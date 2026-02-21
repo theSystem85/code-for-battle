@@ -22,7 +22,7 @@ import {
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { playSound } from '../sound.js'
 import { savePlayerBuildPatterns } from '../savePlayerBuildPatterns.js'
-import { TILE_SIZE } from '../config.js'
+import { TILE_SIZE, MAX_BUILDING_GAP_TILES } from '../config.js'
 import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
@@ -359,6 +359,75 @@ export class EventHandlers {
       }
     }
 
+    const getBlueprintOccupiedTiles = () => {
+      const occupiedTiles = new Set()
+      ;(gameState.blueprints || []).forEach(bp => {
+        const info = buildingData[bp.type]
+        if (!info) {
+          return
+        }
+        for (let y = 0; y < info.height; y++) {
+          for (let x = 0; x < info.width; x++) {
+            occupiedTiles.add(`${bp.x + x},${bp.y + y}`)
+          }
+        }
+      })
+      return occupiedTiles
+    }
+
+    const canPlaceWithoutBlueprintOverlap = (type, tileX, tileY, occupiedTiles) => {
+      const info = buildingData[type]
+      if (!info) {
+        return false
+      }
+
+      if (!canPlaceBuilding(
+        type,
+        tileX,
+        tileY,
+        gameState.mapGrid || this.mapGrid,
+        this.units,
+        gameState.buildings || [],
+        this.factories,
+        gameState.humanPlayer
+      )) {
+        return false
+      }
+
+      for (let y = 0; y < info.height; y++) {
+        for (let x = 0; x < info.width; x++) {
+          if (occupiedTiles.has(`${tileX + x},${tileY + y}`)) {
+            return false
+          }
+        }
+      }
+
+      return true
+    }
+
+    const addFootprintToOccupiedTiles = (type, tileX, tileY, occupiedTiles) => {
+      const info = buildingData[type]
+      if (!info) {
+        return
+      }
+
+      for (let y = 0; y < info.height; y++) {
+        for (let x = 0; x < info.width; x++) {
+          occupiedTiles.add(`${tileX + x},${tileY + y}`)
+        }
+      }
+    }
+
+    const isWithinPlannedTileGap = (fromTile, toTile) => {
+      if (!fromTile || !toTile) {
+        return true
+      }
+
+      const deltaX = Math.abs(toTile.x - fromTile.x)
+      const deltaY = Math.abs(toTile.y - fromTile.y)
+      return Math.max(deltaX, deltaY) <= MAX_BUILDING_GAP_TILES
+    }
+
     const queueMobilePaintedBuildings = () => {
       const buildingType = gameState.mobileBuildPaintType
       const button = gameState.mobileBuildPaintButton
@@ -366,45 +435,23 @@ export class EventHandlers {
         return
       }
 
-      const info = buildingData[buildingType]
-      if (!info) return
-
-      const occ = new Set()
-      gameState.blueprints.forEach(bp => {
-        const bi = buildingData[bp.type]
-        for (let y = 0; y < bi.height; y++) {
-          for (let x = 0; x < bi.width; x++) {
-            occ.add(`${bp.x + x},${bp.y + y}`)
-          }
-        }
-      })
+      const occupiedTiles = getBlueprintOccupiedTiles()
+      let lastQueuedTile = null
 
       gameState.mobileBuildPaintTiles.forEach(pos => {
-        let valid = true
-        for (let y = 0; y < info.height; y++) {
-          for (let x = 0; x < info.width; x++) {
-            const tx = pos.x + x
-            const ty = pos.y + y
-            if (!isTileValid(tx, ty, this.mapGrid, this.units, [], [], buildingType) || occ.has(`${tx},${ty}`)) {
-              valid = false
-              break
-            }
-          }
-          if (!valid) break
+        if (!isWithinPlannedTileGap(lastQueuedTile, pos)) {
+          return
         }
-        if (!valid) {
+
+        if (!canPlaceWithoutBlueprintOverlap(buildingType, pos.x, pos.y, occupiedTiles)) {
           return
         }
 
         const bp = { type: buildingType, x: pos.x, y: pos.y }
         gameState.blueprints.push(bp)
         productionQueue.addItem(buildingType, button, true, bp)
-
-        for (let y = 0; y < info.height; y++) {
-          for (let x = 0; x < info.width; x++) {
-            occ.add(`${pos.x + x},${pos.y + y}`)
-          }
-        }
+        addFootprintToOccupiedTiles(buildingType, pos.x, pos.y, occupiedTiles)
+        lastQueuedTile = pos
       })
     }
 
@@ -459,6 +506,12 @@ export class EventHandlers {
         }
         const buttonRef = productionQueue.completedBuildings.find(building => building.type === currentType)?.button || null
         if (!buttonRef) {
+          resetGestureState()
+          return
+        }
+
+        const occupiedTiles = getBlueprintOccupiedTiles()
+        if (!canPlaceWithoutBlueprintOverlap(currentType, this.mobileChainBuildGesture.startTileX, this.mobileChainBuildGesture.startTileY, occupiedTiles)) {
           resetGestureState()
           return
         }

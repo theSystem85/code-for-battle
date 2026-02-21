@@ -1,5 +1,5 @@
 // rendering/uiRenderer.js
-import { TILE_SIZE } from '../config.js'
+import { TILE_SIZE, MAX_BUILDING_GAP_TILES } from '../config.js'
 import { buildingData, isTileValid, canPlaceBuilding } from '../buildings.js'
 import { gameState } from '../gameState.js'
 import { showNotification } from '../ui/notifications.js'
@@ -16,6 +16,63 @@ export class UIRenderer {
   constructor() {
     this.gameOverEventListenerAdded = false
     this.lastGameOverLayout = null
+  }
+
+
+  getPlanningDisplayName(buildingType) {
+    if (buildingType === 'concreteWall') {
+      return 'Wall'
+    }
+    if (buildingType === 'radarStation') {
+      return 'Radar'
+    }
+
+    return buildingData[buildingType]?.displayName || buildingType
+  }
+
+  isWithinPlanningGap(previousTile, nextTile) {
+    if (!previousTile || !nextTile) {
+      return true
+    }
+
+    return Math.max(
+      Math.abs(nextTile.x - previousTile.x),
+      Math.abs(nextTile.y - previousTile.y)
+    ) <= MAX_BUILDING_GAP_TILES
+  }
+
+  canRenderPlannedTile(type, tileX, tileY, mapGrid, units, buildings, factories, occupiedTiles) {
+    const info = buildingData[type]
+    if (!info) {
+      return false
+    }
+
+    if (!canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, factories, gameState.humanPlayer)) {
+      return false
+    }
+
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 0; x < info.width; x++) {
+        if (occupiedTiles.has(`${tileX + x},${tileY + y}`)) {
+          return false
+        }
+      }
+    }
+
+    return true
+  }
+
+  addPlannedFootprintToOccupiedTiles(type, tileX, tileY, occupiedTiles) {
+    const info = buildingData[type]
+    if (!info) {
+      return
+    }
+
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 0; x < info.width; x++) {
+        occupiedTiles.add(`${tileX + x},${tileY + y}`)
+      }
+    }
   }
   renderSelectionRectangle(ctx, selectionActive, selectionStart, selectionEnd, scrollOffset) {
     // Draw normal selection rectangle if active
@@ -181,7 +238,7 @@ export class UIRenderer {
         ctx.font = '14px "Rajdhani", "Arial Narrow", sans-serif'
         ctx.textAlign = 'center'
         ctx.fillText(
-          buildingInfo.displayName,
+          this.getPlanningDisplayName(gameState.currentBuildingType),
           tileX * TILE_SIZE + (buildingInfo.width * TILE_SIZE / 2) - scrollOffset.x,
           tileY * TILE_SIZE - 10 - scrollOffset.y
         )
@@ -209,34 +266,30 @@ export class UIRenderer {
   renderMobileBuildPaintPlacement(ctx, gameState, scrollOffset, mapGrid, units) {
     if (!gameState.mobileBuildPaintMode || !gameState.mobileBuildPaintType) return
 
-    const info = buildingData[gameState.mobileBuildPaintType]
+    const buildingType = gameState.mobileBuildPaintType
+    const info = buildingData[buildingType]
     const tiles = Array.isArray(gameState.mobileBuildPaintTiles) ? gameState.mobileBuildPaintTiles : []
     if (!info || tiles.length === 0) return
 
-    const occ = new Set()
+    const occupiedTiles = new Set()
     ;(gameState.blueprints || []).forEach(bp => {
-      const bi = buildingData[bp.type]
-      if (!bi) return
-      for (let y = 0; y < bi.height; y++) {
-        for (let x = 0; x < bi.width; x++) {
-          occ.add(`${bp.x + x},${bp.y + y}`)
-        }
-      }
+      this.addPlannedFootprintToOccupiedTiles(bp.type, bp.x, bp.y, occupiedTiles)
     })
 
-    tiles.forEach(pos => {
-      let valid = true
-      for (let y = 0; y < info.height; y++) {
-        for (let x = 0; x < info.width; x++) {
-          const tx = pos.x + x
-          const ty = pos.y + y
-          if (!isTileValid(tx, ty, mapGrid, units, [], [], gameState.mobileBuildPaintType) || occ.has(`${tx},${ty}`)) {
-            valid = false
-            break
-          }
-        }
-        if (!valid) break
-      }
+    const planningFactories = getCurrentGame()?.factories || []
+    let lastValidTile = null
+    tiles.forEach((pos, index) => {
+      const isNearPrevious = this.isWithinPlanningGap(lastValidTile, pos)
+      const isValid = isNearPrevious && this.canRenderPlannedTile(
+        buildingType,
+        pos.x,
+        pos.y,
+        mapGrid,
+        units,
+        gameState.buildings || [],
+        planningFactories,
+        occupiedTiles
+      )
 
       for (let y = 0; y < info.height; y++) {
         for (let x = 0; x < info.width; x++) {
@@ -244,7 +297,7 @@ export class UIRenderer {
           const ty = pos.y + y
           const screenX = tx * TILE_SIZE - scrollOffset.x
           const screenY = ty * TILE_SIZE - scrollOffset.y
-          ctx.fillStyle = valid ? 'rgba(0,255,0,0.5)' : 'rgba(255,0,0,0.5)'
+          ctx.fillStyle = isValid ? 'rgba(0,255,0,0.5)' : 'rgba(255,0,0,0.5)'
           ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE)
           ctx.strokeStyle = '#fff'
           ctx.lineWidth = 1
@@ -252,15 +305,43 @@ export class UIRenderer {
         }
       }
 
-      if (valid) {
-        for (let y = 0; y < info.height; y++) {
-          for (let x = 0; x < info.width; x++) {
-            occ.add(`${pos.x + x},${pos.y + y}`)
-          }
-        }
+      const tileWidth = info.width * TILE_SIZE
+      const tileHeight = info.height * TILE_SIZE
+      const anchorX = pos.x * TILE_SIZE - scrollOffset.x
+      const anchorY = pos.y * TILE_SIZE - scrollOffset.y
+
+      ctx.save()
+      ctx.font = 'bold 12px "Rajdhani", "Arial Narrow", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)'
+      ctx.lineWidth = 3
+      const textX = anchorX + tileWidth / 2
+      const textY = anchorY + tileHeight * 0.75
+      ctx.strokeText(String(index + 1), textX, textY)
+      ctx.fillStyle = '#fff'
+      ctx.fillText(String(index + 1), textX, textY)
+      ctx.restore()
+
+      if (isValid) {
+        this.addPlannedFootprintToOccupiedTiles(buildingType, pos.x, pos.y, occupiedTiles)
+        lastValidTile = pos
       }
     })
+
+    const firstTile = tiles[0]
+    if (firstTile) {
+      ctx.fillStyle = '#fff'
+      ctx.font = '14px "Rajdhani", "Arial Narrow", sans-serif'
+      ctx.textAlign = 'center'
+      ctx.fillText(
+        this.getPlanningDisplayName(buildingType),
+        firstTile.x * TILE_SIZE + (info.width * TILE_SIZE / 2) - scrollOffset.x,
+        firstTile.y * TILE_SIZE - 10 - scrollOffset.y
+      )
+    }
   }
+
 
   renderChainPlacement(ctx, gameState, scrollOffset, mapGrid, units) {
     if (gameState.chainBuildMode && gameState.chainBuildingType) {

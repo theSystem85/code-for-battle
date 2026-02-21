@@ -1,3 +1,4 @@
+- [x] Mobile chain-draw planning polish: block starting paint when first tile violates placement/proximity, skip+red-mark invalid or too-far neighbor tiles, show per-tile draw order numbers, prevent planning onto occupied ground, and shorten planning labels (Wall/Radar).
 - [x] Follow-up: ensure two-finger tap-and-release on the map also exits mobile building placement/construction mode immediately (not only active chain-paint mode).
 - [x] Improve mobile chain-build planning UX: two-finger tap release now instantly cancels planning (without cancelling two-finger drag panning), edge auto-scroll speed reduced to ~33%, and ready-to-place build button highlight made more visually dominant.
 - [x] Ensure all build/production button labels use the global futuristic font and automatically fall back to existing mobile short building labels when desktop text overflows.
