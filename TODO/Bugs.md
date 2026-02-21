@@ -1,4 +1,5 @@
 ## Bugs
+- [x] Ensure mobile layouts always expose sidebar access (or at minimum a visible sidebar toggle), and reposition the notification bell/history to the top-left in mobile landscape to avoid overlap.
 - [x] Ensure `ammo` cheat applies to selected defense buildings with ammo bars, supports absolute and relative (+/- number or %) ammo values for units/buildings, and update modal cheat text.
 - [x] Fix tank movement loop audio lifecycle: stop immediately on halt and prevent same-unit overlapping loop instances that caused runaway loudness.
 - [x] Ensure movement loop audio (engine/rotor) fades out immediately when a unit stops moving.

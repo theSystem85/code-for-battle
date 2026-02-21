@@ -303,7 +303,15 @@
 
 @media (orientation: landscape) and (max-width: 900px) {
   body.mobile-landscape .notif-badge {
-    left: calc(var(--safe-area-left) + 10px);
+    top: calc(var(--safe-area-top) + 10px);
+    left: calc(var(--safe-area-left) + var(--mobile-action-size) + 12px);
     right: auto;
+  }
+
+  body.mobile-landscape .notif-history {
+    top: calc(var(--safe-area-top) + 56px);
+    left: calc(var(--safe-area-left) + var(--mobile-action-size) + 12px);
+    right: auto;
+    max-width: min(380px, calc(100vw - var(--safe-area-left) - var(--safe-area-right) - var(--mobile-action-size) - 24px));
   }
 }

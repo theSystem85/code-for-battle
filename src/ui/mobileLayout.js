@@ -473,7 +473,7 @@ export function setSidebarCollapsed(collapsed, options = {}) {
     toggleButton.setAttribute('aria-expanded', (!collapsed).toString())
     toggleButton.setAttribute('aria-label', collapsed ? 'Open sidebar' : 'Collapse sidebar')
     const body = document.body
-    const hideToggle = !!(body && (body.classList.contains('mobile-portrait') && !collapsed) || body.classList.contains('mobile-landscape'))
+    const hideToggle = !!(body && body.classList.contains('mobile-portrait') && !collapsed)
     toggleButton.setAttribute('aria-hidden', hideToggle ? 'true' : 'false')
     if (hideToggle) {
       toggleButton.setAttribute('tabindex', '-1')
