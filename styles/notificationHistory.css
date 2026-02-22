@@ -303,7 +303,8 @@
 
 @media (orientation: landscape) and (max-width: 900px) {
   body.mobile-landscape .notif-badge {
+    top: calc(var(--safe-area-top) + 10px);
     left: calc(var(--safe-area-left) + 10px);
-    right: auto;
+    right: auto !important;
   }
 }
