@@ -216,3 +216,5 @@
 - [x] Add a Settings modal toggle to enable/disable radar-offline minimap grain animation, and make the white-snow grain visibly flicker/move like an old no-signal TV feed.
 - [x] Fix ground-unit pathfinding reroute thrash: preserve the planned route during stuck recovery, splice in local obstacle evasion instead of clearing full paths, and visualize active local-avoidance path segments in blue in waypoint rendering.
 
+
+- [x] Ensure howitzer unlock is gated behind an owned artillery turret (plus existing radar + vehicle factory requirements) so it cannot be built early.
