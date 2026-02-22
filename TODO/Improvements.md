@@ -2,6 +2,8 @@
 - [x] Mobile chain-draw planning polish: block starting paint when first tile violates placement/proximity, skip+red-mark invalid or too-far neighbor tiles, show per-tile draw order numbers, prevent planning onto occupied ground, and shorten planning labels (Wall/Radar).
 - [x] Follow-up: ensure two-finger tap-and-release on the map also exits mobile building placement/construction mode immediately (not only active chain-paint mode).
 - [x] Improve mobile chain-build planning UX: two-finger tap release now instantly cancels planning (without cancelling two-finger drag panning), edge auto-scroll speed reduced to ~33%, and ready-to-place build button highlight made more visually dominant.
+- [x] Follow-up polish: make sidebar money/power gradients end brighter (not darker) and use the same desktop sidebar gradient on mobile portrait expanded + condensed sidebars.
+- [x] Add a subtle horizontal gradient to sidebar money/power bars (desktop + mobile portrait) and remove rounded corners from the expanded portrait radar/minimap.
 - [x] Ensure all build/production button labels use the global futuristic font and automatically fall back to existing mobile short building labels when desktop text overflows.
 - [x] Apply Rajdhani to sidebar build tabs (desktop/mobile), map settings/edit/shuffle buttons, invite/join controls, save/invite placeholders, all sidebar input fields, and user docs with a 14px minimum.
 - [x] Apply a globally consistent open-source futuristic font (compact footprint) across CSS UI and canvas-rendered in-game text.
@@ -27,6 +29,8 @@
 - [ ] Follow-up HUD tweak: constrain selected-unit edge bars to max 75% tile span so 1px selection outline remains visible, and center crew indicators horizontally beneath the bottom bar.
 - [ ] Refactor selected-unit HUD: 1px yellow outline, 3px stat bars (ammo/hp/fuel/load/xp) centered on outline with dark grey background and no borders, move crew indicator below bottom bar, place XP stars overlapping HP bar by ~33%, and enlarge HUD footprint beyond tile size to avoid occluding the selected unit.
 ## Improvements
+- [x] Ensure expanded sidebar repair/sell active state is visibly highlighted in green (matching condensed sidebar behavior).
+- [x] Remove borders from expanded sidebar action buttons, keep them square, and enforce spaced flex container layout to match the settings-button style.
 - [x] Expand OpenAI API key settings with security-critical disclosure (hover/focus), dedicated limited-permission key guidance, localStorage/XSS risk warning, official OpenAI safety link, low-cost model recommendation, and explicit at-your-own-risk opt-in checkbox before key entry.
 - [x] Move the mobile landscape notification bell icon from top-right to the top-left safe-area position.
 - [x] Temporarily lock LLM settings to OpenAI only: remove invalid remote cost URL usage, keep other provider sections visible but collapsed, and show a "coming soon!" hint for Anthropic/xAI/Ollama.

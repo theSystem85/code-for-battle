@@ -9,6 +9,10 @@ import { focusCameraOnPoint } from './tutorialSystem/helpers.js'
 let tooltipListenersAttached = false
 let tooltipOpen = false
 
+function getMoneyBarGradient() {
+  return 'linear-gradient(90deg, #d18100 0%, #ffd489 100%)'
+}
+
 function ensureMoneyTooltip() {
   let tooltip = document.getElementById('moneyTooltip')
   if (tooltip) return tooltip
@@ -274,7 +278,7 @@ export function addMoneyIndicator() {
   moneyBar.style.left = '0'
   moneyBar.style.height = '100%'
   moneyBar.style.width = '100%'
-  moneyBar.style.backgroundColor = '#FFA500' // Orange color
+  moneyBar.style.background = getMoneyBarGradient()
 
   // Create money text/value overlay
   const moneyText = document.createElement('div')

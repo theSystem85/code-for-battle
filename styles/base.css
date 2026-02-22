@@ -17,6 +17,10 @@ html, body {
   --mobile-action-size: 48px;
   --game-default-cursor: url('/cursors/default.svg') 6 4, auto;
   --game-font-family: 'Rajdhani', 'Arial Narrow', 'Segoe UI', Tahoma, sans-serif;
+  --sidebar-shared-bg-image:
+    radial-gradient(10px 8px at calc(100% - 1px) 8px, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(90deg, #222 0%, #353535 97%, #444 100%);
+  --sidebar-shared-bg-color: #333;
 }
 
 body {
@@ -54,10 +58,8 @@ body.is-touch {
   bottom: 0;
   width: var(--sidebar-width);
   height: auto;
-  background-color: #333;
-  background-image:
-    radial-gradient(10px 8px at calc(100% - 1px) 8px, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0.08) 48%, rgba(255, 255, 255, 0) 100%),
-    linear-gradient(90deg, #222 0%, #353535 97%, #444 100%);
+  background-color: var(--sidebar-shared-bg-color);
+  background-image: var(--sidebar-shared-bg-image);
   color: #fff;
   padding: 10px;
   padding-bottom: calc(10px + var(--safe-area-bottom));
@@ -1248,7 +1250,8 @@ body.mobile-portrait {
 
 body.mobile-portrait #sidebar {
   top: var(--safe-area-top);
-  background: linear-gradient(180deg, rgba(46, 46, 46, 0.98) 0%, rgba(30, 30, 30, 0.98) 100%);
+  background-color: var(--sidebar-shared-bg-color);
+  background-image: var(--sidebar-shared-bg-image);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 12px 0 28px rgba(0, 0, 0, 0.5);
   padding: 12px;
@@ -1262,7 +1265,7 @@ body.mobile-portrait #sidebarScroll {
 
 body.mobile-portrait #minimap {
   height: 130px;
-  border-radius: 10px;
+  border-radius: 0;
   margin-bottom: 12px;
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
@@ -1270,20 +1273,34 @@ body.mobile-portrait #minimap {
 body.mobile-portrait #actions {
   display: flex;
   flex-direction: row;
-  gap: 0;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 8px;
   margin: 12px 0 14px;
 }
 
 body.mobile-portrait #actions .action-button.icon-button {
-  aspect-ratio: 1 / 1;
+  width: var(--mobile-action-size);
+  height: var(--mobile-action-size);
   border-radius: 0;
-  background-color: rgba(55, 55, 55, 0.9);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-  flex: 1;
+  background-color: transparent;
+  box-shadow: none;
+  border: none;
+  flex: 0 0 auto;
 }
 
 body.mobile-portrait #actions .action-button.icon-button:hover {
   transform: none;
+}
+
+
+body.mobile-portrait:not(.sidebar-condensed):not(.sidebar-collapsed) #actions #repairBtn.active img {
+  filter: brightness(0) saturate(100%) invert(70%) sepia(21%) saturate(1283%) hue-rotate(73deg)
+    brightness(97%) contrast(93%);
+}
+
+body.mobile-portrait:not(.sidebar-condensed):not(.sidebar-collapsed) #actions #sellBtn.active .button-icon {
+  color: #7be88a;
 }
 
 #controlGroupsBtn .group-icon {
@@ -1695,7 +1712,8 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer[aria-hidden="fa
   bottom: 0;
   height: var(--portrait-condensed-bar-height);
   padding: 0;
-  background: rgba(20, 20, 20, 0.96);
+  background-color: var(--sidebar-shared-bg-color);
+  background-image: var(--sidebar-shared-bg-image);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 -12px 28px rgba(0, 0, 0, 0.45);
   z-index: 2000;
@@ -1722,7 +1740,8 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileBuildMenuContainer 
   gap: 8px;
   height: var(--safe-area-bottom);
   padding: 4px 12px;
-  background: rgba(20, 20, 20, 0.96);
+  background-color: var(--sidebar-shared-bg-color);
+  background-image: var(--sidebar-shared-bg-image);
   box-sizing: border-box;
   pointer-events: auto;
 }
@@ -1856,7 +1875,8 @@ body.mobile-portrait.sidebar-condensed:not(.pwa-standalone) #mobileBuildMenuCont
   width: var(--portrait-condensed-toggle-width);
   padding: 0;
   margin: 0;
-  background: rgba(18, 18, 18, 0.96);
+  background-color: var(--sidebar-shared-bg-color);
+  background-image: var(--sidebar-shared-bg-image);
   border-left: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: -8px 0 18px rgba(0, 0, 0, 0.35);
   box-sizing: border-box;

@@ -3,6 +3,10 @@
 
 import { gameState } from '../gameState.js'
 
+function getEnergyBarGradient(startColor, endColor) {
+  return `linear-gradient(90deg, ${startColor} 0%, ${endColor} 100%)`
+}
+
 // Add power indicator to sidebar with energy bar
 export function addPowerIndicator() {
   // Get the energy bar container that's already in the HTML
@@ -34,7 +38,7 @@ export function addPowerIndicator() {
   energyBar.style.left = '0'
   energyBar.style.height = '100%'
   energyBar.style.width = '100%'
-  energyBar.style.backgroundColor = '#4CAF50'
+  energyBar.style.background = getEnergyBarGradient('#3f8f44', '#7ce284')
 
   // Create energy text/value overlay
   const energyText = document.createElement('div')
@@ -132,27 +136,27 @@ export function updateEnergyBar() {
   // Update bar color based on percentage thresholds
   if (energyPercentage <= 10) {
     // Below 10% - Red
-    energyBar.style.backgroundColor = '#F44336'
+    energyBar.style.background = getEnergyBarGradient('#c9352b', '#ff8a80')
     if (mobileEnergyBar) {
-      mobileEnergyBar.style.backgroundColor = '#F44336'
+      mobileEnergyBar.style.background = getEnergyBarGradient('#c9352b', '#ff8a80')
     }
   } else if (energyPercentage <= 25) {
     // Below 25% - Orange
-    energyBar.style.backgroundColor = '#FF9800'
+    energyBar.style.background = getEnergyBarGradient('#d57b00', '#ffc46b')
     if (mobileEnergyBar) {
-      mobileEnergyBar.style.backgroundColor = '#FF9800'
+      mobileEnergyBar.style.background = getEnergyBarGradient('#d57b00', '#ffc46b')
     }
   } else if (energyPercentage <= 50) {
     // Below 50% - Yellow
-    energyBar.style.backgroundColor = '#FFEB3B'
+    energyBar.style.background = getEnergyBarGradient('#cbbb2f', '#fff48a')
     if (mobileEnergyBar) {
-      mobileEnergyBar.style.backgroundColor = '#FFEB3B'
+      mobileEnergyBar.style.background = getEnergyBarGradient('#cbbb2f', '#fff48a')
     }
   } else {
     // Above 50% - Green
-    energyBar.style.backgroundColor = '#4CAF50'
+    energyBar.style.background = getEnergyBarGradient('#3f8f44', '#7ce284')
     if (mobileEnergyBar) {
-      mobileEnergyBar.style.backgroundColor = '#4CAF50'
+      mobileEnergyBar.style.background = getEnergyBarGradient('#3f8f44', '#7ce284')
     }
   }
 
