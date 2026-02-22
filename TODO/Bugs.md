@@ -218,3 +218,5 @@
 
 - [x] ✅ Bugfix: Ensure game restart button also resets the build options in the sidebar.
 - [x] ✅ Follow-up bugfix: Restart/shuffle map now also clears build-planning overlays (blueprints, chain build, mobile paint, mine/sweep previews), stale selection, and queued production state.
+
+- [x] Ensure howitzer unlock is gated behind an owned artillery turret (plus existing radar + vehicle factory requirements) so it cannot be built early.

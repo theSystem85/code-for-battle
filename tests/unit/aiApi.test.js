@@ -61,7 +61,7 @@ vi.mock('../../src/ai/enemyBuilding.js', () => ({
 
 import { TILE_SIZE } from '../../src/config.js'
 import { gameState } from '../../src/gameState.js'
-import { applyGameTickOutput } from '../../src/ai-api/applier.js'
+import { applyGameTickOutput, computeAvailableUnitTypes } from '../../src/ai-api/applier.js'
 import { validateGameTickInput, validateGameTickOutput } from '../../src/ai-api/validate.js'
 import { createTestMapGrid, resetGameState, createTestFactory, createTestBuilding } from '../testUtils.js'
 
@@ -101,6 +101,26 @@ describe('LLM Control API validation', () => {
 })
 
 describe('LLM Control API applier', () => {
+
+
+  it('requires artillery turret before howitzer is available', () => {
+    const owner = 'player1'
+    const baseBuildings = [
+      { type: 'vehicleFactory', owner, health: 100 },
+      { type: 'radarStation', owner, health: 100 }
+    ]
+
+    const withoutArtilleryTurret = computeAvailableUnitTypes(baseBuildings, [], owner)
+    expect(withoutArtilleryTurret.has('tank-v2')).toBe(true)
+    expect(withoutArtilleryTurret.has('howitzer')).toBe(false)
+
+    const withArtilleryTurret = computeAvailableUnitTypes(
+      [...baseBuildings, { type: 'artilleryTurret', owner, health: 100 }],
+      [],
+      owner
+    )
+    expect(withArtilleryTurret.has('howitzer')).toBe(true)
+  })
   it('applies building placement and unit production actions', () => {
     const state = resetGameState()
     const mapGrid = createTestMapGrid(24, 24)

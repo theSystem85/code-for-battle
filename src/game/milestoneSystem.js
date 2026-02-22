@@ -91,8 +91,8 @@ export class MilestoneSystem {
       return
     }
 
-    // Define units and buildings to unlock (excluding rocket tank and tank-v3 which have special requirements)
-    const unitsToUnlock = ['tank-v2', 'howitzer']
+    // Define immediate radar unlocks (excluding units with additional requirements)
+    const unitsToUnlock = ['tank-v2']
     const buildingsToUnlock = ['turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
 
     // Unlock multiple types with appropriate sound

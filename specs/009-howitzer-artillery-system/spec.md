@@ -38,6 +38,9 @@ Key visual cues include a reinforced recoil motion, directional muzzle flash jet
 5. **State Exposure**
    - Store barrel elevation, target elevation, world launch angle, readiness flag, and movement lock directly on the unit instance for gameplay and rendering systems to use.
 
+6. **Production Prerequisite**
+   - Howitzer production MUST remain locked until the player has completed an `artilleryTurret`, in addition to existing radar and vehicle factory tech requirements.
+
 ---
 
 ## Acceptance Scenarios
@@ -56,6 +59,9 @@ Key visual cues include a reinforced recoil motion, directional muzzle flash jet
 
 5. **Correct Mount Alignment**
    - **Given** a rendered howitzer, **When** observing the barrel pivot, **Then** the hinge appears at the wagon’s carriage position without drifting or offset during animation.
+
+6. **Prerequisite Enforcement**
+   - **Given** a player has radar and a vehicle factory but no artillery turret, **When** opening unit production options, **Then** the howitzer remains unavailable until an artillery turret is built.
 
 ---
 

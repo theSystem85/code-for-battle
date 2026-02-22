@@ -74,6 +74,16 @@ As a player, I want to drag building buttons while holding shift to create lines
 12. **Given** mobile chain-planning mode is active, **When** player drags near map edges, **Then** auto-scroll follows the same direction as the drag path and selection-rectangle rendering remains disabled during painting
 13. **Given** mobile building placement or planning is active, **When** player double-taps, **Then** active placement/planning cancels and current touch selection intent is cleared
 14. **Given** mobile planning mode was used previously, **When** player starts a two-finger drag afterwards, **Then** camera pan still works normally (no stuck touch pointers)
+15. **Given** mobile chain-planning mode is active, **When** player performs a two-finger tap-and-release without dragging, **Then** planning mode is canceled immediately
+16. **Given** mobile chain-planning mode is active, **When** player performs a two-finger drag to pan the map, **Then** planning mode does not cancel and map panning remains functional
+17. **Given** mobile chain-planning mode auto-scroll is triggered near edges, **When** drag continues, **Then** scrolling speed is intentionally reduced to roughly one-third of the prior speed for better control
+18. **Given** mobile building placement/construction mode is active (before paint mode begins), **When** player performs a two-finger tap-and-release on the map, **Then** placement mode is canceled immediately
+19. **Given** mobile chain-planning starts on a tile that is blocked or outside allowed base proximity, **When** press-hold completes, **Then** paint planning does not activate from that invalid start tile
+20. **Given** mobile chain-planning path includes tiles on occupied/blocked ground, **When** overlay renders and queue is committed, **Then** those tiles are skipped from queue and shown as red invalid overlays
+21. **Given** mobile chain-planning path has a tile too far from the previous valid planned tile, **When** overlay updates, **Then** that tile is skipped for queuing and marked red as an invalid gap
+22. **Given** mobile chain-planning overlay is visible, **When** tiles are painted, **Then** each tile shows its ordering number centered in the lower half of the overlay
+23. **Given** planning labels are rendered for mobile placement/planning, **When** building type is concrete wall or radar station, **Then** labels display as 'Wall' and 'Radar' respectively
+24. **Given** mobile chain-planning uses proximity validation, **When** evaluating tile N, **Then** allowed proximity expansion may derive only from previously accepted planning tiles 1..N-1 in exact draw order (not from later/invalid tiles)
 
 ---
 

@@ -69,7 +69,7 @@ describe('milestoneSystem.js', () => {
       system.setProductionController(mockController)
       system.unlockAdvancedTechnology()
       expect(mockController.unlockMultipleTypes).toHaveBeenCalledWith(
-        ['tank-v2', 'howitzer'],
+        ['tank-v2'],
         ['turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
       )
     })

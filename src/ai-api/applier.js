@@ -86,6 +86,7 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
   const hasAmmunitionFactory = owned.some(b => b.type === 'ammunitionFactory')
   const hasHelipad = owned.some(b => b.type === 'helipad')
   const hasRocketTurret = owned.some(b => b.type === 'rocketTurret')
+  const hasArtilleryTurret = owned.some(b => b.type === 'artilleryTurret')
   const hasRadar = owned.some(b => b.type === 'radarStation')
   const factoryCount = owned.filter(b => b.type === 'vehicleFactory').length
   if (hasFactory) {
@@ -106,7 +107,7 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
   if (hasRocketTurret) available.add('rocketTank')
   if (hasRadar) {
     available.add('tank-v2')
-    if (hasFactory) available.add('howitzer')
+    if (hasFactory && hasArtilleryTurret) available.add('howitzer')
   }
   return available
 }
