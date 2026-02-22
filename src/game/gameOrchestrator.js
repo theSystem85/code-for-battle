@@ -930,6 +930,10 @@ class Game {
     gameState.radarActive = false
     gameState.targetedOreTiles = {}
     gameState.refineryStatus = {}
+    gameState.availableUnitTypes = new Set([])
+    gameState.availableBuildingTypes = new Set(['constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory', 'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'gasStation', 'turretGunV1', 'concreteWall'])
+    gameState.newUnitTypes = new Set([])
+    gameState.newBuildingTypes = new Set([])
     gameState.defeatedPlayers = new Set()
     gameState.unitWrecks = []
     gameState._defeatSoundPlayed = false
@@ -996,6 +1000,7 @@ class Game {
     if (this.productionController) {
       this.productionController.updateVehicleButtonStates()
       this.productionController.updateBuildingButtonStates()
+      this.productionController.updateTabStates()
     }
 
     const pauseBtn = document.getElementById('pauseBtn')
