@@ -375,11 +375,20 @@ export class EventHandlers {
       return occupiedTiles
     }
 
-    const canPlaceWithoutBlueprintOverlap = (type, tileX, tileY, occupiedTiles) => {
+    const canPlaceWithoutBlueprintOverlap = (type, tileX, tileY, occupiedTiles, plannedTiles = []) => {
       const info = buildingData[type]
       if (!info) {
         return false
       }
+
+      const planningBuildings = plannedTiles.map(tile => ({
+        type,
+        x: tile.x,
+        y: tile.y,
+        width: info.width,
+        height: info.height,
+        owner: gameState.humanPlayer
+      }))
 
       if (!canPlaceBuilding(
         type,
@@ -387,7 +396,7 @@ export class EventHandlers {
         tileY,
         gameState.mapGrid || this.mapGrid,
         this.units,
-        gameState.buildings || [],
+        [...(gameState.buildings || []), ...planningBuildings],
         this.factories,
         gameState.humanPlayer
       )) {
@@ -437,13 +446,14 @@ export class EventHandlers {
 
       const occupiedTiles = getBlueprintOccupiedTiles()
       let lastQueuedTile = null
+      const acceptedPlanningTiles = []
 
       gameState.mobileBuildPaintTiles.forEach(pos => {
         if (!isWithinPlannedTileGap(lastQueuedTile, pos)) {
           return
         }
 
-        if (!canPlaceWithoutBlueprintOverlap(buildingType, pos.x, pos.y, occupiedTiles)) {
+        if (!canPlaceWithoutBlueprintOverlap(buildingType, pos.x, pos.y, occupiedTiles, acceptedPlanningTiles)) {
           return
         }
 
@@ -451,6 +461,7 @@ export class EventHandlers {
         gameState.blueprints.push(bp)
         productionQueue.addItem(buildingType, button, true, bp)
         addFootprintToOccupiedTiles(buildingType, pos.x, pos.y, occupiedTiles)
+        acceptedPlanningTiles.push(pos)
         lastQueuedTile = pos
       })
     }
@@ -511,7 +522,7 @@ export class EventHandlers {
         }
 
         const occupiedTiles = getBlueprintOccupiedTiles()
-        if (!canPlaceWithoutBlueprintOverlap(currentType, this.mobileChainBuildGesture.startTileX, this.mobileChainBuildGesture.startTileY, occupiedTiles)) {
+        if (!canPlaceWithoutBlueprintOverlap(currentType, this.mobileChainBuildGesture.startTileX, this.mobileChainBuildGesture.startTileY, occupiedTiles, [])) {
           resetGestureState()
           return
         }

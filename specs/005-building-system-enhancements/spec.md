@@ -83,6 +83,7 @@ As a player, I want to drag building buttons while holding shift to create lines
 21. **Given** mobile chain-planning path has a tile too far from the previous valid planned tile, **When** overlay updates, **Then** that tile is skipped for queuing and marked red as an invalid gap
 22. **Given** mobile chain-planning overlay is visible, **When** tiles are painted, **Then** each tile shows its ordering number centered in the lower half of the overlay
 23. **Given** planning labels are rendered for mobile placement/planning, **When** building type is concrete wall or radar station, **Then** labels display as 'Wall' and 'Radar' respectively
+24. **Given** mobile chain-planning uses proximity validation, **When** evaluating tile N, **Then** allowed proximity expansion may derive only from previously accepted planning tiles 1..N-1 in exact draw order (not from later/invalid tiles)
 
 ---
 

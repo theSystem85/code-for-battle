@@ -41,13 +41,22 @@ export class UIRenderer {
     ) <= MAX_BUILDING_GAP_TILES
   }
 
-  canRenderPlannedTile(type, tileX, tileY, mapGrid, units, buildings, factories, occupiedTiles) {
+  canRenderPlannedTile(type, tileX, tileY, mapGrid, units, buildings, factories, occupiedTiles, plannedTiles = []) {
     const info = buildingData[type]
     if (!info) {
       return false
     }
 
-    if (!canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, factories, gameState.humanPlayer)) {
+    const planningBuildings = plannedTiles.map(tile => ({
+      type,
+      x: tile.x,
+      y: tile.y,
+      width: info.width,
+      height: info.height,
+      owner: gameState.humanPlayer
+    }))
+
+    if (!canPlaceBuilding(type, tileX, tileY, mapGrid, units, [...buildings, ...planningBuildings], factories, gameState.humanPlayer)) {
       return false
     }
 
@@ -278,6 +287,7 @@ export class UIRenderer {
 
     const planningFactories = getCurrentGame()?.factories || []
     let lastValidTile = null
+    const acceptedPlanningTiles = []
     tiles.forEach((pos, index) => {
       const isNearPrevious = this.isWithinPlanningGap(lastValidTile, pos)
       const isValid = isNearPrevious && this.canRenderPlannedTile(
@@ -288,7 +298,8 @@ export class UIRenderer {
         units,
         gameState.buildings || [],
         planningFactories,
-        occupiedTiles
+        occupiedTiles,
+        acceptedPlanningTiles
       )
 
       for (let y = 0; y < info.height; y++) {
@@ -325,6 +336,7 @@ export class UIRenderer {
 
       if (isValid) {
         this.addPlannedFootprintToOccupiedTiles(buildingType, pos.x, pos.y, occupiedTiles)
+        acceptedPlanningTiles.push(pos)
         lastValidTile = pos
       }
     })
