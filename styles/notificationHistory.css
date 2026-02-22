@@ -303,7 +303,16 @@
 
 @media (orientation: landscape) and (max-width: 900px) {
   body.mobile-landscape .notif-badge {
+    top: calc(var(--safe-area-top) + 10px);
     left: calc(var(--safe-area-left) + 10px);
-    right: auto;
+    right: auto !important;
   }
+}
+
+
+/* Always keep bell on top-left in mobile landscape (including wider PWA/tablet viewports) */
+body.mobile-landscape .notif-badge {
+  top: calc(var(--safe-area-top) + 10px);
+  left: calc(var(--safe-area-left) + 10px);
+  right: auto !important;
 }

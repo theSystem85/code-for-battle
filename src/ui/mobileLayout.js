@@ -992,7 +992,7 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
     setMobileSidebarModalVisible(mobileLayoutState.sidebarModalVisible)
     const shouldCollapse = typeof mobileLayoutState.isSidebarCollapsed === 'boolean'
       ? mobileLayoutState.isSidebarCollapsed
-      : true
+      : false
     setSidebarCollapsed(shouldCollapse)
   } else {
     if (isCondensed) {

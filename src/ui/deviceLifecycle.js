@@ -20,12 +20,75 @@ export function initDeviceLifecycle({ getGameInstanceAccessor, requestRender }) 
 
   updateTouchClass()
   updateStandaloneClass()
+  scheduleSafeAreaInsetSync()
   updateMobileLayoutClasses()
 
   if (!listenersInitialized) {
     bindListeners()
     listenersInitialized = true
   }
+}
+
+
+function readSafeAreaInsetPixels() {
+  if (typeof document === 'undefined' || !document.body) {
+    return null
+  }
+
+  const probe = document.createElement('div')
+  probe.style.position = 'fixed'
+  probe.style.left = '0'
+  probe.style.top = '0'
+  probe.style.visibility = 'hidden'
+  probe.style.pointerEvents = 'none'
+  probe.style.paddingTop = 'env(safe-area-inset-top, 0px)'
+  probe.style.paddingRight = 'env(safe-area-inset-right, 0px)'
+  probe.style.paddingBottom = 'env(safe-area-inset-bottom, 0px)'
+  probe.style.paddingLeft = 'env(safe-area-inset-left, 0px)'
+  document.body.appendChild(probe)
+
+  const style = window.getComputedStyle(probe)
+  const insets = {
+    top: parseFloat(style.paddingTop) || 0,
+    right: parseFloat(style.paddingRight) || 0,
+    bottom: parseFloat(style.paddingBottom) || 0,
+    left: parseFloat(style.paddingLeft) || 0
+  }
+
+  probe.remove()
+  return insets
+}
+
+function syncSafeAreaInsets() {
+  if (!document.body || !document.body.classList.contains('is-touch')) {
+    return
+  }
+
+  const insets = readSafeAreaInsetPixels()
+  if (!insets) {
+    return
+  }
+
+  document.body.style.setProperty('--safe-area-top', `${insets.top}px`)
+  document.body.style.setProperty('--safe-area-right', `${insets.right}px`)
+  document.body.style.setProperty('--safe-area-bottom', `${insets.bottom}px`)
+  document.body.style.setProperty('--safe-area-left', `${insets.left}px`)
+}
+
+function scheduleSafeAreaInsetSync() {
+  syncSafeAreaInsets()
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  if (typeof window.requestAnimationFrame === 'function') {
+    window.requestAnimationFrame(() => syncSafeAreaInsets())
+  }
+
+  // Some iOS/PWA launches finalize safe-area metrics asynchronously.
+  window.setTimeout(() => syncSafeAreaInsets(), 140)
+  window.setTimeout(() => syncSafeAreaInsets(), 320)
+  window.setTimeout(() => syncSafeAreaInsets(), 650)
 }
 
 function bindListeners() {
@@ -52,6 +115,7 @@ function bindListeners() {
   }
 
   window.addEventListener('resize', updateMobileLayoutClasses)
+  window.addEventListener('pageshow', updateMobileLayoutClasses)
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateMobileLayoutClasses)
   }
@@ -74,6 +138,7 @@ export function updateMobileLayoutClasses() {
   document.body.classList.toggle('mobile-portrait', mobileMode === 'portrait')
 
   applyMobileSidebarLayout(mobileMode)
+  scheduleSafeAreaInsetSync()
 
   if (lastMobileLayoutMode !== mobileMode) {
     lastMobileLayoutMode = mobileMode
