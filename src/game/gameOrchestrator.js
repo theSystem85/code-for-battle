@@ -1,5 +1,5 @@
 // Core game orchestration extracted from main.js
-import { setupInputHandlers, setRenderScheduler } from '../inputHandler.js'
+import { setupInputHandlers, setRenderScheduler, selectedUnits } from '../inputHandler.js'
 import { unitCosts, initializeOccupancyMap, rebuildOccupancyMapWithTextures } from '../units.js'
 import { gameState } from '../gameState.js'
 import { buildingData, updatePowerSupply } from '../buildings.js'
@@ -831,7 +831,48 @@ class Game {
     gameState.buildingPlacementMode = false
     gameState.currentBuildingType = null
     gameState.repairMode = false
+    gameState.draggedBuildingType = null
+    gameState.draggedBuildingButton = null
+    gameState.draggedUnitType = null
+    gameState.draggedUnitButton = null
+    gameState.blueprints = []
+    gameState.chainBuildPrimed = false
+    gameState.chainBuildMode = false
+    gameState.chainStartX = 0
+    gameState.chainStartY = 0
+    gameState.chainBuildingType = null
+    gameState.chainBuildingButton = null
+    gameState.mobileBuildPaintMode = false
+    gameState.mobileBuildPaintType = null
+    gameState.mobileBuildPaintButton = null
+    gameState.mobileBuildPaintTiles = []
+    gameState.mineDeploymentPreview = null
+    gameState.sweepAreaPreview = null
+    gameState.attackGroupMode = false
+    gameState.attackGroupStart = { x: 0, y: 0 }
+    gameState.attackGroupEnd = { x: 0, y: 0 }
+    gameState.attackGroupTargets = []
     gameState.unitWrecks = []
+    gameState.selectedWreckId = null
+    selectedUnits.length = 0
+    gameState.remoteControl = {
+      forward: 0,
+      backward: 0,
+      turnLeft: 0,
+      turnRight: 0,
+      turretLeft: 0,
+      turretRight: 0,
+      fire: 0
+    }
+    gameState.remoteControlSources = {
+      forward: {},
+      backward: {},
+      turnLeft: {},
+      turnRight: {},
+      turretLeft: {},
+      turretRight: {},
+      fire: {}
+    }
 
     const mapRenderer = getMapRenderer()
     if (mapRenderer) {
@@ -866,6 +907,18 @@ class Game {
     gameState.gameOver = false
     gameState.gameStarted = true
     gameState.gamePaused = false
+
+    if (typeof productionQueue !== 'undefined') {
+      productionQueue.unitItems.length = 0
+      productionQueue.buildingItems.length = 0
+      productionQueue.completedBuildings.length = 0
+      productionQueue.currentUnit = null
+      productionQueue.currentBuilding = null
+      productionQueue.pausedUnit = false
+      productionQueue.pausedBuilding = false
+      productionQueue.unitPaid = 0
+      productionQueue.buildingPaid = 0
+    }
 
     const pauseBtn = document.getElementById('pauseBtn')
     const playPauseIcon = pauseBtn.querySelector('.play-pause-icon')
@@ -927,11 +980,56 @@ class Game {
     gameState.buildingPlacementMode = false
     gameState.currentBuildingType = null
     gameState.repairMode = false
+    gameState.draggedBuildingType = null
+    gameState.draggedBuildingButton = null
+    gameState.draggedUnitType = null
+    gameState.draggedUnitButton = null
+    gameState.blueprints = []
+    gameState.chainBuildPrimed = false
+    gameState.chainBuildMode = false
+    gameState.chainStartX = 0
+    gameState.chainStartY = 0
+    gameState.chainBuildingType = null
+    gameState.chainBuildingButton = null
+    gameState.mobileBuildPaintMode = false
+    gameState.mobileBuildPaintType = null
+    gameState.mobileBuildPaintButton = null
+    gameState.mobileBuildPaintTiles = []
+    gameState.mineDeploymentPreview = null
+    gameState.sweepAreaPreview = null
+    gameState.attackGroupMode = false
+    gameState.attackGroupStart = { x: 0, y: 0 }
+    gameState.attackGroupEnd = { x: 0, y: 0 }
+    gameState.attackGroupTargets = []
     gameState.radarActive = false
     gameState.targetedOreTiles = {}
     gameState.refineryStatus = {}
+    gameState.availableUnitTypes = new Set([])
+    gameState.availableBuildingTypes = new Set(['constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory', 'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'gasStation', 'turretGunV1', 'concreteWall'])
+    gameState.newUnitTypes = new Set([])
+    gameState.newBuildingTypes = new Set([])
     gameState.defeatedPlayers = new Set()
     gameState.unitWrecks = []
+    gameState.selectedWreckId = null
+    selectedUnits.length = 0
+    gameState.remoteControl = {
+      forward: 0,
+      backward: 0,
+      turnLeft: 0,
+      turnRight: 0,
+      turretLeft: 0,
+      turretRight: 0,
+      fire: 0
+    }
+    gameState.remoteControlSources = {
+      forward: {},
+      backward: {},
+      turnLeft: {},
+      turnRight: {},
+      turretLeft: {},
+      turretRight: {},
+      fire: {}
+    }
     gameState._defeatSoundPlayed = false
     gameState.localPlayerDefeated = false
     gameState.isSpectator = false
@@ -996,6 +1094,7 @@ class Game {
     if (this.productionController) {
       this.productionController.updateVehicleButtonStates()
       this.productionController.updateBuildingButtonStates()
+      this.productionController.updateTabStates()
     }
 
     const pauseBtn = document.getElementById('pauseBtn')
