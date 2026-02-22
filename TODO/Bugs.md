@@ -1,4 +1,5 @@
 ## Bugs
+- [x] Ensure mobile landscape initial load always shows the sidebar (condensed/open), sync safe-area insets on first paint so iOS portrait bottom inset fills without device rotation, and pin the landscape notification bell to top-left to avoid sidebar overlap.
 - [x] Ensure `ammo` cheat applies to selected defense buildings with ammo bars, supports absolute and relative (+/- number or %) ammo values for units/buildings, and update modal cheat text.
 - [x] Fix tank movement loop audio lifecycle: stop immediately on halt and prevent same-unit overlapping loop instances that caused runaway loudness.
 - [x] Ensure movement loop audio (engine/rotor) fades out immediately when a unit stops moving.
@@ -123,6 +124,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] Ensure mobile landscape initial load always shows the sidebar (condensed/open), sync safe-area insets on first paint so iOS portrait bottom inset fills without device rotation, and pin the landscape notification bell to top-left to avoid sidebar overlap.
 - [x] Add ammo-based defensive turret logistics: align rocket turret muzzle flashes to 6 spawn points, add selected ammo/reload HUD bars for turretGun V1-V3/rocket/artillery turrets, enforce turret ammo consumption + reload via ammo trucks, and enable mutual ammo-truck↔turret move-into cursor/click interactions.
 - [x] Ensure rocket turret 6-rocket bursts cycle through six distinct muzzle coordinates `(60,40)`, `(60,73)`, `(60,107)`, `(130,40)`, `(130,73)`, `(130,107)` using each rocket sprite center as the spawn anchor.
 - [x] Ensure user docs modal on mobile portrait respects top safe-area inset, spans full screen width, and renders above the tutorial overlay; move docs/settings/cheats buttons above Multiplayer in the sidebar.
