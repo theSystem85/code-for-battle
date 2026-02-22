@@ -84,7 +84,11 @@ function scheduleSafeAreaInsetSync() {
   if (typeof window.requestAnimationFrame === 'function') {
     window.requestAnimationFrame(() => syncSafeAreaInsets())
   }
+
+  // Some iOS/PWA launches finalize safe-area metrics asynchronously.
   window.setTimeout(() => syncSafeAreaInsets(), 140)
+  window.setTimeout(() => syncSafeAreaInsets(), 320)
+  window.setTimeout(() => syncSafeAreaInsets(), 650)
 }
 
 function bindListeners() {
@@ -111,6 +115,7 @@ function bindListeners() {
   }
 
   window.addEventListener('resize', updateMobileLayoutClasses)
+  window.addEventListener('pageshow', updateMobileLayoutClasses)
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', updateMobileLayoutClasses)
   }

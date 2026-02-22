@@ -1230,6 +1230,16 @@ body.mobile-landscape.is-touch #gameCanvasGL {
   height: calc(100% + var(--safe-area-top) + var(--safe-area-bottom));
 }
 
+
+
+/* Ensure portrait PWA canvas stretches through bottom safe-area on first load */
+body.pwa-standalone.mobile-portrait.is-touch #gameCanvas,
+body.pwa-standalone.mobile-portrait.is-touch #gameCanvasGL {
+  top: calc(-1 * var(--safe-area-top));
+  bottom: calc(-1 * var(--safe-area-bottom));
+  height: calc(100% + var(--safe-area-top) + var(--safe-area-bottom));
+}
+
 body.mobile-landscape #sidebar {
   transition: transform 0.25s ease;
 }

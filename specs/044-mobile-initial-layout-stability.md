@@ -12,3 +12,9 @@ Mobile Safari/Chrome emulation can initialize with stale orientation-safe-area v
 - Keep existing rotation/resize listeners intact.
 - Add an initial + deferred safe-area inset sync pass using runtime-computed `env(safe-area-inset-*)` values.
 - Preserve persisted user sidebar preferences when explicitly set; only adjust the fallback default for first landscape load.
+
+
+## Follow-up (PWA Verification)
+- Landscape bell placement MUST apply for all `body.mobile-landscape` sizes, not only narrow (`max-width`) breakpoints, so tablet/wider PWA landscape still pins to top-left safe area.
+- Portrait `pwa-standalone` canvas rendering MUST extend through safe-area insets on first load so no bottom gap appears before rotation.
+- Safe-area sync SHOULD run multiple deferred passes after startup/layout updates because iOS may resolve inset values asynchronously after first paint.
