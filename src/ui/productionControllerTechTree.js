@@ -157,6 +157,7 @@ export function syncTechTreeWithBuildings(controller) {
   const hasFactory = buildings.some(b => b.type === 'vehicleFactory')
   const hasRefinery = buildings.some(b => b.type === 'oreRefinery')
   const hasRocketTurret = buildings.some(b => b.type === 'rocketTurret')
+  const hasArtilleryTurret = buildings.some(b => b.type === 'artilleryTurret')
   const hasRadar = buildings.some(b => b.type === 'radarStation')
   const hasGasStation = buildings.some(b => b.type === 'gasStation')
   const hasHospital = buildings.some(b => b.type === 'hospital')
@@ -211,7 +212,7 @@ export function syncTechTreeWithBuildings(controller) {
     controller.forceUnlockUnitType('tank-v2')
     ;['turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
       .forEach(t => controller.forceUnlockBuildingType(t))
-    if (hasFactory) {
+    if (hasFactory && hasArtilleryTurret) {
       controller.forceUnlockUnitType('howitzer')
     }
   }
