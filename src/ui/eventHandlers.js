@@ -22,7 +22,7 @@ import {
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { playSound } from '../sound.js'
 import { savePlayerBuildPatterns } from '../savePlayerBuildPatterns.js'
-import { TILE_SIZE } from '../config.js'
+import { TILE_SIZE, MAX_BUILDING_GAP_TILES } from '../config.js'
 import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
@@ -36,6 +36,7 @@ export class EventHandlers {
     this.moneyEl = moneyEl
     this.gameInstance = gameInstance
     this.mobileChainBuildGesture = null
+    this.mobileTwoFingerCancelGesture = null
     this.mobileChainBuildSuppressClickUntil = 0
     this.mobilePlanLastTapTime = 0
     this.mobilePlanLastTapPos = null
@@ -236,7 +237,7 @@ export class EventHandlers {
 
     const HOLD_DELAY_MS = 220
     const EDGE_THRESHOLD = 28
-    const EDGE_SCROLL_SPEED = 12
+    const EDGE_SCROLL_SPEED = 4
 
     const resetGestureState = () => {
       if (this.mobileChainBuildGesture?.holdTimer) {
@@ -358,6 +359,84 @@ export class EventHandlers {
       }
     }
 
+    const getBlueprintOccupiedTiles = () => {
+      const occupiedTiles = new Set()
+      ;(gameState.blueprints || []).forEach(bp => {
+        const info = buildingData[bp.type]
+        if (!info) {
+          return
+        }
+        for (let y = 0; y < info.height; y++) {
+          for (let x = 0; x < info.width; x++) {
+            occupiedTiles.add(`${bp.x + x},${bp.y + y}`)
+          }
+        }
+      })
+      return occupiedTiles
+    }
+
+    const canPlaceWithoutBlueprintOverlap = (type, tileX, tileY, occupiedTiles, plannedTiles = []) => {
+      const info = buildingData[type]
+      if (!info) {
+        return false
+      }
+
+      const planningBuildings = plannedTiles.map(tile => ({
+        type,
+        x: tile.x,
+        y: tile.y,
+        width: info.width,
+        height: info.height,
+        owner: gameState.humanPlayer
+      }))
+
+      if (!canPlaceBuilding(
+        type,
+        tileX,
+        tileY,
+        gameState.mapGrid || this.mapGrid,
+        this.units,
+        [...(gameState.buildings || []), ...planningBuildings],
+        this.factories,
+        gameState.humanPlayer
+      )) {
+        return false
+      }
+
+      for (let y = 0; y < info.height; y++) {
+        for (let x = 0; x < info.width; x++) {
+          if (occupiedTiles.has(`${tileX + x},${tileY + y}`)) {
+            return false
+          }
+        }
+      }
+
+      return true
+    }
+
+    const addFootprintToOccupiedTiles = (type, tileX, tileY, occupiedTiles) => {
+      const info = buildingData[type]
+      if (!info) {
+        return
+      }
+
+      for (let y = 0; y < info.height; y++) {
+        for (let x = 0; x < info.width; x++) {
+          occupiedTiles.add(`${tileX + x},${tileY + y}`)
+        }
+      }
+    }
+
+    const isWithinPlannedTileGap = (fromTile, toTile) => {
+      if (!fromTile || !toTile) {
+        return true
+      }
+
+      const deltaX = Math.abs(toTile.x - fromTile.x)
+      const deltaY = Math.abs(toTile.y - fromTile.y)
+      return Math.max(deltaX, deltaY) <= MAX_BUILDING_GAP_TILES
+    }
+
     const queueMobilePaintedBuildings = () => {
       const buildingType = gameState.mobileBuildPaintType
       const button = gameState.mobileBuildPaintButton
@@ -365,45 +444,25 @@ export class EventHandlers {
         return
       }
 
-      const info = buildingData[buildingType]
-      if (!info) return
-
-      const occ = new Set()
-      gameState.blueprints.forEach(bp => {
-        const bi = buildingData[bp.type]
-        for (let y = 0; y < bi.height; y++) {
-          for (let x = 0; x < bi.width; x++) {
-            occ.add(`${bp.x + x},${bp.y + y}`)
-          }
-        }
-      })
+      const occupiedTiles = getBlueprintOccupiedTiles()
+      let lastQueuedTile = null
+      const acceptedPlanningTiles = []
 
       gameState.mobileBuildPaintTiles.forEach(pos => {
-        let valid = true
-        for (let y = 0; y < info.height; y++) {
-          for (let x = 0; x < info.width; x++) {
-            const tx = pos.x + x
-            const ty = pos.y + y
-            if (!isTileValid(tx, ty, this.mapGrid, this.units, [], [], buildingType) || occ.has(`${tx},${ty}`)) {
-              valid = false
-              break
-            }
-          }
-          if (!valid) break
+        if (!isWithinPlannedTileGap(lastQueuedTile, pos)) {
+          return
         }
-        if (!valid) {
+
+        if (!canPlaceWithoutBlueprintOverlap(buildingType, pos.x, pos.y, occupiedTiles, acceptedPlanningTiles)) {
           return
         }
 
         const bp = { type: buildingType, x: pos.x, y: pos.y }
         gameState.blueprints.push(bp)
         productionQueue.addItem(buildingType, button, true, bp)
-
-        for (let y = 0; y < info.height; y++) {
-          for (let x = 0; x < info.width; x++) {
-            occ.add(`${pos.x + x},${pos.y + y}`)
-          }
-        }
+        addFootprintToOccupiedTiles(buildingType, pos.x, pos.y, occupiedTiles)
+        acceptedPlanningTiles.push(pos)
+        lastQueuedTile = pos
       })
     }
 
@@ -458,6 +517,12 @@ export class EventHandlers {
         }
         const buttonRef = productionQueue.completedBuildings.find(building => building.type === currentType)?.button || null
         if (!buttonRef) {
+          resetGestureState()
+          return
+        }
+
+        const occupiedTiles = getBlueprintOccupiedTiles()
+        if (!canPlaceWithoutBlueprintOverlap(currentType, this.mobileChainBuildGesture.startTileX, this.mobileChainBuildGesture.startTileY, occupiedTiles, [])) {
           resetGestureState()
           return
         }
@@ -533,6 +598,82 @@ export class EventHandlers {
 
     gameCanvas.addEventListener('pointerup', finalizeMobileChainGesture, { passive: true })
     gameCanvas.addEventListener('pointercancel', finalizeMobileChainGesture, { passive: true })
+
+    const resetTwoFingerCancelGesture = () => {
+      this.mobileTwoFingerCancelGesture = null
+    }
+
+    const isMobileConstructionInteractionActive = () => (
+      gameState.mobileBuildPaintMode || (gameState.buildingPlacementMode && Boolean(gameState.currentBuildingType))
+    )
+
+    gameCanvas.addEventListener('touchstart', (event) => {
+      if (!isMobileConstructionInteractionActive()) {
+        resetTwoFingerCancelGesture()
+        return
+      }
+
+      if (event.touches.length !== 2) {
+        if (event.touches.length > 2) {
+          resetTwoFingerCancelGesture()
+        }
+        return
+      }
+
+      const [firstTouch, secondTouch] = event.touches
+      this.mobileTwoFingerCancelGesture = {
+        startedAt: performance.now(),
+        firstTouchId: firstTouch.identifier,
+        secondTouchId: secondTouch.identifier,
+        firstStartX: firstTouch.clientX,
+        firstStartY: firstTouch.clientY,
+        secondStartX: secondTouch.clientX,
+        secondStartY: secondTouch.clientY,
+        moved: false
+      }
+    }, { passive: true })
+
+    gameCanvas.addEventListener('touchmove', (event) => {
+      const gesture = this.mobileTwoFingerCancelGesture
+      if (!gesture || event.touches.length !== 2 || gesture.moved) {
+        return
+      }
+
+      const firstTouch = Array.from(event.touches).find(touch => touch.identifier === gesture.firstTouchId)
+      const secondTouch = Array.from(event.touches).find(touch => touch.identifier === gesture.secondTouchId)
+      if (!firstTouch || !secondTouch) {
+        gesture.moved = true
+        return
+      }
+
+      const firstDistance = Math.hypot(firstTouch.clientX - gesture.firstStartX, firstTouch.clientY - gesture.firstStartY)
+      const secondDistance = Math.hypot(secondTouch.clientX - gesture.secondStartX, secondTouch.clientY - gesture.secondStartY)
+      if (firstDistance > 14 || secondDistance > 14) {
+        gesture.moved = true
+      }
+    }, { passive: true })
+
+    gameCanvas.addEventListener('touchend', () => {
+      const gesture = this.mobileTwoFingerCancelGesture
+      if (!gesture) {
+        return
+      }
+
+      if (!isMobileConstructionInteractionActive()) {
+        resetTwoFingerCancelGesture()
+        return
+      }
+
+      const elapsedMs = performance.now() - gesture.startedAt
+      if (!gesture.moved && elapsedMs <= 320) {
+        cancelMobilePlanningAndPlacement()
+        this.mobileChainBuildSuppressClickUntil = performance.now() + 250
+      }
+
+      resetTwoFingerCancelGesture()
+    }, { passive: true })
+
+    gameCanvas.addEventListener('touchcancel', resetTwoFingerCancelGesture, { passive: true })
   }
 
   setupMobileDropListeners() {
