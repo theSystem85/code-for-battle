@@ -50,6 +50,11 @@ The following unit types are considered attack-capable for cursor/range detectio
 
 ## Production Speed Scaling
 
+## Alert Mode Visual Indicators
+
+- `tank-v2` alert mode must render only the pulsing outer red circle on the unit tile.
+- Utility service units in alert mode keep their additional larger discovery-range ring.
+
 - Vehicle factory count accelerates unit production time using a multiplier equal to the number of vehicle factories owned by the player (1 factory = 1x, 2 factories = 2x, etc.).
 - The multiplier applies to ground vehicles and Apache helicopters (helicopters still spawn from Helipads, but their build time is reduced by the same vehicle factory multiplier).
 

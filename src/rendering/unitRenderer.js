@@ -1,5 +1,5 @@
 // rendering/unitRenderer.js
-import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN } from '../config.js'
+import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN } from '../config.js'
 import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
 import { renderTankWithImages, areTankImagesLoaded } from './tankImageRenderer.js'
@@ -723,13 +723,14 @@ export class UnitRenderer {
       ctx.arc(centerX, centerY, TILE_SIZE / 2, 0, 2 * Math.PI)
       ctx.stroke()
 
-      // Add inner range indicator
-      ctx.strokeStyle = `rgba(255, 100, 100, ${pulse * 0.3})`
-      ctx.lineWidth = 1
-      ctx.beginPath()
-      const indicatorRange = unit.isUtilityUnit ? SERVICE_DISCOVERY_RANGE : TANK_FIRE_RANGE
-      ctx.arc(centerX, centerY, indicatorRange * TILE_SIZE, 0, 2 * Math.PI)
-      ctx.stroke()
+      // Utility units keep the discovery range ring, but tank-v2 alert mode only shows the outer pulse.
+      if (unit.isUtilityUnit) {
+        ctx.strokeStyle = `rgba(255, 100, 100, ${pulse * 0.3})`
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, SERVICE_DISCOVERY_RANGE * TILE_SIZE, 0, 2 * Math.PI)
+        ctx.stroke()
+      }
     }
   }
 
