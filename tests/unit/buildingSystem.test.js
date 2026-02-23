@@ -79,7 +79,7 @@ import { updateBuildings, updateTeslaCoilEffects } from '../../src/game/building
 import { updateDangerZoneMaps } from '../../src/game/dangerZoneMap.js'
 import { checkGameEndConditions } from '../../src/game/gameStateManager.js'
 import { playSound, playPositionalSound } from '../../src/sound.js'
-import { triggerExplosion } from '../../src/logic.js'
+import { triggerExplosion, hasLineOfSightToTarget } from '../../src/logic.js'
 import { updateUnitSpeedModifier } from '../../src/utils.js'
 import { selectedUnits } from '../../src/inputHandler.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
@@ -88,6 +88,7 @@ describe('Building System', () => {
   let mapGrid
 
   beforeEach(() => {
+    hasLineOfSightToTarget.mockReturnValue(true)
     resetGameState()
     mapGrid = createTestMapGrid(50, 50)
     gameState.mapGrid = mapGrid
@@ -863,6 +864,57 @@ describe('Building System', () => {
       expect(bullets[0].targetPosition).toEqual(turret.currentTargetPosition)
     })
 
+    it('allows rocket and artillery turrets to fire forced targets without LOS checks', () => {
+      const now = 52000
+      vi.spyOn(performance, 'now').mockReturnValue(now)
+      hasLineOfSightToTarget.mockReturnValue(false)
+
+      const rocketTurret = createBuilding('rocketTurret', 10, 10)
+      rocketTurret.owner = 'player'
+      rocketTurret.fireCooldown = 0
+      rocketTurret.lastShotTime = 0
+      rocketTurret.turretDirection = 0
+
+      const artilleryTurret = createBuilding('artilleryTurret', 15, 10)
+      artilleryTurret.owner = 'player'
+      artilleryTurret.fireCooldown = 0
+      artilleryTurret.lastShotTime = 0
+      artilleryTurret.turretDirection = 0
+
+      const rocketTarget = {
+        id: 'rocket-target',
+        x: (rocketTurret.x + 3) * TILE_SIZE,
+        y: (rocketTurret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 100
+      }
+      const artilleryTarget = {
+        id: 'artillery-target',
+        x: (artilleryTurret.x + 6) * TILE_SIZE,
+        y: (artilleryTurret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 100
+      }
+
+      const rocketCenterX = (rocketTurret.x + rocketTurret.width / 2) * TILE_SIZE
+      const rocketCenterY = (rocketTurret.y + rocketTurret.height / 2) * TILE_SIZE
+      rocketTurret.turretDirection = Math.atan2((rocketTarget.y + TILE_SIZE / 2) - rocketCenterY, (rocketTarget.x + TILE_SIZE / 2) - rocketCenterX)
+      rocketTurret.forcedAttackTarget = rocketTarget
+
+      const artilleryCenterX = (artilleryTurret.x + artilleryTurret.width / 2) * TILE_SIZE
+      const artilleryCenterY = (artilleryTurret.y + artilleryTurret.height / 2) * TILE_SIZE
+      artilleryTurret.turretDirection = Math.atan2((artilleryTarget.y + TILE_SIZE / 2) - artilleryCenterY, (artilleryTarget.x + TILE_SIZE / 2) - artilleryCenterX)
+      artilleryTurret.forcedAttackTarget = artilleryTarget
+
+      units.push(rocketTarget, artilleryTarget)
+      gameState.buildings.push(rocketTurret, artilleryTurret)
+
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+
+      expect(bullets.some(b => b.shooter === rocketTurret && b.projectileType === 'rocket')).toBe(true)
+      expect(bullets.some(b => b.shooter === artilleryTurret && b.parabolic)).toBe(true)
+    })
+
     it('blocks rocket turret firing when power is negative', () => {
       const now = 50000
       vi.spyOn(performance, 'now').mockReturnValue(now)
@@ -883,6 +935,50 @@ describe('Building System', () => {
       updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
 
       expect(bullets).toHaveLength(0)
+    })
+
+    it('promotes queued forced attack targets for defense buildings in FIFO order', () => {
+      const now = 55000
+      vi.spyOn(performance, 'now').mockReturnValue(now)
+
+      const turret = createBuilding('turretGunV1', 10, 10)
+      turret.owner = 'player'
+      turret.fireCooldown = 0
+      turret.lastShotTime = 0
+
+      const firstTarget = {
+        id: 'enemy-1',
+        x: (turret.x + 2) * TILE_SIZE,
+        y: (turret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 0
+      }
+      const secondTarget = {
+        id: 'enemy-2',
+        x: (turret.x + 3) * TILE_SIZE,
+        y: (turret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 100
+      }
+
+      turret.forcedAttackTarget = firstTarget
+      turret.forcedAttackQueue = [secondTarget]
+      gameState.buildings.push(turret)
+
+      const centerX = (turret.x + turret.width / 2) * TILE_SIZE
+      const centerY = (turret.y + turret.height / 2) * TILE_SIZE
+      const secondCenterX = secondTarget.x + TILE_SIZE / 2
+      const secondCenterY = secondTarget.y + TILE_SIZE / 2
+      turret.turretDirection = Math.atan2(secondCenterY - centerY, secondCenterX - centerX)
+
+      units.push(secondTarget)
+
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+
+      expect(turret.forcedAttackTarget).toBe(secondTarget)
+      expect(turret.forcedAttackQueue).toHaveLength(0)
+      expect(bullets).toHaveLength(1)
+      expect(bullets[0].shooter).toBe(turret)
     })
 
     it('runs Tesla coil charge/firing sequence and applies unit effects', () => {

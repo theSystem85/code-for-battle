@@ -224,6 +224,10 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
       let closestEnemy = null
       let closestDistance = Infinity
 
+      if (!Array.isArray(building.forcedAttackQueue)) {
+        building.forcedAttackQueue = []
+      }
+
       if (building.forcedAttackTarget) {
         const t = building.forcedAttackTarget
         if (t.health === undefined || t.health > 0) {
@@ -233,11 +237,18 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
           if (dist <= maxRange && dist >= minRange) {
             closestEnemy = t
             closestDistance = dist
-          } else if (dist > maxRange) {
+          } else {
             building.forcedAttackTarget = null
           }
         } else {
           building.forcedAttackTarget = null
+        }
+      }
+
+      while (!building.forcedAttackTarget && building.forcedAttackQueue.length > 0) {
+        const nextQueuedTarget = building.forcedAttackQueue.shift()
+        if (nextQueuedTarget && (nextQueuedTarget.health === undefined || nextQueuedTarget.health > 0)) {
+          building.forcedAttackTarget = nextQueuedTarget
         }
       }
 
@@ -380,9 +391,12 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
       }      // Regular turret logic
       else {
         const mapGrid = Array.isArray(gameState.mapGrid) ? gameState.mapGrid : []
-        const hasClearLineOfSight = target => (
-          mapGrid.length === 0 || hasLineOfSightToTarget({ x: centerX, y: centerY }, target, mapGrid)
-        )
+        const hasClearLineOfSight = target => {
+          if (building.type === 'rocketTurret' || building.type === 'artilleryTurret') {
+            return true
+          }
+          return mapGrid.length === 0 || hasLineOfSightToTarget({ x: centerX, y: centerY }, target, mapGrid)
+        }
 
         // Check power level for rocket turrets - they don't work when power is below 0
         if (building.type === 'rocketTurret') {
@@ -437,6 +451,9 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
               if (targetDistance < minRange) {
                 if (building.forcedAttackTarget === firingTarget) {
                   building.forcedAttackTarget = null
+                  if (building.forcedAttackQueue.length > 0) {
+                    building.forcedAttackTarget = building.forcedAttackQueue.shift()
+                  }
                 }
                 return
               }
@@ -444,6 +461,9 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
               if (targetDistance > maxRange) {
                 if (building.forcedAttackTarget === firingTarget) {
                   building.forcedAttackTarget = null
+                  if (building.forcedAttackQueue.length > 0) {
+                    building.forcedAttackTarget = building.forcedAttackQueue.shift()
+                  }
                 }
                 return
               }

@@ -15,11 +15,11 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
   }
   selectionManager.clearWreckSelection()
   if (commandableUnits[0].type !== 'factory') {
-    let forceAttackTarget = null
+    let forceAttackTarget = findEnemyTarget(worldX, worldY, handler.gameFactories || [], handler.gameUnits || [])
 
-    if (gameState.buildings && gameState.buildings.length > 0) {
+    if (!forceAttackTarget && gameState.buildings && gameState.buildings.length > 0) {
       for (const building of gameState.buildings) {
-        if (selectionManager.isHumanPlayerBuilding(building)) {
+        if (!selectionManager.isHumanPlayerBuilding(building)) {
           const buildingX = building.x * TILE_SIZE
           const buildingY = building.y * TILE_SIZE
           const buildingWidth = building.width * TILE_SIZE
@@ -38,7 +38,7 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
 
     if (!forceAttackTarget) {
       for (const unit of units) {
-        if (selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
+        if (!selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
           const { centerX, centerY } = getUnitSelectionCenter(unit)
           if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
             forceAttackTarget = unit
@@ -76,7 +76,17 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
       const first = commandableUnits[0]
       if (first.isBuilding) {
         commandableUnits.forEach(b => {
-          b.forcedAttackTarget = forceAttackTarget
+          const currentTarget = b.forcedAttackTarget
+          if (!Array.isArray(b.forcedAttackQueue)) {
+            b.forcedAttackQueue = []
+          }
+
+          const isSameTarget = target => target && forceAttackTarget && target.id === forceAttackTarget.id
+          if (!currentTarget || currentTarget.health <= 0) {
+            b.forcedAttackTarget = forceAttackTarget
+          } else if (!isSameTarget(currentTarget) && !b.forcedAttackQueue.some(isSameTarget)) {
+            b.forcedAttackQueue.push(forceAttackTarget)
+          }
           b.forcedAttack = true
           b.holdFire = false
         })

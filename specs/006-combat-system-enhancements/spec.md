@@ -13,6 +13,8 @@
 - 2026-01-31: Defensive turrets now require clear line-of-sight to targets before firing, matching player and AI behavior.
 - 2026-02-06: Apache helicopters now hold max-range standoff positions in combat, ignore ground-unit pathfinding, and their rockets deal 3x damage to tanker and ammunition trucks.
 - 2026-02-10: Apache helicopters now auto-return to helipads when rockets run dry, force landing alignment on the pad, reload to full before re-engaging the same target, and return to helipad after the target is destroyed.
+- 2026-02-23: Player-commanded defensive buildings now support FIFO forced-target queues; queued targets render the existing red attack triangle with queue numbers while the buildings are selected.
+- 2026-02-23: Fixed forced-target command capture and LOS gating for rocket/artillery turrets so commanded targets are attacked (not aim-only), while turret-gun LOS restrictions remain enforced.
 
 ## User Scenarios & Testing
 
@@ -141,6 +143,8 @@ As a player, I want to see visual indicators showing where my units are moving a
 7. **Given** attack completes or target destroyed, **When** order finishes, **Then** indicator disappears automatically
 8. **Given** unit is reselected, **When** viewing unit, **Then** active order indicators reappear showing current status
 9. **Given** an enemy is hovered outside weapon range, **When** combat units are selected, **Then** the cursor changes to an out-of-range attack cursor
+10. **Given** one or more defensive buildings are selected, **When** the player force-queues enemy targets, **Then** targets are stored and consumed in FIFO order.
+11. **Given** defensive building target queues exist, **When** selected defensive buildings are visible, **Then** queued enemy targets display the red attack triangle with the queue position number.
 
 ### Edge Cases
 
@@ -222,6 +226,9 @@ As a player, I want to see visual indicators showing where my units are moving a
 - **FR-050**: System MUST support both red and green indicators simultaneously during AGF mode
 - **FR-051**: System MUST render indicators above health bars but below other HUD elements
 - **FR-052**: System MUST show a distinct attack cursor when a hovered target is out of range for selected units
+- **FR-060**: System MUST let selected defensive buildings append new forced attack targets to a FIFO queue when additional force-attack orders are issued.
+- **FR-061**: System MUST automatically promote the next queued forced target when the current forced target becomes invalid or out of range.
+- **FR-062**: System MUST render queue order numbers inside the existing red target-indicator triangle for queued forced targets while defensive buildings are selected.
 
 **Integration & Performance:**
 - **FR-053**: System MUST maintain 60fps with 100+ units using all combat enhancements simultaneously
