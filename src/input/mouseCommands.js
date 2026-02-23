@@ -76,7 +76,17 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
       const first = commandableUnits[0]
       if (first.isBuilding) {
         commandableUnits.forEach(b => {
-          b.forcedAttackTarget = forceAttackTarget
+          const currentTarget = b.forcedAttackTarget
+          if (!Array.isArray(b.forcedAttackQueue)) {
+            b.forcedAttackQueue = []
+          }
+
+          const isSameTarget = target => target && forceAttackTarget && target.id === forceAttackTarget.id
+          if (!currentTarget || currentTarget.health <= 0) {
+            b.forcedAttackTarget = forceAttackTarget
+          } else if (!isSameTarget(currentTarget) && !b.forcedAttackQueue.some(isSameTarget)) {
+            b.forcedAttackQueue.push(forceAttackTarget)
+          }
           b.forcedAttack = true
           b.holdFire = false
         })

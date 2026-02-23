@@ -1,4 +1,5 @@
 ## Features
+- [x] Allow selected defense buildings to queue forced attack targets in FIFO order and show numbered red target indicators on queued enemies.
 - [ ] Add `skills.md` OpenAI image generator setup for Codex workflows, including 4 prompt templates (unit sidebar/map + building sidebar/map).
 - [x] Add cheat code `xp [amount]`, `xp +[amount]`, and `xp -[amount]` to set or adjust experience for all selected combat units.
 - [x] Ensure the help modal applies the same style of the cheat modal including a cancel x button on the top right.
