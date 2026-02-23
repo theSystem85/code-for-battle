@@ -1,4 +1,5 @@
 ## Features
+- [x] Extend AGF to selected defensive buildings so box-selected enemy targets are queued (FIFO) and resolve rocket/artillery forced-target no-fire regression by fixing building force-target acquisition.
 - [x] Allow selected defense buildings to queue forced attack targets in FIFO order and show numbered red target indicators on queued enemies.
 - [ ] Add `skills.md` OpenAI image generator setup for Codex workflows, including 4 prompt templates (unit sidebar/map + building sidebar/map).
 - [x] Add cheat code `xp [amount]`, `xp +[amount]`, and `xp -[amount]` to set or adjust experience for all selected combat units.

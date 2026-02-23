@@ -8,6 +8,32 @@ import { isForceAttackModifierActive } from '../utils/inputUtils.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 
+
+function findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManager, gameFactories = []) {
+  let target = findEnemyTarget(worldX, worldY, gameFactories, units)
+  if (target) {
+    return target
+  }
+
+  if (gameState.buildings && gameState.buildings.length > 0) {
+    for (const building of gameState.buildings) {
+      if (!building || building.health <= 0 || selectionManager.isHumanPlayerBuilding(building)) {
+        continue
+      }
+      const buildingX = building.x * TILE_SIZE
+      const buildingY = building.y * TILE_SIZE
+      const buildingWidth = building.width * TILE_SIZE
+      const buildingHeight = building.height * TILE_SIZE
+      if (worldX >= buildingX && worldX < buildingX + buildingWidth && worldY >= buildingY && worldY < buildingY + buildingHeight) {
+        target = building
+        break
+      }
+    }
+  }
+
+  return target
+}
+
 export function handleForceAttackCommand(handler, worldX, worldY, units, selectedUnits, unitCommands, mapGrid, selectionManager) {
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
   if (commandableUnits.length === 0) {
@@ -16,33 +42,38 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
   selectionManager.clearWreckSelection()
   if (commandableUnits[0].type !== 'factory') {
     let forceAttackTarget = null
+    const first = commandableUnits[0]
 
-    if (gameState.buildings && gameState.buildings.length > 0) {
-      for (const building of gameState.buildings) {
-        if (selectionManager.isHumanPlayerBuilding(building)) {
-          const buildingX = building.x * TILE_SIZE
-          const buildingY = building.y * TILE_SIZE
-          const buildingWidth = building.width * TILE_SIZE
-          const buildingHeight = building.height * TILE_SIZE
+    if (first.isBuilding) {
+      forceAttackTarget = findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManager, handler.gameFactories || [])
+    } else {
+      if (gameState.buildings && gameState.buildings.length > 0) {
+        for (const building of gameState.buildings) {
+          if (selectionManager.isHumanPlayerBuilding(building)) {
+            const buildingX = building.x * TILE_SIZE
+            const buildingY = building.y * TILE_SIZE
+            const buildingWidth = building.width * TILE_SIZE
+            const buildingHeight = building.height * TILE_SIZE
 
-          if (worldX >= buildingX &&
-              worldX < buildingX + buildingWidth &&
-              worldY >= buildingY &&
-              worldY < buildingY + buildingHeight) {
-            forceAttackTarget = building
-            break
+            if (worldX >= buildingX &&
+                worldX < buildingX + buildingWidth &&
+                worldY >= buildingY &&
+                worldY < buildingY + buildingHeight) {
+              forceAttackTarget = building
+              break
+            }
           }
         }
       }
-    }
 
-    if (!forceAttackTarget) {
-      for (const unit of units) {
-        if (selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
-          const { centerX, centerY } = getUnitSelectionCenter(unit)
-          if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
-            forceAttackTarget = unit
-            break
+      if (!forceAttackTarget) {
+        for (const unit of units) {
+          if (selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
+            const { centerX, centerY } = getUnitSelectionCenter(unit)
+            if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
+              forceAttackTarget = unit
+              break
+            }
           }
         }
       }
@@ -73,7 +104,6 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
     }
 
     if (forceAttackTarget) {
-      const first = commandableUnits[0]
       if (first.isBuilding) {
         commandableUnits.forEach(b => {
           const currentTarget = b.forcedAttackTarget

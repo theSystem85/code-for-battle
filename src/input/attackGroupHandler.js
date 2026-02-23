@@ -3,6 +3,8 @@ import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { markWaypointsAdded } from '../game/waypointSounds.js'
 
+const DEFENSIVE_BUILDING_TYPES = new Set(['rocketTurret', 'teslaCoil', 'artilleryTurret', 'turretGunV1', 'turretGunV2', 'turretGunV3'])
+
 export class AttackGroupHandler {
   constructor() {
     this.isAttackGroupSelecting = false
@@ -27,6 +29,9 @@ export class AttackGroupHandler {
       unit.owner === gameState.humanPlayer && !unit.isBuilding &&
       unit.type !== 'harvester' && !isServiceVehicle(unit)
     )
+    const hasDefensiveBuildings = hasSelectedUnits && selectedUnits.some(unit =>
+      unit.owner === gameState.humanPlayer && unit.isBuilding && DEFENSIVE_BUILDING_TYPES.has(unit.type)
+    )
     const hasSelectedFactory = hasSelectedUnits && selectedUnits.some(unit =>
       (unit.isBuilding && (unit.type === 'vehicleFactory' || unit.type === 'constructionYard')) ||
       (unit.id && (unit.id === gameState.humanPlayer))
@@ -35,7 +40,7 @@ export class AttackGroupHandler {
                             !gameState.repairMode &&
                             !gameState.sellMode &&
                             !gameState.attackGroupMode
-    return hasSelectedUnits && hasCombatUnits && !hasSelectedFactory && notInSpecialMode
+    return hasSelectedUnits && (hasCombatUnits || hasDefensiveBuildings) && !hasSelectedFactory && notInSpecialMode
   }
 
   handleMouseUp(worldX, worldY, units, selectedUnits, unitCommands, mapGrid, standardCommandFn) {
@@ -140,7 +145,7 @@ export class AttackGroupHandler {
     unitCommands.isAttackGroupOperation = true
 
     const combatUnits = selectedUnits.filter(unit =>
-      unit.type !== 'harvester' && unit.owner === gameState.humanPlayer
+      unit.type !== 'harvester' && unit.owner === gameState.humanPlayer && !unit.isBuilding
     )
 
     combatUnits.forEach((unit) => {
@@ -157,6 +162,50 @@ export class AttackGroupHandler {
     if (combatUnits.length > 0 && combatUnits[0].target) {
       unitCommands.handleAttackCommand(combatUnits, combatUnits[0].target, mapGrid, false)
     }
+
+    const defensiveBuildings = selectedUnits.filter(unit =>
+      unit.owner === gameState.humanPlayer && unit.isBuilding && DEFENSIVE_BUILDING_TYPES.has(unit.type)
+    )
+
+    defensiveBuildings.forEach(building => {
+      if (building.holdFire) {
+        building.holdFire = false
+      }
+      building.forcedAttack = true
+      const liveTargets = enemyTargets.filter(target => target && (target.health === undefined || target.health > 0))
+      if (liveTargets.length === 0) {
+        return
+      }
+
+      const activeTarget = building.forcedAttackTarget
+      const activeTargetLive = Boolean(activeTarget && (activeTarget.health === undefined || activeTarget.health > 0))
+      building.forcedAttackTarget = activeTargetLive ? activeTarget : null
+
+      if (!Array.isArray(building.forcedAttackQueue)) {
+        building.forcedAttackQueue = []
+      }
+
+      const existingIds = new Set()
+      if (building.forcedAttackTarget?.id) {
+        existingIds.add(building.forcedAttackTarget.id)
+      }
+      building.forcedAttackQueue.forEach(target => {
+        if (target?.id) existingIds.add(target.id)
+      })
+
+      liveTargets.forEach(target => {
+        if (!target?.id || existingIds.has(target.id)) {
+          return
+        }
+        if (!building.forcedAttackTarget) {
+          building.forcedAttackTarget = target
+          existingIds.add(target.id)
+          return
+        }
+        building.forcedAttackQueue.push(target)
+        existingIds.add(target.id)
+      })
+    })
 
     unitCommands.isAttackGroupOperation = false
   }

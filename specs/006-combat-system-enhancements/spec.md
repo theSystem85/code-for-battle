@@ -14,6 +14,7 @@
 - 2026-02-06: Apache helicopters now hold max-range standoff positions in combat, ignore ground-unit pathfinding, and their rockets deal 3x damage to tanker and ammunition trucks.
 - 2026-02-10: Apache helicopters now auto-return to helipads when rockets run dry, force landing alignment on the pad, reload to full before re-engaging the same target, and return to helipad after the target is destroyed.
 - 2026-02-23: Player-commanded defensive buildings now support FIFO forced-target queues; queued targets render the existing red attack triangle with queue numbers while the buildings are selected.
+- 2026-02-23: AGF now supports selected defensive buildings by enqueuing boxed enemy targets into forced-target FIFO queues; fixed forced-target assignment bug that made rocket/artillery turrets aim without firing when force-attacking enemies.
 
 ## User Scenarios & Testing
 
@@ -144,6 +145,7 @@ As a player, I want to see visual indicators showing where my units are moving a
 9. **Given** an enemy is hovered outside weapon range, **When** combat units are selected, **Then** the cursor changes to an out-of-range attack cursor
 10. **Given** one or more defensive buildings are selected, **When** the player force-queues enemy targets, **Then** targets are stored and consumed in FIFO order.
 11. **Given** defensive building target queues exist, **When** selected defensive buildings are visible, **Then** queued enemy targets display the red attack triangle with the queue position number.
+12. **Given** defensive buildings are selected, **When** the player uses AGF box selection over enemies, **Then** those enemies are queued as forced targets in FIFO order for each selected defensive building.
 
 ### Edge Cases
 
@@ -228,6 +230,8 @@ As a player, I want to see visual indicators showing where my units are moving a
 - **FR-060**: System MUST let selected defensive buildings append new forced attack targets to a FIFO queue when additional force-attack orders are issued.
 - **FR-061**: System MUST automatically promote the next queued forced target when the current forced target becomes invalid or out of range.
 - **FR-062**: System MUST render queue order numbers inside the existing red target-indicator triangle for queued forced targets while defensive buildings are selected.
+- **FR-063**: System MUST include selected defensive buildings in AGF box-attack commands and enqueue selected enemy targets into each building's forced-target FIFO queue without duplicating already-queued targets.
+- **FR-064**: System MUST resolve force-attack target selection for defensive buildings against enemy objects (units/buildings/factories) before falling back to ground targets.
 
 **Integration & Performance:**
 - **FR-053**: System MUST maintain 60fps with 100+ units using all combat enhancements simultaneously
