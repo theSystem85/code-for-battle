@@ -1,4 +1,5 @@
 ## Bugs
+- [x] ✅ Clarify tank-v2 alert visuals: keep only the larger ring (TANK_FIRE_RANGE) and remove the inner tile circle.
 - [x] ✅ Remove inner red range circle from `tank-v2` alert mode; keep utility-unit alert discovery rings unchanged.
 - [x] Follow-up: ensure PWA mobile landscape notification bell is always pinned top-left (including wider landscape viewports) and portrait standalone canvas/safe-area bottom fill is correct on first load without rotation.
 - [x] Ensure mobile landscape initial load always shows the sidebar (condensed/open), sync safe-area insets on first paint so iOS portrait bottom inset fills without device rotation, and pin the landscape notification bell to top-left to avoid sidebar overlap.
