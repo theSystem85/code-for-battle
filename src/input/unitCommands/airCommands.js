@@ -7,7 +7,7 @@ import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUn
 import { units } from '../../main.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
-  if (!unit || unit.type !== 'apache' || !destCenter) {
+  if (!unit || (unit.type !== 'apache' && unit.type !== 'f22') || !destCenter) {
     return false
   }
 
@@ -52,8 +52,8 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
 }
 
 export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _mapGrid) {
-  const apaches = selectedUnits.filter(unit => unit.type === 'apache')
-  if (apaches.length === 0 || !helipad) {
+  const airUnits = selectedUnits.filter(unit => unit.type === 'apache' || unit.type === 'f22')
+  if (airUnits.length === 0 || !helipad) {
     return
   }
 
@@ -86,7 +86,7 @@ export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _map
 
   const blockedUnits = []
   const assignedHelipadIds = new Set()
-  apaches.forEach(unit => {
+  airUnits.forEach(unit => {
     const option = helipadOptions.find(candidate => {
       if (!candidate.helipadId || assignedHelipadIds.has(candidate.helipadId)) {
         return false
@@ -111,7 +111,7 @@ export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _map
     }
   })
 
-  if (blockedUnits.length === apaches.length) {
+  if (blockedUnits.length === airUnits.length) {
     showNotification('No available helipads for landing!', 2000)
     return
   }
@@ -120,7 +120,7 @@ export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _map
     showNotification('Some helipads are occupied; only available pads assigned.', 2000)
   }
 
-  const avgX = apaches.reduce((sum, u) => sum + u.x, 0) / apaches.length
-  const avgY = apaches.reduce((sum, u) => sum + u.y, 0) / apaches.length
+  const avgX = airUnits.reduce((sum, u) => sum + u.x, 0) / airUnits.length
+  const avgY = airUnits.reduce((sum, u) => sum + u.y, 0) / airUnits.length
   playPositionalSound('movement', avgX, avgY, 0.5)
 }

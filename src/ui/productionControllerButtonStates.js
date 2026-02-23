@@ -90,6 +90,14 @@ export function updateVehicleButtonStates(controller) {
         button.classList.add('disabled')
         button.title = 'Requires Helipad'
       }
+    } else if (unitType === 'f22') {
+      if (hasHelipad && hasRadar) {
+        button.classList.remove('disabled')
+        button.title = ''
+      } else {
+        button.classList.add('disabled')
+        button.title = 'Requires Helipad & Radar Station'
+      }
     } else if (unitType === 'mineLayer') {
       if (hasVehicleFactory && hasWorkshop && hasAmmunitionFactory) {
         button.classList.remove('disabled')

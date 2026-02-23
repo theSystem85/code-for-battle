@@ -703,8 +703,10 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   let spawnPosition = null
   let worldPositionOverride = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
+  const isHelipadF22 = factory.type === 'helipad' && type === 'f22'
+  const isHelipadAirUnit = isHelipadApache || isHelipadF22
 
-  if (isHelipadApache) {
+  if (isHelipadAirUnit) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
     const landingTile = getHelipadLandingTile(factory)
     if (landingTopLeft && landingTile) {
@@ -753,7 +755,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     : options
 
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
-  if (occupancyMap && !isHelipadApache) {
+  if (occupancyMap && !isHelipadAirUnit) {
     // Use center coordinates for occupancy map consistency
     const centerTileX = Math.floor((newUnit.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -766,7 +768,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     }
   }
 
-  if (isHelipadApache) {
+  if (isHelipadAirUnit) {
     const helipadId = getBuildingIdentifier(factory)
     newUnit.flightPlan = null
     newUnit.autoHoldAltitude = false
@@ -781,7 +783,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     newUnit.groundedOccupancyApplied = false
     // Clear any path or moveTarget to prevent immediate takeoff
     // This is a defensive measure - even though rally point logic is skipped,
-    // we explicitly clear these to ensure the helicopter stays grounded
+    // we explicitly clear these to ensure the aircraft stays grounded
     newUnit.path = []
     newUnit.moveTarget = null
     if (newUnit.movement) {
@@ -808,6 +810,11 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
       newUnit.apacheAmmoEmpty = false
       newUnit.canFire = true
     }
+    if (typeof newUnit.maxMissileAmmo === 'number') {
+      newUnit.missileAmmo = newUnit.maxMissileAmmo
+      newUnit.missileAmmoEmpty = false
+      newUnit.canFire = true
+    }
     if (typeof newUnit.maxGas === 'number') {
       newUnit.gas = newUnit.maxGas
       newUnit.outOfGasPlayed = false
@@ -826,8 +833,8 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   // If a rally point target was provided (from the specific spawning factory), set the unit's path to it.
   // This allows each factory to have its own individual assembly point.
   // Harvesters handle their own initial path logic in productionQueue.js
-  // Apache helicopters spawned on helipads should not immediately move to rally points - they should stay landed
-  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache) {
+  // Air units spawned on helipads should not immediately move to rally points - they should stay grounded
+  if (rallyPointTarget && type !== 'harvester' && !isHelipadAirUnit) {
     const path = findPath(
       { x: spawnPosition.x, y: spawnPosition.y },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
@@ -969,8 +976,8 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer']
   const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank']
 
-  // Apache helicopters don't have crew system
-  if (actualType !== 'apache') {
+  // Apache helicopters and F22 don't have crew system
+  if (actualType !== 'apache' && actualType !== 'f22') {
     unit.crew = { driver: true, commander: true }
 
     if (fullCrewTanks.includes(actualType)) {
@@ -1032,6 +1039,37 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.landedHelipadId = null
     unit.maxRocketAmmo = 38
     unit.rocketAmmo = unit.maxRocketAmmo
+  }
+
+  if (actualType === 'f22') {
+    unit.isAirUnit = true
+    unit.flightState = 'grounded'
+    unit.altitude = 0
+    unit.targetAltitude = 0
+    unit.maxAltitude = TILE_SIZE * 6
+    unit.airCruiseSpeed = unitProps.speed
+    unit.autoHoldAltitude = false
+    unit.flightPlan = null
+    unit.shadow = {
+      offset: 0,
+      scale: 1
+    }
+    unit.groundedOccupancyApplied = false
+    unit.lastGroundedOnHelipad = false
+    unit.airborneSince = null
+    const f22Now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+    unit.landedSince = f22Now
+    unit.attackCooldown = 0
+    unit.fuelSource = null
+    unit.requiresHelipad = true
+    unit.manualFlightState = 'auto'
+    unit.helipadLandingRequested = false
+    unit.helipadTargetId = null
+    unit.landedHelipadId = null
+    unit.maxMissileAmmo = 6
+    unit.missileAmmo = unit.maxMissileAmmo
+    unit.missileAmmoEmpty = false
+    unit.canFire = true
   }
 
   if (actualType === 'ambulance') {

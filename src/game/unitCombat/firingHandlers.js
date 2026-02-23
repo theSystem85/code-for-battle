@@ -24,7 +24,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
   }
 
   // Check ammunition availability
-  const ammoField = unit.type === 'apache' ? 'rocketAmmo' : 'ammunition'
+  const ammoField = unit.type === 'apache' ? 'rocketAmmo' : unit.type === 'f22' ? 'missileAmmo' : 'ammunition'
   const ammoValue = unit[ammoField]
   if (typeof ammoValue === 'number' && ammoValue <= 0) {
     // Unit has no ammunition, cannot fire
@@ -42,15 +42,15 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
   if (!unit.lastShotTime || now - unit.lastShotTime >= fireRate) {
     // Check if turret is properly aimed at the target before firing
-    const clearShot = (unit.type === 'apache' || unit.type === 'rocketTank')
+    const clearShot = (unit.type === 'apache' || unit.type === 'rocketTank' || unit.type === 'f22')
       ? true
       : (clearShotOverride ?? hasClearShot(unit, target, units, mapGrid))
-    const turretAimed = unit.type === 'apache' ? true : isTurretAimedAtTarget(unit, target)
+    const turretAimed = (unit.type === 'apache' || unit.type === 'f22') ? true : isTurretAimedAtTarget(unit, target)
     if (unit.canFire !== false && clearShot && turretAimed) {
-      const targetIsAirborneApache = target && target.type === 'apache' && target.flightState !== 'grounded'
+      const targetIsAirborneApache = target && target.isAirUnit && target.flightState !== 'grounded'
       const shooterCanHitAir =
         unit.type === 'rocketTank' ||
-        unit.type === 'apache' ||
+        unit.isAirUnit ||
         unit.type === 'rocketTurret' ||
         unit.type === 'teslaCoil'
       if (targetIsAirborneApache && !shooterCanHitAir) {
@@ -93,9 +93,12 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
       const isRocketTankRocket = projectileType === 'rocket' && unit.type === 'rocketTank'
       const isApacheRocket = projectileType === 'rocket' && unit.type === 'apache'
+      const isF22Missile = projectileType === 'rocket' && unit.type === 'f22'
       const bulletSpeed = isRocketTankRocket
         ? 6
-        : (projectileType === 'rocket' ? (isApacheRocket ? 5 : 3) : TANK_BULLET_SPEED)
+        : isF22Missile
+          ? 7
+          : (projectileType === 'rocket' ? (isApacheRocket ? 5 : 3) : TANK_BULLET_SPEED)
 
       let rocketSpawn = null
       if (isRocketTankRocket) {
@@ -168,14 +171,16 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
       bullets.push(bullet)
 
-      // Deplete ammunition when firing (skip Apache - handled in handleApacheVolley)
-      if (unit.type !== 'apache') {
+      // Deplete ammunition when firing (skip Apache - handled in handleApacheVolley; skip F22 - handled in f22Combat)
+      if (unit.type !== 'apache' && unit.type !== 'f22') {
         if (typeof unit.ammunition === 'number') {
           // Rocket tanks fire 1 rocket at a time in burst, so deplete by 1
           // Other units use ammoPerShot
           const ammoToUse = unit.type === 'rocketTank' ? 1 : (unit.ammoPerShot || 1)
           unit.ammunition = Math.max(0, unit.ammunition - ammoToUse)
         }
+      } else if (unit.type === 'f22') {
+        unit.missileAmmo = Math.max(0, (unit.missileAmmo || 0) - 1)
       }
 
       const soundName = projectileType === 'rocket' ? 'shoot_rocket' : 'shoot'
@@ -187,12 +192,14 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
       unit.recoilStartTime = now
       unit.muzzleFlashStartTime = now
 
-      if (isApacheRocket && unit.customRocketSpawn) {
+      if ((isApacheRocket || isF22Missile) && unit.customRocketSpawn) {
         delete unit.customRocketSpawn
       }
       if (isApacheRocket) {
         bullet.originType = 'apacheRocket'
         bullet.apacheTargetId = target ? target.id : null
+      } else if (isF22Missile) {
+        bullet.originType = 'f22Missile'
       }
 
       return true

@@ -13,6 +13,7 @@ import { renderAmmunitionTruckWithImage, isAmmunitionTruckImageLoaded } from './
 import { renderMineLayerWithImage, isMineLayerImageLoaded } from './mineLayerImageRenderer.js'
 import { renderMineSweeperWithImage, isMineSweeperImageLoaded } from './mineSweeperImageRenderer.js'
 import { renderApacheWithImage } from './apacheImageRenderer.js'
+import { renderF22WithImage } from './f22ImageRenderer.js'
 import { getExperienceProgress, initializeUnitLeveling, getBuildingIdentifier } from '../utils.js'
 
 export class UnitRenderer {
@@ -42,6 +43,16 @@ export class UnitRenderer {
         this.renderAlertMode(ctx, unit, centerX, adjustedCenterY)
         return
       }
+    }
+
+    if (unit.type === 'f22') {
+      const altitudeLift = (unit.altitude || 0) * 0.4
+      const adjustedCenterY = centerY - altitudeLift
+      renderF22WithImage(ctx, unit, centerX, adjustedCenterY)
+      this.renderUtilityServiceRange(ctx, unit, centerX, adjustedCenterY)
+      this.renderSelection(ctx, unit, centerX, adjustedCenterY)
+      this.renderAlertMode(ctx, unit, centerX, adjustedCenterY)
+      return
     }
 
     // Use consistent colors for unit types regardless of owner
@@ -287,7 +298,7 @@ export class UnitRenderer {
   }
 
   getHudCenter(unit, scrollOffset) {
-    const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     return { centerX, centerY, altitudeLift }
@@ -483,7 +494,7 @@ export class UnitRenderer {
   getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY) {
     if (!unit?.selected || unit.health <= 0) return null
 
-    const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     const hudBounds = this.getSelectedHudBounds(centerX, centerY)
@@ -743,7 +754,7 @@ export class UnitRenderer {
     }
 
     // Apply altitude adjustment for Apache helicopters to align with selection markers
-    const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
 
     // Draw health bar with party colors for owner distinction
     const unitHealthRatio = unit.health / unit.maxHealth
@@ -841,7 +852,7 @@ export class UnitRenderer {
 
     if (shouldShowBar) {
       if (unit.selected && !this.isLegacySelectionHud()) {
-        const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+        const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
         const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
         const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
         const hudBounds = this.getSelectedHudBounds(centerX, centerY)
@@ -851,7 +862,7 @@ export class UnitRenderer {
       }
 
       // Apply altitude adjustment for Apache helicopters to align with health bar
-      const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+      const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
 
       const progressBarWidth = TILE_SIZE * 0.8
       const progressBarHeight = unit.selected ? this.getSelectionHudBarThickness() : 3
@@ -879,7 +890,7 @@ export class UnitRenderer {
     const ratio = unit.gas / unit.maxGas
 
     // Apply altitude adjustment for Apache helicopters to align with selection
-    const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
@@ -956,6 +967,11 @@ export class UnitRenderer {
         ratio = Math.max(0, Math.min(1, (unit.rocketAmmo ?? 0) / unit.maxRocketAmmo))
         hasAmmo = true
       }
+    } else if (unit.type === 'f22') {
+      if (typeof unit.maxMissileAmmo === 'number') {
+        ratio = Math.max(0, Math.min(1, (unit.missileAmmo ?? 0) / unit.maxMissileAmmo))
+        hasAmmo = true
+      }
     } else if (typeof unit.maxAmmunition === 'number') {
       // Regular units
       ratio = unit.ammunition / unit.maxAmmunition
@@ -969,7 +985,7 @@ export class UnitRenderer {
     if (!hasAmmo) return
 
     // Apply altitude adjustment for Apache helicopters to align with selection
-    const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
 
@@ -1370,7 +1386,7 @@ export class UnitRenderer {
 
     initializeUnitLeveling(unit)
 
-    const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = (unit.isAirUnit && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     const hudBounds = this.getSelectedHudBounds(centerX, centerY)
@@ -1542,6 +1558,17 @@ export class UnitRenderer {
         this.renderAlertMode(ctx, unit, centerX, adjustedCenterY)
         return
       }
+    }
+
+    // Handle F22 Raptor (always uses image rendering)
+    if (unit.type === 'f22') {
+      const altitudeLift = (unit.altitude || 0) * 0.4
+      const adjustedCenterY = centerY - altitudeLift
+      renderF22WithImage(ctx, unit, centerX, adjustedCenterY)
+      this.renderUtilityServiceRange(ctx, unit, centerX, adjustedCenterY)
+      this.renderSelection(ctx, unit, centerX, adjustedCenterY)
+      this.renderAlertMode(ctx, unit, centerX, adjustedCenterY)
+      return
     }
 
     // Original rendering method (for non-tanks or when image rendering is disabled/failed)

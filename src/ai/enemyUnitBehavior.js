@@ -438,8 +438,8 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
                 units.forEach(u => {
                   if (u.owner === gameState.humanPlayer && u.health > 0) {
                     // Check if target is an airborne Apache - only certain units can target them
-                    const targetIsAirborneApache = u.type === 'apache' && u.flightState !== 'grounded'
-                    const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache'
+                    const targetIsAirborneApache = u.isAirUnit && u.flightState !== 'grounded'
+                    const shooterCanHitAir = unit.type === 'rocketTank' || unit.isAirUnit
 
                     // Skip airborne Apache if this unit can't target air units
                     if (targetIsAirborneApache && !shooterCanHitAir) {
@@ -507,8 +507,8 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
                   }
 
                   // Check if target is an airborne Apache - only certain units can target them
-                  const targetIsAirborneApache = u.type === 'apache' && u.flightState !== 'grounded'
-                  const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache'
+                  const targetIsAirborneApache = u.isAirUnit && u.flightState !== 'grounded'
+                  const shooterCanHitAir = unit.type === 'rocketTank' || unit.isAirUnit
 
                   // Skip airborne Apache if this unit can't target air units
                   if (targetIsAirborneApache && !shooterCanHitAir) {

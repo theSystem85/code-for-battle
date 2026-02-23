@@ -200,6 +200,9 @@ export function syncTechTreeWithBuildings(controller) {
     controller.forceUnlockUnitType('apache')
   }
 
+  if (hasHelipad && hasRadar) {
+    controller.forceUnlockUnitType('f22')
+  }
   if (factoryCount >= 2) {
     controller.forceUnlockUnitType('tank-v3')
   }

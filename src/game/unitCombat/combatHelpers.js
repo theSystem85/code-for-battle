@@ -150,7 +150,7 @@ export function handleTankMovement(unit, target, now, occupancyMap, chaseThresho
       targetCenterX = target.x + TILE_SIZE / 2
       targetCenterY = target.y + TILE_SIZE / 2
       // Adjust for Apache altitude visual offset
-      if (target.type === 'apache' && target.altitude) {
+      if ((target.isAirUnit || target.type === 'apache') && target.altitude) {
         targetCenterY -= target.altitude * 0.4
       }
     } else {
@@ -173,7 +173,7 @@ export function handleTankMovement(unit, target, now, occupancyMap, chaseThresho
     targetCenterX = target.x + TILE_SIZE / 2
     targetCenterY = target.y + TILE_SIZE / 2
     // Adjust for Apache altitude visual offset
-    if (target.type === 'apache' && target.altitude) {
+    if ((target.isAirUnit || target.type === 'apache') && target.altitude) {
       targetCenterY -= target.altitude * 0.4
     }
   } else {
@@ -251,6 +251,9 @@ export function getEffectiveFireRange(unit) {
 
   if (unit.type === 'apache') {
     baseRange *= APACHE_RANGE_REDUCTION
+  } else if (unit.type === 'f22') {
+    // F22 has longer range than Apache (1.5x tank range)
+    baseRange *= 1.5
   }
 
   if (unit.level >= 1) {

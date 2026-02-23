@@ -123,14 +123,14 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
 
     if (Array.isArray(units)) {
 
-      const apacheUnits = units.filter(u => u.type === 'apache' && u.health > 0)
+      const airUnits = units.filter(u => (u.type === 'apache' || u.type === 'f22') && u.health > 0)
       if (helipad.landedUnitId) {
-        const occupant = apacheUnits.find(u => u.id === helipad.landedUnitId)
+        const occupant = airUnits.find(u => u.id === helipad.landedUnitId)
         if (!occupant || occupant.landedHelipadId !== helipadId || occupant.flightState !== 'grounded') {
           helipad.landedUnitId = null
         }
       }
-      apacheUnits.forEach(heli => {
+      airUnits.forEach(heli => {
         const heliCenterX = heli.x + TILE_SIZE / 2
         const heliCenterY = heli.y + TILE_SIZE / 2
         const distance = Math.hypot(heliCenterX - helipadCenterX, heliCenterY - helipadCenterY)
@@ -216,6 +216,22 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               }
             }
 
+            if (typeof heli.maxMissileAmmo === 'number' && heli.missileAmmo < heli.maxMissileAmmo) {
+              if (helipad.ammo > 0) {
+                const ammoNeeded = heli.maxMissileAmmo - heli.missileAmmo
+                const ammoRefillTime = 12000
+                const ammoRefillRate = heli.maxMissileAmmo / ammoRefillTime
+                const ammoToTransfer = Math.min(ammoRefillRate * delta, ammoNeeded, helipad.ammo)
+                if (ammoToTransfer > 0) {
+                  heli.missileAmmo += ammoToTransfer
+                  helipad.ammo -= ammoToTransfer
+                }
+                if (heli.missileAmmo > 0) {
+                  heli.missileAmmoEmpty = false
+                }
+              }
+            }
+
             if (typeof heli.maxGas === 'number' && heli.gas < heli.maxGas && helipad.fuel > 0) {
               const refuelRate = heli.maxGas / 4000
               const transfer = Math.min(refuelRate * delta, heli.maxGas - heli.gas, helipad.fuel)
@@ -231,7 +247,10 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
             }
 
             const hasAmmoCapacity = typeof heli.maxRocketAmmo === 'number' && heli.maxRocketAmmo > 0
-            const ammoFull = !hasAmmoCapacity || heli.rocketAmmo >= heli.maxRocketAmmo
+            const rocketAmmoFull = !hasAmmoCapacity || heli.rocketAmmo >= heli.maxRocketAmmo
+            const hasMissileCapacity = typeof heli.maxMissileAmmo === 'number' && heli.maxMissileAmmo > 0
+            const missileAmmoFull = !hasMissileCapacity || heli.missileAmmo >= heli.maxMissileAmmo
+            const ammoFull = rocketAmmoFull && missileAmmoFull
             const hasStoredAttackTarget = Boolean(heli.autoHelipadReturnAttackTargetId)
             const shouldAutoTakeoff = heli.autoHelipadReturnActive && ammoFull && hasStoredAttackTarget
 
@@ -244,6 +263,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               heli.autoHelipadReturnTargetId = null
               helipad.landedUnitId = null
               heli.landedHelipadId = null
+              if (typeof heli.missileAmmo === 'number') heli.missileAmmoEmpty = false
             } else {
               if (heli.autoHelipadReturnActive) {
                 heli.canFire = false

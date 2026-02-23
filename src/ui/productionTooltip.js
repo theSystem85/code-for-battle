@@ -23,6 +23,7 @@ const unitDisplayNames = {
   ammunitionTruck: 'Ammunition Truck',
   recoveryTank: 'Recovery Tank',
   apache: 'Apache',
+  f22: 'F22 Raptor',
   mineLayer: 'Mine Layer',
   mineSweeper: 'Mine Sweeper'
 }
@@ -35,7 +36,7 @@ const buildingDescriptions = {
   constructionYard: 'Constructs new buildings and expands your base footprint.',
   radarStation: 'Extends battlefield intel and enables advanced tech.',
   hospital: 'Restores crew for damaged vehicles and supports medics.',
-  helipad: 'Hosts and resupplies Apache helicopters with fuel and ammo.',
+  helipad: 'Hosts and resupplies Apache helicopters and F22 Raptors with fuel and ammo.',
   gasStation: 'Refuels vehicles that require gas to operate.',
   ammunitionFactory: 'Reloads ammunition trucks and nearby ammo reserves.',
   turretGunV1: 'Basic defense turret that suppresses nearby threats.',

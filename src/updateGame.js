@@ -240,7 +240,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
             if (vehicleUnitTypes.includes(unitType)) {
               spawnFactory = gameState.buildings.find(b => b.type === 'vehicleFactory' && b.owner === partyId)
-            } else if (unitType === 'apache') {
+            } else if (unitType === 'apache' || unitType === 'f22') {
               spawnFactory = gameState.buildings.find(b => b.type === 'helipad' && b.owner === partyId)
             }
           }

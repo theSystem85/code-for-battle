@@ -4,6 +4,7 @@ import { gameState } from '../gameState.js'
 import { handleTeslaEffects, processAttackQueue, updateGuardTargeting } from './unitCombat/combatState.js'
 import { updateTankCombat, updateTankV2Combat, updateTankV3Combat, updateRocketTankCombat } from './unitCombat/tankCombat.js'
 import { updateApacheCombat } from './unitCombat/apacheCombat.js'
+import { updateF22Combat } from './unitCombat/f22Combat.js'
 import { updateHowitzerCombat } from './unitCombat/howitzerCombat.js'
 
 /**
@@ -46,6 +47,8 @@ export const updateUnitCombat = logPerformance(function updateUnitCombat(units, 
       updateRocketTankCombat(unit, units, bullets, mapGrid, now, occupancyMap)
     } else if (unit.type === 'apache') {
       updateApacheCombat(unit, units, bullets, mapGrid, now, occupancyMap)
+    } else if (unit.type === 'f22') {
+      updateF22Combat(unit, units, bullets, mapGrid, now, occupancyMap)
     } else if (unit.type === 'howitzer') {
       updateHowitzerCombat(unit, units, bullets, mapGrid, now, occupancyMap)
     }

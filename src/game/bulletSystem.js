@@ -128,7 +128,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             targetX = bullet.target.x + TILE_SIZE / 2
             targetY = bullet.target.y + TILE_SIZE / 2
             // Adjust for Apache altitude visual offset
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
+            if (bullet.target.isAirUnit && bullet.target.altitude) {
               targetY -= bullet.target.altitude * 0.4
             }
           }
@@ -262,7 +262,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // For Apache helicopters, adjust target Y to account for altitude visual offset
             // The Apache visual is rendered at y - (altitude * 0.4), so we need to aim higher
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
+            if (bullet.target.isAirUnit && bullet.target.altitude) {
               const altitudeLift = bullet.target.altitude * 0.4
               targetCenterY_pixels -= altitudeLift
             }
@@ -428,7 +428,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           const baseDamage = bullet.baseDamage * 0.9
 
           const targetIsAirborneApache =
-            apacheTargetUnit && apacheTargetUnit.type === 'apache' && apacheTargetUnit.flightState !== 'grounded'
+            apacheTargetUnit && (apacheTargetUnit.isAirUnit || apacheTargetUnit.type === 'apache') && apacheTargetUnit.flightState !== 'grounded'
 
           if (targetIsAirborneApache) {
             let directDamage = Math.round(baseDamage)
@@ -546,7 +546,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             // Unit target
             targetX = bullet.target.x + TILE_SIZE / 2
             targetY = bullet.target.y + TILE_SIZE / 2
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
+            if (bullet.target.isAirUnit && bullet.target.altitude) {
               targetY -= bullet.target.altitude * 0.4
             }
           }
@@ -605,7 +605,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             continue
           }
           if (unit.health > 0 && checkUnitCollision(bullet, unit)) {
-            if (unit.type === 'apache') {
+            if ((unit.isAirUnit || unit.type === 'apache') && unit.flightState !== 'grounded') {
               const shooterType = bullet.shooter?.type || ''
               const allowedShooters = ['rocketTank', 'rocketTurret', 'teslaCoil']
               if (!allowedShooters.includes(shooterType)) {
@@ -1054,8 +1054,8 @@ export function fireBullet(unit, target, bullets, now) {
   if (target.tileX !== undefined) {
     targetCenterX = target.x + TILE_SIZE / 2
     targetCenterY = target.y + TILE_SIZE / 2
-    // Adjust for Apache altitude visual offset
-    if (target.type === 'apache' && target.altitude) {
+    // Adjust for air unit altitude visual offset
+    if ((target.isAirUnit || target.type === 'apache') && target.altitude) {
       targetCenterY -= target.altitude * 0.4
     }
   } else {
@@ -1166,6 +1166,37 @@ export function fireBullet(unit, target, bullets, now) {
       startY: spawn.y,
       projectileType: 'rocket',
       originType: 'apacheRocket'
+    }
+
+    bullet.vx = (dx / distance) * speed
+    bullet.vy = (dy / distance) * speed
+  } else if (unit.type === 'f22') {
+    const spawnX = unit.customRocketSpawn?.x ?? unitCenterX
+    const spawnY = (unit.customRocketSpawn?.y ?? unitCenterY) - (unit.altitude ? unit.altitude * 0.4 : 0)
+    const dx = targetCenterX - spawnX
+    const dy = targetCenterY - spawnY
+    const distance = Math.hypot(dx, dy) || 1
+    const speed = 7
+
+    bullet = {
+      id: Date.now() + gameRandom(),
+      x: spawnX,
+      y: spawnY,
+      speed,
+      baseDamage: 50,
+      active: true,
+      shooter: unit,
+      homing: false,
+      target: null,
+      targetPosition: { x: targetCenterX, y: targetCenterY },
+      explosionRadius: TILE_SIZE * 2.5,
+      skipCollisionChecks: true,
+      maxFlightTime: 4000,
+      creationTime: now,
+      startX: spawnX,
+      startY: spawnY,
+      projectileType: 'rocket',
+      originType: 'f22Missile'
     }
 
     bullet.vx = (dx / distance) * speed

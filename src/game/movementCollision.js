@@ -280,7 +280,7 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
       }
 
       if (tile.building) {
-        if (unit.type === 'apache' && tile.building.type === 'helipad') {
+        if ((unit.type === 'apache' || unit.type === 'f22') && tile.building.type === 'helipad') {
           return { collided: false }
         }
         return {

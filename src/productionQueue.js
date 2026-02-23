@@ -15,7 +15,7 @@ import { gameRandom } from './utils/gameRandom.js'
 // Ambulance should spawn from the vehicle factory as well
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
 
-const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache']
+const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22']
 
 // Enhanced production queue system
 export const productionQueue = {
@@ -411,6 +411,42 @@ export const productionQueue = {
       if (allHelipads.length === 0) {
         console.error('Cannot spawn apache: No Helipad found.')
         showNotification('Production cancelled: Apache requires an operational Helipad.')
+        this.currentUnit.button.classList.remove('active', 'paused')
+        this.currentUnit = null
+        this.startNextUnitProduction()
+        return
+      }
+
+      const availableHelipads = allHelipads.filter(h => !h.landedUnitId)
+      const selectionPool = availableHelipads.length > 0 ? availableHelipads : allHelipads
+
+      gameState.nextHelipadIndex = gameState.nextHelipadIndex ?? 0
+      const chosenIndex = gameState.nextHelipadIndex % selectionPool.length
+      spawnFactory = selectionPool[chosenIndex]
+      gameState.nextHelipadIndex = (gameState.nextHelipadIndex + 1) % selectionPool.length
+
+      if (!availableHelipads.length && spawnFactory.landedUnitId) {
+        const occupyingUnit = units.find(u => u && u.id === spawnFactory.landedUnitId)
+        if (occupyingUnit) {
+          occupyingUnit.manualFlightState = 'takeoff'
+          occupyingUnit.helipadLandingRequested = false
+          occupyingUnit.helipadTargetId = null
+          occupyingUnit.landedHelipadId = null
+        }
+        spawnFactory.landedUnitId = null
+      }
+
+      if (!rallyPointTarget && spawnFactory.rallyPoint) {
+        rallyPointTarget = spawnFactory.rallyPoint
+      }
+    } else if (unitType === 'f22') {
+      const allHelipads = (gameState.buildings || []).filter(
+        b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0
+      )
+
+      if (allHelipads.length === 0) {
+        console.error('Cannot spawn f22: No Helipad found.')
+        showNotification('Production cancelled: F22 Raptor requires an operational Helipad.')
         this.currentUnit.button.classList.remove('active', 'paused')
         this.currentUnit = null
         this.startNextUnitProduction()

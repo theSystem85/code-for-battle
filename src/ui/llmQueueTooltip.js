@@ -37,6 +37,7 @@ const unitSidebarImages = {
   ammunitionTruck: 'images/sidebar/ammunition_truck_sidebar.webp',
   recoveryTank: 'images/sidebar/recovery_tank.webp',
   apache: 'images/sidebar/apache_sidebar.webp',
+  f22: 'images/sidebar/f22_raptor_sidebar.webp',
   howitzer: 'images/sidebar/howitzer_sidebar.webp',
   mineLayer: 'images/sidebar/mine_layer_sidebar.webp',
   mineSweeper: 'images/sidebar/mine_sweeper_sidebar.webp'

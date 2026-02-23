@@ -308,11 +308,11 @@ export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
       if (u.type === 'ammunitionTruck' || u.health <= 0) return
 
       // Check for units with ammunition system (maxAmmunition or maxRocketAmmo)
-      const hasAmmoSystem = typeof u.maxAmmunition === 'number' || typeof u.maxRocketAmmo === 'number'
+      const hasAmmoSystem = typeof u.maxAmmunition === 'number' || typeof u.maxRocketAmmo === 'number' || typeof u.maxMissileAmmo === 'number'
       if (!hasAmmoSystem) return
 
-      const maxAmmo = u.type === 'apache' ? u.maxRocketAmmo : u.maxAmmunition
-      const currentAmmo = u.type === 'apache' ? u.rocketAmmo : u.ammunition
+      const maxAmmo = u.type === 'apache' ? u.maxRocketAmmo : u.type === 'f22' ? u.maxMissileAmmo : u.maxAmmunition
+      const currentAmmo = u.type === 'apache' ? u.rocketAmmo : u.type === 'f22' ? u.missileAmmo : u.ammunition
 
       if (currentAmmo <= 0) {
         criticalUnits.push(u)
@@ -466,11 +466,11 @@ export function manageAIAmmunitionMonitoring(units, gameState, mapGrid) {
 
     aiUnits.forEach(unit => {
       // Skip units without ammunition system
-      const hasAmmoSystem = typeof unit.maxAmmunition === 'number' || typeof unit.maxRocketAmmo === 'number'
+      const hasAmmoSystem = typeof unit.maxAmmunition === 'number' || typeof unit.maxRocketAmmo === 'number' || typeof unit.maxMissileAmmo === 'number'
       if (!hasAmmoSystem || unit.type === 'ammunitionTruck') return
 
-      const maxAmmo = unit.type === 'apache' ? unit.maxRocketAmmo : unit.maxAmmunition
-      const currentAmmo = unit.type === 'apache' ? unit.rocketAmmo : unit.ammunition
+      const maxAmmo = unit.type === 'apache' ? unit.maxRocketAmmo : unit.type === 'f22' ? unit.maxMissileAmmo : unit.maxAmmunition
+      const currentAmmo = unit.type === 'apache' ? unit.rocketAmmo : unit.type === 'f22' ? unit.missileAmmo : unit.ammunition
       const ammoPercentage = currentAmmo / maxAmmo
 
       // FR-033: Retreat logic when ammunition falls below 20%
