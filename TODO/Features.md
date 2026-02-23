@@ -269,3 +269,5 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
   - [x] Combat mechanics with hit zone multipliers (front/side/rear) and projectile details
   - [x] Full keyboard reference table with contexts
   - [x] Building placement rules and sidebar interaction tips (drag, hold, shift+scroll, chain build)
+- [x] Add a unit under-attack notification for player-owned units that includes a clickable unit type link; clicking it smoothly focuses the camera on that unit and selects it.
+
