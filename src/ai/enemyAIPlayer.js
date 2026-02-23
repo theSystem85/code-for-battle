@@ -28,6 +28,7 @@ const AI_SELL_PRIORITY = [
   'artilleryTurret',
   'radarStation',
   'helipad',
+  'airstrip',
   'ammunitionFactory',
   'gasStation',
   'hospital',
@@ -346,6 +347,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     const gasStations = aiBuildings.filter(b => b.type === 'gasStation')
     const vehicleWorkshops = aiBuildings.filter(b => b.type === 'vehicleWorkshop')
     const helipads = aiBuildings.filter(b => b.type === 'helipad')
+    const airstrips = aiBuildings.filter(b => b.type === 'airstrip')
     const ammunitionFactories = aiBuildings.filter(b => b.type === 'ammunitionFactory')
     const turretGunCount = aiBuildings.filter(b => b.type.startsWith('turretGun')).length
     const aiTanks = units.filter(
@@ -446,6 +448,14 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     ) {
       buildingType = 'helipad'
       cost = buildingData.helipad.cost
+    } else if (
+      radarStations.length > 0 &&
+      helipads.length > 0 &&
+      airstrips.length === 0 &&
+      aiFactory.budget >= buildingData.airstrip.cost
+    ) {
+      buildingType = 'airstrip'
+      cost = buildingData.airstrip.cost
     } else if (turrets.length < 3) {
       // Basic defense: choose turret based on budget
       const allowTurretGun = turretGunCount < 2 || totalTanks >= 4

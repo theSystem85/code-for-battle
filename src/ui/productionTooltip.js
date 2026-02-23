@@ -36,6 +36,7 @@ const buildingDescriptions = {
   radarStation: 'Extends battlefield intel and enables advanced tech.',
   hospital: 'Restores crew for damaged vehicles and supports medics.',
   helipad: 'Hosts and resupplies Apache helicopters with fuel and ammo.',
+  airstrip: 'Hosts and resupplies military jets with fuel and ammo.',
   gasStation: 'Refuels vehicles that require gas to operate.',
   ammunitionFactory: 'Reloads ammunition trucks and nearby ammo reserves.',
   turretGunV1: 'Basic defense turret that suppresses nearby threats.',
