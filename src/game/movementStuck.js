@@ -25,6 +25,54 @@ function ensureMovement(unit) {
   return unit.movement
 }
 
+function hasLocalBlockageSignal(unit, mapGrid, occupancyMap, now, recentStaticCollision) {
+  if (recentStaticCollision) {
+    return true
+  }
+
+  if (!unit?.path || unit.path.length === 0) {
+    return false
+  }
+
+  const nextTile = unit.path[0]
+  if (!nextTile || !mapGrid?.[nextTile.y]?.[nextTile.x]) {
+    return false
+  }
+
+  const centerX = unit.x + TILE_SIZE / 2
+  const centerY = unit.y + TILE_SIZE / 2
+  const nextCenterX = nextTile.x * TILE_SIZE + TILE_SIZE / 2
+  const nextCenterY = nextTile.y * TILE_SIZE + TILE_SIZE / 2
+  const distanceToNextTile = Math.hypot(nextCenterX - centerX, nextCenterY - centerY)
+
+  // Stuck recovery should only react to nearby blockers. This avoids triggering
+  // dodge behavior because of far-away path/target obstructions.
+  if (distanceToNextTile > TILE_SIZE * 1.2) {
+    return false
+  }
+
+  const tile = mapGrid[nextTile.y][nextTile.x]
+  if (tile && (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || tile.building)) {
+    return true
+  }
+
+  if (occupancyMap?.[nextTile.y]?.[nextTile.x] > 0) {
+    const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+    const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+    if (nextTile.x !== currentTileX || nextTile.y !== currentTileY) {
+      return true
+    }
+  }
+
+  const lowSpeedWhileTryingToMove = Boolean(unit.movement?.isMoving) && (unit.movement?.currentSpeed || 0) < 0.02
+  if (lowSpeedWhileTryingToMove) {
+    const collisionCooldownActive = unit.lastPathCalcTime && now - unit.lastPathCalcTime > 750
+    return Boolean(collisionCooldownActive)
+  }
+
+  return false
+}
+
 function beginLocalAvoidance(unit, detourTiles) {
   if (!unit || !Array.isArray(detourTiles) || detourTiles.length === 0) {
     return false
@@ -130,6 +178,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
       movement?.lastStaticCollisionTime &&
       now - movement.lastStaticCollisionTime < 650
     )
+    const localBlockageSignal = hasLocalBlockageSignal(unit, mapGrid, occupancyMap, now, recentStaticCollision)
 
     if (unit.type === 'harvester') {
       const isPerformingValidAction = unit.harvesting ||
@@ -150,7 +199,9 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
         if (distanceMoved < movementThreshold) {
           const slidingProgress = recentStaticCollision && distanceMoved >= movementThreshold * 0.35
 
-          if (slidingProgress) {
+          if (!localBlockageSignal) {
+            stuck.stuckTime = Math.max(0, stuck.stuckTime - timeDelta)
+          } else if (slidingProgress) {
             stuck.stuckTime = Math.max(0, stuck.stuckTime - timeDelta * 0.5)
           } else {
             stuck.stuckTime += timeDelta
@@ -250,7 +301,9 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
       if (distanceMoved < movementThreshold) {
         const slidingProgress = recentStaticCollision && distanceMoved >= movementThreshold * 0.35
 
-        if (slidingProgress) {
+        if (!localBlockageSignal) {
+          stuck.stuckTime = Math.max(0, stuck.stuckTime - timeDelta)
+        } else if (slidingProgress) {
           stuck.stuckTime = Math.max(0, stuck.stuckTime - timeDelta * 0.5)
         } else {
           stuck.stuckTime += timeDelta
