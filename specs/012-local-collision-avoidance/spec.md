@@ -26,3 +26,7 @@ Units should anticipate nearby blockers using the existing occupancy map and gen
 5. **Airborne Traffic Safety**
    - Apply an efficient, proximity-based avoidance pass for airborne units so helicopters steer away from each other before contact, without interacting with ground occupancy.
    - Air units must rely solely on predictive separation—no mid-air collisions, bounces, or collision damage are permitted.
+
+6. **Self-Tile Exclusion for Ground Dodge/Reroute**
+   - Ground-unit local dodge validation and stuck reroute checks must ignore the acting unit's own footprint tile when evaluating occupancy/proximity, preventing self-blocking false positives and reroute thrashing.
+

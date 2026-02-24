@@ -1,4 +1,5 @@
 ## Bugs
+- [x] Fix ground-unit stuck dodge/re-route logic to ignore the acting unit's own occupied tile so self-collision checks do not trigger continuous inefficient rerouting loops.
 - [x] Prevent move-command/pathfinding attempts for selected buildings so map clicks with building selections do not trigger "Cannot reach that location. Move command aborted." notifications.
 - [x] Follow-up: ensure PWA mobile landscape notification bell is always pinned top-left (including wider landscape viewports) and portrait standalone canvas/safe-area bottom fill is correct on first load without rotation.
 - [x] Ensure mobile landscape initial load always shows the sidebar (condensed/open), sync safe-area insets on first paint so iOS portrait bottom inset fills without device rotation, and pin the landscape notification bell to top-left to avoid sidebar overlap.

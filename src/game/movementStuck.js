@@ -324,8 +324,8 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
 }
 
 function tryRandomStuckMovement(unit, mapGrid, occupancyMap, units) {
-  const currentTileX = Math.floor(unit.x / TILE_SIZE)
-  const currentTileY = Math.floor(unit.y / TILE_SIZE)
+  const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   let currentDirection = unit.movement?.rotation || 0
   if (unit.path && unit.path.length > 0) {
@@ -343,7 +343,7 @@ function tryRandomStuckMovement(unit, mapGrid, occupancyMap, units) {
   const targetX = Math.round(currentTileX + Math.cos(newDirection) * forwardDistance)
   const targetY = Math.round(currentTileY + Math.sin(newDirection) * forwardDistance)
 
-  if (isValidDodgePosition(targetX, targetY, mapGrid, units)) {
+  if (isValidDodgePosition(targetX, targetY, mapGrid, units, unit)) {
     return beginLocalAvoidance(unit, [{ x: targetX, y: targetY }])
   }
 
@@ -351,8 +351,8 @@ function tryRandomStuckMovement(unit, mapGrid, occupancyMap, units) {
 }
 
 async function tryDodgeMovement(unit, mapGrid, occupancyMap, units) {
-  const currentTileX = Math.floor(unit.x / TILE_SIZE)
-  const currentTileY = Math.floor(unit.y / TILE_SIZE)
+  const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   const dodgePositions = []
 
@@ -361,7 +361,7 @@ async function tryDodgeMovement(unit, mapGrid, occupancyMap, units) {
       const dodgeX = Math.round(currentTileX + Math.cos(angle) * radius)
       const dodgeY = Math.round(currentTileY + Math.sin(angle) * radius)
 
-      if (isValidDodgePosition(dodgeX, dodgeY, mapGrid, units)) {
+      if (isValidDodgePosition(dodgeX, dodgeY, mapGrid, units, unit)) {
         dodgePositions.push({ x: dodgeX, y: dodgeY, radius })
       }
     }
@@ -389,7 +389,7 @@ async function tryDodgeMovement(unit, mapGrid, occupancyMap, units) {
   return false
 }
 
-export function isValidDodgePosition(x, y, mapGrid, units) {
+export function isValidDodgePosition(x, y, mapGrid, units, currentUnit = null) {
   if (!mapGrid || x < 0 || y < 0 || x >= mapGrid[0].length || y >= mapGrid.length) {
     return false
   }
@@ -403,6 +403,7 @@ export function isValidDodgePosition(x, y, mapGrid, units) {
   const unitRadius = TILE_SIZE * 0.4
 
   for (const otherUnit of units) {
+    if (currentUnit && otherUnit.id === currentUnit.id) continue
     if (otherUnit.health <= 0) continue
 
     const otherCenter = { x: otherUnit.x + TILE_SIZE / 2, y: otherUnit.y + TILE_SIZE / 2 }
@@ -417,8 +418,8 @@ export function isValidDodgePosition(x, y, mapGrid, units) {
 }
 
 function findFreeDirection(unit, mapGrid, occupancyMap, units) {
-  const currentTileX = Math.floor(unit.x / TILE_SIZE)
-  const currentTileY = Math.floor(unit.y / TILE_SIZE)
+  const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   const directions = [
     { x: 0, y: -1, angle: -Math.PI / 2 },
@@ -435,7 +436,7 @@ function findFreeDirection(unit, mapGrid, occupancyMap, units) {
     const checkX = currentTileX + dir.x
     const checkY = currentTileY + dir.y
 
-    if (isValidDodgePosition(checkX, checkY, mapGrid, units)) {
+    if (isValidDodgePosition(checkX, checkY, mapGrid, units, unit)) {
       return dir.angle
     }
   }
