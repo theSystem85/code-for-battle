@@ -52,6 +52,7 @@ import { resetLlmUsage } from '../ai/llmUsage.js'
 import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../startupScheduler.js'
 import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
+import { initializeUnitCollisionBounds } from './unitCollisionBounds.js'
 
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
@@ -292,6 +293,7 @@ class Game {
 
   async initializeGame() {
     await runMeasuredTask('startup:initialize-game', async() => {
+      await initializeUnitCollisionBounds()
       await this.loadAssets()
       this.setupGameWorld()
       this.setupUI()

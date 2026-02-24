@@ -229,3 +229,4 @@
 - [x] ✅ Follow-up bugfix: Restart/shuffle map now also clears build-planning overlays (blueprints, chain build, mobile paint, mine/sweep previews), stale selection, and queued production state.
 
 - [x] Ensure howitzer unlock is gated behind an owned artillery turret (plus existing radar + vehicle factory requirements) so it cannot be built early.
+- [x] Reduce static wall collision push strength by scaling impulse with unit speed, add damping, apply push only after >25% obstacle penetration, and use per-unit non-transparent sprite bounds (with build-time JSON cache + runtime fallback).

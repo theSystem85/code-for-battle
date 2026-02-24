@@ -1,0 +1,97 @@
+{
+  "generatedAtUtc": "2026-02-24T11:04:04.582Z",
+  "tileSize": 32,
+  "alphaThreshold": 8,
+  "unitBounds": {
+    "tank_v1": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 19.302,
+      "maxY": 32
+    },
+    "tank-v2": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 19.302,
+      "maxY": 32
+    },
+    "tank_v2": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 19.302,
+      "maxY": 32
+    },
+    "tank-v3": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 19.302,
+      "maxY": 32
+    },
+    "tank_v3": {
+      "minX": 0,
+      "minY": 0,
+      "maxX": 19.302,
+      "maxY": 32
+    },
+    "harvester": {
+      "minX": 5.5,
+      "minY": 1,
+      "maxX": 27.5,
+      "maxY": 30.5
+    },
+    "rocketTank": {
+      "minX": 5.5,
+      "minY": 1.5,
+      "maxX": 25.5,
+      "maxY": 30.5
+    },
+    "recoveryTank": {
+      "minX": 7,
+      "minY": 1,
+      "maxX": 24,
+      "maxY": 30
+    },
+    "ambulance": {
+      "minX": 8.5,
+      "minY": 2,
+      "maxX": 23,
+      "maxY": 30.5
+    },
+    "tankerTruck": {
+      "minX": 9,
+      "minY": 0,
+      "maxX": 23,
+      "maxY": 32
+    },
+    "ammunitionTruck": {
+      "minX": 8.5,
+      "minY": 1,
+      "maxX": 23.5,
+      "maxY": 32
+    },
+    "mineLayer": {
+      "minX": 11,
+      "minY": 0.5,
+      "maxX": 21,
+      "maxY": 31
+    },
+    "mineSweeper": {
+      "minX": 9.5,
+      "minY": 1.5,
+      "maxX": 23,
+      "maxY": 31.5
+    },
+    "howitzer": {
+      "minX": 7,
+      "minY": 0,
+      "maxX": 24,
+      "maxY": 32
+    },
+    "apache": {
+      "minX": 3.5,
+      "minY": 1,
+      "maxX": 22.5,
+      "maxY": 31.5
+    }
+  }
+}
