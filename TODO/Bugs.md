@@ -1,4 +1,5 @@
 ## Bugs
+- [x] Prevent premature dodge/stuck handling from triggering on far-away path obstacles; only accumulate stuck/dodge when blockage signals are local (near next waypoint or recent local collision).
 - [x] Fix ground-unit stuck dodge/re-route logic to ignore the acting unit's own occupied tile so self-collision checks do not trigger continuous inefficient rerouting loops.
 - [x] ✅ Follow-up: restore `tank-v2` alert outer range ring and remove the inner tile-sized red circle.
 - [x] ✅ Remove inner red range circle from `tank-v2` alert mode; keep utility-unit alert discovery rings unchanged.
@@ -130,6 +131,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] Prevent premature dodge/stuck handling from triggering on far-away path obstacles; only accumulate stuck/dodge when blockage signals are local (near next waypoint or recent local collision).
 - [x] Follow-up: ensure PWA mobile landscape notification bell is always pinned top-left (including wider landscape viewports) and portrait standalone canvas/safe-area bottom fill is correct on first load without rotation.
 - [x] Ensure mobile landscape initial load always shows the sidebar (condensed/open), sync safe-area insets on first paint so iOS portrait bottom inset fills without device rotation, and pin the landscape notification bell to top-left to avoid sidebar overlap.
 - [x] Add ammo-based defensive turret logistics: align rocket turret muzzle flashes to 6 spawn points, add selected ammo/reload HUD bars for turretGun V1-V3/rocket/artillery turrets, enforce turret ammo consumption + reload via ammo trucks, and enable mutual ammo-truck↔turret move-into cursor/click interactions.
