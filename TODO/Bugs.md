@@ -1,4 +1,5 @@
 ## Bugs
+- [x] Fix ground-unit stuck dodge/re-route logic to ignore the acting unit's own occupied tile so self-collision checks do not trigger continuous inefficient rerouting loops.
 - [x] ✅ Follow-up: restore `tank-v2` alert outer range ring and remove the inner tile-sized red circle.
 - [x] ✅ Remove inner red range circle from `tank-v2` alert mode; keep utility-unit alert discovery rings unchanged.
 - [x] Prevent move-command/pathfinding attempts for selected buildings so map clicks with building selections do not trigger "Cannot reach that location. Move command aborted." notifications.
