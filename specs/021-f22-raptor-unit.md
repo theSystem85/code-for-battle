@@ -23,9 +23,29 @@ Adds the F22 Raptor as a new air unit that spawns from the existing airstrip bui
 
 ## Spawning
 - Spawns from `airstrip` building (12×6 tiles)
+- Uses dedicated airstrip spawn points on the upper runway area (no center spawn)
 - Production queue selects airstrips via round-robin (`gameState.nextAirstripIndex`)
 - If all airstrips are occupied, forces occupying F22 to take off before spawning
 - Starts in `flightState: 'grounded'` with full fuel and ammo
+
+## Airstrip passability and build-only occupancy
+- Introduces **build-only occupancy** tiles: these block building placement, but remain passable for unit movement/pathing.
+- Airstrip now applies build-only occupancy on most of its footprint so units can traverse the runway.
+- A blocked sub-rectangle remains occupied/non-passable to match airstrip geometry:
+  - Source image space: lower area below the rectangle bounded by `(0, 0)` to `(480, 200)` on `768×512` airstrip map art.
+
+## Street building
+- Adds new buildable `street` building tile:
+  - Cost: `$10`
+  - Size: `1×1`
+  - No build prerequisites
+  - Not selectable
+  - No health bar rendering
+  - Destroyed immediately by direct projectile hit
+
+## F22 movement and production speed
+- F22 is handled by the same flight-plan movement path as Apache (lift-off/takeoff behavior works for move and attack commands).
+- F22 production speed now scales with the number of player Vehicle Factories, same as other factory-speed units.
 
 ## Tech Tree
 - Unlocked when player owns at least one `airstrip` building

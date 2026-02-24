@@ -1182,7 +1182,7 @@ export class BuildingRenderer {
   }
 
   shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight) {
-    if (!building || building.health <= 0) {
+    if (!building || building.health <= 0 || building.type === 'street') {
       return false
     }
 

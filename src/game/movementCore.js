@@ -186,7 +186,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     unit.movement.targetVelocity = { x: 0, y: 0 }
     unit.movement.isMoving = false
     unit.movement.currentSpeed = 0
-    if (unit.type === 'apache') {
+    if (unit.isAirUnit) {
       unit.flightPlan = null
       unit.autoHoldAltitude = false
       unit.helipadLandingRequested = false
@@ -265,7 +265,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   const effectiveMaxSpeed = MOVEMENT_CONFIG.MAX_SPEED * speedModifier * terrainMultiplier
 
-  const isApache = unit.type === 'apache'
+  const isApache = unit.type === 'apache' || unit.type === 'f22Raptor'
   let activeFlightPlan = null
   let hadFlightPlanAtStart = false
   if (isApache) {
@@ -440,7 +440,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  if (!(unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer' || unit.type === 'apache')) {
+  if (!(unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer' || unit.type === 'apache' || unit.type === 'f22Raptor')) {
     updateUnitRotation(unit)
   }
 
@@ -637,7 +637,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     checkMineDetonation(unit, unit.tileX, unit.tileY, units, buildings)
   }
 
-  if (unit.type === 'apache') {
+  if (unit.isAirUnit) {
     updateApacheFlightState(unit, movement, occupancyMap, now)
   }
 

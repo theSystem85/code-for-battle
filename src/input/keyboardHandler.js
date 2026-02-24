@@ -21,6 +21,7 @@ import {
 } from '../utils/layoutMetrics.js'
 import { notifyBenchmarkManualCameraControl } from '../benchmark/benchmarkTracker.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 export class KeyboardHandler {
   constructor() {
@@ -750,7 +751,7 @@ export class KeyboardHandler {
 
     // Check tile type and buildings
     const tile = mapGrid[y][x]
-    if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || tile.building) {
+    if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || hasBlockingBuilding(tile)) {
       return false
     }
 

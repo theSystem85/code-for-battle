@@ -274,3 +274,4 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Add a unit under-attack notification for player-owned units that includes a clickable unit type link; clicking it smoothly focuses the camera on that unit and selects it.
 
 - [x] Add F22 Raptor stealth fighter unit: spawns from airstrip, requires airstrip building, isAirUnit with radarInvisible, rocket ammo (20), fuel tank (8000), cost $8000, speed 8.0; integrates with helipad refuel/rearm logic on airstrip, production queue, tech tree unlock, AI production, and rendering with sidebar/map images.
+- [x] Follow-up fix for F22 + Airstrip: corrected F22 airstrip spawn points, made F22 air movement/attack commands work (lift-off + flight plan handling), added build-only occupancy tiles with new buildable Street ($10), made airstrip tiles passable except blocked lower-left sub-rectangle (source rect below y=200 within x=0..480), and included F22 in Vehicle Factory speed scaling.

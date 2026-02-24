@@ -3,6 +3,7 @@ import { TILE_SIZE, CURSOR_METERS_PER_TILE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { findWreckAtTile } from '../game/unitWreckManager.js'
 import { isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 
 const CURSOR_CLASS_NAMES = [
@@ -303,7 +304,7 @@ export class CursorManager {
     // Check if the tile type is impassable
     const tile = row[tileX]
     const tileType = tile.type
-    const hasBuilding = tile.building
+    const hasBuilding = hasBlockingBuilding(tile)
     const hasSeedCrystal = tile.seedCrystal
     const occupancyMap = gameState.occupancyMap
     const occupied =

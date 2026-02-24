@@ -23,6 +23,7 @@ vi.mock('../../src/units.js', () => ({
     tank_v1: 800,
     harvester: 1200,
     apache: 1500,
+    f22Raptor: 8000,
     ambulance: 600,
     tankerTruck: 500,
     recoveryTank: 700,
@@ -578,6 +579,19 @@ describe('Production Queue System', () => {
       gameState.buildings = []
       const multiplier = productionQueue.getVehicleFactoryMultiplier()
       expect(multiplier).toBe(0)
+    })
+
+    it('should speed up F22 production when multiple vehicle factories exist', () => {
+      gameState.buildings = [
+        { type: 'airstrip', owner: 'player', health: 1000 },
+        { type: 'vehicleFactory', owner: 'player', health: 100 },
+        { type: 'vehicleFactory', owner: 'player', health: 100 }
+      ]
+      productionQueue.unitItems = [{ type: 'f22Raptor', button: mockButton, isBuilding: false }]
+      productionQueue.startNextUnitProduction()
+
+      expect(productionQueue.currentUnit).not.toBeNull()
+      expect(productionQueue.currentUnit.duration).toBe(24000)
     })
   })
 

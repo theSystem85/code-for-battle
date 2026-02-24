@@ -845,8 +845,14 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               actualDamage = window.cheatSystem.preventDamage(building, actualDamage)
             }
 
-            // Only apply damage if actualDamage > 0 (god mode protection) and not an Apache rocket
-            if (actualDamage > 0 && bullet.originType !== 'apacheRocket') {
+            const isStreetTileBuilding = building.type === 'street'
+
+            // Only apply damage if actualDamage > 0 (god mode protection).
+            // Streets should still be destroyed by direct projectile impacts, including apache rockets.
+            if (actualDamage > 0 && (bullet.originType !== 'apacheRocket' || isStreetTileBuilding)) {
+              if (isStreetTileBuilding) {
+                actualDamage = Math.max(actualDamage, building.health)
+              }
               const previousHealth = building.health
               building.health -= actualDamage
 
@@ -897,8 +903,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               playPositionalSound('bulletHit', bullet.x, bullet.y, 0.5)
             }
 
-            // Handle building destruction (only for non-Apache rockets)
-            if (building.health <= 0 && bullet.originType !== 'apacheRocket') {
+            // Handle building destruction (streets can also be destroyed by Apache rockets)
+            if (building.health <= 0 && (bullet.originType !== 'apacheRocket' || isStreetTileBuilding)) {
               playPositionalSound('explosion', bullet.x, bullet.y, 0.5)
               building.health = 0
               // Award experience to the shooter for destroying ANY building (except harvesters cannot receive XP)

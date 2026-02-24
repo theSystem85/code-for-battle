@@ -178,33 +178,34 @@ export function updateBuildingButtonStates(controller) {
     const isOreRefinery = type === 'oreRefinery'
     const isVehicleFactory = type === 'vehicleFactory'
     const isConstructionYardButton = type === 'constructionYard'
+    const isStreet = type === 'street'
 
-    if (!hasConstructionYard && !isConstructionYardButton) {
+    if (!hasConstructionYard && !isConstructionYardButton && !isStreet) {
       disable = true
       if (!req.includes('Construction Yard')) req.push('Construction Yard')
     }
 
-    if (buildingData[type]?.requiresRadar && !hasRadar) {
+    if (buildingData[type]?.requiresRadar && !hasRadar && !isStreet) {
       disable = true
       if (!req.includes('Radar Station')) req.push('Radar Station')
     }
 
-    if (buildingData[type]?.requiresVehicleFactory && !hasVehicleFactory) {
+    if (buildingData[type]?.requiresVehicleFactory && !hasVehicleFactory && !isStreet) {
       disable = true
       if (!req.includes('Vehicle Factory')) req.push('Vehicle Factory')
     }
 
-    if (!hasPowerPlant && !isPowerPlant && !isConstructionYardButton) {
+    if (!hasPowerPlant && !isPowerPlant && !isConstructionYardButton && !isStreet) {
       disable = true
       if (!req.includes('Power Plant')) req.push('Power Plant')
     }
 
-    if (hasPowerPlant && !hasRefinery && !isPowerPlant && !isOreRefinery && !isConstructionYardButton) {
+    if (hasPowerPlant && !hasRefinery && !isPowerPlant && !isOreRefinery && !isConstructionYardButton && !isStreet) {
       disable = true
       if (!req.includes('Ore Refinery')) req.push('Ore Refinery')
     }
 
-    if (hasPowerPlant && hasRefinery && !hasVehicleFactory && !isPowerPlant && !isOreRefinery && !isVehicleFactory && !isConstructionYardButton) {
+    if (hasPowerPlant && hasRefinery && !hasVehicleFactory && !isPowerPlant && !isOreRefinery && !isVehicleFactory && !isConstructionYardButton && !isStreet) {
       disable = true
       if (!req.includes('Vehicle Factory')) req.push('Vehicle Factory')
     }
