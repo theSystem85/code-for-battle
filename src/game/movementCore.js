@@ -186,7 +186,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     unit.movement.targetVelocity = { x: 0, y: 0 }
     unit.movement.isMoving = false
     unit.movement.currentSpeed = 0
-    if (unit.isAirUnit) {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
       unit.flightPlan = null
       unit.autoHoldAltitude = false
       unit.helipadLandingRequested = false
@@ -265,10 +265,10 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   const effectiveMaxSpeed = MOVEMENT_CONFIG.MAX_SPEED * speedModifier * terrainMultiplier
 
-  const isApache = unit.type === 'apache' || unit.type === 'f22Raptor'
+  const isAirFlightUnit = unit.type === 'apache' || unit.type === 'f22Raptor'
   let activeFlightPlan = null
   let hadFlightPlanAtStart = false
-  if (isApache) {
+  if (isAirFlightUnit) {
     if (unit.remoteControlActive) {
       unit.flightPlan = null
     } else {
@@ -337,7 +337,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  const skipPathHandlingForApache = isApache && !unit.remoteControlActive && hadFlightPlanAtStart
+  const skipPathHandlingForApache = isAirFlightUnit && !unit.remoteControlActive && hadFlightPlanAtStart
   if (!skipPathHandlingForApache && unit.path && unit.path.length > 0) {
     const nextTile = unit.path[0]
     const targetX = nextTile.x * TILE_SIZE
@@ -440,7 +440,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  if (!(unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer' || unit.type === 'apache' || unit.type === 'f22Raptor')) {
+  const noAutoRotationTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f22Raptor']
+  if (!noAutoRotationTypes.includes(unit.type)) {
     updateUnitRotation(unit)
   }
 
@@ -637,7 +638,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     checkMineDetonation(unit, unit.tileX, unit.tileY, units, buildings)
   }
 
-  if (unit.isAirUnit) {
+  if (unit.type === 'apache' || unit.type === 'f22Raptor') {
     updateApacheFlightState(unit, movement, occupancyMap, now)
   }
 

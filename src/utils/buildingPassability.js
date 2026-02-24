@@ -1,5 +1,7 @@
 export const AIRSTRIP_SOURCE_WIDTH = 768
 export const AIRSTRIP_SOURCE_HEIGHT = 512
+export const AIRSTRIP_DEFAULT_WIDTH = 12
+export const AIRSTRIP_DEFAULT_HEIGHT = 6
 
 export const AIRSTRIP_PASSABLE_RECT = Object.freeze({
   xMin: 0,
@@ -16,7 +18,7 @@ export function hasBlockingBuilding(tile) {
   return Boolean(tile?.building) && !isBuildOnlyOccupiedTile(tile)
 }
 
-export function isAirstripBlockedLocalTile(localX, localY, width = 12, height = 6) {
+export function isAirstripBlockedLocalTile(localX, localY, width = AIRSTRIP_DEFAULT_WIDTH, height = AIRSTRIP_DEFAULT_HEIGHT) {
   if (width <= 0 || height <= 0) return true
 
   const pixelX = ((localX + 0.5) / width) * AIRSTRIP_SOURCE_WIDTH
