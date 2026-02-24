@@ -23,6 +23,7 @@ const unitDisplayNames = {
   ammunitionTruck: 'Ammunition Truck',
   recoveryTank: 'Recovery Tank',
   apache: 'Apache',
+  f22Raptor: 'F22 Raptor',
   mineLayer: 'Mine Layer',
   mineSweeper: 'Mine Sweeper'
 }

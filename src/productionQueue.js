@@ -403,7 +403,43 @@ export const productionQueue = {
     let spawnFactory = null
     let rallyPointTarget = this.currentUnit.rallyPoint || null // Rally point from drag&drop
 
-    if (unitType === 'apache') {
+    if (unitType === 'f22Raptor') {
+      const allAirstrips = (gameState.buildings || []).filter(
+        b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0
+      )
+
+      if (allAirstrips.length === 0) {
+        console.error('Cannot spawn F22 Raptor: No Airstrip found.')
+        showNotification('Production cancelled: F22 Raptor requires an operational Airstrip.')
+        this.currentUnit.button.classList.remove('active', 'paused')
+        this.currentUnit = null
+        this.startNextUnitProduction()
+        return
+      }
+
+      const availableAirstrips = allAirstrips.filter(a => !a.landedUnitId)
+      const selectionPool = availableAirstrips.length > 0 ? availableAirstrips : allAirstrips
+
+      gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
+      const chosenIndex = gameState.nextAirstripIndex % selectionPool.length
+      spawnFactory = selectionPool[chosenIndex]
+      gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % selectionPool.length
+
+      if (!availableAirstrips.length && spawnFactory.landedUnitId) {
+        const occupyingUnit = units.find(u => u && u.id === spawnFactory.landedUnitId)
+        if (occupyingUnit) {
+          occupyingUnit.manualFlightState = 'takeoff'
+          occupyingUnit.helipadLandingRequested = false
+          occupyingUnit.helipadTargetId = null
+          occupyingUnit.landedHelipadId = null
+        }
+        spawnFactory.landedUnitId = null
+      }
+
+      if (!rallyPointTarget && spawnFactory.rallyPoint) {
+        rallyPointTarget = spawnFactory.rallyPoint
+      }
+    } else if (unitType === 'apache') {
       const allHelipads = (gameState.buildings || []).filter(
         b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0
       )
