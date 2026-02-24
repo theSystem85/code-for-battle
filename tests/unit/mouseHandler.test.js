@@ -459,6 +459,44 @@ describe('MouseHandler', () => {
     expect(playSound).toHaveBeenCalledWith('confirmed', 0.5)
   })
 
+
+  it('does not issue move commands when only buildings are selected', () => {
+    const _handler = new MouseHandler()
+    const selectionManager = {
+      isCommandableUnit: () => true
+    }
+    _handler.selectionManager = selectionManager
+
+    const selectedBuilding = {
+      id: 'building-1',
+      type: 'powerPlant',
+      owner: 'player',
+      isBuilding: true
+    }
+
+    const unitCommands = {
+      handleMovementCommand: vi.fn(),
+      handleAttackCommand: vi.fn(),
+      handleRefineryUnloadCommand: vi.fn(),
+      handleRepairWorkshopCommand: vi.fn(),
+      handleAmbulanceRefillCommand: vi.fn(),
+      handleGasStationRefillCommand: vi.fn(),
+      handleHarvesterCommand: vi.fn()
+    }
+
+    const mapGrid = createTestMapGrid(5, 5)
+
+    _handler.handleStandardCommands(
+      TILE_SIZE * 2,
+      TILE_SIZE * 2,
+      [selectedBuilding],
+      unitCommands,
+      mapGrid
+    )
+
+    expect(unitCommands.handleMovementCommand).not.toHaveBeenCalled()
+    expect(unitCommands.handleAttackCommand).not.toHaveBeenCalled()
+  })
   it('prioritizes refinery unload and ore harvesting commands', () => {
     const _handler = new MouseHandler()
     const selectionManager = {
