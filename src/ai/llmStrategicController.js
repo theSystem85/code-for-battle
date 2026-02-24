@@ -12,7 +12,7 @@ import protocolSchema from '../ai-api/protocol.schema.json'
 
 function buildUnitCatalog() {
   const catalog = []
-  const allTypes = ['tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'apache', 'mineLayer', 'mineSweeper']
+  const allTypes = ['tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'apache', 'mineLayer', 'mineSweeper', 'f22Raptor']
   for (const type of allTypes) {
     const props = UNIT_PROPERTIES[type] || {}
     const cost = UNIT_COSTS[type] || 0
@@ -43,12 +43,17 @@ function buildUnitCatalog() {
       entry.weapon = 'machinegun'
       entry.fireRange = TANK_FIRE_RANGE
       entry.spawnsFrom = 'helipad'
+    } else if (type === 'f22Raptor') {
+      entry.weapon = 'missile'
+      entry.fireRange = TANK_FIRE_RANGE * 1.5
+      entry.spawnsFrom = 'airstrip'
+      entry.radarInvisible = true
     } else if (['tank_v1', 'tank-v2', 'tank-v3'].includes(type)) {
       entry.weapon = 'cannon'
       entry.fireRange = TANK_FIRE_RANGE
     }
     // Spawn location
-    if (type !== 'apache') entry.spawnsFrom = 'vehicleFactory'
+    if (type !== 'apache' && type !== 'f22Raptor') entry.spawnsFrom = 'vehicleFactory'
     // Special roles
     if (type === 'harvester') entry.role = 'economic: harvests ore and delivers to refinery'
     if (type === 'ambulance') entry.role = 'support: heals nearby friendly units'

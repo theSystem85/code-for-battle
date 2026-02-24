@@ -111,7 +111,7 @@ export function createBuilding(type, x, y) {
     constructionFinished: false
   }
 
-  if (type === 'helipad') {
+  if (type === 'helipad' || type === 'airstrip') {
     building.landedUnitId = null
   }
 
@@ -132,7 +132,7 @@ export function createBuilding(type, x, y) {
   }
 
   // Initialize rally point for vehicle factories and workshops
-  if (type === 'vehicleFactory' || type === 'vehicleWorkshop') {
+  if (type === 'vehicleFactory' || type === 'vehicleWorkshop' || type === 'airstrip') {
     building.rallyPoint = null
   }
 

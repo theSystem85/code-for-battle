@@ -189,6 +189,12 @@ export function setupUnitButtons(controller) {
           requirementsMet = false
           requirementText = 'Requires Helipad'
         }
+      } else if (unitType === 'f22Raptor') {
+        const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer)
+        if (!hasAirstrip) {
+          requirementsMet = false
+          requirementText = 'Requires Airstrip'
+        }
       } else if (unitType === 'ammunitionTruck') {
         const hasVehicleFactory = gameState.buildings.some(b => b.type === 'vehicleFactory' && b.owner === gameState.humanPlayer)
         const hasAmmunitionFactory = gameState.buildings.some(b => b.type === 'ammunitionFactory' && b.owner === gameState.humanPlayer)
