@@ -863,6 +863,54 @@ describe('Building System', () => {
       expect(bullets[0].targetPosition).toEqual(turret.currentTargetPosition)
     })
 
+
+    it('allows artillery and rocket turrets to fire without direct line of sight', () => {
+      const now = 45500
+      vi.spyOn(performance, 'now').mockReturnValue(now)
+
+      const artillery = createBuilding('artilleryTurret', 10, 10)
+      artillery.owner = 'player'
+      artillery.fireCooldown = 0
+      artillery.lastShotTime = 0
+      const rocket = createBuilding('rocketTurret', 13, 10)
+      rocket.owner = 'player'
+      rocket.fireCooldown = 0
+      rocket.lastShotTime = 0
+      rocket.ammo = rocket.maxAmmo || 6
+      artillery.ammo = artillery.maxAmmo || 6
+      gameState.buildings.push(artillery, rocket)
+
+      const target = {
+        id: 'enemy-blocked',
+        x: (artillery.x + 8) * TILE_SIZE,
+        y: (artillery.y + 1) * TILE_SIZE,
+        width: 1,
+        height: 1,
+        owner: 'enemy',
+        health: 100
+      }
+      units.push(target)
+
+      const artilleryCenterX = (artillery.x + artillery.width / 2) * TILE_SIZE
+      const artilleryCenterY = (artillery.y + artillery.height / 2) * TILE_SIZE
+      const rocketCenterX = (rocket.x + rocket.width / 2) * TILE_SIZE
+      const rocketCenterY = (rocket.y + rocket.height / 2) * TILE_SIZE
+      const targetCenterX = target.x + TILE_SIZE / 2
+      const targetCenterY = target.y + TILE_SIZE / 2
+      artillery.turretDirection = Math.atan2(targetCenterY - artilleryCenterY, targetCenterX - artilleryCenterX)
+      rocket.turretDirection = Math.atan2(targetCenterY - rocketCenterY, targetCenterX - rocketCenterX)
+
+      const targetTileX = Math.floor(target.x / TILE_SIZE)
+      const targetTileY = Math.floor(target.y / TILE_SIZE)
+      mapGrid[targetTileY][targetTileX - 2].building = { type: 'concreteWall' }
+
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+
+      expect(bullets.some(b => b.shooter === artillery)).toBe(true)
+      expect(bullets.some(b => b.shooter === rocket)).toBe(true)
+    })
+
     it('blocks rocket turret firing when power is negative', () => {
       const now = 50000
       vi.spyOn(performance, 'now').mockReturnValue(now)

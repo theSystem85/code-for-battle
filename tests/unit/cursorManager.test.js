@@ -254,6 +254,7 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
   })
 
+
   it('uses out-of-range attack cursor in force-attack mode', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()

@@ -229,3 +229,4 @@
 - [x] ✅ Follow-up bugfix: Restart/shuffle map now also clears build-planning overlays (blueprints, chain build, mobile paint, mine/sweep previews), stale selection, and queued production state.
 
 - [x] Ensure howitzer unlock is gated behind an owned artillery turret (plus existing radar + vehicle factory requirements) so it cannot be built early.
+- [x] ✅ Fixed defense AGF forced-target regression where artillery/rocket turrets aimed but did not fire (line-of-sight checks now only gate direct-fire gun turrets), restored defense-building hover attack cursor on enemy targets, and added queued AGF red chain lines for ordered attack targets.

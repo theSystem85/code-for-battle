@@ -391,8 +391,9 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
       }      // Regular turret logic
       else {
         const mapGrid = Array.isArray(gameState.mapGrid) ? gameState.mapGrid : []
+        const requiresLineOfSight = building.type.startsWith('turretGun')
         const hasClearLineOfSight = target => (
-          mapGrid.length === 0 || hasLineOfSightToTarget({ x: centerX, y: centerY }, target, mapGrid)
+          !requiresLineOfSight || mapGrid.length === 0 || hasLineOfSightToTarget({ x: centerX, y: centerY }, target, mapGrid)
         )
 
         // Check power level for rocket turrets - they don't work when power is below 0
