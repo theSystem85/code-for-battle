@@ -413,6 +413,16 @@
                   <div class="batch-counter" style="display:none">0</div>
                   <div class="new-label" style="display:none">NEW</div>
                 </button>
+                <button class="production-button" data-building-type="airstrip">
+                  <img draggable="true" src="images/sidebar/placeholder.webp" data-src="images/sidebar/air_strip.webp"
+                    alt="Airstrip" loading="lazy">
+                  <span class="building-name">Airstrip</span>
+                  <span class="building-cost"></span>
+                  <span class="building-power"></span>
+                  <div class="production-progress"></div>
+                  <div class="batch-counter" style="display:none">0</div>
+                  <div class="new-label" style="display:none">NEW</div>
+                </button>
                 <button class="production-button" data-building-type="turretGunV1">
                   <img draggable="true" src="images/sidebar/placeholder.webp"
                     data-src="images/sidebar/turret_gun_v1.webp" alt="Turret Gun V1" loading="lazy">
@@ -526,8 +536,8 @@
         <button id="helpBtn" class="action-button icon-button" type="button" title="Show game controls help">
           <span class="button-icon">ℹ️</span>
         </button>
-        <button id="performanceWidgetBtn" class="action-button icon-button" type="button"
-          title="Toggle FPS overlay" aria-label="Toggle FPS overlay">
+        <button id="performanceWidgetBtn" class="action-button icon-button" type="button" title="Toggle FPS overlay"
+          aria-label="Toggle FPS overlay">
           <span class="button-icon">📊</span>
         </button>
       </div>
@@ -859,18 +869,28 @@
               <div class="config-modal__api-key-security" id="llmApiKeySecurity-openai">
                 <label class="config-modal__field">
                   <span>API key:</span>
-                  <input type="password" id="llmApiKey-openai" autocomplete="off" placeholder="sk-..." aria-describedby="llmApiKeySecurityNote-openai">
+                  <input type="password" id="llmApiKey-openai" autocomplete="off" placeholder="sk-..."
+                    aria-describedby="llmApiKeySecurityNote-openai">
                 </label>
-                <div class="config-modal__api-key-security-note" id="llmApiKeySecurityNote-openai" role="note" aria-live="polite">
+                <div class="config-modal__api-key-security-note" id="llmApiKeySecurityNote-openai" role="note"
+                  aria-live="polite">
                   <strong>Security-critical: read before entering a key.</strong>
                   <ul>
-                    <li>Use a <strong>dedicated OpenAI API key</strong> created only for this game. Required permissions are: read model list (<code>GET /v1/models</code>) and create responses (<code>POST /v1/responses</code>) only.</li>
-                    <li>Set strict spending controls (low monthly budget + usage alerts) and rotate/revoke the key immediately if you suspect exposure.</li>
-                    <li>The key is used only in your browser to request strategic AI plans and commentary for this game session. No server-side relay is used by this app.</li>
-                    <li>Use a low-cost model when possible (for example OpenAI nano-class models) to reduce token spend.</li>
-                    <li>This app stores the key in browser <code>localStorage</code> only (not on our servers). Local storage can be exposed by browser/device compromise or XSS, so treat this as sensitive.</li>
+                    <li>Use a <strong>dedicated OpenAI API key</strong> created only for this game. Required permissions
+                      are: read model list (<code>GET /v1/models</code>) and create responses
+                      (<code>POST /v1/responses</code>) only.</li>
+                    <li>Set strict spending controls (low monthly budget + usage alerts) and rotate/revoke the key
+                      immediately if you suspect exposure.</li>
+                    <li>The key is used only in your browser to request strategic AI plans and commentary for this game
+                      session. No server-side relay is used by this app.</li>
+                    <li>Use a low-cost model when possible (for example OpenAI nano-class models) to reduce token spend.
+                    </li>
+                    <li>This app stores the key in browser <code>localStorage</code> only (not on our servers). Local
+                      storage can be exposed by browser/device compromise or XSS, so treat this as sensitive.</li>
                     <li>Entering a key is optional. You can play the game fully without LLM features.</li>
-                    <li><a href="https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety" target="_blank" rel="noopener noreferrer">OpenAI official API key safety best practices</a>.</li>
+                    <li><a href="https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety"
+                        target="_blank" rel="noopener noreferrer">OpenAI official API key safety best practices</a>.
+                    </li>
                   </ul>
                   <label class="config-modal__field config-modal__field--toggle config-modal__field--compact">
                     <input type="checkbox" id="llmApiKeyRiskConfirm-openai">
@@ -929,7 +949,8 @@
                   <span>Model:</span>
                   <select id="llmModel-xai" class="config-modal__select" disabled></select>
                 </label>
-                <button class="config-modal__button" id="llmRefresh-xai" type="button" disabled>Refresh xAI models</button>
+                <button class="config-modal__button" id="llmRefresh-xai" type="button" disabled>Refresh xAI
+                  models</button>
                 <div class="config-modal__note">xAI provider settings are coming soon!</div>
               </div>
             </details>
@@ -947,7 +968,8 @@
                   <span>Model:</span>
                   <select id="llmModel-ollama" class="config-modal__select" disabled></select>
                 </label>
-                <button class="config-modal__button" id="llmRefresh-ollama" type="button" disabled>Refresh Ollama models</button>
+                <button class="config-modal__button" id="llmRefresh-ollama" type="button" disabled>Refresh Ollama
+                  models</button>
                 <div class="config-modal__note">Ollama provider settings are coming soon!</div>
               </div>
             </details>
@@ -1075,7 +1097,8 @@
     <div class="user-docs-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="userDocsTitle">
       <div class="user-docs-modal__header">
         <h2 id="userDocsTitle">Code for Battle — User Documentation</h2>
-        <button id="userDocsCloseBtn" class="user-docs-modal__close" type="button" aria-label="Close documentation">×</button>
+        <button id="userDocsCloseBtn" class="user-docs-modal__close" type="button"
+          aria-label="Close documentation">×</button>
       </div>
       <iframe id="userDocsFrame" class="user-docs-modal__frame" title="User documentation" loading="lazy"></iframe>
     </div>

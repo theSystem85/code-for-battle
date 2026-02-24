@@ -148,7 +148,7 @@ export class CheatSystem {
             <li><code>fuel [amount|percent%]</code> - Set fuel level of selected unit</li>
             <li><code>medics [amount]</code> - Set medic count of selected ambulance(s)</li>
             <li><code>ammo [value|percent%|+/-value|+/-percent%]</code> - Set or adjust ammo for selected units/buildings with ammo bars</li>
-            <li><code>ammo load [amount|percent%]</code> - Set ammo cargo of selected ammunition trucks or ammo reserves of selected helipads</li>
+            <li><code>ammo load [amount|percent%]</code> - Set ammo cargo of selected ammunition trucks or ammo reserves of selected helipads and airstrips</li>
             <li><code>xp [amount]</code> / <code>xp +[amount]</code> / <code>xp -[amount]</code> - Set or adjust XP for selected combat units</li>
             <li><code>partyme [party]</code> - Switch your player party (reassigns your forces)</li>
             <li><code>party [color|player]</code> - Change party of selected unit(s)</li>
@@ -157,7 +157,7 @@ export class CheatSystem {
             <li><code>enemycontrol on</code> / <code>enemycontrol off</code> - Toggle enemy unit control</li>
             <li><code>driver</code> / <code>commander</code> / <code>loader</code> / <code>gunner</code> - Toggle crew for selected unit</li>
             <li title="Supported unit types: harvester, tank_v1, tank-v2, tank-v3, rocketTank, recoveryTank, ambulance, tankerTruck, ammunitionTruck, apache, howitzer, mineLayer, mineSweeper"><code>[type] [amount] [party]</code> - Spawn units around the cursor. Defaults to the player's party</li>
-            <li title="Supported building types include helipad, powerPlant, oreRefinery, vehicleFactory, vehicleWorkshop, radarStation, hospital, gasStation, turret variants, and walls"><code>build [type] [party]</code> - Spawn a building near the cursor. Defaults to the player's party</li>
+            <li title="Supported building types include airstrip, helipad, powerPlant, oreRefinery, vehicleFactory, vehicleWorkshop, radarStation, hospital, gasStation, turret variants, and walls"><code>build [type] [party]</code> - Spawn a building near the cursor. Defaults to the player's party</li>
             <li><code>mine [party]</code> - Deploy a mine at the cursor for the specified party (defaults to player)</li>
             <li><code>mines [WxH][gG] [party]</code> or <code>WxHgG</code> - Drop a minefield pattern (e.g., <code>mines 2x3g1</code>, <code>3x1</code> for a continuous row) with optional gaps</li>
           </ul>
@@ -1117,8 +1117,8 @@ export class CheatSystem {
         const clamped = Math.max(0, Math.min(target, unit.maxAmmoCargo))
         unit.ammoCargo = clamped
         appliedCount++
-      } else if (unit.type === 'helipad') {
-        // Handle helipad ammo reserves
+      } else if (unit.type === 'helipad' || unit.type === 'airstrip') {
+        // Handle helipad/airstrip ammo reserves
         if (typeof unit.maxAmmo !== 'number') {
           unit.maxAmmo = HELIPAD_AMMO_RESERVE
         }
@@ -1137,7 +1137,7 @@ export class CheatSystem {
       showNotification(`🚛 Ammo load ${verb} ${display} for ${appliedCount} item${appliedCount > 1 ? 's' : ''}`, 3000)
       playSound('confirmed', 0.5)
     } else {
-      this.showError('No ammunition trucks or helipads selected')
+      this.showError('No ammunition trucks, helipads, or airstrips selected')
     }
   }
 

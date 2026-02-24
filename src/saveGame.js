@@ -1012,13 +1012,13 @@ export function loadGame(key) {
       // Restore ammunition system properties for buildings
       if (typeof b.ammo === 'number') {
         building.ammo = b.ammo
-      } else if (building.type === 'helipad' && typeof building.ammo !== 'number') {
+      } else if ((building.type === 'helipad' || building.type === 'airstrip') && typeof building.ammo !== 'number') {
         // Fallback for older saves - initialize helipad ammo to full capacity
         building.ammo = building.maxAmmo || HELIPAD_AMMO_RESERVE
       }
       if (typeof b.maxAmmo === 'number') {
         building.maxAmmo = b.maxAmmo
-      } else if (building.type === 'helipad' && typeof building.maxAmmo !== 'number') {
+      } else if ((building.type === 'helipad' || building.type === 'airstrip') && typeof building.maxAmmo !== 'number') {
         // Fallback for older saves - set max ammo for helipads
         building.maxAmmo = HELIPAD_AMMO_RESERVE
       }
@@ -1027,7 +1027,7 @@ export function loadGame(key) {
       }
       if (typeof b.needsAmmo === 'boolean') {
         building.needsAmmo = b.needsAmmo
-      } else if (building.type === 'helipad') {
+      } else if (building.type === 'helipad' || building.type === 'airstrip') {
         // Fallback - calculate needsAmmo based on current ammo level
         building.needsAmmo = building.ammo < (building.maxAmmo * 0.25)
       }

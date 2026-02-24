@@ -210,7 +210,7 @@ export function syncTechTreeWithBuildings(controller) {
 
   if (hasRadar) {
     controller.forceUnlockUnitType('tank-v2')
-    ;['turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
+    ;['airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
       .forEach(t => controller.forceUnlockBuildingType(t))
     if (hasFactory && hasArtilleryTurret) {
       controller.forceUnlockUnitType('howitzer')

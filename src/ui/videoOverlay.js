@@ -332,9 +332,17 @@ export class VideoOverlay {
         }
 
         if (!audioLoaded) {
-          window.logger.warn('Failed to load audio from all attempted paths, video will play without sound')
+          window.logger.warn('Failed to load audio from all attempted paths, video will play without separate sound. Re-enabling embedded video audio.')
           this.currentAudio = null
         }
+      }
+
+      // Configure video volume based on separate audio presence
+      if (this.currentAudio) {
+        video.muted = true
+      } else {
+        video.muted = false
+        video.volume = 0.28 * getMasterVolume()
       }
 
       // Keep overlay hidden - only use for video element, render on minimap instead
@@ -484,6 +492,9 @@ export class VideoOverlay {
   updateAudioVolume() {
     if (this.currentAudio) {
       this.currentAudio.volume = 0.28 * getMasterVolume()
+    }
+    if (this.currentVideo && !this.currentVideo.muted) {
+      this.currentVideo.volume = 0.28 * getMasterVolume()
     }
   }
 }

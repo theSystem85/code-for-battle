@@ -78,6 +78,13 @@ export class MilestoneSystem {
         displayName: 'Tanker Truck Available',
         description: 'Mobile refueling capabilities unlocked',
         priority: 'medium'
+      },
+      firstAirstrip: {
+        id: 'firstAirstrip',
+        displayName: 'First Airstrip Built',
+        description: 'Military aviation capabilities unlocked',
+        videoFilename: 'air_strip',
+        priority: 'high'
       }
     }
   }
@@ -191,6 +198,16 @@ export class MilestoneSystem {
       )
       if (hasRefinery) {
         this.triggerMilestone('firstRefinery')
+      }
+    }
+
+    // Check for first airstrip
+    if (!this.achievedMilestones.has('firstAirstrip')) {
+      const hasAirstrip = gameState.buildings?.some(building =>
+        building.type === 'airstrip' && building.owner === gameState.humanPlayer
+      )
+      if (hasAirstrip) {
+        this.triggerMilestone('firstAirstrip')
       }
     }
 

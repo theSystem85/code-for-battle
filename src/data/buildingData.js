@@ -107,6 +107,21 @@ export const buildingData = {
     ammoReloadTime: HELIPAD_RELOAD_TIME,
     smokeSpots: []
   },
+  airstrip: {
+    width: 12,
+    height: 6,
+    cost: 10000,
+    power: -200,
+    image: 'air_strip.webp',
+    displayName: 'Airstrip',
+    health: 10000,
+    requiresRadar: true,
+    maxFuel: HELIPAD_FUEL_CAPACITY,
+    fuelReloadTime: HELIPAD_RELOAD_TIME,
+    maxAmmo: HELIPAD_AMMO_RESERVE,
+    ammoReloadTime: HELIPAD_RELOAD_TIME,
+    smokeSpots: []
+  },
   gasStation: {
     width: 3,
     height: 3,

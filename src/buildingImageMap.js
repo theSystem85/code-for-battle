@@ -13,6 +13,7 @@ export const buildingImageMap = {
   radarStation: 'images/map/buildings/radar_station.webp',
   hospital: 'images/map/buildings/hospital.webp',
   helipad: 'images/map/buildings/helipad_map.webp',
+  airstrip: 'images/map/buildings/airstrip_map.webp',
   gasStation: 'images/map/buildings/gas_station.webp',
   turretGunV1: 'images/map/buildings/turret01_base.webp', // Use base image as fallback when turret images are disabled
   turretGunV2: 'images/map/buildings/turret02_base.webp',
