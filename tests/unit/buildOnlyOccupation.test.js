@@ -31,5 +31,8 @@ describe('build-only occupation', () => {
   it('treats the lower-left section of the airstrip footprint as blocked', () => {
     expect(isAirstripBlockedLocalTile(0, 0, 12, 6)).toBe(false)
     expect(isAirstripBlockedLocalTile(0, 5, 12, 6)).toBe(true)
+    expect(isAirstripBlockedLocalTile(7, 1, 12, 6)).toBe(false)
+    expect(isAirstripBlockedLocalTile(7, 3, 12, 6)).toBe(true)
+    expect(isAirstripBlockedLocalTile(11, 5, 12, 6)).toBe(false)
   })
 })
