@@ -311,8 +311,8 @@ export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
       const hasAmmoSystem = typeof u.maxAmmunition === 'number' || typeof u.maxRocketAmmo === 'number'
       if (!hasAmmoSystem) return
 
-      const maxAmmo = u.type === 'apache' ? u.maxRocketAmmo : u.maxAmmunition
-      const currentAmmo = u.type === 'apache' ? u.rocketAmmo : u.ammunition
+      const maxAmmo = u.isAirUnit ? u.maxRocketAmmo : u.maxAmmunition
+      const currentAmmo = u.isAirUnit ? u.rocketAmmo : u.ammunition
 
       if (currentAmmo <= 0) {
         criticalUnits.push(u)
@@ -469,8 +469,8 @@ export function manageAIAmmunitionMonitoring(units, gameState, mapGrid) {
       const hasAmmoSystem = typeof unit.maxAmmunition === 'number' || typeof unit.maxRocketAmmo === 'number'
       if (!hasAmmoSystem || unit.type === 'ammunitionTruck') return
 
-      const maxAmmo = unit.type === 'apache' ? unit.maxRocketAmmo : unit.maxAmmunition
-      const currentAmmo = unit.type === 'apache' ? unit.rocketAmmo : unit.ammunition
+      const maxAmmo = unit.isAirUnit ? unit.maxRocketAmmo : unit.maxAmmunition
+      const currentAmmo = unit.isAirUnit ? unit.rocketAmmo : unit.ammunition
       const ammoPercentage = currentAmmo / maxAmmo
 
       // FR-033: Retreat logic when ammunition falls below 20%

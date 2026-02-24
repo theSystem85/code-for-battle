@@ -273,3 +273,17 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
   - [x] Building placement rules and sidebar interaction tips (drag, hold, shift+scroll, chain build)
 - [x] Add a unit under-attack notification for player-owned units that includes a clickable unit type link; clicking it smoothly focuses the camera on that unit and selects it.
 
+- [x] Implement F22 Raptor stealth fighter unit
+  - [x] Spawns from Airstrip (requires Airstrip to produce)
+  - [x] Stealth property (unit.stealth = true for future radar hiding)
+  - [x] High altitude flight (maxAltitude = TILE_SIZE * 6) using Apache flight system
+  - [x] High speed (9.0 vs Apache 5.0625)
+  - [x] 6 missiles ammo capacity, refuels/rearmed at Airstrip
+  - [x] Image renderer (f22ImageRenderer.js) using f22_raptor_map.webp
+  - [x] Sidebar button using f22_raptor_sidebar.webp
+  - [x] Combat uses Apache combat system (rocket volley fire)
+  - [x] Tech tree: unlocked when Airstrip is built
+  - [x] AI enemy produces F22 from Airstrips
+  - [x] Landing/refueling/rearming at Airstrip (helipadLogic.js)
+  - [x] Click on Airstrip to command F22 to land
+  - [x] Cost: $5000

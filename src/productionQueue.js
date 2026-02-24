@@ -15,7 +15,7 @@ import { gameRandom } from './utils/gameRandom.js'
 // Ambulance should spawn from the vehicle factory as well
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
 
-const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache']
+const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor']
 
 // Enhanced production queue system
 export const productionQueue = {
@@ -426,6 +426,42 @@ export const productionQueue = {
       gameState.nextHelipadIndex = (gameState.nextHelipadIndex + 1) % selectionPool.length
 
       if (!availableHelipads.length && spawnFactory.landedUnitId) {
+        const occupyingUnit = units.find(u => u && u.id === spawnFactory.landedUnitId)
+        if (occupyingUnit) {
+          occupyingUnit.manualFlightState = 'takeoff'
+          occupyingUnit.helipadLandingRequested = false
+          occupyingUnit.helipadTargetId = null
+          occupyingUnit.landedHelipadId = null
+        }
+        spawnFactory.landedUnitId = null
+      }
+
+      if (!rallyPointTarget && spawnFactory.rallyPoint) {
+        rallyPointTarget = spawnFactory.rallyPoint
+      }
+    } else if (unitType === 'f22Raptor') {
+      const allAirstrips = (gameState.buildings || []).filter(
+        b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0
+      )
+
+      if (allAirstrips.length === 0) {
+        console.error('Cannot spawn f22Raptor: No Airstrip found.')
+        showNotification('Production cancelled: F22 Raptor requires an operational Airstrip.')
+        this.currentUnit.button.classList.remove('active', 'paused')
+        this.currentUnit = null
+        this.startNextUnitProduction()
+        return
+      }
+
+      const availableAirstrips = allAirstrips.filter(a => !a.landedUnitId)
+      const selectionPool = availableAirstrips.length > 0 ? availableAirstrips : allAirstrips
+
+      gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
+      const chosenIndex = gameState.nextAirstripIndex % selectionPool.length
+      spawnFactory = selectionPool[chosenIndex]
+      gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % selectionPool.length
+
+      if (!availableAirstrips.length && spawnFactory.landedUnitId) {
         const occupyingUnit = units.find(u => u && u.id === spawnFactory.landedUnitId)
         if (occupyingUnit) {
           occupyingUnit.manualFlightState = 'takeoff'

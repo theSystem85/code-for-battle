@@ -78,7 +78,7 @@ function processAmmunitionResupply(source, units, delta, rangeInTiles) {
 
     const stationary = !(unit.movement && unit.movement.isMoving)
 
-    const isHelicopter = unit.type === 'apache'
+    const isHelicopter = unit.type === 'apache' || unit.type === 'f22Raptor'
     const maxAmmo = isHelicopter ? unit.maxRocketAmmo : unit.maxAmmunition
     const currentAmmo = isHelicopter ? unit.rocketAmmo : unit.ammunition
 
@@ -132,7 +132,7 @@ function processAmmunitionTruckResupply(truck, units, delta) {
 
     const stationary = !(unit.movement && unit.movement.isMoving)
 
-    const isHelicopter = unit.type === 'apache'
+    const isHelicopter = unit.type === 'apache' || unit.type === 'f22Raptor'
     const maxAmmo = isHelicopter ? unit.maxRocketAmmo : unit.maxAmmunition
     const currentAmmo = isHelicopter ? unit.rocketAmmo : unit.ammunition
 

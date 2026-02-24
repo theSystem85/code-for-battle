@@ -431,6 +431,10 @@ export class CursorManager {
       const selectedApacheIds = hasSelectedApaches
         ? selectedUnits.filter(unit => unit.type === 'apache' && unit.id).map(unit => unit.id)
         : []
+      const hasSelectedF22s = selectedUnits.some(unit => unit.type === 'f22Raptor')
+      const selectedF22Ids = hasSelectedF22s
+        ? selectedUnits.filter(unit => unit.type === 'f22Raptor' && unit.id).map(unit => unit.id)
+        : []
 
       if (hasSelectedHarvesters) {
         for (const building of gameState.buildings) {
@@ -484,6 +488,20 @@ export class CursorManager {
                 tileY >= building.y && tileY < building.y + building.height) {
             this.isOverFriendlyHelipad = true
             this.isOverBlockedHelipad = !isHelipadAvailableForUnit(building, units, selectedApacheIds)
+            break
+          }
+        }
+      }
+
+      if (hasSelectedF22s) {
+        for (const building of gameState.buildings) {
+          if (building.type === 'airstrip' &&
+                building.owner === gameState.humanPlayer &&
+                building.health > 0 &&
+                tileX >= building.x && tileX < building.x + building.width &&
+                tileY >= building.y && tileY < building.y + building.height) {
+            this.isOverFriendlyHelipad = true
+            this.isOverBlockedHelipad = !isHelipadAvailableForUnit(building, units, selectedF22Ids)
             break
           }
         }

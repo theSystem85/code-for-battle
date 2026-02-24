@@ -43,12 +43,16 @@ function buildUnitCatalog() {
       entry.weapon = 'machinegun'
       entry.fireRange = TANK_FIRE_RANGE
       entry.spawnsFrom = 'helipad'
+    } else if (type === 'f22Raptor') {
+      entry.weapon = 'missile'
+      entry.fireRange = TANK_FIRE_RANGE
+      entry.spawnsFrom = 'airstrip'
     } else if (['tank_v1', 'tank-v2', 'tank-v3'].includes(type)) {
       entry.weapon = 'cannon'
       entry.fireRange = TANK_FIRE_RANGE
     }
     // Spawn location
-    if (type !== 'apache') entry.spawnsFrom = 'vehicleFactory'
+    if (type !== 'apache' && type !== 'f22Raptor') entry.spawnsFrom = 'vehicleFactory'
     // Special roles
     if (type === 'harvester') entry.role = 'economic: harvests ore and delivers to refinery'
     if (type === 'ambulance') entry.role = 'support: heals nearby friendly units'

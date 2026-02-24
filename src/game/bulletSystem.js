@@ -128,7 +128,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             targetX = bullet.target.x + TILE_SIZE / 2
             targetY = bullet.target.y + TILE_SIZE / 2
             // Adjust for Apache altitude visual offset
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
+            if (bullet.target.isAirUnit && bullet.target.altitude) {
               targetY -= bullet.target.altitude * 0.4
             }
           }
@@ -262,7 +262,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // For Apache helicopters, adjust target Y to account for altitude visual offset
             // The Apache visual is rendered at y - (altitude * 0.4), so we need to aim higher
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
+            if (bullet.target.isAirUnit && bullet.target.altitude) {
               const altitudeLift = bullet.target.altitude * 0.4
               targetCenterY_pixels -= altitudeLift
             }
@@ -546,7 +546,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             // Unit target
             targetX = bullet.target.x + TILE_SIZE / 2
             targetY = bullet.target.y + TILE_SIZE / 2
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
+            if (bullet.target.isAirUnit && bullet.target.altitude) {
               targetY -= bullet.target.altitude * 0.4
             }
           }

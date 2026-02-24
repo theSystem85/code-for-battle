@@ -703,6 +703,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   let spawnPosition = null
   let worldPositionOverride = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
+  const isAirstripF22 = factory.type === 'airstrip' && type === 'f22Raptor'
 
   if (isHelipadApache) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
@@ -723,6 +724,17 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
         }
       }
     }
+  } else if (isAirstripF22) {
+    // Place F22 at the center of the airstrip runway
+    const airstripCenterTileX = factory.x + Math.floor(factory.width / 2)
+    const airstripCenterTileY = factory.y + Math.floor(factory.height / 2)
+    const airstripCenterX = airstripCenterTileX * TILE_SIZE
+    const airstripCenterY = airstripCenterTileY * TILE_SIZE
+    worldPositionOverride = {
+      x: airstripCenterX - TILE_SIZE / 2,
+      y: airstripCenterY - TILE_SIZE / 2
+    }
+    spawnPosition = { x: airstripCenterTileX, y: airstripCenterTileY }
   } else if (factory.type === 'vehicleFactory') {
     // Attempt to free the designated spawn tile using algorithm A1
     moveBlockingUnits(spawnX, spawnY, units, mapGrid)
@@ -753,7 +765,8 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     : options
 
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
-  if (occupancyMap && !isHelipadApache) {
+  const isSpawnedOnPad = isHelipadApache || isAirstripF22
+  if (occupancyMap && !isSpawnedOnPad) {
     // Use center coordinates for occupancy map consistency
     const centerTileX = Math.floor((newUnit.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -823,11 +836,57 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     }
   }
 
+  if (isAirstripF22) {
+    const airstripId = getBuildingIdentifier(factory)
+    newUnit.flightPlan = null
+    newUnit.autoHoldAltitude = false
+    newUnit.manualFlightState = 'auto'
+    newUnit.altitude = 0
+    newUnit.targetAltitude = 0
+    newUnit.hovering = false
+    newUnit.helipadLandingRequested = false
+    newUnit.helipadTargetId = airstripId
+    newUnit.landedHelipadId = airstripId
+    newUnit.remoteControlActive = false
+    newUnit.groundedOccupancyApplied = false
+    newUnit.path = []
+    newUnit.moveTarget = null
+    if (newUnit.movement) {
+      newUnit.movement.velocity = { x: 0, y: 0 }
+      newUnit.movement.targetVelocity = { x: 0, y: 0 }
+      newUnit.movement.isMoving = false
+      newUnit.movement.currentSpeed = 0
+    }
+    newUnit.flightState = 'grounded'
+    if (newUnit.shadow) {
+      newUnit.shadow.offset = 0
+      newUnit.shadow.scale = 1
+    }
+    if (typeof newUnit.maxRocketAmmo === 'number') {
+      newUnit.rocketAmmo = newUnit.maxRocketAmmo
+      newUnit.apacheAmmoEmpty = false
+      newUnit.canFire = true
+    }
+    if (typeof newUnit.maxGas === 'number') {
+      newUnit.gas = newUnit.maxGas
+      newUnit.outOfGasPlayed = false
+    }
+    factory.landedUnitId = newUnit.id
+    if (Array.isArray(gameState.buildings)) {
+      const matchingAirstrip = gameState.buildings.find(
+        b => getBuildingIdentifier(b) === airstripId
+      )
+      if (matchingAirstrip) {
+        matchingAirstrip.landedUnitId = newUnit.id
+      }
+    }
+  }
+
   // If a rally point target was provided (from the specific spawning factory), set the unit's path to it.
   // This allows each factory to have its own individual assembly point.
   // Harvesters handle their own initial path logic in productionQueue.js
-  // Apache helicopters spawned on helipads should not immediately move to rally points - they should stay landed
-  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache) {
+  // Apache helicopters spawned on helipads and F22 Raptors spawned on airstrips should not immediately move to rally points
+  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22) {
     const path = findPath(
       { x: spawnPosition.x, y: spawnPosition.y },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
@@ -969,8 +1028,8 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer']
   const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank']
 
-  // Apache helicopters don't have crew system
-  if (actualType !== 'apache') {
+  // Apache helicopters and F22 Raptor don't have crew system
+  if (actualType !== 'apache' && actualType !== 'f22Raptor') {
     unit.crew = { driver: true, commander: true }
 
     if (fullCrewTanks.includes(actualType)) {
@@ -1031,6 +1090,42 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.helipadTargetId = null
     unit.landedHelipadId = null
     unit.maxRocketAmmo = 38
+    unit.rocketAmmo = unit.maxRocketAmmo
+  }
+
+  if (actualType === 'f22Raptor') {
+    unit.isAirUnit = true
+    unit.stealth = true
+    unit.flightState = 'grounded'
+    unit.altitude = 0
+    unit.targetAltitude = 0
+    unit.maxAltitude = TILE_SIZE * 6
+    unit.airCruiseSpeed = unitProps.speed
+    unit.hoverFuelMultiplier = 1.0 // Jets consume full fuel when airborne (no hover discount)
+    unit.autoHoldAltitude = false
+    unit.flightPlan = null
+    unit.shadow = {
+      offset: 0,
+      scale: 1
+    }
+    unit.hovering = false
+    unit.groundedOccupancyApplied = false
+    unit.lastGroundedOnHelipad = false
+    unit.airborneSince = null
+    const f22Now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+    unit.landedSince = f22Now
+    unit.attackCooldown = 0
+    unit.volleyState = null
+    unit.dodgeCooldown = 0
+    unit.dodgeChance = 0.4
+    unit.fuelSource = null
+    unit.requiresAirstrip = true
+    unit.manualFlightState = 'auto'
+    unit.manualFlightHoverRequested = false
+    unit.helipadLandingRequested = false
+    unit.helipadTargetId = null
+    unit.landedHelipadId = null
+    unit.maxRocketAmmo = 6
     unit.rocketAmmo = unit.maxRocketAmmo
   }
 

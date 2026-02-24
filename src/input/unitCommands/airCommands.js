@@ -7,7 +7,7 @@ import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUn
 import { units } from '../../main.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
-  if (!unit || unit.type !== 'apache' || !destCenter) {
+  if (!unit || (unit.type !== 'apache' && unit.type !== 'f22Raptor') || !destCenter) {
     return false
   }
 
@@ -52,7 +52,8 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
 }
 
 export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _mapGrid) {
-  const apaches = selectedUnits.filter(unit => unit.type === 'apache')
+  const isAirstripCommand = helipad && helipad.type === 'airstrip'
+  const apaches = selectedUnits.filter(unit => isAirstripCommand ? unit.type === 'f22Raptor' : unit.type === 'apache')
   if (apaches.length === 0 || !helipad) {
     return
   }
@@ -62,8 +63,9 @@ export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _map
     return
   }
 
+  const padType = helipad.type
   const helipads = Array.isArray(gameState.buildings)
-    ? gameState.buildings.filter(building => building.type === 'helipad' && building.health > 0 && building.owner === helipad.owner)
+    ? gameState.buildings.filter(building => building.type === padType && building.health > 0 && building.owner === helipad.owner)
     : []
 
   const helipadOptions = helipads.map(building => {

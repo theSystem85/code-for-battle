@@ -124,6 +124,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
     if (Array.isArray(units)) {
 
       const apacheUnits = units.filter(u => u.type === 'apache' && u.health > 0)
+      const f22Units = units.filter(u => u.type === 'f22Raptor' && u.health > 0)
       if (helipad.type === 'helipad') {
         if (helipad.landedUnitId) {
           const occupant = apacheUnits.find(u => u.id === helipad.landedUnitId)
@@ -273,6 +274,123 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
           }
         })
       } // end if helipad.type === 'helipad'
+
+      // Handle F22 Raptor units landing/refueling at Airstrip
+      if (helipad.type === 'airstrip') {
+        if (helipad.landedUnitId) {
+          const occupant = f22Units.find(u => u.id === helipad.landedUnitId)
+          if (!occupant || occupant.landedHelipadId !== helipadId || occupant.flightState !== 'grounded') {
+            helipad.landedUnitId = null
+          }
+        }
+        f22Units.forEach(jet => {
+          const jetCenterX = jet.x + TILE_SIZE / 2
+          const jetCenterY = jet.y + TILE_SIZE / 2
+          const distance = Math.hypot(jetCenterX - helipadCenterX, jetCenterY - helipadCenterY)
+          // Airstrip is large (12x6) so use a wider landing radius
+          const landingRadius = TILE_SIZE * 3
+
+          if (jet.flightState !== 'grounded' && jet.landedHelipadId === helipadId) {
+            jet.landedHelipadId = null
+          }
+          if (jet.flightState !== 'grounded' && helipad.landedUnitId === jet.id) {
+            helipad.landedUnitId = null
+          }
+
+          const landingCommanded = jet.helipadLandingRequested && (!jet.helipadTargetId || jet.helipadTargetId === helipadId)
+          const landingLinked = jet.landedHelipadId === helipadId || helipad.landedUnitId === jet.id
+          const landingRequested = landingCommanded || landingLinked
+
+          if (distance <= landingRadius) {
+            if (landingRequested) {
+              const landingX = helipadCenterX - TILE_SIZE / 2
+              const landingY = helipadCenterY - TILE_SIZE / 2
+
+              const isAlreadyGroundedHere = jet.flightState === 'grounded' &&
+                jet.landedHelipadId === helipadId &&
+                Math.abs(jet.x - landingX) < 2 &&
+                Math.abs(jet.y - landingY) < 2
+
+              if (!isAlreadyGroundedHere) {
+                jet.x = landingX
+                jet.y = landingY
+                jet.tileX = Math.floor(jet.x / TILE_SIZE)
+                jet.tileY = Math.floor(jet.y / TILE_SIZE)
+              }
+
+              if (jet.flightState === 'grounded') {
+                jet.moveTarget = null
+                jet.path = []
+                jet.flightPlan = null
+              } else {
+                jet.moveTarget = { x: jet.tileX, y: jet.tileY }
+                jet.path = []
+                jet.flightPlan = {
+                  x: helipadCenterX,
+                  y: helipadCenterY,
+                  stopRadius: Math.max(6, TILE_SIZE * 0.5),
+                  mode: 'helipad',
+                  followTargetId: null,
+                  destinationTile: { x: jet.tileX, y: jet.tileY }
+                }
+              }
+
+              if (jet.flightState !== 'grounded') {
+                jet.autoHoldAltitude = false
+                jet.manualFlightState = 'land'
+              }
+
+              jet.helipadTargetId = helipadId
+              jet.landedHelipadId = helipadId
+              helipad.landedUnitId = jet.id
+
+              if (typeof jet.maxRocketAmmo === 'number' && jet.rocketAmmo < jet.maxRocketAmmo) {
+                if (helipad.ammo > 0) {
+                  const ammoNeeded = jet.maxRocketAmmo - jet.rocketAmmo
+                  const ammoRefillTime = 8000
+                  const ammoRefillRate = jet.maxRocketAmmo / ammoRefillTime
+                  const ammoToTransfer = Math.min(ammoRefillRate * delta, ammoNeeded, helipad.ammo)
+                  if (ammoToTransfer > 0) {
+                    jet.rocketAmmo += ammoToTransfer
+                    helipad.ammo -= ammoToTransfer
+                  }
+                  if (jet.rocketAmmo > 0) {
+                    jet.apacheAmmoEmpty = false
+                  }
+                }
+              }
+
+              if (typeof jet.maxGas === 'number' && jet.gas < jet.maxGas && helipad.fuel > 0) {
+                const refuelRate = jet.maxGas / 3500
+                const transfer = Math.min(refuelRate * delta, jet.maxGas - jet.gas, helipad.fuel)
+                if (transfer > 0) {
+                  jet.gas = Math.min(jet.maxGas, jet.gas + transfer)
+                  helipad.fuel = Math.max(0, helipad.fuel - transfer)
+                  jet.refuelingAtHelipad = true
+                } else {
+                  jet.refuelingAtHelipad = false
+                }
+              } else {
+                jet.refuelingAtHelipad = false
+              }
+
+              const hasAmmoCapacity = typeof jet.maxRocketAmmo === 'number' && jet.maxRocketAmmo > 0
+              const ammoFull = !hasAmmoCapacity || jet.rocketAmmo >= jet.maxRocketAmmo
+              jet.canFire = ammoFull && jet.flightState === 'grounded'
+            }
+          } else {
+            if (jet.refuelingAtHelipad) {
+              jet.refuelingAtHelipad = false
+            }
+            if (jet.landedHelipadId === helipadId) {
+              clearHelipadClaimForUnit(jet, helipadId, helipads)
+            }
+            if (helipad.landedUnitId === jet.id) {
+              helipad.landedUnitId = null
+            }
+          }
+        })
+      } // end if helipad.type === 'airstrip'
 
       const tankers = units.filter(u => u.type === 'tankerTruck' && u.health > 0 && typeof u.supplyGas === 'number' && u.supplyGas > 0)
       tankers.forEach(tanker => {

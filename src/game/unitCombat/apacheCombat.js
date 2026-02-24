@@ -59,8 +59,11 @@ function findNearestHelipadForApache(unit, units) {
     return null
   }
 
+  // F22 Raptors use airstrips; Apaches use helipads
+  const padType = unit.type === 'f22Raptor' ? 'airstrip' : 'helipad'
+
   const candidates = gameState.buildings.filter(building => {
-    if (!building || building.type !== 'helipad' || building.health <= 0) {
+    if (!building || building.type !== padType || building.health <= 0) {
       return false
     }
     if (building.owner && unit.owner && building.owner !== unit.owner) {
@@ -91,7 +94,7 @@ function findNearestHelipadForApache(unit, units) {
     }
     if (helipad.landedUnitId && helipad.landedUnitId !== unit.id) {
       const occupant = Array.isArray(units) ? units.find(u => u && u.id === helipad.landedUnitId) : null
-      const occupantGrounded = occupant && occupant.type === 'apache' && occupant.health > 0 && occupant.flightState === 'grounded'
+      const occupantGrounded = occupant && (occupant.type === 'apache' || occupant.type === 'f22Raptor') && occupant.health > 0 && occupant.flightState === 'grounded'
       if (occupantGrounded) {
         return
       }
@@ -112,7 +115,7 @@ function getHelipadById(helipadId) {
   }
 
   return gameState.buildings.find(building => {
-    if (!building || building.type !== 'helipad' || building.health <= 0) {
+    if (!building || (building.type !== 'helipad' && building.type !== 'airstrip') || building.health <= 0) {
       return false
     }
     return getBuildingIdentifier(building) === helipadId

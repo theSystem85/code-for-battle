@@ -194,6 +194,7 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
   const tileY = Math.floor(worldY / TILE_SIZE)
   const hasSelectedHarvesters = commandableUnits.some(unit => unit.type === 'harvester')
   const hasSelectedApaches = commandableUnits.some(unit => unit.type === 'apache')
+  const hasSelectedF22s = commandableUnits.some(unit => unit.type === 'f22Raptor')
 
   if (
     hasSelectedApaches &&
@@ -203,6 +204,24 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
   ) {
     for (const building of gameState.buildings) {
       if (building.type === 'helipad' &&
+          building.owner === gameState.humanPlayer &&
+          building.health > 0 &&
+          tileX >= building.x && tileX < building.x + building.width &&
+          tileY >= building.y && tileY < building.y + building.height) {
+        unitCommands.handleApacheHelipadCommand(commandableUnits, building, mapGrid)
+        return
+      }
+    }
+  }
+
+  if (
+    hasSelectedF22s &&
+    commandableUnits.every(unit => unit.type === 'f22Raptor') &&
+    gameState.buildings &&
+    Array.isArray(gameState.buildings)
+  ) {
+    for (const building of gameState.buildings) {
+      if (building.type === 'airstrip' &&
           building.owner === gameState.humanPlayer &&
           building.health > 0 &&
           tileX >= building.x && tileX < building.x + building.width &&

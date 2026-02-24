@@ -62,7 +62,7 @@ export function processUtilityQueueSelection(handler, units, mapGrid, selectedUn
     if (unit.health < unit.maxHealth) {
       repairTargets.push(unit)
     }
-    const needsAmmo = (unit.type === 'apache'
+    const needsAmmo = (unit.type === 'apache' || unit.type === 'f22Raptor'
       ? typeof unit.maxRocketAmmo === 'number' && unit.rocketAmmo < unit.maxRocketAmmo
       : typeof unit.maxAmmunition === 'number' && unit.ammunition < unit.maxAmmunition)
     if (needsAmmo) {
@@ -288,7 +288,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
 
       if (unit.type === 'howitzer') {
         range = HOWITZER_FIRE_RANGE * TILE_SIZE
-      } else if (unit.type === 'apache') {
+      } else if (unit.type === 'apache' || unit.type === 'f22Raptor') {
         range = baseRange * APACHE_RANGE_REDUCTION
       }
 
@@ -307,7 +307,8 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
         'tank-v3',
         'rocketTank',
         'howitzer',
-        'apache'
+        'apache',
+        'f22Raptor'
       ])
 
       if (!attackCapableTypes.has(unit.type)) {
@@ -907,6 +908,24 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
     ) {
       for (const building of gameState.buildings) {
         if (building.type === 'helipad' &&
+            building.owner === gameState.humanPlayer &&
+            building.health > 0 &&
+            tileX >= building.x && tileX < building.x + building.width &&
+            tileY >= building.y && tileY < building.y + building.height) {
+          unitCommands.handleApacheHelipadCommand(commandableUnits, building, mapGrid)
+          return
+        }
+      }
+    }
+
+    const hasSelectedF22s = commandableUnits.some(unit => unit.type === 'f22Raptor')
+    if (
+      hasSelectedF22s &&
+      commandableUnits.every(unit => unit.type === 'f22Raptor') &&
+      gameState.buildings && Array.isArray(gameState.buildings)
+    ) {
+      for (const building of gameState.buildings) {
+        if (building.type === 'airstrip' &&
             building.owner === gameState.humanPlayer &&
             building.health > 0 &&
             tileX >= building.x && tileX < building.x + building.width &&

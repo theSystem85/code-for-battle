@@ -48,7 +48,7 @@ export function isAirborneUnit(unit) {
   if (unit.isAirUnit && unit.flightState !== 'grounded') {
     return true
   }
-  return unit.type === 'apache' && unit.flightState !== 'grounded'
+  return (unit.type === 'apache' || unit.type === 'f22Raptor') && unit.flightState !== 'grounded'
 }
 
 export function isGroundUnit(unit) {

@@ -84,8 +84,8 @@ export const updateAmmunitionTruckLogic = logPerformance(function(units, gameSta
       // Clear target if it's gone, dead, or full
       const isUnit = typeof target.tileX === 'number'
       if (target.health <= 0 ||
-          (isUnit && target.type === 'apache' && typeof target.maxRocketAmmo === 'number' && target.rocketAmmo >= target.maxRocketAmmo) ||
-          (isUnit && target.type !== 'apache' && typeof target.maxAmmunition === 'number' && target.ammunition >= target.maxAmmunition) ||
+          (isUnit && target.isAirUnit && typeof target.maxRocketAmmo === 'number' && target.rocketAmmo >= target.maxRocketAmmo) ||
+          (isUnit && !target.isAirUnit && typeof target.maxAmmunition === 'number' && target.ammunition >= target.maxAmmunition) ||
           (!isUnit && typeof target.maxAmmo === 'number' && target.ammo >= target.maxAmmo)) {
         ammoTruck.ammoResupplyTarget = null
         ammoTruck.ammoResupplyTimer = 0
@@ -107,24 +107,24 @@ export const updateAmmunitionTruckLogic = logPerformance(function(units, gameSta
 
           if (ammoTruck.ammoCargo > 0) {
             const needsAmmo = isUnit ?
-              (target.type === 'apache' ?
+              (target.isAirUnit ?
                 (target.rocketAmmo < target.maxRocketAmmo) :
                 (target.ammunition < target.maxAmmunition)) :
               (target.ammo < target.maxAmmo)
 
             if (needsAmmo) {
               const refillRate = (isUnit ?
-                (target.type === 'apache' ? target.maxRocketAmmo : target.maxAmmunition) :
+                (target.isAirUnit ? target.maxRocketAmmo : target.maxAmmunition) :
                 target.maxAmmo) / AMMO_RESUPPLY_TIME
               const ammoNeeded = isUnit ?
-                (target.type === 'apache' ?
+                (target.isAirUnit ?
                   (target.maxRocketAmmo - target.rocketAmmo) :
                   (target.maxAmmunition - target.ammunition)) :
                 (target.maxAmmo - target.ammo)
               const transfer = Math.min(refillRate * delta, ammoNeeded, ammoTruck.ammoCargo)
 
               if (isUnit) {
-                if (target.type === 'apache') {
+                if (target.isAirUnit) {
                   target.rocketAmmo = Math.min(target.maxRocketAmmo, target.rocketAmmo + transfer)
                 } else {
                   target.ammunition = Math.min(target.maxAmmunition, target.ammunition + transfer)
