@@ -116,8 +116,8 @@ export class MouseHandler {
     return handleServiceProviderClick(this, provider, selectedUnits, unitCommands, mapGrid)
   }
 
-  handleFallbackCommand(worldX, worldY, selectedUnits, unitCommands, mapGrid, e) {
-    return handleFallbackCommand(this, worldX, worldY, selectedUnits, unitCommands, mapGrid, e)
+  handleFallbackCommand(worldX, worldY, selectedUnits, unitCommands, mapGrid, e, units = [], factories = []) {
+    return handleFallbackCommand(this, worldX, worldY, selectedUnits, unitCommands, mapGrid, e, units, factories)
   }
 
   handleContextMenu(e, gameCanvas) {

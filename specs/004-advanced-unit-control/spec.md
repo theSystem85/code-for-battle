@@ -191,6 +191,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-069**: Defense buildings selected by the player (turretGun variants, rocket turret, artillery turret, tesla coil) MUST show attack/out-of-range attack cursor states while hovering enemy targets, matching unit attack cursor behavior.
 - **FR-070**: AGF forced-target queues for defense buildings MUST preserve queued FIFO behavior and allow artillery/rocket turrets to fire at queued targets even when direct line-of-sight is blocked by buildings.
 - **FR-071**: When AGF assigns multiple queued attack targets, the renderer MUST draw a red ordered chain line from the selected attacker to each queued target in sequence.
+- **FR-072**: With defensive buildings selected, a normal click on an enemy target (without force-attack modifier) MUST assign forced attack targeting, and newly added targets MUST be inserted at the front of the forced-attack queue (newest-first).
 
 
 **Logistics Symmetry:**
