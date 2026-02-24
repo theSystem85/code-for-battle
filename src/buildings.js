@@ -15,6 +15,7 @@ import { ensureServiceRadius } from './utils/serviceRadius.js'
 import { getUniqueId } from './utils.js'
 import { getMapRenderer } from './rendering.js'
 import { getBuildingImage } from './buildingImageMap.js'
+import { isAirstripBlockedLocalTile } from './utils/buildingPassability.js'
 
 // Re-export buildingData from the data module to maintain backwards compatibility
 export { buildingData } from './data/buildingData.js'
@@ -113,6 +114,10 @@ export function createBuilding(type, x, y) {
 
   if (type === 'helipad' || type === 'airstrip') {
     building.landedUnitId = null
+  }
+
+  if (type === 'street') {
+    building.selectable = false
   }
 
   if (typeof data.maxFuel === 'number') {
@@ -248,7 +253,17 @@ export function placeBuilding(building, mapGrid, occupancyMap = gameState.occupa
 
       // Mark tile as having a building (for collision detection) but preserve the original tile type for rendering
       mapGrid[y][x].building = building
-      if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
+      const localX = x - building.x
+      const localY = y - building.y
+      const isStreetTile = building.type === 'street'
+      const isAirstripPassableTile =
+        building.type === 'airstrip' &&
+        !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
+      const isBuildOnlyTile = isStreetTile || isAirstripPassableTile
+
+      if (isBuildOnlyTile) {
+        mapGrid[y][x].buildOnlyOccupied = (mapGrid[y][x].buildOnlyOccupied || 0) + 1
+      } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
         occupancyMap[y][x] = (occupancyMap[y][x] || 0) + 1
       }
 
@@ -257,6 +272,10 @@ export function placeBuilding(building, mapGrid, occupancyMap = gameState.occupa
         mapGrid[y][x].ore = false
         // Clear any cached texture variations for this tile to force re-render
         mapGrid[y][x].textureVariation = null
+      }
+
+      if (isStreetTile) {
+        mapGrid[y][x].type = 'street'
       }
 
       // DON'T change the tile type - keep the original background texture visible
@@ -333,7 +352,20 @@ export function clearBuildingFromMapGrid(building, mapGrid, occupancyMap = gameS
         changedTiles.push({ x, y })
         // Clear any building reference to unblock this tile for pathfinding
         delete mapGrid[y][x].building
-        if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
+        const localX = x - building.x
+        const localY = y - building.y
+        const isStreetTile = building.type === 'street'
+        const isAirstripPassableTile =
+          building.type === 'airstrip' &&
+          !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
+        const isBuildOnlyTile = isStreetTile || isAirstripPassableTile
+
+        if (isBuildOnlyTile) {
+          mapGrid[y][x].buildOnlyOccupied = Math.max(0, (mapGrid[y][x].buildOnlyOccupied || 0) - 1)
+          if (mapGrid[y][x].buildOnlyOccupied <= 0) {
+            delete mapGrid[y][x].buildOnlyOccupied
+          }
+        } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
           occupancyMap[y][x] = Math.max(0, (occupancyMap[y][x] || 0) - 1)
         }
       }

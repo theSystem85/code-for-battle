@@ -15,7 +15,7 @@ import { gameRandom } from './utils/gameRandom.js'
 // Ambulance should spawn from the vehicle factory as well
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
 
-const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache']
+const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor']
 
 // Enhanced production queue system
 export const productionQueue = {

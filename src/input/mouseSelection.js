@@ -921,7 +921,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   let clickedBuilding = null
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (const building of gameState.buildings) {
-      if (!building || building.health <= 0) continue
+      if (!building || building.health <= 0 || building.selectable === false) continue
 
       const buildingX = building.x * TILE_SIZE
       const buildingY = building.y * TILE_SIZE

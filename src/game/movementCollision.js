@@ -31,6 +31,7 @@ import {
   LOCAL_LOOKAHEAD_STRENGTH
 } from './movementConstants.js'
 import { isAirborneUnit, isGroundUnit, ownersAreEnemies } from './movementHelpers.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 const STATIC_COLLISION_SEPARATION_SCALE = 0.3
 const STATIC_COLLISION_SEPARATION_MIN = 0.25
@@ -58,7 +59,7 @@ function isTileBlockedForCollision(mapGrid, tileX, tileY) {
     return true
   }
 
-  if (tile.building) {
+  if (hasBlockingBuilding(tile)) {
     return true
   }
 
@@ -279,7 +280,7 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         return { collided: true, type: 'terrain', tileX, tileY }
       }
 
-      if (tile.building) {
+      if (hasBlockingBuilding(tile)) {
         if (unit.type === 'apache' && tile.building.type === 'helipad') {
           return { collided: false }
         }

@@ -21,6 +21,7 @@ import { getHelipadLandingCenter, getHelipadLandingTile, getHelipadLandingTopLef
 import { isFriendlyMineBlocking } from './game/mineSystem.js'
 import { getSpatialQuadtree } from './game/spatialQuadtree.js'
 import { recordUnitCreated } from './ai-api/transitionCollector.js'
+import { hasBlockingBuilding, getAirstripSpawnOffsets } from './utils/buildingPassability.js'
 
 // Add a global variable to track if we've already shown the pathfinding warning
 let pathfindingWarningShown = false
@@ -65,7 +66,7 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
         tile.type === 'water' ||
         tile.type === 'rock' ||
         tile.seedCrystal ||
-        tile.building ||
+        hasBlockingBuilding(tile) ||
         isImpassableGrass ? 1 : 0
     }
   }
@@ -258,7 +259,7 @@ function findNearestFreeTile(x, y, mapGrid, occupancyMap, maxDistance = 5, optio
           const passable =
             tile.type !== 'water' &&
             tile.type !== 'rock' &&
-            !tile.building &&
+            !hasBlockingBuilding(tile) &&
             !tile.seedCrystal
           const occupied = isTileBlockedForUnit(occupancyMap, checkX, checkY, options)
           if (passable && !occupied) {
@@ -312,7 +313,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   let adjustedEnd = { ...end }
   const destTile = mapGrid[adjustedEnd.y][adjustedEnd.x]
   const destType = destTile.type
-  const destHasBuilding = destTile.building
+  const destHasBuilding = hasBlockingBuilding(destTile)
   const destSeedCrystal = destTile.seedCrystal
   const destinationIsStart = adjustedEnd.x === start.x && adjustedEnd.y === start.y
   const destOccupied = !destinationIsStart && isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
@@ -509,7 +510,7 @@ function isTileWithinBounds(mapGrid, x, y) {
 }
 
 function isTerrainBlocked(tile) {
-  return tile.type === 'water' || tile.type === 'rock' || tile.building || tile.seedCrystal
+  return tile.type === 'water' || tile.type === 'rock' || hasBlockingBuilding(tile) || tile.seedCrystal
 }
 
 function isTilePassable(mapGrid, x, y) {
@@ -725,10 +726,14 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
       }
     }
   } else if (isAirstripF22) {
-    const centerTileX = factory.x + Math.floor(factory.width / 2)
-    const centerTileY = factory.y + Math.floor(factory.height / 2)
-    spawnPosition = { x: centerTileX, y: centerTileY }
-    worldPositionOverride = { x: centerTileX * TILE_SIZE, y: centerTileY * TILE_SIZE }
+    const spawnOffsets = getAirstripSpawnOffsets()
+    gameState.nextAirstripSpawnPointIndex = gameState.nextAirstripSpawnPointIndex ?? 0
+    const offset = spawnOffsets[gameState.nextAirstripSpawnPointIndex % spawnOffsets.length]
+    gameState.nextAirstripSpawnPointIndex = (gameState.nextAirstripSpawnPointIndex + 1) % spawnOffsets.length
+    const spawnTileX = factory.x + Math.min(factory.width - 1, Math.max(0, offset.x))
+    const spawnTileY = factory.y + Math.min(factory.height - 1, Math.max(0, offset.y))
+    spawnPosition = { x: spawnTileX, y: spawnTileY }
+    worldPositionOverride = { x: spawnTileX * TILE_SIZE, y: spawnTileY * TILE_SIZE }
   } else if (factory.type === 'vehicleFactory') {
     // Attempt to free the designated spawn tile using algorithm A1
     moveBlockingUnits(spawnX, spawnY, units, mapGrid)
@@ -1242,7 +1247,7 @@ function isPositionValid(x, y, mapGrid, units) {
     return false
   }
 
-  if (mapGrid[y][x].building) {
+  if (hasBlockingBuilding(mapGrid[y][x])) {
     return false
   }
 

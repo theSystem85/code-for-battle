@@ -40,6 +40,7 @@ const buildingDescriptions = {
   airstrip: 'Hosts and resupplies military jets with fuel and ammo.',
   gasStation: 'Refuels vehicles that require gas to operate.',
   ammunitionFactory: 'Reloads ammunition trucks and nearby ammo reserves.',
+  street: 'Passable road tile that blocks construction placement on top of it.',
   turretGunV1: 'Basic defense turret that suppresses nearby threats.',
   turretGunV2: 'Upgraded turret with higher firepower and range.',
   turretGunV3: 'Advanced turret that excels at rapid enemy suppression.',

@@ -8,6 +8,7 @@ import { clearTankerKamikazeState } from '../../game/tankerTruckUtils.js'
 import { broadcastUnitMove } from '../../network/gameCommandSync.js'
 import { resetUnitVelocityForNewPath } from '../../game/unifiedMovement.js'
 import { clearAttackGroupState, cancelRecoveryTask } from './utilityQueue.js'
+import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
 
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
   const commandableUnits = selectedUnits.filter(unit => {
@@ -95,7 +96,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
             newTile.x < mapGrid[0].length && newTile.y < mapGrid.length &&
             mapGrid[newTile.y][newTile.x].type !== 'water' &&
             mapGrid[newTile.y][newTile.x].type !== 'rock' &&
-            !mapGrid[newTile.y][newTile.x].building &&
+            !hasBlockingBuilding(mapGrid[newTile.y][newTile.x]) &&
             !selectedUnits.slice(0, index).some(u =>
               u.moveTarget && u.moveTarget.x === newTile.x && u.moveTarget.y === newTile.y
             )) {
@@ -107,7 +108,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
 
     const gasDepleted = typeof unit.maxGas === 'number' && unit.gas <= 0
 
-    if (unit.type === 'apache') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
       if (gasDepleted) {
         outOfGasCount++
         return
