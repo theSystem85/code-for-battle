@@ -53,8 +53,9 @@ function queueDefenseBuildingTarget(building, target) {
   if (!currentTarget || currentTarget.health <= 0) {
     building.forcedAttackTarget = target
   } else if (!isSameTarget(currentTarget) && !targetAlreadyQueued) {
-    // Intentionally prepend newest target so latest click executes first.
-    building.forcedAttackQueue.unshift(target)
+    // New target becomes active immediately; previous active target is queued next.
+    building.forcedAttackQueue.unshift(currentTarget)
+    building.forcedAttackTarget = target
   }
 
   building.forcedAttack = true

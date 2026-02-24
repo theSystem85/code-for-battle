@@ -64,8 +64,8 @@ describe('mouseCommands fallback defense-building targeting', () => {
       []
     )
 
-    expect(selectedTurret.forcedAttackTarget).toBe(activeTarget)
-    expect(selectedTurret.forcedAttackQueue.map(target => target.id)).toEqual(['enemy-clicked', 'enemy-old'])
+    expect(selectedTurret.forcedAttackTarget).toBe(clickedEnemy)
+    expect(selectedTurret.forcedAttackQueue.map(target => target.id)).toEqual(['enemy-active', 'enemy-old'])
     expect(selectedTurret.holdFire).toBe(false)
     expect(selectedTurret.forcedAttack).toBe(true)
   })

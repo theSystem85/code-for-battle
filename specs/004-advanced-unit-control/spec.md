@@ -192,6 +192,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-070**: AGF forced-target queues for defense buildings MUST preserve queued FIFO behavior and allow artillery/rocket turrets to fire at queued targets even when direct line-of-sight is blocked by buildings.
 - **FR-071**: When AGF assigns multiple queued attack targets, the renderer MUST draw a red ordered chain line from the selected attacker to each queued target in sequence.
 - **FR-072**: With defensive buildings selected, a normal click on an enemy target (without force-attack modifier) MUST assign forced attack targeting, and newly added targets MUST be inserted at the front of the forced-attack queue (newest-first).
+- **FR-073**: For defensive-building forced targeting, a newly added target MUST become the immediate active target (queue position 1), and the prior active target MUST be moved to the front of the remaining queue.
 
 
 **Logistics Symmetry:**

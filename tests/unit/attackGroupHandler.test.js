@@ -519,8 +519,8 @@ describe('AttackGroupHandler', () => {
 
       expect(turret.holdFire).toBe(false)
       expect(turret.forcedAttack).toBe(true)
-      expect(turret.forcedAttackTarget).toBe(targets[0])
-      expect(turret.forcedAttackQueue).toEqual([targets[1]])
+      expect(turret.forcedAttackTarget).toBe(targets[1])
+      expect(turret.forcedAttackQueue).toEqual([targets[0]])
     })
 
   })
@@ -545,9 +545,10 @@ describe('AttackGroupHandler', () => {
 
     handler.setupAttackQueue([turret], targets, unitCommands, mapGrid)
 
+    expect(turret.forcedAttackTarget.id).toBe('enemy-new-2')
     expect(turret.forcedAttackQueue.map(target => target.id)).toEqual([
-      'enemy-new-2',
       'enemy-new-1',
+      'enemy-active',
       'enemy-old-1',
       'enemy-old-2'
     ])
