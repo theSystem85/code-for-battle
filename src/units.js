@@ -878,7 +878,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   // If a rally point target was provided (from the specific spawning factory), set the unit's path to it.
   // This allows each factory to have its own individual assembly point.
   // Harvesters handle their own initial path logic in productionQueue.js
-  // Apache helicopters spawned on helipads and F22 Raptors on airstrips should not immediately move to rally points - they should stay landed
+  // Apache helicopters spawned on helipads and F22 Raptors spawned on airstrips should not immediately move to rally points - they should stay landed
   if (rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22) {
     const path = findPath(
       { x: spawnPosition.x, y: spawnPosition.y },
@@ -1021,7 +1021,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer']
   const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank']
 
-  // Apache helicopters and F22 Raptors don't have crew system
+  // Apache helicopters and F22 Raptors don't have the crew system
   if (actualType !== 'apache' && actualType !== 'f22Raptor') {
     unit.crew = { driver: true, commander: true }
 
