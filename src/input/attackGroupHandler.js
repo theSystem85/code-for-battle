@@ -202,7 +202,8 @@ export class AttackGroupHandler {
           existingIds.add(target.id)
           return
         }
-        building.forcedAttackQueue.push(target)
+        building.forcedAttackQueue.unshift(building.forcedAttackTarget)
+        building.forcedAttackTarget = target
         existingIds.add(target.id)
       })
     })

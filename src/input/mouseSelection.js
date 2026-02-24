@@ -995,6 +995,6 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
     selectionManager.handleUnitSelection(clickedUnit, e, units, factories, selectedUnits)
     handler.updateAGFCapability(selectedUnits)
   } else {
-    handleFallbackCommand(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, e)
+    handleFallbackCommand(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, e, units, factories)
   }
 }

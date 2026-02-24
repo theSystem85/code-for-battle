@@ -8,6 +8,8 @@ import { isForceAttackModifierActive } from '../utils/inputUtils.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 
+const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
+
 
 function findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManager, gameFactories = []) {
   let target = findEnemyTarget(worldX, worldY, gameFactories, units)
@@ -32,6 +34,33 @@ function findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManag
   }
 
   return target
+}
+
+
+function queueDefenseBuildingTarget(building, target) {
+  if (!building || !target) {
+    return false
+  }
+
+  if (!Array.isArray(building.forcedAttackQueue)) {
+    building.forcedAttackQueue = []
+  }
+
+  const isSameTarget = candidate => candidate && target && candidate.id === target.id
+  const currentTarget = building.forcedAttackTarget
+  const targetAlreadyQueued = building.forcedAttackQueue.some(isSameTarget)
+
+  if (!currentTarget || currentTarget.health <= 0) {
+    building.forcedAttackTarget = target
+  } else if (!isSameTarget(currentTarget) && !targetAlreadyQueued) {
+    // New target becomes active immediately; previous active target is queued next.
+    building.forcedAttackQueue.unshift(currentTarget)
+    building.forcedAttackTarget = target
+  }
+
+  building.forcedAttack = true
+  building.holdFire = false
+  return true
 }
 
 export function handleForceAttackCommand(handler, worldX, worldY, units, selectedUnits, unitCommands, mapGrid, selectionManager) {
@@ -106,19 +135,7 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
     if (forceAttackTarget) {
       if (first.isBuilding) {
         commandableUnits.forEach(b => {
-          const currentTarget = b.forcedAttackTarget
-          if (!Array.isArray(b.forcedAttackQueue)) {
-            b.forcedAttackQueue = []
-          }
-
-          const isSameTarget = target => target && forceAttackTarget && target.id === forceAttackTarget.id
-          if (!currentTarget || currentTarget.health <= 0) {
-            b.forcedAttackTarget = forceAttackTarget
-          } else if (!isSameTarget(currentTarget) && !b.forcedAttackQueue.some(isSameTarget)) {
-            b.forcedAttackQueue.push(forceAttackTarget)
-          }
-          b.forcedAttack = true
-          b.holdFire = false
+          queueDefenseBuildingTarget(b, forceAttackTarget)
         })
         return true
       } else {
@@ -334,7 +351,7 @@ export function handleServiceProviderClick(handler, provider, selectedUnits, uni
   return unitCommands.handleServiceProviderRequest(provider, requesters, mapGrid)
 }
 
-export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, e) {
+export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, e, units = [], factories = []) {
   if (selectedUnits.length === 0 || gameState.buildingPlacementMode || gameState.repairMode || gameState.sellMode) {
     return
   }
@@ -346,7 +363,23 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
 
   if (e.shiftKey) {
     initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
-  } else if (e.altKey) {
+    return
+  }
+
+  const defensiveBuildings = commandableUnits.filter(unit =>
+    unit?.isBuilding && unit.owner === gameState.humanPlayer && DEFENSIVE_BUILDING_TYPES.has(unit.type)
+  )
+
+  if (!isForceAttackModifierActive(e) && defensiveBuildings.length > 0) {
+    const fallbackTarget = findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManager, factories)
+    if (fallbackTarget && (fallbackTarget.health === undefined || fallbackTarget.health > 0)) {
+      defensiveBuildings.forEach(building => {
+        queueDefenseBuildingTarget(building, fallbackTarget)
+      })
+    }
+  }
+
+  if (e.altKey) {
     handleStandardCommands(handler, worldX, worldY, commandableUnits, unitCommands, mapGrid, true)
   } else if (!isForceAttackModifierActive(e)) {
     handleStandardCommands(handler, worldX, worldY, commandableUnits, unitCommands, mapGrid, false)
