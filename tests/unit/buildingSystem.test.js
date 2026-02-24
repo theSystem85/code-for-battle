@@ -885,6 +885,50 @@ describe('Building System', () => {
       expect(bullets).toHaveLength(0)
     })
 
+    it('promotes queued forced attack targets for defense buildings in FIFO order', () => {
+      const now = 55000
+      vi.spyOn(performance, 'now').mockReturnValue(now)
+
+      const turret = createBuilding('turretGunV1', 10, 10)
+      turret.owner = 'player'
+      turret.fireCooldown = 0
+      turret.lastShotTime = 0
+
+      const firstTarget = {
+        id: 'enemy-1',
+        x: (turret.x + 2) * TILE_SIZE,
+        y: (turret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 0
+      }
+      const secondTarget = {
+        id: 'enemy-2',
+        x: (turret.x + 3) * TILE_SIZE,
+        y: (turret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 100
+      }
+
+      turret.forcedAttackTarget = firstTarget
+      turret.forcedAttackQueue = [secondTarget]
+      gameState.buildings.push(turret)
+
+      const centerX = (turret.x + turret.width / 2) * TILE_SIZE
+      const centerY = (turret.y + turret.height / 2) * TILE_SIZE
+      const secondCenterX = secondTarget.x + TILE_SIZE / 2
+      const secondCenterY = secondTarget.y + TILE_SIZE / 2
+      turret.turretDirection = Math.atan2(secondCenterY - centerY, secondCenterX - centerX)
+
+      units.push(secondTarget)
+
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+
+      expect(turret.forcedAttackTarget).toBe(secondTarget)
+      expect(turret.forcedAttackQueue).toHaveLength(0)
+      expect(bullets).toHaveLength(1)
+      expect(bullets[0].shooter).toBe(turret)
+    })
+
     it('runs Tesla coil charge/firing sequence and applies unit effects', () => {
       const now = 60000
       vi.useFakeTimers()

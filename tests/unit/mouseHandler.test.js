@@ -340,8 +340,8 @@ describe('MouseHandler', () => {
     const _handler = new MouseHandler()
     const selectionManager = {
       isCommandableUnit: () => true,
-      isHumanPlayerBuilding: () => true,
-      isHumanPlayerUnit: () => true,
+      isHumanPlayerBuilding: b => b?.owner === 'player',
+      isHumanPlayerUnit: u => u?.owner === 'player',
       clearWreckSelection: vi.fn()
     }
     const unitCommands = {
@@ -361,7 +361,7 @@ describe('MouseHandler', () => {
       {
         id: 'b1',
         type: 'turret',
-        owner: 'player',
+        owner: 'enemy',
         x: 0,
         y: 0,
         width: 1,
