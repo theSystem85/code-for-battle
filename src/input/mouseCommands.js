@@ -124,7 +124,7 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
 
 export function handleStandardCommands(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, altPressed = false) {
   const selectionManager = handler.selectionManager
-  const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
+  const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u) && !u.isBuilding)
   if (commandableUnits.length === 0 || commandableUnits[0].type === 'factory') {
     return
   }

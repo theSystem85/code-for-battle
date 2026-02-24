@@ -1,11 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { handleAttackNotification, resetAttackNotifications } from '../../src/game/attackNotifications.js'
 import { playSound } from '../../src/sound.js'
+import { showNotification } from '../../src/ui/notifications.js'
 import { gameState } from '../../src/gameState.js'
 
 // Mock dependencies
 vi.mock('../../src/sound.js', () => ({
   playSound: vi.fn()
+}))
+
+vi.mock('../../src/ui/notifications.js', () => ({
+  showNotification: vi.fn()
+}))
+
+vi.mock('../../src/inputHandler.js', () => ({
+  selectedUnits: []
+}))
+
+vi.mock('../../src/config.js', () => ({
+  TILE_SIZE: 32
+}))
+
+vi.mock('../../src/utils/layoutMetrics.js', () => ({
+  getPlayableViewportWidth: () => 800,
+  getPlayableViewportHeight: () => 600
 }))
 
 vi.mock('../../src/gameState.js', () => ({
@@ -142,13 +160,27 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenCalledWith('ourBaseIsUnderAttack', 1.0, 0, true)
     })
 
-    it('does not trigger for non-base non-harvester units', () => {
-      const target = { owner: 'player1', type: 'tank' }
+    it('shows a unit under attack notification for player non-base non-harvester units', () => {
+      const target = { id: 'tank-1', owner: 'player1', type: 'tank_v1', health: 100 }
       const attacker = { owner: 'enemy' }
 
       handleAttackNotification(target, attacker, NOW)
 
       expect(playSound).not.toHaveBeenCalled()
+      expect(showNotification).toHaveBeenCalledWith('Tank is under attack!', 4500, expect.objectContaining({ historyMessage: 'Tank is under attack!' }))
+    })
+
+    it('throttles unit under attack notifications per unit id', () => {
+      const target = { id: 'tank-1', owner: 'player1', type: 'tank_v1', health: 100 }
+      const attacker = { owner: 'enemy' }
+
+      handleAttackNotification(target, attacker, NOW)
+      handleAttackNotification(target, attacker, NOW + 1000)
+
+      expect(showNotification).toHaveBeenCalledTimes(1)
+
+      handleAttackNotification(target, attacker, NOW + 9000)
+      expect(showNotification).toHaveBeenCalledTimes(2)
     })
   })
 

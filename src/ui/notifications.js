@@ -11,7 +11,9 @@ export function showNotification(message, duration = 3000, options = {}) {
   notification.className = 'notification'
 
   // Add LLM indicator if llmPlayerId is provided
-  if (options.llmPlayerId) {
+  if (typeof options.renderContent === 'function') {
+    options.renderContent(notification, message)
+  } else if (options.llmPlayerId) {
     notification.style.display = 'flex'
     notification.style.alignItems = 'center'
     notification.style.gap = '8px'
@@ -50,7 +52,8 @@ export function showNotification(message, duration = 3000, options = {}) {
   document.body.appendChild(notification)
 
   // Push to persistent notification history
-  pushNotification(message, { llmPlayerId: options.llmPlayerId, llmColor: options.llmColor })
+  const historyMessage = typeof options.historyMessage === 'string' ? options.historyMessage : message
+  pushNotification(historyMessage, { llmPlayerId: options.llmPlayerId, llmColor: options.llmColor })
 
   // Fade out and remove
   setTimeout(() => {
