@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "vite",
     "stun": "node server/stun.js",
-    "prebuild": "node scripts/write-commit.js",
+    "prebuild": "npm run build:unit-collision-bounds && node scripts/write-commit.js",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src/ tests/ *.js",
@@ -35,7 +35,8 @@
     "lighthouse": "lighthouse http://localhost:4173 --output=html --output=json --output-path=./tests/lighthouse/default",
     "lighthouse:desktop": "lighthouse https://localhost:4173 --preset=desktop --output=html --output=json --output-path=./tests/lighthouse/desktop",
     "lighthouse:mobile": "lighthouse https://localhost:4173 --preset=mobile --output=html --output=json --output-path=./tests/lighthouse/mobile",
-    "lighthouse:ci": "lighthouse https://localhost:4173 --chrome-flags='--headless --no-sandbox' --output=json --output-path=./tests/lighthouse/ci.json"
+    "lighthouse:ci": "lighthouse https://localhost:4173 --chrome-flags='--headless --no-sandbox' --output=json --output-path=./tests/lighthouse/ci.json",
+    "build:unit-collision-bounds": "node scripts/generate-unit-collision-bounds.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

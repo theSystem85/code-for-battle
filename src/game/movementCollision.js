@@ -31,10 +31,46 @@ import {
   LOCAL_LOOKAHEAD_STRENGTH
 } from './movementConstants.js'
 import { isAirborneUnit, isGroundUnit, ownersAreEnemies } from './movementHelpers.js'
+import { getUnitCollisionBoxAt } from './unitCollisionBounds.js'
 
 const STATIC_COLLISION_SEPARATION_SCALE = 0.3
 const STATIC_COLLISION_SEPARATION_MIN = 0.25
 const STATIC_COLLISION_SEPARATION_MAX = 6
+const STATIC_COLLISION_PUSH_THRESHOLD_RATIO = 0.25
+const STATIC_COLLISION_NORMAL_DAMPING = 0.35
+
+function getBlockedStaticTileCollision(unit, attemptedX, attemptedY, mapGrid) {
+  const bounds = getUnitCollisionBoxAt(unit, attemptedX, attemptedY)
+  const width = Math.max(1, bounds.width)
+  const height = Math.max(1, bounds.height)
+
+  const startTileX = Math.floor(bounds.minX / TILE_SIZE)
+  const endTileX = Math.floor((bounds.maxX - 0.001) / TILE_SIZE)
+  const startTileY = Math.floor(bounds.minY / TILE_SIZE)
+  const endTileY = Math.floor((bounds.maxY - 0.001) / TILE_SIZE)
+
+  let best = null
+  for (let tileY = startTileY; tileY <= endTileY; tileY++) {
+    for (let tileX = startTileX; tileX <= endTileX; tileX++) {
+      if (!isTileBlockedForCollision(mapGrid, tileX, tileY)) continue
+
+      const tileMinX = tileX * TILE_SIZE
+      const tileMinY = tileY * TILE_SIZE
+      const tileMaxX = tileMinX + TILE_SIZE
+      const tileMaxY = tileMinY + TILE_SIZE
+      const overlapX = Math.min(bounds.maxX, tileMaxX) - Math.max(bounds.minX, tileMinX)
+      const overlapY = Math.min(bounds.maxY, tileMaxY) - Math.max(bounds.minY, tileMinY)
+      if (overlapX <= 0 || overlapY <= 0) continue
+
+      const penetrationRatio = Math.max(overlapX / width, overlapY / height)
+      if (!best || penetrationRatio > best.penetrationRatio) {
+        best = { tileX, tileY, overlapX, overlapY, penetrationRatio }
+      }
+    }
+  }
+
+  return best
+}
 
 function isTileBlockedForCollision(mapGrid, tileX, tileY) {
   if (!mapGrid || tileY < 0 || tileY >= mapGrid.length) {
@@ -260,36 +296,42 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
   const tileX = Math.floor(unit.x / TILE_SIZE)
   const tileY = Math.floor(unit.y / TILE_SIZE)
 
-  const tileRow = Array.isArray(mapGrid) ? mapGrid[tileY] : undefined
-  const tile = tileRow ? tileRow[tileX] : undefined
-
   const unitAirborne = isAirborneUnit(unit)
 
-  if (!tileRow || tile === undefined) {
+  if (!Array.isArray(mapGrid) || mapGrid.length === 0 || !Array.isArray(mapGrid[0])) {
     return { collided: true, type: 'bounds', tileX, tileY }
   }
 
   if (!unitAirborne) {
-    if (typeof tile === 'number') {
-      if (tile === 1) {
-        return { collided: true, type: 'terrain', tileX, tileY }
-      }
-    } else {
-      if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal) {
-        return { collided: true, type: 'terrain', tileX, tileY }
-      }
+    const blockedTileCollision = getBlockedStaticTileCollision(unit, unit.x, unit.y, mapGrid)
+    if (blockedTileCollision) {
+      const blockedRow = mapGrid[blockedTileCollision.tileY]
+      const blockedTile = blockedRow ? blockedRow[blockedTileCollision.tileX] : null
 
-      if (tile.building) {
-        if (unit.type === 'apache' && tile.building.type === 'helipad') {
+      if (blockedTile && typeof blockedTile !== 'number' && blockedTile.building) {
+        if (unit.type === 'apache' && blockedTile.building.type === 'helipad') {
           return { collided: false }
         }
         return {
           collided: true,
           type: 'building',
-          building: tile.building,
-          tileX,
-          tileY
+          building: blockedTile.building,
+          tileX: blockedTileCollision.tileX,
+          tileY: blockedTileCollision.tileY,
+          overlapX: blockedTileCollision.overlapX,
+          overlapY: blockedTileCollision.overlapY,
+          penetrationRatio: blockedTileCollision.penetrationRatio
         }
+      }
+
+      return {
+        collided: true,
+        type: 'terrain',
+        tileX: blockedTileCollision.tileX,
+        tileY: blockedTileCollision.tileY,
+        overlapX: blockedTileCollision.overlapX,
+        overlapY: blockedTileCollision.overlapY,
+        penetrationRatio: blockedTileCollision.penetrationRatio
       }
     }
   }
@@ -514,17 +556,21 @@ function getStaticObstacleCollisionInfo(unit, collisionResult, attemptedX, attem
     normalX = tileCenterX - attemptedCenterX
     normalY = tileCenterY - attemptedCenterY
 
-    const tileMinX = tileX * TILE_SIZE
-    const tileMaxX = tileMinX + TILE_SIZE
-    const tileMinY = tileY * TILE_SIZE
-    const tileMaxY = tileMinY + TILE_SIZE
-    const distLeft = attemptedCenterX - tileMinX
-    const distRight = tileMaxX - attemptedCenterX
-    const distTop = attemptedCenterY - tileMinY
-    const distBottom = tileMaxY - attemptedCenterY
-    const minEdgeDistance = Math.min(distLeft, distRight, distTop, distBottom)
-    const halfTile = TILE_SIZE / 2
-    overlap += Math.max(0, halfTile - minEdgeDistance)
+    if (Number.isFinite(collisionResult.overlapX) || Number.isFinite(collisionResult.overlapY)) {
+      overlap += Math.max(collisionResult.overlapX || 0, collisionResult.overlapY || 0)
+    } else {
+      const tileMinX = tileX * TILE_SIZE
+      const tileMaxX = tileMinX + TILE_SIZE
+      const tileMinY = tileY * TILE_SIZE
+      const tileMaxY = tileMinY + TILE_SIZE
+      const distLeft = attemptedCenterX - tileMinX
+      const distRight = tileMaxX - attemptedCenterX
+      const distTop = attemptedCenterY - tileMinY
+      const distBottom = tileMaxY - attemptedCenterY
+      const minEdgeDistance = Math.min(distLeft, distRight, distTop, distBottom)
+      const halfTile = TILE_SIZE / 2
+      overlap += Math.max(0, halfTile - minEdgeDistance)
+    }
   } else if (collisionResult.type === 'bounds') {
     const mapWidth = (mapGrid && mapGrid[0] ? mapGrid[0].length : 0) * TILE_SIZE
     const mapHeight = (Array.isArray(mapGrid) ? mapGrid.length : 0) * TILE_SIZE
@@ -585,13 +631,29 @@ export function applyStaticObstacleCollisionResponse(
   }
 
   const { normalX, normalY, overlap } = info
+  const penetrationRatio = Number(collisionResult.penetrationRatio) || 0
+  if (penetrationRatio < STATIC_COLLISION_PUSH_THRESHOLD_RATIO) {
+    return
+  }
+
   const normalVel = movement.velocity.x * normalX + movement.velocity.y * normalY
+  const unitSpeed = Math.hypot(movement.velocity.x, movement.velocity.y)
+  const speedFactor = Math.min(1, unitSpeed / Math.max(0.001, unit.speed || MOVEMENT_CONFIG.MAX_SPEED || 1))
 
   if (normalVel > 0) {
-    const impulseBase = normalVel * STATIC_COLLISION_BOUNCE_MULT + overlap * STATIC_COLLISION_BOUNCE_OVERLAP
-    const impulse = Math.max(STATIC_COLLISION_BOUNCE_MIN, Math.min(STATIC_COLLISION_BOUNCE_MAX, impulseBase))
+    const impulseBase =
+      normalVel * STATIC_COLLISION_BOUNCE_MULT * speedFactor +
+      overlap * STATIC_COLLISION_BOUNCE_OVERLAP * speedFactor
+    const impulse = Math.max(0, Math.min(STATIC_COLLISION_BOUNCE_MAX, Math.max(STATIC_COLLISION_BOUNCE_MIN * speedFactor, impulseBase)))
     movement.velocity.x -= normalX * impulse
     movement.velocity.y -= normalY * impulse
+
+    const postNormalVel = movement.velocity.x * normalX + movement.velocity.y * normalY
+    if (postNormalVel > 0) {
+      const dampingImpulse = postNormalVel * STATIC_COLLISION_NORMAL_DAMPING
+      movement.velocity.x -= normalX * dampingImpulse
+      movement.velocity.y -= normalY * dampingImpulse
+    }
   }
 
   if (movement.targetVelocity) {
