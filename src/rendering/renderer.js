@@ -203,11 +203,20 @@ export class Renderer {
       const dzm = pid ? gameState.dangerZoneMaps[pid] : null
       if (dzm) this.dangerZoneRenderer.render(gameCtx, dzm, scrollOffset, pid)
     }
+    const opacityLevel = Number.isFinite(gameState.entityImageOpacityLevel)
+      ? gameState.entityImageOpacityLevel
+      : 0
+    const entityImageAlpha = opacityLevel === 1 ? 0.5 : (opacityLevel === 2 ? 0 : 1)
+
+    gameCtx.save()
+    gameCtx.globalAlpha *= entityImageAlpha
     this.buildingRenderer.renderBases(gameCtx, buildings, mapGrid, scrollOffset)
     // Render initial construction yards using the same renderer
     this.buildingRenderer.renderBases(gameCtx, factories, mapGrid, scrollOffset)
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset)
     this.unitRenderer.renderBases(gameCtx, units, scrollOffset)
+    gameCtx.restore()
+
     this.effectsRenderer.render(gameCtx, bullets, gameState, units, scrollOffset)
 
     // Render mine indicators (skull overlays)
@@ -240,6 +249,7 @@ export class Renderer {
     this.buildingRenderer.renderOverlays(gameCtx, buildings, scrollOffset)
     this.buildingRenderer.renderOverlays(gameCtx, factories, scrollOffset)
     this.unitRenderer.renderOverlays(gameCtx, units, scrollOffset)
+    this.buildingRenderer.renderHudHoverTooltip(gameCtx, [...(buildings || []), ...(factories || [])], scrollOffset)
 
     this.uiRenderer.render(gameCtx, gameCanvas, gameState, selectionActive, selectionStart, selectionEnd, scrollOffset, factories, buildings, mapGrid, units)
   }

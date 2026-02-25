@@ -134,8 +134,10 @@ export function updateGuardTargeting(unit, units) {
   units.forEach(p => {
     if (p.owner !== unit.owner && p.health > 0) {
       // Check if target is an airborne Apache - only certain units can target them
-      const targetIsAirborneApache = p.type === 'apache' && p.flightState !== 'grounded'
-      const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache'
+      const targetIsAirborneApache =
+        (p.type === 'apache' || p.type === 'f22Raptor') &&
+        p.flightState !== 'grounded'
+      const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache' || unit.type === 'f22Raptor'
 
       // Skip airborne Apache if this unit can't target air units
       if (targetIsAirborneApache && !shooterCanHitAir) {

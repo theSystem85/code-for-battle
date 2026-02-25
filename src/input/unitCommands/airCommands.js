@@ -4,11 +4,53 @@ import { playPositionalSound } from '../../sound.js'
 import { showNotification } from '../../ui/notifications.js'
 import { getBuildingIdentifier } from '../../utils.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUnit } from '../../utils/helipadUtils.js'
+import { getAirstripRunwayPoints } from '../../utils/airstripUtils.js'
 import { units } from '../../main.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
-  if (!unit || unit.type !== 'apache' || !destCenter) {
+  if (!unit || (unit.type !== 'apache' && unit.type !== 'f22Raptor') || !destCenter) {
     return false
+  }
+
+  if (unit.type === 'f22Raptor') {
+    const stopRadius = Math.max(6, options.stopRadius || TILE_SIZE * 0.5)
+    unit.path = []
+    unit.originalPath = null
+    unit.moveTarget = destTile ? { x: destTile.x, y: destTile.y } : null
+    unit.f22AssignedDestination = {
+      x: destCenter.x,
+      y: destCenter.y,
+      stopRadius,
+      mode: options.mode || 'manual',
+      destinationTile: destTile ? { ...destTile } : null,
+      followTargetId: options.followTargetId || null
+    }
+    const unitCenterX = unit.x + TILE_SIZE / 2
+    const unitCenterY = unit.y + TILE_SIZE / 2
+    unit.f22OrbitAngle = Math.atan2(unitCenterY - destCenter.y, unitCenterX - destCenter.x)
+    unit.autoHoldAltitude = true
+
+    if (options.mode === 'airstrip' && options.airstrip) {
+      unit.airstripId = getBuildingIdentifier(options.airstrip)
+      unit.runwayPoints = getAirstripRunwayPoints(options.airstrip)
+      unit.f22State = 'approach_runway'
+      unit.f22PendingTakeoff = false
+      unit.helipadLandingRequested = true
+    } else {
+      unit.helipadLandingRequested = false
+      if (unit.flightState === 'grounded') {
+        unit.f22PendingTakeoff = true
+        unit.f22State = 'wait_takeoff_clearance'
+        unit.path = []
+        unit.moveTarget = null
+      } else {
+        unit.f22State = 'airborne'
+      }
+    }
+
+    unit.remoteControlActive = false
+    unit.hovering = false
+    return true
   }
 
   const stopRadius = Math.max(6, options.stopRadius || TILE_SIZE * 0.5)

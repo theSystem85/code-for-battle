@@ -19,7 +19,7 @@ import {
 } from './config.js'
 import { enforceSmokeParticleCapacity } from './utils/smokeUtils.js'
 import { createUnit } from './units.js'
-import { buildingData } from './buildings.js'
+import { buildingData, placeBuilding } from './buildings.js'
 import { showNotification } from './ui/notifications.js'
 import { milestoneSystem } from './game/milestoneSystem.js'
 import { initializeOccupancyMap } from './units.js'
@@ -438,6 +438,7 @@ export function saveGame(label) {
       fpsVisible: gameState.fpsVisible,
       benchmarkActive: Boolean(gameState.benchmarkActive),
       useTankImages: gameState.useTankImages,
+      entityImageOpacityLevel: gameState.entityImageOpacityLevel,
       useTurretImages: gameState.useTurretImages,
       nextVehicleFactoryIndex: gameState.nextVehicleFactoryIndex,
       refineryStatus: gameState.refineryStatus,
@@ -624,6 +625,9 @@ export function loadGame(key) {
     gameState.chainBuildingType = typeof loaded.gameState?.chainBuildingType === 'string'
       ? loaded.gameState.chainBuildingType
       : null
+    gameState.entityImageOpacityLevel = Number.isFinite(loaded.gameState?.entityImageOpacityLevel)
+      ? Math.max(0, Math.min(2, loaded.gameState.entityImageOpacityLevel))
+      : 0
 
     gameState.draggedBuildingType = null
     gameState.draggedBuildingButton = null
@@ -862,6 +866,10 @@ export function loadGame(key) {
       }
       if (typeof u.maxRocketAmmo === 'number') {
         hydrated.maxRocketAmmo = u.maxRocketAmmo
+      }
+      if (hydrated.type === 'f22Raptor') {
+        hydrated.maxRocketAmmo = 8
+        hydrated.rocketAmmo = Math.max(0, Math.min(typeof hydrated.rocketAmmo === 'number' ? hydrated.rocketAmmo : 8, 8))
       }
       if (typeof u.apacheAmmoEmpty === 'boolean') {
         hydrated.apacheAmmoEmpty = u.apacheAmmoEmpty
@@ -1183,18 +1191,22 @@ export function loadGame(key) {
         if (tile && tile.building) {
           delete tile.building
         }
+        if (tile && tile.buildOnlyOccupied) {
+          delete tile.buildOnlyOccupied
+        }
+        if (tile && tile.airstripStreet) {
+          delete tile.airstripStreet
+        }
+        if (tile && tile.noBuild) {
+          delete tile.noBuild
+        }
       }
     }
 
-    // Re-place all buildings on the map to set building properties correctly
+    // Re-place all buildings through canonical placement logic so occupancy and passability
+    // are restored exactly like a freshly built structure.
     gameState.buildings.forEach(building => {
-      for (let y = building.y; y < building.y + building.height; y++) {
-        for (let x = building.x; x < building.x + building.width; x++) {
-          if (mapGrid[y] && mapGrid[y][x]) {
-            mapGrid[y][x].building = building
-          }
-        }
-      }
+      placeBuilding(building, mapGrid, gameState.occupancyMap, { recordTransition: false })
     })
 
     // Ensure no ore overlaps with buildings or factories after loading

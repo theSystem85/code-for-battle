@@ -175,7 +175,6 @@ export class BuildingRenderer {
     ctx.save()
 
     // Don't reset transforms - use the existing canvas state to maintain proper coordinate system
-    ctx.globalAlpha = 1
     ctx.globalCompositeOperation = 'source-over'
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
@@ -534,7 +533,7 @@ export class BuildingRenderer {
   }
 
   renderHelipadFuel(ctx, building, screenX, screenY, width, height) {
-    if (building.type !== 'helipad') {
+    if (building.type !== 'helipad' && building.type !== 'airstrip') {
       return
     }
 
@@ -565,7 +564,7 @@ export class BuildingRenderer {
   }
 
   renderHelipadAmmo(ctx, building, screenX, screenY, width, height) {
-    if (building.type !== 'helipad') {
+    if (building.type !== 'helipad' && building.type !== 'airstrip') {
       return
     }
 
@@ -1114,6 +1113,123 @@ export class BuildingRenderer {
 
     ctx.strokeText(alias, textX, textY)
     ctx.fillText(alias, textX, textY)
+    ctx.restore()
+  }
+
+  isPointInRect(x, y, rect) {
+    if (!rect) return false
+    return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height
+  }
+
+  getBuildingHudHoverLabel(building, scrollOffset, mouseScreenX, mouseScreenY) {
+    if (!building?.selected || building.health <= 0) {
+      return null
+    }
+
+    const screenX = building.x * TILE_SIZE - scrollOffset.x
+    const screenY = building.y * TILE_SIZE - scrollOffset.y
+    const width = building.width * TILE_SIZE
+    const height = building.height * TILE_SIZE
+
+    const healthRect = { x: screenX, y: screenY - 10, width, height: 5 }
+    if (this.isPointInRect(mouseScreenX, mouseScreenY, healthRect)) {
+      return 'health'
+    }
+
+    const margin = 4
+    const barWidth = 5
+    const barHeight = Math.max(0, height - margin * 2)
+    if (barHeight <= 0) {
+      return null
+    }
+
+    const hasFuelBar =
+      (building.type === 'helipad' || building.type === 'airstrip') &&
+      typeof building.maxFuel === 'number' &&
+      building.maxFuel > 0
+    if (hasFuelBar) {
+      const fuelRect = {
+        x: screenX + width - barWidth - margin / 2,
+        y: screenY + margin,
+        width: barWidth,
+        height: barHeight
+      }
+      if (this.isPointInRect(mouseScreenX, mouseScreenY, fuelRect)) {
+        return 'fuel'
+      }
+    }
+
+    const isAmmoTurret = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret']).has(building.type)
+    const hasAmmoBar = (
+      ((building.type === 'helipad' || building.type === 'airstrip') || isAmmoTurret) &&
+      typeof building.maxAmmo === 'number' &&
+      building.maxAmmo > 0
+    )
+    if (hasAmmoBar) {
+      const ammoRect = {
+        x: screenX + margin / 2,
+        y: screenY + margin,
+        width: barWidth,
+        height: barHeight
+      }
+      if (this.isPointInRect(mouseScreenX, mouseScreenY, ammoRect)) {
+        return 'ammo'
+      }
+    }
+
+    return null
+  }
+
+  renderHudHoverTooltip(ctx, buildings, scrollOffset) {
+    if (!gameState?.desktopEdgeScroll?.overCanvas || !Array.isArray(buildings) || buildings.length === 0) {
+      return
+    }
+
+    const mouseScreenX = gameState.cursorX - scrollOffset.x
+    const mouseScreenY = gameState.cursorY - scrollOffset.y
+
+    let label = null
+    for (const building of buildings) {
+      label = this.getBuildingHudHoverLabel(building, scrollOffset, mouseScreenX, mouseScreenY)
+      if (label) {
+        break
+      }
+    }
+
+    if (!label) {
+      return
+    }
+
+    const fontSize = 9
+    const tooltipText = label
+
+    ctx.save()
+    ctx.font = `${fontSize}px "Rajdhani", "Arial Narrow", sans-serif`
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'middle'
+
+    const paddingX = 4
+    const paddingY = 2
+    const textWidth = ctx.measureText(tooltipText).width
+    const boxWidth = textWidth + paddingX * 2
+    const boxHeight = fontSize + paddingY * 2
+
+    let boxX = mouseScreenX + 8
+    let boxY = mouseScreenY - boxHeight - 8
+    if (boxX + boxWidth > ctx.canvas.width - 2) {
+      boxX = mouseScreenX - boxWidth - 8
+    }
+    if (boxY < 2) {
+      boxY = mouseScreenY + 8
+    }
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+    ctx.fillRect(boxX, boxY, boxWidth, boxHeight)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)'
+    ctx.lineWidth = 1
+    ctx.strokeRect(boxX, boxY, boxWidth, boxHeight)
+    ctx.fillStyle = '#FFF'
+    ctx.fillText(tooltipText, boxX + paddingX, boxY + boxHeight / 2)
     ctx.restore()
   }
 

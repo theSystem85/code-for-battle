@@ -4,6 +4,15 @@ import { showNotification } from '../ui/notifications.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 
+function normalizeOwner(owner) {
+  return owner === 'player' ? 'player1' : owner
+}
+
+function isEnemyRelativeToHuman(owner) {
+  const humanPlayer = normalizeOwner(gameState.humanPlayer || 'player1')
+  return normalizeOwner(owner) !== humanPlayer
+}
+
 export function isRallyPointTileBlocked(tileX, tileY) {
   const occupancyMap = gameState.occupancyMap
   if (!occupancyMap || occupancyMap.length === 0) {
@@ -126,7 +135,7 @@ export function handleContextMenu(e, gameCanvas) {
 export function findEnemyTarget(worldX, worldY, gameFactories, units) {
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (const building of gameState.buildings) {
-      if (building.owner !== 'player') {
+      if (isEnemyRelativeToHuman(building.owner)) {
         const buildingX = building.x * TILE_SIZE
         const buildingY = building.y * TILE_SIZE
         const buildingWidth = building.width * TILE_SIZE
@@ -143,7 +152,7 @@ export function findEnemyTarget(worldX, worldY, gameFactories, units) {
   }
 
   for (const factory of gameFactories) {
-    if (factory.id !== 'player' &&
+    if (isEnemyRelativeToHuman(factory.id) &&
         worldX >= factory.x * TILE_SIZE &&
         worldX < (factory.x + factory.width) * TILE_SIZE &&
         worldY >= factory.y * TILE_SIZE &&
@@ -153,7 +162,7 @@ export function findEnemyTarget(worldX, worldY, gameFactories, units) {
   }
 
   for (const unit of units) {
-    if (unit.owner !== 'player') {
+    if (isEnemyRelativeToHuman(unit.owner)) {
       const { centerX, centerY } = getUnitSelectionCenter(unit)
       const distance = Math.hypot(worldX - centerX, worldY - centerY)
       if (distance < TILE_SIZE / 2) {

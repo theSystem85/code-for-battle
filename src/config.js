@@ -741,7 +741,7 @@ export const UNIT_COSTS = {
   ammunitionTruck: 800,
   recoveryTank: 3000,
   apache: 3000,
-  f22Raptor: 8000,
+  f22Raptor: 6000,
   howitzer: HOWITZER_COST,
   mineLayer: 1000,
   mineSweeper: 1000
@@ -843,7 +843,7 @@ export const UNIT_PROPERTIES = {
   f22Raptor: {
     health: 80,
     maxHealth: 80,
-    speed: 8.0,
+    speed: 10.125,
     rotationSpeed: 0.3,
     turretRotationSpeed: 0,
     accelerationMultiplier: 1.5
@@ -1142,7 +1142,7 @@ export const UNIT_AMMO_CAPACITY = {
   rocketTank: 24,
   howitzer: 30,
   apache: 38,
-  f22Raptor: 20
+  f22Raptor: 8
 }
 
 const REMOTE_CONTROL_ALLOWED_ACTIONS = [

@@ -251,6 +251,8 @@ export function getEffectiveFireRange(unit) {
 
   if (unit.type === 'apache') {
     baseRange *= APACHE_RANGE_REDUCTION
+  } else if (unit.type === 'f22Raptor') {
+    baseRange = 16 * TILE_SIZE
   }
 
   if (unit.level >= 1) {

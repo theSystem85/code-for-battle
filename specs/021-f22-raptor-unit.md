@@ -1,69 +1,143 @@
-# Spec 021: F22 Raptor Stealth Fighter Unit
+# Spec 021: F22 Raptor Consolidated Requirements (Non-Street)
 
-## Overview
-Adds the F22 Raptor as a new air unit that spawns from the existing airstrip building.
+## Scope and Conflict Resolution
+- This spec consolidates all F22 requirements from this chat into one checklist.
+- Street-specific feature work is intentionally excluded.
+- If earlier and later requirements conflict, the latest requirement in chat wins.
 
-## Unit Properties
-- **Type**: `f22Raptor`
-- **Cost**: $8,000
-- **Health**: 80 / 80
-- **Speed**: 8.0 (fastest unit in the game)
-- **Rotation speed**: 0.3
-- **Acceleration multiplier**: 1.5
-- **Fuel tank**: 8,000 (consumption: 200/tick)
-- **Ammo capacity**: 20 rockets
-- **Color**: `#1E3A5F` (dark blue / stealth)
+## Status Labels
+- `✅` User-verified working.
+- `❌` User-verified not working.
+- `?` Unclear due blocking/related issues.
+- `Implemented (code)`: Implemented in code and lint/diagnostic clean (engineering status).
+- `Needs gameplay verification`: Requires runtime playtest confirmation.
+- `Open`: Not implemented.
 
-## Key Flags
-- `isAirUnit: true` — treated as an air unit by all flight systems
-- `requiresAirstrip: true` — must land at an airstrip to refuel/rearm
-- `radarInvisible: true` — invisible to radar detection
-- No crew system (excluded from crew initialization)
-- No turret (turret rendering skipped)
+## User Validation Snapshot (2026-02-25)
+- Working: `A1`, `A2`, `A3`, `C1`, `E1`
+- Not working: `A4`, `A7`, `A8`, `A9`, `A10`, `A11`, `B3`, `B4`
+- Unclear: `A5`, `A6`, `B1`, `B2`, `C2`, `C3`, `C4`
+- Rule: this user snapshot overrides earlier status assumptions.
 
-## Spawning
-- Spawns from `airstrip` building (12×6 tiles)
-- Uses dedicated airstrip spawn points on the upper runway area (no center spawn)
-- Production queue selects airstrips via round-robin (`gameState.nextAirstripIndex`)
-- If all airstrips are occupied, forces occupying F22 to take off before spawning
-- Starts in `flightState: 'grounded'` with full fuel and ammo
+## Cluster A: Spawn, Airstrip Lifecycle, and Queueing
+`Primary files`: `src/utils/airstripUtils.js`, `src/game/movementF22.js`, `src/input/unitCommands/airCommands.js`, `src/units.js`, `src/productionQueue.js`, `src/saveGame.js`
 
-## Airstrip passability and build-only occupancy
-- Introduces **build-only occupancy** tiles: these block building placement, but remain passable for unit movement/pathing.
-- Airstrip now applies build-only occupancy on most of its footprint so units can traverse the runway.
-- A blocked sub-rectangle remains occupied/non-passable to match airstrip geometry:
-  - Source image space: lower area below the rectangle bounded by `(0, 0)` to `(480, 200)` on `768×512` airstrip map art.
+### A.1 Spawn point and orientation requirements
+1. `A1` All F22 parking and runway reference points are shifted up by 32 source pixels (lower y by 32).
+	- Status: `✅` User-verified working
+2. `A2` F22 spawn orientation is nose-to-top-left while parked.
+	- Status: `✅` User-verified working
+3. `A3` Airstrip slot/runway coordinates are source-space based and converted consistently to world/tile positions.
+	- Status: `✅` User-verified working
 
-## Street building
-- Adds new buildable `street` building tile:
-  - Cost: `$10`
-  - Size: `1×1`
-  - No build prerequisites
-  - Not selectable
-  - No health bar rendering
-  - Destroyed immediately by direct projectile hit
+### A.2 Runway sequencing and clearance requirements
+4. `A4` Multiple F22 takeoff/landing operations are serialized per airstrip (one active runway op at a time).
+	- Status: `❌` User-verified not working
+5. `A5` Queued takeoff aircraft remain parked and stationary until their runway turn starts.
+	- Status: `?` Unclear due related runway issues
+6. `A6` Takeoff from queue additionally requires runway start area to be physically clear.
+	- Status: `?` Unclear due related runway issues
 
-## F22 movement and production speed
-- F22 is handled by the same flight-plan movement path as Apache (lift-off/takeoff behavior works for move and attack commands).
-- F22 production speed now scales with the number of player Vehicle Factories, same as other factory-speed units.
+### A.3 Takeoff/landing motion profile requirements
+7. `A7` Takeoff roll uses eased acceleration from start to liftoff.
+	- Status: `❌` User-verified not working (still too slow at start)
+8. `A8` Landing roll uses eased deceleration in reverse.
+	- Status: `❌` User-verified not working (units do not return to parking spots)
+9. `A9` Altitude transition after liftoff and before touchdown is gradual/eased.
+	- Status: `❌` User-verified not working
+10. `A10` Initial takeoff speed is not sluggish; startup roll was explicitly increased.
+	- Status: `❌` User-verified not working
 
-## Tech Tree
-- Unlocked when player owns at least one `airstrip` building
-- Button disabled with tooltip "Requires Airstrip" if no airstrip exists
+### A.4 Post-takeoff command continuity
+11. `A11` After takeoff, F22 must approach and continue toward assigned/active target (no idle mid-air stall).
+	- Status: `❌` User-verified not working (still stuck after takeoff)
+	- Notes: Includes destination fallback from active target when assigned destination is missing.
 
-## Refueling / Rearming
-- Uses `helipadLogic.js` airstrip branch (parallel to helipad/apache logic)
-- Landing radius: 4 tiles from airstrip center
-- Refuels at rate: `maxGas / 4000` per ms
-- Rearmed at rate: `maxRocketAmmo / 10000` per ms
-- Auto-takeoff when ammo is full and `autoHelipadReturnActive` is set
+## Cluster B: Flight Dynamics and Collision Rules
+`Primary files`: `src/game/movementCore.js`, `src/game/movementCollision.js`, `src/game/movementF22.js`
 
-## Rendering
-- `src/rendering/f22ImageRenderer.js`: loads `images/map/units/f22_raptor_map.webp`
-- Renders with altitude lift offset and shadow ellipse
-- Sidebar image: `images/sidebar/f22_raptor_sidebar.webp`
-- Integrated into `unitRenderer.js` (body, turret skip, ammo bar, altitude adjustments)
+### B.1 Airborne overlap and avoidance rules
+12. `B1` Airborne F22 should not collision-block each other; overlap in air is allowed.
+	- Status: `?` Unclear due related flight-state issues
+13. `B2` Airborne F22 should not use air-avoidance steering forces that push them apart.
+	- Status: `?` Unclear due related flight-state issues
 
-## AI Support
-- Added to `enemyAIPlayer.js`: AI produces F22s when airstrips are available
-- Added to `llmStrategicController.js` unit catalog with `weapon: 'missile'`, `radarInvisible: true`, `spawnsFrom: 'airstrip'`
+### B.2 Ground interaction rules
+14. `B3` F22 must not push ground units away during collision response.
+	- Status: `❌` User-verified not working
+
+### B.3 Attack movement behavior
+15. `B4` During combat, F22 attacks in wave-like orbits around target instead of static hover over target center.
+	- Status: `❌` User-verified not working
+
+## Cluster C: Combat, Ammo, and Damage Model
+`Primary files`: `src/game/unitCombat/tankCombat.js`, `src/game/unitCombat/firingHandlers.js`, `src/game/bulletSystem.js`, `src/saveGame.js`, `src/config.js`
+
+### C.1 Firing eligibility and volley continuity
+16. `C1` Grounded F22 cannot fire; must be airborne to attack.
+	- Status: `✅` User-verified working
+17. `C2` Once a volley starts, it continues beyond first rocket until volley completion (not aborted by cooldown gate).
+	- Status: `?` Unclear due related combat/flight issues
+
+### C.2 Ammo capacity and reload behavior
+18. `C3` F22 max ammo is 8 rockets.
+	- Status: `?` Unclear (ammo bar does not seem to update)
+19. `C4` Save/load hydration clamps F22 ammo values to the 8-rocket cap.
+	- Status: `?` Unclear due related ammo state issues
+
+### C.3 Overkill prevention and target commitment
+20. `C5` F22 should not fire more rockets than required to destroy target.
+	- Status: `Implemented (code)`
+	- Notes: Current logic estimates required rockets from target HP, armor, and in-flight F22 rockets.
+
+### C.4 Dedicated F22 rocket lethality
+21. `C6` F22 uses a dedicated rocket profile so Apache/other rocket stats are not changed.
+	- Status: `Implemented (code)`
+22. `C7` Tuning target: F22 destroys `tank_v1` in 2 direct hits.
+	- Status: `Implemented (code)`
+
+## Cluster D: Input, Selection, and UX Integration
+`Primary files`: `src/input/unitCommands/airCommands.js`, `src/input/unitCommands/movementCommands.js`, `src/input/mouseSelection.js`, `src/input/cursorManager.js`, `src/rendering/unitRenderer.js`, `src/rendering/buildingRenderer.js`
+
+### D.1 F22 command routing requirements
+23. `D1` Grounded attack/move commands must trigger proper takeoff flow and preserve destination/target intent.
+	- Status: `Implemented (code)`
+
+### D.2 Selection and HUD requirements
+24. `D2` Single-click should prioritize landed F22 above overlapping airstrip hitbox.
+	- Status: `Implemented (code)`
+25. `D3` Selected F22 ammo bar includes reload indicator behavior.
+	- Status: `Implemented (code)`
+
+## Cluster E: AI and Targeting Compatibility
+`Primary files`: `src/ai/enemyUnitBehavior.js`, `src/game/unitCombat/combatState.js`, `src/game/buildingSystem.js`, `src/game/bulletSystem.js`
+
+### E.1 Air-target eligibility requirements
+26. `E1` Airborne F22 is targetable/damageable only by anti-air-capable shooters/buildings.
+	- Status: `✅` User-verified working
+27. `E2` F22 is included in AI air-target awareness and anti-air shooter capability checks.
+	- Status: `Implemented (code)`
+
+## Consolidated Runtime Checklist
+Use this section as the practical test checklist.
+
+1. Queue three F22 for simultaneous takeoff at one airstrip; verify strict one-by-one runway usage.
+	- Status: `Needs gameplay verification`
+2. Block runway start with a grounded F22 and queue another for takeoff; verify queued unit waits fully parked.
+	- Status: `Needs gameplay verification`
+3. Issue grounded attack command and verify faster takeoff onset plus post-takeoff target approach.
+	- Status: `Needs gameplay verification`
+4. Order multiple F22 into same airspace and verify no airborne collision blocking/avoidance separation.
+	- Status: `Needs gameplay verification`
+5. Observe F22 near ground units and verify no shove/push behavior.
+	- Status: `Needs gameplay verification`
+6. Attack low-HP targets and verify anti-overkill volley capping.
+	- Status: `Needs gameplay verification`
+7. Attack `tank_v1` and verify 2 direct-hit destruction target.
+	- Status: `Needs gameplay verification`
+8. Save/load with partially spent F22 ammo and verify cap stays at 8.
+	- Status: `Needs gameplay verification`
+
+## Open Questions
+- None currently.
+

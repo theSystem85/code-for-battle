@@ -275,137 +275,46 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
       } // end if helipad.type === 'helipad'
 
       if (helipad.type === 'airstrip') {
-        // F22 landing and refueling logic on airstrip
         const f22Units = units.filter(u => u.type === 'f22Raptor' && u.health > 0)
-
-        if (helipad.landedUnitId) {
-          const occupant = f22Units.find(u => u.id === helipad.landedUnitId)
-          if (!occupant || occupant.landedHelipadId !== helipadId || occupant.flightState !== 'grounded') {
-            helipad.landedUnitId = null
-          }
-        }
-
         f22Units.forEach(f22 => {
-          const f22CenterX = f22.x + TILE_SIZE / 2
-          const f22CenterY = f22.y + TILE_SIZE / 2
-          const distance = Math.hypot(f22CenterX - helipadCenterX, f22CenterY - helipadCenterY)
-          const landingRadius = TILE_SIZE * 4
+          const isParkedOnThisAirstrip =
+            f22.flightState === 'grounded' &&
+            f22.f22State === 'parked' &&
+            f22.landedHelipadId === helipadId
 
-          if (f22.flightState !== 'grounded' && f22.landedHelipadId === helipadId) {
-            f22.landedHelipadId = null
-          }
-          if (f22.flightState !== 'grounded' && helipad.landedUnitId === f22.id) {
-            helipad.landedUnitId = null
-          }
-
-          const landingCommanded = f22.helipadLandingRequested && (!f22.helipadTargetId || f22.helipadTargetId === helipadId)
-          const landingLinked = f22.landedHelipadId === helipadId || helipad.landedUnitId === f22.id
-          const landingRequested = landingCommanded || landingLinked
-
-          if (distance <= landingRadius && landingRequested) {
-            if (helipad.landedUnitId && helipad.landedUnitId !== f22.id) return
-
-            const landingX = helipadCenterX - TILE_SIZE / 2
-            const landingY = helipadCenterY - TILE_SIZE / 2
-
-            const isAlreadyGroundedHere = f22.flightState === 'grounded' &&
-                                          f22.landedHelipadId === helipadId &&
-                                          Math.abs(f22.x - landingX) < 1 &&
-                                          Math.abs(f22.y - landingY) < 1
-
-            if (!isAlreadyGroundedHere) {
-              f22.x = landingX
-              f22.y = landingY
-              f22.tileX = Math.floor(f22.x / TILE_SIZE)
-              f22.tileY = Math.floor(f22.y / TILE_SIZE)
-            }
-
-            if (f22.flightState === 'grounded') {
-              f22.moveTarget = null
-              f22.path = []
-              f22.flightPlan = null
-            } else {
-              f22.moveTarget = { x: f22.tileX, y: f22.tileY }
-              f22.path = []
-              f22.flightPlan = {
-                x: helipadCenterX,
-                y: helipadCenterY,
-                stopRadius: Math.max(6, TILE_SIZE * 0.3),
-                mode: 'helipad',
-                followTargetId: null,
-                destinationTile: { x: f22.tileX, y: f22.tileY }
-              }
-            }
-
-            if (f22.flightState !== 'grounded') {
-              f22.autoHoldAltitude = false
-              f22.manualFlightState = 'land'
-            }
-            f22.manualFlightHoverRequested = false
-            f22.helipadTargetId = helipadId
-            f22.landedHelipadId = helipadId
-            helipad.landedUnitId = f22.id
-
-            if (typeof f22.maxRocketAmmo === 'number' && f22.rocketAmmo < f22.maxRocketAmmo) {
-              if (helipad.ammo > 0) {
-                const ammoNeeded = f22.maxRocketAmmo - f22.rocketAmmo
-                const ammoRefillTime = 10000
-                const ammoRefillRate = f22.maxRocketAmmo / ammoRefillTime
-                const ammoToTransfer = Math.min(ammoRefillRate * delta, ammoNeeded, helipad.ammo)
-                if (ammoToTransfer > 0) {
-                  f22.rocketAmmo += ammoToTransfer
-                  helipad.ammo -= ammoToTransfer
-                }
-                if (f22.rocketAmmo > 0) {
-                  f22.apacheAmmoEmpty = false
-                }
-              }
-            }
-
-            if (typeof f22.maxGas === 'number' && f22.gas < f22.maxGas && helipad.fuel > 0) {
-              const refuelRate = f22.maxGas / 4000
-              const transfer = Math.min(refuelRate * delta, f22.maxGas - f22.gas, helipad.fuel)
-              if (transfer > 0) {
-                f22.gas = Math.min(f22.maxGas, f22.gas + transfer)
-                helipad.fuel = Math.max(0, helipad.fuel - transfer)
-                f22.refuelingAtHelipad = true
-              } else {
-                f22.refuelingAtHelipad = false
-              }
-            } else {
-              f22.refuelingAtHelipad = false
-            }
-
-            const hasAmmoCapacity = typeof f22.maxRocketAmmo === 'number' && f22.maxRocketAmmo > 0
-            const ammoFull = !hasAmmoCapacity || f22.rocketAmmo >= f22.maxRocketAmmo
-            const hasStoredAttackTarget = Boolean(f22.autoHelipadReturnAttackTargetId)
-            const shouldAutoTakeoff = f22.autoHelipadReturnActive && ammoFull && hasStoredAttackTarget
-
-            if (shouldAutoTakeoff) {
-              f22.helipadLandingRequested = false
-              f22.autoHoldAltitude = true
-              f22.manualFlightState = 'takeoff'
-              f22.canFire = true
-              f22.autoHelipadReturnActive = false
-              f22.autoHelipadReturnTargetId = null
-              helipad.landedUnitId = null
-              f22.landedHelipadId = null
-            } else {
-              if (!f22.autoHelipadReturnActive) {
-                f22.canFire = ammoFull && f22.flightState === 'grounded'
-              }
-            }
-            f22.autoHelipadRetryAt = 0
-          } else {
+          if (!isParkedOnThisAirstrip) {
             if (f22.refuelingAtHelipad) {
               f22.refuelingAtHelipad = false
             }
-            if (f22.landedHelipadId === helipadId) {
-              clearHelipadClaimForUnit(f22, helipadId, helipads)
+            return
+          }
+
+          helipad.landedUnitId = f22.id
+
+          if (typeof f22.maxRocketAmmo === 'number' && f22.rocketAmmo < f22.maxRocketAmmo && helipad.ammo > 0) {
+            const ammoNeeded = f22.maxRocketAmmo - f22.rocketAmmo
+            const ammoRefillTime = 10000
+            const ammoRefillRate = f22.maxRocketAmmo / ammoRefillTime
+            const ammoToTransfer = Math.min(ammoRefillRate * delta, ammoNeeded, helipad.ammo)
+            if (ammoToTransfer > 0) {
+              f22.rocketAmmo += ammoToTransfer
+              helipad.ammo -= ammoToTransfer
             }
-            if (helipad.landedUnitId === f22.id) {
-              helipad.landedUnitId = null
+            if (f22.rocketAmmo > 0) {
+              f22.apacheAmmoEmpty = false
             }
+          }
+
+          if (typeof f22.maxGas === 'number' && f22.gas < f22.maxGas && helipad.fuel > 0) {
+            const refuelRate = f22.maxGas / 4000
+            const transfer = Math.min(refuelRate * delta, f22.maxGas - f22.gas, helipad.fuel)
+            if (transfer > 0) {
+              f22.gas = Math.min(f22.maxGas, f22.gas + transfer)
+              helipad.fuel = Math.max(0, helipad.fuel - transfer)
+              f22.refuelingAtHelipad = true
+            }
+          } else {
+            f22.refuelingAtHelipad = false
           }
         })
       }

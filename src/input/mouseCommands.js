@@ -225,6 +225,47 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
   } else if (oreTarget) {
     unitCommands.handleHarvesterCommand(commandableUnits, oreTarget, mapGrid)
   } else {
+    const humanPlayer = gameState.humanPlayer || 'player1'
+    const friendlyAirstrip = (gameState.buildings || []).find(building => {
+      if (!building || building.health <= 0 || building.type !== 'airstrip') return false
+      const isFriendly =
+        building.owner === humanPlayer ||
+        (humanPlayer === 'player1' && building.owner === 'player')
+      return isFriendly &&
+        tileX >= building.x && tileX < building.x + building.width &&
+        tileY >= building.y && tileY < building.y + building.height
+    })
+
+    const clickedFriendlyBuilding = (gameState.buildings || []).some(building => {
+      if (!building || building.health <= 0) return false
+      const isFriendly =
+        building.owner === humanPlayer ||
+        (humanPlayer === 'player1' && building.owner === 'player')
+      return isFriendly &&
+        tileX >= building.x && tileX < building.x + building.width &&
+        tileY >= building.y && tileY < building.y + building.height
+    })
+
+    const clickedFriendlyFactory = (handler.gameFactories || []).some(factory => {
+      if (!factory) return false
+      const isFriendly =
+        factory.id === humanPlayer ||
+        (humanPlayer === 'player1' && factory.id === 'player')
+      return isFriendly &&
+        worldX >= factory.x * TILE_SIZE &&
+        worldX < (factory.x + factory.width) * TILE_SIZE &&
+        worldY >= factory.y * TILE_SIZE &&
+        worldY < (factory.y + factory.height) * TILE_SIZE
+    })
+
+    if (clickedFriendlyBuilding || clickedFriendlyFactory) {
+      const onlyF22Selected = commandableUnits.length > 0 && commandableUnits.every(unit => unit.type === 'f22Raptor')
+      if (friendlyAirstrip && onlyF22Selected) {
+        unitCommands.handleMovementCommand(commandableUnits, worldX, worldY, mapGrid)
+      }
+      return
+    }
+
     target = findEnemyTarget(worldX, worldY, handler.gameFactories || [], handler.gameUnits || [])
 
     if (target) {

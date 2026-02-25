@@ -47,6 +47,7 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
           x: (target.x + (target.width || 1) / 2) * TILE_SIZE,
           y: (target.y + (target.height || 1) / 2) * TILE_SIZE
         }
+
       const destTile = {
         x: Math.floor(targetCenter.x / TILE_SIZE),
         y: Math.floor(targetCenter.y / TILE_SIZE)

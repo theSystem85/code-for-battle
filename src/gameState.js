@@ -196,6 +196,9 @@ export const gameState = {
   // Tank image rendering toggle - initialize from config
   useTankImages: true,
 
+  // Debug image opacity mode for unit/building sprites: 0=>100%, 1=>50%, 2=>0%
+  entityImageOpacityLevel: 0,
+
   // Turret image rendering toggle - initialize from config
   useTurretImages: true,
 

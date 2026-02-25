@@ -24,7 +24,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
   }
 
   // Check ammunition availability
-  const ammoField = unit.type === 'apache' ? 'rocketAmmo' : 'ammunition'
+  const ammoField = (unit.type === 'apache' || unit.type === 'f22Raptor') ? 'rocketAmmo' : 'ammunition'
   const ammoValue = unit[ammoField]
   if (typeof ammoValue === 'number' && ammoValue <= 0) {
     // Unit has no ammunition, cannot fire
@@ -42,17 +42,17 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
   if (!unit.lastShotTime || now - unit.lastShotTime >= fireRate) {
     // Check if turret is properly aimed at the target before firing
-    const clearShot = (unit.type === 'apache' || unit.type === 'rocketTank')
+    const clearShot = (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'rocketTank')
       ? true
       : (clearShotOverride ?? hasClearShot(unit, target, units, mapGrid))
-    const turretAimed = unit.type === 'apache' ? true : isTurretAimedAtTarget(unit, target)
+    const turretAimed = (unit.type === 'apache' || unit.type === 'f22Raptor') ? true : isTurretAimedAtTarget(unit, target)
     if (unit.canFire !== false && clearShot && turretAimed) {
-      const targetIsAirborneApache = target && target.type === 'apache' && target.flightState !== 'grounded'
+      const targetIsAirborneApache = target && (target.type === 'apache' || target.type === 'f22Raptor') && target.flightState !== 'grounded'
       const shooterCanHitAir =
         unit.type === 'rocketTank' ||
         unit.type === 'apache' ||
-        unit.type === 'rocketTurret' ||
-        unit.type === 'teslaCoil'
+        unit.type === 'f22Raptor' ||
+        unit.type === 'rocketTurret'
       if (targetIsAirborneApache && !shooterCanHitAir) {
         return false
       }
@@ -92,7 +92,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
       const angle = Math.atan2(finalTarget.y - unitCenterY, finalTarget.x - unitCenterX)
 
       const isRocketTankRocket = projectileType === 'rocket' && unit.type === 'rocketTank'
-      const isApacheRocket = projectileType === 'rocket' && unit.type === 'apache'
+      const isApacheRocket = projectileType === 'rocket' && (unit.type === 'apache' || unit.type === 'f22Raptor')
       const bulletSpeed = isRocketTankRocket
         ? 6
         : (projectileType === 'rocket' ? (isApacheRocket ? 5 : 3) : TANK_BULLET_SPEED)
@@ -139,6 +139,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         const distance = Math.hypot(dx, dy)
         bullet.vx = (dx / distance) * bulletSpeed
         bullet.vy = (dy / distance) * bulletSpeed
+        bullet.f22Rocket = unit.type === 'f22Raptor'
       }
 
       if (isRocketTankRocket) {
@@ -168,8 +169,8 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
       bullets.push(bullet)
 
-      // Deplete ammunition when firing (skip Apache - handled in handleApacheVolley)
-      if (unit.type !== 'apache') {
+      // Deplete ammunition when firing (skip apache/f22 - handled in handleApacheVolley)
+      if (unit.type !== 'apache' && unit.type !== 'f22Raptor') {
         if (typeof unit.ammunition === 'number') {
           // Rocket tanks fire 1 rocket at a time in burst, so deplete by 1
           // Other units use ammoPerShot
@@ -234,7 +235,7 @@ export function handleRocketBurstFire(unit, target, bullets, now, targetCenterX,
         currentTargetCenterX = burstTarget.x + TILE_SIZE / 2
         currentTargetCenterY = burstTarget.y + TILE_SIZE / 2
         // Adjust for Apache altitude visual offset
-        if (burstTarget.type === 'apache' && burstTarget.altitude) {
+        if ((burstTarget.type === 'apache' || burstTarget.type === 'f22Raptor') && burstTarget.altitude) {
           currentTargetCenterY -= burstTarget.altitude * 0.4
         }
       }
@@ -263,7 +264,27 @@ export function handleRocketBurstFire(unit, target, bullets, now, targetCenterX,
  * Handle multi-rocket volley for Apache helicopter
  */
 export function handleApacheVolley(unit, target, bullets, now, targetCenterX, targetCenterY, units, mapGrid) {
+  const estimateF22RocketDamage = targetEntity => {
+    if (!targetEntity) return 30
+    const armor = targetEntity.armor && targetEntity.armor > 0 ? targetEntity.armor : 1
+    const isTankFamily = ['tank', 'tank_v1', 'tank-v2', 'tank-v3'].includes(targetEntity.type)
+    const rawDamage = isTankFamily ? 50 : 30
+    return Math.max(1, Math.round(rawDamage / armor))
+  }
+
+  const getF22PendingRocketCount = targetEntity => {
+    if (!Array.isArray(bullets) || !targetEntity) return 0
+    return bullets.reduce((count, bullet) => {
+      if (!bullet?.active || !bullet.f22Rocket) return count
+      if (bullet.shooter?.id !== unit.id) return count
+      if (bullet.target === targetEntity) return count + 1
+      if (targetEntity.id && bullet.apacheTargetId === targetEntity.id) return count + 1
+      return count
+    }, 0)
+  }
+
   const availableAmmo = Math.max(0, Math.floor(unit.rocketAmmo || 0))
+  const isF22 = unit.type === 'f22Raptor'
   if (availableAmmo <= 0) {
     unit.volleyState = null
     unit.apacheAmmoEmpty = true
@@ -272,7 +293,17 @@ export function handleApacheVolley(unit, target, bullets, now, targetCenterX, ta
   }
 
   if (!unit.volleyState) {
-    const rocketsThisVolley = Math.min(8, availableAmmo)
+    let rocketsThisVolley = isF22 ? availableAmmo : Math.min(8, availableAmmo)
+
+    if (isF22 && target?.health > 0) {
+      const estimatedDamage = estimateF22RocketDamage(target)
+      const pendingRockets = getF22PendingRocketCount(target)
+      const pendingDamage = pendingRockets * estimatedDamage
+      const remainingHealth = Math.max(0, target.health - pendingDamage)
+      const rocketsRequired = Math.max(1, Math.ceil(remainingHealth / estimatedDamage))
+      rocketsThisVolley = Math.max(1, Math.min(rocketsThisVolley, rocketsRequired))
+    }
+
     const leftCount = Math.min(4, Math.ceil(rocketsThisVolley / 2))
     const rightCount = Math.min(4, rocketsThisVolley - leftCount)
 
@@ -280,7 +311,7 @@ export function handleApacheVolley(unit, target, bullets, now, targetCenterX, ta
       leftRemaining: leftCount,
       rightRemaining: rightCount,
       lastRocketTime: 0,
-      delay: COMBAT_CONFIG.APACHE.VOLLEY_DELAY,
+      delay: isF22 ? 333 : COMBAT_CONFIG.APACHE.VOLLEY_DELAY,
       nextSide: 'left',
       totalInVolley: rocketsThisVolley
     }

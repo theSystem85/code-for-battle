@@ -63,13 +63,45 @@ export function renderF22WithImage(ctx, unit, centerX, centerY) {
 
   const altitudeLift = (unit.altitude || 0) * 0.4
 
-  renderShadow(ctx, unit, centerX, centerY)
+  const isAirborne = unit.flightState && unit.flightState !== 'grounded' && (unit.altitude || 0) > 1
+  if (isAirborne) {
+    renderShadow(ctx, unit, centerX, centerY)
+  }
 
   const sourceWidth = f22Image.naturalWidth || f22Image.width || TILE_SIZE
   const sourceHeight = f22Image.naturalHeight || f22Image.height || TILE_SIZE
   const scale = F22_TARGET_WIDTH / Math.max(sourceWidth, 1)
   const targetWidth = sourceWidth * scale
   const targetHeight = sourceHeight * scale
+
+  const drawJetBurst = () => {
+    const movingFast = unit.movement?.currentSpeed > 0.7 || unit.f22State === 'takeoff_roll' || unit.f22State === 'liftoff'
+    if (!movingFast) return
+
+    const nozzles = [
+      { x: 29, y: 54 },
+      { x: 34, y: 54 }
+    ]
+    const jitter = (Math.sin((performance.now() % 1000) * 0.03) + 1) * 0.5
+    const burstLength = 9 + jitter * 7
+
+    ctx.save()
+    ctx.translate(centerX, centerY - altitudeLift)
+    ctx.rotate((unit.direction || 0) + Math.PI / 2)
+    nozzles.forEach(nozzle => {
+      const localX = (nozzle.x - sourceWidth / 2) * scale
+      const localY = (nozzle.y - sourceHeight / 2) * scale
+      const gradient = ctx.createLinearGradient(localX, localY, localX, localY + burstLength)
+      gradient.addColorStop(0, 'rgba(255,255,220,0.9)')
+      gradient.addColorStop(0.45, 'rgba(255,184,76,0.8)')
+      gradient.addColorStop(1, 'rgba(255,90,18,0)')
+      ctx.fillStyle = gradient
+      ctx.fillRect(localX - 1.2, localY + 1, 2.4, burstLength)
+    })
+    ctx.restore()
+  }
+
+  drawJetBurst()
 
   ctx.save()
   ctx.translate(centerX, centerY - altitudeLift)

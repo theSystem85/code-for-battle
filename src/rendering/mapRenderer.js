@@ -237,7 +237,7 @@ export class MapRenderer {
       const row = mapGrid[y]
       for (let x = extraStartX; x < extraEndX; x++) {
         const tile = row[x]
-        parts.push(tile.type, tile.ore ? 1 : 0, tile.seedCrystal ? 1 : 0, tile.noBuild || 0)
+        parts.push(tile.type, tile.airstripStreet ? 1 : 0, tile.ore ? 1 : 0, tile.seedCrystal ? 1 : 0, tile.noBuild || 0)
         if (tile.type === 'water') containsWater = true
       }
     }
@@ -397,14 +397,15 @@ export class MapRenderer {
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
+        const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
 
-        this.drawTileBase(ctx, x, y, tile.type, screenX, screenY, useTexture, currentWaterFrame)
+        this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
 
         // Use precomputed SOT mask instead of computing neighbors each frame
         // SOT applies to land tiles (street/water corners) and street tiles (water corners)
-        if ((tile.type === 'land' || tile.type === 'street') && this.sotMask[y]?.[x]) {
+        if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
@@ -694,7 +695,6 @@ export class MapRenderer {
     const mode = gameState.occupancyMapViewMode || 'players'
     const mineOverlay = this.buildMineOverlay(mode, gameState.mines)
 
-    ctx.fillStyle = 'rgba(255, 0, 0, 0.3)'
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         if (y < 0 || y >= occupancyMap.length || x < 0 || x >= occupancyMap[0].length) continue
@@ -702,9 +702,14 @@ export class MapRenderer {
         const tileOccupied = Boolean(occupancyMap[y][x])
         const tileKey = `${x},${y}`
         const mineBlocked = mineOverlay && mineOverlay.has(tileKey)
-        if (tileOccupied || mineBlocked) {
+        const tile = gameState?.mapGrid?.[y]?.[x]
+        const buildOnlyStreet = Boolean(tile?.buildOnlyOccupied) && tile?.type === 'street'
+        if (tileOccupied || mineBlocked || buildOnlyStreet) {
           const tileX = Math.floor(x * TILE_SIZE - scrollOffset.x)
           const tileY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+          ctx.fillStyle = buildOnlyStreet && !tileOccupied && !mineBlocked
+            ? 'rgba(255, 255, 0, 0.35)'
+            : 'rgba(255, 0, 0, 0.3)'
           ctx.fillRect(tileX, tileY, TILE_SIZE, TILE_SIZE)
         }
       }
@@ -751,7 +756,8 @@ export class MapRenderer {
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
-        if ((tile.type === 'land' || tile.type === 'street') && this.sotMask[y]?.[x]) {
+        const visualTileType = tile?.airstripStreet ? 'land' : tile.type
+        if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }

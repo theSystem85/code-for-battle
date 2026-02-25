@@ -3,7 +3,7 @@ import { smoothRotateTowardsAngle } from '../../logic.js'
 import { gameState } from '../../gameState.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
 import { ensureLineOfSight, getEffectiveFireRange, getEffectiveFireRate, handleTankMovement, isHumanControlledParty, isTurretAimedAtTarget } from './combatHelpers.js'
-import { handleRocketBurstFire, handleTankFiring, handleTankV3BurstFire } from './firingHandlers.js'
+import { handleApacheVolley, handleRocketBurstFire, handleTankFiring, handleTankV3BurstFire } from './firingHandlers.js'
 
 /**
  * Updates standard tank combat
@@ -47,8 +47,10 @@ export function updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancy
     units.forEach(potentialTarget => {
       if (potentialTarget.owner !== unit.owner && potentialTarget.health > 0) {
         // Check if target is an airborne Apache - only certain units can target them
-        const targetIsAirborneApache = potentialTarget.type === 'apache' && potentialTarget.flightState !== 'grounded'
-        const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache'
+        const targetIsAirborneApache =
+          (potentialTarget.type === 'apache' || potentialTarget.type === 'f22Raptor') &&
+          potentialTarget.flightState !== 'grounded'
+        const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache' || unit.type === 'f22Raptor'
 
         // Skip airborne Apache if this unit can't target air units
         if (targetIsAirborneApache && !shooterCanHitAir) {
@@ -180,17 +182,23 @@ export function updateTankV3Combat(unit, units, bullets, mapGrid, now, occupancy
  * Updates rocket tank combat
  */
 export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occupancyMap) {
+  const isF22 = unit.type === 'f22Raptor'
+
   // Clear target and burst if target is destroyed
   if (unit.target && unit.target.health <= 0) {
     unit.target = null
     unit.burstState = null
+    if (isF22) {
+      unit.volleyState = null
+    }
     return
   }
 
   if (unit.target && unit.target.health > 0) {
     const CHASE_THRESHOLD = TANK_FIRE_RANGE * TILE_SIZE * COMBAT_CONFIG.CHASE_MULTIPLIER.ROCKET
 
-    const rocketRange = getEffectiveFireRange(unit) * COMBAT_CONFIG.RANGE_MULTIPLIER.ROCKET
+    const rangeMultiplier = unit.type === 'f22Raptor' ? 1 : COMBAT_CONFIG.RANGE_MULTIPLIER.ROCKET
+    const rocketRange = getEffectiveFireRange(unit) * rangeMultiplier
 
     // Handle movement using common logic - this already adjusts for Apache altitude
     const { distance, targetCenterX, targetCenterY } = handleTankMovement(
@@ -218,9 +226,23 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
     const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
     const effectiveRange = rocketRange
     const clearShot = true
-    if (distance <= effectiveRange && canAttack && clearShot) {
+    const hasActiveF22Volley = isF22 && Boolean(unit.volleyState)
+    const inFiringWindow = distance <= effectiveRange || hasActiveF22Volley
+    if (inFiringWindow && canAttack && clearShot) {
       // Check if we need to start a new burst or continue existing one
-      if (!unit.burstState) {
+      if (isF22) {
+        if (unit.flightState === 'grounded') {
+          unit.volleyState = null
+          return
+        }
+        const readyForNewVolley = !unit.lastShotTime || now - unit.lastShotTime >= getEffectiveFireRate(unit, COMBAT_CONFIG.FIRE_RATES.APACHE)
+        if (unit.volleyState || readyForNewVolley) {
+          const volleyComplete = handleApacheVolley(unit, unit.target, bullets, now, targetCenterX, targetCenterY, units, mapGrid)
+          if (volleyComplete) {
+            unit.lastShotTime = now
+          }
+        }
+      } else if (!unit.burstState) {
         // Start new burst if cooldown has passed
         const effectiveFireRate = getEffectiveFireRate(unit, COMBAT_CONFIG.FIRE_RATES.ROCKET)
         if (!unit.lastShotTime || now - unit.lastShotTime >= effectiveFireRate) {
