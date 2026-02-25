@@ -5,7 +5,27 @@ import { showNotification } from './ui/notifications.js'
 import { productionQueue } from './productionQueue.js'
 import { updateMoneyBar } from './ui/moneyBar.js'
 import { broadcastBuildingSell } from './network/gameCommandSync.js'
+import { buildingData } from './data/buildingData.js'
+import { getCascadingBlueprintCancellation } from './planning/blueprintPlanning.js'
 // No need to modify map grid immediately; building removal occurs after the sell animation
+
+function showPlanCancellationWarning(planCount) {
+  showNotification(`Warning: ${planCount} building plans would be cancelled. Click again to confirm.`, 4500, {
+    renderContent: (notification, message) => {
+      notification.style.display = 'flex'
+      notification.style.alignItems = 'center'
+      notification.style.gap = '8px'
+
+      const text = document.createElement('span')
+      text.textContent = message
+      notification.appendChild(text)
+
+      const icon = document.createElement('span')
+      icon.textContent = '⚠️'
+      notification.appendChild(icon)
+    }
+  })
+}
 
 /**
  * Handles the selling of buildings
@@ -22,6 +42,55 @@ export function buildingSellHandler(e, gameState, gameCanvas, mapGrid, units, fa
   // Convert to tile coordinates
   const tileX = Math.floor(mouseX / TILE_SIZE)
   const tileY = Math.floor(mouseY / TILE_SIZE)
+
+  const clickedBlueprint = (gameState.blueprints || []).find((blueprint) => {
+    const info = buildingData[blueprint.type]
+    if (!info) {
+      return false
+    }
+
+    return tileX >= blueprint.x && tileX < blueprint.x + info.width && tileY >= blueprint.y && tileY < blueprint.y + info.height
+  })
+
+  if (clickedBlueprint) {
+    const preview = gameState.sellPlanCancellationPreview
+    if (preview && preview.targetBlueprint !== clickedBlueprint) {
+      gameState.sellPlanCancellationPreview = null
+      return false
+    }
+
+    const blueprintsToCancel = getCascadingBlueprintCancellation(
+      clickedBlueprint,
+      gameState.blueprints || [],
+      gameState.buildings || [],
+      factories || [],
+      gameState.humanPlayer
+    )
+
+    if (blueprintsToCancel.length > 1 && !preview) {
+      gameState.sellPlanCancellationPreview = {
+        targetBlueprint: clickedBlueprint,
+        blueprintsToCancel
+      }
+      showPlanCancellationWarning(blueprintsToCancel.length)
+      playSound('error')
+      return false
+    }
+
+    const cancelledCount = productionQueue.cancelBlueprintPlans(blueprintsToCancel)
+    gameState.sellPlanCancellationPreview = null
+
+    if (cancelledCount > 0) {
+      playSound('constructionCancelled', 1.0, 0, true)
+      showNotification(cancelledCount === 1
+        ? 'Building plan cancelled.'
+        : `${cancelledCount} building plans cancelled.`)
+      return true
+    }
+
+    showNotification('No player building found to sell.')
+    return false
+  }
 
   // Player factory cannot be sold
   const playerFactory = factories.find(factory => factory.id === gameState.humanPlayer)
@@ -78,6 +147,7 @@ export function buildingSellHandler(e, gameState, gameCanvas, mapGrid, units, fa
     }
   }
 
+  gameState.sellPlanCancellationPreview = null
   showNotification('No player building found to sell.')
   return false
 }

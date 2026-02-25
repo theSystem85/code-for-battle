@@ -131,6 +131,7 @@ export const gameState = {
 
   // Repair mode
   repairMode: false,
+  sellPlanCancellationPreview: null,
   buildingsUnderRepair: [],
 
   // Track active invite buttons per party so UI state persists after re-render

@@ -1,3 +1,4 @@
+- [x] Let planned building footprints extend base build proximity for additional plans, render per-plan build order numbers, and support sell-mode cascading plan cancellation with two-click warning/preview highlights.
 - [x] Ensure mobile planning base-proximity expansion is sequential and order-locked: each next tile may extend range only from previously accepted planning tiles in draw order.
 - [x] Mobile chain-draw planning polish: block starting paint when first tile violates placement/proximity, skip+red-mark invalid or too-far neighbor tiles, show per-tile draw order numbers, prevent planning onto occupied ground, and shorten planning labels (Wall/Radar).
 - [x] Follow-up: ensure two-finger tap-and-release on the map also exits mobile building placement/construction mode immediately (not only active chain-paint mode).

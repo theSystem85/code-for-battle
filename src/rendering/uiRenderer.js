@@ -5,6 +5,7 @@ import { gameState } from '../gameState.js'
 import { showNotification } from '../ui/notifications.js'
 import { getCurrentGame } from '../main.js'
 import { renderMapEditorOverlay } from '../mapEditor.js'
+import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
 import {
   getCanvasLogicalHeight,
   getCanvasLogicalWidth,
@@ -170,19 +171,36 @@ export class UIRenderer {
   }
 
   renderBlueprints(ctx, blueprints, scrollOffset) {
-    blueprints.forEach(bp => {
+    const pendingCancellation = gameState.sellPlanCancellationPreview
+    const highlightedPlans = new Set(pendingCancellation?.blueprintsToCancel || [])
+
+    blueprints.forEach((bp, index) => {
       const info = buildingData[bp.type]
       if (!info) return
       const x = bp.x * TILE_SIZE - scrollOffset.x
       const y = bp.y * TILE_SIZE - scrollOffset.y
-      ctx.fillStyle = 'rgba(0, 0, 255, 0.3)'
+      const isHighlighted = highlightedPlans.has(bp)
+      ctx.fillStyle = isHighlighted ? 'rgba(255, 165, 0, 0.35)' : 'rgba(0, 0, 255, 0.3)'
       ctx.fillRect(x, y, info.width * TILE_SIZE, info.height * TILE_SIZE)
-      ctx.strokeStyle = '#0000FF'
+      ctx.strokeStyle = isHighlighted ? '#FF8C00' : '#0000FF'
       ctx.strokeRect(x, y, info.width * TILE_SIZE, info.height * TILE_SIZE)
       ctx.fillStyle = '#FFFFFF'
       ctx.font = '12px "Rajdhani", "Arial Narrow", sans-serif'
       ctx.textAlign = 'center'
       ctx.fillText(info.displayName, x + (info.width * TILE_SIZE) / 2, y + (info.height * TILE_SIZE) / 2)
+
+      ctx.save()
+      ctx.font = 'bold 14px "Rajdhani", "Arial Narrow", sans-serif'
+      ctx.textBaseline = 'middle'
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.85)'
+      ctx.lineWidth = 3
+      const orderText = String(index + 1)
+      const textX = x + (info.width * TILE_SIZE) / 2
+      const textY = y + (info.height * TILE_SIZE) - 12
+      ctx.strokeText(orderText, textX, textY)
+      ctx.fillStyle = '#FFFFFF'
+      ctx.fillText(orderText, textX, textY)
+      ctx.restore()
     })
   }
 
@@ -199,13 +217,14 @@ export class UIRenderer {
         const tileX = Math.floor(mouseX / TILE_SIZE)
         const tileY = Math.floor(mouseY / TILE_SIZE)
 
+        const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer)
         const isPlacementAllowed = canPlaceBuilding(
           gameState.currentBuildingType,
           tileX,
           tileY,
           gameState.mapGrid || mapGrid,
           units,
-          buildings,
+          [...buildings, ...planningBuildings],
           factories,
           gameState.humanPlayer
         )
