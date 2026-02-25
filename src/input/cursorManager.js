@@ -5,6 +5,7 @@ import { findWreckAtTile } from '../game/unitWreckManager.js'
 import { isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
+import { getUnitSelectionCenter } from './selectionManager.js'
 
 const CURSOR_CLASS_NAMES = [
   'repair-mode',
@@ -236,15 +237,39 @@ export class CursorManager {
       return
     }
 
-    const { distance: distanceValue, maxRange } = this.rangeCursorInfo
-    const distanceMeters = (distanceValue / TILE_SIZE) * CURSOR_METERS_PER_TILE
-    const maxRangeMeters = (maxRange / TILE_SIZE) * CURSOR_METERS_PER_TILE
-
-    rangeText.textContent = `${Math.round(distanceMeters)}m/${Math.round(maxRangeMeters)}m`
+    const { distance: distanceValue, maxRange, displayText } = this.rangeCursorInfo
+    if (typeof displayText === 'string' && displayText.length > 0) {
+      rangeText.textContent = displayText
+    } else {
+      const distanceMeters = (distanceValue / TILE_SIZE) * CURSOR_METERS_PER_TILE
+      const maxRangeMeters = (maxRange / TILE_SIZE) * CURSOR_METERS_PER_TILE
+      rangeText.textContent = `${Math.round(distanceMeters)}m/${Math.round(maxRangeMeters)}m`
+    }
 
     container.style.left = `${position.x}px`
     container.style.top = `${position.y}px`
     container.classList.add('visible')
+  }
+
+  getClosestSelectedUnitAirDistance(selectedUnits, worldX, worldY) {
+    if (!Array.isArray(selectedUnits) || selectedUnits.length === 0) {
+      return null
+    }
+
+    let closestDistance = Infinity
+    for (const unit of selectedUnits) {
+      if (!unit || unit.isBuilding || unit.health <= 0) {
+        continue
+      }
+
+      const unitCenter = getUnitSelectionCenter(unit)
+      const distance = Math.hypot(worldX - unitCenter.centerX, worldY - unitCenter.centerY)
+      if (distance < closestDistance) {
+        closestDistance = distance
+      }
+    }
+
+    return Number.isFinite(closestDistance) ? closestDistance : null
   }
 
   applyCursor(gameCanvas, cursorStyle, classNames = []) {
@@ -810,7 +835,15 @@ export class CursorManager {
       const setAttackBlockedCursor = () => setCursor('none', 'attack-blocked-mode')
       const setAttackOutOfRangeCursor = () => setOutOfRangeCursor()
       const setMoveBlockedCursor = () => setCursor('none', 'move-blocked-mode')
-      const setMoveCursor = () => setCursor('none', 'move-mode')
+      const setMoveCursor = () => {
+        const closestAirDistance = this.getClosestSelectedUnitAirDistance(selectedUnits, worldX, worldY)
+        if (closestAirDistance !== null) {
+          const distanceMeters = (closestAirDistance / TILE_SIZE) * CURSOR_METERS_PER_TILE
+          this.setRangeCursorInfo({ displayText: `${Math.round(distanceMeters)}m` })
+          this.updateRangeCursorDisplay(rangeCursorPosition, true)
+        }
+        setCursor('none', 'move-mode')
+      }
       const setDefaultCursor = () => setCursor('default')
       const setGrabbingCursor = () => setCursor('grabbing')
 

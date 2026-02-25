@@ -110,6 +110,17 @@ describe('CursorManager', () => {
     expect(container.classList.contains('visible')).toBe(true)
   })
 
+
+  it('renders custom range cursor text when provided', () => {
+    const manager = new CursorManager()
+    manager.setRangeCursorInfo({ displayText: '123m' })
+
+    manager.updateRangeCursorDisplay({ x: 10, y: 20 }, true)
+
+    const { rangeText } = manager.rangeCursorElements
+    expect(rangeText.textContent).toBe('123m')
+  })
+
   it('hides range cursor display when not showing', () => {
     const manager = new CursorManager()
     manager.setRangeCursorInfo({
@@ -254,6 +265,20 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
   })
 
+
+  it('shows move cursor air distance text below cursor', () => {
+    const manager = new CursorManager()
+    createCanvas()
+    const mapGrid = createTestMapGrid(8, 8)
+    const selectedUnits = [{ owner: 'player1', type: 'tank', x: TILE_SIZE, y: TILE_SIZE, health: 100 }]
+
+    const event = createMouseEvent(TILE_SIZE * 3, TILE_SIZE * 3)
+    manager.updateCustomCursor(event, mapGrid, [], selectedUnits, [])
+
+    const { container, rangeText } = manager.rangeCursorElements
+    expect(container.classList.contains('visible')).toBe(true)
+    expect(rangeText.textContent).toMatch(/^\d+m$/)
+  })
 
   it('uses out-of-range attack cursor in force-attack mode', () => {
     const manager = new CursorManager()

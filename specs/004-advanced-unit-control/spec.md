@@ -193,6 +193,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-071**: When AGF assigns multiple queued attack targets, the renderer MUST draw a red ordered chain line from the selected attacker to each queued target in sequence.
 - **FR-072**: With defensive buildings selected, a normal click on an enemy target (without force-attack modifier) MUST assign forced attack targeting, and newly added targets MUST be inserted at the front of the forced-attack queue (newest-first).
 - **FR-073**: For defensive-building forced targeting, a newly added target MUST become the immediate active target (queue position 1), and the prior active target MUST be moved to the front of the remaining queue.
+- **FR-074**: When one or more units are selected and the move cursor is active, the UI MUST display the straight-line air distance from the closest selected unit to the hovered target point below the cursor in meters.
 
 
 **Logistics Symmetry:**
