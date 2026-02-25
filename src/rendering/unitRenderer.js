@@ -1,5 +1,5 @@
 // rendering/unitRenderer.js
-import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN } from '../config.js'
+import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
 import { renderTankWithImages, areTankImagesLoaded } from './tankImageRenderer.js'
@@ -361,6 +361,51 @@ export class UnitRenderer {
     return (unit.type !== 'harvester' && unit.level < 3)
   }
 
+  roundHudValue(value) {
+    if (!Number.isFinite(value)) return 0
+    return Math.max(0, Math.round(value))
+  }
+
+  getHudFuelTooltipValue(unit) {
+    if (typeof unit.maxGas !== 'number') return null
+    const remainingGas = this.roundHudValue(unit.gas ?? unit.maxGas)
+    const meters = this.roundHudValue((remainingGas / TILE_SIZE) * CURSOR_METERS_PER_TILE)
+    return `fuel ${meters}m`
+  }
+
+  getHudAmmoTooltipValue(unit) {
+    if (typeof unit.maxAmmunition === 'number') {
+      return `ammo ${this.roundHudValue(unit.ammunition ?? 0)}`
+    }
+
+    if (typeof unit.maxRocketAmmo === 'number') {
+      return `ammo ${this.roundHudValue(unit.rocketAmmo ?? 0)}`
+    }
+
+    if (typeof unit.maxAmmoCargo === 'number') {
+      return `ammo ${this.roundHudValue(unit.ammoCargo ?? 0)}`
+    }
+
+    if (typeof unit.mineCapacity === 'number') {
+      return `ammo ${this.roundHudValue(unit.remainingMines ?? 0)}`
+    }
+
+    return null
+  }
+
+  getHudAbsoluteTooltipText(unit, label) {
+    switch (label) {
+      case 'health':
+        return `health ${this.roundHudValue(unit.health)}`
+      case 'fuel':
+        return this.getHudFuelTooltipValue(unit)
+      case 'ammo':
+        return this.getHudAmmoTooltipValue(unit)
+      default:
+        return label
+    }
+  }
+
   getDonutEdgeLabelAtPoint(unit, scrollOffset, mouseScreenX, mouseScreenY) {
     const { centerX, centerY } = this.getHudCenter(unit, scrollOffset)
     const hudBounds = this.getSelectedHudBounds(centerX, centerY)
@@ -554,14 +599,16 @@ export class UnitRenderer {
     const selected = units.filter(unit => unit?.selected)
     if (selected.length === 0) return
 
-    let label = null
+    let tooltipText = null
     for (const unit of selected) {
-      label = this.getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY)
-      if (label) break
-    }
-    if (!label) return
+      const label = this.getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY)
+      if (!label) continue
 
-    const tooltipText = label
+      tooltipText = this.getHudAbsoluteTooltipText(unit, label)
+      if (tooltipText) break
+    }
+    if (!tooltipText) return
+
     const fontSize = 9
     ctx.save()
     ctx.font = `${fontSize}px "Rajdhani", "Arial Narrow", sans-serif`
