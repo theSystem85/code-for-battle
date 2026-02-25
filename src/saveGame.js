@@ -35,7 +35,8 @@ import {
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { getKeyboardHandler } from './inputHandler.js'
 import { ensurePlayerBuildHistoryLoaded } from './savePlayerBuildPatterns.js'
-import { getUniqueId } from './utils.js'
+import { getUniqueId, getBuildingIdentifier } from './utils.js'
+import { ensureAirstripOperations, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant } from './utils/airstripUtils.js'
 import { rebuildMineLookup } from './game/mineSystem.js'
 import { regenerateAllInviteTokens } from './network/multiplayerStore.js'
 import { refreshSidebarMultiplayer } from './ui/sidebarMultiplayer.js'
@@ -312,7 +313,9 @@ export function saveGame(label) {
       selfRepair: u.selfRepair,
       damageValue: u.damageValue,
       totalRepairPaid: u.totalRepairPaid,
-      isRestoredFromWreck: u.isRestoredFromWreck
+      isRestoredFromWreck: u.isRestoredFromWreck,
+      direction: u.direction,
+      rotation: u.rotation
       // Note: lastAttacker is excluded to prevent circular references
       // Add more fields if needed
     }
@@ -329,6 +332,18 @@ export function saveGame(label) {
 
     if (u.type === 'mineSweeper') {
       serialized.sweeping = Boolean(u.sweeping)
+    }
+
+    if (u.type === 'f22Raptor') {
+      serialized.f22State = u.f22State
+      serialized.airstripId = u.airstripId
+      serialized.airstripParkingSlotIndex = u.airstripParkingSlotIndex
+      serialized.flightState = u.flightState
+      serialized.altitude = u.altitude
+      serialized.landedHelipadId = u.landedHelipadId
+      serialized.helipadTargetId = u.helipadTargetId
+      serialized.f22PendingTakeoff = u.f22PendingTakeoff
+      serialized.groundedOccupancyApplied = u.groundedOccupancyApplied
     }
 
     return serialized
@@ -1234,6 +1249,66 @@ export function loadGame(key) {
       // Use the new method to set milestones
       milestoneSystem.setAchievedMilestones(loaded.achievedMilestones)
     }
+
+    // Restore F22 Raptor airstrip state after all buildings are loaded
+    units.forEach(unit => {
+      if (unit.type !== 'f22Raptor') return
+
+      // For old saves without airstripId, find airstrip by position
+      if (!unit.airstripId) {
+        const airstrip = gameState.buildings.find(b =>
+          b.type === 'airstrip' && b.owner === unit.owner && b.health > 0 &&
+          unit.tileX >= b.x && unit.tileX < b.x + b.width &&
+          unit.tileY >= b.y && unit.tileY < b.y + b.height
+        )
+        if (airstrip) {
+          unit.airstripId = getBuildingIdentifier(airstrip)
+        }
+      }
+
+      // Restore runway points from airstrip
+      const airstrip = gameState.buildings.find(b => getBuildingIdentifier(b) === unit.airstripId)
+      if (airstrip) {
+        ensureAirstripOperations(airstrip)
+        unit.runwayPoints = getAirstripRunwayPoints(airstrip)
+
+        // Restore parking slot occupancy and direction for parked units
+        if (unit.f22State === 'parked') {
+          // For old saves without airstripParkingSlotIndex, find nearest parking spot
+          if (typeof unit.airstripParkingSlotIndex !== 'number') {
+            const spots = getAirstripParkingSpots(airstrip)
+            let bestIdx = -1
+            let bestDist = Infinity
+            spots.forEach((spot, idx) => {
+              if (airstrip.f22OccupiedSlotUnitIds[idx]) return
+              const dist = Math.hypot(unit.x - spot.worldX, unit.y - spot.worldY)
+              if (dist < bestDist) {
+                bestDist = dist
+                bestIdx = idx
+              }
+            })
+            if (bestIdx >= 0) unit.airstripParkingSlotIndex = bestIdx
+          }
+
+          if (typeof unit.airstripParkingSlotIndex === 'number') {
+            setAirstripSlotOccupant(airstrip, unit.airstripParkingSlotIndex, unit.id)
+            const spots = getAirstripParkingSpots(airstrip)
+            const spot = spots[unit.airstripParkingSlotIndex]
+            if (spot) {
+              unit.direction = spot.facing
+              unit.rotation = spot.facing
+            }
+          }
+
+          unit.landedHelipadId = unit.airstripId
+          unit.helipadTargetId = unit.airstripId
+          unit.flightState = 'grounded'
+          unit.altitude = 0
+          unit.groundedOccupancyApplied = true
+          airstrip.landedUnitId = unit.id
+        }
+      }
+    })
 
     // Re-assign harvesters to refineries after all buildings are loaded
     units.forEach(unit => {
