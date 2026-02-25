@@ -729,7 +729,7 @@ export class UnitRenderer {
   }
 
   getSelectionHudMode() {
-    return gameState.selectionHudMode || 'modern'
+    return gameState.selectionHudMode || 'modern-donut'
   }
 
   getSelectionHudBarThickness() {

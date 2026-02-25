@@ -74,7 +74,7 @@ export class CursorManager {
   }
 
   getSelectionHudMode() {
-    return gameState.selectionHudMode || 'modern'
+    return gameState.selectionHudMode || 'modern-donut'
   }
 
   isCursorOverSelectedUnitOrHud(worldX, worldY, selectedUnits) {
