@@ -20,6 +20,7 @@ import {
   ownersAreEnemies
 } from './movementHelpers.js'
 import { updateApacheFlightState } from './movementApache.js'
+import { updateF22FlightState } from './movementF22.js'
 import {
   checkUnitCollision,
   applyWreckCollisionResponse,
@@ -186,7 +187,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     unit.movement.targetVelocity = { x: 0, y: 0 }
     unit.movement.isMoving = false
     unit.movement.currentSpeed = 0
-    if (unit.type === 'apache') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
       unit.flightPlan = null
       unit.autoHoldAltitude = false
       unit.helipadLandingRequested = false
@@ -247,7 +248,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
   const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const tile = mapGrid[tileY] && mapGrid[tileY][tileX]
-  const onStreet = tile && tile.type === 'street'
+  const onStreet = tile && (tile.type === 'street' || tile.airstripStreet)
   const onOre = Boolean(tile && tile.ore)
   const isGroundMover = !isAirborne
 
@@ -265,10 +266,21 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   const effectiveMaxSpeed = MOVEMENT_CONFIG.MAX_SPEED * speedModifier * terrainMultiplier
 
-  const isApache = unit.type === 'apache'
+  if (unit.type === 'f22Raptor') {
+    updateF22FlightState(unit, movement, now)
+  }
+
+  const isApacheFlightUnit = unit.type === 'apache'
+  const isF22AirborneState = unit.type === 'f22Raptor' && unit.flightState !== 'grounded'
+  const isAirFlightUnit = isApacheFlightUnit || isF22AirborneState
+  const isF22RunwayControlled = unit.type === 'f22Raptor' && (
+    unit.f22State === 'takeoff_roll' ||
+    unit.f22State === 'liftoff' ||
+    unit.f22State === 'landing_roll'
+  )
   let activeFlightPlan = null
   let hadFlightPlanAtStart = false
-  if (isApache) {
+  if (isAirFlightUnit) {
     if (unit.remoteControlActive) {
       unit.flightPlan = null
     } else {
@@ -300,12 +312,19 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         const dirX = dx / distance
         const dirY = dy / distance
         const desiredRotation = normalizeAngle(Math.atan2(dirY, dirX))
-        const apacheRotationSpeed = unit.rotationSpeed || 0.18
+        const apacheRotationSpeed = unit.type === 'f22Raptor'
+          ? Math.max(0.02, (unit.rotationSpeed || 0.18) * 0.28)
+          : (unit.rotationSpeed || 0.18)
         const currentRotation = unit.direction || movement.rotation || 0
         const smoothedRotation = smoothRotateTowardsAngle(currentRotation, desiredRotation, apacheRotationSpeed)
-        movement.targetRotation = desiredRotation
+        movement.targetRotation = smoothedRotation
 
-        if (activeFlightPlan.mode === 'helipad') {
+        if (unit.type === 'f22Raptor') {
+          const angleToTarget = Math.abs(normalizeAngle(desiredRotation - smoothedRotation))
+          const forwardThrottle = Math.max(0.22, Math.cos(angleToTarget))
+          movement.targetVelocity.x = Math.cos(smoothedRotation) * airSpeed * forwardThrottle
+          movement.targetVelocity.y = Math.sin(smoothedRotation) * airSpeed * forwardThrottle
+        } else if (activeFlightPlan.mode === 'helipad') {
           const angleToTarget = Math.abs(normalizeAngle(desiredRotation - smoothedRotation))
           const forwardThrottle = Math.max(0, Math.cos(angleToTarget))
           const minThrottle = angleToTarget < Math.PI * 0.35 ? 0.2 : 0
@@ -324,7 +343,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         unit.hovering = false
       }
       unit.path = []
-    } else if (!unit.remoteControlActive) {
+    } else if (!unit.remoteControlActive && !isF22RunwayControlled) {
       movement.targetVelocity.x = 0
       movement.targetVelocity.y = 0
       movement.targetRotation = movement.rotation
@@ -337,8 +356,10 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  const skipPathHandlingForApache = isApache && !unit.remoteControlActive && hadFlightPlanAtStart
-  if (!skipPathHandlingForApache && unit.path && unit.path.length > 0) {
+  const skipPathHandlingForAirFlight =
+    (isAirFlightUnit && !unit.remoteControlActive && hadFlightPlanAtStart) ||
+    isF22RunwayControlled
+  if (!skipPathHandlingForAirFlight && unit.path && unit.path.length > 0) {
     const nextTile = unit.path[0]
     const targetX = nextTile.x * TILE_SIZE
     const targetY = nextTile.y * TILE_SIZE
@@ -432,7 +453,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         movement.targetRotation = Math.atan2(dy, dx)
       }
     }
-  } else if (!skipPathHandlingForApache) {
+  } else if (!skipPathHandlingForAirFlight) {
     if (!unit.remoteControlActive) {
       movement.targetVelocity.x = 0
       movement.targetVelocity.y = 0
@@ -440,7 +461,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  if (!(unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer' || unit.type === 'apache')) {
+  const noAutoRotationTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f22Raptor']
+  if (!noAutoRotationTypes.includes(unit.type)) {
     updateUnitRotation(unit)
   }
 
@@ -455,7 +477,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       canAccelerate = unit.canAccelerate !== false
       shouldDecelerate = !canAccelerate && movement.isMoving
     }
-  } else if (unit.type !== 'apache') {
+  } else if (unit.type !== 'apache' && !(unit.type === 'f22Raptor' && unit.flightState !== 'grounded')) {
     const rotationDiff = Math.abs(normalizeAngle(movement.targetRotation - movement.rotation))
     canAccelerate = rotationDiff < Math.PI / 12
     shouldDecelerate = !canAccelerate && movement.isMoving
@@ -463,9 +485,14 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   let avoidanceForce = { x: 0, y: 0 }
   if (movement.isMoving && canAccelerate) {
-    avoidanceForce = isAirborne
-      ? calculateAirCollisionAvoidance(unit, units)
-      : calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap)
+    // F22s never participate in collision avoidance (airborne or grounded taxi)
+    if (unit.type === 'f22Raptor') {
+      avoidanceForce = { x: 0, y: 0 }
+    } else {
+      avoidanceForce = isAirborne
+        ? calculateAirCollisionAvoidance(unit, units)
+        : calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap)
+    }
   }
 
   let accelRate

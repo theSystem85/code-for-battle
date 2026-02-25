@@ -237,6 +237,31 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
       }
     }
 
+    if (!isOverEnemy && !isOverFriendlyUnit && gameState.buildings && gameState.buildings.length > 0) {
+      const humanPlayer = gameState.humanPlayer || 'player1'
+      for (const building of gameState.buildings) {
+        const isFriendlyBuilding =
+          building.owner === humanPlayer ||
+          (humanPlayer === 'player1' && building.owner === 'player')
+        if (!isFriendlyBuilding || building.health <= 0) {
+          continue
+        }
+
+        const buildingX = building.x * TILE_SIZE
+        const buildingY = building.y * TILE_SIZE
+        const buildingWidth = building.width * TILE_SIZE
+        const buildingHeight = building.height * TILE_SIZE
+
+        if (worldX >= buildingX &&
+            worldX < buildingX + buildingWidth &&
+            worldY >= buildingY &&
+            worldY < buildingY + buildingHeight) {
+          isOverFriendlyUnit = true
+          break
+        }
+      }
+    }
+
     if (!isOverEnemy && !isOverFriendlyUnit) {
       const humanPlayer = gameState.humanPlayer || 'player1'
       for (const unit of units) {
@@ -921,7 +946,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   let clickedBuilding = null
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (const building of gameState.buildings) {
-      if (!building || building.health <= 0) continue
+      if (!building || building.health <= 0 || building.selectable === false) continue
 
       const buildingX = building.x * TILE_SIZE
       const buildingY = building.y * TILE_SIZE
@@ -941,6 +966,21 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   }
 
   if (clickedBuilding) {
+    const overlappingF22 = units.find(unit => {
+      if (!selectionManager.isSelectableUnit(unit) || unit.type !== 'f22Raptor') return false
+      const { centerX, centerY } = getUnitSelectionCenter(unit)
+      const dx = worldX - centerX
+      const dy = worldY - centerY
+      return Math.hypot(dx, dy) < TILE_SIZE / 2
+    })
+
+    if (overlappingF22) {
+      selectionManager.handleUnitSelection(overlappingF22, e, units, factories, selectedUnits)
+      handler.updateAGFCapability(selectedUnits)
+      e.stopPropagation()
+      return
+    }
+
     const hasFriendlyUnitsSelected = selectedUnits.some(unit =>
       selectionManager.isHumanPlayerUnit(unit) && unit.isBuilding !== true
     )

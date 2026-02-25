@@ -197,6 +197,9 @@ export const gameState = {
   // Tank image rendering toggle - initialize from config
   useTankImages: true,
 
+  // Debug image opacity mode for unit/building sprites: 0=>100%, 1=>50%, 2=>0%
+  entityImageOpacityLevel: 0,
+
   // Turret image rendering toggle - initialize from config
   useTurretImages: true,
 
@@ -262,7 +265,7 @@ export const gameState = {
 
   // Initially no units are available (require vehicle factory), only basic buildings
   availableUnitTypes: new Set([]),
-  availableBuildingTypes: new Set(['constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory', 'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'gasStation', 'turretGunV1', 'concreteWall']),
+  availableBuildingTypes: new Set(['constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory', 'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'gasStation', 'turretGunV1', 'street', 'concreteWall']),
   newUnitTypes: new Set(),
   newBuildingTypes: new Set(),
 

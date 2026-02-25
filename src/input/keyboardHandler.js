@@ -21,6 +21,7 @@ import {
 } from '../utils/layoutMetrics.js'
 import { notifyBenchmarkManualCameraControl } from '../benchmark/benchmarkTracker.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 export class KeyboardHandler {
   constructor() {
@@ -146,6 +147,11 @@ export class KeyboardHandler {
       if (keybindingManager.matchesKeyboardAction(e, 'toggle-waypoints', kbContext)) {
         e.preventDefault()
         this.handleWaypointToggle()
+        return
+      }
+      if (keybindingManager.matchesKeyboardAction(e, 'toggle-entity-opacity', kbContext)) {
+        e.preventDefault()
+        this.handleEntityOpacityToggle()
         return
       }
       if (keybindingManager.matchesKeyboardAction(e, 'map-edit-toggle', kbContext)) {
@@ -750,7 +756,7 @@ export class KeyboardHandler {
 
     // Check tile type and buildings
     const tile = mapGrid[y][x]
-    if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || tile.building) {
+    if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || hasBlockingBuilding(tile)) {
       return false
     }
 
@@ -1074,6 +1080,20 @@ export class KeyboardHandler {
     gameState.moveWaypointsVisible = !gameState.moveWaypointsVisible
     const status = gameState.moveWaypointsVisible ? 'ON' : 'OFF'
     this.showNotification(`Movement waypoints: ${status}`, 2000)
+    playSound('confirmed', 0.5)
+  }
+
+  handleEntityOpacityToggle() {
+    const nextLevel = ((gameState.entityImageOpacityLevel || 0) + 1) % 3
+    gameState.entityImageOpacityLevel = nextLevel
+
+    const labels = {
+      0: '100%',
+      1: '50%',
+      2: '0%'
+    }
+
+    this.showNotification(`Entity image opacity: ${labels[nextLevel] || '100%'}`, 2000)
     playSound('confirmed', 0.5)
   }
 

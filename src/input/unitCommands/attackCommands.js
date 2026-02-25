@@ -40,13 +40,14 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
   combatUnits.forEach((unit, index) => {
     unit.canFire = true
 
-    if (unit.type === 'apache') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
       const targetCenter = target.tileX !== undefined
         ? { x: target.x + TILE_SIZE / 2, y: target.y + TILE_SIZE / 2 }
         : {
           x: (target.x + (target.width || 1) / 2) * TILE_SIZE,
           y: (target.y + (target.height || 1) / 2) * TILE_SIZE
         }
+
       const destTile = {
         x: Math.floor(targetCenter.x / TILE_SIZE),
         y: Math.floor(targetCenter.y / TILE_SIZE)

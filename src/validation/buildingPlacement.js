@@ -136,6 +136,7 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
           mapGrid[y][x].type === 'rock' ||
           mapGrid[y][x].seedCrystal ||
           mapGrid[y][x].building ||
+          mapGrid[y][x].buildOnlyOccupied ||
           (!isFactoryOrRefinery && mapGrid[y][x].noBuild)) {
         return false
       }
@@ -220,6 +221,7 @@ export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factorie
       mapGrid[tileY][tileX].type === 'rock' ||
       mapGrid[tileY][tileX].seedCrystal ||
       mapGrid[tileY][tileX].building ||
+      mapGrid[tileY][tileX].buildOnlyOccupied ||
       (!isFactoryOrRefinery && mapGrid[tileY][tileX].noBuild)) {
     return false
   }

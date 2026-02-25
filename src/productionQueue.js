@@ -11,12 +11,13 @@ import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { broadcastBuildingPlace, broadcastUnitSpawn, isHost } from './network/gameCommandSync.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
+import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
 
-const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache']
+const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor']
 
 // Enhanced production queue system
 export const productionQueue = {
@@ -467,7 +468,40 @@ export const productionQueue = {
     let spawnFactory = null
     let rallyPointTarget = this.currentUnit.rallyPoint || null // Rally point from drag&drop
 
-    if (unitType === 'apache') {
+    if (unitType === 'f22Raptor') {
+      const allAirstrips = (gameState.buildings || []).filter(
+        b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0
+      )
+
+      if (allAirstrips.length === 0) {
+        console.error('Cannot spawn F22 Raptor: No Airstrip found.')
+        showNotification('Production cancelled: F22 Raptor requires an operational Airstrip.')
+        this.currentUnit.button.classList.remove('active', 'paused')
+        this.currentUnit = null
+        this.startNextUnitProduction()
+        return
+      }
+
+      const availableAirstrips = allAirstrips.filter(airstrip => {
+        ensureAirstripOperations(airstrip)
+        return claimAirstripParkingSlot(airstrip) >= 0
+      })
+
+      if (!availableAirstrips.length) {
+        showNotification('All airstrip parking slots are occupied. F22 production is waiting for a free slot.')
+        this.pausedUnit = true
+        return
+      }
+
+      gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
+      const chosenIndex = gameState.nextAirstripIndex % availableAirstrips.length
+      spawnFactory = availableAirstrips[chosenIndex]
+      gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % availableAirstrips.length
+
+      if (!rallyPointTarget && spawnFactory.rallyPoint) {
+        rallyPointTarget = spawnFactory.rallyPoint
+      }
+    } else if (unitType === 'apache') {
       const allHelipads = (gameState.buildings || []).filter(
         b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0
       )
@@ -646,7 +680,9 @@ export const productionQueue = {
         updateDangerZoneMaps(gameState)
         placeBuilding(newBuilding, gameState.mapGrid)
         updatePowerSupply(gameState.buildings, gameState)
-        playSound('buildingPlaced')
+        if (this.currentBuilding.type !== 'street') {
+          playSound('buildingPlaced')
+        }
         showNotification(`${buildingData[this.currentBuilding.type].displayName} constructed`)
 
         // Broadcast building placement to other players in multiplayer

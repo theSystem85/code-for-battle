@@ -262,6 +262,16 @@ export const buildingData = {
     projectileSpeed: 0.75,
     maxAmmo: UNIT_AMMO_CAPACITY.howitzer * 4
   },
+  street: {
+    width: 1,
+    height: 1,
+    cost: 10,
+    power: 0,
+    image: 'placeholder.webp',
+    displayName: 'Street',
+    health: 1,
+    smokeSpots: []
+  },
   concreteWall: {
     width: 1,
     height: 1,

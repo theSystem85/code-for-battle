@@ -29,6 +29,7 @@ const DEFAULT_BINDINGS = {
     { id: 'toggle-fps', label: 'Toggle FPS Overlay', input: 'p', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-performance', label: 'Toggle Performance Dialog', input: 'm', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-waypoints', label: 'Toggle Waypoint Paths', input: 'w', context: KEYBINDING_CONTEXTS.DEFAULT },
+    { id: 'toggle-entity-opacity', label: 'Cycle Unit/Building Image Opacity', input: 'y', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-alert', label: 'Toggle Alert Mode', input: 'a', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-sell', label: 'Toggle Sell/Stop', input: 's', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-repair', label: 'Toggle Repair Mode', input: 'r', context: KEYBINDING_CONTEXTS.DEFAULT },

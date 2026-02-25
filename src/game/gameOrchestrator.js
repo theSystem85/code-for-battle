@@ -325,7 +325,7 @@ class Game {
 
     const mapOverrides = startupMapOverrides
     const seedInput = document.getElementById('mapSeed')
-    const seed = resolveMapSeed(mapOverrides?.seed || (seedInput ? seedInput.value : gameState.mapSeed || '1'))
+    const seed = resolveMapSeed(mapOverrides?.seed || (seedInput ? seedInput.value : gameState.mapSeed || '4'))
 
     if (seedInput && mapOverrides?.seed) {
       seedInput.value = seed
@@ -613,7 +613,7 @@ class Game {
       const ctx = selectionHudPreviewCanvas.getContext('2d')
       if (!ctx) return
 
-      const mode = selectionHudModeSelect?.value || gameState.selectionHudMode || 'modern'
+      const mode = selectionHudModeSelect?.value || gameState.selectionHudMode || 'modern-donut'
       const barThickness = sanitizeSelectionHudBarThickness(
         selectionHudBarThicknessInput?.value,
         gameState.selectionHudBarThickness
@@ -716,7 +716,7 @@ class Game {
     }
 
     if (selectionHudModeSelect) {
-      selectionHudModeSelect.value = gameState.selectionHudMode || 'modern'
+      selectionHudModeSelect.value = gameState.selectionHudMode || 'modern-donut'
     }
 
     if (selectionHudBarThicknessInput) {
@@ -1038,7 +1038,7 @@ class Game {
     gameState.losses = preservedLosses
 
     const seedInput = document.getElementById('mapSeed')
-    const seed = resolveMapSeed(gameState.mapSeed || seedInput?.value || '1')
+    const seed = resolveMapSeed(gameState.mapSeed || seedInput?.value || '4')
     gameState.mapSeed = seed
     generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
 

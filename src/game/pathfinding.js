@@ -68,6 +68,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
   // IMMEDIATE path calculation for units with moveTarget but no path
   // This ensures remote player units get paths right away without waiting for the interval
   const unitsNeedingImmediatePath = units.filter(u =>
+    u.type !== 'f22Raptor' &&
     u.moveTarget &&
     (!u.path || u.path.length === 0) &&
     !u.lastPathCalcTime // Only units that haven't had paths calculated yet
@@ -123,6 +124,10 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
     const unitsNeedingPaths = []
 
     units.forEach(unit => {
+      if (unit.type === 'f22Raptor') {
+        return
+      }
+
       // SKIP units that have an attack target - they are handled by updateUnitMovement()
       // This prevents duplicate path calculations between the two systems
       if (unit.target && unit.target.health !== undefined && unit.target.health > 0) {

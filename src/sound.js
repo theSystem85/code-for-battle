@@ -108,6 +108,11 @@ const soundFiles = {
   // Apache helicopter flight loop
   apache_fly: ['apache_fly.mp3'],
 
+  // F22 sounds
+  f22Flight: ['F22Flight.mp3'],
+  f22Landing: ['F22Landing.mp3'],
+  f22Takeoff: ['F22TakeOff_1.mp3', 'F22TakeOff_2.mp3'],
+
   // Game event aliases (previously in soundMapping)
   movement: ['tankEngineStart01.mp3', 'confirmed.mp3', 'onMyWay.mp3'], // alias for tankMove
   shoot: ['tankShot01.mp3', 'tankShot02.mp3', 'tankShot03.mp3'], // alias for tankShot

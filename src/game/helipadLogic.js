@@ -274,6 +274,51 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
         })
       } // end if helipad.type === 'helipad'
 
+      if (helipad.type === 'airstrip') {
+        const f22Units = units.filter(u => u.type === 'f22Raptor' && u.health > 0)
+        f22Units.forEach(f22 => {
+          const isParkedOnThisAirstrip =
+            f22.flightState === 'grounded' &&
+            f22.f22State === 'parked' &&
+            f22.landedHelipadId === helipadId
+
+          if (!isParkedOnThisAirstrip) {
+            if (f22.refuelingAtHelipad) {
+              f22.refuelingAtHelipad = false
+            }
+            return
+          }
+
+          helipad.landedUnitId = f22.id
+
+          if (typeof f22.maxRocketAmmo === 'number' && f22.rocketAmmo < f22.maxRocketAmmo && helipad.ammo > 0) {
+            const ammoNeeded = f22.maxRocketAmmo - f22.rocketAmmo
+            const ammoRefillTime = 10000
+            const ammoRefillRate = f22.maxRocketAmmo / ammoRefillTime
+            const ammoToTransfer = Math.min(ammoRefillRate * delta, ammoNeeded, helipad.ammo)
+            if (ammoToTransfer > 0) {
+              f22.rocketAmmo += ammoToTransfer
+              helipad.ammo -= ammoToTransfer
+            }
+            if (f22.rocketAmmo > 0) {
+              f22.apacheAmmoEmpty = false
+            }
+          }
+
+          if (typeof f22.maxGas === 'number' && f22.gas < f22.maxGas && helipad.fuel > 0) {
+            const refuelRate = f22.maxGas / 4000
+            const transfer = Math.min(refuelRate * delta, f22.maxGas - f22.gas, helipad.fuel)
+            if (transfer > 0) {
+              f22.gas = Math.min(f22.maxGas, f22.gas + transfer)
+              helipad.fuel = Math.max(0, helipad.fuel - transfer)
+              f22.refuelingAtHelipad = true
+            }
+          } else {
+            f22.refuelingAtHelipad = false
+          }
+        })
+      }
+
       const tankers = units.filter(u => u.type === 'tankerTruck' && u.health > 0 && typeof u.supplyGas === 'number' && u.supplyGas > 0)
       tankers.forEach(tanker => {
         const tankerCenterX = tanker.x + TILE_SIZE / 2
