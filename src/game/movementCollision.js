@@ -66,12 +66,6 @@ function isTileBlockedForCollision(mapGrid, tileX, tileY) {
   return false
 }
 
-function isF22GroundStreetBlocked(unit, tile) {
-  if (!unit || unit.type !== 'f22Raptor') return false
-  if (unit.flightState !== 'grounded') return false
-  return !(tile?.type === 'street' || tile?.airstripStreet)
-}
-
 function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupancyMap, units = [], wrecks = [], ignoreIds = []) {
   if (!unit) {
     return true
@@ -286,11 +280,16 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         return { collided: true, type: 'terrain', tileX, tileY }
       }
 
-      if (isF22GroundStreetBlocked(unit, tile)) {
-        return { collided: true, type: 'terrain', tileX, tileY }
-      }
-
-      if (hasBlockingBuilding(tile)) {
+      if (unit.type === 'f22Raptor' && unit.flightState === 'grounded') {
+        // Use center-based tile to avoid edge clipping during taxi
+        const cTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+        const cTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+        const cTile = mapGrid[cTileY]?.[cTileX]
+        if (!(cTile?.type === 'street' || cTile?.airstripStreet)) {
+          return { collided: true, type: 'terrain', tileX: cTileX, tileY: cTileY }
+        }
+        // Center tile is on airstrip street — skip top-left corner building check
+      } else if (hasBlockingBuilding(tile)) {
         if (unit.type === 'apache' && tile.building?.type === 'helipad') {
           return { collided: false }
         }
@@ -638,6 +637,10 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
     return false
   }
 
+  if (unit.type === 'f22Raptor' || collisionResult.other?.type === 'f22Raptor') {
+    return false
+  }
+
   const { normalX, normalY, overlap, unitSpeed, otherSpeed, airCollision = false } = collisionResult.data
   const factoryList = Array.isArray(factories) ? factories : []
   const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
@@ -894,6 +897,8 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
   for (let i = 0, len = nearbyUnits.length; i < len; i++) {
     const otherUnit = nearbyUnits[i]
     if (otherUnit.health <= 0) continue
+    // F22s should never push ground units via avoidance
+    if (otherUnit.type === 'f22Raptor') continue
     // Skip avoidance if this unit is our attack target
     if (unit.target && unit.target === otherUnit) continue
 

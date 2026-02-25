@@ -17,9 +17,53 @@ import { getBuildingIdentifier } from '../utils.js'
 const F22_GROUND_TAKEOFF_SPEED_MIN = 1.5
 const F22_GROUND_TAKEOFF_SPEED_MAX = 2.2
 const F22_LANDING_ROLL_SPEED_MIN = 0.45
-const F22_ORBIT_RADIUS = TILE_SIZE * 5
+const F22_ORBIT_RADIUS = TILE_SIZE * 7
+const F22_COMBAT_ORBIT_RADIUS = TILE_SIZE * 10
+const F22_COMBAT_ORBIT_MIN_RADIUS = TILE_SIZE * 7
 const F22_ORBIT_RPS = 0.16
 const F22_RTB_FUEL_RATIO = 0.2
+
+function isTaxiSurfaceTile(tile) {
+  return Boolean(tile) && (tile.type === 'street' || tile.airstripStreet)
+}
+
+function findNearestTaxiTile(originTile, maxRadius = 6) {
+  if (!originTile || !Array.isArray(gameState.mapGrid) || !Array.isArray(gameState.mapGrid[0])) {
+    return null
+  }
+
+  const mapHeight = gameState.mapGrid.length
+  const mapWidth = gameState.mapGrid[0].length
+  const inBounds = (x, y) => x >= 0 && y >= 0 && x < mapWidth && y < mapHeight
+
+  if (inBounds(originTile.x, originTile.y) && isTaxiSurfaceTile(gameState.mapGrid[originTile.y][originTile.x])) {
+    return { x: originTile.x, y: originTile.y }
+  }
+
+  for (let radius = 1; radius <= maxRadius; radius++) {
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (Math.abs(dx) !== radius && Math.abs(dy) !== radius) continue
+        const x = originTile.x + dx
+        const y = originTile.y + dy
+        if (!inBounds(x, y)) continue
+        if (isTaxiSurfaceTile(gameState.mapGrid[y][x])) {
+          return { x, y }
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+function reachedTaxiDestinationTile(unit, destinationTile, radius = TILE_SIZE * 0.55) {
+  if (!destinationTile) return false
+  const center = getUnitCenter(unit)
+  const targetX = destinationTile.x * TILE_SIZE + TILE_SIZE / 2
+  const targetY = destinationTile.y * TILE_SIZE + TILE_SIZE / 2
+  return Math.hypot(center.x - targetX, center.y - targetY) <= radius
+}
 
 function getUnitCenter(unit) {
   return {
@@ -61,14 +105,30 @@ function routeTaxiToPoint(unit, targetPoint) {
     x: Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE),
     y: Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   }
-  const destTile = { x: targetPoint.x, y: targetPoint.y }
-  const path = findPath(startTile, destTile, gameState.mapGrid, gameState.occupancyMap, undefined, {
+  const initialDestTile = { x: targetPoint.x, y: targetPoint.y }
+  let resolvedDestTile = initialDestTile
+
+  let path = findPath(startTile, resolvedDestTile, gameState.mapGrid, gameState.occupancyMap, undefined, {
     strictDestination: true,
     unitOwner: unit.owner,
     streetOnly: true
   })
+
+  if (!path || path.length <= 1) {
+    const fallbackTile = findNearestTaxiTile(initialDestTile, 8)
+    if (fallbackTile) {
+      resolvedDestTile = fallbackTile
+      path = findPath(startTile, resolvedDestTile, gameState.mapGrid, gameState.occupancyMap, undefined, {
+        strictDestination: true,
+        unitOwner: unit.owner,
+        streetOnly: true
+      })
+    }
+  }
+
   unit.path = path && path.length > 1 ? path.slice(1) : []
-  unit.moveTarget = destTile
+  unit.moveTarget = resolvedDestTile
+  unit.f22TaxiDestinationTile = resolvedDestTile
 }
 
 function isRunwayStartClear(unit, runway) {
@@ -175,26 +235,30 @@ function updateOrbitFlightPlan(unit, now) {
 
   const unitCenter = getUnitCenter(unit)
   const distanceToCenter = Math.hypot(unitCenter.x - center.x, unitCenter.y - center.y)
-  if (distanceToCenter < F22_ORBIT_RADIUS * 0.55) {
+  const isCombatMode = center.mode === 'combat'
+  const baseOrbitRadius = isCombatMode ? F22_COMBAT_ORBIT_RADIUS : F22_ORBIT_RADIUS
+
+  if (distanceToCenter < baseOrbitRadius * 0.65) {
     unit.f22OrbitRadiusBoostUntil = now + 1400
   }
 
-  const orbitRadiusBase = center.mode === 'combat' ? F22_ORBIT_RADIUS * 1.2 : F22_ORBIT_RADIUS
+  const orbitRadiusBase = isCombatMode ? baseOrbitRadius : F22_ORBIT_RADIUS
   const boostedRadius = unit.f22OrbitRadiusBoostUntil && unit.f22OrbitRadiusBoostUntil > now
-    ? F22_ORBIT_RADIUS * 1.45
+    ? orbitRadiusBase * 1.18
     : orbitRadiusBase
 
   const dtMs = Math.max(16, now - (unit.lastF22Update || now))
   const dt = dtMs / 1000
   const prevAngle = Number.isFinite(unit.f22OrbitAngle) ? unit.f22OrbitAngle : 0
-  const orbitRps = center.mode === 'combat' ? F22_ORBIT_RPS * 1.2 : F22_ORBIT_RPS
+  const orbitRps = isCombatMode ? F22_ORBIT_RPS * 1.05 : F22_ORBIT_RPS
   const nextAngle = prevAngle + (Math.PI * 2 * orbitRps * dt)
   unit.f22OrbitAngle = nextAngle
 
-  const waveAmount = center.mode === 'combat' ? TILE_SIZE * 3.5 : TILE_SIZE * 0.7
-  const secondaryWave = center.mode === 'combat' ? Math.sin(nextAngle * 1.3) * TILE_SIZE * 1.5 : 0
+  const waveAmount = isCombatMode ? TILE_SIZE * 1.4 : TILE_SIZE * 0.7
+  const secondaryWave = isCombatMode ? Math.sin(nextAngle * 1.3) * TILE_SIZE * 0.8 : 0
   const radiusWave = Math.sin(nextAngle * 2.4) * waveAmount + secondaryWave
-  const dynamicRadius = Math.max(TILE_SIZE * 2.5, boostedRadius + radiusWave)
+  const minRadius = isCombatMode ? F22_COMBAT_ORBIT_MIN_RADIUS : TILE_SIZE * 2.5
+  const dynamicRadius = Math.max(minRadius, boostedRadius + radiusWave)
 
   unit.flightPlan = {
     x: center.x + Math.cos(nextAngle) * dynamicRadius,
@@ -304,6 +368,7 @@ export function updateF22FlightState(unit, movement, now) {
       unit.manualFlightState = 'takeoff'
       unit.path = []
       unit.moveTarget = null
+      unit.f22TaxiDestinationTile = null
       unit.direction = 0
       unit.rotation = 0
     }
@@ -528,6 +593,20 @@ export function updateF22FlightState(unit, movement, now) {
       if (taxiAirstrip && Number.isInteger(unit.airstripParkingSlotIndex)) {
         const parking = taxiAirstrip.f22ParkingSpots?.[unit.airstripParkingSlotIndex]
         if (parking && !reachedWorldPoint(unit, { x: parking.worldX, y: parking.worldY }, TILE_SIZE * 0.5)) {
+          const reachedFallbackTaxiTile = reachedTaxiDestinationTile(unit, unit.f22TaxiDestinationTile)
+          if (reachedFallbackTaxiTile) {
+            unit.f22State = 'parked'
+            unit.helipadLandingRequested = false
+            unit.f22PendingTakeoff = false
+            unit.flightPlan = null
+            unit.f22TaxiDestinationTile = null
+            unit.landedHelipadId = getBuildingIdentifier(taxiAirstrip)
+            setAirstripSlotOccupant(taxiAirstrip, unit.airstripParkingSlotIndex, unit.id)
+            taxiAirstrip.landedUnitId = unit.id
+            finishTick()
+            return
+          }
+
           const shouldRetryRoute = !unit.lastF22TaxiRouteAttemptAt || now - unit.lastF22TaxiRouteAttemptAt > 400
           if (shouldRetryRoute) {
             routeTaxiToPoint(unit, parking)
@@ -541,6 +620,7 @@ export function updateF22FlightState(unit, movement, now) {
           unit.helipadLandingRequested = false
           unit.f22PendingTakeoff = false
           unit.flightPlan = null
+          unit.f22TaxiDestinationTile = null
           unit.landedHelipadId = getBuildingIdentifier(taxiAirstrip)
           setAirstripSlotOccupant(taxiAirstrip, unit.airstripParkingSlotIndex, unit.id)
           taxiAirstrip.landedUnitId = unit.id

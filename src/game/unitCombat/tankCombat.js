@@ -200,10 +200,33 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
     const rangeMultiplier = unit.type === 'f22Raptor' ? 1 : COMBAT_CONFIG.RANGE_MULTIPLIER.ROCKET
     const rocketRange = getEffectiveFireRange(unit) * rangeMultiplier
 
-    // Handle movement using common logic - this already adjusts for Apache altitude
-    const { distance, targetCenterX, targetCenterY } = handleTankMovement(
-      unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid, rocketRange
-    )
+    let distance
+    let targetCenterX
+    let targetCenterY
+
+    if (isF22) {
+      const unitCenterX = unit.x + TILE_SIZE / 2
+      const unitCenterY = unit.y + TILE_SIZE / 2
+      if (unit.target.tileX !== undefined) {
+        targetCenterX = unit.target.x + TILE_SIZE / 2
+        targetCenterY = unit.target.y + TILE_SIZE / 2
+        if ((unit.target.type === 'apache' || unit.target.type === 'f22Raptor') && unit.target.altitude) {
+          targetCenterY -= unit.target.altitude * 0.4
+        }
+      } else {
+        targetCenterX = unit.target.x * TILE_SIZE + (unit.target.width * TILE_SIZE) / 2
+        targetCenterY = unit.target.y * TILE_SIZE + (unit.target.height * TILE_SIZE) / 2
+      }
+      distance = Math.hypot(targetCenterX - unitCenterX, targetCenterY - unitCenterY)
+    } else {
+      // Handle movement using common logic - this already adjusts for Apache altitude
+      const result = handleTankMovement(
+        unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid, rocketRange
+      )
+      distance = result.distance
+      targetCenterX = result.targetCenterX
+      targetCenterY = result.targetCenterY
+    }
 
     // Rocket tanks have no turret - must rotate entire body to face target
     const unitCenterX = unit.x + TILE_SIZE / 2
@@ -227,7 +250,10 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
     const effectiveRange = rocketRange
     const clearShot = true
     const hasActiveF22Volley = isF22 && Boolean(unit.volleyState)
-    const inFiringWindow = distance <= effectiveRange || hasActiveF22Volley
+    const minF22AttackDistance = TILE_SIZE * 6
+    const inFiringWindow = isF22
+      ? (hasActiveF22Volley || (distance <= effectiveRange && distance >= minF22AttackDistance))
+      : distance <= effectiveRange
     if (inFiringWindow && canAttack && clearShot) {
       // Check if we need to start a new burst or continue existing one
       if (isF22) {
@@ -235,7 +261,7 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
           unit.volleyState = null
           return
         }
-        const readyForNewVolley = !unit.lastShotTime || now - unit.lastShotTime >= getEffectiveFireRate(unit, COMBAT_CONFIG.FIRE_RATES.APACHE)
+        const readyForNewVolley = !unit.lastShotTime || now - unit.lastShotTime >= getEffectiveFireRate(unit, COMBAT_CONFIG.APACHE.FIRE_RATE)
         if (unit.volleyState || readyForNewVolley) {
           const volleyComplete = handleApacheVolley(unit, unit.target, bullets, now, targetCenterX, targetCenterY, units, mapGrid)
           if (volleyComplete) {

@@ -485,10 +485,14 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   let avoidanceForce = { x: 0, y: 0 }
   if (movement.isMoving && canAccelerate) {
-    const skipAirAvoidance = unit.type === 'f22Raptor' && unit.flightState !== 'grounded'
-    avoidanceForce = isAirborne
-      ? (skipAirAvoidance ? { x: 0, y: 0 } : calculateAirCollisionAvoidance(unit, units))
-      : calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap)
+    // F22s never participate in collision avoidance (airborne or grounded taxi)
+    if (unit.type === 'f22Raptor') {
+      avoidanceForce = { x: 0, y: 0 }
+    } else {
+      avoidanceForce = isAirborne
+        ? calculateAirCollisionAvoidance(unit, units)
+        : calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap)
+    }
   }
 
   let accelRate
