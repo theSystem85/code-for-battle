@@ -486,11 +486,15 @@ export function updateF22FlightState(unit, movement, now) {
     if (!runwayGranted) {
       unit.f22State = 'wait_landing_clearance'
       const holdingAngle = Number.isFinite(unit.f22OrbitAngle) ? unit.f22OrbitAngle : 0
-      unit.f22OrbitAngle = holdingAngle + (Math.PI * 2 * 0.08 * Math.max(0.016, (now - (unit.lastF22Update || now)) / 1000))
-      const holdRadius = TILE_SIZE * 3.5
+      const dtSec = Math.max(0.016, (now - (unit.lastF22Update || now)) / 1000)
+      // Determine queue position for angular staggering
+      const queuePos = airstrip?.f22RunwayLandingQueue?.indexOf(unit.id) ?? 0
+      const queueOffset = queuePos * (Math.PI * 2 / Math.max(1, airstrip?.f22RunwayLandingQueue?.length ?? 1))
+      unit.f22OrbitAngle = holdingAngle + (Math.PI * 2 * 0.08 * dtSec)
+      const holdRadius = TILE_SIZE * 10
       unit.flightPlan = {
-        x: runway.runwayExit.worldX + Math.cos(unit.f22OrbitAngle) * holdRadius,
-        y: runway.runwayExit.worldY + Math.sin(unit.f22OrbitAngle) * holdRadius,
+        x: runway.runwayExit.worldX + Math.cos(unit.f22OrbitAngle + queueOffset) * holdRadius,
+        y: runway.runwayExit.worldY + Math.sin(unit.f22OrbitAngle + queueOffset) * holdRadius,
         stopRadius: TILE_SIZE * 0.25,
         mode: 'airstrip'
       }
@@ -561,6 +565,10 @@ export function updateF22FlightState(unit, movement, now) {
           if (newSlot >= 0) {
             unit.airstripParkingSlotIndex = newSlot
           }
+        }
+        // Immediately mark slot as occupied to prevent other landing units from claiming it
+        if (Number.isInteger(unit.airstripParkingSlotIndex)) {
+          setAirstripSlotOccupant(landingAirstrip, unit.airstripParkingSlotIndex, unit.id)
         }
         const parking = landingAirstrip.f22ParkingSpots?.[unit.airstripParkingSlotIndex]
         if (parking) {

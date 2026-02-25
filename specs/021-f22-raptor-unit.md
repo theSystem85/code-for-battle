@@ -193,6 +193,25 @@ Use this section as the practical test checklist.
 	- Status: `Needs gameplay verification`
 8. Save/load with partially spent F22 ammo and verify cap stays at 8.
 	- Status: `Needs gameplay verification`
+9. Save/load F22 parked on airstrip and verify they take off properly when commanded to move/attack.
+	- Status: `Needs gameplay verification`
+10. Command a group of airborne F22 to land; verify they orbit in large 10-tile circles near airstrip entrance and land one-by-one.
+	- Status: `Needs gameplay verification`
+11. After landing, verify each F22 taxis on the ground to its own unique parking spot.
+	- Status: `Needs gameplay verification`
+
+## Engineering Update (2026-02-25, round 5)
+F22 save/load and landing queue fixes:
+1. Save/load: Added `f22State`, `airstripId`, `airstripParkingSlotIndex`, `flightState`, `altitude`,
+	`landedHelipadId`, `helipadTargetId`, `f22PendingTakeoff`, `groundedOccupancyApplied` to unit
+	serialization for F22. On load, runway points are re-derived from the airstrip building, parking
+	slot occupancy is restored, and direction/rotation matches the parking facing. Old saves without
+	`airstripId` are handled by position-based airstrip discovery.
+2. Landing queue: Holding orbit radius increased from 3.5 to 10 tiles for proper large-circle
+	holding patterns before runway approach. Each queued unit gets a staggered angular offset based
+	on queue position so multiple F22 don't overlap in the holding pattern.
+3. Parking slot race: Immediately mark parking slot as occupied when a landing F22 transitions
+	from landing_roll to taxi_to_parking, preventing other landing units from claiming the same slot.
 
 ## Open Questions
 - None currently.
