@@ -50,6 +50,16 @@ Addressed new runtime regressions from validation:
 5. Anti-push hardening: added guard in `applyUnitCollisionResponse` so any F22-involved collision
 	response exits without applying separation impulses.
 
+## Engineering Update (2026-02-25, round 4)
+Additional hardening from user follow-up:
+1. Non-AA units now drop airborne targets before aiming/attack logic in combat updates
+	(`updateTankCombat`, `updateTankV2Combat`, `updateTankV3Combat`, `updateRocketTankCombat`) via
+	shared `canUnitTargetEntity` helper.
+2. Guard-target acquisition and attack-queue retargeting now also reject airborne targets for
+	non-AA units (`combatState.js`), preventing turret/body aim tracking on untargetable air units.
+3. F22 anti-push hardening extended in collision internals: safe-separation blocking and minimum
+	separation correction now explicitly skip F22 participation.
+
 ## Cluster A: Spawn, Airstrip Lifecycle, and Queueing
 `Primary files`: `src/utils/airstripUtils.js`, `src/game/movementF22.js`, `src/input/unitCommands/airCommands.js`, `src/units.js`, `src/productionQueue.js`, `src/saveGame.js`
 
@@ -105,7 +115,7 @@ Addressed new runtime regressions from validation:
 
 ### B.2 Ground interaction rules
 14. `B3` F22 must not push ground units away during collision response.
-	- Status: `Implemented (code)` — `checkUnitCollision` skips F22 collisions; `calculateCollisionAvoidance` skips F22 (both as caller and as obstacle); `applyUnitCollisionResponse` now hard-guards F22 out of separation impulses
+	- Status: `Implemented (code)` — `checkUnitCollision` skips F22 collisions; `calculateCollisionAvoidance` skips F22 (both as caller and as obstacle); `applyUnitCollisionResponse` hard-guards F22 out of impulses; safe-separation/minimum-separation internals now also skip F22
 	- `Needs gameplay verification`
 
 ### B.3 Attack movement behavior

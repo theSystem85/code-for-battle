@@ -115,6 +115,7 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
   if (units && units.length > 0) {
     for (const other of units) {
       if (!other || other.id === unit.id || other.health <= 0) continue
+      if (other.type === 'f22Raptor') continue
       if (ignoreSet && ignoreSet.has(other.id)) continue
       if (!isGroundUnit(other)) continue
 
@@ -181,6 +182,9 @@ function applySafeSeparation(unit, dx, dy, mapGrid, occupancyMap, units = [], wr
 
 function ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occupancyMap, units = [], wrecks = []) {
   if (!unit || !otherUnit) {
+    return
+  }
+  if (unit.type === 'f22Raptor' || otherUnit.type === 'f22Raptor') {
     return
   }
   if (!isGroundUnit(unit) || !isGroundUnit(otherUnit)) {

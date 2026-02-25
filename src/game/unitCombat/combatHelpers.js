@@ -36,6 +36,19 @@ export function isHumanControlledParty(owner) {
   return false
 }
 
+export function isAirborneCombatTarget(target) {
+  if (!target) return false
+  const isAirUnitType = target.type === 'apache' || target.type === 'f22Raptor'
+  return isAirUnitType && target.flightState !== 'grounded'
+}
+
+export function canUnitTargetEntity(unit, target) {
+  if (!unit || !target) return false
+  if (!isAirborneCombatTarget(target)) return true
+
+  return unit.type === 'rocketTank' || unit.type === 'apache' || unit.type === 'f22Raptor'
+}
+
 /**
  * Check if the turret is properly aimed at the target
  * @param {Object} unit - Tank unit
