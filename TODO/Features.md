@@ -1,4 +1,5 @@
 ## Features
+- [x] Show the straight-line (air) distance in meters below the move cursor when units are selected and hovering valid move targets.
 - [x] Extend AGF to selected defensive buildings so box-selected enemy targets are queued (FIFO) and resolve rocket/artillery forced-target no-fire regression by fixing building force-target acquisition.
 - [x] Allow selected defense buildings to queue forced attack targets in FIFO order and show numbered red target indicators on queued enemies.
 - [x] ✅ Consolidated all F22 (non-street) chat requirements into a single numbered spec checklist with conflict resolution (latest wins), parallel agent clusters by file ownership, and explicit implementation vs gameplay-verification status markers.
