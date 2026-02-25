@@ -10,6 +10,7 @@ import { assignHarvesterToOptimalRefinery } from './game/harvesterLogic.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { broadcastBuildingPlace, broadcastUnitSpawn, isHost } from './network/gameCommandSync.js'
 import { gameRandom } from './utils/gameRandom.js'
+import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
 
 // List of unit types considered vehicles requiring a Vehicle Factory
@@ -59,6 +60,66 @@ export const productionQueue = {
     if (item && item.blueprint) {
       gameState.blueprints = gameState.blueprints.filter(bp => bp !== item.blueprint)
     }
+  },
+
+  cancelBlueprintPlans: function(blueprintsToCancel = []) {
+    const targetSet = new Set(Array.isArray(blueprintsToCancel) ? blueprintsToCancel : [])
+    if (targetSet.size === 0) {
+      return 0
+    }
+
+    const isRemoteClientSession = !isHost() && gameState.multiplayerSession?.isRemote
+    const affectedButtons = new Set()
+    let cancelledCount = 0
+
+    const currentBlueprint = this.currentBuilding?.blueprint || null
+    if (currentBlueprint && targetSet.has(currentBlueprint)) {
+      if (!isRemoteClientSession) {
+        gameState.money += this.buildingPaid || 0
+      }
+
+      const currentItem = this.buildingItems.shift()
+      if (currentItem?.button) {
+        affectedButtons.add(currentItem.button)
+      }
+
+      if (this.currentBuilding?.button) {
+        const progressBar = this.currentBuilding.button.querySelector('.production-progress')
+        if (progressBar) {
+          progressBar.style.width = '0%'
+        }
+      }
+
+      this.currentBuilding = null
+      this.pausedBuilding = false
+      this.buildingPaid = 0
+      cancelledCount += 1
+    }
+
+    for (let i = this.buildingItems.length - 1; i >= 0; i--) {
+      const item = this.buildingItems[i]
+      if (item?.blueprint && targetSet.has(item.blueprint)) {
+        if (item.button) {
+          affectedButtons.add(item.button)
+        }
+        this.buildingItems.splice(i, 1)
+        cancelledCount += 1
+      }
+    }
+
+    gameState.blueprints = (gameState.blueprints || []).filter(bp => !targetSet.has(bp))
+
+    affectedButtons.forEach(button => {
+      const remainingCount = this.buildingItems.filter(item => item.button === button).length
+      this.updateBatchCounter(button, remainingCount)
+    })
+
+    if (!this.currentBuilding && this.buildingItems.length > 0) {
+      this.startNextBuildingProduction()
+    }
+
+    this.tryResumeProduction()
+    return cancelledCount
   },
 
   addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null) {
@@ -239,6 +300,9 @@ export const productionQueue = {
 
     if (item.blueprint) {
       const info = buildingData[item.type]
+      const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer, {
+        exclude: new Set([item.blueprint])
+      })
       let nearBase = false
       for (let y = 0; y < info.height; y++) {
         for (let x = 0; x < info.width; x++) {
@@ -246,7 +310,7 @@ export const productionQueue = {
             isNearExistingBuilding(
               item.blueprint.x + x,
               item.blueprint.y + y,
-              gameState.buildings,
+              [...gameState.buildings, ...planningBuildings],
               factories,
               3,
               gameState.humanPlayer
@@ -607,7 +671,8 @@ export const productionQueue = {
 
     const blueprint = this.currentBuilding.blueprint
     if (blueprint) {
-      if (canPlaceBuilding(this.currentBuilding.type, blueprint.x, blueprint.y, gameState.mapGrid, units, gameState.buildings, factories, gameState.humanPlayer)) {
+      const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer)
+      if (canPlaceBuilding(this.currentBuilding.type, blueprint.x, blueprint.y, gameState.mapGrid, units, [...gameState.buildings, ...planningBuildings], factories, gameState.humanPlayer)) {
         const newBuilding = createBuilding(this.currentBuilding.type, blueprint.x, blueprint.y)
         newBuilding.owner = gameState.humanPlayer
         if (!gameState.buildings) gameState.buildings = []

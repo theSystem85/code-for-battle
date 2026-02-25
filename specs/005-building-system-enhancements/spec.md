@@ -420,3 +420,6 @@ As a player, I want to set unique rally points for each factory independently, s
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+- **FR-054**: System MUST treat queued building planning footprints (`blueprints`) as valid proximity anchors for placing additional planned buildings using the same normal build-distance rule as completed base structures.
+- **FR-055**: System MUST render the plan order number on every planned building footprint and keep numbering contiguous after any plan cancellation.
+- **FR-056**: System MUST allow Sell mode to cancel planned buildings, including cascading cancellation of consecutive disconnected plans; if multiple plans would be cancelled, first click MUST show a warning notification with a warning icon and highlight affected footprints in orange, and second click on the same plan MUST confirm cancellation.

@@ -26,6 +26,7 @@ import { TILE_SIZE, MAX_BUILDING_GAP_TILES } from '../config.js'
 import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
+import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
 
 export class EventHandlers {
   constructor(canvasManager, factories, units, mapGrid, moneyEl, gameInstance = null) {
@@ -710,7 +711,8 @@ export class EventHandlers {
     const tileY = Math.floor(mouseY / TILE_SIZE)
 
     if (kind === 'building') {
-      if (canPlaceBuilding(type, tileX, tileY, gameState.mapGrid, this.units, gameState.buildings, this.factories, gameState.humanPlayer)) {
+      const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer)
+      if (canPlaceBuilding(type, tileX, tileY, gameState.mapGrid, this.units, [...gameState.buildings, ...planningBuildings], this.factories, gameState.humanPlayer)) {
         const blueprint = { type, x: tileX, y: tileY }
         if (!gameState.blueprints) {
           gameState.blueprints = []
@@ -760,7 +762,8 @@ export class EventHandlers {
 
       try {
         // Check if placement is valid - pass buildings and factories arrays
-        if (canPlaceBuilding(buildingType, tileX, tileY, gameState.mapGrid, this.units, gameState.buildings, this.factories, gameState.humanPlayer)) {
+        const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer)
+        if (canPlaceBuilding(buildingType, tileX, tileY, gameState.mapGrid, this.units, [...gameState.buildings, ...planningBuildings], this.factories, gameState.humanPlayer)) {
           // Create and place the building
           const newBuilding = createBuilding(buildingType, tileX, tileY)
 
@@ -1004,6 +1007,7 @@ export class EventHandlers {
       // Update button appearance
       const sellBtn = document.getElementById('sellBtn')
       if (gameState.sellMode) {
+        gameState.sellPlanCancellationPreview = null
         sellBtn.classList.add('active')
         showNotification('Sell mode activated. Click on a building to sell it for 70% of build price.')
 
@@ -1017,6 +1021,7 @@ export class EventHandlers {
         gameCanvas.classList.add('sell-mode')
       } else {
         sellBtn.classList.remove('active')
+        gameState.sellPlanCancellationPreview = null
         showNotification('Sell mode deactivated.')
 
         // Remove CSS cursor class
