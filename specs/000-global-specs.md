@@ -58,6 +58,15 @@ The following unit types are considered attack-capable for cursor/range detectio
 - Vehicle factory count accelerates unit production time using a multiplier equal to the number of vehicle factories owned by the player (1 factory = 1x, 2 factories = 2x, etc.).
 - The multiplier applies to ground vehicles and Apache helicopters (helicopters still spawn from Helipads, but their build time is reduced by the same vehicle factory multiplier).
 
+
+## Selected-Unit HUD Hover Tooltips
+
+- Hovering selected-unit HUD bars must show both the hovered stat label and its absolute value when available:
+  - Health: `health <value>` (e.g. `health 30`)
+  - Ammo: `ammo <value>` in raw shots/rounds/rockets (not burst-grouped)
+  - Fuel: `fuel <value>m` converted to meters using `CURSOR_METERS_PER_TILE` (1 tile = 10m)
+- Tooltip value resolution must be field-based (shared stat fields like `health`, `maxAmmunition`, `maxRocketAmmo`, `maxAmmoCargo`, `maxGas`) so newly added compatible units/buildings inherit behavior automatically without per-type hardcoding.
+
 ## Sidebar Money Tooltip
 
 - Clicking or tapping the sidebar money bar (or the mobile money display) opens a tooltip showing:
