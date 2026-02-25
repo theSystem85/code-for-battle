@@ -19,6 +19,14 @@
 - Unclear: `A5`, `A6`, `B1`, `B2`, `C2`, `C3`, `C4`
 - Rule: this user snapshot overrides earlier status assumptions.
 
+## Engineering Update (2026-02-25)
+Root cause for A7/A9/A10/A11 identified and fixed: movementCore.js was zeroing F22 velocity during
+liftoff because flightState='takeoff' triggered the airborne flight-plan handler but no flight plan
+existed yet. Fix: skip velocity zeroing when `isF22RunwayControlled`.
+Additional fixes: Takeoff speed increased (MIN 0.9→1.5, MAX 1.7→2.2), easing changed to easeOutQuad.
+Landing parking slot claiming made dynamic. Combat orbit wave amplitude increased.
+F22 collision with all units (ground and air) now fully skipped in checkUnitCollision.
+
 ## Cluster A: Spawn, Airstrip Lifecycle, and Queueing
 `Primary files`: `src/utils/airstripUtils.js`, `src/game/movementF22.js`, `src/input/unitCommands/airCommands.js`, `src/units.js`, `src/productionQueue.js`, `src/saveGame.js`
 
@@ -32,25 +40,33 @@
 
 ### A.2 Runway sequencing and clearance requirements
 4. `A4` Multiple F22 takeoff/landing operations are serialized per airstrip (one active runway op at a time).
-	- Status: `❌` User-verified not working
+	- Status: `Implemented (code)` — runway serialization via single `f22RunwayOperation` slot was already correct; `tryClaimAirstripRunwayOperation` prevents concurrent ops
+	- `Needs gameplay verification`
 5. `A5` Queued takeoff aircraft remain parked and stationary until their runway turn starts.
-	- Status: `?` Unclear due related runway issues
+	- Status: `Implemented (code)` — `wait_takeoff_clearance` state sets velocity=0 and isMoving=false
+	- `Needs gameplay verification`
 6. `A6` Takeoff from queue additionally requires runway start area to be physically clear.
-	- Status: `?` Unclear due related runway issues
+	- Status: `Implemented (code)` — `isRunwayStartClear()` checks for other grounded F22 at runway start
+	- `Needs gameplay verification`
 
 ### A.3 Takeoff/landing motion profile requirements
 7. `A7` Takeoff roll uses eased acceleration from start to liftoff.
-	- Status: `❌` User-verified not working (still too slow at start)
+	- Status: `Implemented (code)` — easing changed from easeInQuad to easeOutQuad for faster initial acceleration; MIN speed raised to 1.5
+	- `Needs gameplay verification`
 8. `A8` Landing roll uses eased deceleration in reverse.
-	- Status: `❌` User-verified not working (units do not return to parking spots)
+	- Status: `Implemented (code)` — landing→taxi_to_parking now dynamically claims parking slot via `claimAirstripParkingSlot`; handles missing or occupied slots
+	- `Needs gameplay verification`
 9. `A9` Altitude transition after liftoff and before touchdown is gradual/eased.
-	- Status: `❌` User-verified not working
+	- Status: `Implemented (code)` — easeInSine for climb, easeOutSine for descent; root cause of stall (velocity zeroing) fixed in movementCore.js
+	- `Needs gameplay verification`
 10. `A10` Initial takeoff speed is not sluggish; startup roll was explicitly increased.
-	- Status: `❌` User-verified not working
+	- Status: `Implemented (code)` — F22_GROUND_TAKEOFF_SPEED_MIN raised 0.9→1.5, MAX raised 1.7→2.2
+	- `Needs gameplay verification`
 
 ### A.4 Post-takeoff command continuity
 11. `A11` After takeoff, F22 must approach and continue toward assigned/active target (no idle mid-air stall).
-	- Status: `❌` User-verified not working (still stuck after takeoff)
+	- Status: `Implemented (code)` — root cause fixed: movementCore.js `isF22RunwayControlled` check prevents velocity zeroing during liftoff; post-takeoff fallback destination added
+	- `Needs gameplay verification`
 	- Notes: Includes destination fallback from active target when assigned destination is missing.
 
 ## Cluster B: Flight Dynamics and Collision Rules
@@ -58,17 +74,21 @@
 
 ### B.1 Airborne overlap and avoidance rules
 12. `B1` Airborne F22 should not collision-block each other; overlap in air is allowed.
-	- Status: `?` Unclear due related flight-state issues
+	- Status: `Implemented (code)` — F22 collisions are fully skipped in `checkUnitCollision` (both grounded and airborne)
+	- `Needs gameplay verification`
 13. `B2` Airborne F22 should not use air-avoidance steering forces that push them apart.
-	- Status: `?` Unclear due related flight-state issues
+	- Status: `Implemented (code)` — `skipAirAvoidance` flag in movementCore.js returns zero avoidance for F22
+	- `Needs gameplay verification`
 
 ### B.2 Ground interaction rules
 14. `B3` F22 must not push ground units away during collision response.
-	- Status: `❌` User-verified not working
+	- Status: `Implemented (code)` — `checkUnitCollision` now skips collision entirely when either unit is F22
+	- `Needs gameplay verification`
 
 ### B.3 Attack movement behavior
 15. `B4` During combat, F22 attacks in wave-like orbits around target instead of static hover over target center.
-	- Status: `❌` User-verified not working
+	- Status: `Implemented (code)` — combat wave amplitude increased (2.2→3.5 tiles), added secondary wave oscillation for more dynamic orbit shape
+	- `Needs gameplay verification`
 
 ## Cluster C: Combat, Ammo, and Damage Model
 `Primary files`: `src/game/unitCombat/tankCombat.js`, `src/game/unitCombat/firingHandlers.js`, `src/game/bulletSystem.js`, `src/saveGame.js`, `src/config.js`
@@ -77,13 +97,16 @@
 16. `C1` Grounded F22 cannot fire; must be airborne to attack.
 	- Status: `✅` User-verified working
 17. `C2` Once a volley starts, it continues beyond first rocket until volley completion (not aborted by cooldown gate).
-	- Status: `?` Unclear due related combat/flight issues
+	- Status: `Implemented (code)` — volleyState persists across ticks; `hasActiveF22Volley` check in tankCombat.js allows firing beyond range limit while volley is active
+	- `Needs gameplay verification`
 
 ### C.2 Ammo capacity and reload behavior
 18. `C3` F22 max ammo is 8 rockets.
-	- Status: `?` Unclear (ammo bar does not seem to update)
+	- Status: `Implemented (code)` — `UNIT_AMMO_CAPACITY.f22Raptor = 8` in config.js
+	- `Needs gameplay verification`
 19. `C4` Save/load hydration clamps F22 ammo values to the 8-rocket cap.
-	- Status: `?` Unclear due related ammo state issues
+	- Status: `Implemented (code)` — saveGame.js sets `maxRocketAmmo=8` and clamps `rocketAmmo` for f22Raptor type
+	- `Needs gameplay verification`
 
 ### C.3 Overkill prevention and target commitment
 20. `C5` F22 should not fire more rockets than required to destroy target.

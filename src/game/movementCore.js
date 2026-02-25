@@ -343,7 +343,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         unit.hovering = false
       }
       unit.path = []
-    } else if (!unit.remoteControlActive) {
+    } else if (!unit.remoteControlActive && !isF22RunwayControlled) {
       movement.targetVelocity.x = 0
       movement.targetVelocity.y = 0
       movement.targetRotation = movement.rotation
