@@ -923,6 +923,9 @@ export class CursorManager {
       if (!hasNonBuildingSelected) {
         const singleBuilding = selectedBuildings.length === 1 ? selectedBuildings[0] : null
         const isVehicleFactory = singleBuilding && singleBuilding.type === 'vehicleFactory'
+        const hasSelectedDefenseBuilding = selectedBuildings.some(b =>
+          b && (b.type === 'rocketTurret' || b.type === 'artilleryTurret' || b.type === 'teslaCoil' || b.type?.startsWith('turretGun'))
+        )
 
         if (isVehicleFactory) {
           if (this.isOverBlockedTerrain) {
@@ -934,6 +937,10 @@ export class CursorManager {
           }
         } else if (applyArtilleryTargeting()) {
           // Artillery targeting already applied
+        } else if (hasSelectedDefenseBuilding && this.isOverEnemyOutOfRange) {
+          setAttackOutOfRangeCursor()
+        } else if (hasSelectedDefenseBuilding && this.isOverEnemy) {
+          setAttackCursor()
         } else {
           setDefaultCursor()
         }

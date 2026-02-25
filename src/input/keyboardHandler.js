@@ -1151,6 +1151,7 @@ export class KeyboardHandler {
     this.selectedUnits.forEach(unit => {
       if (unit.isBuilding) {
         unit.forcedAttackTarget = null
+        unit.forcedAttackQueue = []
         unit.forcedAttack = false
         unit.holdFire = true
         stoppedCount++

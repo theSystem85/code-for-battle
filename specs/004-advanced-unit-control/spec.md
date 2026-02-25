@@ -188,6 +188,11 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-066**: For direct player-issued move commands, pathfinding MUST treat the clicked destination as strict and MUST NOT auto-retarget to a nearby passable tile when the destination tile itself is blocked.
 - **FR-067**: In strict destination mode, partial/fallback paths that do not terminate on the clicked destination tile MUST be rejected (including when the destination is enclosed by occupied neighboring tiles).
 - **FR-068**: Strict-destination movement MUST still allow any reachable long-distance destination, and pathfinding for those commands MUST not be cut short by pathfinding-limit fallback that would produce false unreachable results or truncated route visualization.
+- **FR-069**: Defense buildings selected by the player (turretGun variants, rocket turret, artillery turret, tesla coil) MUST show attack/out-of-range attack cursor states while hovering enemy targets, matching unit attack cursor behavior.
+- **FR-070**: AGF forced-target queues for defense buildings MUST preserve queued FIFO behavior and allow artillery/rocket turrets to fire at queued targets even when direct line-of-sight is blocked by buildings.
+- **FR-071**: When AGF assigns multiple queued attack targets, the renderer MUST draw a red ordered chain line from the selected attacker to each queued target in sequence.
+- **FR-072**: With defensive buildings selected, a normal click on an enemy target (without force-attack modifier) MUST assign forced attack targeting, and newly added targets MUST be inserted at the front of the forced-attack queue (newest-first).
+- **FR-073**: For defensive-building forced targeting, a newly added target MUST become the immediate active target (queue position 1), and the prior active target MUST be moved to the front of the remaining queue.
 
 
 **Logistics Symmetry:**

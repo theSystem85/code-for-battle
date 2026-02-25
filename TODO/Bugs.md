@@ -9,6 +9,8 @@
 - [x] ✅ F22 follow-up: grounded F22 can no longer fire, active F22 volleys now continue to completion while approaching targets (instead of dropping after first rocket), and the selected F22 ammo bar now shows a reload progress indicator line similar to rocket tanks.
 - [x] ✅ F22/airstrip follow-up: airstrip passable tiles stay visually unchanged (no visible street texture bleed) while remaining logical street for movement, street placement build sound is suppressed, F22 spawn parking orientation now points nose to top-left, runway takeoff/landing now climbs/descends between runway midpoint and strip end/right side, and airborne F22 steering uses forward-inertia turn-rate-limited flight to avoid jitter.
 - [x] ✅ F22 follow-up: blocked friendly-building attack commands/cursor (unless force-attack), fixed owner-aware target detection, added building HUD hover tooltips for HP/fuel/ammo bars, expanded F22 cruise orbit to ~5 tiles, tuned F22 rocket cadence to 333ms full-burst behavior, and restricted airborne F22 targeting/damage to rocket AA + air units.
+- [x] Prevent premature dodge/stuck handling from triggering on far-away path obstacles; only accumulate stuck/dodge when blockage signals are local (near next waypoint or recent local collision).
+- [x] Fix ground-unit stuck dodge/re-route logic to ignore the acting unit's own occupied tile so self-collision checks do not trigger continuous inefficient rerouting loops.
 - [x] ✅ Follow-up: restore `tank-v2` alert outer range ring and remove the inner tile-sized red circle.
 - [x] ✅ Remove inner red range circle from `tank-v2` alert mode; keep utility-unit alert discovery rings unchanged.
 - [x] Prevent move-command/pathfinding attempts for selected buildings so map clicks with building selections do not trigger "Cannot reach that location. Move command aborted." notifications.
@@ -139,6 +141,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] Prevent premature dodge/stuck handling from triggering on far-away path obstacles; only accumulate stuck/dodge when blockage signals are local (near next waypoint or recent local collision).
 - [x] Follow-up: ensure PWA mobile landscape notification bell is always pinned top-left (including wider landscape viewports) and portrait standalone canvas/safe-area bottom fill is correct on first load without rotation.
 - [x] Ensure mobile landscape initial load always shows the sidebar (condensed/open), sync safe-area insets on first paint so iOS portrait bottom inset fills without device rotation, and pin the landscape notification bell to top-left to avoid sidebar overlap.
 - [x] Add ammo-based defensive turret logistics: align rocket turret muzzle flashes to 6 spawn points, add selected ammo/reload HUD bars for turretGun V1-V3/rocket/artillery turrets, enforce turret ammo consumption + reload via ammo trucks, and enable mutual ammo-truck↔turret move-into cursor/click interactions.
@@ -238,3 +241,6 @@
 - [x] ✅ Follow-up bugfix: Restart/shuffle map now also clears build-planning overlays (blueprints, chain build, mobile paint, mine/sweep previews), stale selection, and queued production state.
 
 - [x] Ensure howitzer unlock is gated behind an owned artillery turret (plus existing radar + vehicle factory requirements) so it cannot be built early.
+- [x] ✅ Fixed defense AGF forced-target regression where artillery/rocket turrets aimed but did not fire (line-of-sight checks now only gate direct-fire gun turrets), restored defense-building hover attack cursor on enemy targets, and added queued AGF red chain lines for ordered attack targets.
+- [x] ✅ Restored normal-click enemy targeting for selected defensive buildings (without force-attack modifier) and changed defense forced-target queue insertion to newest-first (prepend) for both click targeting and AGF additions.
+- [x] ✅ Adjusted defensive forced-target ordering so each newly assigned target becomes immediate active target (position 1) while previous active target is pushed to the front of the queued list.

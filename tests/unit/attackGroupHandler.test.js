@@ -234,6 +234,16 @@ describe('AttackGroupHandler', () => {
 
       expect(result).toBe(true)
     })
+
+    it('should return true for selected defensive buildings', () => {
+      const defensiveBuildings = [
+        { id: 'turret-1', type: 'rocketTurret', owner: 'player1', health: 100, isBuilding: true }
+      ]
+
+      const result = handler.shouldStartAttackGroupMode(defensiveBuildings)
+
+      expect(result).toBe(true)
+    })
   })
 
   describe('handleMouseUp()', () => {
@@ -489,7 +499,61 @@ describe('AttackGroupHandler', () => {
       // After setupAttackQueue completes, flag should be reset
       expect(unitCommands.isAttackGroupOperation).toBe(false)
     })
+
+    it('queues AGF targets for selected defensive buildings with newest queued target first', () => {
+      const turret = {
+        id: 'turret-1',
+        type: 'rocketTurret',
+        owner: 'player1',
+        isBuilding: true,
+        holdFire: true,
+        forcedAttackTarget: null,
+        forcedAttackQueue: []
+      }
+      const targets = [
+        { id: 'enemy-1', owner: 'enemy', health: 100 },
+        { id: 'enemy-2', owner: 'enemy', health: 100 }
+      ]
+
+      handler.setupAttackQueue([turret], targets, unitCommands, mapGrid)
+
+      expect(turret.holdFire).toBe(false)
+      expect(turret.forcedAttack).toBe(true)
+      expect(turret.forcedAttackTarget).toBe(targets[1])
+      expect(turret.forcedAttackQueue).toEqual([targets[0]])
+    })
+
   })
+
+  it('prepends newly queued AGF targets ahead of existing building forced queue entries', () => {
+    const turret = {
+      id: 'turret-2',
+      type: 'rocketTurret',
+      owner: 'player1',
+      isBuilding: true,
+      holdFire: false,
+      forcedAttackTarget: { id: 'enemy-active', owner: 'enemy', health: 100 },
+      forcedAttackQueue: [
+        { id: 'enemy-old-1', owner: 'enemy', health: 100 },
+        { id: 'enemy-old-2', owner: 'enemy', health: 100 }
+      ]
+    }
+    const targets = [
+      { id: 'enemy-new-1', owner: 'enemy', health: 100 },
+      { id: 'enemy-new-2', owner: 'enemy', health: 100 }
+    ]
+
+    handler.setupAttackQueue([turret], targets, unitCommands, mapGrid)
+
+    expect(turret.forcedAttackTarget.id).toBe('enemy-new-2')
+    expect(turret.forcedAttackQueue.map(target => target.id)).toEqual([
+      'enemy-new-1',
+      'enemy-active',
+      'enemy-old-1',
+      'enemy-old-2'
+    ])
+  })
+
 
   describe('shouldDisableAGFRendering()', () => {
     it('should return the disableAGFRendering flag', () => {

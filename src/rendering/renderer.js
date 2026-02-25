@@ -25,6 +25,8 @@ import { preloadHowitzerImage } from './howitzerImageRenderer.js'
 import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
+import { selectedUnits } from '../inputHandler.js'
+import { TILE_SIZE } from '../config.js'
 
 export class Renderer {
   constructor() {
@@ -43,6 +45,88 @@ export class Renderer {
     this.dangerZoneRenderer = new DangerZoneRenderer()
     this.wreckRenderer = new WreckRenderer()
     this.gpuRenderer = null
+  }
+
+
+  getRenderableAttackQueue(entity) {
+    if (!entity) {
+      return []
+    }
+
+    if (Array.isArray(entity.attackQueue) && entity.attackQueue.length > 0) {
+      return entity.attackQueue.filter(target => target && (target.health === undefined || target.health > 0))
+    }
+
+    if (entity.isBuilding) {
+      const queue = []
+      if (entity.forcedAttackTarget && (entity.forcedAttackTarget.health === undefined || entity.forcedAttackTarget.health > 0)) {
+        queue.push(entity.forcedAttackTarget)
+      }
+      if (Array.isArray(entity.forcedAttackQueue) && entity.forcedAttackQueue.length > 0) {
+        queue.push(...entity.forcedAttackQueue.filter(target => target && (target.health === undefined || target.health > 0)))
+      }
+      return queue
+    }
+
+    return []
+  }
+
+  getEntityCenterWorld(entity) {
+    if (!entity) {
+      return null
+    }
+
+    if (entity.isBuilding) {
+      return {
+        x: (entity.x + entity.width / 2) * TILE_SIZE,
+        y: (entity.y + entity.height / 2) * TILE_SIZE
+      }
+    }
+
+    if (typeof entity.x === 'number' && typeof entity.y === 'number') {
+      return { x: entity.x + TILE_SIZE / 2, y: entity.y + TILE_SIZE / 2 }
+    }
+
+    return null
+  }
+
+  renderQueuedAttackLines(ctx, scrollOffset) {
+    if (!Array.isArray(selectedUnits) || selectedUnits.length === 0) {
+      return
+    }
+
+    const selectedAttackers = selectedUnits.filter(entity => entity?.selected)
+    selectedAttackers.forEach(attacker => {
+      const queue = this.getRenderableAttackQueue(attacker)
+      if (queue.length < 2) {
+        return
+      }
+
+      const start = this.getEntityCenterWorld(attacker)
+      if (!start) {
+        return
+      }
+
+      let previous = start
+      ctx.save()
+      ctx.strokeStyle = 'rgba(255, 0, 0, 0.8)'
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([6, 4])
+
+      queue.forEach(target => {
+        const targetCenter = this.getEntityCenterWorld(target)
+        if (!targetCenter) {
+          return
+        }
+        ctx.beginPath()
+        ctx.moveTo(previous.x - scrollOffset.x, previous.y - scrollOffset.y)
+        ctx.lineTo(targetCenter.x - scrollOffset.x, targetCenter.y - scrollOffset.y)
+        ctx.stroke()
+        previous = targetCenter
+      })
+
+      ctx.restore()
+    })
   }
 
   // Initialize texture loading
@@ -242,6 +326,9 @@ export class Renderer {
 
     // Render guard mode indicators
     this.guardRenderer.render(gameCtx, units, scrollOffset)
+
+    // Render queued attack chains (AGF ordering)
+    this.renderQueuedAttackLines(gameCtx, scrollOffset)
 
     // Render harvester HUD overlay (if enabled)
     this.harvesterHUD.render(gameCtx, units, gameState, scrollOffset)

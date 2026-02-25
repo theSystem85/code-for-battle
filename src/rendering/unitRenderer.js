@@ -1235,6 +1235,27 @@ export class UnitRenderer {
     ctx.restore()
   }
 
+  getBuildingForcedAttackQueuePosition(selectedBuilding, targetUnit) {
+    if (!selectedBuilding || !selectedBuilding.isBuilding || !targetUnit) {
+      return null
+    }
+
+    if (selectedBuilding.forcedAttackTarget?.id === targetUnit.id) {
+      return 1
+    }
+
+    if (!Array.isArray(selectedBuilding.forcedAttackQueue)) {
+      return null
+    }
+
+    const index = selectedBuilding.forcedAttackQueue.findIndex(target => target?.id === targetUnit.id)
+    if (index === -1) {
+      return null
+    }
+
+    return (selectedBuilding.forcedAttackTarget ? 2 : 1) + index
+  }
+
   renderAttackTargetIndicator(ctx, unit, centerX, centerY) {
     // Check if this unit is in the attack group targets OR if it's currently being targeted by selected units
     const isInAttackGroupTargets = gameState.attackGroupTargets &&
@@ -1247,8 +1268,21 @@ export class UnitRenderer {
                                        (selectedUnit.attackQueue && selectedUnit.attackQueue.some(target => target.id === unit.id))
                                      )
 
-    // Show red indicator if: unit is in AGF targets OR being targeted by a selected unit
-    const shouldShowAttackIndicator = isInAttackGroupTargets || isTargetedBySelectedUnit
+    let forcedAttackQueuePosition = null
+    if (Array.isArray(selectedUnits) && selectedUnits.length > 0) {
+      selectedUnits.forEach(selectedUnit => {
+        if (!selectedUnit?.selected || !selectedUnit?.isBuilding || selectedUnit.owner !== gameState.humanPlayer) {
+          return
+        }
+        const position = this.getBuildingForcedAttackQueuePosition(selectedUnit, unit)
+        if (position !== null) {
+          forcedAttackQueuePosition = forcedAttackQueuePosition === null ? position : Math.min(forcedAttackQueuePosition, position)
+        }
+      })
+    }
+
+    // Show red indicator if: unit is in AGF targets OR being targeted by a selected unit OR queued by selected defense buildings
+    const shouldShowAttackIndicator = isInAttackGroupTargets || isTargetedBySelectedUnit || forcedAttackQueuePosition !== null
 
     if (shouldShowAttackIndicator) {
       const now = performance.now()
@@ -1274,6 +1308,14 @@ export class UnitRenderer {
       ctx.closePath()
       ctx.fill()
       ctx.stroke()
+
+      if (forcedAttackQueuePosition !== null) {
+        ctx.fillStyle = '#fff'
+        ctx.font = '10px "Rajdhani", "Arial Narrow", sans-serif'
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(String(forcedAttackQueuePosition), indicatorX, indicatorY - halfSize / 3 + 2)
+      }
 
       ctx.restore()
     }

@@ -863,6 +863,54 @@ describe('Building System', () => {
       expect(bullets[0].targetPosition).toEqual(turret.currentTargetPosition)
     })
 
+
+    it('allows artillery and rocket turrets to fire without direct line of sight', () => {
+      const now = 45500
+      vi.spyOn(performance, 'now').mockReturnValue(now)
+
+      const artillery = createBuilding('artilleryTurret', 10, 10)
+      artillery.owner = 'player'
+      artillery.fireCooldown = 0
+      artillery.lastShotTime = 0
+      const rocket = createBuilding('rocketTurret', 13, 10)
+      rocket.owner = 'player'
+      rocket.fireCooldown = 0
+      rocket.lastShotTime = 0
+      rocket.ammo = rocket.maxAmmo || 6
+      artillery.ammo = artillery.maxAmmo || 6
+      gameState.buildings.push(artillery, rocket)
+
+      const target = {
+        id: 'enemy-blocked',
+        x: (artillery.x + 8) * TILE_SIZE,
+        y: (artillery.y + 1) * TILE_SIZE,
+        width: 1,
+        height: 1,
+        owner: 'enemy',
+        health: 100
+      }
+      units.push(target)
+
+      const artilleryCenterX = (artillery.x + artillery.width / 2) * TILE_SIZE
+      const artilleryCenterY = (artillery.y + artillery.height / 2) * TILE_SIZE
+      const rocketCenterX = (rocket.x + rocket.width / 2) * TILE_SIZE
+      const rocketCenterY = (rocket.y + rocket.height / 2) * TILE_SIZE
+      const targetCenterX = target.x + TILE_SIZE / 2
+      const targetCenterY = target.y + TILE_SIZE / 2
+      artillery.turretDirection = Math.atan2(targetCenterY - artilleryCenterY, targetCenterX - artilleryCenterX)
+      rocket.turretDirection = Math.atan2(targetCenterY - rocketCenterY, targetCenterX - rocketCenterX)
+
+      const targetTileX = Math.floor(target.x / TILE_SIZE)
+      const targetTileY = Math.floor(target.y / TILE_SIZE)
+      mapGrid[targetTileY][targetTileX - 2].building = { type: 'concreteWall' }
+
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+
+      expect(bullets.some(b => b.shooter === artillery)).toBe(true)
+      expect(bullets.some(b => b.shooter === rocket)).toBe(true)
+    })
+
     it('blocks rocket turret firing when power is negative', () => {
       const now = 50000
       vi.spyOn(performance, 'now').mockReturnValue(now)
@@ -883,6 +931,50 @@ describe('Building System', () => {
       updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
 
       expect(bullets).toHaveLength(0)
+    })
+
+    it('promotes queued forced attack targets for defense buildings in FIFO order', () => {
+      const now = 55000
+      vi.spyOn(performance, 'now').mockReturnValue(now)
+
+      const turret = createBuilding('turretGunV1', 10, 10)
+      turret.owner = 'player'
+      turret.fireCooldown = 0
+      turret.lastShotTime = 0
+
+      const firstTarget = {
+        id: 'enemy-1',
+        x: (turret.x + 2) * TILE_SIZE,
+        y: (turret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 0
+      }
+      const secondTarget = {
+        id: 'enemy-2',
+        x: (turret.x + 3) * TILE_SIZE,
+        y: (turret.y + 1) * TILE_SIZE,
+        owner: 'enemy',
+        health: 100
+      }
+
+      turret.forcedAttackTarget = firstTarget
+      turret.forcedAttackQueue = [secondTarget]
+      gameState.buildings.push(turret)
+
+      const centerX = (turret.x + turret.width / 2) * TILE_SIZE
+      const centerY = (turret.y + turret.height / 2) * TILE_SIZE
+      const secondCenterX = secondTarget.x + TILE_SIZE / 2
+      const secondCenterY = secondTarget.y + TILE_SIZE / 2
+      turret.turretDirection = Math.atan2(secondCenterY - centerY, secondCenterX - centerX)
+
+      units.push(secondTarget)
+
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
+
+      expect(turret.forcedAttackTarget).toBe(secondTarget)
+      expect(turret.forcedAttackQueue).toHaveLength(0)
+      expect(bullets).toHaveLength(1)
+      expect(bullets[0].shooter).toBe(turret)
     })
 
     it('runs Tesla coil charge/firing sequence and applies unit effects', () => {
