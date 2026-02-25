@@ -2,13 +2,26 @@ import { TILE_SIZE, TANK_FIRE_RANGE } from '../../config.js'
 import { smoothRotateTowardsAngle } from '../../logic.js'
 import { gameState } from '../../gameState.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
-import { ensureLineOfSight, getEffectiveFireRange, getEffectiveFireRate, handleTankMovement, isHumanControlledParty, isTurretAimedAtTarget } from './combatHelpers.js'
+import {
+  canUnitTargetEntity,
+  ensureLineOfSight,
+  getEffectiveFireRange,
+  getEffectiveFireRate,
+  handleTankMovement,
+  isHumanControlledParty,
+  isTurretAimedAtTarget
+} from './combatHelpers.js'
 import { handleApacheVolley, handleRocketBurstFire, handleTankFiring, handleTankV3BurstFire } from './firingHandlers.js'
 
 /**
  * Updates standard tank combat
  */
 export function updateTankCombat(unit, units, bullets, mapGrid, now, occupancyMap) {
+  if (unit.target && !canUnitTargetEntity(unit, unit.target)) {
+    unit.target = null
+    return
+  }
+
   if (unit.target && unit.target.health > 0) {
     const CHASE_THRESHOLD = TANK_FIRE_RANGE * TILE_SIZE * COMBAT_CONFIG.CHASE_MULTIPLIER.STANDARD
 
@@ -33,6 +46,11 @@ export function updateTankCombat(unit, units, bullets, mapGrid, now, occupancyMa
  * Updates tank-v2 combat with improved targeting and alert mode
  */
 export function updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancyMap) {
+  if (unit.target && !canUnitTargetEntity(unit, unit.target)) {
+    unit.target = null
+    return
+  }
+
   // Alert mode: automatically scan for targets when no target is assigned
   // Skip alert mode if unit is retreating
   if (unit.alertMode && isHumanControlledParty(unit.owner) && (!unit.target || unit.target.health <= 0) && !unit.isRetreating) {
@@ -144,6 +162,11 @@ export function updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancy
  * Updates tank-v3 combat with aim-ahead feature
  */
 export function updateTankV3Combat(unit, units, bullets, mapGrid, now, occupancyMap) {
+  if (unit.target && !canUnitTargetEntity(unit, unit.target)) {
+    unit.target = null
+    return
+  }
+
   if (unit.target && unit.target.health > 0) {
     const CHASE_THRESHOLD = TANK_FIRE_RANGE * TILE_SIZE * COMBAT_CONFIG.CHASE_MULTIPLIER.STANDARD
 
@@ -183,6 +206,15 @@ export function updateTankV3Combat(unit, units, bullets, mapGrid, now, occupancy
  */
 export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occupancyMap) {
   const isF22 = unit.type === 'f22Raptor'
+
+  if (unit.target && !canUnitTargetEntity(unit, unit.target)) {
+    unit.target = null
+    unit.burstState = null
+    if (isF22) {
+      unit.volleyState = null
+    }
+    return
+  }
 
   // Clear target and burst if target is destroyed
   if (unit.target && unit.target.health <= 0) {

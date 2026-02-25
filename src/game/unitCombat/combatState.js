@@ -3,7 +3,7 @@ import { findPath } from '../../units.js'
 import { gameState } from '../../gameState.js'
 import { updateUnitSpeedModifier } from '../../utils.js'
 import { isPositionVisibleToPlayer } from '../shadowOfWar.js'
-import { getEffectiveFireRange } from './combatHelpers.js'
+import { canUnitTargetEntity, getEffectiveFireRange } from './combatHelpers.js'
 
 /**
  * Handle Tesla Coil status effects
@@ -49,6 +49,10 @@ export function processAttackQueue(unit, units, mapGrid) {
 
   // Helper function to initiate pathfinding to new target
   function setNewTargetWithPath(newTarget) {
+    if (!canUnitTargetEntity(unit, newTarget)) {
+      return
+    }
+
     const oldTarget = unit.target
     unit.target = newTarget
 
@@ -113,6 +117,10 @@ export function processAttackQueue(unit, units, mapGrid) {
 export function updateGuardTargeting(unit, units) {
   if (!unit.guardTarget || unit.isRetreating) return
 
+  if (unit.target && !canUnitTargetEntity(unit, unit.target)) {
+    unit.target = null
+  }
+
   const range = getEffectiveFireRange(unit)
   const unitCenterX = unit.x + TILE_SIZE / 2
   const unitCenterY = unit.y + TILE_SIZE / 2
@@ -133,14 +141,7 @@ export function updateGuardTargeting(unit, units) {
   let closestDist = Infinity
   units.forEach(p => {
     if (p.owner !== unit.owner && p.health > 0) {
-      // Check if target is an airborne Apache - only certain units can target them
-      const targetIsAirborneApache =
-        (p.type === 'apache' || p.type === 'f22Raptor') &&
-        p.flightState !== 'grounded'
-      const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache' || unit.type === 'f22Raptor'
-
-      // Skip airborne Apache if this unit can't target air units
-      if (targetIsAirborneApache && !shooterCanHitAir) {
+      if (!canUnitTargetEntity(unit, p)) {
         return
       }
 
