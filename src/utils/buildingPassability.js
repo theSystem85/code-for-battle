@@ -3,11 +3,11 @@ export const AIRSTRIP_SOURCE_HEIGHT = 512
 export const AIRSTRIP_DEFAULT_WIDTH = 12
 export const AIRSTRIP_DEFAULT_HEIGHT = 6
 
-export const AIRSTRIP_PASSABLE_RECT = Object.freeze({
+export const AIRSTRIP_BLOCKED_RECT = Object.freeze({
   xMin: 0,
-  xMax: 480,
+  xMax: 470,
   yMin: 0,
-  yMax: 200
+  yMax: 148
 })
 
 export function isBuildOnlyOccupiedTile(tile) {
@@ -24,12 +24,13 @@ export function isAirstripBlockedLocalTile(localX, localY, width = AIRSTRIP_DEFA
   const pixelX = ((localX + 0.5) / width) * AIRSTRIP_SOURCE_WIDTH
   const pixelY = ((localY + 0.5) / height) * AIRSTRIP_SOURCE_HEIGHT
 
-  const belowPassableRect =
-    pixelX >= AIRSTRIP_PASSABLE_RECT.xMin &&
-    pixelX <= AIRSTRIP_PASSABLE_RECT.xMax &&
-    pixelY > AIRSTRIP_PASSABLE_RECT.yMax
+  const inBlockedRect =
+    pixelX >= AIRSTRIP_BLOCKED_RECT.xMin &&
+    pixelX <= AIRSTRIP_BLOCKED_RECT.xMax &&
+    pixelY >= AIRSTRIP_BLOCKED_RECT.yMin &&
+    pixelY <= AIRSTRIP_BLOCKED_RECT.yMax
 
-  return belowPassableRect
+  return inBlockedRect
 }
 
 export function getAirstripSpawnOffsets() {

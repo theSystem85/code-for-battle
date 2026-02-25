@@ -66,6 +66,12 @@ function isTileBlockedForCollision(mapGrid, tileX, tileY) {
   return false
 }
 
+function isF22GroundStreetBlocked(unit, tile) {
+  if (!unit || unit.type !== 'f22Raptor') return false
+  if (unit.flightState !== 'grounded') return false
+  return !(tile?.type === 'street' || tile?.airstripStreet)
+}
+
 function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupancyMap, units = [], wrecks = [], ignoreIds = []) {
   if (!unit) {
     return true
@@ -280,6 +286,10 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         return { collided: true, type: 'terrain', tileX, tileY }
       }
 
+      if (isF22GroundStreetBlocked(unit, tile)) {
+        return { collided: true, type: 'terrain', tileX, tileY }
+      }
+
       if (hasBlockingBuilding(tile)) {
         if (unit.type === 'apache' && tile.building?.type === 'helipad') {
           return { collided: false }
@@ -309,6 +319,12 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
 
     const otherAirborne = isAirborneUnit(otherUnit)
     if (unitAirborne !== otherAirborne) continue
+
+    // F22s in the air should be able to overlap freely with other air units.
+    const f22OverlapAllowed =
+      (unit.type === 'f22Raptor' && unit.flightState !== 'grounded') ||
+      (otherUnit.type === 'f22Raptor' && otherUnit.flightState !== 'grounded')
+    if (f22OverlapAllowed) continue
 
     const otherCenterX = otherUnit._cx ?? (otherUnit.x + TILE_SIZE / 2)
     const otherCenterY = otherUnit._cy ?? (otherUnit.y + TILE_SIZE / 2)
@@ -627,11 +643,19 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
 
   const { normalX, normalY, overlap, unitSpeed, otherSpeed, airCollision = false } = collisionResult.data
   const factoryList = Array.isArray(factories) ? factories : []
+  const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
+
+  if (unit.type === 'f22Raptor' || otherUnit?.type === 'f22Raptor') {
+    movement.velocity.x = 0
+    movement.velocity.y = 0
+    movement.currentSpeed = 0
+    return false
+  }
 
   if (unit.type === 'tankerTruck') {
-    const otherUnit = collisionResult.other
+    const otherUnitForTanker = collisionResult.other
     const isEnemyCollision = Boolean(
-      otherUnit && typeof otherUnit.owner === 'string' && typeof unit.owner === 'string' && otherUnit.owner !== unit.owner
+      otherUnitForTanker && typeof otherUnitForTanker.owner === 'string' && typeof unit.owner === 'string' && otherUnitForTanker.owner !== unit.owner
     )
     const kamikazeActive = isEnemyCollision && unit.kamikazeMode
     const baseSpeed = typeof unit.speed === 'number' ? unit.speed : MOVEMENT_CONFIG.MAX_SPEED
@@ -646,7 +670,6 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
   }
 
   const separation = Math.min(COLLISION_SEPARATION_MAX, Math.max(COLLISION_SEPARATION_MIN, (overlap * COLLISION_SEPARATION_SCALE)))
-  const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
 
   if (airCollision) {
     if (separation > 0.001) {

@@ -123,7 +123,33 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
         y: clampedTile.y * TILE_SIZE + TILE_SIZE / 2
       }
 
-      if (handler.assignApacheFlight && handler.assignApacheFlight(unit, clampedTile, center, { mode: 'manual' })) {
+      let airstripModeOptions = { mode: 'manual' }
+      if (unit.type === 'f22Raptor') {
+        const targetAirstrip = (gameState.buildings || []).find(building =>
+          building.type === 'airstrip' &&
+          building.owner === unit.owner &&
+          building.health > 0 &&
+          clampedTile.x >= building.x &&
+          clampedTile.x < building.x + building.width &&
+          clampedTile.y >= building.y &&
+          clampedTile.y < building.y + building.height
+        )
+        if (targetAirstrip) {
+          const runwayExit = targetAirstrip.runwayPoints?.runwayExit || {
+            x: (targetAirstrip.x + targetAirstrip.width - 1) * TILE_SIZE,
+            y: (targetAirstrip.y + Math.floor(targetAirstrip.height / 2)) * TILE_SIZE
+          }
+          airstripModeOptions = {
+            mode: 'airstrip',
+            airstrip: targetAirstrip,
+            stopRadius: TILE_SIZE * 0.4
+          }
+          center.x = runwayExit.worldX ?? runwayExit.x
+          center.y = runwayExit.worldY ?? runwayExit.y
+        }
+      }
+
+      if (handler.assignApacheFlight && handler.assignApacheFlight(unit, clampedTile, center, airstripModeOptions)) {
         unit.target = null
         unit.originalTarget = null
         unit.forcedAttack = false

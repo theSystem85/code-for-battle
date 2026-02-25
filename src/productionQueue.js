@@ -10,6 +10,7 @@ import { assignHarvesterToOptimalRefinery } from './game/harvesterLogic.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { broadcastBuildingPlace, broadcastUnitSpawn, isHost } from './network/gameCommandSync.js'
 import { gameRandom } from './utils/gameRandom.js'
+import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
@@ -417,24 +418,21 @@ export const productionQueue = {
         return
       }
 
-      const availableAirstrips = allAirstrips.filter(a => !a.landedUnitId)
-      const selectionPool = availableAirstrips.length > 0 ? availableAirstrips : allAirstrips
+      const availableAirstrips = allAirstrips.filter(airstrip => {
+        ensureAirstripOperations(airstrip)
+        return claimAirstripParkingSlot(airstrip) >= 0
+      })
+
+      if (!availableAirstrips.length) {
+        showNotification('All airstrip parking slots are occupied. F22 production is waiting for a free slot.')
+        this.pausedUnit = true
+        return
+      }
 
       gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
-      const chosenIndex = gameState.nextAirstripIndex % selectionPool.length
-      spawnFactory = selectionPool[chosenIndex]
-      gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % selectionPool.length
-
-      if (!availableAirstrips.length && spawnFactory.landedUnitId) {
-        const occupyingUnit = units.find(u => u && u.id === spawnFactory.landedUnitId)
-        if (occupyingUnit) {
-          occupyingUnit.manualFlightState = 'takeoff'
-          occupyingUnit.helipadLandingRequested = false
-          occupyingUnit.helipadTargetId = null
-          occupyingUnit.landedHelipadId = null
-        }
-        spawnFactory.landedUnitId = null
-      }
+      const chosenIndex = gameState.nextAirstripIndex % availableAirstrips.length
+      spawnFactory = availableAirstrips[chosenIndex]
+      gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % availableAirstrips.length
 
       if (!rallyPointTarget && spawnFactory.rallyPoint) {
         rallyPointTarget = spawnFactory.rallyPoint
@@ -617,7 +615,9 @@ export const productionQueue = {
         updateDangerZoneMaps(gameState)
         placeBuilding(newBuilding, gameState.mapGrid)
         updatePowerSupply(gameState.buildings, gameState)
-        playSound('buildingPlaced')
+        if (this.currentBuilding.type !== 'street') {
+          playSound('buildingPlaced')
+        }
         showNotification(`${buildingData[this.currentBuilding.type].displayName} constructed`)
 
         // Broadcast building placement to other players in multiplayer

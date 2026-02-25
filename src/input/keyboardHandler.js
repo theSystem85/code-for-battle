@@ -149,6 +149,11 @@ export class KeyboardHandler {
         this.handleWaypointToggle()
         return
       }
+      if (keybindingManager.matchesKeyboardAction(e, 'toggle-entity-opacity', kbContext)) {
+        e.preventDefault()
+        this.handleEntityOpacityToggle()
+        return
+      }
       if (keybindingManager.matchesKeyboardAction(e, 'map-edit-toggle', kbContext)) {
         e.preventDefault()
         gameState.mapEditMode = !gameState.mapEditMode
@@ -1075,6 +1080,20 @@ export class KeyboardHandler {
     gameState.moveWaypointsVisible = !gameState.moveWaypointsVisible
     const status = gameState.moveWaypointsVisible ? 'ON' : 'OFF'
     this.showNotification(`Movement waypoints: ${status}`, 2000)
+    playSound('confirmed', 0.5)
+  }
+
+  handleEntityOpacityToggle() {
+    const nextLevel = ((gameState.entityImageOpacityLevel || 0) + 1) % 3
+    gameState.entityImageOpacityLevel = nextLevel
+
+    const labels = {
+      0: '100%',
+      1: '50%',
+      2: '0%'
+    }
+
+    this.showNotification(`Entity image opacity: ${labels[nextLevel] || '100%'}`, 2000)
     playSound('confirmed', 0.5)
   }
 

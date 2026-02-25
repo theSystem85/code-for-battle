@@ -16,6 +16,7 @@ import { getUniqueId } from './utils.js'
 import { getMapRenderer } from './rendering.js'
 import { getBuildingImage } from './buildingImageMap.js'
 import { isAirstripBlockedLocalTile } from './utils/buildingPassability.js'
+import { ensureAirstripOperations } from './utils/airstripUtils.js'
 
 // Re-export buildingData from the data module to maintain backwards compatibility
 export { buildingData } from './data/buildingData.js'
@@ -114,6 +115,10 @@ export function createBuilding(type, x, y) {
 
   if (type === 'helipad' || type === 'airstrip') {
     building.landedUnitId = null
+  }
+
+  if (type === 'airstrip') {
+    ensureAirstripOperations(building)
   }
 
   if (type === 'street') {
@@ -278,6 +283,10 @@ export function placeBuilding(building, mapGrid, occupancyMap = gameState.occupa
         mapGrid[y][x].type = 'street'
       }
 
+      if (isAirstripPassableTile) {
+        mapGrid[y][x].airstripStreet = true
+      }
+
       // DON'T change the tile type - keep the original background texture visible
       // mapGrid[y][x].type = 'building' // REMOVED: This was causing solid color rendering
     }
@@ -352,6 +361,9 @@ export function clearBuildingFromMapGrid(building, mapGrid, occupancyMap = gameS
         changedTiles.push({ x, y })
         // Clear any building reference to unblock this tile for pathfinding
         delete mapGrid[y][x].building
+        if (mapGrid[y][x].airstripStreet) {
+          delete mapGrid[y][x].airstripStreet
+        }
         const localX = x - building.x
         const localY = y - building.y
         const isStreetTile = building.type === 'street'

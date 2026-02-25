@@ -991,6 +991,16 @@ export class UnitRenderer {
         ratio = Math.max(0, Math.min(1, (unit.rocketAmmo ?? 0) / unit.maxRocketAmmo))
         hasAmmo = true
       }
+
+      const now = performance.now()
+      const fireRate = 8400 // COMBAT_CONFIG.APACHE.FIRE_RATE
+      const timeSinceLastShot = unit.lastShotTime ? now - unit.lastShotTime : fireRate
+
+      if (unit.volleyState) {
+        reloadRatio = 0
+      } else {
+        reloadRatio = Math.min(1, timeSinceLastShot / fireRate)
+      }
     } else if (typeof unit.maxAmmunition === 'number') {
       // Regular units
       ratio = unit.ammunition / unit.maxAmmunition
