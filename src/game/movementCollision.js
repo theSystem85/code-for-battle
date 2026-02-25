@@ -320,11 +320,8 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
     const otherAirborne = isAirborneUnit(otherUnit)
     if (unitAirborne !== otherAirborne) continue
 
-    // F22s in the air should be able to overlap freely with other air units.
-    const f22OverlapAllowed =
-      (unit.type === 'f22Raptor' && unit.flightState !== 'grounded') ||
-      (otherUnit.type === 'f22Raptor' && otherUnit.flightState !== 'grounded')
-    if (f22OverlapAllowed) continue
+    // F22s should never collision-block or push any other unit (airborne or grounded).
+    if (unit.type === 'f22Raptor' || otherUnit.type === 'f22Raptor') continue
 
     const otherCenterX = otherUnit._cx ?? (otherUnit.x + TILE_SIZE / 2)
     const otherCenterY = otherUnit._cy ?? (otherUnit.y + TILE_SIZE / 2)
@@ -644,13 +641,6 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
   const { normalX, normalY, overlap, unitSpeed, otherSpeed, airCollision = false } = collisionResult.data
   const factoryList = Array.isArray(factories) ? factories : []
   const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
-
-  if (unit.type === 'f22Raptor' || otherUnit?.type === 'f22Raptor') {
-    movement.velocity.x = 0
-    movement.velocity.y = 0
-    movement.currentSpeed = 0
-    return false
-  }
 
   if (unit.type === 'tankerTruck') {
     const otherUnitForTanker = collisionResult.other
