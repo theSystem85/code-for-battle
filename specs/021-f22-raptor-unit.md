@@ -115,8 +115,8 @@ Additional hardening from user follow-up:
 
 ### B.2 Ground interaction rules
 14. `B3` F22 must not push ground units away during collision response.
-	- Status: `Implemented (code)` — `checkUnitCollision` skips F22 collisions; `calculateCollisionAvoidance` skips F22 (both as caller and as obstacle); `applyUnitCollisionResponse` hard-guards F22 out of impulses; safe-separation/minimum-separation internals now also skip F22
-	- `Needs gameplay verification`
+	- Status: `Implemented (code)` — `checkUnitCollision` skips F22 collisions; `calculateCollisionAvoidance` skips F22 (both as caller and as obstacle); `applyUnitCollisionResponse` hard-guards F22 out of impulses; safe-separation/minimum-separation internals now also skip F22; `resolveUnitCollisions` in `units.js` now skips airborne air units so F22 in flight no longer participates in ground-unit separation forcing
+	- `Verified`
 
 ### B.3 Attack movement behavior
 15. `B4` During combat, F22 attacks in wave-like orbits around target instead of static hover over target center.

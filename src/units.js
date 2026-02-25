@@ -1370,6 +1370,7 @@ export function resolveUnitCollisions(units, mapGrid) {
   for (let i = 0, len = units.length; i < len; i++) {
     const unit1 = units[i]
     if (!unit1 || unit1.health <= 0) continue
+    if (unit1.isAirUnit && unit1.flightState !== 'grounded') continue // Skip airborne units (e.g. F22 in flight)
     if (unit1.path && unit1.path.length > 0) continue // Skip moving units
 
     // Update tile coordinates
