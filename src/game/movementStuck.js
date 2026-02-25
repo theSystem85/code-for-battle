@@ -10,6 +10,7 @@ import { findPath } from '../units.js'
 import { MOVEMENT_CONFIG } from './movementConstants.js'
 import { normalizeAngle } from './movementHelpers.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 function ensureMovement(unit) {
   if (!unit.movement) {
@@ -448,7 +449,7 @@ export function isValidDodgePosition(x, y, mapGrid, units, currentUnit = null) {
   }
 
   const tile = mapGrid[y][x]
-  if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || tile.building) {
+  if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || hasBlockingBuilding(tile)) {
     return false
   }
 

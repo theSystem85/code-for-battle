@@ -21,6 +21,13 @@ import { getHelipadLandingCenter, getHelipadLandingTile, getHelipadLandingTopLef
 import { isFriendlyMineBlocking } from './game/mineSystem.js'
 import { getSpatialQuadtree } from './game/spatialQuadtree.js'
 import { recordUnitCreated } from './ai-api/transitionCollector.js'
+import { hasBlockingBuilding } from './utils/buildingPassability.js'
+import {
+  ensureAirstripOperations,
+  claimAirstripParkingSlot,
+  setAirstripSlotOccupant,
+  getAirstripRunwayPoints
+} from './utils/airstripUtils.js'
 
 // Add a global variable to track if we've already shown the pathfinding warning
 let pathfindingWarningShown = false
@@ -65,7 +72,7 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
         tile.type === 'water' ||
         tile.type === 'rock' ||
         tile.seedCrystal ||
-        tile.building ||
+        hasBlockingBuilding(tile) ||
         isImpassableGrass ? 1 : 0
     }
   }
@@ -254,12 +261,7 @@ function findNearestFreeTile(x, y, mapGrid, occupancyMap, maxDistance = 5, optio
           checkX < mapGrid[0].length &&
           checkY < mapGrid.length
         ) {
-          const tile = mapGrid[checkY][checkX]
-          const passable =
-            tile.type !== 'water' &&
-            tile.type !== 'rock' &&
-            !tile.building &&
-            !tile.seedCrystal
+          const passable = isTilePassableForMode(mapGrid, checkX, checkY, options)
           const occupied = isTileBlockedForUnit(occupancyMap, checkX, checkY, options)
           if (passable && !occupied) {
             return { x: checkX, y: checkY }
@@ -306,22 +308,25 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const unitOwner = contextOptions.unitOwner ?? start.owner ?? start.ownerId ?? start.playerId ?? start.unitOwner ?? null
   const ignoreFriendlyMines = Boolean(contextOptions.ignoreFriendlyMines)
   const strictDestination = Boolean(contextOptions.strictDestination)
-  const pathContext = { unitOwner, ignoreFriendlyMines }
+  const streetOnly = Boolean(contextOptions.streetOnly)
+  const pathContext = { unitOwner, ignoreFriendlyMines, streetOnly }
 
   // Begin destination adjustment if blocked or occupied
   let adjustedEnd = { ...end }
   const destTile = mapGrid[adjustedEnd.y][adjustedEnd.x]
   const destType = destTile.type
-  const destHasBuilding = destTile.building
+  const destHasBuilding = hasBlockingBuilding(destTile)
   const destSeedCrystal = destTile.seedCrystal
   const destinationIsStart = adjustedEnd.x === start.x && adjustedEnd.y === start.y
   const destOccupied = !destinationIsStart && isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
+  const destModeBlocked = !isTilePassableForMode(mapGrid, adjustedEnd.x, adjustedEnd.y, pathContext)
   if (
     destType === 'water' ||
     destType === 'rock' ||
     destHasBuilding ||
     destSeedCrystal ||
-    destOccupied
+    destOccupied ||
+    destModeBlocked
   ) {
     if (strictDestination) {
       return []
@@ -406,6 +411,9 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
       if (hasDiagonalCornerBlocker(currentNode, neighbor, mapGrid, occupancyMap, start, pathContext)) {
         continue
       }
+      if (!isTilePassableForMode(mapGrid, neighbor.x, neighbor.y, pathContext)) {
+        continue
+      }
       // Skip if occupancyMap is provided and the tile is occupied,
       // except when the tile is the starting tile for this path.
       if (
@@ -479,7 +487,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   // If direct line is available, compare costs
   let directPath = null
   let directCost = Infinity
-  if (isDirectPathClear(start, adjustedEnd, mapGrid, occupancyMap, pathContext)) {
+  if (!streetOnly && isDirectPathClear(start, adjustedEnd, mapGrid, occupancyMap, pathContext)) {
     directPath = getLineTiles(start, adjustedEnd)
     directCost = calculatePathCost(directPath, mapGrid)
   }
@@ -490,6 +498,10 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
 
   if (directPath && (finalPath.length === 0 || directCost <= aStarCost)) {
     chosenPath = directPath
+  }
+
+  if (streetOnly) {
+    return chosenPath
   }
 
   return smoothPath(chosenPath, mapGrid, occupancyMap, pathContext)
@@ -509,7 +521,7 @@ function isTileWithinBounds(mapGrid, x, y) {
 }
 
 function isTerrainBlocked(tile) {
-  return tile.type === 'water' || tile.type === 'rock' || tile.building || tile.seedCrystal
+  return tile.type === 'water' || tile.type === 'rock' || hasBlockingBuilding(tile) || tile.seedCrystal
 }
 
 function isTilePassable(mapGrid, x, y) {
@@ -518,6 +530,17 @@ function isTilePassable(mapGrid, x, y) {
   }
   const tile = mapGrid[y][x]
   return !isTerrainBlocked(tile)
+}
+
+function isTilePassableForMode(mapGrid, x, y, options = {}) {
+  if (!isTilePassable(mapGrid, x, y)) {
+    return false
+  }
+  if (!options.streetOnly) {
+    return true
+  }
+  const tile = mapGrid[y][x]
+  return tile.type === 'street' || Boolean(tile.airstripStreet)
 }
 
 function isTileBlockedForUnit(occupancyMap, x, y, options = {}) {
@@ -703,6 +726,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   let spawnPosition = null
   let worldPositionOverride = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
+  const isAirstripF22 = factory.type === 'airstrip' && type === 'f22Raptor'
 
   if (isHelipadApache) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
@@ -723,6 +747,20 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
         }
       }
     }
+  } else if (isAirstripF22) {
+    ensureAirstripOperations(factory)
+    gameState.nextAirstripSpawnPointIndex = gameState.nextAirstripSpawnPointIndex ?? 0
+    const preferredSlot = gameState.nextAirstripSpawnPointIndex % factory.f22ParkingSpots.length
+    let slotIndex = claimAirstripParkingSlot(factory, preferredSlot)
+    if (slotIndex < 0) {
+      slotIndex = preferredSlot
+    }
+    gameState.nextAirstripSpawnPointIndex = (slotIndex + 1) % factory.f22ParkingSpots.length
+    const slot = factory.f22ParkingSpots[slotIndex]
+    spawnPosition = { x: slot.x, y: slot.y }
+    worldPositionOverride = { x: slot.worldX, y: slot.worldY }
+    options.airstripParkingSlotIndex = slotIndex
+    options.airstripId = getBuildingIdentifier(factory)
   } else if (factory.type === 'vehicleFactory') {
     // Attempt to free the designated spawn tile using algorithm A1
     moveBlockingUnits(spawnX, spawnY, units, mapGrid)
@@ -753,7 +791,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     : options
 
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
-  if (occupancyMap && !isHelipadApache) {
+  if (occupancyMap && !isHelipadApache && !isAirstripF22) {
     // Use center coordinates for occupancy map consistency
     const centerTileX = Math.floor((newUnit.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -823,11 +861,70 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     }
   }
 
+  if (isAirstripF22) {
+    const airstripId = getBuildingIdentifier(factory)
+    ensureAirstripOperations(factory)
+    const parkingSlotIndex = Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : 0
+    setAirstripSlotOccupant(factory, parkingSlotIndex, newUnit.id)
+    const runwayPoints = getAirstripRunwayPoints(factory)
+
+    newUnit.flightPlan = null
+    newUnit.autoHoldAltitude = false
+    newUnit.manualFlightState = 'auto'
+    newUnit.altitude = 0
+    newUnit.targetAltitude = 0
+    newUnit.hovering = false
+    newUnit.helipadLandingRequested = false
+    newUnit.helipadTargetId = airstripId
+    newUnit.landedHelipadId = airstripId
+    newUnit.airstripId = airstripId
+    newUnit.airstripParkingSlotIndex = parkingSlotIndex
+    newUnit.f22State = 'parked'
+    newUnit.f22AssignedDestination = null
+    newUnit.f22PendingTakeoff = false
+    newUnit.runwayPoints = runwayPoints
+    newUnit.direction = factory.f22ParkingSpots?.[parkingSlotIndex]?.facing ?? Math.PI / 2
+    newUnit.rotation = newUnit.direction
+    newUnit.path = []
+    newUnit.moveTarget = null
+    if (newUnit.movement) {
+      newUnit.movement.velocity = { x: 0, y: 0 }
+      newUnit.movement.targetVelocity = { x: 0, y: 0 }
+      newUnit.movement.isMoving = false
+      newUnit.movement.currentSpeed = 0
+    }
+    newUnit.flightState = 'grounded'
+    newUnit.groundedOccupancyApplied = true
+    if (newUnit.shadow) {
+      newUnit.shadow.offset = 0
+      newUnit.shadow.scale = 1
+    }
+    newUnit.refuelingAtHelipad = false
+    if (typeof newUnit.maxRocketAmmo === 'number') {
+      newUnit.rocketAmmo = newUnit.maxRocketAmmo
+      newUnit.apacheAmmoEmpty = false
+      newUnit.canFire = true
+    }
+    if (typeof newUnit.maxGas === 'number') {
+      newUnit.gas = newUnit.maxGas
+      newUnit.outOfGasPlayed = false
+    }
+    factory.landedUnitId = newUnit.id
+    if (Array.isArray(gameState.buildings)) {
+      const matchingAirstrip = gameState.buildings.find(
+        b => getBuildingIdentifier(b) === airstripId
+      )
+      if (matchingAirstrip) {
+        matchingAirstrip.landedUnitId = newUnit.id
+      }
+    }
+  }
+
   // If a rally point target was provided (from the specific spawning factory), set the unit's path to it.
   // This allows each factory to have its own individual assembly point.
   // Harvesters handle their own initial path logic in productionQueue.js
-  // Apache helicopters spawned on helipads should not immediately move to rally points - they should stay landed
-  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache) {
+  // Apache helicopters spawned on helipads and F22 Raptors spawned on airstrips should not immediately move to rally points - they should stay landed
+  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22) {
     const path = findPath(
       { x: spawnPosition.x, y: spawnPosition.y },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
@@ -969,8 +1066,8 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer']
   const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank']
 
-  // Apache helicopters don't have crew system
-  if (actualType !== 'apache') {
+  // Apache helicopters and F22 Raptors don't have the crew system
+  if (actualType !== 'apache' && actualType !== 'f22Raptor') {
     unit.crew = { driver: true, commander: true }
 
     if (fullCrewTanks.includes(actualType)) {
@@ -1032,6 +1129,42 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.landedHelipadId = null
     unit.maxRocketAmmo = 38
     unit.rocketAmmo = unit.maxRocketAmmo
+  }
+
+  if (actualType === 'f22Raptor') {
+    unit.isAirUnit = true
+    unit.flightState = 'grounded'
+    unit.altitude = 0
+    unit.targetAltitude = 0
+    unit.maxAltitude = TILE_SIZE * 4.5
+    unit.airCruiseSpeed = unitProps.speed
+    unit.autoHoldAltitude = false
+    unit.flightPlan = null
+    unit.shadow = { offset: 0, scale: 1 }
+    unit.hovering = false
+    unit.groundedOccupancyApplied = false
+    unit.airborneSince = null
+    const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+    unit.landedSince = now
+    unit.attackCooldown = 0
+    unit.dodgeCooldown = 0
+    unit.dodgeChance = 0.6
+    unit.fuelSource = null
+    unit.requiresAirstrip = true
+    unit.radarInvisible = true
+    unit.manualFlightState = 'auto'
+    unit.manualFlightHoverRequested = false
+    unit.helipadLandingRequested = false
+    unit.helipadTargetId = null
+    unit.landedHelipadId = null
+    unit.maxRocketAmmo = 8
+    unit.rocketAmmo = unit.maxRocketAmmo
+    unit.apacheAmmoEmpty = false
+    unit.canFire = true
+    unit.volleyState = null
+    unit.f22State = 'parked'
+    unit.f22AssignedDestination = null
+    unit.f22PendingTakeoff = false
   }
 
   if (actualType === 'ambulance') {
@@ -1157,7 +1290,7 @@ function isPositionValid(x, y, mapGrid, units) {
     return false
   }
 
-  if (mapGrid[y][x].building) {
+  if (hasBlockingBuilding(mapGrid[y][x])) {
     return false
   }
 
@@ -1237,6 +1370,7 @@ export function resolveUnitCollisions(units, mapGrid) {
   for (let i = 0, len = units.length; i < len; i++) {
     const unit1 = units[i]
     if (!unit1 || unit1.health <= 0) continue
+    if (unit1.isAirUnit && unit1.flightState !== 'grounded') continue // Skip airborne units (e.g. F22 in flight)
     if (unit1.path && unit1.path.length > 0) continue // Skip moving units
 
     // Update tile coordinates

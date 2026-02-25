@@ -28,6 +28,7 @@ import { recordDamage } from '../ai-api/transitionCollector.js'
 
 const APACHE_REMOTE_DAMAGE = 10
 const APACHE_TANK_DAMAGE_MULTIPLIER = 1.67
+const F22_TANK_DAMAGE_MULTIPLIER = 2.25
 
 /**
  * Updates all bullets in the game including movement, collision detection, and cleanup
@@ -478,8 +479,9 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
           // Apply tank damage multiplier for direct unit hits
           let damageMultiplier = 1.0
+          const tankDamageMultiplier = bullet.f22Rocket ? F22_TANK_DAMAGE_MULTIPLIER : APACHE_TANK_DAMAGE_MULTIPLIER
           if (apacheTargetUnit && ['tank', 'tank_v1', 'tank-v2', 'tank-v3'].includes(apacheTargetUnit.type)) {
-            damageMultiplier = APACHE_TANK_DAMAGE_MULTIPLIER
+            damageMultiplier = tankDamageMultiplier
           } else if (bullet.shooter && units) {
             // Check if explosion will hit any tanks
             const explosionRadius = TILE_SIZE * 2
@@ -493,7 +495,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               return dist <= explosionRadius
             })
             if (hasTankNearby) {
-              damageMultiplier = APACHE_TANK_DAMAGE_MULTIPLIER // Boost damage for tank targets
+              damageMultiplier = tankDamageMultiplier // Boost damage for tank targets
             }
           }
 
@@ -605,9 +607,9 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             continue
           }
           if (unit.health > 0 && checkUnitCollision(bullet, unit)) {
-            if (unit.type === 'apache') {
+            if ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.flightState !== 'grounded') {
               const shooterType = bullet.shooter?.type || ''
-              const allowedShooters = ['rocketTank', 'rocketTurret', 'teslaCoil']
+              const allowedShooters = ['rocketTank', 'rocketTurret', 'apache', 'f22Raptor']
               if (!allowedShooters.includes(shooterType)) {
                 continue
               }
@@ -845,8 +847,14 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               actualDamage = window.cheatSystem.preventDamage(building, actualDamage)
             }
 
-            // Only apply damage if actualDamage > 0 (god mode protection) and not an Apache rocket
-            if (actualDamage > 0 && bullet.originType !== 'apacheRocket') {
+            const isStreetTileBuilding = building.type === 'street'
+
+            // Only apply damage if actualDamage > 0 (god mode protection).
+            // Streets should still be destroyed by direct projectile impacts, including apache rockets.
+            if (actualDamage > 0 && (bullet.originType !== 'apacheRocket' || isStreetTileBuilding)) {
+              if (isStreetTileBuilding) {
+                actualDamage = Math.max(actualDamage, building.health)
+              }
               const previousHealth = building.health
               building.health -= actualDamage
 
@@ -897,8 +905,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               playPositionalSound('bulletHit', bullet.x, bullet.y, 0.5)
             }
 
-            // Handle building destruction (only for non-Apache rockets)
-            if (building.health <= 0 && bullet.originType !== 'apacheRocket') {
+            // Handle building destruction (streets can also be destroyed by Apache rockets)
+            if (building.health <= 0 && (bullet.originType !== 'apacheRocket' || isStreetTileBuilding)) {
               playPositionalSound('explosion', bullet.x, bullet.y, 0.5)
               building.health = 0
               // Award experience to the shooter for destroying ANY building (except harvesters cannot receive XP)

@@ -200,6 +200,11 @@ export function syncTechTreeWithBuildings(controller) {
     controller.forceUnlockUnitType('apache')
   }
 
+  const hasAirstrip = buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
+  if (hasAirstrip) {
+    controller.forceUnlockUnitType('f22Raptor')
+  }
+
   if (factoryCount >= 2) {
     controller.forceUnlockUnitType('tank-v3')
   }

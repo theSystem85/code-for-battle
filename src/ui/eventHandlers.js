@@ -814,8 +814,10 @@ export class EventHandlers {
             productionQueue.updateReadyBuildingCounter(building.button)
           })
 
-          // Play placement sound
-          playSound('buildingPlaced')
+          // Suppress rapid sound spam for mass street placement.
+          if (buildingType !== 'street') {
+            playSound('buildingPlaced')
+          }
 
           // Show notification
           showNotification(`${buildingData[buildingType].displayName} constructed`)

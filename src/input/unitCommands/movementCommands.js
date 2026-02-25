@@ -8,6 +8,7 @@ import { clearTankerKamikazeState } from '../../game/tankerTruckUtils.js'
 import { broadcastUnitMove } from '../../network/gameCommandSync.js'
 import { resetUnitVelocityForNewPath } from '../../game/unifiedMovement.js'
 import { clearAttackGroupState, cancelRecoveryTask } from './utilityQueue.js'
+import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
 
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
   const commandableUnits = selectedUnits.filter(unit => {
@@ -95,7 +96,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
             newTile.x < mapGrid[0].length && newTile.y < mapGrid.length &&
             mapGrid[newTile.y][newTile.x].type !== 'water' &&
             mapGrid[newTile.y][newTile.x].type !== 'rock' &&
-            !mapGrid[newTile.y][newTile.x].building &&
+            !hasBlockingBuilding(mapGrid[newTile.y][newTile.x]) &&
             !selectedUnits.slice(0, index).some(u =>
               u.moveTarget && u.moveTarget.x === newTile.x && u.moveTarget.y === newTile.y
             )) {
@@ -107,7 +108,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
 
     const gasDepleted = typeof unit.maxGas === 'number' && unit.gas <= 0
 
-    if (unit.type === 'apache') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
       if (gasDepleted) {
         outOfGasCount++
         return
@@ -122,7 +123,33 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
         y: clampedTile.y * TILE_SIZE + TILE_SIZE / 2
       }
 
-      if (handler.assignApacheFlight && handler.assignApacheFlight(unit, clampedTile, center, { mode: 'manual' })) {
+      let airstripModeOptions = { mode: 'manual' }
+      if (unit.type === 'f22Raptor') {
+        const targetAirstrip = (gameState.buildings || []).find(building =>
+          building.type === 'airstrip' &&
+          building.owner === unit.owner &&
+          building.health > 0 &&
+          clampedTile.x >= building.x &&
+          clampedTile.x < building.x + building.width &&
+          clampedTile.y >= building.y &&
+          clampedTile.y < building.y + building.height
+        )
+        if (targetAirstrip) {
+          const runwayExit = targetAirstrip.runwayPoints?.runwayExit || {
+            x: (targetAirstrip.x + targetAirstrip.width - 1) * TILE_SIZE,
+            y: (targetAirstrip.y + Math.floor(targetAirstrip.height / 2)) * TILE_SIZE
+          }
+          airstripModeOptions = {
+            mode: 'airstrip',
+            airstrip: targetAirstrip,
+            stopRadius: TILE_SIZE * 0.4
+          }
+          center.x = runwayExit.worldX ?? runwayExit.x
+          center.y = runwayExit.worldY ?? runwayExit.y
+        }
+      }
+
+      if (handler.assignApacheFlight && handler.assignApacheFlight(unit, clampedTile, center, airstripModeOptions)) {
         unit.target = null
         unit.originalTarget = null
         unit.forcedAttack = false

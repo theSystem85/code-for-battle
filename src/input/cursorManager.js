@@ -3,6 +3,7 @@ import { TILE_SIZE, CURSOR_METERS_PER_TILE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { findWreckAtTile } from '../game/unitWreckManager.js'
 import { isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 
 const CURSOR_CLASS_NAMES = [
@@ -89,7 +90,7 @@ export class CursorManager {
       if (!unit || unit.isBuilding || unit.health <= 0) continue
       if (typeof unit.x !== 'number' || typeof unit.y !== 'number') continue
 
-      const altitudeLift = (unit.type === 'apache' && unit.altitude) ? unit.altitude * 0.4 : 0
+      const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
       const centerX = unit.x + TILE_SIZE / 2
       const centerY = unit.y + TILE_SIZE / 2 - altitudeLift
 
@@ -303,7 +304,7 @@ export class CursorManager {
     // Check if the tile type is impassable
     const tile = row[tileX]
     const tileType = tile.type
-    const hasBuilding = tile.building
+    const hasBuilding = hasBlockingBuilding(tile)
     const hasSeedCrystal = tile.seedCrystal
     const occupancyMap = gameState.occupancyMap
     const occupied =
@@ -428,6 +429,7 @@ export class CursorManager {
       const hasSelectedRecoveryTanks = selectedUnits.some(unit => unit.type === 'recoveryTank')
       const hasSelectedDamagedUnits = selectedUnits.some(unit => unit.health < unit.maxHealth)
       const hasSelectedApaches = selectedUnits.some(unit => unit.type === 'apache')
+      const hasSelectedF22 = selectedUnits.some(unit => unit.type === 'f22Raptor')
       const selectedApacheIds = hasSelectedApaches
         ? selectedUnits.filter(unit => unit.type === 'apache' && unit.id).map(unit => unit.id)
         : []
@@ -484,6 +486,20 @@ export class CursorManager {
                 tileY >= building.y && tileY < building.y + building.height) {
             this.isOverFriendlyHelipad = true
             this.isOverBlockedHelipad = !isHelipadAvailableForUnit(building, units, selectedApacheIds)
+            break
+          }
+        }
+      }
+
+      if (!this.isOverFriendlyHelipad && hasSelectedF22) {
+        for (const building of gameState.buildings) {
+          if (building.type === 'airstrip' &&
+                building.owner === gameState.humanPlayer &&
+                building.health > 0 &&
+                tileX >= building.x && tileX < building.x + building.width &&
+                tileY >= building.y && tileY < building.y + building.height) {
+            this.isOverFriendlyHelipad = true
+            this.isOverBlockedHelipad = false
             break
           }
         }
@@ -791,7 +807,7 @@ export class CursorManager {
           this.updateRangeCursorDisplay(rangeCursorPosition, true)
         }
       }
-      const _setAttackBlockedCursor = () => setCursor('none', 'attack-blocked-mode')
+      const setAttackBlockedCursor = () => setCursor('none', 'attack-blocked-mode')
       const setAttackOutOfRangeCursor = () => setOutOfRangeCursor()
       const setMoveBlockedCursor = () => setCursor('none', 'move-blocked-mode')
       const setMoveCursor = () => setCursor('none', 'move-mode')
@@ -890,7 +906,7 @@ export class CursorManager {
         } else if (this.isOverBlockedTerrain) {
           setMoveBlockedCursor()
         } else if (this.isOverFriendlyUnit) {
-          setDefaultCursor()
+          setAttackBlockedCursor()
         } else if (!gameState.isRightDragging) {
           setMoveCursor()
         } else {
@@ -969,7 +985,7 @@ export class CursorManager {
       }
 
       if (this.isOverFriendlyUnit) {
-        setDefaultCursor()
+        setAttackBlockedCursor()
         return
       }
 

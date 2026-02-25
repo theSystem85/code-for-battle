@@ -2,6 +2,7 @@
 // Generates local direction vectors to guide units through narrow passages
 
 import { TILE_SIZE, DIRECTIONS } from '../config.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 // Flow field configuration
 const FLOW_FIELD_TTL = 5000 // Time-to-live for cached flow fields (ms)
@@ -228,7 +229,7 @@ export class FlowFieldManager {
 
     return tile.type !== 'water' &&
            tile.type !== 'rock' &&
-           !tile.building &&
+           !hasBlockingBuilding(tile) &&
            !tile.seedCrystal
   }
 

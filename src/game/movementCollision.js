@@ -31,6 +31,7 @@ import {
   LOCAL_LOOKAHEAD_STRENGTH
 } from './movementConstants.js'
 import { isAirborneUnit, isGroundUnit, ownersAreEnemies } from './movementHelpers.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 const STATIC_COLLISION_SEPARATION_SCALE = 0.3
 const STATIC_COLLISION_SEPARATION_MIN = 0.25
@@ -58,7 +59,7 @@ function isTileBlockedForCollision(mapGrid, tileX, tileY) {
     return true
   }
 
-  if (tile.building) {
+  if (hasBlockingBuilding(tile)) {
     return true
   }
 
@@ -114,6 +115,7 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
   if (units && units.length > 0) {
     for (const other of units) {
       if (!other || other.id === unit.id || other.health <= 0) continue
+      if (other.type === 'f22Raptor') continue
       if (ignoreSet && ignoreSet.has(other.id)) continue
       if (!isGroundUnit(other)) continue
 
@@ -180,6 +182,9 @@ function applySafeSeparation(unit, dx, dy, mapGrid, occupancyMap, units = [], wr
 
 function ensureMinimumSeparation(unit, otherUnit, normalX, normalY, mapGrid, occupancyMap, units = [], wrecks = []) {
   if (!unit || !otherUnit) {
+    return
+  }
+  if (unit.type === 'f22Raptor' || otherUnit.type === 'f22Raptor') {
     return
   }
   if (!isGroundUnit(unit) || !isGroundUnit(otherUnit)) {
@@ -279,8 +284,17 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         return { collided: true, type: 'terrain', tileX, tileY }
       }
 
-      if (tile.building) {
-        if (unit.type === 'apache' && tile.building.type === 'helipad') {
+      if (unit.type === 'f22Raptor' && unit.flightState === 'grounded') {
+        // Use center-based tile to avoid edge clipping during taxi
+        const cTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+        const cTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+        const cTile = mapGrid[cTileY]?.[cTileX]
+        if (!(cTile?.type === 'street' || cTile?.airstripStreet)) {
+          return { collided: true, type: 'terrain', tileX: cTileX, tileY: cTileY }
+        }
+        // Center tile is on airstrip street — skip top-left corner building check
+      } else if (hasBlockingBuilding(tile)) {
+        if (unit.type === 'apache' && tile.building?.type === 'helipad') {
           return { collided: false }
         }
         return {
@@ -308,6 +322,9 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
 
     const otherAirborne = isAirborneUnit(otherUnit)
     if (unitAirborne !== otherAirborne) continue
+
+    // F22s should never collision-block or push any other unit (airborne or grounded).
+    if (unit.type === 'f22Raptor' || otherUnit.type === 'f22Raptor') continue
 
     const otherCenterX = otherUnit._cx ?? (otherUnit.x + TILE_SIZE / 2)
     const otherCenterY = otherUnit._cy ?? (otherUnit.y + TILE_SIZE / 2)
@@ -624,13 +641,18 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
     return false
   }
 
+  if (unit.type === 'f22Raptor' || collisionResult.other?.type === 'f22Raptor') {
+    return false
+  }
+
   const { normalX, normalY, overlap, unitSpeed, otherSpeed, airCollision = false } = collisionResult.data
   const factoryList = Array.isArray(factories) ? factories : []
+  const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
 
   if (unit.type === 'tankerTruck') {
-    const otherUnit = collisionResult.other
+    const otherUnitForTanker = collisionResult.other
     const isEnemyCollision = Boolean(
-      otherUnit && typeof otherUnit.owner === 'string' && typeof unit.owner === 'string' && otherUnit.owner !== unit.owner
+      otherUnitForTanker && typeof otherUnitForTanker.owner === 'string' && typeof unit.owner === 'string' && otherUnitForTanker.owner !== unit.owner
     )
     const kamikazeActive = isEnemyCollision && unit.kamikazeMode
     const baseSpeed = typeof unit.speed === 'number' ? unit.speed : MOVEMENT_CONFIG.MAX_SPEED
@@ -645,7 +667,6 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
   }
 
   const separation = Math.min(COLLISION_SEPARATION_MAX, Math.max(COLLISION_SEPARATION_MIN, (overlap * COLLISION_SEPARATION_SCALE)))
-  const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
 
   if (airCollision) {
     if (separation > 0.001) {
@@ -880,6 +901,8 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
   for (let i = 0, len = nearbyUnits.length; i < len; i++) {
     const otherUnit = nearbyUnits[i]
     if (otherUnit.health <= 0) continue
+    // F22s should never push ground units via avoidance
+    if (otherUnit.type === 'f22Raptor') continue
     // Skip avoidance if this unit is our attack target
     if (unit.target && unit.target === otherUnit) continue
 

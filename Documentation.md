@@ -146,9 +146,16 @@ public/images/map/units/
 
 ### User Experience
 - **T key**: Toggle tank image rendering on/off with sound feedback
+- **Y key (configurable)**: Cycle unit/building image opacity for debugging (`100% -> 50% -> 0% -> 100%`)
 - **Visual feedback**: Notification shows current rendering mode status
 - **No performance impact**: Images load once and are cached
 - **Seamless fallback**: If images don't load, original rendering continues working
+
+### Debug Opacity Mode
+- Intended for debugging map overlays/pathing, not normal gameplay.
+- Triggered via keybinding action `Cycle Unit/Building Image Opacity` (default `Y`).
+- Can be remapped in the Settings keybindings editor like other keyboard actions.
+- Affects unit/building base sprite pass only; gameplay state and overlays remain active.
 
 ### Technical Implementation
 
