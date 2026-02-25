@@ -27,6 +27,29 @@ Additional fixes: Takeoff speed increased (MIN 0.9→1.5, MAX 1.7→2.2), easing
 Landing parking slot claiming made dynamic. Combat orbit wave amplitude increased.
 F22 collision with all units (ground and air) now fully skipped in checkUnitCollision.
 
+## Engineering Update (2026-02-25, round 2)
+F22 taxi-to-parking fix: Three root causes for grounded F22 being pushed off its taxi path:
+1. `calculateCollisionAvoidance` was still applying avoidance forces to/from grounded F22 — now
+   all F22 avoidance is skipped (movementCore.js + movementCollision.js).
+2. `checkUnitCollision` used top-left corner for F22 street-only check, causing edge-clipping terrain
+   collisions — now uses center-based tile lookup.
+3. Building collision check (`hasBlockingBuilding`) used top-left corner tile, blocking F22 when its
+   corner overlapped hangar tiles — now skipped when center tile is confirmed on airstripStreet.
+
+## Engineering Update (2026-02-25, round 3)
+Addressed new runtime regressions from validation:
+1. Ground taxi routing: `routeTaxiToPoint` now enforces `streetOnly` pathing with nearest taxi-surface
+	fallback search when exact destination tile is not routeable, and tracks fallback taxi destination
+	completion to prevent parking deadlocks.
+2. Repeated F22 attacks: fixed F22 volley cooldown gate in `tankCombat.js` from invalid
+	`COMBAT_CONFIG.FIRE_RATES.APACHE` to `COMBAT_CONFIG.APACHE.FIRE_RATE`.
+3. Volley payload: removed F22 overkill-capped volley sizing so F22 volleys can expend all remaining
+	rockets in sustained attack cycles.
+4. Stand-off attack behavior: F22 combat movement no longer uses ground-unit stop-in-range helper;
+	firing now requires stand-off distance (not directly over target), and orbit radius tuned larger.
+5. Anti-push hardening: added guard in `applyUnitCollisionResponse` so any F22-involved collision
+	response exits without applying separation impulses.
+
 ## Cluster A: Spawn, Airstrip Lifecycle, and Queueing
 `Primary files`: `src/utils/airstripUtils.js`, `src/game/movementF22.js`, `src/input/unitCommands/airCommands.js`, `src/units.js`, `src/productionQueue.js`, `src/saveGame.js`
 
@@ -54,7 +77,7 @@ F22 collision with all units (ground and air) now fully skipped in checkUnitColl
 	- Status: `Implemented (code)` — easing changed from easeInQuad to easeOutQuad for faster initial acceleration; MIN speed raised to 1.5
 	- `Needs gameplay verification`
 8. `A8` Landing roll uses eased deceleration in reverse.
-	- Status: `Implemented (code)` — landing→taxi_to_parking now dynamically claims parking slot via `claimAirstripParkingSlot`; handles missing or occupied slots
+	- Status: `Implemented (code)` — landing→taxi_to_parking dynamically claims parking slot via `claimAirstripParkingSlot`; taxi routing now includes nearest street/airstrip fallback tile search when exact parking tile is not routeable
 	- `Needs gameplay verification`
 9. `A9` Altitude transition after liftoff and before touchdown is gradual/eased.
 	- Status: `Implemented (code)` — easeInSine for climb, easeOutSine for descent; root cause of stall (velocity zeroing) fixed in movementCore.js
@@ -82,12 +105,12 @@ F22 collision with all units (ground and air) now fully skipped in checkUnitColl
 
 ### B.2 Ground interaction rules
 14. `B3` F22 must not push ground units away during collision response.
-	- Status: `Implemented (code)` — `checkUnitCollision` now skips collision entirely when either unit is F22
+	- Status: `Implemented (code)` — `checkUnitCollision` skips F22 collisions; `calculateCollisionAvoidance` skips F22 (both as caller and as obstacle); `applyUnitCollisionResponse` now hard-guards F22 out of separation impulses
 	- `Needs gameplay verification`
 
 ### B.3 Attack movement behavior
 15. `B4` During combat, F22 attacks in wave-like orbits around target instead of static hover over target center.
-	- Status: `Implemented (code)` — combat wave amplitude increased (2.2→3.5 tiles), added secondary wave oscillation for more dynamic orbit shape
+	- Status: `Implemented (code)` — F22 no longer uses stop-in-range helper from `handleTankMovement`; combat orbit tuned to larger stand-off radius and firing window enforces distance from target center
 	- `Needs gameplay verification`
 
 ## Cluster C: Combat, Ammo, and Damage Model
@@ -97,7 +120,7 @@ F22 collision with all units (ground and air) now fully skipped in checkUnitColl
 16. `C1` Grounded F22 cannot fire; must be airborne to attack.
 	- Status: `✅` User-verified working
 17. `C2` Once a volley starts, it continues beyond first rocket until volley completion (not aborted by cooldown gate).
-	- Status: `Implemented (code)` — volleyState persists across ticks; `hasActiveF22Volley` check in tankCombat.js allows firing beyond range limit while volley is active
+	- Status: `Implemented (code)` — volleyState persists across ticks; invalid F22 cooldown key fixed (`COMBAT_CONFIG.APACHE.FIRE_RATE`) so subsequent volleys can start after cooldown
 	- `Needs gameplay verification`
 
 ### C.2 Ammo capacity and reload behavior

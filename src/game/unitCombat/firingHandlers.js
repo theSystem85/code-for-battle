@@ -264,25 +264,6 @@ export function handleRocketBurstFire(unit, target, bullets, now, targetCenterX,
  * Handle multi-rocket volley for Apache helicopter
  */
 export function handleApacheVolley(unit, target, bullets, now, targetCenterX, targetCenterY, units, mapGrid) {
-  const estimateF22RocketDamage = targetEntity => {
-    if (!targetEntity) return 30
-    const armor = targetEntity.armor && targetEntity.armor > 0 ? targetEntity.armor : 1
-    const isTankFamily = ['tank', 'tank_v1', 'tank-v2', 'tank-v3'].includes(targetEntity.type)
-    const rawDamage = isTankFamily ? 50 : 30
-    return Math.max(1, Math.round(rawDamage / armor))
-  }
-
-  const getF22PendingRocketCount = targetEntity => {
-    if (!Array.isArray(bullets) || !targetEntity) return 0
-    return bullets.reduce((count, bullet) => {
-      if (!bullet?.active || !bullet.f22Rocket) return count
-      if (bullet.shooter?.id !== unit.id) return count
-      if (bullet.target === targetEntity) return count + 1
-      if (targetEntity.id && bullet.apacheTargetId === targetEntity.id) return count + 1
-      return count
-    }, 0)
-  }
-
   const availableAmmo = Math.max(0, Math.floor(unit.rocketAmmo || 0))
   const isF22 = unit.type === 'f22Raptor'
   if (availableAmmo <= 0) {
@@ -293,16 +274,7 @@ export function handleApacheVolley(unit, target, bullets, now, targetCenterX, ta
   }
 
   if (!unit.volleyState) {
-    let rocketsThisVolley = isF22 ? availableAmmo : Math.min(8, availableAmmo)
-
-    if (isF22 && target?.health > 0) {
-      const estimatedDamage = estimateF22RocketDamage(target)
-      const pendingRockets = getF22PendingRocketCount(target)
-      const pendingDamage = pendingRockets * estimatedDamage
-      const remainingHealth = Math.max(0, target.health - pendingDamage)
-      const rocketsRequired = Math.max(1, Math.ceil(remainingHealth / estimatedDamage))
-      rocketsThisVolley = Math.max(1, Math.min(rocketsThisVolley, rocketsRequired))
-    }
+    const rocketsThisVolley = isF22 ? availableAmmo : Math.min(8, availableAmmo)
 
     const leftCount = Math.min(4, Math.ceil(rocketsThisVolley / 2))
     const rightCount = Math.min(4, rocketsThisVolley - leftCount)
