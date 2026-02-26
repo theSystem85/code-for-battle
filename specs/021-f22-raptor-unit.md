@@ -238,3 +238,7 @@ Follow-up fixes for commanding, landing triggers, mobile tap input, and runway t
 ## Open Questions
 - None currently.
 
+
+### F.1 Wreck rendering
+28. `F1` Destroyed F22 wreck must render as the greyed-out F22 image, not generic default wreck fallback.
+	- Status: `Implemented (code)` — `wreckSpriteCache` now resolves `f22Raptor` to the same base image used by `f22ImageRenderer`, then applies standard desaturation for wreck rendering.

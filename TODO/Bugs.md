@@ -1,4 +1,5 @@
 ## Bugs
+- [x] F22 wreck sprite (2026-02-26): added dedicated F22 wreck sprite mapping so destroyed F22 renders as greyed F22 image instead of generic fallback wreck.
 - [x] Prevent premature dodge/stuck handling from triggering on far-away path obstacles; only accumulate stuck/dodge when blockage signals are local (near next waypoint or recent local collision).
 - [x] Fix ground-unit stuck dodge/re-route logic to ignore the acting unit's own occupied tile so self-collision checks do not trigger continuous inefficient rerouting loops.
 - [x] F22 save/load (2026-02-25): parked F22 stuck after loading — airstripId, f22State, parking slot not serialized, so runway data couldn't be restored. Fixed by saving all F22-specific fields and re-deriving runway points on load.

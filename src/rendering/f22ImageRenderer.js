@@ -36,6 +36,13 @@ export function isF22ImageLoaded() {
   return f22Loaded && f22Image?.complete
 }
 
+export function getF22BaseImage() {
+  if (!f22Image && !f22Loading) {
+    preloadF22Images()
+  }
+  return isF22ImageLoaded() ? f22Image : null
+}
+
 function renderShadow(ctx, unit, centerX, centerY) {
   const shadow = unit.shadow || { offset: 0, scale: 1 }
   const baseRadius = TILE_SIZE * 0.35
