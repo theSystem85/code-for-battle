@@ -42,6 +42,7 @@
   - [x] ✅ Install and configure Playwright with Chromium
   - [x] ✅ Create basic game flow test (seed 11): build power plant, refinery, vehicle factory, harvester, tank, command tank to ore
   - [x] ✅ Add Apache helipad auto-return regression E2E (ammo empty → return → land/refill → resume attack target)
+  - [x] ✅ Add F22 sequential airstrip cycle E2E (3 parked F22 queue takeoff one-by-one, clear enemy groups, auto-return, park on slots, and verify ammo refills only after parked state)
   - [x] ✅ Stabilize Apache auto-return E2E by removing transient grounded-state assertion and dismissing startup overlays.
   - [x] ✅ Verify console error capture and no-error assertions
   - [x] ✅ Add npm scripts: `test:e2e`, `test:e2e:ui`, `test:e2e:headed`, `test:e2e:debug`

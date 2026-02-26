@@ -277,10 +277,20 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
       if (helipad.type === 'airstrip') {
         const f22Units = units.filter(u => u.type === 'f22Raptor' && u.health > 0)
         f22Units.forEach(f22 => {
+          const assignedParking = Number.isInteger(f22.airstripParkingSlotIndex)
+            ? helipad.f22ParkingSpots?.[f22.airstripParkingSlotIndex]
+            : null
+          const parkingDistance = assignedParking
+            ? Math.hypot((f22.x + TILE_SIZE / 2) - assignedParking.worldX, (f22.y + TILE_SIZE / 2) - assignedParking.worldY)
+            : Infinity
+          const isSettledAtParkingSpot = Boolean(assignedParking) && parkingDistance <= TILE_SIZE * 0.5
+
           const isParkedOnThisAirstrip =
             f22.flightState === 'grounded' &&
             f22.f22State === 'parked' &&
-            f22.landedHelipadId === helipadId
+            f22.landedHelipadId === helipadId &&
+            (!f22.path || f22.path.length === 0) &&
+            isSettledAtParkingSpot
 
           if (!isParkedOnThisAirstrip) {
             if (f22.refuelingAtHelipad) {

@@ -235,6 +235,27 @@ Follow-up fixes for commanding, landing triggers, mobile tap input, and runway t
 5. Added F22 taxi acceleration ramp during `taxi_to_runway_start` and slowed post-liftoff runway phase
 	(using reduced liftoff forward speed) so climb/acceleration progression along the strip is longer.
 
+## Engineering Update (2026-02-26, round 8)
+Fixed F22 taxi-to-parking stall where the unit would stop partway along its taxi path:
+1. Root cause: `f22Raptor` was listed in `noAutoRotationTypes` in `movementCore.js`, preventing
+	`updateUnitRotation()` from ever running on grounded F22. Meanwhile the rotation-gated acceleration
+	check required `rotationDiff < π/12` (~15°) — once the taxi path required a turn greater than 15°
+	the unit decelerated to zero and could never resume because its rotation was never updated.
+2. Fix: removed `f22Raptor` from `noAutoRotationTypes` for grounded state only — airborne F22 still
+	handles rotation via flight-plan steering. Grounded F22 now rotates like a normal ground unit
+	through `updateUnitRotation`.
+3. Disabled stuck-detection (`handleStuckUnit`) for F22 in `taxi_to_parking` and `taxi_to_runway_start`
+	states to prevent random dodge/rotation moves from interfering with the taxi routing, which already
+	re-paths internally every 400ms.
+
+## Engineering Update (2026-02-26, round 9)
+Follow-up runway-state reliability hardening:
+1. Extended the F22 stuck-detection bypass to all state-machine controlled runway/taxi phases in
+	`movementStuck.js` (`wait_takeoff_clearance`, `taxi_to_runway_start`, `takeoff_roll`, `liftoff`,
+	`wait_landing_clearance`, `approach_runway`, `landing_roll`, `taxi_to_parking`).
+2. This prevents generic random dodge/rotation stuck-recovery logic from overriding deterministic
+	takeoff/landing sequencing and runway motion control.
+
 ## Open Questions
 - None currently.
 

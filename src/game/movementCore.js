@@ -461,8 +461,9 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  const noAutoRotationTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f22Raptor']
-  if (!noAutoRotationTypes.includes(unit.type)) {
+  const noAutoRotationTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache']
+  const isF22Airborne = unit.type === 'f22Raptor' && unit.flightState !== 'grounded'
+  if (!noAutoRotationTypes.includes(unit.type) && !isF22Airborne) {
     updateUnitRotation(unit)
   }
 

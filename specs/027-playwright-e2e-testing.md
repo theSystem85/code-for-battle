@@ -10,6 +10,11 @@ Setup and integration of Playwright for end-to-end (E2E) testing of the RTS game
 4. Catch console errors and regressions automatically
 5. Integrate with CI pipeline
 
+## Policy Update (2026-02-26)
+- For every implemented bugfix or feature, add a meaningful E2E regression/validation test in the same task.
+- Required workflow: implement code change first, then implement E2E test, run it, and continue improving code/test until it passes.
+- E2E tests must remain behavior-driven and meaningful; do not weaken assertions to force a pass.
+
 ## Implementation Details
 
 ### Dependencies
@@ -96,12 +101,35 @@ Validates Apache auto-return with a cheat-accelerated setup to keep runtime mini
 - Apache takes off automatically after reload and resumes attacking same target.
 - No critical console/page errors.
 
+## Test: f22SequentialAirstripCycle.test.js
+
+### Scenario
+Validates multi-F22 airstrip sequencing and full attack-return lifecycle:
+
+1. Spawn one player-owned airstrip via cheat and initialize 3 F22 on parking slots.
+2. Spawn 3 enemy target groups (2 units each) near the airstrip runway exit area.
+3. Run sorties sequentially: each F22 takes off, attacks its assigned group, returns, lands/parks, and refills before the next F22 launches.
+4. Verify takeoff starts are serialized and ordered one-by-one.
+5. Verify automatic RTB flow after assigned-group combat completion.
+6. Verify all 3 F22 settle into valid airstrip parking slots.
+7. Verify ammo refill is observed only after each unit is fully parked (never during taxi/landing movement states).
+
+### Assertions
+- Takeoff order matches the queued order of the 3 parked F22.
+- Takeoff timestamps are strictly increasing to prove serialized starts.
+- All assigned enemy groups are destroyed.
+- All F22 end in `flightState=grounded`, `f22State=parked`, with occupied-slot mapping consistency.
+- No ammo increase occurs while any F22 is in non-parked states.
+- Ammo refill increase is observed after parked settle for each F22.
+- No critical console/page errors.
+
 ## Files Modified
 - `package.json` - Added E2E test scripts
 - `playwright.config.js` - New Playwright configuration
 
 ## Files Created
 - `tests/e2e/basicGameFlow.test.js` - First E2E test
+- `tests/e2e/f22SequentialAirstripCycle.test.js` - F22 sequential takeoff/attack/return/parking/refill regression test
 
 ## Related Specs
 - 023-vitest-testing-framework.md - Unit testing framework

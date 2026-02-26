@@ -136,6 +136,22 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
     return
   }
 
+  // Skip stuck detection for F22 state-machine controlled runway/taxi phases —
+  // random dodge/rotation recovery interferes with deterministic takeoff/landing flows.
+  const f22StateMachineControlledStates = new Set([
+    'wait_takeoff_clearance',
+    'taxi_to_runway_start',
+    'takeoff_roll',
+    'liftoff',
+    'wait_landing_clearance',
+    'approach_runway',
+    'landing_roll',
+    'taxi_to_parking'
+  ])
+  if (unit.type === 'f22Raptor' && f22StateMachineControlledStates.has(unit.f22State)) {
+    return
+  }
+
   const movement = ensureMovement(unit)
 
   // For human-controlled units following a player-issued move target, skip stuck
