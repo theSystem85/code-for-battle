@@ -263,3 +263,8 @@ Follow-up runway-state reliability hardening:
 ### F.1 Wreck rendering
 28. `F1` Destroyed F22 wreck must render as the greyed-out F22 image, not generic default wreck fallback.
 	- Status: `Implemented (code)` — `wreckSpriteCache` now resolves `f22Raptor` to the same base image used by `f22ImageRenderer`, then applies standard desaturation for wreck rendering.
+
+## Section D — Airborne destruction behavior
+
+21. `D1` Airborne F22 destruction must trigger an animated crash run that preserves current heading, descends over time, emits visible fire/smoke from rear engines and wing areas, plays a crash-impact sound on ground hit, and only then produces the wreck at the impact position.
+	- Status: `Implemented (code)` — added `crashing`/`crashed` F22 states with heading-preserving forward glide and timed descent, smoke emitters at rear engines + wing points, renderer fire plumes in same areas, impact SFX (`f22CrashImpact` mapped to available explosion audio), and deferred cleanup so `registerUnitWreck` runs at crash impact coordinates.

@@ -1,4 +1,5 @@
 ## Bugs
+- [x] F22 crash sequence (2026-02-26): airborne F22 now enters a headed crash glide on destruction, descends to ground with engine/wing fire+smoke, plays crash impact sound on ground hit, and spawns wreck at impact location.
 - [x] F22 wreck sprite (2026-02-26): added dedicated F22 wreck sprite mapping so destroyed F22 renders as greyed F22 image instead of generic fallback wreck.
 - [x] Prevent premature dodge/stuck handling from triggering on far-away path obstacles; only accumulate stuck/dodge when blockage signals are local (near next waypoint or recent local collision).
 - [x] Fix ground-unit stuck dodge/re-route logic to ignore the acting unit's own occupied tile so self-collision checks do not trigger continuous inefficient rerouting loops.
