@@ -9,6 +9,7 @@ import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
+const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
 
 
 function findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManager, gameFactories = []) {
@@ -317,7 +318,11 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
 
     if (clickedFriendlyBuilding || clickedFriendlyFactory) {
       const onlyF22Selected = commandableUnits.length > 0 && commandableUnits.every(unit => unit.type === 'f22Raptor')
-      if (friendlyAirstrip && onlyF22Selected) {
+      const onlySupplyUnitsSelected =
+        commandableUnits.length > 0 &&
+        commandableUnits.every(unit => AIRSTRIP_SUPPLY_UNIT_TYPES.has(unit.type))
+
+      if (friendlyAirstrip && (onlyF22Selected || onlySupplyUnitsSelected)) {
         unitCommands.handleMovementCommand(commandableUnits, worldX, worldY, mapGrid)
       }
       return

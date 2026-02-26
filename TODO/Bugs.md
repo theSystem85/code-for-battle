@@ -261,3 +261,4 @@
 - [x] ✅ Restored normal-click enemy targeting for selected defensive buildings (without force-attack modifier) and changed defense forced-target queue insertion to newest-first (prepend) for both click targeting and AGF additions.
 - [x] ✅ Adjusted defensive forced-target ordering so each newly assigned target becomes immediate active target (position 1) while previous active target is pushed to the front of the queued list.
 - [x] Ensure workshop restoration displays the correct F22 wreck image (no generic default fallback) and rotates all restored wreck previews by 45°.
+- [x] ✅ Supply-unit airstrip move UX: when only support units (ambulance/tanker/ammunition/recovery) are selected, friendly airstrip tiles now behave like valid move targets (no move-blocked cursor), allow right-click move command on the airstrip footprint, and produce normal green move target indicators.
