@@ -81,6 +81,8 @@ import {
   setDesktopEdgeAutoscrollEnabled,
   LONG_PRESS_MS,
   setLongPressMs,
+  CHEAT_CONSOLE_HISTORY_LIMIT,
+  setCheatConsoleHistoryLimit,
   INERTIA_STOP_THRESHOLD,
   setInertiaStopThreshold,
   GAS_REFILL_TIME,
@@ -703,6 +705,18 @@ export const configRegistry = {
     min: 250,
     max: 2000,
     step: 50,
+    category: 'Controls'
+  },
+
+  cheatConsoleHistoryLimit: {
+    name: 'Cheat Console History Limit',
+    description: 'Number of cheat commands remembered for ArrowUp/ArrowDown recall',
+    type: 'number',
+    get: () => CHEAT_CONSOLE_HISTORY_LIMIT,
+    set: setCheatConsoleHistoryLimit,
+    min: 1,
+    max: 100,
+    step: 1,
     category: 'Controls'
   },
 

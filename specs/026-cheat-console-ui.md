@@ -22,3 +22,9 @@
 
 - Ammo cheat help text now documents absolute and relative forms (`value`, `percent%`, `+/-value`, `+/-percent%`) and clarifies it applies to selected units and ammo-bar buildings.
 - `ammo` command now supports absolute and relative adjustments for both unit ammo pools (`ammunition`/Apache `rocketAmmo`) and building ammo reserves (`ammo` with `maxAmmo`).
+
+## Command History
+- Cheat input now supports keyboard history navigation via `ArrowUp` (older commands) and `ArrowDown` (newer commands / draft restore).
+- Command history persists in `localStorage` under `rts-cheat-console-history` so it survives reloads.
+- History length is capped by configurable runtime config `CHEAT_CONSOLE_HISTORY_LIMIT` (default `10`).
+- Entered commands are appended to history after execution, with oldest entries dropped once the cap is reached.

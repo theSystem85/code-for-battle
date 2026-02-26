@@ -464,6 +464,19 @@ export function setLongPressMs(value) {
   LONG_PRESS_MS = value
 }
 
+// Number of commands retained for cheat console ArrowUp/ArrowDown history recall
+export let CHEAT_CONSOLE_HISTORY_LIMIT = 10
+
+export function setCheatConsoleHistoryLimit(value) {
+  const numericValue = Number(value)
+  if (!Number.isFinite(numericValue)) {
+    return CHEAT_CONSOLE_HISTORY_LIMIT
+  }
+
+  CHEAT_CONSOLE_HISTORY_LIMIT = Math.max(1, Math.floor(numericValue))
+  return CHEAT_CONSOLE_HISTORY_LIMIT
+}
+
 // Increase tank range by 50% (for example, from 6 to 9 tiles)
 export let TANK_FIRE_RANGE = 9
 
@@ -1413,6 +1426,7 @@ const EXPORTED_CONFIG_VARIABLES = [
   'WRECK_COLLISION_RECOIL_MAX_UNIT',
   'KEYBOARD_SCROLL_SPEED',
   'LONG_PRESS_MS',
+  'CHEAT_CONSOLE_HISTORY_LIMIT',
   'TANK_FIRE_RANGE',
   'SERVICE_DISCOVERY_RANGE',
   'SERVICE_SERVING_RANGE',
