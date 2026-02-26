@@ -213,6 +213,28 @@ F22 save/load and landing queue fixes:
 3. Parking slot race: Immediately mark parking slot as occupied when a landing F22 transitions
 	from landing_roll to taxi_to_parking, preventing other landing units from claiming the same slot.
 
+## Engineering Update (2026-02-25, round 6)
+F22 selected HUD ammo freshness fix:
+1. In `unitRenderer`, Apache/F22 ammo bars now read helipad/airstrip reserve ammo only while the
+	air unit is actually grounded (`flightState === 'grounded'`).
+2. This prevents stale-looking F22 ammo bars in flight when `landedHelipadId` remains populated for
+	routing/return logic.
+
+## Engineering Update (2026-02-26, round 7)
+Follow-up fixes for commanding, landing triggers, mobile tap input, and runway timing:
+1. Fixed parked F22 attack-command takeoff stalls by skipping grounded F22 combat steering/firing in
+	`updateRocketTankCombat`; ground combat steering was competing with runway taxi movement.
+2. Added F22 automatic return-to-airstrip trigger while airborne when either:
+	- ammo is empty (`rocketAmmo <= 0` and no active volley), or
+	- a combat follow-target was destroyed (assigned combat followTargetId no longer alive).
+3. Improved direct tap/click attack reliability by issuing immediate attack commands when clicking an
+	enemy unit while friendly commandable units are selected (instead of falling back through generic
+	target discovery).
+4. Improved F22 touch hit detection by applying altitude offset in shared unit selection center logic
+	for `f22Raptor` (same handling as Apache).
+5. Added F22 taxi acceleration ramp during `taxi_to_runway_start` and slowed post-liftoff runway phase
+	(using reduced liftoff forward speed) so climb/acceleration progression along the strip is longer.
+
 ## Open Questions
 - None currently.
 

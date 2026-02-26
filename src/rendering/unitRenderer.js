@@ -1012,7 +1012,8 @@ export class UnitRenderer {
       }
     } else if (unit.type === 'apache') {
       // Check if Apache is landed on a helipad
-      if (unit.landedHelipadId && gameState.buildings) {
+      const isGroundedOnPad = unit.flightState === 'grounded' && Boolean(unit.landedHelipadId)
+      if (isGroundedOnPad && gameState.buildings) {
         const helipad = gameState.buildings.find(b => b.type === 'helipad' && getBuildingIdentifier(b) === unit.landedHelipadId)
         if (helipad && typeof helipad.maxAmmo === 'number' && helipad.maxAmmo > 0) {
           // Show helipad ammo bar
@@ -1027,7 +1028,8 @@ export class UnitRenderer {
         hasAmmo = true
       }
     } else if (unit.type === 'f22Raptor') {
-      if (unit.landedHelipadId && gameState.buildings) {
+      const isGroundedOnPad = unit.flightState === 'grounded' && Boolean(unit.landedHelipadId)
+      if (isGroundedOnPad && gameState.buildings) {
         const airstrip = gameState.buildings.find(b => b.type === 'airstrip' && getBuildingIdentifier(b) === unit.landedHelipadId)
         if (airstrip && typeof airstrip.maxAmmo === 'number' && airstrip.maxAmmo > 0) {
           ratio = Math.max(0, Math.min(1, (airstrip.ammo ?? airstrip.maxAmmo) / airstrip.maxAmmo))

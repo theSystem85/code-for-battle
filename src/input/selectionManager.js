@@ -13,7 +13,7 @@ export function getUnitSelectionCenter(unit) {
   const centerX = unit.x + TILE_SIZE / 2
   let centerY = unit.y + TILE_SIZE / 2
 
-  if (unit.type === 'apache') {
+  if (unit.type === 'apache' || unit.type === 'f22Raptor') {
     const altitudeLift = (unit.altitude || 0) * 0.4
     centerY -= altitudeLift
   }

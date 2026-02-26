@@ -207,6 +207,13 @@ export function updateTankV3Combat(unit, units, bullets, mapGrid, now, occupancy
 export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occupancyMap) {
   const isF22 = unit.type === 'f22Raptor'
 
+  // Grounded F22 should not run combat steering/firing logic.
+  // Attack commands set targets before takeoff, and ground combat steering can fight taxi movement.
+  if (isF22 && unit.flightState === 'grounded') {
+    unit.volleyState = null
+    return
+  }
+
   if (unit.target && !canUnitTargetEntity(unit, unit.target)) {
     unit.target = null
     unit.burstState = null

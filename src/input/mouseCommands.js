@@ -397,7 +397,7 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
     return
   }
   const selectionManager = handler.selectionManager
-  const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
+  const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u) && !u.isBuilding)
   if (commandableUnits.length === 0) {
     return
   }
@@ -407,7 +407,8 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
     return
   }
 
-  const defensiveBuildings = commandableUnits.filter(unit =>
+  const defensiveBuildings = selectedUnits.filter(unit =>
+    selectionManager.isCommandableUnit(unit) &&
     unit?.isBuilding && unit.owner === gameState.humanPlayer && DEFENSIVE_BUILDING_TYPES.has(unit.type)
   )
 

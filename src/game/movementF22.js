@@ -17,6 +17,8 @@ import { getBuildingIdentifier } from '../utils.js'
 const F22_GROUND_TAKEOFF_SPEED_MIN = 1.5
 const F22_GROUND_TAKEOFF_SPEED_MAX = 2.2
 const F22_LANDING_ROLL_SPEED_MIN = 0.45
+const F22_TAXI_ACCEL_DURATION_MS = 2200
+const F22_LIFTOFF_SPEED_SCALE = 0.5
 const F22_ORBIT_RADIUS = TILE_SIZE * 7
 const F22_COMBAT_ORBIT_RADIUS = TILE_SIZE * 10
 const F22_COMBAT_ORBIT_MIN_RADIUS = TILE_SIZE * 7
@@ -161,6 +163,14 @@ function shouldReturnToAirstrip(unit) {
   return unit.gas <= unit.maxGas * F22_RTB_FUEL_RATIO
 }
 
+function isFollowTargetAlive(unit) {
+  const followTargetId = unit?.f22AssignedDestination?.followTargetId
+  if (!followTargetId || !Array.isArray(gameState.units)) {
+    return false
+  }
+  return gameState.units.some(candidate => candidate && candidate.id === followTargetId && candidate.health > 0)
+}
+
 function easeInQuad(t) {
   const clamped = Math.max(0, Math.min(1, t))
   return clamped * clamped
@@ -280,6 +290,10 @@ export function updateF22FlightState(unit, movement, now) {
     unit.f22State = unit.flightState === 'grounded' ? 'parked' : 'airborne'
   }
 
+  if (unit.target && unit.target.health <= 0) {
+    unit.target = null
+  }
+
   if (!unit.f22AssignedDestination && unit.target?.health > 0) {
     const targetCenter = getTargetCenterFromUnitTarget(unit.target)
     if (targetCenter) {
@@ -352,7 +366,11 @@ export function updateF22FlightState(unit, movement, now) {
     unit.flightState = 'grounded'
     unit.altitude = 0
     unit.shadow = { offset: 0, scale: 1 }
-    unit.speedModifier = 1
+    if (!unit.f22TaxiStartTime) {
+      unit.f22TaxiStartTime = now
+    }
+    const taxiProgress = Math.max(0, Math.min(1, (now - unit.f22TaxiStartTime) / F22_TAXI_ACCEL_DURATION_MS))
+    unit.speedModifier = 0.45 + (taxiProgress * 0.95)
 
     const reachedRunwayStart = reachedWorldPoint(unit, { x: runway.runwayStart.worldX, y: runway.runwayStart.worldY }, TILE_SIZE * 0.6)
     if ((!unit.path || unit.path.length === 0) && !reachedRunwayStart) {
@@ -366,6 +384,7 @@ export function updateF22FlightState(unit, movement, now) {
     if ((!unit.path || unit.path.length === 0) && reachedRunwayStart) {
       unit.f22State = 'takeoff_roll'
       unit.manualFlightState = 'takeoff'
+      unit.f22TaxiStartTime = 0
       unit.path = []
       unit.moveTarget = null
       unit.f22TaxiDestinationTile = null
@@ -415,7 +434,7 @@ export function updateF22FlightState(unit, movement, now) {
     const liftOffEndX = Math.max(liftOffStartX + 1, runway.runwayExit.worldX)
     const centerX = getUnitCenter(unit).x
     const climbProgress = Math.max(0, Math.min(1, (centerX - liftOffStartX) / (liftOffEndX - liftOffStartX)))
-    movement.targetVelocity.x = unit.airCruiseSpeed * (0.65 + 0.35 * easeOutSine(climbProgress))
+    movement.targetVelocity.x = unit.airCruiseSpeed * F22_LIFTOFF_SPEED_SCALE * (0.65 + 0.35 * easeOutSine(climbProgress))
     movement.targetVelocity.y = 0
 
     unit.altitude = unit.maxAltitude * easeInSine(climbProgress)
@@ -641,9 +660,20 @@ export function updateF22FlightState(unit, movement, now) {
 
   if (unit.f22State === 'airborne') {
     unit.flightState = 'airborne'
-    if (!unit.helipadLandingRequested && shouldReturnToAirstrip(unit)) {
+    const outOfAmmo = typeof unit.maxRocketAmmo === 'number' && (unit.rocketAmmo ?? 0) <= 0 && !unit.volleyState
+    const hadCombatAssignment = unit.f22AssignedDestination?.mode === 'combat' && Boolean(unit.f22AssignedDestination?.followTargetId)
+    const combatTargetDestroyed = hadCombatAssignment && !isFollowTargetAlive(unit)
+    const shouldReturnForFuel = shouldReturnToAirstrip(unit)
+    const shouldReturnForAmmo = outOfAmmo
+    const shouldReturnAfterCombat = combatTargetDestroyed
+
+    if (!unit.helipadLandingRequested && (shouldReturnForFuel || shouldReturnForAmmo || shouldReturnAfterCombat)) {
       unit.helipadLandingRequested = true
       unit.flightPlan = null
+      if (shouldReturnForAmmo || shouldReturnAfterCombat) {
+        unit.f22AssignedDestination = null
+        unit.target = null
+      }
       if (airstrip) {
         enqueueAirstripRunwayOperation(airstrip, unit.id, 'landing')
       }

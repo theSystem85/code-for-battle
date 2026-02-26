@@ -1026,6 +1026,25 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   const friendlySelected = selectedUnits.some(u => selectionManager.isHumanPlayerUnit(u) || selectionManager.isHumanPlayerBuilding(u))
   const clickedIsEnemy = clickedUnit && !selectionManager.isHumanPlayerUnit(clickedUnit)
 
+  if (clickedUnit && friendlySelected && clickedIsEnemy) {
+    const commandableUnits = selectedUnits.filter(unit =>
+      selectionManager.isCommandableUnit(unit) && unit.isBuilding !== true
+    )
+    if (commandableUnits.length > 0) {
+      if (e.shiftKey) {
+        initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
+      } else if (e.altKey || gameState.altKeyDown) {
+        commandableUnits.forEach(unit => {
+          if (!unit.commandQueue) unit.commandQueue = []
+          unit.commandQueue.push({ type: 'attack', target: clickedUnit })
+        })
+      } else {
+        unitCommands.handleAttackCommand(commandableUnits, clickedUnit, mapGrid, false)
+      }
+      return
+    }
+  }
+
   if (clickedUnit && !(friendlySelected && clickedIsEnemy)) {
     const handledService = friendlySelected && handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)
     if (handledService) {
