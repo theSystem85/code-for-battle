@@ -29,6 +29,7 @@ import { detonateAmmunitionTruck } from './ammunitionTruckLogic.js'
 import { distributeMineLayerPayload } from './mineSystem.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
+import { beginF22CrashSequence } from './movementF22.js'
 
 const MINIMAP_SCROLL_SMOOTHING = 0.2
 const MINIMAP_SCROLL_STOP_DISTANCE = 0.75
@@ -421,6 +422,14 @@ export function cleanupDestroyedUnits(units, gameState) {
   for (let i = units.length - 1; i >= 0; i--) {
     if (units[i].health <= 0) {
       const unit = units[i]
+
+      if (unit.type === 'f22Raptor' && unit.flightState !== 'grounded' && unit.f22State !== 'crashed') {
+        const crashTriggered = beginF22CrashSequence(unit, performance.now())
+        if (crashTriggered) {
+          unit.health = Math.max(1, unit.health)
+          continue
+        }
+      }
       if (!unit.aiApiDestroyedRecorded && gameState.gameStarted && !gameState.mapEditMode) {
         recordDestroyed({
           killerId: unit.lastAttacker?.id,

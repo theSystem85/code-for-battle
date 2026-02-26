@@ -43,6 +43,46 @@ export function getF22BaseImage() {
   return isF22ImageLoaded() ? f22Image : null
 }
 
+
+function drawCrashFire(ctx, unit, centerX, centerY, altitudeLift, sourceWidth, sourceHeight, scale) {
+  if (unit.f22State !== 'crashing') return
+
+  const jets = [
+    { x: 29, y: 54, length: 22, width: 4.8 },
+    { x: 34, y: 54, length: 22, width: 4.8 },
+    { x: 23, y: 40, length: 16, width: 5.2 },
+    { x: 40, y: 40, length: 16, width: 5.2 }
+  ]
+
+  const flicker = 0.75 + ((Math.sin(performance.now() * 0.022) + 1) * 0.5) * 0.45
+
+  ctx.save()
+  ctx.translate(centerX, centerY - altitudeLift)
+  ctx.rotate((unit.direction || 0) + Math.PI / 2)
+
+  jets.forEach(jet => {
+    const localX = (jet.x - sourceWidth / 2) * scale
+    const localY = (jet.y - sourceHeight / 2) * scale
+    const flameLength = jet.length * flicker
+    const flameWidth = jet.width * (0.8 + flicker * 0.35)
+
+    const gradient = ctx.createLinearGradient(localX, localY, localX, localY + flameLength)
+    gradient.addColorStop(0, 'rgba(255,255,210,0.95)')
+    gradient.addColorStop(0.25, 'rgba(255,196,84,0.92)')
+    gradient.addColorStop(0.62, 'rgba(255,98,18,0.78)')
+    gradient.addColorStop(1, 'rgba(120,25,8,0)')
+    ctx.fillStyle = gradient
+    ctx.beginPath()
+    ctx.moveTo(localX, localY)
+    ctx.lineTo(localX - flameWidth * 0.5, localY + flameLength)
+    ctx.lineTo(localX + flameWidth * 0.5, localY + flameLength)
+    ctx.closePath()
+    ctx.fill()
+  })
+
+  ctx.restore()
+}
+
 function renderShadow(ctx, unit, centerX, centerY) {
   const shadow = unit.shadow || { offset: 0, scale: 1 }
   const baseRadius = TILE_SIZE * 0.35
@@ -109,6 +149,7 @@ export function renderF22WithImage(ctx, unit, centerX, centerY) {
   }
 
   drawJetBurst()
+  drawCrashFire(ctx, unit, centerX, centerY, altitudeLift, sourceWidth, sourceHeight, scale)
 
   ctx.save()
   ctx.translate(centerX, centerY - altitudeLift)

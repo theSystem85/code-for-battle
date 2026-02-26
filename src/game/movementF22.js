@@ -2,6 +2,7 @@ import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { playPositionalSound } from '../sound.js'
 import { findPath } from '../units.js'
+import { emitSmokeParticles } from '../utils/smokeUtils.js'
 import {
   ensureAirstripOperations,
   setAirstripSlotOccupant,
@@ -24,6 +25,119 @@ const F22_COMBAT_ORBIT_RADIUS = TILE_SIZE * 10
 const F22_COMBAT_ORBIT_MIN_RADIUS = TILE_SIZE * 7
 const F22_ORBIT_RPS = 0.16
 const F22_RTB_FUEL_RATIO = 0.2
+const F22_CRASH_DURATION_MS = 3200
+
+function getCrashEmitterPoints(unit) {
+  const centerX = unit.x + TILE_SIZE / 2
+  const centerY = unit.y + TILE_SIZE / 2 - (unit.altitude || 0) * 0.4
+  const direction = Number.isFinite(unit.f22CrashDirection) ? unit.f22CrashDirection : (unit.direction || 0)
+  const forwardX = Math.cos(direction)
+  const forwardY = Math.sin(direction)
+  const rightX = -forwardY
+  const rightY = forwardX
+
+  const localToWorld = (forwardOffset, rightOffset) => ({
+    x: centerX + forwardX * forwardOffset + rightX * rightOffset,
+    y: centerY + forwardY * forwardOffset + rightY * rightOffset
+  })
+
+  return [
+    localToWorld(-21, -6), // left engine
+    localToWorld(-21, 6), // right engine
+    localToWorld(-4, -19), // left wing root
+    localToWorld(-4, 19) // right wing root
+  ]
+}
+
+function updateF22CrashState(unit, movement, now) {
+  if (!unit.f22CrashStartedAt) {
+    unit.f22CrashStartedAt = now
+  }
+
+  const elapsed = now - unit.f22CrashStartedAt
+  const progress = Math.max(0, Math.min(1, elapsed / F22_CRASH_DURATION_MS))
+  const crashDirection = Number.isFinite(unit.f22CrashDirection) ? unit.f22CrashDirection : (unit.direction || 0)
+  const startAltitude = Math.max(unit.f22CrashStartAltitude || unit.maxAltitude || TILE_SIZE, 1)
+
+  unit.flightState = 'airborne'
+  unit.helipadLandingRequested = false
+  unit.f22PendingTakeoff = false
+  unit.f22AssignedDestination = null
+  unit.flightPlan = null
+  unit.path = []
+  unit.moveTarget = null
+  unit.target = null
+
+  const speedRatio = 1 - progress * 0.5
+  const crashSpeed = Math.max((unit.airCruiseSpeed || unit.speed || 1.2) * 0.4, (unit.airCruiseSpeed || unit.speed || 1.2) * speedRatio)
+  movement.targetVelocity.x = Math.cos(crashDirection) * crashSpeed
+  movement.targetVelocity.y = Math.sin(crashDirection) * crashSpeed
+  movement.isMoving = true
+  movement.targetRotation = crashDirection
+  movement.rotation = crashDirection
+  unit.direction = crashDirection
+  unit.rotation = crashDirection
+
+  unit.altitude = Math.max(0, startAltitude * (1 - progress))
+  const altitudeRatio = Math.max(0, Math.min(1, unit.altitude / Math.max(unit.maxAltitude || startAltitude, 1)))
+  unit.shadow = {
+    offset: altitudeRatio * TILE_SIZE * 1.8,
+    scale: 1 + altitudeRatio * 0.5
+  }
+
+  if (!unit.lastF22CrashSmokeAt || now - unit.lastF22CrashSmokeAt >= 80) {
+    const emitters = getCrashEmitterPoints(unit)
+    emitters.forEach(point => emitSmokeParticles(gameState, point.x, point.y, now, 1))
+    unit.lastF22CrashSmokeAt = now
+  }
+
+  if (progress >= 1 || unit.altitude <= 0.5) {
+    if (!unit.f22CrashImpactHandled) {
+      playPositionalSound('f22CrashImpact', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.7)
+      if (Array.isArray(gameState.explosions)) {
+        gameState.explosions.push({
+          x: unit.x + TILE_SIZE / 2,
+          y: unit.y + TILE_SIZE / 2,
+          startTime: now,
+          duration: 420,
+          radius: TILE_SIZE * 1.8,
+          maxRadius: TILE_SIZE * 1.8
+        })
+      }
+      unit.f22CrashImpactHandled = true
+    }
+
+    unit.f22State = 'crashed'
+    unit.flightState = 'grounded'
+    unit.health = 0
+    unit.altitude = 0
+    unit.shadow = { offset: 0, scale: 1 }
+    movement.targetVelocity.x = 0
+    movement.targetVelocity.y = 0
+    movement.isMoving = false
+  }
+}
+
+export function beginF22CrashSequence(unit, now = performance.now()) {
+  if (!unit || unit.type !== 'f22Raptor') return false
+  if (unit.f22State === 'crashing' || unit.f22State === 'crashed') return true
+  if (unit.flightState === 'grounded') return false
+
+  unit.f22CrashStartedAt = now
+  unit.f22CrashDirection = Number.isFinite(unit.direction)
+    ? unit.direction
+    : Number.isFinite(unit.movement?.rotation)
+      ? unit.movement.rotation
+      : 0
+  unit.f22CrashStartAltitude = Math.max(unit.altitude || unit.maxAltitude * 0.8 || TILE_SIZE, TILE_SIZE * 0.35)
+  unit.f22CrashImpactHandled = false
+  unit.lastF22CrashSmokeAt = null
+  unit.f22State = 'crashing'
+  unit.helipadLandingRequested = false
+  unit.target = null
+  unit.volleyState = null
+  return true
+}
 
 function isTaxiSurfaceTile(tile) {
   return Boolean(tile) && (tile.type === 'street' || tile.airstripStreet)
@@ -288,6 +402,12 @@ export function updateF22FlightState(unit, movement, now) {
 
   if (!unit.f22State) {
     unit.f22State = unit.flightState === 'grounded' ? 'parked' : 'airborne'
+  }
+
+  if (unit.f22State === 'crashing') {
+    updateF22CrashState(unit, movement, now)
+    finishTick()
+    return
   }
 
   if (unit.target && unit.target.health <= 0) {
