@@ -68,8 +68,9 @@ function updateF22CrashState(unit, movement, now) {
   unit.moveTarget = null
   unit.target = null
 
-  const speedRatio = 1 - progress * 0.5
-  const crashSpeed = Math.max((unit.airCruiseSpeed || unit.speed || 1.2) * 0.4, (unit.airCruiseSpeed || unit.speed || 1.2) * speedRatio)
+  const initialCrashSpeed = Math.max(unit.f22CrashInitialSpeed || 0, unit.airCruiseSpeed || unit.speed || 1.2)
+  const endSpeed = Math.max(initialCrashSpeed * 0.75, (unit.airCruiseSpeed || unit.speed || 1.2) * 0.55)
+  const crashSpeed = initialCrashSpeed + (endSpeed - initialCrashSpeed) * progress
   movement.targetVelocity.x = Math.cos(crashDirection) * crashSpeed
   movement.targetVelocity.y = Math.sin(crashDirection) * crashSpeed
   movement.isMoving = true
@@ -87,7 +88,10 @@ function updateF22CrashState(unit, movement, now) {
 
   if (!unit.lastF22CrashSmokeAt || now - unit.lastF22CrashSmokeAt >= 80) {
     const emitters = getCrashEmitterPoints(unit)
-    emitters.forEach(point => emitSmokeParticles(gameState, point.x, point.y, now, 1))
+    emitters.forEach(point => emitSmokeParticles(gameState, point.x, point.y, now, {
+      count: 1,
+      fireIntensity: 0.6 + (1 - progress) * 0.35
+    }))
     unit.lastF22CrashSmokeAt = now
   }
 
@@ -130,6 +134,13 @@ export function beginF22CrashSequence(unit, now = performance.now()) {
       ? unit.movement.rotation
       : 0
   unit.f22CrashStartAltitude = Math.max(unit.altitude || unit.maxAltitude * 0.8 || TILE_SIZE, TILE_SIZE * 0.35)
+  const currentVelocityX = unit.movement?.velocity?.x || 0
+  const currentVelocityY = unit.movement?.velocity?.y || 0
+  unit.f22CrashInitialSpeed = Math.max(
+    unit.airCruiseSpeed || unit.speed || 1.2,
+    Math.hypot(currentVelocityX, currentVelocityY),
+    Math.hypot(unit.movement?.targetVelocity?.x || 0, unit.movement?.targetVelocity?.y || 0)
+  )
   unit.f22CrashImpactHandled = false
   unit.lastF22CrashSmokeAt = null
   unit.f22State = 'crashing'
