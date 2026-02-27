@@ -6,6 +6,18 @@ import { buildingData } from '../buildings.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 
+function isAirborneAirUnit(target) {
+  if (!target) return false
+  const isAirUnitType = target.type === 'apache' || target.type === 'f22Raptor'
+  return isAirUnitType && target.flightState !== 'grounded'
+}
+
+function canUnitHitTarget(shooter, target) {
+  if (!shooter || !target) return false
+  if (!isAirborneAirUnit(target)) return true
+  return shooter.type === 'rocketTank' || shooter.type === 'apache' || shooter.type === 'f22Raptor'
+}
+
 const ENABLE_DODGING = false
 const lastPositionCheckTimeDelay = 3000
 const dodgeTimeDelay = 3000
@@ -31,6 +43,12 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
   if (unit.isBeingAttacked && unit.lastDamageTime && (now - unit.lastDamageTime > 5000)) {
     unit.isBeingAttacked = false
     unit.lastAttacker = null
+  }
+
+  if (unit.target && !canUnitHitTarget(unit, unit.target)) {
+    unit.target = null
+    unit.targetId = null
+    unit.targetType = null
   }
 
   // Clear invalid attacker references
@@ -60,7 +78,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
       const dy = attacker.y - unit.y
       const dist = Math.sqrt(dx * dx + dy * dy)
       const fireRange = getEffectiveFireRange(unit) * TILE_SIZE
-      if (dist <= fireRange * 1.2) {
+      if (dist <= fireRange * 1.2 && canUnitHitTarget(unit, attacker)) {
         unit.target = attacker
         unit.targetId = attacker.id
         unit.targetType = 'unit'
@@ -73,6 +91,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
       const nearestEnemy = units.find(enemy => {
         if (enemy.owner === unit.owner || enemy.health <= 0) return false
         if (!isEnemyTo(unit, enemy, gameState)) return false
+        if (!canUnitHitTarget(unit, enemy)) return false
         const edx = enemy.x - unit.x
         const edy = enemy.y - unit.y
         return (edx * edx + edy * edy) <= fireRange * fireRange
@@ -334,7 +353,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
               }
             }
 
-            if (validTarget) {
+            if (validTarget && canUnitHitTarget(unit, unit.lastAttacker)) {
               newTarget = unit.lastAttacker
             }
           }
@@ -437,17 +456,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
 
                 units.forEach(u => {
                   if (u.owner === gameState.humanPlayer && u.health > 0) {
-                    // Check if target is an airborne Apache - only certain units can target them
-                    const targetIsAirborneApache =
-                      (u.type === 'apache' || u.type === 'f22Raptor') &&
-                      u.flightState !== 'grounded'
-                    const shooterCanHitAir =
-                      unit.type === 'rocketTank' ||
-                      unit.type === 'apache' ||
-                      unit.type === 'f22Raptor'
-
-                    // Skip airborne Apache if this unit can't target air units
-                    if (targetIsAirborneApache && !shooterCanHitAir) {
+                    if (!canUnitHitTarget(unit, u)) {
                       return
                     }
 
@@ -511,17 +520,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
                     return false
                   }
 
-                  // Check if target is an airborne Apache - only certain units can target them
-                  const targetIsAirborneApache =
-                    (u.type === 'apache' || u.type === 'f22Raptor') &&
-                    u.flightState !== 'grounded'
-                  const shooterCanHitAir =
-                    unit.type === 'rocketTank' ||
-                    unit.type === 'apache' ||
-                    unit.type === 'f22Raptor'
-
-                  // Skip airborne Apache if this unit can't target air units
-                  if (targetIsAirborneApache && !shooterCanHitAir) {
+                  if (!canUnitHitTarget(unit, u)) {
                     return false
                   }
 
@@ -589,6 +588,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
           const existingTargets = units.filter(u =>
             u.owner === gameState.humanPlayer &&
             u.health > 0 &&
+            canUnitHitTarget(unit, u) &&
             Math.hypot((u.x + TILE_SIZE / 2) - (unit.x + TILE_SIZE / 2), (u.y + TILE_SIZE / 2) - (unit.y + TILE_SIZE / 2)) < 10 * TILE_SIZE
           )
           if (existingTargets.length > 0) {
