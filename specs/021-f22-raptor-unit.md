@@ -267,6 +267,18 @@ Follow-up runway-state reliability hardening:
 
 21. `D1` Airborne F22 destruction must trigger an animated crash run that preserves current heading, descends over time, emits visible fire/smoke from rear engines and wing areas, plays a crash-impact sound on ground hit, and only then produces the wreck at the impact position.
 	- Status: `Implemented (code)` — added `crashing`/`crashed` F22 states with heading-preserving forward glide and timed descent, smoke emitters at rear engines + wing points, renderer fire plumes in same areas, impact SFX (`f22CrashImpact` mapped to available explosion audio), and deferred cleanup so `registerUnitWreck` runs at crash impact coordinates.
+
+## Engineering Update (2026-02-27, round 10)
+F22 same-airstrip re-land prevention + cursor intent feedback:
+1. Added a grounded parked guard in movement command routing so commanding an F22 to land on the exact airstrip where it is already parked becomes a no-op (no takeoff/instant-reland loop).
+2. Updated cursor hover logic to show move-blocked when the selected F22 group is already parked on the hovered friendly airstrip, while keeping move-into on other friendly airstrips.
+3. Added both unit and E2E regression coverage for cursor state and no-relaunch behavior.
+
+## Engineering Update (2026-02-27, round 11)
+F22 in-progress same-airstrip guard refinement:
+1. Extended same-airstrip command suppression beyond parked F22 to runway transition states (`wait_takeoff_clearance`, `taxi_to_runway_start`, `takeoff_roll`, `liftoff`, `wait_landing_clearance`, `approach_runway`, `landing_roll`, `taxi_to_parking`) so right-clicking the same airstrip does not reset/override active takeoff or landing sequencing.
+2. Cursor feedback now marks the hovered airstrip as move-blocked when selected F22 are already committed to that specific airstrip either as parked or in the above in-progress runway states.
+3. Added regression tests to cover in-progress-state cursor blocking and movement command no-op behavior.
 	- Follow-up (2026-02-26): crash speed now preserves the jet's in-flight momentum through the descent window (no stone-drop slowdown), and smoke particles emitted during crash carry fire intensity so the smoke column visibly burns until impact.
 	- Follow-up (2026-02-26, phase 2): `movementCore.js` now exempts `f22State=crashing` from generic air-unit velocity reset/path steering so crash glide velocity is not overwritten each frame.
 	- Follow-up (2026-02-27): crash glide speed is now hard-capped at 50% of F22 max speed; wreck direction now uses persisted crash heading (`f22CrashWreckDirection`) so wreck orientation matches impact heading.

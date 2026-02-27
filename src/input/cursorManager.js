@@ -6,6 +6,7 @@ import { isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
+import { getBuildingIdentifier } from '../utils.js'
 
 const CURSOR_CLASS_NAMES = [
   'repair-mode',
@@ -517,14 +518,44 @@ export class CursorManager {
       }
 
       if (!this.isOverFriendlyHelipad && hasSelectedF22) {
+        const selectedFriendlyF22 = selectedUnits.filter(unit => unit.type === 'f22Raptor' && unit.owner === gameState.humanPlayer)
+        const f22RunwayTransitionStates = new Set([
+          'wait_takeoff_clearance',
+          'taxi_to_runway_start',
+          'takeoff_roll',
+          'liftoff',
+          'wait_landing_clearance',
+          'approach_runway',
+          'landing_roll',
+          'taxi_to_parking'
+        ])
+
         for (const building of gameState.buildings) {
           if (building.type === 'airstrip' &&
                 building.owner === gameState.humanPlayer &&
                 building.health > 0 &&
                 tileX >= building.x && tileX < building.x + building.width &&
                 tileY >= building.y && tileY < building.y + building.height) {
+            const hoveredAirstripId = getBuildingIdentifier(building)
+            const isEverySelectedF22AlreadyCommittedToHoveredAirstrip = selectedFriendlyF22.length > 0 && selectedFriendlyF22.every(f22 => {
+              const sameAirstrip =
+                f22.landedHelipadId === hoveredAirstripId ||
+                f22.airstripId === hoveredAirstripId ||
+                f22.helipadTargetId === hoveredAirstripId
+
+              if (!sameAirstrip) {
+                return false
+              }
+
+              const isParkedOnHoveredAirstrip =
+                f22.flightState === 'grounded' &&
+                f22.f22State === 'parked' &&
+                f22.landedHelipadId === hoveredAirstripId
+
+              return isParkedOnHoveredAirstrip || f22RunwayTransitionStates.has(f22.f22State)
+            })
             this.isOverFriendlyHelipad = true
-            this.isOverBlockedHelipad = false
+            this.isOverBlockedHelipad = isEverySelectedF22AlreadyCommittedToHoveredAirstrip
             break
           }
         }
