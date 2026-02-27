@@ -70,6 +70,7 @@ test.describe('F22 crash momentum and burning smoke', () => {
         f22Id: f22.id,
         startX: f22.x,
         xPositions: [],
+        sampleTimes: [],
         targetVelocities: [],
         smokeWithFireCount: 0,
         crashStartSeen: false
@@ -93,6 +94,7 @@ test.describe('F22 crash momentum and burning smoke', () => {
       if (unit.f22State === 'crashing') {
         tracker.crashStartSeen = true
         tracker.xPositions.push(unit.x)
+        tracker.sampleTimes.push(performance.now())
         tracker.targetVelocities.push(unit.movement?.targetVelocity?.x || 0)
 
         const smokeParticles = Array.isArray(gs.smokeParticles) ? gs.smokeParticles : []
@@ -112,10 +114,19 @@ test.describe('F22 crash momentum and burning smoke', () => {
         ? Math.min(...tracker.targetVelocities)
         : 0
 
+      let monotonicForwardSamples = 0
+      for (let i = 1; i < tracker.xPositions.length; i++) {
+        if (tracker.xPositions[i] > tracker.xPositions[i - 1] + 0.01) {
+          monotonicForwardSamples += 1
+        }
+      }
+
       return {
         crashStartSeen: tracker.crashStartSeen,
         forwardTravel,
         minTargetVelocityX,
+        monotonicForwardSamples,
+        totalCrashSamples: tracker.xPositions.length,
         smokeWithFireCount: tracker.smokeWithFireCount,
         lastState: unit.f22State,
         finalAltitude: unit.altitude
@@ -129,6 +140,8 @@ test.describe('F22 crash momentum and burning smoke', () => {
     expect(resolved.finalAltitude).toBeLessThanOrEqual(0.5)
     expect(resolved.forwardTravel).toBeGreaterThan(120)
     expect(resolved.minTargetVelocityX).toBeGreaterThan(1)
+    expect(resolved.totalCrashSamples).toBeGreaterThan(6)
+    expect(resolved.monotonicForwardSamples).toBeGreaterThanOrEqual(Math.floor(resolved.totalCrashSamples * 0.65))
     expect(resolved.smokeWithFireCount).toBeGreaterThan(0)
 
     expect(consoleErrors, `Console errors encountered:\n${consoleErrors.join('\n')}`).toEqual([])

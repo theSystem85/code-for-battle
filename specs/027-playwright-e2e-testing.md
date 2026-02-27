@@ -139,6 +139,7 @@ Validates airborne F22 destruction behavior after HP reaches zero:
 - Crash sequence is entered (`f22State=crashing`) before final crash state.
 - F22 keeps meaningful forward travel during descent (does not drop vertically in place).
 - Crash target horizontal velocity remains positive through crash updates.
+- Most crash-state position samples continue moving forward along heading (monotonic-forward sample majority).
 - At least one crash smoke particle carries fire intensity (`fireIntensity > 0`).
 - Final state reaches `f22State=crashed` at (near) ground altitude.
 - No critical console/page errors.

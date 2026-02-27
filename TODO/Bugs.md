@@ -1,4 +1,5 @@
 ## Bugs
+- [x] F22 crash momentum follow-up (2026-02-26): movement core was still zeroing F22 crash glide velocity; crash state is now treated as movement-controlled so forward motion persists through descent.
 - [x] F22 crash momentum/fire follow-up (2026-02-26): when airborne F22 enters crash sequence at 0 HP it now preserves its forward momentum during descent instead of dropping vertically, and crash smoke particles now include visible fire glow while descending.
 - [x] F22 crash sequence (2026-02-26): airborne F22 now enters a headed crash glide on destruction, descends to ground with engine/wing fire+smoke, plays crash impact sound on ground hit, and spawns wreck at impact location.
 - [x] F22 wreck sprite (2026-02-26): added dedicated F22 wreck sprite mapping so destroyed F22 renders as greyed F22 image instead of generic fallback wreck.
@@ -148,6 +149,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] F22 crash momentum follow-up (2026-02-26): movement core was still zeroing F22 crash glide velocity; crash state is now treated as movement-controlled so forward motion persists through descent.
 - [x] Prevent premature dodge/stuck handling from triggering on far-away path obstacles; only accumulate stuck/dodge when blockage signals are local (near next waypoint or recent local collision).
 - [x] Follow-up: ensure PWA mobile landscape notification bell is always pinned top-left (including wider landscape viewports) and portrait standalone canvas/safe-area bottom fill is correct on first load without rotation.
 - [x] Ensure mobile landscape initial load always shows the sidebar (condensed/open), sync safe-area insets on first paint so iOS portrait bottom inset fills without device rotation, and pin the landscape notification bell to top-left to avoid sidebar overlap.
