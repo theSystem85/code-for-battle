@@ -1,4 +1,5 @@
 ## Bugs
+- [x] Restored F22 landing regression (2026-02-27): workshop-restored F22 could lose `airstripId`, so F22 runway data never initialized and landing state machine could not approach runway. Fixed by auto-rebinding F22 to nearest friendly live airstrip when runway data is needed.
 - [x] F22 same-airstrip in-progress command guard (2026-02-27): move-blocked cursor now also appears when selected F22 are in landing/takeoff runway phases for that same airstrip, and right-click move/land commands to that strip are ignored during those in-progress states to avoid immediate relaunch/reland loops.
 - [x] F22 parked re-land command loop (2026-02-27): right-clicking the same airstrip under an already parked/grounded F22 no longer triggers immediate takeoff/reland; cursor now shows move-blocked only on that specific occupied airstrip, while other friendly airstrips still show move-into.
 - [x] F22 wreck orientation renderer follow-up (2026-02-27): fixed single-image wreck rotation for F22 so crash wreck no longer points opposite to crash flight direction.
@@ -154,6 +155,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] Restored F22 landing regression (2026-02-27): workshop-restored F22 could lose `airstripId`, so F22 runway data never initialized and landing state machine could not approach runway. Fixed by auto-rebinding F22 to nearest friendly live airstrip when runway data is needed.
 - [x] F22 wreck orientation renderer follow-up (2026-02-27): fixed single-image wreck rotation for F22 so crash wreck no longer points opposite to crash flight direction.
 - [x] F22 crash cap+wreck-heading follow-up (2026-02-27): crash glide speed is now capped at 50% of F22 max speed, and F22 wreck orientation is locked to crash heading at impact.
 - [x] F22 crash momentum follow-up (2026-02-26): movement core was still zeroing F22 crash glide velocity; crash state is now treated as movement-controlled so forward motion persists through descent.

@@ -205,6 +205,33 @@ function getUnitCenter(unit) {
 }
 
 function ensureRunwayData(unit) {
+  if (!unit.airstripId && Array.isArray(gameState.buildings)) {
+    const fallbackAirstrips = gameState.buildings.filter(building =>
+      building?.type === 'airstrip' &&
+      building.health > 0 &&
+      building.owner === unit.owner
+    )
+
+    if (fallbackAirstrips.length > 0) {
+      const unitCenter = getUnitCenter(unit)
+      fallbackAirstrips.sort((a, b) => {
+        const aCenterX = (a.x + (a.width || 0) / 2) * TILE_SIZE
+        const aCenterY = (a.y + (a.height || 0) / 2) * TILE_SIZE
+        const bCenterX = (b.x + (b.width || 0) / 2) * TILE_SIZE
+        const bCenterY = (b.y + (b.height || 0) / 2) * TILE_SIZE
+        const aDist = Math.hypot(unitCenter.x - aCenterX, unitCenter.y - aCenterY)
+        const bDist = Math.hypot(unitCenter.x - bCenterX, unitCenter.y - bCenterY)
+        return aDist - bDist
+      })
+
+      const fallbackAirstrip = fallbackAirstrips[0]
+      unit.airstripId = getBuildingIdentifier(fallbackAirstrip)
+      if (!unit.helipadTargetId) {
+        unit.helipadTargetId = unit.airstripId
+      }
+    }
+  }
+
   if (unit.runwayPoints?.runwayStart && unit.runwayPoints?.runwayLiftOff && unit.runwayPoints?.runwayExit) {
     return
   }
