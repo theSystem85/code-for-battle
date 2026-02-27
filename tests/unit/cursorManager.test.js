@@ -328,6 +328,41 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-into-mode')).toBe(true)
   })
 
+
+  it('uses move-blocked cursor for F22 in landing sequence on the hovered airstrip', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas()
+    const mapGrid = createTestMapGrid(12, 12)
+
+    gameState.buildings = [{
+      id: 'airstrip-1',
+      type: 'airstrip',
+      owner: 'player1',
+      health: 100,
+      x: 3,
+      y: 3,
+      width: 4,
+      height: 4
+    }]
+
+    const selectedUnits = [{
+      id: 'f22-landing',
+      owner: 'player1',
+      type: 'f22Raptor',
+      health: 100,
+      maxHealth: 100,
+      flightState: 'airborne',
+      f22State: 'approach_runway',
+      airstripId: 'airstrip-1',
+      helipadTargetId: 'airstrip-1'
+    }]
+
+    const event = createMouseEvent(TILE_SIZE * 4 + 1, TILE_SIZE * 4 + 1)
+    manager.updateCustomCursor(event, mapGrid, [], selectedUnits, [])
+
+    expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
+  })
+
   it('uses move-blocked cursor for F22 parked on the hovered airstrip', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()

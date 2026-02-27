@@ -163,7 +163,7 @@ test.describe('F22 parked airstrip command guard', () => {
 
     await page.waitForTimeout(1000)
 
-    const f22State = await page.evaluate(({ f22Id }) => {
+    const parkedState = await page.evaluate(({ f22Id }) => {
       const f22 = window.gameInstance.units.find(unit => unit.id === f22Id)
       if (!f22) {
         return null
@@ -176,11 +176,53 @@ test.describe('F22 parked airstrip command guard', () => {
       }
     }, { f22Id: scenario.f22Id })
 
-    expect(f22State).not.toBeNull()
-    expect(f22State.flightState).toBe('grounded')
-    expect(f22State.f22State).toBe('parked')
-    expect(f22State.f22PendingTakeoff).toBe(false)
-    expect(f22State.helipadLandingRequested).toBe(false)
+    expect(parkedState).not.toBeNull()
+    expect(parkedState.flightState).toBe('grounded')
+    expect(parkedState.f22State).toBe('parked')
+    expect(parkedState.f22PendingTakeoff).toBe(false)
+    expect(parkedState.helipadLandingRequested).toBe(false)
+
+    await page.evaluate(({ f22Id }) => {
+      const f22 = window.gameInstance.units.find(unit => unit.id === f22Id)
+      if (!f22) {
+        return
+      }
+      f22.flightState = 'airborne'
+      f22.f22State = 'approach_runway'
+      f22.helipadLandingRequested = true
+      f22.airstripId = f22.landedHelipadId
+      f22.helipadTargetId = f22.landedHelipadId
+      f22.f22PendingTakeoff = false
+    }, { f22Id: scenario.f22Id })
+
+    await page.mouse.move(homeCursorPoint.x, homeCursorPoint.y)
+    const inProgressCursorClass = await page.evaluate(() => {
+      const gameCanvas = document.getElementById('gameCanvas')
+      return Array.from(gameCanvas?.classList || [])
+    })
+    expect(inProgressCursorClass).toContain('move-blocked-mode')
+
+    await page.mouse.click(homeCursorPoint.x, homeCursorPoint.y, { button: 'right' })
+    await page.waitForTimeout(600)
+
+    const inProgressState = await page.evaluate(({ f22Id }) => {
+      const f22 = window.gameInstance.units.find(unit => unit.id === f22Id)
+      if (!f22) {
+        return null
+      }
+      return {
+        flightState: f22.flightState,
+        f22State: f22.f22State,
+        helipadLandingRequested: f22.helipadLandingRequested,
+        f22PendingTakeoff: f22.f22PendingTakeoff
+      }
+    }, { f22Id: scenario.f22Id })
+
+    expect(inProgressState).not.toBeNull()
+    expect(inProgressState.flightState).toBe('airborne')
+    expect(inProgressState.f22State).toBe('approach_runway')
+    expect(inProgressState.helipadLandingRequested).toBe(true)
+    expect(inProgressState.f22PendingTakeoff).toBe(false)
 
     expect(consoleErrors).toEqual([])
   })

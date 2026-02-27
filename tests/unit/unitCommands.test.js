@@ -93,6 +93,7 @@ import {
   getWreckById
 } from '../../src/game/unitWreckManager.js'
 import { units } from '../../src/main.js'
+import { getBuildingIdentifier } from '../../src/utils.js'
 
 const createMapGrid = (width = 6, height = 6) =>
   Array.from({ length: height }, () => Array.from({ length: width }, () => 0))
@@ -834,6 +835,97 @@ describe('UnitCommandsHandler attack group and movement', () => {
     handler.handleMovementCommand([aiUnit], 96, 96, mapGrid)
 
     expect(showNotification).not.toHaveBeenCalledWith('Cannot reach that location. Move command aborted.', 2200)
+  })
+
+
+  it('handleMovementCommand no-ops F22 already in landing sequence for same airstrip', () => {
+    vi.mocked(getBuildingIdentifier).mockImplementation(building => building.id)
+
+    gameState.buildings = [{
+      id: 'airstrip-1',
+      type: 'airstrip',
+      owner: 'player',
+      health: 100,
+      x: 1,
+      y: 1,
+      width: 4,
+      height: 3,
+      runwayPoints: {
+        runwayExit: { x: 96, y: 96 }
+      }
+    }]
+
+    const f22 = {
+      id: 'f22-1',
+      type: 'f22Raptor',
+      owner: 'player',
+      tileX: 2,
+      tileY: 2,
+      x: 64,
+      y: 64,
+      maxGas: 100,
+      gas: 100,
+      flightState: 'airborne',
+      f22State: 'approach_runway',
+      airstripId: 'airstrip-1',
+      helipadTargetId: 'airstrip-1',
+      landedHelipadId: null,
+      target: { id: 'enemy' },
+      forcedAttack: true
+    }
+
+    const assignSpy = vi.spyOn(handler, 'assignApacheFlight')
+
+    handler.handleMovementCommand([f22], 64, 64, createMapGrid(10, 10))
+
+    expect(assignSpy).not.toHaveBeenCalled()
+    expect(f22.target).toEqual({ id: 'enemy' })
+    expect(f22.forcedAttack).toBe(true)
+  })
+
+  it('handleMovementCommand still assigns F22 flight to a different airstrip', () => {
+    vi.mocked(getBuildingIdentifier).mockImplementation(building => building.id)
+
+    gameState.buildings = [{
+      id: 'airstrip-2',
+      type: 'airstrip',
+      owner: 'player',
+      health: 100,
+      x: 1,
+      y: 1,
+      width: 4,
+      height: 3,
+      runwayPoints: {
+        runwayExit: { x: 96, y: 96 }
+      }
+    }]
+
+    const f22 = {
+      id: 'f22-2',
+      type: 'f22Raptor',
+      owner: 'player',
+      tileX: 2,
+      tileY: 2,
+      x: 64,
+      y: 64,
+      maxGas: 100,
+      gas: 100,
+      flightState: 'airborne',
+      f22State: 'approach_runway',
+      airstripId: 'airstrip-1',
+      helipadTargetId: 'airstrip-1',
+      landedHelipadId: null,
+      target: { id: 'enemy' },
+      forcedAttack: true
+    }
+
+    const assignSpy = vi.spyOn(handler, 'assignApacheFlight').mockReturnValue(true)
+
+    handler.handleMovementCommand([f22], 64, 64, createMapGrid(10, 10))
+
+    expect(assignSpy).toHaveBeenCalledOnce()
+    expect(f22.target).toBe(null)
+    expect(f22.forcedAttack).toBe(false)
   })
 
 

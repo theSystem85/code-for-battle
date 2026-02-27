@@ -137,12 +137,30 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
         )
         if (targetAirstrip) {
           const targetAirstripId = getBuildingIdentifier(targetAirstrip)
-          const alreadyParkedOnTargetAirstrip =
-            unit.flightState === 'grounded' &&
-            unit.f22State === 'parked' &&
-            unit.landedHelipadId === targetAirstripId
+          const f22RunwayTransitionStates = new Set([
+            'wait_takeoff_clearance',
+            'taxi_to_runway_start',
+            'takeoff_roll',
+            'liftoff',
+            'wait_landing_clearance',
+            'approach_runway',
+            'landing_roll',
+            'taxi_to_parking'
+          ])
 
-          if (alreadyParkedOnTargetAirstrip) {
+          const alreadyCommittedToTargetAirstrip = (
+            unit.landedHelipadId === targetAirstripId ||
+            unit.airstripId === targetAirstripId ||
+            unit.helipadTargetId === targetAirstripId
+          ) && (
+            (
+              unit.flightState === 'grounded' &&
+              unit.f22State === 'parked' &&
+              unit.landedHelipadId === targetAirstripId
+            ) || f22RunwayTransitionStates.has(unit.f22State)
+          )
+
+          if (alreadyCommittedToTargetAirstrip) {
             return
           }
 
