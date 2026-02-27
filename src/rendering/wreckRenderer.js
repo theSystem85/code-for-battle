@@ -116,7 +116,9 @@ export class WreckRenderer {
       if (sprite) {
         ctx.save()
         ctx.translate(centerX, centerY)
-        const rotation = (wreck.direction || 0) - Math.PI / 2
+        const rotation = wreck.unitType === 'f22Raptor'
+          ? (wreck.direction || 0) + Math.PI / 2
+          : (wreck.direction || 0) - Math.PI / 2
         ctx.rotate(rotation)
         const scale = TILE_SIZE / Math.max(sprite.width, sprite.height)
         const width = sprite.width * scale

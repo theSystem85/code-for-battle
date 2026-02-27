@@ -123,6 +123,30 @@ Validates multi-F22 airstrip sequencing and full attack-return lifecycle:
 - Ammo refill increase is observed after parked settle for each F22.
 - No critical console/page errors.
 
+
+## Test: f22CrashMomentum.test.js
+
+### Scenario
+Validates airborne F22 destruction behavior after HP reaches zero:
+
+1. Spawn one player-owned F22 via cheat.
+2. Force it into an airborne state with forward velocity and heading.
+3. Set HP to 0 to trigger the crash sequence.
+4. Observe the full crash until `f22State=crashed`.
+5. Record x-position movement, crash target velocity samples, and smoke particle fire-intensity flags during the crash.
+
+### Assertions
+- Crash sequence is entered (`f22State=crashing`) before final crash state.
+- F22 keeps meaningful forward travel during descent (does not drop vertically in place).
+- Crash target horizontal velocity remains positive through crash updates.
+- Crash glide horizontal speed remains <= 50% of F22 max speed during crash updates.
+- Most crash-state position samples continue moving forward along heading (monotonic-forward sample majority).
+- At least one crash smoke particle carries fire intensity (`fireIntensity > 0`).
+- Final state reaches `f22State=crashed` at (near) ground altitude.
+- Wreck direction matches the last sampled F22 crash heading (within tight angular tolerance).
+- F22 wreck rendering rotation uses the same forward-orientation convention as live F22 rendering (no 180° visual flip).
+- No critical console/page errors.
+
 ## Files Modified
 - `package.json` - Added E2E test scripts
 - `playwright.config.js` - New Playwright configuration
@@ -130,6 +154,7 @@ Validates multi-F22 airstrip sequencing and full attack-return lifecycle:
 ## Files Created
 - `tests/e2e/basicGameFlow.test.js` - First E2E test
 - `tests/e2e/f22SequentialAirstripCycle.test.js` - F22 sequential takeoff/attack/return/parking/refill regression test
+- `tests/e2e/f22CrashMomentum.test.js` - F22 crash momentum + burning smoke regression test
 
 ## Related Specs
 - 023-vitest-testing-framework.md - Unit testing framework

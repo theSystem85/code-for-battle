@@ -306,10 +306,31 @@ export class EffectsRenderer {
       }
 
       const safeSize = Math.max(1, p.size)
+      const fireIntensity = Math.max(0, Math.min(1, p.fireIntensity || 0))
 
       // Use pre-cached sprite instead of creating gradient per frame
       const sprite = getClosestSmokeSprite(safeSize)
       if (sprite) {
+        if (fireIntensity > 0.01) {
+          const flameRadius = safeSize * (0.5 + fireIntensity * 0.65)
+          const flameGradient = ctx.createRadialGradient(
+            screenX,
+            screenY,
+            flameRadius * 0.08,
+            screenX,
+            screenY,
+            flameRadius
+          )
+          flameGradient.addColorStop(0, `rgba(255, 250, 214, ${0.18 + fireIntensity * 0.3})`)
+          flameGradient.addColorStop(0.42, `rgba(255, 171, 58, ${0.2 + fireIntensity * 0.38})`)
+          flameGradient.addColorStop(0.78, `rgba(255, 86, 20, ${0.12 + fireIntensity * 0.28})`)
+          flameGradient.addColorStop(1, 'rgba(120, 18, 4, 0)')
+          ctx.fillStyle = flameGradient
+          ctx.beginPath()
+          ctx.arc(screenX, screenY, flameRadius, 0, Math.PI * 2)
+          ctx.fill()
+        }
+
         ctx.globalAlpha = p.alpha
         // Scale sprite to match actual particle size
         const scale = safeSize / sprite.size

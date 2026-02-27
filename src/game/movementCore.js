@@ -278,6 +278,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     unit.f22State === 'liftoff' ||
     unit.f22State === 'landing_roll'
   )
+  const isF22CrashControlled = unit.type === 'f22Raptor' && unit.f22State === 'crashing'
   let activeFlightPlan = null
   let hadFlightPlanAtStart = false
   if (isAirFlightUnit) {
@@ -343,7 +344,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         unit.hovering = false
       }
       unit.path = []
-    } else if (!unit.remoteControlActive && !isF22RunwayControlled) {
+    } else if (!unit.remoteControlActive && !isF22RunwayControlled && !isF22CrashControlled) {
       movement.targetVelocity.x = 0
       movement.targetVelocity.y = 0
       movement.targetRotation = movement.rotation
@@ -358,7 +359,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   const skipPathHandlingForAirFlight =
     (isAirFlightUnit && !unit.remoteControlActive && hadFlightPlanAtStart) ||
-    isF22RunwayControlled
+    isF22RunwayControlled ||
+    isF22CrashControlled
   if (!skipPathHandlingForAirFlight && unit.path && unit.path.length > 0) {
     const nextTile = unit.path[0]
     const targetX = nextTile.x * TILE_SIZE
