@@ -268,3 +268,9 @@ Follow-up runway-state reliability hardening:
 
 21. `D1` Airborne F22 destruction must trigger an animated crash run that preserves current heading, descends over time, emits visible fire/smoke from rear engines and wing areas, plays a crash-impact sound on ground hit, and only then produces the wreck at the impact position.
 	- Status: `Implemented (code)` — added `crashing`/`crashed` F22 states with heading-preserving forward glide and timed descent, smoke emitters at rear engines + wing points, renderer fire plumes in same areas, impact SFX (`f22CrashImpact` mapped to available explosion audio), and deferred cleanup so `registerUnitWreck` runs at crash impact coordinates.
+
+## Engineering Update (2026-02-27, round 10)
+F22 same-airstrip re-land prevention + cursor intent feedback:
+1. Added a grounded parked guard in movement command routing so commanding an F22 to land on the exact airstrip where it is already parked becomes a no-op (no takeoff/instant-reland loop).
+2. Updated cursor hover logic to show move-blocked when the selected F22 group is already parked on the hovered friendly airstrip, while keeping move-into on other friendly airstrips.
+3. Added both unit and E2E regression coverage for cursor state and no-relaunch behavior.

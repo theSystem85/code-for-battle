@@ -9,6 +9,7 @@ import { broadcastUnitMove } from '../../network/gameCommandSync.js'
 import { resetUnitVelocityForNewPath } from '../../game/unifiedMovement.js'
 import { clearAttackGroupState, cancelRecoveryTask } from './utilityQueue.js'
 import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
+import { getBuildingIdentifier } from '../../utils.js'
 
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
   const commandableUnits = selectedUnits.filter(unit => {
@@ -135,6 +136,16 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           clampedTile.y < building.y + building.height
         )
         if (targetAirstrip) {
+          const targetAirstripId = getBuildingIdentifier(targetAirstrip)
+          const alreadyParkedOnTargetAirstrip =
+            unit.flightState === 'grounded' &&
+            unit.f22State === 'parked' &&
+            unit.landedHelipadId === targetAirstripId
+
+          if (alreadyParkedOnTargetAirstrip) {
+            return
+          }
+
           const runwayExit = targetAirstrip.runwayPoints?.runwayExit || {
             x: (targetAirstrip.x + targetAirstrip.width - 1) * TILE_SIZE,
             y: (targetAirstrip.y + Math.floor(targetAirstrip.height / 2)) * TILE_SIZE

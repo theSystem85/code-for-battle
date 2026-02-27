@@ -6,6 +6,7 @@ import { isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
+import { getBuildingIdentifier } from '../utils.js'
 
 const CURSOR_CLASS_NAMES = [
   'repair-mode',
@@ -517,14 +518,21 @@ export class CursorManager {
       }
 
       if (!this.isOverFriendlyHelipad && hasSelectedF22) {
+        const selectedFriendlyF22 = selectedUnits.filter(unit => unit.type === 'f22Raptor' && unit.owner === gameState.humanPlayer)
         for (const building of gameState.buildings) {
           if (building.type === 'airstrip' &&
                 building.owner === gameState.humanPlayer &&
                 building.health > 0 &&
                 tileX >= building.x && tileX < building.x + building.width &&
                 tileY >= building.y && tileY < building.y + building.height) {
+            const hoveredAirstripId = getBuildingIdentifier(building)
+            const isEverySelectedF22AlreadyParkedOnHoveredAirstrip = selectedFriendlyF22.length > 0 && selectedFriendlyF22.every(f22 =>
+              f22.flightState === 'grounded' &&
+              f22.f22State === 'parked' &&
+              f22.landedHelipadId === hoveredAirstripId
+            )
             this.isOverFriendlyHelipad = true
-            this.isOverBlockedHelipad = false
+            this.isOverBlockedHelipad = isEverySelectedF22AlreadyParkedOnHoveredAirstrip
             break
           }
         }

@@ -1,4 +1,5 @@
 ## Bugs
+- [x] F22 parked re-land command loop (2026-02-27): right-clicking the same airstrip under an already parked/grounded F22 no longer triggers immediate takeoff/reland; cursor now shows move-blocked only on that specific occupied airstrip, while other friendly airstrips still show move-into.
 - [x] Ensure cheat console input supports ArrowUp/ArrowDown command history recall with localStorage persistence and configurable history limit (default 10).
 - [x] F22 crash sequence (2026-02-26): airborne F22 now enters a headed crash glide on destruction, descends to ground with engine/wing fire+smoke, plays crash impact sound on ground hit, and spawns wreck at impact location.
 - [x] F22 wreck sprite (2026-02-26): added dedicated F22 wreck sprite mapping so destroyed F22 renders as greyed F22 image instead of generic fallback wreck.
