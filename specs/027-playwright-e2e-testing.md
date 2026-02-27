@@ -144,6 +144,7 @@ Validates airborne F22 destruction behavior after HP reaches zero:
 - At least one crash smoke particle carries fire intensity (`fireIntensity > 0`).
 - Final state reaches `f22State=crashed` at (near) ground altitude.
 - Wreck direction matches the last sampled F22 crash heading (within tight angular tolerance).
+- F22 wreck rendering rotation uses the same forward-orientation convention as live F22 rendering (no 180° visual flip).
 - No critical console/page errors.
 
 ## Files Modified
