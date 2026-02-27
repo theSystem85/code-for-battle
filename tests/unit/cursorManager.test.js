@@ -265,6 +265,36 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
   })
 
+  it('uses move cursor (not blocked) for supply-only selection on friendly airstrip tile', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas()
+    const mapGrid = createTestMapGrid(8, 8)
+
+    gameState.humanPlayer = 'player1'
+    gameState.buildings = [{
+      type: 'airstrip',
+      owner: 'player1',
+      health: 100,
+      x: 2,
+      y: 2,
+      width: 3,
+      height: 2
+    }]
+
+    setTileAt(mapGrid, 2, 2, {
+      type: 'land',
+      building: { type: 'airstrip', owner: 'player1' }
+    })
+
+    const selectedUnits = [{ owner: 'player1', type: 'tankerTruck' }]
+    const event = createMouseEvent(TILE_SIZE * 2 + 1, TILE_SIZE * 2 + 1)
+
+    manager.updateCustomCursor(event, mapGrid, [], selectedUnits, [])
+
+    expect(canvas.classList.contains('move-blocked-mode')).toBe(false)
+    expect(canvas.classList.contains('move-mode')).toBe(true)
+  })
+
 
   it('shows move cursor air distance text below cursor', () => {
     const manager = new CursorManager()

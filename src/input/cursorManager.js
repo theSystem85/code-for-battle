@@ -22,6 +22,13 @@ const CURSOR_CLASS_NAMES = [
   'guard-mode'
 ]
 
+const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set([
+  'ambulance',
+  'tankerTruck',
+  'ammunitionTruck',
+  'recoveryTank'
+])
+
 export class CursorManager {
   constructor() {
     this.isOverGameCanvas = false
@@ -347,6 +354,22 @@ export class CursorManager {
     )
   }
 
+  isFriendlyAirstripTile(tileX, tileY) {
+    const humanPlayer = gameState.humanPlayer || 'player1'
+    return (gameState.buildings || []).some(building => {
+      if (!building || building.type !== 'airstrip' || building.health <= 0) {
+        return false
+      }
+      const isFriendly =
+        building.owner === humanPlayer ||
+        (humanPlayer === 'player1' && building.owner === 'player')
+
+      return isFriendly &&
+        tileX >= building.x && tileX < building.x + building.width &&
+        tileY >= building.y && tileY < building.y + building.height
+    })
+  }
+
   // Function to update custom cursor position and visibility
   updateCustomCursor(e, mapGrid, factories, selectedUnits, units = []) {
     // Store last mouse event for later refreshes
@@ -419,10 +442,16 @@ export class CursorManager {
     const tileWithinBounds = gridReady && tileX >= 0 && tileY >= 0 && tileX < gridWidth && tileY < gridHeight
     const hoveredTile = tileWithinBounds && mapGrid[tileY] ? mapGrid[tileY][tileX] : null
 
+    const selectedSupportOnlyOnAirstrip =
+      selectedUnits.length > 0 &&
+      selectedUnits.every(unit => AIRSTRIP_SUPPLY_UNIT_TYPES.has(unit.type)) &&
+      this.isFriendlyAirstripTile(tileX, tileY)
+
     // Check if mouse is over blocked terrain when in game canvas, with added safety check
     this.isOverBlockedTerrain = this.isOverGameCanvas &&
       gridReady &&
-      this.isBlockedTerrain(tileX, tileY, mapGrid)
+      this.isBlockedTerrain(tileX, tileY, mapGrid) &&
+      !selectedSupportOnlyOnAirstrip
 
     // Check if mouse is over a player refinery when harvesters are selected
     this.isOverPlayerRefinery = false
