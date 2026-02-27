@@ -259,7 +259,6 @@ Follow-up runway-state reliability hardening:
 ## Open Questions
 - None currently.
 
-
 ### F.1 Wreck rendering
 28. `F1` Destroyed F22 wreck must render as the greyed-out F22 image, not generic default wreck fallback.
 	- Status: `Implemented (code)` — `wreckSpriteCache` now resolves `f22Raptor` to the same base image used by `f22ImageRenderer`, then applies standard desaturation for wreck rendering.
@@ -280,3 +279,7 @@ F22 in-progress same-airstrip guard refinement:
 1. Extended same-airstrip command suppression beyond parked F22 to runway transition states (`wait_takeoff_clearance`, `taxi_to_runway_start`, `takeoff_roll`, `liftoff`, `wait_landing_clearance`, `approach_runway`, `landing_roll`, `taxi_to_parking`) so right-clicking the same airstrip does not reset/override active takeoff or landing sequencing.
 2. Cursor feedback now marks the hovered airstrip as move-blocked when selected F22 are already committed to that specific airstrip either as parked or in the above in-progress runway states.
 3. Added regression tests to cover in-progress-state cursor blocking and movement command no-op behavior.
+	- Follow-up (2026-02-26): crash speed now preserves the jet's in-flight momentum through the descent window (no stone-drop slowdown), and smoke particles emitted during crash carry fire intensity so the smoke column visibly burns until impact.
+	- Follow-up (2026-02-26, phase 2): `movementCore.js` now exempts `f22State=crashing` from generic air-unit velocity reset/path steering so crash glide velocity is not overwritten each frame.
+	- Follow-up (2026-02-27): crash glide speed is now hard-capped at 50% of F22 max speed; wreck direction now uses persisted crash heading (`f22CrashWreckDirection`) so wreck orientation matches impact heading.
+	- Follow-up (2026-02-27, render fix): `wreckRenderer` now applies F22 single-image wreck rotation with `+ PI/2` (matching live F22 render convention) to prevent opposite-facing wreck orientation.

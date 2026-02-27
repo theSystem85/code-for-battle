@@ -98,7 +98,9 @@ export function registerUnitWreck(unit, gameState) {
     y: unit.y,
     tileX: unit.tileX,
     tileY: unit.tileY,
-    direction: unit.direction || 0,
+    direction: (unit.type === 'f22Raptor' && Number.isFinite(unit.f22CrashWreckDirection))
+      ? unit.f22CrashWreckDirection
+      : (unit.direction || 0),
     turretDirection: unit.turretDirection || unit.direction || 0,
     createdAt: performance.now(),
     cost: getUnitCost(unit.type) || 0,
