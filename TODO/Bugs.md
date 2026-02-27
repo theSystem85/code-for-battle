@@ -260,3 +260,4 @@
 - [x] ✅ Fixed defense AGF forced-target regression where artillery/rocket turrets aimed but did not fire (line-of-sight checks now only gate direct-fire gun turrets), restored defense-building hover attack cursor on enemy targets, and added queued AGF red chain lines for ordered attack targets.
 - [x] ✅ Restored normal-click enemy targeting for selected defensive buildings (without force-attack modifier) and changed defense forced-target queue insertion to newest-first (prepend) for both click targeting and AGF additions.
 - [x] ✅ Adjusted defensive forced-target ordering so each newly assigned target becomes immediate active target (position 1) while previous active target is pushed to the front of the queued list.
+- [x] Ensure workshop restoration displays the correct F22 wreck image (no generic default fallback) and rotates all restored wreck previews by 45°.

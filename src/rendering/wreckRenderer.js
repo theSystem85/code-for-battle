@@ -5,6 +5,7 @@ import { getTankWreckCanvases, getSingleImageWreckSprite } from './wreckSpriteCa
 import { selectedUnits } from '../inputHandler.js'
 
 const noiseCanvasCache = new Map()
+const WORKSHOP_RESTORATION_ROTATION = Math.PI / 4
 
 function getNoiseCanvas(seedKey) {
   if (noiseCanvasCache.has(seedKey)) {
@@ -87,11 +88,11 @@ export class WreckRenderer {
     const isBeingRestored = wreck.isBeingRestored || false
 
     if (isTank) {
-      const images = isBeingRestored ? null : getTankWreckCanvases(wreck.unitType)
+      const images = getTankWreckCanvases(wreck.unitType)
       const pseudoUnit = {
         type: wreck.unitType,
-        direction: isBeingRestored ? Math.PI * 5 / 4 : (wreck.direction || 0), // Southwest during restoration
-        turretDirection: isBeingRestored ? Math.PI * 5 / 4 : (wreck.turretDirection || wreck.direction || 0),
+        direction: isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : (wreck.direction || 0),
+        turretDirection: isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : (wreck.turretDirection || wreck.direction || 0),
         recoilStartTime: null,
         muzzleFlashStartTime: null
       }
@@ -109,16 +110,18 @@ export class WreckRenderer {
       })
       ctx.restore()
       if (!rendered) {
-        this.renderFallback(ctx, wreck, centerX, centerY)
+        this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
       }
     } else {
-      const sprite = isBeingRestored ? null : getSingleImageWreckSprite(wreck.unitType)
+      const sprite = getSingleImageWreckSprite(wreck.unitType)
       if (sprite) {
         ctx.save()
         ctx.translate(centerX, centerY)
-        const rotation = wreck.unitType === 'f22Raptor'
-          ? (wreck.direction || 0) + Math.PI / 2
-          : (wreck.direction || 0) - Math.PI / 2
+        const rotation = isBeingRestored
+          ? WORKSHOP_RESTORATION_ROTATION
+          : wreck.unitType === 'f22Raptor'
+            ? (wreck.direction || 0) + Math.PI / 2
+            : (wreck.direction || 0) - Math.PI / 2
         ctx.rotate(rotation)
         const scale = TILE_SIZE / Math.max(sprite.width, sprite.height)
         const width = sprite.width * scale
@@ -127,7 +130,7 @@ export class WreckRenderer {
         ctx.drawImage(sprite, -width / 2, -height / 2, width, height)
         ctx.restore()
       } else {
-        this.renderFallback(ctx, wreck, centerX, centerY)
+        this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
       }
     }
 
@@ -219,10 +222,10 @@ export class WreckRenderer {
     ctx.restore()
   }
 
-  renderFallback(ctx, wreck, centerX, centerY) {
+  renderFallback(ctx, wreck, centerX, centerY, rotationOverride = null) {
     ctx.save()
     ctx.translate(centerX, centerY)
-    ctx.rotate(wreck.direction || 0)
+    ctx.rotate(rotationOverride ?? wreck.direction ?? 0)
     ctx.fillStyle = 'rgba(90, 90, 90, 0.9)'
     ctx.fillRect(-TILE_SIZE * 0.35, -TILE_SIZE * 0.2, TILE_SIZE * 0.7, TILE_SIZE * 0.4)
     ctx.fillStyle = 'rgba(40, 40, 40, 0.9)'
@@ -260,4 +263,3 @@ export class WreckRenderer {
     ctx.fillRect(healthBarX, healthBarY, healthBarWidth * ratio, healthBarHeight)
   }
 }
-
