@@ -70,7 +70,8 @@ vi.mock('../../src/config.js', () => ({
     recoveryTank: {},
     ammunitionTruck: {}
   },
-  HELIPAD_AMMO_RESERVE: 200
+  HELIPAD_AMMO_RESERVE: 200,
+  CHEAT_CONSOLE_HISTORY_LIMIT: 10
 }))
 
 const createUnit = vi.fn()
@@ -184,6 +185,42 @@ afterEach(() => {
 })
 
 describe('CheatSystem', () => {
+  it('restores cheat command history with ArrowUp and ArrowDown', () => {
+    const system = new CheatSystem()
+    system.commandHistory = ['give 1000', 'status', 'godmode on']
+    system.openDialog()
+
+    const input = document.getElementById('cheat-input')
+    input.value = 'partial'
+
+    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    expect(input.value).toBe('godmode on')
+
+    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true }))
+    expect(input.value).toBe('status')
+
+    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    expect(input.value).toBe('godmode on')
+
+    input.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+    expect(input.value).toBe('partial')
+  })
+
+  it('stores only the configured maximum number of cheat commands in history', () => {
+    const system = new CheatSystem()
+
+    for (let i = 1; i <= 20; i++) {
+      system.addCommandToHistory(`cmd-${i}`)
+    }
+
+    expect(system.commandHistory).toHaveLength(10)
+    expect(system.commandHistory[0]).toBe('cmd-11')
+    expect(system.commandHistory[9]).toBe('cmd-20')
+
+    const saved = JSON.parse(localStorage.getItem('rts-cheat-console-history'))
+    expect(saved).toEqual(system.commandHistory)
+  })
+
   it('injects cheat dialog styles once', () => {
     const system = new CheatSystem()
     const style = document.getElementById('cheat-dialog-styles')

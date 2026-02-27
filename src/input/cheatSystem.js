@@ -7,6 +7,7 @@ import { productionQueue } from '../productionQueue.js'
 import {
   ENABLE_ENEMY_CONTROL,
   setEnemyControlEnabled,
+  CHEAT_CONSOLE_HISTORY_LIMIT,
   TILE_SIZE,
   DIRECTIONS,
   MAX_SPAWN_SEARCH_DISTANCE,
@@ -21,12 +22,97 @@ import { getWreckById, removeWreckById } from '../game/unitWreckManager.js'
 
 export class CheatSystem {
   constructor() {
+    this.historyStorageKey = 'rts-cheat-console-history'
     this.isDialogOpen = false
     this.godModeEnabled = false
     this.originalHealthValues = new Map()
     this.godModeUnits = new Set()
     this.selectedUnits = null
+    this.commandHistory = this.loadCommandHistory()
+    this.historyNavigationIndex = -1
+    this.historyDraftValue = ''
     this.setupStyles()
+  }
+
+  getHistoryLimit() {
+    const configuredLimit = Math.floor(Number(CHEAT_CONSOLE_HISTORY_LIMIT))
+    return Math.max(1, configuredLimit || 10)
+  }
+
+  loadCommandHistory() {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return []
+    }
+
+    try {
+      const raw = window.localStorage.getItem(this.historyStorageKey)
+      if (!raw) {
+        return []
+      }
+
+      const parsed = JSON.parse(raw)
+      if (!Array.isArray(parsed)) {
+        return []
+      }
+
+      return parsed
+        .filter(entry => typeof entry === 'string' && entry.trim().length > 0)
+        .slice(-this.getHistoryLimit())
+    } catch (error) {
+      window?.logger?.warn('Failed to load cheat console history:', error)
+      return []
+    }
+  }
+
+  saveCommandHistory() {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return
+    }
+
+    try {
+      window.localStorage.setItem(this.historyStorageKey, JSON.stringify(this.commandHistory))
+    } catch (error) {
+      window?.logger?.warn('Failed to save cheat console history:', error)
+    }
+  }
+
+  addCommandToHistory(code) {
+    const normalizedCode = code.trim()
+    if (!normalizedCode) {
+      return
+    }
+
+    this.commandHistory.push(normalizedCode)
+    this.commandHistory = this.commandHistory.slice(-this.getHistoryLimit())
+    this.saveCommandHistory()
+  }
+
+  navigateHistory(input, direction) {
+    if (!Array.isArray(this.commandHistory) || this.commandHistory.length === 0) {
+      return
+    }
+
+    if (direction === 'up') {
+      if (this.historyNavigationIndex === -1) {
+        this.historyDraftValue = input.value
+      }
+      if (this.historyNavigationIndex < this.commandHistory.length - 1) {
+        this.historyNavigationIndex += 1
+      }
+    } else if (direction === 'down') {
+      if (this.historyNavigationIndex === -1) {
+        return
+      }
+      this.historyNavigationIndex -= 1
+    }
+
+    if (this.historyNavigationIndex === -1) {
+      input.value = this.historyDraftValue
+      return
+    }
+
+    const historyIndex = this.commandHistory.length - 1 - this.historyNavigationIndex
+    input.value = this.commandHistory[historyIndex] || ''
   }
 
   setupStyles() {
@@ -191,8 +277,11 @@ export class CheatSystem {
     const submitCheat = () => {
       const code = input.value.trim()
       if (code) {
+        this.addCommandToHistory(code)
         this.processCheatCode(code)
         input.value = ''
+        this.historyNavigationIndex = -1
+        this.historyDraftValue = ''
       }
     }
 
@@ -212,6 +301,12 @@ export class CheatSystem {
       if (e.key === 'Enter') {
         e.preventDefault()
         submitCheat()
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        this.navigateHistory(input, 'up')
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        this.navigateHistory(input, 'down')
       } else if (e.key === 'Escape') {
         e.preventDefault()
         closeDialog()
