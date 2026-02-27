@@ -259,7 +259,6 @@ Follow-up runway-state reliability hardening:
 ## Open Questions
 - None currently.
 
-
 ### F.1 Wreck rendering
 28. `F1` Destroyed F22 wreck must render as the greyed-out F22 image, not generic default wreck fallback.
 	- Status: `Implemented (code)` — `wreckSpriteCache` now resolves `f22Raptor` to the same base image used by `f22ImageRenderer`, then applies standard desaturation for wreck rendering.
@@ -270,3 +269,4 @@ Follow-up runway-state reliability hardening:
 	- Status: `Implemented (code)` — added `crashing`/`crashed` F22 states with heading-preserving forward glide and timed descent, smoke emitters at rear engines + wing points, renderer fire plumes in same areas, impact SFX (`f22CrashImpact` mapped to available explosion audio), and deferred cleanup so `registerUnitWreck` runs at crash impact coordinates.
 	- Follow-up (2026-02-26): crash speed now preserves the jet's in-flight momentum through the descent window (no stone-drop slowdown), and smoke particles emitted during crash carry fire intensity so the smoke column visibly burns until impact.
 	- Follow-up (2026-02-26, phase 2): `movementCore.js` now exempts `f22State=crashing` from generic air-unit velocity reset/path steering so crash glide velocity is not overwritten each frame.
+	- Follow-up (2026-02-27): crash glide speed is now hard-capped at 50% of F22 max speed; wreck direction now uses persisted crash heading (`f22CrashWreckDirection`) so wreck orientation matches impact heading.

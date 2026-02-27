@@ -52,6 +52,7 @@ function getCrashEmitterPoints(unit) {
 function updateF22CrashState(unit, movement, now) {
   if (!unit.f22CrashStartedAt) {
     unit.f22CrashStartedAt = now
+    unit.f22CrashWreckDirection = unit.f22CrashDirection
   }
 
   const elapsed = now - unit.f22CrashStartedAt
@@ -68,9 +69,9 @@ function updateF22CrashState(unit, movement, now) {
   unit.moveTarget = null
   unit.target = null
 
-  const initialCrashSpeed = Math.max(unit.f22CrashInitialSpeed || 0, unit.airCruiseSpeed || unit.speed || 1.2)
-  const endSpeed = Math.max(initialCrashSpeed * 0.75, (unit.airCruiseSpeed || unit.speed || 1.2) * 0.55)
-  const crashSpeed = initialCrashSpeed + (endSpeed - initialCrashSpeed) * progress
+  const f22MaxSpeed = Math.max(unit.airCruiseSpeed || 0, unit.speed || 0, 1.2)
+  const crashSpeedCap = f22MaxSpeed * 0.5
+  const crashSpeed = Math.min(Math.max(unit.f22CrashInitialSpeed || 0, 0), crashSpeedCap)
   movement.targetVelocity.x = Math.cos(crashDirection) * crashSpeed
   movement.targetVelocity.y = Math.sin(crashDirection) * crashSpeed
   movement.isMoving = true
@@ -78,6 +79,7 @@ function updateF22CrashState(unit, movement, now) {
   movement.rotation = crashDirection
   unit.direction = crashDirection
   unit.rotation = crashDirection
+  unit.f22CrashWreckDirection = crashDirection
 
   unit.altitude = Math.max(0, startAltitude * (1 - progress))
   const altitudeRatio = Math.max(0, Math.min(1, unit.altitude / Math.max(unit.maxAltitude || startAltitude, 1)))
@@ -133,14 +135,17 @@ export function beginF22CrashSequence(unit, now = performance.now()) {
     : Number.isFinite(unit.movement?.rotation)
       ? unit.movement.rotation
       : 0
+  unit.f22CrashWreckDirection = unit.f22CrashDirection
   unit.f22CrashStartAltitude = Math.max(unit.altitude || unit.maxAltitude * 0.8 || TILE_SIZE, TILE_SIZE * 0.35)
   const currentVelocityX = unit.movement?.velocity?.x || 0
   const currentVelocityY = unit.movement?.velocity?.y || 0
-  unit.f22CrashInitialSpeed = Math.max(
-    unit.airCruiseSpeed || unit.speed || 1.2,
+  const sampledCrashSpeed = Math.max(
     Math.hypot(currentVelocityX, currentVelocityY),
     Math.hypot(unit.movement?.targetVelocity?.x || 0, unit.movement?.targetVelocity?.y || 0)
   )
+  unit.f22CrashInitialSpeed = sampledCrashSpeed > 0.01
+    ? sampledCrashSpeed
+    : (unit.airCruiseSpeed || unit.speed || 1.2)
   unit.f22CrashImpactHandled = false
   unit.lastF22CrashSmokeAt = null
   unit.f22State = 'crashing'

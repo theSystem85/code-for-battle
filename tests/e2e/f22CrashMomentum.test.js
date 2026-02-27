@@ -72,8 +72,12 @@ test.describe('F22 crash momentum and burning smoke', () => {
         xPositions: [],
         sampleTimes: [],
         targetVelocities: [],
+        crashDirectionSamples: [],
         smokeWithFireCount: 0,
-        crashStartSeen: false
+        crashStartSeen: false,
+        crashedSeen: false,
+        finalAltitude: null,
+        forwardTravelAtCrash: null
       }
 
       f22.health = 0
@@ -89,13 +93,13 @@ test.describe('F22 crash momentum and burning smoke', () => {
       if (!tracker || !gs) return false
 
       const unit = units.find(candidate => candidate.id === tracker.f22Id)
-      if (!unit) return false
 
-      if (unit.f22State === 'crashing') {
+      if (unit && unit.f22State === 'crashing') {
         tracker.crashStartSeen = true
         tracker.xPositions.push(unit.x)
         tracker.sampleTimes.push(performance.now())
         tracker.targetVelocities.push(unit.movement?.targetVelocity?.x || 0)
+        tracker.crashDirectionSamples.push(unit.direction || 0)
 
         const smokeParticles = Array.isArray(gs.smokeParticles) ? gs.smokeParticles : []
         for (const particle of smokeParticles) {
@@ -107,9 +111,17 @@ test.describe('F22 crash momentum and burning smoke', () => {
         }
       }
 
-      if (unit.f22State !== 'crashed') return false
+      if (unit && unit.f22State === 'crashed') {
+        tracker.crashedSeen = true
+        tracker.finalAltitude = unit.altitude
+        tracker.forwardTravelAtCrash = unit.x - tracker.startX
+      }
 
-      const forwardTravel = unit.x - tracker.startX
+      if (!tracker.crashedSeen) return false
+
+      const forwardTravel = typeof tracker.forwardTravelAtCrash === 'number'
+        ? tracker.forwardTravelAtCrash
+        : (unit ? unit.x - tracker.startX : 0)
       const minTargetVelocityX = tracker.targetVelocities.length > 0
         ? Math.min(...tracker.targetVelocities)
         : 0
@@ -121,15 +133,33 @@ test.describe('F22 crash momentum and burning smoke', () => {
         }
       }
 
+      const crashSpeedCap = Math.max(unit?.airCruiseSpeed || unit?.speed || 1.2, 1.2) * 0.5
+      const maxObservedCrashSpeed = tracker.targetVelocities.length > 0
+        ? Math.max(...tracker.targetVelocities.map(Math.abs))
+        : 0
+
+      const wrecks = Array.isArray(gs.unitWrecks) ? gs.unitWrecks : []
+      const wreck = wrecks.find(candidate => candidate && candidate.sourceUnitId === tracker.f22Id)
+      if (!wreck) return false
+
+      const finalCrashDirection = tracker.crashDirectionSamples.length > 0
+        ? tracker.crashDirectionSamples[tracker.crashDirectionSamples.length - 1]
+        : (unit?.direction || 0)
+      const wrappedDiff = Math.atan2(Math.sin((wreck.direction || 0) - finalCrashDirection), Math.cos((wreck.direction || 0) - finalCrashDirection))
+      const wreckDirectionDiff = Math.abs(wrappedDiff)
+
       return {
         crashStartSeen: tracker.crashStartSeen,
         forwardTravel,
         minTargetVelocityX,
+        maxObservedCrashSpeed,
+        crashSpeedCap,
         monotonicForwardSamples,
         totalCrashSamples: tracker.xPositions.length,
         smokeWithFireCount: tracker.smokeWithFireCount,
-        lastState: unit.f22State,
-        finalAltitude: unit.altitude
+        lastState: 'crashed',
+        finalAltitude: typeof tracker.finalAltitude === 'number' ? tracker.finalAltitude : 0,
+        wreckDirectionDiff
       }
     }, { timeout: 90000 })
 
@@ -140,9 +170,11 @@ test.describe('F22 crash momentum and burning smoke', () => {
     expect(resolved.finalAltitude).toBeLessThanOrEqual(0.5)
     expect(resolved.forwardTravel).toBeGreaterThan(120)
     expect(resolved.minTargetVelocityX).toBeGreaterThan(1)
+    expect(resolved.maxObservedCrashSpeed).toBeLessThanOrEqual(resolved.crashSpeedCap + 0.05)
     expect(resolved.totalCrashSamples).toBeGreaterThan(6)
     expect(resolved.monotonicForwardSamples).toBeGreaterThanOrEqual(Math.floor(resolved.totalCrashSamples * 0.65))
     expect(resolved.smokeWithFireCount).toBeGreaterThan(0)
+    expect(resolved.wreckDirectionDiff).toBeLessThanOrEqual(0.06)
 
     expect(consoleErrors, `Console errors encountered:\n${consoleErrors.join('\n')}`).toEqual([])
   })
