@@ -271,3 +271,5 @@ Follow-up runway-state reliability hardening:
 	- Follow-up (2026-02-26, phase 2): `movementCore.js` now exempts `f22State=crashing` from generic air-unit velocity reset/path steering so crash glide velocity is not overwritten each frame.
 	- Follow-up (2026-02-27): crash glide speed is now hard-capped at 50% of F22 max speed; wreck direction now uses persisted crash heading (`f22CrashWreckDirection`) so wreck orientation matches impact heading.
 	- Follow-up (2026-02-27, render fix): `wreckRenderer` now applies F22 single-image wreck rotation with `+ PI/2` (matching live F22 render convention) to prevent opposite-facing wreck orientation.
+
+- Follow-up (2026-02-27, workshop restoration render fix): `wreckRenderer` now always resolves the F22 wreck sprite even while the wreck is in workshop restoration preview mode (avoids default fallback), and workshop restoration previews rotate wreck visuals to a consistent 45° heading for F22 and other unit wrecks.
