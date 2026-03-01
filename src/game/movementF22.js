@@ -26,6 +26,28 @@ const F22_COMBAT_ORBIT_MIN_RADIUS = TILE_SIZE * 7
 const F22_ORBIT_RPS = 0.16
 const F22_RTB_FUEL_RATIO = 0.2
 const F22_CRASH_DURATION_MS = 3200
+const F22_TAKEOFF_CLEARANCE_TIMEOUT_MS = 15000
+const F22_TAXI_TO_RUNWAY_TIMEOUT_MS = 20000
+const F22_TAKEOFF_ROLL_TIMEOUT_MS = 12000
+const F22_LIFTOFF_TIMEOUT_MS = 12000
+const F22_LANDING_CLEARANCE_TIMEOUT_MS = 25000
+const F22_APPROACH_TIMEOUT_MS = 18000
+const F22_LANDING_ROLL_TIMEOUT_MS = 15000
+const F22_TAXI_TO_PARKING_TIMEOUT_MS = 22000
+
+const F22_TAKEOFF_OPERATION_STATES = new Set([
+  'wait_takeoff_clearance',
+  'taxi_to_runway_start',
+  'takeoff_roll',
+  'liftoff'
+])
+
+const F22_LANDING_OPERATION_STATES = new Set([
+  'wait_landing_clearance',
+  'approach_runway',
+  'landing_roll',
+  'taxi_to_parking'
+])
 
 function getCrashEmitterPoints(unit) {
   const centerX = unit.x + TILE_SIZE / 2
@@ -205,6 +227,33 @@ function getUnitCenter(unit) {
 }
 
 function ensureRunwayData(unit) {
+  if (!unit.airstripId && Array.isArray(gameState.buildings)) {
+    const fallbackAirstrips = gameState.buildings.filter(building =>
+      building?.type === 'airstrip' &&
+      building.health > 0 &&
+      building.owner === unit.owner
+    )
+
+    if (fallbackAirstrips.length > 0) {
+      const unitCenter = getUnitCenter(unit)
+      fallbackAirstrips.sort((a, b) => {
+        const aCenterX = (a.x + (a.width || 0) / 2) * TILE_SIZE
+        const aCenterY = (a.y + (a.height || 0) / 2) * TILE_SIZE
+        const bCenterX = (b.x + (b.width || 0) / 2) * TILE_SIZE
+        const bCenterY = (b.y + (b.height || 0) / 2) * TILE_SIZE
+        const aDist = Math.hypot(unitCenter.x - aCenterX, unitCenter.y - aCenterY)
+        const bDist = Math.hypot(unitCenter.x - bCenterX, unitCenter.y - bCenterY)
+        return aDist - bDist
+      })
+
+      const fallbackAirstrip = fallbackAirstrips[0]
+      unit.airstripId = getBuildingIdentifier(fallbackAirstrip)
+      if (!unit.helipadTargetId) {
+        unit.helipadTargetId = unit.airstripId
+      }
+    }
+  }
+
   if (unit.runwayPoints?.runwayStart && unit.runwayPoints?.runwayLiftOff && unit.runwayPoints?.runwayExit) {
     return
   }
@@ -293,12 +342,101 @@ function shouldReturnToAirstrip(unit) {
   return unit.gas <= unit.maxGas * F22_RTB_FUEL_RATIO
 }
 
-function isFollowTargetAlive(unit) {
+function getFollowTargetEntity(unit) {
   const followTargetId = unit?.f22AssignedDestination?.followTargetId
-  if (!followTargetId || !Array.isArray(gameState.units)) {
-    return false
+  if (!followTargetId) return null
+
+  if (Array.isArray(gameState.units)) {
+    const unitTarget = gameState.units.find(candidate => candidate && candidate.id === followTargetId && candidate.health > 0)
+    if (unitTarget) return unitTarget
   }
-  return gameState.units.some(candidate => candidate && candidate.id === followTargetId && candidate.health > 0)
+
+  if (Array.isArray(gameState.buildings)) {
+    const buildingTarget = gameState.buildings.find(candidate => candidate && candidate.id === followTargetId && candidate.health > 0)
+    if (buildingTarget) return buildingTarget
+  }
+
+  return null
+}
+
+function isFollowTargetAlive(unit) {
+  return Boolean(getFollowTargetEntity(unit))
+}
+
+function sanitizeAirstripRunwayState(airstrip) {
+  if (!airstrip) return
+  ensureAirstripOperations(airstrip)
+
+  const liveF22Ids = new Set((Array.isArray(gameState.units) ? gameState.units : [])
+    .filter(candidate => candidate && candidate.type === 'f22Raptor' && candidate.health > 0)
+    .map(candidate => candidate.id))
+
+  const isTakeoffState = id => {
+    const unit = gameState.units?.find(candidate => candidate && candidate.id === id)
+    return Boolean(unit && F22_TAKEOFF_OPERATION_STATES.has(unit.f22State))
+  }
+
+  const isLandingState = id => {
+    const unit = gameState.units?.find(candidate => candidate && candidate.id === id)
+    return Boolean(unit && F22_LANDING_OPERATION_STATES.has(unit.f22State))
+  }
+
+  airstrip.f22RunwayTakeoffQueue = airstrip.f22RunwayTakeoffQueue.filter(id => liveF22Ids.has(id) && isTakeoffState(id))
+  airstrip.f22RunwayLandingQueue = airstrip.f22RunwayLandingQueue.filter(id => liveF22Ids.has(id) && isLandingState(id))
+
+  if (airstrip.f22RunwayOperation?.unitId) {
+    const activeUnitId = airstrip.f22RunwayOperation.unitId
+    const type = airstrip.f22RunwayOperation.type
+    const valid =
+      liveF22Ids.has(activeUnitId) &&
+      ((type === 'takeoff' && isTakeoffState(activeUnitId)) ||
+       (type === 'landing' && isLandingState(activeUnitId)))
+
+    if (!valid) {
+      airstrip.f22RunwayOperation = null
+    }
+  }
+}
+
+function forceParkAtAssignedAirstrip(unit, airstrip) {
+  if (!airstrip) return false
+  ensureAirstripOperations(airstrip)
+
+  if (!Number.isInteger(unit.airstripParkingSlotIndex) ||
+      (airstrip.f22OccupiedSlotUnitIds?.[unit.airstripParkingSlotIndex] &&
+       airstrip.f22OccupiedSlotUnitIds[unit.airstripParkingSlotIndex] !== unit.id)) {
+    const slot = claimAirstripParkingSlot(airstrip, unit.airstripParkingSlotIndex ?? null)
+    if (slot >= 0) {
+      unit.airstripParkingSlotIndex = slot
+    }
+  }
+
+  const parking = airstrip.f22ParkingSpots?.[unit.airstripParkingSlotIndex]
+  if (!parking) return false
+
+  unit.x = parking.worldX - TILE_SIZE / 2
+  unit.y = parking.worldY - TILE_SIZE / 2
+  unit.tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  unit.tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  unit.path = []
+  unit.moveTarget = null
+  unit.f22TaxiDestinationTile = null
+  unit.flightPlan = null
+  unit.flightState = 'grounded'
+  unit.altitude = 0
+  unit.shadow = { offset: 0, scale: 1 }
+  unit.f22State = 'parked'
+  unit.helipadLandingRequested = false
+  unit.f22PendingTakeoff = false
+  unit.landedHelipadId = getBuildingIdentifier(airstrip)
+  unit.helipadTargetId = unit.landedHelipadId
+  unit.direction = parking.facing
+  unit.rotation = parking.facing
+  setAirstripSlotOccupant(airstrip, unit.airstripParkingSlotIndex, unit.id)
+  airstrip.landedUnitId = unit.id
+  releaseAirstripRunwayOperation(airstrip, unit.id)
+
+  return true
 }
 
 function easeInQuad(t) {
@@ -456,7 +594,15 @@ export function updateF22FlightState(unit, movement, now) {
   const airstrip = getAirstripForUnit(unit)
   if (airstrip) {
     ensureAirstripOperations(airstrip)
+    sanitizeAirstripRunwayState(airstrip)
   }
+
+  if (unit.lastF22State !== unit.f22State) {
+    unit.lastF22State = unit.f22State
+    unit.lastF22StateChangeAt = now
+  }
+
+  const stateAgeMs = now - (unit.lastF22StateChangeAt || now)
 
   if (unit.helipadLandingRequested && unit.f22State === 'airborne') {
     unit.f22State = 'wait_landing_clearance'
@@ -479,11 +625,18 @@ export function updateF22FlightState(unit, movement, now) {
 
     const runwayGranted = airstrip ? tryClaimAirstripRunwayOperation(airstrip, unit.id, 'takeoff') : true
     if (!runwayGranted) {
+      if (stateAgeMs > F22_TAKEOFF_CLEARANCE_TIMEOUT_MS && airstrip) {
+        sanitizeAirstripRunwayState(airstrip)
+        unit.lastF22StateChangeAt = now
+      }
       finishTick()
       return
     }
 
     if (!isRunwayStartClear(unit, runway)) {
+      if (stateAgeMs > F22_TAKEOFF_CLEARANCE_TIMEOUT_MS) {
+        unit.lastF22StateChangeAt = now
+      }
       finishTick()
       return
     }
@@ -527,6 +680,18 @@ export function updateF22FlightState(unit, movement, now) {
       unit.direction = 0
       unit.rotation = 0
     }
+
+    if (stateAgeMs > F22_TAXI_TO_RUNWAY_TIMEOUT_MS) {
+      unit.x = runway.runwayStart.worldX - TILE_SIZE / 2
+      unit.y = runway.runwayStart.worldY - TILE_SIZE / 2
+      unit.path = []
+      unit.moveTarget = null
+      unit.f22TaxiDestinationTile = null
+      unit.f22State = 'takeoff_roll'
+      unit.lastF22StateChangeAt = now
+      unit.direction = 0
+      unit.rotation = 0
+    }
     finishTick()
     return
   }
@@ -550,6 +715,13 @@ export function updateF22FlightState(unit, movement, now) {
     if (centerX >= runway.runwayLiftOff.worldX) {
       unit.f22State = 'liftoff'
       unit.f22PendingTakeoff = false
+    }
+
+    if (stateAgeMs > F22_TAKEOFF_ROLL_TIMEOUT_MS) {
+      unit.f22State = 'liftoff'
+      unit.f22PendingTakeoff = false
+      unit.lastF22StateChangeAt = now
+      unit.x = Math.max(unit.x, runway.runwayLiftOff.worldX - TILE_SIZE / 2)
     }
     finishTick()
     return
@@ -627,6 +799,19 @@ export function updateF22FlightState(unit, movement, now) {
         followTargetId: unit.f22AssignedDestination.followTargetId || null
       }
     }
+
+    if (stateAgeMs > F22_LIFTOFF_TIMEOUT_MS) {
+      unit.f22State = 'airborne'
+      unit.flightState = 'airborne'
+      unit.f22TakeoffSoundPlayed = false
+      if (airstrip) {
+        releaseAirstripRunwayOperation(airstrip, unit.id)
+      }
+      if (unit.f22AssignedDestination?.mode === 'combat' && isFollowTargetAlive(unit)) {
+        unit.helipadLandingRequested = false
+      }
+      unit.lastF22StateChangeAt = now
+    }
     finishTick()
     return
   }
@@ -653,6 +838,10 @@ export function updateF22FlightState(unit, movement, now) {
         stopRadius: TILE_SIZE * 0.25,
         mode: 'airstrip'
       }
+      if (stateAgeMs > F22_LANDING_CLEARANCE_TIMEOUT_MS && airstrip) {
+        sanitizeAirstripRunwayState(airstrip)
+        unit.lastF22StateChangeAt = now
+      }
       finishTick()
       return
     }
@@ -668,6 +857,17 @@ export function updateF22FlightState(unit, movement, now) {
     if (reachedWorldPoint(unit, { x: runway.runwayExit.worldX, y: runway.runwayExit.worldY }, TILE_SIZE * 0.5)) {
       unit.f22State = 'landing_roll'
       unit.flightPlan = null
+      playPositionalSound('f22Landing', unit.x, unit.y, 0.55)
+    }
+
+    if (stateAgeMs > F22_APPROACH_TIMEOUT_MS) {
+      unit.x = runway.runwayExit.worldX - TILE_SIZE / 2
+      unit.y = runway.runwayExit.worldY - TILE_SIZE / 2
+      unit.path = []
+      unit.moveTarget = null
+      unit.flightPlan = null
+      unit.f22State = 'landing_roll'
+      unit.lastF22StateChangeAt = now
       playPositionalSound('f22Landing', unit.x, unit.y, 0.55)
     }
     finishTick()
@@ -731,6 +931,18 @@ export function updateF22FlightState(unit, movement, now) {
         }
       }
     }
+
+    if (stateAgeMs > F22_LANDING_ROLL_TIMEOUT_MS) {
+      unit.altitude = 0
+      unit.flightState = 'grounded'
+      unit.f22State = 'taxi_to_parking'
+      const landingAirstrip = getAirstripForUnit(unit)
+      if (landingAirstrip) {
+        releaseAirstripRunwayOperation(landingAirstrip, unit.id)
+        forceParkAtAssignedAirstrip(unit, landingAirstrip)
+      }
+      unit.lastF22StateChangeAt = now
+    }
     finishTick()
     return
   }
@@ -790,6 +1002,14 @@ export function updateF22FlightState(unit, movement, now) {
         }
       }
     }
+
+    if (stateAgeMs > F22_TAXI_TO_PARKING_TIMEOUT_MS) {
+      const taxiAirstrip = getAirstripForUnit(unit)
+      if (taxiAirstrip) {
+        forceParkAtAssignedAirstrip(unit, taxiAirstrip)
+      }
+      unit.lastF22StateChangeAt = now
+    }
     finishTick()
     return
   }
@@ -799,9 +1019,20 @@ export function updateF22FlightState(unit, movement, now) {
     const outOfAmmo = typeof unit.maxRocketAmmo === 'number' && (unit.rocketAmmo ?? 0) <= 0 && !unit.volleyState
     const hadCombatAssignment = unit.f22AssignedDestination?.mode === 'combat' && Boolean(unit.f22AssignedDestination?.followTargetId)
     const combatTargetDestroyed = hadCombatAssignment && !isFollowTargetAlive(unit)
+    const hasLiveCombatTarget = hadCombatAssignment && !combatTargetDestroyed
     const shouldReturnForFuel = shouldReturnToAirstrip(unit)
     const shouldReturnForAmmo = outOfAmmo
     const shouldReturnAfterCombat = combatTargetDestroyed
+
+    if (hasLiveCombatTarget && unit.helipadLandingRequested && !shouldReturnForAmmo && !shouldReturnForFuel) {
+      unit.helipadLandingRequested = false
+      if (unit.f22State === 'wait_landing_clearance' || unit.f22State === 'approach_runway') {
+        if (airstrip) {
+          releaseAirstripRunwayOperation(airstrip, unit.id)
+        }
+        unit.f22State = 'airborne'
+      }
+    }
 
     if (!unit.helipadLandingRequested && (shouldReturnForFuel || shouldReturnForAmmo || shouldReturnAfterCombat)) {
       unit.helipadLandingRequested = true

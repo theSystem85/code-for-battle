@@ -550,7 +550,19 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
   if (typeof unit.gas === 'number') {
     const distTiles = Math.hypot(unit.x - prevX, unit.y - prevY) / TILE_SIZE
     const distMeters = distTiles * TILE_LENGTH_METERS
-    const usage = (unit.gasConsumption || 0) * distMeters / 100000
+    let fuelMultiplier = 1
+    if (unit.type === 'f22Raptor') {
+      fuelMultiplier *= 3
+      if (
+        unit.f22State === 'wait_takeoff_clearance' ||
+        unit.f22State === 'taxi_to_runway_start' ||
+        unit.f22State === 'takeoff_roll' ||
+        unit.f22State === 'liftoff'
+      ) {
+        fuelMultiplier *= 2
+      }
+    }
+    const usage = (unit.gasConsumption || 0) * distMeters / 100000 * fuelMultiplier
     consumeUnitGas(unit, usage)
   }
 
