@@ -3,7 +3,7 @@
 **Branch:** `007-multi-player-ai-system`  
 **Status:** Implemented  
 **Created:** 2025-11-05  
-**Last Updated:** 2026-01-28
+**Last Updated:** 2026-02-27
 
 ---
 
@@ -102,6 +102,7 @@ This specification documents the comprehensive multi-player AI system that power
 - [x] AI rebuilds critical structures when destroyed
 - [x] AI adapts strategy based on current game state (winning/losing)
 - [x] AI Apache helicopters immediately target enemy helicopters within firing range and resume their prior objectives after the threat is destroyed or disengaged
+- [x] AI F22 Raptors acquire enemy targets via air combat behavior and initiate takeoff when grounded so produced F22 units actively join attacks
 
 ---
 
@@ -216,6 +217,10 @@ This specification documents the comprehensive multi-player AI system that power
 #### FR-019: Army Composition
 **Priority:** P1  
 **Description:** AI maintains balanced army composition: ~70% combat vehicles (tanks, rocket tanks, apache), ~20% heavy units (howitzers, tank-v3), ~10% support units (harvesters, ambulances, tankers). Adjusts ratios based on game phase and threat assessment.
+
+#### FR-019a: Enemy F22 Attack Activation
+**Priority:** P1  
+**Description:** AI-controlled F22 Raptors must use air-strike target selection and, when grounded, set takeoff intent immediately after target acquisition so they do not remain idle on the runway once produced.
 
 ---
 

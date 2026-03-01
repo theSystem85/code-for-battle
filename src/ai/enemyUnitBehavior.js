@@ -218,7 +218,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
     return
   }
 
-  if (unit.type === 'apache') {
+  if (unit.type === 'apache' || unit.type === 'f22Raptor') {
     updateApacheAI(unit, units, gameState, mapGrid, now, aiPlayerId)
     return
   }
@@ -1429,6 +1429,11 @@ function updateApacheAI(unit, units, gameState, mapGrid, now, aiPlayerId) {
 
   unit.target = target
   unit.allowedToAttack = true
+
+  if (unit.type === 'f22Raptor' && unit.health > 0 && unit.flightState === 'grounded') {
+    unit.f22PendingTakeoff = true
+  }
+
   unit.lastTargetChangeTime = now
   unit.lastDecisionTime = now
 
