@@ -1512,6 +1512,16 @@ function isAirDefenseNearby(position, units, gameState) {
   return nearbyTurrets
 }
 
+function isHarvesterAtOreField(harvester, gameState) {
+  if (!harvester || !gameState?.mapGrid) return false
+  if (harvester.harvesting) return true
+
+  const centerTileX = Math.floor((harvester.x + TILE_SIZE / 2) / TILE_SIZE)
+  const centerTileY = Math.floor((harvester.y + TILE_SIZE / 2) / TILE_SIZE)
+  const tile = gameState.mapGrid?.[centerTileY]?.[centerTileX]
+  return Boolean(tile && tile.ore && !tile.seedCrystal)
+}
+
 function findApacheStrikeTarget(units, gameState, seeker) {
   const player = gameState.humanPlayer
   const playerHarvesters = units.filter(u => u.owner === player && u.type === 'harvester' && u.health > 0)
@@ -1522,6 +1532,18 @@ function findApacheStrikeTarget(units, gameState, seeker) {
     return !isAirDefenseNearby(center, units, gameState)
   })
 
+  if (seeker?.type === 'f22Raptor') {
+    const oreFieldHarvesters = unprotectedHarvesters.filter(harvester => isHarvesterAtOreField(harvester, gameState))
+    if (oreFieldHarvesters.length > 0) {
+      oreFieldHarvesters.sort((a, b) => {
+        const aCenter = getUnitCenter(a)
+        const bCenter = getUnitCenter(b)
+        return Math.hypot(aCenter.x - seekerCenter.x, aCenter.y - seekerCenter.y) - Math.hypot(bCenter.x - seekerCenter.x, bCenter.y - seekerCenter.y)
+      })
+      return oreFieldHarvesters[0]
+    }
+  }
+
   if (unprotectedHarvesters.length > 0) {
     unprotectedHarvesters.sort((a, b) => {
       const aCenter = getUnitCenter(a)
@@ -1531,8 +1553,31 @@ function findApacheStrikeTarget(units, gameState, seeker) {
     return unprotectedHarvesters[0]
   }
 
-  const priorityBuildings = ['constructionYard', 'oreRefinery', 'vehicleFactory', 'powerPlant']
   const playerBuildings = (gameState.buildings || []).filter(b => b.owner === player && b.health > 0)
+
+  if (seeker?.type === 'f22Raptor') {
+    const unprotectedDefenses = playerBuildings.filter(building => {
+      if (!PLAYER_DEFENSE_BUILDINGS.has(building.type)) return false
+      const center = {
+        x: (building.x + (building.width || 1) / 2) * TILE_SIZE,
+        y: (building.y + (building.height || 1) / 2) * TILE_SIZE
+      }
+      return !isAirDefenseNearby(center, units, gameState)
+    })
+
+    if (unprotectedDefenses.length > 0) {
+      unprotectedDefenses.sort((a, b) => {
+        const aCenterX = (a.x + (a.width || 1) / 2) * TILE_SIZE
+        const aCenterY = (a.y + (a.height || 1) / 2) * TILE_SIZE
+        const bCenterX = (b.x + (b.width || 1) / 2) * TILE_SIZE
+        const bCenterY = (b.y + (b.height || 1) / 2) * TILE_SIZE
+        return Math.hypot(aCenterX - seekerCenter.x, aCenterY - seekerCenter.y) - Math.hypot(bCenterX - seekerCenter.x, bCenterY - seekerCenter.y)
+      })
+      return unprotectedDefenses[0]
+    }
+  }
+
+  const priorityBuildings = ['constructionYard', 'oreRefinery', 'vehicleFactory', 'powerPlant']
 
   for (const type of priorityBuildings) {
     const candidate = playerBuildings
@@ -1552,5 +1597,6 @@ function findApacheStrikeTarget(units, gameState, seeker) {
 
   return fallback || null
 }
+
 
 export { updateAIUnit }

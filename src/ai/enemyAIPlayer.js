@@ -18,6 +18,7 @@ import { RECOVERY_TANK_RATIO, UNIT_COSTS } from '../config.js'
 import { gameState } from '../gameState.js'
 import { getLlmSettings } from './llmSettings.js'
 import { processLlmBuildQueue, processLlmUnitQueue, markLlmBuildComplete, markLlmUnitComplete } from '../ai-api/applier.js'
+import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/airstripUtils.js'
 
 const AI_SELL_PRIORITY = [
   'turretGunV1',
@@ -804,7 +805,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const isVeryHighBudget = aiFactory.budget >= VERY_HIGH_BUDGET_THRESHOLD
       const apacheCapacity = helipadsForProduction.length
       const needApache = apacheCapacity > 0 && (aiApaches.length + apacheCountInProduction) < apacheCapacity
-      const f22Capacity = airstripsForProduction.length
+      const multiF22BudgetThreshold = 10000
+      const f22PerAirstripTarget = aiFactory.budget > multiF22BudgetThreshold ? 2 : 1
+      const f22Capacity = airstripsForProduction.length * f22PerAirstripTarget
       const needF22 = f22Capacity > 0 && (aiF22s.length + f22CountInProduction) < f22Capacity
 
       // Check if we need to force the harvester hunter (use variables from above)
@@ -921,13 +924,17 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
             return
           }
         } else if (unitType === 'f22Raptor') {
-          if (airstripsForProduction.length > 0) {
+          const availableAirstrips = airstripsForProduction.filter(airstrip => {
+            ensureAirstripOperations(airstrip)
+            return claimAirstripParkingSlot(airstrip) >= 0
+          })
+
+          if (availableAirstrips.length > 0) {
             const airstripIndexKey = `next${aiPlayerId}AirstripIndex`
             gameState[airstripIndexKey] = gameState[airstripIndexKey] ?? 0
-            spawnFactory = airstripsForProduction[gameState[airstripIndexKey] % airstripsForProduction.length]
+            spawnFactory = availableAirstrips[gameState[airstripIndexKey] % availableAirstrips.length]
             gameState[airstripIndexKey]++
           } else {
-            console.error(`Cannot spawn f22Raptor: AI player ${aiPlayerId} has no Airstrip.`)
             gameState[lastProductionKey] = now
             return
           }

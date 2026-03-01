@@ -3,7 +3,7 @@
 **Branch:** `007-multi-player-ai-system`  
 **Status:** Implemented  
 **Created:** 2025-11-05  
-**Last Updated:** 2026-02-27
+**Last Updated:** 2026-03-01
 
 ---
 
@@ -103,6 +103,7 @@ This specification documents the comprehensive multi-player AI system that power
 - [x] AI adapts strategy based on current game state (winning/losing)
 - [x] AI Apache helicopters immediately target enemy helicopters within firing range and resume their prior objectives after the threat is destroyed or disengaged
 - [x] AI F22 Raptors acquire enemy targets via air combat behavior and initiate takeoff when grounded so produced F22 units actively join attacks
+- [x] AI F22 Raptors spawn/park/takeoff/land through the same airstrip flow as player F22s, prioritize ore-field harvesters, and then unprotected player defense buildings
 
 ---
 
@@ -221,6 +222,14 @@ This specification documents the comprehensive multi-player AI system that power
 #### FR-019a: Enemy F22 Attack Activation
 **Priority:** P1  
 **Description:** AI-controlled F22 Raptors must use air-strike target selection and, when grounded, set takeoff intent immediately after target acquisition so they do not remain idle on the runway once produced.
+
+#### FR-019b: AI F22 Production Scaling & Ground Discipline
+**Priority:** P1  
+**Description:** AI should scale to at least two F22 Raptors per airstrip once budget exceeds 10k while still spawning each F22 on a valid airstrip parking slot and keeping it grounded on airstrip/runway tiles until runway takeoff begins.
+
+#### FR-019c: AI F22 Target Priorities
+**Priority:** P1  
+**Description:** AI F22 strike targeting should prioritize player harvesters actively working at ore fields; when unavailable, prioritize player defensive buildings that are not covered by air defense before falling back to other unprotected structures.
 
 ---
 
