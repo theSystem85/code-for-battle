@@ -1,4 +1,6 @@
 import { gameState } from '../gameState.js'
+import { getMapRenderer, getTextureManager } from '../rendering.js'
+import { initializeOccupancyMap } from '../units.js'
 import {
   activateMapEditMode,
   deactivateMapEditMode,
@@ -14,11 +16,35 @@ import {
   toggleRandomMode
 } from '../mapEditor.js'
 import { listPartyStates, observePartyOwnershipChange } from '../network/multiplayerStore.js'
+import { initSpriteSheetEditor } from './spriteSheetEditor.js'
 
 let editButton = null
 let tileSelect = null
 let randomCheckbox = null
 let statusEl = null
+let integratedSpriteSheetModeCheckbox = null
+
+const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
+
+async function applyIntegratedSpriteSheetRuntime(metadata = null) {
+  const textureManager = getTextureManager()
+  if (!textureManager?.setIntegratedSpriteSheetConfig) return
+
+  await textureManager.setIntegratedSpriteSheetConfig({
+    enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+    sheetPath: metadata?.sheetPath || gameState.activeSpriteSheetPath,
+    metadata: metadata || gameState.activeSpriteSheetMetadata || null
+  })
+
+  const mapRenderer = getMapRenderer()
+  if (mapRenderer) {
+    mapRenderer.invalidateAllChunks()
+  }
+
+  if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
+    gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
+  }
+}
 
 function updatePauseIcon() {
   const pauseBtn = document.getElementById('pauseBtn')
@@ -84,6 +110,17 @@ export function initMapEditorControls() {
   tileSelect = document.getElementById('mapEditTileSelect')
   randomCheckbox = document.getElementById('mapEditRandomToggle')
   statusEl = document.getElementById('mapEditStatus')
+  integratedSpriteSheetModeCheckbox = document.getElementById('integratedSpriteSheetModeCheckbox')
+
+  gameState.useIntegratedSpriteSheetMode = Boolean(gameState.useIntegratedSpriteSheetMode)
+  try {
+    const storedMode = localStorage.getItem(INTEGRATED_MODE_STORAGE_KEY)
+    if (storedMode !== null) {
+      gameState.useIntegratedSpriteSheetMode = storedMode === 'true'
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load integrated sprite sheet mode:', err)
+  }
 
   if (editButton) {
     editButton.addEventListener('click', () => {
@@ -107,6 +144,42 @@ export function initMapEditorControls() {
       syncControlsFromState()
     })
   }
+
+  if (integratedSpriteSheetModeCheckbox) {
+    integratedSpriteSheetModeCheckbox.checked = gameState.useIntegratedSpriteSheetMode
+    integratedSpriteSheetModeCheckbox.addEventListener('change', async(e) => {
+      const enabled = Boolean(e.target.checked)
+      gameState.useIntegratedSpriteSheetMode = enabled
+      try {
+        localStorage.setItem(INTEGRATED_MODE_STORAGE_KEY, enabled ? 'true' : 'false')
+      } catch (err) {
+        window.logger.warn('Failed to persist integrated sprite sheet mode:', err)
+      }
+      await applyIntegratedSpriteSheetRuntime()
+    })
+  }
+
+  initSpriteSheetEditor({
+    initialSheetPath: gameState.activeSpriteSheetPath,
+    onSheetDataChange: (metadata) => {
+      gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
+      gameState.activeSpriteSheetMetadata = metadata
+      if (gameState.useIntegratedSpriteSheetMode) {
+        applyIntegratedSpriteSheetRuntime(metadata)
+      }
+    },
+    onApply: (metadata) => {
+      gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
+      gameState.activeSpriteSheetMetadata = metadata
+      applyIntegratedSpriteSheetRuntime(metadata)
+    }
+  }).then((controller) => {
+    if (gameState.useIntegratedSpriteSheetMode) {
+      controller.refreshRuntimeSheetData()
+    }
+  }).catch((err) => {
+    window.logger.warn('Failed to initialize Sprite Sheet Editor:', err)
+  })
 
   observePartyOwnershipChange(updateLockState)
   updateLockState()

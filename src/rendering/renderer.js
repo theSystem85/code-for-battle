@@ -257,7 +257,7 @@ export class Renderer {
 
     // Render all game elements in order
     let gpuRendered = false
-    if (gpuContext && gpuCanvas) {
+    if (gpuContext && gpuCanvas && !gameState.useIntegratedSpriteSheetMode) {
       if (!this.gpuRenderer) {
         this.gpuRenderer = new GameWebGLRenderer(gpuContext, this.textureManager)
       } else {

@@ -202,6 +202,7 @@ export class MapRenderer {
         endY,
         signature: null,
         lastUseTexture: null,
+        lastIntegratedSignature: null,
         lastWaterFrameIndex: null,
         lastSotMaskVersion: null,
         containsWaterAnimation: false,
@@ -262,6 +263,7 @@ export class MapRenderer {
     const needsRedraw =
       chunk.signature !== signature ||
       chunk.lastUseTexture !== useTexture ||
+      chunk.lastIntegratedSignature !== this.textureManager.integratedRenderSignature ||
       chunk.lastSotMaskVersion !== this.sotMaskVersion ||
       chunk.containsWaterAnimation !== hasWaterAnimation ||
       (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
@@ -297,6 +299,7 @@ export class MapRenderer {
 
     chunk.signature = signature
     chunk.lastUseTexture = useTexture
+    chunk.lastIntegratedSignature = this.textureManager.integratedRenderSignature
     chunk.lastSotMaskVersion = this.sotMaskVersion
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
@@ -420,6 +423,25 @@ export class MapRenderer {
   }
 
   drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+    if (this.textureManager.integratedSpriteSheetMode) {
+      const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
+      if (integratedTile?.image && integratedTile?.rect) {
+        const { image, rect } = integratedTile
+        ctx.drawImage(
+          image,
+          rect.x,
+          rect.y,
+          rect.width,
+          rect.height,
+          screenX,
+          screenY,
+          TILE_SIZE + 1,
+          TILE_SIZE + 1
+        )
+        return
+      }
+    }
+
     if (type === 'water' && this.textureManager.waterFrames.length) {
       const frame = currentWaterFrame || this.textureManager.getCurrentWaterFrame()
       if (frame) {

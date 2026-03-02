@@ -1,4 +1,7 @@
 ## Features
+- [x] Add Sprite Sheet Editor (SSE) modal under Map Settings with tag-paint workflow, per-sheet metadata JSON apply/export, and integrated sprite-sheet map rendering mode toggle.
+- [x] Extend SSE with zoom controls (in/out/100%/snap), apply-current-tag-to-all action, and resizable/maximizable modal UX.
+- [x] Refine SSE to fullscreen-only edge-to-edge layout with no top bar, default snap-to-canvas fit, functional zoom controls, and right-click drag inertia panning (no native scrollbars).
 - [x] Show the straight-line (air) distance in meters below the move cursor when units are selected and hovering valid move targets.
 - [x] Extend AGF to selected defensive buildings so box-selected enemy targets are queued (FIFO) and resolve rocket/artillery forced-target no-fire regression by fixing building force-target acquisition.
 - [x] Allow selected defense buildings to queue forced attack targets in FIFO order and show numbered red target indicators on queued enemies.
