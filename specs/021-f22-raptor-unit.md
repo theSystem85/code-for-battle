@@ -60,6 +60,13 @@ Additional hardening from user follow-up:
 3. F22 anti-push hardening extended in collision internals: safe-separation blocking and minimum
 	separation correction now explicitly skip F22 participation.
 
+## Engineering Update (2026-03-02)
+Remaining enemy AI airborne-targeting edge cases were fixed. Non-anti-air enemy ground units could
+still choose airborne Apache/F22 targets through base-defense threat selection and harvester-hunter
+self-defense scans in `enemyUnitBehavior.js`, leading to visible aim-lock on untargetable airborne
+units. Both selection paths now apply shared air-target eligibility checks so non-AA units ignore
+airborne-only targets and retarget to valid ground threats.
+
 ## Cluster A: Spawn, Airstrip Lifecycle, and Queueing
 `Primary files`: `src/utils/airstripUtils.js`, `src/game/movementF22.js`, `src/input/unitCommands/airCommands.js`, `src/units.js`, `src/productionQueue.js`, `src/saveGame.js`
 
