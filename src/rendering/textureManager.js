@@ -142,40 +142,107 @@ export class TextureManager {
     return 'impassable'
   }
 
+  selectIntegratedTileByTags(requiredTags, x, y, excludedTags = []) {
+    if (!Array.isArray(requiredTags) || !requiredTags.length) return null
+
+    const buckets = this.integratedTagBuckets || {}
+    let seedBucket = null
+
+    requiredTags.forEach((tag) => {
+      const bucket = buckets[tag]
+      if (!Array.isArray(bucket) || !bucket.length) {
+        seedBucket = []
+        return
+      }
+      if (!seedBucket || bucket.length < seedBucket.length) {
+        seedBucket = bucket
+      }
+    })
+
+    if (!Array.isArray(seedBucket) || !seedBucket.length) {
+      return null
+    }
+
+    const filtered = seedBucket.filter((tile) => {
+      if (!Array.isArray(tile?.tags) || !tile.rect) return false
+      const hasRequired = requiredTags.every(tag => tile.tags.includes(tag))
+      if (!hasRequired) return false
+      return excludedTags.every(tag => !tile.tags.includes(tag))
+    })
+
+    if (!filtered.length) {
+      return null
+    }
+
+    return filtered[TextureManager.coordHash(x, y) % filtered.length]
+  }
+
+  getIntegratedTileCandidatesByTags(requiredTags, excludedTags = []) {
+    if (!Array.isArray(requiredTags) || !requiredTags.length) return []
+
+    const buckets = this.integratedTagBuckets || {}
+    let seedBucket = null
+
+    requiredTags.forEach((tag) => {
+      const bucket = buckets[tag]
+      if (!Array.isArray(bucket) || !bucket.length) {
+        seedBucket = []
+        return
+      }
+      if (!seedBucket || bucket.length < seedBucket.length) {
+        seedBucket = bucket
+      }
+    })
+
+    if (!Array.isArray(seedBucket) || !seedBucket.length) {
+      return []
+    }
+
+    return seedBucket.filter((tile) => {
+      if (!Array.isArray(tile?.tags) || !tile.rect) return false
+      const hasRequired = requiredTags.every(tag => tile.tags.includes(tag))
+      if (!hasRequired) return false
+      return excludedTags.every(tag => !tile.tags.includes(tag))
+    })
+  }
+
+  selectIntegratedTileFromCandidates(candidates, x, y) {
+    if (!Array.isArray(candidates) || !candidates.length) return null
+    return candidates[TextureManager.coordHash(x, y) % candidates.length]
+  }
+
   getIntegratedTileForMapTile(type, x, y) {
     if (!this.integratedSpriteSheetMode || !this.integratedSpriteSheetImage || !this.integratedSpriteSheetMetadata) {
       return null
     }
 
-    const buckets = this.integratedTagBuckets || {}
-    const preferredTags = []
+    let selected = null
 
     if (type === 'land') {
-      preferredTags.push(this.integratedBiomeTag)
-    } else if (type === 'street') {
-      preferredTags.push('street')
-    } else if (type === 'rock') {
-      preferredTags.push('rocks', 'rock')
-    } else if (type === 'water') {
-      preferredTags.push('water')
-    } else {
-      preferredTags.push(type, 'passable')
-    }
-
-    let selectedBucket = null
-    for (const tag of preferredTags) {
-      const bucket = buckets[tag]
-      if (Array.isArray(bucket) && bucket.length) {
-        selectedBucket = bucket
-        break
+      const classification = this.getLandClassificationTag(x, y)
+      const biomeDecorativeCandidates = this.getIntegratedTileCandidatesByTags([this.integratedBiomeTag, 'decorative'])
+      if (classification === 'decorative') {
+        if (biomeDecorativeCandidates.length) {
+          selected = this.selectIntegratedTileFromCandidates(biomeDecorativeCandidates, x, y)
+        }
+      } else if (classification === 'impassable') {
+        selected = this.selectIntegratedTileByTags([this.integratedBiomeTag, 'impassable'], x, y)
+      } else {
+        selected = this.selectIntegratedTileByTags([this.integratedBiomeTag, 'passable'], x, y, ['decorative', 'impassable'])
+          || this.selectIntegratedTileByTags([this.integratedBiomeTag], x, y, ['decorative', 'impassable'])
       }
+    } else if (type === 'street') {
+      selected = this.selectIntegratedTileByTags(['street'], x, y)
+    } else if (type === 'rock') {
+      selected = this.selectIntegratedTileByTags(['rocks'], x, y)
+        || this.selectIntegratedTileByTags(['rock'], x, y)
+    } else if (type === 'water') {
+      selected = this.selectIntegratedTileByTags(['water'], x, y)
+    } else {
+      selected = this.selectIntegratedTileByTags([type], x, y)
+        || this.selectIntegratedTileByTags(['passable'], x, y)
     }
 
-    if (!selectedBucket) {
-      return null
-    }
-
-    const selected = selectedBucket[TextureManager.coordHash(x, y) % selectedBucket.length]
     if (!selected?.rect) return null
 
     return {

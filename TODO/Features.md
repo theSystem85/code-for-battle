@@ -5,6 +5,7 @@
 - [x] Refine SSE so red overlay follows active tag selection only, and apply action immediately loads generated JSON into runtime memory for next map reload/regeneration.
 - [x] Refine SSE label behavior so labels (if enabled) stay visible for all tagged tiles while only red overlay is filtered by active tag.
 - [x] Add Map Settings SSE biome dropdown (soil/sand/grass/snow) to control integrated land-tile biome tag preference.
+- [x] Add SSE checkbox to toggle red tag overlay visibility in the editor canvas.
 - [x] Show the straight-line (air) distance in meters below the move cursor when units are selected and hovering valid move targets.
 - [x] Extend AGF to selected defensive buildings so box-selected enemy targets are queued (FIFO) and resolve rocket/artillery forced-target no-fire regression by fixing building force-target acquisition.
 - [x] Allow selected defense buildings to queue forced attack targets in FIFO order and show numbered red target indicators on queued enemies.

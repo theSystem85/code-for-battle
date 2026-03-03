@@ -80,15 +80,29 @@ test.describe('Sprite Sheet Editor integration', () => {
     expect(activeTagOverlayPixel).not.toBeNull()
 
     await page.check('#sseTagList input[value="decorative"]')
+    await canvas.click({ position: { x: 12, y: 12 } })
 
     const differentTagOverlayPixel = await page.evaluate(() => {
       const canvasEl = document.getElementById('sseTileCanvas')
       const ctx = canvasEl?.getContext('2d')
       if (!ctx) return null
-      return Array.from(ctx.getImageData(20, 50, 1, 1).data)
+      return Array.from(ctx.getImageData(20, 20, 1, 1).data)
     })
     expect(differentTagOverlayPixel).not.toBeNull()
     expect(differentTagOverlayPixel).not.toEqual(activeTagOverlayPixel)
+
+    await page.uncheck('#sseShowTaggedOverlayCheckbox')
+
+    const overlayDisabledPixel = await page.evaluate(() => {
+      const canvasEl = document.getElementById('sseTileCanvas')
+      const ctx = canvasEl?.getContext('2d')
+      if (!ctx) return null
+      return Array.from(ctx.getImageData(20, 20, 1, 1).data)
+    })
+    expect(overlayDisabledPixel).not.toBeNull()
+    expect(overlayDisabledPixel).not.toEqual(differentTagOverlayPixel)
+
+    await page.check('#sseShowTaggedOverlayCheckbox')
 
     const labelPixelWithoutLabels = await page.evaluate(() => {
       const canvasEl = document.getElementById('sseTileCanvas')
@@ -236,17 +250,9 @@ test.describe('Sprite Sheet Editor integration', () => {
         return null
       }
 
-      const addTag = (tileKey, tag) => {
-        const tile = metadata.tiles[tileKey]
-        if (!tile) return
-        const tags = Array.isArray(tile.tags) ? tile.tags : []
-        if (!tags.includes(tag)) tags.push(tag)
-        tile.tags = tags
-      }
-
-      addTag(keys[0], 'grass')
-      addTag(keys[1], 'snow')
-      addTag(keys[2], 'rocks')
+      metadata.tiles[keys[0]].tags = ['grass', 'passable']
+      metadata.tiles[keys[1]].tags = ['grass', 'decorative']
+      metadata.tiles[keys[2]].tags = ['snow', 'passable', 'rocks']
 
       gameState.activeSpriteSheetMetadata = metadata
 
@@ -308,18 +314,10 @@ test.describe('Sprite Sheet Editor integration', () => {
         biomeTag: 'grass'
       })
 
-      let landPos = { x: 1, y: 1 }
-      for (let y = 0; y < mapGrid.length; y++) {
-        for (let x = 0; x < mapGrid[y].length; x++) {
-          if (mapGrid[y][x]?.type === 'land') {
-            landPos = { x, y }
-            y = mapGrid.length
-            break
-          }
-        }
-      }
-
-      const landGrass = textureManager.getIntegratedTileForMapTile('land', landPos.x, landPos.y)
+      const originalClassifier = textureManager.getLandClassificationTag.bind(textureManager)
+      textureManager.getLandClassificationTag = () => 'passable'
+      const landGrass = textureManager.getIntegratedTileForMapTile('land', 2, 2)
+      textureManager.getLandClassificationTag = originalClassifier
 
       return {
         biomeTag: textureManager.integratedBiomeTag,
@@ -329,6 +327,51 @@ test.describe('Sprite Sheet Editor integration', () => {
     expect(grassBiomeResolutionCheck).not.toBeNull()
     expect(grassBiomeResolutionCheck.biomeTag).toBe('grass')
     expect(grassBiomeResolutionCheck.grassTags).toContain('grass')
+
+    const decorativeBiomeUseCheck = await page.evaluate(async() => {
+      const renderingModule = await import('/src/rendering.js')
+      const textureManager = renderingModule?.getTextureManager ? renderingModule.getTextureManager() : null
+      const gameState = window.gameState
+      if (!textureManager || !gameState?.activeSpriteSheetPath || !gameState?.activeSpriteSheetMetadata) {
+        return null
+      }
+
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        sheetPath: gameState.activeSpriteSheetPath,
+        metadata: gameState.activeSpriteSheetMetadata,
+        biomeTag: 'grass'
+      })
+
+      const originalClassifier = textureManager.getLandClassificationTag.bind(textureManager)
+
+      textureManager.getLandClassificationTag = () => 'decorative'
+      const decorativeTile = textureManager.getIntegratedTileForMapTile('land', 3, 3)
+      let decorativeNullCount = 0
+      for (let i = 0; i < 24; i++) {
+        const sampleTile = textureManager.getIntegratedTileForMapTile('land', i, i + 1)
+        if (!sampleTile) {
+          decorativeNullCount++
+        }
+      }
+
+      textureManager.getLandClassificationTag = () => 'passable'
+      const passableTile = textureManager.getIntegratedTileForMapTile('land', 3, 3)
+
+      textureManager.getLandClassificationTag = originalClassifier
+
+      return {
+        decorativeTags: decorativeTile?.tags || [],
+        passableTags: passableTile?.tags || [],
+        decorativeNullCount
+      }
+    })
+    expect(decorativeBiomeUseCheck).not.toBeNull()
+    expect(decorativeBiomeUseCheck.decorativeTags).toContain('grass')
+    expect(decorativeBiomeUseCheck.decorativeTags).toContain('decorative')
+    expect(decorativeBiomeUseCheck.decorativeNullCount).toBe(0)
+    expect(decorativeBiomeUseCheck.passableTags).toContain('grass')
+    expect(decorativeBiomeUseCheck.passableTags).not.toContain('decorative')
 
     const fallbackCheck = await page.evaluate(async() => {
       const renderingModule = await import('/src/rendering.js')

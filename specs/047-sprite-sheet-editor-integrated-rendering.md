@@ -14,6 +14,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - zoom controls: in, out, 100%, snap-to-canvas
   - grid visibility toggle
   - label visibility toggle
+  - red tag overlay visibility toggle
 - Support click and click-drag tile tagging on sheet canvas.
 - Persist per-sheet metadata across sheet switches.
 - Add `Apply tags` action that updates runtime metadata and exports JSON.
@@ -28,6 +29,8 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - Applying tags immediately commits generated JSON into game runtime memory/state for next map regenerate/reload usage.
 - Map Settings includes SSE biome selector (`soil`, `sand`, `grass`, `snow`) that defines preferred tag family for integrated land fill rendering.
 - Integrated land tiles resolve strictly from the selected biome tag family (no generic passable/decorative fallback randomness).
+- Integrated land tiles preserve legacy passable/decorative/impassable likelihood while resolving within the selected biome tag family.
+- Tiles tagged with `<biome> + decorative` are used only for decorative land-class tiles of that biome, never for normal passable land.
 - Add `rocks` to SSE default tag options for rock tile mapping.
 - Integrated rendering falls back to legacy non-SSE textures per tile type (`land`, `street`, `water`, `rock`) when the required SSE tag bucket is missing.
 - Add map setting checkbox for integrated sprite-sheet mode.
@@ -76,6 +79,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - Switching sheets loads immediately and preserves edits from previous sheet.
 - Tagging supports click and drag; toggling same active tag on tile removes it.
 - Grid and label visibility toggles work.
+- Red tag overlay visibility toggle works.
 - Zoom controls update canvas zoom and support snap-to-canvas + direct 100% reset.
 - Apply-current-tag-all marks every segment tile with active tag.
 - SSE opens in fullscreen with no top bar.
@@ -86,6 +90,8 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - Applied tags export JSON and update runtime data.
 - Mode checkbox switches between legacy and integrated rendering path.
 - Changing SSE biome immediately updates integrated land tile selection to that biome-tag bucket.
+- Decorative biome-tagged tiles are selected only when land-classification resolves to decorative at legacy distribution likelihood.
+- Non-SSE decorative land fallback is allowed only if zero SSE candidates exist for `<selected-biome> + decorative`; do not mix SSE decorative and legacy decorative sources when SSE candidates are available.
 - `rock` map tiles use `rocks` (or legacy `rock`) tag bucket when present, else fall back to legacy non-SSE rendering.
 - Movement blocking matches existing behavior for `impassable` in integrated mode.
 - No full-map forced redraw on each paint step; chunk-based invalidation remains in place.

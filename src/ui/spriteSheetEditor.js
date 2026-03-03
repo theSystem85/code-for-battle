@@ -707,6 +707,7 @@ export async function initSpriteSheetEditor(options = {}) {
     addTagBtn: document.getElementById('sseAddTagBtn'),
     showGridCheckbox: document.getElementById('sseShowGridCheckbox'),
     showLabelsCheckbox: document.getElementById('sseShowLabelsCheckbox'),
+    showTaggedOverlayCheckbox: document.getElementById('sseShowTaggedOverlayCheckbox'),
     zoomInBtn: document.getElementById('sseZoomInBtn'),
     zoomOutBtn: document.getElementById('sseZoomOutBtn'),
     zoom100Btn: document.getElementById('sseZoom100Btn'),
@@ -815,6 +816,12 @@ export async function initSpriteSheetEditor(options = {}) {
 
   state.showLabelsCheckbox?.addEventListener('change', () => {
     state.showLabels = Boolean(state.showLabelsCheckbox.checked)
+    drawSseCanvas(state)
+    applyCanvasZoom(state)
+  })
+
+  state.showTaggedOverlayCheckbox?.addEventListener('change', () => {
+    state.showTaggedOverlay = Boolean(state.showTaggedOverlayCheckbox.checked)
     drawSseCanvas(state)
     applyCanvasZoom(state)
   })
