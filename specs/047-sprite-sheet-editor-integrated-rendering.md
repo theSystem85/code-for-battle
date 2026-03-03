@@ -23,6 +23,9 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - Remove canvas scrollbars and use right-click + drag panning with inertia (map-like navigation).
 - Fit sprite sheet to canvas by default (`snap-to-canvas`) when opening/loading sheet.
 - Use edge-to-edge layout with no extra gutters between sidebar and canvas; sidebar visual style follows main game sidebar.
+- Red tile overlay highlights only tiles tagged with the currently selected active tag.
+- Tag labels (when enabled) remain visible for all tagged tiles regardless of active tag selection.
+- Applying tags immediately commits generated JSON into game runtime memory/state for next map regenerate/reload usage.
 - Add map setting checkbox for integrated sprite-sheet mode.
 - Preserve passability semantics:
   - `impassable` blocks movement like current impassable behavior
@@ -74,6 +77,8 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - SSE opens in fullscreen with no top bar.
 - Right-click drag pans canvas and continues briefly with inertia.
 - Default opening scale matches fit-to-canvas scale.
+- Changing active tag updates red tile overlay visibility immediately.
+- After `Apply tags`, runtime uses freshly generated JSON without requiring SSE reopen.
 - Applied tags export JSON and update runtime data.
 - Mode checkbox switches between legacy and integrated rendering path.
 - Movement blocking matches existing behavior for `impassable` in integrated mode.

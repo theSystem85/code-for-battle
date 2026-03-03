@@ -208,8 +208,12 @@ function drawSseCanvas(state) {
       const { col, row } = parseTileKey(tileKey)
       const x = col * tileSize
       const y = row * tileSize
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.33)'
-      ctx.fillRect(x, y, tileSize, tileSize)
+      const isActiveTagTile = state.activeTag && tileData.tags.includes(state.activeTag)
+
+      if (isActiveTagTile) {
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.33)'
+        ctx.fillRect(x, y, tileSize, tileSize)
+      }
 
       if (state.showLabels) {
         const tags = tileData.tags
@@ -371,6 +375,8 @@ function renderTagList(state) {
     input.addEventListener('change', () => {
       state.activeTag = tag
       renderTagList(state)
+      drawSseCanvas(state)
+      applyCanvasZoom(state)
     })
 
     const usedCount = Object.values(state.activeData.tiles)
@@ -836,13 +842,13 @@ export async function initSpriteSheetEditor(options = {}) {
 
   updateZoomDisplay(state)
 
-  state.applyTagsBtn?.addEventListener('click', () => {
+  state.applyTagsBtn?.addEventListener('click', async() => {
     if (!state.activeData || !state.image) return
     saveDataToLocalStorage(state.activeData)
     const serialized = toSerializableData(state.activeData, state.image)
     const sourceTile = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
 
-    options.onApply?.(serialized)
+    await Promise.resolve(options.onApply?.(serialized))
     triggerJsonDownload(state.activeData.sheetPath, serialized)
 
     if (sourceTile < 64) {

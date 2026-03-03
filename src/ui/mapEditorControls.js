@@ -25,6 +25,7 @@ let statusEl = null
 let integratedSpriteSheetModeCheckbox = null
 
 const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
+const SSE_APPLIED_METADATA_STORAGE_KEY = 'rts-sse-applied-metadata'
 
 async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   const textureManager = getTextureManager()
@@ -122,6 +123,19 @@ export function initMapEditorControls() {
     window.logger.warn('Failed to load integrated sprite sheet mode:', err)
   }
 
+  try {
+    const storedAppliedMetadata = localStorage.getItem(SSE_APPLIED_METADATA_STORAGE_KEY)
+    if (storedAppliedMetadata) {
+      const parsed = JSON.parse(storedAppliedMetadata)
+      if (parsed && typeof parsed === 'object') {
+        gameState.activeSpriteSheetMetadata = parsed
+        gameState.activeSpriteSheetPath = parsed.sheetPath || gameState.activeSpriteSheetPath || null
+      }
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load applied SSE metadata from localStorage:', err)
+  }
+
   if (editButton) {
     editButton.addEventListener('click', () => {
       if (isMapEditorLocked()) return
@@ -168,10 +182,15 @@ export function initMapEditorControls() {
         applyIntegratedSpriteSheetRuntime(metadata)
       }
     },
-    onApply: (metadata) => {
+    onApply: async(metadata) => {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
-      applyIntegratedSpriteSheetRuntime(metadata)
+      try {
+        localStorage.setItem(SSE_APPLIED_METADATA_STORAGE_KEY, JSON.stringify(metadata))
+      } catch (err) {
+        window.logger.warn('Failed to persist applied SSE metadata:', err)
+      }
+      await applyIntegratedSpriteSheetRuntime(metadata)
     }
   }).then((controller) => {
     if (gameState.useIntegratedSpriteSheetMode) {

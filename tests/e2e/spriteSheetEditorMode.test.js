@@ -67,6 +67,47 @@ test.describe('Sprite Sheet Editor integration', () => {
     await canvas.click({ position: { x: 12, y: 12 } })
     await canvas.click({ position: { x: 80, y: 12 } })
 
+    await page.uncheck('#sseShowLabelsCheckbox')
+
+    const activeTagOverlayPixel = await page.evaluate(() => {
+      const canvasEl = document.getElementById('sseTileCanvas')
+      const ctx = canvasEl?.getContext('2d')
+      if (!ctx) return null
+      return Array.from(ctx.getImageData(20, 50, 1, 1).data)
+    })
+    expect(activeTagOverlayPixel).not.toBeNull()
+
+    await page.check('#sseTagList input[value="decorative"]')
+
+    const differentTagOverlayPixel = await page.evaluate(() => {
+      const canvasEl = document.getElementById('sseTileCanvas')
+      const ctx = canvasEl?.getContext('2d')
+      if (!ctx) return null
+      return Array.from(ctx.getImageData(20, 50, 1, 1).data)
+    })
+    expect(differentTagOverlayPixel).not.toBeNull()
+    expect(differentTagOverlayPixel).not.toEqual(activeTagOverlayPixel)
+
+    const labelPixelWithoutLabels = await page.evaluate(() => {
+      const canvasEl = document.getElementById('sseTileCanvas')
+      const ctx = canvasEl?.getContext('2d')
+      if (!ctx) return null
+      return Array.from(ctx.getImageData(6, 6, 1, 1).data)
+    })
+    expect(labelPixelWithoutLabels).not.toBeNull()
+
+    await page.check('#sseShowLabelsCheckbox')
+    const labelPixelWithDifferentActiveTag = await page.evaluate(() => {
+      const canvasEl = document.getElementById('sseTileCanvas')
+      const ctx = canvasEl?.getContext('2d')
+      if (!ctx) return null
+      return Array.from(ctx.getImageData(6, 6, 1, 1).data)
+    })
+    expect(labelPixelWithDifferentActiveTag).not.toBeNull()
+    expect(labelPixelWithDifferentActiveTag).not.toEqual(labelPixelWithoutLabels)
+
+    await page.check('#sseTagList input[value="passable"]')
+
     const zoomBefore = await page.evaluate(() => {
       const raw = (document.getElementById('sseZoomValue')?.textContent || '0').replace('%', '')
       return Number.parseFloat(raw) || 0
@@ -145,6 +186,18 @@ test.describe('Sprite Sheet Editor integration', () => {
       return metadata?.tiles ? Object.keys(metadata.tiles).length : 0
     })
     expect(taggedTileCount).toBeGreaterThan(0)
+
+    const appliedStorage = await page.evaluate(() => {
+      const raw = localStorage.getItem('rts-sse-applied-metadata')
+      if (!raw) return null
+      const parsed = JSON.parse(raw)
+      return {
+        sheetPath: parsed?.sheetPath || null,
+        tileCount: parsed?.tiles ? Object.keys(parsed.tiles).length : 0
+      }
+    })
+    expect(appliedStorage).not.toBeNull()
+    expect(appliedStorage.tileCount).toBeGreaterThan(0)
 
     await page.click('#spriteSheetEditorCloseBtn')
     await expect(page.locator('#spriteSheetEditorModal')).not.toHaveClass(/config-modal--open/)
