@@ -23,8 +23,10 @@ let tileSelect = null
 let randomCheckbox = null
 let statusEl = null
 let integratedSpriteSheetModeCheckbox = null
+let integratedSpriteSheetBiomeSelect = null
 
 const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
+const INTEGRATED_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
 const SSE_APPLIED_METADATA_STORAGE_KEY = 'rts-sse-applied-metadata'
 
 async function applyIntegratedSpriteSheetRuntime(metadata = null) {
@@ -34,7 +36,8 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   await textureManager.setIntegratedSpriteSheetConfig({
     enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
     sheetPath: metadata?.sheetPath || gameState.activeSpriteSheetPath,
-    metadata: metadata || gameState.activeSpriteSheetMetadata || null
+    metadata: metadata || gameState.activeSpriteSheetMetadata || null,
+    biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
   })
 
   const mapRenderer = getMapRenderer()
@@ -112,6 +115,7 @@ export function initMapEditorControls() {
   randomCheckbox = document.getElementById('mapEditRandomToggle')
   statusEl = document.getElementById('mapEditStatus')
   integratedSpriteSheetModeCheckbox = document.getElementById('integratedSpriteSheetModeCheckbox')
+  integratedSpriteSheetBiomeSelect = document.getElementById('integratedSpriteSheetBiomeSelect')
 
   gameState.useIntegratedSpriteSheetMode = Boolean(gameState.useIntegratedSpriteSheetMode)
   try {
@@ -121,6 +125,16 @@ export function initMapEditorControls() {
     }
   } catch (err) {
     window.logger.warn('Failed to load integrated sprite sheet mode:', err)
+  }
+
+  gameState.activeSpriteSheetBiomeTag = gameState.activeSpriteSheetBiomeTag || 'grass'
+  try {
+    const storedBiome = localStorage.getItem(INTEGRATED_BIOME_STORAGE_KEY)
+    if (storedBiome && ['soil', 'sand', 'grass', 'snow'].includes(storedBiome)) {
+      gameState.activeSpriteSheetBiomeTag = storedBiome
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load integrated sprite sheet biome:', err)
   }
 
   try {
@@ -168,6 +182,20 @@ export function initMapEditorControls() {
         localStorage.setItem(INTEGRATED_MODE_STORAGE_KEY, enabled ? 'true' : 'false')
       } catch (err) {
         window.logger.warn('Failed to persist integrated sprite sheet mode:', err)
+      }
+      await applyIntegratedSpriteSheetRuntime()
+    })
+  }
+
+  if (integratedSpriteSheetBiomeSelect) {
+    integratedSpriteSheetBiomeSelect.value = gameState.activeSpriteSheetBiomeTag
+    integratedSpriteSheetBiomeSelect.addEventListener('change', async(e) => {
+      const biome = e.target.value
+      gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(biome) ? biome : 'grass'
+      try {
+        localStorage.setItem(INTEGRATED_BIOME_STORAGE_KEY, gameState.activeSpriteSheetBiomeTag)
+      } catch (err) {
+        window.logger.warn('Failed to persist integrated sprite sheet biome:', err)
       }
       await applyIntegratedSpriteSheetRuntime()
     })

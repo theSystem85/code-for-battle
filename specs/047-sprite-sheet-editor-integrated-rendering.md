@@ -26,6 +26,10 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - Red tile overlay highlights only tiles tagged with the currently selected active tag.
 - Tag labels (when enabled) remain visible for all tagged tiles regardless of active tag selection.
 - Applying tags immediately commits generated JSON into game runtime memory/state for next map regenerate/reload usage.
+- Map Settings includes SSE biome selector (`soil`, `sand`, `grass`, `snow`) that defines preferred tag family for integrated land fill rendering.
+- Integrated land tiles resolve strictly from the selected biome tag family (no generic passable/decorative fallback randomness).
+- Add `rocks` to SSE default tag options for rock tile mapping.
+- Integrated rendering falls back to legacy non-SSE textures per tile type (`land`, `street`, `water`, `rock`) when the required SSE tag bucket is missing.
 - Add map setting checkbox for integrated sprite-sheet mode.
 - Preserve passability semantics:
   - `impassable` blocks movement like current impassable behavior
@@ -81,5 +85,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - After `Apply tags`, runtime uses freshly generated JSON without requiring SSE reopen.
 - Applied tags export JSON and update runtime data.
 - Mode checkbox switches between legacy and integrated rendering path.
+- Changing SSE biome immediately updates integrated land tile selection to that biome-tag bucket.
+- `rock` map tiles use `rocks` (or legacy `rock`) tag bucket when present, else fall back to legacy non-SSE rendering.
 - Movement blocking matches existing behavior for `impassable` in integrated mode.
 - No full-map forced redraw on each paint step; chunk-based invalidation remains in place.

@@ -63,6 +63,8 @@ test.describe('Sprite Sheet Editor integration', () => {
       return Boolean(canvas && canvas.width > 0 && canvas.height > 0)
     })
 
+    await expect(page.locator('#sseTagList input[value="rocks"]')).toHaveCount(1)
+
     const canvas = page.locator('#sseTileCanvas')
     await canvas.click({ position: { x: 12, y: 12 } })
     await canvas.click({ position: { x: 80, y: 12 } })
@@ -204,15 +206,177 @@ test.describe('Sprite Sheet Editor integration', () => {
 
     await page.check('#integratedSpriteSheetModeCheckbox')
 
+    await page.selectOption('#integratedSpriteSheetBiomeSelect', 'snow')
+
     const runtimeModeEnabled = await page.evaluate(() => {
       return {
         stateFlag: Boolean(window.gameState?.useIntegratedSpriteSheetMode),
-        persistedFlag: localStorage.getItem('rts-integrated-spritesheet-mode')
+        persistedFlag: localStorage.getItem('rts-integrated-spritesheet-mode'),
+        biomeTag: window.gameState?.activeSpriteSheetBiomeTag || null,
+        persistedBiome: localStorage.getItem('rts-integrated-spritesheet-biome')
       }
     })
 
     expect(runtimeModeEnabled.stateFlag).toBe(true)
     expect(runtimeModeEnabled.persistedFlag).toBe('true')
+    expect(runtimeModeEnabled.biomeTag).toBe('snow')
+    expect(runtimeModeEnabled.persistedBiome).toBe('snow')
+
+    const seededMetadata = await page.evaluate(async() => {
+      const renderingModule = await import('/src/rendering.js')
+      const textureManager = renderingModule?.getTextureManager ? renderingModule.getTextureManager() : null
+      const gameState = window.gameState
+      if (!textureManager || !gameState?.activeSpriteSheetMetadata || !gameState?.activeSpriteSheetPath) {
+        return null
+      }
+
+      const metadata = JSON.parse(JSON.stringify(gameState.activeSpriteSheetMetadata))
+      const keys = Object.keys(metadata.tiles || {})
+      if (keys.length < 3) {
+        return null
+      }
+
+      const addTag = (tileKey, tag) => {
+        const tile = metadata.tiles[tileKey]
+        if (!tile) return
+        const tags = Array.isArray(tile.tags) ? tile.tags : []
+        if (!tags.includes(tag)) tags.push(tag)
+        tile.tags = tags
+      }
+
+      addTag(keys[0], 'grass')
+      addTag(keys[1], 'snow')
+      addTag(keys[2], 'rocks')
+
+      gameState.activeSpriteSheetMetadata = metadata
+
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        sheetPath: gameState.activeSpriteSheetPath,
+        metadata,
+        biomeTag: gameState.activeSpriteSheetBiomeTag || 'snow'
+      })
+
+      return {
+        seeded: true,
+        tileCount: keys.length
+      }
+    })
+    expect(seededMetadata).not.toBeNull()
+    expect(seededMetadata.seeded).toBe(true)
+
+    const biomeResolutionCheck = await page.evaluate(async() => {
+      const renderingModule = await import('/src/rendering.js')
+      const textureManager = renderingModule?.getTextureManager ? renderingModule.getTextureManager() : null
+      const mapGrid = window.gameState?.mapGrid
+      if (!textureManager || !mapGrid?.length) {
+        return null
+      }
+
+      const findTileType = (type) => {
+        for (let y = 0; y < mapGrid.length; y++) {
+          for (let x = 0; x < mapGrid[y].length; x++) {
+            if (mapGrid[y][x]?.type === type) return { x, y }
+          }
+        }
+        return { x: 1, y: 1 }
+      }
+
+      const landPos = findTileType('land')
+      const landSnow = textureManager.getIntegratedTileForMapTile('land', landPos.x, landPos.y)
+
+      return {
+        snowTags: landSnow?.tags || []
+      }
+    })
+    expect(biomeResolutionCheck).not.toBeNull()
+    expect(biomeResolutionCheck.snowTags).toContain('snow')
+
+    const grassBiomeResolutionCheck = await page.evaluate(async() => {
+      const renderingModule = await import('/src/rendering.js')
+      const textureManager = renderingModule?.getTextureManager ? renderingModule.getTextureManager() : null
+      const gameState = window.gameState
+      const mapGrid = window.gameState?.mapGrid
+      if (!textureManager || !mapGrid?.length || !gameState?.activeSpriteSheetPath || !gameState?.activeSpriteSheetMetadata) {
+        return null
+      }
+
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        sheetPath: gameState.activeSpriteSheetPath,
+        metadata: gameState.activeSpriteSheetMetadata,
+        biomeTag: 'grass'
+      })
+
+      let landPos = { x: 1, y: 1 }
+      for (let y = 0; y < mapGrid.length; y++) {
+        for (let x = 0; x < mapGrid[y].length; x++) {
+          if (mapGrid[y][x]?.type === 'land') {
+            landPos = { x, y }
+            y = mapGrid.length
+            break
+          }
+        }
+      }
+
+      const landGrass = textureManager.getIntegratedTileForMapTile('land', landPos.x, landPos.y)
+
+      return {
+        biomeTag: textureManager.integratedBiomeTag,
+        grassTags: landGrass?.tags || []
+      }
+    })
+    expect(grassBiomeResolutionCheck).not.toBeNull()
+    expect(grassBiomeResolutionCheck.biomeTag).toBe('grass')
+    expect(grassBiomeResolutionCheck.grassTags).toContain('grass')
+
+    const fallbackCheck = await page.evaluate(async() => {
+      const renderingModule = await import('/src/rendering.js')
+      const textureManager = renderingModule?.getTextureManager ? renderingModule.getTextureManager() : null
+      const gameState = window.gameState
+      if (!textureManager || !gameState?.activeSpriteSheetMetadata || !gameState?.activeSpriteSheetPath) {
+        return null
+      }
+
+      const metadata = gameState.activeSpriteSheetMetadata
+      const stripped = JSON.parse(JSON.stringify(metadata))
+
+      Object.values(stripped.tiles || {}).forEach((entry) => {
+        if (!Array.isArray(entry?.tags)) return
+        entry.tags = entry.tags.filter((tag) => !['rocks', 'rock', 'street', 'water', 'grass'].includes(tag))
+      })
+
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        sheetPath: gameState.activeSpriteSheetPath,
+        metadata: stripped,
+        biomeTag: 'grass'
+      })
+
+      const rockTile = textureManager.getIntegratedTileForMapTile('rock', 1, 1)
+      const streetTile = textureManager.getIntegratedTileForMapTile('street', 1, 1)
+      const waterTile = textureManager.getIntegratedTileForMapTile('water', 1, 1)
+      const landTile = textureManager.getIntegratedTileForMapTile('land', 1, 1)
+
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        sheetPath: gameState.activeSpriteSheetPath,
+        metadata,
+        biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
+      })
+
+      return {
+        rockNull: rockTile === null,
+        streetNull: streetTile === null,
+        waterNull: waterTile === null,
+        landNull: landTile === null
+      }
+    })
+    expect(fallbackCheck).not.toBeNull()
+    expect(fallbackCheck.rockNull).toBe(true)
+    expect(fallbackCheck.streetNull).toBe(true)
+    expect(fallbackCheck.waterNull).toBe(true)
+    expect(fallbackCheck.landNull).toBe(true)
 
   })
 })

@@ -446,6 +446,7 @@ export function saveGame(label) {
       useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
       activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null,
+      activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag || 'grass',
       powerSupply: gameState.powerSupply,
       playerBuildHistory: gameState.playerBuildHistory,
       currentSessionId: gameState.currentSessionId,
@@ -594,6 +595,7 @@ export function loadGame(key) {
     gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
     gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
     gameState.activeSpriteSheetMetadata = loaded.gameState?.activeSpriteSheetMetadata || null
+    gameState.activeSpriteSheetBiomeTag = loaded.gameState?.activeSpriteSheetBiomeTag || 'grass'
 
     // Clear defeat/victory state when loading - let the game check conditions fresh
     gameState.gameOver = false
@@ -1246,7 +1248,8 @@ export function loadGame(key) {
       textureManager.setIntegratedSpriteSheetConfig({
         enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
         sheetPath: gameState.activeSpriteSheetPath,
-        metadata: gameState.activeSpriteSheetMetadata
+        metadata: gameState.activeSpriteSheetMetadata,
+        biomeTag: gameState.activeSpriteSheetBiomeTag
       }).then(() => {
         if (mapRenderer) {
           mapRenderer.invalidateAllChunks()

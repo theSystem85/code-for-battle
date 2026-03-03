@@ -13,8 +13,10 @@ export const DEFAULT_SSE_TAGS = [
   'soil',
   'snow',
   'sand',
+  'rocks',
   'concrete',
-  'street'
+  'street',
+  'water'
 ]
 
 const fallbackSheets = [
@@ -58,7 +60,9 @@ function ensureTileRecord(data, tileKey) {
 }
 
 function normalizeSheetData(raw, sheetPath) {
-  const tags = Array.isArray(raw?.tags) ? raw.tags.filter(Boolean) : [...DEFAULT_SSE_TAGS]
+  const tags = Array.isArray(raw?.tags)
+    ? Array.from(new Set([...raw.tags.filter(Boolean), ...DEFAULT_SSE_TAGS]))
+    : [...DEFAULT_SSE_TAGS]
   const data = {
     schemaVersion: 1,
     sheetPath,

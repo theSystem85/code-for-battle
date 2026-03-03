@@ -36,6 +36,7 @@ export class TextureManager {
     this.integratedSpriteSheetImage = null
     this.integratedSpriteSheetMetadata = null
     this.integratedTagBuckets = {}
+    this.integratedBiomeTag = 'grass'
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
   }
@@ -115,7 +116,8 @@ export class TextureManager {
     this.integratedSpriteSheetImage = image
     this.integratedSpriteSheetMetadata = metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(metadata)
-    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}`
+    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
+    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}`
     this.integratedConfigVersion++
   }
 
@@ -149,13 +151,13 @@ export class TextureManager {
     const preferredTags = []
 
     if (type === 'land') {
-      preferredTags.push(this.getLandClassificationTag(x, y), 'grass', 'soil', 'sand', 'snow', 'passable')
+      preferredTags.push(this.integratedBiomeTag)
     } else if (type === 'street') {
-      preferredTags.push('street', 'intersection', 'concrete', 'passable')
+      preferredTags.push('street')
     } else if (type === 'rock') {
-      preferredTags.push('impassable', 'decorative')
+      preferredTags.push('rocks', 'rock')
     } else if (type === 'water') {
-      preferredTags.push('water', 'impassable')
+      preferredTags.push('water')
     } else {
       preferredTags.push(type, 'passable')
     }
