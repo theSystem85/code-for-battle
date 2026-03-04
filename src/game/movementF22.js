@@ -23,8 +23,13 @@ const F22_LIFTOFF_SPEED_SCALE = 0.5
 const F22_ORBIT_RADIUS = TILE_SIZE * 7
 const F22_COMBAT_ORBIT_RADIUS = TILE_SIZE * 10
 const F22_COMBAT_ORBIT_MIN_RADIUS = TILE_SIZE * 7
+const F22_COMBAT_ORBIT_MAX_RADIUS = TILE_SIZE * 14
 const F22_ORBIT_RPS = 0.16
 const F22_RTB_FUEL_RATIO = 0.2
+const F22_ORBIT_CRUISE_SPEED_MULTIPLIER = 0.62
+const F22_MAP_EDGE_MARGIN = TILE_SIZE * 2.5
+const F22_MAP_EDGE_EVADE_RADIUS = TILE_SIZE * 5
+const F22_MAP_EDGE_EVADE_DURATION_MS = 1200
 const F22_CRASH_DURATION_MS = 3200
 const F22_TAKEOFF_CLEARANCE_TIMEOUT_MS = 15000
 const F22_TAXI_TO_RUNWAY_TIMEOUT_MS = 20000
@@ -505,14 +510,77 @@ function getTargetCenterFromUnitTarget(target) {
   return null
 }
 
+function getMapWorldBounds() {
+  if (!Array.isArray(gameState.mapGrid) || !Array.isArray(gameState.mapGrid[0])) {
+    return null
+  }
+
+  const width = gameState.mapGrid[0].length * TILE_SIZE
+  const height = gameState.mapGrid.length * TILE_SIZE
+  return {
+    minX: F22_MAP_EDGE_MARGIN,
+    minY: F22_MAP_EDGE_MARGIN,
+    maxX: Math.max(F22_MAP_EDGE_MARGIN, width - F22_MAP_EDGE_MARGIN),
+    maxY: Math.max(F22_MAP_EDGE_MARGIN, height - F22_MAP_EDGE_MARGIN)
+  }
+}
+
+function clampPointToMapBounds(point, bounds) {
+  if (!point || !bounds) return point
+  return {
+    x: Math.max(bounds.minX, Math.min(bounds.maxX, point.x)),
+    y: Math.max(bounds.minY, Math.min(bounds.maxY, point.y))
+  }
+}
+
+function getF22BorderEvasionDestination(unit, now) {
+  const bounds = getMapWorldBounds()
+  if (!bounds) return null
+
+  if (unit.f22BorderEvadePoint && unit.f22BorderEvadeUntil && unit.f22BorderEvadeUntil > now) {
+    return clampPointToMapBounds(unit.f22BorderEvadePoint, bounds)
+  }
+
+  const center = getUnitCenter(unit)
+  const nearLeft = center.x <= bounds.minX + F22_MAP_EDGE_EVADE_RADIUS
+  const nearRight = center.x >= bounds.maxX - F22_MAP_EDGE_EVADE_RADIUS
+  const nearTop = center.y <= bounds.minY + F22_MAP_EDGE_EVADE_RADIUS
+  const nearBottom = center.y >= bounds.maxY - F22_MAP_EDGE_EVADE_RADIUS
+
+  if (!nearLeft && !nearRight && !nearTop && !nearBottom) {
+    unit.f22BorderEvadePoint = null
+    unit.f22BorderEvadeUntil = null
+    return null
+  }
+
+  const inwardX = nearLeft
+    ? bounds.minX + F22_MAP_EDGE_EVADE_RADIUS
+    : nearRight
+      ? bounds.maxX - F22_MAP_EDGE_EVADE_RADIUS
+      : center.x
+  const inwardY = nearTop
+    ? bounds.minY + F22_MAP_EDGE_EVADE_RADIUS
+    : nearBottom
+      ? bounds.maxY - F22_MAP_EDGE_EVADE_RADIUS
+      : center.y
+
+  unit.f22BorderEvadePoint = { x: inwardX, y: inwardY }
+  unit.f22BorderEvadeUntil = now + F22_MAP_EDGE_EVADE_DURATION_MS
+  return clampPointToMapBounds(unit.f22BorderEvadePoint, bounds)
+}
+
 function updateOrbitFlightPlan(unit, now) {
-  const center = resolveFollowTargetDestination(unit)
-  if (!center) return
+  const resolvedCenter = resolveFollowTargetDestination(unit)
+  if (!resolvedCenter) return
+  const bounds = getMapWorldBounds()
+  const center = clampPointToMapBounds(resolvedCenter, bounds)
+  const borderEvadeCenter = getF22BorderEvasionDestination(unit, now)
+  const orbitCenter = borderEvadeCenter || center
 
   unit.f22AssignedDestination = center
 
   const unitCenter = getUnitCenter(unit)
-  const distanceToCenter = Math.hypot(unitCenter.x - center.x, unitCenter.y - center.y)
+  const distanceToCenter = Math.hypot(unitCenter.x - orbitCenter.x, unitCenter.y - orbitCenter.y)
   const isCombatMode = center.mode === 'combat'
   const baseOrbitRadius = isCombatMode ? F22_COMBAT_ORBIT_RADIUS : F22_ORBIT_RADIUS
 
@@ -536,11 +604,16 @@ function updateOrbitFlightPlan(unit, now) {
   const secondaryWave = isCombatMode ? Math.sin(nextAngle * 1.3) * TILE_SIZE * 0.8 : 0
   const radiusWave = Math.sin(nextAngle * 2.4) * waveAmount + secondaryWave
   const minRadius = isCombatMode ? F22_COMBAT_ORBIT_MIN_RADIUS : TILE_SIZE * 2.5
-  const dynamicRadius = Math.max(minRadius, boostedRadius + radiusWave)
+  const dynamicRadius = Math.min(F22_COMBAT_ORBIT_MAX_RADIUS, Math.max(minRadius, boostedRadius + radiusWave))
+
+  const orbitCaptureRange = isCombatMode ? baseOrbitRadius * 1.35 : baseOrbitRadius
+  unit.f22OrbitSpeedMultiplier = distanceToCenter <= orbitCaptureRange
+    ? F22_ORBIT_CRUISE_SPEED_MULTIPLIER
+    : 1
 
   unit.flightPlan = {
-    x: center.x + Math.cos(nextAngle) * dynamicRadius,
-    y: center.y + Math.sin(nextAngle) * dynamicRadius,
+    x: orbitCenter.x + Math.cos(nextAngle) * dynamicRadius,
+    y: orbitCenter.y + Math.sin(nextAngle) * dynamicRadius,
     stopRadius: TILE_SIZE * 0.2,
     mode: 'orbit',
     destinationTile: center.destinationTile || null,

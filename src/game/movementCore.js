@@ -309,7 +309,10 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
           unit.autoHoldAltitude = true
         }
       } else {
-        const airSpeed = (unit.airCruiseSpeed || unit.speed || MOVEMENT_CONFIG.MAX_SPEED) * (unit.speedModifier || 1)
+        const orbitSpeedMultiplier = unit.type === 'f22Raptor'
+          ? (unit.f22OrbitSpeedMultiplier || 1)
+          : 1
+        const airSpeed = (unit.airCruiseSpeed || unit.speed || MOVEMENT_CONFIG.MAX_SPEED) * (unit.speedModifier || 1) * orbitSpeedMultiplier
         const dirX = dx / distance
         const dirY = dy / distance
         const desiredRotation = normalizeAngle(Math.atan2(dirY, dirX))
@@ -350,6 +353,9 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       movement.targetRotation = movement.rotation
       if (movement.isMoving) {
         movement.isMoving = false
+      }
+      if (unit.type === 'f22Raptor') {
+        unit.f22OrbitSpeedMultiplier = 1
       }
       if (movement.currentSpeed < MOVEMENT_CONFIG.MIN_SPEED) {
         unit.hovering = unit.flightState === 'airborne'
