@@ -1,4 +1,5 @@
 ## Bugs
+- [x] F22 landing non-passable airstrip recovery (2026-03-04): during `landing_roll`, F22 now gets a soft centerline correction with stronger push when on non-taxi tiles, preventing frequent landing stalls in blocked airstrip-adjacent regions.
 - [x] F22 rocket spawn alignment (2026-03-04): F22-fired rockets now spawn from the lower F22 fuselage hardpoint (below the jet body) instead of shadow-aligned coordinates; added E2E regression asserting rocket origin stays above the projected ground shadow.
 - [x] F22 handling/combat tuning (2026-03-04): reduced F22 turn rate to one-third, reduced F22 top speed by 40%, and increased F22 rocket projectile speed by 50% without changing Apache rocket speed.
 - [x] Enemy non-AA airborne retargeting follow-up (2026-03-02): fixed remaining AI target selection gaps where non-anti-air enemy ground units could still pick airborne Apache/F22 during base-defense and harvester-hunter threat scans; they now immediately ignore airborne-only threats and choose valid ground targets instead. Added E2E coverage for base-defense retargeting.

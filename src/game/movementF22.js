@@ -18,6 +18,8 @@ import { getBuildingIdentifier } from '../utils.js'
 const F22_GROUND_TAKEOFF_SPEED_MIN = 1.5
 const F22_GROUND_TAKEOFF_SPEED_MAX = 2.2
 const F22_LANDING_ROLL_SPEED_MIN = 0.45
+const F22_LANDING_CENTERLINE_PUSH_SPEED = 0.22
+const F22_LANDING_CENTERLINE_STRONG_PUSH_SPEED = 0.34
 const F22_TAXI_ACCEL_DURATION_MS = 2200
 const F22_LIFTOFF_SPEED_SCALE = 0.5
 const F22_ORBIT_RADIUS = TILE_SIZE * 7
@@ -283,6 +285,30 @@ function reachedWorldPoint(unit, worldPoint, radius = TILE_SIZE * 0.5) {
   if (!worldPoint) return false
   const center = getUnitCenter(unit)
   return Math.hypot(center.x - worldPoint.x, center.y - worldPoint.y) <= radius
+}
+
+function applyLandingCenterlinePush(unit, movement, runway) {
+  if (!runway?.runwayStart || !runway?.runwayExit) return
+
+  const center = getUnitCenter(unit)
+  const runwayCenterY = (runway.runwayStart.worldY + runway.runwayExit.worldY) / 2
+  const centerlineDelta = runwayCenterY - center.y
+  const normalizedDelta = Math.max(-1, Math.min(1, centerlineDelta / (TILE_SIZE * 1.1)))
+
+  const tileX = Math.floor(center.x / TILE_SIZE)
+  const tileY = Math.floor(center.y / TILE_SIZE)
+  const tile = gameState.mapGrid?.[tileY]?.[tileX]
+  const onTaxiSurface = isTaxiSurfaceTile(tile)
+
+  const pushSpeed = onTaxiSurface
+    ? F22_LANDING_CENTERLINE_PUSH_SPEED
+    : F22_LANDING_CENTERLINE_STRONG_PUSH_SPEED
+
+  movement.targetVelocity.y = normalizedDelta * pushSpeed
+
+  if (!onTaxiSurface) {
+    movement.velocity.y *= 0.75
+  }
 }
 
 function routeTaxiToPoint(unit, targetPoint) {
@@ -961,7 +987,7 @@ export function updateF22FlightState(unit, movement, now) {
     const speedMax = Math.max(F22_GROUND_TAKEOFF_SPEED_MAX * 0.9, unit.airCruiseSpeed * 0.7)
     const easedSpeed = speedMax - (speedMax - F22_LANDING_ROLL_SPEED_MIN) * easeInQuad(landingProgress)
     movement.targetVelocity.x = -easedSpeed
-    movement.targetVelocity.y = 0
+    applyLandingCenterlinePush(unit, movement, runway)
 
     const touchDownX = runway.runwayLiftOff.worldX
     const approachStartX = Math.max(touchDownX + 1, runway.runwayExit.worldX)
