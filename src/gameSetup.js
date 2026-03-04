@@ -133,6 +133,50 @@ function createOptimizedStreetNetwork(mapGrid, points, type) {
   }
 }
 
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(max, value))
+}
+
+function drawOrthogonalStreetPath(grid, start, end, type) {
+  let x = start.x
+  let y = start.y
+
+  while (x !== end.x) {
+    grid[y][x].type = type
+    x += Math.sign(end.x - x)
+  }
+
+  while (y !== end.y) {
+    grid[y][x].type = type
+    y += Math.sign(end.y - y)
+  }
+
+  grid[y][x].type = type
+}
+
+function createBalancedOreClusterCenters(playerPositions, mapWidth, mapHeight) {
+  const inwardTargetX = Math.floor(mapWidth / 2)
+  const inwardTargetY = Math.floor(mapHeight / 2)
+  const desiredStreetDistance = clamp(Math.floor(Math.min(mapWidth, mapHeight) * 0.2), 10, 16)
+
+  return playerPositions.map(position => {
+    const dirX = inwardTargetX >= position.x ? 1 : -1
+    const dirY = inwardTargetY >= position.y ? 1 : -1
+    const horizontalSteps = Math.floor(desiredStreetDistance / 2)
+    const verticalSteps = desiredStreetDistance - horizontalSteps
+
+    const x = clamp(position.x + horizontalSteps * dirX, 2, mapWidth - 3)
+    const y = clamp(position.y + verticalSteps * dirY, 2, mapHeight - 3)
+
+    return {
+      id: position.id,
+      x,
+      y,
+      requiredStreetDistance: desiredStreetDistance
+    }
+  })
+}
+
 // Generate a new map using the given seed and organic features
 export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
   const { value: normalizedSeed } = sanitizeSeed(seed)
@@ -224,17 +268,15 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     })
   })
 
-  // Store ore cluster centers for connecting streets
-  const oreClusterCenters = []
-  for (let i = 0; i < 6; i++) {
-    const clusterCenterX = Math.floor(rand() * MAP_TILES_X)
-    const clusterCenterY = Math.floor(rand() * MAP_TILES_Y)
-    oreClusterCenters.push({ x: clusterCenterX, y: clusterCenterY })
-  }
+  // Create one balanced ore seed target per player so nearest street distance stays fair.
+  const oreClusterCenters = createBalancedOreClusterCenters(playerPositions, MAP_TILES_X, MAP_TILES_Y)
 
-  // Create unified street network connecting all important points
+  // Keep a connected global road graph and also enforce direct base-to-ore street reachability.
   const allStreetPoints = [...playerPositions, ...oreClusterCenters]
   createOptimizedStreetNetwork(mapGrid, allStreetPoints, 'street')
+  playerPositions.forEach((basePosition, index) => {
+    drawOrthogonalStreetPath(mapGrid, basePosition, oreClusterCenters[index], 'street')
+  })
 
   // Ensure river crossing exists (if there are lakes)
   if (lakeCenters.length === 2) {
@@ -294,17 +336,8 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
       }
     }
 
-    // Place 1-3 seed crystals in the center of the ore field
-    const seedCount = Math.floor(rand() * 3) + 1
+    // Keep one deterministic seed crystal per cluster for symmetric nearest-distance balancing.
     const seedPositions = [{ x: cluster.x, y: cluster.y }]
-    while (seedPositions.length < seedCount) {
-      const dx = Math.floor(rand() * 3) - 1
-      const dy = Math.floor(rand() * 3) - 1
-      const pos = { x: cluster.x + dx, y: cluster.y + dy }
-      if (!seedPositions.some(p => p.x === pos.x && p.y === pos.y)) {
-        seedPositions.push(pos)
-      }
-    }
     seedPositions.forEach(pos => {
       if (pos.x >= 0 && pos.y >= 0 && pos.x < MAP_TILES_X && pos.y < MAP_TILES_Y) {
         mapGrid[pos.y][pos.x].ore = true
