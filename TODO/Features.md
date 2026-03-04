@@ -1,4 +1,5 @@
 ## Features
+- [x] Follow-up: InceptionLabs integration now uses fixed `Mercury 2` model selection (no `/models` fetch) and calls `v1/chat/completions` for requests.
 - [x] Integrate InceptionLabs Mercury M2 as an LLM provider, add multi-provider model pool with per-model tick interval overrides, and allow per-party Local/LLM model assignment from multiplayer sidebar.
 - [x] Add Sprite Sheet Editor (SSE) modal under Map Settings with tag-paint workflow, per-sheet metadata JSON apply/export, and integrated sprite-sheet map rendering mode toggle.
 - [x] Extend SSE with zoom controls (in/out/100%/snap), apply-current-tag-to-all action, and resizable/maximizable modal UX.
@@ -223,6 +224,7 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
   - [x] only the host can start/pause the game or use cheats, even after other players join
 
 ## Features
+- [x] Follow-up: InceptionLabs integration now uses fixed `Mercury 2` model selection (no `/models` fetch) and calls `v1/chat/completions` for requests.
 - [x] Integrate InceptionLabs Mercury M2 as an LLM provider, add multi-provider model pool with per-model tick interval overrides, and allow per-party Local/LLM model assignment from multiplayer sidebar.
 - [ ] Wrecks and recovery/recycling: Ensure the units when destroyed do not just vanish from the map but their left overs keep lying on the map. The left overs should look totally color desaturated and slightly noisy to indicated dirt and damage (cache those desaturated images and reuse them). Any (also the ones from the enemy) left over unit can be pulled by a recovery tank to the base when player has the recovery tank selected and clicks on the tank. The the recovery tank will drive to the target then mount (indicated by a 2px black string that connects both units) and then automatically drive to the workshop where it unmounts and the unit gets fully restored but without crew. 
 
