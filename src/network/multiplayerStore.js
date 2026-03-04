@@ -63,6 +63,8 @@ function ensurePartyStates() {
         owner: isHost ? getHostAliasLabel() : 'AI',
         inviteToken: null,
         aiActive: !isHost,
+        llmControlled: false,
+        llmModelKey: null,
         lastConnectedAt: null,
         unresponsiveSince: null
       }

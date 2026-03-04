@@ -312,6 +312,31 @@ function getAiPlayers(state) {
   })
 }
 
+
+function getPlayerStrategicModelConfig(playerId, state, settings) {
+  const partyState = Array.isArray(state.partyStates)
+    ? state.partyStates.find(p => p.partyId === playerId)
+    : null
+  const modelPool = Array.isArray(settings.strategicModelPool) ? settings.strategicModelPool : []
+  const selectedModelKey = partyState?.llmModelKey
+  const selected = selectedModelKey ? modelPool.find(entry => entry.key === selectedModelKey) : null
+  if (selected && selected.provider && selected.model) {
+    return {
+      providerId: selected.provider,
+      model: selected.model,
+      tickSeconds: selected.tickSeconds || settings.strategic.tickSeconds || 60
+    }
+  }
+
+  const providerId = settings.strategic.provider
+  const model = settings.providers?.[providerId]?.model
+  return {
+    providerId,
+    model,
+    tickSeconds: settings.strategic.tickSeconds || 60
+  }
+}
+
 function ensureStrategicState(state) {
   if (!state.llmStrategic) {
     state.llmStrategic = {
@@ -322,7 +347,8 @@ function ensureStrategicState(state) {
       plansByPlayer: {},
       summariesByPlayer: {},
       bootstrappedByPlayer: {},
-      responseIdsByPlayer: {}
+      responseIdsByPlayer: {},
+      perPlayerTick: {}
     }
   }
   return state.llmStrategic
@@ -556,7 +582,7 @@ function disableLlmAI(type = 'both') {
   updateLlmSettings(updates)
 }
 
-async function runStrategicTickForPlayer(playerId, state, settings, now) {
+async function runStrategicTickForPlayer(playerId, state, settings, now, modelConfig = null) {
   const strategicState = ensureStrategicState(state)
   const factories = state.factories || []
   const enemyFactory = factories.find(factory => factory.id === playerId)
@@ -583,8 +609,9 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
   strategicState.summariesByPlayer[playerId] = summary
   strategicState.lastSummary = summary
 
-  const providerId = settings.strategic.provider
-  const model = settings.providers?.[providerId]?.model
+  const selectedModelConfig = modelConfig || getPlayerStrategicModelConfig(playerId, state, settings)
+  const providerId = selectedModelConfig.providerId
+  const model = selectedModelConfig.model
   const providerSettings = getProviderSettings(providerId)
   const hasApiKey = providerSettings?.apiKey && providerSettings.apiKey.trim().length > 0
 
@@ -1007,24 +1034,31 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
   const strategicState = ensureStrategicState(state)
   const commentaryState = ensureCommentaryState(state)
 
-  const tickIntervalMs = Math.max(5, settings.strategic.tickSeconds || 30) * 1000
-
-  if (settings.strategic.enabled && !strategicState.pending &&
-      (strategicState.lastTickAt === 0 || now - strategicState.lastTickAt >= tickIntervalMs)) {
-    strategicState.pending = true
-    strategicState.lastTickAt = now
-    strategicState.lastTickFrame = state.frameCount || 0
+  if (settings.strategic.enabled) {
+    strategicState.lastTickFrame = state.frameCount || strategicState.lastTickFrame || 0
     const aiPlayers = getAiPlayers(state)
-    Promise.all(aiPlayers.map(playerId => runStrategicTickForPlayer(playerId, state, settings, now)))
-      .catch(err => {
-        window.logger.warn('[LLM] Strategic tick failed:', err)
-      })
-      .finally(() => {
-        strategicState.pending = false
-      })
+    aiPlayers.forEach(playerId => {
+      const meta = strategicState.perPlayerTick[playerId] || { pending: false, lastTickAt: 0 }
+      strategicState.perPlayerTick[playerId] = meta
+      const modelConfig = getPlayerStrategicModelConfig(playerId, state, settings)
+      const tickIntervalMs = Math.max(5, modelConfig.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
+      if (meta.pending) return
+      if (meta.lastTickAt !== 0 && now - meta.lastTickAt < tickIntervalMs) return
+
+      meta.pending = true
+      meta.lastTickAt = now
+      runStrategicTickForPlayer(playerId, state, settings, now, modelConfig)
+        .catch(err => {
+          window.logger.warn('[LLM] Strategic tick failed:', err)
+        })
+        .finally(() => {
+          meta.pending = false
+        })
+    })
   }
 
-  if (settings.commentary.enabled && !commentaryState.pending && now - commentaryState.lastTickAt >= tickIntervalMs) {
+  const commentaryTickIntervalMs = Math.max(5, settings.strategic.tickSeconds || 60) * 1000
+  if (settings.commentary.enabled && !commentaryState.pending && now - commentaryState.lastTickAt >= commentaryTickIntervalMs) {
     commentaryState.pending = true
     commentaryState.lastTickAt = now
     runCommentaryTick(state, settings, now)
@@ -1044,18 +1078,23 @@ export async function triggerStrategicNow(state = gameState) {
   if (!settings.strategic.enabled) return
 
   const strategicState = ensureStrategicState(state)
-  if (strategicState.pending) return
 
-  strategicState.pending = true
   const now = performance.now()
-  strategicState.lastTickAt = now
   strategicState.lastTickFrame = state.frameCount || 0
   const aiPlayers = getAiPlayers(state)
   try {
-    await Promise.all(aiPlayers.map(playerId => runStrategicTickForPlayer(playerId, state, settings, now)))
+    await Promise.all(aiPlayers.map(playerId => {
+      const modelConfig = getPlayerStrategicModelConfig(playerId, state, settings)
+      const meta = strategicState.perPlayerTick[playerId] || { pending: false, lastTickAt: 0 }
+      strategicState.perPlayerTick[playerId] = meta
+      meta.lastTickAt = now
+      meta.pending = true
+      return runStrategicTickForPlayer(playerId, state, settings, now, modelConfig)
+        .finally(() => {
+          meta.pending = false
+        })
+    }))
   } catch (err) {
     window.logger.warn('[LLM] Immediate strategic tick failed:', err)
-  } finally {
-    strategicState.pending = false
   }
 }
