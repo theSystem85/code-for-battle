@@ -278,3 +278,5 @@
 - [x] ✅ Supply-unit airstrip move UX: when only support units (ambulance/tanker/ammunition/recovery) are selected, friendly airstrip tiles now behave like valid move targets (no move-blocked cursor), allow right-click move command on the airstrip footprint, and produce normal green move target indicators.
 - [x] ✅ Map generation fairness (2026-03-04): nearest ore seed crystal street distance is now equalized per party by generating one balanced ore cluster per base and forcing direct street reachability from each start base to its closest seed crystal.
 - [x] ✅ Ore layout rebalance follow-up (2026-03-04): map generation now creates one smaller near-base ore field per player (~30 street tiles away and equally reachable), multiple larger center-map ore fields, additional seed-random spread ore fields, and default ore spread interval increased 3x (slower growth).
+
+- [x] ✅ Map settings ore-field count control (2026-03-04): added sidebar ore field count input and deterministic seeded usage in map generation, with one center seed crystal per generated field.

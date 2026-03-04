@@ -55,6 +55,7 @@ import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
+const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
 export const MAP_WIDTH_TILES_STORAGE_KEY = 'rts-map-width-tiles'
 export const MAP_HEIGHT_TILES_STORAGE_KEY = 'rts-map-height-tiles'
 const SHADOW_OF_WAR_STORAGE_KEY = 'rts-shadow-of-war-enabled'
@@ -68,6 +69,17 @@ function sanitizeMapDimension(value, fallback) {
     return Math.max(MIN_MAP_TILES, parsed)
   }
   return Math.max(MIN_MAP_TILES, Number.isFinite(fallback) ? Math.floor(fallback) : MIN_MAP_TILES)
+}
+
+function sanitizeOreFieldCount(value, playerCount = gameState.playerCount || 2) {
+  const parsed = parseInt(value, 10)
+  const minFields = Math.max(playerCount + 3, 6)
+  const maxFields = 24
+  if (Number.isFinite(parsed)) {
+    return Math.max(minFields, Math.min(maxFields, parsed))
+  }
+  const fallback = Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8
+  return Math.max(minFields, Math.min(maxFields, Math.floor(fallback)))
 }
 
 function sanitizeSelectionHudBarThickness(value, fallback = 4) {
@@ -91,8 +103,9 @@ function parseStartupMapOverrides() {
   const rawWidth = params.get('width') || params.get('mapWidth')
   const rawHeight = params.get('height') || params.get('mapHeight')
   const rawPlayers = params.get('players') || params.get('playerCount')
+  const rawOreFields = params.get('oreFields') || params.get('oreFieldCount')
 
-  const hasAnyOverride = rawSeed !== null || rawSize !== null || rawWidth !== null || rawHeight !== null || rawPlayers !== null
+  const hasAnyOverride = rawSeed !== null || rawSize !== null || rawWidth !== null || rawHeight !== null || rawPlayers !== null || rawOreFields !== null
   if (!hasAnyOverride) {
     return null
   }
@@ -121,11 +134,20 @@ function parseStartupMapOverrides() {
     }
   }
 
+  let oreFieldCount = null
+  if (rawOreFields !== null) {
+    const parsedOreFields = parseInt(rawOreFields, 10)
+    if (Number.isFinite(parsedOreFields)) {
+      oreFieldCount = Math.max(6, Math.min(24, parsedOreFields))
+    }
+  }
+
   return {
     seed: rawSeed !== null ? resolveMapSeed(rawSeed) : null,
     width,
     height,
-    playerCount
+    playerCount,
+    oreFieldCount
   }
 }
 
@@ -222,6 +244,28 @@ function loadPersistedSettings() {
     }
   } catch (e) {
     window.logger.warn('Failed to load player count from localStorage:', e)
+  }
+
+  try {
+    const oreFieldInput = document.getElementById('mapOreFieldCount')
+    const storedOreFields = localStorage.getItem(ORE_FIELD_COUNT_STORAGE_KEY)
+    const overridePlayerCount = mapOverrides?.playerCount || gameState.playerCount || 2
+
+    if (oreFieldInput && mapOverrides?.oreFieldCount) {
+      const sanitized = sanitizeOreFieldCount(mapOverrides.oreFieldCount, overridePlayerCount)
+      oreFieldInput.value = sanitized
+      gameState.mapOreFieldCount = sanitized
+    } else if (oreFieldInput && storedOreFields !== null) {
+      const sanitized = sanitizeOreFieldCount(storedOreFields, gameState.playerCount || 2)
+      oreFieldInput.value = sanitized
+      gameState.mapOreFieldCount = sanitized
+    } else if (oreFieldInput) {
+      const sanitized = sanitizeOreFieldCount(gameState.mapOreFieldCount, gameState.playerCount || 2)
+      oreFieldInput.value = sanitized
+      gameState.mapOreFieldCount = sanitized
+    }
+  } catch (e) {
+    window.logger.warn('Failed to load ore field count from localStorage:', e)
   }
 
   try {
@@ -514,6 +558,18 @@ class Game {
           } catch (err) {
             window.logger.warn('Failed to save player count to localStorage:', err)
           }
+          const oreFieldInput = document.getElementById('mapOreFieldCount')
+          if (oreFieldInput) {
+            oreFieldInput.min = Math.max(value + 3, 6)
+            const sanitizedOreCount = sanitizeOreFieldCount(oreFieldInput.value, value)
+            oreFieldInput.value = sanitizedOreCount
+            gameState.mapOreFieldCount = sanitizedOreCount
+            try {
+              localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, sanitizedOreCount.toString())
+            } catch (err) {
+              window.logger.warn('Failed to save ore field count to localStorage:', err)
+            }
+          }
           refreshSidebarMultiplayer()
         } else {
           e.target.value = gameState.playerCount || 2
@@ -526,12 +582,29 @@ class Game {
     const seedInput = document.getElementById('mapSeed')
     const mapWidthInput = document.getElementById('mapWidthTiles')
     const mapHeightInput = document.getElementById('mapHeightTiles')
+    const oreFieldInput = document.getElementById('mapOreFieldCount')
     if (seedInput) {
       seedInput.addEventListener('change', (e) => {
         try {
           localStorage.setItem(MAP_SEED_STORAGE_KEY, e.target.value)
         } catch (err) {
           window.logger.warn('Failed to save map seed to localStorage:', err)
+        }
+      })
+    }
+
+    if (oreFieldInput) {
+      oreFieldInput.min = Math.max((gameState.playerCount || 2) + 3, 6)
+      oreFieldInput.max = 24
+      oreFieldInput.value = sanitizeOreFieldCount(oreFieldInput.value || gameState.mapOreFieldCount, gameState.playerCount || 2)
+      oreFieldInput.addEventListener('change', () => {
+        const sanitized = sanitizeOreFieldCount(oreFieldInput.value, gameState.playerCount || 2)
+        oreFieldInput.value = sanitized
+        gameState.mapOreFieldCount = sanitized
+        try {
+          localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, sanitized.toString())
+        } catch (err) {
+          window.logger.warn('Failed to save ore field count to localStorage:', err)
         }
       })
     }
@@ -563,6 +636,10 @@ class Game {
 
       const widthTiles = mapWidthInput ? sanitizeMapDimension(mapWidthInput.value, MAP_TILES_X) : MAP_TILES_X
       const heightTiles = mapHeightInput ? sanitizeMapDimension(mapHeightInput.value, MAP_TILES_Y) : MAP_TILES_Y
+      const oreFieldCount = oreFieldInput
+        ? sanitizeOreFieldCount(oreFieldInput.value, gameState.playerCount || 2)
+        : sanitizeOreFieldCount(gameState.mapOreFieldCount, gameState.playerCount || 2)
+      gameState.mapOreFieldCount = oreFieldCount
 
       if (mapWidthInput) {
         mapWidthInput.value = widthTiles
@@ -581,6 +658,15 @@ class Game {
         localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString())
       } catch (err) {
         window.logger.warn('Failed to save map height to localStorage:', err)
+      }
+
+      if (oreFieldInput) {
+        oreFieldInput.value = oreFieldCount
+      }
+      try {
+        localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, oreFieldCount.toString())
+      } catch (err) {
+        window.logger.warn('Failed to save ore field count to localStorage:', err)
       }
 
       const { width, height } = setMapDimensions(widthTiles, heightTiles)
@@ -1173,8 +1259,8 @@ gameState.mapGrid = mapGrid
 gameState.units = units
 gameState.factories = factories
 
-function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount) {
-  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount)
+function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapOreFieldCount) {
+  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount)
   deactivateMapEditMode()
   const { value: clientSeed } = sanitizeSeed(seed)
   const normalizedSeed = clientSeed.toString()
@@ -1186,6 +1272,9 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount) {
   gameState.mapTilesY = heightTiles
   if (playerCount) {
     gameState.playerCount = playerCount
+  }
+  if (Number.isFinite(mapOreFieldCount)) {
+    gameState.mapOreFieldCount = sanitizeOreFieldCount(mapOreFieldCount, gameState.playerCount || 2)
   }
 
   gameState.unitWrecks = []

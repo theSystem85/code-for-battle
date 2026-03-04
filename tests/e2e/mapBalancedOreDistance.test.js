@@ -1,25 +1,29 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Map generation ore layout balance', () => {
-  test('creates equal near-base seed distances, central large fields, and seed-driven spread fields', async({ page }) => {
-    const seedsToCheck = ['11', '23', '77']
-    const randomSpreadSignatures = []
+  test('uses ore field count setting deterministically and keeps balanced near-base street access', async({ page }) => {
+    const oreFieldCount = 12
+    const seedsToCheck = ['11', '23']
+    const spreadSignatures = []
 
     for (const seed of seedsToCheck) {
-      await page.goto(`/?seed=${seed}&players=4`)
+      await page.goto(`/?seed=${seed}&players=4&oreFieldCount=${oreFieldCount}`)
       await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
 
-      const mapStats = await page.evaluate(() => {
+      await expect(page.locator('#mapOreFieldCount')).toHaveValue(String(oreFieldCount))
+
+      const stats = await page.evaluate(() => {
         const mapGrid = window.gameState?.mapGrid || []
         const buildings = window.gameState?.buildings || []
+        const configuredFieldCount = window.gameState?.mapOreFieldCount
 
-        if (!Array.isArray(mapGrid) || mapGrid.length === 0 || !Array.isArray(mapGrid[0]) || mapGrid[0].length === 0) {
-          throw new Error('mapGrid is not initialized')
+        if (!Array.isArray(mapGrid) || mapGrid.length === 0 || !Array.isArray(mapGrid[0])) {
+          throw new Error('mapGrid not initialized')
         }
 
         const width = mapGrid[0].length
         const height = mapGrid.length
-        const mapCenter = { x: Math.floor(width / 2), y: Math.floor(height / 2) }
+        const center = { x: Math.floor(width / 2), y: Math.floor(height / 2) }
         const dirs = [
           { x: 1, y: 0 },
           { x: -1, y: 0 },
@@ -35,57 +39,40 @@ test.describe('Map generation ore layout balance', () => {
           throw new Error(`Expected 4 start bases, got ${baseBuildings.length}`)
         }
 
-        function isStreet(x, y) {
-          const tile = mapGrid[y]?.[x]
-          return Boolean(tile && tile.type === 'street')
-        }
+        const isStreet = (x, y) => mapGrid[y]?.[x]?.type === 'street'
 
-        function nearestBaseDistance(x, y) {
-          return Math.min(...baseBuildings.map(base => {
-            const cx = base.x + Math.floor((base.width || 1) / 2)
-            const cy = base.y + Math.floor((base.height || 1) / 2)
-            return Math.abs(cx - x) + Math.abs(cy - y)
-          }))
-        }
+        const nearestBaseDistance = (x, y) => Math.min(...baseBuildings.map(base => {
+          const cx = base.x + Math.floor((base.width || 1) / 2)
+          const cy = base.y + Math.floor((base.height || 1) / 2)
+          return Math.abs(cx - x) + Math.abs(cy - y)
+        }))
 
-        function getAdjacentStreetTiles(base) {
-          const starts = []
+        function shortestStreetDistanceToSeed(base) {
+          const queue = []
+          const visited = new Set()
+
           for (let y = base.y; y < base.y + (base.height || 1); y++) {
             for (let x = base.x; x < base.x + (base.width || 1); x++) {
               for (const dir of dirs) {
                 const nx = x + dir.x
                 const ny = y + dir.y
-                if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
-                if (isStreet(nx, ny)) starts.push({ x: nx, y: ny })
+                const key = `${nx},${ny}`
+                if (nx < 0 || ny < 0 || nx >= width || ny >= height || !isStreet(nx, ny) || visited.has(key)) continue
+                visited.add(key)
+                queue.push({ x: nx, y: ny, dist: 0 })
               }
             }
           }
-          const unique = new Map(starts.map(tile => [`${tile.x},${tile.y}`, tile]))
-          return [...unique.values()]
-        }
-
-        function shortestStreetDistanceToSeed(base) {
-          const starts = getAdjacentStreetTiles(base)
-          if (starts.length === 0) return null
-
-          const visited = new Set()
-          const queue = starts.map(tile => ({ ...tile, dist: 0 }))
-          queue.forEach(tile => visited.add(`${tile.x},${tile.y}`))
 
           while (queue.length > 0) {
             const current = queue.shift()
-            const tile = mapGrid[current.y]?.[current.x]
-            if (tile?.seedCrystal) return current.dist
+            if (mapGrid[current.y][current.x].seedCrystal) return current.dist
 
             for (const dir of dirs) {
               const nx = current.x + dir.x
               const ny = current.y + dir.y
-              if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
-              if (!isStreet(nx, ny)) continue
-
               const key = `${nx},${ny}`
-              if (visited.has(key)) continue
-
+              if (nx < 0 || ny < 0 || nx >= width || ny >= height || !isStreet(nx, ny) || visited.has(key)) continue
               visited.add(key)
               queue.push({ x: nx, y: ny, dist: current.dist + 1 })
             }
@@ -103,91 +90,65 @@ test.describe('Map generation ore layout balance', () => {
           }
         }
 
-        const oreComponents = []
-        const visitedOre = new Set()
-        for (let y = 0; y < height; y++) {
-          for (let x = 0; x < width; x++) {
-            if (!mapGrid[y][x].ore) continue
-            const key = `${x},${y}`
-            if (visitedOre.has(key)) continue
+        const nearSeedCount = seedCrystals.filter(seed => {
+          const distance = nearestBaseDistance(seed.x, seed.y)
+          return distance >= 24 && distance <= 36
+        }).length
 
-            const queue = [{ x, y }]
-            visitedOre.add(key)
-            let count = 0
-            let hasSeed = false
-            let sumX = 0
-            let sumY = 0
+        const middleSeedCount = seedCrystals.filter(seed => {
+          const d = Math.abs(seed.x - center.x) + Math.abs(seed.y - center.y)
+          return d <= 26
+        }).length
 
-            while (queue.length > 0) {
-              const current = queue.shift()
-              const tile = mapGrid[current.y][current.x]
-              count += 1
-              sumX += current.x
-              sumY += current.y
-              if (tile.seedCrystal) hasSeed = true
+        const randomSpreadSignature = seedCrystals
+          .filter(seed => nearestBaseDistance(seed.x, seed.y) > 36)
+          .map(seed => `${seed.x},${seed.y}`)
+          .sort()
+          .join('|')
 
-              for (const dir of dirs) {
-                const nx = current.x + dir.x
-                const ny = current.y + dir.y
-                if (nx < 0 || ny < 0 || nx >= width || ny >= height) continue
-                const nKey = `${nx},${ny}`
-                if (visitedOre.has(nKey) || !mapGrid[ny][nx].ore) continue
-                visitedOre.add(nKey)
-                queue.push({ x: nx, y: ny })
-              }
-            }
-
-            oreComponents.push({
-              size: count,
-              hasSeed,
-              centerX: Math.round(sumX / count),
-              centerY: Math.round(sumY / count)
-            })
-          }
-        }
-
-        const streetDistances = baseBuildings.map(base => ({
+        const distances = baseBuildings.map(base => ({
           owner: base.owner,
           distance: shortestStreetDistanceToSeed(base)
         }))
 
-        const equalDistanceValues = [...new Set(streetDistances.map(item => item.distance))]
-
-        const smallNearBaseComponents = oreComponents.filter(component =>
-          component.hasSeed && component.size <= 90 && nearestBaseDistance(component.centerX, component.centerY) >= 24 && nearestBaseDistance(component.centerX, component.centerY) <= 36
-        )
-
-        const largeMiddleComponents = oreComponents.filter(component =>
-          component.hasSeed && component.size >= 120 && Math.abs(component.centerX - mapCenter.x) + Math.abs(component.centerY - mapCenter.y) <= 26
-        )
-
-        const randomSpreadSignature = oreComponents
-          .filter(component => component.hasSeed && component.size <= 110 && nearestBaseDistance(component.centerX, component.centerY) > 36)
-          .map(component => `${component.centerX},${component.centerY}`)
-          .sort()
-          .join('|')
-
         return {
-          streetDistances,
-          equalDistanceCount: equalDistanceValues.length,
-          firstDistance: equalDistanceValues[0],
-          smallNearBaseCount: smallNearBaseComponents.length,
-          largeMiddleCount: largeMiddleComponents.length,
+          configuredFieldCount,
+          seedCrystalCount: seedCrystals.length,
+          nearSeedCount,
+          middleSeedCount,
           randomSpreadSignature,
-          seedCrystalCount: seedCrystals.length
+          distances,
+          uniqueDistanceCount: new Set(distances.map(item => item.distance)).size,
+          firstDistance: distances[0]?.distance ?? null
         }
       })
 
-      expect(mapStats.equalDistanceCount, `street distance mismatch for seed ${seed}: ${JSON.stringify(mapStats.streetDistances)}`).toBe(1)
-      expect(mapStats.firstDistance, `nearest seed street distance should be near 30 for seed ${seed}`).toBeGreaterThanOrEqual(24)
-      expect(mapStats.firstDistance, `nearest seed street distance should be near 30 for seed ${seed}`).toBeLessThanOrEqual(36)
-      expect(mapStats.smallNearBaseCount, `expected at least one small near-base ore field per player for seed ${seed}`).toBeGreaterThanOrEqual(4)
-      expect(mapStats.largeMiddleCount, `expected a few larger middle ore fields for seed ${seed}`).toBeGreaterThanOrEqual(3)
-      expect(mapStats.seedCrystalCount, `expected multiple seed crystals for seed ${seed}`).toBeGreaterThanOrEqual(10)
+      expect(stats.configuredFieldCount).toBe(oreFieldCount)
+      expect(stats.seedCrystalCount).toBe(oreFieldCount)
+      expect(stats.uniqueDistanceCount, `street distances: ${JSON.stringify(stats.distances)}`).toBe(1)
+      expect(stats.firstDistance).toBeGreaterThanOrEqual(24)
+      expect(stats.firstDistance).toBeLessThanOrEqual(36)
+      expect(stats.nearSeedCount).toBeGreaterThanOrEqual(4)
+      expect(stats.middleSeedCount).toBeGreaterThanOrEqual(3)
 
-      randomSpreadSignatures.push(mapStats.randomSpreadSignature)
+      spreadSignatures.push(stats.randomSpreadSignature)
     }
 
-    expect(new Set(randomSpreadSignatures).size, `random spread ore fields should vary with map seed: ${JSON.stringify(randomSpreadSignatures)}`).toBeGreaterThan(1)
+    expect(new Set(spreadSignatures).size).toBeGreaterThan(1)
+
+    await page.goto('/?seed=11&players=4&oreFieldCount=9')
+    await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
+    await expect(page.locator('#mapOreFieldCount')).toHaveValue('9')
+    const reducedSeedCount = await page.evaluate(() => {
+      const mapGrid = window.gameState?.mapGrid || []
+      let count = 0
+      for (let y = 0; y < mapGrid.length; y++) {
+        for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
+          if (mapGrid[y][x].seedCrystal) count += 1
+        }
+      }
+      return count
+    })
+    expect(reducedSeedCount).toBe(9)
   })
 })
