@@ -31,6 +31,7 @@ let partyListContainer = null
 let sessionObserverCleanup = null
 let partyOwnershipCleanup = null
 let reconnectTimerHandle = null
+let llmModelPoolListenerBound = false
 
 /**
  * Get the stored player alias from localStorage
@@ -456,6 +457,12 @@ export function initSidebarMultiplayer() {
   setupAliasInput()
   setupJoinInviteLinkInput()
   setupQrScanner()
+  if (!llmModelPoolListenerBound && typeof document !== 'undefined') {
+    document.addEventListener('llmModelPoolChanged', () => {
+      refreshSidebarMultiplayer()
+    })
+    llmModelPoolListenerBound = true
+  }
   // Note: Host polling is started only when user clicks "Invite" button (handleInviteClick)
   // This prevents unnecessary polling before a user actively shares an invite link
 
@@ -612,58 +619,52 @@ function createPartyRow(partyState) {
   return row
 }
 
-/**
- * Determine if a party is effectively LLM-controlled
- * @param {Object} partyState - The party state object
- * @returns {boolean}
- */
-function isPartyLlmControlled(partyState) {
+function getAvailableLlmModels() {
   const settings = getLlmSettings()
-  if (!settings.strategic.enabled) return false
-  return partyState.llmControlled !== false
+  const fallbackTick = settings.strategic?.tickSeconds || 60
+  const pool = Array.isArray(settings.strategicModelPool) ? settings.strategicModelPool : []
+  return pool
+    .filter(entry => entry?.provider && entry?.model)
+    .map(entry => ({
+      key: entry.key,
+      label: `${entry.model} (${entry.tickSeconds || fallbackTick}s)`
+    }))
 }
 
-/**
- * Create an LLM/Local AI toggle button for an AI party
- * @param {Object} partyState - The party state object
- * @returns {HTMLElement}
- */
 function createLlmToggleButton(partyState) {
-  const button = document.createElement('button')
-  button.type = 'button'
-  button.className = 'multiplayer-llm-toggle'
+  const select = document.createElement('select')
+  select.className = 'multiplayer-llm-toggle'
+  select.dataset.testid = `multiplayer-llm-select-${partyState.partyId}`
 
-  const llmActive = isPartyLlmControlled(partyState)
-  updateLlmToggleAppearance(button, llmActive)
+  const localOption = document.createElement('option')
+  localOption.value = 'local'
+  localOption.textContent = '⚙️ Local'
+  select.appendChild(localOption)
 
-  button.addEventListener('click', () => {
-    const currentlyLlm = isPartyLlmControlled(partyState)
-    // Toggle: if currently LLM, switch to local AI; if local AI, switch to LLM
-    const ps = gameState.partyStates?.find(p => p.partyId === partyState.partyId)
-    if (ps) {
-      ps.llmControlled = !currentlyLlm
-    }
-    updateLlmToggleAppearance(button, !currentlyLlm)
+  const llmModels = getAvailableLlmModels()
+  llmModels.forEach(model => {
+    const option = document.createElement('option')
+    option.value = model.key
+    option.textContent = `🤖 ${model.label}`
+    select.appendChild(option)
   })
 
-  return button
-}
+  const selected = partyState.llmControlled === false ? 'local' : (partyState.llmModelKey || 'local')
+  select.value = Array.from(select.options).some(opt => opt.value === selected) ? selected : 'local'
 
-/**
- * Update the visual appearance of an LLM toggle button
- * @param {HTMLElement} button
- * @param {boolean} isLlm - Whether the party is LLM controlled
- */
-function updateLlmToggleAppearance(button, isLlm) {
-  if (isLlm) {
-    button.textContent = '🤖 LLM'
-    button.classList.add('multiplayer-llm-toggle--active')
-    button.title = 'Controlled by LLM AI – click to switch to local AI'
-  } else {
-    button.textContent = '⚙️ Local'
-    button.classList.remove('multiplayer-llm-toggle--active')
-    button.title = 'Controlled by local AI – click to switch to LLM AI'
-  }
+  select.addEventListener('change', () => {
+    const ps = gameState.partyStates?.find(p => p.partyId === partyState.partyId)
+    if (!ps) return
+    if (select.value === 'local') {
+      ps.llmControlled = false
+      ps.llmModelKey = null
+    } else {
+      ps.llmControlled = true
+      ps.llmModelKey = select.value
+    }
+  })
+
+  return select
 }
 
 function getPartyDisplayName(partyId, color) {

@@ -22,6 +22,12 @@ export const DEFAULT_LLM_SETTINGS = {
       model: '',
       riskAccepted: false
     },
+    inceptionlabs: {
+      apiKey: '',
+      baseUrl: 'https://api.inceptionlabs.ai/v1',
+      model: '',
+      riskAccepted: false
+    },
     anthropic: {
       apiKey: '',
       baseUrl: 'https://api.anthropic.com',
@@ -40,7 +46,8 @@ export const DEFAULT_LLM_SETTINGS = {
       model: '',
       riskAccepted: false
     }
-  }
+  },
+  strategicModelPool: []
 }
 
 let currentSettings = null

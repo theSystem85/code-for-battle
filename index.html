@@ -849,6 +849,25 @@
           </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">LLM Strategic AI</h3>
+            <div class="config-modal__subsection">
+              <h4 class="config-modal__section-title">Model Pool for Party AI</h4>
+              <div class="config-modal__field config-modal__field--row">
+                <label class="config-modal__field config-modal__field--inline">
+                  <span>Provider:</span>
+                  <select id="llmPoolProvider" class="config-modal__select"></select>
+                </label>
+                <label class="config-modal__field config-modal__field--inline">
+                  <span>Model:</span>
+                  <select id="llmPoolModel" class="config-modal__select"></select>
+                </label>
+                <label class="config-modal__field config-modal__field--inline">
+                  <span>Interval (s):</span>
+                  <input type="number" id="llmPoolInterval" min="5" max="300" step="5" placeholder="Default">
+                </label>
+                <button id="llmPoolAddButton" class="config-modal__button" type="button">Add</button>
+              </div>
+              <div id="llmPoolList" class="config-modal__note">No LLM models added yet.</div>
+            </div>
             <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="llmStrategicEnabled">
               <span>Enable LLM strategic planning for enemy AI</span>
@@ -905,29 +924,16 @@
                   <input type="password" id="llmApiKey-openai" autocomplete="off" placeholder="sk-..."
                     aria-describedby="llmApiKeySecurityNote-openai">
                 </label>
-                <div class="config-modal__api-key-security-note" id="llmApiKeySecurityNote-openai" role="note"
-                  aria-live="polite">
+                <div class="config-modal__api-key-security-note" id="llmApiKeySecurityNote-openai" role="note" aria-live="polite">
                   <strong>Security-critical: read before entering a key.</strong>
                   <ul>
-                    <li>Use a <strong>dedicated OpenAI API key</strong> created only for this game. Required permissions
-                      are: read model list (<code>GET /v1/models</code>) and create responses
-                      (<code>POST /v1/responses</code>) only.</li>
-                    <li>Set strict spending controls (low monthly budget + usage alerts) and rotate/revoke the key
-                      immediately if you suspect exposure.</li>
-                    <li>The key is used only in your browser to request strategic AI plans and commentary for this game
-                      session. No server-side relay is used by this app.</li>
-                    <li>Use a low-cost model when possible (for example OpenAI nano-class models) to reduce token spend.
-                    </li>
-                    <li>This app stores the key in browser <code>localStorage</code> only (not on our servers). Local
-                      storage can be exposed by browser/device compromise or XSS, so treat this as sensitive.</li>
-                    <li>Entering a key is optional. You can play the game fully without LLM features.</li>
-                    <li><a href="https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety"
-                        target="_blank" rel="noopener noreferrer">OpenAI official API key safety best practices</a>.
-                    </li>
+                    <li>Use a dedicated API key with strict spend limits.</li>
+                    <li>Keys are stored in browser localStorage only for this app.</li>
+                    <li>Entering a key is optional.</li>
                   </ul>
-                  <label class="config-modal__field config-modal__field--toggle config-modal__field--compact">
+                  <label class="config-modal__field config-modal__field--toggle">
                     <input type="checkbox" id="llmApiKeyRiskConfirm-openai">
-                    <span>I understand the risks and choose to enter a key at my own risk.</span>
+                    <span>I understand the risk and still want to enter an API key in this browser.</span>
                   </label>
                 </div>
               </div>
@@ -941,70 +947,44 @@
               </label>
               <button class="config-modal__button" id="llmRefresh-openai" type="button">Refresh OpenAI models</button>
             </div>
-            <details class="config-modal__subsection config-modal__subsection--locked">
-              <summary class="config-modal__subsection-summary">
-                <h4 class="config-modal__section-title">Anthropic</h4>
-                <span class="config-modal__hint">coming soon!</span>
-              </summary>
-              <div class="config-modal__locked-content">
+            <div class="config-modal__subsection">
+              <h4 class="config-modal__section-title">InceptionLabs (Mercury)</h4>
+              <div class="config-modal__api-key-security" id="llmApiKeySecurity-inceptionlabs">
                 <label class="config-modal__field">
                   <span>API key:</span>
-                  <input type="password" id="llmApiKey-anthropic" autocomplete="off" placeholder="sk-ant-..." disabled>
+                  <input type="password" id="llmApiKey-inceptionlabs" autocomplete="off" placeholder="sk-..."
+                    aria-describedby="llmApiKeySecurityNote-inceptionlabs">
                 </label>
-                <label class="config-modal__field">
-                  <span>Base URL:</span>
-                  <input type="text" id="llmBaseUrl-anthropic" placeholder="https://api.anthropic.com" disabled>
-                </label>
-                <label class="config-modal__field">
-                  <span>Model:</span>
-                  <select id="llmModel-anthropic" class="config-modal__select" disabled></select>
-                </label>
-                <button class="config-modal__button" id="llmRefresh-anthropic" type="button" disabled>Refresh Anthropic
-                  models</button>
-                <div class="config-modal__note">Anthropic provider settings are coming soon!</div>
+                <div class="config-modal__api-key-security-note" id="llmApiKeySecurityNote-inceptionlabs" role="note" aria-live="polite">
+                  <strong>Security-critical: read before entering a key.</strong>
+                  <ul>
+                    <li>Use an InceptionLabs key with strict spend and permission controls.</li>
+                    <li>Mercury models are OpenAI-compatible in this app.</li>
+                  </ul>
+                  <label class="config-modal__field config-modal__field--toggle">
+                    <input type="checkbox" id="llmApiKeyRiskConfirm-inceptionlabs">
+                    <span>I understand the risk and still want to enter an API key in this browser.</span>
+                  </label>
+                </div>
               </div>
+              <label class="config-modal__field">
+                <span>Base URL:</span>
+                <input type="text" id="llmBaseUrl-inceptionlabs" placeholder="https://api.inceptionlabs.ai/v1">
+              </label>
+              <label class="config-modal__field">
+                <span>Model:</span>
+                <select id="llmModel-inceptionlabs" class="config-modal__select"></select>
+              </label>
+              <button class="config-modal__button" id="llmRefresh-inceptionlabs" type="button">Refresh InceptionLabs models</button>
+            </div>
+            <details class="config-modal__subsection config-modal__subsection--locked">
+              <summary class="config-modal__subsection-summary"><h4 class="config-modal__section-title">Anthropic</h4><span class="config-modal__hint">coming soon!</span></summary>
             </details>
             <details class="config-modal__subsection config-modal__subsection--locked">
-              <summary class="config-modal__subsection-summary">
-                <h4 class="config-modal__section-title">xAI</h4>
-                <span class="config-modal__hint">coming soon!</span>
-              </summary>
-              <div class="config-modal__locked-content">
-                <label class="config-modal__field">
-                  <span>API key:</span>
-                  <input type="password" id="llmApiKey-xai" autocomplete="off" placeholder="xai-..." disabled>
-                </label>
-                <label class="config-modal__field">
-                  <span>Base URL:</span>
-                  <input type="text" id="llmBaseUrl-xai" placeholder="https://api.x.ai/v1" disabled>
-                </label>
-                <label class="config-modal__field">
-                  <span>Model:</span>
-                  <select id="llmModel-xai" class="config-modal__select" disabled></select>
-                </label>
-                <button class="config-modal__button" id="llmRefresh-xai" type="button" disabled>Refresh xAI
-                  models</button>
-                <div class="config-modal__note">xAI provider settings are coming soon!</div>
-              </div>
+              <summary class="config-modal__subsection-summary"><h4 class="config-modal__section-title">xAI</h4><span class="config-modal__hint">coming soon!</span></summary>
             </details>
             <details class="config-modal__subsection config-modal__subsection--locked">
-              <summary class="config-modal__subsection-summary">
-                <h4 class="config-modal__section-title">Ollama</h4>
-                <span class="config-modal__hint">coming soon!</span>
-              </summary>
-              <div class="config-modal__locked-content">
-                <label class="config-modal__field">
-                  <span>Base URL:</span>
-                  <input type="text" id="llmBaseUrl-ollama" placeholder="http://localhost:11434" disabled>
-                </label>
-                <label class="config-modal__field">
-                  <span>Model:</span>
-                  <select id="llmModel-ollama" class="config-modal__select" disabled></select>
-                </label>
-                <button class="config-modal__button" id="llmRefresh-ollama" type="button" disabled>Refresh Ollama
-                  models</button>
-                <div class="config-modal__note">Ollama provider settings are coming soon!</div>
-              </div>
+              <summary class="config-modal__subsection-summary"><h4 class="config-modal__section-title">Ollama</h4><span class="config-modal__hint">coming soon!</span></summary>
             </details>
           </div>
         </div>
