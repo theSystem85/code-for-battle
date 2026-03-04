@@ -90,7 +90,8 @@ export async function fetchModelList(providerId) {
   const baseUrl = normalizeBaseUrl(settings.baseUrl)
 
   switch (providerId) {
-    case 'openai': {
+    case 'openai':
+    case 'inceptionlabs': {
       if (!settings.apiKey) return []
       const response = await fetch(`${baseUrl}/models`, {
         headers: {
@@ -98,7 +99,7 @@ export async function fetchModelList(providerId) {
         }
       })
       if (!response.ok) {
-        throw new Error(`OpenAI model fetch failed: ${response.status}`)
+        throw new Error(`${providerId} model fetch failed: ${response.status}`)
       }
       const payload = await response.json()
       return (payload.data || [])
@@ -212,9 +213,10 @@ export async function requestLlmCompletion(providerId, {
   const baseUrl = normalizeBaseUrl(settings.baseUrl)
 
   switch (providerId) {
-    case 'openai': {
+    case 'openai':
+    case 'inceptionlabs': {
       if (!settings.apiKey) {
-        throw new Error('openai API key missing')
+        throw new Error(`${providerId} API key missing`)
       }
 
       const inputItems = buildResponseInput([
