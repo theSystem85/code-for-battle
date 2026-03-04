@@ -292,3 +292,10 @@ F22 in-progress same-airstrip guard refinement:
 	- Follow-up (2026-02-27, render fix): `wreckRenderer` now applies F22 single-image wreck rotation with `+ PI/2` (matching live F22 render convention) to prevent opposite-facing wreck orientation.
 
 - Follow-up (2026-02-27, workshop restoration render fix): `wreckRenderer` now always resolves the F22 wreck sprite even while the wreck is in workshop restoration preview mode (avoids default fallback), and workshop restoration previews rotate wreck visuals to a consistent 45° heading for F22 and other unit wrecks.
+
+## Engineering Update (2026-03-04)
+F22 handling + rocket-speed tuning:
+1. Reduced F22 `rotationSpeed` from `0.3` to `0.1` (exactly 1/3 of prior turn rate).
+2. Reduced F22 `speed` from `10.125` to `6.075` (40% reduction, i.e., 60% of prior top speed).
+3. Increased F22 rocket projectile speed from `5` to `7.5` (50% faster), while keeping Apache rocket speed unchanged.
+4. Added E2E regression coverage that validates the applied F22 unit movement stats and the spawned F22 rocket projectile speed.

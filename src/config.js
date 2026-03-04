@@ -856,8 +856,8 @@ export const UNIT_PROPERTIES = {
   f22Raptor: {
     health: 80,
     maxHealth: 80,
-    speed: 10.125,
-    rotationSpeed: 0.3,
+    speed: 6.075,
+    rotationSpeed: 0.1,
     turretRotationSpeed: 0,
     accelerationMultiplier: 1.5
   },
