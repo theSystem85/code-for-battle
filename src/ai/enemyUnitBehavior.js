@@ -37,6 +37,8 @@ const AIR_DEFENSE_BUILDINGS = new Set(['rocketTurret'])
 const HARVESTER_HUNTER_PATH_REFRESH = 2000
 const ROCKET_TURRET_RANGE = (buildingData.rocketTurret?.fireRange || 16) * TILE_SIZE
 const AIR_DEFENSE_RADIUS = TANK_FIRE_RANGE * TILE_SIZE * 1.2
+const F22_ANTI_AIR_BUFFER = TILE_SIZE * 0.75
+const F22_APPROACH_NODE_LIMIT = 5000
 
 function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targetedOreTiles, bullets) {
   // Reset being attacked flag if enough time has passed since last damage
@@ -1444,12 +1446,19 @@ function updateApacheAI(unit, units, gameState, mapGrid, now, aiPlayerId) {
     ? { x: target.tileX, y: target.tileY }
     : { x: target.x, y: target.y }
 
+  const f22ThreatSources = unit.type === 'f22Raptor'
+    ? getAntiAirThreatSources(units, gameState, unit.owner)
+    : []
+  const safeApproachWaypoint = unit.type === 'f22Raptor'
+    ? getF22SafeApproachWaypoint(unit, target, f22ThreatSources, mapGrid)
+    : null
+
   unit.moveTarget = null
   unit.path = []
   unit.flightPlan = {
-    x: (targetTile.x + 0.5) * TILE_SIZE,
-    y: (targetTile.y + 0.5) * TILE_SIZE,
-    stopRadius: TILE_SIZE * 0.6,
+    x: safeApproachWaypoint?.x ?? (targetTile.x + 0.5) * TILE_SIZE,
+    y: safeApproachWaypoint?.y ?? (targetTile.y + 0.5) * TILE_SIZE,
+    stopRadius: safeApproachWaypoint?.stopRadius ?? TILE_SIZE * 0.6,
     mode: 'attack',
     followTargetId: target.id || null,
     destinationTile: { ...targetTile }
@@ -1515,6 +1524,171 @@ function isAirDefenseNearby(position, units, gameState) {
   return nearbyTurrets
 }
 
+function getAntiAirThreatSources(units, gameState, owner) {
+  const sources = []
+  const enemyUnits = Array.isArray(units) ? units : []
+
+  enemyUnits.forEach(candidate => {
+    if (!candidate || candidate.health <= 0 || candidate.owner === owner) return
+    if (!AIR_DEFENSE_TYPES.has(candidate.type)) return
+    const center = getUnitCenter(candidate)
+    const range = getEffectiveFireRange(candidate)
+    if (range > 0) {
+      sources.push({ x: center.x, y: center.y, range })
+    }
+  })
+
+  const enemyBuildings = Array.isArray(gameState?.buildings) ? gameState.buildings : []
+  enemyBuildings.forEach(building => {
+    if (!building || building.health <= 0 || building.owner === owner) return
+    if (!AIR_DEFENSE_BUILDINGS.has(building.type)) return
+
+    const supply = building.owner === gameState.humanPlayer ? gameState.playerPowerSupply : gameState.enemyPowerSupply
+    if (building.type === 'rocketTurret' && supply < 0) return
+
+    const range = (building.fireRange || buildingData.rocketTurret?.fireRange || 16) * TILE_SIZE
+    const centerX = (building.x + (building.width || 1) / 2) * TILE_SIZE
+    const centerY = (building.y + (building.height || 1) / 2) * TILE_SIZE
+    sources.push({ x: centerX, y: centerY, range })
+  })
+
+  return sources
+}
+
+function isPointInsideAntiAirThreat(point, threatSources, buffer = 0) {
+  if (!point || !Array.isArray(threatSources) || threatSources.length === 0) return false
+
+  return threatSources.some(source => {
+    const maxRange = source.range + buffer
+    return Math.hypot(point.x - source.x, point.y - source.y) <= maxRange
+  })
+}
+
+function isTargetOutsideAntiAirThreat(target, threatSources) {
+  if (!target) return false
+  const center = target.tileX !== undefined
+    ? {
+      x: (target.tileX + (target.width || 1) / 2) * TILE_SIZE,
+      y: (target.tileY + (target.height || 1) / 2) * TILE_SIZE
+    }
+    : {
+      x: target.x + TILE_SIZE / 2,
+      y: target.y + TILE_SIZE / 2
+    }
+  return !isPointInsideAntiAirThreat(center, threatSources, F22_ANTI_AIR_BUFFER)
+}
+
+function findSafeApproachPath(startTile, destinationTile, mapGrid, threatSources) {
+  if (!startTile || !destinationTile || !Array.isArray(mapGrid) || !Array.isArray(mapGrid[0])) return null
+
+  const mapHeight = mapGrid.length
+  const mapWidth = mapGrid[0].length
+  const inBounds = (x, y) => x >= 0 && y >= 0 && x < mapWidth && y < mapHeight
+  const makeKey = (x, y) => `${x},${y}`
+  const heuristic = (x, y) => Math.hypot(destinationTile.x - x, destinationTile.y - y)
+
+  const isBlocked = (x, y) => {
+    if (!inBounds(x, y)) return true
+    const point = {
+      x: (x + 0.5) * TILE_SIZE,
+      y: (y + 0.5) * TILE_SIZE
+    }
+    return isPointInsideAntiAirThreat(point, threatSources, F22_ANTI_AIR_BUFFER)
+  }
+
+  if (isBlocked(destinationTile.x, destinationTile.y)) {
+    return null
+  }
+
+  const startBlocked = isBlocked(startTile.x, startTile.y)
+  const open = [{ x: startTile.x, y: startTile.y, g: 0, f: heuristic(startTile.x, startTile.y) }]
+  const gScore = new Map([[makeKey(startTile.x, startTile.y), 0]])
+  const cameFrom = new Map()
+  const closed = new Set()
+
+  const neighbors = [
+    { x: -1, y: 0 }, { x: 1, y: 0 },
+    { x: 0, y: -1 }, { x: 0, y: 1 },
+    { x: -1, y: -1 }, { x: 1, y: -1 },
+    { x: -1, y: 1 }, { x: 1, y: 1 }
+  ]
+
+  let explored = 0
+  while (open.length > 0 && explored < F22_APPROACH_NODE_LIMIT) {
+    explored++
+    let currentIndex = 0
+    for (let i = 1; i < open.length; i++) {
+      if (open[i].f < open[currentIndex].f) {
+        currentIndex = i
+      }
+    }
+
+    const current = open.splice(currentIndex, 1)[0]
+    const currentKey = makeKey(current.x, current.y)
+    if (closed.has(currentKey)) continue
+
+    if (current.x === destinationTile.x && current.y === destinationTile.y) {
+      const path = [{ x: current.x, y: current.y }]
+      let traceKey = currentKey
+      while (cameFrom.has(traceKey)) {
+        const previous = cameFrom.get(traceKey)
+        path.push(previous)
+        traceKey = makeKey(previous.x, previous.y)
+      }
+      return path.reverse()
+    }
+
+    closed.add(currentKey)
+
+    neighbors.forEach(offset => {
+      const nx = current.x + offset.x
+      const ny = current.y + offset.y
+      const neighborKey = makeKey(nx, ny)
+      if (closed.has(neighborKey) || !inBounds(nx, ny)) return
+
+      if (!(startBlocked && nx === startTile.x && ny === startTile.y) && isBlocked(nx, ny)) {
+        return
+      }
+
+      const stepCost = (offset.x === 0 || offset.y === 0) ? 1 : Math.SQRT2
+      const tentativeG = current.g + stepCost
+      const previousG = gScore.get(neighborKey)
+      if (previousG !== undefined && tentativeG >= previousG) return
+
+      cameFrom.set(neighborKey, { x: current.x, y: current.y })
+      gScore.set(neighborKey, tentativeG)
+      open.push({ x: nx, y: ny, g: tentativeG, f: tentativeG + heuristic(nx, ny) })
+    })
+  }
+
+  return null
+}
+
+function getF22SafeApproachWaypoint(seeker, target, threatSources, mapGrid) {
+  if (!seeker || !target || !Array.isArray(mapGrid) || !Array.isArray(mapGrid[0])) return null
+
+  const startTile = {
+    x: Math.floor((seeker.x + TILE_SIZE / 2) / TILE_SIZE),
+    y: Math.floor((seeker.y + TILE_SIZE / 2) / TILE_SIZE)
+  }
+  const destinationTile = target.tileX !== undefined
+    ? { x: target.tileX, y: target.tileY }
+    : { x: Math.floor(target.x), y: Math.floor(target.y) }
+
+  const safePath = findSafeApproachPath(startTile, destinationTile, mapGrid, threatSources)
+  if (!safePath || safePath.length === 0) return null
+
+  const nextNode = safePath[Math.min(3, safePath.length - 1)]
+  return {
+    x: (nextNode.x + 0.5) * TILE_SIZE,
+    y: (nextNode.y + 0.5) * TILE_SIZE,
+    stopRadius: TILE_SIZE * 0.7,
+    mode: 'attack',
+    followTargetId: target.id || null,
+    destinationTile: { x: destinationTile.x, y: destinationTile.y }
+  }
+}
+
 function isHarvesterAtOreField(harvester, gameState) {
   if (!harvester || !gameState?.mapGrid) return false
   if (harvester.harvesting) return true
@@ -1527,6 +1701,9 @@ function isHarvesterAtOreField(harvester, gameState) {
 
 function findApacheStrikeTarget(units, gameState, seeker) {
   const player = gameState.humanPlayer
+  const antiAirThreatSources = seeker?.type === 'f22Raptor'
+    ? getAntiAirThreatSources(units, gameState, seeker.owner)
+    : []
   const playerHarvesters = units.filter(u => u.owner === player && u.type === 'harvester' && u.health > 0)
   const seekerCenter = getUnitCenter(seeker)
 
@@ -1536,7 +1713,9 @@ function findApacheStrikeTarget(units, gameState, seeker) {
   })
 
   if (seeker?.type === 'f22Raptor') {
-    const oreFieldHarvesters = unprotectedHarvesters.filter(harvester => isHarvesterAtOreField(harvester, gameState))
+    const oreFieldHarvesters = unprotectedHarvesters
+      .filter(harvester => isHarvesterAtOreField(harvester, gameState))
+      .filter(harvester => isTargetOutsideAntiAirThreat(harvester, antiAirThreatSources))
     if (oreFieldHarvesters.length > 0) {
       oreFieldHarvesters.sort((a, b) => {
         const aCenter = getUnitCenter(a)
@@ -1548,12 +1727,18 @@ function findApacheStrikeTarget(units, gameState, seeker) {
   }
 
   if (unprotectedHarvesters.length > 0) {
-    unprotectedHarvesters.sort((a, b) => {
+    const safeHarvesters = seeker?.type === 'f22Raptor'
+      ? unprotectedHarvesters.filter(harvester => isTargetOutsideAntiAirThreat(harvester, antiAirThreatSources))
+      : unprotectedHarvesters
+
+    safeHarvesters.sort((a, b) => {
       const aCenter = getUnitCenter(a)
       const bCenter = getUnitCenter(b)
       return Math.hypot(aCenter.x - seekerCenter.x, aCenter.y - seekerCenter.y) - Math.hypot(bCenter.x - seekerCenter.x, bCenter.y - seekerCenter.y)
     })
-    return unprotectedHarvesters[0]
+    if (safeHarvesters.length > 0) {
+      return safeHarvesters[0]
+    }
   }
 
   const playerBuildings = (gameState.buildings || []).filter(b => b.owner === player && b.health > 0)
@@ -1565,7 +1750,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
         x: (building.x + (building.width || 1) / 2) * TILE_SIZE,
         y: (building.y + (building.height || 1) / 2) * TILE_SIZE
       }
-      return !isAirDefenseNearby(center, units, gameState)
+      return !isAirDefenseNearby(center, units, gameState) && isTargetOutsideAntiAirThreat(building, antiAirThreatSources)
     })
 
     if (unprotectedDefenses.length > 0) {
@@ -1588,7 +1773,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
       .find(b => !isAirDefenseNearby({
         x: (b.x + (b.width || 1) / 2) * TILE_SIZE,
         y: (b.y + (b.height || 1) / 2) * TILE_SIZE
-      }, units, gameState))
+      }, units, gameState) && isTargetOutsideAntiAirThreat(b, antiAirThreatSources))
 
     if (candidate) return candidate
   }
@@ -1596,7 +1781,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
   const fallback = playerBuildings.find(b => !isAirDefenseNearby({
     x: (b.x + (b.width || 1) / 2) * TILE_SIZE,
     y: (b.y + (b.height || 1) / 2) * TILE_SIZE
-  }, units, gameState))
+  }, units, gameState) && isTargetOutsideAntiAirThreat(b, antiAirThreatSources))
 
   return fallback || null
 }

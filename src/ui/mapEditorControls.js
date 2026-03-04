@@ -1,4 +1,6 @@
 import { gameState } from '../gameState.js'
+import { getMapRenderer, getTextureManager } from '../rendering.js'
+import { initializeOccupancyMap } from '../units.js'
 import {
   activateMapEditMode,
   deactivateMapEditMode,
@@ -14,11 +16,39 @@ import {
   toggleRandomMode
 } from '../mapEditor.js'
 import { listPartyStates, observePartyOwnershipChange } from '../network/multiplayerStore.js'
+import { initSpriteSheetEditor } from './spriteSheetEditor.js'
 
 let editButton = null
 let tileSelect = null
 let randomCheckbox = null
 let statusEl = null
+let integratedSpriteSheetModeCheckbox = null
+let integratedSpriteSheetBiomeSelect = null
+
+const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
+const INTEGRATED_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
+const SSE_APPLIED_METADATA_STORAGE_KEY = 'rts-sse-applied-metadata'
+
+async function applyIntegratedSpriteSheetRuntime(metadata = null) {
+  const textureManager = getTextureManager()
+  if (!textureManager?.setIntegratedSpriteSheetConfig) return
+
+  await textureManager.setIntegratedSpriteSheetConfig({
+    enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+    sheetPath: metadata?.sheetPath || gameState.activeSpriteSheetPath,
+    metadata: metadata || gameState.activeSpriteSheetMetadata || null,
+    biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
+  })
+
+  const mapRenderer = getMapRenderer()
+  if (mapRenderer) {
+    mapRenderer.invalidateAllChunks()
+  }
+
+  if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
+    gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
+  }
+}
 
 function updatePauseIcon() {
   const pauseBtn = document.getElementById('pauseBtn')
@@ -84,6 +114,41 @@ export function initMapEditorControls() {
   tileSelect = document.getElementById('mapEditTileSelect')
   randomCheckbox = document.getElementById('mapEditRandomToggle')
   statusEl = document.getElementById('mapEditStatus')
+  integratedSpriteSheetModeCheckbox = document.getElementById('integratedSpriteSheetModeCheckbox')
+  integratedSpriteSheetBiomeSelect = document.getElementById('integratedSpriteSheetBiomeSelect')
+
+  gameState.useIntegratedSpriteSheetMode = Boolean(gameState.useIntegratedSpriteSheetMode)
+  try {
+    const storedMode = localStorage.getItem(INTEGRATED_MODE_STORAGE_KEY)
+    if (storedMode !== null) {
+      gameState.useIntegratedSpriteSheetMode = storedMode === 'true'
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load integrated sprite sheet mode:', err)
+  }
+
+  gameState.activeSpriteSheetBiomeTag = gameState.activeSpriteSheetBiomeTag || 'grass'
+  try {
+    const storedBiome = localStorage.getItem(INTEGRATED_BIOME_STORAGE_KEY)
+    if (storedBiome && ['soil', 'sand', 'grass', 'snow'].includes(storedBiome)) {
+      gameState.activeSpriteSheetBiomeTag = storedBiome
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load integrated sprite sheet biome:', err)
+  }
+
+  try {
+    const storedAppliedMetadata = localStorage.getItem(SSE_APPLIED_METADATA_STORAGE_KEY)
+    if (storedAppliedMetadata) {
+      const parsed = JSON.parse(storedAppliedMetadata)
+      if (parsed && typeof parsed === 'object') {
+        gameState.activeSpriteSheetMetadata = parsed
+        gameState.activeSpriteSheetPath = parsed.sheetPath || gameState.activeSpriteSheetPath || null
+      }
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load applied SSE metadata from localStorage:', err)
+  }
 
   if (editButton) {
     editButton.addEventListener('click', () => {
@@ -107,6 +172,61 @@ export function initMapEditorControls() {
       syncControlsFromState()
     })
   }
+
+  if (integratedSpriteSheetModeCheckbox) {
+    integratedSpriteSheetModeCheckbox.checked = gameState.useIntegratedSpriteSheetMode
+    integratedSpriteSheetModeCheckbox.addEventListener('change', async(e) => {
+      const enabled = Boolean(e.target.checked)
+      gameState.useIntegratedSpriteSheetMode = enabled
+      try {
+        localStorage.setItem(INTEGRATED_MODE_STORAGE_KEY, enabled ? 'true' : 'false')
+      } catch (err) {
+        window.logger.warn('Failed to persist integrated sprite sheet mode:', err)
+      }
+      await applyIntegratedSpriteSheetRuntime()
+    })
+  }
+
+  if (integratedSpriteSheetBiomeSelect) {
+    integratedSpriteSheetBiomeSelect.value = gameState.activeSpriteSheetBiomeTag
+    integratedSpriteSheetBiomeSelect.addEventListener('change', async(e) => {
+      const biome = e.target.value
+      gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(biome) ? biome : 'grass'
+      try {
+        localStorage.setItem(INTEGRATED_BIOME_STORAGE_KEY, gameState.activeSpriteSheetBiomeTag)
+      } catch (err) {
+        window.logger.warn('Failed to persist integrated sprite sheet biome:', err)
+      }
+      await applyIntegratedSpriteSheetRuntime()
+    })
+  }
+
+  initSpriteSheetEditor({
+    initialSheetPath: gameState.activeSpriteSheetPath,
+    onSheetDataChange: (metadata) => {
+      gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
+      gameState.activeSpriteSheetMetadata = metadata
+      if (gameState.useIntegratedSpriteSheetMode) {
+        applyIntegratedSpriteSheetRuntime(metadata)
+      }
+    },
+    onApply: async(metadata) => {
+      gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
+      gameState.activeSpriteSheetMetadata = metadata
+      try {
+        localStorage.setItem(SSE_APPLIED_METADATA_STORAGE_KEY, JSON.stringify(metadata))
+      } catch (err) {
+        window.logger.warn('Failed to persist applied SSE metadata:', err)
+      }
+      await applyIntegratedSpriteSheetRuntime(metadata)
+    }
+  }).then((controller) => {
+    if (gameState.useIntegratedSpriteSheetMode) {
+      controller.refreshRuntimeSheetData()
+    }
+  }).catch((err) => {
+    window.logger.warn('Failed to initialize Sprite Sheet Editor:', err)
+  })
 
   observePartyOwnershipChange(updateLockState)
   updateLockState()

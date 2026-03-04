@@ -29,6 +29,10 @@ export const gameState = {
   mapTilesX: DEFAULT_MAP_TILES_X,
   mapTilesY: DEFAULT_MAP_TILES_Y,
   mapEditMode: false,
+  useIntegratedSpriteSheetMode: false,
+  activeSpriteSheetPath: null,
+  activeSpriteSheetMetadata: null,
+  activeSpriteSheetBiomeTag: 'grass',
   // Arrow key scrolling state
   keyScroll: { up: false, down: false, left: false, right: false },
   // ID of the unit the camera should follow when auto-focus is enabled

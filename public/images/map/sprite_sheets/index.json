@@ -1,0 +1,10 @@
+{
+  "sheets": [
+    "images/map/sprite_sheets/grass.webp",
+    "images/map/sprite_sheets/soil.webp",
+    "images/map/sprite_sheets/snow.webp",
+    "images/map/sprite_sheets/desert.webp",
+    "images/map/sprite_sheets/water.webp",
+    "images/map/sprite_sheets/multiTerrainSpriteSheet.webp"
+  ]
+}
