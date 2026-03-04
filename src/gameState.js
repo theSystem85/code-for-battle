@@ -279,6 +279,9 @@ export const gameState = {
   // Store current map seed so map generation stays consistent across restarts
   mapSeed: '1',
 
+  // Number of generated ore fields for map generation
+  mapOreFieldCount: 8,
+
   // Lockstep deterministic multiplayer state (spec 015)
   lockstep: {
     enabled: false,             // Whether lockstep mode is active

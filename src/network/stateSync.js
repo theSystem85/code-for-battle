@@ -403,6 +403,7 @@ export function createGameStateSnapshot() {
     mapTilesX: gameState.mapTilesX,
     mapTilesY: gameState.mapTilesY,
     playerCount: gameState.playerCount,
+    mapOreFieldCount: gameState.mapOreFieldCount,
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
     shadowOfWarEnabled: gameState.shadowOfWarEnabled,
@@ -421,8 +422,9 @@ export function createGameStateSnapshot() {
  * @param {number} width - Map width in tiles
  * @param {number} height - Map height in tiles
  * @param {number} playerCount - Number of players from host
+ * @param {number} mapOreFieldCount - Number of ore fields from host
  */
-function syncClientMap(seed, width, height, playerCount) {
+function syncClientMap(seed, width, height, playerCount, mapOreFieldCount) {
   if (!seed || !width || !height) {
     return false
   }
@@ -432,7 +434,7 @@ function syncClientMap(seed, width, height, playerCount) {
     return true
   }
 
-  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount)
+  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount)
 
   // Update map dimensions in config module
   setMapDimensions(width, height)
@@ -445,11 +447,14 @@ function syncClientMap(seed, width, height, playerCount) {
   if (playerCount) {
     gameState.playerCount = playerCount
   }
+  if (Number.isFinite(mapOreFieldCount)) {
+    gameState.mapOreFieldCount = mapOreFieldCount
+  }
 
-  // Call main.js function to regenerate map with host's seed, dimensions, and player count
+  // Call main.js function to regenerate map with host's seed and generation settings
   if (typeof regenerateMapForClient === 'function') {
-    regenerateMapForClient(seed, width, height, playerCount)
-    window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount)
+    regenerateMapForClient(seed, width, height, playerCount, mapOreFieldCount)
+    window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount)
   } else {
     // Fallback: Initialize empty map grid if regenerateMapForClient is not available
     window.logger.warn('[GameCommandSync] regenerateMapForClient not available, creating empty map grid')
@@ -527,7 +532,7 @@ export function applyGameStateSnapshot(snapshot) {
   // Sync map seed, dimensions, and player count from host, regenerate map if needed
   // This must happen before syncing buildings so placeBuilding can work
   if (snapshot.mapSeed && snapshot.mapTilesX && snapshot.mapTilesY) {
-    syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount)
+    syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount, snapshot.mapOreFieldCount)
   }
 
   // Sync game settings from host - clients cannot change these

@@ -55,6 +55,7 @@ import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
+const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
 export const MAP_WIDTH_TILES_STORAGE_KEY = 'rts-map-width-tiles'
 export const MAP_HEIGHT_TILES_STORAGE_KEY = 'rts-map-height-tiles'
 const SHADOW_OF_WAR_STORAGE_KEY = 'rts-shadow-of-war-enabled'
@@ -68,6 +69,15 @@ function sanitizeMapDimension(value, fallback) {
     return Math.max(MIN_MAP_TILES, parsed)
   }
   return Math.max(MIN_MAP_TILES, Number.isFinite(fallback) ? Math.floor(fallback) : MIN_MAP_TILES)
+}
+
+function sanitizeOreFieldCount(value) {
+  const parsed = parseInt(value, 10)
+  if (Number.isFinite(parsed)) {
+    return Math.max(0, Math.min(24, parsed))
+  }
+  const fallback = Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8
+  return Math.max(0, Math.min(24, Math.floor(fallback)))
 }
 
 function sanitizeSelectionHudBarThickness(value, fallback = 4) {
@@ -91,8 +101,9 @@ function parseStartupMapOverrides() {
   const rawWidth = params.get('width') || params.get('mapWidth')
   const rawHeight = params.get('height') || params.get('mapHeight')
   const rawPlayers = params.get('players') || params.get('playerCount')
+  const rawOreFields = params.get('oreFields') || params.get('oreFieldCount')
 
-  const hasAnyOverride = rawSeed !== null || rawSize !== null || rawWidth !== null || rawHeight !== null || rawPlayers !== null
+  const hasAnyOverride = rawSeed !== null || rawSize !== null || rawWidth !== null || rawHeight !== null || rawPlayers !== null || rawOreFields !== null
   if (!hasAnyOverride) {
     return null
   }
@@ -121,11 +132,20 @@ function parseStartupMapOverrides() {
     }
   }
 
+  let oreFieldCount = null
+  if (rawOreFields !== null) {
+    const parsedOreFields = parseInt(rawOreFields, 10)
+    if (Number.isFinite(parsedOreFields)) {
+      oreFieldCount = Math.max(0, Math.min(24, parsedOreFields))
+    }
+  }
+
   return {
     seed: rawSeed !== null ? resolveMapSeed(rawSeed) : null,
     width,
     height,
-    playerCount
+    playerCount,
+    oreFieldCount
   }
 }
 
@@ -222,6 +242,27 @@ function loadPersistedSettings() {
     }
   } catch (e) {
     window.logger.warn('Failed to load player count from localStorage:', e)
+  }
+
+  try {
+    const oreFieldInput = document.getElementById('mapOreFieldCount')
+    const storedOreFields = localStorage.getItem(ORE_FIELD_COUNT_STORAGE_KEY)
+
+    if (oreFieldInput && mapOverrides?.oreFieldCount) {
+      const sanitized = sanitizeOreFieldCount(mapOverrides.oreFieldCount)
+      oreFieldInput.value = sanitized
+      gameState.mapOreFieldCount = sanitized
+    } else if (oreFieldInput && storedOreFields !== null) {
+      const sanitized = sanitizeOreFieldCount(storedOreFields)
+      oreFieldInput.value = sanitized
+      gameState.mapOreFieldCount = sanitized
+    } else if (oreFieldInput) {
+      const sanitized = sanitizeOreFieldCount(gameState.mapOreFieldCount)
+      oreFieldInput.value = sanitized
+      gameState.mapOreFieldCount = sanitized
+    }
+  } catch (e) {
+    window.logger.warn('Failed to load ore field count from localStorage:', e)
   }
 
   try {
@@ -436,7 +477,6 @@ class Game {
     addMoneyIndicator()
 
     this.setupSpeedControl()
-    this.setupPlayerCountControl()
     this.setupMapShuffle()
     this.setupMapSettings()
     this.productionController.initProductionTabs()
@@ -514,6 +554,18 @@ class Game {
           } catch (err) {
             window.logger.warn('Failed to save player count to localStorage:', err)
           }
+          const oreFieldInput = document.getElementById('mapOreFieldCount')
+          if (oreFieldInput) {
+            oreFieldInput.min = 0
+            const sanitizedOreCount = sanitizeOreFieldCount(oreFieldInput.value)
+            oreFieldInput.value = sanitizedOreCount
+            gameState.mapOreFieldCount = sanitizedOreCount
+            try {
+              localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, sanitizedOreCount.toString())
+            } catch (err) {
+              window.logger.warn('Failed to save ore field count to localStorage:', err)
+            }
+          }
           refreshSidebarMultiplayer()
         } else {
           e.target.value = gameState.playerCount || 2
@@ -524,16 +576,48 @@ class Game {
 
   setupMapShuffle() {
     const seedInput = document.getElementById('mapSeed')
+    const playerCountInput = document.getElementById('playerCount')
     const mapWidthInput = document.getElementById('mapWidthTiles')
     const mapHeightInput = document.getElementById('mapHeightTiles')
+    const oreFieldInput = document.getElementById('mapOreFieldCount')
+
+    const applyMapSettingsAndRegenerate = () => {
+      const seed = seedInput ? seedInput.value || '1' : '1'
+      const widthTiles = mapWidthInput ? sanitizeMapDimension(mapWidthInput.value, MAP_TILES_X) : MAP_TILES_X
+      const heightTiles = mapHeightInput ? sanitizeMapDimension(mapHeightInput.value, MAP_TILES_Y) : MAP_TILES_Y
+      const playerCount = playerCountInput ? parseInt(playerCountInput.value, 10) : (gameState.playerCount || 2)
+      const oreFieldCount = oreFieldInput
+        ? sanitizeOreFieldCount(oreFieldInput.value)
+        : sanitizeOreFieldCount(gameState.mapOreFieldCount)
+
+      if (mapWidthInput) mapWidthInput.value = widthTiles
+      if (mapHeightInput) mapHeightInput.value = heightTiles
+      if (playerCountInput) playerCountInput.value = Number.isFinite(playerCount) ? Math.max(2, Math.min(4, playerCount)) : (gameState.playerCount || 2)
+      if (oreFieldInput) {
+        oreFieldInput.min = 0
+        oreFieldInput.max = 24
+        oreFieldInput.value = oreFieldCount
+      }
+
+      gameState.playerCount = Number.isFinite(playerCount) ? Math.max(2, Math.min(4, playerCount)) : (gameState.playerCount || 2)
+      gameState.mapOreFieldCount = oreFieldCount
+
+      try { localStorage.setItem(MAP_SEED_STORAGE_KEY, seed) } catch (err) { window.logger.warn('Failed to save map seed to localStorage:', err) }
+      try { localStorage.setItem(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles.toString()) } catch (err) { window.logger.warn('Failed to save map width to localStorage:', err) }
+      try { localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString()) } catch (err) { window.logger.warn('Failed to save map height to localStorage:', err) }
+      try { localStorage.setItem(PLAYER_COUNT_STORAGE_KEY, gameState.playerCount.toString()) } catch (err) { window.logger.warn('Failed to save player count to localStorage:', err) }
+      try { localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, oreFieldCount.toString()) } catch (err) { window.logger.warn('Failed to save ore field count to localStorage:', err) }
+
+      const { width, height } = setMapDimensions(widthTiles, heightTiles)
+      gameState.mapTilesX = width
+      gameState.mapTilesY = height
+
+      this.resetGameWithNewMap(seed)
+      refreshSidebarMultiplayer()
+    }
+
     if (seedInput) {
-      seedInput.addEventListener('change', (e) => {
-        try {
-          localStorage.setItem(MAP_SEED_STORAGE_KEY, e.target.value)
-        } catch (err) {
-          window.logger.warn('Failed to save map seed to localStorage:', err)
-        }
-      })
+      seedInput.addEventListener('change', applyMapSettingsAndRegenerate)
     }
 
     const persistDimension = (input, storageKey) => {
@@ -542,53 +626,26 @@ class Game {
         const fallback = storageKey === MAP_WIDTH_TILES_STORAGE_KEY ? MAP_TILES_X : MAP_TILES_Y
         const sanitized = sanitizeMapDimension(input.value, fallback)
         input.value = sanitized
-        try {
-          localStorage.setItem(storageKey, sanitized.toString())
-        } catch (err) {
-          window.logger.warn('Failed to save map dimension to localStorage:', err)
-        }
+        applyMapSettingsAndRegenerate()
       })
     }
 
     persistDimension(mapWidthInput, MAP_WIDTH_TILES_STORAGE_KEY)
     persistDimension(mapHeightInput, MAP_HEIGHT_TILES_STORAGE_KEY)
 
-    document.getElementById('shuffleMapBtn').addEventListener('click', () => {
-      const seed = seedInput ? seedInput.value || '1' : '1'
-      try {
-        localStorage.setItem(MAP_SEED_STORAGE_KEY, seed)
-      } catch (err) {
-        window.logger.warn('Failed to save map seed to localStorage:', err)
-      }
+    if (playerCountInput) {
+      playerCountInput.addEventListener('change', applyMapSettingsAndRegenerate)
+    }
 
-      const widthTiles = mapWidthInput ? sanitizeMapDimension(mapWidthInput.value, MAP_TILES_X) : MAP_TILES_X
-      const heightTiles = mapHeightInput ? sanitizeMapDimension(mapHeightInput.value, MAP_TILES_Y) : MAP_TILES_Y
-
-      if (mapWidthInput) {
-        mapWidthInput.value = widthTiles
-      }
-      if (mapHeightInput) {
-        mapHeightInput.value = heightTiles
-      }
-
-      try {
-        localStorage.setItem(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles.toString())
-      } catch (err) {
-        window.logger.warn('Failed to save map width to localStorage:', err)
-      }
-
-      try {
-        localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString())
-      } catch (err) {
-        window.logger.warn('Failed to save map height to localStorage:', err)
-      }
-
-      const { width, height } = setMapDimensions(widthTiles, heightTiles)
-      gameState.mapTilesX = width
-      gameState.mapTilesY = height
-
-      this.resetGameWithNewMap(seed)
-    })
+    if (oreFieldInput) {
+      oreFieldInput.min = 0
+      oreFieldInput.max = 24
+      oreFieldInput.value = sanitizeOreFieldCount(oreFieldInput.value || gameState.mapOreFieldCount)
+      oreFieldInput.addEventListener('change', () => {
+        oreFieldInput.value = sanitizeOreFieldCount(oreFieldInput.value)
+        applyMapSettingsAndRegenerate()
+      })
+    }
   }
 
   setupMapSettings() {
@@ -1173,8 +1230,8 @@ gameState.mapGrid = mapGrid
 gameState.units = units
 gameState.factories = factories
 
-function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount) {
-  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount)
+function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapOreFieldCount) {
+  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount)
   deactivateMapEditMode()
   const { value: clientSeed } = sanitizeSeed(seed)
   const normalizedSeed = clientSeed.toString()
@@ -1186,6 +1243,9 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount) {
   gameState.mapTilesY = heightTiles
   if (playerCount) {
     gameState.playerCount = playerCount
+  }
+  if (Number.isFinite(mapOreFieldCount)) {
+    gameState.mapOreFieldCount = sanitizeOreFieldCount(mapOreFieldCount)
   }
 
   gameState.unitWrecks = []
