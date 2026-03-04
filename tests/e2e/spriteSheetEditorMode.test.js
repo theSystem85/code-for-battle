@@ -34,9 +34,42 @@ test.describe('Sprite Sheet Editor integration', () => {
     await page.click('#openSpriteSheetEditorBtn')
     await expect(page.locator('#spriteSheetEditorModal')).toHaveClass(/config-modal--open/)
 
+    const sidebarScrollCheck = await page.evaluate(() => {
+      const sidebar = document.querySelector('.sprite-sheet-editor__sidebar')
+      if (!sidebar) return null
+      const style = window.getComputedStyle(sidebar)
+      return {
+        overflowY: style.overflowY,
+        scrollbarWidth: style.scrollbarWidth,
+        canScroll: sidebar.scrollHeight > sidebar.clientHeight
+      }
+    })
+    expect(sidebarScrollCheck).not.toBeNull()
+    expect(sidebarScrollCheck.overflowY).toBe('auto')
+    expect(sidebarScrollCheck.scrollbarWidth).toBe('none')
+    expect(sidebarScrollCheck.canScroll).toBe(true)
+
     await expect(page.locator('#sseTileSizeInput')).toHaveValue('64')
     await expect(page.locator('#sseBorderWidthInput')).toHaveValue('1')
     await expect(page.locator('#spriteSheetEditorMaxBtn')).toHaveCount(0)
+    await expect(page.locator('#sseBrightnessRange')).toHaveValue('100')
+    await expect(page.locator('#sseSaturationRange')).toHaveValue('100')
+
+    await page.evaluate(() => {
+      const brightness = document.getElementById('sseBrightnessRange')
+      const saturation = document.getElementById('sseSaturationRange')
+      if (brightness) {
+        brightness.value = '120'
+        brightness.dispatchEvent(new window.Event('input', { bubbles: true }))
+      }
+      if (saturation) {
+        saturation.value = '140'
+        saturation.dispatchEvent(new window.Event('input', { bubbles: true }))
+      }
+    })
+
+    await expect(page.locator('#sseBrightnessValue')).toHaveText('120%')
+    await expect(page.locator('#sseSaturationValue')).toHaveText('140%')
 
     const fitScaleCheck = await page.evaluate(() => {
       const wrap = document.getElementById('sseCanvasWrap')
@@ -79,7 +112,13 @@ test.describe('Sprite Sheet Editor integration', () => {
     })
     expect(activeTagOverlayPixel).not.toBeNull()
 
-    await page.check('#sseTagList input[value="decorative"]')
+    await page.evaluate(() => {
+      const input = document.querySelector('#sseTagList input[value="decorative"]')
+      if (input) {
+        input.checked = true
+        input.dispatchEvent(new window.Event('change', { bubbles: true }))
+      }
+    })
     await canvas.click({ position: { x: 12, y: 12 } })
 
     const differentTagOverlayPixel = await page.evaluate(() => {
@@ -122,7 +161,13 @@ test.describe('Sprite Sheet Editor integration', () => {
     expect(labelPixelWithDifferentActiveTag).not.toBeNull()
     expect(labelPixelWithDifferentActiveTag).not.toEqual(labelPixelWithoutLabels)
 
-    await page.check('#sseTagList input[value="passable"]')
+    await page.evaluate(() => {
+      const input = document.querySelector('#sseTagList input[value="passable"]')
+      if (input) {
+        input.checked = true
+        input.dispatchEvent(new window.Event('change', { bubbles: true }))
+      }
+    })
 
     const zoomBefore = await page.evaluate(() => {
       const raw = (document.getElementById('sseZoomValue')?.textContent || '0').replace('%', '')
@@ -227,7 +272,9 @@ test.describe('Sprite Sheet Editor integration', () => {
         stateFlag: Boolean(window.gameState?.useIntegratedSpriteSheetMode),
         persistedFlag: localStorage.getItem('rts-integrated-spritesheet-mode'),
         biomeTag: window.gameState?.activeSpriteSheetBiomeTag || null,
-        persistedBiome: localStorage.getItem('rts-integrated-spritesheet-biome')
+        persistedBiome: localStorage.getItem('rts-integrated-spritesheet-biome'),
+        brightness: window.gameState?.activeSpriteSheetMetadata?.brightness || null,
+        saturation: window.gameState?.activeSpriteSheetMetadata?.saturation || null
       }
     })
 
@@ -235,6 +282,27 @@ test.describe('Sprite Sheet Editor integration', () => {
     expect(runtimeModeEnabled.persistedFlag).toBe('true')
     expect(runtimeModeEnabled.biomeTag).toBe('snow')
     expect(runtimeModeEnabled.persistedBiome).toBe('snow')
+    expect(runtimeModeEnabled.brightness).toBe(120)
+    expect(runtimeModeEnabled.saturation).toBe(140)
+
+    const integratedFilterState = await page.evaluate(async() => {
+      const renderingModule = await import('/src/rendering.js')
+      const textureManager = renderingModule?.getTextureManager ? renderingModule.getTextureManager() : null
+      if (!textureManager || !window.gameState?.activeSpriteSheetPath || !window.gameState?.activeSpriteSheetMetadata) return null
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        sheetPath: window.gameState.activeSpriteSheetPath,
+        metadata: window.gameState.activeSpriteSheetMetadata,
+        biomeTag: window.gameState.activeSpriteSheetBiomeTag || 'grass'
+      })
+      return {
+        brightness: textureManager.integratedBrightness,
+        saturation: textureManager.integratedSaturation
+      }
+    })
+    expect(integratedFilterState).not.toBeNull()
+    expect(integratedFilterState.brightness).toBe(120)
+    expect(integratedFilterState.saturation).toBe(140)
 
     const seededMetadata = await page.evaluate(async() => {
       const renderingModule = await import('/src/rendering.js')

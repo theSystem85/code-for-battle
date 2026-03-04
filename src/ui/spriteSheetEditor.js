@@ -68,6 +68,12 @@ function normalizeSheetData(raw, sheetPath) {
     sheetPath,
     tileSize: Number.isFinite(raw?.tileSize) ? Math.max(8, Math.floor(raw.tileSize)) : DEFAULT_TILE_SIZE,
     borderWidth: Number.isFinite(raw?.borderWidth) ? Math.max(0, Math.floor(raw.borderWidth)) : DEFAULT_BORDER_WIDTH,
+    brightness: Number.isFinite(raw?.brightness)
+      ? Math.max(50, Math.min(150, Math.floor(raw.brightness)))
+      : (Number.isFinite(raw?.filters?.brightness) ? Math.max(50, Math.min(150, Math.floor(raw.filters.brightness))) : 100),
+    saturation: Number.isFinite(raw?.saturation)
+      ? Math.max(0, Math.min(200, Math.floor(raw.saturation)))
+      : (Number.isFinite(raw?.filters?.saturation) ? Math.max(0, Math.min(200, Math.floor(raw.filters.saturation))) : 100),
     tags: tags.length ? Array.from(new Set(tags)) : [...DEFAULT_SSE_TAGS],
     tiles: raw?.tiles && typeof raw.tiles === 'object' ? raw.tiles : {}
   }
@@ -125,6 +131,8 @@ function toSerializableData(data, image) {
     sheetPath: data.sheetPath,
     tileSize: data.tileSize,
     borderWidth: data.borderWidth,
+    brightness: data.brightness,
+    saturation: data.saturation,
     tags: data.tags,
     columns,
     rows,
@@ -133,6 +141,10 @@ function toSerializableData(data, image) {
       targetTileSize: 64,
       scale: sourceTile > 0 ? (64 / sourceTile) : 1,
       requiresUpscale: sourceTile < 64
+    },
+    filters: {
+      brightness: data.brightness,
+      saturation: data.saturation
     },
     tiles: serializedTiles
   }
@@ -161,6 +173,12 @@ function getRelativeEventPos(element, event) {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top
   }
+}
+
+function getCanvasImageFilter(state) {
+  const brightness = Number.isFinite(state.activeData?.brightness) ? state.activeData.brightness : 100
+  const saturation = Number.isFinite(state.activeData?.saturation) ? state.activeData.saturation : 100
+  return `brightness(${brightness}%) saturate(${saturation}%)`
 }
 
 function getTileAtCanvasPos(state, posX, posY) {
@@ -204,7 +222,9 @@ function drawSseCanvas(state) {
   canvas.height = image.height
   ctx.clearRect(0, 0, canvas.width, canvas.height)
   ctx.imageSmoothingEnabled = false
+  ctx.filter = getCanvasImageFilter(state)
   ctx.drawImage(image, 0, 0)
+  ctx.filter = 'none'
 
   if (state.showTaggedOverlay) {
     Object.entries(data.tiles).forEach(([tileKey, tileData]) => {
@@ -469,6 +489,22 @@ async function loadSheet(state, sheetPath, { saveCurrent = true } = {}) {
     state.borderWidthInput.value = state.activeData.borderWidth
   }
 
+  if (state.brightnessRange) {
+    state.brightnessRange.value = String(state.activeData.brightness)
+  }
+
+  if (state.saturationRange) {
+    state.saturationRange.value = String(state.activeData.saturation)
+  }
+
+  if (state.brightnessValueEl) {
+    state.brightnessValueEl.textContent = `${state.activeData.brightness}%`
+  }
+
+  if (state.saturationValueEl) {
+    state.saturationValueEl.textContent = `${state.activeData.saturation}%`
+  }
+
   saveDataToLocalStorage(state.activeData)
   drawSseCanvas(state)
   snapZoomToCanvas(state)
@@ -708,6 +744,10 @@ export async function initSpriteSheetEditor(options = {}) {
     showGridCheckbox: document.getElementById('sseShowGridCheckbox'),
     showLabelsCheckbox: document.getElementById('sseShowLabelsCheckbox'),
     showTaggedOverlayCheckbox: document.getElementById('sseShowTaggedOverlayCheckbox'),
+    brightnessRange: document.getElementById('sseBrightnessRange'),
+    saturationRange: document.getElementById('sseSaturationRange'),
+    brightnessValueEl: document.getElementById('sseBrightnessValue'),
+    saturationValueEl: document.getElementById('sseSaturationValue'),
     zoomInBtn: document.getElementById('sseZoomInBtn'),
     zoomOutBtn: document.getElementById('sseZoomOutBtn'),
     zoom100Btn: document.getElementById('sseZoom100Btn'),
@@ -826,6 +866,34 @@ export async function initSpriteSheetEditor(options = {}) {
     applyCanvasZoom(state)
   })
 
+  state.brightnessRange?.addEventListener('input', () => {
+    if (!state.activeData) return
+    state.activeData.brightness = Math.max(50, Math.min(150, Number.parseInt(state.brightnessRange.value, 10) || 100))
+    if (state.brightnessValueEl) {
+      state.brightnessValueEl.textContent = `${state.activeData.brightness}%`
+    }
+    drawSseCanvas(state)
+    applyCanvasZoom(state)
+    saveDataToLocalStorage(state.activeData)
+    if (state.image) {
+      state.onSheetDataChange?.(toSerializableData(state.activeData, state.image))
+    }
+  })
+
+  state.saturationRange?.addEventListener('input', () => {
+    if (!state.activeData) return
+    state.activeData.saturation = Math.max(0, Math.min(200, Number.parseInt(state.saturationRange.value, 10) || 100))
+    if (state.saturationValueEl) {
+      state.saturationValueEl.textContent = `${state.activeData.saturation}%`
+    }
+    drawSseCanvas(state)
+    applyCanvasZoom(state)
+    saveDataToLocalStorage(state.activeData)
+    if (state.image) {
+      state.onSheetDataChange?.(toSerializableData(state.activeData, state.image))
+    }
+  })
+
   state.zoomInBtn?.addEventListener('click', () => {
     zoomByStep(state, 0.1)
   })
@@ -841,7 +909,6 @@ export async function initSpriteSheetEditor(options = {}) {
   state.zoomFitBtn?.addEventListener('click', () => {
     snapZoomToCanvas(state)
   })
-
   state.applyCurrentTagAllBtn?.addEventListener('click', () => {
     const changed = applyCurrentTagToAllTiles(state)
     if (changed > 0) {

@@ -15,6 +15,8 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - grid visibility toggle
   - label visibility toggle
   - red tag overlay visibility toggle
+  - brightness slider (default `100%`)
+  - saturation slider (default `100%`)
 - Support click and click-drag tile tagging on sheet canvas.
 - Persist per-sheet metadata across sheet switches.
 - Add `Apply tags` action that updates runtime metadata and exports JSON.
@@ -24,6 +26,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - Remove canvas scrollbars and use right-click + drag panning with inertia (map-like navigation).
 - Fit sprite sheet to canvas by default (`snap-to-canvas`) when opening/loading sheet.
 - Use edge-to-edge layout with no extra gutters between sidebar and canvas; sidebar visual style follows main game sidebar.
+- SSE sidebar supports vertical scrolling when content exceeds viewport height, with scrollbar visuals hidden.
 - Red tile overlay highlights only tiles tagged with the currently selected active tag.
 - Tag labels (when enabled) remain visible for all tagged tiles regardless of active tag selection.
 - Applying tags immediately commits generated JSON into game runtime memory/state for next map regenerate/reload usage.
@@ -80,6 +83,8 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - Tagging supports click and drag; toggling same active tag on tile removes it.
 - Grid and label visibility toggles work.
 - Red tag overlay visibility toggle works.
+- Brightness/saturation slider values persist in SSE metadata and are applied globally to integrated SSE tiles before rendering/map-generation usage.
+- SSE sidebar remains scrollable without visible scrollbar chrome.
 - Zoom controls update canvas zoom and support snap-to-canvas + direct 100% reset.
 - Apply-current-tag-all marks every segment tile with active tag.
 - SSE opens in fullscreen with no top bar.

@@ -34,11 +34,33 @@ export class TextureManager {
     this.integratedSpriteSheetMode = false
     this.integratedSpriteSheetPath = null
     this.integratedSpriteSheetImage = null
+    this.integratedSpriteSheetRenderImage = null
     this.integratedSpriteSheetMetadata = null
     this.integratedTagBuckets = {}
     this.integratedBiomeTag = 'grass'
+    this.integratedBrightness = 100
+    this.integratedSaturation = 100
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
+  }
+
+  createFilteredSpriteSheetImage(sourceImage, brightness = 100, saturation = 100) {
+    if (!sourceImage) return null
+    const useFilter = brightness !== 100 || saturation !== 100
+    if (!useFilter) {
+      return sourceImage
+    }
+
+    const canvas = document.createElement('canvas')
+    canvas.width = sourceImage.width
+    canvas.height = sourceImage.height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return sourceImage
+    ctx.imageSmoothingEnabled = false
+    ctx.filter = `brightness(${brightness}%) saturate(${saturation}%)`
+    ctx.drawImage(sourceImage, 0, 0)
+    ctx.filter = 'none'
+    return canvas
   }
 
   async loadIntegratedSpriteSheetImage(sheetPath) {
@@ -85,6 +107,7 @@ export class TextureManager {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
+      this.integratedSpriteSheetRenderImage = null
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -96,6 +119,7 @@ export class TextureManager {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
+      this.integratedSpriteSheetRenderImage = null
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -106,6 +130,7 @@ export class TextureManager {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
+      this.integratedSpriteSheetRenderImage = null
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -117,7 +142,18 @@ export class TextureManager {
     this.integratedSpriteSheetMetadata = metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(metadata)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
-    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}`
+    this.integratedBrightness = Number.isFinite(metadata?.brightness)
+      ? Math.max(50, Math.min(150, Math.floor(metadata.brightness)))
+      : (Number.isFinite(metadata?.filters?.brightness) ? Math.max(50, Math.min(150, Math.floor(metadata.filters.brightness))) : 100)
+    this.integratedSaturation = Number.isFinite(metadata?.saturation)
+      ? Math.max(0, Math.min(200, Math.floor(metadata.saturation)))
+      : (Number.isFinite(metadata?.filters?.saturation) ? Math.max(0, Math.min(200, Math.floor(metadata.filters.saturation))) : 100)
+    this.integratedSpriteSheetRenderImage = this.createFilteredSpriteSheetImage(
+      image,
+      this.integratedBrightness,
+      this.integratedSaturation
+    )
+    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}|${this.integratedBrightness}|${this.integratedSaturation}`
     this.integratedConfigVersion++
   }
 
@@ -246,7 +282,7 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: this.integratedSpriteSheetImage,
+      image: this.integratedSpriteSheetRenderImage || this.integratedSpriteSheetImage,
       rect: selected.rect,
       tags: selected.tags || []
     }

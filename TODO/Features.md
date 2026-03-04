@@ -6,6 +6,8 @@
 - [x] Refine SSE label behavior so labels (if enabled) stay visible for all tagged tiles while only red overlay is filtered by active tag.
 - [x] Add Map Settings SSE biome dropdown (soil/sand/grass/snow) to control integrated land-tile biome tag preference.
 - [x] Add SSE checkbox to toggle red tag overlay visibility in the editor canvas.
+- [x] Add SSE brightness and saturation sliders that apply globally to integrated tiles before map generation/rendering.
+- [x] Make SSE sidebar scrollable while hiding visible scrollbar chrome.
 - [x] Show the straight-line (air) distance in meters below the move cursor when units are selected and hovering valid move targets.
 - [x] Extend AGF to selected defensive buildings so box-selected enemy targets are queued (FIFO) and resolve rocket/artillery forced-target no-fire regression by fixing building force-target acquisition.
 - [x] Allow selected defense buildings to queue forced attack targets in FIFO order and show numbered red target indicators on queued enemies.
