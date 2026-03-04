@@ -1,4 +1,5 @@
 ## Bugs
+- [x] F22 rocket spawn alignment (2026-03-04): F22-fired rockets now spawn from the lower F22 fuselage hardpoint (below the jet body) instead of shadow-aligned coordinates; added E2E regression asserting rocket origin stays above the projected ground shadow.
 - [x] F22 handling/combat tuning (2026-03-04): reduced F22 turn rate to one-third, reduced F22 top speed by 40%, and increased F22 rocket projectile speed by 50% without changing Apache rocket speed.
 - [x] Enemy non-AA airborne retargeting follow-up (2026-03-02): fixed remaining AI target selection gaps where non-anti-air enemy ground units could still pick airborne Apache/F22 during base-defense and harvester-hunter threat scans; they now immediately ignore airborne-only threats and choose valid ground targets instead. Added E2E coverage for base-defense retargeting.
 - [x] F22 border/orbit attack loop stabilization (2026-03-01): F22 now proactively evades map borders before impact, slows to cruise/orbit speed near combat loiter circles, and continues large multi-pass attack orbits until target destruction or ammo depletion before RTB.
@@ -165,6 +166,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] F22 rocket spawn alignment (2026-03-04): F22-fired rockets now spawn from the lower F22 fuselage hardpoint (below the jet body) instead of shadow-aligned coordinates; added E2E regression asserting rocket origin stays above the projected ground shadow.
 - [x] F22 handling/combat tuning (2026-03-04): reduced F22 turn rate to one-third, reduced F22 top speed by 40%, and increased F22 rocket projectile speed by 50% without changing Apache rocket speed.
 - [x] F22 border/orbit attack loop stabilization (2026-03-01): F22 now proactively evades map borders before impact, slows to cruise/orbit speed near combat loiter circles, and continues large multi-pass attack orbits until target destruction or ammo depletion before RTB.
 - [x] Enemy F22 anti-air avoidance (2026-03-01): F22 target selection now rejects targets inside active anti-air missile ranges (rocket tanks/rocket turrets), and F22 attack flight plans now compute safe approach waypoints that route around anti-air action radii when possible.
