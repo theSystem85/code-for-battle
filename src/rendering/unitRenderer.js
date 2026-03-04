@@ -87,6 +87,28 @@ export class UnitRenderer {
     ctx.restore()
   }
 
+  renderPartyAssociationCross(ctx, unit, centerX, centerY, directionOverride = null) {
+    const partyColor = PARTY_COLORS[unit.owner] || PARTY_COLORS.player1 || '#FFFFFF'
+    const unitDirection = typeof directionOverride === 'number' ? directionOverride : (unit.direction || 0)
+    const crossStrokeLength = 6
+
+    ctx.save()
+    ctx.translate(centerX, centerY)
+    ctx.rotate(unitDirection)
+    ctx.globalAlpha = 0.5
+    ctx.strokeStyle = partyColor
+    ctx.lineWidth = 2
+    ctx.lineCap = 'round'
+
+    ctx.beginPath()
+    ctx.moveTo(-crossStrokeLength / 2, -crossStrokeLength / 2)
+    ctx.lineTo(crossStrokeLength / 2, crossStrokeLength / 2)
+    ctx.moveTo(crossStrokeLength / 2, -crossStrokeLength / 2)
+    ctx.lineTo(-crossStrokeLength / 2, crossStrokeLength / 2)
+    ctx.stroke()
+    ctx.restore()
+  }
+
   renderTurret(ctx, unit, centerX, centerY) {
     if (unit.type === 'apache' || unit.type === 'f22Raptor') {
       return
@@ -1567,6 +1589,7 @@ export class UnitRenderer {
     if (unit.type === 'harvester' && isHarvesterImageLoaded()) {
       const ok = renderHarvesterWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1577,6 +1600,7 @@ export class UnitRenderer {
     if (unit.type === 'rocketTank' && isRocketTankImageLoaded()) {
       const ok = renderRocketTankWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1587,6 +1611,7 @@ export class UnitRenderer {
     if (unit.type === 'recoveryTank' && isRecoveryTankImageLoaded()) {
       const ok = renderRecoveryTankWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1597,6 +1622,7 @@ export class UnitRenderer {
     if (unit.type === 'ambulance' && isAmbulanceImageLoaded()) {
       const ok = renderAmbulanceWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1607,6 +1633,7 @@ export class UnitRenderer {
     if (unit.type === 'tankerTruck' && isTankerTruckImageLoaded()) {
       const ok = renderTankerTruckWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1617,6 +1644,7 @@ export class UnitRenderer {
     if (unit.type === 'ammunitionTruck' && isAmmunitionTruckImageLoaded()) {
       const ok = renderAmmunitionTruckWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1627,6 +1655,7 @@ export class UnitRenderer {
     if (unit.type === 'mineLayer' && isMineLayerImageLoaded()) {
       const ok = renderMineLayerWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
         return
@@ -1636,6 +1665,7 @@ export class UnitRenderer {
     if (unit.type === 'mineSweeper' && isMineSweeperImageLoaded()) {
       const ok = renderMineSweeperWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
         return
@@ -1648,6 +1678,7 @@ export class UnitRenderer {
 
       if (imageRenderSuccess) {
         // Image rendering successful, still render other components
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1659,6 +1690,7 @@ export class UnitRenderer {
     if (unit.type === 'howitzer' && isHowitzerImageLoaded()) {
       const ok = renderHowitzerWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
         this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
@@ -1670,6 +1702,7 @@ export class UnitRenderer {
     if (unit.type === 'apache') {
       const ok = renderApacheWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY, (unit.direction || 0) + Math.PI / 2)
         // For Apache, adjust selection position to account for altitude lift
         const altitudeLift = (unit.altitude || 0) * 0.4
         const adjustedCenterY = centerY - altitudeLift
@@ -1684,6 +1717,7 @@ export class UnitRenderer {
     if (unit.type === 'f22Raptor') {
       const ok = renderF22WithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderPartyAssociationCross(ctx, unit, centerX, centerY, (unit.direction || 0) + Math.PI / 2)
         const altitudeLift = (unit.altitude || 0) * 0.4
         const adjustedCenterY = centerY - altitudeLift
         this.renderUtilityServiceRange(ctx, unit, centerX, adjustedCenterY)
@@ -1695,6 +1729,7 @@ export class UnitRenderer {
 
     // Original rendering method (for non-tanks or when image rendering is disabled/failed)
     this.renderUnitBody(ctx, unit, centerX, centerY)
+    this.renderPartyAssociationCross(ctx, unit, centerX, centerY)
     this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
     this.renderSelection(ctx, unit, centerX, centerY)
     this.renderAlertMode(ctx, unit, centerX, centerY)

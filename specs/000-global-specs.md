@@ -116,3 +116,12 @@ Ground and air movement logic is split across modular files to keep each under 1
 - The repository is licensed under the MIT License.
 - The canonical license text must be kept in the root `LICENSE` file.
 - Package metadata must declare `"license": "MIT"` in `package.json`.
+
+## Unit Party Association Overlay
+
+- Every unit must render an in-world ownership marker directly on the unit image: a centered diagonal cross (`X`) using the unit owner party color.
+- The ownership cross must use 50% opacity.
+- The cross must rotate with the unit orientation (world-space/unit-space rendering), not as a fixed HUD overlay.
+- The cross consists of two strokes, each with:
+  - stroke thickness: `2px`
+  - stroke length: `6px`
