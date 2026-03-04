@@ -5,6 +5,7 @@ import { gameState } from '../../gameState.js'
 import { showNotification } from '../../ui/notifications.js'
 import { getRocketSpawnPoint } from '../../rendering/rocketTankImageRenderer.js'
 import { getApacheRocketSpawnPoints } from '../../rendering/apacheImageRenderer.js'
+import { getF22RocketSpawnPoint } from '../../rendering/f22ImageRenderer.js'
 import { isHowitzerGunReadyToFire, getHowitzerLaunchAngle } from '../howitzerGunController.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
@@ -102,7 +103,9 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
       if (isRocketTankRocket) {
         rocketSpawn = getRocketSpawnPoint(unit, unitCenterX, unitCenterY)
       } else if (isApacheRocket) {
-        rocketSpawn = unit.customRocketSpawn || getApacheRocketSpawnPoints(unit, unitCenterX, unitCenterY).left
+        rocketSpawn = unit.customRocketSpawn || (unit.type === 'f22Raptor'
+          ? getF22RocketSpawnPoint(unit, unitCenterX, unitCenterY)
+          : getApacheRocketSpawnPoints(unit, unitCenterX, unitCenterY).left)
       }
 
       const bullet = {

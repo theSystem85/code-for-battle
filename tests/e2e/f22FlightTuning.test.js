@@ -75,11 +75,29 @@ test.describe('F22 tuning regression', () => {
       const bullets = window.gameState?.bullets || []
       const f22Rocket = bullets.find(b => b?.f22Rocket === true && b?.shooter?.id === f22Id && b?.active)
       if (!f22Rocket) return false
-      return { speed: f22Rocket.speed, originType: f22Rocket.originType }
+      return {
+        speed: f22Rocket.speed,
+        originType: f22Rocket.originType,
+        startX: f22Rocket.startX,
+        startY: f22Rocket.startY,
+        shooterX: f22Rocket.shooter?.x,
+        shooterY: f22Rocket.shooter?.y,
+        shooterAltitude: f22Rocket.shooter?.altitude,
+        shooterShadowOffset: f22Rocket.shooter?.shadow?.offset || 0
+      }
     }, setupResult.f22Id, { timeout: 30000 })
 
     const rocket = await rocketHandle.jsonValue()
     expect(rocket.originType).toBe('apacheRocket')
     expect(rocket.speed).toBeCloseTo(7.5, 6)
+
+    const f22CenterY = rocket.shooterY + 16
+    const altitudeLift = (rocket.shooterAltitude || 0) * 0.4
+    const shadowCenterY = f22CenterY + (rocket.shooterShadowOffset || 0)
+
+    // Rocket should launch from the lower part of the visible F22 body,
+    // while still remaining above the separate ground shadow projection.
+    expect(rocket.startY).toBeGreaterThan(f22CenterY - altitudeLift)
+    expect(rocket.startY).toBeLessThan(shadowCenterY - 4)
   })
 })

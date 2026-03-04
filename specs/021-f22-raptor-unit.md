@@ -299,3 +299,9 @@ F22 handling + rocket-speed tuning:
 2. Reduced F22 `speed` from `10.125` to `6.075` (40% reduction, i.e., 60% of prior top speed).
 3. Increased F22 rocket projectile speed from `5` to `7.5` (50% faster), while keeping Apache rocket speed unchanged.
 4. Added E2E regression coverage that validates the applied F22 unit movement stats and the spawned F22 rocket projectile speed.
+
+## Engineering Update (2026-03-04, rocket spawn alignment)
+F22 rocket origin visual alignment:
+1. Added a dedicated `getF22RocketSpawnPoint` helper in `f22ImageRenderer.js` so F22 rockets originate from a lower fuselage hardpoint tied to the rendered F22 sprite transform.
+2. Updated shared firing logic (`firingHandlers.js`) to use F22-specific rocket spawn coordinates instead of Apache hardpoints for F22 units.
+3. Added E2E regression assertions verifying F22 rocket spawn starts below the rendered jet body centerline while remaining above the ground shadow projection.
