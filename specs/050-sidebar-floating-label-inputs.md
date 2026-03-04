@@ -7,7 +7,12 @@ Introduce a reusable floating label input wrapper style for sidebar form control
 - Sidebar text and number inputs must use a floating label wrapper that keeps labels visible after value entry.
 - Existing static labels tied to converted sidebar inputs must be removed to avoid duplicate labeling.
 - Floating label typography must use the Rajdhani game font family already used in the sidebar.
-- Input styling must align with the existing dark futuristic UI language (subtle borders, focus glow, clear contrast).
+- Input styling must align with the existing dark futuristic UI language (focus glow, compact spacing, clear contrast).
+- Floating-label input height must stay aligned with prior sidebar input height (40px) to avoid layout growth.
+- Floating-label field styling must use a flat solid background (no inner gradient) and no borders.
+- Floating label color must match the tutorial green accent (`#6efc4b`).
+- Number input spinners should be visually aligned with the floating-label theme on desktop pointer devices.
+- Spacing and padding should remain compact and non-wasteful in the sidebar.
 - Map settings and multiplayer invite flows must remain fully functional after the markup migration.
 - Add an E2E test that verifies floating label wrappers and migrated labels render in the sidebar.
 

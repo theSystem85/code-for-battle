@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Sidebar floating label inputs', () => {
-  test('renders floating labels for sidebar text/number inputs and removes legacy join label', async({ page }) => {
+  test('renders compact floating labels with non-gradient borderless styling', async({ page }) => {
     await page.goto('/')
 
     await page.waitForSelector('#sidebar', { state: 'visible' })
@@ -21,5 +21,27 @@ test.describe('Sidebar floating label inputs', () => {
     await expect(page.locator('#playerAliasInput + label')).toHaveText('Your alias')
     await expect(page.locator('#mapWidthTiles + label')).toHaveText('Width')
     await expect(page.locator('#mapHeightTiles + label')).toHaveText('Height')
+
+    const styleSnapshot = await page.evaluate(() => {
+      const input = document.querySelector('#saveLabelInput')
+      const label = document.querySelector('#saveLabelInput + label')
+      const computedInput = window.getComputedStyle(input)
+      const computedLabel = window.getComputedStyle(label)
+      return {
+        height: computedInput.height,
+        borderTopWidth: computedInput.borderTopWidth,
+        backgroundImage: computedInput.backgroundImage,
+        paddingTop: computedInput.paddingTop,
+        paddingBottom: computedInput.paddingBottom,
+        labelColor: computedLabel.color
+      }
+    })
+
+    expect(styleSnapshot.height).toBe('40px')
+    expect(styleSnapshot.borderTopWidth).toBe('0px')
+    expect(styleSnapshot.backgroundImage).toBe('none')
+    expect(styleSnapshot.paddingTop).toBe('13px')
+    expect(styleSnapshot.paddingBottom).toBe('3px')
+    expect(styleSnapshot.labelColor).toBe('rgb(110, 252, 75)')
   })
 })
