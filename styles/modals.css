@@ -1130,7 +1130,7 @@ body.mobile-sidebar-modal-open #sidebarScroll {
   width: 100%;
   box-sizing: border-box;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: 0;
   border: 2px solid rgba(255, 255, 255, 0.1);
   background: rgba(255, 255, 255, 0.05);
   color: #fff;

@@ -49,13 +49,18 @@ test.describe('Sidebar floating label inputs', () => {
       const input = document.querySelector('#saveLabelInput')
       const label = document.querySelector('#saveLabelInput + label')
       const numberInput = document.querySelector('#mapSeed')
+      const biomeSelect = document.querySelector('#integratedSpriteSheetBiomeSelect')
+      const sidebarControls = Array.from(document.querySelectorAll('#sidebar input.sidebar-input, #sidebar select.sidebar-input'))
       const computedInput = window.getComputedStyle(input)
       const computedLabel = window.getComputedStyle(label)
       const computedNumber = window.getComputedStyle(numberInput)
       const computedSpin = window.getComputedStyle(numberInput, '::-webkit-inner-spin-button')
+      const computedSelect = window.getComputedStyle(biomeSelect)
+      const allSquareControls = sidebarControls.every(control => window.getComputedStyle(control).borderRadius === '0px')
       return {
         height: computedInput.height,
         borderTopWidth: computedInput.borderTopWidth,
+        borderRadius: computedInput.borderRadius,
         backgroundImage: computedInput.backgroundImage,
         paddingTop: computedInput.paddingTop,
         paddingBottom: computedInput.paddingBottom,
@@ -64,12 +69,17 @@ test.describe('Sidebar floating label inputs', () => {
         numberBackgroundColor: computedNumber.backgroundColor,
         spinnerColor: computedSpin.color,
         spinnerFilter: computedSpin.filter,
-        spinnerBackgroundColor: computedSpin.backgroundColor
+        spinnerBackgroundColor: computedSpin.backgroundColor,
+        selectPaddingLeft: computedSelect.paddingLeft,
+        selectPaddingRight: computedSelect.paddingRight,
+        selectBackgroundPosition: computedSelect.backgroundPosition,
+        allSquareControls
       }
     })
 
     expect(styleSnapshot.height).toBe('40px')
     expect(styleSnapshot.borderTopWidth).toBe('0px')
+    expect(styleSnapshot.borderRadius).toBe('0px')
     expect(styleSnapshot.backgroundImage).toBe('none')
     expect(styleSnapshot.paddingTop).toBe('14px')
     expect(styleSnapshot.paddingBottom).toBe('2px')
@@ -77,5 +87,9 @@ test.describe('Sidebar floating label inputs', () => {
     expect(styleSnapshot.spinnerColor).toBe(styleSnapshot.numberColor)
     expect(styleSnapshot.spinnerFilter).toBe('none')
     expect(styleSnapshot.spinnerBackgroundColor).toBe(styleSnapshot.numberBackgroundColor)
+    expect(styleSnapshot.selectPaddingLeft).toBe('12px')
+    expect(styleSnapshot.selectPaddingRight).toBe('36px')
+    expect(styleSnapshot.selectBackgroundPosition).toContain('calc(100% - 12px)')
+    expect(styleSnapshot.allSquareControls).toBe(true)
   })
 })

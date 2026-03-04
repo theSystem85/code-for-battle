@@ -1,3 +1,6 @@
+- [x] Ensure dropdown carets have balanced horizontal spacing by adding explicit right inset/padding (matching left-side visual padding) for sidebar/settings selects.
+- [x] Ensure all dropdowns and input fields use square corners (`border-radius: 0`) across sidebar and modal form controls.
+- [x] Ensure number-input spinner buttons keep the same background color as the floating input field while the spinner triangle icons use the same color as the input text.
 - [x] Keep floating-label sidebar input wrappers exactly 40px tall with refined internal spacing, move "Your alias" above invite link controls in Multiplayer, align map inputs into Seed+Players and Width+Height shared rows, and ensure number spinners match input text color without separate spinner background.
 - [x] Let planned building footprints extend base build proximity for additional plans, render per-plan build order numbers, and support sell-mode cascading plan cancellation with two-click warning/preview highlights.
 - [x] Ensure mobile planning base-proximity expansion is sequential and order-locked: each next tile may extend range only from previously accepted planning tiles in draw order.
