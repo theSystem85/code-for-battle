@@ -1,154 +1,189 @@
 import { test, expect } from '@playwright/test'
 
-test.describe('Map generation ore layout balance', () => {
-  test('uses ore field count setting deterministically and keeps balanced near-base street access', async({ page }) => {
-    const oreFieldCount = 12
-    const seedsToCheck = ['11', '23']
-    const spreadSignatures = []
-
-    for (const seed of seedsToCheck) {
-      await page.goto(`/?seed=${seed}&players=4&oreFieldCount=${oreFieldCount}`)
-      await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
-
-      await expect(page.locator('#mapOreFieldCount')).toHaveValue(String(oreFieldCount))
-
-      const stats = await page.evaluate(() => {
-        const mapGrid = window.gameState?.mapGrid || []
-        const buildings = window.gameState?.buildings || []
-        const configuredFieldCount = window.gameState?.mapOreFieldCount
-
-        if (!Array.isArray(mapGrid) || mapGrid.length === 0 || !Array.isArray(mapGrid[0])) {
-          throw new Error('mapGrid not initialized')
-        }
-
-        const width = mapGrid[0].length
-        const height = mapGrid.length
-        const center = { x: Math.floor(width / 2), y: Math.floor(height / 2) }
-        const dirs = [
-          { x: 1, y: 0 },
-          { x: -1, y: 0 },
-          { x: 0, y: 1 },
-          { x: 0, y: -1 }
-        ]
-
-        const baseBuildings = buildings
-          .filter(b => b.type === 'factory' || b.type === 'constructionYard')
-          .sort((a, b) => String(a.owner || '').localeCompare(String(b.owner || '')))
-
-        if (baseBuildings.length < 4) {
-          throw new Error(`Expected 4 start bases, got ${baseBuildings.length}`)
-        }
-
-        const isStreet = (x, y) => mapGrid[y]?.[x]?.type === 'street'
-
-        const nearestBaseDistance = (x, y) => Math.min(...baseBuildings.map(base => {
-          const cx = base.x + Math.floor((base.width || 1) / 2)
-          const cy = base.y + Math.floor((base.height || 1) / 2)
-          return Math.abs(cx - x) + Math.abs(cy - y)
-        }))
-
-        function shortestStreetDistanceToSeed(base) {
-          const queue = []
-          const visited = new Set()
-
-          for (let y = base.y; y < base.y + (base.height || 1); y++) {
-            for (let x = base.x; x < base.x + (base.width || 1); x++) {
-              for (const dir of dirs) {
-                const nx = x + dir.x
-                const ny = y + dir.y
-                const key = `${nx},${ny}`
-                if (nx < 0 || ny < 0 || nx >= width || ny >= height || !isStreet(nx, ny) || visited.has(key)) continue
-                visited.add(key)
-                queue.push({ x: nx, y: ny, dist: 0 })
-              }
-            }
-          }
-
-          while (queue.length > 0) {
-            const current = queue.shift()
-            if (mapGrid[current.y][current.x].seedCrystal) return current.dist
-
-            for (const dir of dirs) {
-              const nx = current.x + dir.x
-              const ny = current.y + dir.y
-              const key = `${nx},${ny}`
-              if (nx < 0 || ny < 0 || nx >= width || ny >= height || !isStreet(nx, ny) || visited.has(key)) continue
-              visited.add(key)
-              queue.push({ x: nx, y: ny, dist: current.dist + 1 })
-            }
-          }
-
-          return null
-        }
-
-        const seedCrystals = []
-        for (let y = 0; y < height; y++) {
-          for (let x = 0; x < width; x++) {
-            if (mapGrid[y][x].seedCrystal) {
-              seedCrystals.push({ x, y })
-            }
-          }
-        }
-
-        const nearSeedCount = seedCrystals.filter(seed => {
-          const distance = nearestBaseDistance(seed.x, seed.y)
-          return distance >= 24 && distance <= 36
-        }).length
-
-        const middleSeedCount = seedCrystals.filter(seed => {
-          const d = Math.abs(seed.x - center.x) + Math.abs(seed.y - center.y)
-          return d <= 26
-        }).length
-
-        const randomSpreadSignature = seedCrystals
-          .filter(seed => nearestBaseDistance(seed.x, seed.y) > 36)
-          .map(seed => `${seed.x},${seed.y}`)
-          .sort()
-          .join('|')
-
-        const distances = baseBuildings.map(base => ({
-          owner: base.owner,
-          distance: shortestStreetDistanceToSeed(base)
-        }))
-
-        return {
-          configuredFieldCount,
-          seedCrystalCount: seedCrystals.length,
-          nearSeedCount,
-          middleSeedCount,
-          randomSpreadSignature,
-          distances,
-          uniqueDistanceCount: new Set(distances.map(item => item.distance)).size,
-          firstDistance: distances[0]?.distance ?? null
-        }
-      })
-
-      expect(stats.configuredFieldCount).toBe(oreFieldCount)
-      expect(stats.seedCrystalCount).toBe(oreFieldCount)
-      expect(stats.uniqueDistanceCount, `street distances: ${JSON.stringify(stats.distances)}`).toBe(1)
-      expect(stats.firstDistance).toBeGreaterThanOrEqual(24)
-      expect(stats.firstDistance).toBeLessThanOrEqual(36)
-      expect(stats.nearSeedCount).toBeGreaterThanOrEqual(4)
-      expect(stats.middleSeedCount).toBeGreaterThanOrEqual(3)
-
-      spreadSignatures.push(stats.randomSpreadSignature)
-    }
-
-    expect(new Set(spreadSignatures).size).toBeGreaterThan(1)
-
-    await page.goto('/?seed=11&players=4&oreFieldCount=9')
+test.describe('Map generation ore field count rules', () => {
+  test('supports OFC=0 and applies center/near/spread placement rules with immediate map updates', async({ page }) => {
+    await page.goto('/?seed=11&players=4&oreFieldCount=0')
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
-    await expect(page.locator('#mapOreFieldCount')).toHaveValue('9')
-    const reducedSeedCount = await page.evaluate(() => {
+    await page.locator('#mapSettingsToggle').click()
+
+    await expect(page.locator('#mapOreFieldCount')).toHaveValue('0')
+
+    const zeroStats = await page.evaluate(() => {
       const mapGrid = window.gameState?.mapGrid || []
-      let count = 0
+      const buildings = window.gameState?.buildings || []
+      const bases = buildings.filter(b => b.type === 'factory' || b.type === 'constructionYard')
+      const center = { x: Math.floor((mapGrid[0]?.length || 0) / 2), y: Math.floor(mapGrid.length / 2) }
+
+      const seeds = []
       for (let y = 0; y < mapGrid.length; y++) {
         for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
-          if (mapGrid[y][x].seedCrystal) count += 1
+          if (mapGrid[y][x].seedCrystal) seeds.push({ x, y })
         }
       }
-      return count
+
+      const nearestBaseDistance = (x, y) => Math.min(...bases.map(base => {
+        const cx = base.x + Math.floor((base.width || 1) / 2)
+        const cy = base.y + Math.floor((base.height || 1) / 2)
+        return Math.abs(cx - x) + Math.abs(cy - y)
+      }))
+
+      const centerSeeds = seeds.filter(seed => Math.abs(seed.x - center.x) + Math.abs(seed.y - center.y) <= 26).length
+      const nearSeeds = seeds.filter(seed => {
+        const d = nearestBaseDistance(seed.x, seed.y)
+        return d >= 24 && d <= 36
+      }).length
+
+      return {
+        mapOreFieldCount: window.gameState?.mapOreFieldCount,
+        seedCrystalCount: seeds.length,
+        centerSeeds,
+        nearSeeds
+      }
     })
-    expect(reducedSeedCount).toBe(9)
+
+    expect(zeroStats.mapOreFieldCount).toBe(0)
+    expect(zeroStats.seedCrystalCount).toBe(0)
+
+    // Immediate update check: change OFC in the input (no shuffle button) and verify map regenerates instantly.
+    await page.locator('#mapOreFieldCount').fill('6')
+    await page.locator('#mapOreFieldCount').dispatchEvent('change')
+
+    await expect.poll(async() => {
+      return page.evaluate(() => {
+        const mapGrid = window.gameState?.mapGrid || []
+        let count = 0
+        for (let y = 0; y < mapGrid.length; y++) {
+          for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
+            if (mapGrid[y][x].seedCrystal) count += 1
+          }
+        }
+        return count
+      })
+    }, { timeout: 10000 }).toBe(6)
+
+    const ofcSixStats = await page.evaluate(() => {
+      const mapGrid = window.gameState?.mapGrid || []
+      const buildings = window.gameState?.buildings || []
+      const bases = buildings.filter(b => b.type === 'factory' || b.type === 'constructionYard')
+      const center = { x: Math.floor((mapGrid[0]?.length || 0) / 2), y: Math.floor(mapGrid.length / 2) }
+
+      const seeds = []
+      for (let y = 0; y < mapGrid.length; y++) {
+        for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
+          if (mapGrid[y][x].seedCrystal) seeds.push({ x, y })
+        }
+      }
+
+      const nearestBaseDistance = (x, y) => Math.min(...bases.map(base => {
+        const cx = base.x + Math.floor((base.width || 1) / 2)
+        const cy = base.y + Math.floor((base.height || 1) / 2)
+        return Math.abs(cx - x) + Math.abs(cy - y)
+      }))
+
+      const centerSeeds = seeds.filter(seed => Math.abs(seed.x - center.x) + Math.abs(seed.y - center.y) <= 26).length
+      const nearSeeds = seeds.filter(seed => {
+        const d = nearestBaseDistance(seed.x, seed.y)
+        return d >= 24 && d <= 36
+      }).length
+
+      return {
+        ofc: window.gameState?.mapOreFieldCount,
+        seedCount: seeds.length,
+        centerSeeds,
+        nearSeeds
+      }
+    })
+
+    // parties=4 and OFC=6 => 4 near + 2 center + 0 spread
+    expect(ofcSixStats.ofc).toBe(6)
+    expect(ofcSixStats.seedCount).toBe(6)
+    expect(ofcSixStats.nearSeeds).toBeGreaterThanOrEqual(4)
+    expect(ofcSixStats.centerSeeds).toBeGreaterThanOrEqual(2)
+
+    // parties=4 and OFC=10 => 4 near + up to 4 center + remaining spread (2)
+    await page.locator('#mapOreFieldCount').fill('10')
+    await page.locator('#mapOreFieldCount').dispatchEvent('change')
+    await expect.poll(async() => {
+      return page.evaluate(() => window.gameState?.mapOreFieldCount)
+    }).toBe(10)
+
+    const ofcTenStats = await page.evaluate(() => {
+      const mapGrid = window.gameState?.mapGrid || []
+      const buildings = window.gameState?.buildings || []
+      const bases = buildings.filter(b => b.type === 'factory' || b.type === 'constructionYard')
+      const center = { x: Math.floor((mapGrid[0]?.length || 0) / 2), y: Math.floor(mapGrid.length / 2) }
+
+      const seeds = []
+      for (let y = 0; y < mapGrid.length; y++) {
+        for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
+          if (mapGrid[y][x].seedCrystal) seeds.push({ x, y })
+        }
+      }
+
+      const nearestBaseDistance = (x, y) => Math.min(...bases.map(base => {
+        const cx = base.x + Math.floor((base.width || 1) / 2)
+        const cy = base.y + Math.floor((base.height || 1) / 2)
+        return Math.abs(cx - x) + Math.abs(cy - y)
+      }))
+
+      const centerSeeds = seeds.filter(seed => Math.abs(seed.x - center.x) + Math.abs(seed.y - center.y) <= 26).length
+      const nearSeeds = seeds.filter(seed => {
+        const d = nearestBaseDistance(seed.x, seed.y)
+        return d >= 24 && d <= 36
+      }).length
+      const spreadSeeds = seeds.filter(seed => {
+        const near = (() => {
+          const d = nearestBaseDistance(seed.x, seed.y)
+          return d >= 24 && d <= 36
+        })()
+        const centerSeed = Math.abs(seed.x - center.x) + Math.abs(seed.y - center.y) <= 26
+        return !near && !centerSeed
+      }).length
+
+      return {
+        seedCount: seeds.length,
+        nearSeeds,
+        centerSeeds,
+        spreadSeeds,
+        signature: seeds.map(seed => `${seed.x},${seed.y}`).sort().join('|')
+      }
+    })
+
+    expect(ofcTenStats.seedCount).toBe(10)
+    expect(ofcTenStats.nearSeeds).toBeGreaterThanOrEqual(4)
+    expect(ofcTenStats.centerSeeds).toBeGreaterThanOrEqual(4)
+    expect(ofcTenStats.spreadSeeds).toBeGreaterThanOrEqual(1)
+
+    // Determinism for same seed+settings and variation for different seeds.
+    const signatureSameSeed = ofcTenStats.signature
+    await page.locator('#mapSeed').fill('11')
+    await page.locator('#mapSeed').dispatchEvent('change')
+
+    const signatureSameAgain = await page.evaluate(() => {
+      const mapGrid = window.gameState?.mapGrid || []
+      const seeds = []
+      for (let y = 0; y < mapGrid.length; y++) {
+        for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
+          if (mapGrid[y][x].seedCrystal) seeds.push(`${x},${y}`)
+        }
+      }
+      return seeds.sort().join('|')
+    })
+    expect(signatureSameAgain).toBe(signatureSameSeed)
+
+    await page.locator('#mapSeed').fill('12')
+    await page.locator('#mapSeed').dispatchEvent('change')
+
+    const signatureDifferentSeed = await page.evaluate(() => {
+      const mapGrid = window.gameState?.mapGrid || []
+      const seeds = []
+      for (let y = 0; y < mapGrid.length; y++) {
+        for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
+          if (mapGrid[y][x].seedCrystal) seeds.push(`${x},${y}`)
+        }
+      }
+      return seeds.sort().join('|')
+    })
+    expect(signatureDifferentSeed).not.toBe(signatureSameSeed)
   })
 })

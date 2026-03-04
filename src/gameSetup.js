@@ -154,13 +154,12 @@ function drawOrthogonalStreetPath(grid, start, end, type) {
   grid[y][x].type = type
 }
 
-function sanitizeOreFieldCount(value, playerCount) {
-  const minimum = Math.max(playerCount + 3, 6)
+function sanitizeOreFieldCount(value) {
   const parsed = parseInt(value, 10)
   if (!Number.isFinite(parsed)) {
-    return Math.max(minimum, 8)
+    return 8
   }
-  return clamp(parsed, minimum, 24)
+  return clamp(parsed, 0, 24)
 }
 
 function createBalancedOreClusterCenters(playerPositions, mapWidth, mapHeight, targetDistance) {
@@ -253,18 +252,30 @@ function createRandomSpreadOreClusters(rand, mapWidth, mapHeight, count, exclusi
 
 function buildOreClusterPlan(rand, playerPositions, mapWidth, mapHeight, oreFieldCount) {
   const nearOreDistance = clamp(Math.floor(Math.min(mapWidth, mapHeight) * 0.3), 24, 32)
-  const nearOreClusters = createBalancedOreClusterCenters(playerPositions, mapWidth, mapHeight, nearOreDistance)
+  const partyCount = playerPositions.length
 
-  const remainingFields = Math.max(0, oreFieldCount - nearOreClusters.length)
-  const desiredMiddleCount = remainingFields === 0 ? 0 : Math.max(3, Math.floor(remainingFields * 0.6))
-  const middleCount = Math.min(remainingFields, desiredMiddleCount)
-  const spreadCount = Math.max(0, remainingFields - middleCount)
+  const nearOreClusters = oreFieldCount >= partyCount
+    ? createBalancedOreClusterCenters(playerPositions, mapWidth, mapHeight, nearOreDistance)
+    : []
+
+  // Rules:
+  // - OFC < partyCount: all fields are center fields
+  // - OFC == partyCount: only near fields
+  // - OFC > partyCount: next up to 4 fields are center fields
+  // - remaining are random spread fields
+  const centerFieldCount = oreFieldCount < partyCount
+    ? oreFieldCount
+    : Math.min(Math.max(oreFieldCount - partyCount, 0), 4)
+
+  const spreadCount = oreFieldCount < partyCount
+    ? 0
+    : Math.max(0, oreFieldCount - partyCount - centerFieldCount)
 
   const middleOreClusters = createMiddleOreClusterCenters(
     rand,
     mapWidth,
     mapHeight,
-    middleCount,
+    centerFieldCount,
     [...playerPositions, ...nearOreClusters]
   )
 
@@ -279,7 +290,7 @@ function buildOreClusterPlan(rand, playerPositions, mapWidth, mapHeight, oreFiel
 
   const allClusters = [...nearOreClusters, ...middleOreClusters, ...randomOreClusters]
 
-  // Deterministic fallback: if placement constraints prevented full count, fill remaining slots with relaxed random fields.
+  // Deterministic fallback: if constraints prevented full count, fill remaining slots.
   let fallbackIndex = 0
   while (allClusters.length < oreFieldCount) {
     const fallbackX = clamp(5 + ((fallbackIndex * 11) % Math.max(10, mapWidth - 10)), 3, mapWidth - 4)
@@ -434,16 +445,18 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     })
   })
 
-  const oreFieldCount = sanitizeOreFieldCount(gameState.mapOreFieldCount, playerCount)
+  const oreFieldCount = sanitizeOreFieldCount(gameState.mapOreFieldCount)
   gameState.mapOreFieldCount = oreFieldCount
   const orePlan = buildOreClusterPlan(rand, playerPositions, MAP_TILES_X, MAP_TILES_Y, oreFieldCount)
 
   // Keep a connected global road graph and enforce direct base-to-near-ore street reachability.
   const allStreetPoints = [...playerPositions, ...orePlan.nearOreClusters, ...orePlan.middleOreClusters]
   createOptimizedStreetNetwork(mapGrid, allStreetPoints, 'street')
-  playerPositions.forEach((basePosition, index) => {
-    drawOrthogonalStreetPath(mapGrid, basePosition, orePlan.nearOreClusters[index], 'street')
-  })
+  if (orePlan.nearOreClusters.length === playerPositions.length) {
+    playerPositions.forEach((basePosition, index) => {
+      drawOrthogonalStreetPath(mapGrid, basePosition, orePlan.nearOreClusters[index], 'street')
+    })
+  }
 
   // Ensure river crossing exists (if there are lakes)
   if (lakeCenters.length === 2) {

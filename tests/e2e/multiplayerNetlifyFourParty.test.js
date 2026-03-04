@@ -232,9 +232,9 @@ async function setHostMapAndPlayers(page) {
   await page.locator('#mapHeightTiles').fill(String(MAP_SIZE))
   await page.locator('#mapHeightTiles').dispatchEvent('change')
 
-  logStep(`Setting map seed to ${MAP_SEED} and clicking shuffle`)
+  logStep(`Setting map seed to ${MAP_SEED} (auto-regenerate on change)`)
   await page.locator('#mapSeed').fill(MAP_SEED)
-  await page.locator('#shuffleMapBtn').click()
+  await page.locator('#mapSeed').dispatchEvent('change')
 
   await page.waitForFunction(
     (args) => {
