@@ -1,4 +1,5 @@
 ## Bugs
+- [x] F22 landing non-passable airstrip recovery (2026-03-04): during `landing_roll`, F22 now gets a soft centerline correction with stronger push when on non-taxi tiles, preventing frequent landing stalls in blocked airstrip-adjacent regions.
 - [x] F22 border/orbit attack loop stabilization (2026-03-01): F22 now proactively evades map borders before impact, slows to cruise/orbit speed near combat loiter circles, and continues large multi-pass attack orbits until target destruction or ammo depletion before RTB.
 - [x] Enemy F22 anti-air avoidance (2026-03-01): F22 target selection now rejects targets inside active anti-air missile ranges (rocket tanks/rocket turrets), and F22 attack flight plans now compute safe approach waypoints that route around anti-air action radii when possible.
 - [x] SSE decorative fallback isolation (2026-03-03): legacy non-SSE decorative land is now used only when no selected-biome + `decorative` SSE candidates exist, preventing mixed decorative sources.
