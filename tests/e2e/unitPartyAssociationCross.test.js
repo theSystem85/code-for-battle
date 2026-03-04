@@ -7,8 +7,8 @@ const PARTY_EXPECTATIONS = [
   { owner: 'player4', spawn: 'yellow', rgb: [255, 255, 0] }
 ]
 
-test.describe('Unit party association cross', () => {
-  test('renders a semi-transparent party-colored cross at the center of each party unit', async({ page }) => {
+test.describe('Unit party association circle', () => {
+  test('renders a semi-transparent party-colored circle at the center of each party unit', async({ page }) => {
     await page.addInitScript(() => {
       localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
       localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
@@ -67,9 +67,10 @@ test.describe('Unit party association cross', () => {
         const cy = Math.round(unit.y + 16 - scroll.y)
 
         const pixels = []
-        for (let offset = -2; offset <= 2; offset++) {
-          pixels.push(Array.from(ctx.getImageData(cx + offset, cy + offset, 1, 1).data))
-          pixels.push(Array.from(ctx.getImageData(cx + offset, cy - offset, 1, 1).data))
+        for (let dx = -2; dx <= 2; dx++) {
+          for (let dy = -2; dy <= 2; dy++) {
+            pixels.push(Array.from(ctx.getImageData(cx + dx, cy + dy, 1, 1).data))
+          }
         }
 
         unitSamples.push({ owner, pixels })
@@ -105,7 +106,7 @@ test.describe('Unit party association cross', () => {
         return r >= 120 && g >= 120
       })
 
-      expect(hasPartyTint, `expected visible party-colored center cross for ${expectation.owner}`).toBe(true)
+      expect(hasPartyTint, `expected visible party-colored center circle for ${expectation.owner}`).toBe(true)
     }
   })
 })
