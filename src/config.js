@@ -597,7 +597,7 @@ export const BUILDING_SELL_DURATION = 3000
 export const WIND_DIRECTION = { x: 0.3, y: -0.1 } // Slight eastward and upward wind
 export const WIND_STRENGTH = 0.008 // How much wind affects particle movement
 
-export let ORE_SPREAD_INTERVAL = 30000  // 30 seconds (3x faster than before)
+export let ORE_SPREAD_INTERVAL = 90000  // 90 seconds (3x slower ore growth)
 
 export function setOreSpreadInterval(value) {
   ORE_SPREAD_INTERVAL = value

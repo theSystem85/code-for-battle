@@ -1,17 +1,21 @@
-# 049 - Balanced ore seed crystal street distance
+# 049 - Balanced ore seed crystal street distance and ore distribution tiers
 
 ## Summary
-Map generation must keep early-economy access fair by ensuring each party start base has the same nearest distance to an ore seed crystal, and that this nearest crystal is reachable via street tiles.
+Map generation must keep early-economy access fair while adding richer ore distribution. Every party gets a comparable near-base ore field reachable by street, larger shared ore opportunities in the center, and additional seed-driven random spread fields.
 
 ## Functional requirements
-- Generate one primary ore cluster center per active party (2-4 parties).
-- Place each cluster center at a balanced inward offset from that party's start base so all parties share equal nominal street distance to their nearest seed crystal.
-- Generate a guaranteed street connection from each party start base to that party's primary ore cluster center.
-- Ensure at least one seed crystal exists at each primary ore cluster center.
+- Generate one small near-base ore field per active party (2-4 parties).
+- Place each party near-base seed crystal at approximately 30 street tiles from the start base (accepted range 24-36 tiles), with equal nearest street distance across all parties for the same map.
+- Guarantee a street route from each party start base to that party's nearest seed crystal.
+- Generate at least three larger ore fields near the map center.
+- Generate several additional random spread ore fields whose positions vary by map seed.
+- Increase default ore spread interval by 3x to slow growth speed.
 
 ## Acceptance criteria
-1. Given any generated map and active parties, when measuring shortest street path length from each party's start base to the nearest seed crystal, then all parties return the same distance value.
-2. Given any generated map and active parties, when validating reachability from each start base to nearest seed crystal, then a street-valid route exists for every party.
+1. Given any generated map with active parties, when measuring shortest street path length from each party start base to the nearest seed crystal, then all parties have the same distance value and that distance is within 24-36 tiles.
+2. Given any generated map, when inspecting ore field distribution, then each party has a nearby small field, at least three larger center fields exist, and extra spread fields are present.
+3. Given two different map seeds, when comparing spread-field placements, then at least one spread-field position differs.
+4. Given default game configuration, when reading ore spread interval, then the value is 3x slower than the previous default.
 
 ## Validation
-- Add and run a Playwright E2E test that loads several map seeds with 4 players and verifies equal nearest street distances to seed crystals across all parties.
+- Add and run a Playwright E2E test that verifies street-distance fairness, near/middle/spread ore layout expectations, and seed-dependent spread variation across multiple seeds.
