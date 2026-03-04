@@ -5,6 +5,7 @@ import { gameState } from '../../gameState.js'
 import { showNotification } from '../../ui/notifications.js'
 import { getRocketSpawnPoint } from '../../rendering/rocketTankImageRenderer.js'
 import { getApacheRocketSpawnPoints } from '../../rendering/apacheImageRenderer.js'
+import { getF22RocketSpawnPoint } from '../../rendering/f22ImageRenderer.js'
 import { isHowitzerGunReadyToFire, getHowitzerLaunchAngle } from '../howitzerGunController.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
@@ -93,15 +94,18 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
       const isRocketTankRocket = projectileType === 'rocket' && unit.type === 'rocketTank'
       const isApacheRocket = projectileType === 'rocket' && (unit.type === 'apache' || unit.type === 'f22Raptor')
+      const isF22Rocket = projectileType === 'rocket' && unit.type === 'f22Raptor'
       const bulletSpeed = isRocketTankRocket
         ? 6
-        : (projectileType === 'rocket' ? (isApacheRocket ? 5 : 3) : TANK_BULLET_SPEED)
+        : (projectileType === 'rocket' ? (isApacheRocket ? (isF22Rocket ? 7.5 : 5) : 3) : TANK_BULLET_SPEED)
 
       let rocketSpawn = null
       if (isRocketTankRocket) {
         rocketSpawn = getRocketSpawnPoint(unit, unitCenterX, unitCenterY)
       } else if (isApacheRocket) {
-        rocketSpawn = unit.customRocketSpawn || getApacheRocketSpawnPoints(unit, unitCenterX, unitCenterY).left
+        rocketSpawn = unit.customRocketSpawn || (unit.type === 'f22Raptor'
+          ? getF22RocketSpawnPoint(unit, unitCenterX, unitCenterY)
+          : getApacheRocketSpawnPoints(unit, unitCenterX, unitCenterY).left)
       }
 
       const bullet = {

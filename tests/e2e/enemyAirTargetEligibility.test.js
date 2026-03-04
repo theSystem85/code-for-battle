@@ -148,4 +148,113 @@ test.describe('Enemy air-target eligibility', () => {
 
     expect(consoleErrors, `Console errors encountered:\n${consoleErrors.join('\n')}`).toEqual([])
   })
+
+  test('enemy base-defense target selection ignores airborne-only threats for non-AA units', async({ page }) => {
+    test.setTimeout(120000)
+
+    await page.goto('/?seed=11')
+    await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
+
+    await page.waitForFunction(() => {
+      const gs = window.gameState
+      return Boolean(gs?.gameStarted && !gs.gamePaused && window.cheatSystem && window.gameInstance?.units)
+    }, { timeout: 30000 })
+
+    const setup = await page.evaluate(() => {
+      const gs = window.gameState
+      const units = window.gameInstance.units
+      const buildings = gs.buildings || []
+      const humanPlayer = gs.humanPlayer || 'player1'
+      const enemyPlayer = humanPlayer === 'player1' ? 'player2' : 'player1'
+      const enemyBaseBuilding = buildings.find(b => b.owner === enemyPlayer && b.health > 0)
+      if (!enemyBaseBuilding) {
+        return { error: 'Missing enemy building for base-defense scenario' }
+      }
+
+      const knownUnitIds = new Set(units.map(u => u.id))
+      gs.cursorX = (enemyBaseBuilding.x + 6) * 32
+      gs.cursorY = (enemyBaseBuilding.y + 3) * 32
+      window.cheatSystem.processCheatCode(`tank_v1 1 ${enemyPlayer}`)
+      window.cheatSystem.processCheatCode(`apache 1 ${humanPlayer}`)
+      window.cheatSystem.processCheatCode(`tank_v1 1 ${humanPlayer}`)
+
+      const spawned = units.filter(u => !knownUnitIds.has(u.id))
+      const enemyTank = spawned.find(u => u.type === 'tank_v1' && u.owner === enemyPlayer)
+      const playerApache = spawned.find(u => u.type === 'apache' && u.owner === humanPlayer)
+      const playerTank = spawned.find(u => u.type === 'tank_v1' && u.owner === humanPlayer)
+      if (!enemyTank || !playerApache || !playerTank) {
+        return { error: 'Failed to spawn units for base-defense test' }
+      }
+
+      const buildingCenterX = (enemyBaseBuilding.x + (enemyBaseBuilding.width || 1) / 2) * 32
+      const buildingCenterY = (enemyBaseBuilding.y + (enemyBaseBuilding.height || 1) / 2) * 32
+
+      enemyTank.x = buildingCenterX + 32
+      enemyTank.y = buildingCenterY + 32
+      enemyTank.tileX = Math.floor(enemyTank.x / 32)
+      enemyTank.tileY = Math.floor(enemyTank.y / 32)
+      enemyTank.path = []
+      enemyTank.moveTarget = null
+      enemyTank.target = null
+      enemyTank.targetId = null
+      enemyTank.lastDecisionTime = 0
+      enemyTank.lastTargetChangeTime = 0
+      enemyTank.defendingBase = false
+
+      // Place airborne Apache very close to enemy base (invalid target for non-AA tank)
+      playerApache.flightState = 'airborne'
+      playerApache.altitude = Math.max(playerApache.maxAltitude || 90, 90)
+      playerApache.x = buildingCenterX + 2 * 32
+      playerApache.y = buildingCenterY
+      playerApache.tileX = Math.floor(playerApache.x / 32)
+      playerApache.tileY = Math.floor(playerApache.y / 32)
+      playerApache.path = []
+      playerApache.moveTarget = null
+
+      // Place ground tank slightly farther; this must become defense target
+      playerTank.x = buildingCenterX + 4 * 32
+      playerTank.y = buildingCenterY
+      playerTank.tileX = Math.floor(playerTank.x / 32)
+      playerTank.tileY = Math.floor(playerTank.y / 32)
+      playerTank.path = []
+      playerTank.moveTarget = null
+
+      window.__enemyBaseDefenseAirTargetE2E = {
+        enemyTankId: enemyTank.id,
+        playerApacheId: playerApache.id,
+        playerTankId: playerTank.id
+      }
+
+      return { ok: true }
+    })
+
+    expect(setup.error || null).toBeNull()
+
+    const resultHandle = await page.waitForFunction(() => {
+      const tracker = window.__enemyBaseDefenseAirTargetE2E
+      if (!tracker) return false
+      const units = window.gameInstance?.units || []
+      const enemyTank = units.find(u => u.id === tracker.enemyTankId)
+      const playerApache = units.find(u => u.id === tracker.playerApacheId)
+      const playerTank = units.find(u => u.id === tracker.playerTankId)
+      if (!enemyTank || !playerApache || !playerTank) return false
+
+      const notTrackingAirborneApache = enemyTank.targetId !== playerApache.id && enemyTank.target !== playerApache
+      const selectedGroundThreat = enemyTank.targetId === playerTank.id || enemyTank.target === playerTank
+      if (!notTrackingAirborneApache || !selectedGroundThreat) return false
+
+      return {
+        enemyTankTargetId: enemyTank.targetId || enemyTank.target?.id || null,
+        selectedGroundThreat,
+        notTrackingAirborneApache,
+        apacheFlightState: playerApache.flightState
+      }
+    }, { timeout: 30000 })
+
+    const result = await resultHandle.jsonValue()
+    expect(result.apacheFlightState).toBe('airborne')
+    expect(result.notTrackingAirborneApache).toBe(true)
+    expect(result.selectedGroundThreat).toBe(true)
+    expect(consoleErrors, `Console errors encountered:\n${consoleErrors.join('\n')}`).toEqual([])
+  })
 })

@@ -60,6 +60,13 @@ Additional hardening from user follow-up:
 3. F22 anti-push hardening extended in collision internals: safe-separation blocking and minimum
 	separation correction now explicitly skip F22 participation.
 
+## Engineering Update (2026-03-02)
+Remaining enemy AI airborne-targeting edge cases were fixed. Non-anti-air enemy ground units could
+still choose airborne Apache/F22 targets through base-defense threat selection and harvester-hunter
+self-defense scans in `enemyUnitBehavior.js`, leading to visible aim-lock on untargetable airborne
+units. Both selection paths now apply shared air-target eligibility checks so non-AA units ignore
+airborne-only targets and retarget to valid ground threats.
+
 ## Cluster A: Spawn, Airstrip Lifecycle, and Queueing
 `Primary files`: `src/utils/airstripUtils.js`, `src/game/movementF22.js`, `src/input/unitCommands/airCommands.js`, `src/units.js`, `src/productionQueue.js`, `src/saveGame.js`
 
@@ -285,3 +292,16 @@ F22 in-progress same-airstrip guard refinement:
 	- Follow-up (2026-02-27, render fix): `wreckRenderer` now applies F22 single-image wreck rotation with `+ PI/2` (matching live F22 render convention) to prevent opposite-facing wreck orientation.
 
 - Follow-up (2026-02-27, workshop restoration render fix): `wreckRenderer` now always resolves the F22 wreck sprite even while the wreck is in workshop restoration preview mode (avoids default fallback), and workshop restoration previews rotate wreck visuals to a consistent 45° heading for F22 and other unit wrecks.
+
+## Engineering Update (2026-03-04)
+F22 handling + rocket-speed tuning:
+1. Reduced F22 `rotationSpeed` from `0.3` to `0.1` (exactly 1/3 of prior turn rate).
+2. Reduced F22 `speed` from `10.125` to `6.075` (40% reduction, i.e., 60% of prior top speed).
+3. Increased F22 rocket projectile speed from `5` to `7.5` (50% faster), while keeping Apache rocket speed unchanged.
+4. Added E2E regression coverage that validates the applied F22 unit movement stats and the spawned F22 rocket projectile speed.
+
+## Engineering Update (2026-03-04, rocket spawn alignment)
+F22 rocket origin visual alignment:
+1. Added a dedicated `getF22RocketSpawnPoint` helper in `f22ImageRenderer.js` so F22 rockets originate from a lower fuselage hardpoint tied to the rendered F22 sprite transform.
+2. Updated shared firing logic (`firingHandlers.js`) to use F22-specific rocket spawn coordinates instead of Apache hardpoints for F22 units.
+3. Added E2E regression assertions verifying F22 rocket spawn starts below the rendered jet body centerline while remaining above the ground shadow projection.

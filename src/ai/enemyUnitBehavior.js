@@ -820,6 +820,7 @@ function checkBaseDefenseNeeded(unit, units, gameState, aiPlayerId) {
   // Check if any player units are near our base
   const playerUnitsNearBase = units.filter(u => {
     if (u.owner !== gameState.humanPlayer || u.health <= 0) return false
+    if (!canUnitHitTarget(unit, u)) return false
 
     return aiBuildings.some(building => {
       const buildingCenterX = (building.x + building.width / 2) * TILE_SIZE
@@ -870,6 +871,7 @@ function findBaseDefenseTarget(unit, units, gameState, aiPlayerId) {
   // Find player units threatening our base
   const threats = units.filter(u => {
     if (u.owner !== gameState.humanPlayer || u.health <= 0) return false
+    if (!canUnitHitTarget(unit, u)) return false
 
     return aiBuildings.some(building => {
       const buildingCenterX = (building.x + building.width / 2) * TILE_SIZE
@@ -973,6 +975,7 @@ function updateHarvesterHunterTank(unit, units, gameState, mapGrid, now, aiPlaye
   // Check for nearby enemy tanks that might be attacking us
   const nearbyEnemyTanks = units.filter(u => {
     if (u.owner === unit.owner || u.type === 'harvester' || u.health <= 0) return false
+    if (!canUnitHitTarget(unit, u)) return false
 
     const dist = Math.hypot(
       (u.x + TILE_SIZE / 2) - unitCenterX,

@@ -159,3 +159,33 @@ export function renderF22WithImage(ctx, unit, centerX, centerY) {
 
   return true
 }
+
+export function getF22RocketSpawnPoint(unit, centerX, centerY) {
+  const altitudeLift = (unit.altitude || 0) * 0.4
+
+  if (!isF22ImageLoaded()) {
+    const offsetForward = TILE_SIZE * 0.46
+    return {
+      x: centerX + Math.cos(unit.direction || 0) * offsetForward,
+      y: centerY + Math.sin(unit.direction || 0) * offsetForward - altitudeLift
+    }
+  }
+
+  const sourceWidth = f22Image?.naturalWidth || f22Image?.width || TILE_SIZE
+  const sourceHeight = f22Image?.naturalHeight || f22Image?.height || TILE_SIZE
+  const scale = F22_TARGET_WIDTH / Math.max(sourceWidth, 1)
+
+  // Lower fuselage centerline hardpoint so rockets emerge from the rendered jet body, not the ground shadow.
+  const hardpoint = { x: sourceWidth / 2, y: sourceHeight * 0.62 }
+  const localX = (hardpoint.x - sourceWidth / 2) * scale
+  const localY = (hardpoint.y - sourceHeight / 2) * scale
+  const rotation = (unit.direction || 0) + Math.PI / 2
+
+  const rotatedX = localX * Math.cos(rotation) - localY * Math.sin(rotation)
+  const rotatedY = localX * Math.sin(rotation) + localY * Math.cos(rotation)
+
+  return {
+    x: centerX + rotatedX,
+    y: centerY + rotatedY - altitudeLift
+  }
+}
