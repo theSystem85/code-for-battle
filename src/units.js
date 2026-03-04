@@ -61,6 +61,15 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
 
       // Check if this is an impassable grass tile
       let isImpassableGrass = false
+      let isImpassableTagged = false
+
+      if (textureManager?.integratedSpriteSheetMode && textureManager.getIntegratedTileForMapTile) {
+        const taggedTile = textureManager.getIntegratedTileForMapTile(tile.type, x, y)
+        if (taggedTile?.tags?.includes('impassable')) {
+          isImpassableTagged = true
+        }
+      }
+
       if (tile.type === 'land' && textureManager && textureManager.isLandTileImpassable) {
         isImpassableGrass = textureManager.isLandTileImpassable(x, y)
         if (isImpassableGrass) {
@@ -73,7 +82,8 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
         tile.type === 'rock' ||
         tile.seedCrystal ||
         hasBlockingBuilding(tile) ||
-        isImpassableGrass ? 1 : 0
+        isImpassableGrass ||
+        isImpassableTagged ? 1 : 0
     }
   }
 

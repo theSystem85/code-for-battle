@@ -443,6 +443,10 @@ export function saveGame(label) {
       totalMoneyEarned: gameState.totalMoneyEarned,
       scrollOffset: gameState.scrollOffset,
       speedMultiplier: gameState.speedMultiplier,
+      useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
+      activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
+      activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null,
+      activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag || 'grass',
       powerSupply: gameState.powerSupply,
       playerBuildHistory: gameState.playerBuildHistory,
       currentSessionId: gameState.currentSessionId,
@@ -587,6 +591,11 @@ export function loadGame(key) {
     }
 
     Object.assign(gameState, loaded.gameState)
+
+    gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
+    gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
+    gameState.activeSpriteSheetMetadata = loaded.gameState?.activeSpriteSheetMetadata || null
+    gameState.activeSpriteSheetBiomeTag = loaded.gameState?.activeSpriteSheetBiomeTag || 'grass'
 
     // Clear defeat/victory state when loading - let the game check conditions fresh
     gameState.gameOver = false
@@ -1234,7 +1243,24 @@ export function loadGame(key) {
       mapRenderer.invalidateAllChunks()
     }
 
-    gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, getTextureManager())
+    const textureManager = getTextureManager()
+    if (textureManager?.setIntegratedSpriteSheetConfig) {
+      textureManager.setIntegratedSpriteSheetConfig({
+        enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+        sheetPath: gameState.activeSpriteSheetPath,
+        metadata: gameState.activeSpriteSheetMetadata,
+        biomeTag: gameState.activeSpriteSheetBiomeTag
+      }).then(() => {
+        if (mapRenderer) {
+          mapRenderer.invalidateAllChunks()
+        }
+        gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
+      }).catch((err) => {
+        window.logger.warn('Failed to apply integrated sprite sheet config after load:', err)
+      })
+    }
+
+    gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
     updateDangerZoneMaps(gameState)
 
     // Restore targeted ore tiles for harvester system

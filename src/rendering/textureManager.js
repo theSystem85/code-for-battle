@@ -31,6 +31,225 @@ export class TextureManager {
     this.waterFrames = []
     this.waterFrameIndex = 0
     this.lastWaterFrameTime = 0
+    this.integratedSpriteSheetMode = false
+    this.integratedSpriteSheetPath = null
+    this.integratedSpriteSheetImage = null
+    this.integratedSpriteSheetMetadata = null
+    this.integratedTagBuckets = {}
+    this.integratedBiomeTag = 'grass'
+    this.integratedConfigVersion = 0
+    this.integratedRenderSignature = 'off'
+  }
+
+  async loadIntegratedSpriteSheetImage(sheetPath) {
+    if (!sheetPath) return null
+    if (this.integratedSpriteSheetPath === sheetPath && this.integratedSpriteSheetImage) {
+      return this.integratedSpriteSheetImage
+    }
+
+    const image = await new Promise((resolve) => {
+      const img = new Image()
+      img.onload = () => resolve(img)
+      img.onerror = () => resolve(null)
+      img.src = sheetPath.startsWith('/') ? sheetPath : `/${sheetPath}`
+    })
+
+    if (image) {
+      this.integratedSpriteSheetPath = sheetPath
+      this.integratedSpriteSheetImage = image
+    }
+
+    return image
+  }
+
+  buildIntegratedTagBuckets(metadata) {
+    const buckets = {}
+    if (!metadata?.tiles) return buckets
+
+    Object.values(metadata.tiles).forEach((tile) => {
+      if (!tile?.rect || !Array.isArray(tile.tags)) return
+      tile.tags.forEach((tag) => {
+        if (!buckets[tag]) {
+          buckets[tag] = []
+        }
+        buckets[tag].push(tile)
+      })
+    })
+
+    return buckets
+  }
+
+  async setIntegratedSpriteSheetConfig(config = {}) {
+    const enabled = Boolean(config?.enabled)
+    if (!enabled) {
+      this.integratedSpriteSheetMode = false
+      this.integratedSpriteSheetMetadata = null
+      this.integratedTagBuckets = {}
+      this.integratedRenderSignature = 'off'
+      this.integratedConfigVersion++
+      return
+    }
+
+    const sheetPath = config?.sheetPath
+    const metadata = config?.metadata
+    if (!sheetPath || !metadata) {
+      this.integratedSpriteSheetMode = false
+      this.integratedSpriteSheetMetadata = null
+      this.integratedTagBuckets = {}
+      this.integratedRenderSignature = 'off'
+      this.integratedConfigVersion++
+      return
+    }
+
+    const image = await this.loadIntegratedSpriteSheetImage(sheetPath)
+    if (!image) {
+      this.integratedSpriteSheetMode = false
+      this.integratedSpriteSheetMetadata = null
+      this.integratedTagBuckets = {}
+      this.integratedRenderSignature = 'off'
+      this.integratedConfigVersion++
+      return
+    }
+
+    this.integratedSpriteSheetMode = true
+    this.integratedSpriteSheetPath = sheetPath
+    this.integratedSpriteSheetImage = image
+    this.integratedSpriteSheetMetadata = metadata
+    this.integratedTagBuckets = this.buildIntegratedTagBuckets(metadata)
+    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
+    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}`
+    this.integratedConfigVersion++
+  }
+
+  static coordHash(x, y) {
+    let hash = ((x * 73856093) ^ (y * 19349663) ^ ((x + y) * 83492791)) >>> 0
+    hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
+    hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
+    hash = (hash >>> 16) ^ hash
+    return Math.abs(hash)
+  }
+
+  getLandClassificationTag(x, y) {
+    const landIndex = this.getTileVariation('land', x, y)
+    const info = this.grassTileMetadata
+    if (!info || !Number.isFinite(landIndex)) {
+      return 'passable'
+    }
+
+    const { passableCount, decorativeCount } = info
+    if (landIndex < passableCount) return 'passable'
+    if (landIndex < passableCount + decorativeCount) return 'decorative'
+    return 'impassable'
+  }
+
+  selectIntegratedTileByTags(requiredTags, x, y, excludedTags = []) {
+    if (!Array.isArray(requiredTags) || !requiredTags.length) return null
+
+    const buckets = this.integratedTagBuckets || {}
+    let seedBucket = null
+
+    requiredTags.forEach((tag) => {
+      const bucket = buckets[tag]
+      if (!Array.isArray(bucket) || !bucket.length) {
+        seedBucket = []
+        return
+      }
+      if (!seedBucket || bucket.length < seedBucket.length) {
+        seedBucket = bucket
+      }
+    })
+
+    if (!Array.isArray(seedBucket) || !seedBucket.length) {
+      return null
+    }
+
+    const filtered = seedBucket.filter((tile) => {
+      if (!Array.isArray(tile?.tags) || !tile.rect) return false
+      const hasRequired = requiredTags.every(tag => tile.tags.includes(tag))
+      if (!hasRequired) return false
+      return excludedTags.every(tag => !tile.tags.includes(tag))
+    })
+
+    if (!filtered.length) {
+      return null
+    }
+
+    return filtered[TextureManager.coordHash(x, y) % filtered.length]
+  }
+
+  getIntegratedTileCandidatesByTags(requiredTags, excludedTags = []) {
+    if (!Array.isArray(requiredTags) || !requiredTags.length) return []
+
+    const buckets = this.integratedTagBuckets || {}
+    let seedBucket = null
+
+    requiredTags.forEach((tag) => {
+      const bucket = buckets[tag]
+      if (!Array.isArray(bucket) || !bucket.length) {
+        seedBucket = []
+        return
+      }
+      if (!seedBucket || bucket.length < seedBucket.length) {
+        seedBucket = bucket
+      }
+    })
+
+    if (!Array.isArray(seedBucket) || !seedBucket.length) {
+      return []
+    }
+
+    return seedBucket.filter((tile) => {
+      if (!Array.isArray(tile?.tags) || !tile.rect) return false
+      const hasRequired = requiredTags.every(tag => tile.tags.includes(tag))
+      if (!hasRequired) return false
+      return excludedTags.every(tag => !tile.tags.includes(tag))
+    })
+  }
+
+  selectIntegratedTileFromCandidates(candidates, x, y) {
+    if (!Array.isArray(candidates) || !candidates.length) return null
+    return candidates[TextureManager.coordHash(x, y) % candidates.length]
+  }
+
+  getIntegratedTileForMapTile(type, x, y) {
+    if (!this.integratedSpriteSheetMode || !this.integratedSpriteSheetImage || !this.integratedSpriteSheetMetadata) {
+      return null
+    }
+
+    let selected = null
+
+    if (type === 'land') {
+      const classification = this.getLandClassificationTag(x, y)
+      const biomeDecorativeCandidates = this.getIntegratedTileCandidatesByTags([this.integratedBiomeTag, 'decorative'])
+      if (classification === 'decorative') {
+        if (biomeDecorativeCandidates.length) {
+          selected = this.selectIntegratedTileFromCandidates(biomeDecorativeCandidates, x, y)
+        }
+      } else if (classification === 'impassable') {
+        selected = this.selectIntegratedTileByTags([this.integratedBiomeTag, 'impassable'], x, y)
+      } else {
+        selected = this.selectIntegratedTileByTags([this.integratedBiomeTag, 'passable'], x, y, ['decorative', 'impassable'])
+          || this.selectIntegratedTileByTags([this.integratedBiomeTag], x, y, ['decorative', 'impassable'])
+      }
+    } else if (type === 'street') {
+      selected = this.selectIntegratedTileByTags(['street'], x, y)
+    } else if (type === 'rock') {
+      selected = this.selectIntegratedTileByTags(['rocks'], x, y)
+        || this.selectIntegratedTileByTags(['rock'], x, y)
+    } else if (type === 'water') {
+      selected = this.selectIntegratedTileByTags(['water'], x, y)
+    } else {
+      selected = this.selectIntegratedTileByTags([type], x, y)
+        || this.selectIntegratedTileByTags(['passable'], x, y)
+    }
+
+    if (!selected?.rect) return null
+
+    return {
+      image: this.integratedSpriteSheetImage,
+      rect: selected.rect,
+      tags: selected.tags || []
+    }
   }
 
   // Helper function to load images once
@@ -390,6 +609,16 @@ export class TextureManager {
 
   // Check if a land tile at given position uses an impassable grass texture
   isLandTileImpassable(x, y) {
+    if (this.integratedSpriteSheetMode) {
+      const integratedTile = this.getIntegratedTileForMapTile('land', x, y)
+      if (integratedTile?.tags?.includes('impassable')) {
+        return true
+      }
+      if (integratedTile?.tags?.includes('passable') || integratedTile?.tags?.includes('decorative')) {
+        return false
+      }
+    }
+
     if (!this.grassTileMetadata || !this.allTexturesLoaded) {
       return false // Return false if grass tiles aren't loaded yet
     }
