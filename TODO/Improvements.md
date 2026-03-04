@@ -1,3 +1,4 @@
+- [x] Keep floating-label sidebar input wrappers exactly 40px tall with refined internal spacing, move "Your alias" above invite link controls in Multiplayer, align map inputs into Seed+Players and Width+Height shared rows, and ensure number spinners match input text color without separate spinner background.
 - [x] Let planned building footprints extend base build proximity for additional plans, render per-plan build order numbers, and support sell-mode cascading plan cancellation with two-click warning/preview highlights.
 - [x] Ensure mobile planning base-proximity expansion is sequential and order-locked: each next tile may extend range only from previously accepted planning tiles in draw order.
 - [x] Mobile chain-draw planning polish: block starting paint when first tile violates placement/proximity, skip+red-mark invalid or too-far neighbor tiles, show per-tile draw order numbers, prevent planning onto occupied ground, and shorten planning labels (Wall/Radar).

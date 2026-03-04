@@ -12,8 +12,12 @@ Introduce a reusable floating label input wrapper style for sidebar form control
 - Floating-label field styling must use a flat solid background (no inner gradient) and no borders.
 - Floating label color must match the tutorial green accent (`#6efc4b`).
 - Number input spinners should be visually aligned with the floating-label theme on desktop pointer devices.
+- Number input spinner arrows must match the input font color and use no separate spinner background.
 - Spacing and padding should remain compact and non-wasteful in the sidebar.
 - Map settings and multiplayer invite flows must remain fully functional after the markup migration.
+- The `Your alias` floating input must be placed in the Multiplayer section above the invite-link row.
+- In Map Settings, `Seed` and `Players` fields must share one horizontal row.
+- In Map Settings, `Width` and `Height` fields must share one horizontal row.
 - Add an E2E test that verifies floating label wrappers and migrated labels render in the sidebar.
 
 ## Implementation Notes

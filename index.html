@@ -568,6 +568,10 @@
         <h3>Multiplayer</h3>
         <div id="multiplayerPartyList" class="multiplayer-party-list" aria-live="polite"></div>
         <div class="multiplayer-join-section">
+          <div class="floating-label-input" style="margin-bottom: 8px;">
+            <input type="text" class="sidebar-input" id="playerAliasInput" placeholder=" " autocomplete="off">
+            <label for="playerAliasInput">Your alias</label>
+          </div>
           <div class="multiplayer-join-input-row">
             <div class="floating-label-input multiplayer-join-input">
               <input type="text" id="inviteLinkInput" class="sidebar-input" placeholder=" " autocomplete="off">
@@ -637,15 +641,7 @@
               <input type="number" class="sidebar-input" id="mapSeed" value="4" placeholder=" ">
               <label for="mapSeed">Seed</label>
             </div>
-            <div class="floating-label-input floating-label-input--narrow" style="margin: 10px 0; width: 120px;">
-              <input type="number" class="sidebar-input" id="playerCount" min="2" max="4" value="2" placeholder=" ">
-              <label for="playerCount">Players</label>
-            </div>
-            <div class="floating-label-input" style="margin: 10px 0; width: 100%;">
-              <input type="text" class="sidebar-input" id="playerAliasInput" placeholder=" " autocomplete="off">
-              <label for="playerAliasInput">Your alias</label>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 10px; margin: 10px 0;">
+            <div style="display: flex; gap: 10px; margin: 10px 0;">
               <div class="floating-label-input floating-label-input--narrow" style="width: 120px;">
                 <input type="number" class="sidebar-input" id="mapWidthTiles" min="32" value="100" placeholder=" ">
                 <label for="mapWidthTiles">Width</label>

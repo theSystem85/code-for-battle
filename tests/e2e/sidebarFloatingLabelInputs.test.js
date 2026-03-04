@@ -22,26 +22,60 @@ test.describe('Sidebar floating label inputs', () => {
     await expect(page.locator('#mapWidthTiles + label')).toHaveText('Width')
     await expect(page.locator('#mapHeightTiles + label')).toHaveText('Height')
 
+    const layoutSnapshot = await page.evaluate(() => {
+      const mapSeedRect = document.querySelector('#mapSeed')?.getBoundingClientRect()
+      const playerCountRect = document.querySelector('#playerCount')?.getBoundingClientRect()
+      const mapWidthRect = document.querySelector('#mapWidthTiles')?.getBoundingClientRect()
+      const mapHeightRect = document.querySelector('#mapHeightTiles')?.getBoundingClientRect()
+      const aliasWrapper = document.querySelector('#playerAliasInput')?.closest('.floating-label-input')
+      const joinInputRow = document.querySelector('.multiplayer-join-input-row')
+      const joinSection = document.querySelector('.multiplayer-join-section')
+      const sectionChildren = joinSection ? Array.from(joinSection.children) : []
+      const aliasIndex = sectionChildren.indexOf(aliasWrapper)
+      const joinRowIndex = sectionChildren.indexOf(joinInputRow)
+
+      return {
+        seedAndPlayersSameRow: Math.abs((mapSeedRect?.top ?? 0) - (playerCountRect?.top ?? 0)) < 1,
+        widthAndHeightSameRow: Math.abs((mapWidthRect?.top ?? 0) - (mapHeightRect?.top ?? 0)) < 1,
+        aliasAboveJoinRow: aliasIndex >= 0 && joinRowIndex >= 0 && aliasIndex < joinRowIndex
+      }
+    })
+
+    expect(layoutSnapshot.seedAndPlayersSameRow).toBe(true)
+    expect(layoutSnapshot.widthAndHeightSameRow).toBe(true)
+    expect(layoutSnapshot.aliasAboveJoinRow).toBe(true)
+
     const styleSnapshot = await page.evaluate(() => {
       const input = document.querySelector('#saveLabelInput')
       const label = document.querySelector('#saveLabelInput + label')
+      const numberInput = document.querySelector('#mapSeed')
       const computedInput = window.getComputedStyle(input)
       const computedLabel = window.getComputedStyle(label)
+      const computedNumber = window.getComputedStyle(numberInput)
+      const computedSpin = window.getComputedStyle(numberInput, '::-webkit-inner-spin-button')
       return {
         height: computedInput.height,
         borderTopWidth: computedInput.borderTopWidth,
         backgroundImage: computedInput.backgroundImage,
         paddingTop: computedInput.paddingTop,
         paddingBottom: computedInput.paddingBottom,
-        labelColor: computedLabel.color
+        labelColor: computedLabel.color,
+        numberColor: computedNumber.color,
+        numberBackgroundColor: computedNumber.backgroundColor,
+        spinnerColor: computedSpin.color,
+        spinnerFilter: computedSpin.filter,
+        spinnerBackgroundColor: computedSpin.backgroundColor
       }
     })
 
     expect(styleSnapshot.height).toBe('40px')
     expect(styleSnapshot.borderTopWidth).toBe('0px')
     expect(styleSnapshot.backgroundImage).toBe('none')
-    expect(styleSnapshot.paddingTop).toBe('13px')
-    expect(styleSnapshot.paddingBottom).toBe('3px')
+    expect(styleSnapshot.paddingTop).toBe('14px')
+    expect(styleSnapshot.paddingBottom).toBe('2px')
     expect(styleSnapshot.labelColor).toBe('rgb(110, 252, 75)')
+    expect(styleSnapshot.spinnerColor).toBe(styleSnapshot.numberColor)
+    expect(styleSnapshot.spinnerFilter).toBe('none')
+    expect(styleSnapshot.spinnerBackgroundColor).toBe(styleSnapshot.numberBackgroundColor)
   })
 })
