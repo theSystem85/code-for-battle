@@ -11,7 +11,7 @@ const PROVIDERS = [
 ]
 
 const ENABLED_PROVIDER_IDS = new Set(['openai', 'inceptionlabs'])
-const PROVIDERS_REQUIRING_KEY = new Set(['openai', 'inceptionlabs', 'anthropic', 'xai'])
+const PROVIDERS_REQUIRING_KEY = new Set(['openai', 'anthropic', 'xai'])
 
 const modelCacheByProvider = new Map()
 

@@ -52,6 +52,39 @@ export const DEFAULT_LLM_SETTINGS = {
 
 let currentSettings = null
 
+function normalizeInceptionlabsSettings(settings) {
+  const next = { ...settings }
+  if (next.providers?.inceptionlabs?.model === 'mercury-m2') {
+    next.providers = {
+      ...next.providers,
+      inceptionlabs: {
+        ...next.providers.inceptionlabs,
+        model: 'Mercury 2'
+      }
+    }
+  }
+
+  const pool = Array.isArray(next.strategicModelPool) ? next.strategicModelPool : []
+  let changed = false
+  const mappedPool = pool.map(entry => {
+    if (entry?.provider === 'inceptionlabs' && entry?.model === 'mercury-m2') {
+      changed = true
+      return {
+        ...entry,
+        model: 'Mercury 2',
+        key: 'inceptionlabs:Mercury 2'
+      }
+    }
+    return entry
+  })
+  if (changed) {
+    next.strategicModelPool = mappedPool
+  }
+
+  return next
+}
+
+
 function mergeSettings(base, patch) {
   if (!patch || typeof patch !== 'object') return base
   const merged = { ...base }
@@ -74,12 +107,12 @@ export function loadLlmSettings() {
   } catch (err) {
     window.logger.warn('[LLM] Failed to parse stored settings:', err)
   }
-  currentSettings = mergeSettings(DEFAULT_LLM_SETTINGS, stored || {})
+  currentSettings = normalizeInceptionlabsSettings(mergeSettings(DEFAULT_LLM_SETTINGS, stored || {}))
   return currentSettings
 }
 
 export function saveLlmSettings(settings) {
-  currentSettings = mergeSettings(DEFAULT_LLM_SETTINGS, settings || {})
+  currentSettings = normalizeInceptionlabsSettings(mergeSettings(DEFAULT_LLM_SETTINGS, settings || {}))
   try {
     localStorage.setItem(LLM_SETTINGS_KEY, JSON.stringify(currentSettings))
   } catch (err) {
