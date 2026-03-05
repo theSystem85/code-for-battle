@@ -19,7 +19,7 @@ export const KEYBINDING_CONTEXTS = {
 // are informational for gestures that the game already recognizes.
 const DEFAULT_BINDINGS = {
   keyboard: [
-    { id: 'toggle-help', label: 'Toggle Controls Help', input: 'i', context: KEYBINDING_CONTEXTS.DEFAULT },
+    { id: 'toggle-help', label: 'Open Settings (Keybindings Tab)', input: 'i', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'open-cheats', label: 'Open Cheat Console', input: 'c', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'open-runtime-config', label: 'Open Runtime Config', input: 'k', context: KEYBINDING_CONTEXTS.DEFAULT },
     { id: 'toggle-grid', label: 'Toggle Grid', input: 'g', context: KEYBINDING_CONTEXTS.DEFAULT },

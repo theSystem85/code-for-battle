@@ -3,7 +3,6 @@ import { gameState } from '../gameState.js'
 import { TILE_SIZE } from '../config.js'
 import { findPathForOwner } from '../units.js'
 import { playSound, playPositionalSound } from '../sound.js'
-import { HelpSystem } from './helpSystem.js'
 import { CheatSystem } from './cheatSystem.js'
 import { isInputFieldFocused } from '../utils/inputUtils.js'
 import { toggleUnitLogging } from '../utils/logger.js'
@@ -11,6 +10,7 @@ import { cancelUnitMovement } from '../game/unifiedMovement.js'
 import { handleAltKeyRelease, resetWaypointTracking } from '../game/waypointSounds.js'
 import { performanceDialog } from '../ui/performanceDialog.js'
 import { runtimeConfigDialog } from '../ui/runtimeConfigDialog.js'
+import { openSettingsModal } from '../ui/settingsModal.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { setRemoteControlAction, getRemoteControlActionState } from './remoteControlState.js'
 import { broadcastUnitStop } from '../network/gameCommandSync.js'
@@ -30,7 +30,6 @@ export class KeyboardHandler {
     this.lastGroupKeyPressTime = 0
     this.doublePressThreshold = 500 // 500ms threshold for double press
     this.groupFormationMode = false
-    this.helpSystem = new HelpSystem()
     this.playerFactory = null
     this.cheatSystem = new CheatSystem()
     this.unitCommands = null
@@ -80,7 +79,7 @@ export class KeyboardHandler {
       if (keybindingManager.matchesKeyboardAction(e, 'toggle-help', kbContext)) {
         e.preventDefault()
         e.stopPropagation()
-        this.helpSystem.showControlsHelp()
+        openSettingsModal('keybindings')
         return
       }
 
@@ -99,7 +98,7 @@ export class KeyboardHandler {
       }
 
       // Don't process other inputs if game is paused, cheat dialog is open, or runtime config dialog is open
-      if (gameState.paused || gameState.cheatDialogOpen || gameState.runtimeConfigDialogOpen || gameState.helpDialogOpen) return
+      if (gameState.paused || gameState.cheatDialogOpen || gameState.runtimeConfigDialogOpen) return
 
       // Block game commands in spectator mode, when locally defeated, or when host has paused
       // (allow view-only commands like grid toggle, FPS toggle, camera movement)
@@ -410,7 +409,7 @@ export class KeyboardHandler {
     const helpBtn = document.getElementById('helpBtn')
     if (helpBtn) {
       helpBtn.addEventListener('click', () => {
-        this.helpSystem.showControlsHelp()
+        openSettingsModal('keybindings')
       })
     }
 

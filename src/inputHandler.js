@@ -28,7 +28,7 @@ function remoteCheatGuard(event) {
     return
   }
   const key = event.key?.toLowerCase()
-  if (key !== 'c' || gameState.cheatDialogOpen || gameState.runtimeConfigDialogOpen || gameState.helpDialogOpen) {
+  if (key !== 'c' || gameState.cheatDialogOpen || gameState.runtimeConfigDialogOpen) {
     return
   }
   event.preventDefault()
