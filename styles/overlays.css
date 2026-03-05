@@ -675,12 +675,26 @@ body.config-modal-open {
 .config-modal__field textarea {
   background: #11161e;
   border: 1px solid #2d3640;
-  border-radius: 4px;
+  border-radius: 0;
   color: #e5e5e5;
   padding: 8px;
   font-size: 14px;
   outline: none;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.config-modal__field select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23e5e5e5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 8px;
+}
+
+.config-modal__field select::-ms-expand {
+  display: none;
 }
 
 .config-modal__field select:focus,

@@ -195,15 +195,6 @@ body.is-touch {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.multiplayer-join-label {
-  display: block;
-  font-size: 11px;
-  color: #a8a8a8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
 .multiplayer-join-input-row {
   display: flex;
   gap: 6px;
@@ -213,18 +204,18 @@ body.is-touch {
 .multiplayer-join-input {
   flex: 1;
   min-width: 0;
-  font-size: 12px;
-  padding: 6px 8px;
 }
 
 .multiplayer-join-btn {
   flex-shrink: 0;
-  padding: 6px 12px;
+  height: 40px;
+  padding: 0 12px;
 }
 
 .multiplayer-scan-btn {
   flex-shrink: 0;
-  padding: 6px 8px;
+  height: 40px;
+  padding: 0 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -248,6 +239,92 @@ body.is-touch {
 
 .multiplayer-join-status.success {
   color: #6efc4b;
+}
+
+
+.floating-label-input {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 40px;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--game-font-family);
+}
+
+.floating-label-input > .sidebar-input,
+.floating-label-input > textarea.sidebar-input {
+  --floating-input-bg: #4a4a4a;
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+  padding: 14px 10px 2px;
+  border: none;
+  border-radius: 0;
+  background-color: var(--floating-input-bg);
+  color: #f5f7ff;
+  font-size: 14px;
+  line-height: 1.1;
+  transition: box-shadow 140ms ease, background-color 140ms ease;
+}
+
+.floating-label-input > textarea.sidebar-input {
+  min-height: 76px;
+  resize: vertical;
+  padding-top: 18px;
+}
+
+.floating-label-input > label {
+  position: absolute;
+  left: 10px;
+  top: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #6efc4b;
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  transform-origin: left center;
+  transition: transform 140ms ease, color 140ms ease;
+}
+
+.floating-label-input > .sidebar-input::placeholder,
+.floating-label-input > textarea.sidebar-input::placeholder {
+  color: transparent;
+}
+
+.floating-label-input > .sidebar-input:focus,
+.floating-label-input > textarea.sidebar-input:focus {
+  --floating-input-bg: #505050;
+  outline: none;
+  background-color: var(--floating-input-bg);
+  box-shadow: 0 0 0 1px rgba(110, 252, 75, 0.5);
+}
+
+.floating-label-input > .sidebar-input:focus + label,
+.floating-label-input > .sidebar-input:not(:placeholder-shown) + label,
+.floating-label-input > textarea.sidebar-input:focus + label,
+.floating-label-input > textarea.sidebar-input:not(:placeholder-shown) + label {
+  transform: translateY(-2px) scale(0.86);
+  color: #6efc4b;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .floating-label-input > input[type='number']::-webkit-inner-spin-button,
+  .floating-label-input > input[type='number']::-webkit-outer-spin-button {
+    opacity: 1;
+    background-color: var(--floating-input-bg);
+    color: inherit;
+    filter: none;
+    margin: 0;
+  }
+
+  .floating-label-input > input[type='number'] {
+    padding-right: 6px;
+  }
+}
+
+.floating-label-input--narrow {
+  max-width: 128px;
 }
 
 #saveLabelInput::placeholder,
@@ -565,11 +642,27 @@ body.is-touch {
 .sidebar-input {
   flex-grow: 1;
   height: 40px;
-  padding: 0px 12px;
+  padding: 0 12px;
   background-color: #444;
   color: #eee;
   border: none;
+  border-radius: 0;
 }
+
+#sidebar select.sidebar-input {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23e5e5e5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px 8px;
+}
+
+#sidebar select.sidebar-input::-ms-expand {
+  display: none;
+}
+
 .sidebar-input::placeholder {
   color: #aaa;
 }
