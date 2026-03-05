@@ -1,4 +1,6 @@
 ## Bugs
+- [x] Enemy AI harvester unstuck scan follow-up (2026-03-05): harvesters are now treated as stuck after 60s with zero movement even when idle at ore fields (no path/moveTarget), with forced ore reassignment; out-of-fuel harvesters are left for tanker refill logic and missing-crew harvesters are left for ambulance crew-support logic.
+- [x] Enemy AI harvester unstuck scan (2026-03-05): every AI player now runs a 60s harvester recovery scan and reassigns stuck harvesters to different ore tiles when they fail to make movement progress.
 - [x] F22 landing non-passable airstrip recovery (2026-03-04): during `landing_roll`, F22 now gets a soft centerline correction with stronger push when on non-taxi tiles, preventing frequent landing stalls in blocked airstrip-adjacent regions.
 - [x] F22 rocket spawn alignment (2026-03-04): F22-fired rockets now spawn from the lower F22 fuselage hardpoint (below the jet body) instead of shadow-aligned coordinates; added E2E regression asserting rocket origin stays above the projected ground shadow.
 - [x] F22 handling/combat tuning (2026-03-04): reduced F22 turn rate to one-third, reduced F22 top speed by 40%, and increased F22 rocket projectile speed by 50% without changing Apache rocket speed.
@@ -167,6 +169,8 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] Enemy AI harvester unstuck scan follow-up (2026-03-05): harvesters are now treated as stuck after 60s with zero movement even when idle at ore fields (no path/moveTarget), with forced ore reassignment; out-of-fuel harvesters are left for tanker refill logic and missing-crew harvesters are left for ambulance crew-support logic.
+- [x] Enemy AI harvester unstuck scan (2026-03-05): every AI player now runs a 60s harvester recovery scan and reassigns stuck harvesters to different ore tiles when they fail to make movement progress.
 - [x] F22 rocket spawn alignment (2026-03-04): F22-fired rockets now spawn from the lower F22 fuselage hardpoint (below the jet body) instead of shadow-aligned coordinates; added E2E regression asserting rocket origin stays above the projected ground shadow.
 - [x] F22 handling/combat tuning (2026-03-04): reduced F22 turn rate to one-third, reduced F22 top speed by 40%, and increased F22 rocket projectile speed by 50% without changing Apache rocket speed.
 - [x] F22 border/orbit attack loop stabilization (2026-03-01): F22 now proactively evades map borders before impact, slows to cruise/orbit speed near combat loiter circles, and continues large multi-pass attack orbits until target destruction or ammo depletion before RTB.
