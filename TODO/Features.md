@@ -1,4 +1,5 @@
 ## Features
+- [x] Show defeated players with a clear "Defeated" status in the multiplayer sidebar overview.
 - [x] Add Sprite Sheet Editor (SSE) modal under Map Settings with tag-paint workflow, per-sheet metadata JSON apply/export, and integrated sprite-sheet map rendering mode toggle.
 - [x] Extend SSE with zoom controls (in/out/100%/snap), apply-current-tag-to-all action, and resizable/maximizable modal UX.
 - [x] Refine SSE to fullscreen-only edge-to-edge layout with no top bar, default snap-to-canvas fit, functional zoom controls, and right-click drag inertia panning (no native scrollbars).
@@ -222,6 +223,7 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
   - [x] only the host can start/pause the game or use cheats, even after other players join
 
 ## Features
+- [x] Show defeated players with a clear "Defeated" status in the multiplayer sidebar overview.
 - [ ] Wrecks and recovery/recycling: Ensure the units when destroyed do not just vanish from the map but their left overs keep lying on the map. The left overs should look totally color desaturated and slightly noisy to indicated dirt and damage (cache those desaturated images and reuse them). Any (also the ones from the enemy) left over unit can be pulled by a recovery tank to the base when player has the recovery tank selected and clicks on the tank. The the recovery tank will drive to the target then mount (indicated by a 2px black string that connects both units) and then automatically drive to the workshop where it unmounts and the unit gets fully restored but without crew. 
 
 2nd option is that the user has the recovery tank selected and clicks on the left over unit while holding shift key. Then the leftover unit get recycled completely (vanishes from the map) but the owner of the recovery tank gets 33% of the value of the unit added to his budget (like a harvesting of resources). This process takes about as long as it took the unit to build. Show blue progress bar on the recovery tank while this mode is active.
