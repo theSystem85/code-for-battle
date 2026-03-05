@@ -1434,7 +1434,7 @@ function buildExportFilename(label, time) {
   const safeDate = Number.isFinite(time)
     ? new Date(time).toISOString().replace(/[:.]/g, '-').replace('T', '_').replace('Z', 'Z')
     : 'unknown-date'
-  return `${safeLabel}_${safeDate}.json`
+  return `${safeDate}_${safeLabel}.json`
 }
 
 export function exportSaveGame(key) {
@@ -1467,7 +1467,7 @@ export function exportSaveGame(key) {
 }
 
 export async function importSaveGameFromFile(file) {
-  if (!file || typeof localStorage === 'undefined') return false
+  if (!file || typeof localStorage === 'undefined') return null
 
   const fileText = await file.text()
   let saveObj = null
@@ -1477,12 +1477,12 @@ export async function importSaveGameFromFile(file) {
   } catch (err) {
     window.logger.warn('Failed to parse imported save file:', err)
     showNotification('Import failed: invalid JSON file')
-    return false
+    return null
   }
 
   if (!saveObj || typeof saveObj !== 'object' || typeof saveObj.state === 'undefined') {
     showNotification('Import failed: unsupported save file format')
-    return false
+    return null
   }
 
   const importedLabel = typeof saveObj.label === 'string' && saveObj.label.trim()
@@ -1494,10 +1494,38 @@ export async function importSaveGameFromFile(file) {
     state: typeof saveObj.state === 'string' ? saveObj.state : JSON.stringify(saveObj.state)
   }
 
-  localStorage.setItem(`rts_save_${normalizedSave.label}`, JSON.stringify(normalizedSave))
+  const saveKey = `rts_save_${normalizedSave.label}`
+  localStorage.setItem(saveKey, JSON.stringify(normalizedSave))
+  return {
+    key: saveKey,
+    label: normalizedSave.label
+  }
+}
+
+export async function importSaveGamesFromFiles(fileList) {
+  const files = Array.from(fileList || [])
+  if (files.length === 0) return
+
+  const importedSaves = []
+  for (const file of files) {
+    const importedSave = await importSaveGameFromFile(file)
+    if (importedSave) {
+      importedSaves.push(importedSave)
+    }
+  }
+
+  if (importedSaves.length === 0) return
+
   updateSaveGamesList()
-  showNotification(`Imported save: ${normalizedSave.label}`)
-  return true
+
+  if (importedSaves.length === 1) {
+    const [singleSave] = importedSaves
+    showNotification(`Imported save: ${singleSave.label}`)
+    loadGame(singleSave.key)
+    return
+  }
+
+  showNotification(`Imported ${importedSaves.length} save games`)
 }
 
 export function updateSaveGamesList() {
@@ -1540,11 +1568,11 @@ export function updateSaveGamesList() {
     li.appendChild(label)
     if (!save.builtin) {
       const exportBtn = document.createElement('button')
-      exportBtn.textContent = '⭳'
       exportBtn.title = 'Export save game as JSON'
       exportBtn.setAttribute('aria-label', 'Export save game')
-      exportBtn.classList.add('action-button')
+      exportBtn.classList.add('action-button', 'icon-button')
       exportBtn.style.marginLeft = '6px'
+      exportBtn.innerHTML = '<img src="/icons/export.svg" alt="Export" class="button-icon white-icon">'
       exportBtn.onclick = () => { exportSaveGame(save.key) }
       li.appendChild(exportBtn)
 
@@ -1584,8 +1612,7 @@ export function initSaveGameSystem() {
       importSaveInput.click()
     })
     importSaveInput.addEventListener('change', async() => {
-      const file = importSaveInput.files?.[0]
-      await importSaveGameFromFile(file)
+      await importSaveGamesFromFiles(importSaveInput.files)
       importSaveInput.value = ''
     })
   }
