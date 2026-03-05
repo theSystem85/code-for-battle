@@ -19,12 +19,6 @@ vi.mock('../../src/units.js', () => ({
   findPathForOwner: vi.fn()
 }))
 
-vi.mock('../../src/input/helpSystem.js', () => ({
-  HelpSystem: class {
-    showControlsHelp() {}
-  }
-}))
-
 vi.mock('../../src/input/cheatSystem.js', () => ({
   CheatSystem: class {
     setSelectedUnitsRef() {}

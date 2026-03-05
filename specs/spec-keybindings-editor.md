@@ -16,3 +16,5 @@
 - Keyboard shortcuts in `keyboardHandler` resolve against the keybinding manager so remaps take effect without reloads.
 - Mouse selection/command handling consults the same manager to honor remapped primary/secondary clicks while keeping spectator safeguards.
 - Map edit mode toggling is exposed as a binding and updates the shared `gameState.mapEditMode` flag for context-aware grouping.
+- The `i` keyboard shortcut and the sidebar info (`ℹ️`) action both open the same settings modal directly on the **Key Bindings** tab.
+- The legacy standalone "Game Controls" modal is removed so keybinding/help discovery is centralized in one settings surface.

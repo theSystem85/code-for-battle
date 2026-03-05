@@ -10,12 +10,6 @@ vi.mock('../../src/sound.js', () => ({
   playPositionalSound: vi.fn()
 }))
 
-vi.mock('../../src/input/helpSystem.js', () => ({
-  HelpSystem: class {
-    showControlsHelp() {}
-  }
-}))
-
 vi.mock('../../src/input/cheatSystem.js', () => ({
   CheatSystem: class {
     setSelectedUnitsRef() {}
