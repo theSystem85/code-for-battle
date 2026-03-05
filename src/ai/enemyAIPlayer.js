@@ -19,6 +19,7 @@ import { gameState } from '../gameState.js'
 import { getLlmSettings } from './llmSettings.js'
 import { processLlmBuildQueue, processLlmUnitQueue, markLlmBuildComplete, markLlmUnitComplete } from '../ai-api/applier.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/airstripUtils.js'
+import { handleStuckHarvester } from '../game/harvesterLogic.js'
 
 const AI_SELL_PRIORITY = [
   'turretGunV1',
@@ -45,6 +46,63 @@ const AI_SELL_PRIORITY_MAP = AI_SELL_PRIORITY.reduce((acc, type, index) => {
 }, {})
 
 const PROTECTED_AI_BUILDINGS = new Set(['constructionYard', 'oreRefinery'])
+const ENEMY_HARVESTER_STUCK_SCAN_INTERVAL = 60000
+const ENEMY_HARVESTER_STUCK_MOVEMENT_THRESHOLD = 8
+
+function scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupancyMap, gameState, factories, now) {
+  const lastScanKey = `${aiPlayerId}LastHarvesterStuckScanTime`
+  if (!gameState[lastScanKey]) {
+    gameState[lastScanKey] = now
+    return
+  }
+
+  if (now - gameState[lastScanKey] < ENEMY_HARVESTER_STUCK_SCAN_INTERVAL) {
+    return
+  }
+
+  gameState[lastScanKey] = now
+
+  const aiHarvesters = units.filter(
+    unit => unit.owner === aiPlayerId && unit.type === 'harvester' && unit.health > 0
+  )
+
+  aiHarvesters.forEach(harvester => {
+    const isActivelyHarvesting = harvester.harvesting || harvester.unloadingAtRefinery
+    const needsOreTarget = harvester.oreCarried < 1
+    const hasAssignedOreTile = Boolean(harvester.oreField)
+    const hasMovementIntent = Boolean(harvester.moveTarget) || (Array.isArray(harvester.path) && harvester.path.length > 0)
+
+    if (isActivelyHarvesting || !needsOreTarget || !hasAssignedOreTile || !hasMovementIntent) {
+      harvester.lastEnemyAiHarvesterStuckSample = { x: harvester.x, y: harvester.y, time: now }
+      return
+    }
+
+    const lastSample = harvester.lastEnemyAiHarvesterStuckSample
+    harvester.lastEnemyAiHarvesterStuckSample = { x: harvester.x, y: harvester.y, time: now }
+
+    if (!lastSample) {
+      return
+    }
+
+    const distanceMoved = Math.hypot(harvester.x - lastSample.x, harvester.y - lastSample.y)
+    if (distanceMoved > ENEMY_HARVESTER_STUCK_MOVEMENT_THRESHOLD) {
+      return
+    }
+
+    const previousOreKey = `${harvester.oreField.x},${harvester.oreField.y}`
+    handleStuckHarvester(harvester, mapGrid, occupancyMap, gameState, factories)
+
+    if (!harvester.oreField) {
+      return
+    }
+
+    const nextOreKey = `${harvester.oreField.x},${harvester.oreField.y}`
+    if (nextOreKey === previousOreKey && gameState.targetedOreTiles?.[previousOreKey] === harvester.id) {
+      delete gameState.targetedOreTiles[previousOreKey]
+      handleStuckHarvester(harvester, mapGrid, occupancyMap, gameState, factories)
+    }
+  })
+}
 
 function getSellPriorityIndex(type) {
   return AI_SELL_PRIORITY_MAP[type] ?? AI_SELL_PRIORITY.length
@@ -968,6 +1026,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       }
     }
   }
+
+  scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupancyMap, gameState, factories, now)
 
   // --- Update AI Units ---
   units.forEach(unit => {

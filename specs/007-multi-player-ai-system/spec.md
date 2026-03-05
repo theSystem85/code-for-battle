@@ -299,6 +299,10 @@ This specification documents the comprehensive multi-player AI system that power
 **Priority:** P1  
 **Description:** AI tracks harvester count and produces replacements when destroyed. Ensures minimum 1 harvester per refinery to maintain economy.
 
+#### FR-033a: Periodic Harvester Unstuck Scan
+**Priority:** P1  
+**Description:** Enemy AI performs a 60-second scan for harvesters that have an ore assignment but no meaningful movement progress, then forces a retarget to a different ore tile to recover stalled harvesting loops.
+
 ---
 
 ### AI-to-AI Interaction

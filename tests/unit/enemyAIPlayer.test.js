@@ -52,6 +52,10 @@ vi.mock('../../src/game/dangerZoneMap.js', () => ({
   updateDangerZoneMaps: vi.fn()
 }))
 
+vi.mock('../../src/game/harvesterLogic.js', () => ({
+  handleStuckHarvester: vi.fn()
+}))
+
 vi.mock('../../src/config.js', async(importOriginal) => {
   const actual = await importOriginal()
   return {
@@ -113,6 +117,7 @@ import { updateDangerZoneMaps } from '../../src/game/dangerZoneMap.js'
 import { getUnitCost } from '../../src/utils.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
 import { findBuildingPosition } from '../../src/ai/enemyBuilding.js'
+import { handleStuckHarvester } from '../../src/game/harvesterLogic.js'
 
 const createMapGrid = (width, height) =>
   Array.from({ length: height }, () =>
@@ -421,4 +426,82 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(vehicleFactory.isBeingSold).toBe(false)
     expect(powerPlantA.isBeingSold || powerPlantB.isBeingSold).toBe(true)
   })
+
+  it('rescans AI harvester paths every 60s and reassigns stuck ore targets', () => {
+    const aiPlayerId = 'ai1'
+    const aiFactory = {
+      id: aiPlayerId,
+      owner: aiPlayerId,
+      health: 100,
+      budget: 0
+    }
+    const mapGrid = createMapGrid(12, 12)
+    mapGrid[2][2].ore = true
+
+    const stuckHarvester = {
+      id: 'h-ai-1',
+      owner: aiPlayerId,
+      type: 'harvester',
+      health: 100,
+      x: 64,
+      y: 64,
+      tileX: 2,
+      tileY: 2,
+      oreCarried: 0,
+      harvesting: false,
+      unloadingAtRefinery: false,
+      oreField: { x: 2, y: 2 },
+      moveTarget: { x: 2, y: 2 },
+      path: [{ x: 2, y: 2 }]
+    }
+
+    const gameState = {
+      buildings: [{ type: 'oreRefinery', owner: aiPlayerId, health: 100, x: 5, y: 5, width: 2, height: 2 }],
+      enemyPowerSupply: 0,
+      enemyBuildSpeedModifier: 1,
+      speedMultiplier: 1,
+      targetedOreTiles: { '2,2': stuckHarvester.id }
+    }
+
+    updateAIPlayer(
+      aiPlayerId,
+      [stuckHarvester],
+      [aiFactory],
+      [],
+      mapGrid,
+      gameState,
+      null,
+      1000,
+      gameState.targetedOreTiles
+    )
+
+    expect(handleStuckHarvester).not.toHaveBeenCalled()
+
+    updateAIPlayer(
+      aiPlayerId,
+      [stuckHarvester],
+      [aiFactory],
+      [],
+      mapGrid,
+      gameState,
+      null,
+      62050,
+      gameState.targetedOreTiles
+    )
+
+    updateAIPlayer(
+      aiPlayerId,
+      [stuckHarvester],
+      [aiFactory],
+      [],
+      mapGrid,
+      gameState,
+      null,
+      123100,
+      gameState.targetedOreTiles
+    )
+
+    expect(handleStuckHarvester).toHaveBeenCalled()
+  })
+
 })
