@@ -129,6 +129,10 @@ body.is-touch {
   color: #6efc4b;
 }
 
+.multiplayer-party-status.defeated {
+  color: #ff6b6b;
+}
+
 .multiplayer-invite-button {
   border: 1px solid rgba(255, 255, 255, 0.3);
   border-radius: 4px;

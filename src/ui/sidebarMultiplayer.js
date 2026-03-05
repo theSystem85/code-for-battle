@@ -31,6 +31,7 @@ let partyListContainer = null
 let sessionObserverCleanup = null
 let partyOwnershipCleanup = null
 let reconnectTimerHandle = null
+let lastDefeatedPlayersSignature = ''
 
 /**
  * Get the stored player alias from localStorage
@@ -450,6 +451,7 @@ async function setupQrScanner() {
 
 export function initSidebarMultiplayer() {
   partyListContainer = document.getElementById(PARTY_LIST_ID)
+  lastDefeatedPlayersSignature = getDefeatedPlayersSignature()
   refreshSidebarMultiplayer()
   setupHostControlWatcher()
   setupPartyOwnershipWatcher()
@@ -462,11 +464,29 @@ export function initSidebarMultiplayer() {
   if (!reconnectTimerHandle) {
     reconnectTimerHandle = setInterval(() => {
       const hasUnresponsive = listPartyStates().some(party => party.unresponsiveSince)
-      if (hasUnresponsive) {
+      const defeatedPlayersSignature = getDefeatedPlayersSignature()
+      const defeatedPlayersChanged = defeatedPlayersSignature !== lastDefeatedPlayersSignature
+
+      if (hasUnresponsive || defeatedPlayersChanged) {
+        lastDefeatedPlayersSignature = defeatedPlayersSignature
         refreshSidebarMultiplayer()
       }
     }, 1000)
   }
+}
+
+function getDefeatedPlayersSignature() {
+  if (!gameState.defeatedPlayers) {
+    return ''
+  }
+
+  const defeatedPlayers = gameState.defeatedPlayers instanceof Set
+    ? Array.from(gameState.defeatedPlayers)
+    : Array.isArray(gameState.defeatedPlayers)
+      ? gameState.defeatedPlayers
+      : []
+
+  return defeatedPlayers.slice().sort().join('|')
 }
 
 export function refreshSidebarMultiplayer() {
@@ -671,6 +691,12 @@ function getPartyDisplayName(partyId, color) {
 }
 
 function formatStatusText(statusKey, partyState) {
+  const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
+    || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
+  if (isDefeated) {
+    return 'Defeated'
+  }
+
   if (partyState.unresponsiveSince) {
     const elapsedSeconds = Math.max(0, Math.floor((Date.now() - partyState.unresponsiveSince) / 1000))
     const minutes = Math.floor(elapsedSeconds / 60).toString().padStart(2, '0')
@@ -696,7 +722,10 @@ function formatStatusText(statusKey, partyState) {
 
 function updateStatusText(element, partyState) {
   const currentStatus = getHostInviteStatus(partyState.partyId)
+  const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
+    || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
   element.textContent = formatStatusText(currentStatus, partyState)
+  element.classList.toggle('defeated', isDefeated)
   element.dataset.status = currentStatus
 }
 
