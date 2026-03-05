@@ -68,17 +68,26 @@ function scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupanc
 
   aiHarvesters.forEach(harvester => {
     const isActivelyHarvesting = harvester.harvesting || harvester.unloadingAtRefinery
-    const needsOreTarget = harvester.oreCarried < 1
-    const hasAssignedOreTile = Boolean(harvester.oreField)
-    const hasMovementIntent = Boolean(harvester.moveTarget) || (Array.isArray(harvester.path) && harvester.path.length > 0)
-
-    if (isActivelyHarvesting || !needsOreTarget || !hasAssignedOreTile || !hasMovementIntent) {
-      harvester.lastEnemyAiHarvesterStuckSample = { x: harvester.x, y: harvester.y, time: now }
-      return
-    }
+    const isOutOfFuel = typeof harvester.gas === 'number' && harvester.gas <= 0
+    const hasMissingCrew = Boolean(
+      harvester.crew &&
+      typeof harvester.crew === 'object' &&
+      Object.values(harvester.crew).some(isAlive => !isAlive)
+    )
 
     const lastSample = harvester.lastEnemyAiHarvesterStuckSample
     harvester.lastEnemyAiHarvesterStuckSample = { x: harvester.x, y: harvester.y, time: now }
+
+    if (isActivelyHarvesting) {
+      return
+    }
+
+    // Let support logistics handle hard blocks first:
+    // - 0 fuel: tanker trucks should service this harvester.
+    // - missing crew: ambulances should service this harvester.
+    if (isOutOfFuel || hasMissingCrew) {
+      return
+    }
 
     if (!lastSample) {
       return
@@ -89,10 +98,10 @@ function scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupanc
       return
     }
 
-    const previousOreKey = `${harvester.oreField.x},${harvester.oreField.y}`
+    const previousOreKey = harvester.oreField ? `${harvester.oreField.x},${harvester.oreField.y}` : null
     handleStuckHarvester(harvester, mapGrid, occupancyMap, gameState, factories)
 
-    if (!harvester.oreField) {
+    if (!previousOreKey || !harvester.oreField) {
       return
     }
 
@@ -103,6 +112,7 @@ function scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupanc
     }
   })
 }
+
 
 function getSellPriorityIndex(type) {
   return AI_SELL_PRIORITY_MAP[type] ?? AI_SELL_PRIORITY.length

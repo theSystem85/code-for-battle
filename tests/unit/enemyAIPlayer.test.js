@@ -451,8 +451,8 @@ describe('enemyAIPlayer updateAIPlayer', () => {
       harvesting: false,
       unloadingAtRefinery: false,
       oreField: { x: 2, y: 2 },
-      moveTarget: { x: 2, y: 2 },
-      path: [{ x: 2, y: 2 }]
+      moveTarget: null,
+      path: []
     }
 
     const gameState = {
@@ -502,6 +502,90 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     )
 
     expect(handleStuckHarvester).toHaveBeenCalled()
+  })
+
+
+  it('does not retarget stuck harvesters when they are out of fuel or missing crew', () => {
+    const aiPlayerId = 'ai1'
+    const aiFactory = {
+      id: aiPlayerId,
+      owner: aiPlayerId,
+      health: 100,
+      budget: 0
+    }
+    const mapGrid = createMapGrid(12, 12)
+
+    const outOfFuelHarvester = {
+      id: 'h-fuel',
+      owner: aiPlayerId,
+      type: 'harvester',
+      health: 100,
+      x: 64,
+      y: 64,
+      tileX: 2,
+      tileY: 2,
+      oreCarried: 0,
+      harvesting: false,
+      unloadingAtRefinery: false,
+      oreField: { x: 2, y: 2 },
+      gas: 0,
+      maxGas: 100,
+      lastEnemyAiHarvesterStuckSample: { x: 64, y: 64, time: 1000 }
+    }
+
+    const missingCrewHarvester = {
+      id: 'h-crew',
+      owner: aiPlayerId,
+      type: 'harvester',
+      health: 100,
+      x: 96,
+      y: 96,
+      tileX: 3,
+      tileY: 3,
+      oreCarried: 0,
+      harvesting: false,
+      unloadingAtRefinery: false,
+      oreField: { x: 3, y: 3 },
+      crew: { commander: true, driver: false, gunner: true, loader: true },
+      lastEnemyAiHarvesterStuckSample: { x: 96, y: 96, time: 1000 }
+    }
+
+    const gameState = {
+      buildings: [{ type: 'oreRefinery', owner: aiPlayerId, health: 100, x: 5, y: 5, width: 2, height: 2 }],
+      enemyPowerSupply: 0,
+      enemyBuildSpeedModifier: 1,
+      speedMultiplier: 1,
+      targetedOreTiles: {
+        '2,2': outOfFuelHarvester.id,
+        '3,3': missingCrewHarvester.id
+      }
+    }
+
+    updateAIPlayer(
+      aiPlayerId,
+      [outOfFuelHarvester, missingCrewHarvester],
+      [aiFactory],
+      [],
+      mapGrid,
+      gameState,
+      null,
+      1000,
+      gameState.targetedOreTiles
+    )
+
+    updateAIPlayer(
+      aiPlayerId,
+      [outOfFuelHarvester, missingCrewHarvester],
+      [aiFactory],
+      [],
+      mapGrid,
+      gameState,
+      null,
+      62050,
+      gameState.targetedOreTiles
+    )
+
+    expect(handleStuckHarvester).not.toHaveBeenCalled()
   })
 
 })

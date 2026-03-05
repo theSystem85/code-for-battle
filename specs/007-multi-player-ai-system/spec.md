@@ -301,7 +301,7 @@ This specification documents the comprehensive multi-player AI system that power
 
 #### FR-033a: Periodic Harvester Unstuck Scan
 **Priority:** P1  
-**Description:** Enemy AI performs a 60-second scan for harvesters that have an ore assignment but no meaningful movement progress, then forces a retarget to a different ore tile to recover stalled harvesting loops.
+**Description:** Enemy AI performs a 60-second scan for harvesters that show no meaningful movement progress (including idle harvesters at ore fields), then forces a retarget to a different ore tile to recover stalled harvesting loops. If a harvester is out of fuel or has missing crew, AI prioritizes tanker/ambulance support instead of ore retargeting.
 
 ---
 

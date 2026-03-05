@@ -59,8 +59,9 @@ test.describe('Enemy harvester stuck rescan', () => {
       spawnedHarvester.y = originTile.y * 32
       spawnedHarvester.tileX = originTile.x
       spawnedHarvester.tileY = originTile.y
-      spawnedHarvester.path = [{ x: originTile.x, y: originTile.y }]
-      spawnedHarvester.moveTarget = { x: originTile.x, y: originTile.y }
+      // Simulate a truly idle stuck harvester: no active path and no move target
+      spawnedHarvester.path = []
+      spawnedHarvester.moveTarget = null
       spawnedHarvester.oreField = { x: originTile.x, y: originTile.y }
       spawnedHarvester.oreCarried = 0
       spawnedHarvester.harvesting = false
