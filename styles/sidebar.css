@@ -1190,3 +1190,17 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 #saveGamesList > li {
   font-size: 12px;
 }
+
+.save-game-label-button {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  padding: 0;
+  cursor: pointer;
+}
+
+.save-game-label-button:hover {
+  text-decoration: underline;
+}

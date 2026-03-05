@@ -1421,6 +1421,85 @@ export function deleteGame(key) {
   }
 }
 
+function sanitizeFileSegment(value, fallback) {
+  const cleaned = String(value || '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+  return cleaned || fallback
+}
+
+function buildExportFilename(label, time) {
+  const safeLabel = sanitizeFileSegment(label, 'save')
+  const safeDate = Number.isFinite(time)
+    ? new Date(time).toISOString().replace(/[:.]/g, '-').replace('T', '_').replace('Z', 'Z')
+    : 'unknown-date'
+  return `${safeLabel}_${safeDate}.json`
+}
+
+export function exportSaveGame(key) {
+  if (typeof localStorage === 'undefined') return
+
+  const rawSave = localStorage.getItem(key)
+  if (!rawSave) {
+    window.logger.warn('No save found to export for key:', key)
+    return
+  }
+
+  let saveObj = null
+  try {
+    saveObj = JSON.parse(rawSave)
+  } catch (err) {
+    window.logger.warn('Failed to parse save data for export:', err)
+    return
+  }
+
+  const payload = JSON.stringify(saveObj, null, 2)
+  const blob = new Blob([payload], { type: 'application/json' })
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = buildExportFilename(saveObj?.label, saveObj?.time)
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(objectUrl)
+}
+
+export async function importSaveGameFromFile(file) {
+  if (!file || typeof localStorage === 'undefined') return false
+
+  const fileText = await file.text()
+  let saveObj = null
+
+  try {
+    saveObj = JSON.parse(fileText)
+  } catch (err) {
+    window.logger.warn('Failed to parse imported save file:', err)
+    showNotification('Import failed: invalid JSON file')
+    return false
+  }
+
+  if (!saveObj || typeof saveObj !== 'object' || typeof saveObj.state === 'undefined') {
+    showNotification('Import failed: unsupported save file format')
+    return false
+  }
+
+  const importedLabel = typeof saveObj.label === 'string' && saveObj.label.trim()
+    ? saveObj.label.trim()
+    : `Imported Save ${new Date().toLocaleString()}`
+  const normalizedSave = {
+    label: importedLabel,
+    time: Number.isFinite(saveObj.time) ? saveObj.time : Date.now(),
+    state: typeof saveObj.state === 'string' ? saveObj.state : JSON.stringify(saveObj.state)
+  }
+
+  localStorage.setItem(`rts_save_${normalizedSave.label}`, JSON.stringify(normalizedSave))
+  updateSaveGamesList()
+  showNotification(`Imported save: ${normalizedSave.label}`)
+  return true
+}
+
 export function updateSaveGamesList() {
   const list = document.getElementById('saveGamesList')
   if (!list) return // Early return if element doesn't exist
@@ -1433,7 +1512,9 @@ export function updateSaveGamesList() {
     li.style.justifyContent = 'space-between'
     li.style.alignItems = 'center'
     li.style.padding = '2px 0'
-    const label = document.createElement('span')
+    const label = document.createElement('button')
+    label.type = 'button'
+    label.classList.add('save-game-label-button')
     const subtitleText = save.builtin
       ? ''
       : new Date(save.time).toLocaleString()
@@ -1442,6 +1523,8 @@ export function updateSaveGamesList() {
       : ''
     label.innerHTML = `${save.label}${missionBadge}${subtitleText ? `<br><small>${subtitleText}</small>` : ''}`
     label.style.flex = '1'
+    label.title = `Load ${save.label}`
+    label.onclick = () => { loadGame(save.key) }
     // Add tooltip for mission description on hover/tap
     if (save.builtin && save.description) {
       label.title = save.description
@@ -1454,15 +1537,17 @@ export function updateSaveGamesList() {
         }
       })
     }
-    const loadBtn = document.createElement('button')
-    loadBtn.textContent = '▶'
-    loadBtn.title = 'Load save game'
-    loadBtn.classList.add('action-button')
-    loadBtn.style.marginLeft = '6px'
-    loadBtn.onclick = () => { loadGame(save.key) }
     li.appendChild(label)
-    li.appendChild(loadBtn)
     if (!save.builtin) {
+      const exportBtn = document.createElement('button')
+      exportBtn.textContent = '⭳'
+      exportBtn.title = 'Export save game as JSON'
+      exportBtn.setAttribute('aria-label', 'Export save game')
+      exportBtn.classList.add('action-button')
+      exportBtn.style.marginLeft = '6px'
+      exportBtn.onclick = () => { exportSaveGame(save.key) }
+      li.appendChild(exportBtn)
+
       const delBtn = document.createElement('button')
       delBtn.textContent = '✗'
       delBtn.title = 'Delete save'
@@ -1478,6 +1563,8 @@ export function updateSaveGamesList() {
 // Add initialization function to set up event listeners
 export function initSaveGameSystem() {
   const saveGameBtn = document.getElementById('saveGameBtn')
+  const importSaveBtn = document.getElementById('importSaveBtn')
+  const importSaveInput = document.getElementById('importSaveInput')
   const saveLabelInput = document.getElementById('saveLabelInput')
 
   // Helper to perform the save action
@@ -1490,6 +1577,17 @@ export function initSaveGameSystem() {
 
   if (saveGameBtn) {
     saveGameBtn.addEventListener('click', performSave)
+  }
+
+  if (importSaveBtn && importSaveInput) {
+    importSaveBtn.addEventListener('click', () => {
+      importSaveInput.click()
+    })
+    importSaveInput.addEventListener('change', async() => {
+      const file = importSaveInput.files?.[0]
+      await importSaveGameFromFile(file)
+      importSaveInput.value = ''
+    })
   }
 
   // Allow saving by pressing Enter in the input field

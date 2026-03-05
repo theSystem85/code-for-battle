@@ -1,3 +1,4 @@
+- [x] Add save game sharing via sidebar import/export: export local saves as JSON from each save row, add an import button next to save, and make save labels clickable to load.
 ## Features
 - [x] Add Sprite Sheet Editor (SSE) modal under Map Settings with tag-paint workflow, per-sheet metadata JSON apply/export, and integrated sprite-sheet map rendering mode toggle.
 - [x] Extend SSE with zoom controls (in/out/100%/snap), apply-current-tag-to-all action, and resizable/maximizable modal UX.
