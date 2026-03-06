@@ -868,18 +868,6 @@
               </div>
               <div id="llmPoolList" class="config-modal__note">No LLM models added yet.</div>
             </div>
-            <label class="config-modal__field config-modal__field--toggle">
-              <input type="checkbox" id="llmStrategicEnabled">
-              <span>Enable LLM strategic planning for enemy AI</span>
-            </label>
-            <label class="config-modal__field">
-              <span>Strategic tick interval (seconds):</span>
-              <input type="number" id="llmStrategicInterval" min="5" max="300" step="5">
-            </label>
-            <label class="config-modal__field">
-              <span>Strategic provider:</span>
-              <select id="llmStrategicProvider" class="config-modal__select"></select>
-            </label>
             <label class="config-modal__field">
               <span>Strategic verbosity:</span>
               <select id="llmStrategicVerbosity" class="config-modal__select">
@@ -893,8 +881,8 @@
               <span>Enable mean enemy commentary (LLM)</span>
             </label>
             <label class="config-modal__field">
-              <span>Commentary provider:</span>
-              <select id="llmCommentaryProvider" class="config-modal__select"></select>
+              <span>Commentary model:</span>
+              <select id="llmCommentaryModel" class="config-modal__select"></select>
             </label>
             <label class="config-modal__field">
               <span>Commentary prompt override:</span>

@@ -108,7 +108,7 @@ export async function fetchModelList(providerId) {
     }
     case 'inceptionlabs': {
       // InceptionLabs currently offers Mercury 2 only.
-      return ['Mercury 2']
+      return ['mercury-2']
     }
     case 'anthropic': {
       if (!settings.apiKey) return []
@@ -185,6 +185,12 @@ function buildResponseInput(messages = []) {
   }))
 }
 
+function normalizeRequestModel(providerId, model) {
+  if (providerId !== 'inceptionlabs') return model
+  if (model === 'Mercury 2' || model === 'mercury-m2') return 'mercury-2'
+  return model
+}
+
 function extractResponseText(output) {
   if (!output || typeof output !== 'object') return ''
   if (typeof output.output_text === 'string') return output.output_text
@@ -227,7 +233,7 @@ export async function requestLlmCompletion(providerId, {
       ])
 
       const requestBody = {
-        model,
+        model: normalizeRequestModel(providerId, model),
         input: inputItems,
         temperature,
         max_output_tokens: maxTokens,
@@ -300,7 +306,7 @@ export async function requestLlmCompletion(providerId, {
       }
 
       const requestBody = {
-        model,
+        model: normalizeRequestModel(providerId, model),
         messages: [
           ...(system ? [{ role: 'system', content: system }] : []),
           ...(messages || [])
@@ -371,7 +377,7 @@ export async function requestLlmCompletion(providerId, {
       }
 
       const requestBody = {
-        model,
+        model: normalizeRequestModel(providerId, model),
         messages: [
           ...(system ? [{ role: 'system', content: system }] : []),
           ...(messages || [])
@@ -439,7 +445,7 @@ export async function requestLlmCompletion(providerId, {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model,
+          model: normalizeRequestModel(providerId, model),
           max_tokens: maxTokens,
           temperature,
           system,
@@ -494,7 +500,7 @@ export async function requestLlmCompletion(providerId, {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model,
+          model: normalizeRequestModel(providerId, model),
           messages: [
             ...(system ? [{ role: 'system', content: system }] : []),
             ...messages

@@ -337,6 +337,21 @@ function getPlayerStrategicModelConfig(playerId, state, settings) {
   }
 }
 
+
+function getCommentaryModelConfig(settings) {
+  const modelPool = Array.isArray(settings.strategicModelPool) ? settings.strategicModelPool : []
+  const selectedKey = settings.commentary?.modelKey || ''
+  const selected = selectedKey ? modelPool.find(entry => entry.key === selectedKey) : null
+  if (!selected || !selected.provider || !selected.model) {
+    return null
+  }
+  return {
+    providerId: selected.provider,
+    model: selected.model,
+    tickSeconds: selected.tickSeconds || settings.strategic.tickSeconds || 60
+  }
+}
+
 function ensureStrategicState(state) {
   if (!state.llmStrategic) {
     state.llmStrategic = {
@@ -851,7 +866,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
 
     const acceptedCommands = result.accepted.filter(action => action.type === 'unit_command')
     acceptedCommands.forEach(action => {
-      applyLlmLocks(state.units || [], action.unitIds || [], now, settings.strategic.tickSeconds * 1000)
+      applyLlmLocks(state.units || [], action.unitIds || [], now, selectedModelConfig.tickSeconds * 1000)
     })
 
     updatePlanCache(state, playerId, parsed)
@@ -880,7 +895,6 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
         6000
       )
       window.logger.warn(`[LLM] ${providerName} quota exceeded:`, err.message)
-      disableLlmAI('strategic')
     } else if (err instanceof AuthenticationError) {
       const providerName = providerId.charAt(0).toUpperCase() + providerId.slice(1)
       showNotification(
@@ -888,7 +902,6 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
         6000
       )
       window.logger.warn(`[LLM] ${providerName} authentication error:`, err.message)
-      disableLlmAI('strategic')
     } else if (err instanceof ApiParameterError) {
       const providerName = providerId.charAt(0).toUpperCase() + providerId.slice(1)
       showNotification(
@@ -896,7 +909,6 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
         6000
       )
       window.logger.warn(`[LLM] ${providerName} API parameter error:`, err.message)
-      disableLlmAI('strategic')
     } else {
       throw err
     }
@@ -905,13 +917,13 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
 
 async function runCommentaryTick(state, settings, _now) {
   const commentaryState = ensureCommentaryState(state)
-  const providerId = settings.commentary.provider
-  const model = settings.providers?.[providerId]?.model
+  const commentaryConfig = getCommentaryModelConfig(settings)
+  const providerId = commentaryConfig?.providerId
+  const model = commentaryConfig?.model
   const providerSettings = getProviderSettings(providerId)
   const hasApiKey = providerSettings?.apiKey && providerSettings.apiKey.trim().length > 0
 
   if (!providerId || !model) {
-    showNotification('LLM commentary needs a provider and model selected.')
     return
   }
 
@@ -1029,12 +1041,12 @@ async function runCommentaryTick(state, settings, _now) {
 export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state = gameState, now = performance.now()) {
   if (!isHost()) return
   const settings = getLlmSettings()
-  if (!settings.strategic.enabled && !settings.commentary.enabled) return
+  if (!settings.commentary.enabled && getAiPlayers(state).length === 0) return
 
   const strategicState = ensureStrategicState(state)
   const commentaryState = ensureCommentaryState(state)
 
-  if (settings.strategic.enabled) {
+  {
     strategicState.lastTickFrame = state.frameCount || strategicState.lastTickFrame || 0
     const aiPlayers = getAiPlayers(state)
     aiPlayers.forEach(playerId => {
@@ -1057,8 +1069,9 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
     })
   }
 
-  const commentaryTickIntervalMs = Math.max(5, settings.strategic.tickSeconds || 60) * 1000
-  if (settings.commentary.enabled && !commentaryState.pending && now - commentaryState.lastTickAt >= commentaryTickIntervalMs) {
+  const commentaryModelConfig = getCommentaryModelConfig(settings)
+  const commentaryTickIntervalMs = Math.max(5, commentaryModelConfig?.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
+  if (settings.commentary.enabled && commentaryModelConfig && !commentaryState.pending && now - commentaryState.lastTickAt >= commentaryTickIntervalMs) {
     commentaryState.pending = true
     commentaryState.lastTickAt = now
     runCommentaryTick(state, settings, now)
@@ -1075,8 +1088,6 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
 export async function triggerStrategicNow(state = gameState) {
   if (!isHost()) return
   const settings = getLlmSettings()
-  if (!settings.strategic.enabled) return
-
   const strategicState = ensureStrategicState(state)
 
   const now = performance.now()

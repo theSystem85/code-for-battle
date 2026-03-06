@@ -1,4 +1,5 @@
 ## Bugs
+- [x] InceptionLabs requests must send `mercury-2` (not display label `Mercury 2`) and settings should remove obsolete global strategic enable/provider/interval controls in favor of model-pool + per-party selection.
 - [x] Enemy non-AA airborne retargeting follow-up (2026-03-02): fixed remaining AI target selection gaps where non-anti-air enemy ground units could still pick airborne Apache/F22 during base-defense and harvester-hunter threat scans; they now immediately ignore airborne-only threats and choose valid ground targets instead. Added E2E coverage for base-defense retargeting.
 - [x] F22 border/orbit attack loop stabilization (2026-03-01): F22 now proactively evades map borders before impact, slows to cruise/orbit speed near combat loiter circles, and continues large multi-pass attack orbits until target destruction or ammo depletion before RTB.
 - [x] Enemy F22 anti-air avoidance (2026-03-01): F22 target selection now rejects targets inside active anti-air missile ranges (rocket tanks/rocket turrets), and F22 attack flight plans now compute safe approach waypoints that route around anti-air action radii when possible.
@@ -164,6 +165,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] InceptionLabs requests must send `mercury-2` (not display label `Mercury 2`) and settings should remove obsolete global strategic enable/provider/interval controls in favor of model-pool + per-party selection.
 - [x] F22 border/orbit attack loop stabilization (2026-03-01): F22 now proactively evades map borders before impact, slows to cruise/orbit speed near combat loiter circles, and continues large multi-pass attack orbits until target destruction or ammo depletion before RTB.
 - [x] Enemy F22 anti-air avoidance (2026-03-01): F22 target selection now rejects targets inside active anti-air missile ranges (rocket tanks/rocket turrets), and F22 attack flight plans now compute safe approach waypoints that route around anti-air action radii when possible.
 - [x] Enemy F22 parity follow-up (2026-03-01): AI F22 now spawns via shared player spawn pipeline on airstrip parking slots, grounded F22 no longer roam over grass before takeoff, AI can scale F22 production to 2 per airstrip when budget > 10k, and F22 strike priorities now favor ore-field harvesters plus unprotected player defense buildings.
