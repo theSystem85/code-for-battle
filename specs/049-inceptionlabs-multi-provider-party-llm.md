@@ -27,3 +27,9 @@ Enable Mercury M2 (InceptionLabs) as a selectable LLM provider and let each AI p
 ## Implementation update (2026-03-04 follow-up)
 - InceptionLabs currently has no public model-list endpoint in this project context, so UI uses a fixed model option: **Mercury 2**.
 - InceptionLabs requests are sent through **`/v1/chat/completions`** (OpenAI chat-compatible payload), while OpenAI remains on `/v1/responses`.
+
+## Follow-up update (2026-03-06)
+- InceptionLabs UI label remains **Mercury 2**, but API request model must be **`mercury-2`**.
+- Removed runtime-global strategic enable/provider/interval controls from settings; strategic execution is now governed by per-party model assignment and model-pool intervals.
+- Commentary now selects a **model from the same model pool** and uses that selected model's interval for commentary tick cadence.
+- Multiplayer party model selector must stay within row bounds and crop long selected labels (no row overflow).

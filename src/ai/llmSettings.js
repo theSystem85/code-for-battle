@@ -11,6 +11,7 @@ export const DEFAULT_LLM_SETTINGS = {
   commentary: {
     enabled: false,
     provider: 'openai',
+    modelKey: '',
     promptOverride: '',
     ttsEnabled: true,
     voiceName: ''
@@ -54,12 +55,13 @@ let currentSettings = null
 
 function normalizeInceptionlabsSettings(settings) {
   const next = { ...settings }
-  if (next.providers?.inceptionlabs?.model === 'mercury-m2') {
+  const currentModel = next.providers?.inceptionlabs?.model
+  if (currentModel === 'mercury-m2' || currentModel === 'Mercury 2') {
     next.providers = {
       ...next.providers,
       inceptionlabs: {
         ...next.providers.inceptionlabs,
-        model: 'Mercury 2'
+        model: 'mercury-2'
       }
     }
   }
@@ -67,18 +69,24 @@ function normalizeInceptionlabsSettings(settings) {
   const pool = Array.isArray(next.strategicModelPool) ? next.strategicModelPool : []
   let changed = false
   const mappedPool = pool.map(entry => {
-    if (entry?.provider === 'inceptionlabs' && entry?.model === 'mercury-m2') {
-      changed = true
-      return {
-        ...entry,
-        model: 'Mercury 2',
-        key: 'inceptionlabs:Mercury 2'
-      }
+    if (entry?.provider !== 'inceptionlabs') return entry
+    if (entry?.model !== 'mercury-m2' && entry?.model !== 'Mercury 2') return entry
+    changed = true
+    return {
+      ...entry,
+      model: 'mercury-2',
+      key: 'inceptionlabs:mercury-2'
     }
-    return entry
   })
   if (changed) {
     next.strategicModelPool = mappedPool
+  }
+
+  if (next.commentary?.modelKey === 'inceptionlabs:Mercury 2') {
+    next.commentary = {
+      ...next.commentary,
+      modelKey: 'inceptionlabs:mercury-2'
+    }
   }
 
   return next

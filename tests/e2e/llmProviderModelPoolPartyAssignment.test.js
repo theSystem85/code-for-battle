@@ -38,7 +38,7 @@ test('allows mixed-provider LLM model pool and per-party Local/LLM assignment', 
         inceptionlabs: {
           apiKey: 'test-inception-key',
           baseUrl: 'https://api.inceptionlabs.ai/v1',
-          model: 'Mercury 2',
+          model: 'mercury-2',
           riskAccepted: true
         }
       },
@@ -53,7 +53,7 @@ test('allows mixed-provider LLM model pool and per-party Local/LLM assignment', 
   await expect(page.locator('#configSettingsModal')).toHaveClass(/config-modal--open/)
 
   await page.selectOption('#llmPoolProvider', 'inceptionlabs')
-  await page.selectOption('#llmPoolModel', 'Mercury 2')
+  await page.selectOption('#llmPoolModel', 'mercury-2')
   await page.fill('#llmPoolInterval', '15')
   await page.click('#llmPoolAddButton')
   await expect(page.locator('#llmPoolList')).toContainText('Mercury 2 (15s)')
@@ -64,15 +64,25 @@ test('allows mixed-provider LLM model pool and per-party Local/LLM assignment', 
   await page.click('#llmPoolAddButton')
   await expect(page.locator('#llmPoolList')).toContainText('gpt-5-nano (60s)')
 
+
+  const commentaryModelSelect = page.locator('#llmCommentaryModel')
+  await expect(commentaryModelSelect).toBeVisible()
+  await expect(commentaryModelSelect.locator('option')).toContainText(['🤖 Mercury 2 (15s)', '🤖 gpt-5-nano (60s)'])
+  await commentaryModelSelect.selectOption('inceptionlabs:mercury-2')
+  await expect.poll(async() => page.evaluate(() => {
+    const raw = localStorage.getItem('rts_llm_settings')
+    return raw ? JSON.parse(raw)?.commentary?.modelKey : null
+  })).toBe('inceptionlabs:mercury-2')
+
   const partySelect = page.locator('[data-testid="multiplayer-llm-select-player2"]')
   await expect(partySelect).toBeVisible()
   await expect(partySelect.locator('option')).toContainText(['⚙️ Local', '🤖 Mercury 2 (15s)', '🤖 gpt-5-nano (60s)'])
 
-  await partySelect.selectOption('inceptionlabs:Mercury 2')
+  await partySelect.selectOption('inceptionlabs:mercury-2')
   await expect.poll(async() => page.evaluate(() => {
     const p2 = window.gameState?.partyStates?.find(p => p.partyId === 'player2')
     return { llmControlled: p2?.llmControlled, llmModelKey: p2?.llmModelKey }
-  })).toEqual({ llmControlled: true, llmModelKey: 'inceptionlabs:Mercury 2' })
+  })).toEqual({ llmControlled: true, llmModelKey: 'inceptionlabs:mercury-2' })
 
   await partySelect.selectOption('local')
   await expect.poll(async() => page.evaluate(() => {

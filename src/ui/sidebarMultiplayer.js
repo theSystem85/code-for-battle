@@ -639,6 +639,12 @@ function createPartyRow(partyState) {
   return row
 }
 
+
+function formatModelNameForUi(providerId, model) {
+  if (providerId === 'inceptionlabs' && model === 'mercury-2') return 'Mercury 2'
+  return model
+}
+
 function getAvailableLlmModels() {
   const settings = getLlmSettings()
   const fallbackTick = settings.strategic?.tickSeconds || 60
@@ -647,7 +653,7 @@ function getAvailableLlmModels() {
     .filter(entry => entry?.provider && entry?.model)
     .map(entry => ({
       key: entry.key,
-      label: `${entry.model} (${entry.tickSeconds || fallbackTick}s)`
+      label: `${formatModelNameForUi(entry.provider, entry.model)} (${entry.tickSeconds || fallbackTick}s)`
     }))
 }
 
