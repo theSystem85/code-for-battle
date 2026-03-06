@@ -20,24 +20,39 @@ function emitLlmModelPoolChanged() {
   document.dispatchEvent(new CustomEvent('llmModelPoolChanged'))
 }
 
+function formatProviderLabel(providerId) {
+  return PROVIDERS.find(provider => provider.id === providerId)?.label || providerId
+}
+
+function formatModelNameForUi(providerId, model) {
+  if (providerId === 'inceptionlabs' && model === 'mercury-2') return 'Mercury 2'
+  return model
+}
+
+function formatPoolEntryLabel(entry, fallbackTickSeconds = 60) {
+  const tickSeconds = entry.tickSeconds || fallbackTickSeconds
+  return `${formatModelNameForUi(entry.provider, entry.model)} (${tickSeconds}s)`
+}
+
 function setSelectOptions(select, options, placeholder = 'Select model') {
   if (!select) return
   select.innerHTML = ''
-  const first = document.createElement('option')
-  first.value = ''
-  first.textContent = placeholder
-  select.appendChild(first)
+  const placeholderOption = document.createElement('option')
+  placeholderOption.value = ''
+  placeholderOption.textContent = placeholder
+  select.appendChild(placeholderOption)
+
   options.forEach(option => {
-    const next = document.createElement('option')
-    next.value = option.value
-    next.textContent = option.label
-    select.appendChild(next)
+    const el = document.createElement('option')
+    el.value = option.value
+    el.textContent = option.label
+    select.appendChild(el)
   })
 }
 
 function setSelectValue(select, value) {
   if (!select) return
-  const hasValue = Array.from(select.options).some(opt => opt.value === value)
+  const hasValue = Array.from(select.options).some(option => option.value === value)
   select.value = hasValue ? value : ''
 }
 
@@ -48,17 +63,23 @@ function buildPoolEntryKey(providerId, model) {
 function updateProviderModelSelect(providerId, models, costs) {
   const select = document.getElementById(`llmModel-${providerId}`)
   if (!select) return
-  setSelectOptions(select, models.map(model => ({
-    value: model,
-    label: `${model}${formatModelCost(getModelCostInfo(providerId, model, costs))}`
-  })))
+  const options = models.map(model => {
+    const costInfo = getModelCostInfo(providerId, model, costs)
+    const modelName = formatModelNameForUi(providerId, model)
+    return {
+      value: model,
+      label: `${modelName}${formatModelCost(costInfo)}`
+    }
+  })
+  setSelectOptions(select, options)
 }
 
 async function refreshProviderModels(providerId, settings, { silent = false } = {}) {
   if (!ENABLED_PROVIDER_IDS.has(providerId)) return []
+
   if (PROVIDERS_REQUIRING_KEY.has(providerId)) {
-    const key = settings.providers?.[providerId]?.apiKey || ''
-    if (!key.trim()) {
+    const apiKey = settings.providers?.[providerId]?.apiKey || ''
+    if (!apiKey.trim()) {
       const select = document.getElementById(`llmModel-${providerId}`)
       if (select) setSelectOptions(select, [], 'Enter API key first')
       return []
@@ -70,11 +91,14 @@ async function refreshProviderModels(providerId, settings, { silent = false } = 
     const models = await fetchModelList(providerId)
     modelCacheByProvider.set(providerId, models)
     updateProviderModelSelect(providerId, models, costs)
-    setSelectValue(document.getElementById(`llmModel-${providerId}`), settings.providers?.[providerId]?.model || '')
+    const currentModel = settings.providers?.[providerId]?.model || ''
+    setSelectValue(document.getElementById(`llmModel-${providerId}`), currentModel)
     return models
   } catch (err) {
     window.logger.warn('[LLM] Failed to refresh models:', err)
-    if (!silent) showNotification(`Failed to refresh ${providerId} models.`)
+    if (!silent) {
+      showNotification(`Failed to refresh ${providerId} models.`)
+    }
     return []
   }
 }
@@ -84,6 +108,7 @@ function readAndStoreProviderInput(providerId) {
   const baseUrlInput = document.getElementById(`llmBaseUrl-${providerId}`)
   const modelSelect = document.getElementById(`llmModel-${providerId}`)
   const riskConfirmInput = document.getElementById(`llmApiKeyRiskConfirm-${providerId}`)
+
   updateLlmSettings({
     providers: {
       [providerId]: {
@@ -97,27 +122,31 @@ function readAndStoreProviderInput(providerId) {
 }
 
 function bindApiKeySecurityDisclosure(providerId, settings) {
-  const wrap = document.getElementById(`llmApiKeySecurity-${providerId}`)
-  const note = document.getElementById(`llmApiKeySecurityNote-${providerId}`)
-  const keyInput = document.getElementById(`llmApiKey-${providerId}`)
-  const confirm = document.getElementById(`llmApiKeyRiskConfirm-${providerId}`)
-  if (!wrap || !note || !keyInput) return
+  const securityWrap = document.getElementById(`llmApiKeySecurity-${providerId}`)
+  const securityNote = document.getElementById(`llmApiKeySecurityNote-${providerId}`)
+  const apiKeyInput = document.getElementById(`llmApiKey-${providerId}`)
+  const riskConfirmInput = document.getElementById(`llmApiKeyRiskConfirm-${providerId}`)
 
-  const setVisible = visible => note.classList.toggle('is-visible', visible)
-  const applyRiskState = () => {
-    if (!confirm) return
-    const enabled = Boolean(confirm.checked)
-    keyInput.disabled = !enabled
-    keyInput.title = enabled ? '' : 'Confirm risk acknowledgment to enable API key entry.'
+  if (!securityWrap || !securityNote || !apiKeyInput) return
+
+  const setVisible = visible => {
+    securityNote.classList.toggle('is-visible', visible)
   }
 
-  wrap.addEventListener('mouseenter', () => setVisible(true))
-  wrap.addEventListener('mouseleave', () => setVisible(false))
-  keyInput.addEventListener('focus', () => setVisible(true))
+  const applyRiskState = () => {
+    if (!riskConfirmInput) return
+    const riskAccepted = Boolean(riskConfirmInput.checked)
+    apiKeyInput.disabled = !riskAccepted
+    apiKeyInput.title = riskAccepted ? '' : 'Confirm risk acknowledgment to enable API key entry.'
+  }
 
-  if (confirm) {
-    confirm.checked = Boolean(settings.providers?.[providerId]?.riskAccepted)
-    confirm.addEventListener('change', () => {
+  securityWrap.addEventListener('mouseenter', () => setVisible(true))
+  securityWrap.addEventListener('mouseleave', () => setVisible(false))
+  apiKeyInput.addEventListener('focus', () => setVisible(true))
+
+  if (riskConfirmInput) {
+    riskConfirmInput.checked = Boolean(settings.providers?.[providerId]?.riskAccepted)
+    riskConfirmInput.addEventListener('change', () => {
       applyRiskState()
       readAndStoreProviderInput(providerId)
     })
@@ -125,8 +154,42 @@ function bindApiKeySecurityDisclosure(providerId, settings) {
   }
 }
 
+function syncPoolProviderModels() {
+  const settings = getLlmSettings()
+  const providerSelect = document.getElementById('llmPoolProvider')
+  const modelSelect = document.getElementById('llmPoolModel')
+  if (!providerSelect || !modelSelect) return
+
+  const providerId = providerSelect.value || 'openai'
+  const models = modelCacheByProvider.get(providerId) || []
+  setSelectOptions(modelSelect, models.map(model => ({
+    value: model,
+    label: formatModelNameForUi(providerId, model)
+  })))
+  const defaultModel = settings.providers?.[providerId]?.model || ''
+  setSelectValue(modelSelect, defaultModel)
+}
+
+function getPoolEntries(settings = getLlmSettings()) {
+  return Array.isArray(settings.strategicModelPool) ? settings.strategicModelPool : []
+}
+
+function syncCommentaryModelOptions(settings = getLlmSettings()) {
+  const commentaryModelSelect = document.getElementById('llmCommentaryModel')
+  if (!commentaryModelSelect) return
+
+  const pool = getPoolEntries(settings)
+  const fallbackTickSeconds = settings.strategic.tickSeconds || 60
+  setSelectOptions(commentaryModelSelect, pool.map(entry => ({
+    value: entry.key,
+    label: `🤖 ${formatPoolEntryLabel(entry, fallbackTickSeconds)}`
+  })), 'Select model from pool')
+  setSelectValue(commentaryModelSelect, settings.commentary.modelKey || '')
+}
+
 function bindProviderInputs(providerId, settings) {
   if (!ENABLED_PROVIDER_IDS.has(providerId)) return
+
   const apiKeyInput = document.getElementById(`llmApiKey-${providerId}`)
   const baseUrlInput = document.getElementById(`llmBaseUrl-${providerId}`)
   const modelSelect = document.getElementById(`llmModel-${providerId}`)
@@ -140,79 +203,51 @@ function bindProviderInputs(providerId, settings) {
       readAndStoreProviderInput(providerId)
       await refreshProviderModels(providerId, getLlmSettings(), { silent: true })
       syncPoolProviderModels()
+      syncCommentaryModelOptions()
     })
   }
+
   if (baseUrlInput) {
     baseUrlInput.value = settings.providers?.[providerId]?.baseUrl || ''
     baseUrlInput.addEventListener('change', async() => {
       readAndStoreProviderInput(providerId)
       await refreshProviderModels(providerId, getLlmSettings(), { silent: true })
       syncPoolProviderModels()
+      syncCommentaryModelOptions()
     })
   }
+
   if (modelSelect) {
-    modelSelect.addEventListener('change', () => readAndStoreProviderInput(providerId))
+    modelSelect.addEventListener('change', () => {
+      readAndStoreProviderInput(providerId)
+      syncPoolProviderModels()
+    })
   }
+
   if (refreshBtn) {
     refreshBtn.addEventListener('click', async() => {
       await refreshProviderModels(providerId, getLlmSettings(), { silent: false })
       syncPoolProviderModels()
+      syncCommentaryModelOptions()
     })
   }
 }
 
-function populateProviderSelect(select, includeLocalOnly = false) {
+function populateProviderSelect(select) {
   if (!select) return
   select.innerHTML = ''
-  if (includeLocalOnly) {
-    const local = document.createElement('option')
-    local.value = 'local'
-    local.textContent = 'Local AI'
-    select.appendChild(local)
-  }
-  PROVIDERS.filter(provider => ENABLED_PROVIDER_IDS.has(provider.id)).forEach(provider => {
-    const option = document.createElement('option')
-    option.value = provider.id
-    option.textContent = provider.label
-    select.appendChild(option)
-  })
+  PROVIDERS
+    .filter(provider => ENABLED_PROVIDER_IDS.has(provider.id))
+    .forEach(provider => {
+      const option = document.createElement('option')
+      option.value = provider.id
+      option.textContent = provider.label
+      select.appendChild(option)
+    })
 }
 
 function bindStrategicSettings(settings) {
-  const enabledToggle = document.getElementById('llmStrategicEnabled')
-  const tickInput = document.getElementById('llmStrategicInterval')
-  const providerSelect = document.getElementById('llmStrategicProvider')
   const verbositySelect = document.getElementById('llmStrategicVerbosity')
-
-  if (enabledToggle) {
-    enabledToggle.checked = Boolean(settings.strategic.enabled)
-    enabledToggle.addEventListener('change', () => {
-      updateLlmSettings({ strategic: { enabled: enabledToggle.checked } })
-      if (enabledToggle.checked) {
-        import('../ai/llmStrategicController.js').then(mod => {
-          if (typeof mod.triggerStrategicNow === 'function') mod.triggerStrategicNow()
-        }).catch(err => window.logger.warn('[LLM] Failed to trigger immediate strategic tick:', err))
-      }
-    })
-  }
-
-  if (tickInput) {
-    tickInput.value = settings.strategic.tickSeconds || 60
-    tickInput.addEventListener('change', () => {
-      const next = Math.max(5, Number.parseInt(tickInput.value, 10) || 60)
-      tickInput.value = next
-      updateLlmSettings({ strategic: { tickSeconds: next } })
-      renderStrategicModelPool(getLlmSettings())
-    })
-  }
-
-  if (providerSelect) {
-    providerSelect.value = settings.strategic.provider || 'openai'
-    providerSelect.addEventListener('change', () => {
-      updateLlmSettings({ strategic: { provider: providerSelect.value } })
-    })
-  }
-
   if (verbositySelect) {
     verbositySelect.value = settings.strategic.verbosity || 'minimal'
     verbositySelect.addEventListener('change', () => {
@@ -225,45 +260,62 @@ function attachVoiceOptions(select, settings) {
   if (!select) return
   const voices = window.speechSynthesis?.getVoices?.() || []
   select.innerHTML = ''
+
   const defaultOption = document.createElement('option')
   defaultOption.value = ''
   defaultOption.textContent = 'Default'
   select.appendChild(defaultOption)
+
   voices.forEach(voice => {
     const option = document.createElement('option')
     option.value = voice.name
     option.textContent = `${voice.name} (${voice.lang})`
     select.appendChild(option)
   })
+
   setSelectValue(select, settings.commentary.voiceName)
 }
 
 function bindCommentarySettings(settings) {
   const enabledToggle = document.getElementById('llmCommentaryEnabled')
-  const providerSelect = document.getElementById('llmCommentaryProvider')
+  const modelSelect = document.getElementById('llmCommentaryModel')
   const promptInput = document.getElementById('llmCommentaryPrompt')
   const ttsToggle = document.getElementById('llmCommentaryTts')
   const voiceSelect = document.getElementById('llmCommentaryVoice')
 
   if (enabledToggle) {
     enabledToggle.checked = Boolean(settings.commentary.enabled)
-    enabledToggle.addEventListener('change', () => updateLlmSettings({ commentary: { enabled: enabledToggle.checked } }))
+    enabledToggle.addEventListener('change', () => {
+      updateLlmSettings({ commentary: { enabled: enabledToggle.checked } })
+    })
   }
-  if (providerSelect) {
-    providerSelect.value = settings.commentary.provider || 'openai'
-    providerSelect.addEventListener('change', () => updateLlmSettings({ commentary: { provider: providerSelect.value } }))
+
+  if (modelSelect) {
+    modelSelect.addEventListener('change', () => {
+      updateLlmSettings({ commentary: { modelKey: modelSelect.value || '' } })
+    })
   }
+
   if (promptInput) {
     promptInput.value = settings.commentary.promptOverride || ''
-    promptInput.addEventListener('change', () => updateLlmSettings({ commentary: { promptOverride: promptInput.value } }))
+    promptInput.addEventListener('change', () => {
+      updateLlmSettings({ commentary: { promptOverride: promptInput.value } })
+    })
   }
+
   if (ttsToggle) {
     ttsToggle.checked = settings.commentary.ttsEnabled !== false
-    ttsToggle.addEventListener('change', () => updateLlmSettings({ commentary: { ttsEnabled: ttsToggle.checked } }))
+    ttsToggle.addEventListener('change', () => {
+      updateLlmSettings({ commentary: { ttsEnabled: ttsToggle.checked } })
+    })
   }
+
   if (voiceSelect) {
-    voiceSelect.addEventListener('change', () => updateLlmSettings({ commentary: { voiceName: voiceSelect.value } }))
+    voiceSelect.addEventListener('change', () => {
+      updateLlmSettings({ commentary: { voiceName: voiceSelect.value } })
+    })
   }
+
   attachVoiceOptions(voiceSelect, settings)
   if (window.speechSynthesis && typeof window.speechSynthesis.addEventListener === 'function') {
     window.speechSynthesis.addEventListener('voiceschanged', () => {
@@ -272,48 +324,50 @@ function bindCommentarySettings(settings) {
   }
 }
 
-function syncPoolProviderModels() {
-  const settings = getLlmSettings()
-  const providerSelect = document.getElementById('llmPoolProvider')
-  const modelSelect = document.getElementById('llmPoolModel')
-  if (!providerSelect || !modelSelect) return
-  const providerId = providerSelect.value || 'openai'
-  const models = modelCacheByProvider.get(providerId) || []
-  setSelectOptions(modelSelect, models.map(model => ({ value: model, label: model })))
-  const defaultProviderModel = settings.providers?.[providerId]?.model || ''
-  setSelectValue(modelSelect, defaultProviderModel)
-}
-
 function renderStrategicModelPool(settings) {
   const list = document.getElementById('llmPoolList')
   if (!list) return
-  const pool = Array.isArray(settings.strategicModelPool) ? settings.strategicModelPool : []
+
+  const pool = getPoolEntries(settings)
   if (pool.length === 0) {
     list.innerHTML = 'No LLM models added yet.'
     return
   }
-  const fallbackInterval = settings.strategic.tickSeconds || 60
+
+  const fallbackTickSeconds = settings.strategic.tickSeconds || 60
   list.innerHTML = ''
   pool.forEach(entry => {
     const row = document.createElement('div')
     row.className = 'config-modal__field config-modal__field--row'
-    const name = document.createElement('span')
-    const interval = entry.tickSeconds || fallbackInterval
-    name.textContent = `${entry.model} (${interval}s)`
-    const provider = document.createElement('span')
-    provider.textContent = `${entry.provider}`
-    provider.style.opacity = '0.8'
-    const remove = document.createElement('button')
-    remove.type = 'button'
-    remove.className = 'config-modal__button'
-    remove.textContent = 'Remove'
-    remove.addEventListener('click', () => {
-      const nextPool = pool.filter(item => item.key !== entry.key)
-      updateLlmSettings({ strategicModelPool: nextPool })
-      renderStrategicModelPool(getLlmSettings())
+
+    const modelLabel = document.createElement('span')
+    modelLabel.textContent = formatPoolEntryLabel(entry, fallbackTickSeconds)
+
+    const providerLabel = document.createElement('span')
+    providerLabel.textContent = formatProviderLabel(entry.provider)
+    providerLabel.style.opacity = '0.8'
+
+    const removeButton = document.createElement('button')
+    removeButton.type = 'button'
+    removeButton.className = 'config-modal__button'
+    removeButton.textContent = 'Remove'
+    removeButton.addEventListener('click', () => {
+      const current = getLlmSettings()
+      const nextPool = getPoolEntries(current).filter(item => item.key !== entry.key)
+      const commentaryPatch = current.commentary?.modelKey === entry.key
+        ? { modelKey: '' }
+        : {}
+      updateLlmSettings({
+        strategicModelPool: nextPool,
+        commentary: commentaryPatch
+      })
+      const nextSettings = getLlmSettings()
+      renderStrategicModelPool(nextSettings)
+      syncCommentaryModelOptions(nextSettings)
       emitLlmModelPoolChanged()
     })
-    row.append(name, provider, remove)
+
+    row.append(modelLabel, providerLabel, removeButton)
     list.appendChild(row)
   })
 }
@@ -326,7 +380,7 @@ function bindModelPoolSettings(settings) {
   if (!providerSelect || !modelSelect || !intervalInput || !addButton) return
 
   populateProviderSelect(providerSelect)
-  providerSelect.value = 'openai'
+  providerSelect.value = settings.providers?.inceptionlabs?.model ? 'inceptionlabs' : 'openai'
   providerSelect.addEventListener('change', () => syncPoolProviderModels())
 
   addButton.addEventListener('click', () => {
@@ -336,19 +390,25 @@ function bindModelPoolSettings(settings) {
       showNotification('Choose provider and model before adding to model pool.')
       return
     }
+
     const parsed = Number.parseInt(intervalInput.value, 10)
     const tickSeconds = Number.isFinite(parsed) ? Math.max(5, parsed) : null
-    const pool = Array.isArray(getLlmSettings().strategicModelPool) ? [...getLlmSettings().strategicModelPool] : []
+
+    const current = getLlmSettings()
+    const pool = [...getPoolEntries(current)]
     const key = buildPoolEntryKey(providerId, model)
-    const existingIndex = pool.findIndex(entry => entry.key === key)
     const nextEntry = { key, provider: providerId, model, tickSeconds }
+    const existingIndex = pool.findIndex(entry => entry.key === key)
     if (existingIndex >= 0) {
       pool.splice(existingIndex, 1, nextEntry)
     } else {
       pool.push(nextEntry)
     }
+
     updateLlmSettings({ strategicModelPool: pool })
-    renderStrategicModelPool(getLlmSettings())
+    const nextSettings = getLlmSettings()
+    renderStrategicModelPool(nextSettings)
+    syncCommentaryModelOptions(nextSettings)
     emitLlmModelPoolChanged()
     intervalInput.value = ''
   })
@@ -359,8 +419,7 @@ function bindModelPoolSettings(settings) {
 
 export function initLlmSettingsPanel() {
   const settings = getLlmSettings()
-  populateProviderSelect(document.getElementById('llmStrategicProvider'))
-  populateProviderSelect(document.getElementById('llmCommentaryProvider'))
+
   bindStrategicSettings(settings)
   bindCommentarySettings(settings)
   bindModelPoolSettings(settings)
@@ -369,5 +428,8 @@ export function initLlmSettingsPanel() {
   PROVIDERS.forEach(async provider => {
     await refreshProviderModels(provider.id, settings, { silent: true })
     syncPoolProviderModels()
+    syncCommentaryModelOptions(getLlmSettings())
   })
+
+  syncCommentaryModelOptions(settings)
 }

@@ -28,7 +28,7 @@ describe('llmProviders inceptionlabs integration', () => {
   it('returns static Mercury 2 model list without network discovery', async() => {
     globalThis.fetch = vi.fn()
     const models = await fetchModelList('inceptionlabs')
-    expect(models).toEqual(['Mercury 2'])
+    expect(models).toEqual(['mercury-2'])
     expect(globalThis.fetch).not.toHaveBeenCalled()
   })
 
@@ -52,6 +52,7 @@ describe('llmProviders inceptionlabs integration', () => {
     const [url, options] = globalThis.fetch.mock.calls[0]
     expect(url).toBe('https://api.inceptionlabs.ai/v1/chat/completions')
     expect(options.method).toBe('POST')
+    expect(JSON.parse(options.body).model).toBe('mercury-2')
     expect(result.text).toBe('{"ok":true}')
     expect(result.responseId).toBeNull()
   })
