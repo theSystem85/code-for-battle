@@ -1,4 +1,5 @@
 ## Bugs
+- [x] Sidebar save-list delete button sizing parity (2026-03-06): updated save-row delete action to use the icon-button sizing class so it matches export at 40x40px and added E2E coverage for computed button dimensions.
 - [x] Enemy AI harvester unstuck scan follow-up (2026-03-05): harvesters are now treated as stuck after 60s with zero movement even when idle at ore fields (no path/moveTarget), with forced ore reassignment; out-of-fuel harvesters are left for tanker refill logic and missing-crew harvesters are left for ambulance crew-support logic.
 - [x] Enemy AI harvester unstuck scan (2026-03-05): every AI player now runs a 60s harvester recovery scan and reassigns stuck harvesters to different ore tiles when they fail to make movement progress.
 - [x] F22 landing non-passable airstrip recovery (2026-03-04): during `landing_roll`, F22 now gets a soft centerline correction with stronger push when on non-taxi tiles, preventing frequent landing stalls in blocked airstrip-adjacent regions.
@@ -169,6 +170,7 @@
 - [x] ✅ Fixed standard tanks slowing to a crawl in range. `updateTankCombat` used a rocket-range override, causing stop/start oscillation with movement pathing. Removed the override so tanks stop at their actual effective range.
 - [x] ✅ Paused attack pathfinding while a tank is remote controlled and delayed auto-movement for 1s after remote control stops.
 ## Bugs
+- [x] Sidebar save-list delete button sizing parity (2026-03-06): updated save-row delete action to use the icon-button sizing class so it matches export at 40x40px and added E2E coverage for computed button dimensions.
 - [x] Enemy AI harvester unstuck scan follow-up (2026-03-05): harvesters are now treated as stuck after 60s with zero movement even when idle at ore fields (no path/moveTarget), with forced ore reassignment; out-of-fuel harvesters are left for tanker refill logic and missing-crew harvesters are left for ambulance crew-support logic.
 - [x] Enemy AI harvester unstuck scan (2026-03-05): every AI player now runs a 60s harvester recovery scan and reassigns stuck harvesters to different ore tiles when they fail to make movement progress.
 - [x] F22 rocket spawn alignment (2026-03-04): F22-fired rockets now spawn from the lower F22 fuselage hardpoint (below the jet body) instead of shadow-aligned coordinates; added E2E regression asserting rocket origin stays above the projected ground shadow.

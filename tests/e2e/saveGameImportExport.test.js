@@ -22,6 +22,34 @@ test.describe('Save game import/export from sidebar', () => {
     const saveRowA = await createSave(saveLabelA)
     const saveRowB = await createSave(saveLabelB)
 
+
+    const exportButton = saveRowA.locator('button[aria-label="Export save game"]')
+    const deleteButton = saveRowA.locator('button[aria-label="Delete save game"]')
+    await expect(exportButton).toBeVisible()
+    await expect(deleteButton).toBeVisible()
+
+    const buttonDimensions = await saveRowA.evaluate((row) => {
+      const exportBtn = row.querySelector('button[aria-label="Export save game"]')
+      const deleteBtn = row.querySelector('button[aria-label="Delete save game"]')
+      if (!exportBtn || !deleteBtn) return null
+      const exportStyle = window.getComputedStyle(exportBtn)
+      const deleteStyle = window.getComputedStyle(deleteBtn)
+      return {
+        exportWidth: exportStyle.width,
+        exportHeight: exportStyle.height,
+        deleteWidth: deleteStyle.width,
+        deleteHeight: deleteStyle.height
+      }
+    })
+
+    expect(buttonDimensions).not.toBeNull()
+    expect(buttonDimensions).toEqual({
+      exportWidth: '40px',
+      exportHeight: '40px',
+      deleteWidth: '40px',
+      deleteHeight: '40px'
+    })
+
     const downloadA = page.waitForEvent('download')
     await saveRowA.locator('button[aria-label="Export save game"]').click()
     const downloadedA = await downloadA

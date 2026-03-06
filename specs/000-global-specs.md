@@ -74,6 +74,11 @@ The following unit types are considered attack-capable for cursor/range detectio
   - Each player-owned harvester with total money earned, harvest cycle time in seconds, fuel percentage, and crew status.
 - Each refinery/harvester row is a link that selects the entity and centers the camera on it.
 
+## Save List Action Buttons
+
+- In the sidebar save list, the delete-save and export-save action buttons must both render as square icon buttons at exactly `40px × 40px` for consistent hit area and alignment.
+
+
 ## Enemy Resource Display
 
 - When `showEnemyResources` is enabled and an enemy construction yard is selected, display the enemy budget and power supply values using the current aggregated enemy power state.

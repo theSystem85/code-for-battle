@@ -1579,7 +1579,8 @@ export function updateSaveGamesList() {
       const delBtn = document.createElement('button')
       delBtn.textContent = '✗'
       delBtn.title = 'Delete save'
-      delBtn.classList.add('action-button')
+      delBtn.setAttribute('aria-label', 'Delete save game')
+      delBtn.classList.add('action-button', 'icon-button')
       delBtn.style.marginLeft = '5px'
       delBtn.onclick = () => { deleteGame(save.key); updateSaveGamesList() }
       li.appendChild(delBtn)
