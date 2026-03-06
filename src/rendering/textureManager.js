@@ -334,26 +334,8 @@ export class TextureManager {
     })
     this.spriteImage = spriteImg
 
-    // Load water animation frames
-    const waterImg = await new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = reject
-      img.src = 'images/map/water_spritesheet.webp'
-    })
+    // World-space water renderer no longer relies on frame-based tile sheets
     this.waterFrames = []
-    for (let i = 0; i < 16; i++) {
-      const canvas = document.createElement('canvas')
-      canvas.width = TILE_SIZE
-      canvas.height = TILE_SIZE
-      const ctx = canvas.getContext('2d')
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = 'high'
-      const sx = (i % 8) * 64
-      const sy = Math.floor(i / 8) * 64
-      ctx.drawImage(waterImg, sx, sy, 64, 64, 0, 0, TILE_SIZE, TILE_SIZE)
-      this.waterFrames.push(canvas)
-    }
 
     // Discover grass tiles configuration
     let grassTileData = null

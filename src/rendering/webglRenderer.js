@@ -250,19 +250,20 @@ export class GameWebGLRenderer {
   buildTileInstances(mapGrid, startX, startY, endX, endY) {
     const instances = []
     const canUseTextures = USE_TEXTURES && this.textureManager?.allTexturesLoaded
-    const hasAnimatedWater = !!this.waterTexture
 
     for (let y = startY; y < endY; y++) {
       const row = mapGrid[y]
       for (let x = startX; x < endX; x++) {
         const tile = row[x]
         if (!tile) continue
-        instances.push(this.createInstance(tile.type, x, y, canUseTextures, hasAnimatedWater))
+        if (tile.type !== 'water') {
+          instances.push(this.createInstance(tile.type, x, y, canUseTextures, false))
+        }
 
         if (tile.seedCrystal) {
-          instances.push(this.createInstance('seedCrystal', x, y, canUseTextures, hasAnimatedWater))
+          instances.push(this.createInstance('seedCrystal', x, y, canUseTextures, false))
         } else if (tile.ore) {
-          instances.push(this.createInstance('ore', x, y, canUseTextures, hasAnimatedWater))
+          instances.push(this.createInstance('ore', x, y, canUseTextures, false))
         }
       }
     }
@@ -270,9 +271,9 @@ export class GameWebGLRenderer {
     return instances.filter(Boolean)
   }
 
-  createInstance(type, tileX, tileY, canUseTextures, hasAnimatedWater) {
+  createInstance(type, tileX, tileY, canUseTextures) {
     const useTexture = canUseTextures && this.textureManager.tileTextureCache?.[type]?.length
-    const isWaterAnimated = type === 'water' && hasAnimatedWater
+    const isWaterAnimated = false
     let uvRect = [0, 0, 0, 0]
     if (isWaterAnimated) {
       uvRect = [0, 0, 1, 1]

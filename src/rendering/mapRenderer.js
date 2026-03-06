@@ -1,5 +1,16 @@
 // rendering/mapRenderer.js
 import { TILE_SIZE, TILE_COLORS, USE_TEXTURES } from '../config.js'
+import {
+  WaterRenderer,
+  SHORELINE_EDGE_TOP,
+  SHORELINE_EDGE_RIGHT,
+  SHORELINE_EDGE_BOTTOM,
+  SHORELINE_EDGE_LEFT,
+  SHORELINE_CORNER_TOP_LEFT,
+  SHORELINE_CORNER_TOP_RIGHT,
+  SHORELINE_CORNER_BOTTOM_RIGHT,
+  SHORELINE_CORNER_BOTTOM_LEFT
+} from './waterRenderer.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -19,6 +30,59 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
+    this.waterRenderer = new WaterRenderer(this.textureManager)
+    this.shorelineMask = null
+    this.shorelineMaskVersion = 0
+  }
+
+  normalizeTileWaterFlags(tile) {
+    if (!tile) return false
+    const isWater = tile.type === 'water' || tile.isWater === true
+    tile.isWater = isWater
+    return isWater
+  }
+
+  computeShorelineMask(mapGrid) {
+    if (!mapGrid || !mapGrid.length || !mapGrid[0]?.length) {
+      this.shorelineMask = null
+      return
+    }
+
+    const mapHeight = mapGrid.length
+    const mapWidth = mapGrid[0].length
+    this.shorelineMask = Array.from({ length: mapHeight }, () => new Uint8Array(mapWidth))
+
+    const isWaterTile = (x, y) => {
+      if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) return false
+      return this.normalizeTileWaterFlags(mapGrid[y][x])
+    }
+
+    for (let y = 0; y < mapHeight; y++) {
+      for (let x = 0; x < mapWidth; x++) {
+        const tile = mapGrid[y][x]
+        if (!isWaterTile(x, y)) {
+          if (tile) {
+            tile.shorelineMask = 0
+            tile.waterVariant = null
+          }
+          continue
+        }
+        let mask = 0
+        if (!isWaterTile(x, y - 1)) mask |= SHORELINE_EDGE_TOP
+        if (!isWaterTile(x + 1, y)) mask |= SHORELINE_EDGE_RIGHT
+        if (!isWaterTile(x, y + 1)) mask |= SHORELINE_EDGE_BOTTOM
+        if (!isWaterTile(x - 1, y)) mask |= SHORELINE_EDGE_LEFT
+        if (!isWaterTile(x - 1, y - 1)) mask |= SHORELINE_CORNER_TOP_LEFT
+        if (!isWaterTile(x + 1, y - 1)) mask |= SHORELINE_CORNER_TOP_RIGHT
+        if (!isWaterTile(x + 1, y + 1)) mask |= SHORELINE_CORNER_BOTTOM_RIGHT
+        if (!isWaterTile(x - 1, y + 1)) mask |= SHORELINE_CORNER_BOTTOM_LEFT
+        this.shorelineMask[y][x] = mask
+        tile.shorelineMask = mask
+        tile.waterVariant = tile.waterVariant || 'default'
+      }
+    }
+
+    this.shorelineMaskVersion++
   }
 
   /**
@@ -138,6 +202,9 @@ export class MapRenderer {
     }
 
     this.sotMaskVersion++
+    if (this.shorelineMask) {
+      this.computeShorelineMask(mapGrid)
+    }
     // Mark affected chunks as dirty
     this.markTileDirty(tileX, tileY)
   }
@@ -148,6 +215,7 @@ export class MapRenderer {
     }
     // Also invalidate SOT mask since map dimensions may have changed
     this.sotMask = null
+    this.shorelineMask = null
   }
 
   markTileDirty(tileX, tileY) {
@@ -246,10 +314,10 @@ export class MapRenderer {
     return { signature: parts.join('|'), containsWater }
   }
 
-  updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
+  updateChunkCache(chunk, mapGrid, useTexture, _currentWaterFrame) {
     if (!chunk.canvas || !chunk.ctx) return
 
-    const { signature, containsWater } = this.computeChunkSignature(
+    const { signature } = this.computeChunkSignature(
       mapGrid,
       chunk.startX,
       chunk.startY,
@@ -257,16 +325,12 @@ export class MapRenderer {
       chunk.endY
     )
 
-    const hasWaterAnimation = containsWater && this.textureManager.waterFrames.length > 0
-    const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
-
     const needsRedraw =
       chunk.signature !== signature ||
       chunk.lastUseTexture !== useTexture ||
       chunk.lastIntegratedSignature !== this.textureManager.integratedRenderSignature ||
       chunk.lastSotMaskVersion !== this.sotMaskVersion ||
-      chunk.containsWaterAnimation !== hasWaterAnimation ||
-      (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
+      chunk.containsWaterAnimation !== false
 
     if (!needsRedraw) return
 
@@ -294,29 +358,43 @@ export class MapRenderer {
       chunk.offsetX,
       chunk.offsetY,
       useTexture,
-      currentWaterFrame
+      _currentWaterFrame
     )
 
     chunk.signature = signature
     chunk.lastUseTexture = useTexture
     chunk.lastIntegratedSignature = this.textureManager.integratedRenderSignature
     chunk.lastSotMaskVersion = this.sotMaskVersion
-    chunk.containsWaterAnimation = hasWaterAnimation
-    chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
+    chunk.containsWaterAnimation = false
+    chunk.lastWaterFrameIndex = null
   }
 
-  renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState) {
+  renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState) {
     // Disable image smoothing to prevent antialiasing gaps between tiles
     ctx.imageSmoothingEnabled = false
 
     const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
-    const currentWaterFrame = this.textureManager.waterFrames.length
-      ? this.textureManager.getCurrentWaterFrame()
-      : null
-
     // Ensure SOT mask is computed before any rendering (needed for chunk caching)
     if (!this.sotMask) {
       this.computeSOTMask(mapGrid)
+    }
+    if (!this.shorelineMask) {
+      this.computeShorelineMask(mapGrid)
+    }
+
+    const waterRenderConfig = gameState?.waterRenderConfig || {}
+    const nowMs = Number.isFinite(gameState?.gameTime) ? gameState.gameTime : 0
+    this.waterRenderer.render(
+      ctx,
+      mapGrid,
+      this.shorelineMask,
+      scrollOffset,
+      { startX: startTileX, startY: startTileY, endX: endTileX, endY: endTileY },
+      nowMs,
+      waterRenderConfig
+    )
+    if (gameState) {
+      gameState.waterDebugInfo = this.waterRenderer.lastRenderStats
     }
 
     if (!this.canUseOffscreen) {
@@ -330,7 +408,7 @@ export class MapRenderer {
         scrollOffset.x,
         scrollOffset.y,
         useTexture,
-        currentWaterFrame
+        null
       )
       ctx.imageSmoothingEnabled = true
       return
@@ -369,12 +447,12 @@ export class MapRenderer {
             scrollOffset.x,
             scrollOffset.y,
             useTexture,
-            currentWaterFrame
+            null
           )
           continue
         }
 
-        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame)
+        this.updateChunkCache(chunk, mapGrid, useTexture, null)
 
         const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
         const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
@@ -386,7 +464,7 @@ export class MapRenderer {
     ctx.imageSmoothingEnabled = true
   }
 
-  drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame) {
+  drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, __currentWaterFrame) {
     if (!mapGrid.length || !mapGrid[0]?.length) return
 
     // Ensure SOT mask is computed
@@ -404,13 +482,13 @@ export class MapRenderer {
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
 
-        this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+        this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, null)
 
         // Use precomputed SOT mask instead of computing neighbors each frame
         // SOT applies to land tiles (street/water corners) and street tiles (water corners)
         if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
-          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
+          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, null)
         }
 
         if (tile.seedCrystal) {
@@ -422,7 +500,7 @@ export class MapRenderer {
     }
   }
 
-  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, __currentWaterFrame) {
     if (this.textureManager.integratedSpriteSheetMode) {
       const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
@@ -442,12 +520,8 @@ export class MapRenderer {
       }
     }
 
-    if (type === 'water' && this.textureManager.waterFrames.length) {
-      const frame = currentWaterFrame || this.textureManager.getCurrentWaterFrame()
-      if (frame) {
-        ctx.drawImage(frame, screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
-        return
-      }
+    if (type === 'water') {
+      return
     }
 
     if (useTexture && this.textureManager.tileTextureCache[type]) {
@@ -616,7 +690,7 @@ export class MapRenderer {
   /**
    * Draw a Smoothening Overlay Texture (SOT) on a single tile
    */
-  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null) {
+  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', __currentWaterFrame = null) {
     const key = `${tileX},${tileY}`
     if (sotApplied.has(key)) return
     sotApplied.add(key)
@@ -653,14 +727,9 @@ export class MapRenderer {
     ctx.closePath()
     ctx.clip()
 
-    if (type === 'water' && this.textureManager.waterFrames.length) {
-      const frame = currentWaterFrame || this.textureManager.getCurrentWaterFrame()
-      if (frame) {
-        ctx.drawImage(frame, screenX, screenY, size, size)
-      } else {
-        ctx.fillStyle = TILE_COLORS[type]
-        ctx.fill()
-      }
+    if (type === 'water') {
+      ctx.fillStyle = 'rgba(38, 115, 176, 0.55)'
+      ctx.fill()
     } else if (useTexture) {
       const idx = this.textureManager.getTileVariation(type, tileX, tileY)
       if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
@@ -767,10 +836,6 @@ export class MapRenderer {
     }
 
     const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
-    const currentWaterFrame = this.textureManager.waterFrames.length
-      ? this.textureManager.getCurrentWaterFrame()
-      : null
-
     const sotApplied = new Set()
 
     // First pass: render all SOT overlays
@@ -781,7 +846,7 @@ export class MapRenderer {
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
-          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
+          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, null)
         }
       }
     }
@@ -819,6 +884,21 @@ export class MapRenderer {
     if (!skipBaseLayer) {
       this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState)
     } else {
+      if (!this.shorelineMask) {
+        this.computeShorelineMask(mapGrid)
+      }
+      const waterRenderConfig = gameState?.waterRenderConfig || {}
+      const nowMs = Number.isFinite(gameState?.gameTime) ? gameState.gameTime : 0
+      this.waterRenderer.render(
+        ctx,
+        mapGrid,
+        this.shorelineMask,
+        scrollOffset,
+        { startX: startTileX, startY: startTileY, endX: endTileX, endY: endTileY },
+        nowMs,
+        waterRenderConfig
+      )
+
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
       this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY)
     }
