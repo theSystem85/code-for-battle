@@ -60,6 +60,27 @@ export const gameState = {
   occupancyMap: [], // Global occupancy map updated incrementally
   occupancyMapViewIndex: 0,
   occupancyMapViewMode: 'off',
+
+  // World-space water rendering configuration (deterministic, multiplayer-safe values)
+  waterRenderConfig: {
+    enabled: true,
+    waterTextureScale: 512,
+    layerASpeed: { x: 6, y: -4 },
+    layerBSpeed: { x: -10, y: 8 },
+    noiseScaleA: 384,
+    noiseScaleB: 224,
+    noiseSpeedA: { x: 12, y: 10 },
+    noiseSpeedB: { x: -16, y: 12 },
+    distortionStrength: 0.08,
+    highlightStrength: 0.2,
+    foamStrength: 0.58,
+    foamWidthPx: 8,
+    waterTintMultiplier: { r: 0.86, g: 0.96, b: 1.1 },
+    depthDarknessMultiplier: 0.92,
+    showFoam: true,
+    shorelineDebugOverlay: false
+  },
+  waterDebugInfo: null,
   powerSupply: 0,
   // Separate power tracking for each side
   playerPowerSupply: 0,

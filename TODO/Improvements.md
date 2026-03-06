@@ -1,3 +1,4 @@
+- [x] Implement deterministic world-space seamless water rendering with dual animated layers, shoreline foam bitmasking, runtime tuning/debug toggles, and documentation + E2E coverage.
 - [x] Ensure dropdown carets have balanced horizontal spacing by adding explicit right inset/padding (matching left-side visual padding) for sidebar/settings selects.
 - [x] Ensure all dropdowns and input fields use square corners (`border-radius: 0`) across sidebar and modal form controls.
 - [x] Ensure number-input spinner buttons keep the same background color as the floating input field while the spinner triangle icons use the same color as the input text.
