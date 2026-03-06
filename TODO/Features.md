@@ -1,3 +1,5 @@
+- [x] Follow-up polish for save sharing: fix import/export icons, auto-load exactly one imported save, support multi-file import without auto-load, and export filenames as timestamp-first.
+- [x] Add save game sharing via sidebar import/export: export local saves as JSON from each save row, add an import button next to save, and make save labels clickable to load.
 ## Features
 - [x] Show defeated players with a clear "Defeated" status in the multiplayer sidebar overview.
 - [x] Add Sprite Sheet Editor (SSE) modal under Map Settings with tag-paint workflow, per-sheet metadata JSON apply/export, and integrated sprite-sheet map rendering mode toggle.
