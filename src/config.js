@@ -826,7 +826,7 @@ export const UNIT_PROPERTIES = {
     health: 25,
     maxHealth: 25,
     speed: 0.175, // 65% slower than previous base (0.5 -> 0.175) for reduced mobility
-    streetSpeedMultiplier: 4.0,
+    streetSpeedMultiplier: 2.0,
     rotationSpeed: TANK_WAGON_ROT,
     turretRotationSpeed: 0,
     maxMedics: 10,
@@ -849,7 +849,7 @@ export const UNIT_PROPERTIES = {
   apache: {
     health: 40,
     maxHealth: 40,
-    speed: 5.0625, // 25% slower than previous value (6.75 -> 5.0625)
+    speed: 4, // 25% slower than previous value (6.75 -> 5.0625)
     rotationSpeed: 0.18,
     turretRotationSpeed: 0,
     accelerationMultiplier: 1.25
@@ -865,7 +865,7 @@ export const UNIT_PROPERTIES = {
   f35: {
     health: 70,
     maxHealth: 70,
-    speed: 3.95,
+    speed: 5,
     rotationSpeed: 0.13,
     turretRotationSpeed: 0,
     accelerationMultiplier: 1.35
