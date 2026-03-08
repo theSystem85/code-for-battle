@@ -1,3 +1,4 @@
+- [x] Replace tile-image-based water rendering with a procedural WebGL water shader that animates seamlessly and applies shoreline blending using logical water tiles for placement.
 - [x] Added shared F35 behavior guards (`canF35ReleaseWeapons`, `canF35StartLanding`) plus deterministic slot reservation lifecycle for airstrip landing intents.
 - [x] Ensure dropdown carets have balanced horizontal spacing by adding explicit right inset/padding (matching left-side visual padding) for sidebar/settings selects.
 - [x] Ensure all dropdowns and input fields use square corners (`border-radius: 0`) across sidebar and modal form controls.
