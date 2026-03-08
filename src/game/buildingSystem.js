@@ -257,7 +257,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
           if (unit.owner !== building.owner && unit.health > 0) {
             // Check if target is an airborne Apache - only certain buildings can target them
             const targetIsAirborneApache =
-              (unit.type === 'apache' || unit.type === 'f22Raptor') &&
+              (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') &&
               unit.flightState !== 'grounded'
             const canTargetAir = building.type === 'rocketTurret'
 

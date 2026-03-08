@@ -17,7 +17,7 @@ import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airs
 // Ambulance should spawn from the vehicle factory as well
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
 
-const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor']
+const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor', 'f35']
 
 // Enhanced production queue system
 export const productionQueue = {
@@ -533,6 +533,42 @@ export const productionQueue = {
         }
         spawnFactory.landedUnitId = null
       }
+
+      if (!rallyPointTarget && spawnFactory.rallyPoint) {
+        rallyPointTarget = spawnFactory.rallyPoint
+      }
+    } else if (unitType === 'f35') {
+      const allPads = (gameState.buildings || []).filter(
+        b => (b.type === 'helipad' || b.type === 'airstrip') && b.owner === gameState.humanPlayer && b.health > 0
+      )
+
+      if (allPads.length === 0) {
+        console.error('Cannot spawn F35: No Helipad or Airstrip found.')
+        showNotification('Production cancelled: F35 requires an operational Helipad or Airstrip.')
+        this.currentUnit.button.classList.remove('active', 'paused')
+        this.currentUnit = null
+        this.startNextUnitProduction()
+        return
+      }
+
+      const availablePads = allPads.filter(building => {
+        if (building.type === 'helipad') {
+          return !building.landedUnitId
+        }
+        ensureAirstripOperations(building)
+        return claimAirstripParkingSlot(building) >= 0
+      })
+
+      if (!availablePads.length) {
+        showNotification('All helipad and airstrip parking slots are occupied. F35 production is waiting for a free slot.')
+        this.pausedUnit = true
+        return
+      }
+
+      gameState.nextF35PadIndex = gameState.nextF35PadIndex ?? 0
+      const chosenIndex = gameState.nextF35PadIndex % availablePads.length
+      spawnFactory = availablePads[chosenIndex]
+      gameState.nextF35PadIndex = (gameState.nextF35PadIndex + 1) % availablePads.length
 
       if (!rallyPointTarget && spawnFactory.rallyPoint) {
         rallyPointTarget = spawnFactory.rallyPoint

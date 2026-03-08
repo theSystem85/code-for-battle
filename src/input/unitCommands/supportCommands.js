@@ -268,7 +268,7 @@ export function handleAmmunitionTruckResupplyCommand(handler, selectedUnits, tar
   }
 
   const needsAmmo = isUnit ?
-    (target.type === 'apache' ?
+    ((target.type === 'apache' || target.type === 'f35') ?
       (typeof target.maxRocketAmmo === 'number' && target.rocketAmmo < target.maxRocketAmmo) :
       (typeof target.maxAmmunition === 'number' && target.ammunition < target.maxAmmunition)) :
     (typeof target.maxAmmo === 'number' && target.ammo < target.maxAmmo)

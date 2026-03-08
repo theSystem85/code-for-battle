@@ -48,13 +48,13 @@ export function isHelipadAvailableForUnit(helipad, units = [], excludeUnitIds = 
 
   if (helipad?.landedUnitId && !excludedIds.has(helipad.landedUnitId)) {
     const occupant = unitList.find(unit => unit && unit.id === helipad.landedUnitId)
-    if (occupant && occupant.type === 'apache' && occupant.health > 0 && occupant.flightState === 'grounded') {
+    if (occupant && (occupant.type === 'apache' || occupant.type === 'f35') && occupant.health > 0 && occupant.flightState === 'grounded') {
       return false
     }
   }
 
   const reservedByOther = unitList.some(unit => {
-    if (!unit || unit.type !== 'apache' || unit.health <= 0 || excludedIds.has(unit.id)) {
+    if (!unit || (unit.type !== 'apache' && unit.type !== 'f35') || unit.health <= 0 || excludedIds.has(unit.id)) {
       return false
     }
 

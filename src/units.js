@@ -736,9 +736,10 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   let spawnPosition = null
   let worldPositionOverride = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
+  const isPadF35 = (factory.type === 'helipad' || factory.type === 'airstrip') && type === 'f35'
   const isAirstripF22 = factory.type === 'airstrip' && type === 'f22Raptor'
 
-  if (isHelipadApache) {
+  if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
     const landingTile = getHelipadLandingTile(factory)
     if (landingTopLeft && landingTile) {
@@ -757,7 +758,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
         }
       }
     }
-  } else if (isAirstripF22) {
+  } else if (isAirstripF22 || (isPadF35 && factory.type === 'airstrip')) {
     ensureAirstripOperations(factory)
     gameState.nextAirstripSpawnPointIndex = gameState.nextAirstripSpawnPointIndex ?? 0
     const preferredSlot = gameState.nextAirstripSpawnPointIndex % factory.f22ParkingSpots.length
@@ -801,7 +802,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     : options
 
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
-  if (occupancyMap && !isHelipadApache && !isAirstripF22) {
+  if (occupancyMap && !isHelipadApache && !isAirstripF22 && !isPadF35) {
     // Use center coordinates for occupancy map consistency
     const centerTileX = Math.floor((newUnit.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -814,7 +815,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     }
   }
 
-  if (isHelipadApache) {
+  if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
     const helipadId = getBuildingIdentifier(factory)
     newUnit.flightPlan = null
     newUnit.autoHoldAltitude = false
@@ -871,7 +872,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     }
   }
 
-  if (isAirstripF22) {
+  if (isAirstripF22 || (isPadF35 && factory.type === 'airstrip')) {
     const airstripId = getBuildingIdentifier(factory)
     ensureAirstripOperations(factory)
     const parkingSlotIndex = Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : 0
@@ -889,9 +890,11 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     newUnit.landedHelipadId = airstripId
     newUnit.airstripId = airstripId
     newUnit.airstripParkingSlotIndex = parkingSlotIndex
-    newUnit.f22State = 'parked'
-    newUnit.f22AssignedDestination = null
-    newUnit.f22PendingTakeoff = false
+    if (newUnit.type === 'f22Raptor') {
+      newUnit.f22State = 'parked'
+      newUnit.f22AssignedDestination = null
+      newUnit.f22PendingTakeoff = false
+    }
     newUnit.runwayPoints = runwayPoints
     newUnit.direction = factory.f22ParkingSpots?.[parkingSlotIndex]?.facing ?? Math.PI / 2
     newUnit.rotation = newUnit.direction
@@ -934,7 +937,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   // This allows each factory to have its own individual assembly point.
   // Harvesters handle their own initial path logic in productionQueue.js
   // Apache helicopters spawned on helipads and F22 Raptors spawned on airstrips should not immediately move to rally points - they should stay landed
-  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22) {
+  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22 && !isPadF35) {
     const path = findPath(
       { x: spawnPosition.x, y: spawnPosition.y },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
@@ -1077,7 +1080,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank']
 
   // Apache helicopters and F22 Raptors don't have the crew system
-  if (actualType !== 'apache' && actualType !== 'f22Raptor') {
+  if (actualType !== 'apache' && actualType !== 'f22Raptor' && actualType !== 'f35') {
     unit.crew = { driver: true, commander: true }
 
     if (fullCrewTanks.includes(actualType)) {
@@ -1175,6 +1178,42 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.f22State = 'parked'
     unit.f22AssignedDestination = null
     unit.f22PendingTakeoff = false
+  }
+
+  if (actualType === 'f35') {
+    unit.isAirUnit = true
+    unit.flightState = 'grounded'
+    unit.altitude = 0
+    unit.targetAltitude = 0
+    unit.maxAltitude = TILE_SIZE * 4.2
+    unit.airCruiseSpeed = unitProps.speed
+    unit.autoHoldAltitude = false
+    unit.flightPlan = null
+    unit.shadow = { offset: 0, scale: 1 }
+    unit.hovering = false
+    unit.groundedOccupancyApplied = false
+    unit.airborneSince = null
+    unit.landedSince = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+    unit.attackCooldown = 0
+    unit.dodgeCooldown = 0
+    unit.dodgeChance = 0.4
+    unit.fuelSource = null
+    unit.requiresHelipad = true
+    unit.requiresAirstrip = true
+    unit.radarInvisible = true
+    unit.manualFlightState = 'auto'
+    unit.manualFlightHoverRequested = false
+    unit.helipadLandingRequested = false
+    unit.helipadTargetId = null
+    unit.landedHelipadId = null
+    unit.groundLandingRequested = false
+    unit.groundLandingTarget = null
+    unit.landedOnGround = false
+    unit.maxRocketAmmo = 6
+    unit.rocketAmmo = unit.maxRocketAmmo
+    unit.apacheAmmoEmpty = false
+    unit.canFire = true
+    unit.volleyState = null
   }
 
   if (actualType === 'ambulance') {

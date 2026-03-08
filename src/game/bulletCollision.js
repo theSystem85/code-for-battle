@@ -35,7 +35,7 @@ export function checkUnitCollision(bullet, unit) {
 
     // For Apache helicopters, adjust the collision Y to account for altitude visual offset
     // The Apache visual is rendered at y - (altitude * 0.4), so collision should match
-    if (unit.type === 'apache' && unit.altitude) {
+    if ((unit.type === 'apache' || unit.type === 'f35') && unit.altitude) {
       const altitudeLift = unit.altitude * 0.4
       unitCenterY -= altitudeLift
     }

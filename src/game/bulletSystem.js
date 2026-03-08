@@ -339,27 +339,27 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
         // Explode if bullet has been flying too long or is close enough to its original target destination (for non-homing)
         // For non-homing, targetPosition is the intended destination.
         if (now - bullet.startTime > timeLimit ||
-          (bullet.targetPosition && distanceFromTarget < 15 && !bullet.homing && bullet.originType !== 'apacheRocket')) { // Skip distance check for Apache rockets since they explode on arrival
+          (bullet.targetPosition && distanceFromTarget < 15 && !bullet.homing && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb')) {
         // Explode at the bullet's current position or original target if non-homing and close
           const explosionX = !bullet.homing && bullet.targetPosition ? bullet.targetPosition.x : bullet.x
           const explosionY = !bullet.homing && bullet.targetPosition ? bullet.targetPosition.y : bullet.y
-          if (bullet.originType === 'apacheRocket') {
+          if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
             // Apache rockets explode immediately when reaching target, not on timeout
             // This should not happen, but just in case
             triggerExplosion(
               bullet.x,
               bullet.y,
-              bullet.baseDamage * 0.9,
+              bullet.originType === 'f35Bomb' ? bullet.baseDamage * 1.8 : bullet.baseDamage * 0.9,
               units,
               factories,
               bullet.shooter,
               now,
               mapGrid,
-              TILE_SIZE * 2,
+              bullet.originType === 'f35Bomb' ? TILE_SIZE * 2.5 : TILE_SIZE * 2,
               false,
               rocketExplosionOptions
             )
-            playPositionalSound('explosion', bullet.x, bullet.y, 0.7)
+            playPositionalSound(bullet.originType === 'f35Bomb' ? 'f35BombImpact' : 'explosion', bullet.x, bullet.y, 0.7)
           } else {
             triggerExplosion(
               explosionX,
@@ -387,7 +387,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       }
 
       // Update bullet position
-      if (bullet.originType === 'apacheRocket' && typeof bullet.startX !== 'number') {
+      if ((bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') && typeof bullet.startX !== 'number') {
         bullet.startX = bullet.x
         bullet.startY = bullet.y
       }
@@ -395,7 +395,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       bullet.x += bullet.vx || 0
       bullet.y += bullet.vy || 0
 
-      if (bullet.originType === 'apacheRocket' && bullet.targetPosition) {
+      if ((bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') && bullet.targetPosition) {
         const startX = bullet.startX
         const startY = bullet.startY
         const totalDx = bullet.targetPosition.x - startX
@@ -415,23 +415,25 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       }
 
       // Check if Apache rocket has reached its target position or exceeded max flight time
-      if (bullet.originType === 'apacheRocket' && bullet.targetPosition) {
+      if ((bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') && bullet.targetPosition) {
         const distanceToTarget = Math.hypot(bullet.x - bullet.targetPosition.x, bullet.y - bullet.targetPosition.y)
         const flightTime = now - (bullet.creationTime || bullet.startTime || now)
         const maxFlightTime = bullet.maxFlightTime || 3000
 
         const proximityThreshold = bullet.apacheTargetRadius || TILE_SIZE * 0.3
 
-        if (distanceToTarget <= proximityThreshold || flightTime >= maxFlightTime) { // Explode on proximity OR time limit
+        if (distanceToTarget <= proximityThreshold || flightTime >= maxFlightTime) {
           // Apache rockets create 1 explosion at their current position
           // Base damage 10 * 0.9 multiplier * 1.67 tank multiplier ~= 15 damage per rocket
           // 8 rockets * 15 ~= 120 damage (tough tanks now survive a full volley)
           const baseDamage = bullet.baseDamage * 0.9
 
           const targetIsAirborneApache =
-            apacheTargetUnit && apacheTargetUnit.type === 'apache' && apacheTargetUnit.flightState !== 'grounded'
+            apacheTargetUnit &&
+            (apacheTargetUnit.type === 'apache' || apacheTargetUnit.type === 'f22Raptor' || apacheTargetUnit.type === 'f35') &&
+            apacheTargetUnit.flightState !== 'grounded'
 
-          if (targetIsAirborneApache) {
+          if (targetIsAirborneApache && bullet.originType !== 'f35Bomb') {
             let directDamage = Math.round(baseDamage)
 
             if (window.cheatSystem) {
@@ -501,16 +503,17 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
           const explosionX = apacheTargetUnit ? apacheTargetUnit.x + TILE_SIZE / 2 : bullet.x
           const explosionY = apacheTargetUnit ? apacheTargetUnit.y + TILE_SIZE / 2 : bullet.y
+          const isF35Bomb = bullet.originType === 'f35Bomb'
           triggerExplosion(
             explosionX,
             explosionY,
-            baseDamage * damageMultiplier,
+            (isF35Bomb ? baseDamage * 1.9 : baseDamage) * damageMultiplier,
             units,
             factories,
             bullet.shooter,
             now,
             mapGrid,
-            TILE_SIZE * 2,
+            isF35Bomb ? TILE_SIZE * 2.5 : TILE_SIZE * 2,
             false,
             {
               ...rocketExplosionOptions,
@@ -521,8 +524,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
           )
 
-          // Play explosion sound
-          playPositionalSound('explosion', explosionX, explosionY, 0.7)
+          playPositionalSound(isF35Bomb ? 'f35BombImpact' : 'explosion', explosionX, explosionY, 0.7)
 
           bullets.splice(i, 1)
           continue
@@ -594,7 +596,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       }
 
       // Add trails for Apache rockets (but no smoke)
-      if (bullet.originType === 'apacheRocket') {
+      if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
         bullet.trail = bullet.trail || []
         bullet.trail.push({ x: bullet.x, y: bullet.y, time: now })
         bullet.trail = bullet.trail.filter(p => now - p.time < 300)
@@ -607,7 +609,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             continue
           }
           if (unit.health > 0 && checkUnitCollision(bullet, unit)) {
-            if ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.flightState !== 'grounded') {
+            if ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.flightState !== 'grounded') {
               const shooterType = bullet.shooter?.type || ''
               const allowedShooters = ['rocketTank', 'rocketTurret', 'apache', 'f22Raptor']
               if (!allowedShooters.includes(shooterType)) {
@@ -668,7 +670,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
 
             // Only apply damage if actualDamage > 0 (god mode protection) and not an Apache rocket
-            if (actualDamage > 0 && bullet.originType !== 'apacheRocket') {
+            if (actualDamage > 0 && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               const previousHealth = unit.health
               // Apply damage reduction from armor if the unit has armor
               if (unit.armor) {
@@ -737,12 +739,12 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
 
             // Play hit sound (skip for Apache rockets since they have explosion sound)
-            if (bullet.originType !== 'apacheRocket') {
+            if (bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               playPositionalSound('bulletHit', bullet.x, bullet.y, 0.5)
             }
 
             // Handle unit destruction (only for non-Apache rockets)
-            if (unit.health <= 0 && bullet.originType !== 'apacheRocket') {
+            if (unit.health <= 0 && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               playPositionalSound('explosion', bullet.x, bullet.y, 0.5)
               unit.health = 0
               if (!unit.occupancyRemoved) {
@@ -762,7 +764,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // If bullet has a target position, explode there; otherwise explode at hit location
             // ALWAYS explode at the bullet's current position for accurate impact
-            if (bullet.originType === 'apacheRocket') {
+            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
@@ -793,15 +795,15 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           if (checkWreckCollision(bullet, wreck)) {
             const damageMultiplier = 0.8 + gameRandom() * 0.4
             const actualDamage = Math.round(bullet.baseDamage * damageMultiplier)
-            if (actualDamage > 0 && bullet.originType !== 'apacheRocket') {
+            if (actualDamage > 0 && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               applyDamageToWreck(wreck, actualDamage, gameState, { x: bullet.x, y: bullet.y })
             }
 
             // Play hit sound (skip for Apache rockets since they have explosion sound)
-            if (bullet.originType !== 'apacheRocket') {
+            if (bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               playPositionalSound('bulletHit', bullet.x, bullet.y, 0.5)
             }
-            if (bullet.originType === 'apacheRocket') {
+            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
@@ -851,7 +853,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // Only apply damage if actualDamage > 0 (god mode protection).
             // Streets should still be destroyed by direct projectile impacts, including apache rockets.
-            if (actualDamage > 0 && (bullet.originType !== 'apacheRocket' || isStreetTileBuilding)) {
+            if (actualDamage > 0 && (bullet.originType !== 'apacheRocket' || bullet.originType === 'f35Bomb' || isStreetTileBuilding)) {
               if (isStreetTileBuilding) {
                 actualDamage = Math.max(actualDamage, building.health)
               }
@@ -901,12 +903,12 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
 
             // Play hit sound (skip for Apache rockets since they have explosion sound)
-            if (bullet.originType !== 'apacheRocket') {
+            if (bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               playPositionalSound('bulletHit', bullet.x, bullet.y, 0.5)
             }
 
             // Handle building destruction (streets can also be destroyed by Apache rockets)
-            if (building.health <= 0 && (bullet.originType !== 'apacheRocket' || isStreetTileBuilding)) {
+            if (building.health <= 0 && (bullet.originType !== 'apacheRocket' || bullet.originType === 'f35Bomb' || isStreetTileBuilding)) {
               playPositionalSound('explosion', bullet.x, bullet.y, 0.5)
               building.health = 0
               // Award experience to the shooter for destroying ANY building (except harvesters cannot receive XP)
@@ -917,7 +919,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // Explode at target position or bullet location
             // ALWAYS explode at the bullet's current position for accurate impact
-            if (bullet.originType === 'apacheRocket') {
+            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
@@ -959,7 +961,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
 
             // Only apply damage if actualDamage > 0 (god mode protection) and not an Apache rocket
-            if (actualDamage > 0 && bullet.originType !== 'apacheRocket') {
+            if (actualDamage > 0 && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               const previousHealth = factory.health
               factory.health -= actualDamage
 
@@ -1001,12 +1003,12 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
 
             // Play hit sound (skip for Apache rockets since they have explosion sound)
-            if (bullet.originType !== 'apacheRocket') {
+            if (bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               playPositionalSound('bulletHit', bullet.x, bullet.y, 0.5)
             }
 
             // Handle factory destruction (only for non-Apache rockets)
-            if (factory.health <= 0 && bullet.originType !== 'apacheRocket') {
+            if (factory.health <= 0 && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               playPositionalSound('explosion', bullet.x, bullet.y, 0.7)
               factory.health = 0
               factory.destroyed = true
@@ -1014,7 +1016,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // Explode at target position or bullet location
             // ALWAYS explode at the bullet's current position for accurate impact
-            if (bullet.originType === 'apacheRocket') {
+            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {

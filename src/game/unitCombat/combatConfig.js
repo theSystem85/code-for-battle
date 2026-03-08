@@ -17,7 +17,8 @@ export const COMBAT_CONFIG = {
     STANDARD: 25,
     TANK_V3: 30,
     ROCKET: 20,
-    APACHE: 10
+    APACHE: 10,
+    F35_BOMB: 70
   },
   RANGE_MULTIPLIER: {
     ROCKET: 1.5

@@ -62,7 +62,7 @@ export function processUtilityQueueSelection(handler, units, mapGrid, selectedUn
     if (unit.health < unit.maxHealth) {
       repairTargets.push(unit)
     }
-    const needsAmmo = (unit.type === 'apache'
+    const needsAmmo = ((unit.type === 'apache' || unit.type === 'f35')
       ? typeof unit.maxRocketAmmo === 'number' && unit.rocketAmmo < unit.maxRocketAmmo
       : typeof unit.maxAmmunition === 'number' && unit.ammunition < unit.maxAmmunition)
     if (needsAmmo) {
@@ -313,7 +313,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
 
       if (unit.type === 'howitzer') {
         range = HOWITZER_FIRE_RANGE * TILE_SIZE
-      } else if (unit.type === 'apache') {
+      } else if (unit.type === 'apache' || unit.type === 'f35') {
         range = baseRange * APACHE_RANGE_REDUCTION
       }
 
@@ -726,7 +726,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   const appendToUtilityQueue = e.altKey || gameState.altKeyDown
   if (selectedUnits.length > 0) {
     const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
-    const hasSelectedApaches = commandableUnits.some(unit => unit.type === 'apache')
+    const hasSelectedApaches = commandableUnits.some(unit => unit.type === 'apache' || unit.type === 'f35')
     const hasSelectedHarvesters = commandableUnits.some(unit => unit.type === 'harvester')
 
     if (hasSelectedHarvesters) {
@@ -927,11 +927,11 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
     if (
       hasSelectedApaches &&
-      commandableUnits.every(unit => unit.type === 'apache') &&
+      commandableUnits.every(unit => unit.type === 'apache' || unit.type === 'f35') &&
       gameState.buildings && Array.isArray(gameState.buildings)
     ) {
       for (const building of gameState.buildings) {
-        if (building.type === 'helipad' &&
+        if ((building.type === 'helipad' || building.type === 'airstrip') &&
             building.owner === gameState.humanPlayer &&
             building.health > 0 &&
             tileX >= building.x && tileX < building.x + building.width &&
@@ -967,7 +967,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
   if (clickedBuilding) {
     const overlappingF22 = units.find(unit => {
-      if (!selectionManager.isSelectableUnit(unit) || unit.type !== 'f22Raptor') return false
+      if (!selectionManager.isSelectableUnit(unit) || (unit.type !== 'f22Raptor' && unit.type !== 'f35')) return false
       const { centerX, centerY } = getUnitSelectionCenter(unit)
       const dx = worldX - centerX
       const dy = worldY - centerY

@@ -14,6 +14,7 @@ import { renderMineLayerWithImage, isMineLayerImageLoaded } from './mineLayerIma
 import { renderMineSweeperWithImage, isMineSweeperImageLoaded } from './mineSweeperImageRenderer.js'
 import { renderApacheWithImage } from './apacheImageRenderer.js'
 import { renderF22WithImage } from './f22ImageRenderer.js'
+import { renderF35WithImage } from './f35ImageRenderer.js'
 import { getExperienceProgress, initializeUnitLeveling, getBuildingIdentifier } from '../utils.js'
 
 export class UnitRenderer {
@@ -57,6 +58,18 @@ export class UnitRenderer {
       }
     }
 
+    if (unit.type === 'f35') {
+      const rendered = renderF35WithImage(ctx, unit, centerX, centerY)
+      if (rendered) {
+        const altitudeLift = (unit.altitude || 0) * 0.4
+        const adjustedCenterY = centerY - altitudeLift
+        this.renderUtilityServiceRange(ctx, unit, centerX, adjustedCenterY)
+        this.renderSelection(ctx, unit, centerX, adjustedCenterY)
+        this.renderAlertMode(ctx, unit, centerX, adjustedCenterY)
+        return
+      }
+    }
+
     // Use consistent colors for unit types regardless of owner
     ctx.fillStyle = UNIT_TYPE_COLORS[unit.type] || '#0000FF' // Default to blue if type not found
 
@@ -88,7 +101,7 @@ export class UnitRenderer {
   }
 
   renderTurret(ctx, unit, centerX, centerY) {
-    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
       return
     }
     // Harvesters use image rendering. Show mining bar only if image not loaded
@@ -300,7 +313,7 @@ export class UnitRenderer {
   }
 
   getHudCenter(unit, scrollOffset) {
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     return { centerX, centerY, altitudeLift }
@@ -541,7 +554,7 @@ export class UnitRenderer {
   getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY) {
     if (!unit?.selected || unit.health <= 0) return null
 
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     const hudBounds = this.getSelectedHudBounds(centerX, centerY)
@@ -813,7 +826,7 @@ export class UnitRenderer {
     }
 
     // Apply altitude adjustment for Apache helicopters to align with selection markers
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
 
     // Draw health bar with party colors for owner distinction
     const unitHealthRatio = unit.health / unit.maxHealth
@@ -911,7 +924,7 @@ export class UnitRenderer {
 
     if (shouldShowBar) {
       if (unit.selected && !this.isLegacySelectionHud()) {
-        const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+        const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
         const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
         const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
         const hudBounds = this.getSelectedHudBounds(centerX, centerY)
@@ -921,7 +934,7 @@ export class UnitRenderer {
       }
 
       // Apply altitude adjustment for Apache helicopters to align with health bar
-      const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+      const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
 
       const progressBarWidth = TILE_SIZE * 0.8
       const progressBarHeight = unit.selected ? this.getSelectionHudBarThickness() : 3
@@ -949,7 +962,7 @@ export class UnitRenderer {
     const ratio = unit.gas / unit.maxGas
 
     // Apply altitude adjustment for Apache helicopters to align with selection
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
@@ -1027,12 +1040,15 @@ export class UnitRenderer {
         ratio = Math.max(0, Math.min(1, (unit.rocketAmmo ?? 0) / unit.maxRocketAmmo))
         hasAmmo = true
       }
-    } else if (unit.type === 'f22Raptor') {
+    } else if (unit.type === 'f22Raptor' || unit.type === 'f35') {
       const isGroundedOnPad = unit.flightState === 'grounded' && Boolean(unit.landedHelipadId)
       if (isGroundedOnPad && gameState.buildings) {
-        const airstrip = gameState.buildings.find(b => b.type === 'airstrip' && getBuildingIdentifier(b) === unit.landedHelipadId)
-        if (airstrip && typeof airstrip.maxAmmo === 'number' && airstrip.maxAmmo > 0) {
-          ratio = Math.max(0, Math.min(1, (airstrip.ammo ?? airstrip.maxAmmo) / airstrip.maxAmmo))
+        const serviceBuilding = gameState.buildings.find(b =>
+          (b.type === 'airstrip' || b.type === 'helipad') &&
+          getBuildingIdentifier(b) === unit.landedHelipadId
+        )
+        if (serviceBuilding && typeof serviceBuilding.maxAmmo === 'number' && serviceBuilding.maxAmmo > 0) {
+          ratio = Math.max(0, Math.min(1, (serviceBuilding.ammo ?? serviceBuilding.maxAmmo) / serviceBuilding.maxAmmo))
           hasAmmo = true
         }
       }
@@ -1041,14 +1057,16 @@ export class UnitRenderer {
         hasAmmo = true
       }
 
-      const now = performance.now()
-      const fireRate = 8400 // COMBAT_CONFIG.APACHE.FIRE_RATE
-      const timeSinceLastShot = unit.lastShotTime ? now - unit.lastShotTime : fireRate
+      if (unit.type === 'f22Raptor') {
+        const now = performance.now()
+        const fireRate = 8400 // COMBAT_CONFIG.APACHE.FIRE_RATE
+        const timeSinceLastShot = unit.lastShotTime ? now - unit.lastShotTime : fireRate
 
-      if (unit.volleyState) {
-        reloadRatio = 0
-      } else {
-        reloadRatio = Math.min(1, timeSinceLastShot / fireRate)
+        if (unit.volleyState) {
+          reloadRatio = 0
+        } else {
+          reloadRatio = Math.min(1, timeSinceLastShot / fireRate)
+        }
       }
     } else if (typeof unit.maxAmmunition === 'number') {
       // Regular units
@@ -1063,7 +1081,7 @@ export class UnitRenderer {
     if (!hasAmmo) return
 
     // Apply altitude adjustment for Apache helicopters to align with selection
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
 
@@ -1506,7 +1524,7 @@ export class UnitRenderer {
 
     initializeUnitLeveling(unit)
 
-    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+    const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
     const hudBounds = this.getSelectedHudBounds(centerX, centerY)
@@ -1683,6 +1701,18 @@ export class UnitRenderer {
     // Handle F22 Raptor (always uses image rendering when available)
     if (unit.type === 'f22Raptor') {
       const ok = renderF22WithImage(ctx, unit, centerX, centerY)
+      if (ok) {
+        const altitudeLift = (unit.altitude || 0) * 0.4
+        const adjustedCenterY = centerY - altitudeLift
+        this.renderUtilityServiceRange(ctx, unit, centerX, adjustedCenterY)
+        this.renderSelection(ctx, unit, centerX, adjustedCenterY)
+        this.renderAlertMode(ctx, unit, centerX, adjustedCenterY)
+        return
+      }
+    }
+
+    if (unit.type === 'f35') {
+      const ok = renderF35WithImage(ctx, unit, centerX, centerY)
       if (ok) {
         const altitudeLift = (unit.altitude || 0) * 0.4
         const adjustedCenterY = centerY - altitudeLift

@@ -448,7 +448,6 @@ As a player, I want Apache air-to-air rockets to avoid harming ground units or b
 
 ### Follow-up: Air Target Eligibility for Enemy Ground Units
 
-- Enemy ground units that are not rocket-capable anti-air (e.g., `tank`, `tank_v1`, `tank-v2`, `tank-v3`, `howitzer`) must not retain, reacquire, or path toward airborne `apache`/`f22Raptor` targets.
-- Rocket-capable anti-air units (`rocketTank`) and air units (`apache`, `f22Raptor`) may still target airborne `apache`/`f22Raptor` targets.
+- Enemy ground units that are not rocket-capable anti-air (e.g., `tank`, `tank_v1`, `tank-v2`, `tank-v3`, `howitzer`) must not retain, reacquire, or path toward airborne `apache`/`f22Raptor`/`f35` targets.
+- Rocket-capable anti-air units (`rocketTank`) and air units (`apache`, `f22Raptor`) may still target airborne `apache`/`f22Raptor`/`f35` targets.
 - If a target transitions from grounded to airborne and becomes invalid for the attacker, the attacker must clear the target assignment on the next AI update tick.
-

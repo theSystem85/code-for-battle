@@ -8,6 +8,7 @@ import { getHowitzerBaseImage } from './howitzerImageRenderer.js'
 import { getMineLayerBaseImage } from './mineLayerImageRenderer.js'
 import { getMineSweeperBaseImage } from './mineSweeperImageRenderer.js'
 import { getF22BaseImage } from './f22ImageRenderer.js'
+import { getF35BaseImage } from './f35ImageRenderer.js'
 
 const grayscaleCache = new WeakMap()
 
@@ -101,6 +102,9 @@ export function getSingleImageWreckSprite(unitType) {
     case 'f22Raptor':
       image = getF22BaseImage()
       break
+    case 'f35':
+      image = getF35BaseImage()
+      break
     default:
       image = null
       break
@@ -111,4 +115,3 @@ export function getSingleImageWreckSprite(unitType) {
   }
   return getDesaturatedCanvas(image)
 }
-

@@ -97,7 +97,8 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       unit.target.health > 0 &&
       !remoteControlCooldownActive &&
       unit.type !== 'apache' &&
-      unit.type !== 'f22Raptor'
+      unit.type !== 'f22Raptor' &&
+      unit.type !== 'f35'
     ) {
       // Calculate distance to target center
       let targetCenterX, targetCenterY

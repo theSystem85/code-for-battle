@@ -109,7 +109,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
 
     const gasDepleted = typeof unit.maxGas === 'number' && unit.gas <= 0
 
-    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
       if (gasDepleted) {
         outOfGasCount++
         return
@@ -175,6 +175,40 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           }
           center.x = runwayExit.worldX ?? runwayExit.x
           center.y = runwayExit.worldY ?? runwayExit.y
+        }
+      }
+
+      if (unit.type === 'f35') {
+        const targetBuilding = (gameState.buildings || []).find(building =>
+          building.owner === unit.owner &&
+          building.health > 0 &&
+          clampedTile.x >= building.x &&
+          clampedTile.x < building.x + building.width &&
+          clampedTile.y >= building.y &&
+          clampedTile.y < building.y + building.height
+        )
+
+        if (targetBuilding?.type === 'airstrip') {
+          airstripModeOptions = {
+            mode: 'airstrip',
+            airstrip: targetBuilding,
+            stopRadius: TILE_SIZE * 0.3
+          }
+        } else if (targetBuilding?.type === 'helipad') {
+          airstripModeOptions = {
+            mode: 'helipad',
+            helipadId: getBuildingIdentifier(targetBuilding),
+            stopRadius: TILE_SIZE * 0.2
+          }
+        } else {
+          const row = gameState.occupancyMap?.[clampedTile.y]
+          const occupancy = row?.[clampedTile.x] || 0
+          if (!hasBlockingBuilding(mapGrid[clampedTile.y]?.[clampedTile.x]) && occupancy <= 0) {
+            airstripModeOptions = {
+              mode: 'groundLand',
+              stopRadius: TILE_SIZE * 0.22
+            }
+          }
         }
       }
 

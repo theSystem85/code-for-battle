@@ -203,7 +203,7 @@ export function isUtilityTargetValid(mode, serviceUnit, target) {
     return typeof actualTarget.maxGas === 'number' && actualTarget.gas < actualTarget.maxGas
   }
   if (mode === UTILITY_QUEUE_MODES.AMMO) {
-    const isApache = actualTarget.type === 'apache'
+    const isApache = actualTarget.type === 'apache' || actualTarget.type === 'f35'
     const isBuilding = actualTarget.isBuilding || typeof actualTarget.tileX !== 'number'
 
     if (actualTarget.type === 'ammunitionFactory') {
@@ -320,7 +320,7 @@ export function assignAmmunitionTruckToTarget(ammoTruck, target, mapGrid, { supp
 
   if (!isReloadMode) {
     const needsAmmo = isUnit ?
-      (target.type === 'apache' ?
+      ((target.type === 'apache' || target.type === 'f35') ?
         (typeof target.maxRocketAmmo === 'number' && target.rocketAmmo < target.maxRocketAmmo) :
         (typeof target.maxAmmunition === 'number' && target.ammunition < target.maxAmmunition)) :
       (typeof target.maxAmmo === 'number' && target.ammo < target.maxAmmo)

@@ -123,7 +123,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
 
     if (Array.isArray(units)) {
 
-      const apacheUnits = units.filter(u => u.type === 'apache' && u.health > 0)
+      const apacheUnits = units.filter(u => (u.type === 'apache' || u.type === 'f35') && u.health > 0)
       if (helipad.type === 'helipad') {
         if (helipad.landedUnitId) {
           const occupant = apacheUnits.find(u => u.id === helipad.landedUnitId)
@@ -234,7 +234,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               const hasAmmoCapacity = typeof heli.maxRocketAmmo === 'number' && heli.maxRocketAmmo > 0
               const ammoFull = !hasAmmoCapacity || heli.rocketAmmo >= heli.maxRocketAmmo
               const hasStoredAttackTarget = Boolean(heli.autoHelipadReturnAttackTargetId)
-              const shouldAutoTakeoff = heli.autoHelipadReturnActive && ammoFull && hasStoredAttackTarget
+              const shouldAutoTakeoff = heli.type === 'apache' && heli.autoHelipadReturnActive && ammoFull && hasStoredAttackTarget
 
               if (shouldAutoTakeoff) {
                 heli.helipadLandingRequested = false
@@ -275,11 +275,31 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
       } // end if helipad.type === 'helipad'
 
       if (helipad.type === 'airstrip') {
-        const f22Units = units.filter(u => u.type === 'f22Raptor' && u.health > 0)
-        f22Units.forEach(f22 => {
+        const stripUnits = units.filter(u => (u.type === 'f22Raptor' || u.type === 'f35') && u.health > 0)
+        stripUnits.forEach(f22 => {
           const assignedParking = Number.isInteger(f22.airstripParkingSlotIndex)
             ? helipad.f22ParkingSpots?.[f22.airstripParkingSlotIndex]
             : null
+          if (f22.type === 'f35' && assignedParking) {
+            const landingDistance = Math.hypot((f22.x + TILE_SIZE / 2) - assignedParking.worldX, (f22.y + TILE_SIZE / 2) - assignedParking.worldY)
+            const landingRequested = f22.helipadLandingRequested && f22.helipadTargetId === helipadId
+            if (landingRequested && landingDistance <= TILE_SIZE * 0.9) {
+              f22.x = assignedParking.worldX - TILE_SIZE / 2
+              f22.y = assignedParking.worldY - TILE_SIZE / 2
+              f22.tileX = assignedParking.x
+              f22.tileY = assignedParking.y
+              f22.flightState = 'grounded'
+              f22.manualFlightState = 'land'
+              f22.path = []
+              f22.flightPlan = null
+              f22.moveTarget = { x: assignedParking.x, y: assignedParking.y }
+              f22.landedHelipadId = helipadId
+              f22.groundLandingRequested = false
+              f22.groundLandingTarget = null
+              f22.landedOnGround = false
+              helipad.landedUnitId = f22.id
+            }
+          }
           const parkingDistance = assignedParking
             ? Math.hypot((f22.x + TILE_SIZE / 2) - assignedParking.worldX, (f22.y + TILE_SIZE / 2) - assignedParking.worldY)
             : Infinity
@@ -287,7 +307,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
 
           const isParkedOnThisAirstrip =
             f22.flightState === 'grounded' &&
-            f22.f22State === 'parked' &&
+            (f22.type !== 'f22Raptor' || f22.f22State === 'parked') &&
             f22.landedHelipadId === helipadId &&
             (!f22.path || f22.path.length === 0) &&
             isSettledAtParkingSpot

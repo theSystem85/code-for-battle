@@ -119,7 +119,7 @@ export class WreckRenderer {
         ctx.translate(centerX, centerY)
         const rotation = isBeingRestored
           ? WORKSHOP_RESTORATION_ROTATION
-          : wreck.unitType === 'f22Raptor'
+          : (wreck.unitType === 'f22Raptor' || wreck.unitType === 'f35')
             ? (wreck.direction || 0) + Math.PI / 2
             : (wreck.direction || 0) - Math.PI / 2
         ctx.rotate(rotation)

@@ -39,6 +39,17 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
   let manualState = unit.manualFlightState || 'auto'
   let landingBlocked = false
+  const hasGroundLandingRequest = Boolean(unit.type === 'f35' && unit.groundLandingRequested && unit.groundLandingTarget)
+
+  if (hasGroundLandingRequest && unit.groundLandingTarget) {
+    const centerX = unit.x + TILE_SIZE / 2
+    const centerY = unit.y + TILE_SIZE / 2
+    const targetDistance = Math.hypot(centerX - unit.groundLandingTarget.x, centerY - unit.groundLandingTarget.y)
+    const stopRadius = Math.max(8, unit.flightPlan?.stopRadius || TILE_SIZE * 0.35)
+    if (targetDistance <= stopRadius) {
+      manualState = 'land'
+    }
+  }
 
   if (manualState === 'land' && occupancyMap) {
     const centerTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
@@ -51,7 +62,7 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
     if (row && centerTileX >= 0 && centerTileX < row.length) {
       const occupancy = row[centerTileX] || 0
-      const helipadLandingActive = Boolean(unit.helipadLandingRequested || unit.landedHelipadId)
+      const helipadLandingActive = Boolean(unit.helipadLandingRequested || unit.landedHelipadId || hasGroundLandingRequest)
 
       landingBlocked = occupancy > 0 && !helipadLandingActive
       if (landingBlocked) {
@@ -119,6 +130,7 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
   const isGroundedNow = unit.flightState === 'grounded'
   const onHelipadNow = isGroundedNow && Boolean(unit.landedHelipadId)
+  const onGroundLandingNow = isGroundedNow && Boolean(unit.type === 'f35' && unit.groundLandingRequested && !unit.landedHelipadId)
 
   if (!isGroundedNow) {
     if (previouslyGrounded && hadGroundOccupancy) {
@@ -143,6 +155,16 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
       unit.occupancyRemoved = false
     }
     unit.lastGroundedOnHelipad = onHelipadNow
+    if (onGroundLandingNow && unit.groundLandingTarget) {
+      unit.x = unit.groundLandingTarget.x - TILE_SIZE / 2
+      unit.y = unit.groundLandingTarget.y - TILE_SIZE / 2
+      unit.tileX = Math.floor(unit.x / TILE_SIZE)
+      unit.tileY = Math.floor(unit.y / TILE_SIZE)
+      unit.path = []
+      unit.moveTarget = { x: unit.tileX, y: unit.tileY }
+      unit.flightPlan = null
+      unit.landedOnGround = true
+    }
   }
 
   const rotorTargetSpeed = unit.flightState === 'grounded'
@@ -163,8 +185,16 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
   shadow.scale = 1 + altitudeRatio * 0.5
 
   if (manualState === 'takeoff' && unit.altitude >= unit.maxAltitude * 0.95) {
+    if (unit.type === 'f35' && !unit._f35TakeoffSoundAt) {
+      playPositionalSound('f35Takeoff', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.55)
+      unit._f35TakeoffSoundAt = now
+    }
     unit.manualFlightState = 'auto'
   } else if (manualState === 'land' && unit.altitude <= 1) {
+    if (unit.type === 'f35' && (!unit._f35LandingSoundAt || now - unit._f35LandingSoundAt > 1000)) {
+      playPositionalSound('f35Landing', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.55)
+      unit._f35LandingSoundAt = now
+    }
     unit.manualFlightState = 'auto'
   }
 
@@ -197,7 +227,8 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
     unit.health > 0 &&
     !unit.destroyed &&
     unit.flightState &&
-    unit.flightState !== 'grounded'
+    unit.flightState !== 'grounded' &&
+    unit.type === 'apache'
 
   if (shouldPlayRotorSound) {
     const altitudeRatioNow = unit.maxAltitude > 0 ? Math.min(1, unit.altitude / unit.maxAltitude) : 0

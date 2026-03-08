@@ -66,7 +66,7 @@ export function updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancy
       if (potentialTarget.owner !== unit.owner && potentialTarget.health > 0) {
         // Check if target is an airborne Apache - only certain units can target them
         const targetIsAirborneApache =
-          (potentialTarget.type === 'apache' || potentialTarget.type === 'f22Raptor') &&
+          (potentialTarget.type === 'apache' || potentialTarget.type === 'f22Raptor' || potentialTarget.type === 'f35') &&
           potentialTarget.flightState !== 'grounded'
         const shooterCanHitAir = unit.type === 'rocketTank' || unit.type === 'apache' || unit.type === 'f22Raptor'
 
@@ -249,7 +249,7 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
       if (unit.target.tileX !== undefined) {
         targetCenterX = unit.target.x + TILE_SIZE / 2
         targetCenterY = unit.target.y + TILE_SIZE / 2
-        if ((unit.target.type === 'apache' || unit.target.type === 'f22Raptor') && unit.target.altitude) {
+        if ((unit.target.type === 'apache' || unit.target.type === 'f22Raptor' || unit.target.type === 'f35') && unit.target.altitude) {
           targetCenterY -= unit.target.altitude * 0.4
         }
       } else {

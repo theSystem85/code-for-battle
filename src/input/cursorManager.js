@@ -99,7 +99,7 @@ export class CursorManager {
       if (!unit || unit.isBuilding || unit.health <= 0) continue
       if (typeof unit.x !== 'number' || typeof unit.y !== 'number') continue
 
-      const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor') && unit.altitude) ? unit.altitude * 0.4 : 0
+      const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
       const centerX = unit.x + TILE_SIZE / 2
       const centerY = unit.y + TILE_SIZE / 2 - altitudeLift
 
@@ -483,10 +483,10 @@ export class CursorManager {
       // Check for recovery tank interactions
       const hasSelectedRecoveryTanks = selectedUnits.some(unit => unit.type === 'recoveryTank')
       const hasSelectedDamagedUnits = selectedUnits.some(unit => unit.health < unit.maxHealth)
-      const hasSelectedApaches = selectedUnits.some(unit => unit.type === 'apache')
-      const hasSelectedF22 = selectedUnits.some(unit => unit.type === 'f22Raptor')
+      const hasSelectedApaches = selectedUnits.some(unit => unit.type === 'apache' || unit.type === 'f35')
+      const hasSelectedF22 = selectedUnits.some(unit => unit.type === 'f22Raptor' || unit.type === 'f35')
       const selectedApacheIds = hasSelectedApaches
-        ? selectedUnits.filter(unit => unit.type === 'apache' && unit.id).map(unit => unit.id)
+        ? selectedUnits.filter(unit => (unit.type === 'apache' || unit.type === 'f35') && unit.id).map(unit => unit.id)
         : []
 
       if (hasSelectedHarvesters) {
@@ -547,7 +547,7 @@ export class CursorManager {
       }
 
       if (!this.isOverFriendlyHelipad && hasSelectedF22) {
-        const selectedFriendlyF22 = selectedUnits.filter(unit => unit.type === 'f22Raptor' && unit.owner === gameState.humanPlayer)
+        const selectedFriendlyF22 = selectedUnits.filter(unit => (unit.type === 'f22Raptor' || unit.type === 'f35') && unit.owner === gameState.humanPlayer)
         const f22RunwayTransitionStates = new Set([
           'wait_takeoff_clearance',
           'taxi_to_runway_start',
@@ -632,10 +632,13 @@ export class CursorManager {
       if (hasSelectedAmmoTrucks && units && Array.isArray(units)) {
         // Check units that can receive ammo
         for (const unit of units) {
-          if (unit.owner === gameState.humanPlayer && typeof unit.maxAmmunition === 'number') {
+          const canReceiveAmmo = typeof unit.maxAmmunition === 'number' || typeof unit.maxRocketAmmo === 'number'
+          if (unit.owner === gameState.humanPlayer && canReceiveAmmo) {
             const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
             const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-            if (unitTileX === tileX && unitTileY === tileY && unit.ammunition < unit.maxAmmunition) {
+            const ammoCurrent = typeof unit.maxRocketAmmo === 'number' ? unit.rocketAmmo : unit.ammunition
+            const ammoMax = typeof unit.maxRocketAmmo === 'number' ? unit.maxRocketAmmo : unit.maxAmmunition
+            if (unitTileX === tileX && unitTileY === tileY && ammoCurrent < ammoMax) {
               this.isOverAmmoReceivableTarget = true
               break
             }
@@ -678,7 +681,7 @@ export class CursorManager {
           if (unit.isBuilding) {
             return typeof unit.maxAmmo === 'number' && unit.ammo < unit.maxAmmo
           }
-          if (unit.type === 'apache') {
+          if (unit.type === 'apache' || unit.type === 'f35') {
             return typeof unit.maxRocketAmmo === 'number' && unit.rocketAmmo < unit.maxRocketAmmo
           }
           return typeof unit.maxAmmunition === 'number' && unit.ammunition < unit.maxAmmunition

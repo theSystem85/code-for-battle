@@ -163,6 +163,7 @@ export function syncTechTreeWithBuildings(controller) {
   const hasHospital = buildings.some(b => b.type === 'hospital')
   const hasWorkshop = buildings.some(b => b.type === 'vehicleWorkshop')
   const hasHelipad = buildings.some(b => b.type === 'helipad')
+  const hasAirstrip = buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
   const hasAmmunitionFactory = buildings.some(b => b.type === 'ammunitionFactory')
   const factoryCount = buildings.filter(b => b.type === 'vehicleFactory').length
 
@@ -200,9 +201,12 @@ export function syncTechTreeWithBuildings(controller) {
     controller.forceUnlockUnitType('apache')
   }
 
-  const hasAirstrip = buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
   if (hasAirstrip) {
     controller.forceUnlockUnitType('f22Raptor')
+  }
+
+  if ((hasHelipad || hasAirstrip) && hasAmmunitionFactory) {
+    controller.forceUnlockUnitType('f35')
   }
 
   if (factoryCount >= 2) {
