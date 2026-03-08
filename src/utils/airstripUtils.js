@@ -104,6 +104,10 @@ export function ensureAirstripOperations(airstrip) {
     airstrip.f22OccupiedSlotUnitIds = airstrip.f22ParkingSpots.map(() => null)
   }
 
+  if (!Array.isArray(airstrip.f22ReservedSlotUnitIds) || airstrip.f22ReservedSlotUnitIds.length !== airstrip.f22ParkingSpots.length) {
+    airstrip.f22ReservedSlotUnitIds = airstrip.f22ParkingSpots.map(() => null)
+  }
+
   if (!Array.isArray(airstrip.f22RunwayTakeoffQueue)) {
     airstrip.f22RunwayTakeoffQueue = []
   }
@@ -120,14 +124,42 @@ export function ensureAirstripOperations(airstrip) {
 export function claimAirstripParkingSlot(airstrip, preferredIndex = null) {
   ensureAirstripOperations(airstrip)
   if (!airstrip?.f22OccupiedSlotUnitIds) return null
+  const reserved = airstrip.f22ReservedSlotUnitIds || []
 
   if (Number.isInteger(preferredIndex) && preferredIndex >= 0 && preferredIndex < airstrip.f22OccupiedSlotUnitIds.length) {
-    if (!airstrip.f22OccupiedSlotUnitIds[preferredIndex]) {
+    if (!airstrip.f22OccupiedSlotUnitIds[preferredIndex] && !reserved[preferredIndex]) {
       return preferredIndex
     }
   }
 
-  return airstrip.f22OccupiedSlotUnitIds.findIndex(slotId => !slotId)
+  return airstrip.f22OccupiedSlotUnitIds.findIndex((slotId, index) => !slotId && !reserved[index])
+}
+
+export function reserveAirstripParkingSlot(airstrip, unitId, preferredIndex = null) {
+  ensureAirstripOperations(airstrip)
+  if (!airstrip?.f22ReservedSlotUnitIds || !unitId) return null
+
+  const existingReservation = airstrip.f22ReservedSlotUnitIds.findIndex(id => id === unitId)
+  if (existingReservation >= 0) {
+    return existingReservation
+  }
+
+  const slotIndex = claimAirstripParkingSlot(airstrip, preferredIndex)
+  if (!Number.isInteger(slotIndex) || slotIndex < 0) {
+    return null
+  }
+
+  airstrip.f22ReservedSlotUnitIds[slotIndex] = unitId
+  return slotIndex
+}
+
+export function releaseAirstripParkingSlotReservation(airstrip, unitId) {
+  ensureAirstripOperations(airstrip)
+  if (!airstrip?.f22ReservedSlotUnitIds || !unitId) return
+  const index = airstrip.f22ReservedSlotUnitIds.findIndex(id => id === unitId)
+  if (index >= 0) {
+    airstrip.f22ReservedSlotUnitIds[index] = null
+  }
 }
 
 export function setAirstripSlotOccupant(airstrip, slotIndex, unitId) {
@@ -135,6 +167,9 @@ export function setAirstripSlotOccupant(airstrip, slotIndex, unitId) {
   if (!airstrip?.f22OccupiedSlotUnitIds) return
   if (!Number.isInteger(slotIndex) || slotIndex < 0 || slotIndex >= airstrip.f22OccupiedSlotUnitIds.length) return
   airstrip.f22OccupiedSlotUnitIds[slotIndex] = unitId || null
+  if (airstrip.f22ReservedSlotUnitIds && slotIndex < airstrip.f22ReservedSlotUnitIds.length) {
+    airstrip.f22ReservedSlotUnitIds[slotIndex] = unitId || null
+  }
 }
 
 export function clearAirstripSlotOccupant(airstrip, unitId) {
@@ -143,6 +178,9 @@ export function clearAirstripSlotOccupant(airstrip, unitId) {
   const index = airstrip.f22OccupiedSlotUnitIds.findIndex(id => id === unitId)
   if (index >= 0) {
     airstrip.f22OccupiedSlotUnitIds[index] = null
+    if (airstrip.f22ReservedSlotUnitIds && index < airstrip.f22ReservedSlotUnitIds.length && airstrip.f22ReservedSlotUnitIds[index] === unitId) {
+      airstrip.f22ReservedSlotUnitIds[index] = null
+    }
   }
 }
 

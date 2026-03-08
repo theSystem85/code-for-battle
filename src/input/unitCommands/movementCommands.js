@@ -200,15 +200,6 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
             helipadId: getBuildingIdentifier(targetBuilding),
             stopRadius: TILE_SIZE * 0.2
           }
-        } else {
-          const row = gameState.occupancyMap?.[clampedTile.y]
-          const occupancy = row?.[clampedTile.x] || 0
-          if (!hasBlockingBuilding(mapGrid[clampedTile.y]?.[clampedTile.x]) && occupancy <= 0) {
-            airstripModeOptions = {
-              mode: 'groundLand',
-              stopRadius: TILE_SIZE * 0.22
-            }
-          }
         }
       }
 

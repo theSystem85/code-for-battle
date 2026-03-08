@@ -11,6 +11,7 @@ import { isHowitzerGunReadyToFire, getHowitzerLaunchAngle } from '../howitzerGun
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
 import { applyTargetingSpread, getDamageForUnitType, getHowitzerDamage, isTurretAimedAtTarget } from './combatHelpers.js'
+import { canF35ReleaseWeapons, computeF35BombReleasePoint } from '../f35Behavior.js'
 
 /**
  * Common firing logic helper - handles bullet creation
@@ -40,6 +41,10 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
   } else if (ammoValue > 0) {
     // Reset notification flag when unit has ammo again
     unit.noAmmoNotificationShown = false
+  }
+
+  if (projectileType === 'bomb' && unit.type === 'f35' && !canF35ReleaseWeapons(unit)) {
+    return false
   }
 
   if (!unit.lastShotTime || now - unit.lastShotTime >= fireRate) {
@@ -101,7 +106,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         ? 6
         : (projectileType === 'rocket'
           ? (isApacheRocket ? (isF22Rocket ? 7.5 : 5) : 3)
-          : (isF35Bomb ? 7 : TANK_BULLET_SPEED))
+          : (isF35Bomb ? 0 : TANK_BULLET_SPEED))
 
       let rocketSpawn = null
       if (isRocketTankRocket) {
@@ -143,17 +148,27 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         bullet.startX = rocketSpawn.x
         bullet.startY = rocketSpawn.y
         bullet.apacheTargetRadius = TILE_SIZE * 0.3
-        // Air-delivered projectiles fly straight to their target position
         const dx = finalTarget.x - rocketSpawn.x
         const dy = finalTarget.y - rocketSpawn.y
-        const distance = Math.hypot(dx, dy)
-        bullet.vx = (dx / distance) * bulletSpeed
-        bullet.vy = (dy / distance) * bulletSpeed
-        bullet.f22Rocket = unit.type === 'f22Raptor'
+        const distance = Math.max(1, Math.hypot(dx, dy))
         if (isF35Bomb) {
+          const inheritedVx = unit.movement?.velocity?.x ?? 0
+          const inheritedVy = unit.movement?.velocity?.y ?? 0
+          bullet.vx = inheritedVx
+          bullet.vy = inheritedVy
+          bullet.gravity = 0.11
+          bullet.drag = 0.992
+          bullet.bombFall = true
+          bullet.explosionRadius = TILE_SIZE * 2.5
           bullet.originType = 'f35Bomb'
           bullet.apacheTargetId = target ? target.id : null
+          bullet.noTrail = true
+          bullet.targetPosition = { x: finalTarget.x, y: finalTarget.y }
+        } else {
+          bullet.vx = (dx / distance) * bulletSpeed
+          bullet.vy = (dy / distance) * bulletSpeed
         }
+        bullet.f22Rocket = unit.type === 'f22Raptor'
       }
 
       if (isRocketTankRocket) {
@@ -420,8 +435,18 @@ export function handleF35BombDrop(unit, target, bullets, now, targetCenterX, tar
     return true
   }
 
+  if (!canF35ReleaseWeapons(unit)) {
+    return false
+  }
+
   const centerX = unit.x + TILE_SIZE / 2
   const centerY = unit.y + TILE_SIZE / 2
+  const releasePoint = computeF35BombReleasePoint(unit, targetCenterX, targetCenterY)
+  const distanceToTarget = Math.hypot(targetCenterX - centerX, targetCenterY - centerY)
+  if (distanceToTarget > releasePoint.releaseDistance + TILE_SIZE * 0.75) {
+    return false
+  }
+
   unit.customRocketSpawn = getF35BombSpawnPoint(unit, centerX, centerY)
   const fired = handleTankFiring(
     unit,
@@ -429,13 +454,13 @@ export function handleF35BombDrop(unit, target, bullets, now, targetCenterX, tar
     bullets,
     now,
     0,
-    targetCenterX,
-    targetCenterY,
+    releasePoint.x,
+    releasePoint.y,
     'bomb',
     units,
     mapGrid,
     false,
-    { x: targetCenterX, y: targetCenterY }
+    { x: releasePoint.x, y: releasePoint.y }
   )
   unit.customRocketSpawn = null
 

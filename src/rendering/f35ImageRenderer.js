@@ -66,8 +66,7 @@ function drawEngineGlow(ctx, unit, centerX, centerY, altitudeLift, sourceWidth, 
   if (!movingFast) return
 
   const nozzles = [
-    { x: sourceWidth * 0.44, y: sourceHeight * 0.77 },
-    { x: sourceWidth * 0.56, y: sourceHeight * 0.77 }
+    { x: sourceWidth * 0.5, y: sourceHeight * 0.77 }
   ]
   const jitter = (Math.sin((performance.now() % 1000) * 0.03) + 1) * 0.5
   const burstLength = 7 + jitter * 5

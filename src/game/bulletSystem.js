@@ -343,7 +343,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
         // Explode at the bullet's current position or original target if non-homing and close
           const explosionX = !bullet.homing && bullet.targetPosition ? bullet.targetPosition.x : bullet.x
           const explosionY = !bullet.homing && bullet.targetPosition ? bullet.targetPosition.y : bullet.y
-          if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
+          if (bullet.originType === 'apacheRocket') {
             // Apache rockets explode immediately when reaching target, not on timeout
             // This should not happen, but just in case
             triggerExplosion(
@@ -395,7 +395,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       bullet.x += bullet.vx || 0
       bullet.y += bullet.vy || 0
 
-      if ((bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') && bullet.targetPosition) {
+      if (bullet.originType === 'apacheRocket' && bullet.targetPosition) {
         const startX = bullet.startX
         const startY = bullet.startY
         const totalDx = bullet.targetPosition.x - startX
@@ -415,7 +415,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       }
 
       // Check if Apache rocket has reached its target position or exceeded max flight time
-      if ((bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') && bullet.targetPosition) {
+      if (bullet.originType === 'apacheRocket' && bullet.targetPosition) {
         const distanceToTarget = Math.hypot(bullet.x - bullet.targetPosition.x, bullet.y - bullet.targetPosition.y)
         const flightTime = now - (bullet.creationTime || bullet.startTime || now)
         const maxFlightTime = bullet.maxFlightTime || 3000
@@ -581,6 +581,42 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           playPositionalSound('explosion', explosionX, explosionY, 0.7)
           bullets.splice(i, 1)
           continue
+
+
+        }
+      }
+
+
+      if (bullet.originType === 'f35Bomb') {
+        const flightTime = now - (bullet.creationTime || bullet.startTime || now)
+        const maxFlightTime = bullet.maxFlightTime || 1600
+        const gravity = bullet.gravity || 0.11
+        const drag = bullet.drag || 0.992
+        bullet.vx = (bullet.vx || 0) * drag
+        bullet.vy = ((bullet.vy || 0) * drag) + gravity
+
+        const targetY = bullet.targetPosition?.y ?? bullet.y
+        const hitGround = bullet.y >= targetY
+        if (hitGround || flightTime >= maxFlightTime) {
+          const explosionX = bullet.x
+          const explosionY = hitGround ? targetY : bullet.y
+          const baseDamage = bullet.baseDamage * 1.8
+          triggerExplosion(
+            explosionX,
+            explosionY,
+            baseDamage,
+            units,
+            factories,
+            bullet.shooter,
+            now,
+            mapGrid,
+            TILE_SIZE * 2.5,
+            false,
+            rocketExplosionOptions
+          )
+          playPositionalSound('f35BombImpact', explosionX, explosionY, 0.7)
+          bullets.splice(i, 1)
+          continue
         }
       }
 
@@ -596,7 +632,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       }
 
       // Add trails for Apache rockets (but no smoke)
-      if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
+      if (bullet.originType === 'apacheRocket') {
         bullet.trail = bullet.trail || []
         bullet.trail.push({ x: bullet.x, y: bullet.y, time: now })
         bullet.trail = bullet.trail.filter(p => now - p.time < 300)
@@ -764,7 +800,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // If bullet has a target position, explode there; otherwise explode at hit location
             // ALWAYS explode at the bullet's current position for accurate impact
-            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
+            if (bullet.originType === 'apacheRocket') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
@@ -803,7 +839,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             if (bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
               playPositionalSound('bulletHit', bullet.x, bullet.y, 0.5)
             }
-            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
+            if (bullet.originType === 'apacheRocket') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
@@ -919,7 +955,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // Explode at target position or bullet location
             // ALWAYS explode at the bullet's current position for accurate impact
-            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
+            if (bullet.originType === 'apacheRocket') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
@@ -1016,7 +1052,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // Explode at target position or bullet location
             // ALWAYS explode at the bullet's current position for accurate impact
-            if (bullet.originType === 'apacheRocket' || bullet.originType === 'f35Bomb') {
+            if (bullet.originType === 'apacheRocket') {
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
