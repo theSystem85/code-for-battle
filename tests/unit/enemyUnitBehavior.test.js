@@ -441,6 +441,63 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     }).not.toThrow()
   })
 
+
+  it('makes enemy f35 prefer defense-less buildings outside anti-air coverage', () => {
+    mapGrid = createMapGrid(40, 40)
+
+    const guardedBuilding = {
+      id: 'guarded-refinery',
+      owner: 'player',
+      type: 'oreRefinery',
+      health: 100,
+      x: 5,
+      y: 5,
+      width: 2,
+      height: 2
+    }
+    const safeBuilding = {
+      id: 'safe-power',
+      owner: 'player',
+      type: 'powerPlant',
+      health: 100,
+      x: 30,
+      y: 30,
+      width: 2,
+      height: 2
+    }
+    const antiAirTurret = {
+      id: 'aa-turret',
+      owner: 'player',
+      type: 'rocketTurret',
+      health: 100,
+      x: guardedBuilding.x,
+      y: guardedBuilding.y,
+      width: 1,
+      height: 1
+    }
+
+    gameState.buildings = [guardedBuilding, safeBuilding, antiAirTurret]
+
+    const unit = createBaseUnit({
+      type: 'f35',
+      x: 28 * TILE_SIZE,
+      y: 28 * TILE_SIZE,
+      tileX: 28,
+      tileY: 28,
+      flightState: 'airborne',
+      altitude: 120,
+      canFire: true,
+      maxAltitude: 120,
+      rocketAmmo: 6,
+      lastDecisionTime: now - AI_DECISION_INTERVAL - 1000
+    })
+
+    updateAIUnit(unit, [unit], gameState, mapGrid, now, 'ai', [], [])
+
+    expect(unit.target).toBe(safeBuilding)
+    expect(unit.allowedToAttack).toBe(true)
+  })
+
   it('prioritizes base defense over other behaviors', () => {
     const aiBuilding = { id: 'ai-factory', owner: 'ai', health: 100, x: 5, y: 5, width: 2, height: 2 }
     const playerThreat = {

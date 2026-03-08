@@ -838,6 +838,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const aiAmmoTrucks = units.filter(u => u.owner === aiPlayerId && u.type === 'ammunitionTruck')
       const aiApaches = units.filter(u => u.owner === aiPlayerId && u.type === 'apache' && u.health > 0)
       const aiF22s = units.filter(u => u.owner === aiPlayerId && u.type === 'f22Raptor' && u.health > 0)
+      const aiF35s = units.filter(u => u.owner === aiPlayerId && u.type === 'f35' && u.health > 0)
       const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId)
       const aiRefineries = aiBuildings.filter(b => b.type === 'oreRefinery')
       const gasStations = aiBuildings.filter(b => b.type === 'gasStation')
@@ -867,6 +868,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const currentHarvesterTotal = aiHarvesters.length + harvesterCountInProduction
       const apacheCountInProduction = aiFactory.currentlyProducingUnit === 'apache' ? 1 : 0
       const f22CountInProduction = aiFactory.currentlyProducingUnit === 'f22Raptor' ? 1 : 0
+      const f35CountInProduction = aiFactory.currentlyProducingUnit === 'f35' ? 1 : 0
       const HIGH_BUDGET_THRESHOLD = 12000
       const VERY_HIGH_BUDGET_THRESHOLD = 20000
       const isHighBudget = aiFactory.budget >= HIGH_BUDGET_THRESHOLD
@@ -877,6 +879,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const f22PerAirstripTarget = aiFactory.budget > multiF22BudgetThreshold ? 2 : 1
       const f22Capacity = airstripsForProduction.length * f22PerAirstripTarget
       const needF22 = f22Capacity > 0 && (aiF22s.length + f22CountInProduction) < f22Capacity
+      const totalF22Planned = aiF22s.length + f22CountInProduction
+      const needF35 = totalF22Planned > 0 && (aiF35s.length + f35CountInProduction) < totalF22Planned
 
       // Check if we need to force the harvester hunter (use variables from above)
       if (needsHarvesterHunter) {
@@ -899,6 +903,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       } else if (hasHospital && aiAmbulances.length === 0) {
         // Always ensure at least one ambulance exists if hospital is available
         unitType = 'ambulance'
+      } else if (needF35 && aiFactory.budget >= getUnitCost('f35')) {
+        unitType = 'f35'
       } else if (needF22 && aiFactory.budget >= getUnitCost('f22Raptor')) {
         unitType = 'f22Raptor'
       } else if (needApache && aiFactory.budget >= getUnitCost('apache')) {
@@ -992,6 +998,21 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
             return
           }
         } else if (unitType === 'f22Raptor') {
+          const availableAirstrips = airstripsForProduction.filter(airstrip => {
+            ensureAirstripOperations(airstrip)
+            return claimAirstripParkingSlot(airstrip) >= 0
+          })
+
+          if (availableAirstrips.length > 0) {
+            const airstripIndexKey = `next${aiPlayerId}AirstripIndex`
+            gameState[airstripIndexKey] = gameState[airstripIndexKey] ?? 0
+            spawnFactory = availableAirstrips[gameState[airstripIndexKey] % availableAirstrips.length]
+            gameState[airstripIndexKey]++
+          } else {
+            gameState[lastProductionKey] = now
+            return
+          }
+        } else if (unitType === 'f35') {
           const availableAirstrips = airstripsForProduction.filter(airstrip => {
             ensureAirstripOperations(airstrip)
             return claimAirstripParkingSlot(airstrip) >= 0

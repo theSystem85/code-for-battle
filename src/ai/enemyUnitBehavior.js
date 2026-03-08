@@ -220,7 +220,7 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targete
     return
   }
 
-  if (unit.type === 'apache' || unit.type === 'f22Raptor') {
+  if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
     updateApacheAI(unit, units, gameState, mapGrid, now, aiPlayerId)
     return
   }
@@ -1566,15 +1566,25 @@ function isPointInsideAntiAirThreat(point, threatSources, buffer = 0) {
 
 function isTargetOutsideAntiAirThreat(target, threatSources) {
   if (!target) return false
-  const center = target.tileX !== undefined
-    ? {
+
+  let center = null
+  if (target.tileX !== undefined && target.tileY !== undefined) {
+    center = {
       x: (target.tileX + (target.width || 1) / 2) * TILE_SIZE,
       y: (target.tileY + (target.height || 1) / 2) * TILE_SIZE
     }
-    : {
+  } else if ((target.width !== undefined || target.height !== undefined) && Number.isFinite(target.x) && Number.isFinite(target.y)) {
+    center = {
+      x: (target.x + (target.width || 1) / 2) * TILE_SIZE,
+      y: (target.y + (target.height || 1) / 2) * TILE_SIZE
+    }
+  } else {
+    center = {
       x: target.x + TILE_SIZE / 2,
       y: target.y + TILE_SIZE / 2
     }
+  }
+
   return !isPointInsideAntiAirThreat(center, threatSources, F22_ANTI_AIR_BUFFER)
 }
 
@@ -1701,7 +1711,8 @@ function isHarvesterAtOreField(harvester, gameState) {
 
 function findApacheStrikeTarget(units, gameState, seeker) {
   const player = gameState.humanPlayer
-  const antiAirThreatSources = seeker?.type === 'f22Raptor'
+  const isStrikeJet = seeker?.type === 'f22Raptor' || seeker?.type === 'f35'
+  const antiAirThreatSources = isStrikeJet
     ? getAntiAirThreatSources(units, gameState, seeker.owner)
     : []
   const playerHarvesters = units.filter(u => u.owner === player && u.type === 'harvester' && u.health > 0)
@@ -1712,7 +1723,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
     return !isAirDefenseNearby(center, units, gameState)
   })
 
-  if (seeker?.type === 'f22Raptor') {
+  if (isStrikeJet) {
     const oreFieldHarvesters = unprotectedHarvesters
       .filter(harvester => isHarvesterAtOreField(harvester, gameState))
       .filter(harvester => isTargetOutsideAntiAirThreat(harvester, antiAirThreatSources))
@@ -1727,7 +1738,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
   }
 
   if (unprotectedHarvesters.length > 0) {
-    const safeHarvesters = seeker?.type === 'f22Raptor'
+    const safeHarvesters = isStrikeJet
       ? unprotectedHarvesters.filter(harvester => isTargetOutsideAntiAirThreat(harvester, antiAirThreatSources))
       : unprotectedHarvesters
 
@@ -1762,6 +1773,29 @@ function findApacheStrikeTarget(units, gameState, seeker) {
         return Math.hypot(aCenterX - seekerCenter.x, aCenterY - seekerCenter.y) - Math.hypot(bCenterX - seekerCenter.x, bCenterY - seekerCenter.y)
       })
       return unprotectedDefenses[0]
+    }
+  }
+
+
+  if (seeker?.type === 'f35') {
+    const unprotectedGroundBuildings = playerBuildings.filter(building => {
+      if (AIR_DEFENSE_BUILDINGS.has(building.type)) return false
+      const center = {
+        x: (building.x + (building.width || 1) / 2) * TILE_SIZE,
+        y: (building.y + (building.height || 1) / 2) * TILE_SIZE
+      }
+      return !isAirDefenseNearby(center, units, gameState) && isTargetOutsideAntiAirThreat(building, antiAirThreatSources)
+    })
+
+    if (unprotectedGroundBuildings.length > 0) {
+      unprotectedGroundBuildings.sort((a, b) => {
+        const aCenterX = (a.x + (a.width || 1) / 2) * TILE_SIZE
+        const aCenterY = (a.y + (a.height || 1) / 2) * TILE_SIZE
+        const bCenterX = (b.x + (b.width || 1) / 2) * TILE_SIZE
+        const bCenterY = (b.y + (b.height || 1) / 2) * TILE_SIZE
+        return Math.hypot(aCenterX - seekerCenter.x, aCenterY - seekerCenter.y) - Math.hypot(bCenterX - seekerCenter.x, bCenterY - seekerCenter.y)
+      })
+      return unprotectedGroundBuildings[0]
     }
   }
 

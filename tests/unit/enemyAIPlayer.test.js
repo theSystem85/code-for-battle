@@ -143,7 +143,9 @@ beforeEach(() => {
       'tank-v2': 500,
       'tank-v3': 800,
       rocketTank: 700,
-      recoveryTank: 400
+      recoveryTank: 400,
+      f22Raptor: 600,
+      f35: 300
     }
     return costs[type] ?? 0
   })
@@ -328,6 +330,58 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(manageAIRecoveryTanks).toHaveBeenCalled()
     expect(manageAIAmmunitionTrucks).toHaveBeenCalled()
     expect(manageAIAmmunitionMonitoring).toHaveBeenCalled()
+  })
+
+
+  it('pairs each planned F22 with an F35 on available airstrips', () => {
+    const aiPlayerId = 'ai1'
+    const aiFactory = {
+      id: aiPlayerId,
+      owner: aiPlayerId,
+      health: 100,
+      budget: 5000
+    }
+    const airstrip = { type: 'airstrip', owner: aiPlayerId, health: 100 }
+    const units = [
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'tankerTruck', health: 100 },
+      { owner: aiPlayerId, type: 'ambulance', health: 100 },
+      { owner: aiPlayerId, type: 'tank_v1', health: 100, harvesterHunter: true },
+      { owner: aiPlayerId, type: 'f22Raptor', health: 100 }
+    ]
+    const gameState = {
+      buildings: [
+        { type: 'powerPlant', owner: aiPlayerId, health: 100 },
+        { type: 'vehicleFactory', owner: aiPlayerId, health: 100 },
+        { type: 'oreRefinery', owner: aiPlayerId, health: 100 },
+        { type: 'hospital', owner: aiPlayerId, health: 100 },
+        { type: 'rocketTurret', owner: aiPlayerId, health: 100 },
+        { type: 'teslaCoil', owner: aiPlayerId, health: 100 },
+        { type: 'artilleryTurret', owner: aiPlayerId, health: 100 },
+        airstrip
+      ],
+      enemyPowerSupply: 0,
+      enemyBuildSpeedModifier: 1,
+      speedMultiplier: 1
+    }
+
+    updateAIPlayer(
+      aiPlayerId,
+      units,
+      [aiFactory],
+      [],
+      createMapGrid(6, 6),
+      gameState,
+      null,
+      10000,
+      []
+    )
+
+    expect(aiFactory.currentlyProducingUnit).toBe('f35')
+    expect(aiFactory.unitSpawnBuilding).toBe(airstrip)
   })
 
   it('falls back to simple placement when advanced placement fails', () => {
