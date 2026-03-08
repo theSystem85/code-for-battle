@@ -113,6 +113,10 @@ const soundFiles = {
   f22Landing: ['F22Landing.mp3'],
   f22Takeoff: ['F22TakeOff_1.mp3', 'F22TakeOff_2.mp3'],
   f22CrashImpact: ['explosion04.mp3'],
+  f35Takeoff: ['F35TakeOff.mp3'],
+  f35Landing: ['F35Landing.mp3'],
+  f35BombDrop: ['F35BombDrop.mp3'],
+  f35BombImpact: ['F35BombDetonation.mp3'],
 
   // Game event aliases (previously in soundMapping)
   movement: ['tankEngineStart01.mp3', 'confirmed.mp3', 'onMyWay.mp3'], // alias for tankMove

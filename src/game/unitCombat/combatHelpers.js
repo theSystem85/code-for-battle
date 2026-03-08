@@ -38,7 +38,7 @@ export function isHumanControlledParty(owner) {
 
 export function isAirborneCombatTarget(target) {
   if (!target) return false
-  const isAirUnitType = target.type === 'apache' || target.type === 'f22Raptor'
+  const isAirUnitType = target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35'
   return isAirUnitType && target.flightState !== 'grounded'
 }
 
@@ -242,6 +242,7 @@ export function getDamageForUnitType(unitType) {
     case 'tank-v3': return COMBAT_CONFIG.DAMAGE.TANK_V3
     case 'rocketTank': return COMBAT_CONFIG.DAMAGE.ROCKET
     case 'apache': return COMBAT_CONFIG.DAMAGE.APACHE
+    case 'f35': return COMBAT_CONFIG.DAMAGE.F35_BOMB
     default: return COMBAT_CONFIG.DAMAGE.STANDARD
   }
 }
@@ -266,6 +267,8 @@ export function getEffectiveFireRange(unit) {
     baseRange *= APACHE_RANGE_REDUCTION
   } else if (unit.type === 'f22Raptor') {
     baseRange = 16 * TILE_SIZE
+  } else if (unit.type === 'f35') {
+    baseRange = 14 * TILE_SIZE
   }
 
   if (unit.level >= 1) {

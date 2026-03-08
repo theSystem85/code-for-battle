@@ -98,7 +98,7 @@ export function registerUnitWreck(unit, gameState) {
     y: unit.y,
     tileX: unit.tileX,
     tileY: unit.tileY,
-    direction: (unit.type === 'f22Raptor' && Number.isFinite(unit.f22CrashWreckDirection))
+    direction: ((unit.type === 'f22Raptor' || unit.type === 'f35') && Number.isFinite(unit.f22CrashWreckDirection))
       ? unit.f22CrashWreckDirection
       : (unit.direction || 0),
     turretDirection: unit.turretDirection || unit.direction || 0,
@@ -509,4 +509,3 @@ function evaluateEntityCollision(prevCenterX, prevCenterY, newCenterX, newCenter
 
   return { blocked: true, overlap, normalX, normalY }
 }
-

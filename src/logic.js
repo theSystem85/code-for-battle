@@ -62,7 +62,7 @@ export function triggerExplosion(
     if (distance < explosionRadius) {
       if (shooter && unit.id === shooter.id) return
 
-      const isAirUnit = unit.isAirUnit || unit.type === 'apache'
+      const isAirUnit = unit.isAirUnit || unit.type === 'apache' || unit.type === 'f35'
       const airborneStates = ['takeoff', 'airborne', 'landing']
       const isAirborne = isAirUnit && airborneStates.includes(unit.flightState)
       if (isAirborne && !allowAirborneDamage) {

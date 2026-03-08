@@ -187,7 +187,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     unit.movement.targetVelocity = { x: 0, y: 0 }
     unit.movement.isMoving = false
     unit.movement.currentSpeed = 0
-    if (unit.type === 'apache' || unit.type === 'f22Raptor') {
+    if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
       unit.flightPlan = null
       unit.autoHoldAltitude = false
       unit.helipadLandingRequested = false
@@ -270,7 +270,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     updateF22FlightState(unit, movement, now)
   }
 
-  const isApacheFlightUnit = unit.type === 'apache'
+  const isApacheFlightUnit = unit.type === 'apache' || unit.type === 'f35'
   const isF22AirborneState = unit.type === 'f22Raptor' && unit.flightState !== 'grounded'
   const isAirFlightUnit = isApacheFlightUnit || isF22AirborneState
   const isF22RunwayControlled = unit.type === 'f22Raptor' && (
@@ -328,7 +328,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
           const forwardThrottle = Math.max(0.22, Math.cos(angleToTarget))
           movement.targetVelocity.x = Math.cos(smoothedRotation) * airSpeed * forwardThrottle
           movement.targetVelocity.y = Math.sin(smoothedRotation) * airSpeed * forwardThrottle
-        } else if (activeFlightPlan.mode === 'helipad') {
+        } else if (activeFlightPlan.mode === 'helipad' || activeFlightPlan.mode === 'airstrip' || activeFlightPlan.mode === 'groundLand') {
           const angleToTarget = Math.abs(normalizeAngle(desiredRotation - smoothedRotation))
           const forwardThrottle = Math.max(0, Math.cos(angleToTarget))
           const minThrottle = angleToTarget < Math.PI * 0.35 ? 0.2 : 0
@@ -469,7 +469,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  const noAutoRotationTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache']
+  const noAutoRotationTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f35']
   const isF22Airborne = unit.type === 'f22Raptor' && unit.flightState !== 'grounded'
   if (!noAutoRotationTypes.includes(unit.type) && !isF22Airborne) {
     updateUnitRotation(unit)
@@ -486,7 +486,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       canAccelerate = unit.canAccelerate !== false
       shouldDecelerate = !canAccelerate && movement.isMoving
     }
-  } else if (unit.type !== 'apache' && !(unit.type === 'f22Raptor' && unit.flightState !== 'grounded')) {
+  } else if (unit.type !== 'apache' && unit.type !== 'f35' && !(unit.type === 'f22Raptor' && unit.flightState !== 'grounded')) {
     const rotationDiff = Math.abs(normalizeAngle(movement.targetRotation - movement.rotation))
     canAccelerate = rotationDiff < Math.PI / 12
     shouldDecelerate = !canAccelerate && movement.isMoving
@@ -685,7 +685,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     checkMineDetonation(unit, unit.tileX, unit.tileY, units, buildings)
   }
 
-  if (unit.type === 'apache') {
+  if (unit.type === 'apache' || unit.type === 'f35') {
     updateApacheFlightState(unit, movement, occupancyMap, now)
   }
 

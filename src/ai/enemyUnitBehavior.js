@@ -8,7 +8,7 @@ import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 
 function isAirborneAirUnit(target) {
   if (!target) return false
-  const isAirUnitType = target.type === 'apache' || target.type === 'f22Raptor'
+  const isAirUnitType = target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35'
   return isAirUnitType && target.flightState !== 'grounded'
 }
 

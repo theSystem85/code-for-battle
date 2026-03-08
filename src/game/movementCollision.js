@@ -284,7 +284,7 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         return { collided: true, type: 'terrain', tileX, tileY }
       }
 
-      if (unit.type === 'f22Raptor' && unit.flightState === 'grounded') {
+      if ((unit.type === 'f22Raptor' || unit.type === 'f35') && unit.flightState === 'grounded' && tile.building?.type === 'airstrip') {
         // Use center-based tile to avoid edge clipping during taxi
         const cTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
         const cTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -294,7 +294,7 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         }
         // Center tile is on airstrip street — skip top-left corner building check
       } else if (hasBlockingBuilding(tile)) {
-        if (unit.type === 'apache' && tile.building?.type === 'helipad') {
+        if ((unit.type === 'apache' || unit.type === 'f35') && tile.building?.type === 'helipad') {
           return { collided: false }
         }
         return {

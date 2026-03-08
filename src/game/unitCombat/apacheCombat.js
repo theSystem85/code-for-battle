@@ -6,7 +6,8 @@ import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUn
 import { showNotification } from '../../ui/notifications.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
 import { getEffectiveFireRange, getEffectiveFireRate, isHumanControlledParty } from './combatHelpers.js'
-import { handleApacheVolley } from './firingHandlers.js'
+import { claimAirstripParkingSlot, getAirstripParkingSpots } from '../../utils/airstripUtils.js'
+import { handleApacheVolley, handleF35BombDrop } from './firingHandlers.js'
 
 function getApacheTargetCenter(target) {
   if (!target) {
@@ -106,6 +107,58 @@ function findNearestHelipadForApache(unit, units) {
   return best
 }
 
+function findNearestLandingPadForF35(unit, units) {
+  if (!unit || !Array.isArray(gameState.buildings)) {
+    return null
+  }
+
+  const candidates = []
+  const unitCenterX = unit.x + TILE_SIZE / 2
+  const unitCenterY = unit.y + TILE_SIZE / 2
+
+  gameState.buildings.forEach(building => {
+    if (!building || building.health <= 0 || building.owner !== unit.owner) {
+      return
+    }
+
+    if (building.type === 'helipad') {
+      const center = getHelipadLandingCenter(building)
+      const tile = getHelipadLandingTile(building)
+      if (!center || !tile || !isHelipadAvailableForUnit(building, units, unit.id)) {
+        return
+      }
+      candidates.push({
+        mode: 'helipad',
+        building,
+        center,
+        tile,
+        helipadId: getBuildingIdentifier(building),
+        distance: Math.hypot(center.x - unitCenterX, center.y - unitCenterY)
+      })
+      return
+    }
+
+    if (building.type === 'airstrip') {
+      const slotIndex = claimAirstripParkingSlot(building, unit.airstripParkingSlotIndex)
+      if (slotIndex < 0) return
+      const slot = getAirstripParkingSpots(building)[slotIndex]
+      if (!slot) return
+      candidates.push({
+        mode: 'airstrip',
+        building,
+        center: { x: slot.worldX, y: slot.worldY },
+        tile: { x: slot.x, y: slot.y },
+        airstripId: getBuildingIdentifier(building),
+        slotIndex,
+        distance: Math.hypot(slot.worldX - unitCenterX, slot.worldY - unitCenterY)
+      })
+    }
+  })
+
+  candidates.sort((a, b) => a.distance - b.distance)
+  return candidates[0] || null
+}
+
 function getHelipadById(helipadId) {
   if (!helipadId || !Array.isArray(gameState.buildings)) {
     return null
@@ -162,6 +215,52 @@ function initiateApacheHelipadReturn(unit, helipadInfo) {
   unit.autoHelipadReturnTargetId = unit.helipadTargetId
 
   return true
+}
+
+function initiateF35PadReturn(unit, padInfo) {
+  if (!unit || !padInfo?.center || !padInfo?.tile) {
+    return false
+  }
+
+  unit.path = []
+  unit.originalPath = null
+  unit.autoHoldAltitude = true
+  unit.remoteControlActive = false
+  unit.hovering = false
+  unit.flightPlan = {
+    x: padInfo.center.x,
+    y: padInfo.center.y,
+    stopRadius: TILE_SIZE * 0.22,
+    mode: padInfo.mode,
+    followTargetId: null,
+    destinationTile: { ...padInfo.tile }
+  }
+  unit.moveTarget = { ...padInfo.tile }
+  unit.helipadLandingRequested = true
+  unit.groundLandingRequested = false
+  unit.groundLandingTarget = null
+  unit.landedOnGround = false
+
+  if (padInfo.mode === 'airstrip') {
+    unit.airstripId = padInfo.airstripId
+    unit.airstripParkingSlotIndex = padInfo.slotIndex
+    unit.helipadTargetId = padInfo.airstripId
+  } else {
+    unit.helipadTargetId = padInfo.helipadId
+  }
+
+  if (unit.flightState === 'grounded') {
+    unit.manualFlightState = 'takeoff'
+  }
+
+  return true
+}
+
+function countBombsNeededForTarget(target, availableBombs) {
+  if (!target || availableBombs <= 0) return 0
+  const estimatedDamage = target.tileX !== undefined ? 70 : 130
+  const remainingHealth = Math.max(1, target.health || estimatedDamage)
+  return Math.max(1, Math.min(availableBombs, Math.ceil(remainingHealth / estimatedDamage)))
 }
 
 export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupancyMap) {
@@ -419,4 +518,130 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
       unit.volleyState = null
     }
   }
+}
+
+export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMap) {
+  if (unit.target && unit.target.health <= 0) {
+    unit.target = null
+  }
+
+  const ammoRemaining = Math.max(0, Math.floor(unit.rocketAmmo || 0))
+  unit.apacheAmmoEmpty = ammoRemaining <= 0
+
+  const fuelRatio = typeof unit.maxGas === 'number' && unit.maxGas > 0
+    ? (unit.gas || 0) / unit.maxGas
+    : 1
+
+  if ((!unit.target || unit.target.health <= 0) && Array.isArray(unit.attackQueue) && unit.attackQueue.length > 0) {
+    unit.attackQueue = unit.attackQueue.filter(target => target && target.health > 0 && target.owner !== unit.owner)
+    if (unit.attackQueue.length > 0) {
+      unit.target = unit.attackQueue[0]
+    }
+  }
+
+  if (!unit.target || unit.target.health <= 0 || ammoRemaining <= 0 || fuelRatio <= 0.18) {
+    unit.volleyState = null
+    const alreadyLanding = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.flightPlan?.mode === 'airstrip')
+    if (!alreadyLanding && (ammoRemaining <= 0 || fuelRatio <= 0.18 || unit.autoReturnToHelipadOnTargetLoss)) {
+      const padInfo = findNearestLandingPadForF35(unit, units)
+      if (padInfo) {
+        initiateF35PadReturn(unit, padInfo)
+      }
+    }
+    return
+  }
+
+  if (unit.target.type && (unit.target.type === 'apache' || unit.target.type === 'f22Raptor' || unit.target.type === 'f35')) {
+    unit.target = null
+    return
+  }
+
+  const targetCenter = getApacheTargetCenter(unit.target)
+  if (!targetCenter) {
+    return
+  }
+
+  const unitCenterX = unit.x + TILE_SIZE / 2
+  const unitCenterY = unit.y + TILE_SIZE / 2
+  const dx = targetCenter.x - unitCenterX
+  const dy = targetCenter.y - unitCenterY
+  const distance = Math.hypot(dx, dy)
+  const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
+  const effectiveRange = getEffectiveFireRange(unit)
+  const inRange = distance <= effectiveRange
+
+  const desiredFacing = Math.atan2(dy, dx)
+  const currentDirection = typeof unit.direction === 'number' ? unit.direction : 0
+  const rotationSpeed = unit.rotationSpeed || 0.13
+  const newDirection = smoothRotateTowardsAngle(currentDirection, desiredFacing, rotationSpeed)
+  unit.direction = newDirection
+  unit.rotation = newDirection
+  if (unit.movement) {
+    unit.movement.rotation = newDirection
+    unit.movement.targetRotation = newDirection
+  }
+
+  if (!inRange && !unit.helipadLandingRequested) {
+    const standOffDistance = Math.max(TILE_SIZE * 2.5, Math.min(effectiveRange * 0.82, distance))
+    const normX = dx / Math.max(1, distance)
+    const normY = dy / Math.max(1, distance)
+    const standOffX = targetCenter.x - normX * standOffDistance
+    const standOffY = targetCenter.y - normY * standOffDistance
+    unit.flightPlan = {
+      x: standOffX,
+      y: standOffY,
+      stopRadius: TILE_SIZE * 0.55,
+      mode: 'combat',
+      followTargetId: unit.target.id || null,
+      destinationTile: {
+        x: Math.max(0, Math.floor(standOffX / TILE_SIZE)),
+        y: Math.max(0, Math.floor(standOffY / TILE_SIZE))
+      }
+    }
+    unit.moveTarget = unit.flightPlan.destinationTile
+  } else {
+    unit.flightPlan = null
+    unit.moveTarget = null
+  }
+
+  unit.autoHoldAltitude = true
+  if (unit.flightState === 'grounded') {
+    unit.manualFlightState = 'takeoff'
+  }
+
+  if (!inRange || !canAttack || unit.canFire === false || unit.flightState === 'grounded') {
+    return
+  }
+
+  let bombBudget = ammoRemaining
+  const queuedTargets = [unit.target]
+  if (Array.isArray(unit.attackQueue)) {
+    unit.attackQueue.forEach(target => {
+      if (target && target !== unit.target && target.health > 0) {
+        queuedTargets.push(target)
+      }
+    })
+  }
+
+  for (const queuedTarget of queuedTargets) {
+    if (bombBudget <= 0) break
+    if (!queuedTarget || queuedTarget.health <= 0) continue
+    if (queuedTarget.type && (queuedTarget.type === 'apache' || queuedTarget.type === 'f22Raptor' || queuedTarget.type === 'f35')) continue
+
+    const queueTargetCenter = getApacheTargetCenter(queuedTarget)
+    if (!queueTargetCenter) continue
+    const queueDistance = Math.hypot(queueTargetCenter.x - unitCenterX, queueTargetCenter.y - unitCenterY)
+    if (queueDistance > effectiveRange) continue
+
+    const bombsForTarget = countBombsNeededForTarget(queuedTarget, bombBudget)
+    for (let i = 0; i < bombsForTarget; i++) {
+      const dropped = handleF35BombDrop(unit, queuedTarget, bullets, now, queueTargetCenter.x, queueTargetCenter.y, units, mapGrid)
+      if (!dropped) {
+        return
+      }
+      bombBudget--
+    }
+  }
+
+  unit.lastShotTime = now
 }

@@ -423,7 +423,7 @@ export function cleanupDestroyedUnits(units, gameState) {
     if (units[i].health <= 0) {
       const unit = units[i]
 
-      if (unit.type === 'f22Raptor' && unit.flightState !== 'grounded' && unit.f22State !== 'crashed') {
+      if ((unit.type === 'f22Raptor' || unit.type === 'f35') && unit.flightState !== 'grounded' && unit.f22State !== 'crashed') {
         const crashTriggered = beginF22CrashSequence(unit, performance.now())
         if (crashTriggered) {
           unit.health = Math.max(1, unit.health)

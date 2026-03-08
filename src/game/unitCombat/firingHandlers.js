@@ -6,6 +6,7 @@ import { showNotification } from '../../ui/notifications.js'
 import { getRocketSpawnPoint } from '../../rendering/rocketTankImageRenderer.js'
 import { getApacheRocketSpawnPoints } from '../../rendering/apacheImageRenderer.js'
 import { getF22RocketSpawnPoint } from '../../rendering/f22ImageRenderer.js'
+import { getF35BombSpawnPoint } from '../../rendering/f35ImageRenderer.js'
 import { isHowitzerGunReadyToFire, getHowitzerLaunchAngle } from '../howitzerGunController.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
@@ -25,7 +26,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
   }
 
   // Check ammunition availability
-  const ammoField = (unit.type === 'apache' || unit.type === 'f22Raptor') ? 'rocketAmmo' : 'ammunition'
+  const ammoField = (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') ? 'rocketAmmo' : 'ammunition'
   const ammoValue = unit[ammoField]
   if (typeof ammoValue === 'number' && ammoValue <= 0) {
     // Unit has no ammunition, cannot fire
@@ -43,12 +44,12 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
   if (!unit.lastShotTime || now - unit.lastShotTime >= fireRate) {
     // Check if turret is properly aimed at the target before firing
-    const clearShot = (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'rocketTank')
+    const clearShot = (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35' || unit.type === 'rocketTank')
       ? true
       : (clearShotOverride ?? hasClearShot(unit, target, units, mapGrid))
-    const turretAimed = (unit.type === 'apache' || unit.type === 'f22Raptor') ? true : isTurretAimedAtTarget(unit, target)
+    const turretAimed = (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') ? true : isTurretAimedAtTarget(unit, target)
     if (unit.canFire !== false && clearShot && turretAimed) {
-      const targetIsAirborneApache = target && (target.type === 'apache' || target.type === 'f22Raptor') && target.flightState !== 'grounded'
+      const targetIsAirborneApache = target && (target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35') && target.flightState !== 'grounded'
       const shooterCanHitAir =
         unit.type === 'rocketTank' ||
         unit.type === 'apache' ||
@@ -94,10 +95,13 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
 
       const isRocketTankRocket = projectileType === 'rocket' && unit.type === 'rocketTank'
       const isApacheRocket = projectileType === 'rocket' && (unit.type === 'apache' || unit.type === 'f22Raptor')
+      const isF35Bomb = projectileType === 'bomb' && unit.type === 'f35'
       const isF22Rocket = projectileType === 'rocket' && unit.type === 'f22Raptor'
       const bulletSpeed = isRocketTankRocket
         ? 6
-        : (projectileType === 'rocket' ? (isApacheRocket ? (isF22Rocket ? 7.5 : 5) : 3) : TANK_BULLET_SPEED)
+        : (projectileType === 'rocket'
+          ? (isApacheRocket ? (isF22Rocket ? 7.5 : 5) : 3)
+          : (isF35Bomb ? 7 : TANK_BULLET_SPEED))
 
       let rocketSpawn = null
       if (isRocketTankRocket) {
@@ -106,17 +110,19 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         rocketSpawn = unit.customRocketSpawn || (unit.type === 'f22Raptor'
           ? getF22RocketSpawnPoint(unit, unitCenterX, unitCenterY)
           : getApacheRocketSpawnPoints(unit, unitCenterX, unitCenterY).left)
+      } else if (isF35Bomb) {
+        rocketSpawn = unit.customRocketSpawn || getF35BombSpawnPoint(unit, unitCenterX, unitCenterY)
       }
 
       const bullet = {
         id: Date.now() + gameRandom(),
-        x: (isRocketTankRocket || isApacheRocket) ? rocketSpawn.x : unitCenterX,
-        y: (isRocketTankRocket || isApacheRocket) ? rocketSpawn.y : unitCenterY,
+        x: (isRocketTankRocket || isApacheRocket || isF35Bomb) ? rocketSpawn.x : unitCenterX,
+        y: (isRocketTankRocket || isApacheRocket || isF35Bomb) ? rocketSpawn.y : unitCenterY,
         speed: bulletSpeed,
         baseDamage: getDamageForUnitType(unit.type),
         active: true,
         shooter: unit,
-        homing: isRocketTankRocket ? true : (isApacheRocket ? false : (projectileType === 'rocket')),
+        homing: isRocketTankRocket ? true : ((isApacheRocket || isF35Bomb) ? false : (projectileType === 'rocket')),
         target: projectileType === 'rocket' && !isApacheRocket ? target : null,
         targetPosition: { x: finalTarget.x, y: finalTarget.y },
         startTime: now,
@@ -129,7 +135,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         bullet.burstRocket = true // Mark as part of a burst for debugging/tracking
       }
 
-      if (isApacheRocket) {
+      if (isApacheRocket || isF35Bomb) {
         bullet.explosionRadius = TILE_SIZE
         bullet.skipCollisionChecks = true
         bullet.maxFlightTime = 3000 // 3 seconds max flight time before forced explosion
@@ -137,13 +143,17 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         bullet.startX = rocketSpawn.x
         bullet.startY = rocketSpawn.y
         bullet.apacheTargetRadius = TILE_SIZE * 0.3
-        // Apache rockets fly straight to their target position
+        // Air-delivered projectiles fly straight to their target position
         const dx = finalTarget.x - rocketSpawn.x
         const dy = finalTarget.y - rocketSpawn.y
         const distance = Math.hypot(dx, dy)
         bullet.vx = (dx / distance) * bulletSpeed
         bullet.vy = (dy / distance) * bulletSpeed
         bullet.f22Rocket = unit.type === 'f22Raptor'
+        if (isF35Bomb) {
+          bullet.originType = 'f35Bomb'
+          bullet.apacheTargetId = target ? target.id : null
+        }
       }
 
       if (isRocketTankRocket) {
@@ -174,7 +184,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
       bullets.push(bullet)
 
       // Deplete ammunition when firing (skip apache/f22 - handled in handleApacheVolley)
-      if (unit.type !== 'apache' && unit.type !== 'f22Raptor') {
+      if (unit.type !== 'apache' && unit.type !== 'f22Raptor' && unit.type !== 'f35') {
         if (typeof unit.ammunition === 'number') {
           // Rocket tanks fire 1 rocket at a time in burst, so deplete by 1
           // Other units use ammoPerShot
@@ -183,8 +193,8 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         }
       }
 
-      const soundName = projectileType === 'rocket' ? 'shoot_rocket' : 'shoot'
-      const vol = projectileType === 'rocket' ? 0.3 : 0.5
+      const soundName = isF35Bomb ? 'f35BombDrop' : (projectileType === 'rocket' ? 'shoot_rocket' : 'shoot')
+      const vol = (projectileType === 'rocket' || isF35Bomb) ? 0.3 : 0.5
       playPositionalSound(soundName, bullet.x, bullet.y, vol)
       unit.lastShotTime = now
 
@@ -396,6 +406,46 @@ export function handleApacheVolley(unit, target, bullets, now, targetCenterX, ta
       unit.volleyState = null
       return true
     }
+  }
+
+  return false
+}
+
+export function handleF35BombDrop(unit, target, bullets, now, targetCenterX, targetCenterY, units, mapGrid) {
+  const availableAmmo = Math.max(0, Math.floor(unit.rocketAmmo || 0))
+  if (availableAmmo <= 0) {
+    unit.volleyState = null
+    unit.apacheAmmoEmpty = true
+    unit.canFire = false
+    return true
+  }
+
+  const centerX = unit.x + TILE_SIZE / 2
+  const centerY = unit.y + TILE_SIZE / 2
+  unit.customRocketSpawn = getF35BombSpawnPoint(unit, centerX, centerY)
+  const fired = handleTankFiring(
+    unit,
+    target,
+    bullets,
+    now,
+    0,
+    targetCenterX,
+    targetCenterY,
+    'bomb',
+    units,
+    mapGrid,
+    false,
+    { x: targetCenterX, y: targetCenterY }
+  )
+  unit.customRocketSpawn = null
+
+  if (fired) {
+    unit.rocketAmmo = Math.max(0, availableAmmo - 1)
+    if (unit.rocketAmmo <= 0) {
+      unit.apacheAmmoEmpty = true
+      unit.canFire = false
+    }
+    return true
   }
 
   return false

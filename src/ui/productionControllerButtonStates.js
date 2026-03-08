@@ -99,6 +99,15 @@ export function updateVehicleButtonStates(controller) {
         button.classList.add('disabled')
         button.title = 'Requires Airstrip'
       }
+    } else if (unitType === 'f35') {
+      const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
+      if ((hasHelipad || hasAirstrip) && hasAmmunitionFactory) {
+        button.classList.remove('disabled')
+        button.title = ''
+      } else {
+        button.classList.add('disabled')
+        button.title = 'Requires Helipad or Airstrip and Ammunition Factory'
+      }
     } else if (unitType === 'mineLayer') {
       if (hasVehicleFactory && hasWorkshop && hasAmmunitionFactory) {
         button.classList.remove('disabled')

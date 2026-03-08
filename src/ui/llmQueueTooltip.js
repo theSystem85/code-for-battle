@@ -22,6 +22,7 @@ const unitDisplayNames = {
   recoveryTank: 'Recovery Tank',
   apache: 'Apache',
   f22Raptor: 'F22 Raptor',
+  f35: 'F35',
   mineLayer: 'Mine Layer',
   mineSweeper: 'Mine Sweeper'
 }
@@ -39,6 +40,7 @@ const unitSidebarImages = {
   recoveryTank: 'images/sidebar/recovery_tank.webp',
   apache: 'images/sidebar/apache_sidebar.webp',
   f22Raptor: 'images/sidebar/f22_raptor_sidebar.webp',
+  f35: 'images/sidebar/f35_sidebar.webp',
   howitzer: 'images/sidebar/howitzer_sidebar.webp',
   mineLayer: 'images/sidebar/mine_layer_sidebar.webp',
   mineSweeper: 'images/sidebar/mine_sweeper_sidebar.webp'

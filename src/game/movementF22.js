@@ -154,7 +154,7 @@ function updateF22CrashState(unit, movement, now) {
 }
 
 export function beginF22CrashSequence(unit, now = performance.now()) {
-  if (!unit || unit.type !== 'f22Raptor') return false
+  if (!unit || (unit.type !== 'f22Raptor' && unit.type !== 'f35')) return false
   if (unit.f22State === 'crashing' || unit.f22State === 'crashed') return true
   if (unit.flightState === 'grounded') return false
 
@@ -503,7 +503,7 @@ function resolveFollowTargetDestination(unit) {
 
   const centerX = followTarget.x + TILE_SIZE / 2
   let centerY = followTarget.y + TILE_SIZE / 2
-  if ((followTarget.type === 'apache' || followTarget.type === 'f22Raptor') && followTarget.altitude) {
+  if ((followTarget.type === 'apache' || followTarget.type === 'f22Raptor' || followTarget.type === 'f35') && followTarget.altitude) {
     centerY -= followTarget.altitude * 0.4
   }
 
@@ -520,7 +520,7 @@ function getTargetCenterFromUnitTarget(target) {
   if (target.tileX !== undefined) {
     const centerX = target.x + TILE_SIZE / 2
     let centerY = target.y + TILE_SIZE / 2
-    if ((target.type === 'apache' || target.type === 'f22Raptor') && target.altitude) {
+    if ((target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35') && target.altitude) {
       centerY -= target.altitude * 0.4
     }
     return { x: centerX, y: centerY }

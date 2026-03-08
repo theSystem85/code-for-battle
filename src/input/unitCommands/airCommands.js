@@ -4,11 +4,11 @@ import { playPositionalSound } from '../../sound.js'
 import { showNotification } from '../../ui/notifications.js'
 import { getBuildingIdentifier } from '../../utils.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUnit } from '../../utils/helipadUtils.js'
-import { getAirstripRunwayPoints } from '../../utils/airstripUtils.js'
+import { claimAirstripParkingSlot, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant } from '../../utils/airstripUtils.js'
 import { units } from '../../main.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
-  if (!unit || (unit.type !== 'apache' && unit.type !== 'f22Raptor') || !destCenter) {
+  if (!unit || (unit.type !== 'apache' && unit.type !== 'f22Raptor' && unit.type !== 'f35') || !destCenter) {
     return false
   }
 
@@ -53,6 +53,71 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     return true
   }
 
+  if (unit.type === 'f35') {
+    const stopRadius = Math.max(6, options.stopRadius || TILE_SIZE * 0.4)
+    unit.path = []
+    unit.originalPath = null
+    unit.moveTarget = destTile ? { x: destTile.x, y: destTile.y } : null
+    unit.flightPlan = {
+      x: destCenter.x,
+      y: destCenter.y,
+      stopRadius,
+      mode: options.mode || 'manual',
+      followTargetId: options.followTargetId || null,
+      destinationTile: destTile ? { ...destTile } : null
+    }
+    unit.autoHoldAltitude = true
+    unit.remoteControlActive = false
+    unit.hovering = false
+    unit.landedOnGround = false
+
+    if (options.mode === 'airstrip' && options.airstrip) {
+      const airstripId = getBuildingIdentifier(options.airstrip)
+      let slotIndex = Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : claimAirstripParkingSlot(options.airstrip, unit.airstripParkingSlotIndex)
+      if (slotIndex < 0) {
+        slotIndex = unit.airstripParkingSlotIndex
+      }
+      const slot = getAirstripParkingSpots(options.airstrip)[slotIndex]
+      if (slot) {
+        unit.moveTarget = { x: slot.x, y: slot.y }
+        unit.flightPlan.x = slot.worldX
+        unit.flightPlan.y = slot.worldY
+        unit.flightPlan.destinationTile = { x: slot.x, y: slot.y }
+      }
+      unit.helipadLandingRequested = true
+      unit.groundLandingRequested = false
+      unit.groundLandingTarget = null
+      unit.helipadTargetId = airstripId
+      unit.airstripId = airstripId
+      unit.airstripParkingSlotIndex = slotIndex
+      if (Number.isInteger(slotIndex)) {
+        setAirstripSlotOccupant(options.airstrip, slotIndex, unit.id)
+      }
+    } else if (options.mode === 'helipad') {
+      unit.helipadLandingRequested = true
+      unit.groundLandingRequested = false
+      unit.groundLandingTarget = null
+      unit.helipadTargetId = options.helipadId || null
+      unit.airstripId = null
+    } else if (options.mode === 'groundLand') {
+      unit.helipadLandingRequested = false
+      unit.helipadTargetId = null
+      unit.airstripId = null
+      unit.groundLandingRequested = true
+      unit.groundLandingTarget = { x: destCenter.x, y: destCenter.y }
+    } else {
+      unit.helipadLandingRequested = false
+      unit.helipadTargetId = null
+      unit.groundLandingRequested = false
+      unit.groundLandingTarget = null
+    }
+
+    if (unit.flightState === 'grounded') {
+      unit.manualFlightState = 'takeoff'
+    }
+    return true
+  }
+
   const stopRadius = Math.max(6, options.stopRadius || TILE_SIZE * 0.5)
   unit.path = []
   unit.originalPath = null
@@ -94,8 +159,67 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
 }
 
 export function handleApacheHelipadCommand(handler, selectedUnits, helipad, _mapGrid) {
-  const apaches = selectedUnits.filter(unit => unit.type === 'apache')
+  const apaches = selectedUnits.filter(unit => unit.type === 'apache' || unit.type === 'f35')
   if (apaches.length === 0 || !helipad) {
+    return
+  }
+
+  if (helipad.type === 'airstrip') {
+    const availableSlots = getAirstripParkingSpots(helipad)
+      .map((slot, index) => ({ slot, index }))
+      .filter(({ index }) => {
+        const occupantId = helipad.f22OccupiedSlotUnitIds?.[index]
+        return !occupantId || apaches.some(unit => unit.id === occupantId)
+      })
+
+    if (availableSlots.length === 0) {
+      showNotification('No available airstrip parking for landing!', 2000)
+      return
+    }
+
+    const blockedUnits = []
+    const assignedSlots = new Set()
+
+    apaches.forEach(unit => {
+      const option = availableSlots.find(candidate => !assignedSlots.has(candidate.index))
+      if (!option) {
+        blockedUnits.push(unit)
+        return
+      }
+
+      const handled = handler.assignApacheFlight && handler.assignApacheFlight(unit, {
+        x: option.slot.x,
+        y: option.slot.y
+      }, {
+        x: option.slot.worldX,
+        y: option.slot.worldY
+      }, {
+        mode: 'airstrip',
+        airstrip: helipad,
+        airstripParkingSlotIndex: option.index,
+        stopRadius: TILE_SIZE * 0.2
+      })
+
+      if (handled) {
+        assignedSlots.add(option.index)
+        unit.target = null
+        unit.originalTarget = null
+        unit.forcedAttack = false
+      }
+    })
+
+    if (blockedUnits.length === apaches.length) {
+      showNotification('No available airstrip parking for landing!', 2000)
+      return
+    }
+
+    if (blockedUnits.length > 0) {
+      showNotification('Some airstrip parking slots are occupied; only available slots assigned.', 2000)
+    }
+
+    const avgX = apaches.reduce((sum, u) => sum + u.x, 0) / apaches.length
+    const avgY = apaches.reduce((sum, u) => sum + u.y, 0) / apaches.length
+    playPositionalSound('movement', avgX, avgY, 0.5)
     return
   }
 

@@ -334,7 +334,7 @@ export function saveGame(label) {
       serialized.sweeping = Boolean(u.sweeping)
     }
 
-    if (u.type === 'f22Raptor') {
+    if (u.type === 'f22Raptor' || u.type === 'f35') {
       serialized.f22State = u.f22State
       serialized.airstripId = u.airstripId
       serialized.airstripParkingSlotIndex = u.airstripParkingSlotIndex
@@ -344,6 +344,9 @@ export function saveGame(label) {
       serialized.helipadTargetId = u.helipadTargetId
       serialized.f22PendingTakeoff = u.f22PendingTakeoff
       serialized.groundedOccupancyApplied = u.groundedOccupancyApplied
+      serialized.groundLandingRequested = u.groundLandingRequested
+      serialized.groundLandingTarget = u.groundLandingTarget
+      serialized.landedOnGround = u.landedOnGround
     }
 
     return serialized
@@ -884,8 +887,8 @@ export function loadGame(key) {
       }
       if (typeof u.rocketAmmo === 'number') {
         hydrated.rocketAmmo = u.rocketAmmo
-      } else if (hydrated.type === 'apache' && typeof hydrated.rocketAmmo !== 'number') {
-        // Fallback for older saves - initialize Apache to full rocket ammo
+      } else if ((hydrated.type === 'apache' || hydrated.type === 'f35') && typeof hydrated.rocketAmmo !== 'number') {
+        // Fallback for older saves - initialize airborne rocket-ammo units to full rocket ammo
         hydrated.rocketAmmo = hydrated.maxRocketAmmo || 38
       }
       if (typeof u.maxRocketAmmo === 'number') {
@@ -894,18 +897,34 @@ export function loadGame(key) {
       if (hydrated.type === 'f22Raptor') {
         hydrated.maxRocketAmmo = 8
         hydrated.rocketAmmo = Math.max(0, Math.min(typeof hydrated.rocketAmmo === 'number' ? hydrated.rocketAmmo : 8, 8))
+      } else if (hydrated.type === 'f35') {
+        hydrated.maxRocketAmmo = 6
+        hydrated.rocketAmmo = Math.max(0, Math.min(typeof hydrated.rocketAmmo === 'number' ? hydrated.rocketAmmo : 6, 6))
       }
       if (typeof u.apacheAmmoEmpty === 'boolean') {
         hydrated.apacheAmmoEmpty = u.apacheAmmoEmpty
-      } else if (hydrated.type === 'apache') {
+      } else if (hydrated.type === 'apache' || hydrated.type === 'f35') {
         // Fallback - assume not empty if not saved
         hydrated.apacheAmmoEmpty = false
       }
       if (typeof u.canFire === 'boolean') {
         hydrated.canFire = u.canFire
-      } else if (hydrated.type === 'apache') {
+      } else if (hydrated.type === 'apache' || hydrated.type === 'f35') {
         // Fallback - assume can fire if not saved
         hydrated.canFire = true
+      }
+
+      if (hydrated.type === 'f35') {
+        hydrated.flightState = u.flightState || hydrated.flightState || 'grounded'
+        hydrated.altitude = typeof u.altitude === 'number' ? u.altitude : (hydrated.flightState === 'grounded' ? 0 : (hydrated.maxAltitude || 0))
+        hydrated.airstripId = u.airstripId || null
+        hydrated.airstripParkingSlotIndex = Number.isInteger(u.airstripParkingSlotIndex) ? u.airstripParkingSlotIndex : null
+        hydrated.landedHelipadId = u.landedHelipadId || null
+        hydrated.helipadTargetId = u.helipadTargetId || null
+        hydrated.groundedOccupancyApplied = Boolean(u.groundedOccupancyApplied)
+        hydrated.groundLandingRequested = Boolean(u.groundLandingRequested)
+        hydrated.groundLandingTarget = u.groundLandingTarget || null
+        hydrated.landedOnGround = Boolean(u.landedOnGround)
       }
 
       // Ensure path is always an array
@@ -1276,9 +1295,9 @@ export function loadGame(key) {
       milestoneSystem.setAchievedMilestones(loaded.achievedMilestones)
     }
 
-    // Restore F22 Raptor airstrip state after all buildings are loaded
+    // Restore F22/F35 airstrip state after all buildings are loaded
     units.forEach(unit => {
-      if (unit.type !== 'f22Raptor') return
+      if (unit.type !== 'f22Raptor' && unit.type !== 'f35') return
 
       // For old saves without airstripId, find airstrip by position
       if (!unit.airstripId) {
@@ -1296,10 +1315,12 @@ export function loadGame(key) {
       const airstrip = gameState.buildings.find(b => getBuildingIdentifier(b) === unit.airstripId)
       if (airstrip) {
         ensureAirstripOperations(airstrip)
-        unit.runwayPoints = getAirstripRunwayPoints(airstrip)
+        if (unit.type === 'f22Raptor') {
+          unit.runwayPoints = getAirstripRunwayPoints(airstrip)
+        }
 
-        // Restore parking slot occupancy and direction for parked units
-        if (unit.f22State === 'parked') {
+        // Restore parking slot occupancy and direction for parked airstrip units
+        if ((unit.type === 'f22Raptor' && unit.f22State === 'parked') || (unit.type === 'f35' && unit.flightState === 'grounded')) {
           // For old saves without airstripParkingSlotIndex, find nearest parking spot
           if (typeof unit.airstripParkingSlotIndex !== 'number') {
             const spots = getAirstripParkingSpots(airstrip)
@@ -1323,6 +1344,12 @@ export function loadGame(key) {
             if (spot) {
               unit.direction = spot.facing
               unit.rotation = spot.facing
+              if (unit.type === 'f35') {
+                unit.x = spot.worldX
+                unit.y = spot.worldY
+                unit.tileX = spot.x
+                unit.tileY = spot.y
+              }
             }
           }
 

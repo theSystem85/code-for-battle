@@ -194,16 +194,16 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
   const tileX = Math.floor(worldX / TILE_SIZE)
   const tileY = Math.floor(worldY / TILE_SIZE)
   const hasSelectedHarvesters = commandableUnits.some(unit => unit.type === 'harvester')
-  const hasSelectedApaches = commandableUnits.some(unit => unit.type === 'apache')
+  const hasSelectedApaches = commandableUnits.some(unit => unit.type === 'apache' || unit.type === 'f35')
 
   if (
     hasSelectedApaches &&
-    commandableUnits.every(unit => unit.type === 'apache') &&
+    commandableUnits.every(unit => unit.type === 'apache' || unit.type === 'f35') &&
     gameState.buildings &&
     Array.isArray(gameState.buildings)
   ) {
     for (const building of gameState.buildings) {
-      if (building.type === 'helipad' &&
+      if ((building.type === 'helipad' || building.type === 'airstrip') &&
           building.owner === gameState.humanPlayer &&
           building.health > 0 &&
           tileX >= building.x && tileX < building.x + building.width &&
@@ -317,7 +317,7 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
     })
 
     if (clickedFriendlyBuilding || clickedFriendlyFactory) {
-      const onlyF22Selected = commandableUnits.length > 0 && commandableUnits.every(unit => unit.type === 'f22Raptor')
+      const onlyF22Selected = commandableUnits.length > 0 && commandableUnits.every(unit => unit.type === 'f22Raptor' || unit.type === 'f35')
       const onlySupplyUnitsSelected =
         commandableUnits.length > 0 &&
         commandableUnits.every(unit => AIRSTRIP_SUPPLY_UNIT_TYPES.has(unit.type))
@@ -383,7 +383,7 @@ export function handleServiceProviderClick(handler, provider, selectedUnits, uni
     requesters.forEach(requester => {
       const needsAmmo = requester.isBuilding
         ? (typeof requester.maxAmmo === 'number' && requester.ammo < requester.maxAmmo)
-        : (requester.type === 'apache'
+        : ((requester.type === 'apache' || requester.type === 'f35')
           ? (typeof requester.maxRocketAmmo === 'number' && requester.rocketAmmo < requester.maxRocketAmmo)
           : (typeof requester.maxAmmunition === 'number' && requester.ammunition < requester.maxAmmunition))
       if (needsAmmo) {

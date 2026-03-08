@@ -26,7 +26,8 @@ const UNIT_TYPE_DISPLAY_NAMES = {
   recoveryTank: 'Recovery Tank',
   ambulance: 'Ambulance',
   howitzer: 'Howitzer',
-  apache: 'Apache'
+  apache: 'Apache',
+  f35: 'F35'
 }
 
 function getUnitDisplayName(unitType) {

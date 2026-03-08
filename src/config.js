@@ -755,6 +755,7 @@ export const UNIT_COSTS = {
   recoveryTank: 3000,
   apache: 3000,
   f22Raptor: 6000,
+  f35: 3000,
   howitzer: HOWITZER_COST,
   mineLayer: 1000,
   mineSweeper: 1000
@@ -860,6 +861,14 @@ export const UNIT_PROPERTIES = {
     rotationSpeed: 0.1,
     turretRotationSpeed: 0,
     accelerationMultiplier: 1.5
+  },
+  f35: {
+    health: 70,
+    maxHealth: 70,
+    speed: 3.0375,
+    rotationSpeed: 0.13,
+    turretRotationSpeed: 0,
+    accelerationMultiplier: 1.35
   },
   howitzer: {
     health: 160,
@@ -1012,6 +1021,7 @@ export const UNIT_TYPE_COLORS = {
   howitzer: '#D2691E',    // Chocolate
   apache: '#556B2F',       // Dark olive green
   f22Raptor: '#1E3A5F',   // Dark blue - stealth
+  f35: '#4E5C6A',         // Slate gray - stealth strike fighter
   mineLayer: '#A0522D',    // Sienna (brownish)
   mineSweeper: '#4682B4'   // Steel blue
 }
@@ -1155,7 +1165,8 @@ export const UNIT_AMMO_CAPACITY = {
   rocketTank: 24,
   howitzer: 30,
   apache: 38,
-  f22Raptor: 8
+  f22Raptor: 8,
+  f35: 6
 }
 
 const REMOTE_CONTROL_ALLOWED_ACTIONS = [
@@ -1360,6 +1371,7 @@ export const UNIT_GAS_PROPERTIES = {
   tankerTruck: { tankSize: 700, consumption: 150 },
   apache: { tankSize: 5200, consumption: 120 },
   f22Raptor: { tankSize: 8000, consumption: 200 },
+  f35: { tankSize: 8000, consumption: 180 },
   mineLayer: { tankSize: 700, consumption: 150 },
   mineSweeper: { tankSize: 1900, consumption: 450 }
 }
