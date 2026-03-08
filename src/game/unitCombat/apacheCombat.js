@@ -259,13 +259,6 @@ function initiateF35PadReturn(unit, padInfo) {
   return true
 }
 
-function countBombsNeededForTarget(target, availableBombs) {
-  if (!target || availableBombs <= 0) return 0
-  const estimatedDamage = target.tileX !== undefined ? 70 : 130
-  const remainingHealth = Math.max(1, target.health || estimatedDamage)
-  return Math.max(1, Math.min(availableBombs, Math.ceil(remainingHealth / estimatedDamage)))
-}
-
 export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupancyMap) {
   if ((!unit.target || unit.target.health <= 0) && unit.autoHelipadReturnAttackTargetId) {
     unit.target = resolveStoredApacheTarget(unit, units)
@@ -588,21 +581,18 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     unit.movement.targetRotation = newDirection
   }
 
-  if (!inRange && !unit.helipadLandingRequested) {
-    const standOffDistance = Math.max(TILE_SIZE * 2.5, Math.min(effectiveRange * 0.82, distance))
-    const normX = dx / Math.max(1, distance)
-    const normY = dy / Math.max(1, distance)
-    const standOffX = targetCenter.x - normX * standOffDistance
-    const standOffY = targetCenter.y - normY * standOffDistance
+  if (!unit.helipadLandingRequested) {
+    const overflyX = targetCenter.x
+    const overflyY = targetCenter.y
     unit.flightPlan = {
-      x: standOffX,
-      y: standOffY,
-      stopRadius: TILE_SIZE * 0.55,
+      x: overflyX,
+      y: overflyY,
+      stopRadius: TILE_SIZE * 0.2,
       mode: 'combat',
       followTargetId: unit.target.id || null,
       destinationTile: {
-        x: Math.max(0, Math.floor(standOffX / TILE_SIZE)),
-        y: Math.max(0, Math.floor(standOffY / TILE_SIZE))
+        x: Math.max(0, Math.floor(overflyX / TILE_SIZE)),
+        y: Math.max(0, Math.floor(overflyY / TILE_SIZE))
       }
     }
     unit.moveTarget = unit.flightPlan.destinationTile
@@ -620,7 +610,7 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     return
   }
 
-  let bombBudget = ammoRemaining
+  const bombBudget = ammoRemaining
   const queuedTargets = [unit.target]
   if (Array.isArray(unit.attackQueue)) {
     unit.attackQueue.forEach(target => {
@@ -628,6 +618,11 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
         queuedTargets.push(target)
       }
     })
+  }
+
+  const bombDelayMs = 300
+  if (unit.lastShotTime && now - unit.lastShotTime < bombDelayMs) {
+    return
   }
 
   for (const queuedTarget of queuedTargets) {
@@ -640,15 +635,10 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     const queueDistance = Math.hypot(queueTargetCenter.x - unitCenterX, queueTargetCenter.y - unitCenterY)
     if (queueDistance > effectiveRange) continue
 
-    const bombsForTarget = countBombsNeededForTarget(queuedTarget, bombBudget)
-    for (let i = 0; i < bombsForTarget; i++) {
-      const dropped = handleF35BombDrop(unit, queuedTarget, bullets, now, queueTargetCenter.x, queueTargetCenter.y, units, mapGrid)
-      if (!dropped) {
-        return
-      }
-      bombBudget--
+    const dropped = handleF35BombDrop(unit, queuedTarget, bullets, now, queueTargetCenter.x, queueTargetCenter.y, units, mapGrid)
+    if (dropped) {
+      unit.lastShotTime = now
+      return
     }
   }
-
-  unit.lastShotTime = now
 }

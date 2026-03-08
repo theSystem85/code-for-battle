@@ -441,11 +441,29 @@ export function handleF35BombDrop(unit, target, bullets, now, targetCenterX, tar
 
   const centerX = unit.x + TILE_SIZE / 2
   const centerY = unit.y + TILE_SIZE / 2
-  const releasePoint = computeF35BombReleasePoint(unit, targetCenterX, targetCenterY)
+  const previousCenterX = Number.isFinite(unit._f35LastBombPassCenterX) ? unit._f35LastBombPassCenterX : centerX
+  const previousCenterY = Number.isFinite(unit._f35LastBombPassCenterY) ? unit._f35LastBombPassCenterY : centerY
+  unit._f35LastBombPassCenterX = centerX
+  unit._f35LastBombPassCenterY = centerY
+
+  const overTargetRadius = TILE_SIZE * 0.75
+  const segmentLengthSquared = Math.max(0.0001,
+    ((centerX - previousCenterX) * (centerX - previousCenterX)) +
+    ((centerY - previousCenterY) * (centerY - previousCenterY)))
+  const segmentProjection = ((targetCenterX - previousCenterX) * (centerX - previousCenterX)) +
+    ((targetCenterY - previousCenterY) * (centerY - previousCenterY))
+  const clampedProjection = Math.max(0, Math.min(1, segmentProjection / segmentLengthSquared))
+  const closestPointX = previousCenterX + (centerX - previousCenterX) * clampedProjection
+  const closestPointY = previousCenterY + (centerY - previousCenterY) * clampedProjection
+  const distanceToPassSegment = Math.hypot(targetCenterX - closestPointX, targetCenterY - closestPointY)
   const distanceToTarget = Math.hypot(targetCenterX - centerX, targetCenterY - centerY)
-  if (distanceToTarget > releasePoint.releaseDistance + TILE_SIZE * 0.75) {
+  const isOverTarget = distanceToTarget <= overTargetRadius || distanceToPassSegment <= overTargetRadius
+
+  if (!isOverTarget) {
     return false
   }
+
+  const releasePoint = computeF35BombReleasePoint(unit, targetCenterX, targetCenterY)
 
   unit.customRocketSpawn = getF35BombSpawnPoint(unit, centerX, centerY)
   const fired = handleTankFiring(

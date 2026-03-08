@@ -865,7 +865,7 @@ export const UNIT_PROPERTIES = {
   f35: {
     health: 70,
     maxHealth: 70,
-    speed: 3.0375,
+    speed: 3.95,
     rotationSpeed: 0.13,
     turretRotationSpeed: 0,
     accelerationMultiplier: 1.35
