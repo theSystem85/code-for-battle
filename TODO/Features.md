@@ -1,3 +1,4 @@
+- [x] Ensure enemy AI maintains F22:F35 build parity at 1:1 and uses F35 strike logic against anti-air-uncovered ground buildings.
 - [x] Added F35 behavior consistency E2E regression coverage for grounded-fire blocking, no-auto-land-on-move, airstrip slot reservation separation, and no-trail bomb drops.
 - [x] Follow-up polish for save sharing: fix import/export icons, auto-load exactly one imported save, support multi-file import without auto-load, and export filenames as timestamp-first.
 - [x] Add save game sharing via sidebar import/export: export local saves as JSON from each save row, add an import button next to save, and make save labels clickable to load.
