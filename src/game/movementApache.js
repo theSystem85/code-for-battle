@@ -3,6 +3,7 @@ import { removeUnitOccupancy } from '../units.js'
 import { playPositionalSound, audioContext, getMasterVolume } from '../sound.js'
 import { calculatePositionalAudio, consumeUnitGas } from './movementHelpers.js'
 import { BASE_FRAME_SECONDS, MOVEMENT_CONFIG } from './movementConstants.js'
+import { canF35StartLanding } from './f35Behavior.js'
 
 const ROTOR_AIRBORNE_SPEED = 0.35
 const ROTOR_GROUNDED_SPEED = 0
@@ -41,7 +42,11 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
   let landingBlocked = false
   const hasGroundLandingRequest = Boolean(unit.type === 'f35' && unit.groundLandingRequested && unit.groundLandingTarget)
 
-  if (hasGroundLandingRequest && unit.groundLandingTarget) {
+  if (unit.type === 'f35' && !canF35StartLanding(unit) && manualState === 'land') {
+    manualState = 'auto'
+  }
+
+  if (hasGroundLandingRequest && unit.groundLandingTarget && canF35StartLanding(unit)) {
     const centerX = unit.x + TILE_SIZE / 2
     const centerY = unit.y + TILE_SIZE / 2
     const targetDistance = Math.hypot(centerX - unit.groundLandingTarget.x, centerY - unit.groundLandingTarget.y)
@@ -62,7 +67,7 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
     if (row && centerTileX >= 0 && centerTileX < row.length) {
       const occupancy = row[centerTileX] || 0
-      const helipadLandingActive = Boolean(unit.helipadLandingRequested || unit.landedHelipadId || hasGroundLandingRequest)
+      const helipadLandingActive = Boolean((unit.helipadLandingRequested && canF35StartLanding(unit)) || unit.landedHelipadId || (hasGroundLandingRequest && canF35StartLanding(unit)))
 
       landingBlocked = occupancy > 0 && !helipadLandingActive
       if (landingBlocked) {
@@ -220,6 +225,14 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
       const hoverMeters = hoverEquivalentPixels * metersPerPixel
       const hoverUsage = (unit.gasConsumption || 0) * hoverMeters / 100000 * (unit.hoverFuelMultiplier || 0.2)
       consumeUnitGas(unit, hoverUsage)
+    }
+  }
+
+
+  if (unit.type === 'f35' && unit.flightState && unit.flightState !== 'grounded') {
+    if (!unit.lastF22FlightSoundAt || now - unit.lastF22FlightSoundAt > 4500) {
+      playPositionalSound('f22Flight', unit.x, unit.y, 0.25)
+      unit.lastF22FlightSoundAt = now
     }
   }
 

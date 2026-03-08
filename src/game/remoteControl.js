@@ -368,6 +368,8 @@ function handleApacheRemoteControl(unit, params) {
   if (remoteActive) {
     unit.flightPlan = null
     unit.helipadLandingRequested = false
+    unit.groundLandingRequested = false
+    unit.groundLandingTarget = null
     unit.helipadTargetId = null
     unit.autoHoldAltitude = !descendActive
   }
@@ -382,14 +384,17 @@ function handleApacheRemoteControl(unit, params) {
   }
 
   if (ascendActive || (remoteActive && unit.flightState === 'grounded' && !descendActive)) {
+    if (unit.type === 'f35') unit.commandIntent = 'move'
     unit.manualFlightHoverRequested = true
     unit.manualFlightState = 'takeoff'
     unit.autoHoldAltitude = true
   } else if (descendActive) {
+    if (unit.type === 'f35') unit.commandIntent = 'explicitLand'
     unit.manualFlightHoverRequested = false
     unit.manualFlightState = 'land'
     unit.autoHoldAltitude = false
   } else if (unit.manualFlightHoverRequested && unit.flightState !== 'grounded') {
+    if (unit.type === 'f35') unit.commandIntent = 'move'
     unit.manualFlightState = 'hover'
     unit.autoHoldAltitude = true
   } else if (!remoteActive && unit.flightState === 'grounded') {
@@ -494,7 +499,7 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
     if (!unit || !unit.movement) return
 
     const hasTurret = isTurretTankUnitType(unit.type)
-    const isApache = unit.type === 'apache'
+    const isApache = unit.type === 'apache' || unit.type === 'f35'
     const isTouchLayout = typeof document !== 'undefined' && document.body?.classList.contains('is-touch')
 
     // Only allow remote control for player units unless enemy control is enabled

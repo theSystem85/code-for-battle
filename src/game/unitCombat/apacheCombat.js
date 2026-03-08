@@ -6,8 +6,9 @@ import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUn
 import { showNotification } from '../../ui/notifications.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
 import { getEffectiveFireRange, getEffectiveFireRate, isHumanControlledParty } from './combatHelpers.js'
-import { claimAirstripParkingSlot, getAirstripParkingSpots } from '../../utils/airstripUtils.js'
+import { getAirstripParkingSpots, reserveAirstripParkingSlot } from '../../utils/airstripUtils.js'
 import { handleApacheVolley, handleF35BombDrop } from './firingHandlers.js'
+import { canF35ReleaseWeapons } from '../f35Behavior.js'
 
 function getApacheTargetCenter(target) {
   if (!target) {
@@ -139,7 +140,7 @@ function findNearestLandingPadForF35(unit, units) {
     }
 
     if (building.type === 'airstrip') {
-      const slotIndex = claimAirstripParkingSlot(building, unit.airstripParkingSlotIndex)
+      const slotIndex = reserveAirstripParkingSlot(building, unit.id, unit.airstripParkingSlotIndex)
       if (slotIndex < 0) return
       const slot = getAirstripParkingSpots(building)[slotIndex]
       if (!slot) return
@@ -203,6 +204,7 @@ function initiateApacheHelipadReturn(unit, helipadInfo) {
     unit.landedHelipadId = null
   }
 
+  unit.commandIntent = 'landAtStructure'
   unit.helipadLandingRequested = true
   unit.helipadTargetId = helipadId || getBuildingIdentifier(helipad)
   if (unit.flightState === 'grounded') {
@@ -236,6 +238,7 @@ function initiateF35PadReturn(unit, padInfo) {
     destinationTile: { ...padInfo.tile }
   }
   unit.moveTarget = { ...padInfo.tile }
+  unit.commandIntent = 'returnToBase'
   unit.helipadLandingRequested = true
   unit.groundLandingRequested = false
   unit.groundLandingTarget = null
@@ -364,6 +367,8 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
     // Set canFire to true when ammo is available
     unit.canFire = true
   }
+
+  unit.commandIntent = 'attack'
 
   const targetCenter = getApacheTargetCenter(unit.target)
   if (!targetCenter) {
@@ -556,6 +561,8 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     return
   }
 
+  unit.commandIntent = 'attack'
+
   const targetCenter = getApacheTargetCenter(unit.target)
   if (!targetCenter) {
     return
@@ -609,7 +616,7 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     unit.manualFlightState = 'takeoff'
   }
 
-  if (!inRange || !canAttack || unit.canFire === false || unit.flightState === 'grounded') {
+  if (!inRange || !canAttack || !canF35ReleaseWeapons(unit)) {
     return
   }
 

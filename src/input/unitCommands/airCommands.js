@@ -4,7 +4,7 @@ import { playPositionalSound } from '../../sound.js'
 import { showNotification } from '../../ui/notifications.js'
 import { getBuildingIdentifier } from '../../utils.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUnit } from '../../utils/helipadUtils.js'
-import { claimAirstripParkingSlot, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant } from '../../utils/airstripUtils.js'
+import { getAirstripParkingSpots, getAirstripRunwayPoints, reserveAirstripParkingSlot, releaseAirstripParkingSlotReservation } from '../../utils/airstripUtils.js'
 import { units } from '../../main.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
@@ -31,12 +31,21 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     unit.autoHoldAltitude = true
 
     if (options.mode === 'airstrip' && options.airstrip) {
+      unit.commandIntent = 'landAtStructure'
       unit.airstripId = getBuildingIdentifier(options.airstrip)
       unit.runwayPoints = getAirstripRunwayPoints(options.airstrip)
       unit.f22State = 'approach_runway'
       unit.f22PendingTakeoff = false
+      unit.commandIntent = 'landAtStructure'
       unit.helipadLandingRequested = true
     } else {
+      unit.commandIntent = options.mode === 'combat' ? 'attack' : 'move'
+      if (unit.airstripId && Array.isArray(gameState.buildings)) {
+        const previousAirstrip = gameState.buildings.find(b => getBuildingIdentifier(b) === unit.airstripId)
+        if (previousAirstrip) {
+          releaseAirstripParkingSlotReservation(previousAirstrip, unit.id)
+        }
+      }
       unit.helipadLandingRequested = false
       if (unit.flightState === 'grounded') {
         unit.f22PendingTakeoff = true
@@ -70,12 +79,14 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
     unit.remoteControlActive = false
     unit.hovering = false
     unit.landedOnGround = false
+    unit.commandIntent = 'move'
 
     if (options.mode === 'airstrip' && options.airstrip) {
+      unit.commandIntent = 'landAtStructure'
       const airstripId = getBuildingIdentifier(options.airstrip)
-      let slotIndex = Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : claimAirstripParkingSlot(options.airstrip, unit.airstripParkingSlotIndex)
-      if (slotIndex < 0) {
-        slotIndex = unit.airstripParkingSlotIndex
+      let slotIndex = reserveAirstripParkingSlot(options.airstrip, unit.id, Number.isInteger(options.airstripParkingSlotIndex) ? options.airstripParkingSlotIndex : unit.airstripParkingSlotIndex)
+      if (!Number.isInteger(slotIndex) || slotIndex < 0) {
+        slotIndex = null
       }
       const slot = getAirstripParkingSpots(options.airstrip)[slotIndex]
       if (slot) {
@@ -90,22 +101,40 @@ export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
       unit.helipadTargetId = airstripId
       unit.airstripId = airstripId
       unit.airstripParkingSlotIndex = slotIndex
-      if (Number.isInteger(slotIndex)) {
-        setAirstripSlotOccupant(options.airstrip, slotIndex, unit.id)
-      }
     } else if (options.mode === 'helipad') {
+      unit.commandIntent = 'landAtStructure'
+      if (unit.airstripId && Array.isArray(gameState.buildings)) {
+        const previousAirstrip = gameState.buildings.find(b => getBuildingIdentifier(b) === unit.airstripId)
+        if (previousAirstrip) {
+          releaseAirstripParkingSlotReservation(previousAirstrip, unit.id)
+        }
+      }
       unit.helipadLandingRequested = true
       unit.groundLandingRequested = false
       unit.groundLandingTarget = null
       unit.helipadTargetId = options.helipadId || null
       unit.airstripId = null
     } else if (options.mode === 'groundLand') {
+      unit.commandIntent = 'explicitLand'
+      if (unit.airstripId && Array.isArray(gameState.buildings)) {
+        const previousAirstrip = gameState.buildings.find(b => getBuildingIdentifier(b) === unit.airstripId)
+        if (previousAirstrip) {
+          releaseAirstripParkingSlotReservation(previousAirstrip, unit.id)
+        }
+      }
       unit.helipadLandingRequested = false
       unit.helipadTargetId = null
       unit.airstripId = null
       unit.groundLandingRequested = true
       unit.groundLandingTarget = { x: destCenter.x, y: destCenter.y }
     } else {
+      unit.commandIntent = options.mode === 'combat' ? 'attack' : 'move'
+      if (unit.airstripId && Array.isArray(gameState.buildings)) {
+        const previousAirstrip = gameState.buildings.find(b => getBuildingIdentifier(b) === unit.airstripId)
+        if (previousAirstrip) {
+          releaseAirstripParkingSlotReservation(previousAirstrip, unit.id)
+        }
+      }
       unit.helipadLandingRequested = false
       unit.helipadTargetId = null
       unit.groundLandingRequested = false
