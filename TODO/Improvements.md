@@ -761,3 +761,5 @@
 - [x] Add mobile bulk-planning for building placement: tap ready build button, press-and-hold a start tile, drag to preview a line, and place the full planned line on release while keeping the build-button bulk count in sync.
 - [x] Refine mobile bulk building planning to freeform paint mode (not forced line mode), disable yellow selection rectangle during paint, and fix edge auto-scroll direction to match drawing direction.
 - [x] Restore mobile double-tap cancel behavior for placement/planning mode and keep two-finger pan scrolling functional after using draw-to-plan mode.
+
+- [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
