@@ -24,6 +24,7 @@ out vec4 vWaterEdges;
 
 void main() {
   vec2 worldPos = aTranslation * uTileStep - uScroll + aPosition * uTileSize;
+  vec2 worldSamplePos = aTranslation * uTileStep + aPosition * uTileSize;
   vec2 zeroToOne = worldPos / uResolution;
   vec2 clipSpace = zeroToOne * 2.0 - 1.0;
   gl_Position = vec4(clipSpace * vec2(1.0, -1.0), 0.0, 1.0);
@@ -31,7 +32,7 @@ void main() {
   vColor = aColor;
   vTextureType = aTextureType;
   vLocalPos = aPosition;
-  vWorldPos = worldPos;
+  vWorldPos = worldSamplePos;
   vWaterEdges = aWaterEdges;
 }
 `
@@ -55,20 +56,21 @@ void main() {
   if (vTextureType > 1.5) {
     float t = uTime * 0.001;
     vec2 flow = vec2(
-      sin(vWorldPos.y * 0.018 + t * 0.55),
-      cos(vWorldPos.x * 0.016 - t * 0.48)
+      sin(vWorldPos.y * 0.046 + t * 0.82),
+      cos(vWorldPos.x * 0.042 - t * 0.74)
     );
-    vec2 p = vWorldPos * 0.032 + flow * 2.4;
-    float waveA = sin(p.x + t * 0.9);
-    float waveB = cos(p.y * 1.2 - t * 1.15);
-    float waveC = sin((p.x + p.y) * 0.65 + t * 0.45);
+    vec2 p = vWorldPos * 0.082 + flow * 1.25;
+    float waveA = sin(p.x * 1.5 + t * 1.1);
+    float waveB = cos(p.y * 1.8 - t * 1.25);
+    float waveC = sin((p.x - p.y) * 1.1 + t * 0.63);
     float wave = (waveA + waveB + waveC) / 3.0;
-    float shimmer = 0.5 + 0.5 * sin((p.x * 0.7 - p.y * 0.6) + t * 1.35);
+    float shimmer = 0.5 + 0.5 * sin((p.x * 1.2 - p.y * 1.05) + t * 1.65);
 
-    vec3 deepColor = vec3(0.05, 0.21, 0.35);
-    vec3 shallowColor = vec3(0.11, 0.43, 0.56);
-    vec3 waterColor = mix(deepColor, shallowColor, 0.45 + wave * 0.22);
-    waterColor += vec3(0.03, 0.06, 0.08) * shimmer * 0.35;
+    vec3 deepColor = vec3(0.04, 0.18, 0.32);
+    vec3 brightColor = vec3(0.08, 0.39, 0.58);
+    float contrast = clamp(0.5 + wave * 0.45, 0.0, 1.0);
+    vec3 waterColor = mix(deepColor, brightColor, contrast);
+    waterColor += vec3(0.04, 0.08, 0.10) * shimmer * 0.42;
 
     float edgeDistance = 1.0;
     if (vWaterEdges.x > 0.5) edgeDistance = min(edgeDistance, vLocalPos.y);
@@ -76,11 +78,8 @@ void main() {
     if (vWaterEdges.z > 0.5) edgeDistance = min(edgeDistance, 1.0 - vLocalPos.y);
     if (vWaterEdges.w > 0.5) edgeDistance = min(edgeDistance, vLocalPos.x);
 
-    float shoreBlend = 1.0 - smoothstep(0.0, 0.16, edgeDistance);
-    float foam = shoreBlend * (0.35 + 0.65 * (0.5 + 0.5 * sin((p.x + p.y) * 1.8 - t * 1.8)));
-    vec3 shoreColor = vec3(0.30, 0.56, 0.63);
-    waterColor = mix(waterColor, shoreColor, shoreBlend * 0.65);
-    waterColor += vec3(0.20, 0.24, 0.24) * foam * 0.28;
+    float shoreMask = edgeDistance < 0.09 ? 1.0 : 0.0;
+    waterColor += vec3(0.03, 0.05, 0.05) * shoreMask;
 
     outColor = vec4(waterColor, 1.0);
   } else if (vTextureType > 0.5) {
