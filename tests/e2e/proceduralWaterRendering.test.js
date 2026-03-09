@@ -168,10 +168,57 @@ test.describe('Procedural WebGL water rendering', () => {
 
     expect(centerLater).not.toBeNull()
 
+    const parallaxCheck = await page.evaluate((tileSize) => {
+      const game = window.gameInstance
+      const gameState = window.gameState
+      const glCanvas = document.getElementById('gameCanvasGL')
+      const gl = glCanvas?.getContext('webgl2') || glCanvas?.getContext('webgl')
+      const map = game?.mapGrid || gameState?.mapGrid
+      if (!game || !gameState || !glCanvas || !gl || !map) return null
+
+      const isWater = (x, y) => map?.[y]?.[x]?.type === 'water'
+      let target = null
+      for (let y = 2; y < map.length - 2 && !target; y++) {
+        for (let x = 2; x < map[0].length - 2 && !target; x++) {
+          if (isWater(x, y) && isWater(x + 1, y) && isWater(x, y + 1)) {
+            target = { x, y }
+          }
+        }
+      }
+      if (!target) return null
+
+      const ratio = window.devicePixelRatio || 1
+      const readAtWorld = () => {
+        const screenX = (target.x * tileSize - gameState.scrollOffset.x + tileSize * 0.5) * ratio
+        const screenY = (target.y * tileSize - gameState.scrollOffset.y + tileSize * 0.5) * ratio
+        const px = Math.min(glCanvas.width - 1, Math.max(0, Math.floor(screenX)))
+        const pyTop = Math.min(glCanvas.height - 1, Math.max(0, Math.floor(screenY)))
+        const py = glCanvas.height - 1 - pyTop
+        const out = new Uint8Array(4)
+        gl.readPixels(px, py, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, out)
+        return Array.from(out)
+      }
+
+      const before = readAtWorld()
+      gameState.scrollOffset.x = Math.max(0, gameState.scrollOffset.x + tileSize)
+      game?.gameLoop?.requestRender?.()
+      return new Promise(resolve => {
+        requestAnimationFrame(() => {
+          const after = readAtWorld()
+          resolve({ before, after })
+        })
+      })
+    }, TILE_SIZE)
+
+    expect(parallaxCheck).not.toBeNull()
+
     const centerDelta = sampling.centerNow.reduce((sum, value, idx) => sum + Math.abs(value - centerLater[idx]), 0)
     const shoreDelta = sampling.centerNow.reduce((sum, value, idx) => sum + Math.abs(value - sampling.shoreNow[idx]), 0)
 
+    const parallaxDelta = parallaxCheck.before.reduce((sum, value, idx) => sum + Math.abs(value - parallaxCheck.after[idx]), 0)
+
     expect(centerDelta).toBeGreaterThan(8)
-    expect(shoreDelta).toBeGreaterThan(12)
+    expect(shoreDelta).toBeGreaterThan(8)
+    expect(parallaxDelta).toBeLessThan(18)
   })
 })

@@ -36,7 +36,9 @@ Upgrade the rendering stack to prioritize GPU-backed pipelines for the main play
 8. **Animated Water Without Tile Asset Frames**
    - Render water procedurally in the GPU path (shader-driven animation) while still using logical `water` map tiles to determine placement.
    - Do not depend on water image-frame assets for base water rendering.
-   - Blend shore edges against neighboring non-water tiles to avoid hard seams at coastlines and corners.
+   - Keep procedural water pattern anchored in world space so camera scrolling does not introduce parallax drift.
+   - Apply the same procedural water style to water SOT overlays for visual consistency.
+   - Favor crisp shoreline transitions over soft blur if blending artifacts appear.
 
 ---
 

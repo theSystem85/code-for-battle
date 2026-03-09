@@ -422,7 +422,7 @@ export class MapRenderer {
     }
   }
 
-  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, _currentWaterFrame) {
     if (this.textureManager.integratedSpriteSheetMode) {
       const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
@@ -442,12 +442,9 @@ export class MapRenderer {
       }
     }
 
-    if (type === 'water' && this.textureManager.waterFrames.length) {
-      const frame = currentWaterFrame || this.textureManager.getCurrentWaterFrame()
-      if (frame) {
-        ctx.drawImage(frame, screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
-        return
-      }
+    if (type === 'water') {
+      this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
+      return
     }
 
     if (useTexture && this.textureManager.tileTextureCache[type]) {
@@ -474,6 +471,38 @@ export class MapRenderer {
 
     ctx.fillStyle = TILE_COLORS[type]
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+  }
+
+  drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    const t = now * 0.0022
+    const originX = tileX * TILE_SIZE
+    const originY = tileY * TILE_SIZE
+
+    ctx.fillStyle = '#0b3551'
+    ctx.fillRect(screenX, screenY, size, size)
+
+    const bandCount = 5
+    const bandHeight = size / (bandCount + 1)
+    for (let i = 0; i < bandCount; i++) {
+      const phase = t + originX * 0.045 + originY * 0.052 + i * 1.17
+      const offset = Math.sin(phase) * 2
+      const y = screenY + (i + 1) * bandHeight + offset
+      const alpha = 0.22 + 0.08 * Math.sin(phase * 1.4)
+      ctx.fillStyle = `rgba(95, 176, 216, ${Math.max(0.12, Math.min(0.36, alpha)).toFixed(3)})`
+      ctx.fillRect(screenX, Math.floor(y), size, 1)
+    }
+
+    const xBandCount = 3
+    const colWidth = size / (xBandCount + 1)
+    for (let i = 0; i < xBandCount; i++) {
+      const phase = t * 0.8 + originX * 0.061 - originY * 0.044 + i * 1.9
+      const offset = Math.cos(phase) * 1.5
+      const x = screenX + (i + 1) * colWidth + offset
+      const alpha = 0.1 + 0.08 * Math.cos(phase * 1.7)
+      ctx.fillStyle = `rgba(142, 221, 242, ${Math.max(0.05, Math.min(0.24, alpha)).toFixed(3)})`
+      ctx.fillRect(Math.floor(x), screenY, 1, size)
+    }
   }
 
   drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture) {
@@ -616,7 +645,7 @@ export class MapRenderer {
   /**
    * Draw a Smoothening Overlay Texture (SOT) on a single tile
    */
-  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null) {
+  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', _currentWaterFrame = null) {
     const key = `${tileX},${tileY}`
     if (sotApplied.has(key)) return
     sotApplied.add(key)
@@ -653,14 +682,8 @@ export class MapRenderer {
     ctx.closePath()
     ctx.clip()
 
-    if (type === 'water' && this.textureManager.waterFrames.length) {
-      const frame = currentWaterFrame || this.textureManager.getCurrentWaterFrame()
-      if (frame) {
-        ctx.drawImage(frame, screenX, screenY, size, size)
-      } else {
-        ctx.fillStyle = TILE_COLORS[type]
-        ctx.fill()
-      }
+    if (type === 'water') {
+      this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY)
     } else if (useTexture) {
       const idx = this.textureManager.getTileVariation(type, tileX, tileY)
       if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
