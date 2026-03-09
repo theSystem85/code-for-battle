@@ -8,6 +8,55 @@
 			"group": "build",
 			"isBackground": true,
 			"problemMatcher": []
+		},
+		{
+			"label": "Lint Changed Files",
+			"type": "shell",
+			"command": "npm run lint:fix:changed",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Procedural Water E2E",
+			"type": "shell",
+			"command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 PLAYWRIGHT_WEB_SERVER_COMMAND=\"npm run dev -- --host 127.0.0.1 --port 4173\" npx playwright test tests/e2e/proceduralWaterRendering.test.js --project=chromium",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Procedural Water E2E Retry",
+			"type": "shell",
+			"command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 PLAYWRIGHT_WEB_SERVER_COMMAND=\"npm run dev -- --host 127.0.0.1 --port 4173\" npx playwright test tests/e2e/proceduralWaterRendering.test.js --project=chromium",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Procedural Water E2E Retry 2",
+			"type": "shell",
+			"command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 PLAYWRIGHT_WEB_SERVER_COMMAND=\"npm run dev -- --host 127.0.0.1 --port 4173\" npx playwright test tests/e2e/proceduralWaterRendering.test.js --project=chromium",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Procedural Water E2E Retry 3",
+			"type": "shell",
+			"command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 PLAYWRIGHT_WEB_SERVER_COMMAND=\"npm run dev -- --host 127.0.0.1 --port 4173\" npx playwright test tests/e2e/proceduralWaterRendering.test.js --project=chromium",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Procedural Water E2E Retry 4",
+			"type": "shell",
+			"command": "PLAYWRIGHT_BASE_URL=http://127.0.0.1:4173 PLAYWRIGHT_WEB_SERVER_COMMAND=\"npm run dev -- --host 127.0.0.1 --port 4173\" npx playwright test tests/e2e/proceduralWaterRendering.test.js --project=chromium",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Lint Changed Files Final",
+			"type": "shell",
+			"command": "npm run lint:fix:changed",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

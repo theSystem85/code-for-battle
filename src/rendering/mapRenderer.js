@@ -1,5 +1,5 @@
 // rendering/mapRenderer.js
-import { TILE_SIZE, TILE_COLORS, USE_TEXTURES } from '../config.js'
+import { TILE_SIZE, TILE_COLORS, USE_TEXTURES, WATER_EFFECT_ZOOM } from '../config.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -475,9 +475,10 @@ export class MapRenderer {
 
   drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-    const t = now * 0.0022
+    const t = now * 0.0018
     const originX = tileX * TILE_SIZE
     const originY = tileY * TILE_SIZE
+    const zoom = Math.max(WATER_EFFECT_ZOOM, 0.001)
 
     ctx.fillStyle = '#0b3551'
     ctx.fillRect(screenX, screenY, size, size)
@@ -485,7 +486,7 @@ export class MapRenderer {
     const bandCount = 5
     const bandHeight = size / (bandCount + 1)
     for (let i = 0; i < bandCount; i++) {
-      const phase = t + originX * 0.045 + originY * 0.052 + i * 1.17
+      const phase = t + originX * (0.026 / zoom) + originY * (0.029 / zoom) + i * 1.17
       const offset = Math.sin(phase) * 2
       const y = screenY + (i + 1) * bandHeight + offset
       const alpha = 0.22 + 0.08 * Math.sin(phase * 1.4)
@@ -496,7 +497,7 @@ export class MapRenderer {
     const xBandCount = 3
     const colWidth = size / (xBandCount + 1)
     for (let i = 0; i < xBandCount; i++) {
-      const phase = t * 0.8 + originX * 0.061 - originY * 0.044 + i * 1.9
+      const phase = t * 0.72 + originX * (0.031 / zoom) - originY * (0.026 / zoom) + i * 1.9
       const offset = Math.cos(phase) * 1.5
       const x = screenX + (i + 1) * colWidth + offset
       const alpha = 0.1 + 0.08 * Math.cos(phase * 1.7)
@@ -651,9 +652,10 @@ export class MapRenderer {
     sotApplied.add(key)
 
     // Offset SOT slightly to hide gaps on left/top edges and expand a bit
-    const screenX = tileX * TILE_SIZE - scrollOffset.x - 1
-    const screenY = tileY * TILE_SIZE - scrollOffset.y - 1
-    const size = TILE_SIZE + 3
+    const isWaterSot = type === 'water'
+    const screenX = tileX * TILE_SIZE - scrollOffset.x - (isWaterSot ? 0 : 1)
+    const screenY = tileY * TILE_SIZE - scrollOffset.y - (isWaterSot ? 0 : 1)
+    const size = TILE_SIZE + (isWaterSot ? 1 : 3)
 
     ctx.save()
     ctx.beginPath()
@@ -783,7 +785,8 @@ export class MapRenderer {
    * Used when GPU rendering handles base tiles but SOT still needs 2D canvas rendering.
    * Also renders ore/seed overlays after SOT to ensure correct z-order (SOT below ore).
    */
-  renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY) {
+  renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, options = {}) {
+    const { skipWaterSot = false } = options
     // Ensure SOT mask is computed
     if (!this.sotMask) {
       this.computeSOTMask(mapGrid)
@@ -804,6 +807,9 @@ export class MapRenderer {
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
+          if (skipWaterSot && sotInfo.type === 'water') {
+            continue
+          }
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
       }
@@ -826,7 +832,7 @@ export class MapRenderer {
   }
 
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
-    const { skipBaseLayer = false } = options || {}
+    const { skipBaseLayer = false, skipWaterSot = false } = options || {}
     // Guard against empty or invalid mapGrid
     if (!mapGrid || !Array.isArray(mapGrid) || mapGrid.length === 0 || !mapGrid[0]) {
       return
@@ -843,7 +849,7 @@ export class MapRenderer {
       this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState)
     } else {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
-      this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY)
+      this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, { skipWaterSot })
     }
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
