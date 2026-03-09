@@ -2,6 +2,7 @@
 // UI dialog for runtime configuration without eval()
 
 import {
+  configRegistry,
   getConfigCategories,
   getConfigsByCategory,
   getConfigValue,
@@ -15,6 +16,7 @@ export class RuntimeConfigDialog {
   constructor() {
     this.isDialogOpen = false
     this.selectedCategory = null
+    this.searchQuery = ''
     this.setupStyles()
   }
 
@@ -94,6 +96,46 @@ export class RuntimeConfigDialog {
           flex-wrap: wrap;
           border-bottom: 1px solid #2d3640;
           background: rgba(0, 0, 0, 0.15);
+        }
+
+        .runtime-config-search {
+          padding: 12px 20px;
+          border-bottom: 1px solid #2d3640;
+          background: rgba(0, 0, 0, 0.12);
+        }
+
+        .runtime-config-search-input {
+          width: 100%;
+          padding: 10px 12px;
+          font-size: 14px;
+          border: 1px solid #3c4a58;
+          border-radius: 6px;
+          background: #1a1f27;
+          color: #e5e5e5;
+          font-family: inherit;
+          box-sizing: border-box;
+        }
+
+        .runtime-config-search-input:focus {
+          border-color: #4da3ff;
+          outline: none;
+          box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.2);
+        }
+
+        .runtime-config-result-meta {
+          color: #9fb3c8;
+          font-size: 11px;
+          margin-top: 6px;
+        }
+
+        .runtime-config-no-results {
+          padding: 12px;
+          color: #9fb3c8;
+          font-size: 13px;
+          text-align: center;
+          border: 1px dashed #3c4a58;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.01);
         }
 
         .runtime-config-category-btn {
@@ -285,6 +327,10 @@ export class RuntimeConfigDialog {
             padding: 10px 14px;
           }
 
+          .runtime-config-search {
+            padding: 10px 14px;
+          }
+
           .runtime-config-category-btn {
             padding: 8px 12px;
             font-size: 12px;
@@ -352,11 +398,21 @@ export class RuntimeConfigDialog {
     // Get categories
     const categories = getConfigCategories()
     this.selectedCategory = categories[0] || null
+    this.searchQuery = ''
 
     dialog.innerHTML = `
       <div class="runtime-config-header">
         <h2>⚙️ Runtime Configuration</h2>
         <button class="runtime-config-close" id="runtime-config-close">✕</button>
+      </div>
+      <div class="runtime-config-search">
+        <input
+          id="runtime-config-search-input"
+          class="runtime-config-search-input"
+          type="search"
+          placeholder="Search variables by name or value"
+          aria-label="Search runtime configuration"
+        >
       </div>
       <div class="runtime-config-categories" id="runtime-config-categories"></div>
       <div class="runtime-config-content" id="runtime-config-content"></div>
@@ -406,11 +462,18 @@ export class RuntimeConfigDialog {
   renderContent() {
     const container = document.getElementById('runtime-config-content')
     if (!container || !this.selectedCategory) return
-
-    const configs = getConfigsByCategory(this.selectedCategory)
     container.innerHTML = ''
 
-    Object.entries(configs).forEach(([id, entry]) => {
+    const hasSearchQuery = this.searchQuery.trim().length > 0
+    const configs = hasSearchQuery ? this.getSearchMatches() : Object.entries(getConfigsByCategory(this.selectedCategory))
+
+    if (configs.length === 0) {
+      container.innerHTML = '<div class="runtime-config-no-results">No configuration variables match your search.</div>'
+      return
+    }
+
+    configs.forEach(([id, entry]) => {
+      const isSearchResult = hasSearchQuery
       const item = document.createElement('div')
       item.className = 'runtime-config-item'
 
@@ -464,6 +527,7 @@ export class RuntimeConfigDialog {
         <div class="runtime-config-item-description">
           ${entry.description}
           ${!isMutable ? '<span class="runtime-config-readonly"> (read-only)</span>' : ''}
+          ${isSearchResult ? `<div class="runtime-config-result-meta">Category: ${entry.category} · Variable: ${id}</div>` : ''}
         </div>
         <div class="runtime-config-item-control">
           ${controlHtml}
@@ -501,6 +565,37 @@ export class RuntimeConfigDialog {
     })
   }
 
+
+  matchesSearchTerm(text, query) {
+    const normalizedText = String(text || '').toLowerCase()
+    const normalizedQuery = String(query || '').toLowerCase()
+
+    if (!normalizedQuery) return true
+    if (normalizedText.includes(normalizedQuery)) return true
+
+    let queryIndex = 0
+    for (const char of normalizedText) {
+      if (char === normalizedQuery[queryIndex]) {
+        queryIndex += 1
+        if (queryIndex === normalizedQuery.length) {
+          return true
+        }
+      }
+    }
+
+    return false
+  }
+
+  getSearchMatches() {
+    const query = this.searchQuery.trim().toLowerCase()
+    if (!query) return []
+
+    return Object.entries(configRegistry).filter(([id, entry]) => {
+      const value = this.formatValue(getConfigValue(id), entry.type).toLowerCase()
+      return this.matchesSearchTerm(entry.name, query) || this.matchesSearchTerm(id, query) || this.matchesSearchTerm(value, query)
+    })
+  }
+
   formatValue(value, type) {
     if (type === 'boolean') {
       return value ? 'true' : 'false'
@@ -535,6 +630,15 @@ export class RuntimeConfigDialog {
     const refreshDialog = () => {
       this.renderContent()
       showNotification('Configuration refreshed', 1500)
+    }
+
+    const searchInput = document.getElementById('runtime-config-search-input')
+
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.searchQuery = e.target.value || ''
+        this.renderContent()
+      })
     }
 
     if (closeBtn) closeBtn.addEventListener('click', closeDialog)
