@@ -1,4 +1,25 @@
-import { TILE_COLORS, TILE_SIZE, USE_TEXTURES } from '../config.js'
+import { TILE_COLORS, TILE_SIZE, USE_TEXTURES, WATER_EFFECT_ZOOM } from '../config.js'
+
+const SOT_CLIP_NONE = 0
+const SOT_CLIP_TOP_LEFT = 1
+const SOT_CLIP_TOP_RIGHT = 2
+const SOT_CLIP_BOTTOM_LEFT = 3
+const SOT_CLIP_BOTTOM_RIGHT = 4
+
+function getSotClipOrientation(orientation) {
+  switch (orientation) {
+    case 'top-left':
+      return SOT_CLIP_TOP_LEFT
+    case 'top-right':
+      return SOT_CLIP_TOP_RIGHT
+    case 'bottom-left':
+      return SOT_CLIP_BOTTOM_LEFT
+    case 'bottom-right':
+      return SOT_CLIP_BOTTOM_RIGHT
+    default:
+      return SOT_CLIP_NONE
+  }
+}
 
 const VERTEX_SHADER_SOURCE = `#version 300 es
 precision highp float;
@@ -9,6 +30,7 @@ layout(location = 2) in vec4 aUVRect;
 layout(location = 3) in vec4 aColor;
 layout(location = 4) in float aTextureType;
 layout(location = 5) in vec4 aWaterEdges;
+layout(location = 6) in float aClipOrientation;
 
 uniform vec2 uResolution;
 uniform vec2 uScroll;
@@ -21,6 +43,7 @@ out float vTextureType;
 out vec2 vLocalPos;
 out vec2 vWorldPos;
 out vec4 vWaterEdges;
+out float vClipOrientation;
 
 void main() {
   vec2 worldPos = aTranslation * uTileStep - uScroll + aPosition * uTileSize;
@@ -34,6 +57,7 @@ void main() {
   vLocalPos = aPosition;
   vWorldPos = worldSamplePos;
   vWaterEdges = aWaterEdges;
+  vClipOrientation = aClipOrientation;
 }
 `
 
@@ -42,6 +66,7 @@ precision highp float;
 
 uniform sampler2D uAtlas;
 uniform float uTime;
+uniform float uWaterZoom;
 
 in vec2 vUV;
 in vec4 vColor;
@@ -49,20 +74,39 @@ in float vTextureType;
 in vec2 vLocalPos;
 in vec2 vWorldPos;
 in vec4 vWaterEdges;
+in float vClipOrientation;
 
 out vec4 outColor;
 
 void main() {
+  if (vClipOrientation > 0.5) {
+    bool insideClip = true;
+    if (vClipOrientation < 1.5) {
+      insideClip = vLocalPos.x + vLocalPos.y <= 1.0;
+    } else if (vClipOrientation < 2.5) {
+      insideClip = vLocalPos.x >= vLocalPos.y;
+    } else if (vClipOrientation < 3.5) {
+      insideClip = vLocalPos.x <= vLocalPos.y;
+    } else {
+      insideClip = vLocalPos.x + vLocalPos.y >= 1.0;
+    }
+
+    if (!insideClip) {
+      discard;
+    }
+  }
+
   if (vTextureType > 1.5) {
     float t = uTime * 0.001;
+    float worldScale = 1.0 / max(uWaterZoom, 0.001);
     vec2 flow = vec2(
-      sin(vWorldPos.y * 0.046 + t * 0.82),
-      cos(vWorldPos.x * 0.042 - t * 0.74)
+      sin(vWorldPos.y * (0.031 * worldScale) + t * 0.82),
+      cos(vWorldPos.x * (0.029 * worldScale) - t * 0.74)
     );
-    vec2 p = vWorldPos * 0.082 + flow * 1.25;
-    float waveA = sin(p.x * 1.5 + t * 1.1);
-    float waveB = cos(p.y * 1.8 - t * 1.25);
-    float waveC = sin((p.x - p.y) * 1.1 + t * 0.63);
+    vec2 p = vWorldPos * (0.052 * worldScale) + flow * 1.15;
+    float waveA = sin(p.x * 1.2 + t * 1.1);
+    float waveB = cos(p.y * 1.35 - t * 1.25);
+    float waveC = sin((p.x - p.y) * 0.92 + t * 0.63);
     float wave = (waveA + waveB + waveC) / 3.0;
     float shimmer = 0.5 + 0.5 * sin((p.x * 1.2 - p.y * 1.05) + t * 1.65);
 
@@ -153,9 +197,10 @@ function parseColor(color) {
 }
 
 export class GameWebGLRenderer {
-  constructor(gl, textureManager) {
+  constructor(gl, textureManager, mapRenderer = null) {
     this.gl = gl
     this.textureManager = textureManager
+    this.mapRenderer = mapRenderer
     this.program = null
     this.buffers = {}
     this.instanceCapacity = 0
@@ -163,6 +208,7 @@ export class GameWebGLRenderer {
     this.atlasSize = { ...DEFAULT_ATLAS_SIZE }
     this.colorCache = new Map()
     this.pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    this.rendersWaterSot = true
   }
 
   setContext(gl) {
@@ -173,6 +219,10 @@ export class GameWebGLRenderer {
     this.instanceCapacity = 0
     this.atlasTexture = null
     this.atlasSize = { ...DEFAULT_ATLAS_SIZE }
+  }
+
+  setMapRenderer(mapRenderer) {
+    this.mapRenderer = mapRenderer
   }
 
   ensureInitialized() {
@@ -208,6 +258,7 @@ export class GameWebGLRenderer {
     this.buffers.uv = gl.createBuffer()
     this.buffers.color = gl.createBuffer()
     this.buffers.textureType = gl.createBuffer()
+    this.buffers.clipOrientation = gl.createBuffer()
 
     gl.useProgram(this.program)
     gl.uniform1i(gl.getUniformLocation(this.program, 'uAtlas'), 0)
@@ -253,25 +304,53 @@ export class GameWebGLRenderer {
   }
 
   buildTileInstances(mapGrid, startX, startY, endX, endY) {
-    const instances = []
+    const baseInstances = []
+    const overlayInstances = []
+    const resourceInstances = []
     const canUseTextures = USE_TEXTURES && this.textureManager?.allTexturesLoaded
+    const sotMask = this.getSotMask(mapGrid)
 
     for (let y = startY; y < endY; y++) {
       const row = mapGrid[y]
       for (let x = startX; x < endX; x++) {
         const tile = row[x]
         if (!tile) continue
-        instances.push(this.createInstance(tile.type, x, y, mapGrid, canUseTextures))
+        const visualTileType = tile?.airstripStreet ? 'land' : tile.type
+        baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures))
+
+        const sotInfo = sotMask?.[y]?.[x]
+        if ((visualTileType === 'land' || visualTileType === 'street') && sotInfo?.type === 'water') {
+          overlayInstances.push(this.createWaterSotInstance(x, y, sotInfo.orientation))
+        }
 
         if (tile.seedCrystal) {
-          instances.push(this.createInstance('seedCrystal', x, y, mapGrid, canUseTextures))
+          resourceInstances.push(this.createInstance('seedCrystal', x, y, mapGrid, canUseTextures))
         } else if (tile.ore) {
-          instances.push(this.createInstance('ore', x, y, mapGrid, canUseTextures))
+          resourceInstances.push(this.createInstance('ore', x, y, mapGrid, canUseTextures))
         }
       }
     }
 
-    return instances.filter(Boolean)
+    return [...baseInstances, ...overlayInstances, ...resourceInstances].filter(Boolean)
+  }
+
+  getSotMask(mapGrid) {
+    if (!this.mapRenderer) return null
+    if (!this.mapRenderer.sotMask) {
+      this.mapRenderer.computeSOTMask(mapGrid)
+    }
+    return this.mapRenderer.sotMask
+  }
+
+  createWaterSotInstance(tileX, tileY, orientation) {
+    return {
+      translation: [tileX, tileY],
+      uvRect: [0, 0, 1, 1],
+      color: this.getColor('water'),
+      textureType: 2,
+      waterEdges: [0, 0, 0, 0],
+      clipOrientation: getSotClipOrientation(orientation)
+    }
   }
 
   createInstance(type, tileX, tileY, mapGrid, canUseTextures) {
@@ -298,7 +377,8 @@ export class GameWebGLRenderer {
       uvRect,
       color: this.getColor(type),
       textureType: isWaterAnimated ? 2 : useTexture ? 1 : 0,
-      waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY) : [0, 0, 0, 0]
+      waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY) : [0, 0, 0, 0],
+      clipOrientation: SOT_CLIP_NONE
     }
   }
 
@@ -349,6 +429,7 @@ export class GameWebGLRenderer {
     const colors = new Float32Array(instances.length * 4)
     const textureType = new Float32Array(instances.length)
     const waterEdges = new Float32Array(instances.length * 4)
+    const clipOrientation = new Float32Array(instances.length)
 
     for (let i = 0; i < instances.length; i++) {
       const inst = instances[i]
@@ -367,6 +448,7 @@ export class GameWebGLRenderer {
       waterEdges[i * 4 + 1] = inst.waterEdges[1]
       waterEdges[i * 4 + 2] = inst.waterEdges[2]
       waterEdges[i * 4 + 3] = inst.waterEdges[3]
+      clipOrientation[i] = inst.clipOrientation
     }
 
     gl.viewport(0, 0, canvas.width, canvas.height)
@@ -380,12 +462,14 @@ export class GameWebGLRenderer {
     const tileSizeLocation = gl.getUniformLocation(this.program, 'uTileSize')
     const tileStepLocation = gl.getUniformLocation(this.program, 'uTileStep')
     const timeLocation = gl.getUniformLocation(this.program, 'uTime')
+    const waterZoomLocation = gl.getUniformLocation(this.program, 'uWaterZoom')
 
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height)
     gl.uniform2f(scrollLocation, scrollX, scrollY)
     gl.uniform1f(tileSizeLocation, tileSize)
     gl.uniform1f(tileStepLocation, tileStep)
     gl.uniform1f(timeLocation, (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()))
+    gl.uniform1f(waterZoomLocation, WATER_EFFECT_ZOOM)
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
@@ -432,6 +516,13 @@ export class GameWebGLRenderer {
     gl.enableVertexAttribArray(5)
     gl.vertexAttribPointer(5, 4, gl.FLOAT, false, 0, 0)
     gl.vertexAttribDivisor(5, 1)
+
+    // SOT clip orientation (0 = full quad)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.clipOrientation)
+    gl.bufferData(gl.ARRAY_BUFFER, clipOrientation, gl.DYNAMIC_DRAW)
+    gl.enableVertexAttribArray(6)
+    gl.vertexAttribPointer(6, 1, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(6, 1)
 
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instances.length)
 

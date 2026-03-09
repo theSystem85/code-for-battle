@@ -356,6 +356,19 @@ export const TILE_IMAGES = {
   }
 }
 
+// Procedural water world zoom. Higher values zoom the animated pattern farther out.
+export let WATER_EFFECT_ZOOM = 0.2
+
+export function setWaterEffectZoom(value) {
+  const numericValue = Number(value)
+  if (!Number.isFinite(numericValue) || numericValue <= 0) {
+    return WATER_EFFECT_ZOOM
+  }
+
+  WATER_EFFECT_ZOOM = numericValue
+  return WATER_EFFECT_ZOOM
+}
+
 // Sprite sheet and mapping for map tiles
 export const TILE_SPRITE_SHEET = 'images/map/map_sprites.webp'
 export const TILE_SPRITE_MAP = 'images/map/map_sprites.json'
@@ -1397,6 +1410,7 @@ const EXPORTED_CONFIG_VARIABLES = [
   'TANKER_SUPPLY_CAPACITY',
   'TILE_COLORS',
   'TILE_IMAGES',
+  'WATER_EFFECT_ZOOM',
   'TILE_SPRITE_SHEET',
   'TILE_SPRITE_MAP',
   'USE_TEXTURES',

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { MapRenderer } from '../../src/rendering/mapRenderer.js'
+import { GameWebGLRenderer } from '../../src/rendering/webglRenderer.js'
 
 describe('MapRenderer water rendering', () => {
   const makeTextureManager = () => ({
@@ -45,5 +46,23 @@ describe('MapRenderer water rendering', () => {
 
     expect(proceduralSpy).toHaveBeenCalled()
     expect(ctx.drawImage).not.toHaveBeenCalled()
+  })
+
+  it('adds water SOT triangles to the WebGL tile batch so they match shader-rendered water', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'water' }, { type: 'land' }],
+      [{ type: 'water' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    mapRenderer.computeSOTMask(mapGrid)
+
+    const webglRenderer = new GameWebGLRenderer(null, makeTextureManager(), mapRenderer)
+    const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 3, 3)
+    const waterSotInstances = instances.filter(instance => instance.textureType === 2 && instance.clipOrientation > 0)
+
+    expect(waterSotInstances).toHaveLength(1)
+    expect(waterSotInstances[0].translation).toEqual([1, 1])
   })
 })

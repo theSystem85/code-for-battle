@@ -259,9 +259,10 @@ export class Renderer {
     let gpuRendered = false
     if (gpuContext && gpuCanvas && !gameState.useIntegratedSpriteSheetMode) {
       if (!this.gpuRenderer) {
-        this.gpuRenderer = new GameWebGLRenderer(gpuContext, this.textureManager)
+        this.gpuRenderer = new GameWebGLRenderer(gpuContext, this.textureManager, this.mapRenderer)
       } else {
         this.gpuRenderer.setContext(gpuContext)
+        this.gpuRenderer.setMapRenderer(this.mapRenderer)
       }
       gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas)
     }
@@ -279,7 +280,7 @@ export class Renderer {
       gameCanvas,
       gameState,
       occupancyMap,
-      { skipBaseLayer: gpuRendered }
+      { skipBaseLayer: gpuRendered, skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot }
     )
     if (gameState.dzmOverlayIndex !== -1) {
       const ids = Object.keys(gameState.dangerZoneMaps || {})
