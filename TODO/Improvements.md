@@ -1,3 +1,7 @@
+- [x] Make the water-effect zoom configurable, default it much farther out, and render water SOT tiles with the same animated water treatment as full water tiles in the GPU path.
+- [x] Fix broken-looking water SOT overlays by aligning SOT water draw bounds with base water rendering and further zooming out the procedural water pattern scale.
+- [x] Tune procedural water rendering: sharper/smaller pattern scale, remove soft shoreline smoothing, lock pattern to world scroll (no parallax), and use the same procedural effect for water SOT overlays.
+- [x] Replace tile-image-based water rendering with a procedural WebGL water shader that animates seamlessly and applies shoreline blending using logical water tiles for placement.
 - [x] Added shared F35 behavior guards (`canF35ReleaseWeapons`, `canF35StartLanding`) plus deterministic slot reservation lifecycle for airstrip landing intents.
 - [x] Ensure dropdown carets have balanced horizontal spacing by adding explicit right inset/padding (matching left-side visual padding) for sidebar/settings selects.
 - [x] Ensure all dropdowns and input fields use square corners (`border-radius: 0`) across sidebar and modal form controls.

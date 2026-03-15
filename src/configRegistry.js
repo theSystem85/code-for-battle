@@ -99,7 +99,15 @@ import {
   setMobileVehicleJoystickMapping,
   getMobileApacheJoystickMapping,
   setMobileApacheJoystickMapping,
-  SAFE_RANGE_ENABLED
+  SAFE_RANGE_ENABLED,
+  USE_PROCEDURAL_WATER_RENDERING,
+  setUseProceduralWaterRendering,
+  WATER_EFFECT_TONE,
+  setWaterEffectTone,
+  WATER_EFFECT_SATURATION,
+  setWaterEffectSaturation,
+  WATER_EFFECT_ZOOM,
+  setWaterEffectZoom
   , HOWITZER_COST
   , setHowitzerCost
   , HOWITZER_SPEED
@@ -143,6 +151,52 @@ import {
  * Keys are internal IDs, values are ConfigEntry objects
  */
 export const configRegistry = {
+  // Graphics
+  proceduralWaterRendering: {
+    name: 'Procedural Water Rendering',
+    description: 'Switch between the new procedural water shader and the classic animated water tiles',
+    type: 'boolean',
+    get: () => USE_PROCEDURAL_WATER_RENDERING,
+    set: setUseProceduralWaterRendering,
+    category: 'Graphics'
+  },
+
+  waterEffectTone: {
+    name: 'Water Tone',
+    description: 'Blend the procedural water palette from cooler blue toward greener teal',
+    type: 'number',
+    get: () => WATER_EFFECT_TONE,
+    set: setWaterEffectTone,
+    min: -1,
+    max: 1,
+    step: 0.05,
+    category: 'Graphics'
+  },
+
+  waterEffectSaturation: {
+    name: 'Water Saturation',
+    description: 'Adjust the saturation multiplier applied to procedural water colors',
+    type: 'number',
+    get: () => WATER_EFFECT_SATURATION,
+    set: setWaterEffectSaturation,
+    min: 0,
+    max: 2,
+    step: 0.05,
+    category: 'Graphics'
+  },
+
+  waterEffectZoom: {
+    name: 'Water Zoom',
+    description: 'Scale of the procedural water pattern in world space',
+    type: 'number',
+    get: () => WATER_EFFECT_ZOOM,
+    set: setWaterEffectZoom,
+    min: 0.05,
+    max: 2,
+    step: 0.05,
+    category: 'Graphics'
+  },
+
   // Game Balance
   xpMultiplier: {
     name: 'XP Multiplier',

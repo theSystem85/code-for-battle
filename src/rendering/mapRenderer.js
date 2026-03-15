@@ -1,9 +1,34 @@
 // rendering/mapRenderer.js
-import { TILE_SIZE, TILE_COLORS, USE_TEXTURES } from '../config.js'
+import {
+  TILE_SIZE,
+  TILE_COLORS,
+  USE_TEXTURES,
+  USE_PROCEDURAL_WATER_RENDERING,
+  WATER_EFFECT_TONE,
+  WATER_EFFECT_SATURATION,
+  WATER_EFFECT_ZOOM
+} from '../config.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
+
+function clampChannel(value) {
+  return Math.max(0, Math.min(255, Math.round(value)))
+}
+
+function mixColor(colorA, colorB, amount) {
+  return colorA.map((channel, index) => channel + (colorB[index] - channel) * amount)
+}
+
+function applySaturation(color, saturation) {
+  const luma = color[0] * 0.2126 + color[1] * 0.7152 + color[2] * 0.0722
+  return color.map(channel => luma + (channel - luma) * saturation)
+}
+
+function toRgba(color, alpha = 1) {
+  return `rgba(${clampChannel(color[0])}, ${clampChannel(color[1])}, ${clampChannel(color[2])}, ${alpha})`
+}
 
 export class MapRenderer {
   constructor(textureManager) {
@@ -204,6 +229,10 @@ export class MapRenderer {
         lastUseTexture: null,
         lastIntegratedSignature: null,
         lastWaterFrameIndex: null,
+        lastProceduralWaterEnabled: null,
+        lastWaterEffectTone: null,
+        lastWaterEffectSaturation: null,
+        lastWaterEffectZoom: null,
         lastSotMaskVersion: null,
         containsWaterAnimation: false,
         padding: this.chunkPadding,
@@ -257,13 +286,17 @@ export class MapRenderer {
       chunk.endY
     )
 
-    const hasWaterAnimation = containsWater && this.textureManager.waterFrames.length > 0
+    const hasWaterAnimation = containsWater && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)
     const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
 
     const needsRedraw =
       chunk.signature !== signature ||
       chunk.lastUseTexture !== useTexture ||
       chunk.lastIntegratedSignature !== this.textureManager.integratedRenderSignature ||
+      chunk.lastProceduralWaterEnabled !== USE_PROCEDURAL_WATER_RENDERING ||
+      chunk.lastWaterEffectTone !== WATER_EFFECT_TONE ||
+      chunk.lastWaterEffectSaturation !== WATER_EFFECT_SATURATION ||
+      chunk.lastWaterEffectZoom !== WATER_EFFECT_ZOOM ||
       chunk.lastSotMaskVersion !== this.sotMaskVersion ||
       chunk.containsWaterAnimation !== hasWaterAnimation ||
       (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
@@ -300,6 +333,10 @@ export class MapRenderer {
     chunk.signature = signature
     chunk.lastUseTexture = useTexture
     chunk.lastIntegratedSignature = this.textureManager.integratedRenderSignature
+    chunk.lastProceduralWaterEnabled = USE_PROCEDURAL_WATER_RENDERING
+    chunk.lastWaterEffectTone = WATER_EFFECT_TONE
+    chunk.lastWaterEffectSaturation = WATER_EFFECT_SATURATION
+    chunk.lastWaterEffectZoom = WATER_EFFECT_ZOOM
     chunk.lastSotMaskVersion = this.sotMaskVersion
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
@@ -442,12 +479,13 @@ export class MapRenderer {
       }
     }
 
-    if (type === 'water' && this.textureManager.waterFrames.length) {
-      const frame = currentWaterFrame || this.textureManager.getCurrentWaterFrame()
-      if (frame) {
-        ctx.drawImage(frame, screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
-        return
+    if (type === 'water') {
+      if (USE_PROCEDURAL_WATER_RENDERING) {
+        this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
+      } else {
+        this.drawClassicWater(ctx, screenX, screenY, TILE_SIZE + 1, currentWaterFrame)
       }
+      return
     }
 
     if (useTexture && this.textureManager.tileTextureCache[type]) {
@@ -474,6 +512,62 @@ export class MapRenderer {
 
     ctx.fillStyle = TILE_COLORS[type]
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+  }
+
+  drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    const t = now * 0.0018
+    const originX = tileX * TILE_SIZE
+    const originY = tileY * TILE_SIZE
+    const zoom = Math.max(WATER_EFFECT_ZOOM, 0.001)
+    const toneBlend = (WATER_EFFECT_TONE + 1) / 2
+    const saturation = Math.max(0, WATER_EFFECT_SATURATION)
+    const deepColor = applySaturation(mixColor([10, 46, 82], [24, 70, 76], toneBlend), saturation)
+    const brightColor = applySaturation(mixColor([20, 99, 148], [33, 133, 110], toneBlend), saturation)
+    const shimmerColor = applySaturation(mixColor([10, 20, 26], [12, 28, 18], toneBlend), saturation)
+    const bandColor = applySaturation(mixColor([95, 176, 216], [94, 213, 180], toneBlend), saturation)
+    const columnColor = applySaturation(mixColor([142, 221, 242], [151, 236, 202], toneBlend), saturation)
+
+    ctx.fillStyle = toRgba(deepColor)
+    ctx.fillRect(screenX, screenY, size, size)
+
+    const bandCount = 5
+    const bandHeight = size / (bandCount + 1)
+    for (let i = 0; i < bandCount; i++) {
+      const phase = t + originX * (0.026 / zoom) + originY * (0.029 / zoom) + i * 1.17
+      const offset = Math.sin(phase) * 2
+      const y = screenY + (i + 1) * bandHeight + offset
+      const alpha = 0.22 + 0.08 * Math.sin(phase * 1.4)
+      ctx.fillStyle = toRgba(bandColor, Math.max(0.12, Math.min(0.36, alpha)).toFixed(3))
+      ctx.fillRect(screenX, Math.floor(y), size, 1)
+    }
+
+    const xBandCount = 3
+    const colWidth = size / (xBandCount + 1)
+    for (let i = 0; i < xBandCount; i++) {
+      const phase = t * 0.72 + originX * (0.031 / zoom) - originY * (0.026 / zoom) + i * 1.9
+      const offset = Math.cos(phase) * 1.5
+      const x = screenX + (i + 1) * colWidth + offset
+      const alpha = 0.1 + 0.08 * Math.cos(phase * 1.7)
+      ctx.fillStyle = toRgba(columnColor, Math.max(0.05, Math.min(0.24, alpha)).toFixed(3))
+      ctx.fillRect(Math.floor(x), screenY, 1, size)
+    }
+
+    const shimmer = 0.5 + 0.5 * Math.sin((originX - originY) * (0.03 / zoom) + t * 1.65)
+    ctx.fillStyle = toRgba(brightColor, 0.16 + shimmer * 0.08)
+    ctx.fillRect(screenX, screenY, size, size)
+    ctx.fillStyle = toRgba(shimmerColor, 0.08 + shimmer * 0.05)
+    ctx.fillRect(screenX, screenY, size, size)
+  }
+
+  drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame) {
+    if (currentWaterFrame) {
+      ctx.drawImage(currentWaterFrame, screenX, screenY, size, size)
+      return
+    }
+
+    ctx.fillStyle = TILE_COLORS.water
+    ctx.fillRect(screenX, screenY, size, size)
   }
 
   drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture) {
@@ -622,9 +716,10 @@ export class MapRenderer {
     sotApplied.add(key)
 
     // Offset SOT slightly to hide gaps on left/top edges and expand a bit
-    const screenX = tileX * TILE_SIZE - scrollOffset.x - 1
-    const screenY = tileY * TILE_SIZE - scrollOffset.y - 1
-    const size = TILE_SIZE + 3
+    const isWaterSot = type === 'water'
+    const screenX = tileX * TILE_SIZE - scrollOffset.x - (isWaterSot ? 0 : 1)
+    const screenY = tileY * TILE_SIZE - scrollOffset.y - (isWaterSot ? 0 : 1)
+    const size = TILE_SIZE + (isWaterSot ? 1 : 3)
 
     ctx.save()
     ctx.beginPath()
@@ -653,13 +748,11 @@ export class MapRenderer {
     ctx.closePath()
     ctx.clip()
 
-    if (type === 'water' && this.textureManager.waterFrames.length) {
-      const frame = currentWaterFrame || this.textureManager.getCurrentWaterFrame()
-      if (frame) {
-        ctx.drawImage(frame, screenX, screenY, size, size)
+    if (type === 'water') {
+      if (USE_PROCEDURAL_WATER_RENDERING) {
+        this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY)
       } else {
-        ctx.fillStyle = TILE_COLORS[type]
-        ctx.fill()
+        this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
       }
     } else if (useTexture) {
       const idx = this.textureManager.getTileVariation(type, tileX, tileY)
@@ -760,7 +853,8 @@ export class MapRenderer {
    * Used when GPU rendering handles base tiles but SOT still needs 2D canvas rendering.
    * Also renders ore/seed overlays after SOT to ensure correct z-order (SOT below ore).
    */
-  renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY) {
+  renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, options = {}) {
+    const { skipWaterSot = false } = options
     // Ensure SOT mask is computed
     if (!this.sotMask) {
       this.computeSOTMask(mapGrid)
@@ -781,6 +875,9 @@ export class MapRenderer {
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
+          if (skipWaterSot && sotInfo.type === 'water') {
+            continue
+          }
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
       }
@@ -803,7 +900,7 @@ export class MapRenderer {
   }
 
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
-    const { skipBaseLayer = false } = options || {}
+    const { skipBaseLayer = false, skipWaterSot = false } = options || {}
     // Guard against empty or invalid mapGrid
     if (!mapGrid || !Array.isArray(mapGrid) || mapGrid.length === 0 || !mapGrid[0]) {
       return
@@ -820,7 +917,7 @@ export class MapRenderer {
       this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState)
     } else {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
-      this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY)
+      this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, { skipWaterSot })
     }
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
