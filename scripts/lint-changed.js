@@ -1,4 +1,5 @@
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
 
 const status = spawnSync('git', ['status', '--short'], { encoding: 'utf8' });
 
@@ -35,6 +36,10 @@ const changedFiles = status.stdout
   })
   .filter((file) => {
     if (!file) {
+      return false;
+    }
+
+    if (!existsSync(file)) {
       return false;
     }
 

@@ -1,4 +1,11 @@
-import { TILE_COLORS, TILE_SIZE, USE_TEXTURES, WATER_EFFECT_ZOOM } from '../config.js'
+import {
+  TILE_COLORS,
+  TILE_SIZE,
+  USE_TEXTURES,
+  WATER_EFFECT_TONE,
+  WATER_EFFECT_SATURATION,
+  WATER_EFFECT_ZOOM
+} from '../config.js'
 
 const SOT_CLIP_NONE = 0
 const SOT_CLIP_TOP_LEFT = 1
@@ -67,6 +74,8 @@ precision highp float;
 uniform sampler2D uAtlas;
 uniform float uTime;
 uniform float uWaterZoom;
+uniform float uWaterTone;
+uniform float uWaterSaturation;
 
 in vec2 vUV;
 in vec4 vColor;
@@ -77,6 +86,11 @@ in vec4 vWaterEdges;
 in float vClipOrientation;
 
 out vec4 outColor;
+
+vec3 applySaturation(vec3 color, float saturation) {
+  float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
+  return mix(vec3(luma), color, max(saturation, 0.0));
+}
 
 void main() {
   if (vClipOrientation > 0.5) {
@@ -109,12 +123,14 @@ void main() {
     float waveC = sin((p.x - p.y) * 0.92 + t * 0.63);
     float wave = (waveA + waveB + waveC) / 3.0;
     float shimmer = 0.5 + 0.5 * sin((p.x * 1.2 - p.y * 1.05) + t * 1.65);
+    float toneBlend = clamp((uWaterTone + 1.0) * 0.5, 0.0, 1.0);
 
-    vec3 deepColor = vec3(0.04, 0.18, 0.32);
-    vec3 brightColor = vec3(0.08, 0.39, 0.58);
+    vec3 deepColor = mix(vec3(0.04, 0.18, 0.32), vec3(0.09, 0.27, 0.30), toneBlend);
+    vec3 brightColor = mix(vec3(0.08, 0.39, 0.58), vec3(0.13, 0.52, 0.43), toneBlend);
     float contrast = clamp(0.5 + wave * 0.45, 0.0, 1.0);
     vec3 waterColor = mix(deepColor, brightColor, contrast);
     waterColor += vec3(0.04, 0.08, 0.10) * shimmer * 0.42;
+    waterColor = applySaturation(waterColor, uWaterSaturation);
 
     float edgeDistance = 1.0;
     if (vWaterEdges.x > 0.5) edgeDistance = min(edgeDistance, vLocalPos.y);
@@ -463,6 +479,8 @@ export class GameWebGLRenderer {
     const tileStepLocation = gl.getUniformLocation(this.program, 'uTileStep')
     const timeLocation = gl.getUniformLocation(this.program, 'uTime')
     const waterZoomLocation = gl.getUniformLocation(this.program, 'uWaterZoom')
+    const waterToneLocation = gl.getUniformLocation(this.program, 'uWaterTone')
+    const waterSaturationLocation = gl.getUniformLocation(this.program, 'uWaterSaturation')
 
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height)
     gl.uniform2f(scrollLocation, scrollX, scrollY)
@@ -470,6 +488,8 @@ export class GameWebGLRenderer {
     gl.uniform1f(tileStepLocation, tileStep)
     gl.uniform1f(timeLocation, (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()))
     gl.uniform1f(waterZoomLocation, WATER_EFFECT_ZOOM)
+    gl.uniform1f(waterToneLocation, WATER_EFFECT_TONE)
+    gl.uniform1f(waterSaturationLocation, WATER_EFFECT_SATURATION)
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
