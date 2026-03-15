@@ -5,8 +5,56 @@ import { runtimeConfigDialog } from './runtimeConfigDialog.js'
 import { renderKeybindingsEditor } from './keybindingsEditor.js'
 import { initLlmSettingsPanel } from './llmSettingsPanel.js'
 import { gameState } from '../gameState.js'
+import { getConfigValue, setConfigValue } from '../configRegistry.js'
 
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
+const WATER_SETTINGS_CONFIG_IDS = {
+  enabled: 'proceduralWaterRendering',
+  tone: 'waterEffectTone',
+  saturation: 'waterEffectSaturation'
+}
+
+function formatWaterTone(value) {
+  const percentage = Math.round(Number(value) * 100)
+  if (percentage > 0) {
+    return `+${percentage}%`
+  }
+  return `${percentage}%`
+}
+
+function formatWaterSaturation(value) {
+  return `${Math.round(Number(value) * 100)}%`
+}
+
+function syncWaterGraphicsControls(modal) {
+  const enabledToggle = modal.querySelector('#settingsProceduralWaterToggle')
+  const toneInput = modal.querySelector('#settingsWaterToneRange')
+  const saturationInput = modal.querySelector('#settingsWaterSaturationRange')
+  const toneValue = modal.querySelector('#settingsWaterToneValue')
+  const saturationValue = modal.querySelector('#settingsWaterSaturationValue')
+
+  if (enabledToggle) {
+    enabledToggle.checked = Boolean(getConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled))
+  }
+
+  if (toneInput) {
+    const tone = Number(getConfigValue(WATER_SETTINGS_CONFIG_IDS.tone) ?? 0)
+    toneInput.value = String(tone)
+    toneInput.disabled = !enabledToggle?.checked
+    if (toneValue) {
+      toneValue.textContent = formatWaterTone(tone)
+    }
+  }
+
+  if (saturationInput) {
+    const saturation = Number(getConfigValue(WATER_SETTINGS_CONFIG_IDS.saturation) ?? 1)
+    saturationInput.value = String(saturation)
+    saturationInput.disabled = !enabledToggle?.checked
+    if (saturationValue) {
+      saturationValue.textContent = formatWaterSaturation(saturation)
+    }
+  }
+}
 
 function loadRadarOfflineAnimationSetting() {
   try {
@@ -65,6 +113,7 @@ function openModal(modal, defaultTab = 'keybindings') {
   if (radarOfflineAnimationToggle) {
     radarOfflineAnimationToggle.checked = gameState.radarOfflineAnimationEnabled !== false
   }
+  syncWaterGraphicsControls(modal)
   if (keybindingsPanel) {
     renderKeybindingsEditor(keybindingsPanel)
   }
@@ -94,6 +143,9 @@ export function initSettingsModal() {
   const runtimeLaunchBtn = document.getElementById('openRuntimeConfigDialogBtn')
   const frameLimiterToggle = document.getElementById('settingsFrameLimiterToggle')
   const radarOfflineAnimationToggle = document.getElementById('settingsRadarOfflineAnimationToggle')
+  const proceduralWaterToggle = document.getElementById('settingsProceduralWaterToggle')
+  const waterToneRange = document.getElementById('settingsWaterToneRange')
+  const waterSaturationRange = document.getElementById('settingsWaterSaturationRange')
 
   if (!modal) return
 
@@ -133,4 +185,30 @@ export function initSettingsModal() {
       saveRadarOfflineAnimationSetting(enabled)
     })
   }
+
+  if (proceduralWaterToggle) {
+    proceduralWaterToggle.checked = Boolean(getConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled))
+    proceduralWaterToggle.addEventListener('change', (event) => {
+      setConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled, event.target.checked)
+      syncWaterGraphicsControls(modal)
+    })
+  }
+
+  if (waterToneRange) {
+    waterToneRange.value = String(getConfigValue(WATER_SETTINGS_CONFIG_IDS.tone) ?? 0)
+    waterToneRange.addEventListener('input', (event) => {
+      setConfigValue(WATER_SETTINGS_CONFIG_IDS.tone, Number(event.target.value))
+      syncWaterGraphicsControls(modal)
+    })
+  }
+
+  if (waterSaturationRange) {
+    waterSaturationRange.value = String(getConfigValue(WATER_SETTINGS_CONFIG_IDS.saturation) ?? 1)
+    waterSaturationRange.addEventListener('input', (event) => {
+      setConfigValue(WATER_SETTINGS_CONFIG_IDS.saturation, Number(event.target.value))
+      syncWaterGraphicsControls(modal)
+    })
+  }
+
+  syncWaterGraphicsControls(modal)
 }

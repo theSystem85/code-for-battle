@@ -26,7 +26,7 @@ import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { selectedUnits } from '../inputHandler.js'
-import { TILE_SIZE } from '../config.js'
+import { TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
 
 export class Renderer {
   constructor() {
@@ -257,7 +257,14 @@ export class Renderer {
 
     // Render all game elements in order
     let gpuRendered = false
-    if (gpuContext && gpuCanvas && !gameState.useIntegratedSpriteSheetMode) {
+    const shouldUseGpuTerrain = Boolean(
+      gpuContext &&
+      gpuCanvas &&
+      !gameState.useIntegratedSpriteSheetMode &&
+      USE_PROCEDURAL_WATER_RENDERING
+    )
+
+    if (shouldUseGpuTerrain) {
       if (!this.gpuRenderer) {
         this.gpuRenderer = new GameWebGLRenderer(gpuContext, this.textureManager, this.mapRenderer)
       } else {
@@ -265,6 +272,10 @@ export class Renderer {
         this.gpuRenderer.setMapRenderer(this.mapRenderer)
       }
       gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas)
+    } else if (gpuContext && gpuCanvas) {
+      gpuContext.viewport(0, 0, gpuCanvas.width, gpuCanvas.height)
+      gpuContext.clearColor(0, 0, 0, 0)
+      gpuContext.clear(gpuContext.COLOR_BUFFER_BIT)
     }
 
     // Build occupancy map for visualization if needed
