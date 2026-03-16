@@ -33,8 +33,21 @@ Upgrade the rendering stack to prioritize GPU-backed pipelines for the main play
    - Keep GPU submission resilient to changing map sizes and visibility windows without reallocating buffers each frame.
 7. **Viewport Coverage**
    - Draw a buffer of off-screen tiles beyond the visible viewport (accounting for device pixel ratios) so no gaps or black bars appear when panning to any map edge.
-8. **Animated Tiles**
-   - Preserve animated terrain (e.g., water) in the GPU path by sampling the existing water animation frames; fall back to atlas UVs only when animation frames are unavailable.
+8. **Animated Water Without Tile Asset Frames**
+   - Render water procedurally in the GPU path (shader-driven animation) while still using logical `water` map tiles to determine placement.
+   - Do not depend on water image-frame assets for base water rendering.
+   - Expose the procedural water zoom as a numeric config value so the pattern scale can be tuned without shader rewrites.
+   - Default the procedural water zoom farther out than the original implementation so the animation reads as a larger continuous body of water.
+   - Keep procedural water pattern anchored in world space so camera scrolling does not introduce parallax drift.
+   - Apply the same procedural water style to water SOT overlays for visual consistency, including aligned tile bounds so SOT corners do not appear broken relative to adjacent water tiles and GPU water SOT corners use the same animated shader treatment as full water tiles.
+   - For enclosed land/street islands inside water, render inverse SOT on the surrounding water tiles at concave corners so the inner terrain visually overlaps the water; do not apply this inverse SOT to ordinary coastlines or any land/street mass that connects to the map boundary.
+   - When an enclosed island uses inverse land/street SOT, suppress ordinary water-on-land corner SOT on that same island so smoothing is owned by the inner terrain instead of being cut back by water wedges.
+   - Enclosed-island inverse SOT should recognize valid concave corners based on the same enclosed island component reaching both orthogonal sides of the water tile, even when the immediate diagonal tile remains water.
+   - Enclosed-island inverse SOT should also recognize diagonal shoulder corners when the enclosed island component reaches the water tile through one orthogonal neighbor plus the adjacent diagonal continuation, so rounded island shoulders do not leave isolated missing grass/street wedges.
+   - Favor crisp shoreline transitions over soft blur if blending artifacts appear.
+   - Expose a persisted graphics setting that lets the player switch between procedural water and the legacy animated tile-water renderer from the in-game settings modal.
+   - Expose persisted tone and saturation controls for the procedural water palette in both the settings modal and the runtime config under a dedicated Graphics category.
+   - Default the procedural water palette controls to +35% tone and 40% saturation for the shipped experience.
 
 ---
 

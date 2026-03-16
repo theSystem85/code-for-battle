@@ -617,6 +617,24 @@ body.config-modal-open {
   font-size: 13px;
 }
 
+.config-modal__range-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.config-modal__range-value {
+  color: #9fd2ff;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
+  font-size: 12px;
+}
+
+.config-modal__field input[type='range'] {
+  padding: 0;
+  accent-color: #4da3ff;
+}
+
 .config-modal__api-key-security {
   position: relative;
 }

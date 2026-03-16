@@ -821,6 +821,27 @@
             Animate minimap radar-offline grain (old TV white-snow flicker)
           </label>
           <div class="config-modal__section">
+            <h3 class="config-modal__section-title">Graphics</h3>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsProceduralWaterToggle" checked>
+              <span>Use procedural water rendering instead of classic animated water tiles</span>
+            </label>
+            <label class="config-modal__field">
+              <span class="config-modal__range-label-row">
+                <span>Water tone</span>
+                <span id="settingsWaterToneValue" class="config-modal__range-value">+35%</span>
+              </span>
+              <input type="range" id="settingsWaterToneRange" min="-1" max="1" step="0.05" value="0.35">
+            </label>
+            <label class="config-modal__field">
+              <span class="config-modal__range-label-row">
+                <span>Water saturation</span>
+                <span id="settingsWaterSaturationValue" class="config-modal__range-value">40%</span>
+              </span>
+              <input type="range" id="settingsWaterSaturationRange" min="0" max="2" step="0.05" value="0.4">
+            </label>
+          </div>
+          <div class="config-modal__section">
             <h3 class="config-modal__section-title">Tutorial</h3>
             <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="tutorialShowOnStartup">
