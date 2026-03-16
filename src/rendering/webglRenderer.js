@@ -335,8 +335,8 @@ export class GameWebGLRenderer {
         baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures))
 
         const sotInfo = sotMask?.[y]?.[x]
-        if ((visualTileType === 'land' || visualTileType === 'street') && sotInfo?.type === 'water') {
-          overlayInstances.push(this.createWaterSotInstance(x, y, sotInfo.orientation))
+        if (sotInfo) {
+          overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures))
         }
 
         if (tile.seedCrystal) {
@@ -364,6 +364,19 @@ export class GameWebGLRenderer {
       uvRect: [0, 0, 1, 1],
       color: this.getColor('water'),
       textureType: 2,
+      waterEdges: [0, 0, 0, 0],
+      clipOrientation: getSotClipOrientation(orientation)
+    }
+  }
+
+  createSotInstance(type, tileX, tileY, orientation, mapGrid, canUseTextures) {
+    if (type === 'water') {
+      return this.createWaterSotInstance(tileX, tileY, orientation)
+    }
+
+    const instance = this.createInstance(type, tileX, tileY, mapGrid, canUseTextures)
+    return {
+      ...instance,
       waterEdges: [0, 0, 0, 0],
       clipOrientation: getSotClipOrientation(orientation)
     }

@@ -12,6 +12,7 @@ import {
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
+const MIN_SOT_CLUSTER_SIZE = 5
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -28,6 +29,179 @@ function applySaturation(color, saturation) {
 
 function toRgba(color, alpha = 1) {
   return `rgba(${clampChannel(color[0])}, ${clampChannel(color[1])}, ${clampChannel(color[2])}, ${alpha})`
+}
+
+function getSotComponentKey(x, y, tileType) {
+  return `${tileType}:${x},${y}`
+}
+
+function getSotComponentInfo(mapGrid, startX, startY, tileType, analysisCache = null) {
+  if (!mapGrid[startY]?.[startX] || mapGrid[startY][startX].type !== tileType) return null
+
+  const cache = analysisCache ?? new Map()
+  const cacheKey = getSotComponentKey(startX, startY, tileType)
+  if (cache.has(cacheKey)) return cache.get(cacheKey)
+
+  const visited = new Set([`${startX},${startY}`])
+  const queue = [[startX, startY]]
+  const tiles = []
+  const maxY = mapGrid.length - 1
+  const maxX = mapGrid[0]?.length - 1
+  let enclosed = true
+
+  while (queue.length) {
+    const [x, y] = queue.shift()
+    tiles.push([x, y])
+    if (x === 0 || y === 0 || x === maxX || y === maxY) {
+      enclosed = false
+    }
+
+    const neighbors = [
+      [x, y - 1],
+      [x + 1, y],
+      [x, y + 1],
+      [x - 1, y]
+    ]
+
+    for (const [nextX, nextY] of neighbors) {
+      const neighbor = mapGrid[nextY]?.[nextX]
+      if (!neighbor) {
+        enclosed = false
+        continue
+      }
+
+      if (neighbor.type === tileType) {
+        const key = `${nextX},${nextY}`
+        if (!visited.has(key)) {
+          visited.add(key)
+          queue.push([nextX, nextY])
+        }
+        continue
+      }
+
+      if (neighbor.type !== 'water') {
+        enclosed = false
+      }
+    }
+  }
+
+  const info = { size: tiles.length, enclosed }
+  for (const [x, y] of tiles) {
+    cache.set(getSotComponentKey(x, y, tileType), info)
+  }
+
+  return info
+}
+
+function hasMinimumSotCluster(mapGrid, startX, startY, tileType, analysisCache = null, minSize = MIN_SOT_CLUSTER_SIZE) {
+  const info = getSotComponentInfo(mapGrid, startX, startY, tileType, analysisCache)
+  return Boolean(info && info.size >= minSize)
+}
+
+function isEnclosedSotIsland(mapGrid, startX, startY, tileType, analysisCache = null) {
+  const info = getSotComponentInfo(mapGrid, startX, startY, tileType, analysisCache)
+  return Boolean(info?.enclosed)
+}
+
+function areTilesInSameEnclosedSotComponent(mapGrid, firstX, firstY, secondX, secondY, tileType, analysisCache = null) {
+  const firstInfo = getSotComponentInfo(mapGrid, firstX, firstY, tileType, analysisCache)
+  const secondInfo = getSotComponentInfo(mapGrid, secondX, secondY, tileType, analysisCache)
+
+  return Boolean(
+    firstInfo &&
+    secondInfo &&
+    firstInfo === secondInfo &&
+    firstInfo.enclosed &&
+    firstInfo.size >= MIN_SOT_CLUSTER_SIZE
+  )
+}
+
+function matchesInverseSotComponentPattern(mapGrid, waterX, waterY, tileType, positions, analysisCache = null) {
+  const candidateTiles = positions.filter(([x, y]) => mapGrid[y]?.[x]?.type === tileType)
+  if (candidateTiles.length < 2) return false
+
+  const [firstTile, ...restTiles] = candidateTiles
+  return restTiles.some(([x, y]) =>
+    areTilesInSameEnclosedSotComponent(mapGrid, firstTile[0], firstTile[1], x, y, tileType, analysisCache)
+  )
+}
+
+function hasSolidSotInterior(top, right, bottom, left, orientation, tileType) {
+  switch (orientation) {
+    case 'top-left':
+      return right?.type === tileType && bottom?.type === tileType
+    case 'top-right':
+      return left?.type === tileType && bottom?.type === tileType
+    case 'bottom-left':
+      return top?.type === tileType && right?.type === tileType
+    case 'bottom-right':
+      return top?.type === tileType && left?.type === tileType
+    default:
+      return false
+  }
+}
+
+function canApplySotCorner(mapGrid, x, y, tileType, orientation, top, right, bottom, left, analysisCache = null) {
+  return hasMinimumSotCluster(mapGrid, x, y, tileType, analysisCache) &&
+    hasSolidSotInterior(top, right, bottom, left, orientation, tileType)
+}
+
+function getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, analysisCache = null) {
+  if (tileType !== 'water') return null
+
+  const candidates = ['street', 'land']
+  for (const candidateType of candidates) {
+    if (
+      matchesInverseSotComponentPattern(
+        mapGrid,
+        x,
+        y,
+        candidateType,
+        [[x, y - 1], [x - 1, y], [x - 1, y - 1]],
+        analysisCache
+      )
+    ) {
+      return { orientation: 'top-left', type: candidateType }
+    }
+    if (
+      matchesInverseSotComponentPattern(
+        mapGrid,
+        x,
+        y,
+        candidateType,
+        [[x, y - 1], [x + 1, y], [x + 1, y - 1]],
+        analysisCache
+      )
+    ) {
+      return { orientation: 'top-right', type: candidateType }
+    }
+    if (
+      matchesInverseSotComponentPattern(
+        mapGrid,
+        x,
+        y,
+        candidateType,
+        [[x, y + 1], [x - 1, y], [x - 1, y + 1]],
+        analysisCache
+      )
+    ) {
+      return { orientation: 'bottom-left', type: candidateType }
+    }
+    if (
+      matchesInverseSotComponentPattern(
+        mapGrid,
+        x,
+        y,
+        candidateType,
+        [[x, y + 1], [x + 1, y], [x + 1, y + 1]],
+        analysisCache
+      )
+    ) {
+      return { orientation: 'bottom-right', type: candidateType }
+    }
+  }
+
+  return null
 }
 
 export class MapRenderer {
@@ -60,20 +234,22 @@ export class MapRenderer {
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0].length
 
+    const analysisCache = new Map()
+
     // Initialize mask array
     this.sotMask = Array.from({ length: mapHeight })
     for (let y = 0; y < mapHeight; y++) {
       this.sotMask[y] = Array.from({ length: mapWidth }, () => null)
     }
 
-    // Compute SOT for each land or street tile
-    // Land tiles get SOT for street/water corners, street tiles get SOT for water corners
+    // Compute SOT for each terrain tile that can either receive an outer corner overlay
+    // or host an inverse inner-terrain corner when water surrounds an island.
     for (let y = 0; y < mapHeight; y++) {
       for (let x = 0; x < mapWidth; x++) {
         const tile = mapGrid[y][x]
-        if (tile.type !== 'land' && tile.type !== 'street') continue
+        if (tile.type !== 'land' && tile.type !== 'street' && tile.type !== 'water') continue
 
-        const sotInfo = this.computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tile.type)
+        const sotInfo = this.computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tile.type, analysisCache)
         if (sotInfo) {
           this.sotMask[y][x] = sotInfo
         }
@@ -93,40 +269,63 @@ export class MapRenderer {
    * @param {string} tileType - The type of the current tile ('land' or 'street')
    * @returns {Object|null} SOT info { orientation, type } or null
    */
-  computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tileType = 'land') {
+  computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tileType = 'land', analysisCache = null) {
     const top = y > 0 ? mapGrid[y - 1][x] : null
     const left = x > 0 ? mapGrid[y][x - 1] : null
     const bottom = y < mapHeight - 1 ? mapGrid[y + 1][x] : null
     const right = x < mapWidth - 1 ? mapGrid[y][x + 1] : null
+    const isEnclosedIsland = (tileType === 'land' || tileType === 'street') &&
+      isEnclosedSotIsland(mapGrid, x, y, tileType, analysisCache)
+
+    const inverseSotInfo = getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, analysisCache)
+    if (inverseSotInfo) {
+      return inverseSotInfo
+    }
 
     // For land tiles: check street corners first (streets take priority over water)
     if (tileType === 'land') {
       if (top && left && top.type === 'street' && left.type === 'street') {
-        return { orientation: 'top-left', type: 'street' }
+        return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
+          ? { orientation: 'top-left', type: 'street' }
+          : null
       }
       if (top && right && top.type === 'street' && right.type === 'street') {
-        return { orientation: 'top-right', type: 'street' }
+        return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
+          ? { orientation: 'top-right', type: 'street' }
+          : null
       }
       if (bottom && left && bottom.type === 'street' && left.type === 'street') {
-        return { orientation: 'bottom-left', type: 'street' }
+        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
+          ? { orientation: 'bottom-left', type: 'street' }
+          : null
       }
       if (bottom && right && bottom.type === 'street' && right.type === 'street') {
-        return { orientation: 'bottom-right', type: 'street' }
+        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
+          ? { orientation: 'bottom-right', type: 'street' }
+          : null
       }
     }
 
     // Check water corners (for both land and street tiles)
-    if (top && left && top.type === 'water' && left.type === 'water') {
-      return { orientation: 'top-left', type: 'water' }
+    if (!isEnclosedIsland && top && left && top.type === 'water' && left.type === 'water') {
+      return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
+        ? { orientation: 'top-left', type: 'water' }
+        : null
     }
-    if (top && right && top.type === 'water' && right.type === 'water') {
-      return { orientation: 'top-right', type: 'water' }
+    if (!isEnclosedIsland && top && right && top.type === 'water' && right.type === 'water') {
+      return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
+        ? { orientation: 'top-right', type: 'water' }
+        : null
     }
-    if (bottom && left && bottom.type === 'water' && left.type === 'water') {
-      return { orientation: 'bottom-left', type: 'water' }
+    if (!isEnclosedIsland && bottom && left && bottom.type === 'water' && left.type === 'water') {
+      return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
+        ? { orientation: 'bottom-left', type: 'water' }
+        : null
     }
-    if (bottom && right && bottom.type === 'water' && right.type === 'water') {
-      return { orientation: 'bottom-right', type: 'water' }
+    if (!isEnclosedIsland && bottom && right && bottom.type === 'water' && right.type === 'water') {
+      return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
+        ? { orientation: 'bottom-right', type: 'water' }
+        : null
     }
 
     return null
@@ -144,6 +343,7 @@ export class MapRenderer {
 
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
+    const analysisCache = new Map()
 
     // Update the tile and its immediate neighbors (SOT depends on adjacent tiles)
     for (let dy = -1; dy <= 1; dy++) {
@@ -154,8 +354,8 @@ export class MapRenderer {
         if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) continue
 
         const tile = mapGrid[y][x]
-        if (tile.type === 'land' || tile.type === 'street') {
-          this.sotMask[y][x] = this.computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tile.type)
+        if (tile.type === 'land' || tile.type === 'street' || tile.type === 'water') {
+          this.sotMask[y][x] = this.computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tile.type, analysisCache)
         } else {
           this.sotMask[y][x] = null
         }
@@ -443,9 +643,9 @@ export class MapRenderer {
 
         this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
 
-        // Use precomputed SOT mask instead of computing neighbors each frame
-        // SOT applies to land tiles (street/water corners) and street tiles (water corners)
-        if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
+        // Use precomputed SOT mask instead of computing neighbors each frame.
+        // Water tiles can also host inverse SOT so enclosed islands smooth inward.
+        if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
