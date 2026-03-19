@@ -1,6 +1,7 @@
 import { gameState } from '../gameState.js'
 import { TILE_SIZE } from '../config.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
+import { isPartyUsingLlmStrategic } from '../ai/llmStrategicAccess.js'
 import { buildingData } from '../buildings.js'
 import { getLlmQueueState } from '../ai-api/applier.js'
 
@@ -358,12 +359,16 @@ function attachListeners() {
   })
 }
 
-export function showLlmQueueTooltip(building) {
+function canShowTooltipForParty(partyId) {
   const settings = getLlmSettings()
-  if (!settings.strategic.enabled) return
+  return isPartyUsingLlmStrategic(partyId, gameState, settings)
+}
+
+export function showLlmQueueTooltip(building) {
   if (!building) return
   const humanPlayer = gameState.humanPlayer || 'player1'
   if (building.owner === humanPlayer || (humanPlayer === 'player1' && building.owner === 'player')) return
+  if (!canShowTooltipForParty(building.owner)) return
 
   attachListeners()
   if (activeBuildingId !== building.id) {
@@ -380,12 +385,6 @@ export function showLlmQueueTooltip(building) {
 }
 
 export function updateLlmQueueTooltipForSelection() {
-  const settings = getLlmSettings()
-  if (!settings.strategic.enabled) {
-    hideLlmQueueTooltip()
-    return
-  }
-
   const humanPlayer = gameState.humanPlayer || 'player1'
   const isEnemy = (owner) => owner !== humanPlayer && !(humanPlayer === 'player1' && owner === 'player')
 
@@ -401,6 +400,11 @@ export function updateLlmQueueTooltipForSelection() {
   })
 
   if (!selectedBuilding) {
+    hideLlmQueueTooltip()
+    return
+  }
+
+  if (!canShowTooltipForParty(selectedBuilding.owner)) {
     hideLlmQueueTooltip()
     return
   }

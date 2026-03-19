@@ -16,7 +16,7 @@ import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { logPerformance } from '../performanceUtils.js'
 import { RECOVERY_TANK_RATIO, UNIT_COSTS } from '../config.js'
 import { gameState } from '../gameState.js'
-import { getLlmSettings } from './llmSettings.js'
+import { isPartyUsingLlmStrategic } from './llmStrategicAccess.js'
 import { processLlmBuildQueue, processLlmUnitQueue, markLlmBuildComplete, markLlmUnitComplete } from '../ai-api/applier.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/airstripUtils.js'
 import { handleStuckHarvester } from '../game/harvesterLogic.js'
@@ -377,7 +377,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   const aiHarvesters = units.filter(
     u => u.owner === aiPlayerId && u.type === 'harvester' && u.health > 0
   )
-  const llmStrategicActive = getLlmSettings().strategic.enabled
+  const llmStrategicActive = isPartyUsingLlmStrategic(aiPlayerId, gameState)
   const allowStrategicDecisions = !llmStrategicActive
 
   // Process LLM building & unit queues when LLM strategic AI is active.
