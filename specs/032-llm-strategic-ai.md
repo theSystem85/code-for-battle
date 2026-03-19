@@ -148,7 +148,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 
 ## UI Hooks
 - Settings modal includes LLM sections and provider configuration.
-- Selecting any enemy building (including factories like the Construction Yard) while LLM strategic AI is enabled shows the LLM strategic plan tooltip including:
+- Selecting any enemy building (including factories like the Construction Yard) for a party currently assigned to LLM strategic control shows the LLM strategic plan tooltip including:
   - Strategic intent/notes from the LLM
   - Production plan (queued buildings and units with images and status indicators)
   - Status indicators: ✓ completed (green, strikethrough), ⏳ in-progress (yellow highlight), ✗ failed (red, dimmed), queued (no icon)
@@ -156,6 +156,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - The production plan tooltip renders a scrollable, ordered list with unit/building names, images, and live queue status.
 - The production plan shows latest/newest items at the top (reversed insertion order) so the most recent strategic decisions are immediately visible.
 - The tooltip does not dismiss on `mouseleave` from the canvas when an enemy building is selected, preventing accidental hiding when the pointer enters the tooltip overlay.
+- Legacy saves that still store `strategic.enabled: false` must still show the tooltip when the selected enemy party is marked `llmControlled: true`.
 
 ## API Key & Provider Management
 - OpenAI API key entry now includes a security-critical disclosure panel that appears on hover/focus and explains required API scopes (`GET /v1/models`, `POST /v1/responses`), quota limiting, optional usage, and localStorage/XSS exposure risks.
