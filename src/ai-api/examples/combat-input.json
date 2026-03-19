@@ -33,15 +33,12 @@
         "owner": "player1",
         "health": 72,
         "maxHealth": 100,
-        "position": { "x": 960, "y": 800, "space": "world" },
         "tilePosition": { "x": 30, "y": 25, "space": "tile" },
         "status": {
           "ammo": 30,
-          "fuel": 1200,
-          "isAirUnit": false
+          "fuel": 1200
         },
         "orders": {
-          "moveTarget": null,
           "targetId": "unit_enemy_tank_02"
         }
       },
@@ -51,15 +48,12 @@
         "owner": "player1",
         "health": 100,
         "maxHealth": 100,
-        "position": { "x": 928, "y": 832, "space": "world" },
         "tilePosition": { "x": 29, "y": 26, "space": "tile" },
         "status": {
           "ammo": 34,
-          "fuel": 1300,
-          "isAirUnit": false
+          "fuel": 1300
         },
         "orders": {
-          "moveTarget": null,
           "targetId": "unit_enemy_tank_02"
         }
       }
@@ -73,8 +67,7 @@
         "maxHealth": 350,
         "tilePosition": { "x": 12, "y": 18, "space": "tile" },
         "size": { "width": 3, "height": 3 },
-        "constructionFinished": true,
-        "rallyPoint": null
+        "constructionFinished": true
       }
     ],
     "buildQueues": {
@@ -92,13 +85,9 @@
         "id": "ev_301",
         "type": "damage",
         "tick": 2144,
-        "timeSeconds": 312.6,
-        "attackerId": "unit_enemy_tank_02",
         "targetId": "unit_tank_01",
         "targetKind": "unit",
-        "amount": 18,
-        "weapon": "tank_v1_cannon",
-        "position": { "x": 960, "y": 800, "space": "world" }
+        "amount": 18
       },
       {
         "id": "ev_302",

@@ -554,8 +554,8 @@ function filterInputByFogOfWar(input, state, playerId) {
   // Keep own units, filter enemy units by visibility
   filtered.snapshot.units = (input.snapshot.units || []).filter(u => {
     if (u.owner === playerId) return true
-    const tx = u.tilePosition?.x ?? Math.floor(u.position.x / TILE_SIZE)
-    const ty = u.tilePosition?.y ?? Math.floor(u.position.y / TILE_SIZE)
+    const tx = u.tilePosition?.x ?? (u.position ? Math.floor(u.position.x / TILE_SIZE) : 0)
+    const ty = u.tilePosition?.y ?? (u.position ? Math.floor(u.position.y / TILE_SIZE) : 0)
     return isTileVisible(vis, tx, ty)
   })
   // Keep own buildings, filter enemy buildings by visibility
