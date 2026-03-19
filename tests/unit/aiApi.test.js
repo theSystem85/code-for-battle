@@ -63,6 +63,8 @@ import { TILE_SIZE } from '../../src/config.js'
 import { gameState } from '../../src/gameState.js'
 import { applyGameTickOutput, computeAvailableUnitTypes } from '../../src/ai-api/applier.js'
 import { validateGameTickInput, validateGameTickOutput } from '../../src/ai-api/validate.js'
+import { exportGameTickInput } from '../../src/ai-api/exporter.js'
+import { resetTransitions, recordDamage } from '../../src/ai-api/transitionCollector.js'
 import { createTestMapGrid, resetGameState, createTestFactory, createTestBuilding } from '../testUtils.js'
 
 // Use fileURLToPath and dirname to resolve paths correctly in test environment
@@ -238,5 +240,124 @@ describe('LLM Control API applier', () => {
     expect(result.rejected).toHaveLength(0)
     expect(unit.moveTarget).toBeNull()
     expect(unit.target).toBe(units[1])
+  })
+})
+
+describe('LLM exporter compact output', () => {
+  it('omits world-pixel position and null/default fields from unit snapshots', () => {
+    const state = resetGameState()
+    state.mapTilesX = 20
+    state.mapTilesY = 20
+    const units = [
+      {
+        id: 'u1',
+        type: 'tank_v1',
+        owner: 'player1',
+        x: 5 * TILE_SIZE,
+        y: 3 * TILE_SIZE,
+        health: 80,
+        maxHealth: 100,
+        ammo: 20,
+        gas: 1000,
+        isAirUnit: false,
+        moveTarget: null,
+        target: null
+      },
+      {
+        id: 'u2',
+        type: 'apache',
+        owner: 'player1',
+        x: 8 * TILE_SIZE,
+        y: 4 * TILE_SIZE,
+        health: 100,
+        maxHealth: 100,
+        ammo: 15,
+        gas: undefined,
+        isAirUnit: true,
+        moveTarget: { x: 10, y: 10 },
+        target: { id: 'enemy1' }
+      }
+    ]
+
+    const result = exportGameTickInput(state, 0, {
+      units,
+      buildings: [],
+      factories: [],
+      mapGrid: [],
+      playerId: 'player1',
+      pruneTransitions: false
+    })
+
+    const tank = result.snapshot.units.find(u => u.id === 'u1')
+    const apache = result.snapshot.units.find(u => u.id === 'u2')
+
+    // World-pixel position must not appear
+    expect(tank).not.toHaveProperty('position')
+    expect(apache).not.toHaveProperty('position')
+
+    // tilePosition must be present and use tile space
+    expect(tank.tilePosition).toEqual({ x: 5, y: 3, space: 'tile' })
+    expect(apache.tilePosition).toEqual({ x: 8, y: 4, space: 'tile' })
+
+    // isAirUnit: false should be omitted; isAirUnit: true should be present
+    expect(tank.status?.isAirUnit).toBeUndefined()
+    expect(apache.status?.isAirUnit).toBe(true)
+
+    // Null orders should be omitted entirely
+    expect(tank.orders).toBeUndefined()
+
+    // Active orders should be included
+    expect(apache.orders?.moveTarget).toBeDefined()
+    expect(apache.orders?.targetId).toBe('enemy1')
+  })
+
+  it('omits null rallyPoint from building snapshots', () => {
+    const state = resetGameState()
+    const buildings = [
+      { id: 'b1', type: 'constructionYard', owner: 'player1', health: 300, maxHealth: 300, x: 5, y: 5, width: 3, height: 3, constructionFinished: true, rallyPoint: null },
+      { id: 'b2', type: 'vehicleFactory', owner: 'player1', health: 200, maxHealth: 200, x: 10, y: 5, width: 3, height: 2, constructionFinished: true, rallyPoint: { x: 320, y: 192 } }
+    ]
+
+    const result = exportGameTickInput(state, 0, {
+      units: [],
+      buildings,
+      factories: [],
+      mapGrid: [],
+      playerId: 'player1',
+      pruneTransitions: false
+    })
+
+    const cy = result.snapshot.buildings.find(b => b.id === 'b1')
+    const vf = result.snapshot.buildings.find(b => b.id === 'b2')
+
+    expect(cy).not.toHaveProperty('rallyPoint')
+    expect(vf.rallyPoint).toBeDefined()
+  })
+
+  it('aggregates multiple damage events for the same target into one entry', () => {
+    resetTransitions()
+    // Simulate three hits on the same target
+    recordDamage({ attackerId: 'a1', targetId: 'u1', targetKind: 'unit', amount: 10, tick: 1, timeSeconds: 0.1 })
+    recordDamage({ attackerId: 'a1', targetId: 'u1', targetKind: 'unit', amount: 15, tick: 2, timeSeconds: 0.2 })
+    recordDamage({ attackerId: 'a2', targetId: 'u2', targetKind: 'unit', amount: 20, tick: 3, timeSeconds: 0.3 })
+
+    const state = resetGameState()
+    const result = exportGameTickInput(state, 0, {
+      units: [],
+      buildings: [],
+      factories: [],
+      mapGrid: [],
+      playerId: 'player1',
+      pruneTransitions: false
+    })
+
+    const damageEvents = result.transitions.events.filter(e => e.type === 'damage')
+    // Three raw events → two aggregated entries (one per target)
+    expect(damageEvents).toHaveLength(2)
+    const u1Event = damageEvents.find(e => e.targetId === 'u1')
+    expect(u1Event.amount).toBe(25) // 10 + 15
+    const u2Event = damageEvents.find(e => e.targetId === 'u2')
+    expect(u2Event.amount).toBe(20)
+    resetTransitions()
   })
 })
