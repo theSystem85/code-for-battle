@@ -1,3 +1,4 @@
+- [x] Reduce LLM API token usage to avoid 429 rate-limit errors: remove redundant world-pixel `position` from unit snapshots (keep only `tilePosition`), omit null/default `status` and `orders` fields, omit null `rallyPoint` from buildings, and aggregate damage transition events per target instead of sending every individual hit.
 - [x] Make the water-effect zoom configurable, default it much farther out, and render water SOT tiles with the same animated water treatment as full water tiles in the GPU path.
 - [x] Fix broken-looking water SOT overlays by aligning SOT water draw bounds with base water rendering and further zooming out the procedural water pattern scale.
 - [x] Tune procedural water rendering: sharper/smaller pattern scale, remove soft shoreline smoothing, lock pattern to world scroll (no parallax), and use the same procedural effect for water SOT overlays.

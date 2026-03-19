@@ -33,15 +33,12 @@
         "owner": "player1",
         "health": 120,
         "maxHealth": 120,
-        "position": { "x": 640, "y": 704, "space": "world" },
         "tilePosition": { "x": 20, "y": 22, "space": "tile" },
         "status": {
-          "fuel": 1800,
-          "isAirUnit": false
+          "fuel": 1800
         },
         "orders": {
-          "moveTarget": { "x": 24, "y": 24, "space": "tile" },
-          "targetId": null
+          "moveTarget": { "x": 24, "y": 24, "space": "tile" }
         }
       }
     ],
@@ -54,8 +51,7 @@
         "maxHealth": 350,
         "tilePosition": { "x": 12, "y": 18, "space": "tile" },
         "size": { "width": 3, "height": 3 },
-        "constructionFinished": true,
-        "rallyPoint": null
+        "constructionFinished": true
       },
       {
         "id": "building_vf_01",

@@ -17,29 +17,34 @@ function toTilePosition(x, y) {
 function unitToSnapshot(unit) {
   const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-  return {
+
+  // Build compact status — only include non-null / non-default properties
+  const status = {}
+  if (Number.isFinite(unit.ammo)) status.ammo = unit.ammo
+  if (Number.isFinite(unit.gas)) status.fuel = unit.gas
+  if (unit.crew) status.crew = unit.crew
+  if (unit.isAirUnit) status.isAirUnit = true
+
+  // Build compact orders — only include when there is an active order
+  const orders = {}
+  if (unit.moveTarget) orders.moveTarget = toTilePosition(unit.moveTarget.x, unit.moveTarget.y)
+  if (unit.target) orders.targetId = unit.target.id
+
+  const snapshot = {
     id: unit.id,
     type: unit.type,
     owner: unit.owner,
     health: unit.health,
     maxHealth: unit.maxHealth,
-    position: toWorldPosition(unit.x, unit.y),
-    tilePosition: toTilePosition(tileX, tileY),
-    status: {
-      ammo: Number.isFinite(unit.ammo) ? unit.ammo : undefined,
-      fuel: Number.isFinite(unit.gas) ? unit.gas : undefined,
-      crew: unit.crew || undefined,
-      isAirUnit: Boolean(unit.isAirUnit)
-    },
-    orders: {
-      moveTarget: unit.moveTarget ? toTilePosition(unit.moveTarget.x, unit.moveTarget.y) : undefined,
-      targetId: unit.target ? unit.target.id : null
-    }
+    tilePosition: toTilePosition(tileX, tileY)
   }
+  if (Object.keys(status).length > 0) snapshot.status = status
+  if (Object.keys(orders).length > 0) snapshot.orders = orders
+  return snapshot
 }
 
 function buildingToSnapshot(building) {
-  return {
+  const snapshot = {
     id: building.id,
     type: building.type,
     owner: building.owner,
@@ -47,11 +52,13 @@ function buildingToSnapshot(building) {
     maxHealth: building.maxHealth,
     tilePosition: toTilePosition(building.x, building.y),
     size: { width: building.width, height: building.height },
-    constructionFinished: Boolean(building.constructionFinished),
-    rallyPoint: building.rallyPoint
-      ? toWorldPosition(building.rallyPoint.x, building.rallyPoint.y)
-      : null
+    constructionFinished: Boolean(building.constructionFinished)
   }
+  // Only include rallyPoint when set — omitting null saves tokens
+  if (building.rallyPoint) {
+    snapshot.rallyPoint = toWorldPosition(building.rallyPoint.x, building.rallyPoint.y)
+  }
+  return snapshot
 }
 
 function collectMapSnapshot(mapGrid, verbosity) {
@@ -73,6 +80,43 @@ function collectMapSnapshot(mapGrid, verbosity) {
     })
   })
   return { oreTiles, obstacles }
+}
+
+/**
+ * Aggregate damage transition events by target to dramatically reduce token count.
+ * Multiple individual hits against the same target are merged into one entry with
+ * the total damage amount. Non-damage events are kept verbatim.
+ */
+function compactTransitions(transitions) {
+  if (!transitions || !Array.isArray(transitions.events)) return transitions
+
+  const nonDamageEvents = []
+  /** @type {Map<string, {id: string, type: string, tick: number, targetId: string, targetKind: string, amount: number}>} */
+  const damageByTarget = new Map()
+
+  for (const event of transitions.events) {
+    if (event.type === 'damage') {
+      const key = event.targetId
+      if (!damageByTarget.has(key)) {
+        damageByTarget.set(key, {
+          id: event.id,
+          type: 'damage',
+          tick: event.tick,
+          targetId: event.targetId,
+          targetKind: event.targetKind,
+          amount: 0
+        })
+      }
+      damageByTarget.get(key).amount += event.amount
+    } else {
+      nonDamageEvents.push(event)
+    }
+  }
+
+  return {
+    ...transitions,
+    events: [...nonDamageEvents, ...Array.from(damageByTarget.values())]
+  }
 }
 
 export function exportGameTickInput(state = gameState, sinceTick = 0, options = {}) {
@@ -119,7 +163,7 @@ export function exportGameTickInput(state = gameState, sinceTick = 0, options = 
   // queued, in-progress, or completed — preventing duplicate commands.
   const llmQueue = getLlmQueueState(state, playerId)
 
-  const transitions = collectTransitionsSince(sinceTick)
+  const transitions = compactTransitions(collectTransitionsSince(sinceTick))
   if (options.pruneTransitions !== false) {
     pruneTransitionsUpTo(sinceTick)
   }

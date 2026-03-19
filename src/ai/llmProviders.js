@@ -98,13 +98,17 @@ export async function fetchModelList(providerId) {
         }
       })
       if (!response.ok) {
-        throw new Error(`OpenAI model fetch failed: ${response.status}`)
+        throw new Error(`${providerId} model fetch failed: ${response.status}`)
       }
       const payload = await response.json()
       return (payload.data || [])
         .map(model => model.id)
         .filter(Boolean)
         .sort()
+    }
+    case 'inceptionlabs': {
+      // InceptionLabs currently offers Mercury 2 only.
+      return ['mercury-2']
     }
     case 'anthropic': {
       if (!settings.apiKey) return []
@@ -181,6 +185,12 @@ function buildResponseInput(messages = []) {
   }))
 }
 
+function normalizeRequestModel(providerId, model) {
+  if (providerId !== 'inceptionlabs') return model
+  if (model === 'Mercury 2' || model === 'mercury-m2') return 'mercury-2'
+  return model
+}
+
 function extractResponseText(output) {
   if (!output || typeof output !== 'object') return ''
   if (typeof output.output_text === 'string') return output.output_text
@@ -214,7 +224,7 @@ export async function requestLlmCompletion(providerId, {
   switch (providerId) {
     case 'openai': {
       if (!settings.apiKey) {
-        throw new Error('openai API key missing')
+        throw new Error(`${providerId} API key missing`)
       }
 
       const inputItems = buildResponseInput([
@@ -223,7 +233,7 @@ export async function requestLlmCompletion(providerId, {
       ])
 
       const requestBody = {
-        model,
+        model: normalizeRequestModel(providerId, model),
         input: inputItems,
         temperature,
         max_output_tokens: maxTokens,
@@ -290,13 +300,84 @@ export async function requestLlmCompletion(providerId, {
         responseId: payload.id || null
       }
     }
+    case 'inceptionlabs': {
+      if (!settings.apiKey) {
+        throw new Error('inceptionlabs API key missing')
+      }
+
+      const requestBody = {
+        model: normalizeRequestModel(providerId, model),
+        messages: [
+          ...(system ? [{ role: 'system', content: system }] : []),
+          ...(messages || [])
+        ],
+        temperature,
+        max_tokens: maxTokens
+      }
+
+      if (responseFormat) {
+        requestBody.response_format = {
+          type: 'json_schema',
+          json_schema: responseFormat
+        }
+      }
+
+      const response = await fetch(`${baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${settings.apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null)
+
+        if (errorData?.error?.code === 'insufficient_quota' || errorData?.error?.type === 'insufficient_quota') {
+          throw new QuotaExceededError(
+            errorData.error.message || 'API quota exceeded',
+            providerId
+          )
+        }
+
+        if (response.status === 401 || errorData?.error?.type === 'invalid_request_error') {
+          throw new AuthenticationError(
+            errorData?.error?.message || 'Authentication failed or insufficient permissions',
+            providerId
+          )
+        }
+
+        if (response.status === 400 && errorData?.error?.param) {
+          const paramName = errorData.error.param
+          const errorCode = errorData.error.code
+          if (errorCode === 'unsupported_parameter' || errorCode === 'unsupported_value') {
+            throw new ApiParameterError(
+              errorData.error.message || 'API parameter error',
+              providerId,
+              paramName
+            )
+          }
+        }
+
+        throw new Error(`${providerId} completion failed: ${response.status}`)
+      }
+      const payload = await response.json()
+      const content = payload.choices?.[0]?.message?.content || ''
+      return {
+        text: typeof content === 'string' ? content : JSON.stringify(content),
+        usage: payload.usage || null,
+        responseId: null
+      }
+    }
+
     case 'xai': {
       if (!settings.apiKey) {
         throw new Error('xai API key missing')
       }
 
       const requestBody = {
-        model,
+        model: normalizeRequestModel(providerId, model),
         messages: [
           ...(system ? [{ role: 'system', content: system }] : []),
           ...(messages || [])
@@ -364,7 +445,7 @@ export async function requestLlmCompletion(providerId, {
           'anthropic-version': '2023-06-01'
         },
         body: JSON.stringify({
-          model,
+          model: normalizeRequestModel(providerId, model),
           max_tokens: maxTokens,
           temperature,
           system,
@@ -419,7 +500,7 @@ export async function requestLlmCompletion(providerId, {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model,
+          model: normalizeRequestModel(providerId, model),
           messages: [
             ...(system ? [{ role: 'system', content: system }] : []),
             ...messages
