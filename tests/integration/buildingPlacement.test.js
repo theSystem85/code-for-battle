@@ -253,6 +253,49 @@ describe('Building Placement Near Construction Yard', () => {
     })
   })
 
+
+  describe('Non-expanding build area structures', () => {
+    it('should NOT allow a power plant to extend from a street tile alone', () => {
+      ctx.addBuilding('street', 23, 20, 'player')
+      ctx.addBuilding('street', 24, 20, 'player')
+      ctx.addBuilding('street', 25, 20, 'player')
+      ctx.addBuilding('street', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('powerPlant', 27, 20, 'player')
+      expect(canPlace).toBe(false)
+    })
+
+    it('should allow streets to extend from other street tiles', () => {
+      ctx.addBuilding('street', 23, 20, 'player')
+      ctx.addBuilding('street', 24, 20, 'player')
+      ctx.addBuilding('street', 25, 20, 'player')
+      ctx.addBuilding('street', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('street', 27, 20, 'player')
+      expect(canPlace).toBe(true)
+    })
+
+    it('should NOT allow a power plant to extend from a concrete wall tile alone', () => {
+      ctx.addBuilding('concreteWall', 23, 20, 'player')
+      ctx.addBuilding('concreteWall', 24, 20, 'player')
+      ctx.addBuilding('concreteWall', 25, 20, 'player')
+      ctx.addBuilding('concreteWall', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('powerPlant', 27, 20, 'player')
+      expect(canPlace).toBe(false)
+    })
+
+    it('should allow concrete walls to extend from other concrete walls', () => {
+      ctx.addBuilding('concreteWall', 23, 20, 'player')
+      ctx.addBuilding('concreteWall', 24, 20, 'player')
+      ctx.addBuilding('concreteWall', 25, 20, 'player')
+      ctx.addBuilding('concreteWall', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('concreteWall', 27, 20, 'player')
+      expect(canPlace).toBe(true)
+    })
+  })
+
   describe('Edge case: Maximum allowed distance (exactly 3 tiles)', () => {
     it('should allow power plant at exactly MAX_GAP tiles distance to the right', async() => {
       // CY edge at x=22, MAX_GAP=3 means power plant at x=26 is at the edge
