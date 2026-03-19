@@ -107,6 +107,7 @@ describe('Ammunition System', () => {
         health: 100,
         maxAmmunition: 100,
         ammunition: 50,
+        owner: 'player',
         movement: { isMoving: true }
       }
       units.push(unit)
@@ -140,6 +141,7 @@ describe('Ammunition System', () => {
         health: 100,
         maxAmmunition: 100,
         ammunition: 50,
+        owner: 'player',
         movement: { isMoving: false }
       }
       units.push(unit)
@@ -177,6 +179,7 @@ describe('Ammunition System', () => {
         health: 100,
         maxAmmunition: 100,
         ammunition: 50,
+        owner: 'player',
         movement: { isMoving: false }
       }
       units.push(unit)
@@ -218,6 +221,7 @@ describe('Ammunition System', () => {
         health: 100,
         maxAmmunition: 100,
         ammunition: 50,
+        owner: 'player',
         movement: { isMoving: false }
       }
       units.push(unit)
@@ -259,6 +263,7 @@ describe('Ammunition System', () => {
         health: 100,
         maxAmmunition: 100,
         ammunition: 50,
+        owner: 'player',
         movement: { isMoving: false }
       }
       units.push(tank)
@@ -271,6 +276,53 @@ describe('Ammunition System', () => {
       expect(tank.resupplyingAmmo).toBe(true)
       expect(tank.ammunition).toBeGreaterThan(50)
       expect(truck.ammoCargo).toBeLessThan(500)
+    })
+
+
+    it('should not resupply enemy or airborne units from an ammo truck', () => {
+      const truck = {
+        id: 'truck1',
+        type: 'ammunitionTruck',
+        x: 10 * TILE_SIZE,
+        y: 10 * TILE_SIZE,
+        health: 100,
+        maxAmmoCargo: 500,
+        ammoCargo: 500,
+        owner: 'player1'
+      }
+      const enemyTank = {
+        id: 'enemy1',
+        type: 'tank',
+        x: 10 * TILE_SIZE,
+        y: 10 * TILE_SIZE,
+        health: 100,
+        maxAmmunition: 100,
+        ammunition: 40,
+        owner: 'player2',
+        movement: { isMoving: false }
+      }
+      const airborneApache = {
+        id: 'apache1',
+        type: 'apache',
+        x: 10 * TILE_SIZE,
+        y: 10 * TILE_SIZE,
+        health: 100,
+        maxRocketAmmo: 12,
+        rocketAmmo: 2,
+        owner: 'player1',
+        isAirUnit: true,
+        flightState: 'airborne',
+        movement: { isMoving: false }
+      }
+      units.push(truck, enemyTank, airborneApache)
+
+      updateAmmunitionSystem(units, buildings, gameState, 100)
+
+      expect(enemyTank.ammunition).toBe(40)
+      expect(enemyTank.resupplyingAmmo).toBeFalsy()
+      expect(airborneApache.rocketAmmo).toBe(2)
+      expect(airborneApache.resupplyingAmmo).toBeFalsy()
+      expect(truck.ammoCargo).toBe(500)
     })
 
     it('should not resupply if truck has no cargo', () => {
@@ -294,6 +346,7 @@ describe('Ammunition System', () => {
         health: 100,
         maxAmmunition: 100,
         ammunition: 50,
+        owner: 'player',
         movement: { isMoving: false }
       }
       units.push(tank)
@@ -370,6 +423,7 @@ describe('Ammunition System', () => {
         health: 100,
         maxRocketAmmo: 20,
         rocketAmmo: 5,
+        flightState: 'grounded',
         movement: { isMoving: false },
         owner: 'player'
       }
