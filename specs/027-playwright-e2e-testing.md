@@ -101,6 +101,7 @@ Validates Apache auto-return with a cheat-accelerated setup to keep runtime mini
 - Apache takes off automatically after reload and resumes attacking same target.
 - No critical console/page errors.
 - Apache flight loop audio is not left active after helipad touchdown or forced destruction.
+- Forced-destruction validation must exercise real destroyed-unit cleanup, not only a manual state toggle.
 
 ## Test: f22SequentialAirstripCycle.test.js
 

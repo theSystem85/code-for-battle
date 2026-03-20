@@ -25,7 +25,7 @@ function shouldPlayApacheRotorSound(unit) {
   )
 }
 
-function stopApacheRotorSound(unit, { immediate = false } = {}) {
+export function stopApacheRotorSound(unit, { immediate = false } = {}) {
   unit.rotorSoundRequestId = (unit.rotorSoundRequestId || 0) + 1
 
   if (!unit.rotorSound) {
