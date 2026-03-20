@@ -288,11 +288,14 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
     const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
     const effectiveRange = rocketRange
     const clearShot = true
-    const hasActiveF22Volley = isF22 && Boolean(unit.volleyState)
     const minF22AttackDistance = TILE_SIZE * 6
     const inFiringWindow = isF22
-      ? (hasActiveF22Volley || (distance <= effectiveRange && distance >= minF22AttackDistance))
+      ? (distance <= effectiveRange && distance >= minF22AttackDistance)
       : distance <= effectiveRange
+
+    if (isF22 && !inFiringWindow) {
+      unit.volleyState = null
+    }
     if (inFiringWindow && canAttack && clearShot) {
       // Check if we need to start a new burst or continue existing one
       if (isF22) {
