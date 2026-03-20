@@ -10,6 +10,20 @@ import {
   updateWreckPositionFromTank,
   releaseWreckAssignment
 } from './unitWreckManager.js'
+function normalizeServiceOwner(owner) {
+  return owner === 'player' ? 'player1' : owner
+}
+
+function isAirborneServiceTarget(unit) {
+  if (!unit) return false
+  const isAirUnit = Boolean(unit.isAirUnit) || unit.type === 'apache' || unit.type === 'f35' || unit.type === 'f22Raptor'
+  return isAirUnit && unit.flightState !== 'grounded'
+}
+
+function isEligibleFriendlyGroundServiceTarget(source, unit) {
+  if (!source || !unit) return false
+  return normalizeServiceOwner(source.owner) === normalizeServiceOwner(unit.owner) && !isAirborneServiceTarget(unit)
+}
 
 const TOW_DISTANCE_THRESHOLD = TILE_SIZE * 1.8 // Doubled hook-up range for easier towing
 
@@ -340,7 +354,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
         const damagedCandidates = units
           .filter(u =>
             u.id !== tank.id &&
-            u.owner === tank.owner &&
+            isEligibleFriendlyGroundServiceTarget(tank, u) &&
             u.health > 0 &&
             u.health < u.maxHealth &&
             !(u.movement && u.movement.isMoving)
@@ -418,7 +432,7 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
           tank.repairTargetUnit = null
         }
         target = units.find(u =>
-          u.owner === tank.owner &&
+          isEligibleFriendlyGroundServiceTarget(tank, u) &&
           u !== tank &&
           u.health < u.maxHealth &&
           Math.hypot(u.tileX - tank.tileX, u.tileY - tank.tileY) <= SERVICE_SERVING_RANGE &&

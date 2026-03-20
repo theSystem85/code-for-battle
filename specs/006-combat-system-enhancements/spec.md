@@ -16,6 +16,7 @@
 - 2026-02-10: Apache helicopters now auto-return to helipads when rockets run dry, force landing alignment on the pad, reload to full before re-engaging the same target, and return to helipad after the target is destroyed.
 - 2026-02-23: Player-commanded defensive buildings now support FIFO forced-target queues; queued targets render the existing red attack triangle with queue numbers while the buildings are selected.
 - 2026-02-23: AGF now supports selected defensive buildings by enqueuing boxed enemy targets into forced-target FIFO queues; fixed forced-target assignment bug that made rocket/artillery turrets aim without firing when force-attacking enemies.
+- 2026-03-18: Service-resupply interactions now require same-party ownership and a grounded target for ammunition trucks/factories, tanker trucks, ambulances, and recovery tanks so airborne aircraft cannot be serviced while flying over enemy or neutral support units.
 
 ## User Scenarios & Testing
 

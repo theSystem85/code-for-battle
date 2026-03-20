@@ -3,6 +3,20 @@ import { TILE_SIZE, AMMO_RESUPPLY_TIME, AMMO_TRUCK_RANGE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
 import { gameState } from '../gameState.js'
+function normalizeServiceOwner(owner) {
+  return owner === 'player' ? 'player1' : owner
+}
+
+function isAirborneServiceTarget(unit) {
+  if (!unit) return false
+  const isAirUnit = Boolean(unit.isAirUnit) || unit.type === 'apache' || unit.type === 'f35' || unit.type === 'f22Raptor'
+  return isAirUnit && unit.flightState !== 'grounded'
+}
+
+function isEligibleFriendlyGroundServiceTarget(source, unit) {
+  if (!source || !unit) return false
+  return normalizeServiceOwner(source.owner) === normalizeServiceOwner(unit.owner) && !isAirborneServiceTarget(unit)
+}
 
 function isUnitWithinServiceRadius(unit, building) {
   if (!unit || !building) {
@@ -66,6 +80,7 @@ function processAmmunitionResupply(source, units, delta) {
   units.forEach(unit => {
     // Only resupply units with ammunition system
     if ((typeof unit.maxAmmunition !== 'number' && typeof unit.maxRocketAmmo !== 'number') || unit.health <= 0) return
+    if (!isEligibleFriendlyGroundServiceTarget(source, unit)) return
 
     const unitCenterX = (unit.x ?? unit.tileX * TILE_SIZE) + TILE_SIZE / 2
     const unitCenterY = (unit.y ?? unit.tileY * TILE_SIZE) + TILE_SIZE / 2
@@ -120,6 +135,7 @@ function processAmmunitionTruckResupply(truck, units, delta) {
     // Only resupply units with ammunition system (not the truck itself or other supply units)
     if ((typeof unit.maxAmmunition !== 'number' && typeof unit.maxRocketAmmo !== 'number') || unit.health <= 0 || unit.id === truck.id) return
     if (unit.type === 'ammunitionTruck') return // Don't resupply other ammo trucks
+    if (!isEligibleFriendlyGroundServiceTarget(truck, unit)) return
 
     const unitCenterX = unit.x + TILE_SIZE / 2
     const unitCenterY = unit.y + TILE_SIZE / 2

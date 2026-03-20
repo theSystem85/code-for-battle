@@ -221,6 +221,54 @@ describe('tankerTruckLogic.js', () => {
       expect(target.gas).toBeGreaterThan(0)
     })
 
+
+    it('should not refuel enemy or airborne units', () => {
+      const enemyTarget = {
+        id: 'u1',
+        type: 'tank',
+        health: 100,
+        owner: 2,
+        tileX: 10,
+        tileY: 10,
+        gas: 100,
+        maxGas: 1000,
+        movement: { isMoving: false }
+      }
+      const airborneApache = {
+        id: 'u2',
+        type: 'apache',
+        health: 100,
+        owner: 1,
+        tileX: 10,
+        tileY: 10,
+        gas: 100,
+        maxGas: 1000,
+        isAirUnit: true,
+        flightState: 'airborne',
+        movement: { isMoving: false }
+      }
+      const tanker = {
+        id: 't1',
+        type: 'tankerTruck',
+        health: 100,
+        owner: 1,
+        tileX: 10,
+        tileY: 10,
+        supplyGas: 10000,
+        maxSupplyGas: 10000,
+        refuelTarget: airborneApache,
+        refuelTimer: 0
+      }
+      const units = [tanker, enemyTarget, airborneApache]
+
+      updateTankerTruckLogic(units, gameState, 100)
+
+      expect(enemyTarget.gas).toBe(100)
+      expect(airborneApache.gas).toBe(100)
+      expect(tanker.refuelTarget).toBe(null)
+      expect(tanker.supplyGas).toBe(10000)
+    })
+
     it('should stop refueling when target is full', () => {
       const target = {
         id: 'u1',
