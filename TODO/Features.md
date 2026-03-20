@@ -1,3 +1,4 @@
+- [ ] F22 combat follow-up (2026-03-20): only fire rockets while targets remain inside the active firing window, and hard-cap effective F22 firing range at 20 tiles including bonuses.
 - [x] Ensure enemy AI maintains F22:F35 build parity at 1:1 and uses F35 strike logic against anti-air-uncovered ground buildings.
 - [x] Added F35 behavior consistency E2E regression coverage for grounded-fire blocking, no-auto-land-on-move, airstrip slot reservation separation, and no-trail bomb drops.
 - [x] Follow-up polish for save sharing: fix import/export icons, auto-load exactly one imported save, support multi-file import without auto-load, and export filenames as timestamp-first.

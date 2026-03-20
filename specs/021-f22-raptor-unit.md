@@ -134,6 +134,12 @@ airborne-only targets and retarget to valid ground threats.
 `Primary files`: `src/game/unitCombat/tankCombat.js`, `src/game/unitCombat/firingHandlers.js`, `src/game/bulletSystem.js`, `src/saveGame.js`, `src/config.js`
 
 ### C.1 Firing eligibility and volley continuity
+### C.1a Range gating follow-up (2026-03-20)
+23a. `C1a` F22 may only continue or start rocket volleys while the target remains inside the active firing window; leaving range immediately stops further rocket release until back in range.
+	- Status: `Implemented (code)`
+24a. `C1b` Effective F22 firing range is hard-capped at 20 tiles total, including veterancy/range multipliers.
+	- Status: `Implemented (code)`
+
 16. `C1` Grounded F22 cannot fire; must be airborne to attack.
 	- Status: `✅` User-verified working
 17. `C2` Once a volley starts, it continues beyond first rocket until volley completion (not aborted by cooldown gate).

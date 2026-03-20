@@ -365,6 +365,10 @@ export function getEffectiveFireRange(unit) {
     baseRange *= (unit.rangeMultiplier || 1.2)
   }
 
+  if (unit.type === 'f22Raptor') {
+    baseRange = Math.min(baseRange, 20 * TILE_SIZE)
+  }
+
   return baseRange
 }
 
