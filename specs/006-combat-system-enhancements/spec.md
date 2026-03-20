@@ -9,6 +9,7 @@
 
 ## Maintenance Updates
 
+- 2026-03-20: Apache/F22 rocket projectiles now keep their original fired trajectory instead of re-aiming toward moving targets mid-flight; airborne direct-hit damage only applies if the target is still at the original impact point.
 - 2026-02-01: Split `src/game/unitCombat.js` into focused submodules under `src/game/unitCombat/` to keep each file under 1k LOC while preserving existing combat behavior.
 - 2026-01-31: Defensive turrets now require clear line-of-sight to targets before firing, matching player and AI behavior.
 - 2026-02-06: Apache helicopters now hold max-range standoff positions in combat, ignore ground-unit pathfinding, and their rockets deal 3x damage to tanker and ammunition trucks.
