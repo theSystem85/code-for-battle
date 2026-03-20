@@ -23,18 +23,8 @@ test.describe('Rocket turret anti-air Apache damage', () => {
     })
   })
 
-  test('three rocket turret rockets are enough to destroy an airborne Apache', async({ page }) => {
-    test.setTimeout(120000)
-
-    await page.goto('/?seed=11')
-    await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
-
-    await page.waitForFunction(() => {
-      const gs = window.gameState
-      return Boolean(gs?.gameStarted && !gs.gamePaused && window.cheatSystem && window.gameInstance?.units)
-    }, { timeout: 30000 })
-
-    const setup = await page.evaluate(() => {
+  async function verifyApacheDestroyedInThreeRockets(page, flightState) {
+    const setup = await page.evaluate((targetFlightState) => {
       const gs = window.gameState
       const units = window.gameInstance.units
       const buildings = gs.buildings || []
@@ -49,7 +39,7 @@ test.describe('Rocket turret anti-air Apache damage', () => {
 
       const rocketTurret = (gs.buildings || []).find(building => !knownBuildingIds.has(building.id) && building.type === 'rocketTurret' && building.owner === humanPlayer)
       if (!rocketTurret) {
-        return { error: 'Failed to spawn rocket turret' }
+        return { error: `Failed to spawn rocket turret for ${targetFlightState}` }
       }
 
       rocketTurret.ammo = 3
@@ -66,13 +56,15 @@ test.describe('Rocket turret anti-air Apache damage', () => {
 
       const apache = units.find(unit => !knownUnitIds.has(unit.id) && unit.type === 'apache' && unit.owner === enemyPlayer)
       if (!apache) {
-        return { error: 'Failed to spawn apache' }
+        return { error: `Failed to spawn apache for ${targetFlightState}` }
       }
 
       const turretCenterX = (rocketTurret.x + rocketTurret.width / 2) * 32
       const turretCenterY = (rocketTurret.y + rocketTurret.height / 2) * 32
-      apache.flightState = 'airborne'
-      apache.altitude = Math.max(apache.maxAltitude || 90, 90)
+      apache.flightState = targetFlightState
+      apache.altitude = targetFlightState === 'airborne'
+        ? Math.max(apache.maxAltitude || 90, 90)
+        : 0
       apache.x = turretCenterX + (6 * 32)
       apache.y = turretCenterY - 16
       apache.tileX = Math.floor(apache.x / 32)
@@ -85,11 +77,12 @@ test.describe('Rocket turret anti-air Apache damage', () => {
       window.__rocketTurretApacheE2E = {
         rocketTurretId: rocketTurret.id,
         apacheId: apache.id,
-        initialAmmo: rocketTurret.ammo
+        initialAmmo: rocketTurret.ammo,
+        flightState: targetFlightState
       }
 
       return { ok: true }
-    })
+    }, flightState)
 
     expect(setup.error || null).toBeNull()
 
@@ -111,20 +104,41 @@ test.describe('Rocket turret anti-air Apache damage', () => {
       if (rocketsInFlight > 0) return false
 
       return {
+        flightState: tracker.flightState,
         ammoRemaining: rocketTurret.ammo ?? null,
         ammoSpent,
         apacheDestroyed,
-        apacheStillPresent: Boolean(apache),
         apacheHealth: apache?.health ?? 0
       }
     }, { timeout: 30000 })
 
-    const result = await resultHandle.jsonValue()
+    return resultHandle.jsonValue()
+  }
 
-    expect(result.apacheDestroyed).toBe(true)
-    expect(result.ammoSpent).toBe(3)
-    expect(result.ammoRemaining).toBe(0)
-    expect(result.apacheHealth).toBeLessThanOrEqual(0)
+  test('grounded and airborne Apaches both die to three direct rocket turret rockets', async({ page }) => {
+    test.setTimeout(120000)
+
+    await page.goto('/?seed=11')
+    await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
+
+    await page.waitForFunction(() => {
+      const gs = window.gameState
+      return Boolean(gs?.gameStarted && !gs.gamePaused && window.cheatSystem && window.gameInstance?.units)
+    }, { timeout: 30000 })
+
+    const groundedResult = await verifyApacheDestroyedInThreeRockets(page, 'grounded')
+    const airborneResult = await verifyApacheDestroyedInThreeRockets(page, 'airborne')
+
+    expect(groundedResult.flightState).toBe('grounded')
+    expect(groundedResult.apacheDestroyed).toBe(true)
+    expect(groundedResult.ammoSpent).toBe(3)
+    expect(groundedResult.ammoRemaining).toBe(0)
+
+    expect(airborneResult.flightState).toBe('airborne')
+    expect(airborneResult.apacheDestroyed).toBe(true)
+    expect(airborneResult.ammoSpent).toBe(3)
+    expect(airborneResult.ammoRemaining).toBe(0)
+
     expect(consoleErrors, `Console errors encountered\n${consoleErrors.join('\n')}`).toEqual([])
   })
 })

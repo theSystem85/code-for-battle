@@ -54,17 +54,22 @@ export function triggerExplosion(
 
   // Apply damage to nearby units
   units.forEach(unit => {
-    const dx = (unit.x + TILE_SIZE / 2) - x
-    const dy = (unit.y + TILE_SIZE / 2) - y
+    const isAirUnit = unit.isAirUnit || unit.type === 'apache' || unit.type === 'f35'
+    const airborneStates = ['takeoff', 'airborne', 'landing']
+    const isAirborne = isAirUnit && airborneStates.includes(unit.flightState)
+    const unitCenterX = unit.x + TILE_SIZE / 2
+    const unitCenterY = unit.y + TILE_SIZE / 2
+    const airborneVisualOffsetY = isAirborne ? (unit.altitude || 0) * 0.4 : 0
+    const damageCenterX = unitCenterX
+    const damageCenterY = unitCenterY - airborneVisualOffsetY
+    const dx = damageCenterX - x
+    const dy = damageCenterY - y
     const distance = Math.hypot(dx, dy)
 
     // Skip the shooter if this was their own bullet
     if (distance < explosionRadius) {
       if (shooter && unit.id === shooter.id) return
 
-      const isAirUnit = unit.isAirUnit || unit.type === 'apache' || unit.type === 'f35'
-      const airborneStates = ['takeoff', 'airborne', 'landing']
-      const isAirborne = isAirUnit && airborneStates.includes(unit.flightState)
       if (isAirborne && !allowAirborneDamage) {
         return
       }

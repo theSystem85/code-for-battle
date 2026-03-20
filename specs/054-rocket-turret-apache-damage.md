@@ -12,3 +12,5 @@
 4. Coverage includes:
    - a unit test for the projectile/explosion damage multiplier path, and
    - a Playwright E2E scenario that proves a rocket turret with only three rockets can still kill an Apache.
+
+5. Airborne Apache explosion damage uses the same centered impact distance as grounded Apache hits, so a direct rocket impact deals the same damage in both states.
