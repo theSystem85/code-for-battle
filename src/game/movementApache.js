@@ -13,6 +13,51 @@ const ROTOR_STOP_EPSILON = 0.002
 const APACHE_ROTOR_LOOP_VOLUME = 0.25
 const APACHE_ROTOR_ALTITUDE_GAIN_MIN = 0.6
 const APACHE_ROTOR_ALTITUDE_GAIN_MAX = 1.0
+const APACHE_ROTOR_STOP_FADE_SECONDS = 0.05
+
+function shouldPlayApacheRotorSound(unit) {
+  return Boolean(
+    unit.type === 'apache' &&
+    unit.health > 0 &&
+    !unit.destroyed &&
+    unit.flightState &&
+    unit.flightState !== 'grounded'
+  )
+}
+
+function stopApacheRotorSound(unit, { immediate = false } = {}) {
+  unit.rotorSoundRequestId = (unit.rotorSoundRequestId || 0) + 1
+
+  if (!unit.rotorSound) {
+    unit.rotorSound = null
+    unit.rotorSoundLoading = false
+    return
+  }
+
+  const { source, gainNode } = unit.rotorSound
+  const stopDelay = immediate ? 0 : APACHE_ROTOR_STOP_FADE_SECONDS
+
+  if (gainNode && audioContext) {
+    gainNode.gain.cancelScheduledValues(audioContext.currentTime)
+    gainNode.gain.setValueAtTime(gainNode.gain.value, audioContext.currentTime)
+    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + stopDelay)
+  }
+
+  if (source) {
+    try {
+      if (audioContext) {
+        source.stop(audioContext.currentTime + stopDelay)
+      } else {
+        source.stop()
+      }
+    } catch (e) {
+      console.error('Failed to stop apache rotor sound:', e)
+    }
+  }
+
+  unit.rotorSound = null
+  unit.rotorSoundLoading = false
+}
 
 function addUnitOccupancyDirect(unit, occupancyMap) {
   if (!occupancyMap) return
@@ -236,12 +281,7 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
     }
   }
 
-  const shouldPlayRotorSound =
-    unit.health > 0 &&
-    !unit.destroyed &&
-    unit.flightState &&
-    unit.flightState !== 'grounded' &&
-    unit.type === 'apache'
+  const shouldPlayRotorSound = shouldPlayApacheRotorSound(unit)
 
   if (shouldPlayRotorSound) {
     const altitudeRatioNow = unit.maxAltitude > 0 ? Math.min(1, unit.altitude / unit.maxAltitude) : 0
@@ -250,6 +290,8 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
       altitudeRatioNow * (APACHE_ROTOR_ALTITUDE_GAIN_MAX - APACHE_ROTOR_ALTITUDE_GAIN_MIN)
 
     if (!unit.rotorSound && !unit.rotorSoundLoading) {
+      const requestId = (unit.rotorSoundRequestId || 0) + 1
+      unit.rotorSoundRequestId = requestId
       unit.rotorSoundLoading = true
       playPositionalSound('apache_fly', unit.x, unit.y, APACHE_ROTOR_LOOP_VOLUME, 0, false, { playLoop: true })
         .then(handle => {
@@ -259,16 +301,14 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
           }
 
           const stillAirborne =
-            unit.health > 0 &&
-            !unit.destroyed &&
-            unit.flightState &&
-            unit.flightState !== 'grounded'
+            unit.rotorSoundRequestId === requestId &&
+            shouldPlayApacheRotorSound(unit)
 
           if (!stillAirborne) {
             try {
               handle.source.stop()
             } catch (e) {
-              console.error('Failed to stop apache rotor sound after landing:', e)
+              console.error('Failed to stop apache rotor sound after state change:', e)
             }
             return
           }
@@ -316,22 +356,6 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
       }
     }
   } else {
-    if (unit.rotorSound) {
-      const { source, gainNode } = unit.rotorSound
-      if (gainNode) {
-        gainNode.gain.cancelScheduledValues(audioContext.currentTime)
-        gainNode.gain.setValueAtTime(gainNode.gain.value, audioContext.currentTime)
-        gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3)
-      }
-      if (source) {
-        try {
-          source.stop(audioContext.currentTime + 0.3)
-        } catch (e) {
-          console.error('Failed to schedule apache rotor sound stop:', e)
-        }
-      }
-      unit.rotorSound = null
-    }
-    unit.rotorSoundLoading = false
+    stopApacheRotorSound(unit)
   }
 }

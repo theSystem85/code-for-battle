@@ -100,6 +100,7 @@ Validates Apache auto-return with a cheat-accelerated setup to keep runtime mini
 - Auto-return state captures helipad + attack target.
 - Apache takes off automatically after reload and resumes attacking same target.
 - No critical console/page errors.
+- Apache flight loop audio is not left active after helipad touchdown or forced destruction.
 
 ## Test: f22SequentialAirstripCycle.test.js
 
