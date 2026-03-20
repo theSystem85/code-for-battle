@@ -381,3 +381,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
 
 - **FR-075**: When only supply units (ambulance, tanker truck, ammunition truck, recovery tank) are selected, friendly airstrip tiles MUST be treated as valid move-command targets for cursor feedback and click handling (move cursor + green movement indicator, no move-blocked state).
+
+
+- **FR-076**: Apache helipad touchdown MUST NOT start ammo or fuel transfer until the helicopter is fully landed, stationary, and settled on the final helipad center; touching down or snapping into approach alignment alone is insufficient.
+- **FR-077**: The selected Apache ammo HUD bar MUST always display the helicopter's actual `rocketAmmo` value instead of substituting helipad reserve ammo while grounded.

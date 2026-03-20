@@ -3,6 +3,44 @@ import { logPerformance } from '../performanceUtils.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { getHelipadLandingCenter, isHelipadAvailableForUnit } from '../utils/helipadUtils.js'
 
+const SERVICE_SETTLE_TIME_MS = 250
+
+function isUnitStopped(unit) {
+  return !(unit?.movement?.isMoving) && (unit?.movement?.currentSpeed || 0) <= 0.05
+}
+
+function getPadTouchdownReadyAt(unit) {
+  return typeof unit?.servicePadTouchdownReadyAt === 'number' ? unit.servicePadTouchdownReadyAt : 0
+}
+
+function markPadTouchdown(unit, delta) {
+  if (!unit) return
+  const remaining = getPadTouchdownReadyAt(unit)
+  if (!remaining) {
+    unit.servicePadTouchdownReadyAt = Math.max(0, SERVICE_SETTLE_TIME_MS - delta)
+    return
+  }
+  unit.servicePadTouchdownReadyAt = Math.max(0, remaining - delta)
+}
+
+function clearPadTouchdown(unit) {
+  if (!unit) return
+  unit.servicePadTouchdownReadyAt = 0
+}
+
+function isServiceLandingSettled(unit, targetX, targetY, delta) {
+  if (!unit || unit.flightState !== 'grounded') return false
+  const distance = Math.hypot((unit.x + TILE_SIZE / 2) - targetX, (unit.y + TILE_SIZE / 2) - targetY)
+  const closeEnough = distance <= 1
+  const stationary = isUnitStopped(unit)
+  if (!closeEnough || !stationary) {
+    clearPadTouchdown(unit)
+    return false
+  }
+  markPadTouchdown(unit, delta)
+  return getPadTouchdownReadyAt(unit) <= 1
+}
+
 function clearHelipadClaimForUnit(unit, helipadId, helipads = []) {
   if (!unit) return
   if (unit.landedHelipadId) {
@@ -198,10 +236,21 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               heli.manualFlightHoverRequested = false
 
               heli.helipadTargetId = helipadId
-              heli.landedHelipadId = helipadId
-              helipad.landedUnitId = heli.id
 
-              if (typeof heli.maxRocketAmmo === 'number' && heli.rocketAmmo < heli.maxRocketAmmo) {
+              const settledOnPad = isServiceLandingSettled(heli, helipadCenterX, helipadCenterY, delta)
+              if (settledOnPad) {
+                heli.landedHelipadId = helipadId
+                helipad.landedUnitId = heli.id
+              } else {
+                if (heli.landedHelipadId === helipadId) {
+                  heli.landedHelipadId = null
+                }
+                if (helipad.landedUnitId === heli.id) {
+                  helipad.landedUnitId = null
+                }
+              }
+
+              if (settledOnPad && typeof heli.maxRocketAmmo === 'number' && heli.rocketAmmo < heli.maxRocketAmmo) {
                 if (helipad.ammo > 0) {
                   const ammoNeeded = heli.maxRocketAmmo - heli.rocketAmmo
                   const ammoRefillTime = 10000
@@ -217,7 +266,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
                 }
               }
 
-              if (typeof heli.maxGas === 'number' && heli.gas < heli.maxGas && helipad.fuel > 0) {
+              if (settledOnPad && typeof heli.maxGas === 'number' && heli.gas < heli.maxGas && helipad.fuel > 0) {
                 const refuelRate = heli.maxGas / 4000
                 const transfer = Math.min(refuelRate * delta, heli.maxGas - heli.gas, helipad.fuel)
                 if (transfer > 0) {
@@ -234,7 +283,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               const hasAmmoCapacity = typeof heli.maxRocketAmmo === 'number' && heli.maxRocketAmmo > 0
               const ammoFull = !hasAmmoCapacity || heli.rocketAmmo >= heli.maxRocketAmmo
               const hasStoredAttackTarget = Boolean(heli.autoHelipadReturnAttackTargetId)
-              const shouldAutoTakeoff = heli.type === 'apache' && heli.autoHelipadReturnActive && ammoFull && hasStoredAttackTarget
+              const shouldAutoTakeoff = heli.type === 'apache' && settledOnPad && heli.autoHelipadReturnActive && ammoFull && hasStoredAttackTarget
 
               if (shouldAutoTakeoff) {
                 heli.helipadLandingRequested = false
@@ -264,6 +313,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
             if (heli.refuelingAtHelipad) {
               heli.refuelingAtHelipad = false
             }
+            clearPadTouchdown(heli)
             if (heli.landedHelipadId === helipadId) {
               clearHelipadClaimForUnit(heli, helipadId, helipads)
             }
