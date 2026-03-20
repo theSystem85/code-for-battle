@@ -313,7 +313,8 @@ export const productionQueue = {
               [...gameState.buildings, ...planningBuildings],
               factories,
               3,
-              gameState.humanPlayer
+              gameState.humanPlayer,
+              item.type
             )
           ) {
             nearBase = true

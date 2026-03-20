@@ -56,7 +56,9 @@ vi.mock('../../src/buildings.js', () => ({
     powerPlant: { width: 2, height: 2, cost: 500, power: 200, health: 200, displayName: 'Power Plant' },
     oreRefinery: { width: 3, height: 3, cost: 2500, power: -150, health: 200, displayName: 'Ore Refinery' },
     vehicleFactory: { width: 3, height: 3, cost: 2000, power: -100, health: 300, displayName: 'Vehicle Factory' },
-    constructionYard: { width: 3, height: 3, cost: 5000, power: 50, health: 400, displayName: 'Construction Yard' }
+    constructionYard: { width: 3, height: 3, cost: 5000, power: 50, health: 400, displayName: 'Construction Yard' },
+    street: { width: 1, height: 1, cost: 10, power: 0, health: 1, displayName: 'Street' },
+    concreteWall: { width: 1, height: 1, cost: 100, power: 0, health: 200, displayName: 'Concrete Wall' }
   },
   createBuilding: vi.fn((type, x, y) => ({
     id: `${type}-${x}-${y}`,
@@ -94,6 +96,7 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
 
 // Import after mocking
 import { productionQueue } from '../../src/productionQueue.js'
+import { isNearExistingBuilding } from '../../src/buildings.js'
 
 describe('Production Queue System', () => {
   let mockButton
@@ -796,6 +799,27 @@ describe('Production Queue System', () => {
       expect(productionQueue.currentBuilding).toBeTruthy()
       expect(productionQueue.currentBuilding.type).toBe('powerPlant')
       expect(productionQueue.currentBuilding.progress).toBe(0)
+    })
+
+
+    it('should pass the blueprint building type to proximity checks for chained street plans', () => {
+      const blueprint = { type: 'street', x: 27, y: 20 }
+      gameState.blueprints = [
+        { type: 'street', x: 23, y: 20 },
+        { type: 'street', x: 24, y: 20 },
+        { type: 'street', x: 25, y: 20 },
+        { type: 'street', x: 26, y: 20 },
+        blueprint
+      ]
+      productionQueue.buildingItems = [{ type: 'street', button: mockButton, isBuilding: true, blueprint }]
+
+      productionQueue.startNextBuildingProduction()
+
+      expect(isNearExistingBuilding).toHaveBeenCalled()
+      const lastCall = isNearExistingBuilding.mock.calls.at(-1)
+      expect(lastCall.at(-1)).toBe('street')
+      expect(productionQueue.currentBuilding).toBeTruthy()
+      expect(productionQueue.currentBuilding.type).toBe('street')
     })
 
     it('should apply construction yard multiplier', () => {
