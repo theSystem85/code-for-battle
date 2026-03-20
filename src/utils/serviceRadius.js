@@ -1,4 +1,4 @@
-import { TILE_SIZE, AMMO_FACTORY_RANGE } from '../config.js'
+import { TILE_SIZE } from '../config.js'
 
 const SERVICE_BUILDING_TYPES = new Set(['vehicleWorkshop', 'hospital', 'gasStation', 'ammunitionFactory'])
 
@@ -21,19 +21,9 @@ export function ensureServiceRadius(building) {
     return 0
   }
 
-  let desiredRadius
-  if (building.type === 'ammunitionFactory') {
-    desiredRadius = AMMO_FACTORY_RANGE
-  } else {
-    const baseRadius = computeServiceRadiusTiles(building.width, building.height)
-    let multiplier = 1
-    if (building.type === 'hospital') {
-      multiplier = 2
-    } else if (building.type === 'vehicleWorkshop') {
-      multiplier = 2
-    }
-    desiredRadius = baseRadius * multiplier
-  }
+  const baseRadius = computeServiceRadiusTiles(building.width, building.height)
+  const multiplier = ['vehicleWorkshop', 'hospital', 'gasStation', 'ammunitionFactory'].includes(building.type) ? 2 : 1
+  const desiredRadius = baseRadius * multiplier
 
   if (typeof building.serviceRadius === 'number') {
     if (building.serviceRadius !== desiredRadius) {

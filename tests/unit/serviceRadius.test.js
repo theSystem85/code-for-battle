@@ -9,8 +9,7 @@ import {
 
 // Mock config
 vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  AMMO_FACTORY_RANGE: 10
+  TILE_SIZE: 32
 }))
 
 describe('serviceRadius', () => {
@@ -143,21 +142,22 @@ describe('serviceRadius', () => {
       expect(building.serviceRadius).toBeCloseTo(baseRadius * 2)
     })
 
-    it('sets and returns radius for gasStation (1x multiplier)', () => {
+    it('sets and returns radius for gasStation (2x multiplier like hospital)', () => {
       const building = { type: 'gasStation', width: 2, height: 2 }
       const result = ensureServiceRadius(building)
 
       const baseRadius = computeServiceRadiusTiles(2, 2)
-      expect(result).toBeCloseTo(baseRadius)
-      expect(building.serviceRadius).toBeCloseTo(baseRadius)
+      expect(result).toBeCloseTo(baseRadius * 2)
+      expect(building.serviceRadius).toBeCloseTo(baseRadius * 2)
     })
 
-    it('uses AMMO_FACTORY_RANGE for ammunitionFactory', () => {
+    it('sets and returns radius for ammunitionFactory (2x multiplier like hospital)', () => {
       const building = { type: 'ammunitionFactory', width: 2, height: 2 }
       const result = ensureServiceRadius(building)
 
-      expect(result).toBe(10) // AMMO_FACTORY_RANGE from mock
-      expect(building.serviceRadius).toBe(10)
+      const baseRadius = computeServiceRadiusTiles(2, 2)
+      expect(result).toBeCloseTo(baseRadius * 2)
+      expect(building.serviceRadius).toBeCloseTo(baseRadius * 2)
     })
 
     it('returns existing serviceRadius if already set correctly', () => {

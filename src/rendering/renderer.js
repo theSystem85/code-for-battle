@@ -27,6 +27,7 @@ import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPrevi
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { selectedUnits } from '../inputHandler.js'
 import { TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
+import { isAirborneUnit } from '../game/movementHelpers.js'
 
 export class Renderer {
   constructor() {
@@ -45,6 +46,21 @@ export class Renderer {
     this.dangerZoneRenderer = new DangerZoneRenderer()
     this.wreckRenderer = new WreckRenderer()
     this.gpuRenderer = null
+  }
+
+  partitionUnitsByRenderLayer(units) {
+    const groundedUnits = []
+    const airborneUnits = []
+
+    ;(units || []).forEach(unit => {
+      if (isAirborneUnit(unit)) {
+        airborneUnits.push(unit)
+        return
+      }
+      groundedUnits.push(unit)
+    })
+
+    return { groundedUnits, airborneUnits }
   }
 
 
@@ -304,13 +320,15 @@ export class Renderer {
       : 0
     const entityImageAlpha = opacityLevel === 1 ? 0.5 : (opacityLevel === 2 ? 0 : 1)
 
+    const { groundedUnits, airborneUnits } = this.partitionUnitsByRenderLayer(units)
+
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
     this.buildingRenderer.renderBases(gameCtx, buildings, mapGrid, scrollOffset)
     // Render initial construction yards using the same renderer
     this.buildingRenderer.renderBases(gameCtx, factories, mapGrid, scrollOffset)
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset)
-    this.unitRenderer.renderBases(gameCtx, units, scrollOffset)
+    this.unitRenderer.renderBases(gameCtx, groundedUnits, scrollOffset)
     gameCtx.restore()
 
     this.effectsRenderer.render(gameCtx, bullets, gameState, units, scrollOffset)
@@ -347,7 +365,12 @@ export class Renderer {
 
     this.buildingRenderer.renderOverlays(gameCtx, buildings, scrollOffset)
     this.buildingRenderer.renderOverlays(gameCtx, factories, scrollOffset)
-    this.unitRenderer.renderOverlays(gameCtx, units, scrollOffset)
+    this.unitRenderer.renderOverlays(gameCtx, groundedUnits, scrollOffset)
+    gameCtx.save()
+    gameCtx.globalAlpha *= entityImageAlpha
+    this.unitRenderer.renderBases(gameCtx, airborneUnits, scrollOffset)
+    gameCtx.restore()
+    this.unitRenderer.renderOverlays(gameCtx, airborneUnits, scrollOffset)
     this.buildingRenderer.renderHudHoverTooltip(gameCtx, [...(buildings || []), ...(factories || [])], scrollOffset)
 
     this.uiRenderer.render(gameCtx, gameCanvas, gameState, selectionActive, selectionStart, selectionEnd, scrollOffset, factories, buildings, mapGrid, units)
