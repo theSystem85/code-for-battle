@@ -327,6 +327,48 @@ describe('gameStateManager', () => {
       expect(gameState.playerUnitsDestroyed).toBe(1)
       expect(units).toHaveLength(0)
     })
+
+
+    it('stops apache rotor audio during destroyed-unit cleanup', () => {
+      const stop = vi.fn()
+      const apache = {
+        id: 'apache-1',
+        type: 'apache',
+        owner: 'enemy',
+        health: 0,
+        rotorSoundRequestId: 4,
+        rotorSoundLoading: true,
+        rotorSound: {
+          gainNode: {
+            gain: {
+              value: 0.25,
+              cancelScheduledValues: vi.fn(),
+              setValueAtTime: vi.fn(),
+              linearRampToValueAtTime: vi.fn()
+            }
+          },
+          source: { stop }
+        }
+      }
+      const units = [apache]
+      const gameState = {
+        factories: [],
+        buildings: [],
+        occupancyMap: [],
+        playerUnitsDestroyed: 0,
+        enemyUnitsDestroyed: 0,
+        humanPlayer: 'player1'
+      }
+
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(apache.destroyed).toBe(true)
+      expect(apache.rotorSoundRequestId).toBe(5)
+      expect(apache.rotorSound).toBeNull()
+      expect(apache.rotorSoundLoading).toBe(false)
+      expect(stop).toHaveBeenCalledWith(0.05)
+      expect(units).toHaveLength(0)
+    })
   })
 
   describe('cleanupDestroyedFactories', () => {
