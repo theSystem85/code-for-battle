@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Apache rocket straight-line regression', () => {
-  test('apache rockets keep their original trajectory when the target moves after launch', async({ page }) => {
+  test('apache leads a steadily moving tank without homing and kills it in one precise burst', async({ page }) => {
     test.setTimeout(90000)
 
     await page.addInitScript(() => {
@@ -47,7 +47,8 @@ test.describe('Apache rocket straight-line regression', () => {
       apache.flightPlan = null
       apache.helipadLandingRequested = false
       apache.landedHelipadId = null
-      apache.rocketAmmo = Math.max(4, apache.rocketAmmo || 0)
+      apache.rocketAmmo = 8
+      apache.maxRocketAmmo = 8
       apache.apacheAmmoEmpty = false
       apache.canFire = true
       apache.volleyState = null
@@ -59,9 +60,35 @@ test.describe('Apache rocket straight-line regression', () => {
       target.tileY = Math.floor(target.y / 32)
       target.path = []
       target.moveTarget = null
+      target.health = 100
+      target.maxHealth = 100
+      target.movement = {
+        velocity: { x: 2, y: 0 },
+        targetVelocity: { x: 2, y: 0 },
+        currentSpeed: 2,
+        isMoving: true
+      }
 
       apache.target = target
       apache.attackMoveTarget = null
+
+      window.__apacheLeadTest = {
+        targetId: target.id,
+        intervalId: window.setInterval(() => {
+          const liveTarget = window.gameInstance?.units?.find(unit => unit.id === target.id)
+          if (!liveTarget || liveTarget.health <= 0) return
+          liveTarget.x += 2
+          liveTarget.tileX = Math.floor(liveTarget.x / 32)
+          liveTarget.tileY = Math.floor(liveTarget.y / 32)
+          liveTarget.path = []
+          liveTarget.moveTarget = null
+          liveTarget.movement = liveTarget.movement || {}
+          liveTarget.movement.velocity = { x: 2, y: 0 }
+          liveTarget.movement.targetVelocity = { x: 2, y: 0 }
+          liveTarget.movement.currentSpeed = 2
+          liveTarget.movement.isMoving = true
+        }, 16)
+      }
 
       return {
         apacheId: apache.id,
@@ -78,10 +105,8 @@ test.describe('Apache rocket straight-line regression', () => {
       if (!rocket || !target) return false
       return {
         bulletId: rocket.id,
-        startX: rocket.startX,
-        startY: rocket.startY,
         targetPosition: rocket.targetPosition,
-        initialTargetCenter: {
+        currentTargetCenter: {
           x: target.x + 16,
           y: target.y + 16
         }
@@ -89,68 +114,36 @@ test.describe('Apache rocket straight-line regression', () => {
     }, setup, { timeout: 30000 })
 
     const launchInfo = await launch.jsonValue()
-    expect(launchInfo.targetPosition.x).toBeCloseTo(launchInfo.initialTargetCenter.x, 6)
-    expect(launchInfo.targetPosition.y).toBeCloseTo(launchInfo.initialTargetCenter.y, 6)
+    expect(launchInfo.targetPosition.x).toBeGreaterThan(launchInfo.currentTargetCenter.x + 40)
+    expect(Math.abs(launchInfo.targetPosition.y - launchInfo.currentTargetCenter.y)).toBeLessThanOrEqual(8)
 
-    const movedState = await page.evaluate(({ bulletId, targetId }) => {
-      const target = window.gameInstance.units.find(unit => unit.id === targetId)
-      const rocket = window.gameState.bullets.find(b => b.id === bulletId)
-      if (!target || !rocket) return null
-
-      target.x += 8 * 32
-      target.y += 5 * 32
-      target.tileX = Math.floor(target.x / 32)
-      target.tileY = Math.floor(target.y / 32)
-      target.path = []
-      target.moveTarget = null
-
-      return {
-        movedTargetCenter: {
-          x: target.x + 16,
-          y: target.y + 16
-        },
-        targetPositionAfterMove: {
-          x: rocket.targetPosition.x,
-          y: rocket.targetPosition.y
-        }
-      }
-    }, launchInfo)
-
-    expect(movedState).not.toBeNull()
-    expect(movedState.targetPositionAfterMove.x).toBeCloseTo(launchInfo.targetPosition.x, 6)
-    expect(movedState.targetPositionAfterMove.y).toBeCloseTo(launchInfo.targetPosition.y, 6)
-    expect(Math.abs(movedState.movedTargetCenter.x - launchInfo.targetPosition.x)).toBeGreaterThan(100)
-    expect(Math.abs(movedState.movedTargetCenter.y - launchInfo.targetPosition.y)).toBeGreaterThan(100)
-
-    const impact = await page.waitForFunction(({ bulletId, targetId, initialTargetPosition }) => {
+    const result = await page.waitForFunction(({ bulletId, targetId, apacheId }) => {
       const rocket = window.gameState?.bullets?.find(b => b.id === bulletId)
-      if (rocket) return false
-
+      const apache = window.gameInstance?.units?.find(unit => unit.id === apacheId)
       const target = window.gameInstance?.units?.find(unit => unit.id === targetId)
-      if (!target) return false
-
-      const impact = window.gameState?.explosions?.at(-1)
-      if (!impact) return false
-
-      const dx = initialTargetPosition.x - impact.x
-      const dy = initialTargetPosition.y - impact.y
-      const targetDx = target.x + 16 - impact.x
-      const targetDy = target.y + 16 - impact.y
-
+      if (!apache || !target) return false
+      if (rocket) return false
+      if (target.health > 0) return false
       return {
-        impactX: impact.x,
-        impactY: impact.y,
-        distanceFromInitialAim: Math.hypot(dx, dy),
-        distanceFromMovedTarget: Math.hypot(targetDx, targetDy)
+        targetHealth: target.health,
+        rocketAmmo: apache.rocketAmmo,
+        targetX: target.x
       }
     }, {
       bulletId: launchInfo.bulletId,
       targetId: setup.targetId,
-      initialTargetPosition: launchInfo.targetPosition
+      apacheId: setup.apacheId
     }, { timeout: 30000 })
 
-    const impactInfo = await impact.jsonValue()
-    expect(impactInfo.distanceFromInitialAim).toBeLessThanOrEqual(24)
-    expect(impactInfo.distanceFromMovedTarget).toBeGreaterThan(120)
+    const finalState = await result.jsonValue()
+    expect(finalState.targetHealth).toBeLessThanOrEqual(0)
+    expect(finalState.rocketAmmo).toBe(0)
+
+    await page.evaluate(() => {
+      if (window.__apacheLeadTest?.intervalId) {
+        window.clearInterval(window.__apacheLeadTest.intervalId)
+      }
+      window.__apacheLeadTest = null
+    })
   })
 })
