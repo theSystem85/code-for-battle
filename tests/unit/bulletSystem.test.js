@@ -1179,6 +1179,60 @@ describe('Bullet System', () => {
       nowSpy.mockRestore()
     })
 
+    it('applies extra explosion damage when rocket turret rockets hit airborne apaches', () => {
+      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2600)
+      const apache = createMockUnit({
+        id: 'apache-air-1',
+        type: 'apache',
+        owner: 'enemy',
+        health: 40,
+        maxHealth: 40,
+        flightState: 'airborne',
+        altitude: 90,
+        x: 160,
+        y: 160
+      })
+      const bullet = createMockBullet({
+        originType: 'rocketTurret',
+        projectileType: 'rocket',
+        baseDamage: 18,
+        x: apache.x + TILE_SIZE / 2,
+        y: apache.y + TILE_SIZE / 2 - apache.altitude * 0.4,
+        target: apache,
+        targetPosition: {
+          x: apache.x + TILE_SIZE / 2,
+          y: apache.y + TILE_SIZE / 2 - apache.altitude * 0.4
+        },
+        creationTime: 0,
+        startTime: 0,
+        maxFlightTime: 5000,
+        explosionRadius: TILE_SIZE * 1.5
+      })
+      const bullets = [bullet]
+
+      updateBullets(bullets, [apache], [], createGameState(), mapGrid)
+
+      expect(apache.health).toBe(40)
+      expect(bullets).toHaveLength(0)
+      expect(triggerExplosion).toHaveBeenCalledWith(
+        bullet.targetPosition.x,
+        bullet.targetPosition.y,
+        bullet.baseDamage,
+        [apache],
+        [],
+        bullet.shooter,
+        2600,
+        mapGrid,
+        bullet.explosionRadius || TILE_SIZE * 1.5,
+        undefined,
+        expect.objectContaining({
+          allowAirborneDamage: true,
+          unitDamageMultipliers: { apache: 1.5 }
+        })
+      )
+      nowSpy.mockRestore()
+    })
+
     it('explodes rocket tank homing missiles when they reach their target', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2000)
       const target = createMockUnit({ owner: 'enemy', x: 160, y: 160 })
