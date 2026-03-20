@@ -715,6 +715,25 @@ describe('Building Placement Validation - Direct Function Tests', () => {
       expect(result).toBe(true)
     })
 
+
+    it('should ignore street anchors for non-street placement types', () => {
+      buildings = [{ owner: 'player', type: 'street', x: 26, y: 20, width: 1, height: 1 }]
+      const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'powerPlant')
+      expect(result).toBe(false)
+    })
+
+    it('should allow street anchors for street placement types', () => {
+      buildings = [{ owner: 'player', type: 'street', x: 26, y: 20, width: 1, height: 1 }]
+      const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'street')
+      expect(result).toBe(true)
+    })
+
+    it('should allow concrete wall anchors for concrete wall placement types', () => {
+      buildings = [{ owner: 'player', type: 'concreteWall', x: 26, y: 20, width: 1, height: 1 }]
+      const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'concreteWall')
+      expect(result).toBe(true)
+    })
+
     it('should use Chebyshev distance (max of x and y difference)', () => {
       // Chebyshev distance allows diagonal movement at same cost as cardinal
       // Factory at (20,20) with size 3x3 means tiles (20-22, 20-22)
