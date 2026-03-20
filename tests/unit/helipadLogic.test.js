@@ -138,7 +138,8 @@ describe('helipadLogic', () => {
     const landingCenter = getHelipadLandingCenter(helipad)
     const apache = createApache({
       x: landingCenter.x - 16,
-      y: landingCenter.y - 16
+      y: landingCenter.y - 16,
+      movement: { isMoving: false, currentSpeed: 0 }
     })
 
     updateHelipadLogic([apache], [helipad], {}, 1000)
@@ -168,7 +169,8 @@ describe('helipadLogic', () => {
       flightState: 'airborne',
       helipadLandingRequested: true,
       selected: true,
-      altitude: 40
+      altitude: 40,
+      movement: { isMoving: true, currentSpeed: 1 }
     })
 
     updateHelipadLogic([apache], [helipad], {}, 100)
@@ -177,8 +179,35 @@ describe('helipadLogic', () => {
     expect(apache.y).toBe(landingCenter.y - 16)
     expect(apache.manualFlightState).toBe('land')
     expect(apache.flightPlan?.mode).toBe('helipad')
+    expect(apache.landedHelipadId).toBeNull()
+    expect(helipad.landedUnitId ?? null).toBeNull()
+  })
+
+  it('waits until an apache is fully settled on the helipad before refilling ammo or fuel', () => {
+    const helipad = createHelipad({ ammo: 50, fuel: 100, landedUnitId: null })
+    const landingCenter = getHelipadLandingCenter(helipad)
+    const apache = createApache({
+      x: landingCenter.x - 16,
+      y: landingCenter.y - 16,
+      flightState: 'grounded',
+      rocketAmmo: 0,
+      gas: 0,
+      movement: { isMoving: false, currentSpeed: 0 }
+    })
+
+    updateHelipadLogic([apache], [helipad], {}, 100)
+
+    expect(apache.landedHelipadId).toBeNull()
+    expect(helipad.landedUnitId).toBeNull()
+    expect(apache.rocketAmmo).toBe(0)
+    expect(apache.gas).toBe(0)
+
+    updateHelipadLogic([apache], [helipad], {}, 200)
+
     expect(apache.landedHelipadId).toBe('helipad-h1')
     expect(helipad.landedUnitId).toBe('a1')
+    expect(apache.rocketAmmo).toBeGreaterThan(0)
+    expect(apache.gas).toBeGreaterThan(0)
   })
 
   it('auto relaunches to continue attack after full ammo reload on auto-return', () => {
@@ -202,7 +231,7 @@ describe('helipadLogic', () => {
       autoHelipadReturnAttackTargetType: 'unit'
     })
 
-    updateHelipadLogic([apache], [helipad], {}, 100)
+    updateHelipadLogic([apache], [helipad], {}, 300)
 
     expect(apache.rocketAmmo).toBe(10)
     expect(apache.helipadLandingRequested).toBe(false)

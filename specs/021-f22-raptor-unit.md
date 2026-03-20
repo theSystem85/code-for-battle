@@ -305,3 +305,9 @@ F22 rocket origin visual alignment:
 1. Added a dedicated `getF22RocketSpawnPoint` helper in `f22ImageRenderer.js` so F22 rockets originate from a lower fuselage hardpoint tied to the rendered F22 sprite transform.
 2. Updated shared firing logic (`firingHandlers.js`) to use F22-specific rocket spawn coordinates instead of Apache hardpoints for F22 units.
 3. Added E2E regression assertions verifying F22 rocket spawn starts below the rendered jet body centerline while remaining above the ground shadow projection.
+
+
+Ammo HUD + parked-only resupply consistency follow-up (2026-03-20):
+1. The selected F22 ammo HUD bar must always render the aircraft's own `rocketAmmo` value, even while parked on an airstrip, so the displayed status matches the real combat ammo state before, during, and after sorties.
+2. Airstrip reserve ammo remains a building-level resource only; it must not replace the selected aircraft ammo readout.
+3. F22 airstrip refill timing remains gated to the fully parked state only, with no ammo/fuel transfer during touchdown, runway roll, or taxi phases.
