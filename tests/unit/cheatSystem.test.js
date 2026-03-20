@@ -40,7 +40,8 @@ vi.mock('../../src/ui/notifications.js', () => ({
 }))
 
 vi.mock('../../src/sound.js', () => ({
-  playSound
+  playSound,
+  audioContext: { currentTime: 0 }
 }))
 
 const productionQueue = {
@@ -118,10 +119,15 @@ vi.mock('../../src/game/mineSystem.js', () => ({
 
 const getWreckById = vi.fn()
 const removeWreckById = vi.fn()
+const stopApacheRotorSound = vi.fn()
 
 vi.mock('../../src/game/unitWreckManager.js', () => ({
   getWreckById,
   removeWreckById
+}))
+
+vi.mock('../../src/game/movementApache.js', () => ({
+  stopApacheRotorSound
 }))
 
 const resetDom = () => {
@@ -662,6 +668,43 @@ describe('CheatSystem', () => {
     expect(system.selectedUnits).toHaveLength(0)
     expect(gameState.selectionActive).toBe(false)
     expect(showNotification).toHaveBeenCalledWith(expect.stringContaining('Destroyed 1 unit and 1 building'), 4000)
+  })
+
+  it('stops apache rotor audio immediately when kill cheat is used', () => {
+    const system = new CheatSystem()
+    const apache = {
+      health: 10,
+      destroyed: false,
+      selected: true,
+      isBuilding: false,
+      type: 'apache',
+      rotorSound: {
+        gainNode: {
+          gain: {
+            value: 0.25,
+            cancelScheduledValues: vi.fn(),
+            setValueAtTime: vi.fn(),
+            linearRampToValueAtTime: vi.fn()
+          }
+        },
+        source: { stop: vi.fn() }
+      },
+      rotorSoundLoading: true,
+      rotorSoundRequestId: 2
+    }
+    stopApacheRotorSound.mockImplementation(target => {
+      target.rotorSound = null
+      target.rotorSoundLoading = false
+    })
+    system.setSelectedUnitsRef([apache])
+
+    system.killSelectedTargets()
+
+    expect(apache.health).toBe(0)
+    expect(apache.destroyed).toBe(true)
+    expect(stopApacheRotorSound).toHaveBeenCalledWith(apache)
+    expect(apache.rotorSound).toBeNull()
+    expect(apache.rotorSoundLoading).toBe(false)
   })
 
   it('recovers selected wrecks into restored units', () => {

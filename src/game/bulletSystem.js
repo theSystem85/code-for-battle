@@ -169,20 +169,6 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
     if (!skipStandardMotion) {
       if (bullet.originType === 'apacheRocket' && apacheTargetUnit) {
-        const targetCenterX = apacheTargetUnit.x + TILE_SIZE / 2
-        const targetCenterY = apacheTargetUnit.y + TILE_SIZE / 2
-        bullet.targetPosition = { x: targetCenterX, y: targetCenterY }
-
-        const dxToTarget = targetCenterX - bullet.x
-        const dyToTarget = targetCenterY - bullet.y
-        const distanceToCenter = Math.hypot(dxToTarget, dyToTarget)
-        const currentSpeed = Math.hypot(bullet.vx || 0, bullet.vy || 0) || bullet.speed || 0
-        if (distanceToCenter > 1e-3 && currentSpeed > 0) {
-          const speedScale = currentSpeed / distanceToCenter
-          bullet.vx = dxToTarget * speedScale
-          bullet.vy = dyToTarget * speedScale
-        }
-
         const footprintWidth = (apacheTargetUnit.width || 1) * TILE_SIZE
         const footprintHeight = (apacheTargetUnit.height || 1) * TILE_SIZE
         bullet.apacheTargetRadius = Math.max(
@@ -431,12 +417,22 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           // 8 rockets * 15 ~= 120 damage (tough tanks now survive a full volley)
           const baseDamage = bullet.baseDamage * 0.9
 
+          const explosionX = bullet.x
+          const explosionY = bullet.y
+
           const targetIsAirborneApache =
             apacheTargetUnit &&
             (apacheTargetUnit.type === 'apache' || apacheTargetUnit.type === 'f22Raptor' || apacheTargetUnit.type === 'f35') &&
             apacheTargetUnit.flightState !== 'grounded'
 
-          if (targetIsAirborneApache && bullet.originType !== 'f35Bomb') {
+          const airborneTargetStillNearImpact = targetIsAirborneApache && apacheTargetUnit && (() => {
+            const targetCenterX = apacheTargetUnit.x + TILE_SIZE / 2
+            const targetCenterY = apacheTargetUnit.y + TILE_SIZE / 2
+            const airborneDistanceToImpact = Math.hypot(explosionX - targetCenterX, explosionY - targetCenterY)
+            return airborneDistanceToImpact <= proximityThreshold
+          })()
+
+          if (airborneTargetStillNearImpact && bullet.originType !== 'f35Bomb') {
             let directDamage = Math.round(baseDamage)
 
             if (window.cheatSystem) {
@@ -494,8 +490,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               if (u.health <= 0 || u.owner === bullet.shooter.owner) return false
               const tankTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3']
               if (!tankTypes.includes(u.type)) return false
-              const explosionOriginX = apacheTargetUnit ? apacheTargetUnit.x + TILE_SIZE / 2 : bullet.x
-              const explosionOriginY = apacheTargetUnit ? apacheTargetUnit.y + TILE_SIZE / 2 : bullet.y
+              const explosionOriginX = bullet.x
+              const explosionOriginY = bullet.y
               const dist = Math.hypot(u.x + TILE_SIZE / 2 - explosionOriginX, u.y + TILE_SIZE / 2 - explosionOriginY)
               return dist <= explosionRadius
             })
@@ -504,8 +500,6 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
           }
 
-          const explosionX = apacheTargetUnit ? apacheTargetUnit.x + TILE_SIZE / 2 : bullet.x
-          const explosionY = apacheTargetUnit ? apacheTargetUnit.y + TILE_SIZE / 2 : bullet.y
           const isF35Bomb = bullet.originType === 'f35Bomb'
           triggerExplosion(
             explosionX,

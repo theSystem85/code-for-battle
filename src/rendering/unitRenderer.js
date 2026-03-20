@@ -15,7 +15,7 @@ import { renderMineSweeperWithImage, isMineSweeperImageLoaded } from './mineSwee
 import { renderApacheWithImage } from './apacheImageRenderer.js'
 import { renderF22WithImage } from './f22ImageRenderer.js'
 import { renderF35WithImage } from './f35ImageRenderer.js'
-import { getExperienceProgress, initializeUnitLeveling, getBuildingIdentifier } from '../utils.js'
+import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 
 export class UnitRenderer {
   constructor() {
@@ -1023,36 +1023,8 @@ export class UnitRenderer {
       } else {
         reloadRatio = Math.min(1, timeSinceLastShot / fireRate) // Progress toward next shot
       }
-    } else if (unit.type === 'apache') {
-      // Check if Apache is landed on a helipad
-      const isGroundedOnPad = unit.flightState === 'grounded' && Boolean(unit.landedHelipadId)
-      if (isGroundedOnPad && gameState.buildings) {
-        const helipad = gameState.buildings.find(b => b.type === 'helipad' && getBuildingIdentifier(b) === unit.landedHelipadId)
-        if (helipad && typeof helipad.maxAmmo === 'number' && helipad.maxAmmo > 0) {
-          // Show helipad ammo bar
-          ratio = Math.max(0, Math.min(1, (helipad.ammo ?? helipad.maxAmmo) / helipad.maxAmmo))
-          hasAmmo = true
-        }
-      }
-
-      // If not landed or no helipad ammo, show unit ammo
-      if (!hasAmmo && typeof unit.maxRocketAmmo === 'number') {
-        ratio = Math.max(0, Math.min(1, (unit.rocketAmmo ?? 0) / unit.maxRocketAmmo))
-        hasAmmo = true
-      }
-    } else if (unit.type === 'f22Raptor' || unit.type === 'f35') {
-      const isGroundedOnPad = unit.flightState === 'grounded' && Boolean(unit.landedHelipadId)
-      if (isGroundedOnPad && gameState.buildings) {
-        const serviceBuilding = gameState.buildings.find(b =>
-          (b.type === 'airstrip' || b.type === 'helipad') &&
-          getBuildingIdentifier(b) === unit.landedHelipadId
-        )
-        if (serviceBuilding && typeof serviceBuilding.maxAmmo === 'number' && serviceBuilding.maxAmmo > 0) {
-          ratio = Math.max(0, Math.min(1, (serviceBuilding.ammo ?? serviceBuilding.maxAmmo) / serviceBuilding.maxAmmo))
-          hasAmmo = true
-        }
-      }
-      if (!hasAmmo && typeof unit.maxRocketAmmo === 'number') {
+    } else if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
+      if (typeof unit.maxRocketAmmo === 'number') {
         ratio = Math.max(0, Math.min(1, (unit.rocketAmmo ?? 0) / unit.maxRocketAmmo))
         hasAmmo = true
       }

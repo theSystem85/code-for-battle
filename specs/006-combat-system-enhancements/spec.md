@@ -9,12 +9,14 @@
 
 ## Maintenance Updates
 
+- 2026-03-20: Apache/F22 rocket projectiles now keep their original fired trajectory instead of re-aiming toward moving targets mid-flight, but Apache volleys now compute predictive lead from target speed/direction so straight-flying rockets can still hit steady moving targets precisely; airborne direct-hit damage only applies if the target is still at the original impact point.
 - 2026-02-01: Split `src/game/unitCombat.js` into focused submodules under `src/game/unitCombat/` to keep each file under 1k LOC while preserving existing combat behavior.
 - 2026-01-31: Defensive turrets now require clear line-of-sight to targets before firing, matching player and AI behavior.
 - 2026-02-06: Apache helicopters now hold max-range standoff positions in combat, ignore ground-unit pathfinding, and their rockets deal 3x damage to tanker and ammunition trucks.
 - 2026-02-10: Apache helicopters now auto-return to helipads when rockets run dry, force landing alignment on the pad, reload to full before re-engaging the same target, and return to helipad after the target is destroyed.
 - 2026-02-23: Player-commanded defensive buildings now support FIFO forced-target queues; queued targets render the existing red attack triangle with queue numbers while the buildings are selected.
 - 2026-02-23: AGF now supports selected defensive buildings by enqueuing boxed enemy targets into forced-target FIFO queues; fixed forced-target assignment bug that made rocket/artillery turrets aim without firing when force-attacking enemies.
+- 2026-03-18: Service-resupply interactions now require same-party ownership and a grounded target for ammunition trucks/factories, tanker trucks, ambulances, and recovery tanks so airborne aircraft cannot be serviced while flying over enemy or neutral support units.
 
 ## User Scenarios & Testing
 

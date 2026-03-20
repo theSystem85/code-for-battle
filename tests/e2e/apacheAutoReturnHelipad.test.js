@@ -378,7 +378,10 @@ test.describe('Apache helipad auto-return regression', () => {
       if (!apache) return false
 
       return (
-        apache.landedHelipadId === helipadId
+        apache.flightState === 'grounded' &&
+        apache.landedHelipadId === helipadId &&
+        apache.rotorSound == null &&
+        apache.rotorSoundLoading === false
       )
     }, scenarioAfterApache, { timeout: 30000 })
 
@@ -434,6 +437,52 @@ test.describe('Apache helipad auto-return regression', () => {
     expect(postState.flightState).not.toBe('grounded')
     expect(postState.helipadLandingRequested).toBe(false)
     expect(postState.enemyHealth).toBeLessThan(postState.enemyMaxHealth)
+
+    await page.evaluate(({ apacheId }) => {
+      const apache = window.gameInstance.units.find(unit => unit.id === apacheId)
+      if (!apache) return
+
+      apache.flightState = 'airborne'
+      apache.altitude = apache.maxAltitude || 100
+      apache.manualFlightState = 'auto'
+      apache.autoHoldAltitude = true
+      apache.moveTarget = { x: Math.floor(apache.x / 32) + 2, y: Math.floor(apache.y / 32) }
+      apache.health = 100
+      apache.destroyed = false
+      window.__apacheDestroyedStopArgs = null
+    }, { apacheId: scenarioAfterApache.apacheId })
+
+    await page.waitForFunction(({ apacheId }) => {
+      const apache = window.gameInstance.units.find(unit => unit.id === apacheId)
+      return Boolean(apache?.rotorSound)
+    }, { apacheId: scenarioAfterApache.apacheId })
+
+    await page.evaluate(({ apacheId }) => {
+      const apache = window.gameInstance.units.find(unit => unit.id === apacheId)
+      if (!apache?.rotorSound?.source) return
+
+      const originalStop = apache.rotorSound.source.stop.bind(apache.rotorSound.source)
+      apache.rotorSound.source.stop = (...args) => {
+        window.__apacheDestroyedStopArgs = args
+        return originalStop(...args)
+      }
+    }, { apacheId: scenarioAfterApache.apacheId })
+
+    await page.evaluate(({ apacheId }) => {
+      const apache = window.gameInstance.units.find(unit => unit.id === apacheId)
+      if (!apache) return
+      apache.health = 0
+    }, { apacheId: scenarioAfterApache.apacheId })
+
+    const destroyedAudioState = await page.waitForFunction(({ apacheId }) => {
+      const apache = window.gameInstance.units.find(unit => unit.id === apacheId)
+      const stopArgs = window.__apacheDestroyedStopArgs
+      if (apache) return false
+      if (!Array.isArray(stopArgs)) return false
+      return { stopArgs }
+    }, { apacheId: scenarioAfterApache.apacheId }).then(result => result.jsonValue())
+
+    expect(destroyedAudioState.stopArgs.length).toBeGreaterThan(0)
 
     const criticalErrors = consoleErrors.filter(error =>
       !error.includes('favicon') &&

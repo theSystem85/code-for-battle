@@ -134,6 +134,12 @@ airborne-only targets and retarget to valid ground threats.
 `Primary files`: `src/game/unitCombat/tankCombat.js`, `src/game/unitCombat/firingHandlers.js`, `src/game/bulletSystem.js`, `src/saveGame.js`, `src/config.js`
 
 ### C.1 Firing eligibility and volley continuity
+### C.1a Range gating follow-up (2026-03-20)
+23a. `C1a` F22 may only continue or start rocket volleys while the target remains inside the active firing window; leaving range immediately stops further rocket release until back in range.
+	- Status: `Implemented (code)`
+24a. `C1b` Effective F22 firing range is hard-capped at 20 tiles total, including veterancy/range multipliers.
+	- Status: `Implemented (code)`
+
 16. `C1` Grounded F22 cannot fire; must be airborne to attack.
 	- Status: `✅` User-verified working
 17. `C2` Once a volley starts, it continues beyond first rocket until volley completion (not aborted by cooldown gate).
@@ -305,3 +311,9 @@ F22 rocket origin visual alignment:
 1. Added a dedicated `getF22RocketSpawnPoint` helper in `f22ImageRenderer.js` so F22 rockets originate from a lower fuselage hardpoint tied to the rendered F22 sprite transform.
 2. Updated shared firing logic (`firingHandlers.js`) to use F22-specific rocket spawn coordinates instead of Apache hardpoints for F22 units.
 3. Added E2E regression assertions verifying F22 rocket spawn starts below the rendered jet body centerline while remaining above the ground shadow projection.
+
+
+Ammo HUD + parked-only resupply consistency follow-up (2026-03-20):
+1. The selected F22 ammo HUD bar must always render the aircraft's own `rocketAmmo` value, even while parked on an airstrip, so the displayed status matches the real combat ammo state before, during, and after sorties.
+2. Airstrip reserve ammo remains a building-level resource only; it must not replace the selected aircraft ammo readout.
+3. F22 airstrip refill timing remains gated to the fully parked state only, with no ammo/fuel transfer during touchdown, runway roll, or taxi phases.

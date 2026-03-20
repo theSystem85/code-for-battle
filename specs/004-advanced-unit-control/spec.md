@@ -183,6 +183,9 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-061**: Cheat ammo commands applied to selected Apache helicopters MUST update Apache combat ammo (`rocketAmmo`) as the primary source of truth, even when compatibility fields (e.g. `maxAmmunition`) exist on the same unit object.
 - **FR-062**: Apache combat/autoreturn logic MUST ignore stale remote-control state after a short inactivity timeout so old `remoteControlActive` flags cannot block ammo-empty auto-return to helipad.
 - **FR-063**: Automated E2E coverage MUST verify the Apache ammo-empty lifecycle end-to-end (auto-return intent, refill, relaunch, and target-resume) including stale remote-control-state regression protection, using durable state checks that do not rely on a single-frame grounded transition.
+- **FR-063a**: Apache flight loop audio MUST stop within a short fade when an Apache lands or is destroyed, including cases where the loop was still asynchronously starting during the state change.
+- **FR-063b**: Destroyed-unit cleanup MUST explicitly stop active Apache/F35 flight loops before the unit object is removed, because movement-state updates may no longer execute after the fatal frame.
+- **FR-063c**: Cheat-driven destruction (`kill`) MUST also stop Apache/F35 flight loops immediately on command execution, even before the next simulation cleanup tick.
 - **FR-064**: When a move command target is unreachable by pathfinding, the system MUST abort that unit's move command instead of leaving it pending.
 - **FR-065**: When one or more human-controlled selected units receive an unreachable move command, the system MUST show a user notification indicating the move was aborted.
 - **FR-066**: For direct player-issued move commands, pathfinding MUST treat the clicked destination as strict and MUST NOT auto-retarget to a nearby passable tile when the destination tile itself is blocked.
@@ -378,3 +381,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
 
 - **FR-075**: When only supply units (ambulance, tanker truck, ammunition truck, recovery tank) are selected, friendly airstrip tiles MUST be treated as valid move-command targets for cursor feedback and click handling (move cursor + green movement indicator, no move-blocked state).
+
+
+- **FR-076**: Apache helipad touchdown MUST NOT start ammo or fuel transfer until the helicopter is fully landed, stationary, and settled on the final helipad center; touching down or snapping into approach alignment alone is insufficient.
+- **FR-077**: The selected Apache ammo HUD bar MUST always display the helicopter's actual `rocketAmmo` value instead of substituting helipad reserve ammo while grounded.
