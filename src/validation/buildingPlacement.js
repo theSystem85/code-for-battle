@@ -10,6 +10,20 @@
 import { MAX_BUILDING_GAP_TILES } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 
+const NON_EXPANDING_BUILD_AREA_TYPES = new Set(['street', 'concreteWall'])
+
+function canBuildingTypeExtendBuildArea(type) {
+  return !NON_EXPANDING_BUILD_AREA_TYPES.has(type)
+}
+
+function canExistingBuildingAnchorPlacement(existingType, placementType) {
+  if (canBuildingTypeExtendBuildArea(existingType)) {
+    return true
+  }
+
+  return existingType === placementType
+}
+
 /**
  * Checks if a position is near existing buildings using Chebyshev distance
  * @param {number} tileX - X tile position to check
@@ -20,7 +34,7 @@ import { buildingData } from '../data/buildingData.js'
  * @param {string} owner - Owner to check against (default: 'player')
  * @returns {boolean} - Whether the position is near an existing building
  */
-export function isNearExistingBuilding(tileX, tileY, buildings, factories, maxDistance = MAX_BUILDING_GAP_TILES, owner = 'player') {
+export function isNearExistingBuilding(tileX, tileY, buildings, factories, maxDistance = MAX_BUILDING_GAP_TILES, owner = 'player', placementType = null) {
   // First check factories
   if (factories && factories.length > 0) {
     for (const factory of factories) {
@@ -48,6 +62,10 @@ export function isNearExistingBuilding(tileX, tileY, buildings, factories, maxDi
     for (const building of buildings) {
       // Skip buildings not belonging to the same owner
       if (building.owner !== owner) {
+        continue
+      }
+
+      if (!canExistingBuildingAnchorPlacement(building.type, placementType)) {
         continue
       }
 
@@ -114,7 +132,7 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
     let isAnyTileInRange = false
     for (let y = tileY; y < tileY + height; y++) {
       for (let x = tileX; x < tileX + width; x++) {
-        if (isNearExistingBuilding(x, y, buildings, factories, MAX_BUILDING_GAP_TILES, owner)) {
+        if (isNearExistingBuilding(x, y, buildings, factories, MAX_BUILDING_GAP_TILES, owner, type)) {
           isAnyTileInRange = true
           break
         }

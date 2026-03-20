@@ -242,6 +242,48 @@ describe('Ammunition System', () => {
   })
 
   describe('Resupply from trucks', () => {
+
+    it('reloads an ammunition truck from the factory service radius', () => {
+      const factory = {
+        id: 'factory1',
+        type: 'ammunitionFactory',
+        x: 10,
+        y: 10,
+        width: 3,
+        height: 3,
+        health: 100,
+        owner: 'player'
+      }
+      buildings.push(factory)
+
+      const truck = {
+        id: 'truck1',
+        type: 'ammunitionTruck',
+        x: 16 * TILE_SIZE,
+        y: 11 * TILE_SIZE,
+        tileX: 16,
+        tileY: 11,
+        health: 100,
+        maxAmmoCargo: 500,
+        ammoCargo: 0,
+        movement: { isMoving: false }
+      }
+      units.push(truck)
+
+      getServiceRadiusPixels.mockImplementation(building => {
+        if (building.id === 'factory1') {
+          return 6 * TILE_SIZE
+        }
+        return 5 * TILE_SIZE
+      })
+
+      updateAmmunitionSystem(units, buildings, gameState, 1000)
+
+      expect(truck.reloadingAmmo).toBe(true)
+      expect(truck.ammoCargo).toBeGreaterThan(0)
+      expect(truck.ammoReloadTimer).toBe(1000)
+      expect(truck.ammoReloadTargetId).toBe('factory1')
+    })
     it('should resupply a unit from an ammo truck', () => {
       const truck = {
         id: 'truck1',
