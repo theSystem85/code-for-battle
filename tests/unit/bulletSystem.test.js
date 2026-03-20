@@ -1279,6 +1279,90 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
       nowSpy.mockRestore()
     })
+
+
+    it('keeps apache rockets on their original trajectory when the target moves', () => {
+      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2400)
+      const airborneApache = createMockUnit({
+        id: 'apache-1',
+        type: 'apache',
+        owner: 'enemy',
+        altitude: 40,
+        health: 40,
+        flightState: 'flying'
+      })
+      const bullet = createMockBullet({
+        originType: 'apacheRocket',
+        projectileType: 'rocket',
+        x: 100,
+        y: 100,
+        vx: 5,
+        vy: 0,
+        speed: 5,
+        baseDamage: 10,
+        shooter: { id: 'player-1', owner: 'player', type: 'apache' },
+        apacheTargetId: airborneApache.id,
+        targetPosition: { x: 200, y: 100 },
+        startX: 100,
+        startY: 100,
+        creationTime: 0,
+        startTime: 0,
+        maxFlightTime: 3000
+      })
+      const bullets = [bullet]
+
+      airborneApache.x = 400
+      airborneApache.y = 260
+
+      updateBullets(bullets, [airborneApache], [], createGameState(), mapGrid)
+
+      expect(bullet.targetPosition).toEqual({ x: 200, y: 100 })
+      expect(bullet.y).toBeCloseTo(100, 6)
+      expect(bullet.x).toBeGreaterThan(100)
+      nowSpy.mockRestore()
+    })
+
+    it('does not apply direct airborne damage when the apache target moved away from the original impact point', () => {
+      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2400)
+      const airborneApache = createMockUnit({
+        id: 'apache-1',
+        type: 'apache',
+        owner: 'enemy',
+        altitude: 40,
+        armor: 2,
+        health: 40,
+        flightState: 'flying',
+        x: 320,
+        y: 320
+      })
+      const bullet = createMockBullet({
+        originType: 'apacheRocket',
+        projectileType: 'rocket',
+        x: 200,
+        y: 100,
+        vx: 0,
+        vy: 0,
+        speed: 5,
+        baseDamage: 10,
+        shooter: { id: 'player-1', owner: 'player', type: 'apache' },
+        apacheTargetId: airborneApache.id,
+        apacheTargetRadius: TILE_SIZE * 0.35,
+        targetPosition: { x: 200, y: 100 },
+        startX: 100,
+        startY: 100,
+        creationTime: 0,
+        startTime: 0,
+        maxFlightTime: 3000
+      })
+      const bullets = [bullet]
+
+      updateBullets(bullets, [airborneApache], [], createGameState(), mapGrid)
+
+      expect(airborneApache.health).toBe(40)
+      expect(triggerExplosion).toHaveBeenCalled()
+      expect(bullets).toHaveLength(0)
+      nowSpy.mockRestore()
+    })
   })
 
   describe('fireBullet', () => {
