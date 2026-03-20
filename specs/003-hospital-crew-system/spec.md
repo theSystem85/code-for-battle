@@ -12,6 +12,7 @@
 ### Automated Tests
 
 - Unit tests cover hospital crew healing progression, role order updates, money deductions, and ambulance medic refills/refill timer resets within the hospital service radius.
+- The hospital service radius is also the parity target for other base support buildings such as gas stations and ammunition factories.
 
 ### User Story 1 - Tank Crew System (Priority: P1)
 

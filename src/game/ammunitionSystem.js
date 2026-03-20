@@ -1,28 +1,25 @@
 // Ammunition System Module - Handles ammunition resupply at factories and by supply trucks
-import { TILE_SIZE, AMMO_RESUPPLY_TIME, AMMO_FACTORY_RANGE, AMMO_TRUCK_RANGE } from '../config.js'
+import { TILE_SIZE, AMMO_RESUPPLY_TIME, AMMO_TRUCK_RANGE } from '../config.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
 import { gameState } from '../gameState.js'
 
-function isUnitWithinBuildingRange(unit, building, rangeInTiles) {
-  if (!unit || !building || typeof rangeInTiles !== 'number') {
+function isUnitWithinServiceRadius(unit, building) {
+  if (!unit || !building) {
     return false
   }
 
-  const unitTileX = typeof unit.tileX === 'number' ? unit.tileX : Math.floor((unit.x ?? 0) / TILE_SIZE)
-  const unitTileY = typeof unit.tileY === 'number' ? unit.tileY : Math.floor((unit.y ?? 0) / TILE_SIZE)
-  const width = building.width || 1
-  const height = building.height || 1
-
-  for (let bx = building.x; bx < building.x + width; bx++) {
-    for (let by = building.y; by < building.y + height; by++) {
-      const distance = Math.hypot(unitTileX - bx, unitTileY - by)
-      if (distance <= rangeInTiles) {
-        return true
-      }
-    }
+  const serviceRadius = getServiceRadiusPixels(building)
+  if (serviceRadius <= 0) {
+    return false
   }
-  return false
+
+  const unitCenterX = (unit.x ?? unit.tileX * TILE_SIZE) + TILE_SIZE / 2
+  const unitCenterY = (unit.y ?? unit.tileY * TILE_SIZE) + TILE_SIZE / 2
+  const buildingCenterX = building.x * TILE_SIZE + (building.width * TILE_SIZE) / 2
+  const buildingCenterY = building.y * TILE_SIZE + (building.height * TILE_SIZE) / 2
+
+  return Math.hypot(unitCenterX - buildingCenterX, unitCenterY - buildingCenterY) <= serviceRadius
 }
 
 /**
@@ -36,7 +33,7 @@ export const updateAmmunitionSystem = logPerformance(function(units, buildings, 
   // Process ammunition factories
   const ammoFactories = buildings.filter(b => b.type === 'ammunitionFactory' && b.health > 0)
   ammoFactories.forEach(factory => {
-    processAmmunitionResupply(factory, units, delta, AMMO_FACTORY_RANGE)
+    processAmmunitionResupply(factory, units, delta)
   })
 
   // Process ammunition supply trucks
@@ -53,10 +50,9 @@ export const updateAmmunitionSystem = logPerformance(function(units, buildings, 
  * @param {Object} source - The ammunition factory building
  * @param {Array} units - Array of unit objects
  * @param {number} delta - Time delta in milliseconds
- * @param {number} rangeInTiles - Resupply range in tiles
  */
-function processAmmunitionResupply(source, units, delta, rangeInTiles) {
-  const serviceRadius = getServiceRadiusPixels(source, rangeInTiles)
+function processAmmunitionResupply(source, units, delta) {
+  const serviceRadius = getServiceRadiusPixels(source)
   if (serviceRadius <= 0) return
 
   const centerX = source.x * TILE_SIZE + (source.width * TILE_SIZE) / 2
@@ -177,14 +173,12 @@ function reloadAmmunitionTruck(truck, factories, delta) {
     return
   }
 
-  const range = AMMO_FACTORY_RANGE
-
   const stationary = !(truck.movement && truck.movement.isMoving)
 
   for (const factory of factories) {
     if (factory.health <= 0) continue
 
-    const inRange = isUnitWithinBuildingRange(truck, factory, range)
+    const inRange = isUnitWithinServiceRadius(truck, factory)
 
     if (inRange && stationary) {
       if (!truck.reloadingAmmo) {
