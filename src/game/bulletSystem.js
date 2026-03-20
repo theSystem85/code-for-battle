@@ -62,7 +62,10 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       ? {
         buildingDamageMultiplier: 2,
         factoryDamageMultiplier: 2,
-        allowAirborneDamage: bullet.originType === 'rocketTank' || bullet.originType === 'rocketTurret'
+        allowAirborneDamage: bullet.originType === 'rocketTank' || bullet.originType === 'rocketTurret',
+        unitDamageMultipliers: bullet.originType === 'rocketTurret'
+          ? { apache: 1.5 }
+          : undefined
       }
       : undefined
 

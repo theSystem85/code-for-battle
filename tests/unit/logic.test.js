@@ -16,13 +16,17 @@ import {
 import { gameState } from '../../src/gameState.js'
 
 // Mock dependencies
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  HOWITZER_BUILDING_DAMAGE_MULTIPLIER: 1.5,
-  HELIPAD_FUEL_CAPACITY: 15600,
-  HELIPAD_RELOAD_TIME: 8000,
-  HELIPAD_AMMO_RESERVE: 250
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    HOWITZER_BUILDING_DAMAGE_MULTIPLIER: 1.5,
+    HELIPAD_FUEL_CAPACITY: 15600,
+    HELIPAD_RELOAD_TIME: 8000,
+    HELIPAD_AMMO_RESERVE: 250
+  }
+})
 
 vi.mock('../../src/gameState.js', () => ({
   gameState: {
@@ -49,7 +53,8 @@ vi.mock('../../src/game/soundCooldownManager.js', () => ({
 
 vi.mock('../../src/utils.js', () => ({
   updateUnitSpeedModifier: vi.fn(),
-  awardExperience: vi.fn()
+  awardExperience: vi.fn(),
+  getUnitCost: vi.fn(() => 0)
 }))
 
 vi.mock('../../src/buildings.js', () => ({
@@ -242,6 +247,77 @@ describe('logic.js', () => {
     it('returns false for unit far away', () => {
       const unit = { x: 10 * TILE_SIZE, y: 10 * TILE_SIZE }
       expect(isAdjacentToBuilding(unit, building)).toBe(false)
+    })
+  })
+
+  describe('triggerExplosion', () => {
+    beforeEach(() => {
+      explosions.length = 0
+      gameState.buildings = []
+      gameState.unitWrecks = []
+      gameState.gameStarted = false
+      gameState.mapEditMode = false
+      gameState.frameCount = 0
+      gameState.gameTime = 0
+      globalThis.window = globalThis.window || {}
+      globalThis.window.cheatSystem = undefined
+    })
+
+    it('applies the same direct-hit damage to grounded and airborne apaches', () => {
+      const shooter = { id: 'rocket-turret-1', owner: 'player1', type: 'rocketTurret' }
+      const groundedApache = {
+        id: 'apache-grounded',
+        type: 'apache',
+        owner: 'enemy',
+        x: 160,
+        y: 160,
+        health: 40,
+        maxHealth: 40,
+        altitude: 90,
+        flightState: 'grounded'
+      }
+      const airborneApache = {
+        id: 'apache-airborne',
+        type: 'apache',
+        owner: 'enemy',
+        x: 160,
+        y: 160,
+        health: 40,
+        maxHealth: 40,
+        altitude: 90,
+        flightState: 'airborne'
+      }
+
+      triggerExplosion(
+        groundedApache.x + TILE_SIZE / 2,
+        groundedApache.y + TILE_SIZE / 2,
+        18,
+        [groundedApache],
+        [],
+        shooter,
+        1000,
+        [],
+        TILE_SIZE * 1.5,
+        false,
+        { allowAirborneDamage: true, unitDamageMultipliers: { apache: 1.5 } }
+      )
+
+      triggerExplosion(
+        airborneApache.x + TILE_SIZE / 2,
+        airborneApache.y + TILE_SIZE / 2 - airborneApache.altitude * 0.4,
+        18,
+        [airborneApache],
+        [],
+        shooter,
+        1000,
+        [],
+        TILE_SIZE * 1.5,
+        false,
+        { allowAirborneDamage: true, unitDamageMultipliers: { apache: 1.5 } }
+      )
+
+      expect(groundedApache.health).toBe(26)
+      expect(airborneApache.health).toBe(26)
     })
   })
 
