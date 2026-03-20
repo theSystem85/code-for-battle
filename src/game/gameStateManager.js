@@ -19,6 +19,7 @@ import { playSound, playPositionalSound, audioContext } from '../sound.js'
 import { clearFactoryFromMapGrid } from '../factories.js'
 import { logPerformance } from '../performanceUtils.js'
 import { registerUnitWreck, releaseWreckAssignment } from './unitWreckManager.js'
+import { stopApacheRotorSound } from './movementApache.js'
 import { removeSmokeParticle } from '../utils/smokeUtils.js'
 import {
   getPlayableViewportHeight,
@@ -487,6 +488,9 @@ export function cleanupDestroyedUnits(units, gameState) {
         removeUnitOccupancy(unit, gameState.occupancyMap)
       }
 
+      // Mark unit as destroyed before stopping sounds so async audio start callbacks also self-cancel.
+      unit.destroyed = true
+
       if (unit.engineSound) {
         try {
           unit.engineSound.gainNode.gain.cancelScheduledValues(audioContext.currentTime)
@@ -496,8 +500,11 @@ export function cleanupDestroyedUnits(units, gameState) {
         }
         unit.engineSound = null
       }
-      // Mark unit as destroyed so any pending async tasks can clean up
-      unit.destroyed = true
+
+      if (unit.type === 'apache' || unit.type === 'f35') {
+        stopApacheRotorSound(unit)
+      }
+
       units.splice(i, 1)
     }
   }

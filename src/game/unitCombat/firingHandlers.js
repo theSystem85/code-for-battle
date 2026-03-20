@@ -10,7 +10,14 @@ import { getF35BombSpawnPoint } from '../../rendering/f35ImageRenderer.js'
 import { isHowitzerGunReadyToFire, getHowitzerLaunchAngle } from '../howitzerGunController.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
-import { applyTargetingSpread, getDamageForUnitType, getHowitzerDamage, isTurretAimedAtTarget } from './combatHelpers.js'
+import {
+  applyTargetingSpread,
+  computeProjectileInterceptPoint,
+  getDamageForUnitType,
+  getHowitzerDamage,
+  getTargetVelocity,
+  isTurretAimedAtTarget
+} from './combatHelpers.js'
 import { canF35ReleaseWeapons, computeF35BombReleasePoint } from '../f35Behavior.js'
 
 /**
@@ -342,34 +349,22 @@ export function handleApacheVolley(unit, target, bullets, now, targetCenterX, ta
   const spawnPoints = getApacheRocketSpawnPoints(unit, centerX, centerY)
   const spawn = spawnPoints[side] || { x: centerX, y: centerY }
 
-  let approachVectorX = targetCenterX - centerX
-  let approachVectorY = targetCenterY - centerY
-  let approachDistance = Math.hypot(approachVectorX, approachVectorY)
-  if (approachDistance < 1) {
-    const fallbackAngle = unit.direction || 0
-    approachVectorX = Math.cos(fallbackAngle)
-    approachVectorY = Math.sin(fallbackAngle)
-    approachDistance = 1
-  }
+  const targetVelocity = getTargetVelocity(target, targetCenterX, targetCenterY)
+  const projectileSpeed = unit.type === 'f22Raptor' ? 7.5 : 5
+  const predictedImpact = computeProjectileInterceptPoint({
+    shooterX: centerX,
+    shooterY: centerY,
+    spawnX: spawn.x,
+    spawnY: spawn.y,
+    targetX: targetCenterX,
+    targetY: targetCenterY,
+    targetVelocityX: targetVelocity.x,
+    targetVelocityY: targetVelocity.y,
+    projectileSpeed
+  })
 
-  const forwardNormX = approachVectorX / approachDistance
-  const forwardNormY = approachVectorY / approachDistance
-  const maxImpactDistance = Math.min(approachDistance, TILE_SIZE * 0.9)
-  const desiredImpactDistance = Math.max(
-    Math.min(TILE_SIZE * 0.3, maxImpactDistance),
-    Math.min(approachDistance * 0.6, maxImpactDistance)
-  )
-
-  const baseImpactX = targetCenterX - forwardNormX * desiredImpactDistance
-  const baseImpactY = targetCenterY - forwardNormY * desiredImpactDistance
-  const perpendicularX = -forwardNormY
-  const perpendicularY = forwardNormX
-  const lateralSpan = Math.min(TILE_SIZE * 0.35, approachDistance * 0.25)
-  const lateralOffset = (gameRandom() - 0.5) * 2 * lateralSpan
-  const forwardJitter = (gameRandom() - 0.5) * Math.min(TILE_SIZE * 0.2, desiredImpactDistance * 0.4)
-
-  let impactX = baseImpactX - forwardNormX * forwardJitter + perpendicularX * lateralOffset
-  let impactY = baseImpactY - forwardNormY * forwardJitter + perpendicularY * lateralOffset
+  let impactX = predictedImpact.x
+  let impactY = predictedImpact.y
 
   if (Array.isArray(mapGrid) && mapGrid.length > 0 && Array.isArray(mapGrid[0])) {
     const mapWidth = mapGrid[0].length * TILE_SIZE
@@ -381,6 +376,9 @@ export function handleApacheVolley(unit, target, bullets, now, targetCenterX, ta
     impactX = Math.max(minX, Math.min(impactX, maxX))
     impactY = Math.max(minY, Math.min(impactY, maxY))
   }
+
+  target.lastKnownX = targetCenterX
+  target.lastKnownY = targetCenterY
 
   const overrideTarget = { x: impactX, y: impactY }
 

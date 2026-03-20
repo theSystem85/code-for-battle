@@ -253,6 +253,49 @@ describe('Building Placement Near Construction Yard', () => {
     })
   })
 
+
+  describe('Non-expanding build area structures', () => {
+    it('should NOT allow a power plant to extend from a street tile alone', () => {
+      ctx.addBuilding('street', 23, 20, 'player')
+      ctx.addBuilding('street', 24, 20, 'player')
+      ctx.addBuilding('street', 25, 20, 'player')
+      ctx.addBuilding('street', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('powerPlant', 27, 20, 'player')
+      expect(canPlace).toBe(false)
+    })
+
+    it('should allow streets to extend from other street tiles', () => {
+      ctx.addBuilding('street', 23, 20, 'player')
+      ctx.addBuilding('street', 24, 20, 'player')
+      ctx.addBuilding('street', 25, 20, 'player')
+      ctx.addBuilding('street', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('street', 27, 20, 'player')
+      expect(canPlace).toBe(true)
+    })
+
+    it('should NOT allow a power plant to extend from a concrete wall tile alone', () => {
+      ctx.addBuilding('concreteWall', 23, 20, 'player')
+      ctx.addBuilding('concreteWall', 24, 20, 'player')
+      ctx.addBuilding('concreteWall', 25, 20, 'player')
+      ctx.addBuilding('concreteWall', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('powerPlant', 27, 20, 'player')
+      expect(canPlace).toBe(false)
+    })
+
+    it('should allow concrete walls to extend from other concrete walls', () => {
+      ctx.addBuilding('concreteWall', 23, 20, 'player')
+      ctx.addBuilding('concreteWall', 24, 20, 'player')
+      ctx.addBuilding('concreteWall', 25, 20, 'player')
+      ctx.addBuilding('concreteWall', 26, 20, 'player')
+
+      const canPlace = ctx.canPlaceBuilding('concreteWall', 27, 20, 'player')
+      expect(canPlace).toBe(true)
+    })
+  })
+
   describe('Edge case: Maximum allowed distance (exactly 3 tiles)', () => {
     it('should allow power plant at exactly MAX_GAP tiles distance to the right', async() => {
       // CY edge at x=22, MAX_GAP=3 means power plant at x=26 is at the edge
@@ -669,6 +712,25 @@ describe('Building Placement Validation - Direct Function Tests', () => {
 
     it('should handle null buildings array', () => {
       const result = isNearExistingBuilding(22, 20, null, factories, 3, 'player')
+      expect(result).toBe(true)
+    })
+
+
+    it('should ignore street anchors for non-street placement types', () => {
+      buildings = [{ owner: 'player', type: 'street', x: 26, y: 20, width: 1, height: 1 }]
+      const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'powerPlant')
+      expect(result).toBe(false)
+    })
+
+    it('should allow street anchors for street placement types', () => {
+      buildings = [{ owner: 'player', type: 'street', x: 26, y: 20, width: 1, height: 1 }]
+      const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'street')
+      expect(result).toBe(true)
+    })
+
+    it('should allow concrete wall anchors for concrete wall placement types', () => {
+      buildings = [{ owner: 'player', type: 'concreteWall', x: 26, y: 20, width: 1, height: 1 }]
+      const result = isNearExistingBuilding(27, 20, buildings, [], 3, 'player', 'concreteWall')
       expect(result).toBe(true)
     })
 

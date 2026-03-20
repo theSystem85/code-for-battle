@@ -4,6 +4,20 @@ import { logPerformance } from '../performanceUtils.js'
 import { getUnitCommandsHandler } from '../inputHandler.js'
 import { getServiceRadiusPixels } from '../utils/serviceRadius.js'
 import { findPath } from '../units.js'
+function normalizeServiceOwner(owner) {
+  return owner === 'player' ? 'player1' : owner
+}
+
+function isAirborneServiceTarget(unit) {
+  if (!unit) return false
+  const isAirUnit = Boolean(unit.isAirUnit) || unit.type === 'apache' || unit.type === 'f35' || unit.type === 'f22Raptor'
+  return isAirUnit && unit.flightState !== 'grounded'
+}
+
+function isEligibleFriendlyGroundServiceTarget(source, unit) {
+  if (!source || !unit) return false
+  return normalizeServiceOwner(source.owner) === normalizeServiceOwner(unit.owner) && !isAirborneServiceTarget(unit)
+}
 
 export const updateAmbulanceLogic = logPerformance(function(units, gameState, delta) {
   // Reset active service markers before processing to avoid stale indicators
@@ -86,7 +100,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
         const candidates = units
           .filter(u =>
             u.id !== ambulance.id &&
-            u.owner === ambulance.owner &&
+            isEligibleFriendlyGroundServiceTarget(ambulance, u) &&
             u.crew && typeof u.crew === 'object' &&
             Object.values(u.crew).some(alive => !alive) &&
             !(u.movement && u.movement.isMoving)
@@ -120,7 +134,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
     if (!ambulance.healingTarget && !queueActive && !ambulance.alertMode) {
       const potential = units.find(u =>
         u.id !== ambulance.id &&
-        u.owner === ambulance.owner &&
+        isEligibleFriendlyGroundServiceTarget(ambulance, u) &&
         u.crew && typeof u.crew === 'object' &&
         Object.values(u.crew).some(alive => !alive) &&
         Math.hypot(u.tileX - ambulance.tileX, u.tileY - ambulance.tileY) <= SERVICE_SERVING_RANGE &&
@@ -249,6 +263,10 @@ export function canAmbulanceHealUnit(ambulance, targetUnit) {
     return false
   }
   // Check if target has crew system
+  if (!isEligibleFriendlyGroundServiceTarget(ambulance, targetUnit)) {
+    return false
+  }
+
   if (!targetUnit.crew || typeof targetUnit.crew !== 'object') {
     return false
   }
@@ -335,7 +353,7 @@ function isAmbulanceInHospitalRange(ambulance, buildings) {
     return false
   }
 
-  const hospitals = buildings.filter(b => b.type === 'hospital')
+  const hospitals = buildings.filter(b => b.type === 'hospital' && normalizeServiceOwner(b.owner) === normalizeServiceOwner(ambulance.owner))
   if (hospitals.length === 0) return false
 
   const ambulanceCenterX = (ambulance.x ?? ambulance.tileX * TILE_SIZE) + TILE_SIZE / 2

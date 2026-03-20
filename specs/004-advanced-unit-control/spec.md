@@ -183,6 +183,9 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-061**: Cheat ammo commands applied to selected Apache helicopters MUST update Apache combat ammo (`rocketAmmo`) as the primary source of truth, even when compatibility fields (e.g. `maxAmmunition`) exist on the same unit object.
 - **FR-062**: Apache combat/autoreturn logic MUST ignore stale remote-control state after a short inactivity timeout so old `remoteControlActive` flags cannot block ammo-empty auto-return to helipad.
 - **FR-063**: Automated E2E coverage MUST verify the Apache ammo-empty lifecycle end-to-end (auto-return intent, refill, relaunch, and target-resume) including stale remote-control-state regression protection, using durable state checks that do not rely on a single-frame grounded transition.
+- **FR-063a**: Apache flight loop audio MUST stop within a short fade when an Apache lands or is destroyed, including cases where the loop was still asynchronously starting during the state change.
+- **FR-063b**: Destroyed-unit cleanup MUST explicitly stop active Apache/F35 flight loops before the unit object is removed, because movement-state updates may no longer execute after the fatal frame.
+- **FR-063c**: Cheat-driven destruction (`kill`) MUST also stop Apache/F35 flight loops immediately on command execution, even before the next simulation cleanup tick.
 - **FR-064**: When a move command target is unreachable by pathfinding, the system MUST abort that unit's move command instead of leaving it pending.
 - **FR-065**: When one or more human-controlled selected units receive an unreachable move command, the system MUST show a user notification indicating the move was aborted.
 - **FR-066**: For direct player-issued move commands, pathfinding MUST treat the clicked destination as strict and MUST NOT auto-retarget to a nearby passable tile when the destination tile itself is blocked.

@@ -41,7 +41,7 @@ This specification defines a comprehensive ammunition management system for the 
 
 3. **Given** a combat unit with 0 ammunition, **When** the unit is commanded to attack an enemy, **Then** the unit moves into firing range but does not fire, and a "No Ammunition" notification appears
 
-4. **Given** a tank with depleted ammunition at an Ammunition Factory (within 2 tiles), **When** the unit remains stationary within range for 7 seconds per reload cycle, **Then** the ammunition bar refills gradually until reaching 100%, and the unit can fire again
+4. **Given** a tank with depleted ammunition at an Ammunition Factory (within the same service radius as a hospital), **When** the unit remains stationary within range for 7 seconds per reload cycle, **Then** the ammunition bar refills gradually until reaching 100%, and the unit can fire again
 
 5. **Given** multiple combat units with varying ammunition levels, **When** units are selected, **Then** each unit displays its current ammunition level via the orange ammunition bar on the left side of the HUD
 
@@ -55,13 +55,13 @@ This specification defines a comprehensive ammunition management system for the 
 
 **Why this priority**: Essential infrastructure for the ammunition system. Without the factory, there's no way to resupply units, making the system non-functional.
 
-**Independent Test**: Can be fully tested by building an Ammunition Factory, positioning units within 2 tiles, and verifying ammunition replenishment occurs. Delivers core resupply infrastructure value.
+**Independent Test**: Can be fully tested by building an Ammunition Factory, positioning units within the same service radius as a hospital, and verifying ammunition replenishment occurs. Delivers core resupply infrastructure value.
 
 **Acceptance Scenarios**:
 
 1. **Given** the player has a Construction Yard and sufficient resources ($2000, 40MW power available), **When** the player selects and places the Ammunition Factory building, **Then** the factory is constructed with dimensions 3x3 tiles (same as Vehicle Factory), consumes 40MW power, and has 250 health
 
-2. **Given** an Ammunition Factory exists on the map, **When** friendly combat units move within 2 tile distance of the factory, **Then** the units automatically begin ammunition replenishment (indicated by orange loading bar)
+2. **Given** an Ammunition Factory exists on the map, **When** friendly combat units move within the same service radius used by the hospital of the factory, **Then** the units automatically begin ammunition replenishment (indicated by orange loading bar)
 
 3. **Given** an Ammunition Factory is actively resupplying a unit, **When** the unit remains in range for the full reload duration (7 seconds), **Then** the unit's ammunition is fully replenished at no cost and the unit returns to combat-ready status
 
@@ -95,7 +95,7 @@ This specification defines a comprehensive ammunition management system for the 
 
 6. **Given** an Ammunition Supply Truck is destroyed, **When** the wreckage would normally be registered, **Then** the truck leaves no towable wreck, triggers an immediate 2-tile radius blast, and launches ten random ammunition rounds that can damage any nearby vehicles or buildings regardless of ownership.
 
-7. **Given** an Ammunition Supply Truck with depleted ammunition supply, **When** the truck returns to an Ammunition Factory (within 2 tiles) and waits for 10 seconds, **Then** the truck's ammunition supply is fully replenished to 500 rounds capacity (indicated by top loading bar)
+7. **Given** an Ammunition Supply Truck with depleted ammunition supply, **When** the truck returns to an Ammunition Factory (within the same service radius as a hospital) and waits for 10 seconds, **Then** the truck's ammunition supply is fully replenished to 500 rounds capacity (indicated by top loading bar)
 
 ---
 
@@ -292,11 +292,11 @@ This specification defines a comprehensive ammunition management system for the 
 
 #### FR-008: Ammunition Factory Resupply Zone
 **Priority:** P0  
-**Description:** Ammunition Factory provides ammunition resupply to friendly combat units within 2 tile distance (measured from factory edge to unit center). Resupply zone is automatically calculated and units within range are eligible for resupply.
+**Description:** Ammunition Factory provides ammunition resupply to friendly combat units within the same service radius used by the hospital (measured from factory edge to unit center). Resupply zone is automatically calculated and units within range are eligible for resupply.
 
 #### FR-009: Ammunition Resupply Process
 **Priority:** P0  
-**Description:** When a combat unit with <100% ammunition remains stationary within 2 tiles of an Ammunition Factory for 7 seconds, the unit's ammunition is fully replenished at no cost. Orange loading bar displays resupply progress.
+**Description:** When a combat unit with <100% ammunition remains stationary within the same service radius as a hospital of an Ammunition Factory for 7 seconds, the unit's ammunition is fully replenished at no cost. Orange loading bar displays resupply progress.
 
 #### FR-010: Ammunition Factory Queue System
 **Priority:** P1  
@@ -348,7 +348,7 @@ This specification defines a comprehensive ammunition management system for the 
 
 #### FR-021: Ammunition Supply Truck Reload at Factory
 **Priority:** P1  
-**Description:** When Ammunition Supply Truck with depleted cargo (<100%) parks within 2 tiles of Ammunition Factory for 10 seconds, truck's cargo is fully replenished to 500 rounds. Orange top bar displays reload progress.
+**Description:** When Ammunition Supply Truck with depleted cargo (<100%) parks within the same service radius as a hospital of Ammunition Factory for 10 seconds, truck's cargo is fully replenished to 500 rounds. Orange top bar displays reload progress.
 
 #### FR-022: Ammunition Supply Truck Multi-Target Resupply
 **Priority:** P1  
@@ -631,7 +631,7 @@ This specification defines a comprehensive ammunition management system for the 
 
 1. **Ammunition Depletion Test**: Build Tank V1, engage enemies, verify ammunition decreases from 42 to 0, verify unit stops firing at 0
 2. **Ammunition Factory Construction Test**: Build Ammunition Factory, verify cost ($2000), power consumption (40MW), placement (3x3 tiles), health (250)
-3. **Ammunition Resupply Test**: Move depleted unit within 2 tiles of factory, verify orange bar fills over 7 seconds, verify ammunition restored to max
+3. **Ammunition Resupply Test**: Move depleted unit within the same service radius as a hospital of factory, verify orange bar fills over 7 seconds, verify ammunition restored to max
 4. **Ammunition Supply Truck Production Test**: Build supply truck, verify cost ($800), verify requires Vehicle Factory + Ammunition Factory
 5. **Field Resupply Test**: Command supply truck to depleted unit, verify truck moves to unit, verify resupply occurs within 1 tile
 6. **HUD Ammunition Bar Test**: Select various units, verify orange bar appears on left, verify fill percentage matches ammunition level
@@ -643,7 +643,7 @@ This specification defines a comprehensive ammunition management system for the 
 ### Automated Testing (if implemented)
 
 - Unit tests for ammunition depletion calculations (ammo per shot, burst fire logic)
-- Unit tests for resupply distance calculations (within 2 tiles for factory, within 1 tile for truck)
+- Unit tests for resupply distance calculations (within the same service radius as a hospital for factory, within 1 tile for truck)
 - Unit tests for Ammunition Supply Truck cargo management (depletion, reload at factory)
 - Integration tests for ammunition particle collision detection and damage application
 - State serialization tests for save/load ammunition integrity

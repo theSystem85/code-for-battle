@@ -211,6 +211,34 @@ describe('Recovery Tank System', () => {
       expect(recoveryTank.speed).toBe(0.525)
     })
 
+
+    it('should not auto-repair enemy or airborne units', () => {
+      const recoveryTank = createTestRecoveryTank('rt1', 6, 6, 'player1')
+      const enemyTarget = createTestUnit('enemy1', 6, 6, 'player2')
+      enemyTarget.health = 50
+      const airborneApache = {
+        id: 'apache1',
+        type: 'apache',
+        x: 6 * 32,
+        y: 6 * 32,
+        tileX: 6,
+        tileY: 6,
+        owner: 'player1',
+        health: 50,
+        maxHealth: 100,
+        isAirUnit: true,
+        flightState: 'airborne',
+        movement: { isMoving: false }
+      }
+      units.push(recoveryTank, enemyTarget, airborneApache)
+
+      updateRecoveryTankLogic(units, gameState, delta)
+
+      expect(recoveryTank.repairTarget).toBeNull()
+      expect(enemyTarget.health).toBe(50)
+      expect(airborneApache.health).toBe(50)
+    })
+
     it('should update towed unit position', () => {
       const recoveryTank = createTestRecoveryTank('rt1', 8, 8)
       const towedUnit = createTestUnit('tank1', 0, 0)

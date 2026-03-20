@@ -8,6 +8,20 @@ import {
   clearTankerKamikazeState,
   updateKamikazeTargetPoint
 } from './tankerTruckUtils.js'
+function normalizeServiceOwner(owner) {
+  return owner === 'player' ? 'player1' : owner
+}
+
+function isAirborneServiceTarget(unit) {
+  if (!unit) return false
+  const isAirUnit = Boolean(unit.isAirUnit) || unit.type === 'apache' || unit.type === 'f35' || unit.type === 'f22Raptor'
+  return isAirUnit && unit.flightState !== 'grounded'
+}
+
+function isEligibleFriendlyGroundServiceTarget(source, unit) {
+  if (!source || !unit) return false
+  return normalizeServiceOwner(source.owner) === normalizeServiceOwner(unit.owner) && !isAirborneServiceTarget(unit)
+}
 
 const AUTO_REFUEL_SCAN_INTERVAL = 10000
 
@@ -115,7 +129,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
         const candidates = units
           .filter(u =>
             u.id !== tanker.id &&
-            u.owner === tanker.owner &&
+            isEligibleFriendlyGroundServiceTarget(tanker, u) &&
             typeof u.maxGas === 'number' &&
             u.gas < (u.maxGas * 0.5) &&
             u.health > 0 &&
@@ -156,7 +170,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
       const target = units
         .filter(u =>
           u.id !== tanker.id &&
-          u.owner === tanker.owner &&
+          isEligibleFriendlyGroundServiceTarget(tanker, u) &&
           typeof u.maxGas === 'number' &&
           u.gas < (u.maxGas * 0.5) && // Only refuel if unit has less than 50% gas
           u.health > 0 && // Ensure target is alive
@@ -201,6 +215,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
       const distanceToTarget = target ? Math.hypot(target.tileX - tanker.tileX, target.tileY - tanker.tileY) : Infinity
       if (!target ||
           target.health <= 0 ||
+          !isEligibleFriendlyGroundServiceTarget(tanker, target) ||
           distanceToTarget > SERVICE_SERVING_RANGE ||
           (target.movement && target.movement.isMoving)) {
         const _distance = target ? Math.abs(target.tileX - tanker.tileX) + Math.abs(target.tileY - tanker.tileY) : 'N/A'
@@ -297,7 +312,7 @@ function handleEmergencyFuelRequests(tankers, units, gameState) {
     }
     if (unit.type === 'tankerTruck' && unit.health > 0) {
       playerGroups[unit.owner].tankers.push(unit)
-    } else if (typeof unit.maxGas === 'number' && unit.health > 0) {
+    } else if (typeof unit.maxGas === 'number' && unit.health > 0 && !isAirborneServiceTarget(unit)) {
       playerGroups[unit.owner].units.push(unit)
     }
   })

@@ -19,6 +19,7 @@ import { buildingData, createBuilding, placeBuilding, updatePowerSupply } from '
 import { checkLevelUp, initializeUnitLeveling, updateUnitSpeedModifier } from '../utils.js'
 import { deployMine } from '../game/mineSystem.js'
 import { getWreckById, removeWreckById } from '../game/unitWreckManager.js'
+import { stopApacheRotorSound } from '../game/movementApache.js'
 
 export class CheatSystem {
   constructor() {
@@ -1407,6 +1408,21 @@ export class CheatSystem {
 
       target.health = 0
       target.destroyed = true
+
+      if (target.type === 'apache' || target.type === 'f35') {
+        stopApacheRotorSound(target)
+      }
+
+      if (target.engineSound) {
+        try {
+          target.engineSound.gainNode?.gain?.cancelScheduledValues?.(0)
+          target.engineSound.source?.stop?.()
+        } catch (error) {
+          window?.logger?.warn('Failed to stop engine sound during kill cheat:', error)
+        }
+        target.engineSound = null
+      }
+
       if (target.selected) {
         target.selected = false
       }

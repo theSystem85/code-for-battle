@@ -155,6 +155,32 @@ describe('Ambulance System', () => {
       expect(canAmbulanceHealUnit(ambulance, target)).toBe(false)
     })
 
+
+    it('should not heal enemy or airborne units', () => {
+      const ambulance = createTestAmbulance('amb1', 5, 5, 'player1')
+      const enemyTarget = createTestUnit('enemy1', 5, 5, 'player2')
+      enemyTarget.crew.driver = false
+      const airborneApache = {
+        id: 'apache1',
+        type: 'apache',
+        x: 5 * 32,
+        y: 5 * 32,
+        tileX: 5,
+        tileY: 5,
+        owner: 'player1',
+        health: 100,
+        crew: { driver: false, commander: true, gunner: true, loader: true },
+        isAirUnit: true,
+        flightState: 'airborne',
+        movement: { isMoving: false }
+      }
+
+      expect(canAmbulanceHealUnit(ambulance, enemyTarget)).toBe(false)
+      expect(canAmbulanceHealUnit(ambulance, airborneApache)).toBe(false)
+      expect(assignAmbulanceToHealUnit(ambulance, enemyTarget, [])).toBe(false)
+      expect(assignAmbulanceToHealUnit(ambulance, airborneApache, [])).toBe(false)
+    })
+
     it('should return false when ambulance has no medics', () => {
       const ambulance = createTestAmbulance('amb1')
       ambulance.medics = 0

@@ -143,6 +143,96 @@ export function applyTargetingSpread(shooterX, shooterY, targetX, targetY, proje
   }
 }
 
+
+export function getTargetVelocity(target, currentTargetCenterX, currentTargetCenterY) {
+  if (!target) {
+    return { x: 0, y: 0 }
+  }
+
+  const movementVelocityX = target.movement?.velocity?.x
+  const movementVelocityY = target.movement?.velocity?.y
+  if (Number.isFinite(movementVelocityX) && Number.isFinite(movementVelocityY)) {
+    return { x: movementVelocityX, y: movementVelocityY }
+  }
+
+  if (Number.isFinite(target.velocityX) || Number.isFinite(target.velocityY)) {
+    return {
+      x: Number.isFinite(target.velocityX) ? target.velocityX : 0,
+      y: Number.isFinite(target.velocityY) ? target.velocityY : 0
+    }
+  }
+
+  if (Number.isFinite(target.lastKnownX) && Number.isFinite(target.lastKnownY)) {
+    return {
+      x: currentTargetCenterX - target.lastKnownX,
+      y: currentTargetCenterY - target.lastKnownY
+    }
+  }
+
+  return { x: 0, y: 0 }
+}
+
+export function computeProjectileInterceptPoint({
+  shooterX,
+  shooterY,
+  spawnX = shooterX,
+  spawnY = shooterY,
+  targetX,
+  targetY,
+  targetVelocityX = 0,
+  targetVelocityY = 0,
+  projectileSpeed,
+  fallbackTimeScale = 1
+}) {
+  if (!Number.isFinite(projectileSpeed) || projectileSpeed <= 0) {
+    return { x: targetX, y: targetY, travelTime: 0 }
+  }
+
+  const originX = Number.isFinite(spawnX) ? spawnX : shooterX
+  const originY = Number.isFinite(spawnY) ? spawnY : shooterY
+  const relX = targetX - originX
+  const relY = targetY - originY
+  const velSq = targetVelocityX * targetVelocityX + targetVelocityY * targetVelocityY
+  const speedSq = projectileSpeed * projectileSpeed
+  const a = velSq - speedSq
+  const b = 2 * (relX * targetVelocityX + relY * targetVelocityY)
+  const c = relX * relX + relY * relY
+
+  let travelTime = null
+  if (Math.abs(a) < 1e-6) {
+    if (Math.abs(b) > 1e-6) {
+      const candidate = -c / b
+      if (candidate > 0) {
+        travelTime = candidate
+      }
+    }
+  } else {
+    const discriminant = b * b - 4 * a * c
+    if (discriminant >= 0) {
+      const sqrtDiscriminant = Math.sqrt(discriminant)
+      const candidates = [
+        (-b - sqrtDiscriminant) / (2 * a),
+        (-b + sqrtDiscriminant) / (2 * a)
+      ].filter(value => Number.isFinite(value) && value > 0)
+
+      if (candidates.length > 0) {
+        travelTime = Math.min(...candidates)
+      }
+    }
+  }
+
+  if (!Number.isFinite(travelTime) || travelTime === null) {
+    const fallbackDistance = Math.hypot(relX, relY)
+    travelTime = (fallbackDistance / projectileSpeed) * fallbackTimeScale
+  }
+
+  return {
+    x: targetX + targetVelocityX * travelTime,
+    y: targetY + targetVelocityY * travelTime,
+    travelTime
+  }
+}
+
 /**
  * Common combat logic helper - handles stopping when in range
  * NOTE: Path calculation is handled by updateUnitMovement() in unitMovement.js
@@ -273,6 +363,10 @@ export function getEffectiveFireRange(unit) {
 
   if (unit.level >= 1) {
     baseRange *= (unit.rangeMultiplier || 1.2)
+  }
+
+  if (unit.type === 'f22Raptor') {
+    baseRange = Math.min(baseRange, 20 * TILE_SIZE)
   }
 
   return baseRange
