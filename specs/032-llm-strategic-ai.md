@@ -62,15 +62,15 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - The compact strategic digest replaces raw unit/building arrays in the prompt with grouped force summaries, condensed owned-building state, visible enemy intel, priority target ids, compact map/base intel, recent delta highlights, and queue state.
 
 ## Commentary Flow
-- If enabled, a lightweight prompt generates short taunts and announcements.
+- If enabled, a lightweight prompt generates short taunts and announcements from the perspective of the first active AI player rather than the human player.
 - Speech synthesis reads commentary aloud when enabled.
 - Commentary skips ticks where no interesting events occurred (no combat, production, or destruction events) to avoid spamming.
 - When the LLM chooses to skip commentary it responds with `{"skip": true}` which is silently accepted.
 - The last 10 commentary messages are tracked and included in the prompt to prevent repetition; the LLM is instructed to vary vocabulary and never repeat itself.
-- Commentary prompt enforces strict owner-aware narration: the AI must treat `input.playerId` as its own side and use each entity's `owner` field to attribute losses/kills correctly across all parties.
+- Commentary prompt now consumes `inputMode: compact-commentary-v1`, with strict owner-aware narration based on `input.ownerContext` and each highlight's `side` field.
 - All commentary notifications are recorded in a persistent notification history log (up to 100 entries) accessible via a bell icon in the top-right corner.
 - Commentary requests now use a much smaller output-token cap than strategic planning and participate in the same response-chain reset policy for OpenAI-backed sessions.
-- Commentary still uses the generic snapshot path and remains the next major compaction target.
+- Commentary requests now degrade by trimming highlight depth and anti-repeat history before skipping a request on budget grounds.
 
 ## Fog-of-War Awareness
 - The LLM strategic AI only receives information about enemy units and buildings that are visible to its own forces.

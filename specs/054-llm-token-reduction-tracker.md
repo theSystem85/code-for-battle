@@ -22,7 +22,7 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - [x] Add request-size instrumentation and explicit request budgets.
 - [x] Reset or avoid unbounded `previous_response_id` chains.
 - [x] Replace the generic raw snapshot with a compact strategic digest.
-- [ ] Rework commentary to use a compact event digest instead of the generic snapshot.
+- [x] Rework commentary to use a compact event digest instead of the generic snapshot.
 - [ ] Shrink the bootstrap/follow-up prompts substantially.
 - [x] Remove duplicate system/instruction prompt content from requests.
 - [x] Lower strategy/commentary output token caps.
@@ -75,10 +75,13 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - [ ] Keep structured output schema strict, but stop duplicating protocol explanation in prompt prose.
 
 ### Phase 6 - Commentary compaction
-- [ ] Build a dedicated commentary input path.
+- [x] Build a dedicated commentary input path.
   - Input should contain only: interesting recent deltas, owner context, anti-repeat memory, and a short summary.
-- [ ] Stop exporting the generic game snapshot for commentary.
-- [ ] Give commentary its own tight budget and degradation rules.
+  - Status: implemented `buildCompactCommentaryInput()` in `src/ai/llmCommentaryDigest.js` with owner context, compact recent-delta highlights, and anti-repeat memory.
+- [x] Stop exporting the generic game snapshot for commentary.
+  - Status: commentary prompts now send `inputMode: compact-commentary-v1` instead of the raw `GameTickInput` snapshot.
+- [x] Give commentary its own tight budget and degradation rules.
+  - Status: commentary now degrades its compact payload by trimming highlight/comment history before skipping, while still honoring the existing commentary-specific token cap.
 
 ### Phase 7 - Adaptive degradation and safeguards
 - [ ] Degrade oversized requests in a fixed order.
@@ -90,7 +93,8 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - [x] Evolve the input contract explicitly rather than silently redefining the current snapshot.
   - Options: protocol version bump or explicit compact mode.
   - Status: strategic requests now declare `inputMode: compact-strategic-v1` and the design docs have been updated to describe the compact strategic contract explicitly.
-- [ ] Add unit coverage for budget resets, prompt dedupe, compact digest export, and degraded fallback behavior.
+- [x] Add unit coverage for budget resets, prompt dedupe, compact digest export, and degraded fallback behavior.
+  - Status: added focused unit coverage for both strategic and commentary compact digest builders, plus request-budget/provider behaviors.
 - [ ] Add a behavior-driven Playwright test that intercepts the provider request and asserts:
   - no duplicated system/instruction prompt payload,
   - no raw full-map dump,
@@ -110,7 +114,9 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - Strategic OpenAI follow-up requests now avoid resending prompt instructions on every continued chain request; instructions are resent only on fresh sessions or reset boundaries.
 - Commentary requests now use the same reset-and-cap discipline with a much smaller output ceiling.
 - Added `src/ai/llmStrategicDigest.js` and switched strategic requests to a compact `inputMode: compact-strategic-v1` payload with grouped forces, condensed building state, enemy priority targets, compact map intel, and compact recent deltas.
-- This branch still needs commentary compaction, prompt slimming, and adaptive degradation; the biggest raw strategic snapshot bloat has now been removed, but commentary still uses the generic snapshot path.
+- Added `src/ai/llmCommentaryDigest.js` and switched commentary requests to a compact `inputMode: compact-commentary-v1` payload with owner-aware highlights, anti-repeat memory, and commentary-specific degradation.
+- Commentary now uses the first active AI player as its perspective and filters for the actual transition types emitted by the collector (`damage`, `destroyed`, `building_completed`, etc.).
+- This branch still needs prompt slimming and broader adaptive degradation; both strategic and commentary request payloads are now compacted, but the bootstrap prompt remains oversized.
 
 ## Agent Notes
 - Treat this file as the canonical progress tracker for follow-up token-reduction work.

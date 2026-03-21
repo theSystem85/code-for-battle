@@ -5,6 +5,7 @@ import { fetchCostMap, getModelCostInfo, requestLlmCompletion, QuotaExceededErro
 import { recordLlmUsage } from './llmUsage.js'
 import { LLM_REQUEST_BUDGETS, estimateRequestPromptTokens, shouldResetResponseChain, buildCarryForwardMemory, trimRollingSummary } from './llmRequestBudget.js'
 import { buildCompactStrategicInput } from './llmStrategicDigest.js'
+import { buildCompactCommentaryInput, hasInterestingCommentaryEvents } from './llmCommentaryDigest.js'
 import { showNotification } from '../ui/notifications.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
@@ -284,12 +285,12 @@ Follow the rules and schema from the initial brief.
 Always include intent, confidence (0-1), and notes fields.`
 
 const DEFAULT_COMMENTARY_PROMPT = `You are a mean RTS opponent commentating on the battle while actively controlling one AI party.
-Your controlled side is input.playerId in the provided game snapshot. Treat that side as "my" side in commentary.
-Before commenting on any event, identify ownership using each unit/building owner field:
-- If owner === input.playerId, it is YOUR side.
-- If owner !== input.playerId, it is an opposing side (usually the human player, but may include other parties).
+Your controlled side is input.playerId in the compact commentary input. Treat that side as "my" side in commentary.
+Use input.ownerContext and each highlight.side value to identify who suffered or caused the event:
+- side === "self" means YOUR side.
+- side === "enemy" means an opposing side.
+- If multiple opposing owners exist, refer to them using input.ownerContext.opposingOwners.
 Never confuse sides: do not describe your own losses as the player's losses, and do not claim enemy losses as your own.
-When multiple non-self parties exist, refer to them as specific opposing parties based on owner id.
 Taunt the player about notable events: units destroyed, buildings lost, economy problems, or your upcoming attacks.
 Only comment when something interesting happened (battles, kills, expansions, milestones).
 If nothing notable occurred since your last comment, respond with exactly: {"skip":true}
@@ -378,6 +379,7 @@ function ensureCommentaryState(state) {
   if (!state.llmCommentary) {
     state.llmCommentary = {
       lastTickAt: 0,
+      lastTickFrame: 0,
       pending: false,
       responseId: null,
       recentComments: [],
@@ -482,29 +484,34 @@ function buildStrategicMessages({ input, summary, memory = null }) {
   ]
 }
 
-function hasInterestingEvents(transitions) {
-  if (!Array.isArray(transitions) || transitions.length === 0) return false
-  const interestingTypes = new Set([
-    'unit_destroyed', 'building_destroyed', 'unit_created', 'building_placed',
-    'attack_started', 'building_captured', 'unit_promoted', 'milestone',
-    'harvester_destroyed', 'construction_started'
-  ])
-  return transitions.some(evt => interestingTypes.has(evt.type))
-}
-
-function buildCommentaryMessages(input, summary, recentComments = []) {
-  const avoidRepeat = recentComments.length > 0
-    ? `\nRecent comments you already made (DO NOT repeat these): ${recentComments.slice(-5).join(' | ')}` : ''
+function buildCommentaryMessages(input) {
   return [
     {
       role: 'user',
-      content: JSON.stringify({
-        summary,
-        transitions: input.transitions?.events?.slice(-8) || [],
-        instruction: `Comment on recent events.${avoidRepeat}\nIf nothing interesting happened, respond with exactly: {"skip":true}`
-      })
+      content: JSON.stringify({ input })
     }
   ]
+}
+
+function buildCommentaryRequestPayload(rawInput, summary, recentComments = []) {
+  const attemptConfigs = [
+    { maxHighlights: 6, maxRecentComments: 3 },
+    { maxHighlights: 4, maxRecentComments: 2 },
+    { maxHighlights: 2, maxRecentComments: 1 }
+  ]
+
+  return attemptConfigs.map(config => {
+    const compactInput = buildCompactCommentaryInput(rawInput, {
+      summary,
+      recentComments,
+      ...config
+    })
+
+    return {
+      compactInput,
+      messages: buildCommentaryMessages(compactInput)
+    }
+  })
 }
 
 function ensureStrategicContextStats(state, playerId) {
@@ -1064,12 +1071,13 @@ async function runCommentaryTick(state, settings, _now) {
   const commentaryState = ensureCommentaryState(state)
   const budgetConfig = LLM_REQUEST_BUDGETS.commentary
   const commentaryConfig = getCommentaryModelConfig(settings)
+  const commentaryPlayerId = getAiPlayers(state)[0] || null
   const providerId = commentaryConfig?.providerId
   const model = commentaryConfig?.model
   const providerSettings = getProviderSettings(providerId)
   const hasApiKey = providerSettings?.apiKey && providerSettings.apiKey.trim().length > 0
 
-  if (!providerId || !model) {
+  if (!providerId || !model || !commentaryPlayerId) {
     return
   }
 
@@ -1078,13 +1086,17 @@ async function runCommentaryTick(state, settings, _now) {
     return
   }
 
-  const input = exportGameTickInput(state, state.llmStrategic?.lastTickFrame || 0, {
-    verbosity: 'minimal'
+  const rawInput = exportGameTickInput(state, commentaryState.lastTickFrame || state.llmStrategic?.lastTickFrame || 0, {
+    verbosity: 'minimal',
+    playerId: commentaryPlayerId,
+    pruneTransitions: false
   })
+  const input = filterInputByFogOfWar(rawInput, state, commentaryPlayerId)
 
   // Skip commentary when nothing interesting happened
   const transitions = input.transitions?.events || []
-  if (!hasInterestingEvents(transitions)) {
+  if (!hasInterestingCommentaryEvents(transitions)) {
+    commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
     window.logger.info('[LLM] Commentary skipped: no interesting events')
     return
   }
@@ -1103,23 +1115,43 @@ async function runCommentaryTick(state, settings, _now) {
     resetContextStats(commentaryState.contextStats, requestConfig.resetReason)
     commentaryState.responseId = null
   }
-  const messages = buildCommentaryMessages(input, requestConfig.summary, recentComments.slice(-5))
-  const estimatedPromptTokens = estimateRequestPromptTokens({
-    messages,
-    system: requestConfig.system
-  })
-  if (estimatedPromptTokens > budgetConfig.maxEstimatedPromptTokens) {
-    window.logger.warn(
-      `[LLM] Skipping commentary request: estimated prompt tokens ${estimatedPromptTokens} exceed budget ${budgetConfig.maxEstimatedPromptTokens}`
-    )
-    return
+  const payloadAttempts = buildCommentaryRequestPayload(input, requestConfig.summary, recentComments.slice(-5))
+  let selectedPayload = null
+  let estimatedPromptTokens = 0
+
+  for (const attempt of payloadAttempts) {
+    const attemptPromptTokens = estimateRequestPromptTokens({
+      messages: attempt.messages,
+      system: requestConfig.system
+    })
+    if (attemptPromptTokens <= budgetConfig.maxEstimatedPromptTokens) {
+      selectedPayload = attempt
+      estimatedPromptTokens = attemptPromptTokens
+      break
+    }
+  }
+
+  if (!selectedPayload) {
+    const smallestAttempt = payloadAttempts[payloadAttempts.length - 1]
+    estimatedPromptTokens = estimateRequestPromptTokens({
+      messages: smallestAttempt.messages,
+      system: requestConfig.system
+    })
+    selectedPayload = smallestAttempt
+    commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+    if (estimatedPromptTokens > budgetConfig.maxEstimatedPromptTokens) {
+      window.logger.warn(
+        `[LLM] Skipping commentary request: estimated prompt tokens ${estimatedPromptTokens} exceed budget ${budgetConfig.maxEstimatedPromptTokens}`
+      )
+      return
+    }
   }
 
   try {
     const response = await requestLlmCompletion(providerId, {
       model,
       system: requestConfig.system,
-      messages,
+      messages: selectedPayload.messages,
       maxTokens: budgetConfig.maxOutputTokens,
       temperature: 1.0,
       previousResponseId: requestConfig.previousResponseId,
@@ -1137,6 +1169,7 @@ async function runCommentaryTick(state, settings, _now) {
     try {
       const parsed = JSON.parse(rawComment)
       if (parsed.skip) {
+        commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
         window.logger.info('[LLM] Commentary self-skipped via {skip:true}')
         return
       }
@@ -1156,6 +1189,7 @@ async function runCommentaryTick(state, settings, _now) {
     if (commentaryState.recentComments.length > 10) {
       commentaryState.recentComments = commentaryState.recentComments.slice(-10)
     }
+    commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
 
     showNotification(rawComment, 5000)
     if (settings.commentary.ttsEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
