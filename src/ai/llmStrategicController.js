@@ -3,12 +3,12 @@ import { applyGameTickOutput } from '../ai-api/applier.js'
 import { getLlmSettings, updateLlmSettings, getProviderSettings } from './llmSettings.js'
 import { fetchCostMap, getModelCostInfo, requestLlmCompletion, QuotaExceededError, AuthenticationError, ApiParameterError } from './llmProviders.js'
 import { recordLlmUsage } from './llmUsage.js'
+import { LLM_REQUEST_BUDGETS, estimateRequestPromptTokens, shouldResetResponseChain, buildCarryForwardMemory, trimRollingSummary } from './llmRequestBudget.js'
 import { showNotification } from '../ui/notifications.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
 import { TILE_SIZE, UNIT_COSTS, UNIT_PROPERTIES, BULLET_DAMAGES, UNIT_AMMO_CAPACITY, UNIT_GAS_PROPERTIES, TANK_FIRE_RANGE, HOWITZER_FIRE_RANGE, HOWITZER_MIN_RANGE, HOWITZER_FIREPOWER, HOWITZER_FIRE_COOLDOWN, PARTY_COLORS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
-import protocolSchema from '../ai-api/protocol.schema.json'
 
 function buildUnitCatalog() {
   const catalog = []
@@ -290,9 +290,6 @@ If nothing notable occurred since your last comment, respond with exactly: {"ski
 NEVER repeat the same taunt or observation twice. Vary your vocabulary, tone, and targets.
 Keep it under 30 words. Be creative, menacing, and entertaining.`
 
-
-const PROTOCOL_SCHEMA_TEXT = JSON.stringify(protocolSchema)
-
 function getAiPlayers(state) {
   const humanPlayer = state.humanPlayer || 'player1'
   const playerCount = state.playerCount || 2
@@ -361,9 +358,11 @@ function ensureStrategicState(state) {
       lastSummary: '',
       plansByPlayer: {},
       summariesByPlayer: {},
+      memoryByPlayer: {},
       bootstrappedByPlayer: {},
       responseIdsByPlayer: {},
-      perPlayerTick: {}
+      perPlayerTick: {},
+      contextStatsByPlayer: {}
     }
   }
   return state.llmStrategic
@@ -375,7 +374,13 @@ function ensureCommentaryState(state) {
       lastTickAt: 0,
       pending: false,
       responseId: null,
-      recentComments: []
+      recentComments: [],
+      contextStats: {
+        requestCount: 0,
+        estimatedPromptTokens: 0,
+        responseId: null,
+        lastResetReason: null
+      }
     }
   }
   return state.llmCommentary
@@ -432,7 +437,7 @@ function parseOutput(text) {
   }
 }
 
-function applyUsageCost(providerId, model, usage, costMap) {
+function applyUsageCost(providerId, model, usage, costMap, requestType = 'generic') {
   if (!usage) return
   const inputTokens = usage.input_tokens ?? usage.prompt_tokens ?? 0
   const outputTokens = usage.output_tokens ?? usage.completion_tokens ?? 0
@@ -453,22 +458,22 @@ function applyUsageCost(providerId, model, usage, costMap) {
     totalTokens,
     costUsd
   })
+  window.logger?.info?.(
+    `[LLM] Usage ${requestType} ${providerId}:${model} prompt=${inputTokens} completion=${outputTokens} total=${totalTokens}`
+  )
 }
 
-function buildStrategicMessages({ input, summary, includeBootstrap }) {
-  const messages = []
-  if (includeBootstrap) {
-    messages.push({ role: 'system', content: STRATEGIC_BOOTSTRAP_PROMPT })
-    messages.push({ role: 'system', content: `PROTOCOL_JSON_SCHEMA:\n${PROTOCOL_SCHEMA_TEXT}` })
-  }
-  messages.push({
-    role: 'user',
-    content: JSON.stringify({
-      summary,
-      input
-    })
-  })
-  return messages
+function buildStrategicMessages({ input, summary, memory = null }) {
+  return [
+    {
+      role: 'user',
+      content: JSON.stringify({
+        summary,
+        input,
+        memory: memory || undefined
+      })
+    }
+  ]
 }
 
 function hasInterestingEvents(transitions) {
@@ -494,6 +499,104 @@ function buildCommentaryMessages(input, summary, recentComments = []) {
       })
     }
   ]
+}
+
+function ensureStrategicContextStats(state, playerId) {
+  const strategicState = ensureStrategicState(state)
+  if (!strategicState.contextStatsByPlayer[playerId]) {
+    strategicState.contextStatsByPlayer[playerId] = {
+      requestCount: 0,
+      estimatedPromptTokens: 0,
+      responseId: null,
+      lastResetReason: null
+    }
+  }
+  return strategicState.contextStatsByPlayer[playerId]
+}
+
+function resetContextStats(stats, reason) {
+  stats.requestCount = 0
+  stats.estimatedPromptTokens = 0
+  stats.responseId = null
+  stats.lastResetReason = reason || null
+}
+
+function recordContextProgress(stats, estimatedPromptTokens, responseId, resetReason = null) {
+  stats.requestCount += 1
+  stats.estimatedPromptTokens += estimatedPromptTokens
+  stats.responseId = responseId || null
+  stats.lastResetReason = resetReason || null
+}
+
+function resolveStrategicRequestConfig({ providerId, previousResponseId, hasBootstrapped, messages, summary, budget, contextStats, plan }) {
+  const continuedChain = providerId === 'openai' && Boolean(previousResponseId)
+  const initialPromptTokens = estimateRequestPromptTokens({ messages })
+  const resetDecision = continuedChain
+    ? shouldResetResponseChain({ ...contextStats, responseId: previousResponseId }, initialPromptTokens, budget)
+    : { reset: false, reason: null }
+
+  let activePreviousResponseId = previousResponseId
+  let summaryForRequest = summary
+  let memory = null
+  let resetReason = null
+  let instructionPrompt = null
+  let systemPrompt = null
+
+  if (providerId === 'openai') {
+    if (!continuedChain || resetDecision.reset) {
+      instructionPrompt = hasBootstrapped ? STRATEGIC_FOLLOWUP_PROMPT : STRATEGIC_BOOTSTRAP_PROMPT
+    }
+  } else {
+    systemPrompt = hasBootstrapped ? STRATEGIC_FOLLOWUP_PROMPT : STRATEGIC_BOOTSTRAP_PROMPT
+  }
+
+  if (resetDecision.reset) {
+    activePreviousResponseId = null
+    resetReason = resetDecision.reason
+    summaryForRequest = trimRollingSummary(summary, budget.maxSummaryLinesOnReset)
+    memory = buildCarryForwardMemory({ plan, summary })
+  }
+
+  return {
+    previousResponseId: activePreviousResponseId,
+    summary: summaryForRequest,
+    memory,
+    resetReason,
+    instructions: instructionPrompt,
+    system: systemPrompt
+  }
+}
+
+function resolveCommentaryRequestConfig({ providerId, previousResponseId, summary, budget, contextStats }) {
+  const basePrompt = DEFAULT_COMMENTARY_PROMPT
+  const continuedChain = providerId === 'openai' && Boolean(previousResponseId)
+  const resetDecision = continuedChain
+    ? shouldResetResponseChain({ ...contextStats, responseId: previousResponseId }, 0, budget)
+    : { reset: false, reason: null }
+
+  if (providerId === 'openai') {
+    if (continuedChain && !resetDecision.reset) {
+      return {
+        previousResponseId,
+        summary,
+        resetReason: null,
+        system: null
+      }
+    }
+    return {
+      previousResponseId: null,
+      summary: trimRollingSummary(summary, budget.maxSummaryLinesOnReset),
+      resetReason: resetDecision.reason,
+      system: basePrompt
+    }
+  }
+
+  return {
+    previousResponseId: null,
+    summary,
+    resetReason: null,
+    system: basePrompt
+  }
 }
 
 function computeAiVisibleTiles(state, playerId) {
@@ -581,7 +684,10 @@ function updatePlanCache(state, playerId, output) {
   const plan = {
     updatedAt: state.gameTime || performance.now(),
     actions: output.actions || [],
-    notes: output.notes || ''
+    notes: output.notes || '',
+    intent: output.intent || '',
+    confidence: Number.isFinite(output.confidence) ? output.confidence : null,
+    recentRejects: state.llmStrategic?.memoryByPlayer?.[playerId]?.recentRejects || []
   }
   state.llmStrategic.plansByPlayer[playerId] = plan
 }
@@ -599,6 +705,7 @@ function disableLlmAI(type = 'both') {
 
 async function runStrategicTickForPlayer(playerId, state, settings, now, modelConfig = null) {
   const strategicState = ensureStrategicState(state)
+  const budgetConfig = LLM_REQUEST_BUDGETS.strategic
   const factories = state.factories || []
   const enemyFactory = factories.find(factory => factory.id === playerId)
   const budget = enemyFactory?.budget ?? 0
@@ -642,12 +749,37 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
 
   const costMap = await fetchCostMap()
   const hasBootstrapped = Boolean(strategicState.bootstrappedByPlayer[playerId])
-  const previousResponseId = strategicState.responseIdsByPlayer[playerId] || null
+  const contextStats = ensureStrategicContextStats(state, playerId)
+  const requestConfig = resolveStrategicRequestConfig({
+    providerId,
+    previousResponseId: strategicState.responseIdsByPlayer[playerId] || null,
+    hasBootstrapped,
+    messages: buildStrategicMessages({ input, summary }),
+    summary,
+    budget: budgetConfig,
+    contextStats,
+    plan: strategicState.plansByPlayer[playerId] || null
+  })
+  if (requestConfig.resetReason) {
+    resetContextStats(contextStats, requestConfig.resetReason)
+    strategicState.responseIdsByPlayer[playerId] = null
+  }
   const messages = buildStrategicMessages({
     input,
-    summary,
-    includeBootstrap: !hasBootstrapped
+    summary: requestConfig.summary,
+    memory: requestConfig.memory
   })
+  const estimatedPromptTokens = estimateRequestPromptTokens({
+    messages,
+    instructions: requestConfig.instructions,
+    system: requestConfig.system
+  })
+  if (estimatedPromptTokens > budgetConfig.maxEstimatedPromptTokens) {
+    window.logger.warn(
+      `[LLM] Skipping strategic request for ${playerId}: estimated prompt tokens ${estimatedPromptTokens} exceed budget ${budgetConfig.maxEstimatedPromptTokens}`
+    )
+    return
+  }
   // Schema for the OpenAI Responses API with strict: true.
   // Rules from https://platform.openai.com/docs/guides/structured-outputs#supported-schemas:
   //  - Use anyOf (NOT oneOf) for discriminated unions
@@ -826,20 +958,22 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     schema: SIMPLE_GAME_TICK_SCHEMA,
     strict: true
   }
-  const instructionPrompt = hasBootstrapped ? STRATEGIC_FOLLOWUP_PROMPT : STRATEGIC_BOOTSTRAP_PROMPT
-  const systemForRequest = providerId === 'openai' ? null : instructionPrompt
 
   try {
     const response = await requestLlmCompletion(providerId, {
       model,
-      system: systemForRequest,
+      system: requestConfig.system,
       messages,
+      maxTokens: budgetConfig.maxOutputTokens,
       responseFormat,
-      previousResponseId,
-      instructions: instructionPrompt
+      previousResponseId: requestConfig.previousResponseId,
+      instructions: requestConfig.instructions,
+      requestType: 'strategic',
+      promptBudget: budgetConfig,
+      resetContextReason: requestConfig.resetReason
     })
 
-    applyUsageCost(providerId, model, response.usage, costMap)
+    applyUsageCost(providerId, model, response.usage, costMap, 'strategic')
 
     const parsed = parseOutput(response.text)
     if (!parsed) {
@@ -869,12 +1003,16 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
       applyLlmLocks(state.units || [], action.unitIds || [], now, selectedModelConfig.tickSeconds * 1000)
     })
 
+    strategicState.memoryByPlayer[playerId] = {
+      recentRejects: result.rejected.map(entry => ({ type: entry.type, reason: entry.reason }))
+    }
     updatePlanCache(state, playerId, parsed)
     if (!hasBootstrapped) {
       strategicState.bootstrappedByPlayer[playerId] = true
     }
-    if (response.responseId) {
+    if (providerId === 'openai' && response.responseId) {
       strategicState.responseIdsByPlayer[playerId] = response.responseId
+      recordContextProgress(contextStats, estimatedPromptTokens, response.responseId, requestConfig.resetReason)
     }
 
     if (parsed.notes) {
@@ -917,6 +1055,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
 
 async function runCommentaryTick(state, settings, _now) {
   const commentaryState = ensureCommentaryState(state)
+  const budgetConfig = LLM_REQUEST_BUDGETS.commentary
   const commentaryConfig = getCommentaryModelConfig(settings)
   const providerId = commentaryConfig?.providerId
   const model = commentaryConfig?.model
@@ -944,23 +1083,45 @@ async function runCommentaryTick(state, settings, _now) {
   }
 
   const summary = summarizeInput(input, state.llmStrategic?.lastSummary || '')
-  const systemPrompt = settings.commentary.promptOverride?.trim() || DEFAULT_COMMENTARY_PROMPT
   const costMap = await fetchCostMap()
   const recentComments = commentaryState.recentComments || []
-  const messages = buildCommentaryMessages(input, summary, recentComments)
-  const previousResponseId = commentaryState.responseId || null
+  const requestConfig = resolveCommentaryRequestConfig({
+    providerId,
+    previousResponseId: commentaryState.responseId || null,
+    summary,
+    budget: budgetConfig,
+    contextStats: commentaryState.contextStats
+  })
+  if (requestConfig.resetReason) {
+    resetContextStats(commentaryState.contextStats, requestConfig.resetReason)
+    commentaryState.responseId = null
+  }
+  const messages = buildCommentaryMessages(input, requestConfig.summary, recentComments.slice(-5))
+  const estimatedPromptTokens = estimateRequestPromptTokens({
+    messages,
+    system: requestConfig.system
+  })
+  if (estimatedPromptTokens > budgetConfig.maxEstimatedPromptTokens) {
+    window.logger.warn(
+      `[LLM] Skipping commentary request: estimated prompt tokens ${estimatedPromptTokens} exceed budget ${budgetConfig.maxEstimatedPromptTokens}`
+    )
+    return
+  }
 
   try {
     const response = await requestLlmCompletion(providerId, {
       model,
-      system: systemPrompt,
+      system: requestConfig.system,
       messages,
-      maxTokens: 10000,
+      maxTokens: budgetConfig.maxOutputTokens,
       temperature: 1.0,
-      previousResponseId
+      previousResponseId: requestConfig.previousResponseId,
+      requestType: 'commentary',
+      promptBudget: budgetConfig,
+      resetContextReason: requestConfig.resetReason
     })
 
-    applyUsageCost(providerId, model, response.usage, costMap)
+    applyUsageCost(providerId, model, response.usage, costMap, 'commentary')
 
     const rawComment = response.text?.trim()
     if (!rawComment) return
@@ -977,8 +1138,9 @@ async function runCommentaryTick(state, settings, _now) {
     }
 
     state.llmCommentary.lastText = rawComment
-    if (response.responseId) {
+    if (providerId === 'openai' && response.responseId) {
       commentaryState.responseId = response.responseId
+      recordContextProgress(commentaryState.contextStats, estimatedPromptTokens, response.responseId, requestConfig.resetReason)
     }
 
     // Track recent comments to prevent repetition (keep last 10)

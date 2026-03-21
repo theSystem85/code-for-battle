@@ -213,7 +213,10 @@ export async function requestLlmCompletion(providerId, {
   temperature = 1.0,
   responseFormat,
   previousResponseId,
-  instructions
+  instructions,
+  requestType = 'generic',
+  promptBudget = null,
+  resetContextReason = null
 }) {
   const settings = getProviderSettings(providerId)
   if (!settings) {
@@ -227,10 +230,8 @@ export async function requestLlmCompletion(providerId, {
         throw new Error(`${providerId} API key missing`)
       }
 
-      const inputItems = buildResponseInput([
-        ...(system ? [{ role: 'system', content: system }] : []),
-        ...(messages || [])
-      ])
+      const resolvedInstructions = instructions || system || null
+      const inputItems = buildResponseInput(messages || [])
 
       const requestBody = {
         model: normalizeRequestModel(providerId, model),
@@ -248,8 +249,21 @@ export async function requestLlmCompletion(providerId, {
         requestBody.text = { format: responseFormat }
       }
 
-      if (instructions || system) {
-        requestBody.instructions = instructions || system
+      if (resolvedInstructions) {
+        requestBody.instructions = resolvedInstructions
+      }
+
+      const requestBodyText = JSON.stringify(requestBody)
+      const requestChars = requestBodyText.length
+      const requestEstimatedTokens = Math.ceil(requestChars / 4)
+      const budgetLabel = promptBudget?.maxEstimatedPromptTokens || 'n/a'
+      window.logger?.info?.(
+        `[LLM] Request ${requestType} ${providerId}:${requestBody.model} chars=${requestChars} estTokens=${requestEstimatedTokens} prev=${previousResponseId ? 'yes' : 'no'} instructions=${resolvedInstructions ? 'yes' : 'no'} reset=${resetContextReason || 'no'} budget=${budgetLabel}`
+      )
+      if (promptBudget && requestEstimatedTokens > promptBudget.maxEstimatedPromptTokens) {
+        window.logger.warn(
+          `[LLM] Request ${requestType} exceeds estimated prompt budget (${requestEstimatedTokens}/${promptBudget.maxEstimatedPromptTokens})`
+        )
       }
 
       const response = await fetch(`${baseUrl}/responses`, {
@@ -258,7 +272,7 @@ export async function requestLlmCompletion(providerId, {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${settings.apiKey}`
         },
-        body: JSON.stringify(requestBody)
+        body: requestBodyText
       })
 
       if (!response.ok) {
@@ -322,13 +336,20 @@ export async function requestLlmCompletion(providerId, {
         }
       }
 
+      const requestBodyText = JSON.stringify(requestBody)
+      const requestChars = requestBodyText.length
+      const requestEstimatedTokens = Math.ceil(requestChars / 4)
+      window.logger?.info?.(
+        `[LLM] Request ${requestType} ${providerId}:${requestBody.model} chars=${requestChars} estTokens=${requestEstimatedTokens} prev=no instructions=${system ? 'yes' : 'no'} reset=${resetContextReason || 'no'} budget=${promptBudget?.maxEstimatedPromptTokens || 'n/a'}`
+      )
+
       const response = await fetch(`${baseUrl}/chat/completions`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${settings.apiKey}`
         },
-        body: JSON.stringify(requestBody)
+        body: requestBodyText
       })
 
       if (!response.ok) {

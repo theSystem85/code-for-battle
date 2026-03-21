@@ -19,35 +19,36 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - [x] Record the initial token-reduction task in `TODO/Improvements.md` and prompt history.
 
 ### Confirmed gaps after PR 554 review
-- [ ] Add request-size instrumentation and explicit request budgets.
-- [ ] Reset or avoid unbounded `previous_response_id` chains.
+- [x] Add request-size instrumentation and explicit request budgets.
+- [x] Reset or avoid unbounded `previous_response_id` chains.
 - [ ] Replace the generic raw snapshot with a compact strategic digest.
 - [ ] Rework commentary to use a compact event digest instead of the generic snapshot.
 - [ ] Shrink the bootstrap/follow-up prompts substantially.
-- [ ] Remove duplicate system/instruction prompt content from requests.
-- [ ] Lower strategy/commentary output token caps.
+- [x] Remove duplicate system/instruction prompt content from requests.
+- [x] Lower strategy/commentary output token caps.
 - [ ] Add adaptive degradation when payload budgets are exceeded.
 
 ## Progress Board
 
 ### Phase 1 - Safety rails and observability
-- [ ] Add serialized request size logging for strategic and commentary calls.
+- [x] Add serialized request size logging for strategic and commentary calls.
   - Target files: `src/ai/llmStrategicController.js`, `src/ai/llmProviders.js`
-  - Done when: logs show request bytes/chars, provider/model, previous-response reuse, and provider token usage.
-- [ ] Add hard request budgets before dispatch.
-  - Done when: oversized requests are downgraded or skipped instead of being sent blindly.
-- [ ] Add explicit output caps per request type.
-  - Done when: strategy uses a much smaller cap than the current default and commentary uses a very small cap.
+  - Status: implemented request logging in `src/ai/llmProviders.js` plus usage logging in `src/ai/llmStrategicController.js` for strategic/commentary requests.
+- [x] Add hard request budgets before dispatch.
+  - Status: implemented estimated prompt-token budgets, chain resets, and oversized-request skipping for strategic/commentary calls.
+- [x] Add explicit output caps per request type.
+  - Status: strategic requests now use a capped output budget and commentary uses a much smaller cap than the old default.
 
 ### Phase 2 - Prompt duplication and session growth
-- [ ] Remove duplicate instruction payloads for OpenAI requests.
+- [x] Remove duplicate instruction payloads for OpenAI requests.
   - Current issue: the request path can send overlapping bootstrap/follow-up content via message content plus `instructions`.
-  - Done when: each request has exactly one authoritative instruction source.
-- [ ] Add `previous_response_id` reset policy.
+  - Status: OpenAI now sends one authoritative instruction source and no longer duplicates system prompt content inside the input payload.
+- [x] Add `previous_response_id` reset policy.
   - Suggested policy: reset every N ticks or when cumulative prompt budget exceeds threshold.
-  - Done when: long matches do not cause unbounded context accumulation.
-- [ ] Persist only compact local memory across resets.
+  - Status: chain resets now trigger on request-count and estimated-context budgets.
+- [x] Persist only compact local memory across resets.
   - Minimum memory: current intent, unresolved goals, stale enemy intel summary, recent rejected-action reasons.
+  - Status: resets now carry forward compact plan intent/notes/confidence, trimmed summary, and recent rejection reasons.
 
 ### Phase 3 - Compact strategic digest
 - [ ] Add a new export path for compact strategic input instead of reusing the generic `GameTickInput` snapshot.
@@ -95,11 +96,17 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - [ ] Update `specs/031-llm-control-api.md` and `specs/032-llm-strategic-ai.md` after the compact input contract is finalized.
 
 ## Immediate Next Slice
-- [ ] Remove prompt duplication from the strategic and commentary request path.
-- [ ] Add request-size/token instrumentation.
-- [ ] Lower output token caps aggressively.
-- [ ] Add `previous_response_id` reset policy.
+- [x] Remove prompt duplication from the strategic and commentary request path.
+- [x] Add request-size/token instrumentation.
+- [x] Lower output token caps aggressively.
+- [x] Add `previous_response_id` reset policy.
 - [ ] Add one request-interception E2E covering payload duplication and size budget.
+
+## Implementation Notes - 2026-03-21
+- Added `src/ai/llmRequestBudget.js` with budget constants, prompt-token estimation, summary trimming, carry-forward memory helpers, and chain-reset decisions.
+- Strategic OpenAI follow-up requests now avoid resending prompt instructions on every continued chain request; instructions are resent only on fresh sessions or reset boundaries.
+- Commentary requests now use the same reset-and-cap discipline with a much smaller output ceiling.
+- This branch still needs the larger compact strategic digest refactor; current work improves request shaping and prevents runaway context growth, but it does not yet replace raw unit/building snapshots.
 
 ## Agent Notes
 - Treat this file as the canonical progress tracker for follow-up token-reduction work.
