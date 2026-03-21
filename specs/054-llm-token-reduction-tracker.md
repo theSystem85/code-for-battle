@@ -23,7 +23,7 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - [x] Reset or avoid unbounded `previous_response_id` chains.
 - [x] Replace the generic raw snapshot with a compact strategic digest.
 - [x] Rework commentary to use a compact event digest instead of the generic snapshot.
-- [ ] Shrink the bootstrap/follow-up prompts substantially.
+- [x] Shrink the bootstrap/follow-up prompts substantially.
 - [x] Remove duplicate system/instruction prompt content from requests.
 - [x] Lower strategy/commentary output token caps.
 - [ ] Add adaptive degradation when payload budgets are exceeded.
@@ -69,10 +69,14 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
   - Done when: retries or skipped ticks do not replay large stale event windows.
 
 ### Phase 5 - Prompt slimming
-- [ ] Replace the huge bootstrap prompt with a concise invariant ruleset.
-- [ ] Remove full static unit/building catalogs from the bootstrap.
-- [ ] Send currently available build/unit options inside the compact input instead.
-- [ ] Keep structured output schema strict, but stop duplicating protocol explanation in prompt prose.
+- [x] Replace the huge bootstrap prompt with a concise invariant ruleset.
+  - Status: the strategic bootstrap prompt now focuses on core rules, economy priorities, ownership, and tactical constraints instead of re-explaining the full game catalog.
+- [x] Remove full static unit/building catalogs from the bootstrap.
+  - Status: removed the embedded static unit/building catalog blobs from `src/ai/llmStrategicController.js`.
+- [x] Send currently available build/unit options inside the compact input instead.
+  - Status: `buildCompactStrategicInput()` now includes `productionOptions.availableBuildings` and `productionOptions.availableUnits` derived from the live tech tree.
+- [x] Keep structured output schema strict, but stop duplicating protocol explanation in prompt prose.
+  - Status: the response schema remains strict while the prose prompt is reduced to the minimum behavioral rules needed for planning.
 
 ### Phase 6 - Commentary compaction
 - [x] Build a dedicated commentary input path.
@@ -116,7 +120,8 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - Added `src/ai/llmStrategicDigest.js` and switched strategic requests to a compact `inputMode: compact-strategic-v1` payload with grouped forces, condensed building state, enemy priority targets, compact map intel, and compact recent deltas.
 - Added `src/ai/llmCommentaryDigest.js` and switched commentary requests to a compact `inputMode: compact-commentary-v1` payload with owner-aware highlights, anti-repeat memory, and commentary-specific degradation.
 - Commentary now uses the first active AI player as its perspective and filters for the actual transition types emitted by the collector (`damage`, `destroyed`, `building_completed`, etc.).
-- This branch still needs prompt slimming and broader adaptive degradation; both strategic and commentary request payloads are now compacted, but the bootstrap prompt remains oversized.
+- Added shared `src/ai-api/techTree.js` helpers so the compact strategic input can expose only the current live production options; the large static strategic catalogs are gone from the bootstrap prompt.
+- This branch still needs broader adaptive degradation; both strategic and commentary payloads are compact, and the strategic bootstrap prompt is substantially smaller, but oversized requests still mostly rely on skip behavior rather than staged degradation.
 
 ## Agent Notes
 - Treat this file as the canonical progress tracker for follow-up token-reduction work.

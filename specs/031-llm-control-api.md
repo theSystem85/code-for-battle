@@ -40,7 +40,7 @@ Event collection is recorded in the following systems:
 ## Engine Integration
 - `exportGameTickInput(state, sinceTick, options)` builds an input payload from game state plus transition events.
 - Strategic LLM requests no longer embed the raw `GameTickInput` snapshot directly. They derive a compact `inputMode: compact-strategic-v1` digest for prompting that keeps the output contract unchanged while reducing prompt size.
-- The compact strategic digest contains grouped friendly forces, condensed owned-building state, visible enemy force summaries, priority target ids, compact map/base intel, LLM queue state, recent delta highlights, and action constraints.
+- The compact strategic digest contains grouped friendly forces, condensed owned-building state, visible enemy force summaries, priority target ids, compact map/base intel, live production options, LLM queue state, recent delta highlights, and action constraints.
 - Commentary LLM requests now derive a separate `inputMode: compact-commentary-v1` digest containing owner context, short summary text, interesting recent delta highlights, and anti-repeat memory instead of the raw game snapshot.
 - `applyGameTickOutput(state, output)` validates and applies actions, returning accepted/rejected action lists.
 - Invalid actions are rejected with structured reason codes (e.g. `INVALID_SCHEMA`, `UNKNOWN_ENTITY`).

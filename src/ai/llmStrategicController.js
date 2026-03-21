@@ -9,118 +9,21 @@ import { buildCompactCommentaryInput, hasInterestingCommentaryEvents } from './l
 import { showNotification } from '../ui/notifications.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
-import { TILE_SIZE, UNIT_COSTS, UNIT_PROPERTIES, BULLET_DAMAGES, UNIT_AMMO_CAPACITY, UNIT_GAS_PROPERTIES, TANK_FIRE_RANGE, HOWITZER_FIRE_RANGE, HOWITZER_MIN_RANGE, HOWITZER_FIREPOWER, HOWITZER_FIRE_COOLDOWN, PARTY_COLORS } from '../config.js'
+import { TILE_SIZE, TANK_FIRE_RANGE, PARTY_COLORS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 
-function buildUnitCatalog() {
-  const catalog = []
-  const allTypes = ['tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'apache', 'mineLayer', 'mineSweeper', 'f22Raptor']
-  for (const type of allTypes) {
-    const props = UNIT_PROPERTIES[type] || {}
-    const cost = UNIT_COSTS[type] || 0
-    const ammo = UNIT_AMMO_CAPACITY[type] || null
-    const gas = UNIT_GAS_PROPERTIES[type] || {}
-    const dmg = BULLET_DAMAGES[type.replace('-', '_').replace('tank_v1', 'tank_v1').replace('tank-v2', 'tank_v2').replace('tank-v3', 'tank_v3')] || null
-    const entry = {
-      type,
-      cost,
-      hp: props.health || props.maxHealth || 0,
-      speed: props.speed || 0,
-      armor: props.armor || 0
-    }
-    if (ammo) entry.ammo = ammo
-    if (dmg) entry.damage = dmg
-    if (gas.tankSize) entry.fuelCapacity = gas.tankSize
-    // Weapon / range info
-    if (type === 'howitzer') {
-      entry.weapon = 'artillery'
-      entry.fireRange = HOWITZER_FIRE_RANGE
-      entry.minRange = HOWITZER_MIN_RANGE
-      entry.firepower = HOWITZER_FIREPOWER
-      entry.fireCooldownMs = HOWITZER_FIRE_COOLDOWN
-    } else if (type === 'rocketTank') {
-      entry.weapon = 'rocket'
-      entry.fireRange = TANK_FIRE_RANGE
-    } else if (type === 'apache') {
-      entry.weapon = 'machinegun'
-      entry.fireRange = TANK_FIRE_RANGE
-      entry.spawnsFrom = 'helipad'
-    } else if (type === 'f22Raptor') {
-      entry.weapon = 'missile'
-      entry.fireRange = TANK_FIRE_RANGE * 1.5
-      entry.spawnsFrom = 'airstrip'
-      entry.radarInvisible = true
-    } else if (['tank_v1', 'tank-v2', 'tank-v3'].includes(type)) {
-      entry.weapon = 'cannon'
-      entry.fireRange = TANK_FIRE_RANGE
-    }
-    // Spawn location
-    if (type !== 'apache' && type !== 'f22Raptor') entry.spawnsFrom = 'vehicleFactory'
-    // Special roles
-    if (type === 'harvester') entry.role = 'economic: harvests ore and delivers to refinery'
-    if (type === 'ambulance') entry.role = 'support: heals nearby friendly units'
-    if (type === 'tankerTruck') entry.role = 'support: refuels nearby units'
-    if (type === 'ammunitionTruck') entry.role = 'support: resupplies ammo to nearby units'
-    if (type === 'recoveryTank') entry.role = 'support: tows damaged units to workshop for repair'
-    if (type === 'mineLayer') entry.role = 'utility: deploys anti-vehicle mines'
-    if (type === 'mineSweeper') entry.role = 'utility: clears enemy mines'
-    catalog.push(entry)
-  }
-  return catalog
-}
-
-function buildBuildingCatalog() {
-  const catalog = []
-  for (const [type, data] of Object.entries(buildingData)) {
-    if (type.startsWith('concreteWall')) continue // skip wall variants
-    const entry = {
-      type,
-      displayName: data.displayName || type,
-      cost: data.cost || 0,
-      power: data.power || 0,
-      hp: data.health || 0,
-      size: `${data.width}x${data.height}`
-    }
-    if (data.armor) entry.armor = data.armor
-    if (data.fireRange) {
-      entry.weapon = data.projectileType || 'bullet'
-      entry.fireRange = data.fireRange
-      entry.damage = data.damage || 0
-      entry.fireCooldownMs = data.fireCooldown || 0
-      if (data.burstCount) entry.burst = `${data.burstCount} shots/${data.burstDelay}ms`
-      if (data.minFireRange) entry.minRange = data.minFireRange
-    }
-    if (data.requiresRadar) entry.requires = 'radarStation'
-    if (data.requiresVehicleFactory) entry.requires = 'vehicleFactory'
-    catalog.push(entry)
-  }
-  // Add concrete wall once
-  const wall = buildingData.concreteWall
-  if (wall) {
-    catalog.push({ type: 'concreteWall', displayName: 'Concrete Wall', cost: wall.cost, power: 0, hp: wall.health, size: '1x1' })
-  }
-  return catalog
-}
-
-const UNIT_CATALOG_TEXT = JSON.stringify(buildUnitCatalog(), null, 0)
-const BUILDING_CATALOG_TEXT = JSON.stringify(buildBuildingCatalog(), null, 0)
-
 const STRATEGIC_BOOTSTRAP_PROMPT = `You are the strategic commander for the enemy AI in a real-time strategy game.
-Your job: plan economy, production, expansion, and attacks to defeat the human player. Keep actions practical, achievable, and within budget.
+Plan economy, production, expansion, and attacks to defeat the human player. Keep actions practical, achievable, and within budget.
 
-GAME OVERVIEW
-- Tile-based RTS with base building, unit production, and combat.
-- You control one enemy player. The human player is the opponent.
-- Buildings unlock tech and produce units. Units can move, attack, and guard.
-- You can place buildings on valid tiles, queue units at the right factory, and issue unit commands.
+CORE RULES
+- You control one AI player. The human player is the opponent.
 - The engine executes only explicit actions you output.
-- BUILDING PLACEMENT RULE (CRITICAL): New buildings MUST be placed within 3 tiles (Chebyshev distance) of an existing building you own. Buildings placed far from your base WILL BE REJECTED. Always expand outward from your construction yard, placing each new building adjacent to or near your existing structures.
-- Each unit and building has an "owner" field identifying which player controls it.
-- Your units will still auto-attack enemies within their fire range even between your ticks, but you should issue explicit commands for strategic movements and coordinated attacks.
-- Consider retreating damaged units to regroup before launching full-scale attacks. A well-coordinated strike with sufficient firepower is better than trickling units into enemy defenses.
-- You only see the battlefield where your own units and buildings provide vision. Data in the snapshot is limited to what is visible to you (fog of war).
+- Fog of war applies. If something is not in the compact input, do not assume it exists.
+- New buildings must be placed within 3 tiles of an existing owned building or they will be rejected.
+- Respect available money, constraints.maxActionsPerTick, and the live production options in input.productionOptions.
+- The engine rejects tech-locked or duplicate queue requests.
 
-ECONOMY & MONEY SUPPLY (CRITICAL!)
+ECONOMY PRIORITY
 - Money is the ONLY resource. You start with a limited budget that WILL run out if you don't establish income.
 - Income comes from harvesters mining ore and delivering it to an ore refinery. Without at least 1 refinery AND 1 harvester, you have ZERO income.
 - ALWAYS prioritize building a power plant first, then an ore refinery, then a vehicle factory, then produce a harvester. This is the minimum viable economy.
@@ -128,39 +31,11 @@ ECONOMY & MONEY SUPPLY (CRITICAL!)
 - Monitor your money closely. If money is below 2000 and you have no harvester or refinery, you are in an economic emergency — sell non-essential buildings to fund recovery.
 - A tank rush without economy will fail once your starting money runs out.
 
-TECH TREE (CRITICAL — FOLLOW THIS ORDER!)
-- You start with only: constructionYard, oreRefinery, powerPlant, vehicleFactory, vehicleWorkshop, radarStation, hospital, helipad, gasStation, turretGunV1, concreteWall
-- To unlock additional buildings and units, you MUST build prerequisite structures first:
-  Building prerequisites:
-  - ammunitionFactory: requires vehicleFactory
-  - turretGunV2, turretGunV3, rocketTurret, teslaCoil, artilleryTurret: requires radarStation
-  Unit prerequisites:
-  - tank (tank_v1): requires vehicleFactory
-  - harvester: requires vehicleFactory + oreRefinery
-  - tankerTruck: requires vehicleFactory + gasStation
-  - ammunitionTruck: requires vehicleFactory + ammunitionFactory
-  - ambulance: requires hospital
-  - recoveryTank, mineSweeper: requires vehicleFactory + vehicleWorkshop
-  - mineLayer: requires vehicleFactory + vehicleWorkshop + ammunitionFactory
-  - tank-v2: requires radarStation
-  - tank-v3: requires 2x vehicleFactory
-  - rocketTank: requires rocketTurret
-  - howitzer: requires radarStation + vehicleFactory
-  - apache: requires helipad (helipad requires radarStation)
-- Buildings and units you try to build without having the prerequisites WILL BE REJECTED.
-- The engine enforces construction times — buildings take time to finish construction, just like the human player.
-
 SELL & REPAIR BUILDINGS
 - You can sell buildings you own to recover 70% of their cost. Use action type "sell_building" with a buildingId.
 - You can repair damaged buildings. Use action type "repair_building" with a buildingId. Repair costs ~30% of damage value.
 - Sell unneeded or redundant buildings when you need emergency funds.
 - Repair critical buildings (refineries, factories) when they're damaged.
-
-UNIT CATALOG (all producible units with stats):
-${UNIT_CATALOG_TEXT}
-
-BUILDING CATALOG (all constructable buildings with stats):
-${BUILDING_CATALOG_TEXT}
 
 IMPORTANT OWNERSHIP: Every unit and building in the compact strategic input has an "owner" field when ownership matters. YOUR units/buildings have owner === your playerId. The HUMAN PLAYER's entities have a different owner. Always check the owner field to distinguish friend from foe.
 
@@ -183,6 +58,7 @@ CompactStrategicInput key fields:
 - forceGroups.detailedUnits: extra per-unit detail for harvesters, support, aircraft, damaged units, and units already engaged in combat
 - knownEnemyIntel.visibleForceGroups / priorityTargets: visible enemy groups and the most important enemy ids to attack
 - mapIntel: compact map and base-location context instead of raw map tiles
+- productionOptions.availableBuildings / availableUnits: the current tech-legal buildings and units you may request right now, with costs and basic roles
 - queueState.llmQueue: YOUR current production queue with status tracking:
   - buildings: array of {buildingType, status} where status is "queued"|"building"|"completed"|"failed"
   - units: array of {unitType, status} where status is "queued"|"building"|"completed"|"failed"
@@ -254,11 +130,9 @@ OUTPUT FORMAT (return ONLY JSON, no markdown) - GameTickOutput:
 Always include intent, confidence (0.0-1.0), and notes fields even if the value is minimal.
 
 TACTICAL GUIDELINES
-- Build power plants FIRST to ensure your base has enough energy.
-- Build an ore refinery and a harvester IMMEDIATELY for income. Without income you will lose.
-- Build a vehicle factory before queueing land units (all land units spawn from vehicle factory).
-- Build a helipad (requires radar) before queueing apaches.
-- BUILDING PLACEMENT: Look at your existing buildings in the snapshot (especially your constructionYard) and place new buildings within 1-2 tiles of them. Use coordinates close to your existing structures. If your constructionYard is at (x, y), place the next building at (x+3, y) or (x, y+3) etc. NEVER place buildings at random positions on the map.
+- Build power first, then refinery, then factory, then harvester unless input.productionOptions makes one of those temporarily unavailable.
+- Use input.productionOptions for what is currently legal to build; do not guess missing tech prerequisites.
+- Place buildings adjacent to your current base footprint, not at random map positions.
 - Defend your base with turrets to slow rushes.
 - Amass a critical mass of combat units (at least 5-8 tanks) before attacking. Sending 1-2 tanks into an enemy base with turrets is wasteful — they will die instantly.
 - AVOID ENEMY BASE DEFENSES: Do NOT send units into range of enemy turrets, tesla coils, or artillery unless you have overwhelming force (2-3x the defensive firepower). Scout the enemy base perimeter first, then attack from the weakest side.
@@ -275,13 +149,14 @@ RULES
 - Prefer "tile" positions for building placement.
 - If unsure, return an empty actions array.
 
-You will receive this full context only once. Future prompts include only the latest game state + transitions; continue the same session and follow these rules.
+You will receive this ruleset only on fresh sessions or after resets. Future prompts continue the same session.
 
 IMPORTANT: Respond to THIS message with your first set of strategic actions NOW. Analyze the game state below. Your economy build order should start immediately: build a power plant, then an ore refinery, then a vehicle factory, then queue a harvester. Do not wait for a second prompt to start issuing commands.`
 
 const STRATEGIC_FOLLOWUP_PROMPT = `You are the same enemy strategic AI continuing the current match.
 Return ONLY valid JSON matching GameTickOutput. No markdown or extra text.
-Follow the rules and schema from the initial brief.
+Follow the same rules as the initial brief.
+Use input.productionOptions and queueState.llmQueue instead of assuming all unit or building types are currently legal.
 Always include intent, confidence (0-1), and notes fields.`
 
 const DEFAULT_COMMENTARY_PROMPT = `You are a mean RTS opponent commentating on the battle while actively controlling one AI party.

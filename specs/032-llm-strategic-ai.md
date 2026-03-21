@@ -60,6 +60,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - Strategic requests now track estimated prompt size, log request metrics, apply a capped output-token budget, and reset the response chain when request-count or estimated-context budgets are exceeded.
 - When a response chain resets, a compact carry-forward memory object is sent with trimmed prior context instead of relying on the provider to remember an unbounded history.
 - The compact strategic digest replaces raw unit/building arrays in the prompt with grouped force summaries, condensed owned-building state, visible enemy intel, priority target ids, compact map/base intel, recent delta highlights, and queue state.
+- The compact strategic digest also carries `productionOptions.availableBuildings` and `productionOptions.availableUnits`, derived from the live tech tree, so the strategic prompt no longer needs embedded static unit/building catalogs.
 
 ## Commentary Flow
 - If enabled, a lightweight prompt generates short taunts and announcements from the perspective of the first active AI player rather than the human player.
@@ -77,10 +78,10 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - Visibility is computed on-the-fly per AI tick using the AI player's own units and buildings with appropriate vision ranges per unit type.
 - If shadow-of-war is disabled in game settings, the full game state is passed without filtering.
 
-## Unit/Building Catalogs in Bootstrap
-- The initial strategic system prompt includes a full JSON catalog of all unit types with cost, HP, speed, armor, ammo capacity, damage, weapon type, fire range, spawn building, and tactical role.
-- A full JSON catalog of all building types with cost, power consumption, HP, size, weapon stats, requirements, and tactical notes is also included.
-- These catalogs give the LLM full knowledge of the game's economy and military capabilities on its first tick.
+## Live Production Options
+- The compact strategic input includes only the currently tech-legal `productionOptions.availableBuildings` and `productionOptions.availableUnits` for the AI player.
+- Each available option carries compact metadata such as cost, role, size or spawn building, allowing the prompt to stay small while still exposing current production choices.
+- The strategic bootstrap prompt now relies on these live options instead of embedding full static unit/building catalogs.
 
 ## Owner-Aware State Updates
 - Game state snapshots sent to the LLM include an `owner` field on every unit and building.

@@ -1,3 +1,7 @@
+import { UNIT_COSTS } from '../config.js'
+import { buildingData } from '../data/buildingData.js'
+import { computeAvailableBuildingTypes, computeAvailableUnitTypes } from '../ai-api/techTree.js'
+
 const PRODUCTION_BUILDING_TYPES = new Set([
   'constructionYard',
   'powerPlant',
@@ -43,6 +47,44 @@ const PRIORITY_TARGET_UNIT_TYPES = new Set([
   'recoveryTank',
   'mineLayer'
 ])
+const UNIT_ROLE_LABELS = {
+  tank: 'frontline',
+  tank_v1: 'frontline',
+  'tank-v2': 'frontline',
+  'tank-v3': 'heavy-frontline',
+  rocketTank: 'anti-armor',
+  harvester: 'economy',
+  tankerTruck: 'fuel-support',
+  ammunitionTruck: 'ammo-support',
+  ambulance: 'healing-support',
+  recoveryTank: 'repair-support',
+  howitzer: 'long-range-artillery',
+  apache: 'air-attack',
+  mineLayer: 'mine-utility',
+  mineSweeper: 'mine-clearance'
+}
+const UNIT_SPAWN_BUILDINGS = {
+  apache: 'helipad'
+}
+const BUILDING_ROLE_LABELS = {
+  constructionYard: 'expansion-core',
+  powerPlant: 'power',
+  oreRefinery: 'economy',
+  vehicleFactory: 'vehicle-production',
+  vehicleWorkshop: 'repair-support',
+  radarStation: 'tech-radar',
+  hospital: 'healing-support',
+  helipad: 'air-production',
+  gasStation: 'fuel-support',
+  ammunitionFactory: 'ammo-support',
+  turretGunV1: 'defense',
+  turretGunV2: 'defense',
+  turretGunV3: 'defense',
+  rocketTurret: 'defense',
+  teslaCoil: 'defense',
+  artilleryTurret: 'defense',
+  concreteWall: 'wall'
+}
 
 function roundNumber(value, digits = 2) {
   if (!Number.isFinite(value)) return 0
@@ -277,6 +319,36 @@ function summarizeEconomy(input, baseStatus, forceGroups) {
   }
 }
 
+function summarizeProductionOptions(buildings, playerId) {
+  const availableBuildings = Array.from(computeAvailableBuildingTypes(buildings, [], playerId))
+    .sort()
+    .map(type => {
+      const data = buildingData[type] || {}
+      const entry = {
+        type,
+        cost: Number(data.cost || 0),
+        role: BUILDING_ROLE_LABELS[type] || 'utility'
+      }
+      if (Number.isFinite(data.power) && data.power !== 0) entry.power = data.power
+      if (Number.isFinite(data.width) && Number.isFinite(data.height)) entry.size = `${data.width}x${data.height}`
+      return entry
+    })
+
+  const availableUnits = Array.from(computeAvailableUnitTypes(buildings, [], playerId))
+    .sort()
+    .map(type => ({
+      type,
+      cost: Number(UNIT_COSTS[type] || 0),
+      role: UNIT_ROLE_LABELS[type] || 'combat',
+      spawnsFrom: UNIT_SPAWN_BUILDINGS[type] || 'vehicleFactory'
+    }))
+
+  return {
+    availableBuildings,
+    availableUnits
+  }
+}
+
 function summarizeMapIntel(input, baseStatus, enemyIntel) {
   return {
     mapSize: {
@@ -347,6 +419,7 @@ export function buildCompactStrategicInput(input) {
     forceGroups,
     knownEnemyIntel: enemyIntel,
     mapIntel: summarizeMapIntel(input, baseStatus, enemyIntel),
+    productionOptions: summarizeProductionOptions(buildings, input.playerId),
     queueState: {
       llmQueue: input.snapshot?.llmQueue || { buildings: [], units: [] }
     },

@@ -75,6 +75,15 @@ describe('llmStrategicDigest', () => {
             constructionFinished: true
           },
           {
+            id: 'factory-1',
+            type: 'vehicleFactory',
+            owner: 'player2',
+            health: 900,
+            maxHealth: 1000,
+            tilePosition: { x: 18, y: 10, space: 'tile' },
+            constructionFinished: true
+          },
+          {
             id: 'enemy-refinery',
             type: 'oreRefinery',
             owner: 'player1',
@@ -108,7 +117,7 @@ describe('llmStrategicDigest', () => {
     expect(digest.inputMode).toBe('compact-strategic-v1')
     expect(digest.snapshot).toBeUndefined()
     expect(digest.transitions).toBeUndefined()
-    expect(digest.baseStatus.ownedBuildings).toHaveLength(2)
+    expect(digest.baseStatus.ownedBuildings).toHaveLength(3)
     expect(digest.forceGroups.combat[0]).toMatchObject({
       type: 'tank_v1',
       count: 2,
@@ -126,6 +135,18 @@ describe('llmStrategicDigest', () => {
         expect.objectContaining({ id: 'enemy-harv', type: 'harvester' })
       ])
     )
+    expect(digest.productionOptions.availableBuildings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'powerPlant', role: 'power' }),
+        expect.objectContaining({ type: 'vehicleFactory', role: 'vehicle-production' })
+      ])
+    )
+    expect(digest.productionOptions.availableUnits).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ type: 'tank_v1', spawnsFrom: 'vehicleFactory' }),
+        expect.objectContaining({ type: 'harvester', role: 'economy' })
+      ])
+    )
     expect(digest.queueState.llmQueue.units[0]).toEqual({ unitType: 'harvester', status: 'building' })
     expect(digest.recentDeltas.countsByType).toEqual({ damage: 1, unit_created: 1 })
   })
@@ -140,13 +161,14 @@ describe('llmStrategicDigest', () => {
       meta: { tilesX: 100, tilesY: 100, fogOfWarEnabled: true },
       snapshot: {
         resources: { money: 4200, power: { supply: 40, production: 70, consumption: 30 } },
-        units: Array.from({ length: 12 }, (_, index) => ({
+        units: Array.from({ length: 48 }, (_, index) => ({
           id: `tank-${index + 1}`,
-          type: 'tank_v1',
+          type: index % 3 === 0 ? 'tank_v1' : (index % 3 === 1 ? 'rocketTank' : 'harvester'),
           owner: 'player2',
-          health: 100,
+          health: index % 5 === 0 ? 65 : 100,
           maxHealth: 100,
-          tilePosition: { x: index, y: index + 1, space: 'tile' }
+          tilePosition: { x: index, y: index + 1, space: 'tile' },
+          orders: index % 4 === 0 ? { targetId: 'enemy-yard' } : undefined
         })).concat([
           {
             id: 'enemy-howitzer',
@@ -177,6 +199,33 @@ describe('llmStrategicDigest', () => {
             constructionFinished: true
           },
           {
+            id: 'radar-1',
+            type: 'radarStation',
+            owner: 'player2',
+            health: 1000,
+            maxHealth: 1000,
+            tilePosition: { x: 18, y: 10, space: 'tile' },
+            constructionFinished: true
+          },
+          {
+            id: 'ammo-1',
+            type: 'ammunitionFactory',
+            owner: 'player2',
+            health: 1000,
+            maxHealth: 1000,
+            tilePosition: { x: 20, y: 10, space: 'tile' },
+            constructionFinished: true
+          },
+          {
+            id: 'workshop-1',
+            type: 'vehicleWorkshop',
+            owner: 'player2',
+            health: 1000,
+            maxHealth: 1000,
+            tilePosition: { x: 23, y: 10, space: 'tile' },
+            constructionFinished: true
+          },
+          {
             id: 'enemy-yard',
             type: 'constructionYard',
             owner: 'player1',
@@ -184,11 +233,32 @@ describe('llmStrategicDigest', () => {
             maxHealth: 1000,
             tilePosition: { x: 80, y: 82, space: 'tile' },
             constructionFinished: true
+          },
+          {
+            id: 'enemy-refinery',
+            type: 'oreRefinery',
+            owner: 'player1',
+            health: 1000,
+            maxHealth: 1000,
+            tilePosition: { x: 82, y: 84, space: 'tile' },
+            constructionFinished: true
           }
         ],
         llmQueue: { buildings: [], units: [] }
       },
-      transitions: { summary: { totalDamage: 0, unitsDestroyed: 0, buildingsDestroyed: 0 }, events: [] },
+      transitions: {
+        summary: { totalDamage: 240, unitsDestroyed: 3, buildingsDestroyed: 1 },
+        events: Array.from({ length: 14 }, (_, index) => ({
+          type: index % 3 === 0 ? 'damage' : (index % 3 === 1 ? 'unit_created' : 'destroyed'),
+          tick: 190 + index,
+          targetId: 'enemy-yard',
+          amount: index % 3 === 0 ? 20 : undefined,
+          unitId: index % 3 === 1 ? `tank-${index}` : undefined,
+          unitType: index % 3 === 1 ? 'tank_v1' : undefined,
+          victimId: index % 3 === 2 ? `tank-${index}` : undefined,
+          victimKind: index % 3 === 2 ? 'unit' : undefined
+        }))
+      },
       constraints: { maxActionsPerTick: 50, allowQueuedCommands: true, maxQueuedCommands: 20 }
     }
 

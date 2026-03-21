@@ -5,6 +5,7 @@ import { unitCosts } from '../units.js'
 import { units as mainUnits, factories as mainFactories, mapGrid as mainMapGrid } from '../main.js'
 import { validateGameTickOutput } from './validate.js'
 import { findBuildingPosition } from '../ai/enemyBuilding.js'
+import { computeAvailableBuildingTypes, computeAvailableUnitTypes } from './techTree.js'
 
 const vehicleUnitTypes = [
   'tank',
@@ -44,72 +45,6 @@ function ensureLlmQueues(state) {
   if (!state.llmStrategic.unitQueuesByPlayer) {
     state.llmStrategic.unitQueuesByPlayer = {}
   }
-}
-
-/**
- * Compute the set of building types available to a given owner based on tech tree.
- * Mirrors the logic in productionControllerTechTree.syncTechTreeWithBuildings.
- */
-export function computeAvailableBuildingTypes(buildings, factories, owner) {
-  // Start with the base set every player has
-  const available = new Set([
-    'constructionYard', 'oreRefinery', 'powerPlant', 'vehicleFactory',
-    'vehicleWorkshop', 'radarStation', 'hospital', 'helipad',
-    'gasStation', 'turretGunV1', 'concreteWall'
-  ])
-  const owned = [...buildings, ...factories].filter(b => b.owner === owner && b.health > 0)
-  const hasRadar = owned.some(b => b.type === 'radarStation')
-  const hasFactory = owned.some(b => b.type === 'vehicleFactory')
-  if (hasFactory) available.add('ammunitionFactory')
-  if (hasRadar) {
-    available.add('turretGunV2')
-    available.add('turretGunV3')
-    available.add('rocketTurret')
-    available.add('teslaCoil')
-    available.add('artilleryTurret')
-  }
-  return available
-}
-
-/**
- * Compute the set of unit types available to a given owner based on tech tree.
- * Mirrors the logic in productionControllerTechTree.syncTechTreeWithBuildings.
- */
-export function computeAvailableUnitTypes(buildings, factories, owner) {
-  const available = new Set()
-  const owned = [...buildings, ...factories].filter(b => b.owner === owner && b.health > 0)
-  const hasFactory = owned.some(b => b.type === 'vehicleFactory')
-  const hasRefinery = owned.some(b => b.type === 'oreRefinery')
-  const hasGasStation = owned.some(b => b.type === 'gasStation')
-  const hasHospital = owned.some(b => b.type === 'hospital')
-  const hasWorkshop = owned.some(b => b.type === 'vehicleWorkshop')
-  const hasAmmunitionFactory = owned.some(b => b.type === 'ammunitionFactory')
-  const hasHelipad = owned.some(b => b.type === 'helipad')
-  const hasRocketTurret = owned.some(b => b.type === 'rocketTurret')
-  const hasArtilleryTurret = owned.some(b => b.type === 'artilleryTurret')
-  const hasRadar = owned.some(b => b.type === 'radarStation')
-  const factoryCount = owned.filter(b => b.type === 'vehicleFactory').length
-  if (hasFactory) {
-    available.add('tank')
-    available.add('tank_v1')
-  }
-  if (hasFactory && hasRefinery) available.add('harvester')
-  if (hasFactory && hasGasStation) available.add('tankerTruck')
-  if (hasFactory && hasAmmunitionFactory) available.add('ammunitionTruck')
-  if (hasHospital) available.add('ambulance')
-  if (hasFactory && hasWorkshop) {
-    available.add('recoveryTank')
-    available.add('mineSweeper')
-  }
-  if (hasFactory && hasWorkshop && hasAmmunitionFactory) available.add('mineLayer')
-  if (hasHelipad) available.add('apache')
-  if (factoryCount >= 2) available.add('tank-v3')
-  if (hasRocketTurret) available.add('rocketTank')
-  if (hasRadar) {
-    available.add('tank-v2')
-    if (hasFactory && hasArtilleryTurret) available.add('howitzer')
-  }
-  return available
 }
 
 function toTilePosition(position) {
