@@ -10,6 +10,10 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - Track token consumption and spend per session and surface in the performance overlay.
 - Keep LLM input compact with summaries of recent events and decisions.
 
+## Follow-up Tracking
+- Ongoing token-reduction follow-up work is tracked in `specs/054-llm-token-reduction-tracker.md`.
+- Use that tracker as the canonical implementation board for payload-size reduction, prompt dedupe, session-reset policy, compact strategic digest work, and remaining verification.
+
 ## Settings & Persistence
 - Settings are persisted to localStorage under `rts_llm_settings`.
 - Per-provider settings:
