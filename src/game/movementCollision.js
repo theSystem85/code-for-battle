@@ -15,11 +15,7 @@ import {
   WRECK_COLLISION_MIN,
   WRECK_COLLISION_MAX,
   WRECK_COLLISION_RECOIL_FACTOR_UNIT,
-  WRECK_COLLISION_RECOIL_MAX_UNIT,
-  STATIC_COLLISION_BOUNCE_MULT,
-  STATIC_COLLISION_BOUNCE_OVERLAP,
-  STATIC_COLLISION_BOUNCE_MIN,
-  STATIC_COLLISION_BOUNCE_MAX
+  WRECK_COLLISION_RECOIL_MAX_UNIT
 } from '../config.js'
 import { getSpatialQuadtree } from './spatialQuadtree.js'
 import { detonateTankerTruck } from './tankerTruckUtils.js'
@@ -32,10 +28,6 @@ import {
 } from './movementConstants.js'
 import { isAirborneUnit, isGroundUnit, ownersAreEnemies } from './movementHelpers.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
-
-const STATIC_COLLISION_SEPARATION_SCALE = 0.3
-const STATIC_COLLISION_SEPARATION_MIN = 0.25
-const STATIC_COLLISION_SEPARATION_MAX = 6
 
 function isTileBlockedForCollision(mapGrid, tileX, tileY) {
   if (!mapGrid || tileY < 0 || tileY >= mapGrid.length) {
@@ -604,13 +596,6 @@ export function applyStaticObstacleCollisionResponse(
   const { normalX, normalY, overlap } = info
   const normalVel = movement.velocity.x * normalX + movement.velocity.y * normalY
 
-  if (normalVel > 0) {
-    const impulseBase = normalVel * STATIC_COLLISION_BOUNCE_MULT + overlap * STATIC_COLLISION_BOUNCE_OVERLAP
-    const impulse = Math.max(STATIC_COLLISION_BOUNCE_MIN, Math.min(STATIC_COLLISION_BOUNCE_MAX, impulseBase))
-    movement.velocity.x -= normalX * impulse
-    movement.velocity.y -= normalY * impulse
-  }
-
   if (movement.targetVelocity) {
     const targetNormal = movement.targetVelocity.x * normalX + movement.targetVelocity.y * normalY
     if (targetNormal > 0) {
@@ -619,11 +604,16 @@ export function applyStaticObstacleCollisionResponse(
     }
   }
 
+  if (normalVel > 0) {
+    movement.velocity.x -= normalX * Math.min(normalVel * COLLISION_NORMAL_DAMPING_MULT, COLLISION_NORMAL_DAMPING_MAX)
+    movement.velocity.y -= normalY * Math.min(normalVel * COLLISION_NORMAL_DAMPING_MULT, COLLISION_NORMAL_DAMPING_MAX)
+  }
+
   const separation = Math.min(
-    STATIC_COLLISION_SEPARATION_MAX,
+    COLLISION_SEPARATION_MAX,
     Math.max(
-      STATIC_COLLISION_SEPARATION_MIN,
-      overlap * STATIC_COLLISION_SEPARATION_SCALE + Math.max(0, normalVel) * 0.4
+      COLLISION_SEPARATION_MIN,
+      overlap * COLLISION_SEPARATION_SCALE
     )
   )
 
