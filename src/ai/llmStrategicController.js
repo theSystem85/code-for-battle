@@ -11,6 +11,7 @@ import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
 import { TILE_SIZE, TANK_FIRE_RANGE, PARTY_COLORS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
+import { pruneTransitionsUpTo } from '../ai-api/transitionCollector.js'
 
 const STRATEGIC_BOOTSTRAP_PROMPT = `You are the strategic commander for the enemy AI in a real-time strategy game.
 Plan economy, production, expansion, and attacks to defeat the human player. Keep actions practical, achievable, and within budget.
@@ -241,6 +242,7 @@ function ensureStrategicState(state) {
       plansByPlayer: {},
       summariesByPlayer: {},
       memoryByPlayer: {},
+      lastSuccessfulTickFrameByPlayer: {},
       bootstrappedByPlayer: {},
       responseIdsByPlayer: {},
       perPlayerTick: {},
@@ -387,6 +389,82 @@ function buildCommentaryRequestPayload(rawInput, summary, recentComments = []) {
       messages: buildCommentaryMessages(compactInput)
     }
   })
+}
+
+function buildStrategicRequestPayload(rawInput, summary, memory = null) {
+  const attemptConfigs = [
+    {
+      maxDetailedUnits: 14,
+      maxCombatGroups: 8,
+      maxSupportGroups: 6,
+      maxLogisticsGroups: 6,
+      maxAircraftGroups: 4,
+      maxEnemyGroups: 8,
+      maxEnemyPriorityUnits: 8,
+      maxEnemyPriorityBuildings: 8,
+      maxPriorityTargets: 12,
+      maxEnemyBaseCenters: 4,
+      maxVisibleOreRefineries: 8,
+      maxDeltas: 8
+    },
+    {
+      maxDetailedUnits: 10,
+      maxCombatGroups: 6,
+      maxSupportGroups: 4,
+      maxLogisticsGroups: 4,
+      maxAircraftGroups: 3,
+      maxEnemyGroups: 6,
+      maxEnemyPriorityUnits: 5,
+      maxEnemyPriorityBuildings: 5,
+      maxPriorityTargets: 8,
+      maxEnemyBaseCenters: 3,
+      maxVisibleOreRefineries: 6,
+      maxDeltas: 6
+    },
+    {
+      maxDetailedUnits: 6,
+      maxCombatGroups: 4,
+      maxSupportGroups: 3,
+      maxLogisticsGroups: 3,
+      maxAircraftGroups: 2,
+      maxEnemyGroups: 4,
+      maxEnemyPriorityUnits: 3,
+      maxEnemyPriorityBuildings: 3,
+      maxPriorityTargets: 5,
+      maxEnemyBaseCenters: 2,
+      maxVisibleOreRefineries: 4,
+      maxDeltas: 4
+    }
+  ]
+
+  return attemptConfigs.map(config => {
+    const compactInput = buildCompactStrategicInput(rawInput, config)
+    return {
+      compactInput,
+      messages: buildStrategicMessages({ input: compactInput, summary, memory })
+    }
+  })
+}
+
+function pruneConsumedTransitions(state, settings) {
+  const strategicState = ensureStrategicState(state)
+  const commentaryState = ensureCommentaryState(state)
+  const consumedTicks = []
+  const aiPlayers = getAiPlayers(state)
+
+  aiPlayers.forEach(playerId => {
+    const tick = strategicState.lastSuccessfulTickFrameByPlayer?.[playerId]
+    if (Number.isFinite(tick) && tick > 0) {
+      consumedTicks.push(tick)
+    }
+  })
+
+  if (settings.commentary.enabled && Number.isFinite(commentaryState.lastTickFrame) && commentaryState.lastTickFrame > 0) {
+    consumedTicks.push(commentaryState.lastTickFrame)
+  }
+
+  if (consumedTicks.length === 0) return
+  pruneTransitionsUpTo(Math.min(...consumedTicks))
 }
 
 function ensureStrategicContextStats(state, playerId) {
@@ -604,16 +682,17 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     humanPlayer: state.humanPlayer
   }
 
-  const lastTickFrame = state.llmStrategic.lastTickFrame || 0
+  const lastTickFrame = strategicState.lastSuccessfulTickFrameByPlayer[playerId] || 0
   const rawInput = exportGameTickInput(viewState, lastTickFrame, {
     playerId,
     verbosity: settings.strategic.verbosity,
-    maxActionsPerTick: settings.strategic.maxActions
+    maxActionsPerTick: settings.strategic.maxActions,
+    pruneTransitions: false
   })
 
   // Apply fog-of-war: only show entities visible to this AI player
   const input = filterInputByFogOfWar(rawInput, state, playerId)
-  const compactInput = buildCompactStrategicInput(input)
+  const payloadAttempts = buildStrategicRequestPayload(input, '', null)
 
   const previousSummary = strategicState.summariesByPlayer[playerId] || ''
   const summary = summarizeInput(input, previousSummary)
@@ -643,7 +722,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     providerId,
     previousResponseId: strategicState.responseIdsByPlayer[playerId] || null,
     hasBootstrapped,
-    messages: buildStrategicMessages({ input: compactInput, summary }),
+    messages: payloadAttempts[0].messages,
     summary,
     budget: budgetConfig,
     contextStats,
@@ -653,16 +732,33 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     resetContextStats(contextStats, requestConfig.resetReason)
     strategicState.responseIdsByPlayer[playerId] = null
   }
-  const messages = buildStrategicMessages({
-    input: compactInput,
-    summary: requestConfig.summary,
-    memory: requestConfig.memory
-  })
-  const estimatedPromptTokens = estimateRequestPromptTokens({
-    messages,
-    instructions: requestConfig.instructions,
-    system: requestConfig.system
-  })
+  const requestPayloadAttempts = buildStrategicRequestPayload(input, requestConfig.summary, requestConfig.memory)
+  let selectedPayload = null
+  let estimatedPromptTokens = 0
+
+  for (const attempt of requestPayloadAttempts) {
+    const attemptPromptTokens = estimateRequestPromptTokens({
+      messages: attempt.messages,
+      instructions: requestConfig.instructions,
+      system: requestConfig.system
+    })
+    if (attemptPromptTokens <= budgetConfig.maxEstimatedPromptTokens) {
+      selectedPayload = attempt
+      estimatedPromptTokens = attemptPromptTokens
+      break
+    }
+  }
+
+  if (!selectedPayload) {
+    const smallestAttempt = requestPayloadAttempts[requestPayloadAttempts.length - 1]
+    estimatedPromptTokens = estimateRequestPromptTokens({
+      messages: smallestAttempt.messages,
+      instructions: requestConfig.instructions,
+      system: requestConfig.system
+    })
+    selectedPayload = smallestAttempt
+  }
+
   if (estimatedPromptTokens > budgetConfig.maxEstimatedPromptTokens) {
     window.logger.warn(
       `[LLM] Skipping strategic request for ${playerId}: estimated prompt tokens ${estimatedPromptTokens} exceed budget ${budgetConfig.maxEstimatedPromptTokens}`
@@ -852,7 +948,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     const response = await requestLlmCompletion(providerId, {
       model,
       system: requestConfig.system,
-      messages,
+      messages: selectedPayload.messages,
       maxTokens: budgetConfig.maxOutputTokens,
       responseFormat,
       previousResponseId: requestConfig.previousResponseId,
@@ -899,6 +995,8 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     if (!hasBootstrapped) {
       strategicState.bootstrappedByPlayer[playerId] = true
     }
+    strategicState.lastSuccessfulTickFrameByPlayer[playerId] = state.frameCount || rawInput.tick || lastTickFrame
+    pruneConsumedTransitions(state, settings)
     if (providerId === 'openai' && response.responseId) {
       strategicState.responseIdsByPlayer[playerId] = response.responseId
       recordContextProgress(contextStats, estimatedPromptTokens, response.responseId, requestConfig.resetReason)
@@ -972,6 +1070,7 @@ async function runCommentaryTick(state, settings, _now) {
   const transitions = input.transitions?.events || []
   if (!hasInterestingCommentaryEvents(transitions)) {
     commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+    pruneConsumedTransitions(state, settings)
     window.logger.info('[LLM] Commentary skipped: no interesting events')
     return
   }
@@ -1045,6 +1144,7 @@ async function runCommentaryTick(state, settings, _now) {
       const parsed = JSON.parse(rawComment)
       if (parsed.skip) {
         commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+        pruneConsumedTransitions(state, settings)
         window.logger.info('[LLM] Commentary self-skipped via {skip:true}')
         return
       }
@@ -1065,6 +1165,7 @@ async function runCommentaryTick(state, settings, _now) {
       commentaryState.recentComments = commentaryState.recentComments.slice(-10)
     }
     commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+    pruneConsumedTransitions(state, settings)
 
     showNotification(rawComment, 5000)
     if (settings.commentary.ttsEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
@@ -1125,7 +1226,6 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
   const commentaryState = ensureCommentaryState(state)
 
   {
-    strategicState.lastTickFrame = state.frameCount || strategicState.lastTickFrame || 0
     const aiPlayers = getAiPlayers(state)
     aiPlayers.forEach(playerId => {
       const meta = strategicState.perPlayerTick[playerId] || { pending: false, lastTickAt: 0 }
@@ -1169,7 +1269,6 @@ export async function triggerStrategicNow(state = gameState) {
   const strategicState = ensureStrategicState(state)
 
   const now = performance.now()
-  strategicState.lastTickFrame = state.frameCount || 0
   const aiPlayers = getAiPlayers(state)
   try {
     await Promise.all(aiPlayers.map(playerId => {

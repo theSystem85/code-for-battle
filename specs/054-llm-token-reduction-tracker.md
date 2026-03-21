@@ -26,7 +26,7 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - [x] Shrink the bootstrap/follow-up prompts substantially.
 - [x] Remove duplicate system/instruction prompt content from requests.
 - [x] Lower strategy/commentary output token caps.
-- [ ] Add adaptive degradation when payload budgets are exceeded.
+- [x] Add adaptive degradation when payload budgets are exceeded.
 
 ## Progress Board
 
@@ -62,11 +62,12 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
   - Status: strategic requests now send compact map/base intel (map size, fog state, base centers, visible refineries) instead of any raw map tile dump.
 
 ### Phase 4 - Strategic delta redesign
-- [ ] Keep only strategy-relevant transitions.
+- [x] Keep only strategy-relevant transitions.
   - Keep: created/destroyed, construction started/completed/failed, large damage spikes, sighting changes, base-under-attack changes, economy threshold crossings, expansion changes, frontline shifts.
   - Drop or aggregate: noisy movement chatter and repetitive micro-events.
-- [ ] Send deltas only since the last successful LLM tick.
+- [x] Send deltas only since the last successful LLM tick.
   - Done when: retries or skipped ticks do not replay large stale event windows.
+  - Status: strategic requests now rank/filter transition highlights down to strategy-relevant events and track each AI player's last successful strategic tick so retries do not resend stale windows.
 
 ### Phase 5 - Prompt slimming
 - [x] Replace the huge bootstrap prompt with a concise invariant ruleset.
@@ -88,10 +89,11 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
   - Status: commentary now degrades its compact payload by trimming highlight/comment history before skipping, while still honoring the existing commentary-specific token cap.
 
 ### Phase 7 - Adaptive degradation and safeguards
-- [ ] Degrade oversized requests in a fixed order.
+- [x] Degrade oversized requests in a fixed order.
   - Suggested order: drop map-intel detail, collapse force groups harder, shorten delta window, trim stale enemy intel, reset provider session.
-- [ ] Skip the LLM tick if the request still exceeds budget after degradation.
+- [x] Skip the LLM tick if the request still exceeds budget after degradation.
   - Done when: the engine preserves the last valid plan rather than sending an oversized request.
+  - Status: strategic requests now try progressively smaller compact-input variants before skipping, matching the commentary path's degrade-then-skip behavior.
 
 ### Phase 8 - Protocol, tests, and docs
 - [x] Evolve the input contract explicitly rather than silently redefining the current snapshot.
@@ -121,7 +123,7 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - Added `src/ai/llmCommentaryDigest.js` and switched commentary requests to a compact `inputMode: compact-commentary-v1` payload with owner-aware highlights, anti-repeat memory, and commentary-specific degradation.
 - Commentary now uses the first active AI player as its perspective and filters for the actual transition types emitted by the collector (`damage`, `destroyed`, `building_completed`, etc.).
 - Added shared `src/ai-api/techTree.js` helpers so the compact strategic input can expose only the current live production options; the large static strategic catalogs are gone from the bootstrap prompt.
-- This branch still needs broader adaptive degradation; both strategic and commentary payloads are compact, and the strategic bootstrap prompt is substantially smaller, but oversized requests still mostly rely on skip behavior rather than staged degradation.
+- Strategic requests now degrade through smaller compact-input variants before skipping; remaining follow-up work is mainly the optional request-interception E2E coverage.
 
 ## Agent Notes
 - Treat this file as the canonical progress tracker for follow-up token-reduction work.

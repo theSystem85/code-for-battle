@@ -1,7 +1,7 @@
 {
   "name": "vite-starter",
   "private": true,
-  "version": "0.29.3",
+  "version": "0.29.4",
   "license": "MIT",
   "author": "patrick.beyer.software@gmail.com",
   "type": "module",

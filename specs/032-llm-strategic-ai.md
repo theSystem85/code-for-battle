@@ -61,6 +61,8 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - When a response chain resets, a compact carry-forward memory object is sent with trimmed prior context instead of relying on the provider to remember an unbounded history.
 - The compact strategic digest replaces raw unit/building arrays in the prompt with grouped force summaries, condensed owned-building state, visible enemy intel, priority target ids, compact map/base intel, recent delta highlights, and queue state.
 - The compact strategic digest also carries `productionOptions.availableBuildings` and `productionOptions.availableUnits`, derived from the live tech tree, so the strategic prompt no longer needs embedded static unit/building catalogs.
+- Strategic `recentDeltas` are now filtered to strategy-relevant events and are measured from each AI player's last successful strategic tick rather than from the scheduler frame.
+- Strategic requests now degrade through smaller compact digest variants before skipping on budget overflow, trimming detailed units, force groups, enemy intel, map intel, and delta highlights in a fixed order.
 
 ## Commentary Flow
 - If enabled, a lightweight prompt generates short taunts and announcements from the perspective of the first active AI player rather than the human player.

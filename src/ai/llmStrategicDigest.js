@@ -85,6 +85,21 @@ const BUILDING_ROLE_LABELS = {
   artilleryTurret: 'defense',
   concreteWall: 'wall'
 }
+const STRATEGIC_EVENT_TYPES = new Set([
+  'unit_created',
+  'building_started',
+  'building_completed',
+  'destroyed',
+  'unit_destroyed',
+  'building_destroyed',
+  'building_placed',
+  'building_captured',
+  'milestone',
+  'harvester_destroyed',
+  'construction_started',
+  'attack_started',
+  'damage'
+])
 
 function roundNumber(value, digits = 2) {
   if (!Number.isFinite(value)) return 0
@@ -198,15 +213,20 @@ function summarizeUnitGroups(units = []) {
     })
 }
 
-function summarizeFriendlyForces(units, playerId) {
+function limitGroups(groups, maxGroups) {
+  return groups.slice(0, Math.max(1, maxGroups))
+}
+
+function summarizeFriendlyForces(units, playerId, options = {}) {
   const ownedUnits = units.filter(unit => unit.owner === playerId)
   const combatUnits = ownedUnits.filter(unit => !AIR_UNIT_TYPES.has(unit.type) && !SUPPORT_UNIT_TYPES.has(unit.type) && !LOGISTICS_UNIT_TYPES.has(unit.type))
   const supportUnits = ownedUnits.filter(unit => SUPPORT_UNIT_TYPES.has(unit.type))
   const logisticsUnits = ownedUnits.filter(unit => LOGISTICS_UNIT_TYPES.has(unit.type))
   const aircraftUnits = ownedUnits.filter(unit => AIR_UNIT_TYPES.has(unit.type))
+  const maxDetailedUnits = Math.max(1, options.maxDetailedUnits || 14)
   const detailedUnits = ownedUnits
     .filter(unit => LOGISTICS_UNIT_TYPES.has(unit.type) || SUPPORT_UNIT_TYPES.has(unit.type) || AIR_UNIT_TYPES.has(unit.type) || buildHealthRatio(unit) < 0.55 || unit.orders?.targetId)
-    .slice(0, 14)
+    .slice(0, maxDetailedUnits)
     .map(compactUnit)
 
   return {
@@ -216,10 +236,10 @@ function summarizeFriendlyForces(units, playerId) {
       logistics: logisticsUnits.length,
       aircraft: aircraftUnits.length
     },
-    combat: summarizeUnitGroups(combatUnits),
-    support: summarizeUnitGroups(supportUnits),
-    logistics: summarizeUnitGroups(logisticsUnits),
-    aircraft: summarizeUnitGroups(aircraftUnits),
+    combat: limitGroups(summarizeUnitGroups(combatUnits), options.maxCombatGroups || 8),
+    support: limitGroups(summarizeUnitGroups(supportUnits), options.maxSupportGroups || 6),
+    logistics: limitGroups(summarizeUnitGroups(logisticsUnits), options.maxLogisticsGroups || 6),
+    aircraft: limitGroups(summarizeUnitGroups(aircraftUnits), options.maxAircraftGroups || 4),
     detailedUnits
   }
 }
@@ -241,7 +261,7 @@ function summarizeBaseStatus(buildings, playerId) {
   }
 }
 
-function summarizeEnemyIntel(units, buildings, playerId) {
+function summarizeEnemyIntel(units, buildings, playerId, options = {}) {
   const enemyUnits = units.filter(unit => unit.owner !== playerId)
   const enemyBuildings = buildings.filter(building => building.owner !== playerId)
   const unitCounts = {}
@@ -250,11 +270,11 @@ function summarizeEnemyIntel(units, buildings, playerId) {
   enemyUnits.forEach(unit => incrementCount(unitCounts, unit.type))
   enemyBuildings.forEach(building => incrementCount(buildingCounts, building.type))
 
-  const groupedUnits = summarizeUnitGroups(enemyUnits).slice(0, 8)
+  const groupedUnits = summarizeUnitGroups(enemyUnits).slice(0, Math.max(1, options.maxEnemyGroups || 8))
   const priorityTargets = [
     ...enemyUnits
       .filter(unit => PRIORITY_TARGET_UNIT_TYPES.has(unit.type) || buildHealthRatio(unit) < 0.55)
-      .slice(0, 8)
+      .slice(0, Math.max(1, options.maxEnemyPriorityUnits || 8))
       .map(unit => ({
         id: unit.id,
         type: unit.type,
@@ -264,7 +284,7 @@ function summarizeEnemyIntel(units, buildings, playerId) {
       })),
     ...enemyBuildings
       .filter(building => PRIORITY_TARGET_BUILDING_TYPES.has(building.type) || buildHealthRatio(building) < 0.55)
-      .slice(0, 8)
+      .slice(0, Math.max(1, options.maxEnemyPriorityBuildings || 8))
       .map(building => ({
         id: building.id,
         type: building.type,
@@ -272,7 +292,7 @@ function summarizeEnemyIntel(units, buildings, playerId) {
         tilePosition: buildTilePosition(building.tilePosition),
         healthRatio: buildHealthRatio(building)
       }))
-  ].slice(0, 12)
+  ].slice(0, Math.max(1, options.maxPriorityTargets || 12))
 
   const enemyBaseCenters = Object.entries(
     enemyBuildings.reduce((accumulator, building) => {
@@ -349,7 +369,7 @@ function summarizeProductionOptions(buildings, playerId) {
   }
 }
 
-function summarizeMapIntel(input, baseStatus, enemyIntel) {
+function summarizeMapIntel(input, baseStatus, enemyIntel, options = {}) {
   return {
     mapSize: {
       tilesX: Number(input.meta?.tilesX || 0),
@@ -357,9 +377,10 @@ function summarizeMapIntel(input, baseStatus, enemyIntel) {
     },
     fogOfWarEnabled: Boolean(input.meta?.fogOfWarEnabled),
     ownBaseCenter: summarizeCenter(baseStatus.productionAnchors.length > 0 ? baseStatus.productionAnchors : baseStatus.ownedBuildings),
-    enemyBaseCenters: enemyIntel.enemyBaseCenters,
+    enemyBaseCenters: enemyIntel.enemyBaseCenters.slice(0, Math.max(1, options.maxEnemyBaseCenters || 4)),
     visibleOreRefineries: [...baseStatus.ownedBuildings, ...enemyIntel.priorityTargets]
       .filter(entry => entry.type === 'oreRefinery')
+      .slice(0, Math.max(1, options.maxVisibleOreRefineries || 8))
       .map(entry => ({
         id: entry.id,
         owner: entry.owner || input.playerId,
@@ -388,24 +409,80 @@ function compactEvent(event, playerId) {
   return entry
 }
 
-function summarizeRecentDeltas(input) {
+function getDamageImpactScore(event) {
+  const amount = Number(event?.amount || event?.damage || 0)
+  const targetHealth = Number(event?.targetHealth || event?.remainingHealth || 0)
+
+  if (amount >= 250) return 3
+  if (amount >= 100) return 2
+  if (amount >= 40) return 1
+  if (targetHealth > 0 && targetHealth <= 150) return 1
+  return 0
+}
+
+function isStrategicTransitionRelevant(event) {
+  if (!event || !STRATEGIC_EVENT_TYPES.has(event.type)) return false
+  if (event.type !== 'damage') return true
+  return getDamageImpactScore(event) > 0
+}
+
+function scoreStrategicTransition(event) {
+  if (!event) return 0
+
+  switch (event.type) {
+    case 'destroyed':
+    case 'unit_destroyed':
+    case 'building_destroyed':
+      return 9
+    case 'building_completed':
+    case 'building_captured':
+      return 8
+    case 'building_started':
+    case 'building_placed':
+    case 'construction_started':
+      return 7
+    case 'milestone':
+    case 'harvester_destroyed':
+      return 6
+    case 'attack_started':
+      return 5
+    case 'unit_created':
+      return PRIORITY_TARGET_UNIT_TYPES.has(event.unitType) ? 5 : 4
+    case 'damage':
+      return 2 + getDamageImpactScore(event)
+    default:
+      return 1
+  }
+}
+
+function summarizeRecentDeltas(input, options = {}) {
   const events = Array.isArray(input.transitions?.events) ? input.transitions.events : []
   const countsByType = {}
-  events.forEach(event => incrementCount(countsByType, event.type))
+  const relevantEvents = events.filter(isStrategicTransitionRelevant)
+  relevantEvents.forEach(event => incrementCount(countsByType, event.type))
+  const highlights = relevantEvents
+    .map((event, index) => ({ event, index, score: scoreStrategicTransition(event) }))
+    .sort((left, right) => {
+      if (right.score !== left.score) return right.score - left.score
+      return right.index - left.index
+    })
+    .slice(0, Math.max(1, options.maxDeltas || 8))
+    .sort((left, right) => left.index - right.index)
+    .map(({ event }) => compactEvent(event, input.playerId))
 
   return {
     summary: input.transitions?.summary || { totalDamage: 0, unitsDestroyed: 0, buildingsDestroyed: 0 },
     countsByType: sortEntriesByCount(countsByType),
-    highlights: events.slice(-8).map(event => compactEvent(event, input.playerId))
+    highlights
   }
 }
 
-export function buildCompactStrategicInput(input) {
+export function buildCompactStrategicInput(input, options = {}) {
   const units = Array.isArray(input.snapshot?.units) ? input.snapshot.units : []
   const buildings = Array.isArray(input.snapshot?.buildings) ? input.snapshot.buildings : []
   const baseStatus = summarizeBaseStatus(buildings, input.playerId)
-  const forceGroups = summarizeFriendlyForces(units, input.playerId)
-  const enemyIntel = summarizeEnemyIntel(units, buildings, input.playerId)
+  const forceGroups = summarizeFriendlyForces(units, input.playerId, options)
+  const enemyIntel = summarizeEnemyIntel(units, buildings, input.playerId, options)
 
   return {
     protocolVersion: input.protocolVersion,
@@ -418,12 +495,12 @@ export function buildCompactStrategicInput(input) {
     baseStatus,
     forceGroups,
     knownEnemyIntel: enemyIntel,
-    mapIntel: summarizeMapIntel(input, baseStatus, enemyIntel),
+    mapIntel: summarizeMapIntel(input, baseStatus, enemyIntel, options),
     productionOptions: summarizeProductionOptions(buildings, input.playerId),
     queueState: {
       llmQueue: input.snapshot?.llmQueue || { buildings: [], units: [] }
     },
-    recentDeltas: summarizeRecentDeltas(input),
+    recentDeltas: summarizeRecentDeltas(input, options),
     constraints: input.constraints
   }
 }

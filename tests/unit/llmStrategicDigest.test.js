@@ -267,4 +267,104 @@ describe('llmStrategicDigest', () => {
 
     expect(digestSize).toBeLessThan(rawSize)
   })
+
+  it('keeps only strategically relevant delta highlights', () => {
+    const rawInput = {
+      protocolVersion: '1.0',
+      matchId: 'local',
+      playerId: 'player2',
+      tick: 300,
+      sinceTick: 280,
+      meta: { tilesX: 100, tilesY: 100, fogOfWarEnabled: true },
+      snapshot: {
+        resources: { money: 3000, power: { supply: 40, production: 70, consumption: 30 } },
+        units: [],
+        buildings: [],
+        llmQueue: { buildings: [], units: [] }
+      },
+      transitions: {
+        summary: { totalDamage: 420, unitsDestroyed: 1, buildingsDestroyed: 1 },
+        events: [
+          { type: 'damage', tick: 281, amount: 10, targetId: 'scout-1' },
+          { type: 'damage', tick: 282, amount: 220, targetId: 'enemy-yard' },
+          { type: 'unit_created', tick: 283, unitId: 'tank-9', unitType: 'tank_v1', owner: 'player2' },
+          { type: 'destroyed', tick: 284, victimId: 'enemy-refinery', victimKind: 'building', owner: 'player1' }
+        ]
+      },
+      constraints: { maxActionsPerTick: 50, allowQueuedCommands: true, maxQueuedCommands: 20 }
+    }
+
+    const digest = buildCompactStrategicInput(rawInput)
+
+    expect(digest.recentDeltas.countsByType).toEqual({ damage: 1, destroyed: 1, unit_created: 1 })
+    expect(digest.recentDeltas.highlights).toHaveLength(3)
+    expect(digest.recentDeltas.highlights[0]).toMatchObject({ type: 'damage', amount: 220 })
+    expect(digest.recentDeltas.highlights[2]).toMatchObject({ type: 'destroyed', victimId: 'enemy-refinery' })
+  })
+
+  it('supports a smaller degraded strategic payload shape', () => {
+    const rawInput = {
+      protocolVersion: '1.0',
+      matchId: 'local',
+      playerId: 'player2',
+      tick: 400,
+      sinceTick: 360,
+      meta: { tilesX: 100, tilesY: 100, fogOfWarEnabled: true },
+      snapshot: {
+        resources: { money: 4200, power: { supply: 40, production: 70, consumption: 30 } },
+        units: Array.from({ length: 24 }, (_, index) => ({
+          id: `unit-${index}`,
+          type: index % 4 === 0 ? 'harvester' : 'tank_v1',
+          owner: index % 5 === 0 ? 'player1' : 'player2',
+          health: 100,
+          maxHealth: 100,
+          tilePosition: { x: index, y: index + 1, space: 'tile' },
+          orders: index % 2 === 0 ? { targetId: 'enemy-yard' } : undefined
+        })),
+        buildings: Array.from({ length: 10 }, (_, index) => ({
+          id: `building-${index}`,
+          type: index % 2 === 0 ? 'vehicleFactory' : 'oreRefinery',
+          owner: index % 3 === 0 ? 'player1' : 'player2',
+          health: 1000,
+          maxHealth: 1000,
+          tilePosition: { x: 10 + index, y: 12 + index, space: 'tile' },
+          constructionFinished: true
+        })),
+        llmQueue: { buildings: [], units: [] }
+      },
+      transitions: {
+        summary: { totalDamage: 300, unitsDestroyed: 2, buildingsDestroyed: 0 },
+        events: Array.from({ length: 12 }, (_, index) => ({
+          type: index % 2 === 0 ? 'destroyed' : 'damage',
+          tick: 370 + index,
+          victimId: index % 2 === 0 ? `victim-${index}` : undefined,
+          victimKind: index % 2 === 0 ? 'unit' : undefined,
+          amount: index % 2 === 1 ? 140 : undefined,
+          targetId: 'enemy-yard'
+        }))
+      },
+      constraints: { maxActionsPerTick: 50, allowQueuedCommands: true, maxQueuedCommands: 20 }
+    }
+
+    const fullDigest = buildCompactStrategicInput(rawInput)
+    const degradedDigest = buildCompactStrategicInput(rawInput, {
+      maxDetailedUnits: 4,
+      maxCombatGroups: 2,
+      maxSupportGroups: 1,
+      maxLogisticsGroups: 1,
+      maxAircraftGroups: 1,
+      maxEnemyGroups: 2,
+      maxEnemyPriorityUnits: 2,
+      maxEnemyPriorityBuildings: 2,
+      maxPriorityTargets: 3,
+      maxEnemyBaseCenters: 1,
+      maxVisibleOreRefineries: 2,
+      maxDeltas: 3
+    })
+
+    expect(degradedDigest.forceGroups.detailedUnits.length).toBeLessThanOrEqual(4)
+    expect(degradedDigest.knownEnemyIntel.visibleForceGroups.length).toBeLessThanOrEqual(2)
+    expect(degradedDigest.recentDeltas.highlights.length).toBeLessThanOrEqual(3)
+    expect(JSON.stringify(degradedDigest).length).toBeLessThan(JSON.stringify(fullDigest).length)
+  })
 })
