@@ -48,7 +48,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 
 ## Strategic Control Flow
 - Every N seconds (default 30s) the strategic controller:
-  - Exports `GameTickInput` for each AI player.
+  - Exports `GameTickInput` for each AI player and derives a compact `inputMode: compact-strategic-v1` strategic digest from it.
   - Adds a compact summary of recent state and transitions.
   - On the first prompt per AI player, sends a full system brief with game overview + control schema.
   - On subsequent OpenAI prompts, reuses session context without resending the same instruction prompt on every tick; fresh instructions are resent only when bootstrapping or after an explicit response-chain reset.
@@ -59,6 +59,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - OpenAI uses `/v1/responses` with `previous_response_id` and a simplified `json_schema` (protocolVersion, tick, actions, intent, confidence, notes all required) to satisfy provider-side strict validation; request shaping now avoids duplicating the same system/instruction prompt inside both `input` and `instructions`.
 - Strategic requests now track estimated prompt size, log request metrics, apply a capped output-token budget, and reset the response chain when request-count or estimated-context budgets are exceeded.
 - When a response chain resets, a compact carry-forward memory object is sent with trimmed prior context instead of relying on the provider to remember an unbounded history.
+- The compact strategic digest replaces raw unit/building arrays in the prompt with grouped force summaries, condensed owned-building state, visible enemy intel, priority target ids, compact map/base intel, recent delta highlights, and queue state.
 
 ## Commentary Flow
 - If enabled, a lightweight prompt generates short taunts and announcements.
@@ -69,6 +70,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - Commentary prompt enforces strict owner-aware narration: the AI must treat `input.playerId` as its own side and use each entity's `owner` field to attribute losses/kills correctly across all parties.
 - All commentary notifications are recorded in a persistent notification history log (up to 100 entries) accessible via a bell icon in the top-right corner.
 - Commentary requests now use a much smaller output-token cap than strategic planning and participate in the same response-chain reset policy for OpenAI-backed sessions.
+- Commentary still uses the generic snapshot path and remains the next major compaction target.
 
 ## Fog-of-War Awareness
 - The LLM strategic AI only receives information about enemy units and buildings that are visible to its own forces.

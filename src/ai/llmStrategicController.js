@@ -4,6 +4,7 @@ import { getLlmSettings, updateLlmSettings, getProviderSettings } from './llmSet
 import { fetchCostMap, getModelCostInfo, requestLlmCompletion, QuotaExceededError, AuthenticationError, ApiParameterError } from './llmProviders.js'
 import { recordLlmUsage } from './llmUsage.js'
 import { LLM_REQUEST_BUDGETS, estimateRequestPromptTokens, shouldResetResponseChain, buildCarryForwardMemory, trimRollingSummary } from './llmRequestBudget.js'
+import { buildCompactStrategicInput } from './llmStrategicDigest.js'
 import { showNotification } from '../ui/notifications.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
@@ -160,29 +161,34 @@ ${UNIT_CATALOG_TEXT}
 BUILDING CATALOG (all constructable buildings with stats):
 ${BUILDING_CATALOG_TEXT}
 
-IMPORTANT OWNERSHIP: Every unit and building in the snapshot has an "owner" field. YOUR units/buildings have owner === your playerId. The HUMAN PLAYER's entities have a different owner. Always check the owner field to distinguish friend from foe.
+IMPORTANT OWNERSHIP: Every unit and building in the compact strategic input has an "owner" field when ownership matters. YOUR units/buildings have owner === your playerId. The HUMAN PLAYER's entities have a different owner. Always check the owner field to distinguish friend from foe.
 
 INPUT FORMAT (you will receive this once per tick in a user message as JSON):
 {
   "summary": "short rolling summary of recent ticks",
-  "input": GameTickInput
+  "input": CompactStrategicInput,
+  "memory": { ...optional carry-forward memory after session resets }
 }
 
-GameTickInput key fields:
+CompactStrategicInput key fields:
 - protocolVersion: string (must match in output)
+- inputMode: compact-strategic-v1
 - tick: number
 - playerId: string (your controlled player)
-- snapshot.resources.money: available budget
-- snapshot.units: array of units with id, type, owner, health, position, status (ammo/fuel)
-- snapshot.buildings: array of buildings with id, type, owner, health, tilePosition
-- snapshot.buildQueues: production queues (current plan in progress)
-- snapshot.llmQueue: YOUR current production queue with status tracking:
+- economy.money and economy.power: available budget and power situation
+- baseStatus.ownedBuildings: your building ids, types, positions, rally points, and health ratios
+- baseStatus.productionAnchors / defenses / criticalBuildings: condensed strategic building views
+- forceGroups.combat / support / logistics / aircraft: grouped friendly units by type with full unitIds for command selection
+- forceGroups.detailedUnits: extra per-unit detail for harvesters, support, aircraft, damaged units, and units already engaged in combat
+- knownEnemyIntel.visibleForceGroups / priorityTargets: visible enemy groups and the most important enemy ids to attack
+- mapIntel: compact map and base-location context instead of raw map tiles
+- queueState.llmQueue: YOUR current production queue with status tracking:
   - buildings: array of {buildingType, status} where status is "queued"|"building"|"completed"|"failed"
   - units: array of {unitType, status} where status is "queued"|"building"|"completed"|"failed"
-  IMPORTANT: Check snapshot.llmQueue BEFORE issuing build_place or build_queue actions.
+  IMPORTANT: Check queueState.llmQueue BEFORE issuing build_place or build_queue actions.
   Do NOT re-issue commands for items already in the queue (queued/building/completed).
   Only add NEW items that are not already tracked.
-- transitions.events: recent changes since last tick
+- recentDeltas: compact transition summary and highlights since the last tick
 - constraints: maxActionsPerTick, allowQueuedCommands, maxQueuedCommands
 
 OUTPUT FORMAT (return ONLY JSON, no markdown) - GameTickOutput:
@@ -725,6 +731,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
 
   // Apply fog-of-war: only show entities visible to this AI player
   const input = filterInputByFogOfWar(rawInput, state, playerId)
+  const compactInput = buildCompactStrategicInput(input)
 
   const previousSummary = strategicState.summariesByPlayer[playerId] || ''
   const summary = summarizeInput(input, previousSummary)
@@ -754,7 +761,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     providerId,
     previousResponseId: strategicState.responseIdsByPlayer[playerId] || null,
     hasBootstrapped,
-    messages: buildStrategicMessages({ input, summary }),
+    messages: buildStrategicMessages({ input: compactInput, summary }),
     summary,
     budget: budgetConfig,
     contextStats,
@@ -765,7 +772,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     strategicState.responseIdsByPlayer[playerId] = null
   }
   const messages = buildStrategicMessages({
-    input,
+    input: compactInput,
     summary: requestConfig.summary,
     memory: requestConfig.memory
   })

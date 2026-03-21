@@ -39,6 +39,8 @@ Event collection is recorded in the following systems:
 
 ## Engine Integration
 - `exportGameTickInput(state, sinceTick, options)` builds an input payload from game state plus transition events.
+- Strategic LLM requests no longer embed the raw `GameTickInput` snapshot directly. They derive a compact `inputMode: compact-strategic-v1` digest for prompting that keeps the output contract unchanged while reducing prompt size.
+- The compact strategic digest contains grouped friendly forces, condensed owned-building state, visible enemy force summaries, priority target ids, compact map/base intel, LLM queue state, recent delta highlights, and action constraints.
 - `applyGameTickOutput(state, output)` validates and applies actions, returning accepted/rejected action lists.
 - Invalid actions are rejected with structured reason codes (e.g. `INVALID_SCHEMA`, `UNKNOWN_ENTITY`).
 - OpenAI calls use the `/v1/responses` endpoint with a lightweight `GameTickOutput` schema (protocolVersion, tick, actions, intent, confidence, notes all required) to satisfy provider strict `json_schema` validation; full protocol validation still happens locally.

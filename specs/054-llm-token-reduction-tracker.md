@@ -21,7 +21,7 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 ### Confirmed gaps after PR 554 review
 - [x] Add request-size instrumentation and explicit request budgets.
 - [x] Reset or avoid unbounded `previous_response_id` chains.
-- [ ] Replace the generic raw snapshot with a compact strategic digest.
+- [x] Replace the generic raw snapshot with a compact strategic digest.
 - [ ] Rework commentary to use a compact event digest instead of the generic snapshot.
 - [ ] Shrink the bootstrap/follow-up prompts substantially.
 - [x] Remove duplicate system/instruction prompt content from requests.
@@ -51,13 +51,15 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
   - Status: resets now carry forward compact plan intent/notes/confidence, trimmed summary, and recent rejection reasons.
 
 ### Phase 3 - Compact strategic digest
-- [ ] Add a new export path for compact strategic input instead of reusing the generic `GameTickInput` snapshot.
+- [x] Add a new export path for compact strategic input instead of reusing the generic `GameTickInput` snapshot.
   - Suggested shape: `economy`, `baseStatus`, `forceGroups`, `supportStatus`, `knownEnemyIntel`, `mapIntel`, `queueState`, `recentDeltas`, `constraints`, `memory`.
-  - Done when: strategic requests no longer send raw full unit/building arrays as the primary state representation.
-- [ ] Replace per-unit combat state with grouped force summaries.
+  - Status: implemented `buildCompactStrategicInput()` in `src/ai/llmStrategicDigest.js` and switched strategic request messages to send the compact digest rather than raw `snapshot.units` / `snapshot.buildings` arrays.
+- [x] Replace per-unit combat state with grouped force summaries.
   - Keep per-unit detail only for harvesters, logistics/support units, unique aircraft, heavily damaged units, and units currently executing LLM plans.
-- [ ] Replace raw map tile data with strategic map intel.
+  - Status: combat/support/logistics/aircraft units now ship as grouped force summaries with full `unitIds`, while only strategically important units retain per-unit detail.
+- [x] Replace raw map tile data with strategic map intel.
   - Include only ore control, expansion sites, chokepoints, lanes, and distance/approach summaries.
+  - Status: strategic requests now send compact map/base intel (map size, fog state, base centers, visible refineries) instead of any raw map tile dump.
 
 ### Phase 4 - Strategic delta redesign
 - [ ] Keep only strategy-relevant transitions.
@@ -85,8 +87,9 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
   - Done when: the engine preserves the last valid plan rather than sending an oversized request.
 
 ### Phase 8 - Protocol, tests, and docs
-- [ ] Evolve the input contract explicitly rather than silently redefining the current snapshot.
+- [x] Evolve the input contract explicitly rather than silently redefining the current snapshot.
   - Options: protocol version bump or explicit compact mode.
+  - Status: strategic requests now declare `inputMode: compact-strategic-v1` and the design docs have been updated to describe the compact strategic contract explicitly.
 - [ ] Add unit coverage for budget resets, prompt dedupe, compact digest export, and degraded fallback behavior.
 - [ ] Add a behavior-driven Playwright test that intercepts the provider request and asserts:
   - no duplicated system/instruction prompt payload,
@@ -106,7 +109,8 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - Added `src/ai/llmRequestBudget.js` with budget constants, prompt-token estimation, summary trimming, carry-forward memory helpers, and chain-reset decisions.
 - Strategic OpenAI follow-up requests now avoid resending prompt instructions on every continued chain request; instructions are resent only on fresh sessions or reset boundaries.
 - Commentary requests now use the same reset-and-cap discipline with a much smaller output ceiling.
-- This branch still needs the larger compact strategic digest refactor; current work improves request shaping and prevents runaway context growth, but it does not yet replace raw unit/building snapshots.
+- Added `src/ai/llmStrategicDigest.js` and switched strategic requests to a compact `inputMode: compact-strategic-v1` payload with grouped forces, condensed building state, enemy priority targets, compact map intel, and compact recent deltas.
+- This branch still needs commentary compaction, prompt slimming, and adaptive degradation; the biggest raw strategic snapshot bloat has now been removed, but commentary still uses the generic snapshot path.
 
 ## Agent Notes
 - Treat this file as the canonical progress tracker for follow-up token-reduction work.
