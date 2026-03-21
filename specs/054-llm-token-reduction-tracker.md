@@ -106,7 +106,8 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
   - no raw full-map dump,
   - compact strategic sections only,
   - serialized payload stays under the chosen ceiling.
-- [ ] Update `specs/031-llm-control-api.md` and `specs/032-llm-strategic-ai.md` after the compact input contract is finalized.
+- [x] Update `specs/031-llm-control-api.md` and `specs/032-llm-strategic-ai.md` after the compact input contract is finalized.
+  - Status: both specs now document the compact strategic/commentary contracts, strategic delta filtering, degrade-then-skip behavior, and the economy-first enforcement layer.
 
 ## Immediate Next Slice
 - [x] Remove prompt duplication from the strategic and commentary request path.
@@ -124,6 +125,7 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - Commentary now uses the first active AI player as its perspective and filters for the actual transition types emitted by the collector (`damage`, `destroyed`, `building_completed`, etc.).
 - Added shared `src/ai-api/techTree.js` helpers so the compact strategic input can expose only the current live production options; the large static strategic catalogs are gone from the bootstrap prompt.
 - Strategic requests now degrade through smaller compact-input variants before skipping; remaining follow-up work is mainly the optional request-interception E2E coverage.
+- Added `src/ai/llmStrategicPolicy.js` so unstable AI economies keep the next required powerPlant -> oreRefinery -> vehicleFactory -> harvester step ahead of non-economy spending even when the model drifts.
 
 ## Agent Notes
 - Treat this file as the canonical progress tracker for follow-up token-reduction work.

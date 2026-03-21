@@ -6,6 +6,7 @@ import { recordLlmUsage } from './llmUsage.js'
 import { LLM_REQUEST_BUDGETS, estimateRequestPromptTokens, shouldResetResponseChain, buildCarryForwardMemory, trimRollingSummary } from './llmRequestBudget.js'
 import { buildCompactStrategicInput } from './llmStrategicDigest.js'
 import { buildCompactCommentaryInput, hasInterestingCommentaryEvents } from './llmCommentaryDigest.js'
+import { prioritizeEconomyActions } from './llmStrategicPolicy.js'
 import { showNotification } from '../ui/notifications.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
@@ -28,6 +29,7 @@ ECONOMY PRIORITY
 - Money is the ONLY resource. You start with a limited budget that WILL run out if you don't establish income.
 - Income comes from harvesters mining ore and delivering it to an ore refinery. Without at least 1 refinery AND 1 harvester, you have ZERO income.
 - ALWAYS prioritize building a power plant first, then an ore refinery, then a vehicle factory, then produce a harvester. This is the minimum viable economy.
+- HARD GATE: until you own or already have queued/building/completed a power plant, ore refinery, vehicle factory, and at least 1 harvester, do not spend money on non-economy buildings or non-harvester unit production.
 - Only after you have a working economy (harvester actively mining) should you invest in military.
 - Monitor your money closely. If money is below 2000 and you have no harvester or refinery, you are in an economic emergency — sell non-essential buildings to fund recovery.
 - A tank rush without economy will fail once your starting money runs out.
@@ -158,6 +160,7 @@ const STRATEGIC_FOLLOWUP_PROMPT = `You are the same enemy strategic AI continuin
 Return ONLY valid JSON matching GameTickOutput. No markdown or extra text.
 Follow the same rules as the initial brief.
 Use input.productionOptions and queueState.llmQueue instead of assuming all unit or building types are currently legal.
+If the minimum economy is not established yet, your first spending action must continue the powerPlant -> oreRefinery -> vehicleFactory -> harvester chain.
 Always include intent, confidence (0-1), and notes fields.`
 
 const DEFAULT_COMMENTARY_PROMPT = `You are a mean RTS opponent commentating on the battle while actively controlling one AI party.
@@ -966,7 +969,9 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
       return
     }
 
-    const result = applyGameTickOutput(state, parsed, {
+    const prioritizedOutput = prioritizeEconomyActions(parsed, selectedPayload.compactInput)
+
+    const result = applyGameTickOutput(state, prioritizedOutput, {
       playerId,
       money: budget,
       onMoneyChange: (nextBudget) => {
@@ -991,7 +996,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     strategicState.memoryByPlayer[playerId] = {
       recentRejects: result.rejected.map(entry => ({ type: entry.type, reason: entry.reason }))
     }
-    updatePlanCache(state, playerId, parsed)
+    updatePlanCache(state, playerId, prioritizedOutput)
     if (!hasBootstrapped) {
       strategicState.bootstrappedByPlayer[playerId] = true
     }
@@ -1002,9 +1007,9 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
       recordContextProgress(contextStats, estimatedPromptTokens, response.responseId, requestConfig.resetReason)
     }
 
-    if (parsed.notes) {
+    if (prioritizedOutput.notes) {
       const llmColor = PARTY_COLORS[playerId] || '#FF0000'
-      showNotification(parsed.notes, 4000, { llmPlayerId: playerId, llmColor })
+      showNotification(prioritizedOutput.notes, 4000, { llmPlayerId: playerId, llmColor })
     }
   } catch (err) {
     // Only show error messages if API key is configured
