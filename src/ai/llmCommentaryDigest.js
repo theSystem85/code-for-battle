@@ -127,6 +127,7 @@ function compactCommentaryEvent(event, playerId, entityLookup) {
 
 export function buildCompactCommentaryInput(input, options = {}) {
   const playerId = input.playerId
+  const humanPlayerId = options.humanPlayerId || null
   const summary = options.summary || ''
   const maxHighlights = Math.max(1, options.maxHighlights || 6)
   const maxRecentComments = Math.max(0, options.maxRecentComments || 3)
@@ -153,6 +154,8 @@ export function buildCompactCommentaryInput(input, options = {}) {
     shortSummary: trimSummary(summary, 1),
     ownerContext: {
       selfPlayerId: playerId,
+      humanPlayerId,
+      hostPerspectiveSide: humanPlayerId && humanPlayerId !== playerId ? 'enemy' : 'self',
       opposingOwners,
       visibleCounts: {
         selfUnits: selfUnits.length,

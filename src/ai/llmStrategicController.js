@@ -30,6 +30,8 @@ ECONOMY PRIORITY
 - Income comes from harvesters mining ore and delivering it to an ore refinery. Without at least 1 refinery AND 1 harvester, you have ZERO income.
 - ALWAYS prioritize building a power plant first, then an ore refinery, then a vehicle factory, then produce a harvester. This is the minimum viable economy.
 - HARD GATE: until you own or already have queued/building/completed a power plant, ore refinery, vehicle factory, and at least 1 harvester, do not spend money on non-economy buildings or non-harvester unit production.
+- Plan several steps ahead on every tick. If the current queues are short, fill the remaining affordable action slots with a future base build stack and follow-up production so the local AI can keep working until your next tick.
+- Think in terms of a whole build backlog, not one isolated action. Queue the next legal economy, tech, defense, and production steps in priority order whenever budget and action limits allow.
 - Only after you have a working economy (harvester actively mining) should you invest in military.
 - Monitor your money closely. If money is below 2000 and you have no harvester or refinery, you are in an economic emergency — sell non-essential buildings to fund recovery.
 - A tank rush without economy will fail once your starting money runs out.
@@ -70,6 +72,7 @@ CompactStrategicInput key fields:
   Only add NEW items that are not already tracked.
 - recentDeltas: compact transition summary and highlights since the last tick
 - constraints: maxActionsPerTick, allowQueuedCommands, maxQueuedCommands
+- commentary: optional compact commentary input when commentary and strategy are combined into one request
 
 OUTPUT FORMAT (return ONLY JSON, no markdown) - GameTickOutput:
 {
@@ -127,10 +130,18 @@ OUTPUT FORMAT (return ONLY JSON, no markdown) - GameTickOutput:
   ],
   "notes": "optional short taunt or plan summary for the player",
   "intent": "short label of your current plan",
-  "confidence": 0.5
+  "confidence": 0.5,
+  "commentary": null | {
+    "skip": true,
+    "text": null
+  } | {
+    "skip": false,
+    "text": "short taunt for the host player"
+  }
 }
 
 Always include intent, confidence (0.0-1.0), and notes fields even if the value is minimal.
+Always include commentary. Return commentary as null when no commentary input was provided. When commentary input is provided and there is nothing worth saying, return {"skip":true,"text":null}.
 
 TACTICAL GUIDELINES
 - Build power first, then refinery, then factory, then harvester unless input.productionOptions makes one of those temporarily unavailable.
@@ -144,6 +155,7 @@ TACTICAL GUIDELINES
 - Use the "move" command to position units, then "attack" to engage specific targets.
 - Protect your harvesters — they are your economy.
 - When issuing "attack" commands, always provide BOTH targetPos AND targetId for the specific enemy unit or building you want destroyed. Units with just a move target will walk but not fire!
+- If commentary input is provided, the commentary must talk about the HOST PLAYER'S situation using "you"/"your" and how you will defeat them. Do not narrate your own setbacks except as setup for a threat.
 
 RULES
 - Return valid JSON only. No markdown, no extra text.
@@ -161,16 +173,18 @@ Return ONLY valid JSON matching GameTickOutput. No markdown or extra text.
 Follow the same rules as the initial brief.
 Use input.productionOptions and queueState.llmQueue instead of assuming all unit or building types are currently legal.
 If the minimum economy is not established yet, your first spending action must continue the powerPlant -> oreRefinery -> vehicleFactory -> harvester chain.
+Plan ahead with a multi-step build and production backlog whenever the queues are short so the local AI stays busy between strategic ticks.
+If commentary input is present, always return a host-focused commentary object and talk about what is happening to the host player and how you will beat them.
 Always include intent, confidence (0-1), and notes fields.`
 
-const DEFAULT_COMMENTARY_PROMPT = `You are a mean RTS opponent commentating on the battle while actively controlling one AI party.
-Your controlled side is input.playerId in the compact commentary input. Treat that side as "my" side in commentary.
-Use input.ownerContext and each highlight.side value to identify who suffered or caused the event:
-- side === "self" means YOUR side.
-- side === "enemy" means an opposing side.
-- If multiple opposing owners exist, refer to them using input.ownerContext.opposingOwners.
-Never confuse sides: do not describe your own losses as the player's losses, and do not claim enemy losses as your own.
-Taunt the player about notable events: units destroyed, buildings lost, economy problems, or your upcoming attacks.
+const DEFAULT_COMMENTARY_PROMPT = `You are a mean RTS opponent taunting the host player during the battle.
+The host player is input.ownerContext.humanPlayerId. Focus commentary on the host player's situation and how you are going to defeat them.
+Use input.ownerContext.hostPerspectiveSide and each highlight.side value to identify what happened to the host:
+- In the usual AI-vs-host case, side === "enemy" is the host player's side.
+- side === "self" is your own AI side.
+- If multiple opposing owners exist, refer to them using input.ownerContext.opposingOwners, but keep the taunt centered on the host player.
+Do not narrate your own losses as the main subject. Mention your own side only to threaten, pressure, or explain how you will punish the host player.
+Taunt the host player about notable events: their units destroyed, their buildings lost, their economy problems, their exposed base, or your upcoming attacks.
 Only comment when something interesting happened (battles, kills, expansions, milestones).
 If nothing notable occurred since your last comment, respond with exactly: {"skip":true}
 NEVER repeat the same taunt or observation twice. Vary your vocabulary, tone, and targets.
@@ -351,13 +365,14 @@ function applyUsageCost(providerId, model, usage, costMap, requestType = 'generi
   )
 }
 
-function buildStrategicMessages({ input, summary, memory = null }) {
+function buildStrategicMessages({ input, summary, memory = null, commentary = null }) {
   return [
     {
       role: 'user',
       content: JSON.stringify({
         summary,
         input,
+        commentary: commentary || undefined,
         memory: memory || undefined
       })
     }
@@ -373,7 +388,7 @@ function buildCommentaryMessages(input) {
   ]
 }
 
-function buildCommentaryRequestPayload(rawInput, summary, recentComments = []) {
+function buildCommentaryRequestPayload(rawInput, summary, recentComments = [], humanPlayerId = null) {
   const attemptConfigs = [
     { maxHighlights: 6, maxRecentComments: 3 },
     { maxHighlights: 4, maxRecentComments: 2 },
@@ -384,6 +399,7 @@ function buildCommentaryRequestPayload(rawInput, summary, recentComments = []) {
     const compactInput = buildCompactCommentaryInput(rawInput, {
       summary,
       recentComments,
+      humanPlayerId,
       ...config
     })
 
@@ -394,7 +410,7 @@ function buildCommentaryRequestPayload(rawInput, summary, recentComments = []) {
   })
 }
 
-function buildStrategicRequestPayload(rawInput, summary, memory = null) {
+function buildStrategicRequestPayload(rawInput, summary, memory = null, commentary = null) {
   const attemptConfigs = [
     {
       maxDetailedUnits: 14,
@@ -444,9 +460,112 @@ function buildStrategicRequestPayload(rawInput, summary, memory = null) {
     const compactInput = buildCompactStrategicInput(rawInput, config)
     return {
       compactInput,
-      messages: buildStrategicMessages({ input: compactInput, summary, memory })
+      messages: buildStrategicMessages({ input: compactInput, summary, memory, commentary })
     }
   })
+}
+
+function getCommentaryPlayerId(state) {
+  return getAiPlayers(state)[0] || null
+}
+
+function getCombinedCommentaryConfig(playerId, state, settings, strategicModelConfig = null) {
+  if (!settings.commentary.enabled) return null
+  const commentaryPlayerId = getCommentaryPlayerId(state)
+  if (!commentaryPlayerId || commentaryPlayerId !== playerId) return null
+  const commentaryConfig = getCommentaryModelConfig(settings)
+  const activeStrategicConfig = strategicModelConfig || getPlayerStrategicModelConfig(playerId, state, settings)
+
+  if (!commentaryConfig || !activeStrategicConfig) return null
+  if (commentaryConfig.providerId !== activeStrategicConfig.providerId) return null
+  if (commentaryConfig.model !== activeStrategicConfig.model) return null
+
+  return commentaryConfig
+}
+
+function buildCombinedCommentaryPayload(state, summary, recentComments = []) {
+  const commentaryState = ensureCommentaryState(state)
+  const commentaryPlayerId = getCommentaryPlayerId(state)
+  if (!commentaryPlayerId) return null
+
+  const rawInput = exportGameTickInput(state, commentaryState.lastTickFrame || state.llmStrategic?.lastTickFrame || 0, {
+    verbosity: 'minimal',
+    playerId: commentaryPlayerId,
+    pruneTransitions: false
+  })
+  const input = filterInputByFogOfWar(rawInput, state, commentaryPlayerId)
+
+  return buildCompactCommentaryInput(input, {
+    summary,
+    recentComments: recentComments.slice(-4),
+    maxHighlights: 4,
+    maxRecentComments: 2,
+    humanPlayerId: state.humanPlayer || 'player1'
+  })
+}
+
+function normalizeCommentaryPayload(commentary) {
+  if (!commentary || typeof commentary !== 'object') return null
+  return {
+    skip: Boolean(commentary.skip),
+    text: typeof commentary.text === 'string' ? commentary.text.trim() : null
+  }
+}
+
+function speakCommentaryText(text, settings) {
+  if (!text || !settings.commentary.ttsEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    return
+  }
+
+  const synth = window.speechSynthesis
+  const speak = () => {
+    const utterance = new SpeechSynthesisUtterance(text)
+    const voices = synth.getVoices()
+    if (settings.commentary.voiceName) {
+      const selectedVoice = voices.find(voice => voice.name === settings.commentary.voiceName)
+      if (selectedVoice) {
+        utterance.voice = selectedVoice
+      }
+    }
+    utterance.onerror = (event) => {
+      window.logger?.warn?.('[LLM] Commentary TTS failed:', event.error || event)
+    }
+    synth.cancel()
+    if (typeof synth.resume === 'function') synth.resume()
+    synth.speak(utterance)
+  }
+
+  const availableVoices = synth.getVoices()
+  if (availableVoices.length > 0 || !settings.commentary.voiceName) {
+    speak()
+    return
+  }
+
+  let settled = false
+  const handleVoicesChanged = () => {
+    if (settled) return
+    settled = true
+    synth.removeEventListener('voiceschanged', handleVoicesChanged)
+    speak()
+  }
+
+  synth.addEventListener('voiceschanged', handleVoicesChanged)
+  setTimeout(handleVoicesChanged, 400)
+}
+
+function publishCommentaryText(state, settings, text) {
+  if (!text) return
+  const commentaryState = ensureCommentaryState(state)
+  state.llmCommentary.lastText = text
+
+  if (!commentaryState.recentComments) commentaryState.recentComments = []
+  commentaryState.recentComments.push(text)
+  if (commentaryState.recentComments.length > 10) {
+    commentaryState.recentComments = commentaryState.recentComments.slice(-10)
+  }
+
+  showNotification(text, 5000)
+  speakCommentaryText(text, settings)
 }
 
 function pruneConsumedTransitions(state, settings) {
@@ -674,6 +793,7 @@ function disableLlmAI(type = 'both') {
 
 async function runStrategicTickForPlayer(playerId, state, settings, now, modelConfig = null) {
   const strategicState = ensureStrategicState(state)
+  const commentaryState = ensureCommentaryState(state)
   const budgetConfig = LLM_REQUEST_BUDGETS.strategic
   const factories = state.factories || []
   const enemyFactory = factories.find(factory => factory.id === playerId)
@@ -703,6 +823,10 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
   strategicState.lastSummary = summary
 
   const selectedModelConfig = modelConfig || getPlayerStrategicModelConfig(playerId, state, settings)
+  const combinedCommentaryConfig = getCombinedCommentaryConfig(playerId, state, settings, selectedModelConfig)
+  const combinedCommentaryInput = combinedCommentaryConfig
+    ? buildCombinedCommentaryPayload(state, summary, commentaryState.recentComments || [])
+    : null
   const providerId = selectedModelConfig.providerId
   const model = selectedModelConfig.model
   const providerSettings = getProviderSettings(providerId)
@@ -725,7 +849,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     providerId,
     previousResponseId: strategicState.responseIdsByPlayer[playerId] || null,
     hasBootstrapped,
-    messages: payloadAttempts[0].messages,
+    messages: buildStrategicMessages({ input: payloadAttempts[0].compactInput, summary, commentary: combinedCommentaryInput }),
     summary,
     budget: budgetConfig,
     contextStats,
@@ -735,7 +859,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     resetContextStats(contextStats, requestConfig.resetReason)
     strategicState.responseIdsByPlayer[playerId] = null
   }
-  const requestPayloadAttempts = buildStrategicRequestPayload(input, requestConfig.summary, requestConfig.memory)
+  const requestPayloadAttempts = buildStrategicRequestPayload(input, requestConfig.summary, requestConfig.memory, combinedCommentaryInput)
   let selectedPayload = null
   let estimatedPromptTokens = 0
 
@@ -822,6 +946,20 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
       intent: { type: 'string' },
       confidence: { type: 'number' },
       notes: { type: 'string' },
+      commentary: {
+        anyOf: [
+          {
+            type: 'object',
+            properties: {
+              skip: { type: 'boolean' },
+              text: { type: ['string', 'null'] }
+            },
+            required: ['skip', 'text'],
+            additionalProperties: false
+          },
+          { type: 'null' }
+        ]
+      },
       actions: {
         type: 'array',
         items: {
@@ -936,7 +1074,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
         }
       }
     },
-    required: ['protocolVersion', 'tick', 'intent', 'confidence', 'notes', 'actions'],
+    required: ['protocolVersion', 'tick', 'intent', 'confidence', 'notes', 'commentary', 'actions'],
     additionalProperties: false
   }
 
@@ -1011,6 +1149,16 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
       const llmColor = PARTY_COLORS[playerId] || '#FF0000'
       showNotification(prioritizedOutput.notes, 4000, { llmPlayerId: playerId, llmColor })
     }
+
+    if (combinedCommentaryInput) {
+      const combinedCommentary = normalizeCommentaryPayload(parsed.commentary)
+      commentaryState.lastTickAt = now
+      commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+      if (combinedCommentary && !combinedCommentary.skip && combinedCommentary.text) {
+        publishCommentaryText(state, settings, combinedCommentary.text)
+      }
+      pruneConsumedTransitions(state, settings)
+    }
   } catch (err) {
     // Only show error messages if API key is configured
     if (!hasApiKey) {
@@ -1049,13 +1197,17 @@ async function runCommentaryTick(state, settings, _now) {
   const commentaryState = ensureCommentaryState(state)
   const budgetConfig = LLM_REQUEST_BUDGETS.commentary
   const commentaryConfig = getCommentaryModelConfig(settings)
-  const commentaryPlayerId = getAiPlayers(state)[0] || null
+  const commentaryPlayerId = getCommentaryPlayerId(state)
   const providerId = commentaryConfig?.providerId
   const model = commentaryConfig?.model
   const providerSettings = getProviderSettings(providerId)
   const hasApiKey = providerSettings?.apiKey && providerSettings.apiKey.trim().length > 0
 
   if (!providerId || !model || !commentaryPlayerId) {
+    return
+  }
+
+  if (getCombinedCommentaryConfig(commentaryPlayerId, state, settings)) {
     return
   }
 
@@ -1094,7 +1246,12 @@ async function runCommentaryTick(state, settings, _now) {
     resetContextStats(commentaryState.contextStats, requestConfig.resetReason)
     commentaryState.responseId = null
   }
-  const payloadAttempts = buildCommentaryRequestPayload(input, requestConfig.summary, recentComments.slice(-5))
+  const payloadAttempts = buildCommentaryRequestPayload(
+    input,
+    requestConfig.summary,
+    recentComments.slice(-5),
+    state.humanPlayer || 'player1'
+  )
   let selectedPayload = null
   let estimatedPromptTokens = 0
 
@@ -1157,34 +1314,15 @@ async function runCommentaryTick(state, settings, _now) {
       // Not JSON, treat as a normal comment
     }
 
-    state.llmCommentary.lastText = rawComment
     if (providerId === 'openai' && response.responseId) {
       commentaryState.responseId = response.responseId
       recordContextProgress(commentaryState.contextStats, estimatedPromptTokens, response.responseId, requestConfig.resetReason)
     }
 
-    // Track recent comments to prevent repetition (keep last 10)
-    if (!commentaryState.recentComments) commentaryState.recentComments = []
-    commentaryState.recentComments.push(rawComment)
-    if (commentaryState.recentComments.length > 10) {
-      commentaryState.recentComments = commentaryState.recentComments.slice(-10)
-    }
     commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
     pruneConsumedTransitions(state, settings)
 
-    showNotification(rawComment, 5000)
-    if (settings.commentary.ttsEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(rawComment)
-      const voices = window.speechSynthesis.getVoices()
-      if (settings.commentary.voiceName) {
-        const selected = voices.find(v => v.name === settings.commentary.voiceName)
-        if (selected) {
-          utterance.voice = selected
-        }
-      }
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.speak(utterance)
-    }
+    publishCommentaryText(state, settings, rawComment)
   } catch (err) {
     // Only show error messages if API key is configured
     if (!hasApiKey) {
@@ -1253,8 +1391,11 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
   }
 
   const commentaryModelConfig = getCommentaryModelConfig(settings)
+  const combinedCommentaryMode = commentaryModelConfig
+    ? Boolean(getCombinedCommentaryConfig(getCommentaryPlayerId(state), state, settings, commentaryModelConfig))
+    : false
   const commentaryTickIntervalMs = Math.max(5, commentaryModelConfig?.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
-  if (settings.commentary.enabled && commentaryModelConfig && !commentaryState.pending && now - commentaryState.lastTickAt >= commentaryTickIntervalMs) {
+  if (settings.commentary.enabled && commentaryModelConfig && !combinedCommentaryMode && !commentaryState.pending && now - commentaryState.lastTickAt >= commentaryTickIntervalMs) {
     commentaryState.pending = true
     commentaryState.lastTickAt = now
     runCommentaryTick(state, settings, now)

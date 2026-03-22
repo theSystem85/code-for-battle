@@ -64,6 +64,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - Strategic `recentDeltas` are now filtered to strategy-relevant events and are measured from each AI player's last successful strategic tick rather than from the scheduler frame.
 - Strategic requests now degrade through smaller compact digest variants before skipping on budget overflow, trimming detailed units, force groups, enemy intel, map intel, and delta highlights in a fixed order.
 - A deterministic economy-priority policy runs on the parsed strategic output before application so unstable AI economies continue the minimum viable chain (`powerPlant -> oreRefinery -> vehicleFactory -> harvester`) ahead of non-economy spending.
+- The strategic post-processing policy now also tops up a forward base-build backlog when queues are short, so the local AI keeps receiving several legal, affordable follow-up build and production actions between LLM ticks.
 
 ## Commentary Flow
 - If enabled, a lightweight prompt generates short taunts and announcements from the perspective of the first active AI player rather than the human player.
@@ -72,9 +73,12 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - When the LLM chooses to skip commentary it responds with `{"skip": true}` which is silently accepted.
 - The last 10 commentary messages are tracked and included in the prompt to prevent repetition; the LLM is instructed to vary vocabulary and never repeat itself.
 - Commentary prompt now consumes `inputMode: compact-commentary-v1`, with strict owner-aware narration based on `input.ownerContext` and each highlight's `side` field.
+- Commentary prompt is now host-focused: it talks about the host player's losses, exposed economy, and impending defeat rather than narrating the AI's own situation.
 - All commentary notifications are recorded in a persistent notification history log (up to 100 entries) accessible via a bell icon in the top-right corner.
 - Commentary requests now use a much smaller output-token cap than strategic planning and participate in the same response-chain reset policy for OpenAI-backed sessions.
 - Commentary requests now degrade by trimming highlight depth and anti-repeat history before skipping a request on budget grounds.
+- When commentary and strategic planning use the same provider/model for the first AI player, commentary is generated as a structured `commentary` field inside the strategic response rather than through a separate request.
+- Commentary speech playback now retries after voice lists load and resumes the speech engine before speaking, fixing regressions where read-aloud silently stopped.
 
 ## Fog-of-War Awareness
 - The LLM strategic AI only receives information about enemy units and buildings that are visible to its own forces.

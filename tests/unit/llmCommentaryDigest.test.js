@@ -49,12 +49,15 @@ describe('llmCommentaryDigest', () => {
     const digest = buildCompactCommentaryInput(rawInput, {
       summary: 'Tick 440 | MyUnits 1 EnemyUnits 1',
       recentComments: ['You call that artillery?', 'My tanks smell fear.'],
+      humanPlayerId: 'player1',
       maxHighlights: 4,
       maxRecentComments: 2
     })
 
     expect(digest.inputMode).toBe('compact-commentary-v1')
     expect(digest.ownerContext.selfPlayerId).toBe('player2')
+    expect(digest.ownerContext.humanPlayerId).toBe('player1')
+    expect(digest.ownerContext.hostPerspectiveSide).toBe('enemy')
     expect(digest.ownerContext.opposingOwners).toEqual(['player1'])
     expect(digest.ownerContext.visibleEnemyUnitTypes).toEqual({ howitzer: 1 })
     expect(digest.recentDeltas.highlights).toEqual(

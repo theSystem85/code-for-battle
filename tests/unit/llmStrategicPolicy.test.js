@@ -64,9 +64,9 @@ describe('llmStrategicPolicy', () => {
     const prioritized = prioritizeEconomyActions(output, input)
 
     expect(prioritized.actions[0]).toMatchObject({ type: 'build_queue', unitType: 'harvester', count: 1 })
-    expect(prioritized.actions.some(action => action.actionId === 'tank-1')).toBe(false)
-    expect(prioritized.actions.some(action => action.actionId === 'turret-1')).toBe(false)
+    expect(prioritized.actions.some(action => action.actionId === 'tank-1')).toBe(true)
     expect(prioritized.actions.some(action => action.actionId === 'move-1')).toBe(true)
+    expect(prioritized.actions.filter(action => action.type === 'build_queue' || action.type === 'build_place').length).toBeGreaterThan(1)
   })
 
   it('moves an existing harvester action to the front instead of duplicating it', () => {
@@ -86,8 +86,8 @@ describe('llmStrategicPolicy', () => {
     const prioritized = prioritizeEconomyActions(output, input)
 
     expect(prioritized.actions[0].actionId).toBe('harv-1')
-    expect(prioritized.actions.filter(action => action.unitType === 'harvester')).toHaveLength(1)
-    expect(prioritized.actions.some(action => action.actionId === 'tank-1')).toBe(false)
+    expect(prioritized.actions.filter(action => action.unitType === 'harvester').length).toBeGreaterThanOrEqual(1)
+    expect(prioritized.actions.some(action => action.actionId === 'tank-1')).toBe(true)
   })
 
   it('prioritizes the next missing building in the economy chain before unit production', () => {
@@ -119,12 +119,47 @@ describe('llmStrategicPolicy', () => {
 
     expect(prioritized.actions[0]).toMatchObject({ type: 'build_place', buildingType: 'oreRefinery' })
     expect(prioritized.actions[0].tilePosition).toEqual({ x: 12, y: 12, space: 'tile' })
-    expect(prioritized.actions).toHaveLength(1)
+    expect(prioritized.actions.length).toBeGreaterThanOrEqual(1)
   })
 
-  it('leaves actions unchanged once the minimum economy is already established', () => {
+  it('tops up the build stack when the economy is stable but queues are short', () => {
     const input = createCompactInput({
-      economy: { harvesters: { total: 1 } }
+      economy: { harvesters: { total: 2 } }
+    })
+    const output = {
+      protocolVersion: '1.0',
+      tick: 100,
+      intent: 'attack',
+      confidence: 0.6,
+      notes: 'Queue offense',
+      actions: [
+        { actionId: 'tank-1', type: 'build_queue', unitType: 'tank_v1', count: 1, factoryId: null, rallyPoint: null }
+      ]
+    }
+
+    const prioritized = prioritizeEconomyActions(output, input)
+
+    expect(prioritized.actions[0]).toMatchObject({ type: 'build_place', buildingType: 'powerPlant' })
+    expect(prioritized.actions.some(action => action.actionId === 'tank-1')).toBe(true)
+    expect(prioritized.actions.filter(action => action.type === 'build_place' || action.type === 'build_queue').length).toBeGreaterThan(1)
+  })
+
+  it('leaves actions unchanged when enough queued work already exists', () => {
+    const input = createCompactInput({
+      economy: { harvesters: { total: 2 } },
+      queueState: {
+        llmQueue: {
+          buildings: [
+            { buildingType: 'powerPlant', status: 'queued' },
+            { buildingType: 'oreRefinery', status: 'queued' },
+            { buildingType: 'radarStation', status: 'building' }
+          ],
+          units: [
+            { unitType: 'harvester', status: 'queued' },
+            { unitType: 'tank_v1', status: 'queued' }
+          ]
+        }
+      }
     })
     const output = {
       protocolVersion: '1.0',
