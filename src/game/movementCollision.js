@@ -29,6 +29,11 @@ import {
 import { isAirborneUnit, isGroundUnit, ownersAreEnemies } from './movementHelpers.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
+const STATIC_COLLISION_FORCE_DECAY = 0.72
+const STATIC_COLLISION_FORCE_MIN = 0.05
+const STATIC_COLLISION_FORCE_MULTIPLIER = 2.4
+const STATIC_COLLISION_SEPARATION_BLEND = 0.35
+
 function isTileBlockedForCollision(mapGrid, tileX, tileY) {
   if (!mapGrid || tileY < 0 || tileY >= mapGrid.length) {
     return true
@@ -594,21 +599,6 @@ export function applyStaticObstacleCollisionResponse(
   }
 
   const { normalX, normalY, overlap } = info
-  const normalVel = movement.velocity.x * normalX + movement.velocity.y * normalY
-
-  if (movement.targetVelocity) {
-    const targetNormal = movement.targetVelocity.x * normalX + movement.targetVelocity.y * normalY
-    if (targetNormal > 0) {
-      movement.targetVelocity.x -= normalX * targetNormal
-      movement.targetVelocity.y -= normalY * targetNormal
-    }
-  }
-
-  if (normalVel > 0) {
-    movement.velocity.x -= normalX * Math.min(normalVel * COLLISION_NORMAL_DAMPING_MULT, COLLISION_NORMAL_DAMPING_MAX)
-    movement.velocity.y -= normalY * Math.min(normalVel * COLLISION_NORMAL_DAMPING_MULT, COLLISION_NORMAL_DAMPING_MAX)
-  }
-
   const separation = Math.min(
     COLLISION_SEPARATION_MAX,
     Math.max(
@@ -617,8 +607,30 @@ export function applyStaticObstacleCollisionResponse(
     )
   )
 
+  const repulsionStrength = Math.max(
+    STATIC_COLLISION_FORCE_MIN,
+    Math.min(
+      COLLISION_SEPARATION_MAX * STATIC_COLLISION_FORCE_MULTIPLIER,
+      separation * STATIC_COLLISION_FORCE_MULTIPLIER
+    )
+  )
+
+  movement.staticCollisionForce = {
+    x: -normalX * repulsionStrength,
+    y: -normalY * repulsionStrength,
+    decay: STATIC_COLLISION_FORCE_DECAY
+  }
+
   if (separation > 0.001) {
-    applySafeSeparation(unit, -normalX * separation, -normalY * separation, mapGrid, occupancyMap, units, wrecks)
+    applySafeSeparation(
+      unit,
+      -normalX * separation * STATIC_COLLISION_SEPARATION_BLEND,
+      -normalY * separation * STATIC_COLLISION_SEPARATION_BLEND,
+      mapGrid,
+      occupancyMap,
+      units,
+      wrecks
+    )
   }
 
   movement.currentSpeed = Math.hypot(movement.velocity.x, movement.velocity.y)
@@ -962,6 +974,19 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
         avoidanceX += (awayX / awayDist) * strength
         avoidanceY += (awayY / awayDist) * strength
       }
+    }
+  }
+
+  const staticCollisionForce = movement.staticCollisionForce
+  if (staticCollisionForce) {
+    avoidanceX += staticCollisionForce.x
+    avoidanceY += staticCollisionForce.y
+
+    staticCollisionForce.x *= staticCollisionForce.decay || STATIC_COLLISION_FORCE_DECAY
+    staticCollisionForce.y *= staticCollisionForce.decay || STATIC_COLLISION_FORCE_DECAY
+
+    if (Math.hypot(staticCollisionForce.x, staticCollisionForce.y) < STATIC_COLLISION_FORCE_MIN) {
+      movement.staticCollisionForce = null
     }
   }
 

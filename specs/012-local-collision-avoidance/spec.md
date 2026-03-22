@@ -34,6 +34,6 @@ Units should anticipate nearby blockers using the existing occupancy map and gen
    - Stuck/dodge escalation must only trigger from local blockage signals (e.g., recent local collision or near-next-waypoint obstruction), not from distant blockers further along the planned path/target tile.
 
 8. **Environment Contacts Match Unit Contacts**
-   - When a ground unit physically contacts a blocking building, wall, terrain tile, occupied map tile, or bounds edge, resolve the collision with the same gentle capped separation and normal-component damping used for unit-vs-unit collisions rather than a stronger bounce impulse.
+   - When a ground unit physically contacts a blocking building, wall, terrain tile, occupied map tile, or bounds edge, resolve the collision through a short-lived local repulsion force field plus only minimal positional separation, avoiding abrupt velocity rewrites or strong bounce impulses.
    - Refactoring should remove redundant legacy static-environment bounce code and keep the runtime path efficient by staying local to the contacted obstacle.
 
