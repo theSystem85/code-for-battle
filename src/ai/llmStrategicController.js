@@ -34,12 +34,14 @@ ECONOMY PRIORITY
 - Think in terms of a whole build backlog, not one isolated action. Queue the next legal economy, tech, defense, and production steps in priority order whenever budget and action limits allow.
 - Only after you have a working economy (harvester actively mining) should you invest in military.
 - Monitor your money closely. If money is below 2000 and you have no harvester or refinery, you are in an economic emergency — sell non-essential buildings to fund recovery.
+- If your economy collapses and you cannot afford a replacement ore refinery or harvester, sell lower-priority buildings or excess defenses first so you can rebuild the refinery-harvester chain immediately.
 - A tank rush without economy will fail once your starting money runs out.
 
 SELL & REPAIR BUILDINGS
 - You can sell buildings you own to recover 70% of their cost. Use action type "sell_building" with a buildingId.
 - You can repair damaged buildings. Use action type "repair_building" with a buildingId. Repair costs ~30% of damage value.
 - Sell unneeded or redundant buildings when you need emergency funds.
+- In an economy emergency, selling a non-critical building to afford a refinery or harvester is correct.
 - Repair critical buildings (refineries, factories) when they're damaged.
 
 IMPORTANT OWNERSHIP: Every unit and building in the compact strategic input has an "owner" field when ownership matters. YOUR units/buildings have owner === your playerId. The HUMAN PLAYER's entities have a different owner. Always check the owner field to distinguish friend from foe.
@@ -63,6 +65,7 @@ CompactStrategicInput key fields:
 - forceGroups.detailedUnits: extra per-unit detail for harvesters, support, aircraft, damaged units, and units already engaged in combat
 - knownEnemyIntel.visibleForceGroups / priorityTargets: visible enemy groups and the most important enemy ids to attack
 - mapIntel: compact map and base-location context instead of raw map tiles
+- techTreeCsv: compressed CSV string with the full tech tree for long-term planning using k,type,cost,req,extra where k is B or U
 - productionOptions.availableBuildings / availableUnits: the current tech-legal buildings and units you may request right now, with costs and basic roles
 - queueState.llmQueue: YOUR current production queue with status tracking:
   - buildings: array of {buildingType, status} where status is "queued"|"building"|"completed"|"failed"
@@ -145,6 +148,7 @@ Always include commentary. Return commentary as null when no commentary input wa
 
 TACTICAL GUIDELINES
 - Build power first, then refinery, then factory, then harvester unless input.productionOptions makes one of those temporarily unavailable.
+- Use input.techTreeCsv for long-term planning and future tech paths, but use input.productionOptions for what is legal to request on this tick.
 - Use input.productionOptions for what is currently legal to build; do not guess missing tech prerequisites.
 - Place buildings adjacent to your current base footprint, not at random map positions.
 - Defend your base with turrets to slow rushes.
@@ -172,6 +176,7 @@ const STRATEGIC_FOLLOWUP_PROMPT = `You are the same enemy strategic AI continuin
 Return ONLY valid JSON matching GameTickOutput. No markdown or extra text.
 Follow the same rules as the initial brief.
 Use input.productionOptions and queueState.llmQueue instead of assuming all unit or building types are currently legal.
+Use input.techTreeCsv for full long-term tech planning and sell non-critical buildings if that is the fastest way to restore a broken refinery/harvester economy.
 If the minimum economy is not established yet, your first spending action must continue the powerPlant -> oreRefinery -> vehicleFactory -> harvester chain.
 Plan ahead with a multi-step build and production backlog whenever the queues are short so the local AI stays busy between strategic ticks.
 If commentary input is present, always return a host-focused commentary object and talk about what is happening to the host player and how you will beat them.

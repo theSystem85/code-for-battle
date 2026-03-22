@@ -1,6 +1,6 @@
 import { UNIT_COSTS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
-import { computeAvailableBuildingTypes, computeAvailableUnitTypes } from '../ai-api/techTree.js'
+import { buildCompactTechTreeCsv, computeAvailableBuildingTypes, computeAvailableUnitTypes } from '../ai-api/techTree.js'
 
 const PRODUCTION_BUILDING_TYPES = new Set([
   'constructionYard',
@@ -496,6 +496,7 @@ export function buildCompactStrategicInput(input, options = {}) {
     forceGroups,
     knownEnemyIntel: enemyIntel,
     mapIntel: summarizeMapIntel(input, baseStatus, enemyIntel, options),
+    techTreeCsv: buildCompactTechTreeCsv(),
     productionOptions: summarizeProductionOptions(buildings, input.playerId),
     queueState: {
       llmQueue: input.snapshot?.llmQueue || { buildings: [], units: [] }

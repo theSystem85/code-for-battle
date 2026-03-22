@@ -1,3 +1,65 @@
+import { UNIT_COSTS } from '../config.js'
+import { buildingData } from '../data/buildingData.js'
+
+const FULL_BUILDING_TECH_TREE = [
+  { type: 'constructionYard', req: '-' },
+  { type: 'powerPlant', req: '-' },
+  { type: 'oreRefinery', req: '-' },
+  { type: 'vehicleFactory', req: '-' },
+  { type: 'vehicleWorkshop', req: '-' },
+  { type: 'radarStation', req: '-' },
+  { type: 'hospital', req: '-' },
+  { type: 'helipad', req: '-' },
+  { type: 'gasStation', req: '-' },
+  { type: 'turretGunV1', req: '-' },
+  { type: 'concreteWall', req: '-' },
+  { type: 'ammunitionFactory', req: 'vehicleFactory' },
+  { type: 'turretGunV2', req: 'radarStation' },
+  { type: 'turretGunV3', req: 'radarStation' },
+  { type: 'rocketTurret', req: 'radarStation' },
+  { type: 'teslaCoil', req: 'radarStation' },
+  { type: 'artilleryTurret', req: 'radarStation' }
+]
+
+const FULL_UNIT_TECH_TREE = [
+  { type: 'tank', req: 'vehicleFactory', spawn: 'vehicleFactory' },
+  { type: 'tank_v1', req: 'vehicleFactory', spawn: 'vehicleFactory' },
+  { type: 'harvester', req: 'vehicleFactory+oreRefinery', spawn: 'vehicleFactory' },
+  { type: 'tankerTruck', req: 'vehicleFactory+gasStation', spawn: 'vehicleFactory' },
+  { type: 'ammunitionTruck', req: 'vehicleFactory+ammunitionFactory', spawn: 'vehicleFactory' },
+  { type: 'ambulance', req: 'hospital', spawn: 'vehicleFactory' },
+  { type: 'recoveryTank', req: 'vehicleFactory+vehicleWorkshop', spawn: 'vehicleFactory' },
+  { type: 'mineSweeper', req: 'vehicleFactory+vehicleWorkshop', spawn: 'vehicleFactory' },
+  { type: 'mineLayer', req: 'vehicleFactory+vehicleWorkshop+ammunitionFactory', spawn: 'vehicleFactory' },
+  { type: 'apache', req: 'helipad', spawn: 'helipad' },
+  { type: 'tank-v3', req: '2xvehicleFactory', spawn: 'vehicleFactory' },
+  { type: 'rocketTank', req: 'rocketTurret', spawn: 'vehicleFactory' },
+  { type: 'tank-v2', req: 'radarStation', spawn: 'vehicleFactory' },
+  { type: 'howitzer', req: 'vehicleFactory+radarStation+artilleryTurret', spawn: 'vehicleFactory' }
+]
+
+function buildCompactTechTreeLine(kind, type, cost, req, extra) {
+  return [kind, type, cost, req || '', extra || ''].join(',')
+}
+
+const FULL_TECH_TREE_CSV = [
+  'fmt:k,type,cost,req,extra',
+  ...FULL_BUILDING_TECH_TREE.map(entry => buildCompactTechTreeLine(
+    'B',
+    entry.type,
+    Number(buildingData[entry.type]?.cost || 0),
+    entry.req,
+    ''
+  )),
+  ...FULL_UNIT_TECH_TREE.map(entry => buildCompactTechTreeLine(
+    'U',
+    entry.type,
+    Number(UNIT_COSTS[entry.type] || 0),
+    entry.req,
+    entry.spawn === 'vehicleFactory' ? '' : entry.spawn
+  ))
+].join('\n')
+
 /**
  * Compute the set of building types available to a given owner based on tech tree.
  * Mirrors the logic in productionControllerTechTree.syncTechTreeWithBuildings.
@@ -61,4 +123,8 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
     if (hasFactory && hasArtilleryTurret) available.add('howitzer')
   }
   return available
+}
+
+export function buildCompactTechTreeCsv() {
+  return FULL_TECH_TREE_CSV
 }

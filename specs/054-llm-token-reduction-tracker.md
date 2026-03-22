@@ -128,6 +128,8 @@ Reduce strategic and commentary LLM request size enough that steady-state calls 
 - Added `src/ai/llmStrategicPolicy.js` so unstable AI economies keep the next required powerPlant -> oreRefinery -> vehicleFactory -> harvester step ahead of non-economy spending even when the model drifts.
 - Strategic planning now tops up a forward build backlog instead of only forcing the next economy step, so short construction/production queues are replenished several actions ahead on each tick.
 - Commentary is now explicitly host-focused, commentary TTS uses a more robust speech-synthesis path, and when commentary and strategy use the same provider/model for the first AI player the commentary is generated inside the strategic request instead of issuing a second LLM call.
+- Strategic inputs now include a compressed `techTreeCsv` string with the full building/unit tech tree for long-term planning, while still keeping `productionOptions` for immediately legal actions.
+- Economy-recovery guidance now explicitly tells the LLM to sell lower-priority buildings when that is the fastest way to restore a broken refinery/harvester chain.
 
 ## Agent Notes
 - Treat this file as the canonical progress tracker for follow-up token-reduction work.

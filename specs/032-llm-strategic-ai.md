@@ -61,10 +61,12 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - When a response chain resets, a compact carry-forward memory object is sent with trimmed prior context instead of relying on the provider to remember an unbounded history.
 - The compact strategic digest replaces raw unit/building arrays in the prompt with grouped force summaries, condensed owned-building state, visible enemy intel, priority target ids, compact map/base intel, recent delta highlights, and queue state.
 - The compact strategic digest also carries `productionOptions.availableBuildings` and `productionOptions.availableUnits`, derived from the live tech tree, so the strategic prompt no longer needs embedded static unit/building catalogs.
+- The compact strategic digest now also carries `techTreeCsv`, a compressed CSV-style string containing the full building and unit tech tree (`k,type,cost,req,extra`) for long-term planning without reintroducing large JSON catalog payloads.
 - Strategic `recentDeltas` are now filtered to strategy-relevant events and are measured from each AI player's last successful strategic tick rather than from the scheduler frame.
 - Strategic requests now degrade through smaller compact digest variants before skipping on budget overflow, trimming detailed units, force groups, enemy intel, map intel, and delta highlights in a fixed order.
 - A deterministic economy-priority policy runs on the parsed strategic output before application so unstable AI economies continue the minimum viable chain (`powerPlant -> oreRefinery -> vehicleFactory -> harvester`) ahead of non-economy spending.
 - The strategic post-processing policy now also tops up a forward base-build backlog when queues are short, so the local AI keeps receiving several legal, affordable follow-up build and production actions between LLM ticks.
+- Strategic prompting now explicitly calls out selling lower-priority buildings as a valid economy-recovery tool when the AI must fund a replacement refinery or harvester.
 
 ## Commentary Flow
 - If enabled, a lightweight prompt generates short taunts and announcements from the perspective of the first active AI player rather than the human player.
@@ -89,6 +91,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - The compact strategic input includes only the currently tech-legal `productionOptions.availableBuildings` and `productionOptions.availableUnits` for the AI player.
 - Each available option carries compact metadata such as cost, role, size or spawn building, allowing the prompt to stay small while still exposing current production choices.
 - The strategic bootstrap prompt now relies on these live options instead of embedding full static unit/building catalogs.
+- For future planning, the same input also includes `techTreeCsv`, which exposes the entire tech tree in compressed text form so the LLM can reason about long-term unlock paths without receiving a bulky JSON catalog.
 
 ## Owner-Aware State Updates
 - Game state snapshots sent to the LLM include an `owner` field on every unit and building.
