@@ -63,6 +63,7 @@ describe('movementCollision environment response', () => {
     expect(unit.movement.staticCollisionForce).toBeTruthy()
     expect(unit.movement.staticCollisionForce.x).toBeLessThan(0)
     expect(unit.movement.staticCollisionForce.y).toBeCloseTo(0, 5)
+    expect(Math.hypot(unit.movement.staticCollisionForce.x, unit.movement.staticCollisionForce.y)).toBeLessThanOrEqual(unit.movement.currentSpeed + 0.01)
     expect(unit.x).toBeLessThan(32)
     expect(unit.x).toBeGreaterThan(30)
   })
@@ -154,7 +155,8 @@ describe('movementCollision environment response', () => {
     expect(staticDisplacement).toBeGreaterThan(0)
     expect(unitDisplacement).toBeGreaterThan(0)
     expect(staticDisplacement).toBeLessThan(unitDisplacement)
-    expect(Math.abs(staticUnit.movement.staticCollisionForce.x)).toBeGreaterThan(unitDisplacement)
+    expect(Math.abs(staticUnit.movement.staticCollisionForce.x)).toBeLessThanOrEqual(staticUnit.movement.currentSpeed)
+    expect(staticDisplacement).toBeLessThanOrEqual(staticUnit.movement.currentSpeed)
   })
 
   it('feeds stored static repulsion back through collision avoidance as a decaying force field', () => {

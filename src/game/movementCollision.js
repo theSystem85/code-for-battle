@@ -599,33 +599,39 @@ export function applyStaticObstacleCollisionResponse(
   }
 
   const { normalX, normalY, overlap } = info
+  const currentSpeed = movement.currentSpeed || Math.hypot(movement.velocity.x, movement.velocity.y)
+  const maxPushback = Math.max(0, currentSpeed)
   const separation = Math.min(
-    COLLISION_SEPARATION_MAX,
+    maxPushback,
     Math.max(
-      COLLISION_SEPARATION_MIN,
+      0,
       overlap * COLLISION_SEPARATION_SCALE
     )
   )
 
-  const repulsionStrength = Math.max(
-    STATIC_COLLISION_FORCE_MIN,
+  const repulsionStrength = Math.min(
+    maxPushback,
     Math.min(
       COLLISION_SEPARATION_MAX * STATIC_COLLISION_FORCE_MULTIPLIER,
       separation * STATIC_COLLISION_FORCE_MULTIPLIER
     )
   )
 
-  movement.staticCollisionForce = {
-    x: -normalX * repulsionStrength,
-    y: -normalY * repulsionStrength,
-    decay: STATIC_COLLISION_FORCE_DECAY
+  if (repulsionStrength > STATIC_COLLISION_FORCE_MIN) {
+    movement.staticCollisionForce = {
+      x: -normalX * repulsionStrength,
+      y: -normalY * repulsionStrength,
+      decay: STATIC_COLLISION_FORCE_DECAY
+    }
+  } else {
+    movement.staticCollisionForce = null
   }
 
   if (separation > 0.001) {
     applySafeSeparation(
       unit,
-      -normalX * separation * STATIC_COLLISION_SEPARATION_BLEND,
-      -normalY * separation * STATIC_COLLISION_SEPARATION_BLEND,
+      -normalX * Math.min(maxPushback, separation * STATIC_COLLISION_SEPARATION_BLEND),
+      -normalY * Math.min(maxPushback, separation * STATIC_COLLISION_SEPARATION_BLEND),
       mapGrid,
       occupancyMap,
       units,
