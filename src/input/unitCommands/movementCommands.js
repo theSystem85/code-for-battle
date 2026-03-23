@@ -12,6 +12,7 @@ import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
 import { getBuildingIdentifier } from '../../utils.js'
 
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
+  const now = performance.now()
   const commandableUnits = selectedUnits.filter(unit => {
     if (unit.crew && typeof unit.crew === 'object' && !unit.crew.commander) {
       return false
@@ -204,6 +205,14 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
       }
 
       if (handler.assignApacheFlight && handler.assignApacheFlight(unit, clampedTile, center, airstripModeOptions)) {
+        if (unit.type === 'apache') {
+          unit.lastPlayerCommandTime = now
+          unit.autoHelipadReturnActive = false
+          unit.autoHelipadReturnTargetId = null
+          unit.autoHelipadReturnAttackTargetId = null
+          unit.autoHelipadReturnAttackTargetType = null
+          unit.autoReturnToHelipadOnTargetLoss = false
+        }
         unit.target = null
         unit.originalTarget = null
         unit.forcedAttack = false

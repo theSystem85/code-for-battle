@@ -58,6 +58,7 @@ export function handleRefineryUnloadCommand(handler, selectedUnits, refinery, ma
 }
 
 export function handleHarvesterCommand(handler, selectedUnits, oreTarget, mapGrid) {
+  const now = performance.now()
   selectedUnits.forEach(u => { u.commandQueue = []; u.currentCommand = null })
   handler.clearAttackGroupState(selectedUnits)
 
@@ -77,6 +78,7 @@ export function handleHarvesterCommand(handler, selectedUnits, oreTarget, mapGri
       if (path && path.length > 0) {
         unit.path = path.length > 1 ? path.slice(1) : path
         unit.manualOreTarget = oreTarget
+        unit.lastPlayerCommandTime = now
         unit.oreField = null
         unit.target = null
         unit.moveTarget = oreTarget

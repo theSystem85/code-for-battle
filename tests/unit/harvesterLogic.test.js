@@ -230,6 +230,21 @@ describe('Harvester Logic', () => {
       const targetedTiles = getTargetedOreTiles()
       expect(targetedTiles['2,2']).toBe(harvester.id)
     })
+
+    it('does not let auto targeting override recent harvester remote control input', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      harvester.lastRemoteControlTime = now - 1500
+      harvester.moveTarget = { x: 8, y: 5 }
+      units.push(harvester)
+
+      mapGrid[5][5].ore = true
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.harvesting).toBe(false)
+      expect(harvester.oreField).toBeNull()
+      expect(harvester.moveTarget).toEqual({ x: 8, y: 5 })
+    })
   })
 
   describe('Refinery Unloading', () => {

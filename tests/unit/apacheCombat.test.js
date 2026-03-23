@@ -101,7 +101,7 @@ describe('apacheCombat auto helipad return flow', () => {
       target: enemy,
       rocketAmmo: 0,
       remoteControlActive: true,
-      lastRemoteControlTime: 1
+      lastRemoteControlTime: -5000
     })
 
     updateApacheCombat(apache, [apache, enemy], [], [[{}]], 1000)
@@ -158,5 +158,24 @@ describe('apacheCombat auto helipad return flow', () => {
     expect(apache.helipadLandingRequested).toBe(true)
     expect(apache.helipadTargetId).toBe('pad-2')
     expect(apache.flightPlan?.mode).toBe('helipad')
+  })
+
+  it('gives player command priority over stored auto-return target recovery', () => {
+    const enemy = { id: 'enemy-1', type: 'tank', x: 200, y: 200, tileX: 6, tileY: 6, health: 100 }
+    const apache = createApache({
+      target: null,
+      autoHelipadReturnActive: true,
+      autoHelipadReturnAttackTargetId: 'enemy-1',
+      autoHelipadReturnAttackTargetType: 'unit',
+      autoReturnToHelipadOnTargetLoss: true,
+      lastPlayerCommandTime: 1000
+    })
+
+    updateApacheCombat(apache, [apache, enemy], [], [[{}]], 1500)
+
+    expect(apache.target).toBeNull()
+    expect(apache.autoHelipadReturnActive).toBe(false)
+    expect(apache.autoHelipadReturnAttackTargetId).toBeNull()
+    expect(apache.autoReturnToHelipadOnTargetLoss).toBe(false)
   })
 })

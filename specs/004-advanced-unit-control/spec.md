@@ -197,6 +197,8 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-072**: With defensive buildings selected, a normal click on an enemy target (without force-attack modifier) MUST assign forced attack targeting, and newly added targets MUST be inserted at the front of the forced-attack queue (newest-first).
 - **FR-073**: For defensive-building forced targeting, a newly added target MUST become the immediate active target (queue position 1), and the prior active target MUST be moved to the front of the remaining queue.
 - **FR-074**: When one or more units are selected and the move cursor is active, the UI MUST display the straight-line air distance from the closest selected unit to the hovered target point below the cursor in meters.
+- **FR-075**: Harvester auto-targeting MUST NEVER override a player-issued manual ore target or active remote-control input, and after harvester remote-control input stops the auto-targeting system MUST remain suppressed for 2 seconds before it may choose a new automatic target.
+- **FR-076**: Apache auto-return/reload logic MUST remain interruptible by the player at all times; any player-issued movement, attack, or fresh remote-control input MUST take priority over auto-resume to the stored pre-reload target.
 
 
 **Logistics Symmetry:**
