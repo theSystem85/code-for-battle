@@ -10,6 +10,10 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - Track token consumption and spend per session and surface in the performance overlay.
 - Keep LLM input compact with summaries of recent events and decisions.
 
+## Follow-up Tracking
+- Ongoing token-reduction follow-up work is tracked in `specs/054-llm-token-reduction-tracker.md`.
+- Use that tracker as the canonical implementation board for payload-size reduction, prompt dedupe, session-reset policy, compact strategic digest work, and remaining verification.
+
 ## Settings & Persistence
 - Settings are persisted to localStorage under `rts_llm_settings`.
 - Per-provider settings:
@@ -44,34 +48,50 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 
 ## Strategic Control Flow
 - Every N seconds (default 30s) the strategic controller:
-  - Exports `GameTickInput` for each AI player.
+  - Exports `GameTickInput` for each AI player and derives a compact `inputMode: compact-strategic-v1` strategic digest from it.
   - Adds a compact summary of recent state and transitions.
   - On the first prompt per AI player, sends a full system brief with game overview + control schema.
-  - On subsequent prompts, only sends the current state + transitions while keeping the session context.
+  - On subsequent OpenAI prompts, reuses session context without resending the same instruction prompt on every tick; fresh instructions are resent only when bootstrapping or after an explicit response-chain reset.
   - Requests LLM output as `GameTickOutput`.
   - Applies actions via `applyGameTickOutput` with budget overrides.
   - Locks units touched by LLM commands to prevent local AI override.
 - Local AI continues micro-management between ticks for units not under an LLM lock.
-- OpenAI uses `/v1/responses` with `previous_response_id` and a simplified `json_schema` (protocolVersion, tick, actions, intent, confidence, notes all required) to satisfy provider-side strict validation; bootstrap prompt + schema are included only on the first tick and full validation occurs locally.
+- OpenAI uses `/v1/responses` with `previous_response_id` and a simplified `json_schema` (protocolVersion, tick, actions, intent, confidence, notes all required) to satisfy provider-side strict validation; request shaping now avoids duplicating the same system/instruction prompt inside both `input` and `instructions`.
+- Strategic requests now track estimated prompt size, log request metrics, apply a capped output-token budget, and reset the response chain when request-count or estimated-context budgets are exceeded.
+- When a response chain resets, a compact carry-forward memory object is sent with trimmed prior context instead of relying on the provider to remember an unbounded history.
+- The compact strategic digest replaces raw unit/building arrays in the prompt with grouped force summaries, condensed owned-building state, visible enemy intel, priority target ids, compact map/base intel, recent delta highlights, and queue state.
+- The compact strategic digest also carries `productionOptions.availableBuildings` and `productionOptions.availableUnits`, derived from the live tech tree, so the strategic prompt no longer needs embedded static unit/building catalogs.
+- The compact strategic digest now also carries `techTreeCsv`, a compressed CSV-style string containing the full building and unit tech tree (`k,type,cost,req,extra`) for long-term planning without reintroducing large JSON catalog payloads.
+- Strategic `recentDeltas` are now filtered to strategy-relevant events and are measured from each AI player's last successful strategic tick rather than from the scheduler frame.
+- Strategic requests now degrade through smaller compact digest variants before skipping on budget overflow, trimming detailed units, force groups, enemy intel, map intel, and delta highlights in a fixed order.
+- A deterministic economy-priority policy runs on the parsed strategic output before application so unstable AI economies continue the minimum viable chain (`powerPlant -> oreRefinery -> vehicleFactory -> harvester`) ahead of non-economy spending.
+- The strategic post-processing policy now also tops up a forward base-build backlog when queues are short, so the local AI keeps receiving several legal, affordable follow-up build and production actions between LLM ticks.
+- Strategic prompting now explicitly calls out selling lower-priority buildings as a valid economy-recovery tool when the AI must fund a replacement refinery or harvester.
 
 ## Commentary Flow
-- If enabled, a lightweight prompt generates short taunts and announcements.
+- If enabled, a lightweight prompt generates short taunts and announcements from the perspective of the first active AI player rather than the human player.
 - Speech synthesis reads commentary aloud when enabled.
 - Commentary skips ticks where no interesting events occurred (no combat, production, or destruction events) to avoid spamming.
 - When the LLM chooses to skip commentary it responds with `{"skip": true}` which is silently accepted.
 - The last 10 commentary messages are tracked and included in the prompt to prevent repetition; the LLM is instructed to vary vocabulary and never repeat itself.
-- Commentary prompt enforces strict owner-aware narration: the AI must treat `input.playerId` as its own side and use each entity's `owner` field to attribute losses/kills correctly across all parties.
+- Commentary prompt now consumes `inputMode: compact-commentary-v1`, with strict owner-aware narration based on `input.ownerContext` and each highlight's `side` field.
+- Commentary prompt is now host-focused: it talks about the host player's losses, exposed economy, and impending defeat rather than narrating the AI's own situation.
 - All commentary notifications are recorded in a persistent notification history log (up to 100 entries) accessible via a bell icon in the top-right corner.
+- Commentary requests now use a much smaller output-token cap than strategic planning and participate in the same response-chain reset policy for OpenAI-backed sessions.
+- Commentary requests now degrade by trimming highlight depth and anti-repeat history before skipping a request on budget grounds.
+- When commentary and strategic planning use the same provider/model for the first AI player, commentary is generated as a structured `commentary` field inside the strategic response rather than through a separate request.
+- Commentary speech playback now retries after voice lists load and resumes the speech engine before speaking, fixing regressions where read-aloud silently stopped.
 
 ## Fog-of-War Awareness
 - The LLM strategic AI only receives information about enemy units and buildings that are visible to its own forces.
 - Visibility is computed on-the-fly per AI tick using the AI player's own units and buildings with appropriate vision ranges per unit type.
 - If shadow-of-war is disabled in game settings, the full game state is passed without filtering.
 
-## Unit/Building Catalogs in Bootstrap
-- The initial strategic system prompt includes a full JSON catalog of all unit types with cost, HP, speed, armor, ammo capacity, damage, weapon type, fire range, spawn building, and tactical role.
-- A full JSON catalog of all building types with cost, power consumption, HP, size, weapon stats, requirements, and tactical notes is also included.
-- These catalogs give the LLM full knowledge of the game's economy and military capabilities on its first tick.
+## Live Production Options
+- The compact strategic input includes only the currently tech-legal `productionOptions.availableBuildings` and `productionOptions.availableUnits` for the AI player.
+- Each available option carries compact metadata such as cost, role, size or spawn building, allowing the prompt to stay small while still exposing current production choices.
+- The strategic bootstrap prompt now relies on these live options instead of embedding full static unit/building catalogs.
+- For future planning, the same input also includes `techTreeCsv`, which exposes the entire tech tree in compressed text form so the LLM can reason about long-term unlock paths without receiving a bulky JSON catalog.
 
 ## Owner-Aware State Updates
 - Game state snapshots sent to the LLM include an `owner` field on every unit and building.
@@ -148,7 +168,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 
 ## UI Hooks
 - Settings modal includes LLM sections and provider configuration.
-- Selecting any enemy building (including factories like the Construction Yard) while LLM strategic AI is enabled shows the LLM strategic plan tooltip including:
+- Selecting any enemy building (including factories like the Construction Yard) for a party currently assigned to LLM strategic control shows the LLM strategic plan tooltip including:
   - Strategic intent/notes from the LLM
   - Production plan (queued buildings and units with images and status indicators)
   - Status indicators: ✓ completed (green, strikethrough), ⏳ in-progress (yellow highlight), ✗ failed (red, dimmed), queued (no icon)
@@ -156,6 +176,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - The production plan tooltip renders a scrollable, ordered list with unit/building names, images, and live queue status.
 - The production plan shows latest/newest items at the top (reversed insertion order) so the most recent strategic decisions are immediately visible.
 - The tooltip does not dismiss on `mouseleave` from the canvas when an enemy building is selected, preventing accidental hiding when the pointer enters the tooltip overlay.
+- Legacy saves that still store `strategic.enabled: false` must still show the tooltip when the selected enemy party is marked `llmControlled: true`.
 
 ## API Key & Provider Management
 - OpenAI API key entry now includes a security-critical disclosure panel that appears on hover/focus and explains required API scopes (`GET /v1/models`, `POST /v1/responses`), quota limiting, optional usage, and localStorage/XSS exposure risks.

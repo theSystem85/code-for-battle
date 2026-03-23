@@ -76,7 +76,9 @@ export function validateGameTickInput(payload) {
       if (typeof unit.owner !== 'string') addError(errors, `snapshot.units[${index}].owner`, 'Expected string')
       if (!Number.isFinite(unit.health)) addError(errors, `snapshot.units[${index}].health`, 'Expected number')
       if (!Number.isFinite(unit.maxHealth)) addError(errors, `snapshot.units[${index}].maxHealth`, 'Expected number')
-      validatePosition(unit.position, `snapshot.units[${index}].position`, errors)
+      if (unit.position !== undefined) {
+        validatePosition(unit.position, `snapshot.units[${index}].position`, errors)
+      }
       validatePosition(unit.tilePosition, `snapshot.units[${index}].tilePosition`, errors)
     })
   }

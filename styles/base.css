@@ -84,6 +84,7 @@ body.is-touch {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  min-width: 0;
   padding: 6px 10px;
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -95,6 +96,7 @@ body.is-touch {
   display: flex;
   align-items: center;
   gap: 6px;
+  min-width: 0;
 }
 
 .multiplayer-party-dot {
@@ -116,6 +118,7 @@ body.is-touch {
   align-items: center;
   gap: 6px;
   margin-left: 0.5em;
+  min-width: 0;
 }
 
 .multiplayer-party-status {
@@ -169,6 +172,11 @@ body.is-touch {
   cursor: pointer;
   transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
   white-space: nowrap;
+  width: min(190px, 100%);
+  max-width: min(190px, 100%);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .multiplayer-llm-toggle:hover {

@@ -11,6 +11,7 @@ export const DEFAULT_LLM_SETTINGS = {
   commentary: {
     enabled: false,
     provider: 'openai',
+    modelKey: '',
     promptOverride: '',
     ttsEnabled: true,
     voiceName: ''
@@ -19,6 +20,12 @@ export const DEFAULT_LLM_SETTINGS = {
     openai: {
       apiKey: '',
       baseUrl: 'https://api.openai.com/v1',
+      model: '',
+      riskAccepted: false
+    },
+    inceptionlabs: {
+      apiKey: '',
+      baseUrl: 'https://api.inceptionlabs.ai/v1',
       model: '',
       riskAccepted: false
     },
@@ -40,10 +47,51 @@ export const DEFAULT_LLM_SETTINGS = {
       model: '',
       riskAccepted: false
     }
-  }
+  },
+  strategicModelPool: []
 }
 
 let currentSettings = null
+
+function normalizeInceptionlabsSettings(settings) {
+  const next = { ...settings }
+  const currentModel = next.providers?.inceptionlabs?.model
+  if (currentModel === 'mercury-m2' || currentModel === 'Mercury 2') {
+    next.providers = {
+      ...next.providers,
+      inceptionlabs: {
+        ...next.providers.inceptionlabs,
+        model: 'mercury-2'
+      }
+    }
+  }
+
+  const pool = Array.isArray(next.strategicModelPool) ? next.strategicModelPool : []
+  let changed = false
+  const mappedPool = pool.map(entry => {
+    if (entry?.provider !== 'inceptionlabs') return entry
+    if (entry?.model !== 'mercury-m2' && entry?.model !== 'Mercury 2') return entry
+    changed = true
+    return {
+      ...entry,
+      model: 'mercury-2',
+      key: 'inceptionlabs:mercury-2'
+    }
+  })
+  if (changed) {
+    next.strategicModelPool = mappedPool
+  }
+
+  if (next.commentary?.modelKey === 'inceptionlabs:Mercury 2') {
+    next.commentary = {
+      ...next.commentary,
+      modelKey: 'inceptionlabs:mercury-2'
+    }
+  }
+
+  return next
+}
+
 
 function mergeSettings(base, patch) {
   if (!patch || typeof patch !== 'object') return base
@@ -67,12 +115,12 @@ export function loadLlmSettings() {
   } catch (err) {
     window.logger.warn('[LLM] Failed to parse stored settings:', err)
   }
-  currentSettings = mergeSettings(DEFAULT_LLM_SETTINGS, stored || {})
+  currentSettings = normalizeInceptionlabsSettings(mergeSettings(DEFAULT_LLM_SETTINGS, stored || {}))
   return currentSettings
 }
 
 export function saveLlmSettings(settings) {
-  currentSettings = mergeSettings(DEFAULT_LLM_SETTINGS, settings || {})
+  currentSettings = normalizeInceptionlabsSettings(mergeSettings(DEFAULT_LLM_SETTINGS, settings || {}))
   try {
     localStorage.setItem(LLM_SETTINGS_KEY, JSON.stringify(currentSettings))
   } catch (err) {

@@ -3,187 +3,79 @@ import { applyGameTickOutput } from '../ai-api/applier.js'
 import { getLlmSettings, updateLlmSettings, getProviderSettings } from './llmSettings.js'
 import { fetchCostMap, getModelCostInfo, requestLlmCompletion, QuotaExceededError, AuthenticationError, ApiParameterError } from './llmProviders.js'
 import { recordLlmUsage } from './llmUsage.js'
+import { LLM_REQUEST_BUDGETS, estimateRequestPromptTokens, shouldResetResponseChain, buildCarryForwardMemory, trimRollingSummary } from './llmRequestBudget.js'
+import { buildCompactStrategicInput } from './llmStrategicDigest.js'
+import { buildCompactCommentaryInput, hasInterestingCommentaryEvents } from './llmCommentaryDigest.js'
+import { prioritizeEconomyActions } from './llmStrategicPolicy.js'
 import { showNotification } from '../ui/notifications.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { gameState } from '../gameState.js'
-import { TILE_SIZE, UNIT_COSTS, UNIT_PROPERTIES, BULLET_DAMAGES, UNIT_AMMO_CAPACITY, UNIT_GAS_PROPERTIES, TANK_FIRE_RANGE, HOWITZER_FIRE_RANGE, HOWITZER_MIN_RANGE, HOWITZER_FIREPOWER, HOWITZER_FIRE_COOLDOWN, PARTY_COLORS } from '../config.js'
+import { TILE_SIZE, TANK_FIRE_RANGE, PARTY_COLORS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
-import protocolSchema from '../ai-api/protocol.schema.json'
-
-function buildUnitCatalog() {
-  const catalog = []
-  const allTypes = ['tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'apache', 'mineLayer', 'mineSweeper', 'f22Raptor']
-  for (const type of allTypes) {
-    const props = UNIT_PROPERTIES[type] || {}
-    const cost = UNIT_COSTS[type] || 0
-    const ammo = UNIT_AMMO_CAPACITY[type] || null
-    const gas = UNIT_GAS_PROPERTIES[type] || {}
-    const dmg = BULLET_DAMAGES[type.replace('-', '_').replace('tank_v1', 'tank_v1').replace('tank-v2', 'tank_v2').replace('tank-v3', 'tank_v3')] || null
-    const entry = {
-      type,
-      cost,
-      hp: props.health || props.maxHealth || 0,
-      speed: props.speed || 0,
-      armor: props.armor || 0
-    }
-    if (ammo) entry.ammo = ammo
-    if (dmg) entry.damage = dmg
-    if (gas.tankSize) entry.fuelCapacity = gas.tankSize
-    // Weapon / range info
-    if (type === 'howitzer') {
-      entry.weapon = 'artillery'
-      entry.fireRange = HOWITZER_FIRE_RANGE
-      entry.minRange = HOWITZER_MIN_RANGE
-      entry.firepower = HOWITZER_FIREPOWER
-      entry.fireCooldownMs = HOWITZER_FIRE_COOLDOWN
-    } else if (type === 'rocketTank') {
-      entry.weapon = 'rocket'
-      entry.fireRange = TANK_FIRE_RANGE
-    } else if (type === 'apache') {
-      entry.weapon = 'machinegun'
-      entry.fireRange = TANK_FIRE_RANGE
-      entry.spawnsFrom = 'helipad'
-    } else if (type === 'f22Raptor') {
-      entry.weapon = 'missile'
-      entry.fireRange = TANK_FIRE_RANGE * 1.5
-      entry.spawnsFrom = 'airstrip'
-      entry.radarInvisible = true
-    } else if (['tank_v1', 'tank-v2', 'tank-v3'].includes(type)) {
-      entry.weapon = 'cannon'
-      entry.fireRange = TANK_FIRE_RANGE
-    }
-    // Spawn location
-    if (type !== 'apache' && type !== 'f22Raptor') entry.spawnsFrom = 'vehicleFactory'
-    // Special roles
-    if (type === 'harvester') entry.role = 'economic: harvests ore and delivers to refinery'
-    if (type === 'ambulance') entry.role = 'support: heals nearby friendly units'
-    if (type === 'tankerTruck') entry.role = 'support: refuels nearby units'
-    if (type === 'ammunitionTruck') entry.role = 'support: resupplies ammo to nearby units'
-    if (type === 'recoveryTank') entry.role = 'support: tows damaged units to workshop for repair'
-    if (type === 'mineLayer') entry.role = 'utility: deploys anti-vehicle mines'
-    if (type === 'mineSweeper') entry.role = 'utility: clears enemy mines'
-    catalog.push(entry)
-  }
-  return catalog
-}
-
-function buildBuildingCatalog() {
-  const catalog = []
-  for (const [type, data] of Object.entries(buildingData)) {
-    if (type.startsWith('concreteWall')) continue // skip wall variants
-    const entry = {
-      type,
-      displayName: data.displayName || type,
-      cost: data.cost || 0,
-      power: data.power || 0,
-      hp: data.health || 0,
-      size: `${data.width}x${data.height}`
-    }
-    if (data.armor) entry.armor = data.armor
-    if (data.fireRange) {
-      entry.weapon = data.projectileType || 'bullet'
-      entry.fireRange = data.fireRange
-      entry.damage = data.damage || 0
-      entry.fireCooldownMs = data.fireCooldown || 0
-      if (data.burstCount) entry.burst = `${data.burstCount} shots/${data.burstDelay}ms`
-      if (data.minFireRange) entry.minRange = data.minFireRange
-    }
-    if (data.requiresRadar) entry.requires = 'radarStation'
-    if (data.requiresVehicleFactory) entry.requires = 'vehicleFactory'
-    catalog.push(entry)
-  }
-  // Add concrete wall once
-  const wall = buildingData.concreteWall
-  if (wall) {
-    catalog.push({ type: 'concreteWall', displayName: 'Concrete Wall', cost: wall.cost, power: 0, hp: wall.health, size: '1x1' })
-  }
-  return catalog
-}
-
-const UNIT_CATALOG_TEXT = JSON.stringify(buildUnitCatalog(), null, 0)
-const BUILDING_CATALOG_TEXT = JSON.stringify(buildBuildingCatalog(), null, 0)
+import { pruneTransitionsUpTo } from '../ai-api/transitionCollector.js'
 
 const STRATEGIC_BOOTSTRAP_PROMPT = `You are the strategic commander for the enemy AI in a real-time strategy game.
-Your job: plan economy, production, expansion, and attacks to defeat the human player. Keep actions practical, achievable, and within budget.
+Plan economy, production, expansion, and attacks to defeat the human player. Keep actions practical, achievable, and within budget.
 
-GAME OVERVIEW
-- Tile-based RTS with base building, unit production, and combat.
-- You control one enemy player. The human player is the opponent.
-- Buildings unlock tech and produce units. Units can move, attack, and guard.
-- You can place buildings on valid tiles, queue units at the right factory, and issue unit commands.
+CORE RULES
+- You control one AI player. The human player is the opponent.
 - The engine executes only explicit actions you output.
-- BUILDING PLACEMENT RULE (CRITICAL): New buildings MUST be placed within 3 tiles (Chebyshev distance) of an existing building you own. Buildings placed far from your base WILL BE REJECTED. Always expand outward from your construction yard, placing each new building adjacent to or near your existing structures.
-- Each unit and building has an "owner" field identifying which player controls it.
-- Your units will still auto-attack enemies within their fire range even between your ticks, but you should issue explicit commands for strategic movements and coordinated attacks.
-- Consider retreating damaged units to regroup before launching full-scale attacks. A well-coordinated strike with sufficient firepower is better than trickling units into enemy defenses.
-- You only see the battlefield where your own units and buildings provide vision. Data in the snapshot is limited to what is visible to you (fog of war).
+- Fog of war applies. If something is not in the compact input, do not assume it exists.
+- New buildings must be placed within 3 tiles of an existing owned building or they will be rejected.
+- Respect available money, constraints.maxActionsPerTick, and the live production options in input.productionOptions.
+- The engine rejects tech-locked or duplicate queue requests.
 
-ECONOMY & MONEY SUPPLY (CRITICAL!)
+ECONOMY PRIORITY
 - Money is the ONLY resource. You start with a limited budget that WILL run out if you don't establish income.
 - Income comes from harvesters mining ore and delivering it to an ore refinery. Without at least 1 refinery AND 1 harvester, you have ZERO income.
 - ALWAYS prioritize building a power plant first, then an ore refinery, then a vehicle factory, then produce a harvester. This is the minimum viable economy.
+- HARD GATE: until you own or already have queued/building/completed a power plant, ore refinery, vehicle factory, and at least 1 harvester, do not spend money on non-economy buildings or non-harvester unit production.
+- Plan several steps ahead on every tick. If the current queues are short, fill the remaining affordable action slots with a future base build stack and follow-up production so the local AI can keep working until your next tick.
+- Think in terms of a whole build backlog, not one isolated action. Queue the next legal economy, tech, defense, and production steps in priority order whenever budget and action limits allow.
 - Only after you have a working economy (harvester actively mining) should you invest in military.
 - Monitor your money closely. If money is below 2000 and you have no harvester or refinery, you are in an economic emergency — sell non-essential buildings to fund recovery.
+- If your economy collapses and you cannot afford a replacement ore refinery or harvester, sell lower-priority buildings or excess defenses first so you can rebuild the refinery-harvester chain immediately.
 - A tank rush without economy will fail once your starting money runs out.
-
-TECH TREE (CRITICAL — FOLLOW THIS ORDER!)
-- You start with only: constructionYard, oreRefinery, powerPlant, vehicleFactory, vehicleWorkshop, radarStation, hospital, helipad, gasStation, turretGunV1, concreteWall
-- To unlock additional buildings and units, you MUST build prerequisite structures first:
-  Building prerequisites:
-  - ammunitionFactory: requires vehicleFactory
-  - turretGunV2, turretGunV3, rocketTurret, teslaCoil, artilleryTurret: requires radarStation
-  Unit prerequisites:
-  - tank (tank_v1): requires vehicleFactory
-  - harvester: requires vehicleFactory + oreRefinery
-  - tankerTruck: requires vehicleFactory + gasStation
-  - ammunitionTruck: requires vehicleFactory + ammunitionFactory
-  - ambulance: requires hospital
-  - recoveryTank, mineSweeper: requires vehicleFactory + vehicleWorkshop
-  - mineLayer: requires vehicleFactory + vehicleWorkshop + ammunitionFactory
-  - tank-v2: requires radarStation
-  - tank-v3: requires 2x vehicleFactory
-  - rocketTank: requires rocketTurret
-  - howitzer: requires radarStation + vehicleFactory
-  - apache: requires helipad (helipad requires radarStation)
-- Buildings and units you try to build without having the prerequisites WILL BE REJECTED.
-- The engine enforces construction times — buildings take time to finish construction, just like the human player.
 
 SELL & REPAIR BUILDINGS
 - You can sell buildings you own to recover 70% of their cost. Use action type "sell_building" with a buildingId.
 - You can repair damaged buildings. Use action type "repair_building" with a buildingId. Repair costs ~30% of damage value.
 - Sell unneeded or redundant buildings when you need emergency funds.
+- In an economy emergency, selling a non-critical building to afford a refinery or harvester is correct.
 - Repair critical buildings (refineries, factories) when they're damaged.
 
-UNIT CATALOG (all producible units with stats):
-${UNIT_CATALOG_TEXT}
-
-BUILDING CATALOG (all constructable buildings with stats):
-${BUILDING_CATALOG_TEXT}
-
-IMPORTANT OWNERSHIP: Every unit and building in the snapshot has an "owner" field. YOUR units/buildings have owner === your playerId. The HUMAN PLAYER's entities have a different owner. Always check the owner field to distinguish friend from foe.
+IMPORTANT OWNERSHIP: Every unit and building in the compact strategic input has an "owner" field when ownership matters. YOUR units/buildings have owner === your playerId. The HUMAN PLAYER's entities have a different owner. Always check the owner field to distinguish friend from foe.
 
 INPUT FORMAT (you will receive this once per tick in a user message as JSON):
 {
   "summary": "short rolling summary of recent ticks",
-  "input": GameTickInput
+  "input": CompactStrategicInput,
+  "memory": { ...optional carry-forward memory after session resets }
 }
 
-GameTickInput key fields:
+CompactStrategicInput key fields:
 - protocolVersion: string (must match in output)
+- inputMode: compact-strategic-v1
 - tick: number
 - playerId: string (your controlled player)
-- snapshot.resources.money: available budget
-- snapshot.units: array of units with id, type, owner, health, position, status (ammo/fuel)
-- snapshot.buildings: array of buildings with id, type, owner, health, tilePosition
-- snapshot.buildQueues: production queues (current plan in progress)
-- snapshot.llmQueue: YOUR current production queue with status tracking:
+- economy.money and economy.power: available budget and power situation
+- baseStatus.ownedBuildings: your building ids, types, positions, rally points, and health ratios
+- baseStatus.productionAnchors / defenses / criticalBuildings: condensed strategic building views
+- forceGroups.combat / support / logistics / aircraft: grouped friendly units by type with full unitIds for command selection
+- forceGroups.detailedUnits: extra per-unit detail for harvesters, support, aircraft, damaged units, and units already engaged in combat
+- knownEnemyIntel.visibleForceGroups / priorityTargets: visible enemy groups and the most important enemy ids to attack
+- mapIntel: compact map and base-location context instead of raw map tiles
+- techTreeCsv: compressed CSV string with the full tech tree for long-term planning using k,type,cost,req,extra where k is B or U
+- productionOptions.availableBuildings / availableUnits: the current tech-legal buildings and units you may request right now, with costs and basic roles
+- queueState.llmQueue: YOUR current production queue with status tracking:
   - buildings: array of {buildingType, status} where status is "queued"|"building"|"completed"|"failed"
   - units: array of {unitType, status} where status is "queued"|"building"|"completed"|"failed"
-  IMPORTANT: Check snapshot.llmQueue BEFORE issuing build_place or build_queue actions.
+  IMPORTANT: Check queueState.llmQueue BEFORE issuing build_place or build_queue actions.
   Do NOT re-issue commands for items already in the queue (queued/building/completed).
   Only add NEW items that are not already tracked.
-- transitions.events: recent changes since last tick
+- recentDeltas: compact transition summary and highlights since the last tick
 - constraints: maxActionsPerTick, allowQueuedCommands, maxQueuedCommands
+- commentary: optional compact commentary input when commentary and strategy are combined into one request
 
 OUTPUT FORMAT (return ONLY JSON, no markdown) - GameTickOutput:
 {
@@ -241,17 +133,24 @@ OUTPUT FORMAT (return ONLY JSON, no markdown) - GameTickOutput:
   ],
   "notes": "optional short taunt or plan summary for the player",
   "intent": "short label of your current plan",
-  "confidence": 0.5
+  "confidence": 0.5,
+  "commentary": null | {
+    "skip": true,
+    "text": null
+  } | {
+    "skip": false,
+    "text": "short taunt for the host player"
+  }
 }
 
 Always include intent, confidence (0.0-1.0), and notes fields even if the value is minimal.
+Always include commentary. Return commentary as null when no commentary input was provided. When commentary input is provided and there is nothing worth saying, return {"skip":true,"text":null}.
 
 TACTICAL GUIDELINES
-- Build power plants FIRST to ensure your base has enough energy.
-- Build an ore refinery and a harvester IMMEDIATELY for income. Without income you will lose.
-- Build a vehicle factory before queueing land units (all land units spawn from vehicle factory).
-- Build a helipad (requires radar) before queueing apaches.
-- BUILDING PLACEMENT: Look at your existing buildings in the snapshot (especially your constructionYard) and place new buildings within 1-2 tiles of them. Use coordinates close to your existing structures. If your constructionYard is at (x, y), place the next building at (x+3, y) or (x, y+3) etc. NEVER place buildings at random positions on the map.
+- Build power first, then refinery, then factory, then harvester unless input.productionOptions makes one of those temporarily unavailable.
+- Use input.techTreeCsv for long-term planning and future tech paths, but use input.productionOptions for what is legal to request on this tick.
+- Use input.productionOptions for what is currently legal to build; do not guess missing tech prerequisites.
+- Place buildings adjacent to your current base footprint, not at random map positions.
 - Defend your base with turrets to slow rushes.
 - Amass a critical mass of combat units (at least 5-8 tanks) before attacking. Sending 1-2 tanks into an enemy base with turrets is wasteful — they will die instantly.
 - AVOID ENEMY BASE DEFENSES: Do NOT send units into range of enemy turrets, tesla coils, or artillery unless you have overwhelming force (2-3x the defensive firepower). Scout the enemy base perimeter first, then attack from the weakest side.
@@ -260,6 +159,7 @@ TACTICAL GUIDELINES
 - Use the "move" command to position units, then "attack" to engage specific targets.
 - Protect your harvesters — they are your economy.
 - When issuing "attack" commands, always provide BOTH targetPos AND targetId for the specific enemy unit or building you want destroyed. Units with just a move target will walk but not fire!
+- If commentary input is provided, the commentary must talk about the HOST PLAYER'S situation using "you"/"your" and how you will defeat them. Do not narrate your own setbacks except as setup for a threat.
 
 RULES
 - Return valid JSON only. No markdown, no extra text.
@@ -268,30 +168,32 @@ RULES
 - Prefer "tile" positions for building placement.
 - If unsure, return an empty actions array.
 
-You will receive this full context only once. Future prompts include only the latest game state + transitions; continue the same session and follow these rules.
+You will receive this ruleset only on fresh sessions or after resets. Future prompts continue the same session.
 
 IMPORTANT: Respond to THIS message with your first set of strategic actions NOW. Analyze the game state below. Your economy build order should start immediately: build a power plant, then an ore refinery, then a vehicle factory, then queue a harvester. Do not wait for a second prompt to start issuing commands.`
 
 const STRATEGIC_FOLLOWUP_PROMPT = `You are the same enemy strategic AI continuing the current match.
 Return ONLY valid JSON matching GameTickOutput. No markdown or extra text.
-Follow the rules and schema from the initial brief.
+Follow the same rules as the initial brief.
+Use input.productionOptions and queueState.llmQueue instead of assuming all unit or building types are currently legal.
+Use input.techTreeCsv for full long-term tech planning and sell non-critical buildings if that is the fastest way to restore a broken refinery/harvester economy.
+If the minimum economy is not established yet, your first spending action must continue the powerPlant -> oreRefinery -> vehicleFactory -> harvester chain.
+Plan ahead with a multi-step build and production backlog whenever the queues are short so the local AI stays busy between strategic ticks.
+If commentary input is present, always return a host-focused commentary object and talk about what is happening to the host player and how you will beat them.
 Always include intent, confidence (0-1), and notes fields.`
 
-const DEFAULT_COMMENTARY_PROMPT = `You are a mean RTS opponent commentating on the battle while actively controlling one AI party.
-Your controlled side is input.playerId in the provided game snapshot. Treat that side as "my" side in commentary.
-Before commenting on any event, identify ownership using each unit/building owner field:
-- If owner === input.playerId, it is YOUR side.
-- If owner !== input.playerId, it is an opposing side (usually the human player, but may include other parties).
-Never confuse sides: do not describe your own losses as the player's losses, and do not claim enemy losses as your own.
-When multiple non-self parties exist, refer to them as specific opposing parties based on owner id.
-Taunt the player about notable events: units destroyed, buildings lost, economy problems, or your upcoming attacks.
+const DEFAULT_COMMENTARY_PROMPT = `You are a mean RTS opponent taunting the host player during the battle.
+The host player is input.ownerContext.humanPlayerId. Focus commentary on the host player's situation and how you are going to defeat them.
+Use input.ownerContext.hostPerspectiveSide and each highlight.side value to identify what happened to the host:
+- In the usual AI-vs-host case, side === "enemy" is the host player's side.
+- side === "self" is your own AI side.
+- If multiple opposing owners exist, refer to them using input.ownerContext.opposingOwners, but keep the taunt centered on the host player.
+Do not narrate your own losses as the main subject. Mention your own side only to threaten, pressure, or explain how you will punish the host player.
+Taunt the host player about notable events: their units destroyed, their buildings lost, their economy problems, their exposed base, or your upcoming attacks.
 Only comment when something interesting happened (battles, kills, expansions, milestones).
 If nothing notable occurred since your last comment, respond with exactly: {"skip":true}
 NEVER repeat the same taunt or observation twice. Vary your vocabulary, tone, and targets.
 Keep it under 30 words. Be creative, menacing, and entertaining.`
-
-
-const PROTOCOL_SCHEMA_TEXT = JSON.stringify(protocolSchema)
 
 function getAiPlayers(state) {
   const humanPlayer = state.humanPlayer || 'player1'
@@ -312,6 +214,46 @@ function getAiPlayers(state) {
   })
 }
 
+
+function getPlayerStrategicModelConfig(playerId, state, settings) {
+  const partyState = Array.isArray(state.partyStates)
+    ? state.partyStates.find(p => p.partyId === playerId)
+    : null
+  const modelPool = Array.isArray(settings.strategicModelPool) ? settings.strategicModelPool : []
+  const selectedModelKey = partyState?.llmModelKey
+  const selected = selectedModelKey ? modelPool.find(entry => entry.key === selectedModelKey) : null
+  if (selected && selected.provider && selected.model) {
+    return {
+      providerId: selected.provider,
+      model: selected.model,
+      tickSeconds: selected.tickSeconds || settings.strategic.tickSeconds || 60
+    }
+  }
+
+  const providerId = settings.strategic.provider
+  const model = settings.providers?.[providerId]?.model
+  return {
+    providerId,
+    model,
+    tickSeconds: settings.strategic.tickSeconds || 60
+  }
+}
+
+
+function getCommentaryModelConfig(settings) {
+  const modelPool = Array.isArray(settings.strategicModelPool) ? settings.strategicModelPool : []
+  const selectedKey = settings.commentary?.modelKey || ''
+  const selected = selectedKey ? modelPool.find(entry => entry.key === selectedKey) : null
+  if (!selected || !selected.provider || !selected.model) {
+    return null
+  }
+  return {
+    providerId: selected.provider,
+    model: selected.model,
+    tickSeconds: selected.tickSeconds || settings.strategic.tickSeconds || 60
+  }
+}
+
 function ensureStrategicState(state) {
   if (!state.llmStrategic) {
     state.llmStrategic = {
@@ -321,8 +263,12 @@ function ensureStrategicState(state) {
       lastSummary: '',
       plansByPlayer: {},
       summariesByPlayer: {},
+      memoryByPlayer: {},
+      lastSuccessfulTickFrameByPlayer: {},
       bootstrappedByPlayer: {},
-      responseIdsByPlayer: {}
+      responseIdsByPlayer: {},
+      perPlayerTick: {},
+      contextStatsByPlayer: {}
     }
   }
   return state.llmStrategic
@@ -332,9 +278,16 @@ function ensureCommentaryState(state) {
   if (!state.llmCommentary) {
     state.llmCommentary = {
       lastTickAt: 0,
+      lastTickFrame: 0,
       pending: false,
       responseId: null,
-      recentComments: []
+      recentComments: [],
+      contextStats: {
+        requestCount: 0,
+        estimatedPromptTokens: 0,
+        responseId: null,
+        lastResetReason: null
+      }
     }
   }
   return state.llmCommentary
@@ -391,7 +344,7 @@ function parseOutput(text) {
   }
 }
 
-function applyUsageCost(providerId, model, usage, costMap) {
+function applyUsageCost(providerId, model, usage, costMap, requestType = 'generic') {
   if (!usage) return
   const inputTokens = usage.input_tokens ?? usage.prompt_tokens ?? 0
   const outputTokens = usage.output_tokens ?? usage.completion_tokens ?? 0
@@ -412,47 +365,331 @@ function applyUsageCost(providerId, model, usage, costMap) {
     totalTokens,
     costUsd
   })
+  window.logger?.info?.(
+    `[LLM] Usage ${requestType} ${providerId}:${model} prompt=${inputTokens} completion=${outputTokens} total=${totalTokens}`
+  )
 }
 
-function buildStrategicMessages({ input, summary, includeBootstrap }) {
-  const messages = []
-  if (includeBootstrap) {
-    messages.push({ role: 'system', content: STRATEGIC_BOOTSTRAP_PROMPT })
-    messages.push({ role: 'system', content: `PROTOCOL_JSON_SCHEMA:\n${PROTOCOL_SCHEMA_TEXT}` })
-  }
-  messages.push({
-    role: 'user',
-    content: JSON.stringify({
-      summary,
-      input
-    })
-  })
-  return messages
-}
-
-function hasInterestingEvents(transitions) {
-  if (!Array.isArray(transitions) || transitions.length === 0) return false
-  const interestingTypes = new Set([
-    'unit_destroyed', 'building_destroyed', 'unit_created', 'building_placed',
-    'attack_started', 'building_captured', 'unit_promoted', 'milestone',
-    'harvester_destroyed', 'construction_started'
-  ])
-  return transitions.some(evt => interestingTypes.has(evt.type))
-}
-
-function buildCommentaryMessages(input, summary, recentComments = []) {
-  const avoidRepeat = recentComments.length > 0
-    ? `\nRecent comments you already made (DO NOT repeat these): ${recentComments.slice(-5).join(' | ')}` : ''
+function buildStrategicMessages({ input, summary, memory = null, commentary = null }) {
   return [
     {
       role: 'user',
       content: JSON.stringify({
         summary,
-        transitions: input.transitions?.events?.slice(-8) || [],
-        instruction: `Comment on recent events.${avoidRepeat}\nIf nothing interesting happened, respond with exactly: {"skip":true}`
+        input,
+        commentary: commentary || undefined,
+        memory: memory || undefined
       })
     }
   ]
+}
+
+function buildCommentaryMessages(input) {
+  return [
+    {
+      role: 'user',
+      content: JSON.stringify({ input })
+    }
+  ]
+}
+
+function buildCommentaryRequestPayload(rawInput, summary, recentComments = [], humanPlayerId = null) {
+  const attemptConfigs = [
+    { maxHighlights: 6, maxRecentComments: 3 },
+    { maxHighlights: 4, maxRecentComments: 2 },
+    { maxHighlights: 2, maxRecentComments: 1 }
+  ]
+
+  return attemptConfigs.map(config => {
+    const compactInput = buildCompactCommentaryInput(rawInput, {
+      summary,
+      recentComments,
+      humanPlayerId,
+      ...config
+    })
+
+    return {
+      compactInput,
+      messages: buildCommentaryMessages(compactInput)
+    }
+  })
+}
+
+function buildStrategicRequestPayload(rawInput, summary, memory = null, commentary = null) {
+  const attemptConfigs = [
+    {
+      maxDetailedUnits: 14,
+      maxCombatGroups: 8,
+      maxSupportGroups: 6,
+      maxLogisticsGroups: 6,
+      maxAircraftGroups: 4,
+      maxEnemyGroups: 8,
+      maxEnemyPriorityUnits: 8,
+      maxEnemyPriorityBuildings: 8,
+      maxPriorityTargets: 12,
+      maxEnemyBaseCenters: 4,
+      maxVisibleOreRefineries: 8,
+      maxDeltas: 8
+    },
+    {
+      maxDetailedUnits: 10,
+      maxCombatGroups: 6,
+      maxSupportGroups: 4,
+      maxLogisticsGroups: 4,
+      maxAircraftGroups: 3,
+      maxEnemyGroups: 6,
+      maxEnemyPriorityUnits: 5,
+      maxEnemyPriorityBuildings: 5,
+      maxPriorityTargets: 8,
+      maxEnemyBaseCenters: 3,
+      maxVisibleOreRefineries: 6,
+      maxDeltas: 6
+    },
+    {
+      maxDetailedUnits: 6,
+      maxCombatGroups: 4,
+      maxSupportGroups: 3,
+      maxLogisticsGroups: 3,
+      maxAircraftGroups: 2,
+      maxEnemyGroups: 4,
+      maxEnemyPriorityUnits: 3,
+      maxEnemyPriorityBuildings: 3,
+      maxPriorityTargets: 5,
+      maxEnemyBaseCenters: 2,
+      maxVisibleOreRefineries: 4,
+      maxDeltas: 4
+    }
+  ]
+
+  return attemptConfigs.map(config => {
+    const compactInput = buildCompactStrategicInput(rawInput, config)
+    return {
+      compactInput,
+      messages: buildStrategicMessages({ input: compactInput, summary, memory, commentary })
+    }
+  })
+}
+
+function getCommentaryPlayerId(state) {
+  return getAiPlayers(state)[0] || null
+}
+
+function getCombinedCommentaryConfig(playerId, state, settings, strategicModelConfig = null) {
+  if (!settings.commentary.enabled) return null
+  const commentaryPlayerId = getCommentaryPlayerId(state)
+  if (!commentaryPlayerId || commentaryPlayerId !== playerId) return null
+  const commentaryConfig = getCommentaryModelConfig(settings)
+  const activeStrategicConfig = strategicModelConfig || getPlayerStrategicModelConfig(playerId, state, settings)
+
+  if (!commentaryConfig || !activeStrategicConfig) return null
+  if (commentaryConfig.providerId !== activeStrategicConfig.providerId) return null
+  if (commentaryConfig.model !== activeStrategicConfig.model) return null
+
+  return commentaryConfig
+}
+
+function buildCombinedCommentaryPayload(state, summary, recentComments = []) {
+  const commentaryState = ensureCommentaryState(state)
+  const commentaryPlayerId = getCommentaryPlayerId(state)
+  if (!commentaryPlayerId) return null
+
+  const rawInput = exportGameTickInput(state, commentaryState.lastTickFrame || state.llmStrategic?.lastTickFrame || 0, {
+    verbosity: 'minimal',
+    playerId: commentaryPlayerId,
+    pruneTransitions: false
+  })
+  const input = filterInputByFogOfWar(rawInput, state, commentaryPlayerId)
+
+  return buildCompactCommentaryInput(input, {
+    summary,
+    recentComments: recentComments.slice(-4),
+    maxHighlights: 4,
+    maxRecentComments: 2,
+    humanPlayerId: state.humanPlayer || 'player1'
+  })
+}
+
+function normalizeCommentaryPayload(commentary) {
+  if (!commentary || typeof commentary !== 'object') return null
+  return {
+    skip: Boolean(commentary.skip),
+    text: typeof commentary.text === 'string' ? commentary.text.trim() : null
+  }
+}
+
+function speakCommentaryText(text, settings) {
+  if (!text || !settings.commentary.ttsEnabled || typeof window === 'undefined' || !('speechSynthesis' in window)) {
+    return
+  }
+
+  const synth = window.speechSynthesis
+  const speak = () => {
+    const utterance = new SpeechSynthesisUtterance(text)
+    const voices = synth.getVoices()
+    if (settings.commentary.voiceName) {
+      const selectedVoice = voices.find(voice => voice.name === settings.commentary.voiceName)
+      if (selectedVoice) {
+        utterance.voice = selectedVoice
+      }
+    }
+    utterance.onerror = (event) => {
+      window.logger?.warn?.('[LLM] Commentary TTS failed:', event.error || event)
+    }
+    synth.cancel()
+    if (typeof synth.resume === 'function') synth.resume()
+    synth.speak(utterance)
+  }
+
+  const availableVoices = synth.getVoices()
+  if (availableVoices.length > 0 || !settings.commentary.voiceName) {
+    speak()
+    return
+  }
+
+  let settled = false
+  const handleVoicesChanged = () => {
+    if (settled) return
+    settled = true
+    synth.removeEventListener('voiceschanged', handleVoicesChanged)
+    speak()
+  }
+
+  synth.addEventListener('voiceschanged', handleVoicesChanged)
+  setTimeout(handleVoicesChanged, 400)
+}
+
+function publishCommentaryText(state, settings, text) {
+  if (!text) return
+  const commentaryState = ensureCommentaryState(state)
+  state.llmCommentary.lastText = text
+
+  if (!commentaryState.recentComments) commentaryState.recentComments = []
+  commentaryState.recentComments.push(text)
+  if (commentaryState.recentComments.length > 10) {
+    commentaryState.recentComments = commentaryState.recentComments.slice(-10)
+  }
+
+  showNotification(text, 5000)
+  speakCommentaryText(text, settings)
+}
+
+function pruneConsumedTransitions(state, settings) {
+  const strategicState = ensureStrategicState(state)
+  const commentaryState = ensureCommentaryState(state)
+  const consumedTicks = []
+  const aiPlayers = getAiPlayers(state)
+
+  aiPlayers.forEach(playerId => {
+    const tick = strategicState.lastSuccessfulTickFrameByPlayer?.[playerId]
+    if (Number.isFinite(tick) && tick > 0) {
+      consumedTicks.push(tick)
+    }
+  })
+
+  if (settings.commentary.enabled && Number.isFinite(commentaryState.lastTickFrame) && commentaryState.lastTickFrame > 0) {
+    consumedTicks.push(commentaryState.lastTickFrame)
+  }
+
+  if (consumedTicks.length === 0) return
+  pruneTransitionsUpTo(Math.min(...consumedTicks))
+}
+
+function ensureStrategicContextStats(state, playerId) {
+  const strategicState = ensureStrategicState(state)
+  if (!strategicState.contextStatsByPlayer[playerId]) {
+    strategicState.contextStatsByPlayer[playerId] = {
+      requestCount: 0,
+      estimatedPromptTokens: 0,
+      responseId: null,
+      lastResetReason: null
+    }
+  }
+  return strategicState.contextStatsByPlayer[playerId]
+}
+
+function resetContextStats(stats, reason) {
+  stats.requestCount = 0
+  stats.estimatedPromptTokens = 0
+  stats.responseId = null
+  stats.lastResetReason = reason || null
+}
+
+function recordContextProgress(stats, estimatedPromptTokens, responseId, resetReason = null) {
+  stats.requestCount += 1
+  stats.estimatedPromptTokens += estimatedPromptTokens
+  stats.responseId = responseId || null
+  stats.lastResetReason = resetReason || null
+}
+
+function resolveStrategicRequestConfig({ providerId, previousResponseId, hasBootstrapped, messages, summary, budget, contextStats, plan }) {
+  const continuedChain = providerId === 'openai' && Boolean(previousResponseId)
+  const initialPromptTokens = estimateRequestPromptTokens({ messages })
+  const resetDecision = continuedChain
+    ? shouldResetResponseChain({ ...contextStats, responseId: previousResponseId }, initialPromptTokens, budget)
+    : { reset: false, reason: null }
+
+  let activePreviousResponseId = previousResponseId
+  let summaryForRequest = summary
+  let memory = null
+  let resetReason = null
+  let instructionPrompt = null
+  let systemPrompt = null
+
+  if (providerId === 'openai') {
+    if (!continuedChain || resetDecision.reset) {
+      instructionPrompt = hasBootstrapped ? STRATEGIC_FOLLOWUP_PROMPT : STRATEGIC_BOOTSTRAP_PROMPT
+    }
+  } else {
+    systemPrompt = hasBootstrapped ? STRATEGIC_FOLLOWUP_PROMPT : STRATEGIC_BOOTSTRAP_PROMPT
+  }
+
+  if (resetDecision.reset) {
+    activePreviousResponseId = null
+    resetReason = resetDecision.reason
+    summaryForRequest = trimRollingSummary(summary, budget.maxSummaryLinesOnReset)
+    memory = buildCarryForwardMemory({ plan, summary })
+  }
+
+  return {
+    previousResponseId: activePreviousResponseId,
+    summary: summaryForRequest,
+    memory,
+    resetReason,
+    instructions: instructionPrompt,
+    system: systemPrompt
+  }
+}
+
+function resolveCommentaryRequestConfig({ providerId, previousResponseId, summary, budget, contextStats }) {
+  const basePrompt = DEFAULT_COMMENTARY_PROMPT
+  const continuedChain = providerId === 'openai' && Boolean(previousResponseId)
+  const resetDecision = continuedChain
+    ? shouldResetResponseChain({ ...contextStats, responseId: previousResponseId }, 0, budget)
+    : { reset: false, reason: null }
+
+  if (providerId === 'openai') {
+    if (continuedChain && !resetDecision.reset) {
+      return {
+        previousResponseId,
+        summary,
+        resetReason: null,
+        system: null
+      }
+    }
+    return {
+      previousResponseId: null,
+      summary: trimRollingSummary(summary, budget.maxSummaryLinesOnReset),
+      resetReason: resetDecision.reason,
+      system: basePrompt
+    }
+  }
+
+  return {
+    previousResponseId: null,
+    summary,
+    resetReason: null,
+    system: basePrompt
+  }
 }
 
 function computeAiVisibleTiles(state, playerId) {
@@ -513,8 +750,8 @@ function filterInputByFogOfWar(input, state, playerId) {
   // Keep own units, filter enemy units by visibility
   filtered.snapshot.units = (input.snapshot.units || []).filter(u => {
     if (u.owner === playerId) return true
-    const tx = u.tilePosition?.x ?? Math.floor(u.position.x / TILE_SIZE)
-    const ty = u.tilePosition?.y ?? Math.floor(u.position.y / TILE_SIZE)
+    const tx = u.tilePosition?.x ?? (u.position ? Math.floor(u.position.x / TILE_SIZE) : 0)
+    const ty = u.tilePosition?.y ?? (u.position ? Math.floor(u.position.y / TILE_SIZE) : 0)
     return isTileVisible(vis, tx, ty)
   })
   // Keep own buildings, filter enemy buildings by visibility
@@ -540,7 +777,10 @@ function updatePlanCache(state, playerId, output) {
   const plan = {
     updatedAt: state.gameTime || performance.now(),
     actions: output.actions || [],
-    notes: output.notes || ''
+    notes: output.notes || '',
+    intent: output.intent || '',
+    confidence: Number.isFinite(output.confidence) ? output.confidence : null,
+    recentRejects: state.llmStrategic?.memoryByPlayer?.[playerId]?.recentRejects || []
   }
   state.llmStrategic.plansByPlayer[playerId] = plan
 }
@@ -556,8 +796,10 @@ function disableLlmAI(type = 'both') {
   updateLlmSettings(updates)
 }
 
-async function runStrategicTickForPlayer(playerId, state, settings, now) {
+async function runStrategicTickForPlayer(playerId, state, settings, now, modelConfig = null) {
   const strategicState = ensureStrategicState(state)
+  const commentaryState = ensureCommentaryState(state)
+  const budgetConfig = LLM_REQUEST_BUDGETS.strategic
   const factories = state.factories || []
   const enemyFactory = factories.find(factory => factory.id === playerId)
   const budget = enemyFactory?.budget ?? 0
@@ -568,23 +810,30 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
     humanPlayer: state.humanPlayer
   }
 
-  const lastTickFrame = state.llmStrategic.lastTickFrame || 0
+  const lastTickFrame = strategicState.lastSuccessfulTickFrameByPlayer[playerId] || 0
   const rawInput = exportGameTickInput(viewState, lastTickFrame, {
     playerId,
     verbosity: settings.strategic.verbosity,
-    maxActionsPerTick: settings.strategic.maxActions
+    maxActionsPerTick: settings.strategic.maxActions,
+    pruneTransitions: false
   })
 
   // Apply fog-of-war: only show entities visible to this AI player
   const input = filterInputByFogOfWar(rawInput, state, playerId)
+  const payloadAttempts = buildStrategicRequestPayload(input, '', null)
 
   const previousSummary = strategicState.summariesByPlayer[playerId] || ''
   const summary = summarizeInput(input, previousSummary)
   strategicState.summariesByPlayer[playerId] = summary
   strategicState.lastSummary = summary
 
-  const providerId = settings.strategic.provider
-  const model = settings.providers?.[providerId]?.model
+  const selectedModelConfig = modelConfig || getPlayerStrategicModelConfig(playerId, state, settings)
+  const combinedCommentaryConfig = getCombinedCommentaryConfig(playerId, state, settings, selectedModelConfig)
+  const combinedCommentaryInput = combinedCommentaryConfig
+    ? buildCombinedCommentaryPayload(state, summary, commentaryState.recentComments || [])
+    : null
+  const providerId = selectedModelConfig.providerId
+  const model = selectedModelConfig.model
   const providerSettings = getProviderSettings(providerId)
   const hasApiKey = providerSettings?.apiKey && providerSettings.apiKey.trim().length > 0
 
@@ -600,12 +849,54 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
 
   const costMap = await fetchCostMap()
   const hasBootstrapped = Boolean(strategicState.bootstrappedByPlayer[playerId])
-  const previousResponseId = strategicState.responseIdsByPlayer[playerId] || null
-  const messages = buildStrategicMessages({
-    input,
+  const contextStats = ensureStrategicContextStats(state, playerId)
+  const requestConfig = resolveStrategicRequestConfig({
+    providerId,
+    previousResponseId: strategicState.responseIdsByPlayer[playerId] || null,
+    hasBootstrapped,
+    messages: buildStrategicMessages({ input: payloadAttempts[0].compactInput, summary, commentary: combinedCommentaryInput }),
     summary,
-    includeBootstrap: !hasBootstrapped
+    budget: budgetConfig,
+    contextStats,
+    plan: strategicState.plansByPlayer[playerId] || null
   })
+  if (requestConfig.resetReason) {
+    resetContextStats(contextStats, requestConfig.resetReason)
+    strategicState.responseIdsByPlayer[playerId] = null
+  }
+  const requestPayloadAttempts = buildStrategicRequestPayload(input, requestConfig.summary, requestConfig.memory, combinedCommentaryInput)
+  let selectedPayload = null
+  let estimatedPromptTokens = 0
+
+  for (const attempt of requestPayloadAttempts) {
+    const attemptPromptTokens = estimateRequestPromptTokens({
+      messages: attempt.messages,
+      instructions: requestConfig.instructions,
+      system: requestConfig.system
+    })
+    if (attemptPromptTokens <= budgetConfig.maxEstimatedPromptTokens) {
+      selectedPayload = attempt
+      estimatedPromptTokens = attemptPromptTokens
+      break
+    }
+  }
+
+  if (!selectedPayload) {
+    const smallestAttempt = requestPayloadAttempts[requestPayloadAttempts.length - 1]
+    estimatedPromptTokens = estimateRequestPromptTokens({
+      messages: smallestAttempt.messages,
+      instructions: requestConfig.instructions,
+      system: requestConfig.system
+    })
+    selectedPayload = smallestAttempt
+  }
+
+  if (estimatedPromptTokens > budgetConfig.maxEstimatedPromptTokens) {
+    window.logger.warn(
+      `[LLM] Skipping strategic request for ${playerId}: estimated prompt tokens ${estimatedPromptTokens} exceed budget ${budgetConfig.maxEstimatedPromptTokens}`
+    )
+    return
+  }
   // Schema for the OpenAI Responses API with strict: true.
   // Rules from https://platform.openai.com/docs/guides/structured-outputs#supported-schemas:
   //  - Use anyOf (NOT oneOf) for discriminated unions
@@ -660,6 +951,20 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
       intent: { type: 'string' },
       confidence: { type: 'number' },
       notes: { type: 'string' },
+      commentary: {
+        anyOf: [
+          {
+            type: 'object',
+            properties: {
+              skip: { type: 'boolean' },
+              text: { type: ['string', 'null'] }
+            },
+            required: ['skip', 'text'],
+            additionalProperties: false
+          },
+          { type: 'null' }
+        ]
+      },
       actions: {
         type: 'array',
         items: {
@@ -774,7 +1079,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
         }
       }
     },
-    required: ['protocolVersion', 'tick', 'intent', 'confidence', 'notes', 'actions'],
+    required: ['protocolVersion', 'tick', 'intent', 'confidence', 'notes', 'commentary', 'actions'],
     additionalProperties: false
   }
 
@@ -784,20 +1089,22 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
     schema: SIMPLE_GAME_TICK_SCHEMA,
     strict: true
   }
-  const instructionPrompt = hasBootstrapped ? STRATEGIC_FOLLOWUP_PROMPT : STRATEGIC_BOOTSTRAP_PROMPT
-  const systemForRequest = providerId === 'openai' ? null : instructionPrompt
 
   try {
     const response = await requestLlmCompletion(providerId, {
       model,
-      system: systemForRequest,
-      messages,
+      system: requestConfig.system,
+      messages: selectedPayload.messages,
+      maxTokens: budgetConfig.maxOutputTokens,
       responseFormat,
-      previousResponseId,
-      instructions: instructionPrompt
+      previousResponseId: requestConfig.previousResponseId,
+      instructions: requestConfig.instructions,
+      requestType: 'strategic',
+      promptBudget: budgetConfig,
+      resetContextReason: requestConfig.resetReason
     })
 
-    applyUsageCost(providerId, model, response.usage, costMap)
+    applyUsageCost(providerId, model, response.usage, costMap, 'strategic')
 
     const parsed = parseOutput(response.text)
     if (!parsed) {
@@ -805,7 +1112,9 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
       return
     }
 
-    const result = applyGameTickOutput(state, parsed, {
+    const prioritizedOutput = prioritizeEconomyActions(parsed, selectedPayload.compactInput)
+
+    const result = applyGameTickOutput(state, prioritizedOutput, {
       playerId,
       money: budget,
       onMoneyChange: (nextBudget) => {
@@ -824,20 +1133,36 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
 
     const acceptedCommands = result.accepted.filter(action => action.type === 'unit_command')
     acceptedCommands.forEach(action => {
-      applyLlmLocks(state.units || [], action.unitIds || [], now, settings.strategic.tickSeconds * 1000)
+      applyLlmLocks(state.units || [], action.unitIds || [], now, selectedModelConfig.tickSeconds * 1000)
     })
 
-    updatePlanCache(state, playerId, parsed)
+    strategicState.memoryByPlayer[playerId] = {
+      recentRejects: result.rejected.map(entry => ({ type: entry.type, reason: entry.reason }))
+    }
+    updatePlanCache(state, playerId, prioritizedOutput)
     if (!hasBootstrapped) {
       strategicState.bootstrappedByPlayer[playerId] = true
     }
-    if (response.responseId) {
+    strategicState.lastSuccessfulTickFrameByPlayer[playerId] = state.frameCount || rawInput.tick || lastTickFrame
+    pruneConsumedTransitions(state, settings)
+    if (providerId === 'openai' && response.responseId) {
       strategicState.responseIdsByPlayer[playerId] = response.responseId
+      recordContextProgress(contextStats, estimatedPromptTokens, response.responseId, requestConfig.resetReason)
     }
 
-    if (parsed.notes) {
+    if (prioritizedOutput.notes) {
       const llmColor = PARTY_COLORS[playerId] || '#FF0000'
-      showNotification(parsed.notes, 4000, { llmPlayerId: playerId, llmColor })
+      showNotification(prioritizedOutput.notes, 4000, { llmPlayerId: playerId, llmColor })
+    }
+
+    if (combinedCommentaryInput) {
+      const combinedCommentary = normalizeCommentaryPayload(parsed.commentary)
+      commentaryState.lastTickAt = now
+      commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+      if (combinedCommentary && !combinedCommentary.skip && combinedCommentary.text) {
+        publishCommentaryText(state, settings, combinedCommentary.text)
+      }
+      pruneConsumedTransitions(state, settings)
     }
   } catch (err) {
     // Only show error messages if API key is configured
@@ -853,7 +1178,6 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
         6000
       )
       window.logger.warn(`[LLM] ${providerName} quota exceeded:`, err.message)
-      disableLlmAI('strategic')
     } else if (err instanceof AuthenticationError) {
       const providerName = providerId.charAt(0).toUpperCase() + providerId.slice(1)
       showNotification(
@@ -861,7 +1185,6 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
         6000
       )
       window.logger.warn(`[LLM] ${providerName} authentication error:`, err.message)
-      disableLlmAI('strategic')
     } else if (err instanceof ApiParameterError) {
       const providerName = providerId.charAt(0).toUpperCase() + providerId.slice(1)
       showNotification(
@@ -869,7 +1192,6 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
         6000
       )
       window.logger.warn(`[LLM] ${providerName} API parameter error:`, err.message)
-      disableLlmAI('strategic')
     } else {
       throw err
     }
@@ -878,13 +1200,19 @@ async function runStrategicTickForPlayer(playerId, state, settings, now) {
 
 async function runCommentaryTick(state, settings, _now) {
   const commentaryState = ensureCommentaryState(state)
-  const providerId = settings.commentary.provider
-  const model = settings.providers?.[providerId]?.model
+  const budgetConfig = LLM_REQUEST_BUDGETS.commentary
+  const commentaryConfig = getCommentaryModelConfig(settings)
+  const commentaryPlayerId = getCommentaryPlayerId(state)
+  const providerId = commentaryConfig?.providerId
+  const model = commentaryConfig?.model
   const providerSettings = getProviderSettings(providerId)
   const hasApiKey = providerSettings?.apiKey && providerSettings.apiKey.trim().length > 0
 
-  if (!providerId || !model) {
-    showNotification('LLM commentary needs a provider and model selected.')
+  if (!providerId || !model || !commentaryPlayerId) {
+    return
+  }
+
+  if (getCombinedCommentaryConfig(commentaryPlayerId, state, settings)) {
     return
   }
 
@@ -893,35 +1221,87 @@ async function runCommentaryTick(state, settings, _now) {
     return
   }
 
-  const input = exportGameTickInput(state, state.llmStrategic?.lastTickFrame || 0, {
-    verbosity: 'minimal'
+  const rawInput = exportGameTickInput(state, commentaryState.lastTickFrame || state.llmStrategic?.lastTickFrame || 0, {
+    verbosity: 'minimal',
+    playerId: commentaryPlayerId,
+    pruneTransitions: false
   })
+  const input = filterInputByFogOfWar(rawInput, state, commentaryPlayerId)
 
   // Skip commentary when nothing interesting happened
   const transitions = input.transitions?.events || []
-  if (!hasInterestingEvents(transitions)) {
+  if (!hasInterestingCommentaryEvents(transitions)) {
+    commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+    pruneConsumedTransitions(state, settings)
     window.logger.info('[LLM] Commentary skipped: no interesting events')
     return
   }
 
   const summary = summarizeInput(input, state.llmStrategic?.lastSummary || '')
-  const systemPrompt = settings.commentary.promptOverride?.trim() || DEFAULT_COMMENTARY_PROMPT
   const costMap = await fetchCostMap()
   const recentComments = commentaryState.recentComments || []
-  const messages = buildCommentaryMessages(input, summary, recentComments)
-  const previousResponseId = commentaryState.responseId || null
+  const requestConfig = resolveCommentaryRequestConfig({
+    providerId,
+    previousResponseId: commentaryState.responseId || null,
+    summary,
+    budget: budgetConfig,
+    contextStats: commentaryState.contextStats
+  })
+  if (requestConfig.resetReason) {
+    resetContextStats(commentaryState.contextStats, requestConfig.resetReason)
+    commentaryState.responseId = null
+  }
+  const payloadAttempts = buildCommentaryRequestPayload(
+    input,
+    requestConfig.summary,
+    recentComments.slice(-5),
+    state.humanPlayer || 'player1'
+  )
+  let selectedPayload = null
+  let estimatedPromptTokens = 0
+
+  for (const attempt of payloadAttempts) {
+    const attemptPromptTokens = estimateRequestPromptTokens({
+      messages: attempt.messages,
+      system: requestConfig.system
+    })
+    if (attemptPromptTokens <= budgetConfig.maxEstimatedPromptTokens) {
+      selectedPayload = attempt
+      estimatedPromptTokens = attemptPromptTokens
+      break
+    }
+  }
+
+  if (!selectedPayload) {
+    const smallestAttempt = payloadAttempts[payloadAttempts.length - 1]
+    estimatedPromptTokens = estimateRequestPromptTokens({
+      messages: smallestAttempt.messages,
+      system: requestConfig.system
+    })
+    selectedPayload = smallestAttempt
+    commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+    if (estimatedPromptTokens > budgetConfig.maxEstimatedPromptTokens) {
+      window.logger.warn(
+        `[LLM] Skipping commentary request: estimated prompt tokens ${estimatedPromptTokens} exceed budget ${budgetConfig.maxEstimatedPromptTokens}`
+      )
+      return
+    }
+  }
 
   try {
     const response = await requestLlmCompletion(providerId, {
       model,
-      system: systemPrompt,
-      messages,
-      maxTokens: 10000,
+      system: requestConfig.system,
+      messages: selectedPayload.messages,
+      maxTokens: budgetConfig.maxOutputTokens,
       temperature: 1.0,
-      previousResponseId
+      previousResponseId: requestConfig.previousResponseId,
+      requestType: 'commentary',
+      promptBudget: budgetConfig,
+      resetContextReason: requestConfig.resetReason
     })
 
-    applyUsageCost(providerId, model, response.usage, costMap)
+    applyUsageCost(providerId, model, response.usage, costMap, 'commentary')
 
     const rawComment = response.text?.trim()
     if (!rawComment) return
@@ -930,6 +1310,8 @@ async function runCommentaryTick(state, settings, _now) {
     try {
       const parsed = JSON.parse(rawComment)
       if (parsed.skip) {
+        commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+        pruneConsumedTransitions(state, settings)
         window.logger.info('[LLM] Commentary self-skipped via {skip:true}')
         return
       }
@@ -937,31 +1319,15 @@ async function runCommentaryTick(state, settings, _now) {
       // Not JSON, treat as a normal comment
     }
 
-    state.llmCommentary.lastText = rawComment
-    if (response.responseId) {
+    if (providerId === 'openai' && response.responseId) {
       commentaryState.responseId = response.responseId
+      recordContextProgress(commentaryState.contextStats, estimatedPromptTokens, response.responseId, requestConfig.resetReason)
     }
 
-    // Track recent comments to prevent repetition (keep last 10)
-    if (!commentaryState.recentComments) commentaryState.recentComments = []
-    commentaryState.recentComments.push(rawComment)
-    if (commentaryState.recentComments.length > 10) {
-      commentaryState.recentComments = commentaryState.recentComments.slice(-10)
-    }
+    commentaryState.lastTickFrame = state.frameCount || commentaryState.lastTickFrame || 0
+    pruneConsumedTransitions(state, settings)
 
-    showNotification(rawComment, 5000)
-    if (settings.commentary.ttsEnabled && typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(rawComment)
-      const voices = window.speechSynthesis.getVoices()
-      if (settings.commentary.voiceName) {
-        const selected = voices.find(v => v.name === settings.commentary.voiceName)
-        if (selected) {
-          utterance.voice = selected
-        }
-      }
-      window.speechSynthesis.cancel()
-      window.speechSynthesis.speak(utterance)
-    }
+    publishCommentaryText(state, settings, rawComment)
   } catch (err) {
     // Only show error messages if API key is configured
     if (!hasApiKey) {
@@ -1002,29 +1368,39 @@ async function runCommentaryTick(state, settings, _now) {
 export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state = gameState, now = performance.now()) {
   if (!isHost()) return
   const settings = getLlmSettings()
-  if (!settings.strategic.enabled && !settings.commentary.enabled) return
+  if (!settings.commentary.enabled && getAiPlayers(state).length === 0) return
 
   const strategicState = ensureStrategicState(state)
   const commentaryState = ensureCommentaryState(state)
 
-  const tickIntervalMs = Math.max(5, settings.strategic.tickSeconds || 30) * 1000
-
-  if (settings.strategic.enabled && !strategicState.pending &&
-      (strategicState.lastTickAt === 0 || now - strategicState.lastTickAt >= tickIntervalMs)) {
-    strategicState.pending = true
-    strategicState.lastTickAt = now
-    strategicState.lastTickFrame = state.frameCount || 0
+  {
     const aiPlayers = getAiPlayers(state)
-    Promise.all(aiPlayers.map(playerId => runStrategicTickForPlayer(playerId, state, settings, now)))
-      .catch(err => {
-        window.logger.warn('[LLM] Strategic tick failed:', err)
-      })
-      .finally(() => {
-        strategicState.pending = false
-      })
+    aiPlayers.forEach(playerId => {
+      const meta = strategicState.perPlayerTick[playerId] || { pending: false, lastTickAt: 0 }
+      strategicState.perPlayerTick[playerId] = meta
+      const modelConfig = getPlayerStrategicModelConfig(playerId, state, settings)
+      const tickIntervalMs = Math.max(5, modelConfig.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
+      if (meta.pending) return
+      if (meta.lastTickAt !== 0 && now - meta.lastTickAt < tickIntervalMs) return
+
+      meta.pending = true
+      meta.lastTickAt = now
+      runStrategicTickForPlayer(playerId, state, settings, now, modelConfig)
+        .catch(err => {
+          window.logger.warn('[LLM] Strategic tick failed:', err)
+        })
+        .finally(() => {
+          meta.pending = false
+        })
+    })
   }
 
-  if (settings.commentary.enabled && !commentaryState.pending && now - commentaryState.lastTickAt >= tickIntervalMs) {
+  const commentaryModelConfig = getCommentaryModelConfig(settings)
+  const combinedCommentaryMode = commentaryModelConfig
+    ? Boolean(getCombinedCommentaryConfig(getCommentaryPlayerId(state), state, settings, commentaryModelConfig))
+    : false
+  const commentaryTickIntervalMs = Math.max(5, commentaryModelConfig?.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
+  if (settings.commentary.enabled && commentaryModelConfig && !combinedCommentaryMode && !commentaryState.pending && now - commentaryState.lastTickAt >= commentaryTickIntervalMs) {
     commentaryState.pending = true
     commentaryState.lastTickAt = now
     runCommentaryTick(state, settings, now)
@@ -1041,21 +1417,23 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
 export async function triggerStrategicNow(state = gameState) {
   if (!isHost()) return
   const settings = getLlmSettings()
-  if (!settings.strategic.enabled) return
-
   const strategicState = ensureStrategicState(state)
-  if (strategicState.pending) return
 
-  strategicState.pending = true
   const now = performance.now()
-  strategicState.lastTickAt = now
-  strategicState.lastTickFrame = state.frameCount || 0
   const aiPlayers = getAiPlayers(state)
   try {
-    await Promise.all(aiPlayers.map(playerId => runStrategicTickForPlayer(playerId, state, settings, now)))
+    await Promise.all(aiPlayers.map(playerId => {
+      const modelConfig = getPlayerStrategicModelConfig(playerId, state, settings)
+      const meta = strategicState.perPlayerTick[playerId] || { pending: false, lastTickAt: 0 }
+      strategicState.perPlayerTick[playerId] = meta
+      meta.lastTickAt = now
+      meta.pending = true
+      return runStrategicTickForPlayer(playerId, state, settings, now, modelConfig)
+        .finally(() => {
+          meta.pending = false
+        })
+    }))
   } catch (err) {
     window.logger.warn('[LLM] Immediate strategic tick failed:', err)
-  } finally {
-    strategicState.pending = false
   }
 }
