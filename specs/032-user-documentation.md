@@ -10,6 +10,7 @@ Provide a professional, in-game user documentation experience that can be opened
    - Controls & HUD — selection, control groups, HUD bar indicators (HP, fuel, ammo, XP, crew)
    - Building placement rules
    - Tech tree — visual dependency graph for buildings and units with sidebar asset images
+   - Air power coverage — Airstrip building plus F22 Raptor and F35 entries, including unlock rules, runway/parking behavior, and logistics requirements
    - Unit compendium — all 13 units with full numerical stats (cost, HP, speed, damage, fire rate, range, burst, ammo capacity, armor, special abilities)
    - Building compendium — all 18 buildings split into economy/production, support, and defensive categories with full stats
    - Combat mechanics — hit zone multipliers, projectile details, damage thresholds
@@ -39,5 +40,6 @@ Provide a professional, in-game user documentation experience that can be opened
 ## Implementation Notes
 - Keep docs static for low runtime overhead.
 - Reuse game asset images from `public/images/sidebar` and screenshots stored in `public/images/docs`.
+- Ensure the static docs stay in sync when new playable units/buildings such as Airstrip/F22/F35 ship.
 - Expose a global `window.openUserDocs` callback so multiple UI surfaces can trigger the same modal.
 - All stat values sourced from `src/config.js`, `src/game/combatConfig.js`, and `src/data/buildingData.js`.

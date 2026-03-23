@@ -326,7 +326,7 @@
     <!-- ═══════════ HERO ═══════════ -->
     <section class="hero">
       <h1>Code for Battle — Official Player Guide</h1>
-      <p>Welcome Commander. This handbook covers everything from first-click onboarding to advanced system mastery, including a complete compendium of every unit and building with full combat stats.</p>
+      <p>Welcome Commander. This handbook covers everything from first-click onboarding to advanced system mastery, including economy, logistics, and late-game air power like the Airstrip, F22 Raptor, and F35 strike fighter.</p>
       <span class="pill">Version: Live In-Game Docs</span>
     </section>
 
@@ -362,12 +362,12 @@
         </article>
         <article class="card">
           <h3>Step 2 — Army</h3>
-          <p>Train tanks from the Vehicle Factory. Set rally points by selecting a factory and right-clicking the map. Keep gas and ammo supply online.</p>
+          <p>Train tanks from the Vehicle Factory, then transition into air power with an Airstrip for F22/F35 support. Set rally points by selecting a factory and right-clicking the map, and keep gas and ammo supply online.</p>
           <img class="shot" src="/images/docs/quick-guide-sidebar.png" alt="Sidebar production" loading="lazy">
         </article>
         <article class="card">
           <h3>Step 3 — Victory</h3>
-          <p>Destroy <em>all</em> enemy buildings to win. Use turrets for defense and logistics units (tankers, ammo trucks, ambulances) to sustain pressure.</p>
+          <p>Destroy <em>all</em> enemy buildings to win. Use turrets for defense, logistics units (tankers, ammo trucks, ambulances) to sustain pressure, and late-game jets to break entrenched defenses.</p>
           <img class="shot" src="/images/docs/quick-guide-docs-modal.png" alt="Docs modal" loading="lazy">
         </article>
       </div>
@@ -537,9 +537,28 @@
           <span class="tech-node tech-node--unit"><img src="/images/sidebar/ambulance.webp" alt="">Ambulance</span>
         </div>
         <div class="tech-row">
+          <span class="tech-node tech-node--building"><img src="/images/sidebar/radar_station.webp" alt="">Radar Station</span>
+          <span class="tech-arrow">→</span>
+          <span class="tech-node tech-node--building"><img src="/images/sidebar/air_strip.webp" alt="">Airstrip</span>
+        </div>
+        <div class="tech-row">
           <span class="tech-node tech-node--building"><img src="/images/sidebar/helipad_sidebar.webp" alt="">Helipad</span>
           <span class="tech-arrow">→</span>
           <span class="tech-node tech-node--unit"><img src="/images/sidebar/apache_sidebar.webp" alt="">Apache</span>
+        </div>
+        <div class="tech-row">
+          <span class="tech-node tech-node--building"><img src="/images/sidebar/air_strip.webp" alt="">Airstrip</span>
+          <span class="tech-arrow">→</span>
+          <span class="tech-node tech-node--unit"><img src="/images/sidebar/f22_raptor_sidebar.webp" alt="">F22 Raptor</span>
+        </div>
+        <div class="tech-row">
+          <span class="tech-node tech-node--building"><img src="/images/sidebar/ammunition_factory_sidebar.webp" alt="">Ammo Factory</span>
+          <span class="tech-arrow">+</span>
+          <span class="tech-node tech-node--building"><img src="/images/sidebar/helipad_sidebar.webp" alt="">Helipad</span>
+          <span class="tech-arrow">or</span>
+          <span class="tech-node tech-node--building"><img src="/images/sidebar/air_strip.webp" alt="">Airstrip</span>
+          <span class="tech-arrow">→</span>
+          <span class="tech-node tech-node--unit"><img src="/images/sidebar/f35_sidebar.webp" alt="">F35</span>
         </div>
         <div class="tech-row">
           <span class="tech-node tech-node--building"><img src="/images/sidebar/rocket_turret.webp" alt="">Rocket Turret</span>
@@ -547,6 +566,13 @@
           <span class="tech-node tech-node--unit"><img src="/images/sidebar/rocket_tank.webp" alt="">Rocket Tank</span>
         </div>
       </div>
+      <h3>Air Power Notes</h3>
+      <ul>
+        <li><strong>Airstrip:</strong> late-game airbase unlocked by Radar Station. It is a large 12×6 building with runway parking logic for jets.</li>
+        <li><strong>F22 Raptor:</strong> produced only from an Airstrip and best used for high-speed interceptions or cracking exposed air threats before they reach your base.</li>
+        <li><strong>F35:</strong> requires an Ammunition Factory plus either a Helipad or an Airstrip, making it easier to field once your logistics chain is stable.</li>
+        <li>Both jets depend on fuel and ammo reserves, so protect your aviation infrastructure instead of parking it on the front line.</li>
+      </ul>
     </section>
 
     <!-- ═══════════ 5. UNIT COMPENDIUM ═══════════ -->
@@ -649,6 +675,32 @@
               <td class="num">volley</td>
               <td class="num">38</td>
               <td><span class="badge badge--special">Airborne</span> Helipad refuel/reload, hits ground only</td>
+            </tr>
+            <tr>
+              <td><img class="asset" src="/images/sidebar/f22_raptor_sidebar.webp" alt="F22 Raptor"></td>
+              <td><strong>F22 Raptor</strong></td>
+              <td class="num">$6,000</td>
+              <td class="num">80</td>
+              <td class="num">6.075</td>
+              <td class="num">10 ×8</td>
+              <td class="num">8.4s</td>
+              <td class="num">20 tiles</td>
+              <td class="num">8 (180ms)</td>
+              <td class="num">8</td>
+              <td><span class="badge badge--special">Air superiority</span> Launches only from an Airstrip, queues for runway takeoff/landing, can engage airborne targets, then returns to park/rearm.</td>
+            </tr>
+            <tr>
+              <td><img class="asset" src="/images/sidebar/f35_sidebar.webp" alt="F35"></td>
+              <td><strong>F35</strong></td>
+              <td class="num">$3,000</td>
+              <td class="num">70</td>
+              <td class="num">5</td>
+              <td class="num">70</td>
+              <td class="num">bomb pass</td>
+              <td class="num">6 tiles</td>
+              <td class="num">1</td>
+              <td class="num">6</td>
+              <td><span class="badge badge--special">Strike fighter</span> Requires Ammo Factory plus Helipad or Airstrip. Drops bombs on ground targets during attack runs and can operate from either pad type.</td>
             </tr>
           </tbody>
         </table>
@@ -830,6 +882,15 @@
               <td>Apache spawn point. Holds 15,600L fuel + 250 rounds ammo reserve.</td>
             </tr>
             <tr>
+              <td><img class="asset" src="/images/sidebar/air_strip.webp" alt="Airstrip"></td>
+              <td><strong>Airstrip</strong></td>
+              <td class="num">$10,000</td>
+              <td class="num">10,000</td>
+              <td class="num negative">−200 MW</td>
+              <td class="num">12×6</td>
+              <td>Heavy airbase for F22s and optional F35 basing. Requires Radar, provides runway taxi/takeoff/landing queues, parking slots, and shared fuel/ammo reserves for jets.</td>
+            </tr>
+            <tr>
               <td><img class="asset" src="/images/sidebar/gas_station.webp" alt="Gas Station"></td>
               <td><strong>Gas Station</strong></td>
               <td class="num">$2,000</td>
@@ -996,6 +1057,8 @@
         <li><strong>Rockets:</strong> bullet speed 8, 4-rocket salvo with 300ms intervals.</li>
         <li><strong>Howitzer:</strong> shell speed 0.85, ballistic arc, 3-tile splash radius, 2× vs buildings, fires over obstacles.</li>
         <li><strong>Apache:</strong> rapid volley with 180ms between shots, ground targets only.</li>
+        <li><strong>F22 Raptor:</strong> 8-rocket anti-air / strike volley, 180ms between launches, 20-tile effective engagement range, runway takeoff and landing sequencing.</li>
+        <li><strong>F35:</strong> releases 70-damage bombs on ground attack passes only after reaching its computed release point; bombs do not track airborne targets.</li>
       </ul>
 
       <h3>Damage &amp; Health</h3>
@@ -1132,6 +1195,8 @@
                 <tr><td>Tanker Truck</td><td class="num">700</td><td class="num">150</td><td>+40,000L supply tank</td></tr>
                 <tr><td>Mine Layer</td><td class="num">700</td><td class="num">150</td><td></td></tr>
                 <tr><td>Apache</td><td class="num">5,200</td><td class="num">120</td><td></td></tr>
+                <tr><td>F22 Raptor</td><td class="num">8,000</td><td class="num">200</td><td>Airstrip-based jet</td></tr>
+                <tr><td>F35</td><td class="num">8,000</td><td class="num">180</td><td>Helipad or Airstrip-based strike jet</td></tr>
               </tbody>
             </table>
           </div>
@@ -1142,7 +1207,7 @@
       <h3>Ammunition System</h3>
       <p>Combat units carry limited ammo. At 0 rounds, units display "No Ammunition" and cannot fire.</p>
       <ul>
-        <li><strong>Resupply sources:</strong> Ammunition Factory (2-tile range, 7s), Ammo Truck (1.5-tile range), Helipad (250 rounds for Apaches).</li>
+        <li><strong>Resupply sources:</strong> Ammunition Factory (2-tile range, 7s), Ammo Truck (1.5-tile range), Helipad (250 rounds for Apaches/F35s), and Airstrip reserves for F22/F35 turnaround.</li>
         <li><strong>Ammo Truck cargo:</strong> 500 rounds total.</li>
         <li><strong>Warning:</strong> Ammo Factories and Trucks <strong>explode violently</strong> on destruction — keep away from your base core!</li>
       </ul>
@@ -1151,6 +1216,7 @@
       <ol>
         <li><strong>Build</strong> Gas Station + Tanker Truck for fuel supply.</li>
         <li><strong>Build</strong> Ammunition Factory + Ammo Truck for ammo supply.</li>
+        <li><strong>Build</strong> Radar Station → Airstrip to unlock F22s and give F35s a runway-capable alternative to Helipads.</li>
         <li><strong>Build</strong> Vehicle Workshop for passive repairs (2% HP/sec nearby).</li>
         <li><strong>Build</strong> Hospital + Ambulance for crew restoration.</li>
         <li><strong>Position</strong> logistics buildings near the front line but protected from enemy fire.</li>
