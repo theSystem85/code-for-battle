@@ -66,10 +66,11 @@ import { buildingCosts } from './main.js'
 import { unitCosts } from './units.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnUnit } from './units.js'
+import { getSimulationTime } from './game/time.js'
 
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
   try {
-    const now = performance.now()
+    const now = getSimulationTime(gameState)
     const occupancyMap = gameState.occupancyMap
 
     // Check if we're a remote client (not the host)
@@ -279,7 +280,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
     // Update movement speeds for all units based on speed multiplier
     units.forEach(unit => {
-      unit.effectiveSpeed = unit.speed * gameState.speedMultiplier
+      unit.effectiveSpeed = unit.speed
     })
 
     // Clean up unit selection - prevent null references

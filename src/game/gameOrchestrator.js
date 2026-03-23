@@ -530,14 +530,16 @@ class Game {
     const speedMultiplier = document.getElementById('speedMultiplier')
     if (speedMultiplier) {
       speedMultiplier.value = gameState.speedMultiplier
-      speedMultiplier.addEventListener('change', (e) => {
+      const applySpeed = (e) => {
         const value = parseFloat(e.target.value)
         if (value >= 0.25 && value <= 4) {
           gameState.speedMultiplier = value
         } else {
           e.target.value = gameState.speedMultiplier
         }
-      })
+      }
+      speedMultiplier.addEventListener('change', applySpeed)
+      speedMultiplier.addEventListener('input', applySpeed)
     }
   }
 

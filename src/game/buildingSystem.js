@@ -11,6 +11,7 @@ import { updateDangerZoneMaps } from './dangerZoneMap.js'
 import { getTurretImageConfig, turretImagesAvailable } from '../rendering/turretImageRenderer.js'
 import { logPerformance } from '../performanceUtils.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { getSimulationTime } from './time.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from './turretMuzzleConfig.js'
 
@@ -25,7 +26,7 @@ import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '.
  * @param {number} delta - Time delta
  */
 export const updateBuildings = logPerformance(function updateBuildings(gameState, units, bullets, factories, mapGrid, delta) {
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
 
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (let i = gameState.buildings.length - 1; i >= 0; i--) {
@@ -311,7 +312,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
           return
         }
 
-        const effectiveCooldown = building.fireCooldown / gameState.speedMultiplier
+        const effectiveCooldown = building.fireCooldown
         if (!building.lastShotTime || now - building.lastShotTime >= effectiveCooldown) {
           if (closestEnemy) {
             // Play loading sound and mark coil as charging

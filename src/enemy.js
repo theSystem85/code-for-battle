@@ -5,6 +5,7 @@ import { logPerformance } from './performanceUtils.js'
 import { isHost } from './network/gameCommandSync.js'
 import { AI_UPDATE_FRAME_SKIP } from './config.js'
 import { updateLlmStrategicAI } from './ai/llmStrategicController.js'
+import { getSimulationTime } from './game/time.js'
 export { spawnEnemyUnit } from './ai/enemySpawner.js'
 
 // Frame counter for AI update throttling
@@ -46,7 +47,7 @@ export const updateEnemyAI = logPerformance(function updateEnemyAI(units, factor
   }
 
   const occupancyMap = gameState.occupancyMap
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
   const humanPlayer = gameState.humanPlayer || 'player1'
   const playerCount = gameState.playerCount || 2
   const allPlayers = ['player1', 'player2', 'player3', 'player4'].slice(0, playerCount)

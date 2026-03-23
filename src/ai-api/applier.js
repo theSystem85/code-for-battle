@@ -493,8 +493,6 @@ export function processLlmBuildQueue(state, owner, aiFactory, factories, mapGrid
       if (state.enemyPowerSupply < 0) {
         aiFactory.buildDuration = aiFactory.buildDuration / Math.max(state.enemyBuildSpeedModifier || 1, 0.01)
       }
-      // Apply game speed multiplier
-      aiFactory.buildDuration = aiFactory.buildDuration / (state.speedMultiplier || 1)
       aiFactory.buildingPosition = position
       return
     }
@@ -567,8 +565,6 @@ export function processLlmUnitQueue(state, owner, aiFactory, factories, units, b
     if (state.enemyPowerSupply < 0) {
       aiFactory.unitBuildDuration = aiFactory.unitBuildDuration / Math.max(state.enemyBuildSpeedModifier || 1, 0.01)
     }
-    // Apply game speed multiplier
-    aiFactory.unitBuildDuration = aiFactory.unitBuildDuration / (state.speedMultiplier || 1)
     aiFactory.unitSpawnBuilding = spawnFactory
     return
   }

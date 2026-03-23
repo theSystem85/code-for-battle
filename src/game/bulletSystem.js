@@ -25,6 +25,7 @@ import { handleAICrewLossEvent } from '../ai/enemyStrategies.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { recordDamageValue } from '../utils/combatStats.js'
 import { recordDamage } from '../ai-api/transitionCollector.js'
+import { getSimulationTime } from './time.js'
 
 const APACHE_REMOTE_DAMAGE = 10
 const APACHE_TANK_DAMAGE_MULTIPLIER = 1.67
@@ -39,11 +40,10 @@ const F22_TANK_DAMAGE_MULTIPLIER = 2.25
  * @param {Array} mapGrid - 2D array representing the map
  */
 export const updateBullets = logPerformance(function updateBullets(bullets, units, factories, gameState, mapGrid) {
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
 
-  // Update bullet speeds based on game speed multiplier
   bullets.forEach(bullet => {
-    bullet.effectiveSpeed = bullet.speed * gameState.speedMultiplier
+    bullet.effectiveSpeed = bullet.speed
   })
 
   for (let i = bullets.length - 1; i >= 0; i--) {

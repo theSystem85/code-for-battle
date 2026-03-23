@@ -769,8 +769,7 @@ export function checkGameEndConditions(factories, gameState) {
  * @param {number} delta - Time delta in milliseconds
  */
 export function updateGameTime(gameState, delta) {
-  const scaledDelta = delta * gameState.speedMultiplier
-  gameState.gameTime += scaledDelta / 1000
+  gameState.gameTime += delta / 1000
 }
 
 /**

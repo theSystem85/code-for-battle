@@ -12,6 +12,7 @@ import { broadcastBuildingPlace, broadcastUnitSpawn, isHost } from './network/ga
 import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
+import { getSimulationTime } from './game/time.js'
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
@@ -230,15 +231,12 @@ export const productionQueue = {
       duration = duration / gameState.playerBuildSpeedModifier
     }
 
-    // Apply game speed multiplier to build speed
-    // Lower duration = faster build, so we divide by the speed multiplier
-    duration = duration / gameState.speedMultiplier
 
     this.currentUnit = {
       type: item.type,
       button: item.button,
       progress: 0,
-      startTime: performance.now(),
+      startTime: getSimulationTime(gameState),
       duration: duration,
       isBuilding: item.isBuilding, // Should always be false here
       rallyPoint: item.rallyPoint || null
@@ -348,15 +346,12 @@ export const productionQueue = {
       duration = duration / gameState.playerBuildSpeedModifier
     }
 
-    // Apply game speed multiplier to building speed
-    // Lower duration = faster build, so we divide by the speed multiplier
-    duration = duration / gameState.speedMultiplier
 
     this.currentBuilding = {
       type: item.type,
       button: item.button,
       progress: 0,
-      startTime: performance.now(),
+      startTime: getSimulationTime(gameState),
       duration: duration,
       isBuilding: item.isBuilding,
       blueprint: item.blueprint || null
@@ -384,7 +379,7 @@ export const productionQueue = {
     if (this.currentUnit && !this.pausedUnit) {
       const item = this.unitItems[0]
       const cost = unitCosts[item.type] || 0
-      const elapsed = (timestamp - this.currentUnit.startTime) * gameState.speedMultiplier
+      const elapsed = timestamp - this.currentUnit.startTime
       const progress = Math.min(elapsed / this.currentUnit.duration, 1)
 
       // Calculate how much should be paid up to this progress
@@ -426,7 +421,7 @@ export const productionQueue = {
 
       const item = this.buildingItems[0]
       const cost = buildingCosts[item.type] || 0
-      const elapsed = (timestamp - this.currentBuilding.startTime) * gameState.speedMultiplier
+      const elapsed = timestamp - this.currentBuilding.startTime
       const progress = Math.min(elapsed / this.currentBuilding.duration, 1)
 
       // Calculate how much should be paid up to this progress
@@ -973,7 +968,7 @@ export const productionQueue = {
       if (gameState.money > 0 && this.unitPaid < cost) {
         this.pausedUnit = false
         // Adjust startTime so progress resumes smoothly
-        this.currentUnit.startTime = performance.now() - this.currentUnit.progress * this.currentUnit.duration / gameState.speedMultiplier
+        this.currentUnit.startTime = getSimulationTime(gameState) - this.currentUnit.progress * this.currentUnit.duration
         resumed = true
       }
     }
@@ -983,7 +978,7 @@ export const productionQueue = {
       const cost = buildingCosts[item.type] || 0
       if (gameState.money > 0 && this.buildingPaid < cost) {
         this.pausedBuilding = false
-        this.currentBuilding.startTime = performance.now() - this.currentBuilding.progress * this.currentBuilding.duration / gameState.speedMultiplier
+        this.currentBuilding.startTime = getSimulationTime(gameState) - this.currentBuilding.progress * this.currentBuilding.duration
         resumed = true
       }
     }
@@ -998,7 +993,7 @@ export const productionQueue = {
     }
     // Force a progress update if anything resumed
     if (resumed) {
-      this.updateProgress(performance.now())
+      this.updateProgress(getSimulationTime(gameState))
     }
   },
 
@@ -1105,7 +1100,7 @@ export const productionQueue = {
         return Math.max(0, Math.min(1, item.progress))
       }
       if (Number.isFinite(item.startTime) && Number.isFinite(item.duration) && item.duration > 0) {
-        const elapsed = (performance.now() - item.startTime) * (gameState.speedMultiplier || 1)
+        const elapsed = getSimulationTime(gameState) - item.startTime
         return Math.max(0, Math.min(1, elapsed / item.duration))
       }
       return 0
@@ -1279,8 +1274,7 @@ export const productionQueue = {
     this.pausedBuilding = Boolean(state.pausedBuilding)
 
     const clamp = (value) => Math.max(0, Math.min(1, Number.isFinite(value) ? value : 0))
-    const now = performance.now()
-    const speedMultiplier = gameState.speedMultiplier || 1
+    const now = getSimulationTime(gameState)
 
     const reorderToFront = (items, predicate) => {
       if (!Array.isArray(items) || items.length === 0) return null
@@ -1322,7 +1316,7 @@ export const productionQueue = {
           button: match.button,
           progress,
           startTime: duration > 0
-            ? now - (progress * duration) / (speedMultiplier || 1)
+            ? now - (progress * duration)
             : now,
           duration,
           isBuilding: false,
@@ -1355,7 +1349,7 @@ export const productionQueue = {
           button: match.button,
           progress,
           startTime: duration > 0
-            ? now - (progress * duration) / (speedMultiplier || 1)
+            ? now - (progress * duration)
             : now,
           duration,
           isBuilding: true,
