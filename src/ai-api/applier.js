@@ -6,6 +6,7 @@ import { units as mainUnits, factories as mainFactories, mapGrid as mainMapGrid 
 import { validateGameTickOutput } from './validate.js'
 import { findBuildingPosition } from '../ai/enemyBuilding.js'
 import { computeAvailableBuildingTypes, computeAvailableUnitTypes } from './techTree.js'
+import { getSimulationTime } from '../game/time.js'
 
 const vehicleUnitTypes = [
   'tank',
@@ -397,7 +398,7 @@ export function applyGameTickOutput(state = gameState, output, options = {}) {
         }
         const sellValue = Math.floor(bData.cost * 0.7)
         building.isBeingSold = true
-        building.sellStartTime = performance.now()
+        building.sellStartTime = getSimulationTime(state)
         updateMoney(sellValue)
         accepted.push({ actionId: action.actionId, type: action.type, sellValue })
         return

@@ -20,3 +20,5 @@ The sidebar game-speed input must scale simulation time without changing render 
    - speed input affecting simulation speed
    - frame-rate independence for representative movement / production behavior
    - render-loop independence from speed input
+
+7. Defensive building charge/fire sequences and AI/LLM building-sell timers must also use simulation time so they stay synchronized with pause/speed controls.

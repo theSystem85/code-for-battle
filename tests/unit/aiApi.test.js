@@ -61,7 +61,8 @@ vi.mock('../../src/ai/enemyBuilding.js', () => ({
 
 import { TILE_SIZE } from '../../src/config.js'
 import { gameState } from '../../src/gameState.js'
-import { applyGameTickOutput, computeAvailableUnitTypes } from '../../src/ai-api/applier.js'
+import { applyGameTickOutput } from '../../src/ai-api/applier.js'
+import { computeAvailableUnitTypes } from '../../src/ai-api/techTree.js'
 import { validateGameTickInput, validateGameTickOutput } from '../../src/ai-api/validate.js'
 import { exportGameTickInput } from '../../src/ai-api/exporter.js'
 import { resetTransitions, recordDamage } from '../../src/ai-api/transitionCollector.js'
@@ -104,6 +105,16 @@ describe('LLM Control API validation', () => {
 
 describe('LLM Control API applier', () => {
 
+
+  it('validates sell_building outputs in the protocol schema', () => {
+    const result = validateGameTickOutput({
+      protocolVersion: '1.0',
+      tick: 10,
+      actions: [{ actionId: 'sell-1', type: 'sell_building', buildingId: 'power-1' }]
+    })
+
+    expect(result.ok).toBe(true)
+  })
 
   it('requires artillery turret before howitzer is available', () => {
     const owner = 'player1'

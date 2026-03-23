@@ -132,7 +132,7 @@ function canSellBuildingType(type, counts) {
   return true
 }
 
-function sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requiredBudget) {
+function sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requiredBudget, now) {
   if (!aiFactory || !aiBuildings || requiredBudget <= 0) {
     return false
   }
@@ -173,7 +173,7 @@ function sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requ
 
     const sellValue = Math.floor(data.cost * 0.7)
     building.isBeingSold = true
-    building.sellStartTime = performance.now()
+    building.sellStartTime = now
     aiFactory.budget += sellValue
     buildingCounts[building.type] = (buildingCounts[building.type] || 1) - 1
     soldAny = true
@@ -182,7 +182,7 @@ function sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requ
   return soldAny
 }
 
-function ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvesters) {
+function ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvesters, now) {
   if (!aiFactory) {
     return
   }
@@ -204,7 +204,7 @@ function ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvester
     return
   }
 
-  sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requiredBudget)
+  sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requiredBudget, now)
 }
 
 function findSimpleBuildingPosition(buildingType, mapGrid, factories, aiPlayerId) {
@@ -391,7 +391,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   // Ensure AI can recover from economic collapse by selling buildings if needed
   // This must run BEFORE the budget check so it can execute when budget is low/zero
   if (allowStrategicDecisions) {
-    ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvesters)
+    ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvesters, now)
   }
 
   // Debug logging (enable temporarily to debug building issues)

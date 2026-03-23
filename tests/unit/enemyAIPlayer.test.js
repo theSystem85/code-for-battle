@@ -384,6 +384,49 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(aiFactory.unitSpawnBuilding).toBe(airstrip)
   })
 
+  it('timestamps emergency AI building sales from simulation time', () => {
+    const aiPlayerId = 'ai1'
+    const aiFactory = {
+      id: aiPlayerId,
+      owner: aiPlayerId,
+      health: 100,
+      budget: 100
+    }
+    const constructionYard = {
+      type: 'constructionYard',
+      owner: aiPlayerId,
+      health: 100,
+      isBeingSold: false
+    }
+    const turretGun = {
+      type: 'turretGunV1',
+      owner: aiPlayerId,
+      health: 100,
+      isBeingSold: false
+    }
+    const gameState = {
+      buildings: [constructionYard, turretGun],
+      enemyPowerSupply: 0,
+      enemyBuildSpeedModifier: 1,
+      speedMultiplier: 1
+    }
+
+    updateAIPlayer(
+      aiPlayerId,
+      [],
+      [aiFactory],
+      [],
+      createMapGrid(5, 5),
+      gameState,
+      null,
+      43210,
+      []
+    )
+
+    expect(turretGun.isBeingSold).toBe(true)
+    expect(turretGun.sellStartTime).toBe(43210)
+  })
+
   it('falls back to simple placement when advanced placement fails', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {
