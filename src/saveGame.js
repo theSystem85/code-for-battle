@@ -549,38 +549,7 @@ export function saveGame(label) {
   localStorage.setItem('rts_save_' + saveObj.label, JSON.stringify(saveObj))
 }
 
-export function loadGame(key) {
-  let saveObj = null
-
-  if (key.startsWith(BUILTIN_SAVE_PREFIX)) {
-    const missionId = key.slice(BUILTIN_SAVE_PREFIX.length)
-    const mission = getBuiltinMissionById(missionId)
-    if (!mission) {
-      window.logger.warn('Built-in mission not found:', missionId)
-      return
-    }
-    saveObj = {
-      label: mission.label,
-      state: mission.state
-    }
-  } else {
-    if (typeof localStorage === 'undefined') {
-      window.logger.warn('localStorage is not available, unable to load save:', key)
-      return
-    }
-    const raw = localStorage.getItem(key)
-    if (!raw) {
-      window.logger.warn('Save game not found:', key)
-      return
-    }
-    try {
-      saveObj = JSON.parse(raw)
-    } catch (err) {
-      window.logger.warn('Failed to parse saved game metadata:', err)
-      return
-    }
-  }
-
+function loadGameFromSaveObject(saveObj, key) {
   if (saveObj && saveObj.state !== undefined) {
     let stateString
     if (typeof saveObj.state === 'string') {
@@ -1477,6 +1446,45 @@ export function loadGame(key) {
 
     showNotification('Game loaded: ' + (saveObj.label || key))
   }
+}
+
+export function loadGameFromState(state, label = 'Direct load') {
+  loadGameFromSaveObject({ label, state }, label)
+}
+
+export function loadGame(key) {
+  let saveObj = null
+
+  if (key.startsWith(BUILTIN_SAVE_PREFIX)) {
+    const missionId = key.slice(BUILTIN_SAVE_PREFIX.length)
+    const mission = getBuiltinMissionById(missionId)
+    if (!mission) {
+      window.logger.warn('Built-in mission not found:', missionId)
+      return
+    }
+    saveObj = {
+      label: mission.label,
+      state: mission.state
+    }
+  } else {
+    if (typeof localStorage === 'undefined') {
+      window.logger.warn('localStorage is not available, unable to load save:', key)
+      return
+    }
+    const raw = localStorage.getItem(key)
+    if (!raw) {
+      window.logger.warn('Save game not found:', key)
+      return
+    }
+    try {
+      saveObj = JSON.parse(raw)
+    } catch (err) {
+      window.logger.warn('Failed to parse saved game metadata:', err)
+      return
+    }
+  }
+
+  loadGameFromSaveObject(saveObj, key)
 }
 
 export function deleteGame(key) {

@@ -1,6 +1,6 @@
 import { gameState } from './gameState.js'
 import { TILE_SIZE } from './config.js'
-import { saveGame, loadGame, updateSaveGamesList } from './saveGame.js'
+import { saveGame, loadGameFromState, updateSaveGamesList } from './saveGame.js'
 import { showNotification } from './ui/notifications.js'
 import { applyGameTickOutput } from './ai-api/applier.js'
 import { productionQueue } from './productionQueue.js'
@@ -1016,16 +1016,7 @@ export function loadReplay(key) {
     return
   }
 
-  const tempLabel = `${TEMP_BASELINE_LABEL_PREFIX}load_${Date.now()}`
-  const tempKey = `rts_save_${tempLabel}`
-  localStorage.setItem(tempKey, JSON.stringify({
-    label: tempLabel,
-    time: Date.now(),
-    state: parsed.baselineState
-  }))
-
-  loadGame(tempKey)
-  localStorage.removeItem(tempKey)
+  loadGameFromState(parsed.baselineState, `${TEMP_BASELINE_LABEL_PREFIX}load_${Date.now()}`)
 
   const replay = ensureReplayState()
   replay.playbackActive = true
