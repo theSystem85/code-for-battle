@@ -448,6 +448,26 @@
       },
       "additionalProperties": false
     },
+    "SellBuildingAction": {
+      "type": "object",
+      "required": ["actionId", "type", "buildingId"],
+      "properties": {
+        "actionId": { "type": "string" },
+        "type": { "const": "sell_building" },
+        "buildingId": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "RepairBuildingAction": {
+      "type": "object",
+      "required": ["actionId", "type", "buildingId"],
+      "properties": {
+        "actionId": { "type": "string" },
+        "type": { "const": "repair_building" },
+        "buildingId": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
     "GameAction": {
       "oneOf": [
         { "$ref": "#/$defs/BuildPlaceAction" },
@@ -455,7 +475,9 @@
         { "$ref": "#/$defs/UnitCommandAction" },
         { "$ref": "#/$defs/SetRallyAction" },
         { "$ref": "#/$defs/CancelAction" },
-        { "$ref": "#/$defs/AbilityAction" }
+        { "$ref": "#/$defs/AbilityAction" },
+        { "$ref": "#/$defs/SellBuildingAction" },
+        { "$ref": "#/$defs/RepairBuildingAction" }
       ]
     },
     "GameTickOutput": {

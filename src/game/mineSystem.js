@@ -10,6 +10,7 @@ import {
 } from '../config.js'
 import { broadcastBuildingDamage } from '../network/gameCommandSync.js'
 import { recordDamage } from '../ai-api/transitionCollector.js'
+import { getSimulationTime } from './time.js'
 
 const mineLookup = new Map()
 
@@ -109,6 +110,7 @@ export function hasActiveMine(tileX, tileY) {
  */
 export function detonateMine(mine, units, buildings) {
   if (!mine) return
+  const now = getSimulationTime(gameState)
 
   // Create explosion effect at mine location
   const explosionX = mine.tileX * TILE_SIZE + TILE_SIZE / 2
@@ -117,8 +119,8 @@ export function detonateMine(mine, units, buildings) {
   gameState.explosions.push({
     x: explosionX,
     y: explosionY,
-    radius: TILE_SIZE,
-    startTime: performance.now(),
+    maxRadius: TILE_SIZE,
+    startTime: now,
     duration: 300
   })
 
@@ -281,6 +283,7 @@ export function removeMine(mine) {
  */
 export function safeSweeperDetonation(mine, units, buildings) {
   if (!mine) return
+  const now = getSimulationTime(gameState)
 
   // Create explosion effect at mine location
   const explosionX = mine.tileX * TILE_SIZE + TILE_SIZE / 2
@@ -289,8 +292,8 @@ export function safeSweeperDetonation(mine, units, buildings) {
   gameState.explosions.push({
     x: explosionX,
     y: explosionY,
-    radius: TILE_SIZE,
-    startTime: performance.now(),
+    maxRadius: TILE_SIZE,
+    startTime: now,
     duration: 300
   })
 
@@ -418,6 +421,8 @@ export function distributeMineLayerPayload(unit, units, buildings) {
     return
   }
 
+  const now = getSimulationTime(gameState)
+
   // Calculate total damage from remaining mines
   const totalDamage = unit.remainingMines * MINE_DAMAGE_CENTER
 
@@ -452,8 +457,8 @@ export function distributeMineLayerPayload(unit, units, buildings) {
     gameState.explosions.push({
       x: explosionX,
       y: explosionY,
-      radius: TILE_SIZE * 0.8,
-      startTime: performance.now() + i * 50,
+      maxRadius: TILE_SIZE * 0.8,
+      startTime: now + i * 50,
       duration: 300
     })
   }

@@ -131,6 +131,10 @@ function validateAction(action, index, errors) {
       if (typeof action.abilityId !== 'string') addError(errors, `${path}.abilityId`, 'Expected string')
       if (action.targetPos) validatePosition(action.targetPos, `${path}.targetPos`, errors)
       break
+    case 'sell_building':
+    case 'repair_building':
+      if (typeof action.buildingId !== 'string') addError(errors, `${path}.buildingId`, 'Expected string')
+      break
     default:
       addError(errors, `${path}.type`, `Unknown action type: ${action.type}`)
   }

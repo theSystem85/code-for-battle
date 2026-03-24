@@ -2,6 +2,8 @@
 // Image-based tank rendering system using 3 separate image assets
 import { TILE_SIZE, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE } from '../config.js'
 import tankImageConfigData from '../tankImageConfig.json' with { type: 'json' }
+import { gameState } from '../gameState.js'
+import { getSimulationTime } from '../game/time.js'
 
 // Tank image asset cache - organized by tank variant
 const tankImageCache = {
@@ -153,7 +155,7 @@ export function renderTankWithImages(ctx, unit, centerX, centerY, options = {}) 
     return false // Images not ready, caller should fall back to original rendering
   }
 
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
   const variant = getTankVariant(unit.type)
   const variantConfig = tankImageConfig[variant]
 

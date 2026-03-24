@@ -228,6 +228,44 @@ describe('GameLoop', () => {
     expect(loop.frameTimeoutId).toBe(202)
   })
 
+  it('runs standard mode with a fixed simulation step scaled by game speed instead of render FPS', () => {
+    const productionQueue = {
+      updateProgress: vi.fn(),
+      setProductionController: vi.fn()
+    }
+    const loop = createLoop({ productionQueue })
+    loop.running = true
+    gameState.gameStarted = true
+    gameState.gamePaused = false
+    gameState.speedMultiplier = 2
+    isLockstepEnabledMock.mockReturnValue(false)
+
+    loop.lastFrameTime = 1000
+    loop.animate(1033)
+
+    expect(updateGameMock).toHaveBeenCalledTimes(2)
+    expect(updateGameMock).toHaveBeenNthCalledWith(1, gameState.simulationStepMs, [], [], [], [], gameState)
+    expect(updateGameMock).toHaveBeenNthCalledWith(2, gameState.simulationStepMs, [], [], [], [], gameState)
+    expect(gameState.simulationTime).toBeCloseTo(gameState.simulationStepMs * 2, 4)
+    expect(productionQueue.updateProgress).toHaveBeenCalledWith(0)
+  })
+
+  it('updates map scrolling once per rendered frame regardless of game speed', () => {
+    const loop = createLoop()
+    loop.running = true
+    gameState.gameStarted = true
+    gameState.gamePaused = false
+    gameState.speedMultiplier = 2
+    isLockstepEnabledMock.mockReturnValue(false)
+
+    loop.lastFrameTime = 1000
+    loop.animate(1033)
+
+    expect(updateGameMock).toHaveBeenCalledTimes(2)
+    expect(updateMapScrollingMock).toHaveBeenCalledTimes(1)
+    expect(updateMapScrollingMock).toHaveBeenCalledWith(gameState, [])
+  })
+
   it('clears timeout-based scheduling on stop', () => {
     const loop = createLoop()
     loop.running = true
@@ -355,9 +393,10 @@ describe('GameLoop', () => {
     loop.lastMoneyDisplayed = 0
     loop.lastGameTimeUpdate = 0
 
-    loop.animate(1000)
+    loop.lastFrameTime = 1000
+    loop.animate(1017)
 
-    expect(updateGameMock).toHaveBeenCalledWith(0, [], [], [], [], gameState)
+    expect(updateGameMock).toHaveBeenCalledWith(gameState.simulationStepMs, [], [], [], [], gameState)
     expect(updateEnergyBarMock).toHaveBeenCalled()
     expect(updateMoneyBarMock).toHaveBeenCalled()
     expect(checkMilestonesMock).toHaveBeenCalledWith(gameState)

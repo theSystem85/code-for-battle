@@ -720,7 +720,7 @@ describe('Building System', () => {
 
     it('removes sold buildings and refreshes power + UI state', () => {
       const now = 10000
-      vi.spyOn(performance, 'now').mockReturnValue(now)
+      gameState.simulationTime = now
       const powerSpy = vi.spyOn(buildingsModule, 'updatePowerSupply')
       const clearSpy = vi.spyOn(buildingsModule, 'clearBuildingFromMapGrid')
 
@@ -798,7 +798,7 @@ describe('Building System', () => {
 
     it('fires turret projectiles when aligned with a target in range', () => {
       const now = 40000
-      vi.spyOn(performance, 'now').mockReturnValue(now)
+      gameState.simulationTime = now
 
       const turret = createBuilding('turretGunV1', 8, 8)
       turret.owner = 'player'
@@ -977,10 +977,9 @@ describe('Building System', () => {
       expect(bullets[0].shooter).toBe(turret)
     })
 
-    it('runs Tesla coil charge/firing sequence and applies unit effects', () => {
+    it('runs Tesla coil charge/firing sequence and applies unit effects from simulation time', () => {
       const now = 60000
-      vi.useFakeTimers()
-      vi.spyOn(performance, 'now').mockReturnValue(now)
+      gameState.simulationTime = now
 
       const tesla = createBuilding('teslaCoil', 12, 12)
       tesla.owner = 'player'
@@ -1005,21 +1004,24 @@ describe('Building System', () => {
       )
       expect(tesla.teslaState).toBe('charging')
 
-      vi.advanceTimersByTime(400)
+      gameState.simulationTime = now + 400
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
       expect(tesla.teslaState).toBe('firing')
 
-      vi.advanceTimersByTime(200)
+      gameState.simulationTime = now + 600
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
       expect(target.health).toBeLessThan(100)
-      expect(target.teslaDisabledUntil).toBe(now + 60000)
+      expect(target.teslaDisabledUntil).toBe(now + 600 + 60000)
       expect(target.teslaSlowed).toBe(true)
 
-      vi.advanceTimersByTime(400)
+      gameState.simulationTime = now + 800
+      updateBuildings(gameState, units, bullets, factories, mapGrid, 16)
       expect(tesla.teslaState).toBe('idle')
     })
 
-    it('toggles Tesla coil slow/disable state based on timer expiry', () => {
+    it('toggles Tesla coil slow/disable state based on simulation-time expiry', () => {
       const now = 70000
-      const nowSpy = vi.spyOn(performance, 'now')
+      gameState.simulationTime = now
 
       const unit = {
         teslaDisabledUntil: now + 1000,
@@ -1028,15 +1030,14 @@ describe('Building System', () => {
         teslaSlowed: true
       }
 
-      nowSpy.mockReturnValueOnce(now)
-      updateTeslaCoilEffects([unit])
+      updateTeslaCoilEffects([unit], gameState)
 
       expect(unit.canFire).toBe(false)
       expect(unit.baseSpeedModifier).toBe(0.2)
       expect(updateUnitSpeedModifier).toHaveBeenCalledWith(unit)
 
-      nowSpy.mockReturnValueOnce(now + 2000)
-      updateTeslaCoilEffects([unit])
+      gameState.simulationTime = now + 2000
+      updateTeslaCoilEffects([unit], gameState)
 
       expect(unit.canFire).toBe(true)
       expect(unit.baseSpeedModifier).toBe(1.0)

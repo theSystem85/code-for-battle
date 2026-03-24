@@ -1049,4 +1049,19 @@ describe('Production Queue System', () => {
       expect(productionQueue.productionController).toBe(mockController)
     })
   })
+
+  describe('Simulation time integration', () => {
+    it('tracks unit production progress from simulation time instead of wall-clock speed multipliers', () => {
+      gameState.buildings = [{ type: 'vehicleFactory', owner: 'player', health: 100 }]
+      productionQueue.addItem('tank_v1', mockButton, false)
+
+      expect(productionQueue.currentUnit).toBeTruthy()
+      const duration = productionQueue.currentUnit.duration
+
+      gameState.speedMultiplier = 4
+      productionQueue.updateProgress(productionQueue.currentUnit.startTime + (duration / 2))
+
+      expect(productionQueue.currentUnit.progress).toBeCloseTo(0.5, 2)
+    })
+  })
 })

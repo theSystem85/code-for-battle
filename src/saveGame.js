@@ -91,6 +91,10 @@ function saveLastGameCheckpoint(reason = '') {
   }
 }
 
+export function persistLastGameCheckpoint(reason = '') {
+  saveLastGameCheckpoint(reason)
+}
+
 function startLastGameAutoSaveLoop() {
   if (lastGameAutoSaveInterval !== null) return
 
@@ -432,6 +436,9 @@ export function saveGame(label) {
       money: gameState.money,
       gameTime: gameState.gameTime,
       frameCount: gameState.frameCount,
+      simulationTime: gameState.simulationTime,
+      simulationAccumulator: gameState.simulationAccumulator,
+      simulationStepMs: gameState.simulationStepMs,
       wins: gameState.wins,
       losses: gameState.losses,
       gameStarted: gameState.gameStarted,
@@ -594,6 +601,19 @@ export function loadGame(key) {
     }
 
     Object.assign(gameState, loaded.gameState)
+
+    gameState.speedMultiplier = Number.isFinite(loaded.gameState?.speedMultiplier)
+      ? Math.max(0.5, Math.min(5, loaded.gameState.speedMultiplier))
+      : 1
+    gameState.simulationTime = Number.isFinite(loaded.gameState?.simulationTime)
+      ? loaded.gameState.simulationTime
+      : Math.max(0, (gameState.gameTime || 0) * 1000)
+    gameState.simulationAccumulator = Number.isFinite(loaded.gameState?.simulationAccumulator)
+      ? Math.max(0, loaded.gameState.simulationAccumulator)
+      : 0
+    gameState.simulationStepMs = Number.isFinite(loaded.gameState?.simulationStepMs)
+      ? loaded.gameState.simulationStepMs
+      : gameState.simulationStepMs
 
     gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
     gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
@@ -1402,6 +1422,15 @@ export function loadGame(key) {
       if (playPauseIcon) {
         playPauseIcon.textContent = '⏸'
       }
+    }
+
+    const speedSlider = document.getElementById('speedMultiplier')
+    const speedSliderValue = document.getElementById('speedMultiplierValue')
+    if (speedSlider) {
+      speedSlider.value = String(gameState.speedMultiplier)
+    }
+    if (speedSliderValue) {
+      speedSliderValue.textContent = `${gameState.speedMultiplier.toFixed(1)}x`
     }
 
     // Resume production after unpause

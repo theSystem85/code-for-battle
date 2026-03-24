@@ -52,6 +52,9 @@ export const gameState = {
   selectedWreckId: null, // Currently selected wreck (for UI feedback)
   mines: [], // Deployed land mines with position, owner, health, and arming status
   speedMultiplier: 1.0,  // Set to 1.0 as requested
+  simulationTime: 0,
+  simulationAccumulator: 0,
+  simulationStepMs: 1000 / 60,
   // Building related properties
   buildings: [],
   units: [], // Add units array to gameState

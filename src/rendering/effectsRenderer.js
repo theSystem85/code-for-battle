@@ -1,6 +1,7 @@
 // rendering/effectsRenderer.js
 import { TILE_SIZE } from '../config.js'
 import { drawTeslaCoilLightning } from './renderingUtils.js'
+import { getSimulationTime } from '../game/time.js'
 
 // Pre-cached gradient sprites for smoke particles (GPU-friendly)
 // These are created once at initialization and reused via drawImage
@@ -385,7 +386,7 @@ export class EffectsRenderer {
   renderExplosions(ctx, gameState, scrollOffset) {
     if (!gameState?.explosions || gameState.explosions.length === 0) return
 
-    const currentTime = performance.now()
+    const currentTime = getSimulationTime(gameState)
     const visibilityMap = gameState?.visibilityMap
     const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
 
@@ -492,10 +493,10 @@ export class EffectsRenderer {
     }
   }
 
-  renderTeslaLightning(ctx, units, scrollOffset) {
+  renderTeslaLightning(ctx, units, scrollOffset, gameState) {
     // Render Tesla Coil Lightning Effects ON TOP
     if (units && units.length > 0) {
-      const now = performance.now()
+      const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
       for (const unit of units) {
         if (unit.teslaCoilHit && now - unit.teslaCoilHit.impactTime < 400) {
           // Draw the lightning bolt for a short time after impact
@@ -518,7 +519,7 @@ export class EffectsRenderer {
     this.renderDust(ctx, gameState, scrollOffset)
     this.renderDustParticles(ctx, gameState, scrollOffset)
     this.renderExplosions(ctx, gameState, scrollOffset)
-    this.renderTeslaLightning(ctx, units, scrollOffset)
+    this.renderTeslaLightning(ctx, units, scrollOffset, gameState)
 
     // Debug: log smoke particle count periodically
     if (gameState?.smokeParticles?.length > 0 && gameState.frameCount % 100 === 0) {

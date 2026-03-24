@@ -313,7 +313,7 @@ describe('updateGame.js', () => {
       expect(updateEnemyAI).toHaveBeenCalled()
     })
 
-    it('should call map scrolling for UI regardless of host status', async() => {
+    it('should update camera follow for UI regardless of host status', async() => {
       const { updateMapScrolling, updateCameraFollow } = await import('../../src/game/gameStateManager.js')
 
       const gameState = {
@@ -326,7 +326,7 @@ describe('updateGame.js', () => {
 
       updateGameModule.updateGame(16, [], [], [], [], gameState)
 
-      expect(updateMapScrolling).toHaveBeenCalled()
+      expect(updateMapScrolling).not.toHaveBeenCalled()
       expect(updateCameraFollow).toHaveBeenCalled()
     })
 

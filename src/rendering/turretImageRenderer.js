@@ -3,6 +3,8 @@
 
 import turretImageConfig from '../turretImageConfig.json' with { type: 'json' }
 import { MUZZLE_FLASH_DURATION } from '../config.js'
+import { gameState } from '../gameState.js'
+import { getSimulationTime } from '../game/time.js'
 
 // Cache for loaded turret images
 const turretImageCache = {}
@@ -110,7 +112,7 @@ export function renderTurretWithImages(ctx, building, screenX, screenY, width, h
   const images = turretImageCache[building.type]
   const centerX = screenX + width / 2
   const centerY = screenY + height / 2
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
 
   ctx.save()
 

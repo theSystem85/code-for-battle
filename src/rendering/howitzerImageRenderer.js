@@ -6,6 +6,8 @@ import {
   MUZZLE_FLASH_DURATION,
   MUZZLE_FLASH_SIZE
 } from '../config.js'
+import { gameState } from '../gameState.js'
+import { getSimulationTime } from '../game/time.js'
 
 let howitzerBaseImg = null
 let howitzerBarrelImg = null
@@ -94,7 +96,7 @@ export function isHowitzerImageLoaded() {
 export function renderHowitzerWithImage(ctx, unit, centerX, centerY) {
   if (!isHowitzerImageLoaded()) return false
 
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
   ctx.save()
   ctx.translate(centerX, centerY)
 

@@ -11,7 +11,9 @@ import { updateDangerZoneMaps } from './dangerZoneMap.js'
 import { getTurretImageConfig, turretImagesAvailable } from '../rendering/turretImageRenderer.js'
 import { logPerformance } from '../performanceUtils.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { getSimulationTime } from './time.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
+import { gameState as globalGameState } from '../gameState.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from './turretMuzzleConfig.js'
 
 
@@ -25,7 +27,7 @@ import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '.
  * @param {number} delta - Time delta
  */
 export const updateBuildings = logPerformance(function updateBuildings(gameState, units, bullets, factories, mapGrid, delta) {
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
 
   if (gameState.buildings && gameState.buildings.length > 0) {
     for (let i = gameState.buildings.length - 1; i >= 0; i--) {
@@ -204,7 +206,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
  * @param {Object} gameState - Game state object
  */
 const updateDefensiveBuildings = logPerformance(function updateDefensiveBuildings(buildings, units, bullets, delta, gameState) {
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
 
   // Debug: Count Tesla coils
   const _teslaCoils = buildings.filter(b => b.type === 'teslaCoil' && b.health > 0)
@@ -311,84 +313,82 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
           return
         }
 
-        const effectiveCooldown = building.fireCooldown / gameState.speedMultiplier
-        if (!building.lastShotTime || now - building.lastShotTime >= effectiveCooldown) {
-          if (closestEnemy) {
-            // Play loading sound and mark coil as charging
-            playPositionalSound('teslacoil_loading', centerX, centerY, 1.0)
-            building.teslaState = 'charging'
-            building.teslaChargeStartTime = performance.now()
+        const teslaTarget = building.teslaTarget && building.teslaTarget.health > 0 ? building.teslaTarget : null
 
-            // Schedule the firing sequence
-            setTimeout(() => {
-              // Play firing sound and mark as firing
-              playPositionalSound('teslacoil_firing', centerX, centerY, 1.0)
-              building.teslaState = 'firing'
-              building.teslaFireStartTime = performance.now()
+        if (building.teslaState === 'charging') {
+          if (now - (building.teslaChargeStartTime || 0) >= 400) {
+            building.teslaState = 'firing'
+            building.teslaFireStartTime = now
+            building.teslaDamageApplied = false
+            playPositionalSound('teslacoil_firing', centerX, centerY, 1.0)
 
-              // Apply effects after a short delay to sync with bolt sound
-              setTimeout(() => {
-                // Check if enemy is still alive and in range
-                if (closestEnemy.health > 0) {
-                  // Apply Tesla Coil effects
-                  closestEnemy.teslaDisabledUntil = now + 60000 // 60 seconds
-                  closestEnemy.teslaSlowUntil = now + 60000
-                  closestEnemy.teslaSlowed = true
-
-                  // Apply damage to the target
-                  let actualDamage = building.damage
-                  if (window.cheatSystem) {
-                    actualDamage = window.cheatSystem.preventDamage(closestEnemy, building.damage)
-                  }
-
-                  // Only apply damage if actualDamage > 0 (god mode protection)
-                  if (actualDamage > 0) {
-                    closestEnemy.health -= actualDamage
-                  }
-
-                  // Track when units are being attacked for AI response
-                  if (building.owner !== closestEnemy.owner) {
-                    closestEnemy.lastDamageTime = now
-                    closestEnemy.lastAttacker = building
-                    // Mark as being attacked if it's an enemy unit
-                    if (closestEnemy.owner === 'enemy') {
-                      closestEnemy.isBeingAttacked = true
-                    }
-                  }
-                }
-              }, 200) // Small delay after bolt sound starts
-            }, 400) // Delay for loading sound to finish
-
-            // Return to idle state after bolt animation
-            setTimeout(() => {
-              if (building.teslaState === 'firing') {
-                building.teslaState = 'idle'
-                building.teslaChargeStartTime = 0
-                building.teslaFireStartTime = 0
-              }
-            }, 800) // 400ms charge + 400ms bolt
-
-            // Create visual lightning effect synchronized with firing sound
-            setTimeout(() => {
-              const targetX = closestEnemy.x + TILE_SIZE / 2
-              const targetY = closestEnemy.y + TILE_SIZE / 2
+            if (teslaTarget) {
+              const targetX = teslaTarget.x + TILE_SIZE / 2
+              const targetY = teslaTarget.y + TILE_SIZE / 2
               const imgWidth = building.width * TILE_SIZE
               const imgHeight = building.height * TILE_SIZE
               const fromX = building.x * TILE_SIZE + imgWidth * (96 / 192)
               const fromY = building.y * TILE_SIZE + imgHeight * (42 / 192)
-              closestEnemy.teslaCoilHit = {
+              teslaTarget.teslaCoilHit = {
                 fromX,
                 fromY,
                 toX: targetX,
                 toY: targetY,
-                impactTime: performance.now()
+                impactTime: now
               }
-            }, 400) // Same timing as firing sound
-
-            building.lastShotTime = now
-            building.firingAt = closestEnemy
-            building.fireStartTime = performance.now()
+            }
           }
+          return
+        }
+
+        if (building.teslaState === 'firing') {
+          if (!building.teslaDamageApplied && now - (building.teslaFireStartTime || 0) >= 200) {
+            if (teslaTarget) {
+              teslaTarget.teslaDisabledUntil = now + 60000
+              teslaTarget.teslaSlowUntil = now + 60000
+              teslaTarget.teslaSlowed = true
+
+              let actualDamage = building.damage
+              if (window.cheatSystem) {
+                actualDamage = window.cheatSystem.preventDamage(teslaTarget, building.damage)
+              }
+
+              if (actualDamage > 0) {
+                teslaTarget.health -= actualDamage
+              }
+
+              if (building.owner !== teslaTarget.owner) {
+                teslaTarget.lastDamageTime = now
+                teslaTarget.lastAttacker = building
+                if (teslaTarget.owner === 'enemy') {
+                  teslaTarget.isBeingAttacked = true
+                }
+              }
+            }
+            building.teslaDamageApplied = true
+          }
+
+          if (now - (building.teslaFireStartTime || 0) >= 400) {
+            building.teslaState = 'idle'
+            building.teslaChargeStartTime = 0
+            building.teslaFireStartTime = 0
+            building.teslaDamageApplied = false
+            building.teslaTarget = null
+          }
+          return
+        }
+
+        const effectiveCooldown = building.fireCooldown
+        if ((!building.lastShotTime || now - building.lastShotTime >= effectiveCooldown) && closestEnemy) {
+          playPositionalSound('teslacoil_loading', centerX, centerY, 1.0)
+          building.teslaState = 'charging'
+          building.teslaChargeStartTime = now
+          building.teslaFireStartTime = 0
+          building.teslaDamageApplied = false
+          building.teslaTarget = closestEnemy
+          building.lastShotTime = now
+          building.firingAt = closestEnemy
+          building.fireStartTime = now
         }
       }      // Regular turret logic
       else {
@@ -728,8 +728,8 @@ function fireTurretProjectile(building, target, centerX, centerY, now, bullets, 
  * Updates Tesla Coil effects on units
  * @param {Array} units - Array of unit objects
  */
-export function updateTeslaCoilEffects(units) {
-  const now = performance.now()
+export function updateTeslaCoilEffects(units, state = globalGameState) {
+  const now = getSimulationTime(state)
   for (const unit of units) {
     if (unit.teslaDisabledUntil && now < unit.teslaDisabledUntil) {
       unit.canFire = false

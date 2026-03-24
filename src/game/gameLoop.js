@@ -14,6 +14,7 @@ import { pauseAllSounds, resumeAllSounds } from '../sound.js'
 import { updateMapScrolling } from './gameStateManager.js'
 import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSync.js'
 import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
+import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
 
 export class GameLoop {
   constructor(canvasManager, productionController, mapGrid, factories, units, bullets, productionQueue, moneyEl, gameTimeEl) {
@@ -263,13 +264,14 @@ export class GameLoop {
     }
 
     // Update production progress
-    this.productionQueue.updateProgress(timestamp)
+    const simulationTime = getSimulationTime(gameState)
+    this.productionQueue.updateProgress(simulationTime)
 
     // Update buildings under repair
-    updateBuildingsUnderRepair(gameState, timestamp)
+    updateBuildingsUnderRepair(gameState, simulationTime)
 
     // Update buildings awaiting repair (countdown for buildings under attack)
-    updateBuildingsAwaitingRepair(gameState, timestamp)
+    updateBuildingsAwaitingRepair(gameState, simulationTime)
 
     // Update energy bar display at most once per second
     if (now - this.lastEnergyUpdate >= 1000) {
@@ -305,6 +307,7 @@ export class GameLoop {
              ticksProcessed < LOCKSTEP_CONFIG.MAX_TICKS_PER_FRAME) {
         // Process one tick with the fixed timestep
         processLockstepTick((fixedDelta) => {
+          advanceSimulationTime(fixedDelta, gameState)
           updateGame(fixedDelta, this.mapGrid, this.factories, this.units, this.bullets, gameState)
         })
 
@@ -317,9 +320,25 @@ export class GameLoop {
         gameState.lockstep.tickAccumulator = MS_PER_TICK * LOCKSTEP_CONFIG.MAX_TICKS_PER_FRAME
       }
     } else {
-      // Standard mode: Variable timestep
-      updateGame(delta, this.mapGrid, this.factories, this.units, this.bullets, gameState)
+      const fixedStepMs = getFixedSimulationStepMs(gameState)
+      const speedMultiplier = Number.isFinite(gameState.speedMultiplier) ? Math.max(gameState.speedMultiplier, 0.5) : 1
+      gameState.simulationAccumulator += delta * speedMultiplier
+
+      let ticksProcessed = 0
+      while (gameState.simulationAccumulator >= fixedStepMs &&
+             ticksProcessed < LOCKSTEP_CONFIG.MAX_TICKS_PER_FRAME) {
+        advanceSimulationTime(fixedStepMs, gameState)
+        updateGame(fixedStepMs, this.mapGrid, this.factories, this.units, this.bullets, gameState)
+        gameState.simulationAccumulator -= fixedStepMs
+        ticksProcessed++
+      }
+
+      if (gameState.simulationAccumulator > fixedStepMs * LOCKSTEP_CONFIG.MAX_TICKS_PER_FRAME) {
+        gameState.simulationAccumulator = fixedStepMs * LOCKSTEP_CONFIG.MAX_TICKS_PER_FRAME
+      }
     }
+
+    updateMapScrolling(gameState, this.mapGrid)
 
     // Refresh production buttons if a building was destroyed
     if (gameState.pendingButtonUpdate) {

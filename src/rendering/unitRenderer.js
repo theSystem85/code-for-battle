@@ -16,6 +16,7 @@ import { renderApacheWithImage } from './apacheImageRenderer.js'
 import { renderF22WithImage } from './f22ImageRenderer.js'
 import { renderF35WithImage } from './f35ImageRenderer.js'
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
+import { getSimulationTime } from '../game/time.js'
 
 export class UnitRenderer {
   constructor() {
@@ -117,7 +118,7 @@ export class UnitRenderer {
       return
     }
 
-    const now = performance.now()
+    const now = getSimulationTime(gameState)
 
     // Special handling for rocket tanks - render fallback tubes only if image not loaded
     if (unit.type === 'rocketTank' && !isRocketTankImageLoaded()) {
@@ -185,7 +186,7 @@ export class UnitRenderer {
     // Only show mining bar when harvesting
     if (!unit.harvesting) return
 
-    const now = performance.now()
+    const now = getSimulationTime(gameState)
     const miningProgress = unit.harvestTimer ?
       Math.sin((now - unit.harvestTimer) / 200) * 0.5 + 0.5 : 0  // Oscillating animation
 
@@ -876,14 +877,23 @@ export class UnitRenderer {
 
       if (unit.unloadingAtRefinery && unit.unloadStartTime) {
         // Show unloading progress (reverse direction)
-        const unloadProgress = Math.min((performance.now() - unit.unloadStartTime) / HARVESTER_UNLOAD_TIME, 1)
+        const unloadProgress = Math.min(
+          Math.max((getSimulationTime(gameState) - unit.unloadStartTime) / HARVESTER_UNLOAD_TIME, 0),
+          1
+        )
         progress = 1 - unloadProgress // Reverse the progress
         barColor = '#FF6B6B' // Red-ish for unloading
       } else if (unit.harvesting && unit.harvestTimer) {
         // Show harvesting progress
-        progress = Math.min((performance.now() - unit.harvestTimer) / 10000, 1)
+        progress = Math.min(
+          Math.max((getSimulationTime(gameState) - unit.harvestTimer) / 10000, 0),
+          1
+        )
         barColor = '#32CD32' // Green for harvesting
       } else {
+        if (!unit.selected) {
+          return
+        }
         // Show current ore load
         progress = unit.oreCarried / HARVESTER_CAPPACITY
         barColor = '#FFD700' // Gold for ore
@@ -905,7 +915,10 @@ export class UnitRenderer {
       // Mine Layer - show deployment progress when deploying
       if (unit.deployingMine && unit.deployStartTime) {
         shouldShowBar = true
-        progress = Math.min((performance.now() - unit.deployStartTime) / MINE_DEPLOY_STOP_TIME, 1)
+        progress = Math.min(
+          Math.max((getSimulationTime(gameState) - unit.deployStartTime) / MINE_DEPLOY_STOP_TIME, 0),
+          1
+        )
         barColor = '#FFFF00' // Yellow for deployment progress
       }
       // Don't show mine capacity here - it's on the left ammunition bar
@@ -1014,7 +1027,7 @@ export class UnitRenderer {
       barColor = '#FFA500' // Orange for ammunition
 
       // Calculate reload progress as overlay indicator
-      const now = performance.now()
+      const now = getSimulationTime(gameState)
       const fireRate = 12000 // COMBAT_CONFIG.FIRE_RATES.ROCKET
       const timeSinceLastShot = unit.lastShotTime ? now - unit.lastShotTime : fireRate
 
@@ -1030,7 +1043,7 @@ export class UnitRenderer {
       }
 
       if (unit.type === 'f22Raptor') {
-        const now = performance.now()
+        const now = getSimulationTime(gameState)
         const fireRate = 8400 // COMBAT_CONFIG.APACHE.FIRE_RATE
         const timeSinceLastShot = unit.lastShotTime ? now - unit.lastShotTime : fireRate
 

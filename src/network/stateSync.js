@@ -9,6 +9,7 @@ import { placeBuilding } from '../buildings.js'
 import { units as mainUnits, bullets as mainBullets, factories as mainFactories, regenerateMapForClient } from '../main.js'
 import { setMapDimensions, ORE_SPREAD_ENABLED, setOreSpreadEnabled } from '../config.js'
 import { broadcastGameCommand } from './commandBroadcast.js'
+import { getSimulationTime } from '../game/time.js'
 
 // Re-export COMMAND_TYPES for convenience (will need to import from gameCommandSync or define here)
 // For now, we'll assume it's imported where needed
@@ -360,10 +361,11 @@ export function createGameStateSnapshot() {
   }))
 
   // Serialize explosions
+  const explosionTime = getSimulationTime(gameState)
   const explosions = (gameState.explosions || []).map(exp => ({
     x: exp.x,
     y: exp.y,
-    startElapsed: typeof exp.startTime === 'number' ? Math.max(0, now - exp.startTime) : 0,
+    startElapsed: typeof exp.startTime === 'number' ? Math.max(0, explosionTime - exp.startTime) : 0,
     duration: exp.duration,
     maxRadius: exp.maxRadius
   }))
@@ -907,6 +909,7 @@ export function applyGameStateSnapshot(snapshot) {
  */
 function createClientStateUpdate() {
   const now = performance.now()
+  const explosionTime = getSimulationTime(gameState)
   const partyId = gameState.humanPlayer
 
   // Only include units owned by this client - use mainUnits as that's authoritative
@@ -950,7 +953,7 @@ function createClientStateUpdate() {
   const explosions = (gameState.explosions || []).map(exp => ({
     x: exp.x,
     y: exp.y,
-    startElapsed: typeof exp.startTime === 'number' ? Math.max(0, now - exp.startTime) : 0,
+    startElapsed: typeof exp.startTime === 'number' ? Math.max(0, explosionTime - exp.startTime) : 0,
     duration: exp.duration,
     maxRadius: exp.maxRadius
   }))

@@ -23,7 +23,7 @@ import { initAiPartySync } from '../network/aiPartySync.js'
 import { setProductionControllerRef } from '../network/gameCommandSync.js'
 import { initFactories } from '../factories.js'
 import { initializeGameAssets, generateMap as generateMapFromSetup, cleanupOreFromBuildings } from '../gameSetup.js'
-import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame } from '../saveGame.js'
+import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, persistLastGameCheckpoint } from '../saveGame.js'
 import { showNotification } from '../ui/notifications.js'
 import { resetAttackDirections } from '../ai/enemyStrategies.js'
 import { getTextureManager, preloadTileTextures, getMapRenderer } from '../rendering.js'
@@ -528,16 +528,28 @@ class Game {
 
   setupSpeedControl() {
     const speedMultiplier = document.getElementById('speedMultiplier')
+    const speedMultiplierValue = document.getElementById('speedMultiplierValue')
     if (speedMultiplier) {
-      speedMultiplier.value = gameState.speedMultiplier
-      speedMultiplier.addEventListener('change', (e) => {
-        const value = parseFloat(e.target.value)
-        if (value >= 0.25 && value <= 4) {
-          gameState.speedMultiplier = value
-        } else {
-          e.target.value = gameState.speedMultiplier
+      const syncSpeedUi = (value) => {
+        speedMultiplier.value = String(value)
+        if (speedMultiplierValue) {
+          speedMultiplierValue.textContent = `${value.toFixed(1)}x`
         }
-      })
+      }
+
+      syncSpeedUi(gameState.speedMultiplier)
+      const applySpeed = (e) => {
+        const value = parseFloat(e.target.value)
+        if (value >= 0.5 && value <= 5) {
+          gameState.speedMultiplier = value
+          syncSpeedUi(value)
+          persistLastGameCheckpoint('speed-change')
+        } else {
+          syncSpeedUi(gameState.speedMultiplier)
+        }
+      }
+      speedMultiplier.addEventListener('change', applySpeed)
+      speedMultiplier.addEventListener('input', applySpeed)
     }
   }
 

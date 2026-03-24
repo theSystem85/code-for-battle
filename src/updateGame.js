@@ -43,7 +43,6 @@ import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.j
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
 import {
-  updateMapScrolling,
   updateCameraFollow,
   updateOreSpread,
   updateExplosions,
@@ -66,10 +65,11 @@ import { buildingCosts } from './main.js'
 import { unitCosts } from './units.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnUnit } from './units.js'
+import { getSimulationTime } from './game/time.js'
 
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
   try {
-    const now = performance.now()
+    const now = getSimulationTime(gameState)
     const occupancyMap = gameState.occupancyMap
 
     // Check if we're a remote client (not the host)
@@ -279,7 +279,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
     // Update movement speeds for all units based on speed multiplier
     units.forEach(unit => {
-      unit.effectiveSpeed = unit.speed * gameState.speedMultiplier
+      unit.effectiveSpeed = unit.speed
     })
 
     // Clean up unit selection - prevent null references
@@ -288,8 +288,6 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
     // Handle right-click deselection
     handleRightClickDeselect(gameState, units)
 
-    // Map scrolling with inertia (client needs this for UI)
-    updateMapScrolling(gameState, mapGrid)
     // Keep camera focused on followed unit when enabled
     updateCameraFollow(gameState, units, mapGrid)
 
