@@ -1543,38 +1543,59 @@ export function exportSaveGame(key) {
 }
 
 export async function importSaveGameFromFile(file) {
+  const importedEntry = await importSaveDataFromFile(file)
+  return importedEntry?.type === 'save' ? importedEntry : null
+}
+
+function isImportedReplayPayload(importedObj) {
+  return Boolean(importedObj)
+    && typeof importedObj === 'object'
+    && typeof importedObj.baselineState !== 'undefined'
+    && Array.isArray(importedObj.commands)
+}
+
+async function importSaveDataFromFile(file) {
   if (!file || typeof localStorage === 'undefined') return null
 
   const fileText = await file.text()
-  let saveObj = null
+  let importedObj = null
 
   try {
-    saveObj = JSON.parse(fileText)
+    importedObj = JSON.parse(fileText)
   } catch (err) {
     window.logger.warn('Failed to parse imported save file:', err)
     showNotification('Import failed: invalid JSON file')
     return null
   }
 
-  if (!saveObj || typeof saveObj !== 'object' || typeof saveObj.state === 'undefined') {
+  if (isImportedReplayPayload(importedObj)) {
+    const { importReplayFromObject } = await import('./replaySystem.js')
+    const importedReplay = importReplayFromObject(importedObj)
+    return importedReplay
+      ? { ...importedReplay, type: 'replay' }
+      : null
+  }
+
+  if (!importedObj || typeof importedObj !== 'object' || typeof importedObj.state === 'undefined') {
     showNotification('Import failed: unsupported save file format')
     return null
   }
 
-  const importedLabel = typeof saveObj.label === 'string' && saveObj.label.trim()
-    ? saveObj.label.trim()
+  const importedLabel = typeof importedObj.label === 'string' && importedObj.label.trim()
+    ? importedObj.label.trim()
     : `Imported Save ${new Date().toLocaleString()}`
   const normalizedSave = {
     label: importedLabel,
-    time: Number.isFinite(saveObj.time) ? saveObj.time : Date.now(),
-    state: typeof saveObj.state === 'string' ? saveObj.state : JSON.stringify(saveObj.state)
+    time: Number.isFinite(importedObj.time) ? importedObj.time : Date.now(),
+    state: typeof importedObj.state === 'string' ? importedObj.state : JSON.stringify(importedObj.state)
   }
 
   const saveKey = `rts_save_${normalizedSave.label}`
   localStorage.setItem(saveKey, JSON.stringify(normalizedSave))
   return {
     key: saveKey,
-    label: normalizedSave.label
+    label: normalizedSave.label,
+    type: 'save'
   }
 }
 
@@ -1582,26 +1603,49 @@ export async function importSaveGamesFromFiles(fileList) {
   const files = Array.from(fileList || [])
   if (files.length === 0) return
 
-  const importedSaves = []
+  const importedEntries = []
   for (const file of files) {
-    const importedSave = await importSaveGameFromFile(file)
-    if (importedSave) {
-      importedSaves.push(importedSave)
+    const importedEntry = await importSaveDataFromFile(file)
+    if (importedEntry) {
+      importedEntries.push(importedEntry)
     }
   }
 
-  if (importedSaves.length === 0) return
+  if (importedEntries.length === 0) return
 
-  updateSaveGamesList()
+  const importedSaves = importedEntries.filter(entry => entry.type === 'save')
+  const importedReplays = importedEntries.filter(entry => entry.type === 'replay')
 
-  if (importedSaves.length === 1) {
-    const [singleSave] = importedSaves
-    showNotification(`Imported save: ${singleSave.label}`)
-    loadGame(singleSave.key)
+  if (importedSaves.length > 0) {
+    updateSaveGamesList()
+  }
+
+  if (importedReplays.length > 0) {
+    const { updateReplayList } = await import('./replaySystem.js')
+    updateReplayList()
+  }
+
+  if (importedEntries.length === 1) {
+    const [singleEntry] = importedEntries
+    showNotification(`Imported ${singleEntry.type}: ${singleEntry.label}`)
+    if (singleEntry.type === 'replay') {
+      const { loadReplay } = await import('./replaySystem.js')
+      loadReplay(singleEntry.key)
+      return
+    }
+
+    loadGame(singleEntry.key)
     return
   }
 
-  showNotification(`Imported ${importedSaves.length} save games`)
+  const importSummary = []
+  if (importedSaves.length > 0) {
+    importSummary.push(`${importedSaves.length} save game${importedSaves.length === 1 ? '' : 's'}`)
+  }
+  if (importedReplays.length > 0) {
+    importSummary.push(`${importedReplays.length} replay${importedReplays.length === 1 ? '' : 's'}`)
+  }
+  showNotification(`Imported ${importSummary.join(' and ')}`)
 }
 
 export function updateSaveGamesList() {

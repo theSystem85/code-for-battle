@@ -1031,6 +1031,49 @@ export function loadReplay(key) {
   showNotification(`Loaded replay: ${parsed.label || 'Unnamed replay'}`)
 }
 
+function isReplayImportPayload(replayObj) {
+  return Boolean(replayObj)
+    && typeof replayObj === 'object'
+    && typeof replayObj.baselineState !== 'undefined'
+    && Array.isArray(replayObj.commands)
+}
+
+export function importReplayFromObject(replayObj) {
+  if (typeof localStorage === 'undefined') return null
+
+  if (!isReplayImportPayload(replayObj)) {
+    showNotification('Import failed: unsupported replay file format')
+    return null
+  }
+
+  const importedLabel = typeof replayObj.label === 'string' && replayObj.label.trim()
+    ? replayObj.label.trim()
+    : `Imported Replay ${new Date().toLocaleString()}`
+  const normalizedReplay = {
+    ...replayObj,
+    label: importedLabel,
+    time: Number.isFinite(replayObj.time) ? replayObj.time : Date.now(),
+    baselineState: typeof replayObj.baselineState === 'string'
+      ? replayObj.baselineState
+      : JSON.stringify(replayObj.baselineState),
+    commands: Array.isArray(replayObj.commands) ? replayObj.commands : []
+  }
+  const replayKey = buildReplayStorageKey(`${normalizedReplay.time}_${normalizedReplay.label}`)
+
+  try {
+    localStorage.setItem(replayKey, JSON.stringify(normalizedReplay))
+  } catch (err) {
+    window.logger.warn('Failed to store imported replay:', err)
+    showNotification('Import failed: could not store replay')
+    return null
+  }
+
+  return {
+    key: replayKey,
+    label: normalizedReplay.label
+  }
+}
+
 export function updateRecordButtonState() {
   const replay = ensureReplayState()
   const recordBtn = document.getElementById('recordBtn')
