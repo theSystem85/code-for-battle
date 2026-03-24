@@ -452,6 +452,26 @@ describe('gameStateManager', () => {
       expect(gameState.defeatedPlayers.has('player1')).toBe(true)
     })
 
+    it('does not mark player1 defeated when buildings use legacy player owner id', () => {
+      const gameState = {
+        gameStarted: true,
+        buildings: [
+          { owner: 'player', type: 'constructionYard', health: 350 },
+          { owner: 'player2', type: 'constructionYard', health: 350 }
+        ],
+        humanPlayer: 'player1',
+        losses: 0,
+        multiplayerSession: { isRemote: true },
+        defeatedPlayers: new Set()
+      }
+
+      const result = checkGameEndConditions([], gameState)
+
+      expect(result).toBe(false)
+      expect(gameState.localPlayerDefeated).not.toBe(true)
+      expect(gameState.defeatedPlayers.has('player1')).toBe(false)
+    })
+
     it('plays defeat sounds for newly defeated players', () => {
       vi.useFakeTimers()
       const gameState = {

@@ -620,6 +620,11 @@ export function checkGameEndConditions(factories, gameState) {
     return building.type !== 'concreteWall'
   }
 
+  const isOwnedByPlayer = (owner, playerId) => {
+    if (owner === playerId) return true
+    return playerId === 'player1' && owner === 'player'
+  }
+
   // In multiplayer, check if the local player is already a spectator
   const isMultiplayer = gameState.multiplayerSession?.isRemote ||
     (gameState.partyStates && gameState.partyStates.some(p => !p.aiActive))
@@ -631,10 +636,10 @@ export function checkGameEndConditions(factories, gameState) {
 
   // Count remaining buildings AND factories for human player (excluding concrete walls)
   const humanPlayerBuildings = gameState.buildings.filter(
-    b => b.owner === gameState.humanPlayer && shouldCountBuilding(b)
+    b => isOwnedByPlayer(b.owner, gameState.humanPlayer) && shouldCountBuilding(b)
   )
   const humanPlayerFactories = factories.filter(
-    f => (f.id === gameState.humanPlayer || f.owner === gameState.humanPlayer) && shouldCountBuilding(f)
+    f => (isOwnedByPlayer(f.id, gameState.humanPlayer) || isOwnedByPlayer(f.owner, gameState.humanPlayer)) && shouldCountBuilding(f)
   )
   const totalHumanPlayerBuildings = humanPlayerBuildings.length + humanPlayerFactories.length
 
@@ -684,10 +689,10 @@ export function checkGameEndConditions(factories, gameState) {
 
   for (const playerId of otherPlayerIds) {
     const playerBuildings = gameState.buildings.filter(
-      b => b.owner === playerId && shouldCountBuilding(b)
+      b => isOwnedByPlayer(b.owner, playerId) && shouldCountBuilding(b)
     )
     const playerFactories = factories.filter(
-      f => (f.id === playerId || f.owner === playerId) && shouldCountBuilding(f)
+      f => (isOwnedByPlayer(f.id, playerId) || isOwnedByPlayer(f.owner, playerId)) && shouldCountBuilding(f)
     )
     const totalPlayerBuildings = playerBuildings.length + playerFactories.length
 
@@ -729,10 +734,10 @@ export function checkGameEndConditions(factories, gameState) {
     let totalRemainingPlayers = 0
     for (const playerId of allPlayers) {
       const playerBuildings = gameState.buildings.filter(
-        b => b.owner === playerId && shouldCountBuilding(b)
+        b => isOwnedByPlayer(b.owner, playerId) && shouldCountBuilding(b)
       )
       const playerFactories = factories.filter(
-        f => (f.id === playerId || f.owner === playerId) && shouldCountBuilding(f)
+        f => (isOwnedByPlayer(f.id, playerId) || isOwnedByPlayer(f.owner, playerId)) && shouldCountBuilding(f)
       )
       if (playerBuildings.length + playerFactories.length > 0) {
         totalRemainingPlayers++
@@ -745,10 +750,10 @@ export function checkGameEndConditions(factories, gameState) {
       // Find the winner
       const winner = allPlayers.find(playerId => {
         const playerBuildings = gameState.buildings.filter(
-          b => b.owner === playerId && shouldCountBuilding(b)
+          b => isOwnedByPlayer(b.owner, playerId) && shouldCountBuilding(b)
         )
         const playerFactories = factories.filter(
-          f => (f.id === playerId || f.owner === playerId) && shouldCountBuilding(f)
+          f => (isOwnedByPlayer(f.id, playerId) || isOwnedByPlayer(f.owner, playerId)) && shouldCountBuilding(f)
         )
         return playerBuildings.length + playerFactories.length > 0
       })
