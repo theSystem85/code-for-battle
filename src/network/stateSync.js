@@ -406,6 +406,13 @@ export function createGameStateSnapshot() {
     mapTilesY: gameState.mapTilesY,
     playerCount: gameState.playerCount,
     mapOreFieldCount: gameState.mapOreFieldCount,
+    mapWaterPercent: gameState.mapWaterPercent,
+    mapRockPercent: gameState.mapRockPercent,
+    mapShoreNorth: gameState.mapShoreNorth,
+    mapShoreWest: gameState.mapShoreWest,
+    mapShoreEast: gameState.mapShoreEast,
+    mapShoreSouth: gameState.mapShoreSouth,
+    mapCenterLake: gameState.mapCenterLake,
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
     shadowOfWarEnabled: gameState.shadowOfWarEnabled,
@@ -425,8 +432,9 @@ export function createGameStateSnapshot() {
  * @param {number} height - Map height in tiles
  * @param {number} playerCount - Number of players from host
  * @param {number} mapOreFieldCount - Number of ore fields from host
+ * @param {Object|null} terrainSettings - Additional terrain controls from host
  */
-function syncClientMap(seed, width, height, playerCount, mapOreFieldCount) {
+function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, terrainSettings = null) {
   if (!seed || !width || !height) {
     return false
   }
@@ -436,7 +444,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount) {
     return true
   }
 
-  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount)
+  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'terrainSettings:', terrainSettings)
 
   // Update map dimensions in config module
   setMapDimensions(width, height)
@@ -452,11 +460,20 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount) {
   if (Number.isFinite(mapOreFieldCount)) {
     gameState.mapOreFieldCount = mapOreFieldCount
   }
+  if (terrainSettings && typeof terrainSettings === 'object') {
+    gameState.mapWaterPercent = terrainSettings.mapWaterPercent
+    gameState.mapRockPercent = terrainSettings.mapRockPercent
+    gameState.mapShoreNorth = !!terrainSettings.mapShoreNorth
+    gameState.mapShoreWest = !!terrainSettings.mapShoreWest
+    gameState.mapShoreEast = !!terrainSettings.mapShoreEast
+    gameState.mapShoreSouth = !!terrainSettings.mapShoreSouth
+    gameState.mapCenterLake = !!terrainSettings.mapCenterLake
+  }
 
   // Call main.js function to regenerate map with host's seed and generation settings
   if (typeof regenerateMapForClient === 'function') {
-    regenerateMapForClient(seed, width, height, playerCount, mapOreFieldCount)
-    window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount)
+    regenerateMapForClient(seed, width, height, playerCount, mapOreFieldCount, terrainSettings)
+    window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'terrainSettings:', terrainSettings)
   } else {
     // Fallback: Initialize empty map grid if regenerateMapForClient is not available
     window.logger.warn('[GameCommandSync] regenerateMapForClient not available, creating empty map grid')
@@ -534,7 +551,15 @@ export function applyGameStateSnapshot(snapshot) {
   // Sync map seed, dimensions, and player count from host, regenerate map if needed
   // This must happen before syncing buildings so placeBuilding can work
   if (snapshot.mapSeed && snapshot.mapTilesX && snapshot.mapTilesY) {
-    syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount, snapshot.mapOreFieldCount)
+    syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount, snapshot.mapOreFieldCount, {
+      mapWaterPercent: snapshot.mapWaterPercent,
+      mapRockPercent: snapshot.mapRockPercent,
+      mapShoreNorth: snapshot.mapShoreNorth,
+      mapShoreWest: snapshot.mapShoreWest,
+      mapShoreEast: snapshot.mapShoreEast,
+      mapShoreSouth: snapshot.mapShoreSouth,
+      mapCenterLake: snapshot.mapCenterLake
+    })
   }
 
   // Sync game settings from host - clients cannot change these

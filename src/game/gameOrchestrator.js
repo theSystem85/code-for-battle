@@ -57,6 +57,13 @@ import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
 const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
+const MAP_WATER_PERCENT_STORAGE_KEY = 'rts-map-water-percent'
+const MAP_ROCK_PERCENT_STORAGE_KEY = 'rts-map-rock-percent'
+const MAP_SHORE_NORTH_STORAGE_KEY = 'rts-map-shore-north'
+const MAP_SHORE_WEST_STORAGE_KEY = 'rts-map-shore-west'
+const MAP_SHORE_EAST_STORAGE_KEY = 'rts-map-shore-east'
+const MAP_SHORE_SOUTH_STORAGE_KEY = 'rts-map-shore-south'
+const MAP_CENTER_LAKE_STORAGE_KEY = 'rts-map-center-lake'
 export const MAP_WIDTH_TILES_STORAGE_KEY = 'rts-map-width-tiles'
 export const MAP_HEIGHT_TILES_STORAGE_KEY = 'rts-map-height-tiles'
 const SHADOW_OF_WAR_STORAGE_KEY = 'rts-shadow-of-war-enabled'
@@ -79,6 +86,20 @@ function sanitizeOreFieldCount(value) {
   }
   const fallback = Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8
   return Math.max(0, Math.min(24, Math.floor(fallback)))
+}
+
+function sanitizeTerrainPercent(value, fallback) {
+  const parsed = parseInt(value, 10)
+  if (Number.isFinite(parsed)) {
+    return Math.max(0, Math.min(80, parsed))
+  }
+  return Math.max(0, Math.min(80, Number.isFinite(fallback) ? Math.floor(fallback) : 10))
+}
+
+function parseStoredBoolean(value, fallback = false) {
+  if (value === 'true') return true
+  if (value === 'false') return false
+  return fallback
 }
 
 function sanitizeSelectionHudBarThickness(value, fallback = 4) {
@@ -264,6 +285,44 @@ function loadPersistedSettings() {
     }
   } catch (e) {
     window.logger.warn('Failed to load ore field count from localStorage:', e)
+  }
+
+  try {
+    const waterInput = document.getElementById('mapWaterPercent')
+    const rockInput = document.getElementById('mapRockPercent')
+    const shoreNorthCheckbox = document.getElementById('mapShoreNorthCheckbox')
+    const shoreWestCheckbox = document.getElementById('mapShoreWestCheckbox')
+    const shoreEastCheckbox = document.getElementById('mapShoreEastCheckbox')
+    const shoreSouthCheckbox = document.getElementById('mapShoreSouthCheckbox')
+    const centerLakeCheckbox = document.getElementById('mapCenterLakeCheckbox')
+
+    const storedWater = localStorage.getItem(MAP_WATER_PERCENT_STORAGE_KEY)
+    const storedRock = localStorage.getItem(MAP_ROCK_PERCENT_STORAGE_KEY)
+    const storedShoreNorth = localStorage.getItem(MAP_SHORE_NORTH_STORAGE_KEY)
+    const storedShoreWest = localStorage.getItem(MAP_SHORE_WEST_STORAGE_KEY)
+    const storedShoreEast = localStorage.getItem(MAP_SHORE_EAST_STORAGE_KEY)
+    const storedShoreSouth = localStorage.getItem(MAP_SHORE_SOUTH_STORAGE_KEY)
+    const storedCenterLake = localStorage.getItem(MAP_CENTER_LAKE_STORAGE_KEY)
+
+    const waterPercent = sanitizeTerrainPercent(storedWater, gameState.mapWaterPercent)
+    const rockPercent = sanitizeTerrainPercent(storedRock, gameState.mapRockPercent)
+    gameState.mapWaterPercent = waterPercent
+    gameState.mapRockPercent = rockPercent
+    gameState.mapShoreNorth = parseStoredBoolean(storedShoreNorth, gameState.mapShoreNorth)
+    gameState.mapShoreWest = parseStoredBoolean(storedShoreWest, gameState.mapShoreWest)
+    gameState.mapShoreEast = parseStoredBoolean(storedShoreEast, gameState.mapShoreEast)
+    gameState.mapShoreSouth = parseStoredBoolean(storedShoreSouth, gameState.mapShoreSouth)
+    gameState.mapCenterLake = parseStoredBoolean(storedCenterLake, gameState.mapCenterLake)
+
+    if (waterInput) waterInput.value = waterPercent
+    if (rockInput) rockInput.value = rockPercent
+    if (shoreNorthCheckbox) shoreNorthCheckbox.checked = gameState.mapShoreNorth
+    if (shoreWestCheckbox) shoreWestCheckbox.checked = gameState.mapShoreWest
+    if (shoreEastCheckbox) shoreEastCheckbox.checked = gameState.mapShoreEast
+    if (shoreSouthCheckbox) shoreSouthCheckbox.checked = gameState.mapShoreSouth
+    if (centerLakeCheckbox) centerLakeCheckbox.checked = gameState.mapCenterLake
+  } catch (e) {
+    window.logger.warn('Failed to load terrain map settings from localStorage:', e)
   }
 
   try {
@@ -594,6 +653,13 @@ class Game {
     const mapWidthInput = document.getElementById('mapWidthTiles')
     const mapHeightInput = document.getElementById('mapHeightTiles')
     const oreFieldInput = document.getElementById('mapOreFieldCount')
+    const waterPercentInput = document.getElementById('mapWaterPercent')
+    const rockPercentInput = document.getElementById('mapRockPercent')
+    const shoreNorthCheckbox = document.getElementById('mapShoreNorthCheckbox')
+    const shoreWestCheckbox = document.getElementById('mapShoreWestCheckbox')
+    const shoreEastCheckbox = document.getElementById('mapShoreEastCheckbox')
+    const shoreSouthCheckbox = document.getElementById('mapShoreSouthCheckbox')
+    const centerLakeCheckbox = document.getElementById('mapCenterLakeCheckbox')
 
     const applyMapSettingsAndRegenerate = () => {
       const seed = seedInput ? seedInput.value || '1' : '1'
@@ -603,6 +669,17 @@ class Game {
       const oreFieldCount = oreFieldInput
         ? sanitizeOreFieldCount(oreFieldInput.value)
         : sanitizeOreFieldCount(gameState.mapOreFieldCount)
+      const waterPercent = waterPercentInput
+        ? sanitizeTerrainPercent(waterPercentInput.value, gameState.mapWaterPercent)
+        : sanitizeTerrainPercent(gameState.mapWaterPercent, 10)
+      const rockPercent = rockPercentInput
+        ? sanitizeTerrainPercent(rockPercentInput.value, gameState.mapRockPercent)
+        : sanitizeTerrainPercent(gameState.mapRockPercent, 10)
+      const shoreNorth = !!shoreNorthCheckbox?.checked
+      const shoreWest = !!shoreWestCheckbox?.checked
+      const shoreEast = !!shoreEastCheckbox?.checked
+      const shoreSouth = !!shoreSouthCheckbox?.checked
+      const centerLake = !!centerLakeCheckbox?.checked
 
       if (mapWidthInput) mapWidthInput.value = widthTiles
       if (mapHeightInput) mapHeightInput.value = heightTiles
@@ -612,15 +689,39 @@ class Game {
         oreFieldInput.max = 24
         oreFieldInput.value = oreFieldCount
       }
+      if (waterPercentInput) {
+        waterPercentInput.min = 0
+        waterPercentInput.max = 80
+        waterPercentInput.value = waterPercent
+      }
+      if (rockPercentInput) {
+        rockPercentInput.min = 0
+        rockPercentInput.max = 80
+        rockPercentInput.value = rockPercent
+      }
 
       gameState.playerCount = Number.isFinite(playerCount) ? Math.max(2, Math.min(4, playerCount)) : (gameState.playerCount || 2)
       gameState.mapOreFieldCount = oreFieldCount
+      gameState.mapWaterPercent = waterPercent
+      gameState.mapRockPercent = rockPercent
+      gameState.mapShoreNorth = shoreNorth
+      gameState.mapShoreWest = shoreWest
+      gameState.mapShoreEast = shoreEast
+      gameState.mapShoreSouth = shoreSouth
+      gameState.mapCenterLake = centerLake
 
       try { localStorage.setItem(MAP_SEED_STORAGE_KEY, seed) } catch (err) { window.logger.warn('Failed to save map seed to localStorage:', err) }
       try { localStorage.setItem(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles.toString()) } catch (err) { window.logger.warn('Failed to save map width to localStorage:', err) }
       try { localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString()) } catch (err) { window.logger.warn('Failed to save map height to localStorage:', err) }
       try { localStorage.setItem(PLAYER_COUNT_STORAGE_KEY, gameState.playerCount.toString()) } catch (err) { window.logger.warn('Failed to save player count to localStorage:', err) }
       try { localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, oreFieldCount.toString()) } catch (err) { window.logger.warn('Failed to save ore field count to localStorage:', err) }
+      try { localStorage.setItem(MAP_WATER_PERCENT_STORAGE_KEY, waterPercent.toString()) } catch (err) { window.logger.warn('Failed to save map water percent to localStorage:', err) }
+      try { localStorage.setItem(MAP_ROCK_PERCENT_STORAGE_KEY, rockPercent.toString()) } catch (err) { window.logger.warn('Failed to save map rock percent to localStorage:', err) }
+      try { localStorage.setItem(MAP_SHORE_NORTH_STORAGE_KEY, shoreNorth.toString()) } catch (err) { window.logger.warn('Failed to save north shore setting to localStorage:', err) }
+      try { localStorage.setItem(MAP_SHORE_WEST_STORAGE_KEY, shoreWest.toString()) } catch (err) { window.logger.warn('Failed to save west shore setting to localStorage:', err) }
+      try { localStorage.setItem(MAP_SHORE_EAST_STORAGE_KEY, shoreEast.toString()) } catch (err) { window.logger.warn('Failed to save east shore setting to localStorage:', err) }
+      try { localStorage.setItem(MAP_SHORE_SOUTH_STORAGE_KEY, shoreSouth.toString()) } catch (err) { window.logger.warn('Failed to save south shore setting to localStorage:', err) }
+      try { localStorage.setItem(MAP_CENTER_LAKE_STORAGE_KEY, centerLake.toString()) } catch (err) { window.logger.warn('Failed to save center lake setting to localStorage:', err) }
 
       const { width, height } = setMapDimensions(widthTiles, heightTiles)
       gameState.mapTilesX = width
@@ -660,6 +761,32 @@ class Game {
         applyMapSettingsAndRegenerate()
       })
     }
+
+    if (waterPercentInput) {
+      waterPercentInput.min = 0
+      waterPercentInput.max = 80
+      waterPercentInput.value = sanitizeTerrainPercent(waterPercentInput.value || gameState.mapWaterPercent, 10)
+      waterPercentInput.addEventListener('change', () => {
+        waterPercentInput.value = sanitizeTerrainPercent(waterPercentInput.value, gameState.mapWaterPercent)
+        applyMapSettingsAndRegenerate()
+      })
+    }
+
+    if (rockPercentInput) {
+      rockPercentInput.min = 0
+      rockPercentInput.max = 80
+      rockPercentInput.value = sanitizeTerrainPercent(rockPercentInput.value || gameState.mapRockPercent, 10)
+      rockPercentInput.addEventListener('change', () => {
+        rockPercentInput.value = sanitizeTerrainPercent(rockPercentInput.value, gameState.mapRockPercent)
+        applyMapSettingsAndRegenerate()
+      })
+    }
+
+    ;[shoreNorthCheckbox, shoreWestCheckbox, shoreEastCheckbox, shoreSouthCheckbox, centerLakeCheckbox]
+      .filter(Boolean)
+      .forEach((checkbox) => {
+        checkbox.addEventListener('change', applyMapSettingsAndRegenerate)
+      })
   }
 
   setupMapSettings() {
@@ -1244,8 +1371,8 @@ gameState.mapGrid = mapGrid
 gameState.units = units
 gameState.factories = factories
 
-function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapOreFieldCount) {
-  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount)
+function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapOreFieldCount, terrainSettings = null) {
+  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'terrainSettings:', terrainSettings)
   deactivateMapEditMode()
   const { value: clientSeed } = sanitizeSeed(seed)
   const normalizedSeed = clientSeed.toString()
@@ -1260,6 +1387,15 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
   }
   if (Number.isFinite(mapOreFieldCount)) {
     gameState.mapOreFieldCount = sanitizeOreFieldCount(mapOreFieldCount)
+  }
+  if (terrainSettings && typeof terrainSettings === 'object') {
+    gameState.mapWaterPercent = sanitizeTerrainPercent(terrainSettings.mapWaterPercent, gameState.mapWaterPercent)
+    gameState.mapRockPercent = sanitizeTerrainPercent(terrainSettings.mapRockPercent, gameState.mapRockPercent)
+    gameState.mapShoreNorth = !!terrainSettings.mapShoreNorth
+    gameState.mapShoreWest = !!terrainSettings.mapShoreWest
+    gameState.mapShoreEast = !!terrainSettings.mapShoreEast
+    gameState.mapShoreSouth = !!terrainSettings.mapShoreSouth
+    gameState.mapCenterLake = !!terrainSettings.mapCenterLake
   }
 
   gameState.unitWrecks = []

@@ -65,24 +65,6 @@ function drawStreetLine(grid, start, end, type) {
   }
 }
 
-// Helper: Draw a thick line (Bresenham-like) - for non-street features
-function drawThickLine(grid, start, end, type, thickness) {
-  const dx = end.x - start.x, dy = end.y - start.y
-  const steps = Math.max(Math.abs(dx), Math.abs(dy))
-  for (let j = 0; j <= steps; j++) {
-    const x = Math.floor(start.x + (dx * j) / steps)
-    const y = Math.floor(start.y + (dy * j) / steps)
-    for (let ty = -Math.floor(thickness / 2); ty <= Math.floor(thickness / 2); ty++) {
-      for (let tx = -Math.floor(thickness / 2); tx <= Math.floor(thickness / 2); tx++) {
-        const nx = x + tx, ny = y + ty
-        if (nx >= 0 && ny >= 0 && nx < grid[0].length && ny < grid.length) {
-          grid[ny][nx].type = type
-        }
-      }
-    }
-  }
-}
-
 // Helper: Create optimized street network using minimum spanning tree approach
 function createOptimizedStreetNetwork(mapGrid, points, type) {
   if (points.length < 2) return
@@ -160,6 +142,123 @@ function sanitizeOreFieldCount(value) {
     return 8
   }
   return clamp(parsed, 0, 24)
+}
+
+function sanitizePercent(value, fallback = 0) {
+  const parsed = parseInt(value, 10)
+  if (!Number.isFinite(parsed)) {
+    return clamp(fallback, 0, 80)
+  }
+  return clamp(parsed, 0, 80)
+}
+
+function setTileToType(mapGrid, x, y, type) {
+  if (!mapGrid[y] || !mapGrid[y][x]) return
+  mapGrid[y][x].type = type
+}
+
+function stampCircle(mapGrid, centerX, centerY, radius, type) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  for (let y = Math.max(0, centerY - radius); y <= Math.min(height - 1, centerY + radius); y++) {
+    for (let x = Math.max(0, centerX - radius); x <= Math.min(width - 1, centerX + radius); x++) {
+      if (Math.hypot(x - centerX, y - centerY) <= radius) {
+        setTileToType(mapGrid, x, y, type)
+      }
+    }
+  }
+}
+
+function buildProtectedTileSet(playerPositions, mapWidth, mapHeight) {
+  const protectedTiles = new Set()
+  const mark = (x, y) => {
+    if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) return
+    protectedTiles.add(`${x},${y}`)
+  }
+
+  playerPositions.forEach(position => {
+    for (let y = position.y - 4; y <= position.y + 4; y++) {
+      for (let x = position.x - 4; x <= position.x + 4; x++) {
+        mark(x, y)
+      }
+    }
+  })
+
+  return protectedTiles
+}
+
+function collectTilesOfType(mapGrid, type, protectedTiles) {
+  const tiles = []
+  for (let y = 0; y < mapGrid.length; y++) {
+    for (let x = 0; x < mapGrid[0].length; x++) {
+      if (mapGrid[y][x].type !== type) continue
+      if (protectedTiles.has(`${x},${y}`)) continue
+      tiles.push({ x, y })
+    }
+  }
+  return tiles
+}
+
+function setRandomTilesToType(rand, mapGrid, fromTypes, targetType, count, protectedTiles) {
+  if (count <= 0) return
+  const candidates = []
+  for (let y = 0; y < mapGrid.length; y++) {
+    for (let x = 0; x < mapGrid[0].length; x++) {
+      if (!fromTypes.has(mapGrid[y][x].type)) continue
+      if (protectedTiles.has(`${x},${y}`)) continue
+      candidates.push({ x, y })
+    }
+  }
+
+  for (let i = candidates.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1))
+    const tmp = candidates[i]
+    candidates[i] = candidates[j]
+    candidates[j] = tmp
+  }
+
+  const limit = Math.min(count, candidates.length)
+  for (let i = 0; i < limit; i++) {
+    const tile = candidates[i]
+    mapGrid[tile.y][tile.x].type = targetType
+  }
+}
+
+function enforceLandAroundBases(mapGrid, playerPositions) {
+  playerPositions.forEach(position => {
+    for (let y = position.y - 3; y <= position.y + 3; y++) {
+      for (let x = position.x - 3; x <= position.x + 3; x++) {
+        if (y < 0 || x < 0 || y >= mapGrid.length || x >= mapGrid[0].length) continue
+        if (Math.hypot(x - position.x, y - position.y) <= 3.2) {
+          mapGrid[y][x].type = 'land'
+        }
+      }
+    }
+  })
+}
+
+function applyShoreWater(mapGrid, side, depth) {
+  const height = mapGrid.length
+  const width = mapGrid[0].length
+  const normalizedDepth = Math.max(1, Math.min(Math.floor(depth), Math.floor(Math.min(width, height) * 0.45)))
+
+  if (side === 'north') {
+    for (let y = 0; y < normalizedDepth; y++) {
+      for (let x = 0; x < width; x++) setTileToType(mapGrid, x, y, 'water')
+    }
+  } else if (side === 'south') {
+    for (let y = height - normalizedDepth; y < height; y++) {
+      for (let x = 0; x < width; x++) setTileToType(mapGrid, x, y, 'water')
+    }
+  } else if (side === 'west') {
+    for (let x = 0; x < normalizedDepth; x++) {
+      for (let y = 0; y < height; y++) setTileToType(mapGrid, x, y, 'water')
+    }
+  } else if (side === 'east') {
+    for (let x = width - normalizedDepth; x < width; x++) {
+      for (let y = 0; y < height; y++) setTileToType(mapGrid, x, y, 'water')
+    }
+  }
 }
 
 function createBalancedOreClusterCenters(playerPositions, mapWidth, mapHeight, targetDistance) {
@@ -368,68 +467,7 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     }
   }
 
-  // -------- Step 1: Generate Mountain Chains (Rock Clusters) --------
-  const rockClusterCount = 9
-  const rockClusters = []
-  for (let i = 0; i < rockClusterCount; i++) {
-    const clusterCenterX = Math.floor(rand() * MAP_TILES_X)
-    const clusterCenterY = Math.floor(rand() * MAP_TILES_Y)
-    rockClusters.push({ x: clusterCenterX, y: clusterCenterY })
-    const clusterRadius = Math.floor(rand() * 3) + 2 // radius between 2 and 4
-    for (let y = Math.max(0, clusterCenterY - clusterRadius); y < Math.min(MAP_TILES_Y, clusterCenterY + clusterRadius); y++) {
-      for (let x = Math.max(0, clusterCenterX - clusterRadius); x < Math.min(MAP_TILES_X, clusterCenterX + clusterRadius); x++) {
-        const dx = x - clusterCenterX, dy = y - clusterCenterY
-        if (Math.hypot(dx, dy) < clusterRadius && rand() < 0.8) {
-          mapGrid[y][x].type = 'rock'
-        }
-      }
-    }
-  }
-  // Connect rock clusters in sequence (mountain chains)
-  for (let i = 0; i < rockClusters.length - 1; i++) {
-    drawThickLine(mapGrid, rockClusters[i], rockClusters[i + 1], 'rock', 2)
-  }
-
-  // -------- Step 2: Generate Lakes and Rivers --------
-  const lakeCount = 2
-  const lakeCenters = []
-  for (let i = 0; i < lakeCount; i++) {
-    const centerX = Math.floor(rand() * MAP_TILES_X)
-    const centerY = Math.floor(rand() * MAP_TILES_Y)
-    lakeCenters.push({ x: centerX, y: centerY })
-    const radius = Math.floor(rand() * 4) + 4 // radius between 4 and 7
-    for (let y = Math.max(0, centerY - radius); y < Math.min(MAP_TILES_Y, centerY + radius); y++) {
-      for (let x = Math.max(0, centerX - radius); x < Math.min(MAP_TILES_X, centerX + radius); x++) {
-        const dx = x - centerX, dy = y - centerY
-        if (Math.hypot(dx, dy) < radius) {
-          mapGrid[y][x].type = 'water'
-        }
-      }
-    }
-  }
-  // Connect lakes with a river
-  if (lakeCenters.length === 2) {
-    const startLake = lakeCenters[0]
-    const endLake = lakeCenters[1]
-    const steps = Math.max(Math.abs(endLake.x - startLake.x), Math.abs(endLake.y - startLake.y))
-    for (let j = 0; j <= steps; j++) {
-      const x = Math.floor(startLake.x + ((endLake.x - startLake.x) * j) / steps)
-      const y = Math.floor(startLake.y + ((endLake.y - startLake.y) * j) / steps)
-      for (let dy = -1; dy <= 1; dy++) {
-        for (let dx = -1; dx <= 1; dx++) {
-          const nx = x + dx, ny = y + dy
-          if (nx >= 0 && ny >= 0 && nx < MAP_TILES_X && ny < MAP_TILES_Y) {
-            if (rand() < 0.8) {
-              mapGrid[ny][nx].type = 'water'
-            }
-          }
-        }
-      }
-    }
-    // Ensure at least one street crosses the river (midpoint) - will be handled by the unified street network
-  }
-
-  // -------- Step 3: Generate Streets --------
+  // -------- Step 1: Resolve player positions and map settings --------
   // Get player count and positions from gameState
   const playerCount = gameState?.playerCount || 2
   const playerPositions = []
@@ -445,6 +483,52 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     })
   })
 
+  const protectedTiles = buildProtectedTileSet(playerPositions, MAP_TILES_X, MAP_TILES_Y)
+  const requestedWaterPercent = sanitizePercent(gameState.mapWaterPercent, 10)
+  const requestedRockPercent = sanitizePercent(gameState.mapRockPercent, 10)
+  gameState.mapWaterPercent = requestedWaterPercent
+  gameState.mapRockPercent = requestedRockPercent
+
+  // -------- Step 2: Generate water terrain (percent + shore/lake controls) --------
+  const enabledShoreSides = [
+    gameState.mapShoreNorth ? 'north' : null,
+    gameState.mapShoreWest ? 'west' : null,
+    gameState.mapShoreEast ? 'east' : null,
+    gameState.mapShoreSouth ? 'south' : null
+  ].filter(Boolean)
+
+  const shoreDepth = Math.max(4, Math.floor(Math.min(MAP_TILES_X, MAP_TILES_Y) * 0.12))
+  enabledShoreSides.forEach(side => {
+    applyShoreWater(mapGrid, side, shoreDepth)
+  })
+
+  if (gameState.mapCenterLake) {
+    const centerX = Math.floor(MAP_TILES_X / 2)
+    const centerY = Math.floor(MAP_TILES_Y / 2)
+    const radius = Math.max(7, Math.floor(Math.min(MAP_TILES_X, MAP_TILES_Y) * 0.18))
+    stampCircle(mapGrid, centerX, centerY, radius, 'water')
+  }
+
+  const totalTiles = MAP_TILES_X * MAP_TILES_Y
+  const targetWaterTiles = Math.floor((totalTiles * requestedWaterPercent) / 100)
+  const currentWaterTiles = collectTilesOfType(mapGrid, 'water', new Set()).length
+
+  if (currentWaterTiles < targetWaterTiles) {
+    setRandomTilesToType(
+      rand,
+      mapGrid,
+      new Set(['land']),
+      'water',
+      targetWaterTiles - currentWaterTiles,
+      protectedTiles
+    )
+  }
+
+  // -------- Step 3: Generate rock terrain percentage (on non-water tiles) --------
+  const targetRockTiles = Math.floor((totalTiles * requestedRockPercent) / 100)
+  setRandomTilesToType(rand, mapGrid, new Set(['land']), 'rock', targetRockTiles, protectedTiles)
+
+  // -------- Step 4: Generate Streets --------
   const oreFieldCount = sanitizeOreFieldCount(gameState.mapOreFieldCount)
   gameState.mapOreFieldCount = oreFieldCount
   const orePlan = buildOreClusterPlan(rand, playerPositions, MAP_TILES_X, MAP_TILES_Y, oreFieldCount)
@@ -458,14 +542,16 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     })
   }
 
-  // Ensure river crossing exists (if there are lakes)
-  if (lakeCenters.length === 2) {
-    const riverMidX = Math.floor((lakeCenters[0].x + lakeCenters[1].x) / 2)
-    const riverMidY = Math.floor((lakeCenters[0].y + lakeCenters[1].y) / 2)
-    mapGrid[riverMidY][riverMidX].type = 'street'
+  // Hard guarantee: every base anchor remains on land and every base is land-reachable.
+  enforceLandAroundBases(mapGrid, playerPositions)
+  if (playerPositions.length > 1) {
+    const hubPosition = playerPositions[0]
+    for (let i = 1; i < playerPositions.length; i++) {
+      drawOrthogonalStreetPath(mapGrid, hubPosition, playerPositions[i], 'street')
+    }
   }
 
-  // -------- Step 4: Generate Ore Fields (AFTER terrain generation) --------
+  // -------- Step 5: Generate Ore Fields (AFTER terrain generation) --------
   // Generate ore clusters around the predefined centers, but only on passable terrain
   // and avoid factory and building locations
 
