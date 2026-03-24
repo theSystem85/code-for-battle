@@ -56,6 +56,24 @@ function clearApacheReturnAttackState(unit) {
   unit.autoReturnToHelipadOnTargetLoss = false
 }
 
+function hasActivePlayerApacheOverride(unit, now) {
+  if (!unit) return false
+  const lastRemoteControlTime = typeof unit.lastRemoteControlTime === 'number' ? unit.lastRemoteControlTime : 0
+  if (unit.remoteControlActive) {
+    if (!lastRemoteControlTime) {
+      return true
+    }
+    if (now - lastRemoteControlTime < 2000) {
+      return true
+    }
+  }
+  if (lastRemoteControlTime > 0 && now - lastRemoteControlTime < 2000) {
+    return true
+  }
+  const lastPlayerCommandTime = typeof unit.lastPlayerCommandTime === 'number' ? unit.lastPlayerCommandTime : 0
+  return lastPlayerCommandTime > 0 && now - lastPlayerCommandTime < 2000
+}
+
 function findNearestHelipadForApache(unit, units) {
   if (!unit || !Array.isArray(gameState.buildings) || gameState.buildings.length === 0) {
     return null
@@ -260,6 +278,15 @@ function initiateF35PadReturn(unit, padInfo) {
 }
 
 export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupancyMap) {
+  if (hasActivePlayerApacheOverride(unit, now)) {
+    if (unit.autoHelipadReturnActive || unit.autoHelipadReturnAttackTargetId || unit.autoReturnToHelipadOnTargetLoss) {
+      unit.autoHelipadReturnActive = false
+      unit.autoHelipadReturnTargetId = null
+      clearApacheReturnAttackState(unit)
+    }
+    return
+  }
+
   if ((!unit.target || unit.target.health <= 0) && unit.autoHelipadReturnAttackTargetId) {
     unit.target = resolveStoredApacheTarget(unit, units)
   }

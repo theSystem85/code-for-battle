@@ -54,6 +54,25 @@ function clearHelipadClaimForUnit(unit, helipadId, helipads = []) {
   }
 }
 
+function hasRecentPlayerApacheControl(unit) {
+  if (!unit) return false
+  const now = performance.now()
+  const lastRemoteControlTime = typeof unit.lastRemoteControlTime === 'number' ? unit.lastRemoteControlTime : 0
+  if (unit.remoteControlActive) {
+    if (!lastRemoteControlTime) {
+      return true
+    }
+    if (now - lastRemoteControlTime < 2000) {
+      return true
+    }
+  }
+  if (lastRemoteControlTime > 0 && now - lastRemoteControlTime < 2000) {
+    return true
+  }
+  const lastPlayerCommandTime = typeof unit.lastPlayerCommandTime === 'number' ? unit.lastPlayerCommandTime : 0
+  return lastPlayerCommandTime > 0 && now - lastPlayerCommandTime < 2000
+}
+
 
 /**
  * Check if a unit is adjacent to any tile of a building
@@ -283,7 +302,13 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               const hasAmmoCapacity = typeof heli.maxRocketAmmo === 'number' && heli.maxRocketAmmo > 0
               const ammoFull = !hasAmmoCapacity || heli.rocketAmmo >= heli.maxRocketAmmo
               const hasStoredAttackTarget = Boolean(heli.autoHelipadReturnAttackTargetId)
-              const shouldAutoTakeoff = heli.type === 'apache' && settledOnPad && heli.autoHelipadReturnActive && ammoFull && hasStoredAttackTarget
+              const playerOverrideActive = heli.type === 'apache' && hasRecentPlayerApacheControl(heli)
+              const shouldAutoTakeoff = heli.type === 'apache' &&
+                settledOnPad &&
+                heli.autoHelipadReturnActive &&
+                ammoFull &&
+                hasStoredAttackTarget &&
+                !playerOverrideActive
 
               if (shouldAutoTakeoff) {
                 heli.helipadLandingRequested = false
@@ -295,6 +320,10 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
                 helipad.landedUnitId = null
                 heli.landedHelipadId = null
               } else {
+                if (playerOverrideActive) {
+                  heli.autoHelipadReturnActive = false
+                  heli.autoHelipadReturnTargetId = null
+                }
                 if (heli.autoHelipadReturnActive) {
                   heli.canFire = false
                   if (!hasStoredAttackTarget) {

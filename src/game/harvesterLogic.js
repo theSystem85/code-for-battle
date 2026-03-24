@@ -18,6 +18,18 @@ const harvestedTiles = new Set()
 const targetedOreTiles = {}
 // Track refinery queues
 const refineryQueues = {}
+const HARVESTER_REMOTE_OVERRIDE_GRACE_MS = 2000
+
+function isRemoteControlOverrideActive(unit, now = performance.now()) {
+  if (!unit) return false
+  if (unit.remoteControlActive) return true
+  const lastRemoteControlTime = typeof unit.lastRemoteControlTime === 'number' ? unit.lastRemoteControlTime : 0
+  return lastRemoteControlTime > 0 && now - lastRemoteControlTime < HARVESTER_REMOTE_OVERRIDE_GRACE_MS
+}
+
+function hasPlayerHarvesterPriority(unit, now = performance.now()) {
+  return Boolean(unit?.manualOreTarget) || isRemoteControlOverrideActive(unit, now)
+}
 
 function stopMovement(unit) {
   unit.path = []
@@ -93,7 +105,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     const isInRepairQueue = unit.targetWorkshop && unit.targetWorkshop.repairQueue &&
                            unit.targetWorkshop.repairQueue.includes(unit)
 
-    if (unit.oreCarried < HARVESTER_CAPPACITY && !unit.harvesting && !unit.unloadingAtRefinery &&
+    if (!hasPlayerHarvesterPriority(unit, now) &&
+        unit.oreCarried < HARVESTER_CAPPACITY && !unit.harvesting && !unit.unloadingAtRefinery &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       // Check if harvester is near an ore tile (more tolerant detection)
       const nearbyOreTile = findNearbyOreTile(unit, mapGrid, unitTileX, unitTileY)
@@ -167,7 +180,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
 
     // Handle unloading when at capacity
     // Skip auto-unloading if harvester is heading to or being repaired at workshop, or is in repair queue
-    if (unit.oreCarried >= HARVESTER_CAPPACITY && !unit.unloadingAtRefinery && !unit.harvesting &&
+    if (!isRemoteControlOverrideActive(unit, now) &&
+        unit.oreCarried >= HARVESTER_CAPPACITY && !unit.unloadingAtRefinery && !unit.harvesting &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occupancyMap, units)
     }
@@ -179,7 +193,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
 
     // Find new ore when idle and not carrying ore
     // Skip auto-ore finding if harvester is heading to or being repaired at workshop, or is in repair queue
-    if (unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
+    if (!isRemoteControlOverrideActive(unit, now) &&
+        unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
         (!unit.path || unit.path.length === 0) && !unit.oreField &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       // Check if there's a manual ore target first
@@ -192,7 +207,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
 
     // Handle harvesters that have an ore field but no path and aren't harvesting
     // This can happen when they get stuck or lose their path
-    if (unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
+    if (!hasPlayerHarvesterPriority(unit, now) &&
+        unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
         unit.oreField && (!unit.path || unit.path.length === 0)) {
       const tileKey = `${unit.oreField.x},${unit.oreField.y}`
       const _currentTileX = Math.floor(unit.x / TILE_SIZE)
@@ -1298,9 +1314,9 @@ function findNearbyOreTile(unit, mapGrid, centerTileX, centerTileY) {
 /**
  * Check if harvester is being productive (harvesting, moving, or unloading)
  */
-function checkHarvesterProductivity(unit, mapGrid, occupancyMap, _now) {
+function checkHarvesterProductivity(unit, mapGrid, occupancyMap, now) {
   // Don't interfere with manual commands
-  if (unit.manualOreTarget) {
+  if (hasPlayerHarvesterPriority(unit, now)) {
     return
   }
 

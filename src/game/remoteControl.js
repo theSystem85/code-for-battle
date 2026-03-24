@@ -541,6 +541,7 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
         unit.moveTarget = null
         unit.remoteControlActive = true
         unit.lastRemoteControlTime = now
+        unit.lastPlayerCommandTime = now
       } else {
         unit.remoteControlActive = false
       }
@@ -621,6 +622,9 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
     unit.remoteControlActive = !!hasMovementInput
     if (unit.remoteControlActive) {
       unit.lastRemoteControlTime = now
+      if (unit.type === 'harvester') {
+        unit.lastPlayerCommandTime = now
+      }
     }
 
     if (unit.remoteControlActive && !unit.hasUsedRemoteControl) {

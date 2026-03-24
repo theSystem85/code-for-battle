@@ -8,6 +8,7 @@ import { clearTankerKamikazeState } from '../../game/tankerTruckUtils.js'
 import { issueTankerKamikazeCommand, clearAttackGroupState } from './utilityQueue.js'
 
 export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isForceAttack = false, skipQueueClear = false) {
+  const now = performance.now()
   if (!handler.isAttackGroupOperation) {
     clearAttackGroupState(selectedUnits)
   }
@@ -60,6 +61,12 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
           followTargetId: target.id || null
         })
       }
+      unit.lastPlayerCommandTime = now
+      unit.autoHelipadReturnActive = false
+      unit.autoHelipadReturnTargetId = null
+      unit.autoHelipadReturnAttackTargetId = null
+      unit.autoHelipadReturnAttackTargetType = null
+      unit.autoReturnToHelipadOnTargetLoss = false
       unit.target = target
       unit.forcedAttack = isForceAttack
       return
