@@ -257,6 +257,11 @@ export const gameState = {
     localRole: 'host'
   },
 
+
+  // Replay state
+  replayMode: false,
+  replay: null,
+
   // Track defeated players for sound effects
   defeatedPlayers: new Set(),
 

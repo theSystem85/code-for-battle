@@ -1,3 +1,4 @@
+- [x] Add replay system with record-mode command capture (including LLM decisions), replay list tab beside save games, replay playback controlled by Start/Pause, and replay-mode input/build restrictions plus user-doc updates.
 - [x] Update the in-game user documentation to cover the Airstrip building plus the F22 Raptor and F35 jet workflows, unlocks, and stat entries.
 - [ ] F22 combat follow-up (2026-03-20): only fire rockets while targets remain inside the active firing window, and hard-cap effective F22 firing range at 20 tiles including bonuses.
 - [x] Ensure enemy AI maintains F22:F35 build parity at 1:1 and uses F35 strike logic against anti-air-uncovered ground buildings.

@@ -7,6 +7,7 @@ import { findEnemyTarget } from './mouseHelpers.js'
 import { isForceAttackModifierActive } from '../utils/inputUtils.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
+import { isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
 const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
@@ -67,6 +68,9 @@ function queueDefenseBuildingTarget(building, target) {
 export function handleForceAttackCommand(handler, worldX, worldY, units, selectedUnits, unitCommands, mapGrid, selectionManager) {
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
   if (commandableUnits.length === 0) {
+    return false
+  }
+  if (isReplayInteractionLocked()) {
     return false
   }
   selectionManager.clearWreckSelection()
@@ -156,6 +160,9 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
   if (commandableUnits.length === 0) {
     return false
   }
+  if (isReplayInteractionLocked()) {
+    return false
+  }
   let guardTarget = null
   for (const unit of units) {
     if (selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
@@ -184,6 +191,9 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
   const selectionManager = handler.selectionManager
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u) && !u.isBuilding)
   if (commandableUnits.length === 0 || commandableUnits[0].type === 'factory') {
+    return
+  }
+  if (isReplayInteractionLocked()) {
     return
   }
 
@@ -324,6 +334,13 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
 
       if (friendlyAirstrip && (onlyF22Selected || onlySupplyUnitsSelected)) {
         unitCommands.handleMovementCommand(commandableUnits, worldX, worldY, mapGrid)
+        recordReplayCommand({
+          type: 'unit_command',
+          command: 'move',
+          unitIds: commandableUnits.map(unit => unit.id),
+          targetPos: { space: 'world', x: worldX, y: worldY },
+          owner: gameState.humanPlayer
+        }, { source: 'human' })
       }
       return
     }
@@ -339,6 +356,13 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
         markWaypointsAdded()
       } else {
         unitCommands.handleAttackCommand(commandableUnits, target, mapGrid, false)
+        recordReplayCommand({
+          type: 'unit_command',
+          command: 'attack',
+          unitIds: commandableUnits.map(unit => unit.id),
+          targetId: target?.id || null,
+          owner: gameState.humanPlayer
+        }, { source: 'human' })
       }
     } else {
       if (altPressed) {
@@ -349,12 +373,22 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
         markWaypointsAdded()
       } else {
         unitCommands.handleMovementCommand(commandableUnits, worldX, worldY, mapGrid)
+        recordReplayCommand({
+          type: 'unit_command',
+          command: 'move',
+          unitIds: commandableUnits.map(unit => unit.id),
+          targetPos: { space: 'world', x: worldX, y: worldY },
+          owner: gameState.humanPlayer
+        }, { source: 'human' })
       }
     }
   }
 }
 
 export function handleServiceProviderClick(handler, provider, selectedUnits, unitCommands, mapGrid) {
+  if (isReplayInteractionLocked()) {
+    return false
+  }
   if (!unitCommands || !provider) {
     return false
   }

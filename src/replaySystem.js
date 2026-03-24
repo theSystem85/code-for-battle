@@ -1,0 +1,279 @@
+import { gameState } from './gameState.js'
+import { saveGame, loadGame, updateSaveGamesList } from './saveGame.js'
+import { showNotification } from './ui/notifications.js'
+import { applyGameTickOutput } from './ai-api/applier.js'
+
+const REPLAY_STORAGE_PREFIX = 'rts_replay_'
+const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
+
+function getNowMs() {
+  return Number.isFinite(gameState.simulationTime) ? gameState.simulationTime : Date.now()
+}
+
+function ensureReplayState() {
+  if (!gameState.replay) {
+    gameState.replay = {
+      recordingActive: false,
+      recordingStartedAt: 0,
+      recordingLabel: '',
+      commands: [],
+      baselineState: null,
+      playbackActive: false,
+      playbackStartedAt: 0,
+      playbackCursor: 0,
+      playbackCommands: []
+    }
+  }
+  return gameState.replay
+}
+
+function buildReplayStorageKey(label) {
+  return `${REPLAY_STORAGE_PREFIX}${label}`
+}
+
+function serializeReplay({ label, startedAt, baselineState, commands }) {
+  return {
+    label,
+    time: Date.now(),
+    startedAt,
+    baselineState,
+    commands
+  }
+}
+
+function captureBaselineState() {
+  const replay = ensureReplayState()
+  const baselineLabel = `${TEMP_BASELINE_LABEL_PREFIX}${Date.now()}`
+  const baselineKey = `rts_save_${baselineLabel}`
+  saveGame(baselineLabel)
+  try {
+    const raw = localStorage.getItem(baselineKey)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    replay.baselineState = parsed?.state || null
+    return replay.baselineState
+  } finally {
+    localStorage.removeItem(baselineKey)
+    updateSaveGamesList()
+  }
+}
+
+export function listReplays() {
+  const replays = []
+  if (typeof localStorage === 'undefined') return replays
+  for (const key in localStorage) {
+    if (!key.startsWith(REPLAY_STORAGE_PREFIX)) continue
+    try {
+      const replay = JSON.parse(localStorage.getItem(key))
+      replays.push({ key, label: replay?.label || '(no label)', time: replay?.time || 0 })
+    } catch (err) {
+      window.logger.warn('Failed to parse replay entry:', err)
+    }
+  }
+  replays.sort((a, b) => (b.time || 0) - (a.time || 0))
+  return replays
+}
+
+export function isReplayInteractionLocked() {
+  return Boolean(gameState.replay?.playbackActive && !gameState.replay?.isApplyingReplayCommand)
+}
+
+export function startReplayRecording() {
+  const replay = ensureReplayState()
+  if (replay.recordingActive) return
+  const baselineState = captureBaselineState()
+  if (!baselineState) {
+    showNotification('Replay recording failed: baseline save could not be captured.')
+    return
+  }
+
+  replay.recordingActive = true
+  replay.recordingStartedAt = getNowMs()
+  replay.commands = []
+  replay.recordingLabel = `Replay ${new Date().toLocaleString()}`
+  replay.baselineState = baselineState
+  showNotification('Replay recording started')
+}
+
+export function stopReplayRecording() {
+  const replay = ensureReplayState()
+  if (!replay.recordingActive) return
+
+  replay.recordingActive = false
+  const payload = serializeReplay({
+    label: replay.recordingLabel,
+    startedAt: replay.recordingStartedAt,
+    baselineState: replay.baselineState,
+    commands: replay.commands
+  })
+  const key = buildReplayStorageKey(`${payload.time}_${payload.label}`)
+  localStorage.setItem(key, JSON.stringify(payload))
+  updateReplayList()
+  showNotification(`Replay saved (${replay.commands.length} commands)`)
+}
+
+export function toggleReplayRecording() {
+  const replay = ensureReplayState()
+  if (replay.recordingActive) {
+    stopReplayRecording()
+  } else {
+    startReplayRecording()
+  }
+  updateRecordButtonState()
+}
+
+export function recordReplayCommand(command, metadata = {}) {
+  const replay = ensureReplayState()
+  if (!replay.recordingActive) return
+  replay.commands.push({
+    at: Math.max(0, getNowMs() - replay.recordingStartedAt),
+    command,
+    metadata
+  })
+}
+
+function executeReplayCommand(entry) {
+  if (!entry?.command) return
+  const { command } = entry
+
+  const replay = ensureReplayState()
+  replay.isApplyingReplayCommand = true
+  try {
+    if (command.type === 'unit_command' || command.type === 'build_place' || command.type === 'build_queue') {
+      applyGameTickOutput(gameState, {
+        protocolVersion: '1.0',
+        tick: gameState.frameCount || 0,
+        intent: 'replay',
+        confidence: 1,
+        notes: 'Replay command execution',
+        commentary: null,
+        actions: [{ actionId: `replay_${Date.now()}_${Math.random()}`, ...command }]
+      }, {
+        playerId: command.owner || gameState.humanPlayer
+      })
+      return
+    }
+
+    if (command.type === 'production_add') {
+      const isBuilding = Boolean(command.isBuilding)
+      const selector = isBuilding
+        ? `.production-button[data-building-type="${command.itemType}"]`
+        : `.production-button[data-unit-type="${command.itemType}"]`
+      const button = document.querySelector(selector)
+      if (button) {
+        button.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+      }
+    }
+  } finally {
+    replay.isApplyingReplayCommand = false
+  }
+}
+
+export function updateReplayPlayback() {
+  const replay = ensureReplayState()
+  if (!replay.playbackActive || gameState.gamePaused) return
+
+  const elapsed = Math.max(0, getNowMs() - replay.playbackStartedAt)
+  while (replay.playbackCursor < replay.playbackCommands.length && replay.playbackCommands[replay.playbackCursor].at <= elapsed) {
+    executeReplayCommand(replay.playbackCommands[replay.playbackCursor])
+    replay.playbackCursor += 1
+  }
+
+  if (replay.playbackCursor >= replay.playbackCommands.length) {
+    replay.playbackActive = false
+    showNotification('Replay finished')
+  }
+}
+
+export function loadReplay(key) {
+  if (typeof localStorage === 'undefined') return
+  const raw = localStorage.getItem(key)
+  if (!raw) return
+
+  const parsed = JSON.parse(raw)
+  if (!parsed?.baselineState) {
+    showNotification('Replay is missing baseline state')
+    return
+  }
+
+  const tempLabel = `${TEMP_BASELINE_LABEL_PREFIX}load_${Date.now()}`
+  const tempKey = `rts_save_${tempLabel}`
+  localStorage.setItem(tempKey, JSON.stringify({
+    label: tempLabel,
+    time: Date.now(),
+    state: parsed.baselineState
+  }))
+
+  loadGame(tempKey)
+  localStorage.removeItem(tempKey)
+
+  const replay = ensureReplayState()
+  replay.playbackActive = true
+  replay.playbackStartedAt = getNowMs()
+  replay.playbackCursor = 0
+  replay.playbackCommands = Array.isArray(parsed.commands) ? parsed.commands : []
+  gameState.gamePaused = true
+  gameState.replayMode = true
+  showNotification(`Loaded replay: ${parsed.label || 'Unnamed replay'}`)
+}
+
+export function updateRecordButtonState() {
+  const replay = ensureReplayState()
+  const recordBtn = document.getElementById('recordBtn')
+  if (!recordBtn) return
+  recordBtn.classList.toggle('recording-active', replay.recordingActive)
+  recordBtn.setAttribute('aria-pressed', replay.recordingActive ? 'true' : 'false')
+}
+
+export function updateReplayList() {
+  const list = document.getElementById('replayList')
+  if (!list) return
+  list.innerHTML = ''
+
+  listReplays().forEach(replay => {
+    const li = document.createElement('li')
+    li.style.display = 'flex'
+    li.style.alignItems = 'center'
+    li.style.justifyContent = 'space-between'
+    li.style.padding = '2px 0'
+
+    const btn = document.createElement('button')
+    btn.type = 'button'
+    btn.className = 'save-game-label-button'
+    btn.style.flex = '1'
+    btn.innerHTML = `${replay.label}<br><small>${new Date(replay.time).toLocaleString()}</small>`
+    btn.onclick = () => loadReplay(replay.key)
+    li.appendChild(btn)
+
+    list.appendChild(li)
+  })
+}
+
+export function initReplaySystem() {
+  ensureReplayState()
+
+  const recordBtn = document.getElementById('recordBtn')
+  if (recordBtn && recordBtn.dataset.boundReplay !== 'true') {
+    recordBtn.dataset.boundReplay = 'true'
+    recordBtn.addEventListener('click', () => toggleReplayRecording())
+  }
+
+  const saveTab = document.getElementById('saveListTab')
+  const replayTab = document.getElementById('replayListTab')
+  const savePane = document.getElementById('saveGamesPane')
+  const replayPane = document.getElementById('replaysPane')
+
+  const activateTab = (tab) => {
+    const showReplays = tab === 'replays'
+    saveTab?.classList.toggle('active', !showReplays)
+    replayTab?.classList.toggle('active', showReplays)
+    savePane?.classList.toggle('hidden', showReplays)
+    replayPane?.classList.toggle('hidden', !showReplays)
+  }
+
+  saveTab?.addEventListener('click', () => activateTab('saves'))
+  replayTab?.addEventListener('click', () => activateTab('replays'))
+
+  updateRecordButtonState()
+  updateReplayList()
+}

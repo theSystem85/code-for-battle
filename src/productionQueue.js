@@ -13,6 +13,7 @@ import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
 import { getSimulationTime } from './game/time.js'
+import { isReplayInteractionLocked, recordReplayCommand } from './replaySystem.js'
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
@@ -124,6 +125,18 @@ export const productionQueue = {
   },
 
   addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null) {
+    if (isReplayInteractionLocked()) {
+      showNotification('Replay mode is active: build commands are disabled.')
+      return
+    }
+
+    recordReplayCommand({
+      type: 'production_add',
+      itemType: type,
+      isBuilding: Boolean(isBuilding),
+      rallyPoint: rallyPoint || null
+    }, { source: 'human' })
+
     // Only block queuing if game is paused
     if (gameState.gamePaused) {
       button.classList.add('error')

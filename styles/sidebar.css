@@ -1204,3 +1204,25 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 .save-game-label-button:hover {
   text-decoration: underline;
 }
+
+.record-icon {
+  color: #f74a4a;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+#recordBtn.recording-active {
+  box-shadow: 0 0 0 1px rgba(247, 74, 74, 0.8), 0 0 10px rgba(247, 74, 74, 0.7);
+  background: rgba(247, 74, 74, 0.18);
+}
+
+.save-replay-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#saveGamesPane.hidden,
+#replaysPane.hidden {
+  display: none;
+}

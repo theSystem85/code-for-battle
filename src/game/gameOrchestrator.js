@@ -24,6 +24,7 @@ import { setProductionControllerRef } from '../network/gameCommandSync.js'
 import { initFactories } from '../factories.js'
 import { initializeGameAssets, generateMap as generateMapFromSetup, cleanupOreFromBuildings } from '../gameSetup.js'
 import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, persistLastGameCheckpoint } from '../saveGame.js'
+import { initReplaySystem } from '../replaySystem.js'
 import { showNotification } from '../ui/notifications.js'
 import { resetAttackDirections } from '../ai/enemyStrategies.js'
 import { getTextureManager, preloadTileTextures, getMapRenderer } from '../rendering.js'
@@ -518,6 +519,7 @@ class Game {
       initSettingsModal()
       attachBenchmarkButton()
       initSaveGameSystem()
+      initReplaySystem()
     })
   }
 

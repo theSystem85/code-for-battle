@@ -66,11 +66,14 @@ import { unitCosts } from './units.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnUnit } from './units.js'
 import { getSimulationTime } from './game/time.js'
+import { updateReplayPlayback } from './replaySystem.js'
 
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
   try {
     const now = getSimulationTime(gameState)
     const occupancyMap = gameState.occupancyMap
+
+    updateReplayPlayback()
 
     // Check if we're a remote client (not the host)
     const isRemoteClient = !isHost() && gameState.multiplayerSession?.isRemote

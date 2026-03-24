@@ -4,6 +4,7 @@ import { handlePointerDown as handleMapEditPointerDown, handlePointerMove as han
 import { notifyMapEditorWheel } from '../ui/mapEditorControls.js'
 import { hideLlmQueueTooltip } from '../ui/llmQueueTooltip.js'
 import { keybindingManager, KEYBINDING_CONTEXTS } from './keybindings.js'
+import { isReplayInteractionLocked } from '../replaySystem.js'
 
 export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid, selectedUnits, selectionManager, unitCommands, cursorManager) {
   handler.gameFactories = factories
@@ -28,6 +29,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
     if (gameState.paused) return
 
     const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote
+    const replayLocked = isReplayInteractionLocked()
 
     const pointerContext = gameState.mapEditMode ? KEYBINDING_CONTEXTS.MAP_EDIT_ON : KEYBINDING_CONTEXTS.MAP_EDIT_OFF
     const commandBinding = keybindingManager.matchesPointerAction('mouse', e, 'command', pointerContext) ||
@@ -38,7 +40,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
       keybindingManager.matchesPointerAction('mouse', e, 'force-attack', pointerContext) ||
       keybindingManager.matchesPointerAction('mouse', e, 'guard', pointerContext)
 
-    if (commandBinding || e.button === 2) {
+    if ((commandBinding || e.button === 2) && !replayLocked) {
       handler.handleRightMouseDown(e, worldX, worldY, gameCanvas, cursorManager)
     } else if ((selectionBinding || e.button === 0) && !isSpectatorOrDefeated) {
       handler.handleLeftMouseDown(e, worldX, worldY, gameCanvas, selectedUnits, cursorManager)
@@ -92,7 +94,6 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
     if (gameState.paused) return
 
     const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote
-
     if (e.button === 2) {
       handler.handleRightMouseUp(e, units, factories, selectedUnits, selectionManager, cursorManager)
     } else if (e.button === 0 && !isSpectatorOrDefeated) {
