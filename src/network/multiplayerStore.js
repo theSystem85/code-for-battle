@@ -58,9 +58,12 @@ export function generateRandomId(prefix = 'id') {
 
 function ensurePartyStates() {
   const partyCount = Math.max(2, Math.min(gameState.playerCount || 2, MAX_MULTIPLAYER_PARTIES))
+  const localPartyId = normalizePartyId(gameState.humanPlayer || 'player1')
+  const isRemoteClient = Boolean(gameState.multiplayerSession?.isRemote && gameState.multiplayerSession?.localRole === 'client')
+
   if (!Array.isArray(gameState.partyStates) || gameState.partyStates.length === 0 || gameState.partyStates.length !== partyCount) {
     gameState.partyStates = MULTIPLAYER_PARTY_IDS.slice(0, partyCount).map((partyId) => {
-      const isHost = partyId === normalizePartyId(gameState.humanPlayer)
+      const isHost = partyId === localPartyId
       return {
         partyId,
         color: PARTY_COLORS[partyId] || PARTY_COLORS.player1,
@@ -74,6 +77,16 @@ function ensurePartyStates() {
       }
     })
   }
+
+  const localPartyState = gameState.partyStates.find(state => normalizePartyId(state.partyId) === localPartyId)
+  if (!isRemoteClient && localPartyState) {
+    localPartyState.partyId = localPartyId
+    localPartyState.color = localPartyState.color || PARTY_COLORS[localPartyId] || PARTY_COLORS.player1
+    localPartyState.owner = getHostAliasLabel(localPartyState.owner === 'AI' ? '' : localPartyState.owner)
+    localPartyState.aiActive = false
+    localPartyState.unresponsiveSince = null
+  }
+
   return gameState.partyStates
 }
 

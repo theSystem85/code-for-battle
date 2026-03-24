@@ -146,6 +146,47 @@ describe('multiplayerStore', () => {
     expect(getPartyState('player1')?.aiActive).toBe(false)
   })
 
+
+  it('reconciles preloaded AI ownership for local green party on mission load', async() => {
+    resetGameStateMock({
+      playerCount: 2,
+      humanPlayer: 'player1',
+      partyStates: [
+        {
+          partyId: 'player1',
+          color: configMock.PARTY_COLORS.player1,
+          owner: 'AI',
+          inviteToken: null,
+          aiActive: true,
+          llmControlled: false,
+          llmModelKey: null,
+          lastConnectedAt: null,
+          unresponsiveSince: null
+        },
+        {
+          partyId: 'player2',
+          color: configMock.PARTY_COLORS.player2,
+          owner: 'AI',
+          inviteToken: null,
+          aiActive: true,
+          llmControlled: false,
+          llmModelKey: null,
+          lastConnectedAt: null,
+          unresponsiveSince: null
+        }
+      ]
+    })
+
+    const { ensureMultiplayerState, getPartyState } = await loadStore()
+
+    ensureMultiplayerState()
+
+    expect(getPartyState('player1')?.owner).toBe('You (Host)')
+    expect(getPartyState('player1')?.aiActive).toBe(false)
+    expect(getPartyState('player2')?.owner).toBe('AI')
+    expect(getPartyState('player2')?.aiActive).toBe(true)
+  })
+
   it('initializes party states with host ownership and colors', async() => {
     resetGameStateMock({
       playerCount: 3,
