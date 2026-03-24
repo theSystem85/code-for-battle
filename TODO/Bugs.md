@@ -96,6 +96,7 @@
 - [x] Fix building system unit tests failing due to missing `hasLineOfSightToTarget` mock export.
 - [ ] Defense turrets should not fire through buildings; block shots when line of sight is obstructed for player and AI turrets.
 - [ ] Prevent multiple Apaches from landing on the same helipad; show blocked cursor when hovering over occupied helipads.
+- [x] Apache helipad touchdown regression (2026-03-24): fixed Apache landing-state altitude handling so helipad-commanded and auto-returning Apaches complete actual touchdown on the assigned helipad (instead of hovering above it), then perform pad ammo/fuel refill as intended.
 - [x] Harvester + Apache player-target priority follow-up (2026-03-23): harvester auto-targeting now defers to manual ore targets and remote-control input for a full 2s inactivity grace period, while Apache helipad auto-return/resume now cancels cleanly whenever the player issues fresh movement/attack/remote-control commands so player targets always win.
 - [x] Ensure Apache helicopters can land on helipads even while still selected.
 - [x] Allow mobile-selected Apache helicopters to land on helipads without remote-control interference, and auto-lift when remote control starts from a landed state.
