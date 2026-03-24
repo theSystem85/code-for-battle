@@ -70,6 +70,21 @@ function formatDuration(durationMs = 0) {
   return `${minutes}:${String(seconds).padStart(2, '0')}`
 }
 
+function formatReplayTimestamp(timestamp) {
+  const date = new Date(timestamp)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}/${month}/${day}, ${hours}:${minutes}:${seconds}`
+}
+
+function formatReplayListLabel(timestamp, durationMs = 0) {
+  return `${formatReplayTimestamp(timestamp)}, ${formatDuration(durationMs)}`
+}
+
 function syncPauseButtonIcon() {
   const pauseBtn = document.getElementById('pauseBtn')
   const playPauseIcon = pauseBtn?.querySelector('.play-pause-icon')
@@ -132,7 +147,7 @@ export function startReplayRecording() {
   replay.recordingStartedAt = getNowMs()
   replay.recordingStartedWallClock = Date.now()
   replay.commands = []
-  replay.recordingLabel = `Replay ${new Date().toLocaleString()}`
+  replay.recordingLabel = formatReplayTimestamp(replay.recordingStartedWallClock)
   replay.baselineState = baselineState
   showNotification('Replay recording started')
 }
@@ -208,7 +223,8 @@ function executeReplayCommand(entry) {
           button,
           isBuilding,
           command.blueprint || null,
-          command.rallyPoint || null
+          command.rallyPoint || null,
+          { allowReplay: true, record: false }
         )
       }
       return
@@ -379,8 +395,9 @@ export function updateReplayList() {
     btn.type = 'button'
     btn.className = 'save-game-label-button'
     btn.style.flex = '1'
-    btn.title = `Load ${replay.label}`
-    btn.innerHTML = `${replay.label}<br><small>${new Date(startTs).toLocaleString()} • ${formatDuration(durationMs)}</small>`
+    const replayLabel = formatReplayListLabel(startTs, durationMs)
+    btn.title = `Load ${replayLabel}`
+    btn.textContent = replayLabel
     btn.onclick = () => loadReplay(replay.key)
     li.appendChild(btn)
 

@@ -124,25 +124,30 @@ export const productionQueue = {
     return cancelledCount
   },
 
-  addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null) {
-    if (isReplayModeActive() || isReplayInteractionLocked()) {
+  addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null, options = {}) {
+    const allowReplay = options.allowReplay === true
+    const shouldRecord = options.record !== false
+
+    if (!allowReplay && (isReplayModeActive() || isReplayInteractionLocked())) {
       showNotification('Replay mode is active: build commands are disabled.')
       return
     }
 
-    recordReplayCommand({
-      type: 'production_add',
-      itemType: type,
-      isBuilding: Boolean(isBuilding),
-      rallyPoint: rallyPoint || null,
-      blueprint: blueprint
-        ? {
-          type: blueprint.type,
-          x: blueprint.x,
-          y: blueprint.y
-        }
-        : null
-    }, { source: 'human' })
+    if (shouldRecord) {
+      recordReplayCommand({
+        type: 'production_add',
+        itemType: type,
+        isBuilding: Boolean(isBuilding),
+        rallyPoint: rallyPoint || null,
+        blueprint: blueprint
+          ? {
+            type: blueprint.type,
+            x: blueprint.x,
+            y: blueprint.y
+          }
+          : null
+      }, { source: options.source || 'human' })
+    }
 
     // Only block queuing if game is paused
     if (gameState.gamePaused) {

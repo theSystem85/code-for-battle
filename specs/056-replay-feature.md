@@ -27,3 +27,5 @@ Implement deterministic replay capture/playback for player sessions.
 - Player-triggered unit/building production pause-resume toggles are captured and replayed deterministically.
 - Replay mode preserves camera panning via right-click drag and mobile two-finger pan while leaving gameplay commands locked.
 - Desktop and mobile drag-to-build interactions are blocked for the full replay-mode session.
+- Replay playback may still execute recorded production/build commands internally even though user-initiated replay-mode build commands remain blocked.
+- Replay row labels now render as `YYYY/MM/DD, hh:mm:ss, DURATION`.
