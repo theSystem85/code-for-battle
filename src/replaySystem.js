@@ -1,4 +1,5 @@
 import { gameState } from './gameState.js'
+import { TILE_SIZE } from './config.js'
 import { saveGame, loadGame, updateSaveGamesList } from './saveGame.js'
 import { showNotification } from './ui/notifications.js'
 import { applyGameTickOutput } from './ai-api/applier.js'
@@ -295,6 +296,28 @@ function resolveReplayEntityReference(reference) {
 
 function resolveReplayCommandTarget(command) {
   return resolveReplayEntityReference(command?.targetRef) || findReplayTargetById(command?.targetId)
+}
+
+function normalizeReplayRallyPoint(rallyPoint) {
+  if (!rallyPoint || typeof rallyPoint !== 'object') {
+    return null
+  }
+
+  if (rallyPoint.space === 'world') {
+    return {
+      x: Math.floor(rallyPoint.x / TILE_SIZE),
+      y: Math.floor(rallyPoint.y / TILE_SIZE)
+    }
+  }
+
+  if (Number.isFinite(rallyPoint.x) && Number.isFinite(rallyPoint.y)) {
+    return {
+      x: rallyPoint.x,
+      y: rallyPoint.y
+    }
+  }
+
+  return null
 }
 
 export function createReplayUnitReference(unit) {
@@ -694,6 +717,15 @@ function executeReplayCommand(entry) {
       }, {
         playerId: command.owner || gameState.humanPlayer
       })
+      return
+    }
+
+    if (command.type === 'set_rally') {
+      const building = resolveReplayEntityReference(command.targetRef) || findReplayTargetById(command.buildingId)
+      const rallyPoint = normalizeReplayRallyPoint(command.rallyPoint)
+      if (building && rallyPoint) {
+        building.rallyPoint = rallyPoint
+      }
       return
     }
 

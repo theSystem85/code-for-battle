@@ -7,6 +7,7 @@
 - [x] Replay follow-up polish: restore selected unit context when replaying keyboard remote-control commands so direct-control actions drive the recorded unit again, and decouple replay playback from the remote-control module import path.
 - [x] Replay follow-up polish: restore selection for every replayed unit command and use a dedicated replay-side UnitCommandsHandler fallback so move/attack playback no longer depends on a window-owned live handler reference.
 - [x] Replay follow-up polish: replay unit commands now resolve post-baseline spawned units via deterministic replay unit references and a legacy id-alias fallback, so exported replays still move newly produced units even when playback regenerates different runtime ids.
+- [x] Replay follow-up polish: user-set rally points on the construction yard, vehicle factory, and vehicle workshop are now recorded and replayed so produced and restored units follow the same building rally destinations during playback.
 - [x] Add replay system with record-mode command capture (including LLM decisions), replay list tab beside save games, replay playback controlled by Start/Pause, and replay-mode input/build restrictions plus user-doc updates.
 - [x] Update the in-game user documentation to cover the Airstrip building plus the F22 Raptor and F35 jet workflows, unlocks, and stat entries.
 - [ ] F22 combat follow-up (2026-03-20): only fire rockets while targets remain inside the active firing window, and hard-cap effective F22 firing range at 20 tiles including bonuses.

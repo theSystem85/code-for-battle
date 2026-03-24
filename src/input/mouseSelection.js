@@ -40,6 +40,21 @@ function recordHumanUnitCommand(unitIds, command) {
   }, { source: 'human' })
 }
 
+function recordHumanRallyPointCommand(building, rallyTileX, rallyTileY) {
+  const targetRef = createReplayEntityReference(building)
+  recordReplayCommand({
+    type: 'set_rally',
+    owner: gameState.humanPlayer,
+    buildingId: building?.id || null,
+    ...(targetRef ? { targetRef } : {}),
+    rallyPoint: {
+      space: 'tile',
+      x: rallyTileX,
+      y: rallyTileY
+    }
+  }, { source: 'human' })
+}
+
 export function processUtilityQueueSelection(handler, units, mapGrid, selectedUnits, selectionManager, unitCommands) {
   if (!unitCommands) {
     return false
@@ -537,6 +552,7 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
     }
 
     selectedFactory.rallyPoint = { x: rallyTileX, y: rallyTileY }
+    recordHumanRallyPointCommand(selectedFactory, rallyTileX, rallyTileY)
     playPositionalSound('movement', worldX, worldY, 0.5)
 
     selectedFactory.selected = false
@@ -572,6 +588,7 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
     }
 
     selectedBuilding.rallyPoint = { x: rallyTileX, y: rallyTileY }
+    recordHumanRallyPointCommand(selectedBuilding, rallyTileX, rallyTileY)
     playPositionalSound('movement', worldX, worldY, 0.5)
 
     if (selectedUnits.indexOf(selectedBuilding) === -1) {
