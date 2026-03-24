@@ -27,7 +27,13 @@ import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
 import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
-import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from '../replaySystem.js'
+import {
+  completeFinishedReplaySession,
+  isReplayFinishedPaused,
+  isReplayInteractionLocked,
+  isReplayModeActive,
+  recordReplayCommand
+} from '../replaySystem.js'
 
 export class EventHandlers {
   constructor(canvasManager, factories, units, mapGrid, moneyEl, gameInstance = null) {
@@ -60,6 +66,18 @@ export class EventHandlers {
       if (gameState.mapEditMode) {
         endMapEditOnPlay()
       }
+
+      if (isReplayFinishedPaused()) {
+        completeFinishedReplaySession()
+
+        productionQueue.resumeProductionAfterUnpause()
+
+        if (this.gameInstance && this.gameInstance.gameLoop && typeof this.gameInstance.gameLoop.resumeFromPause === 'function') {
+          this.gameInstance.gameLoop.resumeFromPause()
+        }
+        return
+      }
+
       gameState.gamePaused = !gameState.gamePaused
 
       // Update button icon based on game state

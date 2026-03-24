@@ -22,7 +22,16 @@ import {
 import { notifyBenchmarkManualCameraControl } from '../benchmark/benchmarkTracker.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
-import { isReplayInteractionLocked } from '../replaySystem.js'
+import { isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
+
+function recordHumanUnitCommand(unitIds, command) {
+  recordReplayCommand({
+    type: 'unit_command',
+    owner: gameState.humanPlayer,
+    unitIds,
+    ...command
+  }, { source: 'human' })
+}
 
 export class KeyboardHandler {
   constructor() {
@@ -185,6 +194,10 @@ export class KeyboardHandler {
         const queue = e.altKey
         if (this.unitCommands) {
           this.unitCommands.handleWorkshopRepairHotkey(selectedUnits, mapGrid, queue, false)
+          recordHumanUnitCommand(selectedUnits.map(unit => unit.id), {
+            command: 'workshop_hotkey',
+            queue
+          })
         }
         if (queue && this.markWaypointsAdded) this.markWaypointsAdded()
       }
@@ -192,6 +205,9 @@ export class KeyboardHandler {
       else if (keybindingManager.matchesKeyboardAction(e, 'dodge', kbContext)) {
         e.preventDefault()
         this.handleDodgeCommand(selectedUnits, units, mapGrid)
+        recordHumanUnitCommand(selectedUnits.map(unit => unit.id), {
+          command: 'dodge'
+        })
       }
       // H key to focus on factory
       else if (keybindingManager.matchesKeyboardAction(e, 'focus-factory', kbContext)) {
@@ -1196,6 +1212,9 @@ export class KeyboardHandler {
     }
 
     if (stoppedCount > 0) {
+      recordHumanUnitCommand(this.selectedUnits.map(unit => unit.id), {
+        command: 'stop_attack'
+      })
       this.showNotification(`${stoppedCount} unit${stoppedCount > 1 ? 's' : ''} stopped attacking`, 2000)
     } else {
       this.showNotification('Selected units were not attacking', 2000)

@@ -64,6 +64,71 @@ export const productionQueue = {
     }
   },
 
+  removeQueuedUnitByButton: function(button, options = {}) {
+    if (!button) return false
+
+    for (let i = this.unitItems.length - 1; i >= 0; i--) {
+      const queued = this.unitItems[i]
+      if (queued.button !== button) {
+        continue
+      }
+
+      if (i === 0 && this.currentUnit && this.currentUnit.button === button) {
+        return this.cancelUnitProduction(options)
+      }
+
+      this.tryResumeProduction()
+      this.unitItems.splice(i, 1)
+      this.updateBatchCounter(button, this.unitItems.filter(item => item.button === button).length)
+
+      if (options.record !== false) {
+        recordReplayCommand({
+          type: 'production_cancel',
+          queueType: 'unit',
+          itemType: queued.type,
+          scope: 'queued'
+        }, { source: options.source || 'human' })
+      }
+
+      return true
+    }
+
+    return false
+  },
+
+  removeQueuedBuildingByButton: function(button, options = {}) {
+    if (!button) return false
+
+    for (let i = this.buildingItems.length - 1; i >= 0; i--) {
+      const queued = this.buildingItems[i]
+      if (queued.button !== button) {
+        continue
+      }
+
+      if (i === 0 && this.currentBuilding && this.currentBuilding.button === button) {
+        return this.cancelBuildingProduction(options)
+      }
+
+      this.tryResumeProduction()
+      this.buildingItems.splice(i, 1)
+      this.removeBlueprint(queued)
+      this.updateBatchCounter(button, this.buildingItems.filter(item => item.button === button).length)
+
+      if (options.record !== false) {
+        recordReplayCommand({
+          type: 'production_cancel',
+          queueType: 'building',
+          itemType: queued.type,
+          scope: 'queued'
+        }, { source: options.source || 'human' })
+      }
+
+      return true
+    }
+
+    return false
+  },
+
   cancelBlueprintPlans: function(blueprintsToCancel = []) {
     const targetSet = new Set(Array.isArray(blueprintsToCancel) ? blueprintsToCancel : [])
     if (targetSet.size === 0) {
@@ -847,13 +912,22 @@ export const productionQueue = {
     return this.setBuildingPaused(!this.pausedBuilding)
   },
 
-  cancelUnitProduction: function() {
+  cancelUnitProduction: function(options = {}) {
     if (!this.currentUnit) return
 
     const isRemoteClientSession = !isHost() && gameState.multiplayerSession?.isRemote
 
     const button = this.currentUnit.button
-    const _type = this.currentUnit.type
+    const type = this.currentUnit.type
+
+    if (options.record !== false) {
+      recordReplayCommand({
+        type: 'production_cancel',
+        queueType: 'unit',
+        itemType: type,
+        scope: 'current'
+      }, { source: options.source || 'human' })
+    }
 
     // Play cancel sound before cancelling
     playSound('constructionCancelled', 1.0, 0, true)
@@ -891,13 +965,22 @@ export const productionQueue = {
     this.tryResumeProduction()
   },
 
-  cancelBuildingProduction: function() {
+  cancelBuildingProduction: function(options = {}) {
     if (!this.currentBuilding) return
 
     const isRemoteClientSession = !isHost() && gameState.multiplayerSession?.isRemote
 
     const button = this.currentBuilding.button
-    const _type = this.currentBuilding.type
+    const type = this.currentBuilding.type
+
+    if (options.record !== false) {
+      recordReplayCommand({
+        type: 'production_cancel',
+        queueType: 'building',
+        itemType: type,
+        scope: 'current'
+      }, { source: options.source || 'human' })
+    }
 
     // Play cancel sound before cancelling
     playSound('constructionCancelled', 1.0, 0, true)

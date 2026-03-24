@@ -75,6 +75,8 @@ export function setupInputHandlers(units, factories, mapGrid) {
 
   // Make cheat system globally accessible for damage prevention
   window.cheatSystem = keyboardHandler.getCheatSystem()
+  window.keyboardHandler = keyboardHandler
+  window.unitCommandsHandler = unitCommands
 
   // Apply the initial state for the custom cursor
   // Set up the document-level mousemove event

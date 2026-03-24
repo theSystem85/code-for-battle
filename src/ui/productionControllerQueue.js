@@ -14,23 +14,7 @@ export function getUnitProductionCount(_controller, button) {
 export function removeQueuedUnit(controller, button) {
   if (!button) return false
 
-  for (let i = productionQueue.unitItems.length - 1; i >= 0; i--) {
-    const queued = productionQueue.unitItems[i]
-    if (queued.button === button) {
-      if (i === 0 && productionQueue.currentUnit && productionQueue.currentUnit.button === button) {
-        productionQueue.cancelUnitProduction()
-      } else {
-        productionQueue.tryResumeProduction()
-        productionQueue.unitItems.splice(i, 1)
-      }
-
-      productionQueue.updateBatchCounter(button, controller.getUnitProductionCount(button))
-      return true
-    }
-  }
-
-  if (productionQueue.currentUnit && productionQueue.currentUnit.button === button) {
-    productionQueue.cancelUnitProduction()
+  if (productionQueue.removeQueuedUnitByButton(button)) {
     productionQueue.updateBatchCounter(button, controller.getUnitProductionCount(button))
     return true
   }
@@ -52,24 +36,7 @@ export function getBuildingProductionCount(_controller, button) {
 export function removeQueuedBuilding(controller, button) {
   if (!button) return false
 
-  for (let i = productionQueue.buildingItems.length - 1; i >= 0; i--) {
-    const queued = productionQueue.buildingItems[i]
-    if (queued.button === button) {
-      if (i === 0 && productionQueue.currentBuilding && productionQueue.currentBuilding.button === button) {
-        productionQueue.cancelBuildingProduction()
-      } else {
-        productionQueue.tryResumeProduction()
-        productionQueue.buildingItems.splice(i, 1)
-        productionQueue.removeBlueprint(queued)
-      }
-
-      productionQueue.updateBatchCounter(button, controller.getBuildingProductionCount(button))
-      return true
-    }
-  }
-
-  if (productionQueue.currentBuilding && productionQueue.currentBuilding.button === button) {
-    productionQueue.cancelBuildingProduction()
+  if (productionQueue.removeQueuedBuildingByButton(button)) {
     productionQueue.updateBatchCounter(button, controller.getBuildingProductionCount(button))
     return true
   }
