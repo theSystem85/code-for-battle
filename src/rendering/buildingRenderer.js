@@ -7,6 +7,7 @@ import { renderTurretWithImages, turretImagesAvailable } from './turretImageRend
 import { getServiceRadiusPixels, isServiceBuilding } from '../utils/serviceRadius.js'
 import { recordBuildingCompleted } from '../ai-api/transitionCollector.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '../game/turretMuzzleConfig.js'
+import { getSimulationTime } from '../game/time.js'
 
 export class BuildingRenderer {
   constructor() {
@@ -101,6 +102,7 @@ export class BuildingRenderer {
         )
       } else {
         if (building.type === 'artilleryTurret') {
+          const simulationNow = getSimulationTime(gameState)
           const centerX = screenX + width / 2
           const centerY = screenY + height / 2
           ctx.save()
@@ -108,8 +110,8 @@ export class BuildingRenderer {
           ctx.rotate((building.turretDirection || 0) + Math.PI * 3 / 4)
           ctx.drawImage(img, -width / 2, -height / 2, width, height)
           // Big muzzle flash when firing
-          if (building.muzzleFlashStartTime && now - building.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
-            const progress = (now - building.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION
+          if (building.muzzleFlashStartTime && simulationNow - building.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
+            const progress = (simulationNow - building.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION
             const alpha = 1 - progress
             const size = 24 * (1 - progress * 0.5)
             const fx = 7 - width / 2
@@ -191,12 +193,13 @@ export class BuildingRenderer {
     const SOURCE_HEIGHT = 192
     const CHARGE_CLIP_START = 51
     const CHARGE_DURATION = 400
+    const simulationNow = getSimulationTime(gameState)
 
     ctx.save()
 
     let clipY = CHARGE_CLIP_START
     if (building.teslaState === 'charging') {
-      const progress = Math.min((performance.now() - (building.teslaChargeStartTime || 0)) / CHARGE_DURATION, 1)
+      const progress = Math.min((simulationNow - (building.teslaChargeStartTime || 0)) / CHARGE_DURATION, 1)
       clipY = CHARGE_CLIP_START * (1 - progress)
     } else if (building.teslaState === 'firing') {
       clipY = 0
@@ -307,7 +310,7 @@ export class BuildingRenderer {
         }
 
         // Fallback to original drawing method
-        const now = performance.now()
+        const now = getSimulationTime(gameState)
 
         // Calculate recoil offset
         let recoilOffset = 0
@@ -398,7 +401,7 @@ export class BuildingRenderer {
         ctx.fill()
 
         // Draw ready indicator if the turret can fire
-        if (!building.lastShotTime || performance.now() - building.lastShotTime >= building.fireCooldown) {
+        if (!building.lastShotTime || getSimulationTime(gameState) - building.lastShotTime >= building.fireCooldown) {
           ctx.fillStyle = '#0F0'
           ctx.beginPath()
           ctx.arc(0, 0, 4, 0, Math.PI * 2)
@@ -407,7 +410,7 @@ export class BuildingRenderer {
 
         ctx.restore()
       } else if (building.type === 'rocketTurret') {
-        const now = performance.now()
+        const now = getSimulationTime(gameState)
 
         if (building.muzzleFlashStartTime && now - building.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
           const flashProgress = (now - building.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION

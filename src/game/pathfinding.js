@@ -2,6 +2,7 @@
 import { PATH_CALC_INTERVAL, PATHFINDING_THRESHOLD, TILE_SIZE, MOVE_TARGET_REACHED_THRESHOLD, PATH_CACHE_TTL, MAX_PATHS_PER_CYCLE } from '../config.js'
 import { findPath } from '../units.js'
 import { logPerformance } from '../performanceUtils.js'
+import { getSimulationTime } from './time.js'
 
 // Simple in-memory cache for sharing A* paths between units
 const pathCache = new Map()
@@ -63,7 +64,7 @@ function getCachedPath(start, end, mapGrid, occupancyMap, options = null) {
  */
 export const updateGlobalPathfinding = logPerformance(_updateGlobalPathfinding, false)
 function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
 
   // IMMEDIATE path calculation for units with moveTarget but no path
   // This ensures remote player units get paths right away without waiting for the interval

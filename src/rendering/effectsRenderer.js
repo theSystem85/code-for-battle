@@ -1,6 +1,7 @@
 // rendering/effectsRenderer.js
 import { TILE_SIZE } from '../config.js'
 import { drawTeslaCoilLightning } from './renderingUtils.js'
+import { getSimulationTime } from '../game/time.js'
 
 // Pre-cached gradient sprites for smoke particles (GPU-friendly)
 // These are created once at initialization and reused via drawImage
@@ -385,7 +386,7 @@ export class EffectsRenderer {
   renderExplosions(ctx, gameState, scrollOffset) {
     if (!gameState?.explosions || gameState.explosions.length === 0) return
 
-    const currentTime = performance.now()
+    const currentTime = getSimulationTime(gameState)
     const visibilityMap = gameState?.visibilityMap
     const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
 

@@ -152,7 +152,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
         const shouldRecalculatePath = needsInitialPath || (pathRecalcNeeded && (targetHasMoved || shouldRecalcForDistance))
 
         if (shouldRecalculatePath) {
-          unit.moveTarget = { x: targetCenterX, y: targetCenterY }
+          unit.moveTarget = { x: targetTileX, y: targetTileY }
           unit.lastAttackPathCalcTime = now
           unit.lastPathCalcTime = now // Also set regular path calc time to prevent global pathfinding from overriding
           // Store target position for movement tracking

@@ -11,6 +11,7 @@ import { MOVEMENT_CONFIG } from './movementConstants.js'
 import { normalizeAngle } from './movementHelpers.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { getSimulationTime } from './time.js'
 
 function ensureMovement(unit) {
   if (!unit.movement) {
@@ -74,12 +75,11 @@ function hasLocalBlockageSignal(unit, mapGrid, occupancyMap, now, recentStaticCo
   return false
 }
 
-function beginLocalAvoidance(unit, detourTiles) {
+function beginLocalAvoidance(unit, detourTiles, now) {
   if (!unit || !Array.isArray(detourTiles) || detourTiles.length === 0) {
     return false
   }
 
-  const now = performance.now()
   const remainingRoute = Array.isArray(unit.path) ? [...unit.path] : []
   const lastDetourTile = detourTiles[detourTiles.length - 1]
 
@@ -158,7 +158,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
   // handling ONLY within the first 2 seconds after a path was calculated.
   // This prevents immediate re-path jitter while still allowing stuck recovery
   // when the unit is genuinely blocked.
-  const now = performance.now()
+  const now = gameState ? getSimulationTime(gameState) : performance.now()
   const isPlayerUnit = gameState && (unit.owner === gameState.humanPlayer ||
     (gameState.humanPlayer === 'player1' && unit.owner === 'player'))
   const hasRecentPath = unit.lastPathCalcTime && (now - unit.lastPathCalcTime < 2000)
@@ -173,7 +173,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
     unit.movement.stuckDetection = {
       lastPosition: { x: unit.x, y: unit.y },
       stuckTime: 0,
-      lastMovementCheck: performance.now() - randomOffset,
+      lastMovementCheck: now - randomOffset,
       rotationAttempts: 0,
       isRotating: false,
       dodgeAttempts: 0,
@@ -246,7 +246,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
               }
             }
 
-            if (tryRandomStuckMovement(unit, mapGrid, occupancyMap, units)) {
+            if (tryRandomStuckMovement(unit, mapGrid, occupancyMap, units, now)) {
               stuck.stuckTime = 0
               stuck.rotationAttempts = 0
               stuck.dodgeAttempts = 0
@@ -268,7 +268,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
             }
 
             if (stuck.dodgeAttempts < 3 && now - stuck.lastDodgeTime > DODGE_ATTEMPT_COOLDOWN) {
-              if (tryDodgeMovement(unit, mapGrid, occupancyMap, units)) {
+              if (tryDodgeMovement(unit, mapGrid, occupancyMap, units, now)) {
                 stuck.dodgeAttempts++
                 stuck.lastDodgeTime = now
                 stuck.stuckTime = 0
@@ -339,7 +339,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
             return
           }
 
-          if (tryRandomStuckMovement(unit, mapGrid, occupancyMap, units)) {
+          if (tryRandomStuckMovement(unit, mapGrid, occupancyMap, units, now)) {
             stuck.stuckTime = 0
             stuck.rotationAttempts = 0
             stuck.dodgeAttempts = 0
@@ -393,7 +393,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
   }
 }
 
-function tryRandomStuckMovement(unit, mapGrid, occupancyMap, units) {
+function tryRandomStuckMovement(unit, mapGrid, occupancyMap, units, now) {
   const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
@@ -414,13 +414,13 @@ function tryRandomStuckMovement(unit, mapGrid, occupancyMap, units) {
   const targetY = Math.round(currentTileY + Math.sin(newDirection) * forwardDistance)
 
   if (isValidDodgePosition(targetX, targetY, mapGrid, units, unit)) {
-    return beginLocalAvoidance(unit, [{ x: targetX, y: targetY }])
+    return beginLocalAvoidance(unit, [{ x: targetX, y: targetY }], now)
   }
 
   return false
 }
 
-async function tryDodgeMovement(unit, mapGrid, occupancyMap, units) {
+function tryDodgeMovement(unit, mapGrid, occupancyMap, units, now) {
   const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
@@ -452,7 +452,7 @@ async function tryDodgeMovement(unit, mapGrid, occupancyMap, units) {
     )
 
     if (dodgePath.length > 1) {
-      return beginLocalAvoidance(unit, dodgePath.slice(1))
+      return beginLocalAvoidance(unit, dodgePath.slice(1), now)
     }
   }
 

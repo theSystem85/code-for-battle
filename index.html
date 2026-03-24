@@ -557,6 +557,15 @@
         <ul id="saveGamesList" style="max-height: 120px; overflow-y: auto; margin: 8px 0 0 0; list-style: none;"></ul>
       </div>
 
+      <div id="speedControl">
+        <label style="display: flex; align-items: center; margin-bottom: 5px;">
+          Speed:
+          <input type="range" class="volume-slider" id="speedMultiplier" min="0.5" max="5" step="0.5" value="1"
+            style="margin-left: 10px; flex: 1;">
+          <span id="speedMultiplierValue" class="volume-value">1.0x</span>
+        </label>
+      </div>
+
       <!-- Multiplayer Settings -->
       <div style="display: flex; gap: 5px; margin: 10px 0;">
         <button id="mapSettingsBtn" class="action-button icon-button" title="Map Settings">
@@ -620,16 +629,6 @@
         <p>Time: <span id="gameTime">0</span></p>
         <p>Wins: <span id="wins">0</span></p>
         <p>Losses: <span id="losses">0</span></p>
-
-        <!-- Game speed control added here at the bottom -->
-        <div id="speedControl">
-          <div class="floating-label-input floating-label-input--narrow" style="margin: 10px 0; width: 120px;">
-            <input type="number" class="sidebar-input" min="0.25" max="4" step="0.25" value="1" placeholder=" "
-              id="speedMultiplier">
-            <label for="speedMultiplier">Game Speed</label>
-          </div>
-        </div>
-
         <!-- Map Settings Accordion -->
         <div id="mapSettingsAccordion" style="margin: 10px 0;">
           <button id="mapSettingsToggle" class="action-button"

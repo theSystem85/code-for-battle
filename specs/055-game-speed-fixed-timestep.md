@@ -22,3 +22,6 @@ The sidebar game-speed input must scale simulation time without changing render 
    - render-loop independence from speed input
 
 7. Defensive building charge/fire sequences and AI/LLM building-sell timers must also use simulation time so they stay synchronized with pause/speed controls.
+8. Simulation-time visual effects and HUD timers must not mix wall-clock `performance.now()` with simulation timestamps; projectile impact explosions, turret muzzle flashes, recoil, and harvester unload/harvest progress must render from the same simulation clock.
+9. The sidebar speed control is a persisted slider with range `0.5` to `5.0`, step `0.5`, default `1.0`, positioned above the Multiplayer section, and its current value must be restored from saves/autosaves and written back immediately when changed.
+10. Movement/pathfinding support timers that influence unit steering or stuck recovery must stay on simulation time, and attack-path `moveTarget` values must remain in tile coordinates so units do not oscillate between adjacent tiles under increased speed multipliers.

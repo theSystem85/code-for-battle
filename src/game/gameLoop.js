@@ -321,7 +321,7 @@ export class GameLoop {
       }
     } else {
       const fixedStepMs = getFixedSimulationStepMs(gameState)
-      const speedMultiplier = Number.isFinite(gameState.speedMultiplier) ? Math.max(gameState.speedMultiplier, 0.01) : 1
+      const speedMultiplier = Number.isFinite(gameState.speedMultiplier) ? Math.max(gameState.speedMultiplier, 0.5) : 1
       gameState.simulationAccumulator += delta * speedMultiplier
 
       let ticksProcessed = 0

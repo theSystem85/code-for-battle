@@ -1,5 +1,7 @@
 // rocketTankImageRenderer.js - render rocket tanks using a single image asset
 import { TILE_SIZE, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE } from '../config.js'
+import { gameState } from '../gameState.js'
+import { getSimulationTime } from '../game/time.js'
 
 let rocketTankImg = null
 let rocketTankLoaded = false
@@ -38,7 +40,7 @@ export function isRocketTankImageLoaded() {
 export function renderRocketTankWithImage(ctx, unit, centerX, centerY) {
   if (!isRocketTankImageLoaded()) return false
 
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
 
   ctx.save()
   ctx.translate(centerX, centerY)

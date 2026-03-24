@@ -31,6 +31,7 @@ import { distributeMineLayerPayload } from './mineSystem.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
+import { getSimulationTime } from './time.js'
 
 const MINIMAP_SCROLL_SMOOTHING = 0.2
 const MINIMAP_SCROLL_STOP_DISTANCE = 0.75
@@ -304,7 +305,7 @@ export const updateOreSpread = logPerformance(function updateOreSpread(gameState
  * @param {Object} gameState - Game state object
  */
 export function updateExplosions(gameState) {
-  const now = performance.now()
+  const now = getSimulationTime(gameState)
   const hostAuthority = isHost()
 
   if (!hostAuthority) {
@@ -569,7 +570,7 @@ export function cleanupDestroyedFactories(factories, mapGrid, gameState) {
       gameState.explosions.push({
         x: explosionX,
         y: explosionY,
-        startTime: performance.now(),
+        startTime: getSimulationTime(gameState),
         duration: 1000,
         maxRadius: explosionRadius,
         color: '#ff4444'
