@@ -131,4 +131,21 @@ describe('updateApacheFlightState rotor loop lifecycle', () => {
     expect(apache.rotorSound).toBeNull()
     expect(apache.rotorSoundLoading).toBe(false)
   })
+
+  it('keeps apache in landing descent when helipad landing is requested and no flight plan remains', () => {
+    const apache = createApache({
+      altitude: 0,
+      flightState: 'grounded',
+      autoHoldAltitude: true,
+      helipadLandingRequested: true,
+      moveTarget: { x: 4, y: 5 },
+      movement: { isMoving: false, currentSpeed: 0 }
+    })
+
+    updateApacheFlightState(apache, { isMoving: false, currentSpeed: 0 }, [[0]], 1000)
+
+    expect(apache.targetAltitude).toBe(0)
+    expect(apache.flightState).toBe('grounded')
+    expect(apache.altitude).toBe(0)
+  })
 })

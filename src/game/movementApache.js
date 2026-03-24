@@ -86,6 +86,9 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
   let manualState = unit.manualFlightState || 'auto'
   let landingBlocked = false
   const hasGroundLandingRequest = Boolean(unit.type === 'f35' && unit.groundLandingRequested && unit.groundLandingTarget)
+  const helipadLandingIntentActive = unit.type === 'f35'
+    ? Boolean(unit.helipadLandingRequested && canF35StartLanding(unit))
+    : Boolean(unit.helipadLandingRequested)
 
   if (unit.type === 'f35' && !canF35StartLanding(unit) && manualState === 'land') {
     manualState = 'auto'
@@ -112,7 +115,7 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
     if (row && centerTileX >= 0 && centerTileX < row.length) {
       const occupancy = row[centerTileX] || 0
-      const helipadLandingActive = Boolean((unit.helipadLandingRequested && canF35StartLanding(unit)) || unit.landedHelipadId || (hasGroundLandingRequest && canF35StartLanding(unit)))
+      const helipadLandingActive = Boolean(helipadLandingIntentActive || unit.landedHelipadId || (hasGroundLandingRequest && canF35StartLanding(unit)))
 
       landingBlocked = occupancy > 0 && !helipadLandingActive
       if (landingBlocked) {
@@ -134,7 +137,9 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
   const holdAltitude = Boolean(unit.autoHoldAltitude) || Boolean(unit.flightPlan) || Boolean(unit.remoteControlActive)
   // Don't consider moveTarget as "in motion" if we're grounded on a helipad
-  const isInMotion = Boolean(movement?.isMoving) || (unit.path && unit.path.length > 0) || (Boolean(unit.moveTarget) && !isGroundedOnHelipad)
+  const isInMotion = Boolean(movement?.isMoving) ||
+    (unit.path && unit.path.length > 0) ||
+    (Boolean(unit.moveTarget) && !isGroundedOnHelipad && !helipadLandingIntentActive && !hasGroundLandingRequest)
 
   let desiredAltitude = 0
   if (manualState === 'takeoff') {
@@ -144,7 +149,11 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
   } else if (manualState === 'hover') {
     desiredAltitude = unit.maxAltitude * 0.75
   } else {
-    desiredAltitude = (holdAltitude || isInMotion) ? unit.maxAltitude : 0
+    if ((helipadLandingIntentActive || hasGroundLandingRequest) && !unit.flightPlan) {
+      desiredAltitude = 0
+    } else {
+      desiredAltitude = (holdAltitude || isInMotion) ? unit.maxAltitude : 0
+    }
   }
 
   if (landingBlocked) {

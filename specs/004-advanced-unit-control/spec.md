@@ -387,3 +387,4 @@ As a player, I want to select multiple enemy units at once for my combat units t
 
 - **FR-076**: Apache helipad touchdown MUST NOT start ammo or fuel transfer until the helicopter is fully landed, stationary, and settled on the final helipad center; touching down or snapping into approach alignment alone is insufficient.
 - **FR-077**: The selected Apache ammo HUD bar MUST always display the helicopter's actual `rocketAmmo` value instead of substituting helipad reserve ammo while grounded.
+- **FR-078**: When an Apache has an active helipad landing command (manual landing command or auto-return for resupply), altitude control MUST remain in landing descent until touchdown completes; queued hover/takeoff hold states MUST NOT cause the helicopter to hover indefinitely over the helipad.
