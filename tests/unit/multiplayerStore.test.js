@@ -127,6 +127,25 @@ describe('multiplayerStore', () => {
     nowSpy.mockRestore()
   })
 
+
+  it('maps legacy humanPlayer "player" to player1 host party state', async() => {
+    resetGameStateMock({
+      playerCount: 2,
+      humanPlayer: 'player',
+      partyStates: []
+    })
+
+    const { ensureMultiplayerState, updateHostPartyAlias, getPartyState } = await loadStore()
+
+    const parties = ensureMultiplayerState()
+    expect(parties.find(p => p.partyId === 'player1')?.owner).toBe('You (Host)')
+    expect(parties.find(p => p.partyId === 'player1')?.aiActive).toBe(false)
+
+    updateHostPartyAlias('Commander Green')
+    expect(getPartyState('player1')?.owner).toBe('Commander Green')
+    expect(getPartyState('player1')?.aiActive).toBe(false)
+  })
+
   it('initializes party states with host ownership and colors', async() => {
     resetGameStateMock({
       playerCount: 3,

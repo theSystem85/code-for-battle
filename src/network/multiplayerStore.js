@@ -13,6 +13,10 @@ import { gameRandom } from '../utils/gameRandom.js'
 const inviteRecords = new Map()
 const HOST_ALIAS_STORAGE_KEY = 'rts-player-alias'
 
+function normalizePartyId(partyId) {
+  return partyId === 'player' ? 'player1' : partyId
+}
+
 // Event type for party ownership changes
 export const PARTY_OWNERSHIP_CHANGED_EVENT = 'partyOwnershipChanged'
 
@@ -56,7 +60,7 @@ function ensurePartyStates() {
   const partyCount = Math.max(2, Math.min(gameState.playerCount || 2, MAX_MULTIPLAYER_PARTIES))
   if (!Array.isArray(gameState.partyStates) || gameState.partyStates.length === 0 || gameState.partyStates.length !== partyCount) {
     gameState.partyStates = MULTIPLAYER_PARTY_IDS.slice(0, partyCount).map((partyId) => {
-      const isHost = partyId === gameState.humanPlayer
+      const isHost = partyId === normalizePartyId(gameState.humanPlayer)
       return {
         partyId,
         color: PARTY_COLORS[partyId] || PARTY_COLORS.player1,
@@ -139,7 +143,8 @@ export function getHostId() {
 
 export function getPartyState(partyId) {
   ensureMultiplayerState()
-  return gameState.partyStates.find((state) => state.partyId === partyId) || null
+  const normalizedPartyId = normalizePartyId(partyId)
+  return gameState.partyStates.find((state) => state.partyId === normalizedPartyId) || null
 }
 
 export function listPartyStates() {
@@ -309,7 +314,7 @@ export function markPartyControlledByHuman(partyId, alias) {
 }
 
 export function updateHostPartyAlias(alias) {
-  const party = getPartyState(gameState.humanPlayer)
+  const party = getPartyState(normalizePartyId(gameState.humanPlayer))
   if (!party) {
     return null
   }
