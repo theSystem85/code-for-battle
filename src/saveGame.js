@@ -838,6 +838,7 @@ export function loadGame(key) {
     enforceSmokeParticleCapacity(gameState)
 
     // Restore AI player budgets
+    gameState.replayUnitSpawnOrdinals = {}
     units.length = 0
     loaded.units.forEach(u => {
       // Rehydrate unit using createUnit logic
@@ -858,11 +859,22 @@ export function loadGame(key) {
       const hydrated = createUnit(factory, u.type, tileX, tileY)
       // Store the default maxHealth from createUnit before Object.assign overwrites it
       const defaultMaxHealth = hydrated.maxHealth
+      const defaultReplaySpawnOrdinal = hydrated.replaySpawnOrdinal
       // Copy over all saved properties (health, id, etc.)
       Object.assign(hydrated, u)
       // Ensure maxHealth is valid (fix for older save games that may not have saved maxHealth)
       if (!Number.isFinite(hydrated.maxHealth) || hydrated.maxHealth <= 0) {
         hydrated.maxHealth = defaultMaxHealth || hydrated.health || 100
+      }
+      if (!Number.isFinite(hydrated.replaySpawnOrdinal)) {
+        hydrated.replaySpawnOrdinal = defaultReplaySpawnOrdinal
+      }
+      if (Number.isFinite(hydrated.replaySpawnOrdinal)) {
+        const replayKey = `${hydrated.owner || u.owner || 'unknown'}::${hydrated.type || u.type || 'unknown'}`
+        gameState.replayUnitSpawnOrdinals[replayKey] = Math.max(
+          gameState.replayUnitSpawnOrdinals[replayKey] || 0,
+          hydrated.replaySpawnOrdinal
+        )
       }
       // Ensure tileX/tileY/x/y are consistent
       hydrated.tileX = tileX

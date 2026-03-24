@@ -1,6 +1,6 @@
 import { gameState } from '../gameState.js'
 import { getActiveRemoteConnection } from '../network/remoteConnection.js'
-import { recordReplayCommand } from '../replaySystem.js'
+import { createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
 
 const REMOTE_CONTROL_ACTIONS = [
   'forward',
@@ -24,6 +24,24 @@ const DEFAULT_ABSOLUTE_STATE = {
 }
 
 const REMOTE_CONTROL_MESSAGE_TYPE = 'remote-control'
+
+function getSelectedRemoteControlUnitIds() {
+  if (typeof window === 'undefined' || !Array.isArray(window.selectedUnitsRef)) {
+    return []
+  }
+
+  return window.selectedUnitsRef
+    .filter(unit => unit && unit.isBuilding !== true && unit.id)
+    .map(unit => unit.id)
+}
+
+function getSelectedRemoteControlUnitRefs() {
+  if (typeof window === 'undefined' || !Array.isArray(window.selectedUnitsRef)) {
+    return []
+  }
+
+  return createReplayUnitReferences(window.selectedUnitsRef)
+}
 
 function clampIntensity(value) {
   if (!Number.isFinite(value)) {
@@ -151,8 +169,11 @@ export function setRemoteControlAction(action, source, active, intensity = 1) {
   if (!gameState.replay?.isApplyingReplayCommand) {
     recordReplayCommand({
       type: 'remote_control_action',
+      owner: gameState.humanPlayer,
       action,
       source,
+      selectedUnitIds: getSelectedRemoteControlUnitIds(),
+      selectedUnitRefs: getSelectedRemoteControlUnitRefs(),
       active: Boolean(active),
       intensity: clampIntensity(intensity)
     }, { source: 'human-remote-control' })
@@ -214,7 +235,10 @@ export function setRemoteControlAbsolute(source, values = {}) {
   if (!gameState.replay?.isApplyingReplayCommand) {
     recordReplayCommand({
       type: 'remote_control_absolute',
+      owner: gameState.humanPlayer,
       source,
+      selectedUnitIds: getSelectedRemoteControlUnitIds(),
+      selectedUnitRefs: getSelectedRemoteControlUnitRefs(),
       wagonDirection: data.wagonDirection,
       wagonSpeed: data.wagonSpeed,
       turretDirection: data.turretDirection,
@@ -292,4 +316,13 @@ export function releaseRemoteControlSource(source) {
   }
   clearRemoteControlSource(source)
   clearRemoteControlAbsoluteSource(source)
+}
+
+if (typeof window !== 'undefined') {
+  window.remoteControlApi = {
+    setRemoteControlAction,
+    setRemoteControlAbsolute,
+    clearRemoteControlSource,
+    clearRemoteControlAbsoluteSource
+  }
 }

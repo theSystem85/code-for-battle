@@ -27,13 +27,15 @@ import {
   handleFallbackCommand
 } from './mouseCommands.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
-import { createReplayEntityReference, recordReplayCommand } from '../replaySystem.js'
+import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
 
 function recordHumanUnitCommand(unitIds, command) {
+  const unitRefs = createReplayUnitReferences(unitIds)
   recordReplayCommand({
     type: 'unit_command',
     owner: gameState.humanPlayer,
     unitIds,
+    ...(unitRefs.length > 0 ? { unitRefs } : {}),
     ...command
   }, { source: 'human' })
 }

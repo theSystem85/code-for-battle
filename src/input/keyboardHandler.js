@@ -22,13 +22,15 @@ import {
 import { notifyBenchmarkManualCameraControl } from '../benchmark/benchmarkTracker.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
-import { isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
+import { createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 
 function recordHumanUnitCommand(unitIds, command) {
+  const unitRefs = createReplayUnitReferences(unitIds)
   recordReplayCommand({
     type: 'unit_command',
     owner: gameState.humanPlayer,
     unitIds,
+    ...(unitRefs.length > 0 ? { unitRefs } : {}),
     ...command
   }, { source: 'human' })
 }

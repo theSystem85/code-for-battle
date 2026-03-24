@@ -77,6 +77,7 @@ export function setupInputHandlers(units, factories, mapGrid) {
   window.cheatSystem = keyboardHandler.getCheatSystem()
   window.keyboardHandler = keyboardHandler
   window.unitCommandsHandler = unitCommands
+  window.selectedUnitsRef = selectedUnits
 
   // Apply the initial state for the custom cursor
   // Set up the document-level mousemove event

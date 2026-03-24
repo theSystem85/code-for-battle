@@ -7,16 +7,18 @@ import { findEnemyTarget } from './mouseHelpers.js'
 import { isForceAttackModifierActive } from '../utils/inputUtils.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
-import { createReplayEntityReference, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
+import { createReplayEntityReference, createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
 const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
 
 function recordHumanUnitCommand(unitIds, command) {
+  const unitRefs = createReplayUnitReferences(unitIds)
   recordReplayCommand({
     type: 'unit_command',
     owner: gameState.humanPlayer,
     unitIds,
+    ...(unitRefs.length > 0 ? { unitRefs } : {}),
     ...command
   }, { source: 'human' })
 }

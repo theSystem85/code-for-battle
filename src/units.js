@@ -34,6 +34,21 @@ let pathfindingWarningShown = false
 
 export const unitCosts = UNIT_COSTS
 
+function getNextReplaySpawnOrdinal(owner, unitType, providedOrdinal = null) {
+  if (Number.isFinite(providedOrdinal)) {
+    return providedOrdinal
+  }
+
+  if (!gameState.replayUnitSpawnOrdinals || typeof gameState.replayUnitSpawnOrdinals !== 'object') {
+    gameState.replayUnitSpawnOrdinals = {}
+  }
+
+  const key = `${owner || 'unknown'}::${unitType || 'unknown'}`
+  const nextOrdinal = (gameState.replayUnitSpawnOrdinals[key] || 0) + 1
+  gameState.replayUnitSpawnOrdinals[key] = nextOrdinal
+  return nextOrdinal
+}
+
 // Build an occupancy map indicating which tiles are occupied by a unit.
 export function buildOccupancyMap(units, mapGrid, textureManager = null) {
   const safeUnits = Array.isArray(units) ? units : []
@@ -1003,12 +1018,15 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   const tileCenterY = initialY + TILE_SIZE / 2
   const tileX = Math.floor(tileCenterX / TILE_SIZE)
   const tileY = Math.floor(tileCenterY / TILE_SIZE)
+  const owner = factory.owner || factory.id
+  const replaySpawnOrdinal = getNextReplaySpawnOrdinal(owner, actualType, options.replaySpawnOrdinal)
 
   const unit = {
-    id: getUniqueId(),
+    id: options.id || getUniqueId(),
     type: actualType,
     // Determine owner based on factory's 'owner' property (for buildings) or 'id' (for initial factories)
-    owner: factory.owner || factory.id,
+    owner,
+    replaySpawnOrdinal,
     tileX,
     tileY,
     x: initialX,

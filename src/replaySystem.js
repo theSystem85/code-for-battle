@@ -4,13 +4,14 @@ import { showNotification } from './ui/notifications.js'
 import { applyGameTickOutput } from './ai-api/applier.js'
 import { productionQueue } from './productionQueue.js'
 import { CheatSystem } from './input/cheatSystem.js'
+import { UnitCommandsHandler } from './input/unitCommands.js'
 import { getBuildingIdentifier } from './utils.js'
 import { getWreckById } from './game/unitWreckManager.js'
 import { initiateRetreat } from './behaviours/retreat.js'
-import { setRemoteControlAbsolute, setRemoteControlAction } from './input/remoteControlState.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
+const replayUnitCommandsHandler = new UnitCommandsHandler()
 
 function sanitizeFileSegment(value, fallback) {
   const cleaned = String(value || '')
@@ -45,8 +46,12 @@ function ensureReplayState() {
       playbackFinished: false,
       playbackStartedAt: 0,
       playbackCursor: 0,
-      playbackCommands: []
+      playbackCommands: [],
+      unitIdAliases: {}
     }
+  }
+  if (!gameState.replay.unitIdAliases || typeof gameState.replay.unitIdAliases !== 'object') {
+    gameState.replay.unitIdAliases = {}
   }
   return gameState.replay
 }
@@ -123,10 +128,115 @@ function getReplayKeyboardHandler() {
   return typeof window !== 'undefined' ? window.keyboardHandler || null : null
 }
 
+function getReplaySelectedUnitsRef() {
+  return typeof window !== 'undefined' ? window.selectedUnitsRef || null : null
+}
+
+function getReplayRemoteControlApi() {
+  return typeof window !== 'undefined' ? window.remoteControlApi || null : null
+}
+
 function getReplayUnitsByIds(unitIds = []) {
   const units = Array.isArray(gameState.units) ? gameState.units : []
   const idSet = new Set(Array.isArray(unitIds) ? unitIds : [])
   return units.filter(unit => unit && idSet.has(unit.id))
+}
+
+function getReplayUnitAliasMap() {
+  return ensureReplayState().unitIdAliases
+}
+
+function getReplayReservedLiveUnitIds(excludedRecordedIds = []) {
+  const excluded = new Set(Array.isArray(excludedRecordedIds) ? excludedRecordedIds : [])
+  return new Set(
+    Object.entries(getReplayUnitAliasMap())
+      .filter(([recordedId, liveId]) => liveId && !excluded.has(recordedId))
+      .map(([, liveId]) => liveId)
+  )
+}
+
+function resolveReplayUnitByReference(reference, command, reservedLiveIds, usedLiveIds) {
+  let candidates = (gameState.units || []).filter(unit => {
+    if (!unit || unit.isBuilding) return false
+    if (usedLiveIds.has(unit.id)) return false
+    if (reservedLiveIds.has(unit.id)) return false
+    return true
+  })
+
+  const owner = reference?.owner || command?.owner || null
+  if (owner) {
+    candidates = candidates.filter(unit => unit.owner === owner)
+  }
+
+  if (reference?.type) {
+    candidates = candidates.filter(unit => unit.type === reference.type)
+  }
+
+  if (Number.isFinite(reference?.replaySpawnOrdinal)) {
+    const ordinalMatch = candidates.find(unit => unit.replaySpawnOrdinal === reference.replaySpawnOrdinal)
+    if (ordinalMatch) {
+      return ordinalMatch
+    }
+  }
+
+  const referenceBuildDuration = Number.isFinite(reference?.buildDuration) ? reference.buildDuration : null
+  candidates.sort((left, right) => {
+    const leftOrdinal = Number.isFinite(left.replaySpawnOrdinal) ? left.replaySpawnOrdinal : Number.MAX_SAFE_INTEGER
+    const rightOrdinal = Number.isFinite(right.replaySpawnOrdinal) ? right.replaySpawnOrdinal : Number.MAX_SAFE_INTEGER
+    if (leftOrdinal !== rightOrdinal) {
+      return leftOrdinal - rightOrdinal
+    }
+
+    if (referenceBuildDuration !== null) {
+      const leftDurationDelta = Math.abs((left.buildDuration || 0) - referenceBuildDuration)
+      const rightDurationDelta = Math.abs((right.buildDuration || 0) - referenceBuildDuration)
+      if (leftDurationDelta !== rightDurationDelta) {
+        return leftDurationDelta - rightDurationDelta
+      }
+    }
+
+    return String(left.id || '').localeCompare(String(right.id || ''))
+  })
+
+  return candidates[0] || null
+}
+
+function resolveReplayCommandUnits(command = {}) {
+  const recordedIds = Array.isArray(command.unitIds) ? command.unitIds.filter(Boolean) : []
+  const unitRefs = Array.isArray(command.unitRefs) ? command.unitRefs : []
+  const aliasMap = getReplayUnitAliasMap()
+  const reservedLiveIds = getReplayReservedLiveUnitIds(recordedIds)
+  const usedLiveIds = new Set()
+  const count = Math.max(recordedIds.length, unitRefs.length)
+  const resolved = []
+
+  for (let index = 0; index < count; index++) {
+    const recordedId = recordedIds[index] || unitRefs[index]?.id || null
+    let unit = null
+
+    if (recordedId) {
+      unit = (gameState.units || []).find(candidate => candidate && candidate.id === recordedId) || null
+      if (!unit && aliasMap[recordedId]) {
+        unit = (gameState.units || []).find(candidate => candidate && candidate.id === aliasMap[recordedId]) || null
+      }
+    }
+
+    if (!unit) {
+      unit = resolveReplayUnitByReference(unitRefs[index], command, reservedLiveIds, usedLiveIds)
+      if (unit && recordedId) {
+        aliasMap[recordedId] = unit.id
+      }
+    }
+
+    if (!unit || usedLiveIds.has(unit.id)) {
+      continue
+    }
+
+    usedLiveIds.add(unit.id)
+    resolved.push(unit)
+  }
+
+  return resolved
 }
 
 function findReplayTargetById(id) {
@@ -187,6 +297,34 @@ function resolveReplayCommandTarget(command) {
   return resolveReplayEntityReference(command?.targetRef) || findReplayTargetById(command?.targetId)
 }
 
+export function createReplayUnitReference(unit) {
+  if (!unit || unit.isBuilding) {
+    return null
+  }
+
+  return {
+    id: unit.id || null,
+    owner: unit.owner || null,
+    type: unit.type || null,
+    replaySpawnOrdinal: Number.isFinite(unit.replaySpawnOrdinal) ? unit.replaySpawnOrdinal : null,
+    buildDuration: Number.isFinite(unit.buildDuration) ? unit.buildDuration : null
+  }
+}
+
+export function createReplayUnitReferences(unitsOrIds = []) {
+  const sourceItems = Array.isArray(unitsOrIds) ? unitsOrIds : []
+  const liveUnits = Array.isArray(gameState.units) ? gameState.units : []
+
+  return sourceItems
+    .map(item => {
+      if (item && typeof item === 'object') {
+        return createReplayUnitReference(item)
+      }
+      return createReplayUnitReference(liveUnits.find(unit => unit && unit.id === item))
+    })
+    .filter(Boolean)
+}
+
 function stopReplayUnitsAttacking(selectedUnits) {
   selectedUnits.forEach(unit => {
     if (unit.isBuilding) {
@@ -214,6 +352,32 @@ function stopReplayUnitsAttacking(selectedUnits) {
   })
 }
 
+function restoreReplaySelectedUnits(unitIds = [], command = null) {
+  const selectedUnits = getReplaySelectedUnitsRef()
+  if (!selectedUnits || !Array.isArray(selectedUnits)) {
+    return false
+  }
+
+  const nextUnits = command ? resolveReplayCommandUnits(command) : getReplayUnitsByIds(unitIds)
+  if (!nextUnits.length) {
+    return false
+  }
+
+  selectedUnits.forEach(unit => {
+    if (unit) {
+      unit.selected = false
+    }
+  })
+  selectedUnits.length = 0
+
+  nextUnits.forEach(unit => {
+    unit.selected = true
+    selectedUnits.push(unit)
+  })
+
+  return true
+}
+
 function queueReplayMove(selectedUnits, targetPos) {
   selectedUnits.forEach(unit => {
     if (!unit.commandQueue) unit.commandQueue = []
@@ -229,8 +393,10 @@ function queueReplayAttack(selectedUnits, target) {
 }
 
 function executeReplayUnitCommand(command) {
-  const handler = getReplayUnitCommandsHandler()
-  const selectedUnits = getReplayUnitsByIds(command.unitIds)
+  restoreReplaySelectedUnits(command.unitIds, command)
+
+  const handler = getReplayUnitCommandsHandler() || replayUnitCommandsHandler
+  const selectedUnits = resolveReplayCommandUnits(command)
   const mapGrid = gameState.mapGrid || []
 
   if (!selectedUnits.length) {
@@ -244,7 +410,7 @@ function executeReplayUnitCommand(command) {
         queueReplayMove(selectedUnits, command.targetPos)
         return true
       }
-      if (handler && command.targetPos) {
+      if (command.targetPos) {
         handler.handleMovementCommand(selectedUnits, command.targetPos.x, command.targetPos.y, mapGrid)
         return true
       }
@@ -256,7 +422,7 @@ function executeReplayUnitCommand(command) {
         queueReplayAttack(selectedUnits, target)
         return true
       }
-      if (handler) {
+      if (target) {
         handler.handleAttackCommand(selectedUnits, target, mapGrid, Boolean(command.forceAttack))
         return true
       }
@@ -289,70 +455,53 @@ function executeReplayUnitCommand(command) {
       return true
     }
     case 'workshop_hotkey':
-      if (!handler) return false
       handler.handleWorkshopRepairHotkey(selectedUnits, mapGrid, Boolean(command.queue), false)
       return true
     case 'apache_helipad':
-      if (!handler) return false
       return Boolean(handler.handleApacheHelipadCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid))
     case 'refinery_unload':
-      if (!handler) return false
       handler.handleRefineryUnloadCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid)
       return true
     case 'harvest_ore':
-      if (!handler) return false
       handler.handleHarvesterCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid)
       return true
     case 'repair_workshop':
-      if (!handler) return false
       handler.handleRepairWorkshopCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid)
       return true
     case 'ambulance_heal':
-      if (!handler) return false
       handler.handleAmbulanceHealCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid, { append: Boolean(command.append) })
       return true
     case 'tanker_refuel':
-      if (!handler) return false
       handler.handleTankerRefuelCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid, { append: Boolean(command.append) })
       return true
     case 'ammo_resupply':
-      if (!handler) return false
       handler.handleAmmunitionTruckResupplyCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid, { append: Boolean(command.append), suppressNotifications: true })
       return true
     case 'ammo_reload':
-      if (!handler) return false
       handler.handleAmmunitionTruckReloadCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid, { append: Boolean(command.append) })
       return true
     case 'ambulance_refill':
-      if (!handler) return false
       handler.handleAmbulanceRefillCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid)
       return true
     case 'gas_refill':
-      if (!handler) return false
       handler.handleGasStationRefillCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid)
       return true
     case 'recovery_tow':
-      if (!handler) return false
       handler.handleRecoveryTowCommand(selectedUnits, resolveReplayEntityReference(command.targetRef))
       return true
     case 'recovery_tank_repair':
-      if (!handler) return false
       handler.handleRecoveryTankRepairCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid, { append: Boolean(command.append) })
       return true
     case 'recovery_wreck_tow':
-      if (!handler) return false
       handler.handleRecoveryWreckTowCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid, { append: Boolean(command.append) })
       return true
     case 'recovery_wreck_recycle':
-      if (!handler) return false
       handler.handleRecoveryWreckRecycleCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid, { append: Boolean(command.append) })
       return true
     case 'damaged_to_recovery':
-      if (!handler) return false
       handler.handleDamagedUnitToRecoveryTankCommand(selectedUnits, resolveReplayEntityReference(command.targetRef), mapGrid)
       return true
     case 'service_provider_request': {
-      if (!handler) return false
       const provider = resolveReplayEntityReference(command.providerRef)
       const requesters = (command.requesterRefs || []).map(resolveReplayEntityReference).filter(Boolean)
       if (!provider || requesters.length === 0) return false
@@ -446,6 +595,7 @@ export function completeFinishedReplaySession() {
   replay.playbackActive = false
   replay.playbackCursor = replay.playbackCommands.length
   replay.playbackCommands = []
+  replay.unitIdAliases = {}
   gameState.replayMode = false
   gameState.gamePaused = false
   syncPauseButtonIcon()
@@ -602,8 +752,14 @@ function executeReplayCommand(entry) {
 
     if (command.type === 'remote_control_action') {
       const action = command.action
-      if (action) {
-        setRemoteControlAction(
+      const remoteControlApi = getReplayRemoteControlApi()
+      if (action && remoteControlApi?.setRemoteControlAction) {
+        restoreReplaySelectedUnits(command.selectedUnitIds, {
+          unitIds: command.selectedUnitIds,
+          unitRefs: command.selectedUnitRefs,
+          owner: command.owner
+        })
+        remoteControlApi.setRemoteControlAction(
           action,
           command.source || 'replay',
           Boolean(command.active),
@@ -614,7 +770,16 @@ function executeReplayCommand(entry) {
     }
 
     if (command.type === 'remote_control_absolute') {
-      setRemoteControlAbsolute(command.source || 'replay', {
+      const remoteControlApi = getReplayRemoteControlApi()
+      if (!remoteControlApi?.setRemoteControlAbsolute) {
+        return
+      }
+      restoreReplaySelectedUnits(command.selectedUnitIds, {
+        unitIds: command.selectedUnitIds,
+        unitRefs: command.selectedUnitRefs,
+        owner: command.owner
+      })
+      remoteControlApi.setRemoteControlAbsolute(command.source || 'replay', {
         wagonDirection: command.wagonDirection ?? null,
         wagonSpeed: Number.isFinite(command.wagonSpeed) ? command.wagonSpeed : 0,
         turretDirection: command.turretDirection ?? null,
@@ -681,6 +846,7 @@ export function loadReplay(key) {
   replay.playbackStartedAt = getNowMs()
   replay.playbackCursor = 0
   replay.playbackCommands = Array.isArray(parsed.commands) ? parsed.commands : []
+  replay.unitIdAliases = {}
   gameState.gamePaused = false
   gameState.replayMode = true
   syncPauseButtonIcon()
