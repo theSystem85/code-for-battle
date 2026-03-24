@@ -43,7 +43,6 @@ import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.j
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
 import {
-  updateMapScrolling,
   updateCameraFollow,
   updateOreSpread,
   updateExplosions,
@@ -289,8 +288,6 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
     // Handle right-click deselection
     handleRightClickDeselect(gameState, units)
 
-    // Map scrolling with inertia (client needs this for UI)
-    updateMapScrolling(gameState, mapGrid)
     // Keep camera focused on followed unit when enabled
     updateCameraFollow(gameState, units, mapGrid)
 

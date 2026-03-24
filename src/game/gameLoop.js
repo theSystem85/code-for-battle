@@ -338,6 +338,8 @@ export class GameLoop {
       }
     }
 
+    updateMapScrolling(gameState, this.mapGrid)
+
     // Refresh production buttons if a building was destroyed
     if (gameState.pendingButtonUpdate) {
       if (this.productionController) {

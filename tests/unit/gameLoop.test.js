@@ -250,6 +250,22 @@ describe('GameLoop', () => {
     expect(productionQueue.updateProgress).toHaveBeenCalledWith(0)
   })
 
+  it('updates map scrolling once per rendered frame regardless of game speed', () => {
+    const loop = createLoop()
+    loop.running = true
+    gameState.gameStarted = true
+    gameState.gamePaused = false
+    gameState.speedMultiplier = 2
+    isLockstepEnabledMock.mockReturnValue(false)
+
+    loop.lastFrameTime = 1000
+    loop.animate(1033)
+
+    expect(updateGameMock).toHaveBeenCalledTimes(2)
+    expect(updateMapScrollingMock).toHaveBeenCalledTimes(1)
+    expect(updateMapScrollingMock).toHaveBeenCalledWith(gameState, [])
+  })
+
   it('clears timeout-based scheduling on stop', () => {
     const loop = createLoop()
     loop.running = true
