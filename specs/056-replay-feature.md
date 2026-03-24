@@ -33,3 +33,6 @@ Implement deterministic replay capture/playback for player sessions.
 - Player-issued unit commands now replay through the same runtime input handlers used during live play instead of the generic AI action applier, restoring movement pathing and support/service command fidelity.
 - Replay-mode command locks now apply for the whole replay session, including the paused state after playback has finished.
 - When playback reaches the final replay command, the game auto-pauses, shows a replay-finished pause message, and exits replay mode only after the user presses Start/Pause again to continue normal play.
+- Recorded remote-control inputs now replay via the same source-aware remote-control state APIs used during live keyboard control, preserving direct-control key press and release behavior.
+- Sidebar speed and volume sliders now show their current values inline inside the left label text, which frees more width for the slider rails and uses green slider knobs to match input labels.
+- Replay list scrollbars use the same custom styling as the save-game list.

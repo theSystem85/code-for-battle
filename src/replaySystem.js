@@ -7,6 +7,7 @@ import { CheatSystem } from './input/cheatSystem.js'
 import { getBuildingIdentifier } from './utils.js'
 import { getWreckById } from './game/unitWreckManager.js'
 import { initiateRetreat } from './behaviours/retreat.js'
+import { setRemoteControlAbsolute, setRemoteControlAction } from './input/remoteControlState.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
@@ -601,19 +602,24 @@ function executeReplayCommand(entry) {
 
     if (command.type === 'remote_control_action') {
       const action = command.action
-      if (action && gameState.remoteControl && typeof gameState.remoteControl[action] === 'number') {
-        gameState.remoteControl[action] = command.active ? Math.max(0, Math.min(1, command.intensity || 1)) : 0
+      if (action) {
+        setRemoteControlAction(
+          action,
+          command.source || 'replay',
+          Boolean(command.active),
+          Math.max(0, Math.min(1, command.intensity || 1))
+        )
       }
       return
     }
 
     if (command.type === 'remote_control_absolute') {
-      gameState.remoteControlAbsolute = {
+      setRemoteControlAbsolute(command.source || 'replay', {
         wagonDirection: command.wagonDirection ?? null,
         wagonSpeed: Number.isFinite(command.wagonSpeed) ? command.wagonSpeed : 0,
         turretDirection: command.turretDirection ?? null,
         turretTurnFactor: Number.isFinite(command.turretTurnFactor) ? command.turretTurnFactor : 0
-      }
+      })
       return
     }
 

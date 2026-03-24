@@ -180,11 +180,9 @@
 
     <!-- Master Volume Control -->
     <div id="volumeControl">
-      <label style="display: flex; align-items: center; margin-bottom: 5px;">
-        Volume:
-        <input type="range" class="volume-slider" id="masterVolumeSlider" min="0" max="100" value="50"
-          style="margin-left: 10px; flex: 1;">
-        <span id="volumeValue" class="volume-value">50%</span>
+      <label for="masterVolumeSlider" class="slider-control-row">
+        <span class="slider-control-label">Volume(<span id="volumeValue" class="slider-inline-value">50%</span>):</span>
+        <input type="range" class="volume-slider slider-control-slider" id="masterVolumeSlider" min="0" max="100" value="50">
       </label>
     </div>
 
@@ -559,18 +557,17 @@
           <button id="replayListTab" class="tab-button" type="button">Replays</button>
         </div>
         <div id="saveGamesPane">
-          <ul id="saveGamesList" style="max-height: 120px; overflow-y: auto; margin: 8px 0 0 0; list-style: none;"></ul>
+          <ul id="saveGamesList" class="save-replay-list"></ul>
         </div>
         <div id="replaysPane" class="hidden">
-          <ul id="replayList" style="max-height: 120px; overflow-y: auto; margin: 8px 0 0 0; list-style: none;"></ul>
+          <ul id="replayList" class="save-replay-list"></ul>
         </div>
       </div>
 
       <div id="speedControl">
         <div class="speed-control-row">
-          <label for="speedMultiplier" class="speed-control-label">Speed:</label>
+          <label for="speedMultiplier" class="speed-control-label">Speed(<span id="speedMultiplierValue" class="slider-inline-value">1.0x</span>):</label>
           <input type="range" class="volume-slider speed-control-slider" id="speedMultiplier" min="0.5" max="5" step="0.5" value="1">
-          <span id="speedMultiplierValue" class="volume-value">1.0x</span>
           <button id="recordBtn" class="action-button icon-button" title="Toggle Replay Recording" aria-pressed="false"
             style="margin-left: 8px;">
             <span class="button-icon record-icon">●</span>

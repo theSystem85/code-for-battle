@@ -1151,20 +1151,20 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   appearance: none;
   width: 16px;
   height: 16px;
-  background: #4f9cff;
+  background: #6efc4b;
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .volume-slider::-webkit-slider-thumb:hover {
-  background: #6bb6ff;
+  background: #68cf6d;
 }
 
 .volume-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: #4f9cff;
+  background: #6efc4b;
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1172,14 +1172,39 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 }
 
 .volume-slider::-moz-range-thumb:hover {
-  background: #6bb6ff;
+  background: #68cf6d;
 }
 
-.volume-value {
-  color: #ccc;
+.slider-inline-value {
+  color: inherit;
   font-size: 12px;
-  min-width: 35px;
-  text-align: right;
+  font-weight: 600;
+}
+
+.slider-control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.slider-control-label {
+  flex: 0 0 auto;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.slider-control-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.save-replay-list {
+  max-height: 120px;
+  overflow-y: auto;
+  margin: 8px 0 0 0;
+  list-style: none;
 }
 
 #saveGamesList {
@@ -1256,16 +1281,15 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 
 .speed-control-label {
   flex: 0 0 auto;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .speed-control-slider {
-  flex: 1 1 auto;
+  flex: 1 1 180px;
   min-width: 0;
   margin-left: 0;
-}
-
-.speed-control-row .volume-value {
-  flex: 0 0 auto;
 }
 
 #recordBtn {
