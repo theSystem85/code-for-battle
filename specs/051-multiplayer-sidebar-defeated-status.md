@@ -8,6 +8,12 @@ Add defeated-state visibility to the multiplayer party overview in the sidebar s
 - Defeated status should override invite/availability/reconnect text.
 - Defeated status should have distinct styling from normal and success statuses.
 - Sidebar status should refresh as defeat data changes during runtime.
+- Defeat detection must normalize legacy owner id `player` as `player1` so initial mission loads do not mark the green local player as defeated when their assets still use legacy ownership.
+- Multiplayer sidebar ownership labels must also normalize legacy local id `player` to `player1` so Green remains shown as host/human alias (not AI) on mission start.
+- On mission load with pre-populated `partyStates`, local host sessions must reconcile the Green/local party away from `AI` to the host alias before rendering the sidebar list.
 
 ## Validation
 - E2E: set `gameState.defeatedPlayers` for a party and verify that party row shows `Defeated` and the defeated status style class.
+- Unit: `checkGameEndConditions` should keep `player1` alive when surviving structures are owned by legacy `player`.
+- Unit: multiplayer party initialization/alias updates should treat `humanPlayer: "player"` as `player1` for host-party ownership labels.
+- Unit: `ensureMultiplayerState` should reconcile preloaded AI-controlled local Green party rows to host alias ownership on mission load.

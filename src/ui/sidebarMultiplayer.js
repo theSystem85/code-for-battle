@@ -570,6 +570,10 @@ function updateHostControlAccessibility(session) {
   })
 }
 
+function getLocalPartyId() {
+  return gameState.humanPlayer === 'player' ? 'player1' : gameState.humanPlayer
+}
+
 function createPartyRow(partyState) {
   const row = document.createElement('div')
   row.className = 'multiplayer-party-row'
@@ -599,7 +603,8 @@ function createPartyRow(partyState) {
   status.dataset.testid = `multiplayer-party-status-${partyState.partyId}`
 
   // Check if a human player is connected (not AI and not the host)
-  const isHumanConnected = !partyState.aiActive && partyState.partyId !== gameState.humanPlayer
+  const localPartyId = getLocalPartyId()
+  const isHumanConnected = !partyState.aiActive && partyState.partyId !== localPartyId
 
   if (isHumanConnected) {
     // Human player is connected - show empty status and kick button
@@ -619,7 +624,7 @@ function createPartyRow(partyState) {
     controls.appendChild(status)
 
     // Show LLM toggle for AI parties (not the host)
-    const isAiParty = partyState.aiActive !== false && partyState.partyId !== gameState.humanPlayer
+    const isAiParty = partyState.aiActive !== false && partyState.partyId !== localPartyId
     if (isAiParty) {
       const llmToggle = createLlmToggleButton(partyState)
       controls.appendChild(llmToggle)
