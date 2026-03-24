@@ -66,7 +66,13 @@ import { unitCosts } from './units.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnUnit } from './units.js'
 import { getSimulationTime } from './game/time.js'
-import { updateReplayPlayback } from './replaySystem.js'
+import {
+  createReplayEntityReference,
+  createReplayUnitReference,
+  createReplayUnitReferences,
+  recordReplayCommand,
+  updateReplayPlayback
+} from './replaySystem.js'
 
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
   try {
@@ -127,6 +133,18 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           updateDangerZoneMaps(gameState)
           placeBuilding(newBuilding, mapGrid)
           updatePowerSupply(gameState.buildings, gameState)
+          recordReplayCommand({
+            type: 'build_place',
+            owner,
+            buildingType,
+            buildingId: newBuilding.id,
+            targetRef: createReplayEntityReference(newBuilding),
+            tilePosition: {
+              space: 'tile',
+              x,
+              y
+            }
+          }, { source: 'remote-human', playerId: owner })
         } else if (cmd.commandType === COMMAND_TYPES.BUILDING_SELL && cmd.payload) {
           // Apply building sell from client
           const { buildingId, sellStartTime } = cmd.payload
@@ -143,6 +161,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           const tileX = Math.floor(targetX / TILE_SIZE)
           const tileY = Math.floor(targetY / TILE_SIZE)
           window.logger('[Host] Processing UNIT_MOVE from party:', partyId, 'unitIds:', unitIds, 'target pixels:', targetX, targetY, 'tiles:', tileX, tileY)
+          const unitRefs = createReplayUnitReferences(unitIds)
           unitIds.forEach(unitId => {
             // Find unit by ID - owner check is implicit since client can only select their own units
             const unit = mainUnits.find(u => u.id === unitId)
@@ -161,11 +180,29 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               window.logger.warn('[Host] Unit not found:', unitId)
             }
           })
+          if (unitRefs.length > 0) {
+            recordReplayCommand({
+              type: 'unit_command',
+              owner: partyId,
+              unitIds,
+              unitRefs,
+              command: 'move',
+              targetPos: {
+                space: 'world',
+                x: targetX,
+                y: targetY
+              }
+            }, { source: 'remote-human', playerId: partyId })
+          }
         } else if (cmd.commandType === COMMAND_TYPES.UNIT_ATTACK && cmd.payload) {
           // Apply unit attack command from client
           const { unitIds, targetId, targetX, targetY } = cmd.payload
           const partyId = cmd.sourcePartyId
           window.logger('[Host] Processing UNIT_ATTACK from party:', partyId, 'unitIds:', unitIds, 'targetId:', targetId)
+          const unitRefs = createReplayUnitReferences(unitIds)
+          const replayTarget = mainUnits.find(u => u.id === targetId) ||
+            gameState.buildings.find(b => b.id === targetId) ||
+            factories.find(f => f.id === targetId)
           unitIds.forEach(unitId => {
             const unit = mainUnits.find(u => u.id === unitId && u.owner === partyId)
             if (unit) {
@@ -193,10 +230,31 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               window.logger.warn('[Host] Unit not found or owner mismatch:', unitId, partyId)
             }
           })
+          if (unitRefs.length > 0) {
+            recordReplayCommand({
+              type: 'unit_command',
+              owner: partyId,
+              unitIds,
+              unitRefs,
+              command: 'attack',
+              ...(targetId ? { targetId } : {}),
+              ...(replayTarget ? { targetRef: createReplayEntityReference(replayTarget) } : {}),
+              ...(targetX !== undefined && targetY !== undefined
+                ? {
+                  targetPos: {
+                    space: 'world',
+                    x: targetX,
+                    y: targetY
+                  }
+                }
+                : {})
+            }, { source: 'remote-human', playerId: partyId })
+          }
         } else if (cmd.commandType === COMMAND_TYPES.UNIT_STOP && cmd.payload) {
           // Apply unit stop command from client
           const { unitIds } = cmd.payload
           const partyId = cmd.sourcePartyId
+          const unitRefs = createReplayUnitReferences(unitIds)
           unitIds.forEach(unitId => {
             const unit = mainUnits.find(u => u.id === unitId && u.owner === partyId)
             if (unit) {
@@ -210,6 +268,15 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               unit.attackGroupTargets = []
             }
           })
+          if (unitRefs.length > 0) {
+            recordReplayCommand({
+              type: 'unit_command',
+              owner: partyId,
+              unitIds,
+              unitRefs,
+              command: 'stop_attack'
+            }, { source: 'remote-human', playerId: partyId })
+          }
         } else if (cmd.commandType === COMMAND_TYPES.UNIT_GUARD && cmd.payload) {
           // Apply unit guard command from client
           const { unitIds, guardX, guardY } = cmd.payload
@@ -260,6 +327,22 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             if (newUnit) {
               newUnit.owner = partyId
               mainUnits.push(newUnit)
+              recordReplayCommand({
+                type: 'unit_spawn',
+                owner: partyId,
+                unitType,
+                factoryId: spawnFactory.id,
+                factoryRef: createReplayEntityReference(spawnFactory),
+                rallyPoint: rallyPoint
+                  ? {
+                    space: 'tile',
+                    x: rallyPoint.x,
+                    y: rallyPoint.y
+                  }
+                  : null,
+                unitId: newUnit.id,
+                unitRef: createReplayUnitReference(newUnit)
+              }, { source: 'remote-human', playerId: partyId })
             }
           }
         }

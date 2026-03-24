@@ -38,5 +38,6 @@ Implement deterministic replay capture/playback for player sessions.
 - All replayed unit commands now restore the referenced unit selection before execution, and replay uses its own UnitCommandsHandler fallback instead of depending solely on the live UI handler instance.
 - Recorded unit and remote-control commands now also store deterministic replay unit references, and replay resolves post-baseline spawned units through those references plus a compatibility alias fallback so playback still works when runtime-generated unit ids differ from the recording.
 - User-set rally points on the construction yard, vehicle factory, and vehicle workshop are recorded as replay commands and restored during playback.
+- Replay capture now records classic AI building completions, unit spawns, and unit-command transitions with owner-specific command data, and host-applied remote-party building/unit commands are also recorded so replay can reproduce full multi-party matches without relying on live AI reruns.
 - Sidebar speed and volume sliders now show their current values inline inside the left label text, which frees more width for the slider rails and uses green slider knobs to match input labels.
 - Replay list scrollbars use the same custom styling as the save-game list.

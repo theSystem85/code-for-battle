@@ -4,7 +4,7 @@ import { findClosestOre } from '../logic.js'
 import { assignHarvesterToOptimalRefinery } from '../game/harvesterLogic.js'
 import { spawnUnit } from '../units.js'
 
-export function spawnEnemyUnit(spawnBuilding, unitType, units, mapGrid, gameState, productionStartTime, aiPlayerId) {
+export function spawnEnemyUnit(spawnBuilding, unitType, units, mapGrid, gameState, productionStartTime, aiPlayerId, options = {}) {
   const unit = spawnUnit(
     spawnBuilding,
     unitType,
@@ -12,7 +12,7 @@ export function spawnEnemyUnit(spawnBuilding, unitType, units, mapGrid, gameStat
     mapGrid,
     null,
     gameState?.occupancyMap,
-    {}
+    options
   )
 
   if (!unit) {

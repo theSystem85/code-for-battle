@@ -20,6 +20,7 @@ import { isPartyUsingLlmStrategic } from './llmStrategicAccess.js'
 import { processLlmBuildQueue, processLlmUnitQueue, markLlmBuildComplete, markLlmUnitComplete } from '../ai-api/applier.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/airstripUtils.js'
 import { handleStuckHarvester } from '../game/harvesterLogic.js'
+import { createReplayEntityReference, createReplayUnitReference, recordReplayCommand } from '../replaySystem.js'
 
 const AI_SELL_PRIORITY = [
   'turretGunV1',
@@ -48,6 +49,44 @@ const AI_SELL_PRIORITY_MAP = AI_SELL_PRIORITY.reduce((acc, type, index) => {
 const PROTECTED_AI_BUILDINGS = new Set(['constructionYard', 'oreRefinery'])
 const ENEMY_HARVESTER_STUCK_SCAN_INTERVAL = 60000
 const ENEMY_HARVESTER_STUCK_MOVEMENT_THRESHOLD = 8
+
+function recordAiReplayCommand(playerId, command, metadata = {}) {
+  recordReplayCommand({
+    ...command,
+    owner: playerId
+  }, {
+    source: metadata.source || 'classic-ai',
+    playerId,
+    ...metadata
+  })
+}
+
+function recordAiBuildingPlacement(playerId, building) {
+  if (!building) return
+  recordAiReplayCommand(playerId, {
+    type: 'build_place',
+    buildingType: building.type,
+    buildingId: building.id,
+    targetRef: createReplayEntityReference(building),
+    tilePosition: {
+      space: 'tile',
+      x: building.x,
+      y: building.y
+    }
+  })
+}
+
+function recordAiUnitSpawn(playerId, spawnBuilding, unit) {
+  if (!spawnBuilding || !unit) return
+  recordAiReplayCommand(playerId, {
+    type: 'unit_spawn',
+    unitType: unit.type,
+    factoryId: spawnBuilding.id,
+    factoryRef: createReplayEntityReference(spawnBuilding),
+    unitId: unit.id,
+    unitRef: createReplayUnitReference(unit)
+  })
+}
 
 function scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupancyMap, gameState, factories, now) {
   const lastScanKey = `${aiPlayerId}LastHarvesterStuckScanTime`
@@ -724,6 +763,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
         updateDangerZoneMaps(gameState)
         placeBuilding(newBuilding, mapGrid)
         updatePowerSupply(gameState.buildings, gameState)
+        recordAiBuildingPlacement(aiPlayerId, newBuilding)
       } else {
         // Position became invalid, try to find an alternative position immediately
 
@@ -743,6 +783,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
           updateDangerZoneMaps(gameState)
           placeBuilding(newBuilding, mapGrid)
           updatePowerSupply(gameState.buildings, gameState)
+          recordAiBuildingPlacement(aiPlayerId, newBuilding)
         } else {
           // No alternative position found, refund the cost as last resort
           aiFactory.budget += buildingData[buildingType]?.cost || 0
@@ -771,6 +812,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
       if (newUnit) {
         units.push(newUnit)
+        recordAiUnitSpawn(aiPlayerId, spawnFactory, newUnit)
 
         // Immediately trigger recovery tank assignment for newly spawned recovery tanks
         if (unitType === 'recoveryTank') {

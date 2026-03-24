@@ -6,9 +6,13 @@ import { applyGameTickOutput } from './ai-api/applier.js'
 import { productionQueue } from './productionQueue.js'
 import { CheatSystem } from './input/cheatSystem.js'
 import { UnitCommandsHandler } from './input/unitCommands.js'
+import { createBuilding, canPlaceBuilding, placeBuilding, updatePowerSupply } from './buildings.js'
+import { spawnUnit } from './units.js'
 import { getBuildingIdentifier } from './utils.js'
 import { getWreckById } from './game/unitWreckManager.js'
 import { initiateRetreat } from './behaviours/retreat.js'
+import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
+import { spawnEnemyUnit } from './ai/enemySpawner.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
@@ -320,6 +324,141 @@ function normalizeReplayRallyPoint(rallyPoint) {
   return null
 }
 
+function normalizeReplayTilePosition(position) {
+  if (!position || typeof position !== 'object') {
+    return null
+  }
+
+  if (position.space === 'world') {
+    return {
+      x: Math.floor(position.x / TILE_SIZE),
+      y: Math.floor(position.y / TILE_SIZE)
+    }
+  }
+
+  if (Number.isFinite(position.x) && Number.isFinite(position.y)) {
+    return {
+      x: position.x,
+      y: position.y
+    }
+  }
+
+  return null
+}
+
+function normalizeReplayWorldPosition(position) {
+  if (!position || typeof position !== 'object') {
+    return null
+  }
+
+  if (position.space === 'tile') {
+    return {
+      x: (position.x + 0.5) * TILE_SIZE,
+      y: (position.y + 0.5) * TILE_SIZE
+    }
+  }
+
+  if (Number.isFinite(position.x) && Number.isFinite(position.y)) {
+    return {
+      x: position.x,
+      y: position.y
+    }
+  }
+
+  return null
+}
+
+function placeReplayBuilding(command) {
+  const tilePosition = normalizeReplayTilePosition(command.tilePosition)
+  if (!tilePosition) {
+    return false
+  }
+
+  const existingBuilding = resolveReplayEntityReference(command.targetRef) || findReplayTargetById(command.buildingId)
+  if (existingBuilding) {
+    return true
+  }
+
+  const units = Array.isArray(gameState.units) ? gameState.units : []
+  const buildings = Array.isArray(gameState.buildings) ? gameState.buildings : []
+  const factories = Array.isArray(gameState.factories) ? gameState.factories : []
+  const mapGrid = gameState.mapGrid || []
+
+  if (!canPlaceBuilding(command.buildingType, tilePosition.x, tilePosition.y, mapGrid, units, buildings, factories, command.owner)) {
+    return false
+  }
+
+  const building = createBuilding(command.buildingType, tilePosition.x, tilePosition.y)
+  building.owner = command.owner || building.owner
+  if (command.buildingId) {
+    building.id = command.buildingId
+  }
+  if (command.targetRef?.id) {
+    building.id = command.targetRef.id
+  }
+  if (command.rallyPoint) {
+    building.rallyPoint = normalizeReplayRallyPoint(command.rallyPoint)
+  }
+
+  gameState.buildings.push(building)
+  updateDangerZoneMaps(gameState)
+  placeBuilding(building, mapGrid)
+  updatePowerSupply(gameState.buildings, gameState)
+  return true
+}
+
+function replaySpawnUnit(command, metadata = {}) {
+  const spawnBuilding = resolveReplayEntityReference(command.factoryRef) || findReplayTargetById(command.factoryId)
+  if (!spawnBuilding) {
+    return false
+  }
+
+  const targetId = command.unitRef?.id || command.unitId || null
+  if (targetId && (gameState.units || []).some(unit => unit && unit.id === targetId)) {
+    return true
+  }
+
+  const unitOptions = {
+    id: command.unitRef?.id || null,
+    replaySpawnOrdinal: command.unitRef?.replaySpawnOrdinal ?? null,
+    buildDuration: command.unitRef?.buildDuration ?? null
+  }
+
+  const newUnit = metadata?.source === 'remote-human'
+    ? spawnUnit(
+      spawnBuilding,
+      command.unitType,
+      gameState.units || [],
+      gameState.mapGrid || [],
+      normalizeReplayRallyPoint(command.rallyPoint),
+      gameState.occupancyMap,
+      unitOptions
+    )
+    : spawnEnemyUnit(
+      spawnBuilding,
+      command.unitType,
+      gameState.units || [],
+      gameState.mapGrid || [],
+      gameState,
+      getNowMs(),
+      command.owner,
+      unitOptions
+    )
+
+  if (!newUnit) {
+    return false
+  }
+
+  if (metadata?.source === 'remote-human') {
+    newUnit.owner = command.owner || newUnit.owner
+  }
+
+  if (!(gameState.units || []).includes(newUnit)) {
+    gameState.units.push(newUnit)
+  }
+  return true
+}
+
 export function createReplayUnitReference(unit) {
   if (!unit || unit.isBuilding) {
     return null
@@ -430,11 +569,15 @@ function executeReplayUnitCommand(command) {
     case 'move':
       if (command.queueAppend) {
         if (!command.targetPos) return false
-        queueReplayMove(selectedUnits, command.targetPos)
+        const queuedTarget = normalizeReplayWorldPosition(command.targetPos)
+        if (!queuedTarget) return false
+        queueReplayMove(selectedUnits, queuedTarget)
         return true
       }
       if (command.targetPos) {
-        handler.handleMovementCommand(selectedUnits, command.targetPos.x, command.targetPos.y, mapGrid)
+        const worldTarget = normalizeReplayWorldPosition(command.targetPos)
+        if (!worldTarget) return false
+        handler.handleMovementCommand(selectedUnits, worldTarget.x, worldTarget.y, mapGrid)
         return true
       }
       return false
@@ -464,7 +607,9 @@ function executeReplayUnitCommand(command) {
     }
     case 'retreat':
       if (command.targetPos) {
-        initiateRetreat(selectedUnits, command.targetPos.x, command.targetPos.y, mapGrid)
+        const retreatTarget = normalizeReplayWorldPosition(command.targetPos)
+        if (!retreatTarget) return false
+        initiateRetreat(selectedUnits, retreatTarget.x, retreatTarget.y, mapGrid)
         return true
       }
       return false
@@ -683,7 +828,7 @@ export function recordReplayCommand(command, metadata = {}) {
 
 function executeReplayCommand(entry) {
   if (!entry?.command) return
-  const { command } = entry
+  const { command, metadata } = entry
 
   const replay = ensureReplayState()
   replay.isApplyingReplayCommand = true
@@ -702,6 +847,11 @@ function executeReplayCommand(entry) {
           playerId: command.owner || gameState.humanPlayer
         })
       }
+      return
+    }
+
+    if (command.type === 'build_place' && (metadata?.source === 'classic-ai' || metadata?.source === 'remote-human')) {
+      placeReplayBuilding(command)
       return
     }
 
@@ -726,6 +876,11 @@ function executeReplayCommand(entry) {
       if (building && rallyPoint) {
         building.rallyPoint = rallyPoint
       }
+      return
+    }
+
+    if (command.type === 'unit_spawn') {
+      replaySpawnUnit(command, metadata)
       return
     }
 
