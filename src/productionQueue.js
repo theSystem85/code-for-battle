@@ -134,7 +134,14 @@ export const productionQueue = {
       type: 'production_add',
       itemType: type,
       isBuilding: Boolean(isBuilding),
-      rallyPoint: rallyPoint || null
+      rallyPoint: rallyPoint || null,
+      blueprint: blueprint
+        ? {
+          type: blueprint.type,
+          x: blueprint.x,
+          y: blueprint.y
+        }
+        : null
     }, { source: 'human' })
 
     // Only block queuing if game is paused

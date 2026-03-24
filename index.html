@@ -166,9 +166,6 @@
       <button id="pauseBtn" class="action-button icon-button" title="Start/Pause Game">
         <span class="button-icon play-pause-icon">▶</span>
       </button>
-      <button id="recordBtn" class="action-button icon-button" title="Toggle Replay Recording" aria-pressed="false">
-        <span class="button-icon record-icon">●</span>
-      </button>
       <button id="restartBtn" class="action-button icon-button" title="Restart Game">
         <span class="button-icon restart-icon">↻</span>
       </button>
@@ -575,6 +572,10 @@
           <input type="range" class="volume-slider" id="speedMultiplier" min="0.5" max="5" step="0.5" value="1"
             style="margin-left: 10px; flex: 1;">
           <span id="speedMultiplierValue" class="volume-value">1.0x</span>
+          <button id="recordBtn" class="action-button icon-button" title="Toggle Replay Recording" aria-pressed="false"
+            style="margin-left: 8px;">
+            <span class="button-icon record-icon">●</span>
+          </button>
         </label>
       </div>
 

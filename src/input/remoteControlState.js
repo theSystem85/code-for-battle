@@ -1,5 +1,6 @@
 import { gameState } from '../gameState.js'
 import { getActiveRemoteConnection } from '../network/remoteConnection.js'
+import { recordReplayCommand } from '../replaySystem.js'
 
 const REMOTE_CONTROL_ACTIONS = [
   'forward',
@@ -147,6 +148,15 @@ export function setRemoteControlAction(action, source, active, intensity = 1) {
     delete sources[source]
   }
   recomputeAction(action)
+  if (!gameState.replay?.isApplyingReplayCommand) {
+    recordReplayCommand({
+      type: 'remote_control_action',
+      action,
+      source,
+      active: Boolean(active),
+      intensity: clampIntensity(intensity)
+    }, { source: 'human-remote-control' })
+  }
   broadcastRemoteControlState()
 }
 
@@ -201,6 +211,16 @@ export function setRemoteControlAbsolute(source, values = {}) {
   }
 
   recomputeAbsolute()
+  if (!gameState.replay?.isApplyingReplayCommand) {
+    recordReplayCommand({
+      type: 'remote_control_absolute',
+      source,
+      wagonDirection: data.wagonDirection,
+      wagonSpeed: data.wagonSpeed,
+      turretDirection: data.turretDirection,
+      turretTurnFactor: data.turretTurnFactor
+    }, { source: 'human-remote-control' })
+  }
   broadcastRemoteControlState()
 }
 

@@ -2,6 +2,8 @@ import { gameState } from './gameState.js'
 import { saveGame, loadGame, updateSaveGamesList } from './saveGame.js'
 import { showNotification } from './ui/notifications.js'
 import { applyGameTickOutput } from './ai-api/applier.js'
+import { productionQueue } from './productionQueue.js'
+import { CheatSystem } from './input/cheatSystem.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
@@ -16,6 +18,7 @@ function ensureReplayState() {
       recordingActive: false,
       recordingStartedAt: 0,
       recordingLabel: '',
+      recordingStartedWallClock: 0,
       commands: [],
       baselineState: null,
       playbackActive: false,
@@ -32,12 +35,30 @@ function buildReplayStorageKey(label) {
 }
 
 function serializeReplay({ label, startedAt, baselineState, commands }) {
+  const durationMs = commands.length > 0 ? (commands[commands.length - 1].at || 0) : 0
   return {
     label,
     time: Date.now(),
     startedAt,
+    startedAtWallClock: ensureReplayState().recordingStartedWallClock || Date.now(),
+    durationMs,
     baselineState,
     commands
+  }
+}
+
+function formatDuration(durationMs = 0) {
+  const totalSeconds = Math.max(0, Math.floor((durationMs || 0) / 1000))
+  const minutes = Math.floor(totalSeconds / 60)
+  const seconds = totalSeconds % 60
+  return `${minutes}:${String(seconds).padStart(2, '0')}`
+}
+
+function syncPauseButtonIcon() {
+  const pauseBtn = document.getElementById('pauseBtn')
+  const playPauseIcon = pauseBtn?.querySelector('.play-pause-icon')
+  if (playPauseIcon) {
+    playPauseIcon.textContent = gameState.gamePaused ? '▶' : '⏸'
   }
 }
 
@@ -89,6 +110,7 @@ export function startReplayRecording() {
 
   replay.recordingActive = true
   replay.recordingStartedAt = getNowMs()
+  replay.recordingStartedWallClock = Date.now()
   replay.commands = []
   replay.recordingLabel = `Replay ${new Date().toLocaleString()}`
   replay.baselineState = baselineState
@@ -161,8 +183,40 @@ function executeReplayCommand(entry) {
         : `.production-button[data-unit-type="${command.itemType}"]`
       const button = document.querySelector(selector)
       if (button) {
-        button.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+        productionQueue.addItem(
+          command.itemType,
+          button,
+          isBuilding,
+          command.blueprint || null,
+          command.rallyPoint || null
+        )
       }
+      return
+    }
+
+    if (command.type === 'remote_control_action') {
+      const action = command.action
+      if (action && gameState.remoteControl && typeof gameState.remoteControl[action] === 'number') {
+        gameState.remoteControl[action] = command.active ? Math.max(0, Math.min(1, command.intensity || 1)) : 0
+      }
+      return
+    }
+
+    if (command.type === 'remote_control_absolute') {
+      gameState.remoteControlAbsolute = {
+        wagonDirection: command.wagonDirection ?? null,
+        wagonSpeed: Number.isFinite(command.wagonSpeed) ? command.wagonSpeed : 0,
+        turretDirection: command.turretDirection ?? null,
+        turretTurnFactor: Number.isFinite(command.turretTurnFactor) ? command.turretTurnFactor : 0
+      }
+      return
+    }
+
+    if (command.type === 'cheat_code') {
+      if (!executeReplayCommand.cheatSystemInstance) {
+        executeReplayCommand.cheatSystemInstance = new CheatSystem()
+      }
+      executeReplayCommand.cheatSystemInstance.processCheatCode(command.code || '')
     }
   } finally {
     replay.isApplyingReplayCommand = false
@@ -212,8 +266,9 @@ export function loadReplay(key) {
   replay.playbackStartedAt = getNowMs()
   replay.playbackCursor = 0
   replay.playbackCommands = Array.isArray(parsed.commands) ? parsed.commands : []
-  gameState.gamePaused = true
+  gameState.gamePaused = false
   gameState.replayMode = true
+  syncPauseButtonIcon()
   showNotification(`Loaded replay: ${parsed.label || 'Unnamed replay'}`)
 }
 
@@ -231,6 +286,11 @@ export function updateReplayList() {
   list.innerHTML = ''
 
   listReplays().forEach(replay => {
+    const rawReplay = JSON.parse(localStorage.getItem(replay.key) || '{}')
+    const startTs = Number.isFinite(rawReplay.startedAtWallClock) ? rawReplay.startedAtWallClock : replay.time
+    const durationMs = Number.isFinite(rawReplay.durationMs) ? rawReplay.durationMs : (
+      Array.isArray(rawReplay.commands) && rawReplay.commands.length > 0 ? rawReplay.commands[rawReplay.commands.length - 1].at : 0
+    )
     const li = document.createElement('li')
     li.style.display = 'flex'
     li.style.alignItems = 'center'
@@ -241,7 +301,7 @@ export function updateReplayList() {
     btn.type = 'button'
     btn.className = 'save-game-label-button'
     btn.style.flex = '1'
-    btn.innerHTML = `${replay.label}<br><small>${new Date(replay.time).toLocaleString()}</small>`
+    btn.innerHTML = `${replay.label}<br><small>${new Date(startTs).toLocaleString()} • ${formatDuration(durationMs)}</small>`
     btn.onclick = () => loadReplay(replay.key)
     li.appendChild(btn)
 
@@ -251,6 +311,9 @@ export function updateReplayList() {
 
 export function initReplaySystem() {
   ensureReplayState()
+  if (typeof window !== 'undefined') {
+    window.recordReplayCommand = recordReplayCommand
+  }
 
   const recordBtn = document.getElementById('recordBtn')
   if (recordBtn && recordBtn.dataset.boundReplay !== 'true') {
