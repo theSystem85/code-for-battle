@@ -43,6 +43,8 @@ import {
   updateVehicleButtonStates,
   updateBuildingButtonStates,
   MAP_SEED_STORAGE_KEY,
+  PLAYER_COUNT_STORAGE_KEY,
+  ORE_FIELD_COUNT_STORAGE_KEY,
   MAP_WIDTH_TILES_STORAGE_KEY,
   MAP_HEIGHT_TILES_STORAGE_KEY
 } from './game/gameOrchestrator.js'
@@ -152,6 +154,8 @@ export {
   regenerateMapForClient,
   getCurrentGame,
   MAP_SEED_STORAGE_KEY,
+  PLAYER_COUNT_STORAGE_KEY,
+  ORE_FIELD_COUNT_STORAGE_KEY,
   MAP_WIDTH_TILES_STORAGE_KEY,
   MAP_HEIGHT_TILES_STORAGE_KEY,
   updateTouchClass,

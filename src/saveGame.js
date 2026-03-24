@@ -29,6 +29,8 @@ import { productionQueue } from './productionQueue.js'
 import {
   getCurrentGame,
   MAP_SEED_STORAGE_KEY,
+  PLAYER_COUNT_STORAGE_KEY,
+  ORE_FIELD_COUNT_STORAGE_KEY,
   MAP_WIDTH_TILES_STORAGE_KEY,
   MAP_HEIGHT_TILES_STORAGE_KEY
 } from './main.js'
@@ -134,7 +136,7 @@ function setupLifecycleSaves() {
   }
 }
 
-function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed) {
+function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, playerCount) {
   const widthInput = document.getElementById('mapWidthTiles')
   if (widthInput) {
     widthInput.value = widthTiles
@@ -148,6 +150,16 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed) {
   const seedInput = document.getElementById('mapSeed')
   if (seedInput && typeof mapSeed === 'string') {
     seedInput.value = mapSeed
+  }
+
+  const oreFieldInput = document.getElementById('mapOreFieldCount')
+  if (oreFieldInput && Number.isFinite(oreFieldCount)) {
+    oreFieldInput.value = Math.max(0, Math.min(24, Math.floor(oreFieldCount)))
+  }
+
+  const playerCountInput = document.getElementById('playerCount')
+  if (playerCountInput && Number.isFinite(playerCount)) {
+    playerCountInput.value = Math.max(2, Math.min(4, Math.floor(playerCount)))
   }
 
   if (typeof localStorage === 'undefined') {
@@ -171,6 +183,22 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed) {
       localStorage.setItem(MAP_SEED_STORAGE_KEY, mapSeed)
     } catch (err) {
       window.logger.warn('Failed to persist loaded map seed to localStorage:', err)
+    }
+  }
+
+  if (Number.isFinite(oreFieldCount)) {
+    try {
+      localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, Math.max(0, Math.min(24, Math.floor(oreFieldCount))).toString())
+    } catch (err) {
+      window.logger.warn('Failed to persist loaded ore field count to localStorage:', err)
+    }
+  }
+
+  if (Number.isFinite(playerCount)) {
+    try {
+      localStorage.setItem(PLAYER_COUNT_STORAGE_KEY, Math.max(2, Math.min(4, Math.floor(playerCount))).toString())
+    } catch (err) {
+      window.logger.warn('Failed to persist loaded player count to localStorage:', err)
     }
   }
 }
@@ -216,6 +244,91 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
   }
 
   return grid
+}
+
+function createSerializableMapTile(tile = {}) {
+  return {
+    type: typeof tile.type === 'string' ? tile.type : 'land',
+    ore: Boolean(tile.ore),
+    seedCrystal: Boolean(tile.seedCrystal),
+    walkable: typeof tile.walkable === 'boolean' ? tile.walkable : undefined,
+    passable: typeof tile.passable === 'boolean' ? tile.passable : undefined
+  }
+}
+
+function createMapTileStateSnapshot(grid = []) {
+  if (!Array.isArray(grid)) {
+    return []
+  }
+
+  return grid.map(row => Array.isArray(row)
+    ? row.map(tile => createSerializableMapTile(tile))
+    : [])
+}
+
+function getSavedMapDimensions(loaded = {}) {
+  const fallbackWidth = Array.isArray(loaded?.mapTileState?.[0])
+    ? loaded.mapTileState[0].length
+    : (Array.isArray(loaded?.mapGridTypes?.[0]) ? loaded.mapGridTypes[0].length : DEFAULT_MAP_TILES_X)
+  const fallbackHeight = Array.isArray(loaded?.mapTileState)
+    ? loaded.mapTileState.length
+    : (Array.isArray(loaded?.mapGridTypes) ? loaded.mapGridTypes.length : DEFAULT_MAP_TILES_Y)
+
+  return {
+    width: Number.isFinite(loaded?.gameState?.mapTilesX) ? loaded.gameState.mapTilesX : fallbackWidth,
+    height: Number.isFinite(loaded?.gameState?.mapTilesY) ? loaded.gameState.mapTilesY : fallbackHeight
+  }
+}
+
+function restoreStaticMapTiles(loaded, targetMapGrid) {
+  if (Array.isArray(loaded?.mapTileState) && loaded.mapTileState.length > 0) {
+    for (let y = 0; y < targetMapGrid.length; y++) {
+      for (let x = 0; x < targetMapGrid[y].length; x++) {
+        const savedTile = loaded.mapTileState[y]?.[x]
+        const targetTile = targetMapGrid[y][x]
+        targetTile.type = typeof savedTile?.type === 'string' ? savedTile.type : 'land'
+        targetTile.ore = Boolean(savedTile?.ore)
+        targetTile.seedCrystal = Boolean(savedTile?.seedCrystal)
+
+        if (typeof savedTile?.walkable === 'boolean') {
+          targetTile.walkable = savedTile.walkable
+        } else {
+          delete targetTile.walkable
+        }
+
+        if (typeof savedTile?.passable === 'boolean') {
+          targetTile.passable = savedTile.passable
+        } else {
+          delete targetTile.passable
+        }
+      }
+    }
+    return
+  }
+
+  for (let y = 0; y < targetMapGrid.length; y++) {
+    for (let x = 0; x < targetMapGrid[y].length; x++) {
+      const tile = targetMapGrid[y][x]
+      tile.ore = false
+      tile.seedCrystal = false
+      delete tile.walkable
+      delete tile.passable
+
+      if (loaded?.mapGridTypes?.[y]?.[x] && loaded.mapGridTypes[y][x] !== 'building') {
+        tile.type = loaded.mapGridTypes[y][x]
+      } else if (typeof tile.type !== 'string') {
+        tile.type = 'land'
+      }
+    }
+  }
+
+  if (Array.isArray(loaded?.orePositions)) {
+    loaded.orePositions.forEach(pos => {
+      if (targetMapGrid[pos?.y]?.[pos?.x]) {
+        targetMapGrid[pos.y][pos.x].ore = true
+      }
+    })
+  }
 }
 
 // === Save/Load Game Logic ===
@@ -428,6 +541,7 @@ export function saveGame(label) {
 
   // Save the full mapGrid tile types for restoring building/wall/terrain occupancy
   const mapGridTypes = mapGrid.map(row => row.map(tile => tile.type))
+  const mapTileState = createMapTileStateSnapshot(mapGrid)
 
   // Save everything in a single object
   const saveData = {
@@ -452,6 +566,10 @@ export function saveGame(label) {
       enemyBuildingsDestroyed: gameState.enemyBuildingsDestroyed,
       totalMoneyEarned: gameState.totalMoneyEarned,
       scrollOffset: gameState.scrollOffset,
+      mapTilesX: gameState.mapTilesX,
+      mapTilesY: gameState.mapTilesY,
+      mapSeed: gameState.mapSeed,
+      mapOreFieldCount: gameState.mapOreFieldCount,
       speedMultiplier: gameState.speedMultiplier,
       useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
@@ -536,6 +654,7 @@ export function saveGame(label) {
     factoryRallyPoints, // Save factory rally points
     orePositions,
     mapGridTypes, // ADDED: save mapGrid tile types
+    mapTileState,
     targetedOreTiles: gameState.targetedOreTiles || {}, // Save targeted ore tiles for harvesters
     achievedMilestones: milestoneSystem.getAchievedMilestones(), // Save milestone progress
     productionQueueState: productionQueue.getSerializableState()
@@ -598,12 +717,7 @@ function loadGameFromSaveObject(saveObj, key) {
     // Ensure game is marked as started
     gameState.gameStarted = true
 
-    const savedWidthTiles = Number.isFinite(loaded?.gameState?.mapTilesX)
-      ? loaded.gameState.mapTilesX
-      : DEFAULT_MAP_TILES_X
-    const savedHeightTiles = Number.isFinite(loaded?.gameState?.mapTilesY)
-      ? loaded.gameState.mapTilesY
-      : DEFAULT_MAP_TILES_Y
+    const { width: savedWidthTiles, height: savedHeightTiles } = getSavedMapDimensions(loaded)
     const { width: appliedWidth, height: appliedHeight } = setMapDimensions(savedWidthTiles, savedHeightTiles)
     gameState.mapTilesX = appliedWidth
     gameState.mapTilesY = appliedHeight
@@ -614,7 +728,22 @@ function loadGameFromSaveObject(saveObj, key) {
     if (typeof savedSeed === 'string') {
       gameState.mapSeed = savedSeed
     }
-    syncLoadedMapSettings(appliedWidth, appliedHeight, savedSeed)
+
+    const savedOreFieldCount = Number.isFinite(loaded?.gameState?.mapOreFieldCount)
+      ? Math.max(0, Math.min(24, Math.floor(loaded.gameState.mapOreFieldCount)))
+      : (Number.isFinite(gameState.mapOreFieldCount)
+        ? Math.max(0, Math.min(24, Math.floor(gameState.mapOreFieldCount)))
+        : 8)
+    gameState.mapOreFieldCount = savedOreFieldCount
+
+    const savedPlayerCount = Number.isFinite(loaded?.gameState?.playerCount)
+      ? Math.max(2, Math.min(4, Math.floor(loaded.gameState.playerCount)))
+      : (Number.isFinite(gameState.playerCount)
+        ? Math.max(2, Math.min(4, Math.floor(gameState.playerCount)))
+        : 2)
+    gameState.playerCount = savedPlayerCount
+
+    syncLoadedMapSettings(appliedWidth, appliedHeight, savedSeed, savedOreFieldCount, savedPlayerCount)
 
     const pendingFactoryBudgets = loaded.aiFactoryBudgets || null
     const legacyEnemyMoney = loaded.enemyMoney
@@ -1197,36 +1326,6 @@ function loadGameFromSaveObject(saveObj, key) {
         gameState.occupancyMap[y][x] = 0
       }
     }
-    // Restore mapGrid tile types (excluding 'building' to avoid black spots)
-    if (loaded.mapGridTypes) {
-      for (let y = 0; y < mapGrid.length; y++) {
-        for (let x = 0; x < mapGrid[y].length; x++) {
-          if (loaded.mapGridTypes[y] && loaded.mapGridTypes[y][x]) {
-            // Don't restore 'building' tile type - let building placement handle this
-            if (loaded.mapGridTypes[y][x] !== 'building') {
-              mapGrid[y][x].type = loaded.mapGridTypes[y][x]
-            }
-          }
-        }
-      }
-    } else {
-      // Fallback: clear ore overlays
-      for (let y = 0; y < mapGrid.length; y++) {
-        for (let x = 0; x < mapGrid[y].length; x++) {
-          mapGrid[y][x].ore = false
-        }
-      }
-    }
-
-    // Restore ore overlays from saved positions
-    if (loaded.orePositions) {
-      loaded.orePositions.forEach(pos => {
-        if (mapGrid[pos.y] && mapGrid[pos.y][pos.x]) {
-          mapGrid[pos.y][pos.x].ore = true
-        }
-      })
-    }
-
     // Clear stale building references before re-placing buildings from the save
     for (let y = 0; y < mapGrid.length; y++) {
       if (!mapGrid[y]) continue
@@ -1241,11 +1340,13 @@ function loadGameFromSaveObject(saveObj, key) {
         if (tile && tile.airstripStreet) {
           delete tile.airstripStreet
         }
-        if (tile && tile.noBuild) {
-          delete tile.noBuild
+        if (tile) {
+          tile.noBuild = 0
         }
       }
     }
+
+    restoreStaticMapTiles(loaded, mapGrid)
 
     // Re-place all buildings through canonical placement logic so occupancy and passability
     // are restored exactly like a freshly built structure.

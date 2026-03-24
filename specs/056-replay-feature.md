@@ -17,6 +17,7 @@ Implement deterministic replay capture/playback for player sessions.
 - Playback rehydrates baseline state, then executes commands against simulation time.
 
 ## Follow-up refinements (2026-03-24)
+- Replay/save baselines now persist full map settings and static tile resource state, and replay loading restores that canonical map snapshot before rebuilding structures so imported or reloaded replays do not inherit seed/dimension/ore-layout drift from the current map settings.
 - Save/Load sidebar import now accepts exported replay JSON through the shared import button, refreshes the replay browser, and auto-loads a single imported replay.
 - Replay list rows display the replay start date/time and total replay duration on the subtitle line.
 - Loading a replay auto-starts playback and synchronizes the action-bar play/pause icon state.

@@ -89,6 +89,8 @@ vi.mock('../../src/main.js', () => ({
     centerOnPlayerFactory: vi.fn()
   })),
   MAP_SEED_STORAGE_KEY: 'rts-map-seed',
+  PLAYER_COUNT_STORAGE_KEY: 'rts-player-count',
+  ORE_FIELD_COUNT_STORAGE_KEY: 'rts-ore-field-count',
   MAP_WIDTH_TILES_STORAGE_KEY: 'rts-map-width-tiles',
   MAP_HEIGHT_TILES_STORAGE_KEY: 'rts-map-height-tiles'
 }))
@@ -170,7 +172,9 @@ vi.mock('../../src/buildings.js', () => ({
   buildingData: {
     constructionYard: { health: 1000 },
     vehicleFactory: { health: 800 }
-  }
+  },
+  placeBuilding: vi.fn(),
+  updatePowerSupply: vi.fn()
 }))
 
 vi.mock('../../src/ui/notifications.js', () => ({
@@ -361,6 +365,38 @@ describe('saveGame.js', () => {
       expect(state.gameState.gameTime).toBe(120)
     })
 
+    it('should save map settings and static tile state needed for replay consistency', async() => {
+      const { gameState } = await import('../../src/gameState.js')
+      const { mapGrid } = await import('../../src/main.js')
+
+      gameState.mapTilesX = 84
+      gameState.mapTilesY = 72
+      gameState.mapSeed = 'replay-seed-9'
+      gameState.mapOreFieldCount = 6
+
+      mapGrid[1][2].type = 'water'
+      mapGrid[1][2].ore = true
+      mapGrid[1][2].seedCrystal = true
+
+      saveGameModule.saveGame('MapStateTest')
+
+      const saved = localStorage.getItem('rts_save_MapStateTest')
+      const parsed = JSON.parse(saved)
+      const state = JSON.parse(parsed.state)
+
+      expect(state.gameState.mapTilesX).toBe(84)
+      expect(state.gameState.mapTilesY).toBe(72)
+      expect(state.gameState.mapSeed).toBe('replay-seed-9')
+      expect(state.gameState.mapOreFieldCount).toBe(6)
+      expect(state.mapTileState[1][2]).toEqual({
+        type: 'water',
+        ore: true,
+        seedCrystal: true,
+        walkable: undefined,
+        passable: undefined
+      })
+    })
+
     it('should save units array', async() => {
       const { units } = await import('../../src/main.js')
       units.push({
@@ -412,6 +448,9 @@ describe('saveGame.js', () => {
 
     it('should save ore positions from mapGrid', async() => {
       const { mapGrid } = await import('../../src/main.js')
+      mapGrid.forEach(row => row.forEach(tile => {
+        tile.ore = false
+      }))
       mapGrid[2][3].ore = true
       mapGrid[5][7].ore = true
 
@@ -513,6 +552,118 @@ describe('saveGame.js', () => {
       saveGameModule.loadGame('rts_save_SetTest')
 
       expect(gameState.defeatedPlayers instanceof Set).toBe(true)
+    })
+
+    it('should restore saved map settings and static ore/seed tile state when loading', async() => {
+      const { gameState } = await import('../../src/gameState.js')
+      const { mapGrid } = await import('../../src/main.js')
+      const { setMapDimensions } = await import('../../src/config.js')
+
+      setMapDimensions.mockReturnValueOnce({ width: 64, height: 48 })
+
+      const widthInput = document.createElement('input')
+      widthInput.id = 'mapWidthTiles'
+      document.body.appendChild(widthInput)
+
+      const heightInput = document.createElement('input')
+      heightInput.id = 'mapHeightTiles'
+      document.body.appendChild(heightInput)
+
+      const seedInput = document.createElement('input')
+      seedInput.id = 'mapSeed'
+      document.body.appendChild(seedInput)
+
+      const oreFieldInput = document.createElement('input')
+      oreFieldInput.id = 'mapOreFieldCount'
+      document.body.appendChild(oreFieldInput)
+
+      const playerCountInput = document.createElement('input')
+      playerCountInput.id = 'playerCount'
+      document.body.appendChild(playerCountInput)
+
+      mapGrid[4][4].type = 'land'
+      mapGrid[4][4].ore = false
+      mapGrid[4][4].seedCrystal = false
+
+      const saveData = {
+        gameState: {
+          money: 5000,
+          gameStarted: true,
+          playerCount: 3,
+          mapTilesX: 64,
+          mapTilesY: 48,
+          mapSeed: 'loaded-seed',
+          mapOreFieldCount: 5
+        },
+        units: [],
+        buildings: [],
+        mapTileState: Array.from({ length: 10 }, (_, y) =>
+          Array.from({ length: 10 }, (_, x) => ({
+            type: x === 4 && y === 4 ? 'water' : 'land',
+            ore: x === 4 && y === 4,
+            seedCrystal: x === 4 && y === 4
+          }))
+        ),
+        orePositions: [],
+        targetedOreTiles: {}
+      }
+      localStorage.setItem('rts_save_MapLoadTest', JSON.stringify({
+        label: 'MapLoadTest',
+        time: Date.now(),
+        state: JSON.stringify(saveData)
+      }))
+
+      saveGameModule.loadGame('rts_save_MapLoadTest')
+
+      expect(setMapDimensions).toHaveBeenCalledWith(64, 48)
+      expect(gameState.mapTilesX).toBe(64)
+      expect(gameState.mapTilesY).toBe(48)
+      expect(gameState.mapSeed).toBe('loaded-seed')
+      expect(gameState.mapOreFieldCount).toBe(5)
+      expect(gameState.playerCount).toBe(3)
+      expect(mapGrid[4][4].type).toBe('water')
+      expect(mapGrid[4][4].ore).toBe(true)
+      expect(mapGrid[4][4].seedCrystal).toBe(true)
+      expect(widthInput.value).toBe('64')
+      expect(heightInput.value).toBe('48')
+      expect(seedInput.value).toBe('loaded-seed')
+      expect(oreFieldInput.value).toBe('5')
+      expect(playerCountInput.value).toBe('3')
+      expect(localStorage.getItem('rts-map-seed')).toBe('loaded-seed')
+      expect(localStorage.getItem('rts-ore-field-count')).toBe('5')
+      expect(localStorage.getItem('rts-player-count')).toBe('3')
+
+      widthInput.remove()
+      heightInput.remove()
+      seedInput.remove()
+      oreFieldInput.remove()
+      playerCountInput.remove()
+    })
+
+    it('should derive map dimensions from legacy saved tile grids when explicit settings are missing', async() => {
+      const { setMapDimensions } = await import('../../src/config.js')
+
+      setMapDimensions.mockReturnValueOnce({ width: 14, height: 12 })
+
+      const saveData = {
+        gameState: {
+          money: 5000,
+          gameStarted: true
+        },
+        units: [],
+        buildings: [],
+        mapGridTypes: Array.from({ length: 12 }, () => Array.from({ length: 14 }, () => 'land')),
+        orePositions: []
+      }
+      localStorage.setItem('rts_save_LegacyMapDims', JSON.stringify({
+        label: 'LegacyMapDims',
+        time: Date.now(),
+        state: JSON.stringify(saveData)
+      }))
+
+      saveGameModule.loadGame('rts_save_LegacyMapDims')
+
+      expect(setMapDimensions).toHaveBeenCalledWith(14, 12)
     })
   })
 

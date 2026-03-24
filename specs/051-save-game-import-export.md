@@ -20,6 +20,7 @@ Enable players to share save games by exporting local saves as JSON files and im
 14. Multi-file import imports all selected save/replay files and does not auto-load any entry.
 15. The import button tooltip reads "Import save game or replay".
 16. Export filename order is timestamp first, then save label.
+17. Save-game exports and replay baselines must include the full loaded map settings and static resource-tile state so later import/load cannot inherit ore layout or map configuration from another session.
 
 ## Validation
 - E2E covers create save -> export -> delete -> import -> load from label behavior.
