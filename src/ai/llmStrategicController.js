@@ -3,6 +3,7 @@ import { applyGameTickOutput } from '../ai-api/applier.js'
 import { getLlmSettings, updateLlmSettings, getProviderSettings } from './llmSettings.js'
 import { fetchCostMap, getModelCostInfo, requestLlmCompletion, QuotaExceededError, AuthenticationError, ApiParameterError } from './llmProviders.js'
 import { recordLlmUsage } from './llmUsage.js'
+import { recordReplayCommand } from '../replaySystem.js'
 import { LLM_REQUEST_BUDGETS, estimateRequestPromptTokens, shouldResetResponseChain, buildCarryForwardMemory, trimRollingSummary } from './llmRequestBudget.js'
 import { buildCompactStrategicInput } from './llmStrategicDigest.js'
 import { buildCompactCommentaryInput, hasInterestingCommentaryEvents } from './llmCommentaryDigest.js'
@@ -1129,6 +1130,13 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
     }
     if (result.accepted.length > 0) {
       window.logger.info('[LLM] Accepted actions:', result.accepted.map(a => `${a.type}:${a.actionId}`).join(', '))
+      result.accepted.forEach(action => {
+        const sourceAction = prioritizedOutput?.actions?.find(candidate => candidate.actionId === action.actionId)
+        if (sourceAction) {
+          const { actionId: _actionId, ...command } = sourceAction
+          recordReplayCommand({ ...command, owner: playerId }, { source: 'llm', playerId })
+        }
+      })
     }
 
     const acceptedCommands = result.accepted.filter(action => action.type === 'unit_command')

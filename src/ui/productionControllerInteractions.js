@@ -6,6 +6,7 @@ import {
   getSafeAreaInset,
   getMobileActionBarWidth
 } from '../utils/layoutMetrics.js'
+import { isReplayModeActive } from '../replaySystem.js'
 
 const MOBILE_EDGE_SCROLL_THRESHOLD = 20
 const MOBILE_EDGE_SCROLL_SPEED_PER_MS = 0.14
@@ -21,7 +22,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
     if (event.pointerType !== 'touch') {
       return
     }
-    if (gameState.gamePaused || button.classList.contains('disabled')) {
+    if (isReplayModeActive() || gameState.gamePaused || button.classList.contains('disabled')) {
       return
     }
 

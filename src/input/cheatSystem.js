@@ -347,6 +347,12 @@ export class CheatSystem {
 
   processCheatCode(code) {
     const normalizedCode = code.toLowerCase().trim()
+    if (normalizedCode && !gameState.replay?.isApplyingReplayCommand) {
+      window.recordReplayCommand?.({
+        type: 'cheat_code',
+        code: normalizedCode
+      }, { source: 'human-cheat' })
+    }
 
     const mineFieldArgs = this.parseMineFieldCommand(normalizedCode)
     if (mineFieldArgs) {

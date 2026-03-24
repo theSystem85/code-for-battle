@@ -1,5 +1,6 @@
 import { gameState } from '../gameState.js'
 import { suspendRemoteControlAutoFocus } from '../game/remoteControl.js'
+import { isReplayModeActive } from '../replaySystem.js'
 import {
   createSyntheticMouseEvent,
   createSyntheticMouseEventFromCoords,
@@ -20,6 +21,21 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
     }
   }
 
+  const startRightPanFromClient = (clientX, clientY, sourceEvent = null) => {
+    const rect = gameCanvas.getBoundingClientRect()
+    const synthetic = sourceEvent
+      ? createSyntheticMouseEvent(sourceEvent, gameCanvas, 2)
+      : createSyntheticMouseEventFromCoords(gameCanvas, clientX, clientY, 2)
+
+    handler.handleRightMouseDown(
+      synthetic,
+      clientX - rect.left + gameState.scrollOffset.x,
+      clientY - rect.top + gameState.scrollOffset.y,
+      gameCanvas,
+      cursorManager
+    )
+  }
+
   const startLongPress = (touchState) => {
     if (touchState.longPressTimer) {
       clearTimeout(touchState.longPressTimer)
@@ -28,13 +44,11 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
       touchState.longPressTimer = null
       touchState.longPressFired = true
       touchState.rightActive = true
-      let synthetic
-      if (touchState.lastEvent) {
-        synthetic = createSyntheticMouseEvent(touchState.lastEvent, gameCanvas, 2)
-      } else {
-        synthetic = createSyntheticMouseEventFromCoords(gameCanvas, touchState.startX, touchState.startY, 2)
-      }
-      handler.handleRightMouseDown(synthetic, gameCanvas, cursorManager)
+      startRightPanFromClient(
+        touchState.lastEvent?.clientX ?? touchState.startX,
+        touchState.lastEvent?.clientY ?? touchState.startY,
+        touchState.lastEvent || null
+      )
     }, handler.longPressDuration)
   }
 
@@ -68,8 +82,7 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
     handler.wasDragging = false
     handler.attackGroupHandler.isAttackGroupSelecting = false
     activePointers.forEach(cancelLongPress)
-    const synthetic = createSyntheticMouseEventFromCoords(gameCanvas, center.x, center.y, 2)
-    handler.handleRightMouseDown(synthetic, gameCanvas, cursorManager)
+    startRightPanFromClient(center.x, center.y)
   }
 
   const updateTwoFingerPan = () => {
@@ -87,7 +100,9 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
   const endTwoFingerPan = (event) => {
     if (!handler.twoFingerPan) return
     const synthetic = createSyntheticMouseEvent(event, gameCanvas, 2)
-    handler.handleRightMouseUp(synthetic, units, factories, selectedUnits, selectionManager, cursorManager)
+    handler.handleRightMouseUp(synthetic, units, factories, selectedUnits, selectionManager, cursorManager, {
+      preserveSelection: isReplayModeActive()
+    })
     const endedTouch = activePointers.get(event.pointerId)
     if (endedTouch) {
       endedTouch.skipTapAfterPan = true
@@ -129,7 +144,9 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
       skipTapAfterPan: false
     }
     activePointers.set(event.pointerId, touchState)
-    startLongPress(touchState)
+    if (!isReplayModeActive()) {
+      startLongPress(touchState)
+    }
     if (activePointers.size >= 2) {
       beginTwoFingerPan()
     }
@@ -211,7 +228,9 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
       endTwoFingerPan(event)
     } else if (touchState.longPressFired) {
       const synthetic = createSyntheticMouseEvent(event, gameCanvas, 2)
-      handler.handleRightMouseUp(synthetic, units, factories, selectedUnits, selectionManager, cursorManager)
+      handler.handleRightMouseUp(synthetic, units, factories, selectedUnits, selectionManager, cursorManager, {
+        preserveSelection: isReplayModeActive()
+      })
     } else if (!touchState.skipTapAfterPan) {
       const { worldX, worldY } = getWorldPosition(event)
       const synthetic = createSyntheticMouseEvent(event, gameCanvas, 0)

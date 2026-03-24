@@ -66,14 +66,14 @@ export function handleRightDragScrolling(handler, e, mapGrid, gameCanvas) {
   }
 }
 
-export function handleRightMouseUp(handler, e, units, factories, selectedUnits, selectionManager, cursorManager) {
+export function handleRightMouseUp(handler, e, units, factories, selectedUnits, selectionManager, cursorManager, options = {}) {
   gameState.isRightDragging = false
 
   if (handler.requestRenderFrame) {
     handler.requestRenderFrame()
   }
 
-  if (!handler.rightWasDragging) {
+  if (!handler.rightWasDragging && !options.preserveSelection) {
     units.forEach(u => { if (selectionManager.isSelectableUnit(u)) u.selected = false })
     factories.forEach(f => { f.selected = false })
     if (gameState.buildings) {

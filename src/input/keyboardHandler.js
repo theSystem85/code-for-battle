@@ -22,6 +22,18 @@ import {
 import { notifyBenchmarkManualCameraControl } from '../benchmark/benchmarkTracker.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
+
+function recordHumanUnitCommand(unitIds, command) {
+  const unitRefs = createReplayUnitReferences(unitIds)
+  recordReplayCommand({
+    type: 'unit_command',
+    owner: gameState.humanPlayer,
+    unitIds,
+    ...(unitRefs.length > 0 ? { unitRefs } : {}),
+    ...command
+  }, { source: 'human' })
+}
 
 export class KeyboardHandler {
   constructor() {
@@ -102,7 +114,7 @@ export class KeyboardHandler {
 
       // Block game commands in spectator mode, when locally defeated, or when host has paused
       // (allow view-only commands like grid toggle, FPS toggle, camera movement)
-      const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote
+      const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote || isReplayInteractionLocked()
 
       // ESC key to cancel attack group mode
       if (keybindingManager.matchesKeyboardAction(e, 'escape', kbContext)) {
@@ -184,6 +196,10 @@ export class KeyboardHandler {
         const queue = e.altKey
         if (this.unitCommands) {
           this.unitCommands.handleWorkshopRepairHotkey(selectedUnits, mapGrid, queue, false)
+          recordHumanUnitCommand(selectedUnits.map(unit => unit.id), {
+            command: 'workshop_hotkey',
+            queue
+          })
         }
         if (queue && this.markWaypointsAdded) this.markWaypointsAdded()
       }
@@ -191,6 +207,9 @@ export class KeyboardHandler {
       else if (keybindingManager.matchesKeyboardAction(e, 'dodge', kbContext)) {
         e.preventDefault()
         this.handleDodgeCommand(selectedUnits, units, mapGrid)
+        recordHumanUnitCommand(selectedUnits.map(unit => unit.id), {
+          command: 'dodge'
+        })
       }
       // H key to focus on factory
       else if (keybindingManager.matchesKeyboardAction(e, 'focus-factory', kbContext)) {
@@ -1195,6 +1214,9 @@ export class KeyboardHandler {
     }
 
     if (stoppedCount > 0) {
+      recordHumanUnitCommand(this.selectedUnits.map(unit => unit.id), {
+        command: 'stop_attack'
+      })
       this.showNotification(`${stoppedCount} unit${stoppedCount > 1 ? 's' : ''} stopped attacking`, 2000)
     } else {
       this.showNotification('Selected units were not attacking', 2000)

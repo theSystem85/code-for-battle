@@ -5,6 +5,7 @@ import { isEnemyTo } from './enemyUtils.js'
 import { buildingData } from '../buildings.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
+import { createReplayEntityReference, createReplayUnitReference, recordReplayCommand } from '../replaySystem.js'
 
 function isAirborneAirUnit(target) {
   if (!target) return false
@@ -40,13 +41,132 @@ const AIR_DEFENSE_RADIUS = TANK_FIRE_RANGE * TILE_SIZE * 1.2
 const F22_ANTI_AIR_BUFFER = TILE_SIZE * 0.75
 const F22_APPROACH_NODE_LIMIT = 5000
 
-function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, _targetedOreTiles, bullets) {
+function getAiReplayTargetPos(moveTarget, mapGrid) {
+  if (!moveTarget || !Number.isFinite(moveTarget.x) || !Number.isFinite(moveTarget.y)) {
+    return null
+  }
+
+  const mapWidth = Array.isArray(mapGrid?.[0]) ? mapGrid[0].length : 0
+  const mapHeight = Array.isArray(mapGrid) ? mapGrid.length : 0
+  const isTileTarget =
+    Number.isInteger(moveTarget.x) &&
+    Number.isInteger(moveTarget.y) &&
+    moveTarget.x >= 0 &&
+    moveTarget.y >= 0 &&
+    moveTarget.x < mapWidth &&
+    moveTarget.y < mapHeight
+
+  if (isTileTarget) {
+    return {
+      space: 'tile',
+      x: moveTarget.x,
+      y: moveTarget.y
+    }
+  }
+
+  return {
+    space: 'world',
+    x: moveTarget.x,
+    y: moveTarget.y
+  }
+}
+
+function buildAiReplayUnitCommand(unit, mapGrid) {
+  if (!unit?.owner || unit.isBuilding) {
+    return null
+  }
+
+  const unitRef = createReplayUnitReference(unit)
+  if (!unitRef) {
+    return null
+  }
+
+  if (unit.target) {
+    const targetRef = createReplayEntityReference(unit.target)
+    if (targetRef) {
+      return {
+        type: 'unit_command',
+        owner: unit.owner,
+        unitIds: [unit.id],
+        unitRefs: [unitRef],
+        command: 'attack',
+        targetId: unit.target.id || null,
+        targetRef
+      }
+    }
+  }
+
+  const targetPos = getAiReplayTargetPos(unit.moveTarget, mapGrid)
+  if (targetPos) {
+    return {
+      type: 'unit_command',
+      owner: unit.owner,
+      unitIds: [unit.id],
+      unitRefs: [unitRef],
+      command: 'move',
+      targetPos
+    }
+  }
+
+  return null
+}
+
+function buildAiReplayCommandSignature(command) {
+  if (!command) {
+    return ''
+  }
+
+  return JSON.stringify({
+    type: command.type,
+    owner: command.owner,
+    unitIds: command.unitIds,
+    command: command.command,
+    targetId: command.targetId || null,
+    targetRef: command.targetRef || null,
+    targetPos: command.targetPos || null
+  })
+}
+
+function recordAiUnitReplayCommand(unit, mapGrid) {
+  if (!unit?.owner) {
+    return
+  }
+
+  const command = buildAiReplayUnitCommand(unit, mapGrid)
+  const nextSignature = buildAiReplayCommandSignature(command)
+  const previousSignature = unit.replayLastRecordedCommandSignature || ''
+
+  if (!command) {
+    if (previousSignature) {
+      const unitRef = createReplayUnitReference(unit)
+      if (unitRef) {
+        recordReplayCommand({
+          type: 'unit_command',
+          owner: unit.owner,
+          unitIds: [unit.id],
+          unitRefs: [unitRef],
+          command: 'stop_attack'
+        }, { source: 'classic-ai', playerId: unit.owner })
+      }
+    }
+    unit.replayLastRecordedCommandSignature = ''
+    return
+  }
+
+  if (nextSignature === previousSignature) {
+    return
+  }
+
+  recordReplayCommand(command, { source: 'classic-ai', playerId: unit.owner })
+  unit.replayLastRecordedCommandSignature = nextSignature
+}
+
+function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, _targetedOreTiles, bullets) {
   // Reset being attacked flag if enough time has passed since last damage
   if (unit.isBeingAttacked && unit.lastDamageTime && (now - unit.lastDamageTime > 5000)) {
     unit.isBeingAttacked = false
     unit.lastAttacker = null
   }
-
   if (unit.target && !canUnitHitTarget(unit, unit.target)) {
     unit.target = null
     unit.targetId = null
@@ -1818,6 +1938,11 @@ function findApacheStrikeTarget(units, gameState, seeker) {
   }, units, gameState) && isTargetOutsideAntiAirThreat(b, antiAirThreatSources))
 
   return fallback || null
+}
+
+function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, targetedOreTiles, bullets) {
+  updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, targetedOreTiles, bullets)
+  recordAiUnitReplayCommand(unit, mapGrid)
 }
 
 

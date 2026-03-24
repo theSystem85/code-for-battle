@@ -4,6 +4,7 @@ import { handlePointerDown as handleMapEditPointerDown, handlePointerMove as han
 import { notifyMapEditorWheel } from '../ui/mapEditorControls.js'
 import { hideLlmQueueTooltip } from '../ui/llmQueueTooltip.js'
 import { keybindingManager, KEYBINDING_CONTEXTS } from './keybindings.js'
+import { isReplayInteractionLocked } from '../replaySystem.js'
 
 export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid, selectedUnits, selectionManager, unitCommands, cursorManager) {
   handler.gameFactories = factories
@@ -28,6 +29,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
     if (gameState.paused) return
 
     const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote
+    const replayLocked = isReplayInteractionLocked()
 
     const pointerContext = gameState.mapEditMode ? KEYBINDING_CONTEXTS.MAP_EDIT_ON : KEYBINDING_CONTEXTS.MAP_EDIT_OFF
     const commandBinding = keybindingManager.matchesPointerAction('mouse', e, 'command', pointerContext) ||
@@ -38,7 +40,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
       keybindingManager.matchesPointerAction('mouse', e, 'force-attack', pointerContext) ||
       keybindingManager.matchesPointerAction('mouse', e, 'guard', pointerContext)
 
-    if (commandBinding || e.button === 2) {
+    if (e.button === 2 || (commandBinding && !replayLocked)) {
       handler.handleRightMouseDown(e, worldX, worldY, gameCanvas, cursorManager)
     } else if ((selectionBinding || e.button === 0) && !isSpectatorOrDefeated) {
       handler.handleLeftMouseDown(e, worldX, worldY, gameCanvas, selectedUnits, cursorManager)
@@ -78,6 +80,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
     const rect = gameCanvas.getBoundingClientRect()
     const worldX = e.clientX - rect.left + gameState.scrollOffset.x
     const worldY = e.clientY - rect.top + gameState.scrollOffset.y
+    const replayLocked = isReplayInteractionLocked()
 
     if (gameState.mapEditMode) {
       const tileX = Math.floor(worldX / TILE_SIZE)
@@ -92,9 +95,10 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
     if (gameState.paused) return
 
     const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote
-
     if (e.button === 2) {
-      handler.handleRightMouseUp(e, units, factories, selectedUnits, selectionManager, cursorManager)
+      handler.handleRightMouseUp(e, units, factories, selectedUnits, selectionManager, cursorManager, {
+        preserveSelection: replayLocked
+      })
     } else if (e.button === 0 && !isSpectatorOrDefeated) {
       handler.handleLeftMouseUp(e, units, factories, mapGrid, selectedUnits, selectionManager, unitCommands, cursorManager)
     }
@@ -138,13 +142,15 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
 
   document.addEventListener('mouseup', (e) => {
     if (e.button === 2 && gameState.isRightDragging) {
+      const replayLocked = isReplayInteractionLocked()
       handler.handleRightMouseUp(
         e,
         units,
         factories,
         selectedUnits,
         selectionManager,
-        cursorManager
+        cursorManager,
+        { preserveSelection: replayLocked }
       )
     }
   })

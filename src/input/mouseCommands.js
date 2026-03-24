@@ -7,9 +7,21 @@ import { findEnemyTarget } from './mouseHelpers.js'
 import { isForceAttackModifierActive } from '../utils/inputUtils.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
+import { createReplayEntityReference, createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
 const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
+
+function recordHumanUnitCommand(unitIds, command) {
+  const unitRefs = createReplayUnitReferences(unitIds)
+  recordReplayCommand({
+    type: 'unit_command',
+    owner: gameState.humanPlayer,
+    unitIds,
+    ...(unitRefs.length > 0 ? { unitRefs } : {}),
+    ...command
+  }, { source: 'human' })
+}
 
 
 function findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManager, gameFactories = []) {
@@ -67,6 +79,9 @@ function queueDefenseBuildingTarget(building, target) {
 export function handleForceAttackCommand(handler, worldX, worldY, units, selectedUnits, unitCommands, mapGrid, selectionManager) {
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
   if (commandableUnits.length === 0) {
+    return false
+  }
+  if (isReplayInteractionLocked()) {
     return false
   }
   selectionManager.clearWreckSelection()
@@ -144,6 +159,11 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
           unit.forcedAttack = true
         })
         unitCommands.handleAttackCommand(commandableUnits, forceAttackTarget, mapGrid, true)
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'attack',
+          targetRef: createReplayEntityReference(forceAttackTarget),
+          forceAttack: true
+        })
         return true
       }
     }
@@ -154,6 +174,9 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
 export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnits, unitCommands, selectionManager, _mapGrid) {
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
   if (commandableUnits.length === 0) {
+    return false
+  }
+  if (isReplayInteractionLocked()) {
     return false
   }
   let guardTarget = null
@@ -174,6 +197,10 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
       u.target = null
       u.moveTarget = null
     })
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'guard',
+      targetRef: createReplayEntityReference(guardTarget)
+    })
     playSound('confirmed', 0.5)
     return true
   }
@@ -184,6 +211,9 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
   const selectionManager = handler.selectionManager
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u) && !u.isBuilding)
   if (commandableUnits.length === 0 || commandableUnits[0].type === 'factory') {
+    return
+  }
+  if (isReplayInteractionLocked()) {
     return
   }
 
@@ -209,6 +239,10 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
           tileX >= building.x && tileX < building.x + building.width &&
           tileY >= building.y && tileY < building.y + building.height) {
         unitCommands.handleApacheHelipadCommand(commandableUnits, building, mapGrid)
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'apache_helipad',
+          targetRef: createReplayEntityReference(building)
+        })
         return
       }
     }
@@ -274,14 +308,34 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
 
   if (refineryTarget) {
     unitCommands.handleRefineryUnloadCommand(commandableUnits, refineryTarget, mapGrid)
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'refinery_unload',
+      targetRef: createReplayEntityReference(refineryTarget)
+    })
   } else if (workshopTarget) {
     unitCommands.handleRepairWorkshopCommand(commandableUnits, workshopTarget, mapGrid)
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'repair_workshop',
+      targetRef: createReplayEntityReference(workshopTarget)
+    })
   } else if (hospitalTarget) {
     unitCommands.handleAmbulanceRefillCommand(commandableUnits, hospitalTarget, mapGrid)
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'ambulance_refill',
+      targetRef: createReplayEntityReference(hospitalTarget)
+    })
   } else if (gasStationTarget) {
     unitCommands.handleGasStationRefillCommand(commandableUnits, gasStationTarget, mapGrid)
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'gas_refill',
+      targetRef: createReplayEntityReference(gasStationTarget)
+    })
   } else if (oreTarget) {
     unitCommands.handleHarvesterCommand(commandableUnits, oreTarget, mapGrid)
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'harvest_ore',
+      targetRef: { kind: 'ore', x: oreTarget.x, y: oreTarget.y }
+    })
   } else {
     const humanPlayer = gameState.humanPlayer || 'player1'
     const friendlyAirstrip = (gameState.buildings || []).find(building => {
@@ -324,6 +378,10 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
 
       if (friendlyAirstrip && (onlyF22Selected || onlySupplyUnitsSelected)) {
         unitCommands.handleMovementCommand(commandableUnits, worldX, worldY, mapGrid)
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'move',
+          targetPos: { space: 'world', x: worldX, y: worldY }
+        })
       }
       return
     }
@@ -336,9 +394,18 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
           if (!unit.commandQueue) unit.commandQueue = []
           unit.commandQueue.push({ type: 'attack', target })
         })
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'attack',
+          targetRef: createReplayEntityReference(target),
+          queueAppend: true
+        })
         markWaypointsAdded()
       } else {
         unitCommands.handleAttackCommand(commandableUnits, target, mapGrid, false)
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'attack',
+          targetRef: createReplayEntityReference(target)
+        })
       }
     } else {
       if (altPressed) {
@@ -346,15 +413,27 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
           if (!unit.commandQueue) unit.commandQueue = []
           unit.commandQueue.push({ type: 'move', x: worldX, y: worldY })
         })
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'move',
+          targetPos: { space: 'world', x: worldX, y: worldY },
+          queueAppend: true
+        })
         markWaypointsAdded()
       } else {
         unitCommands.handleMovementCommand(commandableUnits, worldX, worldY, mapGrid)
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'move',
+          targetPos: { space: 'world', x: worldX, y: worldY }
+        })
       }
     }
   }
 }
 
 export function handleServiceProviderClick(handler, provider, selectedUnits, unitCommands, mapGrid) {
+  if (isReplayInteractionLocked()) {
+    return false
+  }
   if (!unitCommands || !provider) {
     return false
   }
@@ -391,10 +470,31 @@ export function handleServiceProviderClick(handler, provider, selectedUnits, uni
         handled = true
       }
     })
+    if (handled) {
+      recordReplayCommand({
+        type: 'unit_command',
+        owner: gameState.humanPlayer,
+        unitIds: [provider.id],
+        command: 'service_provider_request',
+        providerRef: createReplayEntityReference(provider),
+        requesterRefs: requesters.map(createReplayEntityReference)
+      }, { source: 'human' })
+    }
     return handled
   }
 
-  return unitCommands.handleServiceProviderRequest(provider, requesters, mapGrid)
+  const handled = unitCommands.handleServiceProviderRequest(provider, requesters, mapGrid)
+  if (handled) {
+    recordReplayCommand({
+      type: 'unit_command',
+      owner: gameState.humanPlayer,
+      unitIds: [provider.id],
+      command: 'service_provider_request',
+      providerRef: createReplayEntityReference(provider),
+      requesterRefs: requesters.map(createReplayEntityReference)
+    }, { source: 'human' })
+  }
+  return handled
 }
 
 export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, e, units = [], factories = []) {
@@ -409,6 +509,10 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
 
   if (e.shiftKey) {
     initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'retreat',
+      targetPos: { space: 'world', x: worldX, y: worldY }
+    })
     return
   }
 

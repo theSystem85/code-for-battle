@@ -27,6 +27,33 @@ import {
   handleFallbackCommand
 } from './mouseCommands.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
+import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
+
+function recordHumanUnitCommand(unitIds, command) {
+  const unitRefs = createReplayUnitReferences(unitIds)
+  recordReplayCommand({
+    type: 'unit_command',
+    owner: gameState.humanPlayer,
+    unitIds,
+    ...(unitRefs.length > 0 ? { unitRefs } : {}),
+    ...command
+  }, { source: 'human' })
+}
+
+function recordHumanRallyPointCommand(building, rallyTileX, rallyTileY) {
+  const targetRef = createReplayEntityReference(building)
+  recordReplayCommand({
+    type: 'set_rally',
+    owner: gameState.humanPlayer,
+    buildingId: building?.id || null,
+    ...(targetRef ? { targetRef } : {}),
+    rallyPoint: {
+      space: 'tile',
+      x: rallyTileX,
+      y: rallyTileY
+    }
+  }, { source: 'human' })
+}
 
 export function processUtilityQueueSelection(handler, units, mapGrid, selectedUnits, selectionManager, unitCommands) {
   if (!unitCommands) {
@@ -525,6 +552,7 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
     }
 
     selectedFactory.rallyPoint = { x: rallyTileX, y: rallyTileY }
+    recordHumanRallyPointCommand(selectedFactory, rallyTileX, rallyTileY)
     playPositionalSound('movement', worldX, worldY, 0.5)
 
     selectedFactory.selected = false
@@ -560,6 +588,7 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
     }
 
     selectedBuilding.rallyPoint = { x: rallyTileX, y: rallyTileY }
+    recordHumanRallyPointCommand(selectedBuilding, rallyTileX, rallyTileY)
     playPositionalSound('movement', worldX, worldY, 0.5)
 
     if (selectedUnits.indexOf(selectedBuilding) === -1) {
@@ -741,6 +770,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
               tileX >= building.x && tileX < building.x + building.width &&
               tileY >= building.y && tileY < building.y + building.height) {
             unitCommands.handleRefineryUnloadCommand(commandableUnits, building, mapGrid)
+            recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+              command: 'refinery_unload',
+              targetRef: createReplayEntityReference(building)
+            })
             return
           }
         }
@@ -758,6 +791,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
             tileX >= building.x && tileX < building.x + building.width &&
             tileY >= building.y && tileY < building.y + building.height) {
           unitCommands.handleRepairWorkshopCommand(commandableUnits, building, mapGrid)
+          recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+            command: 'repair_workshop',
+            targetRef: createReplayEntityReference(building)
+          })
           return
         }
       }
@@ -771,6 +808,11 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
           const uY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
           if (uX === tileX && uY === tileY && unit.gas < unit.maxGas) {
             unitCommands.handleTankerRefuelCommand(commandableUnits, unit, mapGrid, { append: appendToUtilityQueue })
+            recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+              command: 'tanker_refuel',
+              targetRef: createReplayEntityReference(unit),
+              append: appendToUtilityQueue
+            })
             return
           }
         }
@@ -785,6 +827,11 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
           const uY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
           if (uX === tileX && uY === tileY && unit.ammunition < unit.maxAmmunition) {
             unitCommands.handleAmmunitionTruckResupplyCommand(commandableUnits, unit, mapGrid, { append: appendToUtilityQueue })
+            recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+              command: 'ammo_resupply',
+              targetRef: createReplayEntityReference(unit),
+              append: appendToUtilityQueue
+            })
             return
           }
         }
@@ -803,11 +850,21 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
           if (typeof building.maxAmmo === 'number' && building.ammo < building.maxAmmo) {
             unitCommands.handleAmmunitionTruckResupplyCommand(commandableUnits, building, mapGrid, { append: appendToUtilityQueue })
+            recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+              command: 'ammo_resupply',
+              targetRef: createReplayEntityReference(building),
+              append: appendToUtilityQueue
+            })
             return
           }
 
           if (building.type === 'ammunitionFactory') {
             unitCommands.handleAmmunitionTruckReloadCommand(commandableUnits, building, mapGrid, { append: appendToUtilityQueue })
+            recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+              command: 'ammo_reload',
+              targetRef: createReplayEntityReference(building),
+              append: appendToUtilityQueue
+            })
             return
           }
         }
@@ -827,6 +884,11 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
             const missingCrew = Object.entries(unit.crew).filter(([_, alive]) => !alive)
             if (missingCrew.length > 0) {
               unitCommands.handleAmbulanceHealCommand(commandableUnits, unit, mapGrid, { append: appendToUtilityQueue })
+              recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+                command: 'ambulance_heal',
+                targetRef: createReplayEntityReference(unit),
+                append: appendToUtilityQueue
+              })
               return
             }
           }
@@ -841,8 +903,18 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
       if (wreck) {
         if (gameState.shiftKeyDown || e.shiftKey) {
           unitCommands.handleRecoveryWreckRecycleCommand(commandableUnits, wreck, mapGrid, { append: appendToUtilityQueue })
+          recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+            command: 'recovery_wreck_recycle',
+            targetRef: createReplayEntityReference(wreck),
+            append: appendToUtilityQueue
+          })
         } else {
           unitCommands.handleRecoveryWreckTowCommand(commandableUnits, wreck, mapGrid, { append: appendToUtilityQueue })
+          recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+            command: 'recovery_wreck_tow',
+            targetRef: createReplayEntityReference(wreck),
+            append: appendToUtilityQueue
+          })
         }
         return
       }
@@ -856,6 +928,11 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
           if (unitTileX === tileX && unitTileY === tileY) {
             unitCommands.handleRecoveryTankRepairCommand(commandableUnits, unit, mapGrid, { append: appendToUtilityQueue })
+            recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+              command: 'recovery_tank_repair',
+              targetRef: createReplayEntityReference(unit),
+              append: appendToUtilityQueue
+            })
             return
           }
         }
@@ -872,6 +949,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
           if (unitTileX === tileX && unitTileY === tileY) {
             unitCommands.handleDamagedUnitToRecoveryTankCommand(commandableUnits, unit, mapGrid)
+            recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+              command: 'damaged_to_recovery',
+              targetRef: createReplayEntityReference(unit)
+            })
             return
           }
         }
@@ -887,6 +968,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
           if (unitTileX === tileX && unitTileY === tileY) {
             if (unit.crew && (!unit.crew.driver || !unit.crew.commander)) {
               unitCommands.handleRecoveryTowCommand(commandableUnits, unit)
+              recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+                command: 'recovery_tow',
+                targetRef: createReplayEntityReference(unit)
+              })
               return
             }
           }
@@ -904,6 +989,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
             tileX >= building.x && tileX < building.x + building.width &&
             tileY >= building.y && tileY < building.y + building.height) {
           unitCommands.handleAmbulanceRefillCommand(commandableUnits, building, mapGrid)
+          recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+            command: 'ambulance_refill',
+            targetRef: createReplayEntityReference(building)
+          })
           return
         }
       }
@@ -920,6 +1009,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
             tileX >= building.x && tileX < building.x + building.width &&
             tileY >= building.y && tileY < building.y + building.height) {
           unitCommands.handleGasStationRefillCommand(commandableUnits, building, mapGrid)
+          recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+            command: 'gas_refill',
+            targetRef: createReplayEntityReference(building)
+          })
           return
         }
       }
@@ -937,6 +1030,10 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
             tileX >= building.x && tileX < building.x + building.width &&
             tileY >= building.y && tileY < building.y + building.height) {
           unitCommands.handleApacheHelipadCommand(commandableUnits, building, mapGrid)
+          recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
+            command: 'apache_helipad',
+            targetRef: createReplayEntityReference(building)
+          })
           return
         }
       }
@@ -1033,13 +1130,26 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
     if (commandableUnits.length > 0) {
       if (e.shiftKey) {
         initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'retreat',
+          targetPos: { space: 'world', x: worldX, y: worldY }
+        })
       } else if (e.altKey || gameState.altKeyDown) {
         commandableUnits.forEach(unit => {
           if (!unit.commandQueue) unit.commandQueue = []
           unit.commandQueue.push({ type: 'attack', target: clickedUnit })
         })
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'attack',
+          targetRef: createReplayEntityReference(clickedUnit),
+          queueAppend: true
+        })
       } else {
         unitCommands.handleAttackCommand(commandableUnits, clickedUnit, mapGrid, false)
+        recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+          command: 'attack',
+          targetRef: createReplayEntityReference(clickedUnit)
+        })
       }
       return
     }

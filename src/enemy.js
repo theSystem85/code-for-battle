@@ -6,6 +6,7 @@ import { isHost } from './network/gameCommandSync.js'
 import { AI_UPDATE_FRAME_SKIP } from './config.js'
 import { updateLlmStrategicAI } from './ai/llmStrategicController.js'
 import { getSimulationTime } from './game/time.js'
+import { isReplayModeActive } from './replaySystem.js'
 export { spawnEnemyUnit } from './ai/enemySpawner.js'
 
 // Frame counter for AI update throttling
@@ -34,6 +35,10 @@ function isPartyAiControlled(partyId, gameState) {
 }
 
 export const updateEnemyAI = logPerformance(function updateEnemyAI(units, factories, bullets, mapGrid, gameState) {
+  if (isReplayModeActive()) {
+    return
+  }
+
   // AI only runs on the host - clients receive state via sync
   if (!isHost()) {
     return

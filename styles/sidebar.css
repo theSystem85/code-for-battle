@@ -1151,20 +1151,20 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   appearance: none;
   width: 16px;
   height: 16px;
-  background: #4f9cff;
+  background: #6efc4b;
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.2s;
 }
 
 .volume-slider::-webkit-slider-thumb:hover {
-  background: #6bb6ff;
+  background: #68cf6d;
 }
 
 .volume-slider::-moz-range-thumb {
   width: 16px;
   height: 16px;
-  background: #4f9cff;
+  background: #6efc4b;
   border-radius: 50%;
   cursor: pointer;
   border: none;
@@ -1172,14 +1172,39 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 }
 
 .volume-slider::-moz-range-thumb:hover {
-  background: #6bb6ff;
+  background: #68cf6d;
 }
 
-.volume-value {
-  color: #ccc;
+.slider-inline-value {
+  color: inherit;
   font-size: 12px;
-  min-width: 35px;
-  text-align: right;
+  font-weight: 600;
+}
+
+.slider-control-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.slider-control-label {
+  flex: 0 0 auto;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.slider-control-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.save-replay-list {
+  max-height: 120px;
+  overflow-y: auto;
+  margin: 8px 0 0 0;
+  list-style: none;
 }
 
 #saveGamesList {
@@ -1187,7 +1212,14 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   padding-right: 5px;
 }
 
-#saveGamesList > li {
+#saveGamesList,
+#replayList {
+  padding: 0;
+  padding-right: 5px;
+}
+
+#saveGamesList > li,
+#replayList > li {
   font-size: 12px;
 }
 
@@ -1199,8 +1231,67 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   text-align: left;
   padding: 0;
   cursor: pointer;
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .save-game-label-button:hover {
   text-decoration: underline;
+}
+
+.save-game-label-button small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+}
+
+.record-icon {
+  color: #f74a4a;
+  font-weight: 700;
+  font-size: 18px;
+}
+
+#recordBtn.recording-active {
+  box-shadow: 0 0 0 1px rgba(247, 74, 74, 0.8), 0 0 10px rgba(247, 74, 74, 0.7);
+  background: rgba(247, 74, 74, 0.18);
+}
+
+.save-replay-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#saveGamesPane.hidden,
+#replaysPane.hidden {
+  display: none;
+}
+
+#speedControl {
+  min-width: 0;
+}
+
+.speed-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  min-width: 0;
+}
+
+.speed-control-label {
+  flex: 0 0 auto;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.speed-control-slider {
+  flex: 1 1 180px;
+  min-width: 0;
+  margin-left: 0;
+}
+
+#recordBtn {
+  flex: 0 0 auto;
 }

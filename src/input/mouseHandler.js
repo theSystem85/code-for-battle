@@ -76,8 +76,8 @@ export class MouseHandler {
     handleRightDragScrolling(this, e, mapGrid, gameCanvas)
   }
 
-  handleRightMouseUp(e, units, factories, selectedUnits, selectionManager, cursorManager) {
-    handleRightMouseUp(this, e, units, factories, selectedUnits, selectionManager, cursorManager)
+  handleRightMouseUp(e, units, factories, selectedUnits, selectionManager, cursorManager, options = {}) {
+    handleRightMouseUp(this, e, units, factories, selectedUnits, selectionManager, cursorManager, options)
   }
 
   handleLeftMouseDown(e, worldX, worldY, gameCanvas, selectedUnits, cursorManager) {

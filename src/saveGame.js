@@ -549,38 +549,7 @@ export function saveGame(label) {
   localStorage.setItem('rts_save_' + saveObj.label, JSON.stringify(saveObj))
 }
 
-export function loadGame(key) {
-  let saveObj = null
-
-  if (key.startsWith(BUILTIN_SAVE_PREFIX)) {
-    const missionId = key.slice(BUILTIN_SAVE_PREFIX.length)
-    const mission = getBuiltinMissionById(missionId)
-    if (!mission) {
-      window.logger.warn('Built-in mission not found:', missionId)
-      return
-    }
-    saveObj = {
-      label: mission.label,
-      state: mission.state
-    }
-  } else {
-    if (typeof localStorage === 'undefined') {
-      window.logger.warn('localStorage is not available, unable to load save:', key)
-      return
-    }
-    const raw = localStorage.getItem(key)
-    if (!raw) {
-      window.logger.warn('Save game not found:', key)
-      return
-    }
-    try {
-      saveObj = JSON.parse(raw)
-    } catch (err) {
-      window.logger.warn('Failed to parse saved game metadata:', err)
-      return
-    }
-  }
-
+function loadGameFromSaveObject(saveObj, key) {
   if (saveObj && saveObj.state !== undefined) {
     let stateString
     if (typeof saveObj.state === 'string') {
@@ -838,6 +807,7 @@ export function loadGame(key) {
     enforceSmokeParticleCapacity(gameState)
 
     // Restore AI player budgets
+    gameState.replayUnitSpawnOrdinals = {}
     units.length = 0
     loaded.units.forEach(u => {
       // Rehydrate unit using createUnit logic
@@ -858,11 +828,22 @@ export function loadGame(key) {
       const hydrated = createUnit(factory, u.type, tileX, tileY)
       // Store the default maxHealth from createUnit before Object.assign overwrites it
       const defaultMaxHealth = hydrated.maxHealth
+      const defaultReplaySpawnOrdinal = hydrated.replaySpawnOrdinal
       // Copy over all saved properties (health, id, etc.)
       Object.assign(hydrated, u)
       // Ensure maxHealth is valid (fix for older save games that may not have saved maxHealth)
       if (!Number.isFinite(hydrated.maxHealth) || hydrated.maxHealth <= 0) {
         hydrated.maxHealth = defaultMaxHealth || hydrated.health || 100
+      }
+      if (!Number.isFinite(hydrated.replaySpawnOrdinal)) {
+        hydrated.replaySpawnOrdinal = defaultReplaySpawnOrdinal
+      }
+      if (Number.isFinite(hydrated.replaySpawnOrdinal)) {
+        const replayKey = `${hydrated.owner || u.owner || 'unknown'}::${hydrated.type || u.type || 'unknown'}`
+        gameState.replayUnitSpawnOrdinals[replayKey] = Math.max(
+          gameState.replayUnitSpawnOrdinals[replayKey] || 0,
+          hydrated.replaySpawnOrdinal
+        )
       }
       // Ensure tileX/tileY/x/y are consistent
       hydrated.tileX = tileX
@@ -1465,6 +1446,45 @@ export function loadGame(key) {
 
     showNotification('Game loaded: ' + (saveObj.label || key))
   }
+}
+
+export function loadGameFromState(state, label = 'Direct load') {
+  loadGameFromSaveObject({ label, state }, label)
+}
+
+export function loadGame(key) {
+  let saveObj = null
+
+  if (key.startsWith(BUILTIN_SAVE_PREFIX)) {
+    const missionId = key.slice(BUILTIN_SAVE_PREFIX.length)
+    const mission = getBuiltinMissionById(missionId)
+    if (!mission) {
+      window.logger.warn('Built-in mission not found:', missionId)
+      return
+    }
+    saveObj = {
+      label: mission.label,
+      state: mission.state
+    }
+  } else {
+    if (typeof localStorage === 'undefined') {
+      window.logger.warn('localStorage is not available, unable to load save:', key)
+      return
+    }
+    const raw = localStorage.getItem(key)
+    if (!raw) {
+      window.logger.warn('Save game not found:', key)
+      return
+    }
+    try {
+      saveObj = JSON.parse(raw)
+    } catch (err) {
+      window.logger.warn('Failed to parse saved game metadata:', err)
+      return
+    }
+  }
+
+  loadGameFromSaveObject(saveObj, key)
 }
 
 export function deleteGame(key) {

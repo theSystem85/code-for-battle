@@ -689,21 +689,25 @@ body.is-touch {
 }
 
 /* Dark mode scrollbar styling for save games list */
-#saveGamesList::-webkit-scrollbar {
+#saveGamesList::-webkit-scrollbar,
+#replayList::-webkit-scrollbar {
   width: 8px;
 }
 
-#saveGamesList::-webkit-scrollbar-track {
+#saveGamesList::-webkit-scrollbar-track,
+#replayList::-webkit-scrollbar-track {
   background: #2c2c2c; /* Dark track that blends with sidebar background */
   border-radius: 4px;
 }
 
-#saveGamesList::-webkit-scrollbar-thumb {
+#saveGamesList::-webkit-scrollbar-thumb,
+#replayList::-webkit-scrollbar-thumb {
   background: #555; /* Slightly lighter than track for visibility */
   border-radius: 4px;
 }
 
-#saveGamesList::-webkit-scrollbar-thumb:hover {
+#saveGamesList::-webkit-scrollbar-thumb:hover,
+#replayList::-webkit-scrollbar-thumb:hover {
   background: #666; /* Lighter on hover for better interaction feedback */
 }
 
