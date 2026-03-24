@@ -290,6 +290,54 @@ describe('Bullet System', () => {
     })
   })
 
+  describe('Air-to-air rocket damage', () => {
+    it('applies direct F22 rocket damage using the airborne target visual center', () => {
+      const target = createMockUnit({
+        id: 'apache-1',
+        type: 'apache',
+        x: 160,
+        y: 160,
+        health: 40,
+        altitude: 80,
+        flightState: 'airborne'
+      })
+      const impactX = target.x + TILE_SIZE / 2
+      const impactY = target.y + TILE_SIZE / 2 - (target.altitude * 0.4)
+      const bullet = createMockBullet({
+        originType: 'apacheRocket',
+        projectileType: 'rocket',
+        shooter: { id: 'f22-1', owner: 'player', type: 'f22Raptor' },
+        targetPosition: { x: impactX, y: impactY },
+        apacheTargetId: target.id,
+        x: impactX,
+        y: impactY,
+        vx: 0,
+        vy: 0,
+        baseDamage: 25,
+        creationTime: 900,
+        startTime: 900,
+        skipCollisionChecks: true,
+        f22Rocket: true
+      })
+      const bullets = [bullet]
+      const gameState = {
+        simulationTime: 1000,
+        frameCount: 0,
+        gameStarted: false,
+        mapEditMode: false,
+        humanPlayer: 'player',
+        smokeParticles: []
+      }
+      const mapGrid = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'land' })))
+
+      updateBullets(bullets, [target], [], gameState, mapGrid)
+
+      expect(target.health).toBeLessThan(40)
+      expect(bullets).toHaveLength(0)
+      expect(playPositionalSound).toHaveBeenCalledWith('explosion', impactX, impactY, 0.7)
+    })
+  })
+
   describe('Bullet Movement', () => {
     it('should have velocity components', () => {
       const bullet = createMockBullet({ vx: 10, vy: 5 })

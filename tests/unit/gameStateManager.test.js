@@ -226,6 +226,7 @@ describe('gameStateManager', () => {
   describe('updateSmokeParticles', () => {
     it('removes invalid/expired particles and updates active ones', () => {
       const gameState = {
+        simulationTime: 1000,
         smokeParticles: [
           { startTime: 0 },
           { startTime: 0, duration: 100, size: 4, alpha: 1, x: 0, y: 0, vx: 0, vy: 0 },
@@ -244,6 +245,22 @@ describe('gameStateManager', () => {
       expect(particle.y).toBeCloseTo(6 - 0.1 + WIND_DIRECTION.y * WIND_STRENGTH, 5)
       expect(particle.alpha).toBeLessThan(1)
       expect(particle.size).toBeGreaterThan(4)
+    })
+
+    it('uses simulation time for particle aging when available', () => {
+      const gameState = {
+        simulationTime: 1000,
+        smokeParticles: [
+          { startTime: 900, duration: 200, size: 4, alpha: 1, x: 5, y: 6, vx: 0.2, vy: -0.1 }
+        ]
+      }
+      performanceNow.mockReturnValue(5000)
+      gameRandom.mockReturnValue(0.5)
+
+      updateSmokeParticles(gameState)
+
+      expect(removeSmokeParticle).not.toHaveBeenCalled()
+      expect(gameState.smokeParticles).toHaveLength(1)
     })
   })
 

@@ -337,7 +337,7 @@ export function updateExplosions(gameState) {
  * @param {Object} gameState - Game state object
  */
 export function updateSmokeParticles(gameState) {
-  const now = performance.now()
+  const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
 
   for (let i = gameState.smokeParticles.length - 1; i >= 0; i--) {
     const p = gameState.smokeParticles[i]

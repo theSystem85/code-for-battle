@@ -493,10 +493,10 @@ export class EffectsRenderer {
     }
   }
 
-  renderTeslaLightning(ctx, units, scrollOffset) {
+  renderTeslaLightning(ctx, units, scrollOffset, gameState) {
     // Render Tesla Coil Lightning Effects ON TOP
     if (units && units.length > 0) {
-      const now = performance.now()
+      const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
       for (const unit of units) {
         if (unit.teslaCoilHit && now - unit.teslaCoilHit.impactTime < 400) {
           // Draw the lightning bolt for a short time after impact
@@ -519,7 +519,7 @@ export class EffectsRenderer {
     this.renderDust(ctx, gameState, scrollOffset)
     this.renderDustParticles(ctx, gameState, scrollOffset)
     this.renderExplosions(ctx, gameState, scrollOffset)
-    this.renderTeslaLightning(ctx, units, scrollOffset)
+    this.renderTeslaLightning(ctx, units, scrollOffset, gameState)
 
     // Debug: log smoke particle count periodically
     if (gameState?.smokeParticles?.length > 0 && gameState.frameCount % 100 === 0) {

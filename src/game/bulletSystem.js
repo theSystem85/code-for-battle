@@ -427,7 +427,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
           const airborneTargetStillNearImpact = targetIsAirborneApache && apacheTargetUnit && (() => {
             const targetCenterX = apacheTargetUnit.x + TILE_SIZE / 2
-            const targetCenterY = apacheTargetUnit.y + TILE_SIZE / 2
+            const targetAltitudeLift = apacheTargetUnit.altitude ? apacheTargetUnit.altitude * 0.4 : 0
+            const targetCenterY = apacheTargetUnit.y + TILE_SIZE / 2 - targetAltitudeLift
             const airborneDistanceToImpact = Math.hypot(explosionX - targetCenterX, explosionY - targetCenterY)
             return airborneDistanceToImpact <= proximityThreshold
           })()
