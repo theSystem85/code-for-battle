@@ -91,15 +91,42 @@ function sanitizeOreFieldCount(value) {
 function sanitizeTerrainPercent(value, fallback) {
   const parsed = parseInt(value, 10)
   if (Number.isFinite(parsed)) {
-    return Math.max(0, Math.min(80, parsed))
+    return Math.max(0, Math.min(50, parsed))
   }
-  return Math.max(0, Math.min(80, Number.isFinite(fallback) ? Math.floor(fallback) : 10))
+  return Math.max(0, Math.min(50, Number.isFinite(fallback) ? Math.floor(fallback) : 10))
 }
 
 function parseStoredBoolean(value, fallback = false) {
   if (value === 'true') return true
   if (value === 'false') return false
   return fallback
+}
+
+function normalizeTerrainPercents(waterPercent, rockPercent, changedField = null) {
+  let nextWater = sanitizeTerrainPercent(waterPercent, 10)
+  let nextRock = sanitizeTerrainPercent(rockPercent, 10)
+
+  if (nextWater + nextRock <= 50) {
+    return { waterPercent: nextWater, rockPercent: nextRock }
+  }
+
+  if (changedField === 'water') {
+    nextRock = Math.max(0, 50 - nextWater)
+    return { waterPercent: nextWater, rockPercent: nextRock }
+  }
+  if (changedField === 'rock') {
+    nextWater = Math.max(0, 50 - nextRock)
+    return { waterPercent: nextWater, rockPercent: nextRock }
+  }
+
+  // Fallback for restored values: preserve relative split while honoring 50% cap.
+  const total = nextWater + nextRock
+  if (total <= 0) {
+    return { waterPercent: 0, rockPercent: 0 }
+  }
+  nextWater = Math.round((nextWater / total) * 50)
+  nextRock = 50 - nextWater
+  return { waterPercent: nextWater, rockPercent: nextRock }
 }
 
 function sanitizeSelectionHudBarThickness(value, fallback = 4) {
@@ -304,8 +331,12 @@ function loadPersistedSettings() {
     const storedShoreSouth = localStorage.getItem(MAP_SHORE_SOUTH_STORAGE_KEY)
     const storedCenterLake = localStorage.getItem(MAP_CENTER_LAKE_STORAGE_KEY)
 
-    const waterPercent = sanitizeTerrainPercent(storedWater, gameState.mapWaterPercent)
-    const rockPercent = sanitizeTerrainPercent(storedRock, gameState.mapRockPercent)
+    const normalizedTerrain = normalizeTerrainPercents(
+      sanitizeTerrainPercent(storedWater, gameState.mapWaterPercent),
+      sanitizeTerrainPercent(storedRock, gameState.mapRockPercent)
+    )
+    const waterPercent = normalizedTerrain.waterPercent
+    const rockPercent = normalizedTerrain.rockPercent
     gameState.mapWaterPercent = waterPercent
     gameState.mapRockPercent = rockPercent
     gameState.mapShoreNorth = parseStoredBoolean(storedShoreNorth, gameState.mapShoreNorth)
@@ -661,7 +692,7 @@ class Game {
     const shoreSouthCheckbox = document.getElementById('mapShoreSouthCheckbox')
     const centerLakeCheckbox = document.getElementById('mapCenterLakeCheckbox')
 
-    const applyMapSettingsAndRegenerate = () => {
+    const applyMapSettingsAndRegenerate = (changedField = null) => {
       const seed = seedInput ? seedInput.value || '1' : '1'
       const widthTiles = mapWidthInput ? sanitizeMapDimension(mapWidthInput.value, MAP_TILES_X) : MAP_TILES_X
       const heightTiles = mapHeightInput ? sanitizeMapDimension(mapHeightInput.value, MAP_TILES_Y) : MAP_TILES_Y
@@ -669,12 +700,15 @@ class Game {
       const oreFieldCount = oreFieldInput
         ? sanitizeOreFieldCount(oreFieldInput.value)
         : sanitizeOreFieldCount(gameState.mapOreFieldCount)
-      const waterPercent = waterPercentInput
+      const rawWaterPercent = waterPercentInput
         ? sanitizeTerrainPercent(waterPercentInput.value, gameState.mapWaterPercent)
         : sanitizeTerrainPercent(gameState.mapWaterPercent, 10)
-      const rockPercent = rockPercentInput
+      const rawRockPercent = rockPercentInput
         ? sanitizeTerrainPercent(rockPercentInput.value, gameState.mapRockPercent)
         : sanitizeTerrainPercent(gameState.mapRockPercent, 10)
+      const normalizedTerrain = normalizeTerrainPercents(rawWaterPercent, rawRockPercent, changedField)
+      const waterPercent = normalizedTerrain.waterPercent
+      const rockPercent = normalizedTerrain.rockPercent
       const shoreNorth = !!shoreNorthCheckbox?.checked
       const shoreWest = !!shoreWestCheckbox?.checked
       const shoreEast = !!shoreEastCheckbox?.checked
@@ -691,12 +725,12 @@ class Game {
       }
       if (waterPercentInput) {
         waterPercentInput.min = 0
-        waterPercentInput.max = 80
+        waterPercentInput.max = 50
         waterPercentInput.value = waterPercent
       }
       if (rockPercentInput) {
         rockPercentInput.min = 0
-        rockPercentInput.max = 80
+        rockPercentInput.max = 50
         rockPercentInput.value = rockPercent
       }
 
@@ -764,21 +798,21 @@ class Game {
 
     if (waterPercentInput) {
       waterPercentInput.min = 0
-      waterPercentInput.max = 80
+      waterPercentInput.max = 50
       waterPercentInput.value = sanitizeTerrainPercent(waterPercentInput.value || gameState.mapWaterPercent, 10)
       waterPercentInput.addEventListener('change', () => {
         waterPercentInput.value = sanitizeTerrainPercent(waterPercentInput.value, gameState.mapWaterPercent)
-        applyMapSettingsAndRegenerate()
+        applyMapSettingsAndRegenerate('water')
       })
     }
 
     if (rockPercentInput) {
       rockPercentInput.min = 0
-      rockPercentInput.max = 80
+      rockPercentInput.max = 50
       rockPercentInput.value = sanitizeTerrainPercent(rockPercentInput.value || gameState.mapRockPercent, 10)
       rockPercentInput.addEventListener('change', () => {
         rockPercentInput.value = sanitizeTerrainPercent(rockPercentInput.value, gameState.mapRockPercent)
-        applyMapSettingsAndRegenerate()
+        applyMapSettingsAndRegenerate('rock')
       })
     }
 

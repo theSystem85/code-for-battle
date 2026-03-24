@@ -309,6 +309,15 @@ describe('gameSetup.js', () => {
         expect(waterPercent).toBeGreaterThan(15)
       })
 
+      it('should enforce max combined terrain budget (water + rocks <= 50%)', () => {
+        gameState.mapWaterPercent = 40
+        gameState.mapRockPercent = 30
+
+        generateMap(12345, mapGrid, 80, 80)
+
+        expect(gameState.mapWaterPercent + gameState.mapRockPercent).toBeLessThanOrEqual(50)
+      })
+
       it('should create shoreline on checked map edges', () => {
         gameState.mapWaterPercent = 0
         gameState.mapRockPercent = 0
@@ -332,6 +341,37 @@ describe('gameSetup.js', () => {
 
         expect(northWaterCount).toBeGreaterThan(40)
         expect(westWaterCount).toBeGreaterThan(40)
+      })
+
+      it('should form water in long connected lines rather than isolated single tiles', () => {
+        gameState.mapWaterPercent = 20
+        gameState.mapRockPercent = 0
+        gameState.mapShoreNorth = false
+        gameState.mapShoreWest = false
+        gameState.mapShoreEast = false
+        gameState.mapShoreSouth = false
+        gameState.mapCenterLake = false
+
+        generateMap(12345, mapGrid, 90, 90)
+
+        let hasLongRun = false
+        for (let y = 0; y < 90; y++) {
+          let run = 0
+          for (let x = 0; x < 90; x++) {
+            if (mapGrid[y][x].type === 'water') {
+              run++
+              if (run >= 10) {
+                hasLongRun = true
+                break
+              }
+            } else {
+              run = 0
+            }
+          }
+          if (hasLongRun) break
+        }
+
+        expect(hasLongRun).toBe(true)
       })
     })
 

@@ -32,3 +32,9 @@ Add map generation controls in the sidebar so the host/player can define terrain
   - Water percentage control materially affects generated water coverage.
   - Shore toggles produce water on requested map edges.
   - High-water/high-rock combined settings still preserve land-reachable base anchors.
+
+## Follow-up Constraints (2026-03-24)
+- Terrain percentages should generate **line/chain-based formations** (wider/longer lines as % increases), not random isolated scatter across the whole map.
+- Coast contribution must scale with configured water percentage (lower water shrinks coast depth toward map borders; higher water expands coast depth inward).
+- Water and rock percentages are constrained so `water% + rock% <= 50%`.
+- When the user increases water beyond the budget, rock is automatically reduced by the same overflow amount (and vice versa).
