@@ -8,6 +8,22 @@ import { CheatSystem } from './input/cheatSystem.js'
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
 
+function sanitizeFileSegment(value, fallback) {
+  const cleaned = String(value || '')
+    .trim()
+    .replace(/\s+/g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+  return cleaned || fallback
+}
+
+function buildReplayExportFilename(label, time) {
+  const safeLabel = sanitizeFileSegment(label, 'replay')
+  const safeDate = Number.isFinite(time)
+    ? new Date(time).toISOString().replace(/[:.]/g, '-').replace('T', '_').replace('Z', 'Z')
+    : 'unknown-date'
+  return `${safeDate}_${safeLabel}.json`
+}
+
 function getNowMs() {
   return Number.isFinite(gameState.simulationTime) ? gameState.simulationTime : Date.now()
 }
@@ -97,6 +113,10 @@ export function listReplays() {
 
 export function isReplayInteractionLocked() {
   return Boolean(gameState.replay?.playbackActive && !gameState.replay?.isApplyingReplayCommand)
+}
+
+export function isReplayModeActive() {
+  return Boolean(gameState.replayMode)
 }
 
 export function startReplayRecording() {
@@ -194,6 +214,15 @@ function executeReplayCommand(entry) {
       return
     }
 
+    if (command.type === 'production_pause') {
+      if (command.queueType === 'unit') {
+        productionQueue.setUnitPaused(command.paused, { record: false })
+      } else if (command.queueType === 'building') {
+        productionQueue.setBuildingPaused(command.paused, { record: false })
+      }
+      return
+    }
+
     if (command.type === 'remote_control_action') {
       const action = command.action
       if (action && gameState.remoteControl && typeof gameState.remoteControl[action] === 'number') {
@@ -280,6 +309,55 @@ export function updateRecordButtonState() {
   recordBtn.setAttribute('aria-pressed', replay.recordingActive ? 'true' : 'false')
 }
 
+export function exportReplay(key) {
+  if (typeof localStorage === 'undefined') return
+
+  const rawReplay = localStorage.getItem(key)
+  if (!rawReplay) {
+    window.logger.warn('No replay found to export for key:', key)
+    return
+  }
+
+  let replayObj = null
+  try {
+    replayObj = JSON.parse(rawReplay)
+  } catch (err) {
+    window.logger.warn('Failed to parse replay data for export:', err)
+    return
+  }
+
+  const payload = JSON.stringify(replayObj, null, 2)
+  const blob = new Blob([payload], { type: 'application/json' })
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = buildReplayExportFilename(replayObj?.label, replayObj?.time)
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(objectUrl)
+}
+
+export function deleteReplay(key) {
+  if (typeof localStorage === 'undefined') return
+  localStorage.removeItem(key)
+}
+
+function createReplayRowActionButton({ title, ariaLabel, html, onClick }) {
+  const button = document.createElement('button')
+  button.type = 'button'
+  button.title = title
+  button.setAttribute('aria-label', ariaLabel)
+  button.classList.add('action-button', 'icon-button')
+  button.style.marginLeft = '6px'
+  button.innerHTML = html
+  button.onclick = (event) => {
+    event.stopPropagation()
+    onClick()
+  }
+  return button
+}
+
 export function updateReplayList() {
   const list = document.getElementById('replayList')
   if (!list) return
@@ -301,9 +379,27 @@ export function updateReplayList() {
     btn.type = 'button'
     btn.className = 'save-game-label-button'
     btn.style.flex = '1'
+    btn.title = `Load ${replay.label}`
     btn.innerHTML = `${replay.label}<br><small>${new Date(startTs).toLocaleString()} • ${formatDuration(durationMs)}</small>`
     btn.onclick = () => loadReplay(replay.key)
     li.appendChild(btn)
+
+    li.appendChild(createReplayRowActionButton({
+      title: 'Export replay as JSON',
+      ariaLabel: 'Export replay',
+      html: '<img src="/icons/export.svg" alt="Export" class="button-icon white-icon">',
+      onClick: () => exportReplay(replay.key)
+    }))
+
+    li.appendChild(createReplayRowActionButton({
+      title: 'Delete replay',
+      ariaLabel: 'Delete replay',
+      html: '✗',
+      onClick: () => {
+        deleteReplay(replay.key)
+        updateReplayList()
+      }
+    }))
 
     list.appendChild(li)
   })

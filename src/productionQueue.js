@@ -13,7 +13,7 @@ import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
 import { getSimulationTime } from './game/time.js'
-import { isReplayInteractionLocked, recordReplayCommand } from './replaySystem.js'
+import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
@@ -125,7 +125,7 @@ export const productionQueue = {
   },
 
   addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null) {
-    if (isReplayInteractionLocked()) {
+    if (isReplayModeActive() || isReplayInteractionLocked()) {
       showNotification('Replay mode is active: build commands are disabled.')
       return
     }
@@ -778,10 +778,15 @@ export const productionQueue = {
     }
   },
 
-  togglePauseUnit: function() {
-    if (!this.currentUnit) return
+  setUnitPaused: function(paused, options = {}) {
+    if (!this.currentUnit) return false
 
-    this.pausedUnit = !this.pausedUnit
+    const nextPaused = Boolean(paused)
+    if (this.pausedUnit === nextPaused) {
+      return false
+    }
+
+    this.pausedUnit = nextPaused
     if (this.pausedUnit) {
       this.currentUnit.button.classList.add('paused')
       playSound('constructionPaused', 1.0, 0, true)
@@ -789,12 +794,31 @@ export const productionQueue = {
       this.currentUnit.button.classList.remove('paused')
       playSound('constructionStarted', 1.0, 0, true)
     }
+
+    if (options.record !== false) {
+      recordReplayCommand({
+        type: 'production_pause',
+        queueType: 'unit',
+        paused: this.pausedUnit
+      }, { source: options.source || 'human' })
+    }
+
+    return true
   },
 
-  togglePauseBuilding: function() {
-    if (!this.currentBuilding) return
+  togglePauseUnit: function() {
+    return this.setUnitPaused(!this.pausedUnit)
+  },
 
-    this.pausedBuilding = !this.pausedBuilding
+  setBuildingPaused: function(paused, options = {}) {
+    if (!this.currentBuilding) return false
+
+    const nextPaused = Boolean(paused)
+    if (this.pausedBuilding === nextPaused) {
+      return false
+    }
+
+    this.pausedBuilding = nextPaused
     if (this.pausedBuilding) {
       this.currentBuilding.button.classList.add('paused')
       playSound('constructionPaused', 1.0, 0, true)
@@ -802,6 +826,20 @@ export const productionQueue = {
       this.currentBuilding.button.classList.remove('paused')
       playSound('constructionStarted', 1.0, 0, true)
     }
+
+    if (options.record !== false) {
+      recordReplayCommand({
+        type: 'production_pause',
+        queueType: 'building',
+        paused: this.pausedBuilding
+      }, { source: options.source || 'human' })
+    }
+
+    return true
+  },
+
+  togglePauseBuilding: function() {
+    return this.setBuildingPaused(!this.pausedBuilding)
   },
 
   cancelUnitProduction: function() {

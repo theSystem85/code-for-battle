@@ -5,6 +5,7 @@ import { showNotification } from './notifications.js'
 import { buildingData } from '../buildings.js'
 import { applyProductionBrush } from './mapEditorControls.js'
 import { attachProductionTooltipHandlers } from './productionTooltip.js'
+import { isReplayModeActive } from '../replaySystem.js'
 
 const mobileLandscapeBuildingLabelMap = {
   vehicleFactory: 'Vehicle Fab',
@@ -380,7 +381,7 @@ export function setupUnitButtons(controller) {
     }
 
     button.addEventListener('dragstart', (e) => {
-      if (gameState.gamePaused || button.classList.contains('disabled')) {
+      if (isReplayModeActive() || gameState.gamePaused || button.classList.contains('disabled')) {
         e.preventDefault()
         return false
       }
@@ -454,7 +455,7 @@ export function setupBuildingButtons(controller) {
     }
 
     button.addEventListener('dragstart', (e) => {
-      if (gameState.gamePaused || button.classList.contains('disabled')) {
+      if (isReplayModeActive() || gameState.gamePaused || button.classList.contains('disabled')) {
         e.preventDefault()
         return false
       }

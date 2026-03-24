@@ -22,3 +22,8 @@ Implement deterministic replay capture/playback for player sessions.
 - Drag-to-build replay restores blueprint placement data (not just button presses) so map construction reproduces correctly.
 - Remote-control inputs and cheat console commands are captured into replay command logs and reapplied during playback.
 - Record button moved to the speed-control row.
+- Speed slider now shrinks to keep the record button fully visible within the same sidebar row.
+- Replay rows reuse the save-list visual treatment and expose export/delete actions like save-game rows.
+- Player-triggered unit/building production pause-resume toggles are captured and replayed deterministically.
+- Replay mode preserves camera panning via right-click drag and mobile two-finger pan while leaving gameplay commands locked.
+- Desktop and mobile drag-to-build interactions are blocked for the full replay-mode session.

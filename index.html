@@ -567,16 +567,15 @@
       </div>
 
       <div id="speedControl">
-        <label style="display: flex; align-items: center; margin-bottom: 5px;">
-          Speed:
-          <input type="range" class="volume-slider" id="speedMultiplier" min="0.5" max="5" step="0.5" value="1"
-            style="margin-left: 10px; flex: 1;">
+        <div class="speed-control-row">
+          <label for="speedMultiplier" class="speed-control-label">Speed:</label>
+          <input type="range" class="volume-slider speed-control-slider" id="speedMultiplier" min="0.5" max="5" step="0.5" value="1">
           <span id="speedMultiplierValue" class="volume-value">1.0x</span>
           <button id="recordBtn" class="action-button icon-button" title="Toggle Replay Recording" aria-pressed="false"
             style="margin-left: 8px;">
             <span class="button-icon record-icon">●</span>
           </button>
-        </label>
+        </div>
       </div>
 
       <!-- Multiplayer Settings -->

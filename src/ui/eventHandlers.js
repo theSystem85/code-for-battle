@@ -27,7 +27,7 @@ import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
 import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
-import { isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
+import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from '../replaySystem.js'
 
 export class EventHandlers {
   constructor(canvasManager, factories, units, mapGrid, moneyEl, gameInstance = null) {
@@ -174,6 +174,7 @@ export class EventHandlers {
     // Drag and drop placement
     gameCanvas.addEventListener('dragover', (e) => {
       if (gameState.mapEditMode) return
+      if (isReplayModeActive()) return
       if (gameState.draggedBuildingType) {
         e.preventDefault()
         gameState.buildingPlacementMode = true
@@ -193,6 +194,7 @@ export class EventHandlers {
 
     gameCanvas.addEventListener('drop', (e) => {
       if (gameState.mapEditMode) return
+      if (isReplayModeActive()) return
       if (gameState.draggedBuildingType) {
         e.preventDefault()
         this.handleDragDropPlacement({
@@ -692,6 +694,11 @@ export class EventHandlers {
       return
     }
 
+    if (isReplayModeActive()) {
+      showNotification('Replay mode is active: build commands are disabled.')
+      return
+    }
+
     const { kind, type, button, clientX, clientY } = detail
     const gameCanvas = this.canvasManager.getGameCanvas()
     if (!gameCanvas) {
@@ -750,7 +757,7 @@ export class EventHandlers {
   handleBuildingPlacement(e) {
     const gameCanvas = this.canvasManager.getGameCanvas()
 
-    if (isReplayInteractionLocked()) return
+    if (isReplayModeActive() || isReplayInteractionLocked()) return
 
     if (gameState.buildingPlacementMode && gameState.currentBuildingType) {
       const mouseX = e.clientX - gameCanvas.getBoundingClientRect().left + gameState.scrollOffset.x
@@ -862,7 +869,7 @@ export class EventHandlers {
   handleBuildingPlacementOverlay(e) {
     const gameCanvas = this.canvasManager.getGameCanvas()
 
-    if (isReplayInteractionLocked()) return
+    if (isReplayModeActive() || isReplayInteractionLocked()) return
 
     if (gameState.buildingPlacementMode && gameState.currentBuildingType) {
       const mouseX = e.clientX - gameCanvas.getBoundingClientRect().left + gameState.scrollOffset.x
@@ -897,6 +904,7 @@ export class EventHandlers {
   handleChainBuildingPlacement(e) {
     const gameCanvas = this.canvasManager.getGameCanvas()
 
+    if (isReplayModeActive()) return
     if (!gameState.chainBuildMode || !gameState.chainBuildingType) return
 
     const mouseX =
@@ -981,7 +989,7 @@ export class EventHandlers {
 
     // Add repair button functionality
     document.getElementById('repairBtn').addEventListener('click', () => {
-      if (isReplayInteractionLocked()) {
+      if (isReplayModeActive() || isReplayInteractionLocked()) {
         showNotification('Replay mode: repair commands are disabled.')
         return
       }
@@ -1018,7 +1026,7 @@ export class EventHandlers {
 
     // Add sell button functionality
     document.getElementById('sellBtn').addEventListener('click', () => {
-      if (isReplayInteractionLocked()) {
+      if (isReplayModeActive() || isReplayInteractionLocked()) {
         showNotification('Replay mode: sell commands are disabled.')
         return
       }

@@ -1187,7 +1187,14 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   padding-right: 5px;
 }
 
-#saveGamesList > li {
+#saveGamesList,
+#replayList {
+  padding: 0;
+  padding-right: 5px;
+}
+
+#saveGamesList > li,
+#replayList > li {
   font-size: 12px;
 }
 
@@ -1199,10 +1206,18 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   text-align: left;
   padding: 0;
   cursor: pointer;
+  min-width: 0;
+  line-height: 1.25;
 }
 
 .save-game-label-button:hover {
   text-decoration: underline;
+}
+
+.save-game-label-button small {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
 }
 
 .record-icon {
@@ -1225,4 +1240,34 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 #saveGamesPane.hidden,
 #replaysPane.hidden {
   display: none;
+}
+
+#speedControl {
+  min-width: 0;
+}
+
+.speed-control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+  min-width: 0;
+}
+
+.speed-control-label {
+  flex: 0 0 auto;
+}
+
+.speed-control-slider {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 0;
+}
+
+.speed-control-row .volume-value {
+  flex: 0 0 auto;
+}
+
+#recordBtn {
+  flex: 0 0 auto;
 }
