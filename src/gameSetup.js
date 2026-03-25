@@ -529,7 +529,19 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
   gameState.mapWaterPercent = safeWaterPercent
   gameState.mapRockPercent = safeRockPercent
 
-  // -------- Step 2: Generate water terrain (percent + shore/lake controls) --------
+  const totalTiles = MAP_TILES_X * MAP_TILES_Y
+  const targetWaterTiles = Math.floor((totalTiles * safeWaterPercent) / 100)
+  const targetRockTiles = Math.floor((totalTiles * safeRockPercent) / 100)
+
+  // -------- Step 2: Generate rock terrain lines first --------
+  // Water is dominant and is drawn afterwards so rivers/lakes/coasts can break rock lines.
+  growLineTerrainToTarget(rand, mapGrid, 'rock', targetRockTiles, protectedTiles, {
+    minThickness: Math.max(1, Math.floor(1 + (safeRockPercent / 18))),
+    maxThickness: Math.max(2, Math.floor(2 + (safeRockPercent / 8))),
+    maxPasses: 70
+  })
+
+  // -------- Step 3: Generate water terrain over rock (water-dominant) --------
   const enabledShoreSides = [
     gameState.mapShoreNorth ? 'north' : null,
     gameState.mapShoreWest ? 'west' : null,
@@ -537,8 +549,6 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     gameState.mapShoreSouth ? 'south' : null
   ].filter(Boolean)
 
-  const totalTiles = MAP_TILES_X * MAP_TILES_Y
-  const targetWaterTiles = Math.floor((totalTiles * safeWaterPercent) / 100)
   const shoreDepthScale = safeWaterPercent / 50
   const shoreDepth = Math.max(
     1,
@@ -559,14 +569,6 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     minThickness: Math.max(1, Math.floor(1 + (safeWaterPercent / 20))),
     maxThickness: Math.max(2, Math.floor(2 + (safeWaterPercent / 10))),
     maxPasses: 60
-  })
-
-  // -------- Step 3: Generate rock terrain percentage (on non-water tiles) --------
-  const targetRockTiles = Math.floor((totalTiles * safeRockPercent) / 100)
-  growLineTerrainToTarget(rand, mapGrid, 'rock', targetRockTiles, protectedTiles, {
-    minThickness: Math.max(1, Math.floor(1 + (safeRockPercent / 18))),
-    maxThickness: Math.max(2, Math.floor(2 + (safeRockPercent / 8))),
-    maxPasses: 70
   })
 
   // -------- Step 4: Generate Streets --------

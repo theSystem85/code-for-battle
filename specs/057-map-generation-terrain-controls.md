@@ -38,3 +38,5 @@ Add map generation controls in the sidebar so the host/player can define terrain
 - Coast contribution must scale with configured water percentage (lower water shrinks coast depth toward map borders; higher water expands coast depth inward).
 - Water and rock percentages are constrained so `water% + rock% <= 50%`.
 - When the user increases water beyond the budget, rock is automatically reduced by the same overflow amount (and vice versa).
+
+- Rock line generation is applied before water; water generation is dominant and overwrites/cuts rock where paths intersect.

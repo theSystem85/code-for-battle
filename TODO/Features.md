@@ -1,3 +1,4 @@
+- [x] Terrain layering follow-up: rocks are generated first and water is applied afterward so rivers/lakes/coasts dominate and break rock lines at intersections.
 - [x] Map generation terrain controls follow-up: water/rock percentages now generate line-based terrain (no random scatter), coast water scales inward/outward with water%, and water+rock are auto-balanced to a hard 50% combined cap.
 - [x] Extend Map Settings map generation controls with water % and rock % inputs plus shore toggles (north/west/east/south) and big-center-lake toggle, while guaranteeing all base spawns remain on land and every base is land-reachable from every other base.
 - [x] Replay follow-up polish: replay rows now show start date + duration only, replay loads auto-start with synced play/pause icon, drag-to-build blueprints replay correctly, remote-control/cheat inputs are recorded, and record button moved beside speed slider.
