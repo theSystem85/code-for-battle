@@ -48,6 +48,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
   const mapWidth = mapGrid[0]?.length || 0
   unitsToCommand.forEach((unit, index) => {
     unit.guardTarget = null
+    unit.guardTargets = null
     unit.guardMode = false
     if (unit.type === 'tankerTruck') {
       clearTankerKamikazeState(unit)

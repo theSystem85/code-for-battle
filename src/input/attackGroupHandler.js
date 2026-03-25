@@ -2,6 +2,7 @@
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { markWaypointsAdded } from '../game/waypointSounds.js'
+import { activateGroupGuard } from './mouseCommands.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['rocketTurret', 'teslaCoil', 'artilleryTurret', 'turretGunV1', 'turretGunV2', 'turretGunV3'])
 
@@ -48,6 +49,8 @@ export class AttackGroupHandler {
     gameState.disableAGFRendering = true
 
     if (this.attackGroupWasDragging) {
+      const guardTargets = this.findFriendlyUnitsInAttackGroup(units, selectedUnits)
+      this.activateGuardForGroup(selectedUnits, guardTargets)
       const enemyTargets = this.findEnemyUnitsInAttackGroup(units)
       if (enemyTargets.length > 0) {
         if (gameState.altKeyDown) {
@@ -73,6 +76,36 @@ export class AttackGroupHandler {
     setTimeout(() => {
       gameState.disableAGFRendering = false
     }, 50)
+  }
+
+  findFriendlyUnitsInAttackGroup(units, selectedUnits) {
+    const x1 = Math.min(gameState.attackGroupStart.x, gameState.attackGroupEnd.x)
+    const y1 = Math.min(gameState.attackGroupStart.y, gameState.attackGroupEnd.y)
+    const x2 = Math.max(gameState.attackGroupStart.x, gameState.attackGroupEnd.x)
+    const y2 = Math.max(gameState.attackGroupStart.y, gameState.attackGroupEnd.y)
+    const selectedIds = new Set((selectedUnits || []).map(unit => unit.id))
+    const humanPlayer = gameState.humanPlayer || 'player1'
+
+    return (units || []).filter(unit => {
+      if (!unit || unit.health <= 0 || unit.owner !== humanPlayer || selectedIds.has(unit.id)) {
+        return false
+      }
+      const centerX = unit.x + TILE_SIZE / 2
+      const centerY = unit.y + TILE_SIZE / 2
+      return centerX >= x1 && centerX <= x2 && centerY >= y1 && centerY <= y2
+    })
+  }
+
+  activateGuardForGroup(selectedUnits, guardTargets) {
+    if (!Array.isArray(guardTargets) || guardTargets.length === 0) {
+      return
+    }
+    const combatUnits = selectedUnits.filter(unit =>
+      unit.type !== 'harvester' &&
+      unit.owner === gameState.humanPlayer &&
+      !unit.isBuilding
+    )
+    activateGroupGuard(combatUnits, guardTargets)
   }
 
   resetAttackGroupState() {

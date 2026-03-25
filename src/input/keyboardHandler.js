@@ -1203,6 +1203,10 @@ export class KeyboardHandler {
         unit.attackGroupTargets = []
       }
 
+      unit.guardMode = false
+      unit.guardTarget = null
+      unit.guardTargets = null
+
       // Track units owned by this player for network sync
       if (unit.owner === gameState.humanPlayer) {
         unitsToStop.push(unit)

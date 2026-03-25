@@ -29,6 +29,20 @@ import {
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
 
+function hasSelectedCombatUnits(selectionManager, selectedUnits) {
+  return selectedUnits.some(unit =>
+    selectionManager.isCommandableUnit(unit) &&
+    !unit.isBuilding &&
+    unit.type !== 'harvester' &&
+    unit.type !== 'ambulance' &&
+    unit.type !== 'tankerTruck' &&
+    unit.type !== 'ammunitionTruck' &&
+    unit.type !== 'recoveryTank' &&
+    unit.type !== 'mineSweeper' &&
+    unit.type !== 'mineLayer'
+  )
+}
+
 function recordHumanUnitCommand(unitIds, command) {
   const unitRefs = createReplayUnitReferences(unitIds)
   recordReplayCommand({
@@ -1159,6 +1173,19 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
     const handledService = friendlySelected && handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)
     if (handledService) {
       return
+    }
+
+    const clickedIsFriendly = selectionManager.isHumanPlayerUnit(clickedUnit)
+    const shouldGuardFriendly = clickedIsFriendly &&
+      friendlySelected &&
+      hasSelectedCombatUnits(selectionManager, selectedUnits) &&
+      !clickedUnit.selected
+
+    if (shouldGuardFriendly) {
+      const guardHandled = handleGuardCommand(handler, worldX, worldY, units, selectedUnits, unitCommands, selectionManager, mapGrid)
+      if (guardHandled) {
+        return
+      }
     }
 
     selectionManager.handleUnitSelection(clickedUnit, e, units, factories, selectedUnits)
