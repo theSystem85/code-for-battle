@@ -54,11 +54,11 @@ function getArraySortKey(path, item) {
     case '$.units':
       return [item.owner, item.type, item.id, item.tileX, item.tileY, item.x, item.y].join('|')
     case '$.buildings':
-      return [item.owner, item.type, item.id, item.x, item.y, item.width, item.height].join('|')
+      return [item.owner, item.type, item.x, item.y, item.width, item.height, item.id].join('|')
     case '$.unitWrecks':
       return [item.owner, item.unitType, item.sourceUnitId, item.id, item.tileX, item.tileY].join('|')
     case '$.factoryRallyPoints':
-      return [item.id, item.rallyPoint?.x, item.rallyPoint?.y].join('|')
+      return [item.rallyPoint?.x, item.rallyPoint?.y, item.id].join('|')
     case '$.orePositions':
       return [item.x, item.y].join('|')
     case '$.gameState.blueprints':

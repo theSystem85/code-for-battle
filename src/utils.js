@@ -1,13 +1,17 @@
 // utils.js
 import { TILE_SIZE, XP_MULTIPLIER, UNIT_COSTS } from './config.js'
-import { gameRandom } from './utils/gameRandom.js'
+import { deterministicRNG, gameRandom } from './utils/gameRandom.js'
 
 export function tileToPixel(tileX, tileY) {
   return { x: tileX * TILE_SIZE, y: tileY * TILE_SIZE }
 }
 
 export function getUniqueId() {
-  return Date.now().toString() + gameRandom().toString(36).substr(2, 5)
+  const randomPart = Math.floor(gameRandom() * 0xFFFFFFFF).toString(36).padStart(7, '0')
+  const prefix = deterministicRNG.isEnabled()
+    ? deterministicRNG.getCallCount().toString(36)
+    : Date.now().toString(36)
+  return `${prefix}${randomPart}`
 }
 
 export function getBuildingIdentifier(building) {
