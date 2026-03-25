@@ -1,16 +1,9 @@
 // recoveryTanks.js - AI recovery tank management
 import { TILE_SIZE } from '../config.js'
 import { getUnitCommandsHandler } from '../inputHandler.js'
+import { getActiveAIPlayers } from './enemyUtils.js'
 
 const RECOVERY_COMMAND_COOLDOWN = 2000
-
-// Resolve active AI player IDs based on current game setup
-function getAIPlayers(gameState) {
-  const human = gameState.humanPlayer || 'player1'
-  const playerCount = gameState.playerCount || 2
-  const allPlayers = ['player1', 'player2', 'player3', 'player4'].slice(0, playerCount)
-  return allPlayers.filter(p => p !== human)
-}
 
 function getTargetTilePosition(target) {
   if (!target) return null
@@ -192,7 +185,7 @@ export function manageAIRecoveryTanks(units, gameState, mapGrid, now) {
     ? now
     : (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())
 
-  const aiPlayers = getAIPlayers(gameState)
+  const aiPlayers = getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId && u.health > 0)

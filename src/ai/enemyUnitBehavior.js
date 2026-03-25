@@ -1,7 +1,7 @@
 import { TILE_SIZE, TANK_FIRE_RANGE, ATTACK_PATH_CALC_INTERVAL, AI_DECISION_INTERVAL, MOVING_TARGET_CHECK_INTERVAL, TARGET_MOVEMENT_THRESHOLD } from '../config.js'
 import { getCachedPath } from '../game/pathfinding.js'
 import { applyEnemyStrategies, shouldConductGroupAttack, shouldRetreatLowHealth, shouldAIStartAttacking } from './enemyStrategies.js'
-import { isEnemyTo } from './enemyUtils.js'
+import { getEnemyPlayers, isEnemyTo, normalizePartyOwner } from './enemyUtils.js'
 import { buildingData } from '../buildings.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
@@ -40,6 +40,10 @@ const ROCKET_TURRET_RANGE = (buildingData.rocketTurret?.fireRange || 16) * TILE_
 const AIR_DEFENSE_RADIUS = TANK_FIRE_RANGE * TILE_SIZE * 1.2
 const F22_ANTI_AIR_BUFFER = TILE_SIZE * 0.75
 const F22_APPROACH_NODE_LIMIT = 5000
+
+function getEnemyOwnersSet(aiPlayerId, state) {
+  return new Set(getEnemyPlayers(aiPlayerId, state))
+}
 
 function getAiReplayTargetPos(moveTarget, mapGrid) {
   if (!moveTarget || !Number.isFinite(moveTarget.x) || !Number.isFinite(moveTarget.y)) {
@@ -225,13 +229,12 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
       } else {
         // Search enemy buildings in fire range
         const allBuildings = gameState.buildings || []
-        const humanPlayer = gameState.humanPlayer || 'player1'
         let nearestBuilding = null
         let nearestBldgDist = Infinity
         for (const bld of allBuildings) {
           if (bld.health <= 0) continue
           if (bld.owner === unit.owner) continue
-          if (bld.owner !== humanPlayer && bld.owner !== 'player') continue
+          if (!isEnemyTo(bld, unit.owner)) continue
           const bldCX = (bld.x + (bld.width || 1) / 2) * TILE_SIZE
           const bldCY = (bld.y + (bld.height || 1) / 2) * TILE_SIZE
           const bdx = bldCX - (unit.x + TILE_SIZE / 2)
@@ -503,7 +506,7 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
           // Third priority: Target player harvesters (key economic targets)
           if (!newTarget) {
             const playerHarvesters = units.filter(u =>
-              u.owner === gameState.humanPlayer &&
+              isEnemyTo(u, aiPlayerId) &&
             u.type === 'harvester' &&
             u.health > 0
             )
@@ -538,7 +541,7 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
             if (!shouldAttack) {
               // AI not ready for major attacks - only defend and target harvesters
               const playerHarvesters = units.filter(u =>
-                u.owner === gameState.humanPlayer &&
+                isEnemyTo(u, aiPlayerId) &&
                 u.type === 'harvester' &&
                 u.health > 0
               )
@@ -577,7 +580,7 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
                 let closestPlayerDist = Infinity
 
                 units.forEach(u => {
-                  if (u.owner === gameState.humanPlayer && u.health > 0) {
+                  if (isEnemyTo(u, aiPlayerId) && u.health > 0) {
                     if (!canUnitHitTarget(unit, u)) {
                       return
                     }
@@ -592,7 +595,7 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
 
                 // Priority 2: If no player units nearby, target player buildings (base attack)
                 if (!closestPlayerUnit || closestPlayerDist > 15 * TILE_SIZE) {
-                  const playerBuildings = gameState.buildings.filter(b => b.owner === gameState.humanPlayer && b.health > 0)
+                  const playerBuildings = gameState.buildings.filter(b => isEnemyTo(b, aiPlayerId) && b.health > 0)
                   if (playerBuildings.length > 0) {
                     // Prioritize important buildings: construction yard > vehicle factory > ore refinery > others
                     const priorityOrder = ['constructionYard', 'vehicleFactory', 'oreRefinery', 'powerPlant', 'radarStation']
@@ -638,7 +641,7 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
               } else {
                 // Solo unit behavior - be more cautious, focus on harvesters and weak targets
                 const soloTargets = units.filter(u => {
-                  if (u.owner !== gameState.humanPlayer || u.health <= 0) {
+                  if (!isEnemyTo(u, aiPlayerId) || u.health <= 0) {
                     return false
                   }
 
@@ -708,7 +711,7 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
         if (!unit.target) {
           // Only set a new target if we don't have one at all
           const existingTargets = units.filter(u =>
-            u.owner === gameState.humanPlayer &&
+            isEnemyTo(u, aiPlayerId) &&
             u.health > 0 &&
             canUnitHitTarget(unit, u) &&
             Math.hypot((u.x + TILE_SIZE / 2) - (unit.x + TILE_SIZE / 2), (u.y + TILE_SIZE / 2) - (unit.y + TILE_SIZE / 2)) < 10 * TILE_SIZE
@@ -939,7 +942,7 @@ function checkBaseDefenseNeeded(unit, units, gameState, aiPlayerId) {
 
   // Check if any player units are near our base
   const playerUnitsNearBase = units.filter(u => {
-    if (u.owner !== gameState.humanPlayer || u.health <= 0) return false
+    if (!isEnemyTo(u, aiPlayerId) || u.health <= 0) return false
     if (!canUnitHitTarget(unit, u)) return false
 
     return aiBuildings.some(building => {
@@ -990,7 +993,7 @@ function findBaseDefenseTarget(unit, units, gameState, aiPlayerId) {
 
   // Find player units threatening our base
   const threats = units.filter(u => {
-    if (u.owner !== gameState.humanPlayer || u.health <= 0) return false
+    if (!isEnemyTo(u, aiPlayerId) || u.health <= 0) return false
     if (!canUnitHitTarget(unit, u)) return false
 
     return aiBuildings.some(building => {
@@ -1086,8 +1089,8 @@ function updateAmbulanceAI(unit, units, gameState, mapGrid, now, aiPlayerId) {
 function updateHarvesterHunterTank(unit, units, gameState, mapGrid, now, aiPlayerId) {
   unit.defendingBase = false
 
-  const playerBaseCenter = findPlayerBaseCenter(gameState)
-  const remoteHarvesters = findRemotePlayerHarvesters(units, gameState, playerBaseCenter)
+  const playerBaseCenter = findPlayerBaseCenter(gameState, aiPlayerId)
+  const remoteHarvesters = findRemotePlayerHarvesters(units, gameState, playerBaseCenter, aiPlayerId)
 
   const unitCenterX = unit.x + TILE_SIZE / 2
   const unitCenterY = unit.y + TILE_SIZE / 2
@@ -1358,13 +1361,14 @@ function updateHarvesterHunterTank(unit, units, gameState, mapGrid, now, aiPlaye
   unit.lastDecisionTime = now
 }
 
-function findPlayerBaseCenter(gameState) {
-  if (!gameState?.buildings || !gameState.humanPlayer) {
+function findPlayerBaseCenter(gameState, aiPlayerId) {
+  if (!gameState?.buildings) {
     return null
   }
 
+  const enemyOwners = getEnemyOwnersSet(aiPlayerId, gameState)
   const playerBuildings = gameState.buildings.filter(
-    b => b.owner === gameState.humanPlayer && b.health > 0
+    b => enemyOwners.has(b.owner) && b.health > 0
   )
 
   if (playerBuildings.length === 0) return null
@@ -1378,18 +1382,19 @@ function findPlayerBaseCenter(gameState) {
   }
 }
 
-function getPlayerDefensiveBuildings(gameState) {
-  if (!gameState?.buildings || !gameState.humanPlayer) {
+function getPlayerDefensiveBuildings(gameState, aiPlayerId) {
+  if (!gameState?.buildings) {
     return []
   }
 
+  const enemyOwners = getEnemyOwnersSet(aiPlayerId, gameState)
   return gameState.buildings.filter(
-    b => b.owner === gameState.humanPlayer && PLAYER_DEFENSE_BUILDINGS.has(b.type)
+    b => enemyOwners.has(b.owner) && PLAYER_DEFENSE_BUILDINGS.has(b.type)
   )
 }
 
-function isNearPlayerDefense(x, y, gameState) {
-  const defenses = getPlayerDefensiveBuildings(gameState)
+function isNearPlayerDefense(x, y, gameState, aiPlayerId) {
+  const defenses = getPlayerDefensiveBuildings(gameState, aiPlayerId)
   if (defenses.length === 0) return false
 
   return defenses.some(defense => {
@@ -1399,8 +1404,8 @@ function isNearPlayerDefense(x, y, gameState) {
   })
 }
 
-function findNearestPlayerDefense(x, y, gameState) {
-  const defenses = getPlayerDefensiveBuildings(gameState)
+function findNearestPlayerDefense(x, y, gameState, aiPlayerId) {
+  const defenses = getPlayerDefensiveBuildings(gameState, aiPlayerId)
   if (defenses.length === 0) return null
 
   let nearest = null
@@ -1420,22 +1425,23 @@ function findNearestPlayerDefense(x, y, gameState) {
   return nearest
 }
 
-function findRemotePlayerHarvesters(units, gameState, baseCenter) {
-  if (!gameState?.humanPlayer) return []
+function findRemotePlayerHarvesters(units, gameState, baseCenter, aiPlayerId) {
+  const enemyOwners = getEnemyOwnersSet(aiPlayerId, gameState)
+  if (enemyOwners.size === 0) return []
 
   return units.filter(unit => {
-    if (unit.owner !== gameState.humanPlayer) return false
+    if (!enemyOwners.has(unit.owner)) return false
     if (unit.type !== 'harvester' || unit.health <= 0) return false
-    return isHarvesterRemote(unit, baseCenter, gameState)
+    return isHarvesterRemote(unit, baseCenter, gameState, aiPlayerId)
   })
 }
 
-function isHarvesterRemote(harvester, baseCenter, gameState) {
+function isHarvesterRemote(harvester, baseCenter, gameState, aiPlayerId) {
   const centerX = harvester.x + TILE_SIZE / 2
   const centerY = harvester.y + TILE_SIZE / 2
 
   // Main requirement: harvester must NOT be near player defenses
-  if (isNearPlayerDefense(centerX, centerY, gameState)) {
+  if (isNearPlayerDefense(centerX, centerY, gameState, aiPlayerId)) {
     return false
   }
 
@@ -1585,7 +1591,7 @@ function updateApacheAI(unit, units, gameState, mapGrid, now, aiPlayerId) {
   }
 }
 
-function findEnemyApacheInRange(unit, units, gameState) {
+function findEnemyApacheInRange(unit, units, _gameState) {
   if (!unit || !Array.isArray(units)) {
     return null
   }
@@ -1596,8 +1602,7 @@ function findEnemyApacheInRange(unit, units, gameState) {
     candidate &&
     candidate.type === 'apache' &&
     candidate.health > 0 &&
-    candidate.owner !== unit.owner &&
-    candidate.owner === gameState.humanPlayer
+    isEnemyTo(candidate, unit.owner)
   )
 
   let bestTarget = null
@@ -1621,10 +1626,10 @@ function getUnitCenter(unit) {
   }
 }
 
-function isAirDefenseNearby(position, units, gameState) {
-  const player = gameState.humanPlayer
+function isAirDefenseNearby(position, units, gameState, aiPlayerId) {
+  const enemyOwners = getEnemyOwnersSet(aiPlayerId, gameState)
   const nearbyRocketTanks = units.some(u =>
-    u.owner === player &&
+    enemyOwners.has(u.owner) &&
     AIR_DEFENSE_TYPES.has(u.type) &&
     u.health > 0 &&
     Math.hypot((u.x + TILE_SIZE / 2) - position.x, (u.y + TILE_SIZE / 2) - position.y) <= AIR_DEFENSE_RADIUS
@@ -1633,7 +1638,7 @@ function isAirDefenseNearby(position, units, gameState) {
   if (nearbyRocketTanks) return true
 
   const nearbyTurrets = (gameState.buildings || []).some(building => {
-    if (building.owner !== player || !AIR_DEFENSE_BUILDINGS.has(building.type) || building.health <= 0) return false
+    if (!enemyOwners.has(building.owner) || !AIR_DEFENSE_BUILDINGS.has(building.type) || building.health <= 0) return false
 
     const centerX = (building.x + (building.width || 1) / 2) * TILE_SIZE
     const centerY = (building.y + (building.height || 1) / 2) * TILE_SIZE
@@ -1663,7 +1668,8 @@ function getAntiAirThreatSources(units, gameState, owner) {
     if (!building || building.health <= 0 || building.owner === owner) return
     if (!AIR_DEFENSE_BUILDINGS.has(building.type)) return
 
-    const supply = building.owner === gameState.humanPlayer ? gameState.playerPowerSupply : gameState.enemyPowerSupply
+    const buildingOwner = normalizePartyOwner(building.owner)
+    const supply = buildingOwner === 'player1' ? gameState.playerPowerSupply : gameState.enemyPowerSupply
     if (building.type === 'rocketTurret' && supply < 0) return
 
     const range = (building.fireRange || buildingData.rocketTurret?.fireRange || 16) * TILE_SIZE
@@ -1830,17 +1836,17 @@ function isHarvesterAtOreField(harvester, gameState) {
 }
 
 function findApacheStrikeTarget(units, gameState, seeker) {
-  const player = gameState.humanPlayer
+  const enemyOwners = getEnemyOwnersSet(seeker?.owner, gameState)
   const isStrikeJet = seeker?.type === 'f22Raptor' || seeker?.type === 'f35'
   const antiAirThreatSources = isStrikeJet
     ? getAntiAirThreatSources(units, gameState, seeker.owner)
     : []
-  const playerHarvesters = units.filter(u => u.owner === player && u.type === 'harvester' && u.health > 0)
+  const playerHarvesters = units.filter(u => enemyOwners.has(u.owner) && u.type === 'harvester' && u.health > 0)
   const seekerCenter = getUnitCenter(seeker)
 
   const unprotectedHarvesters = playerHarvesters.filter(harvester => {
     const center = getUnitCenter(harvester)
-    return !isAirDefenseNearby(center, units, gameState)
+    return !isAirDefenseNearby(center, units, gameState, seeker?.owner)
   })
 
   if (isStrikeJet) {
@@ -1872,7 +1878,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
     }
   }
 
-  const playerBuildings = (gameState.buildings || []).filter(b => b.owner === player && b.health > 0)
+  const playerBuildings = (gameState.buildings || []).filter(b => enemyOwners.has(b.owner) && b.health > 0)
 
   if (seeker?.type === 'f22Raptor') {
     const unprotectedDefenses = playerBuildings.filter(building => {
@@ -1881,7 +1887,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
         x: (building.x + (building.width || 1) / 2) * TILE_SIZE,
         y: (building.y + (building.height || 1) / 2) * TILE_SIZE
       }
-      return !isAirDefenseNearby(center, units, gameState) && isTargetOutsideAntiAirThreat(building, antiAirThreatSources)
+      return !isAirDefenseNearby(center, units, gameState, seeker?.owner) && isTargetOutsideAntiAirThreat(building, antiAirThreatSources)
     })
 
     if (unprotectedDefenses.length > 0) {
@@ -1904,7 +1910,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
         x: (building.x + (building.width || 1) / 2) * TILE_SIZE,
         y: (building.y + (building.height || 1) / 2) * TILE_SIZE
       }
-      return !isAirDefenseNearby(center, units, gameState) && isTargetOutsideAntiAirThreat(building, antiAirThreatSources)
+      return !isAirDefenseNearby(center, units, gameState, seeker?.owner) && isTargetOutsideAntiAirThreat(building, antiAirThreatSources)
     })
 
     if (unprotectedGroundBuildings.length > 0) {
@@ -1927,7 +1933,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
       .find(b => !isAirDefenseNearby({
         x: (b.x + (b.width || 1) / 2) * TILE_SIZE,
         y: (b.y + (b.height || 1) / 2) * TILE_SIZE
-      }, units, gameState) && isTargetOutsideAntiAirThreat(b, antiAirThreatSources))
+      }, units, gameState, seeker?.owner) && isTargetOutsideAntiAirThreat(b, antiAirThreatSources))
 
     if (candidate) return candidate
   }
@@ -1935,7 +1941,7 @@ function findApacheStrikeTarget(units, gameState, seeker) {
   const fallback = playerBuildings.find(b => !isAirDefenseNearby({
     x: (b.x + (b.width || 1) / 2) * TILE_SIZE,
     y: (b.y + (b.height || 1) / 2) * TILE_SIZE
-  }, units, gameState) && isTargetOutsideAntiAirThreat(b, antiAirThreatSources))
+  }, units, gameState, seeker?.owner) && isTargetOutsideAntiAirThreat(b, antiAirThreatSources))
 
   return fallback || null
 }

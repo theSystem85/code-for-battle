@@ -4,6 +4,7 @@ import { getUnitCost } from '../utils.js'
 import { logPerformance } from '../performanceUtils.js'
 import { findPath } from '../units.js'
 import { getUnitCommandsHandler } from '../inputHandler.js'
+import { getSimulationTime } from './time.js'
 import {
   getWreckById,
   removeWreckById,
@@ -247,7 +248,7 @@ function handleRecycleTask(tank, task, wreck, gameState, delta) {
       task.state = 'recycling'
       task.elapsed = 0
       wreck.isBeingRecycled = true
-      wreck.recycleStartedAt = performance.now()
+      wreck.recycleStartedAt = getSimulationTime(gameState)
       wreck.assignedTankId = tank.id
       tank.recoveryProgress = 0
     }

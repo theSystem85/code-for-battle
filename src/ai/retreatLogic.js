@@ -2,6 +2,8 @@
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { getCachedPath } from '../game/pathfinding.js'
+import { getSimulationTime } from '../game/time.js'
+import { getEnemyPlayers, isEnemyTo } from './enemyUtils.js'
 
 // Configuration constants for AI behavior
 const AI_CONFIG = {
@@ -26,7 +28,7 @@ export function shouldRetreatLowHealth(unit) {
 function findNearestEnemyBase(unit, gameState) {
   if (!gameState.buildings) return null
 
-  const enemyBuildings = gameState.buildings.filter(b => b.owner === 'enemy')
+  const enemyBuildings = gameState.buildings.filter(b => b.owner === unit.owner)
   let nearestBase = null
   let nearestDistance = Infinity
 
@@ -118,15 +120,17 @@ function findSafePositionNearBase(baseX, baseY, mapGrid, _unit) {
 export function shouldHarvesterSeekProtection(harvester, units) {
   if (harvester.type !== 'harvester') return false
 
+  const now = getSimulationTime(gameState)
+
   // Check for nearby enemy units threatening the harvester
   const nearbyThreats = units.filter(u =>
-    u.owner === gameState.humanPlayer &&
+    isEnemyTo(u, harvester.owner) &&
     u.health > 0 &&
     Math.hypot(u.x - harvester.x, u.y - harvester.y) < AI_CONFIG.HARVESTER_DEFENSE_RANGE * TILE_SIZE
   )
 
   // Also check if harvester has been recently damaged
-  const recentlyDamaged = harvester.lastDamageTime && (performance.now() - harvester.lastDamageTime < 10000)
+  const recentlyDamaged = harvester.lastDamageTime && (now - harvester.lastDamageTime < 10000)
 
   return nearbyThreats.length > 0 || recentlyDamaged
 }
@@ -173,7 +177,7 @@ function findDefensivePosition(baseBuilding, gameState, mapGrid) {
 
   // Look for defensive buildings near the base
   const defensiveBuildings = gameState.buildings.filter(b =>
-    b.owner === 'enemy' &&
+    b.owner === baseBuilding.owner &&
     (b.type.includes('turret') || b.type === 'teslaCoil' || b.type === 'artilleryTurret') &&
     Math.hypot(
       (b.x + b.width / 2) - (baseBuilding.x + baseBuilding.width / 2),
@@ -257,9 +261,11 @@ export function sendUnitToWorkshop(unit, gameState, mapGrid) {
 export function shouldStopRetreating(unit, gameState) {
   if (!unit.isRetreating) return false
 
+  const now = getSimulationTime(gameState)
+
   // Stop retreating if health is above threshold and near base
   const healthPercent = unit.health / unit.maxHealth
-  const notUnderFire = !unit.isBeingAttacked && (!unit.lastDamageTime || performance.now() - unit.lastDamageTime > 2000)
+  const notUnderFire = !unit.isBeingAttacked && (!unit.lastDamageTime || now - unit.lastDamageTime > 2000)
   if (healthPercent > 0.3 && notUnderFire) { // 30% health to stop retreating and no recent attacks
     // Check if unit is near enemy base
     const nearestBase = findNearestEnemyBase(unit, gameState)
@@ -284,12 +290,15 @@ export function shouldStopRetreating(unit, gameState) {
 export function isUnitInPlayerBase(unit, gameState) {
   if (!gameState.buildings) return false
 
+  const enemyPlayers = new Set(getEnemyPlayers(unit.owner, gameState))
+  if (enemyPlayers.size === 0) return false
+
   const unitX = unit.x + TILE_SIZE / 2
   const unitY = unit.y + TILE_SIZE / 2
 
   // Check if unit is near any player buildings
   return gameState.buildings
-    .filter(b => b.owner === gameState.humanPlayer)
+    .filter(b => enemyPlayers.has(b.owner))
     .some(building => {
       const buildingCenterX = (building.x + building.width / 2) * TILE_SIZE
       const buildingCenterY = (building.y + building.height / 2) * TILE_SIZE

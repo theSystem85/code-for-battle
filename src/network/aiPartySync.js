@@ -38,11 +38,6 @@ export function isUnitAiControlled(unit) {
     return false
   }
 
-  // The human player is never AI controlled
-  if (unit.owner === gameState.humanPlayer) {
-    return false
-  }
-
   return isPartyAiControlled(unit.owner)
 }
 
@@ -53,11 +48,6 @@ export function isUnitAiControlled(unit) {
  */
 export function isBuildingAiControlled(building) {
   if (!building || !building.owner) {
-    return false
-  }
-
-  // The human player is never AI controlled
-  if (building.owner === gameState.humanPlayer) {
     return false
   }
 

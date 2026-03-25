@@ -8,6 +8,7 @@ import {
 import { getUnitCost } from '../utils.js'
 import { UNIT_COLLISION_MIN_DISTANCE } from './unifiedMovement.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { getSimulationTime } from './time.js'
 
 function adjustWreckOccupancy(wreck, occupancyMap, tileX, tileY) {
   if (!occupancyMap || occupancyMap.length === 0) {
@@ -102,7 +103,7 @@ export function registerUnitWreck(unit, gameState) {
       ? unit.f22CrashWreckDirection
       : (unit.direction || 0),
     turretDirection: unit.turretDirection || unit.direction || 0,
-    createdAt: performance.now(),
+    createdAt: getSimulationTime(gameState),
     cost: getUnitCost(unit.type) || 0,
     buildDuration: estimateBuildDuration(unit.type, unit.buildDuration),
     assignedTankId: null,

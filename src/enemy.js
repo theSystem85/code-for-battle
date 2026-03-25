@@ -53,18 +53,17 @@ export const updateEnemyAI = logPerformance(function updateEnemyAI(units, factor
 
   const occupancyMap = gameState.occupancyMap
   const now = getSimulationTime(gameState)
-  const humanPlayer = gameState.humanPlayer || 'player1'
   const playerCount = gameState.playerCount || 2
   const allPlayers = ['player1', 'player2', 'player3', 'player4'].slice(0, playerCount)
 
-  // Filter to only players that are both non-human AND AI-controlled (not taken over via multiplayer)
-  const aiPlayers = allPlayers.filter(p => p !== humanPlayer && isPartyAiControlled(p, gameState))
+  const aiPlayers = allPlayers.filter(p => isPartyAiControlled(p, gameState))
   const targetedOreTiles = gameState.targetedOreTiles || {}
 
   updateLlmStrategicAI(units, factories, bullets, mapGrid, gameState, now)
 
   if (!gameState.lastGlobalAttackDecision || now - gameState.lastGlobalAttackDecision > 8000) {
-    const point = computeLeastDangerAttackPoint(gameState)
+    const attackPointOwner = aiPlayers[0] || gameState.humanPlayer || 'player1'
+    const point = computeLeastDangerAttackPoint(gameState, attackPointOwner)
     if (point) {
       gameState.globalAttackPoint = point
       gameState.lastGlobalAttackDecision = now

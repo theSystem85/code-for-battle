@@ -15,12 +15,12 @@ import { findBuildingPosition } from './enemyBuilding.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { logPerformance } from '../performanceUtils.js'
 import { RECOVERY_TANK_RATIO, UNIT_COSTS } from '../config.js'
-import { gameState } from '../gameState.js'
 import { isPartyUsingLlmStrategic } from './llmStrategicAccess.js'
 import { processLlmBuildQueue, processLlmUnitQueue, markLlmBuildComplete, markLlmUnitComplete } from '../ai-api/applier.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/airstripUtils.js'
 import { handleStuckHarvester } from '../game/harvesterLogic.js'
 import { createReplayEntityReference, createReplayUnitReference, recordReplayCommand } from '../replaySystem.js'
+import { getClosestEnemyFactory } from './enemyUtils.js'
 
 const AI_SELL_PRIORITY = [
   'turretGunV1',
@@ -272,9 +272,7 @@ function findSimpleBuildingPosition(buildingType, mapGrid, factories, aiPlayerId
 
   let angleOffset = 0
   if (isDefensive) {
-    const playerFactory = factories.find(
-      f => f.id === gameState.humanPlayer || f.id === 'player1'
-    )
+    const playerFactory = getClosestEnemyFactory(factory, factories, aiPlayerId)
     if (playerFactory) {
       const fx = factory.x + Math.floor(factory.width / 2)
       const fy = factory.y + Math.floor(factory.height / 2)

@@ -226,7 +226,7 @@ export function updateMapScrolling(gameState, mapGrid) {
  * @param {Array} factories - Array of factory objects
  */
 export const updateOreSpread = logPerformance(function updateOreSpread(gameState, mapGrid, factories = []) {
-  const now = performance.now()
+  const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
 
   if (!ORE_SPREAD_ENABLED) {
     return
@@ -305,7 +305,7 @@ export const updateOreSpread = logPerformance(function updateOreSpread(gameState
  * @param {Object} gameState - Game state object
  */
 export function updateExplosions(gameState) {
-  const now = getSimulationTime(gameState)
+  const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
   const hostAuthority = isHost()
 
   if (!hostAuthority) {

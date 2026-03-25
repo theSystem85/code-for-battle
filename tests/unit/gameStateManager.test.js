@@ -163,11 +163,12 @@ describe('gameStateManager', () => {
       )
       mapGrid[1][1].ore = true
       const gameState = {
+        simulationTime: ORE_SPREAD_INTERVAL + 10,
         lastOreUpdate: 0,
         occupancyMap: Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => 0)),
         buildings: []
       }
-      performanceNow.mockReturnValue(ORE_SPREAD_INTERVAL + 10)
+      performanceNow.mockReturnValue(0)
       gameRandom.mockReturnValue(0)
 
       updateOreSpread(gameState, mapGrid, [])
@@ -182,12 +183,13 @@ describe('gameStateManager', () => {
       )
       mapGrid[1][1].ore = true
       const gameState = {
+        simulationTime: ORE_SPREAD_INTERVAL + 10,
         lastOreUpdate: 0,
         occupancyMap: Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => 0)),
         buildings: []
       }
       gameState.occupancyMap[1][2] = 1
-      performanceNow.mockReturnValue(ORE_SPREAD_INTERVAL + 10)
+      performanceNow.mockReturnValue(0)
       gameRandom.mockReturnValue(0)
 
       updateOreSpread(gameState, mapGrid, [])
@@ -552,7 +554,7 @@ describe('gameStateManager', () => {
 
       updateGameTime(gameState, 500)
 
-      expect(gameState.gameTime).toBe(1)
+      expect(gameState.gameTime).toBe(0.5)
     })
   })
 

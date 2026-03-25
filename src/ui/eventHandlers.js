@@ -27,6 +27,7 @@ import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
 import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
+import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import {
   completeFinishedReplaySession,
   isReplayFinishedPaused,
@@ -712,8 +713,8 @@ export class EventHandlers {
       return
     }
 
-    if (isReplayModeActive()) {
-      showNotification('Replay mode is active: build commands are disabled.')
+    if (isReplayModeActive() || isLocalPartyAutomationLocked()) {
+      showNotification('Build commands are disabled while replay mode or host-party automation is active.')
       return
     }
 
@@ -775,7 +776,7 @@ export class EventHandlers {
   handleBuildingPlacement(e) {
     const gameCanvas = this.canvasManager.getGameCanvas()
 
-    if (isReplayModeActive() || isReplayInteractionLocked()) return
+    if (isReplayModeActive() || isReplayInteractionLocked() || isLocalPartyAutomationLocked()) return
 
     if (gameState.buildingPlacementMode && gameState.currentBuildingType) {
       const mouseX = e.clientX - gameCanvas.getBoundingClientRect().left + gameState.scrollOffset.x

@@ -1,16 +1,9 @@
 // logistics.js - AI logistics management (tankers and ammunition)
 import { getCachedPath } from '../game/pathfinding.js'
 import { getUnitCommandsHandler } from '../inputHandler.js'
+import { getActiveAIPlayers } from './enemyUtils.js'
 
 const AUTO_REFUEL_SCAN_INTERVAL = 10000
-
-// Resolve active AI player IDs based on current game setup
-function getAIPlayers(gameState) {
-  const human = gameState.humanPlayer || 'player1'
-  const playerCount = gameState.playerCount || 2
-  const allPlayers = ['player1', 'player2', 'player3', 'player4'].slice(0, playerCount)
-  return allPlayers.filter(p => p !== human)
-}
 
 /**
  * Manages tanker truck refueling and guard behavior for all AI players
@@ -18,7 +11,7 @@ function getAIPlayers(gameState) {
 export function manageAITankerTrucks(units, gameState, mapGrid) {
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
   const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
-  const aiPlayers = getAIPlayers(gameState)
+  const aiPlayers = getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId)
@@ -290,7 +283,7 @@ function sendTankerToUnit(tanker, unit, mapGrid, occupancyMap) {
  * Implements FR-031, FR-034, FR-036
  */
 export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
-  const aiPlayers = getAIPlayers(gameState)
+  const aiPlayers = getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId)
@@ -455,7 +448,7 @@ function sendAmmoTruckToUnit(truck, unit, mapGrid, occupancyMap) {
  * Implements FR-032, FR-033
  */
 export function manageAIAmmunitionMonitoring(units, gameState, mapGrid) {
-  const aiPlayers = getAIPlayers(gameState)
+  const aiPlayers = getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId && u.health > 0)

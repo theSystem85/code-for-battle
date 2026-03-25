@@ -4,7 +4,9 @@ import {
   getHostInviteStatus,
   setHostInviteStatus,
   observePartyOwnershipChange,
-  updateHostPartyAlias
+  updateHostPartyAlias,
+  setHostPartyAutomationMode,
+  isHost
 } from '../network/multiplayerStore.js'
 import { watchHostInvite, kickPlayer } from '../network/webrtcSession.js'
 import { showHostNotification } from '../network/hostNotifications.js'
@@ -602,9 +604,10 @@ function createPartyRow(partyState) {
   status.setAttribute('aria-live', 'polite')
   status.dataset.testid = `multiplayer-party-status-${partyState.partyId}`
 
-  // Check if a human player is connected (not AI and not the host)
   const localPartyId = getLocalPartyId()
-  const isHumanConnected = !partyState.aiActive && partyState.partyId !== localPartyId
+  const isLocalHostParty = partyState.partyId === localPartyId
+  const isHumanConnected = !partyState.aiActive && !isLocalHostParty
+  const canManageLocalHostParty = isLocalHostParty && isHost()
 
   if (isHumanConnected) {
     // Human player is connected - show empty status and kick button
@@ -619,25 +622,28 @@ function createPartyRow(partyState) {
     kickButton.addEventListener('click', () => handleKickClick(partyState, kickButton))
     controls.appendChild(kickButton)
   } else {
-    // AI controlled or host party - show normal invite flow
     updateStatusText(status, partyState)
     controls.appendChild(status)
 
-    // Show LLM toggle for AI parties (not the host)
-    const isAiParty = partyState.aiActive !== false && partyState.partyId !== localPartyId
-    if (isAiParty) {
-      const llmToggle = createLlmToggleButton(partyState)
-      controls.appendChild(llmToggle)
+    if (canManageLocalHostParty) {
+      controls.appendChild(createPartyControlSelect(partyState, { includeManual: true }))
+    } else {
+      const isAiParty = partyState.aiActive !== false && partyState.partyId !== localPartyId
+      if (isAiParty) {
+        controls.appendChild(createPartyControlSelect(partyState, { includeManual: false }))
+      }
     }
 
-    const inviteButton = document.createElement('button')
-    inviteButton.type = 'button'
-    inviteButton.className = 'multiplayer-invite-button'
-    inviteButton.textContent = 'Invite'
-    inviteButton.dataset.testid = `multiplayer-invite-${partyState.partyId}`
-    inviteButton.addEventListener('click', () => handleInviteClick(partyState, inviteButton, status))
+    if (!isLocalHostParty) {
+      const inviteButton = document.createElement('button')
+      inviteButton.type = 'button'
+      inviteButton.className = 'multiplayer-invite-button'
+      inviteButton.textContent = 'Invite'
+      inviteButton.dataset.testid = `multiplayer-invite-${partyState.partyId}`
+      inviteButton.addEventListener('click', () => handleInviteClick(partyState, inviteButton, status))
 
-    controls.appendChild(inviteButton)
+      controls.appendChild(inviteButton)
+    }
   }
 
   row.append(info, controls)
@@ -662,14 +668,21 @@ function getAvailableLlmModels() {
     }))
 }
 
-function createLlmToggleButton(partyState) {
+function createPartyControlSelect(partyState, { includeManual = false } = {}) {
   const select = document.createElement('select')
   select.className = 'multiplayer-llm-toggle'
   select.dataset.testid = `multiplayer-llm-select-${partyState.partyId}`
 
+  if (includeManual) {
+    const manualOption = document.createElement('option')
+    manualOption.value = 'manual'
+    manualOption.textContent = 'Take Over'
+    select.appendChild(manualOption)
+  }
+
   const localOption = document.createElement('option')
   localOption.value = 'local'
-  localOption.textContent = '⚙️ Local'
+  localOption.textContent = '⚙️ Local AI'
   select.appendChild(localOption)
 
   const llmModels = getAvailableLlmModels()
@@ -680,12 +693,30 @@ function createLlmToggleButton(partyState) {
     select.appendChild(option)
   })
 
-  const selected = partyState.llmControlled === false ? 'local' : (partyState.llmModelKey || 'local')
+  const selected = includeManual && partyState.aiActive === false
+    ? 'manual'
+    : (partyState.llmControlled === false ? 'local' : (partyState.llmModelKey || 'local'))
   select.value = Array.from(select.options).some(opt => opt.value === selected) ? selected : 'local'
 
   select.addEventListener('change', () => {
     const ps = gameState.partyStates?.find(p => p.partyId === partyState.partyId)
     if (!ps) return
+
+    if (includeManual && select.value === 'manual') {
+      setHostPartyAutomationMode('manual')
+      return
+    }
+
+    if (includeManual && select.value === 'local') {
+      setHostPartyAutomationMode('local')
+      return
+    }
+
+    if (includeManual) {
+      setHostPartyAutomationMode('llm', select.value)
+      return
+    }
+
     if (select.value === 'local') {
       ps.llmControlled = false
       ps.llmModelKey = null

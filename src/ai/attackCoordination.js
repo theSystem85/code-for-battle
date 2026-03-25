@@ -1,8 +1,10 @@
 // attackCoordination.js - AI attack coordination and multi-directional attack strategies
 import { TILE_SIZE, TANK_FIRE_RANGE, HOWITZER_FIRE_RANGE } from '../config.js'
 import { createFormationOffsets, getCachedPath } from '../game/pathfinding.js'
+import { getSimulationTime } from '../game/time.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { isUnitInPlayerBase } from './retreatLogic.js'
+import { getEnemyPlayers, isEnemyTo } from './enemyUtils.js'
 
 // Configuration constants for AI behavior
 const AI_CONFIG = {
@@ -62,8 +64,11 @@ function computeRequiredGroupSize(aiPlayerId, target, gameState) {
  * Evaluates the strength of player defenses near a target
  * Returns a score representing defensive strength
  */
-function evaluatePlayerDefenses(target, gameState) {
+function evaluatePlayerDefenses(target, gameState, aiPlayerId) {
   if (!gameState.buildings) return 0
+
+  const enemyOwners = new Set(getEnemyPlayers(aiPlayerId, gameState))
+  if (enemyOwners.size === 0) return 0
 
   let defenseScore = 0
   const targetX = target.tileX !== undefined ? target.tileX : target.x
@@ -71,7 +76,7 @@ function evaluatePlayerDefenses(target, gameState) {
 
   // Check for defensive buildings near target
   gameState.buildings
-    .filter(b => b.owner === gameState.humanPlayer)
+    .filter(b => enemyOwners.has(b.owner))
     .forEach(building => {
       const distance = Math.hypot(
         (building.x + building.width / 2) - targetX,
@@ -111,7 +116,7 @@ function evaluatePlayerDefenses(target, gameState) {
  */
 function countNearbyAllies(unit, units) {
   return units.filter(u =>
-    u.owner === 'enemy' &&
+    u.owner === unit.owner &&
     u !== unit &&
     u.health > 0 &&
     (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank' || u.type === 'howitzer') &&
@@ -140,6 +145,11 @@ export function shouldAIStartAttacking(aiPlayerId, gameState) {
 export function shouldConductGroupAttack(unit, units, gameState, target) {
   if (!target) return false
 
+  const enemyOwners = new Set(getEnemyPlayers(unit.owner, gameState))
+  if (enemyOwners.size === 0) return false
+
+  const now = getSimulationTime(gameState)
+
   // Prevent AI from attacking before having core infrastructure
   if (!shouldAIStartAttacking(unit.owner, gameState)) return false
 
@@ -152,7 +162,7 @@ export function shouldConductGroupAttack(unit, units, gameState, target) {
   // If we've already maneuvered into firing range of the target, don't hold fire
   // waiting for extra allies. This prevents units from parking next to the
   // player's base and never actually shooting.
-  if (target.owner === gameState.humanPlayer) {
+  if (isEnemyTo(target, unit.owner)) {
     const unitCenterX = unit.x + TILE_SIZE / 2
     const unitCenterY = unit.y + TILE_SIZE / 2
 
@@ -180,12 +190,12 @@ export function shouldConductGroupAttack(unit, units, gameState, target) {
   }
 
   // Allow individual combat if unit is under attack
-  if (unit.isBeingAttacked || unit.lastDamageTime && Date.now() - unit.lastDamageTime < 5000) {
+  if (unit.isBeingAttacked || unit.lastDamageTime && now - unit.lastDamageTime < 5000) {
     return true
   }
 
   // Always allow attacking player harvesters (high priority economic targets)
-  if (target.type === 'harvester' && target.owner === gameState.humanPlayer) {
+  if (target.type === 'harvester' && isEnemyTo(target, unit.owner)) {
     return true
   }
 
@@ -213,27 +223,28 @@ export function shouldConductGroupAttack(unit, units, gameState, target) {
 /**
  * Finds the player's main base center for attack coordination
  */
-function findPlayerBaseCenter(gameState) {
+function findPlayerBaseCenter(gameState, aiPlayerId) {
   if (!gameState.buildings) return null
 
-  const playerBuildings = gameState.buildings.filter(b => b.owner === gameState.humanPlayer)
-  if (playerBuildings.length === 0) return null
+  const enemyOwners = new Set(getEnemyPlayers(aiPlayerId, gameState))
+  const enemyBuildings = gameState.buildings.filter(b => enemyOwners.has(b.owner) && b.health > 0)
+  if (enemyBuildings.length === 0) return null
 
   // Find construction yard or command center as primary target
-  let primaryTarget = playerBuildings.find(b =>
+  let primaryTarget = enemyBuildings.find(b =>
     b.type === 'constructionYard' || b.type === 'commandCenter'
   )
 
   // If no primary target, use any important building
   if (!primaryTarget) {
-    primaryTarget = playerBuildings.find(b =>
+    primaryTarget = enemyBuildings.find(b =>
       b.type === 'vehicleFactory' || b.type === 'oreRefinery' || b.type === 'powerPlant'
     )
   }
 
   // Fallback to first building
   if (!primaryTarget) {
-    primaryTarget = playerBuildings[0]
+    primaryTarget = enemyBuildings[0]
   }
 
   return {
@@ -247,12 +258,12 @@ function findPlayerBaseCenter(gameState) {
  * Assigns attack direction to a group of units to avoid clustering
  */
 export function assignAttackDirection(unit, units, gameState) {
-  const playerBase = findPlayerBaseCenter(gameState)
+  const playerBase = findPlayerBaseCenter(gameState, unit.owner)
   if (!playerBase) return null
 
   // Get nearby combat units for direction assignment
   const nearbyUnits = units.filter(u =>
-    u.owner === 'enemy' &&
+    u.owner === unit.owner &&
     u !== unit &&
     u.health > 0 &&
     (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank' || u.type === 'howitzer') &&
@@ -392,7 +403,7 @@ export function handleMultiDirectionalAttack(unit, units, gameState, mapGrid, no
   }
 
   // Find target for attack
-  const target = findPlayerBaseCenter(gameState)
+  const target = findPlayerBaseCenter(gameState, unit.owner)
   if (!target) return false
 
   // Skip if already very close to target (engage directly)
@@ -488,13 +499,14 @@ export function getAttackDirectionStats() {
 }
 
 // Determine a tile around the player's buildings with the lowest danger level
-export function computeLeastDangerAttackPoint(gameState) {
-  const human = gameState.humanPlayer || 'player1'
-  const dzm = gameState.dangerZoneMaps && gameState.dangerZoneMaps[human]
+export function computeLeastDangerAttackPoint(gameState, aiPlayerId = null) {
+  const targetingPartyId = aiPlayerId || gameState.humanPlayer || 'player1'
+  const enemyOwners = new Set(getEnemyPlayers(targetingPartyId, gameState))
+  const dzm = gameState.dangerZoneMaps && gameState.dangerZoneMaps[targetingPartyId]
   if (!dzm) return null
 
   const buildings = (gameState.buildings || []).filter(
-    b => b.owner === human && b.health > 0
+    b => enemyOwners.has(b.owner) && b.health > 0
   )
   if (buildings.length === 0) return null
 

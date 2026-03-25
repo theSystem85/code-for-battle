@@ -1,6 +1,5 @@
 import { buildingData, createBuilding, canPlaceBuilding, placeBuilding, isNearExistingBuilding, isTileValid, updatePowerSupply } from '../buildings.js'
-import { gameState } from '../gameState.js'
-import { isPartOfFactory } from './enemyUtils.js'
+import { getClosestEnemyFactory, isPartOfFactory } from './enemyUtils.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { gameRandom } from '../utils/gameRandom.js'
 
@@ -70,7 +69,7 @@ export function findBuildingPosition(buildingType, mapGrid, units, buildings, fa
   const buildingHeight = buildingData[buildingType].height
 
   // Get human player factory for directional placement (to build defenses toward them)
-  const humanPlayerFactory = factories.find(f => f.id === gameState.humanPlayer || f.id === 'player1') // Use gameState.humanPlayer
+  const humanPlayerFactory = getClosestEnemyFactory(factory, factories, aiPlayerId)
   const factoryX = factory.x + Math.floor(factory.width / 2)
   const factoryY = factory.y + Math.floor(factory.height / 2)
 
@@ -435,9 +434,7 @@ function fallbackBuildingPosition(buildingType, mapGrid, units, buildings, facto
     : [3, 4, 5, 2]
 
   // Get human player factory for directional placement of defensive buildings
-  const playerFactory = factories.find(
-    f => f.id === gameState.humanPlayer || f.id === 'player1'
-  )
+  const playerFactory = getClosestEnemyFactory(factory, factories, aiPlayerId)
   const isDefensiveBuilding = isDefensiveBuildingType(buildingType)
 
   // Calculate player direction for fallback
