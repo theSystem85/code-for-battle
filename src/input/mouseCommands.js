@@ -201,6 +201,7 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
       command: 'guard',
       targetRef: createReplayEntityReference(guardTarget)
     })
+    document.dispatchEvent(new CustomEvent('mobile-guard-applied'))
     playSound('confirmed', 0.5)
     return true
   }

@@ -27,6 +27,7 @@ import { GAME_DEFAULT_CURSOR } from '../input/cursorStyles.js'
 import { endMapEditOnPlay } from './mapEditorControls.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
 import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
+import { initMobileGuardMode } from './mobileGuardMode.js'
 import {
   completeFinishedReplaySession,
   isReplayFinishedPaused,
@@ -52,6 +53,7 @@ export class EventHandlers {
     this.setupGameControls()
     this.setupBuildingPlacement()
     this.setupRepairAndSellModes()
+    initMobileGuardMode()
     this.setupVolumeControl()
     this.setupMobileDropListeners()
   }

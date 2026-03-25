@@ -1796,6 +1796,32 @@ body.mobile-portrait.sidebar-collapsed #mobilePortraitActions #sellBtn.active {
   box-shadow: none;
 }
 
+#guardBtn {
+  display: none;
+}
+
+body.mobile-portrait.sidebar-condensed #mobilePortraitActions #guardBtn.active img {
+  filter: brightness(0) saturate(100%) invert(70%) sepia(21%) saturate(1283%) hue-rotate(73deg)
+    brightness(97%) contrast(93%);
+}
+
+body.mobile-portrait.sidebar-condensed #mobilePortraitActions #guardBtn.guard-mode-active {
+  animation: mobileGuardPulse 0.95s ease-in-out infinite;
+}
+
+@keyframes mobileGuardPulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
 body.mobile-portrait.sidebar-condensed #mobilePortraitActions #repairBtn.active img,
 body.mobile-portrait.sidebar-collapsed #mobilePortraitActions #repairBtn.active img {
   filter: brightness(0) saturate(100%) invert(70%) sepia(21%) saturate(1283%) hue-rotate(73deg)

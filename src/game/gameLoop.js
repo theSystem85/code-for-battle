@@ -15,6 +15,7 @@ import { updateMapScrolling } from './gameStateManager.js'
 import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSync.js'
 import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
 import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
+import { refreshMobileGuardButtonState } from '../ui/mobileGuardMode.js'
 
 export class GameLoop {
   constructor(canvasManager, productionController, mapGrid, factories, units, bullets, productionQueue, moneyEl, gameTimeEl) {
@@ -414,6 +415,8 @@ export class GameLoop {
       this.gameTimeEl.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`
       this.lastGameTimeUpdate = now
     }
+
+    refreshMobileGuardButtonState()
 
     this.scheduleNextFrame()
   }, false, 'animate')

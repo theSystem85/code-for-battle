@@ -44,6 +44,7 @@ const mouseHandler = new MouseHandler()
 const keyboardHandler = new KeyboardHandler()
 const selectionManager = new SelectionManager()
 const unitCommands = new UnitCommandsHandler()
+let mobileGuardModeActive = false
 keyboardHandler.setUnitCommands(unitCommands)
 
 export function setRenderScheduler(callback) {
@@ -126,7 +127,7 @@ export function setupInputHandlers(units, factories, mapGrid) {
     }
     if (e.key === 'Meta') {
       isGuardModifierActive(e)
-      cursorManager.updateGuardMode(false)
+      cursorManager.updateGuardMode(mobileGuardModeActive)
       cursorManager.refreshCursor(gameState.mapGrid || [], gameState.factories || [], selectedUnits)
     }
   })
@@ -146,4 +147,20 @@ export function getKeyboardHandler() {
 // Provide access to unit command handler for other systems
 export function getUnitCommandsHandler() {
   return unitCommands
+}
+
+export function isMobileGuardModeActive() {
+  return mobileGuardModeActive
+}
+
+export function setMobileGuardModeActive(isActive) {
+  mobileGuardModeActive = Boolean(isActive)
+  const combinedGuardMode = mobileGuardModeActive || isGuardModifierActive()
+  cursorManager.updateGuardMode(combinedGuardMode)
+  cursorManager.refreshCursor(
+    gameState.mapGrid || [],
+    gameState.factories || [],
+    selectedUnits,
+    gameState.units || []
+  )
 }
