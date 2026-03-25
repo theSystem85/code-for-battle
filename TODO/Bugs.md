@@ -328,3 +328,4 @@
 
 - [x] Investigate and fix the sidebar game-speed regression so simulation systems follow the speed input via a fixed-step simulation clock while render FPS stays unchanged and gameplay remains frame-rate independent.
 - [x] Follow-up: convert remaining gameplay-critical wall-clock timers from the game-speed fix (Tesla Coil sequencing and AI/LLM building sell timers) to the simulation clock so they obey sidebar speed changes too.
+- [x] Resolve merge-conflict markers accidentally committed in `src/game/gameOrchestrator.js` around map generation storage keys; keep `PLAYER_COUNT_STORAGE_KEY` and `ORE_FIELD_COUNT_STORAGE_KEY` exported while preserving terrain-storage keys.

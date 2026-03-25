@@ -55,9 +55,8 @@ import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
-<<<<<<< codex/update-map-generation-settings-for-user-input
-const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
-const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
+export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
+export const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
 const MAP_WATER_PERCENT_STORAGE_KEY = 'rts-map-water-percent'
 const MAP_ROCK_PERCENT_STORAGE_KEY = 'rts-map-rock-percent'
 const MAP_SHORE_NORTH_STORAGE_KEY = 'rts-map-shore-north'
@@ -65,10 +64,6 @@ const MAP_SHORE_WEST_STORAGE_KEY = 'rts-map-shore-west'
 const MAP_SHORE_EAST_STORAGE_KEY = 'rts-map-shore-east'
 const MAP_SHORE_SOUTH_STORAGE_KEY = 'rts-map-shore-south'
 const MAP_CENTER_LAKE_STORAGE_KEY = 'rts-map-center-lake'
-=======
-export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
-export const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
->>>>>>> main
 export const MAP_WIDTH_TILES_STORAGE_KEY = 'rts-map-width-tiles'
 export const MAP_HEIGHT_TILES_STORAGE_KEY = 'rts-map-height-tiles'
 const SHADOW_OF_WAR_STORAGE_KEY = 'rts-shadow-of-war-enabled'
