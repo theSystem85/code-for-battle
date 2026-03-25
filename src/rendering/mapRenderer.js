@@ -915,11 +915,12 @@ export class MapRenderer {
     if (sotApplied.has(key)) return
     sotApplied.add(key)
 
-    // Offset SOT slightly to hide gaps on left/top edges and expand a bit
-    const isWaterSot = type === 'water'
-    const screenX = tileX * TILE_SIZE - scrollOffset.x - (isWaterSot ? 0 : 1)
-    const screenY = tileY * TILE_SIZE - scrollOffset.y - (isWaterSot ? 0 : 1)
-    const size = TILE_SIZE + (isWaterSot ? 1 : 3)
+    // Offset SOT slightly to hide antialias seams and expand enough to blend with adjacent tiles.
+    // Water SOT needs the same seam-hiding padding as land/street SOT so diagonal corner wedges
+    // visually merge into full-water tiles as one continuous surface.
+    const screenX = Math.floor(tileX * TILE_SIZE - scrollOffset.x) - 1
+    const screenY = Math.floor(tileY * TILE_SIZE - scrollOffset.y) - 1
+    const size = TILE_SIZE + 3
 
     ctx.save()
     ctx.beginPath()
