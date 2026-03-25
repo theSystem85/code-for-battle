@@ -735,29 +735,43 @@ export class MapRenderer {
     ctx.fillStyle = toRgba(deepColor)
     ctx.fillRect(screenX, screenY, size, size)
 
+    // Use world-space band positions so bands align seamlessly across tile boundaries.
+    // bandHeight was previously tile-relative (size / (bandCount+1)), causing a double-gap
+    // at every tile edge. Now we anchor bands to absolute world Y coordinates.
     const bandCount = 5
-    const bandHeight = size / (bandCount + 1)
-    for (let i = 0; i < bandCount; i++) {
-      const phase = t + originX * (0.026 / zoom) + originY * (0.029 / zoom) + i * 1.17
+    const worldBandSpacing = TILE_SIZE / (bandCount + 1)
+    const firstBandIndex = Math.floor(originY / worldBandSpacing)
+    for (let bandIndex = firstBandIndex; bandIndex <= firstBandIndex + bandCount + 1; bandIndex++) {
+      const worldBandY = bandIndex * worldBandSpacing
+      const phase = t + originX * (0.026 / zoom) + worldBandY * (0.029 / zoom) + bandIndex * 1.17
       const offset = Math.sin(phase) * 2
-      const y = screenY + (i + 1) * bandHeight + offset
-      const alpha = 0.22 + 0.08 * Math.sin(phase * 1.4)
-      ctx.fillStyle = toRgba(bandColor, Math.max(0.12, Math.min(0.36, alpha)).toFixed(3))
-      ctx.fillRect(screenX, Math.floor(y), size, 1)
+      const y = screenY + (worldBandY - originY) + offset
+      if (y >= screenY && y < screenY + size) {
+        const alpha = 0.22 + 0.08 * Math.sin(phase * 1.4)
+        ctx.fillStyle = toRgba(bandColor, Math.max(0.12, Math.min(0.36, alpha)).toFixed(3))
+        ctx.fillRect(screenX, Math.floor(y), size, 1)
+      }
     }
 
+    // Same world-space approach for vertical columns.
     const xBandCount = 3
-    const colWidth = size / (xBandCount + 1)
-    for (let i = 0; i < xBandCount; i++) {
-      const phase = t * 0.72 + originX * (0.031 / zoom) - originY * (0.026 / zoom) + i * 1.9
+    const worldColSpacing = TILE_SIZE / (xBandCount + 1)
+    const firstColIndex = Math.floor(originX / worldColSpacing)
+    for (let colIndex = firstColIndex; colIndex <= firstColIndex + xBandCount + 1; colIndex++) {
+      const worldColX = colIndex * worldColSpacing
+      const phase = t * 0.72 + worldColX * (0.031 / zoom) - originY * (0.026 / zoom) + colIndex * 1.9
       const offset = Math.cos(phase) * 1.5
-      const x = screenX + (i + 1) * colWidth + offset
-      const alpha = 0.1 + 0.08 * Math.cos(phase * 1.7)
-      ctx.fillStyle = toRgba(columnColor, Math.max(0.05, Math.min(0.24, alpha)).toFixed(3))
-      ctx.fillRect(Math.floor(x), screenY, 1, size)
+      const x = screenX + (worldColX - originX) + offset
+      if (x >= screenX && x < screenX + size) {
+        const alpha = 0.1 + 0.08 * Math.cos(phase * 1.7)
+        ctx.fillStyle = toRgba(columnColor, Math.max(0.05, Math.min(0.24, alpha)).toFixed(3))
+        ctx.fillRect(Math.floor(x), screenY, 1, size)
+      }
     }
 
-    const shimmer = 0.5 + 0.5 * Math.sin((originX - originY) * (0.03 / zoom) + t * 1.65)
+    // Use a low spatial frequency for the shimmer overlay so adjacent tiles don't produce
+    // a visible brightness step at tile boundaries (was 0.03/zoom — too high).
+    const shimmer = 0.5 + 0.5 * Math.sin((originX - originY) * (0.004 / zoom) + t * 1.65)
     ctx.fillStyle = toRgba(brightColor, 0.16 + shimmer * 0.08)
     ctx.fillRect(screenX, screenY, size, size)
     ctx.fillStyle = toRgba(shimmerColor, 0.08 + shimmer * 0.05)
