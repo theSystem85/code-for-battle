@@ -288,6 +288,13 @@ export const gameState = {
 
   // Number of generated ore fields for map generation
   mapOreFieldCount: 8,
+  mapWaterPercent: 10,
+  mapRockPercent: 10,
+  mapShoreNorth: false,
+  mapShoreWest: false,
+  mapShoreEast: false,
+  mapShoreSouth: false,
+  mapCenterLake: false,
 
   // Lockstep deterministic multiplayer state (spec 015)
   lockstep: {

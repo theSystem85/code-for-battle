@@ -285,6 +285,94 @@ describe('gameSetup.js', () => {
         // Lakes + river should create significant water coverage
         expect(waterCount).toBeGreaterThan(30)
       })
+
+      it('should honor configured water percentage', () => {
+        gameState.mapWaterPercent = 25
+        gameState.mapRockPercent = 0
+        gameState.mapCenterLake = false
+        gameState.mapShoreNorth = false
+        gameState.mapShoreWest = false
+        gameState.mapShoreEast = false
+        gameState.mapShoreSouth = false
+
+        generateMap(12345, mapGrid, 80, 80)
+
+        let waterCount = 0
+        const total = 80 * 80
+        for (let y = 0; y < 80; y++) {
+          for (let x = 0; x < 80; x++) {
+            if (mapGrid[y][x].type === 'water') waterCount++
+          }
+        }
+
+        const waterPercent = (waterCount / total) * 100
+        expect(waterPercent).toBeGreaterThan(15)
+      })
+
+      it('should enforce max combined terrain budget (water + rocks <= 50%)', () => {
+        gameState.mapWaterPercent = 40
+        gameState.mapRockPercent = 30
+
+        generateMap(12345, mapGrid, 80, 80)
+
+        expect(gameState.mapWaterPercent + gameState.mapRockPercent).toBeLessThanOrEqual(50)
+      })
+
+      it('should create shoreline on checked map edges', () => {
+        gameState.mapWaterPercent = 0
+        gameState.mapRockPercent = 0
+        gameState.mapShoreNorth = true
+        gameState.mapShoreWest = true
+        gameState.mapShoreEast = false
+        gameState.mapShoreSouth = false
+        gameState.mapCenterLake = false
+
+        generateMap(12345, mapGrid, 80, 80)
+
+        let northWaterCount = 0
+        for (let x = 0; x < 80; x++) {
+          if (mapGrid[0][x].type === 'water') northWaterCount++
+        }
+
+        let westWaterCount = 0
+        for (let y = 0; y < 80; y++) {
+          if (mapGrid[y][0].type === 'water') westWaterCount++
+        }
+
+        expect(northWaterCount).toBeGreaterThan(40)
+        expect(westWaterCount).toBeGreaterThan(40)
+      })
+
+      it('should form water in long connected lines rather than isolated single tiles', () => {
+        gameState.mapWaterPercent = 20
+        gameState.mapRockPercent = 0
+        gameState.mapShoreNorth = false
+        gameState.mapShoreWest = false
+        gameState.mapShoreEast = false
+        gameState.mapShoreSouth = false
+        gameState.mapCenterLake = false
+
+        generateMap(12345, mapGrid, 90, 90)
+
+        let hasLongRun = false
+        for (let y = 0; y < 90; y++) {
+          let run = 0
+          for (let x = 0; x < 90; x++) {
+            if (mapGrid[y][x].type === 'water') {
+              run++
+              if (run >= 10) {
+                hasLongRun = true
+                break
+              }
+            } else {
+              run = 0
+            }
+          }
+          if (hasLongRun) break
+        }
+
+        expect(hasLongRun).toBe(true)
+      })
     })
 
     describe('Terrain Features - Streets', () => {
@@ -368,6 +456,57 @@ describe('gameSetup.js', () => {
     })
 
     describe('Factory Area Protection', () => {
+      it('should keep all base spawn anchors on land-reachable terrain', () => {
+        gameState.playerCount = 4
+        gameState.mapWaterPercent = 40
+        gameState.mapRockPercent = 25
+        gameState.mapShoreNorth = true
+        gameState.mapShoreWest = true
+        gameState.mapShoreEast = true
+        gameState.mapShoreSouth = true
+        gameState.mapCenterLake = true
+
+        generateMap(12345, mapGrid, 100, 100)
+
+        const baseAnchors = [
+          { x: Math.floor(100 * 0.1), y: Math.floor(100 * 0.1) },
+          { x: Math.floor(100 * 0.9), y: Math.floor(100 * 0.1) },
+          { x: Math.floor(100 * 0.1), y: Math.floor(100 * 0.9) },
+          { x: Math.floor(100 * 0.9), y: Math.floor(100 * 0.9) }
+        ]
+
+        baseAnchors.forEach(anchor => {
+          const tileType = mapGrid[anchor.y][anchor.x].type
+          expect(tileType === 'land' || tileType === 'street').toBe(true)
+        })
+
+        const start = baseAnchors[0]
+        const queue = [start]
+        const visited = new Set([`${start.x},${start.y}`])
+        const passable = (x, y) => {
+          const tile = mapGrid[y]?.[x]
+          return !!tile && tile.type !== 'water' && tile.type !== 'rock'
+        }
+        const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+
+        while (queue.length > 0) {
+          const current = queue.shift()
+          directions.forEach(([dx, dy]) => {
+            const nx = current.x + dx
+            const ny = current.y + dy
+            const key = `${nx},${ny}`
+            if (visited.has(key)) return
+            if (!passable(nx, ny)) return
+            visited.add(key)
+            queue.push({ x: nx, y: ny })
+          })
+        }
+
+        baseAnchors.slice(1).forEach(anchor => {
+          expect(visited.has(`${anchor.x},${anchor.y}`)).toBe(true)
+        })
+      })
+
       it('should not place ore in factory areas', () => {
         gameState.playerCount = 2
 
