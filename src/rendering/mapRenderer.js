@@ -949,8 +949,9 @@ export class MapRenderer {
     ctx.clip()
 
     if (type === 'water') {
+      const waterSampleTile = this.getWaterSotSampleTile(tileX, tileY, orientation)
       if (USE_PROCEDURAL_WATER_RENDERING) {
-        this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY)
+        this.drawProceduralWater(ctx, screenX, screenY, size, waterSampleTile.x, waterSampleTile.y)
       } else {
         this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
       }
@@ -978,6 +979,21 @@ export class MapRenderer {
       ctx.fill()
     }
     ctx.restore()
+  }
+
+  getWaterSotSampleTile(tileX, tileY, orientation) {
+    switch (orientation) {
+      case 'top-left':
+        return { x: tileX - 1, y: tileY - 1 }
+      case 'top-right':
+        return { x: tileX + 1, y: tileY - 1 }
+      case 'bottom-left':
+        return { x: tileX - 1, y: tileY + 1 }
+      case 'bottom-right':
+        return { x: tileX + 1, y: tileY + 1 }
+      default:
+        return { x: tileX, y: tileY }
+    }
   }
 
   renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState) {
