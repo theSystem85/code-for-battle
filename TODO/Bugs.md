@@ -328,3 +328,4 @@
 
 - [x] Investigate and fix the sidebar game-speed regression so simulation systems follow the speed input via a fixed-step simulation clock while render FPS stays unchanged and gameplay remains frame-rate independent.
 - [x] Follow-up: convert remaining gameplay-critical wall-clock timers from the game-speed fix (Tesla Coil sequencing and AI/LLM building sell timers) to the simulation clock so they obey sidebar speed changes too.
+- [x] Smoke test parse failure (2026-03-25): resolved leftover merge-conflict markers in `src/game/gameOrchestrator.js` that prevented Vite/Vitest from parsing the module and caused `npm run test:smoke` to fail before app startup.

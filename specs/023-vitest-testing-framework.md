@@ -193,3 +193,6 @@ describe('Building Placement', () => {
 ## 2026-02 Smoke Test Stability Update
 - Updated `tests/setup.js` to patch `HTMLCanvasElement.prototype.getContext` in addition to `document.createElement('canvas')` so pre-existing canvases from static HTML are mocked consistently in jsdom.
 - This prevents jsdom "Not implemented: HTMLCanvasElement's getContext()" noise during `npm run test:smoke` while keeping rendering behavior deterministic.
+
+## Maintenance Note (2026-03-25)
+- Smoke startup tests depend on conflict-free source parsing. A single unresolved git merge marker in startup imports (e.g. `src/game/gameOrchestrator.js`) causes Rollup parse failure before runtime assertions execute.
