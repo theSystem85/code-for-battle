@@ -332,17 +332,17 @@ export class GameWebGLRenderer {
         const tile = row[x]
         if (!tile) continue
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures))
+        baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures, sotMask))
 
         const sotInfo = sotMask?.[y]?.[x]
         if (sotInfo) {
-          overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures))
+          overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
         }
 
         if (tile.seedCrystal) {
-          resourceInstances.push(this.createInstance('seedCrystal', x, y, mapGrid, canUseTextures))
+          resourceInstances.push(this.createInstance('seedCrystal', x, y, mapGrid, canUseTextures, sotMask))
         } else if (tile.ore) {
-          resourceInstances.push(this.createInstance('ore', x, y, mapGrid, canUseTextures))
+          resourceInstances.push(this.createInstance('ore', x, y, mapGrid, canUseTextures, sotMask))
         }
       }
     }
@@ -369,12 +369,12 @@ export class GameWebGLRenderer {
     }
   }
 
-  createSotInstance(type, tileX, tileY, orientation, mapGrid, canUseTextures) {
+  createSotInstance(type, tileX, tileY, orientation, mapGrid, canUseTextures, sotMask = null) {
     if (type === 'water') {
       return this.createWaterSotInstance(tileX, tileY, orientation)
     }
 
-    const instance = this.createInstance(type, tileX, tileY, mapGrid, canUseTextures)
+    const instance = this.createInstance(type, tileX, tileY, mapGrid, canUseTextures, sotMask)
     return {
       ...instance,
       waterEdges: [0, 0, 0, 0],
@@ -382,7 +382,7 @@ export class GameWebGLRenderer {
     }
   }
 
-  createInstance(type, tileX, tileY, mapGrid, canUseTextures) {
+  createInstance(type, tileX, tileY, mapGrid, canUseTextures, sotMask = null) {
     const useTexture = canUseTextures && this.textureManager.tileTextureCache?.[type]?.length
     const isWaterAnimated = type === 'water'
     let uvRect = [0, 0, 0, 0]
@@ -406,19 +406,45 @@ export class GameWebGLRenderer {
       uvRect,
       color: this.getColor(type),
       textureType: isWaterAnimated ? 2 : useTexture ? 1 : 0,
-      waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY) : [0, 0, 0, 0],
+      waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY, sotMask) : [0, 0, 0, 0],
       clipOrientation: SOT_CLIP_NONE
     }
   }
 
-  computeWaterEdges(mapGrid, tileX, tileY) {
+  doesWaterSotTouchEdge(sotInfo, edge) {
+    if (!sotInfo || sotInfo.type !== 'water') return false
+    switch (edge) {
+      case 'top':
+        return sotInfo.orientation === 'top-left' || sotInfo.orientation === 'top-right'
+      case 'right':
+        return sotInfo.orientation === 'top-right' || sotInfo.orientation === 'bottom-right'
+      case 'bottom':
+        return sotInfo.orientation === 'bottom-left' || sotInfo.orientation === 'bottom-right'
+      case 'left':
+        return sotInfo.orientation === 'top-left' || sotInfo.orientation === 'bottom-left'
+      default:
+        return false
+    }
+  }
+
+  computeWaterEdges(mapGrid, tileX, tileY, sotMask = null) {
     const row = mapGrid[tileY]
     if (!row || row[tileX]?.type !== 'water') return [0, 0, 0, 0]
 
-    const top = tileY <= 0 || mapGrid[tileY - 1]?.[tileX]?.type !== 'water' ? 1 : 0
-    const right = tileX >= row.length - 1 || mapGrid[tileY]?.[tileX + 1]?.type !== 'water' ? 1 : 0
-    const bottom = tileY >= mapGrid.length - 1 || mapGrid[tileY + 1]?.[tileX]?.type !== 'water' ? 1 : 0
-    const left = tileX <= 0 || mapGrid[tileY]?.[tileX - 1]?.type !== 'water' ? 1 : 0
+    const topNeighbor = tileY > 0 ? mapGrid[tileY - 1]?.[tileX] : null
+    const rightNeighbor = tileX < row.length - 1 ? mapGrid[tileY]?.[tileX + 1] : null
+    const bottomNeighbor = tileY < mapGrid.length - 1 ? mapGrid[tileY + 1]?.[tileX] : null
+    const leftNeighbor = tileX > 0 ? mapGrid[tileY]?.[tileX - 1] : null
+
+    const topSot = tileY > 0 ? sotMask?.[tileY - 1]?.[tileX] : null
+    const rightSot = tileX < row.length - 1 ? sotMask?.[tileY]?.[tileX + 1] : null
+    const bottomSot = tileY < mapGrid.length - 1 ? sotMask?.[tileY + 1]?.[tileX] : null
+    const leftSot = tileX > 0 ? sotMask?.[tileY]?.[tileX - 1] : null
+
+    const top = tileY <= 0 || (topNeighbor?.type !== 'water' && !this.doesWaterSotTouchEdge(topSot, 'bottom')) ? 1 : 0
+    const right = tileX >= row.length - 1 || (rightNeighbor?.type !== 'water' && !this.doesWaterSotTouchEdge(rightSot, 'left')) ? 1 : 0
+    const bottom = tileY >= mapGrid.length - 1 || (bottomNeighbor?.type !== 'water' && !this.doesWaterSotTouchEdge(bottomSot, 'top')) ? 1 : 0
+    const left = tileX <= 0 || (leftNeighbor?.type !== 'water' && !this.doesWaterSotTouchEdge(leftSot, 'right')) ? 1 : 0
 
     return [top, right, bottom, left]
   }
