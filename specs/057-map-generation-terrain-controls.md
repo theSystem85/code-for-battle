@@ -40,3 +40,5 @@ Add map generation controls in the sidebar so the host/player can define terrain
 - When the user increases water beyond the budget, rock is automatically reduced by the same overflow amount (and vice versa).
 
 - Rock line generation is applied before water; water generation is dominant and overwrites/cuts rock where paths intersect.
+
+- Regenerating from map-settings changes preserves current camera position (clamped to new map bounds) rather than forcing recenter on base.

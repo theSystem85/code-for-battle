@@ -1,3 +1,4 @@
+- [x] Map-regeneration UX follow-up: preserve and clamp camera scroll position when map settings changes trigger regeneration, instead of always re-centering on the base.
 - [x] Terrain layering follow-up: rocks are generated first and water is applied afterward so rivers/lakes/coasts dominate and break rock lines at intersections.
 - [x] Map generation terrain controls follow-up: water/rock percentages now generate line-based terrain (no random scatter), coast water scales inward/outward with water%, and water+rock are auto-balanced to a hard 50% combined cap.
 - [x] Extend Map Settings map generation controls with water % and rock % inputs plus shore toggles (north/west/east/south) and big-center-lake toggle, while guaranteeing all base spawns remain on land and every base is land-reachable from every other base.

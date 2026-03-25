@@ -761,7 +761,7 @@ class Game {
       gameState.mapTilesX = width
       gameState.mapTilesY = height
 
-      this.resetGameWithNewMap(seed)
+      this.resetGameWithNewMap(seed, { preserveCamera: true })
       refreshSidebarMultiplayer()
     }
 
@@ -1049,8 +1049,13 @@ class Game {
     }
   }
 
-  resetGameWithNewMap(seed) {
+  resetGameWithNewMap(seed, options = {}) {
     deactivateMapEditMode()
+    const preserveCamera = !!options.preserveCamera
+    const previousScrollOffset = {
+      x: gameState.scrollOffset?.x || 0,
+      y: gameState.scrollOffset?.y || 0
+    }
     const normalizedSeed = resolveMapSeed(seed || '1')
     gameState.buildings.length = 0
     gameState.powerSupply = 0
@@ -1133,7 +1138,14 @@ class Game {
     initializeShadowOfWar(gameState, mapGrid)
     updateShadowOfWar(gameState, units, mapGrid, factories)
 
-    this.centerOnPlayerFactory()
+    if (preserveCamera) {
+      const maxScrollX = Math.max(0, (MAP_TILES_X * TILE_SIZE) - getPlayableViewportWidth(this.canvasManager.getGameCanvas()))
+      const maxScrollY = Math.max(0, (MAP_TILES_Y * TILE_SIZE) - getPlayableViewportHeight(this.canvasManager.getGameCanvas()))
+      gameState.scrollOffset.x = Math.max(0, Math.min(previousScrollOffset.x, maxScrollX))
+      gameState.scrollOffset.y = Math.max(0, Math.min(previousScrollOffset.y, maxScrollY))
+    } else {
+      this.centerOnPlayerFactory()
+    }
 
     gameState.gameTime = 0
     gameState.gameOver = false
