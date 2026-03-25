@@ -438,6 +438,8 @@ export function saveGame(label) {
       oreCarried: u.oreCarried,
       assignedRefinery: u.assignedRefinery,
       oreField: u.oreField,
+      pendingHarvesterAction: u.pendingHarvesterAction || null,
+      pendingHarvesterActionAt: Number.isFinite(u.pendingHarvesterActionAt) ? u.pendingHarvesterActionAt : null,
       path: u.path || [],
       // Save target as ID only to avoid circular references
       targetId: u.target?.id || null,
@@ -1132,6 +1134,8 @@ function loadGameFromSaveObject(saveObj, key) {
       if (hydrated.type === 'harvester') {
         hydrated.oreCarried = u.oreCarried || 0
         hydrated.oreField = u.oreField || null
+        hydrated.pendingHarvesterAction = typeof u.pendingHarvesterAction === 'string' ? u.pendingHarvesterAction : null
+        hydrated.pendingHarvesterActionAt = Number.isFinite(u.pendingHarvesterActionAt) ? u.pendingHarvesterActionAt : null
 
         // If harvester had an assigned refinery but it's lost during save/load, reassign
         if (u.assignedRefinery) {

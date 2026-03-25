@@ -23,6 +23,10 @@ export function isRetreating(unit) {
   return unit.isRetreating === true
 }
 
+function clearRetreatVisualizationState(unit) {
+  unit.retreatIssuedByPlayer = false
+}
+
 /**
  * Initiate retreat behavior for selected units to target position
  * Called when shift+click is used
@@ -55,6 +59,7 @@ export function initiateRetreat(selectedUnits, targetX, targetY, mapGrid) {
 
     // Set retreat mode
     unit.isRetreating = true
+    unit.retreatIssuedByPlayer = true
     unit.retreatTarget = { x: retreatTileX, y: retreatTileY }
     unit.retreatStartTime = performance.now()
 
@@ -167,6 +172,7 @@ export function updateRetreatBehavior(unit, now, mapGrid, units = []) {
   if (distanceToRetreat < TILE_SIZE * 0.8) {
     // Reached retreat position - stop retreating and clear all retreat state
     unit.isRetreating = false
+    clearRetreatVisualizationState(unit)
     unit.retreatTarget = null
     unit.retreatMovementDirection = null
     unit.path = []
@@ -201,6 +207,7 @@ export function updateRetreatBehavior(unit, now, mapGrid, units = []) {
   if (checkRetreatPathBlocked(unit, mapGrid, units)) {
     // Path is blocked - stop retreat here and clear retreat state
     unit.isRetreating = false
+    clearRetreatVisualizationState(unit)
     unit.retreatTarget = null
     unit.retreatMovementDirection = null
     unit.path = []
@@ -299,6 +306,7 @@ function updateRetreatMovement(unit, now) {
       if (stuckDetection.stuckTime > 2000) {
         // Clear retreat state - unit is stuck
         unit.isRetreating = false
+        clearRetreatVisualizationState(unit)
         unit.retreatTarget = null
         unit.retreatMovementDirection = null
         unit.path = []
@@ -353,6 +361,7 @@ export function cancelRetreat(unit) {
   if (!isRetreating(unit)) return
 
   unit.isRetreating = false
+  clearRetreatVisualizationState(unit)
   unit.retreatTarget = null
   unit.retreatMovementDirection = null
   unit.retreatOriginalTarget = null

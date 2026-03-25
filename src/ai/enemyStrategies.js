@@ -186,6 +186,7 @@ export function applyEnemyStrategies(unit, units, gameState, mapGrid, now) {
   if (unit.isRetreating) {
     if (shouldStopRetreating(unit, gameState)) {
       unit.isRetreating = false
+      unit.retreatIssuedByPlayer = false
       unit.retreatTarget = null
       unit.path = []
       if (unit.needsWorkshopRepair && unit.health < unit.maxHealth) {

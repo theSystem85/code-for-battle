@@ -71,7 +71,9 @@ import {
   createReplayUnitReference,
   createReplayUnitReferences,
   recordReplayCommand,
-  updateReplayPlayback
+  flushDeferredReplayPlayback,
+  updateReplayPlayback,
+  finalizeReplayPlaybackIfPending
 } from './replaySystem.js'
 
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
@@ -592,6 +594,9 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         logUnitStatus(unit)
       }
     })
+
+    flushDeferredReplayPlayback()
+    finalizeReplayPlaybackIfPending()
 
   } catch (error) {
     console.error('Critical error in updateGame:', error)

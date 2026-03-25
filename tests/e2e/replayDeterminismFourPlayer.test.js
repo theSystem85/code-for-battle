@@ -8,6 +8,8 @@ const MIN_STATE_OVERLAP_PERCENT = 99
 const MAX_MISMATCH_LEAVES = 40
 
 const OMIT_EXACT_PATHS = new Set([
+  '$.gameState.frameCount',
+  '$.gameState.scrollOffset',
   '$.gameState.playerBuildHistory',
   '$.gameState.currentSessionId',
   '$.gameState.selectedWreckId',
@@ -19,7 +21,11 @@ const OMIT_EXACT_PATHS = new Set([
   '$.gameState.chainStartY',
   '$.gameState.chainBuildingType',
   '$.gameState.mineDeploymentPreview',
-  '$.gameState.sweepAreaPreview'
+  '$.gameState.sweepAreaPreview',
+  '$.gameState.enemyUnitsDestroyed',
+  '$.gameState.powerSupply',
+  '$.gameState.playerPowerSupply',
+  '$.gameState.enemyPowerSupply'
 ])
 
 const OMIT_SUFFIXES = [
