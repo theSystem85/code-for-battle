@@ -67,6 +67,7 @@ import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnUnit } from './units.js'
 import { getSimulationTime } from './game/time.js'
 import {
+  consumeReplaySimulationHaltFlag,
   createReplayEntityReference,
   createReplayUnitReference,
   createReplayUnitReferences,
@@ -82,6 +83,11 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
     const occupancyMap = gameState.occupancyMap
 
     updateReplayPlayback()
+
+    if (consumeReplaySimulationHaltFlag()) {
+      finalizeReplayPlaybackIfPending()
+      return
+    }
 
     // Check if we're a remote client (not the host)
     const isRemoteClient = !isHost() && gameState.multiplayerSession?.isRemote

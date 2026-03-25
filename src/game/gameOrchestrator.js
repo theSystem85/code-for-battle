@@ -39,6 +39,7 @@ import { attachBenchmarkButton } from '../benchmark/benchmarkRunner.js'
 import { getPlayableViewportWidth, getPlayableViewportHeight } from '../utils/layoutMetrics.js'
 import { initMapEditorControls } from '../ui/mapEditorControls.js'
 import { initializeSessionRNG } from '../network/deterministicRandom.js'
+import { resetHarvesterRuntimeState } from './harvesterLogic.js'
 
 function initializeDeterministicGameSession(seed, state = gameState) {
   const sessionSeed = [
@@ -1077,6 +1078,7 @@ class Game {
       y: gameState.scrollOffset?.y || 0
     }
     const normalizedSeed = resolveMapSeed(seed || '1')
+    resetHarvesterRuntimeState(gameState)
     gameState.buildings.length = 0
     gameState.powerSupply = 0
     gameState.playerPowerSupply = 0
