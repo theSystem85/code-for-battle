@@ -77,7 +77,9 @@ function ensureReplayState() {
       playbackStartedAt: 0,
       playbackCursor: 0,
       playbackCommands: [],
-      unitIdAliases: {}
+      unitIdAliases: {},
+      deferredPlaybackEntries: [],
+      pendingPlaybackCompletion: false
     }
   }
   if (!gameState.replay.unitIdAliases || typeof gameState.replay.unitIdAliases !== 'object') {
@@ -789,6 +791,8 @@ export function completeFinishedReplaySession() {
   replay.playbackCursor = replay.playbackCommands.length
   replay.playbackCommands = []
   replay.unitIdAliases = {}
+  replay.deferredPlaybackEntries = []
+  replay.pendingPlaybackCompletion = false
   gameState.replayMode = false
   gameState.gamePaused = false
   syncPauseButtonIcon()
@@ -1023,23 +1027,59 @@ function executeReplayCommand(entry) {
   }
 }
 
+function shouldDeferReplayEntry(entry) {
+  const source = entry?.metadata?.source
+  return source === 'classic-ai' || source === 'llm'
+}
+
 export function updateReplayPlayback() {
   const replay = ensureReplayState()
   if (!replay.playbackActive || gameState.gamePaused) return
 
   const elapsed = Math.max(0, getNowMs() - replay.playbackStartedAt)
   while (replay.playbackCursor < replay.playbackCommands.length && replay.playbackCommands[replay.playbackCursor].at <= elapsed) {
-    executeReplayCommand(replay.playbackCommands[replay.playbackCursor])
+    const entry = replay.playbackCommands[replay.playbackCursor]
+    if (shouldDeferReplayEntry(entry)) {
+      replay.deferredPlaybackEntries.push(entry)
+    } else {
+      executeReplayCommand(entry)
+    }
     replay.playbackCursor += 1
   }
 
   if (replay.playbackCursor >= replay.playbackCommands.length) {
+    replay.pendingPlaybackCompletion = true
     replay.playbackActive = false
-    replay.playbackFinished = true
-    gameState.gamePaused = true
-    syncPauseButtonIcon()
-    showNotification('Replay finished. Game paused. Press Start to continue normal play.')
   }
+}
+
+export function flushDeferredReplayPlayback() {
+  const replay = ensureReplayState()
+  if (!Array.isArray(replay.deferredPlaybackEntries) || replay.deferredPlaybackEntries.length === 0) {
+    return
+  }
+
+  const deferredEntries = replay.deferredPlaybackEntries.splice(0)
+  deferredEntries.forEach(entry => {
+    executeReplayCommand(entry)
+  })
+}
+
+export function finalizeReplayPlaybackIfPending() {
+  const replay = ensureReplayState()
+  if (!replay.pendingPlaybackCompletion || replay.playbackFinished) {
+    return
+  }
+
+  if (Array.isArray(replay.deferredPlaybackEntries) && replay.deferredPlaybackEntries.length > 0) {
+    return
+  }
+
+  replay.pendingPlaybackCompletion = false
+  replay.playbackFinished = true
+  gameState.gamePaused = true
+  syncPauseButtonIcon()
+  showNotification('Replay finished. Game paused. Press Start to continue normal play.')
 }
 
 export function loadReplay(key) {
@@ -1062,6 +1102,8 @@ export function loadReplay(key) {
   replay.playbackCursor = 0
   replay.playbackCommands = Array.isArray(parsed.commands) ? parsed.commands : []
   replay.unitIdAliases = {}
+  replay.deferredPlaybackEntries = []
+  replay.pendingPlaybackCompletion = false
   gameState.gamePaused = false
   gameState.replayMode = true
   syncPauseButtonIcon()

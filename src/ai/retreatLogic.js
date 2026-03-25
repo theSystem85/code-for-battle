@@ -81,6 +81,7 @@ export function handleRetreatToBase(unit, gameState, mapGrid) {
     if (path.length > 1) {
       unit.path = path.slice(1)
       unit.isRetreating = true
+      unit.retreatIssuedByPlayer = false
       unit.retreatTarget = retreatTarget
       unit.needsWorkshopRepair = true
       return true
@@ -158,6 +159,7 @@ export function handleHarvesterRetreat(harvester, gameState, mapGrid) {
     if (path.length > 1) {
       harvester.path = path.slice(1)
       harvester.isRetreating = true
+      harvester.retreatIssuedByPlayer = false
       harvester.retreatTarget = retreatTarget
       // Clear any ore-related state
       harvester.oreField = null

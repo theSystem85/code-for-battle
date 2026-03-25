@@ -23,6 +23,7 @@ export class RetreatTargetRenderer {
     // Render retreat targets for retreating units
     units.forEach(unit => {
       if (!unit.isRetreating || !unit.retreatTarget) return
+      if (unit.retreatIssuedByPlayer !== true) return
 
       if (unit.owner === gameState.humanPlayer) {
         // Calculate screen position of the retreat target
