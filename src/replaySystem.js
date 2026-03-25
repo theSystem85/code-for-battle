@@ -1044,7 +1044,6 @@ export function updateReplayPlayback() {
   while (replay.playbackCursor < replay.playbackCommands.length && replay.playbackCommands[replay.playbackCursor].at <= elapsed) {
     const entry = replay.playbackCommands[replay.playbackCursor]
     if (entry?.command?.type === 'replay_marker') {
-      replay.deferredPlaybackEntries = []
       replay.playbackCursor = replay.playbackCommands.length
       replay.pendingPlaybackCompletion = true
       replay.playbackActive = false

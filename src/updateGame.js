@@ -85,6 +85,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
     updateReplayPlayback()
 
     if (consumeReplaySimulationHaltFlag()) {
+      flushDeferredReplayPlayback()
       finalizeReplayPlaybackIfPending()
       return
     }
