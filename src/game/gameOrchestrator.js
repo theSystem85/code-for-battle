@@ -38,6 +38,19 @@ import { setMapEditorRenderScheduler, setMapEditorProductionController, deactiva
 import { attachBenchmarkButton } from '../benchmark/benchmarkRunner.js'
 import { getPlayableViewportWidth, getPlayableViewportHeight } from '../utils/layoutMetrics.js'
 import { initMapEditorControls } from '../ui/mapEditorControls.js'
+import { initializeSessionRNG } from '../network/deterministicRandom.js'
+
+function initializeDeterministicGameSession(seed, state = gameState) {
+  const sessionSeed = [
+    seed || state.mapSeed || '1',
+    state.mapTilesX || DEFAULT_MAP_TILES_X,
+    state.mapTilesY || DEFAULT_MAP_TILES_Y,
+    state.playerCount || 2,
+    Number.isFinite(state.mapOreFieldCount) ? state.mapOreFieldCount : 8
+  ].join(':')
+
+  initializeSessionRNG(sessionSeed, true)
+}
 import { sanitizeSeed } from '../utils/seedUtils.js'
 import { initTutorialSystem } from '../ui/tutorialSystem.js'
 import { initUserDocs } from '../ui/userDocs.js'
@@ -486,9 +499,11 @@ class Game {
 
     gameState.mapSeed = seed
     generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+    initializeDeterministicGameSession(seed)
 
     gameState.mapTilesX = MAP_TILES_X
     gameState.mapTilesY = MAP_TILES_Y
+    gameState.lastOreUpdate = 0
 
     initFactories(factories, mapGrid)
     gameState.buildings.push(...factories)
@@ -1123,9 +1138,11 @@ class Game {
 
     gameState.mapSeed = normalizedSeed
     generateMapFromSetup(normalizedSeed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+    initializeDeterministicGameSession(normalizedSeed)
 
     gameState.mapTilesX = MAP_TILES_X
     gameState.mapTilesY = MAP_TILES_Y
+    gameState.lastOreUpdate = 0
 
     factories.length = 0
     initFactories(factories, mapGrid)
@@ -1453,6 +1470,8 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
 
   mapGrid.length = 0
   generateMapFromSetup(normalizedSeed, mapGrid, widthTiles, heightTiles)
+  initializeDeterministicGameSession(normalizedSeed)
+  gameState.lastOreUpdate = 0
 
   gameState.occupancyMap = []
   for (let y = 0; y < heightTiles; y++) {

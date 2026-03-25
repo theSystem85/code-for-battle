@@ -2,16 +2,9 @@
 import { TILE_SIZE } from '../config.js'
 import { getCachedPath } from '../game/pathfinding.js'
 import { assignAmbulanceToHealUnit } from '../game/ambulanceSystem.js'
+import { getActiveAIPlayers } from './enemyUtils.js'
 
 const crewScanCooldowns = new Map()
-
-// Resolve active AI player IDs based on current game setup
-function getAIPlayers(gameState) {
-  const human = gameState.humanPlayer || 'player1'
-  const playerCount = gameState.playerCount || 2
-  const allPlayers = ['player1', 'player2', 'player3', 'player4'].slice(0, playerCount)
-  return allPlayers.filter(p => p !== human)
-}
 
 function getNowTime() {
   return (typeof performance !== 'undefined' && typeof performance.now === 'function')
@@ -112,7 +105,7 @@ function requestAmbulanceSupport(targetUnit, ambulances, mapGrid) {
 
 export function manageAICrewHealing(units, gameState, now) {
   // Get all AI players (respect human player and playerCount)
-  const aiPlayers = getAIPlayers(gameState)
+  const aiPlayers = getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId)
@@ -176,7 +169,7 @@ function assignAmbulanceToUnit(targetUnit, ambulances, hospital, mapGrid) {
 
 export function handleAICrewLossEvent(unit, units, gameState, mapGrid) {
   if (!unit || !units) return
-  const aiPlayers = getAIPlayers(gameState)
+  const aiPlayers = getActiveAIPlayers(gameState)
   if (!aiPlayers.includes(unit.owner)) return
   if (!unit.crew || typeof unit.crew !== 'object') return
   if (!Object.values(unit.crew).some(alive => !alive)) return

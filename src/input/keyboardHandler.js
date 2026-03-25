@@ -22,6 +22,7 @@ import {
 import { notifyBenchmarkManualCameraControl } from '../benchmark/benchmarkTracker.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 
 function recordHumanUnitCommand(unitIds, command) {
@@ -114,7 +115,7 @@ export class KeyboardHandler {
 
       // Block game commands in spectator mode, when locally defeated, or when host has paused
       // (allow view-only commands like grid toggle, FPS toggle, camera movement)
-      const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote || isReplayInteractionLocked()
+      const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote || isReplayInteractionLocked() || isLocalPartyAutomationLocked()
 
       // ESC key to cancel attack group mode
       if (keybindingManager.matchesKeyboardAction(e, 'escape', kbContext)) {

@@ -31,10 +31,10 @@ function unregisterMine(mine) {
  * @param {number} tileX - Tile X coordinate
  * @param {number} tileY - Tile Y coordinate
  * @param {string} owner - Owner player ID
- * @param {number} deployTime - Performance timestamp when mine was deployed
+ * @param {number} deployTime - Simulation timestamp when mine was deployed
  * @returns {object} Mine entity
  */
-export function createMine(tileX, tileY, owner, deployTime = performance.now()) {
+export function createMine(tileX, tileY, owner, deployTime = getSimulationTime(gameState)) {
   return {
     id: getUniqueId(),
     tileX,

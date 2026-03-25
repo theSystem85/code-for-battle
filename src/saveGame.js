@@ -40,10 +40,13 @@ import { ensurePlayerBuildHistoryLoaded } from './savePlayerBuildPatterns.js'
 import { getUniqueId, getBuildingIdentifier } from './utils.js'
 import { ensureAirstripOperations, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant } from './utils/airstripUtils.js'
 import { rebuildMineLookup } from './game/mineSystem.js'
+import { getSimulationTime } from './game/time.js'
 import { regenerateAllInviteTokens } from './network/multiplayerStore.js'
 import { refreshSidebarMultiplayer } from './ui/sidebarMultiplayer.js'
 import { stopHostInvite } from './network/webrtcSession.js'
 import { gameRandom } from './utils/gameRandom.js'
+import { getRNGState } from './utils/gameRandom.js'
+import { deterministicRNG, initializeSessionRNG } from './network/deterministicRandom.js'
 
 const BUILTIN_SAVE_PREFIX = 'builtin:'
 const LAST_GAME_LABEL = 'lastGame'
@@ -55,6 +58,28 @@ const PAUSE_OBSERVER_INTERVAL_MS = 1000
 let lastGameAutoSaveInterval = null
 let pauseWatchInterval = null
 let lastPauseState = Boolean(gameState.gamePaused)
+
+function deriveDeterministicSessionSeed(state = {}) {
+  return [
+    state.mapSeed || gameState.mapSeed || '1',
+    state.mapTilesX || gameState.mapTilesX || DEFAULT_MAP_TILES_X,
+    state.mapTilesY || gameState.mapTilesY || DEFAULT_MAP_TILES_Y,
+    state.playerCount || gameState.playerCount || 2,
+    Number.isFinite(state.mapOreFieldCount)
+      ? state.mapOreFieldCount
+      : (Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8)
+  ].join(':')
+}
+
+function restoreDeterministicRng(savedGameState = {}) {
+  const rngState = savedGameState?.rngState
+  if (rngState && typeof rngState === 'object') {
+    deterministicRNG.setState(rngState)
+    return
+  }
+
+  initializeSessionRNG(deriveDeterministicSessionSeed(savedGameState), true)
+}
 
 function markLastGameResumePending() {
   if (typeof localStorage === 'undefined') return
@@ -371,9 +396,7 @@ export function getSaveGames() {
 
 export function saveGame(label) {
   ensurePlayerBuildHistoryLoaded()
-  const perfNow = (typeof performance !== 'undefined' && typeof performance.now === 'function')
-    ? performance.now()
-    : Date.now()
+  const simulationNow = getSimulationTime(gameState)
 
   // Gather AI player money (budget) from all AI factories
   const aiFactoryBudgets = {}
@@ -443,7 +466,7 @@ export function saveGame(label) {
       serialized.deployTargetX = Number.isFinite(u.deployTargetX) ? u.deployTargetX : null
       serialized.deployTargetY = Number.isFinite(u.deployTargetY) ? u.deployTargetY : null
       serialized.mineDeployRemaining = u.deployingMine && typeof u.deployStartTime === 'number'
-        ? Math.max(0, MINE_DEPLOY_STOP_TIME - (perfNow - u.deployStartTime))
+        ? Math.max(0, MINE_DEPLOY_STOP_TIME - (simulationNow - u.deployStartTime))
         : 0
     }
 
@@ -553,6 +576,7 @@ export function saveGame(label) {
       simulationTime: gameState.simulationTime,
       simulationAccumulator: gameState.simulationAccumulator,
       simulationStepMs: gameState.simulationStepMs,
+      rngState: getRNGState(),
       wins: gameState.wins,
       losses: gameState.losses,
       gameStarted: gameState.gameStarted,
@@ -570,6 +594,7 @@ export function saveGame(label) {
       mapTilesY: gameState.mapTilesY,
       mapSeed: gameState.mapSeed,
       mapOreFieldCount: gameState.mapOreFieldCount,
+      lastOreUpdate: Number.isFinite(gameState.lastOreUpdate) ? gameState.lastOreUpdate : 0,
       speedMultiplier: gameState.speedMultiplier,
       useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
@@ -623,7 +648,7 @@ export function saveGame(label) {
           maxHealth: mine.maxHealth,
           active: Boolean(mine.active),
           armDelayRemaining: !mine.active && typeof mine.armedAt === 'number'
-            ? Math.max(0, mine.armedAt - perfNow)
+            ? Math.max(0, mine.armedAt - simulationNow)
             : 0
         }))
         : [],
@@ -702,6 +727,10 @@ function loadGameFromSaveObject(saveObj, key) {
     gameState.simulationStepMs = Number.isFinite(loaded.gameState?.simulationStepMs)
       ? loaded.gameState.simulationStepMs
       : gameState.simulationStepMs
+    gameState.lastOreUpdate = Number.isFinite(loaded.gameState?.lastOreUpdate)
+      ? Math.max(0, loaded.gameState.lastOreUpdate)
+      : 0
+    restoreDeterministicRng(loaded.gameState)
 
     gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
     gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
@@ -820,9 +849,7 @@ function loadGameFromSaveObject(saveObj, key) {
       gameState.newBuildingTypes = new Set(loaded.gameState.newBuildingTypes)
     }
 
-    const perfNowAfterLoad = (typeof performance !== 'undefined' && typeof performance.now === 'function')
-      ? performance.now()
-      : Date.now()
+    const simulationNowAfterLoad = getSimulationTime(gameState)
 
     if (Array.isArray(loaded.gameState?.mines)) {
       gameState.mines = loaded.gameState.mines.map(savedMine => {
@@ -833,7 +860,7 @@ function loadGameFromSaveObject(saveObj, key) {
         const armDelayRemaining = Number.isFinite(savedMine.armDelayRemaining)
           ? Math.max(0, savedMine.armDelayRemaining)
           : 0
-        const armedAt = perfNowAfterLoad + armDelayRemaining
+        const armedAt = simulationNowAfterLoad + armDelayRemaining
         const deployTime = armedAt - MINE_ARM_DELAY
         const active = armDelayRemaining <= 0 ? true : Boolean(savedMine.active)
         return {
@@ -870,10 +897,6 @@ function loadGameFromSaveObject(saveObj, key) {
         Math.max(0, wreck.health ?? computedMaxHealth)
       )
 
-      const perfNow = (typeof performance !== 'undefined' && typeof performance.now === 'function')
-        ? performance.now()
-        : Date.now()
-
       return {
         id: wreck.id || `${wreck.sourceUnitId || 'wreck'}-${computedTileX}-${computedTileY}`,
         sourceUnitId: wreck.sourceUnitId || null,
@@ -887,7 +910,7 @@ function loadGameFromSaveObject(saveObj, key) {
         turretDirection: typeof wreck.turretDirection === 'number'
           ? wreck.turretDirection
           : (typeof wreck.direction === 'number' ? wreck.direction : 0),
-        createdAt: typeof wreck.createdAt === 'number' ? wreck.createdAt : perfNow,
+        createdAt: typeof wreck.createdAt === 'number' ? wreck.createdAt : simulationNowAfterLoad,
         cost: typeof wreck.cost === 'number' ? wreck.cost : 0,
         buildDuration: typeof wreck.buildDuration === 'number' ? wreck.buildDuration : null,
         assignedTankId: typeof wreck.assignedTankId === 'string' ? wreck.assignedTankId : null,
@@ -1092,7 +1115,7 @@ function loadGameFromSaveObject(saveObj, key) {
         if (typeof u.mineDeployRemaining === 'number' && u.mineDeployRemaining > 0) {
           const remaining = Math.min(MINE_DEPLOY_STOP_TIME, u.mineDeployRemaining)
           hydrated.deployingMine = true
-          hydrated.deployStartTime = perfNowAfterLoad - (MINE_DEPLOY_STOP_TIME - remaining)
+          hydrated.deployStartTime = simulationNowAfterLoad - (MINE_DEPLOY_STOP_TIME - remaining)
         } else {
           hydrated.deployingMine = false
           hydrated.deployStartTime = null

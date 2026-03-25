@@ -7,6 +7,7 @@ import { findEnemyTarget } from './mouseHelpers.js'
 import { isForceAttackModifierActive } from '../utils/inputUtils.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
+import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayEntityReference, createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
@@ -81,7 +82,7 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
   if (commandableUnits.length === 0) {
     return false
   }
-  if (isReplayInteractionLocked()) {
+  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
     return false
   }
   selectionManager.clearWreckSelection()
@@ -176,7 +177,7 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
   if (commandableUnits.length === 0) {
     return false
   }
-  if (isReplayInteractionLocked()) {
+  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
     return false
   }
   let guardTarget = null
@@ -213,7 +214,7 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
   if (commandableUnits.length === 0 || commandableUnits[0].type === 'factory') {
     return
   }
-  if (isReplayInteractionLocked()) {
+  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
     return
   }
 

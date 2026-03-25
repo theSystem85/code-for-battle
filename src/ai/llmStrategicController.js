@@ -206,7 +206,6 @@ function getAiPlayers(state) {
   }
 
   return allPlayers.filter(playerId => {
-    if (playerId === humanPlayer) return false
     const partyState = state.partyStates.find(p => p.partyId === playerId)
     if (!partyState) return true
     if (partyState.aiActive === false) return false

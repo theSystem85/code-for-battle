@@ -13,6 +13,7 @@ import { getWreckById } from './game/unitWreckManager.js'
 import { initiateRetreat } from './behaviours/retreat.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnEnemyUnit } from './ai/enemySpawner.js'
+import { initializeSessionRNG } from './network/deterministicRandom.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
@@ -36,6 +37,30 @@ function buildReplayExportFilename(label, time) {
 
 function getNowMs() {
   return Number.isFinite(gameState.simulationTime) ? gameState.simulationTime : Date.now()
+}
+
+function deriveReplaySessionSeed(state = gameState) {
+  return [
+    state.mapSeed || '1',
+    state.mapTilesX || 0,
+    state.mapTilesY || 0,
+    state.playerCount || 2,
+    Number.isFinite(state.mapOreFieldCount) ? state.mapOreFieldCount : 8
+  ].join(':')
+}
+
+function ensureReplayDeterminism(state = gameState) {
+  initializeSessionRNG(deriveReplaySessionSeed(state), true)
+}
+
+function buildReplayActionId(command, replay) {
+  return [
+    'replay',
+    replay.playbackCursor,
+    Number.isFinite(command?.at) ? command.at : 0,
+    command?.type || 'unknown',
+    command?.owner || 'neutral'
+  ].join('_')
 }
 
 function ensureReplayState() {
@@ -774,6 +799,7 @@ export function completeFinishedReplaySession() {
 export function startReplayRecording() {
   const replay = ensureReplayState()
   if (replay.recordingActive) return
+  ensureReplayDeterminism()
   const baselineState = captureBaselineState()
   if (!baselineState) {
     showNotification('Replay recording failed: baseline save could not be captured.')
@@ -792,6 +818,12 @@ export function startReplayRecording() {
 export function stopReplayRecording() {
   const replay = ensureReplayState()
   if (!replay.recordingActive) return
+
+  replay.commands.push({
+    at: Math.max(0, getNowMs() - replay.recordingStartedAt),
+    command: { type: 'replay_marker' },
+    metadata: { source: 'system' }
+  })
 
   replay.recordingActive = false
   const payload = serializeReplay({
@@ -830,7 +862,12 @@ function executeReplayCommand(entry) {
   if (!entry?.command) return
   const { command, metadata } = entry
 
+  if (command.type === 'replay_marker') {
+    return
+  }
+
   const replay = ensureReplayState()
+  const replayActionId = buildReplayActionId(command, replay)
   replay.isApplyingReplayCommand = true
   try {
     if (command.type === 'unit_command') {
@@ -842,7 +879,7 @@ function executeReplayCommand(entry) {
           confidence: 1,
           notes: 'Replay command execution fallback',
           commentary: null,
-          actions: [{ actionId: `replay_${Date.now()}_${Math.random()}`, ...command }]
+          actions: [{ actionId: replayActionId, ...command }]
         }, {
           playerId: command.owner || gameState.humanPlayer
         })
@@ -863,7 +900,7 @@ function executeReplayCommand(entry) {
         confidence: 1,
         notes: 'Replay command execution',
         commentary: null,
-        actions: [{ actionId: `replay_${Date.now()}_${Math.random()}`, ...command }]
+        actions: [{ actionId: replayActionId, ...command }]
       }, {
         playerId: command.owner || gameState.humanPlayer
       })

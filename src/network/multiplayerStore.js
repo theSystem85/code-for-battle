@@ -70,6 +70,7 @@ function ensurePartyStates() {
         owner: isHost ? getHostAliasLabel() : 'AI',
         inviteToken: null,
         aiActive: !isHost,
+        localAutomationEnabled: false,
         llmControlled: false,
         llmModelKey: null,
         lastConnectedAt: null,
@@ -83,7 +84,12 @@ function ensurePartyStates() {
     localPartyState.partyId = localPartyId
     localPartyState.color = localPartyState.color || PARTY_COLORS[localPartyId] || PARTY_COLORS.player1
     localPartyState.owner = getHostAliasLabel(localPartyState.owner === 'AI' ? '' : localPartyState.owner)
-    localPartyState.aiActive = false
+    localPartyState.localAutomationEnabled = localPartyState.localAutomationEnabled === true
+    localPartyState.aiActive = localPartyState.localAutomationEnabled ? true : false
+    if (localPartyState.aiActive !== true) {
+      localPartyState.llmControlled = false
+      localPartyState.llmModelKey = null
+    }
     localPartyState.unresponsiveSince = null
   }
 
@@ -316,6 +322,7 @@ export function markPartyControlledByHuman(partyId, alias) {
 
   party.owner = alias || 'Human'
   party.aiActive = false
+  party.localAutomationEnabled = false
   party.lastConnectedAt = Date.now()
   party.unresponsiveSince = null
   showHostNotification(`Party ${partyId} taken over by ${party.owner}`)
@@ -333,13 +340,45 @@ export function updateHostPartyAlias(alias) {
   }
 
   const nextAlias = getHostAliasLabel(alias)
-  if (party.owner === nextAlias && party.aiActive === false) {
+  if (party.owner === nextAlias) {
     return party
   }
 
   party.owner = nextAlias
-  party.aiActive = false
-  emitPartyOwnershipChange(party.partyId, party.owner, false)
+  emitPartyOwnershipChange(party.partyId, party.owner, party.aiActive !== false)
+  return party
+}
+
+export function setHostPartyAutomationMode(mode = 'manual', llmModelKey = null) {
+  const party = getPartyState(normalizePartyId(gameState.humanPlayer || 'player1'))
+  if (!party) {
+    return null
+  }
+
+  party.owner = getHostAliasLabel(party.owner === 'AI' ? '' : party.owner)
+  party.unresponsiveSince = null
+
+  if (mode === 'manual') {
+    party.aiActive = false
+    party.localAutomationEnabled = false
+    party.llmControlled = false
+    party.llmModelKey = null
+    showHostNotification('You took back direct control of your party')
+  } else {
+    party.aiActive = true
+    party.localAutomationEnabled = true
+    if (mode === 'llm' && llmModelKey) {
+      party.llmControlled = true
+      party.llmModelKey = llmModelKey
+      showHostNotification('LLM now controls your host party')
+    } else {
+      party.llmControlled = false
+      party.llmModelKey = null
+      showHostNotification('Local AI now controls your host party')
+    }
+  }
+
+  emitPartyOwnershipChange(party.partyId, party.owner, party.aiActive !== false)
   return party
 }
 
@@ -351,6 +390,9 @@ export function markPartyControlledByAi(partyId) {
 
   party.owner = 'AI'
   party.aiActive = true
+  party.localAutomationEnabled = false
+  party.llmControlled = false
+  party.llmModelKey = null
   party.lastConnectedAt = null
   party.unresponsiveSince = null
   showHostNotification(`Party ${partyId} returned to AI control`)
@@ -376,6 +418,15 @@ export function setPartyUnresponsiveState(partyId, unresponsiveSince = null) {
 export function getInviteRecords() {
   purgeExpiredInvites()
   return Array.from(inviteRecords.values())
+}
+
+export function isLocalPartyAutomationLocked() {
+  if (!isHost()) {
+    return false
+  }
+
+  const party = getPartyState(normalizePartyId(gameState.humanPlayer || 'player1'))
+  return Boolean(party?.localAutomationEnabled && party?.aiActive === true)
 }
 
 export function getHostInviteStatus(partyId) {

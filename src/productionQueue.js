@@ -13,6 +13,7 @@ import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
 import { getSimulationTime } from './game/time.js'
+import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
 
 // List of unit types considered vehicles requiring a Vehicle Factory
@@ -192,6 +193,11 @@ export const productionQueue = {
   addItem: function(type, button, isBuilding = false, blueprint = null, rallyPoint = null, options = {}) {
     const allowReplay = options.allowReplay === true
     const shouldRecord = options.record !== false
+
+    if (!allowReplay && isLocalPartyAutomationLocked()) {
+      showNotification('Your party is currently controlled by Local AI or LLM. Use the multiplayer dropdown to take over control.')
+      return
+    }
 
     if (!allowReplay && (isReplayModeActive() || isReplayInteractionLocked())) {
       showNotification('Replay mode is active: build commands are disabled.')

@@ -39,8 +39,8 @@ export const gameState = {
   cameraFollowUnitId: null,
   isRightDragging: false,
   lastDragPos: { x: 0, y: 0 },
-  enemyLastProductionTime: performance.now(),
-  lastOreUpdate: performance.now(),
+  enemyLastProductionTime: 0,
+  lastOreUpdate: 0,
   explosions: [],  // Initialized empty explosions array for visual effects.
   smokeParticles: [], // Smoke particles emitted by damaged units
   smokeParticlePool: [], // Reusable pool to avoid allocations during heavy smoke

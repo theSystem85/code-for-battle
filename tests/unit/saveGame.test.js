@@ -244,7 +244,15 @@ vi.mock('../../src/network/webrtcSession.js', () => ({
 }))
 
 vi.mock('../../src/utils/gameRandom.js', () => ({
-  gameRandom: vi.fn(() => Math.random())
+  gameRandom: vi.fn(() => Math.random()),
+  getRNGState: vi.fn(() => ({ seed: 1234, callCount: 12, enabled: true }))
+}))
+
+vi.mock('../../src/network/deterministicRandom.js', () => ({
+  deterministicRNG: {
+    setState: vi.fn()
+  },
+  initializeSessionRNG: vi.fn()
 }))
 
 describe('saveGame.js', () => {
@@ -368,6 +376,7 @@ describe('saveGame.js', () => {
     it('should save map settings and static tile state needed for replay consistency', async() => {
       const { gameState } = await import('../../src/gameState.js')
       const { mapGrid } = await import('../../src/main.js')
+      const { getRNGState } = await import('../../src/utils/gameRandom.js')
 
       gameState.mapTilesX = 84
       gameState.mapTilesY = 72
@@ -388,6 +397,7 @@ describe('saveGame.js', () => {
       expect(state.gameState.mapTilesY).toBe(72)
       expect(state.gameState.mapSeed).toBe('replay-seed-9')
       expect(state.gameState.mapOreFieldCount).toBe(6)
+      expect(state.gameState.rngState).toEqual(getRNGState())
       expect(state.mapTileState[1][2]).toEqual({
         type: 'water',
         ore: true,
@@ -558,6 +568,7 @@ describe('saveGame.js', () => {
       const { gameState } = await import('../../src/gameState.js')
       const { mapGrid } = await import('../../src/main.js')
       const { setMapDimensions } = await import('../../src/config.js')
+      const { deterministicRNG } = await import('../../src/network/deterministicRandom.js')
 
       setMapDimensions.mockReturnValueOnce({ width: 64, height: 48 })
 
@@ -593,7 +604,9 @@ describe('saveGame.js', () => {
           mapTilesX: 64,
           mapTilesY: 48,
           mapSeed: 'loaded-seed',
-          mapOreFieldCount: 5
+          mapOreFieldCount: 5,
+          rngState: { seed: 777, callCount: 42, enabled: true },
+          lastOreUpdate: 6000
         },
         units: [],
         buildings: [],
@@ -621,6 +634,8 @@ describe('saveGame.js', () => {
       expect(gameState.mapSeed).toBe('loaded-seed')
       expect(gameState.mapOreFieldCount).toBe(5)
       expect(gameState.playerCount).toBe(3)
+      expect(gameState.lastOreUpdate).toBe(6000)
+      expect(deterministicRNG.setState).toHaveBeenCalledWith({ seed: 777, callCount: 42, enabled: true })
       expect(mapGrid[4][4].type).toBe('water')
       expect(mapGrid[4][4].ore).toBe(true)
       expect(mapGrid[4][4].seedCrystal).toBe(true)

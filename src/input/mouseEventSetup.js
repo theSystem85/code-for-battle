@@ -3,6 +3,7 @@ import { gameState } from '../gameState.js'
 import { handlePointerDown as handleMapEditPointerDown, handlePointerMove as handleMapEditPointerMove, handlePointerUp as handleMapEditPointerUp } from '../mapEditor.js'
 import { notifyMapEditorWheel } from '../ui/mapEditorControls.js'
 import { hideLlmQueueTooltip } from '../ui/llmQueueTooltip.js'
+import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { keybindingManager, KEYBINDING_CONTEXTS } from './keybindings.js'
 import { isReplayInteractionLocked } from '../replaySystem.js'
 
@@ -29,7 +30,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
     if (gameState.paused) return
 
     const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote
-    const replayLocked = isReplayInteractionLocked()
+    const replayLocked = isReplayInteractionLocked() || isLocalPartyAutomationLocked()
 
     const pointerContext = gameState.mapEditMode ? KEYBINDING_CONTEXTS.MAP_EDIT_ON : KEYBINDING_CONTEXTS.MAP_EDIT_OFF
     const commandBinding = keybindingManager.matchesPointerAction('mouse', e, 'command', pointerContext) ||
@@ -80,7 +81,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
     const rect = gameCanvas.getBoundingClientRect()
     const worldX = e.clientX - rect.left + gameState.scrollOffset.x
     const worldY = e.clientY - rect.top + gameState.scrollOffset.y
-    const replayLocked = isReplayInteractionLocked()
+    const replayLocked = isReplayInteractionLocked() || isLocalPartyAutomationLocked()
 
     if (gameState.mapEditMode) {
       const tileX = Math.floor(worldX / TILE_SIZE)
@@ -142,7 +143,7 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
 
   document.addEventListener('mouseup', (e) => {
     if (e.button === 2 && gameState.isRightDragging) {
-      const replayLocked = isReplayInteractionLocked()
+      const replayLocked = isReplayInteractionLocked() || isLocalPartyAutomationLocked()
       handler.handleRightMouseUp(
         e,
         units,

@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../config.js'
 import { getCachedPath } from '../game/pathfinding.js'
+import { getSimulationTime } from '../game/time.js'
 import { findClosestOre } from '../logic.js'
 import { assignHarvesterToOptimalRefinery } from '../game/harvesterLogic.js'
 import { spawnUnit } from '../units.js'
@@ -20,7 +21,7 @@ export function spawnEnemyUnit(spawnBuilding, unitType, units, mapGrid, gameStat
   }
 
   unit.owner = aiPlayerId
-  unit.spawnTime = Date.now()
+  unit.spawnTime = getSimulationTime(gameState)
   unit.spawnedInFactory = true
   unit.holdInFactory = true
   unit.factoryBuildEndTime = productionStartTime + 5000
