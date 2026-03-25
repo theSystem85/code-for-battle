@@ -24,7 +24,12 @@ import { showNotification } from './ui/notifications.js'
 import { milestoneSystem } from './game/milestoneSystem.js'
 import { initializeOccupancyMap } from './units.js'
 import { getTextureManager, getMapRenderer } from './rendering.js'
-import { assignHarvesterToOptimalRefinery } from './game/harvesterLogic.js'
+import {
+  assignHarvesterToOptimalRefinery,
+  getHarvestedTiles,
+  getRefineryQueues,
+  restoreHarvesterRuntimeState
+} from './game/harvesterLogic.js'
 import { productionQueue } from './productionQueue.js'
 import {
   getCurrentGame,
@@ -682,6 +687,10 @@ export function saveGame(label) {
     orePositions,
     mapGridTypes, // ADDED: save mapGrid tile types
     mapTileState,
+    harvestedTiles: Array.from(getHarvestedTiles()),
+    refineryQueues: Object.fromEntries(
+      Object.entries(getRefineryQueues()).map(([refineryId, queue]) => [refineryId, Array.isArray(queue) ? [...queue] : []])
+    ),
     targetedOreTiles: gameState.targetedOreTiles || {}, // Save targeted ore tiles for harvesters
     achievedMilestones: milestoneSystem.getAchievedMilestones(), // Save milestone progress
     productionQueueState: productionQueue.getSerializableState()
@@ -1411,12 +1420,11 @@ function loadGameFromSaveObject(saveObj, key) {
     gameState.occupancyMap = initializeOccupancyMap(units, mapGrid, textureManager)
     updateDangerZoneMaps(gameState)
 
-    // Restore targeted ore tiles for harvester system
-    if (loaded.targetedOreTiles) {
-      gameState.targetedOreTiles = loaded.targetedOreTiles
-    } else {
-      gameState.targetedOreTiles = {}
-    }
+    restoreHarvesterRuntimeState({
+      harvestedTiles: loaded.harvestedTiles,
+      refineryQueues: loaded.refineryQueues,
+      targetedOreTiles: loaded.targetedOreTiles
+    }, gameState)
 
     // Restore milestone progress
     if (loaded.achievedMilestones && Array.isArray(loaded.achievedMilestones)) {

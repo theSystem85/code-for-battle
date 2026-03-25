@@ -79,7 +79,8 @@ function ensureReplayState() {
       playbackCommands: [],
       unitIdAliases: {},
       deferredPlaybackEntries: [],
-      pendingPlaybackCompletion: false
+      pendingPlaybackCompletion: false,
+      haltSimulationTick: false
     }
   }
   if (!gameState.replay.unitIdAliases || typeof gameState.replay.unitIdAliases !== 'object') {
@@ -793,6 +794,7 @@ export function completeFinishedReplaySession() {
   replay.unitIdAliases = {}
   replay.deferredPlaybackEntries = []
   replay.pendingPlaybackCompletion = false
+  replay.haltSimulationTick = false
   gameState.replayMode = false
   gameState.gamePaused = false
   syncPauseButtonIcon()
@@ -1036,9 +1038,20 @@ export function updateReplayPlayback() {
   const replay = ensureReplayState()
   if (!replay.playbackActive || gameState.gamePaused) return
 
+  replay.haltSimulationTick = false
+
   const elapsed = Math.max(0, getNowMs() - replay.playbackStartedAt)
   while (replay.playbackCursor < replay.playbackCommands.length && replay.playbackCommands[replay.playbackCursor].at <= elapsed) {
     const entry = replay.playbackCommands[replay.playbackCursor]
+    if (entry?.command?.type === 'replay_marker') {
+      replay.deferredPlaybackEntries = []
+      replay.playbackCursor = replay.playbackCommands.length
+      replay.pendingPlaybackCompletion = true
+      replay.playbackActive = false
+      replay.haltSimulationTick = true
+      break
+    }
+
     if (shouldDeferReplayEntry(entry)) {
       replay.deferredPlaybackEntries.push(entry)
     } else {
@@ -1051,6 +1064,13 @@ export function updateReplayPlayback() {
     replay.pendingPlaybackCompletion = true
     replay.playbackActive = false
   }
+}
+
+export function consumeReplaySimulationHaltFlag() {
+  const replay = ensureReplayState()
+  const shouldHalt = Boolean(replay.haltSimulationTick)
+  replay.haltSimulationTick = false
+  return shouldHalt
 }
 
 export function flushDeferredReplayPlayback() {
@@ -1104,6 +1124,7 @@ export function loadReplay(key) {
   replay.unitIdAliases = {}
   replay.deferredPlaybackEntries = []
   replay.pendingPlaybackCompletion = false
+  replay.haltSimulationTick = false
   gameState.gamePaused = false
   gameState.replayMode = true
   syncPauseButtonIcon()

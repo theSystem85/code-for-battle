@@ -675,6 +675,56 @@ export function getHarvestedTiles() {
   return harvestedTiles
 }
 
+export function restoreHarvesterRuntimeState(serializedState = {}, gameStateRef = null) {
+  harvestedTiles.clear()
+  Object.keys(targetedOreTiles).forEach(tileKey => {
+    delete targetedOreTiles[tileKey]
+  })
+  Object.keys(refineryQueues).forEach(refineryId => {
+    delete refineryQueues[refineryId]
+  })
+
+  const restoredHarvestedTiles = Array.isArray(serializedState.harvestedTiles)
+    ? serializedState.harvestedTiles
+    : []
+  restoredHarvestedTiles.forEach(tileKey => {
+    if (typeof tileKey === 'string' && tileKey.length > 0) {
+      harvestedTiles.add(tileKey)
+    }
+  })
+
+  const restoredTargetedOreTiles = serializedState.targetedOreTiles && typeof serializedState.targetedOreTiles === 'object'
+    ? serializedState.targetedOreTiles
+    : {}
+  Object.entries(restoredTargetedOreTiles).forEach(([tileKey, harvesterId]) => {
+    if (typeof tileKey === 'string' && tileKey.length > 0 && typeof harvesterId === 'string' && harvesterId.length > 0) {
+      targetedOreTiles[tileKey] = harvesterId
+    }
+  })
+
+  const restoredRefineryQueues = serializedState.refineryQueues && typeof serializedState.refineryQueues === 'object'
+    ? serializedState.refineryQueues
+    : {}
+  Object.entries(restoredRefineryQueues).forEach(([refineryId, queue]) => {
+    if (typeof refineryId !== 'string' || refineryId.length === 0 || !Array.isArray(queue)) {
+      return
+    }
+
+    const normalizedQueue = queue.filter(harvesterId => typeof harvesterId === 'string' && harvesterId.length > 0)
+    if (normalizedQueue.length > 0) {
+      refineryQueues[refineryId] = normalizedQueue
+    }
+  })
+
+  if (gameStateRef && typeof gameStateRef === 'object') {
+    gameStateRef.targetedOreTiles = targetedOreTiles
+  }
+}
+
+export function resetHarvesterRuntimeState(gameStateRef = null) {
+  restoreHarvesterRuntimeState({}, gameStateRef)
+}
+
 /**
  * Clear ore field assignment for a stuck harvester (called from movement system)
  */
