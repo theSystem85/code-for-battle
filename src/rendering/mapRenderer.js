@@ -475,7 +475,7 @@ export class MapRenderer {
     return { signature: parts.join('|'), containsWater }
   }
 
-  updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
+  updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, waterTimeSeconds = null) {
     if (!chunk.canvas || !chunk.ctx) return
 
     const { signature, containsWater } = this.computeChunkSignature(
@@ -527,7 +527,8 @@ export class MapRenderer {
       chunk.offsetX,
       chunk.offsetY,
       useTexture,
-      currentWaterFrame
+      currentWaterFrame,
+      waterTimeSeconds
     )
 
     chunk.signature = signature
@@ -550,6 +551,7 @@ export class MapRenderer {
     const currentWaterFrame = this.textureManager.waterFrames.length
       ? this.textureManager.getCurrentWaterFrame()
       : null
+    const waterTimeSeconds = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) * 0.001
 
     // Ensure SOT mask is computed before any rendering (needed for chunk caching)
     if (!this.sotMask) {
@@ -567,7 +569,8 @@ export class MapRenderer {
         scrollOffset.x,
         scrollOffset.y,
         useTexture,
-        currentWaterFrame
+        currentWaterFrame,
+        waterTimeSeconds
       )
       ctx.imageSmoothingEnabled = true
       return
@@ -606,12 +609,13 @@ export class MapRenderer {
             scrollOffset.x,
             scrollOffset.y,
             useTexture,
-            currentWaterFrame
+            currentWaterFrame,
+            waterTimeSeconds
           )
           continue
         }
 
-        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame)
+        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, waterTimeSeconds)
 
         const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
         const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
@@ -623,7 +627,7 @@ export class MapRenderer {
     ctx.imageSmoothingEnabled = true
   }
 
-  drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame) {
+  drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame, waterTimeSeconds = null) {
     if (!mapGrid.length || !mapGrid[0]?.length) return
 
     // Ensure SOT mask is computed
@@ -641,13 +645,13 @@ export class MapRenderer {
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
 
-        this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+        this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame, waterTimeSeconds)
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
         if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
-          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
+          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame, waterTimeSeconds)
         }
 
         if (tile.seedCrystal) {
@@ -659,7 +663,7 @@ export class MapRenderer {
     }
   }
 
-  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame, waterTimeSeconds = null) {
     if (this.textureManager.integratedSpriteSheetMode) {
       const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
@@ -681,7 +685,7 @@ export class MapRenderer {
 
     if (type === 'water') {
       if (USE_PROCEDURAL_WATER_RENDERING) {
-        this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
+        this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY, waterTimeSeconds)
       } else {
         this.drawClassicWater(ctx, screenX, screenY, TILE_SIZE + 1, currentWaterFrame)
       }
@@ -714,9 +718,9 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {
-    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-    const t = now * 0.0018
+  drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY, waterTimeSeconds = null) {
+    const nowSeconds = waterTimeSeconds ?? (((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) * 0.001)
+    const t = nowSeconds * 1.8
     const originX = tileX * TILE_SIZE
     const originY = tileY * TILE_SIZE
     const zoom = Math.max(WATER_EFFECT_ZOOM, 0.001)
@@ -910,7 +914,7 @@ export class MapRenderer {
   /**
    * Draw a Smoothening Overlay Texture (SOT) on a single tile
    */
-  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null) {
+  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null, waterTimeSeconds = null) {
     const key = `${tileX},${tileY}`
     if (sotApplied.has(key)) return
     sotApplied.add(key)
@@ -950,7 +954,7 @@ export class MapRenderer {
 
     if (type === 'water') {
       if (USE_PROCEDURAL_WATER_RENDERING) {
-        this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY)
+        this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY, waterTimeSeconds)
       } else {
         this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
       }
@@ -1064,6 +1068,7 @@ export class MapRenderer {
     const currentWaterFrame = this.textureManager.waterFrames.length
       ? this.textureManager.getCurrentWaterFrame()
       : null
+    const waterTimeSeconds = ((typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()) * 0.001
 
     const sotApplied = new Set()
 
@@ -1078,7 +1083,7 @@ export class MapRenderer {
           if (skipWaterSot && sotInfo.type === 'water') {
             continue
           }
-          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
+          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame, waterTimeSeconds)
         }
       }
     }

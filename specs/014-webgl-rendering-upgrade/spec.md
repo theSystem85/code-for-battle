@@ -40,6 +40,7 @@ Upgrade the rendering stack to prioritize GPU-backed pipelines for the main play
    - Default the procedural water zoom farther out than the original implementation so the animation reads as a larger continuous body of water.
    - Keep procedural water pattern anchored in world space so camera scrolling does not introduce parallax drift.
    - Apply the same procedural water style to water SOT overlays for visual consistency, including aligned tile bounds so SOT corners do not appear broken relative to adjacent water tiles and GPU water SOT corners use the same animated shader treatment as full water tiles.
+   - Ensure procedural water animation time is frame-consistent across both full water tiles and water SOT overlays (sample once per pass), so no visible seam appears where SOT wedges touch adjacent full water.
    - For enclosed land/street islands inside water, render inverse SOT on the surrounding water tiles at concave corners so the inner terrain visually overlaps the water; do not apply this inverse SOT to ordinary coastlines or any land/street mass that connects to the map boundary.
    - When an enclosed island uses inverse land/street SOT, suppress ordinary water-on-land corner SOT on that same island so smoothing is owned by the inner terrain instead of being cut back by water wedges.
    - Enclosed-island inverse SOT should recognize valid concave corners based on the same enclosed island component reaching both orthogonal sides of the water tile, even when the immediate diagonal tile remains water.
