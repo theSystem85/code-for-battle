@@ -52,6 +52,9 @@ As a player, I want to assign combat units to guard other units, so that they au
 7. **Given** guarded unit is destroyed, **When** guard target becomes invalid, **Then** guarding unit reverts to idle state
 8. **Given** AGF drag box includes friendly and enemy units, **When** command is released, **Then** enemies are queued for attack first and guard mode activates for all friendly units inside the box
 9. **Given** guard mode is active and guarding combat unit remains selected, **When** target friendly unit is visible, **Then** guard icon remains shown above that guarded unit
+10. **Given** guard mode is active, **When** guarded unit is within half the guard unit's fire range, **Then** no guard reroute/path recalculation is triggered
+11. **Given** guard mode is active and guarded unit moves beyond half the guard unit's fire range, **When** reroute is needed, **Then** path recalculation occurs at most once every 2 seconds
+12. **Given** guarded unit is attacked, **When** attacker is in guard unit firing range, **Then** guarding unit immediately targets that attacker while staying in guard mode
 
 ---
 
@@ -135,6 +138,9 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-017**: System MUST support guard mode for all combat unit types
 - **FR-018A**: System MUST render guard icon above guarded friendly targets while the guarding combat unit remains selected and guard mode is active
 - **FR-018B**: System MUST support multi-target guard assignment from AGF drag boxes that include friendly units
+- **FR-018C**: System MUST throttle guard follow rerouting to no more than once every 2 seconds
+- **FR-018D**: System MUST only reroute for follow when guarded target exceeds half of the guard unit effective fire range
+- **FR-018E**: System MUST prioritize immediate retaliation against the latest attacker of the guarded unit when in range, without disabling guard mode
 
 **Path Planning Feature (PPF):**
 - **FR-018**: System MUST add commands to queue when shift key is held during command input

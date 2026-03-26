@@ -1,8 +1,9 @@
 import { TILE_SIZE } from '../config.js'
 import { findPath } from '../units.js'
+import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 
-const FOLLOW_DISTANCE = 1.5 * TILE_SIZE
-const PATH_INTERVAL = 500
+const DEFAULT_GUARD_DISTANCE = 1.5 * TILE_SIZE
+const PATH_INTERVAL = 2000
 
 export function updateGuardBehavior(unit, mapGrid, occupancyMap, now) {
   if (Array.isArray(unit.guardTargets)) {
@@ -36,8 +37,12 @@ export function updateGuardBehavior(unit, mapGrid, occupancyMap, now) {
     const targetCenterY = unit.guardTarget.y + TILE_SIZE / 2
     const distance = Math.hypot(targetCenterX - unitCenterX, targetCenterY - unitCenterY)
     const desiredTile = { x: unit.guardTarget.tileX, y: unit.guardTarget.tileY }
+    const fireRange = getEffectiveFireRange(unit)
+    const rerouteThreshold = Number.isFinite(fireRange) && fireRange > 0
+      ? fireRange / 2
+      : DEFAULT_GUARD_DISTANCE
 
-    if (distance > FOLLOW_DISTANCE) {
+    if (distance > rerouteThreshold) {
       if (!unit.lastGuardPathCalcTime || now - unit.lastGuardPathCalcTime > PATH_INTERVAL) {
         const path = findPath({ x: unit.tileX, y: unit.tileY }, desiredTile, mapGrid, occupancyMap)
         if (path && path.length > 1) {

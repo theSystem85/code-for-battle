@@ -125,6 +125,25 @@ export function updateGuardTargeting(unit, units) {
   const unitCenterX = unit.x + TILE_SIZE / 2
   const unitCenterY = unit.y + TILE_SIZE / 2
   const mapGrid = gameState.mapGrid
+  const now = performance.now()
+
+  const guardTargetAttacker = unit.guardTarget?.lastAttacker
+  const guardTargetUnderAttackRecently = unit.guardTarget?.lastDamageTime && (now - unit.guardTarget.lastDamageTime < 1200)
+  if (guardTargetUnderAttackRecently && guardTargetAttacker && guardTargetAttacker.health > 0 && guardTargetAttacker.owner !== unit.owner) {
+    if (canUnitTargetEntity(unit, guardTargetAttacker)) {
+      const attackerCenterX = guardTargetAttacker.tileX !== undefined
+        ? guardTargetAttacker.x + TILE_SIZE / 2
+        : guardTargetAttacker.x * TILE_SIZE + (guardTargetAttacker.width * TILE_SIZE) / 2
+      const attackerCenterY = guardTargetAttacker.tileY !== undefined
+        ? guardTargetAttacker.y + TILE_SIZE / 2
+        : guardTargetAttacker.y * TILE_SIZE + (guardTargetAttacker.height * TILE_SIZE) / 2
+      const attackerDistance = Math.hypot(attackerCenterX - unitCenterX, attackerCenterY - unitCenterY)
+      if (attackerDistance <= range) {
+        unit.target = guardTargetAttacker
+        return
+      }
+    }
+  }
 
   if (unit.target && unit.target.health > 0) {
     const targetCenterX = unit.target.tileX !== undefined ? unit.target.x + TILE_SIZE / 2 : unit.target.x * TILE_SIZE + (unit.target.width * TILE_SIZE) / 2
