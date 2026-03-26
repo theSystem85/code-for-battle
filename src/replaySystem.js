@@ -14,6 +14,7 @@ import { initiateRetreat } from './behaviours/retreat.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnEnemyUnit } from './ai/enemySpawner.js'
 import { initializeSessionRNG } from './network/deterministicRandom.js'
+import { terminateAllSounds } from './sound.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
@@ -1112,6 +1113,7 @@ export function loadReplay(key) {
     return
   }
 
+  terminateAllSounds()
   loadGameFromState(parsed.baselineState, `${TEMP_BASELINE_LABEL_PREFIX}load_${Date.now()}`)
 
   const replay = ensureReplayState()

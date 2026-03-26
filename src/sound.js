@@ -526,6 +526,31 @@ export async function toggleBackgroundMusic() {
 }
 
 // --- Game Pause/Resume Helpers ---
+// Immediately stop all active audio sources from the current session.
+export function terminateAllSounds() {
+  activeAudioElements.forEach(source => {
+    if (!source) return
+    try {
+      source.stop()
+    } catch (e) {
+      window.logger.warn('Error stopping active sound source:', e)
+    }
+  })
+  activeAudioElements.clear()
+
+  narratedSoundQueue.length = 0
+  isNarratedPlaying = false
+
+  if (bgMusicAudio) {
+    try {
+      bgMusicAudio.pause()
+      bgMusicAudio.currentTime = 0
+    } catch (e) {
+      window.logger.warn('Error terminating background music:', e)
+    }
+  }
+}
+
 // Pause all currently playing audio including background music and looped sounds
 export function pauseAllSounds() {
   if (bgMusicAudio && !bgMusicAudio.paused) {
