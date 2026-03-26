@@ -8,9 +8,13 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 // Mock dependencies
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32
+  }
+})
 
 vi.mock('../../src/gameState.js', () => ({
   gameState: {
@@ -35,9 +39,20 @@ vi.mock('../../src/game/waypointSounds.js', () => ({
   markWaypointsAdded: vi.fn()
 }))
 
+vi.mock('../../src/input/mouseCommands.js', () => ({
+  activateGroupGuard: vi.fn(() => true)
+}))
+
+vi.mock('../../src/replaySystem.js', () => ({
+  createReplayEntityReference: vi.fn(target => target ? { id: target.id || null } : null),
+  createReplayUnitReferences: vi.fn(unitIds => (Array.isArray(unitIds) ? unitIds.map(id => ({ id })) : [])),
+  recordReplayCommand: vi.fn()
+}))
+
 import { AttackGroupHandler } from '../../src/input/attackGroupHandler.js'
 import { gameState } from '../../src/gameState.js'
 import { markWaypointsAdded } from '../../src/game/waypointSounds.js'
+import { recordReplayCommand } from '../../src/replaySystem.js'
 
 describe('AttackGroupHandler', () => {
   let handler
@@ -311,6 +326,28 @@ describe('AttackGroupHandler', () => {
       expect(gameState.disableAGFRendering).toBe(false)
 
       vi.useRealTimers()
+    })
+
+    it('records AGF guard commands when friendlies are boxed', () => {
+      handler.attackGroupWasDragging = true
+      gameState.attackGroupStart = { x: 0, y: 0 }
+      gameState.attackGroupEnd = { x: 100, y: 100 }
+
+      const friendlyTarget = { id: 'ally-1', owner: 'player1', health: 100, x: 16, y: 16 }
+      const enemies = [
+        friendlyTarget,
+        { id: 'enemy-1', owner: 'enemy', health: 100, x: 24, y: 24 }
+      ]
+
+      handler.handleMouseUp(100, 100, enemies, selectedUnits, unitCommands, mapGrid, null)
+
+      expect(recordReplayCommand).toHaveBeenCalledWith(expect.objectContaining({
+        type: 'unit_command',
+        owner: 'player1',
+        command: 'guard',
+        unitIds: ['tank-1'],
+        guardTargetRefs: [{ id: 'ally-1' }]
+      }), { source: 'human' })
     })
   })
 

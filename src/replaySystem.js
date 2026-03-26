@@ -623,9 +623,23 @@ function executeReplayUnitCommand(command) {
       return false
     }
     case 'guard': {
-      const target = resolveReplayEntityReference(command.targetRef)
+      const resolvedGuardTargets = Array.isArray(command.guardTargetRefs)
+        ? command.guardTargetRefs
+          .map(reference => resolveReplayEntityReference(reference))
+          .filter(Boolean)
+        : []
+      const uniqueGuardTargets = []
+      const seenTargetIds = new Set()
+      resolvedGuardTargets.forEach(target => {
+        const key = target?.id || `${target?.x}_${target?.y}`
+        if (!key || seenTargetIds.has(key)) return
+        seenTargetIds.add(key)
+        uniqueGuardTargets.push(target)
+      })
+      const target = uniqueGuardTargets[0] || resolveReplayEntityReference(command.targetRef)
       if (!target) return false
       selectedUnits.forEach(unit => {
+        unit.guardTargets = uniqueGuardTargets.length > 0 ? uniqueGuardTargets.slice() : [target]
         unit.guardTarget = target
         unit.guardMode = true
         unit.target = null

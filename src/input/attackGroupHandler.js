@@ -3,6 +3,7 @@ import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { markWaypointsAdded } from '../game/waypointSounds.js'
 import { activateGroupGuard } from './mouseCommands.js'
+import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['rocketTurret', 'teslaCoil', 'artilleryTurret', 'turretGunV1', 'turretGunV2', 'turretGunV3'])
 
@@ -105,7 +106,25 @@ export class AttackGroupHandler {
       unit.owner === gameState.humanPlayer &&
       !unit.isBuilding
     )
-    activateGroupGuard(combatUnits, guardTargets)
+    if (!activateGroupGuard(combatUnits, guardTargets)) {
+      return
+    }
+
+    const unitIds = combatUnits.map(unit => unit.id).filter(Boolean)
+    const unitRefs = createReplayUnitReferences(unitIds)
+    const guardTargetRefs = guardTargets
+      .map(target => createReplayEntityReference(target))
+      .filter(Boolean)
+
+    recordReplayCommand({
+      type: 'unit_command',
+      owner: gameState.humanPlayer,
+      unitIds,
+      ...(unitRefs.length > 0 ? { unitRefs } : {}),
+      command: 'guard',
+      ...(guardTargetRefs[0] ? { targetRef: guardTargetRefs[0] } : {}),
+      ...(guardTargetRefs.length > 0 ? { guardTargetRefs } : {})
+    }, { source: 'human' })
   }
 
   resetAttackGroupState() {
