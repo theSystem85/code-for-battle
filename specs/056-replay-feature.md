@@ -44,6 +44,7 @@ Implement deterministic replay capture/playback for player sessions.
 - Replay loading now rehydrates the embedded baseline state directly in memory instead of creating a temporary localStorage save first, avoiding quota failures when larger multi-player replay baselines are loaded.
 - Sidebar speed and volume sliders now show their current values inline inside the left label text, which frees more width for the slider rails and uses green slider knobs to match input labels.
 - Replay list scrollbars use the same custom styling as the save-game list.
+- Replay loading must terminate all active audio from the previously running session before restoring the replay baseline so legacy combat/movement/music sounds do not leak into replay playback.
 - Four-player replay determinism E2E should disable tutorial UI both via preseeded tutorial storage and an explicit post-load hide/skip step, because the normal tutorial boot can still appear during startup races and block the replay controls.
 - Determinism E2E must keep `humanPlayer` on a real owning party during the recorded live match; switching it to a spectator-like non-owner is not a valid all-AI shortcut because the standard defeat checks immediately end the game for the local player.
 - The four-player replay determinism E2E scenario is pinned to `/?size=60&players=4&seed=5&oreFields=1` so replay investigations target one stable map layout with a single shared ore-field configuration.
