@@ -39,17 +39,22 @@ As a player, I want to assign combat units to guard other units, so that they au
 
 **Why this priority**: Provides automated defensive tactics, reduces micro-management burden, and enables strategic unit protection especially for resource gathering.
 
-**Independent Test**: Select a combat unit, hold Cmd/Ctrl, click on friendly harvester, verify the combat unit follows and defends the harvester.
+**Independent Test**: Select a combat unit, click/tap on a friendly harvester, verify the combat unit follows and defends the harvester with guard icon visible above target.
 
 **Acceptance Scenarios**:
 
-1. **Given** a combat unit is selected and Cmd/Ctrl key is held, **When** cursor hovers over friendly unit, **Then** cursor changes to guard cursor (guard.svg)
-2. **Given** guard cursor is active, **When** player clicks on friendly unit, **Then** selected unit enters guard mode for that target
+1. **Given** a combat unit is selected, **When** cursor hovers over friendly unit, **Then** cursor changes to guard cursor (guard.svg) on desktop without requiring Cmd/Ctrl
+2. **Given** a combat unit is selected, **When** player clicks/taps on friendly unit, **Then** selected unit enters guard mode for that target on desktop and mobile
 3. **Given** unit is in guard mode, **When** guarded unit moves, **Then** guarding unit follows at appropriate distance
 4. **Given** unit is in guard mode, **When** enemy enters attack range, **Then** guarding unit attacks enemy automatically
 5. **Given** unit is in guard mode attacking, **When** enemy moves away, **Then** guarding unit does not chase beyond guard range and returns to following guarded unit
 6. **Given** unit is in guard mode, **When** given any other command (move, attack, new guard target), **Then** guard mode is cancelled and unit follows new orders
 7. **Given** guarded unit is destroyed, **When** guard target becomes invalid, **Then** guarding unit reverts to idle state
+8. **Given** AGF drag box includes friendly and enemy units, **When** command is released, **Then** enemies are queued for attack first and guard mode activates for all friendly units inside the box
+9. **Given** guard mode is active and guarding combat unit remains selected, **When** target friendly unit is visible, **Then** guard icon remains shown above that guarded unit
+10. **Given** guard mode is active, **When** guarded unit is within half the guard unit's fire range, **Then** no guard reroute/path recalculation is triggered
+11. **Given** guard mode is active and guarded unit moves beyond half the guard unit's fire range, **When** reroute is needed, **Then** path recalculation occurs at most once every 2 seconds
+12. **Given** guarded unit is attacked, **When** attacker is in guard unit firing range, **Then** guarding unit immediately targets that attacker while staying in guard mode
 
 ---
 
@@ -122,8 +127,8 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-008**: System MUST seamlessly transition from remote control to standard control when normal commands issued
 
 **Guard Mode Feature (GMF):**
-- **FR-009**: System MUST display guard cursor (guard.svg) when Cmd/Ctrl held and hovering over friendly unit with combat unit selected
-- **FR-010**: System MUST assign guard target when Cmd/Ctrl + click on friendly unit
+- **FR-009**: System MUST display guard cursor (guard.svg) when hovering over friendly unit with guard-capable combat unit selected (desktop and mobile parity)
+- **FR-010**: System MUST assign guard target when clicking/tapping a friendly unit while guard-capable combat units are selected
 - **FR-011**: System MUST make guarding unit follow guarded unit at appropriate distance
 - **FR-012**: System MUST make guarding unit attack enemies that enter range automatically
 - **FR-013**: System MUST prevent guarding unit from chasing enemies beyond guard range
@@ -131,6 +136,11 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-015**: System MUST cancel guard mode when any new command is issued to guarding unit
 - **FR-016**: System MUST cancel guard mode when guarded unit is destroyed
 - **FR-017**: System MUST support guard mode for all combat unit types
+- **FR-018A**: System MUST render guard icon above guarded friendly targets while the guarding combat unit remains selected and guard mode is active
+- **FR-018B**: System MUST support multi-target guard assignment from AGF drag boxes that include friendly units
+- **FR-018C**: System MUST throttle guard follow rerouting to no more than once every 2 seconds
+- **FR-018D**: System MUST only reroute for follow when guarded target exceeds half of the guard unit effective fire range
+- **FR-018E**: System MUST prioritize immediate retaliation against the latest attacker of the guarded unit when in range, without disabling guard mode
 
 **Path Planning Feature (PPF):**
 - **FR-018**: System MUST add commands to queue when shift key is held during command input

@@ -547,6 +547,7 @@ export function assignRecoveryTankToWreck(tank, wreck, mapGrid, { mode = 'tow', 
   cancelRecoveryTask(tank)
   tank.guardMode = false
   tank.guardTarget = null
+  tank.guardTargets = null
   tank.path = plan.path.slice(1)
   tank.moveTarget = { x: plan.moveTarget.x, y: plan.moveTarget.y }
   tank.recoveryTask = task

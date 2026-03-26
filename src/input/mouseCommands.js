@@ -172,6 +172,35 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
   return false
 }
 
+function applyGuardTargets(commandableUnits, guardTargets) {
+  if (!Array.isArray(guardTargets) || guardTargets.length === 0) {
+    return false
+  }
+
+  const uniqueTargets = []
+  const seen = new Set()
+  guardTargets.forEach(target => {
+    if (!target || target.health <= 0) return
+    const key = target.id || `${target.x}_${target.y}`
+    if (seen.has(key)) return
+    seen.add(key)
+    uniqueTargets.push(target)
+  })
+
+  if (uniqueTargets.length === 0) {
+    return false
+  }
+
+  commandableUnits.forEach(u => {
+    u.guardTargets = uniqueTargets.slice()
+    u.guardTarget = u.guardTargets[0]
+    u.guardMode = true
+    u.target = null
+    u.moveTarget = null
+  })
+  return true
+}
+
 export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnits, unitCommands, selectionManager, _mapGrid) {
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
   if (commandableUnits.length === 0) {
@@ -191,13 +220,7 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
     }
   }
 
-  if (guardTarget) {
-    commandableUnits.forEach(u => {
-      u.guardTarget = guardTarget
-      u.guardMode = true
-      u.target = null
-      u.moveTarget = null
-    })
+  if (guardTarget && applyGuardTargets(commandableUnits, [guardTarget])) {
     recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
       command: 'guard',
       targetRef: createReplayEntityReference(guardTarget)
@@ -206,6 +229,10 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
     return true
   }
   return false
+}
+
+export function activateGroupGuard(commandableUnits, guardTargets) {
+  return applyGuardTargets(commandableUnits, guardTargets)
 }
 
 export function handleStandardCommands(handler, worldX, worldY, selectedUnits, unitCommands, mapGrid, altPressed = false) {

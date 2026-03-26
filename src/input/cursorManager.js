@@ -953,6 +953,17 @@ export class CursorManager {
       const hasCombatUnits = hasSelectedUnits && selectedUnits.some(unit =>
         unit.type !== 'harvester' && unit.owner === gameState.humanPlayer && !unit.isBuilding
       )
+      const hasGuardCapableUnits = hasSelectedUnits && selectedUnits.some(unit =>
+        unit.owner === gameState.humanPlayer &&
+        !unit.isBuilding &&
+        unit.type !== 'harvester' &&
+        unit.type !== 'ambulance' &&
+        unit.type !== 'tankerTruck' &&
+        unit.type !== 'ammunitionTruck' &&
+        unit.type !== 'recoveryTank' &&
+        unit.type !== 'mineSweeper' &&
+        unit.type !== 'mineLayer'
+      )
       const hasSelectedFactory = hasSelectedUnits && selectedUnits.some(unit =>
         (unit.isBuilding && (unit.type === 'vehicleFactory' || unit.type === 'constructionYard')) ||
         (unit.id && (unit.id === gameState.humanPlayer))
@@ -1002,7 +1013,11 @@ export class CursorManager {
         } else if (this.isOverBlockedTerrain) {
           setMoveBlockedCursor()
         } else if (this.isOverFriendlyUnit) {
-          setAttackBlockedCursor()
+          if (hasGuardCapableUnits) {
+            setCursor('none', 'guard-mode')
+          } else {
+            setAttackBlockedCursor()
+          }
         } else if (!gameState.isRightDragging) {
           setMoveCursor()
         } else {

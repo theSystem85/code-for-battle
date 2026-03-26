@@ -14,7 +14,7 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
   }
 
   cancelRetreatForUnits(selectedUnits)
-  selectedUnits.forEach(u => { u.guardTarget = null; u.guardMode = false })
+  selectedUnits.forEach(u => { u.guardTarget = null; u.guardTargets = null; u.guardMode = false })
 
   if (!skipQueueClear) {
     selectedUnits.forEach(unit => {

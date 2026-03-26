@@ -22,6 +22,7 @@ export function handleRefineryUnloadCommand(handler, selectedUnits, refinery, ma
   selectedUnits.forEach(unit => {
     if (unit.type === 'harvester') {
       unit.guardTarget = null
+      unit.guardTargets = null
       unit.guardMode = false
       unit.assignedRefinery = refinery
 
@@ -66,6 +67,7 @@ export function handleHarvesterCommand(handler, selectedUnits, oreTarget, mapGri
   selectedUnits.forEach(unit => {
     if (unit.type === 'harvester') {
       unit.guardTarget = null
+      unit.guardTargets = null
       unit.guardMode = false
       const path = findPathForOwner(
         { x: unit.tileX, y: unit.tileY },
@@ -101,6 +103,7 @@ export function handleRepairWorkshopCommand(handler, selectedUnits, workshop, ma
 
   selectedUnits.forEach((unit, index) => {
     unit.guardTarget = null
+    unit.guardTargets = null
     unit.guardMode = false
     if (!workshop.repairQueue) workshop.repairQueue = []
     if (!workshop.repairQueue.includes(unit)) {
