@@ -179,6 +179,7 @@ beforeEach(async() => {
   gameState.selectionActive = false
   gameState.selectionStart = { x: 0, y: 0 }
   gameState.selectionEnd = { x: 0, y: 0 }
+  window.recordReplayCommand = vi.fn()
   createBuilding.mockReset()
   placeBuilding.mockReset()
   resetDom()
@@ -187,6 +188,7 @@ beforeEach(async() => {
 })
 
 afterEach(() => {
+  delete window.recordReplayCommand
   resetDom()
 })
 
@@ -259,6 +261,24 @@ describe('CheatSystem', () => {
     expect(system.parseAmount('1,200')).toBe(1200)
     expect(system.parseAmount('-5')).toBe(0)
     expect(system.parseAmount('abc')).toBeNull()
+  })
+
+  it('records cheat cursor position for replayed cheat spawns', () => {
+    const system = new CheatSystem()
+    gameState.cursorX = 123
+    gameState.cursorY = 456
+
+    system.processCheatCode('spawn tank_v1')
+
+    expect(window.recordReplayCommand).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'cheat_code',
+      code: 'spawn tank_v1',
+      cursor: {
+        space: 'world',
+        x: 123,
+        y: 456
+      }
+    }), { source: 'human-cheat' })
   })
 
   it('parses fuel and ammo values with percent support', () => {

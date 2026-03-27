@@ -348,9 +348,18 @@ export class CheatSystem {
   processCheatCode(code) {
     const normalizedCode = code.toLowerCase().trim()
     if (normalizedCode && !gameState.replay?.isApplyingReplayCommand) {
+      const replayCursor = {}
+      if (Number.isFinite(gameState.cursorX) && Number.isFinite(gameState.cursorY)) {
+        replayCursor.cursor = {
+          space: 'world',
+          x: gameState.cursorX,
+          y: gameState.cursorY
+        }
+      }
       window.recordReplayCommand?.({
         type: 'cheat_code',
-        code: normalizedCode
+        code: normalizedCode,
+        ...replayCursor
       }, { source: 'human-cheat' })
     }
 
