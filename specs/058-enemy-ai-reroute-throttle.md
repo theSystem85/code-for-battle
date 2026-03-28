@@ -67,3 +67,11 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 
 ## Follow-up Requirement 6
 - Accept a wider ore arrival proximity and clear active move/path intent when near ore so harvest starts reliably instead of oscillating.
+
+## Follow-up Root Cause 7 (2026-03-28)
+- Interrupted harvesting could leave stale ore-tile reservation state, so the harvester could keep re-targeting the same ore tile while never legally entering harvest state.
+- Combined with near-tile path recalculation, this produced repeated same-target reroutes and turn-around loops on the ore tile.
+
+## Follow-up Requirement 7
+- Harvest interruption paths must always release ore-tile harvest reservations.
+- Harvester state should track and clear active harvest reservation ownership explicitly to avoid reservation leaks.

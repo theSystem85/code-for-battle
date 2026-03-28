@@ -105,7 +105,21 @@ function stopMovement(unit) {
   }
 }
 
+function releaseHarvestReservation(unit) {
+  if (!unit) return
+  const tileKey = unit.activeHarvestTileKey || (
+    unit.oreField ? `${unit.oreField.x},${unit.oreField.y}` : null
+  )
+  if (tileKey) {
+    harvestedTiles.delete(tileKey)
+  }
+  unit.activeHarvestTileKey = null
+}
+
 function clearOreField(unit) {
+  if (unit.harvesting) {
+    releaseHarvestReservation(unit)
+  }
   if (unit.oreField) {
     const tileKey = `${unit.oreField.x},${unit.oreField.y}`
     if (targetedOreTiles[tileKey] === unit.id) {
@@ -117,6 +131,7 @@ function clearOreField(unit) {
 
 function startHarvesting(unit, tileKey, now, gameState) {
   unit.harvesting = true
+  unit.activeHarvestTileKey = tileKey
   unit.harvestTimer = now
   clearScheduledHarvesterAction(unit)
   stopMovement(unit)
@@ -166,6 +181,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     // don't immediately overwrite retreat pathing and cause route thrashing.
     if (isRetreatingFromThreat) {
       clearScheduledHarvesterAction(unit, 'findNewOre')
+      releaseHarvestReservation(unit)
       clearOreField(unit)
       unit.harvesting = false
       unit.unloadingAtRefinery = false
@@ -213,6 +229,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     if (unit.harvesting) {
       // Guard against missing oreField to avoid null errors
       if (!unit.oreField) {
+        releaseHarvestReservation(unit)
         unit.harvesting = false
         return // skip to next unit
       }
@@ -224,6 +241,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         unit.harvesting = false
         const tileKey = `${unit.oreField.x},${unit.oreField.y}`
         harvestedTiles.delete(tileKey) // Free up the tile
+        unit.activeHarvestTileKey = null
 
         // Clear manual ore target when harvesting is complete
         if (unit.manualOreTarget &&
