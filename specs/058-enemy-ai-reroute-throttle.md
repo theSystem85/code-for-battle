@@ -24,3 +24,11 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 - Under sustained attack, selected enemy harvesters no longer exhibit rapid path-line flickering.
 - AI retreat reroutes are limited to at most once every 2 seconds for a stable retreat target.
 - Existing retreat behavior still triggers and works when no route exists, target changes, or cooldown expires.
+
+## Follow-up Root Cause (2026-03-28)
+- A second conflict remained after adding the reroute cooldown: harvester economy automation could still issue ore/unload routing while `isRetreating` was active.
+- This created a retreat-vs-economy command tug-of-war where paths were overwritten rapidly and the harvester appeared to flicker in place.
+
+## Follow-up Requirement
+- While `isRetreating` is true on a harvester, retreat logic must be the sole owner of movement intent.
+- Harvester economy loops (ore targeting, unloading, deferred ore-search scheduling) must not issue competing movement/path updates until retreat ends.

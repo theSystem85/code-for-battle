@@ -159,6 +159,19 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
 
     const unitTileX = Math.floor(unit.x / TILE_SIZE)
     const unitTileY = Math.floor(unit.y / TILE_SIZE)
+    const isRetreatingFromThreat = Boolean(unit.isRetreating)
+
+    // Retreat behavior is controlled by AI strategy logic (retreatLogic.js).
+    // While retreating, suspend economy loops so harvester ore/unload policies
+    // don't immediately overwrite retreat pathing and cause route thrashing.
+    if (isRetreatingFromThreat) {
+      clearScheduledHarvesterAction(unit, 'findNewOre')
+      clearOreField(unit)
+      unit.harvesting = false
+      unit.unloadingAtRefinery = false
+      unit.unloadStartTime = null
+      return
+    }
 
     // Periodic productivity check - ensure harvester is doing something useful every 0.5 seconds
     if (!unit.lastProductivityCheck || now - unit.lastProductivityCheck > HARVESTER_PRODUCTIVITY_CHECK_INTERVAL) {
