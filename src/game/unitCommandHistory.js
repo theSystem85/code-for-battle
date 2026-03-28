@@ -1,5 +1,7 @@
 const MAX_COMMAND_HISTORY = 10
 const unitCommandHistory = new Map()
+const MIN_HIGH_LEVEL_MOVE_DISTANCE_TILES = 2
+const MIN_HIGH_LEVEL_MOVE_LOG_INTERVAL_MS = 1200
 
 function getOwnerControlSource(unit, gameState) {
   if (!unit) return 'system'
@@ -54,6 +56,35 @@ function appendCommand(unit, entry) {
   unitCommandHistory.set(unit.id, history)
 }
 
+function shouldLogHighLevelMove(unit, moveTarget, now) {
+  if (!moveTarget || !Number.isFinite(moveTarget.x) || !Number.isFinite(moveTarget.y)) {
+    return false
+  }
+
+  const lastHighLevelMoveTarget = unit._lastHighLevelMoveTarget
+  const lastHighLevelMoveTime = unit._lastHighLevelMoveTime || 0
+  if (!lastHighLevelMoveTarget) {
+    unit._lastHighLevelMoveTarget = { x: moveTarget.x, y: moveTarget.y }
+    unit._lastHighLevelMoveTime = now
+    return true
+  }
+
+  const distance = Math.hypot(
+    moveTarget.x - lastHighLevelMoveTarget.x,
+    moveTarget.y - lastHighLevelMoveTarget.y
+  )
+  const intervalElapsed = (now - lastHighLevelMoveTime) >= MIN_HIGH_LEVEL_MOVE_LOG_INTERVAL_MS
+  const isNewHighLevelTarget = distance >= MIN_HIGH_LEVEL_MOVE_DISTANCE_TILES
+
+  if (isNewHighLevelTarget && intervalElapsed) {
+    unit._lastHighLevelMoveTarget = { x: moveTarget.x, y: moveTarget.y }
+    unit._lastHighLevelMoveTime = now
+    return true
+  }
+
+  return false
+}
+
 export function observeUnitCommandSignals(unit, now, gameState) {
   if (!unit || !unit.id) return
 
@@ -63,7 +94,7 @@ export function observeUnitCommandSignals(unit, now, gameState) {
   const retreatKey = unit.isRetreating ? '1' : '0'
 
   if (unit._lastObservedMoveTargetKey !== moveTargetKey) {
-    if (moveTargetKey !== 'none') {
+    if (moveTargetKey !== 'none' && shouldLogHighLevelMove(unit, unit.moveTarget, now)) {
       appendCommand(unit, {
         timestamp: now,
         source,

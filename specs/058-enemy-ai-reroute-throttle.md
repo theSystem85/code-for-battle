@@ -47,3 +47,10 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 
 ## Follow-up Requirement 3
 - For AI-controlled units, disable generic attack-move reroute handling in `unitMovement` and keep reroute ownership in dedicated AI systems.
+
+## Follow-up Root Cause 4 (2026-03-28)
+- Damage-only harvester retreat checks could still trigger while the harvester was already productively engaged at ore (harvesting/unloading/at assigned ore tile), causing turn-around loops with no useful economy output.
+
+## Follow-up Requirement 4
+- Suppress damage-only retreat triggers when a harvester is already doing useful economy work at ore/refinery.
+- Nearby active threats remain the primary immediate retreat trigger.

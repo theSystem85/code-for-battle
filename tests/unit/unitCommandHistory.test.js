@@ -33,4 +33,27 @@ describe('unitCommandHistory', () => {
     clearUnitCommandHistory(unit.id)
     expect(getUnitCommandHistory(unit.id)).toEqual([])
   })
+
+  it('does not spam move logs for small intermediate sub-path changes', () => {
+    const unit = {
+      id: 'u2',
+      owner: 'player1',
+      moveTarget: { x: 10, y: 10 },
+      target: null,
+      isRetreating: false
+    }
+    const gameState = { humanPlayer: 'player1', partyStates: [] }
+
+    observeUnitCommandSignals(unit, 1000, gameState)
+    unit.moveTarget = { x: 10.5, y: 10.5 } // sub-path like adjustment
+    observeUnitCommandSignals(unit, 1400, gameState)
+    unit.moveTarget = { x: 11, y: 10.8 } // still not a new high-level target
+    observeUnitCommandSignals(unit, 1800, gameState)
+
+    const history = getUnitCommandHistory(unit.id)
+    const moveEntries = history.filter(entry => entry.type === 'move')
+    expect(moveEntries.length).toBe(1)
+
+    clearUnitCommandHistory(unit.id)
+  })
 })

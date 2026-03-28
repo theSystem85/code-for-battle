@@ -4,6 +4,7 @@ import { getUnitCommandHistory } from '../game/unitCommandHistory.js'
 
 const OVERLAY_ID = 'debug-unit-command-overlay'
 let updateTimer = null
+let overlayMinimized = false
 
 function createOverlayElement() {
   let overlay = document.getElementById(OVERLAY_ID)
@@ -28,7 +29,7 @@ function createOverlayElement() {
   overlay.style.lineHeight = '1.35'
   overlay.style.zIndex = '9999'
   overlay.style.display = 'none'
-  overlay.style.pointerEvents = 'none'
+  overlay.style.pointerEvents = 'auto'
   document.body.appendChild(overlay)
   return overlay
 }
@@ -54,8 +55,27 @@ function renderOverlay() {
   }
 
   const history = getUnitCommandHistory(unit.id)
+  const toggleLabel = overlayMinimized ? '▢' : '—'
+  const toggleTitle = overlayMinimized ? 'Maximize commands panel' : 'Minimize commands panel'
+
+  const renderHeader = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+      <strong>Last 10 Commands</strong>
+      <button id="${OVERLAY_ID}-toggle" type="button" title="${toggleTitle}" style="cursor:pointer;border:1px solid rgba(255,255,255,0.25);background:#1a1a1a;color:#fff;border-radius:4px;padding:2px 6px;font-size:11px;">${toggleLabel}</button>
+    </div>
+    <div style="margin-bottom:8px;opacity:0.85;">Unit: ${unit.type || 'unknown'} · ${unit.id}</div>
+  `
+
+  if (overlayMinimized) {
+    overlay.innerHTML = renderHeader
+    attachToggleHandler()
+    overlay.style.display = 'block'
+    return
+  }
+
   if (!history || history.length === 0) {
-    overlay.innerHTML = `<div><strong>Unit Commands</strong> (${unit.type || 'unit'} · ${unit.id})</div><div style="margin-top:8px;opacity:0.8;">No commands recorded yet.</div>`
+    overlay.innerHTML = `${renderHeader}<div style="margin-top:8px;opacity:0.8;">No commands recorded yet.</div>`
+    attachToggleHandler()
     overlay.style.display = 'block'
     return
   }
@@ -73,13 +93,22 @@ function renderOverlay() {
     `)).join('')
 
   overlay.innerHTML = `
-    <div style="margin-bottom:8px;"><strong>Last 10 Commands</strong></div>
-    <div style="margin-bottom:8px;opacity:0.85;">Unit: ${unit.type || 'unknown'} · ${unit.id}</div>
+    ${renderHeader}
     <ol style="margin:0;padding-left:18px;max-height:42vh;overflow:auto;">
       ${rows}
     </ol>
   `
+  attachToggleHandler()
   overlay.style.display = 'block'
+}
+
+function attachToggleHandler() {
+  const button = document.getElementById(`${OVERLAY_ID}-toggle`)
+  if (!button) return
+  button.onclick = () => {
+    overlayMinimized = !overlayMinimized
+    renderOverlay()
+  }
 }
 
 export function initDebugUnitCommandOverlay() {

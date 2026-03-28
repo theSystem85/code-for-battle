@@ -144,6 +144,20 @@ export function shouldHarvesterSeekProtection(harvester, units) {
 
   // Also check if harvester has been recently damaged
   const recentlyDamaged = harvester.lastDamageTime && (now - harvester.lastDamageTime < 10000)
+  const isActivelyHarvesting = Boolean(harvester.harvesting)
+  const isUnloading = Boolean(harvester.unloadingAtRefinery)
+  const isAtAssignedOreField = Boolean(
+    harvester.oreField &&
+    Math.hypot(
+      (harvester.x / TILE_SIZE) - harvester.oreField.x,
+      (harvester.y / TILE_SIZE) - harvester.oreField.y
+    ) <= 0.8
+  )
+  const isDoingUsefulEconomyWork = isActivelyHarvesting || isUnloading || isAtAssignedOreField
+
+  if (isDoingUsefulEconomyWork) {
+    return false
+  }
 
   return recentlyDamaged
 }
