@@ -1,3 +1,4 @@
+- [x] Debug command overlay compact minimized mode (2026-03-28): when minimized, only a floating "Maximize logs" button remains visible at bottom-right above condensed sidebar space.
 - [x] Debug command overlay minimize/maximize control (2026-03-28): `?debug` command panel now has a header toggle button to collapse/expand while keeping selection-aware visibility behavior.
 - [x] Debug selected-unit command history overlay (2026-03-28): with `?debug` enabled, selecting exactly one unit now shows a right-side center overlay listing that unit's last 10 high-level command signals (works for player and enemy units, closes on deselect).
 - [x] Map-regeneration UX follow-up: preserve and clamp camera scroll position when map settings changes trigger regeneration, instead of always re-centering on the base.

@@ -56,4 +56,25 @@ describe('unitCommandHistory', () => {
 
     clearUnitCommandHistory(unit.id)
   })
+
+  it('records reroute entries when path changes but move target stays the same', () => {
+    const unit = {
+      id: 'u3',
+      owner: 'player1',
+      moveTarget: { x: 20, y: 20 },
+      target: null,
+      isRetreating: false,
+      path: [{ x: 5, y: 5 }, { x: 6, y: 5 }]
+    }
+    const gameState = { humanPlayer: 'player1', partyStates: [] }
+
+    observeUnitCommandSignals(unit, 1000, gameState)
+    unit.path = [{ x: 5, y: 6 }, { x: 6, y: 6 }]
+    observeUnitCommandSignals(unit, 1700, gameState)
+
+    const history = getUnitCommandHistory(unit.id)
+    expect(history.some(entry => entry.type === 'reroute')).toBe(true)
+
+    clearUnitCommandHistory(unit.id)
+  })
 })

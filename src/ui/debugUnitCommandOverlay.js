@@ -67,11 +67,26 @@ function renderOverlay() {
   `
 
   if (overlayMinimized) {
-    overlay.innerHTML = renderHeader
+    overlay.style.width = 'auto'
+    overlay.style.maxHeight = 'none'
+    overlay.style.padding = '6px'
+    overlay.style.top = 'auto'
+    overlay.style.transform = 'none'
+    overlay.style.right = '16px'
+    overlay.style.bottom = '88px'
+    overlay.innerHTML = `<button id="${OVERLAY_ID}-toggle" type="button" title="${toggleTitle}" style="cursor:pointer;border:1px solid rgba(255,255,255,0.25);background:#1a1a1a;color:#fff;border-radius:4px;padding:4px 8px;font-size:11px;">Maximize logs</button>`
     attachToggleHandler()
     overlay.style.display = 'block'
     return
   }
+
+  overlay.style.width = '360px'
+  overlay.style.maxHeight = '60vh'
+  overlay.style.padding = '10px'
+  overlay.style.top = '50%'
+  overlay.style.transform = 'translateY(-50%)'
+  overlay.style.right = '24px'
+  overlay.style.bottom = 'auto'
 
   if (!history || history.length === 0) {
     overlay.innerHTML = `${renderHeader}<div style="margin-top:8px;opacity:0.8;">No commands recorded yet.</div>`

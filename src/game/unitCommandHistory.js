@@ -2,6 +2,7 @@ const MAX_COMMAND_HISTORY = 10
 const unitCommandHistory = new Map()
 const MIN_HIGH_LEVEL_MOVE_DISTANCE_TILES = 2
 const MIN_HIGH_LEVEL_MOVE_LOG_INTERVAL_MS = 1200
+const MIN_REROUTE_LOG_INTERVAL_MS = 600
 
 function getOwnerControlSource(unit, gameState) {
   if (!unit) return 'system'
@@ -36,6 +37,16 @@ function normalizeMoveTarget(moveTarget) {
     return 'none'
   }
   return `${moveTarget.x},${moveTarget.y}`
+}
+
+function buildPathSignature(path = []) {
+  if (!Array.isArray(path) || path.length === 0) return 'none'
+  const a = path[0]
+  const b = path[1]
+  if (!a) return 'none'
+  const head = `${a.x},${a.y}`
+  const next = b ? `${b.x},${b.y}` : '-'
+  return `${head}|${next}|len:${path.length}`
 }
 
 function appendCommand(unit, entry) {
@@ -92,6 +103,7 @@ export function observeUnitCommandSignals(unit, now, gameState) {
   const moveTargetKey = normalizeMoveTarget(unit.moveTarget)
   const targetKey = normalizeTargetReference(unit.target)
   const retreatKey = unit.isRetreating ? '1' : '0'
+  const pathSignature = buildPathSignature(unit.path)
 
   if (unit._lastObservedMoveTargetKey !== moveTargetKey) {
     if (moveTargetKey !== 'none' && shouldLogHighLevelMove(unit, unit.moveTarget, now)) {
@@ -126,6 +138,19 @@ export function observeUnitCommandSignals(unit, now, gameState) {
     })
     unit._lastObservedRetreatKey = retreatKey
   }
+
+  const rerouteIntervalElapsed = !unit._lastRerouteLogTime || (now - unit._lastRerouteLogTime) >= MIN_REROUTE_LOG_INTERVAL_MS
+  const sameMoveIntent = unit._lastObservedMoveTargetKey === moveTargetKey && moveTargetKey !== 'none'
+  if (rerouteIntervalElapsed && sameMoveIntent && unit._lastObservedPathSignature && pathSignature !== unit._lastObservedPathSignature) {
+    appendCommand(unit, {
+      timestamp: now,
+      source,
+      type: 'reroute',
+      details: `${moveTargetKey} via ${pathSignature}`
+    })
+    unit._lastRerouteLogTime = now
+  }
+  unit._lastObservedPathSignature = pathSignature
 }
 
 export function getUnitCommandHistory(unitId) {

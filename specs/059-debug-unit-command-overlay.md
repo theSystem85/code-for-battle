@@ -12,12 +12,14 @@ When the game is loaded with the `debug` query parameter, selecting one unit sho
 - Overlay placement:
   - fixed-position panel around middle-right area of the screen.
   - supports minimize/maximize toggle in the panel header.
+  - minimized mode shows only a floating maximize button at bottom-right (above condensed sidebar area).
 - Content:
   - show the last 10 command entries for the selected unit,
   - include command type, source (`player`/`ai`), command detail payload, and relative timestamp.
 - Command collection:
   - track high-level command signals from both AI and player-controlled units.
   - ignore sub-path/intermediate movement tweaks so logs reflect high-level order changes, not every path step.
+  - include reroute signal entries when path changes under the same high-level move intent.
   - cap in-memory history to 10 entries per unit.
 
 ## Implementation

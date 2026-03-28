@@ -54,3 +54,16 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 ## Follow-up Requirement 4
 - Suppress damage-only retreat triggers when a harvester is already doing useful economy work at ore/refinery.
 - Nearby active threats remain the primary immediate retreat trigger.
+
+## Follow-up Root Cause 5 (2026-03-28)
+- Combat tanks could still reroute too aggressively because path updates were triggered from transient distance-trend noise even when the target tile had not changed and the route was clear.
+
+## Follow-up Requirement 5
+- Combat path recalculation should not trigger on short-term distance oscillation alone.
+- Recalculation should primarily occur on initial-path need, throttle expiry with real target movement, or explicit blockage/stuck flows.
+
+## Follow-up Root Cause 6 (2026-03-28)
+- Harvester ore approach used a tight arrival threshold, allowing micro-overshoot/turning feedback around ore tiles where harvest start did not trigger quickly enough.
+
+## Follow-up Requirement 6
+- Accept a wider ore arrival proximity and clear active move/path intent when near ore so harvest starts reliably instead of oscillating.

@@ -299,7 +299,9 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         (unit.y / TILE_SIZE) - unit.oreField.y
       )
 
-      if (distanceToOreField <= 0.7) { // Allow harvester to be within 0.7 tiles of the ore field
+      if (distanceToOreField <= 1.1) { // Accept a wider proximity to prevent micro-turn loops at ore tiles
+        unit.path = []
+        unit.moveTarget = null
         // We're close enough to the ore field, check if we can harvest
         if (mapGrid[unit.oreField.y][unit.oreField.x].ore &&
             !mapGrid[unit.oreField.y][unit.oreField.x].seedCrystal &&

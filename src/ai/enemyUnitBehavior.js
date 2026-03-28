@@ -748,17 +748,12 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
           Math.abs(targetTileX - lastTargetPos.x) > TARGET_MOVEMENT_THRESHOLD ||
           Math.abs(targetTileY - lastTargetPos.y) > TARGET_MOVEMENT_THRESHOLD
 
-        // Check if we should recalculate based on distance trend (for moving targets)
-        let shouldRecalcForDistance = false
+        // Track distance trend for observability, but don't use it to trigger
+        // aggressive reroutes. Distance oscillation on clear paths can produce
+        // unnecessary route churn and non-optimal deviations.
         const checkIntervalPassed = !unit.lastDistanceCheckTime || (now - unit.lastDistanceCheckTime > MOVING_TARGET_CHECK_INTERVAL)
-
         if (checkIntervalPassed) {
           unit.lastDistanceCheckTime = now
-          const lastDistance = unit.lastDistanceToTarget
-          // Only recalculate if distance is increasing (unit going wrong direction)
-          if (lastDistance !== null && lastDistance !== undefined && distToTarget > lastDistance && hasValidPath) {
-            shouldRecalcForDistance = true
-          }
           unit.lastDistanceToTarget = distToTarget
         }
 
@@ -768,8 +763,8 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
         // Only recalculate if:
         // 1. We need an initial path
         // 2. Target has moved significantly AND throttle interval passed
-        // 3. We're getting farther from target AND interval passed
-        const shouldRecalculatePath = needsInitialPath || (pathRecalcNeeded && (targetHasMoved || shouldRecalcForDistance))
+        // 3. Target has actually moved to a new tile after throttle interval
+        const shouldRecalculatePath = needsInitialPath || (pathRecalcNeeded && targetHasMoved)
 
         if (shouldRecalculatePath) {
           // Store target position for movement tracking
