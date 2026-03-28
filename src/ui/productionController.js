@@ -58,7 +58,7 @@ export class ProductionController {
       this.ensureMobileToggle()
       this.updateMobileCategoryToggle()
       if (event?.detail?.enabled && this.isSetup) {
-        const activeButton = document.querySelector('.tab-button.active')
+        const activeButton = document.querySelector('.tab-button.active[data-tab]')
         const tabName = activeButton ? activeButton.getAttribute('data-tab') : null
         if (tabName) {
           this.activateTab(tabName, { scrollIntoView: false })

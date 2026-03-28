@@ -107,3 +107,8 @@ Touch users holding the device in portrait orientation need the ability to recla
 
 - **Drag-to-Build Priority**: In mobile portrait build interactions, drag gestures from production buttons must cancel long-press tooltip activation once movement crosses the drag threshold.
 - **No Tooltip During Active Drag**: While a touch drag-to-build gesture is active for a production button, the production tooltip must remain suppressed to avoid stealing focus from placement flow.
+
+## Bug Fix 2026-03-28
+
+- **Condensed Tab Toggle Reliability**: In portrait condensed mode, the `#mobileCategoryToggle` must resolve the active build tab strictly from production tab buttons (`#productionTabs .tab-button[data-tab]`) and ignore unrelated sidebar tab buttons (for example Save/Replays tabs).
+- **First-Load Behavior Guarantee**: On initial portrait condensed load (before any expand/collapse interaction), tapping the category toggle must immediately switch between Buildings and Units when both categories are available.

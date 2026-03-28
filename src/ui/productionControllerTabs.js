@@ -13,7 +13,7 @@ export function ensureMobileToggle(controller) {
 }
 
 export function handleMobileCategoryToggle(controller) {
-  const activeButton = document.querySelector('.tab-button.active')
+  const activeButton = document.querySelector('.tab-button.active[data-tab]')
   const currentTab = activeButton ? activeButton.getAttribute('data-tab') : null
   if (!currentTab) {
     return
@@ -81,12 +81,12 @@ export function forceLoadTabImages(_controller, tabContent) {
 }
 
 export function activateTab(controller, tabName, options = {}) {
-  const targetButton = document.querySelector(`.tab-button[data-tab="${tabName}"]`)
+  const targetButton = document.querySelector(`#productionTabs .tab-button[data-tab="${tabName}"]`)
   if (!targetButton || targetButton.classList.contains('disabled')) {
     return false
   }
 
-  const tabButtons = document.querySelectorAll('.tab-button')
+  const tabButtons = document.querySelectorAll('.tab-button[data-tab]')
   const tabContents = document.querySelectorAll('.tab-content')
 
   tabButtons.forEach(btn => btn.classList.remove('active'))
@@ -114,11 +114,11 @@ export function updateMobileCategoryToggle(controller, activeTabName) {
   }
 
   const activeTab = activeTabName
-    || (document.querySelector('.tab-button.active')?.getAttribute('data-tab'))
+    || (document.querySelector('.tab-button.active[data-tab]')?.getAttribute('data-tab'))
     || 'buildings'
 
   const otherTab = activeTab === 'units' ? 'buildings' : 'units'
-  const otherButton = document.querySelector(`.tab-button[data-tab="${otherTab}"]`)
+  const otherButton = document.querySelector(`#productionTabs .tab-button[data-tab="${otherTab}"]`)
   const otherDisabled = otherButton ? otherButton.classList.contains('disabled') : true
 
   const currentLabel = activeTab === 'units' ? 'UNITS' : 'BUILDINGS'
@@ -135,7 +135,7 @@ export function updateMobileCategoryToggle(controller, activeTabName) {
 }
 
 export function initProductionTabs(controller) {
-  const tabButtons = document.querySelectorAll('.tab-button')
+  const tabButtons = document.querySelectorAll('.tab-button[data-tab]')
 
   tabButtons.forEach(button => {
     button.addEventListener('click', () => {
@@ -148,7 +148,7 @@ export function initProductionTabs(controller) {
     })
   })
 
-  const activeButton = document.querySelector('.tab-button.active')
+  const activeButton = document.querySelector('.tab-button.active[data-tab]')
   if (activeButton) {
     controller.activateTab(activeButton.getAttribute('data-tab'), { scrollIntoView: false })
   } else if (tabButtons.length > 0) {
@@ -196,7 +196,7 @@ export function updateTabStates(controller) {
   }
 
   // If current active tab becomes disabled, switch to the other tab
-  const activeTab = document.querySelector('.tab-button.active')
+  const activeTab = document.querySelector('.tab-button.active[data-tab]')
   const activeTabDisabled = activeTab && activeTab.classList.contains('disabled')
   const lostConstructionYard = !gameState.mapEditMode && !hasConstructionYard
 
@@ -204,7 +204,7 @@ export function updateTabStates(controller) {
     controller.activateTab('units', { scrollIntoView: false })
   } else if (activeTabDisabled) {
     // Find the first non-disabled tab and activate it
-    const enabledTab = document.querySelector('.tab-button:not(.disabled)')
+    const enabledTab = document.querySelector('.tab-button[data-tab]:not(.disabled)')
     if (enabledTab) {
       controller.activateTab(enabledTab.getAttribute('data-tab'), { scrollIntoView: false })
     }
