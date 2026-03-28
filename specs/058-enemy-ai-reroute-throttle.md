@@ -40,3 +40,10 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 ## Follow-up Requirement 2
 - When a harvester exits retreat, apply a short re-engage cooldown for damage-only retreat triggers.
 - Nearby active threats must still be able to bypass this cooldown and force immediate retreat.
+
+## Follow-up Root Cause 3 (2026-03-28)
+- AI-controlled units were also subject to the generic attack-move reroute path in `unitMovement.js`, which is intended for direct/player control behavior.
+- This introduced a second AI path owner that could rewrite AI movement/attack routes in parallel with enemy AI systems.
+
+## Follow-up Requirement 3
+- For AI-controlled units, disable generic attack-move reroute handling in `unitMovement` and keep reroute ownership in dedicated AI systems.

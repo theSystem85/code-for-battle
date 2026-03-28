@@ -1,3 +1,4 @@
+- [x] Debug selected-unit command history overlay (2026-03-28): with `?debug` enabled, selecting exactly one unit now shows a right-side center overlay listing that unit's last 10 high-level command signals (works for player and enemy units, closes on deselect).
 - [x] Map-regeneration UX follow-up: preserve and clamp camera scroll position when map settings changes trigger regeneration, instead of always re-centering on the base.
 - [x] Terrain layering follow-up: rocks are generated first and water is applied afterward so rivers/lakes/coasts dominate and break rock lines at intersections.
 - [x] Map generation terrain controls follow-up: water/rock percentages now generate line-based terrain (no random scatter), coast water scales inward/outward with water%, and water+rock are auto-balanced to a hard 50% combined cap.

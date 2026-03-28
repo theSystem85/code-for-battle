@@ -20,6 +20,21 @@ import { updateHowitzerGunState } from './howitzerGunController.js'
 import { updateRetreatBehavior, shouldExitRetreat, cancelRetreat } from '../behaviours/retreat.js'
 import { logPerformance } from '../performanceUtils.js'
 import { getEffectiveFireRange } from './unitCombat/combatHelpers.js'
+import { observeUnitCommandSignals, pruneUnitCommandHistory } from './unitCommandHistory.js'
+
+function isAiControlledUnit(unit, gameState) {
+  if (!unit?.owner) return false
+  if (Array.isArray(gameState?.partyStates) && gameState.partyStates.length > 0) {
+    const partyState = gameState.partyStates.find(p => p.partyId === unit.owner)
+    if (partyState) {
+      return partyState.aiActive !== false
+    }
+  }
+
+  const humanPlayer = gameState?.humanPlayer
+  const isHumanOwner = unit.owner === humanPlayer || (humanPlayer === 'player1' && unit.owner === 'player')
+  return !isHumanOwner
+}
 
 /**
  * Updates unit movement, pathfinding, and formation handling
@@ -89,6 +104,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
     const remoteControlCooldownActive =
       unit.remoteControlActive ||
       (unit.lastRemoteControlTime && now - unit.lastRemoteControlTime < 1000)
+    const aiControlledUnit = isAiControlledUnit(unit, gameState)
 
     // --- ATTACK-MOVE FIX: If not retreating, and has a target, and is out of range, set moveTarget/path to target ---
     if (
@@ -96,6 +112,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       unit.target &&
       unit.target.health > 0 &&
       !remoteControlCooldownActive &&
+      !aiControlledUnit &&
       unit.type !== 'apache' &&
       unit.type !== 'f22Raptor' &&
       unit.type !== 'f35'
@@ -217,7 +234,11 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
         unit.moveTarget = null
       }
     }
+
+    observeUnitCommandSignals(unit, now, gameState)
   }
+
+  pruneUnitCommandHistory(units)
 }, false)
 
 /**
