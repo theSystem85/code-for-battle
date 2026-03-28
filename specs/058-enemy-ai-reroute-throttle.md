@@ -1,0 +1,26 @@
+# Enemy AI Reroute Throttle (Harvester Under Attack)
+
+## Summary
+Enemy AI units must not reroute more often than once every 2 seconds when reacting to combat pressure. The observed symptom was rapid path flicker on attacked enemy harvesters caused by repeated retreat reroutes in tight update loops.
+
+## Requirements
+- Enemy harvester retreat routing must be throttled to **>= 2000 ms** between reroutes when the retreat target is unchanged.
+- The retreat handler should reuse the current retreat plan during the cooldown window instead of recalculating a new path every AI update.
+- Retreat state consistency must be preserved while throttled:
+  - `isRetreating` remains true
+  - `retreatIssuedByPlayer` remains false
+  - `moveTarget` remains the active retreat target
+  - ore/harvest state remains cleared while retreating
+
+## Implementation Notes
+- Add a shared reroute cooldown constant in `src/ai/retreatLogic.js`.
+- Track the last AI reroute timestamp per unit (`lastAiRerouteTime`).
+- In `handleHarvesterRetreat`, skip path recomputation when:
+  - retreat target is unchanged,
+  - the unit already has an active retreat path,
+  - and reroute cooldown has not elapsed.
+
+## Acceptance Criteria
+- Under sustained attack, selected enemy harvesters no longer exhibit rapid path-line flickering.
+- AI retreat reroutes are limited to at most once every 2 seconds for a stable retreat target.
+- Existing retreat behavior still triggers and works when no route exists, target changes, or cooldown expires.

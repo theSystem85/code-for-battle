@@ -11,6 +11,7 @@ const AI_CONFIG = {
   HARVESTER_DEFENSE_RANGE: 6,         // Range in tiles to defend harvesters
   BASE_RETREAT_RANGE: 10             // Range in tiles to consider as "base area"
 }
+const AI_REROUTE_MIN_INTERVAL_MS = 2000
 
 /**
  * Checks if a unit should retreat based on low health
@@ -146,8 +147,29 @@ export function handleHarvesterRetreat(harvester, gameState, mapGrid) {
 
   // Find position near defensive buildings
   const retreatTarget = findDefensivePosition(nearestBase, gameState, mapGrid)
+  const now = getSimulationTime(gameState)
 
   if (retreatTarget) {
+    const hasSameRetreatTarget = Boolean(
+      harvester.retreatTarget &&
+      harvester.retreatTarget.x === retreatTarget.x &&
+      harvester.retreatTarget.y === retreatTarget.y
+    )
+    const hasActiveRetreatPath = Array.isArray(harvester.path) && harvester.path.length > 0
+    const recentlyRerouted = Boolean(
+      harvester.lastAiRerouteTime &&
+      (now - harvester.lastAiRerouteTime) < AI_REROUTE_MIN_INTERVAL_MS
+    )
+
+    if (hasSameRetreatTarget && hasActiveRetreatPath && recentlyRerouted) {
+      harvester.isRetreating = true
+      harvester.retreatIssuedByPlayer = false
+      harvester.moveTarget = retreatTarget
+      harvester.oreField = null
+      harvester.harvesting = false
+      return true
+    }
+
     const path = getCachedPath(
       { x: harvester.tileX, y: harvester.tileY, owner: harvester.owner },
       retreatTarget,
@@ -158,9 +180,11 @@ export function handleHarvesterRetreat(harvester, gameState, mapGrid) {
 
     if (path.length > 1) {
       harvester.path = path.slice(1)
+      harvester.lastAiRerouteTime = now
       harvester.isRetreating = true
       harvester.retreatIssuedByPlayer = false
       harvester.retreatTarget = retreatTarget
+      harvester.moveTarget = retreatTarget
       // Clear any ore-related state
       harvester.oreField = null
       harvester.harvesting = false
