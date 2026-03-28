@@ -32,3 +32,11 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 ## Follow-up Requirement
 - While `isRetreating` is true on a harvester, retreat logic must be the sole owner of movement intent.
 - Harvester economy loops (ore targeting, unloading, deferred ore-search scheduling) must not issue competing movement/path updates until retreat ends.
+
+## Follow-up Root Cause 2 (2026-03-28)
+- Retreat exit and retreat re-entry could happen back-to-back because `recentlyDamaged` remained true for several seconds after retreat ended.
+- That allowed a stop-retreat frame to immediately re-trigger retreat without a new nearby threat, producing another reroute loop.
+
+## Follow-up Requirement 2
+- When a harvester exits retreat, apply a short re-engage cooldown for damage-only retreat triggers.
+- Nearby active threats must still be able to bypass this cooldown and force immediate retreat.

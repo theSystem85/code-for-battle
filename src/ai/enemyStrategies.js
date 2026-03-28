@@ -189,6 +189,10 @@ export function applyEnemyStrategies(unit, units, gameState, mapGrid, now) {
       unit.retreatIssuedByPlayer = false
       unit.retreatTarget = null
       unit.path = []
+      if (unit.type === 'harvester') {
+        // Prevent immediate retreat re-trigger loops from recent-damage heuristics.
+        unit.harvesterRetreatCooldownUntil = now + 4000
+      }
       if (unit.needsWorkshopRepair && unit.health < unit.maxHealth) {
         sendUnitToWorkshop(unit, gameState, mapGrid)
         unit.needsWorkshopRepair = false

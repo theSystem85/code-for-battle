@@ -123,6 +123,10 @@ export function shouldHarvesterSeekProtection(harvester, units) {
   if (harvester.type !== 'harvester') return false
 
   const now = getSimulationTime(gameState)
+  const retreatCooldownActive = Boolean(
+    harvester.harvesterRetreatCooldownUntil &&
+    now < harvester.harvesterRetreatCooldownUntil
+  )
 
   // Check for nearby enemy units threatening the harvester
   const nearbyThreats = units.filter(u =>
@@ -130,11 +134,18 @@ export function shouldHarvesterSeekProtection(harvester, units) {
     u.health > 0 &&
     Math.hypot(u.x - harvester.x, u.y - harvester.y) < AI_CONFIG.HARVESTER_DEFENSE_RANGE * TILE_SIZE
   )
+  if (nearbyThreats.length > 0) {
+    return true
+  }
+
+  if (retreatCooldownActive) {
+    return false
+  }
 
   // Also check if harvester has been recently damaged
   const recentlyDamaged = harvester.lastDamageTime && (now - harvester.lastDamageTime < 10000)
 
-  return nearbyThreats.length > 0 || recentlyDamaged
+  return recentlyDamaged
 }
 
 /**
@@ -181,6 +192,7 @@ export function handleHarvesterRetreat(harvester, gameState, mapGrid) {
     if (path.length > 1) {
       harvester.path = path.slice(1)
       harvester.lastAiRerouteTime = now
+      harvester.harvesterRetreatCooldownUntil = null
       harvester.isRetreating = true
       harvester.retreatIssuedByPlayer = false
       harvester.retreatTarget = retreatTarget
