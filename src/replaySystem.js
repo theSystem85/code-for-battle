@@ -291,7 +291,24 @@ function resolveReplayEntityReference(reference) {
   }
 
   if (reference.kind === 'unit') {
-    return (gameState.units || []).find(unit => unit && unit.id === reference.id) || null
+    const units = Array.isArray(gameState.units) ? gameState.units : []
+    let unit = null
+
+    if (reference.id) {
+      unit = units.find(candidate => candidate && candidate.id === reference.id) || null
+      if (!unit) {
+        const aliasId = getReplayUnitAliasMap()?.[reference.id]
+        if (aliasId) {
+          unit = units.find(candidate => candidate && candidate.id === aliasId) || null
+        }
+      }
+    }
+
+    if (!unit) {
+      unit = resolveReplayUnitByReference(reference, { owner: reference.owner || null }, new Set(), new Set())
+    }
+
+    return unit || null
   }
 
   if (reference.kind === 'building') {
@@ -624,9 +641,23 @@ function executeReplayUnitCommand(command) {
       return false
     }
     case 'guard': {
-      const target = resolveReplayEntityReference(command.targetRef)
+      const resolvedGuardTargets = Array.isArray(command.guardTargetRefs)
+        ? command.guardTargetRefs
+          .map(reference => resolveReplayEntityReference(reference))
+          .filter(Boolean)
+        : []
+      const uniqueGuardTargets = []
+      const seenTargetIds = new Set()
+      resolvedGuardTargets.forEach(target => {
+        const key = target?.id || `${target?.x}_${target?.y}`
+        if (!key || seenTargetIds.has(key)) return
+        seenTargetIds.add(key)
+        uniqueGuardTargets.push(target)
+      })
+      const target = uniqueGuardTargets[0] || resolveReplayEntityReference(command.targetRef)
       if (!target) return false
       selectedUnits.forEach(unit => {
+        unit.guardTargets = uniqueGuardTargets.length > 0 ? uniqueGuardTargets.slice() : [target]
         unit.guardTarget = target
         unit.guardMode = true
         unit.target = null
@@ -750,7 +781,11 @@ export function createReplayEntityReference(entity) {
 
   return {
     kind: 'unit',
-    id: entity.id
+    id: entity.id,
+    owner: entity.owner || null,
+    type: entity.type || null,
+    replaySpawnOrdinal: Number.isFinite(entity.replaySpawnOrdinal) ? entity.replaySpawnOrdinal : null,
+    buildDuration: Number.isFinite(entity.buildDuration) ? entity.buildDuration : null
   }
 }
 
@@ -1023,7 +1058,19 @@ function executeReplayCommand(entry) {
       if (!executeReplayCommand.cheatSystemInstance) {
         executeReplayCommand.cheatSystemInstance = new CheatSystem()
       }
+      const replayCursor = command?.cursor
+      const hasReplayCursor = Number.isFinite(replayCursor?.x) && Number.isFinite(replayCursor?.y)
+      const previousCursorX = gameState.cursorX
+      const previousCursorY = gameState.cursorY
+      if (hasReplayCursor) {
+        gameState.cursorX = replayCursor.x
+        gameState.cursorY = replayCursor.y
+      }
       executeReplayCommand.cheatSystemInstance.processCheatCode(command.code || '')
+      if (hasReplayCursor) {
+        gameState.cursorX = previousCursorX
+        gameState.cursorY = previousCursorY
+      }
     }
   } finally {
     replay.isApplyingReplayCommand = false
