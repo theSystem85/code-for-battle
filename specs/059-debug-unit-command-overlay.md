@@ -21,6 +21,7 @@ When the game is loaded with the `debug` query parameter, selecting one unit sho
   - ignore sub-path/intermediate movement tweaks so logs reflect high-level order changes, not every path step.
   - include reroute signal entries when path changes under the same high-level move intent.
   - reroute entries should include diagnostic details (target + compact path signature) so loops can be investigated.
+  - ignore normal path progression events (for example head advancing to previous next tile) to avoid false reroute noise.
   - cap in-memory history to 10 entries per unit.
 
 ## Implementation

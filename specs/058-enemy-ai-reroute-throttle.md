@@ -75,3 +75,9 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 ## Follow-up Requirement 7
 - Harvest interruption paths must always release ore-tile harvest reservations.
 - Harvester state should track and clear active harvest reservation ownership explicitly to avoid reservation leaks.
+
+## Follow-up Root Cause 8 (2026-03-29)
+- Same-target ore approach could still trigger frequent path recomputation when no high-level intent changed, amplifying path jitter around ore and consuming extra CPU.
+
+## Follow-up Requirement 8
+- Add per-harvester ore-path recomputation throttling so ore routes are not rebuilt every frame for the same target without new state changes.

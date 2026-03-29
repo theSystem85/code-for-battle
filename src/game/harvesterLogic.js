@@ -27,6 +27,7 @@ const HARVESTER_ORE_FALLBACK_MIN_DELAY_MS = 1000
 const HARVESTER_ORE_FALLBACK_MAX_DELAY_MS = 2000
 const HARVESTER_ALTERNATIVE_ORE_RETRY_MIN_DELAY_MS = 3000
 const HARVESTER_ALTERNATIVE_ORE_RETRY_MAX_DELAY_MS = 5000
+const HARVESTER_ORE_REPATH_INTERVAL_MS = 2000
 
 function getSimulationTimeOrFallback(gameState) {
   return Number.isFinite(gameState?.simulationTime) ? gameState.simulationTime : performance.now()
@@ -320,6 +321,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
       if (distanceToOreField <= 1.1) { // Accept a wider proximity to prevent micro-turn loops at ore tiles
         unit.path = []
         unit.moveTarget = null
+        unit.lastHarvesterOrePathCalcTime = now
         // We're close enough to the ore field, check if we can harvest
         if (mapGrid[unit.oreField.y][unit.oreField.x].ore &&
             !mapGrid[unit.oreField.y][unit.oreField.x].seedCrystal &&
@@ -331,6 +333,13 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
           findNewOreTarget(unit, mapGrid, occupancyMap, now)
         }
       } else {
+        const canRepathToOre =
+          !unit.lastHarvesterOrePathCalcTime ||
+          (now - unit.lastHarvesterOrePathCalcTime) >= HARVESTER_ORE_REPATH_INTERVAL_MS
+        if (!canRepathToOre) {
+          return
+        }
+
         // Try to path to the ore field again
         const path = findPath(
           { x: unit.tileX, y: unit.tileY, owner: unit.owner },
@@ -341,6 +350,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
           { unitOwner: unit.owner }
         )
         if (path.length > 1) {
+          unit.lastHarvesterOrePathCalcTime = now
           unit.path = path.slice(1)
           unit.moveTarget = unit.oreField // Set move target so the harvester actually moves
         } else {

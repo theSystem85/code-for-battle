@@ -49,6 +49,30 @@ function buildPathSignature(path = []) {
   return `${head}|${next}|len:${path.length}`
 }
 
+function buildPathState(path = []) {
+  if (!Array.isArray(path) || path.length === 0) {
+    return { head: null, next: null, length: 0, signature: 'none' }
+  }
+  const head = path[0] ? { x: path[0].x, y: path[0].y } : null
+  const next = path[1] ? { x: path[1].x, y: path[1].y } : null
+  return {
+    head,
+    next,
+    length: path.length,
+    signature: buildPathSignature(path)
+  }
+}
+
+function isExpectedPathProgress(previousPathState, nextPathState) {
+  if (!previousPathState?.head || !nextPathState?.head) return false
+  if (!previousPathState.next) return false
+  const progressedToNextTile =
+    previousPathState.next.x === nextPathState.head.x &&
+    previousPathState.next.y === nextPathState.head.y
+  if (!progressedToNextTile) return false
+  return nextPathState.length <= previousPathState.length
+}
+
 function appendCommand(unit, entry) {
   if (!unit?.id || !entry) return
 
@@ -103,7 +127,7 @@ export function observeUnitCommandSignals(unit, now, gameState) {
   const moveTargetKey = normalizeMoveTarget(unit.moveTarget)
   const targetKey = normalizeTargetReference(unit.target)
   const retreatKey = unit.isRetreating ? '1' : '0'
-  const pathSignature = buildPathSignature(unit.path)
+  const pathState = buildPathState(unit.path)
 
   if (unit._lastObservedMoveTargetKey !== moveTargetKey) {
     if (moveTargetKey !== 'none' && shouldLogHighLevelMove(unit, unit.moveTarget, now)) {
@@ -141,16 +165,18 @@ export function observeUnitCommandSignals(unit, now, gameState) {
 
   const rerouteIntervalElapsed = !unit._lastRerouteLogTime || (now - unit._lastRerouteLogTime) >= MIN_REROUTE_LOG_INTERVAL_MS
   const sameMoveIntent = unit._lastObservedMoveTargetKey === moveTargetKey && moveTargetKey !== 'none'
-  if (rerouteIntervalElapsed && sameMoveIntent && unit._lastObservedPathSignature && pathSignature !== unit._lastObservedPathSignature) {
+  const pathActuallyChanged = Boolean(unit._lastObservedPathState) && pathState.signature !== unit._lastObservedPathState.signature
+  const normalPathProgress = isExpectedPathProgress(unit._lastObservedPathState, pathState)
+  if (rerouteIntervalElapsed && sameMoveIntent && pathActuallyChanged && !normalPathProgress) {
     appendCommand(unit, {
       timestamp: now,
       source,
       type: 'reroute',
-      details: `${moveTargetKey} via ${pathSignature}`
+      details: `${moveTargetKey} via ${pathState.signature}`
     })
     unit._lastRerouteLogTime = now
   }
-  unit._lastObservedPathSignature = pathSignature
+  unit._lastObservedPathState = pathState
 }
 
 export function getUnitCommandHistory(unitId) {
