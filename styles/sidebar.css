@@ -1295,3 +1295,20 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 #recordBtn {
   flex: 0 0 auto;
 }
+
+.sidebar-legal-links {
+  margin-top: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-size: 12px;
+}
+
+.sidebar-legal-links a {
+  color: #9ed3ff;
+  text-decoration: none;
+}
+
+.sidebar-legal-links a:hover {
+  text-decoration: underline;
+}

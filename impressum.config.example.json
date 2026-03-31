@@ -1,0 +1,20 @@
+{
+  "fullName": "Max Mustermann",
+  "businessName": "Mustermann Interactive",
+  "street": "Musterstraße",
+  "houseNumber": "12a",
+  "postalCode": "10115",
+  "city": "Berlin",
+  "country": "Deutschland",
+  "email": "hello@example.com",
+  "phone": "+49 30 1234567",
+  "website": "https://example.com",
+  "vatId": "",
+  "responsiblePerson": "Max Mustermann",
+  "privacyEmail": "privacy@example.com",
+  "representative": "",
+  "hostingProviderName": "Netlify, Inc.",
+  "hostingProviderAddress": "44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA",
+  "lastUpdatedDe": "30.03.2026",
+  "lastUpdatedEn": "2026-03-30"
+}

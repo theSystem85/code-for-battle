@@ -2316,3 +2316,31 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
   border-radius: 0;
   cursor: pointer;
 }
+
+.global-legal-links {
+  position: fixed;
+  left: max(8px, env(safe-area-inset-left));
+  bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 7;
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(1px);
+}
+
+.global-legal-links a {
+  color: #d7ebff;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.global-legal-links a:hover {
+  text-decoration: underline;
+}
+
+body.mobile-portrait .global-legal-links,
+body.mobile-landscape .global-legal-links {
+  font-size: 11px;
+}
