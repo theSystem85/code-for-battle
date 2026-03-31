@@ -150,7 +150,7 @@ As a player, I want enemy AI units to have the same crew system and for AI to ma
 - **FR-034**: System MUST make AI prioritize crew restoration for valuable/veteran units
 
 **Save/Load:**
-- **FR-035**: System MUST preserve crew status (alive/dead for each member) through save/load operations
+- **FR-035**: System MUST preserve crew status (alive/dead for each member) through save/load operations, including partially crewed units that must not be reset to full crew on load
 - **FR-036**: System MUST maintain backward compatibility for saves without crew system (initialize with full crew)
 - **FR-037**: System MUST preserve ambulance cargo count through save/load
 - **FR-038**: System MUST preserve hospital restoration state through save/load
@@ -209,6 +209,7 @@ As a player, I want enemy AI units to have the same crew system and for AI to ma
 - **SC-021**: System maintains 60fps performance with multiple simultaneous crew restorations
 - **SC-022**: Crew system integrates seamlessly with existing unit leveling (levels preserved through crew loss)
 - **SC-023**: Crew status persists correctly through save/load operations
+- **SC-023a**: A unit saved with any missing crew members loads back with the same missing roles (no automatic full-crew reset)
 - **SC-024**: Legacy saves without crew data load successfully with full crew initialized
 - **SC-025**: Hospital and ambulance construction integrated into existing building/unit production systems
 - **SC-026**: Power system correctly accounts for hospital power consumption (-50MW)
