@@ -161,6 +161,11 @@ function calculateRetreatMovement(unit, _mapGrid) {
 export function updateRetreatBehavior(unit, now, mapGrid, units = []) {
   if (!isRetreating(unit)) return false
 
+  // AI-initiated retreats (enemy harvesters fleeing, low-health tanks) are path-based
+  // and managed by retreatLogic.js / enemyStrategies.js. The backward-movement
+  // behaviour system here is only for player shift+click tactical retreats.
+  if (!unit.retreatIssuedByPlayer) return false
+
   const unitCenterX = unit.x + TILE_SIZE / 2
   const unitCenterY = unit.y + TILE_SIZE / 2
 

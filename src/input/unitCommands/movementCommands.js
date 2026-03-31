@@ -10,6 +10,7 @@ import { resetUnitVelocityForNewPath } from '../../game/unifiedMovement.js'
 import { clearAttackGroupState, cancelRecoveryTask } from './utilityQueue.js'
 import { hasBlockingBuilding } from '../../utils/buildingPassability.js'
 import { getBuildingIdentifier } from '../../utils.js'
+import { interruptHarvesterAutomation } from '../../game/harvesterLogic.js'
 
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
   const now = performance.now()
@@ -235,6 +236,20 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
         )
 
     if (path && path.length > 0) {
+      const isHarvester = unit.type === 'harvester'
+      const isOreTarget = Boolean(
+        isHarvester &&
+        mapGrid?.[destTile.y]?.[destTile.x]?.ore &&
+        !mapGrid[destTile.y][destTile.x].seedCrystal
+      )
+
+      if (isHarvester) {
+        interruptHarvesterAutomation(unit, gameState)
+        unit.lastPlayerCommandTime = now
+        unit.manualHoldPosition = isOreTarget ? null : { x: destTile.x, y: destTile.y }
+        unit.manualOreTarget = isOreTarget ? { x: destTile.x, y: destTile.y } : null
+      }
+
       resetUnitVelocityForNewPath(unit)
 
       unit.path = path.length > 1 ? path.slice(1) : path

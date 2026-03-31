@@ -27,7 +27,8 @@ vi.mock('../../src/behaviours/retreat.js', () => ({
 }))
 
 vi.mock('../../src/game/harvesterLogic.js', () => ({
-  forceHarvesterUnloadPriority: vi.fn()
+  forceHarvesterUnloadPriority: vi.fn(),
+  interruptHarvesterAutomation: vi.fn()
 }))
 
 vi.mock('../../src/ui/notifications.js', () => ({
@@ -87,6 +88,7 @@ import { findPathForOwner } from '../../src/units.js'
 import { playSound } from '../../src/sound.js'
 import { showNotification } from '../../src/ui/notifications.js'
 import { gameState } from '../../src/gameState.js'
+import { interruptHarvesterAutomation } from '../../src/game/harvesterLogic.js'
 import {
   findNearestWorkshop,
   getRecycleDurationForWreck,
@@ -835,6 +837,33 @@ describe('UnitCommandsHandler attack group and movement', () => {
     handler.handleMovementCommand([aiUnit], 96, 96, mapGrid)
 
     expect(showNotification).not.toHaveBeenCalledWith('Cannot reach that location. Move command aborted.', 2200)
+  })
+
+  it('handleMovementCommand puts harvesters into manual hold when moving to non-ore tiles', () => {
+    const harvester = { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0 }
+    const commandMap = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', ore: false })))
+
+    findPathForOwner.mockReturnValue([{ x: 0, y: 0 }, { x: 2, y: 2 }])
+
+    handler.handleMovementCommand([harvester], 64, 64, commandMap)
+
+    expect(interruptHarvesterAutomation).toHaveBeenCalledWith(harvester, gameState)
+    expect(harvester.manualHoldPosition).toEqual({ x: 2, y: 2 })
+    expect(harvester.manualOreTarget).toBe(null)
+    expect(harvester.lastPlayerCommandTime).toBeDefined()
+  })
+
+  it('handleMovementCommand promotes ore clicks into manual harvester ore targets', () => {
+    const harvester = { id: 'h2', type: 'harvester', owner: 'player', tileX: 0, tileY: 0 }
+    const commandMap = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', ore: false })))
+    commandMap[3][3].ore = true
+
+    findPathForOwner.mockReturnValue([{ x: 0, y: 0 }, { x: 3, y: 3 }])
+
+    handler.handleMovementCommand([harvester], 96, 96, commandMap)
+
+    expect(harvester.manualHoldPosition).toBe(null)
+    expect(harvester.manualOreTarget).toEqual({ x: 3, y: 3 })
   })
 
 

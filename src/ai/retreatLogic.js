@@ -71,6 +71,7 @@ export function handleRetreatToBase(unit, gameState, mapGrid) {
   const retreatTarget = findSafePositionNearBase(baseX, baseY, mapGrid, unit)
 
   if (retreatTarget) {
+    const now = getSimulationTime(gameState)
     const path = getCachedPath(
       { x: unit.tileX, y: unit.tileY, owner: unit.owner },
       retreatTarget,
@@ -84,6 +85,7 @@ export function handleRetreatToBase(unit, gameState, mapGrid) {
       unit.isRetreating = true
       unit.retreatIssuedByPlayer = false
       unit.retreatTarget = retreatTarget
+      unit.retreatStartTime = now
       unit.needsWorkshopRepair = true
       return true
     }
@@ -128,6 +130,12 @@ export function shouldHarvesterSeekProtection(harvester, units) {
     now < harvester.harvesterRetreatCooldownUntil
   )
 
+  // Always respect the post-retreat cooldown first — prevents immediate
+  // re-trigger loops when threats are still visible after a retreat.
+  if (retreatCooldownActive) {
+    return false
+  }
+
   // Check for nearby enemy units threatening the harvester
   const nearbyThreats = units.filter(u =>
     isEnemyTo(u, harvester.owner) &&
@@ -136,10 +144,6 @@ export function shouldHarvesterSeekProtection(harvester, units) {
   )
   if (nearbyThreats.length > 0) {
     return true
-  }
-
-  if (retreatCooldownActive) {
-    return false
   }
 
   // Also check if harvester has been recently damaged
@@ -210,6 +214,7 @@ export function handleHarvesterRetreat(harvester, gameState, mapGrid) {
       harvester.isRetreating = true
       harvester.retreatIssuedByPlayer = false
       harvester.retreatTarget = retreatTarget
+      harvester.retreatStartTime = now
       harvester.moveTarget = retreatTarget
       // Clear any ore-related state
       harvester.oreField = null
@@ -314,6 +319,12 @@ export function shouldStopRetreating(unit, gameState) {
   if (!unit.isRetreating) return false
 
   const now = getSimulationTime(gameState)
+
+  // Stop retreating if path is finished (arrived at retreat target or path consumed)
+  const pathFinished = !unit.path || unit.path.length === 0
+  if (pathFinished && !unit.retreatIssuedByPlayer) {
+    return true
+  }
 
   // Stop retreating if health is above threshold and near base
   const healthPercent = unit.health / unit.maxHealth

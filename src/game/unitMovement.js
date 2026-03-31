@@ -358,8 +358,8 @@ function updateUnitRotation(unit, now) {
   const isHowitzer = unit.type === 'howitzer'
 
   // Determine body's target direction
-  if (unit.isRetreating && unit.targetDirection !== undefined) {
-    // For retreat, the target direction is explicitly set by the retreat behavior.
+  if (unit.isRetreating && unit.retreatIssuedByPlayer && unit.targetDirection !== undefined) {
+    // For player retreat, the target direction is explicitly set by the retreat behavior.
     bodyTargetDirection = unit.targetDirection
   } else if (unit.path && unit.path.length > 0) {
     // For normal movement, face the next tile in the path.
@@ -459,11 +459,12 @@ function updateUnitRotation(unit, now) {
   }
 
   // Set movement restriction flag
-  if (unit.isRetreating) {
-    // For retreating units, `unit.canAccelerate` is managed exclusively by `updateRetreatBehavior`.
+  if (unit.isRetreating && unit.retreatIssuedByPlayer) {
+    // For player retreating units, `unit.canAccelerate` is managed exclusively by `updateRetreatBehavior`.
     // We don't touch it here, allowing the retreat logic to control movement.
   } else {
-    // For normal movement, only accelerate if facing the right way.
+    // For normal movement (and AI-initiated retreats which use forward path-following),
+    // only accelerate if facing the right way.
     unit.canAccelerate = !bodyNeedsRotation
   }
 

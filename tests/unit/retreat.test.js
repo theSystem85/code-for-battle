@@ -382,9 +382,22 @@ describe('retreat behavior', () => {
       expect(updateRetreatBehavior(unit, performance.now(), mapGrid, [])).toBe(false)
     })
 
-    it('returns true if unit is retreating', () => {
+    it('returns false for non-player-issued retreats (AI retreats)', () => {
       const unit = {
         isRetreating: true,
+        retreatIssuedByPlayer: false,
+        x: 0,
+        y: 0,
+        retreatTarget: { x: 5, y: 5 },
+        direction: 0
+      }
+      expect(updateRetreatBehavior(unit, performance.now(), mapGrid, [])).toBe(false)
+    })
+
+    it('returns true if unit is retreating (player-issued)', () => {
+      const unit = {
+        isRetreating: true,
+        retreatIssuedByPlayer: true,
         x: 0,
         y: 0,
         retreatTarget: { x: 5, y: 5 },
@@ -396,6 +409,7 @@ describe('retreat behavior', () => {
     it('clears retreat state when reaching destination', () => {
       const unit = {
         isRetreating: true,
+        retreatIssuedByPlayer: true,
         x: 5 * TILE_SIZE,
         y: 5 * TILE_SIZE,
         retreatTarget: { x: 5, y: 5 },
@@ -420,6 +434,7 @@ describe('retreat behavior', () => {
 
       const unit = {
         isRetreating: true,
+        retreatIssuedByPlayer: true,
         x: 0,
         y: 0,
         retreatTarget: { x: 5, y: 5 },
@@ -438,6 +453,7 @@ describe('retreat behavior', () => {
 
       const unit = {
         isRetreating: true,
+        retreatIssuedByPlayer: true,
         x: 0,
         y: 0,
         retreatTarget: { x: 5, y: 5 },
@@ -454,6 +470,7 @@ describe('retreat behavior', () => {
     it('disables firing when retreat target is out of range', () => {
       const unit = {
         isRetreating: true,
+        retreatIssuedByPlayer: true,
         x: 0,
         y: 0,
         retreatTarget: { x: 5, y: 5 },
@@ -472,6 +489,7 @@ describe('retreat behavior', () => {
       const unit = {
         id: 'tank-1',
         isRetreating: true,
+        retreatIssuedByPlayer: true,
         x: 0,
         y: 0,
         retreatTarget: { x: 5, y: 5 },
