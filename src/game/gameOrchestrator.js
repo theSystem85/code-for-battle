@@ -64,6 +64,7 @@ import { addPowerIndicator } from '../ui/energyBar.js'
 import { addMoneyIndicator } from '../ui/moneyBar.js'
 import { closeMobileSidebarModal, isMobileSidebarModalVisible } from '../ui/mobileLayout.js'
 import { resetLlmUsage } from '../ai/llmUsage.js'
+import { terminateAllSounds } from '../sound.js'
 import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../startupScheduler.js'
 import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
@@ -1197,6 +1198,7 @@ class Game {
 
   async resetGame() {
     window.logger('Resetting game...')
+    terminateAllSounds()
 
     deactivateMapEditMode()
 
