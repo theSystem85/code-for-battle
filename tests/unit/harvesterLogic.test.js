@@ -6,8 +6,10 @@ import {
   getHarvesterDistribution,
   assignHarvesterToOptimalRefinery,
   forceHarvesterUnloadPriority,
+  interruptHarvesterAutomation,
   clearStuckHarvesterOreField,
-  handleStuckHarvester
+  handleStuckHarvester,
+  resetHarvesterRuntimeState
 } from '../../src/game/harvesterLogic.js'
 
 // Mock dependencies
@@ -143,6 +145,7 @@ describe('Harvester Logic', () => {
 
     // Clear tracked state between tests
     vi.clearAllMocks()
+    resetHarvesterRuntimeState(gameState)
   })
 
   describe('Ore Detection and Harvesting', () => {
@@ -244,6 +247,33 @@ describe('Harvester Logic', () => {
       expect(harvester.harvesting).toBe(false)
       expect(harvester.oreField).toBeNull()
       expect(harvester.moveTarget).toEqual({ x: 8, y: 5 })
+    })
+
+    it('starts harvesting immediately when a manual ore target is reached', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      harvester.manualOreTarget = { x: 5, y: 5 }
+      units.push(harvester)
+
+      mapGrid[5][5].ore = true
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.harvesting).toBe(true)
+      expect(harvester.oreField).toEqual({ x: 5, y: 5 })
+    })
+
+    it('keeps manual-hold harvesters idle on non-ore move destinations', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      harvester.manualHoldPosition = { x: 5, y: 5 }
+      units.push(harvester)
+
+      mapGrid[5][5].ore = true
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.harvesting).toBe(false)
+      expect(harvester.manualHoldPosition).toEqual({ x: 5, y: 5 })
+      expect(harvester.moveTarget).toBe(null)
     })
   })
 
@@ -612,6 +642,67 @@ describe('Harvester Logic', () => {
 
       expect(harvester.harvesting).toBe(true)
       expect(harvester.oreField).toEqual({ x: 5, y: 5 })
+    })
+
+    it('preserves assigned refinery when a full harvester needs a stuck recovery route', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      const assignedRefinery = createTestRefinery(10, 10)
+      const otherRefinery = createTestRefinery(15, 15)
+      harvester.oreCarried = 1
+      harvester.assignedRefinery = assignedRefinery.id
+      gameState.buildings.push(assignedRefinery, otherRefinery)
+
+      handleStuckHarvester(harvester, mapGrid, gameState.occupancyMap, gameState, factories)
+
+      expect(harvester.targetRefinery).toBe(assignedRefinery.id)
+      expect(harvester.moveTarget).toEqual({ x: 10, y: 13 })
+    })
+  })
+
+  describe('Player Overrides', () => {
+    it('interruptHarvesterAutomation clears active harvest and unload state for player commands', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      harvester.harvesting = true
+      harvester.harvestTimer = now - 1000
+      harvester.oreField = { x: 5, y: 5 }
+      harvester.activeHarvestTileKey = '5,5'
+      harvester.unloadingAtRefinery = true
+      harvester.unloadStartTime = now - 500
+      harvester.targetRefinery = 'refinery_10_10'
+      harvester.unloadRefinery = 'refinery_10_10'
+      gameState.refineryStatus.refinery_10_10 = harvester.id
+
+      interruptHarvesterAutomation(harvester, gameState)
+
+      expect(harvester.harvesting).toBe(false)
+      expect(harvester.oreField).toBeNull()
+      expect(harvester.unloadingAtRefinery).toBe(false)
+      expect(harvester.targetRefinery).toBeNull()
+      expect(gameState.refineryStatus.refinery_10_10).toBeUndefined()
+    })
+  })
+
+  describe('Long-Term Productivity Recovery', () => {
+    it('reroutes stagnant harvesters to a different ore tile after one minute without progress', () => {
+      const harvester = createTestHarvester('harv1', 1, 1)
+      harvester.oreField = { x: 8, y: 8 }
+      harvester.moveTarget = { x: 8, y: 8 }
+      harvester.path = [{ x: 2, y: 2 }]
+      harvester.lastProductivityCheck = now - 600
+      harvester.harvesterGoalKey = 'ore:8,8'
+      harvester.harvesterBestGoalDistance = Math.hypot(7, 7)
+      harvester.harvesterLastGoalProgressAt = now - 60001
+      units.push(harvester)
+
+      mapGrid[8][8].ore = true
+      mapGrid[7][8].ore = true
+      gameState.buildings.push(createTestRefinery(3, 3))
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.oreField).toEqual({ x: 8, y: 7 })
+      expect(harvester.moveTarget).toEqual({ x: 8, y: 7 })
+      expect(getTargetedOreTiles()['8,7']).toBe(harvester.id)
     })
   })
 

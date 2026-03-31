@@ -82,8 +82,8 @@ function hasRecentPlayerApacheControl(unit) {
  * @returns {boolean} True if unit is within range of any building tile
  */
 function isUnitAdjacentToBuilding(unit, building, range) {
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const buildingWidth = building.width || 1
   const buildingHeight = building.height || 1
 

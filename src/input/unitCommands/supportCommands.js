@@ -3,7 +3,7 @@ import { playSound, playPositionalSound } from '../../sound.js'
 import { showNotification } from '../../ui/notifications.js'
 import { findPathForOwner } from '../../units.js'
 import { gameState } from '../../gameState.js'
-import { forceHarvesterUnloadPriority } from '../../game/harvesterLogic.js'
+import { forceHarvesterUnloadPriority, interruptHarvesterAutomation } from '../../game/harvesterLogic.js'
 import { UTILITY_QUEUE_MODES } from './utilityHelpers.js'
 import {
   canAmbulanceProvideCrew,
@@ -21,9 +21,12 @@ export function handleRefineryUnloadCommand(handler, selectedUnits, refinery, ma
 
   selectedUnits.forEach(unit => {
     if (unit.type === 'harvester') {
+      interruptHarvesterAutomation(unit, gameState)
       unit.guardTarget = null
       unit.guardTargets = null
       unit.guardMode = false
+      unit.manualHoldPosition = null
+      unit.manualOreTarget = null
       unit.assignedRefinery = refinery
 
       if (unit.oreCarried > 0) {
@@ -66,6 +69,7 @@ export function handleHarvesterCommand(handler, selectedUnits, oreTarget, mapGri
   let anyAssigned = false
   selectedUnits.forEach(unit => {
     if (unit.type === 'harvester') {
+      interruptHarvesterAutomation(unit, gameState)
       unit.guardTarget = null
       unit.guardTargets = null
       unit.guardMode = false
@@ -79,6 +83,7 @@ export function handleHarvesterCommand(handler, selectedUnits, oreTarget, mapGri
 
       if (path && path.length > 0) {
         unit.path = path.length > 1 ? path.slice(1) : path
+        unit.manualHoldPosition = null
         unit.manualOreTarget = oreTarget
         unit.lastPlayerCommandTime = now
         unit.oreField = null

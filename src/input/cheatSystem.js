@@ -836,7 +836,7 @@ export class CheatSystem {
         if (occupancyMap?.[y]?.[x] > 0) return false
 
         const occupiedByUnit = units.some(unit =>
-          Math.floor(unit.x / TILE_SIZE) === x && Math.floor(unit.y / TILE_SIZE) === y
+          Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === x && Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === y
         )
         if (occupiedByUnit) return false
       }

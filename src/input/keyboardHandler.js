@@ -675,8 +675,8 @@ export class KeyboardHandler {
     // Make all selected units try to dodge by moving one tile forward or backward
     selectedUnits.forEach(unit => {
       // Get current tile coordinates
-      const tileX = Math.floor(unit.x / TILE_SIZE)
-      const tileY = Math.floor(unit.y / TILE_SIZE)
+      const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+      const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
       // Determine unit's facing direction (use movement direction if available, otherwise use last direction)
       let facingAngle = 0

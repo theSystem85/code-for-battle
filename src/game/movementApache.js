@@ -217,8 +217,8 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
     if (onGroundLandingNow && unit.groundLandingTarget) {
       unit.x = unit.groundLandingTarget.x - TILE_SIZE / 2
       unit.y = unit.groundLandingTarget.y - TILE_SIZE / 2
-      unit.tileX = Math.floor(unit.x / TILE_SIZE)
-      unit.tileY = Math.floor(unit.y / TILE_SIZE)
+      unit.tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+      unit.tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
       unit.path = []
       unit.moveTarget = { x: unit.tileX, y: unit.tileY }
       unit.flightPlan = null

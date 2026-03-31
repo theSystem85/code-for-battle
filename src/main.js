@@ -18,6 +18,7 @@ import {
 import { setMobileLayoutGameAccessor } from './ui/mobileLayout.js'
 import { initRemoteInviteLanding } from './ui/remoteInviteLanding.js'
 import { initNotificationHistory } from './ui/notificationHistory.js'
+import { initDebugUnitCommandOverlay } from './ui/debugUnitCommandOverlay.js'
 import { selectedUnits } from './inputHandler.js'
 import {
   resumeAllSounds,
@@ -125,6 +126,10 @@ document.addEventListener('DOMContentLoaded', async() => {
 
   scheduleIdleTask('startup:notification-history', () => {
     initNotificationHistory()
+  })
+
+  scheduleIdleTask('startup:debug-unit-command-overlay', () => {
+    initDebugUnitCommandOverlay()
   })
 
   const gameInstance = new Game()

@@ -72,7 +72,8 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
     u.type !== 'f22Raptor' &&
     u.moveTarget &&
     (!u.path || u.path.length === 0) &&
-    !u.lastPathCalcTime // Only units that haven't had paths calculated yet
+    !u.lastPathCalcTime && // Only units that haven't had paths calculated yet
+    !(u.crew && typeof u.crew === 'object' && !u.crew.driver) // Skip units without driver
   )
 
   unitsNeedingImmediatePath.forEach(unit => {
@@ -126,6 +127,11 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
 
     units.forEach(unit => {
       if (unit.type === 'f22Raptor') {
+        return
+      }
+
+      // Skip units without a driver - they cannot move
+      if (unit.crew && typeof unit.crew === 'object' && !unit.crew.driver) {
         return
       }
 

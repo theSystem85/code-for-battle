@@ -27,9 +27,108 @@ const HARVESTER_ORE_FALLBACK_MIN_DELAY_MS = 1000
 const HARVESTER_ORE_FALLBACK_MAX_DELAY_MS = 2000
 const HARVESTER_ALTERNATIVE_ORE_RETRY_MIN_DELAY_MS = 3000
 const HARVESTER_ALTERNATIVE_ORE_RETRY_MAX_DELAY_MS = 5000
+const HARVESTER_ORE_REPATH_INTERVAL_MS = 2000
+const HARVESTER_ORE_ARRIVAL_TOLERANCE = 1.1
+const HARVESTER_MANUAL_HOLD_ARRIVAL_TOLERANCE = 0.25
+const HARVESTER_MANUAL_REPATH_INTERVAL_MS = 1000
+const HARVESTER_LONG_TERM_STAGNATION_MS = 60000
+const HARVESTER_LONG_TERM_RECOVERY_COOLDOWN_MS = 5000
+const HARVESTER_GOAL_PROGRESS_EPSILON_TILES = 0.2
 
 function getSimulationTimeOrFallback(gameState) {
   return Number.isFinite(gameState?.simulationTime) ? gameState.simulationTime : performance.now()
+}
+
+function getTileDistance(unit, target) {
+  if (!unit || !target) return Infinity
+
+  return Math.hypot(
+    (unit.x / TILE_SIZE) - target.x,
+    (unit.y / TILE_SIZE) - target.y
+  )
+}
+
+function isManualHoldActive(unit) {
+  return Boolean(unit?.manualHoldPosition)
+}
+
+function isOreTileTarget(target, mapGrid) {
+  return Boolean(
+    target &&
+    mapGrid?.[target.y]?.[target.x]?.ore &&
+    !mapGrid[target.y][target.x].seedCrystal
+  )
+}
+
+function getRefineryId(refinery) {
+  if (!refinery) return null
+  if (typeof refinery === 'string') return refinery
+  if (refinery.id) return refinery.id
+
+  if (
+    Number.isFinite(refinery.x) &&
+    Number.isFinite(refinery.y)
+  ) {
+    return `refinery_${refinery.x}_${refinery.y}`
+  }
+
+  return null
+}
+
+function getRefineryTileCenter(refinery) {
+  if (!refinery) return null
+
+  return {
+    x: refinery.x + (refinery.width / 2),
+    y: refinery.y + (refinery.height / 2)
+  }
+}
+
+function getOreDistanceToRefinery(tile, refinery) {
+  if (!tile || !refinery) return Infinity
+
+  const center = getRefineryTileCenter(refinery)
+  return Math.hypot(tile.x - center.x, tile.y - center.y)
+}
+
+function getOperationalRefineriesForOwner(owner, gameState) {
+  return gameState?.buildings?.filter(building =>
+    building.type === 'oreRefinery' &&
+    building.owner === owner &&
+    building.health > 0
+  ) || []
+}
+
+function resolveAssignedRefinery(unit, refineries) {
+  if (!unit?.assignedRefinery || !Array.isArray(refineries) || refineries.length === 0) {
+    return null
+  }
+
+  const assignedId = getRefineryId(unit.assignedRefinery)
+  return refineries.find(refinery => (
+    refinery === unit.assignedRefinery ||
+    getRefineryId(refinery) === assignedId
+  )) || null
+}
+
+function resolveTargetRefinery(unit, refineries) {
+  if (!unit?.targetRefinery || !Array.isArray(refineries) || refineries.length === 0) {
+    return null
+  }
+
+  const targetId = getRefineryId(unit.targetRefinery)
+  return refineries.find(refinery => getRefineryId(refinery) === targetId) || null
+}
+
+function getHarvesterPreferredRefinery(unit, gameState) {
+  const refineries = getOperationalRefineriesForOwner(unit?.owner, gameState)
+  if (refineries.length === 0) {
+    return null
+  }
+
+  return resolveAssignedRefinery(unit, refineries) ||
+    resolveTargetRefinery(unit, refineries) ||
+    null
 }
 
 function getRetryDelay(minDelay, maxDelay) {
@@ -73,13 +172,13 @@ function runScheduledHarvesterAction(unit, mapGrid, occupancyMap, gameState, now
 
   if (action === 'findNewOre') {
     if (unit.oreCarried === 0 && !unit.oreField) {
-      findNewOreTarget(unit, mapGrid, occupancyMap, now)
+      findNewOreTarget(unit, mapGrid, occupancyMap, now, gameState)
     }
     return
   }
 
   if (action === 'retryManualOreTarget' && unit.oreCarried === 0 && unit.manualOreTarget) {
-    handleManualOreTarget(unit, mapGrid, occupancyMap, now)
+    handleManualOreTarget(unit, mapGrid, occupancyMap, now, gameState)
   }
 }
 
@@ -91,7 +190,7 @@ function isRemoteControlOverrideActive(unit, now = performance.now()) {
 }
 
 function hasPlayerHarvesterPriority(unit, now = performance.now()) {
-  return Boolean(unit?.manualOreTarget) || isRemoteControlOverrideActive(unit, now)
+  return Boolean(unit?.manualOreTarget) || isManualHoldActive(unit) || isRemoteControlOverrideActive(unit, now)
 }
 
 function stopMovement(unit) {
@@ -105,7 +204,43 @@ function stopMovement(unit) {
   }
 }
 
+function clearHarvesterUnloadingState(unit, gameState = null) {
+  if (!unit) return
+
+  if (unit.targetRefinery) {
+    removeFromRefineryQueue(unit.targetRefinery, unit.id)
+  }
+
+  const activeRefineryId = unit.unloadRefinery || unit.targetRefinery
+  if (activeRefineryId && gameState?.refineryStatus?.[activeRefineryId] === unit.id) {
+    delete gameState.refineryStatus[activeRefineryId]
+  }
+
+  unit.unloadingAtRefinery = false
+  unit.unloadStartTime = null
+  unit.unloadRefinery = null
+  unit.targetRefinery = null
+  unit.queuePosition = 0
+  unit.forcedUnload = false
+  unit.forcedUnloadRefinery = null
+  unit.findOreAfterUnload = null
+}
+
+function releaseHarvestReservation(unit) {
+  if (!unit) return
+  const tileKey = unit.activeHarvestTileKey || (
+    unit.oreField ? `${unit.oreField.x},${unit.oreField.y}` : null
+  )
+  if (tileKey) {
+    harvestedTiles.delete(tileKey)
+  }
+  unit.activeHarvestTileKey = null
+}
+
 function clearOreField(unit) {
+  if (unit.harvesting) {
+    releaseHarvestReservation(unit)
+  }
   if (unit.oreField) {
     const tileKey = `${unit.oreField.x},${unit.oreField.y}`
     if (targetedOreTiles[tileKey] === unit.id) {
@@ -115,8 +250,20 @@ function clearOreField(unit) {
   }
 }
 
+export function interruptHarvesterAutomation(unit, gameState = null) {
+  if (!unit || unit.type !== 'harvester') return
+
+  clearScheduledHarvesterAction(unit)
+  releaseHarvestReservation(unit)
+  unit.harvesting = false
+  unit.harvestTimer = null
+  clearOreField(unit)
+  clearHarvesterUnloadingState(unit, gameState)
+}
+
 function startHarvesting(unit, tileKey, now, gameState) {
   unit.harvesting = true
+  unit.activeHarvestTileKey = tileKey
   unit.harvestTimer = now
   clearScheduledHarvesterAction(unit)
   stopMovement(unit)
@@ -155,21 +302,89 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
   units.forEach(unit => {
     if (unit.type !== 'harvester') return
 
+    // Skip automation if unit is heading to hospital for crew restaffing
+    if (unit.returningToHospital) return
+
+    // Skip all harvester automation for units with missing crew
+    // Crewless harvesters are handled by the AI crew healing system
+    if (unit.crew && typeof unit.crew === 'object') {
+      if (!unit.crew.driver) {
+        // No driver - harvester cannot move. Stop everything and wait for ambulance.
+        stopMovement(unit)
+        if (unit.harvesting) {
+          releaseHarvestReservation(unit)
+          unit.harvesting = false
+        }
+        clearScheduledHarvesterAction(unit)
+        return
+      }
+      if (!unit.crew.loader) {
+        // No loader - harvester cannot harvest ore.
+        // If carrying ore, still allow unloading logic to run.
+        // Otherwise stop harvesting and let crew healing handle it.
+        if (unit.harvesting) {
+          releaseHarvestReservation(unit)
+          unit.harvesting = false
+        }
+        // Allow unloading if carrying ore (doesn't need loader)
+        if (unit.oreCarried > 0 && !unit.unloadingAtRefinery) {
+          handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occupancyMap, units)
+        }
+        if (unit.unloadingAtRefinery && unit.unloadStartTime) {
+          completeUnloading(unit, factories, mapGrid, gameState, now, occupancyMap)
+        }
+        return
+      }
+    }
+
     runScheduledHarvesterAction(unit, mapGrid, occupancyMap, gameState, now)
 
-    const unitTileX = Math.floor(unit.x / TILE_SIZE)
-    const unitTileY = Math.floor(unit.y / TILE_SIZE)
+    const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+    const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+    const isRetreatingFromThreat = Boolean(unit.isRetreating)
+
+    // Retreat behavior is controlled by AI strategy logic (retreatLogic.js).
+    // While retreating, suspend economy loops so harvester ore/unload policies
+    // don't immediately overwrite retreat pathing and cause route thrashing.
+    if (isRetreatingFromThreat) {
+      clearScheduledHarvesterAction(unit, 'findNewOre')
+      releaseHarvestReservation(unit)
+      clearOreField(unit)
+      unit.harvesting = false
+      unit.unloadingAtRefinery = false
+      unit.unloadStartTime = null
+      return
+    }
 
     // Periodic productivity check - ensure harvester is doing something useful every 0.5 seconds
     if (!unit.lastProductivityCheck || now - unit.lastProductivityCheck > HARVESTER_PRODUCTIVITY_CHECK_INTERVAL) {
       unit.lastProductivityCheck = now
-      checkHarvesterProductivity(unit, mapGrid, occupancyMap, now)
+      checkHarvesterProductivity(unit, mapGrid, occupancyMap, gameState, factories, now)
     }
 
     // Mining ore logic with more tolerant detection
     // Skip auto-harvesting if harvester is heading to or being repaired at workshop, or is in repair queue
     const isInRepairQueue = unit.targetWorkshop && unit.targetWorkshop.repairQueue &&
                            unit.targetWorkshop.repairQueue.includes(unit)
+
+    if (isManualHoldActive(unit) &&
+        !unit.harvesting && !unit.unloadingAtRefinery &&
+        !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
+      handleManualHoldPosition(unit, mapGrid, occupancyMap, now)
+      return
+    }
+
+    if (unit.manualOreTarget &&
+        unit.oreCarried < HARVESTER_CAPPACITY &&
+        !unit.harvesting && !unit.unloadingAtRefinery &&
+        (
+          !unit.path || unit.path.length === 0 ||
+          !unit.moveTarget ||
+          getTileDistance(unit, unit.manualOreTarget) <= HARVESTER_ORE_ARRIVAL_TOLERANCE
+        ) &&
+        !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
+      handleManualOreTarget(unit, mapGrid, occupancyMap, now, gameState)
+    }
 
     if (!hasPlayerHarvesterPriority(unit, now) &&
         unit.oreCarried < HARVESTER_CAPPACITY && !unit.harvesting && !unit.unloadingAtRefinery &&
@@ -200,6 +415,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     if (unit.harvesting) {
       // Guard against missing oreField to avoid null errors
       if (!unit.oreField) {
+        releaseHarvestReservation(unit)
         unit.harvesting = false
         return // skip to next unit
       }
@@ -211,6 +427,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         unit.harvesting = false
         const tileKey = `${unit.oreField.x},${unit.oreField.y}`
         harvestedTiles.delete(tileKey) // Free up the tile
+        unit.activeHarvestTileKey = null
 
         // Clear manual ore target when harvesting is complete
         if (unit.manualOreTarget &&
@@ -277,8 +494,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
         unit.oreField && (!unit.path || unit.path.length === 0)) {
       const tileKey = `${unit.oreField.x},${unit.oreField.y}`
-      const _currentTileX = Math.floor(unit.x / TILE_SIZE)
-      const _currentTileY = Math.floor(unit.y / TILE_SIZE)
+      const _currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+      const _currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
       // Check if we're near the ore field (more tolerant detection)
       const distanceToOreField = Math.hypot(
@@ -286,7 +503,10 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         (unit.y / TILE_SIZE) - unit.oreField.y
       )
 
-      if (distanceToOreField <= 0.7) { // Allow harvester to be within 0.7 tiles of the ore field
+      if (distanceToOreField <= HARVESTER_ORE_ARRIVAL_TOLERANCE) { // Accept a wider proximity to prevent micro-turn loops at ore tiles
+        unit.path = []
+        unit.moveTarget = null
+        unit.lastHarvesterOrePathCalcTime = now
         // We're close enough to the ore field, check if we can harvest
         if (mapGrid[unit.oreField.y][unit.oreField.x].ore &&
             !mapGrid[unit.oreField.y][unit.oreField.x].seedCrystal &&
@@ -298,6 +518,13 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
           findNewOreTarget(unit, mapGrid, occupancyMap, now)
         }
       } else {
+        const canRepathToOre =
+          !unit.lastHarvesterOrePathCalcTime ||
+          (now - unit.lastHarvesterOrePathCalcTime) >= HARVESTER_ORE_REPATH_INTERVAL_MS
+        if (!canRepathToOre) {
+          return
+        }
+
         // Try to path to the ore field again
         const path = findPath(
           { x: unit.tileX, y: unit.tileY, owner: unit.owner },
@@ -308,12 +535,13 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
           { unitOwner: unit.owner }
         )
         if (path.length > 1) {
+          unit.lastHarvesterOrePathCalcTime = now
           unit.path = path.slice(1)
           unit.moveTarget = unit.oreField // Set move target so the harvester actually moves
         } else {
           // Can't path to ore field, abandon it and find new one
           clearOreField(unit)
-          findNewOreTarget(unit, mapGrid, occupancyMap, now)
+          findNewOreTarget(unit, mapGrid, occupancyMap, now, gameState)
         }
       }
     }
@@ -322,7 +550,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     if (unit.findOreAfterUnload && now >= unit.findOreAfterUnload) {
       unit.findOreAfterUnload = null
       if (unit.health > 0 && unit.oreCarried === 0) {
-        findNewOreTarget(unit, mapGrid, occupancyMap, now)
+        findNewOreTarget(unit, mapGrid, occupancyMap, now, gameState)
       }
     }
   })
@@ -625,7 +853,7 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
 /**
  * Finds a new ore target for the harvester
  */
-function findNewOreTarget(unit, mapGrid, occupancyMap, now = performance.now()) {
+function findNewOreTarget(unit, mapGrid, occupancyMap, now = performance.now(), _gameState = null) {
   // Clear any queue position when going to find ore
   if (unit.targetRefinery) {
     removeFromRefineryQueue(unit.targetRefinery, unit.id)
@@ -1093,7 +1321,8 @@ function isAtRefineryUnloadingPosition(harvester, refinery) {
 /**
  * Find the preferred unloading tile (any adjacent tile, preferring directly below refinery)
  */
-function findPreferredUnloadTile(refinery, mapGrid) {
+function findValidUnloadTiles(refinery, mapGrid) {
+  const tiles = []
   const bottomY = refinery.y + refinery.height
 
   // First priority: Check tiles directly below the refinery (preferred unloading spots)
@@ -1103,7 +1332,7 @@ function findPreferredUnloadTile(refinery, mapGrid) {
         !mapGrid[bottomY][x].building &&
         mapGrid[bottomY][x].type !== 'water' &&
         mapGrid[bottomY][x].type !== 'rock') {
-      return { x, y: bottomY }
+      tiles.push({ x, y: bottomY })
     }
   }
 
@@ -1127,19 +1356,64 @@ function findPreferredUnloadTile(refinery, mapGrid) {
           !mapGrid[y][x].building &&
           mapGrid[y][x].type !== 'water' &&
           mapGrid[y][x].type !== 'rock') {
-        return { x, y }
+        tiles.push({ x, y })
       }
     }
   }
 
-  // Fallback to the generic adjacent tile finder
-  return findAdjacentTile(refinery, mapGrid)
+  if (tiles.length > 0) {
+    return tiles
+  }
+
+  const fallbackTile = findAdjacentTile(refinery, mapGrid)
+  return fallbackTile ? [fallbackTile] : []
+}
+
+function findPreferredUnloadTile(refinery, mapGrid) {
+  return findValidUnloadTiles(refinery, mapGrid)[0] || null
+}
+
+function handleManualHoldPosition(unit, mapGrid, occupancyMap, now = performance.now()) {
+  const target = unit.manualHoldPosition
+  if (!target || !mapGrid?.[target.y]?.[target.x]) {
+    unit.manualHoldPosition = null
+    return
+  }
+
+  const distanceToHoldPosition = getTileDistance(unit, target)
+  if (distanceToHoldPosition <= HARVESTER_MANUAL_HOLD_ARRIVAL_TOLERANCE) {
+    stopMovement(unit)
+    return
+  }
+
+  const canRepath =
+    !unit.lastHarvesterManualPathCalcTime ||
+    (now - unit.lastHarvesterManualPathCalcTime) >= HARVESTER_MANUAL_REPATH_INTERVAL_MS
+
+  if ((!unit.path || unit.path.length === 0) && canRepath) {
+    const path = findPath(
+      { x: unit.tileX, y: unit.tileY, owner: unit.owner },
+      target,
+      mapGrid,
+      occupancyMap,
+      undefined,
+      { unitOwner: unit.owner }
+    )
+
+    unit.lastHarvesterManualPathCalcTime = now
+    if (path.length > 1) {
+      unit.path = path.slice(1)
+      unit.moveTarget = target
+    } else {
+      stopMovement(unit)
+    }
+  }
 }
 
 /**
  * Handle manually targeted ore tiles for harvesters
  */
-function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.now()) {
+function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.now(), gameState = null) {
   const target = unit.manualOreTarget
 
   // Validate the manual target
@@ -1157,9 +1431,12 @@ function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.no
 
   // Check if another harvester is already harvesting this tile
   if (harvestedTiles.has(tileKey)) {
+    stopMovement(unit)
     scheduleHarvesterAction(unit, 'retryManualOreTarget', now, HARVESTER_ORE_WAIT_MIN_DELAY_MS, HARVESTER_ORE_WAIT_MAX_DELAY_MS)
     return
   }
+
+  const distanceToTarget = getTileDistance(unit, target)
 
   // Clear any existing ore field reservation
   clearOreField(unit)
@@ -1167,6 +1444,12 @@ function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.no
   // Reserve the manual target
   targetedOreTiles[tileKey] = unit.id
   unit.oreField = target
+
+  if (distanceToTarget <= HARVESTER_ORE_ARRIVAL_TOLERANCE) {
+    clearScheduledHarvesterAction(unit, 'retryManualOreTarget')
+    startHarvesting(unit, tileKey, now, gameState)
+    return
+  }
 
   // Calculate path to manual target
   const path = findPath(
@@ -1179,18 +1462,17 @@ function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.no
   )
   if (path.length > 1) {
     clearScheduledHarvesterAction(unit, 'retryManualOreTarget')
+    unit.lastHarvesterOrePathCalcTime = now
     unit.path = path.slice(1)
     unit.moveTarget = target // Set move target so the harvester actually moves
   } else if (path.length === 1) {
     // Already at the target
     clearScheduledHarvesterAction(unit, 'retryManualOreTarget')
-    unit.path = []
+    unit.lastHarvesterOrePathCalcTime = now
+    startHarvesting(unit, tileKey, now, gameState)
   } else {
-    // Can't path to manual target, clear it and find automatic target
-    delete targetedOreTiles[tileKey]
-    unit.oreField = null
-    unit.manualOreTarget = null
-    findNewOreTarget(unit, mapGrid, occupancyMap, now)
+    stopMovement(unit)
+    scheduleHarvesterAction(unit, 'retryManualOreTarget', now, HARVESTER_ORE_WAIT_MIN_DELAY_MS, HARVESTER_ORE_WAIT_MAX_DELAY_MS)
   }
 }
 
@@ -1200,7 +1482,7 @@ function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.no
 export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, factories) {
 
   // Don't interfere if harvester is manually commanded to a specific location
-  if (unit.manualOreTarget) {
+  if (unit.manualOreTarget || isManualHoldActive(unit)) {
     return
   }
 
@@ -1210,8 +1492,8 @@ export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, fac
   }
 
   // Check if harvester is standing on ore and should be harvesting
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const currentTile = mapGrid[unitTileY] && mapGrid[unitTileY][unitTileX]
 
   if (currentTile && currentTile.ore && unit.oreCarried < HARVESTER_CAPPACITY) {
@@ -1247,59 +1529,80 @@ export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, fac
   }
 }
 
+function tryRouteHarvesterToRefinery(unit, refinery, mapGrid, occupancyMap) {
+  if (!refinery) return false
+
+  const refineryId = getRefineryId(refinery)
+  const unloadTiles = findValidUnloadTiles(refinery, mapGrid)
+
+  for (const unloadTile of unloadTiles) {
+    const distanceToUnloadTile = getTileDistance(unit, unloadTile)
+    if (distanceToUnloadTile <= HARVESTER_MANUAL_HOLD_ARRIVAL_TOLERANCE) {
+      unit.assignedRefinery = unit.assignedRefinery || refineryId
+      unit.targetRefinery = refineryId
+      addToRefineryQueue(refineryId, unit.id)
+      stopMovement(unit)
+      return true
+    }
+
+    const path = findPath(
+      { x: unit.tileX, y: unit.tileY, owner: unit.owner },
+      unloadTile,
+      mapGrid,
+      occupancyMap,
+      undefined,
+      { unitOwner: unit.owner }
+    )
+
+    if (path.length > 1) {
+      unit.assignedRefinery = unit.assignedRefinery || refineryId
+      unit.targetRefinery = refineryId
+      addToRefineryQueue(refineryId, unit.id)
+      unit.path = path.slice(1)
+      unit.moveTarget = unloadTile
+      return true
+    }
+  }
+
+  return false
+}
+
 /**
  * Find alternative unload location for stuck harvester
  */
 function handleStuckHarvesterUnloading(unit, mapGrid, gameState, factories, occupancyMap) {
+  void factories
 
-  // Try to find a different refinery than the one it was trying to reach
-  const refineries = gameState.buildings?.filter(b =>
-    b.type === 'oreRefinery' &&
-    b.owner === unit.owner &&
-    b.health > 0
-  ) || []
-
+  const refineries = getOperationalRefineriesForOwner(unit.owner, gameState)
   if (refineries.length > 0) {
-    // Sort refineries by distance, excluding the one it was stuck trying to reach
-    const availableRefineries = refineries.filter(r => {
-      const refineryId = r.id || `refinery_${r.x}_${r.y}`
-      return refineryId !== unit.assignedRefinery // Try a different refinery
-    })
+    const preferredRefinery = resolveAssignedRefinery(unit, refineries) ||
+      resolveTargetRefinery(unit, refineries)
+    const preferredRefineryId = getRefineryId(preferredRefinery)
 
-    if (availableRefineries.length > 0) {
-      // Find closest alternative refinery
-      const refineryOptions = availableRefineries.map(refinery => {
-        const distance = Math.hypot(
-          unit.tileX - (refinery.x + refinery.width / 2),
-          unit.tileY - (refinery.y + refinery.height / 2)
-        )
-        return { refinery, distance }
-      }).sort((a, b) => a.distance - b.distance)
+    const refineryOptions = [
+      preferredRefinery,
+      ...refineries
+        .filter(refinery => getRefineryId(refinery) !== preferredRefineryId)
+        .sort((a, b) => {
+          const distanceA = Math.hypot(
+            unit.tileX - (a.x + a.width / 2),
+            unit.tileY - (a.y + a.height / 2)
+          )
+          const distanceB = Math.hypot(
+            unit.tileX - (b.x + b.width / 2),
+            unit.tileY - (b.y + b.height / 2)
+          )
+          return distanceA - distanceB
+        })
+    ].filter(Boolean)
 
-      const closestRefinery = refineryOptions[0].refinery
-      const refineryId = closestRefinery.id || `refinery_${closestRefinery.x}_${closestRefinery.y}`
+    for (const refinery of refineryOptions) {
+      if (preferredRefinery && getRefineryId(refinery) !== preferredRefineryId && unit.assignedRefinery) {
+        continue
+      }
 
-      // Assign to new refinery
-      unit.assignedRefinery = refineryId
-      unit.targetRefinery = refineryId
-      addToRefineryQueue(refineryId, unit.id)
-
-      // Try to path to the new refinery
-      const unloadTile = findAdjacentTile(closestRefinery, mapGrid)
-      if (unloadTile) {
-        const path = findPath(
-          { x: unit.tileX, y: unit.tileY, owner: unit.owner },
-          unloadTile,
-          mapGrid,
-          occupancyMap,
-          undefined,
-          { unitOwner: unit.owner }
-        )
-        if (path.length > 1) {
-          unit.path = path.slice(1)
-          unit.moveTarget = unloadTile // Set move target so the harvester actually moves
-          return
-        }
+      if (tryRouteHarvesterToRefinery(unit, refinery, mapGrid, occupancyMap)) {
+        return
       }
     }
   }
@@ -1311,71 +1614,108 @@ function handleStuckHarvesterUnloading(unit, mapGrid, gameState, factories, occu
 /**
  * Find alternative ore target for stuck harvester
  */
-function findAlternativeOreTarget(unit, mapGrid, occupancyMap, gameState) {
+function findAlternativeOreTarget(unit, mapGrid, occupancyMap, gameState, now = getSimulationTimeOrFallback(gameState), options = {}) {
+  const preserveManualTarget = Boolean(options.preserveManualTarget)
+  const referenceTarget = options.referenceTarget || unit.manualOreTarget || unit.oreField
+  const preferredRefinery = getHarvesterPreferredRefinery(unit, gameState)
+  const targetRefineryDistance = referenceTarget && preferredRefinery
+    ? getOreDistanceToRefinery(referenceTarget, preferredRefinery)
+    : null
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  const referenceTileKey = referenceTarget ? `${referenceTarget.x},${referenceTarget.y}` : null
+  const candidateTiles = []
 
-  // Try to find ore tiles that are farther away or in different directions
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
-
-  const oreOptions = []
-
-  // Search in a larger radius for ore tiles
-  for (let radius = 3; radius <= 15; radius++) {
-    for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 8) {
-      const searchX = Math.round(unitTileX + Math.cos(angle) * radius)
-      const searchY = Math.round(unitTileY + Math.sin(angle) * radius)
-
-      if (searchX >= 0 && searchY >= 0 &&
-          searchX < mapGrid[0].length && searchY < mapGrid.length &&
-          mapGrid[searchY][searchX].ore && !mapGrid[searchY][searchX].seedCrystal) {
-
-        const tileKey = `${searchX},${searchY}`
-
-        // Skip tiles that are already targeted or being harvested
-        if (!targetedOreTiles[tileKey] && !harvestedTiles.has(tileKey)) {
-          const distance = Math.hypot(searchX - unitTileX, searchY - unitTileY)
-          oreOptions.push({ x: searchX, y: searchY, distance })
-        }
+  for (let y = 0; y < mapGrid.length; y++) {
+    for (let x = 0; x < mapGrid[0].length; x++) {
+      if (!mapGrid[y][x].ore || mapGrid[y][x].seedCrystal) {
+        continue
       }
-    }
 
-    // If we found ore options at this radius, use them
-    if (oreOptions.length > 0) break
+      const tileKey = `${x},${y}`
+      if (tileKey === referenceTileKey) {
+        continue
+      }
+
+      if (targetedOreTiles[tileKey] && targetedOreTiles[tileKey] !== unit.id) {
+        continue
+      }
+
+      if (harvestedTiles.has(tileKey)) {
+        continue
+      }
+
+      const unitDistance = Math.hypot(x - unitTileX, y - unitTileY)
+      const refineryDistance = preferredRefinery ? getOreDistanceToRefinery({ x, y }, preferredRefinery) : unitDistance
+      const refineryDelta = Number.isFinite(targetRefineryDistance)
+        ? Math.abs(refineryDistance - targetRefineryDistance)
+        : 0
+      const score = Number.isFinite(targetRefineryDistance)
+        ? (refineryDelta * 3) + (unitDistance * 0.35)
+        : unitDistance
+
+      candidateTiles.push({
+        x,
+        y,
+        tileKey,
+        score,
+        refineryDelta,
+        unitDistance
+      })
+    }
   }
 
-  if (oreOptions.length > 0) {
-    // Sort by distance and try the closest ones first
-    oreOptions.sort((a, b) => a.distance - b.distance)
+  candidateTiles.sort((a, b) => {
+    if (a.score !== b.score) return a.score - b.score
+    if (a.refineryDelta !== b.refineryDelta) return a.refineryDelta - b.refineryDelta
+    return a.unitDistance - b.unitDistance
+  })
 
-    for (const orePos of oreOptions) {
-      const path = findPath(
-        { x: unitTileX, y: unitTileY, owner: unit.owner },
-        orePos,
-        mapGrid,
-        occupancyMap,
-        undefined,
-        { unitOwner: unit.owner }
-      )
-      if (path.length > 1) {
-        // Found a pathable ore tile
-        const tileKey = `${orePos.x},${orePos.y}`
-        targetedOreTiles[tileKey] = unit.id
-        unit.oreField = orePos
-        clearScheduledHarvesterAction(unit, 'findNewOre')
-        unit.path = path.slice(1)
-        unit.moveTarget = orePos // Set move target so the harvester actually moves
-        return
+  const shortlistSize = Math.min(8, candidateTiles.length)
+  const shortlist = candidateTiles.slice(0, shortlistSize).map(candidate => ({
+    ...candidate,
+    randomOrder: gameRandom()
+  })).sort((a, b) => a.randomOrder - b.randomOrder)
+  const orderedCandidates = [...shortlist, ...candidateTiles.slice(shortlistSize)]
+
+  for (const orePos of orderedCandidates) {
+    const path = findPath(
+      { x: unitTileX, y: unitTileY, owner: unit.owner },
+      orePos,
+      mapGrid,
+      occupancyMap,
+      undefined,
+      { unitOwner: unit.owner }
+    )
+
+    if (path.length > 1 || getTileDistance(unit, orePos) <= HARVESTER_ORE_ARRIVAL_TOLERANCE) {
+      targetedOreTiles[orePos.tileKey] = unit.id
+      unit.oreField = { x: orePos.x, y: orePos.y }
+      if (preserveManualTarget) {
+        unit.manualOreTarget = { x: orePos.x, y: orePos.y }
       }
+      clearScheduledHarvesterAction(unit, 'findNewOre')
+
+      if (path.length > 1) {
+        unit.lastHarvesterOrePathCalcTime = now
+        unit.path = path.slice(1)
+        unit.moveTarget = { x: orePos.x, y: orePos.y }
+      } else {
+        startHarvesting(unit, orePos.tileKey, now, gameState)
+      }
+      return true
     }
   }
 
   scheduleHarvesterAction(
     unit,
     'findNewOre',
-    getSimulationTimeOrFallback(gameState),
+    now,
     HARVESTER_ALTERNATIVE_ORE_RETRY_MIN_DELAY_MS,
     HARVESTER_ALTERNATIVE_ORE_RETRY_MAX_DELAY_MS
   )
+
+  return false
 }
 
 /**
@@ -1417,46 +1757,167 @@ function findNearbyOreTile(unit, mapGrid, centerTileX, centerTileY) {
   return null
 }
 
+function getHarvesterProgressSnapshot(unit, mapGrid, gameState) {
+  if (unit.harvesting) {
+    return { type: 'harvesting', productive: true, goalKey: null }
+  }
+
+  if (unit.unloadingAtRefinery) {
+    return { type: 'unloading', productive: true, goalKey: null }
+  }
+
+  if (isManualHoldActive(unit)) {
+    return { type: 'manualHold', productive: true, goalKey: null }
+  }
+
+  const isInRepairQueue = unit.targetWorkshop && unit.targetWorkshop.repairQueue &&
+    unit.targetWorkshop.repairQueue.includes(unit)
+  if (unit.targetWorkshop || unit.repairingAtWorkshop || isInRepairQueue) {
+    return { type: 'workshop', productive: true, goalKey: null }
+  }
+
+  if (unit.isRetreating) {
+    return { type: 'retreat', productive: true, goalKey: null }
+  }
+
+  if (unit.oreCarried >= HARVESTER_CAPPACITY) {
+    const refinery = getHarvesterPreferredRefinery(unit, gameState)
+    const refineryId = getRefineryId(refinery)
+    if (refinery && refineryId) {
+      const unloadTile = findPreferredUnloadTile(refinery, mapGrid)
+      return {
+        type: 'toRefinery',
+        productive: false,
+        goalKey: `refinery:${refineryId}`,
+        distance: unloadTile ? getTileDistance(unit, unloadTile) : Infinity,
+        hasMovementIntent: Boolean(unit.path?.length || unit.moveTarget),
+        isNearGoal: isAdjacentToBuilding(unit, refinery) || isAtRefineryUnloadingPosition(unit, refinery)
+      }
+    }
+  }
+
+  const oreTarget = unit.manualOreTarget || unit.oreField
+  if (oreTarget && isOreTileTarget(oreTarget, mapGrid)) {
+    return {
+      type: unit.manualOreTarget ? 'manualOre' : 'toOre',
+      productive: false,
+      goalKey: `ore:${oreTarget.x},${oreTarget.y}`,
+      distance: getTileDistance(unit, oreTarget),
+      hasMovementIntent: Boolean(unit.path?.length || unit.moveTarget),
+      isNearGoal: false
+    }
+  }
+
+  return { type: 'idle', productive: false, goalKey: null }
+}
+
+function updateHarvesterGoalProgress(unit, snapshot, now) {
+  if (!snapshot.goalKey || !Number.isFinite(snapshot.distance)) {
+    unit.harvesterGoalKey = null
+    unit.harvesterBestGoalDistance = null
+    if (snapshot.productive) {
+      unit.harvesterLastGoalProgressAt = now
+    }
+    return
+  }
+
+  const goalChanged = unit.harvesterGoalKey !== snapshot.goalKey
+  if (goalChanged) {
+    unit.harvesterGoalKey = snapshot.goalKey
+    unit.harvesterBestGoalDistance = snapshot.distance
+    unit.harvesterLastGoalProgressAt = now
+    return
+  }
+
+  if (snapshot.isNearGoal) {
+    unit.harvesterBestGoalDistance = snapshot.distance
+    unit.harvesterLastGoalProgressAt = now
+    return
+  }
+
+  const bestDistance = Number.isFinite(unit.harvesterBestGoalDistance)
+    ? unit.harvesterBestGoalDistance
+    : snapshot.distance
+
+  if (snapshot.distance < bestDistance - HARVESTER_GOAL_PROGRESS_EPSILON_TILES) {
+    unit.harvesterBestGoalDistance = snapshot.distance
+    unit.harvesterLastGoalProgressAt = now
+  }
+}
+
+function recoverUnproductiveHarvester(unit, mapGrid, occupancyMap, gameState, factories, now, snapshot) {
+  unit.lastHarvesterLongTermRecoveryAt = now
+  unit.harvesterLastGoalProgressAt = now
+  unit.harvesterBestGoalDistance = null
+  unit.harvesterGoalKey = null
+
+  if (snapshot.type === 'manualOre' || snapshot.type === 'toOre') {
+    const preserveManualTarget = Boolean(unit.manualOreTarget)
+    const referenceTarget = unit.manualOreTarget || unit.oreField
+
+    clearOreField(unit)
+    stopMovement(unit)
+
+    if (preserveManualTarget) {
+      unit.manualOreTarget = null
+    }
+
+    findAlternativeOreTarget(unit, mapGrid, occupancyMap, gameState, now, {
+      preserveManualTarget,
+      referenceTarget
+    })
+    return
+  }
+
+  handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, factories)
+}
+
 /**
  * Check if harvester is being productive (harvesting, moving, or unloading)
  */
-function checkHarvesterProductivity(unit, mapGrid, occupancyMap, now) {
-  // Don't interfere with manual commands
-  if (hasPlayerHarvesterPriority(unit, now)) {
+function checkHarvesterProductivity(unit, mapGrid, occupancyMap, gameState, factories, now) {
+  if (isRemoteControlOverrideActive(unit, now) || isManualHoldActive(unit)) {
     return
   }
 
-  // Don't interfere with workshop repair operations
-  const isInRepairQueue = unit.targetWorkshop && unit.targetWorkshop.repairQueue &&
-                         unit.targetWorkshop.repairQueue.includes(unit)
-  if (unit.targetWorkshop || unit.repairingAtWorkshop || isInRepairQueue) {
+  const snapshot = getHarvesterProgressSnapshot(unit, mapGrid, gameState)
+  updateHarvesterGoalProgress(unit, snapshot, now)
+
+  const lastProgressAt = Number.isFinite(unit.harvesterLastGoalProgressAt)
+    ? unit.harvesterLastGoalProgressAt
+    : now
+  const recentlyRecovered = Boolean(
+    unit.lastHarvesterLongTermRecoveryAt &&
+    (now - unit.lastHarvesterLongTermRecoveryAt) < HARVESTER_LONG_TERM_RECOVERY_COOLDOWN_MS
+  )
+  const canLongTermRecover = snapshot.goalKey &&
+    !snapshot.isNearGoal &&
+    !recentlyRecovered &&
+    (now - lastProgressAt) >= HARVESTER_LONG_TERM_STAGNATION_MS
+
+  if (canLongTermRecover) {
+    recoverUnproductiveHarvester(unit, mapGrid, occupancyMap, gameState, factories, now, snapshot)
     return
   }
 
-  // Check if harvester is doing something productive
-  const isProductive = unit.harvesting ||
-                      unit.unloadingAtRefinery ||
-                      (unit.path && unit.path.length > 0) ||
-                      (unit.moveTarget && Math.hypot(
-                        (unit.x / TILE_SIZE) - unit.moveTarget.x,
-                        (unit.y / TILE_SIZE) - unit.moveTarget.y
-                      ) > 0.3)
+  const isProductive = snapshot.productive ||
+    snapshot.isNearGoal ||
+    Boolean(snapshot.hasMovementIntent)
 
   if (!isProductive) {
-
     if (unit.oreCarried >= HARVESTER_CAPPACITY) {
       // Full harvester should be unloading
       stopMovement(unit)
+      clearHarvesterUnloadingState(unit, gameState)
     } else {
-      // Empty harvester should be finding ore
-
-      // Clear current targets
-      clearOreField(unit)
-
       stopMovement(unit)
 
-      // Try to find new ore target
-      findNewOreTarget(unit, mapGrid, occupancyMap, now)
+      if (unit.manualOreTarget) {
+        handleManualOreTarget(unit, mapGrid, occupancyMap, now, gameState)
+      } else {
+        clearOreField(unit)
+        findNewOreTarget(unit, mapGrid, occupancyMap, now, gameState)
+      }
     }
   }
 }

@@ -337,8 +337,8 @@ export function triggerExplosion(
 }
 
 export function isAdjacentToFactory(unit, factory) {
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   for (let y = factory.y - 1; y <= factory.y + factory.height; y++) {
     for (let x = factory.x - 1; x <= factory.x + factory.width; x++) {
@@ -352,8 +352,8 @@ export function isAdjacentToFactory(unit, factory) {
 
 // Checks if a unit is adjacent to a building (similar to isAdjacentToFactory but for any building)
 export function isAdjacentToBuilding(unit, building) {
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   // Check if unit is adjacent to any tile of the building
   for (let y = building.y - 1; y <= building.y + building.height; y++) {
@@ -400,8 +400,8 @@ export function findClosestOre(unit, mapGrid, targetedOreTiles = {}) {
   const candidates = [] // Store all available ore tiles for better distribution
 
   // Calculate unit's tile position from its pixel coordinates
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   for (let y = 0; y < mapGrid.length; y++) {
     for (let x = 0; x < mapGrid[0].length; x++) {
@@ -565,8 +565,8 @@ export function hasLineOfSightToTarget(shooterCenter, target, mapGrid) {
 
 // Add this new function to find a position with a clear line of sight
 export function findPositionWithClearShot(unit, target, units, mapGrid) {
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   // Check adjacent tiles in a spiral pattern, including diagonal moves for better positioning
   const directions = [

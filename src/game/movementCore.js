@@ -671,8 +671,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  unit.tileX = Math.floor(unit.x / TILE_SIZE)
-  unit.tileY = Math.floor(unit.y / TILE_SIZE)
+  unit.tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  unit.tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   unit.tileX = Math.max(0, Math.min(unit.tileX, mapGrid[0].length - 1))
   unit.tileY = Math.max(0, Math.min(unit.tileY, mapGrid.length - 1))
@@ -689,8 +689,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     updateApacheFlightState(unit, movement, occupancyMap, now)
   }
 
-  const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
-  const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  const currentTileX = unit.tileX
+  const currentTileY = unit.tileY
 
   if ((prevTileX !== currentTileX || prevTileY !== currentTileY) && occupancyMap) {
     updateUnitOccupancy(unit, prevTileX, prevTileY, occupancyMap)

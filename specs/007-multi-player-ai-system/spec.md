@@ -285,11 +285,11 @@ This specification documents the comprehensive multi-player AI system that power
 
 #### FR-030: Harvester Pathfinding
 **Priority:** P1  
-**Description:** AI harvesters automatically pathfind to nearest ore field, collect ore, and return to refinery. Pathfinding avoids combat zones and enemy base areas when possible.
+**Description:** AI harvesters automatically pathfind to reachable ore fields, collect ore, and return to refinery; when a harvester has an assigned refinery, that refinery remains the preferred unload destination and ore recovery logic should preserve comparable refinery travel distance when retargeting.
 
 #### FR-031: Harvester Protection
 **Priority:** P1  
-**Description:** When AI harvester is attacked, nearby combat units move to protect it. Harvester attempts to flee toward base while escort engages attackers.
+**Description:** When AI harvester is attacked, nearby combat units move to protect it. The harvester immediately retreats toward safety/refinery-side base space, then resumes its harvest loop after the retreat state clears.
 
 #### FR-032: Ore Field Assignment
 **Priority:** P2  
@@ -301,7 +301,7 @@ This specification documents the comprehensive multi-player AI system that power
 
 #### FR-033a: Periodic Harvester Unstuck Scan
 **Priority:** P1  
-**Description:** Enemy AI performs a 60-second scan for harvesters that show no meaningful movement progress (including idle harvesters at ore fields), then forces a retarget to a different ore tile to recover stalled harvesting loops. If a harvester is out of fuel or has missing crew, AI prioritizes tanker/ambulance support instead of ore retargeting.
+**Description:** Enemy AI performs a 60-second scan for harvesters that show no meaningful harvesting progress, but the shared harvester controller also tracks all harvesters by goal-progress instead of raw path presence. When a harvester has spent more than 60 seconds without harvesting, unloading, or reducing distance to its ore goal, it must retarget to a pseudo-random reachable ore tile at a similar distance from its preferred refinery. If a harvester is out of fuel or has missing crew, AI prioritizes tanker/ambulance support instead of ore retargeting.
 
 ---
 

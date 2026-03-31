@@ -665,8 +665,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
                 const maxY = mapGrid.length * TILE_SIZE - TILE_SIZE
                 unit.x = Math.max(0, Math.min(unit.x, maxX))
                 unit.y = Math.max(0, Math.min(unit.y, maxY))
-                unit.tileX = Math.floor(unit.x / TILE_SIZE)
-                unit.tileY = Math.floor(unit.y / TILE_SIZE)
+                unit.tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+                unit.tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
                 unit.dodgeVelocity = {
                   vx: Math.cos(dodgeAngle) * (unit.speed || 0.5) * TILE_SIZE * 4,
                   vy: Math.sin(dodgeAngle) * (unit.speed || 0.5) * TILE_SIZE * 4,

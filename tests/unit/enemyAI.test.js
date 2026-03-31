@@ -334,6 +334,7 @@ describe('Enemy AI Strategies', () => {
     it('should return false when still under attack', () => {
       aiUnit.health = 50
       aiUnit.isBeingAttacked = true
+      aiUnit.path = [{ x: 16, y: 16 }]
 
       const result = shouldStopRetreating(aiUnit, gameState)
 
@@ -344,6 +345,7 @@ describe('Enemy AI Strategies', () => {
       aiUnit.health = 50
       aiUnit.isBeingAttacked = false
       aiUnit.lastDamageTime = performance.now() // Very recent
+      aiUnit.path = [{ x: 16, y: 16 }]
 
       const result = shouldStopRetreating(aiUnit, gameState)
 

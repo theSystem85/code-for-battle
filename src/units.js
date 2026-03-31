@@ -176,7 +176,7 @@ export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(u
     )
   }
 
-  // Add occupancy to current position (using center coordinates)
+  // Add occupancy to current position (center-based to match unit visual center)
   const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
@@ -343,7 +343,8 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const destHasBuilding = hasBlockingBuilding(destTile)
   const destSeedCrystal = destTile.seedCrystal
   const destinationIsStart = adjustedEnd.x === start.x && adjustedEnd.y === start.y
-  const destOccupied = !destinationIsStart && isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
+  const destOccupied = !destinationIsStart &&
+    isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
   const destModeBlocked = !isTilePassableForMode(mapGrid, adjustedEnd.x, adjustedEnd.y, pathContext)
   if (
     destType === 'water' ||
@@ -440,7 +441,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
         continue
       }
       // Skip if occupancyMap is provided and the tile is occupied,
-      // except when the tile is the starting tile for this path.
+      // except when the tile is the starting tile.
       if (
         !(neighbor.x === start.x && neighbor.y === start.y) &&
         isTileOccupied(occupancyMap, neighbor.x, neighbor.y, pathContext)
@@ -1367,8 +1368,8 @@ function isPositionValid(x, y, mapGrid, units) {
 
   // Check if tile is occupied by another unit
   const isOccupied = units.some(unit =>
-    Math.floor(unit.x / TILE_SIZE) === x &&
-    Math.floor(unit.y / TILE_SIZE) === y
+    Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === x &&
+    Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === y
   )
 
   return !isOccupied
@@ -1378,8 +1379,8 @@ function isPositionValid(x, y, mapGrid, units) {
 export function moveBlockingUnits(targetX, targetY, units, mapGrid) {
   // Find any unit blocking the target position
   const blockingUnit = units.find(unit =>
-    Math.floor(unit.x / TILE_SIZE) === targetX &&
-    Math.floor(unit.y / TILE_SIZE) === targetY
+    Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === targetX &&
+    Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === targetY
   )
 
   if (!blockingUnit) return true // No blocking unit
