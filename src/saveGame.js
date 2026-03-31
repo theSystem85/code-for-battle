@@ -461,6 +461,7 @@ export function saveGame(label) {
       damageValue: u.damageValue,
       totalRepairPaid: u.totalRepairPaid,
       isRestoredFromWreck: u.isRestoredFromWreck,
+      crew: u.crew && typeof u.crew === 'object' ? { ...u.crew } : undefined,
       direction: u.direction,
       rotation: u.rotation
       // Note: lastAttacker is excluded to prevent circular references
@@ -1076,6 +1077,17 @@ function loadGameFromSaveObject(saveObj, key) {
       } else if (hydrated.type === 'apache' || hydrated.type === 'f35') {
         // Fallback - assume can fire if not saved
         hydrated.canFire = true
+      }
+      if (u.crew && typeof u.crew === 'object') {
+        const restoredCrew = {}
+        for (const [role, status] of Object.entries(u.crew)) {
+          restoredCrew[role] = Boolean(status)
+        }
+        if (hydrated.crew && typeof hydrated.crew === 'object') {
+          hydrated.crew = { ...hydrated.crew, ...restoredCrew }
+        } else {
+          hydrated.crew = restoredCrew
+        }
       }
 
       if (hydrated.type === 'f35') {

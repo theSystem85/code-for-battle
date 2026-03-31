@@ -431,6 +431,39 @@ describe('saveGame.js', () => {
       expect(state.units[0].type).toBe('tank')
     })
 
+    it('should save per-unit crew state for later load restoration', async() => {
+      const { units } = await import('../../src/main.js')
+      units.push({
+        id: 'tank-crew-1',
+        type: 'tank',
+        owner: 'player1',
+        x: 160,
+        y: 192,
+        health: 100,
+        maxHealth: 100,
+        crew: {
+          driver: true,
+          commander: false,
+          gunner: true,
+          loader: false
+        },
+        path: []
+      })
+
+      saveGameModule.saveGame('CrewStateSaveTest')
+
+      const saved = localStorage.getItem('rts_save_CrewStateSaveTest')
+      const parsed = JSON.parse(saved)
+      const state = JSON.parse(parsed.state)
+
+      expect(state.units[0].crew).toEqual({
+        driver: true,
+        commander: false,
+        gunner: true,
+        loader: false
+      })
+    })
+
     it('should save buildings array', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.buildings = [{
