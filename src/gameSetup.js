@@ -424,7 +424,8 @@ function buildOreClusterPlan(rand, playerPositions, mapWidth, mapHeight, oreFiel
 
   // Deterministic fallback: if constraints prevented full count, fill remaining slots.
   let fallbackIndex = 0
-  while (allClusters.length < oreFieldCount) {
+  const maxFallbackAttempts = 500
+  while (allClusters.length < oreFieldCount && fallbackIndex < maxFallbackAttempts) {
     const fallbackX = clamp(5 + ((fallbackIndex * 11) % Math.max(10, mapWidth - 10)), 3, mapWidth - 4)
     const fallbackY = clamp(5 + ((fallbackIndex * 7) % Math.max(10, mapHeight - 10)), 3, mapHeight - 4)
     const tooClose = allClusters.some(cluster => Math.hypot(cluster.x - fallbackX, cluster.y - fallbackY) < 7)
