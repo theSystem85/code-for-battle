@@ -25,3 +25,7 @@
 4. Restarting/shuffling map must clear all build-planning overlays and drag state (`blueprints`, chain-build state, mobile paint state, mine/sweep previews).
 5. Restarting/shuffling map must clear stale selection and input carryover (`selectedUnits`, `selectedWreckId`, remote-control key/source state).
 6. Restarting/shuffling map must clear both production queues to avoid carry-over work from previous matches.
+
+## Follow-up hardening (2026-03-31)
+7. Restarting the game must terminate all active audio from the previous session before the new loop starts.
+8. Audio termination must include active sound-effect sources, narrated queue state, background music playback position, and milestone video overlay audio/queue.

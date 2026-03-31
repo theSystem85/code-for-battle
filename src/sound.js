@@ -549,6 +549,19 @@ export function terminateAllSounds() {
       window.logger.warn('Error terminating background music:', e)
     }
   }
+
+  if (videoOverlay) {
+    try {
+      if (typeof videoOverlay.stopCurrentVideo === 'function') {
+        videoOverlay.stopCurrentVideo()
+      }
+      if (typeof videoOverlay.clearQueue === 'function') {
+        videoOverlay.clearQueue()
+      }
+    } catch (e) {
+      window.logger.warn('Error terminating video overlay audio:', e)
+    }
+  }
 }
 
 // Pause all currently playing audio including background music and looped sounds
