@@ -779,3 +779,5 @@
 - [x] Restore mobile double-tap cancel behavior for placement/planning mode and keep two-finger pan scrolling functional after using draw-to-plan mode.
 
 - [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
+
+- [x] ✅ Deep-fixed harvester automation policies: corrected harvest-proximity tolerance (0.7→1.5 tiles to match MOVE_TARGET_REACHED_THRESHOLD), fixed path.length==1 false-abandon loop, added delayed retry on unpathable ore, prevented productivity-check from clearing ore field when already at tile, added Policy 4 enemy-attack retreat-to-refinery (retreatingToRefinery flag), added Policy 5 60-second stuck-detection with pseudo-random ore reassignment at similar refinery distance. Created harvester-policies.md with full Mermaid state diagram.

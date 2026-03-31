@@ -27,6 +27,16 @@ const HARVESTER_ORE_FALLBACK_MIN_DELAY_MS = 1000
 const HARVESTER_ORE_FALLBACK_MAX_DELAY_MS = 2000
 const HARVESTER_ALTERNATIVE_ORE_RETRY_MIN_DELAY_MS = 3000
 const HARVESTER_ALTERNATIVE_ORE_RETRY_MAX_DELAY_MS = 5000
+// How long after last damage an enemy harvester stays in retreat mode
+const HARVESTER_ATTACK_RETREAT_MS = 5000
+// Distance tolerance for detecting "at ore field".
+// IMPORTANT: must always match MOVE_TARGET_REACHED_THRESHOLD in config.js (currently 1.5)
+// so a harvester that the movement system considers "arrived" is also considered "at ore".
+const HARVEST_DISTANCE_TOLERANCE = 1.5
+// Time without meaningful progress before forcing a different ore tile assignment
+const HARVESTER_ORE_STUCK_TIMEOUT_MS = 60000
+// Minimum distance reduction (in tiles) toward the ore target counted as "progress"
+const HARVESTER_ORE_PROGRESS_THRESHOLD = 0.5
 
 function getSimulationTimeOrFallback(gameState) {
   return Number.isFinite(gameState?.simulationTime) ? gameState.simulationTime : performance.now()
@@ -160,10 +170,33 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     const unitTileX = Math.floor(unit.x / TILE_SIZE)
     const unitTileY = Math.floor(unit.y / TILE_SIZE)
 
+    // Policy 4: Enemy harvester attacked → immediately retreat to refinery, then resume harvest loop.
+    // Triggered when an enemy harvester takes damage and is not already retreating or unloading.
+    if (unit.owner !== gameState.humanPlayer &&
+        !unit.retreatingToRefinery &&
+        !unit.unloadingAtRefinery &&
+        unit.lastDamageTime && now - unit.lastDamageTime < HARVESTER_ATTACK_RETREAT_MS) {
+      // Abort current harvesting/ore-seeking and force retreat
+      if (unit.harvesting) {
+        const attackedTileKey = unit.oreField ? `${unit.oreField.x},${unit.oreField.y}` : null
+        if (attackedTileKey) harvestedTiles.delete(attackedTileKey)
+        unit.harvesting = false
+      }
+      clearOreField(unit)
+      clearScheduledHarvesterAction(unit)
+      stopMovement(unit)
+      unit.retreatingToRefinery = true
+    }
+
+    // Route harvesters that are retreating back to refinery (Policy 4)
+    if (unit.retreatingToRefinery && !unit.unloadingAtRefinery && !unit.harvesting) {
+      routeHarvesterToRefinery(unit, gameState, mapGrid, occupancyMap)
+    }
+
     // Periodic productivity check - ensure harvester is doing something useful every 0.5 seconds
     if (!unit.lastProductivityCheck || now - unit.lastProductivityCheck > HARVESTER_PRODUCTIVITY_CHECK_INTERVAL) {
       unit.lastProductivityCheck = now
-      checkHarvesterProductivity(unit, mapGrid, occupancyMap, now)
+      checkHarvesterProductivity(unit, mapGrid, occupancyMap, now, gameState)
     }
 
     // Mining ore logic with more tolerant detection
@@ -173,6 +206,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
 
     if (!hasPlayerHarvesterPriority(unit, now) &&
         unit.oreCarried < HARVESTER_CAPPACITY && !unit.harvesting && !unit.unloadingAtRefinery &&
+        !unit.retreatingToRefinery &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       // Check if harvester is near an ore tile (more tolerant detection)
       const nearbyOreTile = findNearbyOreTile(unit, mapGrid, unitTileX, unitTileY)
@@ -248,6 +282,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     // Skip auto-unloading if harvester is heading to or being repaired at workshop, or is in repair queue
     if (!isRemoteControlOverrideActive(unit, now) &&
         unit.oreCarried >= HARVESTER_CAPPACITY && !unit.unloadingAtRefinery && !unit.harvesting &&
+        !unit.retreatingToRefinery &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occupancyMap, units)
     }
@@ -261,6 +296,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     // Skip auto-ore finding if harvester is heading to or being repaired at workshop, or is in repair queue
     if (!isRemoteControlOverrideActive(unit, now) &&
         unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
+        !unit.retreatingToRefinery &&
         (!unit.path || unit.path.length === 0) && !unit.oreField &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       // Check if there's a manual ore target first
@@ -274,19 +310,18 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     // Handle harvesters that have an ore field but no path and aren't harvesting
     // This can happen when they get stuck or lose their path
     if (!hasPlayerHarvesterPriority(unit, now) &&
+        !unit.retreatingToRefinery &&
         unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
         unit.oreField && (!unit.path || unit.path.length === 0)) {
       const tileKey = `${unit.oreField.x},${unit.oreField.y}`
-      const _currentTileX = Math.floor(unit.x / TILE_SIZE)
-      const _currentTileY = Math.floor(unit.y / TILE_SIZE)
 
-      // Check if we're near the ore field (more tolerant detection)
+      // Check if we're near the ore field – use the same tolerance as MOVE_TARGET_REACHED_THRESHOLD
       const distanceToOreField = Math.hypot(
         (unit.x / TILE_SIZE) - unit.oreField.x,
         (unit.y / TILE_SIZE) - unit.oreField.y
       )
 
-      if (distanceToOreField <= 0.7) { // Allow harvester to be within 0.7 tiles of the ore field
+      if (distanceToOreField <= HARVEST_DISTANCE_TOLERANCE) {
         // We're close enough to the ore field, check if we can harvest
         if (mapGrid[unit.oreField.y][unit.oreField.x].ore &&
             !mapGrid[unit.oreField.y][unit.oreField.x].seedCrystal &&
@@ -310,10 +345,20 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         if (path.length > 1) {
           unit.path = path.slice(1)
           unit.moveTarget = unit.oreField // Set move target so the harvester actually moves
+        } else if (path.length === 1) {
+          // Already at the ore field tile – start harvesting or pick a new tile
+          if (mapGrid[unit.oreField.y][unit.oreField.x].ore &&
+              !mapGrid[unit.oreField.y][unit.oreField.x].seedCrystal &&
+              !harvestedTiles.has(tileKey)) {
+            startHarvesting(unit, tileKey, now, gameState)
+          } else {
+            clearOreField(unit)
+            findNewOreTarget(unit, mapGrid, occupancyMap, now)
+          }
         } else {
-          // Can't path to ore field, abandon it and find new one
+          // Cannot path to ore field at all – schedule a delayed retry with a different tile
           clearOreField(unit)
-          findNewOreTarget(unit, mapGrid, occupancyMap, now)
+          scheduleHarvesterAction(unit, 'findNewOre', now, HARVESTER_ORE_FALLBACK_MIN_DELAY_MS, HARVESTER_ORE_FALLBACK_MAX_DELAY_MS)
         }
       }
     }
@@ -609,6 +654,9 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
     unit.targetRefinery = null // Clear target refinery
     unit.forcedUnload = false // Clear forced unload flag
     unit.forcedUnloadRefinery = null // Clear forced unload refinery
+    unit.retreatingToRefinery = false // Clear attack-retreat flag (Policy 4)
+    unit.lastOreProgressTime = null // Reset stuck-timer so it starts fresh next harvest cycle
+    unit.lastOreProgressDistToTarget = null
     unit.findOreAfterUnload = now + 500 // Schedule ore search after 500ms
     clearScheduledHarvesterAction(unit)
     if (unit.owner === gameState.humanPlayer) {
@@ -662,6 +710,14 @@ function findNewOreTarget(unit, mapGrid, occupancyMap, now = performance.now()) 
       clearScheduledHarvesterAction(unit, 'findNewOre')
       unit.path = path.slice(1)
       unit.moveTarget = orePos // Set move target so the harvester actually moves
+    } else if (path.length === 1) {
+      // Already at the ore tile – the main loop will detect proximity and start harvesting
+      clearScheduledHarvesterAction(unit, 'findNewOre')
+    } else {
+      // Can't path to this ore tile at all – release reservation and retry later
+      delete targetedOreTiles[tileKey]
+      unit.oreField = null
+      scheduleHarvesterAction(unit, 'findNewOre', now, HARVESTER_ORE_FALLBACK_MIN_DELAY_MS, HARVESTER_ORE_FALLBACK_MAX_DELAY_MS)
     }
   } else {
     scheduleHarvesterAction(unit, 'findNewOre', now, HARVESTER_ORE_FALLBACK_MIN_DELAY_MS, HARVESTER_ORE_FALLBACK_MAX_DELAY_MS)
@@ -1407,8 +1463,9 @@ function findNearbyOreTile(unit, mapGrid, centerTileX, centerTileY) {
           tileCenter.y - harvesterCenter.y
         )
 
-        // Allow harvester to be within 0.7 tiles of ore center
-        if (distance <= 0.7) {
+        // Allow harvester to be within HARVEST_DISTANCE_TOLERANCE tiles of ore center
+        // (matches MOVE_TARGET_REACHED_THRESHOLD so harvesters never idle after arriving)
+        if (distance <= HARVEST_DISTANCE_TOLERANCE) {
           return { x: checkX, y: checkY }
         }
       }
@@ -1418,11 +1475,16 @@ function findNearbyOreTile(unit, mapGrid, centerTileX, centerTileY) {
 }
 
 /**
- * Check if harvester is being productive (harvesting, moving, or unloading)
+ * Check if harvester is being productive (harvesting, moving, or unloading).
+ * Also enforces Policy 5: if a harvester has been stuck on an ore target for more
+ * than HARVESTER_ORE_STUCK_TIMEOUT_MS without making progress, it gets reassigned to
+ * a pseudo-random ore tile at a similar distance from its assigned refinery.
  */
-function checkHarvesterProductivity(unit, mapGrid, occupancyMap, now) {
+function checkHarvesterProductivity(unit, mapGrid, occupancyMap, now, gameState) {
   // Don't interfere with manual commands
   if (hasPlayerHarvesterPriority(unit, now)) {
+    unit.lastOreProgressTime = null
+    unit.lastOreProgressDistToTarget = null
     return
   }
 
@@ -1430,6 +1492,15 @@ function checkHarvesterProductivity(unit, mapGrid, occupancyMap, now) {
   const isInRepairQueue = unit.targetWorkshop && unit.targetWorkshop.repairQueue &&
                          unit.targetWorkshop.repairQueue.includes(unit)
   if (unit.targetWorkshop || unit.repairingAtWorkshop || isInRepairQueue) {
+    unit.lastOreProgressTime = null
+    unit.lastOreProgressDistToTarget = null
+    return
+  }
+
+  // Retreating harvesters are considered productive
+  if (unit.retreatingToRefinery) {
+    unit.lastOreProgressTime = null
+    unit.lastOreProgressDistToTarget = null
     return
   }
 
@@ -1443,20 +1514,222 @@ function checkHarvesterProductivity(unit, mapGrid, occupancyMap, now) {
                       ) > 0.3)
 
   if (!isProductive) {
-
     if (unit.oreCarried >= HARVESTER_CAPPACITY) {
-      // Full harvester should be unloading
+      // Full harvester should be unloading – just stop, the main loop will route it
       stopMovement(unit)
-    } else {
-      // Empty harvester should be finding ore
-
-      // Clear current targets
+    } else if (unit.oreField) {
+      // Has an ore target – check if we're already close enough to start harvesting
+      const distToOre = Math.hypot(
+        (unit.x / TILE_SIZE) - unit.oreField.x,
+        (unit.y / TILE_SIZE) - unit.oreField.y
+      )
+      if (distToOre <= HARVEST_DISTANCE_TOLERANCE) {
+        // We're right next to the ore – the main loop auto-harvest check will pick this up
+        return
+      }
+      // Not close enough and no path – clear and re-find
       clearOreField(unit)
-
       stopMovement(unit)
-
-      // Try to find new ore target
+      findNewOreTarget(unit, mapGrid, occupancyMap, now)
+    } else {
+      // Empty harvester with no ore target – find one
+      stopMovement(unit)
       findNewOreTarget(unit, mapGrid, occupancyMap, now)
     }
   }
+
+  // Policy 5: Track progress toward the targeted ore tile.
+  // If the harvester has an ore target but hasn't gotten meaningfully closer for
+  // HARVESTER_ORE_STUCK_TIMEOUT_MS, reassign it to a pseudo-random ore tile at a
+  // similar distance from the assigned refinery.
+  if (unit.oreField && !unit.harvesting && !unit.unloadingAtRefinery && gameState) {
+    const distToOre = Math.hypot(
+      unit.x / TILE_SIZE - unit.oreField.x,
+      unit.y / TILE_SIZE - unit.oreField.y
+    )
+
+    const madeProgress = !unit.lastOreProgressDistToTarget ||
+      distToOre < unit.lastOreProgressDistToTarget - HARVESTER_ORE_PROGRESS_THRESHOLD
+
+    if (madeProgress) {
+      unit.lastOreProgressTime = now
+      unit.lastOreProgressDistToTarget = distToOre
+    } else if (!unit.lastOreProgressTime) {
+      unit.lastOreProgressTime = now
+      unit.lastOreProgressDistToTarget = distToOre
+    } else if (now - unit.lastOreProgressTime > HARVESTER_ORE_STUCK_TIMEOUT_MS) {
+      // Stuck for a full minute – assign a different pseudo-random ore tile
+      unit.lastOreProgressTime = now
+      unit.lastOreProgressDistToTarget = null
+      findRandomOreNearRefinery(unit, mapGrid, occupancyMap, gameState, now)
+    }
+  } else {
+    // Reset progress tracking when not targeting ore
+    unit.lastOreProgressTime = null
+    unit.lastOreProgressDistToTarget = null
+  }
 }
+
+/**
+ * Route an enemy harvester that is retreating back to its assigned (or nearest) refinery.
+ * Called when Policy 4 is active (harvester got attacked).
+ * When the harvester arrives at the refinery, retreatingToRefinery is cleared and the
+ * normal harvest loop resumes.
+ */
+function routeHarvesterToRefinery(unit, gameState, mapGrid, occupancyMap) {
+  const refineries = gameState.buildings?.filter(b =>
+    b.type === 'oreRefinery' && b.owner === unit.owner && b.health > 0
+  ) || []
+
+  if (refineries.length === 0) {
+    // No refineries available – give up retreating
+    unit.retreatingToRefinery = false
+    return
+  }
+
+  // Check if already adjacent to a refinery
+  const nearRefinery = refineries.find(r =>
+    isAdjacentToBuilding(unit, r) || isAtRefineryUnloadingPosition(unit, r)
+  )
+  if (nearRefinery) {
+    // Arrived – clear retreat flag so normal harvest loop resumes
+    unit.retreatingToRefinery = false
+    return
+  }
+
+  // Only recalculate path when there is none
+  if (unit.path && unit.path.length > 0) return
+
+  // Find target refinery (prefer assigned one)
+  let targetRefinery = null
+  if (unit.assignedRefinery) {
+    targetRefinery = refineries.find(r =>
+      (r.id || `refinery_${r.x}_${r.y}`) === unit.assignedRefinery
+    )
+  }
+  if (!targetRefinery) {
+    targetRefinery = refineries.reduce((closest, r) => {
+      const dist = Math.hypot(unit.tileX - (r.x + r.width / 2), unit.tileY - (r.y + r.height / 2))
+      const closestDist = closest
+        ? Math.hypot(unit.tileX - (closest.x + closest.width / 2), unit.tileY - (closest.y + closest.height / 2))
+        : Infinity
+      return dist < closestDist ? r : closest
+    }, null)
+  }
+
+  if (!targetRefinery) {
+    unit.retreatingToRefinery = false
+    return
+  }
+
+  const unloadTile = findAdjacentTile(targetRefinery, mapGrid)
+  if (!unloadTile) {
+    unit.retreatingToRefinery = false
+    return
+  }
+
+  const path = findPath(
+    { x: unit.tileX, y: unit.tileY, owner: unit.owner },
+    unloadTile,
+    mapGrid,
+    occupancyMap,
+    undefined,
+    { unitOwner: unit.owner }
+  )
+  if (path.length > 1) {
+    unit.path = path.slice(1)
+    unit.moveTarget = unloadTile
+  } else if (path.length <= 1) {
+    // Already there or can't reach – clear retreat flag
+    unit.retreatingToRefinery = false
+  }
+}
+
+/**
+ * Policy 5: Find a pseudo-random ore tile at a similar distance from the unit's assigned
+ * refinery as the current (stuck) ore target.  Called after HARVESTER_ORE_STUCK_TIMEOUT_MS
+ * without making meaningful progress toward the targeted ore tile.
+ */
+function findRandomOreNearRefinery(unit, mapGrid, occupancyMap, gameState, now) {
+  const refineries = gameState.buildings?.filter(b =>
+    b.type === 'oreRefinery' && b.owner === unit.owner && b.health > 0
+  ) || []
+
+  let refinery = null
+  if (unit.assignedRefinery) {
+    refinery = refineries.find(r => (r.id || `refinery_${r.x}_${r.y}`) === unit.assignedRefinery)
+  }
+  if (!refinery && refineries.length > 0) {
+    refinery = refineries[0]
+  }
+
+  // Target distance: distance from refinery to current (unreachable) ore tile
+  let targetDist = 20 // sensible fallback
+  if (unit.oreField && refinery) {
+    const refCenterX = refinery.x + refinery.width / 2
+    const refCenterY = refinery.y + refinery.height / 2
+    targetDist = Math.hypot(unit.oreField.x - refCenterX, unit.oreField.y - refCenterY)
+  }
+
+  const refCenterX = refinery ? refinery.x + refinery.width / 2 : unit.tileX
+  const refCenterY = refinery ? refinery.y + refinery.height / 2 : unit.tileY
+  const minDist = targetDist * 0.5
+  const maxDist = targetDist * 1.5
+
+  // Collect all free ore tiles within the similar-distance band around the refinery
+  const candidates = []
+  for (let y = 0; y < mapGrid.length; y++) {
+    for (let x = 0; x < mapGrid[0].length; x++) {
+      if (!mapGrid[y][x].ore || mapGrid[y][x].seedCrystal) continue
+      const tileKey = `${x},${y}`
+      if (targetedOreTiles[tileKey] && targetedOreTiles[tileKey] !== unit.id) continue
+      if (harvestedTiles.has(tileKey)) continue
+      const dist = Math.hypot(x - refCenterX, y - refCenterY)
+      if (dist >= minDist && dist <= maxDist) {
+        candidates.push({ x, y, dist })
+      }
+    }
+  }
+
+  if (candidates.length === 0) {
+    // No ore at similar distance – fall back to closest available ore
+    findNewOreTarget(unit, mapGrid, occupancyMap, now)
+    return
+  }
+
+  // Pseudo-random selection: hash the unit id to pick deterministically across ticks
+  const idHash = unit.id ? unit.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) : 0
+  const idx = idHash % candidates.length
+  const chosen = candidates[idx]
+
+  clearOreField(unit)
+
+  const tileKey = `${chosen.x},${chosen.y}`
+  targetedOreTiles[tileKey] = unit.id
+  unit.oreField = chosen
+
+  const path = findPath(
+    { x: unit.tileX, y: unit.tileY, owner: unit.owner },
+    chosen,
+    mapGrid,
+    occupancyMap,
+    undefined,
+    { unitOwner: unit.owner }
+  )
+  if (path.length > 1) {
+    clearScheduledHarvesterAction(unit, 'findNewOre')
+    unit.path = path.slice(1)
+    unit.moveTarget = chosen
+    unit.lastOreProgressTime = now
+    unit.lastOreProgressDistToTarget = Math.hypot(unit.tileX - chosen.x, unit.tileY - chosen.y)
+  } else if (path.length === 1) {
+    // Already at the tile
+    clearScheduledHarvesterAction(unit, 'findNewOre')
+  } else {
+    // Can't reach this tile either – release and retry later
+    delete targetedOreTiles[tileKey]
+    unit.oreField = null
+    scheduleHarvesterAction(unit, 'findNewOre', now, HARVESTER_ORE_FALLBACK_MIN_DELAY_MS, HARVESTER_ORE_FALLBACK_MAX_DELAY_MS)
+  }
+}
+
