@@ -544,8 +544,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   const prevX = unit.x
   const prevY = unit.y
-  const prevTileX = Math.floor(prevX / TILE_SIZE)
-  const prevTileY = Math.floor(prevY / TILE_SIZE)
+  const prevTileX = Math.floor((prevX + TILE_SIZE / 2) / TILE_SIZE)
+  const prevTileY = Math.floor((prevY + TILE_SIZE / 2) / TILE_SIZE)
 
   unit.x += movement.velocity.x
   unit.y += movement.velocity.y
@@ -671,8 +671,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  unit.tileX = Math.floor(unit.x / TILE_SIZE)
-  unit.tileY = Math.floor(unit.y / TILE_SIZE)
+  unit.tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  unit.tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   unit.tileX = Math.max(0, Math.min(unit.tileX, mapGrid[0].length - 1))
   unit.tileY = Math.max(0, Math.min(unit.tileY, mapGrid.length - 1))

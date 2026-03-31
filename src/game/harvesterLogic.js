@@ -339,8 +339,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
 
     runScheduledHarvesterAction(unit, mapGrid, occupancyMap, gameState, now)
 
-    const unitTileX = Math.floor(unit.x / TILE_SIZE)
-    const unitTileY = Math.floor(unit.y / TILE_SIZE)
+    const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+    const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
     const isRetreatingFromThreat = Boolean(unit.isRetreating)
 
     // Retreat behavior is controlled by AI strategy logic (retreatLogic.js).
@@ -494,8 +494,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         unit.oreCarried === 0 && !unit.harvesting && !unit.unloadingAtRefinery &&
         unit.oreField && (!unit.path || unit.path.length === 0)) {
       const tileKey = `${unit.oreField.x},${unit.oreField.y}`
-      const _currentTileX = Math.floor(unit.x / TILE_SIZE)
-      const _currentTileY = Math.floor(unit.y / TILE_SIZE)
+      const _currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+      const _currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
       // Check if we're near the ore field (more tolerant detection)
       const distanceToOreField = Math.hypot(
@@ -1492,8 +1492,8 @@ export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, fac
   }
 
   // Check if harvester is standing on ore and should be harvesting
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const currentTile = mapGrid[unitTileY] && mapGrid[unitTileY][unitTileX]
 
   if (currentTile && currentTile.ore && unit.oreCarried < HARVESTER_CAPPACITY) {
@@ -1621,8 +1621,8 @@ function findAlternativeOreTarget(unit, mapGrid, occupancyMap, gameState, now = 
   const targetRefineryDistance = referenceTarget && preferredRefinery
     ? getOreDistanceToRefinery(referenceTarget, preferredRefinery)
     : null
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const referenceTileKey = referenceTarget ? `${referenceTarget.x},${referenceTarget.y}` : null
   const candidateTiles = []
 

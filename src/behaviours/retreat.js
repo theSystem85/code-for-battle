@@ -445,8 +445,8 @@ function getDistanceToTarget(unit, target) {
 function checkRetreatPathBlocked(unit, mapGrid, units) {
   if (!unit.retreatTarget) return false
 
-  const unitTileX = Math.floor(unit.x / TILE_SIZE)
-  const unitTileY = Math.floor(unit.y / TILE_SIZE)
+  const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const retreatTileX = unit.retreatTarget.x
   const retreatTileY = unit.retreatTarget.y
 

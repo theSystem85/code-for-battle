@@ -110,8 +110,8 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
     if (unit.isAirUnit && unit.flightState !== 'grounded') {
       return
     }
-    const tileX = Math.floor(unit.x / TILE_SIZE)
-    const tileY = Math.floor(unit.y / TILE_SIZE)
+    const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+    const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
     if (
       tileY >= 0 &&
       tileY < height &&
@@ -176,9 +176,9 @@ export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(u
     )
   }
 
-  // Add occupancy to current position (matching unit.tileX floor-based coords)
-  const currentTileX = Math.floor(unit.x / TILE_SIZE)
-  const currentTileY = Math.floor(unit.y / TILE_SIZE)
+  // Add occupancy to current position (center-based to match unit visual center)
+  const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
   if (
     currentTileY >= 0 &&
@@ -197,8 +197,8 @@ export function removeUnitOccupancy(unit, occupancyMap, options = {}) {
   if (!ignoreFlightState && unit.isAirUnit && unit.flightState !== 'grounded') {
     return
   }
-  const tileX = Math.floor(unit.x / TILE_SIZE)
-  const tileY = Math.floor(unit.y / TILE_SIZE)
+  const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   if (
     tileY >= 0 &&
     tileY < occupancyMap.length &&
@@ -1368,8 +1368,8 @@ function isPositionValid(x, y, mapGrid, units) {
 
   // Check if tile is occupied by another unit
   const isOccupied = units.some(unit =>
-    Math.floor(unit.x / TILE_SIZE) === x &&
-    Math.floor(unit.y / TILE_SIZE) === y
+    Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === x &&
+    Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === y
   )
 
   return !isOccupied
@@ -1379,8 +1379,8 @@ function isPositionValid(x, y, mapGrid, units) {
 export function moveBlockingUnits(targetX, targetY, units, mapGrid) {
   // Find any unit blocking the target position
   const blockingUnit = units.find(unit =>
-    Math.floor(unit.x / TILE_SIZE) === targetX &&
-    Math.floor(unit.y / TILE_SIZE) === targetY
+    Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === targetX &&
+    Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === targetY
   )
 
   if (!blockingUnit) return true // No blocking unit
