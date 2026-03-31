@@ -110,8 +110,8 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
     if (unit.isAirUnit && unit.flightState !== 'grounded') {
       return
     }
-    const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
-    const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+    const tileX = Math.floor(unit.x / TILE_SIZE)
+    const tileY = Math.floor(unit.y / TILE_SIZE)
     if (
       tileY >= 0 &&
       tileY < height &&
@@ -176,9 +176,9 @@ export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(u
     )
   }
 
-  // Add occupancy to current position (using center coordinates)
-  const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
-  const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  // Add occupancy to current position (matching unit.tileX floor-based coords)
+  const currentTileX = Math.floor(unit.x / TILE_SIZE)
+  const currentTileY = Math.floor(unit.y / TILE_SIZE)
 
   if (
     currentTileY >= 0 &&
@@ -197,8 +197,8 @@ export function removeUnitOccupancy(unit, occupancyMap, options = {}) {
   if (!ignoreFlightState && unit.isAirUnit && unit.flightState !== 'grounded') {
     return
   }
-  const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
-  const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  const tileX = Math.floor(unit.x / TILE_SIZE)
+  const tileY = Math.floor(unit.y / TILE_SIZE)
   if (
     tileY >= 0 &&
     tileY < occupancyMap.length &&
@@ -343,7 +343,8 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const destHasBuilding = hasBlockingBuilding(destTile)
   const destSeedCrystal = destTile.seedCrystal
   const destinationIsStart = adjustedEnd.x === start.x && adjustedEnd.y === start.y
-  const destOccupied = !destinationIsStart && isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
+  const destOccupied = !destinationIsStart &&
+    isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
   const destModeBlocked = !isTilePassableForMode(mapGrid, adjustedEnd.x, adjustedEnd.y, pathContext)
   if (
     destType === 'water' ||
@@ -440,7 +441,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
         continue
       }
       // Skip if occupancyMap is provided and the tile is occupied,
-      // except when the tile is the starting tile for this path.
+      // except when the tile is the starting tile.
       if (
         !(neighbor.x === start.x && neighbor.y === start.y) &&
         isTileOccupied(occupancyMap, neighbor.x, neighbor.y, pathContext)

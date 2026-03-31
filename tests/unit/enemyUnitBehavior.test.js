@@ -20,7 +20,14 @@ vi.mock('../../src/ai/enemyStrategies.js', () => ({
 }))
 
 vi.mock('../../src/ai/enemyUtils.js', () => ({
-  isEnemyTo: vi.fn(() => true)
+  isEnemyTo: vi.fn((unitOrOwner, otherOwnerOrId, _state) => {
+    const ownerA = typeof unitOrOwner === 'string' ? unitOrOwner : unitOrOwner?.owner
+    const ownerB = typeof otherOwnerOrId === 'string' ? otherOwnerOrId : otherOwnerOrId?.owner
+    if (!ownerA || !ownerB) return false
+    return ownerA !== ownerB
+  }),
+  getEnemyPlayers: vi.fn(() => ['player']),
+  normalizePartyOwner: vi.fn((owner) => owner)
 }))
 
 vi.mock('../../src/buildings.js', () => ({

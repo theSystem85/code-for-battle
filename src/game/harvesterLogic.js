@@ -302,6 +302,41 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
   units.forEach(unit => {
     if (unit.type !== 'harvester') return
 
+    // Skip automation if unit is heading to hospital for crew restaffing
+    if (unit.returningToHospital) return
+
+    // Skip all harvester automation for units with missing crew
+    // Crewless harvesters are handled by the AI crew healing system
+    if (unit.crew && typeof unit.crew === 'object') {
+      if (!unit.crew.driver) {
+        // No driver - harvester cannot move. Stop everything and wait for ambulance.
+        stopMovement(unit)
+        if (unit.harvesting) {
+          releaseHarvestReservation(unit)
+          unit.harvesting = false
+        }
+        clearScheduledHarvesterAction(unit)
+        return
+      }
+      if (!unit.crew.loader) {
+        // No loader - harvester cannot harvest ore.
+        // If carrying ore, still allow unloading logic to run.
+        // Otherwise stop harvesting and let crew healing handle it.
+        if (unit.harvesting) {
+          releaseHarvestReservation(unit)
+          unit.harvesting = false
+        }
+        // Allow unloading if carrying ore (doesn't need loader)
+        if (unit.oreCarried > 0 && !unit.unloadingAtRefinery) {
+          handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occupancyMap, units)
+        }
+        if (unit.unloadingAtRefinery && unit.unloadStartTime) {
+          completeUnloading(unit, factories, mapGrid, gameState, now, occupancyMap)
+        }
+        return
+      }
+    }
+
     runScheduledHarvesterAction(unit, mapGrid, occupancyMap, gameState, now)
 
     const unitTileX = Math.floor(unit.x / TILE_SIZE)

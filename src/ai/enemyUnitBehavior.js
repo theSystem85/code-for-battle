@@ -288,8 +288,16 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
       } else {
         // Unit can move - should return to hospital immediately
         // This will be handled by manageAICrewHealing
-        // For now, just mark it as needing hospital
         unit.needsHospital = true
+        // Stop offensive behavior - only allow defensive firing
+        unit.moveTarget = null
+        unit.path = []
+        if (unit.isBeingAttacked && unit.lastAttacker && unit.crew.gunner) {
+          unit.target = unit.lastAttacker
+        } else {
+          unit.target = null
+        }
+        return // Skip normal AI behavior until crew is restored
       }
     }
 
