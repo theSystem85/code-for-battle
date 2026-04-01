@@ -57,9 +57,17 @@ vi.mock('../../src/performanceUtils.js', () => ({
   logPerformance: fn => fn
 }))
 
-vi.mock('../../src/utils/gameRandom.js', () => ({
-  gameRandom: vi.fn(() => 0.5)
-}))
+vi.mock('../../src/utils/gameRandom.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    gameRandom: vi.fn(() => 0.5),
+    deterministicRNG: {
+      isEnabled: vi.fn(() => false),
+      getCallCount: vi.fn(() => 0)
+    }
+  }
+})
 
 vi.mock('../../src/rendering.js', () => ({
   getMapRenderer: () => null

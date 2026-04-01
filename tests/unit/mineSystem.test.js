@@ -98,13 +98,10 @@ describe('mineSystem', () => {
       expect(mine.armedAt).toBe(deployTime + MINE_ARM_DELAY)
     })
 
-    it('should use performance.now() as default deployTime', () => {
-      const before = performance.now()
+    it('should default deployTime to simulation time when not provided', () => {
+      gameState.simulationTime = 1337
       const mine = createMine(5, 10, 'player')
-      const after = performance.now()
-
-      expect(mine.deployTime).toBeGreaterThanOrEqual(before)
-      expect(mine.deployTime).toBeLessThanOrEqual(after)
+      expect(mine.deployTime).toBe(1337)
     })
   })
 

@@ -2,19 +2,21 @@ import { gameState } from '../gameState.js'
 import { getActiveRemoteConnection } from '../network/remoteConnection.js'
 import { createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
 
-const REMOTE_CONTROL_ACTIONS = [
-  'forward',
-  'backward',
-  'turnLeft',
-  'turnRight',
-  'turretLeft',
-  'turretRight',
-  'fire',
-  'ascend',
-  'descend',
-  'strafeLeft',
-  'strafeRight'
-]
+function getRemoteControlActionList() {
+  return [
+    'forward',
+    'backward',
+    'turnLeft',
+    'turnRight',
+    'turretLeft',
+    'turretRight',
+    'fire',
+    'ascend',
+    'descend',
+    'strafeLeft',
+    'strafeRight'
+  ]
+}
 
 const DEFAULT_ABSOLUTE_STATE = {
   wagonDirection: null,
@@ -61,7 +63,7 @@ function ensureRemoteControlSources() {
     gameState.remoteControlSources = {}
   }
 
-  for (const action of REMOTE_CONTROL_ACTIONS) {
+  for (const action of getRemoteControlActionList()) {
     if (!gameState.remoteControlSources[action]) {
       gameState.remoteControlSources[action] = {}
     }
@@ -146,7 +148,7 @@ function recomputeAction(action) {
 }
 
 export function setRemoteControlAction(action, source, active, intensity = 1) {
-  if (!REMOTE_CONTROL_ACTIONS.includes(action)) {
+  if (!getRemoteControlActionList().includes(action)) {
     throw new Error(`Unsupported remote control action: ${action}`)
   }
   if (!source) {
@@ -185,7 +187,7 @@ export function clearRemoteControlSource(source) {
   if (!source) return
   ensureRemoteControlSources()
   let didChange = false
-  for (const action of REMOTE_CONTROL_ACTIONS) {
+  for (const action of getRemoteControlActionList()) {
     const sources = gameState.remoteControlSources[action]
     if (sources && sources[source]) {
       delete sources[source]
@@ -205,7 +207,7 @@ export function getRemoteControlActionState(action) {
 }
 
 export function getRemoteControlActions() {
-  return [...REMOTE_CONTROL_ACTIONS]
+  return getRemoteControlActionList()
 }
 
 export function setRemoteControlAbsolute(source, values = {}) {
@@ -298,7 +300,7 @@ export function applyRemoteControlSnapshot(source, payload = {}) {
 
   const actions = payload.actions || {}
   Object.entries(actions).forEach(([action, intensity]) => {
-    if (!REMOTE_CONTROL_ACTIONS.includes(action)) {
+    if (!getRemoteControlActionList().includes(action)) {
       return
     }
     const clamped = clampIntensity(Number(intensity) || 0)

@@ -69,17 +69,21 @@ vi.mock('../../src/productionQueue.js', () => ({
   }
 }))
 
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  MAP_TILES_X: 100,
-  MAP_TILES_Y: 100,
-  MIN_MAP_TILES: 50,
-  DEFAULT_MAP_TILES_X: 100,
-  DEFAULT_MAP_TILES_Y: 100,
-  ORE_SPREAD_ENABLED: true,
-  setOreSpreadEnabled: vi.fn(),
-  setMapDimensions: vi.fn(() => ({ width: 100, height: 100 }))
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    MAP_TILES_X: 100,
+    MAP_TILES_Y: 100,
+    MIN_MAP_TILES: 50,
+    DEFAULT_MAP_TILES_X: 100,
+    DEFAULT_MAP_TILES_Y: 100,
+    ORE_SPREAD_ENABLED: true,
+    setOreSpreadEnabled: vi.fn(),
+    setMapDimensions: vi.fn(() => ({ width: 100, height: 100 }))
+  }
+})
 
 vi.mock('../../src/ui/settingsModal.js', () => ({
   initSettingsModal: vi.fn(),

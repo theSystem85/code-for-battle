@@ -39,9 +39,9 @@ describe('enemyUtils', () => {
       expect(areEnemies('player1', 'player1')).toBe(false)
     })
 
-    it('should handle null/undefined players', () => {
-      expect(areEnemies(null, 'player1')).toBe(true)
-      expect(areEnemies('player1', null)).toBe(true)
+    it('should treat null/undefined players as non-hostile', () => {
+      expect(areEnemies(null, 'player1')).toBe(false)
+      expect(areEnemies('player1', null)).toBe(false)
       expect(areEnemies(null, null)).toBe(false)
       expect(areEnemies(undefined, undefined)).toBe(false)
     })
@@ -94,9 +94,9 @@ describe('enemyUtils', () => {
       expect(isEnemyTo(unit, 'player1')).toBe(false)
     })
 
-    it('should handle units without owner property', () => {
+    it('should treat units without owner property as non-hostile', () => {
       const unit = {}
-      expect(isEnemyTo(unit, 'player1')).toBe(true)
+      expect(isEnemyTo(unit, 'player1')).toBe(false)
     })
   })
 

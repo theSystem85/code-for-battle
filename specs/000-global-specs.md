@@ -121,3 +121,9 @@ Ground and air movement logic is split across modular files to keep each under 1
 - The repository is licensed under the MIT License.
 - The canonical license text must be kept in the root `LICENSE` file.
 - Package metadata must declare `"license": "MIT"` in `package.json`.
+
+## Unit Test Compatibility Baseline (2026-03-31)
+
+- Unit tests must use partial mocks (`...actual`) for modules with broad, evolving exports (for example `config.js`, harvester runtime modules, and remote/network enums) to avoid brittle import-time crashes when new exports are introduced.
+- Behavior assertions should reflect simulation-time semantics where applicable (e.g., fixed-step/simulation clocks over wall-clock `performance.now`).
+- When gameplay behavior changes (queueing, service transfer amounts, AI ownership resolution), tests must verify the intended behavior invariants instead of legacy implementation details.

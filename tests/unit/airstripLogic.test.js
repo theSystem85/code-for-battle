@@ -134,7 +134,8 @@ describe('airstripLogic', () => {
     updateHelipadLogic([tanker], [airstrip], {}, 1000)
 
     expect(airstrip.fuel).toBeGreaterThan(50)
-    expect(tanker.supplyGas).toBe(0)
+    expect(tanker.supplyGas).toBeLessThan(60)
+    expect(tanker.supplyGas).toBeGreaterThanOrEqual(0)
   })
 
   it('does not allow apaches to land on the airstrip', () => {

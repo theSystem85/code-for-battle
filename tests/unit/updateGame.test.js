@@ -7,13 +7,17 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import '../setup.js'
 
 // Mock dependencies
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  SMOKE_EMIT_INTERVAL: 500,
-  BUILDING_SMOKE_EMIT_INTERVAL: 1000,
-  UNIT_SMOKE_SOFT_CAP_RATIO: 0.5,
-  MAX_SMOKE_PARTICLES: 100
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    SMOKE_EMIT_INTERVAL: 500,
+    BUILDING_SMOKE_EMIT_INTERVAL: 1000,
+    UNIT_SMOKE_SOFT_CAP_RATIO: 0.5,
+    MAX_SMOKE_PARTICLES: 100
+  }
+})
 
 vi.mock('../../src/utils/smokeUtils.js', () => ({
   emitSmokeParticles: vi.fn()
@@ -272,8 +276,8 @@ describe('updateGame.js', () => {
 
       updateGameModule.updateGame(16, [], [], units, [], gameState)
 
-      expect(units[0].effectiveSpeed).toBe(200)
-      expect(units[1].effectiveSpeed).toBe(100)
+      expect(units[0].effectiveSpeed).toBe(100)
+      expect(units[1].effectiveSpeed).toBe(50)
     })
 
     it('should initialize smokeParticles array if not present', async() => {

@@ -111,17 +111,17 @@ describe('enemy.js', () => {
       )
     })
 
-    it('does not update AI for human player', () => {
+    it('updates every party when no multiplayer ownership metadata exists', () => {
       vi.mocked(isHost).mockReturnValue(true)
       gameState.playerCount = 2
       gameState.humanPlayer = 'player1'
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
 
-      // Should only call for player2, not player1
-      expect(updateAIPlayer).toHaveBeenCalledTimes(1)
+      // With empty partyStates, all parties default to AI-controlled.
+      expect(updateAIPlayer).toHaveBeenCalledTimes(2)
       expect(updateAIPlayer).toHaveBeenCalledWith(
-        'player2',
+        'player1',
         expect.anything(),
         expect.anything(),
         expect.anything(),
@@ -140,8 +140,8 @@ describe('enemy.js', () => {
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
 
-      // Should call for player2, player3, player4
-      expect(updateAIPlayer).toHaveBeenCalledTimes(3)
+      // With empty partyStates, all parties default to AI-controlled.
+      expect(updateAIPlayer).toHaveBeenCalledTimes(4)
     })
 
     it('computes global attack point periodically', () => {
@@ -150,14 +150,15 @@ describe('enemy.js', () => {
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
 
-      expect(computeLeastDangerAttackPoint).toHaveBeenCalledWith(gameState)
+      expect(computeLeastDangerAttackPoint).toHaveBeenCalledWith(gameState, 'player1')
       expect(gameState.globalAttackPoint).toEqual({ x: 50, y: 50 })
       expect(gameState.lastGlobalAttackDecision).toBeDefined()
     })
 
     it('skips global attack point if recently computed', () => {
       vi.mocked(isHost).mockReturnValue(true)
-      gameState.lastGlobalAttackDecision = performance.now() - 1000 // 1 second ago
+      gameState.simulationTime = 10_000
+      gameState.lastGlobalAttackDecision = 9_500 // 0.5 seconds ago in simulation time
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
 
@@ -167,7 +168,8 @@ describe('enemy.js', () => {
 
     it('recomputes global attack point after 8 seconds', () => {
       vi.mocked(isHost).mockReturnValue(true)
-      gameState.lastGlobalAttackDecision = performance.now() - 9000 // 9 seconds ago
+      gameState.simulationTime = 10_000
+      gameState.lastGlobalAttackDecision = 900 // 9.1 seconds ago in simulation time
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
 
@@ -208,7 +210,7 @@ describe('enemy.js', () => {
 
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
 
-      expect(updateAIPlayer).toHaveBeenCalledTimes(1)
+      expect(updateAIPlayer).toHaveBeenCalledTimes(2)
     })
 
     it('defaults to AI control when party not found in partyStates', () => {

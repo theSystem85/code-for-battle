@@ -1,7 +1,25 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
 vi.mock('../../src/units.js', () => ({
-  findPath: vi.fn(() => [])
+  findPath: vi.fn(() => []),
+  spawnUnit: vi.fn((spawnBuilding, unitType, tileX, tileY, units, owner) => {
+    const unit = {
+      id: `spawned-${unitType}`,
+      type: unitType,
+      owner,
+      tileX,
+      tileY,
+      x: tileX * 32,
+      y: tileY * 32,
+      health: 100,
+      maxHealth: 100,
+      path: []
+    }
+    if (Array.isArray(units)) {
+      units.push(unit)
+    }
+    return unit
+  })
 }))
 
 vi.mock('../../src/utils.js', () => ({
