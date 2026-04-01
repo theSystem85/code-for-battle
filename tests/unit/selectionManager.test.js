@@ -87,6 +87,11 @@ vi.mock('../../src/main.js', () => ({
   mapGrid: []
 }))
 
+vi.mock('../../src/ui/llmQueueTooltip.js', () => ({
+  hideLlmQueueTooltip: vi.fn(),
+  updateLlmQueueTooltipForSelection: vi.fn()
+}))
+
 import { SelectionManager, getUnitSelectionCenter } from '../../src/input/selectionManager.js'
 import { gameState } from '../../src/gameState.js'
 import { playSound } from '../../src/sound.js'

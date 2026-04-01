@@ -553,10 +553,10 @@ describe('enemyStrategies targeting helpers', () => {
   it('selects least dangerous attack point near player base', () => {
     const map = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 10))
     map[2][2] = 1
-    gameState.dangerZoneMaps = { player1: map }
+    gameState.dangerZoneMaps = { player2: map }
     gameState.buildings = [createBuilding({ owner: 'player1', x: 2, y: 2, width: 1, height: 1, health: 100 })]
 
-    expect(computeLeastDangerAttackPoint(gameState)).toEqual({ x: 2, y: 2 })
+    expect(computeLeastDangerAttackPoint(gameState, 'player2')).toEqual({ x: 2, y: 2 })
   })
 
   it('returns null when danger map data is missing', () => {

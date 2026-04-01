@@ -133,18 +133,22 @@ vi.mock('../../src/gameSetup.js', () => ({
   cleanupOreFromBuildings: vi.fn()
 }))
 
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  TANKER_SUPPLY_CAPACITY: 200,
-  setMapDimensions: vi.fn(() => ({ width: 100, height: 100 })),
-  DEFAULT_MAP_TILES_X: 100,
-  DEFAULT_MAP_TILES_Y: 100,
-  AMMO_TRUCK_CARGO: 100,
-  HELIPAD_AMMO_RESERVE: 50,
-  MINE_HEALTH: 100,
-  MINE_ARM_DELAY: 2000,
-  MINE_DEPLOY_STOP_TIME: 3000
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    TANKER_SUPPLY_CAPACITY: 200,
+    setMapDimensions: vi.fn(() => ({ width: 100, height: 100 })),
+    DEFAULT_MAP_TILES_X: 100,
+    DEFAULT_MAP_TILES_Y: 100,
+    AMMO_TRUCK_CARGO: 100,
+    HELIPAD_AMMO_RESERVE: 50,
+    MINE_HEALTH: 100,
+    MINE_ARM_DELAY: 2000,
+    MINE_DEPLOY_STOP_TIME: 3000
+  }
+})
 
 vi.mock('../../src/utils/smokeUtils.js', () => ({
   enforceSmokeParticleCapacity: vi.fn()
@@ -197,7 +201,10 @@ vi.mock('../../src/rendering.js', () => ({
 }))
 
 vi.mock('../../src/game/harvesterLogic.js', () => ({
-  assignHarvesterToOptimalRefinery: vi.fn()
+  assignHarvesterToOptimalRefinery: vi.fn(),
+  getHarvestedTiles: vi.fn(() => new Set()),
+  getRefineryQueues: vi.fn(() => ({})),
+  restoreHarvesterRuntimeState: vi.fn()
 }))
 
 vi.mock('../../src/productionQueue.js', () => ({
@@ -456,7 +463,9 @@ describe('saveGame.js', () => {
       const parsed = JSON.parse(saved)
       const state = JSON.parse(parsed.state)
 
-      expect(state.units[0].crew).toEqual({
+      const savedUnit = state.units.find(unit => unit.id === 'tank-crew-1')
+      expect(savedUnit).toBeDefined()
+      expect(savedUnit.crew).toEqual({
         driver: true,
         commander: false,
         gunner: true,

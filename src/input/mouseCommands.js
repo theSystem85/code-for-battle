@@ -531,18 +531,6 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
   }
   const selectionManager = handler.selectionManager
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u) && !u.isBuilding)
-  if (commandableUnits.length === 0) {
-    return
-  }
-
-  if (e.shiftKey) {
-    initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
-    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
-      command: 'retreat',
-      targetPos: { space: 'world', x: worldX, y: worldY }
-    })
-    return
-  }
 
   const defensiveBuildings = selectedUnits.filter(unit =>
     selectionManager.isCommandableUnit(unit) &&
@@ -556,6 +544,19 @@ export function handleFallbackCommand(handler, worldX, worldY, selectedUnits, un
         queueDefenseBuildingTarget(building, fallbackTarget)
       })
     }
+  }
+
+  if (commandableUnits.length === 0) {
+    return
+  }
+
+  if (e.shiftKey) {
+    initiateRetreat(commandableUnits, worldX, worldY, mapGrid)
+    recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
+      command: 'retreat',
+      targetPos: { space: 'world', x: worldX, y: worldY }
+    })
+    return
   }
 
   if (e.altKey) {

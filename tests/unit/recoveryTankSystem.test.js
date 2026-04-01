@@ -5,11 +5,15 @@ import { releaseWreckAssignment } from '../../src/game/unitWreckManager.js'
 import { playSound } from '../../src/sound.js'
 
 // Mock dependencies
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  SERVICE_DISCOVERY_RANGE: 10,
-  SERVICE_SERVING_RANGE: 1.5
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    SERVICE_DISCOVERY_RANGE: 10,
+    SERVICE_SERVING_RANGE: 1.5
+  }
+})
 
 vi.mock('../../src/sound.js', () => ({
   playSound: vi.fn()

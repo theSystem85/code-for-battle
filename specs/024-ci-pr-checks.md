@@ -4,7 +4,7 @@
 Ensure every pull request runs linting, unit tests, and integration tests so failures block merges.
 
 ## Requirements
-- GitHub Actions workflow runs on `pull_request` events targeting `main`.
+- GitHub Actions workflow runs on `pull_request` events targeting `main`, including new commits pushed to an open PR (`synchronize`).
 - CI steps include:
   - `npm run lint`
   - `npm run test:unit`

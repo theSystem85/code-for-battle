@@ -29,7 +29,8 @@ vi.mock('../../src/gameState.js', () => ({
 }))
 
 vi.mock('../../src/ai/enemyUtils.js', () => ({
-  isPartOfFactory: vi.fn()
+  isPartOfFactory: vi.fn(),
+  getClosestEnemyFactory: vi.fn(() => ({ id: 'player1', x: 0, y: 0, width: 2, height: 2 }))
 }))
 
 vi.mock('../../src/game/dangerZoneMap.js', () => ({

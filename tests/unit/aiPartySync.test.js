@@ -68,7 +68,7 @@ describe('aiPartySync', () => {
   })
 
   it('identifies AI-controlled units while excluding the human player', () => {
-    getPartyState.mockReturnValue({ aiActive: true })
+    getPartyState.mockImplementation((partyId) => (partyId === 'enemy-ai' ? { aiActive: true } : { aiActive: false }))
 
     expect(isUnitAiControlled(null)).toBe(false)
     expect(isUnitAiControlled({ owner: 'player1' })).toBe(false)
@@ -76,7 +76,7 @@ describe('aiPartySync', () => {
   })
 
   it('identifies AI-controlled buildings while excluding the human player', () => {
-    getPartyState.mockReturnValue({ aiActive: true })
+    getPartyState.mockImplementation((partyId) => (partyId === 'enemy-ai' ? { aiActive: true } : { aiActive: false }))
 
     expect(isBuildingAiControlled(undefined)).toBe(false)
     expect(isBuildingAiControlled({ owner: 'player1' })).toBe(false)

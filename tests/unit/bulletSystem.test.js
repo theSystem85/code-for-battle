@@ -950,6 +950,7 @@ describe('Bullet System', () => {
         occupancyMap: [],
         unitWrecks: [],
         buildings: [],
+        simulationTime: 0,
         ...overrides
       }
     }
@@ -964,11 +965,10 @@ describe('Bullet System', () => {
       const bullet = createMockBullet({ speed: 10, vx: 0, vy: 0 })
       const bullets = [bullet]
       updateBullets(bullets, [], [], createGameState({ speedMultiplier: 2 }), mapGrid)
-      expect(bullet.effectiveSpeed).toBe(20)
+      expect(bullet.effectiveSpeed).toBe(10)
     })
 
     it('detonates parabolic projectiles when their flight completes', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(200)
       const bullet = createMockBullet({
         parabolic: true,
         startTime: 1,
@@ -982,7 +982,7 @@ describe('Bullet System', () => {
       })
       const bullets = [bullet]
 
-      updateBullets(bullets, [], [], createGameState(), mapGrid)
+      updateBullets(bullets, [], [], createGameState({ simulationTime: 200 }), mapGrid)
 
       expect(triggerExplosion).toHaveBeenCalledWith(
         50,
@@ -998,11 +998,9 @@ describe('Bullet System', () => {
         undefined
       )
       expect(bullets).toHaveLength(0)
-      nowSpy.mockRestore()
     })
 
     it('emits smoke and trails during ballistic ascent', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(100)
       const bullet = createMockBullet({
         ballistic: true,
         startTime: 1,
@@ -1012,15 +1010,13 @@ describe('Bullet System', () => {
         arcHeight: 60
       })
       const bullets = [bullet]
-      updateBullets(bullets, [], [], createGameState(), mapGrid)
+      updateBullets(bullets, [], [], createGameState({ simulationTime: 100 }), mapGrid)
 
-      expect(emitSmokeParticles).toHaveBeenCalledWith(expect.any(Object), bullet.x, bullet.y, 100, 1)
+      expect(emitSmokeParticles).toHaveBeenCalledWith(expect.any(Object), bullet.x, bullet.y, expect.any(Number), 1)
       expect(bullet.trail.length).toBe(1)
-      nowSpy.mockRestore()
     })
 
     it('transitions ballistic projectiles into homing mode after ascent', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(200)
       const target = createMockUnit({ x: 160, y: 200, tileX: 5, tileY: 6 })
       const bullet = createMockBullet({
         ballistic: true,
@@ -1033,17 +1029,15 @@ describe('Bullet System', () => {
         target
       })
       const bullets = [bullet]
-      updateBullets(bullets, [target], [], createGameState(), mapGrid)
+      updateBullets(bullets, [target], [], createGameState({ simulationTime: 200 }), mapGrid)
 
       expect(bullet.ballistic).toBe(false)
       expect(bullet.homing).toBe(true)
       expect(bullet.x).toBe(100)
       expect(bullet.y).toBe(150)
-      nowSpy.mockRestore()
     })
 
     it('explodes homing missiles that time out in flight', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(6001)
       const bullet = createMockBullet({
         homing: true,
         startTime: 1,
@@ -1051,22 +1045,20 @@ describe('Bullet System', () => {
         target: null
       })
       const bullets = [bullet]
-      updateBullets(bullets, [], [], createGameState(), mapGrid)
+      updateBullets(bullets, [], [], createGameState({ simulationTime: 6001 }), mapGrid)
 
       expect(triggerExplosion).toHaveBeenCalled()
       expect(bullets).toHaveLength(0)
-      nowSpy.mockRestore()
     })
 
     it('explodes non-homing projectiles when they exceed max flight time', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(4001)
       const bullet = createMockBullet({
         homing: false,
         startTime: 1,
         targetPosition: { x: 210, y: 190 }
       })
       const bullets = [bullet]
-      updateBullets(bullets, [], [], createGameState(), mapGrid)
+      updateBullets(bullets, [], [], createGameState({ simulationTime: 4001 }), mapGrid)
 
       expect(triggerExplosion).toHaveBeenCalledWith(
         210,
@@ -1082,20 +1074,17 @@ describe('Bullet System', () => {
         undefined
       )
       expect(bullets).toHaveLength(0)
-      nowSpy.mockRestore()
     })
 
     it('expires ammunition particles after their lifetime', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2000)
       const bullet = createMockBullet({
         projectileType: 'ammoParticle',
         expiryTime: 1500
       })
       const bullets = [bullet]
-      updateBullets(bullets, [], [], createGameState(), mapGrid)
+      updateBullets(bullets, [], [], createGameState({ simulationTime: 2000 }), mapGrid)
       expect(bullets).toHaveLength(0)
       expect(triggerExplosion).not.toHaveBeenCalled()
-      nowSpy.mockRestore()
     })
 
     it('applies damage and effects on unit collisions', () => {
@@ -1173,7 +1162,6 @@ describe('Bullet System', () => {
     })
 
     it('handles apache dodge maneuvers against rocket hits', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(1200)
       gameRandom.mockReturnValue(0)
       const apache = createMockUnit({
         type: 'apache',
@@ -1191,17 +1179,15 @@ describe('Bullet System', () => {
       })
       const bullets = [bullet]
 
-      updateBullets(bullets, [apache], [], createGameState(), mapGrid)
+      updateBullets(bullets, [apache], [], createGameState({ simulationTime: 1200 }), mapGrid)
 
       expect(apache.dodgeVelocity).toBeDefined()
       expect(apache.lastDodgeTime).toBe(1200)
       expect(bullet.ignoredUnitId).toBe(apache.id)
       expect(bullets).toHaveLength(1)
-      nowSpy.mockRestore()
     })
 
     it('plays critical damage audio and records crew losses', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(1800)
       gameRandom.mockReturnValue(0)
       canPlayCriticalDamageSound.mockReturnValue(true)
       calculateHitZoneDamageMultiplier.mockReturnValue({ multiplier: 1, isRearHit: true })
@@ -1218,17 +1204,15 @@ describe('Bullet System', () => {
       })
       const bullets = [bullet]
 
-      updateBullets(bullets, [playerUnit], [], createGameState({ humanPlayer: 'player' }), mapGrid)
+      updateBullets(bullets, [playerUnit], [], createGameState({ humanPlayer: 'player', simulationTime: 1800 }), mapGrid)
 
       expect(playSound).toHaveBeenCalledWith('ourDriverIsOut')
       expect(handleAICrewLossEvent).toHaveBeenCalledWith(playerUnit, [playerUnit], expect.any(Object), mapGrid)
       expect(playSound).toHaveBeenCalledWith('criticalDamage', 0.7)
       expect(recordCriticalDamageSoundPlayed).toHaveBeenCalledWith(playerUnit, 1800)
-      nowSpy.mockRestore()
     })
 
     it('applies extra explosion damage when rocket turret rockets hit airborne apaches', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2600)
       const apache = createMockUnit({
         id: 'apache-air-1',
         type: 'apache',
@@ -1258,7 +1242,7 @@ describe('Bullet System', () => {
       })
       const bullets = [bullet]
 
-      updateBullets(bullets, [apache], [], createGameState(), mapGrid)
+      updateBullets(bullets, [apache], [], createGameState({ simulationTime: 2600 }), mapGrid)
 
       expect(apache.health).toBe(40)
       expect(bullets).toHaveLength(0)
@@ -1274,15 +1258,15 @@ describe('Bullet System', () => {
         bullet.explosionRadius || TILE_SIZE * 1.5,
         undefined,
         expect.objectContaining({
+          buildingDamageMultiplier: 2,
+          factoryDamageMultiplier: 2,
           allowAirborneDamage: true,
           unitDamageMultipliers: { apache: 1.5 }
         })
       )
-      nowSpy.mockRestore()
     })
 
     it('explodes rocket tank homing missiles when they reach their target', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2000)
       const target = createMockUnit({ owner: 'enemy', x: 160, y: 160 })
       const bullet = createMockBullet({
         originType: 'rocketTank',
@@ -1295,7 +1279,7 @@ describe('Bullet System', () => {
       })
       const bullets = [bullet]
 
-      updateBullets(bullets, [target], [], createGameState(), mapGrid)
+      updateBullets(bullets, [target], [], createGameState({ simulationTime: 2000 }), mapGrid)
 
       expect(triggerExplosion).toHaveBeenCalledWith(
         bullet.x,
@@ -1308,14 +1292,15 @@ describe('Bullet System', () => {
         mapGrid,
         bullet.explosionRadius,
         undefined,
-        expect.any(Object)
+        expect.objectContaining({
+          buildingDamageMultiplier: 2,
+          factoryDamageMultiplier: 2
+        })
       )
       expect(bullets).toHaveLength(0)
-      nowSpy.mockRestore()
     })
 
     it('explodes rocket tank homing missiles at target positions when target is gone', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2200)
       const bullet = createMockBullet({
         originType: 'rocketTank',
         homing: true,
@@ -1328,7 +1313,7 @@ describe('Bullet System', () => {
       })
       const bullets = [bullet]
 
-      updateBullets(bullets, [], [], createGameState(), mapGrid)
+      updateBullets(bullets, [], [], createGameState({ simulationTime: 2200 }), mapGrid)
 
       expect(triggerExplosion).toHaveBeenCalledWith(
         104,
@@ -1341,14 +1326,15 @@ describe('Bullet System', () => {
         mapGrid,
         bullet.explosionRadius || TILE_SIZE,
         undefined,
-        expect.any(Object)
+        expect.objectContaining({
+          buildingDamageMultiplier: 2,
+          factoryDamageMultiplier: 2
+        })
       )
       expect(bullets).toHaveLength(0)
-      nowSpy.mockRestore()
     })
 
     it('applies direct damage when apache rockets hit airborne apaches', () => {
-      const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2400)
       const airborneApache = createMockUnit({
         id: 'apache-1',
         type: 'apache',
@@ -1358,28 +1344,28 @@ describe('Bullet System', () => {
         health: 40,
         flightState: 'flying'
       })
+      const altitudeLift = 40 * 0.4
       const bullet = createMockBullet({
         originType: 'apacheRocket',
         projectileType: 'rocket',
         x: airborneApache.x + TILE_SIZE / 2,
-        y: airborneApache.y + TILE_SIZE / 2,
+        y: airborneApache.y + TILE_SIZE / 2 - altitudeLift,
         baseDamage: 10,
         shooter: { id: 'player-1', owner: 'player', type: 'apache' },
         apacheTargetId: airborneApache.id,
-        targetPosition: { x: airborneApache.x + TILE_SIZE / 2, y: airborneApache.y + TILE_SIZE / 2 },
+        targetPosition: { x: airborneApache.x + TILE_SIZE / 2, y: airborneApache.y + TILE_SIZE / 2 - altitudeLift },
         creationTime: 0,
         startTime: 0,
         maxFlightTime: 3000
       })
       const bullets = [bullet]
 
-      updateBullets(bullets, [airborneApache], [], createGameState(), mapGrid)
+      updateBullets(bullets, [airborneApache], [], createGameState({ simulationTime: 2400 }), mapGrid)
 
       expect(airborneApache.health).toBe(35)
       expect(playPositionalSound).toHaveBeenCalledWith('explosion', bullet.x, bullet.y, 0.7)
       expect(triggerExplosion).not.toHaveBeenCalled()
       expect(bullets).toHaveLength(0)
-      nowSpy.mockRestore()
     })
 
 

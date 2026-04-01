@@ -64,7 +64,12 @@ export function enforceSmokeParticleCapacity(gameState) {
 export function emitSmokeParticles(gameState, x, y, now, countOrOptions = 1) {
   ensureSmokeCollections(gameState)
 
-  const options = typeof countOrOptions === 'number'
+  const explicitNumericCount = typeof countOrOptions === 'number'
+  if (explicitNumericCount && !Number.isFinite(countOrOptions)) {
+    return
+  }
+
+  const options = explicitNumericCount
     ? { count: countOrOptions }
     : (countOrOptions || {})
   const count = Number.isFinite(options.count) ? options.count : 1
