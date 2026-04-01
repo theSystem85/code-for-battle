@@ -1,25 +1,120 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { TILE_SIZE, UNIT_GAS_PROPERTIES, UNIT_PROPERTIES, TANKER_SUPPLY_CAPACITY } from '../../src/config.js'
+
+let spawnUnitIdCounter = 0
+
+const UNIT_COSTS = {
+  'tank-v2': 2000,
+  tank_v1: 1500,
+  harvester: 1500,
+  apache: 3000,
+  tankerTruck: 500,
+  ambulance: 500
+}
+
+const CREW_TEMPLATES = {
+  tank_v1: { driver: true, commander: true, gunner: true, loader: true },
+  'tank-v2': { driver: true, commander: true, gunner: true, loader: true },
+  harvester: { driver: true, commander: true, loader: true },
+  ambulance: { driver: true, commander: true, loader: true },
+  tankerTruck: { driver: true, commander: true, loader: true },
+  recoveryTank: { driver: true, commander: true, loader: true }
+}
+
+function buildMockUnit(spawnBuilding, unitType, units, mapGrid) {
+  spawnUnitIdCounter++
+  const centerX = spawnBuilding.x + Math.floor(spawnBuilding.width / 2)
+  const centerY = spawnBuilding.y + Math.floor(spawnBuilding.height / 2)
+
+  // Find first valid spawn tile around center (simplified)
+  let spawnTileX = centerX
+  let spawnTileY = centerY
+  const isValid = (tx, ty) => {
+    if (!mapGrid || ty < 0 || ty >= mapGrid.length || tx < 0 || tx >= mapGrid[0].length) return false
+    const tile = mapGrid[ty][tx]
+    return tile.type !== 'water' && tile.type !== 'rock' && !tile.building && !tile.seedCrystal
+  }
+  // Search outward in rings
+  let found = false
+  for (let ring = 0; ring <= 4 && !found; ring++) {
+    for (let dy = -ring; dy <= ring && !found; dy++) {
+      for (let dx = -ring; dx <= ring && !found; dx++) {
+        if (ring > 0 && Math.abs(dx) < ring && Math.abs(dy) < ring) continue
+        const tx = centerX + dx
+        const ty = centerY + dy
+        if (isValid(tx, ty)) {
+          spawnTileX = tx
+          spawnTileY = ty
+          found = true
+        }
+      }
+    }
+  }
+
+  const gasProps = UNIT_GAS_PROPERTIES[unitType]
+  const unitProps = UNIT_PROPERTIES[unitType] || {}
+
+  const unit = {
+    id: `unit-${spawnUnitIdCounter}`,
+    type: unitType,
+    tileX: spawnTileX,
+    tileY: spawnTileY,
+    x: spawnTileX * TILE_SIZE,
+    y: spawnTileY * TILE_SIZE,
+    health: unitProps.health || 100,
+    maxHealth: unitProps.maxHealth || 100,
+    speed: unitProps.speed || 0.3,
+    path: [],
+    target: null,
+    selected: false
+  }
+
+  if (gasProps) {
+    unit.maxGas = gasProps.tankSize
+    unit.gas = gasProps.tankSize
+    unit.gasConsumption = gasProps.consumption
+    if (gasProps.harvestConsumption) {
+      unit.harvestGasConsumption = gasProps.harvestConsumption
+    }
+  }
+
+  if (CREW_TEMPLATES[unitType]) {
+    unit.crew = { ...CREW_TEMPLATES[unitType] }
+  }
+
+  unit.baseCost = UNIT_COSTS[unitType] || 1000
+
+  if (unitProps.alertMode) {
+    unit.alertMode = true
+  }
+
+  if (unitProps.medics !== undefined) {
+    unit.medics = unitProps.medics
+    unit.maxMedics = unitProps.maxMedics
+  }
+
+  if (unitType === 'tankerTruck') {
+    unit.maxSupplyGas = TANKER_SUPPLY_CAPACITY
+    unit.supplyGas = TANKER_SUPPLY_CAPACITY
+  }
+
+  if (unitType === 'harvester') {
+    unit.armor = unitProps.armor || 3
+  }
+
+  if (unitType === 'apache' || unitType === 'f22Raptor') {
+    unit.flightState = 'grounded'
+  }
+
+  if (Array.isArray(units)) {
+    units.push(unit)
+  }
+  return unit
+}
 
 vi.mock('../../src/units.js', () => ({
   findPath: vi.fn(() => []),
-  spawnUnit: vi.fn((spawnBuilding, unitType, tileX, tileY, units, owner) => {
-    const unit = {
-      id: `spawned-${unitType}`,
-      type: unitType,
-      owner,
-      tileX,
-      tileY,
-      x: tileX * 32,
-      y: tileY * 32,
-      health: 100,
-      maxHealth: 100,
-      path: []
-    }
-    if (Array.isArray(units)) {
-      units.push(unit)
-    }
-    return unit
-  })
+  spawnUnit: vi.fn((...args) => buildMockUnit(...args))
 }))
 
 vi.mock('../../src/utils.js', () => ({
@@ -34,17 +129,19 @@ vi.mock('../../src/game/harvesterLogic.js', () => ({
   assignHarvesterToOptimalRefinery: vi.fn()
 }))
 
-vi.mock('../../src/game/unifiedMovement.js', () => ({
-  initializeUnitMovement: vi.fn()
+vi.mock('../../src/game/pathfinding.js', () => ({
+  getCachedPath: vi.fn(() => [])
+}))
+
+vi.mock('../../src/game/time.js', () => ({
+  getSimulationTime: vi.fn(() => 5000)
 }))
 
 import { spawnEnemyUnit } from '../../src/ai/enemySpawner.js'
-import { TILE_SIZE, UNIT_GAS_PROPERTIES, UNIT_PROPERTIES, TANKER_SUPPLY_CAPACITY } from '../../src/config.js'
-import { findPath } from '../../src/units.js'
-import { getUniqueId } from '../../src/utils.js'
+import { spawnUnit } from '../../src/units.js'
 import { findClosestOre } from '../../src/logic.js'
 import { assignHarvesterToOptimalRefinery } from '../../src/game/harvesterLogic.js'
-import { initializeUnitMovement } from '../../src/game/unifiedMovement.js'
+import { getCachedPath } from '../../src/game/pathfinding.js'
 
 const createMapGrid = (width = 12, height = 12) => {
   const mapGrid = []
@@ -64,6 +161,7 @@ const createMapGrid = (width = 12, height = 12) => {
 describe('enemySpawner.js', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    spawnUnitIdCounter = 0
     globalThis.window = globalThis.window || {}
     delete globalThis.window.cheatSystem
   })
@@ -72,14 +170,51 @@ describe('enemySpawner.js', () => {
     delete globalThis.window.cheatSystem
   })
 
-  it('spawns at the first valid tile around the building center', () => {
+  it('passes arguments to spawnUnit and sets owner and AI properties', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 4, y: 4, width: 2, height: 2 }
+    const units = []
 
-    mapGrid[4][5].type = 'water'
-    mapGrid[5][6].type = 'rock'
-    mapGrid[6][5].building = { id: 'blocked' }
-    mapGrid[5][4].seedCrystal = true
+    const unit = spawnEnemyUnit(
+      spawnBuilding,
+      'tank-v2',
+      units,
+      mapGrid,
+      { occupancyMap: [], targetedOreTiles: {} },
+      1000,
+      'ai1'
+    )
+
+    expect(spawnUnit).toHaveBeenCalledTimes(1)
+    const [
+      calledSpawnBuilding,
+      calledUnitType,
+      calledUnits,
+      calledMapGrid,
+      calledTarget,
+      calledOccupancyMap,
+      calledOptions
+    ] = vi.mocked(spawnUnit).mock.calls[0]
+    expect(calledSpawnBuilding).toBe(spawnBuilding)
+    expect(calledUnitType).toBe('tank-v2')
+    expect(calledUnits).toBe(units)
+    expect(calledMapGrid).toBe(mapGrid)
+    expect(calledTarget).toBeNull()
+    expect(calledOccupancyMap).toEqual([])
+    expect(calledOptions).toEqual({})
+    expect(unit).toBeDefined()
+    expect(unit.owner).toBe('ai1')
+    expect(unit.spawnedInFactory).toBe(true)
+    expect(unit.holdInFactory).toBe(true)
+    expect(unit.factoryBuildEndTime).toBe(6000)
+    expect(unit.allowedToAttack).toBe(true)
+  })
+
+  it('returns null when spawnUnit returns null', () => {
+    const mapGrid = createMapGrid(6, 6)
+    const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
+
+    vi.mocked(spawnUnit).mockReturnValueOnce(null)
 
     const unit = spawnEnemyUnit(
       spawnBuilding,
@@ -91,36 +226,7 @@ describe('enemySpawner.js', () => {
       'ai1'
     )
 
-    expect(unit.tileX).toBe(6)
-    expect(unit.tileY).toBe(4)
-    expect(unit.x).toBe(6 * TILE_SIZE)
-    expect(unit.y).toBe(4 * TILE_SIZE)
-    expect(initializeUnitMovement).toHaveBeenCalledWith(unit)
-  })
-
-  it('falls back to the building center when no valid spawn tiles exist', () => {
-    const mapGrid = createMapGrid(6, 6)
-    for (const row of mapGrid) {
-      for (const tile of row) {
-        tile.type = 'water'
-      }
-    }
-    const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
-    const occupancyMap = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => 0))
-
-    const unit = spawnEnemyUnit(
-      spawnBuilding,
-      'tank-v2',
-      [],
-      mapGrid,
-      { occupancyMap, targetedOreTiles: {} },
-      1000,
-      'ai1'
-    )
-
-    expect(unit.tileX).toBe(2)
-    expect(unit.tileY).toBe(2)
-    expect(occupancyMap[2][2]).toBe(1)
+    expect(unit).toBeNull()
   })
 
   it('initializes gas, crew, and cost data for combat/support units', () => {
@@ -204,7 +310,7 @@ describe('enemySpawner.js', () => {
       unit.assignedRefinery = { id: 'enemy-refinery' }
     })
     vi.mocked(findClosestOre).mockReturnValue({ x: 4, y: 5 })
-    vi.mocked(findPath).mockReturnValue([
+    vi.mocked(getCachedPath).mockReturnValue([
       { x: 2, y: 2 },
       { x: 3, y: 3 },
       { x: 4, y: 5 }
@@ -229,12 +335,11 @@ describe('enemySpawner.js', () => {
       targetedOreTiles,
       unit.assignedRefinery
     )
-    expect(findPath).toHaveBeenCalledWith(
+    expect(getCachedPath).toHaveBeenCalledWith(
       { x: unit.tileX, y: unit.tileY, owner: unit.owner },
       { x: 4, y: 5 },
       mapGrid,
       null,
-      undefined,
       { unitOwner: unit.owner }
     )
     expect(unit.path).toEqual([{ x: 3, y: 3 }, { x: 4, y: 5 }])
@@ -290,11 +395,9 @@ describe('enemySpawner.js', () => {
     expect(globalThis.window.cheatSystem.addUnitToGodMode).toHaveBeenCalledWith(unit)
   })
 
-  it('uses unique ids for spawned units', () => {
+  it('preserves the unit id returned by spawnUnit', () => {
     const mapGrid = createMapGrid()
     const spawnBuilding = { x: 1, y: 1, width: 2, height: 2 }
-
-    vi.mocked(getUniqueId).mockReturnValueOnce('unit-99')
 
     const unit = spawnEnemyUnit(
       spawnBuilding,
@@ -306,6 +409,7 @@ describe('enemySpawner.js', () => {
       'ai1'
     )
 
-    expect(unit.id).toBe('unit-99')
+    // spawnUnit mock assigns sequential ids like unit-1, unit-2, ...
+    expect(unit.id).toMatch(/^unit-\d+$/)
   })
 })

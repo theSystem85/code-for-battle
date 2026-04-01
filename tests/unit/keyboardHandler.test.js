@@ -9,6 +9,7 @@ import { broadcastUnitStop } from '../../src/network/gameCommandSync.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
 import { KEYBINDING_CONTEXTS } from '../../src/input/keybindings.js'
 import { TILE_SIZE } from '../../src/config.js'
+import { hasBlockingBuilding } from '../../src/utils/buildingPassability.js'
 
 vi.mock('../../src/sound.js', () => ({
   playSound: vi.fn(),
@@ -91,6 +92,24 @@ vi.mock('../../src/benchmark/benchmarkTracker.js', () => ({
 
 vi.mock('../../src/utils/gameRandom.js', () => ({
   gameRandom: vi.fn()
+}))
+
+vi.mock('../../src/ui/settingsModal.js', () => ({
+  openSettingsModal: vi.fn()
+}))
+
+vi.mock('../../src/utils/buildingPassability.js', () => ({
+  hasBlockingBuilding: vi.fn(() => false)
+}))
+
+vi.mock('../../src/network/multiplayerStore.js', () => ({
+  isLocalPartyAutomationLocked: vi.fn(() => false)
+}))
+
+vi.mock('../../src/replaySystem.js', () => ({
+  createReplayUnitReferences: vi.fn(() => []),
+  isReplayInteractionLocked: vi.fn(() => false),
+  recordReplayCommand: vi.fn()
 }))
 
 describe('KeyboardHandler', () => {
@@ -326,6 +345,8 @@ describe('KeyboardHandler', () => {
     mapGrid[1][1].type = 'water'
     mapGrid[2][2].building = { id: 'building' }
     mapGrid[0][2].seedCrystal = true
+
+    vi.mocked(hasBlockingBuilding).mockImplementation(tile => Boolean(tile?.building))
 
     expect(handler.isValidDodgePosition(1, 1, mapGrid, [])).toBe(false)
     expect(handler.isValidDodgePosition(2, 2, mapGrid, [])).toBe(false)

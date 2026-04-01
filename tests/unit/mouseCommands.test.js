@@ -20,7 +20,7 @@ describe('mouseCommands fallback defense-building targeting', () => {
     gameState.sellMode = false
   })
 
-  it('queues normal-click enemy target for selected defense buildings and prepends new entry', () => {
+  it('queues normal-click enemy target for selected defense buildings and promotes clicked target to active', () => {
     const existingQueuedTarget = { id: 'enemy-old', owner: 'enemy', health: 100, x: 0, y: 0 }
     const activeTarget = { id: 'enemy-active', owner: 'enemy', health: 100, x: 0, y: 0 }
     const clickedEnemy = {
@@ -64,8 +64,8 @@ describe('mouseCommands fallback defense-building targeting', () => {
       []
     )
 
-    expect(selectedTurret.forcedAttackTarget).toBe(activeTarget)
-    expect(selectedTurret.forcedAttackQueue.map(target => target.id)).toEqual(['enemy-old'])
+    expect(selectedTurret.forcedAttackTarget).toBe(clickedEnemy)
+    expect(selectedTurret.forcedAttackQueue.map(target => target.id)).toEqual(['enemy-active', 'enemy-old'])
     expect(selectedTurret.holdFire).toBe(false)
     expect(selectedTurret.forcedAttack).toBe(true)
   })

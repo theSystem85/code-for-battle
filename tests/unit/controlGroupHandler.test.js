@@ -91,6 +91,24 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
   }
 }))
 
+vi.mock('../../src/ui/settingsModal.js', () => ({
+  openSettingsModal: vi.fn()
+}))
+
+vi.mock('../../src/utils/buildingPassability.js', () => ({
+  hasBlockingBuilding: vi.fn(() => false)
+}))
+
+vi.mock('../../src/network/multiplayerStore.js', () => ({
+  isLocalPartyAutomationLocked: vi.fn(() => false)
+}))
+
+vi.mock('../../src/replaySystem.js', () => ({
+  createReplayUnitReferences: vi.fn(() => []),
+  isReplayInteractionLocked: vi.fn(() => false),
+  recordReplayCommand: vi.fn()
+}))
+
 import { KeyboardHandler } from '../../src/input/keyboardHandler.js'
 import { gameState } from '../../src/gameState.js'
 import { playSound } from '../../src/sound.js'

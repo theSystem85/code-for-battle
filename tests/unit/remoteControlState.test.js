@@ -17,7 +17,20 @@ import {
 import { getActiveRemoteConnection } from '../../src/network/remoteConnection.js'
 
 vi.mock('../../src/network/remoteConnection.js', () => ({
-  getActiveRemoteConnection: vi.fn()
+  getActiveRemoteConnection: vi.fn(),
+  RemoteConnectionStatus: {
+    IDLE: 'idle',
+    CONNECTING: 'connecting',
+    CONNECTED: 'connected',
+    FAILED: 'failed',
+    DISCONNECTED: 'disconnected'
+  }
+}))
+
+vi.mock('../../src/replaySystem.js', () => ({
+  createReplayUnitReferences: vi.fn(() => []),
+  isReplayInteractionLocked: vi.fn(() => false),
+  recordReplayCommand: vi.fn()
 }))
 
 const mockConnection = {

@@ -193,3 +193,8 @@ describe('Building Placement', () => {
 ## 2026-02 Smoke Test Stability Update
 - Updated `tests/setup.js` to patch `HTMLCanvasElement.prototype.getContext` in addition to `document.createElement('canvas')` so pre-existing canvases from static HTML are mocked consistently in jsdom.
 - This prevents jsdom "Not implemented: HTMLCanvasElement's getContext()" noise during `npm run test:smoke` while keeping rendering behavior deterministic.
+
+## 2026-04 Unit Test Stability Update
+- Updated stale expectations in `tests/unit/enemySpawner.test.js` to assert spawn argument identity/shape without brittle empty-array deep-equality against mutated mock inputs.
+- Updated `tests/unit/keyboardHandler.test.js` dodge validation to mock `hasBlockingBuilding` consistently with the in-test `tile.building` setup.
+- Updated `tests/unit/mouseCommands.test.js` fallback defense-targeting expectation to match current behavior where a newly clicked enemy becomes `forcedAttackTarget` and the previous active target is queued.

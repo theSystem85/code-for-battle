@@ -18,6 +18,12 @@ vi.mock('../../src/units.js', () => ({
   })
 }))
 
+// Mock combatHelpers to prevent deep transitive import chain
+// (combatHelpers → logic → buildings → rendering → inputHandler → benchmarkScenario)
+vi.mock('../../src/game/unitCombat/combatHelpers.js', () => ({
+  getEffectiveFireRange: vi.fn(() => 0)
+}))
+
 describe('guard behavior', () => {
   let mockUnit
   let mockMapGrid
@@ -114,7 +120,7 @@ describe('guard behavior', () => {
         tileX: 5,
         tileY: 5
       }
-      mockUnit.lastGuardPathCalcTime = now - 600 // 600ms ago (beyond 500ms interval)
+      mockUnit.lastGuardPathCalcTime = now - 2100 // 2100ms ago (beyond 2000ms PATH_INTERVAL)
 
       updateGuardBehavior(mockUnit, mockMapGrid, mockOccupancyMap, now)
 
