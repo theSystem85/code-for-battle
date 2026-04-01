@@ -85,7 +85,8 @@ Example: `browserConsoleSmoke.test.js`
 - Loads `index.html` into a jsdom document
 - Imports `src/main.js` to boot the game entrypoint
 - Stubs `fetch` to avoid asset download errors during smoke runs
-- Fails the test if any `console.error` output occurs during startup
+- Waits for `window.gameInstance` creation so startup success is asserted explicitly
+- Fails the test if any `console.error`, `window.error`, or `unhandledrejection` occurs during startup
 
 ### Unit Tests
 Located in `tests/unit/`
@@ -198,3 +199,7 @@ describe('Building Placement', () => {
 - Updated stale expectations in `tests/unit/enemySpawner.test.js` to assert spawn argument identity/shape without brittle empty-array deep-equality against mutated mock inputs.
 - Updated `tests/unit/keyboardHandler.test.js` dodge validation to mock `hasBlockingBuilding` consistently with the in-test `tile.building` setup.
 - Updated `tests/unit/mouseCommands.test.js` fallback defense-targeting expectation to match current behavior where a newly clicked enemy becomes `forcedAttackTarget` and the previous active target is queued.
+
+## 2026-04 Smoke Test Hardening Update
+- Updated `tests/integration/browserConsoleSmoke.test.js` to wait for `window.gameInstance` instead of relying only on a fixed delay.
+- The smoke test now records `console.error`, `window.error`, and `unhandledrejection` failures with richer diagnostics before asserting a clean startup.
