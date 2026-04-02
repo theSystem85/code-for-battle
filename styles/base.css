@@ -2344,3 +2344,8 @@ body.mobile-portrait .global-legal-links,
 body.mobile-landscape .global-legal-links {
   font-size: 11px;
 }
+
+body.mobile-portrait.sidebar-condensed .global-legal-links,
+body.mobile-portrait.sidebar-collapsed .global-legal-links {
+  display: none;
+}

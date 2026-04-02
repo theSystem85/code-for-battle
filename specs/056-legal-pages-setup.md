@@ -40,3 +40,6 @@ Add developer-facing setup docs with:
 - route overview
 - inferred privacy assumptions
 - manual legal review checklist
+
+## Follow-up adjustment (2026-04-01)
+- Floating shell legal quick links must be hidden in mobile portrait condensed/collapsed modes and only remain visible when the sidebar is expanded.
