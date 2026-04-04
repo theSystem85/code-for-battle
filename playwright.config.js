@@ -4,6 +4,7 @@ const useNetlifyDev = process.env.PLAYWRIGHT_NETLIFY_DEV === '1'
 const runHeaded = process.env.PLAYWRIGHT_HEADED === '1' || useNetlifyDev
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || (useNetlifyDev ? 'http://localhost:8888' : 'http://localhost:5173')
 const webServerCommand = process.env.PLAYWRIGHT_WEB_SERVER_COMMAND || (useNetlifyDev ? 'npx netlify dev --port 8888' : 'npm run dev')
+const launchArgs = !runHeaded ? ['--mute-audio'] : []
 
 /**
  * Playwright Configuration for RTS Game E2E Tests
@@ -31,7 +32,10 @@ export default defineConfig({
     /* Capture screenshot on failure */
     screenshot: 'only-on-failure',
     /* Video recording on failure */
-    video: 'on-first-retry'
+    video: 'on-first-retry',
+    launchOptions: {
+      args: launchArgs
+    }
   },
 
   /* Configure projects for major browsers */

@@ -15,6 +15,9 @@ Setup and integration of Playwright for end-to-end (E2E) testing of the RTS game
 - Required workflow: implement code change first, then implement E2E test, run it, and continue improving code/test until it passes.
 - E2E tests must remain behavior-driven and meaningful; do not weaken assertions to force a pass.
 
+## Policy Update (2026-04-04)
+- Headless E2E runs must launch Chromium with audio muted (`--mute-audio`) so tutorial narration and all runtime sound effects stay silent during automation.
+
 ## Implementation Details
 
 ### Dependencies
