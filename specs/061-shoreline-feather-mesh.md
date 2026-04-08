@@ -26,3 +26,7 @@ Soften coastline tile stair-stepping by rendering a lightweight feathered shorel
 - Physically accurate shoreline simulation.
 - Terrain modification or tile type conversion.
 - Full contour simplification/spline fitting.
+
+## 2026-04-08 Visual Polish Follow-up
+- Replaced two-sided contour ribbons with one-sided feather strips generated from direct land-edge-to-water boundaries.
+- This removes crossing artifacts in tight zig-zag coastlines while keeping chunk-local rebuilds and stable borders.

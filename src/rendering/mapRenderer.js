@@ -13,9 +13,9 @@ const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
 const MIN_SOT_CLUSTER_SIZE = 5
-const SHORELINE_STRIP_HALF_WIDTH = 6
+const SHORELINE_STRIP_WIDTH = 8
 const SHORELINE_TEXTURE_LENGTH = 96
-const SHORELINE_TEXTURE_WIDTH = 24
+const SHORELINE_TEXTURE_WIDTH = 16
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -221,7 +221,6 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
-    this.shorelineDebugVisible = false
     this.shorelineFeatherTexture = this.createShorelineFeatherTexture()
   }
 
@@ -234,11 +233,9 @@ export class MapRenderer {
     if (!ctx) return null
 
     const gradient = ctx.createLinearGradient(0, 0, 0, SHORELINE_TEXTURE_WIDTH)
-    gradient.addColorStop(0, 'rgba(216, 236, 245, 0)')
-    gradient.addColorStop(0.2, 'rgba(216, 236, 245, 0.22)')
-    gradient.addColorStop(0.5, 'rgba(216, 236, 245, 0.42)')
-    gradient.addColorStop(0.8, 'rgba(216, 236, 245, 0.22)')
-    gradient.addColorStop(1, 'rgba(216, 236, 245, 0)')
+    gradient.addColorStop(0, 'rgba(210, 235, 245, 0.45)')
+    gradient.addColorStop(0.55, 'rgba(210, 235, 245, 0.20)')
+    gradient.addColorStop(1, 'rgba(210, 235, 245, 0)')
     ctx.fillStyle = gradient
     ctx.fillRect(0, 0, SHORELINE_TEXTURE_LENGTH, SHORELINE_TEXTURE_WIDTH)
     return canvas
@@ -526,49 +523,45 @@ export class MapRenderer {
     const strips = []
     const debugLines = []
     const debugTriangles = []
-    const halfWidth = SHORELINE_STRIP_HALF_WIDTH
+    const stripWidth = SHORELINE_STRIP_WIDTH
 
-    for (let cellY = extraStartY; cellY < extraEndY - 1; cellY++) {
-      for (let cellX = extraStartX; cellX < extraEndX - 1; cellX++) {
-        const tl = this.isLandTile(mapGrid, cellX, cellY)
-        const tr = this.isLandTile(mapGrid, cellX + 1, cellY)
-        const br = this.isLandTile(mapGrid, cellX + 1, cellY + 1)
-        const bl = this.isLandTile(mapGrid, cellX, cellY + 1)
+    for (let y = extraStartY; y < extraEndY; y++) {
+      for (let x = extraStartX; x < extraEndX; x++) {
+        if (!this.isLandTile(mapGrid, x, y)) continue
+        if (x < chunk.startX || x >= chunk.endX || y < chunk.startY || y >= chunk.endY) continue
 
-        const segments = this.getMarchingSquaresSegments(tl, tr, br, bl)
-        if (!segments.length) continue
+        const worldX = x * TILE_SIZE
+        const worldY = y * TILE_SIZE
 
-        const worldCellX = cellX * TILE_SIZE
-        const worldCellY = cellY * TILE_SIZE
+        const edges = [
+          { water: this.isWaterTile(mapGrid, x, y - 1), ax: worldX, ay: worldY, bx: worldX + TILE_SIZE, by: worldY, nx: 0, ny: 1 },
+          { water: this.isWaterTile(mapGrid, x + 1, y), ax: worldX + TILE_SIZE, ay: worldY, bx: worldX + TILE_SIZE, by: worldY + TILE_SIZE, nx: -1, ny: 0 },
+          { water: this.isWaterTile(mapGrid, x, y + 1), ax: worldX + TILE_SIZE, ay: worldY + TILE_SIZE, bx: worldX, by: worldY + TILE_SIZE, nx: 0, ny: -1 },
+          { water: this.isWaterTile(mapGrid, x - 1, y), ax: worldX, ay: worldY + TILE_SIZE, bx: worldX, by: worldY, nx: 1, ny: 0 }
+        ]
 
-        for (const [from, to] of segments) {
-          const ax = worldCellX + from[0] * TILE_SIZE
-          const ay = worldCellY + from[1] * TILE_SIZE
-          const bx = worldCellX + to[0] * TILE_SIZE
-          const by = worldCellY + to[1] * TILE_SIZE
-
-          const midX = (ax + bx) * 0.5
-          const midY = (ay + by) * 0.5
-          const tileMidX = Math.floor(midX / TILE_SIZE)
-          const tileMidY = Math.floor(midY / TILE_SIZE)
-          if (tileMidX < chunk.startX || tileMidX >= chunk.endX || tileMidY < chunk.startY || tileMidY >= chunk.endY) {
-            continue
-          }
-
-          const dx = bx - ax
-          const dy = by - ay
+        for (const edge of edges) {
+          if (!edge.water) continue
+          const dx = edge.bx - edge.ax
+          const dy = edge.by - edge.ay
           const length = Math.hypot(dx, dy)
           if (length < 1) continue
-          const nx = -dy / length
-          const ny = dx / length
 
-          const p1 = { x: ax + nx * halfWidth, y: ay + ny * halfWidth }
-          const p2 = { x: bx + nx * halfWidth, y: by + ny * halfWidth }
-          const p3 = { x: bx - nx * halfWidth, y: by - ny * halfWidth }
-          const p4 = { x: ax - nx * halfWidth, y: ay - ny * halfWidth }
+          strips.push({
+            ax: edge.ax,
+            ay: edge.ay,
+            length,
+            angle: Math.atan2(dy, dx),
+            width: stripWidth,
+            nx: edge.nx,
+            ny: edge.ny
+          })
+          debugLines.push({ ax: edge.ax, ay: edge.ay, bx: edge.bx, by: edge.by })
 
-          strips.push({ ax, ay, bx, by, length, angle: Math.atan2(dy, dx) })
-          debugLines.push({ ax, ay, bx, by })
+          const p1 = { x: edge.ax, y: edge.ay }
+          const p2 = { x: edge.bx, y: edge.by }
+          const p3 = { x: edge.bx + edge.nx * stripWidth, y: edge.by + edge.ny * stripWidth }
+          const p4 = { x: edge.ax + edge.nx * stripWidth, y: edge.ay + edge.ny * stripWidth }
           debugTriangles.push([p1, p2, p3], [p1, p3, p4])
         }
       }
@@ -585,41 +578,11 @@ export class MapRenderer {
     return visualTileType !== 'water'
   }
 
-  getMarchingSquaresSegments(tl, tr, br, bl) {
-    const top = [0.5, 0]
-    const right = [1, 0.5]
-    const bottom = [0.5, 1]
-    const left = [0, 0.5]
-    const mask = (tl ? 8 : 0) | (tr ? 4 : 0) | (br ? 2 : 0) | (bl ? 1 : 0)
-    switch (mask) {
-      case 0:
-      case 15:
-        return []
-      case 1:
-      case 14:
-        return [[bottom, left]]
-      case 2:
-      case 13:
-        return [[right, bottom]]
-      case 3:
-      case 12:
-        return [[right, left]]
-      case 4:
-      case 11:
-        return [[top, right]]
-      case 5:
-        return [[top, left], [right, bottom]]
-      case 6:
-      case 9:
-        return [[top, bottom]]
-      case 7:
-      case 8:
-        return [[top, left]]
-      case 10:
-        return [[top, right], [bottom, left]]
-      default:
-        return []
-    }
+  isWaterTile(mapGrid, x, y) {
+    const tile = mapGrid[y]?.[x]
+    if (!tile) return false
+    const visualTileType = tile.airstripStreet ? 'land' : tile.type
+    return visualTileType === 'water'
   }
 
   renderShoreline(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState) {
@@ -661,17 +624,17 @@ export class MapRenderer {
               SHORELINE_TEXTURE_LENGTH,
               SHORELINE_TEXTURE_WIDTH,
               0,
-              -SHORELINE_STRIP_HALF_WIDTH,
+              0,
               strip.length,
-              SHORELINE_STRIP_HALF_WIDTH * 2
+              strip.width
             )
           } else {
-            const gradient = ctx.createLinearGradient(0, -SHORELINE_STRIP_HALF_WIDTH, 0, SHORELINE_STRIP_HALF_WIDTH)
-            gradient.addColorStop(0, 'rgba(216, 236, 245, 0)')
-            gradient.addColorStop(0.5, 'rgba(216, 236, 245, 0.34)')
-            gradient.addColorStop(1, 'rgba(216, 236, 245, 0)')
+            const gradient = ctx.createLinearGradient(0, 0, 0, strip.width)
+            gradient.addColorStop(0, 'rgba(210, 235, 245, 0.45)')
+            gradient.addColorStop(0.55, 'rgba(210, 235, 245, 0.20)')
+            gradient.addColorStop(1, 'rgba(210, 235, 245, 0)')
             ctx.fillStyle = gradient
-            ctx.fillRect(0, -SHORELINE_STRIP_HALF_WIDTH, strip.length, SHORELINE_STRIP_HALF_WIDTH * 2)
+            ctx.fillRect(0, 0, strip.length, strip.width)
           }
           ctx.restore()
         }
