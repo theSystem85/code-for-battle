@@ -16,6 +16,7 @@ const MIN_SOT_CLUSTER_SIZE = 5
 const SHORELINE_STRIP_WIDTH = 8
 const SHORELINE_TEXTURE_LENGTH = 96
 const SHORELINE_TEXTURE_WIDTH = 16
+const SHORELINE_CORNER_RADIUS = 10
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -409,6 +410,7 @@ export class MapRenderer {
           chunk.signature = null
           chunk.lastWaterFrameIndex = null
           chunk.shorelineSignature = null
+          chunk.shorelineSotVersion = null
         }
       }
     }
@@ -458,7 +460,8 @@ export class MapRenderer {
         lastSotMaskVersion: null,
         containsWaterAnimation: false,
         shorelineSignature: null,
-        shorelineMesh: { strips: [], debugLines: [], debugTriangles: [] },
+        shorelineSotVersion: null,
+        shorelineMesh: { strips: [], corners: [], debugLines: [], debugTriangles: [] },
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
         offsetY: startY * TILE_SIZE - this.chunkPadding
@@ -518,9 +521,10 @@ export class MapRenderer {
     }
 
     const shorelineSignature = signatureParts.join('')
-    if (shorelineSignature === chunk.shorelineSignature) return
+    if (shorelineSignature === chunk.shorelineSignature && chunk.shorelineSotVersion === this.sotMaskVersion) return
 
     const strips = []
+    const corners = []
     const debugLines = []
     const debugTriangles = []
     const stripWidth = SHORELINE_STRIP_WIDTH
@@ -564,11 +568,17 @@ export class MapRenderer {
           const p4 = { x: edge.ax + edge.nx * stripWidth, y: edge.ay + edge.ny * stripWidth }
           debugTriangles.push([p1, p2, p3], [p1, p3, p4])
         }
+
+        const sotInfo = this.sotMask?.[y]?.[x]
+        if (sotInfo?.type === 'water') {
+          corners.push({ tileX: x, tileY: y, orientation: sotInfo.orientation })
+        }
       }
     }
 
-    chunk.shorelineMesh = { strips, debugLines, debugTriangles }
+    chunk.shorelineMesh = { strips, corners, debugLines, debugTriangles }
     chunk.shorelineSignature = shorelineSignature
+    chunk.shorelineSotVersion = this.sotMaskVersion
   }
 
   isLandTile(mapGrid, x, y) {
@@ -588,6 +598,10 @@ export class MapRenderer {
   renderShoreline(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState) {
     const debugEnabled = Boolean(gameState?.shorelineMeshDebug)
     if (!this.canUseOffscreen) return
+    const currentWaterFrame = this.textureManager.waterFrames.length
+      ? this.textureManager.getCurrentWaterFrame()
+      : null
+    const waterFillStyle = this.getShorelineWaterFillStyle(ctx, currentWaterFrame)
 
     const startChunkX = Math.max(0, Math.floor(startTileX / this.chunkSize))
     const startChunkY = Math.max(0, Math.floor(startTileY / this.chunkSize))
@@ -616,27 +630,15 @@ export class MapRenderer {
           ctx.save()
           ctx.translate(strip.ax - scrollOffset.x, strip.ay - scrollOffset.y)
           ctx.rotate(strip.angle)
-          if (this.shorelineFeatherTexture) {
-            ctx.drawImage(
-              this.shorelineFeatherTexture,
-              0,
-              0,
-              SHORELINE_TEXTURE_LENGTH,
-              SHORELINE_TEXTURE_WIDTH,
-              0,
-              0,
-              strip.length,
-              strip.width
-            )
-          } else {
-            const gradient = ctx.createLinearGradient(0, 0, 0, strip.width)
-            gradient.addColorStop(0, 'rgba(210, 235, 245, 0.45)')
-            gradient.addColorStop(0.55, 'rgba(210, 235, 245, 0.20)')
-            gradient.addColorStop(1, 'rgba(210, 235, 245, 0)')
-            ctx.fillStyle = gradient
-            ctx.fillRect(0, 0, strip.length, strip.width)
-          }
+          ctx.fillStyle = waterFillStyle
+          ctx.fillRect(0, 0, strip.length, strip.width)
+          ctx.globalCompositeOperation = 'destination-in'
+          this.fillShorelineAlphaMask(ctx, strip.length, strip.width)
           ctx.restore()
+        }
+
+        for (const corner of mesh.corners) {
+          this.drawShorelineCornerBlend(ctx, corner, scrollOffset, waterFillStyle)
         }
 
         if (debugEnabled) {
@@ -663,6 +665,72 @@ export class MapRenderer {
         }
       }
     }
+    ctx.restore()
+  }
+
+  fillShorelineAlphaMask(ctx, length, width) {
+    if (this.shorelineFeatherTexture) {
+      ctx.drawImage(
+        this.shorelineFeatherTexture,
+        0,
+        0,
+        SHORELINE_TEXTURE_LENGTH,
+        SHORELINE_TEXTURE_WIDTH,
+        0,
+        0,
+        length,
+        width
+      )
+      return
+    }
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, width)
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0.75)')
+    gradient.addColorStop(0.55, 'rgba(0, 0, 0, 0.38)')
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, length, width)
+  }
+
+  getShorelineWaterFillStyle(ctx, currentWaterFrame) {
+    if (currentWaterFrame) {
+      const pattern = ctx.createPattern(currentWaterFrame, 'repeat')
+      if (pattern) return pattern
+    }
+    return TILE_COLORS.water
+  }
+
+  drawShorelineCornerBlend(ctx, corner, scrollOffset, waterFillStyle) {
+    const tileScreenX = corner.tileX * TILE_SIZE - scrollOffset.x
+    const tileScreenY = corner.tileY * TILE_SIZE - scrollOffset.y
+    const radius = SHORELINE_CORNER_RADIUS
+    const rightX = tileScreenX + TILE_SIZE
+    const bottomY = tileScreenY + TILE_SIZE
+    const centerByOrientation = {
+      'top-left': { x: tileScreenX, y: tileScreenY, start: 0, end: 0.5 * Math.PI },
+      'top-right': { x: rightX, y: tileScreenY, start: 0.5 * Math.PI, end: Math.PI },
+      'bottom-right': { x: rightX, y: bottomY, start: Math.PI, end: 1.5 * Math.PI },
+      'bottom-left': { x: tileScreenX, y: bottomY, start: 1.5 * Math.PI, end: 2 * Math.PI }
+    }
+    const info = centerByOrientation[corner.orientation]
+    if (!info) return
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.moveTo(info.x, info.y)
+    ctx.arc(info.x, info.y, radius, info.start, info.end)
+    ctx.closePath()
+    ctx.clip()
+
+    ctx.fillStyle = waterFillStyle
+    ctx.fillRect(info.x - radius, info.y - radius, radius * 2, radius * 2)
+    ctx.globalCompositeOperation = 'destination-in'
+    const gradient = ctx.createRadialGradient(info.x, info.y, 0, info.x, info.y, radius)
+    gradient.addColorStop(0, 'rgba(0, 0, 0, 0.75)')
+    gradient.addColorStop(0.6, 'rgba(0, 0, 0, 0.45)')
+    gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(info.x - radius, info.y - radius, radius * 2, radius * 2)
     ctx.restore()
   }
 

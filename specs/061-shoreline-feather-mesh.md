@@ -30,3 +30,7 @@ Soften coastline tile stair-stepping by rendering a lightweight feathered shorel
 ## 2026-04-08 Visual Polish Follow-up
 - Replaced two-sided contour ribbons with one-sided feather strips generated from direct land-edge-to-water boundaries.
 - This removes crossing artifacts in tight zig-zag coastlines while keeping chunk-local rebuilds and stable borders.
+
+## 2026-04-08 Water-Blend + SOT-Corner Follow-up
+- Shoreline strips now render water fill first, then apply alpha mask (`destination-in`) so shoreline is true texture blending instead of white tinting.
+- Added rounded corner blending patches driven by water SOT corner markers (`sotMask.type === "water"`) to smooth corner transitions.
