@@ -223,7 +223,6 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
-    this.shorelineTexture = null
   }
 
   /**
@@ -379,7 +378,6 @@ export class MapRenderer {
     }
     // Also invalidate SOT mask since map dimensions may have changed
     this.sotMask = null
-    this.shorelineTexture = null
   }
 
   markTileDirty(tileX, tileY) {
@@ -588,26 +586,6 @@ export class MapRenderer {
       chunk.endY
     )
     chunk.shorelineSignature = shorelineSignature
-  }
-
-  getOrCreateShorelineTexture() {
-    if (this.shorelineTexture) return this.shorelineTexture
-    if (typeof document === 'undefined' || typeof document.createElement !== 'function') return null
-
-    const texture = document.createElement('canvas')
-    texture.width = 8
-    texture.height = 64
-    const texCtx = texture.getContext('2d')
-    if (!texCtx) return null
-
-    const gradient = texCtx.createLinearGradient(0, 0, 0, texture.height)
-    gradient.addColorStop(0, `rgba(220, 233, 244, ${SHORELINE_MAX_ALPHA})`)
-    gradient.addColorStop(0.6, 'rgba(180, 210, 224, 0.12)')
-    gradient.addColorStop(1, `rgba(180, 210, 224, ${SHORELINE_MIN_ALPHA})`)
-    texCtx.fillStyle = gradient
-    texCtx.fillRect(0, 0, texture.width, texture.height)
-    this.shorelineTexture = texture
-    return texture
   }
 
   updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
@@ -1257,26 +1235,29 @@ export class MapRenderer {
     }
   }
 
-  drawShorelineSegment(ctx, segment, scrollOffset, texture) {
+  drawShorelineSegment(ctx, segment, scrollOffset) {
     const p0x = segment.p0.x - scrollOffset.x
     const p0y = segment.p0.y - scrollOffset.y
-    const axisXx = segment.p1.x - segment.p0.x
-    const axisXy = segment.p1.y - segment.p0.y
-    const axisYx = segment.p0o.x - segment.p0.x
-    const axisYy = segment.p0o.y - segment.p0.y
+    const p1x = segment.p1.x - scrollOffset.x
+    const p1y = segment.p1.y - scrollOffset.y
+    const p0ox = segment.p0o.x - scrollOffset.x
+    const p0oy = segment.p0o.y - scrollOffset.y
+    const p1ox = segment.p1o.x - scrollOffset.x
+    const p1oy = segment.p1o.y - scrollOffset.y
 
-    ctx.save()
-    ctx.transform(axisXx, axisXy, axisYx, axisYy, p0x, p0y)
-    if (texture) {
-      ctx.drawImage(texture, 0, 0, texture.width, texture.height, 0, 0, 1, 1)
-    } else {
-      const fallbackGradient = ctx.createLinearGradient(0, 0, 0, 1)
-      fallbackGradient.addColorStop(0, `rgba(220, 233, 244, ${SHORELINE_MAX_ALPHA})`)
-      fallbackGradient.addColorStop(1, `rgba(220, 233, 244, ${SHORELINE_MIN_ALPHA})`)
-      ctx.fillStyle = fallbackGradient
-      ctx.fillRect(0, 0, 1, 1)
-    }
-    ctx.restore()
+    const gradient = ctx.createLinearGradient(p0x, p0y, p0ox, p0oy)
+    gradient.addColorStop(0, `rgba(220, 233, 244, ${SHORELINE_MAX_ALPHA})`)
+    gradient.addColorStop(0.6, 'rgba(180, 210, 224, 0.12)')
+    gradient.addColorStop(1, `rgba(180, 210, 224, ${SHORELINE_MIN_ALPHA})`)
+
+    ctx.fillStyle = gradient
+    ctx.beginPath()
+    ctx.moveTo(p0x, p0y)
+    ctx.lineTo(p1x, p1y)
+    ctx.lineTo(p1ox, p1oy)
+    ctx.lineTo(p0ox, p0oy)
+    ctx.closePath()
+    ctx.fill()
   }
 
   renderShorelineMeshDebug(ctx, segment, scrollOffset) {
@@ -1321,7 +1302,6 @@ export class MapRenderer {
     const debugEnabled = Boolean(gameState?.shorelineMeshDebug || globalDebugEnabled)
     const mapWidth = mapGrid[0].length
     const mapHeight = mapGrid.length
-    const texture = this.getOrCreateShorelineTexture()
 
     if (this.canUseOffscreen) {
       const visibleChunks = this.getVisibleChunkRanges(startTileX, startTileY, endTileX, endTileY, mapWidth, mapHeight)
@@ -1330,7 +1310,7 @@ export class MapRenderer {
         this.updateShorelineChunkCache(chunk, mapGrid)
         if (!chunk.shorelineMesh?.length) return
         chunk.shorelineMesh.forEach(segment => {
-          this.drawShorelineSegment(ctx, segment, scrollOffset, texture)
+          this.drawShorelineSegment(ctx, segment, scrollOffset)
           if (debugEnabled) {
             this.renderShorelineMeshDebug(ctx, segment, scrollOffset)
           }
@@ -1341,7 +1321,7 @@ export class MapRenderer {
 
     const shorelineMesh = this.computeShorelineMeshForChunk(mapGrid, startTileX, startTileY, endTileX, endTileY)
     shorelineMesh.forEach(segment => {
-      this.drawShorelineSegment(ctx, segment, scrollOffset, texture)
+      this.drawShorelineSegment(ctx, segment, scrollOffset)
       if (debugEnabled) {
         this.renderShorelineMeshDebug(ctx, segment, scrollOffset)
       }
