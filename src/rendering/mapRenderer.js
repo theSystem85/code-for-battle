@@ -218,6 +218,8 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
+    this.shorelineChunkMaskCache = new Map()
+    this.shorelineMaskVersion = 0
   }
 
   /**
@@ -230,6 +232,8 @@ export class MapRenderer {
       this.sotMask = null
       return
     }
+    this.shorelineChunkMaskCache.clear()
+    this.shorelineMaskVersion++
 
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0].length
@@ -373,23 +377,109 @@ export class MapRenderer {
     }
     // Also invalidate SOT mask since map dimensions may have changed
     this.sotMask = null
+    this.shorelineChunkMaskCache.clear()
   }
 
   markTileDirty(tileX, tileY) {
-    if (!this.canUseOffscreen || !this.chunkCache.size) return
     const chunkX = Math.floor(tileX / this.chunkSize)
     const chunkY = Math.floor(tileY / this.chunkSize)
-
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const key = this.getChunkKey(chunkX + dx, chunkY + dy)
-        const chunk = this.chunkCache.get(key)
-        if (chunk) {
-          chunk.signature = null
-          chunk.lastWaterFrameIndex = null
+    if (this.canUseOffscreen && this.chunkCache.size) {
+      for (let dy = -1; dy <= 1; dy++) {
+        for (let dx = -1; dx <= 1; dx++) {
+          const key = this.getChunkKey(chunkX + dx, chunkY + dy)
+          const chunk = this.chunkCache.get(key)
+          if (chunk) {
+            chunk.signature = null
+            chunk.lastWaterFrameIndex = null
+          }
         }
       }
     }
+
+    this.invalidateShorelineChunksForTile(tileX, tileY)
+  }
+
+  invalidateShorelineChunksForTile(tileX, tileY) {
+    const chunkX = Math.floor(tileX / this.chunkSize)
+    const chunkY = Math.floor(tileY / this.chunkSize)
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        this.shorelineChunkMaskCache.delete(this.getChunkKey(chunkX + dx, chunkY + dy))
+      }
+    }
+    this.shorelineMaskVersion++
+  }
+
+  computeShorelineMaskForChunk(mapGrid, chunkX, chunkY) {
+    if (!mapGrid?.length || !mapGrid[0]?.length) return null
+    const mapHeight = mapGrid.length
+    const mapWidth = mapGrid[0].length
+    const startX = chunkX * this.chunkSize
+    const startY = chunkY * this.chunkSize
+    if (startX >= mapWidth || startY >= mapHeight || chunkX < 0 || chunkY < 0) {
+      return null
+    }
+
+    const width = Math.min(this.chunkSize, mapWidth - startX)
+    const height = Math.min(this.chunkSize, mapHeight - startY)
+    const data = new Uint8Array(width * height * 4)
+
+    for (let localY = 0; localY < height; localY++) {
+      const y = startY + localY
+      for (let localX = 0; localX < width; localX++) {
+        const x = startX + localX
+        const tile = mapGrid[y]?.[x]
+        const tileType = tile?.airstripStreet ? 'land' : tile?.type
+        const isLandLike = tileType === 'land' || tileType === 'street'
+        const isWater = tileType === 'water'
+        if (!isLandLike && !isWater) continue
+
+        const topType = (mapGrid[y - 1]?.[x]?.airstripStreet ? 'land' : mapGrid[y - 1]?.[x]?.type) ?? null
+        const rightType = (mapGrid[y]?.[x + 1]?.airstripStreet ? 'land' : mapGrid[y]?.[x + 1]?.type) ?? null
+        const bottomType = (mapGrid[y + 1]?.[x]?.airstripStreet ? 'land' : mapGrid[y + 1]?.[x]?.type) ?? null
+        const leftType = (mapGrid[y]?.[x - 1]?.airstripStreet ? 'land' : mapGrid[y]?.[x - 1]?.type) ?? null
+
+        const top = isWater ? (topType === 'land' || topType === 'street') : topType === 'water'
+        const right = isWater ? (rightType === 'land' || rightType === 'street') : rightType === 'water'
+        const bottom = isWater ? (bottomType === 'land' || bottomType === 'street') : bottomType === 'water'
+        const left = isWater ? (leftType === 'land' || leftType === 'street') : leftType === 'water'
+        if (!top && !right && !bottom && !left) continue
+
+        const index = (localY * width + localX) * 4
+        data[index] = top ? 1 : 0
+        data[index + 1] = right ? 1 : 0
+        data[index + 2] = bottom ? 1 : 0
+        data[index + 3] = left ? 1 : 0
+      }
+    }
+
+    return { startX, startY, width, height, data }
+  }
+
+  getShorelineMaskForTile(mapGrid, tileX, tileY) {
+    if (!mapGrid?.length || !mapGrid[0]?.length) return null
+    if (tileX < 0 || tileY < 0 || tileY >= mapGrid.length || tileX >= mapGrid[0].length) return null
+
+    const chunkX = Math.floor(tileX / this.chunkSize)
+    const chunkY = Math.floor(tileY / this.chunkSize)
+    const key = this.getChunkKey(chunkX, chunkY)
+    let chunkMask = this.shorelineChunkMaskCache.get(key)
+    if (!chunkMask) {
+      chunkMask = this.computeShorelineMaskForChunk(mapGrid, chunkX, chunkY)
+      if (!chunkMask) return null
+      this.shorelineChunkMaskCache.set(key, chunkMask)
+    }
+
+    const localX = tileX - chunkMask.startX
+    const localY = tileY - chunkMask.startY
+    if (localX < 0 || localY < 0 || localX >= chunkMask.width || localY >= chunkMask.height) return null
+    const index = (localY * chunkMask.width + localX) * 4
+    return [
+      chunkMask.data[index],
+      chunkMask.data[index + 1],
+      chunkMask.data[index + 2],
+      chunkMask.data[index + 3]
+    ]
   }
 
   getChunkKey(chunkX, chunkY) {

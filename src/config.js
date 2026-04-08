@@ -378,7 +378,8 @@ function saveGraphicsSettingsToLocalStorage() {
       JSON.stringify({
         useProceduralWaterRendering: USE_PROCEDURAL_WATER_RENDERING,
         waterEffectTone: WATER_EFFECT_TONE,
-        waterEffectSaturation: WATER_EFFECT_SATURATION
+        waterEffectSaturation: WATER_EFFECT_SATURATION,
+        shorelineMaskDebugView: SHORELINE_MASK_DEBUG_VIEW
       })
     )
   } catch (error) {
@@ -412,6 +413,9 @@ function loadGraphicsSettingsFromLocalStorage() {
 
     WATER_EFFECT_TONE = clampNumber(parsed?.waterEffectTone, -1, 1, WATER_EFFECT_TONE)
     WATER_EFFECT_SATURATION = clampNumber(parsed?.waterEffectSaturation, 0, 2, WATER_EFFECT_SATURATION)
+    if (typeof parsed?.shorelineMaskDebugView === 'boolean') {
+      SHORELINE_MASK_DEBUG_VIEW = parsed.shorelineMaskDebugView
+    }
   } catch (error) {
     window.logger?.warn('Failed to load graphics settings from localStorage:', error)
   }
@@ -458,6 +462,15 @@ export function setWaterEffectZoom(value) {
   WATER_EFFECT_ZOOM = numericValue
   requestGraphicsSettingsRender()
   return WATER_EFFECT_ZOOM
+}
+
+export let SHORELINE_MASK_DEBUG_VIEW = false
+
+export function setShorelineMaskDebugView(value) {
+  SHORELINE_MASK_DEBUG_VIEW = Boolean(value)
+  saveGraphicsSettingsToLocalStorage()
+  requestGraphicsSettingsRender()
+  return SHORELINE_MASK_DEBUG_VIEW
 }
 
 loadGraphicsSettingsFromLocalStorage()

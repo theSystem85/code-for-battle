@@ -107,7 +107,9 @@ import {
   WATER_EFFECT_SATURATION,
   setWaterEffectSaturation,
   WATER_EFFECT_ZOOM,
-  setWaterEffectZoom
+  setWaterEffectZoom,
+  SHORELINE_MASK_DEBUG_VIEW,
+  setShorelineMaskDebugView
   , HOWITZER_COST
   , setHowitzerCost
   , HOWITZER_SPEED
@@ -194,6 +196,15 @@ export const configRegistry = {
     min: 0.05,
     max: 2,
     step: 0.05,
+    category: 'Graphics'
+  },
+
+  shorelineMaskDebugView: {
+    name: 'Shoreline Mask Debug View',
+    description: 'Render shoreline blend mask in grayscale instead of terrain shading',
+    type: 'boolean',
+    get: () => SHORELINE_MASK_DEBUG_VIEW,
+    set: setShorelineMaskDebugView,
     category: 'Graphics'
   },
 

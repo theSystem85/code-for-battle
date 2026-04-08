@@ -2,6 +2,7 @@ import {
   TILE_COLORS,
   TILE_SIZE,
   USE_TEXTURES,
+  SHORELINE_MASK_DEBUG_VIEW,
   WATER_EFFECT_TONE,
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
@@ -38,6 +39,10 @@ layout(location = 3) in vec4 aColor;
 layout(location = 4) in float aTextureType;
 layout(location = 5) in vec4 aWaterEdges;
 layout(location = 6) in float aClipOrientation;
+layout(location = 7) in vec4 aShorelineEdges;
+layout(location = 8) in vec2 aShorelineMeta;
+layout(location = 9) in vec4 aShorelineLandUV;
+layout(location = 10) in vec4 aShorelineLandColor;
 
 uniform vec2 uResolution;
 uniform vec2 uScroll;
@@ -51,6 +56,10 @@ out vec2 vLocalPos;
 out vec2 vWorldPos;
 out vec4 vWaterEdges;
 out float vClipOrientation;
+out vec4 vShorelineEdges;
+out vec2 vShorelineMeta;
+out vec4 vShorelineLandUV;
+out vec4 vShorelineLandColor;
 
 void main() {
   vec2 worldPos = aTranslation * uTileStep - uScroll + aPosition * uTileSize;
@@ -65,6 +74,10 @@ void main() {
   vWorldPos = worldSamplePos;
   vWaterEdges = aWaterEdges;
   vClipOrientation = aClipOrientation;
+  vShorelineEdges = aShorelineEdges;
+  vShorelineMeta = aShorelineMeta;
+  vShorelineLandUV = aShorelineLandUV;
+  vShorelineLandColor = aShorelineLandColor;
 }
 `
 
@@ -76,6 +89,7 @@ uniform float uTime;
 uniform float uWaterZoom;
 uniform float uWaterTone;
 uniform float uWaterSaturation;
+uniform float uShorelineMaskDebugView;
 
 in vec2 vUV;
 in vec4 vColor;
@@ -84,12 +98,57 @@ in vec2 vLocalPos;
 in vec2 vWorldPos;
 in vec4 vWaterEdges;
 in float vClipOrientation;
+in vec4 vShorelineEdges;
+in vec2 vShorelineMeta;
+in vec4 vShorelineLandUV;
+in vec4 vShorelineLandColor;
 
 out vec4 outColor;
 
 vec3 applySaturation(vec3 color, float saturation) {
   float luma = dot(color, vec3(0.2126, 0.7152, 0.0722));
   return mix(vec3(luma), color, max(saturation, 0.0));
+}
+
+vec3 sampleProceduralWater(vec2 worldPos, vec2 localPos, vec4 edgeMask) {
+  float t = uTime * 0.001;
+  float worldScale = 1.0 / max(uWaterZoom, 0.001);
+  vec2 flow = vec2(
+    sin(worldPos.y * (0.031 * worldScale) + t * 0.82),
+    cos(worldPos.x * (0.029 * worldScale) - t * 0.74)
+  );
+  vec2 p = worldPos * (0.052 * worldScale) + flow * 1.15;
+  float waveA = sin(p.x * 1.2 + t * 1.1);
+  float waveB = cos(p.y * 1.35 - t * 1.25);
+  float waveC = sin((p.x - p.y) * 0.92 + t * 0.63);
+  float wave = (waveA + waveB + waveC) / 3.0;
+  float shimmer = 0.5 + 0.5 * sin((p.x * 1.2 - p.y * 1.05) + t * 1.65);
+  float toneBlend = clamp((uWaterTone + 1.0) * 0.5, 0.0, 1.0);
+
+  vec3 deepColor = mix(vec3(0.04, 0.18, 0.32), vec3(0.09, 0.27, 0.30), toneBlend);
+  vec3 brightColor = mix(vec3(0.08, 0.39, 0.58), vec3(0.13, 0.52, 0.43), toneBlend);
+  float contrast = clamp(0.5 + wave * 0.45, 0.0, 1.0);
+  vec3 waterColor = mix(deepColor, brightColor, contrast);
+  waterColor += vec3(0.04, 0.08, 0.10) * shimmer * 0.42;
+  waterColor = applySaturation(waterColor, uWaterSaturation);
+
+  float edgeDistance = 1.0;
+  if (edgeMask.x > 0.5) edgeDistance = min(edgeDistance, localPos.y);
+  if (edgeMask.y > 0.5) edgeDistance = min(edgeDistance, 1.0 - localPos.x);
+  if (edgeMask.z > 0.5) edgeDistance = min(edgeDistance, 1.0 - localPos.y);
+  if (edgeMask.w > 0.5) edgeDistance = min(edgeDistance, localPos.x);
+  float shoreMask = edgeDistance < 0.09 ? 1.0 : 0.0;
+  waterColor += vec3(0.03, 0.05, 0.05) * shoreMask;
+  return waterColor;
+}
+
+float computeShorelineBlendMask(vec2 localPos, vec4 edgeMask) {
+  float edgeDistance = 1.0;
+  if (edgeMask.x > 0.5) edgeDistance = min(edgeDistance, localPos.y);
+  if (edgeMask.y > 0.5) edgeDistance = min(edgeDistance, 1.0 - localPos.x);
+  if (edgeMask.z > 0.5) edgeDistance = min(edgeDistance, 1.0 - localPos.y);
+  if (edgeMask.w > 0.5) edgeDistance = min(edgeDistance, localPos.x);
+  return 1.0 - smoothstep(0.08, 0.42, edgeDistance);
 }
 
 void main() {
@@ -110,42 +169,43 @@ void main() {
     }
   }
 
-  if (vTextureType > 1.5) {
-    float t = uTime * 0.001;
-    float worldScale = 1.0 / max(uWaterZoom, 0.001);
-    vec2 flow = vec2(
-      sin(vWorldPos.y * (0.031 * worldScale) + t * 0.82),
-      cos(vWorldPos.x * (0.029 * worldScale) - t * 0.74)
-    );
-    vec2 p = vWorldPos * (0.052 * worldScale) + flow * 1.15;
-    float waveA = sin(p.x * 1.2 + t * 1.1);
-    float waveB = cos(p.y * 1.35 - t * 1.25);
-    float waveC = sin((p.x - p.y) * 0.92 + t * 0.63);
-    float wave = (waveA + waveB + waveC) / 3.0;
-    float shimmer = 0.5 + 0.5 * sin((p.x * 1.2 - p.y * 1.05) + t * 1.65);
-    float toneBlend = clamp((uWaterTone + 1.0) * 0.5, 0.0, 1.0);
+  vec3 baseColor = vColor.rgb;
+  bool isWaterBase = vTextureType > 1.5;
 
-    vec3 deepColor = mix(vec3(0.04, 0.18, 0.32), vec3(0.09, 0.27, 0.30), toneBlend);
-    vec3 brightColor = mix(vec3(0.08, 0.39, 0.58), vec3(0.13, 0.52, 0.43), toneBlend);
-    float contrast = clamp(0.5 + wave * 0.45, 0.0, 1.0);
-    vec3 waterColor = mix(deepColor, brightColor, contrast);
-    waterColor += vec3(0.04, 0.08, 0.10) * shimmer * 0.42;
-    waterColor = applySaturation(waterColor, uWaterSaturation);
-
-    float edgeDistance = 1.0;
-    if (vWaterEdges.x > 0.5) edgeDistance = min(edgeDistance, vLocalPos.y);
-    if (vWaterEdges.y > 0.5) edgeDistance = min(edgeDistance, 1.0 - vLocalPos.x);
-    if (vWaterEdges.z > 0.5) edgeDistance = min(edgeDistance, 1.0 - vLocalPos.y);
-    if (vWaterEdges.w > 0.5) edgeDistance = min(edgeDistance, vLocalPos.x);
-
-    float shoreMask = edgeDistance < 0.09 ? 1.0 : 0.0;
-    waterColor += vec3(0.03, 0.05, 0.05) * shoreMask;
-
-    outColor = vec4(waterColor, 1.0);
+  if (isWaterBase) {
+    baseColor = sampleProceduralWater(vWorldPos, vLocalPos, vWaterEdges);
   } else if (vTextureType > 0.5) {
     outColor = texture(uAtlas, vUV);
+    baseColor = outColor.rgb;
+  }
+
+  if (vShorelineMeta.x > 0.5) {
+    float shoreMask = computeShorelineBlendMask(vLocalPos, vShorelineEdges);
+    if (uShorelineMaskDebugView > 0.5) {
+      outColor = vec4(vec3(shoreMask), 1.0);
+      return;
+    }
+
+    vec3 waterColor = sampleProceduralWater(vWorldPos, vLocalPos, vWaterEdges);
+    vec3 landColor = vShorelineLandColor.rgb;
+    if (vShorelineLandUV.z > vShorelineLandUV.x && vShorelineLandUV.w > vShorelineLandUV.y) {
+      landColor = texture(uAtlas, mix(vShorelineLandUV.xy, vShorelineLandUV.zw, vLocalPos)).rgb;
+    }
+
+    if (vShorelineMeta.y > 0.5) {
+      baseColor = mix(waterColor, landColor, shoreMask);
+    } else {
+      baseColor = mix(baseColor, waterColor, shoreMask);
+    }
+  } else if (uShorelineMaskDebugView > 0.5) {
+    outColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
+
+  if (!isWaterBase && vTextureType <= 0.5) {
+    outColor = vec4(baseColor, vColor.a);
   } else {
-    outColor = vColor;
+    outColor = vec4(baseColor, 1.0);
   }
 }
 `
@@ -275,6 +335,10 @@ export class GameWebGLRenderer {
     this.buffers.color = gl.createBuffer()
     this.buffers.textureType = gl.createBuffer()
     this.buffers.clipOrientation = gl.createBuffer()
+    this.buffers.shorelineEdges = gl.createBuffer()
+    this.buffers.shorelineMeta = gl.createBuffer()
+    this.buffers.shorelineLandUV = gl.createBuffer()
+    this.buffers.shorelineLandColor = gl.createBuffer()
 
     gl.useProgram(this.program)
     gl.uniform1i(gl.getUniformLocation(this.program, 'uAtlas'), 0)
@@ -365,7 +429,11 @@ export class GameWebGLRenderer {
       color: this.getColor('water'),
       textureType: 2,
       waterEdges: [0, 0, 0, 0],
-      clipOrientation: getSotClipOrientation(orientation)
+      clipOrientation: getSotClipOrientation(orientation),
+      shorelineEdges: [0, 0, 0, 0],
+      shorelineMeta: [0, 0],
+      shorelineLandUV: [0, 0, 0, 0],
+      shorelineLandColor: this.getColor('land')
     }
   }
 
@@ -378,7 +446,33 @@ export class GameWebGLRenderer {
     return {
       ...instance,
       waterEdges: [0, 0, 0, 0],
-      clipOrientation: getSotClipOrientation(orientation)
+      clipOrientation: getSotClipOrientation(orientation),
+      shorelineEdges: [0, 0, 0, 0],
+      shorelineMeta: [0, 0],
+      shorelineLandUV: [0, 0, 0, 0],
+      shorelineLandColor: this.getColor('land')
+    }
+  }
+
+  getLandBlendSource(tileX, tileY, canUseTextures) {
+    const useTexture = canUseTextures && this.textureManager.tileTextureCache?.land?.length
+    if (!useTexture) {
+      return { uvRect: [0, 0, 0, 0], color: this.getColor('land') }
+    }
+    const cache = this.textureManager.tileTextureCache.land
+    const idx = this.textureManager.getTileVariation('land', tileX, tileY)
+    const info = cache[idx % cache.length]
+    if (!info) {
+      return { uvRect: [0, 0, 0, 0], color: this.getColor('land') }
+    }
+    return {
+      uvRect: [
+        info.x / this.atlasSize.width,
+        info.y / this.atlasSize.height,
+        (info.x + info.width) / this.atlasSize.width,
+        (info.y + info.height) / this.atlasSize.height
+      ],
+      color: this.getColor('land')
     }
   }
 
@@ -401,13 +495,26 @@ export class GameWebGLRenderer {
       }
     }
 
+    const shorelineInfo = (type === 'water' || type === 'land' || type === 'street')
+      ? this.getShorelineInfo(mapGrid, tileX, tileY, type, canUseTextures)
+      : {
+        shorelineEdges: [0, 0, 0, 0],
+        shorelineMeta: [0, 0],
+        shorelineLandUV: [0, 0, 0, 0],
+        shorelineLandColor: this.getColor('land')
+      }
+
     return {
       translation: [tileX, tileY],
       uvRect,
       color: this.getColor(type),
       textureType: isWaterAnimated ? 2 : useTexture ? 1 : 0,
       waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY, sotMask) : [0, 0, 0, 0],
-      clipOrientation: SOT_CLIP_NONE
+      clipOrientation: SOT_CLIP_NONE,
+      shorelineEdges: shorelineInfo.shorelineEdges,
+      shorelineMeta: shorelineInfo.shorelineMeta,
+      shorelineLandUV: shorelineInfo.shorelineLandUV,
+      shorelineLandColor: shorelineInfo.shorelineLandColor
     }
   }
 
@@ -449,6 +556,27 @@ export class GameWebGLRenderer {
     return [top, right, bottom, left]
   }
 
+  getShorelineInfo(mapGrid, tileX, tileY, type, canUseTextures) {
+    if (!this.mapRenderer || !mapGrid?.length) {
+      return {
+        shorelineEdges: [0, 0, 0, 0],
+        shorelineMeta: [0, 0],
+        shorelineLandUV: [0, 0, 0, 0],
+        shorelineLandColor: this.getColor('land')
+      }
+    }
+    const edges = this.mapRenderer.getShorelineMaskForTile(mapGrid, tileX, tileY) || [0, 0, 0, 0]
+    const isShoreline = edges[0] || edges[1] || edges[2] || edges[3]
+    const isWaterBase = type === 'water'
+    const landBlend = this.getLandBlendSource(tileX, tileY, canUseTextures)
+    return {
+      shorelineEdges: edges,
+      shorelineMeta: [isShoreline ? 1 : 0, isWaterBase ? 1 : 0],
+      shorelineLandUV: landBlend.uvRect,
+      shorelineLandColor: landBlend.color
+    }
+  }
+
   ensureInstanceCapacity(count) {
     if (count <= this.instanceCapacity) return
     this.instanceCapacity = count
@@ -485,6 +613,10 @@ export class GameWebGLRenderer {
     const textureType = new Float32Array(instances.length)
     const waterEdges = new Float32Array(instances.length * 4)
     const clipOrientation = new Float32Array(instances.length)
+    const shorelineEdges = new Float32Array(instances.length * 4)
+    const shorelineMeta = new Float32Array(instances.length * 2)
+    const shorelineLandUV = new Float32Array(instances.length * 4)
+    const shorelineLandColor = new Float32Array(instances.length * 4)
 
     for (let i = 0; i < instances.length; i++) {
       const inst = instances[i]
@@ -504,6 +636,20 @@ export class GameWebGLRenderer {
       waterEdges[i * 4 + 2] = inst.waterEdges[2]
       waterEdges[i * 4 + 3] = inst.waterEdges[3]
       clipOrientation[i] = inst.clipOrientation
+      shorelineEdges[i * 4] = inst.shorelineEdges[0]
+      shorelineEdges[i * 4 + 1] = inst.shorelineEdges[1]
+      shorelineEdges[i * 4 + 2] = inst.shorelineEdges[2]
+      shorelineEdges[i * 4 + 3] = inst.shorelineEdges[3]
+      shorelineMeta[i * 2] = inst.shorelineMeta[0]
+      shorelineMeta[i * 2 + 1] = inst.shorelineMeta[1]
+      shorelineLandUV[i * 4] = inst.shorelineLandUV[0]
+      shorelineLandUV[i * 4 + 1] = inst.shorelineLandUV[1]
+      shorelineLandUV[i * 4 + 2] = inst.shorelineLandUV[2]
+      shorelineLandUV[i * 4 + 3] = inst.shorelineLandUV[3]
+      shorelineLandColor[i * 4] = inst.shorelineLandColor[0]
+      shorelineLandColor[i * 4 + 1] = inst.shorelineLandColor[1]
+      shorelineLandColor[i * 4 + 2] = inst.shorelineLandColor[2]
+      shorelineLandColor[i * 4 + 3] = inst.shorelineLandColor[3]
     }
 
     gl.viewport(0, 0, canvas.width, canvas.height)
@@ -520,6 +666,7 @@ export class GameWebGLRenderer {
     const waterZoomLocation = gl.getUniformLocation(this.program, 'uWaterZoom')
     const waterToneLocation = gl.getUniformLocation(this.program, 'uWaterTone')
     const waterSaturationLocation = gl.getUniformLocation(this.program, 'uWaterSaturation')
+    const shorelineMaskDebugViewLocation = gl.getUniformLocation(this.program, 'uShorelineMaskDebugView')
 
     gl.uniform2f(resolutionLocation, canvas.width, canvas.height)
     gl.uniform2f(scrollLocation, scrollX, scrollY)
@@ -529,6 +676,7 @@ export class GameWebGLRenderer {
     gl.uniform1f(waterZoomLocation, WATER_EFFECT_ZOOM)
     gl.uniform1f(waterToneLocation, WATER_EFFECT_TONE)
     gl.uniform1f(waterSaturationLocation, WATER_EFFECT_SATURATION)
+    gl.uniform1f(shorelineMaskDebugViewLocation, SHORELINE_MASK_DEBUG_VIEW ? 1 : 0)
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
@@ -582,6 +730,30 @@ export class GameWebGLRenderer {
     gl.enableVertexAttribArray(6)
     gl.vertexAttribPointer(6, 1, gl.FLOAT, false, 0, 0)
     gl.vertexAttribDivisor(6, 1)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.shorelineEdges)
+    gl.bufferData(gl.ARRAY_BUFFER, shorelineEdges, gl.DYNAMIC_DRAW)
+    gl.enableVertexAttribArray(7)
+    gl.vertexAttribPointer(7, 4, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(7, 1)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.shorelineMeta)
+    gl.bufferData(gl.ARRAY_BUFFER, shorelineMeta, gl.DYNAMIC_DRAW)
+    gl.enableVertexAttribArray(8)
+    gl.vertexAttribPointer(8, 2, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(8, 1)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.shorelineLandUV)
+    gl.bufferData(gl.ARRAY_BUFFER, shorelineLandUV, gl.DYNAMIC_DRAW)
+    gl.enableVertexAttribArray(9)
+    gl.vertexAttribPointer(9, 4, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(9, 1)
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.shorelineLandColor)
+    gl.bufferData(gl.ARRAY_BUFFER, shorelineLandColor, gl.DYNAMIC_DRAW)
+    gl.enableVertexAttribArray(10)
+    gl.vertexAttribPointer(10, 4, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(10, 1)
 
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instances.length)
 

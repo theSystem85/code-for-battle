@@ -780,3 +780,4 @@
 - [x] Restore mobile double-tap cancel behavior for placement/planning mode and keep two-finger pan scrolling functional after using draw-to-plan mode.
 
 - [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
+- [x] Implement shoreline smoothing in the WebGL terrain path using a shoreline-only soft alpha mask that blends procedural water with land texture samples, supports grayscale shoreline-mask debug view, and updates chunk-local shoreline masks only for affected tiles.

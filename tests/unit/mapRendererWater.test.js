@@ -66,6 +66,43 @@ describe('MapRenderer water rendering', () => {
     expect(waterSotInstances[0].translation).toEqual([1, 1])
   })
 
+  it('computes chunk-local shoreline masks and only marks coastal tiles', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'water' }, { type: 'water' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'water' }]
+    ]
+
+    const inland = mapRenderer.getShorelineMaskForTile(mapGrid, 0, 0)
+    const shorelineLand = mapRenderer.getShorelineMaskForTile(mapGrid, 1, 0)
+    const shorelineWater = mapRenderer.getShorelineMaskForTile(mapGrid, 1, 1)
+
+    expect(inland).toEqual([0, 0, 0, 0])
+    expect(shorelineLand).toEqual([0, 0, 1, 0])
+    expect(shorelineWater).toEqual([1, 0, 1, 1])
+  })
+
+  it('invalidates only affected shoreline chunks on tile updates', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.canUseOffscreen = false
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+    mapRenderer.computeSOTMask(mapGrid)
+
+    mapRenderer.getShorelineMaskForTile(mapGrid, 1, 1)
+    expect(mapRenderer.shorelineChunkMaskCache.size).toBe(1)
+
+    mapGrid[1][2] = { type: 'water' }
+    mapRenderer.updateSOTMaskForTile(mapGrid, 2, 1)
+
+    expect(mapRenderer.shorelineChunkMaskCache.size).toBe(0)
+    expect(mapRenderer.getShorelineMaskForTile(mapGrid, 1, 1)).toEqual([0, 1, 0, 0])
+  })
+
   it('suppresses water SOT for a single land tile island inside water', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = [
@@ -187,6 +224,28 @@ describe('MapRenderer water rendering', () => {
     expect(inverseLandSotInstances.map(instance => instance.translation)).toEqual(
       expect.arrayContaining([[1, 1], [3, 1], [1, 3], [3, 3]])
     )
+  })
+
+  it('adds shoreline blend metadata only for coastline tiles in the WebGL batch', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'water' }, { type: 'water' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'water' }]
+    ]
+
+    const webglRenderer = new GameWebGLRenderer(null, makeTextureManager(), mapRenderer)
+    const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 3, 3)
+    const shoreInstances = instances.filter(instance => instance.shorelineMeta[0] > 0.5)
+    const inlandInstance = instances.find(instance =>
+      instance.translation[0] === 0 && instance.translation[1] === 0 && instance.clipOrientation === 0
+    )
+
+    expect(shoreInstances.length).toBeGreaterThan(0)
+    expect(shoreInstances.every(instance =>
+      instance.shorelineEdges.some(edge => edge > 0)
+    )).toBe(true)
+    expect(inlandInstance.shorelineMeta[0]).toBe(0)
   })
 
   it('does not add inverse land SOT on coastline water tiles when the land mass reaches the map edge', () => {
