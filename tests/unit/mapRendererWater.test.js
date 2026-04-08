@@ -265,4 +265,48 @@ describe('MapRenderer water rendering', () => {
       expect.arrayContaining([[1, 1], [1, 2]])
     )
   })
+
+  it('builds shoreline mesh strips for land-water borders including chunk boundaries', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'water' }, { type: 'water' }],
+      [{ type: 'water' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'water' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const shorelineMesh = mapRenderer.computeShorelineMeshForChunk(mapGrid, 1, 1, 3, 3)
+
+    // Two top edges + two left edges for the 2x2 land block touching water
+    expect(shorelineMesh).toHaveLength(4)
+    shorelineMesh.forEach(segment => {
+      expect(segment.triangles).toHaveLength(2)
+      expect(segment.edgeLine).toHaveLength(2)
+    })
+  })
+
+  it('reuses shoreline chunk mesh when nearby terrain signature is unchanged', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'water' }, { type: 'water' }],
+      [{ type: 'water' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'water' }, { type: 'land' }, { type: 'land' }]
+    ]
+    const chunk = {
+      startX: 1,
+      startY: 1,
+      endX: 3,
+      endY: 3,
+      shorelineSignature: null,
+      shorelineMesh: null
+    }
+
+    mapRenderer.updateShorelineChunkCache(chunk, mapGrid)
+    const firstMesh = chunk.shorelineMesh
+    const firstSignature = chunk.shorelineSignature
+
+    mapRenderer.updateShorelineChunkCache(chunk, mapGrid)
+
+    expect(chunk.shorelineSignature).toBe(firstSignature)
+    expect(chunk.shorelineMesh).toBe(firstMesh)
+  })
 })

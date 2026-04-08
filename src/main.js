@@ -141,6 +141,7 @@ window.debugGetSelectedUnits = () => selectedUnits
 
 window.testNarratedSounds = testNarratedSounds
 window.debugPlaySound = playSound
+window.debugShorelineMesh = false
 window.getSoundCacheStatus = getSoundCacheStatus
 window.clearSoundCache = clearSoundCache
 

@@ -294,6 +294,7 @@ export const gameState = {
   mapShoreWest: false,
   mapShoreEast: false,
   mapShoreSouth: false,
+  shorelineMeshDebug: false,
   mapCenterLake: false,
 
   // Lockstep deterministic multiplayer state (spec 015)

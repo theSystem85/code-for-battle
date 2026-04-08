@@ -13,6 +13,11 @@ const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
 const MIN_SOT_CLUSTER_SIZE = 5
+const SHORELINE_FEATHER_WIDTH = Math.max(3, Math.floor(TILE_SIZE * 0.35))
+const SHORELINE_MAX_ALPHA = 0.38
+const SHORELINE_MIN_ALPHA = 0
+const SHORELINE_DEBUG_LINE_COLOR = 'rgba(0, 255, 255, 0.85)'
+const SHORELINE_DEBUG_TRIANGLE_COLOR = 'rgba(255, 0, 255, 0.35)'
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -218,6 +223,7 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
+    this.shorelineTexture = null
   }
 
   /**
@@ -373,6 +379,7 @@ export class MapRenderer {
     }
     // Also invalidate SOT mask since map dimensions may have changed
     this.sotMask = null
+    this.shorelineTexture = null
   }
 
   markTileDirty(tileX, tileY) {
@@ -475,6 +482,134 @@ export class MapRenderer {
     return { signature: parts.join('|'), containsWater }
   }
 
+  getVisualTerrainType(tile) {
+    if (!tile) return null
+    return tile.airstripStreet ? 'land' : tile.type
+  }
+
+  isShorelineLand(tile) {
+    const visualType = this.getVisualTerrainType(tile)
+    return visualType === 'land' || visualType === 'street'
+  }
+
+  isWaterTile(tile) {
+    return tile?.type === 'water'
+  }
+
+  buildShorelineSegment(x0, y0, x1, y1, normalX, normalY) {
+    const offsetX = normalX * SHORELINE_FEATHER_WIDTH
+    const offsetY = normalY * SHORELINE_FEATHER_WIDTH
+    const p0 = { x: x0, y: y0 }
+    const p1 = { x: x1, y: y1 }
+    const p0o = { x: x0 + offsetX, y: y0 + offsetY }
+    const p1o = { x: x1 + offsetX, y: y1 + offsetY }
+
+    return {
+      p0,
+      p1,
+      p0o,
+      p1o,
+      edgeLine: [p0, p1],
+      triangles: [
+        [p0, p1, p1o],
+        [p0, p1o, p0o]
+      ]
+    }
+  }
+
+  computeShorelineMeshForChunk(mapGrid, startX, startY, endX, endY) {
+    const mesh = []
+    const mapHeight = mapGrid.length
+    const mapWidth = mapGrid[0]?.length || 0
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        const tile = mapGrid[y]?.[x]
+        if (!this.isShorelineLand(tile)) continue
+
+        const top = y > 0 ? mapGrid[y - 1]?.[x] : null
+        const right = x < mapWidth - 1 ? mapGrid[y]?.[x + 1] : null
+        const bottom = y < mapHeight - 1 ? mapGrid[y + 1]?.[x] : null
+        const left = x > 0 ? mapGrid[y]?.[x - 1] : null
+
+        const tileX = x * TILE_SIZE
+        const tileY = y * TILE_SIZE
+        const tileEndX = tileX + TILE_SIZE
+        const tileEndY = tileY + TILE_SIZE
+
+        if (this.isWaterTile(top)) {
+          mesh.push(this.buildShorelineSegment(tileX, tileY, tileEndX, tileY, 0, -1))
+        }
+        if (this.isWaterTile(right)) {
+          mesh.push(this.buildShorelineSegment(tileEndX, tileY, tileEndX, tileEndY, 1, 0))
+        }
+        if (this.isWaterTile(bottom)) {
+          mesh.push(this.buildShorelineSegment(tileX, tileEndY, tileEndX, tileEndY, 0, 1))
+        }
+        if (this.isWaterTile(left)) {
+          mesh.push(this.buildShorelineSegment(tileX, tileY, tileX, tileEndY, -1, 0))
+        }
+      }
+    }
+
+    return mesh
+  }
+
+  computeShorelineSignature(mapGrid, startX, startY, endX, endY) {
+    const mapHeight = mapGrid.length
+    const mapWidth = mapGrid[0]?.length || 0
+    const extraStartX = Math.max(0, startX - 1)
+    const extraStartY = Math.max(0, startY - 1)
+    const extraEndX = Math.min(mapWidth, endX + 1)
+    const extraEndY = Math.min(mapHeight, endY + 1)
+    const parts = []
+    for (let y = extraStartY; y < extraEndY; y++) {
+      const row = mapGrid[y]
+      for (let x = extraStartX; x < extraEndX; x++) {
+        parts.push(this.getVisualTerrainType(row[x]))
+      }
+    }
+    return parts.join('|')
+  }
+
+  updateShorelineChunkCache(chunk, mapGrid) {
+    const shorelineSignature = this.computeShorelineSignature(
+      mapGrid,
+      chunk.startX,
+      chunk.startY,
+      chunk.endX,
+      chunk.endY
+    )
+    if (chunk.shorelineSignature === shorelineSignature) return
+    chunk.shorelineMesh = this.computeShorelineMeshForChunk(
+      mapGrid,
+      chunk.startX,
+      chunk.startY,
+      chunk.endX,
+      chunk.endY
+    )
+    chunk.shorelineSignature = shorelineSignature
+  }
+
+  getOrCreateShorelineTexture() {
+    if (this.shorelineTexture) return this.shorelineTexture
+    if (typeof document === 'undefined' || typeof document.createElement !== 'function') return null
+
+    const texture = document.createElement('canvas')
+    texture.width = 8
+    texture.height = 64
+    const texCtx = texture.getContext('2d')
+    if (!texCtx) return null
+
+    const gradient = texCtx.createLinearGradient(0, 0, 0, texture.height)
+    gradient.addColorStop(0, `rgba(220, 233, 244, ${SHORELINE_MAX_ALPHA})`)
+    gradient.addColorStop(0.6, 'rgba(180, 210, 224, 0.12)')
+    gradient.addColorStop(1, `rgba(180, 210, 224, ${SHORELINE_MIN_ALPHA})`)
+    texCtx.fillStyle = gradient
+    texCtx.fillRect(0, 0, texture.width, texture.height)
+    this.shorelineTexture = texture
+    return texture
+  }
+
   updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
     if (!chunk.canvas || !chunk.ctx) return
 
@@ -540,6 +675,35 @@ export class MapRenderer {
     chunk.lastSotMaskVersion = this.sotMaskVersion
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
+    this.updateShorelineChunkCache(chunk, mapGrid)
+  }
+
+  getVisibleChunkRanges(startTileX, startTileY, endTileX, endTileY, mapWidth, mapHeight) {
+    const startChunkX = Math.max(0, Math.floor(startTileX / this.chunkSize))
+    const startChunkY = Math.max(0, Math.floor(startTileY / this.chunkSize))
+    const endChunkX = Math.ceil(endTileX / this.chunkSize)
+    const endChunkY = Math.ceil(endTileY / this.chunkSize)
+    const chunks = []
+
+    for (let chunkY = startChunkY; chunkY < endChunkY; chunkY++) {
+      const chunkStartY = chunkY * this.chunkSize
+      if (chunkStartY >= mapHeight) break
+      const chunkEndY = Math.min(mapHeight, chunkStartY + this.chunkSize)
+      for (let chunkX = startChunkX; chunkX < endChunkX; chunkX++) {
+        const chunkStartX = chunkX * this.chunkSize
+        if (chunkStartX >= mapWidth) break
+        const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
+        chunks.push({
+          chunkX,
+          chunkY,
+          chunkStartX,
+          chunkStartY,
+          chunkEndX,
+          chunkEndY
+        })
+      }
+    }
+    return chunks
   }
 
   renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState) {
@@ -578,45 +742,39 @@ export class MapRenderer {
     const mapWidth = mapGrid[0]?.length || 0
     const mapHeight = mapGrid.length
 
-    const startChunkX = Math.max(0, Math.floor(startTileX / this.chunkSize))
-    const startChunkY = Math.max(0, Math.floor(startTileY / this.chunkSize))
-    const endChunkX = Math.ceil(endTileX / this.chunkSize)
-    const endChunkY = Math.ceil(endTileY / this.chunkSize)
+    const visibleChunks = this.getVisibleChunkRanges(startTileX, startTileY, endTileX, endTileY, mapWidth, mapHeight)
 
-    for (let chunkY = startChunkY; chunkY < endChunkY; chunkY++) {
-      const chunkStartY = chunkY * this.chunkSize
-      if (chunkStartY >= mapHeight) break
-      const chunkEndY = Math.min(mapHeight, chunkStartY + this.chunkSize)
+    for (const {
+      chunkX,
+      chunkY,
+      chunkStartX,
+      chunkStartY,
+      chunkEndX,
+      chunkEndY
+    } of visibleChunks) {
+      const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
 
-      for (let chunkX = startChunkX; chunkX < endChunkX; chunkX++) {
-        const chunkStartX = chunkX * this.chunkSize
-        if (chunkStartX >= mapWidth) break
-        const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
-
-        const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
-
-        if (!chunk.canvas || !chunk.ctx) {
-          this.drawBaseLayer(
-            ctx,
-            mapGrid,
-            chunkStartX,
-            chunkStartY,
-            chunkEndX,
-            chunkEndY,
-            scrollOffset.x,
-            scrollOffset.y,
-            useTexture,
-            currentWaterFrame
-          )
-          continue
-        }
-
-        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame)
-
-        const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
-        const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
-        ctx.drawImage(chunk.canvas, drawX, drawY)
+      if (!chunk.canvas || !chunk.ctx) {
+        this.drawBaseLayer(
+          ctx,
+          mapGrid,
+          chunkStartX,
+          chunkStartY,
+          chunkEndX,
+          chunkEndY,
+          scrollOffset.x,
+          scrollOffset.y,
+          useTexture,
+          currentWaterFrame
+        )
+        continue
       }
+
+      this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame)
+
+      const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
+      const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
+      ctx.drawImage(chunk.canvas, drawX, drawY)
     }
 
     // Re-enable image smoothing for other rendering
@@ -1099,6 +1257,97 @@ export class MapRenderer {
     }
   }
 
+  drawShorelineSegment(ctx, segment, scrollOffset, texture) {
+    const p0x = segment.p0.x - scrollOffset.x
+    const p0y = segment.p0.y - scrollOffset.y
+    const axisXx = segment.p1.x - segment.p0.x
+    const axisXy = segment.p1.y - segment.p0.y
+    const axisYx = segment.p0o.x - segment.p0.x
+    const axisYy = segment.p0o.y - segment.p0.y
+
+    ctx.save()
+    ctx.transform(axisXx, axisXy, axisYx, axisYy, p0x, p0y)
+    if (texture) {
+      ctx.drawImage(texture, 0, 0, texture.width, texture.height, 0, 0, 1, 1)
+    } else {
+      const fallbackGradient = ctx.createLinearGradient(0, 0, 0, 1)
+      fallbackGradient.addColorStop(0, `rgba(220, 233, 244, ${SHORELINE_MAX_ALPHA})`)
+      fallbackGradient.addColorStop(1, `rgba(220, 233, 244, ${SHORELINE_MIN_ALPHA})`)
+      ctx.fillStyle = fallbackGradient
+      ctx.fillRect(0, 0, 1, 1)
+    }
+    ctx.restore()
+  }
+
+  renderShorelineMeshDebug(ctx, segment, scrollOffset) {
+    const p0x = segment.p0.x - scrollOffset.x
+    const p0y = segment.p0.y - scrollOffset.y
+    const p1x = segment.p1.x - scrollOffset.x
+    const p1y = segment.p1.y - scrollOffset.y
+    const p0ox = segment.p0o.x - scrollOffset.x
+    const p0oy = segment.p0o.y - scrollOffset.y
+    const p1ox = segment.p1o.x - scrollOffset.x
+    const p1oy = segment.p1o.y - scrollOffset.y
+
+    ctx.save()
+    ctx.strokeStyle = SHORELINE_DEBUG_LINE_COLOR
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.moveTo(p0x, p0y)
+    ctx.lineTo(p1x, p1y)
+    ctx.stroke()
+
+    ctx.fillStyle = SHORELINE_DEBUG_TRIANGLE_COLOR
+    ctx.beginPath()
+    ctx.moveTo(p0x, p0y)
+    ctx.lineTo(p1x, p1y)
+    ctx.lineTo(p1ox, p1oy)
+    ctx.closePath()
+    ctx.fill()
+
+    ctx.beginPath()
+    ctx.moveTo(p0x, p0y)
+    ctx.lineTo(p1ox, p1oy)
+    ctx.lineTo(p0ox, p0oy)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+  }
+
+  renderShorelineMesh(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState) {
+    if (!mapGrid?.length || !mapGrid[0]?.length) return
+
+    const globalDebugEnabled = typeof window !== 'undefined' && Boolean(window.debugShorelineMesh)
+    const debugEnabled = Boolean(gameState?.shorelineMeshDebug || globalDebugEnabled)
+    const mapWidth = mapGrid[0].length
+    const mapHeight = mapGrid.length
+    const texture = this.getOrCreateShorelineTexture()
+
+    if (this.canUseOffscreen) {
+      const visibleChunks = this.getVisibleChunkRanges(startTileX, startTileY, endTileX, endTileY, mapWidth, mapHeight)
+      visibleChunks.forEach(({ chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY }) => {
+        const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
+        this.updateShorelineChunkCache(chunk, mapGrid)
+        if (!chunk.shorelineMesh?.length) return
+        chunk.shorelineMesh.forEach(segment => {
+          this.drawShorelineSegment(ctx, segment, scrollOffset, texture)
+          if (debugEnabled) {
+            this.renderShorelineMeshDebug(ctx, segment, scrollOffset)
+          }
+        })
+      })
+      return
+    }
+
+    const shorelineMesh = this.computeShorelineMeshForChunk(mapGrid, startTileX, startTileY, endTileX, endTileY)
+    shorelineMesh.forEach(segment => {
+      this.drawShorelineSegment(ctx, segment, scrollOffset, texture)
+      if (debugEnabled) {
+        this.renderShorelineMeshDebug(ctx, segment, scrollOffset)
+      }
+    })
+  }
+
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
     const { skipBaseLayer = false, skipWaterSot = false } = options || {}
     // Guard against empty or invalid mapGrid
@@ -1119,6 +1368,7 @@ export class MapRenderer {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
       this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, { skipWaterSot })
     }
+    this.renderShorelineMesh(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState)
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
