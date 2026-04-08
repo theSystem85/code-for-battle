@@ -161,6 +161,7 @@ export const gameState = {
 
   // Occupancy map visibility toggle
   occupancyVisible: false,
+  shorelineMeshDebug: false,
 
   // Movement waypoint visualization toggle
   moveWaypointsVisible: true,

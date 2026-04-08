@@ -13,6 +13,9 @@ const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
 const MIN_SOT_CLUSTER_SIZE = 5
+const SHORELINE_STRIP_HALF_WIDTH = 6
+const SHORELINE_TEXTURE_LENGTH = 96
+const SHORELINE_TEXTURE_WIDTH = 24
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -218,6 +221,27 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
+    this.shorelineDebugVisible = false
+    this.shorelineFeatherTexture = this.createShorelineFeatherTexture()
+  }
+
+  createShorelineFeatherTexture() {
+    if (!this.canUseOffscreen) return null
+    const canvas = document.createElement('canvas')
+    canvas.width = SHORELINE_TEXTURE_LENGTH
+    canvas.height = SHORELINE_TEXTURE_WIDTH
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return null
+
+    const gradient = ctx.createLinearGradient(0, 0, 0, SHORELINE_TEXTURE_WIDTH)
+    gradient.addColorStop(0, 'rgba(216, 236, 245, 0)')
+    gradient.addColorStop(0.2, 'rgba(216, 236, 245, 0.22)')
+    gradient.addColorStop(0.5, 'rgba(216, 236, 245, 0.42)')
+    gradient.addColorStop(0.8, 'rgba(216, 236, 245, 0.22)')
+    gradient.addColorStop(1, 'rgba(216, 236, 245, 0)')
+    ctx.fillStyle = gradient
+    ctx.fillRect(0, 0, SHORELINE_TEXTURE_LENGTH, SHORELINE_TEXTURE_WIDTH)
+    return canvas
   }
 
   /**
@@ -387,6 +411,7 @@ export class MapRenderer {
         if (chunk) {
           chunk.signature = null
           chunk.lastWaterFrameIndex = null
+          chunk.shorelineSignature = null
         }
       }
     }
@@ -435,6 +460,8 @@ export class MapRenderer {
         lastWaterEffectZoom: null,
         lastSotMaskVersion: null,
         containsWaterAnimation: false,
+        shorelineSignature: null,
+        shorelineMesh: { strips: [], debugLines: [], debugTriangles: [] },
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
         offsetY: startY * TILE_SIZE - this.chunkPadding
@@ -473,6 +500,207 @@ export class MapRenderer {
     }
 
     return { signature: parts.join('|'), containsWater }
+  }
+
+  buildShorelineMeshForChunk(mapGrid, chunk) {
+    const mapHeight = mapGrid.length
+    const mapWidth = mapGrid[0]?.length || 0
+    if (!mapWidth || !mapHeight) return
+
+    const extraStartX = Math.max(0, chunk.startX - 2)
+    const extraStartY = Math.max(0, chunk.startY - 2)
+    const extraEndX = Math.min(mapWidth, chunk.endX + 2)
+    const extraEndY = Math.min(mapHeight, chunk.endY + 2)
+    const signatureParts = []
+
+    for (let y = extraStartY; y < extraEndY; y++) {
+      for (let x = extraStartX; x < extraEndX; x++) {
+        const visualTileType = mapGrid[y][x]?.airstripStreet ? 'land' : mapGrid[y][x]?.type
+        signatureParts.push((visualTileType === 'water') ? 1 : 0)
+      }
+    }
+
+    const shorelineSignature = signatureParts.join('')
+    if (shorelineSignature === chunk.shorelineSignature) return
+
+    const strips = []
+    const debugLines = []
+    const debugTriangles = []
+    const halfWidth = SHORELINE_STRIP_HALF_WIDTH
+
+    for (let cellY = extraStartY; cellY < extraEndY - 1; cellY++) {
+      for (let cellX = extraStartX; cellX < extraEndX - 1; cellX++) {
+        const tl = this.isLandTile(mapGrid, cellX, cellY)
+        const tr = this.isLandTile(mapGrid, cellX + 1, cellY)
+        const br = this.isLandTile(mapGrid, cellX + 1, cellY + 1)
+        const bl = this.isLandTile(mapGrid, cellX, cellY + 1)
+
+        const segments = this.getMarchingSquaresSegments(tl, tr, br, bl)
+        if (!segments.length) continue
+
+        const worldCellX = cellX * TILE_SIZE
+        const worldCellY = cellY * TILE_SIZE
+
+        for (const [from, to] of segments) {
+          const ax = worldCellX + from[0] * TILE_SIZE
+          const ay = worldCellY + from[1] * TILE_SIZE
+          const bx = worldCellX + to[0] * TILE_SIZE
+          const by = worldCellY + to[1] * TILE_SIZE
+
+          const midX = (ax + bx) * 0.5
+          const midY = (ay + by) * 0.5
+          const tileMidX = Math.floor(midX / TILE_SIZE)
+          const tileMidY = Math.floor(midY / TILE_SIZE)
+          if (tileMidX < chunk.startX || tileMidX >= chunk.endX || tileMidY < chunk.startY || tileMidY >= chunk.endY) {
+            continue
+          }
+
+          const dx = bx - ax
+          const dy = by - ay
+          const length = Math.hypot(dx, dy)
+          if (length < 1) continue
+          const nx = -dy / length
+          const ny = dx / length
+
+          const p1 = { x: ax + nx * halfWidth, y: ay + ny * halfWidth }
+          const p2 = { x: bx + nx * halfWidth, y: by + ny * halfWidth }
+          const p3 = { x: bx - nx * halfWidth, y: by - ny * halfWidth }
+          const p4 = { x: ax - nx * halfWidth, y: ay - ny * halfWidth }
+
+          strips.push({ ax, ay, bx, by, length, angle: Math.atan2(dy, dx) })
+          debugLines.push({ ax, ay, bx, by })
+          debugTriangles.push([p1, p2, p3], [p1, p3, p4])
+        }
+      }
+    }
+
+    chunk.shorelineMesh = { strips, debugLines, debugTriangles }
+    chunk.shorelineSignature = shorelineSignature
+  }
+
+  isLandTile(mapGrid, x, y) {
+    const tile = mapGrid[y]?.[x]
+    if (!tile) return false
+    const visualTileType = tile.airstripStreet ? 'land' : tile.type
+    return visualTileType !== 'water'
+  }
+
+  getMarchingSquaresSegments(tl, tr, br, bl) {
+    const top = [0.5, 0]
+    const right = [1, 0.5]
+    const bottom = [0.5, 1]
+    const left = [0, 0.5]
+    const mask = (tl ? 8 : 0) | (tr ? 4 : 0) | (br ? 2 : 0) | (bl ? 1 : 0)
+    switch (mask) {
+      case 0:
+      case 15:
+        return []
+      case 1:
+      case 14:
+        return [[bottom, left]]
+      case 2:
+      case 13:
+        return [[right, bottom]]
+      case 3:
+      case 12:
+        return [[right, left]]
+      case 4:
+      case 11:
+        return [[top, right]]
+      case 5:
+        return [[top, left], [right, bottom]]
+      case 6:
+      case 9:
+        return [[top, bottom]]
+      case 7:
+      case 8:
+        return [[top, left]]
+      case 10:
+        return [[top, right], [bottom, left]]
+      default:
+        return []
+    }
+  }
+
+  renderShoreline(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState) {
+    const debugEnabled = Boolean(gameState?.shorelineMeshDebug)
+    if (!this.canUseOffscreen) return
+
+    const startChunkX = Math.max(0, Math.floor(startTileX / this.chunkSize))
+    const startChunkY = Math.max(0, Math.floor(startTileY / this.chunkSize))
+    const endChunkX = Math.ceil(endTileX / this.chunkSize)
+    const endChunkY = Math.ceil(endTileY / this.chunkSize)
+    const mapWidth = mapGrid[0]?.length || 0
+    const mapHeight = mapGrid.length
+
+    ctx.save()
+    ctx.imageSmoothingEnabled = true
+    for (let chunkY = startChunkY; chunkY < endChunkY; chunkY++) {
+      const chunkStartY = chunkY * this.chunkSize
+      if (chunkStartY >= mapHeight) break
+      const chunkEndY = Math.min(mapHeight, chunkStartY + this.chunkSize)
+
+      for (let chunkX = startChunkX; chunkX < endChunkX; chunkX++) {
+        const chunkStartX = chunkX * this.chunkSize
+        if (chunkStartX >= mapWidth) break
+        const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
+        const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
+        this.buildShorelineMeshForChunk(mapGrid, chunk)
+        const mesh = chunk.shorelineMesh
+        if (!mesh) continue
+
+        for (const strip of mesh.strips) {
+          ctx.save()
+          ctx.translate(strip.ax - scrollOffset.x, strip.ay - scrollOffset.y)
+          ctx.rotate(strip.angle)
+          if (this.shorelineFeatherTexture) {
+            ctx.drawImage(
+              this.shorelineFeatherTexture,
+              0,
+              0,
+              SHORELINE_TEXTURE_LENGTH,
+              SHORELINE_TEXTURE_WIDTH,
+              0,
+              -SHORELINE_STRIP_HALF_WIDTH,
+              strip.length,
+              SHORELINE_STRIP_HALF_WIDTH * 2
+            )
+          } else {
+            const gradient = ctx.createLinearGradient(0, -SHORELINE_STRIP_HALF_WIDTH, 0, SHORELINE_STRIP_HALF_WIDTH)
+            gradient.addColorStop(0, 'rgba(216, 236, 245, 0)')
+            gradient.addColorStop(0.5, 'rgba(216, 236, 245, 0.34)')
+            gradient.addColorStop(1, 'rgba(216, 236, 245, 0)')
+            ctx.fillStyle = gradient
+            ctx.fillRect(0, -SHORELINE_STRIP_HALF_WIDTH, strip.length, SHORELINE_STRIP_HALF_WIDTH * 2)
+          }
+          ctx.restore()
+        }
+
+        if (debugEnabled) {
+          ctx.save()
+          ctx.strokeStyle = 'rgba(255, 120, 0, 0.85)'
+          ctx.lineWidth = 1
+          for (const line of mesh.debugLines) {
+            ctx.beginPath()
+            ctx.moveTo(line.ax - scrollOffset.x, line.ay - scrollOffset.y)
+            ctx.lineTo(line.bx - scrollOffset.x, line.by - scrollOffset.y)
+            ctx.stroke()
+          }
+
+          ctx.fillStyle = 'rgba(0, 220, 255, 0.22)'
+          for (const tri of mesh.debugTriangles) {
+            ctx.beginPath()
+            ctx.moveTo(tri[0].x - scrollOffset.x, tri[0].y - scrollOffset.y)
+            ctx.lineTo(tri[1].x - scrollOffset.x, tri[1].y - scrollOffset.y)
+            ctx.lineTo(tri[2].x - scrollOffset.x, tri[2].y - scrollOffset.y)
+            ctx.closePath()
+            ctx.fill()
+          }
+          ctx.restore()
+        }
+      }
+    }
+    ctx.restore()
   }
 
   updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
@@ -1119,6 +1347,7 @@ export class MapRenderer {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
       this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, { skipWaterSot })
     }
+    this.renderShoreline(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState)
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
