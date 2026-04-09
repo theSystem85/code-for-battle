@@ -38,16 +38,8 @@ const mobileLayoutState = {
   musicButton: null,
   musicOriginalParent: null,
   musicOriginalNextSibling: null,
-  sidebarMenuButton: null,
-  sidebarMenuButtonListenerAttached: false,
   sidebarExpandButton: null,
   sidebarExpandButtonListenerAttached: false,
-  sidebarModal: null,
-  sidebarModalContent: null,
-  sidebarModalCloseButton: null,
-  sidebarModalDismissListenerAttached: false,
-  sidebarModalKeydownListenerAttached: false,
-  sidebarModalVisible: false,
   isSidebarCondensed: null,
   saveLoadMenu: null,
   saveLoadOriginalParent: null,
@@ -239,23 +231,6 @@ function ensureMobileLayoutElements() {
     }
   }
 
-  if (!mobileLayoutState.sidebarMenuButton || !mobileLayoutState.sidebarMenuButton.isConnected) {
-    mobileLayoutState.sidebarMenuButton = document.getElementById('mobileSidebarMenuBtn')
-    mobileLayoutState.sidebarMenuButtonListenerAttached = false
-  }
-
-  if (!mobileLayoutState.sidebarModal || !mobileLayoutState.sidebarModal.isConnected) {
-    mobileLayoutState.sidebarModal = document.getElementById('mobileSidebarModal')
-  }
-
-  if (!mobileLayoutState.sidebarModalContent || !mobileLayoutState.sidebarModalContent.isConnected) {
-    mobileLayoutState.sidebarModalContent = document.getElementById('mobileSidebarModalContent')
-  }
-
-  if (!mobileLayoutState.sidebarModalCloseButton || !mobileLayoutState.sidebarModalCloseButton.isConnected) {
-    mobileLayoutState.sidebarModalCloseButton = document.getElementById('mobileSidebarModalClose')
-  }
-
   if (!mobileLayoutState.sidebarExpandButton || !mobileLayoutState.sidebarExpandButton.isConnected) {
     mobileLayoutState.sidebarExpandButton = document.getElementById('mobileSidebarExpandBtn')
     mobileLayoutState.sidebarExpandButtonListenerAttached = false
@@ -298,21 +273,6 @@ function ensureMobileLayoutElements() {
     mobileLayoutState.sidebarToggleListenerAttached = true
   }
 
-  if (mobileLayoutState.sidebarMenuButton && !mobileLayoutState.sidebarMenuButtonListenerAttached) {
-    mobileLayoutState.sidebarMenuButton.addEventListener('click', event => {
-      event.preventDefault()
-      if (!document.body || (!document.body.classList.contains('mobile-landscape') && !document.body.classList.contains('mobile-portrait'))) {
-        return
-      }
-      if (mobileLayoutState.sidebarModalVisible) {
-        closeMobileSidebarModal()
-      } else {
-        openMobileSidebarModal()
-      }
-    })
-    mobileLayoutState.sidebarMenuButtonListenerAttached = true
-  }
-
   if (mobileLayoutState.sidebarExpandButton && !mobileLayoutState.sidebarExpandButtonListenerAttached) {
     mobileLayoutState.sidebarExpandButton.addEventListener('click', event => {
       event.preventDefault()
@@ -329,29 +289,6 @@ function ensureMobileLayoutElements() {
     mobileLayoutState.sidebarExpandButtonListenerAttached = true
   }
 
-  if (mobileLayoutState.sidebarModal && !mobileLayoutState.sidebarModalDismissListenerAttached) {
-    mobileLayoutState.sidebarModal.addEventListener('click', event => {
-      const target = event.target
-      if (!target || typeof target.closest !== 'function') {
-        return
-      }
-      const dismissTrigger = target.closest('[data-modal-dismiss]')
-      if (dismissTrigger) {
-        event.preventDefault()
-        closeMobileSidebarModal()
-      }
-    })
-    mobileLayoutState.sidebarModalDismissListenerAttached = true
-  }
-
-  if (typeof document !== 'undefined' && !mobileLayoutState.sidebarModalKeydownListenerAttached) {
-    document.addEventListener('keydown', event => {
-      if (event.key === 'Escape' && mobileLayoutState.sidebarModalVisible) {
-        closeMobileSidebarModal()
-      }
-    })
-    mobileLayoutState.sidebarModalKeydownListenerAttached = true
-  }
 }
 
 function ensureMobileStatusBar(container, orientation) {
@@ -861,66 +798,6 @@ function restoreSidebarSection(section, originalParent, originalNextSibling) {
   }
 }
 
-function moveSidebarSectionToModal(section) {
-  const { sidebarModalContent } = mobileLayoutState
-  if (!section || !sidebarModalContent) {
-    return
-  }
-
-  if (section.parentNode !== sidebarModalContent) {
-    sidebarModalContent.appendChild(section)
-  }
-}
-
-function setMobileSidebarModalVisible(visible) {
-  mobileLayoutState.sidebarModalVisible = !!visible
-
-  if (typeof document === 'undefined') {
-    return
-  }
-
-  const { sidebarModal, sidebarMenuButton } = mobileLayoutState
-  if (sidebarModal) {
-    sidebarModal.setAttribute('aria-hidden', visible ? 'false' : 'true')
-  }
-
-  if (sidebarMenuButton) {
-    sidebarMenuButton.setAttribute('aria-expanded', visible ? 'true' : 'false')
-  }
-
-  if (document.body) {
-    document.body.classList.toggle('mobile-sidebar-modal-open', !!visible)
-  }
-}
-
-export function openMobileSidebarModal() {
-  if (typeof document === 'undefined' || !document.body || !document.body.classList.contains('mobile-landscape')) {
-    return
-  }
-
-  moveSidebarSectionToModal(mobileLayoutState.saveLoadMenu)
-  moveSidebarSectionToModal(mobileLayoutState.statsSection)
-  setMobileSidebarModalVisible(true)
-
-  const { sidebarModal, sidebarModalCloseButton } = mobileLayoutState
-  if (sidebarModal) {
-    const focusTarget = sidebarModal.querySelector('input, button, select, textarea, [tabindex]:not([tabindex="-1"])')
-    if (focusTarget && typeof focusTarget.focus === 'function') {
-      focusTarget.focus()
-    } else if (sidebarModalCloseButton && typeof sidebarModalCloseButton.focus === 'function') {
-      sidebarModalCloseButton.focus()
-    }
-  }
-}
-
-export function closeMobileSidebarModal() {
-  setMobileSidebarModalVisible(false)
-}
-
-export function isMobileSidebarModalVisible() {
-  return mobileLayoutState.sidebarModalVisible
-}
-
 export function applyMobileSidebarLayout(mode, _options = {}) {
   ensureMobileLayoutElements()
 
@@ -933,11 +810,7 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
     mobileJoystickContainer,
     sidebarUtilityContainer,
     restartButton,
-    musicButton,
-    sidebarMenuButton,
-    sidebarModal,
-    saveLoadMenu,
-    statsSection
+    musicButton
   } = mobileLayoutState
 
   if (!productionArea || !mobileContainer || !document.body) {
@@ -979,17 +852,6 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
         sidebarUtilityContainer.appendChild(musicButton)
       }
     }
-    moveSidebarSectionToModal(saveLoadMenu)
-    moveSidebarSectionToModal(statsSection)
-    if (sidebarMenuButton) {
-      sidebarMenuButton.removeAttribute('aria-hidden')
-      sidebarMenuButton.removeAttribute('tabindex')
-      sidebarMenuButton.setAttribute('aria-expanded', mobileLayoutState.sidebarModalVisible ? 'true' : 'false')
-    }
-    if (sidebarModal) {
-      sidebarModal.setAttribute('data-orientation', mode)
-    }
-    setMobileSidebarModalVisible(mobileLayoutState.sidebarModalVisible)
     const shouldCollapse = typeof mobileLayoutState.isSidebarCollapsed === 'boolean'
       ? mobileLayoutState.isSidebarCollapsed
       : false
@@ -1013,10 +875,6 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
       mobileLayoutState.musicOriginalParent,
       mobileLayoutState.musicOriginalNextSibling
     )
-    closeMobileSidebarModal()
-    if (sidebarModal) {
-      sidebarModal.removeAttribute('data-orientation')
-    }
     restoreSidebarSection(
       mobileLayoutState.saveLoadMenu,
       mobileLayoutState.saveLoadOriginalParent,
@@ -1027,11 +885,6 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
       mobileLayoutState.statsOriginalParent,
       mobileLayoutState.statsOriginalNextSibling
     )
-    if (sidebarMenuButton) {
-      sidebarMenuButton.setAttribute('aria-expanded', 'false')
-      sidebarMenuButton.setAttribute('aria-hidden', 'true')
-      sidebarMenuButton.setAttribute('tabindex', '-1')
-    }
     const shouldCollapse = isPortrait
       ? document.body.classList.contains('sidebar-collapsed')
       : false

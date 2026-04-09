@@ -567,10 +567,6 @@ body.is-touch .money-tooltip__meta {
   justify-content: space-between;
 }
 
-#actions .mobile-sidebar-menu-button {
-  display: none;
-}
-
 .action-button {
   padding: 8px 12px;
   background-color: #444;

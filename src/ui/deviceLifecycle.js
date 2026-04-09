@@ -60,7 +60,7 @@ function readSafeAreaInsetPixels() {
 }
 
 function syncSafeAreaInsets() {
-  if (!document.body || !document.body.classList.contains('is-touch')) {
+  if (typeof document === 'undefined' || !document.body || !document.body.classList.contains('is-touch')) {
     return
   }
 
@@ -122,7 +122,7 @@ function bindListeners() {
 }
 
 export function updateMobileLayoutClasses() {
-  if (!document.body) {
+  if (typeof document === 'undefined' || !document.body) {
     return
   }
 
@@ -154,8 +154,12 @@ export function updateMobileLayoutClasses() {
 }
 
 export function updateTouchClass() {
+  if (typeof window === 'undefined') {
+    return
+  }
+
   const isTouch = window.matchMedia('(pointer: coarse)').matches
-  if (document.body) {
+  if (typeof document !== 'undefined' && document.body) {
     const previous = lastIsTouchState
     document.body.classList.toggle('is-touch', isTouch)
     lastIsTouchState = isTouch
@@ -172,7 +176,7 @@ export function updateTouchClass() {
 }
 
 export function updateStandaloneClass() {
-  if (!document.body) {
+  if (typeof document === 'undefined' || !document.body) {
     return
   }
   const standaloneMatch = typeof window.matchMedia === 'function'

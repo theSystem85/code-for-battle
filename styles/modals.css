@@ -909,110 +909,6 @@ body.benchmark-modal-open {
   opacity: 0.55;
   cursor: not-allowed;
 }
-.mobile-sidebar-modal {
-  display: none;
-}
-
-body.mobile-landscape .mobile-sidebar-modal {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.2s ease;
-}
-
-body.mobile-landscape .mobile-sidebar-modal[aria-hidden="false"] {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-
-.mobile-sidebar-modal__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(2px);
-}
-
-.mobile-sidebar-modal__dialog {
-  position: relative;
-  background: linear-gradient(135deg, #2a2a2a, #333333);
-  color: #ecf0f1;
-  border: 2px solid #555555;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-  padding: 20px;
-  width: min(90vw, 420px);
-  max-height: 80vh;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  font-family: var(--game-font-family);
-}
-
-.mobile-sidebar-modal__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.mobile-sidebar-modal__title {
-  margin: 0;
-  font-size: 1.2rem;
-  color: #ecf0f1;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-}
-
-.mobile-sidebar-modal__close {
-  width: auto;
-  height: auto;
-  background: #e74c3c;
-  color: #ffffff;
-  border: none;
-  border-radius: 4px;
-  padding: 6px 12px;
-  cursor: pointer;
-  font-family: var(--game-font-family);
-  font-weight: bold;
-  transition: background 0.3s ease;
-}
-
-.mobile-sidebar-modal__close:hover,
-.mobile-sidebar-modal__close:focus {
-  background: #c0392b;
-}
-
-.mobile-sidebar-modal__content {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 12px;
-  background: rgba(40, 40, 40, 0.5);
-  border-radius: 4px;
-  font-family: var(--game-font-family);
-}
-
-.mobile-sidebar-modal__content > * {
-  width: 100%;
-  font-family: inherit;
-}
-
-body.mobile-sidebar-modal-open {
-  overflow: hidden;
-}
-
-body.mobile-sidebar-modal-open #sidebar,
-body.mobile-sidebar-modal-open #sidebarScroll {
-  pointer-events: none;
-}
-
 /* Remote invite landing overlay */
 .remote-invite-overlay {
   position: fixed;
@@ -1541,7 +1437,6 @@ body.mobile-portrait .config-modal,
 body.mobile-portrait .keybinding-conflict-overlay,
 body.mobile-portrait .kicked-modal,
 body.mobile-portrait .benchmark-modal,
-body.mobile-portrait .mobile-sidebar-modal[aria-hidden="false"],
 body.mobile-portrait .remote-invite-overlay {
   padding-top: calc(var(--safe-area-top) + 16px);
 }
@@ -1550,7 +1445,6 @@ body.mobile-portrait .config-modal__dialog,
 body.mobile-portrait .keybinding-conflict-dialog,
 body.mobile-portrait .kicked-modal__dialog,
 body.mobile-portrait .benchmark-modal__dialog,
-body.mobile-portrait .mobile-sidebar-modal__content,
 body.mobile-portrait .remote-invite-card {
   max-height: calc(100vh - var(--safe-area-top) - var(--safe-area-bottom) - 32px);
 }

@@ -62,7 +62,6 @@ import { GameLoop } from '../game/gameLoop.js'
 import { setupMinimapHandlers } from '../ui/minimap.js'
 import { addPowerIndicator } from '../ui/energyBar.js'
 import { addMoneyIndicator } from '../ui/moneyBar.js'
-import { closeMobileSidebarModal, isMobileSidebarModalVisible } from '../ui/mobileLayout.js'
 import { resetLlmUsage } from '../ai/llmUsage.js'
 import { terminateAllSounds } from '../sound.js'
 import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../startupScheduler.js'
@@ -1055,10 +1054,6 @@ class Game {
 
     if (cheatMenuBtn) {
       cheatMenuBtn.addEventListener('click', () => {
-        if (isMobileSidebarModalVisible()) {
-          closeMobileSidebarModal()
-        }
-
         if (window.cheatSystem && typeof window.cheatSystem.openDialog === 'function') {
           window.cheatSystem.openDialog()
         }

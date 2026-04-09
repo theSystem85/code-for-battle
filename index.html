@@ -53,7 +53,6 @@
 
     .host-paused-banner--hidden,
     .remote-invite-overlay--hidden,
-    .mobile-sidebar-modal.hidden,
     .modal-hidden {
       display: none;
     }
@@ -149,10 +148,6 @@
     <div id="sidebarUtilityButtons" aria-hidden="true"></div>
 
     <div id="actions">
-      <button id="mobileSidebarMenuBtn" class="action-button icon-button mobile-sidebar-menu-button" title="Open menu"
-        aria-expanded="false" aria-controls="mobileSidebarModal" type="button">
-        <span class="button-icon settings-icon">☰</span>
-      </button>
       <button id="repairBtn" class="action-button icon-button" title="Repair">
         <img src="/icons/wrench.svg" alt="Repair" class="button-icon white-icon">
       </button>
@@ -1234,19 +1229,6 @@
     }
   </script>
 
-  <div id="mobileSidebarModal" class="mobile-sidebar-modal" role="dialog" aria-modal="true" aria-hidden="true">
-    <div class="mobile-sidebar-modal__backdrop" data-modal-dismiss="true"></div>
-    <div class="mobile-sidebar-modal__dialog" role="document">
-      <header class="mobile-sidebar-modal__header">
-        <h2 class="mobile-sidebar-modal__title">Menu</h2>
-        <button id="mobileSidebarModalClose" class="mobile-sidebar-modal__close" type="button" title="Close menu"
-          data-modal-dismiss="true">
-          ✕
-        </button>
-      </header>
-      <div id="mobileSidebarModalContent" class="mobile-sidebar-modal__content"></div>
-    </div>
-  </div>
   <div id="userDocsModal" class="user-docs-modal hidden" aria-hidden="true">
     <div class="user-docs-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="userDocsTitle">
       <div class="user-docs-modal__header">
