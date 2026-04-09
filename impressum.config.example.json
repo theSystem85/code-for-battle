@@ -13,8 +13,8 @@
   "responsiblePerson": "Max Mustermann",
   "privacyEmail": "privacy@example.com",
   "representative": "",
-  "hostingProviderName": "Netlify, Inc.",
-  "hostingProviderAddress": "44 Montgomery Street, Suite 300, San Francisco, CA 94104, USA",
+  "hostingProviderName": "MyWebHoster, Inc.",
+  "hostingProviderAddress": "123 Example Street, Suite 300, San Francisco, CA 94104, USA",
   "lastUpdatedDe": "30.03.2026",
   "lastUpdatedEn": "2026-03-30"
 }

@@ -1,3 +1,4 @@
+- [x] Remove the floating `global-legal-links` shell element so the homepage no longer shows fixed legal quick links; legal pages remain available through their dedicated routes and existing in-game entry points.
 - [x] Provide the LLM with the entire building/unit tech tree in a compressed CSV-style `techTreeCsv` string for long-term planning, while keeping live `productionOptions` for immediately legal actions.
 - [x] Strengthen strategic economy-recovery guidance so the LLM explicitly treats selling lower-priority buildings as valid funding for replacement refineries and harvesters.
 - [x] Let strategic LLM planning look further ahead: when the active queues are short, top them up with several legal, affordable future base-build and production actions so the local AI keeps working between LLM ticks.

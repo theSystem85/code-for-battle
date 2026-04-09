@@ -41,5 +41,6 @@ Add developer-facing setup docs with:
 - inferred privacy assumptions
 - manual legal review checklist
 
-## Follow-up adjustment (2026-04-01)
-- Floating shell legal quick links must be hidden in mobile portrait condensed/collapsed modes and only remain visible when the sidebar is expanded.
+## Follow-up adjustments
+- 2026-04-01: Floating shell legal quick links must be hidden in mobile portrait condensed/collapsed modes and only remain visible when the sidebar is expanded.
+- 2026-04-08: Remove the floating shell legal quick links element from the website shell; legal-page access remains available through the dedicated routes and existing in-game UI flows.
