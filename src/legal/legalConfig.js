@@ -1,6 +1,9 @@
+import exampleLegalConfig from './legalConfig.example.json'
+
 const DEFAULT_LEGAL_CONFIG = {
   fullName: '',
   businessName: '',
+  addressLine1: '',
   street: '',
   houseNumber: '',
   postalCode: '',
@@ -8,6 +11,7 @@ const DEFAULT_LEGAL_CONFIG = {
   country: '',
   email: '',
   phone: '',
+  contactFormUrl: '',
   website: '',
   vatId: '',
   responsiblePerson: '',
@@ -40,11 +44,6 @@ export async function loadLegalConfig() {
     const localConfig = await fetchJson('/impressum.config.json')
     return sanitizeConfig(localConfig)
   } catch {
-    try {
-      const sampleConfig = await fetchJson('/impressum.config.example.json')
-      return sanitizeConfig(sampleConfig)
-    } catch {
-      return { ...DEFAULT_LEGAL_CONFIG }
-    }
+    return sanitizeConfig(exampleLegalConfig)
   }
 }

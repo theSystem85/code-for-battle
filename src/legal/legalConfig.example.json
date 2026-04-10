@@ -1,6 +1,7 @@
 {
   "fullName": "Max Mustermann",
   "businessName": "Mustermann Interactive",
+  "addressLine1": "",
   "street": "Musterstraße",
   "houseNumber": "12a",
   "postalCode": "10115",
@@ -8,6 +9,7 @@
   "country": "Deutschland",
   "email": "hello@example.com",
   "phone": "+49 30 1234567",
+  "contactFormUrl": "/contact",
   "website": "https://example.com",
   "vatId": "",
   "responsiblePerson": "Max Mustermann",

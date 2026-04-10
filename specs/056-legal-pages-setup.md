@@ -9,9 +9,10 @@ Provide production-ready legal pages for a public browser/PWA game with German o
   - `/imprint`
   - `/datenschutz`
   - `/privacy`
+- Keep legal implementation files under `src/legal/` while preserving the existing public routes for dev and production builds.
 - Render content from centralized config data loaded at runtime.
 - Keep local identity/contact details in `impressum.config.json` (gitignored).
-- Provide committed example placeholders in `impressum.config.example.json`.
+- Provide committed example placeholders in `src/legal/legalConfig.example.json`.
 - Ensure legal pages are discoverable:
   - from website shell
   - from in-game UI
@@ -28,6 +29,9 @@ Provide production-ready legal pages for a public browser/PWA game with German o
    - API/signaling requests
    - No explicit classic analytics scripts found
 4. Layout must be readable on desktop and mobile.
+5. Public legal routes must keep working both in Vite dev mode and in built output after moving the implementation files under `src/legal/`.
+6. Privacy text must explicitly cover legal bases, retention periods, third-country transfer wording for Netlify hosting/forms, and TLS transport encryption.
+7. The imprint must include the chosen consumer-dispute wording when applicable.
 
 ## Non-functional requirements
 - No heavy dependency additions.
@@ -44,3 +48,8 @@ Add developer-facing setup docs with:
 ## Follow-up adjustments
 - 2026-04-01: Floating shell legal quick links must be hidden in mobile portrait condensed/collapsed modes and only remain visible when the sidebar is expanded.
 - 2026-04-08: Remove the floating shell legal quick links element from the website shell; legal-page access remains available through the dedicated routes and existing in-game UI flows.
+- 2026-04-09: Add `contactFormUrl` config field. Impressum/Imprint contact sections now render a contact form link when configured, satisfying the § 5 DDG second-contact-method requirement as an alternative to a phone number.
+- 2026-04-09: Add bilingual Netlify Forms contact pages (`/contact`, `/kontakt`) with `data-netlify="true"`, honeypot spam filter, custom success pages (`/contact-success`, `/kontakt-erfolg`), and dark-theme form styles.
+- 2026-04-09: Add `vite.config.js` with multi-page `rollupOptions.input` so all root HTML pages are included in `vite build` dist output (fixes legal pages not being deployed to production).
+- 2026-04-10: Move all committed legal HTML/CSS/example-config implementation files into `src/legal/`. Vite now rewrites the existing dev routes to the moved source pages and relocates the built legal HTML files back to `dist/` root so public URLs remain unchanged.
+- 2026-04-10: Complete the remaining legal disclosure updates for the current operator choices: split the `c/o` address into its own postal line, add the consumer-dispute statement, and extend the privacy policy with legal bases, Netlify Forms disclosure, retention periods, third-country transfer wording, and TLS information.

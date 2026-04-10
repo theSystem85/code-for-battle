@@ -1,17 +1,48 @@
 import { loadLegalConfig } from './legalConfig.js'
 
 const PLACEHOLDER_TEXT = 'Please configure in impressum.config.json'
+const CONTACT_RETENTION_DE = '3 Monate nach abschließender Bearbeitung'
+const CONTACT_RETENTION_EN = '3 months after final processing'
 
 function valueOrPlaceholder(value) {
   return value || PLACEHOLDER_TEXT
 }
 
-function contactLine(config) {
-  return [config.street, config.houseNumber].filter(Boolean).join(' ').trim() || PLACEHOLDER_TEXT
-}
-
 function cityLine(config) {
   return [config.postalCode, config.city].filter(Boolean).join(' ').trim() || PLACEHOLDER_TEXT
+}
+
+function displayNameLines(config) {
+  const lines = []
+
+  if (config.businessName) {
+    lines.push(config.businessName)
+  }
+
+  if (config.fullName && config.fullName !== config.businessName) {
+    lines.push(config.fullName)
+  }
+
+  return lines.length ? lines : [PLACEHOLDER_TEXT]
+}
+
+function addressLines(config) {
+  const streetLine = [config.street, config.houseNumber].filter(Boolean).join(' ').trim()
+  const lines = [config.addressLine1, streetLine].filter(Boolean)
+  return lines.length ? lines : [PLACEHOLDER_TEXT]
+}
+
+function renderLines(lines) {
+  return lines.map(valueOrPlaceholder).join('<br>\n      ')
+}
+
+function renderPostalBlock(config) {
+  return renderLines([
+    ...displayNameLines(config),
+    ...addressLines(config),
+    cityLine(config),
+    config.country
+  ])
 }
 
 function legalLinks(lang) {
@@ -28,10 +59,7 @@ function renderImpressumDe(config) {
 
     <section>
       <h2>Angaben gemäß § 5 DDG</h2>
-      <p>${valueOrPlaceholder(config.businessName || config.fullName)}<br>
-      ${contactLine(config)}<br>
-      ${cityLine(config)}<br>
-      ${valueOrPlaceholder(config.country)}</p>
+      <p>${renderPostalBlock(config)}</p>
       ${config.representative ? `<p>Vertreten durch: ${config.representative}</p>` : ''}
     </section>
 
@@ -39,6 +67,7 @@ function renderImpressumDe(config) {
       <h2>Kontakt</h2>
       <p>E-Mail: ${valueOrPlaceholder(config.email)}</p>
       ${config.phone ? `<p>Telefon: ${config.phone}</p>` : ''}
+      ${config.contactFormUrl ? `<p>Kontaktformular: <a href="${config.contactFormUrl}">${config.contactFormUrl}</a></p>` : ''}
       ${config.website ? `<p>Webseite: ${config.website}</p>` : ''}
     </section>
 
@@ -47,6 +76,11 @@ function renderImpressumDe(config) {
     ${config.responsiblePerson
     ? `<section><h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2><p>${config.responsiblePerson}</p></section>`
     : ''}
+
+    <section>
+      <h2>Verbraucherstreitbeilegung</h2>
+      <p>Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.</p>
+    </section>
 
     <section>
       <h2>Hosting</h2>
@@ -73,10 +107,7 @@ function renderImprintEn(config) {
 
     <section>
       <h2>Information pursuant to German legal requirements</h2>
-      <p>${valueOrPlaceholder(config.businessName || config.fullName)}<br>
-      ${contactLine(config)}<br>
-      ${cityLine(config)}<br>
-      ${valueOrPlaceholder(config.country)}</p>
+      <p>${renderPostalBlock(config)}</p>
       ${config.representative ? `<p>Represented by: ${config.representative}</p>` : ''}
     </section>
 
@@ -84,6 +115,7 @@ function renderImprintEn(config) {
       <h2>Contact</h2>
       <p>Email: ${valueOrPlaceholder(config.email)}</p>
       ${config.phone ? `<p>Phone: ${config.phone}</p>` : ''}
+      ${config.contactFormUrl ? `<p>Contact form: <a href="${config.contactFormUrl}">${config.contactFormUrl}</a></p>` : ''}
       ${config.website ? `<p>Website: ${config.website}</p>` : ''}
     </section>
 
@@ -92,6 +124,11 @@ function renderImprintEn(config) {
     ${config.responsiblePerson
     ? `<section><h2>Person responsible for content</h2><p>${config.responsiblePerson}</p></section>`
     : ''}
+
+    <section>
+      <h2>Consumer dispute resolution</h2>
+      <p>We are neither willing nor obliged to participate in dispute resolution proceedings before a consumer arbitration board.</p>
+    </section>
 
     <section>
       <h2>Hosting</h2>
@@ -119,10 +156,7 @@ function renderPrivacyDe(config) {
 
     <section>
       <h2>Verantwortlicher</h2>
-      <p>${valueOrPlaceholder(config.businessName || config.fullName)}<br>
-      ${contactLine(config)}<br>
-      ${cityLine(config)}<br>
-      ${valueOrPlaceholder(config.country)}</p>
+      <p>${renderPostalBlock(config)}</p>
       <p>Kontakt für Datenschutzanfragen: ${valueOrPlaceholder(privacyContact)}</p>
     </section>
 
@@ -132,43 +166,53 @@ function renderPrivacyDe(config) {
     </section>
 
     <section>
-      <h2>Hosting</h2>
-      <p>Die Anwendung wird bei ${valueOrPlaceholder(config.hostingProviderName)} gehostet. Dabei kann es zur Verarbeitung von Verbindungsdaten in Server-Logfiles kommen.</p>
+      <h2>Hosting und Server-Logfiles</h2>
+      <p>Die Anwendung wird bei ${valueOrPlaceholder(config.hostingProviderName)} gehostet. Beim Aufruf der Website verarbeitet der Hosting-Anbieter technisch erforderliche Verbindungsdaten, insbesondere IP-Adresse, Datum/Uhrzeit, angeforderte URL, Referrer, Browsertyp und Betriebssystem, um Stabilität, Auslieferung und Sicherheit der Plattform sicherzustellen.</p>
+      <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse liegt in dem sicheren und funktionsfähigen Betrieb des Angebots.</p>
     </section>
 
     <section>
-      <h2>Server-Logfiles</h2>
-      <p>Beim Aufruf der Website werden technisch erforderliche Informationen wie IP-Adresse, Datum/Uhrzeit, aufgerufene URL, Referrer, Browsertyp und Betriebssystem verarbeitet, um Stabilität und Sicherheit der Plattform sicherzustellen.</p>
+      <h2>Kontaktaufnahme und Kontaktformular</h2>
+      <p>Wenn Sie uns per E-Mail oder über das bereitgestellte Kontaktformular kontaktieren, verarbeiten wir Ihre Angaben zur Bearbeitung Ihrer Anfrage und für mögliche Rückfragen. Das Kontaktformular wird über Netlify Forms verarbeitet.</p>
+      <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, soweit Ihre Anfrage auf den Abschluss oder die Durchführung eines Vertrags gerichtet ist, andernfalls Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse liegt in der effizienten Bearbeitung eingehender Anfragen.</p>
     </section>
 
     <section>
-      <h2>Kontaktaufnahme</h2>
-      <p>Wenn Sie uns per E-Mail kontaktieren, verarbeiten wir Ihre Angaben zur Bearbeitung Ihrer Anfrage und für mögliche Rückfragen.</p>
+      <h2>Spielnutzung und Browser-Speicher</h2>
+      <p>Bei der Nutzung des Spiels werden Spielstände, Replays, Komfort- und Grafikeinstellungen, Multiplayer-Aliasnamen sowie weitere technisch erforderliche Konfigurationswerte lokal im Browser gespeichert, vor allem über Local Storage. Session Storage wird derzeit nicht aktiv genutzt.</p>
+      <p>Rechtsgrundlage für den Zugriff auf bzw. die Speicherung von Informationen auf Ihrem Endgerät ist § 25 Abs. 2 TDDDG, soweit dies technisch erforderlich ist. Die anschließende Verarbeitung personenbezogener Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b oder lit. f DSGVO, um die von Ihnen gewünschten Spiel- und Komfortfunktionen bereitzustellen.</p>
     </section>
 
     <section>
-      <h2>Spielnutzung</h2>
-      <p>Bei der Nutzung des Spiels werden Spielzustände und Einstellungen lokal im Browser gespeichert (z. B. Local Storage), damit Funktionen wie Spielstände, Replays, Konfiguration und Komforteinstellungen funktionieren.</p>
+      <h2>Mehrspieler, Signalisierung und WebRTC</h2>
+      <p>Zur Bereitstellung von Mehrspieler-Funktionen verarbeitet die Anwendung netzwerkbezogene Metadaten, Signalisierungsdaten und verbindungsbezogene Informationen. Für Peer-to-Peer-Verbindungen wird WebRTC eingesetzt; dabei können IP-bezogene Netzwerk-Metadaten zwischen beteiligten Clients und der eingesetzten Infrastruktur verarbeitet werden.</p>
+      <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO, soweit die Verarbeitung zur Bereitstellung der von Ihnen gewählten Mehrspieler-Funktion erforderlich ist, andernfalls Art. 6 Abs. 1 lit. f DSGVO für den stabilen technischen Betrieb.</p>
     </section>
 
     <section>
-      <h2>Technisch notwendige Datenverarbeitung</h2>
-      <p>Zur Bereitstellung von Mehrspieler-Funktionen verarbeitet die Anwendung netzwerkbezogene Metadaten und Signalisierungsdaten. Außerdem werden API-Aufrufe genutzt, um Sitzungen technisch zu koordinieren.</p>
+      <h2>Optionale Drittanbieter-APIs</h2>
+      <p>Optional können Sie in den Einstellungen eigene API-Zugangsdaten für externe KI-Anbieter hinterlegen. Diese Funktion ist standardmäßig freiwillig und wird erst auf Ihre Veranlassung genutzt. Prüfen Sie die Datenschutzbedingungen der jeweils verwendeten Anbieter.</p>
+      <p>Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO für die Bereitstellung der von Ihnen aktiv genutzten Funktion oder, soweit einschlägig, Ihre freiwillige Entscheidung zur Nutzung nach Art. 6 Abs. 1 lit. a DSGVO.</p>
     </section>
 
     <section>
-      <h2>Browser-Speicher (Local Storage / Session Storage)</h2>
-      <p>Das Projekt verwendet vor allem Local Storage. Session Storage wird derzeit nicht aktiv genutzt, kann aber bei künftigen technischen Erweiterungen hinzukommen.</p>
+      <h2>Empfänger und Auftragsverarbeiter</h2>
+      <p>Empfänger der personenbezogenen Daten können technische Dienstleister sein, die wir für Hosting, Formverarbeitung und die Bereitstellung der Infrastruktur einsetzen. Derzeit betrifft dies insbesondere ${valueOrPlaceholder(config.hostingProviderName)} als Hosting- und Formularanbieter.</p>
     </section>
 
     <section>
-      <h2>WebRTC und Peer-to-Peer-Kommunikation</h2>
-      <p>Für Multiplayer-Verbindungen wird WebRTC eingesetzt. Dabei können Verbindungsdaten wie IP-bezogene Netzwerk-Metadaten zwischen beteiligten Clients und der eingesetzten Infrastruktur verarbeitet werden.</p>
+      <h2>Drittlandübermittlungen</h2>
+      <p>Im Rahmen des Hostings und der Formularverarbeitung kann eine Übermittlung personenbezogener Daten in die USA nicht ausgeschlossen werden. Nach Anbieterangaben stützt ${valueOrPlaceholder(config.hostingProviderName)} solche Übermittlungen auf eine Zertifizierung nach dem EU-U.S. Data Privacy Framework sowie ergänzend auf Standardvertragsklauseln, soweit erforderlich.</p>
     </section>
 
     <section>
-      <h2>Drittanbieter-APIs (optional)</h2>
-      <p>Optional können Sie in den Einstellungen eigene API-Zugangsdaten für externe KI-Anbieter hinterlegen. Diese Funktion ist standardmäßig optional und liegt in Ihrer Verantwortung. Prüfen Sie die Datenschutzbedingungen der jeweils verwendeten Anbieter.</p>
+      <h2>Speicherdauer</h2>
+      <p>Server-Logfiles werden nur so lange gespeichert, wie dies für Sicherheits-, Fehleranalyse- und Betriebszwecke erforderlich ist, und anschließend gelöscht oder anonymisiert. Kontaktanfragen per E-Mail oder Formular speichern wir grundsätzlich für ${CONTACT_RETENTION_DE}, sofern keine gesetzlichen Aufbewahrungspflichten oder berechtigten Gründe für eine längere Aufbewahrung bestehen. Lokal im Browser gespeicherte Daten bleiben grundsätzlich erhalten, bis Sie diese selbst löschen oder Ihre Browserdaten zurücksetzen.</p>
+    </section>
+
+    <section>
+      <h2>TLS-/SSL-Verschlüsselung</h2>
+      <p>Die Website wird über HTTPS ausgeliefert. Dadurch werden übertragene Daten während der Kommunikation zwischen Ihrem Browser und dem Server verschlüsselt.</p>
     </section>
 
     <section>
@@ -201,10 +245,7 @@ function renderPrivacyEn(config) {
 
     <section>
       <h2>Data controller</h2>
-      <p>${valueOrPlaceholder(config.businessName || config.fullName)}<br>
-      ${contactLine(config)}<br>
-      ${cityLine(config)}<br>
-      ${valueOrPlaceholder(config.country)}</p>
+      <p>${renderPostalBlock(config)}</p>
       <p>Privacy contact: ${valueOrPlaceholder(privacyContact)}</p>
     </section>
 
@@ -214,43 +255,53 @@ function renderPrivacyEn(config) {
     </section>
 
     <section>
-      <h2>Hosting</h2>
-      <p>The application is hosted by ${valueOrPlaceholder(config.hostingProviderName)}. Connection data may be processed in server log files.</p>
+      <h2>Hosting and server log files</h2>
+      <p>The application is hosted by ${valueOrPlaceholder(config.hostingProviderName)}. When you visit the website, the hosting provider processes technically necessary connection data, in particular IP address, date/time, requested URL, referrer, browser type, and operating system, to ensure delivery, stability, and security of the platform.</p>
+      <p>The legal basis is Art. 6(1)(f) GDPR. Our legitimate interest lies in the secure and reliable operation of the service.</p>
     </section>
 
     <section>
-      <h2>Server log files</h2>
-      <p>When visiting this website, technical information such as IP address, date/time, requested URL, referrer, browser type, and operating system may be processed to ensure stability and security.</p>
+      <h2>Contact requests and contact form</h2>
+      <p>If you contact us by email or through the provided contact form, we process your information to handle your request and any follow-up communication. The contact form is processed using Netlify Forms.</p>
+      <p>The legal basis is Art. 6(1)(b) GDPR where your request relates to entering into or performing a contract; otherwise Art. 6(1)(f) GDPR applies. Our legitimate interest lies in efficiently handling incoming inquiries.</p>
     </section>
 
     <section>
-      <h2>Contact requests</h2>
-      <p>If you contact us by email, we process your information to handle your request and any follow-up communication.</p>
+      <h2>Game usage and browser storage</h2>
+      <p>When you use the game, save states, replays, convenience and graphics settings, multiplayer aliases, and other technically necessary configuration values are stored locally in your browser, primarily via Local Storage. Session Storage is not currently used actively.</p>
+      <p>The legal basis for accessing or storing information on your device is Section 25(2) TDDDG where this is technically necessary. Subsequent personal data processing is based on Art. 6(1)(b) or Art. 6(1)(f) GDPR in order to provide the game features you requested.</p>
     </section>
 
     <section>
-      <h2>Game usage</h2>
-      <p>The game stores game states and settings locally in your browser (for example using Local Storage) so that savegames, replays, configuration, and convenience features can function.</p>
+      <h2>Multiplayer, signaling, and WebRTC</h2>
+      <p>Multiplayer features process network metadata, signaling data, and connection-related information. Peer-to-peer connectivity uses WebRTC, which can involve processing IP-related network metadata between participating clients and the infrastructure used.</p>
+      <p>The legal basis is Art. 6(1)(b) GDPR where the processing is necessary to provide the multiplayer function you selected, otherwise Art. 6(1)(f) GDPR for stable technical operation.</p>
     </section>
 
     <section>
-      <h2>Technically necessary processing</h2>
-      <p>Multiplayer features process network metadata and signaling data. API requests are also used for technical session coordination.</p>
+      <h2>Optional third-party APIs</h2>
+      <p>You may optionally configure your own API credentials for external AI providers in settings. This feature is voluntary and only used on your instruction. Please review the privacy terms of each provider you choose to use.</p>
+      <p>The legal basis is Art. 6(1)(b) GDPR for providing the feature you actively use or, where applicable, your voluntary choice to use it under Art. 6(1)(a) GDPR.</p>
     </section>
 
     <section>
-      <h2>Browser storage (Local Storage / Session Storage)</h2>
-      <p>The project primarily uses Local Storage. Session Storage is currently not actively used, but may be used in future technical updates.</p>
+      <h2>Recipients and processors</h2>
+      <p>Recipients of personal data may include technical service providers we use for hosting, form handling, and infrastructure delivery. At present this includes ${valueOrPlaceholder(config.hostingProviderName)} in particular as hosting and forms provider.</p>
     </section>
 
     <section>
-      <h2>WebRTC and peer-to-peer networking</h2>
-      <p>Multiplayer connectivity uses WebRTC. This can involve processing connection-related metadata, including IP-related network information between clients and infrastructure.</p>
+      <h2>Transfers to third countries</h2>
+      <p>As part of hosting and form processing, a transfer of personal data to the United States cannot be ruled out. According to the provider, ${valueOrPlaceholder(config.hostingProviderName)} relies on certification under the EU-U.S. Data Privacy Framework and, where required, supplementary Standard Contractual Clauses for such transfers.</p>
     </section>
 
     <section>
-      <h2>Third-party APIs (optional)</h2>
-      <p>You may optionally configure your own API credentials for external AI providers in settings. This feature is optional and used at your discretion. Please review each provider's privacy terms.</p>
+      <h2>Retention periods</h2>
+      <p>Server log files are retained only as long as required for security, troubleshooting, and operational purposes and are then deleted or anonymized. Contact requests submitted by email or form are generally retained for ${CONTACT_RETENTION_EN}, unless statutory retention duties or legitimate reasons require longer retention. Data stored locally in your browser generally remains there until you delete it yourself or reset your browser data.</p>
+    </section>
+
+    <section>
+      <h2>TLS / SSL encryption</h2>
+      <p>The website is delivered over HTTPS. This encrypts data transmitted between your browser and the server during transport.</p>
     </section>
 
     <section>

@@ -7,7 +7,7 @@ Create this file locally in the project root:
 
 You can start by copying:
 
-- `impressum.config.example.json`
+- `src/legal/legalConfig.example.json`
 
 Then replace all placeholder owner/contact/legal fields with your real values.
 
@@ -16,6 +16,7 @@ Update these keys in your local config:
 
 - `fullName`
 - `businessName`
+- `addressLine1` (optional extra postal line, e.g. `c/o ...`)
 - `street`
 - `houseNumber`
 - `postalCode`
@@ -40,11 +41,13 @@ Legal pages are available at:
 - `/imprint` (English legal notice)
 - `/datenschutz` (German privacy policy)
 - `/privacy` (English privacy policy)
+- `/kontakt` (German contact form)
+- `/contact` (English contact form)
 
 They are linked from:
 
 - Sidebar footer links in-game
-- A small persistent quick-links area in the website shell
+- The legal notice contact link when `contactFormUrl` is configured
 
 ## Privacy sections inferred from current codebase
 The privacy text currently reflects observed technical behavior in the repository:
@@ -52,6 +55,7 @@ The privacy text currently reflects observed technical behavior in the repositor
 - Uses browser Local Storage extensively for settings, saves, replays, aliases, and configuration state
 - Uses WebRTC for multiplayer peer connectivity
 - Uses API/network requests for signaling and session coordination (including Netlify function endpoints)
+- Uses Netlify Forms for the static contact forms
 - Uses service worker and cache features for PWA/runtime behavior
 - No explicit classic analytics script integration detected in source files
 
