@@ -38,3 +38,4 @@ Landscaped touch layouts on iPhone 13 Pro Max still leave a black bar on the rig
 
 - **Extended Sidebar Availability in Landscape**: Mobile landscape must keep the extended sidebar sections (save/load and stats) directly in the sidebar scroll area, matching portrait behavior instead of routing those sections through a separate modal.
 - **Modal Cleanup**: Remove unused mobile landscape sidebar modal markup, styling, and JavaScript state/handlers once extended sidebar content is always available inline.
+- **Extended Menu Toggle Visibility**: Keep a visible mobile-landscape action-bar toggle for extended menu navigation; it should remain available after modal removal and allow quickly switching between build controls and extended sidebar sections.

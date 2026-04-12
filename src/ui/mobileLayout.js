@@ -38,6 +38,9 @@ const mobileLayoutState = {
   musicButton: null,
   musicOriginalParent: null,
   musicOriginalNextSibling: null,
+  sidebarMenuButton: null,
+  sidebarMenuButtonListenerAttached: false,
+  isExtendedMenuActive: false,
   sidebarExpandButton: null,
   sidebarExpandButtonListenerAttached: false,
   isSidebarCondensed: null,
@@ -236,6 +239,11 @@ function ensureMobileLayoutElements() {
     mobileLayoutState.sidebarExpandButtonListenerAttached = false
   }
 
+  if (!mobileLayoutState.sidebarMenuButton || !mobileLayoutState.sidebarMenuButton.isConnected) {
+    mobileLayoutState.sidebarMenuButton = document.getElementById('mobileSidebarMenuBtn')
+    mobileLayoutState.sidebarMenuButtonListenerAttached = false
+  }
+
   if (!mobileLayoutState.saveLoadMenu) {
     const saveLoadMenu = document.getElementById('saveLoadMenu')
     if (saveLoadMenu) {
@@ -289,6 +297,33 @@ function ensureMobileLayoutElements() {
     mobileLayoutState.sidebarExpandButtonListenerAttached = true
   }
 
+  if (mobileLayoutState.sidebarMenuButton && !mobileLayoutState.sidebarMenuButtonListenerAttached) {
+    mobileLayoutState.sidebarMenuButton.addEventListener('click', event => {
+      event.preventDefault()
+      if (!document.body || !document.body.classList.contains('mobile-landscape')) {
+        return
+      }
+      mobileLayoutState.isExtendedMenuActive = !mobileLayoutState.isExtendedMenuActive
+      syncLandscapeExtendedMenuButton()
+      if (mobileLayoutState.isExtendedMenuActive) {
+        mobileLayoutState.saveLoadMenu?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      } else {
+        mobileLayoutState.productionArea?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+      }
+    })
+    mobileLayoutState.sidebarMenuButtonListenerAttached = true
+  }
+
+}
+
+function syncLandscapeExtendedMenuButton() {
+  const { sidebarMenuButton } = mobileLayoutState
+  if (!sidebarMenuButton) {
+    return
+  }
+  const showExtended = !!mobileLayoutState.isExtendedMenuActive
+  sidebarMenuButton.setAttribute('aria-pressed', showExtended ? 'true' : 'false')
+  sidebarMenuButton.setAttribute('title', showExtended ? 'Show build menu' : 'Show extended menu')
 }
 
 function ensureMobileStatusBar(container, orientation) {
@@ -810,7 +845,8 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
     mobileJoystickContainer,
     sidebarUtilityContainer,
     restartButton,
-    musicButton
+    musicButton,
+    sidebarMenuButton
   } = mobileLayoutState
 
   if (!productionArea || !mobileContainer || !document.body) {
@@ -852,6 +888,11 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
         sidebarUtilityContainer.appendChild(musicButton)
       }
     }
+    if (sidebarMenuButton) {
+      sidebarMenuButton.removeAttribute('aria-hidden')
+      sidebarMenuButton.removeAttribute('tabindex')
+      syncLandscapeExtendedMenuButton()
+    }
     const shouldCollapse = typeof mobileLayoutState.isSidebarCollapsed === 'boolean'
       ? mobileLayoutState.isSidebarCollapsed
       : false
@@ -885,6 +926,12 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
       mobileLayoutState.statsOriginalParent,
       mobileLayoutState.statsOriginalNextSibling
     )
+    mobileLayoutState.isExtendedMenuActive = false
+    if (sidebarMenuButton) {
+      sidebarMenuButton.setAttribute('aria-hidden', 'true')
+      sidebarMenuButton.setAttribute('tabindex', '-1')
+      syncLandscapeExtendedMenuButton()
+    }
     const shouldCollapse = isPortrait
       ? document.body.classList.contains('sidebar-collapsed')
       : false

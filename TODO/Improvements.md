@@ -776,6 +776,7 @@
 - [x] Mobile landscape production category toggle now uses compact uppercase labels so "BUILDINGS" fits reliably, and building button labels use short forms only in mobile landscape (e.g., Vehicle Fab, Radar, Ammo Fab, Turret V1/V2/V3).
 - [x] Follow-up mobile landscape tweak: keep the BUILDINGS/UNITS toggle button position unchanged but left-align the toggle label text and reduce label font-size by 1px to avoid clipping.
 - [x] Ensure the extended sidebar content (save/load + stats sections) is directly available in mobile landscape just like portrait, and remove the obsolete mobile landscape sidebar modal implementation/code paths.
+- [x] Ensure the mobile landscape extended-menu toggle button remains visible and usable after inline-sidebar modal removal, with quick toggling between build and extended sections.
 - [x] Add mobile bulk-planning for building placement: tap ready build button, press-and-hold a start tile, drag to preview a line, and place the full planned line on release while keeping the build-button bulk count in sync.
 - [x] Refine mobile bulk building planning to freeform paint mode (not forced line mode), disable yellow selection rectangle during paint, and fix edge auto-scroll direction to match drawing direction.
 - [x] Restore mobile double-tap cancel behavior for placement/planning mode and keep two-finger pan scrolling functional after using draw-to-plan mode.

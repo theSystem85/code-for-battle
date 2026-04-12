@@ -1060,6 +1060,14 @@ body.mobile-landscape #actions {
   align-items: flex-start;
 }
 
+body.mobile-landscape #actions .mobile-sidebar-menu-button {
+  display: inline-flex;
+}
+
+body.mobile-portrait #actions .mobile-sidebar-menu-button {
+  display: none;
+}
+
 body.mobile-portrait:not(.sidebar-condensed) #actions #controlGroupsBtn {
   display: none;
 }
