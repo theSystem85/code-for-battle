@@ -1,3 +1,4 @@
+- [x] Ensure the German `Impressum` links to `/kontakt` and the English `Imprint` links to `/contact` even when the shared config stores only one base contact-form route.
 - [x] Remove the "Back to game" header link from all legal/contact pages so opening legal routes in a new tab no longer shows a misleading in-tab return action.
 - [x] Generate `dist/impressum.config.json` during `npm run build` from `IMPRESSUM_CONFIG_JSON` (with local-file fallback) so Git-based Netlify deploys can serve the private legal config without committing it.
 - [x] Move the legal implementation into `src/legal`, add Vite dev-route rewrites plus post-build HTML relocation so `/impressum`, `/privacy`, `/contact`, and related pages keep their existing public URLs, and complete the remaining legal-text fixes (address split, dispute-resolution notice, legal bases, retention, third-country transfer, TLS, and Netlify Forms disclosure).

@@ -1,4 +1,4 @@
 {
-  "commit": "cf266f1b",
-  "message": "build(legal): generate impressum config from Netlify env var"
+  "commit": "94aaaee6",
+  "message": "fix(legal): remove misleading back-to-game links from legal pages"
 }

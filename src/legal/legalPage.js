@@ -45,6 +45,24 @@ function renderPostalBlock(config) {
   ])
 }
 
+function getLocalizedContactFormUrl(config, lang) {
+  const configuredUrl = config.contactFormUrl
+
+  if (!configuredUrl) {
+    return ''
+  }
+
+  if (lang === 'de' && configuredUrl === '/contact') {
+    return '/kontakt'
+  }
+
+  if (lang === 'en' && configuredUrl === '/kontakt') {
+    return '/contact'
+  }
+
+  return configuredUrl
+}
+
 function legalLinks(lang) {
   if (lang === 'de') {
     return '<a href="/impressum">Impressum</a> · <a href="/datenschutz">Datenschutz</a>'
@@ -53,6 +71,8 @@ function legalLinks(lang) {
 }
 
 function renderImpressumDe(config) {
+  const contactFormUrl = getLocalizedContactFormUrl(config, 'de')
+
   return `
     <h1>Impressum</h1>
     <p class="legal-last-updated">Stand: ${valueOrPlaceholder(config.lastUpdatedDe)}</p>
@@ -67,7 +87,7 @@ function renderImpressumDe(config) {
       <h2>Kontakt</h2>
       <p>E-Mail: ${valueOrPlaceholder(config.email)}</p>
       ${config.phone ? `<p>Telefon: ${config.phone}</p>` : ''}
-      ${config.contactFormUrl ? `<p>Kontaktformular: <a href="${config.contactFormUrl}">${config.contactFormUrl}</a></p>` : ''}
+      ${contactFormUrl ? `<p>Kontaktformular: <a href="${contactFormUrl}">${contactFormUrl}</a></p>` : ''}
       ${config.website ? `<p>Webseite: ${config.website}</p>` : ''}
     </section>
 
@@ -101,6 +121,8 @@ function renderImpressumDe(config) {
 }
 
 function renderImprintEn(config) {
+  const contactFormUrl = getLocalizedContactFormUrl(config, 'en')
+
   return `
     <h1>Imprint</h1>
     <p class="legal-last-updated">Last updated: ${valueOrPlaceholder(config.lastUpdatedEn)}</p>
@@ -115,7 +137,7 @@ function renderImprintEn(config) {
       <h2>Contact</h2>
       <p>Email: ${valueOrPlaceholder(config.email)}</p>
       ${config.phone ? `<p>Phone: ${config.phone}</p>` : ''}
-      ${config.contactFormUrl ? `<p>Contact form: <a href="${config.contactFormUrl}">${config.contactFormUrl}</a></p>` : ''}
+      ${contactFormUrl ? `<p>Contact form: <a href="${contactFormUrl}">${contactFormUrl}</a></p>` : ''}
       ${config.website ? `<p>Website: ${config.website}</p>` : ''}
     </section>
 
