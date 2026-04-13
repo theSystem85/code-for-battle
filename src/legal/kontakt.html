@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kontakt | Code for Battle</title>
+  <link rel="stylesheet" href="/src/legal/legal.css">
+</head>
+
+<body>
+  <main class="legal-layout">
+    <header class="legal-header">
+      <h1>Kontakt</h1>
+      <nav class="legal-language-links" aria-label="Sprachumschaltung">
+        <a href="/kontakt" aria-current="page">Deutsch</a> · <a href="/contact">English</a>
+      </nav>
+    </header>
+    <article class="legal-card">
+      <p>Nutzen Sie das Formular, um uns zu kontaktieren. Wir antworten so schnell wie möglich per E-Mail.</p>
+
+      <form name="contact-de" method="POST" data-netlify="true" data-netlify-honeypot="bot-field" action="/kontakt-erfolg">
+        <input type="hidden" name="form-name" value="contact-de">
+        <p class="legal-hidden">
+          <label>Dieses Feld nicht ausfüllen: <input name="bot-field"></label>
+        </p>
+        <div class="form-field">
+          <label for="kontakt-name">Ihr Name</label>
+          <input id="kontakt-name" type="text" name="name" required>
+        </div>
+        <div class="form-field">
+          <label for="kontakt-email">Ihre E-Mail-Adresse</label>
+          <input id="kontakt-email" type="email" name="email" required>
+        </div>
+        <div class="form-field">
+          <label for="kontakt-subject">Betreff</label>
+          <input id="kontakt-subject" type="text" name="subject" required>
+        </div>
+        <div class="form-field">
+          <label for="kontakt-message">Nachricht</label>
+          <textarea id="kontakt-message" name="message" rows="6" required></textarea>
+        </div>
+        <p>
+          <button type="submit" class="form-submit">Nachricht senden</button>
+        </p>
+      </form>
+    </article>
+  </main>
+</body>
+
+</html>

@@ -1,4 +1,4 @@
 {
-  "commit": "6abf462",
-  "message": "fix: add max-attempts guard to ore cluster fallback loop in gameSetup"
+  "commit": "94aaaee6",
+  "message": "fix(legal): remove misleading back-to-game links from legal pages"
 }

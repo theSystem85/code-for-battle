@@ -1,0 +1,22 @@
+{
+  "fullName": "Max Mustermann",
+  "businessName": "Mustermann Interactive",
+  "addressLine1": "",
+  "street": "Musterstraße",
+  "houseNumber": "12a",
+  "postalCode": "10115",
+  "city": "Berlin",
+  "country": "Deutschland",
+  "email": "hello@example.com",
+  "phone": "+49 30 1234567",
+  "contactFormUrl": "/contact",
+  "website": "https://example.com",
+  "vatId": "",
+  "responsiblePerson": "Max Mustermann",
+  "privacyEmail": "privacy@example.com",
+  "representative": "",
+  "hostingProviderName": "MyWebHoster, Inc.",
+  "hostingProviderAddress": "123 Example Street, Suite 300, San Francisco, CA 94104, USA",
+  "lastUpdatedDe": "30.03.2026",
+  "lastUpdatedEn": "2026-03-30"
+}

@@ -203,3 +203,7 @@ describe('Building Placement', () => {
 ## 2026-04 Smoke Test Hardening Update
 - Updated `tests/integration/browserConsoleSmoke.test.js` to wait for `window.gameInstance` instead of relying only on a fixed delay.
 - The smoke test now records `console.error`, `window.error`, and `unhandledrejection` failures with richer diagnostics before asserting a clean startup.
+
+## 2026-04 DOM Teardown Stability Update
+- Updated `src/ui/deviceLifecycle.js` so delayed safe-area inset sync callbacks bail out when `document` is unavailable.
+- This prevents post-test timer callbacks from throwing unhandled `ReferenceError: document is not defined` exceptions during Vitest environment teardown.

@@ -1,7 +1,7 @@
 {
   "name": "vite-starter",
   "private": true,
-  "version": "0.30.3",
+  "version": "0.30.4",
   "license": "MIT",
   "author": "patrick.beyer.software@gmail.com",
   "type": "module",
@@ -9,7 +9,7 @@
     "dev": "vite",
     "stun": "node server/stun.js",
     "prebuild": "node scripts/write-commit.js",
-    "build": "vite build",
+    "build": "vite build && node scripts/write-impressum-config.js",
     "preview": "vite preview",
     "lint": "eslint src/ tests/ *.js",
     "lint:fix": "eslint src/ tests/ *.js --fix",

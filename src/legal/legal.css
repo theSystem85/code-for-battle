@@ -1,0 +1,136 @@
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Rajdhani', Arial, sans-serif;
+  background: #10141c;
+  color: #f2f4f7;
+  line-height: 1.45;
+}
+
+.legal-layout {
+  width: min(920px, 100% - 2rem);
+  margin: 0 auto;
+  padding: 1.5rem 0 2rem;
+}
+
+.legal-header {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.legal-language-links a,
+.legal-card a {
+  color: #7ec8ff;
+  text-decoration: none;
+}
+
+.legal-language-links a:hover,
+.legal-card a:hover {
+  text-decoration: underline;
+}
+
+.legal-card {
+  background: #1a212b;
+  border: 1px solid #2f3b4a;
+  border-radius: 10px;
+  padding: 1.25rem;
+}
+
+h1,
+h2 {
+  margin: 0;
+}
+
+h2 {
+  margin-top: 1rem;
+  margin-bottom: 0.35rem;
+  color: #c9def5;
+}
+
+p {
+  margin: 0.25rem 0;
+}
+
+.legal-last-updated {
+  color: #9ca9b8;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.legal-hidden {
+  display: none;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.form-field label {
+  color: #c9def5;
+  font-weight: 600;
+}
+
+.form-field input,
+.form-field textarea {
+  background: #10141c;
+  border: 1px solid #2f3b4a;
+  border-radius: 6px;
+  color: #f2f4f7;
+  font-family: inherit;
+  font-size: 1rem;
+  padding: 0.6rem 0.75rem;
+  transition: border-color 0.15s;
+}
+
+.form-field input:focus,
+.form-field textarea:focus {
+  border-color: #7ec8ff;
+  outline: none;
+}
+
+.form-field textarea {
+  resize: vertical;
+}
+
+.form-submit {
+  background: #7ec8ff;
+  border: none;
+  border-radius: 6px;
+  color: #10141c;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.65rem 1.5rem;
+  transition: background-color 0.15s;
+}
+
+.form-submit:hover {
+  background: #a6dbff;
+}
+
+.form-submit:active {
+  background: #5db8f0;
+}
+
+@media (max-width: 640px) {
+  .legal-layout {
+    width: calc(100% - 1rem);
+    padding-top: 1rem;
+  }
+
+  .legal-card {
+    padding: 1rem;
+  }
+}

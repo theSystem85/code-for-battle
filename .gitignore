@@ -39,3 +39,6 @@ Thumbs.db
 
 # Local Netlify folder
 .netlify
+
+# Local legal identity config
+impressum.config.json

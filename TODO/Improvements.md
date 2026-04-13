@@ -1,3 +1,12 @@
+- [x] Add explicit hidden `form-name` inputs to the Netlify contact forms so deploy-preview submissions reliably include the form identifier and custom success-page redirects do not fall through to a 404.
+- [x] Ensure the German `Impressum` links to `/kontakt` and the English `Imprint` links to `/contact` even when the shared config stores only one base contact-form route.
+- [x] Remove the "Back to game" header link from all legal/contact pages so opening legal routes in a new tab no longer shows a misleading in-tab return action.
+- [x] Generate `dist/impressum.config.json` during `npm run build` from `IMPRESSUM_CONFIG_JSON` (with local-file fallback) so Git-based Netlify deploys can serve the private legal config without committing it.
+- [x] Move the legal implementation into `src/legal`, add Vite dev-route rewrites plus post-build HTML relocation so `/impressum`, `/privacy`, `/contact`, and related pages keep their existing public URLs, and complete the remaining legal-text fixes (address split, dispute-resolution notice, legal bases, retention, third-country transfer, TLS, and Netlify Forms disclosure).
+- [x] Add `contactFormUrl` config field and render a contact form link in Impressum/Imprint contact section to satisfy § 5 DDG second-contact-method requirement (alternative to phone number).
+- [x] Add bilingual Netlify Forms contact pages (`/contact` EN, `/kontakt` DE) with honeypot spam protection, custom success pages, and matching dark-theme form styling.
+- [x] Add `vite.config.js` with multi-page `rollupOptions.input` so all root HTML pages (legal, contact, success) are included in `vite build` output.
+- [x] Remove the floating `global-legal-links` shell element so the homepage no longer shows fixed legal quick links; legal pages remain available through their dedicated routes and existing in-game entry points.
 - [x] Provide the LLM with the entire building/unit tech tree in a compressed CSV-style `techTreeCsv` string for long-term planning, while keeping live `productionOptions` for immediately legal actions.
 - [x] Strengthen strategic economy-recovery guidance so the LLM explicitly treats selling lower-priority buildings as valid funding for replacement refineries and harvesters.
 - [x] Let strategic LLM planning look further ahead: when the active queues are short, top them up with several legal, affordable future base-build and production actions so the local AI keeps working between LLM ticks.
