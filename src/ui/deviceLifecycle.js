@@ -60,7 +60,7 @@ function readSafeAreaInsetPixels() {
 }
 
 function syncSafeAreaInsets() {
-  if (!document.body || !document.body.classList.contains('is-touch')) {
+  if (typeof document === 'undefined' || !document.body || !document.body.classList.contains('is-touch')) {
     return
   }
 
