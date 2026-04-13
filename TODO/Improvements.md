@@ -1,3 +1,4 @@
+- [x] Add explicit hidden `form-name` inputs to the Netlify contact forms so deploy-preview submissions reliably include the form identifier and custom success-page redirects do not fall through to a 404.
 - [x] Ensure the German `Impressum` links to `/kontakt` and the English `Imprint` links to `/contact` even when the shared config stores only one base contact-form route.
 - [x] Remove the "Back to game" header link from all legal/contact pages so opening legal routes in a new tab no longer shows a misleading in-tab return action.
 - [x] Generate `dist/impressum.config.json` during `npm run build` from `IMPRESSUM_CONFIG_JSON` (with local-file fallback) so Git-based Netlify deploys can serve the private legal config without committing it.
