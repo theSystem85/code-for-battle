@@ -26,14 +26,12 @@ body {
   margin-bottom: 1rem;
 }
 
-.legal-home-link,
 .legal-language-links a,
 .legal-card a {
   color: #7ec8ff;
   text-decoration: none;
 }
 
-.legal-home-link:hover,
 .legal-language-links a:hover,
 .legal-card a:hover {
   text-decoration: underline;
