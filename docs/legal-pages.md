@@ -11,6 +11,25 @@ You can start by copying:
 
 Then replace all placeholder owner/contact/legal fields with your real values.
 
+## Netlify deployment config
+For Git-based Netlify deploys, the gitignored local file is not uploaded automatically. The build now generates `dist/impressum.config.json` in this order:
+
+1. `IMPRESSUM_CONFIG_JSON` from the build environment
+2. local root `impressum.config.json`
+3. runtime fallback to `src/legal/legalConfig.example.json`
+
+If you use Netlify environment variables, set `IMPRESSUM_CONFIG_JSON` to the full JSON content of your legal config. The build accepts both of these forms:
+
+- a JSON object string, for example `{\"fullName\":\"Max Mustermann\"}`
+- a JSON string containing that object, which will be parsed a second time automatically
+
+Recommended Netlify setup:
+
+- Site configuration -> Environment variables
+- Add `IMPRESSUM_CONFIG_JSON`
+- Paste the complete legal config JSON into the value
+- Trigger a new deploy
+
 ## Fields to update
 Update these keys in your local config:
 

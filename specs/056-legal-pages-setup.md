@@ -32,6 +32,7 @@ Provide production-ready legal pages for a public browser/PWA game with German o
 5. Public legal routes must keep working both in Vite dev mode and in built output after moving the implementation files under `src/legal/`.
 6. Privacy text must explicitly cover legal bases, retention periods, third-country transfer wording for Netlify hosting/forms, and TLS transport encryption.
 7. The imprint must include the chosen consumer-dispute wording when applicable.
+8. Git-based deployments must be able to emit `dist/impressum.config.json` from an environment variable so the private legal config can be deployed without committing it.
 
 ## Non-functional requirements
 - No heavy dependency additions.
@@ -53,3 +54,4 @@ Add developer-facing setup docs with:
 - 2026-04-09: Add `vite.config.js` with multi-page `rollupOptions.input` so all root HTML pages are included in `vite build` dist output (fixes legal pages not being deployed to production).
 - 2026-04-10: Move all committed legal HTML/CSS/example-config implementation files into `src/legal/`. Vite now rewrites the existing dev routes to the moved source pages and relocates the built legal HTML files back to `dist/` root so public URLs remain unchanged.
 - 2026-04-10: Complete the remaining legal disclosure updates for the current operator choices: split the `c/o` address into its own postal line, add the consumer-dispute statement, and extend the privacy policy with legal bases, Netlify Forms disclosure, retention periods, third-country transfer wording, and TLS information.
+- 2026-04-10: `npm run build` now writes `dist/impressum.config.json` from `IMPRESSUM_CONFIG_JSON` when available and otherwise falls back to the local gitignored root file. This keeps Git-based Netlify deploys compatible with the private legal config.

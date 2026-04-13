@@ -9,7 +9,7 @@
     "dev": "vite",
     "stun": "node server/stun.js",
     "prebuild": "node scripts/write-commit.js",
-    "build": "vite build",
+    "build": "vite build && node scripts/write-impressum-config.js",
     "preview": "vite preview",
     "lint": "eslint src/ tests/ *.js",
     "lint:fix": "eslint src/ tests/ *.js --fix",
