@@ -1561,12 +1561,12 @@ body.mobile-portrait.sidebar-condensed #gameCanvasGL {
     --portrait-condensed-toggle-width: calc(var(--mobile-action-size) * 0.44);
   }
 
-  body:not(.mobile-landscape):not(.mobile-portrait) #sidebar {
+  html:not(.no-js) body:not(.mobile-landscape):not(.mobile-portrait) #sidebar {
     transform: translateX(-100%);
   }
 
-  body:not(.mobile-landscape):not(.mobile-portrait) #gameCanvas,
-  body:not(.mobile-landscape):not(.mobile-portrait) #gameCanvasGL {
+  html:not(.no-js) body:not(.mobile-landscape):not(.mobile-portrait) #gameCanvas,
+  html:not(.no-js) body:not(.mobile-landscape):not(.mobile-portrait) #gameCanvasGL {
     left: 0;
     width: 100%;
   }
