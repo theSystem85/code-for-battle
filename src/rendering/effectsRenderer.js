@@ -9,7 +9,8 @@ const SMOKE_SPRITE_CACHE = {
   initialized: false,
   sprites: [], // Array of { canvas, size } for different smoke sizes
   coreSprites: [], // Array of { canvas, size } for core gradients
-  explosionSprites: new Map() // Map of size -> canvas for explosion gradients
+  explosionSprites: new Map(), // Map of size -> canvas for explosion gradients
+  explosionCoreSprites: new Map() // Map of size -> canvas for bright core highlights
 }
 
 // Smoke sprite sizes to pre-cache (covers typical particle size range)
@@ -123,6 +124,44 @@ function getExplosionSprite(radius) {
   if (SMOKE_SPRITE_CACHE.explosionSprites.size > 50) {
     const firstKey = SMOKE_SPRITE_CACHE.explosionSprites.keys().next().value
     SMOKE_SPRITE_CACHE.explosionSprites.delete(firstKey)
+  }
+
+  return canvas
+}
+
+/**
+ * Get or create a bright explosion core sprite for a given radius.
+ * Kept separate from the main sprite so we can compose richer visuals cheaply.
+ */
+function getExplosionCoreSprite(radius) {
+  const roundedRadius = Math.round(radius / 4) * 4
+  if (roundedRadius <= 0) return null
+
+  if (SMOKE_SPRITE_CACHE.explosionCoreSprites.has(roundedRadius)) {
+    return SMOKE_SPRITE_CACHE.explosionCoreSprites.get(roundedRadius)
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = roundedRadius * 2
+  canvas.height = roundedRadius * 2
+  const ctx = canvas.getContext('2d')
+
+  const gradient = ctx.createRadialGradient(roundedRadius, roundedRadius, 0, roundedRadius, roundedRadius, roundedRadius)
+  gradient.addColorStop(0, 'rgba(255,255,235,1)')
+  gradient.addColorStop(0.2, 'rgba(255,230,140,0.95)')
+  gradient.addColorStop(0.55, 'rgba(255,150,40,0.55)')
+  gradient.addColorStop(1, 'rgba(255,120,0,0)')
+
+  ctx.fillStyle = gradient
+  ctx.beginPath()
+  ctx.arc(roundedRadius, roundedRadius, roundedRadius, 0, Math.PI * 2)
+  ctx.fill()
+
+  SMOKE_SPRITE_CACHE.explosionCoreSprites.set(roundedRadius, canvas)
+
+  if (SMOKE_SPRITE_CACHE.explosionCoreSprites.size > 50) {
+    const firstKey = SMOKE_SPRITE_CACHE.explosionCoreSprites.keys().next().value
+    SMOKE_SPRITE_CACHE.explosionCoreSprites.delete(firstKey)
   }
 
   return canvas
@@ -427,33 +466,69 @@ export class EffectsRenderer {
       const rawProgress = (currentTime - exp.startTime) / safeDuration
       const progress = Math.min(Math.max(rawProgress, 0), 1)
       const maxRadius = Number.isFinite(exp.maxRadius) && exp.maxRadius > 0 ? exp.maxRadius : TILE_SIZE * 2
-      const currentRadius = maxRadius * progress
-      const alpha = Math.max(0, 1 - progress)
+      const easedProgress = 1 - (1 - progress) * (1 - progress)
+      const currentRadius = maxRadius * easedProgress
+      const fade = Math.max(0, 1 - progress)
+      const flare = 0.65 + 0.35 * (1 - progress)
+      const alpha = fade * flare
 
       if (!Number.isFinite(centerX) || !Number.isFinite(centerY) || !Number.isFinite(currentRadius) || currentRadius <= 0) {
         continue
       }
 
-      // Use pre-cached explosion sprite with alpha
-      const sprite = getExplosionSprite(currentRadius)
-      if (sprite) {
-        ctx.globalAlpha = alpha
-        ctx.drawImage(
-          sprite,
-          centerX - currentRadius,
-          centerY - currentRadius,
-          currentRadius * 2,
-          currentRadius * 2
-        )
-        ctx.globalAlpha = 1
-      }
+      // Layered cached sprites: smoky plume + bright fire core
+      const plumeRadius = currentRadius
+      const coreRadius = plumeRadius * (0.45 + 0.2 * fade)
+      const plumeSprite = getExplosionSprite(plumeRadius)
+      const coreSprite = getExplosionCoreSprite(coreRadius)
 
-      // Draw stroke ring (lightweight operation)
-      ctx.strokeStyle = `rgba(255,165,0,${alpha})`
-      ctx.lineWidth = 2
+      if (plumeSprite) {
+        ctx.globalAlpha = alpha * 0.9
+        ctx.drawImage(
+          plumeSprite,
+          centerX - plumeRadius,
+          centerY - plumeRadius,
+          plumeRadius * 2,
+          plumeRadius * 2
+        )
+      }
+      if (coreSprite) {
+        ctx.globalAlpha = Math.min(1, 0.25 + fade * 1.15)
+        ctx.drawImage(
+          coreSprite,
+          centerX - coreRadius,
+          centerY - coreRadius,
+          coreRadius * 2,
+          coreRadius * 2
+        )
+      }
+      ctx.globalAlpha = 1
+
+      // Draw an energetic shockwave ring with time-varying jitter
+      const shockwaveRadius = plumeRadius * (0.92 + 0.12 * progress)
+      const jitterSeed = (exp.x * 0.13 + exp.y * 0.09 + exp.startTime * 0.001) % (Math.PI * 2)
+      const jitter = Math.sin(progress * 34 + jitterSeed) * 0.08 + 1
+      ctx.strokeStyle = `rgba(255,200,110,${alpha * 0.75})`
+      ctx.lineWidth = 1.2 + 1.8 * fade
       ctx.beginPath()
-      ctx.arc(centerX, centerY, currentRadius, 0, 2 * Math.PI)
+      ctx.arc(centerX, centerY, shockwaveRadius * jitter, 0, 2 * Math.PI)
       ctx.stroke()
+
+      // Faint embers at low count keep the effect fancy without heavy particle systems
+      if (fade > 0.2) {
+        const emberCount = Math.min(4, Math.max(1, Math.floor(maxRadius / TILE_SIZE)))
+        ctx.fillStyle = `rgba(255,215,120,${alpha * 0.5})`
+        for (let e = 0; e < emberCount; e++) {
+          const angle = jitterSeed + e * 2.11
+          const drift = plumeRadius * (0.45 + e * 0.12 + progress * 0.25)
+          const emberX = centerX + Math.cos(angle) * drift
+          const emberY = centerY + Math.sin(angle) * drift
+          const emberRadius = Math.max(0.8, 2.4 * fade - e * 0.35)
+          ctx.beginPath()
+          ctx.arc(emberX, emberY, emberRadius, 0, Math.PI * 2)
+          ctx.fill()
+        }
+      }
     }
   }
 
