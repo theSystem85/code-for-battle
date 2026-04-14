@@ -9,6 +9,7 @@ let standaloneQuery = null
 let getGameInstance = () => null
 let requestRenderAfterResize = () => {}
 let listenersInitialized = false
+const TABLET_LANDSCAPE_MIN_SHORT_EDGE = 600
 
 export function initDeviceLifecycle({ getGameInstanceAccessor, requestRender }) {
   getGameInstance = typeof getGameInstanceAccessor === 'function' ? getGameInstanceAccessor : () => null
@@ -128,7 +129,13 @@ export function updateMobileLayoutClasses() {
 
   const isTouch = document.body.classList.contains('is-touch') || !!lastIsTouchState
   const isPortrait = portraitQuery ? portraitQuery.matches : window.matchMedia('(orientation: portrait)').matches
-  const mobileMode = isTouch ? (isPortrait ? 'portrait' : 'landscape') : null
+  const viewportWidth = Number.isFinite(window.visualViewport?.width) ? window.visualViewport.width : window.innerWidth
+  const viewportHeight = Number.isFinite(window.visualViewport?.height) ? window.visualViewport.height : window.innerHeight
+  const shortEdge = Math.min(viewportWidth || 0, viewportHeight || 0)
+  const isTabletLandscape = isTouch && !isPortrait && shortEdge >= TABLET_LANDSCAPE_MIN_SHORT_EDGE
+  const mobileMode = isTouch
+    ? (isPortrait ? 'portrait' : (isTabletLandscape ? null : 'landscape'))
+    : null
 
   if (document.body.classList.contains('mobile-sidebar-right')) {
     document.body.classList.remove('mobile-sidebar-right')
