@@ -37,3 +37,7 @@ Units should anticipate nearby blockers using the existing occupancy map and gen
    - When a ground unit physically contacts a blocking building, wall, terrain tile, occupied map tile, or bounds edge, resolve the collision through a short-lived local repulsion force field plus only minimal positional separation, avoiding abrupt velocity rewrites or strong bounce impulses. Both the repulsion magnitude and immediate correction must be capped by the unit's actual current speed so pushback never exceeds the unit's own movement speed.
    - Refactoring should remove redundant legacy static-environment bounce code and keep the runtime path efficient by staying local to the contacted obstacle.
 
+9. **Friendly Push Yield for Idle Units**
+   - If a friendly ground unit is physically pushed by another friendly ground unit and the pushed unit has no active move target/path, the pushed unit must enqueue a one-tile movement in the push direction to clear space for the pusher.
+   - This auto-yield must not override existing movement intent: units with an active `moveTarget`/path keep their current command.
+   - Remote-controlled friendly pushers must be handled identically: remote/manual control cannot disable ally-yield behavior, including lower-speed push contacts.

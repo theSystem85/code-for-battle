@@ -258,6 +258,54 @@ function applyAirSeparation(unit, otherUnit, normalX, normalY, separation) {
   }
 }
 
+function queueFriendlyYieldMoveIfIdle(pushedUnit, pushingUnit, normalX, normalY, mapGrid, occupancyMap, units, wrecks) {
+  if (!pushedUnit || !pushingUnit || !mapGrid) return
+  if (ownersAreEnemies(pushedUnit.owner, pushingUnit.owner)) return
+  if (pushedUnit.moveTarget) return
+  if (Array.isArray(pushedUnit.path) && pushedUnit.path.length > 0) return
+  if (!isGroundUnit(pushedUnit)) return
+
+  let stepX = 0
+  let stepY = 0
+  if (Math.abs(normalX) >= Math.abs(normalY)) {
+    stepX = normalX > 0 ? 1 : -1
+  } else {
+    stepY = normalY > 0 ? 1 : -1
+  }
+
+  const currentTileX = Math.floor((pushedUnit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const currentTileY = Math.floor((pushedUnit.y + TILE_SIZE / 2) / TILE_SIZE)
+  const targetTileX = currentTileX + stepX
+  const targetTileY = currentTileY + stepY
+
+  if (
+    targetTileX < 0 ||
+    targetTileY < 0 ||
+    targetTileY >= mapGrid.length ||
+    targetTileX >= (mapGrid[0]?.length || 0)
+  ) {
+    return
+  }
+
+  const targetWorldX = targetTileX * TILE_SIZE
+  const targetWorldY = targetTileY * TILE_SIZE
+  const blocked = isPositionBlockedForCollision(
+    pushedUnit,
+    targetWorldX,
+    targetWorldY,
+    mapGrid,
+    occupancyMap,
+    units,
+    wrecks,
+    [pushingUnit.id]
+  )
+
+  if (blocked) return
+
+  pushedUnit.moveTarget = { x: targetTileX, y: targetTileY }
+  pushedUnit.path = [{ x: targetTileX, y: targetTileY }]
+}
+
 export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = []) {
   const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -697,7 +745,7 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
     movement.currentSpeed = Math.hypot(movement.velocity.x, movement.velocity.y)
     return false
   } else if (separation > 0.001) {
-    const pushOther = Boolean(otherUnit) && otherSpeed <= unitSpeed
+    const pushOther = Boolean(otherUnit) && (unit.remoteControlActive || otherSpeed <= unitSpeed)
 
     if (pushOther && otherUnit) {
       applySafeSeparation(
@@ -710,6 +758,8 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
         wrecks,
         [unit.id]
       )
+
+      queueFriendlyYieldMoveIfIdle(otherUnit, unit, normalX, normalY, mapGrid, occupancyMap, units, wrecks)
     }
 
     applySafeSeparation(
