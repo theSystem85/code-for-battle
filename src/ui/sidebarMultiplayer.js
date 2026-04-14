@@ -639,7 +639,7 @@ function createPartyRow(partyState) {
       inviteButton.type = 'button'
       inviteButton.className = 'multiplayer-invite-button'
       inviteButton.dataset.testid = `multiplayer-invite-${partyState.partyId}`
-      updateInviteButtonText(inviteButton, partyState)
+      updateInviteButtonState(inviteButton, partyState)
       inviteButton.addEventListener('click', () => handleInviteClick(partyState, inviteButton, status))
 
       controls.appendChild(inviteButton)
@@ -766,16 +766,22 @@ function updateStatusText(element, partyState) {
 }
 
 function formatInviteButtonText(statusKey, partyState) {
+  const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
+    || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
+  if (isDefeated) return 'Defeated'
   if (statusKey === 'generating') return 'Generating…'
   if (statusKey === 'copied') return 'Copied!'
   if (partyState.inviteToken) return 'Invite Ready'
   return 'Invite'
 }
 
-function updateInviteButtonText(button, partyState) {
+function updateInviteButtonState(button, partyState) {
   if (!button) return
   const currentStatus = getHostInviteStatus(partyState.partyId)
   button.textContent = formatInviteButtonText(currentStatus, partyState)
+  const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
+    || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
+  button.disabled = isDefeated || currentStatus === 'generating'
 }
 
 async function handleInviteClick(partyState, button, status) {
@@ -789,7 +795,6 @@ async function handleInviteClick(partyState, button, status) {
     return
   }
 
-  const originalText = button.textContent
   button.disabled = true
   button.textContent = 'Generating…'
   status.classList.remove('success')
@@ -805,7 +810,7 @@ async function handleInviteClick(partyState, button, status) {
     button.title = url
     setHostInviteStatus(partyState.partyId, 'copied')
     updateStatusText(status, partyState)
-    updateInviteButtonText(button, partyState)
+    updateInviteButtonState(button, partyState)
     // Show QR code modal after generating invite
     showQRCodeModal(partyState, url)
   } catch (error) {
@@ -814,12 +819,11 @@ async function handleInviteClick(partyState, button, status) {
     updateStatusText(status, partyState)
     showHostNotification(`Invite creation failed: ${error?.message || 'unknown error'}`)
   } finally {
-    button.disabled = false
-    button.textContent = originalText
+    updateInviteButtonState(button, partyState)
     setTimeout(() => {
       setHostInviteStatus(partyState.partyId, 'idle')
       updateStatusText(status, partyState)
-      updateInviteButtonText(button, partyState)
+      updateInviteButtonState(button, partyState)
       status.classList.remove('success')
     }, 2500)
   }
