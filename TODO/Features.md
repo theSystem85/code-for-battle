@@ -1,3 +1,4 @@
+- [x] Implement generic filename-driven sprite sheet animation system and use `public/images/map/animations/64x64_9x9_q85_explosion.webp` for one-shot additive destruction explosions (units/buildings/factories), with time-based frame progression, automatic cleanup, and scalable world-space rendering.
 - [x] Tablet landscape sidebar parity (2026-04-14): touch landscape viewports with tablet-sized short edge now keep desktop sidebar behavior instead of forcing mobile-landscape UI.
 - [x] Debug reroute diagnostics enrichment (2026-03-28): command history now records reroute entries with move target + path signature to expose same-target path churn reasons beyond generic "move" events.
 - [x] Debug command overlay compact minimized mode (2026-03-28): when minimized, only a floating "Maximize logs" button remains visible at bottom-right above condensed sidebar space.

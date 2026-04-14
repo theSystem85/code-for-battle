@@ -42,6 +42,7 @@ export const gameState = {
   enemyLastProductionTime: 0,
   lastOreUpdate: 0,
   explosions: [],  // Initialized empty explosions array for visual effects.
+  spriteSheetAnimations: [], // Active world-space sprite sheet animations
   smokeParticles: [], // Smoke particles emitted by damaged units
   smokeParticlePool: [], // Reusable pool to avoid allocations during heavy smoke
   dustParticles: [], // Dust particles emitted by mine sweepers

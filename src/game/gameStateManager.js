@@ -32,6 +32,7 @@ import { gameRandom } from '../utils/gameRandom.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
 import { getSimulationTime } from './time.js'
+import { spawnSpriteSheetAnimation } from '../rendering/spriteSheetAnimation.js'
 
 const MINIMAP_SCROLL_SMOOTHING = 0.2
 const MINIMAP_SCROLL_STOP_DISTANCE = 0.75
@@ -39,6 +40,7 @@ const DESKTOP_EDGE_AUTOSCROLL_DELAY_MS = 250
 const DESKTOP_EDGE_AUTOSCROLL_THRESHOLD_RATIO = 0.05
 const DESKTOP_EDGE_AUTOSCROLL_DEFAULT_FRAME_MS = 16
 const DESKTOP_EDGE_AUTOSCROLL_MAX_FRAME_MS = 64
+const DESTRUCTION_EXPLOSION_SPRITE = 'images/map/animations/64x64_9x9_q85_explosion.webp'
 
 function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY) {
   if (!DESKTOP_EDGE_AUTOSCROLL_ENABLED) {
@@ -480,6 +482,15 @@ export function cleanupDestroyedUnits(units, gameState) {
         playSound('enemyUnitDestroyed', 1.0, 0, true)
       }
 
+      spawnSpriteSheetAnimation(gameState, {
+        texture: DESTRUCTION_EXPLOSION_SPRITE,
+        x: unit.x + TILE_SIZE / 2,
+        y: unit.y + TILE_SIZE / 2,
+        duration: 1.05,
+        loop: false,
+        scale: 1
+      })
+
       // Remove unit from cheat system tracking if it exists
       if (window.cheatSystem) {
         window.cheatSystem.removeUnitFromTracking(unit.id)
@@ -566,6 +577,14 @@ export function cleanupDestroyedFactories(factories, mapGrid, gameState) {
       // Add explosion effect at factory center
       const maxDimension = Math.max(factory.width || 1, factory.height || 1)
       const explosionRadius = Math.max(TILE_SIZE * 2, maxDimension * TILE_SIZE * 1.2)
+      spawnSpriteSheetAnimation(gameState, {
+        texture: DESTRUCTION_EXPLOSION_SPRITE,
+        x: explosionX,
+        y: explosionY,
+        duration: 1.05,
+        loop: false,
+        scale: Math.max(1, maxDimension)
+      })
 
       gameState.explosions.push({
         x: explosionX,

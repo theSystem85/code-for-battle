@@ -15,7 +15,9 @@ import { getSimulationTime } from './time.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { gameState as globalGameState } from '../gameState.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from './turretMuzzleConfig.js'
+import { spawnSpriteSheetAnimation } from '../rendering/spriteSheetAnimation.js'
 
+const DESTRUCTION_EXPLOSION_SPRITE = 'images/map/animations/64x64_9x9_q85_explosion.webp'
 
 /**
  * Updates all buildings including health checks, destruction, and defensive capabilities
@@ -109,6 +111,14 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
         // Calculate building center for explosion effects
         const buildingCenterX = building.x * TILE_SIZE + (building.width * TILE_SIZE / 2)
         const buildingCenterY = building.y * TILE_SIZE + (building.height * TILE_SIZE / 2)
+        spawnSpriteSheetAnimation(gameState, {
+          texture: DESTRUCTION_EXPLOSION_SPRITE,
+          x: buildingCenterX,
+          y: buildingCenterY,
+          duration: 1.05,
+          loop: false,
+          scale: Math.max(1, Math.max(building.width || 1, building.height || 1))
+        })
 
         // Play explosion sound with reduced volume (0.5)
         playPositionalSound('explosion', buildingCenterX, buildingCenterY, 0.5)

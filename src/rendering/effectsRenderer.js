@@ -2,6 +2,7 @@
 import { TILE_SIZE } from '../config.js'
 import { drawTeslaCoilLightning } from './renderingUtils.js'
 import { getSimulationTime } from '../game/time.js'
+import { renderSpriteSheetAnimations } from './spriteSheetAnimation.js'
 
 // Pre-cached gradient sprites for smoke particles (GPU-friendly)
 // These are created once at initialization and reused via drawImage
@@ -594,6 +595,7 @@ export class EffectsRenderer {
     this.renderDust(ctx, gameState, scrollOffset)
     this.renderDustParticles(ctx, gameState, scrollOffset)
     this.renderExplosions(ctx, gameState, scrollOffset)
+    renderSpriteSheetAnimations(ctx, gameState, scrollOffset)
     this.renderTeslaLightning(ctx, units, scrollOffset, gameState)
 
     // Debug: log smoke particle count periodically
