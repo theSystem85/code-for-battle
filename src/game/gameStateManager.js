@@ -32,6 +32,7 @@ import { gameRandom } from '../utils/gameRandom.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
 import { getSimulationTime } from './time.js'
+import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 
 const MINIMAP_SCROLL_SMOOTHING = 0.2
 const MINIMAP_SCROLL_STOP_DISTANCE = 0.75
@@ -322,7 +323,7 @@ export function updateExplosions(gameState) {
       activeExplosions.splice(i, 1)
       continue
     }
-    if (now - exp.startTime > exp.duration) {
+    if (!exp.loop && now - exp.startTime > exp.duration) {
       activeExplosions.splice(i, 1)
     }
   }
@@ -472,6 +473,11 @@ export function cleanupDestroyedUnits(units, gameState) {
         detonateTankerTruck(unit, units, gameState.factories || [], gameState)
       }
 
+      if (!unit.destructionExplosionSpawned) {
+        spawnDestructionExplosion(gameState, unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2)
+        unit.destructionExplosionSpawned = true
+      }
+
       if (unit.owner === gameState.humanPlayer) {
         gameState.playerUnitsDestroyed++
       } else {
@@ -563,18 +569,8 @@ export function cleanupDestroyedFactories(factories, mapGrid, gameState) {
       // Play explosion sound with reduced volume (0.5)
       playPositionalSound('explosion', explosionX, explosionY, 0.5)
 
-      // Add explosion effect at factory center
-      const maxDimension = Math.max(factory.width || 1, factory.height || 1)
-      const explosionRadius = Math.max(TILE_SIZE * 2, maxDimension * TILE_SIZE * 1.2)
-
-      gameState.explosions.push({
-        x: explosionX,
-        y: explosionY,
-        startTime: getSimulationTime(gameState),
-        duration: 1000,
-        maxRadius: explosionRadius,
-        color: '#ff4444'
-      })
+      // Add one-shot destruction animation at factory center
+      spawnDestructionExplosion(gameState, explosionX, explosionY)
     }
   }
 }

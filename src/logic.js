@@ -39,17 +39,20 @@ export function triggerExplosion(
     factoryDamageMultiplier = 1,
     buildingDamageCaps = {},
     allowAirborneDamage = false,
-    unitDamageMultipliers = {}
+    unitDamageMultipliers = {},
+    spawnVisual = true
   } = options || {}
 
-  // Add explosion visual effect
-  explosions.push({
-    x,
-    y,
-    startTime: now,
-    duration: 500,
-    maxRadius: explosionRadius
-  })
+  if (spawnVisual) {
+    // Add explosion visual effect
+    explosions.push({
+      x,
+      y,
+      startTime: now,
+      duration: 500,
+      maxRadius: explosionRadius
+    })
+  }
   playPositionalSound('explosion', x, y, 0.5)
 
   // Apply damage to nearby units

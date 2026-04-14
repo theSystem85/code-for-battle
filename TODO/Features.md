@@ -1,3 +1,4 @@
+- [x] Generic sprite-sheet destruction VFX (2026-04-14): parse tile/grid/frame metadata from animation filenames (`<tileW>x<tileH>_<cols>x<rows>_*.webp`), add reusable time-based sprite-sheet animation rendering with additive blending, and trigger one centered one-shot explosion animation for destroyed units/buildings/factories.
 - [x] Tablet landscape sidebar parity (2026-04-14): touch landscape viewports with tablet-sized short edge now keep desktop sidebar behavior instead of forcing mobile-landscape UI.
 - [x] Debug reroute diagnostics enrichment (2026-03-28): command history now records reroute entries with move target + path signature to expose same-target path churn reasons beyond generic "move" events.
 - [x] Debug command overlay compact minimized mode (2026-03-28): when minimized, only a floating "Maximize logs" button remains visible at bottom-right above condensed sidebar space.
