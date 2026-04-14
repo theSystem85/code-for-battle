@@ -239,7 +239,7 @@ export function computeProjectileInterceptPoint({
  * This function only handles the "stop when in range" logic
  */
 
-export function handleTankMovement(unit, target, now, occupancyMap, chaseThreshold, mapGrid, rangeOverride = null) {
+export function handleTankMovement(unit, target, now, occupancyMap, chaseThreshold, mapGrid, rangeOverride = null, stopWhenInRange = true) {
   // Skip movement handling if unit is retreating (retreat behavior handles movement)
   if (unit.isRetreating) {
     // Still calculate distance for firing decisions
@@ -290,7 +290,7 @@ export function handleTankMovement(unit, target, now, occupancyMap, chaseThresho
   // Combat movement logic - stop and attack if in range
   // Exception: Don't stop movement if unit is retreating
   const effectiveRange = typeof rangeOverride === 'number' ? rangeOverride : getEffectiveFireRange(unit)
-  if (distance <= effectiveRange && !unit.isRetreating && !unit.remoteControlActive) {
+  if (stopWhenInRange && distance <= effectiveRange && !unit.isRetreating && !unit.remoteControlActive) {
     // In firing range - stop all movement and clear path
     if (unit.path && unit.path.length > 0) {
       unit.path = [] // Clear path to stop movement when in range

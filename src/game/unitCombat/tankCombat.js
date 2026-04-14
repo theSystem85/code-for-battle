@@ -24,17 +24,17 @@ export function updateTankCombat(unit, units, bullets, mapGrid, now, occupancyMa
 
   if (unit.target && unit.target.health > 0) {
     const CHASE_THRESHOLD = TANK_FIRE_RANGE * TILE_SIZE * COMBAT_CONFIG.CHASE_MULTIPLIER.STANDARD
+    const clearShot = ensureLineOfSight(unit, unit.target, units, mapGrid)
 
     // Handle movement using common logic
     const { distance, targetCenterX, targetCenterY } = handleTankMovement(
-      unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid
+      unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid, null, clearShot
     )
 
     // Fire if in range and allowed to attack
     // Human player units (including remote multiplayer players) can always attack, AI units need AI permission
     const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
     const effectiveRange = getEffectiveFireRange(unit)
-    const clearShot = ensureLineOfSight(unit, unit.target, units, mapGrid)
     if (distance <= effectiveRange && canAttack && clearShot) {
       const effectiveFireRate = getEffectiveFireRate(unit, COMBAT_CONFIG.FIRE_RATES.STANDARD)
       handleTankFiring(unit, unit.target, bullets, now, effectiveFireRate, targetCenterX, targetCenterY, 'bullet', units, mapGrid, false, null, clearShot)
@@ -110,6 +110,7 @@ export function updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancy
 
   if (unit.target && unit.target.health > 0) {
     const CHASE_THRESHOLD = TANK_FIRE_RANGE * TILE_SIZE * COMBAT_CONFIG.CHASE_MULTIPLIER.STANDARD
+    const clearShot = ensureLineOfSight(unit, unit.target, units, mapGrid)
 
     // Handle movement using common logic, but prevent chasing if in alert mode
     let distance, targetCenterX, targetCenterY
@@ -139,7 +140,7 @@ export function updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancy
     } else {
       // Normal mode: use standard movement logic
       const result = handleTankMovement(
-        unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid
+        unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid, null, clearShot
       )
       distance = result.distance
       targetCenterX = result.targetCenterX
@@ -150,7 +151,6 @@ export function updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancy
     // Human player units (including remote multiplayer players) can always attack, AI units need AI permission
     const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
     const effectiveRange = getEffectiveFireRange(unit)
-    const clearShot = ensureLineOfSight(unit, unit.target, units, mapGrid)
     if (distance <= effectiveRange && canAttack && clearShot) {
       const effectiveFireRate = getEffectiveFireRate(unit, COMBAT_CONFIG.FIRE_RATES.STANDARD)
       handleTankFiring(unit, unit.target, bullets, now, effectiveFireRate, targetCenterX, targetCenterY, 'bullet', units, mapGrid, false, null, clearShot)
@@ -169,17 +169,17 @@ export function updateTankV3Combat(unit, units, bullets, mapGrid, now, occupancy
 
   if (unit.target && unit.target.health > 0) {
     const CHASE_THRESHOLD = TANK_FIRE_RANGE * TILE_SIZE * COMBAT_CONFIG.CHASE_MULTIPLIER.STANDARD
+    const clearShot = ensureLineOfSight(unit, unit.target, units, mapGrid)
 
     // Handle movement using common logic
     const { distance, targetCenterX, targetCenterY } = handleTankMovement(
-      unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid
+      unit, unit.target, now, occupancyMap, CHASE_THRESHOLD, mapGrid, null, clearShot
     )
 
     // Fire if in range and allowed to attack
     // Human player units (including remote multiplayer players) can always attack, AI units need AI permission
     const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
     const effectiveRange = getEffectiveFireRange(unit)
-    const clearShot = ensureLineOfSight(unit, unit.target, units, mapGrid)
     if (distance <= effectiveRange && canAttack && clearShot) {
       // Check if we need to start a new burst or continue existing one
       if (!unit.burstState) {

@@ -3,6 +3,7 @@ import '../setup.js'
 import { updateUnitCombat, cleanupAttackGroupTargets } from '../../src/game/unitCombat.js'
 import { showNotification } from '../../src/ui/notifications.js'
 import { playSound } from '../../src/sound.js'
+import { hasClearShot, findPositionWithClearShot } from '../../src/logic.js'
 
 // Mock dependencies
 vi.mock('../../src/config.js', () => ({
@@ -767,6 +768,58 @@ describe('unitCombat.js', () => {
       }
       const bullets = []
       updateUnitCombat([unit], bullets, mockMapGrid, mockGameState, performance.now())
+      expect(bullets.length).toBe(0)
+    })
+
+    it('should keep reposition path when target is in range but line of sight is blocked', () => {
+      vi.mocked(hasClearShot).mockReturnValue(false)
+      vi.mocked(findPositionWithClearShot).mockImplementation((unit) => {
+        unit.path = [{ x: 3, y: 2 }]
+        unit.moveTarget = { x: 3, y: 2 }
+        unit.findingClearShot = false
+        return true
+      })
+
+      const target = {
+        x: 64,
+        y: 32,
+        tileX: 2,
+        tileY: 1,
+        health: 100,
+        owner: 'player2'
+      }
+      const blocker = {
+        x: 48,
+        y: 32,
+        tileX: 1,
+        tileY: 1,
+        health: 100,
+        owner: 'ai_enemy'
+      }
+      const unit = {
+        type: 'tank',
+        health: 100,
+        owner: 'ai_enemy',
+        x: 32,
+        y: 32,
+        tileX: 1,
+        tileY: 1,
+        target,
+        ammunition: 10,
+        turretDirection: 0,
+        direction: 0,
+        allowedToAttack: true,
+        lastShotTime: 0,
+        path: [{ x: 1, y: 1 }],
+        moveTarget: { x: 1, y: 1 }
+      }
+      const bullets = []
+
+      updateUnitCombat([unit, blocker, target], bullets, mockMapGrid, mockGameState, performance.now())
+
+      expect(findPositionWithClearShot).toHaveBeenCalled()
+      expect(unit.path).toEqual([{ x: 3, y: 2 }])
+      expect(unit.moveTarget).toEqual({ x: 3, y: 2 })
       expect(bullets.length).toBe(0)
     })
   })

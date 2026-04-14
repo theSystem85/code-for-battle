@@ -165,6 +165,27 @@ function recordAiUnitReplayCommand(unit, mapGrid) {
   unit.replayLastRecordedCommandSignature = nextSignature
 }
 
+function usesGroupAttackPermission(unit) {
+  return !unit?.harvesterHunter && (
+    unit.type === 'tank' ||
+    unit.type === 'tank_v1' ||
+    unit.type === 'tank-v2' ||
+    unit.type === 'tank-v3' ||
+    unit.type === 'rocketTank' ||
+    unit.type === 'howitzer'
+  )
+}
+
+function syncAttackPermissionForCurrentTarget(unit, units, gameState) {
+  if (!usesGroupAttackPermission(unit) || !unit.target) {
+    return
+  }
+
+  // Group-attack strategy updates are throttled to reduce movement churn, but
+  // firing permission must still track the current target every tick.
+  unit.allowedToAttack = shouldConductGroupAttack(unit, units, gameState, unit.target)
+}
+
 function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, _targetedOreTiles, bullets) {
   // Reset being attacked flag if enough time has passed since last damage
   if (unit.isBeingAttacked && unit.lastDamageTime && (now - unit.lastDamageTime > 5000)) {
@@ -263,6 +284,8 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
   if ((allowDecision || justGotAttacked) && !unit.harvesterHunter) {
     applyEnemyStrategies(unit, units, gameState, mapGrid, now)
   }
+
+  syncAttackPermissionForCurrentTarget(unit, units, gameState)
 
   // Skip further processing if unit is retreating
   if (unit.isRetreating) return

@@ -1,5 +1,11 @@
 # Prompt History
 
+## 2026-04-14 - GitHub Copilot
+I still see the enemy tanks of different parties to target each other but just standing still and not firing at each other. Maybe it has to do with the way they approach the target to get in firing range. looks to me like the tanks think they are in range and therefore stop but cannot fire becasue they actually did not sufficiently got close enough (just a guess). Dig deeper to try to fix the issue and explain your findings and guesses (also when you ruled out) and fixes to me!
+
+## 2026-04-13 - GitHub Copilot
+there is currently an issue with enemy tanks (and maybe also other units not fireing at each other when I can see that they targetted each other already (red indicator is visible when enemy unit is selected)). Find out why that is, explain it to me why it happend and fix the issue.
+
 ## 2025-11-18 - gpt-5-codex
 When expanded the toggle button should be invisible.
 

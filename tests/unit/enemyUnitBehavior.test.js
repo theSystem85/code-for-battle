@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { updateAIUnit } from '../../src/ai/enemyUnitBehavior.js'
 import { AI_DECISION_INTERVAL, TILE_SIZE } from '../../src/config.js'
 import { getCachedPath } from '../../src/game/pathfinding.js'
-import { applyEnemyStrategies } from '../../src/ai/enemyStrategies.js'
+import { applyEnemyStrategies, shouldConductGroupAttack } from '../../src/ai/enemyStrategies.js'
 
 vi.mock('../../src/units.js', () => ({
   findPath: vi.fn(() => [{ x: 0, y: 0 }, { x: 1, y: 1 }])
@@ -355,6 +355,36 @@ describe('enemyUnitBehavior updateAIUnit', () => {
 
     // Should not make new decisions within the interval
     expect(unit.lastDecisionTime).toBe(now) // Unchanged
+  })
+
+  it('refreshes attack permission for a current target between decision ticks', () => {
+    const target = {
+      id: 'enemy-1',
+      owner: 'player',
+      type: 'tank',
+      health: 100,
+      x: TILE_SIZE * 2,
+      y: 0,
+      tileX: 2,
+      tileY: 0
+    }
+    const unit = createBaseUnit({
+      target,
+      allowedToAttack: false,
+      lastDecisionTime: now,
+      x: 0,
+      y: 0,
+      tileX: 0,
+      tileY: 0
+    })
+
+    vi.mocked(shouldConductGroupAttack).mockReturnValue(true)
+
+    updateAIUnit(unit, [unit, target], gameState, mapGrid, now + 100, 'ai', [], [])
+
+    expect(applyEnemyStrategies).not.toHaveBeenCalled()
+    expect(shouldConductGroupAttack).toHaveBeenCalledWith(unit, [unit, target], gameState, target)
+    expect(unit.allowedToAttack).toBe(true)
   })
 
   it('handles harvester units without special behavior', () => {

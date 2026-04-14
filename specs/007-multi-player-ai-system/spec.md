@@ -3,7 +3,7 @@
 **Branch:** `007-multi-player-ai-system`  
 **Status:** Implemented  
 **Created:** 2025-11-05  
-**Last Updated:** 2026-03-01
+**Last Updated:** 2026-04-14
 
 ---
 
@@ -14,6 +14,8 @@ This specification documents the comprehensive multi-player AI system that power
 ## Testing Notes
 
 - AI party synchronization should clear queued commands and reset utility targets when a remote party disconnects, ensuring AI reactivation takes immediate control of units owned by that party.
+- Classic AI combat tests must cover the decoupled target-selection vs fire-permission path: once a ground combat unit already has a target, `allowedToAttack` must refresh every tick even though broader AI strategy updates remain throttled by `AI_DECISION_INTERVAL`.
+- Classic AI combat tests must also cover the decoupled range-vs-line-of-sight path: ground tanks must not clear a reposition path merely because they are already within nominal fire range if `hasClearShot()` is still false.
 
 ---
 
@@ -133,7 +135,7 @@ This specification documents the comprehensive multi-player AI system that power
 
 #### FR-002: AI Update Cycle
 **Priority:** P0  
-**Description:** AI decision-making runs at consistent intervals (default 3000ms) to simulate planning delays and prevent instant reactions. Update cycle processes economy, construction, production, and combat decisions in sequence.
+**Description:** AI decision-making runs at consistent intervals (default 3000ms) to simulate planning delays and prevent instant reactions. Update cycle processes economy, construction, production, and combat decisions in sequence. Fire-permission state for already-targeted combat units must still refresh every simulation tick so throttled strategy updates cannot leave units permanently target-locked but unable to shoot. Likewise, combat movement must not treat nominal range as sufficient to stop when line-of-sight repositioning is still in progress.
 
 #### FR-003: Party Resource Tracking
 **Priority:** P0  
