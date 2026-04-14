@@ -85,6 +85,7 @@ const SHADOW_OF_WAR_STORAGE_KEY = 'rts-shadow-of-war-enabled'
 const DESKTOP_EDGE_AUTOSCROLL_STORAGE_KEY = 'rts-desktop-edge-autoscroll-enabled'
 const SELECTION_HUD_MODE_STORAGE_KEY = 'rts-selection-hud-mode'
 const SELECTION_HUD_BAR_THICKNESS_STORAGE_KEY = 'rts-selection-hud-bar-thickness'
+const SPEED_MULTIPLIER_STORAGE_KEY = 'rts-game-speed-multiplier'
 
 function sanitizeMapDimension(value, fallback) {
   const parsed = parseInt(value, 10)
@@ -152,6 +153,15 @@ function sanitizeSelectionHudBarThickness(value, fallback = 4) {
 
   const safeFallback = Number.isFinite(fallback) ? Math.floor(fallback) : 4
   return Math.max(1, Math.min(8, safeFallback))
+}
+
+function sanitizeSpeedMultiplier(value, fallback = 1) {
+  const parsed = Number.parseFloat(value)
+  if (Number.isFinite(parsed)) {
+    return Math.max(0.5, Math.min(5, parsed))
+  }
+
+  return Number.isFinite(fallback) ? Math.max(0.5, Math.min(5, fallback)) : 1
 }
 
 function parseStartupMapOverrides() {
@@ -408,6 +418,17 @@ function loadPersistedSettings() {
   } catch (e) {
     window.logger.warn('Failed to load selection HUD bar thickness from localStorage:', e)
   }
+
+  try {
+    const storedSpeedMultiplier = localStorage.getItem(SPEED_MULTIPLIER_STORAGE_KEY)
+    if (storedSpeedMultiplier !== null) {
+      gameState.speedMultiplier = sanitizeSpeedMultiplier(storedSpeedMultiplier, gameState.speedMultiplier)
+    } else {
+      gameState.speedMultiplier = sanitizeSpeedMultiplier(gameState.speedMultiplier, 1)
+    }
+  } catch (e) {
+    window.logger.warn('Failed to load game speed from localStorage:', e)
+  }
 }
 
 function resolveMapSeed(rawSeed) {
@@ -652,6 +673,11 @@ class Game {
         if (value >= 0.5 && value <= 5) {
           gameState.speedMultiplier = value
           syncSpeedUi(value)
+          try {
+            localStorage.setItem(SPEED_MULTIPLIER_STORAGE_KEY, value.toString())
+          } catch (err) {
+            window.logger.warn('Failed to save game speed to localStorage:', err)
+          }
           persistLastGameCheckpoint('speed-change')
         } else {
           syncSpeedUi(gameState.speedMultiplier)
