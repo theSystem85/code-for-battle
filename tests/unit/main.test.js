@@ -586,5 +586,15 @@ describe('main.js', () => {
 
       expect(gameState.shadowOfWarEnabled).toBe(true)
     })
+
+    it('should restore game speed from localStorage', async() => {
+      localStorage.setItem('rts-game-speed-multiplier', '2.5')
+
+      const { gameState } = await import('../../src/gameState.js')
+
+      mainModule.loadPersistedSettings()
+
+      expect(gameState.speedMultiplier).toBe(2.5)
+    })
   })
 })
