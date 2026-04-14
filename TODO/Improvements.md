@@ -1,3 +1,8 @@
+- [x] Make multiplayer owner badge width content-driven, force dark text on green/yellow badges, and add right-side spacing in party-info row alignment for consistent sidebar padding.
+- [x] Move multiplayer owner labels into the colored party badge to save row space and force dark text on yellow-like badge colors for readability contrast.
+- [x] Keep multiplayer row status text free of defeated/invite-readiness labels and use compact invite-button copy (`Invite`/`Copied!`/`Defeated`) to fit narrow sidebar controls.
+- [x] Disable invite actions for defeated parties and show `Defeated` on their invite buttons so hosts cannot generate/copy invites for eliminated players.
+- [x] Remove per-party "Invite ready" sidebar status labels and reflect invite lifecycle state directly on each Invite button (Generating…/Copied!/Invite Ready) to avoid duplicate multiplayer UI signals.
 - [x] Add explicit hidden `form-name` inputs to the Netlify contact forms so deploy-preview submissions reliably include the form identifier and custom success-page redirects do not fall through to a 404.
 - [x] Ensure the German `Impressum` links to `/kontakt` and the English `Imprint` links to `/contact` even when the shared config stores only one base contact-form route.
 - [x] Remove the "Back to game" header link from all legal/contact pages so opening legal routes in a new tab no longer shows a misleading in-tab return action.

@@ -97,20 +97,26 @@ body.is-touch {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  padding-right: 6px;
 }
 
 .multiplayer-party-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+  width: fit-content;
+  max-width: 120px;
+  height: 20px;
+  border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.4);
   display: inline-flex;
-}
-
-.multiplayer-party-label {
-  color: #ddd;
-  font-size: 13px;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
 }
 
 .multiplayer-party-controls {
