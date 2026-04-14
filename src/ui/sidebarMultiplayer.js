@@ -638,8 +638,8 @@ function createPartyRow(partyState) {
       const inviteButton = document.createElement('button')
       inviteButton.type = 'button'
       inviteButton.className = 'multiplayer-invite-button'
-      inviteButton.textContent = 'Invite'
       inviteButton.dataset.testid = `multiplayer-invite-${partyState.partyId}`
+      updateInviteButtonText(inviteButton, partyState)
       inviteButton.addEventListener('click', () => handleInviteClick(partyState, inviteButton, status))
 
       controls.appendChild(inviteButton)
@@ -748,16 +748,9 @@ function formatStatusText(statusKey, partyState) {
   }
 
   switch (statusKey) {
-    case 'generating':
-      return 'Generating invite...'
-    case 'copied':
-      return 'Copied!'
     case 'error':
       return 'Invite failed'
     default: {
-      if (partyState.inviteToken) {
-        return 'Invite ready'
-      }
       return partyState.aiActive ? '' : 'Available'
     }
   }
@@ -770,6 +763,19 @@ function updateStatusText(element, partyState) {
   element.textContent = formatStatusText(currentStatus, partyState)
   element.classList.toggle('defeated', isDefeated)
   element.dataset.status = currentStatus
+}
+
+function formatInviteButtonText(statusKey, partyState) {
+  if (statusKey === 'generating') return 'Generating…'
+  if (statusKey === 'copied') return 'Copied!'
+  if (partyState.inviteToken) return 'Invite Ready'
+  return 'Invite'
+}
+
+function updateInviteButtonText(button, partyState) {
+  if (!button) return
+  const currentStatus = getHostInviteStatus(partyState.partyId)
+  button.textContent = formatInviteButtonText(currentStatus, partyState)
 }
 
 async function handleInviteClick(partyState, button, status) {
@@ -799,6 +805,7 @@ async function handleInviteClick(partyState, button, status) {
     button.title = url
     setHostInviteStatus(partyState.partyId, 'copied')
     updateStatusText(status, partyState)
+    updateInviteButtonText(button, partyState)
     // Show QR code modal after generating invite
     showQRCodeModal(partyState, url)
   } catch (error) {
@@ -812,6 +819,7 @@ async function handleInviteClick(partyState, button, status) {
     setTimeout(() => {
       setHostInviteStatus(partyState.partyId, 'idle')
       updateStatusText(status, partyState)
+      updateInviteButtonText(button, partyState)
       status.classList.remove('success')
     }, 2500)
   }

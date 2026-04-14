@@ -1,3 +1,4 @@
+- [x] Remove per-party "Invite ready" sidebar status labels and reflect invite lifecycle state directly on each Invite button (Generating…/Copied!/Invite Ready) to avoid duplicate multiplayer UI signals.
 - [x] Add explicit hidden `form-name` inputs to the Netlify contact forms so deploy-preview submissions reliably include the form identifier and custom success-page redirects do not fall through to a 404.
 - [x] Ensure the German `Impressum` links to `/kontakt` and the English `Imprint` links to `/contact` even when the shared config stores only one base contact-form route.
 - [x] Remove the "Back to game" header link from all legal/contact pages so opening legal routes in a new tab no longer shows a misleading in-tab return action.
