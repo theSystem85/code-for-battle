@@ -587,14 +587,11 @@ function createPartyRow(partyState) {
   const dot = document.createElement('span')
   dot.className = 'multiplayer-party-dot'
   dot.style.backgroundColor = partyState.color || '#999'
+  dot.style.color = getPartyBadgeTextColor(partyState.color)
+  dot.textContent = partyState.owner
   dot.title = getPartyDisplayName(partyState.partyId, partyState.color)
+  dot.dataset.testid = `multiplayer-party-label-${partyState.partyId}`
   info.appendChild(dot)
-
-  const label = document.createElement('span')
-  label.className = 'multiplayer-party-label'
-  label.textContent = partyState.owner
-  label.dataset.testid = `multiplayer-party-label-${partyState.partyId}`
-  info.appendChild(label)
 
   const controls = document.createElement('div')
   controls.className = 'multiplayer-party-controls'
@@ -638,8 +635,8 @@ function createPartyRow(partyState) {
       const inviteButton = document.createElement('button')
       inviteButton.type = 'button'
       inviteButton.className = 'multiplayer-invite-button'
-      inviteButton.textContent = 'Invite'
       inviteButton.dataset.testid = `multiplayer-invite-${partyState.partyId}`
+      updateInviteButtonState(inviteButton, partyState)
       inviteButton.addEventListener('click', () => handleInviteClick(partyState, inviteButton, status))
 
       controls.appendChild(inviteButton)
@@ -648,6 +645,55 @@ function createPartyRow(partyState) {
 
   row.append(info, controls)
   return row
+}
+
+function parseRgbChannels(color) {
+  if (typeof color !== 'string') return null
+  const value = color.trim().toLowerCase()
+  const shortHex = /^#([0-9a-f]{3})$/i.exec(value)
+  if (shortHex) {
+    const [, hex] = shortHex
+    return {
+      r: parseInt(hex[0] + hex[0], 16),
+      g: parseInt(hex[1] + hex[1], 16),
+      b: parseInt(hex[2] + hex[2], 16)
+    }
+  }
+
+  const fullHex = /^#([0-9a-f]{6})$/i.exec(value)
+  if (fullHex) {
+    const [, hex] = fullHex
+    return {
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16)
+    }
+  }
+
+  const rgb = /^rgb\(\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*\)$/i.exec(value)
+  if (!rgb) return null
+  return {
+    r: Math.min(255, Number.parseInt(rgb[1], 10)),
+    g: Math.min(255, Number.parseInt(rgb[2], 10)),
+    b: Math.min(255, Number.parseInt(rgb[3], 10))
+  }
+}
+
+function getPartyBadgeTextColor(color) {
+  if (typeof color === 'string' && color.trim().toLowerCase().includes('yellow')) {
+    return '#111'
+  }
+  const normalizedColor = typeof color === 'string' ? color.trim().toLowerCase() : ''
+  if (normalizedColor.includes('green')) {
+    return '#111'
+  }
+  if (normalizedColor === '#00ff00' || normalizedColor === '#0f0' || normalizedColor === 'rgb(0,255,0)') {
+    return '#111'
+  }
+  const channels = parseRgbChannels(color)
+  if (!channels) return '#fff'
+  const brightness = (channels.r * 299 + channels.g * 587 + channels.b * 114) / 1000
+  return brightness >= 160 ? '#111' : '#fff'
 }
 
 
@@ -737,7 +783,7 @@ function formatStatusText(statusKey, partyState) {
   const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
     || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
   if (isDefeated) {
-    return 'Defeated'
+    return ''
   }
 
   if (partyState.unresponsiveSince) {
@@ -748,16 +794,9 @@ function formatStatusText(statusKey, partyState) {
   }
 
   switch (statusKey) {
-    case 'generating':
-      return 'Generating invite...'
-    case 'copied':
-      return 'Copied!'
     case 'error':
       return 'Invite failed'
     default: {
-      if (partyState.inviteToken) {
-        return 'Invite ready'
-      }
       return partyState.aiActive ? '' : 'Available'
     }
   }
@@ -772,6 +811,24 @@ function updateStatusText(element, partyState) {
   element.dataset.status = currentStatus
 }
 
+function formatInviteButtonText(statusKey, partyState) {
+  const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
+    || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
+  if (isDefeated) return 'Defeated'
+  if (statusKey === 'generating') return 'Generating…'
+  if (statusKey === 'copied') return 'Copied!'
+  return 'Invite'
+}
+
+function updateInviteButtonState(button, partyState) {
+  if (!button) return
+  const currentStatus = getHostInviteStatus(partyState.partyId)
+  button.textContent = formatInviteButtonText(currentStatus, partyState)
+  const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
+    || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
+  button.disabled = isDefeated || currentStatus === 'generating'
+}
+
 async function handleInviteClick(partyState, button, status) {
   // If invite already exists, show the QR modal immediately
   if (partyState.inviteToken) {
@@ -783,7 +840,6 @@ async function handleInviteClick(partyState, button, status) {
     return
   }
 
-  const originalText = button.textContent
   button.disabled = true
   button.textContent = 'Generating…'
   status.classList.remove('success')
@@ -799,6 +855,7 @@ async function handleInviteClick(partyState, button, status) {
     button.title = url
     setHostInviteStatus(partyState.partyId, 'copied')
     updateStatusText(status, partyState)
+    updateInviteButtonState(button, partyState)
     // Show QR code modal after generating invite
     showQRCodeModal(partyState, url)
   } catch (error) {
@@ -807,11 +864,11 @@ async function handleInviteClick(partyState, button, status) {
     updateStatusText(status, partyState)
     showHostNotification(`Invite creation failed: ${error?.message || 'unknown error'}`)
   } finally {
-    button.disabled = false
-    button.textContent = originalText
+    updateInviteButtonState(button, partyState)
     setTimeout(() => {
       setHostInviteStatus(partyState.partyId, 'idle')
       updateStatusText(status, partyState)
+      updateInviteButtonState(button, partyState)
       status.classList.remove('success')
     }, 2500)
   }
