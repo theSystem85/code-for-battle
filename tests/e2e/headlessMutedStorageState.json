@@ -1,0 +1,57 @@
+{
+  "cookies": [],
+  "origins": [
+    {
+      "origin": "http://localhost:5173",
+      "localStorage": [
+        {
+          "name": "rts-game-master-volume",
+          "value": "0"
+        },
+        {
+          "name": "rts_tutorial_settings",
+          "value": "{\"showTutorial\":false,\"speechEnabled\":false}"
+        }
+      ]
+    },
+    {
+      "origin": "http://127.0.0.1:5173",
+      "localStorage": [
+        {
+          "name": "rts-game-master-volume",
+          "value": "0"
+        },
+        {
+          "name": "rts_tutorial_settings",
+          "value": "{\"showTutorial\":false,\"speechEnabled\":false}"
+        }
+      ]
+    },
+    {
+      "origin": "http://localhost:8888",
+      "localStorage": [
+        {
+          "name": "rts-game-master-volume",
+          "value": "0"
+        },
+        {
+          "name": "rts_tutorial_settings",
+          "value": "{\"showTutorial\":false,\"speechEnabled\":false}"
+        }
+      ]
+    },
+    {
+      "origin": "http://127.0.0.1:4173",
+      "localStorage": [
+        {
+          "name": "rts-game-master-volume",
+          "value": "0"
+        },
+        {
+          "name": "rts_tutorial_settings",
+          "value": "{\"showTutorial\":false,\"speechEnabled\":false}"
+        }
+      ]
+    }
+  ]
+}

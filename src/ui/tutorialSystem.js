@@ -31,6 +31,7 @@ import {
   TUTORIAL_SETTINGS_KEY
 } from './tutorialSystem/constants.js'
 import { readFromStorage, writeToStorage } from './tutorialSystem/storage.js'
+import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 
 class TutorialSystem {
   constructor() {
@@ -725,6 +726,7 @@ class TutorialSystem {
 
   speak(text) {
     if (!this.settings.speechEnabled) return
+    if (isHeadlessAudioMuted()) return
     if (!text || typeof SpeechSynthesisUtterance === 'undefined') return
     window.speechSynthesis?.cancel?.()
     const utterance = new SpeechSynthesisUtterance(text)

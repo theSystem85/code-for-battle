@@ -9,6 +9,7 @@ Introduce an interactive onboarding tutorial that teaches new players the UI/UX 
 - **Demo + Practice**: Each step demonstrates the action via automation, then waits for player replication.
 - **Device-aware**: Instruction text adapts to desktop (mouse + keyboard) vs. mobile (touch + joystick).
 - **Speech narration**: All step instructions, including the hint/subtext guidance, are read aloud using the browser Speech Synthesis API. Speech is enabled by default and can be disabled in settings.
+- **Automation-safe speech**: Automated headless test runs must suppress tutorial speech regardless of persisted user settings so E2E execution stays silent.
 - **Persistence**: Store tutorial progress and settings (show tutorial + voice) in localStorage.
 - **Settings integration**: Add "Show tutorial on startup" and "Enable tutorial voice" toggles plus "Start Tutorial" and "Restart Tutorial" buttons.
 - **Extensibility**: Steps are data-driven and easy to expand.
