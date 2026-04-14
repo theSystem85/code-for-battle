@@ -17,6 +17,8 @@ Setup and integration of Playwright for end-to-end (E2E) testing of the RTS game
 
 ## Policy Update (2026-04-04)
 - Headless E2E runs must launch Chromium with audio muted (`--mute-audio`) so tutorial narration and all runtime sound effects stay silent during automation.
+- Headless E2E runs must also suppress app-level audio paths inside the game runtime itself, including Web Audio playback, background music, and tutorial Speech Synthesis narration, because browser launch muting alone is not sufficient for every audio API.
+- Headless E2E browser contexts must preload silent local state for automation, including tutorial speech disabled and master volume `0`, so reused dev servers and browser TTS never leak audible output.
 
 ## Implementation Details
 

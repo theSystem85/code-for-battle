@@ -2,9 +2,15 @@ import { defineConfig, devices } from '@playwright/test'
 
 const useNetlifyDev = process.env.PLAYWRIGHT_NETLIFY_DEV === '1'
 const runHeaded = process.env.PLAYWRIGHT_HEADED === '1' || useNetlifyDev
+const headlessE2eMuteAudio = !runHeaded
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || (useNetlifyDev ? 'http://localhost:8888' : 'http://localhost:5173')
-const webServerCommand = process.env.PLAYWRIGHT_WEB_SERVER_COMMAND || (useNetlifyDev ? 'npx netlify dev --port 8888' : 'npm run dev')
+const webServerCommand = process.env.PLAYWRIGHT_WEB_SERVER_COMMAND || (useNetlifyDev
+  ? 'npx netlify dev --port 8888'
+  : headlessE2eMuteAudio
+    ? 'VITE_HEADLESS_E2E_MUTE_AUDIO=1 npm run dev'
+    : 'npm run dev')
 const launchArgs = !runHeaded ? ['--mute-audio'] : []
+const storageState = headlessE2eMuteAudio ? './tests/e2e/headlessMutedStorageState.json' : undefined
 
 /**
  * Playwright Configuration for RTS Game E2E Tests
@@ -27,6 +33,7 @@ export default defineConfig({
     /* Base URL to use in actions like `await page.goto('/')` */
     baseURL,
     headless: !runHeaded,
+    storageState,
     /* Collect trace when retrying the failed test */
     trace: 'on-first-retry',
     /* Capture screenshot on failure */

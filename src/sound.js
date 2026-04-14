@@ -3,12 +3,17 @@ import { MASTER_VOLUME } from './config.js'
 import { videoOverlay } from './ui/videoOverlay.js'
 import { gameState } from './gameState.js'
 import { gameRandom } from './utils/gameRandom.js'
+import { isHeadlessAudioMuted } from './utils/headlessAudioMute.js'
+
+const suppressAudioForAutomation = isHeadlessAudioMuted()
 
 let audioContext = null
-try {
-  audioContext = new (window.AudioContext || window.webkitAudioContext)()
-} catch {
-  console.error('Web Audio API is not supported.')
+if (!suppressAudioForAutomation) {
+  try {
+    audioContext = new (window.AudioContext || window.webkitAudioContext)()
+  } catch {
+    console.error('Web Audio API is not supported.')
+  }
 }
 
 // Master volume control with localStorage persistence
@@ -404,6 +409,10 @@ function playNextNarrated() {
 }
 
 export function playSound(eventName, volume = 1.0, throttleSeconds = 0, stackable = false, options = {}) {
+  if (suppressAudioForAutomation) {
+    return Promise.resolve(null)
+  }
+
   if (stackable) {
     if (narratedSoundQueue.length + (isNarratedPlaying ? 1 : 0) >= MAX_NARRATED_STACK) {
       return
@@ -419,6 +428,8 @@ export function playSound(eventName, volume = 1.0, throttleSeconds = 0, stackabl
 }
 
 export function playPositionalSound(eventName, x, y, volume = 1.0, throttleSeconds = 0, stackable = false, options = {}) {
+  if (suppressAudioForAutomation) return Promise.resolve(null)
+
   const { pan, volumeFactor } = calculatePositionalAudio(x, y)
   const finalVolume = volume * volumeFactor
   if (finalVolume <= 0) return Promise.resolve(null)
@@ -441,6 +452,8 @@ let backgroundMusicInitialized = false
 let backgroundMusicLoading = false
 
 export async function initBackgroundMusic() {
+  if (suppressAudioForAutomation) return
+
   if (bgMusicAudio && backgroundMusicInitialized) return
   if (backgroundMusicLoading) {
     // Already loading, wait for it to complete
@@ -505,6 +518,8 @@ export async function initBackgroundMusic() {
 }
 
 export async function toggleBackgroundMusic() {
+  if (suppressAudioForAutomation) return
+
   // Initialize music on first toggle (loads from server once)
   if (!backgroundMusicInitialized && !backgroundMusicLoading) {
     await initBackgroundMusic()
@@ -583,6 +598,8 @@ export function pauseAllSounds() {
 
 // Resume playback after game unpause
 export function resumeAllSounds() {
+  if (suppressAudioForAutomation) return
+
   if (bgMusicAudio && bgMusicAudio.paused) {
     bgMusicAudio.play().catch(e => {
       window.logger.warn('Error resuming background music:', e)
