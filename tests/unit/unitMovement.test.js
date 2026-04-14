@@ -194,6 +194,29 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toBeTruthy()
     })
 
+    it('recovers a missing attack path for AI-controlled units with a live target', () => {
+      const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
+      const unit = {
+        health: 100,
+        x: 32,
+        y: 32,
+        tileX: 1,
+        tileY: 1,
+        type: 'tank_v1',
+        owner: 'player2',
+        target,
+        path: [],
+        moveTarget: null
+      }
+      vi.mocked(getCachedPath).mockReturnValue([{ x: 1, y: 1 }, { x: 5, y: 5 }])
+
+      updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, performance.now())
+
+      expect(getCachedPath).toHaveBeenCalled()
+      expect(unit.path).toEqual([{ x: 5, y: 5 }])
+      expect(unit.moveTarget).toEqual({ x: 12, y: 12 })
+    })
+
     it('clears moveTarget when close enough and no path remains', () => {
       const unit = {
         health: 100,

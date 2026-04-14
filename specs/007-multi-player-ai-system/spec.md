@@ -17,6 +17,7 @@ This specification documents the comprehensive multi-player AI system that power
 - Classic AI combat tests must cover the decoupled target-selection vs fire-permission path: once a ground combat unit already has a target, `allowedToAttack` must refresh every tick even though broader AI strategy updates remain throttled by `AI_DECISION_INTERVAL`.
 - Classic AI combat tests must also cover the decoupled range-vs-line-of-sight path: ground tanks must not clear a reposition path merely because they are already within nominal fire range if `hasClearShot()` is still false.
 - Classic AI attack-move tests must cover blocked exact-target destinations: when pathing to an occupied enemy unit tile fails, AI tanks must choose a reachable destination tile inside firing range instead of idling with an empty path.
+- Classic AI attack-move tests must also cover missing-route recovery: if an AI ground combat unit already has a live target but no current attack path, per-frame movement must rebuild an initial chase path instead of waiting indefinitely for a slower strategic AI reroute.
 
 ---
 

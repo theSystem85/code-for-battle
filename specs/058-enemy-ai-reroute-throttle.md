@@ -81,3 +81,11 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 
 ## Follow-up Requirement 8
 - Add per-harvester ore-path recomputation throttling so ore routes are not rebuilt every frame for the same target without new state changes.
+
+## Follow-up Root Cause 9 (2026-04-14)
+- Disabling generic `unitMovement` attack-move reroute handling for AI units removed the duplicate path owner, but it also removed the only per-frame recovery path when an AI combat unit still had a live target yet no current chase route.
+- Because classic enemy AI decisions are throttled, tanks could remain target-locked and visibly hostile while standing still until another higher-level AI reroute happened.
+
+## Follow-up Requirement 9
+- Keep AI strategic reroute ownership in dedicated enemy AI systems.
+- Restore a narrow `unitMovement` fallback for AI-controlled ground combat units that only rebuilds an initial missing attack path and does not continuously override existing AI chase routes.

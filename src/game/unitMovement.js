@@ -112,7 +112,6 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       unit.target &&
       unit.target.health > 0 &&
       !remoteControlCooldownActive &&
-      !aiControlledUnit &&
       unit.type !== 'apache' &&
       unit.type !== 'f22Raptor' &&
       unit.type !== 'f35'
@@ -166,7 +165,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
         // 1. We need an initial path
         // 2. Target has moved significantly
         // 3. We're getting farther from target (and interval passed)
-        const shouldRecalculatePath = needsInitialPath || (pathRecalcNeeded && (targetHasMoved || shouldRecalcForDistance))
+        const shouldRecalculatePath = needsInitialPath || (!aiControlledUnit && pathRecalcNeeded && (targetHasMoved || shouldRecalcForDistance))
 
         if (shouldRecalculatePath) {
           unit.moveTarget = { x: targetTileX, y: targetTileY }
