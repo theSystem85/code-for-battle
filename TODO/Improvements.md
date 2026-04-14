@@ -1,3 +1,4 @@
+- [x] Move multiplayer owner labels into the colored party badge to save row space and force dark text on yellow-like badge colors for readability contrast.
 - [x] Keep multiplayer row status text free of defeated/invite-readiness labels and use compact invite-button copy (`Invite`/`Copied!`/`Defeated`) to fit narrow sidebar controls.
 - [x] Disable invite actions for defeated parties and show `Defeated` on their invite buttons so hosts cannot generate/copy invites for eliminated players.
 - [x] Remove per-party "Invite ready" sidebar status labels and reflect invite lifecycle state directly on each Invite button (Generating…/Copied!/Invite Ready) to avoid duplicate multiplayer UI signals.

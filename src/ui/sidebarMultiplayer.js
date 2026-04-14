@@ -587,14 +587,11 @@ function createPartyRow(partyState) {
   const dot = document.createElement('span')
   dot.className = 'multiplayer-party-dot'
   dot.style.backgroundColor = partyState.color || '#999'
+  dot.style.color = getPartyBadgeTextColor(partyState.color)
+  dot.textContent = partyState.owner
   dot.title = getPartyDisplayName(partyState.partyId, partyState.color)
+  dot.dataset.testid = `multiplayer-party-label-${partyState.partyId}`
   info.appendChild(dot)
-
-  const label = document.createElement('span')
-  label.className = 'multiplayer-party-label'
-  label.textContent = partyState.owner
-  label.dataset.testid = `multiplayer-party-label-${partyState.partyId}`
-  info.appendChild(label)
 
   const controls = document.createElement('div')
   controls.className = 'multiplayer-party-controls'
@@ -648,6 +645,48 @@ function createPartyRow(partyState) {
 
   row.append(info, controls)
   return row
+}
+
+function parseRgbChannels(color) {
+  if (typeof color !== 'string') return null
+  const value = color.trim().toLowerCase()
+  const shortHex = /^#([0-9a-f]{3})$/i.exec(value)
+  if (shortHex) {
+    const [, hex] = shortHex
+    return {
+      r: parseInt(hex[0] + hex[0], 16),
+      g: parseInt(hex[1] + hex[1], 16),
+      b: parseInt(hex[2] + hex[2], 16)
+    }
+  }
+
+  const fullHex = /^#([0-9a-f]{6})$/i.exec(value)
+  if (fullHex) {
+    const [, hex] = fullHex
+    return {
+      r: parseInt(hex.slice(0, 2), 16),
+      g: parseInt(hex.slice(2, 4), 16),
+      b: parseInt(hex.slice(4, 6), 16)
+    }
+  }
+
+  const rgb = /^rgb\(\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*[,\s]\s*(\d{1,3})\s*\)$/i.exec(value)
+  if (!rgb) return null
+  return {
+    r: Math.min(255, Number.parseInt(rgb[1], 10)),
+    g: Math.min(255, Number.parseInt(rgb[2], 10)),
+    b: Math.min(255, Number.parseInt(rgb[3], 10))
+  }
+}
+
+function getPartyBadgeTextColor(color) {
+  if (typeof color === 'string' && color.trim().toLowerCase().includes('yellow')) {
+    return '#111'
+  }
+  const channels = parseRgbChannels(color)
+  if (!channels) return '#fff'
+  const brightness = (channels.r * 299 + channels.g * 587 + channels.b * 114) / 1000
+  return brightness >= 160 ? '#111' : '#fff'
 }
 
 
