@@ -303,12 +303,19 @@ function ensureMobileLayoutElements() {
       if (!document.body || !document.body.classList.contains('mobile-landscape')) {
         return
       }
+      if (document.body.classList.contains('sidebar-collapsed')) {
+        setSidebarCollapsed(false)
+      }
       mobileLayoutState.isExtendedMenuActive = !mobileLayoutState.isExtendedMenuActive
       syncLandscapeExtendedMenuButton()
       if (mobileLayoutState.isExtendedMenuActive) {
-        mobileLayoutState.saveLoadMenu?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        requestAnimationFrame(() => {
+          scrollSidebarSectionIntoView(mobileLayoutState.saveLoadMenu)
+        })
       } else {
-        mobileLayoutState.productionArea?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+        requestAnimationFrame(() => {
+          scrollSidebarSectionIntoView(mobileLayoutState.productionArea)
+        })
       }
     })
     mobileLayoutState.sidebarMenuButtonListenerAttached = true
@@ -324,6 +331,21 @@ function syncLandscapeExtendedMenuButton() {
   const showExtended = !!mobileLayoutState.isExtendedMenuActive
   sidebarMenuButton.setAttribute('aria-pressed', showExtended ? 'true' : 'false')
   sidebarMenuButton.setAttribute('title', showExtended ? 'Show build menu' : 'Show extended menu')
+}
+
+function scrollSidebarSectionIntoView(section) {
+  if (!section || typeof document === 'undefined') {
+    return
+  }
+
+  const sidebarScroll = document.getElementById('sidebarScroll')
+  if (!sidebarScroll) {
+    section.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    return
+  }
+
+  const targetTop = Math.max(0, section.offsetTop - sidebarScroll.offsetTop)
+  sidebarScroll.scrollTo({ top: targetTop, behavior: 'smooth' })
 }
 
 function ensureMobileStatusBar(container, orientation) {
