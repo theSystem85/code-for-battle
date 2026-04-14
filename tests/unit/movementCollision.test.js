@@ -195,4 +195,124 @@ describe('movementCollision environment response', () => {
     expect(firstAvoidance.x).toBeLessThan(0)
     expect(Math.abs(secondAvoidance.x)).toBeLessThan(Math.abs(firstAvoidance.x))
   })
+
+  it('queues a one-tile yield move for an idle friendly unit when it gets pushed', () => {
+    const mapGrid = createMapGrid()
+    const occupancyMap = createOccupancyMap()
+
+    const pusher = {
+      id: 'tank-pusher',
+      type: 'tank_v1',
+      owner: 'player1',
+      x: 32,
+      y: 32,
+      movement: {
+        velocity: { x: 1.5, y: 0 },
+        targetVelocity: { x: 1.5, y: 0 },
+        currentSpeed: 1.5
+      }
+    }
+
+    const pushed = {
+      id: 'tank-pushed',
+      type: 'tank_v1',
+      owner: 'player1',
+      x: 64,
+      y: 32,
+      health: 100,
+      path: [],
+      moveTarget: null,
+      movement: {
+        velocity: { x: 0, y: 0 },
+        targetVelocity: { x: 0, y: 0 },
+        currentSpeed: 0
+      }
+    }
+
+    applyUnitCollisionResponse(
+      pusher,
+      pusher.movement,
+      {
+        collided: true,
+        type: 'unit',
+        other: pushed,
+        data: {
+          normalX: 1,
+          normalY: 0,
+          overlap: 8,
+          unitSpeed: 1.5,
+          otherSpeed: 0
+        }
+      },
+      [pusher, pushed],
+      [],
+      null,
+      mapGrid,
+      occupancyMap,
+      []
+    )
+
+    expect(pushed.moveTarget).toEqual({ x: 3, y: 1 })
+    expect(pushed.path).toEqual([{ x: 3, y: 1 }])
+  })
+
+  it('does not queue a yield move when the pushed unit already has a move target', () => {
+    const mapGrid = createMapGrid()
+    const occupancyMap = createOccupancyMap()
+
+    const pusher = {
+      id: 'tank-pusher-2',
+      type: 'tank_v1',
+      owner: 'player1',
+      x: 32,
+      y: 32,
+      movement: {
+        velocity: { x: 1.5, y: 0 },
+        targetVelocity: { x: 1.5, y: 0 },
+        currentSpeed: 1.5
+      }
+    }
+
+    const pushed = {
+      id: 'tank-pushed-2',
+      type: 'tank_v1',
+      owner: 'player1',
+      x: 64,
+      y: 32,
+      health: 100,
+      path: [{ x: 4, y: 1 }],
+      moveTarget: { x: 4, y: 1 },
+      movement: {
+        velocity: { x: 0, y: 0 },
+        targetVelocity: { x: 0, y: 0 },
+        currentSpeed: 0
+      }
+    }
+
+    applyUnitCollisionResponse(
+      pusher,
+      pusher.movement,
+      {
+        collided: true,
+        type: 'unit',
+        other: pushed,
+        data: {
+          normalX: 1,
+          normalY: 0,
+          overlap: 8,
+          unitSpeed: 1.5,
+          otherSpeed: 0
+        }
+      },
+      [pusher, pushed],
+      [],
+      null,
+      mapGrid,
+      occupancyMap,
+      []
+    )
+
+    expect(pushed.moveTarget).toEqual({ x: 4, y: 1 })
+    expect(pushed.path).toEqual([{ x: 4, y: 1 }])
+  })
 })
