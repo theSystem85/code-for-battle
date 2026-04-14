@@ -737,7 +737,7 @@ function formatStatusText(statusKey, partyState) {
   const isDefeated = (gameState.defeatedPlayers instanceof Set && gameState.defeatedPlayers.has(partyState.partyId))
     || (Array.isArray(gameState.defeatedPlayers) && gameState.defeatedPlayers.includes(partyState.partyId))
   if (isDefeated) {
-    return 'Defeated'
+    return ''
   }
 
   if (partyState.unresponsiveSince) {
@@ -771,7 +771,6 @@ function formatInviteButtonText(statusKey, partyState) {
   if (isDefeated) return 'Defeated'
   if (statusKey === 'generating') return 'Generating…'
   if (statusKey === 'copied') return 'Copied!'
-  if (partyState.inviteToken) return 'Invite Ready'
   return 'Invite'
 }
 
