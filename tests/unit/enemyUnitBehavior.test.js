@@ -387,6 +387,44 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.allowedToAttack).toBe(true)
   })
 
+  it('falls back to a reachable in-range tile when the target tile path is blocked', () => {
+    const target = {
+      id: 'enemy-1',
+      owner: 'player',
+      type: 'tank',
+      health: 100,
+      x: TILE_SIZE * 5,
+      y: 0,
+      tileX: 5,
+      tileY: 0
+    }
+    const unit = createBaseUnit({
+      target,
+      moveTarget: { x: target.tileX, y: target.tileY },
+      lastDecisionTime: now - AI_DECISION_INTERVAL - 1000,
+      x: 0,
+      y: 0,
+      tileX: 0,
+      tileY: 0
+    })
+
+    vi.mocked(getCachedPath).mockImplementation((start, end) => {
+      if (start.x === 0 && start.y === 0 && end.x === 5 && end.y === 0) {
+        return []
+      }
+      if (start.x === 0 && start.y === 0 && end.x === 4 && end.y === 0) {
+        return [{ x: 0, y: 0 }, { x: 4, y: 0 }]
+      }
+      return []
+    })
+
+    updateAIUnit(unit, [unit, target], gameState, mapGrid, now, 'ai', [], [])
+
+    expect(unit.moveTarget).toEqual({ x: 4, y: 0 })
+    expect(unit.path).toEqual([{ x: 4, y: 0 }])
+    expect(unit.lastPathCalcTime).toBe(now)
+  })
+
   it('handles harvester units without special behavior', () => {
     const unit = createBaseUnit({
       type: 'harvester',

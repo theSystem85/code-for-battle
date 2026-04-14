@@ -1,6 +1,9 @@
 # Prompt History
 
 ## 2026-04-14 - GitHub Copilot
+see the image where the situation is shown. the selected tank targets another but stands still. All 3 tanks from different parties there have the same issue. The issue is not yet solved! I see no difference in behaviour.
+
+## 2026-04-14 - GitHub Copilot
 I still see the enemy tanks of different parties to target each other but just standing still and not firing at each other. Maybe it has to do with the way they approach the target to get in firing range. looks to me like the tanks think they are in range and therefore stop but cannot fire becasue they actually did not sufficiently got close enough (just a guess). Dig deeper to try to fix the issue and explain your findings and guesses (also when you ruled out) and fixes to me!
 
 ## 2026-04-13 - GitHub Copilot

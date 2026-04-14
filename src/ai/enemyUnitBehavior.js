@@ -165,6 +165,91 @@ function recordAiUnitReplayCommand(unit, mapGrid) {
   unit.replayLastRecordedCommandSignature = nextSignature
 }
 
+function findReachableAttackDestination(unit, target, mapGrid, occupancyMap) {
+  if (!unit || !target || !Array.isArray(mapGrid) || mapGrid.length === 0 || !Array.isArray(mapGrid[0])) {
+    return null
+  }
+
+  const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
+  const directDestination = target.tileX !== undefined
+    ? { x: target.tileX, y: target.tileY }
+    : { x: target.x, y: target.y }
+
+  const directPath = getCachedPath(
+    startNode,
+    directDestination,
+    mapGrid,
+    occupancyMap,
+    { unitOwner: unit.owner }
+  )
+
+  if (directPath.length > 1 || target.tileX === undefined) {
+    return {
+      destination: directDestination,
+      path: directPath
+    }
+  }
+
+  const fireRangeTiles = Math.max(1, Math.floor(getEffectiveFireRange(unit) / TILE_SIZE))
+  const mapHeight = mapGrid.length
+  const mapWidth = mapGrid[0].length
+  let bestCandidate = null
+
+  for (let y = target.tileY - fireRangeTiles; y <= target.tileY + fireRangeTiles; y++) {
+    for (let x = target.tileX - fireRangeTiles; x <= target.tileX + fireRangeTiles; x++) {
+      if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) {
+        continue
+      }
+
+      if (x === target.tileX && y === target.tileY) {
+        continue
+      }
+
+      if (Math.hypot(x - target.tileX, y - target.tileY) > fireRangeTiles) {
+        continue
+      }
+
+      const tile = mapGrid[y][x]
+      if (!tile || tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || tile.building) {
+        continue
+      }
+
+      const candidatePath = getCachedPath(
+        startNode,
+        { x, y },
+        mapGrid,
+        occupancyMap,
+        { unitOwner: unit.owner, strictDestination: true }
+      )
+
+      if (candidatePath.length <= 1) {
+        continue
+      }
+
+      const candidateScore = candidatePath.length + Math.hypot(x - target.tileX, y - target.tileY) * 0.25
+      if (!bestCandidate || candidateScore < bestCandidate.score) {
+        bestCandidate = {
+          destination: { x, y },
+          path: candidatePath,
+          score: candidateScore
+        }
+      }
+    }
+  }
+
+  if (!bestCandidate) {
+    return {
+      destination: directDestination,
+      path: directPath
+    }
+  }
+
+  return {
+    destination: bestCandidate.destination,
+    path: bestCandidate.path
+  }
+}
+
 function usesGroupAttackPermission(unit) {
   return !unit?.harvesterHunter && (
     unit.type === 'tank' ||
@@ -723,15 +808,10 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
           if (!unit.isDodging && targetPos) {
             // Use occupancy map in attack mode to prevent moving through occupied tiles
             const occupancyMap = gameState.occupancyMap
-            const path = getCachedPath(
-              { x: unit.tileX, y: unit.tileY, owner: unit.owner },
-              targetPos,
-              mapGrid,
-              occupancyMap,
-              { unitOwner: unit.owner }
-            )
-            if (path.length > 1) {
-              unit.path = path.slice(1)
+            const attackPath = findReachableAttackDestination(unit, unit.target, mapGrid, occupancyMap)
+            if (attackPath?.path?.length > 1) {
+              unit.moveTarget = attackPath.destination
+              unit.path = attackPath.path.slice(1)
               unit.lastPathCalcTime = now
             }
           }
@@ -756,16 +836,13 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
 
       // Smart path recalculation: only recalculate if target moved or distance is increasing
       if (!unit.isDodging && unit.target) {
-        let targetPos = null
         let targetTileX, targetTileY
         if (unit.target.tileX !== undefined) {
           targetTileX = unit.target.tileX
           targetTileY = unit.target.tileY
-          targetPos = { x: targetTileX, y: targetTileY }
         } else {
           targetTileX = unit.target.x
           targetTileY = unit.target.y
-          targetPos = { x: targetTileX, y: targetTileY }
         }
 
         // Calculate current distance to target
@@ -804,15 +881,10 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
 
           // Use occupancy map in attack mode to prevent moving through occupied tiles
           const occupancyMap = gameState.occupancyMap
-          const path = getCachedPath(
-            { x: unit.tileX, y: unit.tileY, owner: unit.owner },
-            targetPos,
-            mapGrid,
-            occupancyMap,
-            { unitOwner: unit.owner }
-          )
-          if (path.length > 1) {
-            unit.path = path.slice(1)
+          const attackPath = findReachableAttackDestination(unit, unit.target, mapGrid, occupancyMap)
+          if (attackPath?.path?.length > 1) {
+            unit.moveTarget = attackPath.destination
+            unit.path = attackPath.path.slice(1)
             unit.lastPathCalcTime = now
           }
         } else if (hasValidPath) {

@@ -16,6 +16,7 @@ This specification documents the comprehensive multi-player AI system that power
 - AI party synchronization should clear queued commands and reset utility targets when a remote party disconnects, ensuring AI reactivation takes immediate control of units owned by that party.
 - Classic AI combat tests must cover the decoupled target-selection vs fire-permission path: once a ground combat unit already has a target, `allowedToAttack` must refresh every tick even though broader AI strategy updates remain throttled by `AI_DECISION_INTERVAL`.
 - Classic AI combat tests must also cover the decoupled range-vs-line-of-sight path: ground tanks must not clear a reposition path merely because they are already within nominal fire range if `hasClearShot()` is still false.
+- Classic AI attack-move tests must cover blocked exact-target destinations: when pathing to an occupied enemy unit tile fails, AI tanks must choose a reachable destination tile inside firing range instead of idling with an empty path.
 
 ---
 
@@ -135,7 +136,7 @@ This specification documents the comprehensive multi-player AI system that power
 
 #### FR-002: AI Update Cycle
 **Priority:** P0  
-**Description:** AI decision-making runs at consistent intervals (default 3000ms) to simulate planning delays and prevent instant reactions. Update cycle processes economy, construction, production, and combat decisions in sequence. Fire-permission state for already-targeted combat units must still refresh every simulation tick so throttled strategy updates cannot leave units permanently target-locked but unable to shoot. Likewise, combat movement must not treat nominal range as sufficient to stop when line-of-sight repositioning is still in progress.
+**Description:** AI decision-making runs at consistent intervals (default 3000ms) to simulate planning delays and prevent instant reactions. Update cycle processes economy, construction, production, and combat decisions in sequence. Fire-permission state for already-targeted combat units must still refresh every simulation tick so throttled strategy updates cannot leave units permanently target-locked but unable to shoot. Likewise, combat movement must not treat nominal range as sufficient to stop when line-of-sight repositioning is still in progress, and AI attack pathing must fall back from impossible exact target tiles to reachable in-range firing positions.
 
 #### FR-003: Party Resource Tracking
 **Priority:** P0  
