@@ -97,11 +97,12 @@ body.is-touch {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  padding-right: 6px;
 }
 
 .multiplayer-party-dot {
-  min-width: 54px;
-  max-width: 92px;
+  width: fit-content;
+  max-width: 120px;
   height: 20px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.4);

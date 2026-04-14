@@ -683,6 +683,13 @@ function getPartyBadgeTextColor(color) {
   if (typeof color === 'string' && color.trim().toLowerCase().includes('yellow')) {
     return '#111'
   }
+  const normalizedColor = typeof color === 'string' ? color.trim().toLowerCase() : ''
+  if (normalizedColor.includes('green')) {
+    return '#111'
+  }
+  if (normalizedColor === '#00ff00' || normalizedColor === '#0f0' || normalizedColor === 'rgb(0,255,0)') {
+    return '#111'
+  }
   const channels = parseRgbChannels(color)
   if (!channels) return '#fff'
   const brightness = (channels.r * 299 + channels.g * 587 + channels.b * 114) / 1000
