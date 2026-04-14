@@ -315,4 +315,65 @@ describe('movementCollision environment response', () => {
     expect(pushed.moveTarget).toEqual({ x: 4, y: 1 })
     expect(pushed.path).toEqual([{ x: 4, y: 1 }])
   })
+
+  it('queues yield move when the pusher is remote-controlled even if slower', () => {
+    const mapGrid = createMapGrid()
+    const occupancyMap = createOccupancyMap()
+
+    const pusher = {
+      id: 'tank-pusher-rc',
+      type: 'tank_v1',
+      owner: 'player1',
+      remoteControlActive: true,
+      x: 32,
+      y: 32,
+      movement: {
+        velocity: { x: 0.3, y: 0 },
+        targetVelocity: { x: 0.3, y: 0 },
+        currentSpeed: 0.3
+      }
+    }
+
+    const pushed = {
+      id: 'tank-pushed-rc',
+      type: 'tank_v1',
+      owner: 'player1',
+      x: 64,
+      y: 32,
+      health: 100,
+      path: [],
+      moveTarget: null,
+      movement: {
+        velocity: { x: 1.2, y: 0 },
+        targetVelocity: { x: 1.2, y: 0 },
+        currentSpeed: 1.2
+      }
+    }
+
+    applyUnitCollisionResponse(
+      pusher,
+      pusher.movement,
+      {
+        collided: true,
+        type: 'unit',
+        other: pushed,
+        data: {
+          normalX: 1,
+          normalY: 0,
+          overlap: 8,
+          unitSpeed: 0.3,
+          otherSpeed: 1.2
+        }
+      },
+      [pusher, pushed],
+      [],
+      null,
+      mapGrid,
+      occupancyMap,
+      []
+    )
+
+    expect(pushed.moveTarget).toEqual({ x: 3, y: 1 })
+    expect(pushed.path).toEqual([{ x: 3, y: 1 }])
+  })
 })

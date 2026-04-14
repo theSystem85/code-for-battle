@@ -40,3 +40,4 @@ Units should anticipate nearby blockers using the existing occupancy map and gen
 9. **Friendly Push Yield for Idle Units**
    - If a friendly ground unit is physically pushed by another friendly ground unit and the pushed unit has no active move target/path, the pushed unit must enqueue a one-tile movement in the push direction to clear space for the pusher.
    - This auto-yield must not override existing movement intent: units with an active `moveTarget`/path keep their current command.
+   - Remote-controlled friendly pushers must be handled identically: remote/manual control cannot disable ally-yield behavior, including lower-speed push contacts.

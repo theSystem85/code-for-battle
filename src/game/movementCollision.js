@@ -745,7 +745,7 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
     movement.currentSpeed = Math.hypot(movement.velocity.x, movement.velocity.y)
     return false
   } else if (separation > 0.001) {
-    const pushOther = Boolean(otherUnit) && otherSpeed <= unitSpeed
+    const pushOther = Boolean(otherUnit) && (unit.remoteControlActive || otherSpeed <= unitSpeed)
 
     if (pushOther && otherUnit) {
       applySafeSeparation(
