@@ -1,3 +1,4 @@
+- [x] Tablet landscape sidebar parity (2026-04-14): touch landscape viewports with tablet-sized short edge now keep desktop sidebar behavior instead of forcing mobile-landscape UI.
 - [x] Debug reroute diagnostics enrichment (2026-03-28): command history now records reroute entries with move target + path signature to expose same-target path churn reasons beyond generic "move" events.
 - [x] Debug command overlay compact minimized mode (2026-03-28): when minimized, only a floating "Maximize logs" button remains visible at bottom-right above condensed sidebar space.
 - [x] Debug command overlay minimize/maximize control (2026-03-28): `?debug` command panel now has a header toggle button to collapse/expand while keeping selection-aware visibility behavior.
