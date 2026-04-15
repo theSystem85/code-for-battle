@@ -603,6 +603,10 @@ function updateModeTabUi(state) {
   if (state.animationPreviewPanel) {
     state.animationPreviewPanel.hidden = !isAnimated
   }
+  if (!isAnimated && state.previewFrameHandle) {
+    cancelAnimationFrame(state.previewFrameHandle)
+    state.previewFrameHandle = null
+  }
   if (!isAnimated && state.animationPreviewCanvas) {
     const ctx = state.animationPreviewCanvas.getContext('2d')
     if (ctx) {
@@ -616,7 +620,7 @@ function getActiveDefaultTags(state) {
 }
 
 function refreshAnimationPreview(state) {
-  if (state.mode !== 'animated') return
+  if (state.mode !== 'animated' || !state.isModalOpen || state.animationPreviewPanel?.hidden) return
   if (!state.animationPreviewCanvas || !state.activeData || !state.image || !state.activeTag) return
   const ctx = state.animationPreviewCanvas.getContext('2d')
   if (!ctx) return
@@ -681,12 +685,19 @@ function refreshAnimationPreview(state) {
 }
 
 function startAnimationPreviewLoop(state) {
+  if (!state.isModalOpen || state.mode !== 'animated') {
+    if (state.previewFrameHandle) {
+      cancelAnimationFrame(state.previewFrameHandle)
+      state.previewFrameHandle = null
+    }
+    return
+  }
   if (state.previewFrameHandle) {
     cancelAnimationFrame(state.previewFrameHandle)
   }
   const tick = () => {
     refreshAnimationPreview(state)
-    if (state.previewPlaying && state.mode === 'animated') {
+    if (state.previewPlaying && state.mode === 'animated' && state.isModalOpen && !state.animationPreviewPanel?.hidden) {
       state.previewFrameHandle = requestAnimationFrame(tick)
     } else {
       state.previewFrameHandle = null
@@ -952,19 +963,23 @@ function bindCanvasInteractions(state) {
 
 function openModal(state) {
   if (!state.modal) return
+  state.isModalOpen = true
   state.modal.classList.add('config-modal--open')
   state.modal.setAttribute('aria-hidden', 'false')
   document.body.classList.add('config-modal-open')
   drawSseCanvas(state)
   snapZoomToCanvas(state)
-  refreshAnimationPreview(state)
-  if (state.previewPlaying) {
+  if (state.mode === 'animated') {
+    refreshAnimationPreview(state)
+  }
+  if (state.previewPlaying && state.mode === 'animated') {
     startAnimationPreviewLoop(state)
   }
 }
 
 function closeModal(state) {
   if (!state.modal) return
+  state.isModalOpen = false
   state.modal.classList.remove('config-modal--open')
   state.modal.setAttribute('aria-hidden', 'true')
   document.body.classList.remove('config-modal-open')
@@ -1096,6 +1111,7 @@ export async function initSpriteSheetEditor(options = {}) {
     previewPlaying: true,
     previewStartTime: performance.now(),
     previewFrameHandle: null,
+    isModalOpen: false,
     staticModeSnapshot: null,
     animatedModeSnapshot: null,
     onSheetDataChange: options.onSheetDataChange || null,
@@ -1166,7 +1182,7 @@ export async function initSpriteSheetEditor(options = {}) {
     renderTagList(state)
     drawSseCanvas(state)
     refreshAnimationPreview(state)
-    if (state.previewPlaying) startAnimationPreviewLoop(state)
+    if (state.previewPlaying && state.isModalOpen) startAnimationPreviewLoop(state)
   }
 
   state.openBtn.addEventListener('click', () => openModal(state))
@@ -1336,7 +1352,7 @@ export async function initSpriteSheetEditor(options = {}) {
 
   bindCanvasInteractions(state)
   refreshAnimationPreview(state)
-  if (state.previewPlaying) {
+  if (state.previewPlaying && state.isModalOpen) {
     startAnimationPreviewLoop(state)
   }
 
