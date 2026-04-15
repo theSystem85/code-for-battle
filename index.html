@@ -1109,6 +1109,19 @@
             <span>Sprite Sheet</span>
             <select id="sseSheetSelect" class="sidebar-input"></select>
           </label>
+          <div id="sseSheetMetaRow" class="sprite-sheet-editor__sheet-meta" hidden>
+            <span id="sseSheetResolution" class="sprite-sheet-editor__sheet-resolution">Resolution: --</span>
+            <div id="sseSheetInfoWrap" class="sprite-sheet-editor__sheet-info">
+              <button
+                id="sseSheetInfoBtn"
+                class="sprite-sheet-editor__sheet-info-btn"
+                type="button"
+                aria-label="Show sprite sheet image metadata"
+                aria-expanded="false"
+              >i</button>
+              <div id="sseSheetInfoPopover" class="sprite-sheet-editor__sheet-info-popover" role="tooltip"></div>
+            </div>
+          </div>
           <label class="sprite-sheet-editor__field">
             <span>Tile size (px)</span>
             <input id="sseTileSizeInput" class="sidebar-input" type="number" min="8" value="64">

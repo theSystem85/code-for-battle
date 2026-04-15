@@ -115,3 +115,4 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Preview button state returns to `Play` when non-loop playback reaches the end.
   - Static tab must never show animated preview output; preview is exclusive to Animated tab.
   - Editor supports independent row-height configuration (`rowHeight`) separate from tile width (`tileSize`).
+  - Whenever a sprite sheet is loaded (both Static and Animated modes), show its image resolution directly below the sheet selector and provide an `(i)` info bubble that opens on hover/click to display full image metadata in a popover.

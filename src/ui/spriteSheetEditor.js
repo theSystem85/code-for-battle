@@ -1,4 +1,9 @@
-import { createSpriteSheetAnimationInstance, getAnimationFrameIndex, getSpriteSheetTexture } from '../rendering/spriteSheetAnimation.js'
+import {
+  createSpriteSheetAnimationInstance,
+  getAnimationFrameIndex,
+  getSpriteSheetTexture,
+  parseSpriteSheetMetadataFromFilename
+} from '../rendering/spriteSheetAnimation.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -56,6 +61,62 @@ function hashCoord(x, y) {
 
 function buildMetaPath(sheetPath) {
   return sheetPath.replace(/\.(webp|png|jpg|jpeg)$/i, '.json')
+}
+
+function formatAspectRatio(width, height) {
+  if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+    return '--'
+  }
+  const ratio = width / height
+  return `${ratio.toFixed(3)}:1`
+}
+
+function buildSheetMetadataText(data, image) {
+  if (!data || !image) return ''
+  const width = Number.isFinite(image.naturalWidth) && image.naturalWidth > 0 ? image.naturalWidth : image.width
+  const height = Number.isFinite(image.naturalHeight) && image.naturalHeight > 0 ? image.naturalHeight : image.height
+  const columns = Math.floor(width / Math.max(1, data.tileSize))
+  const rows = Math.floor(height / Math.max(1, data.rowHeight || data.tileSize))
+  const remainderX = width % Math.max(1, data.tileSize)
+  const remainderY = height % Math.max(1, data.rowHeight || data.tileSize)
+  const lines = [
+    `Path: ${data.sheetPath}`,
+    `Filename: ${data.sheetPath.split('/').pop() || data.sheetPath}`,
+    `Image: ${width}x${height}px`,
+    `Aspect ratio: ${formatAspectRatio(width, height)}`,
+    `Decoded: ${image.complete ? 'yes' : 'no'}`,
+    `Grid columns: ${columns}`,
+    `Grid rows: ${rows}`,
+    `Remainder pixels: ${remainderX}x${remainderY}`,
+    `Tile width: ${data.tileSize}px`,
+    `Row height: ${data.rowHeight || data.tileSize}px`,
+    `Border width: ${data.borderWidth}px`
+  ]
+  try {
+    const filenameMetadata = parseSpriteSheetMetadataFromFilename(data.sheetPath)
+    lines.push(
+      `Filename metadata: ${filenameMetadata.tileWidth}x${filenameMetadata.tileHeight}px tiles, ${filenameMetadata.columns}x${filenameMetadata.rows} grid, ${filenameMetadata.frameCount} frames`
+    )
+  } catch {
+    lines.push('Filename metadata: not encoded in filename')
+  }
+  return lines.join('\n')
+}
+
+function updateSheetMetadataUi(state) {
+  if (!state.sheetMetaRow || !state.sheetResolutionEl || !state.sheetInfoPopover) return
+  if (!state.activeData || !state.image) {
+    state.sheetMetaRow.hidden = true
+    state.sheetResolutionEl.textContent = 'Resolution: --'
+    state.sheetInfoPopover.textContent = ''
+    return
+  }
+
+  const width = Number.isFinite(state.image.naturalWidth) && state.image.naturalWidth > 0 ? state.image.naturalWidth : state.image.width
+  const height = Number.isFinite(state.image.naturalHeight) && state.image.naturalHeight > 0 ? state.image.naturalHeight : state.image.height
+  state.sheetMetaRow.hidden = false
+  state.sheetResolutionEl.textContent = `Resolution: ${width}x${height}px`
+  state.sheetInfoPopover.textContent = buildSheetMetadataText(state.activeData, state.image)
 }
 
 function ensureTileRecord(data, tileKey) {
@@ -710,6 +771,7 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
     state.borderWidthInput.value = state.activeData.borderWidth
   }
 
+  updateSheetMetadataUi(state)
   saveDataToLocalStorage(state.activeData, state.mode)
   drawSseCanvas(state)
   snapZoomToCanvas(state)
@@ -983,6 +1045,11 @@ export async function initSpriteSheetEditor(options = {}) {
     previewPlayPauseBtn: document.getElementById('ssePreviewPlayPauseBtn'),
     previewDurationEl: document.getElementById('ssePreviewDuration'),
     sheetSelect: document.getElementById('sseSheetSelect'),
+    sheetMetaRow: document.getElementById('sseSheetMetaRow'),
+    sheetResolutionEl: document.getElementById('sseSheetResolution'),
+    sheetInfoWrap: document.getElementById('sseSheetInfoWrap'),
+    sheetInfoBtn: document.getElementById('sseSheetInfoBtn'),
+    sheetInfoPopover: document.getElementById('sseSheetInfoPopover'),
     tileSizeInput: document.getElementById('sseTileSizeInput'),
     rowHeightInput: document.getElementById('sseRowHeightInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
@@ -1137,9 +1204,24 @@ export async function initSpriteSheetEditor(options = {}) {
     await loadSheet(state, e.target.value, { mode: state.mode })
   })
 
+  state.sheetInfoBtn?.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const isOpen = state.sheetInfoWrap?.classList.toggle('is-open')
+    state.sheetInfoBtn?.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+  })
+
+  document.addEventListener('click', (event) => {
+    if (!state.sheetInfoWrap || !state.sheetInfoBtn) return
+    if (state.sheetInfoWrap.contains(event.target)) return
+    state.sheetInfoWrap.classList.remove('is-open')
+    state.sheetInfoBtn.setAttribute('aria-expanded', 'false')
+  })
+
   state.tileSizeInput?.addEventListener('change', () => {
     if (!state.activeData) return
     state.activeData.tileSize = Math.max(8, Number.parseInt(state.tileSizeInput.value, 10) || DEFAULT_TILE_SIZE)
+    updateSheetMetadataUi(state)
     drawSseCanvas(state)
     applyCanvasZoom(state)
     saveDataToLocalStorage(state.activeData, state.mode)
@@ -1149,6 +1231,7 @@ export async function initSpriteSheetEditor(options = {}) {
     if (!state.activeData) return
     const parsed = Number.parseInt(state.rowHeightInput.value, 10)
     state.activeData.rowHeight = Number.isFinite(parsed) ? Math.max(8, parsed) : state.activeData.tileSize
+    updateSheetMetadataUi(state)
     drawSseCanvas(state)
     applyCanvasZoom(state)
     saveDataToLocalStorage(state.activeData, state.mode)
@@ -1158,6 +1241,7 @@ export async function initSpriteSheetEditor(options = {}) {
     if (!state.activeData) return
     const parsed = Number.parseInt(state.borderWidthInput.value, 10)
     state.activeData.borderWidth = Number.isFinite(parsed) ? Math.max(0, parsed) : DEFAULT_BORDER_WIDTH
+    updateSheetMetadataUi(state)
     drawSseCanvas(state)
     applyCanvasZoom(state)
     saveDataToLocalStorage(state.activeData, state.mode)
