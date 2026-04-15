@@ -15,6 +15,7 @@ const SSE_LAST_SHEET_KEY = 'rts-sse-last-sheet'
 const SSE_LAST_ANIMATION_SHEET_KEY = 'rts-sse-last-animation-sheet'
 const SSE_MODE_STORAGE_KEY = 'rts-sse-mode'
 const ANIMATION_DEFAULT_DURATION_MS = 1050
+const SSE_PREVIEW_BACKGROUND_TILE = 'images/map/land01.webp'
 
 export const DEFAULT_SSE_TAGS = [
   'passable',
@@ -61,6 +62,10 @@ function hashCoord(x, y) {
 
 function buildMetaPath(sheetPath) {
   return sheetPath.replace(/\.(webp|png|jpg|jpeg)$/i, '.json')
+}
+
+function isTransientSheetPath(sheetPath) {
+  return typeof sheetPath === 'string' && (sheetPath.startsWith('blob:') || sheetPath.startsWith('data:') || sheetPath.startsWith('local-upload:'))
 }
 
 function formatAspectRatio(width, height) {
@@ -602,6 +607,7 @@ function updateModeTabUi(state) {
   state.modeAnimatedBtn?.setAttribute('aria-selected', isAnimated ? 'true' : 'false')
   if (state.animationPreviewPanel) {
     state.animationPreviewPanel.hidden = !isAnimated
+    state.animationPreviewPanel.style.display = isAnimated ? 'flex' : 'none'
   }
   if (!isAnimated && state.previewFrameHandle) {
     cancelAnimationFrame(state.previewFrameHandle)
@@ -629,6 +635,22 @@ function refreshAnimationPreview(state) {
   const durationMs = ANIMATION_DEFAULT_DURATION_MS
   state.previewDurationEl.textContent = `Duration: ${durationMs}ms (${frameCount} frames)`
   ctx.clearRect(0, 0, state.animationPreviewCanvas.width, state.animationPreviewCanvas.height)
+  if (state.previewBackgroundEnabled) {
+    const backgroundImage = state.previewBackgroundImage
+    const backgroundReady = Boolean(backgroundImage && backgroundImage.complete && backgroundImage.naturalWidth > 0 && backgroundImage.naturalHeight > 0)
+    if (backgroundReady) {
+      if (!state.previewBackgroundPattern) {
+        state.previewBackgroundPattern = ctx.createPattern(backgroundImage, 'repeat')
+      }
+      if (state.previewBackgroundPattern) {
+        ctx.fillStyle = state.previewBackgroundPattern
+        ctx.fillRect(0, 0, state.animationPreviewCanvas.width, state.animationPreviewCanvas.height)
+      }
+    } else {
+      ctx.fillStyle = '#31572a'
+      ctx.fillRect(0, 0, state.animationPreviewCanvas.width, state.animationPreviewCanvas.height)
+    }
+  }
   if (!frameCount) {
     ctx.fillStyle = '#999'
     ctx.font = '12px sans-serif'
@@ -707,6 +729,9 @@ function startAnimationPreviewLoop(state) {
 }
 
 function saveDataToLocalStorage(data, mode = 'static') {
+  if (!data?.sheetPath || isTransientSheetPath(data.sheetPath)) {
+    return
+  }
   try {
     const prefix = mode === 'animated' ? SSE_ANIMATION_METADATA_PREFIX : SSE_METADATA_PREFIX
     const key = mode === 'animated' ? SSE_LAST_ANIMATION_SHEET_KEY : SSE_LAST_SHEET_KEY
@@ -718,6 +743,9 @@ function saveDataToLocalStorage(data, mode = 'static') {
 }
 
 async function loadMetadataFromSourcesForMode(sheetPath, mode = 'static') {
+  if (isTransientSheetPath(sheetPath)) {
+    return normalizeSheetDataForTags(null, sheetPath, mode === 'animated' ? DEFAULT_SSE_ANIMATION_TAGS : DEFAULT_SSE_TAGS)
+  }
   const metadataPrefix = mode === 'animated' ? SSE_ANIMATION_METADATA_PREFIX : SSE_METADATA_PREFIX
   const baseTags = mode === 'animated' ? DEFAULT_SSE_ANIMATION_TAGS : DEFAULT_SSE_TAGS
   const local = safeParseJson(localStorage.getItem(`${metadataPrefix}${sheetPath}`), null)
@@ -742,7 +770,11 @@ async function loadImage(sheetPath) {
     const img = new Image()
     img.onload = () => resolve(img)
     img.onerror = () => resolve(null)
-    img.src = sheetPath.startsWith('/') ? sheetPath : `/${sheetPath}`
+    if (sheetPath.startsWith('/') || sheetPath.startsWith('blob:') || sheetPath.startsWith('data:') || /^https?:\/\//i.test(sheetPath)) {
+      img.src = sheetPath
+    } else {
+      img.src = `/${sheetPath}`
+    }
   })
 }
 
@@ -992,6 +1024,40 @@ function closeModal(state) {
   }
 }
 
+function ensureSheetPathInMode(state, sheetPath, label, mode) {
+  const targetList = mode === 'animated' ? state.animationSheetPaths : state.staticSheetPaths
+  if (!targetList.includes(sheetPath)) {
+    targetList.unshift(sheetPath)
+  }
+  state.customSheetLabels[sheetPath] = label
+}
+
+async function loadDroppedSheetFile(state, file) {
+  if (!file || !file.type.startsWith('image/')) {
+    setStatus(state, 'Only image files can be dropped into SSE.', 'warn')
+    return
+  }
+
+  const objectUrl = URL.createObjectURL(file)
+  ensureSheetPathInMode(state, objectUrl, file.name || 'dropped-image', state.mode)
+  state.sheetPaths = state.mode === 'animated' ? state.animationSheetPaths : state.staticSheetPaths
+  renderSheetOptions(state)
+  await loadSheet(state, objectUrl, { mode: state.mode })
+  setStatus(state, `Loaded dropped image: ${file.name || 'image'}`)
+}
+
+function positionSheetInfoPopover(state) {
+  if (!state.sheetInfoBtn || !state.sheetInfoPopover) return
+  const rect = state.sheetInfoBtn.getBoundingClientRect()
+  const gap = 10
+  const desiredLeft = rect.right + gap
+  const maxLeft = Math.max(8, window.innerWidth - state.sheetInfoPopover.offsetWidth - 8)
+  const left = Math.min(desiredLeft, maxLeft)
+  const top = Math.max(8, rect.bottom + 6)
+  state.sheetInfoPopover.style.left = `${left}px`
+  state.sheetInfoPopover.style.top = `${top}px`
+}
+
 async function loadSheetList() {
   try {
     const response = await fetch(SSE_SHEETS_INDEX, { cache: 'no-store' })
@@ -1028,7 +1094,7 @@ function renderSheetOptions(state) {
   state.sheetPaths.forEach((sheetPath) => {
     const option = document.createElement('option')
     option.value = sheetPath
-    option.textContent = sheetPath.split('/').pop() || sheetPath
+    option.textContent = state.customSheetLabels[sheetPath] || (sheetPath.split('/').pop() || sheetPath)
     state.sheetSelect.appendChild(option)
   })
 }
@@ -1057,6 +1123,7 @@ export async function initSpriteSheetEditor(options = {}) {
     animationPreviewPanel: document.getElementById('sseAnimationPreviewPanel'),
     animationPreviewCanvas: document.getElementById('sseAnimationPreviewCanvas'),
     previewLoopCheckbox: document.getElementById('ssePreviewLoopCheckbox'),
+    previewBackgroundCheckbox: document.getElementById('ssePreviewBackgroundCheckbox'),
     previewPlayPauseBtn: document.getElementById('ssePreviewPlayPauseBtn'),
     previewDurationEl: document.getElementById('ssePreviewDuration'),
     sheetSelect: document.getElementById('sseSheetSelect'),
@@ -1086,6 +1153,7 @@ export async function initSpriteSheetEditor(options = {}) {
     canvasViewport: document.getElementById('sseCanvasViewport'),
     canvas: document.getElementById('sseTileCanvas'),
     sheetPaths: [],
+    customSheetLabels: {},
     staticSheetPaths: [],
     animationSheetPaths: [],
     activeData: null,
@@ -1108,6 +1176,9 @@ export async function initSpriteSheetEditor(options = {}) {
     showTaggedOverlay: true,
     mode: 'static',
     previewLoop: false,
+    previewBackgroundEnabled: true,
+    previewBackgroundImage: null,
+    previewBackgroundPattern: null,
     previewPlaying: true,
     previewStartTime: performance.now(),
     previewFrameHandle: null,
@@ -1139,6 +1210,14 @@ export async function initSpriteSheetEditor(options = {}) {
 
   state.staticSheetPaths = await loadSheetList()
   state.animationSheetPaths = await loadAnimationSheetList()
+  state.previewBackgroundImage = new Image()
+  state.previewBackgroundImage.onload = () => {
+    state.previewBackgroundPattern = null
+    if (state.isModalOpen && state.mode === 'animated') {
+      refreshAnimationPreview(state)
+    }
+  }
+  state.previewBackgroundImage.src = `/${SSE_PREVIEW_BACKGROUND_TILE}`
   state.sheetPaths = state.mode === 'animated' ? state.animationSheetPaths : state.staticSheetPaths
   renderSheetOptions(state)
   updateModeTabUi(state)
@@ -1207,6 +1286,11 @@ export async function initSpriteSheetEditor(options = {}) {
     refreshAnimationPreview(state)
   })
 
+  state.previewBackgroundCheckbox?.addEventListener('change', () => {
+    state.previewBackgroundEnabled = Boolean(state.previewBackgroundCheckbox.checked)
+    refreshAnimationPreview(state)
+  })
+
   state.previewPlayPauseBtn?.addEventListener('click', () => {
     state.previewPlaying = !state.previewPlaying
     state.previewPlayPauseBtn.textContent = state.previewPlaying ? 'Pause' : 'Play'
@@ -1225,6 +1309,23 @@ export async function initSpriteSheetEditor(options = {}) {
     event.stopPropagation()
     const isOpen = state.sheetInfoWrap?.classList.toggle('is-open')
     state.sheetInfoBtn?.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+    if (isOpen) {
+      positionSheetInfoPopover(state)
+    }
+  })
+
+  state.sheetInfoWrap?.addEventListener('mouseenter', () => {
+    positionSheetInfoPopover(state)
+  })
+
+  state.sheetInfoWrap?.addEventListener('focusin', () => {
+    positionSheetInfoPopover(state)
+  })
+
+  window.addEventListener('resize', () => {
+    if (state.sheetInfoWrap?.classList.contains('is-open')) {
+      positionSheetInfoPopover(state)
+    }
   })
 
   document.addEventListener('click', (event) => {
@@ -1232,6 +1333,17 @@ export async function initSpriteSheetEditor(options = {}) {
     if (state.sheetInfoWrap.contains(event.target)) return
     state.sheetInfoWrap.classList.remove('is-open')
     state.sheetInfoBtn.setAttribute('aria-expanded', 'false')
+  })
+
+  state.canvasWrap?.addEventListener('dragover', (event) => {
+    event.preventDefault()
+    event.dataTransfer.dropEffect = 'copy'
+  })
+
+  state.canvasWrap?.addEventListener('drop', async(event) => {
+    event.preventDefault()
+    const file = event.dataTransfer?.files?.[0]
+    await loadDroppedSheetFile(state, file)
   })
 
   state.tileSizeInput?.addEventListener('change', () => {

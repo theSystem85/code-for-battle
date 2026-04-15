@@ -341,10 +341,9 @@ body.config-modal-open {
 }
 
 .sprite-sheet-editor__sheet-info-popover {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: calc(100% + 8px);
-  right: auto;
+  position: fixed;
+  top: 0;
+  left: 0;
   min-width: 230px;
   max-width: min(280px, calc(100vw - 28px));
   background: #0b1118;
@@ -354,7 +353,7 @@ body.config-modal-open {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   color: #d8e0ea;
   white-space: pre-line;
-  z-index: 4;
+  z-index: 9999;
   display: none;
 }
 

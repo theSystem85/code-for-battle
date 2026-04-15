@@ -119,3 +119,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Static mode must always fully disable animated preview rendering/RAF updates (no visible preview and no hidden background animation work).
   - Animated preview RAF loop may only run while the SSE modal is open in Animated mode, so gameplay framerate is not reduced when SSE is closed.
   - Metadata popover should open to the right of the `(i)` button and stay readable near viewport edges (no side clipping).
+  - Animated preview panel must include a `Background` checkbox beside `Loop`; when enabled, preview renders on a grass-like map tile backdrop so black-key transparency/additive blend quality can be inspected in-map context.
+  - Metadata popover must render above the SSE workspace/canvas layer (no clipping behind/right of sidebar due stacking context).
+  - Static mode must hide animated preview panel using effective `display: none` behavior.
+  - SSE canvas accepts drag-drop image files in both Static and Animated modes, adds dropped images to current-mode selector list in-browser only (non-persistent), and auto-selects/loads dropped image immediately.
