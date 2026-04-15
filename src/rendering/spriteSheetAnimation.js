@@ -111,7 +111,11 @@ export function getSpriteSheetTexture(assetPath) {
 
   const img = new Image()
   img.decoding = 'async'
-  img.src = assetPath.startsWith('/') ? assetPath : `/${assetPath}`
+  if (assetPath.startsWith('/') || assetPath.startsWith('blob:') || assetPath.startsWith('data:') || /^https?:\/\//i.test(assetPath)) {
+    img.src = assetPath
+  } else {
+    img.src = `/${assetPath}`
+  }
   textureCache.set(assetPath, {
     image: img,
     processed: null
@@ -136,15 +140,23 @@ export function createSpriteSheetAnimationInstance({
   rows,
   frameCount
 }) {
-  const metadata = parseSpriteSheetMetadataFromFilename(assetPath)
+  let metadata = null
+  try {
+    metadata = parseSpriteSheetMetadataFromFilename(assetPath)
+  } catch {
+    metadata = null
+  }
   const computedDuration = Number.isFinite(durationSeconds)
     ? Math.max(1, durationSeconds * 1000)
     : duration
-  const resolvedColumns = Number.isFinite(columns) ? columns : metadata.columns
-  const resolvedRows = Number.isFinite(rows) ? rows : metadata.rows
-  const resolvedTileWidth = Number.isFinite(tileWidth) ? tileWidth : metadata.tileWidth
-  const resolvedTileHeight = Number.isFinite(tileHeight) ? tileHeight : metadata.tileHeight
-  const resolvedFrameCount = Number.isFinite(frameCount) ? frameCount : metadata.frameCount
+  const fallbackColumns = Number.isFinite(columns) ? columns : (metadata?.columns || 1)
+  const fallbackRows = Number.isFinite(rows) ? rows : (metadata?.rows || 1)
+  const fallbackTileWidth = Number.isFinite(tileWidth) ? tileWidth : (metadata?.tileWidth || 64)
+  const fallbackTileHeight = Number.isFinite(tileHeight) ? tileHeight : (metadata?.tileHeight || 64)
+  const frameRectsCount = Array.isArray(frameRects) ? frameRects.length : 0
+  const fallbackFrameCount = Number.isFinite(frameCount)
+    ? frameCount
+    : (metadata?.frameCount || (frameRectsCount > 0 ? frameRectsCount : (fallbackColumns * fallbackRows)))
 
   return {
     type: 'spriteSheet',
@@ -157,11 +169,11 @@ export function createSpriteSheetAnimationInstance({
     scale,
     frameSequence: Array.isArray(frameSequence) ? frameSequence : null,
     frameRects: Array.isArray(frameRects) ? frameRects : null,
-    tileWidth: resolvedTileWidth,
-    tileHeight: resolvedTileHeight,
-    columns: resolvedColumns,
-    rows: resolvedRows,
-    frameCount: resolvedFrameCount
+    tileWidth: fallbackTileWidth,
+    tileHeight: fallbackTileHeight,
+    columns: fallbackColumns,
+    rows: fallbackRows,
+    frameCount: fallbackFrameCount
   }
 }
 

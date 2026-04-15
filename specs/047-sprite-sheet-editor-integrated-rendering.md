@@ -123,3 +123,4 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Metadata popover must render above the SSE workspace/canvas layer (no clipping behind/right of sidebar due stacking context).
   - Static mode must hide animated preview panel using effective `display: none` behavior.
   - SSE canvas accepts drag-drop image files in both Static and Animated modes, adds dropped images to current-mode selector list in-browser only (non-persistent), and auto-selects/loads dropped image immediately.
+  - Dropped image paths (blob/data URLs) must animate in preview after tagging; animation instance creation/texture loading cannot rely exclusively on filename-encoded metadata for such temporary assets.
