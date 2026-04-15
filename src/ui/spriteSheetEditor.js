@@ -342,7 +342,7 @@ function drawSseCanvas(state) {
     const gridBorderWidth = Math.max(0, Number.isFinite(data.borderWidth) ? data.borderWidth : DEFAULT_BORDER_WIDTH)
     ctx.lineWidth = Math.max(1, gridBorderWidth)
     if (gridBorderWidth === 0) {
-      ctx.setLineDash([4, 4])
+      ctx.setLineDash([10, 6])
     } else {
       ctx.setLineDash([])
     }
@@ -493,11 +493,15 @@ function renderTagList(state) {
     input.addEventListener('change', () => {
       state.activeTag = tag
       state.previewStartTime = performance.now()
+      state.previewPlaying = true
+      if (state.previewPlayPauseBtn) {
+        state.previewPlayPauseBtn.textContent = 'Pause'
+      }
       renderTagList(state)
       drawSseCanvas(state)
       applyCanvasZoom(state)
       refreshAnimationPreview(state)
-      if (state.previewPlaying) startAnimationPreviewLoop(state)
+      startAnimationPreviewLoop(state)
     })
 
     const usedCount = Object.values(state.activeData.tiles)
@@ -561,6 +565,13 @@ function refreshAnimationPreview(state) {
     frameSequence: sequence.map(frame => frame.linearIndex),
     frameRects: sequence.map(frame => frame.rect)
   })
+  const elapsed = Math.max(0, performance.now() - state.previewStartTime)
+  if (!state.previewLoop && elapsed >= durationMs) {
+    state.previewPlaying = false
+    if (state.previewPlayPauseBtn) {
+      state.previewPlayPauseBtn.textContent = 'Play'
+    }
+  }
 
   const texture = getSpriteSheetTexture(animation.assetPath)
   const textureReady = Boolean(
@@ -1113,7 +1124,8 @@ export async function initSpriteSheetEditor(options = {}) {
 
   state.borderWidthInput?.addEventListener('change', () => {
     if (!state.activeData) return
-    state.activeData.borderWidth = Math.max(0, Number.parseInt(state.borderWidthInput.value, 10) || DEFAULT_BORDER_WIDTH)
+    const parsed = Number.parseInt(state.borderWidthInput.value, 10)
+    state.activeData.borderWidth = Number.isFinite(parsed) ? Math.max(0, parsed) : DEFAULT_BORDER_WIDTH
     drawSseCanvas(state)
     applyCanvasZoom(state)
     saveDataToLocalStorage(state.activeData, state.mode)

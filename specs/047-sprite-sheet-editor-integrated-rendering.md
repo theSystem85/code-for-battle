@@ -110,3 +110,6 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Preview must render correctly for cached processed textures (no blank preview when tags are valid).
   - Grid overlay uses dashed lanes when border width is `0`; otherwise line width follows configured border width.
   - Sidebar remains scrollable without visible native scrollbar tracks and tag radio list remains fully reachable.
+  - Border-width input must preserve literal `0` (not fallback to default), so dashed lane mode can be toggled reliably.
+  - Action controls stay anchored at sidebar bottom while tag list remains visible above.
+  - Preview button state returns to `Play` when non-loop playback reaches the end.

@@ -360,8 +360,9 @@ body.config-modal-open {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  min-height: 0;
-  flex: 1;
+  min-height: 220px;
+  flex: 1 1 auto;
+  overflow: hidden;
 }
 
 .sprite-sheet-editor__tags-title {
@@ -382,6 +383,10 @@ body.config-modal-open {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+#sseApplyCurrentTagAllBtn {
+  margin-top: auto;
 }
 
 .sprite-sheet-editor__zoom-controls {
