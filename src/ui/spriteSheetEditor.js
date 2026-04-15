@@ -1,8 +1,15 @@
+import { createSpriteSheetAnimationInstance, getAnimationFrameIndex, getSpriteSheetTexture } from '../rendering/spriteSheetAnimation.js'
+
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
 const SSE_SHEETS_INDEX = 'images/map/sprite_sheets/index.json'
+const SSE_ANIMATION_SHEETS_INDEX = 'images/map/animations/index.json'
 const SSE_METADATA_PREFIX = 'rts-sse-metadata:'
+const SSE_ANIMATION_METADATA_PREFIX = 'rts-sse-animation-metadata:'
 const SSE_LAST_SHEET_KEY = 'rts-sse-last-sheet'
+const SSE_LAST_ANIMATION_SHEET_KEY = 'rts-sse-last-animation-sheet'
+const SSE_MODE_STORAGE_KEY = 'rts-sse-mode'
+const ANIMATION_DEFAULT_DURATION_MS = 1050
 
 export const DEFAULT_SSE_TAGS = [
   'passable',
@@ -18,6 +25,8 @@ export const DEFAULT_SSE_TAGS = [
   'street',
   'water'
 ]
+
+export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
 
 const fallbackSheets = [
   'images/map/sprite_sheets/grass.webp',
@@ -59,16 +68,16 @@ function ensureTileRecord(data, tileKey) {
   return data.tiles[tileKey]
 }
 
-function normalizeSheetData(raw, sheetPath) {
+function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) {
   const tags = Array.isArray(raw?.tags)
-    ? Array.from(new Set([...raw.tags.filter(Boolean), ...DEFAULT_SSE_TAGS]))
-    : [...DEFAULT_SSE_TAGS]
+    ? Array.from(new Set([...raw.tags.filter(Boolean), ...baseTags]))
+    : [...baseTags]
   const data = {
     schemaVersion: 1,
     sheetPath,
     tileSize: Number.isFinite(raw?.tileSize) ? Math.max(8, Math.floor(raw.tileSize)) : DEFAULT_TILE_SIZE,
     borderWidth: Number.isFinite(raw?.borderWidth) ? Math.max(0, Math.floor(raw.borderWidth)) : DEFAULT_BORDER_WIDTH,
-    tags: tags.length ? Array.from(new Set(tags)) : [...DEFAULT_SSE_TAGS],
+    tags: tags.length ? Array.from(new Set(tags)) : [...baseTags],
     tiles: raw?.tiles && typeof raw.tiles === 'object' ? raw.tiles : {}
   }
 
@@ -135,6 +144,66 @@ function toSerializableData(data, image) {
       requiresUpscale: sourceTile < 64
     },
     tiles: serializedTiles
+  }
+}
+
+function getTagFrameSequence(data, image, tag) {
+  if (!data || !image || !tag) return []
+  const tileSize = Math.max(1, data.tileSize)
+  const sourceTile = Math.max(1, tileSize - (data.borderWidth * 2))
+  const sequence = []
+
+  Object.entries(data.tiles || {}).forEach(([tileKey, tileData]) => {
+    if (!tileData?.tags?.includes(tag)) return
+    const { col, row } = parseTileKey(tileKey)
+    const sx = (col * tileSize) + data.borderWidth
+    const sy = (row * tileSize) + data.borderWidth
+    const linearIndex = (row * Math.max(1, Math.floor(image.width / tileSize))) + col
+    sequence.push({
+      tileKey,
+      col,
+      row,
+      linearIndex,
+      rect: {
+        x: sx,
+        y: sy,
+        width: sourceTile,
+        height: sourceTile
+      }
+    })
+  })
+
+  sequence.sort((a, b) => a.linearIndex - b.linearIndex)
+  return sequence
+}
+
+function toAnimationSerializableData(data, image) {
+  const columns = image ? Math.floor(image.width / Math.max(1, data.tileSize)) : 0
+  const rows = image ? Math.floor(image.height / Math.max(1, data.tileSize)) : 0
+  const animations = {}
+  const tags = Array.isArray(data.tags) ? data.tags : []
+  tags.forEach((tag) => {
+    const sequence = getTagFrameSequence(data, image, tag)
+    if (!sequence.length) return
+    animations[tag] = {
+      tag,
+      frameCount: sequence.length,
+      frameIndices: sequence.map(frame => frame.linearIndex),
+      frameRects: sequence.map(frame => frame.rect),
+      durationMs: ANIMATION_DEFAULT_DURATION_MS
+    }
+  })
+
+  return {
+    schemaVersion: 1,
+    mode: 'animated',
+    sheetPath: data.sheetPath,
+    tileSize: data.tileSize,
+    borderWidth: data.borderWidth,
+    columns,
+    rows,
+    tags,
+    animations
   }
 }
 
@@ -206,7 +275,20 @@ function drawSseCanvas(state) {
   ctx.imageSmoothingEnabled = false
   ctx.drawImage(image, 0, 0)
 
+  const isAnimatedMode = state.mode === 'animated'
+
   if (state.showTaggedOverlay) {
+    const tagSequencesByTag = {}
+    if (isAnimatedMode) {
+      data.tags.forEach((tag) => {
+        const map = {}
+        getTagFrameSequence(data, image, tag).forEach((frame, index) => {
+          map[frame.tileKey] = index + 1
+        })
+        tagSequencesByTag[tag] = map
+      })
+    }
+
     Object.entries(data.tiles).forEach(([tileKey, tileData]) => {
       if (!tileData?.tags?.length) return
       const { col, row } = parseTileKey(tileKey)
@@ -220,6 +302,25 @@ function drawSseCanvas(state) {
       }
 
       if (state.showLabels) {
+        if (isAnimatedMode) {
+          const tileTagSequences = (tileData.tags || [])
+            .map(tag => ({ tag, sequence: tagSequencesByTag[tag]?.[tileKey] }))
+            .filter(entry => Number.isFinite(entry.sequence))
+          tileTagSequences.forEach((entry, idx) => {
+            const frameLabel = `${entry.sequence}`
+            const labelX = x + 2
+            const labelY = y + tileSize - 2 - (idx * 11)
+            ctx.font = '10px sans-serif'
+            ctx.textAlign = 'left'
+            ctx.textBaseline = 'bottom'
+            const labelWidth = Math.max(14, frameLabel.length * 6 + 6)
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+            ctx.fillRect(labelX - 1, labelY - 11, labelWidth, 11)
+            ctx.fillStyle = '#ffffff'
+            ctx.fillText(frameLabel, labelX + 1, labelY - 1)
+          })
+        }
+
         const tags = tileData.tags
         ctx.font = '10px sans-serif'
         ctx.textAlign = 'left'
@@ -352,9 +453,14 @@ function applyCurrentTagToAllTiles(state) {
   if (changed > 0) {
     drawSseCanvas(state)
     renderTagList(state)
-    saveDataToLocalStorage(state.activeData)
+    saveDataToLocalStorage(state.activeData, state.mode)
+    refreshAnimationPreview(state)
     if (state.image) {
-      state.onSheetDataChange?.(toSerializableData(state.activeData, state.image))
+      if (state.mode === 'animated') {
+        state.onAnimationSheetDataChange?.(toAnimationSerializableData(state.activeData, state.image))
+      } else {
+        state.onSheetDataChange?.(toSerializableData(state.activeData, state.image))
+      }
     }
   }
 
@@ -378,9 +484,12 @@ function renderTagList(state) {
     input.checked = state.activeTag === tag
     input.addEventListener('change', () => {
       state.activeTag = tag
+      state.previewStartTime = performance.now()
       renderTagList(state)
       drawSseCanvas(state)
       applyCanvasZoom(state)
+      refreshAnimationPreview(state)
+      if (state.previewPlaying) startAnimationPreviewLoop(state)
     })
 
     const usedCount = Object.values(state.activeData.tiles)
@@ -401,31 +510,116 @@ function setStatus(state, message, kind = 'info') {
   state.statusEl.style.color = kind === 'error' ? '#ff8c8c' : (kind === 'warn' ? '#ffcc66' : '#9fb3c8')
 }
 
-function saveDataToLocalStorage(data) {
+function updateModeTabUi(state) {
+  const isAnimated = state.mode === 'animated'
+  state.modeStaticBtn?.classList.toggle('is-active', !isAnimated)
+  state.modeAnimatedBtn?.classList.toggle('is-active', isAnimated)
+  state.modeStaticBtn?.setAttribute('aria-selected', isAnimated ? 'false' : 'true')
+  state.modeAnimatedBtn?.setAttribute('aria-selected', isAnimated ? 'true' : 'false')
+  if (state.animationPreviewPanel) {
+    state.animationPreviewPanel.hidden = !isAnimated
+  }
+}
+
+function getActiveDefaultTags(state) {
+  return state.mode === 'animated' ? DEFAULT_SSE_ANIMATION_TAGS : DEFAULT_SSE_TAGS
+}
+
+function refreshAnimationPreview(state) {
+  if (state.mode !== 'animated') return
+  if (!state.animationPreviewCanvas || !state.activeData || !state.image || !state.activeTag) return
+  const ctx = state.animationPreviewCanvas.getContext('2d')
+  if (!ctx) return
+  const sequence = getTagFrameSequence(state.activeData, state.image, state.activeTag)
+  const frameCount = sequence.length
+  const durationMs = ANIMATION_DEFAULT_DURATION_MS
+  state.previewDurationEl.textContent = `Duration: ${durationMs}ms (${frameCount} frames)`
+  ctx.clearRect(0, 0, state.animationPreviewCanvas.width, state.animationPreviewCanvas.height)
+  if (!frameCount) {
+    ctx.fillStyle = '#999'
+    ctx.font = '12px sans-serif'
+    ctx.fillText('No frames tagged', 10, 20)
+    return
+  }
+
+  const animation = createSpriteSheetAnimationInstance({
+    assetPath: state.activeData.sheetPath,
+    x: state.animationPreviewCanvas.width / 2,
+    y: state.animationPreviewCanvas.height / 2,
+    startTime: state.previewStartTime,
+    duration: durationMs,
+    loop: Boolean(state.previewLoop),
+    scale: 2,
+    frameSequence: sequence.map(frame => frame.linearIndex),
+    frameRects: sequence.map(frame => frame.rect)
+  })
+
+  const texture = getSpriteSheetTexture(animation.assetPath)
+  if (!texture || !texture.complete) return
+  const sequenceIndex = getAnimationFrameIndex(animation, performance.now())
+  const sourceRect = animation.frameRects[sequenceIndex]
+  if (!sourceRect) return
+  const drawWidth = 64
+  const drawHeight = drawWidth * (sourceRect.height / sourceRect.width)
+  ctx.globalCompositeOperation = 'lighter'
+  ctx.drawImage(
+    texture,
+    sourceRect.x,
+    sourceRect.y,
+    sourceRect.width,
+    sourceRect.height,
+    (state.animationPreviewCanvas.width / 2) - (drawWidth / 2),
+    (state.animationPreviewCanvas.height / 2) - (drawHeight / 2),
+    drawWidth,
+    drawHeight
+  )
+  ctx.globalCompositeOperation = 'source-over'
+}
+
+function startAnimationPreviewLoop(state) {
+  if (state.previewFrameHandle) {
+    cancelAnimationFrame(state.previewFrameHandle)
+  }
+  const tick = () => {
+    refreshAnimationPreview(state)
+    if (state.previewPlaying && state.mode === 'animated') {
+      state.previewFrameHandle = requestAnimationFrame(tick)
+    } else {
+      state.previewFrameHandle = null
+    }
+  }
+  state.previewFrameHandle = requestAnimationFrame(tick)
+}
+
+function saveDataToLocalStorage(data, mode = 'static') {
   try {
-    localStorage.setItem(`${SSE_METADATA_PREFIX}${data.sheetPath}`, JSON.stringify(data))
-    localStorage.setItem(SSE_LAST_SHEET_KEY, data.sheetPath)
+    const prefix = mode === 'animated' ? SSE_ANIMATION_METADATA_PREFIX : SSE_METADATA_PREFIX
+    const key = mode === 'animated' ? SSE_LAST_ANIMATION_SHEET_KEY : SSE_LAST_SHEET_KEY
+    localStorage.setItem(`${prefix}${data.sheetPath}`, JSON.stringify(data))
+    localStorage.setItem(key, data.sheetPath)
   } catch (err) {
     window.logger.warn('Failed to save SSE metadata to localStorage:', err)
   }
 }
 
-async function loadMetadataFromSources(sheetPath) {
-  const local = safeParseJson(localStorage.getItem(`${SSE_METADATA_PREFIX}${sheetPath}`), null)
-  if (local) return normalizeSheetData(local, sheetPath)
+async function loadMetadataFromSourcesForMode(sheetPath, mode = 'static') {
+  const metadataPrefix = mode === 'animated' ? SSE_ANIMATION_METADATA_PREFIX : SSE_METADATA_PREFIX
+  const baseTags = mode === 'animated' ? DEFAULT_SSE_ANIMATION_TAGS : DEFAULT_SSE_TAGS
+  const local = safeParseJson(localStorage.getItem(`${metadataPrefix}${sheetPath}`), null)
+  if (local) return normalizeSheetDataForTags(local, sheetPath, baseTags)
 
   const sidecarPath = buildMetaPath(sheetPath)
   try {
     const res = await fetch(sidecarPath, { cache: 'no-store' })
     if (res.ok) {
       const parsed = await res.json()
-      return normalizeSheetData(parsed, sheetPath)
+      return normalizeSheetDataForTags(parsed, sheetPath, baseTags)
     }
   } catch {
     // Ignore missing sidecar files
   }
 
-  return normalizeSheetData(null, sheetPath)
+  return normalizeSheetDataForTags(null, sheetPath, baseTags)
 }
 
 async function loadImage(sheetPath) {
@@ -437,14 +631,14 @@ async function loadImage(sheetPath) {
   })
 }
 
-async function loadSheet(state, sheetPath, { saveCurrent = true } = {}) {
+async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static' } = {}) {
   if (!sheetPath) return
 
   if (saveCurrent && state.activeData) {
-    saveDataToLocalStorage(state.activeData)
+    saveDataToLocalStorage(state.activeData, state.mode)
   }
 
-  const loadedData = await loadMetadataFromSources(sheetPath)
+  const loadedData = await loadMetadataFromSourcesForMode(sheetPath, mode)
   const image = await loadImage(sheetPath)
   if (!image) {
     setStatus(state, `Failed to load sheet: ${sheetPath}`, 'error')
@@ -454,7 +648,7 @@ async function loadSheet(state, sheetPath, { saveCurrent = true } = {}) {
   state.activeData = loadedData
   state.image = image
   if (!state.activeData.tags.includes(state.activeTag)) {
-    state.activeTag = state.activeData.tags[0] || DEFAULT_SSE_TAGS[0]
+    state.activeTag = state.activeData.tags[0] || getActiveDefaultTags(state)[0]
   }
 
   if (state.sheetSelect && state.sheetSelect.value !== sheetPath) {
@@ -469,20 +663,27 @@ async function loadSheet(state, sheetPath, { saveCurrent = true } = {}) {
     state.borderWidthInput.value = state.activeData.borderWidth
   }
 
-  saveDataToLocalStorage(state.activeData)
+  saveDataToLocalStorage(state.activeData, state.mode)
   drawSseCanvas(state)
   snapZoomToCanvas(state)
   renderTagList(state)
 
-  const serialized = toSerializableData(state.activeData, state.image)
-  const sourceTile = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
-  if (sourceTile < 64) {
-    setStatus(state, `Warning: source tile ${sourceTile}px requires upscaling to 64px and may reduce quality.`, 'warn')
+  if (state.mode === 'animated') {
+    const animated = toAnimationSerializableData(state.activeData, state.image)
+    const activeFrames = getTagFrameSequence(state.activeData, state.image, state.activeTag).length
+    setStatus(state, `Loaded ${sheetPath} (${activeFrames} "${state.activeTag}" frames).`)
+    state.onAnimationSheetDataChange?.(animated)
   } else {
-    setStatus(state, `Loaded ${sheetPath}`)
+    const serialized = toSerializableData(state.activeData, state.image)
+    const sourceTile = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
+    if (sourceTile < 64) {
+      setStatus(state, `Warning: source tile ${sourceTile}px requires upscaling to 64px and may reduce quality.`, 'warn')
+    } else {
+      setStatus(state, `Loaded ${sheetPath}`)
+    }
+    state.onSheetDataChange?.(serialized)
   }
-
-  state.onSheetDataChange?.(serialized)
+  refreshAnimationPreview(state)
 }
 
 function toggleTagOnTile(state, col, row) {
@@ -511,6 +712,7 @@ function addTag(state, tag) {
   state.activeTag = normalized
   renderTagList(state)
   drawSseCanvas(state)
+  refreshAnimationPreview(state)
   return true
 }
 
@@ -560,6 +762,7 @@ function bindCanvasInteractions(state) {
     toggleTagOnTile(state, tile.col, tile.row)
     drawSseCanvas(state)
     renderTagList(state)
+    refreshAnimationPreview(state)
   }
 
   const continuePaint = (event) => {
@@ -579,12 +782,13 @@ function bindCanvasInteractions(state) {
     toggleTagOnTile(state, tile.col, tile.row)
     drawSseCanvas(state)
     renderTagList(state)
+    refreshAnimationPreview(state)
   }
 
   const endPaint = () => {
     if (!state.dragging) return
     state.dragging = false
-    saveDataToLocalStorage(state.activeData)
+    saveDataToLocalStorage(state.activeData, state.mode)
   }
 
   const beginPan = (event) => {
@@ -643,6 +847,10 @@ function openModal(state) {
   document.body.classList.add('config-modal-open')
   drawSseCanvas(state)
   snapZoomToCanvas(state)
+  refreshAnimationPreview(state)
+  if (state.previewPlaying) {
+    startAnimationPreviewLoop(state)
+  }
 }
 
 function closeModal(state) {
@@ -651,7 +859,11 @@ function closeModal(state) {
   state.modal.setAttribute('aria-hidden', 'true')
   document.body.classList.remove('config-modal-open')
   if (state.activeData) {
-    saveDataToLocalStorage(state.activeData)
+    saveDataToLocalStorage(state.activeData, state.mode)
+  }
+  if (state.previewFrameHandle) {
+    cancelAnimationFrame(state.previewFrameHandle)
+    state.previewFrameHandle = null
   }
 }
 
@@ -668,6 +880,21 @@ async function loadSheetList() {
     // Use fallback
   }
   return fallbackSheets
+}
+
+async function loadAnimationSheetList() {
+  try {
+    const response = await fetch(SSE_ANIMATION_SHEETS_INDEX, { cache: 'no-store' })
+    if (response.ok) {
+      const data = await response.json()
+      if (Array.isArray(data?.sheets) && data.sheets.length) {
+        return data.sheets
+      }
+    }
+  } catch {
+    // fallback below
+  }
+  return ['images/map/animations/64x64_9x9_q85_explosion.webp']
 }
 
 function renderSheetOptions(state) {
@@ -700,6 +927,13 @@ export async function initSpriteSheetEditor(options = {}) {
     modal: document.getElementById('spriteSheetEditorModal'),
     closeBtn: document.getElementById('spriteSheetEditorCloseBtn'),
     openBtn: document.getElementById('openSpriteSheetEditorBtn'),
+    modeStaticBtn: document.getElementById('sseModeStaticBtn'),
+    modeAnimatedBtn: document.getElementById('sseModeAnimatedBtn'),
+    animationPreviewPanel: document.getElementById('sseAnimationPreviewPanel'),
+    animationPreviewCanvas: document.getElementById('sseAnimationPreviewCanvas'),
+    previewLoopCheckbox: document.getElementById('ssePreviewLoopCheckbox'),
+    previewPlayPauseBtn: document.getElementById('ssePreviewPlayPauseBtn'),
+    previewDurationEl: document.getElementById('ssePreviewDuration'),
     sheetSelect: document.getElementById('sseSheetSelect'),
     tileSizeInput: document.getElementById('sseTileSizeInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
@@ -721,6 +955,8 @@ export async function initSpriteSheetEditor(options = {}) {
     canvasViewport: document.getElementById('sseCanvasViewport'),
     canvas: document.getElementById('sseTileCanvas'),
     sheetPaths: [],
+    staticSheetPaths: [],
+    animationSheetPaths: [],
     activeData: null,
     image: null,
     activeTag: DEFAULT_SSE_TAGS[0],
@@ -739,7 +975,15 @@ export async function initSpriteSheetEditor(options = {}) {
     showGrid: true,
     showLabels: true,
     showTaggedOverlay: true,
-    onSheetDataChange: options.onSheetDataChange || null
+    mode: 'static',
+    previewLoop: false,
+    previewPlaying: true,
+    previewStartTime: performance.now(),
+    previewFrameHandle: null,
+    staticModeSnapshot: null,
+    animatedModeSnapshot: null,
+    onSheetDataChange: options.onSheetDataChange || null,
+    onAnimationSheetDataChange: options.onAnimationSheetDataChange || null
   }
 
   if (!state.modal || !state.openBtn || !state.canvas) {
@@ -752,15 +996,62 @@ export async function initSpriteSheetEditor(options = {}) {
     }
   }
 
-  state.sheetPaths = await loadSheetList()
+  try {
+    const storedMode = localStorage.getItem(SSE_MODE_STORAGE_KEY)
+    if (storedMode === 'animated' || storedMode === 'static') {
+      state.mode = storedMode
+    }
+  } catch {
+    // ignore
+  }
+
+  state.staticSheetPaths = await loadSheetList()
+  state.animationSheetPaths = await loadAnimationSheetList()
+  state.sheetPaths = state.mode === 'animated' ? state.animationSheetPaths : state.staticSheetPaths
   renderSheetOptions(state)
+  updateModeTabUi(state)
 
   const lastSheet = localStorage.getItem(SSE_LAST_SHEET_KEY)
-  const initialSheetPath = options.initialSheetPath && state.sheetPaths.includes(options.initialSheetPath)
-    ? options.initialSheetPath
-    : (lastSheet && state.sheetPaths.includes(lastSheet) ? lastSheet : state.sheetPaths[0])
+  const lastAnimationSheet = localStorage.getItem(SSE_LAST_ANIMATION_SHEET_KEY)
+  const initialSheetPath = state.mode === 'animated'
+    ? (lastAnimationSheet && state.sheetPaths.includes(lastAnimationSheet) ? lastAnimationSheet : state.sheetPaths[0])
+    : (options.initialSheetPath && state.sheetPaths.includes(options.initialSheetPath)
+      ? options.initialSheetPath
+      : (lastSheet && state.sheetPaths.includes(lastSheet) ? lastSheet : state.sheetPaths[0]))
 
-  await loadSheet(state, initialSheetPath, { saveCurrent: false })
+  await loadSheet(state, initialSheetPath, { saveCurrent: false, mode: state.mode })
+
+  const switchMode = async(nextMode) => {
+    if (state.mode === nextMode) return
+    if (state.mode === 'static') {
+      state.staticModeSnapshot = { sheetPath: state.activeData?.sheetPath, activeTag: state.activeTag }
+    } else {
+      state.animatedModeSnapshot = { sheetPath: state.activeData?.sheetPath, activeTag: state.activeTag }
+    }
+
+    state.mode = nextMode
+    state.sheetPaths = nextMode === 'animated' ? state.animationSheetPaths : state.staticSheetPaths
+    renderSheetOptions(state)
+    updateModeTabUi(state)
+    try {
+      localStorage.setItem(SSE_MODE_STORAGE_KEY, nextMode)
+    } catch {
+      // ignore
+    }
+
+    const snapshot = nextMode === 'animated' ? state.animatedModeSnapshot : state.staticModeSnapshot
+    const selectedPath = snapshot?.sheetPath && state.sheetPaths.includes(snapshot.sheetPath)
+      ? snapshot.sheetPath
+      : state.sheetPaths[0]
+    await loadSheet(state, selectedPath, { saveCurrent: true, mode: nextMode })
+    if (snapshot?.activeTag && state.activeData?.tags?.includes(snapshot.activeTag)) {
+      state.activeTag = snapshot.activeTag
+    }
+    renderTagList(state)
+    drawSseCanvas(state)
+    refreshAnimationPreview(state)
+    if (state.previewPlaying) startAnimationPreviewLoop(state)
+  }
 
   state.openBtn.addEventListener('click', () => openModal(state))
   state.closeBtn?.addEventListener('click', () => closeModal(state))
@@ -771,8 +1062,30 @@ export async function initSpriteSheetEditor(options = {}) {
     }
   })
 
+  state.modeStaticBtn?.addEventListener('click', () => {
+    switchMode('static')
+  })
+  state.modeAnimatedBtn?.addEventListener('click', () => {
+    switchMode('animated')
+  })
+
+  state.previewLoopCheckbox?.addEventListener('change', () => {
+    state.previewLoop = Boolean(state.previewLoopCheckbox.checked)
+    state.previewStartTime = performance.now()
+    refreshAnimationPreview(state)
+  })
+
+  state.previewPlayPauseBtn?.addEventListener('click', () => {
+    state.previewPlaying = !state.previewPlaying
+    state.previewPlayPauseBtn.textContent = state.previewPlaying ? 'Pause' : 'Play'
+    if (state.previewPlaying) {
+      state.previewStartTime = performance.now()
+      startAnimationPreviewLoop(state)
+    }
+  })
+
   state.sheetSelect?.addEventListener('change', async(e) => {
-    await loadSheet(state, e.target.value)
+    await loadSheet(state, e.target.value, { mode: state.mode })
   })
 
   state.tileSizeInput?.addEventListener('change', () => {
@@ -780,7 +1093,7 @@ export async function initSpriteSheetEditor(options = {}) {
     state.activeData.tileSize = Math.max(8, Number.parseInt(state.tileSizeInput.value, 10) || DEFAULT_TILE_SIZE)
     drawSseCanvas(state)
     applyCanvasZoom(state)
-    saveDataToLocalStorage(state.activeData)
+    saveDataToLocalStorage(state.activeData, state.mode)
   })
 
   state.borderWidthInput?.addEventListener('change', () => {
@@ -788,7 +1101,7 @@ export async function initSpriteSheetEditor(options = {}) {
     state.activeData.borderWidth = Math.max(0, Number.parseInt(state.borderWidthInput.value, 10) || DEFAULT_BORDER_WIDTH)
     drawSseCanvas(state)
     applyCanvasZoom(state)
-    saveDataToLocalStorage(state.activeData)
+    saveDataToLocalStorage(state.activeData, state.mode)
   })
 
   state.addTagBtn?.addEventListener('click', () => {
@@ -797,7 +1110,7 @@ export async function initSpriteSheetEditor(options = {}) {
       state.newTagInput.value = ''
     }
     if (added) {
-      saveDataToLocalStorage(state.activeData)
+      saveDataToLocalStorage(state.activeData, state.mode)
       setStatus(state, 'Tag added')
     }
   })
@@ -855,34 +1168,53 @@ export async function initSpriteSheetEditor(options = {}) {
 
   state.applyTagsBtn?.addEventListener('click', async() => {
     if (!state.activeData || !state.image) return
-    saveDataToLocalStorage(state.activeData)
-    const serialized = toSerializableData(state.activeData, state.image)
-    const sourceTile = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
-
-    await Promise.resolve(options.onApply?.(serialized))
-    triggerJsonDownload(state.activeData.sheetPath, serialized)
-
-    if (sourceTile < 64) {
-      setStatus(state, `Applied tags. Warning: source tile ${sourceTile}px upscales to 64px.`, 'warn')
+    saveDataToLocalStorage(state.activeData, state.mode)
+    if (state.mode === 'animated') {
+      const serializedAnimation = toAnimationSerializableData(state.activeData, state.image)
+      await Promise.resolve(options.onApplyAnimation?.(serializedAnimation))
+      triggerJsonDownload(state.activeData.sheetPath, serializedAnimation)
+      const currentFrames = getTagFrameSequence(state.activeData, state.image, state.activeTag).length
+      setStatus(state, `Applied animated tags. ${state.activeTag}: ${currentFrames} frames.`)
     } else {
-      setStatus(state, 'Applied tags and downloaded JSON metadata.')
+      const serialized = toSerializableData(state.activeData, state.image)
+      const sourceTile = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
+
+      await Promise.resolve(options.onApply?.(serialized))
+      triggerJsonDownload(state.activeData.sheetPath, serialized)
+
+      if (sourceTile < 64) {
+        setStatus(state, `Applied tags. Warning: source tile ${sourceTile}px upscales to 64px.`, 'warn')
+      } else {
+        setStatus(state, 'Applied tags and downloaded JSON metadata.')
+      }
     }
   })
 
   bindCanvasInteractions(state)
+  refreshAnimationPreview(state)
+  if (state.previewPlaying) {
+    startAnimationPreviewLoop(state)
+  }
 
   return {
     open: () => openModal(state),
     close: () => closeModal(state),
     getActiveSheetData: () => {
       if (!state.activeData || !state.image) return null
-      return toSerializableData(state.activeData, state.image)
+      return state.mode === 'animated'
+        ? toAnimationSerializableData(state.activeData, state.image)
+        : toSerializableData(state.activeData, state.image)
     },
     getActiveSheetPath: () => state.activeData?.sheetPath || null,
     refreshRuntimeSheetData: () => {
       if (!state.activeData || !state.image) return
-      const serialized = toSerializableData(state.activeData, state.image)
-      options.onApply?.(serialized)
+      if (state.mode === 'animated') {
+        const serialized = toAnimationSerializableData(state.activeData, state.image)
+        options.onApplyAnimation?.(serialized)
+      } else {
+        const serialized = toSerializableData(state.activeData, state.image)
+        options.onApply?.(serialized)
+      }
     },
     suggestTileForMap(x, y, tagBuckets) {
       if (!tagBuckets || typeof tagBuckets !== 'object') return null

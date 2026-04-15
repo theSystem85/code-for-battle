@@ -15,6 +15,7 @@ import { getSimulationTime } from './time.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { gameState as globalGameState } from '../gameState.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from './turretMuzzleConfig.js'
+import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 
 
 /**
@@ -113,6 +114,11 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
         // Play explosion sound with reduced volume (0.5)
         playPositionalSound('explosion', buildingCenterX, buildingCenterY, 0.5)
 
+        if (!building.destructionExplosionSpawned) {
+          spawnDestructionExplosion(gameState, buildingCenterX, buildingCenterY)
+          building.destructionExplosionSpawned = true
+        }
+
         if (building.type === 'gasStation') {
           const radius = TILE_SIZE * 5
           triggerExplosion(
@@ -127,6 +133,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
             radius,
             true,
             {
+              spawnVisual: false,
               buildingDamageCaps: {
                 constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
               }
@@ -147,7 +154,10 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
             now,
             undefined,
             initialRadius,
-            false
+            false,
+            {
+              spawnVisual: false
+            }
           )
 
           // Create scattering ammunition particles
@@ -179,8 +189,10 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
 
           playPositionalSound('explosion', buildingCenterX, buildingCenterY, 0.7)
         } else {
-          // Add standard explosion effect
-          triggerExplosion(buildingCenterX, buildingCenterY, 40, units, factories, null, now)
+          // Apply standard destruction splash damage without spawning duplicate VFX
+          triggerExplosion(buildingCenterX, buildingCenterY, 40, units, factories, null, now, undefined, TILE_SIZE * 2, false, {
+            spawnVisual: false
+          })
         }
 
         // Check for game end conditions after a building is destroyed
