@@ -953,8 +953,15 @@ class Game {
               const contentRect = mapSettingsContent.getBoundingClientRect()
               const sidebarRect = sidebarScroll.getBoundingClientRect()
 
-              if (contentRect.bottom > sidebarRect.bottom) {
-                const scrollTop = sidebarScroll.scrollTop + (contentRect.bottom - sidebarRect.bottom) + 10
+              const contentTopOffset = contentRect.top - sidebarRect.top
+              const contentBottomOffset = contentRect.bottom - sidebarRect.bottom
+              const isContentOutsideViewport = contentTopOffset < 0 || contentBottomOffset > 0
+
+              if (isContentOutsideViewport) {
+                const scrollTop = Math.max(
+                  0,
+                  sidebarScroll.scrollTop + contentTopOffset - 8
+                )
                 sidebarScroll.scrollTo({
                   top: scrollTop,
                   behavior: 'smooth'
