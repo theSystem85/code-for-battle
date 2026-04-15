@@ -5,6 +5,26 @@ const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
 const textureCache = new Map()
 const metadataCache = new Map()
 
+function isCanvasTexture(texture) {
+  return typeof window !== 'undefined' && typeof window.HTMLCanvasElement !== 'undefined' && texture instanceof window.HTMLCanvasElement
+}
+
+function isImageTextureReady(texture) {
+  if (!texture) return false
+  if (isCanvasTexture(texture)) {
+    return texture.width > 0 && texture.height > 0
+  }
+  return Boolean(texture.complete && texture.naturalWidth > 0 && texture.naturalHeight > 0)
+}
+
+function getTextureWidth(texture) {
+  return isCanvasTexture(texture) ? texture.width : texture.naturalWidth
+}
+
+function getTextureHeight(texture) {
+  return isCanvasTexture(texture) ? texture.height : texture.naturalHeight
+}
+
 function getFilename(path) {
   if (typeof path !== 'string') return ''
   const cleanPath = path.split('?')[0]
@@ -166,9 +186,11 @@ export function getAnimationFrameIndex(animation, now) {
 
 export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
   const texture = getSpriteSheetTexture(animation.assetPath)
-  if (!texture || !texture.complete || texture.naturalWidth <= 0 || texture.naturalHeight <= 0) {
+  if (!isImageTextureReady(texture)) {
     return
   }
+  const textureWidth = getTextureWidth(texture)
+  const textureHeight = getTextureHeight(texture)
 
   const frameIndex = getAnimationFrameIndex(animation, now)
   let sourceX = 0
@@ -188,8 +210,8 @@ export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
     const columns = Math.max(1, animation.columns)
     const sourceColumn = sourceFrameIndex % columns
     const sourceRow = Math.floor(sourceFrameIndex / columns)
-    sourceTileWidth = texture.naturalWidth / columns
-    sourceTileHeight = texture.naturalHeight / Math.max(1, animation.rows)
+    sourceTileWidth = textureWidth / columns
+    sourceTileHeight = textureHeight / Math.max(1, animation.rows)
     if (!Number.isFinite(sourceTileWidth) || !Number.isFinite(sourceTileHeight) || sourceTileWidth <= 0 || sourceTileHeight <= 0) {
       return
     }

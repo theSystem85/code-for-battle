@@ -107,3 +107,6 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Canvas overlay displays white frame-number labels near bottom-left and reindexes immediately on sequence edits.
   - Sidebar preview panel renders selected-tag animation with play/pause, loop toggle, and duration/frame count display.
   - Applying animated tags immediately updates runtime animation metadata used by in-game destruction VFX.
+  - Preview must render correctly for cached processed textures (no blank preview when tags are valid).
+  - Grid overlay uses dashed lanes when border width is `0`; otherwise line width follows configured border width.
+  - Sidebar remains scrollable without visible native scrollbar tracks and tag radio list remains fully reachable.

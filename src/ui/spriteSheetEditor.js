@@ -339,12 +339,19 @@ function drawSseCanvas(state) {
 
   if (state.showGrid) {
     ctx.strokeStyle = 'rgba(255, 0, 0, 0.85)'
-    ctx.lineWidth = 1
+    const gridBorderWidth = Math.max(0, Number.isFinite(data.borderWidth) ? data.borderWidth : DEFAULT_BORDER_WIDTH)
+    ctx.lineWidth = Math.max(1, gridBorderWidth)
+    if (gridBorderWidth === 0) {
+      ctx.setLineDash([4, 4])
+    } else {
+      ctx.setLineDash([])
+    }
     const cols = Math.floor(image.width / tileSize)
     const rows = Math.floor(image.height / tileSize)
+    const halfLine = ctx.lineWidth / 2
 
     for (let col = 0; col <= cols; col++) {
-      const x = (col * tileSize) + 0.5
+      const x = (col * tileSize) + halfLine
       ctx.beginPath()
       ctx.moveTo(x, 0)
       ctx.lineTo(x, rows * tileSize)
@@ -352,12 +359,13 @@ function drawSseCanvas(state) {
     }
 
     for (let row = 0; row <= rows; row++) {
-      const y = (row * tileSize) + 0.5
+      const y = (row * tileSize) + halfLine
       ctx.beginPath()
       ctx.moveTo(0, y)
       ctx.lineTo(cols * tileSize, y)
       ctx.stroke()
     }
+    ctx.setLineDash([])
   }
 }
 
@@ -555,7 +563,14 @@ function refreshAnimationPreview(state) {
   })
 
   const texture = getSpriteSheetTexture(animation.assetPath)
-  if (!texture || !texture.complete) return
+  const textureReady = Boolean(
+    texture &&
+    (
+      (typeof window !== 'undefined' && typeof window.HTMLCanvasElement !== 'undefined' && texture instanceof window.HTMLCanvasElement && texture.width > 0 && texture.height > 0) ||
+      (texture.complete && texture.naturalWidth > 0 && texture.naturalHeight > 0)
+    )
+  )
+  if (!textureReady) return
   const sequenceIndex = getAnimationFrameIndex(animation, performance.now())
   const sourceRect = animation.frameRects[sequenceIndex]
   if (!sourceRect) return
