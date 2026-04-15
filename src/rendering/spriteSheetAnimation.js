@@ -50,16 +50,53 @@ export function parseSpriteSheetMetadataFromFilename(assetPath) {
   return metadata
 }
 
+function buildBlackTransparentTexture(image) {
+  if (!image || !image.complete || image.naturalWidth <= 0 || image.naturalHeight <= 0) {
+    return null
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = image.naturalWidth
+  canvas.height = image.naturalHeight
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })
+  if (!ctx) return image
+
+  ctx.drawImage(image, 0, 0)
+
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  const data = imageData.data
+
+  for (let i = 0; i < data.length; i += 4) {
+    const r = data[i]
+    const g = data[i + 1]
+    const b = data[i + 2]
+    const a = data[i + 3]
+    const brightness = Math.max(r, g, b)
+    const brightnessAlpha = brightness / 255
+    data[i + 3] = Math.round(a * brightnessAlpha)
+  }
+
+  ctx.putImageData(imageData, 0, 0)
+  return canvas
+}
+
 export function getSpriteSheetTexture(assetPath) {
   if (!assetPath) return null
-  if (textureCache.has(assetPath)) {
-    return textureCache.get(assetPath)
+  const existing = textureCache.get(assetPath)
+  if (existing) {
+    if (!existing.processed && existing.image.complete && existing.image.naturalWidth > 0) {
+      existing.processed = buildBlackTransparentTexture(existing.image)
+    }
+    return existing.processed || existing.image
   }
 
   const img = new Image()
   img.decoding = 'async'
   img.src = assetPath.startsWith('/') ? assetPath : `/${assetPath}`
-  textureCache.set(assetPath, img)
+  textureCache.set(assetPath, {
+    image: img,
+    processed: null
+  })
   return img
 }
 
@@ -112,11 +149,17 @@ export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
   }
 
   const frameIndex = getAnimationFrameIndex(animation, now)
+  const sourceTileWidth = texture.naturalWidth / animation.columns
+  const sourceTileHeight = texture.naturalHeight / animation.rows
+  if (!Number.isFinite(sourceTileWidth) || !Number.isFinite(sourceTileHeight) || sourceTileWidth <= 0 || sourceTileHeight <= 0) {
+    return
+  }
+
   const column = frameIndex % animation.columns
   const row = Math.floor(frameIndex / animation.columns)
 
-  const sourceX = column * animation.tileWidth
-  const sourceY = row * animation.tileHeight
+  const sourceX = Math.floor(column * sourceTileWidth)
+  const sourceY = Math.floor(row * sourceTileHeight)
   const drawWidth = TILE_SIZE * (animation.scale || 1)
   const aspectRatio = animation.tileHeight / animation.tileWidth
   const drawHeight = drawWidth * aspectRatio
@@ -127,8 +170,8 @@ export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
     texture,
     sourceX,
     sourceY,
-    animation.tileWidth,
-    animation.tileHeight,
+    Math.floor(sourceTileWidth),
+    Math.floor(sourceTileHeight),
     centerX - drawWidth / 2,
     centerY - drawHeight / 2,
     drawWidth,

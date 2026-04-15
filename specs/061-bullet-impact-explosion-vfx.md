@@ -26,3 +26,5 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 5. Explosion sprite-sheet rendering uses additive blending and restores previous blend state after drawing.
 6. Expired one-shot animations are cleaned up automatically and should not leak over time.
 7. Hot-path rendering must stay performant for large concurrent counts (no per-frame metadata parsing, no per-frame image creation).
+8. Sprite-sheet source cropping must remain correct across retina/non-retina displays by using texture dimension-aware source tile calculation, not assumptions tied to canvas DPR.
+9. Black background pixels in additive sprite sheets must be treated as transparent in final output (no visible black boxes during explosion playback).
