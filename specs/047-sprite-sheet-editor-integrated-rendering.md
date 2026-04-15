@@ -113,3 +113,5 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Border-width input must preserve literal `0` (not fallback to default), so dashed lane mode can be toggled reliably.
   - Action controls stay anchored at sidebar bottom while tag list remains visible above.
   - Preview button state returns to `Play` when non-loop playback reaches the end.
+  - Static tab must never show animated preview output; preview is exclusive to Animated tab.
+  - Editor supports independent row-height configuration (`rowHeight`) separate from tile width (`tileSize`).

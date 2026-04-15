@@ -69,13 +69,16 @@ function ensureTileRecord(data, tileKey) {
 }
 
 function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) {
+  const normalizedTileSize = Number.isFinite(raw?.tileSize) ? Math.max(8, Math.floor(raw.tileSize)) : DEFAULT_TILE_SIZE
+  const normalizedRowHeight = Number.isFinite(raw?.rowHeight) ? Math.max(8, Math.floor(raw.rowHeight)) : normalizedTileSize
   const tags = Array.isArray(raw?.tags)
     ? Array.from(new Set([...raw.tags.filter(Boolean), ...baseTags]))
     : [...baseTags]
   const data = {
     schemaVersion: 1,
     sheetPath,
-    tileSize: Number.isFinite(raw?.tileSize) ? Math.max(8, Math.floor(raw.tileSize)) : DEFAULT_TILE_SIZE,
+    tileSize: normalizedTileSize,
+    rowHeight: normalizedRowHeight,
     borderWidth: Number.isFinite(raw?.borderWidth) ? Math.max(0, Math.floor(raw.borderWidth)) : DEFAULT_BORDER_WIDTH,
     tags: tags.length ? Array.from(new Set(tags)) : [...baseTags],
     tiles: raw?.tiles && typeof raw.tiles === 'object' ? raw.tiles : {}
@@ -107,22 +110,23 @@ function parseTileKey(tileKey) {
 
 function toSerializableData(data, image) {
   const columns = image ? Math.floor(image.width / Math.max(1, data.tileSize)) : 0
-  const rows = image ? Math.floor(image.height / Math.max(1, data.tileSize)) : 0
-  const sourceTile = Math.max(1, data.tileSize - (data.borderWidth * 2))
+  const rows = image ? Math.floor(image.height / Math.max(1, data.rowHeight || data.tileSize)) : 0
+  const sourceTileWidth = Math.max(1, data.tileSize - (data.borderWidth * 2))
+  const sourceTileHeight = Math.max(1, (data.rowHeight || data.tileSize) - (data.borderWidth * 2))
   const serializedTiles = {}
 
   Object.entries(data.tiles || {}).forEach(([tileKey, tileData]) => {
     if (!tileData?.tags?.length) return
     const { col, row } = parseTileKey(tileKey)
     const sx = (col * data.tileSize) + data.borderWidth
-    const sy = (row * data.tileSize) + data.borderWidth
+    const sy = (row * (data.rowHeight || data.tileSize)) + data.borderWidth
     serializedTiles[tileKey] = {
       tags: [...tileData.tags],
       rect: {
         x: sx,
         y: sy,
-        width: sourceTile,
-        height: sourceTile
+        width: sourceTileWidth,
+        height: sourceTileHeight
       },
       col,
       row
@@ -133,15 +137,16 @@ function toSerializableData(data, image) {
     schemaVersion: 1,
     sheetPath: data.sheetPath,
     tileSize: data.tileSize,
+    rowHeight: data.rowHeight || data.tileSize,
     borderWidth: data.borderWidth,
     tags: data.tags,
     columns,
     rows,
     runtimeNormalization: {
-      sourceTileSize: sourceTile,
+      sourceTileSize: sourceTileWidth,
       targetTileSize: 64,
-      scale: sourceTile > 0 ? (64 / sourceTile) : 1,
-      requiresUpscale: sourceTile < 64
+      scale: sourceTileWidth > 0 ? (64 / sourceTileWidth) : 1,
+      requiresUpscale: sourceTileWidth < 64 || sourceTileHeight < 64
     },
     tiles: serializedTiles
   }
@@ -150,14 +155,16 @@ function toSerializableData(data, image) {
 function getTagFrameSequence(data, image, tag) {
   if (!data || !image || !tag) return []
   const tileSize = Math.max(1, data.tileSize)
-  const sourceTile = Math.max(1, tileSize - (data.borderWidth * 2))
+  const rowHeight = Math.max(1, data.rowHeight || data.tileSize)
+  const sourceTileWidth = Math.max(1, tileSize - (data.borderWidth * 2))
+  const sourceTileHeight = Math.max(1, rowHeight - (data.borderWidth * 2))
   const sequence = []
 
   Object.entries(data.tiles || {}).forEach(([tileKey, tileData]) => {
     if (!tileData?.tags?.includes(tag)) return
     const { col, row } = parseTileKey(tileKey)
     const sx = (col * tileSize) + data.borderWidth
-    const sy = (row * tileSize) + data.borderWidth
+    const sy = (row * rowHeight) + data.borderWidth
     const linearIndex = (row * Math.max(1, Math.floor(image.width / tileSize))) + col
     sequence.push({
       tileKey,
@@ -167,8 +174,8 @@ function getTagFrameSequence(data, image, tag) {
       rect: {
         x: sx,
         y: sy,
-        width: sourceTile,
-        height: sourceTile
+        width: sourceTileWidth,
+        height: sourceTileHeight
       }
     })
   })
@@ -179,7 +186,7 @@ function getTagFrameSequence(data, image, tag) {
 
 function toAnimationSerializableData(data, image) {
   const columns = image ? Math.floor(image.width / Math.max(1, data.tileSize)) : 0
-  const rows = image ? Math.floor(image.height / Math.max(1, data.tileSize)) : 0
+  const rows = image ? Math.floor(image.height / Math.max(1, data.rowHeight || data.tileSize)) : 0
   const animations = {}
   const tags = Array.isArray(data.tags) ? data.tags : []
   tags.forEach((tag) => {
@@ -199,6 +206,7 @@ function toAnimationSerializableData(data, image) {
     mode: 'animated',
     sheetPath: data.sheetPath,
     tileSize: data.tileSize,
+    rowHeight: data.rowHeight || data.tileSize,
     borderWidth: data.borderWidth,
     columns,
     rows,
@@ -235,12 +243,13 @@ function getRelativeEventPos(element, event) {
 function getTileAtCanvasPos(state, posX, posY) {
   if (!state.image) return null
   const tileSize = Math.max(1, state.activeData.tileSize)
+  const rowHeight = Math.max(1, state.activeData.rowHeight || state.activeData.tileSize)
   const unscaledX = (posX - state.panX) / state.zoomScale
   const unscaledY = (posY - state.panY) / state.zoomScale
   const col = Math.floor(unscaledX / tileSize)
-  const row = Math.floor(unscaledY / tileSize)
+  const row = Math.floor(unscaledY / rowHeight)
   const maxCols = Math.floor(state.image.width / tileSize)
-  const maxRows = Math.floor(state.image.height / tileSize)
+  const maxRows = Math.floor(state.image.height / rowHeight)
 
   if (col < 0 || row < 0 || col >= maxCols || row >= maxRows) {
     return null
@@ -269,6 +278,7 @@ function drawSseCanvas(state) {
   }
 
   const tileSize = Math.max(1, data.tileSize)
+  const rowHeight = Math.max(1, data.rowHeight || data.tileSize)
   canvas.width = image.width
   canvas.height = image.height
   ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -293,12 +303,12 @@ function drawSseCanvas(state) {
       if (!tileData?.tags?.length) return
       const { col, row } = parseTileKey(tileKey)
       const x = col * tileSize
-      const y = row * tileSize
+      const y = row * rowHeight
       const isActiveTagTile = state.activeTag && tileData.tags.includes(state.activeTag)
 
       if (isActiveTagTile) {
         ctx.fillStyle = 'rgba(255, 0, 0, 0.33)'
-        ctx.fillRect(x, y, tileSize, tileSize)
+        ctx.fillRect(x, y, tileSize, rowHeight)
       }
 
       if (state.showLabels) {
@@ -309,7 +319,7 @@ function drawSseCanvas(state) {
           tileTagSequences.forEach((entry, idx) => {
             const frameLabel = `${entry.sequence}`
             const labelX = x + 2
-            const labelY = y + tileSize - 2 - (idx * 11)
+            const labelY = y + rowHeight - 2 - (idx * 11)
             ctx.font = '10px sans-serif'
             ctx.textAlign = 'left'
             ctx.textBaseline = 'bottom'
@@ -347,19 +357,19 @@ function drawSseCanvas(state) {
       ctx.setLineDash([])
     }
     const cols = Math.floor(image.width / tileSize)
-    const rows = Math.floor(image.height / tileSize)
+    const rows = Math.floor(image.height / rowHeight)
     const halfLine = ctx.lineWidth / 2
 
     for (let col = 0; col <= cols; col++) {
       const x = (col * tileSize) + halfLine
       ctx.beginPath()
       ctx.moveTo(x, 0)
-      ctx.lineTo(x, rows * tileSize)
+      ctx.lineTo(x, rows * rowHeight)
       ctx.stroke()
     }
 
     for (let row = 0; row <= rows; row++) {
-      const y = (row * tileSize) + halfLine
+      const y = (row * rowHeight) + halfLine
       ctx.beginPath()
       ctx.moveTo(0, y)
       ctx.lineTo(cols * tileSize, y)
@@ -443,8 +453,9 @@ function snapZoomToCanvas(state) {
 function applyCurrentTagToAllTiles(state) {
   if (!state.activeData || !state.image || !state.activeTag) return 0
   const tileSize = Math.max(1, state.activeData.tileSize)
+  const rowHeight = Math.max(1, state.activeData.rowHeight || state.activeData.tileSize)
   const maxCols = Math.floor(state.image.width / tileSize)
-  const maxRows = Math.floor(state.image.height / tileSize)
+  const maxRows = Math.floor(state.image.height / rowHeight)
   let changed = 0
 
   for (let row = 0; row < maxRows; row++) {
@@ -530,6 +541,12 @@ function updateModeTabUi(state) {
   state.modeAnimatedBtn?.setAttribute('aria-selected', isAnimated ? 'true' : 'false')
   if (state.animationPreviewPanel) {
     state.animationPreviewPanel.hidden = !isAnimated
+  }
+  if (!isAnimated && state.animationPreviewCanvas) {
+    const ctx = state.animationPreviewCanvas.getContext('2d')
+    if (ctx) {
+      ctx.clearRect(0, 0, state.animationPreviewCanvas.width, state.animationPreviewCanvas.height)
+    }
   }
 }
 
@@ -685,6 +702,10 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
     state.tileSizeInput.value = state.activeData.tileSize
   }
 
+  if (state.rowHeightInput) {
+    state.rowHeightInput.value = state.activeData.rowHeight || state.activeData.tileSize
+  }
+
   if (state.borderWidthInput) {
     state.borderWidthInput.value = state.activeData.borderWidth
   }
@@ -701,9 +722,10 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
     state.onAnimationSheetDataChange?.(animated)
   } else {
     const serialized = toSerializableData(state.activeData, state.image)
-    const sourceTile = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
-    if (sourceTile < 64) {
-      setStatus(state, `Warning: source tile ${sourceTile}px requires upscaling to 64px and may reduce quality.`, 'warn')
+    const sourceTileWidth = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
+    const sourceTileHeight = Math.max(1, (serialized.rowHeight || serialized.tileSize) - (serialized.borderWidth * 2))
+    if (sourceTileWidth < 64 || sourceTileHeight < 64) {
+      setStatus(state, `Warning: source tile ${sourceTileWidth}x${sourceTileHeight}px requires upscaling to 64px and may reduce quality.`, 'warn')
     } else {
       setStatus(state, `Loaded ${sheetPath}`)
     }
@@ -962,6 +984,7 @@ export async function initSpriteSheetEditor(options = {}) {
     previewDurationEl: document.getElementById('ssePreviewDuration'),
     sheetSelect: document.getElementById('sseSheetSelect'),
     tileSizeInput: document.getElementById('sseTileSizeInput'),
+    rowHeightInput: document.getElementById('sseRowHeightInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
     newTagInput: document.getElementById('sseNewTagInput'),
     addTagBtn: document.getElementById('sseAddTagBtn'),
@@ -1122,6 +1145,15 @@ export async function initSpriteSheetEditor(options = {}) {
     saveDataToLocalStorage(state.activeData, state.mode)
   })
 
+  state.rowHeightInput?.addEventListener('change', () => {
+    if (!state.activeData) return
+    const parsed = Number.parseInt(state.rowHeightInput.value, 10)
+    state.activeData.rowHeight = Number.isFinite(parsed) ? Math.max(8, parsed) : state.activeData.tileSize
+    drawSseCanvas(state)
+    applyCanvasZoom(state)
+    saveDataToLocalStorage(state.activeData, state.mode)
+  })
+
   state.borderWidthInput?.addEventListener('change', () => {
     if (!state.activeData) return
     const parsed = Number.parseInt(state.borderWidthInput.value, 10)
@@ -1204,13 +1236,14 @@ export async function initSpriteSheetEditor(options = {}) {
       setStatus(state, `Applied animated tags. ${state.activeTag}: ${currentFrames} frames.`)
     } else {
       const serialized = toSerializableData(state.activeData, state.image)
-      const sourceTile = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
+      const sourceTileWidth = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
+      const sourceTileHeight = Math.max(1, (serialized.rowHeight || serialized.tileSize) - (serialized.borderWidth * 2))
 
       await Promise.resolve(options.onApply?.(serialized))
       triggerJsonDownload(state.activeData.sheetPath, serialized)
 
-      if (sourceTile < 64) {
-        setStatus(state, `Applied tags. Warning: source tile ${sourceTile}px upscales to 64px.`, 'warn')
+      if (sourceTileWidth < 64 || sourceTileHeight < 64) {
+        setStatus(state, `Applied tags. Warning: source tile ${sourceTileWidth}x${sourceTileHeight}px upscales to 64px.`, 'warn')
       } else {
         setStatus(state, 'Applied tags and downloaded JSON metadata.')
       }
