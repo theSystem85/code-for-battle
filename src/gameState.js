@@ -32,6 +32,7 @@ export const gameState = {
   useIntegratedSpriteSheetMode: false,
   activeSpriteSheetPath: null,
   activeSpriteSheetMetadata: null,
+  activeAnimationSpriteSheetMetadata: null,
   activeSpriteSheetBiomeTag: 'grass',
   // Arrow key scrolling state
   keyScroll: { up: false, down: false, left: false, right: false },

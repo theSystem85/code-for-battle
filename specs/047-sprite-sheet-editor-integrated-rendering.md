@@ -95,3 +95,17 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - `rock` map tiles use `rocks` (or legacy `rock`) tag bucket when present, else fall back to legacy non-SSE rendering.
 - Movement blocking matches existing behavior for `impassable` in integrated mode.
 - No full-map forced redraw on each paint step; chunk-based invalidation remains in place.
+
+## Follow-up (2026-04-15): Version B Animated Sprite-Sheet Editing
+- Add mode tabs in SSE sidebar:
+  - `Static` (existing map tile tagging workflow / Version A)
+  - `Animated` (new animation frame tagging workflow / Version B)
+- Animated mode must:
+  - list sheets from `public/images/map/animations`
+  - default to tag `explosion` while allowing dynamic user-added tags
+  - treat each selected tag as its own ordered frame sequence (LTR, top-to-bottom indexing)
+  - show per-frame sequence numbers in overlay labels (bottom-left) for the selected tag and keep sequence numbers contiguous after edits
+  - show preview panel with play/pause, loop toggle, and computed duration
+  - drive preview from currently selected tag radio option
+  - refresh preview automatically when selected tag or tagged frames change
+  - apply generated animation metadata instantly to runtime when user presses `Apply tags`

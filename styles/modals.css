@@ -251,6 +251,50 @@
   animation: tutorial-dock-appear 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
 }
 
+.sprite-sheet-editor__mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sprite-sheet-editor__mode-tabs .action-button.is-active {
+  outline: 1px solid #6aa9ff;
+  box-shadow: 0 0 0 1px rgba(106, 169, 255, 0.35) inset;
+}
+
+.sprite-sheet-editor__mode-panel {
+  margin-bottom: 8px;
+}
+
+.sprite-sheet-editor__panel-title {
+  display: inline-block;
+  font-size: 12px;
+  color: #9fb3c8;
+}
+
+.sprite-sheet-editor__preview-block {
+  margin: 8px 0 10px;
+  padding: 8px;
+  border: 1px solid rgba(159, 179, 200, 0.25);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+#sseAnimationPreviewCanvas {
+  width: 100%;
+  max-width: 170px;
+  aspect-ratio: 1 / 1;
+  image-rendering: pixelated;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  margin: 6px 0;
+}
+
+.sprite-sheet-editor__preview-duration {
+  font-size: 12px;
+  color: #c8d6e5;
+}
+
 @keyframes tutorial-dock-appear {
   0% {
     opacity: 0;

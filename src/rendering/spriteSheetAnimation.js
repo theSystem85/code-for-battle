@@ -72,8 +72,9 @@ function buildBlackTransparentTexture(image) {
     const b = data[i + 2]
     const a = data[i + 3]
     const brightness = Math.max(r, g, b)
-    const brightnessAlpha = brightness / 255
-    data[i + 3] = Math.round(a * brightnessAlpha)
+    const brightnessAlpha = Math.max(0, (brightness - 3) / 252)
+    const preservedMin = a * 0.12
+    data[i + 3] = Math.round(Math.max(preservedMin, a * brightnessAlpha))
   }
 
   ctx.putImageData(imageData, 0, 0)
@@ -108,12 +109,17 @@ export function createSpriteSheetAnimationInstance({
   duration = 1100,
   durationSeconds,
   loop = false,
-  scale = 1
+  scale = 1,
+  frameSequence = null
 }) {
   const metadata = parseSpriteSheetMetadataFromFilename(assetPath)
   const computedDuration = Number.isFinite(durationSeconds)
     ? Math.max(1, durationSeconds * 1000)
     : duration
+  const normalizedFrameSequence = Array.isArray(frameSequence)
+    ? frameSequence.filter(index => Number.isFinite(index) && index >= 0).map(index => Math.floor(index))
+    : null
+  const computedFrameCount = normalizedFrameSequence?.length || metadata.frameCount
 
   return {
     type: 'spriteSheet',
@@ -124,7 +130,9 @@ export function createSpriteSheetAnimationInstance({
     duration: computedDuration,
     loop,
     scale,
-    ...metadata
+    frameSequence: normalizedFrameSequence,
+    ...metadata,
+    frameCount: computedFrameCount
   }
 }
 
@@ -155,8 +163,11 @@ export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
     return
   }
 
-  const column = frameIndex % animation.columns
-  const row = Math.floor(frameIndex / animation.columns)
+  const sheetFrameIndex = Array.isArray(animation.frameSequence)
+    ? (animation.frameSequence[frameIndex] ?? animation.frameSequence[animation.frameSequence.length - 1] ?? frameIndex)
+    : frameIndex
+  const column = sheetFrameIndex % animation.columns
+  const row = Math.floor(sheetFrameIndex / animation.columns)
 
   const sourceX = Math.floor(column * sourceTileWidth)
   const sourceY = Math.floor(row * sourceTileHeight)

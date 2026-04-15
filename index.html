@@ -1089,6 +1089,28 @@
       aria-label="Sprite Sheet Editor">
       <div class="config-modal__body sprite-sheet-editor">
         <aside class="sprite-sheet-editor__sidebar">
+          <div class="sprite-sheet-editor__mode-tabs">
+            <button type="button" class="action-button is-active" data-sse-mode-tab="static" aria-pressed="true">Static</button>
+            <button type="button" class="action-button" data-sse-mode-tab="animated" aria-pressed="false">Animated</button>
+          </div>
+          <div class="sprite-sheet-editor__mode-panel" data-sse-mode-panel="static">
+            <span class="sprite-sheet-editor__panel-title">Version A — Static tile tags</span>
+          </div>
+          <div class="sprite-sheet-editor__mode-panel" data-sse-mode-panel="animated" hidden>
+            <span class="sprite-sheet-editor__panel-title">Version B — Animated frame tags</span>
+          </div>
+          <div id="sseAnimationPreviewBlock" class="sprite-sheet-editor__preview-block" hidden>
+            <span class="sprite-sheet-editor__tags-title">Animation preview</span>
+            <canvas id="sseAnimationPreviewCanvas" width="160" height="160"></canvas>
+            <label class="sprite-sheet-editor__checkbox-row">
+              <input id="ssePreviewLoopCheckbox" type="checkbox">
+              <span>Loop preview</span>
+            </label>
+            <div class="sprite-sheet-editor__inline">
+              <button id="ssePreviewPlayPauseBtn" class="action-button" type="button">Pause</button>
+              <span id="ssePreviewDurationValue" class="sprite-sheet-editor__preview-duration">0.00s (0 frames)</span>
+            </div>
+          </div>
           <label class="sprite-sheet-editor__field">
             <span>Sprite Sheet</span>
             <select id="sseSheetSelect" class="sidebar-input"></select>
