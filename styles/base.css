@@ -105,7 +105,7 @@ body.is-touch {
   max-width: 120px;
   height: 20px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;

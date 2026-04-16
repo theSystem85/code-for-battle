@@ -17,6 +17,7 @@ Remove redundant per-player `Invite ready` sidebar labels and communicate invite
 - Party badges with green backgrounds must also use dark text for contrast.
 - Owner badge width must be content-driven (no fixed minimum badge width), while preserving overflow safety for very long names.
 - Party info block should include right-side spacing consistent with nearby row elements.
+- Multiplayer colored owner badges (party bubbles) must render without any outline/border stroke.
 
 ## Validation
 - Unit/manual: render multiplayer sidebar with no invite token and verify invite button label is `Invite`.
@@ -28,3 +29,4 @@ Remove redundant per-player `Invite ready` sidebar labels and communicate invite
 - Unit/manual: verify green party badges render dark (black-ish) text instead of white.
 - Unit/manual: verify short owner names produce compact badges sized to text content (not wide fixed badges), and long names still truncate safely.
 - Unit/manual: verify right-side spacing between party-info block and controls matches neighboring row spacing conventions.
+- Unit/manual: verify multiplayer colored badges render as flat fills with no visible border/outline.
