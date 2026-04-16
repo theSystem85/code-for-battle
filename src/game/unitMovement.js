@@ -11,7 +11,7 @@ import {
   TARGET_MOVEMENT_THRESHOLD
 } from '../config.js'
 import { gameState } from '../gameState.js'
-import { findPath, removeUnitOccupancy } from '../units.js'
+import { findPath } from '../units.js'
 import { getCachedPath } from './pathfinding.js'
 import { selectedUnits, cleanupDestroyedSelectedUnits } from '../inputHandler.js'
 import { angleDiff, smoothRotateTowardsAngle, findAdjacentTile } from '../logic.js'
@@ -46,7 +46,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
   for (let i = units.length - 1; i >= 0; i--) {
     const unit = units[i]
 
-    // Skip destroyed units and remove them
+    // Skip destroyed units. Final removal is handled in cleanupDestroyedUnits().
     if (unit.health <= 0) {
       // Remove unit from selected units if it was selected
       if (unit.selected) {
@@ -56,15 +56,10 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
         }
       }
 
-      // Remove unit from cheat system tracking if it exists
+      // Keep compatibility for systems that expect immediate cheat tracking cleanup.
       if (window.cheatSystem) {
         window.cheatSystem.removeUnitFromTracking(unit.id)
       }
-
-      if (!unit.occupancyRemoved) {
-        removeUnitOccupancy(unit, occupancyMap)
-      }
-      units.splice(i, 1)
       continue
     }
 

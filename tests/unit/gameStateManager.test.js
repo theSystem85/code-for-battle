@@ -295,6 +295,8 @@ describe('gameStateManager', () => {
         type: 'recoveryTank',
         owner: 'enemy',
         health: 0,
+        x: 64,
+        y: 96,
         occupancyRemoved: false,
         engineSound: {
           gainNode: { gain: { cancelScheduledValues: vi.fn() } },
@@ -314,15 +316,23 @@ describe('gameStateManager', () => {
         humanPlayer: 'player1'
       }
 
+      gameState.simulationTime = 1000
       cleanupDestroyedUnits([unit], gameState)
 
-      expect(releaseWreckAssignment).toHaveBeenCalledTimes(2)
-      expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
+      expect(releaseWreckAssignment).not.toHaveBeenCalled()
+      expect(registerUnitWreck).not.toHaveBeenCalled()
       expect(playSound).toHaveBeenCalledWith('enemyUnitDestroyed', 1.0, 0, true)
       expect(removeUnitOccupancy).toHaveBeenCalledWith(unit, gameState.occupancyMap)
       expect(unit.destroyed).toBe(true)
       expect(unit.engineSound).toBeNull()
       expect(gameState.enemyUnitsDestroyed).toBe(1)
+
+      gameState.simulationTime = 3100
+      cleanupDestroyedUnits([unit], gameState)
+
+      expect(releaseWreckAssignment).toHaveBeenCalledTimes(2)
+      expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
+      expect(playPositionalSound).toHaveBeenCalledWith('explosion', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.5)
     })
 
     it('handles specialty unit destruction paths', () => {
@@ -338,12 +348,20 @@ describe('gameStateManager', () => {
         humanPlayer: 'player1'
       }
 
+      gameState.simulationTime = 1000
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(detonateAmmunitionTruck).not.toHaveBeenCalled()
+      expect(detonateTankerTruck).not.toHaveBeenCalled()
+      expect(registerUnitWreck).not.toHaveBeenCalledWith(ammoTruck, gameState)
+      expect(gameState.playerUnitsDestroyed).toBe(1)
+      expect(units).toHaveLength(2)
+
+      gameState.simulationTime = 3200
       cleanupDestroyedUnits(units, gameState)
 
       expect(detonateAmmunitionTruck).toHaveBeenCalledWith(ammoTruck, expect.any(Array), [], gameState)
       expect(detonateTankerTruck).toHaveBeenCalledWith(tankerTruck, expect.any(Array), [], gameState)
-      expect(registerUnitWreck).not.toHaveBeenCalledWith(ammoTruck, gameState)
-      expect(gameState.playerUnitsDestroyed).toBe(1)
       expect(units).toHaveLength(0)
     })
 
@@ -379,6 +397,7 @@ describe('gameStateManager', () => {
         humanPlayer: 'player1'
       }
 
+      gameState.simulationTime = 1000
       cleanupDestroyedUnits(units, gameState)
 
       expect(apache.destroyed).toBe(true)
@@ -386,6 +405,10 @@ describe('gameStateManager', () => {
       expect(apache.rotorSound).toBeNull()
       expect(apache.rotorSoundLoading).toBe(false)
       expect(stop).toHaveBeenCalledWith(0.05)
+      expect(units).toHaveLength(1)
+
+      gameState.simulationTime = 3200
+      cleanupDestroyedUnits(units, gameState)
       expect(units).toHaveLength(0)
     })
   })

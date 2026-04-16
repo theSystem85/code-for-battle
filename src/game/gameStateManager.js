@@ -40,6 +40,7 @@ const DESKTOP_EDGE_AUTOSCROLL_DELAY_MS = 250
 const DESKTOP_EDGE_AUTOSCROLL_THRESHOLD_RATIO = 0.05
 const DESKTOP_EDGE_AUTOSCROLL_DEFAULT_FRAME_MS = 16
 const DESKTOP_EDGE_AUTOSCROLL_MAX_FRAME_MS = 64
+const UNIT_DESTRUCTION_FREEZE_MS = 2000
 
 function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY) {
   if (!DESKTOP_EDGE_AUTOSCROLL_ENABLED) {
@@ -422,17 +423,26 @@ export function updateDustParticles(gameState) {
  * @param {Object} gameState - Game state object
  */
 export function cleanupDestroyedUnits(units, gameState) {
-  for (let i = units.length - 1; i >= 0; i--) {
-    if (units[i].health <= 0) {
-      const unit = units[i]
+  const now = getSimulationTime(gameState)
 
-      if ((unit.type === 'f22Raptor' || unit.type === 'f35') && unit.flightState !== 'grounded' && unit.f22State !== 'crashed') {
-        const crashTriggered = beginF22CrashSequence(unit, performance.now())
-        if (crashTriggered) {
-          unit.health = Math.max(1, unit.health)
-          continue
-        }
+  for (let i = units.length - 1; i >= 0; i--) {
+    if (units[i].health > 0) {
+      continue
+    }
+
+    const unit = units[i]
+
+    if ((unit.type === 'f22Raptor' || unit.type === 'f35') && unit.flightState !== 'grounded' && unit.f22State !== 'crashed') {
+      const crashTriggered = beginF22CrashSequence(unit, performance.now())
+      if (crashTriggered) {
+        unit.health = Math.max(1, unit.health)
+        continue
       }
+    }
+
+    if (!unit.pendingDestroyedAt) {
+      unit.pendingDestroyedAt = now
+
       if (!unit.aiApiDestroyedRecorded && gameState.gameStarted && !gameState.mapEditMode) {
         recordDestroyed({
           killerId: unit.lastAttacker?.id,
@@ -444,38 +454,6 @@ export function cleanupDestroyedUnits(units, gameState) {
           timeSeconds: gameState.gameTime
         })
         unit.aiApiDestroyedRecorded = true
-      }
-
-      // Release any wreck assignments if a recovery tank is destroyed
-      if (unit.type === 'recoveryTank' && Array.isArray(gameState.unitWrecks)) {
-        gameState.unitWrecks.forEach(wreck => {
-          if (!wreck) return
-          if (wreck.assignedTankId === unit.id || wreck.towedBy === unit.id) {
-            releaseWreckAssignment(wreck)
-          }
-        })
-      }
-
-      if (unit.type === 'ammunitionTruck') {
-        detonateAmmunitionTruck(unit, units, gameState.factories || [], gameState)
-      }
-
-      if (unit.type === 'mineLayer') {
-        distributeMineLayerPayload(unit, units, gameState.buildings)
-      }
-
-      // Register a wreck so the destroyed unit leaves recoverable remnants
-      if (unit.type !== 'apache' && unit.type !== 'ammunitionTruck') {
-        registerUnitWreck(unit, gameState)
-      }
-
-      if (unit.type === 'tankerTruck') {
-        detonateTankerTruck(unit, units, gameState.factories || [], gameState)
-      }
-
-      if (!unit.destructionExplosionSpawned) {
-        spawnDestructionExplosion(gameState, unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2)
-        unit.destructionExplosionSpawned = true
       }
 
       if (unit.owner === gameState.humanPlayer) {
@@ -511,9 +489,48 @@ export function cleanupDestroyedUnits(units, gameState) {
       if (unit.type === 'apache' || unit.type === 'f35') {
         stopApacheRotorSound(unit)
       }
-
-      units.splice(i, 1)
     }
+
+    if (now - unit.pendingDestroyedAt < UNIT_DESTRUCTION_FREEZE_MS) {
+      continue
+    }
+
+    // Release any wreck assignments if a recovery tank is destroyed
+    if (unit.type === 'recoveryTank' && Array.isArray(gameState.unitWrecks)) {
+      gameState.unitWrecks.forEach(wreck => {
+        if (!wreck) return
+        if (wreck.assignedTankId === unit.id || wreck.towedBy === unit.id) {
+          releaseWreckAssignment(wreck)
+        }
+      })
+    }
+
+    if (unit.type === 'ammunitionTruck') {
+      detonateAmmunitionTruck(unit, units, gameState.factories || [], gameState)
+    }
+
+    if (unit.type === 'mineLayer') {
+      distributeMineLayerPayload(unit, units, gameState.buildings)
+    }
+
+    // Register a wreck so the destroyed unit leaves recoverable remnants
+    if (unit.type !== 'apache' && unit.type !== 'ammunitionTruck') {
+      registerUnitWreck(unit, gameState)
+    }
+
+    if (unit.type === 'tankerTruck') {
+      detonateTankerTruck(unit, units, gameState.factories || [], gameState)
+    }
+
+    if (!unit.destructionExplosionSpawned) {
+      const explosionX = unit.x + TILE_SIZE / 2
+      const explosionY = unit.y + TILE_SIZE / 2
+      playPositionalSound('explosion', explosionX, explosionY, 0.5)
+      spawnDestructionExplosion(gameState, explosionX, explosionY)
+      unit.destructionExplosionSpawned = true
+    }
+
+    units.splice(i, 1)
   }
 }
 
