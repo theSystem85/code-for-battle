@@ -367,7 +367,18 @@ export function createGameStateSnapshot() {
     y: exp.y,
     startElapsed: typeof exp.startTime === 'number' ? Math.max(0, explosionTime - exp.startTime) : 0,
     duration: exp.duration,
-    maxRadius: exp.maxRadius
+    maxRadius: exp.maxRadius,
+    type: exp.type,
+    assetPath: exp.assetPath,
+    tileWidth: exp.tileWidth,
+    tileHeight: exp.tileHeight,
+    columns: exp.columns,
+    rows: exp.rows,
+    frameCount: exp.frameCount,
+    frameSequence: exp.frameSequence,
+    frameRects: exp.frameRects,
+    loop: exp.loop,
+    scale: exp.scale
   }))
 
   // Serialize unit wrecks
@@ -980,7 +991,18 @@ function createClientStateUpdate() {
     y: exp.y,
     startElapsed: typeof exp.startTime === 'number' ? Math.max(0, explosionTime - exp.startTime) : 0,
     duration: exp.duration,
-    maxRadius: exp.maxRadius
+    maxRadius: exp.maxRadius,
+    type: exp.type,
+    assetPath: exp.assetPath,
+    tileWidth: exp.tileWidth,
+    tileHeight: exp.tileHeight,
+    columns: exp.columns,
+    rows: exp.rows,
+    frameCount: exp.frameCount,
+    frameSequence: exp.frameSequence,
+    frameRects: exp.frameRects,
+    loop: exp.loop,
+    scale: exp.scale
   }))
 
   return {

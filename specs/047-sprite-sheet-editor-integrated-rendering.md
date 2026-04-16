@@ -95,3 +95,35 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - `rock` map tiles use `rocks` (or legacy `rock`) tag bucket when present, else fall back to legacy non-SSE rendering.
 - Movement blocking matches existing behavior for `impassable` in integrated mode.
 - No full-map forced redraw on each paint step; chunk-based invalidation remains in place.
+
+## Follow-up (2026-04-15): Version B Animated Sprite-Sheet Editor
+- SSE sidebar now has mode tabs:
+  - `Static` (existing tile metadata workflow)
+  - `Animated` (new animation sequence tagging workflow)
+- Animated mode requirements:
+  - Sprite-sheet selector lists assets from `public/images/map/animations` index.
+  - Default animation tag is `explosion` (users can add more tags dynamically).
+  - Tagging marks frame membership for animation sequences; frame order is left→right, top→bottom.
+  - Canvas overlay displays white frame-number labels near bottom-left and reindexes immediately on sequence edits.
+  - Sidebar preview panel renders selected-tag animation with play/pause, loop toggle, and duration/frame count display.
+  - Applying animated tags immediately updates runtime animation metadata used by in-game destruction VFX.
+  - Preview must render correctly for cached processed textures (no blank preview when tags are valid).
+  - Grid overlay uses dashed lanes when border width is `0`; otherwise line width follows configured border width.
+  - Sidebar remains scrollable without visible native scrollbar tracks and tag radio list remains fully reachable.
+  - Border-width input must preserve literal `0` (not fallback to default), so dashed lane mode can be toggled reliably.
+  - Action controls stay anchored at sidebar bottom while tag list remains visible above.
+  - Preview button state returns to `Play` when non-loop playback reaches the end.
+  - Static tab must never show animated preview output; preview is exclusive to Animated tab.
+  - Editor supports independent row-height configuration (`rowHeight`) separate from tile width (`tileSize`).
+  - Whenever a sprite sheet is loaded (both Static and Animated modes), show its image resolution directly below the sheet selector and provide an `(i)` info bubble that opens on hover/click to display full image metadata in a popover.
+  - Static mode must always fully disable animated preview rendering/RAF updates (no visible preview and no hidden background animation work).
+  - Animated preview RAF loop may only run while the SSE modal is open in Animated mode, so gameplay framerate is not reduced when SSE is closed.
+  - Metadata popover should open to the right of the `(i)` button and stay readable near viewport edges (no side clipping).
+  - Animated preview panel must include a `Background` checkbox beside `Loop`; when enabled, preview renders on a grass-like map tile backdrop so black-key transparency/additive blend quality can be inspected in-map context.
+  - Metadata popover must render above the SSE workspace/canvas layer (no clipping behind/right of sidebar due stacking context).
+  - Static mode must hide animated preview panel using effective `display: none` behavior.
+  - SSE canvas accepts drag-drop image files in both Static and Animated modes, adds dropped images to current-mode selector list in-browser only (non-persistent), and auto-selects/loads dropped image immediately.
+  - Dropped image paths (blob/data URLs) must animate in preview after tagging; animation instance creation/texture loading cannot rely exclusively on filename-encoded metadata for such temporary assets.
+  - `Apply current tag to all tiles` must behave as a toggle: when all tiles already contain active tag it switches to remove mode and removes that tag from all tiles.
+  - Runtime map rendering of sprite-sheet explosions must visually match SSE preview blending (no dark/black aura fringe) by using equivalent additive draw characteristics.
+  - Bundled destruction VFX defaults must boot from `public/images/map/animations/explosion.webp` plus `public/images/map/animations/explosion.json` at startup, so the tested sidecar metadata drives explosions even before the SSE modal is opened or `Apply tags` is clicked in the current session.

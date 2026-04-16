@@ -1089,13 +1089,50 @@
       aria-label="Sprite Sheet Editor">
       <div class="config-modal__body sprite-sheet-editor">
         <aside class="sprite-sheet-editor__sidebar">
+          <div class="sprite-sheet-editor__mode-tabs" role="tablist" aria-label="Sprite sheet editor mode">
+            <button id="sseModeStaticBtn" class="action-button sprite-sheet-editor__mode-tab is-active" type="button" role="tab" aria-selected="true">Static</button>
+            <button id="sseModeAnimatedBtn" class="action-button sprite-sheet-editor__mode-tab" type="button" role="tab" aria-selected="false">Animated</button>
+          </div>
+          <div id="sseAnimationPreviewPanel" class="sprite-sheet-editor__preview-panel" hidden>
+            <span class="sprite-sheet-editor__tags-title">Animation preview</span>
+            <canvas id="sseAnimationPreviewCanvas" width="128" height="128"></canvas>
+            <div class="sprite-sheet-editor__preview-controls">
+              <label class="sprite-sheet-editor__checkbox-row">
+                <input id="ssePreviewLoopCheckbox" type="checkbox">
+                <span>Loop</span>
+              </label>
+              <label class="sprite-sheet-editor__checkbox-row">
+                <input id="ssePreviewBackgroundCheckbox" type="checkbox" checked>
+                <span>Background</span>
+              </label>
+              <button id="ssePreviewPlayPauseBtn" class="action-button" type="button">Pause</button>
+            </div>
+            <div id="ssePreviewDuration" class="sprite-sheet-editor__preview-duration">Duration: 0ms (0 frames)</div>
+          </div>
           <label class="sprite-sheet-editor__field">
             <span>Sprite Sheet</span>
             <select id="sseSheetSelect" class="sidebar-input"></select>
           </label>
+          <div id="sseSheetMetaRow" class="sprite-sheet-editor__sheet-meta" hidden>
+            <span id="sseSheetResolution" class="sprite-sheet-editor__sheet-resolution">Resolution: --</span>
+            <div id="sseSheetInfoWrap" class="sprite-sheet-editor__sheet-info">
+              <button
+                id="sseSheetInfoBtn"
+                class="sprite-sheet-editor__sheet-info-btn"
+                type="button"
+                aria-label="Show sprite sheet image metadata"
+                aria-expanded="false"
+              >i</button>
+              <div id="sseSheetInfoPopover" class="sprite-sheet-editor__sheet-info-popover" role="tooltip"></div>
+            </div>
+          </div>
           <label class="sprite-sheet-editor__field">
             <span>Tile size (px)</span>
             <input id="sseTileSizeInput" class="sidebar-input" type="number" min="8" value="64">
+          </label>
+          <label class="sprite-sheet-editor__field">
+            <span>Row height (px)</span>
+            <input id="sseRowHeightInput" class="sidebar-input" type="number" min="8" value="64">
           </label>
           <label class="sprite-sheet-editor__field">
             <span>Grid border width (px)</span>

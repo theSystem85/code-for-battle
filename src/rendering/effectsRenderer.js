@@ -2,6 +2,7 @@
 import { TILE_SIZE } from '../config.js'
 import { drawTeslaCoilLightning } from './renderingUtils.js'
 import { getSimulationTime } from '../game/time.js'
+import { renderSpriteSheetAnimation } from './spriteSheetAnimation.js'
 
 // Pre-cached gradient sprites for smoke particles (GPU-friendly)
 // These are created once at initialization and reused via drawImage
@@ -436,6 +437,7 @@ export class EffectsRenderer {
 
     const explosions = gameState.explosions
     const len = explosions.length
+    const additiveAnimations = []
 
     for (let i = 0; i < len; i++) {
       const exp = explosions[i]
@@ -460,6 +462,11 @@ export class EffectsRenderer {
         if (!row || tileX < 0 || tileX >= row.length) continue
         const cell = row[tileX]
         if (!cell || !cell.visible) continue
+      }
+
+      if (exp.type === 'spriteSheet') {
+        additiveAnimations.push(exp)
+        continue
       }
 
       const safeDuration = Number.isFinite(exp.duration) && exp.duration > 0 ? exp.duration : 1
@@ -529,6 +536,22 @@ export class EffectsRenderer {
           ctx.fill()
         }
       }
+    }
+
+    if (additiveAnimations.length > 0) {
+      const previousOperation = ctx.globalCompositeOperation
+      const previousAlpha = ctx.globalAlpha
+      const previousSmoothing = ctx.imageSmoothingEnabled
+      ctx.globalCompositeOperation = 'lighter'
+      ctx.imageSmoothingEnabled = false
+
+      for (let i = 0; i < additiveAnimations.length; i++) {
+        renderSpriteSheetAnimation(ctx, additiveAnimations[i], scrollOffset, currentTime)
+      }
+
+      ctx.imageSmoothingEnabled = previousSmoothing
+      ctx.globalCompositeOperation = previousOperation
+      ctx.globalAlpha = previousAlpha
     }
   }
 

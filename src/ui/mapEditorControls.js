@@ -28,6 +28,50 @@ let integratedSpriteSheetBiomeSelect = null
 const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
 const INTEGRATED_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
 const SSE_APPLIED_METADATA_STORAGE_KEY = 'rts-sse-applied-metadata'
+const SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY = 'rts-sse-applied-animation-metadata'
+const DEFAULT_ANIMATION_SHEET_PATH = 'images/map/animations/explosion.webp'
+const DEFAULT_ANIMATION_METADATA_PATH = 'images/map/animations/explosion.json'
+const RETIRED_EXPLOSION_SHEET_PATTERN = /^images\/map\/animations\/\d+x\d+_\d+x\d+_.*explosion\.(webp|png|jpg|jpeg)$/i
+
+function isTransientAnimationSheetPath(sheetPath) {
+  return typeof sheetPath === 'string' && (
+    sheetPath.startsWith('blob:') ||
+    sheetPath.startsWith('data:') ||
+    sheetPath.startsWith('local-upload:')
+  )
+}
+
+function normalizeAnimationMetadata(metadata) {
+  if (!metadata || typeof metadata !== 'object') return null
+  const sheetPath = typeof metadata.sheetPath === 'string' ? metadata.sheetPath : ''
+  const normalizedSheetPath = !sheetPath || isTransientAnimationSheetPath(sheetPath) || RETIRED_EXPLOSION_SHEET_PATTERN.test(sheetPath)
+    ? DEFAULT_ANIMATION_SHEET_PATH
+    : sheetPath
+  return {
+    ...metadata,
+    sheetPath: normalizedSheetPath
+  }
+}
+
+function setActiveAnimationMetadata(metadata) {
+  const normalized = normalizeAnimationMetadata(metadata)
+  if (!normalized) return null
+  gameState.activeAnimationSpriteSheetMetadata = normalized
+  gameState.activeAnimationSpriteSheetPath = normalized.sheetPath || DEFAULT_ANIMATION_SHEET_PATH
+  return normalized
+}
+
+async function loadDefaultAnimationMetadata() {
+  try {
+    const response = await fetch(DEFAULT_ANIMATION_METADATA_PATH, { cache: 'no-store' })
+    if (!response.ok) return null
+    const parsed = await response.json()
+    return normalizeAnimationMetadata(parsed)
+  } catch (err) {
+    window.logger.warn('Failed to load default explosion animation metadata:', err)
+    return null
+  }
+}
 
 async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   const textureManager = getTextureManager()
@@ -150,6 +194,26 @@ export function initMapEditorControls() {
     window.logger.warn('Failed to load applied SSE metadata from localStorage:', err)
   }
 
+  try {
+    const storedAnimationMetadata = localStorage.getItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY)
+    if (storedAnimationMetadata) {
+      const parsed = JSON.parse(storedAnimationMetadata)
+      const normalized = setActiveAnimationMetadata(parsed)
+      if (normalized) {
+        localStorage.setItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY, JSON.stringify(normalized))
+      }
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load applied SSE animation metadata from localStorage:', err)
+  }
+
+  if (!gameState.activeAnimationSpriteSheetMetadata) {
+    loadDefaultAnimationMetadata().then((metadata) => {
+      if (!metadata || gameState.activeAnimationSpriteSheetMetadata) return
+      setActiveAnimationMetadata(metadata)
+    })
+  }
+
   if (editButton) {
     editButton.addEventListener('click', () => {
       if (isMapEditorLocked()) return
@@ -210,6 +274,9 @@ export function initMapEditorControls() {
         applyIntegratedSpriteSheetRuntime(metadata)
       }
     },
+    onAnimationSheetDataChange: (metadata) => {
+      setActiveAnimationMetadata(metadata)
+    },
     onApply: async(metadata) => {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
@@ -219,6 +286,14 @@ export function initMapEditorControls() {
         window.logger.warn('Failed to persist applied SSE metadata:', err)
       }
       await applyIntegratedSpriteSheetRuntime(metadata)
+    },
+    onApplyAnimation: async(metadata) => {
+      const normalized = setActiveAnimationMetadata(metadata)
+      try {
+        localStorage.setItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY, JSON.stringify(normalized))
+      } catch (err) {
+        window.logger.warn('Failed to persist applied SSE animation metadata:', err)
+      }
     }
   }).then((controller) => {
     if (gameState.useIntegratedSpriteSheetMode) {
