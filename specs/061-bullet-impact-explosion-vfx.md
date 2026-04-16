@@ -28,3 +28,9 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 7. Hot-path rendering must stay performant for large concurrent counts (no per-frame metadata parsing, no per-frame image creation).
 8. Sprite-sheet source cropping must remain correct across retina/non-retina displays by using texture dimension-aware source tile calculation, not assumptions tied to canvas DPR.
 9. Black background pixels in additive sprite sheets must be treated as transparent in final output (no visible black boxes during explosion playback).
+
+## Follow-up (2026-04-16): Unit Death Freeze Before Destruction
+1. Ground/air units with `health <= 0` must enter a frozen death state for 2000ms before final cleanup.
+2. During the freeze window, the unit must not continue movement/combat/path progression.
+3. Wreck registration and destruction explosion VFX must occur after the freeze delay, not immediately on the fatal hit.
+4. Unit destruction explosion audio must be emitted at the same delayed moment as the destruction explosion VFX so A/V timing remains synchronized.

@@ -40,6 +40,7 @@ const DESKTOP_EDGE_AUTOSCROLL_DELAY_MS = 250
 const DESKTOP_EDGE_AUTOSCROLL_THRESHOLD_RATIO = 0.05
 const DESKTOP_EDGE_AUTOSCROLL_DEFAULT_FRAME_MS = 16
 const DESKTOP_EDGE_AUTOSCROLL_MAX_FRAME_MS = 64
+const UNIT_DESTRUCTION_FREEZE_MS = 2000
 
 function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY) {
   if (!DESKTOP_EDGE_AUTOSCROLL_ENABLED) {
@@ -422,9 +423,34 @@ export function updateDustParticles(gameState) {
  * @param {Object} gameState - Game state object
  */
 export function cleanupDestroyedUnits(units, gameState) {
+  const simulationNow = getSimulationTime(gameState)
+  const now = simulationNow > 0
+    ? simulationNow
+    : ((typeof performance !== 'undefined' && typeof performance.now === 'function') ? performance.now() : Date.now())
   for (let i = units.length - 1; i >= 0; i--) {
     if (units[i].health <= 0) {
       const unit = units[i]
+
+      if (!Number.isFinite(unit.destructionFreezeStartedAt)) {
+        unit.destructionFreezeStartedAt = now
+        unit.moveTarget = null
+        unit.path = []
+        unit.target = null
+        if (unit.movement) {
+          unit.movement.velocity.x = 0
+          unit.movement.velocity.y = 0
+          if (unit.movement.targetVelocity) {
+            unit.movement.targetVelocity.x = 0
+            unit.movement.targetVelocity.y = 0
+          }
+          unit.movement.currentSpeed = 0
+          unit.movement.isMoving = false
+        }
+      }
+
+      if ((now - unit.destructionFreezeStartedAt) < UNIT_DESTRUCTION_FREEZE_MS) {
+        continue
+      }
 
       if ((unit.type === 'f22Raptor' || unit.type === 'f35') && unit.flightState !== 'grounded' && unit.f22State !== 'crashed') {
         const crashTriggered = beginF22CrashSequence(unit, performance.now())
@@ -474,6 +500,9 @@ export function cleanupDestroyedUnits(units, gameState) {
       }
 
       if (!unit.destructionExplosionSpawned) {
+        if (unit.type !== 'ammunitionTruck' && unit.type !== 'tankerTruck') {
+          playPositionalSound('explosion', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.5)
+        }
         spawnDestructionExplosion(gameState, unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2)
         unit.destructionExplosionSpawned = true
       }

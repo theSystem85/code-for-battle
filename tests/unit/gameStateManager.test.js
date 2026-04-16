@@ -289,12 +289,14 @@ describe('gameStateManager', () => {
   })
 
   describe('cleanupDestroyedUnits', () => {
-    it('cleans up recovery tanks and tracks wreck assignments', () => {
+    it('cleans up recovery tanks and tracks wreck assignments after destruction freeze delay', () => {
       const unit = {
         id: 'rec-1',
         type: 'recoveryTank',
         owner: 'enemy',
         health: 0,
+        x: 64,
+        y: 128,
         occupancyRemoved: false,
         engineSound: {
           gainNode: { gain: { cancelScheduledValues: vi.fn() } },
@@ -315,10 +317,21 @@ describe('gameStateManager', () => {
       }
 
       cleanupDestroyedUnits([unit], gameState)
+      expect(registerUnitWreck).not.toHaveBeenCalled()
+      expect(unit.destroyed).not.toBe(true)
+
+      performanceNow.mockReturnValue(3001)
+      cleanupDestroyedUnits([unit], gameState)
 
       expect(releaseWreckAssignment).toHaveBeenCalledTimes(2)
       expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
       expect(playSound).toHaveBeenCalledWith('enemyUnitDestroyed', 1.0, 0, true)
+      expect(playPositionalSound).toHaveBeenCalledWith(
+        'explosion',
+        unit.x + TILE_SIZE / 2,
+        unit.y + TILE_SIZE / 2,
+        0.5
+      )
       expect(removeUnitOccupancy).toHaveBeenCalledWith(unit, gameState.occupancyMap)
       expect(unit.destroyed).toBe(true)
       expect(unit.engineSound).toBeNull()
@@ -339,10 +352,20 @@ describe('gameStateManager', () => {
       }
 
       cleanupDestroyedUnits(units, gameState)
+      expect(units).toHaveLength(2)
+
+      performanceNow.mockReturnValue(3001)
+      cleanupDestroyedUnits(units, gameState)
 
       expect(detonateAmmunitionTruck).toHaveBeenCalledWith(ammoTruck, expect.any(Array), [], gameState)
       expect(detonateTankerTruck).toHaveBeenCalledWith(tankerTruck, expect.any(Array), [], gameState)
       expect(registerUnitWreck).not.toHaveBeenCalledWith(ammoTruck, gameState)
+      expect(playPositionalSound).not.toHaveBeenCalledWith(
+        'explosion',
+        expect.any(Number),
+        expect.any(Number),
+        0.5
+      )
       expect(gameState.playerUnitsDestroyed).toBe(1)
       expect(units).toHaveLength(0)
     })
@@ -379,6 +402,10 @@ describe('gameStateManager', () => {
         humanPlayer: 'player1'
       }
 
+      cleanupDestroyedUnits(units, gameState)
+      expect(apache.destroyed).not.toBe(true)
+
+      performanceNow.mockReturnValue(3001)
       cleanupDestroyedUnits(units, gameState)
 
       expect(apache.destroyed).toBe(true)
