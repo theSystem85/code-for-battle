@@ -516,19 +516,65 @@ function snapZoomToCanvas(state) {
   setZoomScale(state, fitScale, { preserveCenter: false })
 }
 
-function applyCurrentTagToAllTiles(state) {
-  if (!state.activeData || !state.image || !state.activeTag) return 0
+function getTileGridBounds(state) {
+  if (!state.activeData || !state.image) {
+    return { maxCols: 0, maxRows: 0, totalTiles: 0 }
+  }
   const tileSize = Math.max(1, state.activeData.tileSize)
   const rowHeight = Math.max(1, state.activeData.rowHeight || state.activeData.tileSize)
   const maxCols = Math.floor(state.image.width / tileSize)
   const maxRows = Math.floor(state.image.height / rowHeight)
+  return {
+    maxCols,
+    maxRows,
+    totalTiles: maxCols * maxRows
+  }
+}
+
+function countTilesWithActiveTag(state) {
+  if (!state.activeData || !state.image || !state.activeTag) return 0
+  const { maxCols, maxRows } = getTileGridBounds(state)
+  let tagged = 0
+  for (let row = 0; row < maxRows; row++) {
+    for (let col = 0; col < maxCols; col++) {
+      const entry = state.activeData.tiles?.[makeTileKey(col, row)]
+      if (entry?.tags?.includes(state.activeTag)) {
+        tagged++
+      }
+    }
+  }
+  return tagged
+}
+
+function updateApplyAllButtonLabel(state) {
+  if (!state.applyCurrentTagAllBtn || !state.activeTag || !state.image || !state.activeData) return
+  const { totalTiles } = getTileGridBounds(state)
+  const taggedTiles = countTilesWithActiveTag(state)
+  const shouldRemove = totalTiles > 0 && taggedTiles === totalTiles
+  state.applyCurrentTagAllBtn.textContent = shouldRemove
+    ? `Remove "${state.activeTag}" from all tiles`
+    : `Apply "${state.activeTag}" to all tiles`
+  state.applyCurrentTagAllBtn.dataset.mode = shouldRemove ? 'remove' : 'apply'
+}
+
+function toggleCurrentTagOnAllTiles(state) {
+  if (!state.activeData || !state.image || !state.activeTag) return { changed: 0, mode: 'none' }
+  const { maxCols, maxRows, totalTiles } = getTileGridBounds(state)
+  const shouldRemove = totalTiles > 0 && countTilesWithActiveTag(state) === totalTiles
   let changed = 0
 
   for (let row = 0; row < maxRows; row++) {
     for (let col = 0; col < maxCols; col++) {
       const tileKey = makeTileKey(col, row)
       const entry = ensureTileRecord(state.activeData, tileKey)
-      if (!entry.tags.includes(state.activeTag)) {
+      const tagIndex = entry.tags.indexOf(state.activeTag)
+      if (shouldRemove && tagIndex >= 0) {
+        entry.tags.splice(tagIndex, 1)
+        if (!entry.tags.length) {
+          delete state.activeData.tiles[tileKey]
+        }
+        changed++
+      } else if (!shouldRemove && tagIndex < 0) {
         entry.tags.push(state.activeTag)
         changed++
       }
@@ -549,7 +595,11 @@ function applyCurrentTagToAllTiles(state) {
     }
   }
 
-  return changed
+  updateApplyAllButtonLabel(state)
+  return {
+    changed,
+    mode: shouldRemove ? 'removed' : 'applied'
+  }
 }
 
 function renderTagList(state) {
@@ -579,6 +629,7 @@ function renderTagList(state) {
       applyCanvasZoom(state)
       refreshAnimationPreview(state)
       startAnimationPreviewLoop(state)
+      updateApplyAllButtonLabel(state)
     })
 
     const usedCount = Object.values(state.activeData.tiles)
@@ -691,7 +742,9 @@ function refreshAnimationPreview(state) {
   if (!sourceRect) return
   const drawWidth = 64
   const drawHeight = drawWidth * (sourceRect.height / sourceRect.width)
+  const previousSmoothing = ctx.imageSmoothingEnabled
   ctx.globalCompositeOperation = 'lighter'
+  ctx.imageSmoothingEnabled = false
   ctx.drawImage(
     texture,
     sourceRect.x,
@@ -703,6 +756,7 @@ function refreshAnimationPreview(state) {
     drawWidth,
     drawHeight
   )
+  ctx.imageSmoothingEnabled = previousSmoothing
   ctx.globalCompositeOperation = 'source-over'
 }
 
@@ -819,6 +873,7 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
   drawSseCanvas(state)
   snapZoomToCanvas(state)
   renderTagList(state)
+  updateApplyAllButtonLabel(state)
 
   if (state.mode === 'animated') {
     const animated = toAnimationSerializableData(state.activeData, state.image)
@@ -866,6 +921,7 @@ function addTag(state, tag) {
   renderTagList(state)
   drawSseCanvas(state)
   refreshAnimationPreview(state)
+  updateApplyAllButtonLabel(state)
   return true
 }
 
@@ -916,6 +972,7 @@ function bindCanvasInteractions(state) {
     drawSseCanvas(state)
     renderTagList(state)
     refreshAnimationPreview(state)
+    updateApplyAllButtonLabel(state)
   }
 
   const continuePaint = (event) => {
@@ -936,6 +993,7 @@ function bindCanvasInteractions(state) {
     drawSseCanvas(state)
     renderTagList(state)
     refreshAnimationPreview(state)
+    updateApplyAllButtonLabel(state)
   }
 
   const endPaint = () => {
@@ -1427,11 +1485,15 @@ export async function initSpriteSheetEditor(options = {}) {
   })
 
   state.applyCurrentTagAllBtn?.addEventListener('click', () => {
-    const changed = applyCurrentTagToAllTiles(state)
-    if (changed > 0) {
-      setStatus(state, `Applied tag "${state.activeTag}" to ${changed} tiles.`)
+    const result = toggleCurrentTagOnAllTiles(state)
+    if (result.changed > 0) {
+      if (result.mode === 'removed') {
+        setStatus(state, `Removed tag "${state.activeTag}" from ${result.changed} tiles.`)
+      } else {
+        setStatus(state, `Applied tag "${state.activeTag}" to ${result.changed} tiles.`)
+      }
     } else {
-      setStatus(state, `All tiles already contain tag "${state.activeTag}".`)
+      setStatus(state, `No tile changes for tag "${state.activeTag}".`)
     }
   })
 

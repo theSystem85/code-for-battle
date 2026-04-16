@@ -541,12 +541,15 @@ export class EffectsRenderer {
     if (additiveAnimations.length > 0) {
       const previousOperation = ctx.globalCompositeOperation
       const previousAlpha = ctx.globalAlpha
+      const previousSmoothing = ctx.imageSmoothingEnabled
       ctx.globalCompositeOperation = 'lighter'
+      ctx.imageSmoothingEnabled = false
 
       for (let i = 0; i < additiveAnimations.length; i++) {
         renderSpriteSheetAnimation(ctx, additiveAnimations[i], scrollOffset, currentTime)
       }
 
+      ctx.imageSmoothingEnabled = previousSmoothing
       ctx.globalCompositeOperation = previousOperation
       ctx.globalAlpha = previousAlpha
     }
