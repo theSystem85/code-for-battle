@@ -7,7 +7,7 @@ import { findPathForOwner } from '../../src/units.js'
 import { cancelUnitMovement } from '../../src/game/unifiedMovement.js'
 import { broadcastUnitStop } from '../../src/network/gameCommandSync.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
-import { KEYBINDING_CONTEXTS } from '../../src/input/keybindings.js'
+import { KEYBINDING_CONTEXTS, keybindingManager } from '../../src/input/keybindings.js'
 import { TILE_SIZE } from '../../src/config.js'
 import { hasBlockingBuilding } from '../../src/utils/buildingPassability.js'
 
@@ -183,6 +183,10 @@ describe('KeyboardHandler', () => {
 
     gameState.attackGroupMode = true
     gameState.buildingPlacementMode = true
+    gameState.chainBuildMode = true
+    gameState.chainBuildPrimed = true
+    gameState.chainBuildingType = 'powerPlant'
+    gameState.chainBuildingButton = document.createElement('button')
     gameState.repairMode = true
     gameState.sellMode = true
 
@@ -190,6 +194,10 @@ describe('KeyboardHandler', () => {
 
     expect(mouseHandler.resetAttackGroupState).toHaveBeenCalled()
     expect(gameState.buildingPlacementMode).toBe(false)
+    expect(gameState.chainBuildMode).toBe(false)
+    expect(gameState.chainBuildPrimed).toBe(false)
+    expect(gameState.chainBuildingType).toBeNull()
+    expect(gameState.chainBuildingButton).toBeNull()
     expect(gameState.repairMode).toBe(false)
     expect(gameState.sellMode).toBe(false)
     expect(handler.selectedUnits).toHaveLength(0)
@@ -200,6 +208,29 @@ describe('KeyboardHandler', () => {
     expect(repairBtn.classList.contains('active')).toBe(false)
     expect(mouseHandler.updateAGFCapability).toHaveBeenCalledWith(handler.selectedUnits)
     expect(handler.showNotification).toHaveBeenCalledWith('Selection cleared', 1000)
+  })
+
+  it('cancels chain build mode with escape when game is paused', () => {
+    const mapGrid = createTestMapGrid(4, 4)
+    const selectedUnits = []
+    const matchesKeyboardAction = vi.mocked(keybindingManager.matchesKeyboardAction)
+    matchesKeyboardAction.mockImplementation((event, action) => action === 'escape' && event.key === 'Escape')
+
+    gameState.paused = true
+    gameState.chainBuildMode = true
+    gameState.chainBuildPrimed = true
+    gameState.chainBuildingType = 'powerPlant'
+    gameState.chainBuildingButton = document.createElement('button')
+
+    handler.setupKeyboardEvents([], selectedUnits, mapGrid, [])
+
+    const escEvent = new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
+    document.dispatchEvent(escEvent)
+
+    expect(gameState.chainBuildMode).toBe(false)
+    expect(gameState.chainBuildPrimed).toBe(false)
+    expect(gameState.chainBuildingType).toBeNull()
+    expect(gameState.chainBuildingButton).toBeNull()
   })
 
   it('toggles alert mode for eligible units and plays feedback', () => {
