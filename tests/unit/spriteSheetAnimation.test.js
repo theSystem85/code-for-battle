@@ -9,7 +9,7 @@ import {
 describe('spriteSheetAnimation', () => {
   it('parses sprite sheet metadata from filename segments', () => {
     const metadata = parseSpriteSheetMetadataFromFilename(
-      'images/map/animations/64x64_9x9_q85_explosion.webp'
+      'images/map/animations/64x64_9x9_generic.webp'
     )
 
     expect(metadata).toEqual({
@@ -28,7 +28,7 @@ describe('spriteSheetAnimation', () => {
 
   it('advances frame index by elapsed time, independent of fps', () => {
     const animation = createSpriteSheetAnimationInstance({
-      assetPath: 'images/map/animations/64x64_9x9_q85_explosion.webp',
+      assetPath: 'images/map/animations/64x64_9x9_generic.webp',
       x: 0,
       y: 0,
       startTime: 1000,

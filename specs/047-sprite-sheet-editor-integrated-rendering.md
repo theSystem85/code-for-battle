@@ -126,3 +126,4 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Dropped image paths (blob/data URLs) must animate in preview after tagging; animation instance creation/texture loading cannot rely exclusively on filename-encoded metadata for such temporary assets.
   - `Apply current tag to all tiles` must behave as a toggle: when all tiles already contain active tag it switches to remove mode and removes that tag from all tiles.
   - Runtime map rendering of sprite-sheet explosions must visually match SSE preview blending (no dark/black aura fringe) by using equivalent additive draw characteristics.
+  - Bundled destruction VFX defaults must boot from `public/images/map/animations/explosion.webp` plus `public/images/map/animations/explosion.json` at startup, so the tested sidecar metadata drives explosions even before the SSE modal is opened or `Apply tags` is clicked in the current session.

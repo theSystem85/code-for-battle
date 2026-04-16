@@ -1,8 +1,31 @@
 import { createSpriteSheetAnimationInstance } from '../rendering/spriteSheetAnimation.js'
 import { getSimulationTime } from './time.js'
 
-const DEFAULT_DESTRUCTION_SPRITE = 'images/map/animations/64x64_9x9_q85_explosion.webp'
+const DEFAULT_DESTRUCTION_SPRITE = 'images/map/animations/explosion.webp'
 const DEFAULT_DESTRUCTION_DURATION = 1050
+const DEFAULT_DESTRUCTION_TILE_SIZE = 64
+const DEFAULT_DESTRUCTION_BORDER_WIDTH = 1
+const DEFAULT_DESTRUCTION_COLUMNS = 16
+const DEFAULT_DESTRUCTION_ROWS = 16
+const DEFAULT_DESTRUCTION_FRAME_COUNT = 229
+
+function buildDefaultDestructionFrameRects() {
+  const frameRects = []
+  const sourceSize = DEFAULT_DESTRUCTION_TILE_SIZE - (DEFAULT_DESTRUCTION_BORDER_WIDTH * 2)
+  for (let index = 0; index < DEFAULT_DESTRUCTION_FRAME_COUNT; index += 1) {
+    const column = index % DEFAULT_DESTRUCTION_COLUMNS
+    const row = Math.floor(index / DEFAULT_DESTRUCTION_COLUMNS)
+    frameRects.push({
+      x: (column * DEFAULT_DESTRUCTION_TILE_SIZE) + DEFAULT_DESTRUCTION_BORDER_WIDTH,
+      y: (row * DEFAULT_DESTRUCTION_TILE_SIZE) + DEFAULT_DESTRUCTION_BORDER_WIDTH,
+      width: sourceSize,
+      height: sourceSize
+    })
+  }
+  return frameRects
+}
+
+const DEFAULT_DESTRUCTION_FRAME_RECTS = buildDefaultDestructionFrameRects()
 
 function getConfiguredDestructionAnimation(gameState) {
   const metadata = gameState?.activeAnimationSpriteSheetMetadata
@@ -58,9 +81,11 @@ export function spawnDestructionExplosion(gameState, centerX, centerY, options =
     loop,
     scale,
     frameSequence: configured?.frameSequence,
-    frameRects: configured?.frameRects,
-    frameCount: configured?.frameCount,
-    columns: configured?.columns,
-    rows: configured?.rows
+    frameRects: configured?.frameRects ?? DEFAULT_DESTRUCTION_FRAME_RECTS,
+    frameCount: configured?.frameCount ?? DEFAULT_DESTRUCTION_FRAME_COUNT,
+    columns: configured?.columns ?? DEFAULT_DESTRUCTION_COLUMNS,
+    rows: configured?.rows ?? DEFAULT_DESTRUCTION_ROWS,
+    tileWidth: DEFAULT_DESTRUCTION_TILE_SIZE,
+    tileHeight: DEFAULT_DESTRUCTION_TILE_SIZE
   })
 }

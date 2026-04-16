@@ -1143,7 +1143,7 @@ async function loadAnimationSheetList() {
   } catch {
     // fallback below
   }
-  return ['images/map/animations/64x64_9x9_q85_explosion.webp']
+  return ['images/map/animations/explosion.webp']
 }
 
 function renderSheetOptions(state) {
