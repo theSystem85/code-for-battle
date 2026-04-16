@@ -40,6 +40,7 @@ const DESKTOP_EDGE_AUTOSCROLL_DELAY_MS = 250
 const DESKTOP_EDGE_AUTOSCROLL_THRESHOLD_RATIO = 0.05
 const DESKTOP_EDGE_AUTOSCROLL_DEFAULT_FRAME_MS = 16
 const DESKTOP_EDGE_AUTOSCROLL_MAX_FRAME_MS = 64
+const UNIT_DESTRUCTION_FREEZE_DELAY_MS = 2000
 
 function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY) {
   if (!DESKTOP_EDGE_AUTOSCROLL_ENABLED) {
@@ -422,9 +423,22 @@ export function updateDustParticles(gameState) {
  * @param {Object} gameState - Game state object
  */
 export function cleanupDestroyedUnits(units, gameState) {
+  const simulationNow = getSimulationTime(gameState)
+  const now = simulationNow > 0 ? simulationNow : performance.now()
+
   for (let i = units.length - 1; i >= 0; i--) {
     if (units[i].health <= 0) {
       const unit = units[i]
+
+      if (!Number.isFinite(unit.destructionQueuedAt)) {
+        unit.destructionQueuedAt = now
+      }
+
+      if (now - unit.destructionQueuedAt < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
+        unit.vx = 0
+        unit.vy = 0
+        continue
+      }
 
       if ((unit.type === 'f22Raptor' || unit.type === 'f35') && unit.flightState !== 'grounded' && unit.f22State !== 'crashed') {
         const crashTriggered = beginF22CrashSequence(unit, performance.now())
@@ -474,7 +488,10 @@ export function cleanupDestroyedUnits(units, gameState) {
       }
 
       if (!unit.destructionExplosionSpawned) {
-        spawnDestructionExplosion(gameState, unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2)
+        const unitCenterX = unit.x + TILE_SIZE / 2
+        const unitCenterY = unit.y + TILE_SIZE / 2
+        playPositionalSound('explosion', unitCenterX, unitCenterY, 0.5)
+        spawnDestructionExplosion(gameState, unitCenterX, unitCenterY)
         unit.destructionExplosionSpawned = true
       }
 
