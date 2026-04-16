@@ -1,11 +1,16 @@
 import { TILE_SIZE } from '../config.js'
 
 const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
-const BLACK_ALPHA_CUTOFF_BRIGHTNESS = 20
-const BLACK_ALPHA_SOFTEN_BRIGHTNESS = 45
+const BLACK_ALPHA_CUTOFF_BRIGHTNESS = 24
+const BLACK_ALPHA_SOFTEN_BRIGHTNESS = 48
 
 const textureCache = new Map()
 const metadataCache = new Map()
+const processedImageCache = new WeakMap()
+
+export function normalizeSpriteSheetBlendMode(mode) {
+  return mode === 'alpha' ? 'alpha' : 'black'
+}
 
 function isCanvasTexture(texture) {
   return typeof window !== 'undefined' && typeof window.HTMLCanvasElement !== 'undefined' && texture instanceof window.HTMLCanvasElement
@@ -111,14 +116,30 @@ function buildBlackTransparentTexture(image) {
   return canvas
 }
 
-export function getSpriteSheetTexture(assetPath) {
+export function getImageTextureWithBlendMode(image, blendMode = 'black') {
+  const normalizedBlendMode = normalizeSpriteSheetBlendMode(blendMode)
+  if (!image || normalizedBlendMode === 'alpha') {
+    return image
+  }
+
+  const existing = processedImageCache.get(image)
+  if (existing) {
+    return existing
+  }
+
+  const processed = buildBlackTransparentTexture(image)
+  if (processed) {
+    processedImageCache.set(image, processed)
+  }
+
+  return processed || image
+}
+
+export function getSpriteSheetTexture(assetPath, blendMode = 'black') {
   if (!assetPath) return null
   const existing = textureCache.get(assetPath)
   if (existing) {
-    if (!existing.processed && existing.image.complete && existing.image.naturalWidth > 0) {
-      existing.processed = buildBlackTransparentTexture(existing.image)
-    }
-    return existing.processed || existing.image
+    return getImageTextureWithBlendMode(existing.image, blendMode)
   }
 
   const img = new Image()
@@ -129,8 +150,7 @@ export function getSpriteSheetTexture(assetPath) {
     img.src = `/${assetPath}`
   }
   textureCache.set(assetPath, {
-    image: img,
-    processed: null
+    image: img
   })
   return img
 }
@@ -161,7 +181,8 @@ export function createSpriteSheetAnimationInstance({
   tileHeight,
   columns,
   rows,
-  frameCount
+  frameCount,
+  blendMode = 'black'
 }) {
   let metadata = null
   try {
@@ -196,7 +217,8 @@ export function createSpriteSheetAnimationInstance({
     tileHeight: fallbackTileHeight,
     columns: fallbackColumns,
     rows: fallbackRows,
-    frameCount: fallbackFrameCount
+    frameCount: fallbackFrameCount,
+    blendMode: normalizeSpriteSheetBlendMode(blendMode)
   }
 }
 
@@ -220,7 +242,7 @@ export function getAnimationFrameIndex(animation, now) {
 }
 
 export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
-  const texture = getSpriteSheetTexture(animation.assetPath)
+  const texture = getSpriteSheetTexture(animation.assetPath, animation.blendMode)
   if (!isImageTextureReady(texture)) {
     return
   }

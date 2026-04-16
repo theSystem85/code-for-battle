@@ -542,7 +542,8 @@ export class MapRenderer {
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
   }
 
-  renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState) {
+  renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState, options = {}) {
+    const { skipWaterBase = false, skipWaterSot = false } = options
     // Disable image smoothing to prevent antialiasing gaps between tiles
     ctx.imageSmoothingEnabled = false
 
@@ -556,7 +557,7 @@ export class MapRenderer {
       this.computeSOTMask(mapGrid)
     }
 
-    if (!this.canUseOffscreen) {
+    if (!this.canUseOffscreen || skipWaterBase || skipWaterSot) {
       this.drawBaseLayer(
         ctx,
         mapGrid,
@@ -567,7 +568,8 @@ export class MapRenderer {
         scrollOffset.x,
         scrollOffset.y,
         useTexture,
-        currentWaterFrame
+        currentWaterFrame,
+        { skipWaterBase, skipWaterSot }
       )
       ctx.imageSmoothingEnabled = true
       return
@@ -606,7 +608,8 @@ export class MapRenderer {
             scrollOffset.x,
             scrollOffset.y,
             useTexture,
-            currentWaterFrame
+            currentWaterFrame,
+            { skipWaterBase, skipWaterSot }
           )
           continue
         }
@@ -623,7 +626,8 @@ export class MapRenderer {
     ctx.imageSmoothingEnabled = true
   }
 
-  drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame) {
+  drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame, options = {}) {
+    const { skipWaterBase = false, skipWaterSot = false } = options
     if (!mapGrid.length || !mapGrid[0]?.length) return
 
     // Ensure SOT mask is computed
@@ -641,12 +645,20 @@ export class MapRenderer {
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
 
-        this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+        if (!(skipWaterBase && visualTileType === 'water')) {
+          this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+        }
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
         if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
+          if (skipWaterSot && sotInfo.type === 'water') {
+            if (skipWaterBase && visualTileType !== 'water') {
+              this.clearTriangleArea(ctx, screenX, screenY, TILE_SIZE + 1, sotInfo.orientation)
+            }
+            continue
+          }
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
 
@@ -659,26 +671,58 @@ export class MapRenderer {
     }
   }
 
-  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
-    if (this.textureManager.integratedSpriteSheetMode) {
-      const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
-      if (integratedTile?.image && integratedTile?.rect) {
-        const { image, rect } = integratedTile
-        ctx.drawImage(
-          image,
-          rect.x,
-          rect.y,
-          rect.width,
-          rect.height,
-          screenX,
-          screenY,
-          TILE_SIZE + 1,
-          TILE_SIZE + 1
-        )
-        return
-      }
-    }
+  drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
+    if (!integratedTile?.image || !integratedTile?.rect) return false
+    const { image, rect } = integratedTile
+    ctx.drawImage(
+      image,
+      rect.x,
+      rect.y,
+      rect.width,
+      rect.height,
+      screenX,
+      screenY,
+      TILE_SIZE + 1,
+      TILE_SIZE + 1
+    )
+    return true
+  }
 
+  clearTriangleArea(ctx, screenX, screenY, size, orientation) {
+    ctx.save()
+    ctx.beginPath()
+    switch (orientation) {
+      case 'top-left':
+        ctx.moveTo(screenX, screenY)
+        ctx.lineTo(screenX + size, screenY)
+        ctx.lineTo(screenX, screenY + size)
+        break
+      case 'top-right':
+        ctx.moveTo(screenX + size, screenY)
+        ctx.lineTo(screenX, screenY)
+        ctx.lineTo(screenX + size, screenY + size)
+        break
+      case 'bottom-left':
+        ctx.moveTo(screenX, screenY + size)
+        ctx.lineTo(screenX, screenY)
+        ctx.lineTo(screenX + size, screenY + size)
+        break
+      case 'bottom-right':
+        ctx.moveTo(screenX + size, screenY + size)
+        ctx.lineTo(screenX, screenY + size)
+        ctx.lineTo(screenX + size, screenY)
+        break
+      default:
+        ctx.restore()
+        return
+    }
+    ctx.closePath()
+    ctx.clip()
+    ctx.clearRect(screenX, screenY, size, size)
+    ctx.restore()
+  }
+
+  drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
     if (type === 'water') {
       if (USE_PROCEDURAL_WATER_RENDERING) {
         this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
@@ -712,6 +756,24 @@ export class MapRenderer {
 
     ctx.fillStyle = TILE_COLORS[type]
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+  }
+
+  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+    if (this.textureManager.integratedSpriteSheetMode) {
+      const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
+      if (integratedTile?.image && integratedTile?.rect) {
+        if (type === 'rock') {
+          const landTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
+          if (!this.drawIntegratedTileImage(ctx, landTile, screenX, screenY)) {
+            this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+          }
+        }
+        this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+        return
+      }
+    }
+
+    this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
   }
 
   drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {
@@ -949,10 +1011,15 @@ export class MapRenderer {
     ctx.clip()
 
     if (type === 'water') {
-      if (USE_PROCEDURAL_WATER_RENDERING) {
-        this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY)
-      } else {
-        this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
+      const integratedWaterTile = this.textureManager.integratedSpriteSheetMode
+        ? this.textureManager.getIntegratedTileForMapTile('water', tileX, tileY)
+        : null
+      if (!this.drawIntegratedTileImage(ctx, integratedWaterTile, screenX, screenY)) {
+        if (USE_PROCEDURAL_WATER_RENDERING) {
+          this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY)
+        } else {
+          this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
+        }
       }
     } else if (useTexture) {
       const idx = this.textureManager.getTileVariation(type, tileX, tileY)
@@ -1100,7 +1167,7 @@ export class MapRenderer {
   }
 
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
-    const { skipBaseLayer = false, skipWaterSot = false } = options || {}
+    const { skipBaseLayer = false, skipWaterSot = false, skipWaterBase = false } = options || {}
     // Guard against empty or invalid mapGrid
     if (!mapGrid || !Array.isArray(mapGrid) || mapGrid.length === 0 || !mapGrid[0]) {
       return
@@ -1114,7 +1181,7 @@ export class MapRenderer {
     const endTileY = Math.min(mapGrid.length, startTileY + tilesY)
 
     if (!skipBaseLayer) {
-      this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState)
+      this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, { skipWaterBase, skipWaterSot })
     } else {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
       this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, { skipWaterSot })

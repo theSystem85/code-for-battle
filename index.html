@@ -657,7 +657,7 @@
             </div>
             <label style="display:flex; align-items:center; gap:5px; margin: 10px 0;">
               <input type="checkbox" id="integratedSpriteSheetModeCheckbox">
-              <span>Use integrated sprite-sheet tile rendering</span>
+              <span>Custom sprite sheets</span>
             </label>
             <div style="margin: 10px 0;">
               <label for="integratedSpriteSheetBiomeSelect" style="display:block; margin-bottom: 6px;">SSE Biome</label>
@@ -1137,6 +1137,13 @@
           <label class="sprite-sheet-editor__field">
             <span>Grid border width (px)</span>
             <input id="sseBorderWidthInput" class="sidebar-input" type="number" min="0" value="1">
+          </label>
+          <label class="sprite-sheet-editor__field">
+            <span>Transparency / blending</span>
+            <select id="sseBlendModeSelect" class="sidebar-input">
+              <option value="black" selected>Black</option>
+              <option value="alpha">Alpha</option>
+            </select>
           </label>
           <label class="sprite-sheet-editor__field">
             <span>Add tag</span>

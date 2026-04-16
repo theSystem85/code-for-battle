@@ -273,11 +273,16 @@ export class Renderer {
 
     // Render all game elements in order
     let gpuRendered = false
+    const hasIntegratedWaterTiles = Boolean(
+      gameState.useIntegratedSpriteSheetMode &&
+      this.textureManager.integratedTagBuckets?.water?.length
+    )
+    const gpuWaterOnly = Boolean(gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles)
     const shouldUseGpuTerrain = Boolean(
       gpuContext &&
       gpuCanvas &&
-      !gameState.useIntegratedSpriteSheetMode &&
-      USE_PROCEDURAL_WATER_RENDERING
+      USE_PROCEDURAL_WATER_RENDERING &&
+      (!gameState.useIntegratedSpriteSheetMode || gpuWaterOnly)
     )
 
     if (shouldUseGpuTerrain) {
@@ -287,7 +292,7 @@ export class Renderer {
         this.gpuRenderer.setContext(gpuContext)
         this.gpuRenderer.setMapRenderer(this.mapRenderer)
       }
-      gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas)
+      gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas, { waterOnly: gpuWaterOnly })
     } else if (gpuContext && gpuCanvas) {
       gpuContext.viewport(0, 0, gpuCanvas.width, gpuCanvas.height)
       gpuContext.clearColor(0, 0, 0, 0)
@@ -307,7 +312,11 @@ export class Renderer {
       gameCanvas,
       gameState,
       occupancyMap,
-      { skipBaseLayer: gpuRendered, skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot }
+      {
+        skipBaseLayer: gpuRendered && !gpuWaterOnly,
+        skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot,
+        skipWaterBase: gpuRendered && gpuWaterOnly
+      }
     )
     if (gameState.dzmOverlayIndex !== -1) {
       const ids = Object.keys(gameState.dangerZoneMaps || {})

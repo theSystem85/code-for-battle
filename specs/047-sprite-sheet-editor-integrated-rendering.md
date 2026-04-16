@@ -127,3 +127,18 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - `Apply current tag to all tiles` must behave as a toggle: when all tiles already contain active tag it switches to remove mode and removes that tag from all tiles.
   - Runtime map rendering of sprite-sheet explosions must visually match SSE preview blending (no dark/black aura fringe) by using equivalent additive draw characteristics.
   - Bundled destruction VFX defaults must boot from `public/images/map/animations/explosion.webp` plus `public/images/map/animations/explosion.json` at startup, so the tested sidecar metadata drives explosions even before the SSE modal is opened or `Apply tags` is clicked in the current session.
+  - SSE metadata now includes `blendMode` with values `black` or `alpha`; `black` removes near-black backgrounds for sprite-sheet-backed map tiles and keeps additive animation rendering, while `alpha` uses the source image's native alpha channel with normal source-over compositing.
+  - Map Settings label for the integrated runtime toggle is now `Custom sprite sheets`.
+  - When custom sprite sheets are enabled but the active SSE metadata contains no `water` tag bucket, runtime water must continue to fall back to the default procedural water renderer.
+  - Integrated `rock` tiles with transparent custom sprites must render over a land underlay so the cleared background reveals terrain instead of empty black.
+  - When custom sprite sheets are enabled without any tagged SSE water tiles, the renderer must keep the legacy GPU procedural-water appearance rather than downgrading to the CPU-only fallback look.
+  - In that GPU water-only fallback mode, water SOT/coastline smoothing must remain enabled on the 2D pass so coast edges match the normal non-custom rendering.
+  - When SSE `water` tags are present, integrated mode must render those tagged water tiles through the SSE path instead of switching back to the legacy GPU procedural terrain path.
+  - When no SSE `water` tags are present, the top 2D terrain canvas must not repaint opaque water base tiles over the GPU procedural-water fallback underneath.
+  - When SSE `water` tags are present, water SOT/coastline overlays must also render from clipped SSE water tiles, not from the procedural water renderer.
+  - When SSE `water` tags are absent and the GPU procedural-water fallback is active, the top 2D terrain pass must also skip water SOT/coastline overlays so no polygonal water artifacts remain above the GPU water layer.
+  - In that same no-water GPU fallback mode, the WebGL water-only batch must not emit clipped water-SOT triangle instances either; it should render only unclipped procedural water tiles.
+  - The no-water GPU fallback must apply that water-SOT suppression in the active base-layer path too, not only in the overlay-only path; any SOT that would render into water must be skipped there.
+  - That suppression must stay host-aware: skip SOT hosted on water tiles in the no-water fallback, but preserve land/street-hosted `type: water` SOT so coastline smoothing still appears against other terrain.
+  - In the no-water custom-sheet fallback, those preserved `type: water` coastline SOT triangles must be rendered by the WebGL water shader, not the 2D procedural-water routine, so they visually match adjacent procedural water tiles.
+  - Because those coastline `type: water` triangles come from the GPU underlay, the top 2D pass must cut that triangle out of the land/street base tile instead of repainting over it.

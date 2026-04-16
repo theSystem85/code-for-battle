@@ -563,11 +563,23 @@ export class EffectsRenderer {
       const previousOperation = ctx.globalCompositeOperation
       const previousAlpha = ctx.globalAlpha
       const previousSmoothing = ctx.imageSmoothingEnabled
-      ctx.globalCompositeOperation = 'lighter'
-      ctx.imageSmoothingEnabled = false
+      const blackBlendAnimations = additiveAnimations.filter(animation => (animation?.blendMode || 'black') === 'black')
+      const alphaBlendAnimations = additiveAnimations.filter(animation => (animation?.blendMode || 'black') === 'alpha')
 
-      for (let i = 0; i < additiveAnimations.length; i++) {
-        renderSpriteSheetAnimation(ctx, additiveAnimations[i], scrollOffset, currentTime)
+      if (blackBlendAnimations.length > 0) {
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.imageSmoothingEnabled = false
+        for (let i = 0; i < blackBlendAnimations.length; i++) {
+          renderSpriteSheetAnimation(ctx, blackBlendAnimations[i], scrollOffset, currentTime)
+        }
+      }
+
+      if (alphaBlendAnimations.length > 0) {
+        ctx.globalCompositeOperation = 'source-over'
+        ctx.imageSmoothingEnabled = false
+        for (let i = 0; i < alphaBlendAnimations.length; i++) {
+          renderSpriteSheetAnimation(ctx, alphaBlendAnimations[i], scrollOffset, currentTime)
+        }
       }
 
       ctx.imageSmoothingEnabled = previousSmoothing

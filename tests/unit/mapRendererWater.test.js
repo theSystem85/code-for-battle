@@ -25,6 +25,73 @@ describe('MapRenderer water rendering', () => {
     expect(ctx.fillRect).toHaveBeenCalled()
   })
 
+  it('falls back to procedural water when custom sprite sheets are enabled without water tags', () => {
+    const mapRenderer = new MapRenderer({
+      ...makeTextureManager(),
+      integratedSpriteSheetMode: true,
+      getIntegratedTileForMapTile: vi.fn((type) => {
+        if (type === 'land') {
+          return {
+            image: { id: 'custom-land-sheet' },
+            rect: { x: 0, y: 0, width: 64, height: 64 },
+            tags: ['grass', 'passable']
+          }
+        }
+        return null
+      })
+    })
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      fillStyle: '#000'
+    }
+
+    mapRenderer.drawTileBase(ctx, 5, 6, 'water', 100, 120, false, null)
+
+    expect(ctx.drawImage).not.toHaveBeenCalled()
+    expect(ctx.fillRect).toHaveBeenCalled()
+  })
+
+  it('draws land beneath integrated rock sprites so black-key transparency reveals terrain', () => {
+    const integratedLookup = vi.fn((type) => {
+      if (type === 'land') {
+        return {
+          image: { id: 'land-sheet' },
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          tags: ['grass', 'passable']
+        }
+      }
+
+      if (type === 'rock') {
+        return {
+          image: { id: 'rock-sheet' },
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          tags: ['rocks']
+        }
+      }
+
+      return null
+    })
+    const mapRenderer = new MapRenderer({
+      ...makeTextureManager(),
+      integratedSpriteSheetMode: true,
+      getIntegratedTileForMapTile: integratedLookup
+    })
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      fillStyle: '#000'
+    }
+
+    mapRenderer.drawTileBase(ctx, 7, 8, 'rock', 100, 120, false, null)
+
+    expect(integratedLookup).toHaveBeenCalledWith('rock', 7, 8)
+    expect(integratedLookup).toHaveBeenCalledWith('land', 7, 8)
+    expect(ctx.drawImage).toHaveBeenCalledTimes(2)
+    expect(ctx.drawImage.mock.calls[0][0]).toEqual({ id: 'land-sheet' })
+    expect(ctx.drawImage.mock.calls[1][0]).toEqual({ id: 'rock-sheet' })
+  })
+
   it('uses procedural water for water SOT overlays', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const proceduralSpy = vi.spyOn(mapRenderer, 'drawProceduralWater')
@@ -48,6 +115,94 @@ describe('MapRenderer water rendering', () => {
     expect(ctx.drawImage).not.toHaveBeenCalled()
   })
 
+  it('uses integrated custom water tiles for water SOT overlays when available', () => {
+    const mapRenderer = new MapRenderer({
+      ...makeTextureManager(),
+      integratedSpriteSheetMode: true,
+      getIntegratedTileForMapTile: vi.fn((type) => {
+        if (type === 'water') {
+          return {
+            image: { id: 'water-sheet' },
+            rect: { x: 0, y: 0, width: 64, height: 64 },
+            tags: ['water']
+          }
+        }
+        return null
+      })
+    })
+    const proceduralSpy = vi.spyOn(mapRenderer, 'drawProceduralWater')
+    const ctx = {
+      save: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn(),
+      restore: vi.fn(),
+      drawImage: vi.fn(),
+      fill: vi.fn(),
+      fillRect: vi.fn(),
+      fillStyle: '#000'
+    }
+
+    mapRenderer.drawSOT(ctx, 4, 4, 'top-left', { x: 0, y: 0 }, false, new Set(), 'water', null)
+
+    expect(proceduralSpy).not.toHaveBeenCalled()
+    expect(ctx.drawImage).toHaveBeenCalledTimes(1)
+    expect(ctx.drawImage.mock.calls[0][0]).toEqual({ id: 'water-sheet' })
+  })
+
+  it('can leave top-canvas water tiles transparent for GPU fallback while still drawing land tiles', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const drawTileBaseSpy = vi.spyOn(mapRenderer, 'drawTileBase').mockImplementation(() => {})
+    const drawSotSpy = vi.spyOn(mapRenderer, 'drawSOT').mockImplementation(() => {})
+    const ctx = {}
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'land' }]
+    ]
+
+    mapRenderer.drawBaseLayer(ctx, mapGrid, 0, 0, 2, 1, 0, 0, false, null, { skipWaterBase: true })
+
+    expect(drawTileBaseSpy).toHaveBeenCalledTimes(1)
+    expect(drawTileBaseSpy).toHaveBeenCalledWith(ctx, 1, 0, 'land', 32, 0, false, null)
+    expect(drawSotSpy).not.toHaveBeenCalled()
+  })
+
+  it('cuts out coastline water SOT on the 2D fallback while still allowing land inverse SOT', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const drawTileBaseSpy = vi.spyOn(mapRenderer, 'drawTileBase').mockImplementation(() => {})
+    const drawSotSpy = vi.spyOn(mapRenderer, 'drawSOT').mockImplementation(() => {})
+    const clearTriangleSpy = vi.spyOn(mapRenderer, 'clearTriangleArea').mockImplementation(() => {})
+    const ctx = {}
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'land' }]
+    ]
+
+    mapRenderer.sotMask = [[
+      { orientation: 'top-left', type: 'land' },
+      { orientation: 'top-left', type: 'water' }
+    ]]
+
+    mapRenderer.drawBaseLayer(ctx, mapGrid, 0, 0, 2, 1, 0, 0, false, null, { skipWaterBase: true, skipWaterSot: true })
+
+    expect(drawTileBaseSpy).toHaveBeenCalledTimes(1)
+    expect(drawTileBaseSpy).toHaveBeenCalledWith(ctx, 1, 0, 'land', 32, 0, false, null)
+    expect(drawSotSpy).toHaveBeenCalledTimes(1)
+    expect(drawSotSpy).toHaveBeenCalledWith(
+      ctx,
+      0,
+      0,
+      'top-left',
+      { x: 0, y: 0 },
+      false,
+      expect.any(Set),
+      'land',
+      null
+    )
+    expect(clearTriangleSpy).toHaveBeenCalledTimes(1)
+    expect(clearTriangleSpy).toHaveBeenCalledWith(ctx, 32, 0, 33, 'top-left')
+  })
+
   it('adds water SOT triangles to the WebGL tile batch so they match shader-rendered water', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = [
@@ -60,6 +215,24 @@ describe('MapRenderer water rendering', () => {
 
     const webglRenderer = new GameWebGLRenderer(null, makeTextureManager(), mapRenderer)
     const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 3, 3)
+    const waterSotInstances = instances.filter(instance => instance.textureType === 2 && instance.clipOrientation > 0)
+
+    expect(waterSotInstances).toHaveLength(1)
+    expect(waterSotInstances[0].translation).toEqual([1, 1])
+  })
+
+  it('adds coastline water SOT triangles to the WebGL water-only fallback batch', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'water' }, { type: 'land' }],
+      [{ type: 'water' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    mapRenderer.computeSOTMask(mapGrid)
+
+    const webglRenderer = new GameWebGLRenderer(null, makeTextureManager(), mapRenderer)
+    const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 3, 3, { waterOnly: true })
     const waterSotInstances = instances.filter(instance => instance.textureType === 2 && instance.clipOrientation > 0)
 
     expect(waterSotInstances).toHaveLength(1)

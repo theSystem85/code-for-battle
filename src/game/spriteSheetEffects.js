@@ -45,7 +45,8 @@ function getConfiguredDestructionAnimation(gameState) {
     frameRects: Array.isArray(entry.frameRects) ? entry.frameRects : null,
     frameCount: Number.isFinite(entry.frameCount) ? entry.frameCount : undefined,
     columns: Number.isFinite(metadata.columns) ? metadata.columns : undefined,
-    rows: Number.isFinite(metadata.rows) ? metadata.rows : undefined
+    rows: Number.isFinite(metadata.rows) ? metadata.rows : undefined,
+    blendMode: metadata.blendMode
   }
 }
 
@@ -87,7 +88,8 @@ export function spawnDestructionExplosion(gameState, centerX, centerY, options =
     columns: configured?.columns ?? DEFAULT_DESTRUCTION_COLUMNS,
     rows: configured?.rows ?? DEFAULT_DESTRUCTION_ROWS,
     tileWidth: DEFAULT_DESTRUCTION_TILE_SIZE,
-    tileHeight: DEFAULT_DESTRUCTION_TILE_SIZE
+    tileHeight: DEFAULT_DESTRUCTION_TILE_SIZE,
+    blendMode: configured?.blendMode
   })
 }
 

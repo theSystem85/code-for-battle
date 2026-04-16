@@ -319,7 +319,8 @@ export class GameWebGLRenderer {
     return this.colorCache.get(type)
   }
 
-  buildTileInstances(mapGrid, startX, startY, endX, endY) {
+  buildTileInstances(mapGrid, startX, startY, endX, endY, options = {}) {
+    const { waterOnly = false } = options
     const baseInstances = []
     const overlayInstances = []
     const resourceInstances = []
@@ -332,9 +333,18 @@ export class GameWebGLRenderer {
         const tile = row[x]
         if (!tile) continue
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures, sotMask))
+        if (!waterOnly || visualTileType === 'water') {
+          baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures, sotMask))
+        }
 
         const sotInfo = sotMask?.[y]?.[x]
+        if (waterOnly) {
+          if (sotInfo && sotInfo.type === 'water' && visualTileType !== 'water') {
+            overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
+          }
+          continue
+        }
+
         if (sotInfo) {
           overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
         }
@@ -454,7 +464,7 @@ export class GameWebGLRenderer {
     this.instanceCapacity = count
   }
 
-  render(mapGrid, scrollOffset, canvas) {
+  render(mapGrid, scrollOffset, canvas, options = {}) {
     if (!this.gl || !mapGrid?.length || !canvas) return false
     if (!this.ensureInitialized()) return false
     this.syncAtlasTexture()
@@ -474,7 +484,7 @@ export class GameWebGLRenderer {
     const endTileX = Math.min(mapGrid[0].length, startTileX + tilesX)
     const endTileY = Math.min(mapGrid.length, startTileY + tilesY)
 
-    const instances = this.buildTileInstances(mapGrid, startTileX, startTileY, endTileX, endTileY)
+    const instances = this.buildTileInstances(mapGrid, startTileX, startTileY, endTileX, endTileY, options)
     if (!instances.length) return false
 
     this.ensureInstanceCapacity(instances.length)

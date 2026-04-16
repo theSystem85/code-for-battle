@@ -2,6 +2,7 @@ import {
   createSpriteSheetAnimationInstance,
   getAnimationFrameIndex,
   getSpriteSheetTexture,
+  normalizeSpriteSheetBlendMode,
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
 
@@ -146,6 +147,7 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
     tileSize: normalizedTileSize,
     rowHeight: normalizedRowHeight,
     borderWidth: Number.isFinite(raw?.borderWidth) ? Math.max(0, Math.floor(raw.borderWidth)) : DEFAULT_BORDER_WIDTH,
+    blendMode: normalizeSpriteSheetBlendMode(raw?.blendMode),
     tags: tags.length ? Array.from(new Set(tags)) : [...baseTags],
     tiles: raw?.tiles && typeof raw.tiles === 'object' ? raw.tiles : {}
   }
@@ -205,6 +207,7 @@ function toSerializableData(data, image) {
     tileSize: data.tileSize,
     rowHeight: data.rowHeight || data.tileSize,
     borderWidth: data.borderWidth,
+    blendMode: normalizeSpriteSheetBlendMode(data.blendMode),
     tags: data.tags,
     columns,
     rows,
@@ -274,6 +277,7 @@ function toAnimationSerializableData(data, image) {
     tileSize: data.tileSize,
     rowHeight: data.rowHeight || data.tileSize,
     borderWidth: data.borderWidth,
+    blendMode: normalizeSpriteSheetBlendMode(data.blendMode),
     columns,
     rows,
     tags,
@@ -718,7 +722,8 @@ function refreshAnimationPreview(state) {
     loop: Boolean(state.previewLoop),
     scale: 2,
     frameSequence: sequence.map(frame => frame.linearIndex),
-    frameRects: sequence.map(frame => frame.rect)
+    frameRects: sequence.map(frame => frame.rect),
+    blendMode: state.activeData.blendMode
   })
   const elapsed = Math.max(0, performance.now() - state.previewStartTime)
   if (!state.previewLoop && elapsed >= durationMs) {
@@ -728,7 +733,7 @@ function refreshAnimationPreview(state) {
     }
   }
 
-  const texture = getSpriteSheetTexture(animation.assetPath)
+  const texture = getSpriteSheetTexture(animation.assetPath, state.activeData.blendMode)
   const textureReady = Boolean(
     texture &&
     (
@@ -743,7 +748,8 @@ function refreshAnimationPreview(state) {
   const drawWidth = 64
   const drawHeight = drawWidth * (sourceRect.height / sourceRect.width)
   const previousSmoothing = ctx.imageSmoothingEnabled
-  ctx.globalCompositeOperation = 'lighter'
+  const previousOperation = ctx.globalCompositeOperation
+  ctx.globalCompositeOperation = state.activeData.blendMode === 'alpha' ? 'source-over' : 'lighter'
   ctx.imageSmoothingEnabled = false
   ctx.drawImage(
     texture,
@@ -757,7 +763,7 @@ function refreshAnimationPreview(state) {
     drawHeight
   )
   ctx.imageSmoothingEnabled = previousSmoothing
-  ctx.globalCompositeOperation = 'source-over'
+  ctx.globalCompositeOperation = previousOperation
 }
 
 function startAnimationPreviewLoop(state) {
@@ -866,6 +872,10 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
 
   if (state.borderWidthInput) {
     state.borderWidthInput.value = state.activeData.borderWidth
+  }
+
+  if (state.blendModeSelect) {
+    state.blendModeSelect.value = normalizeSpriteSheetBlendMode(state.activeData.blendMode)
   }
 
   updateSheetMetadataUi(state)
@@ -1193,6 +1203,7 @@ export async function initSpriteSheetEditor(options = {}) {
     tileSizeInput: document.getElementById('sseTileSizeInput'),
     rowHeightInput: document.getElementById('sseRowHeightInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
+    blendModeSelect: document.getElementById('sseBlendModeSelect'),
     newTagInput: document.getElementById('sseNewTagInput'),
     addTagBtn: document.getElementById('sseAddTagBtn'),
     showGridCheckbox: document.getElementById('sseShowGridCheckbox'),
@@ -1430,6 +1441,14 @@ export async function initSpriteSheetEditor(options = {}) {
     updateSheetMetadataUi(state)
     drawSseCanvas(state)
     applyCanvasZoom(state)
+    saveDataToLocalStorage(state.activeData, state.mode)
+  })
+
+  state.blendModeSelect?.addEventListener('change', () => {
+    if (!state.activeData) return
+    state.activeData.blendMode = normalizeSpriteSheetBlendMode(state.blendModeSelect.value)
+    drawSseCanvas(state)
+    refreshAnimationPreview(state)
     saveDataToLocalStorage(state.activeData, state.mode)
   })
 

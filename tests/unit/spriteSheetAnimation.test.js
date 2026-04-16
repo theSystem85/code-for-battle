@@ -3,7 +3,8 @@ import '../setup.js'
 import {
   parseSpriteSheetMetadataFromFilename,
   createSpriteSheetAnimationInstance,
-  getAnimationFrameIndex
+  getAnimationFrameIndex,
+  getImageTextureWithBlendMode
 } from '../../src/rendering/spriteSheetAnimation.js'
 
 describe('spriteSheetAnimation', () => {
@@ -63,5 +64,34 @@ describe('spriteSheetAnimation', () => {
     expect(getAnimationFrameIndex(animation, 0)).toBe(0)
     expect(getAnimationFrameIndex(animation, 500)).toBe(1)
     expect(getAnimationFrameIndex(animation, 1000)).toBe(2)
+  })
+
+  it('defaults sprite-sheet animations to black-key blending and allows alpha override', () => {
+    const defaultAnimation = createSpriteSheetAnimationInstance({
+      assetPath: 'images/map/animations/64x64_2x1_generic.webp',
+      x: 0,
+      y: 0,
+      startTime: 0
+    })
+    const alphaAnimation = createSpriteSheetAnimationInstance({
+      assetPath: 'images/map/animations/64x64_2x1_generic.webp',
+      x: 0,
+      y: 0,
+      startTime: 0,
+      blendMode: 'alpha'
+    })
+
+    expect(defaultAnimation.blendMode).toBe('black')
+    expect(alphaAnimation.blendMode).toBe('alpha')
+  })
+
+  it('returns native image textures unchanged for alpha mode', () => {
+    const image = {
+      complete: true,
+      naturalWidth: 8,
+      naturalHeight: 8
+    }
+
+    expect(getImageTextureWithBlendMode(image, 'alpha')).toBe(image)
   })
 })

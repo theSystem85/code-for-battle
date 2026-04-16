@@ -105,7 +105,14 @@ vi.mock('../../src/rendering/mineRenderer.js', () => ({
 }))
 
 vi.mock('../../src/rendering/webglRenderer.js', () => ({
-  GameWebGLRenderer: class {}
+  GameWebGLRenderer: class {
+    constructor() {
+      this.rendersWaterSot = true
+      this.render = vi.fn(() => true)
+      this.setContext = vi.fn()
+      this.setMapRenderer = vi.fn()
+    }
+  }
 }))
 
 vi.mock('../../src/rendering/tankImageRenderer.js', () => ({ preloadTankImages: vi.fn() }))
@@ -207,5 +214,128 @@ describe('Renderer airborne layering', () => {
     expect(callOrder.indexOf('building-overlays:1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1'))
     expect(callOrder.indexOf('unit-overlays:ground-1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1'))
     expect(callOrder.indexOf('unit-bases:air-1')).toBeLessThan(callOrder.indexOf('unit-overlays:air-1'))
+  })
+
+  it('keeps GPU procedural water active in water-only mode when custom sheets have no water tags', () => {
+    const renderer = new Renderer()
+    const gameCtx = {
+      clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      globalAlpha: 1,
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      fillText: vi.fn(),
+      measureText: vi.fn(() => ({ width: 10 }))
+    }
+    const gpuContext = {
+      viewport: vi.fn(),
+      clearColor: vi.fn(),
+      clear: vi.fn(),
+      COLOR_BUFFER_BIT: 1
+    }
+    const gameCanvas = { width: 800, height: 600 }
+    const gpuCanvas = { width: 800, height: 600 }
+    const mapGrid = [[{ type: 'water' }, { type: 'land' }]]
+
+    renderer.textureManager.integratedTagBuckets = {}
+    renderer.mapRenderer.render.mockClear()
+
+    renderer.renderGame(
+      gameCtx,
+      gameCanvas,
+      mapGrid,
+      [],
+      [],
+      [],
+      [],
+      { x: 0, y: 0 },
+      false,
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      gpuContext,
+      gpuCanvas
+    )
+
+    expect(renderer.gpuRenderer.render).toHaveBeenCalledWith(mapGrid, { x: 0, y: 0 }, gpuCanvas, { waterOnly: true })
+    expect(renderer.mapRenderer.render).toHaveBeenCalledWith(
+      gameCtx,
+      mapGrid,
+      { x: 0, y: 0 },
+      gameCanvas,
+      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      null,
+      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true }
+    )
+  })
+
+  it('does not use legacy GPU terrain when integrated custom water tiles are available', () => {
+    const renderer = new Renderer()
+    const gameCtx = {
+      clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      globalAlpha: 1,
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      fillText: vi.fn(),
+      measureText: vi.fn(() => ({ width: 10 }))
+    }
+    const gpuContext = {
+      viewport: vi.fn(),
+      clearColor: vi.fn(),
+      clear: vi.fn(),
+      COLOR_BUFFER_BIT: 1
+    }
+    const gameCanvas = { width: 800, height: 600 }
+    const gpuCanvas = { width: 800, height: 600 }
+    const mapGrid = [[{ type: 'water' }, { type: 'land' }]]
+
+    renderer.textureManager.integratedTagBuckets = { water: [{ rect: { x: 0, y: 0, width: 64, height: 64 } }] }
+    renderer.mapRenderer.render.mockClear()
+
+    renderer.renderGame(
+      gameCtx,
+      gameCanvas,
+      mapGrid,
+      [],
+      [],
+      [],
+      [],
+      { x: 0, y: 0 },
+      false,
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      gpuContext,
+      gpuCanvas
+    )
+
+    expect(renderer.gpuRenderer).toBeNull()
+    expect(renderer.mapRenderer.render).toHaveBeenCalledWith(
+      gameCtx,
+      mapGrid,
+      { x: 0, y: 0 },
+      gameCanvas,
+      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      null,
+      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false }
+    )
+    expect(gpuContext.clear).toHaveBeenCalledWith(gpuContext.COLOR_BUFFER_BIT)
   })
 })

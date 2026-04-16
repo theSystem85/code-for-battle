@@ -3,6 +3,7 @@ import { TILE_SIZE, TILE_IMAGES, GRASS_DECORATIVE_RATIO, GRASS_IMPASSABLE_RATIO,
 import { buildingImageMap } from '../buildingImageMap.js'
 import { getDevicePixelRatio } from './renderingUtils.js'
 import { discoverGrassTiles } from '../utils/grassTileDiscovery.js'
+import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -37,6 +38,7 @@ export class TextureManager {
     this.integratedSpriteSheetMetadata = null
     this.integratedTagBuckets = {}
     this.integratedBiomeTag = 'grass'
+    this.integratedBlendMode = 'black'
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
   }
@@ -85,6 +87,7 @@ export class TextureManager {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
+      this.integratedBlendMode = 'black'
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -96,6 +99,7 @@ export class TextureManager {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
+      this.integratedBlendMode = 'black'
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -106,6 +110,7 @@ export class TextureManager {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
+      this.integratedBlendMode = 'black'
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -117,7 +122,8 @@ export class TextureManager {
     this.integratedSpriteSheetMetadata = metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(metadata)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
-    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}`
+    this.integratedBlendMode = normalizeSpriteSheetBlendMode(metadata?.blendMode)
+    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}|${this.integratedBlendMode}`
     this.integratedConfigVersion++
   }
 
@@ -246,7 +252,7 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: this.integratedSpriteSheetImage,
+      image: getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode),
       rect: selected.rect,
       tags: selected.tags || []
     }
