@@ -40,6 +40,7 @@ const DESKTOP_EDGE_AUTOSCROLL_DELAY_MS = 250
 const DESKTOP_EDGE_AUTOSCROLL_THRESHOLD_RATIO = 0.05
 const DESKTOP_EDGE_AUTOSCROLL_DEFAULT_FRAME_MS = 16
 const DESKTOP_EDGE_AUTOSCROLL_MAX_FRAME_MS = 64
+const UNIT_DESTRUCTION_FREEZE_MS = 2000
 
 function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY) {
   if (!DESKTOP_EDGE_AUTOSCROLL_ENABLED) {
@@ -422,6 +423,7 @@ export function updateDustParticles(gameState) {
  * @param {Object} gameState - Game state object
  */
 export function cleanupDestroyedUnits(units, gameState) {
+  const simulationNow = getSimulationTime(gameState)
   for (let i = units.length - 1; i >= 0; i--) {
     if (units[i].health <= 0) {
       const unit = units[i]
@@ -464,6 +466,20 @@ export function cleanupDestroyedUnits(units, gameState) {
         distributeMineLayerPayload(unit, units, gameState.buildings)
       }
 
+      if (!Number.isFinite(unit.destructionFreezeStartTime)) {
+        unit.destructionFreezeStartTime = simulationNow
+      }
+
+      const freezeElapsed = simulationNow - unit.destructionFreezeStartTime
+      if (freezeElapsed < UNIT_DESTRUCTION_FREEZE_MS) {
+        unit.vx = 0
+        unit.vy = 0
+        unit.isMoving = false
+        unit.target = null
+        unit.moveTarget = null
+        continue
+      }
+
       // Register a wreck so the destroyed unit leaves recoverable remnants
       if (unit.type !== 'apache' && unit.type !== 'ammunitionTruck') {
         registerUnitWreck(unit, gameState)
@@ -474,6 +490,7 @@ export function cleanupDestroyedUnits(units, gameState) {
       }
 
       if (!unit.destructionExplosionSpawned) {
+        playPositionalSound('explosion', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.5)
         spawnDestructionExplosion(gameState, unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2)
         unit.destructionExplosionSpawned = true
       }

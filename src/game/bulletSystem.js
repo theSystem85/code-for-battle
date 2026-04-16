@@ -779,7 +779,6 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
             // Handle unit destruction (only for non-Apache rockets)
             if (unit.health <= 0 && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb') {
-              playPositionalSound('explosion', bullet.x, bullet.y, 0.5)
               unit.health = 0
               if (!unit.occupancyRemoved) {
                 removeUnitOccupancy(unit, gameState.occupancyMap)

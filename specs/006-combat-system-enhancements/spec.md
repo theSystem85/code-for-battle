@@ -9,6 +9,7 @@
 
 ## Maintenance Updates
 
+- 2026-04-16: Destroyed ground units now freeze in-place for 2 seconds once HP reaches 0, then trigger the destruction explosion + wreck registration; the destruction explosion SFX now plays at this delayed moment so audio aligns with the visual blast.
 - 2026-03-20: Apache/F22 rocket projectiles now keep their original fired trajectory instead of re-aiming toward moving targets mid-flight, but Apache volleys now compute predictive lead from target speed/direction so straight-flying rockets can still hit steady moving targets precisely; airborne direct-hit damage only applies if the target is still at the original impact point.
 - 2026-02-01: Split `src/game/unitCombat.js` into focused submodules under `src/game/unitCombat/` to keep each file under 1k LOC while preserving existing combat behavior.
 - 2026-01-31: Defensive turrets now require clear line-of-sight to targets before firing, matching player and AI behavior.

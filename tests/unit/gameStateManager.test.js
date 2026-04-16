@@ -295,6 +295,7 @@ describe('gameStateManager', () => {
         type: 'recoveryTank',
         owner: 'enemy',
         health: 0,
+        destructionFreezeStartTime: 0,
         occupancyRemoved: false,
         engineSound: {
           gainNode: { gain: { cancelScheduledValues: vi.fn() } },
@@ -309,6 +310,7 @@ describe('gameStateManager', () => {
         factories: [],
         buildings: [],
         occupancyMap: [],
+        simulationTime: 2500,
         playerUnitsDestroyed: 0,
         enemyUnitsDestroyed: 0,
         humanPlayer: 'player1'
@@ -326,13 +328,14 @@ describe('gameStateManager', () => {
     })
 
     it('handles specialty unit destruction paths', () => {
-      const ammoTruck = { id: 'ammo-1', type: 'ammunitionTruck', owner: 'enemy', health: 0 }
-      const tankerTruck = { id: 'tank-1', type: 'tankerTruck', owner: 'player1', health: 0 }
+      const ammoTruck = { id: 'ammo-1', type: 'ammunitionTruck', owner: 'enemy', health: 0, destructionFreezeStartTime: 0 }
+      const tankerTruck = { id: 'tank-1', type: 'tankerTruck', owner: 'player1', health: 0, destructionFreezeStartTime: 0 }
       const units = [ammoTruck, tankerTruck]
       const gameState = {
         factories: [],
         buildings: [],
         occupancyMap: [],
+        simulationTime: 2500,
         playerUnitsDestroyed: 0,
         enemyUnitsDestroyed: 0,
         humanPlayer: 'player1'
@@ -355,6 +358,7 @@ describe('gameStateManager', () => {
         type: 'apache',
         owner: 'enemy',
         health: 0,
+        destructionFreezeStartTime: 0,
         rotorSoundRequestId: 4,
         rotorSoundLoading: true,
         rotorSound: {
@@ -374,6 +378,7 @@ describe('gameStateManager', () => {
         factories: [],
         buildings: [],
         occupancyMap: [],
+        simulationTime: 2500,
         playerUnitsDestroyed: 0,
         enemyUnitsDestroyed: 0,
         humanPlayer: 'player1'
@@ -386,6 +391,51 @@ describe('gameStateManager', () => {
       expect(apache.rotorSound).toBeNull()
       expect(apache.rotorSoundLoading).toBe(false)
       expect(stop).toHaveBeenCalledWith(0.05)
+      expect(units).toHaveLength(0)
+    })
+
+    it('keeps destroyed units frozen for 2 seconds before explosion + removal', () => {
+      const unit = {
+        id: 'tank-1',
+        type: 'tank_v1',
+        owner: 'enemy',
+        health: 0,
+        x: 64,
+        y: 96,
+        vx: 1,
+        vy: -2,
+        isMoving: true,
+        target: { id: 'target-1' },
+        moveTarget: { x: 3, y: 4 }
+      }
+      const units = [unit]
+      const gameState = {
+        factories: [],
+        buildings: [],
+        occupancyMap: [],
+        simulationTime: 1000,
+        playerUnitsDestroyed: 0,
+        enemyUnitsDestroyed: 0,
+        humanPlayer: 'player1'
+      }
+
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(units).toHaveLength(1)
+      expect(unit.destructionFreezeStartTime).toBe(1000)
+      expect(unit.vx).toBe(0)
+      expect(unit.vy).toBe(0)
+      expect(unit.isMoving).toBe(false)
+      expect(unit.target).toBeNull()
+      expect(unit.moveTarget).toBeNull()
+      expect(registerUnitWreck).not.toHaveBeenCalled()
+      expect(playPositionalSound).not.toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number), 0.5)
+
+      gameState.simulationTime = 3000
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
+      expect(playPositionalSound).toHaveBeenCalledWith('explosion', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.5)
       expect(units).toHaveLength(0)
     })
   })
