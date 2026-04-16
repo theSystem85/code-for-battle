@@ -289,6 +289,48 @@ describe('gameStateManager', () => {
   })
 
   describe('cleanupDestroyedUnits', () => {
+    it('waits for the destruction freeze window before cleanup', () => {
+      const unit = {
+        id: 'tank-1',
+        type: 'tank',
+        owner: 'enemy',
+        health: 0,
+        x: 64,
+        y: 96
+      }
+      const units = [unit]
+      const gameState = {
+        simulationTime: 0,
+        unitWrecks: [],
+        factories: [],
+        buildings: [],
+        explosions: [],
+        occupancyMap: [],
+        playerUnitsDestroyed: 0,
+        enemyUnitsDestroyed: 0,
+        humanPlayer: 'player1'
+      }
+
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(unit.destroyedAtSimulationTime).toBe(0)
+      expect(registerUnitWreck).not.toHaveBeenCalled()
+      expect(units).toHaveLength(1)
+
+      gameState.simulationTime = 1900
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(registerUnitWreck).not.toHaveBeenCalled()
+      expect(units).toHaveLength(1)
+
+      gameState.simulationTime = 2000
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
+      expect(gameState.explosions.length).toBeGreaterThan(0)
+      expect(units).toHaveLength(0)
+    })
+
     it('cleans up recovery tanks and tracks wreck assignments', () => {
       const unit = {
         id: 'rec-1',
@@ -302,6 +344,7 @@ describe('gameStateManager', () => {
         }
       }
       const gameState = {
+        simulationTime: 0,
         unitWrecks: [
           { assignedTankId: 'rec-1' },
           { towedBy: 'rec-1' }
@@ -314,6 +357,8 @@ describe('gameStateManager', () => {
         humanPlayer: 'player1'
       }
 
+      cleanupDestroyedUnits([unit], gameState)
+      gameState.simulationTime = 2000
       cleanupDestroyedUnits([unit], gameState)
 
       expect(releaseWreckAssignment).toHaveBeenCalledTimes(2)
@@ -330,6 +375,7 @@ describe('gameStateManager', () => {
       const tankerTruck = { id: 'tank-1', type: 'tankerTruck', owner: 'player1', health: 0 }
       const units = [ammoTruck, tankerTruck]
       const gameState = {
+        simulationTime: 0,
         factories: [],
         buildings: [],
         occupancyMap: [],
@@ -338,6 +384,8 @@ describe('gameStateManager', () => {
         humanPlayer: 'player1'
       }
 
+      cleanupDestroyedUnits(units, gameState)
+      gameState.simulationTime = 2000
       cleanupDestroyedUnits(units, gameState)
 
       expect(detonateAmmunitionTruck).toHaveBeenCalledWith(ammoTruck, expect.any(Array), [], gameState)
@@ -371,6 +419,7 @@ describe('gameStateManager', () => {
       }
       const units = [apache]
       const gameState = {
+        simulationTime: 0,
         factories: [],
         buildings: [],
         occupancyMap: [],
@@ -379,6 +428,8 @@ describe('gameStateManager', () => {
         humanPlayer: 'player1'
       }
 
+      cleanupDestroyedUnits(units, gameState)
+      gameState.simulationTime = 2000
       cleanupDestroyedUnits(units, gameState)
 
       expect(apache.destroyed).toBe(true)

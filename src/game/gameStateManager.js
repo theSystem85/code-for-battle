@@ -40,6 +40,7 @@ const DESKTOP_EDGE_AUTOSCROLL_DELAY_MS = 250
 const DESKTOP_EDGE_AUTOSCROLL_THRESHOLD_RATIO = 0.05
 const DESKTOP_EDGE_AUTOSCROLL_DEFAULT_FRAME_MS = 16
 const DESKTOP_EDGE_AUTOSCROLL_MAX_FRAME_MS = 64
+const UNIT_DESTRUCTION_FREEZE_MS = 2000
 
 function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY) {
   if (!DESKTOP_EDGE_AUTOSCROLL_ENABLED) {
@@ -422,6 +423,7 @@ export function updateDustParticles(gameState) {
  * @param {Object} gameState - Game state object
  */
 export function cleanupDestroyedUnits(units, gameState) {
+  const simulationNow = getSimulationTime(gameState)
   for (let i = units.length - 1; i >= 0; i--) {
     if (units[i].health <= 0) {
       const unit = units[i]
@@ -433,6 +435,19 @@ export function cleanupDestroyedUnits(units, gameState) {
           continue
         }
       }
+
+      if (!Number.isFinite(unit.destroyedAtSimulationTime)) {
+        unit.destroyedAtSimulationTime = simulationNow
+        unit.velocityX = 0
+        unit.velocityY = 0
+        unit.moving = false
+        continue
+      }
+
+      if (simulationNow - unit.destroyedAtSimulationTime < UNIT_DESTRUCTION_FREEZE_MS) {
+        continue
+      }
+
       if (!unit.aiApiDestroyedRecorded && gameState.gameStarted && !gameState.mapEditMode) {
         recordDestroyed({
           killerId: unit.lastAttacker?.id,

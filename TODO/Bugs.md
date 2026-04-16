@@ -386,3 +386,4 @@
 - [x] Follow-up: convert remaining gameplay-critical wall-clock timers from the game-speed fix (Tesla Coil sequencing and AI/LLM building sell timers) to the simulation clock so they obey sidebar speed changes too.
 - [ ] Stabilize unit test mocks after runtime API changes (config exports, harvester runtime state exports, deterministic RNG export, enemy utility exports) so unit suites run without import-time failures.
 - [ ] Align unit tests with simulation-time behavior (mine deploy timestamps, AI decision timing, projectile timing/speed assertions) while keeping behavior-focused assertions meaningful.
+- [x] Unit destruction freeze/explosion sync (2026-04-16): units now stay frozen in-place for 2000ms after HP reaches 0 before running destruction cleanup, so wreck spawn and explosion SFX/VFX are delayed in sync with bullet impact animations.
