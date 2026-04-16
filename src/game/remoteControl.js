@@ -518,6 +518,9 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
       backwardIntensity > 0 ||
       turnLeftIntensity > 0 ||
       turnRightIntensity > 0
+    const hasTurretInput =
+      hasTurret && ((rawTurretDirection !== null && rawTurretTurnFactor > 0) || turretLeftIntensity > 0 || turretRightIntensity > 0)
+    const hasRemoteCommandInput = hasMovementInput || hasTurretInput || fireIntensity > 0
 
     if (isApache) {
       const landingInProgress = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.landedHelipadId)
@@ -620,9 +623,9 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
 
     // Track whether this unit is actively being moved via remote control
     unit.remoteControlActive = !!hasMovementInput
-    if (unit.remoteControlActive) {
+    if (hasRemoteCommandInput) {
       unit.lastRemoteControlTime = now
-      if (unit.type === 'harvester') {
+      if (unit.type === 'harvester' && hasMovementInput) {
         unit.lastPlayerCommandTime = now
       }
     }

@@ -88,6 +88,8 @@ describe('unitMovement.js', () => {
       Array(10).fill(0)
     )
 
+    _selectedUnits.length = 0
+
     mockGameState = {
       humanPlayer: 'player1',
       occupancyMap: mockOccupancyMap,
@@ -172,6 +174,55 @@ describe('unitMovement.js', () => {
       updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, performance.now())
       expect(unit.tileX).toBe(0)
       expect(unit.tileY).toBe(0)
+    })
+
+
+    it('suppresses attack auto-chase for 5s while recently remote-controlled unit remains selected', () => {
+      const now = 10_000
+      const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
+      const unit = {
+        health: 100,
+        x: 32,
+        y: 32,
+        tileX: 1,
+        tileY: 1,
+        type: 'tank_v1',
+        target,
+        lastRemoteControlTime: now - 2_000,
+        path: [],
+        moveTarget: null
+      }
+      _selectedUnits.push(unit)
+
+      updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, now)
+
+      expect(getCachedPath).not.toHaveBeenCalled()
+      expect(unit.path).toEqual([])
+      expect(unit.moveTarget).toBeNull()
+    })
+
+    it('allows attack auto-chase after deselection even within the 5s suppression window', () => {
+      const now = 10_000
+      const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
+      const unit = {
+        health: 100,
+        x: 32,
+        y: 32,
+        tileX: 1,
+        tileY: 1,
+        type: 'tank_v1',
+        target,
+        lastRemoteControlTime: now - 2_000,
+        path: [],
+        moveTarget: null
+      }
+      vi.mocked(getCachedPath).mockReturnValue([{ x: 1, y: 1 }, { x: 5, y: 5 }])
+
+      updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, now)
+
+      expect(getCachedPath).toHaveBeenCalled()
+      expect(unit.path).toEqual([{ x: 5, y: 5 }])
+      expect(unit.moveTarget).toEqual({ x: 12, y: 12 })
     })
 
     it('sets an attack move path when target is out of range', () => {
