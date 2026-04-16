@@ -106,4 +106,22 @@ describe('UnitRenderer ammo HUD consistency', () => {
 
     expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'left', 0.25, '#FFA500')
   })
+
+  it('keeps units renderable during destruction freeze delay even at 0 HP', () => {
+    const renderer = new UnitRenderer()
+    const result = renderer.shouldRenderUnit(
+      {
+        health: 0,
+        destructionQueuedAt: 1000,
+        destructionExplosionSpawned: false,
+        x: 0,
+        y: 0
+      },
+      { x: 0, y: 0 },
+      1280,
+      720
+    )
+
+    expect(result).toBe(true)
+  })
 })

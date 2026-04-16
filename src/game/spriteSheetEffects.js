@@ -1,4 +1,4 @@
-import { createSpriteSheetAnimationInstance } from '../rendering/spriteSheetAnimation.js'
+import { createSpriteSheetAnimationInstance, prewarmSpriteSheetTexture } from '../rendering/spriteSheetAnimation.js'
 import { getSimulationTime } from './time.js'
 
 const DEFAULT_DESTRUCTION_SPRITE = 'images/map/animations/explosion.webp'
@@ -8,6 +8,7 @@ const DEFAULT_DESTRUCTION_BORDER_WIDTH = 1
 const DEFAULT_DESTRUCTION_COLUMNS = 16
 const DEFAULT_DESTRUCTION_ROWS = 16
 const DEFAULT_DESTRUCTION_FRAME_COUNT = 229
+const DEFAULT_DESTRUCTION_SCALE = 1.3
 
 function buildDefaultDestructionFrameRects() {
   const frameRects = []
@@ -68,7 +69,7 @@ export function spawnDestructionExplosion(gameState, centerX, centerY, options =
   const configured = getConfiguredDestructionAnimation(gameState)
   const {
     duration = configured?.duration ?? DEFAULT_DESTRUCTION_DURATION,
-    scale = 1,
+    scale = DEFAULT_DESTRUCTION_SCALE,
     loop = false,
     assetPath = configured?.assetPath ?? DEFAULT_DESTRUCTION_SPRITE
   } = options
@@ -88,4 +89,10 @@ export function spawnDestructionExplosion(gameState, centerX, centerY, options =
     tileWidth: DEFAULT_DESTRUCTION_TILE_SIZE,
     tileHeight: DEFAULT_DESTRUCTION_TILE_SIZE
   })
+}
+
+export function prewarmDestructionExplosionTexture(gameState) {
+  const configured = getConfiguredDestructionAnimation(gameState)
+  const assetPath = configured?.assetPath ?? DEFAULT_DESTRUCTION_SPRITE
+  prewarmSpriteSheetTexture(assetPath)
 }

@@ -77,6 +77,10 @@ import {
   finalizeReplayPlaybackIfPending
 } from './replaySystem.js'
 
+const DESTRUCTION_FREEZE_SMOKE_INTERVAL_MS = 180
+const DESTRUCTION_FREEZE_SMOKE_COUNT = 3
+const DESTRUCTION_FREEZE_SMOKE_SHADE = 0.9
+
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
   try {
     const now = getSimulationTime(gameState)
@@ -491,6 +495,10 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       // Ensure maxHealth is valid (fix for loaded games with missing maxHealth)
       const maxHealth = unit.maxHealth || unit.health || 100
       const healthRatio = unit.health / maxHealth
+      const isInDestructionFreeze =
+        unit.health <= 0 &&
+        Number.isFinite(unit.destructionQueuedAt) &&
+        unit.destructionExplosionSpawned !== true
 
       // Check if unit type should emit smoke when heavily damaged
       // Uses string.includes('tank') to match tank_v1, tank-v2, tank-v3, rocketTank
@@ -500,27 +508,31 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         unit.type === 'howitzer' ||
         unit.type === 'recoveryTank'
 
-      const shouldEmitSmoke = healthRatio < 0.25 && isSmokeEmittingType
+      const shouldEmitSmoke = (healthRatio < 0.25 || isInDestructionFreeze) && isSmokeEmittingType
 
       if (shouldEmitSmoke) {
         if (gameState.smokeParticles.length >= unitSmokeLimit) {
           return
         }
 
-        if (!unit.lastSmokeTime || now - unit.lastSmokeTime > SMOKE_EMIT_INTERVAL) {
+        const smokeInterval = isInDestructionFreeze
+          ? DESTRUCTION_FREEZE_SMOKE_INTERVAL_MS
+          : SMOKE_EMIT_INTERVAL
+        if (!unit.lastSmokeTime || now - unit.lastSmokeTime > smokeInterval) {
           // Emit smoke from the BACK of the unit (opposite to direction of travel)
           // direction = 0 means facing right (east), so back is to the left (west)
           const direction = unit.direction || 0
           const offsetX = -Math.cos(direction) * TILE_SIZE * 0.35
           const offsetY = -Math.sin(direction) * TILE_SIZE * 0.35
 
-          const particleCount = 1
+          const particleCount = isInDestructionFreeze ? DESTRUCTION_FREEZE_SMOKE_COUNT : 1
+          const smokeShade = isInDestructionFreeze ? DESTRUCTION_FREEZE_SMOKE_SHADE : 0
           emitSmokeParticles(
             gameState,
             unit.x + TILE_SIZE / 2 + offsetX,
             unit.y + TILE_SIZE / 2 + offsetY,
             now,
-            particleCount
+            { count: particleCount, smokeShade }
           )
           unit.lastSmokeTime = now
         }

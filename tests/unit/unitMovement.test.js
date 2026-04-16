@@ -7,7 +7,7 @@ import {
 } from '../../src/game/unitMovement.js'
 import { gameState } from '../../src/gameState.js'
 import { selectedUnits as _selectedUnits, cleanupDestroyedSelectedUnits } from '../../src/inputHandler.js'
-import { findPath, removeUnitOccupancy as _removeUnitOccupancy } from '../../src/units.js'
+import { findPath } from '../../src/units.js'
 import { getCachedPath } from '../../src/game/pathfinding.js'
 import { initializeUnitMovement, updateUnitPosition } from '../../src/game/unifiedMovement.js'
 import { updateRetreatBehavior, shouldExitRetreat, cancelRetreat } from '../../src/behaviours/retreat.js'
@@ -110,14 +110,15 @@ describe('unitMovement.js', () => {
       expect(cleanupDestroyedSelectedUnits).toHaveBeenCalled()
     })
 
-    it('should remove units with health <= 0', () => {
+    it('should skip units with health <= 0 and leave cleanup to cleanupDestroyedUnits', () => {
       const units = [
         { id: 1, health: 0, x: 32, y: 32, tileX: 1, tileY: 1, occupancyRemoved: false },
         { id: 2, health: 50, x: 64, y: 64, tileX: 2, tileY: 2 }
       ]
       updateUnitMovement(units, mockMapGrid, mockOccupancyMap, mockGameState, performance.now())
-      expect(units.length).toBe(1)
-      expect(units[0].id).toBe(2)
+      expect(units.length).toBe(2)
+      expect(units[0].id).toBe(1)
+      expect(units[1].id).toBe(2)
     })
 
     it('should initialize movement system for all units', () => {
@@ -324,12 +325,12 @@ describe('unitMovement.js', () => {
       expect(updateRetreatBehavior).toHaveBeenCalled()
     })
 
-    it('should remove unit from cheatSystem tracking when destroyed', () => {
+    it('should defer cheatSystem destroyed-unit tracking cleanup to cleanupDestroyedUnits', () => {
       const mockRemoveUnit = vi.fn()
       window.cheatSystem = { removeUnitFromTracking: mockRemoveUnit }
       const unit = { id: 'test-id', health: 0, x: 32, y: 32, tileX: 1, tileY: 1, occupancyRemoved: false }
       updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, performance.now())
-      expect(mockRemoveUnit).toHaveBeenCalledWith('test-id')
+      expect(mockRemoveUnit).not.toHaveBeenCalled()
       delete window.cheatSystem
     })
   })

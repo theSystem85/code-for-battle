@@ -1934,7 +1934,14 @@ export class UnitRenderer {
   }
 
   shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight) {
-    if (!unit || unit.health <= 0) return false
+    if (!unit) return false
+
+    const pendingDestructionFreeze =
+      unit.health <= 0 &&
+      Number.isFinite(unit.destructionQueuedAt) &&
+      unit.destructionExplosionSpawned !== true
+
+    if (unit.health <= 0 && !pendingDestructionFreeze) return false
 
     // View frustum culling - skip units outside the visible viewport
     // This is the first check as it's the cheapest and most frequently eliminates entities

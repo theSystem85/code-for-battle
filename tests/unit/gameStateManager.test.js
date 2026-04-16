@@ -295,6 +295,7 @@ describe('gameStateManager', () => {
         type: 'recoveryTank',
         owner: 'enemy',
         health: 0,
+        destructionQueuedAt: -2000,
         occupancyRemoved: false,
         engineSound: {
           gainNode: { gain: { cancelScheduledValues: vi.fn() } },
@@ -325,9 +326,54 @@ describe('gameStateManager', () => {
       expect(gameState.enemyUnitsDestroyed).toBe(1)
     })
 
+    it('keeps destroyed units frozen for 2 seconds before cleanup', () => {
+      const unit = {
+        id: 'tank-1',
+        type: 'tank_v1',
+        owner: 'enemy',
+        health: 0,
+        x: 32,
+        y: 64,
+        direction: 1.1,
+        turretDirection: 2.2,
+        vx: 1.5,
+        vy: -0.5,
+        occupancyRemoved: false
+      }
+      const units = [unit]
+      const gameState = {
+        factories: [],
+        buildings: [],
+        occupancyMap: [],
+        playerUnitsDestroyed: 0,
+        enemyUnitsDestroyed: 0,
+        humanPlayer: 'player1'
+      }
+
+      performanceNow.mockReturnValue(1000)
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(units).toHaveLength(1)
+      expect(unit.vx).toBe(0)
+      expect(unit.vy).toBe(0)
+      expect(registerUnitWreck).not.toHaveBeenCalled()
+      expect(playPositionalSound).not.toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number), expect.any(Number))
+
+      unit.direction = 0.1
+      unit.turretDirection = 0.3
+      performanceNow.mockReturnValue(3001)
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(units).toHaveLength(0)
+      expect(unit.direction).toBe(1.1)
+      expect(unit.turretDirection).toBe(2.2)
+      expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
+      expect(playPositionalSound).toHaveBeenCalledWith('explosion', 48, 80, 0.5)
+    })
+
     it('handles specialty unit destruction paths', () => {
-      const ammoTruck = { id: 'ammo-1', type: 'ammunitionTruck', owner: 'enemy', health: 0 }
-      const tankerTruck = { id: 'tank-1', type: 'tankerTruck', owner: 'player1', health: 0 }
+      const ammoTruck = { id: 'ammo-1', type: 'ammunitionTruck', owner: 'enemy', health: 0, destructionQueuedAt: -2000 }
+      const tankerTruck = { id: 'tank-1', type: 'tankerTruck', owner: 'player1', health: 0, destructionQueuedAt: -2000 }
       const units = [ammoTruck, tankerTruck]
       const gameState = {
         factories: [],
@@ -355,6 +401,7 @@ describe('gameStateManager', () => {
         type: 'apache',
         owner: 'enemy',
         health: 0,
+        destructionQueuedAt: -2000,
         rotorSoundRequestId: 4,
         rotorSoundLoading: true,
         rotorSound: {

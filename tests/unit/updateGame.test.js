@@ -666,6 +666,42 @@ describe('updateGame.js', () => {
       expect(emitSmokeParticles).toHaveBeenCalled()
     })
 
+    it('should emit darker/heavier smoke during destruction freeze delay', async() => {
+      const { emitSmokeParticles } = await import('../../src/utils/smokeUtils.js')
+
+      const gameState = {
+        gamePaused: false,
+        occupancyMap: [],
+        smokeParticles: [],
+        buildings: [],
+        multiplayerSession: null
+      }
+
+      const units = [
+        {
+          type: 'tank',
+          health: 0,
+          maxHealth: 100,
+          x: 100,
+          y: 100,
+          direction: 0,
+          destructionQueuedAt: 1000,
+          destructionExplosionSpawned: false,
+          lastSmokeTime: 0
+        }
+      ]
+
+      updateGameModule.updateGame(16, [], [], units, [], gameState)
+
+      expect(emitSmokeParticles).toHaveBeenCalledWith(
+        expect.any(Object),
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number),
+        expect.objectContaining({ count: 3, smokeShade: 0.9 })
+      )
+    })
+
     it('should not emit smoke for healthy units', async() => {
       const { emitSmokeParticles } = await import('../../src/utils/smokeUtils.js')
 

@@ -1,6 +1,8 @@
 import { TILE_SIZE } from '../config.js'
 
 const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
+const BLACK_ALPHA_CUTOFF_BRIGHTNESS = 20
+const BLACK_ALPHA_SOFTEN_BRIGHTNESS = 45
 
 const textureCache = new Map()
 const metadataCache = new Map()
@@ -92,7 +94,17 @@ function buildBlackTransparentTexture(image) {
     const b = data[i + 2]
     const a = data[i + 3]
     const brightness = Math.max(r, g, b)
-    data[i + 3] = brightness <= 8 ? 0 : a
+    if (brightness <= BLACK_ALPHA_CUTOFF_BRIGHTNESS) {
+      data[i + 3] = 0
+      continue
+    }
+    if (brightness < BLACK_ALPHA_SOFTEN_BRIGHTNESS) {
+      const t = (brightness - BLACK_ALPHA_CUTOFF_BRIGHTNESS) /
+        (BLACK_ALPHA_SOFTEN_BRIGHTNESS - BLACK_ALPHA_CUTOFF_BRIGHTNESS)
+      data[i + 3] = Math.round(a * t)
+      continue
+    }
+    data[i + 3] = a
   }
 
   ctx.putImageData(imageData, 0, 0)
@@ -121,6 +133,17 @@ export function getSpriteSheetTexture(assetPath) {
     processed: null
   })
   return img
+}
+
+export function prewarmSpriteSheetTexture(assetPath) {
+  if (!assetPath) return
+  const texture = getSpriteSheetTexture(assetPath)
+  if (isImageTextureReady(texture)) {
+    return
+  }
+  if (texture && typeof texture.decode === 'function') {
+    texture.decode().catch(() => {})
+  }
 }
 
 export function createSpriteSheetAnimationInstance({
