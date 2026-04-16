@@ -110,20 +110,31 @@ export class KeyboardHandler {
         return
       }
 
+      const isEscapeKey = e.key === 'Escape' || keybindingManager.matchesKeyboardAction(e, 'escape', kbContext)
+      const hasCancelableEscapeState = Boolean(
+        gameState.chainBuildMode ||
+        gameState.chainBuildPrimed ||
+        gameState.buildingPlacementMode ||
+        gameState.attackGroupMode ||
+        gameState.repairMode ||
+        gameState.sellMode ||
+        (this.selectedUnits && this.selectedUnits.length > 0)
+      )
+
+      // Escape must always be able to cancel active gameplay modes, even in edge states.
+      if (isEscapeKey && hasCancelableEscapeState) {
+        e.preventDefault()
+        e.stopPropagation()
+        this.handleEscapeKey()
+        return
+      }
+
       // Don't process other inputs if game is paused, cheat dialog is open, or runtime config dialog is open
       if (gameState.paused || gameState.cheatDialogOpen || gameState.runtimeConfigDialogOpen) return
 
       // Block game commands in spectator mode, when locally defeated, or when host has paused
       // (allow view-only commands like grid toggle, FPS toggle, camera movement)
       const isSpectatorOrDefeated = gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote || isReplayInteractionLocked() || isLocalPartyAutomationLocked()
-
-      // ESC key to cancel attack group mode
-      if (keybindingManager.matchesKeyboardAction(e, 'escape', kbContext)) {
-        e.preventDefault()
-        e.stopPropagation()
-        this.handleEscapeKey()
-        return
-      }
 
       // View-only commands that work in spectator mode
       if (keybindingManager.matchesKeyboardAction(e, 'toggle-grid', kbContext)) {
@@ -464,6 +475,14 @@ export class KeyboardHandler {
     if (gameState.buildingPlacementMode) {
       gameState.buildingPlacementMode = false
       gameState.selectedBuilding = null
+      modeWasCanceled = true
+    }
+
+    if (gameState.chainBuildMode || gameState.chainBuildPrimed || gameState.chainBuildingType || gameState.chainBuildingButton) {
+      gameState.chainBuildMode = false
+      gameState.chainBuildPrimed = false
+      gameState.chainBuildingType = null
+      gameState.chainBuildingButton = null
       modeWasCanceled = true
     }
 
