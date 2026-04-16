@@ -5,6 +5,7 @@
     "images/map/sprite_sheets/snow.webp",
     "images/map/sprite_sheets/desert.webp",
     "images/map/sprite_sheets/water.webp",
-    "images/map/sprite_sheets/multiTerrainSpriteSheet.webp"
+    "images/map/sprite_sheets/multiTerrainSpriteSheet.webp",
+    "images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp"
   ]
 }
