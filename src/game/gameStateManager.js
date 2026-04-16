@@ -32,7 +32,7 @@ import { gameRandom } from '../utils/gameRandom.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
 import { getSimulationTime } from './time.js'
-import { spawnDestructionExplosion } from './spriteSheetEffects.js'
+import { prewarmDestructionExplosionTexture, spawnDestructionExplosion } from './spriteSheetEffects.js'
 
 const MINIMAP_SCROLL_SMOOTHING = 0.2
 const MINIMAP_SCROLL_STOP_DISTANCE = 0.75
@@ -432,6 +432,11 @@ export function cleanupDestroyedUnits(units, gameState) {
 
       if (!Number.isFinite(unit.destructionQueuedAt)) {
         unit.destructionQueuedAt = now
+        unit.frozenDestructionDirection = Number.isFinite(unit.direction) ? unit.direction : 0
+        unit.frozenDestructionTurretDirection = Number.isFinite(unit.turretDirection)
+          ? unit.turretDirection
+          : (Number.isFinite(unit.direction) ? unit.direction : 0)
+        prewarmDestructionExplosionTexture(gameState)
       }
 
       if (now - unit.destructionQueuedAt < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
@@ -480,6 +485,12 @@ export function cleanupDestroyedUnits(units, gameState) {
 
       // Register a wreck so the destroyed unit leaves recoverable remnants
       if (unit.type !== 'apache' && unit.type !== 'ammunitionTruck') {
+        if (Number.isFinite(unit.frozenDestructionDirection)) {
+          unit.direction = unit.frozenDestructionDirection
+        }
+        if (Number.isFinite(unit.frozenDestructionTurretDirection)) {
+          unit.turretDirection = unit.frozenDestructionTurretDirection
+        }
         registerUnitWreck(unit, gameState)
       }
 
@@ -491,7 +502,7 @@ export function cleanupDestroyedUnits(units, gameState) {
         const unitCenterX = unit.x + TILE_SIZE / 2
         const unitCenterY = unit.y + TILE_SIZE / 2
         playPositionalSound('explosion', unitCenterX, unitCenterY, 0.5)
-        spawnDestructionExplosion(gameState, unitCenterX, unitCenterY)
+        spawnDestructionExplosion(gameState, unitCenterX, unitCenterY, { scale: 1.3 })
         unit.destructionExplosionSpawned = true
       }
 

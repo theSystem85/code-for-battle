@@ -25,6 +25,10 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 3. Wreck registration/remnant creation must occur after the same delay so wrecks and explosion timing stay in sync.
 4. While frozen, the unit must remain visible with its normal live-unit appearance (no wreck grayscale/dead replacement during the delay window).
 5. During the freeze window, smoke output is intentionally intensified and darkened versus normal critical-damage smoke.
+6. Freeze-state tanks must preserve their pre-destruction turret/body orientation during the delay window, and wreck creation must inherit that same frozen turret/body angle.
+7. Destruction explosion scale is increased by 30% relative to baseline and must render above the exploding unit image layer.
+8. Destruction sprite-sheet textures must be prewarmed/cached before delayed explosion start to eliminate first-frame stutter.
+9. Black-edge/halo artifacts around fire/explosion sprite content should be aggressively suppressed during sprite processing so the map render matches SSE preview quality.
 
 ## Follow-up (2026-04-14): Generic Sprite-Sheet Destruction Explosions
 1. Add a reusable sprite-sheet animation abstraction that derives tile size and frame grid from asset filename format:

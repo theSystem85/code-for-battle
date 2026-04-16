@@ -24,6 +24,8 @@ export const updateUnitCombat = logPerformance(function updateUnitCombat(units, 
   const occupancyMap = gameState.occupancyMap
 
   units.forEach(unit => {
+    if (!unit || unit.health <= 0) return
+
     // Skip if unit has no combat capabilities
     if (unit.type === 'harvester') return
 

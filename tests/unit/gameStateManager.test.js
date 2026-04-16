@@ -334,6 +334,8 @@ describe('gameStateManager', () => {
         health: 0,
         x: 32,
         y: 64,
+        direction: 1.1,
+        turretDirection: 2.2,
         vx: 1.5,
         vy: -0.5,
         occupancyRemoved: false
@@ -357,10 +359,14 @@ describe('gameStateManager', () => {
       expect(registerUnitWreck).not.toHaveBeenCalled()
       expect(playPositionalSound).not.toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number), expect.any(Number))
 
+      unit.direction = 0.1
+      unit.turretDirection = 0.3
       performanceNow.mockReturnValue(3001)
       cleanupDestroyedUnits(units, gameState)
 
       expect(units).toHaveLength(0)
+      expect(unit.direction).toBe(1.1)
+      expect(unit.turretDirection).toBe(2.2)
       expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
       expect(playPositionalSound).toHaveBeenCalledWith('explosion', 48, 80, 0.5)
     })
