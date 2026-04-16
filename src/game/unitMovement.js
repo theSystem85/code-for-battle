@@ -22,6 +22,8 @@ import { logPerformance } from '../performanceUtils.js'
 import { getEffectiveFireRange } from './unitCombat/combatHelpers.js'
 import { observeUnitCommandSignals, pruneUnitCommandHistory } from './unitCommandHistory.js'
 
+const REMOTE_ATTACK_CHASE_SUPPRESSION_MS = 5000
+
 function isAiControlledUnit(unit, gameState) {
   if (!unit?.owner) return false
   if (Array.isArray(gameState?.partyStates) && gameState.partyStates.length > 0) {
@@ -101,17 +103,26 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       unit.lastDistanceToTarget = null
     }
 
+    const isSelectedByHuman = Array.isArray(selectedUnits) && selectedUnits.includes(unit)
     const remoteControlCooldownActive =
       unit.remoteControlActive ||
       (unit.lastRemoteControlTime && now - unit.lastRemoteControlTime < 1000)
+    const remoteAttackChaseSuppressed = Boolean(
+      isSelectedByHuman &&
+      unit.lastRemoteControlTime &&
+      now - unit.lastRemoteControlTime < REMOTE_ATTACK_CHASE_SUPPRESSION_MS
+    )
     const aiControlledUnit = isAiControlledUnit(unit, gameState)
 
     // --- ATTACK-MOVE FIX: If not retreating, and has a target, and is out of range, set moveTarget/path to target ---
+    // Regression guard: while a human-selected unit was recently remote-controlled, keep attack auto-chase paused
+    // so remote control can aim/fire at a selected target without forcing movement until deselect or timeout.
     if (
       !unit.isRetreating &&
       unit.target &&
       unit.target.health > 0 &&
       !remoteControlCooldownActive &&
+      !remoteAttackChaseSuppressed &&
       unit.type !== 'apache' &&
       unit.type !== 'f22Raptor' &&
       unit.type !== 'f35'

@@ -210,6 +210,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-075**: Harvester auto-targeting MUST NEVER override a player-issued manual ore target, a player-issued manual non-ore hold destination, or active remote-control input; player-issued harvester movement MUST interrupt active harvesting/unloading, and after harvester remote-control input stops the auto-targeting system MUST remain suppressed for 2 seconds before it may choose a new automatic target.
 - **FR-075a**: When a player sends a harvester to a non-ore tile, the harvester MUST travel there and remain idle until the player issues a new command; when a player sends a harvester to an ore tile, reaching that tile MUST transition directly into the normal automated harvest-and-refinery loop.
 - **FR-076**: Apache auto-return/reload logic MUST remain interruptible by the player at all times; any player-issued movement, attack, or fresh remote-control input MUST take priority over auto-resume to the stored pre-reload target.
+- **FR-077a**: For player-selected ground combat units, remote-control input MUST suppress automatic attack-chase movement toward the current selected target while still allowing aiming/firing; suppression ends immediately on deselection or after 5 seconds since the last remote command.
 
 
 **Logistics Symmetry:**
