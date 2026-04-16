@@ -23,6 +23,8 @@ Bullet impact explosions should look more realistic and visually rich, but rende
    - destruction explosion visual spawn
    - positional explosion audio
 3. Wreck registration/remnant creation must occur after the same delay so wrecks and explosion timing stay in sync.
+4. While frozen, the unit must remain visible with its normal live-unit appearance (no wreck grayscale/dead replacement during the delay window).
+5. During the freeze window, smoke output is intentionally intensified and darkened versus normal critical-damage smoke.
 
 ## Follow-up (2026-04-14): Generic Sprite-Sheet Destruction Explosions
 1. Add a reusable sprite-sheet animation abstraction that derives tile size and frame grid from asset filename format:

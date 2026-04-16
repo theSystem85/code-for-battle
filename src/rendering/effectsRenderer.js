@@ -348,6 +348,7 @@ export class EffectsRenderer {
 
       const safeSize = Math.max(1, p.size)
       const fireIntensity = Math.max(0, Math.min(1, p.fireIntensity || 0))
+      const smokeShade = Math.max(0, Math.min(1, p.smokeShade || 0))
 
       // Use pre-cached sprite instead of creating gradient per frame
       const sprite = getClosestSmokeSprite(safeSize)
@@ -397,6 +398,26 @@ export class EffectsRenderer {
             coreDrawSize,
             coreDrawSize
           )
+        }
+
+        if (smokeShade > 0.01) {
+          const darkAlpha = Math.min(0.8, p.alpha * (0.25 + smokeShade * 0.55))
+          const shadeGradient = ctx.createRadialGradient(
+            screenX,
+            screenY,
+            safeSize * 0.1,
+            screenX,
+            screenY,
+            safeSize * 0.95
+          )
+          shadeGradient.addColorStop(0, `rgba(20, 20, 20, ${darkAlpha})`)
+          shadeGradient.addColorStop(0.7, `rgba(16, 16, 16, ${darkAlpha * 0.55})`)
+          shadeGradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
+          ctx.globalAlpha = 1
+          ctx.fillStyle = shadeGradient
+          ctx.beginPath()
+          ctx.arc(screenX, screenY, safeSize, 0, Math.PI * 2)
+          ctx.fill()
         }
       }
     }

@@ -180,6 +180,7 @@
 - [x] Hide the tutorial dock ("?") button after completion with a visibility-hidden class on completion and on reload until the tutorial is restarted from settings.
 - [x] ✅ Fixed tutorial step 12 completion not unlocking when user uses remote control by adding hasUsedRemoteControl flag to units and updating completion check.
 - [x] ✅ Unit destruction freeze delay (2026-04-16): when a unit reaches 0 HP it now remains frozen in place for 2 seconds (to allow impact animation completion) before cleanup triggers the destruction explosion, wreck registration, and synced explosion audio.
+- [x] ✅ Unit freeze visual follow-up (2026-04-16): during the 2s destruction freeze, dead units stay fully visible with their normal sprite (no gray wreck styling) and emit heavier, darker smoke until delayed explosion cleanup runs.
 - [x] ✅ Portrait condensed build bar now hides locked production buttons while keeping unlocked ones visible in the scrollable row.
 - [x] ✅ PWA portrait condensed build bar now reaches the bottom edge of the screen without leaving a gap.
 - [ ] Tutorial window should be allowed to overlap the sidebar; on portrait mode it should mount at the top-left corner over the sidebar and span the full width when expanded.

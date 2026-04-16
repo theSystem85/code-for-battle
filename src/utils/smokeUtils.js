@@ -28,6 +28,7 @@ function recycleParticleInstance(gameState, particle) {
   particle.alpha = 0
   particle.size = 0
   particle.fireIntensity = 0
+  particle.smokeShade = 0
 
   gameState.smokeParticlePool.push(particle)
 }
@@ -76,6 +77,9 @@ export function emitSmokeParticles(gameState, x, y, now, countOrOptions = 1) {
   const fireIntensity = Number.isFinite(options.fireIntensity)
     ? Math.max(0, Math.min(1, options.fireIntensity))
     : 0
+  const smokeShade = Number.isFinite(options.smokeShade)
+    ? Math.max(0, Math.min(1, options.smokeShade))
+    : 0
 
   if (!Number.isFinite(count) || count <= 0) {
     return
@@ -109,6 +113,7 @@ export function emitSmokeParticles(gameState, x, y, now, countOrOptions = 1) {
     particle.fireIntensity = fireIntensity > 0
       ? fireIntensity * (0.65 + gameRandom() * 0.35)
       : 0
+    particle.smokeShade = smokeShade
 
     gameState.smokeParticles.push(particle)
   }
