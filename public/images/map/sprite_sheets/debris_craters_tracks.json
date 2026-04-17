@@ -1,0 +1,1012 @@
+{
+  "schemaVersion": 1,
+  "sheetPath": "blob:https://code-for-battle.netlify.app/ccc04ae8-2093-4943-b117-e7cde1c3f522",
+  "tileSize": 64,
+  "rowHeight": 64,
+  "borderWidth": 1,
+  "blendMode": "black",
+  "tags": [
+    "passable",
+    "decorative",
+    "impassable",
+    "intersection",
+    "grass",
+    "soil",
+    "snow",
+    "sand",
+    "rocks",
+    "concrete",
+    "street",
+    "water",
+    "crater",
+    "debris",
+    "impact",
+    "street_vertical",
+    "street_horizontal"
+  ],
+  "columns": 16,
+  "rows": 16,
+  "runtimeNormalization": {
+    "sourceTileSize": 62,
+    "targetTileSize": 64,
+    "scale": 1.032258064516129,
+    "requiresUpscale": true
+  },
+  "tiles": {
+    "0,8": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 8
+    },
+    "1,8": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 8
+    },
+    "1,9": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 9
+    },
+    "0,9": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 9
+    },
+    "0,10": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 10
+    },
+    "1,10": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 10
+    },
+    "2,10": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 129,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "col": 2,
+      "row": 10
+    },
+    "3,10": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 193,
+        "y": 641,
+        "width": 62,
+        "height": 62
+      },
+      "col": 3,
+      "row": 10
+    },
+    "0,11": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 705,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 11
+    },
+    "12,8": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 769,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "col": 12,
+      "row": 8
+    },
+    "12,9": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 769,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "col": 12,
+      "row": 9
+    },
+    "13,9": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 833,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "col": 13,
+      "row": 9
+    },
+    "10,0": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 641,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 10,
+      "row": 0
+    },
+    "9,0": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 0
+    },
+    "8,0": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 0
+    },
+    "8,1": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 1
+    },
+    "9,1": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 1
+    },
+    "4,9": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 257,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "col": 4,
+      "row": 9
+    },
+    "5,9": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 321,
+        "y": 577,
+        "width": 62,
+        "height": 62
+      },
+      "col": 5,
+      "row": 9
+    },
+    "9,8": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 8
+    },
+    "8,8": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 513,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 8
+    },
+    "15,12": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 961,
+        "y": 769,
+        "width": 62,
+        "height": 62
+      },
+      "col": 15,
+      "row": 12
+    },
+    "14,12": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 897,
+        "y": 769,
+        "width": 62,
+        "height": 62
+      },
+      "col": 14,
+      "row": 12
+    },
+    "1,13": {
+      "tags": [
+        "debris"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 833,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 13
+    },
+    "15,0": {
+      "tags": [
+        "crater"
+      ],
+      "rect": {
+        "x": 961,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 15,
+      "row": 0
+    },
+    "14,0": {
+      "tags": [
+        "crater"
+      ],
+      "rect": {
+        "x": 897,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 14,
+      "row": 0
+    },
+    "1,11": {
+      "tags": [
+        "crater"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 705,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 11
+    },
+    "2,11": {
+      "tags": [
+        "crater"
+      ],
+      "rect": {
+        "x": 129,
+        "y": 705,
+        "width": 62,
+        "height": 62
+      },
+      "col": 2,
+      "row": 11
+    },
+    "15,2": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 961,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 15,
+      "row": 2
+    },
+    "5,0": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 321,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 5,
+      "row": 0
+    },
+    "6,0": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 0
+    },
+    "11,4": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 705,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 11,
+      "row": 4
+    },
+    "9,2": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 2
+    },
+    "8,2": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 2
+    },
+    "3,4": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 193,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 3,
+      "row": 4
+    },
+    "1,4": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 4
+    },
+    "1,3": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 193,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 3
+    },
+    "4,3": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 257,
+        "y": 193,
+        "width": 62,
+        "height": 62
+      },
+      "col": 4,
+      "row": 3
+    },
+    "13,4": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 833,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 13,
+      "row": 4
+    },
+    "14,3": {
+      "tags": [
+        "impact"
+      ],
+      "rect": {
+        "x": 897,
+        "y": 193,
+        "width": 62,
+        "height": 62
+      },
+      "col": 14,
+      "row": 3
+    },
+    "0,5": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 5
+    },
+    "0,6": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 6
+    },
+    "0,7": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 7
+    },
+    "1,5": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 5
+    },
+    "1,6": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 6
+    },
+    "1,7": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 7
+    },
+    "2,5": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 129,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 2,
+      "row": 5
+    },
+    "2,6": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 129,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 2,
+      "row": 6
+    },
+    "2,7": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 129,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 2,
+      "row": 7
+    },
+    "3,5": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 193,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 3,
+      "row": 5
+    },
+    "3,6": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 193,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 3,
+      "row": 6
+    },
+    "3,7": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 193,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 3,
+      "row": 7
+    },
+    "8,4": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 4
+    },
+    "8,5": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 5
+    },
+    "8,6": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 6
+    },
+    "11,5": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 705,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 11,
+      "row": 5
+    },
+    "11,6": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 705,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 11,
+      "row": 6
+    },
+    "11,7": {
+      "tags": [
+        "street_vertical"
+      ],
+      "rect": {
+        "x": 705,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 11,
+      "row": 7
+    },
+    "6,4": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 4
+    },
+    "7,4": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 449,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 7,
+      "row": 4
+    },
+    "7,5": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 449,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 7,
+      "row": 5
+    },
+    "6,5": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 5
+    },
+    "6,6": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 6
+    },
+    "7,6": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 449,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 7,
+      "row": 6
+    },
+    "7,7": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 449,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 7,
+      "row": 7
+    },
+    "6,7": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 7
+    },
+    "8,7": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 7
+    },
+    "9,4": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 4
+    },
+    "10,4": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 641,
+        "y": 257,
+        "width": 62,
+        "height": 62
+      },
+      "col": 10,
+      "row": 4
+    },
+    "10,5": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 641,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 10,
+      "row": 5
+    },
+    "9,5": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 321,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 5
+    },
+    "12,6": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 769,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 12,
+      "row": 6
+    },
+    "13,6": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 833,
+        "y": 385,
+        "width": 62,
+        "height": 62
+      },
+      "col": 13,
+      "row": 6
+    },
+    "13,7": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 833,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 13,
+      "row": 7
+    },
+    "12,7": {
+      "tags": [
+        "street_horizontal"
+      ],
+      "rect": {
+        "x": 769,
+        "y": 449,
+        "width": 62,
+        "height": 62
+      },
+      "col": 12,
+      "row": 7
+    }
+  }
+}
