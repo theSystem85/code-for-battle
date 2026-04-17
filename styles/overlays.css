@@ -103,6 +103,26 @@
   padding: 10px;
 }
 
+.integrated-sheet-selection-list {
+  max-height: calc(5 * 28px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.integrated-sheet-selection-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #ddd;
+}
+
 body.config-modal-open {
   overflow: hidden;
 }

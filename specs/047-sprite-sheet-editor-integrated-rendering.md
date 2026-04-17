@@ -137,6 +137,10 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - When no SSE `water` tags are present, the top 2D terrain canvas must not repaint opaque water base tiles over the GPU procedural-water fallback underneath.
   - When SSE `water` tags are present, water SOT/coastline overlays must also render from clipped SSE water tiles, not from the procedural water renderer.
   - When SSE `water` tags are absent and the GPU procedural-water fallback is active, the top 2D terrain pass must also skip water SOT/coastline overlays so no polygonal water artifacts remain above the GPU water layer.
+  - Integrated runtime tile selection must compose all enabled static sprite sheets that provide tagged tiles; for any requested tag, candidates from every enabled sheet are pooled so selection can mix variants across sheets deterministically.
+  - Sheets without any tagged tiles must be excluded from runtime loading/candidate pools to reduce memory usage.
+  - Static metadata precedence is: localStorage sidecar override first, bundled sidecar JSON fallback. In active multiplayer sessions, runtime must bypass local overrides and use bundled sidecar metadata only.
+  - Map Settings must expose a per-sheet checkbox list (visible only when `Custom sprite sheets` is enabled) to control which static sheets are eligible at runtime; list viewport is capped to 5 visible rows with scrolling.
   - In that same no-water GPU fallback mode, the WebGL water-only batch must not emit clipped water-SOT triangle instances either; it should render only unclipped procedural water tiles.
   - The no-water GPU fallback must apply that water-SOT suppression in the active base-layer path too, not only in the overlay-only path; any SOT that would render into water must be skipped there.
   - That suppression must stay host-aware: skip SOT hosted on water tiles in the no-water fallback, but preserve land/street-hosted `type: water` SOT so coastline smoothing still appears against other terrain.
