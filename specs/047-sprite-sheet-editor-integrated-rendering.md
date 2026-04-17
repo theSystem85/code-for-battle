@@ -137,6 +137,11 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - When no SSE `water` tags are present, the top 2D terrain canvas must not repaint opaque water base tiles over the GPU procedural-water fallback underneath.
   - When SSE `water` tags are present, water SOT/coastline overlays must also render from clipped SSE water tiles, not from the procedural water renderer.
   - When SSE `water` tags are absent and the GPU procedural-water fallback is active, the top 2D terrain pass must also skip water SOT/coastline overlays so no polygonal water artifacts remain above the GPU water layer.
+  - Integrated runtime terrain lookup must combine tagged tiles from every enabled sprite sheet listed in `images/map/sprite_sheets/index.json` (e.g., `rocks` tags from multiple sheets are deterministically mixed by map coordinates).
+  - Sidecar metadata loaded from localStorage (`rts-sse-metadata:<sheetPath>`) overrides on-disk JSON in single-player sessions; multiplayer sessions use on-disk defaults only to keep clients deterministic without metadata sync.
+  - Sprite sheets with zero tagged tiles must be ignored at runtime (their textures should not be loaded) to reduce memory usage.
+  - Map Settings must show a sheet checklist under `Custom sprite sheets` when enabled so players can include/exclude individual indexed sheets; the visible checklist viewport is capped to five rows with scrolling.
+  - Rock-tagged integrated tiles must always render over the selected biome land base and respect the source sheet blend mode so rock overlays stay cosmetic and never affect pathing/logic.
   - In that same no-water GPU fallback mode, the WebGL water-only batch must not emit clipped water-SOT triangle instances either; it should render only unclipped procedural water tiles.
   - The no-water GPU fallback must apply that water-SOT suppression in the active base-layer path too, not only in the overlay-only path; any SOT that would render into water must be skipped there.
   - That suppression must stay host-aware: skip SOT hosted on water tiles in the no-water fallback, but preserve land/street-hosted `type: water` SOT so coastline smoothing still appears against other terrain.

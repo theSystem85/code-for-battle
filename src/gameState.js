@@ -32,6 +32,7 @@ export const gameState = {
   useIntegratedSpriteSheetMode: false,
   activeSpriteSheetPath: null,
   activeSpriteSheetMetadata: null,
+  selectedIntegratedSpriteSheets: [],
   activeAnimationSpriteSheetPath: null,
   activeAnimationSpriteSheetMetadata: null,
   activeSpriteSheetBiomeTag: 'grass',

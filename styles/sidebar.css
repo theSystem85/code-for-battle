@@ -1312,3 +1312,30 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 .sidebar-legal-links a:hover {
   text-decoration: underline;
 }
+
+.integrated-sprite-sheet-list-wrap {
+  margin: 10px 0;
+}
+
+.integrated-sprite-sheet-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: calc(5 * 24px);
+  overflow-y: auto;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px;
+}
+
+.integrated-sprite-sheet-list__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.integrated-sprite-sheet-list__empty {
+  font-size: 12px;
+  color: #ccc;
+}
