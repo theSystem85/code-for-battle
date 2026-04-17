@@ -1,6 +1,7 @@
 import { gameState } from '../gameState.js'
 import { getMapRenderer, getTextureManager } from '../rendering.js'
 import { initializeOccupancyMap } from '../units.js'
+import { observeMultiplayerSession } from '../network/multiplayerSessionEvents.js'
 import {
   activateMapEditMode,
   deactivateMapEditMode,
@@ -24,11 +25,22 @@ let randomCheckbox = null
 let statusEl = null
 let integratedSpriteSheetModeCheckbox = null
 let integratedSpriteSheetBiomeSelect = null
+let integratedSpriteSheetSelectionContainer = null
+let integratedSpriteSheetSelectionList = null
 
 const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
 const INTEGRATED_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
+const INTEGRATED_SELECTED_SHEETS_STORAGE_KEY = 'rts-integrated-spritesheet-selected-sheets'
 const SSE_APPLIED_METADATA_STORAGE_KEY = 'rts-sse-applied-metadata'
 const SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY = 'rts-sse-applied-animation-metadata'
+const SSE_SHEETS_INDEX = 'images/map/sprite_sheets/index.json'
+const SSE_METADATA_PREFIX = 'rts-sse-metadata:'
+const DEFAULT_SSE_SHEETS = [
+  'images/map/sprite_sheets/seasons_1024_q90_2.webp',
+  'images/map/sprite_sheets/seasons_1024_q90_3.webp',
+  'images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp',
+  'images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp'
+]
 const DEFAULT_ANIMATION_SHEET_PATH = 'images/map/animations/explosion.webp'
 const DEFAULT_ANIMATION_METADATA_PATH = 'images/map/animations/explosion.json'
 const RETIRED_EXPLOSION_SHEET_PATTERN = /^images\/map\/animations\/\d+x\d+_\d+x\d+_.*explosion\.(webp|png|jpg|jpeg)$/i
@@ -61,6 +73,101 @@ function setActiveAnimationMetadata(metadata) {
   return normalized
 }
 
+function safeParseJson(raw, fallback = null) {
+  if (!raw) return fallback
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return fallback
+  }
+}
+
+function buildMetaPath(sheetPath) {
+  return sheetPath.replace(/\.(webp|png|jpg|jpeg)$/i, '.json')
+}
+
+function hasTaggedTiles(metadata) {
+  if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
+  return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
+}
+
+function isMultiplayerSessionActive() {
+  const session = gameState.multiplayerSession || {}
+  return Boolean(session.isRemote) || session.status === 'connected'
+}
+
+async function loadStaticSheetPaths() {
+  try {
+    const response = await fetch(SSE_SHEETS_INDEX, { cache: 'no-store' })
+    if (response.ok) {
+      const parsed = await response.json()
+      if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
+        return parsed.sheets
+      }
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load sprite sheet index:', err)
+  }
+  return [...DEFAULT_SSE_SHEETS]
+}
+
+async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {}) {
+  if (!sheetPath) return null
+  if (allowLocalOverride) {
+    const local = safeParseJson(localStorage.getItem(`${SSE_METADATA_PREFIX}${sheetPath}`), null)
+    if (local && typeof local === 'object') {
+      return local
+    }
+  }
+
+  const sidecarPath = buildMetaPath(sheetPath)
+  try {
+    const res = await fetch(sidecarPath, { cache: 'no-store' })
+    if (res.ok) {
+      return await res.json()
+    }
+  } catch {
+    // ignored: missing sidecar file
+  }
+  return null
+}
+
+function renderIntegratedSheetSelectionList(sheetPaths = []) {
+  if (!integratedSpriteSheetSelectionList) return
+  integratedSpriteSheetSelectionList.innerHTML = ''
+
+  const selectedPaths = new Set(Array.isArray(gameState.activeSpriteSheetSelections) ? gameState.activeSpriteSheetSelections : sheetPaths)
+  sheetPaths.forEach((sheetPath) => {
+    const item = document.createElement('label')
+    item.className = 'integrated-sheet-selection-item'
+    const checkbox = document.createElement('input')
+    checkbox.type = 'checkbox'
+    checkbox.dataset.sheetPath = sheetPath
+    checkbox.checked = selectedPaths.has(sheetPath)
+    checkbox.addEventListener('change', async() => {
+      const currentSelected = new Set(Array.isArray(gameState.activeSpriteSheetSelections) ? gameState.activeSpriteSheetSelections : sheetPaths)
+      if (checkbox.checked) currentSelected.add(sheetPath)
+      else currentSelected.delete(sheetPath)
+      gameState.activeSpriteSheetSelections = sheetPaths.filter(path => currentSelected.has(path))
+      try {
+        localStorage.setItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY, JSON.stringify(gameState.activeSpriteSheetSelections))
+      } catch (err) {
+        window.logger.warn('Failed to persist selected integrated sprite sheets:', err)
+      }
+      await applyIntegratedSpriteSheetRuntime()
+    })
+    const name = document.createElement('span')
+    name.textContent = sheetPath.split('/').pop() || sheetPath
+    item.append(checkbox, name)
+    integratedSpriteSheetSelectionList.appendChild(item)
+  })
+}
+
+function updateIntegratedSheetSelectionVisibility() {
+  if (!integratedSpriteSheetSelectionContainer || !integratedSpriteSheetModeCheckbox) return
+  integratedSpriteSheetSelectionContainer.hidden = !integratedSpriteSheetModeCheckbox.checked
+}
+
 async function loadDefaultAnimationMetadata() {
   try {
     const response = await fetch(DEFAULT_ANIMATION_METADATA_PATH, { cache: 'no-store' })
@@ -77,10 +184,34 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   const textureManager = getTextureManager()
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
 
+  const allStaticSheets = Array.isArray(gameState.availableStaticSpriteSheets) && gameState.availableStaticSpriteSheets.length
+    ? gameState.availableStaticSpriteSheets
+    : await loadStaticSheetPaths()
+  gameState.availableStaticSpriteSheets = allStaticSheets
+  if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
+    gameState.activeSpriteSheetSelections = [...allStaticSheets]
+  }
+
+  const selectedSheetPaths = allStaticSheets.filter(path => gameState.activeSpriteSheetSelections.includes(path))
+  const multiplayerActive = isMultiplayerSessionActive()
+  const allowLocalOverride = !multiplayerActive
+  const resolvedSheets = []
+  for (const sheetPath of selectedSheetPaths) {
+    const resolvedMetadata = metadata?.sheetPath === sheetPath
+      ? metadata
+      : await loadMetadataForSheet(sheetPath, { allowLocalOverride })
+    if (!hasTaggedTiles(resolvedMetadata)) continue
+    resolvedSheets.push({
+      sheetPath,
+      metadata: resolvedMetadata
+    })
+  }
+
   await textureManager.setIntegratedSpriteSheetConfig({
     enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
     sheetPath: metadata?.sheetPath || gameState.activeSpriteSheetPath,
     metadata: metadata || gameState.activeSpriteSheetMetadata || null,
+    sheets: resolvedSheets,
     biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
   })
 
@@ -160,6 +291,8 @@ export function initMapEditorControls() {
   statusEl = document.getElementById('mapEditStatus')
   integratedSpriteSheetModeCheckbox = document.getElementById('integratedSpriteSheetModeCheckbox')
   integratedSpriteSheetBiomeSelect = document.getElementById('integratedSpriteSheetBiomeSelect')
+  integratedSpriteSheetSelectionContainer = document.getElementById('integratedSpriteSheetSelectionContainer')
+  integratedSpriteSheetSelectionList = document.getElementById('integratedSpriteSheetSelectionList')
 
   gameState.useIntegratedSpriteSheetMode = Boolean(gameState.useIntegratedSpriteSheetMode)
   try {
@@ -180,6 +313,37 @@ export function initMapEditorControls() {
   } catch (err) {
     window.logger.warn('Failed to load integrated sprite sheet biome:', err)
   }
+  gameState.availableStaticSpriteSheets = [...DEFAULT_SSE_SHEETS]
+
+  try {
+    const storedSelected = safeParseJson(localStorage.getItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), [])
+    if (Array.isArray(storedSelected) && storedSelected.length) {
+      gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.filter(path => storedSelected.includes(path))
+    }
+  } catch (err) {
+    window.logger.warn('Failed to load selected integrated sprite sheets:', err)
+  }
+  if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
+    gameState.activeSpriteSheetSelections = [...gameState.availableStaticSpriteSheets]
+  }
+  renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
+  loadStaticSheetPaths().then(async(sheetPaths) => {
+    gameState.availableStaticSpriteSheets = sheetPaths
+    if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
+      gameState.activeSpriteSheetSelections = [...sheetPaths]
+    } else {
+      gameState.activeSpriteSheetSelections = sheetPaths.filter(path => gameState.activeSpriteSheetSelections.includes(path))
+      if (!gameState.activeSpriteSheetSelections.length) {
+        gameState.activeSpriteSheetSelections = [...sheetPaths]
+      }
+    }
+    renderIntegratedSheetSelectionList(sheetPaths)
+    if (gameState.useIntegratedSpriteSheetMode) {
+      await applyIntegratedSpriteSheetRuntime()
+    }
+  }).catch((err) => {
+    window.logger.warn('Failed to hydrate static sprite sheet list:', err)
+  })
 
   try {
     const storedAppliedMetadata = localStorage.getItem(SSE_APPLIED_METADATA_STORAGE_KEY)
@@ -239,9 +403,11 @@ export function initMapEditorControls() {
 
   if (integratedSpriteSheetModeCheckbox) {
     integratedSpriteSheetModeCheckbox.checked = gameState.useIntegratedSpriteSheetMode
+    updateIntegratedSheetSelectionVisibility()
     integratedSpriteSheetModeCheckbox.addEventListener('change', async(e) => {
       const enabled = Boolean(e.target.checked)
       gameState.useIntegratedSpriteSheetMode = enabled
+      updateIntegratedSheetSelectionVisibility()
       try {
         localStorage.setItem(INTEGRATED_MODE_STORAGE_KEY, enabled ? 'true' : 'false')
       } catch (err) {
@@ -304,6 +470,9 @@ export function initMapEditorControls() {
   })
 
   observePartyOwnershipChange(updateLockState)
+  observeMultiplayerSession(() => {
+    applyIntegratedSpriteSheetRuntime()
+  })
   updateLockState()
   syncControlsFromState()
   updatePauseIcon()
