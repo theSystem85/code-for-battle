@@ -36,6 +36,7 @@ export class TextureManager {
     this.integratedSpriteSheetPath = null
     this.integratedSpriteSheetImage = null
     this.integratedSpriteSheetMetadata = null
+    this.integratedSpriteSheetSources = []
     this.integratedTagBuckets = {}
     this.integratedBiomeTag = 'grass'
     this.integratedBlendMode = 'black'
@@ -64,17 +65,26 @@ export class TextureManager {
     return image
   }
 
-  buildIntegratedTagBuckets(metadata) {
+  buildIntegratedTagBuckets(sources) {
     const buckets = {}
-    if (!metadata?.tiles) return buckets
+    if (!Array.isArray(sources) || !sources.length) return buckets
 
-    Object.values(metadata.tiles).forEach((tile) => {
-      if (!tile?.rect || !Array.isArray(tile.tags)) return
-      tile.tags.forEach((tag) => {
-        if (!buckets[tag]) {
-          buckets[tag] = []
+    sources.forEach((source) => {
+      if (!source?.metadata?.tiles || !source.image) return
+      Object.values(source.metadata.tiles).forEach((tile) => {
+        if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
+        const enrichedTile = {
+          ...tile,
+          __sheetPath: source.sheetPath,
+          __sheetImage: source.image,
+          __blendMode: normalizeSpriteSheetBlendMode(source.metadata?.blendMode)
         }
-        buckets[tag].push(tile)
+        tile.tags.forEach((tag) => {
+          if (!buckets[tag]) {
+            buckets[tag] = []
+          }
+          buckets[tag].push(enrichedTile)
+        })
       })
     })
 
@@ -86,6 +96,7 @@ export class TextureManager {
     if (!enabled) {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
+      this.integratedSpriteSheetSources = []
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
       this.integratedRenderSignature = 'off'
@@ -98,6 +109,7 @@ export class TextureManager {
     if (!sheetPath || !metadata) {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
+      this.integratedSpriteSheetSources = []
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
       this.integratedRenderSignature = 'off'
@@ -105,10 +117,29 @@ export class TextureManager {
       return
     }
 
+    const providedSources = Array.isArray(config?.sources) ? config.sources : []
+    const sourceEntries = []
+
+    if (providedSources.length) {
+      for (const source of providedSources) {
+        const sourceSheetPath = source?.sheetPath
+        const sourceMetadata = source?.metadata
+        if (!sourceSheetPath || !sourceMetadata) continue
+        const sourceImage = await this.loadIntegratedSpriteSheetImage(sourceSheetPath)
+        if (!sourceImage) continue
+        sourceEntries.push({
+          sheetPath: sourceSheetPath,
+          image: sourceImage,
+          metadata: sourceMetadata
+        })
+      }
+    }
+
     const image = await this.loadIntegratedSpriteSheetImage(sheetPath)
-    if (!image) {
+    if (!image || !sourceEntries.length) {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
+      this.integratedSpriteSheetSources = []
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
       this.integratedRenderSignature = 'off'
@@ -120,10 +151,14 @@ export class TextureManager {
     this.integratedSpriteSheetPath = sheetPath
     this.integratedSpriteSheetImage = image
     this.integratedSpriteSheetMetadata = metadata
-    this.integratedTagBuckets = this.buildIntegratedTagBuckets(metadata)
+    this.integratedSpriteSheetSources = sourceEntries
+    this.integratedTagBuckets = this.buildIntegratedTagBuckets(sourceEntries)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(metadata?.blendMode)
-    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}|${this.integratedBlendMode}`
+    const sourceSignature = sourceEntries
+      .map(source => `${source.sheetPath}:${Object.keys(source.metadata?.tiles || {}).length}:${normalizeSpriteSheetBlendMode(source.metadata?.blendMode)}`)
+      .join('|')
+    this.integratedRenderSignature = `${sourceSignature}|${this.integratedBiomeTag}`
     this.integratedConfigVersion++
   }
 
@@ -252,7 +287,7 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode),
+      image: getImageTextureWithBlendMode(selected.__sheetImage || this.integratedSpriteSheetImage, selected.__blendMode || this.integratedBlendMode),
       rect: selected.rect,
       tags: selected.tags || []
     }

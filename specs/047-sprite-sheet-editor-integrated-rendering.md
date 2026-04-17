@@ -142,3 +142,9 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - That suppression must stay host-aware: skip SOT hosted on water tiles in the no-water fallback, but preserve land/street-hosted `type: water` SOT so coastline smoothing still appears against other terrain.
   - In the no-water custom-sheet fallback, those preserved `type: water` coastline SOT triangles must be rendered by the WebGL water shader, not the 2D procedural-water routine, so they visually match adjacent procedural water tiles.
   - Because those coastline `type: water` triangles come from the GPU underlay, the top 2D pass must cut that triangle out of the land/street base tile instead of repainting over it.
+  - Integrated runtime map rendering now composes all enabled sprite-sheet sources (not only one active sheet): the renderer must aggregate matching tagged tiles across checked sheet entries and randomize tile picks from the merged tag pool.
+  - Sidecar metadata load precedence for integrated runtime is `localStorage (rts-sse-metadata:<sheetPath>)` first, then default `<sheet>.json`, so locally edited tag maps override bundled defaults.
+  - Untagged sheets must be excluded from runtime loading/rendering to reduce memory usage.
+  - Map Settings now shows a checkbox list of all available static sprite sheets under `Custom sprite sheets`; only checked sheets are used for runtime composition, and the list container height is capped to 5 visible items before scrolling.
+  - Multiplayer sessions must force legacy/default map sprite rendering (custom sprite-sheet composition disabled), because sprite-sheet metadata/source selection is not synchronized across host and clients.
+  - Rock tiles in integrated mode must support blend-aware compositing over the selected biome land underlay so rock overlays behave like ore-style terrain overlays without affecting game logic.

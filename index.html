@@ -659,6 +659,10 @@
               <input type="checkbox" id="integratedSpriteSheetModeCheckbox">
               <span>Custom sprite sheets</span>
             </label>
+            <div id="integratedSpriteSheetSelectionWrap" style="display:none; margin: 8px 0 12px 22px;">
+              <div style="font-size: 12px; color: #ccc; margin-bottom: 6px;">Active sprite sheets</div>
+              <div id="integratedSpriteSheetList" style="display:flex; flex-direction:column; gap:4px; max-height: calc(5 * 24px); overflow-y:auto;"></div>
+            </div>
             <div style="margin: 10px 0;">
               <label for="integratedSpriteSheetBiomeSelect" style="display:block; margin-bottom: 6px;">SSE Biome</label>
               <select id="integratedSpriteSheetBiomeSelect" class="sidebar-input" style="width: 100%;">
