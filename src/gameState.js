@@ -35,6 +35,8 @@ export const gameState = {
   activeAnimationSpriteSheetPath: null,
   activeAnimationSpriteSheetMetadata: null,
   activeSpriteSheetBiomeTag: 'grass',
+  integratedSpriteSheetAvailablePaths: [],
+  integratedSpriteSheetSelectedPaths: [],
   // Arrow key scrolling state
   keyScroll: { up: false, down: false, left: false, right: false },
   // ID of the unit the camera should follow when auto-focus is enabled

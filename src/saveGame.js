@@ -608,6 +608,9 @@ export function saveGame(label) {
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
       activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null,
       activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag || 'grass',
+      integratedSpriteSheetSelectedPaths: Array.isArray(gameState.integratedSpriteSheetSelectedPaths)
+        ? [...gameState.integratedSpriteSheetSelectedPaths]
+        : [],
       powerSupply: gameState.powerSupply,
       playerBuildHistory: gameState.playerBuildHistory,
       currentSessionId: gameState.currentSessionId,
@@ -748,6 +751,9 @@ function loadGameFromSaveObject(saveObj, key) {
     gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
     gameState.activeSpriteSheetMetadata = loaded.gameState?.activeSpriteSheetMetadata || null
     gameState.activeSpriteSheetBiomeTag = loaded.gameState?.activeSpriteSheetBiomeTag || 'grass'
+    gameState.integratedSpriteSheetSelectedPaths = Array.isArray(loaded.gameState?.integratedSpriteSheetSelectedPaths)
+      ? [...loaded.gameState.integratedSpriteSheetSelectedPaths]
+      : []
 
     // Clear defeat/victory state when loading - let the game check conditions fresh
     gameState.gameOver = false

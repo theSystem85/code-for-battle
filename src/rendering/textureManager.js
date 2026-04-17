@@ -36,6 +36,8 @@ export class TextureManager {
     this.integratedSpriteSheetPath = null
     this.integratedSpriteSheetImage = null
     this.integratedSpriteSheetMetadata = null
+    this.integratedSpriteSheetEntries = []
+    this.integratedSpriteSheetImageCache = {}
     this.integratedTagBuckets = {}
     this.integratedBiomeTag = 'grass'
     this.integratedBlendMode = 'black'
@@ -45,8 +47,8 @@ export class TextureManager {
 
   async loadIntegratedSpriteSheetImage(sheetPath) {
     if (!sheetPath) return null
-    if (this.integratedSpriteSheetPath === sheetPath && this.integratedSpriteSheetImage) {
-      return this.integratedSpriteSheetImage
+    if (this.integratedSpriteSheetImageCache[sheetPath]) {
+      return this.integratedSpriteSheetImageCache[sheetPath]
     }
 
     const image = await new Promise((resolve) => {
@@ -57,24 +59,34 @@ export class TextureManager {
     })
 
     if (image) {
-      this.integratedSpriteSheetPath = sheetPath
-      this.integratedSpriteSheetImage = image
+      this.integratedSpriteSheetImageCache[sheetPath] = image
     }
 
     return image
   }
 
-  buildIntegratedTagBuckets(metadata) {
+  buildIntegratedTagBuckets(sheetEntries) {
     const buckets = {}
-    if (!metadata?.tiles) return buckets
 
-    Object.values(metadata.tiles).forEach((tile) => {
-      if (!tile?.rect || !Array.isArray(tile.tags)) return
-      tile.tags.forEach((tag) => {
-        if (!buckets[tag]) {
-          buckets[tag] = []
+    ;(Array.isArray(sheetEntries) ? sheetEntries : []).forEach((entry) => {
+      if (!entry?.metadata?.tiles || !entry?.image) return
+      const blendMode = normalizeSpriteSheetBlendMode(entry.metadata?.blendMode)
+      const processedImage = getImageTextureWithBlendMode(entry.image, blendMode)
+      Object.values(entry.metadata.tiles).forEach((tile) => {
+        if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
+        const runtimeTile = {
+          rect: tile.rect,
+          tags: tile.tags,
+          image: processedImage,
+          blendMode,
+          sheetPath: entry.sheetPath
         }
-        buckets[tag].push(tile)
+        tile.tags.forEach((tag) => {
+          if (!buckets[tag]) {
+            buckets[tag] = []
+          }
+          buckets[tag].push(runtimeTile)
+        })
       })
     })
 
@@ -85,6 +97,7 @@ export class TextureManager {
     const enabled = Boolean(config?.enabled)
     if (!enabled) {
       this.integratedSpriteSheetMode = false
+      this.integratedSpriteSheetEntries = []
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
@@ -93,10 +106,14 @@ export class TextureManager {
       return
     }
 
-    const sheetPath = config?.sheetPath
-    const metadata = config?.metadata
-    if (!sheetPath || !metadata) {
+    const configuredEntries = Array.isArray(config?.sheets) && config.sheets.length
+      ? config.sheets
+      : [{ sheetPath: config?.sheetPath, metadata: config?.metadata }]
+    const validEntries = configuredEntries.filter((entry) => entry?.sheetPath && entry?.metadata)
+
+    if (!validEntries.length) {
       this.integratedSpriteSheetMode = false
+      this.integratedSpriteSheetEntries = []
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
@@ -105,9 +122,23 @@ export class TextureManager {
       return
     }
 
-    const image = await this.loadIntegratedSpriteSheetImage(sheetPath)
-    if (!image) {
+    const loadedEntries = []
+    for (const entry of validEntries) {
+      const metadata = entry.metadata
+      const taggedTileCount = Object.values(metadata?.tiles || {}).filter(tile => Array.isArray(tile?.tags) && tile.tags.length).length
+      if (!taggedTileCount) continue
+      const image = await this.loadIntegratedSpriteSheetImage(entry.sheetPath)
+      if (!image) continue
+      loadedEntries.push({
+        sheetPath: entry.sheetPath,
+        metadata,
+        image
+      })
+    }
+
+    if (!loadedEntries.length) {
       this.integratedSpriteSheetMode = false
+      this.integratedSpriteSheetEntries = []
       this.integratedSpriteSheetMetadata = null
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
@@ -117,13 +148,18 @@ export class TextureManager {
     }
 
     this.integratedSpriteSheetMode = true
-    this.integratedSpriteSheetPath = sheetPath
-    this.integratedSpriteSheetImage = image
-    this.integratedSpriteSheetMetadata = metadata
-    this.integratedTagBuckets = this.buildIntegratedTagBuckets(metadata)
+    this.integratedSpriteSheetEntries = loadedEntries
+    this.integratedSpriteSheetPath = loadedEntries[0].sheetPath
+    this.integratedSpriteSheetImage = loadedEntries[0].image
+    this.integratedSpriteSheetMetadata = loadedEntries[0].metadata
+    this.integratedTagBuckets = this.buildIntegratedTagBuckets(loadedEntries)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
-    this.integratedBlendMode = normalizeSpriteSheetBlendMode(metadata?.blendMode)
-    this.integratedRenderSignature = `${sheetPath}|${metadata.tileSize}|${metadata.borderWidth}|${Object.keys(metadata.tiles || {}).length}|${this.integratedBiomeTag}|${this.integratedBlendMode}`
+    this.integratedBlendMode = normalizeSpriteSheetBlendMode(loadedEntries[0].metadata?.blendMode)
+    this.integratedRenderSignature = loadedEntries.map((entry) => {
+      const taggedCount = Object.values(entry.metadata?.tiles || {}).filter(tile => Array.isArray(tile?.tags) && tile.tags.length).length
+      const blendMode = normalizeSpriteSheetBlendMode(entry.metadata?.blendMode)
+      return `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${taggedCount}|${blendMode}`
+    }).join('||') + `|${this.integratedBiomeTag}`
     this.integratedConfigVersion++
   }
 
@@ -218,7 +254,7 @@ export class TextureManager {
   }
 
   getIntegratedTileForMapTile(type, x, y) {
-    if (!this.integratedSpriteSheetMode || !this.integratedSpriteSheetImage || !this.integratedSpriteSheetMetadata) {
+    if (!this.integratedSpriteSheetMode || !this.integratedSpriteSheetEntries.length) {
       return null
     }
 
@@ -252,7 +288,7 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode),
+      image: selected.image,
       rect: selected.rect,
       tags: selected.tags || []
     }
