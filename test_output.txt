@@ -1,0 +1,683 @@
+
+> vite-starter@0.30.4 test:unit
+> vitest run tests/unit/
+
+
+[1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/Users/hella/Documents/projects/gemini-rts-game[39m
+
+[90mstdout[2m | tests/unit/saveGame.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/buildingImageMap.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/benchmarkRunner.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/benchmarkScenario.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/main.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/enemyAIPlayer.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/updateGame.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstderr[2m | tests/unit/buildingImageMap.test.js[2m > [22m[2mbuildingImageMap.js[2m > [22m[2mgetBuildingImage[2m > [22m[2mshould handle image load errors
+[22m[39mFailed to load building image: images/map/buildings/power_plant.webp
+
+[90mstderr[2m | tests/unit/benchmarkRunner.test.js[2m > [22m[2mbenchmarkRunner.js[2m > [22m[2mrunBenchmark[2m > [22m[2mhandles failures when benchmark session cannot start
+[22m[39mBenchmark run failed: Error: Benchmark session already running
+    at runBenchmarkInternal [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/benchmark/benchmarkRunner.js:59:13[90m)[39m
+    at runBenchmark [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/benchmark/benchmarkRunner.js:125:3[90m)[39m
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/benchmarkRunner.test.js:208:22
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:20
+
+ [32m✓[39m tests/unit/benchmarkScenario.test.js [2m([22m[2m39 tests[22m[2m)[22m[32m 221[2mms[22m[39m
+ [32m✓[39m tests/unit/saveGame.test.js [2m([22m[2m36 tests[22m[2m)[22m[33m 456[2mms[22m[39m
+       [33m[2m✓[22m[39m should return builtin missions [33m 324[2mms[22m[39m
+[90mstderr[2m | tests/unit/benchmarkRunner.test.js[2m > [22m[2mbenchmarkRunner.js[2m > [22m[2mrunBenchmark[2m > [22m[2mshould hide countdown on completion
+[22m[39mBenchmark run failed: Error: Setup failed
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/benchmarkRunner.test.js:289:15
+    at Mock [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:285:34[90m)[39m
+    at runBenchmarkInternal [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/benchmark/benchmarkRunner.js:50:27[90m)[39m
+    at runBenchmark [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/benchmark/benchmarkRunner.js:125:9[90m)[39m
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/benchmarkRunner.test.js:323:13
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:20
+
+ [32m✓[39m tests/unit/benchmarkRunner.test.js [2m([22m[2m21 tests[22m[2m)[22m[33m 363[2mms[22m[39m
+ [32m✓[39m tests/unit/buildingImageMap.test.js [2m([22m[2m34 tests[22m[2m)[22m[33m 685[2mms[22m[39m
+[90mstdout[2m | tests/unit/rendererLayering.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/cheatSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/layoutMetrics.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/layoutMetrics.test.js [2m([22m[2m30 tests[22m[2m)[22m[32m 146[2mms[22m[39m
+ [32m✓[39m tests/unit/rendererLayering.test.js [2m([22m[2m4 tests[22m[2m)[22m[33m 334[2mms[22m[39m
+     [33m[2m✓[22m[39m partitions airborne units into the top render layer [33m 327[2mms[22m[39m
+[90mstdout[2m | tests/unit/deviceLifecycle.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/cheatSystem.test.js [2m([22m[2m39 tests[22m[2m)[22m[33m 350[2mms[22m[39m
+[90mstderr[2m | tests/unit/updateGame.test.js[2m > [22m[2mupdateGame.js[2m > [22m[2mupdateGame[2m > [22m[2mshould update unit movement speeds based on speed multiplier
+[22m[39mCritical error in updateGame: TypeError: Cannot read properties of undefined (reading 'includes')
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39msrc/updateGame.js:506:19
+    at Array.forEach (<anonymous>)
+    at Module.updateGame [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/updateGame.js:494:11[90m)[39m
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/updateGame.test.js:277:24
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+Trace: 
+    at Module.updateGame (/Users/hella/Documents/projects/gemini-rts-game/src/updateGame.js:622:13)
+    at /Users/hella/Documents/projects/gemini-rts-game/tests/unit/updateGame.test.js:277:24
+    at file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/runner/dist/index.js:145:11
+    at file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/runner/dist/index.js:915:26
+    at file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/runner/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/runner/dist/index.js:1209:10)
+    at file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/runner/dist/index.js:1653:37
+    at Traces.$ (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/vitest/dist/chunks/traces.CCmnQaNT.js:142:27)
+    at trace (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/vitest/dist/chunks/test.B8ej_ZHS.js:239:21)
+
+ [32m✓[39m tests/unit/deviceLifecycle.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 260[2mms[22m[39m
+[90mstderr[2m | tests/unit/updateGame.test.js[2m > [22m[2mupdateGame.js[2m > [22m[2mupdateGame[2m > [22m[2mshould handle errors gracefully without crashing
+[22m[39mCritical error in updateGame: Error: Test error
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/updateGame.test.js:374:15
+    at Mock [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:285:34[90m)[39m
+    at Module.updateGame [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/updateGame.js:410:25[90m)[39m
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/updateGame.test.js:387:26
+    at Proxy.assertThrows [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4mchai[24m/index.js:2798:5[90m)[39m
+    at Proxy.methodWrapper [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4mchai[24m/index.js:1700:25[90m)[39m
+    at Proxy.<anonymous> [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/expect[24m/dist/index.js:1149:12[90m)[39m
+    at Proxy.overwritingMethodWrapper [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4mchai[24m/index.js:1750:33[90m)[39m
+    at Proxy.<anonymous> [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/expect[24m/dist/index.js:1485:16[90m)[39m
+    at Proxy.<anonymous> [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/expect[24m/dist/index.js:1090:14[90m)[39m
+Trace: 
+    at Module.updateGame (/Users/hella/Documents/projects/gemini-rts-game/src/updateGame.js:622:13)
+    at /Users/hella/Documents/projects/gemini-rts-game/tests/unit/updateGame.test.js:387:26
+    at Proxy.assertThrows (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/chai/index.js:2798:5)
+    at Proxy.methodWrapper (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/chai/index.js:1700:25)
+    at Proxy.<anonymous> (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/expect/dist/index.js:1149:12)
+    at Proxy.overwritingMethodWrapper (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/chai/index.js:1750:33)
+    at Proxy.<anonymous> (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/expect/dist/index.js:1485:16)
+    at Proxy.<anonymous> (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/@vitest/expect/dist/index.js:1090:14)
+    at Proxy.methodWrapper (file:///Users/hella/Documents/projects/gemini-rts-game/node_modules/chai/index.js:1700:25)
+    at /Users/hella/Documents/projects/gemini-rts-game/tests/unit/updateGame.test.js:388:14
+
+ [32m✓[39m tests/unit/main.test.js [2m([22m[2m42 tests[22m[2m)[22m[33m 1829[2mms[22m[39m
+       [33m[2m✓[22m[39m should export mapGrid array [33m 1021[2mms[22m[39m
+[90mstdout[2m | tests/unit/gameSetup.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/updateGame.test.js [2m([22m[2m27 tests[22m[2m)[22m[33m 2019[2mms[22m[39m
+       [33m[2m✓[22m[39m should export updateGame function [33m 1311[2mms[22m[39m
+[90mstdout[2m | tests/unit/buildingSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/rendering.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/gameSetup.test.js [2m([22m[2m35 tests[22m[2m)[22m[32m 121[2mms[22m[39m
+ [32m✓[39m tests/unit/rendering.test.js [2m([22m[2m21 tests[22m[2m)[22m[32m 66[2mms[22m[39m
+ [32m✓[39m tests/unit/buildingSystem.test.js [2m([22m[2m102 tests[22m[2m)[22m[32m 97[2mms[22m[39m
+[90mstdout[2m | tests/unit/gameStateManager.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/enemyAIPlayer.test.js [2m([22m[2m10 tests[22m[2m)[22m[33m 2276[2mms[22m[39m
+[90mstdout[2m | tests/unit/multiplayerStore.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/gameStateManager.test.js [2m([22m[2m29 tests[22m[2m)[22m[32m 46[2mms[22m[39m
+ [32m✓[39m tests/unit/multiplayerStore.test.js [2m([22m[2m15 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+[90mstdout[2m | tests/unit/harvesterLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/harvesterLogic.test.js [2m([22m[2m42 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+[90mstdout[2m | tests/unit/webrtcSession.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/configRegistry.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/webrtcSession.test.js [2m([22m[2m17 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+[90mstderr[2m | tests/unit/configRegistry.test.js[2m > [22m[2mconfigRegistry.js[2m > [22m[2msetConfigValue[2m > [22m[2mshould handle setter errors gracefully
+[22m[39mFailed to set config testErrorConfig: Error: Setter error
+    at Object.<anonymous> [90m(/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/configRegistry.test.js:264:15[90m)[39m
+    at Object.Mock [as set] [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/spy[24m/dist/index.js:285:34[90m)[39m
+    at setConfigValue [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/configRegistry.js:972:11[90m)[39m
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/configRegistry.test.js:277:36
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+
+ [32m✓[39m tests/unit/configRegistry.test.js [2m([22m[2m37 tests[22m[2m)[22m[32m 63[2mms[22m[39m
+[90mstdout[2m | tests/unit/gameLoop.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/productionQueue.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/gameLoop.test.js [2m([22m[2m17 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+[90mstdout[2m | tests/unit/spatialQuadtree.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/pathfinding.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/spatialQuadtree.test.js [2m([22m[2m31 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/cursorManager.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/enemy.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/keyboardHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/keyboardHandler.test.js [2m([22m[2m21 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+[90mstdout[2m | tests/unit/controlGroupHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/enemyUnitBehavior.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/controlGroupHandler.test.js [2m([22m[2m14 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m tests/unit/productionQueue.test.js [2m([22m[2m85 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m tests/unit/cursorManager.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 60[2mms[22m[39m
+ [32m✓[39m tests/unit/pathfinding.test.js [2m([22m[2m76 tests[22m[2m)[22m[32m 54[2mms[22m[39m
+[90mstdout[2m | tests/unit/signalling.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/signalling.test.js [2m([22m[2m28 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+[90mstdout[2m | tests/unit/mouseHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/keybindings.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/enemy.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+[90mstdout[2m | tests/unit/selectionManager.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/keybindings.test.js [2m([22m[2m55 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+[90mstdout[2m | tests/unit/gameRandom.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstderr[2m | tests/unit/selectionManager.test.js[2m > [22m[2mselectionManager[2m > [22m[2mresets selection state on drag selection errors
+[22m[39mError in handleBoundingBoxSelection: TypeError: Cannot read properties of null (reading 'x')
+    at SelectionManager.handleBoundingBoxSelection [90m(/Users/hella/Documents/projects/gemini-rts-game/[39msrc/input/selectionManager.js:254:42[90m)[39m
+    at [90m/Users/hella/Documents/projects/gemini-rts-game/[39mtests/unit/selectionManager.test.js:305:13
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:145:11
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:915:26
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
+    at new Promise (<anonymous>)
+    at runWithTimeout [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
+    at [90mfile:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
+    at Traces.$ [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
+    at trace [90m(file:///Users/hella/Documents/projects/gemini-rts-game/[39mnode_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
+
+ [32m✓[39m tests/unit/selectionManager.test.js [2m([22m[2m17 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/gameRandom.test.js [2m([22m[2m40 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/unit/enemyUnitBehavior.test.js [2m([22m[2m27 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstdout[2m | tests/unit/utils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/utils.test.js [2m([22m[2m103 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/unit/mouseHandler.test.js [2m([22m[2m29 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+[90mstdout[2m | tests/unit/remoteControl.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/steeringBehaviors.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/llmCommentaryDigest.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/remoteControl.test.js [2m([22m[2m22 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m tests/unit/llmCommentaryDigest.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+[90mstdout[2m | tests/unit/hitZoneDebug.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/steeringBehaviors.test.js [2m([22m[2m82 tests[22m[2m)[22m[32m 70[2mms[22m[39m
+ [32m✓[39m tests/unit/hitZoneDebug.test.js [2m([22m[2m24 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/buildingSellHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/buildingSellHandler.test.js [2m([22m[2m22 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+[90mstdout[2m | tests/unit/cursorStyles.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/cursorStyles.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+[90mstdout[2m | tests/unit/factories.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/factories.test.js [2m([22m[2m32 tests[22m[2m)[22m[32m 29[2mms[22m[39m
+[90mstdout[2m | tests/unit/unitMovement.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/deterministicRandom.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/config.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/deterministicRandom.test.js [2m([22m[2m49 tests[22m[2m)[22m[32m 32[2mms[22m[39m
+[90mstdout[2m | tests/unit/unitCommands.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/config.test.js [2m([22m[2m76 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/unit/unitMovement.test.js [2m([22m[2m30 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/unitCommands.test.js [2m([22m[2m72 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+[90mstdout[2m | tests/unit/enemyStrategies.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/index.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/index.test.js [2m([22m[2m18 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m tests/unit/enemyStrategies.test.js [2m([22m[2m35 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+[90mstdout[2m | tests/unit/productionControllerTabs.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/productionControllerTabs.test.js [2m([22m[2m2 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+[90mstdout[2m | tests/unit/units.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/enemySpawner.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/unifiedMovement.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/units.test.js [2m([22m[2m72 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m tests/unit/enemySpawner.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+[90mstdout[2m | tests/unit/multiplayerSessionEvents.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/multiplayerSessionEvents.test.js [2m([22m[2m20 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m tests/unit/unifiedMovement.test.js [2m([22m[2m66 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+[90mstdout[2m | tests/unit/enemyBuilding.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/seedUtils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/enemyBuilding.test.js [2m([22m[2m17 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m tests/unit/seedUtils.test.js [2m([22m[2m39 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+[90mstdout[2m | tests/unit/tankerTruckUtils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/tankerTruckUtils.test.js [2m([22m[2m36 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+[90mstdout[2m | tests/unit/commandSync.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/mineSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/commandSync.test.js [2m([22m[2m42 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstdout[2m | tests/unit/unitCombat.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/debugLogger.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/mineSystem.test.js [2m([22m[2m48 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m tests/unit/unitCombat.test.js [2m([22m[2m54 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/debugLogger.test.js [2m([22m[2m19 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+[90mstdout[2m | tests/unit/gameFolderUnitCombat.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/logic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstderr[2m | tests/unit/logic.test.js[2m > [22m[2mlogic.js[2m > [22m[2mfindClosestOre[2m > [22m[2mreturns null for undefined unit
+[22m[39mfindClosestOre called with undefined unit
+
+[90mstderr[2m | tests/unit/logic.test.js[2m > [22m[2mlogic.js[2m > [22m[2mfindClosestOre[2m > [22m[2mreturns null for unit missing x property
+[22m[39mfindClosestOre called with unit missing x/y properties: { id: [33m1[39m, y: [33m160[39m }
+
+[90mstderr[2m | tests/unit/logic.test.js[2m > [22m[2mlogic.js[2m > [22m[2mfindClosestOre[2m > [22m[2mreturns null for unit missing y property
+[22m[39mfindClosestOre called with unit missing x/y properties: { id: [33m1[39m, x: [33m160[39m }
+
+ [32m✓[39m tests/unit/logic.test.js [2m([22m[2m62 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m tests/unit/gameFolderUnitCombat.test.js [2m([22m[2m29 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+[90mstdout[2m | tests/unit/bulletSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/bulletSystem.test.js [2m([22m[2m80 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+[90mstdout[2m | tests/unit/unitWreckManager.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/smokeUtils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/flowField.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/smokeUtils.test.js [2m([22m[2m26 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | tests/unit/hitZoneCalculator.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/unitWreckManager.test.js [2m([22m[2m65 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/flowField.test.js [2m([22m[2m43 tests[22m[2m)[22m[32m 31[2mms[22m[39m
+ [32m✓[39m tests/unit/hitZoneCalculator.test.js [2m([22m[2m36 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+[90mstdout[2m | tests/unit/llmStrategicDigest.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/retreat.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/llmStrategicDigest.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 25[2mms[22m[39m
+ [32m✓[39m tests/unit/retreat.test.js [2m([22m[2m36 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+[90mstdout[2m | tests/unit/attackNotifications.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/attackNotifications.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/tankerTruckLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/enemyUtils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/inputUtils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/enemyUtils.test.js [2m([22m[2m29 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/mapEditor.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/inputUtils.test.js [2m([22m[2m28 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/tankerTruckLogic.test.js [2m([22m[2m20 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/mapEditor.test.js [2m([22m[2m73 tests[22m[2m)[22m[32m 35[2mms[22m[39m
+[90mstdout[2m | tests/unit/unitCommandHistory.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/apacheCombat.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/unitCommandHistory.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/apacheCombat.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | tests/unit/spriteSheetAnimation.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/spriteSheetAnimation.test.js [2m([22m[2m7 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | tests/unit/logger.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/logger.test.js [2m([22m[2m30 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/helipadUtils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/recoveryTankSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/resourceSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/helipadUtils.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m tests/unit/recoveryTankSystem.test.js [2m([22m[2m35 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+[90mstdout[2m | tests/unit/attackGroupHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/milestoneSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/resourceSystem.test.js [2m([22m[2m44 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/attackGroupHandler.test.js [2m([22m[2m42 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m tests/unit/milestoneSystem.test.js [2m([22m[2m45 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+[90mstdout[2m | tests/unit/peerConnection.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/multiUnitInputHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/peerConnection.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/multiUnitInputHandler.test.js [2m([22m[2m23 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | tests/unit/mineLayerSweeper.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/mineLayerSweeper.test.js [2m([22m[2m46 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+[90mstdout[2m | tests/unit/unitRendererAmmoBar.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/unitRendererAmmoBar.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstdout[2m | tests/unit/ambulanceSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/lockstepManager.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/ambulanceSystem.test.js [2m([22m[2m35 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m tests/unit/lockstepManager.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+[90mstdout[2m | tests/unit/shadowOfWar.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/shadowOfWar.test.js [2m([22m[2m28 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | tests/unit/inputHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/stateHash.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/stateHash.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+ [32m✓[39m tests/unit/inputHandler.test.js [2m([22m[2m38 tests[22m[2m)[22m[32m 36[2mms[22m[39m
+[90mstdout[2m | tests/unit/mapRendererWater.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/mapRendererWater.test.js [2m([22m[2m19 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+[90mstdout[2m | tests/unit/blueprintPlanning.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/blueprintPlanning.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | tests/unit/ammunitionTruckLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/workshopLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/ammunitionTruckLogic.test.js [2m([22m[2m28 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m tests/unit/workshopLogic.test.js [2m([22m[2m24 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+[90mstdout[2m | tests/unit/dangerZoneMap.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/dangerZoneMap.test.js [2m([22m[2m32 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+[90mstdout[2m | tests/unit/savePlayerBuildPatterns.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/mouseCommands.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/savePlayerBuildPatterns.test.js [2m([22m[2m15 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+[90mstdout[2m | tests/unit/invites.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/invites.test.js [2m([22m[2m29 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+[90mstdout[2m | tests/unit/benchmarkTracker.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/benchmarkTracker.test.js [2m([22m[2m38 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+[90mstdout[2m | tests/unit/missions/index.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/remoteControlState.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/tankerLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/missions/index.test.js [2m([22m[2m16 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m tests/unit/remoteControlState.test.js [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/tankerLogic.test.js [2m([22m[2m30 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | tests/unit/waypointSounds.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/waypointSounds.test.js [2m([22m[2m18 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m tests/unit/mouseCommands.test.js [2m([22m[2m2 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+[90mstdout[2m | tests/unit/hospitalLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/hospitalLogic.test.js [2m([22m[2m9 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | tests/unit/effectsRenderer.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/llmProvidersOpenai.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/movementApache.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/effectsRenderer.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/llmProvidersOpenai.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 3[2mms[22m[39m
+[90mstdout[2m | tests/unit/hostNotifications.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/movementApache.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m tests/unit/hostNotifications.test.js [2m([22m[2m16 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+[90mstdout[2m | tests/unit/buildingRepairHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/llmStrategicPolicy.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/buildingRepairHandler.test.js [2m([22m[2m17 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/llmStrategicPolicy.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | tests/unit/soundCooldownManager.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/soundCooldownManager.test.js [2m([22m[2m19 tests[22m[2m)[22m[32m 10[2mms[22m[39m
+[90mstdout[2m | tests/unit/howitzerGunController.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/aiApi.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/inputBuffer.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/inputBuffer.test.js [2m([22m[2m17 tests[22m[2m)[22m[32m 9[2mms[22m[39m
+ [32m✓[39m tests/unit/howitzerGunController.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+[90mstdout[2m | tests/unit/commandQueue.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/commandQueue.test.js [2m([22m[2m20 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/ammunitionSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/grassTileDiscovery.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/grassTileDiscovery.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32m✓[39m tests/unit/ammunitionSystem.test.js [2m([22m[2m11 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+[90mstdout[2m | tests/unit/mineInputHandler.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/mineInputHandler.test.js [2m([22m[2m41 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+[90mstdout[2m | tests/unit/helipadLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/tankConfigUtil.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/helipadLogic.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/tankConfigUtil.test.js [2m([22m[2m9 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/baseUtils.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/baseUtils.test.js [2m([22m[2m24 tests[22m[2m)[22m[32m 13[2mms[22m[39m
+[90mstdout[2m | tests/unit/enemyAI.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/enemyAI.test.js [2m([22m[2m36 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m tests/unit/aiApi.test.js [2m([22m[2m8 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+[90mstdout[2m | tests/unit/textureManagerIntegratedSheets.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/textureManagerIntegratedSheets.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+[90mstdout[2m | tests/unit/aiPartySync.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/aiPartySync.test.js [2m([22m[2m10 tests[22m[2m)[22m[32m 4[2mms[22m[39m
+[90mstdout[2m | tests/unit/wreckRenderer.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/wreckRenderer.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 4[2mms[22m[39m
+[90mstdout[2m | tests/unit/serviceRadius.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/serviceRadius.test.js [2m([22m[2m31 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+[90mstdout[2m | tests/unit/buildOnlyOccupation.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/buildOnlyOccupation.test.js [2m([22m[2m2 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+[90mstdout[2m | tests/unit/llmProvidersInceptionlabs.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/version.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/llmProvidersInceptionlabs.test.js [2m([22m[2m2 tests[22m[2m)[22m[32m 5[2mms[22m[39m
+ [32m✓[39m tests/unit/version.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+[90mstdout[2m | tests/unit/guardBehavior.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/movementCollision.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/guardBehavior.test.js [2m([22m[2m12 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+[90mstdout[2m | tests/unit/airstripLogic.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/airstripLogic.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+[90mstdout[2m | tests/unit/tileDecals.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/tileDecals.test.js [2m([22m[2m5 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+[90mstdout[2m | tests/unit/llmRequestBudget.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/llmRequestBudget.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+[90mstdout[2m | tests/unit/combatHelpers.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+[90mstdout[2m | tests/unit/airstripReservations.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/combatHelpers.test.js [2m([22m[2m2 tests[22m[2m)[22m[32m 6[2mms[22m[39m
+ [32m✓[39m tests/unit/airstripReservations.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 9[2mms[22m[39m
+[90mstdout[2m | tests/unit/helpSystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/helpSystem.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 1[2mms[22m[39m
+[90mstdout[2m | tests/unit/replaySystem.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/replaySystem.test.js [2m([22m[2m1 test[22m[2m)[22m[32m 2[2mms[22m[39m
+ [32m✓[39m tests/unit/movementCollision.test.js [2m([22m[2m6 tests[22m[2m)[22m[32m 3[2mms[22m[39m
+[90mstdout[2m | tests/unit/headlessAudioMute.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/headlessAudioMute.test.js [2m([22m[2m4 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+[90mstdout[2m | tests/unit/f35Behavior.test.js
+[22m[39m[TEST SETUP] Headless test environment initialized
+
+ [32m✓[39m tests/unit/f35Behavior.test.js [2m([22m[2m3 tests[22m[2m)[22m[32m 2[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m141 passed[39m[22m[90m (141)[39m
+[2m      Tests [22m [1m[32m3655 passed[39m[22m[90m (3655)[39m
+[2m   Start at [22m 16:24:23
+[2m   Duration [22m 19.64s[2m (transform 7.19s, setup 2.59s, import 16.25s, tests 11.30s, environment 82.56s)[22m
+

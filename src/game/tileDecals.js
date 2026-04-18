@@ -3,6 +3,10 @@ import { TILE_SIZE } from '../config.js'
 const DECAL_TAGS = new Set(['impact', 'crater', 'debris'])
 const DEFAULT_SEED = 1
 
+function shouldPreserveExistingDecal(existingTag, nextTag) {
+  return existingTag === 'crater' && nextTag === 'impact'
+}
+
 function toSeedNumber(seedValue) {
   if (typeof seedValue === 'number' && Number.isFinite(seedValue)) {
     return Math.abs(Math.floor(seedValue)) || DEFAULT_SEED
@@ -47,6 +51,10 @@ export function setTileDecal(mapGrid, gameState, tileX, tileY, tag) {
 
   const tile = getTileForDecal(mapGrid, tileX, tileY)
   if (!tile) return null
+
+  if (shouldPreserveExistingDecal(tile.decal?.tag, tag)) {
+    return tile.decal
+  }
 
   const previousCounter = Number.isFinite(tile.decalCounter) ? tile.decalCounter : 0
   const nextCounter = previousCounter + 1

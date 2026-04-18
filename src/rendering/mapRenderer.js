@@ -897,7 +897,7 @@ export class MapRenderer {
     const tag = tile.decal.tag
     if (!tag) return
 
-    const candidates = this.textureManager.getIntegratedTileCandidatesByTags([tag])
+    const candidates = this.textureManager.getDecalTileCandidatesByTags([tag])
     const variantSeed = Number.isFinite(tile.decal.variantSeed)
       ? tile.decal.variantSeed
       : ((tileX * 73856093) ^ (tileY * 19349663)) >>> 0

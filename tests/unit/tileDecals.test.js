@@ -27,6 +27,18 @@ describe('tileDecals', () => {
     expect(mapGrid[0][0].decalCounter).toBe(2)
   })
 
+  it('preserves an existing crater when a later impact hits the same tile', () => {
+    const mapGrid = [[{ type: 'land' }]]
+    const gameState = { mapSeed: '42' }
+
+    const crater = setTileDecal(mapGrid, gameState, 0, 0, 'crater')
+    const afterImpact = setTileDecal(mapGrid, gameState, 0, 0, 'impact')
+
+    expect(afterImpact).toBe(crater)
+    expect(mapGrid[0][0].decal.tag).toBe('crater')
+    expect(mapGrid[0][0].decalCounter).toBe(1)
+  })
+
   it('applies debris decals to every tile of a building footprint', () => {
     const mapGrid = [
       [{ type: 'land' }, { type: 'land' }, { type: 'land' }],

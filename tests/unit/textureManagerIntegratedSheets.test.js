@@ -76,4 +76,24 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.integratedSpriteSheetMode).toBe(false)
     expect(manager.integratedTagBuckets).toEqual({})
   })
+
+  it('falls back to bundled combat decal candidates when integrated sheets do not provide decal tags', () => {
+    const manager = new TextureManager()
+    manager.defaultCombatDecalTagBuckets = {
+      crater: [
+        {
+          tags: ['crater'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'combat-sheet' },
+          sheetPath: 'images/map/sprite_sheets/debris_craters_tracks.webp'
+        }
+      ]
+    }
+
+    expect(manager.getDecalTileCandidatesByTags(['crater'])).toEqual([
+      expect.objectContaining({
+        sheetPath: 'images/map/sprite_sheets/debris_craters_tracks.webp'
+      })
+    ])
+  })
 })

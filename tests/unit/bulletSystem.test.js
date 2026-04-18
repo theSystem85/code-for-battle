@@ -80,6 +80,10 @@ vi.mock('../../src/ai/enemyStrategies.js', () => ({
   handleAICrewLossEvent: vi.fn()
 }))
 
+vi.mock('../../src/game/tileDecals.js', () => ({
+  setWorldDecal: vi.fn()
+}))
+
 vi.mock('../../src/utils/gameRandom.js', () => ({
   gameRandom: vi.fn(() => 0)
 }))
@@ -97,6 +101,7 @@ import { canPlayCriticalDamageSound, recordCriticalDamageSoundPlayed } from '../
 import { handleAICrewLossEvent } from '../../src/ai/enemyStrategies.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
 import { calculateHitZoneDamageMultiplier } from '../../src/game/hitZoneCalculator.js'
+import { setWorldDecal } from '../../src/game/tileDecals.js'
 
 // Mock performance.now for consistent timing
 vi.stubGlobal('performance', {
@@ -997,7 +1002,30 @@ describe('Bullet System', () => {
         undefined,
         undefined
       )
+      expect(setWorldDecal).toHaveBeenCalledWith(mapGrid, expect.any(Object), 50, 60, 'impact')
       expect(bullets).toHaveLength(0)
+    })
+
+    it('stamps a crater decal when a howitzer shell detonates', () => {
+      const bullet = createMockBullet({
+        parabolic: true,
+        startTime: 1,
+        flightDuration: 100,
+        startX: 10,
+        startY: 12,
+        dx: 20,
+        dy: 30,
+        arcHeight: 40,
+        projectileType: 'artillery',
+        shooter: { id: 'howitzer-1', owner: 'player', type: 'howitzer' },
+        targetPosition: { x: 70, y: 90 }
+      })
+      const bullets = [bullet]
+      const gameState = createGameState({ simulationTime: 200 })
+
+      updateBullets(bullets, [], [], gameState, mapGrid)
+
+      expect(setWorldDecal).toHaveBeenCalledWith(mapGrid, gameState, 70, 90, 'crater')
     })
 
     it('emits smoke and trails during ballistic ascent', () => {

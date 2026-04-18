@@ -55,3 +55,9 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 1. The bundled combat decal sheet `public/images/map/sprite_sheets/debris_craters_tracks.webp` must be listed in the indexed/default SSE static-sheet sources so it is selectable and editable in the Sprite Sheet Editor without manual local setup.
 2. Black-key transparency processing for integrated sprite sheets must support sheet-specific thresholds so very dark decal art can preserve visible marks while still removing the black sheet background.
 3. The bundled combat decal sheet must use tuned black-key thresholds that keep `impact`, `crater`, and `debris` details visibly readable on terrain tiles instead of keying out most of the decal itself.
+
+## Follow-up (2026-04-18): Crater Priority and Default Combat Decal Fallback
+1. A tile that already contains a `crater` decal must not be downgraded to `impact` by later projectile-hit decal events on that same tile.
+2. Howitzer-fired shells must always stamp a `crater` decal on their impact tile rather than an `impact` decal.
+3. Persistent `impact`, `crater`, and `debris` decals must continue to render through the bundled combat decal sheet even when custom sprite sheets are disabled.
+4. When custom sprite sheets are enabled but provide no decal-tagged tiles for `impact`, `crater`, or `debris`, runtime must fall back to the bundled `images/map/sprite_sheets/debris_craters_tracks.json` metadata and its corresponding sheet image instead of dropping back to flat-color decal placeholders.

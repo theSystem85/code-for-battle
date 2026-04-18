@@ -42,9 +42,17 @@ function shouldSpawnImpactDecal(bullet) {
   )
 }
 
+function getDecalTagForBullet(bullet) {
+  if (bullet?.shooter?.type === 'howitzer') {
+    return 'crater'
+  }
+
+  return 'impact'
+}
+
 function spawnImpactDecal(gameState, mapGrid, bullet, x, y) {
   if (!shouldSpawnImpactDecal(bullet)) return
-  setWorldDecal(mapGrid, gameState, x, y, 'impact')
+  setWorldDecal(mapGrid, gameState, x, y, getDecalTagForBullet(bullet))
 }
 
 /**
