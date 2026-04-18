@@ -17,6 +17,7 @@ import { explosions } from '../logic.js'
 import { isHost } from '../network/gameCommandSync.js'
 import { playSound, playPositionalSound, audioContext } from '../sound.js'
 import { clearFactoryFromMapGrid } from '../factories.js'
+import { setBuildingDebrisDecals, setWorldDecal } from './tileDecals.js'
 import { logPerformance } from '../performanceUtils.js'
 import { registerUnitWreck, releaseWreckAssignment } from './unitWreckManager.js'
 import { stopApacheRotorSound } from './movementApache.js'
@@ -501,6 +502,7 @@ export function cleanupDestroyedUnits(units, gameState) {
       if (!unit.destructionExplosionSpawned) {
         const unitCenterX = unit.x + TILE_SIZE / 2
         const unitCenterY = unit.y + TILE_SIZE / 2
+        setWorldDecal(gameState.mapGrid, gameState, unitCenterX, unitCenterY, 'crater')
         playPositionalSound('explosion', unitCenterX, unitCenterY, 0.5)
         spawnDestructionExplosion(gameState, unitCenterX, unitCenterY, { scale: 1.3 })
         unit.destructionExplosionSpawned = true
@@ -573,6 +575,7 @@ export function cleanupDestroyedFactories(factories, mapGrid, gameState) {
         factory.aiApiDestroyedRecorded = true
       }
       // Clear the factory from the map grid to unblock tiles for pathfinding
+      setBuildingDebrisDecals(mapGrid, gameState, factory)
       clearFactoryFromMapGrid(factory, mapGrid)
 
       // Remove the factory from the factories array

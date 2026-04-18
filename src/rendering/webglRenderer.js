@@ -349,6 +349,10 @@ export class GameWebGLRenderer {
           overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
         }
 
+        if (tile.decal) {
+          overlayInstances.push(this.createDecalInstance(tile, x, y))
+        }
+
         if (tile.seedCrystal) {
           resourceInstances.push(this.createInstance('seedCrystal', x, y, mapGrid, canUseTextures, sotMask))
         } else if (tile.ore) {
@@ -417,6 +421,26 @@ export class GameWebGLRenderer {
       color: this.getColor(type),
       textureType: isWaterAnimated ? 2 : useTexture ? 1 : 0,
       waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY, sotMask) : [0, 0, 0, 0],
+      clipOrientation: SOT_CLIP_NONE
+    }
+  }
+
+  createDecalInstance(tile, tileX, tileY) {
+    const decalTag = tile?.decal?.tag
+    if (!decalTag) return null
+
+    const fallbackColors = {
+      impact: [0.26, 0.23, 0.2, 0.28],
+      crater: [0.17, 0.15, 0.14, 0.33],
+      debris: [0.36, 0.33, 0.29, 0.4]
+    }
+
+    return {
+      translation: [tileX, tileY],
+      uvRect: [0, 0, 0, 0],
+      color: fallbackColors[decalTag] || [0.22, 0.2, 0.19, 0.26],
+      textureType: 0,
+      waterEdges: [0, 0, 0, 0],
       clipOrientation: SOT_CLIP_NONE
     }
   }

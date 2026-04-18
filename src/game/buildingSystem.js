@@ -16,6 +16,7 @@ import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { gameState as globalGameState } from '../gameState.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from './turretMuzzleConfig.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
+import { setBuildingDebrisDecals } from './tileDecals.js'
 
 
 /**
@@ -110,6 +111,8 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
         // Calculate building center for explosion effects
         const buildingCenterX = building.x * TILE_SIZE + (building.width * TILE_SIZE / 2)
         const buildingCenterY = building.y * TILE_SIZE + (building.height * TILE_SIZE / 2)
+
+        setBuildingDebrisDecals(mapGrid, gameState, building)
 
         // Play explosion sound with reduced volume (0.5)
         playPositionalSound('explosion', buildingCenterX, buildingCenterY, 0.5)

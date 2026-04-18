@@ -41,3 +41,12 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 7. Hot-path rendering must stay performant for large concurrent counts (no per-frame metadata parsing, no per-frame image creation).
 8. Sprite-sheet source cropping must remain correct across retina/non-retina displays by using texture dimension-aware source tile calculation, not assumptions tied to canvas DPR.
 9. Black background pixels in additive sprite sheets must be treated as transparent in final output (no visible black boxes during explosion playback).
+
+## Follow-up (2026-04-17): Persistent Terrain Decals from Combat Events
+1. Projectile impacts from unit-fired attacks stamp a persistent `impact` decal on the impacted tile.
+2. Unit destruction stamps a persistent `crater` decal on the unit's explosion tile.
+3. Building/factory destruction stamps persistent `debris` decals across every tile in the destroyed footprint.
+4. Each map tile stores at most one decal at a time; newer decal events replace older tile decals.
+5. Decal variation is selected pseudo-randomly using map-seed-driven deterministic selection so outcomes are reproducible for a given simulation.
+6. Map tile save/load payload must persist decal state (including deterministic variant metadata) so reloads retain exact visual decals.
+7. Rendering order must keep ore/seed overlays above decal overlays when both exist on the same tile.
