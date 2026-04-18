@@ -1189,6 +1189,31 @@
             <button id="spriteSheetEditorCloseBtn" class="action-button" type="button">Close</button>
             <button id="sseApplyTagsBtn" class="action-button" type="button">Apply tags</button>
           </div>
+          <details class="sprite-sheet-editor__converter" id="sseConverterSection">
+            <summary class="sprite-sheet-editor__converter-summary">Image → WebP Converter</summary>
+            <p class="sprite-sheet-editor__converter-copy">Drop PNG/JPEG/WebP files here (local browser only).</p>
+            <label class="sprite-sheet-editor__field">
+              <span>Compression (%)</span>
+              <input id="sseConvertCompressionInput" class="sidebar-input" type="number" min="1" max="100" value="90">
+            </label>
+            <div class="sprite-sheet-editor__converter-resolution-row">
+              <label class="sprite-sheet-editor__field">
+                <span>Resolution width (px)</span>
+                <input id="sseConvertWidthInput" class="sidebar-input" type="number" min="1" max="2048" value="1024">
+              </label>
+              <label class="sprite-sheet-editor__field">
+                <span>Resolution height (px)</span>
+                <input id="sseConvertHeightInput" class="sidebar-input" type="number" min="1" max="2048" value="1024">
+              </label>
+            </div>
+            <label class="sprite-sheet-editor__checkbox-row">
+              <input id="sseConvertSuffixCheckbox" type="checkbox">
+              <span>Add _{width}x{height}_q{compression} suffix to filename</span>
+            </label>
+            <div id="sseConverterDropZone" class="sprite-sheet-editor__converter-dropzone" role="button" tabindex="0" aria-label="Drop image files to convert to webp">
+              Drag &amp; drop files to convert now
+            </div>
+          </details>
           <div id="sseStatus" class="sprite-sheet-editor__status" aria-live="polite"></div>
         </aside>
         <section class="sprite-sheet-editor__workspace">

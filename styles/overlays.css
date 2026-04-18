@@ -508,6 +508,57 @@ body.config-modal-open {
   gap: 6px;
 }
 
+.sprite-sheet-editor__converter {
+  margin-top: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(7, 11, 16, 0.6);
+  padding: 6px;
+}
+
+.sprite-sheet-editor__converter-summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: #d9e5ef;
+}
+
+.sprite-sheet-editor__converter-copy {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #b0c0d0;
+}
+
+.sprite-sheet-editor__converter-resolution-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sprite-sheet-editor__converter[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sprite-sheet-editor__converter-dropzone {
+  border: 1px dashed rgba(166, 197, 225, 0.6);
+  border-radius: 4px;
+  min-height: 66px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+  font-size: 12px;
+  color: #d8e0ea;
+  background: rgba(17, 24, 33, 0.75);
+}
+
+.sprite-sheet-editor__converter-dropzone.is-drag-over {
+  border-color: #66b0ff;
+  background: rgba(36, 60, 82, 0.7);
+}
+
 .sprite-sheet-editor__tag-option {
   display: inline-flex;
   align-items: center;

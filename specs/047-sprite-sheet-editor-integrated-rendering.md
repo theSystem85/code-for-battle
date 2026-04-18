@@ -123,6 +123,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Metadata popover must render above the SSE workspace/canvas layer (no clipping behind/right of sidebar due stacking context).
   - Static mode must hide animated preview panel using effective `display: none` behavior.
   - SSE canvas accepts drag-drop image files in both Static and Animated modes, adds dropped images to current-mode selector list in-browser only (non-persistent), and auto-selects/loads dropped image immediately.
+  - SSE sidebar includes a bottom expand/collapse converter section for local-only drag-drop PNG/JPEG/WEBP conversion to immediate WEBP download with numeric controls for compression (%) and output width/height, defaults `90` and `1024x1024`, hard cap `2048x2048`, and an optional filename suffix toggle (`_{width}x{height}_q{compression}`).
   - Dropped image paths (blob/data URLs) must animate in preview after tagging; animation instance creation/texture loading cannot rely exclusively on filename-encoded metadata for such temporary assets.
   - `Apply current tag to all tiles` must behave as a toggle: when all tiles already contain active tag it switches to remove mode and removes that tag from all tiles.
   - Runtime map rendering of sprite-sheet explosions must visually match SSE preview blending (no dark/black aura fringe) by using equivalent additive draw characteristics.

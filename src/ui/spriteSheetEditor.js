@@ -17,6 +17,10 @@ const SSE_LAST_ANIMATION_SHEET_KEY = 'rts-sse-last-animation-sheet'
 const SSE_MODE_STORAGE_KEY = 'rts-sse-mode'
 const ANIMATION_DEFAULT_DURATION_MS = 1050
 const SSE_PREVIEW_BACKGROUND_TILE = 'images/map/land01.webp'
+const SSE_CONVERTER_DEFAULT_COMPRESSION = 90
+const SSE_CONVERTER_DEFAULT_RESOLUTION = 1024
+const SSE_CONVERTER_MAX_RESOLUTION = 2048
+const SSE_CONVERTER_ACCEPTED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
 
 export const DEFAULT_SSE_TAGS = [
   'passable',
@@ -1181,6 +1185,114 @@ function triggerJsonDownload(sheetPath, serialized) {
   URL.revokeObjectURL(url)
 }
 
+function clampInteger(value, fallback, min, max) {
+  const parsed = Number.parseInt(value, 10)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.max(min, Math.min(max, parsed))
+}
+
+function sanitizeDownloadBaseName(filename) {
+  const rawBase = `${filename || 'converted'}`.replace(/\.[^.]+$/, '').trim()
+  return rawBase.replace(/[\\/:*?"<>|]/g, '_') || 'converted'
+}
+
+function triggerImageDownload(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(url)
+}
+
+function sanitizeConverterInputs(state) {
+  if (!state.convertCompressionInput || !state.convertWidthInput || !state.convertHeightInput) {
+    return {
+      compression: SSE_CONVERTER_DEFAULT_COMPRESSION,
+      width: SSE_CONVERTER_DEFAULT_RESOLUTION,
+      height: SSE_CONVERTER_DEFAULT_RESOLUTION
+    }
+  }
+
+  const compression = clampInteger(state.convertCompressionInput.value, SSE_CONVERTER_DEFAULT_COMPRESSION, 1, 100)
+  const width = clampInteger(state.convertWidthInput.value, SSE_CONVERTER_DEFAULT_RESOLUTION, 1, SSE_CONVERTER_MAX_RESOLUTION)
+  const height = clampInteger(state.convertHeightInput.value, SSE_CONVERTER_DEFAULT_RESOLUTION, 1, SSE_CONVERTER_MAX_RESOLUTION)
+  state.convertCompressionInput.value = `${compression}`
+  state.convertWidthInput.value = `${width}`
+  state.convertHeightInput.value = `${height}`
+  return { compression, width, height }
+}
+
+function convertImageFileToWebp(file, width, height, quality) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    image.onload = () => {
+      try {
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const ctx = canvas.getContext('2d', { alpha: true })
+        if (!ctx) {
+          reject(new Error('Canvas 2D context unavailable'))
+          return
+        }
+        ctx.clearRect(0, 0, width, height)
+        ctx.drawImage(image, 0, 0, width, height)
+        canvas.toBlob((blob) => {
+          if (!blob) {
+            reject(new Error('Failed to encode WEBP image'))
+            return
+          }
+          resolve(blob)
+        }, 'image/webp', quality)
+      } finally {
+        URL.revokeObjectURL(objectUrl)
+      }
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Failed to decode image'))
+    }
+    image.src = objectUrl
+  })
+}
+
+async function handleConverterFilesDrop(state, fileList) {
+  const files = Array.from(fileList || [])
+  if (!files.length) {
+    setStatus(state, 'Drop one or more PNG/JPEG/WEBP files to convert.', 'warn')
+    return
+  }
+
+  const { compression, width, height } = sanitizeConverterInputs(state)
+  const shouldAddSuffix = Boolean(state.convertSuffixCheckbox?.checked)
+  let converted = 0
+
+  for (const file of files) {
+    if (!SSE_CONVERTER_ACCEPTED_TYPES.has(file.type)) {
+      continue
+    }
+    try {
+      const blob = await convertImageFileToWebp(file, width, height, compression / 100)
+      const baseName = sanitizeDownloadBaseName(file.name)
+      const suffix = shouldAddSuffix ? `_${width}x${height}_q${compression}` : ''
+      triggerImageDownload(blob, `${baseName}${suffix}.webp`)
+      converted += 1
+    } catch {
+      // continue with remaining files
+    }
+  }
+
+  if (!converted) {
+    setStatus(state, 'No valid files converted. Accepted types: PNG, JPEG, WEBP.', 'warn')
+    return
+  }
+  setStatus(state, `Converted ${converted} image${converted === 1 ? '' : 's'} to WEBP (${width}x${height}, q${compression}).`)
+}
+
 export async function initSpriteSheetEditor(options = {}) {
   const state = {
     modal: document.getElementById('spriteSheetEditorModal'),
@@ -1221,6 +1333,11 @@ export async function initSpriteSheetEditor(options = {}) {
     canvasWrap: document.getElementById('sseCanvasWrap'),
     canvasViewport: document.getElementById('sseCanvasViewport'),
     canvas: document.getElementById('sseTileCanvas'),
+    convertCompressionInput: document.getElementById('sseConvertCompressionInput'),
+    convertWidthInput: document.getElementById('sseConvertWidthInput'),
+    convertHeightInput: document.getElementById('sseConvertHeightInput'),
+    convertSuffixCheckbox: document.getElementById('sseConvertSuffixCheckbox'),
+    converterDropZone: document.getElementById('sseConverterDropZone'),
     sheetPaths: [],
     customSheetLabels: {},
     staticSheetPaths: [],
@@ -1413,6 +1530,26 @@ export async function initSpriteSheetEditor(options = {}) {
     event.preventDefault()
     const file = event.dataTransfer?.files?.[0]
     await loadDroppedSheetFile(state, file)
+  })
+
+  state.convertCompressionInput?.addEventListener('change', () => sanitizeConverterInputs(state))
+  state.convertWidthInput?.addEventListener('change', () => sanitizeConverterInputs(state))
+  state.convertHeightInput?.addEventListener('change', () => sanitizeConverterInputs(state))
+
+  state.converterDropZone?.addEventListener('dragover', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    event.dataTransfer.dropEffect = 'copy'
+    state.converterDropZone?.classList.add('is-drag-over')
+  })
+  state.converterDropZone?.addEventListener('dragleave', () => {
+    state.converterDropZone?.classList.remove('is-drag-over')
+  })
+  state.converterDropZone?.addEventListener('drop', async(event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    state.converterDropZone?.classList.remove('is-drag-over')
+    await handleConverterFilesDrop(state, event.dataTransfer?.files)
   })
 
   state.tileSizeInput?.addEventListener('change', () => {
