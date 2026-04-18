@@ -43,7 +43,7 @@ function shouldSpawnImpactDecal(bullet) {
 }
 
 function getDecalTagForBullet(bullet) {
-  if (bullet?.shooter?.type === 'howitzer') {
+  if (bullet?.shooter?.type === 'howitzer' || bullet?.shooter?.type === 'artilleryTurret') {
     return 'crater'
   }
 
