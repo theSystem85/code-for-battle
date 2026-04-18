@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import '../setup.js'
 import {
   parseSpriteSheetMetadataFromFilename,
@@ -94,4 +94,65 @@ describe('spriteSheetAnimation', () => {
 
     expect(getImageTextureWithBlendMode(image, 'alpha')).toBe(image)
   })
+
+  it('supports sheet-specific black-key thresholds for dark decal textures', () => {
+    const originalCreateElement = document.createElement.bind(document)
+    const image = {
+      complete: true,
+      naturalWidth: 1,
+      naturalHeight: 1
+    }
+    const writes = []
+    const contexts = [
+      createMockCanvasContext([12, 12, 12, 255], writes),
+      createMockCanvasContext([12, 12, 12, 255], writes)
+    ]
+
+    vi.spyOn(document, 'createElement').mockImplementation((tagName, options) => {
+      if (`${tagName}`.toLowerCase() !== 'canvas') {
+        return originalCreateElement(tagName, options)
+      }
+
+      return {
+        width: 0,
+        height: 0,
+        getContext: () => contexts.shift() || null
+      }
+    })
+
+    const defaultTexture = getImageTextureWithBlendMode(image, 'black')
+    const tunedTexture = getImageTextureWithBlendMode(image, 'black', {
+      cutoffBrightness: 8,
+      softenBrightness: 24
+    })
+
+    expect(defaultTexture).not.toBe(image)
+    expect(tunedTexture).not.toBe(image)
+    expect(defaultTexture).not.toBe(tunedTexture)
+    expect(writes).toHaveLength(2)
+    expect(writes[0][3]).toBe(0)
+    expect(writes[1][3]).toBeGreaterThan(0)
+  })
 })
+
+function createMockCanvasContext(rgba, writes) {
+  const imageData = {
+    data: new Uint8ClampedArray(rgba),
+    width: 1,
+    height: 1
+  }
+
+  return {
+    drawImage() {},
+    getImageData() {
+      return {
+        data: imageData.data.slice(),
+        width: imageData.width,
+        height: imageData.height
+      }
+    },
+    putImageData(nextImageData) {
+      writes.push(Array.from(nextImageData.data))
+    }
+  }
+}

@@ -41,3 +41,27 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 7. Hot-path rendering must stay performant for large concurrent counts (no per-frame metadata parsing, no per-frame image creation).
 8. Sprite-sheet source cropping must remain correct across retina/non-retina displays by using texture dimension-aware source tile calculation, not assumptions tied to canvas DPR.
 9. Black background pixels in additive sprite sheets must be treated as transparent in final output (no visible black boxes during explosion playback).
+
+## Follow-up (2026-04-17): Persistent Terrain Decals from Combat Events
+1. Projectile impacts from unit-fired attacks stamp a persistent `impact` decal on the impacted tile.
+2. Unit destruction stamps a persistent `crater` decal on the unit's explosion tile.
+3. Building/factory destruction stamps persistent `debris` decals across every tile in the destroyed footprint.
+4. Each map tile stores at most one decal at a time; newer decal events replace older tile decals.
+5. Decal variation is selected pseudo-randomly using map-seed-driven deterministic selection so outcomes are reproducible for a given simulation.
+6. Map tile save/load payload must persist decal state (including deterministic variant metadata) so reloads retain exact visual decals.
+7. Rendering order must keep ore/seed overlays above decal overlays when both exist on the same tile.
+
+## Follow-up (2026-04-18): Combat Decal Sheet Visibility and SSE Access
+1. The bundled combat decal sheet `public/images/map/sprite_sheets/debris_craters_tracks.webp` must be listed in the indexed/default SSE static-sheet sources so it is selectable and editable in the Sprite Sheet Editor without manual local setup.
+2. Black-key transparency processing for integrated sprite sheets must support sheet-specific thresholds so very dark decal art can preserve visible marks while still removing the black sheet background.
+3. The bundled combat decal sheet must use tuned black-key thresholds that keep `impact`, `crater`, and `debris` details visibly readable on terrain tiles instead of keying out most of the decal itself.
+
+## Follow-up (2026-04-18): Crater Priority and Default Combat Decal Fallback
+1. A tile that already contains a `crater` decal must not be downgraded to `impact` by later projectile-hit decal events on that same tile.
+2. Howitzer-fired shells must always stamp a `crater` decal on their impact tile rather than an `impact` decal.
+3. Persistent `impact`, `crater`, and `debris` decals must continue to render through the bundled combat decal sheet even when custom sprite sheets are disabled.
+4. When custom sprite sheets are enabled but provide no decal-tagged tiles for `impact`, `crater`, or `debris`, runtime must fall back to the bundled `images/map/sprite_sheets/debris_craters_tracks.json` metadata and its corresponding sheet image instead of dropping back to flat-color decal placeholders.
+
+## Follow-up (2026-04-18): Remove Legacy GPU Decal Underlay
+1. When procedural GPU terrain rendering is active and decals are rendered by the 2D map pass, the WebGL terrain batch must not also emit its legacy flat-color decal fallback for those same tiles.
+2. In the non-custom-sprite path, a decal tile must show only the terrain tile plus the decal art itself; no semi-transparent gray/brown intermediate layer may remain beneath the decal.

@@ -5,6 +5,10 @@
   "rowHeight": 64,
   "borderWidth": 1,
   "blendMode": "black",
+  "blackKey": {
+    "cutoffBrightness": 8,
+    "softenBrightness": 24
+  },
   "tags": [
     "passable",
     "decorative",

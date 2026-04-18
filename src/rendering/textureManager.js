@@ -5,6 +5,9 @@ import { getDevicePixelRatio } from './renderingUtils.js'
 import { discoverGrassTiles } from '../utils/grassTileDiscovery.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
 
+const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
+const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
+
 // Map unit types to their image paths
 const unitImageMap = {
   tank: 'images/tank.webp',
@@ -41,8 +44,40 @@ export class TextureManager {
     this.integratedTagBuckets = {}
     this.integratedBiomeTag = 'grass'
     this.integratedBlendMode = 'black'
+    this.integratedBlackKey = null
+    this.defaultCombatDecalSheetImage = null
+    this.defaultCombatDecalSheetMetadata = null
+    this.defaultCombatDecalTagBuckets = {}
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
+  }
+
+  getTagBucketCandidates(buckets, requiredTags, excludedTags = []) {
+    if (!Array.isArray(requiredTags) || !requiredTags.length) return []
+
+    let seedBucket = null
+
+    requiredTags.forEach((tag) => {
+      const bucket = buckets?.[tag]
+      if (!Array.isArray(bucket) || !bucket.length) {
+        seedBucket = []
+        return
+      }
+      if (!seedBucket || bucket.length < seedBucket.length) {
+        seedBucket = bucket
+      }
+    })
+
+    if (!Array.isArray(seedBucket) || !seedBucket.length) {
+      return []
+    }
+
+    return seedBucket.filter((tile) => {
+      if (!Array.isArray(tile?.tags) || !tile.rect) return false
+      const hasRequired = requiredTags.every(tag => tile.tags.includes(tag))
+      if (!hasRequired) return false
+      return excludedTags.every(tag => !tile.tags.includes(tag))
+    })
   }
 
   async loadIntegratedSpriteSheetImage(sheetPath) {
@@ -77,8 +112,9 @@ export class TextureManager {
         if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
         const tileRef = {
           ...tile,
-          image: getImageTextureWithBlendMode(entry.image, entry.blendMode),
+          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
           blendMode: entry.blendMode,
+          blackKey: entry.blackKey,
           sheetPath: entry.sheetPath
         }
         tile.tags.forEach((tag) => {
@@ -98,6 +134,48 @@ export class TextureManager {
     return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
   }
 
+  async preloadDefaultCombatDecalSheet() {
+    try {
+      const response = await fetch(DEFAULT_COMBAT_DECAL_METADATA_PATH, { cache: 'no-store' })
+      if (!response.ok) {
+        this.defaultCombatDecalSheetMetadata = null
+        this.defaultCombatDecalTagBuckets = {}
+        return
+      }
+
+      const metadata = await response.json()
+      if (!this.hasTaggedIntegratedTiles(metadata)) {
+        this.defaultCombatDecalSheetMetadata = null
+        this.defaultCombatDecalTagBuckets = {}
+        return
+      }
+
+      const image = await this.loadIntegratedSpriteSheetImage(DEFAULT_COMBAT_DECAL_SHEET_PATH)
+      if (!image) {
+        this.defaultCombatDecalSheetMetadata = null
+        this.defaultCombatDecalTagBuckets = {}
+        return
+      }
+
+      this.defaultCombatDecalSheetImage = image
+      this.defaultCombatDecalSheetMetadata = {
+        ...metadata,
+        sheetPath: DEFAULT_COMBAT_DECAL_SHEET_PATH
+      }
+      this.defaultCombatDecalTagBuckets = this.buildIntegratedTagBuckets([{
+        sheetPath: DEFAULT_COMBAT_DECAL_SHEET_PATH,
+        metadata: this.defaultCombatDecalSheetMetadata,
+        image,
+        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
+        blackKey: metadata?.blackKey || null
+      }])
+    } catch (err) {
+      this.defaultCombatDecalSheetMetadata = null
+      this.defaultCombatDecalTagBuckets = {}
+      window.logger.warn('Failed to preload default combat decal sheet:', err)
+    }
+  }
+
   async setIntegratedSpriteSheetConfig(config = {}) {
     const enabled = Boolean(config?.enabled)
     if (!enabled) {
@@ -106,6 +184,7 @@ export class TextureManager {
       this.integratedSpriteSheets = []
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
+      this.integratedBlackKey = null
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -130,7 +209,8 @@ export class TextureManager {
         sheetPath,
         metadata,
         image,
-        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode)
+        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
+        blackKey: metadata?.blackKey || null
       })
     }
 
@@ -140,6 +220,7 @@ export class TextureManager {
       this.integratedSpriteSheets = []
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
+      this.integratedBlackKey = null
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -153,8 +234,9 @@ export class TextureManager {
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
+    this.integratedBlackKey = normalizedEntries[0].blackKey
     const signatureSheets = normalizedEntries
-      .map(entry => `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}`)
+      .map(entry => `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}|${entry.blackKey?.cutoffBrightness ?? 'default'}|${entry.blackKey?.softenBrightness ?? 'default'}`)
       .join(';')
     this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}`
     this.integratedConfigVersion++
@@ -217,32 +299,16 @@ export class TextureManager {
   }
 
   getIntegratedTileCandidatesByTags(requiredTags, excludedTags = []) {
-    if (!Array.isArray(requiredTags) || !requiredTags.length) return []
+    return this.getTagBucketCandidates(this.integratedTagBuckets || {}, requiredTags, excludedTags)
+  }
 
-    const buckets = this.integratedTagBuckets || {}
-    let seedBucket = null
-
-    requiredTags.forEach((tag) => {
-      const bucket = buckets[tag]
-      if (!Array.isArray(bucket) || !bucket.length) {
-        seedBucket = []
-        return
-      }
-      if (!seedBucket || bucket.length < seedBucket.length) {
-        seedBucket = bucket
-      }
-    })
-
-    if (!Array.isArray(seedBucket) || !seedBucket.length) {
-      return []
+  getDecalTileCandidatesByTags(requiredTags, excludedTags = []) {
+    const integratedCandidates = this.getIntegratedTileCandidatesByTags(requiredTags, excludedTags)
+    if (integratedCandidates.length > 0) {
+      return integratedCandidates
     }
 
-    return seedBucket.filter((tile) => {
-      if (!Array.isArray(tile?.tags) || !tile.rect) return false
-      const hasRequired = requiredTags.every(tag => tile.tags.includes(tag))
-      if (!hasRequired) return false
-      return excludedTags.every(tag => !tile.tags.includes(tag))
-    })
+    return this.getTagBucketCandidates(this.defaultCombatDecalTagBuckets || {}, requiredTags, excludedTags)
   }
 
   selectIntegratedTileFromCandidates(candidates, x, y) {
@@ -285,7 +351,7 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode),
+      image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey),
       rect: selected.rect,
       tags: selected.tags || [],
       sheetPath: selected.sheetPath || null
@@ -436,6 +502,8 @@ export class TextureManager {
       if (tileInfo.passablePaths) tileInfo.passablePaths.forEach(p => addFromPath(p, tileType))
       if (tileInfo.impassablePaths) tileInfo.impassablePaths.forEach(p => addFromPath(p, tileType))
     }
+
+    await this.preloadDefaultCombatDecalSheet()
 
     this.allTexturesLoaded = true
     if (callback) callback()

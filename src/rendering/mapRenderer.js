@@ -8,6 +8,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
 } from '../config.js'
+import { getTileDecalSignature } from '../game/tileDecals.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -467,7 +468,14 @@ export class MapRenderer {
       const row = mapGrid[y]
       for (let x = extraStartX; x < extraEndX; x++) {
         const tile = row[x]
-        parts.push(tile.type, tile.airstripStreet ? 1 : 0, tile.ore ? 1 : 0, tile.seedCrystal ? 1 : 0, tile.noBuild || 0)
+        parts.push(
+          tile.type,
+          tile.airstripStreet ? 1 : 0,
+          tile.ore ? 1 : 0,
+          tile.seedCrystal ? 1 : 0,
+          tile.noBuild || 0,
+          getTileDecalSignature(tile)
+        )
         if (tile.type === 'water') containsWater = true
       }
     }
@@ -661,6 +669,8 @@ export class MapRenderer {
           }
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
+
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture)
@@ -880,6 +890,42 @@ export class MapRenderer {
 
     ctx.fillStyle = TILE_COLORS.seedCrystal
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+  }
+
+  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY) {
+    if (!tile?.decal || typeof tile.decal !== 'object') return
+    const tag = tile.decal.tag
+    if (!tag) return
+
+    const candidates = this.textureManager.getDecalTileCandidatesByTags([tag])
+    const variantSeed = Number.isFinite(tile.decal.variantSeed)
+      ? tile.decal.variantSeed
+      : ((tileX * 73856093) ^ (tileY * 19349663)) >>> 0
+
+    if (Array.isArray(candidates) && candidates.length > 0) {
+      const selected = candidates[variantSeed % candidates.length]
+      if (selected?.rect && selected?.image) {
+        const { rect, image } = selected
+        ctx.drawImage(
+          image,
+          rect.x,
+          rect.y,
+          rect.width,
+          rect.height,
+          screenX,
+          screenY,
+          TILE_SIZE + 1,
+          TILE_SIZE + 1
+        )
+        return
+      }
+    }
+
+    ctx.save()
+    ctx.globalAlpha = tag === 'debris' ? 0.4 : (tag === 'crater' ? 0.33 : 0.25)
+    ctx.fillStyle = tag === 'debris' ? '#5a5244' : (tag === 'crater' ? '#2f2b28' : '#3f3a36')
+    ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+    ctx.restore()
   }
 
   applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState) {
@@ -1156,6 +1202,8 @@ export class MapRenderer {
         const tile = mapGrid[y][x]
         const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
         const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture)

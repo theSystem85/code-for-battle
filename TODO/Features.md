@@ -354,3 +354,11 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [ ] Add F35 stealth strike fighter unit with generated sidebar/map assets, VTOL landing on helipads/airstrip parking/empty ground, JDAM multi-target AGF bombing, radar stealth, F22-relative speed/cost tuning, ground-only attack rules, landed logistics servicing/refill, crash wreck recovery parity, build prerequisites ((airstrip OR helipad) AND ammo fab), F35 sound hooks, and cheat-spawn support.
 - [x] Add bilingual legal pages and routing (`/impressum`, `/imprint`, `/datenschutz`, `/privacy`) with a gitignored local legal identity config (`impressum.config.json`), example config fallback, in-game + shell legal links, and privacy text aligned to actually used storage/network/WebRTC behavior.
 - [x] Adjust legal quick links visibility: hide floating shell links when mobile portrait sidebar is condensed or collapsed; keep them visible only when the sidebar is expanded.
+# 2026-04-17 - Persistent combat decals
+- Add permanent per-tile decals for combat events:
+  - `impact` decal when unit-fired shots impact a tile/target tile.
+  - `crater` decal when a unit explodes.
+  - `debris` decals across full building/factory footprints on destruction.
+- Decal selection must be pseudo-random from map seed and replace prior tile decal when a new event occurs.
+- Save/load support required for tile decals (type + deterministic variant state/counter).
+- Rendering order requirement: ore/seed overlays must remain above decals.

@@ -239,6 +239,20 @@ describe('MapRenderer water rendering', () => {
     expect(waterSotInstances[0].translation).toEqual([1, 1])
   })
 
+  it('does not add a legacy WebGL decal layer when the 2D map pass renders decals', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'land', decal: { tag: 'impact', variantSeed: 7 } }]
+    ]
+
+    const webglRenderer = new GameWebGLRenderer(null, makeTextureManager(), mapRenderer)
+    const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 1, 1)
+
+    expect(instances).toHaveLength(1)
+    expect(instances[0].translation).toEqual([0, 0])
+    expect(instances[0].clipOrientation).toBe(0)
+  })
+
   it('suppresses water SOT for a single land tile island inside water', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = [

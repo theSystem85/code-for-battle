@@ -234,7 +234,7 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, 
 }
 
 function createDefaultMapTile() {
-  return { type: 'land', ore: false, seedCrystal: false, noBuild: 0 }
+  return { type: 'land', ore: false, seedCrystal: false, noBuild: 0, decal: null, decalCounter: 0 }
 }
 
 function ensureMapGridMatchesDimensions(grid, width, height) {
@@ -270,6 +270,12 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
       if (!Number.isFinite(tile.noBuild)) {
         tile.noBuild = 0
       }
+      if (!tile.decal || typeof tile.decal !== 'object' || typeof tile.decal.tag !== 'string') {
+        tile.decal = null
+      }
+      if (!Number.isFinite(tile.decalCounter)) {
+        tile.decalCounter = 0
+      }
     }
   }
 
@@ -281,6 +287,13 @@ function createSerializableMapTile(tile = {}) {
     type: typeof tile.type === 'string' ? tile.type : 'land',
     ore: Boolean(tile.ore),
     seedCrystal: Boolean(tile.seedCrystal),
+    decal: tile.decal && typeof tile.decal === 'object'
+      ? {
+        tag: typeof tile.decal.tag === 'string' ? tile.decal.tag : null,
+        variantSeed: Number.isFinite(tile.decal.variantSeed) ? tile.decal.variantSeed : 0
+      }
+      : undefined,
+    decalCounter: Number.isFinite(tile.decalCounter) && tile.decalCounter > 0 ? tile.decalCounter : undefined,
     walkable: typeof tile.walkable === 'boolean' ? tile.walkable : undefined,
     passable: typeof tile.passable === 'boolean' ? tile.passable : undefined
   }
@@ -319,6 +332,13 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         targetTile.type = typeof savedTile?.type === 'string' ? savedTile.type : 'land'
         targetTile.ore = Boolean(savedTile?.ore)
         targetTile.seedCrystal = Boolean(savedTile?.seedCrystal)
+        targetTile.decal = savedTile?.decal && typeof savedTile.decal.tag === 'string'
+          ? {
+            tag: savedTile.decal.tag,
+            variantSeed: Number.isFinite(savedTile.decal.variantSeed) ? savedTile.decal.variantSeed : 0
+          }
+          : null
+        targetTile.decalCounter = Number.isFinite(savedTile?.decalCounter) ? savedTile.decalCounter : 0
 
         if (typeof savedTile?.walkable === 'boolean') {
           targetTile.walkable = savedTile.walkable
@@ -341,6 +361,8 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
       const tile = targetMapGrid[y][x]
       tile.ore = false
       tile.seedCrystal = false
+      tile.decal = null
+      tile.decalCounter = 0
       delete tile.walkable
       delete tile.passable
 

@@ -8,6 +8,20 @@ const textureCache = new Map()
 const metadataCache = new Map()
 const processedImageCache = new WeakMap()
 
+function normalizeBlackKeyConfig(config = null) {
+  const cutoffBrightness = Number.isFinite(config?.cutoffBrightness)
+    ? Math.max(0, Math.floor(config.cutoffBrightness))
+    : BLACK_ALPHA_CUTOFF_BRIGHTNESS
+  const softenBrightness = Number.isFinite(config?.softenBrightness)
+    ? Math.max(cutoffBrightness + 1, Math.floor(config.softenBrightness))
+    : BLACK_ALPHA_SOFTEN_BRIGHTNESS
+
+  return {
+    cutoffBrightness,
+    softenBrightness
+  }
+}
+
 export function normalizeSpriteSheetBlendMode(mode) {
   return mode === 'alpha' ? 'alpha' : 'black'
 }
@@ -77,10 +91,12 @@ export function parseSpriteSheetMetadataFromFilename(assetPath) {
   return metadata
 }
 
-function buildBlackTransparentTexture(image) {
+function buildBlackTransparentTexture(image, blackKeyConfig = null) {
   if (!image || !image.complete || image.naturalWidth <= 0 || image.naturalHeight <= 0) {
     return null
   }
+
+  const { cutoffBrightness, softenBrightness } = normalizeBlackKeyConfig(blackKeyConfig)
 
   const canvas = document.createElement('canvas')
   canvas.width = image.naturalWidth
@@ -99,13 +115,13 @@ function buildBlackTransparentTexture(image) {
     const b = data[i + 2]
     const a = data[i + 3]
     const brightness = Math.max(r, g, b)
-    if (brightness <= BLACK_ALPHA_CUTOFF_BRIGHTNESS) {
+    if (brightness <= cutoffBrightness) {
       data[i + 3] = 0
       continue
     }
-    if (brightness < BLACK_ALPHA_SOFTEN_BRIGHTNESS) {
-      const t = (brightness - BLACK_ALPHA_CUTOFF_BRIGHTNESS) /
-        (BLACK_ALPHA_SOFTEN_BRIGHTNESS - BLACK_ALPHA_CUTOFF_BRIGHTNESS)
+    if (brightness < softenBrightness) {
+      const t = (brightness - cutoffBrightness) /
+        (softenBrightness - cutoffBrightness)
       data[i + 3] = Math.round(a * t)
       continue
     }
@@ -116,20 +132,25 @@ function buildBlackTransparentTexture(image) {
   return canvas
 }
 
-export function getImageTextureWithBlendMode(image, blendMode = 'black') {
+export function getImageTextureWithBlendMode(image, blendMode = 'black', blackKeyConfig = null) {
   const normalizedBlendMode = normalizeSpriteSheetBlendMode(blendMode)
   if (!image || normalizedBlendMode === 'alpha') {
     return image
   }
 
-  const existing = processedImageCache.get(image)
+  const normalizedBlackKey = normalizeBlackKeyConfig(blackKeyConfig)
+  const cacheKey = `${normalizedBlendMode}:${normalizedBlackKey.cutoffBrightness}:${normalizedBlackKey.softenBrightness}`
+  const existingByConfig = processedImageCache.get(image)
+  const existing = existingByConfig?.get(cacheKey)
   if (existing) {
     return existing
   }
 
-  const processed = buildBlackTransparentTexture(image)
+  const processed = buildBlackTransparentTexture(image, normalizedBlackKey)
   if (processed) {
-    processedImageCache.set(image, processed)
+    const nextCache = existingByConfig || new Map()
+    nextCache.set(cacheKey, processed)
+    processedImageCache.set(image, nextCache)
   }
 
   return processed || image

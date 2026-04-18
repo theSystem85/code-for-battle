@@ -421,6 +421,26 @@ export class GameWebGLRenderer {
     }
   }
 
+  createDecalInstance(tile, tileX, tileY) {
+    const decalTag = tile?.decal?.tag
+    if (!decalTag) return null
+
+    const fallbackColors = {
+      impact: [0.26, 0.23, 0.2, 0.28],
+      crater: [0.17, 0.15, 0.14, 0.33],
+      debris: [0.36, 0.33, 0.29, 0.4]
+    }
+
+    return {
+      translation: [tileX, tileY],
+      uvRect: [0, 0, 0, 0],
+      color: fallbackColors[decalTag] || [0.22, 0.2, 0.19, 0.26],
+      textureType: 0,
+      waterEdges: [0, 0, 0, 0],
+      clipOrientation: SOT_CLIP_NONE
+    }
+  }
+
   doesWaterSotTouchEdge(sotInfo, edge) {
     if (!sotInfo || sotInfo.type !== 'water') return false
     switch (edge) {

@@ -26,10 +26,34 @@ import { gameRandom } from '../utils/gameRandom.js'
 import { recordDamageValue } from '../utils/combatStats.js'
 import { recordDamage } from '../ai-api/transitionCollector.js'
 import { getSimulationTime } from './time.js'
+import { setWorldDecal } from './tileDecals.js'
 
 const APACHE_REMOTE_DAMAGE = 10
 const APACHE_TANK_DAMAGE_MULTIPLIER = 1.67
 const F22_TANK_DAMAGE_MULTIPLIER = 2.25
+
+function shouldSpawnImpactDecal(bullet) {
+  return Boolean(
+    bullet &&
+    bullet.shooter &&
+    typeof bullet.shooter === 'object' &&
+    typeof bullet.shooter.type === 'string' &&
+    bullet.projectileType !== 'ammoParticle'
+  )
+}
+
+function getDecalTagForBullet(bullet) {
+  if (bullet?.shooter?.type === 'howitzer') {
+    return 'crater'
+  }
+
+  return 'impact'
+}
+
+function spawnImpactDecal(gameState, mapGrid, bullet, x, y) {
+  if (!shouldSpawnImpactDecal(bullet)) return
+  setWorldDecal(mapGrid, gameState, x, y, getDecalTagForBullet(bullet))
+}
 
 /**
  * Updates all bullets in the game including movement, collision detection, and cleanup
@@ -84,6 +108,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
     if (bullet.parabolic) {
       const t = (now - bullet.startTime) / bullet.flightDuration
       if (t >= 1) {
+        spawnImpactDecal(gameState, mapGrid, bullet, bullet.targetPosition.x, bullet.targetPosition.y)
         triggerExplosion(
           bullet.targetPosition.x,
           bullet.targetPosition.y,
@@ -196,6 +221,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               const explosionY = targetCenter.y + Math.sin(angle) * distance
 
               // Create surface damage explosion (smaller radius, proximity-based damage)
+              spawnImpactDecal(gameState, mapGrid, bullet, explosionX, explosionY)
               triggerExplosion(
                 explosionX,
                 explosionY,
@@ -214,6 +240,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             // Play explosion sound once for the rocket impact
             playPositionalSound('explosion', bullet.x, bullet.y, 0.7)
           } else {
+            spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
             triggerExplosion(
               bullet.x,
               bullet.y,
@@ -268,6 +295,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           } else if (bullet.originType === 'rocketTank') {
             // Rocket tank rockets explode when close enough to target (distance <= 10)
             // This handles the case where rockets have skipCollisionChecks: true
+            spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
             triggerExplosion(
               bullet.x,
               bullet.y,
@@ -299,6 +327,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             bullet.vy = (dy / distance) * bullet.effectiveSpeed
           } else {
             // Explode at target position when close enough
+            spawnImpactDecal(gameState, mapGrid, bullet, bullet.targetPosition.x, bullet.targetPosition.y)
             triggerExplosion(
               bullet.targetPosition.x,
               bullet.targetPosition.y,
@@ -335,6 +364,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           if (bullet.originType === 'apacheRocket') {
             // Apache rockets explode immediately when reaching target, not on timeout
             // This should not happen, but just in case
+            spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
             triggerExplosion(
               bullet.x,
               bullet.y,
@@ -350,6 +380,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             )
             playPositionalSound(bullet.originType === 'f35Bomb' ? 'f35BombImpact' : 'explosion', bullet.x, bullet.y, 0.7)
           } else {
+            spawnImpactDecal(gameState, mapGrid, bullet, explosionX, explosionY)
             triggerExplosion(
               explosionX,
               explosionY,
@@ -475,6 +506,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             }
 
             playPositionalSound('explosion', bullet.x, bullet.y, 0.7)
+            spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
             bullets.splice(i, 1)
             continue
           }
@@ -502,6 +534,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           }
 
           const isF35Bomb = bullet.originType === 'f35Bomb'
+          spawnImpactDecal(gameState, mapGrid, bullet, explosionX, explosionY)
           triggerExplosion(
             explosionX,
             explosionY,
@@ -562,6 +595,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           const explosionX = distanceToTarget <= proximityThreshold ? targetX : bullet.x
           const explosionY = distanceToTarget <= proximityThreshold ? targetY : bullet.y
 
+          spawnImpactDecal(gameState, mapGrid, bullet, explosionX, explosionY)
           triggerExplosion(
             explosionX,
             explosionY,
@@ -599,6 +633,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           const explosionX = bullet.x
           const explosionY = hitGround ? targetY : bullet.y
           const baseDamage = bullet.baseDamage * 1.8
+          spawnImpactDecal(gameState, mapGrid, bullet, explosionX, explosionY)
           triggerExplosion(
             explosionX,
             explosionY,
@@ -802,6 +837,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
+              spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
               triggerExplosion(
                 bullet.x,
                 bullet.y,
@@ -841,6 +877,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
+              spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
               triggerExplosion(
                 bullet.x,
                 bullet.y,
@@ -957,6 +994,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
+              spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
               triggerExplosion(
                 bullet.x,
                 bullet.y,
@@ -1054,6 +1092,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               // Apache rockets explode immediately when reaching target, not on collision
               // This should not happen since they have skipCollisionChecks: true
             } else {
+              spawnImpactDecal(gameState, mapGrid, bullet, bullet.x, bullet.y)
               triggerExplosion(
                 bullet.x,
                 bullet.y,
