@@ -759,80 +759,6 @@
             </label>
           </div>
         </div>
-        <div id="sseImageConverterAccordion" class="sse-image-converter-accordion">
-          <button
-            id="sseImageConverterToggle"
-            class="action-button sse-image-converter-accordion__toggle"
-            type="button"
-            aria-expanded="false"
-            aria-controls="sseImageConverterContent"
-          >
-            <span>SSE Image Converter</span>
-            <span id="sseImageConverterToggleIcon">▼</span>
-          </button>
-          <div id="sseImageConverterContent" class="sse-image-converter" hidden>
-            <p class="sse-image-converter__hint">
-              Drag and drop PNG/JPEG/WEBP files to convert and auto-download as WEBP.
-            </p>
-            <div class="sse-image-converter__inputs">
-              <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
-                <input
-                  type="number"
-                  class="sidebar-input"
-                  id="sseImageConverterCompression"
-                  min="1"
-                  max="100"
-                  value="90"
-                  placeholder=" "
-                >
-                <label for="sseImageConverterCompression">Compression %</label>
-              </div>
-              <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
-                <input
-                  type="number"
-                  class="sidebar-input"
-                  id="sseImageConverterWidth"
-                  min="1"
-                  max="2048"
-                  value="1024"
-                  placeholder=" "
-                >
-                <label for="sseImageConverterWidth">Width</label>
-              </div>
-              <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
-                <input
-                  type="number"
-                  class="sidebar-input"
-                  id="sseImageConverterHeight"
-                  min="1"
-                  max="2048"
-                  value="1024"
-                  placeholder=" "
-                >
-                <label for="sseImageConverterHeight">Height</label>
-              </div>
-            </div>
-            <label class="sse-image-converter__checkbox">
-              <input type="checkbox" id="sseImageConverterFilenameSuffix">
-              <span>Add _qXX_WIDTHxHEIGHT suffix to filename</span>
-            </label>
-            <label
-              id="sseImageConverterDropZone"
-              class="sse-image-converter__drop-zone"
-              for="sseImageConverterFileInput"
-            >
-              <input
-                type="file"
-                id="sseImageConverterFileInput"
-                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
-                multiple
-              >
-              <span>Drop files here or click to browse</span>
-            </label>
-            <div id="sseImageConverterStatus" class="sse-image-converter__status" aria-live="polite"></div>
-          </div>
-        </div>
-
         <div id="sidebarFooterVersion" class="sidebar-version">
           <div class="sidebar-version__row">
             <span class="sidebar-version__label">Version:</span>
@@ -1203,18 +1129,97 @@
               <div id="sseSheetInfoPopover" class="sprite-sheet-editor__sheet-info-popover" role="tooltip"></div>
             </div>
           </div>
-          <label class="sprite-sheet-editor__field">
-            <span>Tile size (px)</span>
-            <input id="sseTileSizeInput" class="sidebar-input" type="number" min="8" value="64">
-          </label>
-          <label class="sprite-sheet-editor__field">
-            <span>Row height (px)</span>
-            <input id="sseRowHeightInput" class="sidebar-input" type="number" min="8" value="64">
-          </label>
-          <label class="sprite-sheet-editor__field">
-            <span>Grid border width (px)</span>
-            <input id="sseBorderWidthInput" class="sidebar-input" type="number" min="0" value="1">
-          </label>
+          <div id="sseImageConverterAccordion" class="sse-image-converter-accordion">
+            <button
+              id="sseImageConverterToggle"
+              class="action-button sse-image-converter-accordion__toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="sseImageConverterContent"
+            >
+              <span>SSE Image Converter</span>
+              <span id="sseImageConverterToggleIcon">▼</span>
+            </button>
+            <div id="sseImageConverterContent" class="sse-image-converter" hidden>
+              <p class="sse-image-converter__hint">
+                Drag and drop PNG/JPEG/WEBP files to convert and auto-download as WEBP.
+              </p>
+              <div class="sse-image-converter__inputs">
+                <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                  <input
+                    type="number"
+                    class="sidebar-input"
+                    id="sseImageConverterCompression"
+                    min="1"
+                    max="100"
+                    value="90"
+                    placeholder=" "
+                  >
+                  <label for="sseImageConverterCompression">Compression %</label>
+                </div>
+                <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                  <input
+                    type="number"
+                    class="sidebar-input"
+                    id="sseImageConverterWidth"
+                    min="1"
+                    max="2048"
+                    value="1024"
+                    placeholder=" "
+                  >
+                  <label for="sseImageConverterWidth">Width</label>
+                </div>
+                <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                  <input
+                    type="number"
+                    class="sidebar-input"
+                    id="sseImageConverterHeight"
+                    min="1"
+                    max="2048"
+                    value="1024"
+                    placeholder=" "
+                  >
+                  <label for="sseImageConverterHeight">Height</label>
+                </div>
+              </div>
+              <label class="sse-image-converter__checkbox">
+                <input type="checkbox" id="sseImageConverterFilenameSuffix">
+                <span>Add _qXX_WIDTHxHEIGHT suffix to filename</span>
+              </label>
+              <label
+                id="sseImageConverterDropZone"
+                class="sse-image-converter__drop-zone"
+                for="sseImageConverterFileInput"
+              >
+                <input
+                  type="file"
+                  id="sseImageConverterFileInput"
+                  accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                  multiple
+                >
+                <span>Drop files here or click to browse</span>
+              </label>
+              <div id="sseImageConverterStatus" class="sse-image-converter__status" aria-live="polite"></div>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__field">
+            <div class="floating-label-input sprite-sheet-editor__floating-input">
+              <input id="sseTileSizeInput" class="sidebar-input" type="number" min="8" value="64" placeholder=" ">
+              <label for="sseTileSizeInput">Tile size (px)</label>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__field">
+            <div class="floating-label-input sprite-sheet-editor__floating-input">
+              <input id="sseRowHeightInput" class="sidebar-input" type="number" min="8" value="64" placeholder=" ">
+              <label for="sseRowHeightInput">Row height (px)</label>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__field">
+            <div class="floating-label-input sprite-sheet-editor__floating-input">
+              <input id="sseBorderWidthInput" class="sidebar-input" type="number" min="0" value="1" placeholder=" ">
+              <label for="sseBorderWidthInput">Grid border width (px)</label>
+            </div>
+          </div>
           <label class="sprite-sheet-editor__field">
             <span>Transparency / blending</span>
             <select id="sseBlendModeSelect" class="sidebar-input">
@@ -1222,13 +1227,15 @@
               <option value="alpha">Alpha</option>
             </select>
           </label>
-          <label class="sprite-sheet-editor__field">
-            <span>Add tag</span>
+          <div class="sprite-sheet-editor__field">
             <div class="sprite-sheet-editor__inline">
-              <input id="sseNewTagInput" class="sidebar-input" type="text" placeholder="new tag">
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseNewTagInput" class="sidebar-input" type="text" placeholder=" ">
+                <label for="sseNewTagInput">Add tag</label>
+              </div>
               <button id="sseAddTagBtn" class="action-button" type="button">Add</button>
             </div>
-          </label>
+          </div>
           <label class="sprite-sheet-editor__checkbox-row">
             <input id="sseShowGridCheckbox" type="checkbox" checked>
             <span>Show grid overlay</span>
