@@ -2,6 +2,7 @@ import { TILE_SIZE } from '../config.js'
 
 const DECAL_TAGS = new Set(['impact', 'crater', 'debris'])
 const DEFAULT_SEED = 1
+const WATER_BLOCKED_DECAL_TAGS = new Set(['impact', 'crater'])
 
 function shouldPreserveExistingDecal(existingTag, nextTag) {
   return existingTag === 'crater' && nextTag === 'impact'
@@ -51,6 +52,7 @@ export function setTileDecal(mapGrid, gameState, tileX, tileY, tag) {
 
   const tile = getTileForDecal(mapGrid, tileX, tileY)
   if (!tile) return null
+  if (tile.type === 'water' && WATER_BLOCKED_DECAL_TAGS.has(tag)) return null
 
   if (shouldPreserveExistingDecal(tile.decal?.tag, tag)) {
     return tile.decal

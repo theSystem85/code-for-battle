@@ -434,6 +434,10 @@ body.config-modal-open {
   gap: 6px;
 }
 
+.sprite-sheet-editor__floating-input {
+  width: 100%;
+}
+
 .sprite-sheet-editor__checkbox-row {
   display: inline-flex;
   align-items: center;
