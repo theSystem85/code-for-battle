@@ -27,6 +27,16 @@ let integratedSpriteSheetModeCheckbox = null
 let integratedSpriteSheetBiomeSelect = null
 let integratedSpriteSheetSelectionContainer = null
 let integratedSpriteSheetSelectionList = null
+let sseImageConverterToggle = null
+let sseImageConverterContent = null
+let sseImageConverterToggleIcon = null
+let sseImageConverterCompressionInput = null
+let sseImageConverterWidthInput = null
+let sseImageConverterHeightInput = null
+let sseImageConverterFilenameSuffixCheckbox = null
+let sseImageConverterDropZone = null
+let sseImageConverterFileInput = null
+let sseImageConverterStatus = null
 
 const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
 const INTEGRATED_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
@@ -50,6 +60,11 @@ const DEFAULT_SSE_SHEETS = [
 const DEFAULT_ANIMATION_SHEET_PATH = 'images/map/animations/explosion.webp'
 const DEFAULT_ANIMATION_METADATA_PATH = 'images/map/animations/explosion.json'
 const RETIRED_EXPLOSION_SHEET_PATTERN = /^images\/map\/animations\/\d+x\d+_\d+x\d+_.*explosion\.(webp|png|jpg|jpeg)$/i
+const SSE_CONVERTER_DEFAULT_QUALITY = 90
+const SSE_CONVERTER_DEFAULT_RESOLUTION = 1024
+const SSE_CONVERTER_MAX_RESOLUTION = 2048
+const SSE_CONVERTER_ALLOWED_TYPES = new Set(['image/png', 'image/jpeg', 'image/webp'])
+const SSE_CONVERTER_ALLOWED_EXTENSIONS = /\.(png|jpe?g|webp)$/i
 
 function isTransientAnimationSheetPath(sheetPath) {
   return typeof sheetPath === 'string' && (
@@ -129,6 +144,216 @@ function hasTaggedTiles(metadata) {
 function isMultiplayerSessionActive() {
   const session = gameState.multiplayerSession || {}
   return Boolean(session.isRemote) || session.status === 'connected'
+}
+
+function clampInteger(value, min, max, fallback) {
+  const normalized = Number.parseInt(value, 10)
+  if (!Number.isFinite(normalized)) return fallback
+  return Math.max(min, Math.min(max, normalized))
+}
+
+function setSseImageConverterStatus(message, tone = 'info') {
+  if (!sseImageConverterStatus) return
+  sseImageConverterStatus.textContent = message
+  if (tone === 'error') sseImageConverterStatus.style.color = '#ff6b6b'
+  else if (tone === 'success') sseImageConverterStatus.style.color = '#8fe58a'
+  else sseImageConverterStatus.style.color = '#ccc'
+}
+
+function getSseConverterConfig() {
+  const compression = clampInteger(
+    sseImageConverterCompressionInput?.value,
+    1,
+    100,
+    SSE_CONVERTER_DEFAULT_QUALITY
+  )
+  const width = clampInteger(
+    sseImageConverterWidthInput?.value,
+    1,
+    SSE_CONVERTER_MAX_RESOLUTION,
+    SSE_CONVERTER_DEFAULT_RESOLUTION
+  )
+  const height = clampInteger(
+    sseImageConverterHeightInput?.value,
+    1,
+    SSE_CONVERTER_MAX_RESOLUTION,
+    SSE_CONVERTER_DEFAULT_RESOLUTION
+  )
+
+  if (sseImageConverterCompressionInput) sseImageConverterCompressionInput.value = String(compression)
+  if (sseImageConverterWidthInput) sseImageConverterWidthInput.value = String(width)
+  if (sseImageConverterHeightInput) sseImageConverterHeightInput.value = String(height)
+
+  return {
+    compression,
+    width,
+    height,
+    includeSuffix: Boolean(sseImageConverterFilenameSuffixCheckbox?.checked)
+  }
+}
+
+function buildConvertedFilename(fileName, { compression, width, height, includeSuffix }) {
+  const sourceName = typeof fileName === 'string' && fileName.trim() ? fileName.trim() : 'converted-image'
+  const dotIndex = sourceName.lastIndexOf('.')
+  const baseName = dotIndex > 0 ? sourceName.slice(0, dotIndex) : sourceName
+  const suffix = includeSuffix ? `_q${compression}_${width}x${height}` : ''
+  return `${baseName}${suffix}.webp`
+}
+
+function loadImageFromFile(file) {
+  return new Promise((resolve, reject) => {
+    const image = new Image()
+    const objectUrl = URL.createObjectURL(file)
+    image.onload = () => {
+      URL.revokeObjectURL(objectUrl)
+      resolve(image)
+    }
+    image.onerror = () => {
+      URL.revokeObjectURL(objectUrl)
+      reject(new Error('Could not decode image file'))
+    }
+    image.src = objectUrl
+  })
+}
+
+function canvasToWebpBlob(canvas, qualityPercent) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob)
+      else reject(new Error('Failed to encode WEBP blob'))
+    }, 'image/webp', qualityPercent / 100)
+  })
+}
+
+function triggerBlobDownload(blob, fileName) {
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = fileName
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 0)
+}
+
+async function convertAndDownloadSseFile(file) {
+  const isAllowedType = SSE_CONVERTER_ALLOWED_TYPES.has(file?.type)
+  const isAllowedExtension = SSE_CONVERTER_ALLOWED_EXTENSIONS.test(file?.name || '')
+  if (!file || (!isAllowedType && !isAllowedExtension)) {
+    throw new Error('Only PNG, JPEG, and WEBP files are supported')
+  }
+
+  const config = getSseConverterConfig()
+  const image = await loadImageFromFile(file)
+  const canvas = document.createElement('canvas')
+  canvas.width = config.width
+  canvas.height = config.height
+  const context = canvas.getContext('2d')
+  if (!context) {
+    throw new Error('Canvas 2D context unavailable in this browser')
+  }
+  context.imageSmoothingEnabled = true
+  context.imageSmoothingQuality = 'high'
+  context.drawImage(image, 0, 0, config.width, config.height)
+
+  const blob = await canvasToWebpBlob(canvas, config.compression)
+  const outputName = buildConvertedFilename(file.name, config)
+  triggerBlobDownload(blob, outputName)
+  return outputName
+}
+
+async function handleSseConverterFiles(fileList) {
+  const files = Array.from(fileList || [])
+  if (!files.length) {
+    setSseImageConverterStatus('No files selected.', 'error')
+    return
+  }
+
+  const converted = []
+  for (const file of files) {
+    try {
+      const outputName = await convertAndDownloadSseFile(file)
+      converted.push(outputName)
+    } catch (err) {
+      setSseImageConverterStatus(`${file.name}: ${err.message}`, 'error')
+      return
+    }
+  }
+
+  setSseImageConverterStatus(`Converted ${converted.length} file${converted.length === 1 ? '' : 's'} to WEBP.`, 'success')
+}
+
+function initSseImageConverterControls() {
+  sseImageConverterToggle = document.getElementById('sseImageConverterToggle')
+  sseImageConverterContent = document.getElementById('sseImageConverterContent')
+  sseImageConverterToggleIcon = document.getElementById('sseImageConverterToggleIcon')
+  sseImageConverterCompressionInput = document.getElementById('sseImageConverterCompression')
+  sseImageConverterWidthInput = document.getElementById('sseImageConverterWidth')
+  sseImageConverterHeightInput = document.getElementById('sseImageConverterHeight')
+  sseImageConverterFilenameSuffixCheckbox = document.getElementById('sseImageConverterFilenameSuffix')
+  sseImageConverterDropZone = document.getElementById('sseImageConverterDropZone')
+  sseImageConverterFileInput = document.getElementById('sseImageConverterFileInput')
+  sseImageConverterStatus = document.getElementById('sseImageConverterStatus')
+
+  if (
+    !sseImageConverterToggle
+    || !sseImageConverterContent
+    || !sseImageConverterToggleIcon
+    || !sseImageConverterDropZone
+    || !sseImageConverterFileInput
+  ) {
+    return
+  }
+
+  sseImageConverterToggle.addEventListener('click', () => {
+    const isExpanded = !sseImageConverterContent.hidden
+    sseImageConverterContent.hidden = isExpanded
+    sseImageConverterToggle.setAttribute('aria-expanded', isExpanded ? 'false' : 'true')
+    sseImageConverterToggleIcon.textContent = isExpanded ? '▼' : '▲'
+  })
+
+  const normalizeInput = () => getSseConverterConfig()
+  const converterInputs = [
+    sseImageConverterCompressionInput,
+    sseImageConverterWidthInput,
+    sseImageConverterHeightInput
+  ]
+  converterInputs.forEach((input) => {
+    if (input) {
+      input.addEventListener('change', normalizeInput)
+      input.addEventListener('blur', normalizeInput)
+    }
+  })
+  normalizeInput()
+
+  sseImageConverterFileInput.addEventListener('change', async(e) => {
+    await handleSseConverterFiles(e.target.files)
+    e.target.value = ''
+  })
+
+  const setDragOver = (isDragOver) => {
+    sseImageConverterDropZone.classList.toggle('is-dragover', isDragOver)
+  }
+
+  sseImageConverterDropZone.addEventListener('dragover', (event) => {
+    event.preventDefault()
+    setDragOver(true)
+  })
+  sseImageConverterDropZone.addEventListener('dragenter', (event) => {
+    event.preventDefault()
+    setDragOver(true)
+  })
+  sseImageConverterDropZone.addEventListener('dragleave', (event) => {
+    if (!sseImageConverterDropZone.contains(event.relatedTarget)) {
+      setDragOver(false)
+    }
+  })
+  sseImageConverterDropZone.addEventListener('drop', async(event) => {
+    event.preventDefault()
+    setDragOver(false)
+    const files = event.dataTransfer?.files
+    await handleSseConverterFiles(files)
+  })
 }
 
 async function loadStaticSheetPaths() {
@@ -328,6 +553,7 @@ export function initMapEditorControls() {
   integratedSpriteSheetBiomeSelect = document.getElementById('integratedSpriteSheetBiomeSelect')
   integratedSpriteSheetSelectionContainer = document.getElementById('integratedSpriteSheetSelectionContainer')
   integratedSpriteSheetSelectionList = document.getElementById('integratedSpriteSheetSelectionList')
+  initSseImageConverterControls()
 
   gameState.useIntegratedSpriteSheetMode = Boolean(gameState.useIntegratedSpriteSheetMode)
   try {

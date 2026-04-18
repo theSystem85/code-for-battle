@@ -759,6 +759,79 @@
             </label>
           </div>
         </div>
+        <div id="sseImageConverterAccordion" class="sse-image-converter-accordion">
+          <button
+            id="sseImageConverterToggle"
+            class="action-button sse-image-converter-accordion__toggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="sseImageConverterContent"
+          >
+            <span>SSE Image Converter</span>
+            <span id="sseImageConverterToggleIcon">▼</span>
+          </button>
+          <div id="sseImageConverterContent" class="sse-image-converter" hidden>
+            <p class="sse-image-converter__hint">
+              Drag and drop PNG/JPEG/WEBP files to convert and auto-download as WEBP.
+            </p>
+            <div class="sse-image-converter__inputs">
+              <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                <input
+                  type="number"
+                  class="sidebar-input"
+                  id="sseImageConverterCompression"
+                  min="1"
+                  max="100"
+                  value="90"
+                  placeholder=" "
+                >
+                <label for="sseImageConverterCompression">Compression %</label>
+              </div>
+              <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                <input
+                  type="number"
+                  class="sidebar-input"
+                  id="sseImageConverterWidth"
+                  min="1"
+                  max="2048"
+                  value="1024"
+                  placeholder=" "
+                >
+                <label for="sseImageConverterWidth">Width</label>
+              </div>
+              <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                <input
+                  type="number"
+                  class="sidebar-input"
+                  id="sseImageConverterHeight"
+                  min="1"
+                  max="2048"
+                  value="1024"
+                  placeholder=" "
+                >
+                <label for="sseImageConverterHeight">Height</label>
+              </div>
+            </div>
+            <label class="sse-image-converter__checkbox">
+              <input type="checkbox" id="sseImageConverterFilenameSuffix">
+              <span>Add _qXX_WIDTHxHEIGHT suffix to filename</span>
+            </label>
+            <label
+              id="sseImageConverterDropZone"
+              class="sse-image-converter__drop-zone"
+              for="sseImageConverterFileInput"
+            >
+              <input
+                type="file"
+                id="sseImageConverterFileInput"
+                accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                multiple
+              >
+              <span>Drop files here or click to browse</span>
+            </label>
+            <div id="sseImageConverterStatus" class="sse-image-converter__status" aria-live="polite"></div>
+          </div>
+        </div>
 
         <div id="sidebarFooterVersion" class="sidebar-version">
           <div class="sidebar-version__row">
