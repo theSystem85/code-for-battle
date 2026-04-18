@@ -35,11 +35,17 @@ const SSE_APPLIED_METADATA_STORAGE_KEY = 'rts-sse-applied-metadata'
 const SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY = 'rts-sse-applied-animation-metadata'
 const SSE_SHEETS_INDEX = 'images/map/sprite_sheets/index.json'
 const SSE_METADATA_PREFIX = 'rts-sse-metadata:'
+const COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
+const COMBAT_DECAL_BLACK_KEY = Object.freeze({
+  cutoffBrightness: 8,
+  softenBrightness: 24
+})
 const DEFAULT_SSE_SHEETS = [
   'images/map/sprite_sheets/seasons_1024_q90_2.webp',
   'images/map/sprite_sheets/seasons_1024_q90_3.webp',
   'images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp',
-  'images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp'
+  'images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp',
+  'images/map/sprite_sheets/debris_craters_tracks.webp'
 ]
 const DEFAULT_ANIMATION_SHEET_PATH = 'images/map/animations/explosion.webp'
 const DEFAULT_ANIMATION_METADATA_PATH = 'images/map/animations/explosion.json'
@@ -86,6 +92,35 @@ function buildMetaPath(sheetPath) {
   return sheetPath.replace(/\.(webp|png|jpg|jpeg)$/i, '.json')
 }
 
+function normalizeBlackKeyForSheet(sheetPath, blackKey) {
+  if (blackKey && Number.isFinite(blackKey.cutoffBrightness) && Number.isFinite(blackKey.softenBrightness)) {
+    return {
+      cutoffBrightness: Math.max(0, Math.floor(blackKey.cutoffBrightness)),
+      softenBrightness: Math.max(Math.floor(blackKey.cutoffBrightness) + 1, Math.floor(blackKey.softenBrightness))
+    }
+  }
+
+  if (sheetPath === COMBAT_DECAL_SHEET_PATH) {
+    return { ...COMBAT_DECAL_BLACK_KEY }
+  }
+
+  return undefined
+}
+
+function normalizeMetadataForSheet(sheetPath, metadata) {
+  if (!metadata || typeof metadata !== 'object') return metadata
+
+  const blackKey = normalizeBlackKeyForSheet(sheetPath, metadata.blackKey)
+  if (!blackKey) {
+    return metadata
+  }
+
+  return {
+    ...metadata,
+    blackKey
+  }
+}
+
 function hasTaggedTiles(metadata) {
   if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
   return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
@@ -116,7 +151,7 @@ async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {
   if (allowLocalOverride) {
     const local = safeParseJson(localStorage.getItem(`${SSE_METADATA_PREFIX}${sheetPath}`), null)
     if (local && typeof local === 'object') {
-      return local
+      return normalizeMetadataForSheet(sheetPath, local)
     }
   }
 
@@ -124,7 +159,7 @@ async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {
   try {
     const res = await fetch(sidecarPath, { cache: 'no-store' })
     if (res.ok) {
-      return await res.json()
+      return normalizeMetadataForSheet(sheetPath, await res.json())
     }
   } catch {
     // ignored: missing sidecar file

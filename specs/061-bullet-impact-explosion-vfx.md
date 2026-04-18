@@ -50,3 +50,8 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 5. Decal variation is selected pseudo-randomly using map-seed-driven deterministic selection so outcomes are reproducible for a given simulation.
 6. Map tile save/load payload must persist decal state (including deterministic variant metadata) so reloads retain exact visual decals.
 7. Rendering order must keep ore/seed overlays above decal overlays when both exist on the same tile.
+
+## Follow-up (2026-04-18): Combat Decal Sheet Visibility and SSE Access
+1. The bundled combat decal sheet `public/images/map/sprite_sheets/debris_craters_tracks.webp` must be listed in the indexed/default SSE static-sheet sources so it is selectable and editable in the Sprite Sheet Editor without manual local setup.
+2. Black-key transparency processing for integrated sprite sheets must support sheet-specific thresholds so very dark decal art can preserve visible marks while still removing the black sheet background.
+3. The bundled combat decal sheet must use tuned black-key thresholds that keep `impact`, `crater`, and `debris` details visibly readable on terrain tiles instead of keying out most of the decal itself.

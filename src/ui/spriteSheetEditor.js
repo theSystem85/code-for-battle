@@ -17,6 +17,11 @@ const SSE_LAST_ANIMATION_SHEET_KEY = 'rts-sse-last-animation-sheet'
 const SSE_MODE_STORAGE_KEY = 'rts-sse-mode'
 const ANIMATION_DEFAULT_DURATION_MS = 1050
 const SSE_PREVIEW_BACKGROUND_TILE = 'images/map/land01.webp'
+const COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
+const COMBAT_DECAL_BLACK_KEY = Object.freeze({
+  cutoffBrightness: 8,
+  softenBrightness: 24
+})
 
 export const DEFAULT_SSE_TAGS = [
   'passable',
@@ -41,7 +46,8 @@ const fallbackSheets = [
   'images/map/sprite_sheets/snow.webp',
   'images/map/sprite_sheets/desert.webp',
   'images/map/sprite_sheets/water.webp',
-  'images/map/sprite_sheets/multiTerrainSpriteSheet.webp'
+  'images/map/sprite_sheets/multiTerrainSpriteSheet.webp',
+  'images/map/sprite_sheets/debris_craters_tracks.webp'
 ]
 
 function safeParseJson(raw, fallback) {
@@ -63,6 +69,21 @@ function hashCoord(x, y) {
 
 function buildMetaPath(sheetPath) {
   return sheetPath.replace(/\.(webp|png|jpg|jpeg)$/i, '.json')
+}
+
+function normalizeBlackKeyForSheet(sheetPath, blackKey) {
+  if (blackKey && Number.isFinite(blackKey.cutoffBrightness) && Number.isFinite(blackKey.softenBrightness)) {
+    return {
+      cutoffBrightness: Math.max(0, Math.floor(blackKey.cutoffBrightness)),
+      softenBrightness: Math.max(Math.floor(blackKey.cutoffBrightness) + 1, Math.floor(blackKey.softenBrightness))
+    }
+  }
+
+  if (sheetPath === COMBAT_DECAL_SHEET_PATH) {
+    return { ...COMBAT_DECAL_BLACK_KEY }
+  }
+
+  return undefined
 }
 
 function isTransientSheetPath(sheetPath) {
@@ -148,6 +169,7 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
     rowHeight: normalizedRowHeight,
     borderWidth: Number.isFinite(raw?.borderWidth) ? Math.max(0, Math.floor(raw.borderWidth)) : DEFAULT_BORDER_WIDTH,
     blendMode: normalizeSpriteSheetBlendMode(raw?.blendMode),
+    blackKey: normalizeBlackKeyForSheet(sheetPath, raw?.blackKey),
     tags: tags.length ? Array.from(new Set(tags)) : [...baseTags],
     tiles: raw?.tiles && typeof raw.tiles === 'object' ? raw.tiles : {}
   }
@@ -208,6 +230,7 @@ function toSerializableData(data, image) {
     rowHeight: data.rowHeight || data.tileSize,
     borderWidth: data.borderWidth,
     blendMode: normalizeSpriteSheetBlendMode(data.blendMode),
+    blackKey: data.blackKey,
     tags: data.tags,
     columns,
     rows,
