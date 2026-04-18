@@ -65,3 +65,8 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 ## Follow-up (2026-04-18): Remove Legacy GPU Decal Underlay
 1. When procedural GPU terrain rendering is active and decals are rendered by the 2D map pass, the WebGL terrain batch must not also emit its legacy flat-color decal fallback for those same tiles.
 2. In the non-custom-sprite path, a decal tile must show only the terrain tile plus the decal art itself; no semi-transparent gray/brown intermediate layer may remain beneath the decal.
+
+## Follow-up (2026-04-18): Water Tile Decal Guard
+1. `impact` decals must not be stamped on tiles whose terrain type is `water`.
+2. `crater` decals must not be stamped on tiles whose terrain type is `water`.
+3. `debris` decals remain allowed for destroyed structure footprints, even when any covered footprint tile is `water`.
