@@ -59,8 +59,9 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 ## Follow-up (2026-04-18): Crater Priority and Default Combat Decal Fallback
 1. A tile that already contains a `crater` decal must not be downgraded to `impact` by later projectile-hit decal events on that same tile.
 2. Howitzer-fired shells must always stamp a `crater` decal on their impact tile rather than an `impact` decal.
-3. Persistent `impact`, `crater`, and `debris` decals must continue to render through the bundled combat decal sheet even when custom sprite sheets are disabled.
-4. When custom sprite sheets are enabled but provide no decal-tagged tiles for `impact`, `crater`, or `debris`, runtime must fall back to the bundled `images/map/sprite_sheets/debris_craters_tracks.json` metadata and its corresponding sheet image instead of dropping back to flat-color decal placeholders.
+3. Artillery turret-fired shells must always stamp a `crater` decal on their impact tile rather than an `impact` decal.
+4. Persistent `impact`, `crater`, and `debris` decals must continue to render through the bundled combat decal sheet even when custom sprite sheets are disabled.
+5. When custom sprite sheets are enabled but provide no decal-tagged tiles for `impact`, `crater`, or `debris`, runtime must fall back to the bundled `images/map/sprite_sheets/debris_craters_tracks.json` metadata and its corresponding sheet image instead of dropping back to flat-color decal placeholders.
 
 ## Follow-up (2026-04-18): Remove Legacy GPU Decal Underlay
 1. When procedural GPU terrain rendering is active and decals are rendered by the 2D map pass, the WebGL terrain batch must not also emit its legacy flat-color decal fallback for those same tiles.

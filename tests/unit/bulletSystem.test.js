@@ -1028,6 +1028,28 @@ describe('Bullet System', () => {
       expect(setWorldDecal).toHaveBeenCalledWith(mapGrid, gameState, 70, 90, 'crater')
     })
 
+    it('stamps a crater decal when an artillery turret shell detonates', () => {
+      const bullet = createMockBullet({
+        parabolic: true,
+        startTime: 1,
+        flightDuration: 100,
+        startX: 10,
+        startY: 12,
+        dx: 20,
+        dy: 30,
+        arcHeight: 40,
+        projectileType: 'artillery',
+        shooter: { id: 'artillery-turret-1', owner: 'player', type: 'artilleryTurret' },
+        targetPosition: { x: 82, y: 104 }
+      })
+      const bullets = [bullet]
+      const gameState = createGameState({ simulationTime: 200 })
+
+      updateBullets(bullets, [], [], gameState, mapGrid)
+
+      expect(setWorldDecal).toHaveBeenCalledWith(mapGrid, gameState, 82, 104, 'crater')
+    })
+
     it('emits smoke and trails during ballistic ascent', () => {
       const bullet = createMockBullet({
         ballistic: true,
