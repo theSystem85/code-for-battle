@@ -65,4 +65,28 @@ describe('tileDecals', () => {
     setWorldDecal(mapGrid, gameState, 20, 20, 'impact')
     expect(mapGrid[0][0].decal?.tag).toBe('impact')
   })
+
+  it('does not place impact or crater decals on water tiles', () => {
+    const mapGrid = [[{ type: 'water' }]]
+    const gameState = { mapSeed: '17' }
+
+    const impactDecal = setTileDecal(mapGrid, gameState, 0, 0, 'impact')
+    const craterDecal = setTileDecal(mapGrid, gameState, 0, 0, 'crater')
+
+    expect(impactDecal).toBeNull()
+    expect(craterDecal).toBeNull()
+    expect(mapGrid[0][0].decal).toBeUndefined()
+    expect(mapGrid[0][0].decalCounter).toBeUndefined()
+  })
+
+  it('still allows debris decals on water tiles', () => {
+    const mapGrid = [[{ type: 'water' }]]
+    const gameState = { mapSeed: '17' }
+
+    const debrisDecal = setTileDecal(mapGrid, gameState, 0, 0, 'debris')
+
+    expect(debrisDecal?.tag).toBe('debris')
+    expect(mapGrid[0][0].decal?.tag).toBe('debris')
+    expect(mapGrid[0][0].decalCounter).toBe(1)
+  })
 })
