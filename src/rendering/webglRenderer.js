@@ -349,10 +349,6 @@ export class GameWebGLRenderer {
           overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
         }
 
-        if (tile.decal) {
-          overlayInstances.push(this.createDecalInstance(tile, x, y))
-        }
-
         if (tile.seedCrystal) {
           resourceInstances.push(this.createInstance('seedCrystal', x, y, mapGrid, canUseTextures, sotMask))
         } else if (tile.ore) {
