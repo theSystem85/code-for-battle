@@ -1204,6 +1204,14 @@ function triggerJsonDownload(sheetPath, serialized) {
   URL.revokeObjectURL(url)
 }
 
+function resolveSheetDisplayLabel(state, sheetPath) {
+  const explicit = state.customSheetLabels?.[sheetPath]
+  if (typeof explicit === 'string' && explicit.trim()) {
+    return explicit.trim()
+  }
+  return sheetPath?.split('/').pop() || sheetPath || ''
+}
+
 export async function initSpriteSheetEditor(options = {}) {
   const state = {
     modal: document.getElementById('spriteSheetEditorModal'),
@@ -1546,12 +1554,14 @@ export async function initSpriteSheetEditor(options = {}) {
     saveDataToLocalStorage(state.activeData, state.mode)
     if (state.mode === 'animated') {
       const serializedAnimation = toAnimationSerializableData(state.activeData, state.image)
+      serializedAnimation.displayName = resolveSheetDisplayLabel(state, state.activeData.sheetPath)
       await Promise.resolve(options.onApplyAnimation?.(serializedAnimation))
       triggerJsonDownload(state.activeData.sheetPath, serializedAnimation)
       const currentFrames = getTagFrameSequence(state.activeData, state.image, state.activeTag).length
       setStatus(state, `Applied animated tags. ${state.activeTag}: ${currentFrames} frames.`)
     } else {
       const serialized = toSerializableData(state.activeData, state.image)
+      serialized.displayName = resolveSheetDisplayLabel(state, state.activeData.sheetPath)
       const sourceTileWidth = Math.max(1, serialized.tileSize - (serialized.borderWidth * 2))
       const sourceTileHeight = Math.max(1, (serialized.rowHeight || serialized.tileSize) - (serialized.borderWidth * 2))
 
@@ -1586,9 +1596,11 @@ export async function initSpriteSheetEditor(options = {}) {
       if (!state.activeData || !state.image) return
       if (state.mode === 'animated') {
         const serialized = toAnimationSerializableData(state.activeData, state.image)
+        serialized.displayName = resolveSheetDisplayLabel(state, state.activeData.sheetPath)
         options.onApplyAnimation?.(serialized)
       } else {
         const serialized = toSerializableData(state.activeData, state.image)
+        serialized.displayName = resolveSheetDisplayLabel(state, state.activeData.sheetPath)
         options.onApply?.(serialized)
       }
     },

@@ -90,7 +90,11 @@ export class TextureManager {
       const img = new Image()
       img.onload = () => resolve(img)
       img.onerror = () => resolve(null)
-      img.src = sheetPath.startsWith('/') ? sheetPath : `/${sheetPath}`
+      const isDirectPath = sheetPath.startsWith('/')
+        || sheetPath.startsWith('blob:')
+        || sheetPath.startsWith('data:')
+        || /^https?:\/\//i.test(sheetPath)
+      img.src = isDirectPath ? sheetPath : `/${sheetPath}`
     })
 
     if (image) {
