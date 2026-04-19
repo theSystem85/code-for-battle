@@ -37,6 +37,7 @@ let sseImageConverterFilenameSuffixCheckbox = null
 let sseImageConverterDropZone = null
 let sseImageConverterFileInput = null
 let sseImageConverterStatus = null
+const runtimeAppliedStaticMetadataBySheetPath = new Map()
 
 const INTEGRATED_MODE_STORAGE_KEY = 'rts-integrated-spritesheet-mode'
 const INTEGRATED_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
@@ -140,6 +141,11 @@ function normalizeMetadataForSheet(sheetPath, metadata) {
 function hasTaggedTiles(metadata) {
   if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
   return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
+}
+
+function cacheRuntimeIntegratedMetadata(metadata) {
+  if (!metadata?.sheetPath || !hasTaggedTiles(metadata)) return
+  runtimeAppliedStaticMetadataBySheetPath.set(metadata.sheetPath, metadata)
 }
 
 function mergeSheetPaths(baseSheetPaths = [], additionalSheetPaths = []) {
@@ -480,6 +486,7 @@ async function loadDefaultAnimationMetadata() {
 async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   const textureManager = getTextureManager()
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
+  cacheRuntimeIntegratedMetadata(metadata)
 
   const allStaticSheets = Array.isArray(gameState.availableStaticSpriteSheets) && gameState.availableStaticSpriteSheets.length
     ? gameState.availableStaticSpriteSheets
@@ -494,9 +501,10 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   const allowLocalOverride = !multiplayerActive
   const resolvedSheets = []
   for (const sheetPath of selectedSheetPaths) {
+    const runtimeAppliedMetadata = runtimeAppliedStaticMetadataBySheetPath.get(sheetPath)
     const resolvedMetadata = metadata?.sheetPath === sheetPath
       ? metadata
-      : await loadMetadataForSheet(sheetPath, { allowLocalOverride })
+      : (runtimeAppliedMetadata || await loadMetadataForSheet(sheetPath, { allowLocalOverride }))
     if (!hasTaggedTiles(resolvedMetadata)) continue
     resolvedSheets.push({
       sheetPath,
@@ -504,16 +512,21 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     })
   }
 
+  const primarySheet = resolvedSheets[0] || null
+
   await textureManager.setIntegratedSpriteSheetConfig({
     enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
-    sheetPath: metadata?.sheetPath || gameState.activeSpriteSheetPath,
-    metadata: metadata || gameState.activeSpriteSheetMetadata || null,
+    sheetPath: primarySheet?.sheetPath || null,
+    metadata: primarySheet?.metadata || null,
     sheets: resolvedSheets,
     biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
   })
 
   const mapRenderer = getMapRenderer()
   if (mapRenderer) {
+    if (Array.isArray(gameState.mapGrid)) {
+      mapRenderer.computeSOTMask(gameState.mapGrid)
+    }
     mapRenderer.invalidateAllChunks()
   }
 
@@ -618,6 +631,7 @@ export function initMapEditorControls() {
       if (parsed && typeof parsed === 'object') {
         gameState.activeSpriteSheetMetadata = parsed
         gameState.activeSpriteSheetPath = parsed.sheetPath || gameState.activeSpriteSheetPath || null
+        cacheRuntimeIntegratedMetadata(parsed)
       }
     }
   } catch (err) {
@@ -741,6 +755,7 @@ export function initMapEditorControls() {
     onSheetDataChange: (metadata) => {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
+      cacheRuntimeIntegratedMetadata(metadata)
       if (metadata?.sheetPath && hasTaggedTiles(metadata)) {
         ensureIntegratedSheetVisible(metadata.sheetPath, { autoSelect: false })
       }
@@ -754,6 +769,7 @@ export function initMapEditorControls() {
     onApply: async(metadata) => {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
+      cacheRuntimeIntegratedMetadata(metadata)
       if (metadata?.sheetPath && hasTaggedTiles(metadata)) {
         ensureIntegratedSheetVisible(metadata.sheetPath, { autoSelect: true })
       }

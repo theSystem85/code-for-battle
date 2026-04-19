@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const mockSetIntegratedSpriteSheetConfig = vi.fn(async() => {})
 const mockInvalidateAllChunks = vi.fn()
+const mockComputeSotMask = vi.fn()
 const mockInitSpriteSheetEditor = vi.fn(async(options = {}) => {
   globalThis.__capturedSseOptions = options
   return { refreshRuntimeSheetData: vi.fn() }
@@ -26,7 +27,8 @@ vi.mock('../../src/rendering.js', () => ({
     setIntegratedSpriteSheetConfig: mockSetIntegratedSpriteSheetConfig
   }),
   getMapRenderer: () => ({
-    invalidateAllChunks: mockInvalidateAllChunks
+    invalidateAllChunks: mockInvalidateAllChunks,
+    computeSOTMask: mockComputeSotMask
   })
 }))
 
@@ -128,6 +130,8 @@ describe('mapEditorControls integrated sheet selection list', () => {
     const uploadedCheckbox = document.querySelector('input[data-sheet-path="blob:uploaded-sheet"]')
     expect(uploadedCheckbox).not.toBeNull()
     expect(uploadedCheckbox.checked).toBe(true)
+    expect(mockInvalidateAllChunks).toHaveBeenCalled()
+    expect(mockComputeSotMask).toHaveBeenCalled()
 
     const latestConfig = mockSetIntegratedSpriteSheetConfig.mock.calls.at(-1)?.[0]
     expect(Array.isArray(latestConfig?.sheets)).toBe(true)
