@@ -17,7 +17,8 @@ vi.mock('../../src/config.js', () => ({
   TILE_SIZE: 32,
   HARVESTER_CAPPACITY: 1,
   HARVESTER_UNLOAD_TIME: 5000,
-  HARVESTER_PRODUCTIVITY_CHECK_INTERVAL: 500
+  HARVESTER_PRODUCTIVITY_CHECK_INTERVAL: 500,
+  HARVESTER_XP_FULL_UNLOADS_PER_STAR: 10
 }))
 
 vi.mock('../../src/units.js', () => ({
@@ -95,6 +96,10 @@ function createTestHarvester(id, tileX, tileY, owner = 'player1') {
     health: 100,
     maxHealth: 100,
     oreCarried: 0,
+    level: 0,
+    experience: 0,
+    totalMoneyEarned: 0,
+    cargoCapacity: 1000,
     harvesting: false,
     harvestTimer: 0,
     unloadingAtRefinery: false,
@@ -378,6 +383,24 @@ describe('Harvester Logic', () => {
 
       expect(harvester.level).toBe(1)
       expect(harvester.cargoCapacity).toBe(1500)
+    })
+
+    it('uses 10 full unload equivalents for later star promotions too', () => {
+      const harvester = createTestHarvester('harv1', 11, 13)
+      harvester.level = 1
+      harvester.experience = 9
+      harvester.cargoCapacity = 1500
+      harvester.oreCarried = 1500
+      harvester.unloadingAtRefinery = true
+      harvester.unloadStartTime = now - 5001
+      harvester.unloadRefinery = 'refinery_10_10'
+      units.push(harvester)
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.level).toBe(2)
+      expect(harvester.experience).toBe(0)
+      expect(harvester.cargoCapacity).toBe(2000)
     })
 
     it('should take longer to unload when power is negative', () => {

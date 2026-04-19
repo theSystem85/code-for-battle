@@ -372,6 +372,7 @@ export class UnitRenderer {
 
   hasHudAmmoBar(unit) {
     return unit.selected && (
+      unit.type === 'harvester' ||
       typeof unit.maxAmmunition === 'number' ||
       typeof unit.maxRocketAmmo === 'number' ||
       unit.type === 'mineLayer' ||
@@ -381,11 +382,12 @@ export class UnitRenderer {
 
   hasHudBottomProgressBar(unit) {
     if (!unit.selected) return false
-    if (unit.type === 'harvester' || unit.type === 'ambulance' || unit.type === 'tankerTruck' || unit.type === 'ammunitionTruck') return true
+    if (unit.type === 'harvester') return (Number.isFinite(unit.level) ? unit.level : 0) < 3
+    if (unit.type === 'ambulance' || unit.type === 'tankerTruck' || unit.type === 'ammunitionTruck') return true
     if (unit.type === 'mineLayer') return Boolean(unit.deployingMine && unit.deployStartTime)
 
     initializeUnitLeveling(unit)
-    return (unit.type !== 'harvester' && unit.level < 3)
+    return unit.level < 3
   }
 
   roundHudValue(value) {
@@ -401,6 +403,10 @@ export class UnitRenderer {
   }
 
   getHudAmmoTooltipValue(unit) {
+    if (unit.type === 'harvester') {
+      return `load ${this.roundHudValue(unit.oreCarried ?? 0)}`
+    }
+
     if (typeof unit.maxAmmunition === 'number') {
       return `ammo ${this.roundHudValue(unit.ammunition ?? 0)}`
     }
@@ -594,7 +600,7 @@ export class UnitRenderer {
       if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'bottom'))) return 'experience'
     }
 
-    if (unit.type !== 'harvester' && unit.level > 0) {
+    if (unit.level > 0) {
       const starSize = 6
       const starSpacing = 8
       const totalWidth = (unit.level * starSpacing) - (starSpacing - starSize)
@@ -872,11 +878,17 @@ export class UnitRenderer {
     let shouldShowBar = false
 
     if (unit.type === 'harvester') {
-      // Harvester-specific progress logic
-      shouldShowBar = true
+      if (unit.selected) {
+        if (unit.level >= 3) {
+          return
+        }
 
-      if (unit.unloadingAtRefinery && unit.unloadStartTime) {
+        shouldShowBar = true
+        progress = getExperienceProgress(unit)
+        barColor = '#FFFF00' // Bright yellow for experience
+      } else if (unit.unloadingAtRefinery && unit.unloadStartTime) {
         // Show unloading progress (reverse direction)
+        shouldShowBar = true
         const unloadProgress = Math.min(
           Math.max((getSimulationTime(gameState) - unit.unloadStartTime) / HARVESTER_UNLOAD_TIME, 0),
           1
@@ -885,18 +897,14 @@ export class UnitRenderer {
         barColor = '#FF6B6B' // Red-ish for unloading
       } else if (unit.harvesting && unit.harvestTimer) {
         // Show harvesting progress
+        shouldShowBar = true
         progress = Math.min(
           Math.max((getSimulationTime(gameState) - unit.harvestTimer) / 10000, 0),
           1
         )
         barColor = '#32CD32' // Green for harvesting
       } else {
-        if (!unit.selected) {
-          return
-        }
-        // Show current ore load
-        progress = unit.oreCarried / HARVESTER_CAPPACITY
-        barColor = '#FFD700' // Gold for ore
+        return
       }
     } else if (unit.type === 'ambulance') {
       // Ambulance crew loading bar
@@ -1017,8 +1025,13 @@ export class UnitRenderer {
     let barColor = '#FFA500' // Default orange color for ammunition
     let reloadRatio = null // Additional reload indicator for rocket tanks
 
-    // Special handling for rocket tanks - show ammunition with reload overlay
-    if (unit.type === 'rocketTank') {
+    if (unit.type === 'harvester') {
+      const cargoCapacity = Math.max(1, Number.isFinite(unit.cargoCapacity) ? unit.cargoCapacity : HARVESTER_CAPPACITY)
+      ratio = Math.max(0, Math.min(1, (unit.oreCarried ?? 0) / cargoCapacity))
+      hasAmmo = true
+      barColor = '#FFD700'
+    } else if (unit.type === 'rocketTank') {
+      // Special handling for rocket tanks - show ammunition with reload overlay
       // Show ammunition as main bar fill
       if (typeof unit.maxAmmunition === 'number') {
         ratio = unit.ammunition / unit.maxAmmunition
@@ -1502,12 +1515,13 @@ export class UnitRenderer {
   }
 
   renderLevelStars(ctx, unit, scrollOffset) {
-    // Only render stars for combat units with levels > 0
-    if (unit.type === 'harvester' || !unit.level || unit.level <= 0) {
+    if (!unit.level || unit.level <= 0) {
       return
     }
 
-    initializeUnitLeveling(unit)
+    if (unit.type !== 'harvester') {
+      initializeUnitLeveling(unit)
+    }
 
     const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x

@@ -1,5 +1,5 @@
 // utils.js
-import { TILE_SIZE, XP_MULTIPLIER, UNIT_COSTS } from './config.js'
+import { TILE_SIZE, XP_MULTIPLIER, UNIT_COSTS, HARVESTER_XP_FULL_UNLOADS_PER_STAR } from './config.js'
 import { deterministicRNG, gameRandom } from './utils/gameRandom.js'
 
 export function tileToPixel(tileX, tileY) {
@@ -180,7 +180,15 @@ export function applyLevelBonuses(unit) {
  * @returns {number} Progress percentage (0-1)
  */
 export function getExperienceProgress(unit) {
-  if (!unit || unit.level >= 3) return 0
+  if (!unit) return 0
+
+  if (unit.type === 'harvester') {
+    if (unit.level >= 3) return 0
+    const currentExperience = Number.isFinite(unit.experience) ? Math.max(0, unit.experience) : 0
+    return Math.min(currentExperience / HARVESTER_XP_FULL_UNLOADS_PER_STAR, 1)
+  }
+
+  if (unit.level >= 3) return 0
 
   initializeUnitLeveling(unit)
   const experienceRequired = getExperienceRequiredForLevel(unit.level, unit.baseCost)

@@ -1192,6 +1192,9 @@ function loadGameFromSaveObject(saveObj, key) {
       if (hydrated.type === 'harvester') {
         hydrated.oreCarried = u.oreCarried || 0
         hydrated.level = Number.isFinite(u.level) ? Math.max(0, Math.min(3, Math.floor(u.level))) : 0
+        hydrated.experience = hydrated.level >= 3
+          ? 0
+          : (Number.isFinite(u.experience) ? Math.max(0, u.experience) : 0)
         hydrated.totalMoneyEarned = Number.isFinite(u.totalMoneyEarned) ? Math.max(0, u.totalMoneyEarned) : 0
         hydrated.baseHarvesterSpeed = Number.isFinite(u.baseHarvesterSpeed) ? u.baseHarvesterSpeed : hydrated.speed
         hydrated.baseHarvesterArmor = Number.isFinite(u.baseHarvesterArmor) ? u.baseHarvesterArmor : hydrated.armor

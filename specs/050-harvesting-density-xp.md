@@ -11,10 +11,10 @@ Implement crystal density-driven harvesting where ore/seed crystals support dens
    - 2 stars: can harvest up to density 4.
    - 3 stars: can harvest up to density 5.
 3. Harvest value scales by density (density 5 yields 5x base value).
-4. Harvester XP stars are money-delivered based:
-   - 1 star at 10,000
-   - 2 stars at 30,000
-   - 3 stars at 50,000
+4. Harvester XP stars are unload-progress based:
+   - each unload grants XP proportional to the delivered fraction of a full cargo
+   - 10 full unload equivalents fill the XP bar and grant +1 star
+   - XP resets after each promotion until 3 stars are reached
 5. Harvester star upgrades:
    - +50% cargo capacity per star level.
    - +25% armor at 2 stars and above.
@@ -27,3 +27,5 @@ Implement crystal density-driven harvesting where ore/seed crystals support dens
 8. Seed crystal spread rate scales with seed density (density multiplier `1x..5x`).
 9. Seed crystal density is deterministic from map seed RNG during map generation.
 10. Crystal sprite sheet `crystals_q90_1024x1024.webp` should be available in static sheet selection defaults.
+11. Selected harvesters show their XP bar in the shared bottom progress slot used by other units, while harvester cargo/load uses the ammo-side HUD bar to avoid overlap.
+12. Seed crystals should resolve integrated-sheet sprites from `red` + `density_X` tags even when those tiles no longer carry the legacy `ore` tag.
