@@ -392,6 +392,7 @@
 - [x] ✅ Map settings ore-field count control (2026-03-04): added sidebar ore field count input and deterministic seeded usage in map generation, with one center seed crystal per generated field.
 - [x] ✅ OFC zero + immediate map updates (2026-03-04): ore field count now supports 0, follows center/near/spread tier rules relative to party count, and map regenerates instantly when seed/players/dimensions/ore-fields inputs change (shuffle button removed).
 - [x] ✅ Route the `i` key and sidebar info (`ℹ️`) button to the settings modal keybindings tab and remove the redundant legacy "Game Controls" modal entirely.
+- [x] ✅ During unit-destruction freeze delay, hide HP/health bar display for destroyed units so no 0-HP HUD remains visible before cleanup.
 
 - [x] Investigate and fix the sidebar game-speed regression so simulation systems follow the speed input via a fixed-step simulation clock while render FPS stays unchanged and gameplay remains frame-rate independent.
 - [x] Follow-up: convert remaining gameplay-critical wall-clock timers from the game-speed fix (Tesla Coil sequencing and AI/LLM building sell timers) to the simulation clock so they obey sidebar speed changes too.
