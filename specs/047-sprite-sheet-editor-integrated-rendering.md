@@ -141,6 +141,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Sheets without any tagged tiles must be excluded from runtime loading/candidate pools to reduce memory usage.
   - Static metadata precedence is: localStorage sidecar override first, bundled sidecar JSON fallback. In active multiplayer sessions, runtime must bypass local overrides and use bundled sidecar metadata only.
   - Map Settings must expose a per-sheet checkbox list (visible only when `Custom sprite sheets` is enabled) to control which static sheets are eligible at runtime; list viewport is capped to 5 visible rows with scrolling.
+  - When tags are applied to a non-default sheet uploaded on-the-fly (e.g. dropped blob/data/local-upload path), that sheet must also appear in the same checklist, be auto-selected by default for runtime, and contribute tagged candidates to integrated map rendering.
   - In that same no-water GPU fallback mode, the WebGL water-only batch must not emit clipped water-SOT triangle instances either; it should render only unclipped procedural water tiles.
   - The no-water GPU fallback must apply that water-SOT suppression in the active base-layer path too, not only in the overlay-only path; any SOT that would render into water must be skipped there.
   - That suppression must stay host-aware: skip SOT hosted on water tiles in the no-water fallback, but preserve land/street-hosted `type: water` SOT so coastline smoothing still appears against other terrain.
