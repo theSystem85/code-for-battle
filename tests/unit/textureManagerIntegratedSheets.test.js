@@ -96,4 +96,40 @@ describe('TextureManager integrated multi-sheet selection', () => {
       })
     ])
   })
+
+  it('loads blob and data integrated sheets without prefixing a slash', async() => {
+    const manager = new TextureManager()
+    const assignedSrc = []
+
+    const OriginalImage = globalThis.Image
+    class MockImage {
+      set onload(handler) {
+        this._onload = handler
+      }
+
+      set onerror(handler) {
+        this._onerror = handler
+      }
+
+      set src(value) {
+        assignedSrc.push(value)
+        if (this._onload) this._onload()
+      }
+    }
+
+    globalThis.Image = MockImage
+    try {
+      await manager.loadIntegratedSpriteSheetImage('blob:runtime-uploaded')
+      await manager.loadIntegratedSpriteSheetImage('data:image/webp;base64,abc123')
+      await manager.loadIntegratedSpriteSheetImage('images/map/sprite_sheets/default.webp')
+    } finally {
+      globalThis.Image = OriginalImage
+    }
+
+    expect(assignedSrc).toEqual([
+      'blob:runtime-uploaded',
+      'data:image/webp;base64,abc123',
+      '/images/map/sprite_sheets/default.webp'
+    ])
+  })
 })
