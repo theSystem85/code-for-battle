@@ -36,6 +36,7 @@ import {
   MAP_SEED_STORAGE_KEY,
   PLAYER_COUNT_STORAGE_KEY,
   ORE_FIELD_COUNT_STORAGE_KEY,
+  ORE_TOTAL_VALUE_STORAGE_KEY,
   MAP_WIDTH_TILES_STORAGE_KEY,
   MAP_HEIGHT_TILES_STORAGE_KEY
 } from './main.js'
@@ -72,7 +73,10 @@ function deriveDeterministicSessionSeed(state = {}) {
     state.playerCount || gameState.playerCount || 2,
     Number.isFinite(state.mapOreFieldCount)
       ? state.mapOreFieldCount
-      : (Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8)
+      : (Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8),
+    Number.isFinite(state.mapOreTotalValue)
+      ? state.mapOreTotalValue
+      : (Number.isFinite(gameState.mapOreTotalValue) ? gameState.mapOreTotalValue : 64000)
   ].join(':')
 }
 
@@ -166,7 +170,7 @@ function setupLifecycleSaves() {
   }
 }
 
-function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, playerCount) {
+function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, playerCount, oreTotalValue) {
   const widthInput = document.getElementById('mapWidthTiles')
   if (widthInput) {
     widthInput.value = widthTiles
@@ -185,6 +189,10 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, 
   const oreFieldInput = document.getElementById('mapOreFieldCount')
   if (oreFieldInput && Number.isFinite(oreFieldCount)) {
     oreFieldInput.value = Math.max(0, Math.min(24, Math.floor(oreFieldCount)))
+  }
+  const oreTotalInput = document.getElementById('mapOreTotalValue')
+  if (oreTotalInput && Number.isFinite(oreTotalValue)) {
+    oreTotalInput.value = Math.max(0, Math.floor(oreTotalValue / 1000) * 1000)
   }
 
   const playerCountInput = document.getElementById('playerCount')
@@ -221,6 +229,13 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, 
       localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, Math.max(0, Math.min(24, Math.floor(oreFieldCount))).toString())
     } catch (err) {
       window.logger.warn('Failed to persist loaded ore field count to localStorage:', err)
+    }
+  }
+  if (Number.isFinite(oreTotalValue)) {
+    try {
+      localStorage.setItem(ORE_TOTAL_VALUE_STORAGE_KEY, Math.max(0, Math.floor(oreTotalValue / 1000) * 1000).toString())
+    } catch (err) {
+      window.logger.warn('Failed to persist loaded ore total value to localStorage:', err)
     }
   }
 
@@ -639,6 +654,7 @@ export function saveGame(label) {
       mapTilesY: gameState.mapTilesY,
       mapSeed: gameState.mapSeed,
       mapOreFieldCount: gameState.mapOreFieldCount,
+      mapOreTotalValue: gameState.mapOreTotalValue,
       lastOreUpdate: Number.isFinite(gameState.lastOreUpdate) ? gameState.lastOreUpdate : 0,
       speedMultiplier: gameState.speedMultiplier,
       useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
@@ -813,6 +829,12 @@ function loadGameFromSaveObject(saveObj, key) {
         ? Math.max(0, Math.min(24, Math.floor(gameState.mapOreFieldCount)))
         : 8)
     gameState.mapOreFieldCount = savedOreFieldCount
+    const savedOreTotalValue = Number.isFinite(loaded?.gameState?.mapOreTotalValue)
+      ? Math.max(0, Math.floor(loaded.gameState.mapOreTotalValue / 1000) * 1000)
+      : (Number.isFinite(gameState.mapOreTotalValue)
+        ? Math.max(0, Math.floor(gameState.mapOreTotalValue / 1000) * 1000)
+        : 64000)
+    gameState.mapOreTotalValue = savedOreTotalValue
 
     const savedPlayerCount = Number.isFinite(loaded?.gameState?.playerCount)
       ? Math.max(2, Math.min(4, Math.floor(loaded.gameState.playerCount)))
@@ -821,7 +843,7 @@ function loadGameFromSaveObject(saveObj, key) {
         : 2)
     gameState.playerCount = savedPlayerCount
 
-    syncLoadedMapSettings(appliedWidth, appliedHeight, savedSeed, savedOreFieldCount, savedPlayerCount)
+    syncLoadedMapSettings(appliedWidth, appliedHeight, savedSeed, savedOreFieldCount, savedPlayerCount, savedOreTotalValue)
 
     const pendingFactoryBudgets = loaded.aiFactoryBudgets || null
     const legacyEnemyMoney = loaded.enemyMoney

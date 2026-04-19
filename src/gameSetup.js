@@ -152,6 +152,16 @@ function sanitizeOreFieldCount(value) {
   return clamp(parsed, 0, 24)
 }
 
+function sanitizeOreTotalValue(value) {
+  const parsed = parseInt(value, 10)
+  if (!Number.isFinite(parsed)) {
+    return 64000
+  }
+  const step = 1000
+  const clamped = clamp(parsed, 0, 5000000)
+  return Math.floor(clamped / step) * step
+}
+
 function sanitizePercent(value, fallback = 0) {
   const parsed = parseInt(value, 10)
   if (!Number.isFinite(parsed)) {
@@ -459,46 +469,102 @@ function buildOreClusterPlan(rand, playerPositions, mapWidth, mapHeight, oreFiel
   }
 }
 
-function applyOreCluster(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPositions) {
-  const radius = cluster.radius
+function isValidOreTile(mapGrid, x, y, factoryPositions) {
+  const tileType = mapGrid[y]?.[x]?.type
+  if (tileType !== 'land' && tileType !== 'street') return false
+
+  const isInFactory = factoryPositions.some(factory =>
+    x >= factory.x && x < factory.x + factory.width &&
+    y >= factory.y && y < factory.y + factory.height
+  )
+  if (isInFactory) return false
+
+  const isInBuilding = gameState.buildings && gameState.buildings.some(building => {
+    const bx = building.x
+    const by = building.y
+    const bw = building.width || 1
+    const bh = building.height || 1
+    return x >= bx && x < bx + bw && y >= by && y < by + bh
+  })
+  if (isInBuilding) return false
+
+  return true
+}
+
+function applySeedCrystal(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPositions) {
   const centerX = clamp(cluster.x, 0, mapWidth - 1)
   const centerY = clamp(cluster.y, 0, mapHeight - 1)
   const seedDensity = Math.max(1, Math.min(5, Math.floor(rand() * 5) + 1))
 
-  for (let y = Math.max(0, cluster.y - radius); y < Math.min(mapHeight, cluster.y + radius); y++) {
-    for (let x = Math.max(0, cluster.x - radius); x < Math.min(mapWidth, cluster.x + radius); x++) {
-      const dx = x - cluster.x
-      const dy = y - cluster.y
-      if (Math.hypot(dx, dy) >= radius || rand() >= cluster.oreChance) continue
-
-      const tileType = mapGrid[y][x].type
-      if (tileType !== 'land' && tileType !== 'street') continue
-
-      const isInFactory = factoryPositions.some(factory =>
-        x >= factory.x && x < factory.x + factory.width &&
-        y >= factory.y && y < factory.y + factory.height
-      )
-      if (isInFactory) continue
-
-      const isInBuilding = gameState.buildings && gameState.buildings.some(building => {
-        const bx = building.x
-        const by = building.y
-        const bw = building.width || 1
-        const bh = building.height || 1
-        return x >= bx && x < bx + bw && y >= by && y < by + bh
-      })
-      if (isInBuilding) continue
-
-      mapGrid[y][x].ore = true
-      const oreDensity = getOreDensityForDistance(Math.hypot(dx, dy), radius, seedDensity)
-      mapGrid[y][x].oreDensity = Math.max(mapGrid[y][x].oreDensity || 0, oreDensity)
-    }
+  if (!isValidOreTile(mapGrid, centerX, centerY, factoryPositions)) {
+    return null
   }
 
   mapGrid[centerY][centerX].ore = true
   mapGrid[centerY][centerX].oreDensity = Math.max(mapGrid[centerY][centerX].oreDensity || 0, seedDensity)
   mapGrid[centerY][centerX].seedCrystal = true
   mapGrid[centerY][centerX].seedCrystalDensity = seedDensity
+
+  return { ...cluster, centerX, centerY, seedDensity }
+}
+
+function buildOreCandidatesForSeed(seedCluster, mapGrid, mapWidth, mapHeight, factoryPositions) {
+  const radius = Math.max(2, seedCluster.radius || 4)
+  const candidates = []
+
+  for (let y = Math.max(0, seedCluster.centerY - radius); y <= Math.min(mapHeight - 1, seedCluster.centerY + radius); y++) {
+    for (let x = Math.max(0, seedCluster.centerX - radius); x <= Math.min(mapWidth - 1, seedCluster.centerX + radius); x++) {
+      if (x === seedCluster.centerX && y === seedCluster.centerY) continue
+      if (!isValidOreTile(mapGrid, x, y, factoryPositions)) continue
+
+      const distance = Math.hypot(x - seedCluster.centerX, y - seedCluster.centerY)
+      if (distance > radius + 0.001) continue
+      candidates.push({ x, y, distance })
+    }
+  }
+
+  candidates.sort((a, b) => {
+    if (a.distance !== b.distance) return a.distance - b.distance
+    if (a.y !== b.y) return a.y - b.y
+    return a.x - b.x
+  })
+
+  return candidates
+}
+
+function distributeOreAcrossSeeds(seedClusters, mapGrid, mapWidth, mapHeight, factoryPositions, totalOreValue) {
+  const oreValueStep = 1000
+  const densityPerTileMax = 5
+  const totalUnits = Math.floor(Math.max(0, totalOreValue) / oreValueStep)
+  if (totalUnits <= 0 || seedClusters.length === 0) {
+    return
+  }
+
+  const baseUnitsPerSeed = Math.floor(totalUnits / seedClusters.length)
+  let remainingUnits = totalUnits - (baseUnitsPerSeed * seedClusters.length)
+
+  seedClusters.forEach(seedCluster => {
+    let unitsForSeed = baseUnitsPerSeed
+    if (remainingUnits > 0) {
+      unitsForSeed += 1
+      remainingUnits -= 1
+    }
+
+    const candidates = buildOreCandidatesForSeed(seedCluster, mapGrid, mapWidth, mapHeight, factoryPositions)
+    let candidateIndex = 0
+    while (unitsForSeed > 0 && candidateIndex < candidates.length) {
+      const candidate = candidates[candidateIndex]
+      const tile = mapGrid[candidate.y][candidate.x]
+      const assignDensity = Math.min(densityPerTileMax, unitsForSeed)
+      tile.ore = true
+      tile.oreDensity = Math.max(tile.oreDensity || 0, assignDensity)
+      tile.seedCrystal = false
+      tile.seedCrystalDensity = 0
+      unitsForSeed -= assignDensity
+      candidateIndex += 1
+    }
+
+  })
 }
 
 // Generate a new map using the given seed and organic features
@@ -588,7 +654,9 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
 
   // -------- Step 4: Generate Streets --------
   const oreFieldCount = sanitizeOreFieldCount(gameState.mapOreFieldCount)
+  const oreTotalValue = sanitizeOreTotalValue(gameState.mapOreTotalValue)
   gameState.mapOreFieldCount = oreFieldCount
+  gameState.mapOreTotalValue = oreTotalValue
   const orePlan = buildOreClusterPlan(rand, playerPositions, MAP_TILES_X, MAP_TILES_Y, oreFieldCount)
 
   // Keep a connected global road graph and enforce direct base-to-near-ore street reachability.
@@ -630,9 +698,11 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     })
   })
 
-  orePlan.allClusters.forEach(cluster => {
-    applyOreCluster(cluster, mapGrid, MAP_TILES_X, MAP_TILES_Y, rand, factoryPositions)
-  })
+  const seededClusters = orePlan.allClusters
+    .map(cluster => applySeedCrystal(cluster, mapGrid, MAP_TILES_X, MAP_TILES_Y, rand, factoryPositions))
+    .filter(Boolean)
+
+  distributeOreAcrossSeeds(seededClusters, mapGrid, MAP_TILES_X, MAP_TILES_Y, factoryPositions, oreTotalValue)
 }
 
 /**

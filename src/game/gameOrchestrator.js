@@ -47,7 +47,8 @@ function initializeDeterministicGameSession(seed, state = gameState) {
     state.mapTilesX || DEFAULT_MAP_TILES_X,
     state.mapTilesY || DEFAULT_MAP_TILES_Y,
     state.playerCount || 2,
-    Number.isFinite(state.mapOreFieldCount) ? state.mapOreFieldCount : 8
+    Number.isFinite(state.mapOreFieldCount) ? state.mapOreFieldCount : 8,
+    Number.isFinite(state.mapOreTotalValue) ? state.mapOreTotalValue : 64000
   ].join(':')
 
   initializeSessionRNG(sessionSeed, true)
@@ -72,6 +73,7 @@ import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
 export const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
+export const ORE_TOTAL_VALUE_STORAGE_KEY = 'rts-ore-total-value'
 const MAP_WATER_PERCENT_STORAGE_KEY = 'rts-map-water-percent'
 const MAP_ROCK_PERCENT_STORAGE_KEY = 'rts-map-rock-percent'
 const MAP_SHORE_NORTH_STORAGE_KEY = 'rts-map-shore-north'
@@ -102,6 +104,16 @@ function sanitizeOreFieldCount(value) {
   }
   const fallback = Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8
   return Math.max(0, Math.min(24, Math.floor(fallback)))
+}
+
+function sanitizeOreTotalValue(value) {
+  const parsed = parseInt(value, 10)
+  const step = 1000
+  if (Number.isFinite(parsed)) {
+    return Math.floor(Math.max(0, Math.min(5000000, parsed)) / step) * step
+  }
+  const fallback = Number.isFinite(gameState.mapOreTotalValue) ? gameState.mapOreTotalValue : 64000
+  return Math.floor(Math.max(0, Math.min(5000000, fallback)) / step) * step
 }
 
 function sanitizeTerrainPercent(value, fallback) {
@@ -320,7 +332,9 @@ function loadPersistedSettings() {
 
   try {
     const oreFieldInput = document.getElementById('mapOreFieldCount')
+    const oreTotalValueInput = document.getElementById('mapOreTotalValue')
     const storedOreFields = localStorage.getItem(ORE_FIELD_COUNT_STORAGE_KEY)
+    const storedOreTotalValue = localStorage.getItem(ORE_TOTAL_VALUE_STORAGE_KEY)
 
     if (oreFieldInput && mapOverrides?.oreFieldCount) {
       const sanitized = sanitizeOreFieldCount(mapOverrides.oreFieldCount)
@@ -335,8 +349,18 @@ function loadPersistedSettings() {
       oreFieldInput.value = sanitized
       gameState.mapOreFieldCount = sanitized
     }
+
+    if (oreTotalValueInput && storedOreTotalValue !== null) {
+      const sanitizedTotal = sanitizeOreTotalValue(storedOreTotalValue)
+      oreTotalValueInput.value = sanitizedTotal
+      gameState.mapOreTotalValue = sanitizedTotal
+    } else if (oreTotalValueInput) {
+      const sanitizedTotal = sanitizeOreTotalValue(gameState.mapOreTotalValue)
+      oreTotalValueInput.value = sanitizedTotal
+      gameState.mapOreTotalValue = sanitizedTotal
+    }
   } catch (e) {
-    window.logger.warn('Failed to load ore field count from localStorage:', e)
+    window.logger.warn('Failed to load ore map settings from localStorage:', e)
   }
 
   try {
@@ -727,6 +751,7 @@ class Game {
     const mapWidthInput = document.getElementById('mapWidthTiles')
     const mapHeightInput = document.getElementById('mapHeightTiles')
     const oreFieldInput = document.getElementById('mapOreFieldCount')
+    const oreTotalValueInput = document.getElementById('mapOreTotalValue')
     const waterPercentInput = document.getElementById('mapWaterPercent')
     const rockPercentInput = document.getElementById('mapRockPercent')
     const shoreNorthCheckbox = document.getElementById('mapShoreNorthCheckbox')
@@ -743,6 +768,9 @@ class Game {
       const oreFieldCount = oreFieldInput
         ? sanitizeOreFieldCount(oreFieldInput.value)
         : sanitizeOreFieldCount(gameState.mapOreFieldCount)
+      const oreTotalValue = oreTotalValueInput
+        ? sanitizeOreTotalValue(oreTotalValueInput.value)
+        : sanitizeOreTotalValue(gameState.mapOreTotalValue)
       const rawWaterPercent = waterPercentInput
         ? sanitizeTerrainPercent(waterPercentInput.value, gameState.mapWaterPercent)
         : sanitizeTerrainPercent(gameState.mapWaterPercent, 10)
@@ -766,6 +794,12 @@ class Game {
         oreFieldInput.max = 24
         oreFieldInput.value = oreFieldCount
       }
+      if (oreTotalValueInput) {
+        oreTotalValueInput.min = 0
+        oreTotalValueInput.step = 1000
+        oreTotalValueInput.max = 5000000
+        oreTotalValueInput.value = oreTotalValue
+      }
       if (waterPercentInput) {
         waterPercentInput.min = 0
         waterPercentInput.max = 50
@@ -779,6 +813,7 @@ class Game {
 
       gameState.playerCount = Number.isFinite(playerCount) ? Math.max(2, Math.min(4, playerCount)) : (gameState.playerCount || 2)
       gameState.mapOreFieldCount = oreFieldCount
+      gameState.mapOreTotalValue = oreTotalValue
       gameState.mapWaterPercent = waterPercent
       gameState.mapRockPercent = rockPercent
       gameState.mapShoreNorth = shoreNorth
@@ -792,6 +827,7 @@ class Game {
       try { localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString()) } catch (err) { window.logger.warn('Failed to save map height to localStorage:', err) }
       try { localStorage.setItem(PLAYER_COUNT_STORAGE_KEY, gameState.playerCount.toString()) } catch (err) { window.logger.warn('Failed to save player count to localStorage:', err) }
       try { localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, oreFieldCount.toString()) } catch (err) { window.logger.warn('Failed to save ore field count to localStorage:', err) }
+      try { localStorage.setItem(ORE_TOTAL_VALUE_STORAGE_KEY, oreTotalValue.toString()) } catch (err) { window.logger.warn('Failed to save ore total value to localStorage:', err) }
       try { localStorage.setItem(MAP_WATER_PERCENT_STORAGE_KEY, waterPercent.toString()) } catch (err) { window.logger.warn('Failed to save map water percent to localStorage:', err) }
       try { localStorage.setItem(MAP_ROCK_PERCENT_STORAGE_KEY, rockPercent.toString()) } catch (err) { window.logger.warn('Failed to save map rock percent to localStorage:', err) }
       try { localStorage.setItem(MAP_SHORE_NORTH_STORAGE_KEY, shoreNorth.toString()) } catch (err) { window.logger.warn('Failed to save north shore setting to localStorage:', err) }
@@ -835,6 +871,16 @@ class Game {
       oreFieldInput.value = sanitizeOreFieldCount(oreFieldInput.value || gameState.mapOreFieldCount)
       oreFieldInput.addEventListener('change', () => {
         oreFieldInput.value = sanitizeOreFieldCount(oreFieldInput.value)
+        applyMapSettingsAndRegenerate()
+      })
+    }
+    if (oreTotalValueInput) {
+      oreTotalValueInput.min = 0
+      oreTotalValueInput.step = 1000
+      oreTotalValueInput.max = 5000000
+      oreTotalValueInput.value = sanitizeOreTotalValue(oreTotalValueInput.value || gameState.mapOreTotalValue)
+      oreTotalValueInput.addEventListener('change', () => {
+        oreTotalValueInput.value = sanitizeOreTotalValue(oreTotalValueInput.value)
         applyMapSettingsAndRegenerate()
       })
     }
@@ -1471,8 +1517,8 @@ gameState.mapGrid = mapGrid
 gameState.units = units
 gameState.factories = factories
 
-function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapOreFieldCount, terrainSettings = null) {
-  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'terrainSettings:', terrainSettings)
+function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapOreFieldCount, mapOreTotalValue, terrainSettings = null) {
+  window.logger('[Main] Regenerating map for client with seed:', seed, 'dimensions:', widthTiles, 'x', heightTiles, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
   deactivateMapEditMode()
   const { value: clientSeed } = sanitizeSeed(seed)
   const normalizedSeed = clientSeed.toString()
@@ -1487,6 +1533,9 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
   }
   if (Number.isFinite(mapOreFieldCount)) {
     gameState.mapOreFieldCount = sanitizeOreFieldCount(mapOreFieldCount)
+  }
+  if (Number.isFinite(mapOreTotalValue)) {
+    gameState.mapOreTotalValue = sanitizeOreTotalValue(mapOreTotalValue)
   }
   if (terrainSettings && typeof terrainSettings === 'object') {
     gameState.mapWaterPercent = sanitizeTerrainPercent(terrainSettings.mapWaterPercent, gameState.mapWaterPercent)

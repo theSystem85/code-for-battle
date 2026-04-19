@@ -290,6 +290,7 @@ export const gameState = {
 
   // Number of generated ore fields for map generation
   mapOreFieldCount: 8,
+  mapOreTotalValue: 64000,
   mapWaterPercent: 10,
   mapRockPercent: 10,
   mapShoreNorth: false,

@@ -417,6 +417,7 @@ export function createGameStateSnapshot() {
     mapTilesY: gameState.mapTilesY,
     playerCount: gameState.playerCount,
     mapOreFieldCount: gameState.mapOreFieldCount,
+    mapOreTotalValue: gameState.mapOreTotalValue,
     mapWaterPercent: gameState.mapWaterPercent,
     mapRockPercent: gameState.mapRockPercent,
     mapShoreNorth: gameState.mapShoreNorth,
@@ -443,9 +444,10 @@ export function createGameStateSnapshot() {
  * @param {number} height - Map height in tiles
  * @param {number} playerCount - Number of players from host
  * @param {number} mapOreFieldCount - Number of ore fields from host
+ * @param {number} mapOreTotalValue - Total ore value budget from host
  * @param {Object|null} terrainSettings - Additional terrain controls from host
  */
-function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, terrainSettings = null) {
+function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOreTotalValue, terrainSettings = null) {
   if (!seed || !width || !height) {
     return false
   }
@@ -455,7 +457,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, terra
     return true
   }
 
-  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'terrainSettings:', terrainSettings)
+  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
 
   // Update map dimensions in config module
   setMapDimensions(width, height)
@@ -471,6 +473,9 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, terra
   if (Number.isFinite(mapOreFieldCount)) {
     gameState.mapOreFieldCount = mapOreFieldCount
   }
+  if (Number.isFinite(mapOreTotalValue)) {
+    gameState.mapOreTotalValue = mapOreTotalValue
+  }
   if (terrainSettings && typeof terrainSettings === 'object') {
     gameState.mapWaterPercent = terrainSettings.mapWaterPercent
     gameState.mapRockPercent = terrainSettings.mapRockPercent
@@ -483,8 +488,8 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, terra
 
   // Call main.js function to regenerate map with host's seed and generation settings
   if (typeof regenerateMapForClient === 'function') {
-    regenerateMapForClient(seed, width, height, playerCount, mapOreFieldCount, terrainSettings)
-    window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'terrainSettings:', terrainSettings)
+    regenerateMapForClient(seed, width, height, playerCount, mapOreFieldCount, mapOreTotalValue, terrainSettings)
+    window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
   } else {
     // Fallback: Initialize empty map grid if regenerateMapForClient is not available
     window.logger.warn('[GameCommandSync] regenerateMapForClient not available, creating empty map grid')
@@ -562,7 +567,7 @@ export function applyGameStateSnapshot(snapshot) {
   // Sync map seed, dimensions, and player count from host, regenerate map if needed
   // This must happen before syncing buildings so placeBuilding can work
   if (snapshot.mapSeed && snapshot.mapTilesX && snapshot.mapTilesY) {
-    syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount, snapshot.mapOreFieldCount, {
+    syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount, snapshot.mapOreFieldCount, snapshot.mapOreTotalValue, {
       mapWaterPercent: snapshot.mapWaterPercent,
       mapRockPercent: snapshot.mapRockPercent,
       mapShoreNorth: snapshot.mapShoreNorth,

@@ -46,7 +46,8 @@ function deriveReplaySessionSeed(state = gameState) {
     state.mapTilesX || 0,
     state.mapTilesY || 0,
     state.playerCount || 2,
-    Number.isFinite(state.mapOreFieldCount) ? state.mapOreFieldCount : 8
+    Number.isFinite(state.mapOreFieldCount) ? state.mapOreFieldCount : 8,
+    Number.isFinite(state.mapOreTotalValue) ? state.mapOreTotalValue : 64000
   ].join(':')
 }
 
