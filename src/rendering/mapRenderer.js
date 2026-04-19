@@ -884,6 +884,10 @@ export class MapRenderer {
     const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
     if (this.textureManager.integratedSpriteSheetMode) {
       const integratedTile = this.textureManager.selectIntegratedTileByTags(
+        ['red', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      ) || this.textureManager.selectIntegratedTileByTags(
         ['ore', 'red', 'density_' + normalizedDensity],
         tileX,
         tileY

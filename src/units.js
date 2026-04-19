@@ -1275,6 +1275,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.oreCarried = 0
     unit.harvesting = false
     unit.level = 0
+    unit.experience = 0
     unit.armor = unitProps.armor
     unit.baseHarvesterArmor = unitProps.armor
     unit.baseHarvesterSpeed = unitProps.speed

@@ -311,6 +311,9 @@ export function setHarvesterCapacity(value) {
 // Harvester unload time (in milliseconds)
 export let HARVESTER_UNLOAD_TIME = 5000  // 5 seconds (2x faster than before)
 
+// Harvester XP uses full-unload equivalents so each star takes 10 full unloads.
+export const HARVESTER_XP_FULL_UNLOADS_PER_STAR = 10
+
 export function setHarvesterUnloadTime(value) {
   HARVESTER_UNLOAD_TIME = value
 }

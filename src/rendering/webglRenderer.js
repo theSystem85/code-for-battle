@@ -392,12 +392,57 @@ export class GameWebGLRenderer {
     }
   }
 
+  getIntegratedResourceTile(type, tileX, tileY, mapGrid) {
+    if (!this.textureManager.integratedSpriteSheetMode) {
+      return null
+    }
+
+    const tile = mapGrid?.[tileY]?.[tileX]
+    if (!tile) {
+      return null
+    }
+
+    if (type === 'ore') {
+      const density = Math.max(1, Math.min(5, Number.isFinite(tile.oreDensity) ? Math.floor(tile.oreDensity) : 1))
+      return this.textureManager.selectIntegratedTileByTags(['ore', 'density_' + density], tileX, tileY)
+    }
+
+    if (type === 'seedCrystal') {
+      const density = Math.max(
+        1,
+        Math.min(
+          5,
+          Number.isFinite(tile.seedCrystalDensity)
+            ? Math.floor(tile.seedCrystalDensity)
+            : (Number.isFinite(tile.oreDensity) ? Math.floor(tile.oreDensity) : 1)
+        )
+      )
+
+      return this.textureManager.selectIntegratedTileByTags(['red', 'density_' + density], tileX, tileY)
+        || this.textureManager.selectIntegratedTileByTags(['ore', 'red', 'density_' + density], tileX, tileY)
+        || this.textureManager.selectIntegratedTileByTags(['ore', 'density_' + density], tileX, tileY)
+    }
+
+    return null
+  }
+
   createInstance(type, tileX, tileY, mapGrid, canUseTextures, sotMask = null) {
-    const useTexture = canUseTextures && this.textureManager.tileTextureCache?.[type]?.length
+    const integratedResourceTile = this.getIntegratedResourceTile(type, tileX, tileY, mapGrid)
+    const canUseIntegratedResourceTile = Boolean(
+      integratedResourceTile?.rect && integratedResourceTile?.image === this.textureManager.spriteImage
+    )
+    const useTexture = canUseIntegratedResourceTile || (canUseTextures && this.textureManager.tileTextureCache?.[type]?.length)
     const isWaterAnimated = type === 'water'
     let uvRect = [0, 0, 0, 0]
     if (isWaterAnimated) {
       uvRect = [0, 0, 1, 1]
+    } else if (canUseIntegratedResourceTile) {
+      const { rect } = integratedResourceTile
+      const u0 = rect.x / this.atlasSize.width
+      const v0 = rect.y / this.atlasSize.height
+      const u1 = (rect.x + rect.width) / this.atlasSize.width
+      const v1 = (rect.y + rect.height) / this.atlasSize.height
+      uvRect = [u0, v0, u1, v1]
     } else if (useTexture) {
       const cache = this.textureManager.tileTextureCache[type]
       const idx = this.textureManager.getTileVariation(type, tileX, tileY)

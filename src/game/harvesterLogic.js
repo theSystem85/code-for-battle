@@ -1,5 +1,11 @@
 // harvesterLogic.js - Handles all harvester-specific logic
-import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, HARVESTER_PRODUCTIVITY_CHECK_INTERVAL } from '../config.js'
+import {
+  TILE_SIZE,
+  HARVESTER_CAPPACITY,
+  HARVESTER_UNLOAD_TIME,
+  HARVESTER_PRODUCTIVITY_CHECK_INTERVAL,
+  HARVESTER_XP_FULL_UNLOADS_PER_STAR
+} from '../config.js'
 import { findPath } from '../units.js'
 import { playSound } from '../sound.js'
 import { productionQueue } from '../productionQueue.js'
@@ -35,7 +41,6 @@ const HARVESTER_LONG_TERM_STAGNATION_MS = 60000
 const HARVESTER_LONG_TERM_RECOVERY_COOLDOWN_MS = 5000
 const HARVESTER_GOAL_PROGRESS_EPSILON_TILES = 0.2
 const HARVESTER_BASE_CARGO_VALUE = 1000
-const HARVESTER_XP_THRESHOLDS = [10000, 30000, 50000]
 
 function getTileDensity(tile, isSeed = false) {
   if (!tile) return 1
@@ -76,13 +81,51 @@ function recalculateHarvesterLevelBonuses(unit) {
   unit.armor = level >= 2 ? unit.baseHarvesterArmor * 1.25 : unit.baseHarvesterArmor
 }
 
-function updateHarvesterExperience(unit, totalMoneyEarned) {
+function getHarvesterExperienceGain(unit, moneyEarned) {
+  const deliveredMoney = Math.max(0, Number.isFinite(moneyEarned) ? moneyEarned : 0)
+  const currentCargoCapacity = Math.max(
+    1,
+    Number.isFinite(unit?.cargoCapacity) && unit.cargoCapacity > 0
+      ? unit.cargoCapacity
+      : getHarvesterCargoCapacity(unit)
+  )
+
+  return deliveredMoney / currentCargoCapacity
+}
+
+function updateHarvesterExperience(unit, moneyEarned) {
   if (!unit || unit.type !== 'harvester') return
-  unit.totalMoneyEarned = Math.max(0, Number.isFinite(totalMoneyEarned) ? totalMoneyEarned : 0)
-  const newLevel = HARVESTER_XP_THRESHOLDS.reduce((level, threshold) => (unit.totalMoneyEarned >= threshold ? level + 1 : level), 0)
-  if (newLevel !== unit.level) {
-    unit.level = newLevel
+
+  if (!Number.isFinite(unit.level)) {
+    unit.level = 0
+  }
+  if (!Number.isFinite(unit.experience)) {
+    unit.experience = 0
+  }
+  if (!Number.isFinite(unit.totalMoneyEarned)) {
+    unit.totalMoneyEarned = 0
+  }
+
+  const deliveredMoney = Math.max(0, Number.isFinite(moneyEarned) ? moneyEarned : 0)
+  unit.totalMoneyEarned += deliveredMoney
+
+  if (unit.level >= 3 || deliveredMoney <= 0) {
+    if (unit.level >= 3) {
+      unit.experience = 0
+    }
+    return
+  }
+
+  unit.experience += getHarvesterExperienceGain(unit, deliveredMoney)
+
+  while (unit.level < 3 && unit.experience >= HARVESTER_XP_FULL_UNLOADS_PER_STAR) {
+    unit.experience -= HARVESTER_XP_FULL_UNLOADS_PER_STAR
+    unit.level += 1
     recalculateHarvesterLevelBonuses(unit)
+  }
+
+  if (unit.level >= 3) {
+    unit.experience = 0
   }
 }
 
@@ -354,6 +397,9 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     if (unit.type !== 'harvester') return
     if (!Number.isFinite(unit.level)) {
       unit.level = 0
+    }
+    if (!Number.isFinite(unit.experience)) {
+      unit.experience = 0
     }
     if (!Number.isFinite(unit.totalMoneyEarned)) {
       unit.totalMoneyEarned = 0
@@ -868,7 +914,7 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
         gameState.refineryRevenue[unit.unloadRefinery] =
           (gameState.refineryRevenue[unit.unloadRefinery] || 0) + moneyEarned
       }
-      updateHarvesterExperience(unit, (unit.totalMoneyEarned || 0) + moneyEarned)
+      updateHarvesterExperience(unit, moneyEarned)
       if (typeof unit.lastHarvestCycleComplete === 'number') {
         unit.harvestCycleSeconds = (now - unit.lastHarvestCycleComplete) / 1000
       }
@@ -882,7 +928,7 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
       if (aiFactory) {
         aiFactory.budget += moneyEarned
       }
-      updateHarvesterExperience(unit, (unit.totalMoneyEarned || 0) + moneyEarned)
+      updateHarvesterExperience(unit, moneyEarned)
     }
 
     // Clear refinery usage
