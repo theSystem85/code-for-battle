@@ -234,7 +234,7 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, 
 }
 
 function createDefaultMapTile() {
-  return { type: 'land', ore: false, seedCrystal: false, noBuild: 0, decal: null, decalCounter: 0 }
+  return { type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0, noBuild: 0, decal: null, decalCounter: 0 }
 }
 
 function ensureMapGridMatchesDimensions(grid, width, height) {
@@ -267,6 +267,12 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
       if (typeof tile.seedCrystal !== 'boolean') {
         tile.seedCrystal = false
       }
+      if (!Number.isFinite(tile.oreDensity)) {
+        tile.oreDensity = tile.ore ? 1 : 0
+      }
+      if (!Number.isFinite(tile.seedCrystalDensity)) {
+        tile.seedCrystalDensity = tile.seedCrystal ? Math.max(1, tile.oreDensity || 1) : 0
+      }
       if (!Number.isFinite(tile.noBuild)) {
         tile.noBuild = 0
       }
@@ -286,7 +292,9 @@ function createSerializableMapTile(tile = {}) {
   return {
     type: typeof tile.type === 'string' ? tile.type : 'land',
     ore: Boolean(tile.ore),
+    oreDensity: Number.isFinite(tile.oreDensity) ? Math.max(0, Math.min(5, Math.floor(tile.oreDensity))) : undefined,
     seedCrystal: Boolean(tile.seedCrystal),
+    seedCrystalDensity: Number.isFinite(tile.seedCrystalDensity) ? Math.max(0, Math.min(5, Math.floor(tile.seedCrystalDensity))) : undefined,
     decal: tile.decal && typeof tile.decal === 'object'
       ? {
         tag: typeof tile.decal.tag === 'string' ? tile.decal.tag : null,
@@ -331,7 +339,11 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         const targetTile = targetMapGrid[y][x]
         targetTile.type = typeof savedTile?.type === 'string' ? savedTile.type : 'land'
         targetTile.ore = Boolean(savedTile?.ore)
+        targetTile.oreDensity = Number.isFinite(savedTile?.oreDensity) ? Math.max(0, Math.min(5, Math.floor(savedTile.oreDensity))) : (targetTile.ore ? 1 : 0)
         targetTile.seedCrystal = Boolean(savedTile?.seedCrystal)
+        targetTile.seedCrystalDensity = Number.isFinite(savedTile?.seedCrystalDensity)
+          ? Math.max(0, Math.min(5, Math.floor(savedTile.seedCrystalDensity)))
+          : (targetTile.seedCrystal ? Math.max(1, targetTile.oreDensity || 1) : 0)
         targetTile.decal = savedTile?.decal && typeof savedTile.decal.tag === 'string'
           ? {
             tag: savedTile.decal.tag,
@@ -360,7 +372,9 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
     for (let x = 0; x < targetMapGrid[y].length; x++) {
       const tile = targetMapGrid[y][x]
       tile.ore = false
+      tile.oreDensity = 0
       tile.seedCrystal = false
+      tile.seedCrystalDensity = 0
       tile.decal = null
       tile.decalCounter = 0
       delete tile.walkable
@@ -378,6 +392,7 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
     loaded.orePositions.forEach(pos => {
       if (targetMapGrid[pos?.y]?.[pos?.x]) {
         targetMapGrid[pos.y][pos.x].ore = true
+        targetMapGrid[pos.y][pos.x].oreDensity = 1
       }
     })
   }
@@ -1176,6 +1191,11 @@ function loadGameFromSaveObject(saveObj, key) {
       // Restore harvester-specific properties and re-assign to refineries if needed
       if (hydrated.type === 'harvester') {
         hydrated.oreCarried = u.oreCarried || 0
+        hydrated.level = Number.isFinite(u.level) ? Math.max(0, Math.min(3, Math.floor(u.level))) : 0
+        hydrated.totalMoneyEarned = Number.isFinite(u.totalMoneyEarned) ? Math.max(0, u.totalMoneyEarned) : 0
+        hydrated.baseHarvesterSpeed = Number.isFinite(u.baseHarvesterSpeed) ? u.baseHarvesterSpeed : hydrated.speed
+        hydrated.baseHarvesterArmor = Number.isFinite(u.baseHarvesterArmor) ? u.baseHarvesterArmor : hydrated.armor
+        hydrated.cargoCapacity = Number.isFinite(u.cargoCapacity) ? u.cargoCapacity : (1000 * (1 + (hydrated.level * 0.5)))
         hydrated.oreField = u.oreField || null
         hydrated.pendingHarvesterAction = typeof u.pendingHarvesterAction === 'string' ? u.pendingHarvesterAction : null
         hydrated.pendingHarvesterActionAt = Number.isFinite(u.pendingHarvesterActionAt) ? u.pendingHarvesterActionAt : null

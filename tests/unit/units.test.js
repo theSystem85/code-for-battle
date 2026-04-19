@@ -684,10 +684,11 @@ describe('units.js', () => {
       expect(tank.experience).toBe(0)
     })
 
-    it('should not initialize level for harvesters', () => {
+    it('should initialize harvester level metadata', () => {
       const harvester = createUnit(factory, 'harvester', 10, 10)
 
-      expect(harvester.level).toBeUndefined()
+      expect(harvester.level).toBe(0)
+      expect(harvester.cargoCapacity).toBe(1000)
     })
   })
 

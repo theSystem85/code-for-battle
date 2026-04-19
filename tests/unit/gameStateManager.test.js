@@ -196,6 +196,33 @@ describe('gameStateManager', () => {
 
       expect(mapGrid[1][2].ore).toBe(false)
     })
+
+    it('increases neighbor ore density on spread and respects seed density multiplier', () => {
+      const mapGrid = Array.from({ length: 3 }, () =>
+        Array.from({ length: 3 }, () => ({ type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0 }))
+      )
+      mapGrid[1][1].ore = true
+      mapGrid[1][1].seedCrystal = true
+      mapGrid[1][1].seedCrystalDensity = 3
+      mapGrid[1][2].ore = true
+      mapGrid[1][2].oreDensity = 2
+
+      const gameState = {
+        simulationTime: ORE_SPREAD_INTERVAL + 10,
+        lastOreUpdate: 0,
+        occupancyMap: Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => 0)),
+        buildings: []
+      }
+
+      performanceNow.mockReturnValue(0)
+      gameRandom.mockReturnValue(0)
+
+      updateOreSpread(gameState, mapGrid, [])
+
+      expect(mapGrid[1][2].oreDensity).toBe(4)
+      expect(mapGrid[0][1].ore).toBe(true)
+      expect(mapGrid[0][1].oreDensity).toBe(1)
+    })
   })
 
   describe('updateExplosions', () => {
