@@ -67,6 +67,7 @@
 - [ ] Follow-up HUD tweak: constrain selected-unit edge bars to max 75% tile span so 1px selection outline remains visible, and center crew indicators horizontally beneath the bottom bar.
 - [ ] Refactor selected-unit HUD: 1px yellow outline, 3px stat bars (ammo/hp/fuel/load/xp) centered on outline with dark grey background and no borders, move crew indicator below bottom bar, place XP stars overlapping HP bar by ~33%, and enlarge HUD footprint beyond tile size to avoid occluding the selected unit.
 ## Improvements
+- [x] Make generated ore-field density fall off with distance from each seed crystal so richer ore visually radiates outward from the seed in deterministic bands.
 - [x] Improve bullet-impact explosion visuals with layered cached fireball/core sprites, shockwave jitter rings, and low-count ember accents while preserving frustum culling and sprite-cache performance.
 - [x] Ensure GitHub PR CI explicitly reruns unit tests on `pull_request.synchronize` so every new commit pushed to an open PR exercises `npm run test:unit`.
 - [x] Refine sidebar floating-label inputs to stay compact at 40px height with solid brightened backgrounds, no borders/gradients, tutorial-green labels, and desktop-only styled number spinners.

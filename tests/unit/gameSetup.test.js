@@ -41,7 +41,7 @@ vi.mock('../../src/utils/seedUtils.js', () => ({
 }))
 
 // Import after mocking
-import { generateMap, cleanupOreFromBuildings, initializeGameAssets } from '../../src/gameSetup.js'
+import { generateMap, cleanupOreFromBuildings, getOreDensityForDistance, initializeGameAssets } from '../../src/gameSetup.js'
 import { preloadTileTextures } from '../../src/rendering.js'
 import { preloadBuildingImages } from '../../src/buildingImageMap.js'
 import { preloadTurretImages } from '../../src/rendering/turretImageRenderer.js'
@@ -400,6 +400,15 @@ describe('gameSetup.js', () => {
     })
 
     describe('Ore Generation', () => {
+      it('should scale ore density down as tiles get farther from the seed crystal', () => {
+        expect(getOreDensityForDistance(0, 5, 5)).toBe(5)
+        expect(getOreDensityForDistance(1, 5, 5)).toBe(4)
+        expect(getOreDensityForDistance(2, 5, 5)).toBe(3)
+        expect(getOreDensityForDistance(3, 5, 5)).toBe(2)
+        expect(getOreDensityForDistance(4, 5, 5)).toBe(1)
+        expect(getOreDensityForDistance(12, 5, 5)).toBe(1)
+      })
+
       it('should generate ore fields', () => {
         generateMap(12345, mapGrid, 100, 100)
 
