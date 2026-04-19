@@ -452,6 +452,8 @@ function buildOreClusterPlan(rand, playerPositions, mapWidth, mapHeight, oreFiel
 }
 
 function applyOreCluster(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPositions) {
+  const getRandomDensity = () => Math.max(1, Math.min(5, Math.floor(rand() * 5) + 1))
+
   const radius = cluster.radius
   for (let y = Math.max(0, cluster.y - radius); y < Math.min(mapHeight, cluster.y + radius); y++) {
     for (let x = Math.max(0, cluster.x - radius); x < Math.min(mapWidth, cluster.x + radius); x++) {
@@ -478,6 +480,9 @@ function applyOreCluster(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPos
       if (isInBuilding) continue
 
       mapGrid[y][x].ore = true
+      mapGrid[y][x].seedCrystal = false
+      mapGrid[y][x].crystalDensity = getRandomDensity()
+      mapGrid[y][x].crystalColor = 'blue'
     }
   }
 
@@ -485,6 +490,8 @@ function applyOreCluster(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPos
   const centerY = clamp(cluster.y, 0, mapHeight - 1)
   mapGrid[centerY][centerX].ore = true
   mapGrid[centerY][centerX].seedCrystal = true
+  mapGrid[centerY][centerX].crystalDensity = getRandomDensity()
+  mapGrid[centerY][centerX].crystalColor = 'red'
 }
 
 // Generate a new map using the given seed and organic features
@@ -497,7 +504,7 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     mapGrid[y] = []
     for (let x = 0; x < MAP_TILES_X; x++) {
       // Initially all land with no ore overlay
-      mapGrid[y][x] = { type: 'land', ore: false, seedCrystal: false, noBuild: 0 }
+      mapGrid[y][x] = { type: 'land', ore: false, seedCrystal: false, crystalDensity: 1, crystalColor: 'blue', noBuild: 0 }
     }
   }
 

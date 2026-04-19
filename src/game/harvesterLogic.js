@@ -34,6 +34,51 @@ const HARVESTER_MANUAL_REPATH_INTERVAL_MS = 1000
 const HARVESTER_LONG_TERM_STAGNATION_MS = 60000
 const HARVESTER_LONG_TERM_RECOVERY_COOLDOWN_MS = 5000
 const HARVESTER_GOAL_PROGRESS_EPSILON_TILES = 0.2
+const HARVESTER_STAR_THRESHOLDS = [10000, 30000, 50000]
+const HARVESTER_MAX_STARS = 3
+const HARVESTER_ARMOR_STAR_MULTIPLIER = 1.25
+const HARVESTER_SPEED_STAR_MULTIPLIER = 1.25
+
+function getTileCrystalDensity(tile) {
+  return Math.max(1, Math.min(5, Number.isFinite(tile?.crystalDensity) ? tile.crystalDensity : 1))
+}
+
+function getHarvesterStars(unit) {
+  return Math.max(0, Math.min(HARVESTER_MAX_STARS, Number.isFinite(unit?.harvesterStars) ? unit.harvesterStars : 0))
+}
+
+function getHarvesterCapacity(unit) {
+  return HARVESTER_CAPPACITY * (1 + (getHarvesterStars(unit) * 0.5))
+}
+
+function getMaxHarvestableDensity(unit) {
+  return Math.min(5, 2 + getHarvesterStars(unit))
+}
+
+function applyHarvesterProgression(unit) {
+  if (!unit || unit.type !== 'harvester') return
+
+  const earned = Number.isFinite(unit.totalMoneyEarned) ? unit.totalMoneyEarned : 0
+  let stars = 0
+  for (let i = 0; i < HARVESTER_STAR_THRESHOLDS.length; i++) {
+    if (earned >= HARVESTER_STAR_THRESHOLDS[i]) {
+      stars = i + 1
+    }
+  }
+  unit.harvesterStars = Math.max(0, Math.min(HARVESTER_MAX_STARS, stars))
+
+  const baseArmor = Number.isFinite(unit.baseArmor) ? unit.baseArmor : (Number.isFinite(unit.armor) ? unit.armor : 0)
+  const baseSpeed = Number.isFinite(unit.baseSpeed) ? unit.baseSpeed : (Number.isFinite(unit.speed) ? unit.speed : 0)
+  unit.baseArmor = baseArmor
+  unit.baseSpeed = baseSpeed
+
+  unit.armor = unit.harvesterStars >= 2
+    ? baseArmor * HARVESTER_ARMOR_STAR_MULTIPLIER
+    : baseArmor
+  unit.speed = unit.harvesterStars >= 3
+    ? baseSpeed * HARVESTER_SPEED_STAR_MULTIPLIER
+    : baseSpeed
+}
 
 function getSimulationTimeOrFallback(gameState) {
   return Number.isFinite(gameState?.simulationTime) ? gameState.simulationTime : performance.now()
@@ -301,6 +346,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
 
   units.forEach(unit => {
     if (unit.type !== 'harvester') return
+    applyHarvesterProgression(unit)
 
     // Skip automation if unit is heading to hospital for crew restaffing
     if (unit.returningToHospital) return
@@ -375,7 +421,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     }
 
     if (unit.manualOreTarget &&
-        unit.oreCarried < HARVESTER_CAPPACITY &&
+        unit.oreCarried < getHarvesterCapacity(unit) &&
         !unit.harvesting && !unit.unloadingAtRefinery &&
         (
           !unit.path || unit.path.length === 0 ||
@@ -387,7 +433,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     }
 
     if (!hasPlayerHarvesterPriority(unit, now) &&
-        unit.oreCarried < HARVESTER_CAPPACITY && !unit.harvesting && !unit.unloadingAtRefinery &&
+        unit.oreCarried < getHarvesterCapacity(unit) && !unit.harvesting && !unit.unloadingAtRefinery &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       // Check if harvester is near an ore tile (more tolerant detection)
       const nearbyOreTile = findNearbyOreTile(unit, mapGrid, unitTileX, unitTileY)
@@ -400,7 +446,10 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
             targetedOreTiles[tileKey] = unit.id
           }
           if (unit.oreField.x === nearbyOreTile.x && unit.oreField.y === nearbyOreTile.y) {
-            startHarvesting(unit, tileKey, now, gameState)
+            const tileDensity = getTileCrystalDensity(mapGrid?.[nearbyOreTile.y]?.[nearbyOreTile.x])
+            if (tileDensity <= getMaxHarvestableDensity(unit)) {
+              startHarvesting(unit, tileKey, now, gameState)
+            }
           }
         } else {
           // Tile is being harvested by another unit, find a new ore tile
@@ -420,7 +469,9 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         return // skip to next unit
       }
       if (now - unit.harvestTimer > 10000) {
-        unit.oreCarried++
+        const oreTile = mapGrid?.[unit.oreField.y]?.[unit.oreField.x]
+        const harvestedDensity = getTileCrystalDensity(oreTile)
+        unit.oreCarried += harvestedDensity
         if (typeof unit.gas === 'number') {
           unit.gas = Math.max(0, unit.gas - (unit.harvestGasConsumption || 0))
         }
@@ -437,17 +488,18 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         }
 
         // Only deplete the tile after multiple harvests (simulate limited ore)
-        if (!mapGrid[unit.oreField.y][unit.oreField.x].harvests) {
-          mapGrid[unit.oreField.y][unit.oreField.x].harvests = 0
+        if (!oreTile.harvests) {
+          oreTile.harvests = 0
         }
-        mapGrid[unit.oreField.y][unit.oreField.x].harvests++
+        oreTile.harvests++
+        oreTile.crystalDensity = Math.max(0, harvestedDensity - 1)
 
-        // Deplete ore tile after 1 harvest (matches HARVESTER_CAPPACITY = 1)
-        if (mapGrid[unit.oreField.y][unit.oreField.x].harvests >= 1) {
+        if (oreTile.crystalDensity <= 0) {
           // Remove ore overlay instead of changing tile type
-          mapGrid[unit.oreField.y][unit.oreField.x].ore = false
+          oreTile.ore = false
+          oreTile.crystalDensity = 1
           // Clear any cached texture variations for this tile to force re-render
-          mapGrid[unit.oreField.y][unit.oreField.x].textureVariation = null
+          oreTile.textureVariation = null
           // Remove targeting once the tile is depleted
           clearOreField(unit)
 
@@ -464,7 +516,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
     // Handle unloading when at capacity
     // Skip auto-unloading if harvester is heading to or being repaired at workshop, or is in repair queue
     if (!isRemoteControlOverrideActive(unit, now) &&
-        unit.oreCarried >= HARVESTER_CAPPACITY && !unit.unloadingAtRefinery && !unit.harvesting &&
+        unit.oreCarried >= getHarvesterCapacity(unit) && !unit.unloadingAtRefinery && !unit.harvesting &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occupancyMap, units)
     }
@@ -511,7 +563,13 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         if (mapGrid[unit.oreField.y][unit.oreField.x].ore &&
             !mapGrid[unit.oreField.y][unit.oreField.x].seedCrystal &&
             !harvestedTiles.has(tileKey)) {
-          startHarvesting(unit, tileKey, now, gameState)
+          const tileDensity = getTileCrystalDensity(mapGrid[unit.oreField.y][unit.oreField.x])
+          if (tileDensity <= getMaxHarvestableDensity(unit)) {
+            startHarvesting(unit, tileKey, now, gameState)
+          } else {
+            clearOreField(unit)
+            findNewOreTarget(unit, mapGrid, occupancyMap, now, gameState)
+          }
         } else {
           // Ore field is no longer valid, find new one
           clearOreField(unit)
@@ -760,7 +818,7 @@ function handleHarvesterUnloading(unit, factories, mapGrid, gameState, now, occu
 
       // **PREVENT MOVING AWAY WHEN WANTING TO UNLOAD**
       // If harvester is full of ore and close to refinery, don't accept new movement commands
-      if (unit.oreCarried >= HARVESTER_CAPPACITY) {
+      if (unit.oreCarried >= getHarvesterCapacity(unit)) {
         const distanceToRefinery = Math.hypot(
           unit.tileX - (targetRefinery.x + targetRefinery.width / 2),
           unit.tileY - (targetRefinery.y + targetRefinery.height / 2)
@@ -801,6 +859,7 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
         unit.totalMoneyEarned = 0
       }
       unit.totalMoneyEarned += moneyEarned
+      applyHarvesterProgression(unit)
       if (typeof unit.lastHarvestCycleComplete === 'number') {
         unit.harvestCycleSeconds = (now - unit.lastHarvestCycleComplete) / 1000
       }
@@ -864,7 +923,8 @@ function findNewOreTarget(unit, mapGrid, occupancyMap, now = performance.now(), 
   // Clear any existing ore field reservation
   clearOreField(unit)
 
-  const orePos = findClosestOre(unit, mapGrid, targetedOreTiles, unit.assignedRefinery)
+  const maxDensity = getMaxHarvestableDensity(unit)
+  const orePos = findClosestOre(unit, mapGrid, targetedOreTiles, unit.assignedRefinery, { maxDensity })
   if (orePos) {
     const tileKey = `${orePos.x},${orePos.y}`
 
@@ -1428,6 +1488,12 @@ function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.no
   }
 
   const tileKey = `${target.x},${target.y}`
+  const targetDensity = getTileCrystalDensity(mapGrid[target.y][target.x])
+  if (targetDensity > getMaxHarvestableDensity(unit)) {
+    unit.manualOreTarget = null
+    findNewOreTarget(unit, mapGrid, occupancyMap, now)
+    return
+  }
 
   // Check if another harvester is already harvesting this tile
   if (harvestedTiles.has(tileKey)) {
@@ -1496,7 +1562,7 @@ export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, fac
   const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const currentTile = mapGrid[unitTileY] && mapGrid[unitTileY][unitTileX]
 
-  if (currentTile && currentTile.ore && unit.oreCarried < HARVESTER_CAPPACITY) {
+  if (currentTile && currentTile.ore && unit.oreCarried < getHarvesterCapacity(unit)) {
     const tileKey = `${unitTileX},${unitTileY}`
     if (!harvestedTiles.has(tileKey)) {
       // Harvester should start harvesting this tile
@@ -1520,7 +1586,7 @@ export function handleStuckHarvester(unit, mapGrid, occupancyMap, gameState, fac
   stopMovement(unit)
 
   // Determine what the harvester should do based on its state
-  if (unit.oreCarried >= HARVESTER_CAPPACITY) {
+  if (unit.oreCarried >= getHarvesterCapacity(unit)) {
     // Harvester is full, need to find alternative unload location
     handleStuckHarvesterUnloading(unit, mapGrid, gameState, factories, occupancyMap)
   } else {
@@ -1625,10 +1691,14 @@ function findAlternativeOreTarget(unit, mapGrid, occupancyMap, gameState, now = 
   const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
   const referenceTileKey = referenceTarget ? `${referenceTarget.x},${referenceTarget.y}` : null
   const candidateTiles = []
+  const maxDensity = getMaxHarvestableDensity(unit)
 
   for (let y = 0; y < mapGrid.length; y++) {
     for (let x = 0; x < mapGrid[0].length; x++) {
       if (!mapGrid[y][x].ore || mapGrid[y][x].seedCrystal) {
+        continue
+      }
+      if (getTileCrystalDensity(mapGrid[y][x]) > maxDensity) {
         continue
       }
 
@@ -1722,6 +1792,7 @@ function findAlternativeOreTarget(unit, mapGrid, occupancyMap, gameState, now = 
  * Find nearby ore tile with more tolerant detection
  */
 function findNearbyOreTile(unit, mapGrid, centerTileX, centerTileY) {
+  const maxDensity = getMaxHarvestableDensity(unit)
   // Check a 3x3 area around the harvester for ore tiles
   for (let dy = -1; dy <= 1; dy++) {
     for (let dx = -1; dx <= 1; dx++) {
@@ -1731,6 +1802,9 @@ function findNearbyOreTile(unit, mapGrid, centerTileX, centerTileY) {
       if (checkX >= 0 && checkY >= 0 &&
           checkX < mapGrid[0].length && checkY < mapGrid.length &&
           mapGrid[checkY][checkX].ore && !mapGrid[checkY][checkX].seedCrystal) {
+        if (getTileCrystalDensity(mapGrid[checkY][checkX]) > maxDensity) {
+          continue
+        }
 
         // Calculate distance from harvester center to tile center
         const tileCenter = {
@@ -1780,7 +1854,7 @@ function getHarvesterProgressSnapshot(unit, mapGrid, gameState) {
     return { type: 'retreat', productive: true, goalKey: null }
   }
 
-  if (unit.oreCarried >= HARVESTER_CAPPACITY) {
+  if (unit.oreCarried >= getHarvesterCapacity(unit)) {
     const refinery = getHarvesterPreferredRefinery(unit, gameState)
     const refineryId = getRefineryId(refinery)
     if (refinery && refineryId) {
@@ -1905,7 +1979,7 @@ function checkHarvesterProductivity(unit, mapGrid, occupancyMap, gameState, fact
     Boolean(snapshot.hasMovementIntent)
 
   if (!isProductive) {
-    if (unit.oreCarried >= HARVESTER_CAPPACITY) {
+    if (unit.oreCarried >= getHarvesterCapacity(unit)) {
       // Full harvester should be unloading
       stopMovement(unit)
       clearHarvesterUnloadingState(unit, gameState)

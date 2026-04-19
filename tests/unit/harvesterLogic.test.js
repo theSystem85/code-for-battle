@@ -183,11 +183,23 @@ describe('Harvester Logic', () => {
       harvester.oreField = { x: 5, y: 5 }
       mapGrid[5][5].ore = true
       mapGrid[5][5].harvests = 0
+      mapGrid[5][5].crystalDensity = 1
       units.push(harvester)
 
       updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
 
       expect(mapGrid[5][5].ore).toBe(false)
+    })
+
+    it('does not harvest crystals above harvester star density cap', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      units.push(harvester)
+      mapGrid[5][5].ore = true
+      mapGrid[5][5].crystalDensity = 4
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.harvesting).toBe(false)
     })
 
     it('should not harvest seed crystals', () => {
@@ -311,7 +323,7 @@ describe('Harvester Logic', () => {
 
     it('should complete unloading and add money', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 5
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001 // Started 5+ seconds ago
       harvester.unloadRefinery = 'refinery_10_10'
@@ -323,12 +335,12 @@ describe('Harvester Logic', () => {
 
       expect(harvester.oreCarried).toBe(0)
       expect(harvester.unloadingAtRefinery).toBe(false)
-      expect(gameState.money).toBe(initialMoney + 1000)
+      expect(gameState.money).toBe(initialMoney + 5000)
     })
 
     it('should track total money earned from harvesting', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 5
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001
       harvester.unloadRefinery = 'refinery_10_10'
@@ -336,7 +348,27 @@ describe('Harvester Logic', () => {
 
       updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
 
-      expect(gameState.totalMoneyEarned).toBe(1000)
+      expect(gameState.totalMoneyEarned).toBe(5000)
+    })
+
+    it('applies star progression bonuses when money thresholds are reached', () => {
+      const harvester = createTestHarvester('harv1', 11, 13)
+      harvester.oreCarried = 10
+      harvester.unloadingAtRefinery = true
+      harvester.unloadStartTime = now - 5001
+      harvester.unloadRefinery = 'refinery_10_10'
+      harvester.baseArmor = 4
+      harvester.armor = 4
+      harvester.baseSpeed = 1
+      harvester.speed = 1
+      harvester.totalMoneyEarned = 45000
+      units.push(harvester)
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.harvesterStars).toBe(3)
+      expect(harvester.armor).toBeCloseTo(5)
+      expect(harvester.speed).toBeCloseTo(1.25)
     })
 
     it('should take longer to unload when power is negative', () => {

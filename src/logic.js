@@ -386,7 +386,7 @@ export function showUnloadingFeedback(_unit, _refinery) {
   // Add any visual effects here in the future
 }
 
-export function findClosestOre(unit, mapGrid, targetedOreTiles = {}) {
+export function findClosestOre(unit, mapGrid, targetedOreTiles = {}, _assignedRefinery = null, options = {}) {
   // Add validation to prevent undefined unit errors
   if (!unit) {
     console.error('findClosestOre called with undefined unit')
@@ -401,6 +401,7 @@ export function findClosestOre(unit, mapGrid, targetedOreTiles = {}) {
   let closest = null
   let closestDist = Infinity
   const candidates = [] // Store all available ore tiles for better distribution
+  const maxDensity = Number.isFinite(options?.maxDensity) ? options.maxDensity : 5
 
   // Calculate unit's tile position from its pixel coordinates
   const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
@@ -409,6 +410,10 @@ export function findClosestOre(unit, mapGrid, targetedOreTiles = {}) {
   for (let y = 0; y < mapGrid.length; y++) {
     for (let x = 0; x < mapGrid[0].length; x++) {
       if (mapGrid[y][x].ore && !mapGrid[y][x].seedCrystal) {
+        const tileDensity = Math.max(1, Math.min(5, Number.isFinite(mapGrid[y][x].crystalDensity) ? mapGrid[y][x].crystalDensity : 1))
+        if (tileDensity > maxDensity) {
+          continue
+        }
         // Skip this ore tile if it's already targeted by another unit
         const tileKey = `${x},${y}`
         if (targetedOreTiles[tileKey] && targetedOreTiles[tileKey] !== unit.id) {
@@ -437,7 +442,9 @@ export function findClosestOre(unit, mapGrid, targetedOreTiles = {}) {
 
     if (closeCandidates.length > 1) {
       // Add unit ID based selection to ensure different harvesters pick different tiles
-      const unitId = unit.id || Math.floor(gameRandom() * 1000) // Fallback to random if no ID
+      const unitId = typeof unit.id === 'string'
+        ? unit.id.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0)
+        : (unit.id || Math.floor(gameRandom() * 1000)) // Fallback to random if no ID
       const unitBasedIndex = unitId % closeCandidates.length
       const selectedCandidate = closeCandidates[unitBasedIndex]
 

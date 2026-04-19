@@ -473,6 +473,8 @@ export class MapRenderer {
           tile.airstripStreet ? 1 : 0,
           tile.ore ? 1 : 0,
           tile.seedCrystal ? 1 : 0,
+          Number.isFinite(tile.crystalDensity) ? tile.crystalDensity : 1,
+          tile.crystalColor || '',
           tile.noBuild || 0,
           getTileDecalSignature(tile)
         )
@@ -673,9 +675,9 @@ export class MapRenderer {
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
-          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture)
+          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile)
         } else if (tile.ore) {
-          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture)
+          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture, tile)
         }
       }
     }
@@ -842,7 +844,16 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, size, size)
   }
 
-  drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture) {
+  drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, tile = null) {
+    const density = Math.max(1, Math.min(5, Number.isFinite(tile?.crystalDensity) ? tile.crystalDensity : 1))
+    const color = (tile?.crystalColor === 'red' || tile?.seedCrystal) ? 'red' : 'blue'
+    const crystalCandidates = this.textureManager.getCrystalTileCandidatesByTags(['ore', color, `density_${density}`])
+    const crystalTile = this.textureManager.selectIntegratedTileFromCandidates(crystalCandidates, tileX, tileY)
+    if (crystalTile?.rect && crystalTile?.image) {
+      this.drawIntegratedTileImage(ctx, crystalTile, screenX, screenY)
+      return
+    }
+
     const cache = this.textureManager.tileTextureCache.ore
     if (useTexture && cache && cache.length) {
       const idx = this.textureManager.getTileVariation('ore', tileX, tileY)
@@ -867,7 +878,15 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawSeedOverlay(ctx, tileX, tileY, screenX, screenY, useTexture) {
+  drawSeedOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, tile = null) {
+    const density = Math.max(1, Math.min(5, Number.isFinite(tile?.crystalDensity) ? tile.crystalDensity : 1))
+    const crystalCandidates = this.textureManager.getCrystalTileCandidatesByTags(['ore', 'red', `density_${density}`])
+    const crystalTile = this.textureManager.selectIntegratedTileFromCandidates(crystalCandidates, tileX, tileY)
+    if (crystalTile?.rect && crystalTile?.image) {
+      this.drawIntegratedTileImage(ctx, crystalTile, screenX, screenY)
+      return
+    }
+
     const cache = this.textureManager.tileTextureCache.seedCrystal
     if (useTexture && cache && cache.length) {
       const idx = this.textureManager.getTileVariation('seedCrystal', tileX, tileY)
@@ -1206,9 +1225,9 @@ export class MapRenderer {
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
-          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture)
+          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile)
         } else if (tile.ore) {
-          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture)
+          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture, tile)
         }
       }
     }

@@ -264,7 +264,8 @@ export const updateOreSpread = logPerformance(function updateOreSpread(gameState
         const tile = row[x]
         if (!tile) continue
         if (tile.ore || tile.seedCrystal) {
-          const spreadProb = (tile.seedCrystal ? ORE_SPREAD_PROBABILITY * 2 : ORE_SPREAD_PROBABILITY)
+          const sourceDensity = Math.max(1, Math.min(5, Number.isFinite(tile.crystalDensity) ? tile.crystalDensity : 1))
+          const spreadProb = (tile.seedCrystal ? ORE_SPREAD_PROBABILITY * sourceDensity : ORE_SPREAD_PROBABILITY)
           directions.forEach(dir => {
             const nx = x + dir.x, ny = y + dir.y
             if (nx >= 0 && nx < width && ny >= 0 && ny < height && Array.isArray(mapGrid[ny])) {
@@ -291,8 +292,18 @@ export const updateOreSpread = logPerformance(function updateOreSpread(gameState
                 return
               }
               const tileType = neighborTile.type
-              if ((tileType === 'land' || tileType === 'street') && !neighborTile.ore && !neighborTile.seedCrystal && !hasBuilding && !hasFactory && gameRandom() < spreadProb) {
-                neighborTile.ore = true
+              if ((tileType === 'land' || tileType === 'street') && !hasBuilding && !hasFactory && gameRandom() < spreadProb) {
+                if (neighborTile.ore || neighborTile.seedCrystal) {
+                  neighborTile.crystalDensity = Math.min(5, Math.max(1, Number.isFinite(neighborTile.crystalDensity) ? neighborTile.crystalDensity : 1) + 1)
+                  if (!neighborTile.crystalColor) {
+                    neighborTile.crystalColor = neighborTile.seedCrystal ? 'red' : 'blue'
+                  }
+                } else {
+                  neighborTile.ore = true
+                  neighborTile.seedCrystal = false
+                  neighborTile.crystalDensity = 1
+                  neighborTile.crystalColor = 'blue'
+                }
               }
             }
           })

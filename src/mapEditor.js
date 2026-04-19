@@ -155,12 +155,16 @@ function applyTile(tileX, tileY, entry, { randomize = false } = {}) {
     // Place ore without changing underlying tile type
     tile.ore = true
     tile.seedCrystal = false // Remove seed crystal if present
+    tile.crystalDensity = Number.isFinite(tile.crystalDensity) ? Math.max(1, Math.min(5, Math.floor(tile.crystalDensity))) : 1
+    tile.crystalColor = 'blue'
     tile.noBuild = 0
   } else {
     // Normal tile placement - change the tile type
     tile.type = entry.type
     tile.ore = entry.type === 'ore'
     tile.seedCrystal = entry.type === 'seedCrystal'
+    tile.crystalDensity = (tile.ore || tile.seedCrystal) ? 1 : (tile.crystalDensity || 1)
+    tile.crystalColor = tile.seedCrystal ? 'red' : 'blue'
     tile.noBuild = 0
   }
 

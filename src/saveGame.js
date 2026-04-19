@@ -234,7 +234,7 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, 
 }
 
 function createDefaultMapTile() {
-  return { type: 'land', ore: false, seedCrystal: false, noBuild: 0, decal: null, decalCounter: 0 }
+  return { type: 'land', ore: false, seedCrystal: false, crystalDensity: 1, crystalColor: 'blue', noBuild: 0, decal: null, decalCounter: 0 }
 }
 
 function ensureMapGridMatchesDimensions(grid, width, height) {
@@ -267,6 +267,12 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
       if (typeof tile.seedCrystal !== 'boolean') {
         tile.seedCrystal = false
       }
+      if (!Number.isFinite(tile.crystalDensity)) {
+        tile.crystalDensity = 1
+      }
+      if (typeof tile.crystalColor !== 'string') {
+        tile.crystalColor = tile.seedCrystal ? 'red' : 'blue'
+      }
       if (!Number.isFinite(tile.noBuild)) {
         tile.noBuild = 0
       }
@@ -287,6 +293,8 @@ function createSerializableMapTile(tile = {}) {
     type: typeof tile.type === 'string' ? tile.type : 'land',
     ore: Boolean(tile.ore),
     seedCrystal: Boolean(tile.seedCrystal),
+    crystalDensity: Number.isFinite(tile.crystalDensity) ? Math.max(1, Math.min(5, Math.floor(tile.crystalDensity))) : undefined,
+    crystalColor: typeof tile.crystalColor === 'string' ? tile.crystalColor : undefined,
     decal: tile.decal && typeof tile.decal === 'object'
       ? {
         tag: typeof tile.decal.tag === 'string' ? tile.decal.tag : null,
@@ -332,6 +340,12 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         targetTile.type = typeof savedTile?.type === 'string' ? savedTile.type : 'land'
         targetTile.ore = Boolean(savedTile?.ore)
         targetTile.seedCrystal = Boolean(savedTile?.seedCrystal)
+        targetTile.crystalDensity = Number.isFinite(savedTile?.crystalDensity)
+          ? Math.max(1, Math.min(5, Math.floor(savedTile.crystalDensity)))
+          : 1
+        targetTile.crystalColor = typeof savedTile?.crystalColor === 'string'
+          ? savedTile.crystalColor
+          : (targetTile.seedCrystal ? 'red' : 'blue')
         targetTile.decal = savedTile?.decal && typeof savedTile.decal.tag === 'string'
           ? {
             tag: savedTile.decal.tag,
@@ -361,6 +375,8 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
       const tile = targetMapGrid[y][x]
       tile.ore = false
       tile.seedCrystal = false
+      tile.crystalDensity = 1
+      tile.crystalColor = 'blue'
       tile.decal = null
       tile.decalCounter = 0
       delete tile.walkable

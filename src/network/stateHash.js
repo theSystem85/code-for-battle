@@ -256,6 +256,8 @@ export function hashMapGrid(mapGrid) {
         hash = hashCombine(hash, x)
         hash = hashCombine(hash, y)
         hash = hashCombine(hash, tile.seedCrystal ? 1 : 0)
+        hash = hashCombine(hash, Number.isFinite(tile.crystalDensity) ? tile.crystalDensity : 1)
+        hash = hashCombine(hash, tile.crystalColor === 'red' ? 2 : 1)
       }
     }
   }

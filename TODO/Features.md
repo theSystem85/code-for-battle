@@ -364,3 +364,4 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - Decal selection must be pseudo-random from map seed and replace prior tile decal when a new event occurs.
 - Save/load support required for tile decals (type + deterministic variant state/counter).
 - Rendering order requirement: ore/seed overlays must remain above decals.
+- [x] Harvester crystal density + XP progression overhaul (2026-04-19): introduced 5-level crystal density values with density-based income, harvester star-gated mining eligibility (0★: 1-2, 1★: 1-3, 2★: 1-4, 3★: 1-5), star thresholds at 10k/30k/50k earned, per-star +50% capacity scaling, +25% armor at 2★, +25% speed at 3★, and density step-down visuals while harvesting.
