@@ -492,7 +492,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, terra
     for (let y = 0; y < height; y++) {
       gameState.mapGrid[y] = []
       for (let x = 0; x < width; x++) {
-        gameState.mapGrid[y][x] = { type: 'land', ore: false, seedCrystal: false, noBuild: 0 }
+        gameState.mapGrid[y][x] = { type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0, noBuild: 0 }
       }
     }
   }

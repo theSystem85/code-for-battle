@@ -673,9 +673,9 @@ export class MapRenderer {
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
-          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture)
+          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
         } else if (tile.ore) {
-          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture)
+          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture, tile.oreDensity || 1)
         }
       }
     }
@@ -842,10 +842,23 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, size, size)
   }
 
-  drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture) {
+  drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
+    const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
+    if (this.textureManager.integratedSpriteSheetMode) {
+      const integratedTile = this.textureManager.selectIntegratedTileByTags(
+        ['ore', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      )
+      if (integratedTile?.rect && integratedTile?.image) {
+        this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+        return
+      }
+    }
+
     const cache = this.textureManager.tileTextureCache.ore
     if (useTexture && cache && cache.length) {
-      const idx = this.textureManager.getTileVariation('ore', tileX, tileY)
+      const idx = Math.min(cache.length - 1, Math.max(0, normalizedDensity - 1))
       if (idx >= 0 && idx < cache.length) {
         const info = cache[idx]
         ctx.drawImage(
@@ -867,7 +880,24 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawSeedOverlay(ctx, tileX, tileY, screenX, screenY, useTexture) {
+  drawSeedOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
+    const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
+    if (this.textureManager.integratedSpriteSheetMode) {
+      const integratedTile = this.textureManager.selectIntegratedTileByTags(
+        ['ore', 'red', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      ) || this.textureManager.selectIntegratedTileByTags(
+        ['ore', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      )
+      if (integratedTile?.rect && integratedTile?.image) {
+        this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+        return
+      }
+    }
+
     const cache = this.textureManager.tileTextureCache.seedCrystal
     if (useTexture && cache && cache.length) {
       const idx = this.textureManager.getTileVariation('seedCrystal', tileX, tileY)

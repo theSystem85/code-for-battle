@@ -264,36 +264,43 @@ export const updateOreSpread = logPerformance(function updateOreSpread(gameState
         const tile = row[x]
         if (!tile) continue
         if (tile.ore || tile.seedCrystal) {
-          const spreadProb = (tile.seedCrystal ? ORE_SPREAD_PROBABILITY * 2 : ORE_SPREAD_PROBABILITY)
+          const sourceSeedDensity = Math.max(1, Math.min(5, Number.isFinite(tile.seedCrystalDensity) ? tile.seedCrystalDensity : 1))
+          const spreadProb = ORE_SPREAD_PROBABILITY * (tile.seedCrystal ? sourceSeedDensity : 1)
+          if (gameRandom() >= spreadProb) {
+            continue
+          }
+
           directions.forEach(dir => {
-            const nx = x + dir.x, ny = y + dir.y
-            if (nx >= 0 && nx < width && ny >= 0 && ny < height && Array.isArray(mapGrid[ny])) {
-              if ((occupancyMap?.[ny]?.[nx] || 0) > 0) {
-                return
-              }
-              // Check if there's a building on this tile
-              const hasBuilding = buildings.some(building => {
-                const bx = building.x, by = building.y
-                const bw = building.width || 1, bh = building.height || 1
-                return nx >= bx && nx < bx + bw && ny >= by && ny < by + bh
-              })
+            const nx = x + dir.x
+            const ny = y + dir.y
+            if (nx < 0 || nx >= width || ny < 0 || ny >= height || !Array.isArray(mapGrid[ny])) return
+            if ((occupancyMap?.[ny]?.[nx] || 0) > 0) return
 
-              // Check if there's a factory on this tile
-              const hasFactory = factoryList.some(factory => {
-                return nx >= factory.x && nx < factory.x + factory.width &&
-                       ny >= factory.y && ny < factory.y + factory.height
-              })
+            const hasBuilding = buildings.some(building => {
+              const bx = building.x
+              const by = building.y
+              const bw = building.width || 1
+              const bh = building.height || 1
+              return nx >= bx && nx < bx + bw && ny >= by && ny < by + bh
+            })
+            if (hasBuilding) return
 
-              // Only spread to land or street tiles that don't already have ore or seed crystals and don't have buildings or factories
-              const neighborRow = mapGrid[ny]
-              const neighborTile = neighborRow?.[nx]
-              if (!neighborTile) {
-                return
-              }
-              const tileType = neighborTile.type
-              if ((tileType === 'land' || tileType === 'street') && !neighborTile.ore && !neighborTile.seedCrystal && !hasBuilding && !hasFactory && gameRandom() < spreadProb) {
-                neighborTile.ore = true
-              }
+            const hasFactory = factoryList.some(factory => {
+              return nx >= factory.x && nx < factory.x + factory.width &&
+                     ny >= factory.y && ny < factory.y + factory.height
+            })
+            if (hasFactory) return
+
+            const neighborTile = mapGrid[ny]?.[nx]
+            if (!neighborTile) return
+            const tileType = neighborTile.type
+            if (tileType !== 'land' && tileType !== 'street') return
+
+            if (!neighborTile.ore && !neighborTile.seedCrystal) {
+              neighborTile.ore = true
+              neighborTile.oreDensity = 1
+            } else if (neighborTile.ore) {
+              neighborTile.oreDensity = Math.min(5, Math.max(1, Number.isFinite(neighborTile.oreDensity) ? neighborTile.oreDensity : 1) + 1)
             }
           })
         }

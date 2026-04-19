@@ -172,7 +172,34 @@ describe('Harvester Logic', () => {
 
       updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
 
-      expect(harvester.oreCarried).toBe(1)
+      expect(harvester.oreCarried).toBe(1000)
+      expect(harvester.harvesting).toBe(false)
+    })
+
+    it('uses ore density for harvested value and decreases density', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      harvester.level = 3
+      harvester.harvesting = true
+      harvester.harvestTimer = now - 10001
+      harvester.oreField = { x: 5, y: 5 }
+      mapGrid[5][5].ore = true
+      mapGrid[5][5].oreDensity = 5
+      units.push(harvester)
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.oreCarried).toBe(5000)
+      expect(mapGrid[5][5].oreDensity).toBe(4)
+    })
+
+    it('prevents level 0 harvester from harvesting density 3 ore', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      mapGrid[5][5].ore = true
+      mapGrid[5][5].oreDensity = 3
+      units.push(harvester)
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
       expect(harvester.harvesting).toBe(false)
     })
 
@@ -205,7 +232,7 @@ describe('Harvester Logic', () => {
 
     it('should not harvest when at capacity', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
-      harvester.oreCarried = 1 // At capacity (HARVESTER_CAPPACITY = 1)
+      harvester.oreCarried = 1000 // At capacity (HARVESTER_CAPPACITY = 1)
       units.push(harvester)
 
       mapGrid[5][5].ore = true
@@ -280,7 +307,7 @@ describe('Harvester Logic', () => {
   describe('Refinery Unloading', () => {
     it('should find refinery when harvester is full', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       units.push(harvester)
 
       const refinery = createTestRefinery(10, 10)
@@ -293,7 +320,7 @@ describe('Harvester Logic', () => {
 
     it('should start unloading when at refinery', async() => {
       const harvester = createTestHarvester('harv1', 11, 13)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.targetRefinery = 'refinery_10_10'
       units.push(harvester)
 
@@ -311,7 +338,7 @@ describe('Harvester Logic', () => {
 
     it('should complete unloading and add money', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001 // Started 5+ seconds ago
       harvester.unloadRefinery = 'refinery_10_10'
@@ -328,7 +355,7 @@ describe('Harvester Logic', () => {
 
     it('should track total money earned from harvesting', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001
       harvester.unloadRefinery = 'refinery_10_10'
@@ -339,9 +366,23 @@ describe('Harvester Logic', () => {
       expect(gameState.totalMoneyEarned).toBe(1000)
     })
 
+    it('awards star level after 10k delivered', () => {
+      const harvester = createTestHarvester('harv1', 11, 13)
+      harvester.oreCarried = 10000
+      harvester.unloadingAtRefinery = true
+      harvester.unloadStartTime = now - 5001
+      harvester.unloadRefinery = 'refinery_10_10'
+      units.push(harvester)
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.level).toBe(1)
+      expect(harvester.cargoCapacity).toBe(1500)
+    })
+
     it('should take longer to unload when power is negative', () => {
       const harvester = createTestHarvester('harv1', 11, 13)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001 // 5 seconds passed
       harvester.unloadRefinery = 'refinery_10_10'
@@ -353,7 +394,7 @@ describe('Harvester Logic', () => {
 
       // With negative power, unload time doubles to 10 seconds, so 5 seconds is not enough
       expect(harvester.unloadingAtRefinery).toBe(true)
-      expect(harvester.oreCarried).toBe(1) // Still carrying ore
+      expect(harvester.oreCarried).toBe(1000) // Still carrying ore
     })
   })
 
@@ -361,7 +402,7 @@ describe('Harvester Logic', () => {
     it('should assign harvester to refinery queue when near buildings', () => {
       // Simple test: just verify queue functions exist and work
       const harvester = createTestHarvester('harv1', 11, 13)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.targetRefinery = 'refinery_10_10'
       units.push(harvester)
 
@@ -377,7 +418,7 @@ describe('Harvester Logic', () => {
 
     it('should handle multiple refineries', () => {
       const harvester = createTestHarvester('harv_multi', 5, 5)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       units.push(harvester)
 
       const refinery1 = createTestRefinery(30, 30)
@@ -460,7 +501,7 @@ describe('Harvester Logic', () => {
   describe('forceHarvesterUnloadPriority', () => {
     it('should add forced harvester to queue', () => {
       const harvester = createTestHarvester('harv_force_test', 5, 5)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       units.push(harvester)
 
       const refinery = createTestRefinery(50, 50) // Use unique coordinates
@@ -576,7 +617,7 @@ describe('Harvester Logic', () => {
   describe('Enemy Harvester Economics', () => {
     it('should credit AI factory budget on unloading', () => {
       const harvester = createTestHarvester('harv1', 11, 13, 'ai_enemy')
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001
       harvester.unloadRefinery = 'refinery_10_10'
@@ -648,7 +689,7 @@ describe('Harvester Logic', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       const assignedRefinery = createTestRefinery(10, 10)
       const otherRefinery = createTestRefinery(15, 15)
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.assignedRefinery = assignedRefinery.id
       gameState.buildings.push(assignedRefinery, otherRefinery)
 
@@ -720,7 +761,7 @@ describe('Harvester Logic', () => {
   describe('Enemy Repairs After Unload', () => {
     it('sends damaged enemy harvester to workshop after unloading', () => {
       const harvester = createTestHarvester('harv1', 11, 13, 'ai_enemy')
-      harvester.oreCarried = 1
+      harvester.oreCarried = 1000
       harvester.unloadingAtRefinery = true
       harvester.unloadStartTime = now - 5001
       harvester.unloadRefinery = 'refinery_10_10'

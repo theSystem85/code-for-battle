@@ -256,6 +256,8 @@ export function hashMapGrid(mapGrid) {
         hash = hashCombine(hash, x)
         hash = hashCombine(hash, y)
         hash = hashCombine(hash, tile.seedCrystal ? 1 : 0)
+        hash = hashCombine(hash, quantize(tile.oreDensity || 0, 1))
+        hash = hashCombine(hash, quantize(tile.seedCrystalDensity || 0, 1))
       }
     }
   }

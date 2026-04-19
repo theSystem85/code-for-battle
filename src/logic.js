@@ -401,6 +401,8 @@ export function findClosestOre(unit, mapGrid, targetedOreTiles = {}) {
   let closest = null
   let closestDist = Infinity
   const candidates = [] // Store all available ore tiles for better distribution
+  const harvesterLevel = Math.max(0, Math.min(3, Number.isFinite(unit?.level) ? unit.level : 0))
+  const maxHarvestDensity = Math.min(5, 2 + harvesterLevel)
 
   // Calculate unit's tile position from its pixel coordinates
   const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
@@ -409,6 +411,10 @@ export function findClosestOre(unit, mapGrid, targetedOreTiles = {}) {
   for (let y = 0; y < mapGrid.length; y++) {
     for (let x = 0; x < mapGrid[0].length; x++) {
       if (mapGrid[y][x].ore && !mapGrid[y][x].seedCrystal) {
+        const tileDensity = Math.max(1, Math.min(5, Number.isFinite(mapGrid[y][x].oreDensity) ? Math.floor(mapGrid[y][x].oreDensity) : 1))
+        if (tileDensity > maxHarvestDensity) {
+          continue
+        }
         // Skip this ore tile if it's already targeted by another unit
         const tileKey = `${x},${y}`
         if (targetedOreTiles[tileKey] && targetedOreTiles[tileKey] !== unit.id) {

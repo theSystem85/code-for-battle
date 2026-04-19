@@ -1274,7 +1274,11 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   } else if (unitType === 'harvester') {
     unit.oreCarried = 0
     unit.harvesting = false
+    unit.level = 0
     unit.armor = unitProps.armor
+    unit.baseHarvesterArmor = unitProps.armor
+    unit.baseHarvesterSpeed = unitProps.speed
+    unit.cargoCapacity = 1000
     unit.totalMoneyEarned = 0
     unit.lastHarvestCycleComplete = null
     unit.harvestCycleSeconds = null

@@ -478,13 +478,17 @@ function applyOreCluster(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPos
       if (isInBuilding) continue
 
       mapGrid[y][x].ore = true
+      mapGrid[y][x].oreDensity = Math.max(mapGrid[y][x].oreDensity || 0, 1)
     }
   }
 
   const centerX = clamp(cluster.x, 0, mapWidth - 1)
   const centerY = clamp(cluster.y, 0, mapHeight - 1)
   mapGrid[centerY][centerX].ore = true
+  const seedDensity = Math.max(1, Math.min(5, Math.floor(rand() * 5) + 1))
+  mapGrid[centerY][centerX].oreDensity = Math.max(mapGrid[centerY][centerX].oreDensity || 0, seedDensity)
   mapGrid[centerY][centerX].seedCrystal = true
+  mapGrid[centerY][centerX].seedCrystalDensity = seedDensity
 }
 
 // Generate a new map using the given seed and organic features
@@ -497,7 +501,7 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     mapGrid[y] = []
     for (let x = 0; x < MAP_TILES_X; x++) {
       // Initially all land with no ore overlay
-      mapGrid[y][x] = { type: 'land', ore: false, seedCrystal: false, noBuild: 0 }
+      mapGrid[y][x] = { type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0, noBuild: 0 }
     }
   }
 

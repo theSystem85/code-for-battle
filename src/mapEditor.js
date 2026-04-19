@@ -154,13 +154,17 @@ function applyTile(tileX, tileY, entry, { randomize = false } = {}) {
 
     // Place ore without changing underlying tile type
     tile.ore = true
+    tile.oreDensity = Math.max(1, Number.isFinite(tile.oreDensity) ? tile.oreDensity : 1)
     tile.seedCrystal = false // Remove seed crystal if present
+    tile.seedCrystalDensity = 0
     tile.noBuild = 0
   } else {
     // Normal tile placement - change the tile type
     tile.type = entry.type
     tile.ore = entry.type === 'ore'
+    tile.oreDensity = tile.ore ? 1 : 0
     tile.seedCrystal = entry.type === 'seedCrystal'
+    tile.seedCrystalDensity = tile.seedCrystal ? 1 : 0
     tile.noBuild = 0
   }
 
