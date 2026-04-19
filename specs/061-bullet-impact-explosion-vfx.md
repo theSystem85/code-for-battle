@@ -30,6 +30,10 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 8. Destruction sprite-sheet textures must be prewarmed/cached before delayed explosion start to eliminate first-frame stutter.
 9. Black-edge/halo artifacts around fire/explosion sprite content should be aggressively suppressed during sprite processing so the map render matches SSE preview quality.
 
+## Follow-up (2026-04-19): Freeze-Window HP Visibility
+1. Units in the delayed-destruction freeze window (`hp <= 0` with destruction not yet finalized) must not render a health/HP bar.
+2. This suppression applies even if the destroyed unit remains selected during the freeze window.
+
 ## Follow-up (2026-04-14): Generic Sprite-Sheet Destruction Explosions
 1. Add a reusable sprite-sheet animation abstraction that derives tile size and frame grid from asset filename format:
    - `<tileWidth>x<tileHeight>_<cols>x<rows>_<anything>.webp`

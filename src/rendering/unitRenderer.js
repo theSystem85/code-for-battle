@@ -818,6 +818,10 @@ export class UnitRenderer {
   }
 
   renderHealthBar(ctx, unit, scrollOffset) {
+    if (this.isPendingDestructionFreeze(unit)) {
+      return
+    }
+
     // Only show health bar if unit is damaged or selected
     const isDamaged = unit.health < unit.maxHealth
     const isSelected = unit.selected
@@ -1936,10 +1940,7 @@ export class UnitRenderer {
   shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight) {
     if (!unit) return false
 
-    const pendingDestructionFreeze =
-      unit.health <= 0 &&
-      Number.isFinite(unit.destructionQueuedAt) &&
-      unit.destructionExplosionSpawned !== true
+    const pendingDestructionFreeze = this.isPendingDestructionFreeze(unit)
 
     if (unit.health <= 0 && !pendingDestructionFreeze) return false
 
@@ -1992,6 +1993,15 @@ export class UnitRenderer {
 
     const visibility = visibilityMap[tileY]?.[tileX]
     return Boolean(visibility && visibility.visible)
+  }
+
+  isPendingDestructionFreeze(unit) {
+    return Boolean(
+      unit &&
+      unit.health <= 0 &&
+      Number.isFinite(unit.destructionQueuedAt) &&
+      unit.destructionExplosionSpawned !== true
+    )
   }
 
   renderRocketTubes(ctx, unit, centerX, centerY, now) {

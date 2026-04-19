@@ -124,4 +124,32 @@ describe('UnitRenderer ammo HUD consistency', () => {
 
     expect(result).toBe(true)
   })
+
+  it('does not render a health bar while a destroyed unit is in freeze delay', () => {
+    const renderer = new UnitRenderer()
+    const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})
+    const ctx = {
+      fillRect: vi.fn(),
+      strokeRect: vi.fn()
+    }
+
+    renderer.renderHealthBar(
+      ctx,
+      {
+        selected: true,
+        owner: 'player1',
+        x: 0,
+        y: 0,
+        health: 0,
+        maxHealth: 100,
+        destructionQueuedAt: 1000,
+        destructionExplosionSpawned: false
+      },
+      { x: 0, y: 0 }
+    )
+
+    expect(drawHudEdgeBar).not.toHaveBeenCalled()
+    expect(ctx.fillRect).not.toHaveBeenCalled()
+    expect(ctx.strokeRect).not.toHaveBeenCalled()
+  })
 })
