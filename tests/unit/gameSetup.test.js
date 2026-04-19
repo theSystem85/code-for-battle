@@ -462,6 +462,48 @@ describe('gameSetup.js', () => {
           }
         }
       })
+
+      it('should only generate seed crystals when total ore value is zero', () => {
+        gameState.mapOreFieldCount = 6
+        gameState.mapOreTotalValue = 0
+
+        generateMap(12345, mapGrid, 100, 100)
+
+        let seedCount = 0
+        let nonSeedOreCount = 0
+        for (let y = 0; y < 100; y++) {
+          for (let x = 0; x < 100; x++) {
+            const tile = mapGrid[y][x]
+            if (tile.seedCrystal) {
+              seedCount++
+            } else if (tile.ore) {
+              nonSeedOreCount++
+            }
+          }
+        }
+
+        expect(seedCount).toBe(6)
+        expect(nonSeedOreCount).toBe(0)
+      })
+
+      it('should distribute total ore value in 1000-value steps across non-seed crystals', () => {
+        gameState.mapOreFieldCount = 4
+        gameState.mapOreTotalValue = 12000
+
+        generateMap(12345, mapGrid, 100, 100)
+
+        let nonSeedOreValue = 0
+        for (let y = 0; y < 100; y++) {
+          for (let x = 0; x < 100; x++) {
+            const tile = mapGrid[y][x]
+            if (tile.ore && !tile.seedCrystal) {
+              nonSeedOreValue += Math.max(1, Number.isFinite(tile.oreDensity) ? Math.floor(tile.oreDensity) : 1) * 1000
+            }
+          }
+        }
+
+        expect(nonSeedOreValue).toBe(12000)
+      })
     })
 
     describe('Factory Area Protection', () => {
