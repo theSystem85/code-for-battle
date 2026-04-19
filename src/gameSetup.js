@@ -119,6 +119,14 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
 
+export function getOreDensityForDistance(distanceFromSeed, clusterRadius, seedDensity) {
+  const maxDistance = Math.max(1, Math.floor(clusterRadius) - 1)
+  const normalizedDistance = clamp(Math.floor(distanceFromSeed), 0, maxDistance)
+  const normalizedSeedDensity = clamp(Math.floor(seedDensity), 1, 5)
+  const density = 1 + Math.floor(((maxDistance - normalizedDistance) * (normalizedSeedDensity - 1)) / maxDistance)
+  return clamp(density, 1, normalizedSeedDensity)
+}
+
 function drawOrthogonalStreetPath(grid, start, end, type) {
   let x = start.x
   let y = start.y
@@ -453,6 +461,10 @@ function buildOreClusterPlan(rand, playerPositions, mapWidth, mapHeight, oreFiel
 
 function applyOreCluster(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPositions) {
   const radius = cluster.radius
+  const centerX = clamp(cluster.x, 0, mapWidth - 1)
+  const centerY = clamp(cluster.y, 0, mapHeight - 1)
+  const seedDensity = Math.max(1, Math.min(5, Math.floor(rand() * 5) + 1))
+
   for (let y = Math.max(0, cluster.y - radius); y < Math.min(mapHeight, cluster.y + radius); y++) {
     for (let x = Math.max(0, cluster.x - radius); x < Math.min(mapWidth, cluster.x + radius); x++) {
       const dx = x - cluster.x
@@ -478,14 +490,12 @@ function applyOreCluster(cluster, mapGrid, mapWidth, mapHeight, rand, factoryPos
       if (isInBuilding) continue
 
       mapGrid[y][x].ore = true
-      mapGrid[y][x].oreDensity = Math.max(mapGrid[y][x].oreDensity || 0, 1)
+      const oreDensity = getOreDensityForDistance(Math.hypot(dx, dy), radius, seedDensity)
+      mapGrid[y][x].oreDensity = Math.max(mapGrid[y][x].oreDensity || 0, oreDensity)
     }
   }
 
-  const centerX = clamp(cluster.x, 0, mapWidth - 1)
-  const centerY = clamp(cluster.y, 0, mapHeight - 1)
   mapGrid[centerY][centerX].ore = true
-  const seedDensity = Math.max(1, Math.min(5, Math.floor(rand() * 5) + 1))
   mapGrid[centerY][centerX].oreDensity = Math.max(mapGrid[centerY][centerX].oreDensity || 0, seedDensity)
   mapGrid[centerY][centerX].seedCrystal = true
   mapGrid[centerY][centerX].seedCrystalDensity = seedDensity
