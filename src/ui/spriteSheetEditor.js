@@ -1055,12 +1055,10 @@ function bindCanvasInteractions(state) {
     state.inertiaFrame = requestAnimationFrame(tick)
   }
 
-  const beginPaint = (event) => {
-    if (!state.activeData || !state.image) return
-    if (event.button !== 0) return
-    const { x, y } = getRelativeEventPos(canvasWrap, event)
+  const beginPaintAtPosition = (x, y) => {
+    if (!state.activeData || !state.image) return false
     const tile = getTileAtCanvasPos(state, x, y)
-    if (!tile) return
+    if (!tile) return false
 
     state.dragging = true
     state.dragVisited.clear()
@@ -1086,16 +1084,11 @@ function bindCanvasInteractions(state) {
     renderTagList(state)
     refreshAnimationPreview(state)
     updateApplyAllButtonLabel(state)
+    return true
   }
 
-  const continuePaint = (event) => {
+  const continuePaintAtPosition = (x, y) => {
     if (!state.dragging || !state.activeData || !state.image) return
-    if (!(event.buttons & 1)) {
-      state.dragging = false
-      return
-    }
-
-    const { x, y } = getRelativeEventPos(canvasWrap, event)
     const tile = getTileAtCanvasPos(state, x, y)
     if (!tile) return
 
@@ -1121,6 +1114,21 @@ function bindCanvasInteractions(state) {
     renderTagList(state)
     refreshAnimationPreview(state)
     updateApplyAllButtonLabel(state)
+  }
+
+  const beginPaint = (event) => {
+    if (event.button !== 0) return
+    const { x, y } = getRelativeEventPos(canvasWrap, event)
+    beginPaintAtPosition(x, y)
+  }
+
+  const continuePaint = (event) => {
+    if (!(event.buttons & 1)) {
+      state.dragging = false
+      return
+    }
+    const { x, y } = getRelativeEventPos(canvasWrap, event)
+    continuePaintAtPosition(x, y)
   }
 
   const endPaint = () => {
@@ -1192,6 +1200,42 @@ function bindCanvasInteractions(state) {
 
   canvas.addEventListener('mousedown', beginPaint)
   canvas.addEventListener('mousemove', continuePaint)
+  canvas.addEventListener('touchstart', (event) => {
+    if (!event.touches || event.touches.length !== 1) return
+    const touch = event.touches[0]
+    const { x, y } = getRelativeEventPos(canvasWrap, touch)
+    const didStart = beginPaintAtPosition(x, y)
+    if (didStart) {
+      state.paintTouchId = touch.identifier
+      event.preventDefault()
+    }
+  }, { passive: false })
+  canvas.addEventListener('touchmove', (event) => {
+    if (!state.dragging || !event.touches) return
+    const activeTouch = Array.from(event.touches).find(t => t.identifier === state.paintTouchId)
+    if (!activeTouch) return
+    const { x, y } = getRelativeEventPos(canvasWrap, activeTouch)
+    continuePaintAtPosition(x, y)
+    event.preventDefault()
+  }, { passive: false })
+  canvas.addEventListener('touchend', (event) => {
+    if (!event.changedTouches) return
+    const endedTouch = Array.from(event.changedTouches).find(t => t.identifier === state.paintTouchId)
+    if (!endedTouch) return
+    endPaint()
+    state.paintTouchId = null
+  })
+  canvas.addEventListener('touchcancel', (event) => {
+    if (!event.changedTouches) return
+    const endedTouch = Array.from(event.changedTouches).find(t => t.identifier === state.paintTouchId)
+    if (!endedTouch) return
+    state.dragging = false
+    state.dragMode = null
+    state.groupDragBounds = null
+    state.groupDragStartTile = null
+    state.groupStartHadGroupTag = false
+    state.paintTouchId = null
+  })
   canvasWrap.addEventListener('mousedown', beginPan)
   canvasWrap.addEventListener('mousemove', continuePan)
   canvasWrap.addEventListener('contextmenu', (event) => event.preventDefault())
@@ -1515,6 +1559,7 @@ export async function initSpriteSheetEditor(options = {}) {
     panning: false,
     inertiaFrame: null,
     dragging: false,
+    paintTouchId: null,
     dragVisited: new Set(),
     dragMode: null,
     groupDragBounds: null,
