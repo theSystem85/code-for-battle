@@ -151,3 +151,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - That suppression must stay host-aware: skip SOT hosted on water tiles in the no-water fallback, but preserve land/street-hosted `type: water` SOT so coastline smoothing still appears against other terrain.
   - In the no-water custom-sheet fallback, those preserved `type: water` coastline SOT triangles must be rendered by the WebGL water shader, not the 2D procedural-water routine, so they visually match adjacent procedural water tiles.
   - Because those coastline `type: water` triangles come from the GPU underlay, the top 2D pass must cut that triangle out of the land/street base tile instead of repainting over it.
+  - SSE drag/drop import must also accept JSON metadata files and apply the imported tag payload to the currently loaded sheet immediately (same schema as `Apply tags` export).
+  - Static-mode import uses `tiles` tag assignments directly; animated-mode import must support exported animation metadata by reconstructing tile tag membership from frame indices/rects.
+  - After JSON import, tag radio list, canvas overlays, animated preview, and runtime callbacks must refresh instantly without reopening SSE.
+  - SSE sidebar must include a `Reset all tags` action that clears all current tile-tag assignments for the active sheet while keeping tag definitions available.
