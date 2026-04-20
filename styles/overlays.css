@@ -532,6 +532,7 @@ body.config-modal-open {
   background: #10161d;
   padding: 0;
   min-height: 0;
+  position: relative;
 }
 
 .sprite-sheet-editor__canvas-wrap {
@@ -560,6 +561,48 @@ body.config-modal-open {
 #sseTileCanvas {
   display: block;
   image-rendering: pixelated;
+}
+
+.sprite-sheet-editor__menu-toggle {
+  position: absolute;
+  left: max(10px, env(safe-area-inset-left, 0px) + 10px);
+  bottom: max(10px, env(safe-area-inset-bottom, 0px) + 10px);
+  z-index: 12;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 19px;
+  line-height: 1;
+  padding: 0;
+}
+
+@media (max-width: 1024px) {
+  .sprite-sheet-editor {
+    grid-template-columns: minmax(0, 1fr);
+    position: relative;
+  }
+
+  .sprite-sheet-editor__sidebar {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(320px, 82vw);
+    z-index: 10;
+    transition: transform 0.22s ease;
+  }
+
+  .sprite-sheet-editor.sprite-sheet-editor--sidebar-hidden .sprite-sheet-editor__sidebar {
+    transform: translateX(calc(-100% - 6px));
+  }
+
+  .sprite-sheet-editor.sprite-sheet-editor--sidebar-hidden .sprite-sheet-editor__menu-toggle {
+    display: inline-flex;
+  }
 }
 
 .keybinding-toolbar {
