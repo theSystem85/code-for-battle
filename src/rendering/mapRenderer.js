@@ -645,6 +645,49 @@ export class MapRenderer {
 
     const sotApplied = new Set()
     const scrollOffset = { x: offsetX, y: offsetY }
+    const groupedRockPlacements = new Map()
+    const groupedDecorativePlacements = new Map()
+    if (this.textureManager.integratedSpriteSheetMode) {
+      const rockGroups = this.textureManager.getIntegratedGroupCandidatesByTags(['rocks'])
+      const decorativeGroups = this.textureManager.getIntegratedGroupCandidatesByTags([this.textureManager.integratedBiomeTag, 'decorative'])
+      if (rockGroups.length || decorativeGroups.length) {
+        const placementFor = (x, y, groups, matcher) => {
+          for (const group of groups) {
+            let fits = true
+            for (const cell of group.offsets) {
+              const tx = x + cell.dx
+              const ty = y + cell.dy
+              if (tx >= endTileX || ty >= endTileY || !matcher(tx, ty)) {
+                fits = false
+                break
+              }
+            }
+            if (fits) return group
+          }
+          return null
+        }
+        for (let y = startTileY; y < endTileY; y++) {
+          for (let x = startTileX; x < endTileX; x++) {
+            const rockGroup = rockGroups.length
+              ? placementFor(x, y, rockGroups, (tx, ty) => mapGrid[ty]?.[tx]?.type === 'rock')
+              : null
+            if (rockGroup) {
+              rockGroup.offsets.forEach((cell) => {
+                groupedRockPlacements.set(`${x + cell.dx},${y + cell.dy}`, cell.tileRef)
+              })
+            }
+            const decorativeGroup = decorativeGroups.length
+              ? placementFor(x, y, decorativeGroups, (tx, ty) => mapGrid[ty]?.[tx]?.type === 'land' && this.textureManager.getLandClassificationTag(tx, ty) === 'decorative')
+              : null
+            if (decorativeGroup) {
+              decorativeGroup.offsets.forEach((cell) => {
+                groupedDecorativePlacements.set(`${x + cell.dx},${y + cell.dy}`, cell.tileRef)
+              })
+            }
+          }
+        }
+      }
+    }
 
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
@@ -654,7 +697,19 @@ export class MapRenderer {
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
 
         if (!(skipWaterBase && visualTileType === 'water')) {
-          this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+          const rockGroupedTile = groupedRockPlacements.get(`${x},${y}`)
+          const decorativeGroupedTile = groupedDecorativePlacements.get(`${x},${y}`)
+          if (rockGroupedTile?.rect && visualTileType === 'rock') {
+            const landTile = this.textureManager.getIntegratedTileForMapTile('land', x, y)
+            if (!this.drawIntegratedTileImage(ctx, landTile, screenX, screenY)) {
+              this.drawFallbackTileBase(ctx, x, y, 'land', screenX, screenY, useTexture, currentWaterFrame)
+            }
+            this.drawIntegratedTileImage(ctx, rockGroupedTile, screenX, screenY)
+          } else if (decorativeGroupedTile?.rect && visualTileType === 'land') {
+            this.drawIntegratedTileImage(ctx, decorativeGroupedTile, screenX, screenY)
+          } else {
+            this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+          }
         }
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
@@ -931,13 +986,50 @@ export class MapRenderer {
     const tag = tile.decal.tag
     if (!tag) return
 
+    let selectedGroupTile = null
+    if (tag === 'debris' && Number.isFinite(tile.decal?.footprintWidth) && Number.isFinite(tile.decal?.footprintHeight)) {
+      const footprintWidth = Math.max(1, Math.floor(tile.decal.footprintWidth))
+      const footprintHeight = Math.max(1, Math.floor(tile.decal.footprintHeight))
+      const groupedDebris = this.textureManager.getIntegratedGroupCandidatesByTags(['debris'], {
+        exactWidth: footprintWidth,
+        exactHeight: footprintHeight
+      })
+      if (groupedDebris.length) {
+        const originX = Number.isFinite(tile.decal.originX) ? tile.decal.originX : tileX
+        const originY = Number.isFinite(tile.decal.originY) ? tile.decal.originY : tileY
+        const selectedGroup = groupedDebris[Math.abs(((originX * 73856093) ^ (originY * 19349663)) >>> 0) % groupedDebris.length]
+        selectedGroupTile = selectedGroup.offsets.find(cell => cell.dx === (tileX - originX) && cell.dy === (tileY - originY))?.tileRef || null
+      }
+    }
+
     const candidates = this.textureManager.getDecalTileCandidatesByTags([tag])
     const variantSeed = Number.isFinite(tile.decal.variantSeed)
       ? tile.decal.variantSeed
       : ((tileX * 73856093) ^ (tileY * 19349663)) >>> 0
 
+    if (selectedGroupTile?.rect && selectedGroupTile?.image) {
+      const { rect, image } = selectedGroupTile
+      ctx.drawImage(
+        image,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height,
+        screenX,
+        screenY,
+        TILE_SIZE + 1,
+        TILE_SIZE + 1
+      )
+      return
+    }
+
     if (Array.isArray(candidates) && candidates.length > 0) {
-      const selected = candidates[variantSeed % candidates.length]
+      const pool = tag === 'debris'
+        ? (this.textureManager.getUngroupedIntegratedTileCandidatesByTags([tag]).length
+          ? this.textureManager.getUngroupedIntegratedTileCandidatesByTags([tag])
+          : candidates)
+        : candidates
+      const selected = pool[variantSeed % pool.length]
       if (selected?.rect && selected?.image) {
         const { rect, image } = selected
         ctx.drawImage(

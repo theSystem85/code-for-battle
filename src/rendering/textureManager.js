@@ -7,6 +7,7 @@ import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './s
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
+const GROUP_TAG_PATTERN = /^group_(\d{1,3})$/i
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -48,6 +49,7 @@ export class TextureManager {
     this.defaultCombatDecalSheetImage = null
     this.defaultCombatDecalSheetMetadata = null
     this.defaultCombatDecalTagBuckets = {}
+    this.integratedGroups = []
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
   }
@@ -133,6 +135,92 @@ export class TextureManager {
     return buckets
   }
 
+  getTileGroupId(tags = []) {
+    for (const tag of tags) {
+      const match = `${tag || ''}`.match(GROUP_TAG_PATTERN)
+      if (!match) continue
+      const value = Number.parseInt(match[1], 10)
+      if (Number.isFinite(value) && value >= 1 && value <= 999) return value
+    }
+    return null
+  }
+
+  buildIntegratedGroups(sheetEntries) {
+    const groupsByKey = new Map()
+    if (!Array.isArray(sheetEntries)) return []
+    sheetEntries.forEach((entry) => {
+      if (!entry?.metadata?.tiles || !entry?.image) return
+      Object.values(entry.metadata.tiles).forEach((tile) => {
+        if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
+        const groupId = this.getTileGroupId(tile.tags)
+        if (!groupId || !Number.isFinite(tile.col) || !Number.isFinite(tile.row)) return
+        const groupKey = `${entry.sheetPath}|${groupId}`
+        if (!groupsByKey.has(groupKey)) {
+          groupsByKey.set(groupKey, [])
+        }
+        groupsByKey.get(groupKey).push({
+          tileRef: {
+            ...tile,
+            image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
+            blendMode: entry.blendMode,
+            blackKey: entry.blackKey,
+            sheetPath: entry.sheetPath
+          },
+          col: tile.col,
+          row: tile.row
+        })
+      })
+    })
+
+    const groups = []
+    groupsByKey.forEach((cells, groupKey) => {
+      if (!cells.length) return
+      const minCol = Math.min(...cells.map(cell => cell.col))
+      const minRow = Math.min(...cells.map(cell => cell.row))
+      const maxCol = Math.max(...cells.map(cell => cell.col))
+      const maxRow = Math.max(...cells.map(cell => cell.row))
+      const width = (maxCol - minCol + 1)
+      const height = (maxRow - minRow + 1)
+      const expectedSize = width * height
+      if (cells.length !== expectedSize) return
+      const cellMap = new Map()
+      for (const cell of cells) {
+        const key = `${cell.col},${cell.row}`
+        if (cellMap.has(key)) return
+        cellMap.set(key, cell)
+      }
+      const offsets = []
+      for (let row = minRow; row <= maxRow; row++) {
+        for (let col = minCol; col <= maxCol; col++) {
+          const key = `${col},${row}`
+          const cell = cellMap.get(key)
+          if (!cell) return
+          offsets.push({
+            dx: col - minCol,
+            dy: row - minRow,
+            tileRef: cell.tileRef
+          })
+        }
+      }
+
+      const commonTags = offsets[0]?.tileRef?.tags
+        ? offsets[0].tileRef.tags.filter(tag => !GROUP_TAG_PATTERN.test(tag))
+        : []
+      const intersection = commonTags.filter(tag => offsets.every(cell => cell.tileRef.tags?.includes(tag)))
+      groups.push({
+        groupKey,
+        width,
+        height,
+        area: width * height,
+        commonTags: intersection,
+        offsets
+      })
+    })
+
+    groups.sort((a, b) => b.area - a.area || b.width - a.width || b.height - a.height)
+    return groups
+  }
+
   hasTaggedIntegratedTiles(metadata) {
     if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
     return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
@@ -187,6 +275,7 @@ export class TextureManager {
       this.integratedSpriteSheetMetadata = null
       this.integratedSpriteSheets = []
       this.integratedTagBuckets = {}
+      this.integratedGroups = []
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedRenderSignature = 'off'
@@ -223,6 +312,7 @@ export class TextureManager {
       this.integratedSpriteSheetMetadata = null
       this.integratedSpriteSheets = []
       this.integratedTagBuckets = {}
+      this.integratedGroups = []
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedRenderSignature = 'off'
@@ -236,6 +326,7 @@ export class TextureManager {
     this.integratedSpriteSheetImage = normalizedEntries[0].image
     this.integratedSpriteSheetMetadata = normalizedEntries[0].metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
+    this.integratedGroups = this.buildIntegratedGroups(normalizedEntries)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
     this.integratedBlackKey = normalizedEntries[0].blackKey
@@ -304,6 +395,22 @@ export class TextureManager {
 
   getIntegratedTileCandidatesByTags(requiredTags, excludedTags = []) {
     return this.getTagBucketCandidates(this.integratedTagBuckets || {}, requiredTags, excludedTags)
+  }
+
+  getIntegratedGroupCandidatesByTags(requiredTags, { exactWidth = null, exactHeight = null } = {}) {
+    if (!Array.isArray(requiredTags) || !requiredTags.length) return []
+    return (this.integratedGroups || []).filter((group) => {
+      if (!Array.isArray(group?.commonTags) || !group.commonTags.length) return false
+      if (!requiredTags.every(tag => group.commonTags.includes(tag))) return false
+      if (Number.isFinite(exactWidth) && group.width !== exactWidth) return false
+      if (Number.isFinite(exactHeight) && group.height !== exactHeight) return false
+      return true
+    })
+  }
+
+  getUngroupedIntegratedTileCandidatesByTags(requiredTags, excludedTags = []) {
+    return this.getIntegratedTileCandidatesByTags(requiredTags, excludedTags)
+      .filter(tile => this.getTileGroupId(tile?.tags || []) === null)
   }
 
   getDecalTileCandidatesByTags(requiredTags, excludedTags = []) {

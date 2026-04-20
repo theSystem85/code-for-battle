@@ -151,3 +151,12 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - That suppression must stay host-aware: skip SOT hosted on water tiles in the no-water fallback, but preserve land/street-hosted `type: water` SOT so coastline smoothing still appears against other terrain.
   - In the no-water custom-sheet fallback, those preserved `type: water` coastline SOT triangles must be rendered by the WebGL water shader, not the 2D procedural-water routine, so they visually match adjacent procedural water tiles.
   - Because those coastline `type: water` triangles come from the GPU underlay, the top 2D pass must cut that triangle out of the land/street base tile instead of repainting over it.
+
+## Follow-up (2026-04-19): Grouped Rectangular Tile Clusters
+1. SSE static tags include a dedicated `group` tool tag for cluster painting.
+2. When `group` is active, pointer-drag selection must be rectangle-only; non-rectangular drags are rejected with a warning and no metadata mutation.
+3. Accepted group drags write tile labels as `group_X` (X in range 1..999) on every selected tile.
+4. SSE sidebar exposes `Group id` numeric input directly below `Add tag` (range 1..999) for manual override of the next painted group id.
+5. On mouse release after a valid/invalid group drag, SSE automatically increments the `Group id` input by +1 (clamped to 999).
+6. Integrated runtime rendering must parse rectangular `group_X` clusters and prioritize largest-area groups first when drawing connected `rocks` and biome+`decorative` map regions.
+7. Debris decal rendering must prefer a `debris + group_X` rectangle whose width/height exactly matches the destroyed building footprint; if no exact group exists, fallback to ungrouped 1x1 `debris` candidates.

@@ -47,7 +47,7 @@ function getTileForDecal(mapGrid, tileX, tileY) {
   return mapGrid[tileY]?.[tileX] || null
 }
 
-export function setTileDecal(mapGrid, gameState, tileX, tileY, tag) {
+export function setTileDecal(mapGrid, gameState, tileX, tileY, tag, options = {}) {
   if (!DECAL_TAGS.has(tag)) return null
 
   const tile = getTileForDecal(mapGrid, tileX, tileY)
@@ -73,6 +73,12 @@ export function setTileDecal(mapGrid, gameState, tileX, tileY, tag) {
 
   const variantSeed = mixHash(seedInput)
   tile.decal = { tag, variantSeed }
+  if (tag === 'debris') {
+    if (Number.isFinite(options.footprintWidth)) tile.decal.footprintWidth = Math.max(1, Math.floor(options.footprintWidth))
+    if (Number.isFinite(options.footprintHeight)) tile.decal.footprintHeight = Math.max(1, Math.floor(options.footprintHeight))
+    if (Number.isFinite(options.originX)) tile.decal.originX = Math.floor(options.originX)
+    if (Number.isFinite(options.originY)) tile.decal.originY = Math.floor(options.originY)
+  }
 
   return tile.decal
 }
@@ -93,7 +99,12 @@ export function setBuildingDebrisDecals(mapGrid, gameState, buildingLike) {
 
   for (let y = startY; y < startY + height; y++) {
     for (let x = startX; x < startX + width; x++) {
-      setTileDecal(mapGrid, gameState, x, y, 'debris')
+      setTileDecal(mapGrid, gameState, x, y, 'debris', {
+        footprintWidth: width,
+        footprintHeight: height,
+        originX: startX,
+        originY: startY
+      })
     }
   }
 }
@@ -104,5 +115,7 @@ export function getTileDecalSignature(tile) {
   const variantSeed = Number.isFinite(tile.decal.variantSeed)
     ? tile.decal.variantSeed
     : 0
-  return `${tag}:${variantSeed}`
+  const footprintWidth = Number.isFinite(tile.decal.footprintWidth) ? Math.floor(tile.decal.footprintWidth) : 0
+  const footprintHeight = Number.isFinite(tile.decal.footprintHeight) ? Math.floor(tile.decal.footprintHeight) : 0
+  return `${tag}:${variantSeed}:${footprintWidth}x${footprintHeight}`
 }

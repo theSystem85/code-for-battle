@@ -368,3 +368,5 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - Decal selection must be pseudo-random from map seed and replace prior tile decal when a new event occurs.
 - Save/load support required for tile decals (type + deterministic variant state/counter).
 - Rendering order requirement: ore/seed overlays must remain above decals.
+- [x] SSE grouped tile authoring: add `group` tag workflow with rectangular drag validation, auto-incrementing `group_X` IDs (1-999), and sidebar `group id` input below Add tag.
+- [x] Integrated rendering grouped-tile consumption for `rocks`, biome `decorative`, and `debris` (footprint-sized debris group lookup with fallback to ungrouped 1x1 debris).
