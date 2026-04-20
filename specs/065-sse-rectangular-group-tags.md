@@ -23,6 +23,7 @@
    - Debris decals (`debris`)
 3. Runtime prefers larger grouped variants before smaller ones when matching map footprints.
 4. Debris placement uses destroyed building footprint dimensions; if no matching grouped debris exists, fallback to regular 1x1 debris selection.
+5. Group-tagged tiles are exclusive to their declared rectangle and must never be selected by non-group candidate paths (including 1x1 fallback) or by partial/smaller implicit group usage.
 
 ## Persistence
 - Decal save/load payload includes grouped footprint metadata (`groupWidth`, `groupHeight`, `groupOriginX`, `groupOriginY`) so grouped debris rendering survives save/resume.
