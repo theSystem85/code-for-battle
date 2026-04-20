@@ -164,7 +164,7 @@ describe('MapRenderer water rendering', () => {
     mapRenderer.drawBaseLayer(ctx, mapGrid, 0, 0, 2, 1, 0, 0, false, null, { skipWaterBase: true })
 
     expect(drawTileBaseSpy).toHaveBeenCalledTimes(1)
-    expect(drawTileBaseSpy).toHaveBeenCalledWith(ctx, 1, 0, 'land', 32, 0, false, null)
+    expect(drawTileBaseSpy).toHaveBeenCalledWith(ctx, 1, 0, 'land', 32, 0, false, null, mapGrid, expect.any(Object))
     expect(drawSotSpy).not.toHaveBeenCalled()
   })
 
@@ -186,7 +186,7 @@ describe('MapRenderer water rendering', () => {
     mapRenderer.drawBaseLayer(ctx, mapGrid, 0, 0, 2, 1, 0, 0, false, null, { skipWaterBase: true, skipWaterSot: true })
 
     expect(drawTileBaseSpy).toHaveBeenCalledTimes(1)
-    expect(drawTileBaseSpy).toHaveBeenCalledWith(ctx, 1, 0, 'land', 32, 0, false, null)
+    expect(drawTileBaseSpy).toHaveBeenCalledWith(ctx, 1, 0, 'land', 32, 0, false, null, mapGrid, expect.any(Object))
     expect(drawSotSpy).toHaveBeenCalledTimes(1)
     expect(drawSotSpy).toHaveBeenCalledWith(
       ctx,

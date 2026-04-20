@@ -1,4 +1,4 @@
 {
-  "commit": "94aaaee6",
-  "message": "fix(legal): remove misleading back-to-game links from legal pages"
+  "commit": "8e73a22",
+  "message": "fix(sse): show uploaded filename in sheet checklist"
 }

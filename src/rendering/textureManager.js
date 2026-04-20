@@ -7,6 +7,7 @@ import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './s
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
+const GROUP_TAG_REGEX = /^group_(\d{1,3})$/i
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -48,6 +49,8 @@ export class TextureManager {
     this.defaultCombatDecalSheetImage = null
     this.defaultCombatDecalSheetMetadata = null
     this.defaultCombatDecalTagBuckets = {}
+    this.integratedGroupedTileCatalog = {}
+    this.defaultCombatDecalGroupedTileCatalog = {}
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
   }
@@ -133,6 +136,103 @@ export class TextureManager {
     return buckets
   }
 
+  static getGroupIdFromTags(tags = []) {
+    for (const tag of tags) {
+      const match = `${tag || ''}`.match(GROUP_TAG_REGEX)
+      if (match) {
+        return Number.parseInt(match[1], 10)
+      }
+    }
+    return null
+  }
+
+  static getGroupCategoryFromTags(tags = []) {
+    if (tags.includes('debris')) return 'debris'
+    if (tags.includes('decorative')) return 'decorative'
+    if (tags.includes('rocks') || tags.includes('rock')) return 'rocks'
+    return null
+  }
+
+  buildGroupedTileCatalog(sheetEntries) {
+    const groupedByCategory = {}
+    if (!Array.isArray(sheetEntries)) return groupedByCategory
+
+    sheetEntries.forEach((entry) => {
+      if (!entry?.metadata?.tiles || !entry?.image) return
+      const groups = new Map()
+      Object.values(entry.metadata.tiles).forEach((tile) => {
+        if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
+        if (!Number.isFinite(tile.col) || !Number.isFinite(tile.row)) return
+        const groupId = TextureManager.getGroupIdFromTags(tile.tags)
+        if (!groupId) return
+        const category = TextureManager.getGroupCategoryFromTags(tile.tags)
+        if (!category) return
+        const groupKey = `${category}:${groupId}`
+        if (!groups.has(groupKey)) {
+          groups.set(groupKey, {
+            category,
+            groupId,
+            sheetPath: entry.sheetPath,
+            image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
+            tiles: new Map()
+          })
+        }
+        groups.get(groupKey).tiles.set(`${tile.col},${tile.row}`, {
+          ...tile,
+          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
+          blendMode: entry.blendMode,
+          blackKey: entry.blackKey,
+          sheetPath: entry.sheetPath
+        })
+      })
+
+      groups.forEach((group) => {
+        if (!group.tiles.size) return
+        let minCol = Infinity
+        let maxCol = -Infinity
+        let minRow = Infinity
+        let maxRow = -Infinity
+        group.tiles.forEach((tile) => {
+          minCol = Math.min(minCol, tile.col)
+          maxCol = Math.max(maxCol, tile.col)
+          minRow = Math.min(minRow, tile.row)
+          maxRow = Math.max(maxRow, tile.row)
+        })
+        const width = (maxCol - minCol) + 1
+        const height = (maxRow - minRow) + 1
+        const area = width * height
+        if (group.tiles.size !== area) return
+
+        const tilesByOffset = {}
+        for (let rowOffset = 0; rowOffset < height; rowOffset++) {
+          for (let colOffset = 0; colOffset < width; colOffset++) {
+            const tile = group.tiles.get(`${minCol + colOffset},${minRow + rowOffset}`)
+            if (!tile) return
+            tilesByOffset[`${colOffset},${rowOffset}`] = tile
+          }
+        }
+
+        if (!groupedByCategory[group.category]) {
+          groupedByCategory[group.category] = {}
+        }
+        const sizeKey = `${width}x${height}`
+        if (!groupedByCategory[group.category][sizeKey]) {
+          groupedByCategory[group.category][sizeKey] = []
+        }
+        groupedByCategory[group.category][sizeKey].push({
+          groupId: group.groupId,
+          width,
+          height,
+          area,
+          tilesByOffset,
+          sheetPath: group.sheetPath
+        })
+      })
+    })
+
+    return groupedByCategory
+  }
+
   hasTaggedIntegratedTiles(metadata) {
     if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
     return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
@@ -173,9 +273,17 @@ export class TextureManager {
         blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
         blackKey: metadata?.blackKey || null
       }])
+      this.defaultCombatDecalGroupedTileCatalog = this.buildGroupedTileCatalog([{
+        sheetPath: DEFAULT_COMBAT_DECAL_SHEET_PATH,
+        metadata: this.defaultCombatDecalSheetMetadata,
+        image,
+        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
+        blackKey: metadata?.blackKey || null
+      }])
     } catch (err) {
       this.defaultCombatDecalSheetMetadata = null
       this.defaultCombatDecalTagBuckets = {}
+      this.defaultCombatDecalGroupedTileCatalog = {}
       window.logger.warn('Failed to preload default combat decal sheet:', err)
     }
   }
@@ -189,6 +297,7 @@ export class TextureManager {
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
+      this.integratedGroupedTileCatalog = {}
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -225,6 +334,7 @@ export class TextureManager {
       this.integratedTagBuckets = {}
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
+      this.integratedGroupedTileCatalog = {}
       this.integratedRenderSignature = 'off'
       this.integratedConfigVersion++
       return
@@ -236,6 +346,7 @@ export class TextureManager {
     this.integratedSpriteSheetImage = normalizedEntries[0].image
     this.integratedSpriteSheetMetadata = normalizedEntries[0].metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
+    this.integratedGroupedTileCatalog = this.buildGroupedTileCatalog(normalizedEntries)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
     this.integratedBlackKey = normalizedEntries[0].blackKey
@@ -318,6 +429,16 @@ export class TextureManager {
   selectIntegratedTileFromCandidates(candidates, x, y) {
     if (!Array.isArray(candidates) || !candidates.length) return null
     return candidates[TextureManager.coordHash(x, y) % candidates.length]
+  }
+
+  getGroupedTileDefinitions(category, width, height) {
+    const sizeKey = `${width}x${height}`
+    const integrated = this.integratedGroupedTileCatalog?.[category]?.[sizeKey] || []
+    if (integrated.length) return integrated
+    if (category === 'debris') {
+      return this.defaultCombatDecalGroupedTileCatalog?.[category]?.[sizeKey] || []
+    }
+    return []
   }
 
   getIntegratedTileForMapTile(type, x, y) {

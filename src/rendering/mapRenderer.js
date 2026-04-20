@@ -645,6 +645,11 @@ export class MapRenderer {
 
     const sotApplied = new Set()
     const scrollOffset = { x: offsetX, y: offsetY }
+    const groupedRenderCache = {
+      rock: new Map(),
+      decorative: new Map(),
+      debris: new Map()
+    }
 
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
@@ -654,7 +659,7 @@ export class MapRenderer {
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
 
         if (!(skipWaterBase && visualTileType === 'water')) {
-          this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+          this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame, mapGrid, groupedRenderCache)
         }
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
@@ -670,7 +675,7 @@ export class MapRenderer {
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
 
-        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid, groupedRenderCache)
 
         if (tile.seedCrystal) {
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
@@ -768,8 +773,133 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+  tryDrawGroupedIntegratedTile(category, tileX, tileY, mapGrid, groupedRenderCache, getAnchor) {
+    const key = `${tileX},${tileY}`
+    const existing = groupedRenderCache[category].get(key)
+    if (existing) {
+      return existing
+    }
+
+    const anchor = getAnchor(tileX, tileY)
+    if (!anchor) return null
+    if (anchor.x !== tileX || anchor.y !== tileY) {
+      return null
+    }
+
+    const maxWidth = Math.min(5, (mapGrid[0]?.length || 0) - tileX)
+    const maxHeight = Math.min(5, mapGrid.length - tileY)
+    const sizeCandidates = []
+    for (let width = 1; width <= maxWidth; width++) {
+      for (let height = 1; height <= maxHeight; height++) {
+        sizeCandidates.push({ width, height, area: width * height })
+      }
+    }
+    sizeCandidates.sort((a, b) => b.area - a.area || b.height - a.height || b.width - a.width)
+
+    for (const size of sizeCandidates) {
+      const groups = this.textureManager.getGroupedTileDefinitions(category, size.width, size.height)
+      if (!groups.length) continue
+
+      let fits = true
+      for (let rowOffset = 0; rowOffset < size.height && fits; rowOffset++) {
+        for (let colOffset = 0; colOffset < size.width; colOffset++) {
+          const targetX = tileX + colOffset
+          const targetY = tileY + rowOffset
+          const targetAnchor = getAnchor(targetX, targetY)
+          if (!targetAnchor || targetAnchor.x !== tileX || targetAnchor.y !== tileY) {
+            fits = false
+            break
+          }
+          if (groupedRenderCache[category].has(`${targetX},${targetY}`)) {
+            fits = false
+            break
+          }
+        }
+      }
+      if (!fits) continue
+
+      const group = groups[this.textureManager.constructor.coordHash(tileX, tileY) % groups.length]
+      if (!group?.tilesByOffset) continue
+
+      for (let rowOffset = 0; rowOffset < size.height; rowOffset++) {
+        for (let colOffset = 0; colOffset < size.width; colOffset++) {
+          const targetX = tileX + colOffset
+          const targetY = tileY + rowOffset
+          const tile = group.tilesByOffset[`${colOffset},${rowOffset}`]
+          if (!tile) continue
+          groupedRenderCache[category].set(`${targetX},${targetY}`, tile)
+        }
+      }
+      const placed = groupedRenderCache[category].get(key)
+      if (placed) return placed
+    }
+
+    return null
+  }
+
+  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame, mapGrid = null, groupedRenderCache = null) {
     if (this.textureManager.integratedSpriteSheetMode) {
+      if (mapGrid && groupedRenderCache) {
+        if (type === 'rock') {
+          const rockAnchorResolver = (x, y) => {
+            if (mapGrid?.[y]?.[x]?.type !== 'rock') return null
+            let anchorX = x
+            while (anchorX > 0 && mapGrid?.[y]?.[anchorX - 1]?.type === 'rock') {
+              anchorX--
+            }
+            let anchorY = y
+            while (anchorY > 0 && mapGrid?.[anchorY - 1]?.[x]?.type === 'rock') {
+              anchorY--
+            }
+            return { x: anchorX, y: anchorY }
+          }
+          const groupedRockTile = this.tryDrawGroupedIntegratedTile(
+            'rocks',
+            tileX,
+            tileY,
+            mapGrid,
+            groupedRenderCache,
+            rockAnchorResolver
+          )
+          if (groupedRockTile) {
+            const landTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
+            if (!this.drawIntegratedTileImage(ctx, landTile, screenX, screenY)) {
+              this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+            }
+            this.drawIntegratedTileImage(ctx, groupedRockTile, screenX, screenY)
+            return
+          }
+        }
+
+        if (type === 'land' && this.textureManager.getLandClassificationTag(tileX, tileY) === 'decorative') {
+          const decorativeAnchorResolver = (x, y) => {
+            if (!mapGrid?.[y]?.[x]) return null
+            if (this.textureManager.getLandClassificationTag(x, y) !== 'decorative') return null
+            let anchorX = x
+            while (anchorX > 0 && this.textureManager.getLandClassificationTag(anchorX - 1, y) === 'decorative') {
+              anchorX--
+            }
+            let anchorY = y
+            while (anchorY > 0 && this.textureManager.getLandClassificationTag(x, anchorY - 1) === 'decorative') {
+              anchorY--
+            }
+            return { x: anchorX, y: anchorY }
+          }
+          const groupedDecorativeTile = this.tryDrawGroupedIntegratedTile(
+            'decorative',
+            tileX,
+            tileY,
+            mapGrid,
+            groupedRenderCache,
+            decorativeAnchorResolver
+          )
+          if (groupedDecorativeTile) {
+            this.drawIntegratedTileImage(ctx, groupedDecorativeTile, screenX, screenY)
+            return
+          }
+        }
+      }
+
       const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
         if (type === 'rock') {
@@ -926,10 +1056,50 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY) {
+  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY, mapGrid = null, groupedRenderCache = null) {
     if (!tile?.decal || typeof tile.decal !== 'object') return
     const tag = tile.decal.tag
     if (!tag) return
+
+    if (tag === 'debris' && mapGrid && groupedRenderCache && this.textureManager.integratedSpriteSheetMode) {
+      const key = `${tileX},${tileY}`
+      const existing = groupedRenderCache.debris.get(key)
+      if (existing) {
+        this.drawIntegratedTileImage(ctx, existing, screenX, screenY)
+        return
+      }
+
+      const footprint = tile.decal.footprint
+      const originX = Number.isFinite(footprint?.originX) ? footprint.originX : tileX
+      const originY = Number.isFinite(footprint?.originY) ? footprint.originY : tileY
+      const width = Math.max(1, Number.isFinite(footprint?.width) ? Math.floor(footprint.width) : 1)
+      const height = Math.max(1, Number.isFinite(footprint?.height) ? Math.floor(footprint.height) : 1)
+      const withinFootprint = tileX >= originX && tileX < originX + width && tileY >= originY && tileY < originY + height
+
+      if (withinFootprint) {
+        const groups = this.textureManager.getGroupedTileDefinitions('debris', width, height)
+        if (groups.length && tileX === originX && tileY === originY) {
+          const group = groups[this.textureManager.constructor.coordHash(originX, originY) % groups.length]
+          if (group?.tilesByOffset) {
+            for (let rowOffset = 0; rowOffset < height; rowOffset++) {
+              for (let colOffset = 0; colOffset < width; colOffset++) {
+                const groupedTile = group.tilesByOffset[`${colOffset},${rowOffset}`]
+                if (!groupedTile) continue
+                groupedRenderCache.debris.set(`${originX + colOffset},${originY + rowOffset}`, groupedTile)
+              }
+            }
+            const selected = groupedRenderCache.debris.get(key)
+            if (selected) {
+              this.drawIntegratedTileImage(ctx, selected, screenX, screenY)
+              return
+            }
+          }
+        } else if (existing) {
+          this.drawIntegratedTileImage(ctx, existing, screenX, screenY)
+          return
+        }
+      }
+    }
 
     const candidates = this.textureManager.getDecalTileCandidatesByTags([tag])
     const variantSeed = Number.isFinite(tile.decal.variantSeed)

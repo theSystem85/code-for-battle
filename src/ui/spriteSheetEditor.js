@@ -35,7 +35,8 @@ export const DEFAULT_SSE_TAGS = [
   'rocks',
   'concrete',
   'street',
-  'water'
+  'water',
+  'group'
 ]
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
@@ -188,6 +189,16 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
 
 function makeTileKey(col, row) {
   return `${col},${row}`
+}
+
+function clampGroupId(raw) {
+  const parsed = Number.parseInt(raw, 10)
+  if (!Number.isFinite(parsed)) return 1
+  return Math.max(1, Math.min(999, parsed))
+}
+
+function getGroupTagForId(groupId) {
+  return `group_${clampGroupId(groupId)}`
 }
 
 function parseTileKey(tileKey) {
@@ -945,6 +956,25 @@ function toggleTagOnTile(state, col, row) {
   }
 }
 
+function setTagOnTile(state, col, row, tag, shouldApply) {
+  const data = state.activeData
+  if (!data || !tag) return
+
+  const tileKey = makeTileKey(col, row)
+  const entry = ensureTileRecord(data, tileKey)
+  const currentIndex = entry.tags.indexOf(tag)
+
+  if (shouldApply && currentIndex < 0) {
+    entry.tags.push(tag)
+  } else if (!shouldApply && currentIndex >= 0) {
+    entry.tags.splice(currentIndex, 1)
+  }
+
+  if (!entry.tags.length) {
+    delete data.tiles[tileKey]
+  }
+}
+
 function addTag(state, tag) {
   const normalized = `${tag || ''}`.trim().toLowerCase()
   if (!normalized) return false
@@ -999,9 +1029,21 @@ function bindCanvasInteractions(state) {
 
     state.dragging = true
     state.dragVisited.clear()
-    const key = makeTileKey(tile.col, tile.row)
-    state.dragVisited.add(key)
-    toggleTagOnTile(state, tile.col, tile.row)
+    state.dragStartTile = tile
+    state.groupTilesPainted = 0
+    state.dragRectLastBounds = null
+    state.dragActiveGroupTag = state.activeTag === 'group'
+      ? getGroupTagForId(state.groupId)
+      : state.activeTag
+
+    if (state.activeTag === 'group') {
+      setTagOnTile(state, tile.col, tile.row, state.dragActiveGroupTag, true)
+      state.groupTilesPainted = 1
+    } else {
+      const key = makeTileKey(tile.col, tile.row)
+      state.dragVisited.add(key)
+      toggleTagOnTile(state, tile.col, tile.row)
+    }
     drawSseCanvas(state)
     renderTagList(state)
     refreshAnimationPreview(state)
@@ -1019,10 +1061,41 @@ function bindCanvasInteractions(state) {
     const tile = getTileAtCanvasPos(state, x, y)
     if (!tile) return
 
-    const key = makeTileKey(tile.col, tile.row)
-    if (state.dragVisited.has(key)) return
-    state.dragVisited.add(key)
-    toggleTagOnTile(state, tile.col, tile.row)
+    if (state.activeTag === 'group') {
+      const startTile = state.dragStartTile || tile
+      const minCol = Math.min(startTile.col, tile.col)
+      const maxCol = Math.max(startTile.col, tile.col)
+      const minRow = Math.min(startTile.row, tile.row)
+      const maxRow = Math.max(startTile.row, tile.row)
+      const nextBounds = `${minCol},${minRow},${maxCol},${maxRow}`
+      if (state.dragRectLastBounds === nextBounds) return
+
+      if (state.dragRectLastBounds) {
+        const [prevMinCol, prevMinRow, prevMaxCol, prevMaxRow] = state.dragRectLastBounds
+          .split(',')
+          .map(value => Number.parseInt(value, 10))
+        for (let row = prevMinRow; row <= prevMaxRow; row++) {
+          for (let col = prevMinCol; col <= prevMaxCol; col++) {
+            setTagOnTile(state, col, row, state.dragActiveGroupTag, false)
+          }
+        }
+      }
+
+      let paintedTiles = 0
+      for (let row = minRow; row <= maxRow; row++) {
+        for (let col = minCol; col <= maxCol; col++) {
+          setTagOnTile(state, col, row, state.dragActiveGroupTag, true)
+          paintedTiles++
+        }
+      }
+      state.groupTilesPainted = paintedTiles
+      state.dragRectLastBounds = nextBounds
+    } else {
+      const key = makeTileKey(tile.col, tile.row)
+      if (state.dragVisited.has(key)) return
+      state.dragVisited.add(key)
+      toggleTagOnTile(state, tile.col, tile.row)
+    }
     drawSseCanvas(state)
     renderTagList(state)
     refreshAnimationPreview(state)
@@ -1032,6 +1105,16 @@ function bindCanvasInteractions(state) {
   const endPaint = () => {
     if (!state.dragging) return
     state.dragging = false
+    if (state.activeTag === 'group' && state.groupTilesPainted > 0) {
+      state.groupId = clampGroupId(state.groupId + 1)
+      if (state.groupIdInput) {
+        state.groupIdInput.value = `${state.groupId}`
+      }
+    }
+    state.groupTilesPainted = 0
+    state.dragRectLastBounds = null
+    state.dragStartTile = null
+    state.dragActiveGroupTag = null
     saveDataToLocalStorage(state.activeData, state.mode)
   }
 
@@ -1237,6 +1320,7 @@ export async function initSpriteSheetEditor(options = {}) {
     blendModeSelect: document.getElementById('sseBlendModeSelect'),
     newTagInput: document.getElementById('sseNewTagInput'),
     addTagBtn: document.getElementById('sseAddTagBtn'),
+    groupIdInput: document.getElementById('sseGroupIdInput'),
     showGridCheckbox: document.getElementById('sseShowGridCheckbox'),
     showLabelsCheckbox: document.getElementById('sseShowLabelsCheckbox'),
     showTaggedOverlayCheckbox: document.getElementById('sseShowTaggedOverlayCheckbox'),
@@ -1271,10 +1355,15 @@ export async function initSpriteSheetEditor(options = {}) {
     inertiaFrame: null,
     dragging: false,
     dragVisited: new Set(),
+    dragStartTile: null,
+    dragRectLastBounds: null,
+    dragActiveGroupTag: null,
+    groupTilesPainted: 0,
     showGrid: true,
     showLabels: true,
     showTaggedOverlay: true,
     mode: 'static',
+    groupId: 1,
     previewLoop: false,
     previewBackgroundEnabled: true,
     previewBackgroundImage: null,
@@ -1498,6 +1587,11 @@ export async function initSpriteSheetEditor(options = {}) {
     if (event.key !== 'Enter') return
     event.preventDefault()
     state.addTagBtn?.click()
+  })
+
+  state.groupIdInput?.addEventListener('change', () => {
+    state.groupId = clampGroupId(state.groupIdInput.value)
+    state.groupIdInput.value = `${state.groupId}`
   })
 
   state.showGridCheckbox?.addEventListener('change', () => {

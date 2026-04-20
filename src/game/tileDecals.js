@@ -47,7 +47,7 @@ function getTileForDecal(mapGrid, tileX, tileY) {
   return mapGrid[tileY]?.[tileX] || null
 }
 
-export function setTileDecal(mapGrid, gameState, tileX, tileY, tag) {
+export function setTileDecal(mapGrid, gameState, tileX, tileY, tag, options = null) {
   if (!DECAL_TAGS.has(tag)) return null
 
   const tile = getTileForDecal(mapGrid, tileX, tileY)
@@ -72,7 +72,11 @@ export function setTileDecal(mapGrid, gameState, tileX, tileY, tag) {
   ) >>> 0
 
   const variantSeed = mixHash(seedInput)
-  tile.decal = { tag, variantSeed }
+  tile.decal = {
+    tag,
+    variantSeed,
+    footprint: options?.footprint || null
+  }
 
   return tile.decal
 }
@@ -93,7 +97,14 @@ export function setBuildingDebrisDecals(mapGrid, gameState, buildingLike) {
 
   for (let y = startY; y < startY + height; y++) {
     for (let x = startX; x < startX + width; x++) {
-      setTileDecal(mapGrid, gameState, x, y, 'debris')
+      setTileDecal(mapGrid, gameState, x, y, 'debris', {
+        footprint: {
+          originX: startX,
+          originY: startY,
+          width,
+          height
+        }
+      })
     }
   }
 }
