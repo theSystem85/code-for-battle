@@ -132,4 +132,28 @@ describe('TextureManager integrated multi-sheet selection', () => {
       '/images/map/sprite_sheets/default.webp'
     ])
   })
+
+  it('builds rectangular grouped variants and returns tile slices by offset', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'group-sheet' })
+
+    await manager.setIntegratedSpriteSheetConfig({
+      enabled: true,
+      sheets: [{
+        sheetPath: 'images/map/sprite_sheets/grouped.webp',
+        metadata: {
+          blendMode: 'black',
+          tiles: {
+            '0,0': { col: 0, row: 0, tags: ['rocks', 'group', 'group_7'], rect: { x: 0, y: 0, width: 64, height: 64 } },
+            '1,0': { col: 1, row: 0, tags: ['rocks', 'group', 'group_7'], rect: { x: 64, y: 0, width: 64, height: 64 } }
+          }
+        }
+      }]
+    })
+
+    const left = manager.selectGroupedTileVariant('rocks', { width: 2, height: 1, offsetX: 0, offsetY: 0, seed: 0 })
+    const right = manager.selectGroupedTileVariant('rocks', { width: 2, height: 1, offsetX: 1, offsetY: 0, seed: 0 })
+    expect(left?.rect?.x).toBe(0)
+    expect(right?.rect?.x).toBe(64)
+  })
 })
