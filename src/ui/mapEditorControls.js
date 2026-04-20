@@ -55,7 +55,6 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
 const DEFAULT_SSE_SHEETS = [
   'images/map/sprite_sheets/seasons_1024_q90_2.webp',
   'images/map/sprite_sheets/seasons_1024_q90_3.webp',
-  'images/map/sprite_sheets/crystals_q90_1024x1024.webp',
   'images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp',
   'images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp',
   'images/map/sprite_sheets/debris_craters_tracks.webp'

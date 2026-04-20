@@ -7,6 +7,8 @@ import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './s
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
+const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -48,6 +50,9 @@ export class TextureManager {
     this.defaultCombatDecalSheetImage = null
     this.defaultCombatDecalSheetMetadata = null
     this.defaultCombatDecalTagBuckets = {}
+    this.defaultCrystalSheetImage = null
+    this.defaultCrystalSheetMetadata = null
+    this.defaultCrystalTagBuckets = {}
     this.integratedGroupedTagCatalog = {}
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.integratedConfigVersion = 0
@@ -279,6 +284,48 @@ export class TextureManager {
     }
   }
 
+  async preloadDefaultCrystalSheet() {
+    try {
+      const response = await fetch(DEFAULT_CRYSTAL_METADATA_PATH, { cache: 'no-store' })
+      if (!response.ok) {
+        this.defaultCrystalSheetMetadata = null
+        this.defaultCrystalTagBuckets = {}
+        return
+      }
+
+      const metadata = await response.json()
+      if (!this.hasTaggedIntegratedTiles(metadata)) {
+        this.defaultCrystalSheetMetadata = null
+        this.defaultCrystalTagBuckets = {}
+        return
+      }
+
+      const image = await this.loadIntegratedSpriteSheetImage(DEFAULT_CRYSTAL_SHEET_PATH)
+      if (!image) {
+        this.defaultCrystalSheetMetadata = null
+        this.defaultCrystalTagBuckets = {}
+        return
+      }
+
+      this.defaultCrystalSheetImage = image
+      this.defaultCrystalSheetMetadata = {
+        ...metadata,
+        sheetPath: DEFAULT_CRYSTAL_SHEET_PATH
+      }
+      this.defaultCrystalTagBuckets = this.buildIntegratedTagBuckets([{
+        sheetPath: DEFAULT_CRYSTAL_SHEET_PATH,
+        metadata: this.defaultCrystalSheetMetadata,
+        image,
+        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
+        blackKey: metadata?.blackKey || null
+      }])
+    } catch (err) {
+      this.defaultCrystalSheetMetadata = null
+      this.defaultCrystalTagBuckets = {}
+      window.logger.warn('Failed to preload default crystal sheet:', err)
+    }
+  }
+
   async setIntegratedSpriteSheetConfig(config = {}) {
     const enabled = Boolean(config?.enabled)
     if (!enabled) {
@@ -415,6 +462,52 @@ export class TextureManager {
     }
 
     return this.getTagBucketCandidates(this.defaultCombatDecalTagBuckets || {}, requiredTags, excludedTags)
+  }
+
+  selectDefaultCrystalTileByTags(requiredTags, x, y, excludedTags = []) {
+    const candidates = this.getTagBucketCandidates(this.defaultCrystalTagBuckets || {}, requiredTags, excludedTags)
+    return this.selectIntegratedTileFromCandidates(candidates, x, y)
+  }
+
+  selectCrystalTileByDensity(type, tileX, tileY, density = 1) {
+    const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
+    if (type === 'seedCrystal') {
+      return this.selectIntegratedTileByTags(
+        ['red', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      ) || this.selectIntegratedTileByTags(
+        ['ore', 'red', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      ) || this.selectIntegratedTileByTags(
+        ['ore', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      ) || this.selectDefaultCrystalTileByTags(
+        ['red', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      ) || this.selectDefaultCrystalTileByTags(
+        ['ore', 'red', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      ) || this.selectDefaultCrystalTileByTags(
+        ['ore', 'density_' + normalizedDensity],
+        tileX,
+        tileY
+      )
+    }
+
+    return this.selectIntegratedTileByTags(
+      ['ore', 'density_' + normalizedDensity],
+      tileX,
+      tileY
+    ) || this.selectDefaultCrystalTileByTags(
+      ['ore', 'density_' + normalizedDensity],
+      tileX,
+      tileY
+    )
   }
 
   selectIntegratedTileFromCandidates(candidates, x, y) {
@@ -676,6 +769,7 @@ export class TextureManager {
     }
 
     await this.preloadDefaultCombatDecalSheet()
+    await this.preloadDefaultCrystalSheet()
 
     this.allTexturesLoaded = true
     if (callback) callback()

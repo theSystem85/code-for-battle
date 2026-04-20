@@ -852,16 +852,10 @@ export class MapRenderer {
 
   drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
     const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
-    if (this.textureManager.integratedSpriteSheetMode) {
-      const integratedTile = this.textureManager.selectIntegratedTileByTags(
-        ['ore', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      )
-      if (integratedTile?.rect && integratedTile?.image) {
-        this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
-        return
-      }
+    const integratedTile = this.textureManager.selectCrystalTileByDensity('ore', tileX, tileY, normalizedDensity)
+    if (integratedTile?.rect && integratedTile?.image) {
+      this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+      return
     }
 
     const cache = this.textureManager.tileTextureCache.ore
@@ -890,24 +884,10 @@ export class MapRenderer {
 
   drawSeedOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
     const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
-    if (this.textureManager.integratedSpriteSheetMode) {
-      const integratedTile = this.textureManager.selectIntegratedTileByTags(
-        ['red', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      ) || this.textureManager.selectIntegratedTileByTags(
-        ['ore', 'red', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      ) || this.textureManager.selectIntegratedTileByTags(
-        ['ore', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      )
-      if (integratedTile?.rect && integratedTile?.image) {
-        this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
-        return
-      }
+    const integratedTile = this.textureManager.selectCrystalTileByDensity('seedCrystal', tileX, tileY, normalizedDensity)
+    if (integratedTile?.rect && integratedTile?.image) {
+      this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+      return
     }
 
     const cache = this.textureManager.tileTextureCache.seedCrystal

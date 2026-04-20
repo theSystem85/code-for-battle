@@ -393,10 +393,6 @@ export class GameWebGLRenderer {
   }
 
   getIntegratedResourceTile(type, tileX, tileY, mapGrid) {
-    if (!this.textureManager.integratedSpriteSheetMode) {
-      return null
-    }
-
     const tile = mapGrid?.[tileY]?.[tileX]
     if (!tile) {
       return null
@@ -404,7 +400,7 @@ export class GameWebGLRenderer {
 
     if (type === 'ore') {
       const density = Math.max(1, Math.min(5, Number.isFinite(tile.oreDensity) ? Math.floor(tile.oreDensity) : 1))
-      return this.textureManager.selectIntegratedTileByTags(['ore', 'density_' + density], tileX, tileY)
+      return this.textureManager.selectCrystalTileByDensity('ore', tileX, tileY, density)
     }
 
     if (type === 'seedCrystal') {
@@ -418,11 +414,12 @@ export class GameWebGLRenderer {
         )
       )
 
-      return this.textureManager.selectIntegratedTileByTags(['red', 'density_' + density], tileX, tileY)
-        || this.textureManager.selectIntegratedTileByTags(['ore', 'red', 'density_' + density], tileX, tileY)
-        || this.textureManager.selectIntegratedTileByTags(['ore', 'density_' + density], tileX, tileY)
+      return this.textureManager.selectCrystalTileByDensity('seedCrystal', tileX, tileY, density)
     }
 
+    if (!this.textureManager.integratedSpriteSheetMode) {
+      return null
+    }
     return null
   }
 
