@@ -11,6 +11,7 @@ import {
   handleStuckHarvester,
   resetHarvesterRuntimeState
 } from '../../src/game/harvesterLogic.js'
+import { showNotification } from '../../src/ui/notifications.js'
 
 // Mock dependencies
 vi.mock('../../src/config.js', () => ({
@@ -30,6 +31,10 @@ vi.mock('../../src/units.js', () => ({
 
 vi.mock('../../src/sound.js', () => ({
   playSound: vi.fn()
+}))
+
+vi.mock('../../src/ui/notifications.js', () => ({
+  showNotification: vi.fn()
 }))
 
 vi.mock('../../src/productionQueue.js', () => ({
@@ -208,6 +213,28 @@ describe('Harvester Logic', () => {
       expect(harvester.harvesting).toBe(false)
     })
 
+    it('shows a promotion notification with a quicklink when a player harvester levels up', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      harvester.unloadingAtRefinery = true
+      harvester.unloadStartTime = now - 5001
+      harvester.unloadRefinery = 'ref-1'
+      harvester.oreCarried = 1000
+      harvester.experience = 9
+      units.push(harvester)
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.level).toBe(1)
+      expect(showNotification).toHaveBeenCalledWith(
+        'Harvester promoted to XP level 1',
+        5000,
+        expect.objectContaining({
+          historyMessage: 'Harvester promoted to XP level 1 (harv1)',
+          renderContent: expect.any(Function)
+        })
+      )
+    })
+
     it('should deplete ore tile after harvesting', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.harvesting = true
@@ -292,6 +319,22 @@ describe('Harvester Logic', () => {
 
       expect(harvester.harvesting).toBe(true)
       expect(harvester.oreField).toEqual({ x: 5, y: 5 })
+    })
+
+    it('keeps moving toward the exact manual ore tile instead of harvesting from an adjacent ore tile', () => {
+      const harvester = createTestHarvester('harv1', 6, 5)
+      harvester.manualOreTarget = { x: 5, y: 5 }
+      units.push(harvester)
+
+      mapGrid[5][5].ore = true
+      mapGrid[5][6].ore = true
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+
+      expect(harvester.harvesting).toBe(false)
+      expect(harvester.oreField).toEqual({ x: 5, y: 5 })
+      expect(harvester.moveTarget).toEqual({ x: 5, y: 5 })
+      expect(harvester.path).toEqual([{ x: 5, y: 5 }])
     })
 
     it('keeps manual-hold harvesters idle on non-ore move destinations', () => {

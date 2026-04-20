@@ -110,6 +110,7 @@ function hideMapSettingsForClient() {
 
   // Disable ore spread and shadow of war checkboxes - these settings come from host
   const oreCheckbox = document.getElementById('oreSpreadCheckbox')
+  const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
   const shadowCheckbox = document.getElementById('shadowOfWarCheckbox')
 
   if (oreCheckbox) {
@@ -123,6 +124,10 @@ function hideMapSettingsForClient() {
       indicator.textContent = '(host setting)'
       label.appendChild(indicator)
     }
+  }
+
+  if (oreSpreadIntervalInput) {
+    oreSpreadIntervalInput.disabled = true
   }
 
   if (shadowCheckbox) {
@@ -167,6 +172,7 @@ function showMapSettings() {
 
   // Re-enable ore spread and shadow of war checkboxes
   const oreCheckbox = document.getElementById('oreSpreadCheckbox')
+  const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
   const shadowCheckbox = document.getElementById('shadowOfWarCheckbox')
 
   if (oreCheckbox) {
@@ -177,6 +183,10 @@ function showMapSettings() {
     if (indicator) {
       indicator.remove()
     }
+  }
+
+  if (oreSpreadIntervalInput) {
+    oreSpreadIntervalInput.disabled = false
   }
 
   if (shadowCheckbox) {

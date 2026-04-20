@@ -53,6 +53,10 @@ vi.mock('../../src/utils.js', () => ({
   getBuildingIdentifier: vi.fn(building => building.id)
 }))
 
+vi.mock('../../src/game/time.js', () => ({
+  getSimulationTime: vi.fn(() => 10000)
+}))
+
 import { UnitRenderer } from '../../src/rendering/unitRenderer.js'
 
 describe('UnitRenderer ammo HUD consistency', () => {
@@ -151,5 +155,29 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(drawHudEdgeBar).not.toHaveBeenCalled()
     expect(ctx.fillRect).not.toHaveBeenCalled()
     expect(ctx.strokeRect).not.toHaveBeenCalled()
+  })
+
+  it('prioritizes active harvester harvest progress over XP in the selected bottom HUD slot', () => {
+    const renderer = new UnitRenderer()
+    const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})
+
+    renderer.renderHarvesterProgress(
+      {},
+      {
+        id: 'harvester-1',
+        selected: true,
+        type: 'harvester',
+        owner: 'player1',
+        x: 0,
+        y: 0,
+        harvesting: true,
+        harvestTimer: 5000,
+        level: 1,
+        experience: 3
+      },
+      { x: 0, y: 0 }
+    )
+
+    expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'bottom', 0.5, '#32CD32')
   })
 })

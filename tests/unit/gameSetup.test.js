@@ -41,7 +41,13 @@ vi.mock('../../src/utils/seedUtils.js', () => ({
 }))
 
 // Import after mocking
-import { generateMap, cleanupOreFromBuildings, getOreDensityForDistance, initializeGameAssets } from '../../src/gameSetup.js'
+import {
+  allocateOreFieldCandidateDensities,
+  generateMap,
+  cleanupOreFromBuildings,
+  getOreDensityForDistance,
+  initializeGameAssets
+} from '../../src/gameSetup.js'
 import { preloadTileTextures } from '../../src/rendering.js'
 import { preloadBuildingImages } from '../../src/buildingImageMap.js'
 import { preloadTurretImages } from '../../src/rendering/turretImageRenderer.js'
@@ -409,6 +415,17 @@ describe('gameSetup.js', () => {
         expect(getOreDensityForDistance(12, 5, 5)).toBe(1)
       })
 
+      it('spreads initial ore density across reachable tiles before enriching the inner field', () => {
+        const assigned = allocateOreFieldCandidateDensities([
+          { maxDensity: 4 },
+          { maxDensity: 3 },
+          { maxDensity: 2 },
+          { maxDensity: 1 }
+        ], 7)
+
+        expect(assigned).toEqual([2, 2, 2, 1])
+      })
+
       it('should generate ore fields', () => {
         generateMap(12345, mapGrid, 100, 100)
 
@@ -503,6 +520,28 @@ describe('gameSetup.js', () => {
         }
 
         expect(nonSeedOreValue).toBe(12000)
+      })
+
+      it('should keep outer candidate tiles at or below inner candidate density during enrichment', () => {
+        const assigned = allocateOreFieldCandidateDensities([
+          { maxDensity: 4 },
+          { maxDensity: 3 },
+          { maxDensity: 2 },
+          { maxDensity: 1 }
+        ], 10)
+
+        expect(assigned).toEqual([4, 3, 2, 1])
+      })
+
+      it('keeps low starting ore budgets harvestable instead of collapsing into one dense inner tile', () => {
+        const assigned = allocateOreFieldCandidateDensities([
+          { maxDensity: 4 },
+          { maxDensity: 3 },
+          { maxDensity: 2 },
+          { maxDensity: 1 }
+        ], 4)
+
+        expect(assigned).toEqual([1, 1, 1, 1])
       })
     })
 

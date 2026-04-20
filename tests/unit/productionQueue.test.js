@@ -97,6 +97,9 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
 // Import after mocking
 import { productionQueue } from '../../src/productionQueue.js'
 import { isNearExistingBuilding } from '../../src/buildings.js'
+import { spawnUnit, findPath } from '../../src/units.js'
+import { findClosestOre } from '../../src/logic.js'
+import { units } from '../../src/main.js'
 
 describe('Production Queue System', () => {
   let mockButton
@@ -114,6 +117,7 @@ describe('Production Queue System', () => {
     gameState.buildings = []
     gameState.factories = []
     gameState.units = []
+    units.length = 0
     gameState.blueprints = []
     gameState.newUnitTypes = new Set()
     gameState.newBuildingTypes = new Set()
@@ -755,6 +759,38 @@ describe('Production Queue System', () => {
       productionQueue.startNextUnitProduction()
 
       expect(productionQueue.currentUnit.rallyPoint).toEqual(rallyPoint)
+    })
+
+    it('assigns spawned harvesters an immediate ore move target when auto-harvest starts', () => {
+      gameState.buildings = [
+        { id: 'vf-1', type: 'vehicleFactory', owner: 'player', health: 100, rallyPoint: null }
+      ]
+      productionQueue.currentUnit = {
+        type: 'harvester',
+        button: mockButton,
+        duration: 1000,
+        rallyPoint: null
+      }
+      productionQueue.unitItems = [productionQueue.currentUnit]
+
+      vi.mocked(spawnUnit).mockReturnValueOnce({
+        id: 'harvester-1',
+        type: 'harvester',
+        owner: 'player',
+        tileX: 2,
+        tileY: 3,
+        x: 64,
+        y: 96,
+        health: 100
+      })
+      vi.mocked(findClosestOre).mockReturnValueOnce({ x: 6, y: 7 })
+      vi.mocked(findPath).mockReturnValueOnce([{ x: 2, y: 3 }, { x: 6, y: 7 }])
+
+      productionQueue.completeCurrentUnitProduction()
+
+      expect(units[0].oreField).toEqual({ x: 6, y: 7 })
+      expect(units[0].moveTarget).toEqual({ x: 6, y: 7 })
+      expect(units[0].path).toEqual([{ x: 6, y: 7 }])
     })
   })
 

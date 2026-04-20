@@ -28,5 +28,8 @@ Implement crystal density-driven harvesting where ore/seed crystals support dens
 9. Seed crystal density is deterministic from map seed RNG during map generation.
 10. Generated ore-field density must fall off with distance from each field's seed crystal so richer ore visually radiates outward from the seed in deterministic bands.
 11. Crystal sprite sheet `crystals_q90_1024x1024.webp` should be available in static sheet selection defaults.
-12. Selected harvesters show their XP bar in the shared bottom progress slot used by other units, while harvester cargo/load uses the ammo-side HUD bar to avoid overlap.
+12. Selected harvesters show their XP bar in the shared bottom progress slot used by other units while idle, but active harvesting/unloading temporarily takes over that bottom slot so the current cycle progress remains visible; harvester cargo/load stays on the ammo-side HUD bar to avoid overlap.
 13. Seed crystals should resolve integrated-sheet sprites from `red` + `density_X` tags even when those tiles no longer carry the legacy `ore` tag.
+14. When a selected harvester hovers an ore tile whose density exceeds its current XP permission, the cursor must switch to a blocked state and show a small tooltip describing the required XP level.
+15. Player-owned harvesters must emit a promotion notification when they gain a star, and that notification must include a quicklink/focus action for the promoted harvester.
+16. Harvester wagon rotation must remain intentionally slower than its previous density-overhaul tuning and stay at roughly `1.5x` tank wagon rotation so ore-field approach corrections do not snap-turn excessively.

@@ -882,15 +882,7 @@ export class UnitRenderer {
     let shouldShowBar = false
 
     if (unit.type === 'harvester') {
-      if (unit.selected) {
-        if (unit.level >= 3) {
-          return
-        }
-
-        shouldShowBar = true
-        progress = getExperienceProgress(unit)
-        barColor = '#FFFF00' // Bright yellow for experience
-      } else if (unit.unloadingAtRefinery && unit.unloadStartTime) {
+      if (unit.unloadingAtRefinery && unit.unloadStartTime) {
         // Show unloading progress (reverse direction)
         shouldShowBar = true
         const unloadProgress = Math.min(
@@ -907,6 +899,14 @@ export class UnitRenderer {
           1
         )
         barColor = '#32CD32' // Green for harvesting
+      } else if (unit.selected) {
+        if (unit.level >= 3) {
+          return
+        }
+
+        shouldShowBar = true
+        progress = getExperienceProgress(unit)
+        barColor = '#FFFF00' // Bright yellow for experience
       } else {
         return
       }

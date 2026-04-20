@@ -6,10 +6,12 @@ Map generation must keep early-economy access fair while adding richer ore distr
 ## Functional requirements
 - Provide a sidebar map-settings input for ore field count (`mapOreFieldCount`) that supports values from 0 to 24 and is persisted in local settings.
 - Provide a sidebar map-settings input for total seeded ore value (`mapOreTotalValue`) that supports value steps of `1000` (one density-1 crystal / one base harvester load), is persisted in local settings, and defaults to `64000`.
+- Provide a sidebar map-settings input for ore spread interval in seconds (`mapOreSpreadIntervalSeconds`) positioned to the right of `Total Ore Value`, persisted in host settings, and synchronized to remote clients as the authoritative host-controlled ore spread cadence.
 - Remove reliance on a shuffle button by regenerating the map immediately whenever any map feature input changes (`seed`, `players`, `width`, `height`, `ore field count`).
 - Ensure map generation is deterministic for the same seed and map settings.
 - Ensure each generated ore field has one seed crystal in its center with regular ore around it.
 - Distribute the configured total ore value evenly across generated seed crystals by allocating non-seed crystal density in 1000-value units; with total ore value `0`, only seed crystals are generated.
+- Ensure the initial non-seed ore around each seed crystal follows an outward-to-inward density gradient so outer tiles are the least dense reachable ore and the starting field cannot collapse into only density-5 non-seed ore.
 - Distribution rules by Ore Field Count (OFC):
   - If `OFC < number of parties`, all ore fields are placed around the center of the map.
   - If `OFC == number of parties`, each party gets one near-base ore field.
@@ -27,7 +29,10 @@ Map generation must keep early-economy access fair while adding richer ore distr
 6. Given changed seed with same map settings, ore field layout changes.
 7. Given `mapOreTotalValue=0`, generated maps contain only seed-crystal ore tiles (no additional non-seed ore tiles).
 8. Given `mapOreTotalValue=N`, total non-seed ore value equals `N` in 1000-value increments and is distributed evenly per seed cluster (difference at most one 1000-value step between clusters when `N` is not divisible by seed count).
-7. Given changes to any map feature input, map regeneration occurs immediately without pressing a shuffle button.
+9. Given a generated ore field with seed density above `1`, outer non-seed ore tiles are never denser than inner non-seed ore tiles from the same field.
+10. Given the host changes ore spread interval in Map Settings, remote clients inherit the same ore spread cadence and cannot override it locally.
+11. Given changes to any map feature input, map regeneration occurs immediately without pressing a shuffle button.
+12. Given a low non-seed ore budget for a field, the generator spreads density-1 ore across multiple connected non-seed tiles before increasing any inner tile above density 1.
 
 ## Validation
 - Add and run a Playwright E2E test that verifies OFC=0 support, OFC distribution tiers (center/near/spread), deterministic regeneration, and immediate map regeneration from map-settings input changes.

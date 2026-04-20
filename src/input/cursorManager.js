@@ -7,6 +7,7 @@ import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { getBuildingIdentifier } from '../utils.js'
+import { canHarvesterHarvestTile, getRequiredHarvesterLevelForTile } from '../game/harvesterEligibility.js'
 
 const CURSOR_CLASS_NAMES = [
   'repair-mode',
@@ -53,6 +54,7 @@ export class CursorManager {
     this.activeCursorStyle = ''
     this.activeCursorClasses = new Set()
     this.rangeCursorInfo = null
+    this.blockedHarvesterOreLevel = null
     this.rangeCursorElements = this.createRangeCursorElements()
   }
 
@@ -397,6 +399,8 @@ export class CursorManager {
     }
 
     this.updateRangeCursorDisplay(rangeCursorPosition, false)
+    this.setRangeCursorInfo(null)
+    this.blockedHarvesterOreLevel = null
 
     // Check if cursor is over the game canvas
     this.isOverGameCanvas = (
@@ -765,9 +769,18 @@ export class CursorManager {
     this.isOverOreTile = false
     if (this.isOverGameCanvas && gridReady && tileWithinBounds && hoveredTile) {
       // Only show ore tile cursor if harvesters are selected
-      const hasSelectedHarvesters = selectedUnits.some(unit => unit.type === 'harvester')
-      if (hasSelectedHarvesters && hoveredTile.ore) {
+      const selectedHarvesters = selectedUnits.filter(unit => unit.type === 'harvester' && unit.owner === gameState.humanPlayer)
+      if (selectedHarvesters.length > 0 && hoveredTile.ore) {
         this.isOverOreTile = true
+
+        const requiredLevel = getRequiredHarvesterLevelForTile(hoveredTile)
+        if (requiredLevel !== null && requiredLevel > 0) {
+          const allSelectedHarvestersBlocked = selectedHarvesters.every(unit => !canHarvesterHarvestTile(unit, hoveredTile))
+          if (allSelectedHarvestersBlocked) {
+            this.blockedHarvesterOreLevel = requiredLevel
+            this.setRangeCursorInfo({ displayText: `Needs XP level ${requiredLevel}` })
+          }
+        }
       }
     }
 
@@ -1120,6 +1133,12 @@ export class CursorManager {
       }
 
       if (this.isOverOreTile) {
+        if (this.blockedHarvesterOreLevel !== null) {
+          this.updateRangeCursorDisplay(rangeCursorPosition, true)
+          setMoveBlockedCursor()
+          return
+        }
+
         setAttackCursor()
         return
       }

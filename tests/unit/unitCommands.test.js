@@ -541,6 +541,40 @@ describe('UnitCommandsHandler handleHarvesterCommand', () => {
     expect(harvesters[0].manualOreTarget).toEqual(oreTarget)
     expect(harvesters[0].moveTarget).toEqual(oreTarget)
   })
+
+  it('keeps a single harvester on the clicked ore tile even when the field has neighboring ore tiles', () => {
+    const harvesters = [
+      { id: 'h1', type: 'harvester', owner: 'player', tileX: 6, tileY: 5, health: 100, x: 192, y: 160 }
+    ]
+    const oreTarget = { x: 5, y: 5 }
+    mapGrid[5][5].ore = 100
+    mapGrid[5][4].ore = 100
+
+    findPathForOwner.mockImplementation((start, end) => [start, end])
+
+    handler.handleHarvesterCommand(harvesters, oreTarget, mapGrid)
+
+    expect(harvesters[0].manualOreTarget).toEqual(oreTarget)
+    expect(harvesters[0].moveTarget).toEqual(oreTarget)
+  })
+
+  it('spreads multiple harvesters across connected ore tiles when commanding one ore field', () => {
+    const harvesters = [
+      { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0, health: 100, x: 0, y: 0 },
+      { id: 'h2', type: 'harvester', owner: 'player', tileX: 1, tileY: 0, health: 100, x: 32, y: 0 }
+    ]
+    const oreTarget = { x: 5, y: 5 }
+    mapGrid[5][5].ore = 100
+    mapGrid[5][6].ore = 100
+
+    findPathForOwner.mockImplementation((start, end) => [start, end])
+
+    handler.handleHarvesterCommand(harvesters, oreTarget, mapGrid)
+
+    expect(new Set(harvesters.map(harvester => `${harvester.manualOreTarget.x},${harvester.manualOreTarget.y}`))).toEqual(
+      new Set(['5,5', '6,5'])
+    )
+  })
 })
 
 describe('UnitCommandsHandler attack group and movement', () => {
@@ -692,6 +726,21 @@ describe('UnitCommandsHandler attack group and movement', () => {
       const dist = Math.hypot(dx, dy)
       expect(dist).toBeCloseTo(safeDistance, 1)
     })
+  })
+
+  it('blocks harvesters from manually targeting ore above their XP level', () => {
+    const harvesters = [
+      { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0, health: 100, x: 0, y: 0, level: 0 }
+    ]
+    const oreTarget = { x: 5, y: 5 }
+    mapGrid[5][5].ore = 100
+    mapGrid[5][5].oreDensity = 4
+
+    handler.handleHarvesterCommand(harvesters, oreTarget, mapGrid)
+
+    expect(harvesters[0].manualOreTarget).toBeUndefined()
+    expect(harvesters[0].moveTarget).toBeUndefined()
+    expect(showNotification).toHaveBeenCalledWith('1 harvester needs XP level 2 to harvest this ore.', 2500)
   })
 
   it('getTargetPoint returns center for units with tileX', () => {

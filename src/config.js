@@ -885,7 +885,7 @@ export const UNIT_PROPERTIES = {
     health: 150,
     maxHealth: 150,
     speed: 0.4,  // 50% slower: 0.8 * 0.5 = 0.4
-    rotationSpeed: 0.2,
+    rotationSpeed: TANK_WAGON_ROT * 1.5,
     armor: 3
   },
   // Tank properties

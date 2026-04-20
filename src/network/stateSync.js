@@ -7,7 +7,7 @@
 import { gameState } from '../gameState.js'
 import { placeBuilding } from '../buildings.js'
 import { units as mainUnits, bullets as mainBullets, factories as mainFactories, regenerateMapForClient } from '../main.js'
-import { setMapDimensions, ORE_SPREAD_ENABLED, setOreSpreadEnabled } from '../config.js'
+import { setMapDimensions, ORE_SPREAD_ENABLED, ORE_SPREAD_INTERVAL, setOreSpreadEnabled, setOreSpreadInterval } from '../config.js'
 import { broadcastGameCommand } from './commandBroadcast.js'
 import { getSimulationTime } from '../game/time.js'
 
@@ -427,6 +427,7 @@ export function createGameStateSnapshot() {
     mapCenterLake: gameState.mapCenterLake,
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
+    oreSpreadInterval: ORE_SPREAD_INTERVAL,
     shadowOfWarEnabled: gameState.shadowOfWarEnabled,
     showEnemyResources: gameState.showEnemyResources,
     // Sync defeated players so clients can detect their own defeat
@@ -585,6 +586,13 @@ export function applyGameStateSnapshot(snapshot) {
     const oreCheckbox = document.getElementById('oreSpreadCheckbox')
     if (oreCheckbox) {
       oreCheckbox.checked = snapshot.oreSpreadEnabled
+    }
+  }
+  if (Number.isFinite(snapshot.oreSpreadInterval)) {
+    setOreSpreadInterval(snapshot.oreSpreadInterval)
+    const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
+    if (oreSpreadIntervalInput) {
+      oreSpreadIntervalInput.value = Math.max(1, Math.round(snapshot.oreSpreadInterval / 1000))
     }
   }
   if (typeof snapshot.shadowOfWarEnabled === 'boolean') {

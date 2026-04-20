@@ -4,6 +4,7 @@ import { showNotification } from '../../ui/notifications.js'
 import { findPathForOwner } from '../../units.js'
 import { gameState } from '../../gameState.js'
 import { forceHarvesterUnloadPriority, interruptHarvesterAutomation } from '../../game/harvesterLogic.js'
+import { canHarvesterHarvestTile, getRequiredHarvesterLevelForTile } from '../../game/harvesterEligibility.js'
 import { UTILITY_QUEUE_MODES } from './utilityHelpers.js'
 import {
   canAmbulanceProvideCrew,
@@ -12,6 +13,84 @@ import {
   canAmmunitionTruckProvideAmmo,
   canRecoveryTankRepair
 } from './utilityQueue.js'
+
+function isHarvestableOreTile(tile) {
+  return Boolean(tile?.ore && !tile.seedCrystal)
+}
+
+function getConnectedOreFieldTiles(origin, mapGrid) {
+  if (!origin || !isHarvestableOreTile(mapGrid?.[origin.y]?.[origin.x])) {
+    return [origin]
+  }
+
+  const queue = [origin]
+  const visited = new Set([`${origin.x},${origin.y}`])
+  const connectedTiles = []
+
+  while (queue.length > 0) {
+    const current = queue.shift()
+    connectedTiles.push(current)
+
+    const neighbors = [
+      { x: current.x + 1, y: current.y },
+      { x: current.x - 1, y: current.y },
+      { x: current.x, y: current.y + 1 },
+      { x: current.x, y: current.y - 1 }
+    ]
+
+    neighbors.forEach(neighbor => {
+      const key = `${neighbor.x},${neighbor.y}`
+      if (visited.has(key)) {
+        return
+      }
+
+      if (!isHarvestableOreTile(mapGrid?.[neighbor.y]?.[neighbor.x])) {
+        return
+      }
+
+      visited.add(key)
+      queue.push(neighbor)
+    })
+  }
+
+  return connectedTiles.sort((a, b) => {
+    const distanceA = Math.hypot(a.x - origin.x, a.y - origin.y)
+    const distanceB = Math.hypot(b.x - origin.x, b.y - origin.y)
+    if (distanceA !== distanceB) return distanceA - distanceB
+    if (a.y !== b.y) return a.y - b.y
+    return a.x - b.x
+  })
+}
+
+function getCandidateOrderForHarvester(unit, oreCandidates, assignedTargets) {
+  const availableTargets = []
+  const fallbackTargets = []
+
+  oreCandidates.forEach(candidate => {
+    const key = `${candidate.x},${candidate.y}`
+    const targetWithDistance = {
+      ...candidate,
+      distance: Math.hypot(unit.tileX - candidate.x, unit.tileY - candidate.y)
+    }
+
+    if (assignedTargets.has(key)) {
+      fallbackTargets.push(targetWithDistance)
+    } else {
+      availableTargets.push(targetWithDistance)
+    }
+  })
+
+  const byDistance = (a, b) => {
+    if (a.distance !== b.distance) return a.distance - b.distance
+    if (a.y !== b.y) return a.y - b.y
+    return a.x - b.x
+  }
+
+  availableTargets.sort(byDistance)
+  fallbackTargets.sort(byDistance)
+
+  return [...availableTargets, ...fallbackTargets]
+}
 
 export function handleRefineryUnloadCommand(handler, selectedUnits, refinery, mapGrid) {
   selectedUnits.forEach(u => { u.commandQueue = []; u.currentCommand = null })
@@ -66,34 +145,70 @@ export function handleHarvesterCommand(handler, selectedUnits, oreTarget, mapGri
   selectedUnits.forEach(u => { u.commandQueue = []; u.currentCommand = null })
   handler.clearAttackGroupState(selectedUnits)
 
+  const selectedHarvesters = selectedUnits.filter(unit => unit.type === 'harvester')
   let anyAssigned = false
-  selectedUnits.forEach(unit => {
-    if (unit.type === 'harvester') {
-      interruptHarvesterAutomation(unit, gameState)
-      unit.guardTarget = null
-      unit.guardTargets = null
-      unit.guardMode = false
-      const path = findPathForOwner(
-        { x: unit.tileX, y: unit.tileY },
-        oreTarget,
-        mapGrid,
-        gameState.occupancyMap,
-        unit.owner
-      )
+  let blockedHarvesters = 0
+  const clickedTile = mapGrid?.[oreTarget?.y]?.[oreTarget?.x]
+  const requiredLevel = getRequiredHarvesterLevelForTile(clickedTile)
+  const oreCandidates = selectedHarvesters.length <= 1
+    ? [oreTarget]
+    : getConnectedOreFieldTiles(oreTarget, mapGrid)
+  const assignedTargets = new Set()
 
-      if (path && path.length > 0) {
-        unit.path = path.length > 1 ? path.slice(1) : path
-        unit.manualHoldPosition = null
-        unit.manualOreTarget = oreTarget
-        unit.lastPlayerCommandTime = now
-        unit.oreField = null
-        unit.target = null
-        unit.moveTarget = oreTarget
-        unit.forcedAttack = false
-        anyAssigned = true
+  selectedHarvesters
+    .sort((a, b) => {
+      const distanceA = Math.hypot(a.tileX - oreTarget.x, a.tileY - oreTarget.y)
+      const distanceB = Math.hypot(b.tileX - oreTarget.x, b.tileY - oreTarget.y)
+      if (distanceA !== distanceB) return distanceA - distanceB
+      return String(a.id).localeCompare(String(b.id))
+    })
+    .forEach(unit => {
+      if (unit.type === 'harvester') {
+        if (!canHarvesterHarvestTile(unit, clickedTile)) {
+          blockedHarvesters++
+          return
+        }
+
+        interruptHarvesterAutomation(unit, gameState)
+        unit.guardTarget = null
+        unit.guardTargets = null
+        unit.guardMode = false
+        const eligibleTargets = oreCandidates.filter(candidate => canHarvesterHarvestTile(unit, mapGrid?.[candidate.y]?.[candidate.x]))
+        const candidateTargets = getCandidateOrderForHarvester(unit, eligibleTargets, assignedTargets)
+
+        for (const candidateTarget of candidateTargets) {
+          const path = findPathForOwner(
+            { x: unit.tileX, y: unit.tileY },
+            candidateTarget,
+            mapGrid,
+            gameState.occupancyMap,
+            unit.owner
+          )
+
+          if (!path || path.length === 0) {
+            continue
+          }
+
+          unit.path = path.length > 1 ? path.slice(1) : path
+          unit.manualHoldPosition = null
+          unit.manualOreTarget = { x: candidateTarget.x, y: candidateTarget.y }
+          unit.lastPlayerCommandTime = now
+          unit.oreField = null
+          unit.target = null
+          unit.moveTarget = { x: candidateTarget.x, y: candidateTarget.y }
+          unit.forcedAttack = false
+          assignedTargets.add(`${candidateTarget.x},${candidateTarget.y}`)
+          anyAssigned = true
+          break
+        }
       }
-    }
-  })
+    })
+
+  if (!anyAssigned && blockedHarvesters > 0 && Number.isFinite(requiredLevel) && requiredLevel > 0) {
+    const unitLabel = blockedHarvesters === 1 ? 'harvester' : 'harvesters'
+    const verb = blockedHarvesters === 1 ? 'needs' : 'need'
+    showNotification(`${blockedHarvesters} ${unitLabel} ${verb} XP level ${requiredLevel} to harvest this ore.`, 2500)
+  }
 
   if (anyAssigned) {
     const avgX = selectedUnits.reduce((sum, u) => sum + u.x, 0) / selectedUnits.length

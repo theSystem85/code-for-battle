@@ -31,7 +31,7 @@ The refactored `gameCommandSync.js` now serves only as a coordinator that:
   - Factories (production state, rally points)
   - Explosions and unit wrecks
   - Map configuration (seed, dimensions, player count)
-  - Game settings (ore spread, shadow of war, etc.)
+  - Game settings (ore spread enabled state, ore spread interval, shadow of war, etc.)
   - Defeated players tracking
   - Per-party authoritative economy values (`partyMoney`) for remote-client HUD and affordability checks
 

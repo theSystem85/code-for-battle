@@ -362,6 +362,18 @@ describe('logic.js', () => {
       expect(result).toEqual({ x: 8, y: 8 })
     })
 
+    it('skips ore tiles above the harvester XP density limit', () => {
+      mapGrid[4][4].ore = true
+      mapGrid[4][4].oreDensity = 4
+      mapGrid[8][8].ore = true
+      mapGrid[8][8].oreDensity = 2
+
+      const unit = { id: 1, x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, level: 0 }
+      const result = findClosestOre(unit, mapGrid)
+
+      expect(result).toEqual({ x: 8, y: 8 })
+    })
+
     it('skips tiles targeted by other units', () => {
       mapGrid[4][4].ore = true
       mapGrid[8][8].ore = true

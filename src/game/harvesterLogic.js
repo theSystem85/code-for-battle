@@ -17,6 +17,13 @@ import {
   showUnloadingFeedback
 } from '../logic.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { showNotification } from '../ui/notifications.js'
+import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
+import {
+  canHarvesterHarvestTile,
+  getHarvesterMaxHarvestDensity,
+  getTileDensity
+} from './harvesterEligibility.js'
 
 // Track tiles currently being harvested
 const harvestedTiles = new Set()
@@ -35,6 +42,7 @@ const HARVESTER_ALTERNATIVE_ORE_RETRY_MIN_DELAY_MS = 3000
 const HARVESTER_ALTERNATIVE_ORE_RETRY_MAX_DELAY_MS = 5000
 const HARVESTER_ORE_REPATH_INTERVAL_MS = 2000
 const HARVESTER_ORE_ARRIVAL_TOLERANCE = 1.1
+const HARVESTER_MANUAL_ORE_ARRIVAL_TOLERANCE = 0.25
 const HARVESTER_MANUAL_HOLD_ARRIVAL_TOLERANCE = 0.25
 const HARVESTER_MANUAL_REPATH_INTERVAL_MS = 1000
 const HARVESTER_LONG_TERM_STAGNATION_MS = 60000
@@ -42,25 +50,9 @@ const HARVESTER_LONG_TERM_RECOVERY_COOLDOWN_MS = 5000
 const HARVESTER_GOAL_PROGRESS_EPSILON_TILES = 0.2
 const HARVESTER_BASE_CARGO_VALUE = 1000
 
-function getTileDensity(tile, isSeed = false) {
-  if (!tile) return 1
-  const raw = isSeed ? tile.seedCrystalDensity : tile.oreDensity
-  return Math.max(1, Math.min(5, Number.isFinite(raw) ? Math.floor(raw) : 1))
-}
-
 function getHarvesterCargoCapacity(unit) {
   const level = Math.max(0, Math.min(3, Number.isFinite(unit?.level) ? unit.level : 0))
   return HARVESTER_BASE_CARGO_VALUE * (1 + (level * 0.5))
-}
-
-function getHarvesterMaxHarvestDensity(unit) {
-  const level = Math.max(0, Math.min(3, Number.isFinite(unit?.level) ? unit.level : 0))
-  return Math.min(5, 2 + level)
-}
-
-function canHarvesterHarvestTile(unit, tile) {
-  if (!tile || !tile.ore || tile.seedCrystal) return false
-  return getTileDensity(tile, false) <= getHarvesterMaxHarvestDensity(unit)
 }
 
 function recalculateHarvesterLevelBonuses(unit) {
@@ -93,7 +85,106 @@ function getHarvesterExperienceGain(unit, moneyEarned) {
   return deliveredMoney / currentCargoCapacity
 }
 
-function updateHarvesterExperience(unit, moneyEarned) {
+function focusAndSelectHarvester(unit, gameState) {
+  if (!unit || unit.health <= 0) return
+
+  const selectedUnits = Array.isArray(window.selectedUnitsRef) ? window.selectedUnitsRef : null
+
+  if (Array.isArray(gameState?.units)) {
+    gameState.units.forEach(candidate => {
+      candidate.selected = false
+    })
+  }
+
+  if (Array.isArray(gameState?.factories)) {
+    gameState.factories.forEach(factory => {
+      factory.selected = false
+    })
+  }
+
+  if (selectedUnits) {
+    selectedUnits.length = 0
+    selectedUnits.push(unit)
+  }
+
+  unit.selected = true
+
+  const gameCanvas = document.getElementById('gameCanvas')
+  if (!gameCanvas || !Array.isArray(gameState?.mapGrid) || gameState.mapGrid.length === 0) {
+    return
+  }
+
+  const viewportWidth = getPlayableViewportWidth(gameCanvas)
+  const viewportHeight = getPlayableViewportHeight(gameCanvas)
+  if (!viewportWidth || !viewportHeight) {
+    return
+  }
+
+  const mapWidth = gameState.mapGrid[0].length * TILE_SIZE
+  const mapHeight = gameState.mapGrid.length * TILE_SIZE
+  const maxScrollX = Math.max(0, mapWidth - viewportWidth)
+  const maxScrollY = Math.max(0, mapHeight - viewportHeight)
+  const centerX = unit.x + TILE_SIZE / 2
+  const centerY = unit.y + TILE_SIZE / 2
+  const targetX = Math.max(0, Math.min(centerX - viewportWidth / 2, maxScrollX))
+  const targetY = Math.max(0, Math.min(centerY - viewportHeight / 2, maxScrollY))
+
+  if (gameState.dragVelocity) {
+    gameState.dragVelocity.x = 0
+    gameState.dragVelocity.y = 0
+  }
+
+  if (gameState.smoothScroll) {
+    gameState.smoothScroll.targetX = targetX
+    gameState.smoothScroll.targetY = targetY
+    gameState.smoothScroll.active = true
+  } else if (gameState.scrollOffset) {
+    gameState.scrollOffset.x = targetX
+    gameState.scrollOffset.y = targetY
+  }
+}
+
+function showHarvesterPromotionNotification(unit, level, gameState) {
+  if (!unit || unit.type !== 'harvester' || unit.owner !== gameState?.humanPlayer) {
+    return
+  }
+
+  const message = `Harvester promoted to XP level ${level}`
+
+  showNotification(message, 5000, {
+    historyMessage: `${message} (${unit.id})`,
+    renderContent: (notification) => {
+      notification.style.display = 'flex'
+      notification.style.alignItems = 'center'
+      notification.style.gap = '6px'
+
+      const text = document.createElement('span')
+      text.textContent = message
+      notification.appendChild(text)
+
+      const link = document.createElement('button')
+      link.type = 'button'
+      link.textContent = 'Focus harvester'
+      link.className = 'notification__inline-link'
+      link.style.background = 'none'
+      link.style.border = '0'
+      link.style.padding = '0'
+      link.style.margin = '0'
+      link.style.color = '#ffd54f'
+      link.style.font = 'inherit'
+      link.style.textDecoration = 'underline'
+      link.style.cursor = 'pointer'
+      link.addEventListener('click', (event) => {
+        event.preventDefault()
+        focusAndSelectHarvester(unit, gameState)
+      })
+
+      notification.appendChild(link)
+    }
+  })
+}
+
+function updateHarvesterExperience(unit, moneyEarned, gameState = null) {
   if (!unit || unit.type !== 'harvester') return
 
   if (!Number.isFinite(unit.level)) {
@@ -122,6 +213,7 @@ function updateHarvesterExperience(unit, moneyEarned) {
     unit.experience -= HARVESTER_XP_FULL_UNLOADS_PER_STAR
     unit.level += 1
     recalculateHarvesterLevelBonuses(unit)
+    showHarvesterPromotionNotification(unit, unit.level, gameState)
   }
 
   if (unit.level >= 3) {
@@ -356,6 +448,17 @@ export function interruptHarvesterAutomation(unit, gameState = null) {
 }
 
 function startHarvesting(unit, tileKey, now, gameState) {
+  const [tileX, tileY] = tileKey.split(',').map(Number)
+  const targetTile = gameState?.mapGrid?.[tileY]?.[tileX]
+  if (targetTile && !canHarvesterHarvestTile(unit, targetTile)) {
+    releaseHarvestReservation(unit)
+    clearOreField(unit)
+    if (unit.manualOreTarget?.x === tileX && unit.manualOreTarget?.y === tileY) {
+      unit.manualOreTarget = null
+    }
+    return
+  }
+
   unit.harvesting = true
   unit.activeHarvestTileKey = tileKey
   unit.harvestTimer = now
@@ -485,7 +588,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         (
           !unit.path || unit.path.length === 0 ||
           !unit.moveTarget ||
-          getTileDistance(unit, unit.manualOreTarget) <= HARVESTER_ORE_ARRIVAL_TOLERANCE
+          getTileDistance(unit, unit.manualOreTarget) <= HARVESTER_MANUAL_ORE_ARRIVAL_TOLERANCE
         ) &&
         !unit.targetWorkshop && !unit.repairingAtWorkshop && !isInRepairQueue) {
       handleManualOreTarget(unit, mapGrid, occupancyMap, now, gameState)
@@ -914,7 +1017,7 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
         gameState.refineryRevenue[unit.unloadRefinery] =
           (gameState.refineryRevenue[unit.unloadRefinery] || 0) + moneyEarned
       }
-      updateHarvesterExperience(unit, moneyEarned)
+      updateHarvesterExperience(unit, moneyEarned, gameState)
       if (typeof unit.lastHarvestCycleComplete === 'number') {
         unit.harvestCycleSeconds = (now - unit.lastHarvestCycleComplete) / 1000
       }
@@ -928,7 +1031,7 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
       if (aiFactory) {
         aiFactory.budget += moneyEarned
       }
-      updateHarvesterExperience(unit, moneyEarned)
+      updateHarvesterExperience(unit, moneyEarned, gameState)
     }
 
     // Clear refinery usage
@@ -1542,6 +1645,14 @@ function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.no
     return
   }
 
+  if (!canHarvesterHarvestTile(unit, mapGrid[target.y][target.x])) {
+    unit.manualOreTarget = null
+    clearOreField(unit)
+    stopMovement(unit)
+    findNewOreTarget(unit, mapGrid, occupancyMap, now)
+    return
+  }
+
   const tileKey = `${target.x},${target.y}`
 
   // Check if another harvester is already harvesting this tile
@@ -1560,7 +1671,7 @@ function handleManualOreTarget(unit, mapGrid, occupancyMap, now = performance.no
   targetedOreTiles[tileKey] = unit.id
   unit.oreField = target
 
-  if (distanceToTarget <= HARVESTER_ORE_ARRIVAL_TOLERANCE) {
+  if (distanceToTarget <= HARVESTER_MANUAL_ORE_ARRIVAL_TOLERANCE) {
     clearScheduledHarvesterAction(unit, 'retryManualOreTarget')
     startHarvesting(unit, tileKey, now, gameState)
     return

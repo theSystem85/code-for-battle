@@ -295,6 +295,10 @@ describe('config.js', () => {
       expect(UNIT_PROPERTIES.harvester.speed).toBeGreaterThan(0)
     })
 
+    it('should keep harvester rotation only 50% faster than a tank', () => {
+      expect(UNIT_PROPERTIES.harvester.rotationSpeed).toBeCloseTo(UNIT_PROPERTIES.tank_v1.rotationSpeed * 1.5)
+    })
+
     it('should have UNIT_GAS_PROPERTIES for fuel-consuming units', () => {
       expect(UNIT_GAS_PROPERTIES.tank_v1).toBeDefined()
       expect(UNIT_GAS_PROPERTIES.tank_v1.tankSize).toBeGreaterThan(0)

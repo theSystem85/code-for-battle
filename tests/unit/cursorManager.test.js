@@ -265,6 +265,22 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
   })
 
+  it('shows blocked cursor and tooltip for harvesters hovering over ore above their XP level', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas()
+    const mapGrid = createTestMapGrid(5, 5)
+    setTileAt(mapGrid, 2, 2, { ore: true, oreDensity: 4 })
+
+    const selectedUnits = [{ owner: 'player1', type: 'harvester', level: 0, x: 0, y: 0, health: 100 }]
+    const event = createMouseEvent((2 * TILE_SIZE) + 1, (2 * TILE_SIZE) + 1)
+
+    manager.updateCustomCursor(event, mapGrid, [], selectedUnits, [])
+
+    expect(canvas.classList.contains('move-blocked-mode')).toBe(true)
+    expect(manager.rangeCursorElements.rangeText.textContent).toBe('Needs XP level 2')
+    expect(manager.rangeCursorElements.container.classList.contains('visible')).toBe(true)
+  })
+
   it('uses move cursor (not blocked) for supply-only selection on friendly airstrip tile', () => {
     const manager = new CursorManager()
     const canvas = createCanvas()

@@ -11,7 +11,9 @@ import {
   MIN_MAP_TILES,
   DEFAULT_MAP_TILES_X,
   DEFAULT_MAP_TILES_Y,
+  ORE_SPREAD_INTERVAL,
   ORE_SPREAD_ENABLED,
+  setOreSpreadInterval,
   setOreSpreadEnabled,
   DESKTOP_EDGE_AUTOSCROLL_ENABLED,
   setDesktopEdgeAutoscrollEnabled,
@@ -74,6 +76,7 @@ export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
 export const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
 export const ORE_TOTAL_VALUE_STORAGE_KEY = 'rts-ore-total-value'
+export const ORE_SPREAD_INTERVAL_STORAGE_KEY = 'rts-ore-spread-interval-ms'
 const MAP_WATER_PERCENT_STORAGE_KEY = 'rts-map-water-percent'
 const MAP_ROCK_PERCENT_STORAGE_KEY = 'rts-map-rock-percent'
 const MAP_SHORE_NORTH_STORAGE_KEY = 'rts-map-shore-north'
@@ -114,6 +117,25 @@ function sanitizeOreTotalValue(value) {
   }
   const fallback = Number.isFinite(gameState.mapOreTotalValue) ? gameState.mapOreTotalValue : 64000
   return Math.floor(Math.max(0, Math.min(5000000, fallback)) / step) * step
+}
+
+function sanitizeOreSpreadIntervalMs(value, fallback = ORE_SPREAD_INTERVAL) {
+  const parsed = parseInt(value, 10)
+  if (Number.isFinite(parsed)) {
+    return Math.max(1000, Math.min(3600000, parsed))
+  }
+
+  const safeFallback = Number.isFinite(fallback) ? Math.floor(fallback) : ORE_SPREAD_INTERVAL
+  return Math.max(1000, Math.min(3600000, safeFallback))
+}
+
+function sanitizeOreSpreadIntervalSeconds(value, fallbackMs = ORE_SPREAD_INTERVAL) {
+  const parsed = parseInt(value, 10)
+  if (Number.isFinite(parsed)) {
+    return Math.max(1, Math.min(3600, parsed))
+  }
+
+  return Math.max(1, Math.min(3600, Math.round(sanitizeOreSpreadIntervalMs(fallbackMs) / 1000)))
 }
 
 function sanitizeTerrainPercent(value, fallback) {
@@ -333,8 +355,10 @@ function loadPersistedSettings() {
   try {
     const oreFieldInput = document.getElementById('mapOreFieldCount')
     const oreTotalValueInput = document.getElementById('mapOreTotalValue')
+    const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
     const storedOreFields = localStorage.getItem(ORE_FIELD_COUNT_STORAGE_KEY)
     const storedOreTotalValue = localStorage.getItem(ORE_TOTAL_VALUE_STORAGE_KEY)
+    const storedOreSpreadInterval = localStorage.getItem(ORE_SPREAD_INTERVAL_STORAGE_KEY)
 
     if (oreFieldInput && mapOverrides?.oreFieldCount) {
       const sanitized = sanitizeOreFieldCount(mapOverrides.oreFieldCount)
@@ -358,6 +382,16 @@ function loadPersistedSettings() {
       const sanitizedTotal = sanitizeOreTotalValue(gameState.mapOreTotalValue)
       oreTotalValueInput.value = sanitizedTotal
       gameState.mapOreTotalValue = sanitizedTotal
+    }
+
+    if (storedOreSpreadInterval !== null) {
+      setOreSpreadInterval(sanitizeOreSpreadIntervalMs(storedOreSpreadInterval))
+    }
+    if (oreSpreadIntervalInput) {
+      oreSpreadIntervalInput.min = 1
+      oreSpreadIntervalInput.max = 3600
+      oreSpreadIntervalInput.step = 1
+      oreSpreadIntervalInput.value = sanitizeOreSpreadIntervalSeconds(oreSpreadIntervalInput.value || null, ORE_SPREAD_INTERVAL)
     }
   } catch (e) {
     window.logger.warn('Failed to load ore map settings from localStorage:', e)
@@ -752,6 +786,7 @@ class Game {
     const mapHeightInput = document.getElementById('mapHeightTiles')
     const oreFieldInput = document.getElementById('mapOreFieldCount')
     const oreTotalValueInput = document.getElementById('mapOreTotalValue')
+    const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
     const waterPercentInput = document.getElementById('mapWaterPercent')
     const rockPercentInput = document.getElementById('mapRockPercent')
     const shoreNorthCheckbox = document.getElementById('mapShoreNorthCheckbox')
@@ -885,6 +920,24 @@ class Game {
       })
     }
 
+    if (oreSpreadIntervalInput) {
+      oreSpreadIntervalInput.min = 1
+      oreSpreadIntervalInput.max = 3600
+      oreSpreadIntervalInput.step = 1
+      oreSpreadIntervalInput.value = sanitizeOreSpreadIntervalSeconds(oreSpreadIntervalInput.value || null, ORE_SPREAD_INTERVAL)
+      oreSpreadIntervalInput.addEventListener('change', () => {
+        const seconds = sanitizeOreSpreadIntervalSeconds(oreSpreadIntervalInput.value, ORE_SPREAD_INTERVAL)
+        const intervalMs = seconds * 1000
+        oreSpreadIntervalInput.value = seconds
+        setOreSpreadInterval(intervalMs)
+        try {
+          localStorage.setItem(ORE_SPREAD_INTERVAL_STORAGE_KEY, intervalMs.toString())
+        } catch (err) {
+          window.logger.warn('Failed to save ore spread interval to localStorage:', err)
+        }
+      })
+    }
+
     if (waterPercentInput) {
       waterPercentInput.min = 0
       waterPercentInput.max = 50
@@ -918,6 +971,7 @@ class Game {
     const mapSettingsContent = document.getElementById('mapSettingsContent')
     const mapSettingsToggleIcon = document.getElementById('mapSettingsToggleIcon')
     const oreCheckbox = document.getElementById('oreSpreadCheckbox')
+    const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
     const shadowCheckbox = document.getElementById('shadowOfWarCheckbox')
     const edgeAutoscrollCheckbox = document.getElementById('desktopEdgeAutoscrollToggle')
     const selectionHudModeSelect = document.getElementById('selectionHudModeSelect')
@@ -1033,6 +1087,13 @@ class Game {
 
     if (oreCheckbox) {
       oreCheckbox.checked = ORE_SPREAD_ENABLED
+    }
+
+    if (oreSpreadIntervalInput) {
+      oreSpreadIntervalInput.min = 1
+      oreSpreadIntervalInput.max = 3600
+      oreSpreadIntervalInput.step = 1
+      oreSpreadIntervalInput.value = sanitizeOreSpreadIntervalSeconds(ORE_SPREAD_INTERVAL, ORE_SPREAD_INTERVAL)
     }
 
     if (shadowCheckbox) {

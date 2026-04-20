@@ -127,6 +127,55 @@ export function getOreDensityForDistance(distanceFromSeed, clusterRadius, seedDe
   return clamp(density, 1, normalizedSeedDensity)
 }
 
+export function allocateOreFieldCandidateDensities(candidates, unitsToAllocate) {
+  const remainingCandidates = Array.isArray(candidates)
+    ? candidates.map(candidate => ({
+      maxDensity: clamp(Math.floor(candidate?.maxDensity || 0), 0, 5),
+      assignedDensity: 0
+    }))
+    : []
+  let remainingUnits = Math.max(0, Math.floor(unitsToAllocate || 0))
+
+  // First spread density-1 ore across the nearest reachable tiles so even small
+  // starting fields expose low-tier ore before inner tiles get richer.
+  for (const candidate of remainingCandidates) {
+    if (remainingUnits <= 0) {
+      break
+    }
+
+    if (candidate.maxDensity <= 0) {
+      continue
+    }
+
+    candidate.assignedDensity = 1
+    remainingUnits -= 1
+  }
+
+  while (remainingUnits > 0) {
+    let assignedThisPass = false
+
+    for (const candidate of remainingCandidates) {
+      if (remainingUnits <= 0) {
+        break
+      }
+
+      if (candidate.assignedDensity <= 0 || candidate.assignedDensity >= candidate.maxDensity) {
+        continue
+      }
+
+      candidate.assignedDensity += 1
+      remainingUnits -= 1
+      assignedThisPass = true
+    }
+
+    if (!assignedThisPass) {
+      break
+    }
+  }
+
+  return remainingCandidates.map(candidate => candidate.assignedDensity)
+}
+
 function drawOrthogonalStreetPath(grid, start, end, type) {
   let x = start.x
   let y = start.y
@@ -534,7 +583,6 @@ function buildOreCandidatesForSeed(seedCluster, mapGrid, mapWidth, mapHeight, fa
 
 function distributeOreAcrossSeeds(seedClusters, mapGrid, mapWidth, mapHeight, factoryPositions, totalOreValue) {
   const oreValueStep = 1000
-  const densityPerTileMax = 5
   const totalUnits = Math.floor(Math.max(0, totalOreValue) / oreValueStep)
   if (totalUnits <= 0 || seedClusters.length === 0) {
     return
@@ -551,19 +599,24 @@ function distributeOreAcrossSeeds(seedClusters, mapGrid, mapWidth, mapHeight, fa
     }
 
     const candidates = buildOreCandidatesForSeed(seedCluster, mapGrid, mapWidth, mapHeight, factoryPositions)
-    let candidateIndex = 0
-    while (unitsForSeed > 0 && candidateIndex < candidates.length) {
-      const candidate = candidates[candidateIndex]
+    const candidateStates = candidates.map(candidate => ({
+      ...candidate,
+      maxDensity: getOreDensityForDistance(candidate.distance, seedCluster.radius || 4, seedCluster.seedDensity)
+    }))
+    const assignedDensities = allocateOreFieldCandidateDensities(candidateStates, unitsForSeed)
+
+    assignedDensities.forEach((assignDensity, candidateIndex) => {
+      if (assignDensity <= 0) {
+        return
+      }
+
+      const candidate = candidateStates[candidateIndex]
       const tile = mapGrid[candidate.y][candidate.x]
-      const assignDensity = Math.min(densityPerTileMax, unitsForSeed)
       tile.ore = true
       tile.oreDensity = Math.max(tile.oreDensity || 0, assignDensity)
       tile.seedCrystal = false
       tile.seedCrystalDensity = 0
-      unitsForSeed -= assignDensity
-      candidateIndex += 1
-    }
-
+    })
   })
 }
 
