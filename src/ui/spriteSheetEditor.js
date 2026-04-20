@@ -1213,6 +1213,7 @@ function openModal(state) {
   if (state.previewPlaying && state.mode === 'animated') {
     startAnimationPreviewLoop(state)
   }
+  state.onModalOpened?.()
 }
 
 function closeModal(state) {
@@ -1228,6 +1229,7 @@ function closeModal(state) {
     cancelAnimationFrame(state.previewFrameHandle)
     state.previewFrameHandle = null
   }
+  state.onModalClosed?.()
 }
 
 function ensureSheetPathInMode(state, sheetPath, label, mode) {
@@ -1492,6 +1494,9 @@ export async function initSpriteSheetEditor(options = {}) {
     canvasWrap: document.getElementById('sseCanvasWrap'),
     canvasViewport: document.getElementById('sseCanvasViewport'),
     canvas: document.getElementById('sseTileCanvas'),
+    root: document.getElementById('sseRoot'),
+    sidebar: document.getElementById('sseSidebar'),
+    sidebarMenuToggle: document.getElementById('sseSidebarMenuToggle'),
     sheetPaths: [],
     customSheetLabels: {},
     staticSheetPaths: [],
@@ -1530,6 +1535,8 @@ export async function initSpriteSheetEditor(options = {}) {
     isModalOpen: false,
     staticModeSnapshot: null,
     animatedModeSnapshot: null,
+    sidebarHidden: false,
+    sidebarSwipeState: null,
     onSheetDataChange: options.onSheetDataChange || null,
     onAnimationSheetDataChange: options.onAnimationSheetDataChange || null
   }
@@ -1616,6 +1623,108 @@ export async function initSpriteSheetEditor(options = {}) {
     if (event.target === state.modal) {
       closeModal(state)
     }
+  })
+
+  const setSidebarHidden = (hidden) => {
+    state.sidebarHidden = Boolean(hidden)
+    state.root?.classList.toggle('sprite-sheet-editor--sidebar-hidden', state.sidebarHidden)
+    if (state.sidebarMenuToggle) {
+      state.sidebarMenuToggle.hidden = !state.sidebarHidden
+      state.sidebarMenuToggle.setAttribute('aria-expanded', state.sidebarHidden ? 'false' : 'true')
+    }
+    if (state.isModalOpen) {
+      requestAnimationFrame(() => {
+        if (!state.image) return
+        snapZoomToCanvas(state)
+      })
+    }
+  }
+
+  const shouldUseMobileSseSidebar = () => {
+    const body = document.body
+    if (!body) return false
+    return body.classList.contains('mobile-landscape') || body.classList.contains('mobile-portrait')
+  }
+
+  state.sidebarMenuToggle?.addEventListener('click', () => {
+    if (!shouldUseMobileSseSidebar()) return
+    setSidebarHidden(!state.sidebarHidden)
+  })
+
+  state.modal.addEventListener('touchstart', (event) => {
+    if (!state.isModalOpen || !shouldUseMobileSseSidebar()) {
+      state.sidebarSwipeState = null
+      return
+    }
+
+    if (!event.touches || event.touches.length !== 1) {
+      state.sidebarSwipeState = null
+      return
+    }
+
+    const touch = event.touches[0]
+    const target = event.target
+    const startedInsideSidebar = !!(target && typeof target.closest === 'function' && target.closest('#sseSidebar'))
+    const edgeThreshold = 28
+
+    if (!state.sidebarHidden && startedInsideSidebar) {
+      state.sidebarSwipeState = {
+        type: 'hide',
+        identifier: touch.identifier,
+        startX: touch.clientX,
+        startY: touch.clientY
+      }
+      return
+    }
+
+    if (state.sidebarHidden && touch.clientX <= edgeThreshold) {
+      state.sidebarSwipeState = {
+        type: 'show',
+        identifier: touch.identifier,
+        startX: touch.clientX,
+        startY: touch.clientY
+      }
+      return
+    }
+
+    state.sidebarSwipeState = null
+  }, { passive: true })
+
+  state.modal.addEventListener('touchmove', (event) => {
+    const swipeState = state.sidebarSwipeState
+    if (!swipeState || !event.touches) return
+    const touch = Array.from(event.touches).find(t => t.identifier === swipeState.identifier)
+    if (!touch) return
+    const deltaX = Math.abs(touch.clientX - swipeState.startX)
+    const deltaY = Math.abs(touch.clientY - swipeState.startY)
+    if (deltaX > deltaY && deltaX > 8) {
+      event.preventDefault()
+    }
+  }, { passive: false })
+
+  const endSidebarSwipe = (event) => {
+    const swipeState = state.sidebarSwipeState
+    if (!swipeState || !event.changedTouches) return
+    const touch = Array.from(event.changedTouches).find(t => t.identifier === swipeState.identifier)
+    if (!touch) return
+
+    const deltaX = touch.clientX - swipeState.startX
+    const deltaY = touch.clientY - swipeState.startY
+    const activationThreshold = 40
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      if (swipeState.type === 'hide' && deltaX < -activationThreshold) {
+        setSidebarHidden(true)
+      } else if (swipeState.type === 'show' && deltaX > activationThreshold) {
+        setSidebarHidden(false)
+      }
+    }
+
+    state.sidebarSwipeState = null
+  }
+
+  state.modal.addEventListener('touchend', endSidebarSwipe)
+  state.modal.addEventListener('touchcancel', () => {
+    state.sidebarSwipeState = null
   })
 
   state.modeStaticBtn?.addEventListener('click', () => {
@@ -1840,6 +1949,14 @@ export async function initSpriteSheetEditor(options = {}) {
       }
     }
   })
+
+  state.onModalOpened = () => {
+    const mobileMode = shouldUseMobileSseSidebar()
+    setSidebarHidden(mobileMode)
+  }
+  state.onModalClosed = () => {
+    setSidebarHidden(false)
+  }
 
   bindCanvasInteractions(state)
   refreshAnimationPreview(state)

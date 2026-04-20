@@ -80,6 +80,7 @@
 - [x] Extend AGF to selected defensive buildings so box-selected enemy targets are queued (FIFO) and resolve rocket/artillery forced-target no-fire regression by fixing building force-target acquisition.
 - [x] Allow selected defense buildings to queue forced attack targets in FIFO order and show numbered red target indicators on queued enemies.
 - [x] ✅ Consolidated all F22 (non-street) chat requirements into a single numbered spec checklist with conflict resolution (latest wins), parallel agent clusters by file ownership, and explicit implementation vs gameplay-verification status markers.
+- [x] ✅ SSE mobile sidebar swipe parity (2026-04-20): in the Sprite Sheet Editor modal on mobile, sidebar now swipes left to hide, can be reopened via left-edge swipe or bottom-left menu toggle button, and the spritesheet workspace expands when hidden.
 - [x] ✅ F22 follow-up: adjusted airstrip spawn slot orientation/offsets, fixed top-left airstrip blocked-rect geometry, added configurable debug hotkey to cycle unit/building image opacity (100%/50%/0%), and updated occupancy overlay to render build-only street tiles in yellow.
 - [x] ✅ F22 follow-up: enforce street-only grounded taxi, fix save-load airstrip occupancy restoration, cap airstrip parking slots at 7, restore takeoff progression, disable ground engine loop behavior, and add orbit-until-RTB fuel return behavior.
 - [ ] Add `skills.md` OpenAI image generator setup for Codex workflows, including 4 prompt templates (unit sidebar/map + building sidebar/map).

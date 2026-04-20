@@ -155,3 +155,4 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - Static-mode import uses `tiles` tag assignments directly; animated-mode import must support exported animation metadata by reconstructing tile tag membership from frame indices/rects.
   - After JSON import, tag radio list, canvas overlays, animated preview, and runtime callbacks must refresh instantly without reopening SSE.
   - SSE sidebar must include a `Reset all tags` action that clears all current tile-tag assignments for the active sheet while keeping tag definitions available.
+  - On mobile SSE modal layouts, the sidebar must support swipe-left hide and swipe-right reveal parity with the main game sidebar; when hidden, a bottom-left menu toggle button reopens it and the spritesheet canvas/workspace expands to full modal width.
