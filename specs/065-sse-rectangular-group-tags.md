@@ -16,6 +16,8 @@
 4. On mouse release after group paint, `group id` auto-increments by 1 up to max 999.
 5. Single-tile clicks do not create groups; grouped assignment requires at least 2 tiles.
 6. If Group mode clicks a tile that already has a group label and no drag rectangle is formed, that tile’s group label is removed.
+7. Group drag feedback is immediate once coverage reaches at least 2 tiles, and Group-highlight overlay is yellow while drawing.
+8. Removing one tile from an existing group removes the full matching `group_X` cluster from the sheet metadata.
 
 ## Runtime grouping behavior
 1. Group definitions are valid only when a `group_X` cluster forms a perfect rectangle.
