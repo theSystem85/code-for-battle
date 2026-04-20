@@ -7,6 +7,7 @@ import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './s
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
+const GROUP_TAG_PATTERN = /^group_(\d{1,3})$/i
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -48,6 +49,7 @@ export class TextureManager {
     this.defaultCombatDecalSheetImage = null
     this.defaultCombatDecalSheetMetadata = null
     this.defaultCombatDecalTagBuckets = {}
+    this.groupedTagVariants = {}
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
   }
@@ -116,6 +118,8 @@ export class TextureManager {
         if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
         const tileRef = {
           ...tile,
+          col: Number.isFinite(tile.col) ? tile.col : Math.floor((tile.rect?.x || 0) / Math.max(1, entry.metadata?.tileSize || 64)),
+          row: Number.isFinite(tile.row) ? tile.row : Math.floor((tile.rect?.y || 0) / Math.max(1, entry.metadata?.rowHeight || entry.metadata?.tileSize || 64)),
           image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
           blendMode: entry.blendMode,
           blackKey: entry.blackKey,
@@ -190,6 +194,7 @@ export class TextureManager {
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedRenderSignature = 'off'
+      this.groupedTagVariants = {}
       this.integratedConfigVersion++
       return
     }
@@ -226,6 +231,7 @@ export class TextureManager {
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedRenderSignature = 'off'
+      this.groupedTagVariants = {}
       this.integratedConfigVersion++
       return
     }
@@ -243,7 +249,83 @@ export class TextureManager {
       .map(entry => `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}|${entry.blackKey?.cutoffBrightness ?? 'default'}|${entry.blackKey?.softenBrightness ?? 'default'}`)
       .join(';')
     this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}`
+    this.groupedTagVariants = {}
     this.integratedConfigVersion++
+  }
+
+  getGroupIdFromTags(tags = []) {
+    if (!Array.isArray(tags)) return null
+    for (const tag of tags) {
+      const match = GROUP_TAG_PATTERN.exec(`${tag || ''}`)
+      if (!match) continue
+      const id = Number.parseInt(match[1], 10)
+      if (Number.isFinite(id) && id >= 1 && id <= 999) return id
+    }
+    return null
+  }
+
+  getGroupedVariantsForTag(baseTag) {
+    if (!baseTag) return []
+    if (Array.isArray(this.groupedTagVariants[baseTag])) {
+      return this.groupedTagVariants[baseTag]
+    }
+
+    const candidates = this.getIntegratedTileCandidatesByTags([baseTag])
+    const byGroupId = new Map()
+    const variants = []
+
+    candidates.forEach((tile) => {
+      const groupId = this.getGroupIdFromTags(tile.tags)
+      if (!groupId) {
+        variants.push({
+          groupId: null,
+          width: 1,
+          height: 1,
+          area: 1,
+          tiles: [{ offsetX: 0, offsetY: 0, tile }]
+        })
+        return
+      }
+      if (!byGroupId.has(groupId)) byGroupId.set(groupId, [])
+      byGroupId.get(groupId).push(tile)
+    })
+
+    byGroupId.forEach((tiles, groupId) => {
+      if (!tiles.length) return
+      const minCol = Math.min(...tiles.map(tile => tile.col))
+      const maxCol = Math.max(...tiles.map(tile => tile.col))
+      const minRow = Math.min(...tiles.map(tile => tile.row))
+      const maxRow = Math.max(...tiles.map(tile => tile.row))
+      const width = (maxCol - minCol) + 1
+      const height = (maxRow - minRow) + 1
+      if (width * height !== tiles.length) return
+
+      const tileMap = new Map()
+      tiles.forEach((tile) => {
+        tileMap.set(`${tile.col - minCol},${tile.row - minRow}`, tile)
+      })
+
+      const layout = []
+      for (let offsetY = 0; offsetY < height; offsetY++) {
+        for (let offsetX = 0; offsetX < width; offsetX++) {
+          const tile = tileMap.get(`${offsetX},${offsetY}`)
+          if (!tile) return
+          layout.push({ offsetX, offsetY, tile })
+        }
+      }
+
+      variants.push({
+        groupId,
+        width,
+        height,
+        area: width * height,
+        tiles: layout
+      })
+    })
+
+    variants.sort((a, b) => b.area - a.area || b.width - a.width || b.height - a.height)
+    this.groupedTagVariants[baseTag] = variants
+    return variants
   }
 
   static coordHash(x, y) {

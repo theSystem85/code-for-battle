@@ -645,6 +645,8 @@ export class MapRenderer {
 
     const sotApplied = new Set()
     const scrollOffset = { x: offsetX, y: offsetY }
+    const groupedOverrides = this.buildIntegratedGroupedOverrides(mapGrid, startTileX, startTileY, endTileX, endTileY)
+    const groupedDebrisOverrides = this.buildDebrisGroupedOverrides(mapGrid, startTileX, startTileY, endTileX, endTileY)
 
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
@@ -654,7 +656,22 @@ export class MapRenderer {
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
 
         if (!(skipWaterBase && visualTileType === 'water')) {
-          this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+          const groupedOverride = groupedOverrides.get(`${x},${y}`) || null
+          if (groupedOverride) {
+            this.drawTileBase(
+              ctx,
+              x,
+              y,
+              visualTileType,
+              screenX,
+              screenY,
+              useTexture,
+              currentWaterFrame,
+              groupedOverride
+            )
+          } else {
+            this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
+          }
         }
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
@@ -670,7 +687,12 @@ export class MapRenderer {
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
 
-        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
+        const groupedDebrisOverride = groupedDebrisOverrides.get(`${x},${y}`) || null
+        if (groupedDebrisOverride) {
+          this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, groupedDebrisOverride)
+        } else {
+          this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
+        }
 
         if (tile.seedCrystal) {
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
@@ -679,6 +701,91 @@ export class MapRenderer {
         }
       }
     }
+  }
+
+  buildIntegratedGroupedOverrides(mapGrid, startTileX, startTileY, endTileX, endTileY) {
+    const overrides = new Map()
+    if (!this.textureManager?.integratedSpriteSheetMode) return overrides
+    const consumed = new Set()
+    const categories = [
+      {
+        tag: 'rocks',
+        matches: (tile) => tile?.type === 'rock'
+      },
+      {
+        tag: 'decorative',
+        matches: (tile, x, y) => tile?.type === 'land' && this.textureManager.getLandClassificationTag(x, y) === 'decorative'
+      }
+    ]
+
+    const markPlacement = (x, y, variant) => {
+      variant.tiles.forEach(({ offsetX, offsetY, tile }) => {
+        const key = `${x + offsetX},${y + offsetY}`
+        overrides.set(key, { image: tile.image, rect: tile.rect, tags: tile.tags, sheetPath: tile.sheetPath })
+        consumed.add(key)
+      })
+    }
+
+    for (const category of categories) {
+      const variants = this.textureManager.getGroupedVariantsForTag(category.tag)
+      const groupedVariants = variants.filter(variant => variant.area > 1)
+      if (!groupedVariants.length) continue
+      for (let y = startTileY; y < endTileY; y++) {
+        for (let x = startTileX; x < endTileX; x++) {
+          const key = `${x},${y}`
+          if (consumed.has(key) || !category.matches(mapGrid[y]?.[x], x, y)) continue
+          const fitting = groupedVariants.find((variant) => {
+            for (let dy = 0; dy < variant.height; dy++) {
+              for (let dx = 0; dx < variant.width; dx++) {
+                const tx = x + dx
+                const ty = y + dy
+                if (tx < 0 || ty < 0 || ty >= mapGrid.length || tx >= (mapGrid[0]?.length || 0)) return false
+                if (consumed.has(`${tx},${ty}`) || !category.matches(mapGrid[ty]?.[tx], tx, ty)) return false
+              }
+            }
+            return true
+          })
+          if (fitting) {
+            markPlacement(x, y, fitting)
+          }
+        }
+      }
+    }
+    return overrides
+  }
+
+  buildDebrisGroupedOverrides(mapGrid, startTileX, startTileY, endTileX, endTileY) {
+    const overrides = new Map()
+    if (!this.textureManager?.integratedSpriteSheetMode) return overrides
+    const variants = this.textureManager.getGroupedVariantsForTag('debris')
+    if (!variants.length) return overrides
+    const bySize = new Map()
+    variants.filter(variant => variant.area > 1).forEach((variant) => {
+      const key = `${variant.width}x${variant.height}`
+      if (!bySize.has(key)) bySize.set(key, [])
+      bySize.get(key).push(variant)
+    })
+    for (let y = startTileY; y < endTileY; y++) {
+      for (let x = startTileX; x < endTileX; x++) {
+        const key = `${x},${y}`
+        if (overrides.has(key)) continue
+        const decal = mapGrid[y]?.[x]?.decal
+        if (decal?.tag !== 'debris') continue
+        const width = Math.max(1, Math.floor(decal?.footprintWidth || 1))
+        const height = Math.max(1, Math.floor(decal?.footprintHeight || 1))
+        const originX = Number.isFinite(decal?.originX) ? decal.originX : x
+        const originY = Number.isFinite(decal?.originY) ? decal.originY : y
+        if (x !== originX || y !== originY) continue
+        const candidates = bySize.get(`${width}x${height}`) || []
+        if (!candidates.length) continue
+        const variant = candidates[(Math.abs((x * 73856093) ^ (y * 19349663)) >>> 0) % candidates.length]
+        variant.tiles.forEach(({ offsetX, offsetY, tile }) => {
+          const mapKey = `${x + offsetX},${y + offsetY}`
+          overrides.set(mapKey, { image: tile.image, rect: tile.rect, tags: tile.tags, sheetPath: tile.sheetPath })
+        })
+      }
+    }
+    return overrides
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
@@ -768,9 +875,9 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+  drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame, groupedOverride = null) {
     if (this.textureManager.integratedSpriteSheetMode) {
-      const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
+      const integratedTile = groupedOverride || this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
         if (type === 'rock') {
           const landTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
@@ -926,7 +1033,7 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY) {
+  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY, groupedOverride = null) {
     if (!tile?.decal || typeof tile.decal !== 'object') return
     const tag = tile.decal.tag
     if (!tag) return
@@ -935,6 +1042,22 @@ export class MapRenderer {
     const variantSeed = Number.isFinite(tile.decal.variantSeed)
       ? tile.decal.variantSeed
       : ((tileX * 73856093) ^ (tileY * 19349663)) >>> 0
+
+    if (groupedOverride?.rect && groupedOverride?.image) {
+      const { rect, image } = groupedOverride
+      ctx.drawImage(
+        image,
+        rect.x,
+        rect.y,
+        rect.width,
+        rect.height,
+        screenX,
+        screenY,
+        TILE_SIZE + 1,
+        TILE_SIZE + 1
+      )
+      return
+    }
 
     if (Array.isArray(candidates) && candidates.length > 0) {
       const selected = candidates[variantSeed % candidates.length]

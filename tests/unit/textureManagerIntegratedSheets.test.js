@@ -132,4 +132,35 @@ describe('TextureManager integrated multi-sheet selection', () => {
       '/images/map/sprite_sheets/default.webp'
     ])
   })
+
+  it('builds grouped rectangular variants from group_X tags', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'sheet-group' })
+
+    await manager.setIntegratedSpriteSheetConfig({
+      enabled: true,
+      sheets: [
+        {
+          sheetPath: 'images/map/sprite_sheets/grouped.webp',
+          metadata: {
+            blendMode: 'alpha',
+            tileSize: 64,
+            rowHeight: 64,
+            borderWidth: 0,
+            tiles: {
+              '1,1': { tags: ['rocks', 'group_7'], rect: { x: 64, y: 64, width: 64, height: 64 }, col: 1, row: 1 },
+              '2,1': { tags: ['rocks', 'group_7'], rect: { x: 128, y: 64, width: 64, height: 64 }, col: 2, row: 1 }
+            }
+          }
+        }
+      ]
+    })
+
+    const variants = manager.getGroupedVariantsForTag('rocks')
+    const grouped = variants.find(variant => variant.groupId === 7)
+    expect(grouped).toBeTruthy()
+    expect(grouped.width).toBe(2)
+    expect(grouped.height).toBe(1)
+    expect(grouped.tiles).toHaveLength(2)
+  })
 })

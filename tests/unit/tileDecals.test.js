@@ -52,6 +52,10 @@ describe('tileDecals', () => {
     expect(mapGrid[0][2].decal?.tag).toBe('debris')
     expect(mapGrid[1][1].decal?.tag).toBe('debris')
     expect(mapGrid[1][2].decal?.tag).toBe('debris')
+    expect(mapGrid[0][1].decal?.originX).toBe(1)
+    expect(mapGrid[0][1].decal?.originY).toBe(0)
+    expect(mapGrid[0][1].decal?.footprintWidth).toBe(2)
+    expect(mapGrid[0][1].decal?.footprintHeight).toBe(2)
     expect(mapGrid[0][0].decal).toBeUndefined()
   })
 
