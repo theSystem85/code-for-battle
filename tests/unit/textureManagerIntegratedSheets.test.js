@@ -184,4 +184,106 @@ describe('TextureManager integrated multi-sheet selection', () => {
       seed: 0
     })).toBeTruthy()
   })
+
+  it('uses bundled crystal sheet candidates even when integrated mode is disabled', () => {
+    const manager = new TextureManager()
+    manager.defaultCrystalTagBuckets = {
+      ore: [
+        {
+          tags: ['ore', 'density_3'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ],
+      density_3: [
+        {
+          tags: ['ore', 'density_3'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ]
+    }
+
+    const selected = manager.selectCrystalTileByDensity('ore', 2, 5, 3)
+    expect(selected?.sheetPath).toBe('images/map/sprite_sheets/crystals_q90_1024x1024.webp')
+  })
+
+  it('prefers integrated crystal tags over bundled crystal defaults when both exist', () => {
+    const manager = new TextureManager()
+    manager.integratedTagBuckets = {
+      ore: [
+        {
+          tags: ['ore', 'density_2'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'custom-crystals' },
+          sheetPath: 'images/map/sprite_sheets/custom.webp'
+        }
+      ],
+      density_2: [
+        {
+          tags: ['ore', 'density_2'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'custom-crystals' },
+          sheetPath: 'images/map/sprite_sheets/custom.webp'
+        }
+      ]
+    }
+    manager.defaultCrystalTagBuckets = {
+      ore: [
+        {
+          tags: ['ore', 'density_2'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ],
+      density_2: [
+        {
+          tags: ['ore', 'density_2'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ]
+    }
+
+    const selected = manager.selectCrystalTileByDensity('ore', 1, 1, 2)
+    expect(selected?.sheetPath).toBe('images/map/sprite_sheets/custom.webp')
+  })
+
+  it('selects crystal biome underlay from bundled crystal metadata by active biome', () => {
+    const manager = new TextureManager()
+    manager.integratedBiomeTag = 'sand'
+    manager.defaultCrystalTagBuckets = {
+      sand: [
+        {
+          tags: ['sand', 'passable'],
+          rect: { x: 0, y: 64, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ],
+      passable: [
+        {
+          tags: ['sand', 'passable'],
+          rect: { x: 0, y: 64, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ]
+    }
+
+    const underlay = manager.selectCrystalBiomeUnderlayTile(3, 7)
+    expect(underlay?.tags).toContain('sand')
+    expect(underlay?.tags).toContain('passable')
+  })
+
+  it('stores biome tag updates even while integrated mode is disabled', async() => {
+    const manager = new TextureManager()
+    await manager.setIntegratedSpriteSheetConfig({ enabled: false, biomeTag: 'snow' })
+    expect(manager.integratedBiomeTag).toBe('snow')
+    expect(manager.integratedSpriteSheetMode).toBe(false)
+  })
 })

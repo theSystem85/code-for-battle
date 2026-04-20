@@ -27,6 +27,8 @@ Implement crystal density-driven harvesting where ore/seed crystals support dens
 8. Seed crystal spread rate scales with seed density (density multiplier `1x..5x`).
 9. Seed crystal density is deterministic from map seed RNG during map generation.
 10. Generated ore-field density must fall off with distance from each field's seed crystal so richer ore visually radiates outward from the seed in deterministic bands.
-11. Crystal sprite sheet `crystals_q90_1024x1024.webp` should be available in static sheet selection defaults.
+11. Crystal sprite sheet `crystals_q90_1024x1024.webp` must be used as the default ore/seed tagged runtime source even when `Custom sprite sheets` is disabled, and it must not require inclusion in the `sprite sheets to use` checklist.
 12. Selected harvesters show their XP bar in the shared bottom progress slot used by other units, while harvester cargo/load uses the ammo-side HUD bar to avoid overlap.
 13. Seed crystals should resolve integrated-sheet sprites from `red` + `density_X` tags even when those tiles no longer carry the legacy `ore` tag.
+14. If `Custom sprite sheets` is enabled and selected sheets provide matching crystal tags, those selected custom tags override bundled crystal defaults.
+15. When crystal overlays are rendered from tagged sheets, the tile underneath must still render a deterministic random passable ground tile from the currently selected biome tag so transparent crystal pixels reveal biome-consistent terrain.
