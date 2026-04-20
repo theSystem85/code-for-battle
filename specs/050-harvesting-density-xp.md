@@ -31,3 +31,4 @@ Implement crystal density-driven harvesting where ore/seed crystals support dens
 12. Selected harvesters show their XP bar in the shared bottom progress slot used by other units, while harvester cargo/load uses the ammo-side HUD bar to avoid overlap.
 13. Seed crystals should resolve integrated-sheet sprites from `red` + `density_X` tags even when those tiles no longer carry the legacy `ore` tag.
 14. If `Custom sprite sheets` is enabled and selected sheets provide matching crystal tags, those selected custom tags override bundled crystal defaults.
+15. When bundled/default crystal-sheet tiles are selected through the integrated crystal path, legacy ore atlas textures must not render underneath the same tile in the WebGL terrain pass.

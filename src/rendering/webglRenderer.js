@@ -428,7 +428,12 @@ export class GameWebGLRenderer {
     const canUseIntegratedResourceTile = Boolean(
       integratedResourceTile?.rect && integratedResourceTile?.image === this.textureManager.spriteImage
     )
-    const useTexture = canUseIntegratedResourceTile || (canUseTextures && this.textureManager.tileTextureCache?.[type]?.length)
+    const hasIntegratedResourceTile = Boolean(integratedResourceTile?.rect && integratedResourceTile?.image)
+    const useTexture = canUseIntegratedResourceTile || (
+      !hasIntegratedResourceTile &&
+      canUseTextures &&
+      this.textureManager.tileTextureCache?.[type]?.length
+    )
     const isWaterAnimated = type === 'water'
     let uvRect = [0, 0, 0, 0]
     if (isWaterAnimated) {
