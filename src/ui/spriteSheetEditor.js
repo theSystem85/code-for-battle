@@ -1239,8 +1239,19 @@ function ensureSheetPathInMode(state, sheetPath, label, mode) {
 }
 
 async function loadDroppedSheetFile(state, file) {
-  if (!file || !file.type.startsWith('image/')) {
-    setStatus(state, 'Only image files can be dropped into SSE.', 'warn')
+  if (!file) {
+    setStatus(state, 'Drop an image or JSON metadata file into SSE.', 'warn')
+    return
+  }
+
+  const isJsonFile = file.type === 'application/json' || /\.json$/i.test(file.name || '')
+  if (isJsonFile) {
+    await loadDroppedTagFile(state, file)
+    return
+  }
+
+  if (!file.type.startsWith('image/')) {
+    setStatus(state, 'Only image or JSON files can be dropped into SSE.', 'warn')
     return
   }
 
@@ -1250,6 +1261,118 @@ async function loadDroppedSheetFile(state, file) {
   renderSheetOptions(state)
   await loadSheet(state, objectUrl, { mode: state.mode })
   setStatus(state, `Loaded dropped image: ${file.name || 'image'}`)
+}
+
+async function readFileAsText(file) {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '')
+    reader.onerror = () => reject(new Error('Failed to read file'))
+    reader.readAsText(file)
+  })
+}
+
+function buildTilesFromAnimatedImport(raw, sheetMeta) {
+  const tiles = {}
+  const tileSize = Math.max(1, Number.isFinite(sheetMeta?.tileSize) ? sheetMeta.tileSize : DEFAULT_TILE_SIZE)
+  const rowHeight = Math.max(1, Number.isFinite(sheetMeta?.rowHeight) ? sheetMeta.rowHeight : tileSize)
+  const columns = Math.max(1, Number.parseInt(raw?.columns, 10) || 1)
+
+  Object.entries(raw?.animations || {}).forEach(([tag, animation]) => {
+    if (!tag) return
+    const frameIndices = Array.isArray(animation?.frameIndices) ? animation.frameIndices : []
+    frameIndices.forEach((frameIndex) => {
+      const parsed = Number.parseInt(frameIndex, 10)
+      if (!Number.isFinite(parsed) || parsed < 0) return
+      const col = parsed % columns
+      const row = Math.floor(parsed / columns)
+      const tileKey = makeTileKey(col, row)
+      if (!tiles[tileKey]) {
+        tiles[tileKey] = { tags: [] }
+      }
+      if (!tiles[tileKey].tags.includes(tag)) {
+        tiles[tileKey].tags.push(tag)
+      }
+    })
+  })
+
+  if (!Object.keys(tiles).length) {
+    Object.entries(raw?.animations || {}).forEach(([tag, animation]) => {
+      if (!tag) return
+      const frameRects = Array.isArray(animation?.frameRects) ? animation.frameRects : []
+      frameRects.forEach((rect) => {
+        if (!rect || typeof rect !== 'object') return
+        const col = Math.floor(((Number(rect.x) || 0) - (sheetMeta?.borderWidth || 0)) / tileSize)
+        const row = Math.floor(((Number(rect.y) || 0) - (sheetMeta?.borderWidth || 0)) / rowHeight)
+        if (col < 0 || row < 0) return
+        const tileKey = makeTileKey(col, row)
+        if (!tiles[tileKey]) {
+          tiles[tileKey] = { tags: [] }
+        }
+        if (!tiles[tileKey].tags.includes(tag)) {
+          tiles[tileKey].tags.push(tag)
+        }
+      })
+    })
+  }
+
+  return tiles
+}
+
+function notifyActiveDataChange(state) {
+  if (!state.activeData || !state.image) return
+  if (state.mode === 'animated') {
+    state.onAnimationSheetDataChange?.(toAnimationSerializableData(state.activeData, state.image))
+    return
+  }
+  state.onSheetDataChange?.(toSerializableData(state.activeData, state.image))
+}
+
+async function loadDroppedTagFile(state, file) {
+  if (!state.activeData || !state.image) {
+    setStatus(state, 'Load a sprite sheet first, then drop JSON tag metadata.', 'warn')
+    return
+  }
+
+  try {
+    const rawText = await readFileAsText(file)
+    const parsed = safeParseJson(rawText, null)
+    if (!parsed || typeof parsed !== 'object') {
+      setStatus(state, 'Invalid JSON metadata file.', 'error')
+      return
+    }
+
+    const sheetPath = state.activeData.sheetPath
+    const baseTags = getActiveDefaultTags(state)
+    const imported = { ...parsed, sheetPath }
+    if (state.mode === 'animated' && (!imported.tiles || typeof imported.tiles !== 'object')) {
+      imported.tiles = buildTilesFromAnimatedImport(imported, {
+        tileSize: imported.tileSize,
+        rowHeight: imported.rowHeight,
+        borderWidth: imported.borderWidth
+      })
+    }
+
+    state.activeData = normalizeSheetDataForTags(imported, sheetPath, baseTags)
+    if (!state.activeData.tags.includes(state.activeTag)) {
+      state.activeTag = state.activeData.tags[0] || baseTags[0]
+    }
+
+    if (state.tileSizeInput) state.tileSizeInput.value = state.activeData.tileSize
+    if (state.rowHeightInput) state.rowHeightInput.value = state.activeData.rowHeight || state.activeData.tileSize
+    if (state.borderWidthInput) state.borderWidthInput.value = state.activeData.borderWidth
+    if (state.blendModeSelect) state.blendModeSelect.value = normalizeSpriteSheetBlendMode(state.activeData.blendMode)
+
+    saveDataToLocalStorage(state.activeData, state.mode)
+    drawSseCanvas(state)
+    renderTagList(state)
+    updateApplyAllButtonLabel(state)
+    refreshAnimationPreview(state)
+    notifyActiveDataChange(state)
+    setStatus(state, `Loaded tag metadata from ${file.name || 'JSON file'}.`)
+  } catch {
+    setStatus(state, 'Failed to read dropped JSON metadata file.', 'error')
+  }
 }
 
 function positionSheetInfoPopover(state) {
@@ -1362,6 +1485,7 @@ export async function initSpriteSheetEditor(options = {}) {
     zoomFitBtn: document.getElementById('sseZoomFitBtn'),
     zoomValueEl: document.getElementById('sseZoomValue'),
     applyCurrentTagAllBtn: document.getElementById('sseApplyCurrentTagAllBtn'),
+    resetAllTagsBtn: document.getElementById('sseResetAllTagsBtn'),
     applyTagsBtn: document.getElementById('sseApplyTagsBtn'),
     tagList: document.getElementById('sseTagList'),
     statusEl: document.getElementById('sseStatus'),
@@ -1674,6 +1798,18 @@ export async function initSpriteSheetEditor(options = {}) {
     } else {
       setStatus(state, `No tile changes for tag "${state.activeTag}".`)
     }
+  })
+
+  state.resetAllTagsBtn?.addEventListener('click', () => {
+    if (!state.activeData) return
+    state.activeData.tiles = {}
+    drawSseCanvas(state)
+    renderTagList(state)
+    updateApplyAllButtonLabel(state)
+    refreshAnimationPreview(state)
+    saveDataToLocalStorage(state.activeData, state.mode)
+    notifyActiveDataChange(state)
+    setStatus(state, 'Reset all tags for the current sprite sheet.')
   })
 
   updateZoomDisplay(state)
