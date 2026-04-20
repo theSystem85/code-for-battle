@@ -156,3 +156,4 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - After JSON import, tag radio list, canvas overlays, animated preview, and runtime callbacks must refresh instantly without reopening SSE.
   - SSE sidebar must include a `Reset all tags` action that clears all current tile-tag assignments for the active sheet while keeping tag definitions available.
   - On mobile SSE modal layouts, the sidebar must support swipe-left hide and swipe-right reveal parity with the main game sidebar; when hidden, a bottom-left menu toggle button reopens it and the spritesheet canvas/workspace expands to full modal width.
+  - Mobile/touch SSE must support tap-drag tile painting on the spritesheet canvas (same behavior parity as desktop click-drag painting), keep the menu-toggle hidden whenever the sidebar is expanded, and add safe-area-aware top/bottom sidebar padding to avoid iOS/browser bar overlap.
