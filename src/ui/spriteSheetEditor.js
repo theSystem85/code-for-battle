@@ -408,10 +408,13 @@ function drawSseCanvas(state) {
       const { col, row } = parseTileKey(tileKey)
       const x = col * tileSize
       const y = row * rowHeight
-      const isActiveTagTile = state.activeTag && tileData.tags.includes(state.activeTag)
+      const isGroupTile = Array.isArray(tileData.tags) && tileData.tags.some(tag => /^group_\d+$/.test(tag))
+      const isActiveTagTile = state.activeTag === 'group'
+        ? isGroupTile
+        : (state.activeTag && tileData.tags.includes(state.activeTag))
 
       if (isActiveTagTile) {
-        ctx.fillStyle = 'rgba(255, 0, 0, 0.33)'
+        ctx.fillStyle = state.activeTag === 'group' ? 'rgba(255, 221, 0, 0.38)' : 'rgba(255, 0, 0, 0.33)'
         ctx.fillRect(x, y, tileSize, rowHeight)
       }
 
@@ -971,13 +974,25 @@ function removeGroupTagsFromTile(state, col, row) {
   const data = state.activeData
   if (!data) return false
   const tileKey = makeTileKey(col, row)
-  const entry = ensureTileRecord(data, tileKey)
-  const originalLength = entry.tags.length
-  entry.tags = (entry.tags || []).filter(tag => tag !== 'group' && !/^group_\d+$/.test(tag))
-  if (!entry.tags.length) {
-    delete data.tiles[tileKey]
-  }
-  return originalLength !== entry.tags.length
+  const entry = data.tiles?.[tileKey]
+  if (!entry?.tags?.length) return false
+  const groupTag = entry.tags.find(tag => /^group_\d+$/.test(tag))
+  if (!groupTag) return false
+
+  let changed = false
+  Object.entries(data.tiles || {}).forEach(([key, value]) => {
+    if (!value?.tags?.includes(groupTag)) return
+    const next = value.tags.filter(tag => tag !== 'group' && !/^group_\d+$/.test(tag))
+    if (next.length !== value.tags.length) {
+      changed = true
+      if (next.length) {
+        value.tags = next
+      } else {
+        delete data.tiles[key]
+      }
+    }
+  })
+  return changed
 }
 
 function applyGroupedRectangle(state) {
@@ -1091,6 +1106,11 @@ function bindCanvasInteractions(state) {
       bounds.maxCol = Math.max(bounds.maxCol, tile.col)
       bounds.minRow = Math.min(bounds.minRow, tile.row)
       bounds.maxRow = Math.max(bounds.maxRow, tile.row)
+      const width = bounds.maxCol - bounds.minCol + 1
+      const height = bounds.maxRow - bounds.minRow + 1
+      if ((width * height) >= 2) {
+        applyGroupedRectangle(state)
+      }
     } else {
       const key = makeTileKey(tile.col, tile.row)
       if (state.dragVisited.has(key)) return
@@ -1111,7 +1131,6 @@ function bindCanvasInteractions(state) {
       const height = bounds ? (bounds.maxRow - bounds.minRow + 1) : 0
       const groupedTileCount = width * height
       if (groupedTileCount >= 2) {
-        applyGroupedRectangle(state)
         const nextGroupId = Math.min(999, clampGroupId(state.groupIdInput.value) + 1)
         state.groupIdInput.value = `${nextGroupId}`
         state.currentGroupId = nextGroupId
