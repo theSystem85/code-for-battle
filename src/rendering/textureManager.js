@@ -116,7 +116,7 @@ export class TextureManager {
       if (!entry?.metadata?.tiles || !entry?.image) return
       Object.values(entry.metadata.tiles).forEach((tile) => {
         if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
-        const grouped = tile.tags.includes('group') && TextureManager.getGroupTagId(tile.tags)
+        const grouped = TextureManager.getGroupTagId(tile.tags)
         if (grouped) return
         const tileRef = {
           ...tile,
@@ -154,7 +154,6 @@ export class TextureManager {
       if (!metadataTiles || !entry?.image) return
       Object.values(metadataTiles).forEach((tile) => {
         if (!tile?.rect || !Array.isArray(tile.tags)) return
-        if (!tile.tags.includes('group')) return
         const groupLabel = TextureManager.getGroupTagId(tile.tags)
         if (!groupLabel) return
         const sheetGroups = groupsBySheet.get(entry.sheetPath) || {}
