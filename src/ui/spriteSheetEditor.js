@@ -963,8 +963,21 @@ function applyGroupTagToTile(state, col, row, groupId) {
   const entry = ensureTileRecord(data, tileKey)
   const groupLabel = getGroupLabelTag(groupId)
   const nextTags = (entry.tags || []).filter(tag => tag !== 'group' && !/^group_\d+$/.test(tag))
-  nextTags.push('group', groupLabel)
+  nextTags.push(groupLabel)
   entry.tags = Array.from(new Set(nextTags))
+}
+
+function removeGroupTagsFromTile(state, col, row) {
+  const data = state.activeData
+  if (!data) return false
+  const tileKey = makeTileKey(col, row)
+  const entry = ensureTileRecord(data, tileKey)
+  const originalLength = entry.tags.length
+  entry.tags = (entry.tags || []).filter(tag => tag !== 'group' && !/^group_\d+$/.test(tag))
+  if (!entry.tags.length) {
+    delete data.tiles[tileKey]
+  }
+  return originalLength !== entry.tags.length
 }
 
 function applyGroupedRectangle(state) {
@@ -1039,13 +1052,16 @@ function bindCanvasInteractions(state) {
     const isGroupMode = state.activeTag === 'group'
     state.dragMode = isGroupMode ? 'group' : 'tag'
     if (isGroupMode) {
+      const key = makeTileKey(tile.col, tile.row)
+      const existing = state.activeData.tiles?.[key]
+      state.groupStartHadGroupTag = Boolean(existing?.tags?.some(tag => /^group_\d+$/.test(tag)))
+      state.groupDragStartTile = { col: tile.col, row: tile.row }
       state.groupDragBounds = {
         minCol: tile.col,
         maxCol: tile.col,
         minRow: tile.row,
         maxRow: tile.row
       }
-      applyGroupedRectangle(state)
     } else {
       const key = makeTileKey(tile.col, tile.row)
       state.dragVisited.add(key)
@@ -1075,7 +1091,6 @@ function bindCanvasInteractions(state) {
       bounds.maxCol = Math.max(bounds.maxCol, tile.col)
       bounds.minRow = Math.min(bounds.minRow, tile.row)
       bounds.maxRow = Math.max(bounds.maxRow, tile.row)
-      applyGroupedRectangle(state)
     } else {
       const key = makeTileKey(tile.col, tile.row)
       if (state.dragVisited.has(key)) return
@@ -1091,13 +1106,28 @@ function bindCanvasInteractions(state) {
   const endPaint = () => {
     if (!state.dragging) return
     if (state.dragMode === 'group' && state.groupIdInput) {
-      const nextGroupId = Math.min(999, clampGroupId(state.groupIdInput.value) + 1)
-      state.groupIdInput.value = `${nextGroupId}`
-      state.currentGroupId = nextGroupId
+      const bounds = state.groupDragBounds
+      const width = bounds ? (bounds.maxCol - bounds.minCol + 1) : 0
+      const height = bounds ? (bounds.maxRow - bounds.minRow + 1) : 0
+      const groupedTileCount = width * height
+      if (groupedTileCount >= 2) {
+        applyGroupedRectangle(state)
+        const nextGroupId = Math.min(999, clampGroupId(state.groupIdInput.value) + 1)
+        state.groupIdInput.value = `${nextGroupId}`
+        state.currentGroupId = nextGroupId
+      } else if (state.groupStartHadGroupTag && state.groupDragStartTile) {
+        removeGroupTagsFromTile(state, state.groupDragStartTile.col, state.groupDragStartTile.row)
+      }
+      drawSseCanvas(state)
+      renderTagList(state)
+      refreshAnimationPreview(state)
+      updateApplyAllButtonLabel(state)
     }
     state.dragging = false
     state.dragMode = null
     state.groupDragBounds = null
+    state.groupDragStartTile = null
+    state.groupStartHadGroupTag = false
     saveDataToLocalStorage(state.activeData, state.mode)
   }
 
@@ -1340,6 +1370,8 @@ export async function initSpriteSheetEditor(options = {}) {
     dragVisited: new Set(),
     dragMode: null,
     groupDragBounds: null,
+    groupDragStartTile: null,
+    groupStartHadGroupTag: false,
     currentGroupId: 1,
     showGrid: true,
     showLabels: true,

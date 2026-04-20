@@ -11,9 +11,11 @@
 2. Sidebar shows `group id` numeric input directly under `Add tag` input.
 3. When active tag is `group` and user drags on tiles:
    - The drag operation is interpreted as rectangle paint only.
-   - All tiles in the rectangle get tags `group` and `group_X`.
+   - All tiles in the rectangle get only `group_X` (no plain `group` tile tag persisted).
    - Existing `group` / `group_*` tags on affected tiles are replaced.
 4. On mouse release after group paint, `group id` auto-increments by 1 up to max 999.
+5. Single-tile clicks do not create groups; grouped assignment requires at least 2 tiles.
+6. If Group mode clicks a tile that already has a group label and no drag rectangle is formed, that tile’s group label is removed.
 
 ## Runtime grouping behavior
 1. Group definitions are valid only when a `group_X` cluster forms a perfect rectangle.

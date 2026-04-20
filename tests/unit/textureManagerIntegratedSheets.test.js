@@ -144,8 +144,8 @@ describe('TextureManager integrated multi-sheet selection', () => {
         metadata: {
           blendMode: 'black',
           tiles: {
-            '0,0': { col: 0, row: 0, tags: ['rocks', 'group', 'group_7'], rect: { x: 0, y: 0, width: 64, height: 64 } },
-            '1,0': { col: 1, row: 0, tags: ['rocks', 'group', 'group_7'], rect: { x: 64, y: 0, width: 64, height: 64 } }
+            '0,0': { col: 0, row: 0, tags: ['rocks', 'group_7'], rect: { x: 0, y: 0, width: 64, height: 64 } },
+            '1,0': { col: 1, row: 0, tags: ['rocks', 'group_7'], rect: { x: 64, y: 0, width: 64, height: 64 } }
           }
         }
       }]
@@ -168,7 +168,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
         metadata: {
           blendMode: 'black',
           tiles: {
-            '0,0': { col: 0, row: 0, tags: ['debris', 'group', 'group_3'], rect: { x: 0, y: 0, width: 64, height: 64 } }
+            '0,0': { col: 0, row: 0, tags: ['debris', 'group_3'], rect: { x: 0, y: 0, width: 64, height: 64 } }
           }
         }
       }]
