@@ -156,4 +156,32 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(left?.rect?.x).toBe(0)
     expect(right?.rect?.x).toBe(64)
   })
+
+  it('does not use grouped tiles as non-group fallback candidates', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'group-exclusive-sheet' })
+
+    await manager.setIntegratedSpriteSheetConfig({
+      enabled: true,
+      sheets: [{
+        sheetPath: 'images/map/sprite_sheets/group-exclusive.webp',
+        metadata: {
+          blendMode: 'black',
+          tiles: {
+            '0,0': { col: 0, row: 0, tags: ['debris', 'group', 'group_3'], rect: { x: 0, y: 0, width: 64, height: 64 } }
+          }
+        }
+      }]
+    })
+
+    expect(manager.getIntegratedTileCandidatesByTags(['debris'])).toEqual([])
+    expect(manager.selectIntegratedTileByTags(['debris'], 0, 0)).toBeNull()
+    expect(manager.selectGroupedTileVariant('debris', {
+      width: 1,
+      height: 1,
+      offsetX: 0,
+      offsetY: 0,
+      seed: 0
+    })).toBeTruthy()
+  })
 })

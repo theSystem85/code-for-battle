@@ -116,6 +116,8 @@ export class TextureManager {
       if (!entry?.metadata?.tiles || !entry?.image) return
       Object.values(entry.metadata.tiles).forEach((tile) => {
         if (!tile?.rect || !Array.isArray(tile.tags) || !tile.tags.length) return
+        const grouped = tile.tags.includes('group') && TextureManager.getGroupTagId(tile.tags)
+        if (grouped) return
         const tileRef = {
           ...tile,
           image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
