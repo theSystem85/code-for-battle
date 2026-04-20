@@ -313,7 +313,11 @@ function createSerializableMapTile(tile = {}) {
     decal: tile.decal && typeof tile.decal === 'object'
       ? {
         tag: typeof tile.decal.tag === 'string' ? tile.decal.tag : null,
-        variantSeed: Number.isFinite(tile.decal.variantSeed) ? tile.decal.variantSeed : 0
+        variantSeed: Number.isFinite(tile.decal.variantSeed) ? tile.decal.variantSeed : 0,
+        groupWidth: Number.isFinite(tile.decal.groupWidth) ? Math.max(1, Math.floor(tile.decal.groupWidth)) : 1,
+        groupHeight: Number.isFinite(tile.decal.groupHeight) ? Math.max(1, Math.floor(tile.decal.groupHeight)) : 1,
+        groupOriginX: Number.isFinite(tile.decal.groupOriginX) ? Math.floor(tile.decal.groupOriginX) : undefined,
+        groupOriginY: Number.isFinite(tile.decal.groupOriginY) ? Math.floor(tile.decal.groupOriginY) : undefined
       }
       : undefined,
     decalCounter: Number.isFinite(tile.decalCounter) && tile.decalCounter > 0 ? tile.decalCounter : undefined,
@@ -362,7 +366,11 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         targetTile.decal = savedTile?.decal && typeof savedTile.decal.tag === 'string'
           ? {
             tag: savedTile.decal.tag,
-            variantSeed: Number.isFinite(savedTile.decal.variantSeed) ? savedTile.decal.variantSeed : 0
+            variantSeed: Number.isFinite(savedTile.decal.variantSeed) ? savedTile.decal.variantSeed : 0,
+            groupWidth: Number.isFinite(savedTile.decal.groupWidth) ? Math.max(1, Math.floor(savedTile.decal.groupWidth)) : 1,
+            groupHeight: Number.isFinite(savedTile.decal.groupHeight) ? Math.max(1, Math.floor(savedTile.decal.groupHeight)) : 1,
+            groupOriginX: Number.isFinite(savedTile.decal.groupOriginX) ? Math.floor(savedTile.decal.groupOriginX) : x,
+            groupOriginY: Number.isFinite(savedTile.decal.groupOriginY) ? Math.floor(savedTile.decal.groupOriginY) : y
           }
           : null
         targetTile.decalCounter = Number.isFinite(savedTile?.decalCounter) ? savedTile.decalCounter : 0

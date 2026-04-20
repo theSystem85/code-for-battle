@@ -645,6 +645,8 @@ export class MapRenderer {
 
     const sotApplied = new Set()
     const scrollOffset = { x: offsetX, y: offsetY }
+    const previousGroupingMap = this.groupingMapGrid
+    this.groupingMapGrid = mapGrid
 
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
@@ -679,6 +681,7 @@ export class MapRenderer {
         }
       }
     }
+    this.groupingMapGrid = previousGroupingMap
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
@@ -770,10 +773,15 @@ export class MapRenderer {
 
   drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
     if (this.textureManager.integratedSpriteSheetMode) {
-      const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
+      const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+      const integratedTile = mapGrid
+        ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid })
+        : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
         if (type === 'rock') {
-          const landTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
+          const landTile = mapGrid
+            ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
+            : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
           if (!this.drawIntegratedTileImage(ctx, landTile, screenX, screenY)) {
             this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
           }
@@ -931,10 +939,34 @@ export class MapRenderer {
     const tag = tile.decal.tag
     if (!tag) return
 
-    const candidates = this.textureManager.getDecalTileCandidatesByTags([tag])
     const variantSeed = Number.isFinite(tile.decal.variantSeed)
       ? tile.decal.variantSeed
       : ((tileX * 73856093) ^ (tileY * 19349663)) >>> 0
+
+    const groupWidth = Math.max(1, Math.floor(tile.decal.groupWidth || 1))
+    const groupHeight = Math.max(1, Math.floor(tile.decal.groupHeight || 1))
+    const groupOriginX = Number.isFinite(tile.decal.groupOriginX) ? Math.floor(tile.decal.groupOriginX) : tileX
+    const groupOriginY = Number.isFinite(tile.decal.groupOriginY) ? Math.floor(tile.decal.groupOriginY) : tileY
+    const groupOffsetX = tileX - groupOriginX
+    const groupOffsetY = tileY - groupOriginY
+
+    if (groupWidth > 1 || groupHeight > 1) {
+      const grouped = this.textureManager.selectGroupedTileVariant(tag, {
+        width: groupWidth,
+        height: groupHeight,
+        offsetX: groupOffsetX,
+        offsetY: groupOffsetY,
+        seed: variantSeed,
+        includeDefaultDecals: true
+      })
+      if (grouped?.rect && grouped?.image) {
+        const { rect, image } = grouped
+        ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+        return
+      }
+    }
+
+    const candidates = this.textureManager.getDecalTileCandidatesByTags([tag])
 
     if (Array.isArray(candidates) && candidates.length > 0) {
       const selected = candidates[variantSeed % candidates.length]

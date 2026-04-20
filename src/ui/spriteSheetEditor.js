@@ -35,7 +35,8 @@ export const DEFAULT_SSE_TAGS = [
   'rocks',
   'concrete',
   'street',
-  'water'
+  'water',
+  'group'
 ]
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
@@ -188,6 +189,16 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
 
 function makeTileKey(col, row) {
   return `${col},${row}`
+}
+
+function getGroupLabelTag(groupId) {
+  return `group_${groupId}`
+}
+
+function clampGroupId(value) {
+  const parsed = Number.parseInt(value, 10)
+  if (!Number.isFinite(parsed)) return 1
+  return Math.max(1, Math.min(999, parsed))
 }
 
 function parseTileKey(tileKey) {
@@ -945,6 +956,32 @@ function toggleTagOnTile(state, col, row) {
   }
 }
 
+function applyGroupTagToTile(state, col, row, groupId) {
+  const data = state.activeData
+  if (!data) return
+  const tileKey = makeTileKey(col, row)
+  const entry = ensureTileRecord(data, tileKey)
+  const groupLabel = getGroupLabelTag(groupId)
+  const nextTags = (entry.tags || []).filter(tag => tag !== 'group' && !/^group_\d+$/.test(tag))
+  nextTags.push('group', groupLabel)
+  entry.tags = Array.from(new Set(nextTags))
+}
+
+function applyGroupedRectangle(state) {
+  if (!state.groupDragBounds || !state.activeData) return 0
+  const { minCol, maxCol, minRow, maxRow } = state.groupDragBounds
+  const groupId = clampGroupId(state.groupIdInput?.value || state.currentGroupId)
+  let changed = 0
+  for (let row = minRow; row <= maxRow; row++) {
+    for (let col = minCol; col <= maxCol; col++) {
+      applyGroupTagToTile(state, col, row, groupId)
+      changed++
+    }
+  }
+  state.currentGroupId = groupId
+  return changed
+}
+
 function addTag(state, tag) {
   const normalized = `${tag || ''}`.trim().toLowerCase()
   if (!normalized) return false
@@ -999,9 +1036,21 @@ function bindCanvasInteractions(state) {
 
     state.dragging = true
     state.dragVisited.clear()
-    const key = makeTileKey(tile.col, tile.row)
-    state.dragVisited.add(key)
-    toggleTagOnTile(state, tile.col, tile.row)
+    const isGroupMode = state.activeTag === 'group'
+    state.dragMode = isGroupMode ? 'group' : 'tag'
+    if (isGroupMode) {
+      state.groupDragBounds = {
+        minCol: tile.col,
+        maxCol: tile.col,
+        minRow: tile.row,
+        maxRow: tile.row
+      }
+      applyGroupedRectangle(state)
+    } else {
+      const key = makeTileKey(tile.col, tile.row)
+      state.dragVisited.add(key)
+      toggleTagOnTile(state, tile.col, tile.row)
+    }
     drawSseCanvas(state)
     renderTagList(state)
     refreshAnimationPreview(state)
@@ -1019,10 +1068,20 @@ function bindCanvasInteractions(state) {
     const tile = getTileAtCanvasPos(state, x, y)
     if (!tile) return
 
-    const key = makeTileKey(tile.col, tile.row)
-    if (state.dragVisited.has(key)) return
-    state.dragVisited.add(key)
-    toggleTagOnTile(state, tile.col, tile.row)
+    if (state.dragMode === 'group') {
+      const bounds = state.groupDragBounds
+      if (!bounds) return
+      bounds.minCol = Math.min(bounds.minCol, tile.col)
+      bounds.maxCol = Math.max(bounds.maxCol, tile.col)
+      bounds.minRow = Math.min(bounds.minRow, tile.row)
+      bounds.maxRow = Math.max(bounds.maxRow, tile.row)
+      applyGroupedRectangle(state)
+    } else {
+      const key = makeTileKey(tile.col, tile.row)
+      if (state.dragVisited.has(key)) return
+      state.dragVisited.add(key)
+      toggleTagOnTile(state, tile.col, tile.row)
+    }
     drawSseCanvas(state)
     renderTagList(state)
     refreshAnimationPreview(state)
@@ -1031,7 +1090,14 @@ function bindCanvasInteractions(state) {
 
   const endPaint = () => {
     if (!state.dragging) return
+    if (state.dragMode === 'group' && state.groupIdInput) {
+      const nextGroupId = Math.min(999, clampGroupId(state.groupIdInput.value) + 1)
+      state.groupIdInput.value = `${nextGroupId}`
+      state.currentGroupId = nextGroupId
+    }
     state.dragging = false
+    state.dragMode = null
+    state.groupDragBounds = null
     saveDataToLocalStorage(state.activeData, state.mode)
   }
 
@@ -1237,6 +1303,7 @@ export async function initSpriteSheetEditor(options = {}) {
     blendModeSelect: document.getElementById('sseBlendModeSelect'),
     newTagInput: document.getElementById('sseNewTagInput'),
     addTagBtn: document.getElementById('sseAddTagBtn'),
+    groupIdInput: document.getElementById('sseGroupIdInput'),
     showGridCheckbox: document.getElementById('sseShowGridCheckbox'),
     showLabelsCheckbox: document.getElementById('sseShowLabelsCheckbox'),
     showTaggedOverlayCheckbox: document.getElementById('sseShowTaggedOverlayCheckbox'),
@@ -1271,6 +1338,9 @@ export async function initSpriteSheetEditor(options = {}) {
     inertiaFrame: null,
     dragging: false,
     dragVisited: new Set(),
+    dragMode: null,
+    groupDragBounds: null,
+    currentGroupId: 1,
     showGrid: true,
     showLabels: true,
     showTaggedOverlay: true,
@@ -1499,6 +1569,14 @@ export async function initSpriteSheetEditor(options = {}) {
     event.preventDefault()
     state.addTagBtn?.click()
   })
+
+  if (state.groupIdInput) {
+    state.groupIdInput.value = `${state.currentGroupId}`
+    state.groupIdInput.addEventListener('change', () => {
+      state.currentGroupId = clampGroupId(state.groupIdInput.value)
+      state.groupIdInput.value = `${state.currentGroupId}`
+    })
+  }
 
   state.showGridCheckbox?.addEventListener('change', () => {
     state.showGrid = Boolean(state.showGridCheckbox.checked)
