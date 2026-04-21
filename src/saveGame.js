@@ -1846,7 +1846,7 @@ export function exportSaveGame(key) {
 }
 
 export async function importSaveGameFromFile(file) {
-  const importedEntry = await importSaveDataFromFile(file)
+  const importedEntry = await importSaveDataFromFile(file, { persistToLocalStorage: true, includeReplayPayload: true })
   return importedEntry?.type === 'save' ? importedEntry : null
 }
 
@@ -1857,7 +1857,11 @@ function isImportedReplayPayload(importedObj) {
     && Array.isArray(importedObj.commands)
 }
 
-async function importSaveDataFromFile(file) {
+async function importSaveDataFromFile(file, options = {}) {
+  const {
+    persistToLocalStorage = true,
+    includeReplayPayload = true
+  } = options
   if (!file || typeof localStorage === 'undefined') return null
 
   const fileText = await file.text()
@@ -1872,6 +1876,10 @@ async function importSaveDataFromFile(file) {
   }
 
   if (isImportedReplayPayload(importedObj)) {
+    if (!includeReplayPayload) {
+      showNotification('Dropped replay files are ignored on map drag/drop. Use Import for replay persistence.')
+      return null
+    }
     const { importReplayFromObject } = await import('./replaySystem.js')
     const importedReplay = importReplayFromObject(importedObj)
     return importedReplay
@@ -1894,12 +1902,17 @@ async function importSaveDataFromFile(file) {
   }
 
   const saveKey = `${SAVE_STORAGE_KEY_PREFIX}${normalizedSave.label}`
-  localStorage.setItem(saveKey, JSON.stringify(normalizedSave))
-  saveQuotaExceeded = false
+  if (persistToLocalStorage) {
+    localStorage.setItem(saveKey, JSON.stringify(normalizedSave))
+    saveQuotaExceeded = false
+  }
+
   return {
     key: saveKey,
     label: normalizedSave.label,
-    type: 'save'
+    type: 'save',
+    state: normalizedSave.state,
+    persisted: persistToLocalStorage
   }
 }
 
@@ -1909,7 +1922,7 @@ export async function importSaveGamesFromFiles(fileList) {
 
   const importedEntries = []
   for (const file of files) {
-    const importedEntry = await importSaveDataFromFile(file)
+    const importedEntry = await importSaveDataFromFile(file, { persistToLocalStorage: true, includeReplayPayload: true })
     if (importedEntry) {
       importedEntries.push(importedEntry)
     }
@@ -1951,6 +1964,31 @@ export async function importSaveGamesFromFiles(fileList) {
     importSummary.push(`${importedReplays.length} replay${importedReplays.length === 1 ? '' : 's'}`)
   }
   showNotification(`Imported ${importSummary.join(' and ')}`)
+}
+
+async function loadDroppedFilesWithoutPersisting(fileList) {
+  const files = Array.from(fileList || [])
+  if (files.length === 0) return
+
+  const loadedSaveEntries = []
+  for (const file of files) {
+    const importedEntry = await importSaveDataFromFile(file, { persistToLocalStorage: false, includeReplayPayload: false })
+    if (importedEntry?.type === 'save' && typeof importedEntry.state === 'string') {
+      loadedSaveEntries.push(importedEntry)
+    }
+  }
+
+  if (loadedSaveEntries.length === 0) return
+
+  const [firstSave] = loadedSaveEntries
+  loadGameFromState(firstSave.state, firstSave.label)
+
+  if (loadedSaveEntries.length === 1) {
+    showNotification(`Loaded dropped save without localStorage import: ${firstSave.label}`)
+    return
+  }
+
+  showNotification(`Loaded ${loadedSaveEntries.length} dropped saves without localStorage import (opened ${firstSave.label})`)
 }
 
 export function updateSaveGamesList() {
@@ -2125,7 +2163,7 @@ export function initSaveGameSystem() {
       event.stopPropagation()
       const files = Array.from(event.dataTransfer?.files || [])
       if (files.length === 0) return
-      await importSaveGamesFromFiles(files)
+      await loadDroppedFilesWithoutPersisting(files)
     }, true)
 
     gameCanvas.addEventListener('dragover', (event) => {
@@ -2139,7 +2177,7 @@ export function initSaveGameSystem() {
       event.preventDefault()
       event.stopPropagation()
       const files = Array.from(event.dataTransfer.files)
-      await importSaveGamesFromFiles(files)
+      await loadDroppedFilesWithoutPersisting(files)
     })
   }
 

@@ -17,6 +17,7 @@
    - The game canvas accepts dropped files.
    - Dropped JSON save/replay files route through the same import pipeline as the import file input.
    - Browser default file-open navigation must be prevented for file drops over the map canvas (including capture-phase handling so nested listeners do not miss the event).
+   - Save files dropped on the map are loaded directly from file payload and **must not** be persisted into localStorage as imported save entries.
 2. **Save-list tooltip details**
    - For each non-builtin save row, the hover tooltip includes:
      - save file size in MB
