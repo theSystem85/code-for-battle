@@ -273,7 +273,7 @@ describe('Renderer airborne layering', () => {
       gameCanvas,
       { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
       null,
-      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true }
+      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false }
     )
   })
 
@@ -334,7 +334,7 @@ describe('Renderer airborne layering', () => {
       gameCanvas,
       { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
       null,
-      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false }
+      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false, gpuRenderedResources: false }
     )
     expect(gpuContext.clear).toHaveBeenCalledWith(gpuContext.COLOR_BUFFER_BIT)
   })

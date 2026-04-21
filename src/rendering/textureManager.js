@@ -7,6 +7,8 @@ import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './s
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
+const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -48,6 +50,9 @@ export class TextureManager {
     this.defaultCombatDecalSheetImage = null
     this.defaultCombatDecalSheetMetadata = null
     this.defaultCombatDecalTagBuckets = {}
+    this.defaultCrystalSheetImage = null
+    this.defaultCrystalSheetMetadata = null
+    this.defaultCrystalTagBuckets = {}
     this.integratedGroupedTagCatalog = {}
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.integratedConfigVersion = 0
@@ -279,6 +284,48 @@ export class TextureManager {
     }
   }
 
+  async preloadDefaultCrystalSheet() {
+    try {
+      const response = await fetch(DEFAULT_CRYSTAL_METADATA_PATH, { cache: 'no-store' })
+      if (!response.ok) {
+        this.defaultCrystalSheetMetadata = null
+        this.defaultCrystalTagBuckets = {}
+        return
+      }
+
+      const metadata = await response.json()
+      if (!this.hasTaggedIntegratedTiles(metadata)) {
+        this.defaultCrystalSheetMetadata = null
+        this.defaultCrystalTagBuckets = {}
+        return
+      }
+
+      const image = await this.loadIntegratedSpriteSheetImage(DEFAULT_CRYSTAL_SHEET_PATH)
+      if (!image) {
+        this.defaultCrystalSheetMetadata = null
+        this.defaultCrystalTagBuckets = {}
+        return
+      }
+
+      this.defaultCrystalSheetImage = image
+      this.defaultCrystalSheetMetadata = {
+        ...metadata,
+        sheetPath: DEFAULT_CRYSTAL_SHEET_PATH
+      }
+      this.defaultCrystalTagBuckets = this.buildIntegratedTagBuckets([{
+        sheetPath: DEFAULT_CRYSTAL_SHEET_PATH,
+        metadata: this.defaultCrystalSheetMetadata,
+        image,
+        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
+        blackKey: metadata?.blackKey || null
+      }])
+    } catch (err) {
+      this.defaultCrystalSheetMetadata = null
+      this.defaultCrystalTagBuckets = {}
+      window.logger.warn('Failed to preload default crystal sheet:', err)
+    }
+  }
+
   async setIntegratedSpriteSheetConfig(config = {}) {
     const enabled = Boolean(config?.enabled)
     if (!enabled) {
@@ -402,6 +449,19 @@ export class TextureManager {
     }
 
     return filtered[TextureManager.coordHash(x, y) % filtered.length]
+  }
+
+  selectCrystalTileByTags(requiredTags, x, y, excludedTags = []) {
+    const integratedSelection = this.selectIntegratedTileByTags(requiredTags, x, y, excludedTags)
+    if (integratedSelection) {
+      return integratedSelection
+    }
+
+    const defaultCandidates = this.getTagBucketCandidates(this.defaultCrystalTagBuckets || {}, requiredTags, excludedTags)
+    if (!defaultCandidates.length) {
+      return null
+    }
+    return this.selectIntegratedTileFromCandidates(defaultCandidates, x, y)
   }
 
   getIntegratedTileCandidatesByTags(requiredTags, excludedTags = []) {
@@ -676,6 +736,7 @@ export class TextureManager {
     }
 
     await this.preloadDefaultCombatDecalSheet()
+    await this.preloadDefaultCrystalSheet()
 
     this.allTexturesLoaded = true
     if (callback) callback()

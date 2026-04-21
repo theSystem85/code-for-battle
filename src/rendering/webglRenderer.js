@@ -393,10 +393,6 @@ export class GameWebGLRenderer {
   }
 
   getIntegratedResourceTile(type, tileX, tileY, mapGrid) {
-    if (!this.textureManager.integratedSpriteSheetMode) {
-      return null
-    }
-
     const tile = mapGrid?.[tileY]?.[tileX]
     if (!tile) {
       return null
@@ -404,7 +400,7 @@ export class GameWebGLRenderer {
 
     if (type === 'ore') {
       const density = Math.max(1, Math.min(5, Number.isFinite(tile.oreDensity) ? Math.floor(tile.oreDensity) : 1))
-      return this.textureManager.selectIntegratedTileByTags(['ore', 'density_' + density], tileX, tileY)
+      return this.textureManager.selectCrystalTileByTags(['ore', 'density_' + density], tileX, tileY)
     }
 
     if (type === 'seedCrystal') {
@@ -418,9 +414,9 @@ export class GameWebGLRenderer {
         )
       )
 
-      return this.textureManager.selectIntegratedTileByTags(['red', 'density_' + density], tileX, tileY)
-        || this.textureManager.selectIntegratedTileByTags(['ore', 'red', 'density_' + density], tileX, tileY)
-        || this.textureManager.selectIntegratedTileByTags(['ore', 'density_' + density], tileX, tileY)
+      return this.textureManager.selectCrystalTileByTags(['red', 'density_' + density], tileX, tileY)
+        || this.textureManager.selectCrystalTileByTags(['ore', 'red', 'density_' + density], tileX, tileY)
+        || this.textureManager.selectCrystalTileByTags(['ore', 'density_' + density], tileX, tileY)
     }
 
     return null
@@ -431,6 +427,10 @@ export class GameWebGLRenderer {
     const canUseIntegratedResourceTile = Boolean(
       integratedResourceTile?.rect && integratedResourceTile?.image === this.textureManager.spriteImage
     )
+    const isCrystalResource = type === 'ore' || type === 'seedCrystal'
+    if (isCrystalResource && integratedResourceTile?.rect && !canUseIntegratedResourceTile) {
+      return null
+    }
     const useTexture = canUseIntegratedResourceTile || (canUseTextures && this.textureManager.tileTextureCache?.[type]?.length)
     const isWaterAnimated = type === 'water'
     let uvRect = [0, 0, 0, 0]

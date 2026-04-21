@@ -315,7 +315,8 @@ export class Renderer {
       {
         skipBaseLayer: gpuRendered && !gpuWaterOnly,
         skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot,
-        skipWaterBase: gpuRendered && gpuWaterOnly
+        skipWaterBase: gpuRendered && gpuWaterOnly,
+        gpuRenderedResources: gpuRendered && !gpuWaterOnly
       }
     )
     if (gameState.dzmOverlayIndex !== -1) {

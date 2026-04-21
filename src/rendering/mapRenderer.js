@@ -852,16 +852,14 @@ export class MapRenderer {
 
   drawOreOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
     const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
-    if (this.textureManager.integratedSpriteSheetMode) {
-      const integratedTile = this.textureManager.selectIntegratedTileByTags(
-        ['ore', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      )
-      if (integratedTile?.rect && integratedTile?.image) {
-        this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
-        return
-      }
+    const integratedTile = this.textureManager.selectCrystalTileByTags(
+      ['ore', 'density_' + normalizedDensity],
+      tileX,
+      tileY
+    )
+    if (integratedTile?.rect && integratedTile?.image) {
+      this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+      return
     }
 
     const cache = this.textureManager.tileTextureCache.ore
@@ -890,24 +888,22 @@ export class MapRenderer {
 
   drawSeedOverlay(ctx, tileX, tileY, screenX, screenY, useTexture, density = 1) {
     const normalizedDensity = Math.max(1, Math.min(5, Number.isFinite(density) ? Math.floor(density) : 1))
-    if (this.textureManager.integratedSpriteSheetMode) {
-      const integratedTile = this.textureManager.selectIntegratedTileByTags(
-        ['red', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      ) || this.textureManager.selectIntegratedTileByTags(
-        ['ore', 'red', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      ) || this.textureManager.selectIntegratedTileByTags(
-        ['ore', 'density_' + normalizedDensity],
-        tileX,
-        tileY
-      )
-      if (integratedTile?.rect && integratedTile?.image) {
-        this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
-        return
-      }
+    const integratedTile = this.textureManager.selectCrystalTileByTags(
+      ['red', 'density_' + normalizedDensity],
+      tileX,
+      tileY
+    ) || this.textureManager.selectCrystalTileByTags(
+      ['ore', 'red', 'density_' + normalizedDensity],
+      tileX,
+      tileY
+    ) || this.textureManager.selectCrystalTileByTags(
+      ['ore', 'density_' + normalizedDensity],
+      tileX,
+      tileY
+    )
+    if (integratedTile?.rect && integratedTile?.image) {
+      this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+      return
     }
 
     const cache = this.textureManager.tileTextureCache.seedCrystal
@@ -1233,7 +1229,7 @@ export class MapRenderer {
    * Also renders ore/seed overlays after SOT to ensure correct z-order (SOT below ore).
    */
   renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, options = {}) {
-    const { skipWaterSot = false } = options
+    const { skipWaterSot = false, gpuRenderedResources = false } = options
     // Ensure SOT mask is computed
     if (!this.sotMask) {
       this.computeSOTMask(mapGrid)
@@ -1272,12 +1268,45 @@ export class MapRenderer {
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
-          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture)
+          if (gpuRenderedResources && !this.shouldRenderCrystalOverlayOnCpu(tile, x, y)) {
+            continue
+          }
+          this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
         } else if (tile.ore) {
-          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture)
+          if (gpuRenderedResources && !this.shouldRenderCrystalOverlayOnCpu(tile, x, y)) {
+            continue
+          }
+          this.drawOreOverlay(ctx, x, y, screenX, screenY, useTexture, tile.oreDensity || 1)
         }
       }
     }
+  }
+
+  shouldRenderCrystalOverlayOnCpu(tile, tileX, tileY) {
+    if (!tile || (!tile.ore && !tile.seedCrystal)) return false
+    const density = Math.max(
+      1,
+      Math.min(
+        5,
+        Number.isFinite(tile.seedCrystalDensity)
+          ? Math.floor(tile.seedCrystalDensity)
+          : (Number.isFinite(tile.oreDensity) ? Math.floor(tile.oreDensity) : 1)
+      )
+    )
+
+    const integratedTile = tile.seedCrystal
+      ? (
+        this.textureManager.selectCrystalTileByTags(['red', 'density_' + density], tileX, tileY)
+          || this.textureManager.selectCrystalTileByTags(['ore', 'red', 'density_' + density], tileX, tileY)
+          || this.textureManager.selectCrystalTileByTags(['ore', 'density_' + density], tileX, tileY)
+      )
+      : this.textureManager.selectCrystalTileByTags(['ore', 'density_' + density], tileX, tileY)
+
+    if (!integratedTile?.rect || !integratedTile?.image) {
+      return false
+    }
+
+    return integratedTile.image !== this.textureManager.spriteImage
   }
 
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
@@ -1298,7 +1327,10 @@ export class MapRenderer {
       this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, { skipWaterBase, skipWaterSot })
     } else {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
-      this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, { skipWaterSot })
+      this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
+        skipWaterSot,
+        gpuRenderedResources: Boolean(options?.gpuRenderedResources)
+      })
     }
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
