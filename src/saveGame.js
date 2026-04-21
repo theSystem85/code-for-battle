@@ -60,10 +60,15 @@ const LAST_GAME_STORAGE_KEY = `rts_save_${LAST_GAME_LABEL}`
 const LAST_GAME_RESUME_FLAG_KEY = 'rts_lastGame_resume_pending'
 const AUTO_SAVE_INTERVAL_MS = 60_000
 const PAUSE_OBSERVER_INTERVAL_MS = 1000
+const SAVE_STORAGE_KEY_PREFIX = 'rts_save_'
+const BYTE_TO_MB = 1024 * 1024
+const FALLBACK_STORAGE_QUOTA_BYTES = 5 * BYTE_TO_MB
 
 let lastGameAutoSaveInterval = null
 let pauseWatchInterval = null
 let lastPauseState = Boolean(gameState.gamePaused)
+let saveQuotaExceeded = false
+let storageEstimateCache = null
 
 function deriveDeterministicSessionSeed(state = {}) {
   return [
@@ -433,15 +438,17 @@ export function getSaveGames() {
 
   if (typeof localStorage !== 'undefined') {
     for (const key in localStorage) {
-      if (key.startsWith('rts_save_')) {
+      if (key.startsWith(SAVE_STORAGE_KEY_PREFIX)) {
         try {
           const save = JSON.parse(localStorage.getItem(key))
+          const storedSizeBytes = computeStoredStringSize(localStorage.getItem(key))
           saves.push({
             key,
             label: save?.label || '(no label)',
             time: save?.time || 0,
             builtin: false,
-            description: null
+            description: null,
+            sizeBytes: storedSizeBytes
           })
         } catch (err) {
           window.logger.warn('Error processing saved game:', err)
@@ -459,10 +466,49 @@ export function getSaveGames() {
   return saves
 }
 
-export function saveGame(label) {
-  ensurePlayerBuildHistoryLoaded()
-  const simulationNow = getSimulationTime(gameState)
+function computeStoredStringSize(value) {
+  if (typeof value !== 'string') return 0
+  return new Blob([value]).size
+}
 
+function formatMegabytes(bytes) {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0.00 MB'
+  return `${(bytes / BYTE_TO_MB).toFixed(2)} MB`
+}
+
+async function getStorageEstimate() {
+  if (typeof navigator === 'undefined' || !navigator.storage?.estimate) {
+    return {
+      usage: 0,
+      quota: FALLBACK_STORAGE_QUOTA_BYTES
+    }
+  }
+
+  try {
+    const estimate = await navigator.storage.estimate()
+    return {
+      usage: Number.isFinite(estimate?.usage) ? estimate.usage : 0,
+      quota: Number.isFinite(estimate?.quota) && estimate.quota > 0
+        ? estimate.quota
+        : FALLBACK_STORAGE_QUOTA_BYTES
+    }
+  } catch (err) {
+    window.logger.warn('Failed to read browser storage estimate:', err)
+    return {
+      usage: 0,
+      quota: FALLBACK_STORAGE_QUOTA_BYTES
+    }
+  }
+}
+
+async function refreshStorageEstimateCache() {
+  storageEstimateCache = await getStorageEstimate()
+  return storageEstimateCache
+}
+
+function buildSaveObject(label) {
+  const normalizedLabel = label || 'Unnamed'
+  const simulationNow = getSimulationTime(gameState)
   // Gather AI player money (budget) from all AI factories
   const aiFactoryBudgets = {}
   factories.forEach(factory => {
@@ -524,8 +570,6 @@ export function saveGame(label) {
       crew: u.crew && typeof u.crew === 'object' ? { ...u.crew } : undefined,
       direction: u.direction,
       rotation: u.rotation
-      // Note: lastAttacker is excluded to prevent circular references
-      // Add more fields if needed
     }
 
     if (u.type === 'mineLayer') {
@@ -589,7 +633,6 @@ export function saveGame(label) {
     }))
     : []
 
-  // Gather all buildings (player and enemy)
   const allBuildings = gameState.buildings.map(b => ({
     type: b.type,
     owner: b.owner,
@@ -600,27 +643,23 @@ export function saveGame(label) {
     health: b.health,
     maxHealth: b.maxHealth,
     id: b.id,
-    rallyPoint: b.rallyPoint, // Save rally point if it exists
+    rallyPoint: b.rallyPoint,
     fuel: typeof b.fuel === 'number' ? b.fuel : undefined,
     maxFuel: typeof b.maxFuel === 'number' ? b.maxFuel : undefined,
     fuelReloadTime: typeof b.fuelReloadTime === 'number' ? b.fuelReloadTime : undefined,
-    // Ammunition system properties for buildings
     ammo: typeof b.ammo === 'number' ? b.ammo : undefined,
     maxAmmo: typeof b.maxAmmo === 'number' ? b.maxAmmo : undefined,
     ammoReloadTime: typeof b.ammoReloadTime === 'number' ? b.ammoReloadTime : undefined,
     needsAmmo: typeof b.needsAmmo === 'boolean' ? b.needsAmmo : undefined,
     landedUnitId: b.landedUnitId,
     damageValue: b.damageValue
-    // Add more fields if needed
   }))
 
-  // Gather factory rally points as well
   const factoryRallyPoints = factories.map(f => ({
     id: f.id,
     rallyPoint: f.rallyPoint
   }))
 
-  // Gather all ore positions (now using ore property instead of tile type)
   const orePositions = []
   for (let y = 0; y < mapGrid.length; y++) {
     for (let x = 0; x < mapGrid[y].length; x++) {
@@ -630,13 +669,10 @@ export function saveGame(label) {
     }
   }
 
-  // Save the full mapGrid tile types for restoring building/wall/terrain occupancy
   const mapGridTypes = mapGrid.map(row => row.map(tile => tile.type))
   const mapTileState = createMapTileStateSnapshot(mapGrid)
 
-  // Save everything in a single object
   const saveData = {
-    // Only save specific gameState properties to avoid circular references and reduce size
     gameState: {
       money: gameState.money,
       gameTime: gameState.gameTime,
@@ -689,9 +725,9 @@ export function saveGame(label) {
       availableBuildingTypes: Array.from(gameState.availableBuildingTypes || []),
       newUnitTypes: Array.from(gameState.newUnitTypes || []),
       newBuildingTypes: Array.from(gameState.newBuildingTypes || []),
-      defeatedPlayers: gameState.defeatedPlayers instanceof Set ?
-        Array.from(gameState.defeatedPlayers) :
-        (Array.isArray(gameState.defeatedPlayers) ? gameState.defeatedPlayers : []),
+      defeatedPlayers: gameState.defeatedPlayers instanceof Set
+        ? Array.from(gameState.defeatedPlayers)
+        : (Array.isArray(gameState.defeatedPlayers) ? gameState.defeatedPlayers : []),
       selectedWreckId: gameState.selectedWreckId || null,
       buildingPlacementMode: Boolean(gameState.buildingPlacementMode),
       currentBuildingType: gameState.currentBuildingType || null,
@@ -741,29 +777,71 @@ export function saveGame(label) {
         ? Array.from(gameState.mineFreeformPaint)
         : (Array.isArray(gameState.mineFreeformPaint) ? [...gameState.mineFreeformPaint] : null)
     },
-    aiFactoryBudgets, // Save AI player budgets
+    aiFactoryBudgets,
     units: allUnits,
     unitWrecks: allWrecks,
     buildings: allBuildings,
-    factoryRallyPoints, // Save factory rally points
+    factoryRallyPoints,
     orePositions,
-    mapGridTypes, // ADDED: save mapGrid tile types
+    mapGridTypes,
     mapTileState,
     harvestedTiles: Array.from(getHarvestedTiles()),
     refineryQueues: Object.fromEntries(
       Object.entries(getRefineryQueues()).map(([refineryId, queue]) => [refineryId, Array.isArray(queue) ? [...queue] : []])
     ),
-    targetedOreTiles: gameState.targetedOreTiles || {}, // Save targeted ore tiles for harvesters
-    achievedMilestones: milestoneSystem.getAchievedMilestones(), // Save milestone progress
+    targetedOreTiles: gameState.targetedOreTiles || {},
+    achievedMilestones: milestoneSystem.getAchievedMilestones(),
     productionQueueState: productionQueue.getSerializableState()
   }
 
-  const saveObj = {
-    label: label || 'Unnamed',
+  return {
+    label: normalizedLabel,
     time: Date.now(),
     state: JSON.stringify(saveData)
   }
-  localStorage.setItem('rts_save_' + saveObj.label, JSON.stringify(saveObj))
+}
+
+export function saveGame(label) {
+  ensurePlayerBuildHistoryLoaded()
+  const saveObj = buildSaveObject(label)
+  localStorage.setItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, JSON.stringify(saveObj))
+  saveQuotaExceeded = false
+}
+
+function isQuotaExceededError(error) {
+  return Boolean(error) && (
+    error.name === 'QuotaExceededError'
+    || error.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    || error.code === 22
+    || error.code === 1014
+  )
+}
+
+function canWriteToLocalStorage() {
+  if (typeof localStorage === 'undefined') return false
+  const probeKey = '__rts_save_quota_probe__'
+  try {
+    localStorage.setItem(probeKey, '1')
+    localStorage.removeItem(probeKey)
+    return true
+  } catch {
+    return false
+  }
+}
+
+export function exportCurrentGameToFile(label = 'Unnamed') {
+  ensurePlayerBuildHistoryLoaded()
+  const saveObj = buildSaveObject(label)
+  const payload = JSON.stringify(saveObj, null, 2)
+  const blob = new Blob([payload], { type: 'application/json' })
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = buildExportFilename(saveObj?.label, saveObj?.time)
+  document.body.appendChild(anchor)
+  anchor.click()
+  anchor.remove()
+  URL.revokeObjectURL(objectUrl)
 }
 
 function loadGameFromSaveObject(saveObj, key) {
@@ -1717,6 +1795,7 @@ export function deleteGame(key) {
   }
   if (typeof localStorage !== 'undefined') {
     localStorage.removeItem(key)
+    void refreshStorageEstimateCache()
   }
 }
 
@@ -1813,8 +1892,9 @@ async function importSaveDataFromFile(file) {
     state: typeof importedObj.state === 'string' ? importedObj.state : JSON.stringify(importedObj.state)
   }
 
-  const saveKey = `rts_save_${normalizedSave.label}`
+  const saveKey = `${SAVE_STORAGE_KEY_PREFIX}${normalizedSave.label}`
   localStorage.setItem(saveKey, JSON.stringify(normalizedSave))
+  saveQuotaExceeded = false
   return {
     key: saveKey,
     label: normalizedSave.label,
@@ -1840,6 +1920,7 @@ export async function importSaveGamesFromFiles(fileList) {
   const importedReplays = importedEntries.filter(entry => entry.type === 'replay')
 
   if (importedSaves.length > 0) {
+    await refreshStorageEstimateCache()
     updateSaveGamesList()
   }
 
@@ -1877,6 +1958,24 @@ export function updateSaveGamesList() {
 
   list.innerHTML = ''
   const saves = getSaveGames()
+  const quota = storageEstimateCache || { usage: 0, quota: FALLBACK_STORAGE_QUOTA_BYTES }
+  const freeBytes = Math.max(0, (quota.quota || 0) - (quota.usage || 0))
+  if (saveQuotaExceeded && canWriteToLocalStorage()) {
+    saveQuotaExceeded = false
+  }
+  const quotaExceededTooltip = 'Save disabled: browser local storage quota exceeded. Delete old saves or use direct download.'
+  const saveGameBtn = document.getElementById('saveGameBtn')
+  if (saveGameBtn) {
+    saveGameBtn.disabled = saveQuotaExceeded
+    if (saveQuotaExceeded) {
+      saveGameBtn.title = quotaExceededTooltip
+      saveGameBtn.setAttribute('aria-label', quotaExceededTooltip)
+    } else {
+      saveGameBtn.title = 'Save Game'
+      saveGameBtn.setAttribute('aria-label', 'Save game')
+    }
+  }
+
   saves.forEach(save => {
     const li = document.createElement('li')
     li.style.display = 'flex'
@@ -1910,6 +2009,10 @@ export function updateSaveGamesList() {
     }
     li.appendChild(label)
     if (!save.builtin) {
+      const sizeText = formatMegabytes(save.sizeBytes)
+      const remainingText = formatMegabytes(freeBytes)
+      label.title = `${label.title}\nSize: ${sizeText} | Local storage left: ${remainingText}`
+
       const exportBtn = document.createElement('button')
       exportBtn.title = 'Export save game as JSON'
       exportBtn.setAttribute('aria-label', 'Export save game')
@@ -1935,20 +2038,49 @@ export function updateSaveGamesList() {
 // Add initialization function to set up event listeners
 export function initSaveGameSystem() {
   const saveGameBtn = document.getElementById('saveGameBtn')
+  const downloadSaveBtn = document.getElementById('downloadSaveBtn')
   const importSaveBtn = document.getElementById('importSaveBtn')
   const importSaveInput = document.getElementById('importSaveInput')
   const saveLabelInput = document.getElementById('saveLabelInput')
+  const gameCanvas = document.getElementById('gameCanvas')
 
   // Helper to perform the save action
-  const performSave = () => {
+  const performSave = async() => {
+    if (saveQuotaExceeded) {
+      showNotification('Save blocked: browser local storage quota is exceeded. Delete a save or use direct download/export.')
+      return
+    }
+
     const label = document.getElementById('saveLabelInput').value.trim()
-    saveGame(label)
-    updateSaveGamesList()
-    showNotification('Game saved as: ' + (label || 'Unnamed'))
+    try {
+      saveGame(label)
+      await refreshStorageEstimateCache()
+      updateSaveGamesList()
+      showNotification('Game saved as: ' + (label || 'Unnamed'))
+    } catch (err) {
+      if (isQuotaExceededError(err)) {
+        saveQuotaExceeded = true
+        await refreshStorageEstimateCache()
+        updateSaveGamesList()
+        showNotification('Save failed: local storage is full. Use Download Save, or export/delete saves then drag JSON files onto the map to load.', 7000)
+        return
+      }
+      throw err
+    }
   }
 
   if (saveGameBtn) {
-    saveGameBtn.addEventListener('click', performSave)
+    saveGameBtn.addEventListener('click', () => {
+      void performSave()
+    })
+  }
+
+  if (downloadSaveBtn) {
+    downloadSaveBtn.addEventListener('click', () => {
+      const label = document.getElementById('saveLabelInput').value.trim()
+      exportCurrentGameToFile(label || 'Unnamed')
+      showNotification('Save file downloaded (bypassing local storage).')
+    })
   }
 
   if (importSaveBtn && importSaveInput) {
@@ -1961,18 +2093,37 @@ export function initSaveGameSystem() {
     })
   }
 
+  if (gameCanvas) {
+    gameCanvas.addEventListener('dragover', (event) => {
+      if (!event.dataTransfer?.files?.length) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'copy'
+    })
+
+    gameCanvas.addEventListener('drop', async(event) => {
+      if (!event.dataTransfer?.files?.length) return
+      event.preventDefault()
+      event.stopPropagation()
+      const files = Array.from(event.dataTransfer.files)
+      await importSaveGamesFromFiles(files)
+    })
+  }
+
   // Allow saving by pressing Enter in the input field
   if (saveLabelInput) {
     saveLabelInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         e.preventDefault()
-        performSave()
+        void performSave()
       }
     })
   }
 
   // Initial population of save games list
-  updateSaveGamesList()
+  void refreshStorageEstimateCache().then(() => {
+    saveQuotaExceeded = false
+    updateSaveGamesList()
+  })
 }
 
 export function initLastGameRecovery() {
