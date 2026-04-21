@@ -427,6 +427,10 @@ export class GameWebGLRenderer {
     const canUseIntegratedResourceTile = Boolean(
       integratedResourceTile?.rect && integratedResourceTile?.image === this.textureManager.spriteImage
     )
+    const isCrystalResource = type === 'ore' || type === 'seedCrystal'
+    if (isCrystalResource && integratedResourceTile?.rect && !canUseIntegratedResourceTile) {
+      return null
+    }
     const useTexture = canUseIntegratedResourceTile || (canUseTextures && this.textureManager.tileTextureCache?.[type]?.length)
     const isWaterAnimated = type === 'water'
     let uvRect = [0, 0, 0, 0]
