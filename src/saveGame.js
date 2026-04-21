@@ -69,6 +69,7 @@ let pauseWatchInterval = null
 let lastPauseState = Boolean(gameState.gamePaused)
 let saveQuotaExceeded = false
 let storageEstimateCache = null
+let mapFileDropListenersAttached = false
 
 function deriveDeterministicSessionSeed(state = {}) {
   return [
@@ -2093,7 +2094,40 @@ export function initSaveGameSystem() {
     })
   }
 
-  if (gameCanvas) {
+  const isFileDragEvent = (event) => {
+    const transferTypes = event?.dataTransfer?.types
+    if (!transferTypes) return false
+    return Array.from(transferTypes).includes('Files')
+  }
+
+  const isPointInsideCanvas = (event) => {
+    if (!gameCanvas) return false
+    const rect = gameCanvas.getBoundingClientRect()
+    const clientX = Number.isFinite(event?.clientX) ? event.clientX : -1
+    const clientY = Number.isFinite(event?.clientY) ? event.clientY : -1
+    return clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom
+  }
+
+  if (gameCanvas && !mapFileDropListenersAttached) {
+    mapFileDropListenersAttached = true
+
+    document.addEventListener('dragover', (event) => {
+      if (!isFileDragEvent(event)) return
+      if (!isPointInsideCanvas(event)) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'copy'
+    }, true)
+
+    document.addEventListener('drop', async(event) => {
+      if (!isFileDragEvent(event)) return
+      if (!isPointInsideCanvas(event)) return
+      event.preventDefault()
+      event.stopPropagation()
+      const files = Array.from(event.dataTransfer?.files || [])
+      if (files.length === 0) return
+      await importSaveGamesFromFiles(files)
+    }, true)
+
     gameCanvas.addEventListener('dragover', (event) => {
       if (!event.dataTransfer?.files?.length) return
       event.preventDefault()

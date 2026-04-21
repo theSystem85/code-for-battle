@@ -16,6 +16,7 @@
 1. **Map drag/drop load**
    - The game canvas accepts dropped files.
    - Dropped JSON save/replay files route through the same import pipeline as the import file input.
+   - Browser default file-open navigation must be prevented for file drops over the map canvas (including capture-phase handling so nested listeners do not miss the event).
 2. **Save-list tooltip details**
    - For each non-builtin save row, the hover tooltip includes:
      - save file size in MB
