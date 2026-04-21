@@ -184,4 +184,78 @@ describe('TextureManager integrated multi-sheet selection', () => {
       seed: 0
     })).toBeTruthy()
   })
+
+  it('uses default crystal sheet tags when integrated custom sheets are disabled', () => {
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = false
+    manager.defaultCrystalTagBuckets = {
+      ore: [
+        {
+          tags: ['ore', 'density_2'],
+          rect: { x: 128, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ],
+      density_2: [
+        {
+          tags: ['ore', 'density_2'],
+          rect: { x: 128, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ]
+    }
+
+    const selected = manager.selectCrystalTileByTags(['ore', 'density_2'], 3, 9)
+    expect(selected).toEqual(expect.objectContaining({
+      sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+    }))
+  })
+
+  it('prefers integrated crystal tags over default crystal fallback when available', () => {
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = true
+    manager.integratedTagBuckets = {
+      ore: [
+        {
+          tags: ['ore', 'density_3'],
+          rect: { x: 64, y: 64, width: 64, height: 64 },
+          image: { id: 'custom-crystals' },
+          sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
+        }
+      ],
+      density_3: [
+        {
+          tags: ['ore', 'density_3'],
+          rect: { x: 64, y: 64, width: 64, height: 64 },
+          image: { id: 'custom-crystals' },
+          sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
+        }
+      ]
+    }
+    manager.defaultCrystalTagBuckets = {
+      ore: [
+        {
+          tags: ['ore', 'density_3'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ],
+      density_3: [
+        {
+          tags: ['ore', 'density_3'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-crystals' },
+          sheetPath: 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+        }
+      ]
+    }
+
+    const selected = manager.selectCrystalTileByTags(['ore', 'density_3'], 7, 11)
+    expect(selected).toEqual(expect.objectContaining({
+      sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
+    }))
+  })
 })
