@@ -378,3 +378,4 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - Decal selection must be pseudo-random from map seed and replace prior tile decal when a new event occurs.
 - Save/load support required for tile decals (type + deterministic variant state/counter).
 - Rendering order requirement: ore/seed overlays must remain above decals.
+- [x] Integrate a deterministic road autotile mask generator into the existing sprite sheet editor with strict 4-bit connectivity mapping (Top=1, Right=2, Bottom=4, Left=8), 16 unique base patterns, in-editor preview/inspector overlays, and PNG/WebP export of a 1024x1024 sheet where only the first 16 tiles are generated and all remaining tiles stay black.
