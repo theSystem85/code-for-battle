@@ -66,8 +66,9 @@ function buildConfig(config = {}) {
   const rows = clamp(Number.parseInt(config.rows, 10) || DEFAULT_CONFIG.rows, 1, 64)
   const maxRoadWidth = Math.max(4, tileSize - 8)
   const roadWidth = clamp(Number.parseInt(config.roadWidth, 10) || DEFAULT_CONFIG.roadWidth, 4, maxRoadWidth)
-  const maxFade = Math.max(1, Math.floor((tileSize - roadWidth) / 2) - 1)
-  const fadeDistance = clamp(Number.parseInt(config.fadeDistance, 10) || DEFAULT_CONFIG.fadeDistance, 1, maxFade)
+  const maxFade = Math.max(0, Math.floor((tileSize - roadWidth) / 2) - 1)
+  const parsedFade = Number.parseInt(config.fadeDistance, 10)
+  const fadeDistance = clamp(Number.isFinite(parsedFade) ? parsedFade : DEFAULT_CONFIG.fadeDistance, 0, maxFade)
   const cornerRadius = clamp(Number.parseInt(config.cornerRadius, 10) || DEFAULT_CONFIG.cornerRadius, 0, Math.floor(roadWidth / 2))
   return {
     ...DEFAULT_CONFIG,
@@ -225,10 +226,10 @@ function buildColumnLayout() {
   const layout = [
     { columnKey: 'empty', source: empty, rows: 1, base: true },
     { columnKey: 'cap', source: cap, rows: 4, base: true },
-    { columnKey: 'straight', source: straight, rows: 4, base: true },
+    { columnKey: 'straight', source: straight, rows: 2, base: true },
     { columnKey: 'corner', source: corner, rows: 4, base: true },
     { columnKey: 't_junction', source: tJunction, rows: 4, base: true },
-    { columnKey: 'cross', source: cross, rows: 4, base: true },
+    { columnKey: 'cross', source: cross, rows: 1, base: true },
     { columnKey: 'full_fill', source: null, rows: 1, base: false, kind: 'full-fill' },
     { columnKey: 'wide_edge_fade', source: null, rows: 4, base: false, kind: 'wide-edge-fade' }
   ]
@@ -253,7 +254,8 @@ function buildColumnLayout() {
         })
         continue
       }
-      const rotated = rotateConnectivity(column.source, row)
+      const rotationTurns = row
+      const rotated = rotateConnectivity(column.source, rotationTurns)
       const bitmask = connectivityToBitmask(rotated)
       tileSpecs.push({
         col,
@@ -262,7 +264,7 @@ function buildColumnLayout() {
         bitmask,
         connectivity: rotated,
         columnKey: column.columnKey,
-        rotation: row,
+        rotation: rotationTurns,
         base: true,
         debugLabel: connectivityToDebugLabel(rotated)
       })

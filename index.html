@@ -1108,6 +1108,7 @@
           <div class="sprite-sheet-editor__mode-tabs" role="tablist" aria-label="Sprite sheet editor mode">
             <button id="sseModeStaticBtn" class="action-button sprite-sheet-editor__mode-tab is-active" type="button" role="tab" aria-selected="true">Static</button>
             <button id="sseModeAnimatedBtn" class="action-button sprite-sheet-editor__mode-tab" type="button" role="tab" aria-selected="false">Animated</button>
+            <button id="sseModeMasksBtn" class="action-button sprite-sheet-editor__mode-tab" type="button" role="tab" aria-selected="false">Masks</button>
           </div>
           <div id="sseAnimationPreviewPanel" class="sprite-sheet-editor__preview-panel" hidden>
             <span class="sprite-sheet-editor__tags-title">Animation preview</span>
@@ -1214,10 +1215,6 @@
               </label>
               <div id="sseImageConverterStatus" class="sse-image-converter__status" aria-live="polite"></div>
             </div>
-          </div>
-          <div class="sprite-sheet-editor__sidebar-tabs" role="tablist" aria-label="Sprite Sheet Editor sidebar tab">
-            <button id="sseSidebarTabTagsBtn" class="action-button sprite-sheet-editor__mode-tab is-active" type="button" role="tab" aria-selected="true">Tags</button>
-            <button id="sseSidebarTabMasksBtn" class="action-button sprite-sheet-editor__mode-tab" type="button" role="tab" aria-selected="false">Masks</button>
           </div>
           <div id="sseSidebarTagsPanel" class="sprite-sheet-editor__sidebar-panel">
           <div class="sprite-sheet-editor__field">
@@ -1337,7 +1334,7 @@
                   <label for="sseGeneratorRoadWidthInput">Road width</label>
                 </div>
                 <div class="floating-label-input sprite-sheet-editor__floating-input">
-                  <input id="sseGeneratorFadeInput" class="sidebar-input" type="number" min="1" max="31" value="12" placeholder=" ">
+                  <input id="sseGeneratorFadeInput" class="sidebar-input" type="number" min="0" max="31" value="12" placeholder=" ">
                   <label for="sseGeneratorFadeInput">Fade distance</label>
                 </div>
                 <div class="floating-label-input sprite-sheet-editor__floating-input">
@@ -1352,8 +1349,7 @@
               </label>
               <div id="sseGeneratorInspector" class="sprite-sheet-editor__generator-label">Inspector: tileIndex 0, bitmask 0 (T0 R0 B0 L0).</div>
               <div id="sseGeneratorValidation" class="sprite-sheet-editor__generator-label">Validation: pending.</div>
-              <div class="sprite-sheet-editor__zoom-row">
-                <button id="sseGeneratorRegenerateBtn" class="action-button" type="button">Regenerate</button>
+              <div class="sprite-sheet-editor__actions">
                 <button id="sseGeneratorExportPngBtn" class="action-button" type="button">Export PNG</button>
                 <button id="sseGeneratorExportWebpBtn" class="action-button" type="button">Export WebP</button>
               </div>

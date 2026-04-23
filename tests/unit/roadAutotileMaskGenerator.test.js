@@ -38,6 +38,12 @@ describe('roadAutotileMaskGenerator', () => {
     expect(tJunctionColumn).toHaveLength(4)
     expect(new Set(tJunctionColumn.map(tile => tile.col)).size).toBe(1)
 
+    const straightColumn = result.tileMappings.filter(tile => tile.columnKey === 'straight')
+    expect(straightColumn).toHaveLength(2)
+
+    const crossColumn = result.tileMappings.filter(tile => tile.columnKey === 'cross')
+    expect(crossColumn).toHaveLength(1)
+
     const fullFillTile = result.tileMappings.find(tile => tile.kind === 'full-fill')
     expect(fullFillTile).toBeTruthy()
 

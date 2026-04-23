@@ -720,10 +720,13 @@ function setStatus(state, message, kind = 'info') {
 
 function updateModeTabUi(state) {
   const isAnimated = state.mode === 'animated'
-  state.modeStaticBtn?.classList.toggle('is-active', !isAnimated)
+  const isMasks = state.sidebarActiveTab === 'masks'
+  state.modeStaticBtn?.classList.toggle('is-active', !isAnimated && !isMasks)
   state.modeAnimatedBtn?.classList.toggle('is-active', isAnimated)
-  state.modeStaticBtn?.setAttribute('aria-selected', isAnimated ? 'false' : 'true')
+  state.modeMasksBtn?.classList.toggle('is-active', isMasks)
+  state.modeStaticBtn?.setAttribute('aria-selected', (!isAnimated && !isMasks) ? 'true' : 'false')
   state.modeAnimatedBtn?.setAttribute('aria-selected', isAnimated ? 'true' : 'false')
+  state.modeMasksBtn?.setAttribute('aria-selected', isMasks ? 'true' : 'false')
   if (state.animationPreviewPanel) {
     state.animationPreviewPanel.hidden = !isAnimated
     state.animationPreviewPanel.style.display = isAnimated ? 'flex' : 'none'
@@ -1595,6 +1598,8 @@ async function regenerateRoadAutotileSheet(state, { loadIntoEditor = true } = {}
   state.sheetPaths = state.staticSheetPaths
   renderSheetOptions(state)
   await loadSheet(state, objectUrl, { mode: 'static' })
+  applyGeneratorDebugTagsToActiveSheet(state)
+  notifyActiveDataChange(state)
   setStatus(state, 'Generated deterministic 4-bit road autotile mask and loaded it in the editor.')
 }
 
@@ -1612,6 +1617,32 @@ function downloadCanvasImage(canvas, fileName, mimeType = 'image/png') {
   }, mimeType)
 }
 
+function toMaskTag(label) {
+  return `mask_${`${label || ''}`.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')}`
+}
+
+function applyGeneratorDebugTagsToActiveSheet(state) {
+  if (!state.activeData || !state.generatorResult) return
+  const nextTiles = {}
+  const tagSet = new Set(state.activeData.tags || [])
+
+  state.generatorResult.tileMappings.forEach((tile) => {
+    if (tile.kind !== 'bitmask') return
+    const tileTag = toMaskTag(tile.label)
+    tagSet.add(tileTag)
+    const key = makeTileKey(tile.col, tile.row)
+    nextTiles[key] = { tags: [tileTag] }
+  })
+
+  state.activeData.tags = [...tagSet]
+  state.activeData.tiles = nextTiles
+  renderTagList(state)
+  drawSseCanvas(state)
+  applyCanvasZoom(state)
+  updateApplyAllButtonLabel(state)
+  saveDataToLocalStorage(state.activeData, state.mode)
+}
+
 export async function initSpriteSheetEditor(options = {}) {
   const state = {
     modal: document.getElementById('spriteSheetEditorModal'),
@@ -1619,6 +1650,7 @@ export async function initSpriteSheetEditor(options = {}) {
     openBtn: document.getElementById('openSpriteSheetEditorBtn'),
     modeStaticBtn: document.getElementById('sseModeStaticBtn'),
     modeAnimatedBtn: document.getElementById('sseModeAnimatedBtn'),
+    modeMasksBtn: document.getElementById('sseModeMasksBtn'),
     animationPreviewPanel: document.getElementById('sseAnimationPreviewPanel'),
     animationPreviewCanvas: document.getElementById('sseAnimationPreviewCanvas'),
     previewLoopCheckbox: document.getElementById('ssePreviewLoopCheckbox'),
@@ -1657,8 +1689,6 @@ export async function initSpriteSheetEditor(options = {}) {
     root: document.getElementById('sseRoot'),
     sidebar: document.getElementById('sseSidebar'),
     sidebarMenuToggle: document.getElementById('sseSidebarMenuToggle'),
-    sidebarTabTagsBtn: document.getElementById('sseSidebarTabTagsBtn'),
-    sidebarTabMasksBtn: document.getElementById('sseSidebarTabMasksBtn'),
     sidebarTagsPanel: document.getElementById('sseSidebarTagsPanel'),
     sidebarMasksPanel: document.getElementById('sseSidebarMasksPanel'),
     generatorTypeSelect: document.getElementById('sseGeneratorTypeSelect'),
@@ -1668,7 +1698,6 @@ export async function initSpriteSheetEditor(options = {}) {
     generatorRoadWidthInput: document.getElementById('sseGeneratorRoadWidthInput'),
     generatorFadeInput: document.getElementById('sseGeneratorFadeInput'),
     generatorCornerInput: document.getElementById('sseGeneratorCornerInput'),
-    generatorRegenerateBtn: document.getElementById('sseGeneratorRegenerateBtn'),
     generatorExportPngBtn: document.getElementById('sseGeneratorExportPngBtn'),
     generatorExportWebpBtn: document.getElementById('sseGeneratorExportWebpBtn'),
     generatorInspector: document.getElementById('sseGeneratorInspector'),
@@ -1915,10 +1944,23 @@ export async function initSpriteSheetEditor(options = {}) {
   })
 
   state.modeStaticBtn?.addEventListener('click', () => {
+    setSidebarActiveTab('tags')
     switchMode('static')
   })
   state.modeAnimatedBtn?.addEventListener('click', () => {
+    setSidebarActiveTab('tags')
     switchMode('animated')
+  })
+  state.modeMasksBtn?.addEventListener('click', async() => {
+    setSidebarActiveTab('masks')
+    if (state.mode !== 'static') {
+      await switchMode('static')
+    }
+    if (!state.generatorResult) {
+      await regenerateRoadAutotileSheet(state, { loadIntoEditor: true })
+    } else {
+      renderGeneratorPreview(state)
+    }
   })
 
   state.previewLoopCheckbox?.addEventListener('change', () => {
@@ -2091,16 +2133,10 @@ export async function initSpriteSheetEditor(options = {}) {
   const setSidebarActiveTab = (tab) => {
     state.sidebarActiveTab = tab === 'masks' ? 'masks' : 'tags'
     const showMasks = state.sidebarActiveTab === 'masks'
-    state.sidebarTabTagsBtn?.classList.toggle('is-active', !showMasks)
-    state.sidebarTabMasksBtn?.classList.toggle('is-active', showMasks)
-    state.sidebarTabTagsBtn?.setAttribute('aria-selected', showMasks ? 'false' : 'true')
-    state.sidebarTabMasksBtn?.setAttribute('aria-selected', showMasks ? 'true' : 'false')
     if (state.sidebarTagsPanel) state.sidebarTagsPanel.hidden = showMasks
     if (state.sidebarMasksPanel) state.sidebarMasksPanel.hidden = !showMasks
+    updateModeTabUi(state)
   }
-
-  state.sidebarTabTagsBtn?.addEventListener('click', () => setSidebarActiveTab('tags'))
-  state.sidebarTabMasksBtn?.addEventListener('click', () => setSidebarActiveTab('masks'))
 
   state.generatorShowDebugCheckbox?.addEventListener('change', () => {
     state.generatorShowDebugLabels = Boolean(state.generatorShowDebugCheckbox.checked)
@@ -2137,10 +2173,6 @@ export async function initSpriteSheetEditor(options = {}) {
   ].forEach((input) => {
     input?.addEventListener('input', liveGeneratorRefresh)
     input?.addEventListener('change', liveGeneratorRefresh)
-  })
-
-  state.generatorRegenerateBtn?.addEventListener('click', async() => {
-    await regenerateRoadAutotileSheet(state, { loadIntoEditor: true })
   })
 
   state.generatorExportPngBtn?.addEventListener('click', () => {
