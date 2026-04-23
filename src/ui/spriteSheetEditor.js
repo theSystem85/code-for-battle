@@ -1624,8 +1624,12 @@ function downloadCanvasImage(canvas, fileName, mimeType = 'image/png') {
   }, mimeType)
 }
 
-function toMaskTag(label) {
-  return `mask_${`${label || ''}`.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '')}`
+function toDirectionalMaskTags(label) {
+  const raw = `${label || ''}`.toLowerCase()
+  const matches = raw.match(/t([01]).*r([01]).*b([01]).*l([01])/)
+  if (!matches) return []
+  const [, t, r, b, l] = matches
+  return [`mask_t${t}`, `mask_r${r}`, `mask_b${b}`, `mask_l${l}`]
 }
 
 function applyGeneratorDebugTagsToActiveSheet(state) {
@@ -1635,10 +1639,10 @@ function applyGeneratorDebugTagsToActiveSheet(state) {
 
   state.generatorResult.tileMappings.forEach((tile) => {
     if (tile.kind !== 'bitmask') return
-    const tileTag = toMaskTag(tile.label)
-    tagSet.add(tileTag)
+    const directionalTags = toDirectionalMaskTags(tile.label)
+    directionalTags.forEach(tag => tagSet.add(tag))
     const key = makeTileKey(tile.col, tile.row)
-    nextTiles[key] = { tags: [tileTag] }
+    nextTiles[key] = { tags: directionalTags }
   })
 
   state.activeData.tags = [...tagSet]

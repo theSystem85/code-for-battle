@@ -45,6 +45,7 @@ Add an integrated generator inside the existing Sprite Sheet Editor (SSE) that p
 
 ## Metadata/tagging follow-up
 - On generation, bitmask debug labels are also written as per-tile SSE tags so generated sheets can be tagged/filtered immediately.
+- Directional tags are split per edge bit (`mask_t0/1`, `mask_r0/1`, `mask_b0/1`, `mask_l0/1`) rather than a single combined tag token.
 
 ## API/architecture
 - Keep generation logic independent from SSE UI in a reusable module.
