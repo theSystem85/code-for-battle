@@ -1590,8 +1590,17 @@ async function regenerateRoadAutotileSheet(state, { loadIntoEditor = true } = {}
     await state.modeStaticBtn?.click()
   }
 
-  if (state.generatorBlobUrl) {
-    URL.revokeObjectURL(state.generatorBlobUrl)
+  if (state.generatedMaskSheetPaths?.size) {
+    state.generatedMaskSheetPaths.forEach((oldPath) => {
+      state.staticSheetPaths = state.staticSheetPaths.filter(path => path !== oldPath)
+      if (state.customSheetLabels?.[oldPath]) {
+        delete state.customSheetLabels[oldPath]
+      }
+      if (typeof oldPath === 'string' && oldPath.startsWith('blob:')) {
+        URL.revokeObjectURL(oldPath)
+      }
+    })
+    state.generatedMaskSheetPaths.clear()
   }
   const blob = await new Promise(resolve => result.canvas.toBlob(resolve, 'image/png'))
   if (!blob) {
@@ -1601,6 +1610,7 @@ async function regenerateRoadAutotileSheet(state, { loadIntoEditor = true } = {}
   const fileName = 'road_autotile_4bit_mask_1024x1024.png'
   const objectUrl = URL.createObjectURL(blob)
   state.generatorBlobUrl = objectUrl
+  state.generatedMaskSheetPaths?.add(objectUrl)
   ensureSheetPathInMode(state, objectUrl, fileName, 'static')
   state.sheetPaths = state.staticSheetPaths
   renderSheetOptions(state)
@@ -1765,6 +1775,7 @@ export async function initSpriteSheetEditor(options = {}) {
     generatorSelectedTileIndex: 0,
     generatorShowDebugLabels: true,
     generatorBlobUrl: null,
+    generatedMaskSheetPaths: new Set(),
     sidebarActiveTab: 'tags',
     onSheetDataChange: options.onSheetDataChange || null,
     onAnimationSheetDataChange: options.onAnimationSheetDataChange || null

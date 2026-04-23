@@ -61,3 +61,8 @@ Add an integrated generator inside the existing Sprite Sheet Editor (SSE) that p
 - Connected edges touch border centers.
 - Non-connected edges remain clear at border centers.
 - Export/source dimensions exactly 1024x1024 for default config.
+
+## Static import + selector hygiene follow-up
+- Drag/drop image import in `Static` mode must keep working after Masks-tab generation workflows.
+- Regenerating a mask sheet must keep only the newest generated blob-backed mask in the static sheet selector.
+- Previously generated mask blob URLs must be removed from selector metadata and revoked to avoid stale duplicate entries and memory leaks.

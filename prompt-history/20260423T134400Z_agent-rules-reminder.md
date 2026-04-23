@@ -1,0 +1,49 @@
+2026-04-23T13:44:00Z UTC
+LLM: codex
+
+# Prompt
+# AGENTS.md instructions for /workspace/code-for-battle
+
+<INSTRUCTIONS>
+RULES for agentic codeing
+1) running a development server is allowed when required for verification/debugging (especially Playwright E2E), and should be used when a task depends on a live app runtime. You HAVE to run all unit tests using "npm run test:unit" before concluding your code changes and fix all issues in a meaningful way (means fix the root issues in the code and not just adjust the test to pass).
+2) after completing any code implementation, always run `npm run lint:fix:changed` to auto-fix linting issues. If any errors remain that cannot be auto-fixed, manually resolve them before finishing the task.
+3) with every prompt update the relevant TODO file in the TODO/ folder (Improvements.md, Bugs.md, or Features.md) with the incoming new or changed requirements AND also update the any affected specs inside the specs folder or add new specs when needed
+4) put the content of any prompt into the prompt-history folder and for each prompt create a new file inside that folder that has the UTC timestamp as its name followed by an underscore and up to 3 word summary (with dashes as separators) of the prompt so a user can quickly identify what the prompt was about when reading the filename. The file is and .md file with UTC timestamp added on top and the name of the LLM that processed it (copilot, chatGPT, codex, ...).
+5) when adding new buildings to the game the sidebar image can be found in public/images/sidebar and the image to render the building on the map in public/images/map/buildings
+6) when adding new units to the game the sidebar image can be found in public/images/sidebar and the image to render the unit on the map in public/images/map/units
+7) when the image assets for the new units are not specified in the prompt search the content of the folders mentioned in rule 5 and 6 for matching filenames. The names should be self explanatory so you could easily match them to the new units or buildings that you have to implement. The assets are usually added to the repo before you have to start the implementation.
+8) ALL LAND UNITS (tanks, trucks, harvesters, etc.) must spawn from the Vehicle Factory, not the Construction Yard. Apache helicopters spawn from Helipads. When adding a new land unit, always add it to the `vehicleUnitTypes` array in `src/productionQueue.js` to ensure proper spawn location.
+9) Anser every prompt (when you actually changed code) with a last section that contains a commit message describing your last changes for the user to copy paste
+10) !DISABLED FOR NOW!: for every implemented bugfix or feature request, always add a meaningful E2E test that verifies the implementation end-to-end. The workflow is mandatory: first implement the bugfix/feature, then in the same task implement the E2E test, run it, and keep improving code and/or test until the E2E test passes. The E2E test must stay behavior-driven and meaningful (the implementation must satisfy the real behavior being tested, not the test being weakened to fit current code).
+11) SELF-BLOCKING OCCUPANCY WARNING: A unit's occupied tile MUST always be determined by the CENTER of the unit's image (`Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)`), NOT the top-left corner (`Math.floor(unit.x / TILE_SIZE)`). Additionally, the physics/collision system MUST always exclude a unit's own occupancy tile from blocking checks — otherwise the unit gets pushed away from its own tile, triggering pathfinding reroute loops. This has been a recurring source of bugs. When implementing any new feature or fixing bugs that involve occupancy, tile position, pathfinding, or collision logic, always verify: (a) tile position uses center-based formula, (b) self-occupancy is excluded in collision/blocking checks, (c) `unit.tileX`/`unit.tileY` assignment uses center-based formula.
+
+## Skills
+A skill is a set of local instructions to follow that is stored in a `SKILL.md` file. Below is the list of skills that can be used. Each entry includes a name, description, and file path so you can open the source for full instructions when using a specific skill.
+### Available skills
+- skill-creator: Guide for creating effective skills. This skill should be used when users want to create a new skill (or update an existing skill) that extends Codex's capabilities with specialized knowledge, workflows, or tool integrations. (file: /opt/codex/skills/.system/skill-creator/SKILL.md)
+- skill-installer: Install Codex skills into $CODEX_HOME/skills from a curated list or a GitHub repo path. Use when a user asks to list installable skills, install a curated skill, or install a skill from another repo (including private repos). (file: /opt/codex/skills/.system/skill-installer/SKILL.md)
+### How to use skills
+- Discovery: The list above is the skills available in this session (name + description + file path). Skill bodies live on disk at the listed paths.
+- Trigger rules: If the user names a skill (with `$SkillName` or plain text) OR the task clearly matches a skill's description shown above, you must use that skill for that turn. Multiple mentions mean use them all. Do not carry skills across turns unless re-mentioned.
+- Missing/blocked: If a named skill isn't in the list or the path can't be read, say so briefly and continue with the best fallback.
+- How to use a skill (progressive disclosure):
+  1) After deciding to use a skill, open its `SKILL.md`. Read only enough to follow the workflow.
+  2) When `SKILL.md` references relative paths (e.g., `scripts/foo.py`), resolve them relative to the skill directory listed above first, and only consider other paths if needed.
+  3) If `SKILL.md` points to extra folders such as `references/`, load only the specific files needed for the request; don't bulk-load everything.
+  4) If `scripts/` exist, prefer running or patching them instead of retyping large code blocks.
+  5) If `assets/` or templates exist, reuse them instead of recreating from scratch.
+- Coordination and sequencing:
+  - If multiple skills apply, choose the minimal set that covers the request and state the order you'll use them.
+  - Announce which skill(s) you're using and why (one short line). If you skip an obvious skill, say why.
+- Context hygiene:
+  - Keep context small: summarize long sections instead of pasting them; only load extra files when needed.
+  - Avoid deep reference-chasing: prefer opening only files directly linked from `SKILL.md` unless you're blocked.
+  - When variants exist (frameworks, providers, domains), pick only the relevant reference file(s) and note that choice.
+- Safety and fallback: If a skill can't be applied cleanly (missing files, unclear instructions), state the issue, pick the next-best approach, and continue.
+</INSTRUCTIONS><environment_context>
+  <cwd>/workspace/code-for-battle</cwd>
+  <shell>bash</shell>
+  <current_date>2026-04-23</current_date>
+  <timezone>Etc/UTC</timezone>
+</environment_context>
