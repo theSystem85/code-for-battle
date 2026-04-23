@@ -203,6 +203,22 @@ describe('MapRenderer water rendering', () => {
     expect(clearTriangleSpy).toHaveBeenCalledWith(ctx, 32, 0, 33, 'top-left')
   })
 
+  it('skips SOT rendering when the host tile is street', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const drawSotSpy = vi.spyOn(mapRenderer, 'drawSOT').mockImplementation(() => {})
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      fillStyle: '#000'
+    }
+    const mapGrid = [[{ type: 'street' }]]
+
+    mapRenderer.sotMask = [[{ orientation: 'top-left', type: 'water' }]]
+    mapRenderer.drawBaseLayer(ctx, mapGrid, 0, 0, 1, 1, 0, 0, false, null)
+
+    expect(drawSotSpy).not.toHaveBeenCalled()
+  })
+
   it('adds water SOT triangles to the WebGL tile batch so they match shader-rendered water', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = [

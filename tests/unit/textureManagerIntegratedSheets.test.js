@@ -258,4 +258,38 @@ describe('TextureManager integrated multi-sheet selection', () => {
       sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
     }))
   })
+
+  it('picks biome street tiles matching the highest valid adjacency tags', () => {
+    const manager = new TextureManager()
+    const streetTiles = [
+      { tags: ['street', 'grass'], rect: { x: 0, y: 0, width: 64, height: 64 }, image: { id: 'street' }, sheetPath: 'street-sheet' },
+      { tags: ['street', 'grass', 'top'], rect: { x: 64, y: 0, width: 64, height: 64 }, image: { id: 'street' }, sheetPath: 'street-sheet' },
+      { tags: ['street', 'grass', 'left', 'top'], rect: { x: 128, y: 0, width: 64, height: 64 }, image: { id: 'street' }, sheetPath: 'street-sheet' },
+      { tags: ['street', 'grass', 'left', 'right', 'top'], rect: { x: 192, y: 0, width: 64, height: 64 }, image: { id: 'street' }, sheetPath: 'street-sheet' },
+      { tags: ['street', 'snow', 'left', 'top'], rect: { x: 256, y: 0, width: 64, height: 64 }, image: { id: 'street' }, sheetPath: 'street-sheet' }
+    ]
+
+    manager.integratedSpriteSheetMode = true
+    manager.integratedSpriteSheetImage = { id: 'sheet-image' }
+    manager.integratedSpriteSheetMetadata = { tiles: {} }
+    manager.integratedBiomeTag = 'grass'
+    manager.integratedTagBuckets = {
+      street: streetTiles,
+      grass: streetTiles.filter(tile => tile.tags.includes('grass')),
+      snow: streetTiles.filter(tile => tile.tags.includes('snow')),
+      top: streetTiles.filter(tile => tile.tags.includes('top')),
+      left: streetTiles.filter(tile => tile.tags.includes('left')),
+      right: streetTiles.filter(tile => tile.tags.includes('right'))
+    }
+
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const selected = manager.getIntegratedTileForMapTile('street', 1, 1, { mapGrid })
+    expect(selected?.tags).toEqual(expect.arrayContaining(['street', 'grass', 'left', 'top']))
+    expect(selected?.tags).not.toContain('right')
+  })
 })

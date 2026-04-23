@@ -482,6 +482,56 @@ export class TextureManager {
     return candidates[TextureManager.coordHash(x, y) % candidates.length]
   }
 
+  selectStreetTileByAdjacency(x, y, mapGrid) {
+    const allStreetCandidates = this.getIntegratedTileCandidatesByTags(['street'])
+    if (!allStreetCandidates.length) return null
+
+    const biomeCandidates = allStreetCandidates.filter(tile => tile.tags.includes(this.integratedBiomeTag))
+    const candidates = biomeCandidates.length ? biomeCandidates : allStreetCandidates
+    if (!Array.isArray(mapGrid) || !mapGrid.length || !mapGrid[0]?.length) {
+      return this.selectIntegratedTileFromCandidates(candidates, x, y)
+    }
+
+    const hasStreetAt = (cellX, cellY) => {
+      const row = mapGrid[cellY]
+      if (!Array.isArray(row)) return false
+      return row[cellX]?.type === 'street'
+    }
+
+    const wantedDirections = new Set()
+    if (hasStreetAt(x, y - 1)) wantedDirections.add('top')
+    if (hasStreetAt(x, y + 1)) wantedDirections.add('bottom')
+    if (hasStreetAt(x - 1, y)) wantedDirections.add('left')
+    if (hasStreetAt(x + 1, y)) wantedDirections.add('right')
+
+    const directionTags = ['top', 'bottom', 'left', 'right']
+    const eligible = candidates.filter((tile) => {
+      return directionTags.every((tag) => {
+        if (!tile.tags.includes(tag)) return true
+        return wantedDirections.has(tag)
+      })
+    })
+
+    if (!eligible.length) {
+      return this.selectIntegratedTileFromCandidates(candidates, x, y)
+    }
+
+    let bestScore = -1
+    const bestTiles = []
+    eligible.forEach((tile) => {
+      const score = directionTags.reduce((total, tag) => total + (wantedDirections.has(tag) && tile.tags.includes(tag) ? 1 : 0), 0)
+      if (score > bestScore) {
+        bestScore = score
+        bestTiles.length = 0
+        bestTiles.push(tile)
+      } else if (score === bestScore) {
+        bestTiles.push(tile)
+      }
+    })
+
+    return this.selectIntegratedTileFromCandidates(bestTiles, x, y)
+  }
+
   getGroupedTagCandidates(tag, { includeDefaultDecals = false } = {}) {
     const integrated = Array.isArray(this.integratedGroupedTagCatalog?.[tag]) ? this.integratedGroupedTagCatalog[tag] : []
     if (!includeDefaultDecals) {
@@ -565,7 +615,7 @@ export class TextureManager {
           || this.selectIntegratedTileByTags([this.integratedBiomeTag], x, y, ['decorative', 'impassable'])
       }
     } else if (type === 'street') {
-      selected = this.selectIntegratedTileByTags(['street'], x, y)
+      selected = this.selectStreetTileByAdjacency(x, y, mapGrid)
     } else if (type === 'rock') {
       if (mapGrid) {
         selected = this.selectGroupedTileForMapTile('rocks', x, y, mapGrid, (cellX, cellY) => mapGrid[cellY]?.[cellX]?.type === 'rock')

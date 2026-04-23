@@ -53,6 +53,7 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   softenBrightness: 24
 })
 const DEFAULT_SSE_SHEETS = [
+  'images/map/sprite_sheets/streets23_q90_1024x1024.webp',
   'images/map/sprite_sheets/seasons_1024_q90_2.webp',
   'images/map/sprite_sheets/seasons_1024_q90_3.webp',
   'images/map/sprite_sheets/crystals_q90_1024x1024.webp',
