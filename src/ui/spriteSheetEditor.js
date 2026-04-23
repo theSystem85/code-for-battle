@@ -5,6 +5,9 @@ import {
   normalizeSpriteSheetBlendMode,
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
+import {
+  generateRoadAutotileMaskSheet
+} from './roadAutotileMaskGenerator.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -22,6 +25,7 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
   softenBrightness: 24
 })
+const SSE_ROAD_AUTOTILE_GENERATOR = 'road-4bit-mask'
 
 export const DEFAULT_SSE_TAGS = [
   'passable',
@@ -133,8 +137,14 @@ function buildSheetMetadataText(data, image) {
 
 function updateSheetMetadataUi(state) {
   if (!state.sheetMetaRow || !state.sheetResolutionEl || !state.sheetInfoPopover) return
+  if (state.sidebarActiveTab === 'masks') {
+    state.sheetMetaRow.hidden = true
+    state.sheetMetaRow.style.display = 'none'
+    return
+  }
   if (!state.activeData || !state.image) {
     state.sheetMetaRow.hidden = true
+    state.sheetMetaRow.style.display = ''
     state.sheetResolutionEl.textContent = 'Resolution: --'
     state.sheetInfoPopover.textContent = ''
     return
@@ -143,6 +153,7 @@ function updateSheetMetadataUi(state) {
   const width = Number.isFinite(state.image.naturalWidth) && state.image.naturalWidth > 0 ? state.image.naturalWidth : state.image.width
   const height = Number.isFinite(state.image.naturalHeight) && state.image.naturalHeight > 0 ? state.image.naturalHeight : state.image.height
   state.sheetMetaRow.hidden = false
+  state.sheetMetaRow.style.display = ''
   state.sheetResolutionEl.textContent = `Resolution: ${width}x${height}px`
   state.sheetInfoPopover.textContent = buildSheetMetadataText(state.activeData, state.image)
 }
@@ -484,6 +495,29 @@ function drawSseCanvas(state) {
     }
     ctx.setLineDash([])
   }
+
+  if (state.generatorShowDebugLabels && state.generatorResult && state.generatorBlobUrl && state.activeData?.sheetPath === state.generatorBlobUrl) {
+    const generatorTileSize = Math.max(1, state.generatorResult.config.tileSize)
+    state.generatorResult.tileMappings.forEach((tile) => {
+      const x = tile.col * generatorTileSize
+      const y = tile.row * generatorTileSize
+      const label1 = `#${tile.tileIndex}`
+      const label2 = tile.label || ''
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.72)'
+      const width = Math.max(label1.length, label2.length) * 7
+      ctx.fillRect(x + 2, y + 2, width + 8, 24)
+      ctx.fillStyle = '#ffffff'
+      ctx.font = '10px monospace'
+      ctx.fillText(label1, x + 4, y + 4)
+      ctx.fillText(label2, x + 4, y + 14)
+    })
+    const selected = state.generatorResult.tileMappings.find(tile => tile.tileIndex === state.generatorSelectedTileIndex)
+    if (selected) {
+      ctx.strokeStyle = '#00c2ff'
+      ctx.lineWidth = 2
+      ctx.strokeRect((selected.col * generatorTileSize) + 1, (selected.row * generatorTileSize) + 1, generatorTileSize - 2, generatorTileSize - 2)
+    }
+  }
 }
 
 function updateZoomDisplay(state) {
@@ -693,13 +727,16 @@ function setStatus(state, message, kind = 'info') {
 
 function updateModeTabUi(state) {
   const isAnimated = state.mode === 'animated'
-  state.modeStaticBtn?.classList.toggle('is-active', !isAnimated)
+  const isMasks = state.sidebarActiveTab === 'masks'
+  state.modeStaticBtn?.classList.toggle('is-active', !isAnimated && !isMasks)
   state.modeAnimatedBtn?.classList.toggle('is-active', isAnimated)
-  state.modeStaticBtn?.setAttribute('aria-selected', isAnimated ? 'false' : 'true')
+  state.modeMasksBtn?.classList.toggle('is-active', isMasks)
+  state.modeStaticBtn?.setAttribute('aria-selected', (!isAnimated && !isMasks) ? 'true' : 'false')
   state.modeAnimatedBtn?.setAttribute('aria-selected', isAnimated ? 'true' : 'false')
+  state.modeMasksBtn?.setAttribute('aria-selected', isMasks ? 'true' : 'false')
   if (state.animationPreviewPanel) {
-    state.animationPreviewPanel.hidden = !isAnimated
-    state.animationPreviewPanel.style.display = isAnimated ? 'flex' : 'none'
+    state.animationPreviewPanel.hidden = !isAnimated || isMasks
+    state.animationPreviewPanel.style.display = (isAnimated && !isMasks) ? 'flex' : 'none'
   }
   if (!isAnimated && state.previewFrameHandle) {
     cancelAnimationFrame(state.previewFrameHandle)
@@ -1056,6 +1093,7 @@ function bindCanvasInteractions(state) {
   }
 
   const beginPaintAtPosition = (x, y) => {
+    if (state.sidebarActiveTab === 'masks') return false
     if (!state.activeData || !state.image) return false
     const tile = getTileAtCanvasPos(state, x, y)
     if (!tile) return false
@@ -1496,6 +1534,126 @@ function resolveSheetDisplayLabel(state, sheetPath) {
   return sheetPath?.split('/').pop() || sheetPath || ''
 }
 
+function renderGeneratorPreview(state) {
+  drawSseCanvas(state)
+  applyCanvasZoom(state)
+}
+
+function updateGeneratorInspectorUi(state, selectedTileIndex) {
+  if (!state.generatorInspector || !state.generatorResult) return
+  const tile = state.generatorResult.tileMappings.find(entry => entry.tileIndex === selectedTileIndex) || state.generatorResult.tileMappings[0]
+  if (!tile) {
+    state.generatorInspector.textContent = 'Tile inspector: no generated tile selected.'
+    return
+  }
+  state.generatorSelectedTileIndex = tile.tileIndex
+  const bitmaskText = Number.isFinite(tile.bitmask) ? `${tile.bitmask}` : 'N/A'
+  state.generatorInspector.textContent = `Inspector: tileIndex ${tile.tileIndex}, bitmask ${bitmaskText} (${tile.label}) at row ${tile.row}, col ${tile.col}`
+}
+
+function updateGeneratorValidationUi(state) {
+  if (!state.generatorValidation || !state.generatorResult) return
+  const v = state.generatorResult.validations
+  const ok = v.generatedCount === 16 &&
+    v.uniqueCount === 16 &&
+    v.hasExactCoverage &&
+    v.connectedCenterTouches &&
+    v.disconnectedCenterClear &&
+    v.dimensions.isExpectedSize &&
+    v.dimensions.width === 1024 &&
+    v.dimensions.height === 1024
+  state.generatorValidation.textContent = ok
+    ? 'Validation: pass (16 unique patterns, edge-center checks OK, dimensions 1024x1024).'
+    : `Validation: fail (generated=${v.generatedCount}, unique=${v.uniqueCount}, connectedEdges=${v.connectedCenterTouches}, disconnectedEdges=${v.disconnectedCenterClear}, dimensions=${v.dimensions.width}x${v.dimensions.height}).`
+  state.generatorValidation.style.color = ok ? '#9ad09a' : '#ff8c8c'
+}
+
+async function regenerateRoadAutotileSheet(state, { loadIntoEditor = true } = {}) {
+  if (!state.generatorTypeSelect || state.generatorTypeSelect.value !== SSE_ROAD_AUTOTILE_GENERATOR) return
+  const config = {
+    tileSize: Number.parseInt(state.generatorTileSizeInput?.value, 10) || 64,
+    columns: Number.parseInt(state.generatorColsInput?.value, 10) || 16,
+    rows: Number.parseInt(state.generatorRowsInput?.value, 10) || 16,
+    roadWidth: Number.parseInt(state.generatorRoadWidthInput?.value, 10) || 26,
+    fadeDistance: Number.parseInt(state.generatorFadeInput?.value, 10) || 12,
+    cornerRadius: Number.parseInt(state.generatorCornerInput?.value, 10) || 0
+  }
+  const result = generateRoadAutotileMaskSheet(config)
+  state.generatorResult = result
+  state.generatorBitOrderLabel && (state.generatorBitOrderLabel.textContent = result.bitOrderLabel)
+  renderGeneratorPreview(state)
+  updateGeneratorValidationUi(state)
+  updateGeneratorInspectorUi(state, state.generatorSelectedTileIndex || 0)
+
+  if (!loadIntoEditor) return
+  if (state.mode !== 'static') {
+    await state.modeStaticBtn?.click()
+  }
+
+  if (state.generatorBlobUrl) {
+    URL.revokeObjectURL(state.generatorBlobUrl)
+  }
+  const blob = await new Promise(resolve => result.canvas.toBlob(resolve, 'image/png'))
+  if (!blob) {
+    setStatus(state, 'Failed to build generated mask blob.', 'error')
+    return
+  }
+  const fileName = 'road_autotile_4bit_mask_1024x1024.png'
+  const objectUrl = URL.createObjectURL(blob)
+  state.generatorBlobUrl = objectUrl
+  ensureSheetPathInMode(state, objectUrl, fileName, 'static')
+  state.sheetPaths = state.staticSheetPaths
+  renderSheetOptions(state)
+  await loadSheet(state, objectUrl, { mode: 'static' })
+  applyGeneratorDebugTagsToActiveSheet(state)
+  notifyActiveDataChange(state)
+  setStatus(state, 'Generated deterministic 4-bit road autotile mask and loaded it in the editor.')
+}
+
+function downloadCanvasImage(canvas, fileName, mimeType = 'image/png') {
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = fileName
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }, mimeType)
+}
+
+function toDirectionalMaskTags(label) {
+  const raw = `${label || ''}`.toLowerCase()
+  const matches = raw.match(/t([01]).*r([01]).*b([01]).*l([01])/)
+  if (!matches) return []
+  const [, t, r, b, l] = matches
+  return [`mask_t${t}`, `mask_r${r}`, `mask_b${b}`, `mask_l${l}`]
+}
+
+function applyGeneratorDebugTagsToActiveSheet(state) {
+  if (!state.activeData || !state.generatorResult) return
+  const nextTiles = {}
+  const tagSet = new Set(state.activeData.tags || [])
+
+  state.generatorResult.tileMappings.forEach((tile) => {
+    if (tile.kind !== 'bitmask') return
+    const directionalTags = toDirectionalMaskTags(tile.label)
+    directionalTags.forEach(tag => tagSet.add(tag))
+    const key = makeTileKey(tile.col, tile.row)
+    nextTiles[key] = { tags: directionalTags }
+  })
+
+  state.activeData.tags = [...tagSet]
+  state.activeData.tiles = nextTiles
+  renderTagList(state)
+  drawSseCanvas(state)
+  applyCanvasZoom(state)
+  updateApplyAllButtonLabel(state)
+  saveDataToLocalStorage(state.activeData, state.mode)
+}
+
 export async function initSpriteSheetEditor(options = {}) {
   const state = {
     modal: document.getElementById('spriteSheetEditorModal'),
@@ -1503,18 +1661,21 @@ export async function initSpriteSheetEditor(options = {}) {
     openBtn: document.getElementById('openSpriteSheetEditorBtn'),
     modeStaticBtn: document.getElementById('sseModeStaticBtn'),
     modeAnimatedBtn: document.getElementById('sseModeAnimatedBtn'),
+    modeMasksBtn: document.getElementById('sseModeMasksBtn'),
     animationPreviewPanel: document.getElementById('sseAnimationPreviewPanel'),
     animationPreviewCanvas: document.getElementById('sseAnimationPreviewCanvas'),
     previewLoopCheckbox: document.getElementById('ssePreviewLoopCheckbox'),
     previewBackgroundCheckbox: document.getElementById('ssePreviewBackgroundCheckbox'),
     previewPlayPauseBtn: document.getElementById('ssePreviewPlayPauseBtn'),
     previewDurationEl: document.getElementById('ssePreviewDuration'),
+    sheetSelectField: document.getElementById('sseSheetSelectField'),
     sheetSelect: document.getElementById('sseSheetSelect'),
     sheetMetaRow: document.getElementById('sseSheetMetaRow'),
     sheetResolutionEl: document.getElementById('sseSheetResolution'),
     sheetInfoWrap: document.getElementById('sseSheetInfoWrap'),
     sheetInfoBtn: document.getElementById('sseSheetInfoBtn'),
     sheetInfoPopover: document.getElementById('sseSheetInfoPopover'),
+    imageConverterAccordion: document.getElementById('sseImageConverterAccordion'),
     tileSizeInput: document.getElementById('sseTileSizeInput'),
     rowHeightInput: document.getElementById('sseRowHeightInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
@@ -1541,6 +1702,24 @@ export async function initSpriteSheetEditor(options = {}) {
     root: document.getElementById('sseRoot'),
     sidebar: document.getElementById('sseSidebar'),
     sidebarMenuToggle: document.getElementById('sseSidebarMenuToggle'),
+    sidebarTagsPanel: document.getElementById('sseSidebarTagsPanel'),
+    sidebarMasksPanel: document.getElementById('sseSidebarMasksPanel'),
+    generatorTypeSelect: document.getElementById('sseGeneratorTypeSelect'),
+    generatorTileSizeInput: document.getElementById('sseGeneratorTileSizeInput'),
+    generatorColsInput: document.getElementById('sseGeneratorColsInput'),
+    generatorRowsInput: document.getElementById('sseGeneratorRowsInput'),
+    generatorRoadWidthInput: document.getElementById('sseGeneratorRoadWidthInput'),
+    generatorFadeInput: document.getElementById('sseGeneratorFadeInput'),
+    generatorCornerInput: document.getElementById('sseGeneratorCornerInput'),
+    generatorExportPngBtn: document.getElementById('sseGeneratorExportPngBtn'),
+    generatorExportWebpBtn: document.getElementById('sseGeneratorExportWebpBtn'),
+    generatorInspector: document.getElementById('sseGeneratorInspector'),
+    generatorValidation: document.getElementById('sseGeneratorValidation'),
+    generatorShowDebugCheckbox: document.getElementById('sseGeneratorShowDebugCheckbox'),
+    generatorBitOrderLabel: document.getElementById('sseGeneratorBitOrderLabel'),
+    generatorInfoWrap: document.getElementById('sseGeneratorInfoWrap'),
+    generatorInfoBtn: document.getElementById('sseGeneratorInfoBtn'),
+    generatorInfoPopover: document.getElementById('sseGeneratorInfoPopover'),
     sheetPaths: [],
     customSheetLabels: {},
     staticSheetPaths: [],
@@ -1582,6 +1761,11 @@ export async function initSpriteSheetEditor(options = {}) {
     animatedModeSnapshot: null,
     sidebarHidden: false,
     sidebarSwipeState: null,
+    generatorResult: null,
+    generatorSelectedTileIndex: 0,
+    generatorShowDebugLabels: true,
+    generatorBlobUrl: null,
+    sidebarActiveTab: 'tags',
     onSheetDataChange: options.onSheetDataChange || null,
     onAnimationSheetDataChange: options.onAnimationSheetDataChange || null
   }
@@ -1773,10 +1957,19 @@ export async function initSpriteSheetEditor(options = {}) {
   })
 
   state.modeStaticBtn?.addEventListener('click', () => {
+    setSidebarActiveTab('tags')
     switchMode('static')
   })
   state.modeAnimatedBtn?.addEventListener('click', () => {
+    setSidebarActiveTab('tags')
     switchMode('animated')
+  })
+  state.modeMasksBtn?.addEventListener('click', async() => {
+    setSidebarActiveTab('masks')
+    if (state.mode !== 'static') {
+      await switchMode('static')
+    }
+    await regenerateRoadAutotileSheet(state, { loadIntoEditor: true })
   })
 
   state.previewLoopCheckbox?.addEventListener('change', () => {
@@ -1829,9 +2022,14 @@ export async function initSpriteSheetEditor(options = {}) {
 
   document.addEventListener('click', (event) => {
     if (!state.sheetInfoWrap || !state.sheetInfoBtn) return
-    if (state.sheetInfoWrap.contains(event.target)) return
-    state.sheetInfoWrap.classList.remove('is-open')
-    state.sheetInfoBtn.setAttribute('aria-expanded', 'false')
+    if (!state.sheetInfoWrap.contains(event.target)) {
+      state.sheetInfoWrap.classList.remove('is-open')
+      state.sheetInfoBtn.setAttribute('aria-expanded', 'false')
+    }
+    if (state.generatorInfoWrap && state.generatorInfoBtn && !state.generatorInfoWrap.contains(event.target)) {
+      state.generatorInfoWrap.classList.remove('is-open')
+      state.generatorInfoBtn.setAttribute('aria-expanded', 'false')
+    }
   })
 
   state.canvasWrap?.addEventListener('dragover', (event) => {
@@ -1941,6 +2139,86 @@ export async function initSpriteSheetEditor(options = {}) {
     snapZoomToCanvas(state)
   })
 
+  const setSidebarActiveTab = (tab) => {
+    state.sidebarActiveTab = tab === 'masks' ? 'masks' : 'tags'
+    const showMasks = state.sidebarActiveTab === 'masks'
+    if (state.sidebarTagsPanel) {
+      state.sidebarTagsPanel.hidden = showMasks
+      state.sidebarTagsPanel.style.display = showMasks ? 'none' : 'flex'
+    }
+    if (state.sidebarMasksPanel) {
+      state.sidebarMasksPanel.hidden = !showMasks
+      state.sidebarMasksPanel.style.display = showMasks ? 'flex' : 'none'
+    }
+    if (state.sheetSelectField) {
+      state.sheetSelectField.hidden = showMasks
+      state.sheetSelectField.style.display = showMasks ? 'none' : 'flex'
+    }
+    if (state.sheetMetaRow) {
+      const shouldHideMeta = showMasks || !state.activeData || !state.image
+      state.sheetMetaRow.hidden = shouldHideMeta
+      state.sheetMetaRow.style.display = shouldHideMeta ? 'none' : 'inline-flex'
+    }
+    if (state.imageConverterAccordion) {
+      state.imageConverterAccordion.hidden = showMasks
+      state.imageConverterAccordion.style.display = showMasks ? 'none' : ''
+    }
+    if (state.animationPreviewPanel) {
+      const animatedVisible = state.mode === 'animated' && !showMasks
+      state.animationPreviewPanel.hidden = !animatedVisible
+      state.animationPreviewPanel.style.display = animatedVisible ? 'flex' : 'none'
+    }
+    updateModeTabUi(state)
+  }
+
+  state.generatorShowDebugCheckbox?.addEventListener('change', () => {
+    state.generatorShowDebugLabels = Boolean(state.generatorShowDebugCheckbox.checked)
+    renderGeneratorPreview(state)
+  })
+
+  state.canvas?.addEventListener('click', (event) => {
+    if (state.sidebarActiveTab !== 'masks' || !state.generatorResult || !state.generatorBlobUrl || state.activeData?.sheetPath !== state.generatorBlobUrl) return
+    const pos = getRelativeEventPos(state.canvasWrap, event)
+    const tile = getTileAtCanvasPos(state, pos.x, pos.y)
+    if (!tile) return
+    const tileIndex = (tile.row * state.generatorResult.config.columns) + tile.col
+    updateGeneratorInspectorUi(state, tileIndex)
+    renderGeneratorPreview(state)
+  })
+
+  state.generatorInfoBtn?.addEventListener('click', (event) => {
+    event.preventDefault()
+    event.stopPropagation()
+    const isOpen = state.generatorInfoWrap?.classList.toggle('is-open')
+    state.generatorInfoBtn?.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
+  })
+
+  const liveGeneratorRefresh = async() => {
+    await regenerateRoadAutotileSheet(state, { loadIntoEditor: true })
+  }
+  ;[
+    state.generatorTileSizeInput,
+    state.generatorColsInput,
+    state.generatorRowsInput,
+    state.generatorRoadWidthInput,
+    state.generatorFadeInput,
+    state.generatorCornerInput
+  ].forEach((input) => {
+    input?.addEventListener('input', liveGeneratorRefresh)
+    input?.addEventListener('change', liveGeneratorRefresh)
+  })
+
+  state.generatorExportPngBtn?.addEventListener('click', () => {
+    if (!state.generatorResult) return
+    downloadCanvasImage(state.generatorResult.canvas, 'road_autotile_4bit_mask_1024x1024.png', 'image/png')
+    setStatus(state, 'Exported road autotile mask as PNG.')
+  })
+  state.generatorExportWebpBtn?.addEventListener('click', () => {
+    if (!state.generatorResult) return
+    downloadCanvasImage(state.generatorResult.canvas, 'road_autotile_4bit_mask_1024x1024.webp', 'image/webp')
+    setStatus(state, 'Exported road autotile mask as WebP.')
+  })
+
   state.applyCurrentTagAllBtn?.addEventListener('click', () => {
     const result = toggleCurrentTagOnAllTiles(state)
     if (result.changed > 0) {
@@ -2004,6 +2282,11 @@ export async function initSpriteSheetEditor(options = {}) {
   }
 
   bindCanvasInteractions(state)
+  setSidebarActiveTab('tags')
+  if (state.generatorShowDebugCheckbox) {
+    state.generatorShowDebugCheckbox.checked = true
+  }
+  await regenerateRoadAutotileSheet(state, { loadIntoEditor: false })
   refreshAnimationPreview(state)
   if (state.previewPlaying && state.isModalOpen) {
     startAnimationPreviewLoop(state)

@@ -385,7 +385,7 @@ body.config-modal-open {
 
 .sprite-sheet-editor__mode-tabs {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -483,6 +483,45 @@ body.config-modal-open {
   display: flex;
   flex-direction: column;
   gap: 6px;
+}
+
+.sprite-sheet-editor__generator {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.sprite-sheet-editor__generator-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sprite-sheet-editor__sidebar-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sprite-sheet-editor__sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.sprite-sheet-editor__generator-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.sprite-sheet-editor__generator-label {
+  color: #c7d2de;
+  font-size: 12px;
 }
 
 .sprite-sheet-editor__zoom-row {
