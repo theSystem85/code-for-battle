@@ -728,8 +728,8 @@ function updateModeTabUi(state) {
   state.modeAnimatedBtn?.setAttribute('aria-selected', isAnimated ? 'true' : 'false')
   state.modeMasksBtn?.setAttribute('aria-selected', isMasks ? 'true' : 'false')
   if (state.animationPreviewPanel) {
-    state.animationPreviewPanel.hidden = !isAnimated
-    state.animationPreviewPanel.style.display = isAnimated ? 'flex' : 'none'
+    state.animationPreviewPanel.hidden = !isAnimated || isMasks
+    state.animationPreviewPanel.style.display = (isAnimated && !isMasks) ? 'flex' : 'none'
   }
   if (!isAnimated && state.previewFrameHandle) {
     cancelAnimationFrame(state.previewFrameHandle)
@@ -1657,12 +1657,14 @@ export async function initSpriteSheetEditor(options = {}) {
     previewBackgroundCheckbox: document.getElementById('ssePreviewBackgroundCheckbox'),
     previewPlayPauseBtn: document.getElementById('ssePreviewPlayPauseBtn'),
     previewDurationEl: document.getElementById('ssePreviewDuration'),
+    sheetSelectField: document.getElementById('sseSheetSelectField'),
     sheetSelect: document.getElementById('sseSheetSelect'),
     sheetMetaRow: document.getElementById('sseSheetMetaRow'),
     sheetResolutionEl: document.getElementById('sseSheetResolution'),
     sheetInfoWrap: document.getElementById('sseSheetInfoWrap'),
     sheetInfoBtn: document.getElementById('sseSheetInfoBtn'),
     sheetInfoPopover: document.getElementById('sseSheetInfoPopover'),
+    imageConverterAccordion: document.getElementById('sseImageConverterAccordion'),
     tileSizeInput: document.getElementById('sseTileSizeInput'),
     rowHeightInput: document.getElementById('sseRowHeightInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
@@ -2135,6 +2137,14 @@ export async function initSpriteSheetEditor(options = {}) {
     const showMasks = state.sidebarActiveTab === 'masks'
     if (state.sidebarTagsPanel) state.sidebarTagsPanel.hidden = showMasks
     if (state.sidebarMasksPanel) state.sidebarMasksPanel.hidden = !showMasks
+    if (state.sheetSelectField) state.sheetSelectField.hidden = showMasks
+    if (state.sheetMetaRow) state.sheetMetaRow.hidden = showMasks || !state.activeData || !state.image
+    if (state.imageConverterAccordion) state.imageConverterAccordion.hidden = showMasks
+    if (state.animationPreviewPanel) {
+      const animatedVisible = state.mode === 'animated' && !showMasks
+      state.animationPreviewPanel.hidden = !animatedVisible
+      state.animationPreviewPanel.style.display = animatedVisible ? 'flex' : 'none'
+    }
     updateModeTabUi(state)
   }
 

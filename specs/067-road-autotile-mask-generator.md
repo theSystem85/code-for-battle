@@ -26,6 +26,8 @@ Add an integrated generator inside the existing Sprite Sheet Editor (SSE) that p
 - Add info bubble explaining debug code semantics (`T/R/B/L`, `1/0`).
 - `Masks` tab lives in the top SSE mode-tab row (next to `Static` / `Animated`) and when active it owns the entire sidebar.
 - Static/Animated tagging UI must remain available for normal sprite-sheet tagging (including generated mask sheets).
+- All three top tabs (`Static`, `Animated`, `Masks`) remain in the same row.
+- In `Masks` mode, static-only controls (sprite sheet selector/metadata row/converter and static tile-grid metadata inputs) are hidden so only mask-generator controls are shown.
 
 ## Layout follow-up
 - Group base pattern rotations by column: each pattern family gets one column, rows are the 4 rotation slots.
