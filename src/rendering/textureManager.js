@@ -9,6 +9,8 @@ const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
 const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
 const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
+const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets23_q90_1024x1024.json'
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -53,6 +55,9 @@ export class TextureManager {
     this.defaultCrystalSheetImage = null
     this.defaultCrystalSheetMetadata = null
     this.defaultCrystalTagBuckets = {}
+    this.defaultStreetSheetImage = null
+    this.defaultStreetSheetMetadata = null
+    this.defaultStreetTagBuckets = {}
     this.integratedGroupedTagCatalog = {}
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.integratedConfigVersion = 0
@@ -326,7 +331,50 @@ export class TextureManager {
     }
   }
 
+  async preloadDefaultStreetSheet() {
+    try {
+      const response = await fetch(DEFAULT_STREET_METADATA_PATH, { cache: 'no-store' })
+      if (!response.ok) {
+        this.defaultStreetSheetMetadata = null
+        this.defaultStreetTagBuckets = {}
+        return
+      }
+
+      const metadata = await response.json()
+      if (!this.hasTaggedIntegratedTiles(metadata)) {
+        this.defaultStreetSheetMetadata = null
+        this.defaultStreetTagBuckets = {}
+        return
+      }
+
+      const image = await this.loadIntegratedSpriteSheetImage(DEFAULT_STREET_SHEET_PATH)
+      if (!image) {
+        this.defaultStreetSheetMetadata = null
+        this.defaultStreetTagBuckets = {}
+        return
+      }
+
+      this.defaultStreetSheetImage = image
+      this.defaultStreetSheetMetadata = {
+        ...metadata,
+        sheetPath: DEFAULT_STREET_SHEET_PATH
+      }
+      this.defaultStreetTagBuckets = this.buildIntegratedTagBuckets([{
+        sheetPath: DEFAULT_STREET_SHEET_PATH,
+        metadata: this.defaultStreetSheetMetadata,
+        image,
+        blendMode: normalizeSpriteSheetBlendMode(metadata?.blendMode),
+        blackKey: metadata?.blackKey || null
+      }])
+    } catch (err) {
+      this.defaultStreetSheetMetadata = null
+      this.defaultStreetTagBuckets = {}
+      window.logger.warn('Failed to preload default street sheet:', err)
+    }
+  }
+
   async setIntegratedSpriteSheetConfig(config = {}) {
+    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     const enabled = Boolean(config?.enabled)
     if (!enabled) {
       this.integratedSpriteSheetMode = false
@@ -385,7 +433,6 @@ export class TextureManager {
     this.integratedSpriteSheetMetadata = normalizedEntries[0].metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
     this.integratedGroupedTagCatalog = this.buildGroupedTagCatalog(normalizedEntries)
-    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
     this.integratedBlackKey = normalizedEntries[0].blackKey
     const signatureSheets = normalizedEntries
@@ -482,6 +529,56 @@ export class TextureManager {
     return candidates[TextureManager.coordHash(x, y) % candidates.length]
   }
 
+  selectStreetTileFromBuckets(buckets, x, y, mapGrid, biomeTag = this.integratedBiomeTag) {
+    const allStreetCandidates = Array.isArray(buckets?.street) ? buckets.street : []
+    if (!allStreetCandidates.length) return null
+
+    const biomeAwareCandidates = ['soil', 'sand', 'grass', 'snow'].includes(biomeTag)
+      ? allStreetCandidates.filter(tile => Array.isArray(tile?.tags) && tile.tags.includes(biomeTag))
+      : []
+    const candidates = biomeAwareCandidates.length ? biomeAwareCandidates : allStreetCandidates
+
+    if (!Array.isArray(mapGrid) || !mapGrid.length) {
+      return this.selectIntegratedTileFromCandidates(candidates, x, y)
+    }
+
+    const topStreet = mapGrid[y - 1]?.[x]?.type === 'street'
+    const bottomStreet = mapGrid[y + 1]?.[x]?.type === 'street'
+    const leftStreet = mapGrid[y]?.[x - 1]?.type === 'street'
+    const rightStreet = mapGrid[y]?.[x + 1]?.type === 'street'
+    const directionRequirements = {
+      top: topStreet,
+      bottom: bottomStreet,
+      left: leftStreet,
+      right: rightStreet
+    }
+
+    const scored = candidates
+      .map((tile) => {
+        const tags = Array.isArray(tile?.tags) ? tile.tags : []
+        const hasInvalidDirectionalTag = ['top', 'bottom', 'left', 'right'].some(
+          direction => tags.includes(direction) && !directionRequirements[direction]
+        )
+        if (hasInvalidDirectionalTag) return null
+        const score = ['top', 'bottom', 'left', 'right'].reduce((total, direction) => {
+          if (directionRequirements[direction] && tags.includes(direction)) return total + 1
+          return total
+        }, 0)
+        return { tile, score }
+      })
+      .filter(Boolean)
+
+    if (!scored.length) {
+      return this.selectIntegratedTileFromCandidates(candidates, x, y)
+    }
+
+    const maxScore = Math.max(...scored.map(entry => entry.score))
+    const bestCandidates = scored
+      .filter(entry => entry.score === maxScore)
+      .map(entry => entry.tile)
+    return this.selectIntegratedTileFromCandidates(bestCandidates, x, y)
+  }
+
   getGroupedTagCandidates(tag, { includeDefaultDecals = false } = {}) {
     const integrated = Array.isArray(this.integratedGroupedTagCatalog?.[tag]) ? this.integratedGroupedTagCatalog[tag] : []
     if (!includeDefaultDecals) {
@@ -538,14 +635,17 @@ export class TextureManager {
   }
 
   getIntegratedTileForMapTile(type, x, y, options = {}) {
-    if (!this.integratedSpriteSheetMode || !this.integratedSpriteSheetImage || !this.integratedSpriteSheetMetadata) {
-      return null
-    }
-
     let selected = null
     const mapGrid = options?.mapGrid
+    let fallbackImage = null
 
-    if (type === 'land') {
+    if (!this.integratedSpriteSheetMode || !this.integratedSpriteSheetImage || !this.integratedSpriteSheetMetadata) {
+      if (type !== 'street') return null
+      selected = this.selectStreetTileFromBuckets(this.defaultStreetTagBuckets, x, y, mapGrid, this.integratedBiomeTag)
+      fallbackImage = this.defaultStreetSheetImage
+    }
+
+    if (!selected && type === 'land') {
       const classification = this.getLandClassificationTag(x, y)
       const biomeDecorativeCandidates = this.getIntegratedTileCandidatesByTags([this.integratedBiomeTag, 'decorative'])
       if (classification === 'decorative') {
@@ -564,18 +664,20 @@ export class TextureManager {
         selected = this.selectIntegratedTileByTags([this.integratedBiomeTag, 'passable'], x, y, ['decorative', 'impassable'])
           || this.selectIntegratedTileByTags([this.integratedBiomeTag], x, y, ['decorative', 'impassable'])
       }
-    } else if (type === 'street') {
-      selected = this.selectIntegratedTileByTags(['street'], x, y)
-    } else if (type === 'rock') {
+    } else if (!selected && type === 'street') {
+      selected = this.selectStreetTileFromBuckets(this.integratedTagBuckets, x, y, mapGrid, this.integratedBiomeTag)
+      selected = selected || this.selectStreetTileFromBuckets(this.defaultStreetTagBuckets, x, y, mapGrid, this.integratedBiomeTag)
+      fallbackImage = this.defaultStreetSheetImage
+    } else if (!selected && type === 'rock') {
       if (mapGrid) {
         selected = this.selectGroupedTileForMapTile('rocks', x, y, mapGrid, (cellX, cellY) => mapGrid[cellY]?.[cellX]?.type === 'rock')
           || this.selectGroupedTileForMapTile('rock', x, y, mapGrid, (cellX, cellY) => mapGrid[cellY]?.[cellX]?.type === 'rock')
       }
       selected = selected || this.selectIntegratedTileByTags(['rocks'], x, y)
         || this.selectIntegratedTileByTags(['rock'], x, y)
-    } else if (type === 'water') {
+    } else if (!selected && type === 'water') {
       selected = this.selectIntegratedTileByTags(['water'], x, y)
-    } else {
+    } else if (!selected) {
       selected = this.selectIntegratedTileByTags([type], x, y)
         || this.selectIntegratedTileByTags(['passable'], x, y)
     }
@@ -583,7 +685,7 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey),
+      image: selected.image || getImageTextureWithBlendMode(fallbackImage || this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey),
       rect: selected.rect,
       tags: selected.tags || [],
       sheetPath: selected.sheetPath || null
@@ -737,6 +839,7 @@ export class TextureManager {
 
     await this.preloadDefaultCombatDecalSheet()
     await this.preloadDefaultCrystalSheet()
+    await this.preloadDefaultStreetSheet()
 
     this.allTexturesLoaded = true
     if (callback) callback()

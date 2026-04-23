@@ -661,7 +661,7 @@ export class MapRenderer {
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
-        if (this.sotMask[y]?.[x]) {
+        if (visualTileType !== 'street' && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
           if (skipWaterSot && sotInfo.type === 'water') {
             if (skipWaterBase && visualTileType !== 'water') {
@@ -1248,7 +1248,7 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
+        if (visualTileType === 'land' && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
           if (skipWaterSot && sotInfo.type === 'water') {
             continue

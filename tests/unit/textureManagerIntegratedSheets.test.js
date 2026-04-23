@@ -258,4 +258,74 @@ describe('TextureManager integrated multi-sheet selection', () => {
       sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
     }))
   })
+
+  it('selects directional street tiles that satisfy the most neighbor tags', () => {
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = true
+    manager.integratedBiomeTag = 'grass'
+    manager.integratedTagBuckets = {
+      street: [
+        {
+          tags: ['street'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/custom_street.webp'
+        },
+        {
+          tags: ['street', 'top'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/custom_street.webp'
+        },
+        {
+          tags: ['street', 'left'],
+          rect: { x: 128, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/custom_street.webp'
+        },
+        {
+          tags: ['street', 'left', 'top'],
+          rect: { x: 192, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/custom_street.webp'
+        }
+      ],
+      top: [
+        { tags: ['street', 'top'], rect: { x: 64, y: 0, width: 64, height: 64 }, image: { id: 'sheet' } },
+        { tags: ['street', 'left', 'top'], rect: { x: 192, y: 0, width: 64, height: 64 }, image: { id: 'sheet' } }
+      ],
+      left: [
+        { tags: ['street', 'left'], rect: { x: 128, y: 0, width: 64, height: 64 }, image: { id: 'sheet' } },
+        { tags: ['street', 'left', 'top'], rect: { x: 192, y: 0, width: 64, height: 64 }, image: { id: 'sheet' } }
+      ]
+    }
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const selected = manager.getIntegratedTileForMapTile('street', 1, 1, { mapGrid })
+    expect(selected?.tags).toEqual(expect.arrayContaining(['street', 'left', 'top']))
+  })
+
+  it('falls back to default street sheet when integrated mode is disabled', () => {
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = false
+    manager.defaultStreetTagBuckets = {
+      street: [
+        {
+          tags: ['street', 'grass'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-street' },
+          sheetPath: 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+        }
+      ]
+    }
+
+    const selected = manager.getIntegratedTileForMapTile('street', 4, 7)
+    expect(selected).toEqual(expect.objectContaining({
+      sheetPath: 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+    }))
+  })
 })
