@@ -137,8 +137,14 @@ function buildSheetMetadataText(data, image) {
 
 function updateSheetMetadataUi(state) {
   if (!state.sheetMetaRow || !state.sheetResolutionEl || !state.sheetInfoPopover) return
+  if (state.sidebarActiveTab === 'masks') {
+    state.sheetMetaRow.hidden = true
+    state.sheetMetaRow.style.display = 'none'
+    return
+  }
   if (!state.activeData || !state.image) {
     state.sheetMetaRow.hidden = true
+    state.sheetMetaRow.style.display = ''
     state.sheetResolutionEl.textContent = 'Resolution: --'
     state.sheetInfoPopover.textContent = ''
     return
@@ -147,6 +153,7 @@ function updateSheetMetadataUi(state) {
   const width = Number.isFinite(state.image.naturalWidth) && state.image.naturalWidth > 0 ? state.image.naturalWidth : state.image.width
   const height = Number.isFinite(state.image.naturalHeight) && state.image.naturalHeight > 0 ? state.image.naturalHeight : state.image.height
   state.sheetMetaRow.hidden = false
+  state.sheetMetaRow.style.display = ''
   state.sheetResolutionEl.textContent = `Resolution: ${width}x${height}px`
   state.sheetInfoPopover.textContent = buildSheetMetadataText(state.activeData, state.image)
 }
@@ -1958,11 +1965,7 @@ export async function initSpriteSheetEditor(options = {}) {
     if (state.mode !== 'static') {
       await switchMode('static')
     }
-    if (!state.generatorResult) {
-      await regenerateRoadAutotileSheet(state, { loadIntoEditor: true })
-    } else {
-      renderGeneratorPreview(state)
-    }
+    await regenerateRoadAutotileSheet(state, { loadIntoEditor: true })
   })
 
   state.previewLoopCheckbox?.addEventListener('change', () => {
@@ -2135,11 +2138,27 @@ export async function initSpriteSheetEditor(options = {}) {
   const setSidebarActiveTab = (tab) => {
     state.sidebarActiveTab = tab === 'masks' ? 'masks' : 'tags'
     const showMasks = state.sidebarActiveTab === 'masks'
-    if (state.sidebarTagsPanel) state.sidebarTagsPanel.hidden = showMasks
-    if (state.sidebarMasksPanel) state.sidebarMasksPanel.hidden = !showMasks
-    if (state.sheetSelectField) state.sheetSelectField.hidden = showMasks
-    if (state.sheetMetaRow) state.sheetMetaRow.hidden = showMasks || !state.activeData || !state.image
-    if (state.imageConverterAccordion) state.imageConverterAccordion.hidden = showMasks
+    if (state.sidebarTagsPanel) {
+      state.sidebarTagsPanel.hidden = showMasks
+      state.sidebarTagsPanel.style.display = showMasks ? 'none' : 'flex'
+    }
+    if (state.sidebarMasksPanel) {
+      state.sidebarMasksPanel.hidden = !showMasks
+      state.sidebarMasksPanel.style.display = showMasks ? 'flex' : 'none'
+    }
+    if (state.sheetSelectField) {
+      state.sheetSelectField.hidden = showMasks
+      state.sheetSelectField.style.display = showMasks ? 'none' : 'flex'
+    }
+    if (state.sheetMetaRow) {
+      const shouldHideMeta = showMasks || !state.activeData || !state.image
+      state.sheetMetaRow.hidden = shouldHideMeta
+      state.sheetMetaRow.style.display = shouldHideMeta ? 'none' : 'inline-flex'
+    }
+    if (state.imageConverterAccordion) {
+      state.imageConverterAccordion.hidden = showMasks
+      state.imageConverterAccordion.style.display = showMasks ? 'none' : ''
+    }
     if (state.animationPreviewPanel) {
       const animatedVisible = state.mode === 'animated' && !showMasks
       state.animationPreviewPanel.hidden = !animatedVisible
