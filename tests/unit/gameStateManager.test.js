@@ -462,6 +462,49 @@ describe('gameStateManager', () => {
       expect(stop).toHaveBeenCalledWith(0.05)
       expect(units).toHaveLength(0)
     })
+
+    it('animates apache falling and rotating during the 2 second destruction freeze', () => {
+      const apache = {
+        id: 'apache-fall-1',
+        type: 'apache',
+        owner: 'enemy',
+        health: 0,
+        x: 64,
+        y: 96,
+        direction: 0.5,
+        altitude: TILE_SIZE * 2.4,
+        maxAltitude: TILE_SIZE * 3,
+        occupancyRemoved: false
+      }
+      const units = [apache]
+      const gameState = {
+        factories: [],
+        buildings: [],
+        occupancyMap: [],
+        playerUnitsDestroyed: 0,
+        enemyUnitsDestroyed: 0,
+        humanPlayer: 'player1'
+      }
+
+      performanceNow.mockReturnValue(1000)
+      cleanupDestroyedUnits(units, gameState)
+      expect(units).toHaveLength(1)
+      expect(apache.apacheDestructionInitialAltitude).toBeGreaterThan(0)
+      const initialAltitude = apache.apacheDestructionInitialAltitude
+
+      performanceNow.mockReturnValue(2000)
+      cleanupDestroyedUnits(units, gameState)
+      expect(units).toHaveLength(1)
+      expect(apache.altitude).toBeLessThan(initialAltitude)
+      expect(apache.apacheDestructionRenderDirection).toBeCloseTo(0.5 + (Math.PI * 0.75), 5)
+      expect(apache.shadow?.scale).toBeGreaterThanOrEqual(0.6)
+      expect(apache.shadow?.scale).toBeLessThanOrEqual(1)
+
+      performanceNow.mockReturnValue(3001)
+      cleanupDestroyedUnits(units, gameState)
+      expect(units).toHaveLength(0)
+      expect(playPositionalSound).toHaveBeenCalledWith('explosion', 80, 112, 0.5)
+    })
   })
 
   describe('cleanupDestroyedFactories', () => {

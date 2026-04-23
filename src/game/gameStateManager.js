@@ -42,6 +42,7 @@ const DESKTOP_EDGE_AUTOSCROLL_THRESHOLD_RATIO = 0.05
 const DESKTOP_EDGE_AUTOSCROLL_DEFAULT_FRAME_MS = 16
 const DESKTOP_EDGE_AUTOSCROLL_MAX_FRAME_MS = 64
 const UNIT_DESTRUCTION_FREEZE_DELAY_MS = 2000
+const APACHE_DESTRUCTION_TOTAL_ROTATION_RADIANS = (Math.PI * 3) / 2
 
 function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY) {
   if (!DESKTOP_EDGE_AUTOSCROLL_ENABLED) {
@@ -444,10 +445,36 @@ export function cleanupDestroyedUnits(units, gameState) {
         unit.frozenDestructionTurretDirection = Number.isFinite(unit.turretDirection)
           ? unit.turretDirection
           : (Number.isFinite(unit.direction) ? unit.direction : 0)
+        if (unit.type === 'apache') {
+          const currentAltitude = Number.isFinite(unit.altitude) ? unit.altitude : 0
+          const fallbackAltitude = Number.isFinite(unit.maxAltitude) ? unit.maxAltitude * 0.8 : TILE_SIZE * 1.5
+          unit.apacheDestructionInitialAltitude = Math.max(currentAltitude, fallbackAltitude, TILE_SIZE * 0.6)
+          unit.apacheDestructionBaseDirection = unit.frozenDestructionDirection
+        }
         prewarmDestructionExplosionTexture(gameState)
       }
 
       if (now - unit.destructionQueuedAt < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
+        if (unit.type === 'apache') {
+          const elapsed = Math.max(0, now - unit.destructionQueuedAt)
+          const progress = Math.max(0, Math.min(1, elapsed / UNIT_DESTRUCTION_FREEZE_DELAY_MS))
+          const easedFallProgress = 1 - ((1 - progress) ** 2)
+          const startAltitude = Number.isFinite(unit.apacheDestructionInitialAltitude)
+            ? unit.apacheDestructionInitialAltitude
+            : Math.max(Number.isFinite(unit.altitude) ? unit.altitude : 0, TILE_SIZE * 0.6)
+          const baseDirection = Number.isFinite(unit.apacheDestructionBaseDirection)
+            ? unit.apacheDestructionBaseDirection
+            : (Number.isFinite(unit.direction) ? unit.direction : 0)
+
+          unit.apacheDestructionFallProgress = progress
+          unit.apacheDestructionRenderDirection = baseDirection + (APACHE_DESTRUCTION_TOTAL_ROTATION_RADIANS * progress)
+          unit.altitude = Math.max(0, startAltitude * (1 - easedFallProgress))
+          unit.direction = unit.apacheDestructionRenderDirection
+          unit.shadow = {
+            offset: unit.altitude * 0.18,
+            scale: Math.max(0.6, 1 - (unit.altitude / Math.max(startAltitude, 0.001)) * 0.35)
+          }
+        }
         unit.vx = 0
         unit.vy = 0
         continue
