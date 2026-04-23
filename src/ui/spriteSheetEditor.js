@@ -5,6 +5,11 @@ import {
   normalizeSpriteSheetBlendMode,
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
+import {
+  ROAD_AUTOTILE_BIT_ORDER_LABEL,
+  generateRoadAutotileMaskSheet,
+  isWebpCanvasExportSupported
+} from './autotileMaskGenerator.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -483,6 +488,30 @@ function drawSseCanvas(state) {
       ctx.stroke()
     }
     ctx.setLineDash([])
+  }
+
+  if (state.generatorType === 'road-4bit' && state.showAutotileDebugOverlay && state.autotileGenerated?.tileEntries?.length) {
+    ctx.font = '11px monospace'
+    ctx.textAlign = 'left'
+    ctx.textBaseline = 'top'
+    state.autotileGenerated.tileEntries.forEach((entry) => {
+      const x = entry.col * tileSize
+      const y = entry.row * rowHeight
+      const isSelected = state.selectedAutotileIndex === entry.index
+      if (isSelected) {
+        ctx.strokeStyle = 'rgba(0, 200, 255, 0.95)'
+        ctx.lineWidth = 2
+        ctx.strokeRect(x + 1, y + 1, tileSize - 2, rowHeight - 2)
+      }
+      const line1 = `#${entry.index}`
+      const line2 = entry.debugLabel
+      ctx.fillStyle = 'rgba(0,0,0,0.72)'
+      ctx.fillRect(x + 2, y + 2, Math.min(tileSize - 4, 62), 24)
+      ctx.fillStyle = '#ffffff'
+      ctx.fillText(line1, x + 4, y + 4)
+      ctx.fillStyle = '#d9ecff'
+      ctx.fillText(line2, x + 4, y + 14)
+    })
   }
 }
 
@@ -1059,6 +1088,14 @@ function bindCanvasInteractions(state) {
     if (!state.activeData || !state.image) return false
     const tile = getTileAtCanvasPos(state, x, y)
     if (!tile) return false
+    if (state.generatorType === 'road-4bit' && state.autotileGenerated?.tileEntries?.length) {
+      const nextIndex = (tile.row * state.autotileGenerated.config.columns) + tile.col
+      if (nextIndex >= 0 && nextIndex < 16) {
+        renderAutotileInspector(state, nextIndex)
+        drawSseCanvas(state)
+      }
+      return false
+    }
 
     state.dragging = true
     state.dragVisited.clear()
@@ -1496,6 +1533,80 @@ function resolveSheetDisplayLabel(state, sheetPath) {
   return sheetPath?.split('/').pop() || sheetPath || ''
 }
 
+function triggerCanvasDownload(canvas, filename, mimeType = 'image/png') {
+  if (!canvas) return
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }, mimeType)
+}
+
+function renderAutotileInspector(state, index) {
+  if (!state.autotileInspectorEl) return
+  if (!state.autotileGenerated?.tileEntries?.length) {
+    state.autotileInspectorEl.textContent = 'Selected tile: --'
+    return
+  }
+  const normalized = Math.max(0, Math.min(15, Number.parseInt(index, 10) || 0))
+  const entry = state.autotileGenerated.tileEntries.find(item => item.index === normalized)
+  if (!entry) {
+    state.autotileInspectorEl.textContent = 'Selected tile: --'
+    return
+  }
+  state.selectedAutotileIndex = normalized
+  state.autotileInspectorEl.textContent = `Selected tile ${entry.index}: ${entry.debugLabel}`
+}
+
+function regenerateRoadAutotileSheetInEditor(state) {
+  const tileSize = Math.max(8, Number.parseInt(state.autotileTileSizeInput?.value, 10) || 64)
+  const columns = Math.max(1, Number.parseInt(state.autotileColsInput?.value, 10) || 16)
+  const rows = Math.max(1, Number.parseInt(state.autotileRowsInput?.value, 10) || 16)
+  const roadWidth = Number.parseInt(state.autotileRoadWidthInput?.value, 10) || Math.floor(tileSize * 0.52)
+  const fadeDistance = Number.parseInt(state.autotileFadeInput?.value, 10) || Math.floor(tileSize * 0.2)
+  const cornerRadius = Number.parseFloat(state.autotileCornerRadiusInput?.value) || 0
+
+  const generated = generateRoadAutotileMaskSheet({
+    tileSize,
+    columns,
+    rows,
+    roadWidth,
+    fadeDistance,
+    cornerRadius
+  })
+
+  const dataUrl = generated.canvas.toDataURL('image/png')
+  const image = new Image()
+  image.onload = () => {
+    state.autotileGenerated = generated
+    state.image = image
+    state.activeData = normalizeSheetDataForTags({
+      tileSize: generated.config.tileSize,
+      rowHeight: generated.config.tileSize,
+      borderWidth: 0,
+      blendMode: 'black',
+      tags: DEFAULT_SSE_TAGS,
+      tiles: {}
+    }, `local-upload:autotile-road-4bit-${Date.now()}.png`, DEFAULT_SSE_TAGS)
+    state.tileSizeInput.value = generated.config.tileSize
+    state.rowHeightInput.value = generated.config.tileSize
+    state.borderWidthInput.value = 0
+    updateSheetMetadataUi(state)
+    drawSseCanvas(state)
+    snapZoomToCanvas(state)
+    renderAutotileInspector(state, state.selectedAutotileIndex)
+    const validationText = generated.validation.valid ? 'Validation passed.' : generated.validation.errors[0]
+    setStatus(state, `Generated deterministic road 4-bit sheet (${generated.canvas.width}x${generated.canvas.height}). ${validationText}`, generated.validation.valid ? 'info' : 'warn')
+  }
+  image.src = dataUrl
+}
+
 export async function initSpriteSheetEditor(options = {}) {
   const state = {
     modal: document.getElementById('spriteSheetEditorModal'),
@@ -1519,6 +1630,19 @@ export async function initSpriteSheetEditor(options = {}) {
     rowHeightInput: document.getElementById('sseRowHeightInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
     blendModeSelect: document.getElementById('sseBlendModeSelect'),
+    generatorTypeSelect: document.getElementById('sseGeneratorTypeSelect'),
+    autotileTileSizeInput: document.getElementById('sseAutotileTileSizeInput'),
+    autotileColsInput: document.getElementById('sseAutotileColsInput'),
+    autotileRowsInput: document.getElementById('sseAutotileRowsInput'),
+    autotileRoadWidthInput: document.getElementById('sseAutotileRoadWidthInput'),
+    autotileFadeInput: document.getElementById('sseAutotileFadeInput'),
+    autotileCornerRadiusInput: document.getElementById('sseAutotileCornerRadiusInput'),
+    autotileBitOrderEl: document.getElementById('sseAutotileBitOrder'),
+    autotileInspectorEl: document.getElementById('sseAutotileInspector'),
+    autotileDebugOverlayCheckbox: document.getElementById('sseAutotileDebugOverlayCheckbox'),
+    autotileRegenerateBtn: document.getElementById('sseAutotileRegenerateBtn'),
+    autotileExportPngBtn: document.getElementById('sseAutotileExportPngBtn'),
+    autotileExportWebpBtn: document.getElementById('sseAutotileExportWebpBtn'),
     newTagInput: document.getElementById('sseNewTagInput'),
     addTagBtn: document.getElementById('sseAddTagBtn'),
     groupIdInput: document.getElementById('sseGroupIdInput'),
@@ -1568,7 +1692,11 @@ export async function initSpriteSheetEditor(options = {}) {
     currentGroupId: 1,
     showGrid: true,
     showLabels: true,
+    showAutotileDebugOverlay: true,
     showTaggedOverlay: true,
+    generatorType: 'none',
+    autotileGenerated: null,
+    selectedAutotileIndex: 0,
     mode: 'static',
     previewLoop: false,
     previewBackgroundEnabled: true,
@@ -1880,6 +2008,59 @@ export async function initSpriteSheetEditor(options = {}) {
     drawSseCanvas(state)
     refreshAnimationPreview(state)
     saveDataToLocalStorage(state.activeData, state.mode)
+  })
+
+  if (state.autotileBitOrderEl) {
+    state.autotileBitOrderEl.textContent = ROAD_AUTOTILE_BIT_ORDER_LABEL
+  }
+  if (state.generatorTypeSelect) {
+    state.generatorTypeSelect.value = state.generatorType
+  }
+  renderAutotileInspector(state, -1)
+  if (state.autotileExportWebpBtn) {
+    state.autotileExportWebpBtn.disabled = !isWebpCanvasExportSupported()
+  }
+
+  state.generatorTypeSelect?.addEventListener('change', () => {
+    state.generatorType = state.generatorTypeSelect.value
+    if (state.generatorType === 'road-4bit') {
+      regenerateRoadAutotileSheetInEditor(state)
+    } else {
+      state.autotileGenerated = null
+      renderAutotileInspector(state, -1)
+      drawSseCanvas(state)
+    }
+  })
+
+  state.autotileDebugOverlayCheckbox?.addEventListener('change', () => {
+    state.showAutotileDebugOverlay = Boolean(state.autotileDebugOverlayCheckbox.checked)
+    drawSseCanvas(state)
+  })
+
+  state.autotileRegenerateBtn?.addEventListener('click', () => {
+    regenerateRoadAutotileSheetInEditor(state)
+  })
+
+  state.autotileExportPngBtn?.addEventListener('click', () => {
+    if (!state.autotileGenerated?.canvas) return
+    const { canvas } = state.autotileGenerated
+    if (canvas.width !== 1024 || canvas.height !== 1024) {
+      setStatus(state, `Export blocked: expected 1024x1024, got ${canvas.width}x${canvas.height}.`, 'error')
+      return
+    }
+    triggerCanvasDownload(canvas, 'road_autotile_4bit_1024x1024.png', 'image/png')
+    setStatus(state, 'Exported autotile mask as PNG.')
+  })
+
+  state.autotileExportWebpBtn?.addEventListener('click', () => {
+    if (!state.autotileGenerated?.canvas) return
+    const { canvas } = state.autotileGenerated
+    if (canvas.width !== 1024 || canvas.height !== 1024) {
+      setStatus(state, `Export blocked: expected 1024x1024, got ${canvas.width}x${canvas.height}.`, 'error')
+      return
+    }
+    triggerCanvasDownload(canvas, 'road_autotile_4bit_1024x1024.webp', 'image/webp')
+    setStatus(state, 'Exported autotile mask as WebP.')
   })
 
   state.addTagBtn?.addEventListener('click', () => {
