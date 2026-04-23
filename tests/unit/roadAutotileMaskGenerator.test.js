@@ -15,7 +15,7 @@ describe('roadAutotileMaskGenerator', () => {
     expect(ROAD_BIT_ORDER_LABEL).toContain('top=1')
   })
 
-  test('generates a strict 1024x1024 sheet with 16 unique patterns and validation checks', () => {
+  test('generates strict base coverage and grouped rotation columns', () => {
     const result = generateRoadAutotileMaskSheet({
       tileSize: 64,
       columns: 16,
@@ -27,13 +27,23 @@ describe('roadAutotileMaskGenerator', () => {
 
     expect(result.canvas.width).toBe(1024)
     expect(result.canvas.height).toBe(1024)
-    expect(result.tileMappings).toHaveLength(16)
     expect(result.validations.generatedCount).toBe(16)
     expect(result.validations.uniqueCount).toBe(16)
     expect(result.validations.hasExactCoverage).toBe(true)
     expect(result.validations.connectedCenterTouches).toBe(true)
     expect(result.validations.disconnectedCenterClear).toBe(true)
     expect(result.validations.dimensions.isExpectedSize).toBe(true)
+
+    const tJunctionColumn = result.tileMappings.filter(tile => tile.columnKey === 't_junction')
+    expect(tJunctionColumn).toHaveLength(4)
+    expect(new Set(tJunctionColumn.map(tile => tile.col)).size).toBe(1)
+
+    const fullFillTile = result.tileMappings.find(tile => tile.kind === 'full-fill')
+    expect(fullFillTile).toBeTruthy()
+
+    const wideEdgeFadeTiles = result.tileMappings.filter(tile => tile.kind === 'wide-edge-fade')
+    expect(wideEdgeFadeTiles).toHaveLength(4)
+    expect(new Set(wideEdgeFadeTiles.map(tile => tile.fadeEdge)).size).toBe(4)
   })
 
   test('renders deterministic tile pixels for same bitmask/config', () => {

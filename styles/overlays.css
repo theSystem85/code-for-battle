@@ -494,19 +494,29 @@ body.config-modal-open {
   background: rgba(0, 0, 0, 0.2);
 }
 
-.sprite-sheet-editor__generator-grid {
+.sprite-sheet-editor__generator-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sprite-sheet-editor__sidebar-tabs {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
 }
 
-.sprite-sheet-editor__generator-preview {
-  width: 100%;
-  height: auto;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: #000;
-  image-rendering: pixelated;
-  cursor: pointer;
+.sprite-sheet-editor__sidebar-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+}
+
+.sprite-sheet-editor__generator-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px;
 }
 
 .sprite-sheet-editor__generator-label {

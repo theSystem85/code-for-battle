@@ -19,6 +19,8 @@ const DEFAULT_CONFIG = Object.freeze({
   requiredPatterns: 16
 })
 
+const WIDE_EDGE_FADE_DIRECTIONS = Object.freeze(['left', 'top', 'right', 'bottom'])
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
@@ -37,24 +39,25 @@ export function connectivityToDebugLabel(connectivity) {
   return `T${connectivity.top ? 1 : 0} R${connectivity.right ? 1 : 0} B${connectivity.bottom ? 1 : 0} L${connectivity.left ? 1 : 0}`
 }
 
-function drawRoundedRect(ctx, x, y, width, height, radius) {
-  const safeRadius = clamp(radius, 0, Math.floor(Math.min(width, height) / 2))
-  if (safeRadius <= 0) {
-    ctx.fillRect(x, y, width, height)
-    return
+function rotateConnectivity(connectivity, turnsClockwise = 0) {
+  let next = { ...connectivity }
+  const turns = ((turnsClockwise % 4) + 4) % 4
+  for (let i = 0; i < turns; i++) {
+    next = {
+      top: next.left,
+      right: next.top,
+      bottom: next.right,
+      left: next.bottom
+    }
   }
-  ctx.beginPath()
-  ctx.moveTo(x + safeRadius, y)
-  ctx.lineTo(x + width - safeRadius, y)
-  ctx.quadraticCurveTo(x + width, y, x + width, y + safeRadius)
-  ctx.lineTo(x + width, y + height - safeRadius)
-  ctx.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height)
-  ctx.lineTo(x + safeRadius, y + height)
-  ctx.quadraticCurveTo(x, y + height, x, y + height - safeRadius)
-  ctx.lineTo(x, y + safeRadius)
-  ctx.quadraticCurveTo(x, y, x + safeRadius, y)
-  ctx.closePath()
-  ctx.fill()
+  return next
+}
+
+function connectivityToBitmask(connectivity) {
+  return (connectivity.top ? ROAD_BITS.top : 0) |
+    (connectivity.right ? ROAD_BITS.right : 0) |
+    (connectivity.bottom ? ROAD_BITS.bottom : 0) |
+    (connectivity.left ? ROAD_BITS.left : 0)
 }
 
 function buildConfig(config = {}) {
@@ -80,7 +83,74 @@ function buildConfig(config = {}) {
   }
 }
 
-function renderTileToContext(ctx, bitmask, config) {
+function drawRoadBody(ctx, x, y, width, height, color) {
+  ctx.fillStyle = color
+  ctx.fillRect(x, y, width, height)
+}
+
+function drawVerticalSideFade(ctx, x, y, width, height, fadeDistance) {
+  if (fadeDistance <= 0) return
+  const leftFade = ctx.createLinearGradient(x, 0, x - fadeDistance, 0)
+  leftFade.addColorStop(0, 'rgba(255,255,255,0.88)')
+  leftFade.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = leftFade
+  ctx.fillRect(Math.max(0, x - fadeDistance), y, Math.min(fadeDistance, x), height)
+
+  const rightFade = ctx.createLinearGradient(x + width, 0, x + width + fadeDistance, 0)
+  rightFade.addColorStop(0, 'rgba(255,255,255,0.88)')
+  rightFade.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = rightFade
+  ctx.fillRect(x + width, y, fadeDistance, height)
+}
+
+function drawHorizontalSideFade(ctx, x, y, width, height, fadeDistance) {
+  if (fadeDistance <= 0) return
+  const topFade = ctx.createLinearGradient(0, y, 0, y - fadeDistance)
+  topFade.addColorStop(0, 'rgba(255,255,255,0.88)')
+  topFade.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = topFade
+  ctx.fillRect(x, Math.max(0, y - fadeDistance), width, Math.min(fadeDistance, y))
+
+  const bottomFade = ctx.createLinearGradient(0, y + height, 0, y + height + fadeDistance)
+  bottomFade.addColorStop(0, 'rgba(255,255,255,0.88)')
+  bottomFade.addColorStop(1, 'rgba(255,255,255,0)')
+  ctx.fillStyle = bottomFade
+  ctx.fillRect(x, y + height, width, fadeDistance)
+}
+
+function drawSingleEdgeFade(ctx, tileSize, direction, fadeDistance) {
+  if (fadeDistance <= 0) return
+  if (direction === 'left') {
+    const g = ctx.createLinearGradient(0, 0, fadeDistance, 0)
+    g.addColorStop(0, 'rgba(0,0,0,1)')
+    g.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, fadeDistance, tileSize)
+  }
+  if (direction === 'right') {
+    const g = ctx.createLinearGradient(tileSize - fadeDistance, 0, tileSize, 0)
+    g.addColorStop(0, 'rgba(0,0,0,0)')
+    g.addColorStop(1, 'rgba(0,0,0,1)')
+    ctx.fillStyle = g
+    ctx.fillRect(tileSize - fadeDistance, 0, fadeDistance, tileSize)
+  }
+  if (direction === 'top') {
+    const g = ctx.createLinearGradient(0, 0, 0, fadeDistance)
+    g.addColorStop(0, 'rgba(0,0,0,1)')
+    g.addColorStop(1, 'rgba(0,0,0,0)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, 0, tileSize, fadeDistance)
+  }
+  if (direction === 'bottom') {
+    const g = ctx.createLinearGradient(0, tileSize - fadeDistance, 0, tileSize)
+    g.addColorStop(0, 'rgba(0,0,0,0)')
+    g.addColorStop(1, 'rgba(0,0,0,1)')
+    ctx.fillStyle = g
+    ctx.fillRect(0, tileSize - fadeDistance, tileSize, fadeDistance)
+  }
+}
+
+function renderBitmaskTile(ctx, bitmask, config) {
   const connectivity = bitmaskToConnectivity(bitmask)
   const tileSize = config.tileSize
   const center = Math.floor(tileSize / 2)
@@ -88,58 +158,46 @@ function renderTileToContext(ctx, bitmask, config) {
   const roadLeft = center - halfRoad
   const roadTop = center - halfRoad
 
-  ctx.fillStyle = config.background
-  ctx.fillRect(0, 0, tileSize, tileSize)
-
-  ctx.fillStyle = config.roadColor
-  drawRoundedRect(ctx, roadLeft, roadTop, config.roadWidth, config.roadWidth, config.cornerRadius)
+  drawRoadBody(ctx, roadLeft, roadTop, config.roadWidth, config.roadWidth, config.roadColor)
+  drawVerticalSideFade(ctx, roadLeft, roadTop, config.roadWidth, config.roadWidth, config.fadeDistance)
+  drawHorizontalSideFade(ctx, roadLeft, roadTop, config.roadWidth, config.roadWidth, config.fadeDistance)
 
   if (connectivity.top) {
-    drawRoundedRect(ctx, roadLeft, 0, config.roadWidth, center, Math.min(config.cornerRadius, Math.floor(config.roadWidth / 4)))
-  }
-  if (connectivity.right) {
-    drawRoundedRect(ctx, center, roadTop, tileSize - center, config.roadWidth, Math.min(config.cornerRadius, Math.floor(config.roadWidth / 4)))
+    drawRoadBody(ctx, roadLeft, 0, config.roadWidth, center, config.roadColor)
+    drawVerticalSideFade(ctx, roadLeft, 0, config.roadWidth, center, config.fadeDistance)
   }
   if (connectivity.bottom) {
-    drawRoundedRect(ctx, roadLeft, center, config.roadWidth, tileSize - center, Math.min(config.cornerRadius, Math.floor(config.roadWidth / 4)))
+    drawRoadBody(ctx, roadLeft, center, config.roadWidth, tileSize - center, config.roadColor)
+    drawVerticalSideFade(ctx, roadLeft, center, config.roadWidth, tileSize - center, config.fadeDistance)
   }
   if (connectivity.left) {
-    drawRoundedRect(ctx, 0, roadTop, center, config.roadWidth, Math.min(config.cornerRadius, Math.floor(config.roadWidth / 4)))
+    drawRoadBody(ctx, 0, roadTop, center, config.roadWidth, config.roadColor)
+    drawHorizontalSideFade(ctx, 0, roadTop, center, config.roadWidth, config.fadeDistance)
+  }
+  if (connectivity.right) {
+    drawRoadBody(ctx, center, roadTop, tileSize - center, config.roadWidth, config.roadColor)
+    drawHorizontalSideFade(ctx, center, roadTop, tileSize - center, config.roadWidth, config.fadeDistance)
+  }
+}
+
+function renderTileToContext(ctx, tileSpec, config) {
+  ctx.fillStyle = config.background
+  ctx.fillRect(0, 0, config.tileSize, config.tileSize)
+
+  if (tileSpec.kind === 'full-fill') {
+    ctx.fillStyle = config.roadColor
+    ctx.fillRect(0, 0, config.tileSize, config.tileSize)
+    return
   }
 
-  const fade = config.fadeDistance
-
-  if (!connectivity.top) {
-    const topGrad = ctx.createLinearGradient(0, roadTop, 0, roadTop - fade)
-    topGrad.addColorStop(0, 'rgba(255,255,255,1)')
-    topGrad.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = topGrad
-    ctx.fillRect(roadLeft, Math.max(0, roadTop - fade), config.roadWidth, fade)
+  if (tileSpec.kind === 'wide-edge-fade') {
+    ctx.fillStyle = config.roadColor
+    ctx.fillRect(0, 0, config.tileSize, config.tileSize)
+    drawSingleEdgeFade(ctx, config.tileSize, tileSpec.fadeEdge, config.fadeDistance)
+    return
   }
 
-  if (!connectivity.bottom) {
-    const bottomGrad = ctx.createLinearGradient(0, roadTop + config.roadWidth, 0, roadTop + config.roadWidth + fade)
-    bottomGrad.addColorStop(0, 'rgba(255,255,255,1)')
-    bottomGrad.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = bottomGrad
-    ctx.fillRect(roadLeft, roadTop + config.roadWidth, config.roadWidth, Math.min(fade, tileSize - (roadTop + config.roadWidth)))
-  }
-
-  if (!connectivity.left) {
-    const leftGrad = ctx.createLinearGradient(roadLeft, 0, roadLeft - fade, 0)
-    leftGrad.addColorStop(0, 'rgba(255,255,255,1)')
-    leftGrad.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = leftGrad
-    ctx.fillRect(Math.max(0, roadLeft - fade), roadTop, fade, config.roadWidth)
-  }
-
-  if (!connectivity.right) {
-    const rightGrad = ctx.createLinearGradient(roadLeft + config.roadWidth, 0, roadLeft + config.roadWidth + fade, 0)
-    rightGrad.addColorStop(0, 'rgba(255,255,255,1)')
-    rightGrad.addColorStop(1, 'rgba(255,255,255,0)')
-    ctx.fillStyle = rightGrad
-    ctx.fillRect(roadLeft + config.roadWidth, roadTop, Math.min(fade, tileSize - (roadLeft + config.roadWidth)), config.roadWidth)
-  }
+  renderBitmaskTile(ctx, tileSpec.bitmask, config)
 }
 
 export function generateRoadAutotileMaskTile(bitmask, inputConfig = {}) {
@@ -152,15 +210,73 @@ export function generateRoadAutotileMaskTile(bitmask, inputConfig = {}) {
     throw new Error('2D canvas context unavailable for road autotile generation.')
   }
   ctx.imageSmoothingEnabled = false
-  renderTileToContext(ctx, bitmask, config)
+  renderTileToContext(ctx, { kind: 'bitmask', bitmask }, config)
   return canvas
 }
 
-function validateConnectivityCoverage(tileMappings) {
-  const masks = tileMappings.map(entry => entry.bitmask)
+function buildColumnLayout() {
+  const empty = { top: false, right: false, bottom: false, left: false }
+  const cap = { top: true, right: false, bottom: false, left: false }
+  const straight = { top: true, right: false, bottom: true, left: false }
+  const corner = { top: true, right: true, bottom: false, left: false }
+  const tJunction = { top: true, right: true, bottom: true, left: false }
+  const cross = { top: true, right: true, bottom: true, left: true }
+
+  const layout = [
+    { columnKey: 'empty', source: empty, rows: 1, base: true },
+    { columnKey: 'cap', source: cap, rows: 4, base: true },
+    { columnKey: 'straight', source: straight, rows: 4, base: true },
+    { columnKey: 'corner', source: corner, rows: 4, base: true },
+    { columnKey: 't_junction', source: tJunction, rows: 4, base: true },
+    { columnKey: 'cross', source: cross, rows: 4, base: true },
+    { columnKey: 'full_fill', source: null, rows: 1, base: false, kind: 'full-fill' },
+    { columnKey: 'wide_edge_fade', source: null, rows: 4, base: false, kind: 'wide-edge-fade' }
+  ]
+
+  const tileSpecs = []
+  layout.forEach((column, col) => {
+    for (let row = 0; row < column.rows; row++) {
+      if (column.kind === 'full-fill') {
+        tileSpecs.push({ col, row, kind: 'full-fill', columnKey: column.columnKey, rotation: 0, debugLabel: 'FULL' })
+        continue
+      }
+      if (column.kind === 'wide-edge-fade') {
+        const fadeEdge = WIDE_EDGE_FADE_DIRECTIONS[row]
+        tileSpecs.push({
+          col,
+          row,
+          kind: 'wide-edge-fade',
+          fadeEdge,
+          columnKey: column.columnKey,
+          rotation: row,
+          debugLabel: `FULL F${fadeEdge[0].toUpperCase()}`
+        })
+        continue
+      }
+      const rotated = rotateConnectivity(column.source, row)
+      const bitmask = connectivityToBitmask(rotated)
+      tileSpecs.push({
+        col,
+        row,
+        kind: 'bitmask',
+        bitmask,
+        connectivity: rotated,
+        columnKey: column.columnKey,
+        rotation: row,
+        base: true,
+        debugLabel: connectivityToDebugLabel(rotated)
+      })
+    }
+  })
+
+  return tileSpecs
+}
+
+function validateConnectivityCoverage(baseMappings) {
+  const masks = baseMappings.map(entry => entry.bitmask)
   const uniqueMasks = new Set(masks)
   return {
-    generatedCount: tileMappings.length,
+    generatedCount: uniqueMasks.size,
     uniqueCount: uniqueMasks.size,
     hasExactCoverage: uniqueMasks.size === 16 && uniqueMasks.has(0) && uniqueMasks.has(15)
   }
@@ -171,7 +287,7 @@ function getPixelBrightness(imageData, x, y) {
   return Math.max(imageData.data[index], imageData.data[index + 1], imageData.data[index + 2])
 }
 
-function validateEdgeCenters(sheetCanvas, config, tileMappings) {
+function validateEdgeCenters(sheetCanvas, config, baseMappings) {
   const ctx = sheetCanvas.getContext('2d', { alpha: true })
   if (!ctx) return { connectedCenterTouches: false, disconnectedCenterClear: false }
   const imageData = ctx.getImageData(0, 0, sheetCanvas.width, sheetCanvas.height)
@@ -181,7 +297,7 @@ function validateEdgeCenters(sheetCanvas, config, tileMappings) {
   const connectedThreshold = 200
   const disconnectedThreshold = 8
 
-  tileMappings.forEach(({ col, row, bitmask }) => {
+  baseMappings.forEach(({ col, row, bitmask }) => {
     const connectivity = bitmaskToConnectivity(bitmask)
     const originX = col * config.tileSize
     const originY = row * config.tileSize
@@ -223,26 +339,40 @@ export function generateRoadAutotileMaskSheet(inputConfig = {}) {
   ctx.fillStyle = config.background
   ctx.fillRect(0, 0, sheetCanvas.width, sheetCanvas.height)
 
+  const layoutSpecs = buildColumnLayout()
   const tileMappings = []
-  for (let bitmask = 0; bitmask < config.requiredPatterns; bitmask++) {
-    const col = bitmask % config.columns
-    const row = Math.floor(bitmask / config.columns)
-    const tileCanvas = generateRoadAutotileMaskTile(bitmask, config)
-    ctx.drawImage(tileCanvas, col * config.tileSize, row * config.tileSize)
-    const connectivity = bitmaskToConnectivity(bitmask)
-    tileMappings.push({
-      bitmask,
-      col,
-      row,
-      tileIndex: (row * config.columns) + col,
-      connectivity,
-      label: connectivityToDebugLabel(connectivity)
-    })
-  }
+  const baseMappingsByMask = new Map()
 
+  layoutSpecs.forEach((spec) => {
+    const tileCanvas = document.createElement('canvas')
+    tileCanvas.width = config.tileSize
+    tileCanvas.height = config.tileSize
+    const tileCtx = tileCanvas.getContext('2d', { alpha: true })
+    if (!tileCtx) return
+    tileCtx.imageSmoothingEnabled = false
+    renderTileToContext(tileCtx, spec, config)
+
+    const x = spec.col * config.tileSize
+    const y = spec.row * config.tileSize
+    ctx.drawImage(tileCanvas, x, y)
+
+    const tileMapping = {
+      ...spec,
+      tileIndex: (spec.row * config.columns) + spec.col,
+      label: spec.debugLabel,
+      connectivity: spec.kind === 'bitmask' ? bitmaskToConnectivity(spec.bitmask) : null
+    }
+    tileMappings.push(tileMapping)
+
+    if (spec.kind === 'bitmask' && !baseMappingsByMask.has(spec.bitmask)) {
+      baseMappingsByMask.set(spec.bitmask, tileMapping)
+    }
+  })
+
+  const baseMappings = [...baseMappingsByMask.values()]
   const validations = {
-    ...validateConnectivityCoverage(tileMappings),
-    ...validateEdgeCenters(sheetCanvas, config, tileMappings),
+    ...validateConnectivityCoverage(baseMappings),
+    ...validateEdgeCenters(sheetCanvas, config, baseMappings),
     dimensions: validateOutputDimensions(sheetCanvas, config)
   }
 
@@ -250,6 +380,7 @@ export function generateRoadAutotileMaskSheet(inputConfig = {}) {
     canvas: sheetCanvas,
     config,
     tileMappings,
+    baseMappings,
     bitOrderLabel: ROAD_BIT_ORDER_LABEL,
     validations
   }

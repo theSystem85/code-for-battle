@@ -18,9 +18,21 @@ Add an integrated generator inside the existing Sprite Sheet Editor (SSE) that p
 - Generator type selector.
 - Generator controls: tile size, columns, rows, road width, fade distance, corner radius.
 - Bit order display.
-- Preview canvas with optional debug overlay labels.
-- Tile inspector by clicking preview tile.
+- No separate sidebar preview canvas; regenerate directly into the SSE main canvas.
+- Optional debug overlay labels rendered on the main canvas.
+- Tile inspector by clicking tiles in the main canvas while the `Masks` tab is active.
 - Regenerate + export PNG + export WebP actions.
+- Group all generator controls under a dedicated sidebar tab named `Masks`.
+- Add info bubble explaining debug code semantics (`T/R/B/L`, `1/0`).
+
+## Layout follow-up
+- Group base pattern rotations by column: each pattern family gets one column, rows are the 4 rotation slots.
+- Keep all T-junction rotations in one shared column.
+- Include an extra full-fill tile (no fade) for fully connected interior street usage.
+- Include a dedicated column of 4 full-tile edge-fade variants (left/top/right/bottom fade) for wider multi-tile street composition.
+
+## Geometry follow-up
+- Fade must affect only the sides of road parts, not the road endings.
 
 ## API/architecture
 - Keep generation logic independent from SSE UI in a reusable module.
