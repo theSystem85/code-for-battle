@@ -474,6 +474,7 @@ describe('gameStateManager', () => {
         direction: 0.5,
         altitude: TILE_SIZE * 2.4,
         maxAltitude: TILE_SIZE * 3,
+        rotor: { angle: 0.25, speed: 0.35, targetSpeed: 0.35 },
         occupancyRemoved: false
       }
       const units = [apache]
@@ -497,12 +498,15 @@ describe('gameStateManager', () => {
       expect(units).toHaveLength(1)
       expect(apache.altitude).toBeLessThan(initialAltitude)
       expect(apache.apacheDestructionRenderDirection).toBeCloseTo(0.5 + (Math.PI * 0.75), 5)
+      expect(apache.rotor.angle).toBeGreaterThan(0.25)
+      expect(apache.rotor.speed).toBeCloseTo(0.35 * 0.25, 5)
       expect(apache.shadow?.scale).toBeGreaterThanOrEqual(0.6)
       expect(apache.shadow?.scale).toBeLessThanOrEqual(1)
 
       performanceNow.mockReturnValue(3001)
       cleanupDestroyedUnits(units, gameState)
       expect(units).toHaveLength(0)
+      expect(apache.rotor.speed).toBe(0)
       expect(playPositionalSound).toHaveBeenCalledWith('explosion', 80, 112, 0.5)
     })
   })
