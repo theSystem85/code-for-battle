@@ -661,7 +661,7 @@ export class MapRenderer {
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
-        if (this.sotMask[y]?.[x]) {
+        if (visualTileType !== 'street' && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
           if (skipWaterSot && sotInfo.type === 'water') {
             if (skipWaterBase && visualTileType !== 'water') {
@@ -772,13 +772,13 @@ export class MapRenderer {
   }
 
   drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
-    if (this.textureManager.integratedSpriteSheetMode) {
-      const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+    const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+    if (this.textureManager.integratedSpriteSheetMode || type === 'street') {
       const integratedTile = mapGrid
         ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid })
         : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
-        if (type === 'rock') {
+        if (type === 'rock' && this.textureManager.integratedSpriteSheetMode) {
           const landTile = mapGrid
             ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
             : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
@@ -1243,12 +1243,12 @@ export class MapRenderer {
     const sotApplied = new Set()
 
     // First pass: render all SOT overlays
-    // SOT applies to land tiles (street/water corners) and street tiles (water corners)
+    // SOT applies only to land-hosted corners for now (street-hosted SOT disabled).
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
+        if (visualTileType === 'land' && this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
           if (skipWaterSot && sotInfo.type === 'water') {
             continue
