@@ -58,7 +58,8 @@ const DEFAULT_SSE_SHEETS = [
   'images/map/sprite_sheets/crystals_q90_1024x1024.webp',
   'images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp',
   'images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp',
-  'images/map/sprite_sheets/debris_craters_tracks.webp'
+  'images/map/sprite_sheets/debris_craters_tracks.webp',
+  'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
 ]
 const DEFAULT_ANIMATION_SHEET_PATH = 'images/map/animations/explosion.webp'
 const DEFAULT_ANIMATION_METADATA_PATH = 'images/map/animations/explosion.json'

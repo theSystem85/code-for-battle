@@ -248,7 +248,7 @@ export class MapRenderer {
     for (let y = 0; y < mapHeight; y++) {
       for (let x = 0; x < mapWidth; x++) {
         const tile = mapGrid[y][x]
-        if (tile.type !== 'land' && tile.type !== 'street' && tile.type !== 'water') continue
+        if (tile.type !== 'land' && tile.type !== 'water') continue
 
         const sotInfo = this.computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tile.type, analysisCache)
         if (sotInfo) {
@@ -275,7 +275,7 @@ export class MapRenderer {
     const left = x > 0 ? mapGrid[y][x - 1] : null
     const bottom = y < mapHeight - 1 ? mapGrid[y + 1][x] : null
     const right = x < mapWidth - 1 ? mapGrid[y][x + 1] : null
-    const isEnclosedIsland = (tileType === 'land' || tileType === 'street') &&
+    const isEnclosedIsland = tileType === 'land' &&
       isEnclosedSotIsland(mapGrid, x, y, tileType, analysisCache)
 
     const inverseSotInfo = getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, analysisCache)
@@ -355,7 +355,7 @@ export class MapRenderer {
         if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) continue
 
         const tile = mapGrid[y][x]
-        if (tile.type === 'land' || tile.type === 'street' || tile.type === 'water') {
+        if (tile.type === 'land' || tile.type === 'water') {
           this.sotMask[y][x] = this.computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tile.type, analysisCache)
         } else {
           this.sotMask[y][x] = null

@@ -48,7 +48,8 @@ const fallbackSheets = [
   'images/map/sprite_sheets/desert.webp',
   'images/map/sprite_sheets/water.webp',
   'images/map/sprite_sheets/multiTerrainSpriteSheet.webp',
-  'images/map/sprite_sheets/debris_craters_tracks.webp'
+  'images/map/sprite_sheets/debris_craters_tracks.webp',
+  'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
 ]
 
 function safeParseJson(raw, fallback) {

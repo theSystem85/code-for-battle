@@ -258,4 +258,79 @@ describe('TextureManager integrated multi-sheet selection', () => {
       sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
     }))
   })
+
+  it('selects street tiles that match connected directional tags', () => {
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = true
+    manager.integratedSpriteSheetImage = { id: 'sheet' }
+    manager.integratedSpriteSheetMetadata = { tiles: {} }
+    manager.integratedBiomeTag = 'grass'
+    manager.integratedTagBuckets = {
+      street: [
+        {
+          tags: ['street'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+        },
+        {
+          tags: ['street', 'top', 'left'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+        },
+        {
+          tags: ['street', 'top', 'right'],
+          rect: { x: 128, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+        }
+      ],
+      top: [],
+      left: [],
+      right: []
+    }
+    manager.integratedTagBuckets.top = manager.integratedTagBuckets.street.filter(tile => tile.tags.includes('top'))
+    manager.integratedTagBuckets.left = manager.integratedTagBuckets.street.filter(tile => tile.tags.includes('left'))
+    manager.integratedTagBuckets.right = manager.integratedTagBuckets.street.filter(tile => tile.tags.includes('right'))
+
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const selected = manager.getIntegratedTileForMapTile('street', 1, 1, { mapGrid })
+    expect(selected?.tags).toEqual(expect.arrayContaining(['street', 'top', 'left']))
+    expect(selected?.tags).not.toEqual(expect.arrayContaining(['right']))
+  })
+
+  it('prefers biome-tagged street tiles when biome variants exist', () => {
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = true
+    manager.integratedSpriteSheetImage = { id: 'sheet' }
+    manager.integratedSpriteSheetMetadata = { tiles: {} }
+    manager.integratedBiomeTag = 'soil'
+    manager.integratedTagBuckets = {
+      street: [
+        {
+          tags: ['street', 'grass'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+        },
+        {
+          tags: ['street', 'soil'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'sheet' },
+          sheetPath: 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
+        }
+      ]
+    }
+
+    const selected = manager.getIntegratedTileForMapTile('street', 0, 0, {
+      mapGrid: [[{ type: 'street' }]]
+    })
+    expect(selected?.tags).toEqual(expect.arrayContaining(['soil']))
+  })
 })

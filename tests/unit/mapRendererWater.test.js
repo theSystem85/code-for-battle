@@ -239,6 +239,21 @@ describe('MapRenderer water rendering', () => {
     expect(waterSotInstances[0].translation).toEqual([1, 1])
   })
 
+  it('does not generate SOT mask entries on street host tiles', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'water' }, { type: 'street' }],
+      [{ type: 'water' }, { type: 'street' }, { type: 'water' }],
+      [{ type: 'street' }, { type: 'water' }, { type: 'street' }]
+    ]
+
+    mapRenderer.computeSOTMask(mapGrid)
+
+    expect(mapRenderer.sotMask[0][0]).toBeNull()
+    expect(mapRenderer.sotMask[1][1]).toBeNull()
+    expect(mapRenderer.sotMask[2][2]).toBeNull()
+  })
+
   it('does not add a legacy WebGL decal layer when the 2D map pass renders decals', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = [
