@@ -416,6 +416,21 @@ body.config-modal-open {
   image-rendering: pixelated;
 }
 
+#sseAutotilePreviewCanvas {
+  width: 256px;
+  height: 256px;
+  align-self: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #000;
+  image-rendering: pixelated;
+}
+
+.sprite-sheet-editor__autotile-grid-inputs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
 .sprite-sheet-editor__preview-controls {
   display: flex;
   align-items: center;
