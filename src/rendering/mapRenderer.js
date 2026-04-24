@@ -773,7 +773,31 @@ export class MapRenderer {
 
   drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
     const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
-    if (this.textureManager.integratedSpriteSheetMode || type === 'street') {
+    if (type === 'street') {
+      if (this.textureManager.integratedSpriteSheetMode) {
+        const biomeUnderlayTile = mapGrid
+          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
+          : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
+        if (!this.drawIntegratedTileImage(ctx, biomeUnderlayTile, screenX, screenY)) {
+          this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+        }
+      } else {
+        this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+      }
+
+      const integratedStreetTile = mapGrid
+        ? this.textureManager.getIntegratedTileForMapTile('street', tileX, tileY, { mapGrid })
+        : this.textureManager.getIntegratedTileForMapTile('street', tileX, tileY)
+      if (integratedStreetTile?.image && integratedStreetTile?.rect) {
+        this.drawIntegratedTileImage(ctx, integratedStreetTile, screenX, screenY)
+        return
+      }
+
+      this.drawFallbackTileBase(ctx, tileX, tileY, 'street', screenX, screenY, useTexture, currentWaterFrame)
+      return
+    }
+
+    if (this.textureManager.integratedSpriteSheetMode) {
       const integratedTile = mapGrid
         ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid })
         : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)

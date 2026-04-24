@@ -339,7 +339,7 @@ export class GameWebGLRenderer {
 
         const sotInfo = sotMask?.[y]?.[x]
         if (waterOnly) {
-          if (sotInfo && sotInfo.type === 'water' && visualTileType !== 'water') {
+          if (sotInfo && sotInfo.type === 'water' && visualTileType !== 'water' && visualTileType !== 'street') {
             overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
           }
           continue

@@ -7,3 +7,6 @@
 5. If multiple candidates remain, select the candidate that matches the most currently valid directional tags; ties may be broken deterministically by coordinate hash.
 6. Street selection should prefer candidates also tagged with the active integrated biome tag (`grass`, `soil`, `snow`, `sand`) when available, with fallback to non-biome street candidates.
 7. Street-hosted SOT rendering must be disabled for now in both CPU and WebGL overlay passes; land-hosted SOT remains unchanged.
+8. Street rendering must always paint a biome terrain underlay before the street overlay, so keyed/transparent street pixels reveal biome terrain rather than prior street/base artifacts.
+9. Biome underlay for street tiles must use integrated biome-tagged land art when integrated sheets are enabled, and fall back to default grass/land terrain when integrated sheets are disabled.
+10. Tagged street-sheet street rendering must remain active by default even when the `Custom sprite sheets` toggle is disabled.
