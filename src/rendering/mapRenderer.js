@@ -283,25 +283,27 @@ export class MapRenderer {
       return inverseSotInfo
     }
 
+    const streetWaterSotType = tileType === 'street' ? 'land' : 'water'
+
     // Check water corners (for both land and street tiles)
     if (!isEnclosedIsland && top && left && top.type === 'water' && left.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
-        ? { orientation: 'top-left', type: 'water' }
+        ? { orientation: 'top-left', type: streetWaterSotType }
         : null
     }
     if (!isEnclosedIsland && top && right && top.type === 'water' && right.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
-        ? { orientation: 'top-right', type: 'water' }
+        ? { orientation: 'top-right', type: streetWaterSotType }
         : null
     }
     if (!isEnclosedIsland && bottom && left && bottom.type === 'water' && left.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
-        ? { orientation: 'bottom-left', type: 'water' }
+        ? { orientation: 'bottom-left', type: streetWaterSotType }
         : null
     }
     if (!isEnclosedIsland && bottom && right && bottom.type === 'water' && right.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
-        ? { orientation: 'bottom-right', type: 'water' }
+        ? { orientation: 'bottom-right', type: streetWaterSotType }
         : null
     }
 
@@ -639,7 +641,7 @@ export class MapRenderer {
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
         if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
-          if (visualTileType === 'street' && sotInfo.type !== 'water') {
+          if (visualTileType === 'street' && sotInfo.type !== 'water' && sotInfo.type !== 'land') {
             continue
           }
           if (skipWaterSot && sotInfo.type === 'water') {
@@ -1132,6 +1134,36 @@ export class MapRenderer {
           this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
         }
       }
+    } else if (type === 'land') {
+      const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+      const integratedLandTile = this.textureManager.integratedSpriteSheetMode
+        ? (mapGrid
+          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
+          : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY))
+        : null
+      if (!this.drawIntegratedTileImage(ctx, integratedLandTile, screenX, screenY) && useTexture) {
+        const idx = this.textureManager.getTileVariation(type, tileX, tileY)
+        if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
+          const info = this.textureManager.tileTextureCache[type][idx]
+          ctx.drawImage(
+            this.textureManager.spriteImage,
+            info.x,
+            info.y,
+            info.width,
+            info.height,
+            screenX,
+            screenY,
+            size,
+            size
+          )
+        } else {
+          ctx.fillStyle = TILE_COLORS[type]
+          ctx.fill()
+        }
+      } else if (!useTexture && !integratedLandTile) {
+        ctx.fillStyle = TILE_COLORS[type]
+        ctx.fill()
+      }
     } else if (useTexture) {
       const idx = this.textureManager.getTileVariation(type, tileX, tileY)
       if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
@@ -1272,7 +1304,7 @@ export class MapRenderer {
           if (sotInfo.type === 'street') {
             continue
           }
-          if (visualTileType === 'street' && sotInfo.type !== 'water') {
+          if (visualTileType === 'street' && sotInfo.type !== 'water' && sotInfo.type !== 'land') {
             continue
           }
           if (skipWaterSot && sotInfo.type === 'water') {
