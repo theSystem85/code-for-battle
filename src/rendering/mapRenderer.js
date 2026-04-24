@@ -283,27 +283,56 @@ export class MapRenderer {
       return inverseSotInfo
     }
 
-    const streetWaterSotType = tileType === 'street' ? 'land' : 'water'
+    if (tileType === 'street') {
+      return null
+    }
+
+    const isLandLike = tile => tile && (tile.type === 'land' || tile.type === 'street')
+
+    // Coastline smoothing for water tiles near land/street: draw biome land triangles on water,
+    // i.e. the ground cuts into water instead of water cutting street overlays.
+    if (tileType === 'water') {
+      if (isLandLike(top) && isLandLike(left) && (top.type === 'street' || left.type === 'street')) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
+          ? { orientation: 'top-left', type: 'land' }
+          : null
+      }
+      if (isLandLike(top) && isLandLike(right) && (top.type === 'street' || right.type === 'street')) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
+          ? { orientation: 'top-right', type: 'land' }
+          : null
+      }
+      if (isLandLike(bottom) && isLandLike(left) && (bottom.type === 'street' || left.type === 'street')) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
+          ? { orientation: 'bottom-left', type: 'land' }
+          : null
+      }
+      if (isLandLike(bottom) && isLandLike(right) && (bottom.type === 'street' || right.type === 'street')) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
+          ? { orientation: 'bottom-right', type: 'land' }
+          : null
+      }
+    }
 
     // Check water corners (for both land and street tiles)
     if (!isEnclosedIsland && top && left && top.type === 'water' && left.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
-        ? { orientation: 'top-left', type: streetWaterSotType }
+        ? { orientation: 'top-left', type: 'water' }
         : null
     }
     if (!isEnclosedIsland && top && right && top.type === 'water' && right.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
-        ? { orientation: 'top-right', type: streetWaterSotType }
+        ? { orientation: 'top-right', type: 'water' }
         : null
     }
     if (!isEnclosedIsland && bottom && left && bottom.type === 'water' && left.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
-        ? { orientation: 'bottom-left', type: streetWaterSotType }
+        ? { orientation: 'bottom-left', type: 'water' }
         : null
     }
     if (!isEnclosedIsland && bottom && right && bottom.type === 'water' && right.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
-        ? { orientation: 'bottom-right', type: streetWaterSotType }
+        ? { orientation: 'bottom-right', type: 'water' }
         : null
     }
 
@@ -641,7 +670,7 @@ export class MapRenderer {
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
         if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
-          if (visualTileType === 'street' && sotInfo.type !== 'water' && sotInfo.type !== 'land') {
+          if (visualTileType === 'street') {
             continue
           }
           if (skipWaterSot && sotInfo.type === 'water') {
@@ -1304,7 +1333,7 @@ export class MapRenderer {
           if (sotInfo.type === 'street') {
             continue
           }
-          if (visualTileType === 'street' && sotInfo.type !== 'water' && sotInfo.type !== 'land') {
+          if (visualTileType === 'street') {
             continue
           }
           if (skipWaterSot && sotInfo.type === 'water') {

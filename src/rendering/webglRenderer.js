@@ -345,7 +345,7 @@ export class GameWebGLRenderer {
           continue
         }
 
-        if (sotInfo && sotInfo.type !== 'street') {
+        if (sotInfo && sotInfo.type !== 'street' && visualTileType !== 'street') {
           overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
         }
 
