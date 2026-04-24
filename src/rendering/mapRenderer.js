@@ -1265,6 +1265,21 @@ export class MapRenderer {
       : null
 
     const sotApplied = new Set()
+    const previousGroupingMap = this.groupingMapGrid
+    this.groupingMapGrid = mapGrid
+
+    // When GPU renders the base layer, repaint street tiles on CPU using the new street-sheet
+    // pipeline so this works even while Custom sprite sheets is disabled.
+    for (let y = startTileY; y < endTileY; y++) {
+      for (let x = startTileX; x < endTileX; x++) {
+        const tile = mapGrid[y][x]
+        const visualTileType = tile?.airstripStreet ? 'land' : tile.type
+        if (visualTileType !== 'street') continue
+        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
+        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+        this.drawTileBase(ctx, x, y, 'street', screenX, screenY, useTexture, currentWaterFrame)
+      }
+    }
 
     // First pass: render all SOT overlays
     // SOT applies only to land-hosted corners for now (street-hosted SOT disabled).
@@ -1304,6 +1319,7 @@ export class MapRenderer {
         }
       }
     }
+    this.groupingMapGrid = previousGroupingMap
   }
 
   shouldRenderCrystalOverlayOnCpu(tile, tileX, tileY) {

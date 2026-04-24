@@ -10,3 +10,4 @@
 8. Street rendering must always paint a biome terrain underlay before the street overlay, so keyed/transparent street pixels reveal biome terrain rather than prior street/base artifacts.
 9. Biome underlay for street tiles must use integrated biome-tagged land art when integrated sheets are enabled, and fall back to default grass/land terrain when integrated sheets are disabled.
 10. Tagged street-sheet street rendering must remain active by default even when the `Custom sprite sheets` toggle is disabled.
+11. In GPU base-layer mode, the CPU overlay pass must repaint street tiles using the same street underlay/overlay pipeline so streets23 rendering remains visible without requiring `Custom sprite sheets`.
