@@ -283,30 +283,6 @@ export class MapRenderer {
       return inverseSotInfo
     }
 
-    // For land tiles: check street corners first (streets take priority over water)
-    if (tileType === 'land') {
-      if (top && left && top.type === 'street' && left.type === 'street') {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-left', type: 'street' }
-          : null
-      }
-      if (top && right && top.type === 'street' && right.type === 'street') {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-right', type: 'street' }
-          : null
-      }
-      if (bottom && left && bottom.type === 'street' && left.type === 'street') {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-left', type: 'street' }
-          : null
-      }
-      if (bottom && right && bottom.type === 'street' && right.type === 'street') {
-        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-right', type: 'street' }
-          : null
-      }
-    }
-
     // Check water corners (for both land and street tiles)
     if (!isEnclosedIsland && top && left && top.type === 'water' && left.type === 'water') {
       return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
@@ -661,8 +637,11 @@ export class MapRenderer {
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
-        if (visualTileType !== 'street' && this.sotMask[y]?.[x]) {
+        if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
+          if (visualTileType === 'street' && sotInfo.type !== 'water') {
+            continue
+          }
           if (skipWaterSot && sotInfo.type === 'water') {
             if (skipWaterBase && visualTileType !== 'water') {
               this.clearTriangleArea(ctx, screenX, screenY, TILE_SIZE + 1, sotInfo.orientation)
@@ -1281,14 +1260,21 @@ export class MapRenderer {
       }
     }
 
-    // First pass: render all SOT overlays
-    // SOT applies only to land-hosted corners for now (street-hosted SOT disabled).
+    // First pass: render all SOT overlays.
+    // Never draw street-type SOT. Allow water SOT on street-hosted tiles so coastline smoothing
+    // still works against the street underlay terrain.
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if (visualTileType === 'land' && this.sotMask[y]?.[x]) {
+        if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
+          if (sotInfo.type === 'street') {
+            continue
+          }
+          if (visualTileType === 'street' && sotInfo.type !== 'water') {
+            continue
+          }
           if (skipWaterSot && sotInfo.type === 'water') {
             continue
           }
