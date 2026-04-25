@@ -1165,13 +1165,36 @@ export class MapRenderer {
       }
     } else if (type === 'land') {
       const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+      const sourceCoord = (() => {
+        if (!mapGrid?.length) return { x: tileX, y: tileY }
+        const mapHeight = mapGrid.length
+        const mapWidth = mapGrid[0]?.length || 0
+        const pick = (x, y) => {
+          if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) return null
+          const tile = mapGrid[y]?.[x]
+          if (!tile || (tile.type !== 'land' && tile.type !== 'street')) return null
+          return { x, y }
+        }
+        switch (orientation) {
+          case 'top-left':
+            return pick(tileX - 1, tileY) || pick(tileX, tileY - 1) || { x: tileX, y: tileY }
+          case 'top-right':
+            return pick(tileX + 1, tileY) || pick(tileX, tileY - 1) || { x: tileX, y: tileY }
+          case 'bottom-left':
+            return pick(tileX - 1, tileY) || pick(tileX, tileY + 1) || { x: tileX, y: tileY }
+          case 'bottom-right':
+            return pick(tileX + 1, tileY) || pick(tileX, tileY + 1) || { x: tileX, y: tileY }
+          default:
+            return { x: tileX, y: tileY }
+        }
+      })()
       const integratedLandTile = this.textureManager.integratedSpriteSheetMode
         ? (mapGrid
-          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
-          : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY))
+          ? this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y, { mapGrid })
+          : this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y))
         : null
       if (!this.drawIntegratedTileImage(ctx, integratedLandTile, screenX, screenY) && useTexture) {
-        const idx = this.textureManager.getTileVariation(type, tileX, tileY)
+        const idx = this.textureManager.getTileVariation(type, sourceCoord.x, sourceCoord.y)
         if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
           const info = this.textureManager.tileTextureCache[type][idx]
           ctx.drawImage(

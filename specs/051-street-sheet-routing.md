@@ -14,3 +14,5 @@
 12. Street-type SOT generation/rendering must be fully disabled, but water-type SOT must still render on street-hosted tiles so water/shore smoothing continues against the biome underlay beneath streets.
 13. For street tiles adjacent to water corners, SOT texture content must use biome/land texture (selected integrated biome land when available, otherwise default land) rather than street texture so coastline smoothing visually matches the ground underlay.
 14. Coastline smoothing beside streets must be oriented as land-on-water cut-in: street-hosted SOT remains disabled, and water tiles near street corners receive land SOT triangles so water no longer clips street overlays/units.
+15. Land SOT drawn on water tiles near streets must sample land texture variation/biome from adjacent land/street source tiles (orientation-aware), not from the water tile coordinate, to avoid random gray/impassable wedges.
+16. WebGL should continue rendering non-street land SOT overlays (e.g., inverse-island cases), but must skip land-SOT-on-water instances that are street-adjacent so street-coast smoothing comes from CPU biome-sampled wedges.
