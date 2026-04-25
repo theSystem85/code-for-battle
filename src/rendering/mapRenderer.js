@@ -283,26 +283,33 @@ export class MapRenderer {
       return inverseSotInfo
     }
 
-    // For land tiles: check street corners first (streets take priority over water)
-    if (tileType === 'land') {
-      if (top && left && top.type === 'street' && left.type === 'street') {
+    if (tileType === 'street') {
+      return null
+    }
+
+    const isLandLike = tile => tile && (tile.type === 'land' || tile.type === 'street')
+
+    // Coastline smoothing for water tiles near land/street: draw biome land triangles on water,
+    // i.e. the ground cuts into water instead of water cutting street overlays.
+    if (tileType === 'water') {
+      if (isLandLike(top) && isLandLike(left) && (top.type === 'street' || left.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-left', type: 'street' }
+          ? { orientation: 'top-left', type: 'land' }
           : null
       }
-      if (top && right && top.type === 'street' && right.type === 'street') {
+      if (isLandLike(top) && isLandLike(right) && (top.type === 'street' || right.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-right', type: 'street' }
+          ? { orientation: 'top-right', type: 'land' }
           : null
       }
-      if (bottom && left && bottom.type === 'street' && left.type === 'street') {
+      if (isLandLike(bottom) && isLandLike(left) && (bottom.type === 'street' || left.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-left', type: 'street' }
+          ? { orientation: 'bottom-left', type: 'land' }
           : null
       }
-      if (bottom && right && bottom.type === 'street' && right.type === 'street') {
+      if (isLandLike(bottom) && isLandLike(right) && (bottom.type === 'street' || right.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-right', type: 'street' }
+          ? { orientation: 'bottom-right', type: 'land' }
           : null
       }
     }
@@ -663,6 +670,9 @@ export class MapRenderer {
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
         if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
+          if (visualTileType === 'street') {
+            continue
+          }
           if (skipWaterSot && sotInfo.type === 'water') {
             if (skipWaterBase && visualTileType !== 'water') {
               this.clearTriangleArea(ctx, screenX, screenY, TILE_SIZE + 1, sotInfo.orientation)
@@ -772,13 +782,37 @@ export class MapRenderer {
   }
 
   drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+    const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+    if (type === 'street') {
+      if (this.textureManager.integratedSpriteSheetMode) {
+        const biomeUnderlayTile = mapGrid
+          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
+          : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
+        if (!this.drawIntegratedTileImage(ctx, biomeUnderlayTile, screenX, screenY)) {
+          this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+        }
+      } else {
+        this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+      }
+
+      const integratedStreetTile = mapGrid
+        ? this.textureManager.getIntegratedTileForMapTile('street', tileX, tileY, { mapGrid })
+        : this.textureManager.getIntegratedTileForMapTile('street', tileX, tileY)
+      if (integratedStreetTile?.image && integratedStreetTile?.rect) {
+        this.drawIntegratedTileImage(ctx, integratedStreetTile, screenX, screenY)
+        return
+      }
+
+      this.drawFallbackTileBase(ctx, tileX, tileY, 'street', screenX, screenY, useTexture, currentWaterFrame)
+      return
+    }
+
     if (this.textureManager.integratedSpriteSheetMode) {
-      const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
       const integratedTile = mapGrid
         ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid })
         : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
-        if (type === 'rock') {
+        if (type === 'rock' && this.textureManager.integratedSpriteSheetMode) {
           const landTile = mapGrid
             ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
             : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
@@ -1129,6 +1163,59 @@ export class MapRenderer {
           this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
         }
       }
+    } else if (type === 'land') {
+      const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+      const sourceCoord = (() => {
+        if (!mapGrid?.length) return { x: tileX, y: tileY }
+        const mapHeight = mapGrid.length
+        const mapWidth = mapGrid[0]?.length || 0
+        const pick = (x, y) => {
+          if (x < 0 || y < 0 || x >= mapWidth || y >= mapHeight) return null
+          const tile = mapGrid[y]?.[x]
+          if (!tile || (tile.type !== 'land' && tile.type !== 'street')) return null
+          return { x, y }
+        }
+        switch (orientation) {
+          case 'top-left':
+            return pick(tileX - 1, tileY) || pick(tileX, tileY - 1) || { x: tileX, y: tileY }
+          case 'top-right':
+            return pick(tileX + 1, tileY) || pick(tileX, tileY - 1) || { x: tileX, y: tileY }
+          case 'bottom-left':
+            return pick(tileX - 1, tileY) || pick(tileX, tileY + 1) || { x: tileX, y: tileY }
+          case 'bottom-right':
+            return pick(tileX + 1, tileY) || pick(tileX, tileY + 1) || { x: tileX, y: tileY }
+          default:
+            return { x: tileX, y: tileY }
+        }
+      })()
+      const integratedLandTile = this.textureManager.integratedSpriteSheetMode
+        ? (mapGrid
+          ? this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y, { mapGrid })
+          : this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y))
+        : null
+      if (!this.drawIntegratedTileImage(ctx, integratedLandTile, screenX, screenY) && useTexture) {
+        const idx = this.textureManager.getTileVariation(type, sourceCoord.x, sourceCoord.y)
+        if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
+          const info = this.textureManager.tileTextureCache[type][idx]
+          ctx.drawImage(
+            this.textureManager.spriteImage,
+            info.x,
+            info.y,
+            info.width,
+            info.height,
+            screenX,
+            screenY,
+            size,
+            size
+          )
+        } else {
+          ctx.fillStyle = TILE_COLORS[type]
+          ctx.fill()
+        }
+      } else if (!useTexture && !integratedLandTile) {
+        ctx.fillStyle = TILE_COLORS[type]
+        ctx.fill()
+      }
     } else if (useTexture) {
       const idx = this.textureManager.getTileVariation(type, tileX, tileY)
       if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
@@ -1241,15 +1328,37 @@ export class MapRenderer {
       : null
 
     const sotApplied = new Set()
+    const previousGroupingMap = this.groupingMapGrid
+    this.groupingMapGrid = mapGrid
 
-    // First pass: render all SOT overlays
-    // SOT applies to land tiles (street/water corners) and street tiles (water corners)
+    // When GPU renders the base layer, repaint street tiles on CPU using the new street-sheet
+    // pipeline so this works even while Custom sprite sheets is disabled.
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if ((visualTileType === 'land' || visualTileType === 'street') && this.sotMask[y]?.[x]) {
+        if (visualTileType !== 'street') continue
+        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
+        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+        this.drawTileBase(ctx, x, y, 'street', screenX, screenY, useTexture, currentWaterFrame)
+      }
+    }
+
+    // First pass: render all SOT overlays.
+    // Never draw street-type SOT. Allow water SOT on street-hosted tiles so coastline smoothing
+    // still works against the street underlay terrain.
+    for (let y = startTileY; y < endTileY; y++) {
+      for (let x = startTileX; x < endTileX; x++) {
+        const tile = mapGrid[y][x]
+        const visualTileType = tile?.airstripStreet ? 'land' : tile.type
+        if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
+          if (sotInfo.type === 'street') {
+            continue
+          }
+          if (visualTileType === 'street') {
+            continue
+          }
           if (skipWaterSot && sotInfo.type === 'water') {
             continue
           }
@@ -1280,6 +1389,7 @@ export class MapRenderer {
         }
       }
     }
+    this.groupingMapGrid = previousGroupingMap
   }
 
   shouldRenderCrystalOverlayOnCpu(tile, tileX, tileY) {

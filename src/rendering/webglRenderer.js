@@ -345,8 +345,16 @@ export class GameWebGLRenderer {
           continue
         }
 
-        if (sotInfo) {
-          overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
+        if (sotInfo && sotInfo.type !== 'street' && visualTileType !== 'street') {
+          const adjacentStreet = (
+            row[x - 1]?.type === 'street' ||
+            row[x + 1]?.type === 'street' ||
+            mapGrid[y - 1]?.[x]?.type === 'street' ||
+            mapGrid[y + 1]?.[x]?.type === 'street'
+          )
+          if (!(sotInfo.type === 'land' && visualTileType === 'water' && adjacentStreet)) {
+            overlayInstances.push(this.createSotInstance(sotInfo.type, x, y, sotInfo.orientation, mapGrid, canUseTextures, sotMask))
+          }
         }
 
         if (tile.seedCrystal) {
