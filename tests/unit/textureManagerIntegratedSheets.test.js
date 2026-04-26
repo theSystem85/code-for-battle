@@ -258,4 +258,70 @@ describe('TextureManager integrated multi-sheet selection', () => {
       sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
     }))
   })
+
+  it('selects street tiles with exactly matching directional tags', () => {
+    const manager = new TextureManager()
+    manager.defaultStreetTagBuckets = {
+      street: [
+        {
+          tags: ['street', 'top'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        },
+        {
+          tags: ['street', 'top', 'left'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        }
+      ]
+    }
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const selected = manager.selectStreetTileByTags(['street'], 1, 1, mapGrid)
+
+    expect(selected?.tags).toEqual(['street', 'top'])
+  })
+
+  it('uses full street tiles for diagonal cluster corners before directional matches', () => {
+    const manager = new TextureManager()
+    manager.defaultStreetTagBuckets = {
+      street: [
+        {
+          tags: ['street', 'top', 'left'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        },
+        {
+          tags: ['street', 'full', 'top', 'bottom', 'left', 'right'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        }
+      ],
+      full: [
+        {
+          tags: ['street', 'full', 'top', 'bottom', 'left', 'right'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        }
+      ]
+    }
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const selected = manager.selectStreetTileByTags(['street'], 1, 1, mapGrid)
+
+    expect(selected?.tags).toContain('full')
+  })
 })

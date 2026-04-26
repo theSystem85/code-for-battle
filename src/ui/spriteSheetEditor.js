@@ -36,6 +36,11 @@ export const DEFAULT_SSE_TAGS = [
   'rocks',
   'concrete',
   'street',
+  'top',
+  'bottom',
+  'left',
+  'right',
+  'full',
   'water',
   'group'
 ]
@@ -46,7 +51,7 @@ const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_def
 
 const fallbackSheets = [
   MAJOR_SPRITE_SHEET_PATH,
-  'images/map/sprite_sheets/streets23_q90_1024x1024.webp',
+  'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
   'images/map/sprite_sheets/grass.webp',
   'images/map/sprite_sheets/soil.webp',
   'images/map/sprite_sheets/snow.webp',

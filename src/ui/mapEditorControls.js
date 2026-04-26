@@ -57,7 +57,7 @@ const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_def
 
 const DEFAULT_SSE_SHEETS = [
   MAJOR_SPRITE_SHEET_PATH,
-  'images/map/sprite_sheets/streets23_q90_1024x1024.webp',
+  'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
   'images/map/sprite_sheets/seasons_1024_q90_2.webp',
   'images/map/sprite_sheets/seasons_1024_q90_3.webp',
   'images/map/sprite_sheets/crystals_q90_1024x1024.webp',
