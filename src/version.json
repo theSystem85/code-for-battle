@@ -1,4 +1,4 @@
 {
-  "commit": "94aaaee6",
-  "message": "fix(legal): remove misleading back-to-game links from legal pages"
+  "commit": "1db6629f",
+  "message": "Use streets24 and tighten street sprite routing"
 }

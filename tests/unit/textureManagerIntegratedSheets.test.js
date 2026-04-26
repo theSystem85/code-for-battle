@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { describe, it, expect, vi } from 'vitest'
 import { TextureManager } from '../../src/rendering/textureManager.js'
 
@@ -257,5 +258,141 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(selected).toEqual(expect.objectContaining({
       sheetPath: 'images/map/sprite_sheets/custom_crystals.webp'
     }))
+  })
+
+  it('selects street tiles with exactly matching directional tags', () => {
+    const manager = new TextureManager()
+    manager.defaultStreetTagBuckets = {
+      street: [
+        {
+          tags: ['street', 'top'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        },
+        {
+          tags: ['street', 'top', 'left'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        }
+      ]
+    }
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const selected = manager.selectStreetTileByTags(['street'], 1, 1, mapGrid)
+
+    expect(selected?.tags).toEqual(['street', 'top'])
+  })
+
+  it('uses full street tiles for diagonal cluster corners before directional matches', () => {
+    const manager = new TextureManager()
+    manager.defaultStreetTagBuckets = {
+      street: [
+        {
+          tags: ['street', 'top', 'left'],
+          rect: { x: 0, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        },
+        {
+          tags: ['street', 'full', 'top', 'bottom', 'left', 'right'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        }
+      ],
+      full: [
+        {
+          tags: ['street', 'full', 'top', 'bottom', 'left', 'right'],
+          rect: { x: 64, y: 0, width: 64, height: 64 },
+          image: { id: 'default-streets' },
+          sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+        }
+      ]
+    }
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const selected = manager.selectStreetTileByTags(['street'], 1, 1, mapGrid)
+
+    expect(selected?.tags).toContain('full')
+  })
+
+  it('keeps T-cross and 4-way street candidates separated by exact direction tags', () => {
+    const manager = new TextureManager()
+    const grassFourWay = {
+      tags: ['street', 'grass', 'top', 'bottom', 'left', 'right'],
+      rect: { x: 256, y: 256, width: 64, height: 64 },
+      image: { id: 'default-streets' },
+      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+    }
+    const grassRightT = {
+      tags: ['street', 'grass', 'top', 'bottom', 'right'],
+      rect: { x: 320, y: 256, width: 64, height: 64 },
+      image: { id: 'default-streets' },
+      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+    }
+    manager.defaultStreetTagBuckets = {
+      street: [grassFourWay, grassRightT],
+      grass: [grassFourWay, grassRightT],
+      top: [grassFourWay, grassRightT],
+      bottom: [grassFourWay, grassRightT],
+      left: [grassFourWay],
+      right: [grassFourWay, grassRightT]
+    }
+    const fourWayGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'street' }],
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }]
+    ]
+    const rightTGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'street' }, { type: 'street' }],
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }]
+    ]
+
+    expect(manager.selectStreetTileByTags(['street'], 1, 1, fourWayGrid)).toBe(grassFourWay)
+    expect(manager.selectStreetTileByTags(['street'], 1, 1, rightTGrid)).toBe(grassRightT)
+  })
+
+  it('keeps the real streets24 grass T and 4-way metadata distinct', () => {
+    const metadata = JSON.parse(readFileSync(
+      'public/images/map/sprite_sheets/streets24_q90_1024x1024.json',
+      'utf8'
+    ))
+
+    expect(metadata.tiles['4,4'].tags).toEqual(['street', 'grass', 'right', 'top', 'bottom'])
+    expect(metadata.tiles['5,4'].tags).toEqual(['street', 'grass', 'left', 'right', 'top', 'bottom'])
+  })
+
+  it('selects only full-tagged street tiles for SOT fill art', () => {
+    const manager = new TextureManager()
+    const isolatedStreet = {
+      tags: ['street', 'grass'],
+      rect: { x: 0, y: 0, width: 64, height: 64 },
+      image: { id: 'default-streets' },
+      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+    }
+    const fullGrassStreet = {
+      tags: ['street', 'full', 'grass'],
+      rect: { x: 64, y: 0, width: 64, height: 64 },
+      image: { id: 'default-streets' },
+      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+    }
+    manager.defaultStreetTagBuckets = {
+      street: [isolatedStreet, fullGrassStreet],
+      grass: [isolatedStreet, fullGrassStreet],
+      full: [fullGrassStreet]
+    }
+
+    expect(manager.selectFullStreetTileForSOT(5, 7)).toBe(fullGrassStreet)
   })
 })

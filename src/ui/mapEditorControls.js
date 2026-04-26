@@ -18,6 +18,7 @@ import {
 } from '../mapEditor.js'
 import { listPartyStates, observePartyOwnershipChange } from '../network/multiplayerStore.js'
 import { initSpriteSheetEditor } from './spriteSheetEditor.js'
+import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
 
 let editButton = null
 let tileSelect = null
@@ -52,8 +53,11 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
   softenBrightness: 24
 })
+const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
+
 const DEFAULT_SSE_SHEETS = [
-  'images/map/sprite_sheets/streets23_q90_1024x1024.webp',
+  MAJOR_SPRITE_SHEET_PATH,
+  'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
   'images/map/sprite_sheets/seasons_1024_q90_2.webp',
   'images/map/sprite_sheets/seasons_1024_q90_3.webp',
   'images/map/sprite_sheets/crystals_q90_1024x1024.webp',
@@ -129,20 +133,21 @@ function normalizeBlackKeyForSheet(sheetPath, blackKey) {
 function normalizeMetadataForSheet(sheetPath, metadata) {
   if (!metadata || typeof metadata !== 'object') return metadata
 
-  const blackKey = normalizeBlackKeyForSheet(sheetPath, metadata.blackKey)
+  const expandedMetadata = expandCompactSpriteSheetMetadata(metadata)
+
+  const blackKey = normalizeBlackKeyForSheet(sheetPath, expandedMetadata.blackKey)
   if (!blackKey) {
-    return metadata
+    return expandedMetadata
   }
 
   return {
-    ...metadata,
+    ...expandedMetadata,
     blackKey
   }
 }
 
 function hasTaggedTiles(metadata) {
-  if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
-  return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
+  return hasTaggedSpriteSheetTiles(metadata)
 }
 
 function cacheRuntimeIntegratedMetadata(metadata) {
@@ -494,12 +499,30 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
   cacheRuntimeIntegratedMetadata(metadata)
 
+  if (!gameState.useIntegratedSpriteSheetMode) {
+    await textureManager.setIntegratedSpriteSheetConfig({ enabled: false })
+    const mapRenderer = getMapRenderer()
+    if (mapRenderer) {
+      if (Array.isArray(gameState.mapGrid)) {
+        mapRenderer.computeSOTMask(gameState.mapGrid)
+      }
+      mapRenderer.invalidateAllChunks()
+    }
+
+    if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
+      gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
+    }
+    return
+  }
+
   const allStaticSheets = Array.isArray(gameState.availableStaticSpriteSheets) && gameState.availableStaticSpriteSheets.length
     ? gameState.availableStaticSpriteSheets
     : await loadStaticSheetPaths()
   gameState.availableStaticSpriteSheets = allStaticSheets
   if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = [...allStaticSheets]
+    gameState.activeSpriteSheetSelections = allStaticSheets.includes(MAJOR_SPRITE_SHEET_PATH)
+      ? [MAJOR_SPRITE_SHEET_PATH]
+      : [...allStaticSheets]
   }
 
   const selectedSheetPaths = allStaticSheets.filter(path => gameState.activeSpriteSheetSelections.includes(path))
@@ -658,7 +681,9 @@ export function initMapEditorControls() {
     window.logger.warn('Failed to load selected integrated sprite sheets:', err)
   }
   if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = [...gameState.availableStaticSpriteSheets]
+    gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.includes(MAJOR_SPRITE_SHEET_PATH)
+      ? [MAJOR_SPRITE_SHEET_PATH]
+      : [...gameState.availableStaticSpriteSheets]
   }
   renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
   loadStaticSheetPaths().then(async(sheetPaths) => {
@@ -668,11 +693,15 @@ export function initMapEditorControls() {
     )
     const availablePaths = gameState.availableStaticSpriteSheets
     if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-      gameState.activeSpriteSheetSelections = [...availablePaths]
+      gameState.activeSpriteSheetSelections = availablePaths.includes(MAJOR_SPRITE_SHEET_PATH)
+        ? [MAJOR_SPRITE_SHEET_PATH]
+        : [...availablePaths]
     } else {
       gameState.activeSpriteSheetSelections = availablePaths.filter(path => gameState.activeSpriteSheetSelections.includes(path))
       if (!gameState.activeSpriteSheetSelections.length) {
-        gameState.activeSpriteSheetSelections = [...availablePaths]
+        gameState.activeSpriteSheetSelections = availablePaths.includes(MAJOR_SPRITE_SHEET_PATH)
+          ? [MAJOR_SPRITE_SHEET_PATH]
+          : [...availablePaths]
       }
     }
     renderIntegratedSheetSelectionList(availablePaths)

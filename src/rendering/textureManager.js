@@ -4,13 +4,16 @@ import { buildingImageMap } from '../buildingImageMap.js'
 import { getDevicePixelRatio } from './renderingUtils.js'
 import { discoverGrassTiles } from '../utils/grassTileDiscovery.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
+import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
 
-const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
-const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
-const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
-const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
-const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
-const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets23_q90_1024x1024.json'
+const DEFAULT_MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
+const DEFAULT_MAJOR_SPRITE_METADATA_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.json'
+const DEFAULT_COMBAT_DECAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
+const DEFAULT_COMBAT_DECAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
+const DEFAULT_CRYSTAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
+const DEFAULT_CRYSTAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
+const DEFAULT_STREET_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
+const DEFAULT_STREET_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
 const STREET_DIRECTION_TAGS = ['top', 'bottom', 'left', 'right']
 
 // Map unit types to their image paths
@@ -236,8 +239,7 @@ export class TextureManager {
   }
 
   hasTaggedIntegratedTiles(metadata) {
-    if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
-    return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
+    return hasTaggedSpriteSheetTiles(metadata)
   }
 
   async preloadDefaultCombatDecalSheet() {
@@ -249,7 +251,7 @@ export class TextureManager {
         return
       }
 
-      const metadata = await response.json()
+      const metadata = expandCompactSpriteSheetMetadata(await response.json())
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultCombatDecalSheetMetadata = null
         this.defaultCombatDecalTagBuckets = {}
@@ -299,7 +301,7 @@ export class TextureManager {
         return
       }
 
-      const metadata = await response.json()
+      const metadata = expandCompactSpriteSheetMetadata(await response.json())
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultCrystalSheetMetadata = null
         this.defaultCrystalTagBuckets = {}
@@ -341,7 +343,7 @@ export class TextureManager {
         return
       }
 
-      const metadata = await response.json()
+      const metadata = expandCompactSpriteSheetMetadata(await response.json())
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultStreetSheetMetadata = null
         this.defaultStreetTagBuckets = {}
@@ -398,7 +400,7 @@ export class TextureManager {
     const normalizedEntries = []
     for (const entry of sheetEntries) {
       const sheetPath = entry?.sheetPath
-      const metadata = entry?.metadata
+      const metadata = expandCompactSpriteSheetMetadata(entry?.metadata)
       if (!sheetPath || !metadata) continue
       if (!this.hasTaggedIntegratedTiles(metadata)) continue
       const image = await this.loadIntegratedSpriteSheetImage(sheetPath)
@@ -530,10 +532,24 @@ export class TextureManager {
   }
 
   getStreetNeighborDirectionTags(x, y, mapGrid) {
-    if (!Array.isArray(mapGrid) || !mapGrid.length) return []
+    return this.getStreetNeighborInfo(x, y, mapGrid).directionTags
+  }
+
+  getStreetNeighborInfo(x, y, mapGrid) {
+    if (!Array.isArray(mapGrid) || !mapGrid.length) {
+      return {
+        directionTags: [],
+        prefersFull: false
+      }
+    }
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
-    if (!mapWidth || !mapHeight) return []
+    if (!mapWidth || !mapHeight) {
+      return {
+        directionTags: [],
+        prefersFull: false
+      }
+    }
 
     const isStreetTile = (tileX, tileY) => {
       if (tileX < 0 || tileY < 0 || tileX >= mapWidth || tileY >= mapHeight) return false
@@ -542,68 +558,108 @@ export class TextureManager {
     }
 
     const tags = []
-    if (isStreetTile(x, y - 1)) tags.push('top')
-    if (isStreetTile(x, y + 1)) tags.push('bottom')
-    if (isStreetTile(x - 1, y)) tags.push('left')
-    if (isStreetTile(x + 1, y)) tags.push('right')
-    return tags
+    const top = isStreetTile(x, y - 1)
+    const bottom = isStreetTile(x, y + 1)
+    const left = isStreetTile(x - 1, y)
+    const right = isStreetTile(x + 1, y)
+    if (top) tags.push('top')
+    if (bottom) tags.push('bottom')
+    if (left) tags.push('left')
+    if (right) tags.push('right')
+
+    const prefersFull = (top && left && isStreetTile(x - 1, y - 1))
+      || (top && right && isStreetTile(x + 1, y - 1))
+      || (bottom && left && isStreetTile(x - 1, y + 1))
+      || (bottom && right && isStreetTile(x + 1, y + 1))
+
+    return {
+      directionTags: tags,
+      prefersFull
+    }
   }
 
-  selectStreetTileFromCandidates(candidates, x, y, neighborTags = []) {
+  selectStreetTileFromCandidates(candidates, x, y, neighborTags = [], options = {}) {
     if (!Array.isArray(candidates) || !candidates.length) return null
 
     const validDirectionTags = new Set(neighborTags)
-    const scored = candidates
+    const exactDirectionCount = validDirectionTags.size
+    const filtered = candidates
       .filter((tile) => {
         if (!Array.isArray(tile?.tags) || !tile.rect) return false
-        return STREET_DIRECTION_TAGS.every(tag => !tile.tags.includes(tag) || validDirectionTags.has(tag))
-      })
-      .map((tile) => {
-        let score = 0
-        tile.tags.forEach((tag) => {
-          if (validDirectionTags.has(tag)) {
-            score++
-          }
-        })
-        return { tile, score }
+        if (!options.allowFull && tile.tags.includes('full')) return false
+        if (options.allowFull && !tile.tags.includes('full')) return false
+        if (options.ignoreDirectionalExactMatch) return true
+
+        const tileDirectionTags = STREET_DIRECTION_TAGS.filter(tag => tile.tags.includes(tag))
+        if (tileDirectionTags.length !== exactDirectionCount) return false
+        return tileDirectionTags.every(tag => validDirectionTags.has(tag))
       })
 
-    if (!scored.length) return null
-
-    const maxScore = scored.reduce((max, entry) => Math.max(max, entry.score), -Infinity)
-    const bestMatches = scored.filter(entry => entry.score === maxScore).map(entry => entry.tile)
-    return bestMatches[TextureManager.coordHash(x, y) % bestMatches.length]
+    if (!filtered.length) return null
+    return filtered[TextureManager.coordHash(x, y) % filtered.length]
   }
 
   selectStreetTileByTags(requiredTags, x, y, mapGrid, excludedTags = []) {
-    const neighborTags = this.getStreetNeighborDirectionTags(x, y, mapGrid)
+    const neighborInfo = this.getStreetNeighborInfo(x, y, mapGrid)
+    const neighborTags = neighborInfo.directionTags
     const biomeTag = this.integratedBiomeTag
 
-    const integratedBiomeCandidates = this.getTagBucketCandidates(
-      this.integratedTagBuckets || {},
-      [...requiredTags, biomeTag],
-      excludedTags
-    )
-    const integratedCandidates = this.getTagBucketCandidates(
-      this.integratedTagBuckets || {},
-      requiredTags,
-      excludedTags
-    )
-    const defaultBiomeCandidates = this.getTagBucketCandidates(
-      this.defaultStreetTagBuckets || {},
-      [...requiredTags, biomeTag],
-      excludedTags
-    )
-    const defaultCandidates = this.getTagBucketCandidates(
-      this.defaultStreetTagBuckets || {},
-      requiredTags,
-      excludedTags
+    const selectFromBuckets = (tags, options = {}) => {
+      const integratedBiomeCandidates = this.getTagBucketCandidates(
+        this.integratedTagBuckets || {},
+        [...tags, biomeTag],
+        excludedTags
+      )
+      const integratedCandidates = this.getTagBucketCandidates(
+        this.integratedTagBuckets || {},
+        tags,
+        excludedTags
+      )
+      const defaultBiomeCandidates = this.getTagBucketCandidates(
+        this.defaultStreetTagBuckets || {},
+        [...tags, biomeTag],
+        excludedTags
+      )
+      const defaultCandidates = this.getTagBucketCandidates(
+        this.defaultStreetTagBuckets || {},
+        tags,
+        excludedTags
+      )
+
+      return this.selectStreetTileFromCandidates(integratedBiomeCandidates, x, y, neighborTags, options)
+        || this.selectStreetTileFromCandidates(integratedCandidates, x, y, neighborTags, options)
+        || this.selectStreetTileFromCandidates(defaultBiomeCandidates, x, y, neighborTags, options)
+        || this.selectStreetTileFromCandidates(defaultCandidates, x, y, neighborTags, options)
+    }
+
+    if (neighborInfo.prefersFull) {
+      const fullMatch = selectFromBuckets([...requiredTags, 'full'], {
+        allowFull: true,
+        ignoreDirectionalExactMatch: true
+      })
+      if (fullMatch) return fullMatch
+    }
+
+    return selectFromBuckets(requiredTags)
+  }
+
+  selectFullStreetTileForSOT(x, y, excludedTags = []) {
+    const biomeTag = this.integratedBiomeTag
+    const selectFullCandidate = (buckets, tags) => this.selectStreetTileFromCandidates(
+      this.getTagBucketCandidates(buckets || {}, tags, excludedTags),
+      x,
+      y,
+      [],
+      {
+        allowFull: true,
+        ignoreDirectionalExactMatch: true
+      }
     )
 
-    return this.selectStreetTileFromCandidates(integratedBiomeCandidates, x, y, neighborTags)
-      || this.selectStreetTileFromCandidates(integratedCandidates, x, y, neighborTags)
-      || this.selectStreetTileFromCandidates(defaultBiomeCandidates, x, y, neighborTags)
-      || this.selectStreetTileFromCandidates(defaultCandidates, x, y, neighborTags)
+    return selectFullCandidate(this.integratedTagBuckets, ['street', 'full', biomeTag])
+      || selectFullCandidate(this.integratedTagBuckets, ['street', 'full'])
+      || selectFullCandidate(this.defaultStreetTagBuckets, ['street', 'full', biomeTag])
+      || selectFullCandidate(this.defaultStreetTagBuckets, ['street', 'full'])
   }
 
   getGroupedTagCandidates(tag, { includeDefaultDecals = false } = {}) {
