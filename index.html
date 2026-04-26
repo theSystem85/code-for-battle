@@ -1215,6 +1215,55 @@
               <div id="sseImageConverterStatus" class="sse-image-converter__status" aria-live="polite"></div>
             </div>
           </div>
+
+          <div class="sprite-sheet-editor__autotile-panel" id="sseAutotilePanel">
+            <span class="sprite-sheet-editor__tags-title">Autotile mask generator</span>
+            <label class="sprite-sheet-editor__field">
+              <span>Generator type</span>
+              <select id="sseGeneratorTypeSelect" class="sidebar-input">
+                <option value="road-4bit-mask" selected>Road 4-bit mask</option>
+              </select>
+            </label>
+            <div class="sprite-sheet-editor__autotile-grid">
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseGeneratorTileSize" class="sidebar-input" type="number" min="8" max="256" value="64" placeholder=" ">
+                <label for="sseGeneratorTileSize">Tile size</label>
+              </div>
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseGeneratorColumns" class="sidebar-input" type="number" min="1" max="32" value="16" placeholder=" ">
+                <label for="sseGeneratorColumns">Columns</label>
+              </div>
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseGeneratorRows" class="sidebar-input" type="number" min="1" max="32" value="16" placeholder=" ">
+                <label for="sseGeneratorRows">Rows</label>
+              </div>
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseGeneratorRoadWidth" class="sidebar-input" type="range" min="4" max="56" value="24">
+                <label for="sseGeneratorRoadWidth">Road width</label>
+              </div>
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseGeneratorFadeDistance" class="sidebar-input" type="range" min="1" max="32" value="14">
+                <label for="sseGeneratorFadeDistance">Fade distance</label>
+              </div>
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseGeneratorCornerRadius" class="sidebar-input" type="range" min="0" max="24" value="6">
+                <label for="sseGeneratorCornerRadius">Corner smoothing</label>
+              </div>
+            </div>
+            <div id="sseBitOrderDisplay" class="sprite-sheet-editor__autotile-bit-order">Bit order: Top=1 Right=2 Bottom=4 Left=8</div>
+            <label class="sprite-sheet-editor__checkbox-row">
+              <input id="sseGeneratorShowDebugLabels" type="checkbox" checked>
+              <span>Show autotile debug labels</span>
+            </label>
+            <div class="sprite-sheet-editor__autotile-inspector" id="sseAutotileInspector">Selected: tile 0 • T0 R0 B0 L0</div>
+            <canvas id="sseGeneratorPreviewCanvas" class="sprite-sheet-editor__autotile-preview" width="256" height="256"></canvas>
+            <div class="sprite-sheet-editor__zoom-row">
+              <button id="sseGeneratorRegenerateBtn" class="action-button" type="button">Regenerate</button>
+              <button id="sseGeneratorExportBtn" class="action-button" type="button">Export PNG</button>
+              <button id="sseGeneratorExportWebpBtn" class="action-button" type="button">Export WebP</button>
+            </div>
+          </div>
+
           <div class="sprite-sheet-editor__field">
             <div class="floating-label-input sprite-sheet-editor__floating-input">
               <input id="sseTileSizeInput" class="sidebar-input" type="number" min="8" value="64" placeholder=" ">

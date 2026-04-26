@@ -5,6 +5,14 @@ import {
   normalizeSpriteSheetBlendMode,
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
+import {
+  ROAD_AUTOTILE_DEFAULT_CONFIG,
+  ROAD_AUTOTILE_GENERATOR_TYPE,
+  bitmaskToConnectivity,
+  connectivityToDebugLabel,
+  generateRoadAutotileMaskSheet,
+  normalizeRoadAutotileConfig
+} from './autotileMaskGenerator.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -1497,6 +1505,112 @@ function resolveSheetDisplayLabel(state, sheetPath) {
   return sheetPath?.split('/').pop() || sheetPath || ''
 }
 
+function downloadCanvasImage(canvas, filename, mimeType = 'image/png', quality) {
+  if (!canvas || typeof canvas.toBlob !== 'function') return false
+  canvas.toBlob((blob) => {
+    if (!blob) return
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement('a')
+    anchor.href = url
+    anchor.download = filename
+    document.body.appendChild(anchor)
+    anchor.click()
+    anchor.remove()
+    URL.revokeObjectURL(url)
+  }, mimeType, quality)
+  return true
+}
+
+function drawAutotilePreview(state) {
+  if (!state.generatorPreviewCanvas || !state.generatedAutotileSheet?.canvas) return
+  const ctx = state.generatorPreviewCanvas.getContext('2d')
+  if (!ctx) return
+  const source = state.generatedAutotileSheet.canvas
+  const scale = state.generatorPreviewCanvas.width / source.width
+  ctx.clearRect(0, 0, state.generatorPreviewCanvas.width, state.generatorPreviewCanvas.height)
+  ctx.imageSmoothingEnabled = false
+  ctx.drawImage(source, 0, 0, state.generatorPreviewCanvas.width, state.generatorPreviewCanvas.height)
+
+  if (!state.generatorShowDebugLabels) return
+  const tileSize = state.generatedAutotileSheet.config.tileSize
+  for (let bitmask = 0; bitmask < 16; bitmask++) {
+    const col = bitmask % state.generatedAutotileSheet.config.columns
+    const row = Math.floor(bitmask / state.generatedAutotileSheet.config.columns)
+    const x = col * tileSize * scale
+    const y = row * tileSize * scale
+    const connectivity = bitmaskToConnectivity(bitmask)
+    const label = connectivityToDebugLabel(connectivity)
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)'
+    ctx.fillRect(x + 2, y + 2, Math.min(84, (tileSize * scale) - 4), 22)
+    ctx.fillStyle = '#fff'
+    ctx.font = '8px sans-serif'
+    ctx.fillText(`#${bitmask}`, x + 4, y + 10)
+    ctx.fillText(label, x + 4, y + 19)
+  }
+
+  if (Number.isFinite(state.generatorSelectedBitmask)) {
+    const bitmask = Math.max(0, Math.min(15, state.generatorSelectedBitmask))
+    const col = bitmask % state.generatedAutotileSheet.config.columns
+    const row = Math.floor(bitmask / state.generatedAutotileSheet.config.columns)
+    const x = col * tileSize * scale
+    const y = row * tileSize * scale
+    ctx.strokeStyle = '#00d4ff'
+    ctx.lineWidth = 2
+    ctx.strokeRect(x + 1, y + 1, (tileSize * scale) - 2, (tileSize * scale) - 2)
+  }
+}
+
+function updateAutotileInspector(state) {
+  if (!state.generatorInspectorEl) return
+  const bitmask = Math.max(0, Math.min(15, state.generatorSelectedBitmask || 0))
+  state.generatorSelectedBitmask = bitmask
+  const connectivity = bitmaskToConnectivity(bitmask)
+  state.generatorInspectorEl.textContent = `Selected: tile ${bitmask} • ${connectivityToDebugLabel(connectivity)}`
+}
+
+async function regenerateAutotileSheet(state, { loadIntoEditor = true } = {}) {
+  const normalizedConfig = normalizeRoadAutotileConfig({
+    generatorType: state.generatorTypeSelect?.value || ROAD_AUTOTILE_GENERATOR_TYPE,
+    tileSize: Number.parseInt(state.generatorTileSizeInput?.value, 10),
+    columns: Number.parseInt(state.generatorColumnsInput?.value, 10),
+    rows: Number.parseInt(state.generatorRowsInput?.value, 10),
+    sheetWidth: Number.parseInt(state.generatorColumnsInput?.value, 10) * Number.parseInt(state.generatorTileSizeInput?.value, 10),
+    sheetHeight: Number.parseInt(state.generatorRowsInput?.value, 10) * Number.parseInt(state.generatorTileSizeInput?.value, 10),
+    roadWidth: Number.parseInt(state.generatorRoadWidthInput?.value, 10),
+    fadeDistance: Number.parseInt(state.generatorFadeDistanceInput?.value, 10),
+    cornerRadius: Number.parseInt(state.generatorCornerRadiusInput?.value, 10)
+  })
+  state.generatedAutotileSheet = generateRoadAutotileMaskSheet(normalizedConfig)
+
+  if (state.generatorTileSizeInput) state.generatorTileSizeInput.value = `${state.generatedAutotileSheet.config.tileSize}`
+  if (state.generatorColumnsInput) state.generatorColumnsInput.value = `${state.generatedAutotileSheet.config.columns}`
+  if (state.generatorRowsInput) state.generatorRowsInput.value = `${state.generatedAutotileSheet.config.rows}`
+  if (state.generatorRoadWidthInput) state.generatorRoadWidthInput.value = `${state.generatedAutotileSheet.config.roadWidth}`
+  if (state.generatorFadeDistanceInput) state.generatorFadeDistanceInput.value = `${state.generatedAutotileSheet.config.fadeDistance}`
+  if (state.generatorCornerRadiusInput) state.generatorCornerRadiusInput.value = `${state.generatedAutotileSheet.config.cornerRadius}`
+  if (state.bitOrderDisplayEl) state.bitOrderDisplayEl.textContent = state.generatedAutotileSheet.bitOrderDescription
+
+  drawAutotilePreview(state)
+  updateAutotileInspector(state)
+
+  if (!state.generatedAutotileSheet.validation.valid) {
+    setStatus(state, `Autotile validation failed: ${state.generatedAutotileSheet.validation.errors.join(' ')}`, 'error')
+    return
+  }
+
+  if (!loadIntoEditor) {
+    setStatus(state, 'Regenerated 4-bit road autotile sheet.')
+    return
+  }
+
+  const dataUrl = state.generatedAutotileSheet.canvas.toDataURL('image/png')
+  ensureSheetPathInMode(state, dataUrl, 'generated-road-4bit-mask.png', 'static')
+  state.sheetPaths = state.mode === 'animated' ? state.animationSheetPaths : state.staticSheetPaths
+  renderSheetOptions(state)
+  await loadSheet(state, dataUrl, { mode: state.mode })
+  setStatus(state, 'Generated and loaded deterministic road 4-bit mask sheet.')
+}
+
 export async function initSpriteSheetEditor(options = {}) {
   const state = {
     modal: document.getElementById('spriteSheetEditorModal'),
@@ -1516,6 +1630,20 @@ export async function initSpriteSheetEditor(options = {}) {
     sheetInfoWrap: document.getElementById('sseSheetInfoWrap'),
     sheetInfoBtn: document.getElementById('sseSheetInfoBtn'),
     sheetInfoPopover: document.getElementById('sseSheetInfoPopover'),
+    generatorTypeSelect: document.getElementById('sseGeneratorTypeSelect'),
+    generatorTileSizeInput: document.getElementById('sseGeneratorTileSize'),
+    generatorColumnsInput: document.getElementById('sseGeneratorColumns'),
+    generatorRowsInput: document.getElementById('sseGeneratorRows'),
+    generatorRoadWidthInput: document.getElementById('sseGeneratorRoadWidth'),
+    generatorFadeDistanceInput: document.getElementById('sseGeneratorFadeDistance'),
+    generatorCornerRadiusInput: document.getElementById('sseGeneratorCornerRadius'),
+    generatorPreviewCanvas: document.getElementById('sseGeneratorPreviewCanvas'),
+    generatorShowDebugLabelsCheckbox: document.getElementById('sseGeneratorShowDebugLabels'),
+    generatorInspectorEl: document.getElementById('sseAutotileInspector'),
+    generatorRegenerateBtn: document.getElementById('sseGeneratorRegenerateBtn'),
+    generatorExportBtn: document.getElementById('sseGeneratorExportBtn'),
+    generatorExportWebpBtn: document.getElementById('sseGeneratorExportWebpBtn'),
+    bitOrderDisplayEl: document.getElementById('sseBitOrderDisplay'),
     tileSizeInput: document.getElementById('sseTileSizeInput'),
     rowHeightInput: document.getElementById('sseRowHeightInput'),
     borderWidthInput: document.getElementById('sseBorderWidthInput'),
@@ -1583,6 +1711,9 @@ export async function initSpriteSheetEditor(options = {}) {
     animatedModeSnapshot: null,
     sidebarHidden: false,
     sidebarSwipeState: null,
+    generatedAutotileSheet: null,
+    generatorSelectedBitmask: 0,
+    generatorShowDebugLabels: true,
     onSheetDataChange: options.onSheetDataChange || null,
     onAnimationSheetDataChange: options.onAnimationSheetDataChange || null
   }
@@ -1629,6 +1760,18 @@ export async function initSpriteSheetEditor(options = {}) {
       : (lastSheet && state.sheetPaths.includes(lastSheet) ? lastSheet : state.sheetPaths[0]))
 
   await loadSheet(state, initialSheetPath, { saveCurrent: false, mode: state.mode })
+
+  if (state.generatorTypeSelect) {
+    state.generatorTypeSelect.value = ROAD_AUTOTILE_GENERATOR_TYPE
+  }
+  if (state.generatorTileSizeInput) state.generatorTileSizeInput.value = `${ROAD_AUTOTILE_DEFAULT_CONFIG.tileSize}`
+  if (state.generatorColumnsInput) state.generatorColumnsInput.value = `${ROAD_AUTOTILE_DEFAULT_CONFIG.columns}`
+  if (state.generatorRowsInput) state.generatorRowsInput.value = `${ROAD_AUTOTILE_DEFAULT_CONFIG.rows}`
+  if (state.generatorRoadWidthInput) state.generatorRoadWidthInput.value = `${ROAD_AUTOTILE_DEFAULT_CONFIG.roadWidth}`
+  if (state.generatorFadeDistanceInput) state.generatorFadeDistanceInput.value = `${ROAD_AUTOTILE_DEFAULT_CONFIG.fadeDistance}`
+  if (state.generatorCornerRadiusInput) state.generatorCornerRadiusInput.value = `${ROAD_AUTOTILE_DEFAULT_CONFIG.cornerRadius}`
+  if (state.bitOrderDisplayEl) state.bitOrderDisplayEl.textContent = 'Bit order (LSB→MSB): Top=1, Right=2, Bottom=4, Left=8'
+  await regenerateAutotileSheet(state, { loadIntoEditor: false })
 
   const switchMode = async(nextMode) => {
     if (state.mode === nextMode) return
@@ -1924,6 +2067,64 @@ export async function initSpriteSheetEditor(options = {}) {
     state.showTaggedOverlay = Boolean(state.showTaggedOverlayCheckbox.checked)
     drawSseCanvas(state)
     applyCanvasZoom(state)
+  })
+
+  state.generatorRegenerateBtn?.addEventListener('click', async() => {
+    await regenerateAutotileSheet(state, { loadIntoEditor: true })
+  })
+
+  state.generatorShowDebugLabelsCheckbox?.addEventListener('change', () => {
+    state.generatorShowDebugLabels = Boolean(state.generatorShowDebugLabelsCheckbox.checked)
+    drawAutotilePreview(state)
+  })
+
+  state.generatorPreviewCanvas?.addEventListener('click', (event) => {
+    if (!state.generatedAutotileSheet) return
+    const rect = state.generatorPreviewCanvas.getBoundingClientRect()
+    const x = event.clientX - rect.left
+    const y = event.clientY - rect.top
+    const scaleX = state.generatedAutotileSheet.canvas.width / rect.width
+    const scaleY = state.generatedAutotileSheet.canvas.height / rect.height
+    const sourceX = x * scaleX
+    const sourceY = y * scaleY
+    const col = Math.floor(sourceX / state.generatedAutotileSheet.config.tileSize)
+    const row = Math.floor(sourceY / state.generatedAutotileSheet.config.tileSize)
+    const bitmask = (row * state.generatedAutotileSheet.config.columns) + col
+    if (bitmask < 0 || bitmask > 15) return
+    state.generatorSelectedBitmask = bitmask
+    updateAutotileInspector(state)
+    drawAutotilePreview(state)
+  })
+
+  state.generatorExportBtn?.addEventListener('click', () => {
+    if (!state.generatedAutotileSheet?.canvas) return
+    const ok = downloadCanvasImage(state.generatedAutotileSheet.canvas, 'road_4bit_mask_1024x1024.png', 'image/png')
+    if (ok) {
+      setStatus(state, 'Exported PNG autotile mask (1024x1024).')
+    }
+  })
+
+  state.generatorExportWebpBtn?.addEventListener('click', () => {
+    if (!state.generatedAutotileSheet?.canvas) return
+    const ok = downloadCanvasImage(state.generatedAutotileSheet.canvas, 'road_4bit_mask_1024x1024.webp', 'image/webp', 0.95)
+    if (ok) {
+      setStatus(state, 'Exported WebP autotile mask (1024x1024).')
+    }
+  })
+
+  const generatorInputs = [
+    state.generatorTypeSelect,
+    state.generatorTileSizeInput,
+    state.generatorColumnsInput,
+    state.generatorRowsInput,
+    state.generatorRoadWidthInput,
+    state.generatorFadeDistanceInput,
+    state.generatorCornerRadiusInput
+  ]
+  generatorInputs.forEach((input) => {
+    input?.addEventListener('change', async() => {
+      await regenerateAutotileSheet(state, { loadIntoEditor: false })
+    })
   })
 
   state.zoomInBtn?.addEventListener('click', () => {
