@@ -157,3 +157,14 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
   - SSE sidebar must include a `Reset all tags` action that clears all current tile-tag assignments for the active sheet while keeping tag definitions available.
   - On mobile SSE modal layouts, the sidebar must support swipe-left hide and swipe-right reveal parity with the main game sidebar; when hidden, a bottom-left menu toggle button reopens it and the spritesheet canvas/workspace expands to full modal width.
   - Mobile/touch SSE must support tap-drag tile painting on the spritesheet canvas (same behavior parity as desktop click-drag painting), keep the menu-toggle hidden whenever the sidebar is expanded, and add safe-area-aware top/bottom sidebar padding to avoid iOS/browser bar overlap.
+
+
+## Follow-up (2026-04-26): Major sprite sheets default compilation
+- Build pipeline must compile all tagged and runtime-used tiles from default static SSE sheets into one **major sprite sheet** (`major_sprite_sheet_default.webp`) with a merged tagging sidecar (`major_sprite_sheet_default.json`).
+- `public/images/map/sprite_sheets/index.json` must always include the major sprite sheet so SSE static-sheet dropdown exposes it as a selectable option.
+- When integrated sprite-sheet selections are first initialized (no prior user selection), runtime should default to only the major sprite sheet to reduce parallel texture decoding/memory pressure on mobile devices.
+- Major sprite sheet metadata must preserve merged tags and tile rect mappings so opening it in SSE immediately restores combined tag overlays.
+- Existing per-sheet options remain available in UI lists/checklists for manual override and debugging.
+
+- Follow-up (2026-04-26, revision B): major-sheet metadata should support compact `tileEntries` encoding and runtime expansion; SSE should lazy-load sheet images on modal open instead of startup; grouped multi-tile assets in the compiled major atlas must be packed contiguously and arranged by ascending size buckets (all 1x1 rows first, then size-2 groups, then size-3, etc.).
+- Follow-up (2026-04-26, revision C): generated major-sheet atlas outputs are build artifacts and must stay ignored by git; the build metadata stores per-tile image hashes and duplicate logical tiles must point at the first physical atlas tile with the same hash instead of copying identical pixels into the generated image again.

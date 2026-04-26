@@ -42,3 +42,7 @@ Thumbs.db
 
 # Local legal identity config
 impressum.config.json
+
+# Generated major sprite-sheet atlas, rebuilt by npm run build:major-sprite-sheets
+public/images/map/sprite_sheets/major_sprite_sheet_default.webp
+public/images/map/sprite_sheets/major_sprite_sheet_default.json

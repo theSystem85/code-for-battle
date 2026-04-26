@@ -5,6 +5,7 @@ import {
   normalizeSpriteSheetBlendMode,
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
+import { expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -41,7 +42,10 @@ export const DEFAULT_SSE_TAGS = [
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
 
+const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
+
 const fallbackSheets = [
+  MAJOR_SPRITE_SHEET_PATH,
   'images/map/sprite_sheets/streets23_q90_1024x1024.webp',
   'images/map/sprite_sheets/grass.webp',
   'images/map/sprite_sheets/soil.webp',
@@ -159,21 +163,22 @@ function ensureTileRecord(data, tileKey) {
 }
 
 function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) {
-  const normalizedTileSize = Number.isFinite(raw?.tileSize) ? Math.max(8, Math.floor(raw.tileSize)) : DEFAULT_TILE_SIZE
-  const normalizedRowHeight = Number.isFinite(raw?.rowHeight) ? Math.max(8, Math.floor(raw.rowHeight)) : normalizedTileSize
-  const tags = Array.isArray(raw?.tags)
-    ? Array.from(new Set([...raw.tags.filter(Boolean), ...baseTags]))
+  const expandedRaw = expandCompactSpriteSheetMetadata(raw)
+  const normalizedTileSize = Number.isFinite(expandedRaw?.tileSize) ? Math.max(8, Math.floor(expandedRaw.tileSize)) : DEFAULT_TILE_SIZE
+  const normalizedRowHeight = Number.isFinite(expandedRaw?.rowHeight) ? Math.max(8, Math.floor(expandedRaw.rowHeight)) : normalizedTileSize
+  const tags = Array.isArray(expandedRaw?.tags)
+    ? Array.from(new Set([...expandedRaw.tags.filter(Boolean), ...baseTags]))
     : [...baseTags]
   const data = {
     schemaVersion: 1,
     sheetPath,
     tileSize: normalizedTileSize,
     rowHeight: normalizedRowHeight,
-    borderWidth: Number.isFinite(raw?.borderWidth) ? Math.max(0, Math.floor(raw.borderWidth)) : DEFAULT_BORDER_WIDTH,
-    blendMode: normalizeSpriteSheetBlendMode(raw?.blendMode),
-    blackKey: normalizeBlackKeyForSheet(sheetPath, raw?.blackKey),
+    borderWidth: Number.isFinite(expandedRaw?.borderWidth) ? Math.max(0, Math.floor(expandedRaw.borderWidth)) : DEFAULT_BORDER_WIDTH,
+    blendMode: normalizeSpriteSheetBlendMode(expandedRaw?.blendMode),
+    blackKey: normalizeBlackKeyForSheet(sheetPath, expandedRaw?.blackKey),
     tags: tags.length ? Array.from(new Set(tags)) : [...baseTags],
-    tiles: raw?.tiles && typeof raw.tiles === 'object' ? raw.tiles : {}
+    tiles: expandedRaw?.tiles && typeof expandedRaw.tiles === 'object' ? expandedRaw.tiles : {}
   }
 
   Object.keys(data.tiles).forEach((tileKey) => {
@@ -1244,8 +1249,16 @@ function bindCanvasInteractions(state) {
   window.addEventListener('mouseup', endPan)
 }
 
-function openModal(state) {
+async function ensureActiveSheetLoaded(state, { mode = 'static' } = {}) {
+  const selectedPath = state.sheetSelect?.value || state.activeData?.sheetPath || state.sheetPaths[0]
+  if (!selectedPath) return
+  if (state.activeData?.sheetPath === selectedPath && state.image) return
+  await loadSheet(state, selectedPath, { saveCurrent: false, mode })
+}
+
+async function openModal(state) {
   if (!state.modal) return
+  await ensureActiveSheetLoaded(state, { mode: state.mode })
   state.isModalOpen = true
   state.modal.classList.add('config-modal--open')
   state.modal.setAttribute('aria-hidden', 'false')
@@ -1628,7 +1641,12 @@ export async function initSpriteSheetEditor(options = {}) {
       ? options.initialSheetPath
       : (lastSheet && state.sheetPaths.includes(lastSheet) ? lastSheet : state.sheetPaths[0]))
 
-  await loadSheet(state, initialSheetPath, { saveCurrent: false, mode: state.mode })
+  if (state.sheetSelect && initialSheetPath) {
+    state.sheetSelect.value = initialSheetPath
+  }
+  state.statusEl.textContent = state.mode === 'animated'
+    ? 'Select and open an animation sheet to begin.'
+    : 'Select and open a sprite sheet to begin.'
 
   const switchMode = async(nextMode) => {
     if (state.mode === nextMode) return
@@ -1662,7 +1680,12 @@ export async function initSpriteSheetEditor(options = {}) {
     if (state.previewPlaying && state.isModalOpen) startAnimationPreviewLoop(state)
   }
 
-  state.openBtn.addEventListener('click', () => openModal(state))
+  state.openBtn.addEventListener('click', () => {
+    openModal(state).catch((err) => {
+      setStatus(state, 'Failed to open Sprite Sheet Editor.', 'error')
+      window.logger.warn('Failed to open Sprite Sheet Editor:', err)
+    })
+  })
   state.closeBtn?.addEventListener('click', () => closeModal(state))
 
   state.modal.addEventListener('click', (event) => {

@@ -1,4 +1,4 @@
 {
-  "commit": "94aaaee6",
-  "message": "fix(legal): remove misleading back-to-game links from legal pages"
+  "commit": "7ada3748",
+  "message": "FEAT: Add build-time major sprite sheet pipeline and default SSE usage"
 }

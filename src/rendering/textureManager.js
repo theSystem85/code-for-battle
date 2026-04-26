@@ -4,13 +4,16 @@ import { buildingImageMap } from '../buildingImageMap.js'
 import { getDevicePixelRatio } from './renderingUtils.js'
 import { discoverGrassTiles } from '../utils/grassTileDiscovery.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
+import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
 
-const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
-const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
-const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
-const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
-const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets23_q90_1024x1024.webp'
-const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets23_q90_1024x1024.json'
+const DEFAULT_MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
+const DEFAULT_MAJOR_SPRITE_METADATA_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.json'
+const DEFAULT_COMBAT_DECAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
+const DEFAULT_COMBAT_DECAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
+const DEFAULT_CRYSTAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
+const DEFAULT_CRYSTAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
+const DEFAULT_STREET_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
+const DEFAULT_STREET_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
 const STREET_DIRECTION_TAGS = ['top', 'bottom', 'left', 'right']
 
 // Map unit types to their image paths
@@ -236,8 +239,7 @@ export class TextureManager {
   }
 
   hasTaggedIntegratedTiles(metadata) {
-    if (!metadata?.tiles || typeof metadata.tiles !== 'object') return false
-    return Object.values(metadata.tiles).some(tile => Array.isArray(tile?.tags) && tile.tags.length > 0 && tile.rect)
+    return hasTaggedSpriteSheetTiles(metadata)
   }
 
   async preloadDefaultCombatDecalSheet() {
@@ -249,7 +251,7 @@ export class TextureManager {
         return
       }
 
-      const metadata = await response.json()
+      const metadata = expandCompactSpriteSheetMetadata(await response.json())
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultCombatDecalSheetMetadata = null
         this.defaultCombatDecalTagBuckets = {}
@@ -299,7 +301,7 @@ export class TextureManager {
         return
       }
 
-      const metadata = await response.json()
+      const metadata = expandCompactSpriteSheetMetadata(await response.json())
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultCrystalSheetMetadata = null
         this.defaultCrystalTagBuckets = {}
@@ -341,7 +343,7 @@ export class TextureManager {
         return
       }
 
-      const metadata = await response.json()
+      const metadata = expandCompactSpriteSheetMetadata(await response.json())
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultStreetSheetMetadata = null
         this.defaultStreetTagBuckets = {}
@@ -398,7 +400,7 @@ export class TextureManager {
     const normalizedEntries = []
     for (const entry of sheetEntries) {
       const sheetPath = entry?.sheetPath
-      const metadata = entry?.metadata
+      const metadata = expandCompactSpriteSheetMetadata(entry?.metadata)
       if (!sheetPath || !metadata) continue
       if (!this.hasTaggedIntegratedTiles(metadata)) continue
       const image = await this.loadIntegratedSpriteSheetImage(sheetPath)
