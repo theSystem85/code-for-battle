@@ -221,6 +221,53 @@ export class MapRenderer {
     this.sotMaskVersion = 0
   }
 
+  getStreetNeighborState(mapGrid, x, y) {
+    const isStreetTile = (tileX, tileY) => mapGrid[tileY]?.[tileX]?.type === 'street'
+    return {
+      top: isStreetTile(x, y - 1),
+      right: isStreetTile(x + 1, y),
+      bottom: isStreetTile(x, y + 1),
+      left: isStreetTile(x - 1, y),
+      topLeft: isStreetTile(x - 1, y - 1),
+      topRight: isStreetTile(x + 1, y - 1),
+      bottomLeft: isStreetTile(x - 1, y + 1),
+      bottomRight: isStreetTile(x + 1, y + 1)
+    }
+  }
+
+  isFullStreetRenderTile(mapGrid, x, y) {
+    if (mapGrid[y]?.[x]?.type !== 'street') return false
+    const neighbors = this.getStreetNeighborState(mapGrid, x, y)
+    return (neighbors.top && neighbors.left && neighbors.topLeft)
+      || (neighbors.top && neighbors.right && neighbors.topRight)
+      || (neighbors.bottom && neighbors.left && neighbors.bottomLeft)
+      || (neighbors.bottom && neighbors.right && neighbors.bottomRight)
+  }
+
+  computeFullStreetSOTForTile(mapGrid, x, y, top, right, bottom, left) {
+    if (top?.type === 'street' && left?.type === 'street' &&
+      this.isFullStreetRenderTile(mapGrid, x, y - 1) &&
+      this.isFullStreetRenderTile(mapGrid, x - 1, y)) {
+      return { orientation: 'top-left', type: 'street' }
+    }
+    if (top?.type === 'street' && right?.type === 'street' &&
+      this.isFullStreetRenderTile(mapGrid, x, y - 1) &&
+      this.isFullStreetRenderTile(mapGrid, x + 1, y)) {
+      return { orientation: 'top-right', type: 'street' }
+    }
+    if (bottom?.type === 'street' && left?.type === 'street' &&
+      this.isFullStreetRenderTile(mapGrid, x, y + 1) &&
+      this.isFullStreetRenderTile(mapGrid, x - 1, y)) {
+      return { orientation: 'bottom-left', type: 'street' }
+    }
+    if (bottom?.type === 'street' && right?.type === 'street' &&
+      this.isFullStreetRenderTile(mapGrid, x, y + 1) &&
+      this.isFullStreetRenderTile(mapGrid, x + 1, y)) {
+      return { orientation: 'bottom-right', type: 'street' }
+    }
+    return null
+  }
+
   /**
    * Compute the SOT (Smoothening Overlay Texture) mask for the entire map.
    * This should be called once when the map is loaded and when tile types change.
@@ -292,6 +339,9 @@ export class MapRenderer {
     // Coastline smoothing for water tiles near land/street: draw biome land triangles on water,
     // i.e. the ground cuts into water instead of water cutting street overlays.
     if (tileType === 'water') {
+      const streetSotInfo = this.computeFullStreetSOTForTile(mapGrid, x, y, top, right, bottom, left)
+      if (streetSotInfo) return streetSotInfo
+
       if (isLandLike(top) && isLandLike(left) && (top.type === 'street' || left.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
           ? { orientation: 'top-left', type: 'land' }
@@ -312,6 +362,11 @@ export class MapRenderer {
           ? { orientation: 'bottom-right', type: 'land' }
           : null
       }
+    }
+
+    if (tileType === 'land') {
+      const streetSotInfo = this.computeFullStreetSOTForTile(mapGrid, x, y, top, right, bottom, left)
+      if (streetSotInfo) return streetSotInfo
     }
 
     // Check water corners (for both land and street tiles)
@@ -1163,6 +1218,11 @@ export class MapRenderer {
           this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
         }
       }
+    } else if (type === 'street') {
+      const fullStreetTile = this.textureManager.selectFullStreetTileForSOT?.(tileX, tileY)
+      if (fullStreetTile?.image && fullStreetTile?.rect) {
+        this.drawIntegratedTileImage(ctx, fullStreetTile, screenX, screenY)
+      }
     } else if (type === 'land') {
       const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
       const sourceCoord = (() => {
@@ -1345,17 +1405,15 @@ export class MapRenderer {
     }
 
     // First pass: render all SOT overlays.
-    // Never draw street-type SOT. Allow water SOT on street-hosted tiles so coastline smoothing
-    // still works against the street underlay terrain.
+    // Street-type SOT is generated only for full-street cluster corners on terrain tiles.
+    // Allow water SOT on street-hosted tiles so coastline smoothing still works against the
+    // street underlay terrain.
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         if (this.sotMask[y]?.[x]) {
           const sotInfo = this.sotMask[y][x]
-          if (sotInfo.type === 'street') {
-            continue
-          }
           if (visualTileType === 'street') {
             continue
           }

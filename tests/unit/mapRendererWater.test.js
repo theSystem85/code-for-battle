@@ -152,6 +152,43 @@ describe('MapRenderer water rendering', () => {
     expect(ctx.drawImage.mock.calls[0][0]).toEqual({ id: 'water-sheet' })
   })
 
+  it('uses only full-tagged street art for street SOT overlays', () => {
+    const selectFullStreetTileForSOT = vi.fn(() => ({
+      image: { id: 'full-street-sheet' },
+      rect: { x: 64, y: 128, width: 64, height: 64 },
+      tags: ['street', 'full', 'grass']
+    }))
+    const mapRenderer = new MapRenderer({
+      ...makeTextureManager(),
+      selectFullStreetTileForSOT,
+      getIntegratedTileForMapTile: vi.fn(() => ({
+        image: { id: 'legacy-street-or-land' },
+        rect: { x: 0, y: 0, width: 64, height: 64 },
+        tags: ['street']
+      }))
+    })
+    const ctx = {
+      save: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn(),
+      restore: vi.fn(),
+      drawImage: vi.fn(),
+      fill: vi.fn(),
+      fillRect: vi.fn(),
+      fillStyle: '#000'
+    }
+
+    mapRenderer.drawSOT(ctx, 4, 4, 'top-left', { x: 0, y: 0 }, false, new Set(), 'street', null)
+
+    expect(selectFullStreetTileForSOT).toHaveBeenCalledWith(4, 4)
+    expect(mapRenderer.textureManager.getIntegratedTileForMapTile).not.toHaveBeenCalled()
+    expect(ctx.drawImage).toHaveBeenCalledTimes(1)
+    expect(ctx.drawImage.mock.calls[0][0]).toEqual({ id: 'full-street-sheet' })
+  })
+
   it('can leave top-canvas water tiles transparent for GPU fallback while still drawing land tiles', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const drawTileBaseSpy = vi.spyOn(mapRenderer, 'drawTileBase').mockImplementation(() => {})
@@ -398,6 +435,47 @@ describe('MapRenderer water rendering', () => {
     )
 
     expect(inverseLandSotInstances).toHaveLength(0)
+  })
+
+  it('adds street SOT only when land corners sit between full-eligible street tiles', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    mapRenderer.computeSOTMask(mapGrid)
+
+    expect(mapRenderer.sotMask[2][2]).toEqual({ orientation: 'top-left', type: 'street' })
+  })
+
+  it('keeps full street SOT dominant on water corners between full-eligible street tiles', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'street' }, { type: 'water' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    mapRenderer.computeSOTMask(mapGrid)
+
+    expect(mapRenderer.sotMask[2][2]).toEqual({ orientation: 'top-left', type: 'street' })
+  })
+
+  it('does not add street SOT for non-full street corners', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    mapRenderer.computeSOTMask(mapGrid)
+
+    expect(mapRenderer.sotMask[1][1]).toBeNull()
   })
 
   it('adds inverse land SOT for enclosed island notch corners even when the diagonal tile is water', () => {

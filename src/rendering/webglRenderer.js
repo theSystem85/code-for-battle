@@ -345,7 +345,7 @@ export class GameWebGLRenderer {
           continue
         }
 
-        if (sotInfo && sotInfo.type !== 'street' && visualTileType !== 'street') {
+        if (sotInfo && visualTileType !== 'street') {
           const adjacentStreet = (
             row[x - 1]?.type === 'street' ||
             row[x + 1]?.type === 'street' ||
@@ -390,6 +390,9 @@ export class GameWebGLRenderer {
   createSotInstance(type, tileX, tileY, orientation, mapGrid, canUseTextures, sotMask = null) {
     if (type === 'water') {
       return this.createWaterSotInstance(tileX, tileY, orientation)
+    }
+    if (type === 'street') {
+      return null
     }
 
     const instance = this.createInstance(type, tileX, tileY, mapGrid, canUseTextures, sotMask)

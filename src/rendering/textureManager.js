@@ -643,6 +643,25 @@ export class TextureManager {
     return selectFromBuckets(requiredTags)
   }
 
+  selectFullStreetTileForSOT(x, y, excludedTags = []) {
+    const biomeTag = this.integratedBiomeTag
+    const selectFullCandidate = (buckets, tags) => this.selectStreetTileFromCandidates(
+      this.getTagBucketCandidates(buckets || {}, tags, excludedTags),
+      x,
+      y,
+      [],
+      {
+        allowFull: true,
+        ignoreDirectionalExactMatch: true
+      }
+    )
+
+    return selectFullCandidate(this.integratedTagBuckets, ['street', 'full', biomeTag])
+      || selectFullCandidate(this.integratedTagBuckets, ['street', 'full'])
+      || selectFullCandidate(this.defaultStreetTagBuckets, ['street', 'full', biomeTag])
+      || selectFullCandidate(this.defaultStreetTagBuckets, ['street', 'full'])
+  }
+
   getGroupedTagCandidates(tag, { includeDefaultDecals = false } = {}) {
     const integrated = Array.isArray(this.integratedGroupedTagCatalog?.[tag]) ? this.integratedGroupedTagCatalog[tag] : []
     if (!includeDefaultDecals) {

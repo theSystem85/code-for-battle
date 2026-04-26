@@ -1,4 +1,4 @@
 {
-  "commit": "7ada3748",
-  "message": "FEAT: Add build-time major sprite sheet pipeline and default SSE usage"
+  "commit": "1db6629f",
+  "message": "Use streets24 and tighten street sprite routing"
 }
