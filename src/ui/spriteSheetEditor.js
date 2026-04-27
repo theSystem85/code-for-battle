@@ -1285,19 +1285,35 @@ function ensureSheetPathInMode(state, sheetPath, label, mode) {
   state.customSheetLabels[sheetPath] = label
 }
 
+function isDroppedJsonFile(file) {
+  if (!file) return false
+  return Boolean(
+    file.type === 'application/json'
+    || file.type === 'text/json'
+    || /\.json$/i.test(file.name || '')
+  )
+}
+
+function isDroppedImageFile(file) {
+  if (!file) return false
+  return Boolean(
+    file.type?.startsWith('image/')
+    || /\.(png|webp|jpe?g|gif|bmp|avif)$/i.test(file.name || '')
+  )
+}
+
 async function loadDroppedSheetFile(state, file) {
   if (!file) {
     setStatus(state, 'Drop an image or JSON metadata file into SSE.', 'warn')
     return
   }
 
-  const isJsonFile = file.type === 'application/json' || /\.json$/i.test(file.name || '')
-  if (isJsonFile) {
+  if (isDroppedJsonFile(file)) {
     await loadDroppedTagFile(state, file)
     return
   }
 
-  if (!file.type.startsWith('image/')) {
+  if (!isDroppedImageFile(file)) {
     setStatus(state, 'Only image or JSON files can be dropped into SSE.', 'warn')
     return
   }
@@ -1308,6 +1324,30 @@ async function loadDroppedSheetFile(state, file) {
   renderSheetOptions(state)
   await loadSheet(state, objectUrl, { mode: state.mode })
   setStatus(state, `Loaded dropped image: ${file.name || 'image'}`)
+}
+
+async function loadDroppedFiles(state, files) {
+  const droppedFiles = Array.from(files || []).filter(Boolean)
+  if (!droppedFiles.length) {
+    await loadDroppedSheetFile(state, null)
+    return
+  }
+
+  const imageFiles = droppedFiles.filter((file) => isDroppedImageFile(file) && !isDroppedJsonFile(file))
+  const jsonFiles = droppedFiles.filter((file) => isDroppedJsonFile(file))
+
+  if (!imageFiles.length && !jsonFiles.length) {
+    setStatus(state, 'Only image or JSON files can be dropped into SSE.', 'warn')
+    return
+  }
+
+  if (imageFiles.length) {
+    await loadDroppedSheetFile(state, imageFiles[0])
+  }
+
+  if (jsonFiles.length) {
+    await loadDroppedTagFile(state, jsonFiles[0])
+  }
 }
 
 async function readFileAsText(file) {
@@ -1842,8 +1882,7 @@ export async function initSpriteSheetEditor(options = {}) {
 
   state.canvasWrap?.addEventListener('drop', async(event) => {
     event.preventDefault()
-    const file = event.dataTransfer?.files?.[0]
-    await loadDroppedSheetFile(state, file)
+    await loadDroppedFiles(state, event.dataTransfer?.files)
   })
 
   state.tileSizeInput?.addEventListener('change', () => {
