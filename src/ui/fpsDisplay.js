@@ -25,6 +25,13 @@ export class FPSDisplay {
     this.lastNetworkUpdate = performance.now()
     this.lastBytesSent = 0
     this.lastBytesReceived = 0
+    this.longTaskTimeMs = 0
+    this.longTaskObserver = null
+    this.lastBottleneckSampleAt = performance.now()
+    this.bottleneckSnapshot = {
+      type: 'none',
+      details: 'No active bottleneck'
+    }
 
     // Get the DOM element
     this.fpsElement = document.getElementById('fpsDisplay')
@@ -38,6 +45,7 @@ export class FPSDisplay {
     this.frameTimeMaxEl = document.getElementById('frameTimeMax')
     this.fpsLlmTokensEl = document.getElementById('fpsLlmTokens')
     this.fpsLlmSpendEl = document.getElementById('fpsLlmSpend')
+    this.bottleneckEl = document.getElementById('fpsBottleneck')
 
     // Network stats elements
     this.networkStatsContainer = document.getElementById('networkStatsContainer')
@@ -51,6 +59,20 @@ export class FPSDisplay {
     this.lockstepStatusEl = document.getElementById('lockstepStatus')
     this.lockstepTickEl = document.getElementById('lockstepTick')
     this.lockstepDesyncEl = document.getElementById('lockstepDesync')
+
+    const PerformanceObserverCtor = typeof globalThis !== 'undefined' ? globalThis.PerformanceObserver : null
+    if (typeof PerformanceObserverCtor === 'function') {
+      try {
+        this.longTaskObserver = new PerformanceObserverCtor((list) => {
+          for (const entry of list.getEntries()) {
+            this.longTaskTimeMs += entry.duration
+          }
+        })
+        this.longTaskObserver.observe({ entryTypes: ['longtask'] })
+      } catch {
+        this.longTaskObserver = null
+      }
+    }
   }
 
   updateFPS(currentTime) {
@@ -140,6 +162,10 @@ export class FPSDisplay {
       if (this.frameTimeMaxEl) {
         this.frameTimeMaxEl.textContent = `Max: ${this.maxFrameTime.toFixed(1)} ms`
       }
+      this.updateBottleneckStats(currentTime)
+      if (this.bottleneckEl) {
+        this.bottleneckEl.textContent = `Bottleneck: ${this.bottleneckSnapshot.type} (${this.bottleneckSnapshot.details})`
+      }
 
       const llmSettings = getLlmSettings()
       const llmEnabled = Boolean(llmSettings?.strategic?.enabled || llmSettings?.commentary?.enabled)
@@ -176,6 +202,37 @@ export class FPSDisplay {
     } else {
       this.fpsElement.classList.remove('visible')
     }
+  }
+
+  updateBottleneckStats(currentTime) {
+    const sampleWindowMs = Math.max(1, currentTime - this.lastBottleneckSampleAt)
+    const targetFrameMs = 1000 / 60
+    const frameOverBudgetMs = Math.max(0, this.avgFrameTime - targetFrameMs)
+    const longTaskRatio = this.longTaskTimeMs / sampleWindowMs
+    const memory = performance?.memory
+    const memoryPressure = memory?.jsHeapSizeLimit > 0
+      ? memory.usedJSHeapSize / memory.jsHeapSizeLimit
+      : null
+
+    let type = 'none'
+    let details = 'No active bottleneck'
+
+    if (this.avgFrameTime > targetFrameMs * 1.15) {
+      if (memoryPressure !== null && memoryPressure >= 0.82) {
+        type = 'memory/bandwidth'
+        details = `heap ${(memoryPressure * 100).toFixed(0)}%`
+      } else if (longTaskRatio >= 0.2 || frameOverBudgetMs >= 10) {
+        type = 'cpu'
+        details = `long-tasks ${(longTaskRatio * 100).toFixed(0)}%`
+      } else {
+        type = 'gpu/fill-rate'
+        details = `frame ${this.avgFrameTime.toFixed(1)}ms`
+      }
+    }
+
+    this.bottleneckSnapshot = { type, details }
+    this.longTaskTimeMs = 0
+    this.lastBottleneckSampleAt = currentTime
   }
 
   updateNetworkStats(_currentTime) {

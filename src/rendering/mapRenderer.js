@@ -14,6 +14,8 @@ const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
 const MIN_SOT_CLUSTER_SIZE = 5
+const CHUNK_SIGNATURE_REVALIDATION_MS = 500
+const CHUNK_WATER_ANIMATION_REDRAW_INTERVAL_MS = 250
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -497,6 +499,8 @@ export class MapRenderer {
         lastWaterEffectSaturation: null,
         lastWaterEffectZoom: null,
         lastSotMaskVersion: null,
+        lastSignatureCheckAt: 0,
+        lastWaterAnimationRedrawAt: 0,
         containsWaterAnimation: false,
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
@@ -548,19 +552,35 @@ export class MapRenderer {
   updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
     if (!chunk.canvas || !chunk.ctx) return
 
-    const { signature, containsWater } = this.computeChunkSignature(
-      mapGrid,
-      chunk.startX,
-      chunk.startY,
-      chunk.endX,
-      chunk.endY
-    )
+    const now = performance.now()
+    const shouldRevalidateSignature =
+      chunk.signature === null ||
+      (now - chunk.lastSignatureCheckAt) >= CHUNK_SIGNATURE_REVALIDATION_MS
 
-    const hasWaterAnimation = containsWater && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)
+    if (shouldRevalidateSignature) {
+      const { signature, containsWater } = this.computeChunkSignature(
+        mapGrid,
+        chunk.startX,
+        chunk.startY,
+        chunk.endX,
+        chunk.endY
+      )
+      chunk.signature = signature
+      chunk.containsWaterAnimation = containsWater
+      chunk.lastSignatureCheckAt = now
+    }
+
+    const hasWaterAnimation = chunk.containsWaterAnimation &&
+      (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)
     const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
 
+    const shouldRedrawWaterAnimation =
+      hasWaterAnimation &&
+      chunk.lastWaterFrameIndex !== waterFrameIndex &&
+      (now - chunk.lastWaterAnimationRedrawAt) >= CHUNK_WATER_ANIMATION_REDRAW_INTERVAL_MS
+
     const needsRedraw =
-      chunk.signature !== signature ||
+      shouldRevalidateSignature ||
       chunk.lastUseTexture !== useTexture ||
       chunk.lastIntegratedSignature !== this.textureManager.integratedRenderSignature ||
       chunk.lastProceduralWaterEnabled !== USE_PROCEDURAL_WATER_RENDERING ||
@@ -569,7 +589,7 @@ export class MapRenderer {
       chunk.lastWaterEffectZoom !== WATER_EFFECT_ZOOM ||
       chunk.lastSotMaskVersion !== this.sotMaskVersion ||
       chunk.containsWaterAnimation !== hasWaterAnimation ||
-      (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
+      shouldRedrawWaterAnimation
 
     if (!needsRedraw) return
 
@@ -600,7 +620,6 @@ export class MapRenderer {
       currentWaterFrame
     )
 
-    chunk.signature = signature
     chunk.lastUseTexture = useTexture
     chunk.lastIntegratedSignature = this.textureManager.integratedRenderSignature
     chunk.lastProceduralWaterEnabled = USE_PROCEDURAL_WATER_RENDERING
@@ -610,6 +629,9 @@ export class MapRenderer {
     chunk.lastSotMaskVersion = this.sotMaskVersion
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
+    if (shouldRedrawWaterAnimation) {
+      chunk.lastWaterAnimationRedrawAt = now
+    }
   }
 
   renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState, options = {}) {
