@@ -530,4 +530,46 @@ describe('MapRenderer water rendering', () => {
       expect.arrayContaining([[1, 1], [1, 2]])
     )
   })
+
+  it('throttles chunk signature recomputation during rapid cache updates', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }]
+    ]
+    mapRenderer.sotMaskVersion = 1
+    mapRenderer.drawBaseLayer = vi.fn()
+    mapRenderer.textureManager.waterFrameIndex = 0
+
+    const chunkCtx = { clearRect: vi.fn(), drawImage: vi.fn() }
+    const chunk = {
+      canvas: { width: 0, height: 0, getContext: vi.fn(() => chunkCtx) },
+      ctx: chunkCtx,
+      startX: 0,
+      startY: 0,
+      endX: 2,
+      endY: 2,
+      signature: null,
+      lastUseTexture: null,
+      lastIntegratedSignature: null,
+      lastWaterFrameIndex: null,
+      lastProceduralWaterEnabled: null,
+      lastWaterEffectTone: null,
+      lastWaterEffectSaturation: null,
+      lastWaterEffectZoom: null,
+      lastSotMaskVersion: null,
+      lastSignatureCheckAt: 0,
+      lastWaterAnimationRedrawAt: 0,
+      containsWaterAnimation: false,
+      padding: 0,
+      offsetX: 0,
+      offsetY: 0
+    }
+
+    const signatureSpy = vi.spyOn(mapRenderer, 'computeChunkSignature')
+    mapRenderer.updateChunkCache(chunk, mapGrid, false, null)
+    mapRenderer.updateChunkCache(chunk, mapGrid, false, null)
+
+    expect(signatureSpy).toHaveBeenCalledTimes(1)
+  })
 })
