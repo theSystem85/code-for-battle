@@ -14,7 +14,12 @@ const DEFAULT_CRYSTAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
 const DEFAULT_CRYSTAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
 const DEFAULT_STREET_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
 const DEFAULT_STREET_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
-const STREET_DIRECTION_TAGS = ['top', 'bottom', 'left', 'right']
+const STREET_DIRECTION_MASKS = {
+  top: 1,
+  right: 2,
+  bottom: 4,
+  left: 8
+}
 
 // Map unit types to their image paths
 const unitImageMap = {
@@ -64,8 +69,31 @@ export class TextureManager {
     this.defaultStreetTagBuckets = {}
     this.integratedGroupedTagCatalog = {}
     this.defaultCombatDecalGroupedTagCatalog = {}
+    this.streetSelectionPoolCache = new Map()
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
+  }
+
+  clearStreetSelectionPoolCache() {
+    this.streetSelectionPoolCache.clear()
+  }
+
+  buildTagSet(tags) {
+    if (!Array.isArray(tags) || !tags.length) return null
+    return new Set(tags)
+  }
+
+  getStreetDirectionMask(tags, tagSet = null) {
+    if (!Array.isArray(tags) || !tags.length) return 0
+    const lookup = tagSet || this.buildTagSet(tags)
+    if (!lookup) return 0
+    let mask = 0
+    for (const [directionTag, directionMask] of Object.entries(STREET_DIRECTION_MASKS)) {
+      if (lookup.has(directionTag)) {
+        mask |= directionMask
+      }
+    }
+    return mask
   }
 
   getTagBucketCandidates(buckets, requiredTags, excludedTags = []) {
@@ -90,9 +118,13 @@ export class TextureManager {
 
     return seedBucket.filter((tile) => {
       if (!Array.isArray(tile?.tags) || !tile.rect) return false
-      const hasRequired = requiredTags.every(tag => tile.tags.includes(tag))
+      const tagSet = tile.tagSet || this.buildTagSet(tile.tags)
+      if (tagSet && !tile.tagSet) {
+        tile.tagSet = tagSet
+      }
+      const hasRequired = requiredTags.every(tag => tagSet ? tagSet.has(tag) : tile.tags.includes(tag))
       if (!hasRequired) return false
-      return excludedTags.every(tag => !tile.tags.includes(tag))
+      return excludedTags.every(tag => tagSet ? !tagSet.has(tag) : !tile.tags.includes(tag))
     })
   }
 
@@ -134,6 +166,8 @@ export class TextureManager {
         if (grouped) return
         const tileRef = {
           ...tile,
+          tagSet: this.buildTagSet(tile.tags),
+          streetDirectionMask: this.getStreetDirectionMask(tile.tags),
           image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
           blendMode: entry.blendMode,
           blackKey: entry.blackKey,
@@ -340,6 +374,7 @@ export class TextureManager {
       if (!response.ok) {
         this.defaultStreetSheetMetadata = null
         this.defaultStreetTagBuckets = {}
+        this.clearStreetSelectionPoolCache()
         return
       }
 
@@ -347,6 +382,7 @@ export class TextureManager {
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultStreetSheetMetadata = null
         this.defaultStreetTagBuckets = {}
+        this.clearStreetSelectionPoolCache()
         return
       }
 
@@ -354,6 +390,7 @@ export class TextureManager {
       if (!image) {
         this.defaultStreetSheetMetadata = null
         this.defaultStreetTagBuckets = {}
+        this.clearStreetSelectionPoolCache()
         return
       }
 
@@ -368,9 +405,11 @@ export class TextureManager {
         blendMode,
         blackKey
       }])
+      this.clearStreetSelectionPoolCache()
     } catch (err) {
       this.defaultStreetSheetMetadata = null
       this.defaultStreetTagBuckets = {}
+      this.clearStreetSelectionPoolCache()
       window.logger.warn('Failed to preload default street sheet:', err)
     }
   }
@@ -386,6 +425,7 @@ export class TextureManager {
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
       this.integratedRenderSignature = 'off'
+      this.clearStreetSelectionPoolCache()
       this.integratedConfigVersion++
       return
     }
@@ -423,6 +463,7 @@ export class TextureManager {
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
       this.integratedRenderSignature = 'off'
+      this.clearStreetSelectionPoolCache()
       this.integratedConfigVersion++
       return
     }
@@ -441,6 +482,7 @@ export class TextureManager {
       .map(entry => `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}|${entry.blackKey?.cutoffBrightness ?? 'default'}|${entry.blackKey?.softenBrightness ?? 'default'}`)
       .join(';')
     this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}`
+    this.clearStreetSelectionPoolCache()
     this.integratedConfigVersion++
   }
 
@@ -580,56 +622,87 @@ export class TextureManager {
 
   selectStreetTileFromCandidates(candidates, x, y, neighborTags = [], options = {}) {
     if (!Array.isArray(candidates) || !candidates.length) return null
+    const selectionPool = this.getStreetSelectionPoolFromCandidates(candidates, neighborTags, options)
+    if (!selectionPool.length) return null
+    return selectionPool[TextureManager.coordHash(x, y) % selectionPool.length]
+  }
 
+  getStreetSelectionPoolFromCandidates(candidates, neighborTags = [], options = {}) {
+    if (!Array.isArray(candidates) || !candidates.length) return []
     const validDirectionTags = new Set(neighborTags)
-    const exactDirectionCount = validDirectionTags.size
-    const filtered = candidates
-      .filter((tile) => {
-        if (!Array.isArray(tile?.tags) || !tile.rect) return false
-        if (!options.allowFull && tile.tags.includes('full')) return false
-        if (options.allowFull && !tile.tags.includes('full')) return false
-        if (options.ignoreDirectionalExactMatch) return true
+    const neighborMask = this.getStreetDirectionMask(neighborTags, validDirectionTags)
+    return candidates.filter((tile) => {
+      if (!Array.isArray(tile?.tags) || !tile.rect) return false
+      const tagSet = tile.tagSet || this.buildTagSet(tile.tags)
+      if (tagSet && !tile.tagSet) {
+        tile.tagSet = tagSet
+      }
+      const hasFullTag = tagSet ? tagSet.has('full') : tile.tags.includes('full')
+      if (!options.allowFull && hasFullTag) return false
+      if (options.allowFull && !hasFullTag) return false
+      if (options.ignoreDirectionalExactMatch) return true
 
-        const tileDirectionTags = STREET_DIRECTION_TAGS.filter(tag => tile.tags.includes(tag))
-        if (tileDirectionTags.length !== exactDirectionCount) return false
-        return tileDirectionTags.every(tag => validDirectionTags.has(tag))
-      })
+      const tileDirectionMask = Number.isFinite(tile.streetDirectionMask)
+        ? tile.streetDirectionMask
+        : this.getStreetDirectionMask(tile.tags, tagSet)
+      if (!Number.isFinite(tile.streetDirectionMask)) {
+        tile.streetDirectionMask = tileDirectionMask
+      }
+      return tileDirectionMask === neighborMask
+    })
+  }
 
-    if (!filtered.length) return null
-    return filtered[TextureManager.coordHash(x, y) % filtered.length]
+  getStreetSelectionPoolCacheKey(requiredTags, excludedTags, neighborInfo, options = {}) {
+    const requiredKey = [...requiredTags].sort().join(',')
+    const excludedKey = [...excludedTags].sort().join(',')
+    const directionKey = [...(neighborInfo?.directionTags || [])].sort().join(',')
+    const prefersFullKey = neighborInfo?.prefersFull ? '1' : '0'
+    const fullKey = options.allowFull ? '1' : '0'
+    const ignoreDirectionKey = options.ignoreDirectionalExactMatch ? '1' : '0'
+    return [
+      this.integratedRenderSignature,
+      this.integratedBiomeTag || '',
+      requiredKey,
+      excludedKey,
+      directionKey,
+      prefersFullKey,
+      fullKey,
+      ignoreDirectionKey
+    ].join('|')
+  }
+
+  getStreetSelectionPool(requiredTags, excludedTags, neighborInfo, options = {}) {
+    const cacheKey = this.getStreetSelectionPoolCacheKey(requiredTags, excludedTags, neighborInfo, options)
+    const cached = this.streetSelectionPoolCache.get(cacheKey)
+    if (cached) return cached
+
+    const neighborTags = neighborInfo?.directionTags || []
+    const biomeTag = this.integratedBiomeTag
+    const candidateGroups = [
+      this.getTagBucketCandidates(this.integratedTagBuckets || {}, [...requiredTags, biomeTag], excludedTags),
+      this.getTagBucketCandidates(this.integratedTagBuckets || {}, requiredTags, excludedTags),
+      this.getTagBucketCandidates(this.defaultStreetTagBuckets || {}, [...requiredTags, biomeTag], excludedTags),
+      this.getTagBucketCandidates(this.defaultStreetTagBuckets || {}, requiredTags, excludedTags)
+    ]
+    let selectionPool = []
+    for (const candidates of candidateGroups) {
+      const filtered = this.getStreetSelectionPoolFromCandidates(candidates, neighborTags, options)
+      if (filtered.length) {
+        selectionPool = filtered
+        break
+      }
+    }
+    this.streetSelectionPoolCache.set(cacheKey, selectionPool)
+    return selectionPool
   }
 
   selectStreetTileByTags(requiredTags, x, y, mapGrid, excludedTags = []) {
     const neighborInfo = this.getStreetNeighborInfo(x, y, mapGrid)
-    const neighborTags = neighborInfo.directionTags
-    const biomeTag = this.integratedBiomeTag
 
     const selectFromBuckets = (tags, options = {}) => {
-      const integratedBiomeCandidates = this.getTagBucketCandidates(
-        this.integratedTagBuckets || {},
-        [...tags, biomeTag],
-        excludedTags
-      )
-      const integratedCandidates = this.getTagBucketCandidates(
-        this.integratedTagBuckets || {},
-        tags,
-        excludedTags
-      )
-      const defaultBiomeCandidates = this.getTagBucketCandidates(
-        this.defaultStreetTagBuckets || {},
-        [...tags, biomeTag],
-        excludedTags
-      )
-      const defaultCandidates = this.getTagBucketCandidates(
-        this.defaultStreetTagBuckets || {},
-        tags,
-        excludedTags
-      )
-
-      return this.selectStreetTileFromCandidates(integratedBiomeCandidates, x, y, neighborTags, options)
-        || this.selectStreetTileFromCandidates(integratedCandidates, x, y, neighborTags, options)
-        || this.selectStreetTileFromCandidates(defaultBiomeCandidates, x, y, neighborTags, options)
-        || this.selectStreetTileFromCandidates(defaultCandidates, x, y, neighborTags, options)
+      const pool = this.getStreetSelectionPool(tags, excludedTags, neighborInfo, options)
+      if (!pool.length) return null
+      return pool[TextureManager.coordHash(x, y) % pool.length]
     }
 
     if (neighborInfo.prefersFull) {

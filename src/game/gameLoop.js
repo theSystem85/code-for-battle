@@ -145,6 +145,7 @@ export class GameLoop {
   }
 
   handlePausedFrame(now, gameCtx, gameCanvas, pauseStateChanged) {
+    const frameStart = performance.now()
     this.lastFrameTime = null
 
     updateGame(0, this.mapGrid, this.factories, this.units, this.bullets, gameState)
@@ -204,6 +205,12 @@ export class GameLoop {
     }
 
     this.fpsDisplay.render(gameCtx, gameCanvas)
+    const totalPausedFrameMs = performance.now() - frameStart
+    this.fpsDisplay.reportFrameBreakdown({
+      updateMs: totalPausedFrameMs,
+      renderMs: 0,
+      idleMs: 0
+    })
 
     this.forceRender = false
 
@@ -243,6 +250,7 @@ export class GameLoop {
     }
 
     if (!gameState.gameStarted) {
+      this.fpsDisplay.reportFrameBreakdown({ updateMs: 0, renderMs: 0, idleMs: 0 })
       this.fpsDisplay.render(gameCtx, gameCanvas)
       this.scheduleNextFrame()
       return
@@ -257,6 +265,7 @@ export class GameLoop {
     if (!this.lastFrameTime) this.lastFrameTime = now
     const delta = Math.min(now - this.lastFrameTime, 33) // Cap at ~30 FPS equivalent
     this.lastFrameTime = now
+    const frameStart = performance.now()
 
     // Check if game is over
     if (gameState.gameOver) {
@@ -339,6 +348,7 @@ export class GameLoop {
     }
 
     updateMapScrolling(gameState, this.mapGrid)
+    const updateEnd = performance.now()
 
     // Refresh production buttons if a building was destroyed
     if (gameState.pendingButtonUpdate) {
@@ -361,9 +371,15 @@ export class GameLoop {
     // Render minimap with low energy effects if applicable
     renderMinimap(minimapCtx, minimapCanvas, this.mapGrid,
       gameState.scrollOffset, gameCanvas, this.units, gameState.buildings, gameState)
+    const renderEnd = performance.now()
 
     // Render FPS overlay on top of everything when game is running
     this.fpsDisplay.render(gameCtx, gameCanvas)
+    const frameEnd = performance.now()
+    const updateMs = Math.max(0, updateEnd - frameStart)
+    const renderMs = Math.max(0, renderEnd - updateEnd)
+    const idleMs = Math.max(0, frameEnd - frameStart - updateMs - renderMs)
+    this.fpsDisplay.reportFrameBreakdown({ updateMs, renderMs, idleMs })
 
     this.forceRender = false
 

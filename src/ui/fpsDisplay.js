@@ -15,6 +15,9 @@ export class FPSDisplay {
     // Frame time tracking
     this.lastFrameTimestamp = performance.now()
     this.frameTimeSamples = []
+    this.updatePhaseSamples = []
+    this.renderPhaseSamples = []
+    this.idlePhaseSamples = []
     this.lastFrameTimeUpdate = performance.now()
     this.avgFrameTime = 0
     this.minFrameTime = 0
@@ -38,6 +41,11 @@ export class FPSDisplay {
     this.frameTimeMaxEl = document.getElementById('frameTimeMax')
     this.fpsLlmTokensEl = document.getElementById('fpsLlmTokens')
     this.fpsLlmSpendEl = document.getElementById('fpsLlmSpend')
+    this.frameBottleneckEl = document.getElementById('frameBottleneck')
+    this.frameCpuUpdateEl = document.getElementById('frameCpuUpdate')
+    this.frameCpuRenderEl = document.getElementById('frameCpuRender')
+    this.frameGpuEstimateEl = document.getElementById('frameGpuEstimate')
+    this.frameJsHeapEl = document.getElementById('frameJsHeap')
 
     // Network stats elements
     this.networkStatsContainer = document.getElementById('networkStatsContainer')
@@ -108,11 +116,37 @@ export class FPSDisplay {
       }
 
       this.frameTimeSamples = []
+      this.updatePhaseSamples = []
+      this.renderPhaseSamples = []
+      this.idlePhaseSamples = []
       this.lastFrameTimeUpdate = currentTime
       if (currentTime - this.lastDomUpdate >= 1000) {
         this.updateDisplay(currentTime)
       }
     }
+  }
+
+  reportFrameBreakdown(breakdown = {}) {
+    const updateMs = Number.isFinite(breakdown.updateMs) ? Math.max(0, breakdown.updateMs) : 0
+    const renderMs = Number.isFinite(breakdown.renderMs) ? Math.max(0, breakdown.renderMs) : 0
+    const idleMs = Number.isFinite(breakdown.idleMs) ? Math.max(0, breakdown.idleMs) : 0
+    this.updatePhaseSamples.push(updateMs)
+    this.renderPhaseSamples.push(renderMs)
+    this.idlePhaseSamples.push(idleMs)
+  }
+
+  getAverage(samples) {
+    if (!Array.isArray(samples) || !samples.length) return 0
+    const sum = samples.reduce((acc, value) => acc + value, 0)
+    return sum / samples.length
+  }
+
+  getBottleneckLabel(updateAvg, renderAvg, idleAvg) {
+    const dominant = Math.max(updateAvg, renderAvg, idleAvg)
+    if (dominant <= 0.01) return 'Unknown'
+    if (dominant === updateAvg) return 'CPU (simulation/update)'
+    if (dominant === renderAvg) return 'CPU render / draw submission'
+    return 'GPU/compositor/wait'
   }
 
   updateDisplay(currentTime = performance.now()) {
@@ -139,6 +173,30 @@ export class FPSDisplay {
       }
       if (this.frameTimeMaxEl) {
         this.frameTimeMaxEl.textContent = `Max: ${this.maxFrameTime.toFixed(1)} ms`
+      }
+
+      const updateAvg = this.getAverage(this.updatePhaseSamples)
+      const renderAvg = this.getAverage(this.renderPhaseSamples)
+      const idleAvg = this.getAverage(this.idlePhaseSamples)
+      if (this.frameBottleneckEl) {
+        this.frameBottleneckEl.textContent = `Bottleneck: ${this.getBottleneckLabel(updateAvg, renderAvg, idleAvg)}`
+      }
+      if (this.frameCpuUpdateEl) {
+        this.frameCpuUpdateEl.textContent = `CPU Update: ${updateAvg.toFixed(1)} ms`
+      }
+      if (this.frameCpuRenderEl) {
+        this.frameCpuRenderEl.textContent = `CPU Render: ${renderAvg.toFixed(1)} ms`
+      }
+      if (this.frameGpuEstimateEl) {
+        this.frameGpuEstimateEl.textContent = `GPU/Wait: ${idleAvg.toFixed(1)} ms`
+      }
+      if (this.frameJsHeapEl) {
+        const heapBytes = typeof performance !== 'undefined' && performance.memory
+          ? performance.memory.usedJSHeapSize
+          : null
+        this.frameJsHeapEl.textContent = Number.isFinite(heapBytes)
+          ? `JS Heap: ${(heapBytes / (1024 * 1024)).toFixed(1)} MB`
+          : 'JS Heap: n/a'
       }
 
       const llmSettings = getLlmSettings()

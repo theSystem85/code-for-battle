@@ -51,6 +51,7 @@ vi.mock('../../src/ui/fpsDisplay.js', () => ({
     constructor() {
       this.updateFPS = vi.fn()
       this.render = vi.fn()
+      this.reportFrameBreakdown = vi.fn()
     }
   }
 }))
