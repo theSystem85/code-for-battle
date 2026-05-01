@@ -497,6 +497,8 @@ export class MapRenderer {
         lastWaterEffectSaturation: null,
         lastWaterEffectZoom: null,
         lastSotMaskVersion: null,
+        lastSkipWaterBase: null,
+        lastSkipWaterSot: null,
         containsWaterAnimation: false,
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
@@ -545,8 +547,21 @@ export class MapRenderer {
     return { signature: parts.join('|'), containsWater }
   }
 
-  updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
+  chunkContainsAnimatedWaterSot(startX, startY, endX, endY) {
+    if (!this.sotMask) return false
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        if (this.sotMask[y]?.[x]?.type === 'water') {
+          return true
+        }
+      }
+    }
+    return false
+  }
+
+  updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
     if (!chunk.canvas || !chunk.ctx) return
+    const { skipWaterBase = false, skipWaterSot = false } = options
 
     const { signature, containsWater } = this.computeChunkSignature(
       mapGrid,
@@ -556,7 +571,14 @@ export class MapRenderer {
       chunk.endY
     )
 
-    const hasWaterAnimation = containsWater && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)
+    const containsAnimatedWaterSot = !skipWaterSot && this.chunkContainsAnimatedWaterSot(
+      chunk.startX,
+      chunk.startY,
+      chunk.endX,
+      chunk.endY
+    )
+    const hasWaterAnimation = (containsWater && !skipWaterBase && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)) ||
+      (containsAnimatedWaterSot && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0))
     const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
 
     const needsRedraw =
@@ -568,6 +590,8 @@ export class MapRenderer {
       chunk.lastWaterEffectSaturation !== WATER_EFFECT_SATURATION ||
       chunk.lastWaterEffectZoom !== WATER_EFFECT_ZOOM ||
       chunk.lastSotMaskVersion !== this.sotMaskVersion ||
+      chunk.lastSkipWaterBase !== skipWaterBase ||
+      chunk.lastSkipWaterSot !== skipWaterSot ||
       chunk.containsWaterAnimation !== hasWaterAnimation ||
       (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
 
@@ -597,7 +621,8 @@ export class MapRenderer {
       chunk.offsetX,
       chunk.offsetY,
       useTexture,
-      currentWaterFrame
+      currentWaterFrame,
+      { skipWaterBase, skipWaterSot }
     )
 
     chunk.signature = signature
@@ -608,6 +633,8 @@ export class MapRenderer {
     chunk.lastWaterEffectSaturation = WATER_EFFECT_SATURATION
     chunk.lastWaterEffectZoom = WATER_EFFECT_ZOOM
     chunk.lastSotMaskVersion = this.sotMaskVersion
+    chunk.lastSkipWaterBase = skipWaterBase
+    chunk.lastSkipWaterSot = skipWaterSot
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
   }
@@ -627,7 +654,7 @@ export class MapRenderer {
       this.computeSOTMask(mapGrid)
     }
 
-    if (!this.canUseOffscreen || skipWaterBase || skipWaterSot) {
+    if (!this.canUseOffscreen) {
       this.drawBaseLayer(
         ctx,
         mapGrid,
@@ -684,7 +711,7 @@ export class MapRenderer {
           continue
         }
 
-        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame)
+        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, { skipWaterBase, skipWaterSot })
 
         const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
         const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
@@ -1486,8 +1513,14 @@ export class MapRenderer {
     // Calculate visible tile range - improved for better performance
     const startTileX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
     const startTileY = Math.max(0, Math.floor(scrollOffset.y / TILE_SIZE))
-    const tilesX = Math.ceil(gameCanvas.width / TILE_SIZE) + 1
-    const tilesY = Math.ceil(gameCanvas.height / TILE_SIZE) + 1
+    const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    const canvasBounds = typeof gameCanvas.getBoundingClientRect === 'function'
+      ? gameCanvas.getBoundingClientRect()
+      : null
+    const logicalCanvasWidth = canvasBounds?.width || gameCanvas.clientWidth || (gameCanvas.width / pixelRatio) || gameCanvas.width
+    const logicalCanvasHeight = canvasBounds?.height || gameCanvas.clientHeight || (gameCanvas.height / pixelRatio) || gameCanvas.height
+    const tilesX = Math.ceil(logicalCanvasWidth / TILE_SIZE) + 1
+    const tilesY = Math.ceil(logicalCanvasHeight / TILE_SIZE) + 1
     const endTileX = Math.min(mapGrid[0].length, startTileX + tilesX)
     const endTileY = Math.min(mapGrid.length, startTileY + tilesY)
 

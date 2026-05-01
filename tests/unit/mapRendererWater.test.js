@@ -5,8 +5,10 @@ import { GameWebGLRenderer } from '../../src/rendering/webglRenderer.js'
 describe('MapRenderer water rendering', () => {
   const makeTextureManager = () => ({
     integratedSpriteSheetMode: false,
+    allTexturesLoaded: false,
     tileTextureCache: { land: [] },
     waterFrames: [{ id: 'legacy-water-frame' }],
+    getCurrentWaterFrame: () => ({ id: 'legacy-water-frame' }),
     getTileVariation: () => 0,
     integratedRenderSignature: 'sig'
   })
@@ -23,6 +25,85 @@ describe('MapRenderer water rendering', () => {
 
     expect(ctx.drawImage).not.toHaveBeenCalled()
     expect(ctx.fillRect).toHaveBeenCalled()
+  })
+
+  it('keeps the chunk cache active for static CPU terrain over GPU water-only rendering', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.canUseOffscreen = true
+    mapRenderer.sotMask = [[null, null], [null, null]]
+    const chunk = {
+      canvas: { width: 42, height: 42 },
+      ctx: { clearRect: vi.fn(), imageSmoothingEnabled: true },
+      startX: 0,
+      startY: 0,
+      endX: 2,
+      endY: 2,
+      padding: 2,
+      offsetX: -2,
+      offsetY: -2
+    }
+    const ctx = {
+      drawImage: vi.fn(),
+      imageSmoothingEnabled: true
+    }
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'water' }],
+      [{ type: 'land' }, { type: 'street' }]
+    ]
+    const updateChunkCache = vi.spyOn(mapRenderer, 'updateChunkCache').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'getOrCreateChunk').mockReturnValue(chunk)
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 2, 2, {}, {
+      skipWaterBase: true,
+      skipWaterSot: true
+    })
+
+    expect(updateChunkCache).toHaveBeenCalledWith(
+      chunk,
+      mapGrid,
+      expect.any(Boolean),
+      expect.anything(),
+      { skipWaterBase: true, skipWaterSot: true }
+    )
+    expect(ctx.drawImage).toHaveBeenCalledWith(chunk.canvas, -2, -2)
+  })
+
+  it('uses logical canvas dimensions for visible tile bounds on high-DPR screens', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = Array.from({ length: 128 }, () => Array.from({ length: 128 }, () => ({ type: 'land' })))
+    const renderTiles = vi.spyOn(mapRenderer, 'renderTiles').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'applyVisibilityOverlay').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const canvas = document.createElement('canvas')
+    canvas.width = 1170
+    canvas.height = 2532
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 390 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 844 })
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 844 })
+    const originalDevicePixelRatio = window.devicePixelRatio
+    Object.defineProperty(window, 'devicePixelRatio', {
+      configurable: true,
+      value: 3
+    })
+
+    try {
+      mapRenderer.render(
+        { imageSmoothingEnabled: true },
+        mapGrid,
+        { x: 0, y: 0 },
+        canvas,
+        {},
+        null
+      )
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        configurable: true,
+        value: originalDevicePixelRatio
+      })
+    }
+
+    expect(renderTiles.mock.calls[0].slice(3, 7)).toEqual([0, 0, 14, 28])
   })
 
   it('falls back to procedural water when custom sprite sheets are enabled without water tags', () => {

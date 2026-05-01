@@ -277,6 +277,69 @@ describe('Renderer airborne layering', () => {
     )
   })
 
+  it('uses GPU water-only mode when default street sheet terrain must be composited on CPU', () => {
+    const renderer = new Renderer()
+    const gameCtx = {
+      clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      globalAlpha: 1,
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      fillText: vi.fn(),
+      measureText: vi.fn(() => ({ width: 10 }))
+    }
+    const gpuContext = {
+      viewport: vi.fn(),
+      clearColor: vi.fn(),
+      clear: vi.fn(),
+      COLOR_BUFFER_BIT: 1
+    }
+    const gameCanvas = { width: 800, height: 600 }
+    const gpuCanvas = { width: 800, height: 600 }
+    const mapGrid = [[{ type: 'street' }, { type: 'water' }]]
+
+    renderer.textureManager.defaultStreetTagBuckets = {
+      street: [{ rect: { x: 0, y: 0, width: 64, height: 64 } }]
+    }
+    renderer.mapRenderer.render.mockClear()
+
+    renderer.renderGame(
+      gameCtx,
+      gameCanvas,
+      mapGrid,
+      [],
+      [],
+      [],
+      [],
+      { x: 0, y: 0 },
+      false,
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      { useIntegratedSpriteSheetMode: false, unitWrecks: [] },
+      gpuContext,
+      gpuCanvas
+    )
+
+    expect(renderer.gpuRenderer.render).toHaveBeenCalledWith(mapGrid, { x: 0, y: 0 }, gpuCanvas, { waterOnly: true })
+    expect(renderer.mapRenderer.render).toHaveBeenCalledWith(
+      gameCtx,
+      mapGrid,
+      { x: 0, y: 0 },
+      gameCanvas,
+      { useIntegratedSpriteSheetMode: false, unitWrecks: [] },
+      null,
+      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false }
+    )
+  })
+
   it('does not use legacy GPU terrain when integrated custom water tiles are available', () => {
     const renderer = new Renderer()
     const gameCtx = {

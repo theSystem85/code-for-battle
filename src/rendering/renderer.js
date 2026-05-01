@@ -264,7 +264,13 @@ export class Renderer {
       this.textureManager.preloadAllTextures()
     }
 
-    gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
+    const canvasBounds = typeof gameCanvas.getBoundingClientRect === 'function'
+      ? gameCanvas.getBoundingClientRect()
+      : null
+    const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    const logicalCanvasWidth = canvasBounds?.width || gameCanvas.clientWidth || (gameCanvas.width / pixelRatio) || gameCanvas.width
+    const logicalCanvasHeight = canvasBounds?.height || gameCanvas.clientHeight || (gameCanvas.height / pixelRatio) || gameCanvas.height
+    gameCtx.clearRect(0, 0, logicalCanvasWidth, logicalCanvasHeight)
 
     // Check for game over first
     if (this.uiRenderer.renderGameOver(gameCtx, gameCanvas, gameState)) {
@@ -277,7 +283,11 @@ export class Renderer {
       gameState.useIntegratedSpriteSheetMode &&
       this.textureManager.integratedTagBuckets?.water?.length
     )
-    const gpuWaterOnly = Boolean(gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles)
+    const needsCpuTerrainComposite = !gameState.useIntegratedSpriteSheetMode
+    const gpuWaterOnly = Boolean(
+      (gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles) ||
+      needsCpuTerrainComposite
+    )
     const shouldUseGpuTerrain = Boolean(
       gpuContext &&
       gpuCanvas &&

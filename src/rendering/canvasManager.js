@@ -9,7 +9,7 @@ export class CanvasManager {
     this.gameGl = this.initializeGlContext()
     this.minimapCanvas = document.getElementById('minimap')
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
-    this.pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    this.pixelRatio = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2)
 
     this.setupEventListeners()
   }
@@ -38,7 +38,8 @@ export class CanvasManager {
   }
 
   resizeCanvases() {
-    const pixelRatio = window.devicePixelRatio || 1
+    const rawPixelRatio = window.devicePixelRatio || 1
+    const pixelRatio = Math.min(rawPixelRatio, 2)
     this.pixelRatio = pixelRatio
     const body = document.body
     const bodyStyle = body ? window.getComputedStyle(body) : null
@@ -86,10 +87,10 @@ export class CanvasManager {
       : this.gameCanvas.clientHeight || 0
 
     const screenWidth = isTouchLayout && window.screen && window.screen.width
-      ? window.screen.width / pixelRatio
+      ? window.screen.width / rawPixelRatio
       : 0
     const screenHeight = isTouchLayout && window.screen && window.screen.height
-      ? window.screen.height / pixelRatio
+      ? window.screen.height / rawPixelRatio
       : 0
 
     if (viewport) {
