@@ -540,13 +540,25 @@ export class GameWebGLRenderer {
     this.instanceCapacity = count
   }
 
+  getCanvasPixelRatio(canvas) {
+    if (!canvas) return this.pixelRatio || 1
+    const bounds = typeof canvas.getBoundingClientRect === 'function'
+      ? canvas.getBoundingClientRect()
+      : null
+    const logicalWidth = bounds?.width || canvas.clientWidth || 0
+    if (logicalWidth > 0 && canvas.width > 0) {
+      return canvas.width / logicalWidth
+    }
+    return (typeof window !== 'undefined' && window.devicePixelRatio) || this.pixelRatio || 1
+  }
+
   render(mapGrid, scrollOffset, canvas, options = {}) {
     if (!this.gl || !mapGrid?.length || !canvas) return false
     if (!this.ensureInitialized()) return false
     this.syncAtlasTexture()
 
     const gl = this.gl
-    const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || this.pixelRatio || 1
+    const pixelRatio = this.getCanvasPixelRatio(canvas)
     const tileStep = TILE_SIZE * pixelRatio
     const tileSize = (TILE_SIZE + 1) * pixelRatio
     const scrollX = (scrollOffset?.x || 0) * pixelRatio

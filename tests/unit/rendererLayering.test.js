@@ -244,6 +244,7 @@ describe('Renderer airborne layering', () => {
     const gameCanvas = { width: 800, height: 600 }
     const gpuCanvas = { width: 800, height: 600 }
     const mapGrid = [[{ type: 'water' }, { type: 'land' }]]
+    const gameState = { useIntegratedSpriteSheetMode: true, unitWrecks: [] }
 
     renderer.textureManager.integratedTagBuckets = {}
     renderer.mapRenderer.render.mockClear()
@@ -260,7 +261,7 @@ describe('Renderer airborne layering', () => {
       false,
       { x: 0, y: 0 },
       { x: 0, y: 0 },
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      gameState,
       gpuContext,
       gpuCanvas
     )
@@ -271,9 +272,9 @@ describe('Renderer airborne layering', () => {
       mapGrid,
       { x: 0, y: 0 },
       gameCanvas,
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      expect.objectContaining({ useIntegratedSpriteSheetMode: true, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false }
+      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false }
     )
   })
 
@@ -305,6 +306,7 @@ describe('Renderer airborne layering', () => {
     const gameCanvas = { width: 800, height: 600 }
     const gpuCanvas = { width: 800, height: 600 }
     const mapGrid = [[{ type: 'street' }, { type: 'water' }]]
+    const gameState = { useIntegratedSpriteSheetMode: false, unitWrecks: [] }
 
     renderer.textureManager.defaultStreetTagBuckets = {
       street: [{ rect: { x: 0, y: 0, width: 64, height: 64 } }]
@@ -323,7 +325,7 @@ describe('Renderer airborne layering', () => {
       false,
       { x: 0, y: 0 },
       { x: 0, y: 0 },
-      { useIntegratedSpriteSheetMode: false, unitWrecks: [] },
+      gameState,
       gpuContext,
       gpuCanvas
     )
@@ -334,9 +336,9 @@ describe('Renderer airborne layering', () => {
       mapGrid,
       { x: 0, y: 0 },
       gameCanvas,
-      { useIntegratedSpriteSheetMode: false, unitWrecks: [] },
+      expect.objectContaining({ useIntegratedSpriteSheetMode: false, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false }
+      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false }
     )
   })
 
@@ -368,6 +370,7 @@ describe('Renderer airborne layering', () => {
     const gameCanvas = { width: 800, height: 600 }
     const gpuCanvas = { width: 800, height: 600 }
     const mapGrid = [[{ type: 'water' }, { type: 'land' }]]
+    const gameState = { useIntegratedSpriteSheetMode: true, unitWrecks: [] }
 
     renderer.textureManager.integratedTagBuckets = { water: [{ rect: { x: 0, y: 0, width: 64, height: 64 } }] }
     renderer.mapRenderer.render.mockClear()
@@ -384,7 +387,7 @@ describe('Renderer airborne layering', () => {
       false,
       { x: 0, y: 0 },
       { x: 0, y: 0 },
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      gameState,
       gpuContext,
       gpuCanvas
     )
@@ -395,9 +398,9 @@ describe('Renderer airborne layering', () => {
       mapGrid,
       { x: 0, y: 0 },
       gameCanvas,
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      expect.objectContaining({ useIntegratedSpriteSheetMode: true, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false, gpuRenderedResources: false }
+      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false, gpuRenderedResources: false, separateWaterLayer: false }
     )
     expect(gpuContext.clear).toHaveBeenCalledWith(gpuContext.COLOR_BUFFER_BIT)
   })

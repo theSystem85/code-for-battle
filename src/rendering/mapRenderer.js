@@ -215,10 +215,30 @@ export class MapRenderer {
     this.cachedMapWidth = 0
     this.cachedMapHeight = 0
     this.canUseOffscreen = typeof document !== 'undefined' && typeof document.createElement === 'function'
+    this.frameChunkStats = this.createEmptyChunkStats()
+    this.lastFrameChunkStats = this.createEmptyChunkStats()
     // Precomputed SOT (Smoothening Overlay Texture) mask for performance optimization
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
+  }
+
+  createEmptyChunkStats() {
+    return {
+      chunksDrawn: 0,
+      chunkHits: 0,
+      chunkMisses: 0,
+      chunkRedraws: 0,
+      directTilePasses: 0
+    }
+  }
+
+  resetFrameChunkStats() {
+    this.frameChunkStats = this.createEmptyChunkStats()
+  }
+
+  getLastFrameChunkStats() {
+    return { ...this.lastFrameChunkStats }
   }
 
   getStreetNeighborState(mapGrid, x, y) {
@@ -500,6 +520,7 @@ export class MapRenderer {
         lastSkipWaterBase: null,
         lastSkipWaterSot: null,
         containsWaterAnimation: false,
+        everRendered: false,
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
         offsetY: startY * TILE_SIZE - this.chunkPadding
@@ -595,7 +616,16 @@ export class MapRenderer {
       chunk.containsWaterAnimation !== hasWaterAnimation ||
       (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
 
-    if (!needsRedraw) return
+    if (!needsRedraw) {
+      this.frameChunkStats.chunkHits++
+      return false
+    }
+
+    if (!chunk.everRendered) {
+      this.frameChunkStats.chunkMisses++
+    } else {
+      this.frameChunkStats.chunkRedraws++
+    }
 
     const tileWidth = chunk.endX - chunk.startX
     const tileHeight = chunk.endY - chunk.startY
@@ -637,6 +667,8 @@ export class MapRenderer {
     chunk.lastSkipWaterSot = skipWaterSot
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
+    chunk.everRendered = true
+    return true
   }
 
   renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState, options = {}) {
@@ -655,6 +687,7 @@ export class MapRenderer {
     }
 
     if (!this.canUseOffscreen) {
+      this.frameChunkStats.directTilePasses++
       this.drawBaseLayer(
         ctx,
         mapGrid,
@@ -695,6 +728,7 @@ export class MapRenderer {
         const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
 
         if (!chunk.canvas || !chunk.ctx) {
+          this.frameChunkStats.directTilePasses++
           this.drawBaseLayer(
             ctx,
             mapGrid,
@@ -715,11 +749,48 @@ export class MapRenderer {
 
         const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
         const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
+        this.frameChunkStats.chunksDrawn++
         ctx.drawImage(chunk.canvas, drawX, drawY)
       }
     }
 
     // Re-enable image smoothing for other rendering
+    ctx.imageSmoothingEnabled = true
+  }
+
+  renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, options = {}) {
+    const { drawBase = true, drawSot = true } = options
+    if (!drawBase && !drawSot) return
+
+    const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
+    const currentWaterFrame = this.textureManager.waterFrames.length
+      ? this.textureManager.getCurrentWaterFrame()
+      : null
+    if (!this.sotMask) {
+      this.computeSOTMask(mapGrid)
+    }
+
+    const sotApplied = new Set()
+    ctx.imageSmoothingEnabled = false
+
+    for (let y = startTileY; y < endTileY; y++) {
+      for (let x = startTileX; x < endTileX; x++) {
+        const tile = mapGrid[y]?.[x]
+        if (!tile) continue
+        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
+        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+
+        if (drawBase && tile.type === 'water' && !tile.airstripStreet) {
+          this.drawTileBase(ctx, x, y, 'water', screenX, screenY, useTexture, currentWaterFrame)
+        }
+
+        const sotInfo = this.sotMask[y]?.[x]
+        if (drawSot && sotInfo?.type === 'water' && tile.type !== 'street') {
+          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, 'water', currentWaterFrame)
+        }
+      }
+    }
+
     ctx.imageSmoothingEnabled = true
   }
 
@@ -1505,11 +1576,12 @@ export class MapRenderer {
   }
 
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
-    const { skipBaseLayer = false, skipWaterSot = false, skipWaterBase = false } = options || {}
+    const { skipBaseLayer = false, skipWaterSot = false, skipWaterBase = false, separateWaterLayer = false } = options || {}
     // Guard against empty or invalid mapGrid
     if (!mapGrid || !Array.isArray(mapGrid) || mapGrid.length === 0 || !mapGrid[0]) {
       return
     }
+    this.resetFrameChunkStats()
     // Calculate visible tile range - improved for better performance
     const startTileX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
     const startTileY = Math.max(0, Math.floor(scrollOffset.y / TILE_SIZE))
@@ -1525,7 +1597,22 @@ export class MapRenderer {
     const endTileY = Math.min(mapGrid.length, startTileY + tilesY)
 
     if (!skipBaseLayer) {
-      this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, { skipWaterBase, skipWaterSot })
+      if (separateWaterLayer && !skipWaterBase) {
+        this.renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
+          drawBase: true,
+          drawSot: false
+        })
+      }
+      this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, {
+        skipWaterBase: separateWaterLayer ? true : skipWaterBase,
+        skipWaterSot: separateWaterLayer ? true : skipWaterSot
+      })
+      if (separateWaterLayer && !skipWaterSot) {
+        this.renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
+          drawBase: false,
+          drawSot: true
+        })
+      }
     } else {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
       this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
@@ -1536,5 +1623,6 @@ export class MapRenderer {
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
+    this.lastFrameChunkStats = { ...this.frameChunkStats }
   }
 }

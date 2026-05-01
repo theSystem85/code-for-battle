@@ -326,9 +326,19 @@ export class Renderer {
         skipBaseLayer: gpuRendered && !gpuWaterOnly,
         skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot,
         skipWaterBase: gpuRendered && gpuWaterOnly,
-        gpuRenderedResources: gpuRendered && !gpuWaterOnly
+        gpuRenderedResources: gpuRendered && !gpuWaterOnly,
+        separateWaterLayer: needsCpuTerrainComposite && !gpuRendered
       }
     )
+
+    gameState.renderStats = {
+      ...(gameState.renderStats || {}),
+      mapChunks: this.mapRenderer.getLastFrameChunkStats?.() || null,
+      gpuTerrain: {
+        rendered: gpuRendered,
+        waterOnly: gpuWaterOnly
+      }
+    }
     if (gameState.dzmOverlayIndex !== -1) {
       const ids = Object.keys(gameState.dangerZoneMaps || {})
       const pid = ids[gameState.dzmOverlayIndex]

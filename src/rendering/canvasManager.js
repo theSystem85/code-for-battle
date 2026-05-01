@@ -9,9 +9,52 @@ export class CanvasManager {
     this.gameGl = this.initializeGlContext()
     this.minimapCanvas = document.getElementById('minimap')
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
-    this.pixelRatio = Math.min((typeof window !== 'undefined' && window.devicePixelRatio) || 1, 2)
+    this.pixelRatioCap = 2
+    this.pixelRatio = this.resolvePixelRatio()
+    this.lastAdaptivePixelRatioCheck = 0
 
     this.setupEventListeners()
+  }
+
+  isTouchLayout() {
+    const body = typeof document !== 'undefined' ? document.body : null
+    return Boolean(
+      body?.classList.contains('is-touch') ||
+      body?.classList.contains('mobile-landscape') ||
+      body?.classList.contains('mobile-portrait')
+    )
+  }
+
+  resolvePixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
+    const cap = Number.isFinite(this.pixelRatioCap) ? this.pixelRatioCap : 2
+    return Math.max(1, Math.min(rawPixelRatio || 1, cap))
+  }
+
+  updateAdaptivePixelRatio(fps, now = performance.now()) {
+    const rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    if (!this.isTouchLayout() || rawPixelRatio <= 1 || !Number.isFinite(fps) || fps <= 0) {
+      return false
+    }
+
+    if (now - this.lastAdaptivePixelRatioCheck < 1500) {
+      return false
+    }
+    this.lastAdaptivePixelRatioCheck = now
+
+    let nextCap = this.pixelRatioCap
+    if (fps < 18) {
+      nextCap = Math.max(1, this.pixelRatioCap - 0.5)
+    } else if (fps > 45) {
+      nextCap = Math.min(2, this.pixelRatioCap + 0.5)
+    }
+
+    if (Math.abs(nextCap - this.pixelRatioCap) < 0.01) {
+      return false
+    }
+
+    this.pixelRatioCap = nextCap
+    this.resizeCanvases()
+    return true
   }
 
   initializeGlContext() {
@@ -39,7 +82,7 @@ export class CanvasManager {
 
   resizeCanvases() {
     const rawPixelRatio = window.devicePixelRatio || 1
-    const pixelRatio = Math.min(rawPixelRatio, 2)
+    const pixelRatio = this.resolvePixelRatio(rawPixelRatio)
     this.pixelRatio = pixelRatio
     const body = document.body
     const bodyStyle = body ? window.getComputedStyle(body) : null
@@ -200,10 +243,15 @@ export class CanvasManager {
     }
 
     if (typeof document !== 'undefined') {
+      if (window.gameState) {
+        window.gameState.canvasPixelRatio = pixelRatio
+        window.gameState.rawCanvasPixelRatio = rawPixelRatio
+      }
       document.dispatchEvent(new CustomEvent('canvas-resized', {
         detail: {
           width: canvasCssWidth,
-          height: canvasCssHeight
+          height: canvasCssHeight,
+          pixelRatio
         }
       }))
     }

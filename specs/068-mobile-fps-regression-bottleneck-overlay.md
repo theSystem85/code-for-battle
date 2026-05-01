@@ -25,21 +25,28 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - When custom integrated mode is off, procedural GPU terrain now runs in water-only mode so the CPU-rendered street/land layer can use static chunk caching instead of repainting street tiles in the per-frame SOT overlay pass.
 - Static CPU terrain chunks remain cacheable even when GPU water-only rendering asks the 2D layer to skip water base/SOT.
 - Main canvas DPR is capped at 2 to reduce mobile canvas bandwidth while preserving a sharper-than-1x presentation.
+- Follow-up: WebGL water placement now uses the actual canvas backing-store ratio instead of raw `window.devicePixelRatio`, because adaptive mobile DPR can lower the canvas to 1x while the device reports 3x. This keeps GPU water aligned instead of drawing black/transparent water behind the CPU street layer.
+- Follow-up: when WebGL terrain cannot initialize, animated CPU water renders in a separate dynamic pass while land/street terrain chunks skip water and remain static, avoiding full mixed-chunk redraws every water frame.
+- Follow-up: CPU terrain chunk cache telemetry now reports drawn chunks, cache hits, cache misses, and redraws in the FPS overlay and benchmark diagnostics.
+- Follow-up: mobile minimap rendering is throttled while the main game continues rendering every frame, reducing repeated sidebar/minimap draw submission during touch scrolling.
+- Follow-up: canvas DPR is adaptive on touch/mobile layouts; it starts capped at 2 and can step down toward 1 under sustained low FPS, then recover toward 2 when the device has headroom.
 
 ## Benchmark notes
 - Pre-fix local reproduction: desktop game-loop FPS >60; throttled mobile reproduced the failure at ~1fps effective / ~3fps overlay, with CPU render around 700-800ms per frame in the stress scene.
 - Preview comparison before local fixes: preview 650 submitted ~37k drawImages/sec desktop and ~8.5k/sec mobile in the benchmark; preview 640 submitted ~24k/sec desktop and ~6.5k/sec mobile. Preview 650 also exposed the new bottleneck overlay identifying CPU render/draw submission.
 - Post-fix local benchmark: desktop game-loop FPS remained >60; throttled mobile improved to ~11fps reported in the 8x CPU-throttled stress profile, with drawImage submissions reduced to ~2.7k/sec.
+- Follow-up benchmark records page errors during scroll sweeps and samples visible water pixels so black/transparent water regressions are caught alongside FPS metrics.
+- Follow-up local benchmark: desktop reported 94fps / 57.8 effective FPS, throttled mobile reported 13fps / 12.6 effective FPS, page errors were 0, visible water sampled successfully, and mobile drawImage submissions fell to ~56/sec with 0 chunk redraws.
 
 ## Remaining candidates
-- Move street-sheet terrain rendering into a GPU atlas path so default street art no longer requires any CPU terrain compositing.
-- Add chunk-level redraw counters to the FPS overlay/benchmark to separate cache misses from entity/UI draw submission in realtime.
-- Throttle or dirty-rect minimap/entity overlay rendering on mobile; the main map is improved, but render submission remains the dominant bottleneck under heavy throttling.
-- Consider adaptive canvas DPR (2 on strong devices, 1.5 or 1 on weak/mobile sustained low-FPS devices) rather than a fixed cap.
+- Move street-sheet terrain rendering into a GPU atlas path so default street art no longer requires any CPU terrain compositing. This remains larger because the current WebGL renderer samples the legacy atlas while the default street sheet lives in a different packed atlas.
+- Dirty-rect entity overlay rendering on mobile; minimap throttling is in place, but entity overlays still render every frame for correctness.
 
 ## Acceptance criteria
 - Unit tests remain green.
 - Repeated street topology selection calls reuse cached pools.
 - FPS overlay surfaces bottleneck metrics in realtime during gameplay.
+- FPS overlay surfaces chunk cache hit/miss/redraw counters in realtime during gameplay.
 - The E2E benchmark can run against local and remote preview URLs and reports separate desktop/mobile effective frame-rate metrics.
+- The E2E benchmark reports visible water samples and page errors while sweeping the map on mobile.
 - The benchmark evidence is used to validate that mobile render time improves after fixes.

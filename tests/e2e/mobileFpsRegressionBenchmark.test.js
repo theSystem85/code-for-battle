@@ -120,10 +120,11 @@ async function prepareStressScene(page, profileName) {
 
     const viewportWidth = canvas.clientWidth || 800
     const viewportHeight = canvas.clientHeight || 600
-    const maxScrollX = Math.max(0, mapWidth * 20 - viewportWidth)
-    const maxScrollY = Math.max(0, mapHeight * 20 - viewportHeight)
-    gameState.scrollOffset.x = Math.min(maxScrollX, Math.max(0, stressMinX * 20))
-    gameState.scrollOffset.y = Math.min(maxScrollY, Math.max(0, stressMinY * 20))
+    const tileSize = 32
+    const maxScrollX = Math.max(0, mapWidth * tileSize - viewportWidth)
+    const maxScrollY = Math.max(0, mapHeight * tileSize - viewportHeight)
+    gameState.scrollOffset.x = Math.min(maxScrollX, Math.max(0, stressMinX * tileSize))
+    gameState.scrollOffset.y = Math.min(maxScrollY, Math.max(0, stressMinY * tileSize))
     game.gameLoop?.requestRender?.()
     return { ok: true, mapWidth, mapHeight, maxScrollX, maxScrollY }
   }, { profileName })
@@ -140,6 +141,73 @@ async function collectBenchmarkStats(page, durationMs) {
       const sorted = [...values].sort((a, b) => a - b)
       const index = Math.min(sorted.length - 1, Math.max(0, Math.ceil((percentileValue / 100) * sorted.length) - 1))
       return sorted[index]
+    }
+    const sampleVisibleWater = () => {
+      const gameState = window.gameState
+      const canvas = document.getElementById('gameCanvas')
+      const ctx = canvas?.getContext?.('2d')
+      const glCanvas = document.getElementById('gameCanvasGL')
+      const map = window.gameInstance?.mapGrid || gameState?.mapGrid
+      if (!canvas || !ctx || !Array.isArray(map) || !map.length) {
+        return { sampled: false, reason: 'missing-runtime' }
+      }
+
+      const tileSize = 32
+      const ratio = canvas.clientWidth > 0 ? canvas.width / canvas.clientWidth : (window.devicePixelRatio || 1)
+      const startX = Math.max(0, Math.floor((gameState.scrollOffset?.x || 0) / tileSize))
+      const startY = Math.max(0, Math.floor((gameState.scrollOffset?.y || 0) / tileSize))
+      const endX = Math.min(map[0]?.length || 0, startX + Math.ceil((canvas.clientWidth || 800) / tileSize))
+      const endY = Math.min(map.length, startY + Math.ceil((canvas.clientHeight || 600) / tileSize))
+
+      for (let y = startY; y < endY; y++) {
+        for (let x = startX; x < endX; x++) {
+          if (map[y]?.[x]?.type !== 'water') continue
+          const screenX = Math.round((x * tileSize - (gameState.scrollOffset?.x || 0) + tileSize / 2) * ratio)
+          const screenY = Math.round((y * tileSize - (gameState.scrollOffset?.y || 0) + tileSize / 2) * ratio)
+          if (screenX < 0 || screenY < 0 || screenX >= canvas.width || screenY >= canvas.height) continue
+          const [r, g, b, a] = ctx.getImageData(screenX, screenY, 1, 1).data
+          if (a > 16 && (r + g + b) > 20) {
+            return {
+              sampled: true,
+              source: '2d',
+              tileX: x,
+              tileY: y,
+              rgba: [r, g, b, a],
+              visible: true
+            }
+          }
+
+          const gl = glCanvas?.getContext?.('webgl2') || glCanvas?.getContext?.('webgl')
+          if (gl) {
+            const glRatio = glCanvas.clientWidth > 0 ? glCanvas.width / glCanvas.clientWidth : ratio
+            const glX = Math.round((x * tileSize - (gameState.scrollOffset?.x || 0) + tileSize / 2) * glRatio)
+            const glY = Math.round(glCanvas.height - ((y * tileSize - (gameState.scrollOffset?.y || 0) + tileSize / 2) * glRatio) - 1)
+            const pixel = new Uint8Array(4)
+            if (glX >= 0 && glY >= 0 && glX < glCanvas.width && glY < glCanvas.height) {
+              gl.readPixels(glX, glY, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel)
+              return {
+                sampled: true,
+                source: 'webgl',
+                tileX: x,
+                tileY: y,
+                rgba: Array.from(pixel),
+                visible: pixel[3] > 16 && (pixel[0] + pixel[1] + pixel[2]) > 20
+              }
+            }
+          }
+
+          return {
+            sampled: true,
+            source: '2d',
+            tileX: x,
+            tileY: y,
+            rgba: [r, g, b, a],
+            visible: false
+          }
+        }
+      }
+
+      return { sampled: false, reason: 'no-visible-water' }
     }
     const loop = window.gameInstance?.gameLoop
     const gameState = window.gameState
@@ -181,8 +249,9 @@ async function collectBenchmarkStats(page, durationMs) {
         lastFrameTime = timestamp
 
         if (gameState && canvas) {
-          const mapWidthPx = (gameState.mapTilesX || 128) * 20
-          const mapHeightPx = (gameState.mapTilesY || 128) * 20
+          const tileSize = 32
+          const mapWidthPx = (gameState.mapTilesX || 128) * tileSize
+          const mapHeightPx = (gameState.mapTilesY || 128) * tileSize
           const maxScrollX = Math.max(0, mapWidthPx - (canvas.clientWidth || 800))
           const maxScrollY = Math.max(0, mapHeightPx - (canvas.clientHeight || 600))
           gameState.scrollOffset.x += sweepDirection * 9
@@ -251,8 +320,12 @@ async function collectBenchmarkStats(page, durationMs) {
         canvasHeight: canvas?.height || 0,
         canvasClientWidth: canvas?.clientWidth || 0,
         canvasClientHeight: canvas?.clientHeight || 0,
-        devicePixelRatio: window.devicePixelRatio || 1
+        devicePixelRatio: window.devicePixelRatio || 1,
+        canvasPixelRatio: window.gameState?.canvasPixelRatio || null,
+        rawCanvasPixelRatio: window.gameState?.rawCanvasPixelRatio || null,
+        chunkStats: mapRenderer?.getLastFrameChunkStats?.() || null
       },
+      waterSample: sampleVisibleWater(),
       overlayText: document.getElementById('fpsDisplay')?.innerText || ''
     }
   }, durationMs)
@@ -290,6 +363,8 @@ test.describe('Mobile FPS regression benchmark', () => {
       for (const profile of profiles) {
         const context = await createProfileContext(browser, profile)
         const page = await context.newPage()
+        const pageErrors = []
+        page.on('pageerror', error => pageErrors.push(error.message))
         let cdpSession = null
         try {
           await page.goto(buildBenchmarkUrl(rawUrl), { waitUntil: 'domcontentloaded', timeout: 60000 })
@@ -304,6 +379,7 @@ test.describe('Mobile FPS regression benchmark', () => {
             cpuThrottle: profile.cpuThrottle,
             deviceScaleFactor: profile.deviceScaleFactor,
             viewport: profile.viewport,
+            pageErrors,
             ...stats
           })
         } finally {
@@ -339,6 +415,8 @@ test.describe('Mobile FPS regression benchmark', () => {
       for (const result of mobileResults) {
         const mobileFps = Math.max(result.effectiveFps, result.reportedFps)
         expect(mobileFps, `${result.url} throttled mobile fixed-performance floor`).toBeGreaterThan(MOBILE_FIXED_MIN_FPS)
+        expect(result.pageErrors, `${result.url} throttled mobile page errors while scrolling`).toHaveLength(0)
+        expect(result.waterSample?.visible, `${result.url} throttled mobile visible water sample`).toBe(true)
       }
     }
   })
