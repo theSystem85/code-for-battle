@@ -208,9 +208,11 @@ function getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, an
 export class MapRenderer {
   constructor(textureManager) {
     this.textureManager = textureManager
-    this.chunkSize = 32
+    this.chunkSize = 16
     this.chunkPadding = 2
+    this.maxCachedChunks = 32
     this.chunkCache = new Map()
+    this.chunkUseCounter = 0
     this.cachedUseTexture = null
     this.cachedMapWidth = 0
     this.cachedMapHeight = 0
@@ -231,6 +233,7 @@ export class MapRenderer {
       chunkMisses: 0,
       chunkRedraws: 0,
       chunksPrewarmed: 0,
+      chunksEvicted: 0,
       directTilePasses: 0
     }
   }
@@ -457,6 +460,7 @@ export class MapRenderer {
       this.chunkCache.clear()
     }
     this.prewarmedCacheKey = null
+    this.chunkUseCounter = 0
     // Also invalidate SOT mask since map dimensions may have changed
     this.sotMask = null
   }
@@ -526,7 +530,7 @@ export class MapRenderer {
     const chunkColumns = Math.ceil(mapWidth / this.chunkSize)
     const chunkRows = Math.ceil(mapHeight / this.chunkSize)
     const totalChunks = chunkColumns * chunkRows
-    const maxPrewarmChunks = 24
+    const maxPrewarmChunks = Math.min(24, this.maxCachedChunks)
     if (!totalChunks || totalChunks > maxPrewarmChunks) return
 
     const cacheKey = this.getChunkRenderCacheKey(mapGrid, useTexture, { skipWaterBase, skipWaterSot })
@@ -575,6 +579,7 @@ export class MapRenderer {
         lastSkipWaterSot: null,
         containsWaterAnimation: false,
         everRendered: false,
+        lastUsedAt: 0,
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
         offsetY: startY * TILE_SIZE - this.chunkPadding
@@ -590,7 +595,25 @@ export class MapRenderer {
 
     chunk.offsetX = startX * TILE_SIZE - chunk.padding
     chunk.offsetY = startY * TILE_SIZE - chunk.padding
+    chunk.lastUsedAt = ++this.chunkUseCounter
     return chunk
+  }
+
+  evictOldChunks(activeChunkKeys = new Set()) {
+    if (this.chunkCache.size <= this.maxCachedChunks) return
+
+    const candidates = [...this.chunkCache.entries()]
+      .filter(([key]) => !activeChunkKeys.has(key))
+      .sort(([, a], [, b]) => (a.lastUsedAt || 0) - (b.lastUsedAt || 0))
+
+    for (const [key] of candidates) {
+      if (this.chunkCache.size <= this.maxCachedChunks) break
+      this.chunkCache.delete(key)
+      this.frameChunkStats.chunksEvicted++
+      if (this.prewarmedCacheKey) {
+        this.prewarmedCacheKey = null
+      }
+    }
   }
 
   computeChunkSignature(mapGrid, startX, startY, endX, endY) {
@@ -775,6 +798,7 @@ export class MapRenderer {
     const startChunkY = Math.max(0, Math.floor(startTileY / this.chunkSize))
     const endChunkX = Math.ceil(endTileX / this.chunkSize)
     const endChunkY = Math.ceil(endTileY / this.chunkSize)
+    const activeChunkKeys = new Set()
 
     for (let chunkY = startChunkY; chunkY < endChunkY; chunkY++) {
       const chunkStartY = chunkY * this.chunkSize
@@ -787,6 +811,7 @@ export class MapRenderer {
         const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
 
         const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
+        activeChunkKeys.add(this.getChunkKey(chunkX, chunkY))
 
         if (!chunk.canvas || !chunk.ctx) {
           this.frameChunkStats.directTilePasses++
@@ -814,6 +839,8 @@ export class MapRenderer {
         ctx.drawImage(chunk.canvas, drawX, drawY)
       }
     }
+
+    this.evictOldChunks(activeChunkKeys)
 
     // Re-enable image smoothing for other rendering
     ctx.imageSmoothingEnabled = true

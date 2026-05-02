@@ -12,6 +12,10 @@ const FULL_MAP_SCROLL = process.env.PERF_FULL_MAP_SCROLL !== '0'
 const SCROLL_MIN_FPS = Number.parseFloat(process.env.PERF_SCROLL_MIN_FPS || '60')
 const SCROLL_WINDOW_MS = Number.parseInt(process.env.PERF_SCROLL_WINDOW_MS || '1000', 10)
 const SCROLL_PIXELS_PER_FRAME = Number.parseFloat(process.env.PERF_SCROLL_PIXELS_PER_FRAME || '96')
+const SCROLL_LAPS = Number.parseInt(process.env.PERF_SCROLL_LAPS || '1', 10)
+const BENCHMARK_MAP_SIZE = Number.parseInt(process.env.PERF_BENCHMARK_MAP_SIZE || '128', 10)
+const MAX_MOBILE_HEAP_MB = Number.parseFloat(process.env.PERF_MAX_MOBILE_HEAP_MB || '0')
+const MAX_CHUNK_CACHE_SIZE = Number.parseInt(process.env.PERF_MAX_CHUNK_CACHE_SIZE || '0', 10)
 
 function getBenchmarkUrls(baseURL) {
   const rawUrls = process.env.PERF_BENCHMARK_URLS
@@ -28,7 +32,7 @@ function getBenchmarkUrls(baseURL) {
 function buildBenchmarkUrl(rawUrl) {
   const url = new URL(rawUrl, 'http://localhost:5173')
   url.searchParams.set('seed', '11')
-  url.searchParams.set('size', '128')
+  url.searchParams.set('size', BENCHMARK_MAP_SIZE.toString())
   url.searchParams.set('players', '4')
   url.searchParams.set('oreFields', '24')
   return url.toString()
@@ -141,7 +145,7 @@ async function prepareStressScene(page, profileName) {
 }
 
 async function collectBenchmarkStats(page, durationMs) {
-  return page.evaluate(async({ durationMs, fullMapScroll, scrollWindowMs, scrollPixelsPerFrame }) => {
+  return page.evaluate(async({ durationMs, fullMapScroll, scrollWindowMs, scrollPixelsPerFrame, scrollLaps }) => {
     const averageInPage = (values) => {
       if (!values.length) return 0
       return values.reduce((sum, value) => sum + value, 0) / values.length
@@ -229,6 +233,7 @@ async function collectBenchmarkStats(page, durationMs) {
     const breakdowns = []
     const drawImageSamples = []
     const scrollWindowSamples = []
+    const heapSamples = []
     let drawImageCount = 0
     let lastFrameTime = null
     let sweepDirection = 1
@@ -271,15 +276,22 @@ async function collectBenchmarkStats(page, durationMs) {
       const bandStep = Math.max(1, Math.floor(viewportHeight * 0.72))
       let y = 0
       let rightward = true
-      scrollRoute = [{ x: 0, y: 0 }]
+      const baseRoute = [{ x: 0, y: 0 }]
 
       while (y < maxScrollY) {
-        scrollRoute.push({ x: rightward ? maxScrollX : 0, y })
+        baseRoute.push({ x: rightward ? maxScrollX : 0, y })
         y = Math.min(maxScrollY, y + bandStep)
-        scrollRoute.push({ x: rightward ? maxScrollX : 0, y })
+        baseRoute.push({ x: rightward ? maxScrollX : 0, y })
         rightward = !rightward
       }
-      scrollRoute.push({ x: rightward ? maxScrollX : 0, y: maxScrollY })
+      baseRoute.push({ x: rightward ? maxScrollX : 0, y: maxScrollY })
+
+      scrollRoute = [baseRoute[0]]
+      const lapCount = Math.max(1, Number.isFinite(scrollLaps) ? Math.floor(scrollLaps) : 1)
+      for (let lap = 0; lap < lapCount; lap++) {
+        const lapRoute = lap % 2 === 0 ? baseRoute.slice(1) : [...baseRoute].reverse().slice(1)
+        scrollRoute.push(...lapRoute)
+      }
 
       for (let index = 1; index < scrollRoute.length; index++) {
         scrollDistancePx += Math.hypot(
@@ -318,6 +330,9 @@ async function collectBenchmarkStats(page, durationMs) {
             scrollY: gameState?.scrollOffset?.y || 0,
             routeIndex: scrollRouteIndex
           })
+          if (performance.memory?.usedJSHeapSize) {
+            heapSamples.push(performance.memory.usedJSHeapSize / (1024 * 1024))
+          }
           scrollWindowStartTime = timestamp
           scrollWindowFrameCount = 0
           scrollWindowMaxFrameMs = 0
@@ -409,6 +424,9 @@ async function collectBenchmarkStats(page, durationMs) {
     const renderSamples = breakdowns.map(sample => sample.renderMs)
     const idleSamples = breakdowns.map(sample => sample.idleMs)
     const heap = performance.memory?.usedJSHeapSize || null
+    if (Number.isFinite(heap)) {
+      heapSamples.push(heap / (1024 * 1024))
+    }
     const renderingModule = await import('/src/rendering.js').catch(() => null)
     const mapRenderer = renderingModule?.getMapRenderer?.()
     const textureManager = renderingModule?.getTextureManager?.()
@@ -438,6 +456,7 @@ async function collectBenchmarkStats(page, durationMs) {
         : null,
       scrollWindowSamples,
       heapMb: Number.isFinite(heap) ? heap / (1024 * 1024) : null,
+      maxHeapMb: heapSamples.length ? Math.max(...heapSamples) : null,
       rendererDiagnostics: {
         canUseOffscreen: Boolean(mapRenderer?.canUseOffscreen),
         chunkCacheSize: mapRenderer?.chunkCache?.size || 0,
@@ -456,7 +475,13 @@ async function collectBenchmarkStats(page, durationMs) {
       waterSample: sampleVisibleWater(),
       overlayText: document.getElementById('fpsDisplay')?.innerText || ''
     }
-  }, { durationMs, fullMapScroll: FULL_MAP_SCROLL, scrollWindowMs: SCROLL_WINDOW_MS, scrollPixelsPerFrame: SCROLL_PIXELS_PER_FRAME })
+  }, {
+    durationMs,
+    fullMapScroll: FULL_MAP_SCROLL,
+    scrollWindowMs: SCROLL_WINDOW_MS,
+    scrollPixelsPerFrame: SCROLL_PIXELS_PER_FRAME,
+    scrollLaps: SCROLL_LAPS
+  })
 }
 
 test.describe('Mobile FPS regression benchmark', () => {
@@ -549,6 +574,15 @@ test.describe('Mobile FPS regression benchmark', () => {
             result.minRoundedScrollWindowFps,
             `${result.url} throttled mobile lowest full-map scrolling FPS window`
           ).toBeGreaterThanOrEqual(SCROLL_MIN_FPS)
+        }
+        if (MAX_MOBILE_HEAP_MB > 0 && Number.isFinite(result.maxHeapMb)) {
+          expect(result.maxHeapMb, `${result.url} throttled mobile max heap MB`).toBeLessThanOrEqual(MAX_MOBILE_HEAP_MB)
+        }
+        if (MAX_CHUNK_CACHE_SIZE > 0) {
+          expect(
+            result.rendererDiagnostics?.chunkCacheSize || 0,
+            `${result.url} throttled mobile chunk cache budget`
+          ).toBeLessThanOrEqual(MAX_CHUNK_CACHE_SIZE)
         }
         expect(result.pageErrors, `${result.url} throttled mobile page errors while scrolling`).toHaveLength(0)
         expect(result.waterSample?.visible, `${result.url} throttled mobile visible water sample`).toBe(true)

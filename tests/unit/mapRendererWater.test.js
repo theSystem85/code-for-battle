@@ -170,12 +170,31 @@ describe('MapRenderer water rendering', () => {
     mapRenderer.render(ctx, mapGrid, { x: 1300, y: 1000 }, canvas, {}, null, { separateWaterLayer: true })
     const scrolledFrameStats = mapRenderer.getLastFrameChunkStats()
 
-    expect(mapRenderer.chunkCache.size).toBe(4)
-    expect(firstFrameStats.chunksPrewarmed).toBe(4)
-    expect(firstFrameStats.chunkMisses).toBe(4)
+    expect(mapRenderer.chunkCache.size).toBe(16)
+    expect(firstFrameStats.chunksPrewarmed).toBe(16)
+    expect(firstFrameStats.chunkMisses).toBe(16)
     expect(scrolledFrameStats.chunkMisses).toBe(0)
     expect(scrolledFrameStats.chunkRedraws).toBe(0)
     expect(scrolledFrameStats.chunkHits).toBeGreaterThan(0)
+  })
+
+  it('evicts old terrain chunks so cache memory does not grow with explored map area', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.maxCachedChunks = 4
+    const ctx = {
+      drawImage: vi.fn(),
+      imageSmoothingEnabled: true
+    }
+    const mapGrid = Array.from({ length: 96 }, () =>
+      Array.from({ length: 96 }, () => ({ type: 'land' }))
+    )
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 18, 18, {}, {})
+    mapRenderer.resetFrameChunkStats()
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 64 * 32, y: 64 * 32 }, 64, 64, 96, 96, {}, {})
+
+    expect(mapRenderer.chunkCache.size).toBeLessThanOrEqual(4)
+    expect(mapRenderer.frameChunkStats.chunksEvicted).toBeGreaterThan(0)
   })
 
   it('uses logical canvas dimensions for visible tile bounds on high-DPR screens', () => {
