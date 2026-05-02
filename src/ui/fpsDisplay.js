@@ -194,7 +194,7 @@ export class FPSDisplay {
       if (this.frameChunkStatsEl) {
         const chunkStats = gameState.renderStats?.mapChunks
         this.frameChunkStatsEl.textContent = chunkStats
-          ? `Chunks: ${chunkStats.chunksDrawn} drawn, ${chunkStats.chunkHits} hit, ${chunkStats.chunkMisses} miss, ${chunkStats.chunkRedraws} redraw, ${chunkStats.chunksPrewarmed || 0} prewarm, ${chunkStats.chunksEvicted || 0} evict`
+          ? `Chunks: ${chunkStats.chunksDrawn} drawn, ${chunkStats.chunkHits} hit, ${chunkStats.chunkMisses} miss, ${chunkStats.chunkRedraws} redraw, ${chunkStats.chunksPrewarmed || 0} prewarm, ${chunkStats.chunksQueued || 0} queue, ${chunkStats.chunksWarmed || 0} warm, ${chunkStats.chunkFallbacks || 0} fallback, ${chunkStats.chunksEvicted || 0} evict, ${chunkStats.chunkCacheSize || 0} cache`
           : 'Chunks: n/a'
       }
       if (this.frameJsHeapEl) {

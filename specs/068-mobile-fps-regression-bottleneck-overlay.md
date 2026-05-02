@@ -42,6 +42,10 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Follow-up: browser-driven mobile stability checks found no page errors after the latest local fixes, but showed that long scrolling can visit many terrain bands; the static terrain chunk cache is now bounded with LRU eviction so mobile Safari cannot keep accumulating offscreen chunk canvases while traversing large maps.
 - Follow-up: the FPS overlay includes chunk eviction counts so users can see cache churn alongside draw/hit/miss/redraw/prewarm telemetry.
 - Follow-up: the mobile benchmark can now sweep larger maps for repeated laps and optionally enforce heap and chunk-cache budgets, making scroll-crash regressions fail even when instantaneous FPS stays near 60.
+- Follow-up: cold/dirty terrain chunks are no longer rasterized synchronously while the camera is moving. Visible chunks that are not ready draw a cheap flat-color fallback instead of leaving transparent/black holes, nearby chunks are queued for idle warm-ahead, and queued warming is deferred until scrolling has been still briefly so background raster work cannot steal a frame from active mobile scrolling.
+- Follow-up: dynamic CPU water is drawn after the static terrain chunk pass when separate water rendering is active, so fallback terrain cannot cover animated water during fast scroll cache misses.
+- Follow-up: the FPS overlay includes queued/warmed/fallback chunk counters in addition to draw/hit/miss/redraw/prewarm/evict counters.
+- Follow-up: the mobile benchmark samples visible terrain pixels during scroll windows and can fail when black tile samples exceed the configured threshold.
 
 ## Benchmark notes
 - Pre-fix local reproduction: desktop game-loop FPS >60; throttled mobile reproduced the failure at ~1fps effective / ~3fps overlay, with CPU render around 700-800ms per frame in the stress scene.
@@ -56,6 +60,8 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Browser-use local verification: the in-app browser stayed alive through repeated long scroll sweeps with no console warnings/errors; FPS overlay reported capped 75fps on the desktop viewport before the bounded-cache fix, confirming the remaining risk was scroll-distance cache growth rather than an immediate render crash in Chromium.
 - Post-cache-cap local 128x128 benchmark: throttled mobile completed the full route at 60fps reported / ~59.9fps effective, lowest rounded scroll window 60fps, max frame 17.7ms, visible water sampled, no page errors, heap ~57.5MB, and chunk cache size 32.
 - Post-cache-cap 256x256 two-lap benchmark: throttled mobile completed 233kpx of scrolling at 60fps reported / ~60.0fps effective, lowest rounded scroll window 60fps, max frame 17.7ms, visible water sampled, no page errors, heap ~87.5MB, and chunk cache size stayed within the 32-chunk budget.
+- Fast-scroll local benchmark after deferred warming: mobile completed the route at 60fps reported / ~59.6fps effective, lowest rounded scroll window 60fps, max frame 16.9ms, no page errors, visible water sampled, and black terrain sample ratio 0.
+- Fast-scroll 256x256 two-lap benchmark after deferred warming: mobile completed 233kpx of scrolling at 60fps reported / ~60.0fps effective, every rounded scroll window stayed at 60fps, max frame 17.7ms, no page errors, visible water sampled, black terrain sample ratio 0, and heap stayed around 73MB.
 
 ## Remaining candidates
 - Dirty-rect entity overlay rendering on mobile; minimap throttling is in place, but entity overlays still render every frame for correctness.
@@ -69,5 +75,6 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - The E2E benchmark reports visible water samples and page errors while sweeping the map on mobile.
 - The E2E benchmark fails if the mobile full-map scroll route does not complete or if any scrolling FPS window drops below 60fps.
 - The E2E benchmark can enforce mobile heap and terrain chunk-cache budgets during long scroll sweeps.
+- The E2E benchmark can enforce that visible terrain samples do not turn black during fast scroll sweeps.
 - A local non-throttled mobile benchmark profile can reach the 60fps target when mobile pixel density is set to 1x.
 - The benchmark evidence is used to validate that mobile render time improves after fixes.

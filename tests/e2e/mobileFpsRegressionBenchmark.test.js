@@ -16,6 +16,7 @@ const SCROLL_LAPS = Number.parseInt(process.env.PERF_SCROLL_LAPS || '1', 10)
 const BENCHMARK_MAP_SIZE = Number.parseInt(process.env.PERF_BENCHMARK_MAP_SIZE || '128', 10)
 const MAX_MOBILE_HEAP_MB = Number.parseFloat(process.env.PERF_MAX_MOBILE_HEAP_MB || '0')
 const MAX_CHUNK_CACHE_SIZE = Number.parseInt(process.env.PERF_MAX_CHUNK_CACHE_SIZE || '0', 10)
+const MAX_BLACK_TILE_RATIO = Number.parseFloat(process.env.PERF_MAX_BLACK_TILE_RATIO || '0.02')
 
 function getBenchmarkUrls(baseURL) {
   const rawUrls = process.env.PERF_BENCHMARK_URLS
@@ -223,6 +224,46 @@ async function collectBenchmarkStats(page, durationMs) {
 
       return { sampled: false, reason: 'no-visible-water' }
     }
+    const sampleBlackTerrainRatio = () => {
+      const gameState = window.gameState
+      const canvas = document.getElementById('gameCanvas')
+      const ctx = canvas?.getContext?.('2d')
+      const map = window.gameInstance?.mapGrid || gameState?.mapGrid
+      if (!canvas || !ctx || !Array.isArray(map) || !map.length) {
+        return { sampled: false, reason: 'missing-runtime' }
+      }
+
+      const tileSize = 32
+      const ratio = canvas.clientWidth > 0 ? canvas.width / canvas.clientWidth : (window.devicePixelRatio || 1)
+      const startX = Math.max(0, Math.floor((gameState.scrollOffset?.x || 0) / tileSize))
+      const startY = Math.max(0, Math.floor((gameState.scrollOffset?.y || 0) / tileSize))
+      const endX = Math.min(map[0]?.length || 0, startX + Math.ceil((canvas.clientWidth || 800) / tileSize))
+      const endY = Math.min(map.length, startY + Math.ceil((canvas.clientHeight || 600) / tileSize))
+      const stepX = Math.max(1, Math.ceil((endX - startX) / 4))
+      const stepY = Math.max(1, Math.ceil((endY - startY) / 4))
+      let blackCount = 0
+      let sampledCount = 0
+
+      for (let y = startY; y < endY; y += stepY) {
+        for (let x = startX; x < endX; x += stepX) {
+          const screenX = Math.round((x * tileSize - (gameState.scrollOffset?.x || 0) + tileSize / 2) * ratio)
+          const screenY = Math.round((y * tileSize - (gameState.scrollOffset?.y || 0) + tileSize / 2) * ratio)
+          if (screenX < 0 || screenY < 0 || screenX >= canvas.width || screenY >= canvas.height) continue
+          const [r, g, b, a] = ctx.getImageData(screenX, screenY, 1, 1).data
+          sampledCount++
+          if (a > 16 && r + g + b < 24) {
+            blackCount++
+          }
+        }
+      }
+
+      return {
+        sampled: sampledCount > 0,
+        blackCount,
+        sampledCount,
+        ratio: sampledCount > 0 ? blackCount / sampledCount : 0
+      }
+    }
     const loop = window.gameInstance?.gameLoop
     const gameState = window.gameState
     const canvas = document.getElementById('gameCanvas')
@@ -234,6 +275,7 @@ async function collectBenchmarkStats(page, durationMs) {
     const drawImageSamples = []
     const scrollWindowSamples = []
     const heapSamples = []
+    const blackTerrainSamples = []
     let drawImageCount = 0
     let lastFrameTime = null
     let sweepDirection = 1
@@ -332,6 +374,10 @@ async function collectBenchmarkStats(page, durationMs) {
           })
           if (performance.memory?.usedJSHeapSize) {
             heapSamples.push(performance.memory.usedJSHeapSize / (1024 * 1024))
+          }
+          const blackSample = sampleBlackTerrainRatio()
+          if (blackSample.sampled) {
+            blackTerrainSamples.push(blackSample.ratio)
           }
           scrollWindowStartTime = timestamp
           scrollWindowFrameCount = 0
@@ -457,9 +503,11 @@ async function collectBenchmarkStats(page, durationMs) {
       scrollWindowSamples,
       heapMb: Number.isFinite(heap) ? heap / (1024 * 1024) : null,
       maxHeapMb: heapSamples.length ? Math.max(...heapSamples) : null,
+      maxBlackTerrainRatio: blackTerrainSamples.length ? Math.max(...blackTerrainSamples) : null,
       rendererDiagnostics: {
         canUseOffscreen: Boolean(mapRenderer?.canUseOffscreen),
-        chunkCacheSize: mapRenderer?.chunkCache?.size || 0,
+        chunkCacheSize: mapRenderer?.chunkCache?.size || window.gameState?.renderStats?.mapChunks?.chunkCacheSize || 0,
+        chunkWarmQueueSize: mapRenderer?.chunkWarmQueue?.size || window.gameState?.renderStats?.mapChunks?.chunkWarmQueueSize || 0,
         integratedMode: Boolean(textureManager?.integratedSpriteSheetMode),
         defaultStreetTiles: textureManager?.defaultStreetTagBuckets?.street?.length || 0,
         canvasWidth: canvas?.width || 0,
@@ -473,6 +521,7 @@ async function collectBenchmarkStats(page, durationMs) {
         gpuTerrain: window.gameState?.renderStats?.gpuTerrain || null
       },
       waterSample: sampleVisibleWater(),
+      blackTerrainSample: sampleBlackTerrainRatio(),
       overlayText: document.getElementById('fpsDisplay')?.innerText || ''
     }
   }, {
@@ -583,6 +632,9 @@ test.describe('Mobile FPS regression benchmark', () => {
             result.rendererDiagnostics?.chunkCacheSize || 0,
             `${result.url} throttled mobile chunk cache budget`
           ).toBeLessThanOrEqual(MAX_CHUNK_CACHE_SIZE)
+        }
+        if (Number.isFinite(result.maxBlackTerrainRatio)) {
+          expect(result.maxBlackTerrainRatio, `${result.url} throttled mobile black terrain sample ratio`).toBeLessThanOrEqual(MAX_BLACK_TILE_RATIO)
         }
         expect(result.pageErrors, `${result.url} throttled mobile page errors while scrolling`).toHaveLength(0)
         expect(result.waterSample?.visible, `${result.url} throttled mobile visible water sample`).toBe(true)

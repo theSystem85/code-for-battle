@@ -64,7 +64,7 @@ describe('MapRenderer water rendering', () => {
       mapGrid,
       expect.any(Boolean),
       expect.anything(),
-      { skipWaterBase: true, skipWaterSot: true }
+      expect.objectContaining({ skipWaterBase: true, skipWaterSot: true })
     )
     expect(ctx.drawImage).toHaveBeenCalledWith(chunk.canvas, -2, -2)
   })
@@ -195,6 +195,77 @@ describe('MapRenderer water rendering', () => {
 
     expect(mapRenderer.chunkCache.size).toBeLessThanOrEqual(4)
     expect(mapRenderer.frameChunkStats.chunksEvicted).toBeGreaterThan(0)
+  })
+
+  it('draws a non-black fallback and queues cold chunks while scrolling', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.lastScrollOffset = { x: 0, y: 0 }
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      imageSmoothingEnabled: true,
+      fillStyle: '#000'
+    }
+    const mapGrid = Array.from({ length: 64 }, (_, y) =>
+      Array.from({ length: 64 }, (_, x) => ({ type: (x + y) % 4 === 0 ? 'water' : 'street' }))
+    )
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 800, y: 0 }, 25, 0, 40, 20, {}, {
+      skipWaterBase: true,
+      skipWaterSot: true
+    })
+
+    expect(mapRenderer.frameChunkStats.chunkFallbacks).toBeGreaterThan(0)
+    expect(mapRenderer.frameChunkStats.chunksQueued).toBeGreaterThan(0)
+    expect(mapRenderer.frameChunkStats.chunkMisses).toBe(0)
+    expect(ctx.fillRect).toHaveBeenCalled()
+  })
+
+  it('warms queued chunks outside the visible render path', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.lastScrollOffset = { x: 0, y: 0 }
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      imageSmoothingEnabled: true,
+      fillStyle: '#000'
+    }
+    const mapGrid = Array.from({ length: 64 }, () =>
+      Array.from({ length: 64 }, () => ({ type: 'land' }))
+    )
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 800, y: 0 }, 25, 0, 40, 20, {}, {})
+    expect(mapRenderer.chunkWarmQueue.size).toBeGreaterThan(0)
+
+    mapRenderer.deferChunkWarmUntil = 0
+    mapRenderer.processChunkWarmQueue(null)
+
+    expect(mapRenderer.idleChunksWarmedSinceLastFrame).toBeGreaterThan(0)
+    expect([...mapRenderer.chunkCache.values()].some(chunk => chunk.everRendered)).toBe(true)
+  })
+
+  it('renders dynamic water after static terrain chunks so fallback tiles cannot cover water animation', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const calls = []
+    vi.spyOn(mapRenderer, 'renderTiles').mockImplementation(() => calls.push('terrain'))
+    vi.spyOn(mapRenderer, 'renderDynamicWaterLayer').mockImplementation(() => calls.push('water'))
+    vi.spyOn(mapRenderer, 'applyVisibilityOverlay').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const canvas = document.createElement('canvas')
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 128 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 128 })
+    canvas.getBoundingClientRect = () => ({ width: 128, height: 128 })
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'water' }]
+    ]
+
+    mapRenderer.render({ imageSmoothingEnabled: true }, mapGrid, { x: 0, y: 0 }, canvas, {}, null, {
+      separateWaterLayer: true
+    })
+
+    expect(calls).toEqual(['terrain', 'water'])
   })
 
   it('uses logical canvas dimensions for visible tile bounds on high-DPR screens', () => {
