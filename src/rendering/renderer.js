@@ -284,9 +284,13 @@ export class Renderer {
       this.textureManager.integratedTagBuckets?.water?.length
     )
     const needsCpuTerrainComposite = !gameState.useIntegratedSpriteSheetMode
+    const hasGpuStreetAtlas = Boolean(
+      needsCpuTerrainComposite &&
+      this.textureManager.defaultStreetTagBuckets?.street?.some(tile => tile?.image && tile?.rect)
+    )
     const gpuWaterOnly = Boolean(
       (gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles) ||
-      needsCpuTerrainComposite
+      (needsCpuTerrainComposite && !hasGpuStreetAtlas)
     )
     const shouldUseGpuTerrain = Boolean(
       gpuContext &&
@@ -327,7 +331,8 @@ export class Renderer {
         skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot,
         skipWaterBase: gpuRendered && gpuWaterOnly,
         gpuRenderedResources: gpuRendered && !gpuWaterOnly,
-        separateWaterLayer: needsCpuTerrainComposite && !gpuRendered
+        separateWaterLayer: needsCpuTerrainComposite && !gpuRendered,
+        gpuRenderedStreetTerrain: gpuRendered && hasGpuStreetAtlas
       }
     )
 
@@ -336,7 +341,8 @@ export class Renderer {
       mapChunks: this.mapRenderer.getLastFrameChunkStats?.() || null,
       gpuTerrain: {
         rendered: gpuRendered,
-        waterOnly: gpuWaterOnly
+        waterOnly: gpuWaterOnly,
+        streetAtlas: gpuRendered && hasGpuStreetAtlas
       }
     }
     if (gameState.dzmOverlayIndex !== -1) {

@@ -1,5 +1,6 @@
 // canvasManager.js
 // Handle canvas setup, resizing, and management
+import { MOBILE_CANVAS_PIXEL_RATIO_CAP } from '../config.js'
 
 export class CanvasManager {
   constructor() {
@@ -9,7 +10,7 @@ export class CanvasManager {
     this.gameGl = this.initializeGlContext()
     this.minimapCanvas = document.getElementById('minimap')
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
-    this.pixelRatioCap = 2
+    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
     this.pixelRatio = this.resolvePixelRatio()
     this.lastAdaptivePixelRatioCheck = 0
 
@@ -26,8 +27,15 @@ export class CanvasManager {
   }
 
   resolvePixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
-    const cap = Number.isFinite(this.pixelRatioCap) ? this.pixelRatioCap : 2
+    const configuredCap = Number.isFinite(MOBILE_CANVAS_PIXEL_RATIO_CAP) ? MOBILE_CANVAS_PIXEL_RATIO_CAP : 1
+    const adaptiveCap = Number.isFinite(this.adaptivePixelRatioCap) ? this.adaptivePixelRatioCap : configuredCap
+    const cap = Math.min(configuredCap, adaptiveCap)
     return Math.max(1, Math.min(rawPixelRatio || 1, cap))
+  }
+
+  resetAdaptivePixelRatioCap() {
+    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.resizeCanvases()
   }
 
   updateAdaptivePixelRatio(fps, now = performance.now()) {
@@ -41,18 +49,18 @@ export class CanvasManager {
     }
     this.lastAdaptivePixelRatioCheck = now
 
-    let nextCap = this.pixelRatioCap
+    let nextCap = this.adaptivePixelRatioCap
     if (fps < 18) {
-      nextCap = Math.max(1, this.pixelRatioCap - 0.5)
+      nextCap = Math.max(1, this.adaptivePixelRatioCap - 0.5)
     } else if (fps > 45) {
-      nextCap = Math.min(2, this.pixelRatioCap + 0.5)
+      nextCap = Math.min(MOBILE_CANVAS_PIXEL_RATIO_CAP, this.adaptivePixelRatioCap + 0.5)
     }
 
-    if (Math.abs(nextCap - this.pixelRatioCap) < 0.01) {
+    if (Math.abs(nextCap - this.adaptivePixelRatioCap) < 0.01) {
       return false
     }
 
-    this.pixelRatioCap = nextCap
+    this.adaptivePixelRatioCap = nextCap
     this.resizeCanvases()
     return true
   }

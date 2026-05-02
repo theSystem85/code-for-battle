@@ -1474,7 +1474,7 @@ export class MapRenderer {
    * Also renders ore/seed overlays after SOT to ensure correct z-order (SOT below ore).
    */
   renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, options = {}) {
-    const { skipWaterSot = false, gpuRenderedResources = false } = options
+    const { skipWaterSot = false, gpuRenderedResources = false, gpuRenderedStreetTerrain = false } = options
     // Ensure SOT mask is computed
     if (!this.sotMask) {
       this.computeSOTMask(mapGrid)
@@ -1495,7 +1495,7 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if (visualTileType !== 'street') continue
+        if (visualTileType !== 'street' || gpuRenderedStreetTerrain) continue
         const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
         const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
         this.drawTileBase(ctx, x, y, 'street', screenX, screenY, useTexture, currentWaterFrame)

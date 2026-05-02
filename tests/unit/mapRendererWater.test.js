@@ -450,6 +450,52 @@ describe('MapRenderer water rendering', () => {
     }
   })
 
+  it('emits default street-sheet tiles through the WebGL secondary atlas', () => {
+    const streetImage = { id: 'default-street-atlas', width: 256, height: 256 }
+    const textureManager = {
+      ...makeTextureManager(),
+      allTexturesLoaded: true,
+      tileTextureCache: {
+        land: [{ x: 0, y: 0, width: 32, height: 32 }]
+      },
+      spriteImage: { id: 'legacy-atlas', width: 512, height: 512 },
+      selectStreetTileByTags: vi.fn(() => ({
+        image: streetImage,
+        rect: { x: 64, y: 32, width: 32, height: 32 },
+        tags: ['street', 'top']
+      }))
+    }
+    const mapRenderer = new MapRenderer(textureManager)
+    const webglRenderer = new GameWebGLRenderer(null, textureManager, mapRenderer)
+    webglRenderer.secondaryAtlasImage = streetImage
+    webglRenderer.secondaryAtlasSize = { width: 256, height: 256 }
+    const mapGrid = [[{ type: 'street' }]]
+
+    const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 1, 1)
+    const streetInstance = instances.find(instance => instance.textureSource === 1)
+
+    expect(streetInstance).toBeDefined()
+    expect(streetInstance.textureType).toBe(1)
+    expect(streetInstance.uvRect).toEqual([0.25, 0.125, 0.375, 0.25])
+  })
+
+  it('skips CPU street repaint when GPU rendered default street terrain', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.sotMask = [[null]]
+    const drawTileBaseSpy = vi.spyOn(mapRenderer, 'drawTileBase').mockImplementation(() => {})
+    const ctx = {
+      drawImage: vi.fn(),
+      imageSmoothingEnabled: true
+    }
+    const mapGrid = [[{ type: 'street' }]]
+
+    mapRenderer.renderSOTOverlays(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 1, 1, {
+      gpuRenderedStreetTerrain: true
+    })
+
+    expect(drawTileBaseSpy).not.toHaveBeenCalled()
+  })
+
   it('does not add a legacy WebGL decal layer when the 2D map pass renders decals', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = [

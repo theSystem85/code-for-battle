@@ -381,7 +381,8 @@ function saveGraphicsSettingsToLocalStorage() {
       JSON.stringify({
         useProceduralWaterRendering: USE_PROCEDURAL_WATER_RENDERING,
         waterEffectTone: WATER_EFFECT_TONE,
-        waterEffectSaturation: WATER_EFFECT_SATURATION
+        waterEffectSaturation: WATER_EFFECT_SATURATION,
+        mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP
       })
     )
   } catch (error) {
@@ -415,6 +416,7 @@ function loadGraphicsSettingsFromLocalStorage() {
 
     WATER_EFFECT_TONE = clampNumber(parsed?.waterEffectTone, -1, 1, WATER_EFFECT_TONE)
     WATER_EFFECT_SATURATION = clampNumber(parsed?.waterEffectSaturation, 0, 2, WATER_EFFECT_SATURATION)
+    MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 4, MOBILE_CANVAS_PIXEL_RATIO_CAP)
   } catch (error) {
     window.logger?.warn('Failed to load graphics settings from localStorage:', error)
   }
@@ -427,6 +429,18 @@ export function setUseProceduralWaterRendering(value) {
   saveGraphicsSettingsToLocalStorage()
   requestGraphicsSettingsRender()
   return USE_PROCEDURAL_WATER_RENDERING
+}
+
+export let MOBILE_CANVAS_PIXEL_RATIO_CAP = 1
+
+export function setMobileCanvasPixelRatioCap(value) {
+  MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(value, 1, 4, MOBILE_CANVAS_PIXEL_RATIO_CAP)
+  saveGraphicsSettingsToLocalStorage()
+  if (typeof window !== 'undefined') {
+    window.gameInstance?.canvasManager?.resetAdaptivePixelRatioCap?.()
+  }
+  requestGraphicsSettingsRender()
+  return MOBILE_CANVAS_PIXEL_RATIO_CAP
 }
 
 // Water tone controls the palette blend from cooler blue toward greener teal.
@@ -1510,6 +1524,7 @@ const EXPORTED_CONFIG_VARIABLES = [
   'WATER_EFFECT_TONE',
   'WATER_EFFECT_SATURATION',
   'WATER_EFFECT_ZOOM',
+  'MOBILE_CANVAS_PIXEL_RATIO_CAP',
   'TILE_SPRITE_SHEET',
   'TILE_SPRITE_MAP',
   'USE_TEXTURES',

@@ -14,6 +14,8 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 4. Before further code analysis, add an E2E performance benchmark that reproduces the observed mobile degradation (<10fps equivalent under mobile throttling) while preserving normal desktop performance (>60fps equivalent in an uncapped benchmark path).
 5. Compare deploy preview 650 against deploy preview 640 with the benchmark and inspect sprite-sheet/SOT rendering differences before choosing fixes.
 6. Fix the most likely root causes found in sprite-sheet/SOT/rendering paths and document additional candidate fixes that remain out of scope.
+7. Mobile performance target is 60fps; default street-sheet terrain should move into the GPU atlas path rather than relying on CPU terrain compositing.
+8. Mobile canvas pixel density must be configurable in the settings config editor, from native DPR down to 1x.
 
 ## Implementation summary
 - Street tile selection now caches filtered candidate pools per topology/signature instead of re-filtering tag buckets every draw call.
@@ -30,6 +32,8 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Follow-up: CPU terrain chunk cache telemetry now reports drawn chunks, cache hits, cache misses, and redraws in the FPS overlay and benchmark diagnostics.
 - Follow-up: mobile minimap rendering is throttled while the main game continues rendering every frame, reducing repeated sidebar/minimap draw submission during touch scrolling.
 - Follow-up: canvas DPR is adaptive on touch/mobile layouts; it starts capped at 2 and can step down toward 1 under sustained low FPS, then recover toward 2 when the device has headroom.
+- Follow-up: the default street sheet can now be bound as a secondary WebGL atlas, allowing default street terrain instances to render on the GPU and letting the 2D SOT overlay skip the expensive per-frame CPU street repaint pass when GPU terrain succeeds.
+- Follow-up: mobile canvas pixel density is exposed in Graphics config/settings as `mobileCanvasPixelRatioCap`, defaulting to 1x for mobile performance and allowing users to raise the cap toward native DPR for sharper output.
 
 ## Benchmark notes
 - Pre-fix local reproduction: desktop game-loop FPS >60; throttled mobile reproduced the failure at ~1fps effective / ~3fps overlay, with CPU render around 700-800ms per frame in the stress scene.
@@ -37,9 +41,9 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Post-fix local benchmark: desktop game-loop FPS remained >60; throttled mobile improved to ~11fps reported in the 8x CPU-throttled stress profile, with drawImage submissions reduced to ~2.7k/sec.
 - Follow-up benchmark records page errors during scroll sweeps and samples visible water pixels so black/transparent water regressions are caught alongside FPS metrics.
 - Follow-up local benchmark: desktop reported 94fps / 57.8 effective FPS, throttled mobile reported 13fps / 12.6 effective FPS, page errors were 0, visible water sampled successfully, and mobile drawImage submissions fell to ~56/sec with 0 chunk redraws.
+- Mobile 60Hz target benchmark at 1x pixel density: desktop reported 90fps / 59.2 effective FPS; mobile reported 60fps / 59.5 effective FPS, page errors were 0, visible water sampled successfully, and CPU render averaged ~3.5ms. Headless Chromium did not expose the WebGL terrain path in this run, so the benchmark validates the 1x mobile fallback while unit coverage validates the secondary-atlas GPU street path.
 
 ## Remaining candidates
-- Move street-sheet terrain rendering into a GPU atlas path so default street art no longer requires any CPU terrain compositing. This remains larger because the current WebGL renderer samples the legacy atlas while the default street sheet lives in a different packed atlas.
 - Dirty-rect entity overlay rendering on mobile; minimap throttling is in place, but entity overlays still render every frame for correctness.
 
 ## Acceptance criteria
@@ -49,4 +53,5 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - FPS overlay surfaces chunk cache hit/miss/redraw counters in realtime during gameplay.
 - The E2E benchmark can run against local and remote preview URLs and reports separate desktop/mobile effective frame-rate metrics.
 - The E2E benchmark reports visible water samples and page errors while sweeping the map on mobile.
+- A local non-throttled mobile benchmark profile can reach the 60fps target when mobile pixel density is set to 1x.
 - The benchmark evidence is used to validate that mobile render time improves after fixes.

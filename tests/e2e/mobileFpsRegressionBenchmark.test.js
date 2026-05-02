@@ -51,6 +51,12 @@ async function createProfileContext(browser, profile) {
     localStorage.setItem('rts-map-center-lake', 'true')
     localStorage.setItem('rts-shadow-of-war-enabled', 'false')
     localStorage.setItem('rts-game-speed-multiplier', '1')
+    localStorage.setItem('rts_graphics_settings', JSON.stringify({
+      useProceduralWaterRendering: true,
+      waterEffectTone: 0.35,
+      waterEffectSaturation: 0.4,
+      mobileCanvasPixelRatioCap: 1
+    }))
   })
 
   return context
@@ -323,7 +329,8 @@ async function collectBenchmarkStats(page, durationMs) {
         devicePixelRatio: window.devicePixelRatio || 1,
         canvasPixelRatio: window.gameState?.canvasPixelRatio || null,
         rawCanvasPixelRatio: window.gameState?.rawCanvasPixelRatio || null,
-        chunkStats: mapRenderer?.getLastFrameChunkStats?.() || null
+        chunkStats: mapRenderer?.getLastFrameChunkStats?.() || null,
+        gpuTerrain: window.gameState?.renderStats?.gpuTerrain || null
       },
       waterSample: sampleVisibleWater(),
       overlayText: document.getElementById('fpsDisplay')?.innerText || ''
