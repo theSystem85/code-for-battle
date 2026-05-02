@@ -138,6 +138,46 @@ describe('MapRenderer water rendering', () => {
     expect(secondFrameStats.chunkRedraws).toBe(0)
   })
 
+  it('prewarms static terrain chunks so scrolling does not discover uncached terrain', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      imageSmoothingEnabled: true,
+      fillStyle: '#000',
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn(),
+      fill: vi.fn()
+    }
+    vi.spyOn(mapRenderer, 'applyVisibilityOverlay').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const canvas = document.createElement('canvas')
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 390 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 844 })
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 844 })
+    const mapGrid = Array.from({ length: 64 }, (_, y) =>
+      Array.from({ length: 64 }, (_, x) => ({ type: (x + y) % 5 === 0 ? 'water' : 'street' }))
+    )
+
+    mapRenderer.render(ctx, mapGrid, { x: 0, y: 0 }, canvas, {}, null, { separateWaterLayer: true })
+    const firstFrameStats = mapRenderer.getLastFrameChunkStats()
+    mapRenderer.render(ctx, mapGrid, { x: 1300, y: 1000 }, canvas, {}, null, { separateWaterLayer: true })
+    const scrolledFrameStats = mapRenderer.getLastFrameChunkStats()
+
+    expect(mapRenderer.chunkCache.size).toBe(4)
+    expect(firstFrameStats.chunksPrewarmed).toBe(4)
+    expect(firstFrameStats.chunkMisses).toBe(4)
+    expect(scrolledFrameStats.chunkMisses).toBe(0)
+    expect(scrolledFrameStats.chunkRedraws).toBe(0)
+    expect(scrolledFrameStats.chunkHits).toBeGreaterThan(0)
+  })
+
   it('uses logical canvas dimensions for visible tile bounds on high-DPR screens', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const mapGrid = Array.from({ length: 128 }, () => Array.from({ length: 128 }, () => ({ type: 'land' })))

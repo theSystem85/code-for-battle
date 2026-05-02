@@ -16,6 +16,8 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 6. Fix the most likely root causes found in sprite-sheet/SOT/rendering paths and document additional candidate fixes that remain out of scope.
 7. Mobile performance target is 60fps; default street-sheet terrain should move into the GPU atlas path rather than relying on CPU terrain compositing.
 8. Mobile canvas pixel density must be configurable in the settings config editor, from native DPR down to 1x.
+9. The mobile benchmark must include a full-map scroll sweep. During that sweep, every measured scrolling FPS window must stay at or above the 60fps mobile target; a drop below 60fps is a test failure.
+10. Compare deploy preview 650 against deploy preview 645 for the scroll regression, because 645 is the reported last preview that stayed near 60fps while scrolling.
 
 ## Implementation summary
 - Street tile selection now caches filtered candidate pools per topology/signature instead of re-filtering tag buckets every draw call.
@@ -34,6 +36,9 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Follow-up: canvas DPR is adaptive on touch/mobile layouts; it starts capped at 2 and can step down toward 1 under sustained low FPS, then recover toward 2 when the device has headroom.
 - Follow-up: the default street sheet can now be bound as a secondary WebGL atlas, allowing default street terrain instances to render on the GPU and letting the 2D SOT overlay skip the expensive per-frame CPU street repaint pass when GPU terrain succeeds.
 - Follow-up: mobile canvas pixel density is exposed in Graphics config/settings as `mobileCanvasPixelRatioCap`, defaulting to 1x for mobile performance and allowing users to raise the cap toward native DPR for sharper output.
+- Follow-up: the mobile benchmark now drives a deterministic serpentine scroll route across the whole map and reports the lowest scrolling FPS window, worst frame, route completion, page errors, chunk cache misses/redraws, and visible water while moving.
+- Follow-up: static CPU terrain chunks are prewarmed for small/medium maps whenever water is rendered as a separate dynamic layer, and SOT/cache validation order now recomputes SOT after cache invalidation so prewarm keys stay stable.
+- Follow-up: the FPS overlay includes the number of chunks prewarmed in the current frame.
 
 ## Benchmark notes
 - Pre-fix local reproduction: desktop game-loop FPS >60; throttled mobile reproduced the failure at ~1fps effective / ~3fps overlay, with CPU render around 700-800ms per frame in the stress scene.
@@ -42,6 +47,9 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Follow-up benchmark records page errors during scroll sweeps and samples visible water pixels so black/transparent water regressions are caught alongside FPS metrics.
 - Follow-up local benchmark: desktop reported 94fps / 57.8 effective FPS, throttled mobile reported 13fps / 12.6 effective FPS, page errors were 0, visible water sampled successfully, and mobile drawImage submissions fell to ~56/sec with 0 chunk redraws.
 - Mobile 60Hz target benchmark at 1x pixel density: desktop reported 90fps / 59.2 effective FPS; mobile reported 60fps / 59.5 effective FPS, page errors were 0, visible water sampled successfully, and CPU render averaged ~3.5ms. Headless Chromium did not expose the WebGL terrain path in this run, so the benchmark validates the 1x mobile fallback while unit coverage validates the secondary-atlas GPU street path.
+- Full-map scroll benchmark must be used for future mobile fixes: scrolling must cross every chunk band, finish the entire route, and fail when any rounded one-second scrolling window falls below 60fps.
+- Preview comparison with the full-map scroll benchmark: deploy preview 650 held mobile at rounded 60fps windows with a 390x844 backing canvas, while deploy preview 645 fell to rounded 7-27fps windows with a 1170x2532 backing canvas. The old preview’s collapse validates the pixel-bandwidth side of the regression; the local fix additionally removes cold static-chunk misses while scrolling.
+- Post-fix local full-map scroll benchmark: mobile completed the whole route at 60fps reported / ~59.8fps effective, lowest rounded scroll window 60fps, 0 page errors, visible water sampled, chunk cache size 16, and final-frame chunk misses/redraws 0.
 
 ## Remaining candidates
 - Dirty-rect entity overlay rendering on mobile; minimap throttling is in place, but entity overlays still render every frame for correctness.
@@ -53,5 +61,6 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - FPS overlay surfaces chunk cache hit/miss/redraw counters in realtime during gameplay.
 - The E2E benchmark can run against local and remote preview URLs and reports separate desktop/mobile effective frame-rate metrics.
 - The E2E benchmark reports visible water samples and page errors while sweeping the map on mobile.
+- The E2E benchmark fails if the mobile full-map scroll route does not complete or if any scrolling FPS window drops below 60fps.
 - A local non-throttled mobile benchmark profile can reach the 60fps target when mobile pixel density is set to 1x.
 - The benchmark evidence is used to validate that mobile render time improves after fixes.

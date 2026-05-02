@@ -8,6 +8,10 @@ const MOBILE_REGRESSION_MAX_FPS = Number.parseFloat(process.env.PERF_MOBILE_REGR
 const MOBILE_FIXED_MIN_FPS = Number.parseFloat(process.env.PERF_MOBILE_FIXED_MIN_FPS || '20')
 const EXPECT_MOBILE_REGRESSION = process.env.PERF_EXPECT_MOBILE_REGRESSION === '1'
 const ENFORCE_FIXED_BUDGET = process.env.PERF_ENFORCE_FIXED_BUDGET === '1'
+const FULL_MAP_SCROLL = process.env.PERF_FULL_MAP_SCROLL !== '0'
+const SCROLL_MIN_FPS = Number.parseFloat(process.env.PERF_SCROLL_MIN_FPS || '60')
+const SCROLL_WINDOW_MS = Number.parseInt(process.env.PERF_SCROLL_WINDOW_MS || '1000', 10)
+const SCROLL_PIXELS_PER_FRAME = Number.parseFloat(process.env.PERF_SCROLL_PIXELS_PER_FRAME || '96')
 
 function getBenchmarkUrls(baseURL) {
   const rawUrls = process.env.PERF_BENCHMARK_URLS
@@ -137,7 +141,7 @@ async function prepareStressScene(page, profileName) {
 }
 
 async function collectBenchmarkStats(page, durationMs) {
-  return page.evaluate(async(durationMs) => {
+  return page.evaluate(async({ durationMs, fullMapScroll, scrollWindowMs, scrollPixelsPerFrame }) => {
     const averageInPage = (values) => {
       if (!values.length) return 0
       return values.reduce((sum, value) => sum + value, 0) / values.length
@@ -224,9 +228,17 @@ async function collectBenchmarkStats(page, durationMs) {
     const frameIntervals = []
     const breakdowns = []
     const drawImageSamples = []
+    const scrollWindowSamples = []
     let drawImageCount = 0
     let lastFrameTime = null
     let sweepDirection = 1
+    let scrollRoute = []
+    let scrollRouteIndex = 1
+    let scrollCompleted = false
+    let scrollDistancePx = 0
+    let scrollWindowStartTime = null
+    let scrollWindowFrameCount = 0
+    let scrollWindowMaxFrameMs = 0
 
     if (fpsDisplay && originalBreakdown) {
       fpsDisplay.reportFrameBreakdown = (breakdown = {}) => {
@@ -246,15 +258,75 @@ async function collectBenchmarkStats(page, durationMs) {
 
     const startTime = performance.now()
     let lastDrawSampleTime = startTime
+    let maxRunTimeMs = durationMs
+
+    if (gameState && canvas && fullMapScroll) {
+      const tileSize = 32
+      const mapWidthPx = (gameState.mapTilesX || 128) * tileSize
+      const mapHeightPx = (gameState.mapTilesY || 128) * tileSize
+      const viewportWidth = canvas.clientWidth || 800
+      const viewportHeight = canvas.clientHeight || 600
+      const maxScrollX = Math.max(0, mapWidthPx - viewportWidth)
+      const maxScrollY = Math.max(0, mapHeightPx - viewportHeight)
+      const bandStep = Math.max(1, Math.floor(viewportHeight * 0.72))
+      let y = 0
+      let rightward = true
+      scrollRoute = [{ x: 0, y: 0 }]
+
+      while (y < maxScrollY) {
+        scrollRoute.push({ x: rightward ? maxScrollX : 0, y })
+        y = Math.min(maxScrollY, y + bandStep)
+        scrollRoute.push({ x: rightward ? maxScrollX : 0, y })
+        rightward = !rightward
+      }
+      scrollRoute.push({ x: rightward ? maxScrollX : 0, y: maxScrollY })
+
+      for (let index = 1; index < scrollRoute.length; index++) {
+        scrollDistancePx += Math.hypot(
+          scrollRoute[index].x - scrollRoute[index - 1].x,
+          scrollRoute[index].y - scrollRoute[index - 1].y
+        )
+      }
+
+      gameState.scrollOffset.x = scrollRoute[0].x
+      gameState.scrollOffset.y = scrollRoute[0].y
+      maxRunTimeMs = Math.max(
+        durationMs,
+        Math.ceil((scrollDistancePx / Math.max(1, scrollPixelsPerFrame)) * 1000) + 5000
+      )
+    }
 
     await new Promise(resolve => {
-      function step(timestamp) {
-        if (lastFrameTime !== null) {
-          frameIntervals.push(timestamp - lastFrameTime)
+      const recordScrollWindow = (timestamp, interval) => {
+        if (!fullMapScroll || interval <= 0) return
+        if (scrollWindowStartTime === null) {
+          scrollWindowStartTime = timestamp - interval
         }
-        lastFrameTime = timestamp
+        scrollWindowFrameCount += 1
+        scrollWindowMaxFrameMs = Math.max(scrollWindowMaxFrameMs, interval)
+        const elapsed = timestamp - scrollWindowStartTime
+        if (elapsed >= scrollWindowMs) {
+          const fps = (scrollWindowFrameCount * 1000) / elapsed
+          scrollWindowSamples.push({
+            startMs: scrollWindowStartTime - startTime,
+            durationMs: elapsed,
+            fps,
+            roundedFps: Math.round(fps),
+            frameCount: scrollWindowFrameCount,
+            maxFrameMs: scrollWindowMaxFrameMs,
+            scrollX: gameState?.scrollOffset?.x || 0,
+            scrollY: gameState?.scrollOffset?.y || 0,
+            routeIndex: scrollRouteIndex
+          })
+          scrollWindowStartTime = timestamp
+          scrollWindowFrameCount = 0
+          scrollWindowMaxFrameMs = 0
+        }
+      }
 
-        if (gameState && canvas) {
+      const moveAlongRoute = () => {
+        if (!gameState || !canvas) return
+        if (!fullMapScroll) {
           const tileSize = 32
           const mapWidthPx = (gameState.mapTilesX || 128) * tileSize
           const mapHeightPx = (gameState.mapTilesY || 128) * tileSize
@@ -269,8 +341,42 @@ async function collectBenchmarkStats(page, durationMs) {
           }
           gameState.scrollOffset.x = Math.max(0, Math.min(maxScrollX, gameState.scrollOffset.x))
           gameState.scrollOffset.y = Math.max(0, Math.min(maxScrollY, gameState.scrollOffset.y))
-          window.gameInstance?.gameLoop?.requestRender?.()
+          return
         }
+
+        if (scrollCompleted || !scrollRoute.length) return
+        const target = scrollRoute[scrollRouteIndex]
+        if (!target) {
+          scrollCompleted = true
+          return
+        }
+        const dx = target.x - gameState.scrollOffset.x
+        const dy = target.y - gameState.scrollOffset.y
+        const distance = Math.hypot(dx, dy)
+        if (distance <= scrollPixelsPerFrame) {
+          gameState.scrollOffset.x = target.x
+          gameState.scrollOffset.y = target.y
+          scrollRouteIndex += 1
+          if (scrollRouteIndex >= scrollRoute.length) {
+            scrollCompleted = true
+          }
+          return
+        }
+        const ratio = scrollPixelsPerFrame / distance
+        gameState.scrollOffset.x += dx * ratio
+        gameState.scrollOffset.y += dy * ratio
+      }
+
+      function step(timestamp) {
+        if (lastFrameTime !== null) {
+          const interval = timestamp - lastFrameTime
+          frameIntervals.push(interval)
+          recordScrollWindow(timestamp, interval)
+        }
+        lastFrameTime = timestamp
+
+        moveAlongRoute()
+        window.gameInstance?.gameLoop?.requestRender?.()
 
         if (timestamp - lastDrawSampleTime >= 1000) {
           drawImageSamples.push(drawImageCount)
@@ -278,7 +384,11 @@ async function collectBenchmarkStats(page, durationMs) {
           lastDrawSampleTime = timestamp
         }
 
-        if (timestamp - startTime >= durationMs) {
+        if (
+          (fullMapScroll && scrollCompleted && timestamp - startTime >= Math.min(durationMs, 1000)) ||
+          (!fullMapScroll && timestamp - startTime >= durationMs) ||
+          timestamp - startTime >= maxRunTimeMs
+        ) {
           resolve()
         } else {
           requestAnimationFrame(step)
@@ -316,6 +426,17 @@ async function collectBenchmarkStats(page, durationMs) {
       avgIdleMs: averageInPage(idleSamples),
       avgDrawImagesPerSecond: averageInPage(drawImageSamples),
       maxDrawImagesPerSecond: Math.max(0, ...drawImageSamples),
+      scrollCompleted,
+      scrollRoutePoints: scrollRoute.length,
+      scrollRouteIndex,
+      scrollDistancePx,
+      minScrollWindowFps: scrollWindowSamples.length
+        ? Math.min(...scrollWindowSamples.map(sample => sample.fps))
+        : null,
+      minRoundedScrollWindowFps: scrollWindowSamples.length
+        ? Math.min(...scrollWindowSamples.map(sample => sample.roundedFps))
+        : null,
+      scrollWindowSamples,
       heapMb: Number.isFinite(heap) ? heap / (1024 * 1024) : null,
       rendererDiagnostics: {
         canUseOffscreen: Boolean(mapRenderer?.canUseOffscreen),
@@ -335,7 +456,7 @@ async function collectBenchmarkStats(page, durationMs) {
       waterSample: sampleVisibleWater(),
       overlayText: document.getElementById('fpsDisplay')?.innerText || ''
     }
-  }, durationMs)
+  }, { durationMs, fullMapScroll: FULL_MAP_SCROLL, scrollWindowMs: SCROLL_WINDOW_MS, scrollPixelsPerFrame: SCROLL_PIXELS_PER_FRAME })
 }
 
 test.describe('Mobile FPS regression benchmark', () => {
@@ -422,6 +543,13 @@ test.describe('Mobile FPS regression benchmark', () => {
       for (const result of mobileResults) {
         const mobileFps = Math.max(result.effectiveFps, result.reportedFps)
         expect(mobileFps, `${result.url} throttled mobile fixed-performance floor`).toBeGreaterThan(MOBILE_FIXED_MIN_FPS)
+        if (FULL_MAP_SCROLL) {
+          expect(result.scrollCompleted, `${result.url} throttled mobile full-map scroll route completed`).toBe(true)
+          expect(
+            result.minRoundedScrollWindowFps,
+            `${result.url} throttled mobile lowest full-map scrolling FPS window`
+          ).toBeGreaterThanOrEqual(SCROLL_MIN_FPS)
+        }
         expect(result.pageErrors, `${result.url} throttled mobile page errors while scrolling`).toHaveLength(0)
         expect(result.waterSample?.visible, `${result.url} throttled mobile visible water sample`).toBe(true)
       }
