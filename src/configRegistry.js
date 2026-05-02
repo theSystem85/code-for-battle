@@ -107,7 +107,9 @@ import {
   WATER_EFFECT_SATURATION,
   setWaterEffectSaturation,
   WATER_EFFECT_ZOOM,
-  setWaterEffectZoom
+  setWaterEffectZoom,
+  MOBILE_CANVAS_PIXEL_RATIO_CAP,
+  setMobileCanvasPixelRatioCap
   , HOWITZER_COST
   , setHowitzerCost
   , HOWITZER_SPEED
@@ -194,6 +196,18 @@ export const configRegistry = {
     min: 0.05,
     max: 2,
     step: 0.05,
+    category: 'Graphics'
+  },
+
+  mobileCanvasPixelRatioCap: {
+    name: 'Mobile Canvas Pixel Density',
+    description: 'Maximum mobile canvas DPR. Use 1 for fastest mobile rendering, or raise toward native device DPR for sharper output.',
+    type: 'number',
+    get: () => MOBILE_CANVAS_PIXEL_RATIO_CAP,
+    set: setMobileCanvasPixelRatioCap,
+    min: 1,
+    max: 4,
+    step: 0.25,
     category: 'Graphics'
   },
 

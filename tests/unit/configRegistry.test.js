@@ -81,7 +81,8 @@ describe('configRegistry.js', () => {
         'enableEnemyControl',
         'oreSpreadEnabled',
         'harvesterCapacity',
-        'defaultRotationSpeed'
+        'defaultRotationSpeed',
+        'mobileCanvasPixelRatioCap'
       ]
 
       knownKeys.forEach(key => {

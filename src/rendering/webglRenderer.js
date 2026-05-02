@@ -38,6 +38,7 @@ layout(location = 3) in vec4 aColor;
 layout(location = 4) in float aTextureType;
 layout(location = 5) in vec4 aWaterEdges;
 layout(location = 6) in float aClipOrientation;
+layout(location = 7) in float aTextureSource;
 
 uniform vec2 uResolution;
 uniform vec2 uScroll;
@@ -51,6 +52,7 @@ out vec2 vLocalPos;
 out vec2 vWorldPos;
 out vec4 vWaterEdges;
 out float vClipOrientation;
+out float vTextureSource;
 
 void main() {
   vec2 worldPos = aTranslation * uTileStep - uScroll + aPosition * uTileSize;
@@ -65,6 +67,7 @@ void main() {
   vWorldPos = worldSamplePos;
   vWaterEdges = aWaterEdges;
   vClipOrientation = aClipOrientation;
+  vTextureSource = aTextureSource;
 }
 `
 
@@ -72,6 +75,7 @@ const FRAGMENT_SHADER_SOURCE = `#version 300 es
 precision highp float;
 
 uniform sampler2D uAtlas;
+uniform sampler2D uSecondaryAtlas;
 uniform float uTime;
 uniform float uWaterZoom;
 uniform float uWaterTone;
@@ -84,6 +88,7 @@ in vec2 vLocalPos;
 in vec2 vWorldPos;
 in vec4 vWaterEdges;
 in float vClipOrientation;
+in float vTextureSource;
 
 out vec4 outColor;
 
@@ -143,7 +148,11 @@ void main() {
 
     outColor = vec4(waterColor, 1.0);
   } else if (vTextureType > 0.5) {
-    outColor = texture(uAtlas, vUV);
+    if (vTextureSource > 0.5) {
+      outColor = texture(uSecondaryAtlas, vUV);
+    } else {
+      outColor = texture(uAtlas, vUV);
+    }
   } else {
     outColor = vColor;
   }
@@ -222,6 +231,9 @@ export class GameWebGLRenderer {
     this.instanceCapacity = 0
     this.atlasTexture = null
     this.atlasSize = { ...DEFAULT_ATLAS_SIZE }
+    this.secondaryAtlasTexture = null
+    this.secondaryAtlasImage = null
+    this.secondaryAtlasSize = { ...DEFAULT_ATLAS_SIZE }
     this.colorCache = new Map()
     this.pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
     this.rendersWaterSot = true
@@ -235,6 +247,9 @@ export class GameWebGLRenderer {
     this.instanceCapacity = 0
     this.atlasTexture = null
     this.atlasSize = { ...DEFAULT_ATLAS_SIZE }
+    this.secondaryAtlasTexture = null
+    this.secondaryAtlasImage = null
+    this.secondaryAtlasSize = { ...DEFAULT_ATLAS_SIZE }
   }
 
   setMapRenderer(mapRenderer) {
@@ -275,9 +290,11 @@ export class GameWebGLRenderer {
     this.buffers.color = gl.createBuffer()
     this.buffers.textureType = gl.createBuffer()
     this.buffers.clipOrientation = gl.createBuffer()
+    this.buffers.textureSource = gl.createBuffer()
 
     gl.useProgram(this.program)
     gl.uniform1i(gl.getUniformLocation(this.program, 'uAtlas'), 0)
+    gl.uniform1i(gl.getUniformLocation(this.program, 'uSecondaryAtlas'), 1)
     gl.useProgram(null)
 
     gl.enable(gl.BLEND)
@@ -312,6 +329,48 @@ export class GameWebGLRenderer {
     }
   }
 
+  getSecondaryAtlasImage() {
+    const streetTile = this.textureManager?.defaultStreetTagBuckets?.street?.find(tile => tile?.image && tile?.rect)
+    return streetTile?.image || null
+  }
+
+  syncSecondaryAtlasTexture() {
+    if (!this.gl) return
+    const image = this.getSecondaryAtlasImage()
+    if (!image) return
+
+    const gl = this.gl
+    if (this.secondaryAtlasTexture && this.secondaryAtlasImage === image) {
+      return
+    }
+
+    if (this.secondaryAtlasTexture) {
+      gl.deleteTexture(this.secondaryAtlasTexture)
+    }
+
+    this.secondaryAtlasImage = image
+    this.secondaryAtlasTexture = gl.createTexture()
+    gl.bindTexture(gl.TEXTURE_2D, this.secondaryAtlasTexture)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true)
+    gl.texImage2D(
+      gl.TEXTURE_2D,
+      0,
+      gl.RGBA,
+      gl.RGBA,
+      gl.UNSIGNED_BYTE,
+      image
+    )
+    gl.bindTexture(gl.TEXTURE_2D, null)
+    this.secondaryAtlasSize = {
+      width: image.width || image.naturalWidth || DEFAULT_ATLAS_SIZE.width,
+      height: image.height || image.naturalHeight || DEFAULT_ATLAS_SIZE.height
+    }
+  }
+
   getColor(type) {
     if (!this.colorCache.has(type)) {
       this.colorCache.set(type, parseColor(TILE_COLORS[type]))
@@ -334,6 +393,9 @@ export class GameWebGLRenderer {
         if (!tile) continue
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         if (!waterOnly || visualTileType === 'water') {
+          if (!waterOnly && visualTileType === 'street') {
+            baseInstances.push(this.createInstance('land', x, y, mapGrid, canUseTextures, sotMask))
+          }
           baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures, sotMask))
         }
 
@@ -382,6 +444,7 @@ export class GameWebGLRenderer {
       uvRect: [0, 0, 1, 1],
       color: this.getColor('water'),
       textureType: 2,
+      textureSource: 0,
       waterEdges: [0, 0, 0, 0],
       clipOrientation: getSotClipOrientation(orientation)
     }
@@ -433,6 +496,15 @@ export class GameWebGLRenderer {
     return null
   }
 
+  getStreetTile(type, tileX, tileY, mapGrid) {
+    if (type !== 'street') return null
+    const selectedStreetTile = this.textureManager?.selectStreetTileByTags?.(['street'], tileX, tileY, mapGrid)
+    if (!selectedStreetTile?.rect || selectedStreetTile.image !== this.secondaryAtlasImage) {
+      return null
+    }
+    return selectedStreetTile
+  }
+
   createInstance(type, tileX, tileY, mapGrid, canUseTextures, sotMask = null) {
     const integratedResourceTile = this.getIntegratedResourceTile(type, tileX, tileY, mapGrid)
     const canUseIntegratedResourceTile = Boolean(
@@ -444,9 +516,18 @@ export class GameWebGLRenderer {
     }
     const useTexture = canUseIntegratedResourceTile || (canUseTextures && this.textureManager.tileTextureCache?.[type]?.length)
     const isWaterAnimated = type === 'water'
+    const streetTile = this.getStreetTile(type, tileX, tileY, mapGrid)
+    const useSecondaryTexture = Boolean(streetTile)
     let uvRect = [0, 0, 0, 0]
     if (isWaterAnimated) {
       uvRect = [0, 0, 1, 1]
+    } else if (useSecondaryTexture) {
+      const { rect } = streetTile
+      const u0 = rect.x / this.secondaryAtlasSize.width
+      const v0 = rect.y / this.secondaryAtlasSize.height
+      const u1 = (rect.x + rect.width) / this.secondaryAtlasSize.width
+      const v1 = (rect.y + rect.height) / this.secondaryAtlasSize.height
+      uvRect = [u0, v0, u1, v1]
     } else if (canUseIntegratedResourceTile) {
       const { rect } = integratedResourceTile
       const u0 = rect.x / this.atlasSize.width
@@ -471,7 +552,8 @@ export class GameWebGLRenderer {
       translation: [tileX, tileY],
       uvRect,
       color: this.getColor(type),
-      textureType: isWaterAnimated ? 2 : useTexture ? 1 : 0,
+      textureType: isWaterAnimated ? 2 : (useTexture || useSecondaryTexture) ? 1 : 0,
+      textureSource: useSecondaryTexture ? 1 : 0,
       waterEdges: isWaterAnimated ? this.computeWaterEdges(mapGrid, tileX, tileY, sotMask) : [0, 0, 0, 0],
       clipOrientation: SOT_CLIP_NONE
     }
@@ -492,6 +574,7 @@ export class GameWebGLRenderer {
       uvRect: [0, 0, 0, 0],
       color: fallbackColors[decalTag] || [0.22, 0.2, 0.19, 0.26],
       textureType: 0,
+      textureSource: 0,
       waterEdges: [0, 0, 0, 0],
       clipOrientation: SOT_CLIP_NONE
     }
@@ -540,13 +623,26 @@ export class GameWebGLRenderer {
     this.instanceCapacity = count
   }
 
+  getCanvasPixelRatio(canvas) {
+    if (!canvas) return this.pixelRatio || 1
+    const bounds = typeof canvas.getBoundingClientRect === 'function'
+      ? canvas.getBoundingClientRect()
+      : null
+    const logicalWidth = bounds?.width || canvas.clientWidth || 0
+    if (logicalWidth > 0 && canvas.width > 0) {
+      return canvas.width / logicalWidth
+    }
+    return (typeof window !== 'undefined' && window.devicePixelRatio) || this.pixelRatio || 1
+  }
+
   render(mapGrid, scrollOffset, canvas, options = {}) {
     if (!this.gl || !mapGrid?.length || !canvas) return false
     if (!this.ensureInitialized()) return false
     this.syncAtlasTexture()
+    this.syncSecondaryAtlasTexture()
 
     const gl = this.gl
-    const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || this.pixelRatio || 1
+    const pixelRatio = this.getCanvasPixelRatio(canvas)
     const tileStep = TILE_SIZE * pixelRatio
     const tileSize = (TILE_SIZE + 1) * pixelRatio
     const scrollX = (scrollOffset?.x || 0) * pixelRatio
@@ -569,6 +665,7 @@ export class GameWebGLRenderer {
     const uvData = new Float32Array(instances.length * 4)
     const colors = new Float32Array(instances.length * 4)
     const textureType = new Float32Array(instances.length)
+    const textureSource = new Float32Array(instances.length)
     const waterEdges = new Float32Array(instances.length * 4)
     const clipOrientation = new Float32Array(instances.length)
 
@@ -585,6 +682,7 @@ export class GameWebGLRenderer {
       colors[i * 4 + 2] = inst.color[2]
       colors[i * 4 + 3] = inst.color[3]
       textureType[i] = inst.textureType
+      textureSource[i] = inst.textureSource || 0
       waterEdges[i * 4] = inst.waterEdges[0]
       waterEdges[i * 4 + 1] = inst.waterEdges[1]
       waterEdges[i * 4 + 2] = inst.waterEdges[2]
@@ -618,6 +716,8 @@ export class GameWebGLRenderer {
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
+    gl.activeTexture(gl.TEXTURE1)
+    gl.bindTexture(gl.TEXTURE_2D, this.secondaryAtlasTexture || this.atlasTexture)
     // Base quad vertices
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.quad)
     gl.enableVertexAttribArray(0)
@@ -669,9 +769,17 @@ export class GameWebGLRenderer {
     gl.vertexAttribPointer(6, 1, gl.FLOAT, false, 0, 0)
     gl.vertexAttribDivisor(6, 1)
 
+    // Texture source (0 = legacy atlas, 1 = secondary/default street atlas)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.textureSource)
+    gl.bufferData(gl.ARRAY_BUFFER, textureSource, gl.DYNAMIC_DRAW)
+    gl.enableVertexAttribArray(7)
+    gl.vertexAttribPointer(7, 1, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(7, 1)
+
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instances.length)
 
     gl.bindTexture(gl.TEXTURE_2D, null)
+    gl.activeTexture(gl.TEXTURE0)
     gl.useProgram(null)
 
     return true

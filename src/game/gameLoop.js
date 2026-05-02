@@ -40,6 +40,7 @@ export class GameLoop {
     this.frameTimeoutId = null
     this.fpsDisplay = new FPSDisplay()
     this.forceRender = false
+    this.lastMinimapRenderTime = 0
 
     // Track last UI update values to avoid unnecessary DOM writes
     this.lastMoneyDisplayed = null
@@ -144,7 +145,47 @@ export class GameLoop {
     return gameState.isRightDragging || keyScrollActive || velocityActive
   }
 
+  isMobileRenderProfile() {
+    const body = typeof document !== 'undefined' ? document.body : null
+    return Boolean(
+      body?.classList.contains('is-touch') ||
+      body?.classList.contains('mobile-landscape') ||
+      body?.classList.contains('mobile-portrait')
+    )
+  }
+
+  getMinimapRenderIntervalMs() {
+    return this.isMobileRenderProfile() ? 250 : 0
+  }
+
+  shouldRenderMinimap(now, force = false) {
+    const interval = this.getMinimapRenderIntervalMs()
+    if (force || interval <= 0 || now - this.lastMinimapRenderTime >= interval) {
+      this.lastMinimapRenderTime = now
+      return true
+    }
+    return false
+  }
+
+  renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, force = false) {
+    if (!this.shouldRenderMinimap(now, force)) {
+      return
+    }
+
+    renderMinimap(
+      minimapCtx,
+      minimapCanvas,
+      this.mapGrid,
+      gameState.scrollOffset,
+      gameCanvas,
+      this.units,
+      gameState.buildings,
+      gameState
+    )
+  }
+
   handlePausedFrame(now, gameCtx, gameCanvas, pauseStateChanged) {
+    const frameStart = performance.now()
     this.lastFrameTime = null
 
     updateGame(0, this.mapGrid, this.factories, this.units, this.bullets, gameState)
@@ -191,19 +232,16 @@ export class GameLoop {
         gameGlCanvas
       )
 
-      renderMinimap(
-        minimapCtx,
-        minimapCanvas,
-        this.mapGrid,
-        gameState.scrollOffset,
-        gameCanvas,
-        this.units,
-        gameState.buildings,
-        gameState
-      )
+      this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, this.forceRender || pauseStateChanged)
     }
 
     this.fpsDisplay.render(gameCtx, gameCanvas)
+    const totalPausedFrameMs = performance.now() - frameStart
+    this.fpsDisplay.reportFrameBreakdown({
+      updateMs: totalPausedFrameMs,
+      renderMs: 0,
+      idleMs: 0
+    })
 
     this.forceRender = false
 
@@ -243,6 +281,7 @@ export class GameLoop {
     }
 
     if (!gameState.gameStarted) {
+      this.fpsDisplay.reportFrameBreakdown({ updateMs: 0, renderMs: 0, idleMs: 0 })
       this.fpsDisplay.render(gameCtx, gameCanvas)
       this.scheduleNextFrame()
       return
@@ -257,6 +296,7 @@ export class GameLoop {
     if (!this.lastFrameTime) this.lastFrameTime = now
     const delta = Math.min(now - this.lastFrameTime, 33) // Cap at ~30 FPS equivalent
     this.lastFrameTime = now
+    const frameStart = performance.now()
 
     // Check if game is over
     if (gameState.gameOver) {
@@ -339,6 +379,7 @@ export class GameLoop {
     }
 
     updateMapScrolling(gameState, this.mapGrid)
+    const updateEnd = performance.now()
 
     // Refresh production buttons if a building was destroyed
     if (gameState.pendingButtonUpdate) {
@@ -359,11 +400,17 @@ export class GameLoop {
       gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas)
 
     // Render minimap with low energy effects if applicable
-    renderMinimap(minimapCtx, minimapCanvas, this.mapGrid,
-      gameState.scrollOffset, gameCanvas, this.units, gameState.buildings, gameState)
+    this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas)
+    const renderEnd = performance.now()
 
     // Render FPS overlay on top of everything when game is running
     this.fpsDisplay.render(gameCtx, gameCanvas)
+    const frameEnd = performance.now()
+    const updateMs = Math.max(0, updateEnd - frameStart)
+    const renderMs = Math.max(0, renderEnd - updateEnd)
+    const idleMs = Math.max(0, frameEnd - frameStart - updateMs - renderMs)
+    this.fpsDisplay.reportFrameBreakdown({ updateMs, renderMs, idleMs })
+    this.canvasManager.updateAdaptivePixelRatio?.(this.fpsDisplay.fps, now)
 
     this.forceRender = false
 
@@ -477,7 +524,7 @@ export class GameLoop {
     const minimapCanvas = this.canvasManager.getMinimapCanvas()
 
     renderGame(gameCtx, gameCanvas, this.mapGrid, this.factories, this.units, this.bullets, gameState.buildings, gameState.scrollOffset, gameState.selectionActive, gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas)
-    renderMinimap(minimapCtx, minimapCanvas, this.mapGrid, gameState.scrollOffset, gameCanvas, this.units, gameState.buildings, gameState)
+    this.renderMinimapIfDue(timestamp || performance.now(), minimapCtx, minimapCanvas, gameCanvas)
 
     // Render FPS overlay on top of everything in legacy loop too
     this.fpsDisplay.render(gameCtx, gameCanvas)

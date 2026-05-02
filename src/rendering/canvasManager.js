@@ -1,5 +1,6 @@
 // canvasManager.js
 // Handle canvas setup, resizing, and management
+import { MOBILE_CANVAS_PIXEL_RATIO_CAP } from '../config.js'
 
 export class CanvasManager {
   constructor() {
@@ -9,9 +10,59 @@ export class CanvasManager {
     this.gameGl = this.initializeGlContext()
     this.minimapCanvas = document.getElementById('minimap')
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
-    this.pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.pixelRatio = this.resolvePixelRatio()
+    this.lastAdaptivePixelRatioCheck = 0
 
     this.setupEventListeners()
+  }
+
+  isTouchLayout() {
+    const body = typeof document !== 'undefined' ? document.body : null
+    return Boolean(
+      body?.classList.contains('is-touch') ||
+      body?.classList.contains('mobile-landscape') ||
+      body?.classList.contains('mobile-portrait')
+    )
+  }
+
+  resolvePixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
+    const configuredCap = Number.isFinite(MOBILE_CANVAS_PIXEL_RATIO_CAP) ? MOBILE_CANVAS_PIXEL_RATIO_CAP : 1
+    const adaptiveCap = Number.isFinite(this.adaptivePixelRatioCap) ? this.adaptivePixelRatioCap : configuredCap
+    const cap = Math.min(configuredCap, adaptiveCap)
+    return Math.max(1, Math.min(rawPixelRatio || 1, cap))
+  }
+
+  resetAdaptivePixelRatioCap() {
+    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.resizeCanvases()
+  }
+
+  updateAdaptivePixelRatio(fps, now = performance.now()) {
+    const rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    if (!this.isTouchLayout() || rawPixelRatio <= 1 || !Number.isFinite(fps) || fps <= 0) {
+      return false
+    }
+
+    if (now - this.lastAdaptivePixelRatioCheck < 1500) {
+      return false
+    }
+    this.lastAdaptivePixelRatioCheck = now
+
+    let nextCap = this.adaptivePixelRatioCap
+    if (fps < 18) {
+      nextCap = Math.max(1, this.adaptivePixelRatioCap - 0.5)
+    } else if (fps > 45) {
+      nextCap = Math.min(MOBILE_CANVAS_PIXEL_RATIO_CAP, this.adaptivePixelRatioCap + 0.5)
+    }
+
+    if (Math.abs(nextCap - this.adaptivePixelRatioCap) < 0.01) {
+      return false
+    }
+
+    this.adaptivePixelRatioCap = nextCap
+    this.resizeCanvases()
+    return true
   }
 
   initializeGlContext() {
@@ -38,7 +89,8 @@ export class CanvasManager {
   }
 
   resizeCanvases() {
-    const pixelRatio = window.devicePixelRatio || 1
+    const rawPixelRatio = window.devicePixelRatio || 1
+    const pixelRatio = this.resolvePixelRatio(rawPixelRatio)
     this.pixelRatio = pixelRatio
     const body = document.body
     const bodyStyle = body ? window.getComputedStyle(body) : null
@@ -86,10 +138,10 @@ export class CanvasManager {
       : this.gameCanvas.clientHeight || 0
 
     const screenWidth = isTouchLayout && window.screen && window.screen.width
-      ? window.screen.width / pixelRatio
+      ? window.screen.width / rawPixelRatio
       : 0
     const screenHeight = isTouchLayout && window.screen && window.screen.height
-      ? window.screen.height / pixelRatio
+      ? window.screen.height / rawPixelRatio
       : 0
 
     if (viewport) {
@@ -199,10 +251,15 @@ export class CanvasManager {
     }
 
     if (typeof document !== 'undefined') {
+      if (window.gameState) {
+        window.gameState.canvasPixelRatio = pixelRatio
+        window.gameState.rawCanvasPixelRatio = rawPixelRatio
+      }
       document.dispatchEvent(new CustomEvent('canvas-resized', {
         detail: {
           width: canvasCssWidth,
-          height: canvasCssHeight
+          height: canvasCssHeight,
+          pixelRatio
         }
       }))
     }

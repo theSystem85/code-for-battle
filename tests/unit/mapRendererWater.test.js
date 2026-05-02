@@ -5,10 +5,13 @@ import { GameWebGLRenderer } from '../../src/rendering/webglRenderer.js'
 describe('MapRenderer water rendering', () => {
   const makeTextureManager = () => ({
     integratedSpriteSheetMode: false,
+    allTexturesLoaded: false,
     tileTextureCache: { land: [] },
     waterFrames: [{ id: 'legacy-water-frame' }],
+    getCurrentWaterFrame: () => ({ id: 'legacy-water-frame' }),
     getTileVariation: () => 0,
-    integratedRenderSignature: 'sig'
+    integratedRenderSignature: 'sig',
+    getIntegratedTileForMapTile: vi.fn(() => null)
   })
 
   it('uses procedural water for base water tiles instead of water frame assets', () => {
@@ -23,6 +26,284 @@ describe('MapRenderer water rendering', () => {
 
     expect(ctx.drawImage).not.toHaveBeenCalled()
     expect(ctx.fillRect).toHaveBeenCalled()
+  })
+
+  it('keeps the chunk cache active for static CPU terrain over GPU water-only rendering', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.canUseOffscreen = true
+    mapRenderer.sotMask = [[null, null], [null, null]]
+    const chunk = {
+      canvas: { width: 42, height: 42 },
+      ctx: { clearRect: vi.fn(), imageSmoothingEnabled: true },
+      startX: 0,
+      startY: 0,
+      endX: 2,
+      endY: 2,
+      padding: 2,
+      offsetX: -2,
+      offsetY: -2
+    }
+    const ctx = {
+      drawImage: vi.fn(),
+      imageSmoothingEnabled: true
+    }
+    const mapGrid = [
+      [{ type: 'street' }, { type: 'water' }],
+      [{ type: 'land' }, { type: 'street' }]
+    ]
+    const updateChunkCache = vi.spyOn(mapRenderer, 'updateChunkCache').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'getOrCreateChunk').mockReturnValue(chunk)
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 2, 2, {}, {
+      skipWaterBase: true,
+      skipWaterSot: true
+    })
+
+    expect(updateChunkCache).toHaveBeenCalledWith(
+      chunk,
+      mapGrid,
+      expect.any(Boolean),
+      expect.anything(),
+      expect.objectContaining({ skipWaterBase: true, skipWaterSot: true })
+    )
+    expect(ctx.drawImage).toHaveBeenCalledWith(chunk.canvas, -2, -2)
+  })
+
+  it('reports chunk cache hits, misses, redraws, and drawn chunks for the last frame', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.canUseOffscreen = true
+    const ctx = {
+      drawImage: vi.fn(),
+      imageSmoothingEnabled: true
+    }
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }]
+    ]
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 2, 2, {}, {})
+    const firstFrameStats = { ...mapRenderer.frameChunkStats }
+
+    mapRenderer.resetFrameChunkStats()
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 2, 2, {}, {})
+    const secondFrameStats = { ...mapRenderer.frameChunkStats }
+
+    expect(firstFrameStats.chunksDrawn).toBe(1)
+    expect(firstFrameStats.chunkMisses).toBe(1)
+    expect(secondFrameStats.chunksDrawn).toBe(1)
+    expect(secondFrameStats.chunkHits).toBe(1)
+
+    mapGrid[0][0].type = 'street'
+    mapRenderer.markTileDirty(0, 0)
+    mapRenderer.resetFrameChunkStats()
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 2, 2, {}, {})
+
+    expect(mapRenderer.frameChunkStats.chunkRedraws).toBe(1)
+  })
+
+  it('keeps mixed water chunks static when dynamic water is rendered separately', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      imageSmoothingEnabled: true,
+      fillStyle: '#000',
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn(),
+      fill: vi.fn()
+    }
+    vi.spyOn(mapRenderer, 'applyVisibilityOverlay').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const canvas = document.createElement('canvas')
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 128 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 128 })
+    canvas.getBoundingClientRect = () => ({ width: 128, height: 128 })
+    const mapGrid = Array.from({ length: 4 }, (_, y) =>
+      Array.from({ length: 4 }, (_, x) => ({ type: (x + y) % 2 === 0 ? 'water' : 'street' }))
+    )
+
+    mapRenderer.render(ctx, mapGrid, { x: 0, y: 0 }, canvas, {}, null, { separateWaterLayer: true })
+    const firstFrameStats = mapRenderer.getLastFrameChunkStats()
+    mapRenderer.render(ctx, mapGrid, { x: 0, y: 0 }, canvas, {}, null, { separateWaterLayer: true })
+    const secondFrameStats = mapRenderer.getLastFrameChunkStats()
+
+    expect(firstFrameStats.chunkMisses).toBe(1)
+    expect(secondFrameStats.chunkHits).toBe(1)
+    expect(secondFrameStats.chunkRedraws).toBe(0)
+  })
+
+  it('prewarms static terrain chunks so scrolling does not discover uncached terrain', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      imageSmoothingEnabled: true,
+      fillStyle: '#000',
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn(),
+      fill: vi.fn()
+    }
+    vi.spyOn(mapRenderer, 'applyVisibilityOverlay').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const canvas = document.createElement('canvas')
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 390 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 844 })
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 844 })
+    const mapGrid = Array.from({ length: 64 }, (_, y) =>
+      Array.from({ length: 64 }, (_, x) => ({ type: (x + y) % 5 === 0 ? 'water' : 'street' }))
+    )
+
+    mapRenderer.render(ctx, mapGrid, { x: 0, y: 0 }, canvas, {}, null, { separateWaterLayer: true })
+    const firstFrameStats = mapRenderer.getLastFrameChunkStats()
+    mapRenderer.render(ctx, mapGrid, { x: 1300, y: 1000 }, canvas, {}, null, { separateWaterLayer: true })
+    const scrolledFrameStats = mapRenderer.getLastFrameChunkStats()
+
+    expect(mapRenderer.chunkCache.size).toBe(16)
+    expect(firstFrameStats.chunksPrewarmed).toBe(16)
+    expect(firstFrameStats.chunkMisses).toBe(16)
+    expect(scrolledFrameStats.chunkMisses).toBe(0)
+    expect(scrolledFrameStats.chunkRedraws).toBe(0)
+    expect(scrolledFrameStats.chunkHits).toBeGreaterThan(0)
+  })
+
+  it('evicts old terrain chunks so cache memory does not grow with explored map area', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.maxCachedChunks = 4
+    const ctx = {
+      drawImage: vi.fn(),
+      imageSmoothingEnabled: true
+    }
+    const mapGrid = Array.from({ length: 96 }, () =>
+      Array.from({ length: 96 }, () => ({ type: 'land' }))
+    )
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 18, 18, {}, {})
+    mapRenderer.resetFrameChunkStats()
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 64 * 32, y: 64 * 32 }, 64, 64, 96, 96, {}, {})
+
+    expect(mapRenderer.chunkCache.size).toBeLessThanOrEqual(4)
+    expect(mapRenderer.frameChunkStats.chunksEvicted).toBeGreaterThan(0)
+  })
+
+  it('draws a non-black fallback and queues cold chunks while scrolling', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.lastScrollOffset = { x: 0, y: 0 }
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      imageSmoothingEnabled: true,
+      fillStyle: '#000'
+    }
+    const mapGrid = Array.from({ length: 64 }, (_, y) =>
+      Array.from({ length: 64 }, (_, x) => ({ type: (x + y) % 4 === 0 ? 'water' : 'street' }))
+    )
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 800, y: 0 }, 25, 0, 40, 20, {}, {
+      skipWaterBase: true,
+      skipWaterSot: true
+    })
+
+    expect(mapRenderer.frameChunkStats.chunkFallbacks).toBeGreaterThan(0)
+    expect(mapRenderer.frameChunkStats.chunksQueued).toBeGreaterThan(0)
+    expect(mapRenderer.frameChunkStats.chunkMisses).toBe(0)
+    expect(ctx.fillRect).toHaveBeenCalled()
+  })
+
+  it('warms queued chunks outside the visible render path', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.lastScrollOffset = { x: 0, y: 0 }
+    const ctx = {
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+      imageSmoothingEnabled: true,
+      fillStyle: '#000'
+    }
+    const mapGrid = Array.from({ length: 64 }, () =>
+      Array.from({ length: 64 }, () => ({ type: 'land' }))
+    )
+
+    mapRenderer.renderTiles(ctx, mapGrid, { x: 800, y: 0 }, 25, 0, 40, 20, {}, {})
+    expect(mapRenderer.chunkWarmQueue.size).toBeGreaterThan(0)
+
+    mapRenderer.deferChunkWarmUntil = 0
+    mapRenderer.processChunkWarmQueue(null)
+
+    expect(mapRenderer.idleChunksWarmedSinceLastFrame).toBeGreaterThan(0)
+    expect([...mapRenderer.chunkCache.values()].some(chunk => chunk.everRendered)).toBe(true)
+  })
+
+  it('renders dynamic water after static terrain chunks so fallback tiles cannot cover water animation', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const calls = []
+    vi.spyOn(mapRenderer, 'renderTiles').mockImplementation(() => calls.push('terrain'))
+    vi.spyOn(mapRenderer, 'renderDynamicWaterLayer').mockImplementation(() => calls.push('water'))
+    vi.spyOn(mapRenderer, 'applyVisibilityOverlay').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const canvas = document.createElement('canvas')
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 128 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 128 })
+    canvas.getBoundingClientRect = () => ({ width: 128, height: 128 })
+    const mapGrid = [
+      [{ type: 'water' }, { type: 'land' }],
+      [{ type: 'street' }, { type: 'water' }]
+    ]
+
+    mapRenderer.render({ imageSmoothingEnabled: true }, mapGrid, { x: 0, y: 0 }, canvas, {}, null, {
+      separateWaterLayer: true
+    })
+
+    expect(calls).toEqual(['terrain', 'water'])
+  })
+
+  it('uses logical canvas dimensions for visible tile bounds on high-DPR screens', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = Array.from({ length: 128 }, () => Array.from({ length: 128 }, () => ({ type: 'land' })))
+    const renderTiles = vi.spyOn(mapRenderer, 'renderTiles').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'applyVisibilityOverlay').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderGrid').mockImplementation(() => {})
+    vi.spyOn(mapRenderer, 'renderOccupancyMap').mockImplementation(() => {})
+    const canvas = document.createElement('canvas')
+    canvas.width = 1170
+    canvas.height = 2532
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 390 })
+    Object.defineProperty(canvas, 'clientHeight', { configurable: true, value: 844 })
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 844 })
+    const originalDevicePixelRatio = window.devicePixelRatio
+    Object.defineProperty(window, 'devicePixelRatio', {
+      configurable: true,
+      value: 3
+    })
+
+    try {
+      mapRenderer.render(
+        { imageSmoothingEnabled: true },
+        mapGrid,
+        { x: 0, y: 0 },
+        canvas,
+        {},
+        null
+      )
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        configurable: true,
+        value: originalDevicePixelRatio
+      })
+    }
+
+    expect(renderTiles.mock.calls[0].slice(3, 7)).toEqual([0, 0, 14, 28])
   })
 
   it('falls back to procedural water when custom sprite sheets are enabled without water tags', () => {
@@ -274,6 +555,75 @@ describe('MapRenderer water rendering', () => {
 
     expect(waterSotInstances).toHaveLength(1)
     expect(waterSotInstances[0].translation).toEqual([1, 1])
+  })
+
+  it('uses the actual canvas backing-store ratio for WebGL water placement', () => {
+    const webglRenderer = new GameWebGLRenderer(null, makeTextureManager(), new MapRenderer(makeTextureManager()))
+    const canvas = document.createElement('canvas')
+    canvas.width = 390
+    canvas.height = 844
+    Object.defineProperty(canvas, 'clientWidth', { configurable: true, value: 390 })
+    canvas.getBoundingClientRect = () => ({ width: 390, height: 844 })
+    const originalDevicePixelRatio = window.devicePixelRatio
+    Object.defineProperty(window, 'devicePixelRatio', {
+      configurable: true,
+      value: 3
+    })
+
+    try {
+      expect(webglRenderer.getCanvasPixelRatio(canvas)).toBe(1)
+    } finally {
+      Object.defineProperty(window, 'devicePixelRatio', {
+        configurable: true,
+        value: originalDevicePixelRatio
+      })
+    }
+  })
+
+  it('emits default street-sheet tiles through the WebGL secondary atlas', () => {
+    const streetImage = { id: 'default-street-atlas', width: 256, height: 256 }
+    const textureManager = {
+      ...makeTextureManager(),
+      allTexturesLoaded: true,
+      tileTextureCache: {
+        land: [{ x: 0, y: 0, width: 32, height: 32 }]
+      },
+      spriteImage: { id: 'legacy-atlas', width: 512, height: 512 },
+      selectStreetTileByTags: vi.fn(() => ({
+        image: streetImage,
+        rect: { x: 64, y: 32, width: 32, height: 32 },
+        tags: ['street', 'top']
+      }))
+    }
+    const mapRenderer = new MapRenderer(textureManager)
+    const webglRenderer = new GameWebGLRenderer(null, textureManager, mapRenderer)
+    webglRenderer.secondaryAtlasImage = streetImage
+    webglRenderer.secondaryAtlasSize = { width: 256, height: 256 }
+    const mapGrid = [[{ type: 'street' }]]
+
+    const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 1, 1)
+    const streetInstance = instances.find(instance => instance.textureSource === 1)
+
+    expect(streetInstance).toBeDefined()
+    expect(streetInstance.textureType).toBe(1)
+    expect(streetInstance.uvRect).toEqual([0.25, 0.125, 0.375, 0.25])
+  })
+
+  it('skips CPU street repaint when GPU rendered default street terrain', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.sotMask = [[null]]
+    const drawTileBaseSpy = vi.spyOn(mapRenderer, 'drawTileBase').mockImplementation(() => {})
+    const ctx = {
+      drawImage: vi.fn(),
+      imageSmoothingEnabled: true
+    }
+    const mapGrid = [[{ type: 'street' }]]
+
+    mapRenderer.renderSOTOverlays(ctx, mapGrid, { x: 0, y: 0 }, 0, 0, 1, 1, {
+      gpuRenderedStreetTerrain: true
+    })
+
+    expect(drawTileBaseSpy).not.toHaveBeenCalled()
   })
 
   it('does not add a legacy WebGL decal layer when the 2D map pass renders decals', () => {

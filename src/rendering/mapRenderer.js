@@ -208,17 +208,57 @@ function getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, an
 export class MapRenderer {
   constructor(textureManager) {
     this.textureManager = textureManager
-    this.chunkSize = 32
+    this.chunkSize = 16
     this.chunkPadding = 2
+    this.maxCachedChunks = 48
+    this.maxChunkWarmQueue = 96
     this.chunkCache = new Map()
+    this.chunkWarmQueue = new Map()
+    this.chunkWarmScheduled = false
+    this.chunkWarmGeneration = 0
+    this.chunkUseCounter = 0
+    this.chunkWarmQueueCounter = 0
+    this.idleChunksWarmedSinceLastFrame = 0
+    this.deferChunkWarmUntil = 0
+    this.lastScrollOffset = null
     this.cachedUseTexture = null
     this.cachedMapWidth = 0
     this.cachedMapHeight = 0
     this.canUseOffscreen = typeof document !== 'undefined' && typeof document.createElement === 'function'
+    this.frameChunkStats = this.createEmptyChunkStats()
+    this.lastFrameChunkStats = this.createEmptyChunkStats()
+    this.prewarmedCacheKey = null
     // Precomputed SOT (Smoothening Overlay Texture) mask for performance optimization
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
+  }
+
+  createEmptyChunkStats() {
+    return {
+      chunksDrawn: 0,
+      chunkHits: 0,
+      chunkMisses: 0,
+      chunkRedraws: 0,
+      chunksPrewarmed: 0,
+      chunksEvicted: 0,
+      chunksQueued: 0,
+      chunksWarmed: 0,
+      chunkFallbacks: 0,
+      chunkCacheSize: 0,
+      chunkWarmQueueSize: 0,
+      directTilePasses: 0
+    }
+  }
+
+  resetFrameChunkStats() {
+    this.frameChunkStats = this.createEmptyChunkStats()
+    this.frameChunkStats.chunksWarmed = this.idleChunksWarmedSinceLastFrame
+    this.idleChunksWarmedSinceLastFrame = 0
+  }
+
+  getLastFrameChunkStats() {
+    return { ...this.lastFrameChunkStats }
   }
 
   getStreetNeighborState(mapGrid, x, y) {
@@ -434,11 +474,16 @@ export class MapRenderer {
     if (this.chunkCache.size) {
       this.chunkCache.clear()
     }
+    this.chunkWarmQueue.clear()
+    this.chunkWarmGeneration++
+    this.prewarmedCacheKey = null
+    this.chunkUseCounter = 0
     // Also invalidate SOT mask since map dimensions may have changed
     this.sotMask = null
   }
 
   markTileDirty(tileX, tileY) {
+    this.prewarmedCacheKey = null
     if (!this.canUseOffscreen || !this.chunkCache.size) return
     const chunkX = Math.floor(tileX / this.chunkSize)
     const chunkY = Math.floor(tileY / this.chunkSize)
@@ -475,6 +520,56 @@ export class MapRenderer {
     }
   }
 
+  getChunkRenderCacheKey(mapGrid, useTexture, options = {}) {
+    const mapHeight = mapGrid.length
+    const mapWidth = mapGrid[0]?.length || 0
+    const { skipWaterBase = false, skipWaterSot = false } = options
+    return [
+      `${mapWidth}x${mapHeight}`,
+      useTexture ? 'tex' : 'flat',
+      this.textureManager.integratedRenderSignature || 'none',
+      USE_PROCEDURAL_WATER_RENDERING ? 'proc-water' : 'classic-water',
+      WATER_EFFECT_TONE,
+      WATER_EFFECT_SATURATION,
+      WATER_EFFECT_ZOOM,
+      this.sotMaskVersion,
+      skipWaterBase ? 'skip-water-base' : 'draw-water-base',
+      skipWaterSot ? 'skip-water-sot' : 'draw-water-sot'
+    ].join('|')
+  }
+
+  prewarmStaticChunks(mapGrid, useTexture, currentWaterFrame, options = {}) {
+    const { skipWaterBase = false, skipWaterSot = false } = options
+    if (!this.canUseOffscreen || !skipWaterBase || !skipWaterSot) return
+
+    const mapHeight = mapGrid.length
+    const mapWidth = mapGrid[0]?.length || 0
+    const chunkColumns = Math.ceil(mapWidth / this.chunkSize)
+    const chunkRows = Math.ceil(mapHeight / this.chunkSize)
+    const totalChunks = chunkColumns * chunkRows
+    const maxPrewarmChunks = Math.min(24, this.maxCachedChunks)
+    if (!totalChunks || totalChunks > maxPrewarmChunks) return
+
+    const cacheKey = this.getChunkRenderCacheKey(mapGrid, useTexture, { skipWaterBase, skipWaterSot })
+    if (this.prewarmedCacheKey === cacheKey) return
+
+    for (let chunkY = 0; chunkY < chunkRows; chunkY++) {
+      const chunkStartY = chunkY * this.chunkSize
+      const chunkEndY = Math.min(mapHeight, chunkStartY + this.chunkSize)
+      for (let chunkX = 0; chunkX < chunkColumns; chunkX++) {
+        const chunkStartX = chunkX * this.chunkSize
+        const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
+        const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
+        const didRender = this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, { skipWaterBase, skipWaterSot })
+        if (didRender) {
+          this.frameChunkStats.chunksPrewarmed++
+        }
+      }
+    }
+
+    this.prewarmedCacheKey = cacheKey
+  }
+
   getOrCreateChunk(chunkX, chunkY, startX, startY, endX, endY) {
     const key = this.getChunkKey(chunkX, chunkY)
     let chunk = this.chunkCache.get(key)
@@ -497,7 +592,11 @@ export class MapRenderer {
         lastWaterEffectSaturation: null,
         lastWaterEffectZoom: null,
         lastSotMaskVersion: null,
+        lastSkipWaterBase: null,
+        lastSkipWaterSot: null,
         containsWaterAnimation: false,
+        everRendered: false,
+        lastUsedAt: 0,
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
         offsetY: startY * TILE_SIZE - this.chunkPadding
@@ -513,7 +612,189 @@ export class MapRenderer {
 
     chunk.offsetX = startX * TILE_SIZE - chunk.padding
     chunk.offsetY = startY * TILE_SIZE - chunk.padding
+    chunk.lastUsedAt = ++this.chunkUseCounter
     return chunk
+  }
+
+  evictOldChunks(activeChunkKeys = new Set()) {
+    if (this.chunkCache.size <= this.maxCachedChunks) return
+
+    const protectedKeys = new Set([...activeChunkKeys, ...this.chunkWarmQueue.keys()])
+    const candidates = [...this.chunkCache.entries()]
+      .filter(([key]) => !protectedKeys.has(key))
+      .sort(([, a], [, b]) => (a.lastUsedAt || 0) - (b.lastUsedAt || 0))
+
+    for (const [key] of candidates) {
+      if (this.chunkCache.size <= this.maxCachedChunks) break
+      this.chunkCache.delete(key)
+      this.frameChunkStats.chunksEvicted++
+      if (this.prewarmedCacheKey) {
+        this.prewarmedCacheKey = null
+      }
+    }
+  }
+
+  getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
+    const { skipWaterBase = false, skipWaterSot = false } = options
+    const { signature, containsWater } = this.computeChunkSignature(
+      mapGrid,
+      chunk.startX,
+      chunk.startY,
+      chunk.endX,
+      chunk.endY
+    )
+
+    const containsAnimatedWaterSot = !skipWaterSot && this.chunkContainsAnimatedWaterSot(
+      chunk.startX,
+      chunk.startY,
+      chunk.endX,
+      chunk.endY
+    )
+    const hasWaterAnimation = (containsWater && !skipWaterBase && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)) ||
+      (containsAnimatedWaterSot && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0))
+    const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
+
+    const needsRedraw =
+      chunk.signature !== signature ||
+      chunk.lastUseTexture !== useTexture ||
+      chunk.lastIntegratedSignature !== this.textureManager.integratedRenderSignature ||
+      chunk.lastProceduralWaterEnabled !== USE_PROCEDURAL_WATER_RENDERING ||
+      chunk.lastWaterEffectTone !== WATER_EFFECT_TONE ||
+      chunk.lastWaterEffectSaturation !== WATER_EFFECT_SATURATION ||
+      chunk.lastWaterEffectZoom !== WATER_EFFECT_ZOOM ||
+      chunk.lastSotMaskVersion !== this.sotMaskVersion ||
+      chunk.lastSkipWaterBase !== skipWaterBase ||
+      chunk.lastSkipWaterSot !== skipWaterSot ||
+      chunk.containsWaterAnimation !== hasWaterAnimation ||
+      (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
+
+    return {
+      signature,
+      containsWater,
+      hasWaterAnimation,
+      waterFrameIndex,
+      needsRedraw
+    }
+  }
+
+  queueChunkForWarm(mapGrid, chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY, useTexture, currentWaterFrame, options = {}, priority = 1) {
+    if (!this.canUseOffscreen) return
+    const key = this.getChunkKey(chunkX, chunkY)
+    const existing = this.chunkWarmQueue.get(key)
+    if (existing && existing.priority >= priority) return
+
+    this.chunkWarmQueue.set(key, {
+      key,
+      chunkX,
+      chunkY,
+      chunkStartX,
+      chunkStartY,
+      chunkEndX,
+      chunkEndY,
+      mapGrid,
+      useTexture,
+      currentWaterFrame,
+      skipWaterBase: Boolean(options.skipWaterBase),
+      skipWaterSot: Boolean(options.skipWaterSot),
+      priority,
+      generation: this.chunkWarmGeneration,
+      order: ++this.chunkWarmQueueCounter
+    })
+    this.frameChunkStats.chunksQueued++
+    this.trimChunkWarmQueue()
+    this.scheduleChunkWarmProcessing()
+  }
+
+  trimChunkWarmQueue() {
+    if (this.chunkWarmQueue.size <= this.maxChunkWarmQueue) return
+    const removable = [...this.chunkWarmQueue.values()]
+      .sort((a, b) => (a.priority - b.priority) || (a.order - b.order))
+    for (const task of removable) {
+      if (this.chunkWarmQueue.size <= this.maxChunkWarmQueue) break
+      this.chunkWarmQueue.delete(task.key)
+    }
+  }
+
+  scheduleChunkWarmProcessing() {
+    if (this.chunkWarmScheduled || !this.chunkWarmQueue.size) return
+    this.chunkWarmScheduled = true
+    const generation = this.chunkWarmGeneration
+    const callback = deadline => {
+      this.chunkWarmScheduled = false
+      this.processChunkWarmQueue(deadline, generation)
+      if (this.chunkWarmQueue.size) {
+        const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+        const delay = Math.max(0, this.deferChunkWarmUntil - now)
+        if (delay > 0 && typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
+          this.chunkWarmScheduled = true
+          window.setTimeout(() => {
+            this.chunkWarmScheduled = false
+            this.scheduleChunkWarmProcessing()
+          }, delay)
+        } else {
+          this.scheduleChunkWarmProcessing()
+        }
+      }
+    }
+
+    if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
+      window.requestIdleCallback(callback)
+    } else if (typeof window !== 'undefined' && typeof window.setTimeout === 'function') {
+      window.setTimeout(() => callback(null), 0)
+    }
+  }
+
+  processChunkWarmQueue(deadline = null, generation = this.chunkWarmGeneration) {
+    if (!this.chunkWarmQueue.size || generation !== this.chunkWarmGeneration) return
+    const startTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    if (startTime < this.deferChunkWarmUntil) return
+    let warmed = 0
+
+    while (this.chunkWarmQueue.size) {
+      const idleRemaining = typeof deadline?.timeRemaining === 'function' ? deadline.timeRemaining() : null
+      if (idleRemaining !== null && idleRemaining < 6) {
+        break
+      }
+
+      const task = [...this.chunkWarmQueue.values()]
+        .sort((a, b) => (b.priority - a.priority) || (a.order - b.order))[0]
+      if (!task) break
+      this.chunkWarmQueue.delete(task.key)
+      if (task.generation !== this.chunkWarmGeneration) continue
+
+      const chunk = this.getOrCreateChunk(
+        task.chunkX,
+        task.chunkY,
+        task.chunkStartX,
+        task.chunkStartY,
+        task.chunkEndX,
+        task.chunkEndY
+      )
+      const options = {
+        skipWaterBase: task.skipWaterBase,
+        skipWaterSot: task.skipWaterSot,
+        countHit: false,
+        countMiss: false
+      }
+      const state = this.getChunkRenderState(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, options)
+      if (state.needsRedraw) {
+        this.updateChunkCache(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, {
+          ...options,
+          precomputedState: state
+        })
+        warmed++
+      }
+
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+      if (warmed >= 1 || (idleRemaining === null && now - startTime > 3)) {
+        break
+      }
+    }
+
+    if (warmed > 0) {
+      this.idleChunksWarmedSinceLastFrame += warmed
+      this.evictOldChunks()
+    }
   }
 
   computeChunkSignature(mapGrid, startX, startY, endX, endY) {
@@ -545,33 +826,48 @@ export class MapRenderer {
     return { signature: parts.join('|'), containsWater }
   }
 
-  updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame) {
+  chunkContainsAnimatedWaterSot(startX, startY, endX, endY) {
+    if (!this.sotMask) return false
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        if (this.sotMask[y]?.[x]?.type === 'water') {
+          return true
+        }
+      }
+    }
+    return false
+  }
+
+  updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
     if (!chunk.canvas || !chunk.ctx) return
+    const {
+      skipWaterBase = false,
+      skipWaterSot = false,
+      precomputedState = null,
+      countHit = true,
+      countMiss = true
+    } = options
+    const {
+      signature,
+      hasWaterAnimation,
+      waterFrameIndex,
+      needsRedraw
+    } = precomputedState || this.getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, options)
 
-    const { signature, containsWater } = this.computeChunkSignature(
-      mapGrid,
-      chunk.startX,
-      chunk.startY,
-      chunk.endX,
-      chunk.endY
-    )
+    if (!needsRedraw) {
+      if (countHit) {
+        this.frameChunkStats.chunkHits++
+      }
+      return false
+    }
 
-    const hasWaterAnimation = containsWater && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)
-    const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
-
-    const needsRedraw =
-      chunk.signature !== signature ||
-      chunk.lastUseTexture !== useTexture ||
-      chunk.lastIntegratedSignature !== this.textureManager.integratedRenderSignature ||
-      chunk.lastProceduralWaterEnabled !== USE_PROCEDURAL_WATER_RENDERING ||
-      chunk.lastWaterEffectTone !== WATER_EFFECT_TONE ||
-      chunk.lastWaterEffectSaturation !== WATER_EFFECT_SATURATION ||
-      chunk.lastWaterEffectZoom !== WATER_EFFECT_ZOOM ||
-      chunk.lastSotMaskVersion !== this.sotMaskVersion ||
-      chunk.containsWaterAnimation !== hasWaterAnimation ||
-      (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
-
-    if (!needsRedraw) return
+    if (countMiss) {
+      if (!chunk.everRendered) {
+        this.frameChunkStats.chunkMisses++
+      } else {
+        this.frameChunkStats.chunkRedraws++
+      }
+    }
 
     const tileWidth = chunk.endX - chunk.startX
     const tileHeight = chunk.endY - chunk.startY
@@ -597,7 +893,8 @@ export class MapRenderer {
       chunk.offsetX,
       chunk.offsetY,
       useTexture,
-      currentWaterFrame
+      currentWaterFrame,
+      { skipWaterBase, skipWaterSot }
     )
 
     chunk.signature = signature
@@ -608,12 +905,86 @@ export class MapRenderer {
     chunk.lastWaterEffectSaturation = WATER_EFFECT_SATURATION
     chunk.lastWaterEffectZoom = WATER_EFFECT_ZOOM
     chunk.lastSotMaskVersion = this.sotMaskVersion
+    chunk.lastSkipWaterBase = skipWaterBase
+    chunk.lastSkipWaterSot = skipWaterSot
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
+    chunk.everRendered = true
+    return true
+  }
+
+  drawChunkFallback(ctx, mapGrid, scrollOffset, startX, startY, endX, endY, options = {}) {
+    const { skipWaterBase = false } = options
+    for (let y = startY; y < endY; y++) {
+      for (let x = startX; x < endX; x++) {
+        const tile = mapGrid[y]?.[x]
+        if (!tile) continue
+        const visualTileType = tile.airstripStreet ? 'land' : tile.type
+        if (skipWaterBase && visualTileType === 'water') continue
+        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
+        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+
+        if (visualTileType === 'street') {
+          ctx.fillStyle = TILE_COLORS.land
+          ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+          ctx.fillStyle = TILE_COLORS.street
+          ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+          continue
+        }
+
+        ctx.fillStyle = TILE_COLORS[visualTileType] || TILE_COLORS.land
+        ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+      }
+    }
+    this.frameChunkStats.chunkFallbacks++
+  }
+
+  queueWarmChunksAroundViewport(mapGrid, startChunkX, startChunkY, endChunkX, endChunkY, mapWidth, mapHeight, useTexture, currentWaterFrame, options, scrollDelta) {
+    if (!this.canUseOffscreen) return
+    const chunkColumns = Math.ceil(mapWidth / this.chunkSize)
+    const chunkRows = Math.ceil(mapHeight / this.chunkSize)
+    const directionX = Math.sign(scrollDelta.x || 0)
+    const directionY = Math.sign(scrollDelta.y || 0)
+    const warmRadius = 2
+
+    for (let chunkY = Math.max(0, startChunkY - warmRadius); chunkY < Math.min(chunkRows, endChunkY + warmRadius); chunkY++) {
+      const chunkStartY = chunkY * this.chunkSize
+      const chunkEndY = Math.min(mapHeight, chunkStartY + this.chunkSize)
+      for (let chunkX = Math.max(0, startChunkX - warmRadius); chunkX < Math.min(chunkColumns, endChunkX + warmRadius); chunkX++) {
+        if (chunkX >= startChunkX && chunkX < endChunkX && chunkY >= startChunkY && chunkY < endChunkY) {
+          continue
+        }
+        const chunkStartX = chunkX * this.chunkSize
+        const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
+        const key = this.getChunkKey(chunkX, chunkY)
+        const existingChunk = this.chunkCache.get(key)
+        if (existingChunk) {
+          const state = this.getChunkRenderState(existingChunk, mapGrid, useTexture, currentWaterFrame, options)
+          if (!state.needsRedraw) continue
+        }
+
+        const aheadX = directionX !== 0 && ((directionX > 0 && chunkX >= endChunkX) || (directionX < 0 && chunkX < startChunkX))
+        const aheadY = directionY !== 0 && ((directionY > 0 && chunkY >= endChunkY) || (directionY < 0 && chunkY < startChunkY))
+        const priority = aheadX || aheadY ? 3 : 1
+        this.queueChunkForWarm(
+          mapGrid,
+          chunkX,
+          chunkY,
+          chunkStartX,
+          chunkStartY,
+          chunkEndX,
+          chunkEndY,
+          useTexture,
+          currentWaterFrame,
+          options,
+          priority
+        )
+      }
+    }
   }
 
   renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, _gameState, options = {}) {
-    const { skipWaterBase = false, skipWaterSot = false } = options
+    const { skipWaterBase = false, skipWaterSot = false, prewarmStaticTerrain = false } = options
     // Disable image smoothing to prevent antialiasing gaps between tiles
     ctx.imageSmoothingEnabled = false
 
@@ -622,12 +993,18 @@ export class MapRenderer {
       ? this.textureManager.getCurrentWaterFrame()
       : null
 
-    // Ensure SOT mask is computed before any rendering (needed for chunk caching)
+    if (this.canUseOffscreen) {
+      this.ensureCacheValidity(mapGrid, useTexture)
+    }
+
+    // Ensure SOT mask is computed after cache invalidation, otherwise the first
+    // render after a map/texture change would throw away a freshly computed mask.
     if (!this.sotMask) {
       this.computeSOTMask(mapGrid)
     }
 
-    if (!this.canUseOffscreen || skipWaterBase || skipWaterSot) {
+    if (!this.canUseOffscreen) {
+      this.frameChunkStats.directTilePasses++
       this.drawBaseLayer(
         ctx,
         mapGrid,
@@ -645,15 +1022,44 @@ export class MapRenderer {
       return
     }
 
-    this.ensureCacheValidity(mapGrid, useTexture)
-
     const mapWidth = mapGrid[0]?.length || 0
     const mapHeight = mapGrid.length
+    const scrollDelta = this.lastScrollOffset
+      ? {
+        x: scrollOffset.x - this.lastScrollOffset.x,
+        y: scrollOffset.y - this.lastScrollOffset.y
+      }
+      : { x: 0, y: 0 }
+    const isScrolling = Math.abs(scrollDelta.x) > 0.5 || Math.abs(scrollDelta.y) > 0.5
+    if (isScrolling) {
+      const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+      this.deferChunkWarmUntil = now + 120
+    }
+
+    if (prewarmStaticTerrain) {
+      this.prewarmStaticChunks(mapGrid, useTexture, currentWaterFrame, { skipWaterBase, skipWaterSot })
+    }
 
     const startChunkX = Math.max(0, Math.floor(startTileX / this.chunkSize))
     const startChunkY = Math.max(0, Math.floor(startTileY / this.chunkSize))
     const endChunkX = Math.ceil(endTileX / this.chunkSize)
     const endChunkY = Math.ceil(endTileY / this.chunkSize)
+    const activeChunkKeys = new Set()
+    const chunkOptions = { skipWaterBase, skipWaterSot }
+
+    this.queueWarmChunksAroundViewport(
+      mapGrid,
+      startChunkX,
+      startChunkY,
+      endChunkX,
+      endChunkY,
+      mapWidth,
+      mapHeight,
+      useTexture,
+      currentWaterFrame,
+      chunkOptions,
+      scrollDelta
+    )
 
     for (let chunkY = startChunkY; chunkY < endChunkY; chunkY++) {
       const chunkStartY = chunkY * this.chunkSize
@@ -666,8 +1072,10 @@ export class MapRenderer {
         const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
 
         const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
+        activeChunkKeys.add(this.getChunkKey(chunkX, chunkY))
 
         if (!chunk.canvas || !chunk.ctx) {
+          this.frameChunkStats.directTilePasses++
           this.drawBaseLayer(
             ctx,
             mapGrid,
@@ -679,20 +1087,81 @@ export class MapRenderer {
             scrollOffset.y,
             useTexture,
             currentWaterFrame,
-            { skipWaterBase, skipWaterSot }
+            chunkOptions
           )
           continue
         }
 
-        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame)
+        const state = this.getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, chunkOptions)
+        if (state.needsRedraw && isScrolling) {
+          this.queueChunkForWarm(
+            mapGrid,
+            chunkX,
+            chunkY,
+            chunkStartX,
+            chunkStartY,
+            chunkEndX,
+            chunkEndY,
+            useTexture,
+            currentWaterFrame,
+            chunkOptions,
+            4
+          )
+          this.drawChunkFallback(ctx, mapGrid, scrollOffset, chunkStartX, chunkStartY, chunkEndX, chunkEndY, chunkOptions)
+          continue
+        }
+
+        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, {
+          ...chunkOptions,
+          precomputedState: state
+        })
 
         const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
         const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
+        this.frameChunkStats.chunksDrawn++
         ctx.drawImage(chunk.canvas, drawX, drawY)
       }
     }
 
+    this.evictOldChunks(activeChunkKeys)
+
     // Re-enable image smoothing for other rendering
+    ctx.imageSmoothingEnabled = true
+  }
+
+  renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, options = {}) {
+    const { drawBase = true, drawSot = true } = options
+    if (!drawBase && !drawSot) return
+
+    const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
+    const currentWaterFrame = this.textureManager.waterFrames.length
+      ? this.textureManager.getCurrentWaterFrame()
+      : null
+    if (!this.sotMask) {
+      this.computeSOTMask(mapGrid)
+    }
+
+    const sotApplied = new Set()
+    ctx.imageSmoothingEnabled = false
+
+    for (let y = startTileY; y < endTileY; y++) {
+      for (let x = startTileX; x < endTileX; x++) {
+        const tile = mapGrid[y]?.[x]
+        if (!tile) continue
+        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
+        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+
+        if (drawBase && tile.type === 'water' && !tile.airstripStreet) {
+          this.drawTileBase(ctx, x, y, 'water', screenX, screenY, useTexture, currentWaterFrame)
+        }
+
+        const sotInfo = this.sotMask[y]?.[x]
+        if (drawSot && sotInfo?.type === 'water' && tile.type !== 'street') {
+          this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, 'water', currentWaterFrame)
+        }
+      }
+    }
+
     ctx.imageSmoothingEnabled = true
   }
 
@@ -1376,7 +1845,7 @@ export class MapRenderer {
    * Also renders ore/seed overlays after SOT to ensure correct z-order (SOT below ore).
    */
   renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, options = {}) {
-    const { skipWaterSot = false, gpuRenderedResources = false } = options
+    const { skipWaterSot = false, gpuRenderedResources = false, gpuRenderedStreetTerrain = false } = options
     // Ensure SOT mask is computed
     if (!this.sotMask) {
       this.computeSOTMask(mapGrid)
@@ -1397,7 +1866,7 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if (visualTileType !== 'street') continue
+        if (visualTileType !== 'street' || gpuRenderedStreetTerrain) continue
         const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
         const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
         this.drawTileBase(ctx, x, y, 'street', screenX, screenY, useTexture, currentWaterFrame)
@@ -1478,21 +1947,38 @@ export class MapRenderer {
   }
 
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {
-    const { skipBaseLayer = false, skipWaterSot = false, skipWaterBase = false } = options || {}
+    const { skipBaseLayer = false, skipWaterSot = false, skipWaterBase = false, separateWaterLayer = false } = options || {}
     // Guard against empty or invalid mapGrid
     if (!mapGrid || !Array.isArray(mapGrid) || mapGrid.length === 0 || !mapGrid[0]) {
       return
     }
+    this.resetFrameChunkStats()
     // Calculate visible tile range - improved for better performance
     const startTileX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
     const startTileY = Math.max(0, Math.floor(scrollOffset.y / TILE_SIZE))
-    const tilesX = Math.ceil(gameCanvas.width / TILE_SIZE) + 1
-    const tilesY = Math.ceil(gameCanvas.height / TILE_SIZE) + 1
+    const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    const canvasBounds = typeof gameCanvas.getBoundingClientRect === 'function'
+      ? gameCanvas.getBoundingClientRect()
+      : null
+    const logicalCanvasWidth = canvasBounds?.width || gameCanvas.clientWidth || (gameCanvas.width / pixelRatio) || gameCanvas.width
+    const logicalCanvasHeight = canvasBounds?.height || gameCanvas.clientHeight || (gameCanvas.height / pixelRatio) || gameCanvas.height
+    const tilesX = Math.ceil(logicalCanvasWidth / TILE_SIZE) + 1
+    const tilesY = Math.ceil(logicalCanvasHeight / TILE_SIZE) + 1
     const endTileX = Math.min(mapGrid[0].length, startTileX + tilesX)
     const endTileY = Math.min(mapGrid.length, startTileY + tilesY)
 
     if (!skipBaseLayer) {
-      this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, { skipWaterBase, skipWaterSot })
+      this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, {
+        skipWaterBase: separateWaterLayer ? true : skipWaterBase,
+        skipWaterSot: separateWaterLayer ? true : skipWaterSot,
+        prewarmStaticTerrain: separateWaterLayer || (skipWaterBase && skipWaterSot)
+      })
+      if (separateWaterLayer && (!skipWaterBase || !skipWaterSot)) {
+        this.renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
+          drawBase: !skipWaterBase,
+          drawSot: !skipWaterSot
+        })
+      }
     } else {
       // When GPU renders base tiles, we still need to render SOT overlays with 2D canvas
       this.renderSOTOverlays(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
@@ -1503,5 +1989,9 @@ export class MapRenderer {
     this.applyVisibilityOverlay(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderGrid(ctx, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
+    this.frameChunkStats.chunkCacheSize = this.chunkCache.size
+    this.frameChunkStats.chunkWarmQueueSize = this.chunkWarmQueue.size
+    this.lastFrameChunkStats = { ...this.frameChunkStats }
+    this.lastScrollOffset = { x: scrollOffset.x, y: scrollOffset.y }
   }
 }

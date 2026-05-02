@@ -51,6 +51,7 @@ vi.mock('../../src/ui/fpsDisplay.js', () => ({
     constructor() {
       this.updateFPS = vi.fn()
       this.render = vi.fn()
+      this.reportFrameBreakdown = vi.fn()
     }
   }
 }))
@@ -408,6 +409,27 @@ describe('GameLoop', () => {
     expect(gameTimeEl.textContent).toBe('2:10')
     expect(renderGameMock).toHaveBeenCalled()
     expect(renderMinimapMock).toHaveBeenCalled()
+  })
+
+  it('throttles minimap rendering on mobile layouts', () => {
+    const loop = createLoop()
+    loop.running = true
+    document.body.classList.add('is-touch')
+    isLockstepEnabledMock.mockReturnValue(false)
+    gameState.gameStarted = true
+    gameState.gamePaused = false
+    gameState.frameCount = 1
+
+    loop.lastFrameTime = 1000
+    loop.animate(1017)
+    expect(renderMinimapMock).toHaveBeenCalledTimes(1)
+
+    renderMinimapMock.mockClear()
+    loop.animate(1100)
+    expect(renderMinimapMock).not.toHaveBeenCalled()
+
+    loop.animate(1300)
+    expect(renderMinimapMock).toHaveBeenCalledTimes(1)
   })
 
   it('caps lockstep tick accumulator after catching up', () => {
