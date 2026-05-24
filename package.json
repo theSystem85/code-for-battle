@@ -7,6 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "emulator": "open -a Simulator && xcrun simctl boot 'iPhone 15 Pro Max' || true && sleep 2 && xcrun simctl openurl booted http://localhost:5173 && npm run dev -- --host",
     "stun": "node server/stun.js",
     "prebuild": "node scripts/buildMajorSpriteSheets.js && node scripts/write-commit.js",
     "build": "vite build && node scripts/write-impressum-config.js",
