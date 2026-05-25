@@ -33,6 +33,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:file": "npx playwright test $1 --project=chromium",
+    "test:e2e:ios-benchmark": "IOS_EMULATOR_BENCHMARK=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 playwright test tests/e2e/iosSimulatorBenchmark.test.js --project=chromium --reporter=line",
     "lighthouse": "lighthouse http://localhost:4173 --output=html --output=json --output-path=./tests/lighthouse/default",
     "lighthouse:desktop": "lighthouse https://localhost:4173 --preset=desktop --output=html --output=json --output-path=./tests/lighthouse/desktop",
     "lighthouse:mobile": "lighthouse https://localhost:4173 --preset=mobile --output=html --output=json --output-path=./tests/lighthouse/mobile",

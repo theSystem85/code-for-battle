@@ -4,6 +4,7 @@ const useNetlifyDev = process.env.PLAYWRIGHT_NETLIFY_DEV === '1'
 const runHeaded = process.env.PLAYWRIGHT_HEADED === '1' || useNetlifyDev
 const headlessE2eMuteAudio = !runHeaded
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || (useNetlifyDev ? 'http://localhost:8888' : 'http://localhost:5173')
+const skipWebServer = process.env.PLAYWRIGHT_SKIP_WEB_SERVER === '1' || process.env.IOS_EMULATOR_BENCHMARK === '1'
 const webServerCommand = process.env.PLAYWRIGHT_WEB_SERVER_COMMAND || (useNetlifyDev
   ? 'npx netlify dev --port 8888'
   : headlessE2eMuteAudio
@@ -54,7 +55,7 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: {
+  webServer: skipWebServer ? undefined : {
     command: webServerCommand,
     url: baseURL,
     reuseExistingServer: !process.env.CI,

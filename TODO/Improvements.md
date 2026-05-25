@@ -1,3 +1,5 @@
+- [x] Add an opt-in iOS Simulator Safari benchmark E2E that starts the emulator script, opens the app benchmark in Simulator Safari, collects the in-app FPS result, and fails below 60 average FPS.
+- [ ] Mobile performance recovery plan (2026-05-24): evaluate and implement prioritized render-path improvements to move mobile back from ~10fps toward 60fps, starting with the most critical selected item after reviewing the plan.
 - [x] Remove borders from multiplayer sidebar colored owner badges (party bubbles) so the solid fill style matches the updated multiplayer row visuals.
 - [x] Make multiplayer owner badge width content-driven, force dark text on green/yellow badges, and add right-side spacing in party-info row alignment for consistent sidebar padding.
 - [x] Move multiplayer owner labels into the colored party badge to save row space and force dark text on yellow-like badge colors for readability contrast.
