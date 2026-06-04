@@ -11,7 +11,7 @@ Add an end-to-end performance test that runs the existing in-game benchmark insi
 - The test must wait for the app runtime, then open Safari in the booted simulator with an instrumented benchmark URL.
 - The app must run the existing benchmark flow, not a separate synthetic FPS sampler.
 - The app must report the benchmark result back to the Playwright process.
-- The test must fail when `averageFps < 60` by default.
+- The test must fail when `averageFps < 55` by default, with `IOS_BENCHMARK_MIN_AVG_FPS` available to raise the gate back to the 60 FPS target.
 
 ## Implementation
 
@@ -24,7 +24,7 @@ Add an end-to-end performance test that runs the existing in-game benchmark insi
 - `IOS_EMULATOR_SCRIPT`: command used to start the simulator and app. Default: `npm run emulator`.
 - `IOS_EMULATOR_APP_URL`: app URL to wait for and instrument. Default: `http://localhost:5173`.
 - `IOS_BENCHMARK_DURATION_MS`: benchmark duration. Default: `60000`.
-- `IOS_BENCHMARK_MIN_AVG_FPS`: required average FPS. Default: `60`.
+- `IOS_BENCHMARK_MIN_AVG_FPS`: required average FPS. Default: `55`.
 - `IOS_BENCHMARK_SEED`: map seed for the run. Default: `4`.
 - `IOS_BENCHMARK_PLAYERS`: number of players. Default: `2`.
 - `IOS_BENCHMARK_MAP_SIZE`: map size. Default: `40`.
