@@ -4,7 +4,39 @@ import { gameRandom } from '../utils/gameRandom.js'
 
 // Get device pixel ratio for high-DPI rendering
 export const getDevicePixelRatio = () => {
-  return window.devicePixelRatio || 1
+  return (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+}
+
+export function getCanvasPixelRatio(canvas, fallback = getDevicePixelRatio()) {
+  if (!canvas) {
+    return fallback || 1
+  }
+
+  const bounds = typeof canvas.getBoundingClientRect === 'function'
+    ? canvas.getBoundingClientRect()
+    : null
+  const logicalWidth = bounds?.width || canvas.clientWidth || 0
+  if (logicalWidth > 0 && canvas.width > 0) {
+    return canvas.width / logicalWidth
+  }
+
+  return fallback || 1
+}
+
+export function getCanvasLogicalSize(canvas) {
+  if (!canvas) {
+    return { width: 0, height: 0, pixelRatio: 1 }
+  }
+
+  const bounds = typeof canvas.getBoundingClientRect === 'function'
+    ? canvas.getBoundingClientRect()
+    : null
+  const pixelRatio = getCanvasPixelRatio(canvas)
+  return {
+    width: bounds?.width || canvas.clientWidth || (canvas.width / pixelRatio) || canvas.width || 0,
+    height: bounds?.height || canvas.clientHeight || (canvas.height / pixelRatio) || canvas.height || 0,
+    pixelRatio
+  }
 }
 
 // Tesla Coil Lightning Rendering

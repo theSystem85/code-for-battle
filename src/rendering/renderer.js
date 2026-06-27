@@ -25,6 +25,7 @@ import { preloadHowitzerImage } from './howitzerImageRenderer.js'
 import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import { TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
@@ -264,12 +265,7 @@ export class Renderer {
       this.textureManager.preloadAllTextures()
     }
 
-    const canvasBounds = typeof gameCanvas.getBoundingClientRect === 'function'
-      ? gameCanvas.getBoundingClientRect()
-      : null
-    const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
-    const logicalCanvasWidth = canvasBounds?.width || gameCanvas.clientWidth || (gameCanvas.width / pixelRatio) || gameCanvas.width
-    const logicalCanvasHeight = canvasBounds?.height || gameCanvas.clientHeight || (gameCanvas.height / pixelRatio) || gameCanvas.height
+    const { width: logicalCanvasWidth, height: logicalCanvasHeight } = getCanvasLogicalSize(gameCanvas)
     gameCtx.clearRect(0, 0, logicalCanvasWidth, logicalCanvasHeight)
 
     // Check for game over first

@@ -6,6 +6,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
 } from '../config.js'
+import { getCanvasPixelRatio } from './renderingUtils.js'
 
 const SOT_CLIP_NONE = 0
 const SOT_CLIP_TOP_LEFT = 1
@@ -624,15 +625,7 @@ export class GameWebGLRenderer {
   }
 
   getCanvasPixelRatio(canvas) {
-    if (!canvas) return this.pixelRatio || 1
-    const bounds = typeof canvas.getBoundingClientRect === 'function'
-      ? canvas.getBoundingClientRect()
-      : null
-    const logicalWidth = bounds?.width || canvas.clientWidth || 0
-    if (logicalWidth > 0 && canvas.width > 0) {
-      return canvas.width / logicalWidth
-    }
-    return (typeof window !== 'undefined' && window.devicePixelRatio) || this.pixelRatio || 1
+    return getCanvasPixelRatio(canvas, this.pixelRatio || 1)
   }
 
   render(mapGrid, scrollOffset, canvas, options = {}) {

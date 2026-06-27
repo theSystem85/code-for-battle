@@ -9,6 +9,7 @@ import {
   WATER_EFFECT_ZOOM
 } from '../config.js'
 import { getTileDecalSignature } from '../game/tileDecals.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -1956,12 +1957,7 @@ export class MapRenderer {
     // Calculate visible tile range - improved for better performance
     const startTileX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
     const startTileY = Math.max(0, Math.floor(scrollOffset.y / TILE_SIZE))
-    const pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
-    const canvasBounds = typeof gameCanvas.getBoundingClientRect === 'function'
-      ? gameCanvas.getBoundingClientRect()
-      : null
-    const logicalCanvasWidth = canvasBounds?.width || gameCanvas.clientWidth || (gameCanvas.width / pixelRatio) || gameCanvas.width
-    const logicalCanvasHeight = canvasBounds?.height || gameCanvas.clientHeight || (gameCanvas.height / pixelRatio) || gameCanvas.height
+    const { width: logicalCanvasWidth, height: logicalCanvasHeight } = getCanvasLogicalSize(gameCanvas)
     const tilesX = Math.ceil(logicalCanvasWidth / TILE_SIZE) + 1
     const tilesY = Math.ceil(logicalCanvasHeight / TILE_SIZE) + 1
     const endTileX = Math.min(mapGrid[0].length, startTileX + tilesX)

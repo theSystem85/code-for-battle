@@ -26,6 +26,7 @@ import {
   getPlayableViewportHeight,
   getPlayableViewportWidth
 } from '../utils/layoutMetrics.js'
+import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 import { detonateTankerTruck } from './tankerTruckUtils.js'
 import { detonateAmmunitionTruck } from './ammunitionTruckLogic.js'
 import { distributeMineLayerPayload } from './mineSystem.js'
@@ -887,9 +888,7 @@ export function updateCameraFollow(gameState, units, mapGrid) {
 
   const gameCanvas = document.getElementById('gameCanvas')
   if (!gameCanvas) return
-  const pixelRatio = window.devicePixelRatio || 1
-  const logicalWidth = gameCanvas.width / pixelRatio
-  const logicalHeight = gameCanvas.height / pixelRatio
+  const { width: logicalWidth, height: logicalHeight } = getCanvasLogicalSize(gameCanvas)
 
   const maxScrollX = mapGrid[0].length * TILE_SIZE - logicalWidth
   const maxScrollY = mapGrid.length * TILE_SIZE - logicalHeight

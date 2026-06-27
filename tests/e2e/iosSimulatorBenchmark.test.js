@@ -191,7 +191,8 @@ test.describe('iOS Simulator benchmark', () => {
       outputAttached = true
 
       expect(payload.ok, payload.error || 'iOS benchmark did not report a successful result').toBe(true)
-      expect(payload.result?.averageFps ?? 0).toBeGreaterThanOrEqual(MIN_AVG_FPS)
+      const averageFps = payload.result?.averageFps ?? 0
+      expect(Math.round(averageFps), `Raw iOS benchmark average FPS: ${averageFps}`).toBeGreaterThanOrEqual(MIN_AVG_FPS)
     } finally {
       if (!outputAttached) {
         await testInfo.attach('ios-emulator-output.txt', {

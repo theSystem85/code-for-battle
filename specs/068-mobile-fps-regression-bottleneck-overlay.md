@@ -46,6 +46,7 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Follow-up: dynamic CPU water is drawn after the static terrain chunk pass when separate water rendering is active, so fallback terrain cannot cover animated water during fast scroll cache misses.
 - Follow-up: the FPS overlay includes queued/warmed/fallback chunk counters in addition to draw/hit/miss/redraw/prewarm/evict counters.
 - Follow-up: the mobile benchmark samples visible terrain pixels during scroll windows and can fail when black tile samples exceed the configured threshold.
+- Follow-up: render-size calculations now use the actual canvas backing-store ratio instead of raw `window.devicePixelRatio` in shared renderer, map renderer, WebGL terrain, minimap, and camera-follow paths. This prevents iOS/WebKit from doing native-DPR math after the mobile canvas cap has intentionally lowered the backing store.
 
 ## Benchmark notes
 - Pre-fix local reproduction: desktop game-loop FPS >60; throttled mobile reproduced the failure at ~1fps effective / ~3fps overlay, with CPU render around 700-800ms per frame in the stress scene.
@@ -62,6 +63,7 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Post-cache-cap 256x256 two-lap benchmark: throttled mobile completed 233kpx of scrolling at 60fps reported / ~60.0fps effective, lowest rounded scroll window 60fps, max frame 17.7ms, visible water sampled, no page errors, heap ~87.5MB, and chunk cache size stayed within the 32-chunk budget.
 - Fast-scroll local benchmark after deferred warming: mobile completed the route at 60fps reported / ~59.6fps effective, lowest rounded scroll window 60fps, max frame 16.9ms, no page errors, visible water sampled, and black terrain sample ratio 0.
 - Fast-scroll 256x256 two-lap benchmark after deferred warming: mobile completed 233kpx of scrolling at 60fps reported / ~60.0fps effective, every rounded scroll window stayed at 60fps, max frame 17.7ms, no page errors, visible water sampled, black terrain sample ratio 0, and heap stayed around 73MB.
+- iOS Chrome/WebKit crash follow-up: the likely failure mode was canvas/GPU memory and draw-size pressure from mixed raw-DPR and capped-DPR rendering. The app now consistently derives logical sizes from `canvas.width / rendered CSS width`, so iPhone 13 Pro Max Chrome/Safari should stay on the configured low-DPR mobile path.
 
 ## Remaining candidates
 - Dirty-rect entity overlay rendering on mobile; minimap throttling is in place, but entity overlays still render every frame for correctness.
