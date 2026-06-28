@@ -6,6 +6,7 @@ import { renderKeybindingsEditor } from './keybindingsEditor.js'
 import { initLlmSettingsPanel } from './llmSettingsPanel.js'
 import { gameState } from '../gameState.js'
 import { getConfigValue, setConfigValue } from '../configRegistry.js'
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
 const WATER_SETTINGS_CONFIG_IDS = {
@@ -81,7 +82,7 @@ function syncWaterGraphicsControls(modal) {
 
 function loadRadarOfflineAnimationSetting() {
   try {
-    const stored = localStorage.getItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY)
+    const stored = getStoredItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY)
     if (stored === null) return true
     return stored !== 'false'
   } catch (error) {
@@ -92,7 +93,7 @@ function loadRadarOfflineAnimationSetting() {
 
 function saveRadarOfflineAnimationSetting(enabled) {
   try {
-    localStorage.setItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY, enabled ? 'true' : 'false')
+    setStoredItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY, enabled ? 'true' : 'false')
   } catch (error) {
     window.logger.warn('Failed to save radar-offline animation setting:', error)
   }

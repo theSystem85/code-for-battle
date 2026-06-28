@@ -1,3 +1,4 @@
+- [x] Migrate runtime game persistence from direct Web Storage calls to an IndexedDB-backed browser storage layer, including saves, replays, tutorial/settings preferences, aliases, keybindings, LLM settings, sprite-sheet metadata, and legacy data migration.
 - [x] Pin the iOS Simulator benchmark to an explicit `iPhone 13 Pro Max` simulator device by default, create/use the local simulator UDID, and document install/create commands for missing devices.
 - [x] Make benchmark-mode emulator startup leave Safari navigation to the E2E test, so the plain app URL is not opened before Vite is reachable and the Simulator no longer sits on the home screen after an early emulator-script failure.
 - [x] Add an opt-in iOS Simulator Safari benchmark E2E that starts the emulator script, opens the app benchmark in Simulator Safari, collects the in-app FPS result, and currently fails below 55 average FPS while keeping the threshold configurable.

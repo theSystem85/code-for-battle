@@ -2,6 +2,7 @@ import { buildingData, createBuilding, canPlaceBuilding, placeBuilding, isNearEx
 import { getClosestEnemyFactory, isPartOfFactory } from './enemyUtils.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { getStoredItem } from '../storage/indexedDbStorage.js'
 
 const defensiveBuildingTypes = new Set([
   'rocketTurret',
@@ -749,9 +750,9 @@ function completeEnemyBuilding(gameState, mapGrid) {
 // eslint-disable-next-line no-unused-vars
 function replicatePlayerBuildPattern(gameState, enemyBuildings) {
   try {
-    // Get build patterns from localStorage if not already loaded
+    // Get build patterns from persisted browser storage if not already loaded
     if (!gameState.playerBuildHistory) {
-      const savedHistory = localStorage.getItem('playerBuildHistory')
+      const savedHistory = getStoredItem('playerBuildHistory')
       gameState.playerBuildHistory = savedHistory ? JSON.parse(savedHistory) : []
     }
 

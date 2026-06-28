@@ -9,6 +9,7 @@ import { composeInviteToken, buildInviteUrl, humanReadablePartyLabel } from './i
 import { showHostNotification } from './hostNotifications.js'
 import { STUN_HOST } from './signalling.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { getStoredItem } from '../storage/indexedDbStorage.js'
 
 const inviteRecords = new Map()
 const HOST_ALIAS_STORAGE_KEY = 'rts-player-alias'
@@ -103,12 +104,12 @@ function getHostAliasLabel(alias) {
   }
 
   try {
-    const storedAlias = localStorage.getItem(HOST_ALIAS_STORAGE_KEY)
+    const storedAlias = getStoredItem(HOST_ALIAS_STORAGE_KEY)
     if (storedAlias && storedAlias.trim()) {
       return storedAlias.trim()
     }
   } catch (err) {
-    window.logger.warn('Failed to read host alias from localStorage:', err)
+    window.logger.warn('Failed to read host alias from IndexedDB:', err)
   }
 
   return 'You (Host)'

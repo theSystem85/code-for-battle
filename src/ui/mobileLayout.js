@@ -1,6 +1,7 @@
 // Mobile layout and sidebar management
 import { gameState } from '../gameState.js'
 import { updateEnergyBar } from './energyBar.js'
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const PORTRAIT_SIDEBAR_STATE_KEY = 'mobilePortraitSidebarState'
 const PORTRAIT_SIDEBAR_DEFAULT_STATE = 'condensed'
@@ -70,26 +71,23 @@ export function setMobileLayoutGameAccessor(fn) {
 }
 
 function getStoredPortraitSidebarState() {
-  if (typeof localStorage === 'undefined') {
-    return null
-  }
   try {
-    const stored = localStorage.getItem(PORTRAIT_SIDEBAR_STATE_KEY)
+    const stored = getStoredItem(PORTRAIT_SIDEBAR_STATE_KEY)
     return PORTRAIT_SIDEBAR_STATES.has(stored) ? stored : null
   } catch (error) {
-    window?.logger?.warn('Failed to read portrait sidebar state from localStorage:', error)
+    window?.logger?.warn('Failed to read portrait sidebar state from IndexedDB:', error)
     return null
   }
 }
 
 function persistPortraitSidebarState(state) {
-  if (typeof localStorage === 'undefined' || !PORTRAIT_SIDEBAR_STATES.has(state)) {
+  if (!PORTRAIT_SIDEBAR_STATES.has(state)) {
     return
   }
   try {
-    localStorage.setItem(PORTRAIT_SIDEBAR_STATE_KEY, state)
+    setStoredItem(PORTRAIT_SIDEBAR_STATE_KEY, state)
   } catch (error) {
-    window?.logger?.warn('Failed to save portrait sidebar state to localStorage:', error)
+    window?.logger?.warn('Failed to save portrait sidebar state to IndexedDB:', error)
   }
 }
 

@@ -6,7 +6,8 @@
  */
 
 // Note: vi is available globally in vitest tests - import kept for explicit usage
-import { vi as _vi } from 'vitest'
+import { beforeEach, vi as _vi } from 'vitest'
+import { resetGameStorageForTests } from '../src/storage/indexedDbStorage.js'
 
 // Mock the global logger that the game expects
 globalThis.window = globalThis.window || {}
@@ -304,6 +305,10 @@ globalThis.localStorage = {
   removeItem: (key) => { delete mockStorage[key] },
   clear: () => { Object.keys(mockStorage).forEach(key => delete mockStorage[key]) }
 }
+
+beforeEach(() => {
+  resetGameStorageForTests()
+})
 
 // Mock matchMedia
 globalThis.matchMedia = (query) => ({

@@ -1,3 +1,5 @@
+import { getStoredItem, initializeGameStorage, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
+
 const configRegistry = new Map()
 const activeOverrides = new Map()
 
@@ -67,7 +69,7 @@ function setNumericConfigValue(entry, numericValue, { persistLocal = false } = {
   }
 
   if (persistLocal) {
-    saveOverridesToLocalStorage()
+    saveOverridesToIndexedDb()
   }
 
   return updatedValue
@@ -130,8 +132,9 @@ export async function ensureConfigOverridesLoaded() {
 
   if (!overridesLoadPromise) {
     overridesLoadPromise = (async() => {
+      await initializeGameStorage()
       await loadOverridesFromFile()
-      loadOverridesFromLocalStorage()
+      loadOverridesFromIndexedDb()
       overridesLoaded = true
     })()
   }
@@ -166,36 +169,28 @@ function applyOverridesFromObject(overrides, { persistLocal = false } = {}) {
   })
 }
 
-function saveOverridesToLocalStorage() {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return
-  }
-
+function saveOverridesToIndexedDb() {
   try {
     if (activeOverrides.size === 0) {
-      window.localStorage.removeItem(CONFIG_OVERRIDE_STORAGE_KEY)
+      removeStoredItem(CONFIG_OVERRIDE_STORAGE_KEY)
       return
     }
 
-    window.localStorage.setItem(
+    setStoredItem(
       CONFIG_OVERRIDE_STORAGE_KEY,
       JSON.stringify(getConfigOverrides())
     )
   } catch (err) {
-    window.logger.warn('Failed to persist config overrides to localStorage:', err)
+    window.logger.warn('Failed to persist config overrides to IndexedDB:', err)
   }
 }
 
-function loadOverridesFromLocalStorage() {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return
-  }
-
+function loadOverridesFromIndexedDb() {
   let raw
   try {
-    raw = window.localStorage.getItem(CONFIG_OVERRIDE_STORAGE_KEY)
+    raw = getStoredItem(CONFIG_OVERRIDE_STORAGE_KEY)
   } catch (err) {
-    window.logger.warn('Failed to read config overrides from localStorage:', err)
+    window.logger.warn('Failed to read config overrides from IndexedDB:', err)
     return
   }
 
@@ -207,7 +202,7 @@ function loadOverridesFromLocalStorage() {
     const parsed = JSON.parse(raw)
     applyOverridesFromObject(parsed)
   } catch (err) {
-    window.logger.warn('Failed to parse config overrides from localStorage:', err)
+    window.logger.warn('Failed to parse config overrides from IndexedDB:', err)
   }
 }
 
@@ -370,13 +365,9 @@ function clampNumber(value, min, max, fallback) {
   return Math.min(max, Math.max(min, numericValue))
 }
 
-function saveGraphicsSettingsToLocalStorage() {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return
-  }
-
+function saveGraphicsSettingsToIndexedDb() {
   try {
-    window.localStorage.setItem(
+    setStoredItem(
       GRAPHICS_SETTINGS_STORAGE_KEY,
       JSON.stringify({
         useProceduralWaterRendering: USE_PROCEDURAL_WATER_RENDERING,
@@ -386,7 +377,7 @@ function saveGraphicsSettingsToLocalStorage() {
       })
     )
   } catch (error) {
-    window.logger?.warn('Failed to persist graphics settings to localStorage:', error)
+    window.logger?.warn('Failed to persist graphics settings to IndexedDB:', error)
   }
 }
 
@@ -398,13 +389,9 @@ function requestGraphicsSettingsRender() {
   window.gameInstance?.gameLoop?.requestRender?.()
 }
 
-function loadGraphicsSettingsFromLocalStorage() {
-  if (typeof window === 'undefined' || !window.localStorage) {
-    return
-  }
-
+export function loadGraphicsSettingsFromIndexedDb() {
   try {
-    const stored = window.localStorage.getItem(GRAPHICS_SETTINGS_STORAGE_KEY)
+    const stored = getStoredItem(GRAPHICS_SETTINGS_STORAGE_KEY)
     if (!stored) {
       return
     }
@@ -418,7 +405,7 @@ function loadGraphicsSettingsFromLocalStorage() {
     WATER_EFFECT_SATURATION = clampNumber(parsed?.waterEffectSaturation, 0, 2, WATER_EFFECT_SATURATION)
     MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 4, MOBILE_CANVAS_PIXEL_RATIO_CAP)
   } catch (error) {
-    window.logger?.warn('Failed to load graphics settings from localStorage:', error)
+    window.logger?.warn('Failed to load graphics settings from IndexedDB:', error)
   }
 }
 
@@ -426,7 +413,7 @@ export let USE_PROCEDURAL_WATER_RENDERING = true
 
 export function setUseProceduralWaterRendering(value) {
   USE_PROCEDURAL_WATER_RENDERING = Boolean(value)
-  saveGraphicsSettingsToLocalStorage()
+  saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return USE_PROCEDURAL_WATER_RENDERING
 }
@@ -435,7 +422,7 @@ export let MOBILE_CANVAS_PIXEL_RATIO_CAP = 1
 
 export function setMobileCanvasPixelRatioCap(value) {
   MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(value, 1, 4, MOBILE_CANVAS_PIXEL_RATIO_CAP)
-  saveGraphicsSettingsToLocalStorage()
+  saveGraphicsSettingsToIndexedDb()
   if (typeof window !== 'undefined') {
     window.gameInstance?.canvasManager?.resetAdaptivePixelRatioCap?.()
   }
@@ -448,7 +435,7 @@ export let WATER_EFFECT_TONE = 0.35
 
 export function setWaterEffectTone(value) {
   WATER_EFFECT_TONE = clampNumber(value, -1, 1, WATER_EFFECT_TONE)
-  saveGraphicsSettingsToLocalStorage()
+  saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return WATER_EFFECT_TONE
 }
@@ -458,7 +445,7 @@ export let WATER_EFFECT_SATURATION = 0.4
 
 export function setWaterEffectSaturation(value) {
   WATER_EFFECT_SATURATION = clampNumber(value, 0, 2, WATER_EFFECT_SATURATION)
-  saveGraphicsSettingsToLocalStorage()
+  saveGraphicsSettingsToIndexedDb()
   requestGraphicsSettingsRender()
   return WATER_EFFECT_SATURATION
 }
@@ -477,7 +464,7 @@ export function setWaterEffectZoom(value) {
   return WATER_EFFECT_ZOOM
 }
 
-loadGraphicsSettingsFromLocalStorage()
+loadGraphicsSettingsFromIndexedDb()
 
 // Sprite sheet and mapping for map tiles
 export const TILE_SPRITE_SHEET = 'images/map/map_sprites.webp'

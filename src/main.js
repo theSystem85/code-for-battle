@@ -6,6 +6,7 @@ import { registerMapEditorRendering } from './mapEditor.js'
 import { getTextureManager, notifyTileMutation } from './rendering.js'
 import { initializeMobileViewportLock } from './ui/mobileViewportLock.js'
 import { scheduleAfterNextPaint, scheduleIdleTask } from './startupScheduler.js'
+import { initializeGameStorage } from './storage/indexedDbStorage.js'
 import './ui/mobileJoysticks.js'
 import './ui/mobileControlGroups.js'
 import {
@@ -22,6 +23,7 @@ import { initDebugUnitCommandOverlay } from './ui/debugUnitCommandOverlay.js'
 import { selectedUnits } from './inputHandler.js'
 import {
   resumeAllSounds,
+  reloadMasterVolumeFromStorage,
   testNarratedSounds,
   playSound,
   getSoundCacheStatus,
@@ -115,6 +117,8 @@ function setupAudioUnlock() {
 }
 
 document.addEventListener('DOMContentLoaded', async() => {
+  await initializeGameStorage()
+  reloadMasterVolumeFromStorage()
   updateTouchClass()
   updateMobileLayoutClasses()
   setupDoubleTapPrevention()

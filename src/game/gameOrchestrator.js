@@ -71,6 +71,7 @@ import { terminateAllSounds } from '../sound.js'
 import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../startupScheduler.js'
 import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
@@ -91,6 +92,14 @@ const DESKTOP_EDGE_AUTOSCROLL_STORAGE_KEY = 'rts-desktop-edge-autoscroll-enabled
 const SELECTION_HUD_MODE_STORAGE_KEY = 'rts-selection-hud-mode'
 const SELECTION_HUD_BAR_THICKNESS_STORAGE_KEY = 'rts-selection-hud-bar-thickness'
 const SPEED_MULTIPLIER_STORAGE_KEY = 'rts-game-speed-multiplier'
+
+function persistSetting(key, value, label) {
+  try {
+    setStoredItem(key, value.toString())
+  } catch (error) {
+    window.logger.warn(`Failed to save ${label} to IndexedDB:`, error)
+  }
+}
 
 function sanitizeMapDimension(value, fallback) {
   const parsed = parseInt(value, 10)
@@ -263,14 +272,14 @@ function loadPersistedSettings() {
   const mapOverrides = startupMapOverrides
   try {
     const seedInput = document.getElementById('mapSeed')
-    const storedSeed = localStorage.getItem(MAP_SEED_STORAGE_KEY)
+    const storedSeed = getStoredItem(MAP_SEED_STORAGE_KEY)
     if (seedInput && mapOverrides?.seed) {
       seedInput.value = mapOverrides.seed
     } else if (seedInput && storedSeed !== null) {
       seedInput.value = storedSeed
     }
   } catch (e) {
-    window.logger.warn('Failed to load map seed from localStorage:', e)
+    window.logger.warn('Failed to load map seed from IndexedDB:', e)
   }
 
   const widthInput = document.getElementById('mapWidthTiles')
@@ -279,21 +288,21 @@ function loadPersistedSettings() {
   let heightTiles = DEFAULT_MAP_TILES_Y
 
   try {
-    const storedWidth = localStorage.getItem(MAP_WIDTH_TILES_STORAGE_KEY)
+    const storedWidth = getStoredItem(MAP_WIDTH_TILES_STORAGE_KEY)
     if (storedWidth !== null) {
       widthTiles = sanitizeMapDimension(storedWidth, DEFAULT_MAP_TILES_X)
     }
   } catch (e) {
-    window.logger.warn('Failed to load map width from localStorage:', e)
+    window.logger.warn('Failed to load map width from IndexedDB:', e)
   }
 
   try {
-    const storedHeight = localStorage.getItem(MAP_HEIGHT_TILES_STORAGE_KEY)
+    const storedHeight = getStoredItem(MAP_HEIGHT_TILES_STORAGE_KEY)
     if (storedHeight !== null) {
       heightTiles = sanitizeMapDimension(storedHeight, DEFAULT_MAP_TILES_Y)
     }
   } catch (e) {
-    window.logger.warn('Failed to load map height from localStorage:', e)
+    window.logger.warn('Failed to load map height from IndexedDB:', e)
   }
 
   if (widthInput) {
@@ -322,22 +331,13 @@ function loadPersistedSettings() {
   gameState.mapTilesY = height
 
   if (!mapOverrides?.width && !mapOverrides?.height) {
-    try {
-      localStorage.setItem(MAP_WIDTH_TILES_STORAGE_KEY, width.toString())
-    } catch (e) {
-      window.logger.warn('Failed to save map width to localStorage:', e)
-    }
-
-    try {
-      localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, height.toString())
-    } catch (e) {
-      window.logger.warn('Failed to save map height to localStorage:', e)
-    }
+    persistSetting(MAP_WIDTH_TILES_STORAGE_KEY, width, 'map width')
+    persistSetting(MAP_HEIGHT_TILES_STORAGE_KEY, height, 'map height')
   }
 
   try {
     const playerInput = document.getElementById('playerCount')
-    const storedCount = localStorage.getItem(PLAYER_COUNT_STORAGE_KEY)
+    const storedCount = getStoredItem(PLAYER_COUNT_STORAGE_KEY)
     if (playerInput && mapOverrides?.playerCount) {
       playerInput.value = mapOverrides.playerCount
       gameState.playerCount = mapOverrides.playerCount
@@ -349,16 +349,16 @@ function loadPersistedSettings() {
       }
     }
   } catch (e) {
-    window.logger.warn('Failed to load player count from localStorage:', e)
+    window.logger.warn('Failed to load player count from IndexedDB:', e)
   }
 
   try {
     const oreFieldInput = document.getElementById('mapOreFieldCount')
     const oreTotalValueInput = document.getElementById('mapOreTotalValue')
     const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
-    const storedOreFields = localStorage.getItem(ORE_FIELD_COUNT_STORAGE_KEY)
-    const storedOreTotalValue = localStorage.getItem(ORE_TOTAL_VALUE_STORAGE_KEY)
-    const storedOreSpreadInterval = localStorage.getItem(ORE_SPREAD_INTERVAL_STORAGE_KEY)
+    const storedOreFields = getStoredItem(ORE_FIELD_COUNT_STORAGE_KEY)
+    const storedOreTotalValue = getStoredItem(ORE_TOTAL_VALUE_STORAGE_KEY)
+    const storedOreSpreadInterval = getStoredItem(ORE_SPREAD_INTERVAL_STORAGE_KEY)
 
     if (oreFieldInput && mapOverrides?.oreFieldCount) {
       const sanitized = sanitizeOreFieldCount(mapOverrides.oreFieldCount)
@@ -394,7 +394,7 @@ function loadPersistedSettings() {
       oreSpreadIntervalInput.value = sanitizeOreSpreadIntervalSeconds(oreSpreadIntervalInput.value || null, ORE_SPREAD_INTERVAL)
     }
   } catch (e) {
-    window.logger.warn('Failed to load ore map settings from localStorage:', e)
+    window.logger.warn('Failed to load ore map settings from IndexedDB:', e)
   }
 
   try {
@@ -406,13 +406,13 @@ function loadPersistedSettings() {
     const shoreSouthCheckbox = document.getElementById('mapShoreSouthCheckbox')
     const centerLakeCheckbox = document.getElementById('mapCenterLakeCheckbox')
 
-    const storedWater = localStorage.getItem(MAP_WATER_PERCENT_STORAGE_KEY)
-    const storedRock = localStorage.getItem(MAP_ROCK_PERCENT_STORAGE_KEY)
-    const storedShoreNorth = localStorage.getItem(MAP_SHORE_NORTH_STORAGE_KEY)
-    const storedShoreWest = localStorage.getItem(MAP_SHORE_WEST_STORAGE_KEY)
-    const storedShoreEast = localStorage.getItem(MAP_SHORE_EAST_STORAGE_KEY)
-    const storedShoreSouth = localStorage.getItem(MAP_SHORE_SOUTH_STORAGE_KEY)
-    const storedCenterLake = localStorage.getItem(MAP_CENTER_LAKE_STORAGE_KEY)
+    const storedWater = getStoredItem(MAP_WATER_PERCENT_STORAGE_KEY)
+    const storedRock = getStoredItem(MAP_ROCK_PERCENT_STORAGE_KEY)
+    const storedShoreNorth = getStoredItem(MAP_SHORE_NORTH_STORAGE_KEY)
+    const storedShoreWest = getStoredItem(MAP_SHORE_WEST_STORAGE_KEY)
+    const storedShoreEast = getStoredItem(MAP_SHORE_EAST_STORAGE_KEY)
+    const storedShoreSouth = getStoredItem(MAP_SHORE_SOUTH_STORAGE_KEY)
+    const storedCenterLake = getStoredItem(MAP_CENTER_LAKE_STORAGE_KEY)
 
     const normalizedTerrain = normalizeTerrainPercents(
       sanitizeTerrainPercent(storedWater, gameState.mapWaterPercent),
@@ -436,56 +436,56 @@ function loadPersistedSettings() {
     if (shoreSouthCheckbox) shoreSouthCheckbox.checked = gameState.mapShoreSouth
     if (centerLakeCheckbox) centerLakeCheckbox.checked = gameState.mapCenterLake
   } catch (e) {
-    window.logger.warn('Failed to load terrain map settings from localStorage:', e)
+    window.logger.warn('Failed to load terrain map settings from IndexedDB:', e)
   }
 
   try {
-    const storedShadowSetting = localStorage.getItem(SHADOW_OF_WAR_STORAGE_KEY)
+    const storedShadowSetting = getStoredItem(SHADOW_OF_WAR_STORAGE_KEY)
     if (storedShadowSetting !== null) {
       gameState.shadowOfWarEnabled = storedShadowSetting === 'true'
     } else {
       gameState.shadowOfWarEnabled = false
     }
   } catch (e) {
-    window.logger.warn('Failed to load shadow of war setting from localStorage:', e)
+    window.logger.warn('Failed to load shadow of war setting from IndexedDB:', e)
   }
 
   try {
-    const storedEdgeScrollSetting = localStorage.getItem(DESKTOP_EDGE_AUTOSCROLL_STORAGE_KEY)
+    const storedEdgeScrollSetting = getStoredItem(DESKTOP_EDGE_AUTOSCROLL_STORAGE_KEY)
     if (storedEdgeScrollSetting !== null) {
       setDesktopEdgeAutoscrollEnabled(storedEdgeScrollSetting === 'true')
     }
   } catch (e) {
-    window.logger.warn('Failed to load desktop edge auto-scroll setting from localStorage:', e)
+    window.logger.warn('Failed to load desktop edge auto-scroll setting from IndexedDB:', e)
   }
 
   try {
-    const storedSelectionHudMode = localStorage.getItem(SELECTION_HUD_MODE_STORAGE_KEY)
+    const storedSelectionHudMode = getStoredItem(SELECTION_HUD_MODE_STORAGE_KEY)
     if (storedSelectionHudMode === 'legacy' || storedSelectionHudMode === 'modern' || storedSelectionHudMode === 'modern-no-border' || storedSelectionHudMode === 'modern-donut') {
       gameState.selectionHudMode = storedSelectionHudMode
     }
   } catch (e) {
-    window.logger.warn('Failed to load selection HUD mode from localStorage:', e)
+    window.logger.warn('Failed to load selection HUD mode from IndexedDB:', e)
   }
 
   try {
-    const storedSelectionHudBarThickness = localStorage.getItem(SELECTION_HUD_BAR_THICKNESS_STORAGE_KEY)
+    const storedSelectionHudBarThickness = getStoredItem(SELECTION_HUD_BAR_THICKNESS_STORAGE_KEY)
     if (storedSelectionHudBarThickness !== null) {
       gameState.selectionHudBarThickness = sanitizeSelectionHudBarThickness(storedSelectionHudBarThickness, gameState.selectionHudBarThickness)
     }
   } catch (e) {
-    window.logger.warn('Failed to load selection HUD bar thickness from localStorage:', e)
+    window.logger.warn('Failed to load selection HUD bar thickness from IndexedDB:', e)
   }
 
   try {
-    const storedSpeedMultiplier = localStorage.getItem(SPEED_MULTIPLIER_STORAGE_KEY)
+    const storedSpeedMultiplier = getStoredItem(SPEED_MULTIPLIER_STORAGE_KEY)
     if (storedSpeedMultiplier !== null) {
       gameState.speedMultiplier = sanitizeSpeedMultiplier(storedSpeedMultiplier, gameState.speedMultiplier)
     } else {
       gameState.speedMultiplier = sanitizeSpeedMultiplier(gameState.speedMultiplier, 1)
     }
   } catch (e) {
-    window.logger.warn('Failed to load game speed from localStorage:', e)
+    window.logger.warn('Failed to load game speed from IndexedDB:', e)
   }
 }
 
@@ -731,11 +731,7 @@ class Game {
         if (value >= 0.5 && value <= 5) {
           gameState.speedMultiplier = value
           syncSpeedUi(value)
-          try {
-            localStorage.setItem(SPEED_MULTIPLIER_STORAGE_KEY, value.toString())
-          } catch (err) {
-            window.logger.warn('Failed to save game speed to localStorage:', err)
-          }
+          persistSetting(SPEED_MULTIPLIER_STORAGE_KEY, value, 'game speed')
           persistLastGameCheckpoint('speed-change')
         } else {
           syncSpeedUi(gameState.speedMultiplier)
@@ -754,22 +750,14 @@ class Game {
         const value = parseInt(e.target.value)
         if (value >= 2 && value <= 4) {
           gameState.playerCount = value
-          try {
-            localStorage.setItem(PLAYER_COUNT_STORAGE_KEY, value.toString())
-          } catch (err) {
-            window.logger.warn('Failed to save player count to localStorage:', err)
-          }
+          persistSetting(PLAYER_COUNT_STORAGE_KEY, value, 'player count')
           const oreFieldInput = document.getElementById('mapOreFieldCount')
           if (oreFieldInput) {
             oreFieldInput.min = 0
             const sanitizedOreCount = sanitizeOreFieldCount(oreFieldInput.value)
             oreFieldInput.value = sanitizedOreCount
             gameState.mapOreFieldCount = sanitizedOreCount
-            try {
-              localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, sanitizedOreCount.toString())
-            } catch (err) {
-              window.logger.warn('Failed to save ore field count to localStorage:', err)
-            }
+            persistSetting(ORE_FIELD_COUNT_STORAGE_KEY, sanitizedOreCount, 'ore field count')
           }
           refreshSidebarMultiplayer()
         } else {
@@ -857,19 +845,19 @@ class Game {
       gameState.mapShoreSouth = shoreSouth
       gameState.mapCenterLake = centerLake
 
-      try { localStorage.setItem(MAP_SEED_STORAGE_KEY, seed) } catch (err) { window.logger.warn('Failed to save map seed to localStorage:', err) }
-      try { localStorage.setItem(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles.toString()) } catch (err) { window.logger.warn('Failed to save map width to localStorage:', err) }
-      try { localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString()) } catch (err) { window.logger.warn('Failed to save map height to localStorage:', err) }
-      try { localStorage.setItem(PLAYER_COUNT_STORAGE_KEY, gameState.playerCount.toString()) } catch (err) { window.logger.warn('Failed to save player count to localStorage:', err) }
-      try { localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, oreFieldCount.toString()) } catch (err) { window.logger.warn('Failed to save ore field count to localStorage:', err) }
-      try { localStorage.setItem(ORE_TOTAL_VALUE_STORAGE_KEY, oreTotalValue.toString()) } catch (err) { window.logger.warn('Failed to save ore total value to localStorage:', err) }
-      try { localStorage.setItem(MAP_WATER_PERCENT_STORAGE_KEY, waterPercent.toString()) } catch (err) { window.logger.warn('Failed to save map water percent to localStorage:', err) }
-      try { localStorage.setItem(MAP_ROCK_PERCENT_STORAGE_KEY, rockPercent.toString()) } catch (err) { window.logger.warn('Failed to save map rock percent to localStorage:', err) }
-      try { localStorage.setItem(MAP_SHORE_NORTH_STORAGE_KEY, shoreNorth.toString()) } catch (err) { window.logger.warn('Failed to save north shore setting to localStorage:', err) }
-      try { localStorage.setItem(MAP_SHORE_WEST_STORAGE_KEY, shoreWest.toString()) } catch (err) { window.logger.warn('Failed to save west shore setting to localStorage:', err) }
-      try { localStorage.setItem(MAP_SHORE_EAST_STORAGE_KEY, shoreEast.toString()) } catch (err) { window.logger.warn('Failed to save east shore setting to localStorage:', err) }
-      try { localStorage.setItem(MAP_SHORE_SOUTH_STORAGE_KEY, shoreSouth.toString()) } catch (err) { window.logger.warn('Failed to save south shore setting to localStorage:', err) }
-      try { localStorage.setItem(MAP_CENTER_LAKE_STORAGE_KEY, centerLake.toString()) } catch (err) { window.logger.warn('Failed to save center lake setting to localStorage:', err) }
+      persistSetting(MAP_SEED_STORAGE_KEY, seed, 'map seed')
+      persistSetting(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles, 'map width')
+      persistSetting(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles, 'map height')
+      persistSetting(PLAYER_COUNT_STORAGE_KEY, gameState.playerCount, 'player count')
+      persistSetting(ORE_FIELD_COUNT_STORAGE_KEY, oreFieldCount, 'ore field count')
+      persistSetting(ORE_TOTAL_VALUE_STORAGE_KEY, oreTotalValue, 'ore total value')
+      persistSetting(MAP_WATER_PERCENT_STORAGE_KEY, waterPercent, 'map water percent')
+      persistSetting(MAP_ROCK_PERCENT_STORAGE_KEY, rockPercent, 'map rock percent')
+      persistSetting(MAP_SHORE_NORTH_STORAGE_KEY, shoreNorth, 'north shore setting')
+      persistSetting(MAP_SHORE_WEST_STORAGE_KEY, shoreWest, 'west shore setting')
+      persistSetting(MAP_SHORE_EAST_STORAGE_KEY, shoreEast, 'east shore setting')
+      persistSetting(MAP_SHORE_SOUTH_STORAGE_KEY, shoreSouth, 'south shore setting')
+      persistSetting(MAP_CENTER_LAKE_STORAGE_KEY, centerLake, 'center lake setting')
 
       const { width, height } = setMapDimensions(widthTiles, heightTiles)
       gameState.mapTilesX = width
@@ -930,11 +918,7 @@ class Game {
         const intervalMs = seconds * 1000
         oreSpreadIntervalInput.value = seconds
         setOreSpreadInterval(intervalMs)
-        try {
-          localStorage.setItem(ORE_SPREAD_INTERVAL_STORAGE_KEY, intervalMs.toString())
-        } catch (err) {
-          window.logger.warn('Failed to save ore spread interval to localStorage:', err)
-        }
+        persistSetting(ORE_SPREAD_INTERVAL_STORAGE_KEY, intervalMs, 'ore spread interval')
       })
     }
 
@@ -1136,11 +1120,7 @@ class Game {
       shadowCheckbox.addEventListener('change', (e) => {
         const enabled = e.target.checked
         gameState.shadowOfWarEnabled = enabled
-        try {
-          localStorage.setItem(SHADOW_OF_WAR_STORAGE_KEY, enabled.toString())
-        } catch (err) {
-          window.logger.warn('Failed to save shadow of war setting to localStorage:', err)
-        }
+        persistSetting(SHADOW_OF_WAR_STORAGE_KEY, enabled, 'shadow of war setting')
         updateShadowOfWar(gameState, units, gameState.mapGrid, gameState.factories)
       })
     }
@@ -1149,11 +1129,7 @@ class Game {
       edgeAutoscrollCheckbox.addEventListener('change', (e) => {
         const enabled = e.target.checked
         setDesktopEdgeAutoscrollEnabled(enabled)
-        try {
-          localStorage.setItem(DESKTOP_EDGE_AUTOSCROLL_STORAGE_KEY, enabled.toString())
-        } catch (err) {
-          window.logger.warn('Failed to save desktop edge auto-scroll setting to localStorage:', err)
-        }
+        persistSetting(DESKTOP_EDGE_AUTOSCROLL_STORAGE_KEY, enabled, 'desktop edge auto-scroll setting')
       })
     }
 
@@ -1164,11 +1140,7 @@ class Game {
           return
         }
         gameState.selectionHudMode = nextMode
-        try {
-          localStorage.setItem(SELECTION_HUD_MODE_STORAGE_KEY, nextMode)
-        } catch (err) {
-          window.logger.warn('Failed to save selection HUD mode to localStorage:', err)
-        }
+        persistSetting(SELECTION_HUD_MODE_STORAGE_KEY, nextMode, 'selection HUD mode')
         renderSelectionHudPreview()
       })
     }
@@ -1181,11 +1153,7 @@ class Game {
         )
         selectionHudBarThicknessInput.value = nextThickness
         gameState.selectionHudBarThickness = nextThickness
-        try {
-          localStorage.setItem(SELECTION_HUD_BAR_THICKNESS_STORAGE_KEY, nextThickness.toString())
-        } catch (err) {
-          window.logger.warn('Failed to save selection HUD bar thickness to localStorage:', err)
-        }
+        persistSetting(SELECTION_HUD_BAR_THICKNESS_STORAGE_KEY, nextThickness, 'selection HUD bar thickness')
         renderSelectionHudPreview()
       }
 

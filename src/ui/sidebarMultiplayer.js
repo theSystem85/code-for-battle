@@ -14,6 +14,7 @@ import { gameState } from '../gameState.js'
 import { observeMultiplayerSession } from '../network/multiplayerSessionEvents.js'
 import { createQRCodeCanvas } from './qrCode.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
+import { getStoredItem, removeStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const PARTY_LIST_ID = 'multiplayerPartyList'
 const PLAYER_ALIAS_STORAGE_KEY = 'rts-player-alias'
@@ -37,31 +38,31 @@ let lastDefeatedPlayersSignature = ''
 let llmModelPoolListenerBound = false
 
 /**
- * Get the stored player alias from localStorage
+ * Get the stored player alias from IndexedDB
  * @returns {string} The stored alias or empty string
  */
 export function getStoredPlayerAlias() {
   try {
-    return localStorage.getItem(PLAYER_ALIAS_STORAGE_KEY) || ''
+    return getStoredItem(PLAYER_ALIAS_STORAGE_KEY) || ''
   } catch (e) {
-    window.logger.warn('Failed to read player alias from localStorage:', e)
+    window.logger.warn('Failed to read player alias from IndexedDB:', e)
     return ''
   }
 }
 
 /**
- * Save the player alias to localStorage
+ * Save the player alias to IndexedDB
  * @param {string} alias - The alias to save
  */
 export function setStoredPlayerAlias(alias) {
   try {
     if (alias && alias.trim()) {
-      localStorage.setItem(PLAYER_ALIAS_STORAGE_KEY, alias.trim())
+      setStoredItem(PLAYER_ALIAS_STORAGE_KEY, alias.trim())
     } else {
-      localStorage.removeItem(PLAYER_ALIAS_STORAGE_KEY)
+      removeStoredItem(PLAYER_ALIAS_STORAGE_KEY)
     }
   } catch (e) {
-    window.logger.warn('Failed to save player alias to localStorage:', e)
+    window.logger.warn('Failed to save player alias to IndexedDB:', e)
   }
 }
 

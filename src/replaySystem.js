@@ -15,6 +15,7 @@ import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnEnemyUnit } from './ai/enemySpawner.js'
 import { initializeSessionRNG } from './network/deterministicRandom.js'
 import { terminateAllSounds } from './sound.js'
+import { getStoredEntries, getStoredItem, isGameStorageAvailable, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
@@ -144,13 +145,13 @@ function captureBaselineState() {
   const baselineKey = `rts_save_${baselineLabel}`
   saveGame(baselineLabel)
   try {
-    const raw = localStorage.getItem(baselineKey)
+    const raw = getStoredItem(baselineKey)
     if (!raw) return null
     const parsed = JSON.parse(raw)
     replay.baselineState = parsed?.state || null
     return replay.baselineState
   } finally {
-    localStorage.removeItem(baselineKey)
+    removeStoredItem(baselineKey)
     updateSaveGamesList()
   }
 }
@@ -792,11 +793,10 @@ export function createReplayEntityReference(entity) {
 
 export function listReplays() {
   const replays = []
-  if (typeof localStorage === 'undefined') return replays
-  for (const key in localStorage) {
-    if (!key.startsWith(REPLAY_STORAGE_PREFIX)) continue
+  if (!isGameStorageAvailable()) return replays
+  for (const [key, rawReplay] of getStoredEntries(REPLAY_STORAGE_PREFIX)) {
     try {
-      const replay = JSON.parse(localStorage.getItem(key))
+      const replay = JSON.parse(rawReplay)
       replays.push({ key, label: replay?.label || '(no label)', time: replay?.time || 0 })
     } catch (err) {
       window.logger.warn('Failed to parse replay entry:', err)
@@ -876,7 +876,7 @@ export function stopReplayRecording() {
     commands: replay.commands
   })
   const key = buildReplayStorageKey(`${payload.time}_${payload.label}`)
-  localStorage.setItem(key, JSON.stringify(payload))
+  setStoredItem(key, JSON.stringify(payload))
   updateReplayList()
   showNotification(`Replay saved (${replay.commands.length} commands)`)
 }
@@ -1151,8 +1151,8 @@ export function finalizeReplayPlaybackIfPending() {
 }
 
 export function loadReplay(key) {
-  if (typeof localStorage === 'undefined') return
-  const raw = localStorage.getItem(key)
+  if (!isGameStorageAvailable()) return
+  const raw = getStoredItem(key)
   if (!raw) return
 
   const parsed = JSON.parse(raw)
@@ -1188,7 +1188,7 @@ function isReplayImportPayload(replayObj) {
 }
 
 export function importReplayFromObject(replayObj) {
-  if (typeof localStorage === 'undefined') return null
+  if (!isGameStorageAvailable()) return null
 
   if (!isReplayImportPayload(replayObj)) {
     showNotification('Import failed: unsupported replay file format')
@@ -1210,7 +1210,7 @@ export function importReplayFromObject(replayObj) {
   const replayKey = buildReplayStorageKey(`${normalizedReplay.time}_${normalizedReplay.label}`)
 
   try {
-    localStorage.setItem(replayKey, JSON.stringify(normalizedReplay))
+    setStoredItem(replayKey, JSON.stringify(normalizedReplay))
   } catch (err) {
     window.logger.warn('Failed to store imported replay:', err)
     showNotification('Import failed: could not store replay')
@@ -1232,9 +1232,9 @@ export function updateRecordButtonState() {
 }
 
 export function exportReplay(key) {
-  if (typeof localStorage === 'undefined') return
+  if (!isGameStorageAvailable()) return
 
-  const rawReplay = localStorage.getItem(key)
+  const rawReplay = getStoredItem(key)
   if (!rawReplay) {
     window.logger.warn('No replay found to export for key:', key)
     return
@@ -1261,8 +1261,8 @@ export function exportReplay(key) {
 }
 
 export function deleteReplay(key) {
-  if (typeof localStorage === 'undefined') return
-  localStorage.removeItem(key)
+  if (!isGameStorageAvailable()) return
+  removeStoredItem(key)
 }
 
 function createReplayRowActionButton({ title, ariaLabel, html, onClick }) {
@@ -1286,7 +1286,7 @@ export function updateReplayList() {
   list.innerHTML = ''
 
   listReplays().forEach(replay => {
-    const rawReplay = JSON.parse(localStorage.getItem(replay.key) || '{}')
+    const rawReplay = JSON.parse(getStoredItem(replay.key) || '{}')
     const startTs = Number.isFinite(rawReplay.startedAtWallClock) ? rawReplay.startedAtWallClock : replay.time
     const durationMs = Number.isFinite(rawReplay.durationMs) ? rawReplay.durationMs : (
       Array.isArray(rawReplay.commands) && rawReplay.commands.length > 0 ? rawReplay.commands[rawReplay.commands.length - 1].at : 0
