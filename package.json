@@ -1,13 +1,13 @@
 {
   "name": "vite-starter",
   "private": true,
-  "version": "0.30.5",
+  "version": "0.30.6",
   "license": "MIT",
   "author": "patrick.beyer.software@gmail.com",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "emulator": "open -a Simulator && xcrun simctl boot 'iPhone 15 Pro Max' || true && sleep 2 && xcrun simctl openurl booted http://localhost:5173 && npm run dev -- --host",
+    "emulator": "IOS_SIMULATOR_DEVICE=\"${IOS_SIMULATOR_DEVICE:-iPhone 13 Pro Max}\"; IOS_SIMULATOR_TARGET=\"${IOS_SIMULATOR_UDID:-$IOS_SIMULATOR_DEVICE}\"; open -a Simulator; xcrun simctl boot \"$IOS_SIMULATOR_TARGET\" || true; sleep 2; if [ \"$IOS_EMULATOR_BENCHMARK\" = \"1\" ]; then npm run dev -- --host; else xcrun simctl openurl \"$IOS_SIMULATOR_TARGET\" http://localhost:5173 || true; npm run dev -- --host; fi",
     "stun": "node server/stun.js",
     "prebuild": "node scripts/buildMajorSpriteSheets.js && node scripts/write-commit.js",
     "build": "vite build && node scripts/write-impressum-config.js",

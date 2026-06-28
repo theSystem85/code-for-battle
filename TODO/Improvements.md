@@ -1,3 +1,5 @@
+- [x] Pin the iOS Simulator benchmark to an explicit `iPhone 13 Pro Max` simulator device by default, create/use the local simulator UDID, and document install/create commands for missing devices.
+- [x] Make benchmark-mode emulator startup leave Safari navigation to the E2E test, so the plain app URL is not opened before Vite is reachable and the Simulator no longer sits on the home screen after an early emulator-script failure.
 - [x] Add an opt-in iOS Simulator Safari benchmark E2E that starts the emulator script, opens the app benchmark in Simulator Safari, collects the in-app FPS result, and currently fails below 55 average FPS while keeping the threshold configurable.
 - [ ] Mobile performance recovery plan (2026-05-24): evaluate and implement prioritized render-path improvements to move mobile back from ~10fps toward 60fps, starting with the most critical selected item after reviewing the plan.
 - [x] Remove borders from multiplayer sidebar colored owner badges (party bubbles) so the solid fill style matches the updated multiplayer row visuals.
