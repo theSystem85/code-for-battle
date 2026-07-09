@@ -224,7 +224,7 @@ function buildBenchmarkUrl(reportUrl) {
   url.searchParams.set('benchmarkDurationMs', String(BENCHMARK_DURATION_MS))
   url.searchParams.set('seed', process.env.IOS_BENCHMARK_SEED || '4')
   url.searchParams.set('players', process.env.IOS_BENCHMARK_PLAYERS || '2')
-  url.searchParams.set('size', process.env.IOS_BENCHMARK_MAP_SIZE || '40')
+  url.searchParams.set('size', process.env.IOS_BENCHMARK_MAP_SIZE || '100')
   return url.toString()
 }
 

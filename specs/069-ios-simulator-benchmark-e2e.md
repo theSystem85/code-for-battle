@@ -9,6 +9,7 @@ Add an end-to-end performance test that runs the existing in-game benchmark insi
 - The test must be opt-in so normal Playwright runs do not launch Xcode Simulator.
 - The test must start the configured emulator script (`npm run emulator` by default).
 - The test must target `iPhone 13 Pro Max` by default, boot that specific Simulator device, wait for the app runtime, then open Safari on that device's UDID with an instrumented benchmark URL.
+- The instrumented benchmark URL must use at least a `100x100` map by default so chunk loading and full-map rendering are exercised.
 - The app must run the existing benchmark flow, not a separate synthetic FPS sampler.
 - The app must report the benchmark result back to the Playwright process.
 - The test must fail when the rounded displayed average FPS is below `55` by default, with `IOS_BENCHMARK_MIN_AVG_FPS` available to raise the gate back to the 60 FPS target.
@@ -29,10 +30,10 @@ Add an end-to-end performance test that runs the existing in-game benchmark insi
 - `IOS_SIMULATOR_RUNTIME`: optional runtime substring used to choose among multiple matching devices.
 - `IOS_EMULATOR_APP_URL`: app URL to wait for and instrument. Default: `http://localhost:5173`.
 - `IOS_BENCHMARK_DURATION_MS`: benchmark duration. Default: `60000`.
+- `IOS_BENCHMARK_MAP_SIZE`: square map size in tiles. Default: `100`.
 - `IOS_BENCHMARK_MIN_AVG_FPS`: required average FPS. Default: `55`.
 - `IOS_BENCHMARK_SEED`: map seed for the run. Default: `4`.
 - `IOS_BENCHMARK_PLAYERS`: number of players. Default: `2`.
-- `IOS_BENCHMARK_MAP_SIZE`: map size. Default: `40`.
 
 ## Notes
 

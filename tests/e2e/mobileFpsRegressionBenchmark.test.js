@@ -17,6 +17,7 @@ const BENCHMARK_MAP_SIZE = Number.parseInt(process.env.PERF_BENCHMARK_MAP_SIZE |
 const MAX_MOBILE_HEAP_MB = Number.parseFloat(process.env.PERF_MAX_MOBILE_HEAP_MB || '0')
 const MAX_CHUNK_CACHE_SIZE = Number.parseInt(process.env.PERF_MAX_CHUNK_CACHE_SIZE || '0', 10)
 const MAX_BLACK_TILE_RATIO = Number.parseFloat(process.env.PERF_MAX_BLACK_TILE_RATIO || '0.02')
+const MAX_WHITE_STREET_RATIO = Number.parseFloat(process.env.PERF_MAX_WHITE_STREET_RATIO || '0.02')
 
 function getBenchmarkUrls(baseURL) {
   const rawUrls = process.env.PERF_BENCHMARK_URLS
@@ -242,10 +243,13 @@ async function collectBenchmarkStats(page, durationMs) {
       const stepX = Math.max(1, Math.ceil((endX - startX) / 4))
       const stepY = Math.max(1, Math.ceil((endY - startY) / 4))
       let blackCount = 0
+      let whiteStreetCount = 0
+      let streetSampleCount = 0
       let sampledCount = 0
 
       for (let y = startY; y < endY; y += stepY) {
         for (let x = startX; x < endX; x += stepX) {
+          const tile = map[y]?.[x]
           const screenX = Math.round((x * tileSize - (gameState.scrollOffset?.x || 0) + tileSize / 2) * ratio)
           const screenY = Math.round((y * tileSize - (gameState.scrollOffset?.y || 0) + tileSize / 2) * ratio)
           if (screenX < 0 || screenY < 0 || screenX >= canvas.width || screenY >= canvas.height) continue
@@ -254,14 +258,23 @@ async function collectBenchmarkStats(page, durationMs) {
           if (a > 16 && r + g + b < 24) {
             blackCount++
           }
+          if (tile?.type === 'street') {
+            streetSampleCount++
+            if (a > 16 && r > 235 && g > 235 && b > 235) {
+              whiteStreetCount++
+            }
+          }
         }
       }
 
       return {
         sampled: sampledCount > 0,
         blackCount,
+        whiteStreetCount,
+        streetSampleCount,
         sampledCount,
-        ratio: sampledCount > 0 ? blackCount / sampledCount : 0
+        ratio: sampledCount > 0 ? blackCount / sampledCount : 0,
+        whiteStreetRatio: streetSampleCount > 0 ? whiteStreetCount / streetSampleCount : 0
       }
     }
     const loop = window.gameInstance?.gameLoop
@@ -276,6 +289,7 @@ async function collectBenchmarkStats(page, durationMs) {
     const scrollWindowSamples = []
     const heapSamples = []
     const blackTerrainSamples = []
+    const whiteStreetSamples = []
     let drawImageCount = 0
     let lastFrameTime = null
     let sweepDirection = 1
@@ -378,6 +392,7 @@ async function collectBenchmarkStats(page, durationMs) {
           const blackSample = sampleBlackTerrainRatio()
           if (blackSample.sampled) {
             blackTerrainSamples.push(blackSample.ratio)
+            whiteStreetSamples.push(blackSample.whiteStreetRatio || 0)
           }
           scrollWindowStartTime = timestamp
           scrollWindowFrameCount = 0
@@ -504,6 +519,7 @@ async function collectBenchmarkStats(page, durationMs) {
       heapMb: Number.isFinite(heap) ? heap / (1024 * 1024) : null,
       maxHeapMb: heapSamples.length ? Math.max(...heapSamples) : null,
       maxBlackTerrainRatio: blackTerrainSamples.length ? Math.max(...blackTerrainSamples) : null,
+      maxWhiteStreetRatio: whiteStreetSamples.length ? Math.max(...whiteStreetSamples) : null,
       rendererDiagnostics: {
         canUseOffscreen: Boolean(mapRenderer?.canUseOffscreen),
         chunkCacheSize: mapRenderer?.chunkCache?.size || window.gameState?.renderStats?.mapChunks?.chunkCacheSize || 0,
@@ -635,6 +651,9 @@ test.describe('Mobile FPS regression benchmark', () => {
         }
         if (Number.isFinite(result.maxBlackTerrainRatio)) {
           expect(result.maxBlackTerrainRatio, `${result.url} throttled mobile black terrain sample ratio`).toBeLessThanOrEqual(MAX_BLACK_TILE_RATIO)
+        }
+        if (Number.isFinite(result.maxWhiteStreetRatio)) {
+          expect(result.maxWhiteStreetRatio, `${result.url} throttled mobile white street flicker ratio`).toBeLessThanOrEqual(MAX_WHITE_STREET_RATIO)
         }
         expect(result.pageErrors, `${result.url} throttled mobile page errors while scrolling`).toHaveLength(0)
         expect(result.waterSample?.visible, `${result.url} throttled mobile visible water sample`).toBe(true)

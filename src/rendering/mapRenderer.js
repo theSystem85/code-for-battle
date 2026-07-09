@@ -915,28 +915,24 @@ export class MapRenderer {
   }
 
   drawChunkFallback(ctx, mapGrid, scrollOffset, startX, startY, endX, endY, options = {}) {
-    const { skipWaterBase = false } = options
-    for (let y = startY; y < endY; y++) {
-      for (let x = startX; x < endX; x++) {
-        const tile = mapGrid[y]?.[x]
-        if (!tile) continue
-        const visualTileType = tile.airstripStreet ? 'land' : tile.type
-        if (skipWaterBase && visualTileType === 'water') continue
-        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
-        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+    const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
+    const currentWaterFrame = this.textureManager.waterFrames.length
+      ? this.textureManager.getCurrentWaterFrame()
+      : null
 
-        if (visualTileType === 'street') {
-          ctx.fillStyle = TILE_COLORS.land
-          ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
-          ctx.fillStyle = TILE_COLORS.street
-          ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
-          continue
-        }
-
-        ctx.fillStyle = TILE_COLORS[visualTileType] || TILE_COLORS.land
-        ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
-      }
-    }
+    this.drawBaseLayer(
+      ctx,
+      mapGrid,
+      startX,
+      startY,
+      endX,
+      endY,
+      scrollOffset.x,
+      scrollOffset.y,
+      useTexture,
+      currentWaterFrame,
+      options
+    )
     this.frameChunkStats.chunkFallbacks++
   }
 

@@ -203,6 +203,14 @@ describe('MapRenderer water rendering', () => {
     const ctx = {
       drawImage: vi.fn(),
       fillRect: vi.fn(),
+      fill: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      closePath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      clip: vi.fn(),
       imageSmoothingEnabled: true,
       fillStyle: '#000'
     }
