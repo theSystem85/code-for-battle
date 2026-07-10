@@ -15,6 +15,7 @@ import { updateMapScrolling } from './gameStateManager.js'
 import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSync.js'
 import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
 import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
+import { performanceMonitor } from '../performance/performanceMonitor.js'
 
 export class GameLoop {
   constructor(canvasManager, productionController, mapGrid, factories, units, bullets, productionQueue, moneyEl, gameTimeEl) {
@@ -169,9 +170,10 @@ export class GameLoop {
 
   renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, force = false) {
     if (!this.shouldRenderMinimap(now, force)) {
-      return
+      return 0
     }
 
+    const minimapStart = performance.now()
     renderMinimap(
       minimapCtx,
       minimapCanvas,
@@ -182,6 +184,7 @@ export class GameLoop {
       gameState.buildings,
       gameState
     )
+    return Math.max(0, performance.now() - minimapStart)
   }
 
   handlePausedFrame(now, gameCtx, gameCanvas, pauseStateChanged) {
@@ -400,7 +403,7 @@ export class GameLoop {
       gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas)
 
     // Render minimap with low energy effects if applicable
-    this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas)
+    const minimapMs = this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas)
     const renderEnd = performance.now()
 
     // Render FPS overlay on top of everything when game is running
@@ -410,6 +413,15 @@ export class GameLoop {
     const renderMs = Math.max(0, renderEnd - updateEnd)
     const idleMs = Math.max(0, frameEnd - frameStart - updateMs - renderMs)
     this.fpsDisplay.reportFrameBreakdown({ updateMs, renderMs, idleMs })
+    performanceMonitor.recordFrame({
+      frameInterval: now - (this.lastFrameTimestampForMonitor || now),
+      updateMs,
+      renderMs,
+      minimapMs,
+      frameWorkMs: frameEnd - frameStart,
+      compositorWaitMs: Math.max(0, delta - (frameEnd - frameStart))
+    })
+    this.lastFrameTimestampForMonitor = now
     this.canvasManager.updateAdaptivePixelRatio?.(this.fpsDisplay.fps, now)
 
     this.forceRender = false

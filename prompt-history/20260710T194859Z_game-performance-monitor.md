@@ -1,0 +1,5 @@
+# 2026-07-10T19:48:59Z
+
+LLM: Codex
+
+So the new benchmark runs well even on my physical iphone BUT when I check the branch deploy with your changes in the game itself (not the benchmark mode) then the game is running at about 5fps only. Make sure to put some performance monitoring into the app so that when ?monitor query param is set that the game gather some data on the most critical parts of the game loop to figure out where the current performance bottleneck is. Make sure I can gather this data on my phone and copy paste it from there so you can use it in an upcoming prompt to improve the performance on the game. This should also give you a snapshot of the game and map settings I was using to reproduce the issue. when the monitor flag is set there should become a red record button visible on the sidebar where I can record the performance metrics for a arbitrary amount of time. Make sure this snapshot does not record too much data an it will average the data when recording takes longer. so basically the size of the log/report should not get bigger depending on the duration of the recording.

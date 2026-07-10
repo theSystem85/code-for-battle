@@ -1,5 +1,6 @@
 // rendering/renderer.js
 import { TextureManager } from './textureManager.js'
+import { performanceMonitor } from '../performance/performanceMonitor.js'
 import { MapRenderer } from './mapRenderer.js'
 import { BuildingRenderer } from './buildingRenderer.js'
 import { UnitRenderer } from './unitRenderer.js'
@@ -273,6 +274,12 @@ export class Renderer {
       return // Stop rendering if game is over
     }
 
+    const monitorTiming = performanceMonitor.recording
+    const renderStartedAt = monitorTiming ? performance.now() : 0
+    let terrainMs = 0
+    let entitiesMs = 0
+    let effectsMs = 0
+    let uiMs = 0
     // Render all game elements in order
     let gpuRendered = false
     const hasIntegratedWaterTiles = Boolean(
@@ -331,6 +338,7 @@ export class Renderer {
         gpuRenderedStreetTerrain: gpuRendered && hasGpuStreetAtlas
       }
     )
+    if (monitorTiming) terrainMs = performance.now() - renderStartedAt
 
     gameState.renderStats = {
       ...(gameState.renderStats || {}),
@@ -354,6 +362,7 @@ export class Renderer {
 
     const { groundedUnits, airborneUnits } = this.partitionUnitsByRenderLayer(units)
 
+    const entitiesStartedAt = monitorTiming ? performance.now() : 0
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
     this.buildingRenderer.renderBases(gameCtx, buildings, mapGrid, scrollOffset)
@@ -362,7 +371,9 @@ export class Renderer {
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset)
     this.unitRenderer.renderBases(gameCtx, groundedUnits, scrollOffset)
     gameCtx.restore()
+    if (monitorTiming) entitiesMs = performance.now() - entitiesStartedAt
 
+    const effectsStartedAt = monitorTiming ? performance.now() : 0
     this.effectsRenderer.render(gameCtx, bullets, gameState, units, scrollOffset)
 
     // Render mine indicators (skull overlays)
@@ -378,7 +389,9 @@ export class Renderer {
     if (gameState.mineFreeformPaint) {
       renderFreeformSweepPreview(gameCtx, gameState.mineFreeformPaint, scrollOffset)
     }
+    if (monitorTiming) effectsMs = performance.now() - effectsStartedAt
 
+    const uiStartedAt = monitorTiming ? performance.now() : 0
     // Render movement target indicators (green triangles)
     this.movementTargetRenderer.render(gameCtx, units, scrollOffset)
     this.pathPlanningRenderer.render(gameCtx, units, scrollOffset)
@@ -406,6 +419,10 @@ export class Renderer {
     this.buildingRenderer.renderHudHoverTooltip(gameCtx, [...(buildings || []), ...(factories || [])], scrollOffset)
 
     this.uiRenderer.render(gameCtx, gameCanvas, gameState, selectionActive, selectionStart, selectionEnd, scrollOffset, factories, buildings, mapGrid, units)
+    if (monitorTiming) {
+      uiMs = performance.now() - uiStartedAt
+      performanceMonitor.recordRendererPhases({ terrainMs, entitiesMs, effectsMs, uiMs })
+    }
   }
 
   renderMinimap(minimapCtx, minimapCanvas, mapGrid, scrollOffset, gameCanvas, units, buildings, gameState) {
