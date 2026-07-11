@@ -1,10 +1,17 @@
 // rendering/renderingUtils.js
-import { TILE_SIZE } from '../config.js'
+import { MOBILE_CANVAS_PIXEL_RATIO_CAP, TILE_SIZE } from '../config.js'
 import { gameRandom } from '../utils/gameRandom.js'
 
 // Get device pixel ratio for high-DPI rendering
 export const getDevicePixelRatio = () => {
-  return (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+  if (typeof window === 'undefined') return 1
+  const nativeRatio = window.devicePixelRatio || 1
+  const effectiveRatio = window.gameState?.canvasPixelRatio
+  if (Number.isFinite(effectiveRatio) && effectiveRatio > 0) {
+    return effectiveRatio
+  }
+  const isTouch = Boolean(navigator?.maxTouchPoints > 0 || document?.body?.classList.contains('is-touch'))
+  return isTouch ? Math.min(nativeRatio, MOBILE_CANVAS_PIXEL_RATIO_CAP) : nativeRatio
 }
 
 export function getCanvasPixelRatio(canvas, fallback = getDevicePixelRatio()) {

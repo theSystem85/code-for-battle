@@ -197,7 +197,7 @@ describe('MapRenderer water rendering', () => {
     expect(mapRenderer.frameChunkStats.chunksEvicted).toBeGreaterThan(0)
   })
 
-  it('draws a non-black fallback and queues cold chunks while scrolling', () => {
+  it('caches cold visible chunks once while scrolling instead of redrawing an uncached fallback every frame', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.lastScrollOffset = { x: 0, y: 0 }
     const ctx = {
@@ -223,10 +223,10 @@ describe('MapRenderer water rendering', () => {
       skipWaterSot: true
     })
 
-    expect(mapRenderer.frameChunkStats.chunkFallbacks).toBeGreaterThan(0)
+    expect(mapRenderer.frameChunkStats.chunkFallbacks).toBe(0)
     expect(mapRenderer.frameChunkStats.chunksQueued).toBeGreaterThan(0)
-    expect(mapRenderer.frameChunkStats.chunkMisses).toBe(0)
-    expect(ctx.fillRect).toHaveBeenCalled()
+    expect(mapRenderer.frameChunkStats.chunkMisses).toBeGreaterThan(0)
+    expect(ctx.drawImage).toHaveBeenCalled()
   })
 
   it('warms queued chunks outside the visible render path', () => {

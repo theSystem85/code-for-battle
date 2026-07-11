@@ -824,6 +824,7 @@
   </div>
 
   <div id="mobileBuildMenuContainer" aria-hidden="true"></div>
+  <canvas id="gameCanvasGPU" aria-hidden="true"></canvas>
   <canvas id="gameCanvasGL" aria-hidden="true"></canvas>
   <canvas id="gameCanvas"></canvas>
 
@@ -918,7 +919,14 @@
                 <span>Mobile pixel density</span>
                 <span id="settingsMobilePixelDensityValue" class="config-modal__range-value">1x</span>
               </span>
-              <input type="range" id="settingsMobilePixelDensityRange" min="1" max="4" step="0.25" value="1">
+              <input type="range" id="settingsMobilePixelDensityRange" min="1" max="3" step="0.25" value="1">
+            </label>
+            <label class="config-modal__field">
+              <span>Terrain renderer</span>
+              <select id="settingsRendererBackend">
+                <option value="webgl">WebGL (legacy)</option>
+                <option value="webgpu">WebGPU (experimental)</option>
+              </select>
             </label>
           </div>
           <div class="config-modal__section">

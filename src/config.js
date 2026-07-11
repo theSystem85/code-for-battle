@@ -373,7 +373,8 @@ function saveGraphicsSettingsToIndexedDb() {
         useProceduralWaterRendering: USE_PROCEDURAL_WATER_RENDERING,
         waterEffectTone: WATER_EFFECT_TONE,
         waterEffectSaturation: WATER_EFFECT_SATURATION,
-        mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP
+        mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP,
+        rendererBackend: RENDERER_BACKEND
       })
     )
   } catch (error) {
@@ -403,7 +404,8 @@ export function loadGraphicsSettingsFromIndexedDb() {
 
     WATER_EFFECT_TONE = clampNumber(parsed?.waterEffectTone, -1, 1, WATER_EFFECT_TONE)
     WATER_EFFECT_SATURATION = clampNumber(parsed?.waterEffectSaturation, 0, 2, WATER_EFFECT_SATURATION)
-    MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 4, MOBILE_CANVAS_PIXEL_RATIO_CAP)
+    MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 3, MOBILE_CANVAS_PIXEL_RATIO_CAP)
+    RENDERER_BACKEND = parsed?.rendererBackend === 'webgpu' ? 'webgpu' : 'webgl'
   } catch (error) {
     window.logger?.warn('Failed to load graphics settings from IndexedDB:', error)
   }
@@ -421,13 +423,22 @@ export function setUseProceduralWaterRendering(value) {
 export let MOBILE_CANVAS_PIXEL_RATIO_CAP = 1
 
 export function setMobileCanvasPixelRatioCap(value) {
-  MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(value, 1, 4, MOBILE_CANVAS_PIXEL_RATIO_CAP)
+  MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(value, 1, 3, MOBILE_CANVAS_PIXEL_RATIO_CAP)
   saveGraphicsSettingsToIndexedDb()
   if (typeof window !== 'undefined') {
     window.gameInstance?.canvasManager?.resetAdaptivePixelRatioCap?.()
   }
   requestGraphicsSettingsRender()
   return MOBILE_CANVAS_PIXEL_RATIO_CAP
+}
+
+export let RENDERER_BACKEND = 'webgl'
+
+export function setRendererBackend(value) {
+  RENDERER_BACKEND = value === 'webgpu' ? 'webgpu' : 'webgl'
+  saveGraphicsSettingsToIndexedDb()
+  requestGraphicsSettingsRender()
+  return RENDERER_BACKEND
 }
 
 // Water tone controls the palette blend from cooler blue toward greener teal.
@@ -1512,6 +1523,7 @@ const EXPORTED_CONFIG_VARIABLES = [
   'WATER_EFFECT_SATURATION',
   'WATER_EFFECT_ZOOM',
   'MOBILE_CANVAS_PIXEL_RATIO_CAP',
+  'RENDERER_BACKEND',
   'TILE_SPRITE_SHEET',
   'TILE_SPRITE_MAP',
   'USE_TEXTURES',

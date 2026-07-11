@@ -6,13 +6,16 @@ export class CanvasManager {
   constructor() {
     this.gameCanvas = document.getElementById('gameCanvas')
     this.gameCtx = this.gameCanvas ? this.gameCanvas.getContext('2d') : null
+    this.gameGpuCanvas = document.getElementById('gameCanvasGPU')
     this.gameGlCanvas = document.getElementById('gameCanvasGL')
     this.gameGl = this.initializeGlContext()
     this.minimapCanvas = document.getElementById('minimap')
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
-    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.adaptivePixelRatioCap = this.isTouchLayout() ? 1 : MOBILE_CANVAS_PIXEL_RATIO_CAP
     this.pixelRatio = this.resolvePixelRatio()
     this.lastAdaptivePixelRatioCheck = 0
+    this.lastAdaptivePixelRatioChange = 0
+    this.stableCameraSince = 0
 
     this.setupEventListeners()
   }
@@ -27,6 +30,7 @@ export class CanvasManager {
   }
 
   resolvePixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
+    if (!this.isTouchLayout()) return Math.max(1, rawPixelRatio || 1)
     const configuredCap = Number.isFinite(MOBILE_CANVAS_PIXEL_RATIO_CAP) ? MOBILE_CANVAS_PIXEL_RATIO_CAP : 1
     const adaptiveCap = Number.isFinite(this.adaptivePixelRatioCap) ? this.adaptivePixelRatioCap : configuredCap
     const cap = Math.min(configuredCap, adaptiveCap)
@@ -34,26 +38,43 @@ export class CanvasManager {
   }
 
   resetAdaptivePixelRatioCap() {
-    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.adaptivePixelRatioCap = this.isTouchLayout() ? 1 : MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.stableCameraSince = 0
     this.resizeCanvases()
   }
 
-  updateAdaptivePixelRatio(fps, now = performance.now()) {
+  updateAdaptivePixelRatio(fps, now = performance.now(), cameraMoving = false) {
     const rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
     if (!this.isTouchLayout() || rawPixelRatio <= 1 || !Number.isFinite(fps) || fps <= 0) {
       return false
     }
 
+    if (cameraMoving) {
+      this.stableCameraSince = 0
+      if (this.adaptivePixelRatioCap > 1 && now - this.lastAdaptivePixelRatioChange >= 750) {
+        this.adaptivePixelRatioCap = 1
+        this.lastAdaptivePixelRatioChange = now
+        this.resizeCanvases()
+        return true
+      }
+      return false
+    }
+
+    if (!this.stableCameraSince) this.stableCameraSince = now
     if (now - this.lastAdaptivePixelRatioCheck < 1500) {
       return false
     }
     this.lastAdaptivePixelRatioCheck = now
 
     let nextCap = this.adaptivePixelRatioCap
-    if (fps < 18) {
+    if (fps < 55) {
       nextCap = Math.max(1, this.adaptivePixelRatioCap - 0.5)
-    } else if (fps > 45) {
-      nextCap = Math.min(MOBILE_CANVAS_PIXEL_RATIO_CAP, this.adaptivePixelRatioCap + 0.5)
+    } else if (
+      fps >= 59 &&
+      now - this.stableCameraSince >= 4000 &&
+      now - this.lastAdaptivePixelRatioChange >= 5000
+    ) {
+      nextCap = Math.min(MOBILE_CANVAS_PIXEL_RATIO_CAP, this.adaptivePixelRatioCap + 0.25)
     }
 
     if (Math.abs(nextCap - this.adaptivePixelRatioCap) < 0.01) {
@@ -61,6 +82,7 @@ export class CanvasManager {
     }
 
     this.adaptivePixelRatioCap = nextCap
+    this.lastAdaptivePixelRatioChange = now
     this.resizeCanvases()
     return true
   }
@@ -207,6 +229,7 @@ export class CanvasManager {
     }
 
     applyCanvasLayout(this.gameGlCanvas)
+    applyCanvasLayout(this.gameGpuCanvas)
     applyCanvasLayout(this.gameCanvas)
 
     // Set actual pixel size scaled by device pixel ratio
@@ -214,15 +237,19 @@ export class CanvasManager {
     const targetHeight = Math.max(1, Math.round(canvasCssHeight * pixelRatio))
 
     if (this.gameGlCanvas) {
-      this.gameGlCanvas.width = targetWidth
-      this.gameGlCanvas.height = targetHeight
+      if (this.gameGlCanvas.width !== targetWidth) this.gameGlCanvas.width = targetWidth
+      if (this.gameGlCanvas.height !== targetHeight) this.gameGlCanvas.height = targetHeight
       if (this.gameGl) {
         this.gameGl.viewport(0, 0, targetWidth, targetHeight)
       }
     }
+    if (this.gameGpuCanvas) {
+      if (this.gameGpuCanvas.width !== targetWidth) this.gameGpuCanvas.width = targetWidth
+      if (this.gameGpuCanvas.height !== targetHeight) this.gameGpuCanvas.height = targetHeight
+    }
 
-    this.gameCanvas.width = targetWidth
-    this.gameCanvas.height = targetHeight
+    if (this.gameCanvas.width !== targetWidth) this.gameCanvas.width = targetWidth
+    if (this.gameCanvas.height !== targetHeight) this.gameCanvas.height = targetHeight
 
     // Scale the drawing context to counter the device pixel ratio
     if (this.gameCtx) {
@@ -239,8 +266,10 @@ export class CanvasManager {
     const minimapHeight = Math.round(minimapWidth * 0.6)
     this.minimapCanvas.style.width = `${minimapWidth}px`
     this.minimapCanvas.style.height = `${minimapHeight}px`
-    this.minimapCanvas.width = Math.max(1, Math.round(minimapWidth * pixelRatio))
-    this.minimapCanvas.height = Math.max(1, Math.round(minimapHeight * pixelRatio))
+    const minimapTargetWidth = Math.max(1, Math.round(minimapWidth * pixelRatio))
+    const minimapTargetHeight = Math.max(1, Math.round(minimapHeight * pixelRatio))
+    if (this.minimapCanvas.width !== minimapTargetWidth) this.minimapCanvas.width = minimapTargetWidth
+    if (this.minimapCanvas.height !== minimapTargetHeight) this.minimapCanvas.height = minimapTargetHeight
 
     // Scale minimap context
     if (this.minimapCtx) {
@@ -279,6 +308,10 @@ export class CanvasManager {
 
   getGameGlCanvas() {
     return this.gameGlCanvas
+  }
+
+  getGameGpuCanvas() {
+    return this.gameGpuCanvas
   }
 
   getMinimapCanvas() {

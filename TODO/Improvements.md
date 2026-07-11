@@ -264,8 +264,8 @@
     - Fixed 1-frame delay in `canAccelerate` flag by calling rotation update before position update
     - Reduced rotation threshold from 45° to 15° for non-tank units
     - Reset velocity when receiving new movement command to prevent coasting in wrong direction
-- [ ] Move main-map and minimap rendering to GPU-backed WebGL/WebGPU pipelines using atlas streaming and instanced quads for terrain and sprites to reduce CPU draw overhead.
-- [ ] Create a WebGPU transition plan (Chrome/Safari-aligned) covering adapter setup, pipeline parity, asset migration, fallback strategy, and a settings toggle for WebGPU/WebGL selection.
+- [ ] Move remaining sprite, overlay, and minimap rendering to GPU-backed WebGL/WebGPU pipelines; terrain now has opt-in WebGPU atlas instancing with automatic WebGL fallback.
+- [x] Create and begin the WebGPU transition with a persisted WebGPU/WebGL setting, atlas-backed instanced terrain, procedural water parity, asynchronous initialization, and device-loss fallback.
 - [x] Buffer GPU tile rendering with off-screen margin rows/columns so no black bars appear while panning to map edges.
 - [x] Restore animated water tiles within the GPU rendering path so shoreline movement matches the 2D renderer.
 - [x] **Performance:** Pre-cached gradient sprites for smoke and explosions - moves gradient creation from per-frame CPU to one-time startup + GPU texture sampling

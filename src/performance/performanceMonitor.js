@@ -119,6 +119,7 @@ export class PerformanceMonitor {
     const map = gameState.mapGrid || []
     const gameCanvas = document.getElementById('gameCanvas')
     const gameGlCanvas = document.getElementById('gameCanvasGL')
+    const gameGpuCanvas = document.getElementById('gameCanvasGPU')
     const metrics = Object.fromEntries(Object.entries(this.metrics).map(([name, metric]) => [name, summarizeMetric(metric)]))
     const durationMs = Math.max(0, this.endedAt - this.startedAt)
     const frameAverage = metrics.frameInterval.averageMs
@@ -171,6 +172,7 @@ export class PerformanceMonitor {
       canvases: {
         game: getCanvasSnapshot(gameCanvas),
         webgl: getCanvasSnapshot(gameGlCanvas),
+        webgpu: getCanvasSnapshot(gameGpuCanvas),
         configuredCanvasPixelRatio: gameState.canvasPixelRatio || null
       },
       renderer: {

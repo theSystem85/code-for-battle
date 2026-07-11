@@ -13,7 +13,8 @@ const WATER_SETTINGS_CONFIG_IDS = {
   enabled: 'proceduralWaterRendering',
   tone: 'waterEffectTone',
   saturation: 'waterEffectSaturation',
-  pixelDensity: 'mobileCanvasPixelRatioCap'
+  pixelDensity: 'mobileCanvasPixelRatioCap',
+  rendererBackend: 'rendererBackend'
 }
 
 function formatWaterTone(value) {
@@ -48,6 +49,7 @@ function syncWaterGraphicsControls(modal) {
   const toneValue = modal.querySelector('#settingsWaterToneValue')
   const saturationValue = modal.querySelector('#settingsWaterSaturationValue')
   const pixelDensityValue = modal.querySelector('#settingsMobilePixelDensityValue')
+  const rendererSelect = modal.querySelector('#settingsRendererBackend')
 
   if (enabledToggle) {
     enabledToggle.checked = Boolean(getConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled))
@@ -77,6 +79,9 @@ function syncWaterGraphicsControls(modal) {
     if (pixelDensityValue) {
       pixelDensityValue.textContent = formatPixelDensity(pixelDensity)
     }
+  }
+  if (rendererSelect) {
+    rendererSelect.value = getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend) || 'webgl'
   }
 }
 
@@ -171,6 +176,7 @@ export function initSettingsModal() {
   const waterToneRange = document.getElementById('settingsWaterToneRange')
   const waterSaturationRange = document.getElementById('settingsWaterSaturationRange')
   const mobilePixelDensityRange = document.getElementById('settingsMobilePixelDensityRange')
+  const rendererBackendSelect = document.getElementById('settingsRendererBackend')
 
   if (!modal) return
 
@@ -239,6 +245,13 @@ export function initSettingsModal() {
     mobilePixelDensityRange.value = String(getConfigValue(WATER_SETTINGS_CONFIG_IDS.pixelDensity) ?? 1)
     mobilePixelDensityRange.addEventListener('input', (event) => {
       setConfigValue(WATER_SETTINGS_CONFIG_IDS.pixelDensity, Number(event.target.value))
+      syncWaterGraphicsControls(modal)
+    })
+  }
+  if (rendererBackendSelect) {
+    rendererBackendSelect.value = getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend) || 'webgl'
+    rendererBackendSelect.addEventListener('change', event => {
+      setConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend, event.target.value)
       syncWaterGraphicsControls(modal)
     })
   }

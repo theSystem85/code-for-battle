@@ -2,7 +2,7 @@
 
 **Feature Branch**: `014-webgl-rendering-upgrade`
 **Created**: 2025-11-21
-**Status**: Proposed
+**Status**: In Progress
 **Input**: "Move terrain and sprite rendering to WebGL/WebGPU. The engine currently binds both the main and minimap canvases to the CPU-bound 2D context, which limits batching and GPU utilization. Replacing the main canvas context with WebGL (or WebGPU where available) would allow you to stream a single tile atlas to the GPU and render the map with instanced quads, drastically reducing per-tile CPU draw calls. Sprites (units, effects, overlays) can share the same pipeline through texture atlases and instanced vertex data."
 
 ---
@@ -56,6 +56,7 @@ Upgrade the rendering stack to prioritize GPU-backed pipelines for the main play
 
 - WebGPU adoption is optional but the abstraction should leave room for a future adapter.
 - Texture atlases should remain source-of-truth for both tiles and sprite layers to simplify batching and asset management.
+- Implemented follow-up: Settings now provides `WebGL (legacy)` and `WebGPU (experimental)`. WebGPU uses a separate transparent canvas, asynchronously initializes an instanced atlas terrain pipeline, mirrors procedural water/SOT clipping, and keeps WebGL active until WebGPU succeeds. Unsupported initialization and device loss fall back to WebGL without blanking the map.
 
 ---
 

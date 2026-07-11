@@ -7,6 +7,7 @@ import { getTextureManager, notifyTileMutation } from './rendering.js'
 import { initializeMobileViewportLock } from './ui/mobileViewportLock.js'
 import { scheduleAfterNextPaint, scheduleIdleTask } from './startupScheduler.js'
 import { initializeGameStorage } from './storage/indexedDbStorage.js'
+import { loadGraphicsSettingsFromIndexedDb } from './config.js'
 import './ui/mobileJoysticks.js'
 import './ui/mobileControlGroups.js'
 import {
@@ -119,6 +120,7 @@ function setupAudioUnlock() {
 
 document.addEventListener('DOMContentLoaded', async() => {
   await initializeGameStorage()
+  loadGraphicsSettingsFromIndexedDb()
   reloadMasterVolumeFromStorage()
   updateTouchClass()
   updateMobileLayoutClasses()

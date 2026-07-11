@@ -717,6 +717,7 @@ body.is-touch {
   background: #666; /* Lighter on hover for better interaction feedback */
 }
 
+#gameCanvasGPU,
 #gameCanvasGL,
 #gameCanvas {
   position: absolute;
@@ -730,6 +731,7 @@ body.is-touch {
   -webkit-touch-callout: none;
 }
 
+#gameCanvasGPU,
 #gameCanvasGL {
   z-index: 0;
   background: #000;
@@ -1318,6 +1320,7 @@ body.mobile-landscape #energyBarContainer {
 }
 
 body.mobile-landscape #gameCanvas,
+body.mobile-landscape #gameCanvasGPU,
 body.mobile-landscape #gameCanvasGL {
   left: 0;
   width: 100%;
@@ -1325,17 +1328,20 @@ body.mobile-landscape #gameCanvasGL {
 }
 
 body.mobile-portrait #gameCanvas,
+body.mobile-portrait #gameCanvasGPU,
 body.mobile-portrait #gameCanvasGL {
   transition: left 0.25s ease, width 0.25s ease;
 }
 
 body.mobile-portrait:not(.sidebar-collapsed) #gameCanvas,
+body.mobile-portrait:not(.sidebar-collapsed) #gameCanvasGPU,
 body.mobile-portrait:not(.sidebar-collapsed) #gameCanvasGL {
   left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
 }
 
 body.mobile-landscape.is-touch #gameCanvas,
+body.mobile-landscape.is-touch #gameCanvasGPU,
 body.mobile-landscape.is-touch #gameCanvasGL {
   left: calc(-1 * var(--safe-area-left));
   right: calc(-1 * var(--safe-area-right));
@@ -1349,6 +1355,7 @@ body.mobile-landscape.is-touch #gameCanvasGL {
 
 /* Ensure portrait PWA canvas stretches through bottom safe-area on first load */
 body.pwa-standalone.mobile-portrait.is-touch #gameCanvas,
+body.pwa-standalone.mobile-portrait.is-touch #gameCanvasGPU,
 body.pwa-standalone.mobile-portrait.is-touch #gameCanvasGL {
   top: calc(-1 * var(--safe-area-top));
   bottom: calc(-1 * var(--safe-area-bottom));
@@ -1549,12 +1556,14 @@ body.mobile-portrait.sidebar-collapsed #sidebar #minimap {
 }
 
 body.mobile-portrait.sidebar-collapsed #gameCanvas,
+body.mobile-portrait.sidebar-collapsed #gameCanvasGPU,
 body.mobile-portrait.sidebar-collapsed #gameCanvasGL {
   left: 0;
   width: 100%;
 }
 
 body.mobile-portrait.sidebar-condensed #gameCanvas,
+body.mobile-portrait.sidebar-condensed #gameCanvasGPU,
 body.mobile-portrait.sidebar-condensed #gameCanvasGL {
   left: 0;
   width: 100%;
@@ -1572,6 +1581,7 @@ body.mobile-portrait.sidebar-condensed #gameCanvasGL {
   }
 
   html:not(.no-js) body:not(.mobile-landscape):not(.mobile-portrait) #gameCanvas,
+  html:not(.no-js) body:not(.mobile-landscape):not(.mobile-portrait) #gameCanvasGPU,
   html:not(.no-js) body:not(.mobile-landscape):not(.mobile-portrait) #gameCanvasGL {
     left: 0;
     width: 100%;

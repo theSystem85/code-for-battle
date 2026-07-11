@@ -1,4 +1,4 @@
 {
-  "commit": "1db6629f",
-  "message": "Use streets24 and tighten street sprite routing"
+  "commit": "943a2987",
+  "message": "feat: Add opt-in mobile gameplay performance recorder"
 }

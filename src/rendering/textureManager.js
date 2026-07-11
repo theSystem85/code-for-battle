@@ -1022,7 +1022,7 @@ export class TextureManager {
 
     this.getOrLoadImage(imagePath, extensions, (img) => {
       if (img) {
-        const pixelRatio = getDevicePixelRatio()
+        const pixelRatio = Math.min(3, getDevicePixelRatio())
 
         // Create a canvas for the texture at the correct size, accounting for pixel ratio
         const baseCanvas = document.createElement('canvas')

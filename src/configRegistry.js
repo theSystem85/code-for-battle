@@ -109,7 +109,9 @@ import {
   WATER_EFFECT_ZOOM,
   setWaterEffectZoom,
   MOBILE_CANVAS_PIXEL_RATIO_CAP,
-  setMobileCanvasPixelRatioCap
+  setMobileCanvasPixelRatioCap,
+  RENDERER_BACKEND,
+  setRendererBackend
   , HOWITZER_COST
   , setHowitzerCost
   , HOWITZER_SPEED
@@ -206,8 +208,17 @@ export const configRegistry = {
     get: () => MOBILE_CANVAS_PIXEL_RATIO_CAP,
     set: setMobileCanvasPixelRatioCap,
     min: 1,
-    max: 4,
+    max: 3,
     step: 0.25,
+    category: 'Graphics'
+  },
+
+  rendererBackend: {
+    name: 'Terrain Renderer',
+    description: 'Choose WebGPU when available or WebGL for broad compatibility.',
+    type: 'string',
+    get: () => RENDERER_BACKEND,
+    set: setRendererBackend,
     category: 'Graphics'
   },
 

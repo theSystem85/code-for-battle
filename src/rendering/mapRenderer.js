@@ -209,10 +209,14 @@ function getInverseSotInfo(mapGrid, x, y, tileType, top, right, bottom, left, an
 export class MapRenderer {
   constructor(textureManager) {
     this.textureManager = textureManager
-    this.chunkSize = 16
+    this.mobileMemoryProfile = Boolean(
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) ||
+      (typeof document !== 'undefined' && document.body?.classList.contains('is-touch'))
+    )
+    this.chunkSize = this.mobileMemoryProfile ? 8 : 16
     this.chunkPadding = 2
-    this.maxCachedChunks = 48
-    this.maxChunkWarmQueue = 96
+    this.maxCachedChunks = this.mobileMemoryProfile ? 20 : 48
+    this.maxChunkWarmQueue = this.mobileMemoryProfile ? 28 : 96
     this.chunkCache = new Map()
     this.chunkWarmQueue = new Map()
     this.chunkWarmScheduled = false
@@ -627,6 +631,11 @@ export class MapRenderer {
 
     for (const [key] of candidates) {
       if (this.chunkCache.size <= this.maxCachedChunks) break
+      const chunk = this.chunkCache.get(key)
+      if (chunk?.canvas) {
+        chunk.canvas.width = 1
+        chunk.canvas.height = 1
+      }
       this.chunkCache.delete(key)
       this.frameChunkStats.chunksEvicted++
       if (this.prewarmedCacheKey) {
@@ -942,7 +951,7 @@ export class MapRenderer {
     const chunkRows = Math.ceil(mapHeight / this.chunkSize)
     const directionX = Math.sign(scrollDelta.x || 0)
     const directionY = Math.sign(scrollDelta.y || 0)
-    const warmRadius = 2
+    const warmRadius = this.mobileMemoryProfile ? 1 : 2
 
     for (let chunkY = Math.max(0, startChunkY - warmRadius); chunkY < Math.min(chunkRows, endChunkY + warmRadius); chunkY++) {
       const chunkStartY = chunkY * this.chunkSize
@@ -1090,24 +1099,6 @@ export class MapRenderer {
         }
 
         const state = this.getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, chunkOptions)
-        if (state.needsRedraw && isScrolling) {
-          this.queueChunkForWarm(
-            mapGrid,
-            chunkX,
-            chunkY,
-            chunkStartX,
-            chunkStartY,
-            chunkEndX,
-            chunkEndY,
-            useTexture,
-            currentWaterFrame,
-            chunkOptions,
-            4
-          )
-          this.drawChunkFallback(ctx, mapGrid, scrollOffset, chunkStartX, chunkStartY, chunkEndX, chunkEndY, chunkOptions)
-          continue
-        }
-
         this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, {
           ...chunkOptions,
           precomputedState: state

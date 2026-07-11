@@ -26,9 +26,10 @@ import { preloadHowitzerImage } from './howitzerImageRenderer.js'
 import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
+import { GameWebGPURenderer } from './webgpuRenderer.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
-import { TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
+import { RENDERER_BACKEND, TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 
 export class Renderer {
@@ -48,6 +49,7 @@ export class Renderer {
     this.dangerZoneRenderer = new DangerZoneRenderer()
     this.wreckRenderer = new WreckRenderer()
     this.gpuRenderer = null
+    this.webgpuRenderer = null
   }
 
   partitionUnitsByRenderLayer(units) {
@@ -256,7 +258,7 @@ export class Renderer {
     })
   }
 
-  renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null) {
+  renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null, webgpuCanvas = null) {
     if (!gameState || !gameCtx) {
       return
     }
@@ -296,13 +298,24 @@ export class Renderer {
       (needsCpuTerrainComposite && !hasGpuStreetAtlas)
     )
     const shouldUseGpuTerrain = Boolean(
-      gpuContext &&
-      gpuCanvas &&
       USE_PROCEDURAL_WATER_RENDERING &&
+      ((gpuContext && gpuCanvas) || (webgpuCanvas && typeof navigator !== 'undefined' && navigator.gpu)) &&
       (!gameState.useIntegratedSpriteSheetMode || gpuWaterOnly)
     )
 
-    if (shouldUseGpuTerrain) {
+    let gpuBackend = 'cpu'
+    const wantsWebGPU = RENDERER_BACKEND === 'webgpu' && Boolean(webgpuCanvas) && typeof navigator !== 'undefined' && Boolean(navigator.gpu)
+    if (shouldUseGpuTerrain && wantsWebGPU) {
+      if (!this.webgpuRenderer) {
+        this.webgpuRenderer = new GameWebGPURenderer(this.textureManager, this.mapRenderer)
+      } else {
+        this.webgpuRenderer.setMapRenderer(this.mapRenderer)
+      }
+      gpuRendered = this.webgpuRenderer.render(mapGrid, scrollOffset, webgpuCanvas, { waterOnly: gpuWaterOnly })
+      if (gpuRendered) gpuBackend = 'webgpu'
+    }
+
+    if (shouldUseGpuTerrain && !gpuRendered) {
       if (!this.gpuRenderer) {
         this.gpuRenderer = new GameWebGLRenderer(gpuContext, this.textureManager, this.mapRenderer)
       } else {
@@ -310,11 +323,15 @@ export class Renderer {
         this.gpuRenderer.setMapRenderer(this.mapRenderer)
       }
       gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas, { waterOnly: gpuWaterOnly })
+      if (gpuRendered) gpuBackend = 'webgl'
     } else if (gpuContext && gpuCanvas) {
       gpuContext.viewport(0, 0, gpuCanvas.width, gpuCanvas.height)
       gpuContext.clearColor(0, 0, 0, 0)
       gpuContext.clear(gpuContext.COLOR_BUFFER_BIT)
     }
+
+    if (webgpuCanvas?.style) webgpuCanvas.style.display = gpuBackend === 'webgpu' ? 'block' : 'none'
+    if (gpuCanvas?.style) gpuCanvas.style.display = gpuBackend === 'webgpu' ? 'none' : 'block'
 
     // Build occupancy map for visualization if needed
     let occupancyMap = null
@@ -331,7 +348,7 @@ export class Renderer {
       occupancyMap,
       {
         skipBaseLayer: gpuRendered && !gpuWaterOnly,
-        skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot,
+        skipWaterSot: gpuRendered && (gpuBackend === 'webgpu' ? this.webgpuRenderer?.rendersWaterSot : this.gpuRenderer?.rendersWaterSot),
         skipWaterBase: gpuRendered && gpuWaterOnly,
         gpuRenderedResources: gpuRendered && !gpuWaterOnly,
         separateWaterLayer: needsCpuTerrainComposite && !gpuRendered,
@@ -345,6 +362,9 @@ export class Renderer {
       mapChunks: this.mapRenderer.getLastFrameChunkStats?.() || null,
       gpuTerrain: {
         rendered: gpuRendered,
+        backend: gpuBackend,
+        requestedBackend: RENDERER_BACKEND,
+        webgpuStatus: this.webgpuRenderer?.getStatus?.() || null,
         waterOnly: gpuWaterOnly,
         streetAtlas: gpuRendered && hasGpuStreetAtlas
       }

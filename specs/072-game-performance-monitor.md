@@ -8,6 +8,7 @@ Provide an opt-in on-device performance recorder for diagnosing normal gameplay 
 
 1. Open the normal game with `?monitor` appended to its URL.
 2. A red circular record button is visible with the sidebar action controls.
+   On mobile it is fixed inside the safe viewport above the bottom-right help control, with explicit dimensions that override the landscape action-column width rule.
 3. Tap it to start recording, reproduce the slowdown, and tap it again to stop.
 4. The game presents a JSON snapshot. Use `Copy` and paste the report into a follow-up issue.
 
