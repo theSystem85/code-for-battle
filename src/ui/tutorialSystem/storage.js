@@ -1,9 +1,8 @@
+import { getStoredItem, setStoredItem } from '../../storage/indexedDbStorage.js'
+
 export function readFromStorage(key, fallback) {
-  if (typeof localStorage === 'undefined') {
-    return fallback
-  }
   try {
-    const raw = localStorage.getItem(key)
+    const raw = getStoredItem(key)
     if (!raw) return fallback
     return { ...fallback, ...JSON.parse(raw) }
   } catch (err) {
@@ -13,11 +12,8 @@ export function readFromStorage(key, fallback) {
 }
 
 export function writeToStorage(key, payload) {
-  if (typeof localStorage === 'undefined') {
-    return
-  }
   try {
-    localStorage.setItem(key, JSON.stringify(payload))
+    setStoredItem(key, JSON.stringify(payload))
   } catch (err) {
     window.logger?.warn?.('Failed to write tutorial storage:', err)
   }

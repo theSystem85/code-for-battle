@@ -147,7 +147,7 @@ export const gameState = {
   hostInviteStatus: {},
 
   // Enemy AI learning
-  playerBuildHistory: null,  // Will be initialized from localStorage if available
+  playerBuildHistory: null,  // Will be initialized from browser storage if available
   currentSessionId: null,    // Will be set when first building is placed
   enemyLastBuildingTime: 0,  // Track when enemy last built something
 

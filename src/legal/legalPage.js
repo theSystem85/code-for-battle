@@ -201,7 +201,7 @@ function renderPrivacyDe(config) {
 
     <section>
       <h2>Spielnutzung und Browser-Speicher</h2>
-      <p>Bei der Nutzung des Spiels werden Spielstände, Replays, Komfort- und Grafikeinstellungen, Multiplayer-Aliasnamen sowie weitere technisch erforderliche Konfigurationswerte lokal im Browser gespeichert, vor allem über Local Storage. Session Storage wird derzeit nicht aktiv genutzt.</p>
+      <p>Bei der Nutzung des Spiels werden Spielstände, Replays, Komfort- und Grafikeinstellungen, Multiplayer-Aliasnamen sowie weitere technisch erforderliche Konfigurationswerte lokal im Browser gespeichert, vor allem über IndexedDB. Session Storage wird derzeit nicht aktiv genutzt.</p>
       <p>Rechtsgrundlage für den Zugriff auf bzw. die Speicherung von Informationen auf Ihrem Endgerät ist § 25 Abs. 2 TDDDG, soweit dies technisch erforderlich ist. Die anschließende Verarbeitung personenbezogener Daten erfolgt auf Grundlage von Art. 6 Abs. 1 lit. b oder lit. f DSGVO, um die von Ihnen gewünschten Spiel- und Komfortfunktionen bereitzustellen.</p>
     </section>
 
@@ -290,7 +290,7 @@ function renderPrivacyEn(config) {
 
     <section>
       <h2>Game usage and browser storage</h2>
-      <p>When you use the game, save states, replays, convenience and graphics settings, multiplayer aliases, and other technically necessary configuration values are stored locally in your browser, primarily via Local Storage. Session Storage is not currently used actively.</p>
+      <p>When you use the game, save states, replays, convenience and graphics settings, multiplayer aliases, and other technically necessary configuration values are stored locally in your browser, primarily via IndexedDB. Session Storage is not currently used actively.</p>
       <p>The legal basis for accessing or storing information on your device is Section 25(2) TDDDG where this is technically necessary. Subsequent personal data processing is based on Art. 6(1)(b) or Art. 6(1)(f) GDPR in order to provide the game features you requested.</p>
     </section>
 

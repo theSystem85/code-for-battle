@@ -1,10 +1,49 @@
 // rendering/renderingUtils.js
-import { TILE_SIZE } from '../config.js'
+import { MOBILE_CANVAS_PIXEL_RATIO_CAP, TILE_SIZE } from '../config.js'
 import { gameRandom } from '../utils/gameRandom.js'
 
 // Get device pixel ratio for high-DPI rendering
 export const getDevicePixelRatio = () => {
-  return window.devicePixelRatio || 1
+  if (typeof window === 'undefined') return 1
+  const nativeRatio = window.devicePixelRatio || 1
+  const effectiveRatio = window.gameState?.canvasPixelRatio
+  if (Number.isFinite(effectiveRatio) && effectiveRatio > 0) {
+    return effectiveRatio
+  }
+  const isTouch = Boolean(navigator?.maxTouchPoints > 0 || document?.body?.classList.contains('is-touch'))
+  return isTouch ? Math.min(nativeRatio, MOBILE_CANVAS_PIXEL_RATIO_CAP) : nativeRatio
+}
+
+export function getCanvasPixelRatio(canvas, fallback = getDevicePixelRatio()) {
+  if (!canvas) {
+    return fallback || 1
+  }
+
+  const bounds = typeof canvas.getBoundingClientRect === 'function'
+    ? canvas.getBoundingClientRect()
+    : null
+  const logicalWidth = bounds?.width || canvas.clientWidth || 0
+  if (logicalWidth > 0 && canvas.width > 0) {
+    return canvas.width / logicalWidth
+  }
+
+  return fallback || 1
+}
+
+export function getCanvasLogicalSize(canvas) {
+  if (!canvas) {
+    return { width: 0, height: 0, pixelRatio: 1 }
+  }
+
+  const bounds = typeof canvas.getBoundingClientRect === 'function'
+    ? canvas.getBoundingClientRect()
+    : null
+  const pixelRatio = getCanvasPixelRatio(canvas)
+  return {
+    width: bounds?.width || canvas.clientWidth || (canvas.width / pixelRatio) || canvas.width || 0,
+    height: bounds?.height || canvas.clientHeight || (canvas.height / pixelRatio) || canvas.height || 0,
+    pixelRatio
+  }
 }
 
 // Tesla Coil Lightning Rendering

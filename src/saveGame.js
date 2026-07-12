@@ -53,6 +53,14 @@ import { stopHostInvite } from './network/webrtcSession.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { getRNGState } from './utils/gameRandom.js'
 import { deterministicRNG, initializeSessionRNG } from './network/deterministicRandom.js'
+import {
+  getStoredEntries,
+  getStoredItem,
+  hasStoredItem,
+  isGameStorageAvailable,
+  removeStoredItem,
+  setStoredItem
+} from './storage/indexedDbStorage.js'
 
 const BUILTIN_SAVE_PREFIX = 'builtin:'
 const LAST_GAME_LABEL = 'lastGame'
@@ -97,27 +105,23 @@ function restoreDeterministicRng(savedGameState = {}) {
 }
 
 function markLastGameResumePending() {
-  if (typeof localStorage === 'undefined') return
-
   try {
-    localStorage.setItem(LAST_GAME_RESUME_FLAG_KEY, 'true')
+    setStoredItem(LAST_GAME_RESUME_FLAG_KEY, 'true')
   } catch (err) {
     window.logger.warn('Failed to set auto-resume flag for last game:', err)
   }
 }
 
 function clearLastGameResumePending() {
-  if (typeof localStorage === 'undefined') return
-
   try {
-    localStorage.removeItem(LAST_GAME_RESUME_FLAG_KEY)
+    removeStoredItem(LAST_GAME_RESUME_FLAG_KEY)
   } catch (err) {
     window.logger.warn('Failed to clear auto-resume flag for last game:', err)
   }
 }
 
 function canPersistLastGame() {
-  return typeof localStorage !== 'undefined' && gameState.gameStarted && !gameState.gameOver
+  return isGameStorageAvailable() && gameState.gameStarted && !gameState.gameOver
 }
 
 function saveLastGameCheckpoint(reason = '') {
@@ -206,50 +210,46 @@ function syncLoadedMapSettings(widthTiles, heightTiles, mapSeed, oreFieldCount, 
     playerCountInput.value = Math.max(2, Math.min(4, Math.floor(playerCount)))
   }
 
-  if (typeof localStorage === 'undefined') {
-    return
+  try {
+    setStoredItem(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles.toString())
+  } catch (err) {
+    window.logger.warn('Failed to persist loaded map width to IndexedDB:', err)
   }
 
   try {
-    localStorage.setItem(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles.toString())
+    setStoredItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString())
   } catch (err) {
-    window.logger.warn('Failed to persist loaded map width to localStorage:', err)
-  }
-
-  try {
-    localStorage.setItem(MAP_HEIGHT_TILES_STORAGE_KEY, heightTiles.toString())
-  } catch (err) {
-    window.logger.warn('Failed to persist loaded map height to localStorage:', err)
+    window.logger.warn('Failed to persist loaded map height to IndexedDB:', err)
   }
 
   if (typeof mapSeed === 'string') {
     try {
-      localStorage.setItem(MAP_SEED_STORAGE_KEY, mapSeed)
+      setStoredItem(MAP_SEED_STORAGE_KEY, mapSeed)
     } catch (err) {
-      window.logger.warn('Failed to persist loaded map seed to localStorage:', err)
+      window.logger.warn('Failed to persist loaded map seed to IndexedDB:', err)
     }
   }
 
   if (Number.isFinite(oreFieldCount)) {
     try {
-      localStorage.setItem(ORE_FIELD_COUNT_STORAGE_KEY, Math.max(0, Math.min(24, Math.floor(oreFieldCount))).toString())
+      setStoredItem(ORE_FIELD_COUNT_STORAGE_KEY, Math.max(0, Math.min(24, Math.floor(oreFieldCount))).toString())
     } catch (err) {
-      window.logger.warn('Failed to persist loaded ore field count to localStorage:', err)
+      window.logger.warn('Failed to persist loaded ore field count to IndexedDB:', err)
     }
   }
   if (Number.isFinite(oreTotalValue)) {
     try {
-      localStorage.setItem(ORE_TOTAL_VALUE_STORAGE_KEY, Math.max(0, Math.floor(oreTotalValue / 1000) * 1000).toString())
+      setStoredItem(ORE_TOTAL_VALUE_STORAGE_KEY, Math.max(0, Math.floor(oreTotalValue / 1000) * 1000).toString())
     } catch (err) {
-      window.logger.warn('Failed to persist loaded ore total value to localStorage:', err)
+      window.logger.warn('Failed to persist loaded ore total value to IndexedDB:', err)
     }
   }
 
   if (Number.isFinite(playerCount)) {
     try {
-      localStorage.setItem(PLAYER_COUNT_STORAGE_KEY, Math.max(2, Math.min(4, Math.floor(playerCount))).toString())
+      setStoredItem(PLAYER_COUNT_STORAGE_KEY, Math.max(2, Math.min(4, Math.floor(playerCount))).toString())
     } catch (err) {
-      window.logger.warn('Failed to persist loaded player count to localStorage:', err)
+      window.logger.warn('Failed to persist loaded player count to IndexedDB:', err)
     }
   }
 }
@@ -437,24 +437,20 @@ export function getSaveGames() {
     description: mission.description
   }))
 
-  if (typeof localStorage !== 'undefined') {
-    for (const key in localStorage) {
-      if (key.startsWith(SAVE_STORAGE_KEY_PREFIX)) {
-        try {
-          const save = JSON.parse(localStorage.getItem(key))
-          const storedSizeBytes = computeStoredStringSize(localStorage.getItem(key))
-          saves.push({
-            key,
-            label: save?.label || '(no label)',
-            time: save?.time || 0,
-            builtin: false,
-            description: null,
-            sizeBytes: storedSizeBytes
-          })
-        } catch (err) {
-          window.logger.warn('Error processing saved game:', err)
-        }
-      }
+  for (const [key, rawSave] of getStoredEntries(SAVE_STORAGE_KEY_PREFIX)) {
+    try {
+      const save = JSON.parse(rawSave)
+      const storedSizeBytes = computeStoredStringSize(rawSave)
+      saves.push({
+        key,
+        label: save?.label || '(no label)',
+        time: save?.time || 0,
+        builtin: false,
+        description: null,
+        sizeBytes: storedSizeBytes
+      })
+    } catch (err) {
+      window.logger.warn('Error processing saved game:', err)
     }
   }
 
@@ -805,7 +801,7 @@ function buildSaveObject(label) {
 export function saveGame(label) {
   ensurePlayerBuildHistoryLoaded()
   const saveObj = buildSaveObject(label)
-  localStorage.setItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, JSON.stringify(saveObj))
+  setStoredItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, JSON.stringify(saveObj))
   saveQuotaExceeded = false
 }
 
@@ -818,16 +814,8 @@ function isQuotaExceededError(error) {
   )
 }
 
-function canWriteToLocalStorage() {
-  if (typeof localStorage === 'undefined') return false
-  const probeKey = '__rts_save_quota_probe__'
-  try {
-    localStorage.setItem(probeKey, '1')
-    localStorage.removeItem(probeKey)
-    return true
-  } catch {
-    return false
-  }
+function canWriteToIndexedDbStorage() {
+  return isGameStorageAvailable()
 }
 
 export function exportCurrentGameToFile(label = 'Unnamed') {
@@ -1769,11 +1757,11 @@ export function loadGame(key) {
       state: mission.state
     }
   } else {
-    if (typeof localStorage === 'undefined') {
-      window.logger.warn('localStorage is not available, unable to load save:', key)
+    if (!isGameStorageAvailable()) {
+      window.logger.warn('IndexedDB storage is not available, unable to load save:', key)
       return
     }
-    const raw = localStorage.getItem(key)
+    const raw = getStoredItem(key)
     if (!raw) {
       window.logger.warn('Save game not found:', key)
       return
@@ -1794,8 +1782,8 @@ export function deleteGame(key) {
     window.logger.warn('Built-in missions cannot be deleted:', key)
     return
   }
-  if (typeof localStorage !== 'undefined') {
-    localStorage.removeItem(key)
+  if (isGameStorageAvailable()) {
+    removeStoredItem(key)
     void refreshStorageEstimateCache()
   }
 }
@@ -1817,9 +1805,9 @@ function buildExportFilename(label, time) {
 }
 
 export function exportSaveGame(key) {
-  if (typeof localStorage === 'undefined') return
+  if (!isGameStorageAvailable()) return
 
-  const rawSave = localStorage.getItem(key)
+  const rawSave = getStoredItem(key)
   if (!rawSave) {
     window.logger.warn('No save found to export for key:', key)
     return
@@ -1846,7 +1834,7 @@ export function exportSaveGame(key) {
 }
 
 export async function importSaveGameFromFile(file) {
-  const importedEntry = await importSaveDataFromFile(file, { persistToLocalStorage: true, includeReplayPayload: true })
+  const importedEntry = await importSaveDataFromFile(file, { persistToIndexedDb: true, includeReplayPayload: true })
   return importedEntry?.type === 'save' ? importedEntry : null
 }
 
@@ -1859,10 +1847,10 @@ function isImportedReplayPayload(importedObj) {
 
 async function importSaveDataFromFile(file, options = {}) {
   const {
-    persistToLocalStorage = true,
+    persistToIndexedDb = true,
     includeReplayPayload = true
   } = options
-  if (!file || typeof localStorage === 'undefined') return null
+  if (!file || !isGameStorageAvailable()) return null
 
   const fileText = await file.text()
   let importedObj = null
@@ -1902,8 +1890,8 @@ async function importSaveDataFromFile(file, options = {}) {
   }
 
   const saveKey = `${SAVE_STORAGE_KEY_PREFIX}${normalizedSave.label}`
-  if (persistToLocalStorage) {
-    localStorage.setItem(saveKey, JSON.stringify(normalizedSave))
+  if (persistToIndexedDb) {
+    setStoredItem(saveKey, JSON.stringify(normalizedSave))
     saveQuotaExceeded = false
   }
 
@@ -1912,7 +1900,7 @@ async function importSaveDataFromFile(file, options = {}) {
     label: normalizedSave.label,
     type: 'save',
     state: normalizedSave.state,
-    persisted: persistToLocalStorage
+    persisted: persistToIndexedDb
   }
 }
 
@@ -1922,7 +1910,7 @@ export async function importSaveGamesFromFiles(fileList) {
 
   const importedEntries = []
   for (const file of files) {
-    const importedEntry = await importSaveDataFromFile(file, { persistToLocalStorage: true, includeReplayPayload: true })
+    const importedEntry = await importSaveDataFromFile(file, { persistToIndexedDb: true, includeReplayPayload: true })
     if (importedEntry) {
       importedEntries.push(importedEntry)
     }
@@ -1972,7 +1960,7 @@ async function loadDroppedFilesWithoutPersisting(fileList) {
 
   const loadedSaveEntries = []
   for (const file of files) {
-    const importedEntry = await importSaveDataFromFile(file, { persistToLocalStorage: false, includeReplayPayload: false })
+    const importedEntry = await importSaveDataFromFile(file, { persistToIndexedDb: false, includeReplayPayload: false })
     if (importedEntry?.type === 'save' && typeof importedEntry.state === 'string') {
       loadedSaveEntries.push(importedEntry)
     }
@@ -1984,11 +1972,11 @@ async function loadDroppedFilesWithoutPersisting(fileList) {
   loadGameFromState(firstSave.state, firstSave.label)
 
   if (loadedSaveEntries.length === 1) {
-    showNotification(`Loaded dropped save without localStorage import: ${firstSave.label}`)
+    showNotification(`Loaded dropped save without browser storage import: ${firstSave.label}`)
     return
   }
 
-  showNotification(`Loaded ${loadedSaveEntries.length} dropped saves without localStorage import (opened ${firstSave.label})`)
+  showNotification(`Loaded ${loadedSaveEntries.length} dropped saves without browser storage import (opened ${firstSave.label})`)
 }
 
 export function updateSaveGamesList() {
@@ -1999,10 +1987,10 @@ export function updateSaveGamesList() {
   const saves = getSaveGames()
   const quota = storageEstimateCache || { usage: 0, quota: FALLBACK_STORAGE_QUOTA_BYTES }
   const freeBytes = Math.max(0, (quota.quota || 0) - (quota.usage || 0))
-  if (saveQuotaExceeded && canWriteToLocalStorage()) {
+  if (saveQuotaExceeded && canWriteToIndexedDbStorage()) {
     saveQuotaExceeded = false
   }
-  const quotaExceededTooltip = 'Save disabled: browser local storage quota exceeded. Delete old saves or use direct download.'
+  const quotaExceededTooltip = 'Save disabled: browser storage quota exceeded. Delete old saves or use direct download.'
   const saveGameBtn = document.getElementById('saveGameBtn')
   if (saveGameBtn) {
     saveGameBtn.disabled = saveQuotaExceeded
@@ -2050,7 +2038,7 @@ export function updateSaveGamesList() {
     if (!save.builtin) {
       const sizeText = formatMegabytes(save.sizeBytes)
       const remainingText = formatMegabytes(freeBytes)
-      label.title = `${label.title}\nSize: ${sizeText} | Local storage left: ${remainingText}`
+      label.title = `${label.title}\nSize: ${sizeText} | Browser storage left: ${remainingText}`
 
       const exportBtn = document.createElement('button')
       exportBtn.title = 'Export save game as JSON'
@@ -2086,7 +2074,7 @@ export function initSaveGameSystem() {
   // Helper to perform the save action
   const performSave = async() => {
     if (saveQuotaExceeded) {
-      showNotification('Save blocked: browser local storage quota is exceeded. Delete a save or use direct download/export.')
+      showNotification('Save blocked: browser storage quota is exceeded. Delete a save or use direct download/export.')
       return
     }
 
@@ -2101,7 +2089,7 @@ export function initSaveGameSystem() {
         saveQuotaExceeded = true
         await refreshStorageEstimateCache()
         updateSaveGamesList()
-        showNotification('Save failed: local storage is full. Use Download Save, or export/delete saves then drag JSON files onto the map to load.', 7000)
+        showNotification('Save failed: browser storage is full. Use Download Save, or export/delete saves then drag JSON files onto the map to load.', 7000)
         return
       }
       throw err
@@ -2118,7 +2106,7 @@ export function initSaveGameSystem() {
     downloadSaveBtn.addEventListener('click', () => {
       const label = document.getElementById('saveLabelInput').value.trim()
       exportCurrentGameToFile(label || 'Unnamed')
-      showNotification('Save file downloaded (bypassing local storage).')
+      showNotification('Save file downloaded (bypassing browser storage).')
     })
   }
 
@@ -2205,12 +2193,12 @@ export function initLastGameRecovery() {
 }
 
 export function maybeResumeLastPausedGame() {
-  if (typeof localStorage === 'undefined') return false
+  if (!isGameStorageAvailable()) return false
 
   let shouldResume = false
 
   try {
-    shouldResume = localStorage.getItem(LAST_GAME_RESUME_FLAG_KEY) === 'true'
+    shouldResume = getStoredItem(LAST_GAME_RESUME_FLAG_KEY) === 'true'
   } catch (err) {
     window.logger.warn('Failed to read auto-resume flag for last game:', err)
     return false
@@ -2218,7 +2206,7 @@ export function maybeResumeLastPausedGame() {
 
   let hasLastGame = false
   try {
-    hasLastGame = Boolean(localStorage.getItem(LAST_GAME_STORAGE_KEY))
+    hasLastGame = hasStoredItem(LAST_GAME_STORAGE_KEY)
   } catch (err) {
     window.logger.warn('Failed to read last game checkpoint:', err)
     return false
@@ -2227,7 +2215,7 @@ export function maybeResumeLastPausedGame() {
   if (shouldResume && hasLastGame) {
     // Check if the saved game was already over (don't auto-resume finished games)
     try {
-      const raw = localStorage.getItem(LAST_GAME_STORAGE_KEY)
+      const raw = getStoredItem(LAST_GAME_STORAGE_KEY)
       if (raw) {
         const saveObj = JSON.parse(raw)
         if (saveObj?.state) {

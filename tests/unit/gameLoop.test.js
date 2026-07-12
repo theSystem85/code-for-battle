@@ -16,6 +16,7 @@ const resumeAllSoundsMock = vi.hoisted(() => vi.fn())
 const updateMapScrollingMock = vi.hoisted(() => vi.fn())
 const isLockstepEnabledMock = vi.hoisted(() => vi.fn())
 const processLockstepTickMock = vi.hoisted(() => vi.fn((callback) => callback(16)))
+const recordPerformanceFrameMock = vi.hoisted(() => vi.fn())
 
 vi.mock('../../src/updateGame.js', () => ({
   updateGame: updateGameMock
@@ -51,6 +52,7 @@ vi.mock('../../src/ui/fpsDisplay.js', () => ({
     constructor() {
       this.updateFPS = vi.fn()
       this.render = vi.fn()
+      this.reportFrameBreakdown = vi.fn()
     }
   }
 }))
@@ -76,6 +78,12 @@ vi.mock('../../src/network/gameCommandSync.js', () => ({
 vi.mock('../../src/network/lockstepManager.js', () => ({
   LOCKSTEP_CONFIG: { MAX_TICKS_PER_FRAME: 2 },
   MS_PER_TICK: 16
+}))
+
+vi.mock('../../src/performance/performanceMonitor.js', () => ({
+  performanceMonitor: {
+    recordFrame: recordPerformanceFrameMock
+  }
 }))
 
 import { GameLoop } from '../../src/game/gameLoop.js'
@@ -214,6 +222,54 @@ describe('GameLoop', () => {
 
     expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
     expect(setTimeout).not.toHaveBeenCalled()
+  })
+
+  it('races RAF with a mobile watchdog and cancels the delayed RAF when the watchdog wins', () => {
+    document.body.classList.add('is-touch')
+    const loop = createLoop()
+    loop.running = true
+    gameState.frameLimiterEnabled = true
+
+    loop.scheduleNextFrame()
+
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
+    expect(setTimeout).toHaveBeenCalledTimes(1)
+    const watchdog = setTimeout.mock.calls[0][0]
+    watchdog()
+
+    expect(cancelAnimationFrame).toHaveBeenCalledWith(101)
+    expect(loop.lastSchedulerSource).toBe('watchdog')
+  })
+
+  it('cancels the mobile watchdog when RAF arrives on time', () => {
+    document.body.classList.add('is-touch')
+    const loop = createLoop()
+    loop.running = true
+    gameState.frameLimiterEnabled = true
+
+    loop.scheduleNextFrame()
+    const rafCallback = requestAnimationFrame.mock.calls[0][0]
+    rafCallback(1016)
+
+    expect(clearTimeout).toHaveBeenCalledWith(202)
+    expect(loop.lastSchedulerSource).toBe('raf')
+  })
+
+  it('records paused scrolling frames for physical-device terrain diagnosis', () => {
+    const loop = createLoop()
+    loop.running = true
+    gameState.gameStarted = true
+    gameState.gamePaused = true
+    gameState.isRightDragging = true
+
+    loop.animate(1016)
+
+    expect(renderGameMock).toHaveBeenCalledTimes(1)
+    expect(recordPerformanceFrameMock).toHaveBeenCalledWith(expect.objectContaining({
+      schedulerSource: 'none',
+      frameWorkMs: expect.any(Number),
+      renderMs: expect.any(Number)
+    }))
   })
 
   it('uses setTimeout scheduling when frame limiter is disabled', () => {
@@ -408,6 +464,27 @@ describe('GameLoop', () => {
     expect(gameTimeEl.textContent).toBe('2:10')
     expect(renderGameMock).toHaveBeenCalled()
     expect(renderMinimapMock).toHaveBeenCalled()
+  })
+
+  it('throttles minimap rendering on mobile layouts', () => {
+    const loop = createLoop()
+    loop.running = true
+    document.body.classList.add('is-touch')
+    isLockstepEnabledMock.mockReturnValue(false)
+    gameState.gameStarted = true
+    gameState.gamePaused = false
+    gameState.frameCount = 1
+
+    loop.lastFrameTime = 1000
+    loop.animate(1017)
+    expect(renderMinimapMock).toHaveBeenCalledTimes(1)
+
+    renderMinimapMock.mockClear()
+    loop.animate(1100)
+    expect(renderMinimapMock).not.toHaveBeenCalled()
+
+    loop.animate(1300)
+    expect(renderMinimapMock).toHaveBeenCalledTimes(1)
   })
 
   it('caps lockstep tick accumulator after catching up', () => {

@@ -1,4 +1,4 @@
 {
-  "commit": "1db6629f",
-  "message": "Use streets24 and tighten street sprite routing"
+  "commit": "6520450f",
+  "message": "fix: iPhone street rendering collapse with dedicated GPU atlas"
 }

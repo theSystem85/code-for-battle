@@ -6,6 +6,8 @@ import { registerMapEditorRendering } from './mapEditor.js'
 import { getTextureManager, notifyTileMutation } from './rendering.js'
 import { initializeMobileViewportLock } from './ui/mobileViewportLock.js'
 import { scheduleAfterNextPaint, scheduleIdleTask } from './startupScheduler.js'
+import { initializeGameStorage } from './storage/indexedDbStorage.js'
+import { loadGraphicsSettingsFromIndexedDb } from './config.js'
 import './ui/mobileJoysticks.js'
 import './ui/mobileControlGroups.js'
 import {
@@ -19,9 +21,11 @@ import { setMobileLayoutGameAccessor } from './ui/mobileLayout.js'
 import { initRemoteInviteLanding } from './ui/remoteInviteLanding.js'
 import { initNotificationHistory } from './ui/notificationHistory.js'
 import { initDebugUnitCommandOverlay } from './ui/debugUnitCommandOverlay.js'
+import { initializePerformanceMonitor } from './performance/performanceMonitor.js'
 import { selectedUnits } from './inputHandler.js'
 import {
   resumeAllSounds,
+  reloadMasterVolumeFromStorage,
   testNarratedSounds,
   playSound,
   getSoundCacheStatus,
@@ -115,6 +119,9 @@ function setupAudioUnlock() {
 }
 
 document.addEventListener('DOMContentLoaded', async() => {
+  await initializeGameStorage()
+  loadGraphicsSettingsFromIndexedDb()
+  reloadMasterVolumeFromStorage()
   updateTouchClass()
   updateMobileLayoutClasses()
   setupDoubleTapPrevention()
@@ -136,6 +143,7 @@ document.addEventListener('DOMContentLoaded', async() => {
   const gameInstance = new Game()
   window.gameInstance = gameInstance
   window.gameInstance.units = units
+  initializePerformanceMonitor()
 })
 
 window.debugGetSelectedUnits = () => selectedUnits

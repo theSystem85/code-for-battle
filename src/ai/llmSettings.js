@@ -1,3 +1,5 @@
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+
 const LLM_SETTINGS_KEY = 'rts_llm_settings'
 
 export const DEFAULT_LLM_SETTINGS = {
@@ -110,7 +112,7 @@ export function loadLlmSettings() {
   if (currentSettings) return currentSettings
   let stored = null
   try {
-    const raw = localStorage.getItem(LLM_SETTINGS_KEY)
+    const raw = getStoredItem(LLM_SETTINGS_KEY)
     stored = raw ? JSON.parse(raw) : null
   } catch (err) {
     window.logger.warn('[LLM] Failed to parse stored settings:', err)
@@ -122,7 +124,7 @@ export function loadLlmSettings() {
 export function saveLlmSettings(settings) {
   currentSettings = normalizeInceptionlabsSettings(mergeSettings(DEFAULT_LLM_SETTINGS, settings || {}))
   try {
-    localStorage.setItem(LLM_SETTINGS_KEY, JSON.stringify(currentSettings))
+    setStoredItem(LLM_SETTINGS_KEY, JSON.stringify(currentSettings))
   } catch (err) {
     window.logger.warn('[LLM] Failed to save settings:', err)
   }

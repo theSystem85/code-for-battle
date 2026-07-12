@@ -6,12 +6,15 @@ import { renderKeybindingsEditor } from './keybindingsEditor.js'
 import { initLlmSettingsPanel } from './llmSettingsPanel.js'
 import { gameState } from '../gameState.js'
 import { getConfigValue, setConfigValue } from '../configRegistry.js'
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
 const WATER_SETTINGS_CONFIG_IDS = {
   enabled: 'proceduralWaterRendering',
   tone: 'waterEffectTone',
-  saturation: 'waterEffectSaturation'
+  saturation: 'waterEffectSaturation',
+  pixelDensity: 'mobileCanvasPixelRatioCap',
+  rendererBackend: 'rendererBackend'
 }
 
 function formatWaterTone(value) {
@@ -26,12 +29,27 @@ function formatWaterSaturation(value) {
   return `${Math.round(Number(value) * 100)}%`
 }
 
+function formatPixelDensity(value) {
+  const numericValue = Number(value)
+  if (!Number.isFinite(numericValue)) {
+    return '1x'
+  }
+  const deviceRatio = window.devicePixelRatio || 1
+  if (numericValue >= deviceRatio) {
+    return `Native (${deviceRatio.toFixed(2).replace(/\.?0+$/, '')}x)`
+  }
+  return `${numericValue.toFixed(2).replace(/\.?0+$/, '')}x`
+}
+
 function syncWaterGraphicsControls(modal) {
   const enabledToggle = modal.querySelector('#settingsProceduralWaterToggle')
   const toneInput = modal.querySelector('#settingsWaterToneRange')
   const saturationInput = modal.querySelector('#settingsWaterSaturationRange')
+  const pixelDensityInput = modal.querySelector('#settingsMobilePixelDensityRange')
   const toneValue = modal.querySelector('#settingsWaterToneValue')
   const saturationValue = modal.querySelector('#settingsWaterSaturationValue')
+  const pixelDensityValue = modal.querySelector('#settingsMobilePixelDensityValue')
+  const rendererSelect = modal.querySelector('#settingsRendererBackend')
 
   if (enabledToggle) {
     enabledToggle.checked = Boolean(getConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled))
@@ -54,11 +72,22 @@ function syncWaterGraphicsControls(modal) {
       saturationValue.textContent = formatWaterSaturation(saturation)
     }
   }
+
+  if (pixelDensityInput) {
+    const pixelDensity = Number(getConfigValue(WATER_SETTINGS_CONFIG_IDS.pixelDensity) ?? 1)
+    pixelDensityInput.value = String(pixelDensity)
+    if (pixelDensityValue) {
+      pixelDensityValue.textContent = formatPixelDensity(pixelDensity)
+    }
+  }
+  if (rendererSelect) {
+    rendererSelect.value = getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend) || 'webgl'
+  }
 }
 
 function loadRadarOfflineAnimationSetting() {
   try {
-    const stored = localStorage.getItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY)
+    const stored = getStoredItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY)
     if (stored === null) return true
     return stored !== 'false'
   } catch (error) {
@@ -69,7 +98,7 @@ function loadRadarOfflineAnimationSetting() {
 
 function saveRadarOfflineAnimationSetting(enabled) {
   try {
-    localStorage.setItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY, enabled ? 'true' : 'false')
+    setStoredItem(RADAR_OFFLINE_ANIMATION_SETTINGS_KEY, enabled ? 'true' : 'false')
   } catch (error) {
     window.logger.warn('Failed to save radar-offline animation setting:', error)
   }
@@ -146,6 +175,8 @@ export function initSettingsModal() {
   const proceduralWaterToggle = document.getElementById('settingsProceduralWaterToggle')
   const waterToneRange = document.getElementById('settingsWaterToneRange')
   const waterSaturationRange = document.getElementById('settingsWaterSaturationRange')
+  const mobilePixelDensityRange = document.getElementById('settingsMobilePixelDensityRange')
+  const rendererBackendSelect = document.getElementById('settingsRendererBackend')
 
   if (!modal) return
 
@@ -206,6 +237,21 @@ export function initSettingsModal() {
     waterSaturationRange.value = String(getConfigValue(WATER_SETTINGS_CONFIG_IDS.saturation) ?? 1)
     waterSaturationRange.addEventListener('input', (event) => {
       setConfigValue(WATER_SETTINGS_CONFIG_IDS.saturation, Number(event.target.value))
+      syncWaterGraphicsControls(modal)
+    })
+  }
+
+  if (mobilePixelDensityRange) {
+    mobilePixelDensityRange.value = String(getConfigValue(WATER_SETTINGS_CONFIG_IDS.pixelDensity) ?? 1)
+    mobilePixelDensityRange.addEventListener('input', (event) => {
+      setConfigValue(WATER_SETTINGS_CONFIG_IDS.pixelDensity, Number(event.target.value))
+      syncWaterGraphicsControls(modal)
+    })
+  }
+  if (rendererBackendSelect) {
+    rendererBackendSelect.value = getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend) || 'webgl'
+    rendererBackendSelect.addEventListener('change', event => {
+      setConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend, event.target.value)
       syncWaterGraphicsControls(modal)
     })
   }

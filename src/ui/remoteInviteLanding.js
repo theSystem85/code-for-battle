@@ -496,7 +496,7 @@ export function initRemoteInviteLanding() {
   tokenText.textContent = inviteToken
   showOverlay(overlay, statusElement)
 
-  // Pre-fill alias from localStorage if available
+  // Pre-fill alias from persisted browser storage if available
   const storedAlias = getStoredPlayerAlias()
   if (storedAlias) {
     aliasInput.value = storedAlias
@@ -504,7 +504,7 @@ export function initRemoteInviteLanding() {
     aliasInput.value = ''
   }
 
-  // Sync alias changes to localStorage and sidebar input
+  // Sync alias changes to persisted browser storage and sidebar input
   aliasInput.addEventListener('input', (e) => {
     const value = e.target.value
     setStoredPlayerAlias(value)

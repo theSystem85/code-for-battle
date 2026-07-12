@@ -616,6 +616,75 @@ body.is-touch .money-tooltip__meta {
   color: white;
 }
 
+#actions #performanceMonitorButton {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(max(12px, env(safe-area-inset-bottom)) + 56px);
+  z-index: 3200;
+  width: 44px;
+  height: 44px;
+  background-color: #b42318;
+  color: #fff;
+}
+
+#actions #performanceMonitorButton.recording {
+  animation: performance-monitor-pulse 1s steps(2, end) infinite;
+}
+
+@keyframes performance-monitor-pulse {
+  50% { background-color: #ef4444; }
+}
+
+.performance-monitor-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 4000;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.performance-monitor-dialog[hidden] {
+  display: none;
+}
+
+.performance-monitor-dialog__panel {
+  width: min(720px, 100%);
+  height: min(80dvh, 680px);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: #1d1d1d;
+  border: 1px solid #555;
+}
+
+.performance-monitor-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 8px;
+}
+
+.performance-monitor-dialog__actions button {
+  min-width: 44px;
+  min-height: 36px;
+  border: 1px solid #666;
+  background: #333;
+  color: #fff;
+}
+
+#performanceMonitorOutput {
+  min-width: 0;
+  min-height: 0;
+  resize: none;
+  border: 0;
+  border-top: 1px solid #555;
+  padding: 10px;
+  background: #111;
+  color: #e7e7e7;
+  font: 12px/1.35 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
 /* Button icons */
 .button-icon {
   width: 20px;

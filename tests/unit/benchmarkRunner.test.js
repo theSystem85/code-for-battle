@@ -207,7 +207,7 @@ describe('benchmarkRunner.js', () => {
       attach()
       const result = await run()
 
-      expect(result).toBeUndefined()
+      expect(result).toBeNull()
       expect(showBenchmarkStatus).toHaveBeenCalledWith('Benchmark failed. Check console for details.')
       expect(openBenchmarkModal).toHaveBeenCalled()
       expect(teardownBenchmarkScenario).toHaveBeenCalled()
@@ -237,6 +237,26 @@ describe('benchmarkRunner.js', () => {
       await run()
 
       expect(startBenchmarkSession).toHaveBeenCalledWith(60000)
+    })
+
+    it('should return benchmark results and support custom duration', async() => {
+      const mockResult = {
+        durationMs: 5000,
+        frames: 300,
+        averageFps: 60,
+        minFps: 58,
+        maxFps: 62,
+        intervalAverages: []
+      }
+      startBenchmarkSession.mockReturnValue(Promise.resolve(mockResult))
+
+      const { runBenchmark: run } = await import('../../src/benchmark/benchmarkRunner.js')
+
+      const result = await run(5000)
+
+      expect(result).toBe(mockResult)
+      expect(startBenchmarkCountdown).toHaveBeenCalledWith(5000)
+      expect(startBenchmarkSession).toHaveBeenCalledWith(5000)
     })
 
     it('should show results on successful completion', async() => {

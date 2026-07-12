@@ -2,6 +2,7 @@
 // Centralized keybinding definitions, persistence, and matching helpers
 
 import versionInfo from '../version.json' with { type: 'json' }
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const STORAGE_KEY = 'rts-custom-keybindings'
 
@@ -70,7 +71,7 @@ const DEFAULT_BINDINGS = {
 
 function loadStoredOverrides() {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY)
+    const stored = getStoredItem(STORAGE_KEY)
     if (!stored) return { keyboard: {}, mouse: {}, touch: {} }
     const parsed = JSON.parse(stored)
     return {
@@ -86,7 +87,7 @@ function loadStoredOverrides() {
 
 function persistOverrides(overrides) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(overrides))
+    setStoredItem(STORAGE_KEY, JSON.stringify(overrides))
   } catch (err) {
     console.warn('Failed to persist keybindings', err)
   }

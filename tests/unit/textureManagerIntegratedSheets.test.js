@@ -395,4 +395,65 @@ describe('TextureManager integrated multi-sheet selection', () => {
 
     expect(manager.selectFullStreetTileForSOT(5, 7)).toBe(fullGrassStreet)
   })
+
+  it('reuses cached street selection pools for repeated topology lookups', () => {
+    const manager = new TextureManager()
+    manager.integratedBiomeTag = 'grass'
+    manager.integratedRenderSignature = 'street-test-signature'
+    const streetCorner = {
+      tags: ['street', 'grass', 'top', 'right'],
+      rect: { x: 0, y: 0, width: 64, height: 64 },
+      image: { id: 'default-streets' },
+      sheetPath: 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+    }
+    manager.defaultStreetTagBuckets = {
+      street: [streetCorner],
+      grass: [streetCorner],
+      top: [streetCorner],
+      right: [streetCorner]
+    }
+
+    const lookupSpy = vi.spyOn(manager, 'getTagBucketCandidates')
+    const poolSpy = vi.spyOn(manager, 'getStreetSelectionPool')
+    const mapGrid = [
+      [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'street' }, { type: 'street' }],
+      [{ type: 'land' }, { type: 'land' }, { type: 'land' }]
+    ]
+
+    const first = manager.selectStreetTileByTags(['street'], 1, 1, mapGrid)
+    const callsAfterFirst = lookupSpy.mock.calls.length
+    const second = manager.selectStreetTileByTags(['street'], 1, 1, mapGrid)
+
+    expect(first).toBe(streetCorner)
+    expect(second).toBe(streetCorner)
+    expect(lookupSpy.mock.calls.length).toBe(callsAfterFirst)
+    expect(poolSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('loads the dedicated street atlas instead of the combined major atlas', async() => {
+    const manager = new TextureManager()
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async() => ({
+        blendMode: 'alpha',
+        tiles: {
+          '0,0': {
+            tags: ['street', 'grass'],
+            rect: { x: 0, y: 0, width: 64, height: 64 }
+          }
+        }
+      })
+    })
+    const imageSpy = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'street-only' })
+
+    await manager.preloadDefaultStreetSheet()
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'images/map/sprite_sheets/streets24_q90_1024x1024.json',
+      { cache: 'no-store' }
+    )
+    expect(imageSpy).toHaveBeenCalledWith('images/map/sprite_sheets/streets24_q90_1024x1024.webp')
+    expect(manager.defaultStreetSheetImage).toEqual({ id: 'street-only' })
+  })
 })

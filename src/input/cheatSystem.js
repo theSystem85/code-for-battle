@@ -20,6 +20,7 @@ import { checkLevelUp, initializeUnitLeveling, updateUnitSpeedModifier } from '.
 import { deployMine } from '../game/mineSystem.js'
 import { getWreckById, removeWreckById } from '../game/unitWreckManager.js'
 import { stopApacheRotorSound } from '../game/movementApache.js'
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 export class CheatSystem {
   constructor() {
@@ -41,12 +42,8 @@ export class CheatSystem {
   }
 
   loadCommandHistory() {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return []
-    }
-
     try {
-      const raw = window.localStorage.getItem(this.historyStorageKey)
+      const raw = getStoredItem(this.historyStorageKey)
       if (!raw) {
         return []
       }
@@ -66,12 +63,8 @@ export class CheatSystem {
   }
 
   saveCommandHistory() {
-    if (typeof window === 'undefined' || !window.localStorage) {
-      return
-    }
-
     try {
-      window.localStorage.setItem(this.historyStorageKey, JSON.stringify(this.commandHistory))
+      setStoredItem(this.historyStorageKey, JSON.stringify(this.commandHistory))
     } catch (error) {
       window?.logger?.warn('Failed to save cheat console history:', error)
     }

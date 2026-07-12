@@ -6,6 +6,7 @@ import {
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -47,10 +48,7 @@ export const DEFAULT_SSE_TAGS = [
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
 
-const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
-
 const fallbackSheets = [
-  MAJOR_SPRITE_SHEET_PATH,
   'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
   'images/map/sprite_sheets/grass.webp',
   'images/map/sprite_sheets/soil.webp',
@@ -636,7 +634,7 @@ function toggleCurrentTagOnAllTiles(state) {
   if (changed > 0) {
     drawSseCanvas(state)
     renderTagList(state)
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
     refreshAnimationPreview(state)
     if (state.image) {
       if (state.mode === 'animated') {
@@ -836,17 +834,17 @@ function startAnimationPreviewLoop(state) {
   state.previewFrameHandle = requestAnimationFrame(tick)
 }
 
-function saveDataToLocalStorage(data, mode = 'static') {
+function saveDataToIndexedDb(data, mode = 'static') {
   if (!data?.sheetPath || isTransientSheetPath(data.sheetPath)) {
     return
   }
   try {
     const prefix = mode === 'animated' ? SSE_ANIMATION_METADATA_PREFIX : SSE_METADATA_PREFIX
     const key = mode === 'animated' ? SSE_LAST_ANIMATION_SHEET_KEY : SSE_LAST_SHEET_KEY
-    localStorage.setItem(`${prefix}${data.sheetPath}`, JSON.stringify(data))
-    localStorage.setItem(key, data.sheetPath)
+    setStoredItem(`${prefix}${data.sheetPath}`, JSON.stringify(data))
+    setStoredItem(key, data.sheetPath)
   } catch (err) {
-    window.logger.warn('Failed to save SSE metadata to localStorage:', err)
+    window.logger.warn('Failed to save SSE metadata to IndexedDB:', err)
   }
 }
 
@@ -856,7 +854,7 @@ async function loadMetadataFromSourcesForMode(sheetPath, mode = 'static') {
   }
   const metadataPrefix = mode === 'animated' ? SSE_ANIMATION_METADATA_PREFIX : SSE_METADATA_PREFIX
   const baseTags = mode === 'animated' ? DEFAULT_SSE_ANIMATION_TAGS : DEFAULT_SSE_TAGS
-  const local = safeParseJson(localStorage.getItem(`${metadataPrefix}${sheetPath}`), null)
+  const local = safeParseJson(getStoredItem(`${metadataPrefix}${sheetPath}`), null)
   if (local) return normalizeSheetDataForTags(local, sheetPath, baseTags)
 
   const sidecarPath = buildMetaPath(sheetPath)
@@ -890,7 +888,7 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
   if (!sheetPath) return
 
   if (saveCurrent && state.activeData) {
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
   }
 
   const loadedData = await loadMetadataFromSourcesForMode(sheetPath, mode)
@@ -927,7 +925,7 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
   }
 
   updateSheetMetadataUi(state)
-  saveDataToLocalStorage(state.activeData, state.mode)
+  saveDataToIndexedDb(state.activeData, state.mode)
   drawSseCanvas(state)
   snapZoomToCanvas(state)
   renderTagList(state)
@@ -1166,7 +1164,7 @@ function bindCanvasInteractions(state) {
     state.groupDragBounds = null
     state.groupDragStartTile = null
     state.groupStartHadGroupTag = false
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
   }
 
   const beginPan = (event) => {
@@ -1286,7 +1284,7 @@ function closeModal(state) {
   state.modal.setAttribute('aria-hidden', 'true')
   document.body.classList.remove('config-modal-open')
   if (state.activeData) {
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
   }
   if (state.previewFrameHandle) {
     cancelAnimationFrame(state.previewFrameHandle)
@@ -1428,7 +1426,7 @@ async function loadDroppedTagFile(state, file) {
     if (state.borderWidthInput) state.borderWidthInput.value = state.activeData.borderWidth
     if (state.blendModeSelect) state.blendModeSelect.value = normalizeSpriteSheetBlendMode(state.activeData.blendMode)
 
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
     drawSseCanvas(state)
     renderTagList(state)
     updateApplyAllButtonLabel(state)
@@ -1616,7 +1614,7 @@ export async function initSpriteSheetEditor(options = {}) {
   }
 
   try {
-    const storedMode = localStorage.getItem(SSE_MODE_STORAGE_KEY)
+    const storedMode = getStoredItem(SSE_MODE_STORAGE_KEY)
     if (storedMode === 'animated' || storedMode === 'static') {
       state.mode = storedMode
     }
@@ -1638,8 +1636,8 @@ export async function initSpriteSheetEditor(options = {}) {
   renderSheetOptions(state)
   updateModeTabUi(state)
 
-  const lastSheet = localStorage.getItem(SSE_LAST_SHEET_KEY)
-  const lastAnimationSheet = localStorage.getItem(SSE_LAST_ANIMATION_SHEET_KEY)
+  const lastSheet = getStoredItem(SSE_LAST_SHEET_KEY)
+  const lastAnimationSheet = getStoredItem(SSE_LAST_ANIMATION_SHEET_KEY)
   const initialSheetPath = state.mode === 'animated'
     ? (lastAnimationSheet && state.sheetPaths.includes(lastAnimationSheet) ? lastAnimationSheet : state.sheetPaths[0])
     : (options.initialSheetPath && state.sheetPaths.includes(options.initialSheetPath)
@@ -1666,7 +1664,7 @@ export async function initSpriteSheetEditor(options = {}) {
     renderSheetOptions(state)
     updateModeTabUi(state)
     try {
-      localStorage.setItem(SSE_MODE_STORAGE_KEY, nextMode)
+      setStoredItem(SSE_MODE_STORAGE_KEY, nextMode)
     } catch {
       // ignore
     }
@@ -1880,7 +1878,7 @@ export async function initSpriteSheetEditor(options = {}) {
     updateSheetMetadataUi(state)
     drawSseCanvas(state)
     applyCanvasZoom(state)
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
   })
 
   state.rowHeightInput?.addEventListener('change', () => {
@@ -1890,7 +1888,7 @@ export async function initSpriteSheetEditor(options = {}) {
     updateSheetMetadataUi(state)
     drawSseCanvas(state)
     applyCanvasZoom(state)
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
   })
 
   state.borderWidthInput?.addEventListener('change', () => {
@@ -1900,7 +1898,7 @@ export async function initSpriteSheetEditor(options = {}) {
     updateSheetMetadataUi(state)
     drawSseCanvas(state)
     applyCanvasZoom(state)
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
   })
 
   state.blendModeSelect?.addEventListener('change', () => {
@@ -1908,7 +1906,7 @@ export async function initSpriteSheetEditor(options = {}) {
     state.activeData.blendMode = normalizeSpriteSheetBlendMode(state.blendModeSelect.value)
     drawSseCanvas(state)
     refreshAnimationPreview(state)
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
   })
 
   state.addTagBtn?.addEventListener('click', () => {
@@ -1917,7 +1915,7 @@ export async function initSpriteSheetEditor(options = {}) {
       state.newTagInput.value = ''
     }
     if (added) {
-      saveDataToLocalStorage(state.activeData, state.mode)
+      saveDataToIndexedDb(state.activeData, state.mode)
       setStatus(state, 'Tag added')
     }
   })
@@ -1990,7 +1988,7 @@ export async function initSpriteSheetEditor(options = {}) {
     renderTagList(state)
     updateApplyAllButtonLabel(state)
     refreshAnimationPreview(state)
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
     notifyActiveDataChange(state)
     setStatus(state, 'Reset all tags for the current sprite sheet.')
   })
@@ -1999,7 +1997,7 @@ export async function initSpriteSheetEditor(options = {}) {
 
   state.applyTagsBtn?.addEventListener('click', async() => {
     if (!state.activeData || !state.image) return
-    saveDataToLocalStorage(state.activeData, state.mode)
+    saveDataToIndexedDb(state.activeData, state.mode)
     if (state.mode === 'animated') {
       const serializedAnimation = toAnimationSerializableData(state.activeData, state.image)
       serializedAnimation.displayName = resolveSheetDisplayLabel(state, state.activeData.sheetPath)

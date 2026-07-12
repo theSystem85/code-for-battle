@@ -1,14 +1,15 @@
 {
   "name": "vite-starter",
   "private": true,
-  "version": "0.30.4",
+  "version": "0.30.6",
   "license": "MIT",
   "author": "patrick.beyer.software@gmail.com",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "emulator": "IOS_SIMULATOR_DEVICE=\"${IOS_SIMULATOR_DEVICE:-iPhone 13 Pro Max}\"; IOS_SIMULATOR_TARGET=\"${IOS_SIMULATOR_UDID:-$IOS_SIMULATOR_DEVICE}\"; open -a Simulator; xcrun simctl boot \"$IOS_SIMULATOR_TARGET\" || true; sleep 2; if [ \"$IOS_EMULATOR_BENCHMARK\" = \"1\" ]; then npm run dev -- --host; else xcrun simctl openurl \"$IOS_SIMULATOR_TARGET\" http://localhost:5173 || true; npm run dev -- --host; fi",
     "stun": "node server/stun.js",
-    "prebuild": "node scripts/buildMajorSpriteSheets.js && node scripts/write-commit.js",
+    "prebuild": "node scripts/write-commit.js",
     "build": "vite build && node scripts/write-impressum-config.js",
     "preview": "vite preview",
     "lint": "eslint src/ tests/ *.js",
@@ -32,11 +33,13 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:e2e:file": "npx playwright test $1 --project=chromium",
+    "test:e2e:ios-benchmark": "IOS_EMULATOR_BENCHMARK=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 IOS_BENCHMARK_MAP_SIZE=100 playwright test tests/e2e/iosSimulatorBenchmark.test.js --project=chromium --reporter=line",
+    "test:e2e:ios-simulator-benchmark": "IOS_EMULATOR_BENCHMARK=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 IOS_SIMULATOR_DEVICE=\"iPhone 13 Pro Max\" IOS_BENCHMARK_MAP_SIZE=100 playwright test tests/e2e/iosSimulatorBenchmark.test.js --project=chromium --reporter=line",
+    "test:e2e:ios-real-benchmark": "IOS_REAL_DEVICE_BENCHMARK=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 IOS_BENCHMARK_MAP_SIZE=100 playwright test tests/e2e/iosRealDeviceBenchmark.test.js --project=chromium --reporter=line",
     "lighthouse": "lighthouse http://localhost:4173 --output=html --output=json --output-path=./tests/lighthouse/default",
     "lighthouse:desktop": "lighthouse https://localhost:4173 --preset=desktop --output=html --output=json --output-path=./tests/lighthouse/desktop",
     "lighthouse:mobile": "lighthouse https://localhost:4173 --preset=mobile --output=html --output=json --output-path=./tests/lighthouse/mobile",
-    "lighthouse:ci": "lighthouse https://localhost:4173 --chrome-flags='--headless --no-sandbox' --output=json --output-path=./tests/lighthouse/ci.json",
-    "build:major-sprite-sheets": "node scripts/buildMajorSpriteSheets.js"
+    "lighthouse:ci": "lighthouse https://localhost:4173 --chrome-flags='--headless --no-sandbox' --output=json --output-path=./tests/lighthouse/ci.json"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.1",

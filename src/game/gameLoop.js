@@ -15,6 +15,10 @@ import { updateMapScrolling } from './gameStateManager.js'
 import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSync.js'
 import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
 import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
+import { performanceMonitor } from '../performance/performanceMonitor.js'
+
+const MOBILE_FRAME_WATCHDOG_MS = 17
+const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
 
 export class GameLoop {
   constructor(canvasManager, productionController, mapGrid, factories, units, bullets, productionQueue, moneyEl, gameTimeEl) {
@@ -38,8 +42,12 @@ export class GameLoop {
     this.running = false
     this.animationId = null
     this.frameTimeoutId = null
+    this.scheduledFrameToken = 0
+    this.lastSchedulerSource = 'none'
+    this.lastSchedulerDelayMs = 0
     this.fpsDisplay = new FPSDisplay()
     this.forceRender = false
+    this.lastMinimapRenderTime = 0
 
     // Track last UI update values to avoid unnecessary DOM writes
     this.lastMoneyDisplayed = null
@@ -88,12 +96,13 @@ export class GameLoop {
   }
 
   cancelScheduledFrame() {
-    if (this.animationId) {
+    this.scheduledFrameToken++
+    if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId)
       this.animationId = null
     }
 
-    if (this.frameTimeoutId) {
+    if (this.frameTimeoutId !== null) {
       clearTimeout(this.frameTimeoutId)
       this.frameTimeoutId = null
     }
@@ -119,17 +128,38 @@ export class GameLoop {
   }
 
   scheduleNextFrame() {
-    if (!this.running || this.animationId || this.frameTimeoutId) {
+    if (!this.running || this.animationId !== null || this.frameTimeoutId !== null) {
       return
     }
 
     if (gameState.frameLimiterEnabled !== false) {
-      this.animationId = requestAnimationFrame((timestamp) => this.animate(timestamp))
+      const token = ++this.scheduledFrameToken
+      const scheduledAt = performance.now()
+      const runFrame = (timestamp, source) => {
+        if (!this.running || token !== this.scheduledFrameToken) return
+        this.scheduledFrameToken++
+        if (source === 'raf' && this.frameTimeoutId !== null) {
+          clearTimeout(this.frameTimeoutId)
+        } else if (source === 'watchdog' && this.animationId !== null) {
+          cancelAnimationFrame(this.animationId)
+        }
+        this.animationId = null
+        this.frameTimeoutId = null
+        this.lastSchedulerSource = source
+        this.lastSchedulerDelayMs = Math.max(0, performance.now() - scheduledAt)
+        this.animate(timestamp)
+      }
+      this.animationId = requestAnimationFrame((timestamp) => runFrame(timestamp, 'raf'))
+      if (this.isMobileRenderProfile()) {
+        this.frameTimeoutId = setTimeout(() => runFrame(performance.now(), 'watchdog'), MOBILE_FRAME_WATCHDOG_MS)
+      }
       return
     }
 
     this.frameTimeoutId = setTimeout(() => {
       this.frameTimeoutId = null
+      this.lastSchedulerSource = 'timeout'
+      this.lastSchedulerDelayMs = 0
       this.animate(performance.now())
     }, 0)
   }
@@ -144,13 +174,57 @@ export class GameLoop {
     return gameState.isRightDragging || keyScrollActive || velocityActive
   }
 
+  isMobileRenderProfile() {
+    const body = typeof document !== 'undefined' ? document.body : null
+    return Boolean(
+      body?.classList.contains('is-touch') ||
+      body?.classList.contains('mobile-landscape') ||
+      body?.classList.contains('mobile-portrait') ||
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
+    )
+  }
+
+  getMinimapRenderIntervalMs() {
+    return this.isMobileRenderProfile() ? 250 : 0
+  }
+
+  shouldRenderMinimap(now, force = false) {
+    const interval = this.getMinimapRenderIntervalMs()
+    if (force || interval <= 0 || now - this.lastMinimapRenderTime >= interval) {
+      this.lastMinimapRenderTime = now
+      return true
+    }
+    return false
+  }
+
+  renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, force = false) {
+    if (!this.shouldRenderMinimap(now, force)) {
+      return 0
+    }
+
+    const minimapStart = performance.now()
+    renderMinimap(
+      minimapCtx,
+      minimapCanvas,
+      this.mapGrid,
+      gameState.scrollOffset,
+      gameCanvas,
+      this.units,
+      gameState.buildings,
+      gameState
+    )
+    return Math.max(0, performance.now() - minimapStart)
+  }
+
   handlePausedFrame(now, gameCtx, gameCanvas, pauseStateChanged) {
+    const frameStart = performance.now()
     this.lastFrameTime = null
 
     updateGame(0, this.mapGrid, this.factories, this.units, this.bullets, gameState)
 
     const gameGl = this.canvasManager.getGameGlContext()
     const gameGlCanvas = this.canvasManager.getGameGlCanvas()
+    const gameGpuCanvas = this.canvasManager.getGameGpuCanvas?.()
 
     const minimapCtx = this.canvasManager.getMinimapContext()
     const minimapCanvas = this.canvasManager.getMinimapCanvas()
@@ -172,6 +246,8 @@ export class GameLoop {
 
     const offsetChanged = prevOffsetX !== gameState.scrollOffset.x || prevOffsetY !== gameState.scrollOffset.y
     const shouldRenderFrame = this.forceRender || pauseStateChanged || offsetChanged || gameState.isRightDragging
+    const updateEnd = performance.now()
+    let minimapMs = 0
 
     if (shouldRenderFrame) {
       renderGame(
@@ -188,22 +264,36 @@ export class GameLoop {
         gameState.selectionEnd,
         gameState,
         gameGl,
-        gameGlCanvas
+        gameGlCanvas,
+        gameGpuCanvas
       )
 
-      renderMinimap(
-        minimapCtx,
-        minimapCanvas,
-        this.mapGrid,
-        gameState.scrollOffset,
-        gameCanvas,
-        this.units,
-        gameState.buildings,
-        gameState
-      )
+      minimapMs = this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, this.forceRender || pauseStateChanged)
     }
 
+    const renderEnd = performance.now()
     this.fpsDisplay.render(gameCtx, gameCanvas)
+    const frameEnd = performance.now()
+    const totalPausedFrameMs = frameEnd - frameStart
+    const updateMs = Math.max(0, updateEnd - frameStart)
+    const renderMs = Math.max(0, renderEnd - updateEnd)
+    this.fpsDisplay.reportFrameBreakdown({
+      updateMs,
+      renderMs,
+      idleMs: 0
+    })
+    const frameInterval = now - (this.lastFrameTimestampForMonitor || now)
+    performanceMonitor.recordFrame({
+      frameInterval,
+      updateMs,
+      renderMs,
+      minimapMs,
+      frameWorkMs: totalPausedFrameMs,
+      compositorWaitMs: Math.max(0, frameInterval - totalPausedFrameMs),
+      schedulerSource: this.lastSchedulerSource,
+      schedulerDelayMs: this.lastSchedulerDelayMs
+    })
+    this.lastFrameTimestampForMonitor = now
 
     this.forceRender = false
 
@@ -226,6 +316,7 @@ export class GameLoop {
     const gameCanvas = this.canvasManager.getGameCanvas()
     const gameGl = this.canvasManager.getGameGlContext()
     const gameGlCanvas = this.canvasManager.getGameGlCanvas()
+    const gameGpuCanvas = this.canvasManager.getGameGpuCanvas?.()
 
     // Always update FPS tracking
     this.fpsDisplay.updateFPS(now)
@@ -243,6 +334,7 @@ export class GameLoop {
     }
 
     if (!gameState.gameStarted) {
+      this.fpsDisplay.reportFrameBreakdown({ updateMs: 0, renderMs: 0, idleMs: 0 })
       this.fpsDisplay.render(gameCtx, gameCanvas)
       this.scheduleNextFrame()
       return
@@ -255,8 +347,10 @@ export class GameLoop {
 
     // Calculate delta time with a maximum to avoid spiral of doom on slow frames
     if (!this.lastFrameTime) this.lastFrameTime = now
-    const delta = Math.min(now - this.lastFrameTime, 33) // Cap at ~30 FPS equivalent
+    const frameInterval = Math.max(0, now - this.lastFrameTime)
+    const delta = Math.min(frameInterval, MAX_FOREGROUND_SIMULATION_DELTA_MS)
     this.lastFrameTime = now
+    const frameStart = performance.now()
 
     // Check if game is over
     if (gameState.gameOver) {
@@ -339,6 +433,7 @@ export class GameLoop {
     }
 
     updateMapScrolling(gameState, this.mapGrid)
+    const updateEnd = performance.now()
 
     // Refresh production buttons if a building was destroyed
     if (gameState.pendingButtonUpdate) {
@@ -356,14 +451,31 @@ export class GameLoop {
 
     renderGame(gameCtx, gameCanvas, this.mapGrid, this.factories, this.units, this.bullets, gameState.buildings,
       gameState.scrollOffset, gameState.selectionActive,
-      gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas)
+      gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas, gameGpuCanvas)
 
     // Render minimap with low energy effects if applicable
-    renderMinimap(minimapCtx, minimapCanvas, this.mapGrid,
-      gameState.scrollOffset, gameCanvas, this.units, gameState.buildings, gameState)
+    const minimapMs = this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas)
+    const renderEnd = performance.now()
 
     // Render FPS overlay on top of everything when game is running
     this.fpsDisplay.render(gameCtx, gameCanvas)
+    const frameEnd = performance.now()
+    const updateMs = Math.max(0, updateEnd - frameStart)
+    const renderMs = Math.max(0, renderEnd - updateEnd)
+    const idleMs = Math.max(0, frameEnd - frameStart - updateMs - renderMs)
+    this.fpsDisplay.reportFrameBreakdown({ updateMs, renderMs, idleMs })
+    performanceMonitor.recordFrame({
+      frameInterval: now - (this.lastFrameTimestampForMonitor || now),
+      updateMs,
+      renderMs,
+      minimapMs,
+      frameWorkMs: frameEnd - frameStart,
+      compositorWaitMs: Math.max(0, frameInterval - (frameEnd - frameStart)),
+      schedulerSource: this.lastSchedulerSource,
+      schedulerDelayMs: this.lastSchedulerDelayMs
+    })
+    this.lastFrameTimestampForMonitor = now
+    this.canvasManager.updateAdaptivePixelRatio?.(this.fpsDisplay.fps, now, this.hasActiveScrollActivity())
 
     this.forceRender = false
 
@@ -473,11 +585,12 @@ export class GameLoop {
     const gameCanvas = this.canvasManager.getGameCanvas()
     const gameGl = this.canvasManager.getGameGlContext()
     const gameGlCanvas = this.canvasManager.getGameGlCanvas()
+    const gameGpuCanvas = this.canvasManager.getGameGpuCanvas?.()
     const minimapCtx = this.canvasManager.getMinimapContext()
     const minimapCanvas = this.canvasManager.getMinimapCanvas()
 
-    renderGame(gameCtx, gameCanvas, this.mapGrid, this.factories, this.units, this.bullets, gameState.buildings, gameState.scrollOffset, gameState.selectionActive, gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas)
-    renderMinimap(minimapCtx, minimapCanvas, this.mapGrid, gameState.scrollOffset, gameCanvas, this.units, gameState.buildings, gameState)
+    renderGame(gameCtx, gameCanvas, this.mapGrid, this.factories, this.units, this.bullets, gameState.buildings, gameState.scrollOffset, gameState.selectionActive, gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas, gameGpuCanvas)
+    this.renderMinimapIfDue(timestamp || performance.now(), minimapCtx, minimapCanvas, gameCanvas)
 
     // Render FPS overlay on top of everything in legacy loop too
     this.fpsDisplay.render(gameCtx, gameCanvas)

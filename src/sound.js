@@ -4,6 +4,7 @@ import { videoOverlay } from './ui/videoOverlay.js'
 import { gameState } from './gameState.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { isHeadlessAudioMuted } from './utils/headlessAudioMute.js'
+import { getStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 
 const suppressAudioForAutomation = isHeadlessAudioMuted()
 
@@ -16,13 +17,12 @@ if (!suppressAudioForAutomation) {
   }
 }
 
-// Master volume control with localStorage persistence
+// Master volume control with IndexedDB persistence
 const VOLUME_STORAGE_KEY = 'rts-game-master-volume'
 
-// Load volume from localStorage or use default
 function loadVolumeFromStorage() {
   try {
-    const storedVolume = localStorage.getItem(VOLUME_STORAGE_KEY)
+    const storedVolume = getStoredItem(VOLUME_STORAGE_KEY)
     if (storedVolume !== null) {
       const parsedVolume = parseFloat(storedVolume)
       if (!isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 1) {
@@ -30,21 +30,25 @@ function loadVolumeFromStorage() {
       }
     }
   } catch (e) {
-    window.logger.warn('Failed to load volume from localStorage:', e)
+    window.logger.warn('Failed to load volume from IndexedDB:', e)
   }
   return MASTER_VOLUME // Fall back to default
 }
 
-// Save volume to localStorage
 function saveVolumeToStorage(volume) {
   try {
-    localStorage.setItem(VOLUME_STORAGE_KEY, volume.toString())
+    setStoredItem(VOLUME_STORAGE_KEY, volume.toString())
   } catch (e) {
-    window.logger.warn('Failed to save volume to localStorage:', e)
+    window.logger.warn('Failed to save volume to IndexedDB:', e)
   }
 }
 
 let masterVolume = loadVolumeFromStorage()
+
+export function reloadMasterVolumeFromStorage() {
+  masterVolume = loadVolumeFromStorage()
+  return masterVolume
+}
 
 const soundFiles = {
   // Original sound categories
@@ -617,7 +621,7 @@ export function resumeAllSounds() {
 export function setMasterVolume(volume) {
   masterVolume = Math.max(0, Math.min(1, volume)) // Clamp between 0 and 1
 
-  // Save to localStorage
+  // Save to browser storage
   saveVolumeToStorage(masterVolume)
 
   // Update background music volume if it exists

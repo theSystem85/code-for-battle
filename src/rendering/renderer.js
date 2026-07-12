@@ -1,5 +1,6 @@
 // rendering/renderer.js
 import { TextureManager } from './textureManager.js'
+import { performanceMonitor } from '../performance/performanceMonitor.js'
 import { MapRenderer } from './mapRenderer.js'
 import { BuildingRenderer } from './buildingRenderer.js'
 import { UnitRenderer } from './unitRenderer.js'
@@ -25,8 +26,10 @@ import { preloadHowitzerImage } from './howitzerImageRenderer.js'
 import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
+import { GameWebGPURenderer } from './webgpuRenderer.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
-import { TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
+import { RENDERER_BACKEND, TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 
 export class Renderer {
@@ -46,6 +49,7 @@ export class Renderer {
     this.dangerZoneRenderer = new DangerZoneRenderer()
     this.wreckRenderer = new WreckRenderer()
     this.gpuRenderer = null
+    this.webgpuRenderer = null
   }
 
   partitionUnitsByRenderLayer(units) {
@@ -254,7 +258,7 @@ export class Renderer {
     })
   }
 
-  renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null) {
+  renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null, webgpuCanvas = null) {
     if (!gameState || !gameCtx) {
       return
     }
@@ -264,28 +268,54 @@ export class Renderer {
       this.textureManager.preloadAllTextures()
     }
 
-    gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height)
+    const { width: logicalCanvasWidth, height: logicalCanvasHeight } = getCanvasLogicalSize(gameCanvas)
+    gameCtx.clearRect(0, 0, logicalCanvasWidth, logicalCanvasHeight)
 
     // Check for game over first
     if (this.uiRenderer.renderGameOver(gameCtx, gameCanvas, gameState)) {
       return // Stop rendering if game is over
     }
 
+    const monitorTiming = performanceMonitor.recording
+    const renderStartedAt = monitorTiming ? performance.now() : 0
+    let terrainMs = 0
+    let entitiesMs = 0
+    let effectsMs = 0
+    let uiMs = 0
     // Render all game elements in order
     let gpuRendered = false
     const hasIntegratedWaterTiles = Boolean(
       gameState.useIntegratedSpriteSheetMode &&
       this.textureManager.integratedTagBuckets?.water?.length
     )
-    const gpuWaterOnly = Boolean(gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles)
+    const needsCpuTerrainComposite = !gameState.useIntegratedSpriteSheetMode
+    const hasGpuStreetAtlas = Boolean(
+      needsCpuTerrainComposite &&
+      this.textureManager.defaultStreetTagBuckets?.street?.some(tile => tile?.image && tile?.rect)
+    )
+    const gpuWaterOnly = Boolean(
+      (gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles) ||
+      (needsCpuTerrainComposite && !hasGpuStreetAtlas)
+    )
     const shouldUseGpuTerrain = Boolean(
-      gpuContext &&
-      gpuCanvas &&
       USE_PROCEDURAL_WATER_RENDERING &&
+      ((gpuContext && gpuCanvas) || (webgpuCanvas && typeof navigator !== 'undefined' && navigator.gpu)) &&
       (!gameState.useIntegratedSpriteSheetMode || gpuWaterOnly)
     )
 
-    if (shouldUseGpuTerrain) {
+    let gpuBackend = 'cpu'
+    const wantsWebGPU = RENDERER_BACKEND === 'webgpu' && Boolean(webgpuCanvas) && typeof navigator !== 'undefined' && Boolean(navigator.gpu)
+    if (shouldUseGpuTerrain && wantsWebGPU) {
+      if (!this.webgpuRenderer) {
+        this.webgpuRenderer = new GameWebGPURenderer(this.textureManager, this.mapRenderer)
+      } else {
+        this.webgpuRenderer.setMapRenderer(this.mapRenderer)
+      }
+      gpuRendered = this.webgpuRenderer.render(mapGrid, scrollOffset, webgpuCanvas, { waterOnly: gpuWaterOnly })
+      if (gpuRendered) gpuBackend = 'webgpu'
+    }
+
+    if (shouldUseGpuTerrain && !gpuRendered) {
       if (!this.gpuRenderer) {
         this.gpuRenderer = new GameWebGLRenderer(gpuContext, this.textureManager, this.mapRenderer)
       } else {
@@ -293,11 +323,15 @@ export class Renderer {
         this.gpuRenderer.setMapRenderer(this.mapRenderer)
       }
       gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas, { waterOnly: gpuWaterOnly })
+      if (gpuRendered) gpuBackend = 'webgl'
     } else if (gpuContext && gpuCanvas) {
       gpuContext.viewport(0, 0, gpuCanvas.width, gpuCanvas.height)
       gpuContext.clearColor(0, 0, 0, 0)
       gpuContext.clear(gpuContext.COLOR_BUFFER_BIT)
     }
+
+    if (webgpuCanvas?.style) webgpuCanvas.style.display = gpuBackend === 'webgpu' ? 'block' : 'none'
+    if (gpuCanvas?.style) gpuCanvas.style.display = gpuBackend === 'webgpu' ? 'none' : 'block'
 
     // Build occupancy map for visualization if needed
     let occupancyMap = null
@@ -314,11 +348,27 @@ export class Renderer {
       occupancyMap,
       {
         skipBaseLayer: gpuRendered && !gpuWaterOnly,
-        skipWaterSot: gpuRendered && this.gpuRenderer?.rendersWaterSot,
+        skipWaterSot: gpuRendered && (gpuBackend === 'webgpu' ? this.webgpuRenderer?.rendersWaterSot : this.gpuRenderer?.rendersWaterSot),
         skipWaterBase: gpuRendered && gpuWaterOnly,
-        gpuRenderedResources: gpuRendered && !gpuWaterOnly
+        gpuRenderedResources: gpuRendered && !gpuWaterOnly,
+        separateWaterLayer: needsCpuTerrainComposite && !gpuRendered,
+        gpuRenderedStreetTerrain: gpuRendered && hasGpuStreetAtlas
       }
     )
+    if (monitorTiming) terrainMs = performance.now() - renderStartedAt
+
+    gameState.renderStats = {
+      ...(gameState.renderStats || {}),
+      mapChunks: this.mapRenderer.getLastFrameChunkStats?.() || null,
+      gpuTerrain: {
+        rendered: gpuRendered,
+        backend: gpuBackend,
+        requestedBackend: RENDERER_BACKEND,
+        webgpuStatus: this.webgpuRenderer?.getStatus?.() || null,
+        waterOnly: gpuWaterOnly,
+        streetAtlas: gpuRendered && hasGpuStreetAtlas
+      }
+    }
     if (gameState.dzmOverlayIndex !== -1) {
       const ids = Object.keys(gameState.dangerZoneMaps || {})
       const pid = ids[gameState.dzmOverlayIndex]
@@ -332,6 +382,7 @@ export class Renderer {
 
     const { groundedUnits, airborneUnits } = this.partitionUnitsByRenderLayer(units)
 
+    const entitiesStartedAt = monitorTiming ? performance.now() : 0
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
     this.buildingRenderer.renderBases(gameCtx, buildings, mapGrid, scrollOffset)
@@ -340,7 +391,9 @@ export class Renderer {
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset)
     this.unitRenderer.renderBases(gameCtx, groundedUnits, scrollOffset)
     gameCtx.restore()
+    if (monitorTiming) entitiesMs = performance.now() - entitiesStartedAt
 
+    const effectsStartedAt = monitorTiming ? performance.now() : 0
     this.effectsRenderer.render(gameCtx, bullets, gameState, units, scrollOffset)
 
     // Render mine indicators (skull overlays)
@@ -356,7 +409,9 @@ export class Renderer {
     if (gameState.mineFreeformPaint) {
       renderFreeformSweepPreview(gameCtx, gameState.mineFreeformPaint, scrollOffset)
     }
+    if (monitorTiming) effectsMs = performance.now() - effectsStartedAt
 
+    const uiStartedAt = monitorTiming ? performance.now() : 0
     // Render movement target indicators (green triangles)
     this.movementTargetRenderer.render(gameCtx, units, scrollOffset)
     this.pathPlanningRenderer.render(gameCtx, units, scrollOffset)
@@ -384,6 +439,10 @@ export class Renderer {
     this.buildingRenderer.renderHudHoverTooltip(gameCtx, [...(buildings || []), ...(factories || [])], scrollOffset)
 
     this.uiRenderer.render(gameCtx, gameCanvas, gameState, selectionActive, selectionStart, selectionEnd, scrollOffset, factories, buildings, mapGrid, units)
+    if (monitorTiming) {
+      uiMs = performance.now() - uiStartedAt
+      performanceMonitor.recordRendererPhases({ terrainMs, entitiesMs, effectsMs, uiMs })
+    }
   }
 
   renderMinimap(minimapCtx, minimapCanvas, mapGrid, scrollOffset, gameCanvas, units, buildings, gameState) {

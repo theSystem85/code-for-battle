@@ -244,6 +244,7 @@ describe('Renderer airborne layering', () => {
     const gameCanvas = { width: 800, height: 600 }
     const gpuCanvas = { width: 800, height: 600 }
     const mapGrid = [[{ type: 'water' }, { type: 'land' }]]
+    const gameState = { useIntegratedSpriteSheetMode: true, unitWrecks: [] }
 
     renderer.textureManager.integratedTagBuckets = {}
     renderer.mapRenderer.render.mockClear()
@@ -260,7 +261,7 @@ describe('Renderer airborne layering', () => {
       false,
       { x: 0, y: 0 },
       { x: 0, y: 0 },
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      gameState,
       gpuContext,
       gpuCanvas
     )
@@ -271,9 +272,73 @@ describe('Renderer airborne layering', () => {
       mapGrid,
       { x: 0, y: 0 },
       gameCanvas,
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      expect.objectContaining({ useIntegratedSpriteSheetMode: true, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false }
+      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
+    )
+  })
+
+  it('uses full GPU terrain when default street sheet art has an atlas image', () => {
+    const renderer = new Renderer()
+    const gameCtx = {
+      clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      globalAlpha: 1,
+      fillRect: vi.fn(),
+      strokeRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      fillText: vi.fn(),
+      measureText: vi.fn(() => ({ width: 10 }))
+    }
+    const gpuContext = {
+      viewport: vi.fn(),
+      clearColor: vi.fn(),
+      clear: vi.fn(),
+      COLOR_BUFFER_BIT: 1
+    }
+    const gameCanvas = { width: 800, height: 600 }
+    const gpuCanvas = { width: 800, height: 600 }
+    const mapGrid = [[{ type: 'street' }, { type: 'water' }]]
+    const gameState = { useIntegratedSpriteSheetMode: false, unitWrecks: [] }
+
+    renderer.textureManager.defaultStreetTagBuckets = {
+      street: [{ image: { id: 'default-street-atlas' }, rect: { x: 0, y: 0, width: 64, height: 64 } }]
+    }
+    renderer.mapRenderer.render.mockClear()
+
+    renderer.renderGame(
+      gameCtx,
+      gameCanvas,
+      mapGrid,
+      [],
+      [],
+      [],
+      [],
+      { x: 0, y: 0 },
+      false,
+      { x: 0, y: 0 },
+      { x: 0, y: 0 },
+      gameState,
+      gpuContext,
+      gpuCanvas
+    )
+
+    expect(renderer.gpuRenderer.render).toHaveBeenCalledWith(mapGrid, { x: 0, y: 0 }, gpuCanvas, { waterOnly: false })
+    expect(renderer.mapRenderer.render).toHaveBeenCalledWith(
+      gameCtx,
+      mapGrid,
+      { x: 0, y: 0 },
+      gameCanvas,
+      expect.objectContaining({ useIntegratedSpriteSheetMode: false, unitWrecks: [] }),
+      null,
+      { skipBaseLayer: true, skipWaterSot: true, skipWaterBase: false, gpuRenderedResources: true, separateWaterLayer: false, gpuRenderedStreetTerrain: true }
     )
   })
 
@@ -305,6 +370,7 @@ describe('Renderer airborne layering', () => {
     const gameCanvas = { width: 800, height: 600 }
     const gpuCanvas = { width: 800, height: 600 }
     const mapGrid = [[{ type: 'water' }, { type: 'land' }]]
+    const gameState = { useIntegratedSpriteSheetMode: true, unitWrecks: [] }
 
     renderer.textureManager.integratedTagBuckets = { water: [{ rect: { x: 0, y: 0, width: 64, height: 64 } }] }
     renderer.mapRenderer.render.mockClear()
@@ -321,7 +387,7 @@ describe('Renderer airborne layering', () => {
       false,
       { x: 0, y: 0 },
       { x: 0, y: 0 },
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      gameState,
       gpuContext,
       gpuCanvas
     )
@@ -332,9 +398,9 @@ describe('Renderer airborne layering', () => {
       mapGrid,
       { x: 0, y: 0 },
       gameCanvas,
-      { useIntegratedSpriteSheetMode: true, unitWrecks: [] },
+      expect.objectContaining({ useIntegratedSpriteSheetMode: true, unitWrecks: [] }),
       null,
-      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false, gpuRenderedResources: false }
+      { skipBaseLayer: false, skipWaterSot: false, skipWaterBase: false, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
     )
     expect(gpuContext.clear).toHaveBeenCalledWith(gpuContext.COLOR_BUFFER_BIT)
   })

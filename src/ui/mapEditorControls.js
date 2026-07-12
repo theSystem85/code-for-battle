@@ -19,6 +19,7 @@ import {
 import { listPartyStates, observePartyOwnershipChange } from '../network/multiplayerStore.js'
 import { initSpriteSheetEditor } from './spriteSheetEditor.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
+import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 let editButton = null
 let tileSelect = null
@@ -53,10 +54,9 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
   softenBrightness: 24
 })
-const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
+const RETIRED_MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
 
 const DEFAULT_SSE_SHEETS = [
-  MAJOR_SPRITE_SHEET_PATH,
   'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
   'images/map/sprite_sheets/seasons_1024_q90_2.webp',
   'images/map/sprite_sheets/seasons_1024_q90_3.webp',
@@ -162,7 +162,12 @@ function mergeSheetPaths(baseSheetPaths = [], additionalSheetPaths = []) {
   const merged = []
   const seen = new Set()
   ;[...baseSheetPaths, ...additionalSheetPaths].forEach((sheetPath) => {
-    if (typeof sheetPath !== 'string' || !sheetPath.trim() || seen.has(sheetPath)) return
+    if (
+      typeof sheetPath !== 'string' ||
+      !sheetPath.trim() ||
+      sheetPath === RETIRED_MAJOR_SPRITE_SHEET_PATH ||
+      seen.has(sheetPath)
+    ) return
     seen.add(sheetPath)
     merged.push(sheetPath)
   })
@@ -186,7 +191,7 @@ function ensureIntegratedSheetVisible(sheetPath, { autoSelect = true } = {}) {
   }
   gameState.activeSpriteSheetSelections = nextAvailable.filter(path => selectedSet.has(path))
   try {
-    localStorage.setItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY, JSON.stringify(gameState.activeSpriteSheetSelections))
+    setStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY, JSON.stringify(gameState.activeSpriteSheetSelections))
   } catch (err) {
     window.logger.warn('Failed to persist selected integrated sprite sheets:', err)
   }
@@ -415,7 +420,7 @@ async function loadStaticSheetPaths() {
     if (response.ok) {
       const parsed = await response.json()
       if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
-        return parsed.sheets
+        return parsed.sheets.filter(path => path !== RETIRED_MAJOR_SPRITE_SHEET_PATH)
       }
     }
   } catch (err) {
@@ -427,7 +432,7 @@ async function loadStaticSheetPaths() {
 async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {}) {
   if (!sheetPath) return null
   if (allowLocalOverride) {
-    const local = safeParseJson(localStorage.getItem(`${SSE_METADATA_PREFIX}${sheetPath}`), null)
+    const local = safeParseJson(getStoredItem(`${SSE_METADATA_PREFIX}${sheetPath}`), null)
     if (local && typeof local === 'object') {
       return normalizeMetadataForSheet(sheetPath, local)
     }
@@ -463,7 +468,7 @@ function renderIntegratedSheetSelectionList(sheetPaths = []) {
       else currentSelected.delete(sheetPath)
       gameState.activeSpriteSheetSelections = sheetPaths.filter(path => currentSelected.has(path))
       try {
-        localStorage.setItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY, JSON.stringify(gameState.activeSpriteSheetSelections))
+        setStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY, JSON.stringify(gameState.activeSpriteSheetSelections))
       } catch (err) {
         window.logger.warn('Failed to persist selected integrated sprite sheets:', err)
       }
@@ -520,9 +525,7 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     : await loadStaticSheetPaths()
   gameState.availableStaticSpriteSheets = allStaticSheets
   if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = allStaticSheets.includes(MAJOR_SPRITE_SHEET_PATH)
-      ? [MAJOR_SPRITE_SHEET_PATH]
-      : [...allStaticSheets]
+    gameState.activeSpriteSheetSelections = [...allStaticSheets]
   }
 
   const selectedSheetPaths = allStaticSheets.filter(path => gameState.activeSpriteSheetSelections.includes(path))
@@ -636,7 +639,7 @@ export function initMapEditorControls() {
 
   gameState.useIntegratedSpriteSheetMode = Boolean(gameState.useIntegratedSpriteSheetMode)
   try {
-    const storedMode = localStorage.getItem(INTEGRATED_MODE_STORAGE_KEY)
+    const storedMode = getStoredItem(INTEGRATED_MODE_STORAGE_KEY)
     if (storedMode !== null) {
       gameState.useIntegratedSpriteSheetMode = storedMode === 'true'
     }
@@ -646,7 +649,7 @@ export function initMapEditorControls() {
 
   gameState.activeSpriteSheetBiomeTag = gameState.activeSpriteSheetBiomeTag || 'grass'
   try {
-    const storedBiome = localStorage.getItem(INTEGRATED_BIOME_STORAGE_KEY)
+    const storedBiome = getStoredItem(INTEGRATED_BIOME_STORAGE_KEY)
     if (storedBiome && ['soil', 'sand', 'grass', 'snow'].includes(storedBiome)) {
       gameState.activeSpriteSheetBiomeTag = storedBiome
     }
@@ -654,7 +657,7 @@ export function initMapEditorControls() {
     window.logger.warn('Failed to load integrated sprite sheet biome:', err)
   }
   try {
-    const storedAppliedMetadata = localStorage.getItem(SSE_APPLIED_METADATA_STORAGE_KEY)
+    const storedAppliedMetadata = getStoredItem(SSE_APPLIED_METADATA_STORAGE_KEY)
     if (storedAppliedMetadata) {
       const parsed = JSON.parse(storedAppliedMetadata)
       if (parsed && typeof parsed === 'object') {
@@ -664,7 +667,7 @@ export function initMapEditorControls() {
       }
     }
   } catch (err) {
-    window.logger.warn('Failed to load applied SSE metadata from localStorage:', err)
+    window.logger.warn('Failed to load applied SSE metadata from IndexedDB:', err)
   }
 
   gameState.availableStaticSpriteSheets = mergeSheetPaths(
@@ -673,7 +676,7 @@ export function initMapEditorControls() {
   )
 
   try {
-    const storedSelected = safeParseJson(localStorage.getItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), [])
+    const storedSelected = safeParseJson(getStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), [])
     if (Array.isArray(storedSelected) && storedSelected.length) {
       gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.filter(path => storedSelected.includes(path))
     }
@@ -681,9 +684,7 @@ export function initMapEditorControls() {
     window.logger.warn('Failed to load selected integrated sprite sheets:', err)
   }
   if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.includes(MAJOR_SPRITE_SHEET_PATH)
-      ? [MAJOR_SPRITE_SHEET_PATH]
-      : [...gameState.availableStaticSpriteSheets]
+    gameState.activeSpriteSheetSelections = [...gameState.availableStaticSpriteSheets]
   }
   renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
   loadStaticSheetPaths().then(async(sheetPaths) => {
@@ -693,15 +694,11 @@ export function initMapEditorControls() {
     )
     const availablePaths = gameState.availableStaticSpriteSheets
     if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-      gameState.activeSpriteSheetSelections = availablePaths.includes(MAJOR_SPRITE_SHEET_PATH)
-        ? [MAJOR_SPRITE_SHEET_PATH]
-        : [...availablePaths]
+      gameState.activeSpriteSheetSelections = [...availablePaths]
     } else {
       gameState.activeSpriteSheetSelections = availablePaths.filter(path => gameState.activeSpriteSheetSelections.includes(path))
       if (!gameState.activeSpriteSheetSelections.length) {
-        gameState.activeSpriteSheetSelections = availablePaths.includes(MAJOR_SPRITE_SHEET_PATH)
-          ? [MAJOR_SPRITE_SHEET_PATH]
-          : [...availablePaths]
+        gameState.activeSpriteSheetSelections = [...availablePaths]
       }
     }
     renderIntegratedSheetSelectionList(availablePaths)
@@ -713,16 +710,16 @@ export function initMapEditorControls() {
   })
 
   try {
-    const storedAnimationMetadata = localStorage.getItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY)
+    const storedAnimationMetadata = getStoredItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY)
     if (storedAnimationMetadata) {
       const parsed = JSON.parse(storedAnimationMetadata)
       const normalized = setActiveAnimationMetadata(parsed)
       if (normalized) {
-        localStorage.setItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY, JSON.stringify(normalized))
+        setStoredItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY, JSON.stringify(normalized))
       }
     }
   } catch (err) {
-    window.logger.warn('Failed to load applied SSE animation metadata from localStorage:', err)
+    window.logger.warn('Failed to load applied SSE animation metadata from IndexedDB:', err)
   }
 
   if (!gameState.activeAnimationSpriteSheetMetadata) {
@@ -763,7 +760,7 @@ export function initMapEditorControls() {
       gameState.useIntegratedSpriteSheetMode = enabled
       updateIntegratedSheetSelectionVisibility()
       try {
-        localStorage.setItem(INTEGRATED_MODE_STORAGE_KEY, enabled ? 'true' : 'false')
+        setStoredItem(INTEGRATED_MODE_STORAGE_KEY, enabled ? 'true' : 'false')
       } catch (err) {
         window.logger.warn('Failed to persist integrated sprite sheet mode:', err)
       }
@@ -777,7 +774,7 @@ export function initMapEditorControls() {
       const biome = e.target.value
       gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(biome) ? biome : 'grass'
       try {
-        localStorage.setItem(INTEGRATED_BIOME_STORAGE_KEY, gameState.activeSpriteSheetBiomeTag)
+        setStoredItem(INTEGRATED_BIOME_STORAGE_KEY, gameState.activeSpriteSheetBiomeTag)
       } catch (err) {
         window.logger.warn('Failed to persist integrated sprite sheet biome:', err)
       }
@@ -809,7 +806,7 @@ export function initMapEditorControls() {
         ensureIntegratedSheetVisible(metadata.sheetPath, { autoSelect: true })
       }
       try {
-        localStorage.setItem(SSE_APPLIED_METADATA_STORAGE_KEY, JSON.stringify(metadata))
+        setStoredItem(SSE_APPLIED_METADATA_STORAGE_KEY, JSON.stringify(metadata))
       } catch (err) {
         window.logger.warn('Failed to persist applied SSE metadata:', err)
       }
@@ -818,7 +815,7 @@ export function initMapEditorControls() {
     onApplyAnimation: async(metadata) => {
       const normalized = setActiveAnimationMetadata(metadata)
       try {
-        localStorage.setItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY, JSON.stringify(normalized))
+        setStoredItem(SSE_APPLIED_ANIMATION_METADATA_STORAGE_KEY, JSON.stringify(normalized))
       } catch (err) {
         window.logger.warn('Failed to persist applied SSE animation metadata:', err)
       }

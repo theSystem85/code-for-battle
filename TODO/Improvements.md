@@ -1,3 +1,8 @@
+- [x] Migrate runtime game persistence from direct Web Storage calls to an IndexedDB-backed browser storage layer, including saves, replays, tutorial/settings preferences, aliases, keybindings, LLM settings, sprite-sheet metadata, and legacy data migration.
+- [x] Pin the iOS Simulator benchmark to an explicit `iPhone 13 Pro Max` simulator device by default, create/use the local simulator UDID, and document install/create commands for missing devices.
+- [x] Make benchmark-mode emulator startup leave Safari navigation to the E2E test, so the plain app URL is not opened before Vite is reachable and the Simulator no longer sits on the home screen after an early emulator-script failure.
+- [x] Add an opt-in iOS Simulator Safari benchmark E2E that starts the emulator script, opens the app benchmark in Simulator Safari, collects the in-app FPS result, and currently fails below 55 average FPS while keeping the threshold configurable.
+- [ ] Mobile performance recovery plan (2026-05-24): evaluate and implement prioritized render-path improvements to move mobile back from ~10fps toward 60fps, starting with the most critical selected item after reviewing the plan.
 - [x] Remove borders from multiplayer sidebar colored owner badges (party bubbles) so the solid fill style matches the updated multiplayer row visuals.
 - [x] Make multiplayer owner badge width content-driven, force dark text on green/yellow badges, and add right-side spacing in party-info row alignment for consistent sidebar padding.
 - [x] Move multiplayer owner labels into the colored party badge to save row space and force dark text on yellow-like badge colors for readability contrast.
@@ -259,8 +264,8 @@
     - Fixed 1-frame delay in `canAccelerate` flag by calling rotation update before position update
     - Reduced rotation threshold from 45° to 15° for non-tank units
     - Reset velocity when receiving new movement command to prevent coasting in wrong direction
-- [ ] Move main-map and minimap rendering to GPU-backed WebGL/WebGPU pipelines using atlas streaming and instanced quads for terrain and sprites to reduce CPU draw overhead.
-- [ ] Create a WebGPU transition plan (Chrome/Safari-aligned) covering adapter setup, pipeline parity, asset migration, fallback strategy, and a settings toggle for WebGPU/WebGL selection.
+- [ ] Move remaining sprite, overlay, and minimap rendering to GPU-backed WebGL/WebGPU pipelines; terrain now has opt-in WebGPU atlas instancing with automatic WebGL fallback.
+- [x] Create and begin the WebGPU transition with a persisted WebGPU/WebGL setting, atlas-backed instanced terrain, procedural water parity, asynchronous initialization, and device-loss fallback.
 - [x] Buffer GPU tile rendering with off-screen margin rows/columns so no black bars appear while panning to map edges.
 - [x] Restore animated water tiles within the GPU rendering path so shoreline movement matches the 2D renderer.
 - [x] **Performance:** Pre-cached gradient sprites for smoke and explosions - moves gradient creation from per-frame CPU to one-time startup + GPU texture sampling

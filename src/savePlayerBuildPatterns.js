@@ -1,13 +1,11 @@
 import { gameState } from './gameState.js'
+import { getStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 
 function readHistoryFromStorage() {
-  if (typeof localStorage === 'undefined') {
-    return []
-  }
-
   try {
-    const savedHistory = localStorage.getItem('playerBuildHistory')
-    return savedHistory ? JSON.parse(savedHistory) : []
+    const savedHistory = getStoredItem('playerBuildHistory')
+    const parsedHistory = savedHistory ? JSON.parse(savedHistory) : []
+    return Array.isArray(parsedHistory) ? parsedHistory : []
   } catch (error) {
     window.logger.warn('Failed to parse playerBuildHistory from storage:', error)
     return []
@@ -33,7 +31,6 @@ function ensureSessionId() {
   return gameState.currentSessionId
 }
 
-// Add function to save player building patterns to localStorage
 export function savePlayerBuildPatterns(buildingType) {
   try {
     const history = ensurePlayerBuildHistoryLoaded()
@@ -55,9 +52,7 @@ export function savePlayerBuildPatterns(buildingType) {
       gameState.playerBuildHistory = history.slice(-20)
     }
 
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem('playerBuildHistory', JSON.stringify(gameState.playerBuildHistory))
-    }
+    setStoredItem('playerBuildHistory', JSON.stringify(gameState.playerBuildHistory))
   } catch (error) {
     console.error('Error saving player build patterns:', error)
   }

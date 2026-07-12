@@ -7,6 +7,7 @@ import {
   getPlayableViewportHeight,
   getPlayableViewportWidth
 } from '../utils/layoutMetrics.js'
+import { getCanvasPixelRatio } from './renderingUtils.js'
 
 const MINIMAP_UNDISCOVERED_COLOR = '#111111'
 const MINIMAP_FOG_COLOR = 'rgba(30, 30, 30, 0.6)'
@@ -39,7 +40,7 @@ export class MinimapRenderer {
 
   render(minimapCtx, minimapCanvas, mapGrid, scrollOffset, gameCanvas, units, buildings, gameState) {
     // Get the pixel ratio and CSS dimensions
-    const pixelRatio = window.devicePixelRatio || 1
+    const pixelRatio = getCanvasPixelRatio(minimapCanvas)
 
     // Clear the entire canvas with proper scaling
     minimapCtx.setTransform(1, 0, 0, 1, 0, 0) // Reset transform
