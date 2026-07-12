@@ -48,10 +48,7 @@ export const DEFAULT_SSE_TAGS = [
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
 
-const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
-
 const fallbackSheets = [
-  MAJOR_SPRITE_SHEET_PATH,
   'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
   'images/map/sprite_sheets/grass.webp',
   'images/map/sprite_sheets/soil.webp',

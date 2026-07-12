@@ -160,9 +160,9 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 
 
 ## Follow-up (2026-04-26): Major sprite sheets default compilation
-- Build pipeline must compile all tagged and runtime-used tiles from default static SSE sheets into one **major sprite sheet** (`major_sprite_sheet_default.webp`) with a merged tagging sidecar (`major_sprite_sheet_default.json`).
-- `public/images/map/sprite_sheets/index.json` must always include the major sprite sheet so SSE static-sheet dropdown exposes it as a selectable option.
-- When integrated sprite-sheet selections are first initialized (no prior user selection), runtime should default to only the major sprite sheet to reduce parallel texture decoding/memory pressure on mobile devices.
+- Runtime defaults must use the separated tagged sprite sheets for streets, seasons/terrain, crystals, rocks/cliffs, and combat decals. The retired `major_sprite_sheet_default` must not be generated, indexed, selected, or loaded.
+- Stored selections that only reference the retired major sheet must migrate to all available separated default sheets.
+- The production build must not compile or regenerate a combined major sprite sheet.
 - Major sprite sheet metadata must preserve merged tags and tile rect mappings so opening it in SSE immediately restores combined tag overlays.
 - Existing per-sheet options remain available in UI lists/checklists for manual override and debugging.
 

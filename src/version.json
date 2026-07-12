@@ -1,4 +1,4 @@
 {
-  "commit": "28731eb4",
-  "message": "fix: iPhone RAF starvation with mobile frame scheduler watchdog"
+  "commit": "6520450f",
+  "message": "fix: iPhone street rendering collapse with dedicated GPU atlas"
 }

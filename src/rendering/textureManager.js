@@ -6,12 +6,10 @@ import { discoverGrassTiles } from '../utils/grassTileDiscovery.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
 
-const DEFAULT_MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
-const DEFAULT_MAJOR_SPRITE_METADATA_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.json'
-const DEFAULT_COMBAT_DECAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
-const DEFAULT_COMBAT_DECAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
-const DEFAULT_CRYSTAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
-const DEFAULT_CRYSTAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
+const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
+const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
+const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
+const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
 const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
 const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.json'
 const STREET_DIRECTION_MASKS = {

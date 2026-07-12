@@ -54,10 +54,9 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
   softenBrightness: 24
 })
-const MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
+const RETIRED_MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
 
 const DEFAULT_SSE_SHEETS = [
-  MAJOR_SPRITE_SHEET_PATH,
   'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
   'images/map/sprite_sheets/seasons_1024_q90_2.webp',
   'images/map/sprite_sheets/seasons_1024_q90_3.webp',
@@ -163,7 +162,12 @@ function mergeSheetPaths(baseSheetPaths = [], additionalSheetPaths = []) {
   const merged = []
   const seen = new Set()
   ;[...baseSheetPaths, ...additionalSheetPaths].forEach((sheetPath) => {
-    if (typeof sheetPath !== 'string' || !sheetPath.trim() || seen.has(sheetPath)) return
+    if (
+      typeof sheetPath !== 'string' ||
+      !sheetPath.trim() ||
+      sheetPath === RETIRED_MAJOR_SPRITE_SHEET_PATH ||
+      seen.has(sheetPath)
+    ) return
     seen.add(sheetPath)
     merged.push(sheetPath)
   })
@@ -416,7 +420,7 @@ async function loadStaticSheetPaths() {
     if (response.ok) {
       const parsed = await response.json()
       if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
-        return parsed.sheets
+        return parsed.sheets.filter(path => path !== RETIRED_MAJOR_SPRITE_SHEET_PATH)
       }
     }
   } catch (err) {
@@ -521,9 +525,7 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     : await loadStaticSheetPaths()
   gameState.availableStaticSpriteSheets = allStaticSheets
   if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = allStaticSheets.includes(MAJOR_SPRITE_SHEET_PATH)
-      ? [MAJOR_SPRITE_SHEET_PATH]
-      : [...allStaticSheets]
+    gameState.activeSpriteSheetSelections = [...allStaticSheets]
   }
 
   const selectedSheetPaths = allStaticSheets.filter(path => gameState.activeSpriteSheetSelections.includes(path))
@@ -682,9 +684,7 @@ export function initMapEditorControls() {
     window.logger.warn('Failed to load selected integrated sprite sheets:', err)
   }
   if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.includes(MAJOR_SPRITE_SHEET_PATH)
-      ? [MAJOR_SPRITE_SHEET_PATH]
-      : [...gameState.availableStaticSpriteSheets]
+    gameState.activeSpriteSheetSelections = [...gameState.availableStaticSpriteSheets]
   }
   renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
   loadStaticSheetPaths().then(async(sheetPaths) => {
@@ -694,15 +694,11 @@ export function initMapEditorControls() {
     )
     const availablePaths = gameState.availableStaticSpriteSheets
     if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-      gameState.activeSpriteSheetSelections = availablePaths.includes(MAJOR_SPRITE_SHEET_PATH)
-        ? [MAJOR_SPRITE_SHEET_PATH]
-        : [...availablePaths]
+      gameState.activeSpriteSheetSelections = [...availablePaths]
     } else {
       gameState.activeSpriteSheetSelections = availablePaths.filter(path => gameState.activeSpriteSheetSelections.includes(path))
       if (!gameState.activeSpriteSheetSelections.length) {
-        gameState.activeSpriteSheetSelections = availablePaths.includes(MAJOR_SPRITE_SHEET_PATH)
-          ? [MAJOR_SPRITE_SHEET_PATH]
-          : [...availablePaths]
+        gameState.activeSpriteSheetSelections = [...availablePaths]
       }
     }
     renderIntegratedSheetSelectionList(availablePaths)
