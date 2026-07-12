@@ -278,7 +278,7 @@ describe('Renderer airborne layering', () => {
     )
   })
 
-  it('uses full GPU terrain when default street sheet art has an atlas image', () => {
+  it('isolates procedural water from default street sheet terrain on the GPU', () => {
     const renderer = new Renderer()
     const gameCtx = {
       clearRect: vi.fn(),
@@ -330,7 +330,7 @@ describe('Renderer airborne layering', () => {
       gpuCanvas
     )
 
-    expect(renderer.gpuRenderer.render).toHaveBeenCalledWith(mapGrid, { x: 0, y: 0 }, gpuCanvas, { waterOnly: false })
+    expect(renderer.gpuRenderer.render).toHaveBeenCalledWith(mapGrid, { x: 0, y: 0 }, gpuCanvas, { waterOnly: true })
     expect(renderer.mapRenderer.render).toHaveBeenCalledWith(
       gameCtx,
       mapGrid,
@@ -338,8 +338,12 @@ describe('Renderer airborne layering', () => {
       gameCanvas,
       expect.objectContaining({ useIntegratedSpriteSheetMode: false, unitWrecks: [] }),
       null,
-      { skipBaseLayer: true, skipWaterSot: true, skipWaterBase: false, gpuRenderedResources: true, separateWaterLayer: false, gpuRenderedStreetTerrain: true }
+      { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
     )
+    expect(gameState.renderStats.gpuTerrain).toEqual(expect.objectContaining({
+      waterOnly: true,
+      streetAtlas: false
+    }))
   })
 
   it('does not use legacy GPU terrain when integrated custom water tiles are available', () => {

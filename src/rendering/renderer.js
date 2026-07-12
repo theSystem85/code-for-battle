@@ -293,9 +293,15 @@ export class Renderer {
       needsCpuTerrainComposite &&
       this.textureManager.defaultStreetTagBuckets?.street?.some(tile => tile?.image && tile?.rect)
     )
+    // Keep animated procedural water isolated from static terrain. Mixing the
+    // secondary street atlas into the procedural-water draw makes WebKit run
+    // the water shader across a heterogeneous batch every frame, which causes
+    // a severe physical-iPhone slowdown as soon as street/SOT tiles enter the
+    // viewport. Static land and street art already lives in the bounded,
+    // prewarmed 2D chunk cache, so only water and its SOT wedges belong here.
     const gpuWaterOnly = Boolean(
       (gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles) ||
-      (needsCpuTerrainComposite && !hasGpuStreetAtlas)
+      needsCpuTerrainComposite
     )
     const shouldUseGpuTerrain = Boolean(
       USE_PROCEDURAL_WATER_RENDERING &&
@@ -352,7 +358,7 @@ export class Renderer {
         skipWaterBase: gpuRendered && gpuWaterOnly,
         gpuRenderedResources: gpuRendered && !gpuWaterOnly,
         separateWaterLayer: needsCpuTerrainComposite && !gpuRendered,
-        gpuRenderedStreetTerrain: gpuRendered && hasGpuStreetAtlas
+        gpuRenderedStreetTerrain: gpuRendered && !gpuWaterOnly && hasGpuStreetAtlas
       }
     )
     if (monitorTiming) terrainMs = performance.now() - renderStartedAt
@@ -366,7 +372,7 @@ export class Renderer {
         requestedBackend: RENDERER_BACKEND,
         webgpuStatus: this.webgpuRenderer?.getStatus?.() || null,
         waterOnly: gpuWaterOnly,
-        streetAtlas: gpuRendered && hasGpuStreetAtlas
+        streetAtlas: gpuRendered && !gpuWaterOnly && hasGpuStreetAtlas
       }
     }
     if (gameState.dzmOverlayIndex !== -1) {
