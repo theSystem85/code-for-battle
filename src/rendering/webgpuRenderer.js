@@ -111,6 +111,10 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.secondaryTexture = null
     this.uploadedPrimaryImage = null
     this.uploadedSecondaryImage = null
+    this.validationPending = false
+    this.validationCheckScheduled = false
+    this.validationComplete = false
+    this.lastInstanceCounts = null
   }
 
   beginInitialize(canvas) {
@@ -132,7 +136,10 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     if (!this.context) throw new Error('Could not create a WebGPU canvas context')
     this.format = navigator.gpu.getPreferredCanvasFormat()
     this.context.configure({ device: this.device, format: this.format, alphaMode: 'premultiplied' })
+    this.device.pushErrorScope('validation')
     this.createPipeline()
+    const pipelineError = await this.device.popErrorScope()
+    if (pipelineError) throw new Error(`WebGPU pipeline validation failed: ${pipelineError.message}`)
     this.status = 'ready'
     this.device.lost.then(info => {
       this.status = 'failed'
@@ -225,6 +232,46 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     return true
   }
 
+  beginFrameValidation() {
+    if (this.validationPending || this.validationComplete) return
+    this.validationPending = true
+    this.device.pushErrorScope('validation')
+  }
+
+  finishFrameValidation() {
+    if (!this.validationPending || this.validationComplete || this.validationCheckScheduled) return
+    this.validationCheckScheduled = true
+    this.device.queue.onSubmittedWorkDone().then(async() => {
+      const error = await this.device.popErrorScope()
+      this.validationPending = false
+      this.validationCheckScheduled = false
+      if (error) {
+        this.status = 'failed'
+        this.failureReason = `WebGPU frame validation failed: ${error.message}`
+        window.logger?.warn(`${this.failureReason}; using WebGL fallback`)
+        return
+      }
+      this.validationComplete = true
+    }).catch(error => {
+      this.validationPending = false
+      this.validationCheckScheduled = false
+      this.status = 'failed'
+      this.failureReason = error?.message || String(error)
+    })
+  }
+
+  countInstances(instances) {
+    return instances.reduce((counts, instance) => {
+      const key = instance.textureType > 1.5
+        ? 'water'
+        : instance.textureSource > 0.5
+          ? 'secondaryAtlas'
+          : instance.textureType > 0.5 ? 'primaryAtlas' : 'color'
+      counts[key] = (counts[key] || 0) + 1
+      return counts
+    }, { water: 0, primaryAtlas: 0, secondaryAtlas: 0, color: 0 })
+  }
+
   ensureInstanceBuffer(count) {
     if (this.instanceBuffer && count <= this.instanceCapacity) return
     this.instanceBuffer?.destroy?.()
@@ -253,7 +300,15 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
   render(mapGrid, scrollOffset, canvas, options = {}) {
     if (!mapGrid?.length || !canvas) return false
     if (this.status === 'idle') this.beginInitialize(canvas)
-    if (this.status !== 'ready' || !this.syncTextures()) return false
+    if (this.status !== 'ready') return false
+    this.beginFrameValidation()
+    try {
+      if (!this.syncTextures()) return false
+    } catch (error) {
+      this.status = 'failed'
+      this.failureReason = error?.message || String(error)
+      return false
+    }
     const ratio = getCanvasPixelRatio(canvas)
     const tileStep = TILE_SIZE * ratio
     const tileSize = (TILE_SIZE + 1) * ratio
@@ -266,6 +321,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     const endY = Math.min(mapGrid.length, startY + Math.ceil(canvas.height / tileStep) + buffer * 2 + 1)
     const instances = this.buildTileInstances(mapGrid, startX, startY, endX, endY, options)
     if (!instances.length) return false
+    this.lastInstanceCounts = this.countInstances(instances)
 
     this.ensureInstanceBuffer(instances.length)
     this.device.queue.writeBuffer(this.instanceBuffer, 0, this.packInstances(instances))
@@ -287,10 +343,17 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     pass.draw(6, instances.length)
     pass.end()
     this.device.queue.submit([encoder.finish()])
-    return true
+    this.finishFrameValidation()
+    return this.validationComplete
   }
 
   getStatus() {
-    return { status: this.status, failureReason: this.failureReason }
+    return {
+      status: this.status,
+      failureReason: this.failureReason,
+      validationPending: this.validationPending,
+      validationComplete: this.validationComplete,
+      instanceCounts: this.lastInstanceCounts
+    }
   }
 }

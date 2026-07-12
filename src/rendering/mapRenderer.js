@@ -579,7 +579,9 @@ export class MapRenderer {
     const key = this.getChunkKey(chunkX, chunkY)
     let chunk = this.chunkCache.get(key)
     if (!chunk) {
-      const canvas = this.canUseOffscreen ? document.createElement('canvas') : null
+      const canvas = this.canUseOffscreen && typeof document !== 'undefined'
+        ? document.createElement('canvas')
+        : null
       const ctx = canvas ? canvas.getContext('2d') : null
       chunk = {
         canvas,
@@ -726,11 +728,20 @@ export class MapRenderer {
   }
 
   scheduleChunkWarmProcessing() {
+    if (typeof document === 'undefined') {
+      this.chunkWarmQueue.clear()
+      this.chunkWarmScheduled = false
+      return
+    }
     if (this.chunkWarmScheduled || !this.chunkWarmQueue.size) return
     this.chunkWarmScheduled = true
     const generation = this.chunkWarmGeneration
     const callback = deadline => {
       this.chunkWarmScheduled = false
+      if (typeof document === 'undefined') {
+        this.chunkWarmQueue.clear()
+        return
+      }
       this.processChunkWarmQueue(deadline, generation)
       if (this.chunkWarmQueue.size) {
         const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
@@ -755,6 +766,10 @@ export class MapRenderer {
   }
 
   processChunkWarmQueue(deadline = null, generation = this.chunkWarmGeneration) {
+    if (typeof document === 'undefined') {
+      this.chunkWarmQueue.clear()
+      return
+    }
     if (!this.chunkWarmQueue.size || generation !== this.chunkWarmGeneration) return
     const startTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
     if (startTime < this.deferChunkWarmUntil) return

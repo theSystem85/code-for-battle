@@ -28,4 +28,60 @@ describe('GameWebGPURenderer', () => {
 
     expect(renderer.render([[{ type: 'land' }]], { x: 0, y: 0 }, {}, {})).toBe(false)
   })
+
+  it('builds instances for every terrain asset class', () => {
+    const textureManager = {
+      allTexturesLoaded: true,
+      tileTextureCache: {
+        land: [{ x: 0, y: 0, width: 32, height: 32 }],
+        rock: [{ x: 32, y: 0, width: 32, height: 32 }]
+      },
+      getTileVariation: () => 0,
+      selectStreetTileByTags: () => ({ image: streetAtlas, rect: { x: 0, y: 0, width: 32, height: 32 } })
+    }
+    const streetAtlas = {}
+    const renderer = new GameWebGPURenderer(textureManager, null)
+    renderer.atlasSize = { width: 64, height: 32 }
+    renderer.secondaryAtlasSize = { width: 32, height: 32 }
+    renderer.secondaryAtlasImage = streetAtlas
+
+    const instances = renderer.buildTileInstances([[
+      { type: 'land' },
+      { type: 'rock' },
+      { type: 'water' },
+      { type: 'street' }
+    ]], 0, 0, 4, 1)
+    const counts = renderer.countInstances(instances)
+
+    expect(counts.primaryAtlas).toBeGreaterThanOrEqual(2)
+    expect(counts.water).toBe(1)
+    expect(counts.secondaryAtlas).toBe(1)
+  })
+
+  it('does not activate WebGPU until a submitted frame validates', () => {
+    const renderer = new GameWebGPURenderer({}, null)
+    renderer.validationPending = true
+
+    expect(renderer.validationComplete).toBe(false)
+    expect(renderer.getStatus()).toMatchObject({ validationPending: true, validationComplete: false })
+  })
+
+  it('schedules only one completion check for a pending validation frame', () => {
+    let completionChecks = 0
+    const renderer = new GameWebGPURenderer({}, null)
+    renderer.validationPending = true
+    renderer.device = {
+      queue: {
+        onSubmittedWorkDone: () => {
+          completionChecks += 1
+          return new Promise(() => {})
+        }
+      }
+    }
+
+    renderer.finishFrameValidation()
+    renderer.finishFrameValidation()
+
+    expect(completionChecks).toBe(1)
+  })
 })

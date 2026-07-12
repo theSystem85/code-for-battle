@@ -57,6 +57,7 @@ Upgrade the rendering stack to prioritize GPU-backed pipelines for the main play
 - WebGPU adoption is optional but the abstraction should leave room for a future adapter.
 - Texture atlases should remain source-of-truth for both tiles and sprite layers to simplify batching and asset management.
 - Implemented follow-up: Settings now provides `WebGL (legacy)` and `WebGPU (experimental)`. WebGPU uses a separate transparent canvas, asynchronously initializes an instanced atlas terrain pipeline, mirrors procedural water/SOT clipping, and keeps WebGL active until WebGPU succeeds. Unsupported initialization and device loss fall back to WebGL without blanking the map.
+- WebGPU activation is transactional: pipeline creation, primary/secondary atlas uploads, and the first submitted frame must pass a WebGPU validation error scope before WebGPU can suppress the established terrain path. Validation failures retain the WebGL fallback rather than exposing a partial or black terrain frame.
 
 ---
 
