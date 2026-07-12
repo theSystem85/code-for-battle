@@ -1,4 +1,4 @@
 {
-  "commit": "a96bce67",
-  "message": "fix: incomplete WebGPU terrain frames and preserve effect rendering"
+  "commit": "28731eb4",
+  "message": "fix: iPhone RAF starvation with mobile frame scheduler watchdog"
 }

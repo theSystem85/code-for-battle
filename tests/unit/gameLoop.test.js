@@ -16,6 +16,7 @@ const resumeAllSoundsMock = vi.hoisted(() => vi.fn())
 const updateMapScrollingMock = vi.hoisted(() => vi.fn())
 const isLockstepEnabledMock = vi.hoisted(() => vi.fn())
 const processLockstepTickMock = vi.hoisted(() => vi.fn((callback) => callback(16)))
+const recordPerformanceFrameMock = vi.hoisted(() => vi.fn())
 
 vi.mock('../../src/updateGame.js', () => ({
   updateGame: updateGameMock
@@ -77,6 +78,12 @@ vi.mock('../../src/network/gameCommandSync.js', () => ({
 vi.mock('../../src/network/lockstepManager.js', () => ({
   LOCKSTEP_CONFIG: { MAX_TICKS_PER_FRAME: 2 },
   MS_PER_TICK: 16
+}))
+
+vi.mock('../../src/performance/performanceMonitor.js', () => ({
+  performanceMonitor: {
+    recordFrame: recordPerformanceFrameMock
+  }
 }))
 
 import { GameLoop } from '../../src/game/gameLoop.js'
@@ -246,6 +253,23 @@ describe('GameLoop', () => {
 
     expect(clearTimeout).toHaveBeenCalledWith(202)
     expect(loop.lastSchedulerSource).toBe('raf')
+  })
+
+  it('records paused scrolling frames for physical-device terrain diagnosis', () => {
+    const loop = createLoop()
+    loop.running = true
+    gameState.gameStarted = true
+    gameState.gamePaused = true
+    gameState.isRightDragging = true
+
+    loop.animate(1016)
+
+    expect(renderGameMock).toHaveBeenCalledTimes(1)
+    expect(recordPerformanceFrameMock).toHaveBeenCalledWith(expect.objectContaining({
+      schedulerSource: 'none',
+      frameWorkMs: expect.any(Number),
+      renderMs: expect.any(Number)
+    }))
   })
 
   it('uses setTimeout scheduling when frame limiter is disabled', () => {

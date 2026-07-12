@@ -617,6 +617,34 @@ describe('MapRenderer water rendering', () => {
     expect(streetInstance.uvRect).toEqual([0.25, 0.125, 0.375, 0.25])
   })
 
+  it('groups street sampler instances after primary base terrain instances', () => {
+    const streetImage = { id: 'street-only-atlas', width: 1024, height: 1024 }
+    const textureManager = {
+      ...makeTextureManager(),
+      allTexturesLoaded: true,
+      tileTextureCache: {
+        land: [{ x: 0, y: 0, width: 32, height: 32 }]
+      },
+      selectStreetTileByTags: vi.fn(() => ({
+        image: streetImage,
+        rect: { x: 0, y: 0, width: 64, height: 64 },
+        tags: ['street']
+      }))
+    }
+    const renderer = new GameWebGLRenderer(null, textureManager, null)
+    renderer.secondaryAtlasImage = streetImage
+    renderer.secondaryAtlasSize = { width: 1024, height: 1024 }
+
+    const instances = renderer.buildTileInstances([[
+      { type: 'street' }, { type: 'land' }, { type: 'street' }
+    ]], 0, 0, 3, 1)
+    const firstSecondaryIndex = instances.findIndex(instance => instance.textureSource === 1)
+
+    expect(firstSecondaryIndex).toBeGreaterThan(0)
+    expect(instances.slice(0, firstSecondaryIndex).every(instance => instance.textureSource === 0)).toBe(true)
+    expect(instances.slice(firstSecondaryIndex).every(instance => instance.textureSource === 1)).toBe(true)
+  })
+
   it('skips CPU street repaint when GPU rendered default street terrain', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.sotMask = [[null]]

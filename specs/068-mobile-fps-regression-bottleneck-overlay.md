@@ -80,6 +80,13 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - [ ] **P2 - entity overlay dirty regions:** avoid complete entity/effects overlay repaint when large battles prove this layer exceeds the frame budget. The supplied empty-map capture shows only 0.11ms entity cost, so this is not causal for the current 2.41fps failure.
 - [ ] **P3 - WebGPU full feature parity:** continue atlas/effect migration after WebGPU terrain validation is reliable on Safari. WebGL terrain is only 1.26ms in the supplied report, so changing renderer backends cannot recover the missing 412ms in this capture.
 
+## Street-triggered iPhone regression TODO (2026-07-12)
+- [x] **P0 - oversized street GPU texture:** stop binding the `2048x2624` combined major atlas as the default street sampler. Use the existing dedicated `1024x1024` street atlas, reducing decoded street texture area from 5.37M to 1.05M pixels and avoiding unrelated terrain/decal/crystal data in the street sampling working set.
+- [x] **P0 - street texture branch divergence:** group secondary-atlas street instances together inside the base terrain batch so adjacent GPU lanes do not alternate between primary and secondary samplers for every road-underlay pair.
+- [x] **P1 - repeated street tile resolution:** cache the final tile selection by coordinate, topology mask, full-tile preference, biome, tags, and render signature. Pool filtering was already cached, but the final coordinate hash and selection path still ran for every visible street on every frame.
+- [ ] **P1 - single physical terrain atlas:** merge the small legacy terrain atlas and dedicated street atlas into one GPU texture if physical-device results still show sampler-switch pressure after this fix.
+- [x] **P2 - paused monitor coverage:** record paused render frames, including scheduler source/delay and real wait time, so future captures can isolate scrolling cost without running simulation.
+
 ## Acceptance criteria
 - Unit tests remain green.
 - Repeated street topology selection calls reuse cached pools.

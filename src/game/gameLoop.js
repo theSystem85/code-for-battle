@@ -246,6 +246,8 @@ export class GameLoop {
 
     const offsetChanged = prevOffsetX !== gameState.scrollOffset.x || prevOffsetY !== gameState.scrollOffset.y
     const shouldRenderFrame = this.forceRender || pauseStateChanged || offsetChanged || gameState.isRightDragging
+    const updateEnd = performance.now()
+    let minimapMs = 0
 
     if (shouldRenderFrame) {
       renderGame(
@@ -266,16 +268,32 @@ export class GameLoop {
         gameGpuCanvas
       )
 
-      this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, this.forceRender || pauseStateChanged)
+      minimapMs = this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, this.forceRender || pauseStateChanged)
     }
 
+    const renderEnd = performance.now()
     this.fpsDisplay.render(gameCtx, gameCanvas)
-    const totalPausedFrameMs = performance.now() - frameStart
+    const frameEnd = performance.now()
+    const totalPausedFrameMs = frameEnd - frameStart
+    const updateMs = Math.max(0, updateEnd - frameStart)
+    const renderMs = Math.max(0, renderEnd - updateEnd)
     this.fpsDisplay.reportFrameBreakdown({
-      updateMs: totalPausedFrameMs,
-      renderMs: 0,
+      updateMs,
+      renderMs,
       idleMs: 0
     })
+    const frameInterval = now - (this.lastFrameTimestampForMonitor || now)
+    performanceMonitor.recordFrame({
+      frameInterval,
+      updateMs,
+      renderMs,
+      minimapMs,
+      frameWorkMs: totalPausedFrameMs,
+      compositorWaitMs: Math.max(0, frameInterval - totalPausedFrameMs),
+      schedulerSource: this.lastSchedulerSource,
+      schedulerDelayMs: this.lastSchedulerDelayMs
+    })
+    this.lastFrameTimestampForMonitor = now
 
     this.forceRender = false
 

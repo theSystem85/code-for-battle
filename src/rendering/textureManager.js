@@ -12,8 +12,8 @@ const DEFAULT_COMBAT_DECAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
 const DEFAULT_CRYSTAL_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
 const DEFAULT_CRYSTAL_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
-const DEFAULT_STREET_SHEET_PATH = DEFAULT_MAJOR_SPRITE_SHEET_PATH
-const DEFAULT_STREET_METADATA_PATH = DEFAULT_MAJOR_SPRITE_METADATA_PATH
+const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.json'
 const STREET_DIRECTION_MASKS = {
   top: 1,
   right: 2,
@@ -70,12 +70,14 @@ export class TextureManager {
     this.integratedGroupedTagCatalog = {}
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.streetSelectionPoolCache = new Map()
+    this.streetTileSelectionCache = new Map()
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
   }
 
   clearStreetSelectionPoolCache() {
     this.streetSelectionPoolCache.clear()
+    this.streetTileSelectionCache.clear()
   }
 
   buildTagSet(tags) {
@@ -698,6 +700,20 @@ export class TextureManager {
 
   selectStreetTileByTags(requiredTags, x, y, mapGrid, excludedTags = []) {
     const neighborInfo = this.getStreetNeighborInfo(x, y, mapGrid)
+    const topologyMask = this.getStreetDirectionMask(neighborInfo.directionTags)
+    const tileCacheKey = [
+      this.integratedRenderSignature,
+      this.integratedBiomeTag,
+      x,
+      y,
+      topologyMask,
+      neighborInfo.prefersFull ? 1 : 0,
+      requiredTags.join(','),
+      excludedTags.join(',')
+    ].join('|')
+    if (this.streetTileSelectionCache.has(tileCacheKey)) {
+      return this.streetTileSelectionCache.get(tileCacheKey)
+    }
 
     const selectFromBuckets = (tags, options = {}) => {
       const pool = this.getStreetSelectionPool(tags, excludedTags, neighborInfo, options)
@@ -710,10 +726,15 @@ export class TextureManager {
         allowFull: true,
         ignoreDirectionalExactMatch: true
       })
-      if (fullMatch) return fullMatch
+      if (fullMatch) {
+        this.streetTileSelectionCache.set(tileCacheKey, fullMatch)
+        return fullMatch
+      }
     }
 
-    return selectFromBuckets(requiredTags)
+    const selected = selectFromBuckets(requiredTags)
+    this.streetTileSelectionCache.set(tileCacheKey, selected)
+    return selected
   }
 
   selectFullStreetTileForSOT(x, y, excludedTags = []) {

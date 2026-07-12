@@ -428,7 +428,15 @@ export class GameWebGLRenderer {
       }
     }
 
-    return [...baseInstances, ...overlayInstances, ...resourceInstances].filter(Boolean)
+    const validBaseInstances = baseInstances.filter(Boolean)
+    const primaryBaseInstances = validBaseInstances.filter(instance => instance.textureSource <= 0.5)
+    const secondaryBaseInstances = validBaseInstances.filter(instance => instance.textureSource > 0.5)
+    return [
+      ...primaryBaseInstances,
+      ...secondaryBaseInstances,
+      ...overlayInstances,
+      ...resourceInstances
+    ].filter(Boolean)
   }
 
   getSotMask(mapGrid) {

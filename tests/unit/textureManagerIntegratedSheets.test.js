@@ -414,6 +414,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
     }
 
     const lookupSpy = vi.spyOn(manager, 'getTagBucketCandidates')
+    const poolSpy = vi.spyOn(manager, 'getStreetSelectionPool')
     const mapGrid = [
       [{ type: 'land' }, { type: 'street' }, { type: 'land' }],
       [{ type: 'land' }, { type: 'street' }, { type: 'street' }],
@@ -427,5 +428,32 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(first).toBe(streetCorner)
     expect(second).toBe(streetCorner)
     expect(lookupSpy.mock.calls.length).toBe(callsAfterFirst)
+    expect(poolSpy).toHaveBeenCalledTimes(1)
+  })
+
+  it('loads the dedicated street atlas instead of the combined major atlas', async() => {
+    const manager = new TextureManager()
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue({
+      ok: true,
+      json: async() => ({
+        blendMode: 'alpha',
+        tiles: {
+          '0,0': {
+            tags: ['street', 'grass'],
+            rect: { x: 0, y: 0, width: 64, height: 64 }
+          }
+        }
+      })
+    })
+    const imageSpy = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'street-only' })
+
+    await manager.preloadDefaultStreetSheet()
+
+    expect(fetchSpy).toHaveBeenCalledWith(
+      'images/map/sprite_sheets/streets24_q90_1024x1024.json',
+      { cache: 'no-store' }
+    )
+    expect(imageSpy).toHaveBeenCalledWith('images/map/sprite_sheets/streets24_q90_1024x1024.webp')
+    expect(manager.defaultStreetSheetImage).toEqual({ id: 'street-only' })
   })
 })
