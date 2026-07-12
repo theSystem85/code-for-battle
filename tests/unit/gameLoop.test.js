@@ -217,6 +217,37 @@ describe('GameLoop', () => {
     expect(setTimeout).not.toHaveBeenCalled()
   })
 
+  it('races RAF with a mobile watchdog and cancels the delayed RAF when the watchdog wins', () => {
+    document.body.classList.add('is-touch')
+    const loop = createLoop()
+    loop.running = true
+    gameState.frameLimiterEnabled = true
+
+    loop.scheduleNextFrame()
+
+    expect(requestAnimationFrame).toHaveBeenCalledTimes(1)
+    expect(setTimeout).toHaveBeenCalledTimes(1)
+    const watchdog = setTimeout.mock.calls[0][0]
+    watchdog()
+
+    expect(cancelAnimationFrame).toHaveBeenCalledWith(101)
+    expect(loop.lastSchedulerSource).toBe('watchdog')
+  })
+
+  it('cancels the mobile watchdog when RAF arrives on time', () => {
+    document.body.classList.add('is-touch')
+    const loop = createLoop()
+    loop.running = true
+    gameState.frameLimiterEnabled = true
+
+    loop.scheduleNextFrame()
+    const rafCallback = requestAnimationFrame.mock.calls[0][0]
+    rafCallback(1016)
+
+    expect(clearTimeout).toHaveBeenCalledWith(202)
+    expect(loop.lastSchedulerSource).toBe('raf')
+  })
+
   it('uses setTimeout scheduling when frame limiter is disabled', () => {
     const loop = createLoop()
     loop.running = true

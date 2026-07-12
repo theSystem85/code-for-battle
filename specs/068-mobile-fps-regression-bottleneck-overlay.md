@@ -71,6 +71,15 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 ## Remaining candidates
 - Dirty-rect entity overlay rendering on mobile; minimap throttling is in place, but entity overlays still render every frame for correctness.
 
+## iPhone monitor findings and prioritized TODO (2026-07-12)
+- [x] **P0 - foreground frame scheduler starvation:** the physical iPhone report measured 414.28ms between frames while update + render consumed only 2.02ms. Race mobile RAF against a 17ms foreground watchdog and cancel whichever source loses, preventing an abnormally throttled RAF source from reducing the game to 2-3fps.
+- [x] **P0 - simulation slowdown after delayed callbacks:** replace the 33ms frame-delta ceiling with a bounded 100ms foreground catch-up window. The fixed-step accumulator remains bounded, but transient scheduler delays no longer make game time advance at a small fraction of wall time.
+- [x] **P1 - misleading compositor metric:** calculate scheduler/compositor wait from the real frame interval rather than the simulation-clamped delta.
+- [x] **P1 - scheduler diagnostics:** record RAF/watchdog/timeout source counts, scheduler delay, and watchdog share in monitor reports so physical-device scheduler failures are directly visible.
+- [x] **P2 - DPR report correctness:** preserve the valid numeric DPR value `1` instead of reporting it as missing.
+- [ ] **P2 - entity overlay dirty regions:** avoid complete entity/effects overlay repaint when large battles prove this layer exceeds the frame budget. The supplied empty-map capture shows only 0.11ms entity cost, so this is not causal for the current 2.41fps failure.
+- [ ] **P3 - WebGPU full feature parity:** continue atlas/effect migration after WebGPU terrain validation is reliable on Safari. WebGL terrain is only 1.26ms in the supplied report, so changing renderer backends cannot recover the missing 412ms in this capture.
+
 ## Acceptance criteria
 - Unit tests remain green.
 - Repeated street topology selection calls reuse cached pools.

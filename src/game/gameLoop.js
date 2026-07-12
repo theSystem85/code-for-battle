@@ -17,6 +17,9 @@ import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
 import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
 import { performanceMonitor } from '../performance/performanceMonitor.js'
 
+const MOBILE_FRAME_WATCHDOG_MS = 17
+const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
+
 export class GameLoop {
   constructor(canvasManager, productionController, mapGrid, factories, units, bullets, productionQueue, moneyEl, gameTimeEl) {
     this.canvasManager = canvasManager
@@ -39,6 +42,9 @@ export class GameLoop {
     this.running = false
     this.animationId = null
     this.frameTimeoutId = null
+    this.scheduledFrameToken = 0
+    this.lastSchedulerSource = 'none'
+    this.lastSchedulerDelayMs = 0
     this.fpsDisplay = new FPSDisplay()
     this.forceRender = false
     this.lastMinimapRenderTime = 0
@@ -90,12 +96,13 @@ export class GameLoop {
   }
 
   cancelScheduledFrame() {
-    if (this.animationId) {
+    this.scheduledFrameToken++
+    if (this.animationId !== null) {
       cancelAnimationFrame(this.animationId)
       this.animationId = null
     }
 
-    if (this.frameTimeoutId) {
+    if (this.frameTimeoutId !== null) {
       clearTimeout(this.frameTimeoutId)
       this.frameTimeoutId = null
     }
@@ -121,17 +128,38 @@ export class GameLoop {
   }
 
   scheduleNextFrame() {
-    if (!this.running || this.animationId || this.frameTimeoutId) {
+    if (!this.running || this.animationId !== null || this.frameTimeoutId !== null) {
       return
     }
 
     if (gameState.frameLimiterEnabled !== false) {
-      this.animationId = requestAnimationFrame((timestamp) => this.animate(timestamp))
+      const token = ++this.scheduledFrameToken
+      const scheduledAt = performance.now()
+      const runFrame = (timestamp, source) => {
+        if (!this.running || token !== this.scheduledFrameToken) return
+        this.scheduledFrameToken++
+        if (source === 'raf' && this.frameTimeoutId !== null) {
+          clearTimeout(this.frameTimeoutId)
+        } else if (source === 'watchdog' && this.animationId !== null) {
+          cancelAnimationFrame(this.animationId)
+        }
+        this.animationId = null
+        this.frameTimeoutId = null
+        this.lastSchedulerSource = source
+        this.lastSchedulerDelayMs = Math.max(0, performance.now() - scheduledAt)
+        this.animate(timestamp)
+      }
+      this.animationId = requestAnimationFrame((timestamp) => runFrame(timestamp, 'raf'))
+      if (this.isMobileRenderProfile()) {
+        this.frameTimeoutId = setTimeout(() => runFrame(performance.now(), 'watchdog'), MOBILE_FRAME_WATCHDOG_MS)
+      }
       return
     }
 
     this.frameTimeoutId = setTimeout(() => {
       this.frameTimeoutId = null
+      this.lastSchedulerSource = 'timeout'
+      this.lastSchedulerDelayMs = 0
       this.animate(performance.now())
     }, 0)
   }
@@ -151,7 +179,8 @@ export class GameLoop {
     return Boolean(
       body?.classList.contains('is-touch') ||
       body?.classList.contains('mobile-landscape') ||
-      body?.classList.contains('mobile-portrait')
+      body?.classList.contains('mobile-portrait') ||
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
     )
   }
 
@@ -300,7 +329,8 @@ export class GameLoop {
 
     // Calculate delta time with a maximum to avoid spiral of doom on slow frames
     if (!this.lastFrameTime) this.lastFrameTime = now
-    const delta = Math.min(now - this.lastFrameTime, 33) // Cap at ~30 FPS equivalent
+    const frameInterval = Math.max(0, now - this.lastFrameTime)
+    const delta = Math.min(frameInterval, MAX_FOREGROUND_SIMULATION_DELTA_MS)
     this.lastFrameTime = now
     const frameStart = performance.now()
 
@@ -422,7 +452,9 @@ export class GameLoop {
       renderMs,
       minimapMs,
       frameWorkMs: frameEnd - frameStart,
-      compositorWaitMs: Math.max(0, delta - (frameEnd - frameStart))
+      compositorWaitMs: Math.max(0, frameInterval - (frameEnd - frameStart)),
+      schedulerSource: this.lastSchedulerSource,
+      schedulerDelayMs: this.lastSchedulerDelayMs
     })
     this.lastFrameTimestampForMonitor = now
     this.canvasManager.updateAdaptivePixelRatio?.(this.fpsDisplay.fps, now, this.hasActiveScrollActivity())

@@ -1,4 +1,4 @@
 {
-  "commit": "943a2987",
-  "message": "feat: Add opt-in mobile gameplay performance recorder"
+  "commit": "a96bce67",
+  "message": "fix: incomplete WebGPU terrain frames and preserve effect rendering"
 }

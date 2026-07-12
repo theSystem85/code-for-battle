@@ -50,6 +50,7 @@ export class PerformanceMonitor {
     this.endedAt = 0
     this.metrics = this.createMetrics()
     this.lastRendererPhases = null
+    this.schedulerSources = this.createSchedulerSources()
     this.report = null
   }
 
@@ -61,11 +62,16 @@ export class PerformanceMonitor {
       minimap: createMetric(),
       frameWork: createMetric(),
       compositorWait: createMetric(),
+      schedulerDelay: createMetric(),
       terrain: createMetric(),
       entities: createMetric(),
       effects: createMetric(),
       ui: createMetric()
     }
+  }
+
+  createSchedulerSources() {
+    return { raf: 0, watchdog: 0, timeout: 0, unknown: 0 }
   }
 
   start() {
@@ -74,6 +80,7 @@ export class PerformanceMonitor {
     this.endedAt = 0
     this.metrics = this.createMetrics()
     this.lastRendererPhases = null
+    this.schedulerSources = this.createSchedulerSources()
     this.report = null
     return this.getStatus()
   }
@@ -93,13 +100,25 @@ export class PerformanceMonitor {
 
   recordFrame(frame) {
     if (!this.recording) return
-    const { frameInterval, updateMs, renderMs, minimapMs, frameWorkMs, compositorWaitMs } = frame || {}
+    const {
+      frameInterval,
+      updateMs,
+      renderMs,
+      minimapMs,
+      frameWorkMs,
+      compositorWaitMs,
+      schedulerSource,
+      schedulerDelayMs
+    } = frame || {}
     addMetric(this.metrics.frameInterval, frameInterval)
     addMetric(this.metrics.update, updateMs)
     addMetric(this.metrics.render, renderMs)
     addMetric(this.metrics.minimap, minimapMs)
     addMetric(this.metrics.frameWork, frameWorkMs)
     addMetric(this.metrics.compositorWait, compositorWaitMs)
+    addMetric(this.metrics.schedulerDelay, schedulerDelayMs)
+    const source = Object.hasOwn(this.schedulerSources, schedulerSource) ? schedulerSource : 'unknown'
+    this.schedulerSources[source]++
     if (this.lastRendererPhases) {
       addMetric(this.metrics.terrain, this.lastRendererPhases.terrainMs)
       addMetric(this.metrics.entities, this.lastRendererPhases.entitiesMs)
@@ -173,14 +192,23 @@ export class PerformanceMonitor {
         game: getCanvasSnapshot(gameCanvas),
         webgl: getCanvasSnapshot(gameGlCanvas),
         webgpu: getCanvasSnapshot(gameGpuCanvas),
-        configuredCanvasPixelRatio: gameState.canvasPixelRatio || null
+        configuredCanvasPixelRatio: Number.isFinite(gameState.canvasPixelRatio)
+          ? round(gameState.canvasPixelRatio)
+          : null
       },
       renderer: {
         gpuTerrain: renderStats.gpuTerrain || null,
         mapChunks: renderStats.mapChunks || null,
         jsHeapMb: getJsHeapMb()
       },
-      timingMs: metrics
+      timingMs: metrics,
+      scheduler: {
+        sources: { ...this.schedulerSources },
+        watchdogShare: round(
+          this.schedulerSources.watchdog /
+          Math.max(1, Object.values(this.schedulerSources).reduce((sum, count) => sum + count, 0))
+        )
+      }
     }
   }
 }

@@ -14,7 +14,9 @@ describe('PerformanceMonitor', () => {
         renderMs: 14,
         minimapMs: index % 4 === 0 ? 2 : 0,
         frameWorkMs: 18,
-        compositorWaitMs: 2
+        compositorWaitMs: 2,
+        schedulerSource: index % 5 === 0 ? 'watchdog' : 'raf',
+        schedulerDelayMs: index % 5 === 0 ? 17 : 16
       })
     }
 
@@ -28,6 +30,9 @@ describe('PerformanceMonitor', () => {
     })
     expect(report.timingMs.terrain.samples).toBe(10000)
     expect(report.timingMs.terrain.averageMs).toBe(8)
+    expect(report.timingMs.schedulerDelay.averageMs).toBe(16.2)
+    expect(report.scheduler.sources).toMatchObject({ raf: 8000, watchdog: 2000 })
+    expect(report.scheduler.watchdogShare).toBe(0.2)
     expect(JSON.stringify(report).length).toBeLessThan(10000)
   })
 })
