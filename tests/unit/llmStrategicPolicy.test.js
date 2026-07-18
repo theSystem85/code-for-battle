@@ -46,6 +46,53 @@ function createCompactInput(overrides = {}) {
 }
 
 describe('llmStrategicPolicy', () => {
+  it('orders Apache, naval, and jet expansion phases sequentially', () => {
+    const input = createCompactInput({
+      economy: { money: 50000, harvesters: { total: 4 } },
+      baseStatus: {
+        ownedBuildingCounts: {
+          powerPlant: 2,
+          oreRefinery: 2,
+          vehicleFactory: 1,
+          radarStation: 1,
+          vehicleWorkshop: 1,
+          ammunitionFactory: 1,
+          hospital: 1,
+          gasStation: 1,
+          turretGunV1: 2,
+          rocketTurret: 1,
+          artilleryTurret: 1
+        }
+      },
+      productionOptions: {
+        availableBuildings: [
+          { type: 'helipad', cost: 1500 },
+          { type: 'shipyard', cost: 5000 },
+          { type: 'airstrip', cost: 6000 }
+        ],
+        availableUnits: [
+          { type: 'apache', cost: 3000 },
+          { type: 'destroyer', cost: 4500 },
+          { type: 'f22Raptor', cost: 6000 }
+        ]
+      }
+    })
+    const output = {
+      protocolVersion: '1.0',
+      tick: 100,
+      intent: 'expand',
+      confidence: 0.9,
+      notes: 'Build combined arms',
+      actions: []
+    }
+
+    const prioritized = prioritizeEconomyActions(output, input)
+    const phases = prioritized.actions
+      .filter(action => action.type === 'build_place' || action.type === 'build_queue')
+      .map(action => action.buildingType || action.unitType)
+
+    expect(phases.slice(0, 5)).toEqual(['helipad', 'apache', 'shipyard', 'destroyer', 'destroyer'])
+  })
   it('injects a harvester before non-economy spending when the economy is unstable', () => {
     const input = createCompactInput()
     const output = {

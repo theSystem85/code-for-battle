@@ -978,7 +978,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
                   type: 'string',
                   enum: [
                     'constructionYard', 'powerPlant', 'oreRefinery', 'vehicleFactory',
-                    'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'gasStation',
+                    'vehicleWorkshop', 'radarStation', 'hospital', 'helipad', 'shipyard', 'airstrip', 'gasStation',
                     'ammunitionFactory', 'turretGunV1', 'turretGunV2', 'turretGunV3',
                     'rocketTurret', 'teslaCoil', 'artilleryTurret', 'concreteWall'
                   ]
@@ -999,7 +999,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
                   enum: [
                     'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'harvester',
                     'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank',
-                    'howitzer', 'apache', 'mineLayer', 'mineSweeper'
+                    'howitzer', 'apache', 'destroyer', 'f22Raptor', 'f35', 'mineLayer', 'mineSweeper'
                   ]
                 },
                 count: { type: 'number' },

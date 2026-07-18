@@ -63,9 +63,13 @@ export class CursorManager {
     return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
   }
 
-  getSelectedHudBounds(centerX, centerY) {
+  getHudVisualSize(unit) {
+    return unit?.type === 'destroyer' ? TILE_SIZE * 2.8 : TILE_SIZE
+  }
+
+  getSelectedHudBounds(centerX, centerY, unit = null) {
     const hudPadding = 6
-    const halfHudSize = (TILE_SIZE / 2) + hudPadding
+    const halfHudSize = (this.getHudVisualSize(unit) / 2) + hudPadding
     return {
       left: centerX - halfHudSize,
       right: centerX + halfHudSize,
@@ -105,17 +109,18 @@ export class CursorManager {
       const centerX = unit.x + TILE_SIZE / 2
       const centerY = unit.y + TILE_SIZE / 2 - altitudeLift
 
+      const halfVisualSize = this.getHudVisualSize(unit) / 2
       const unitBounds = {
-        left: unit.x,
-        right: unit.x + TILE_SIZE,
-        top: unit.y,
-        bottom: unit.y + TILE_SIZE
+        left: centerX - halfVisualSize,
+        right: centerX + halfVisualSize,
+        top: centerY - halfVisualSize,
+        bottom: centerY + halfVisualSize
       }
       if (this.isPointInsideRect(worldX, worldY, unitBounds)) {
         return true
       }
 
-      const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+      const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
       if (this.isPointInsideRect(worldX, worldY, hudBounds)) {
         return true
       }

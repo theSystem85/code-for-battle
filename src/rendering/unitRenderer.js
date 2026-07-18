@@ -228,7 +228,7 @@ export class UnitRenderer {
 
         const cornerSize = 8
         const offset = 2
-        const halfTile = TILE_SIZE / 2
+        const halfTile = this.getHudVisualSize(unit) / 2
 
         const left = centerX - halfTile - offset
         const right = centerX + halfTile + offset
@@ -264,7 +264,7 @@ export class UnitRenderer {
       ctx.strokeStyle = '#FF0'
       ctx.lineWidth = 1
 
-      const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+      const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
 
       ctx.beginPath()
       ctx.rect(
@@ -277,9 +277,13 @@ export class UnitRenderer {
     }
   }
 
-  getSelectedHudBounds(centerX, centerY) {
+  getHudVisualSize(unit) {
+    return unit?.type === 'destroyer' ? TILE_SIZE * 2.8 : TILE_SIZE
+  }
+
+  getSelectedHudBounds(centerX, centerY, unit = null) {
     const hudPadding = 6
-    const halfHudSize = (TILE_SIZE / 2) + hudPadding
+    const halfHudSize = (this.getHudVisualSize(unit) / 2) + hudPadding
 
     return {
       left: centerX - halfHudSize,
@@ -324,7 +328,7 @@ export class UnitRenderer {
 
   getLegacyVerticalHudBarRect(unit, scrollOffset, side) {
     const { centerX, centerY } = this.getHudCenter(unit, scrollOffset)
-    const halfTile = TILE_SIZE / 2
+    const halfTile = this.getHudVisualSize(unit) / 2
     const cornerSize = 8
     const offset = 2
     const top = centerY - halfTile - offset
@@ -347,7 +351,7 @@ export class UnitRenderer {
 
   getLegacyTopBarRect(unit, scrollOffset, height = 4) {
     const { altitudeLift } = this.getHudCenter(unit, scrollOffset)
-    const width = TILE_SIZE * 0.8
+    const width = this.getHudVisualSize(unit) * 0.8
     return {
       x: unit.x + TILE_SIZE / 2 - scrollOffset.x - width / 2,
       y: unit.y - 10 - scrollOffset.y - altitudeLift,
@@ -358,7 +362,7 @@ export class UnitRenderer {
 
   getLegacyProgressBarRect(unit, scrollOffset) {
     const { altitudeLift } = this.getHudCenter(unit, scrollOffset)
-    const width = TILE_SIZE * 0.8
+    const width = this.getHudVisualSize(unit) * 0.8
     const height = unit.selected ? this.getSelectionHudBarThickness() : 3
     return {
       x: unit.x + TILE_SIZE / 2 - scrollOffset.x - width / 2,
@@ -443,7 +447,7 @@ export class UnitRenderer {
 
   getDonutEdgeLabelAtPoint(unit, scrollOffset, mouseScreenX, mouseScreenY) {
     const { centerX, centerY } = this.getHudCenter(unit, scrollOffset)
-    const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
     const donutRadius = (Math.min(hudBounds.width, hudBounds.height) / 2) + 2
     const barThickness = this.getSelectionHudBarThickness()
     const ringHalf = Math.max(1, (barThickness - 2) / 2)
@@ -566,7 +570,7 @@ export class UnitRenderer {
     const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
-    const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
 
     const crewRects = this.getCrewRects(unit, scrollOffset, hudBounds, centerX, centerY)
     for (const crewRect of crewRects) {
@@ -865,7 +869,7 @@ export class UnitRenderer {
     if (unit.selected && !this.isLegacySelectionHud()) {
       const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
       const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
-      const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+      const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
 
       const healthColor = unitHealthRatio < 0.25
         ? '#FF0000'
@@ -972,7 +976,7 @@ export class UnitRenderer {
         const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
         const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
         const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
-        const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+        const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
 
         this.drawHudEdgeBar(ctx, hudBounds, 'bottom', progress, barColor)
         return
@@ -1037,7 +1041,7 @@ export class UnitRenderer {
       return
     }
 
-    const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
     this.drawHudEdgeBar(ctx, hudBounds, 'right', ratio, '#4A90E2')
   }
 
@@ -1143,7 +1147,7 @@ export class UnitRenderer {
       return
     }
 
-    const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
     this.drawHudEdgeBar(ctx, hudBounds, 'left', ratio, barColor)
 
     // Draw reload indicator overlay for rocket tanks (red 1px line)
@@ -1187,7 +1191,7 @@ export class UnitRenderer {
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
-    const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
     const size = 5
     const colors = { driver: '#00F', gunner: '#F00', loader: '#FFA500', commander: '#006400' }
     const letters = { driver: 'D', gunner: 'G', loader: 'L', commander: 'C' }
@@ -1550,7 +1554,7 @@ export class UnitRenderer {
     const altitudeLift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
-    const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
 
     // Position stars directly over the health bar with slight overlap
     const starSize = 6

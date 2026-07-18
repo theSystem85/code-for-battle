@@ -6,6 +6,11 @@ import { buildingData } from '../buildings.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 import { createReplayEntityReference, createReplayUnitReference, recordReplayCommand } from '../replaySystem.js'
+import {
+  getNavalPathOptions,
+  getShipyardServiceWaterTiles,
+  isNavalUnitInShipyardServiceArea
+} from '../utils/navalUtils.js'
 
 function isAirborneAirUnit(target) {
   if (!target) return false
@@ -271,6 +276,160 @@ function syncAttackPermissionForCurrentTarget(unit, units, gameState) {
   unit.allowedToAttack = shouldConductGroupAttack(unit, units, gameState, unit.target)
 }
 
+function getNavalTargetCenter(target) {
+  if (target?.tileX !== undefined) {
+    return {
+      worldX: target.x + TILE_SIZE / 2,
+      worldY: target.y + TILE_SIZE / 2,
+      tileX: target.tileX,
+      tileY: target.tileY
+    }
+  }
+
+  return {
+    worldX: (target.x + (target.width || 1) / 2) * TILE_SIZE,
+    worldY: (target.y + (target.height || 1) / 2) * TILE_SIZE,
+    tileX: Math.floor(target.x + (target.width || 1) / 2),
+    tileY: Math.floor(target.y + (target.height || 1) / 2)
+  }
+}
+
+function findBestNavalPath(unit, candidateTiles, mapGrid, occupancyMap) {
+  const start = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
+  const options = { ...getNavalPathOptions(unit), strictDestination: true }
+  const ordered = candidateTiles
+    .map(tile => ({ ...tile, score: Math.hypot(tile.x - unit.tileX, tile.y - unit.tileY) }))
+    .sort((a, b) => a.score - b.score)
+
+  for (const candidate of ordered.slice(0, 80)) {
+    const path = getCachedPath(start, candidate, mapGrid, occupancyMap, options)
+    if (path.length > 0) {
+      return { destination: { x: candidate.x, y: candidate.y }, path }
+    }
+  }
+
+  return null
+}
+
+function findNavalAttackPath(unit, target, mapGrid, occupancyMap) {
+  const targetCenter = getNavalTargetCenter(target)
+  const fireRangeTiles = Math.max(1, Math.floor(getEffectiveFireRange(unit) / TILE_SIZE))
+  const candidates = []
+
+  for (let y = Math.max(0, targetCenter.tileY - fireRangeTiles); y <= Math.min(mapGrid.length - 1, targetCenter.tileY + fireRangeTiles); y++) {
+    for (let x = Math.max(0, targetCenter.tileX - fireRangeTiles); x <= Math.min(mapGrid[0].length - 1, targetCenter.tileX + fireRangeTiles); x++) {
+      if (mapGrid[y]?.[x]?.type !== 'water' || mapGrid[y][x].building || mapGrid[y][x].seedCrystal) continue
+      if (Math.hypot(x - targetCenter.tileX, y - targetCenter.tileY) > fireRangeTiles - 0.5) continue
+      candidates.push({ x, y })
+    }
+  }
+
+  return findBestNavalPath(unit, candidates, mapGrid, occupancyMap)
+}
+
+function findNavalAttackTarget(unit, units, gameState, aiPlayerId) {
+  const enemyShips = units
+    .filter(candidate => candidate !== unit && candidate.isNaval && candidate.health > 0 && isEnemyTo(candidate, aiPlayerId))
+    .sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y))
+  if (enemyShips.length > 0) return enemyShips[0]
+
+  const priority = ['constructionYard', 'shipyard', 'vehicleFactory', 'oreRefinery', 'powerPlant']
+  const enemyBuildings = [...(gameState.buildings || []), ...(gameState.factories || [])]
+    .filter((building, index, entries) =>
+      building.health > 0 &&
+      isEnemyTo(building, aiPlayerId) &&
+      entries.findIndex(candidate => candidate === building || (candidate.id && candidate.id === building.id)) === index
+    )
+  enemyBuildings.sort((a, b) => {
+    const priorityA = priority.indexOf(a.type)
+    const priorityB = priority.indexOf(b.type)
+    const rankA = priorityA === -1 ? priority.length : priorityA
+    const rankB = priorityB === -1 ? priority.length : priorityB
+    if (rankA !== rankB) return rankA - rankB
+    const centerA = getNavalTargetCenter(a)
+    const centerB = getNavalTargetCenter(b)
+    return Math.hypot(centerA.worldX - unit.x, centerA.worldY - unit.y) -
+      Math.hypot(centerB.worldX - unit.x, centerB.worldY - unit.y)
+  })
+  return enemyBuildings[0] || null
+}
+
+function updateNavalAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId) {
+  unit.allowedToAttack = true
+  const healthRatio = unit.health / Math.max(1, unit.maxHealth || unit.health)
+  const shipyards = (gameState.buildings || []).filter(building =>
+    building.type === 'shipyard' && building.owner === aiPlayerId && building.health > 0
+  )
+
+  if (healthRatio < 0.2 && !unit.returningToShipyard) {
+    unit.returningToShipyard = true
+    unit.shipyardResumeTarget = unit.navalAttackTarget || unit.target || null
+    unit.target = null
+    unit.navalAttackTarget = null
+    unit.path = []
+  }
+
+  if (unit.returningToShipyard) {
+    unit.target = null
+    unit.allowedToAttack = false
+    const serviceShipyard = shipyards.find(shipyard => isNavalUnitInShipyardServiceArea(unit, shipyard, mapGrid))
+    if (serviceShipyard) {
+      unit.path = []
+      unit.moveTarget = null
+      if (healthRatio >= 0.98) {
+        unit.returningToShipyard = false
+        unit.navalAttackTarget = unit.shipyardResumeTarget?.health > 0 ? unit.shipyardResumeTarget : null
+        unit.shipyardResumeTarget = null
+        unit.allowedToAttack = true
+      }
+      return
+    }
+
+    const shouldRepath = !unit.path?.length || !unit.lastShipyardPathTime || now - unit.lastShipyardPathTime >= AI_DECISION_INTERVAL
+    if (shouldRepath && shipyards.length > 0) {
+      const destinations = shipyards.flatMap(shipyard => getShipyardServiceWaterTiles(shipyard, mapGrid))
+      const route = findBestNavalPath(unit, destinations, mapGrid, gameState.occupancyMap)
+      if (route) {
+        unit.path = route.path.slice(1)
+        unit.moveTarget = route.destination
+        unit.lastShipyardPathTime = now
+      }
+    }
+    return
+  }
+
+  const currentTarget = unit.navalAttackTarget
+  if (!currentTarget || currentTarget.health <= 0 || !isEnemyTo(currentTarget, aiPlayerId)) {
+    unit.navalAttackTarget = findNavalAttackTarget(unit, units, gameState, aiPlayerId)
+  }
+
+  const target = unit.navalAttackTarget
+  if (!target) return
+
+  const targetCenter = getNavalTargetCenter(target)
+  const distance = Math.hypot(
+    targetCenter.worldX - (unit.x + TILE_SIZE / 2),
+    targetCenter.worldY - (unit.y + TILE_SIZE / 2)
+  )
+  if (distance <= getEffectiveFireRange(unit)) {
+    unit.target = target
+    unit.path = []
+    unit.moveTarget = null
+    return
+  }
+
+  unit.target = null
+  const shouldRepath = !unit.path?.length || !unit.lastNavalAttackPathTime || now - unit.lastNavalAttackPathTime >= AI_DECISION_INTERVAL
+  if (shouldRepath) {
+    const route = findNavalAttackPath(unit, target, mapGrid, gameState.occupancyMap)
+    if (route) {
+      unit.path = route.path.slice(1)
+      unit.moveTarget = route.destination
+      unit.lastNavalAttackPathTime = now
+    }
+  }
+}
+
 function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, _targetedOreTiles, bullets) {
   // Reset being attacked flag if enough time has passed since last damage
   if (unit.isBeingAttacked && unit.lastDamageTime && (now - unit.lastDamageTime > 5000)) {
@@ -289,6 +448,11 @@ function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, 
     if (!unit.lastDamageTime || (now - unit.lastDamageTime > 3000)) {
       unit.isBeingAttacked = false
     }
+  }
+
+  if (unit.isNaval) {
+    updateNavalAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId)
+    return
   }
 
   // Skip decision making while returning to or repairing at a workshop
@@ -2050,4 +2214,4 @@ function updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, targeted
 }
 
 
-export { updateAIUnit }
+export { updateAIUnit, updateNavalAIUnit }

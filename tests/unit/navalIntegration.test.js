@@ -4,8 +4,12 @@ import { buildOccupancyMap, findPath } from '../../src/units.js'
 import {
   getShipyardServiceWaterTiles,
   getShipyardWaterLocalTiles,
-  isNavalUnitInShipyardServiceArea
+  isNavalUnitInShipyardServiceArea,
+  addShipWake,
+  DESTROYER_RENDER_LENGTH_TILES,
+  DESTROYER_HULL_LENGTH_RATIO
 } from '../../src/utils/navalUtils.js'
+import { TILE_SIZE } from '../../src/config.js'
 import { updateShipyardServiceLogic } from '../../src/game/shipyardServiceLogic.js'
 
 function createMap(width, height, type = 'land') {
@@ -15,20 +19,42 @@ function createMap(width, height, type = 'land') {
 }
 
 describe('naval integration', () => {
-  it('requires the lower half of a 4x4 Shipyard footprint to be water', () => {
+  it('requires the lower three rows of the 5x5 Shipyard footprint to be water', () => {
     const mapGrid = createMap(20, 20)
-    for (let y = 7; y <= 9; y++) {
-      for (let x = 5; x <= 8; x++) mapGrid[y][x].type = 'water'
+    for (let y = 7; y <= 10; y++) {
+      for (let x = 5; x <= 9; x++) mapGrid[y][x].type = 'water'
     }
     const factories = [{ id: 'player', x: 1, y: 5, width: 3, height: 3 }]
 
-    expect(getShipyardWaterLocalTiles(4, 4)).toHaveLength(8)
+    expect(getShipyardWaterLocalTiles(5, 5)).toHaveLength(15)
     expect(canPlaceBuilding('shipyard', 5, 5, mapGrid, [], [], factories, 'player')).toBe(true)
     expect(isTileValid(5, 5, mapGrid, [], [], factories, 'shipyard', { x: 5, y: 5 })).toBe(true)
     expect(isTileValid(5, 7, mapGrid, [], [], factories, 'shipyard', { x: 5, y: 5 })).toBe(true)
 
     mapGrid[7][5].type = 'land'
     expect(canPlaceBuilding('shipyard', 5, 5, mapGrid, [], [], factories, 'player')).toBe(false)
+  })
+
+  it('anchors a large stern V and smaller bow V to the rendered hull endpoints', () => {
+    const unit = {
+      isNaval: true,
+      x: 5 * TILE_SIZE,
+      y: 4 * TILE_SIZE,
+      direction: 0,
+      movement: { isMoving: true, currentSpeed: 0.4 }
+    }
+    const state = { shipWakes: [] }
+
+    addShipWake(unit, state, 1000)
+
+    expect(state.shipWakes).toHaveLength(2)
+    const stern = state.shipWakes.find(wake => wake.kind === 'stern')
+    const bow = state.shipWakes.find(wake => wake.kind === 'bow')
+    const centerX = unit.x + TILE_SIZE / 2
+    const hullOffset = TILE_SIZE * (DESTROYER_RENDER_LENGTH_TILES / 2) * DESTROYER_HULL_LENGTH_RATIO
+    expect(stern.x).toBeCloseTo(centerX - hullOffset)
+    expect(bow.x).toBeCloseTo(centerX + hullOffset)
+    expect(stern.size).toBeGreaterThan(bow.size)
   })
 
   it('finds water-only paths and keeps water terrain free in the occupancy map', () => {
@@ -61,7 +87,7 @@ describe('naval integration', () => {
   it('clips the three-tile Shipyard service area to water and gates each refill by its support building', () => {
     const mapGrid = createMap(20, 20, 'water')
     const shipyard = {
-      type: 'shipyard', owner: 'player1', x: 5, y: 5, width: 4, height: 4,
+      type: 'shipyard', owner: 'player1', x: 5, y: 5, width: 5, height: 5,
       health: 450, constructionFinished: true
     }
     const unit = {

@@ -652,12 +652,14 @@ export class EffectsRenderer {
       const age = Math.max(0, now - wake.createdAt)
       const alpha = Math.max(0, 1 - age / wake.duration)
       const progress = age / wake.duration
-      const length = wake.size * (0.8 + progress * 1.8)
-      const halfWidth = wake.size * (0.18 + progress * 0.75)
+      const isBowWake = wake.kind === 'bow'
+      const length = wake.size * (isBowWake ? 0.65 + progress * 1.2 : 0.8 + progress * 1.8)
+      const halfWidth = wake.size * (isBowWake ? 0.3 + progress * 0.65 : 0.18 + progress * 0.75)
+      ctx.save()
       ctx.translate(wake.x - scrollOffset.x, wake.y - scrollOffset.y)
       ctx.rotate(wake.direction || 0)
       ctx.strokeStyle = `rgba(205, 240, 255, ${0.5 * alpha})`
-      ctx.lineWidth = 1.4 + alpha
+      ctx.lineWidth = (isBowWake ? 0.8 : 1.4) + alpha
       ctx.lineCap = 'round'
       ctx.beginPath()
       ctx.moveTo(0, 0)
@@ -665,7 +667,7 @@ export class EffectsRenderer {
       ctx.moveTo(0, 0)
       ctx.quadraticCurveTo(-length * 0.48, halfWidth * 0.35, -length, halfWidth)
       ctx.stroke()
-      ctx.setTransform(1, 0, 0, 1, 0, 0)
+      ctx.restore()
     })
     ctx.restore()
   }

@@ -9,8 +9,15 @@ const BASE_BUILDING_TARGETS = [
   { type: 'gasStation', targetCount: 1 },
   { type: 'turretGunV1', targetCount: 2 },
   { type: 'rocketTurret', targetCount: 1 },
-  { type: 'artilleryTurret', targetCount: 1 },
-  { type: 'helipad', targetCount: 1 }
+  { type: 'artilleryTurret', targetCount: 1 }
+]
+const ADVANCED_FORCE_SEQUENCE = [
+  { type: 'build_place', buildingType: 'helipad', targetCount: 1 },
+  { type: 'build_queue', unitType: 'apache', targetCount: 1 },
+  { type: 'build_place', buildingType: 'shipyard', targetCount: 1 },
+  { type: 'build_queue', unitType: 'destroyer', targetCount: 2 },
+  { type: 'build_place', buildingType: 'airstrip', targetCount: 1 },
+  { type: 'build_queue', unitType: 'f22Raptor', targetCount: 1 }
 ]
 const TARGET_ACTIVE_QUEUE_DEPTH = 5
 const MAX_FORWARD_PLANNING_ACTIONS = 6
@@ -25,6 +32,18 @@ function countOwnedBuildings(input, type) {
 
 function countOwnedHarvesters(input) {
   return Number(input?.economy?.harvesters?.total || 0)
+}
+
+function countOwnedUnits(input, type) {
+  const groups = [
+    ...(input?.friendlyForces?.combat || []),
+    ...(input?.friendlyForces?.support || []),
+    ...(input?.friendlyForces?.logistics || []),
+    ...(input?.friendlyForces?.aircraft || [])
+  ]
+  return groups
+    .filter(group => group?.type === type)
+    .reduce((total, group) => total + Number(group.count || 0), 0)
 }
 
 function hasQueuedBuilding(input, type) {
@@ -131,6 +150,8 @@ function buildPlanningSteps(input) {
     steps.push({ type: 'build_place', buildingType: type, targetCount })
   })
 
+  steps.push(...ADVANCED_FORCE_SEQUENCE)
+
   return steps
 }
 
@@ -148,7 +169,7 @@ function getSatisfiedCount(input, plannedActions, step) {
   if (step.unitType === 'harvester') {
     return countOwnedHarvesters(input) + countQueuedUnits(input, step.unitType) + getPlannedActionCount(plannedActions, step)
   }
-  return countQueuedUnits(input, step.unitType) + getPlannedActionCount(plannedActions, step)
+  return countOwnedUnits(input, step.unitType) + countQueuedUnits(input, step.unitType) + getPlannedActionCount(plannedActions, step)
 }
 
 function canBuildStep(input, step) {

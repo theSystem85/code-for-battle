@@ -31,6 +31,7 @@ const AI_SELL_PRIORITY = [
   'artilleryTurret',
   'radarStation',
   'helipad',
+  'shipyard',
   'airstrip',
   'ammunitionFactory',
   'gasStation',
@@ -258,6 +259,10 @@ function findSimpleBuildingPosition(buildingType, mapGrid, factories, aiPlayerId
     return null
   }
 
+  // Shoreline placement requires the full land/water footprint validator.
+  // The simple land-only fallback can never produce a legal Shipyard.
+  if (buildingType === 'shipyard') return null
+
   const factory = factories.find(f => f.id === aiPlayerId)
   if (!factory) return null
 
@@ -453,6 +458,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     const gasStations = aiBuildings.filter(b => b.type === 'gasStation')
     const vehicleWorkshops = aiBuildings.filter(b => b.type === 'vehicleWorkshop')
     const helipads = aiBuildings.filter(b => b.type === 'helipad')
+    const shipyards = aiBuildings.filter(b => b.type === 'shipyard')
     const airstrips = aiBuildings.filter(b => b.type === 'airstrip')
     const ammunitionFactories = aiBuildings.filter(b => b.type === 'ammunitionFactory')
     const turretGunCount = aiBuildings.filter(b => b.type.startsWith('turretGun')).length
@@ -467,6 +473,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       ? 1
       : 0
     const totalTanks = aiTanks.length + tanksInProduction
+    const completedAiApaches = units.filter(u => u.owner === aiPlayerId && u.type === 'apache' && u.health > 0)
+    const completedAiDestroyers = units.filter(u => u.owner === aiPlayerId && u.type === 'destroyer' && u.health > 0)
 
     const REQUIRED_HARVESTERS = 4
     const harvesterGoalMet = aiHarvesters.length >= REQUIRED_HARVESTERS
@@ -557,6 +565,16 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     } else if (
       radarStations.length > 0 &&
       helipads.length > 0 &&
+      completedAiApaches.length > 0 &&
+      shipyards.length === 0 &&
+      aiFactory.budget >= buildingData.shipyard.cost
+    ) {
+      buildingType = 'shipyard'
+      cost = buildingData.shipyard.cost
+    } else if (
+      radarStations.length > 0 &&
+      shipyards.length > 0 &&
+      completedAiDestroyers.length > 0 &&
       airstrips.length === 0 &&
       aiFactory.budget >= buildingData.airstrip.cost
     ) {
@@ -875,6 +893,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const aiTankers = units.filter(u => u.owner === aiPlayerId && u.type === 'tankerTruck')
       const aiAmmoTrucks = units.filter(u => u.owner === aiPlayerId && u.type === 'ammunitionTruck')
       const aiApaches = units.filter(u => u.owner === aiPlayerId && u.type === 'apache' && u.health > 0)
+      const aiDestroyers = units.filter(u => u.owner === aiPlayerId && u.type === 'destroyer' && u.health > 0)
       const aiF22s = units.filter(u => u.owner === aiPlayerId && u.type === 'f22Raptor' && u.health > 0)
       const aiF35s = units.filter(u => u.owner === aiPlayerId && u.type === 'f35' && u.health > 0)
       const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId)
@@ -883,6 +902,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const ammunitionFactoriesForProduction = aiBuildings.filter(b => b.type === 'ammunitionFactory')
       const hasHospital = aiBuildings.some(b => b.type === 'hospital')
       const helipadsForProduction = aiBuildings.filter(b => b.type === 'helipad' && b.health > 0)
+      const shipyardsForProduction = aiBuildings.filter(b => b.type === 'shipyard' && b.health > 0)
       const airstripsForProduction = aiBuildings.filter(b => b.type === 'airstrip' && b.health > 0)
       const rocketTurretsBuilt = aiBuildings.filter(b => b.type === 'rocketTurret').length
       const teslaCoilsBuilt = aiBuildings.filter(b => b.type === 'teslaCoil').length
@@ -905,6 +925,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const harvesterCountInProduction = aiFactory.currentlyProducingUnit === 'harvester' ? 1 : 0
       const currentHarvesterTotal = aiHarvesters.length + harvesterCountInProduction
       const apacheCountInProduction = aiFactory.currentlyProducingUnit === 'apache' ? 1 : 0
+      const destroyerCountInProduction = aiFactory.currentlyProducingUnit === 'destroyer' ? 1 : 0
       const f22CountInProduction = aiFactory.currentlyProducingUnit === 'f22Raptor' ? 1 : 0
       const f35CountInProduction = aiFactory.currentlyProducingUnit === 'f35' ? 1 : 0
       const HIGH_BUDGET_THRESHOLD = 12000
@@ -913,6 +934,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const isVeryHighBudget = aiFactory.budget >= VERY_HIGH_BUDGET_THRESHOLD
       const apacheCapacity = helipadsForProduction.length
       const needApache = apacheCapacity > 0 && (aiApaches.length + apacheCountInProduction) < apacheCapacity
+      const destroyerCapacity = shipyardsForProduction.length * 2
+      const needDestroyer = aiApaches.length > 0 && destroyerCapacity > 0 &&
+        (aiDestroyers.length + destroyerCountInProduction) < destroyerCapacity
       const multiF22BudgetThreshold = 10000
       const f22PerAirstripTarget = aiFactory.budget > multiF22BudgetThreshold ? 2 : 1
       const f22Capacity = airstripsForProduction.length * f22PerAirstripTarget
@@ -941,12 +965,14 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       } else if (hasHospital && aiAmbulances.length === 0) {
         // Always ensure at least one ambulance exists if hospital is available
         unitType = 'ambulance'
-      } else if (needF35 && aiFactory.budget >= getUnitCost('f35')) {
-        unitType = 'f35'
-      } else if (needF22 && aiFactory.budget >= getUnitCost('f22Raptor')) {
-        unitType = 'f22Raptor'
       } else if (needApache && aiFactory.budget >= getUnitCost('apache')) {
         unitType = 'apache'
+      } else if (needDestroyer && aiFactory.budget >= getUnitCost('destroyer')) {
+        unitType = 'destroyer'
+      } else if (needF22 && aiDestroyers.length > 0 && aiFactory.budget >= getUnitCost('f22Raptor')) {
+        unitType = 'f22Raptor'
+      } else if (needF35 && aiDestroyers.length > 0 && aiFactory.budget >= getUnitCost('f35')) {
+        unitType = 'f35'
       } else {
         // Check if we need recovery tanks based on combat unit ratio
         const aiRecoveryTanks = units.filter(u => u.owner === aiPlayerId && u.type === 'recoveryTank' && u.health > 0)
@@ -1032,6 +1058,16 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
             gameState[helipadIndexKey]++
           } else {
             console.error(`Cannot spawn apache: AI player ${aiPlayerId} has no Helipad.`)
+            gameState[lastProductionKey] = now
+            return
+          }
+        } else if (unitType === 'destroyer') {
+          if (shipyardsForProduction.length > 0) {
+            const shipyardIndexKey = `next${aiPlayerId}ShipyardIndex`
+            gameState[shipyardIndexKey] = gameState[shipyardIndexKey] ?? 0
+            spawnFactory = shipyardsForProduction[gameState[shipyardIndexKey] % shipyardsForProduction.length]
+            gameState[shipyardIndexKey]++
+          } else {
             gameState[lastProductionKey] = now
             return
           }

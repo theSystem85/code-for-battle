@@ -10,6 +10,8 @@ const FULL_BUILDING_TECH_TREE = [
   { type: 'radarStation', req: '-' },
   { type: 'hospital', req: '-' },
   { type: 'helipad', req: '-' },
+  { type: 'shipyard', req: 'radarStation+vehicleFactory' },
+  { type: 'airstrip', req: 'radarStation' },
   { type: 'gasStation', req: '-' },
   { type: 'turretGunV1', req: '-' },
   { type: 'concreteWall', req: '-' },
@@ -32,6 +34,9 @@ const FULL_UNIT_TECH_TREE = [
   { type: 'mineSweeper', req: 'vehicleFactory+vehicleWorkshop', spawn: 'vehicleFactory' },
   { type: 'mineLayer', req: 'vehicleFactory+vehicleWorkshop+ammunitionFactory', spawn: 'vehicleFactory' },
   { type: 'apache', req: 'helipad', spawn: 'helipad' },
+  { type: 'destroyer', req: 'shipyard', spawn: 'shipyard' },
+  { type: 'f22Raptor', req: 'airstrip', spawn: 'airstrip' },
+  { type: 'f35', req: 'airstrip', spawn: 'airstrip' },
   { type: 'tank-v3', req: '2xvehicleFactory', spawn: 'vehicleFactory' },
   { type: 'rocketTank', req: 'rocketTurret', spawn: 'vehicleFactory' },
   { type: 'tank-v2', req: 'radarStation', spawn: 'vehicleFactory' },
@@ -80,6 +85,8 @@ export function computeAvailableBuildingTypes(buildings, factories, owner) {
     available.add('rocketTurret')
     available.add('teslaCoil')
     available.add('artilleryTurret')
+    available.add('airstrip')
+    if (hasFactory) available.add('shipyard')
   }
   return available
 }
@@ -98,6 +105,8 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
   const hasWorkshop = owned.some(building => building.type === 'vehicleWorkshop')
   const hasAmmunitionFactory = owned.some(building => building.type === 'ammunitionFactory')
   const hasHelipad = owned.some(building => building.type === 'helipad')
+  const hasShipyard = owned.some(building => building.type === 'shipyard')
+  const hasAirstrip = owned.some(building => building.type === 'airstrip')
   const hasRocketTurret = owned.some(building => building.type === 'rocketTurret')
   const hasArtilleryTurret = owned.some(building => building.type === 'artilleryTurret')
   const hasRadar = owned.some(building => building.type === 'radarStation')
@@ -116,6 +125,11 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
   }
   if (hasFactory && hasWorkshop && hasAmmunitionFactory) available.add('mineLayer')
   if (hasHelipad) available.add('apache')
+  if (hasShipyard) available.add('destroyer')
+  if (hasAirstrip) {
+    available.add('f22Raptor')
+    available.add('f35')
+  }
   if (factoryCount >= 2) available.add('tank-v3')
   if (hasRocketTurret) available.add('rocketTank')
   if (hasRadar) {

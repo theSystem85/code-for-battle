@@ -123,8 +123,8 @@ export const buildingData = {
     smokeSpots: []
   },
   shipyard: {
-    width: 4,
-    height: 4,
+    width: 5,
+    height: 5,
     cost: 5000,
     power: -120,
     image: 'shipyard_sidebar.webp',

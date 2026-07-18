@@ -672,7 +672,9 @@ export class BuildingRenderer {
 
     // Position the flag pole at ground level in the top left corner
     const baseX = screenX + 2
-    const baseY = screenY + height - 2
+    const baseY = building.type === 'shipyard'
+      ? screenY + 12
+      : screenY + height - 2
 
     const poleHeight = 10
     const poleWidth = 2

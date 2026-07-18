@@ -88,6 +88,16 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'left', 0.5, '#FFA500')
   })
 
+  it('sizes the Destroyer HUD beyond the full rendered ship length', () => {
+    const renderer = new UnitRenderer()
+    const standardBounds = renderer.getSelectedHudBounds(100, 100, { type: 'tank_v1' })
+    const destroyerBounds = renderer.getSelectedHudBounds(100, 100, { type: 'destroyer' })
+
+    expect(destroyerBounds.width).toBeGreaterThan(32 * 2.6)
+    expect(destroyerBounds.height).toBe(destroyerBounds.width)
+    expect(destroyerBounds.width).toBeGreaterThan(standardBounds.width)
+  })
+
   it('uses F22 rocketAmmo for the selected ammo bar even while parked on an airstrip', () => {
     const renderer = new UnitRenderer()
     const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})

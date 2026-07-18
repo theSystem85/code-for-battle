@@ -1017,7 +1017,7 @@ export const UNIT_PROPERTIES = {
     rotationSpeed: 0.025,
     turretRotationSpeed: TANK_TURRET_ROT * 0.8,
     accelerationMultiplier: 0.55,
-    armor: 5,
+    armor: 1.5,
     movementType: 'water',
     isNaval: true
   },

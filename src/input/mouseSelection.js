@@ -175,7 +175,7 @@ export function handleLeftMouseDown(handler, e, worldX, worldY, gameCanvas, sele
   handler.utilityQueueCandidate = !handler.forceAttackClick && !handler.guardClick && shouldStartUtilityQueueMode(selectedUnits)
 
   if (selectedUnits.length === 1 && selectedUnits[0].isBuilding &&
-      (selectedUnits[0].type === 'vehicleFactory' || selectedUnits[0].type === 'vehicleWorkshop')) {
+      (selectedUnits[0].type === 'vehicleFactory' || selectedUnits[0].type === 'vehicleWorkshop' || selectedUnits[0].type === 'shipyard')) {
     handler.isSelecting = false
   }
 

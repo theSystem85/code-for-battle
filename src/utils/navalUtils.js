@@ -4,6 +4,8 @@ export const WATER_MOVEMENT_TYPE = 'water'
 export const navalUnitTypes = ['destroyer']
 export const navalProductionBuildingTypes = ['shipyard']
 export const SHIPYARD_SERVICE_RADIUS_TILES = 3
+export const DESTROYER_RENDER_LENGTH_TILES = 2.6
+export const DESTROYER_HULL_LENGTH_RATIO = 0.895
 
 const SHIPYARD_SERVICE_REQUIREMENTS = Object.freeze({
   fuel: 'gasStation',
@@ -25,7 +27,7 @@ export function isWaterPassableTile(mapGrid, x, y) {
   return Boolean(tile && tile.type === 'water' && !tile.building && !tile.seedCrystal)
 }
 
-export function getShipyardWaterLocalTiles(width = 4, height = 4) {
+export function getShipyardWaterLocalTiles(width = 5, height = 5) {
   const tiles = []
   const firstWaterRow = Math.floor(height / 2)
   for (let y = firstWaterRow; y < height; y++) {
@@ -36,7 +38,7 @@ export function getShipyardWaterLocalTiles(width = 4, height = 4) {
   return tiles
 }
 
-export function isShipyardWaterLocalTile(localX, localY, width = 4, height = 4) {
+export function isShipyardWaterLocalTile(localX, localY, width = 5, height = 5) {
   return localX >= 0 && localX < width && localY >= Math.floor(height / 2) && localY < height
 }
 
@@ -121,17 +123,30 @@ export function addShipWake(unit, gameState, now = performance.now()) {
   if (unit.lastWakeTime && now - unit.lastWakeTime < 90) return
 
   const direction = unit.direction || 0
-  const sternX = unit.x + TILE_SIZE / 2 - Math.cos(direction) * TILE_SIZE * 0.65
-  const sternY = unit.y + TILE_SIZE / 2 - Math.sin(direction) * TILE_SIZE * 0.65
+  const centerX = unit.x + TILE_SIZE / 2
+  const centerY = unit.y + TILE_SIZE / 2
+  const hullEndOffset = TILE_SIZE * (DESTROYER_RENDER_LENGTH_TILES / 2) * DESTROYER_HULL_LENGTH_RATIO
+  const directionX = Math.cos(direction)
+  const directionY = Math.sin(direction)
   gameState.shipWakes = gameState.shipWakes || []
   gameState.shipWakes.push({
-    x: sternX,
-    y: sternY,
+    x: centerX - directionX * hullEndOffset,
+    y: centerY - directionY * hullEndOffset,
     direction,
     createdAt: now,
     duration: 1100,
     size: TILE_SIZE * 0.55,
-    speed
+    speed,
+    kind: 'stern'
+  }, {
+    x: centerX + directionX * hullEndOffset,
+    y: centerY + directionY * hullEndOffset,
+    direction,
+    createdAt: now,
+    duration: 650,
+    size: TILE_SIZE * 0.24,
+    speed,
+    kind: 'bow'
   })
   unit.lastWakeTime = now
 }
