@@ -204,6 +204,12 @@ export function setupUnitButtons(controller) {
           requirementsMet = false
           requirementText = 'Requires Helipad or Airstrip and Ammunition Factory'
         }
+      } else if (unitType === 'destroyer') {
+        const hasShipyard = gameState.buildings.some(b => b.type === 'shipyard' && b.owner === gameState.humanPlayer)
+        if (!hasShipyard) {
+          requirementsMet = false
+          requirementText = 'Requires Shipyard'
+        }
       } else if (unitType === 'ammunitionTruck') {
         const hasVehicleFactory = gameState.buildings.some(b => b.type === 'vehicleFactory' && b.owner === gameState.humanPlayer)
         const hasAmmunitionFactory = gameState.buildings.some(b => b.type === 'ammunitionFactory' && b.owner === gameState.humanPlayer)

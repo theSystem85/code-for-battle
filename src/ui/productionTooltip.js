@@ -26,7 +26,8 @@ const unitDisplayNames = {
   f22Raptor: 'F22 Raptor',
   f35: 'F35',
   mineLayer: 'Mine Layer',
-  mineSweeper: 'Mine Sweeper'
+  mineSweeper: 'Mine Sweeper',
+  destroyer: 'Destroyer'
 }
 
 const buildingDescriptions = {

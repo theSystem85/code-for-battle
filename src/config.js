@@ -879,7 +879,8 @@ export const UNIT_COSTS = {
   f35: 3000,
   howitzer: HOWITZER_COST,
   mineLayer: 1000,
-  mineSweeper: 1000
+  mineSweeper: 1000,
+  destroyer: 4500
 }
 
 // Unit properties
@@ -1008,6 +1009,17 @@ export const UNIT_PROPERTIES = {
     rotationSpeed: 0.04,
     turretRotationSpeed: 0,
     mineCapacity: 20
+  },
+  destroyer: {
+    health: 500,
+    maxHealth: 500,
+    speed: 0.42,
+    rotationSpeed: 0.025,
+    turretRotationSpeed: TANK_TURRET_ROT * 0.8,
+    accelerationMultiplier: 0.55,
+    armor: 5,
+    movementType: 'water',
+    isNaval: true
   },
   mineSweeper: {
     health: 200,
@@ -1287,7 +1299,8 @@ export const UNIT_AMMO_CAPACITY = {
   howitzer: 30,
   apache: 38,
   f22Raptor: 8,
-  f35: 6
+  f35: 6,
+  destroyer: 60
 }
 
 const REMOTE_CONTROL_ALLOWED_ACTIONS = [
@@ -1311,6 +1324,7 @@ const TURRET_TANK_TYPES = new Set([
   'tank_v3',
   'tank-v2',
   'tank-v3',
+  'destroyer',
   'rocketTank'
 ])
 
@@ -1494,7 +1508,8 @@ export const UNIT_GAS_PROPERTIES = {
   f22Raptor: { tankSize: 8000, consumption: 200 },
   f35: { tankSize: 8000, consumption: 180 },
   mineLayer: { tankSize: 700, consumption: 150 },
-  mineSweeper: { tankSize: 1900, consumption: 450 }
+  mineSweeper: { tankSize: 1900, consumption: 450 },
+  destroyer: { tankSize: 6000, consumption: 220 }
 }
 
 const EXPORTED_CONFIG_VARIABLES = [

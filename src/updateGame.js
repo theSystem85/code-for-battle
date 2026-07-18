@@ -32,6 +32,7 @@ import { updateHospitalLogic } from './game/hospitalLogic.js'
 import { updateAmbulanceLogic } from './game/ambulanceSystem.js'
 import { updateGasStationLogic } from './game/gasStationLogic.js'
 import { updateAmmunitionSystem } from './game/ammunitionSystem.js'
+import { updateShipyardServiceLogic } from './game/shipyardServiceLogic.js'
 import { updateHelipadLogic } from './game/helipadLogic.js'
 import { updateTankerTruckLogic } from './game/tankerTruckLogic.js'
 import { updateAmmunitionTruckLogic } from './game/ammunitionTruckLogic.js'
@@ -419,6 +420,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       updateAmbulanceLogic(units, gameState, delta)
       updateGasStationLogic(units, gameState.buildings, gameState, delta)
       updateAmmunitionSystem(units, gameState.buildings, gameState, delta)
+      updateShipyardServiceLogic(units, gameState.buildings, mapGrid, delta)
       updateHelipadLogic(units, gameState.buildings, gameState, delta)
       updateTankerTruckLogic(units, gameState, delta)
       updateAmmunitionTruckLogic(units, gameState, delta)

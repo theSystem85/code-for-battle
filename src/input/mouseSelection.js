@@ -356,6 +356,8 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
         range = HOWITZER_FIRE_RANGE * TILE_SIZE
       } else if (unit.type === 'apache' || unit.type === 'f35') {
         range = baseRange * APACHE_RANGE_REDUCTION
+      } else if (unit.type === 'destroyer') {
+        range = 18 * TILE_SIZE
       }
 
       if (unit.level >= 1) {
@@ -373,7 +375,8 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
         'tank-v3',
         'rocketTank',
         'howitzer',
-        'apache'
+        'apache',
+        'destroyer'
       ])
 
       if (!attackCapableTypes.has(unit.type)) {
@@ -583,10 +586,18 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
   const selectedBuilding = gameState.buildings && gameState.buildings.find(building =>
     building.selected &&
     building.owner === gameState.humanPlayer &&
-    (building.type === 'vehicleFactory' || building.type === 'vehicleWorkshop')
+    (building.type === 'vehicleFactory' || building.type === 'vehicleWorkshop' || building.type === 'shipyard')
   )
   if (selectedBuilding && !handler.wasDragging && !gameState.repairMode) {
-    if (isRallyPointTileBlocked(rallyTileX, rallyTileY)) {
+    const isShipyardWaterRally = selectedBuilding.type === 'shipyard' &&
+      gameState.mapGrid?.[rallyTileY]?.[rallyTileX]?.type === 'water' &&
+      !gameState.mapGrid[rallyTileY][rallyTileX].building
+    if (selectedBuilding.type === 'shipyard' && !isShipyardWaterRally) {
+      showNotification('Shipyard rally point must be on open water', 1500)
+      cursorManager.updateCustomCursor(e, gameState.mapGrid || [], factories, selectedUnits, units)
+      return
+    }
+    if (!isShipyardWaterRally && isRallyPointTileBlocked(rallyTileX, rallyTileY)) {
       showNotification('Cannot set rally point on occupied tile', 1500)
       cursorManager.updateCustomCursor(e, gameState.mapGrid || [], factories, selectedUnits, units)
       return
@@ -615,6 +626,8 @@ export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selecte
       buildingName = 'Vehicle Factory'
     } else if (selectedBuilding.type === 'vehicleWorkshop') {
       buildingName = 'Vehicle Workshop'
+    } else if (selectedBuilding.type === 'shipyard') {
+      buildingName = 'Shipyard'
     }
     showNotification(`Rally point set for ${buildingName}`, 1500)
     cursorManager.updateCustomCursor(e, gameState.mapGrid || [], factories, selectedUnits, units)

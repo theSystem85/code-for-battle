@@ -32,6 +32,7 @@ import {
   calculateCollisionAvoidance
 } from './movementCollision.js'
 import { handleStuckUnit } from './movementStuck.js'
+import { addShipWake } from '../utils/navalUtils.js'
 
 const MOVEMENT_SOUND_STOP_FADE_SECONDS = 0.08
 const TANK_ENGINE_LOOP_VOLUME = 0.2
@@ -670,6 +671,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       trySlideMovement(unit, movement, mapGrid, occupancyMap, units, wrecks)
     }
   }
+
+  addShipWake(unit, gameState, now)
 
   unit.tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   unit.tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)

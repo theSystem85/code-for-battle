@@ -312,7 +312,7 @@ export class CursorManager {
   }
 
   // Function to check if a location is a blocked tile (water, rock, building)
-  isBlockedTerrain(tileX, tileY, mapGrid) {
+  isBlockedTerrain(tileX, tileY, mapGrid, movementType = 'land') {
     // First check if mapGrid is defined and properly structured
     if (!Array.isArray(mapGrid) || mapGrid.length === 0) {
       return false // Can't determine if blocked, assume not blocked
@@ -342,14 +342,17 @@ export class CursorManager {
     const hasBuilding = hasBlockingBuilding(tile)
     const hasSeedCrystal = tile.seedCrystal
     const occupancyMap = gameState.occupancyMap
-    const occupied =
+    const occupied = movementType !== 'water' &&
       occupancyMap &&
       occupancyMap[tileY] &&
       occupancyMap[tileY][tileX]
 
+    const terrainBlocked = movementType === 'water'
+      ? tileType !== 'water'
+      : tileType === 'water' || tileType === 'rock'
+
     return (
-      tileType === 'water' ||
-      tileType === 'rock' ||
+      terrainBlocked ||
       hasBuilding ||
       hasSeedCrystal ||
       occupied
@@ -450,11 +453,13 @@ export class CursorManager {
       selectedUnits.length > 0 &&
       selectedUnits.every(unit => AIRSTRIP_SUPPLY_UNIT_TYPES.has(unit.type)) &&
       this.isFriendlyAirstripTile(tileX, tileY)
+    const selectedMovers = selectedUnits.filter(unit => !unit?.isBuilding)
+    const selectedNavalOnly = selectedMovers.length > 0 && selectedMovers.every(unit => unit.isNaval)
 
     // Check if mouse is over blocked terrain when in game canvas, with added safety check
     this.isOverBlockedTerrain = this.isOverGameCanvas &&
       gridReady &&
-      this.isBlockedTerrain(tileX, tileY, mapGrid) &&
+      this.isBlockedTerrain(tileX, tileY, mapGrid, selectedNavalOnly ? 'water' : 'land') &&
       !selectedSupportOnlyOnAirstrip
 
     // Check if mouse is over a player refinery when harvesters are selected

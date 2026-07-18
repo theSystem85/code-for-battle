@@ -54,11 +54,14 @@ function hasLocalBlockageSignal(unit, mapGrid, occupancyMap, now, recentStaticCo
   }
 
   const tile = mapGrid[nextTile.y][nextTile.x]
-  if (tile && (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || tile.building)) {
+  const terrainBlocked = unit.isNaval
+    ? tile?.type !== 'water'
+    : tile?.type === 'water' || tile?.type === 'rock'
+  if (tile && (terrainBlocked || tile.seedCrystal || hasBlockingBuilding(tile))) {
     return true
   }
 
-  if (occupancyMap?.[nextTile.y]?.[nextTile.x] > 0) {
+  if (!unit.isNaval && occupancyMap?.[nextTile.y]?.[nextTile.x] > 0) {
     const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
     if (nextTile.x !== currentTileX || nextTile.y !== currentTileY) {
@@ -448,7 +451,7 @@ function tryDodgeMovement(unit, mapGrid, occupancyMap, units, now) {
       mapGrid,
       occupancyMap,
       undefined,
-      { unitOwner: unit.owner }
+      { unitOwner: unit.owner, movementType: unit.isNaval ? 'water' : undefined }
     )
 
     if (dodgePath.length > 1) {
@@ -465,7 +468,10 @@ export function isValidDodgePosition(x, y, mapGrid, units, currentUnit = null) {
   }
 
   const tile = mapGrid[y][x]
-  if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || hasBlockingBuilding(tile)) {
+  const terrainBlocked = currentUnit?.isNaval
+    ? tile.type !== 'water'
+    : tile.type === 'water' || tile.type === 'rock'
+  if (terrainBlocked || tile.seedCrystal || hasBlockingBuilding(tile)) {
     return false
   }
 

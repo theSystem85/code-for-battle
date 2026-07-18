@@ -25,7 +25,8 @@ const unitDisplayNames = {
   f22Raptor: 'F22 Raptor',
   f35: 'F35',
   mineLayer: 'Mine Layer',
-  mineSweeper: 'Mine Sweeper'
+  mineSweeper: 'Mine Sweeper',
+  destroyer: 'Destroyer'
 }
 
 const unitSidebarImages = {
@@ -43,6 +44,7 @@ const unitSidebarImages = {
   f22Raptor: 'images/sidebar/f22_raptor_sidebar.webp',
   f35: 'images/sidebar/f35_sidebar.webp',
   howitzer: 'images/sidebar/howitzer_sidebar.webp',
+  destroyer: 'images/sidebar/destroyer_sidebar.webp',
   mineLayer: 'images/sidebar/mine_layer_sidebar.webp',
   mineSweeper: 'images/sidebar/mine_sweeper_sidebar.webp'
 }
@@ -58,6 +60,7 @@ const buildingSidebarImages = {
   helipad: 'images/sidebar/helipad_sidebar.webp',
   gasStation: 'images/sidebar/gas_station.webp',
   ammunitionFactory: 'images/sidebar/ammunition_factory_sidebar.webp',
+  shipyard: 'images/sidebar/shipyard_sidebar.webp',
   turretGunV1: 'images/sidebar/turret_gun_v1.webp',
   turretGunV2: 'images/sidebar/turret_gun_v2.webp',
   turretGunV3: 'images/sidebar/turret_gun_v3.webp',

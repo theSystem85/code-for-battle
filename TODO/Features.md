@@ -387,3 +387,9 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - Decal selection must be pseudo-random from map seed and replace prior tile decal when a new event occurs.
 - Save/load support required for tile decals (type + deterministic variant state/counter).
 - Rendering order requirement: ore/seed overlays must remain above decals.
+
+## Shipyard and Destroyer Naval Groundwork
+- Add shoreline-only Shipyard building that requires Radar Station and Vehicle Factory, uses the provided map/sidebar assets, and launches naval units from adjacent water.
+- Add the first naval unit, Destroyer, with water-only movement, reusable naval pathing helpers, fuel/ammo/crew/health/cost stats, rotated map visuals, wake trails while moving, and anti-ground/naval plus anti-air combat behavior.
+- Add new-unit and ship-unit implementation checklist skill files for future agent guidance.
+- [x] Refine Shipyard/Destroyer integration: require a 50/50 land-water footprint, add eight transparent directional ship assets, complete water-domain command/path/cache/collision handling, render a water-only three-tile Shipyard service zone with per-resource infrastructure prerequisites, move V-wakes below ships with stop fading, disable Shipyard smoke, and add Destroyer range/distance aiming feedback.

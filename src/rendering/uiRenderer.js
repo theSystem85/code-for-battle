@@ -248,7 +248,8 @@ export class UIRenderer {
               units,
               buildings,
               factories,
-              gameState.currentBuildingType
+              gameState.currentBuildingType,
+              { x: tileX, y: tileY }
             )
 
             // Determine final color

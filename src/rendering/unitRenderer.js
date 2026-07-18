@@ -15,6 +15,7 @@ import { renderMineSweeperWithImage, isMineSweeperImageLoaded } from './mineSwee
 import { renderApacheWithImage } from './apacheImageRenderer.js'
 import { renderF22WithImage } from './f22ImageRenderer.js'
 import { renderF35WithImage } from './f35ImageRenderer.js'
+import { renderDestroyerWithImage, isDestroyerImageLoaded } from './destroyerImageRenderer.js'
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
@@ -790,6 +791,23 @@ export class UnitRenderer {
     ctx.arc(centerX, centerY, radius, 0, Math.PI * 2)
     ctx.stroke()
     ctx.setLineDash([])
+    ctx.restore()
+  }
+
+  renderNavalWeaponRange(ctx, unit, centerX, centerY) {
+    if (!unit?.selected || !unit.isNaval) return
+    const range = 18 * TILE_SIZE
+    if (!range) return
+
+    ctx.save()
+    ctx.strokeStyle = 'rgba(255, 105, 90, 0.48)'
+    ctx.fillStyle = 'rgba(255, 80, 60, 0.035)'
+    ctx.lineWidth = 1.5
+    ctx.setLineDash([8, 6])
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, range, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
     ctx.restore()
   }
 
@@ -1659,6 +1677,16 @@ export class UnitRenderer {
     if (unit.type === 'mineSweeper' && isMineSweeperImageLoaded()) {
       const ok = renderMineSweeperWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderSelection(ctx, unit, centerX, centerY)
+        this.renderAlertMode(ctx, unit, centerX, centerY)
+        return
+      }
+    }
+
+    if (unit.type === 'destroyer' && isDestroyerImageLoaded()) {
+      const ok = renderDestroyerWithImage(ctx, unit, centerX, centerY)
+      if (ok) {
+        this.renderNavalWeaponRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
         return

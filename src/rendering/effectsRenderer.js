@@ -642,6 +642,34 @@ export class EffectsRenderer {
     }
   }
 
+  renderShipWakes(ctx, gameState, scrollOffset) {
+    const wakes = gameState?.shipWakes
+    if (!Array.isArray(wakes) || wakes.length === 0) return
+    const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
+    gameState.shipWakes = wakes.filter(wake => now - wake.createdAt < wake.duration)
+    ctx.save()
+    gameState.shipWakes.forEach(wake => {
+      const age = Math.max(0, now - wake.createdAt)
+      const alpha = Math.max(0, 1 - age / wake.duration)
+      const progress = age / wake.duration
+      const length = wake.size * (0.8 + progress * 1.8)
+      const halfWidth = wake.size * (0.18 + progress * 0.75)
+      ctx.translate(wake.x - scrollOffset.x, wake.y - scrollOffset.y)
+      ctx.rotate(wake.direction || 0)
+      ctx.strokeStyle = `rgba(205, 240, 255, ${0.5 * alpha})`
+      ctx.lineWidth = 1.4 + alpha
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(0, 0)
+      ctx.quadraticCurveTo(-length * 0.48, -halfWidth * 0.35, -length, -halfWidth)
+      ctx.moveTo(0, 0)
+      ctx.quadraticCurveTo(-length * 0.48, halfWidth * 0.35, -length, halfWidth)
+      ctx.stroke()
+      ctx.setTransform(1, 0, 0, 1, 0, 0)
+    })
+    ctx.restore()
+  }
+
   render(ctx, bullets, gameState, units, scrollOffset) {
     this.renderBullets(ctx, bullets, scrollOffset)
     this.renderSmoke(ctx, gameState, scrollOffset)
