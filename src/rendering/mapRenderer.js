@@ -213,10 +213,10 @@ export class MapRenderer {
       (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) ||
       (typeof document !== 'undefined' && document.body?.classList.contains('is-touch'))
     )
-    this.chunkSize = this.mobileMemoryProfile ? 8 : 16
+    this.chunkSize = 16
     this.chunkPadding = 2
-    this.maxCachedChunks = this.mobileMemoryProfile ? 20 : 48
-    this.maxChunkWarmQueue = this.mobileMemoryProfile ? 28 : 96
+    this.maxCachedChunks = this.mobileMemoryProfile ? 56 : 48
+    this.maxChunkWarmQueue = this.mobileMemoryProfile ? 40 : 96
     this.chunkCache = new Map()
     this.chunkWarmQueue = new Map()
     this.chunkWarmScheduled = false
@@ -662,8 +662,8 @@ export class MapRenderer {
       chunk.endX,
       chunk.endY
     )
-    const hasWaterAnimation = (containsWater && !skipWaterBase && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0)) ||
-      (containsAnimatedWaterSot && (USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0))
+    const waterAnimationEnabled = USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0
+    const hasWaterAnimation = waterAnimationEnabled && ((containsWater && !skipWaterBase) || containsAnimatedWaterSot)
     const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
 
     const needsRedraw =
@@ -830,25 +830,33 @@ export class MapRenderer {
     const extraEndX = Math.min(mapWidth, endX + 1)
     const extraEndY = Math.min(mapHeight, endY + 1)
 
-    const parts = []
+    let signature = 2166136261
     let containsWater = false
+    const mixSignature = value => {
+      const text = String(value ?? '')
+      for (let i = 0; i < text.length; i++) {
+        signature ^= text.charCodeAt(i)
+        signature = Math.imul(signature, 16777619) >>> 0
+      }
+      signature ^= 124
+      signature = Math.imul(signature, 16777619) >>> 0
+    }
+
     for (let y = extraStartY; y < extraEndY; y++) {
       const row = mapGrid[y]
       for (let x = extraStartX; x < extraEndX; x++) {
         const tile = row[x]
-        parts.push(
-          tile.type,
-          tile.airstripStreet ? 1 : 0,
-          tile.ore ? 1 : 0,
-          tile.seedCrystal ? 1 : 0,
-          tile.noBuild || 0,
-          getTileDecalSignature(tile)
-        )
+        mixSignature(tile.type)
+        mixSignature(tile.airstripStreet ? 1 : 0)
+        mixSignature(tile.ore ? 1 : 0)
+        mixSignature(tile.seedCrystal ? 1 : 0)
+        mixSignature(tile.noBuild || 0)
+        mixSignature(getTileDecalSignature(tile))
         if (tile.type === 'water') containsWater = true
       }
     }
 
-    return { signature: parts.join('|'), containsWater }
+    return { signature, containsWater }
   }
 
   chunkContainsAnimatedWaterSot(startX, startY, endX, endY) {
@@ -1052,9 +1060,9 @@ export class MapRenderer {
       }
       : { x: 0, y: 0 }
     const isScrolling = Math.abs(scrollDelta.x) > 0.5 || Math.abs(scrollDelta.y) > 0.5
-    if (isScrolling) {
+    if (isScrolling && this.mobileMemoryProfile) {
       const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-      this.deferChunkWarmUntil = now + 120
+      this.deferChunkWarmUntil = now + 90
     }
 
     if (prewarmStaticTerrain) {

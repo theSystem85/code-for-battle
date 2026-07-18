@@ -802,3 +802,4 @@
 - [x] Restore mobile double-tap cancel behavior for placement/planning mode and keep two-finger pan scrolling functional after using draw-to-plan mode.
 
 - [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
+- [x] Restore iPhone 13 Pro Max map scrolling smoothness by reducing mobile terrain chunk churn and keeping the RAF scheduler from racing native frame cadence during scroll/combat.

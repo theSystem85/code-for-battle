@@ -18,7 +18,7 @@ import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } fr
 import { performanceMonitor } from '../performance/performanceMonitor.js'
 import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 
-const MOBILE_FRAME_WATCHDOG_MS = 17
+const MOBILE_FRAME_WATCHDOG_MS = 250
 const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
 
 export class GameLoop {
@@ -151,7 +151,7 @@ export class GameLoop {
         this.animate(timestamp)
       }
       this.animationId = requestAnimationFrame((timestamp) => runFrame(timestamp, 'raf'))
-      if (this.isMobileRenderProfile()) {
+      if (this.shouldScheduleMobileFrameWatchdog()) {
         this.frameTimeoutId = setTimeout(() => runFrame(performance.now(), 'watchdog'), MOBILE_FRAME_WATCHDOG_MS)
       }
       return
@@ -183,6 +183,14 @@ export class GameLoop {
       body?.classList.contains('mobile-portrait') ||
       (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
     )
+  }
+
+  hasVisibleCombatEffects() {
+    return (gameState.explosions?.length || 0) > 0 || (this.bullets?.length || 0) > 0
+  }
+
+  shouldScheduleMobileFrameWatchdog() {
+    return this.isMobileRenderProfile() && !this.hasActiveScrollActivity() && !this.hasVisibleCombatEffects()
   }
 
   getMinimapRenderIntervalMs() {
