@@ -18,7 +18,11 @@ import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } fr
 import { performanceMonitor } from '../performance/performanceMonitor.js'
 import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 
-const MOBILE_FRAME_WATCHDOG_MS = 17
+// Foreground mobile Safari/Chrome already align requestAnimationFrame to
+// the device refresh driver. Racing RAF with a fixed timeout introduced
+// uneven 8/17ms cadence on ProMotion iPhones during touch scrolling, which
+// surfaced as micro-stutter even when update/render work was below budget.
+const MOBILE_FRAME_WATCHDOG_MS = 250
 const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
 
 export class GameLoop {
@@ -151,7 +155,7 @@ export class GameLoop {
         this.animate(timestamp)
       }
       this.animationId = requestAnimationFrame((timestamp) => runFrame(timestamp, 'raf'))
-      if (this.isMobileRenderProfile()) {
+      if (this.shouldUseMobileWatchdog()) {
         this.frameTimeoutId = setTimeout(() => runFrame(performance.now(), 'watchdog'), MOBILE_FRAME_WATCHDOG_MS)
       }
       return
@@ -173,6 +177,14 @@ export class GameLoop {
     const velocityActive = velocityX > velocityThreshold || velocityY > velocityThreshold
 
     return gameState.isRightDragging || keyScrollActive || velocityActive
+  }
+
+  shouldUseMobileWatchdog() {
+    // Keep the watchdog only as a genuine stall recovery path. Never compete
+    // with active camera motion or visible combat effects, because that creates
+    // non-vsync frame starts on iPhone 13 Pro Max and reads as scroll hitching.
+    return this.isMobileRenderProfile() && !this.hasActiveScrollActivity() &&
+      !(gameState.explosions?.length || gameState.smokeParticles?.length || gameState.dustParticles?.length)
   }
 
   isMobileRenderProfile() {

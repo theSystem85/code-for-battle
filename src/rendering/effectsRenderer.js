@@ -168,6 +168,16 @@ function getExplosionCoreSprite(radius) {
   return canvas
 }
 
+function isMobileRenderProfile() {
+  const body = typeof document !== 'undefined' ? document.body : null
+  return Boolean(
+    body?.classList.contains('is-touch') ||
+    body?.classList.contains('mobile-landscape') ||
+    body?.classList.contains('mobile-portrait') ||
+    (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
+  )
+}
+
 export class EffectsRenderer {
   constructor() {
     // Initialize sprite cache on first renderer creation
@@ -426,21 +436,25 @@ export class EffectsRenderer {
   }
 
   renderDust(ctx, gameState, scrollOffset) {
-    if (gameState?.dustParticles && gameState.dustParticles.length > 0) {
-      gameState.dustParticles.forEach(p => {
-        ctx.save()
-        ctx.globalAlpha = p.alpha
-        const x = p.x - scrollOffset.x
-        const y = p.y - scrollOffset.y
-        const size = p.currentSize || p.size
+    const particles = gameState?.dustParticles
+    if (!particles || particles.length === 0) return
 
-        ctx.fillStyle = p.color || '#D2B48C'
-        ctx.beginPath()
-        ctx.arc(x, y, size, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
-      })
+    const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
+    const padding = 48
+    const previousAlpha = ctx.globalAlpha
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i]
+      if (!p) continue
+      const x = p.x - scrollOffset.x
+      const y = p.y - scrollOffset.y
+      if (x < -padding || x > canvasWidth + padding || y < -padding || y > canvasHeight + padding) continue
+      ctx.globalAlpha = p.alpha
+      ctx.fillStyle = p.color || '#D2B48C'
+      ctx.beginPath()
+      ctx.arc(x, y, p.currentSize || p.size, 0, Math.PI * 2)
+      ctx.fill()
     }
+    ctx.globalAlpha = previousAlpha
   }
 
   renderExplosions(ctx, gameState, scrollOffset) {
@@ -530,18 +544,22 @@ export class EffectsRenderer {
       }
       ctx.globalAlpha = 1
 
-      // Draw an energetic shockwave ring with time-varying jitter
-      const shockwaveRadius = plumeRadius * (0.92 + 0.12 * progress)
+      const mobileQualityMode = isMobileRenderProfile() && (len > 4 || gameState?.isRightDragging)
       const jitterSeed = (exp.x * 0.13 + exp.y * 0.09 + exp.startTime * 0.001) % (Math.PI * 2)
-      const jitter = Math.sin(progress * 34 + jitterSeed) * 0.08 + 1
-      ctx.strokeStyle = `rgba(255,200,110,${alpha * 0.75})`
-      ctx.lineWidth = 1.2 + 1.8 * fade
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, shockwaveRadius * jitter, 0, 2 * Math.PI)
-      ctx.stroke()
+
+      // Draw an energetic shockwave ring with time-varying jitter
+      if (!mobileQualityMode) {
+        const shockwaveRadius = plumeRadius * (0.92 + 0.12 * progress)
+        const jitter = Math.sin(progress * 34 + jitterSeed) * 0.08 + 1
+        ctx.strokeStyle = `rgba(255,200,110,${alpha * 0.75})`
+        ctx.lineWidth = 1.2 + 1.8 * fade
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, shockwaveRadius * jitter, 0, 2 * Math.PI)
+        ctx.stroke()
+      }
 
       // Faint embers at low count keep the effect fancy without heavy particle systems
-      if (fade > 0.2) {
+      if (!mobileQualityMode && fade > 0.2) {
         const emberCount = Math.min(4, Math.max(1, Math.floor(maxRadius / TILE_SIZE)))
         ctx.fillStyle = `rgba(255,215,120,${alpha * 0.5})`
         for (let e = 0; e < emberCount; e++) {
@@ -561,22 +579,20 @@ export class EffectsRenderer {
       const previousOperation = ctx.globalCompositeOperation
       const previousAlpha = ctx.globalAlpha
       const previousSmoothing = ctx.imageSmoothingEnabled
-      const blackBlendAnimations = additiveAnimations.filter(animation => (animation?.blendMode || 'black') === 'black')
-      const alphaBlendAnimations = additiveAnimations.filter(animation => (animation?.blendMode || 'black') === 'alpha')
-
-      if (blackBlendAnimations.length > 0) {
-        ctx.globalCompositeOperation = 'lighter'
-        ctx.imageSmoothingEnabled = false
-        for (let i = 0; i < blackBlendAnimations.length; i++) {
-          renderSpriteSheetAnimation(ctx, blackBlendAnimations[i], scrollOffset, currentTime)
+      ctx.imageSmoothingEnabled = false
+      ctx.globalCompositeOperation = 'lighter'
+      for (let i = 0; i < additiveAnimations.length; i++) {
+        const animation = additiveAnimations[i]
+        if ((animation?.blendMode || 'black') === 'black') {
+          renderSpriteSheetAnimation(ctx, animation, scrollOffset, currentTime)
         }
       }
 
-      if (alphaBlendAnimations.length > 0) {
-        ctx.globalCompositeOperation = 'source-over'
-        ctx.imageSmoothingEnabled = false
-        for (let i = 0; i < alphaBlendAnimations.length; i++) {
-          renderSpriteSheetAnimation(ctx, alphaBlendAnimations[i], scrollOffset, currentTime)
+      ctx.globalCompositeOperation = 'source-over'
+      for (let i = 0; i < additiveAnimations.length; i++) {
+        const animation = additiveAnimations[i]
+        if ((animation?.blendMode || 'black') === 'alpha') {
+          renderSpriteSheetAnimation(ctx, animation, scrollOffset, currentTime)
         }
       }
 
@@ -591,11 +607,15 @@ export class EffectsRenderer {
     if (gameState?.dustParticles && gameState?.dustParticles.length > 0) {
       const currentTime = performance.now()
 
-      // Clean up expired particles
-      gameState.dustParticles = gameState.dustParticles.filter(dust => {
-        const age = currentTime - dust.startTime
-        return age < dust.lifetime
-      })
+      // Clean up expired particles in place to avoid per-frame array allocation.
+      let writeIndex = 0
+      for (let readIndex = 0; readIndex < gameState.dustParticles.length; readIndex++) {
+        const dust = gameState.dustParticles[readIndex]
+        if (dust && currentTime - dust.startTime < dust.lifetime) {
+          gameState.dustParticles[writeIndex++] = dust
+        }
+      }
+      gameState.dustParticles.length = writeIndex
 
       // Render active particles
       gameState.dustParticles.forEach(dust => {

@@ -99,3 +99,9 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - The E2E benchmark can enforce that visible terrain samples do not turn black during fast scroll sweeps.
 - A local non-throttled mobile benchmark profile can reach the 60fps target when mobile terrain pixel density is set to 1x.
 - The benchmark evidence is used to validate that mobile render time improves after fixes.
+
+## Smooth mobile scrolling follow-up (2026-07-18)
+
+- Mobile foreground frame scheduling must prioritize native `requestAnimationFrame` cadence during camera movement and combat effects; any timeout watchdog must be a stall recovery fallback only and must not race active scroll/combat frames.
+- Heavy effect rendering on touch devices should preserve core readability while skipping nonessential explosion adornments, per-frame blend-list allocations, and offscreen dust work when the viewport is moving or many effects are visible.
+- Acceptance: map scrolling on iPhone 13 Pro Max should avoid non-vsync micro-stutter, and large action scenes should keep effects within the mobile frame budget without hiding core explosions/smoke/projectiles.
