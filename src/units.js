@@ -22,6 +22,7 @@ import { isFriendlyMineBlocking } from './game/mineSystem.js'
 import { getSpatialQuadtree } from './game/spatialQuadtree.js'
 import { recordUnitCreated } from './ai-api/transitionCollector.js'
 import { hasBlockingBuilding } from './utils/buildingPassability.js'
+import { getShipyardLaunchTile, getNavalPathOptions, isWaterPassableTile } from './utils/navalUtils.js'
 import {
   ensureAirstripOperations,
   claimAirstripParkingSlot,
@@ -107,7 +108,7 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
   }
 
   safeUnits.forEach(unit => {
-    if (unit.isAirUnit && unit.flightState !== 'grounded') {
+    if ((unit.isAirUnit && unit.flightState !== 'grounded') || unit.isNaval) {
       return
     }
     const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
@@ -334,7 +335,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   const ignoreFriendlyMines = Boolean(contextOptions.ignoreFriendlyMines)
   const strictDestination = Boolean(contextOptions.strictDestination)
   const streetOnly = Boolean(contextOptions.streetOnly)
-  const pathContext = { unitOwner, ignoreFriendlyMines, streetOnly }
+  const pathContext = { unitOwner, ignoreFriendlyMines, streetOnly, movementType: contextOptions.movementType }
 
   // Begin destination adjustment if blocked or occupied
   let adjustedEnd = { ...end }
@@ -347,7 +348,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
     isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
   const destModeBlocked = !isTilePassableForMode(mapGrid, adjustedEnd.x, adjustedEnd.y, pathContext)
   if (
-    destType === 'water' ||
+    (contextOptions.movementType === 'water' ? destType !== 'water' : destType === 'water') ||
     destType === 'rock' ||
     destHasBuilding ||
     destSeedCrystal ||
@@ -430,7 +431,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
     }
 
     closedSet.add(currentKey)
-    const neighbors = getNeighbors(currentNode, mapGrid)
+    const neighbors = getNeighbors(currentNode, mapGrid, pathContext)
     for (const neighbor of neighbors) {
       const neighborKey = `${neighbor.x},${neighbor.y}`
       if (closedSet.has(neighborKey)) continue
@@ -451,7 +452,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
 
       const baseCost = Math.hypot(neighbor.x - currentNode.x, neighbor.y - currentNode.y)
       const tileType = mapGrid[neighbor.y][neighbor.x].type
-      const terrainCost = tileType === 'street' ? STREET_PATH_COST : 1
+      const terrainCost = contextOptions.movementType === 'water' ? 1 : (tileType === 'street' ? STREET_PATH_COST : 1)
       const gScore = currentNode.g + baseCost * terrainCost
       let foundInHeap = false
       for (const node of openHeap.content) {
@@ -559,6 +560,9 @@ function isTilePassable(mapGrid, x, y) {
 }
 
 function isTilePassableForMode(mapGrid, x, y, options = {}) {
+  if (options.movementType === 'water') {
+    return isWaterPassableTile(mapGrid, x, y)
+  }
   if (!isTilePassable(mapGrid, x, y)) {
     return false
   }
@@ -570,7 +574,10 @@ function isTilePassableForMode(mapGrid, x, y, options = {}) {
 }
 
 function isTileBlockedForUnit(occupancyMap, x, y, options = {}) {
-  if (occupancyMap && occupancyMap[y] && occupancyMap[y][x]) {
+  // The shared occupancy map encodes water terrain as blocked for land units.
+  // Naval paths already validate water terrain separately and use runtime
+  // collision/spatial checks for other ships, so they must ignore that layer.
+  if (options.movementType !== 'water' && occupancyMap && occupancyMap[y] && occupancyMap[y][x]) {
     return true
   }
 
@@ -599,7 +606,7 @@ function hasDiagonalCornerBlocker(current, candidate, mapGrid, occupancyMap, sta
   ]
 
   for (const check of checks) {
-    if (!isTilePassable(mapGrid, check.x, check.y)) {
+    if (!isTilePassableForMode(mapGrid, check.x, check.y, options)) {
       return true
     }
     if (
@@ -614,13 +621,13 @@ function hasDiagonalCornerBlocker(current, candidate, mapGrid, occupancyMap, sta
   return false
 }
 
-function getNeighbors(node, mapGrid) {
+function getNeighbors(node, mapGrid, options = {}) {
   const neighbors = []
 
   for (const dir of DIRECTIONS) {
     const x = node.x + dir.x
     const y = node.y + dir.y
-    if (isTilePassable(mapGrid, x, y)) {
+    if (isTilePassableForMode(mapGrid, x, y, options)) {
       neighbors.push({ x, y })
     }
   }
@@ -685,8 +692,7 @@ function isDirectPathClear(start, end, mapGrid, occupancyMap, options = {}) {
     if (!isTileWithinBounds(mapGrid, x, y)) {
       return false
     }
-    const tile = mapGrid[y][x]
-    if (isTerrainBlocked(tile)) {
+    if (!isTilePassableForMode(mapGrid, x, y, options)) {
       return false
     }
     if (isTileOccupied(occupancyMap, x, y, options)) {
@@ -754,6 +760,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
   const isPadF35 = (factory.type === 'helipad' || factory.type === 'airstrip') && type === 'f35'
   const isAirstripF22 = factory.type === 'airstrip' && type === 'f22Raptor'
+  const isShipyardDestroyer = factory.type === 'shipyard' && type === 'destroyer'
 
   if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
@@ -788,6 +795,8 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     worldPositionOverride = { x: slot.worldX, y: slot.worldY }
     options.airstripParkingSlotIndex = slotIndex
     options.airstripId = getBuildingIdentifier(factory)
+  } else if (isShipyardDestroyer) {
+    spawnPosition = getShipyardLaunchTile(factory, mapGrid)
   } else if (factory.type === 'vehicleFactory') {
     // Attempt to free the designated spawn tile using algorithm A1
     moveBlockingUnits(spawnX, spawnY, units, mapGrid)
@@ -818,7 +827,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     : options
 
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
-  if (occupancyMap && !isHelipadApache && !isAirstripF22 && !isPadF35) {
+  if (occupancyMap && !isHelipadApache && !isAirstripF22 && !isPadF35 && !isShipyardDestroyer) {
     // Use center coordinates for occupancy map consistency
     const centerTileX = Math.floor((newUnit.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -958,7 +967,9 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
       { x: spawnPosition.x, y: spawnPosition.y },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
       mapGrid,
-      null // Pass null for occupancyMap initially, pathfinding handles collisions
+      null, // Pass null for occupancyMap initially, pathfinding handles collisions
+      undefined,
+      isShipyardDestroyer ? getNavalPathOptions(newUnit) : undefined
     )
     if (path && path.length > 1) {
       newUnit.path = path.slice(1)
@@ -1095,7 +1106,7 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   }
 
   // Add unit-specific properties
-  const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer']
+  const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer', 'destroyer']
   const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank']
 
   // Apache helicopters and F22 Raptors don't have the crew system
@@ -1108,6 +1119,12 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     } else if (loaderUnits.includes(actualType)) {
       unit.crew.loader = true
     }
+  }
+
+  if (unitProps.movementType === 'water' || unitProps.isNaval) {
+    unit.movementType = 'water'
+    unit.isNaval = true
+    unit.requiresShipyard = true
   }
 
   if (unitProps.accelerationMultiplier) {

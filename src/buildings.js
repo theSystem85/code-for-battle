@@ -142,7 +142,7 @@ export function createBuilding(type, x, y) {
   }
 
   // Initialize rally point for vehicle factories and workshops
-  if (type === 'vehicleFactory' || type === 'vehicleWorkshop' || type === 'airstrip') {
+  if (type === 'vehicleFactory' || type === 'vehicleWorkshop' || type === 'airstrip' || type === 'shipyard') {
     building.rallyPoint = null
   }
 

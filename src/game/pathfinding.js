@@ -17,7 +17,8 @@ function getCachedPath(start, end, mapGrid, occupancyMap, options = null) {
   const derivedOwner = contextOptions.unitOwner ?? start.owner ?? start.ownerId ?? start.playerId ?? null
   const ownerKey = derivedOwner || 'any'
   const ignoreKey = contextOptions.ignoreFriendlyMines ? 'ignoreFriendly' : 'respectFriendly'
-  const endKey = `${end.x},${end.y}-${occupancyMap ? 1 : 0}-${ownerKey}-${ignoreKey}`
+  const movementKey = contextOptions.movementType || 'land'
+  const endKey = `${end.x},${end.y}-${occupancyMap ? 1 : 0}-${ownerKey}-${ignoreKey}-${movementKey}`
   const now = performance.now()
   let entries = pathCache.get(endKey)
 
@@ -79,7 +80,10 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
   unitsNeedingImmediatePath.forEach(unit => {
     const targetPos = unit.moveTarget
     const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
-    const cacheOptions = { unitOwner: unit.owner }
+    const cacheOptions = {
+      unitOwner: unit.owner,
+      movementType: unit.isNaval ? 'water' : undefined
+    }
     const distance = Math.hypot(targetPos.x - unit.tileX, targetPos.y - unit.tileY)
     const useOccupancyMap = distance <= PATHFINDING_THRESHOLD
 
@@ -214,7 +218,10 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
       // Use occupancy map for close range movement to avoid collisions
       const useOccupancyMap = distance <= PATHFINDING_THRESHOLD
       const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
-      const cacheOptions = { unitOwner: unit.owner }
+      const cacheOptions = {
+        unitOwner: unit.owner,
+        movementType: unit.isNaval ? 'water' : undefined
+      }
       const newPath = useOccupancyMap
         ? getCachedPath(startNode, adjustedTarget, mapGrid, occupancyMap, cacheOptions)
         : getCachedPath(startNode, adjustedTarget, mapGrid, null, cacheOptions)

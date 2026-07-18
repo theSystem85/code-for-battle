@@ -91,6 +91,12 @@ function resolveFactoryForUnit({ unitType, factoryId, buildings, factories, owne
   if (unitType === 'apache') {
     return allBuildings.find(b => b.type === 'helipad' && b.owner === owner) || null
   }
+  if (unitType === 'destroyer') {
+    return allBuildings.find(b => b.type === 'shipyard' && b.owner === owner) || null
+  }
+  if (unitType === 'f22Raptor' || unitType === 'f35') {
+    return allBuildings.find(b => b.type === 'airstrip' && b.owner === owner) || null
+  }
   if (vehicleUnitTypes.includes(unitType)) {
     return allBuildings.find(b => b.type === 'vehicleFactory' && b.owner === owner) || null
   }
@@ -215,6 +221,14 @@ export function applyGameTickOutput(state = gameState, output, options = {}) {
           return
         }
         if (unitType === 'apache' && factory.type !== 'helipad') {
+          rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
+          return
+        }
+        if (unitType === 'destroyer' && factory.type !== 'shipyard') {
+          rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
+          return
+        }
+        if ((unitType === 'f22Raptor' || unitType === 'f35') && factory.type !== 'airstrip') {
           rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
           return
         }
@@ -457,6 +471,15 @@ export function processLlmBuildQueue(state, owner, aiFactory, factories, mapGrid
   for (let i = 0; i < queue.length; i++) {
     const item = queue[i]
     if (item.status !== 'queued') continue
+
+    // Naval/air progression is deliberately serial even though building and
+    // unit queues otherwise run independently.
+    if (item.buildingType === 'shipyard' && !units.some(unit => unit.owner === owner && unit.type === 'apache' && unit.health > 0)) {
+      return
+    }
+    if (item.buildingType === 'airstrip' && !units.some(unit => unit.owner === owner && unit.type === 'destroyer' && unit.health > 0)) {
+      return
+    }
 
     // Re-check tech tree at construction start time — prerequisites may have
     // been destroyed since the action was originally queued.

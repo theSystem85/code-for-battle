@@ -165,6 +165,7 @@ export function syncTechTreeWithBuildings(controller) {
   const hasHelipad = buildings.some(b => b.type === 'helipad')
   const hasAirstrip = buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
   const hasAmmunitionFactory = buildings.some(b => b.type === 'ammunitionFactory')
+  const hasShipyard = buildings.some(b => b.type === 'shipyard')
   const factoryCount = buildings.filter(b => b.type === 'vehicleFactory').length
 
   if (hasFactory) {
@@ -213,12 +214,17 @@ export function syncTechTreeWithBuildings(controller) {
     controller.forceUnlockUnitType('tank-v3')
   }
 
+  if (hasShipyard) {
+    controller.forceUnlockUnitType('destroyer')
+  }
+
   if (hasRocketTurret) {
     controller.forceUnlockUnitType('rocketTank')
   }
 
   if (hasRadar) {
     controller.forceUnlockUnitType('tank-v2')
+    if (hasFactory) controller.forceUnlockBuildingType('shipyard')
     ;['airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
       .forEach(t => controller.forceUnlockBuildingType(t))
     if (hasFactory && hasArtilleryTurret) {

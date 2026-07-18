@@ -137,7 +137,7 @@ export class UIRenderer {
         if (building.rallyPoint &&
             building.owner === gameState.humanPlayer &&
             building.selected &&
-            (building.type === 'vehicleFactory' || building.type === 'vehicleWorkshop')) {
+            (building.type === 'vehicleFactory' || building.type === 'vehicleWorkshop' || building.type === 'shipyard')) {
           this.drawRallyPointFlag(ctx, building.rallyPoint, scrollOffset)
         }
       })
@@ -248,7 +248,8 @@ export class UIRenderer {
               units,
               buildings,
               factories,
-              gameState.currentBuildingType
+              gameState.currentBuildingType,
+              { x: tileX, y: tileY }
             )
 
             // Determine final color

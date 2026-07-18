@@ -10,6 +10,7 @@ vi.mock('../../src/buildings.js', () => {
     oreRefinery: { width: 3, height: 3 },
     teslaCoil: { width: 2, height: 2 },
     artilleryTurret: { width: 2, height: 2 },
+    shipyard: { width: 5, height: 5 },
     turretGunSmall: { width: 1, height: 1 }
   }
 
@@ -42,7 +43,7 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
 }))
 
 import { findBuildingPosition } from '../../src/ai/enemyBuilding.js'
-import { isNearExistingBuilding, isTileValid } from '../../src/buildings.js'
+import { canPlaceBuilding, isNearExistingBuilding, isTileValid } from '../../src/buildings.js'
 import { isPartOfFactory } from '../../src/ai/enemyUtils.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
 
@@ -66,6 +67,7 @@ describe('enemyBuilding.findBuildingPosition', () => {
     isNearExistingBuilding.mockReturnValue(true)
     isPartOfFactory.mockReturnValue(false)
     gameRandom.mockReturnValue(0)
+    canPlaceBuilding.mockReturnValue(true)
   })
 
   afterEach(() => {
@@ -104,6 +106,28 @@ describe('enemyBuilding.findBuildingPosition', () => {
     const result = findBuildingPosition('powerPlant', mapGrid, [], [], [humanFactory], 'enemy')
 
     expect(result).toBeNull()
+  })
+
+  it('uses a shoreline-specific validated position for Shipyards', () => {
+    const mapGrid = createGrid(20, 20)
+    for (let y = 10; y < mapGrid.length; y++) {
+      mapGrid[y].forEach(tile => { tile.type = 'water' })
+    }
+
+    const result = findBuildingPosition('shipyard', mapGrid, [], [], [baseFactory], 'enemy')
+
+    expect(result).not.toBeNull()
+    expect(canPlaceBuilding).toHaveBeenCalledWith(
+      'shipyard',
+      result.x,
+      result.y,
+      mapGrid,
+      [],
+      [],
+      [baseFactory],
+      'enemy'
+    )
+    expect(mapGrid[result.y + 5][result.x + 2].type).toBe('water')
   })
 
   it('places defensive buildings toward nearby ore', () => {

@@ -11,6 +11,8 @@ const PRODUCTION_BUILDING_TYPES = new Set([
   'radarStation',
   'hospital',
   'helipad',
+  'shipyard',
+  'airstrip',
   'gasStation',
   'ammunitionFactory'
 ])
@@ -25,7 +27,7 @@ const DEFENSE_BUILDING_TYPES = new Set([
   'concreteWall'
 ])
 
-const AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor'])
+const AIR_UNIT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
 const SUPPORT_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
 const LOGISTICS_UNIT_TYPES = new Set(['harvester', 'mineLayer', 'mineSweeper'])
 const PRIORITY_TARGET_BUILDING_TYPES = new Set([
@@ -34,6 +36,8 @@ const PRIORITY_TARGET_BUILDING_TYPES = new Set([
   'vehicleFactory',
   'radarStation',
   'helipad',
+  'shipyard',
+  'airstrip',
   'rocketTurret',
   'teslaCoil',
   'artilleryTurret'
@@ -44,6 +48,8 @@ const PRIORITY_TARGET_UNIT_TYPES = new Set([
   'rocketTank',
   'apache',
   'f22Raptor',
+  'f35',
+  'destroyer',
   'recoveryTank',
   'mineLayer'
 ])
@@ -60,11 +66,17 @@ const UNIT_ROLE_LABELS = {
   recoveryTank: 'repair-support',
   howitzer: 'long-range-artillery',
   apache: 'air-attack',
+  f22Raptor: 'air-superiority',
+  f35: 'strike-aircraft',
+  destroyer: 'naval-combat',
   mineLayer: 'mine-utility',
   mineSweeper: 'mine-clearance'
 }
 const UNIT_SPAWN_BUILDINGS = {
-  apache: 'helipad'
+  apache: 'helipad',
+  destroyer: 'shipyard',
+  f22Raptor: 'airstrip',
+  f35: 'airstrip'
 }
 const BUILDING_ROLE_LABELS = {
   constructionYard: 'expansion-core',
@@ -75,6 +87,8 @@ const BUILDING_ROLE_LABELS = {
   radarStation: 'tech-radar',
   hospital: 'healing-support',
   helipad: 'air-production',
+  shipyard: 'naval-production',
+  airstrip: 'jet-production',
   gasStation: 'fuel-support',
   ammunitionFactory: 'ammo-support',
   turretGunV1: 'defense',
@@ -223,7 +237,7 @@ function summarizeFriendlyForces(units, playerId, options = {}) {
   const supportUnits = ownedUnits.filter(unit => SUPPORT_UNIT_TYPES.has(unit.type))
   const logisticsUnits = ownedUnits.filter(unit => LOGISTICS_UNIT_TYPES.has(unit.type))
   const aircraftUnits = ownedUnits.filter(unit => AIR_UNIT_TYPES.has(unit.type))
-  const maxDetailedUnits = Math.max(1, options.maxDetailedUnits || 14)
+  const maxDetailedUnits = Math.max(1, options.maxDetailedUnits || 8)
   const detailedUnits = ownedUnits
     .filter(unit => LOGISTICS_UNIT_TYPES.has(unit.type) || SUPPORT_UNIT_TYPES.has(unit.type) || AIR_UNIT_TYPES.has(unit.type) || buildHealthRatio(unit) < 0.55 || unit.orders?.targetId)
     .slice(0, maxDetailedUnits)

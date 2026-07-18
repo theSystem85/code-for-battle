@@ -145,7 +145,8 @@ beforeEach(() => {
       rocketTank: 700,
       recoveryTank: 400,
       f22Raptor: 600,
-      f35: 300
+      f35: 300,
+      destroyer: 900
     }
     return costs[type] ?? 0
   })
@@ -332,6 +333,39 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(manageAIAmmunitionMonitoring).toHaveBeenCalled()
   })
 
+  it('produces Destroyers from Shipyards after an Apache exists', () => {
+    const aiPlayerId = 'ai1'
+    const aiFactory = { id: aiPlayerId, owner: aiPlayerId, health: 100, budget: 5000 }
+    const shipyard = { type: 'shipyard', owner: aiPlayerId, health: 450 }
+    const units = [
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'harvester', health: 100 },
+      { owner: aiPlayerId, type: 'tankerTruck', health: 100 },
+      { owner: aiPlayerId, type: 'ambulance', health: 100 },
+      { owner: aiPlayerId, type: 'tank_v1', health: 100, harvesterHunter: true },
+      { owner: aiPlayerId, type: 'apache', health: 100 }
+    ]
+    const gameState = {
+      buildings: [
+        { type: 'powerPlant', owner: aiPlayerId, health: 100 },
+        { type: 'vehicleFactory', owner: aiPlayerId, health: 100 },
+        { type: 'oreRefinery', owner: aiPlayerId, health: 100 },
+        { type: 'hospital', owner: aiPlayerId, health: 100 },
+        shipyard
+      ],
+      enemyPowerSupply: 0,
+      enemyBuildSpeedModifier: 1,
+      speedMultiplier: 1
+    }
+
+    updateAIPlayer(aiPlayerId, units, [aiFactory], [], createMapGrid(12, 12), gameState, null, 10000, [])
+
+    expect(aiFactory.currentlyProducingUnit).toBe('destroyer')
+    expect(aiFactory.unitSpawnBuilding).toBe(shipyard)
+  })
+
 
   it('pairs each planned F22 with an F35 on available airstrips', () => {
     const aiPlayerId = 'ai1'
@@ -350,6 +384,7 @@ describe('enemyAIPlayer updateAIPlayer', () => {
       { owner: aiPlayerId, type: 'tankerTruck', health: 100 },
       { owner: aiPlayerId, type: 'ambulance', health: 100 },
       { owner: aiPlayerId, type: 'tank_v1', health: 100, harvesterHunter: true },
+      { owner: aiPlayerId, type: 'destroyer', health: 500 },
       { owner: aiPlayerId, type: 'f22Raptor', health: 100 }
     ]
     const gameState = {

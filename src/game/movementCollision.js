@@ -34,7 +34,7 @@ const STATIC_COLLISION_FORCE_MIN = 0.05
 const STATIC_COLLISION_FORCE_MULTIPLIER = 2.4
 const STATIC_COLLISION_SEPARATION_BLEND = 0.35
 
-function isTileBlockedForCollision(mapGrid, tileX, tileY) {
+function isTileBlockedForCollision(mapGrid, tileX, tileY, unit = null) {
   if (!mapGrid || tileY < 0 || tileY >= mapGrid.length) {
     return true
   }
@@ -52,7 +52,10 @@ function isTileBlockedForCollision(mapGrid, tileX, tileY) {
     return true
   }
 
-  if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal) {
+  const terrainBlocked = unit?.isNaval
+    ? tile.type !== 'water'
+    : tile.type === 'water' || tile.type === 'rock'
+  if (terrainBlocked || tile.seedCrystal) {
     return true
   }
 
@@ -74,11 +77,11 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
   const tileX = Math.floor(centerX / TILE_SIZE)
   const tileY = Math.floor(centerY / TILE_SIZE)
 
-  if (isTileBlockedForCollision(mapGrid, tileX, tileY)) {
+  if (isTileBlockedForCollision(mapGrid, tileX, tileY, unit)) {
     return true
   }
 
-  if (occupancyMap && occupancyMap[tileY]) {
+  if (!unit.isNaval && occupancyMap && occupancyMap[tileY]) {
     let occupancy = occupancyMap[tileY][tileX] || 0
     const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
     const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -325,7 +328,11 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         return { collided: true, type: 'terrain', tileX, tileY }
       }
     } else {
-      if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal) {
+      if (unit.isNaval) {
+        if (tile.type !== 'water' || tile.seedCrystal || hasBlockingBuilding(tile)) {
+          return { collided: true, type: 'terrain', tileX, tileY }
+        }
+      } else if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal) {
         return { collided: true, type: 'terrain', tileX, tileY }
       }
 
@@ -1002,9 +1009,9 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
       const tileX = (sampleX / TILE_SIZE) | 0
       const tileY = (sampleY / TILE_SIZE) | 0
 
-      let blocked = isTileBlockedForCollision(mapGrid, tileX, tileY)
+      let blocked = isTileBlockedForCollision(mapGrid, tileX, tileY, unit)
 
-      if (!blocked && occupancyMap) {
+      if (!blocked && occupancyMap && !unit.isNaval) {
         const row = occupancyMap[tileY]
         if (row) {
           const occ = row[tileX] || 0

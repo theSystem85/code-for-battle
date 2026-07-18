@@ -24,6 +24,7 @@ vi.mock('../../src/units.js', () => ({
     harvester: 1200,
     apache: 1500,
     f22Raptor: 8000,
+    destroyer: 4500,
     ambulance: 600,
     tankerTruck: 500,
     recoveryTank: 700,
@@ -791,6 +792,47 @@ describe('Production Queue System', () => {
       expect(units[0].oreField).toEqual({ x: 6, y: 7 })
       expect(units[0].moveTarget).toEqual({ x: 6, y: 7 })
       expect(units[0].path).toEqual([{ x: 6, y: 7 }])
+    })
+
+    it('passes a selected Shipyard water rally point into Destroyer spawning', () => {
+      const rallyPoint = { x: 20, y: 24 }
+      const shipyard = {
+        id: 'shipyard-1',
+        type: 'shipyard',
+        owner: 'player',
+        health: 450,
+        rallyPoint
+      }
+      gameState.buildings = [shipyard]
+      productionQueue.currentUnit = {
+        type: 'destroyer',
+        button: mockButton,
+        duration: 1000,
+        rallyPoint: null
+      }
+      productionQueue.unitItems = [productionQueue.currentUnit]
+      vi.mocked(spawnUnit).mockReturnValueOnce({
+        id: 'destroyer-1',
+        type: 'destroyer',
+        owner: 'player',
+        tileX: 10,
+        tileY: 10,
+        x: 320,
+        y: 320,
+        health: 500
+      })
+
+      productionQueue.completeCurrentUnitProduction()
+
+      expect(spawnUnit).toHaveBeenCalledWith(
+        shipyard,
+        'destroyer',
+        units,
+        gameState.mapGrid,
+        rallyPoint,
+        gameState.occupancyMap,
+        { buildDuration: 1000 }
+      )
     })
   })
 

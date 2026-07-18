@@ -2,6 +2,7 @@ import { TILE_SIZE, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BO
 import { gameState } from '../gameState.js'
 import { renderTankWithImages } from './tankImageRenderer.js'
 import { getTankWreckCanvases, getSingleImageWreckSprite } from './wreckSpriteCache.js'
+import { isDestroyerImageLoaded, renderDestroyerWithImage } from './destroyerImageRenderer.js'
 import { selectedUnits } from '../inputHandler.js'
 
 const noiseCanvasCache = new Map()
@@ -81,6 +82,11 @@ export class WreckRenderer {
     const centerX = wreck.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = wreck.y + TILE_SIZE / 2 - scrollOffset.y
 
+    if (wreck.navalSinking) {
+      this.renderSinkingShipWreck(ctx, wreck, centerX, centerY)
+      return
+    }
+
     const tankTypes = new Set(['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3'])
     const isTank = wreck.unitType && tankTypes.has(wreck.unitType)
 
@@ -139,6 +145,34 @@ export class WreckRenderer {
     }
     this.renderUtilityQueueIndicator(ctx, wreck, centerX, centerY)
     this.renderHealthBar(ctx, wreck, scrollOffset)
+  }
+
+  renderSinkingShipWreck(ctx, wreck, centerX, centerY) {
+    const now = gameState?.simulationTime || performance.now()
+    const elapsed = Math.max(0, now - (wreck.createdAt || now))
+    const progress = Math.min(1, elapsed / (wreck.sinkDuration || 6000))
+    const alpha = Math.max(0, 1 - progress * 0.85)
+    const sinkOffset = progress * TILE_SIZE * 0.9
+    const split = progress * TILE_SIZE * 0.45
+    const rotation = wreck.direction || 0
+
+    ctx.save()
+    ctx.globalAlpha = alpha
+    if (isDestroyerImageLoaded()) {
+      const bow = { type: 'destroyer', direction: rotation + progress * 0.16, x: wreck.x + Math.cos(rotation) * split, y: wreck.y + sinkOffset + Math.sin(rotation) * split }
+      const stern = { type: 'destroyer', direction: rotation + Math.PI + progress * -0.14, x: wreck.x - Math.cos(rotation) * split, y: wreck.y + sinkOffset - Math.sin(rotation) * split }
+      renderDestroyerWithImage(ctx, bow, bow.x + TILE_SIZE / 2, bow.y + TILE_SIZE / 2)
+      ctx.globalAlpha = alpha * 0.85
+      renderDestroyerWithImage(ctx, stern, stern.x + TILE_SIZE / 2, stern.y + TILE_SIZE / 2)
+    } else {
+      this.renderFallback(ctx, wreck, centerX, centerY + sinkOffset, rotation)
+    }
+    ctx.strokeStyle = `rgba(180, 225, 255, ${0.4 * (1 - progress)})`
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.ellipse(centerX, centerY + sinkOffset, TILE_SIZE * (1 + progress), TILE_SIZE * 0.45, 0, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.restore()
   }
 
   getUtilityQueuePosition(selectedUnit, wreck) {

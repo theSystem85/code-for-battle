@@ -66,7 +66,8 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         unit.type === 'rocketTank' ||
         unit.type === 'apache' ||
         unit.type === 'f22Raptor' ||
-        unit.type === 'rocketTurret'
+        unit.type === 'rocketTurret' ||
+        unit.type === 'destroyer'
       if (targetIsAirborneApache && !shooterCanHitAir) {
         return false
       }

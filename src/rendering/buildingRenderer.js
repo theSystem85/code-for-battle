@@ -9,6 +9,7 @@ import { recordBuildingCompleted } from '../ai-api/transitionCollector.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '../game/turretMuzzleConfig.js'
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
+import { getShipyardServiceWaterTiles } from '../utils/navalUtils.js'
 
 export class BuildingRenderer {
   constructor() {
@@ -142,7 +143,7 @@ export class BuildingRenderer {
     }
 
     this.renderTurret(ctx, building, screenX, screenY, width, height)
-    this.renderServiceRadius(ctx, building, screenX, screenY, width, height)
+    this.renderServiceRadius(ctx, building, screenX, screenY, width, height, mapGrid, scrollOffset)
     this.renderSelection(ctx, building, screenX, screenY, width, height)
     if (building.type !== 'concreteWall') {
       this.renderOwnerIndicator(ctx, building, screenX, screenY)
@@ -449,10 +450,29 @@ export class BuildingRenderer {
     }
   }
 
-  renderServiceRadius(ctx, building, screenX, screenY, width, height) {
-    if (!building?.selected || !isServiceBuilding(building)) {
+  renderServiceRadius(ctx, building, screenX, screenY, width, height, mapGrid = null, scrollOffset = { x: 0, y: 0 }) {
+    if (!building?.selected) {
       return
     }
+
+    if (building.type === 'shipyard') {
+      const serviceTiles = getShipyardServiceWaterTiles(building, mapGrid)
+      ctx.save()
+      ctx.fillStyle = 'rgba(80, 205, 255, 0.16)'
+      ctx.strokeStyle = 'rgba(130, 225, 255, 0.72)'
+      ctx.lineWidth = 1.5
+      ctx.setLineDash([5, 4])
+      serviceTiles.forEach(tile => {
+        const x = tile.x * TILE_SIZE - scrollOffset.x
+        const y = tile.y * TILE_SIZE - scrollOffset.y
+        ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE)
+        ctx.strokeRect(x + 1, y + 1, TILE_SIZE - 2, TILE_SIZE - 2)
+      })
+      ctx.restore()
+      return
+    }
+
+    if (!isServiceBuilding(building)) return
 
     const radius = getServiceRadiusPixels(building)
     if (!radius) {
@@ -652,7 +672,9 @@ export class BuildingRenderer {
 
     // Position the flag pole at ground level in the top left corner
     const baseX = screenX + 2
-    const baseY = screenY + height - 2
+    const baseY = building.type === 'shipyard'
+      ? screenY + 12
+      : screenY + height - 2
 
     const poleHeight = 10
     const poleWidth = 2

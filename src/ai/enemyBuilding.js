@@ -35,6 +35,46 @@ function isZeroGapAllowed(buildingType, otherBuildingType) {
   return false
 }
 
+function findShipyardPosition(mapGrid, units, buildings, factories, aiPlayerId) {
+  const factory = factories.find(candidate => candidate.id === aiPlayerId)
+  const shipyard = buildingData.shipyard
+  if (!factory || !shipyard) return null
+
+  const factoryCenterX = factory.x + factory.width / 2
+  const factoryCenterY = factory.y + factory.height / 2
+  const candidates = []
+
+  for (let y = 0; y <= mapGrid.length - shipyard.height; y++) {
+    for (let x = 0; x <= mapGrid[0].length - shipyard.width; x++) {
+      // Cheap shoreline pre-filter: Shipyards face south, so their upper-left
+      // corner must be land and their launch row must be water.
+      const topTile = mapGrid[y]?.[x]
+      const launchTile = mapGrid[y + shipyard.height]?.[x + Math.floor(shipyard.width / 2)]
+      if (!topTile || topTile.type === 'water' || launchTile?.type !== 'water') continue
+
+      candidates.push({
+        x,
+        y,
+        distance: Math.hypot(x + shipyard.width / 2 - factoryCenterX, y + shipyard.height / 2 - factoryCenterY)
+      })
+    }
+  }
+
+  candidates.sort((a, b) => a.distance - b.distance)
+  const match = candidates.find(candidate => canPlaceBuilding(
+    'shipyard',
+    candidate.x,
+    candidate.y,
+    mapGrid,
+    units,
+    buildings,
+    factories,
+    aiPlayerId
+  ))
+
+  return match ? { x: match.x, y: match.y } : null
+}
+
 // Let's improve this function to fix issues with enemy building placement
 // Modified to improve building placement with better spacing and factory avoidance
 export function findBuildingPosition(buildingType, mapGrid, units, buildings, factories, aiPlayerId) {
@@ -68,6 +108,10 @@ export function findBuildingPosition(buildingType, mapGrid, units, buildings, fa
 
   const buildingWidth = buildingData[buildingType].width
   const buildingHeight = buildingData[buildingType].height
+
+  if (buildingType === 'shipyard') {
+    return findShipyardPosition(mapGrid, units, buildings, factories, aiPlayerId)
+  }
 
   // Get human player factory for directional placement (to build defenses toward them)
   const humanPlayerFactory = getClosestEnemyFactory(factory, factories, aiPlayerId)

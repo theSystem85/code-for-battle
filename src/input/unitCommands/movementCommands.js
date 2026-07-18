@@ -96,10 +96,14 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           y: originalDestTile.y + dir.dy
         }
 
+        const candidateType = mapGrid[newTile.y]?.[newTile.x]?.type
+        const terrainMatchesMovement = unit.isNaval
+          ? candidateType === 'water'
+          : candidateType !== 'water' && candidateType !== 'rock'
+
         if (newTile.x >= 0 && newTile.y >= 0 &&
             newTile.x < mapGrid[0].length && newTile.y < mapGrid.length &&
-            mapGrid[newTile.y][newTile.x].type !== 'water' &&
-            mapGrid[newTile.y][newTile.x].type !== 'rock' &&
+            terrainMatchesMovement &&
             !hasBlockingBuilding(mapGrid[newTile.y][newTile.x]) &&
             !selectedUnits.slice(0, index).some(u =>
               u.moveTarget && u.moveTarget.x === newTile.x && u.moveTarget.y === newTile.y
@@ -232,7 +236,10 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           mapGrid,
           gameState.occupancyMap,
           unit.owner,
-          { strictDestination: true }
+          {
+            strictDestination: true,
+            movementType: unit.isNaval ? 'water' : undefined
+          }
         )
 
     if (path && path.length > 0) {

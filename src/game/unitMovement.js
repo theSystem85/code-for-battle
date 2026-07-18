@@ -134,8 +134,8 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       const ATTACK_RANGE = getEffectiveFireRange(unit)
       if (distToTarget > ATTACK_RANGE) {
         // Calculate target tile position
-        const targetTileX = unit.target.tileX !== undefined ? Math.floor(unit.target.x / TILE_SIZE) : unit.target.x
-        const targetTileY = unit.target.tileY !== undefined ? Math.floor(unit.target.y / TILE_SIZE) : unit.target.y
+        const targetTileX = unit.target.tileX !== undefined ? unit.target.tileX : unit.target.x
+        const targetTileY = unit.target.tileY !== undefined ? unit.target.tileY : unit.target.y
 
         // Check if target has moved significantly from last known position
         const lastTargetPos = unit.lastKnownTargetPos
@@ -180,7 +180,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
             { x: targetTileX, y: targetTileY },
             mapGrid,
             occupancyMap,
-            { unitOwner: unit.owner }
+            unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : { unitOwner: unit.owner }
           )
           if (path.length > 1) {
             unit.path = path.slice(1)
@@ -281,7 +281,7 @@ export function updateUnitPathfinding(units, mapGrid, gameState) {
     const isAttackMode = (unit.target && unit.target.health !== undefined) || (unit.attackQueue && unit.attackQueue.length > 0)
     const useOccupancyMap = isAttackMode || distance <= PATHFINDING_THRESHOLD
     const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
-    const pathOptions = { unitOwner: unit.owner }
+    const pathOptions = unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : { unitOwner: unit.owner }
     const newPath = useOccupancyMap
       ? findPath(startNode, adjustedTarget, mapGrid, occupancyMap, undefined, pathOptions)
       : findPath(startNode, adjustedTarget, mapGrid, null, undefined, pathOptions)
@@ -330,7 +330,7 @@ export function updateSpawnExit(units, factories, mapGrid, occupancyMap) {
             mapGrid,
             occupancyMap,
             undefined,
-            { unitOwner: unit.owner }
+            unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : { unitOwner: unit.owner }
           )
           if (exitPath && exitPath.length > 1) {
             unit.path = exitPath.slice(1)

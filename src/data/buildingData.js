@@ -122,6 +122,22 @@ export const buildingData = {
     ammoReloadTime: HELIPAD_RELOAD_TIME,
     smokeSpots: []
   },
+  shipyard: {
+    width: 5,
+    height: 5,
+    cost: 5000,
+    power: -120,
+    image: 'shipyard_sidebar.webp',
+    displayName: 'Shipyard',
+    health: 450,
+    armor: 3,
+    requiresRadar: true,
+    requiresVehicleFactory: true,
+    requiresShoreline: true,
+    launchEdge: 'south',
+    maxAmmo: UNIT_AMMO_CAPACITY.destroyer * 3,
+    smokeSpots: []
+  },
   gasStation: {
     width: 3,
     height: 3,

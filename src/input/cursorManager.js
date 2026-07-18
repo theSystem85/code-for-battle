@@ -63,9 +63,13 @@ export class CursorManager {
     return x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom
   }
 
-  getSelectedHudBounds(centerX, centerY) {
+  getHudVisualSize(unit) {
+    return unit?.type === 'destroyer' ? TILE_SIZE * 2.8 : TILE_SIZE
+  }
+
+  getSelectedHudBounds(centerX, centerY, unit = null) {
     const hudPadding = 6
-    const halfHudSize = (TILE_SIZE / 2) + hudPadding
+    const halfHudSize = (this.getHudVisualSize(unit) / 2) + hudPadding
     return {
       left: centerX - halfHudSize,
       right: centerX + halfHudSize,
@@ -105,17 +109,18 @@ export class CursorManager {
       const centerX = unit.x + TILE_SIZE / 2
       const centerY = unit.y + TILE_SIZE / 2 - altitudeLift
 
+      const halfVisualSize = this.getHudVisualSize(unit) / 2
       const unitBounds = {
-        left: unit.x,
-        right: unit.x + TILE_SIZE,
-        top: unit.y,
-        bottom: unit.y + TILE_SIZE
+        left: centerX - halfVisualSize,
+        right: centerX + halfVisualSize,
+        top: centerY - halfVisualSize,
+        bottom: centerY + halfVisualSize
       }
       if (this.isPointInsideRect(worldX, worldY, unitBounds)) {
         return true
       }
 
-      const hudBounds = this.getSelectedHudBounds(centerX, centerY)
+      const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
       if (this.isPointInsideRect(worldX, worldY, hudBounds)) {
         return true
       }
@@ -312,7 +317,7 @@ export class CursorManager {
   }
 
   // Function to check if a location is a blocked tile (water, rock, building)
-  isBlockedTerrain(tileX, tileY, mapGrid) {
+  isBlockedTerrain(tileX, tileY, mapGrid, movementType = 'land') {
     // First check if mapGrid is defined and properly structured
     if (!Array.isArray(mapGrid) || mapGrid.length === 0) {
       return false // Can't determine if blocked, assume not blocked
@@ -342,14 +347,17 @@ export class CursorManager {
     const hasBuilding = hasBlockingBuilding(tile)
     const hasSeedCrystal = tile.seedCrystal
     const occupancyMap = gameState.occupancyMap
-    const occupied =
+    const occupied = movementType !== 'water' &&
       occupancyMap &&
       occupancyMap[tileY] &&
       occupancyMap[tileY][tileX]
 
+    const terrainBlocked = movementType === 'water'
+      ? tileType !== 'water'
+      : tileType === 'water' || tileType === 'rock'
+
     return (
-      tileType === 'water' ||
-      tileType === 'rock' ||
+      terrainBlocked ||
       hasBuilding ||
       hasSeedCrystal ||
       occupied
@@ -450,11 +458,13 @@ export class CursorManager {
       selectedUnits.length > 0 &&
       selectedUnits.every(unit => AIRSTRIP_SUPPLY_UNIT_TYPES.has(unit.type)) &&
       this.isFriendlyAirstripTile(tileX, tileY)
+    const selectedMovers = selectedUnits.filter(unit => !unit?.isBuilding)
+    const selectedNavalOnly = selectedMovers.length > 0 && selectedMovers.every(unit => unit.isNaval)
 
     // Check if mouse is over blocked terrain when in game canvas, with added safety check
     this.isOverBlockedTerrain = this.isOverGameCanvas &&
       gridReady &&
-      this.isBlockedTerrain(tileX, tileY, mapGrid) &&
+      this.isBlockedTerrain(tileX, tileY, mapGrid, selectedNavalOnly ? 'water' : 'land') &&
       !selectedSupportOnlyOnAirstrip
 
     // Check if mouse is over a player refinery when harvesters are selected

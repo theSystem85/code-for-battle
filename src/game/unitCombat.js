@@ -52,6 +52,8 @@ export const updateUnitCombat = logPerformance(function updateUnitCombat(units, 
       updateRocketTankCombat(unit, units, bullets, mapGrid, now, occupancyMap)
     } else if (unit.type === 'f35') {
       updateF35Combat(unit, units, bullets, mapGrid, now, occupancyMap)
+    } else if (unit.type === 'destroyer') {
+      updateTankCombat(unit, units, bullets, mapGrid, now, occupancyMap)
     } else if (unit.type === 'howitzer') {
       updateHowitzerCombat(unit, units, bullets, mapGrid, now, occupancyMap)
     }

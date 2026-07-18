@@ -73,7 +73,9 @@ Photorealistic physically-based render (PBR) of a **[unit name]**, viewed from a
 3. Visual Consistency Checks  
    - Same geometry, materials, and camouflage between both images  
    - Top-down version must clearly depict the same unit from above  
-   - Ensure clarity and readable silhouette at small scale  
+   - Ensure clarity and readable silhouette at small scale
+   - Keep the complete unit inside the sidebar frame; preserve surrounding terrain or water when requested
+   - Produce one downward-facing map sprite for programmatic rotation unless the user explicitly requests authored directional views
 
 ---
 

@@ -69,7 +69,8 @@ vi.mock('../../src/config.js', () => ({
     tank_v1: {},
     apache: {},
     recoveryTank: {},
-    ammunitionTruck: {}
+    ammunitionTruck: {},
+    destroyer: { isNaval: true, movementType: 'water' }
   },
   HELIPAD_AMMO_RESERVE: 200,
   CHEAT_CONSOLE_HISTORY_LIMIT: 10
@@ -324,6 +325,17 @@ describe('CheatSystem', () => {
     const position = system.findSpawnPositionNear(1, 1)
 
     expect(position).toEqual({ x: 2, y: 1 })
+  })
+
+  it('finds water rather than land for Destroyer cheat spawns', () => {
+    const system = new CheatSystem()
+    gameState.mapGrid = createGrid(5, 5)
+    gameState.mapGrid[1][3].type = 'water'
+
+    const position = system.findSpawnPositionNear(1, 1, 'destroyer')
+
+    expect(position).toEqual({ x: 3, y: 1 })
+    expect(gameState.mapGrid[position.y][position.x].type).toBe('water')
   })
 
   it('spawns units near the cursor and updates occupancy', () => {

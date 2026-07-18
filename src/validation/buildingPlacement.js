@@ -7,8 +7,9 @@
  * These functions are re-exported from buildings.js for backwards compatibility.
  */
 
-import { MAX_BUILDING_GAP_TILES } from '../config.js'
+import { MAX_BUILDING_GAP_TILES, TILE_SIZE } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
+import { getShipyardWaterLocalTiles, isWaterTile } from '../utils/navalUtils.js'
 
 const NON_EXPANDING_BUILD_AREA_TYPES = new Set(['street', 'concreteWall'])
 
@@ -117,6 +118,9 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
   const height = buildingData[type].height
 
   const isFactoryOrRefinery = type === 'vehicleFactory' || type === 'oreRefinery' || type === 'vehicleWorkshop'
+  const isShipyard = type === 'shipyard'
+  const shipyardWaterTiles = isShipyard ? getShipyardWaterLocalTiles(width, height) : []
+  const isShipyardWaterLocalTile = (x, y) => shipyardWaterTiles.some(tile => tile.x === x && tile.y === y)
 
   // Check map boundaries
   if (tileX < 0 || tileY < 0 ||
@@ -150,7 +154,10 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
   for (let y = tileY; y < tileY + height; y++) {
     for (let x = tileX; x < tileX + width; x++) {
       // Check map terrain
-      if (mapGrid[y][x].type === 'water' ||
+      const localX = x - tileX
+      const localY = y - tileY
+      const requiresWater = isShipyardWaterLocalTile(localX, localY)
+      if ((requiresWater ? !isWaterTile(mapGrid, x, y) : mapGrid[y][x].type === 'water') ||
           mapGrid[y][x].type === 'rock' ||
           mapGrid[y][x].seedCrystal ||
           mapGrid[y][x].building ||
@@ -161,14 +168,28 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
 
       // Check for units at this position
       const unitsAtTile = units.filter(unit =>
-        Math.floor(unit.x / 32) === x &&
-        Math.floor(unit.y / 32) === y
+        Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE) === x &&
+        Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE) === y
       )
 
       if (unitsAtTile.length > 0) {
         return false
       }
     }
+  }
+
+  if (isShipyard) {
+    const launchY = tileY + height
+    let hasLaunchWater = false
+    if (launchY < mapGrid.length) {
+      for (let x = tileX; x < tileX + width; x++) {
+        if (isWaterTile(mapGrid, x, launchY) && !mapGrid[launchY][x].building) {
+          hasLaunchWater = true
+          break
+        }
+      }
+    }
+    if (!hasLaunchWater) return false
   }
 
   // Additional protection area checks for factories and refineries
@@ -223,7 +244,7 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
  * @param {string} buildingType - Type of building being placed
  * @returns {boolean} - Whether the tile is valid for placement
  */
-export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factories, buildingType = null) {
+export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factories, buildingType = null, placementOrigin = null) {
   // Out of bounds
   if (tileX < 0 || tileY < 0 ||
       tileX >= mapGrid[0].length ||
@@ -234,8 +255,16 @@ export function isTileValid(tileX, tileY, mapGrid, _units, _buildings, _factorie
   // Invalid terrain
   const isFactoryOrRefinery =
     buildingType === 'vehicleFactory' || buildingType === 'oreRefinery' || buildingType === 'vehicleWorkshop'
+  const isShipyard = buildingType === 'shipyard' && placementOrigin
+  const shipyardInfo = isShipyard ? buildingData.shipyard : null
+  const requiresWater = Boolean(
+    shipyardInfo &&
+    getShipyardWaterLocalTiles(shipyardInfo.width, shipyardInfo.height).some(tile =>
+      tile.x === tileX - placementOrigin.x && tile.y === tileY - placementOrigin.y
+    )
+  )
 
-  if (mapGrid[tileY][tileX].type === 'water' ||
+  if ((requiresWater ? !isWaterTile(mapGrid, tileX, tileY) : mapGrid[tileY][tileX].type === 'water') ||
       mapGrid[tileY][tileX].type === 'rock' ||
       mapGrid[tileY][tileX].seedCrystal ||
       mapGrid[tileY][tileX].building ||

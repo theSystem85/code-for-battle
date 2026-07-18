@@ -23,6 +23,7 @@ import { preloadAmmunitionTruckImage } from './ammunitionTruckImageRenderer.js'
 import { preloadMineLayerImage } from './mineLayerImageRenderer.js'
 import { preloadMineSweeperImage } from './mineSweeperImageRenderer.js'
 import { preloadHowitzerImage } from './howitzerImageRenderer.js'
+import { preloadDestroyerImage } from './destroyerImageRenderer.js'
 import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
@@ -163,9 +164,10 @@ export class Renderer {
     let howitzerLoaded = false
     let mineLayerLoaded = false
     let mineSweeperLoaded = false
+    let destroyerLoaded = false
 
     const checkAllLoaded = () => {
-      if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded) {
+      if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded) {
         if (callback) callback()
       }
     }
@@ -238,6 +240,14 @@ export class Renderer {
         window.logger.warn('Howitzer image failed to load')
       }
       howitzerLoaded = true
+      checkAllLoaded()
+    })
+
+    preloadDestroyerImage((success) => {
+      if (!success) {
+        window.logger.warn('Destroyer image failed to load')
+      }
+      destroyerLoaded = true
       checkAllLoaded()
     })
 
@@ -394,6 +404,8 @@ export class Renderer {
     this.buildingRenderer.renderBases(gameCtx, buildings, mapGrid, scrollOffset)
     // Render initial construction yards using the same renderer
     this.buildingRenderer.renderBases(gameCtx, factories, mapGrid, scrollOffset)
+    // Naval wakes belong to the water layer beneath ships and fade after movement stops.
+    this.effectsRenderer.renderShipWakes?.(gameCtx, gameState, scrollOffset)
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset)
     this.unitRenderer.renderBases(gameCtx, groundedUnits, scrollOffset)
     gameCtx.restore()

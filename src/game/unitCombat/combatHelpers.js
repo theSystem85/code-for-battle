@@ -46,7 +46,7 @@ export function canUnitTargetEntity(unit, target) {
   if (!unit || !target) return false
   if (!isAirborneCombatTarget(target)) return true
 
-  return unit.type === 'rocketTank' || unit.type === 'apache' || unit.type === 'f22Raptor'
+  return unit.type === 'rocketTank' || unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'destroyer'
 }
 
 /**
@@ -331,6 +331,7 @@ export function getDamageForUnitType(unitType) {
   switch (unitType) {
     case 'tank-v3': return COMBAT_CONFIG.DAMAGE.TANK_V3
     case 'rocketTank': return COMBAT_CONFIG.DAMAGE.ROCKET
+    case 'destroyer': return 34
     case 'apache': return COMBAT_CONFIG.DAMAGE.APACHE
     case 'f35': return COMBAT_CONFIG.DAMAGE.F35_BOMB
     default: return COMBAT_CONFIG.DAMAGE.STANDARD
@@ -359,6 +360,8 @@ export function getEffectiveFireRange(unit) {
     baseRange = 16 * TILE_SIZE
   } else if (unit.type === 'f35') {
     baseRange = 14 * TILE_SIZE
+  } else if (unit.type === 'destroyer') {
+    baseRange = 18 * TILE_SIZE
   }
 
   if (unit.level >= 1) {

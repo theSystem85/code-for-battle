@@ -120,11 +120,13 @@ export function registerUnitWreck(unit, gameState) {
     velocityX: 0,
     velocityY: 0,
     occupancyTileX: null,
-    occupancyTileY: null
+    occupancyTileY: null,
+    navalSinking: unit.isNaval === true,
+    sinkDuration: unit.isNaval === true ? 6000 : null
   }
 
   gameState.unitWrecks.push(wreck)
-  if (gameState.occupancyMap) {
+  if (gameState.occupancyMap && !wreck.navalSinking) {
     // Calculate center-based tile position for occupancy
     const centerTileX = Math.floor((wreck.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((wreck.y + TILE_SIZE / 2) / TILE_SIZE)

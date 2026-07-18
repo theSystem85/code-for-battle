@@ -768,8 +768,9 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               updateUnitSpeedModifier(unit)
               let crewLossOccurred = false
               if (unit.crew) {
+                const crewKillChance = unit.type === 'destroyer' ? 0.05 : CREW_KILL_CHANCE
                 for (const member of Object.keys(unit.crew)) {
-                  if (unit.crew[member] && gameRandom() < CREW_KILL_CHANCE) {
+                  if (unit.crew[member] && gameRandom() < crewKillChance) {
                     unit.crew[member] = false
                     crewLossOccurred = true
                     // Only play sound for human player units

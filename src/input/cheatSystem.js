@@ -236,8 +236,8 @@ export class CheatSystem {
             <li><code>recover [party]</code> - Recover the selected wreck for a party (defaults to player)</li>
             <li><code>enemycontrol on</code> / <code>enemycontrol off</code> - Toggle enemy unit control</li>
             <li><code>driver</code> / <code>commander</code> / <code>loader</code> / <code>gunner</code> - Toggle crew for selected unit</li>
-            <li title="Supported unit types: harvester, tank_v1, tank-v2, tank-v3, rocketTank, recoveryTank, ambulance, tankerTruck, ammunitionTruck, apache, howitzer, mineLayer, mineSweeper, f22Raptor, f35"><code>[type] [amount] [party]</code> - Spawn units around the cursor. Defaults to the player's party</li>
-            <li title="Supported building types include airstrip, helipad, powerPlant, oreRefinery, vehicleFactory, vehicleWorkshop, radarStation, hospital, gasStation, turret variants, and walls"><code>build [type] [party]</code> - Spawn a building near the cursor. Defaults to the player's party</li>
+            <li title="Supported unit types: harvester, tank_v1, tank-v2, tank-v3, rocketTank, recoveryTank, ambulance, tankerTruck, ammunitionTruck, apache, howitzer, mineLayer, mineSweeper, f22Raptor, f35, destroyer"><code>[type] [amount] [party]</code> - Spawn units around the cursor. Defaults to the player's party</li>
+            <li title="Supported building types include airstrip, helipad, powerPlant, oreRefinery, vehicleFactory, vehicleWorkshop, radarStation, hospital, gasStation, turret variants, shipyard, and walls"><code>build [type] [party]</code> - Spawn a building near the cursor. Defaults to the player's party</li>
             <li><code>mine [party]</code> - Deploy a mine at the cursor for the specified party (defaults to player)</li>
             <li><code>mines [WxH][gG] [party]</code> or <code>WxHgG</code> - Drop a minefield pattern (e.g., <code>mines 2x3g1</code>, <code>3x1</code> for a continuous row) with optional gaps</li>
           </ul>
@@ -692,7 +692,7 @@ export class CheatSystem {
     return displayNames[owner] || owner
   }
 
-  isValidSpawnPosition(x, y) {
+  isValidSpawnPosition(x, y, unitType = null) {
     const mapGrid = gameState.mapGrid
     if (
       x < 0 ||
@@ -704,23 +704,26 @@ export class CheatSystem {
     }
 
     const tile = mapGrid[y][x]
-    if (tile.type !== 'land' && tile.type !== 'street') return false
+    const requiresWater = UNIT_PROPERTIES[unitType]?.isNaval || UNIT_PROPERTIES[unitType]?.movementType === 'water'
+    if (requiresWater ? tile.type !== 'water' : (tile.type !== 'land' && tile.type !== 'street')) return false
+    if (tile.building) return false
     if (tile.seedCrystal) return false
 
     const occupied = units.some(
-      u => Math.floor(u.x / TILE_SIZE) === x && Math.floor(u.y / TILE_SIZE) === y
+      u => Math.floor((u.x + TILE_SIZE / 2) / TILE_SIZE) === x &&
+        Math.floor((u.y + TILE_SIZE / 2) / TILE_SIZE) === y
     )
     return !occupied
   }
 
-  findSpawnPositionNear(x, y) {
-    if (this.isValidSpawnPosition(x, y)) return { x, y }
+  findSpawnPositionNear(x, y, unitType = null) {
+    if (this.isValidSpawnPosition(x, y, unitType)) return { x, y }
 
     for (let distance = 1; distance <= 5; distance++) {
       for (const dir of DIRECTIONS) {
         const nx = x + dir.x * distance
         const ny = y + dir.y * distance
-        if (this.isValidSpawnPosition(nx, ny)) return { x: nx, y: ny }
+        if (this.isValidSpawnPosition(nx, ny, unitType)) return { x: nx, y: ny }
       }
     }
 
@@ -730,7 +733,7 @@ export class CheatSystem {
           if (Math.abs(dx) < distance && Math.abs(dy) < distance) continue
           const nx = x + dx
           const ny = y + dy
-          if (this.isValidSpawnPosition(nx, ny)) return { x: nx, y: ny }
+          if (this.isValidSpawnPosition(nx, ny, unitType)) return { x: nx, y: ny }
         }
       }
     }
@@ -745,7 +748,7 @@ export class CheatSystem {
     const spawnedRecoveryTanks = []
 
     for (let i = 0; i < count; i++) {
-      const pos = this.findSpawnPositionNear(baseX, baseY)
+      const pos = this.findSpawnPositionNear(baseX, baseY, unitType)
       if (!pos) break
       const newUnit = createUnit({ id: owner }, unitType, pos.x, pos.y)
       units.push(newUnit)

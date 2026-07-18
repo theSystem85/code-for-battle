@@ -35,6 +35,9 @@ export function updateVehicleButtonStates(controller) {
   const hasHelipad = gameState.buildings.some(
     b => b.type === 'helipad' && b.owner === gameState.humanPlayer && b.health > 0
   )
+  const hasShipyard = gameState.buildings.some(
+    b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0
+  )
   const hasAmmunitionFactory = gameState.buildings.some(
     b => b.type === 'ammunitionFactory' && b.owner === gameState.humanPlayer && b.health > 0
   )
@@ -107,6 +110,14 @@ export function updateVehicleButtonStates(controller) {
       } else {
         button.classList.add('disabled')
         button.title = 'Requires Helipad or Airstrip and Ammunition Factory'
+      }
+    } else if (unitType === 'destroyer') {
+      if (hasShipyard) {
+        button.classList.remove('disabled')
+        button.title = ''
+      } else {
+        button.classList.add('disabled')
+        button.title = 'Requires Shipyard'
       }
     } else if (unitType === 'mineLayer') {
       if (hasVehicleFactory && hasWorkshop && hasAmmunitionFactory) {
