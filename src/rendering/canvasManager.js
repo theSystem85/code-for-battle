@@ -13,6 +13,7 @@ export class CanvasManager {
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
     this.adaptivePixelRatioCap = this.isTouchLayout() ? 1 : MOBILE_CANVAS_PIXEL_RATIO_CAP
     this.pixelRatio = this.resolvePixelRatio()
+    this.overlayPixelRatio = this.resolveOverlayPixelRatio()
     this.lastAdaptivePixelRatioCheck = 0
     this.lastAdaptivePixelRatioChange = 0
     this.stableCameraSince = 0
@@ -35,6 +36,10 @@ export class CanvasManager {
     const adaptiveCap = Number.isFinite(this.adaptivePixelRatioCap) ? this.adaptivePixelRatioCap : configuredCap
     const cap = Math.min(configuredCap, adaptiveCap)
     return Math.max(1, Math.min(rawPixelRatio || 1, cap))
+  }
+
+  resolveOverlayPixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
+    return Math.max(1, rawPixelRatio || 1)
   }
 
   resetAdaptivePixelRatioCap() {
@@ -112,8 +117,10 @@ export class CanvasManager {
 
   resizeCanvases() {
     const rawPixelRatio = window.devicePixelRatio || 1
-    const pixelRatio = this.resolvePixelRatio(rawPixelRatio)
-    this.pixelRatio = pixelRatio
+    const terrainPixelRatio = this.resolvePixelRatio(rawPixelRatio)
+    const overlayPixelRatio = this.resolveOverlayPixelRatio(rawPixelRatio)
+    this.pixelRatio = terrainPixelRatio
+    this.overlayPixelRatio = overlayPixelRatio
     const body = document.body
     const bodyStyle = body ? window.getComputedStyle(body) : null
     const parseSafeInset = (value) => {
@@ -232,29 +239,33 @@ export class CanvasManager {
     applyCanvasLayout(this.gameGpuCanvas)
     applyCanvasLayout(this.gameCanvas)
 
-    // Set actual pixel size scaled by device pixel ratio
-    const targetWidth = Math.max(1, Math.round(canvasCssWidth * pixelRatio))
-    const targetHeight = Math.max(1, Math.round(canvasCssHeight * pixelRatio))
+    // Keep the expensive terrain layers on the adaptive DPR budget. The
+    // transparent 2D canvas contains units, buildings, labels, and gameplay UI,
+    // so it must remain at the device's native DPR for maximum clarity.
+    const terrainTargetWidth = Math.max(1, Math.round(canvasCssWidth * terrainPixelRatio))
+    const terrainTargetHeight = Math.max(1, Math.round(canvasCssHeight * terrainPixelRatio))
+    const overlayTargetWidth = Math.max(1, Math.round(canvasCssWidth * overlayPixelRatio))
+    const overlayTargetHeight = Math.max(1, Math.round(canvasCssHeight * overlayPixelRatio))
 
     if (this.gameGlCanvas) {
-      if (this.gameGlCanvas.width !== targetWidth) this.gameGlCanvas.width = targetWidth
-      if (this.gameGlCanvas.height !== targetHeight) this.gameGlCanvas.height = targetHeight
+      if (this.gameGlCanvas.width !== terrainTargetWidth) this.gameGlCanvas.width = terrainTargetWidth
+      if (this.gameGlCanvas.height !== terrainTargetHeight) this.gameGlCanvas.height = terrainTargetHeight
       if (this.gameGl) {
-        this.gameGl.viewport(0, 0, targetWidth, targetHeight)
+        this.gameGl.viewport(0, 0, terrainTargetWidth, terrainTargetHeight)
       }
     }
     if (this.gameGpuCanvas) {
-      if (this.gameGpuCanvas.width !== targetWidth) this.gameGpuCanvas.width = targetWidth
-      if (this.gameGpuCanvas.height !== targetHeight) this.gameGpuCanvas.height = targetHeight
+      if (this.gameGpuCanvas.width !== terrainTargetWidth) this.gameGpuCanvas.width = terrainTargetWidth
+      if (this.gameGpuCanvas.height !== terrainTargetHeight) this.gameGpuCanvas.height = terrainTargetHeight
     }
 
-    if (this.gameCanvas.width !== targetWidth) this.gameCanvas.width = targetWidth
-    if (this.gameCanvas.height !== targetHeight) this.gameCanvas.height = targetHeight
+    if (this.gameCanvas.width !== overlayTargetWidth) this.gameCanvas.width = overlayTargetWidth
+    if (this.gameCanvas.height !== overlayTargetHeight) this.gameCanvas.height = overlayTargetHeight
 
     // Scale the drawing context to counter the device pixel ratio
     if (this.gameCtx) {
       this.gameCtx.setTransform(1, 0, 0, 1, 0, 0)
-      this.gameCtx.scale(pixelRatio, pixelRatio)
+      this.gameCtx.scale(overlayPixelRatio, overlayPixelRatio)
 
       // Maintain high-quality rendering
       this.gameCtx.imageSmoothingEnabled = true
@@ -266,29 +277,31 @@ export class CanvasManager {
     const minimapHeight = Math.round(minimapWidth * 0.6)
     this.minimapCanvas.style.width = `${minimapWidth}px`
     this.minimapCanvas.style.height = `${minimapHeight}px`
-    const minimapTargetWidth = Math.max(1, Math.round(minimapWidth * pixelRatio))
-    const minimapTargetHeight = Math.max(1, Math.round(minimapHeight * pixelRatio))
+    const minimapTargetWidth = Math.max(1, Math.round(minimapWidth * terrainPixelRatio))
+    const minimapTargetHeight = Math.max(1, Math.round(minimapHeight * terrainPixelRatio))
     if (this.minimapCanvas.width !== minimapTargetWidth) this.minimapCanvas.width = minimapTargetWidth
     if (this.minimapCanvas.height !== minimapTargetHeight) this.minimapCanvas.height = minimapTargetHeight
 
     // Scale minimap context
     if (this.minimapCtx) {
       this.minimapCtx.setTransform(1, 0, 0, 1, 0, 0)
-      this.minimapCtx.scale(pixelRatio, pixelRatio)
+      this.minimapCtx.scale(terrainPixelRatio, terrainPixelRatio)
       this.minimapCtx.imageSmoothingEnabled = true
       this.minimapCtx.imageSmoothingQuality = 'high'
     }
 
     if (typeof document !== 'undefined') {
       if (window.gameState) {
-        window.gameState.canvasPixelRatio = pixelRatio
+        window.gameState.canvasPixelRatio = terrainPixelRatio
+        window.gameState.overlayCanvasPixelRatio = overlayPixelRatio
         window.gameState.rawCanvasPixelRatio = rawPixelRatio
       }
       document.dispatchEvent(new CustomEvent('canvas-resized', {
         detail: {
           width: canvasCssWidth,
           height: canvasCssHeight,
-          pixelRatio
+          pixelRatio: terrainPixelRatio,
+          overlayPixelRatio
         }
       }))
     }

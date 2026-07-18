@@ -15,7 +15,7 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 5. Compare deploy preview 650 against deploy preview 640 with the benchmark and inspect sprite-sheet/SOT rendering differences before choosing fixes.
 6. Fix the most likely root causes found in sprite-sheet/SOT/rendering paths and document additional candidate fixes that remain out of scope.
 7. Mobile performance target is 60fps; default street-sheet terrain should move into the GPU atlas path rather than relying on CPU terrain compositing.
-8. Mobile canvas pixel density must be configurable in the settings config editor, from native DPR down to 1x.
+8. Mobile terrain pixel density must be configurable in the settings config editor, from native DPR down to 1x. This cap must apply only to terrain rendering layers and the minimap; units, buildings, map labels, gameplay text, and UI must always use the device's native DPR.
 9. The mobile benchmark must include a full-map scroll sweep. During that sweep, every measured scrolling FPS window must stay at or above the 60fps mobile target; a drop below 60fps is a test failure.
 10. Compare deploy preview 650 against deploy preview 645 for the scroll regression, because 645 is the reported last preview that stayed near 60fps while scrolling.
 
@@ -28,14 +28,14 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Map rendering now computes visible tile bounds from logical canvas dimensions (`getBoundingClientRect`/`clientWidth`) instead of backing-store dimensions, avoiding DPR-squared overdraw on mobile.
 - When custom integrated mode is off, procedural GPU terrain now runs in water-only mode so the CPU-rendered street/land layer can use static chunk caching instead of repainting street tiles in the per-frame SOT overlay pass.
 - Static CPU terrain chunks remain cacheable even when GPU water-only rendering asks the 2D layer to skip water base/SOT.
-- Main canvas DPR is capped at 2 to reduce mobile canvas bandwidth while preserving a sharper-than-1x presentation.
+- WebGL/WebGPU terrain canvas DPR is capped at 2 to reduce mobile terrain bandwidth while preserving a sharper-than-1x presentation; the transparent entity/UI canvas is not capped.
 - Follow-up: WebGL water placement now uses the actual canvas backing-store ratio instead of raw `window.devicePixelRatio`, because adaptive mobile DPR can lower the canvas to 1x while the device reports 3x. This keeps GPU water aligned instead of drawing black/transparent water behind the CPU street layer.
 - Follow-up: when WebGL terrain cannot initialize, animated CPU water renders in a separate dynamic pass while land/street terrain chunks skip water and remain static, avoiding full mixed-chunk redraws every water frame.
 - Follow-up: CPU terrain chunk cache telemetry now reports drawn chunks, cache hits, cache misses, and redraws in the FPS overlay and benchmark diagnostics.
 - Follow-up: mobile minimap rendering is throttled while the main game continues rendering every frame, reducing repeated sidebar/minimap draw submission during touch scrolling.
-- Follow-up: canvas DPR is adaptive on touch/mobile layouts; it starts capped at 2 and can step down toward 1 under sustained low FPS, then recover toward 2 when the device has headroom.
+- Follow-up: terrain canvas DPR is adaptive on touch/mobile layouts; it starts capped at 2 and can step down toward 1 under sustained low FPS, then recover toward 2 when the device has headroom.
 - Follow-up: the default street sheet can now be bound as a secondary WebGL atlas, allowing default street terrain instances to render on the GPU and letting the 2D SOT overlay skip the expensive per-frame CPU street repaint pass when GPU terrain succeeds.
-- Follow-up: mobile canvas pixel density is exposed in Graphics config/settings as `mobileCanvasPixelRatioCap`, defaulting to 1x for mobile performance and allowing users to raise the cap toward native DPR for sharper output.
+- Follow-up: mobile terrain pixel density is exposed in Graphics config/settings as `mobileCanvasPixelRatioCap`, defaulting to 1x for mobile performance and allowing users to raise the cap toward native DPR for sharper terrain output. The transparent entity/UI canvas is independently sized at native device DPR so terrain performance settings cannot wash out units, buildings, or text.
 - Follow-up: the mobile benchmark now drives a deterministic serpentine scroll route across the whole map and reports the lowest scrolling FPS window, worst frame, route completion, page errors, chunk cache misses/redraws, and visible water while moving.
 - Follow-up: static CPU terrain chunks are prewarmed for small/medium maps whenever water is rendered as a separate dynamic layer, and SOT/cache validation order now recomputes SOT after cache invalidation so prewarm keys stay stable.
 - Follow-up: the FPS overlay includes the number of chunks prewarmed in the current frame.
@@ -46,7 +46,7 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Follow-up: dynamic CPU water is drawn after the static terrain chunk pass when separate water rendering is active, so fallback terrain cannot cover animated water during fast scroll cache misses.
 - Follow-up: the FPS overlay includes queued/warmed/fallback chunk counters in addition to draw/hit/miss/redraw/prewarm/evict counters.
 - Follow-up: the mobile benchmark samples visible terrain pixels during scroll windows and can fail when black tile samples exceed the configured threshold.
-- Follow-up: render-size calculations now use the actual canvas backing-store ratio instead of raw `window.devicePixelRatio` in shared renderer, map renderer, WebGL terrain, minimap, and camera-follow paths. This prevents iOS/WebKit from doing native-DPR math after the mobile canvas cap has intentionally lowered the backing store.
+- Follow-up: render-size calculations now use each canvas's actual backing-store ratio instead of assuming one shared `window.devicePixelRatio` in the renderer, map renderer, WebGL terrain, minimap, and camera-follow paths. This keeps capped terrain aligned with the native-DPR entity/UI overlay.
 
 ## Benchmark notes
 - Pre-fix local reproduction: desktop game-loop FPS >60; throttled mobile reproduced the failure at ~1fps effective / ~3fps overlay, with CPU render around 700-800ms per frame in the stress scene.
@@ -56,7 +56,7 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Follow-up local benchmark: desktop reported 94fps / 57.8 effective FPS, throttled mobile reported 13fps / 12.6 effective FPS, page errors were 0, visible water sampled successfully, and mobile drawImage submissions fell to ~56/sec with 0 chunk redraws.
 - Mobile 60Hz target benchmark at 1x pixel density: desktop reported 90fps / 59.2 effective FPS; mobile reported 60fps / 59.5 effective FPS, page errors were 0, visible water sampled successfully, and CPU render averaged ~3.5ms. Headless Chromium did not expose the WebGL terrain path in this run, so the benchmark validates the 1x mobile fallback while unit coverage validates the secondary-atlas GPU street path.
 - Normal-game follow-up: touch devices always start at 1x even when a higher quality cap was saved. Fast camera movement stays at 1x; quality may rise by 0.25 only after at least four stable seconds at 59fps or better, and drops when FPS falls below 55.
-- Normal-game follow-up: offscreen texture preparation uses the effective canvas DPR, not native device DPR, and all touch DPR controls are capped at 3x.
+- Normal-game follow-up: offscreen terrain texture preparation uses the effective terrain DPR, not native device DPR, and all touch terrain-DPR controls are capped at 3x.
 - Normal-game follow-up: mobile terrain chunks use 8x8 tiles and a 20-entry cache. Visible cold chunks are rendered into cache once even during scrolling; only neighboring chunks use background warming. Eviction explicitly releases canvas backing stores.
 - Full-map scroll benchmark must be used for future mobile fixes: scrolling must cross every chunk band, finish the entire route, and fail when any rounded one-second scrolling window falls below 60fps.
 - Preview comparison with the full-map scroll benchmark: deploy preview 650 held mobile at rounded 60fps windows with a 390x844 backing canvas, while deploy preview 645 fell to rounded 7-27fps windows with a 1170x2532 backing canvas. The old preview’s collapse validates the pixel-bandwidth side of the regression; the local fix additionally removes cold static-chunk misses while scrolling.
@@ -66,7 +66,7 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - Post-cache-cap 256x256 two-lap benchmark: throttled mobile completed 233kpx of scrolling at 60fps reported / ~60.0fps effective, lowest rounded scroll window 60fps, max frame 17.7ms, visible water sampled, no page errors, heap ~87.5MB, and chunk cache size stayed within the 32-chunk budget.
 - Fast-scroll local benchmark after deferred warming: mobile completed the route at 60fps reported / ~59.6fps effective, lowest rounded scroll window 60fps, max frame 16.9ms, no page errors, visible water sampled, and black terrain sample ratio 0.
 - Fast-scroll 256x256 two-lap benchmark after deferred warming: mobile completed 233kpx of scrolling at 60fps reported / ~60.0fps effective, every rounded scroll window stayed at 60fps, max frame 17.7ms, no page errors, visible water sampled, black terrain sample ratio 0, and heap stayed around 73MB.
-- iOS Chrome/WebKit crash follow-up: the likely failure mode was canvas/GPU memory and draw-size pressure from mixed raw-DPR and capped-DPR rendering. The app now consistently derives logical sizes from `canvas.width / rendered CSS width`, so iPhone 13 Pro Max Chrome/Safari should stay on the configured low-DPR mobile path.
+- iOS Chrome/WebKit crash follow-up: the likely failure mode was canvas/GPU memory and draw-size pressure from mixed raw-DPR and capped-DPR rendering. The app now derives logical sizes from each layer's `canvas.width / rendered CSS width`, so iPhone 13 Pro Max Chrome/Safari can keep low-DPR terrain without reducing entity/UI clarity.
 
 ## Remaining candidates
 - Dirty-rect entity overlay rendering on mobile; minimap throttling is in place, but entity overlays still render every frame for correctness.
@@ -97,5 +97,5 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - The E2E benchmark fails if the mobile full-map scroll route does not complete or if any scrolling FPS window drops below 60fps.
 - The E2E benchmark can enforce mobile heap and terrain chunk-cache budgets during long scroll sweeps.
 - The E2E benchmark can enforce that visible terrain samples do not turn black during fast scroll sweeps.
-- A local non-throttled mobile benchmark profile can reach the 60fps target when mobile pixel density is set to 1x.
+- A local non-throttled mobile benchmark profile can reach the 60fps target when mobile terrain pixel density is set to 1x.
 - The benchmark evidence is used to validate that mobile render time improves after fixes.

@@ -8,6 +8,7 @@ import { getServiceRadiusPixels, isServiceBuilding } from '../utils/serviceRadiu
 import { recordBuildingCompleted } from '../ai-api/transitionCollector.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '../game/turretMuzzleConfig.js'
 import { getSimulationTime } from '../game/time.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 export class BuildingRenderer {
   constructor() {
@@ -1261,7 +1262,8 @@ export class BuildingRenderer {
 
     let boxX = mouseScreenX + 8
     let boxY = mouseScreenY - boxHeight - 8
-    if (boxX + boxWidth > ctx.canvas.width - 2) {
+    const { width: viewportWidth } = getCanvasLogicalSize(ctx.canvas)
+    if (boxX + boxWidth > viewportWidth - 2) {
       boxX = mouseScreenX - boxWidth - 8
     }
     if (boxY < 2) {
@@ -1280,8 +1282,7 @@ export class BuildingRenderer {
 
   renderBases(ctx, buildings, mapGrid, scrollOffset) {
     if (buildings && buildings.length > 0) {
-      const viewportWidth = ctx.canvas.width
-      const viewportHeight = ctx.canvas.height
+      const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
       buildings.forEach(building => {
         if (!this.shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight)) return
         this.renderBuildingBase(ctx, building, mapGrid, scrollOffset)
@@ -1291,8 +1292,7 @@ export class BuildingRenderer {
 
   renderOverlays(ctx, buildings, scrollOffset) {
     if (buildings && buildings.length > 0) {
-      const viewportWidth = ctx.canvas.width
-      const viewportHeight = ctx.canvas.height
+      const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
       buildings.forEach(building => {
         if (!this.shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight)) return
         this.renderBuildingOverlays(ctx, building, scrollOffset)

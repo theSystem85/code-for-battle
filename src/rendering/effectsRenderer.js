@@ -1,6 +1,6 @@
 // rendering/effectsRenderer.js
 import { TILE_SIZE } from '../config.js'
-import { drawTeslaCoilLightning } from './renderingUtils.js'
+import { drawTeslaCoilLightning, getCanvasLogicalSize } from './renderingUtils.js'
 import { getSimulationTime } from '../game/time.js'
 import { renderSpriteSheetAnimation } from './spriteSheetAnimation.js'
 
@@ -308,8 +308,7 @@ export class EffectsRenderer {
     const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
 
     // Get canvas dimensions for view frustum culling
-    const canvasWidth = ctx.canvas.width
-    const canvasHeight = ctx.canvas.height
+    const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
     const padding = 64 // Extra padding for particles near edges
 
     // Pre-calculate view bounds for frustum culling (screen space)
@@ -452,8 +451,7 @@ export class EffectsRenderer {
     const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
 
     // Get canvas dimensions for view frustum culling
-    const canvasWidth = ctx.canvas.width
-    const canvasHeight = ctx.canvas.height
+    const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
     const padding = 128 // Larger padding for explosions
 
     const explosions = gameState.explosions

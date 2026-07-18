@@ -202,8 +202,8 @@ export const configRegistry = {
   },
 
   mobileCanvasPixelRatioCap: {
-    name: 'Mobile Canvas Pixel Density',
-    description: 'Maximum mobile canvas DPR. Use 1 for fastest mobile rendering, or raise toward native device DPR for sharper output.',
+    name: 'Mobile Terrain Pixel Density',
+    description: 'Maximum mobile terrain DPR. Units, buildings, map labels, and UI always render at native device DPR.',
     type: 'number',
     get: () => MOBILE_CANVAS_PIXEL_RATIO_CAP,
     set: setMobileCanvasPixelRatioCap,

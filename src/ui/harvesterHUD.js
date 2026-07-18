@@ -2,6 +2,7 @@
 import { TILE_SIZE } from '../config.js'
 import { getRefineryQueues } from '../game/harvesterLogic.js'
 import { isInputFieldFocused } from '../utils/inputUtils.js'
+import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 
 export class HarvesterHUD {
   constructor() {
@@ -164,18 +165,19 @@ export class HarvesterHUD {
   drawStatusIndicator(ctx) {
     // Draw small indicator in top-right to show HUD is active
     ctx.save()
+    const { width: viewportWidth } = getCanvasLogicalSize(ctx.canvas)
 
     ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'
-    ctx.fillRect(ctx.canvas.width - 120, 10, 110, 25)
+    ctx.fillRect(viewportWidth - 120, 10, 110, 25)
 
     ctx.strokeStyle = '#4A90E2'
     ctx.lineWidth = 1
-    ctx.strokeRect(ctx.canvas.width - 120, 10, 110, 25)
+    ctx.strokeRect(viewportWidth - 120, 10, 110, 25)
 
     ctx.fillStyle = '#FFFFFF'
     ctx.font = '12px "Rajdhani", "Arial Narrow", sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('Harvester HUD (i)', ctx.canvas.width - 65, 27)
+    ctx.fillText('Harvester HUD (i)', viewportWidth - 65, 27)
 
     ctx.restore()
   }
