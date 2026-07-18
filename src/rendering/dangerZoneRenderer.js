@@ -1,4 +1,5 @@
 import { TILE_SIZE, PARTY_COLORS } from '../config.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 export class DangerZoneRenderer {
   render(ctx, dzm, scrollOffset, playerId) {
@@ -6,8 +7,9 @@ export class DangerZoneRenderer {
 
     const startX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
     const startY = Math.max(0, Math.floor(scrollOffset.y / TILE_SIZE))
-    const tilesX = Math.ceil(ctx.canvas.width / TILE_SIZE) + 1
-    const tilesY = Math.ceil(ctx.canvas.height / TILE_SIZE) + 1
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+    const tilesX = Math.ceil(viewportWidth / TILE_SIZE) + 1
+    const tilesY = Math.ceil(viewportHeight / TILE_SIZE) + 1
     const endX = Math.min(dzm[0].length, startX + tilesX)
     const endY = Math.min(dzm.length, startY + tilesY)
 
@@ -42,15 +44,15 @@ export class DangerZoneRenderer {
 
     ctx.save()
     ctx.fillStyle = 'rgba(0,0,0,0.7)'
-    ctx.fillRect(ctx.canvas.width - 110, 10, 100, 18)
+    ctx.fillRect(viewportWidth - 110, 10, 100, 18)
     ctx.strokeStyle = PARTY_COLORS[playerId] || '#fff'
-    ctx.strokeRect(ctx.canvas.width - 110, 10, 100, 18)
+    ctx.strokeRect(viewportWidth - 110, 10, 100, 18)
     ctx.fillStyle = '#fff'
     ctx.font = '12px "Rajdhani", "Arial Narrow", sans-serif'
     ctx.textAlign = 'center'
     const names = { player1: 'Green', player2: 'Red', player3: 'Blue', player4: 'Yellow' }
     const label = names[playerId] ? `Player ${names[playerId]}` : playerId
-    ctx.fillText(label, ctx.canvas.width - 60, 23)
+    ctx.fillText(label, viewportWidth - 60, 23)
     ctx.restore()
   }
 }

@@ -1,6 +1,7 @@
 // rendering/mineRenderer.js - Render mine indicators and overlays
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 /**
  * Render skull indicators for deployed mines
@@ -13,6 +14,7 @@ export function renderMineIndicators(ctx, scrollOffset) {
   }
 
   ctx.save()
+  const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
 
   gameState.mines.forEach(mine => {
     const screenX = mine.tileX * TILE_SIZE - scrollOffset.x + TILE_SIZE / 2
@@ -20,7 +22,7 @@ export function renderMineIndicators(ctx, scrollOffset) {
 
     // Only render if on screen
     if (screenX < -TILE_SIZE || screenY < -TILE_SIZE ||
-        screenX > ctx.canvas.width + TILE_SIZE || screenY > ctx.canvas.height + TILE_SIZE) {
+        screenX > viewportWidth + TILE_SIZE || screenY > viewportHeight + TILE_SIZE) {
       return
     }
 

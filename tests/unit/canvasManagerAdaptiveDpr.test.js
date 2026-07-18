@@ -13,7 +13,11 @@ function createAdaptiveManager(cap = 3) {
 }
 
 describe('CanvasManager adaptive DPR', () => {
-  afterEach(() => vi.restoreAllMocks())
+  afterEach(() => {
+    vi.restoreAllMocks()
+    document.body.className = ''
+    document.body.innerHTML = ''
+  })
 
   it('drops immediately to 1x while the camera is moving', () => {
     vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
@@ -22,6 +26,37 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.updateAdaptivePixelRatio(60, 1000, true)).toBe(true)
     expect(manager.adaptivePixelRatioCap).toBe(1)
     expect(manager.resizeCanvases).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the entity and UI overlay at native DPR when terrain is capped', () => {
+    const manager = createAdaptiveManager(1)
+
+    expect(manager.resolvePixelRatio(3)).toBe(1)
+    expect(manager.resolveOverlayPixelRatio(3)).toBe(3)
+  })
+
+  it('sizes terrain backing stores at the cap and the overlay at native DPR', () => {
+    document.body.className = 'is-touch'
+    document.body.innerHTML = `
+      <canvas id="gameCanvasGPU"></canvas>
+      <canvas id="gameCanvasGL"></canvas>
+      <canvas id="gameCanvas"></canvas>
+      <canvas id="minimap"></canvas>
+    `
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(400)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800)
+    vi.spyOn(window, 'visualViewport', 'get').mockReturnValue(null)
+
+    const manager = new CanvasManager()
+
+    expect(manager.getGameCanvas().style.width).toBe('150px')
+    expect(manager.getGameCanvas().width).toBe(450)
+    expect(manager.getGameGlCanvas().width).toBe(150)
+    expect(manager.getGameGpuCanvas().width).toBe(150)
+    expect(manager.getMinimapCanvas().width).toBe(230)
+    expect(manager.pixelRatio).toBe(1)
+    expect(manager.overlayPixelRatio).toBe(3)
   })
 
   it('does not raise DPR until the camera and frame rate have stayed stable', () => {

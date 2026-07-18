@@ -17,6 +17,7 @@ import { renderF22WithImage } from './f22ImageRenderer.js'
 import { renderF35WithImage } from './f35ImageRenderer.js'
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 import { getSimulationTime } from '../game/time.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 export class UnitRenderer {
   constructor() {
@@ -656,7 +657,8 @@ export class UnitRenderer {
 
     let boxX = mouseScreenX + 8
     let boxY = mouseScreenY - boxHeight - 8
-    if (boxX + boxWidth > ctx.canvas.width - 2) {
+    const { width: viewportWidth } = getCanvasLogicalSize(ctx.canvas)
+    if (boxX + boxWidth > viewportWidth - 2) {
       boxX = mouseScreenX - boxWidth - 8
     }
     if (boxY < 2) {
@@ -1755,16 +1757,14 @@ export class UnitRenderer {
   }
 
   renderBases(ctx, units, scrollOffset) {
-    const viewportWidth = ctx.canvas.width
-    const viewportHeight = ctx.canvas.height
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
     units.forEach(unit => {
       this.renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight)
     })
   }
 
   renderOverlays(ctx, units, scrollOffset) {
-    const viewportWidth = ctx.canvas.width
-    const viewportHeight = ctx.canvas.height
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
     units.forEach(unit => {
       this.renderTowCable(ctx, unit, scrollOffset)
       this.renderFuelHose(ctx, unit, units, scrollOffset)

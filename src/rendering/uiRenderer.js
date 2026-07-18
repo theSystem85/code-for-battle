@@ -6,6 +6,7 @@ import { showNotification } from '../ui/notifications.js'
 import { getCurrentGame } from '../main.js'
 import { renderMapEditorOverlay } from '../mapEditor.js'
 import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
+import { getCanvasPixelRatio } from './renderingUtils.js'
 import {
   getCanvasLogicalHeight,
   getCanvasLogicalWidth,
@@ -666,8 +667,9 @@ export class UIRenderer {
       if (!this.gameOverEventListenerAdded) {
         this.gameOverClickHandler = (event) => {
           const rect = gameCanvas.getBoundingClientRect()
-          const scaleX = gameCanvas.width / rect.width / (gameState.canvasPixelRatio || 1)
-          const scaleY = gameCanvas.height / rect.height / (gameState.canvasPixelRatio || 1)
+          const overlayPixelRatio = getCanvasPixelRatio(gameCanvas)
+          const scaleX = gameCanvas.width / rect.width / overlayPixelRatio
+          const scaleY = gameCanvas.height / rect.height / overlayPixelRatio
           const clickX = (event.clientX - rect.left) * scaleX
           const clickY = (event.clientY - rect.top) * scaleY
 

@@ -194,6 +194,9 @@ export class PerformanceMonitor {
         webgpu: getCanvasSnapshot(gameGpuCanvas),
         configuredCanvasPixelRatio: Number.isFinite(gameState.canvasPixelRatio)
           ? round(gameState.canvasPixelRatio)
+          : null,
+        overlayCanvasPixelRatio: Number.isFinite(gameState.overlayCanvasPixelRatio)
+          ? round(gameState.overlayCanvasPixelRatio)
           : null
       },
       renderer: {

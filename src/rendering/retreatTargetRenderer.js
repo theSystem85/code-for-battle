@@ -6,6 +6,7 @@
 
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 export class RetreatTargetRenderer {
   /**
@@ -19,6 +20,7 @@ export class RetreatTargetRenderer {
 
     const now = performance.now()
     const pulseOpacity = 0.4 + Math.sin(now * 0.003) * 0.2 // Pulsing effect
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
 
     // Render retreat targets for retreating units
     units.forEach(unit => {
@@ -31,8 +33,8 @@ export class RetreatTargetRenderer {
         const targetScreenY = unit.retreatTarget.y * TILE_SIZE + TILE_SIZE / 2 - scrollOffset.y
 
         // Only render if on screen
-        if (targetScreenX >= -20 && targetScreenX <= ctx.canvas.width + 20 &&
-            targetScreenY >= -20 && targetScreenY <= ctx.canvas.height + 20) {
+        if (targetScreenX >= -20 && targetScreenX <= viewportWidth + 20 &&
+            targetScreenY >= -20 && targetScreenY <= viewportHeight + 20) {
 
           // Draw retreat indicator (orange/yellow circle with backward arrow)
           ctx.save()

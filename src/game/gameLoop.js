@@ -16,6 +16,7 @@ import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSy
 import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
 import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
 import { performanceMonitor } from '../performance/performanceMonitor.js'
+import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 
 const MOBILE_FRAME_WATCHDOG_MS = 17
 const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
@@ -546,12 +547,13 @@ export class GameLoop {
         // Display a loading message or spinner
         const gameCtx = this.canvasManager.getGameContext()
         const gameCanvas = this.canvasManager.getGameCanvas()
+        const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(gameCanvas)
         gameCtx.fillStyle = '#000'
-        gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height)
+        gameCtx.fillRect(0, 0, canvasWidth, canvasHeight)
         gameCtx.font = '20px "Rajdhani", "Arial Narrow", sans-serif'
         gameCtx.fillStyle = '#fff'
         gameCtx.textAlign = 'center'
-        gameCtx.fillText('Loading assets, please wait...', gameCanvas.width / (2 * (window.devicePixelRatio || 1)), gameCanvas.height / (2 * (window.devicePixelRatio || 1)))
+        gameCtx.fillText('Loading assets, please wait...', canvasWidth / 2, canvasHeight / 2)
         if (this.running) {
           this.animationId = requestAnimationFrame((timestamp) => this.legacyGameLoop(timestamp))
         }

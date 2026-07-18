@@ -137,6 +137,7 @@ function getAutoBenchmarkDiagnostics(startedAt, runId = null) {
     visualSample: getAutoBenchmarkCanvasSample(),
     renderStats: gameState.renderStats || null,
     canvasPixelRatio: gameState.canvasPixelRatio || null,
+    overlayCanvasPixelRatio: gameState.overlayCanvasPixelRatio || null,
     rawCanvasPixelRatio: gameState.rawCanvasPixelRatio || null,
     viewport: {
       width: window.innerWidth,
