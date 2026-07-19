@@ -530,6 +530,14 @@ function buildSaveObject(label) {
       maxGas: u.maxGas,
       supplyGas: u.supplyGas,
       maxSupplyGas: u.maxSupplyGas,
+      supplyCrew: u.supplyCrew,
+      maxSupplyCrew: u.maxSupplyCrew,
+      supplyFuel: u.supplyFuel,
+      maxSupplyFuel: u.maxSupplyFuel,
+      supplyAmmo: u.supplyAmmo,
+      maxSupplyAmmo: u.maxSupplyAmmo,
+      supplyRepairTools: u.supplyRepairTools,
+      maxSupplyRepairTools: u.maxSupplyRepairTools,
       gasRefillTimer: u.gasRefillTimer,
       refueling: u.refueling,
       outOfGasPlayed: u.outOfGasPlayed,
@@ -1161,6 +1169,9 @@ function loadGameFromSaveObject(saveObj, key) {
       } else if (hydrated.type === 'tankerTruck') {
         hydrated.maxSupplyGas = TANKER_SUPPLY_CAPACITY
       }
+      ;['supplyCrew', 'maxSupplyCrew', 'supplyFuel', 'maxSupplyFuel', 'supplyAmmo', 'maxSupplyAmmo', 'supplyRepairTools', 'maxSupplyRepairTools'].forEach(key => {
+        if (typeof u[key] === 'number') hydrated[key] = u[key]
+      })
       hydrated.gasRefillTimer = u.gasRefillTimer
       hydrated.refueling = u.refueling
       hydrated.outOfGasPlayed = u.outOfGasPlayed

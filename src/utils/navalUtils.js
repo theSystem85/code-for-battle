@@ -1,7 +1,7 @@
 import { TILE_SIZE } from '../config.js'
 
 export const WATER_MOVEMENT_TYPE = 'water'
-export const navalUnitTypes = ['destroyer']
+export const navalUnitTypes = ['destroyer', 'supplyShip']
 export const navalProductionBuildingTypes = ['shipyard']
 export const SHIPYARD_SERVICE_RADIUS_TILES = 3
 export const DESTROYER_RENDER_LENGTH_TILES = 2.6

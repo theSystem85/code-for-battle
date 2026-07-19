@@ -16,6 +16,7 @@ import { renderApacheWithImage } from './apacheImageRenderer.js'
 import { renderF22WithImage } from './f22ImageRenderer.js'
 import { renderF35WithImage } from './f35ImageRenderer.js'
 import { renderDestroyerWithImage, isDestroyerImageLoaded } from './destroyerImageRenderer.js'
+import { renderSupplyShipWithImage, isSupplyShipImageLoaded } from './supplyShipImageRenderer.js'
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
@@ -278,7 +279,7 @@ export class UnitRenderer {
   }
 
   getHudVisualSize(unit) {
-    return unit?.type === 'destroyer' ? TILE_SIZE * 2.8 : TILE_SIZE
+    return unit?.type === 'destroyer' ? TILE_SIZE * 2.8 : unit?.type === 'supplyShip' ? TILE_SIZE * 2.4 : TILE_SIZE
   }
 
   getSelectedHudBounds(centerX, centerY, unit = null) {
@@ -389,7 +390,7 @@ export class UnitRenderer {
   hasHudBottomProgressBar(unit) {
     if (!unit.selected) return false
     if (unit.type === 'harvester') return (Number.isFinite(unit.level) ? unit.level : 0) < 3
-    if (unit.type === 'ambulance' || unit.type === 'tankerTruck' || unit.type === 'ammunitionTruck') return true
+    if (unit.type === 'ambulance' || unit.type === 'tankerTruck' || unit.type === 'ammunitionTruck' || unit.type === 'supplyShip') return true
     if (unit.type === 'mineLayer') return Boolean(unit.deployingMine && unit.deployStartTime)
 
     initializeUnitLeveling(unit)
@@ -440,6 +441,12 @@ export class UnitRenderer {
         return this.getHudFuelTooltipValue(unit)
       case 'ammo':
         return this.getHudAmmoTooltipValue(unit)
+      case 'supply':
+      case 'experience':
+        if (unit.type === 'supplyShip') {
+          return `crew ${this.roundHudValue(unit.supplyCrew || 0)}/${this.roundHudValue(unit.maxSupplyCrew || 0)} • fuel ${this.roundHudValue(unit.supplyFuel || 0)}/${this.roundHudValue(unit.maxSupplyFuel || 0)} • ammo ${this.roundHudValue(unit.supplyAmmo || 0)}/${this.roundHudValue(unit.maxSupplyAmmo || 0)} • repair tools ${this.roundHudValue(unit.supplyRepairTools || 0)}/${this.roundHudValue(unit.maxSupplyRepairTools || 0)}`
+        }
+        return label
       default:
         return label
     }
@@ -474,7 +481,9 @@ export class UnitRenderer {
     if (this.hasHudBottomProgressBar(unit)) active.add('experience')
 
     const hit = ranges.find(r => active.has(r.key) && angle >= r.start && angle <= r.end)
-    return hit ? hit.key : null
+    if (!hit) return null
+    if (unit.type === 'supplyShip' && hit.key === 'experience') return 'supply'
+    return hit.key
   }
 
   getCrewRects(unit, scrollOffset, hudBounds, centerX, centerY) {
@@ -597,13 +606,13 @@ export class UnitRenderer {
         return 'ammo'
       }
       if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getLegacyProgressBarRect(unit, scrollOffset))) {
-        return 'experience'
+        return unit.type === 'supplyShip' ? 'supply' : 'experience'
       }
     } else {
       if (this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'top'))) return 'health'
       if (hasFuel && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'right'))) return 'fuel'
       if (canShowAmmo && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'left'))) return 'ammo'
-      if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'bottom'))) return 'experience'
+      if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'bottom'))) return unit.type === 'supplyShip' ? 'supply' : 'experience'
     }
 
     if (unit.level > 0) {
@@ -782,7 +791,9 @@ export class UnitRenderer {
   renderUtilityServiceRange(ctx, unit, centerX, centerY) {
     if (!unit?.selected) return
 
-    const rangeInTiles = unit?.isUtilityUnit ? SERVICE_SERVING_RANGE : undefined
+    const rangeInTiles = unit.type === 'supplyShip'
+      ? (unit.supplyRadiusTiles || 2)
+      : (unit?.isUtilityUnit ? SERVICE_SERVING_RANGE : undefined)
     if (!rangeInTiles) return
 
     const radius = rangeInTiles * TILE_SIZE
@@ -947,6 +958,10 @@ export class UnitRenderer {
       shouldShowBar = true
       progress = (unit.ammoCargo || 0) / (unit.maxAmmoCargo || 500)
       barColor = '#FFA500' // Orange for ammunition
+    } else if (unit.type === 'supplyShip') {
+      shouldShowBar = true
+      progress = 1
+      barColor = '#FFFFFF'
     } else if (unit.type === 'mineLayer') {
       // Mine Layer - show deployment progress when deploying
       if (unit.deployingMine && unit.deployStartTime) {
@@ -978,7 +993,11 @@ export class UnitRenderer {
         const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y - altitudeLift
         const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
 
-        this.drawHudEdgeBar(ctx, hudBounds, 'bottom', progress, barColor)
+        if (unit.type === 'supplyShip') {
+          this.drawSupplyShipHudBar(ctx, hudBounds, unit)
+        } else {
+          this.drawHudEdgeBar(ctx, hudBounds, 'bottom', progress, barColor)
+        }
         return
       }
 
@@ -995,14 +1014,80 @@ export class UnitRenderer {
       ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
 
       // Progress fill
-      ctx.fillStyle = barColor
-      ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight)
+      if (unit.type === 'supplyShip') {
+        this.drawSupplyShipLinearBar(ctx, unit, progressBarX, progressBarY, progressBarWidth, progressBarHeight)
+      } else {
+        ctx.fillStyle = barColor
+        ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight)
+      }
 
       if (this.isLegacySelectionHud()) {
         ctx.strokeStyle = '#000'
         ctx.strokeRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
       }
     }
+  }
+
+
+  drawSupplyShipLinearBar(ctx, unit, x, y, width, height) {
+    const segments = [
+      { value: unit.supplyAmmo || 0, max: unit.maxSupplyAmmo || 1, color: '#FFA500' },
+      { value: unit.supplyFuel || 0, max: unit.maxSupplyFuel || 1, color: '#4A90E2' },
+      { value: unit.supplyRepairTools || 0, max: unit.maxSupplyRepairTools || 1, color: '#32CD32' }
+    ]
+    const segmentWidth = width / segments.length
+    segments.forEach((segment, index) => {
+      const fill = Math.max(0, Math.min(1, segment.value / segment.max))
+      ctx.fillStyle = segment.color
+      ctx.fillRect(x + index * segmentWidth, y, segmentWidth * fill, height)
+    })
+  }
+
+  drawSupplyShipHudBar(ctx, hudBounds, unit) {
+    if (this.isDonutSelectionHud()) {
+      const centerX = (hudBounds.left + hudBounds.right) / 2
+      const centerY = (hudBounds.top + hudBounds.bottom) / 2
+      const donutRadius = (Math.min(hudBounds.width, hudBounds.height) / 2) + 2
+      const barThickness = Math.max(1, this.getSelectionHudBarThickness() - 2)
+      const crewHalfSpanAngle = ((5 / 2) + 3) / donutRadius
+      const quarterStart = (Math.PI / 2) + crewHalfSpanAngle
+      const quarterEnd = Math.PI - crewHalfSpanAngle
+      const segmentSweep = (quarterEnd - quarterStart) / 3
+      const segmentGap = Math.min(0.025, segmentSweep * 0.08)
+      const supplies = [
+        { value: unit.supplyAmmo || 0, max: unit.maxSupplyAmmo || 1, color: '#FFA500' },
+        { value: unit.supplyFuel || 0, max: unit.maxSupplyFuel || 1, color: '#4A90E2' },
+        { value: unit.supplyRepairTools || 0, max: unit.maxSupplyRepairTools || 1, color: '#32CD32' }
+      ]
+
+      ctx.save()
+      ctx.lineCap = 'butt'
+      ctx.lineWidth = barThickness
+      supplies.forEach((supply, index) => {
+        const start = quarterStart + index * segmentSweep + segmentGap
+        const end = quarterStart + (index + 1) * segmentSweep - segmentGap
+        const ratio = Math.max(0, Math.min(1, supply.value / supply.max))
+        ctx.strokeStyle = '#3A3A3A'
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, donutRadius, start, end)
+        ctx.stroke()
+        if (ratio > 0) {
+          ctx.strokeStyle = supply.color
+          ctx.beginPath()
+          ctx.arc(centerX, centerY, donutRadius, start, start + ((end - start) * ratio))
+          ctx.stroke()
+        }
+      })
+      ctx.restore()
+      return
+    }
+
+    const rect = this.getHudBarRect(hudBounds, 'bottom')
+    ctx.fillStyle = '#333'
+    ctx.fillRect(rect.x, rect.y, rect.width, rect.height)
+    this.drawSupplyShipLinearBar(ctx, unit, rect.x, rect.y, rect.width, rect.height)
+    ctx.strokeStyle = '#000'
+    ctx.strokeRect(rect.x, rect.y, rect.width, rect.height)
   }
 
   renderGasBar(ctx, unit, scrollOffset) {
@@ -1681,6 +1766,16 @@ export class UnitRenderer {
     if (unit.type === 'mineSweeper' && isMineSweeperImageLoaded()) {
       const ok = renderMineSweeperWithImage(ctx, unit, centerX, centerY)
       if (ok) {
+        this.renderSelection(ctx, unit, centerX, centerY)
+        this.renderAlertMode(ctx, unit, centerX, centerY)
+        return
+      }
+    }
+
+    if (unit.type === 'supplyShip' && isSupplyShipImageLoaded()) {
+      const ok = renderSupplyShipWithImage(ctx, unit, centerX, centerY)
+      if (ok) {
+        this.renderUtilityServiceRange(ctx, unit, centerX, centerY)
         this.renderSelection(ctx, unit, centerX, centerY)
         this.renderAlertMode(ctx, unit, centerX, centerY)
         return

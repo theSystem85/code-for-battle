@@ -34,11 +34,12 @@ Use this checklist when adding ship or naval units.
 - Give enemy naval units an explicit lifecycle: produce only after earlier tech phases, attack enemy ships and reachable coastal/base targets, return below the configured health threshold, stop within the water-only service zone, repair, then resume the saved target/order.
 
 ## Ship visuals
-- Keep the map sprite background-free, but allow the build-button image to show surrounding water. Ensure both the bow and stern remain fully inside the sidebar frame.
-- Use one downward-facing authored top-down ship sprite and rotate that image programmatically for all headings, matching the standard unit renderer. Do not load directional exceptions unless explicitly requested.
+- Keep the map sprite background-free and render it from a strict 90-degree top-down/orthographic camera, with stern at the top and bow facing straight downward (south). No horizon, visible hull-side perspective, isometric angle, or diagonal heading is allowed in map art.
+- Render the build-button image from a photorealistic elevated three-quarter perspective over water. Keep the whole ship inside the frame and place the visible sea horizon in the second quarter from the top (25–50% image height).
+- Use one authored top-down south-facing map sprite and rotate that image programmatically for all headings, matching the standard unit renderer. Do not load directional exceptions unless explicitly requested.
 - Anchor the main V-shaped wake to the rendered hull's stern, not the one-tile logical center, and add a smaller bow V at the forward hull endpoint. Both must rotate with heading, render below the hull, emit only during actual movement, and fade after stopping.
 - Size the selection HUD and cursor hitbox to contain the ship's full rotated sprite in every HUD mode.
-- Add ship destruction with an explosion, hull splitting into bow/stern pieces, and sinking/fading into water.
+- Add both ship-destruction variants: a 33% hull-split animation that crops the real sprite into bow/stern halves before they separate and sink, and a 67% bow-first animation that tilts/foreshortens the ship and progressively clips the bow below the waterline.
 - Ensure render ordering keeps ships visually on water and wakes below the ship.
 
 ## Tests and documentation

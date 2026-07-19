@@ -278,6 +278,10 @@ export function createGameStateSnapshot() {
     isMoving: unit.isMoving,
     isAttacking: unit.isAttacking,
     remainingMines: unit.remainingMines,
+    supplyCrew: unit.supplyCrew,
+    supplyFuel: unit.supplyFuel,
+    supplyAmmo: unit.supplyAmmo,
+    supplyRepairTools: unit.supplyRepairTools,
     sweeping: unit.sweeping
   }))
 
@@ -980,6 +984,10 @@ function createClientStateUpdate() {
       moveTarget: unit.moveTarget,
       path: unit.path,
       remainingMines: unit.remainingMines,
+      supplyCrew: unit.supplyCrew,
+      supplyFuel: unit.supplyFuel,
+      supplyAmmo: unit.supplyAmmo,
+      supplyRepairTools: unit.supplyRepairTools,
       sweeping: unit.sweeping
     }))
 

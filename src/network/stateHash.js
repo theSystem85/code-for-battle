@@ -88,6 +88,9 @@ function hashUnit(unit) {
   if (unit.oreCarried !== undefined) {
     hash = hashCombine(hash, quantize(unit.oreCarried, 1))
   }
+  ;['supplyCrew', 'supplyFuel', 'supplyAmmo', 'supplyRepairTools'].forEach(key => {
+    if (unit[key] !== undefined) hash = hashCombine(hash, quantize(unit[key], 1))
+  })
 
   // Hash movement state
   if (unit.path) {

@@ -8,7 +8,11 @@
 - Add reusable naval groundwork for water passability, naval production classification, and Shipyard launch tile resolution.
 - Destroyer must use water-only pathfinding across player commands, global/attack repathing, cache, smoothing, collision and stuck recovery; carry fuel/ammunition; have crew/armor/health/cost; and attack ground/naval targets with guns plus airborne targets with missiles.
 - Destroyer map art uses only the transparent south/down-facing authored sprite. The renderer rotates that single source programmatically for every heading.
+- The sole Destroyer map asset is `public/images/map/units/destroyer_map.webp`; no directional subfolder or duplicate heading assets are retained.
 - Moving Destroyers leave a stern V-wake aligned to the rendered hull endpoint plus a smaller bow V-wake. Both render below the hull, emit only during actual movement, and fade after the ship stops.
+- The bow/frontal wake uses a 70-degree inner V angle so both arms remain visible outside the hull.
+- The south-facing Destroyer's main-gun projectile origin is source-image coordinate (55, 260), transformed with the ship for every heading.
+- Destroyed ships use a deterministic weighted animation choice: 67% bow-first tilt/clip sinking and 33% correctly cropped bow/stern split-hull sinking.
 - Selecting a Destroyer shows its 18-tile weapon radius. Hovering an enemy uses the in-range/out-of-range attack cursor and displays current distance versus maximum range.
 - Selecting a Shipyard shows a three-tile service area measured from its edges, clipped to water tiles. Only friendly naval units can use it.
 - Selecting a Destroyer shows a selection HUD large enough to contain the complete 2.6-tile sprite at any heading.
@@ -21,8 +25,8 @@
 
 ## Balancing
 - Shipyard: 5x5 footprint, 5000 credits, -120 power, 450 health, requires Radar Station and Vehicle Factory.
-- Destroyer: 4500 credits, 500 health, armor 1.5, 5% per-crew-member casualty chance on damaging hits, 60 ammunition, 6000 fuel, slow acceleration, naval movement, long 18-tile range.
-- Destroyer sidebar build art shows the entire ship with visible ocean around every edge; map art remains transparent.
+- Destroyer: 4500 credits, 250 health, armor 1.5, 5% per-crew-member casualty chance on damaging hits, 60 ammunition, 6000 fuel, slow acceleration, naval movement, long 18-tile range.
+- Destroyer sidebar build art shows the entire ship from a photorealistic elevated three-quarter perspective over water, with the horizon inside the second quarter from the top; map art remains strict top-down, south-facing, and transparent.
 
 ## Validation
 - Unit tests must pass with `npm run test:unit`.

@@ -119,6 +119,15 @@ export function updateVehicleButtonStates(controller) {
         button.classList.add('disabled')
         button.title = 'Requires Shipyard'
       }
+    } else if (unitType === 'supplyShip') {
+      const hasSupplyBuilding = hasGasStation || hasHospital || hasAmmunitionFactory || hasWorkshop
+      if (hasShipyard && hasSupplyBuilding) {
+        button.classList.remove('disabled')
+        button.title = ''
+      } else {
+        button.classList.add('disabled')
+        button.title = 'Requires Shipyard and Gas Station, Hospital, Ammunition Factory, or Workshop'
+      }
     } else if (unitType === 'mineLayer') {
       if (hasVehicleFactory && hasWorkshop && hasAmmunitionFactory) {
         button.classList.remove('disabled')

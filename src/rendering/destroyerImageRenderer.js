@@ -1,6 +1,7 @@
 import { TILE_SIZE } from '../config.js'
 
 const SOUTH_FACING_SOURCE_ANGLE = Math.PI / 2
+const SOUTH_FACING_GUN_SOURCE_POINT = Object.freeze({ x: 55, y: 260 })
 let destroyerImage = null
 const loadCallbacks = []
 let destroyerLoaded = false
@@ -24,11 +25,30 @@ export function preloadDestroyerImage(callback) {
   destroyerImage = new Image()
   destroyerImage.onload = () => finishLoad(true)
   destroyerImage.onerror = () => finishLoad(false)
-  destroyerImage.src = 'images/map/units/destroyer/destroyer_south.webp'
+  destroyerImage.src = 'images/map/units/destroyer_map.webp'
 }
 
 export function isDestroyerImageLoaded() {
   return destroyerLoaded && destroyerImage?.complete
+}
+
+export function getDestroyerBaseImage() {
+  return isDestroyerImageLoaded() ? destroyerImage : null
+}
+
+export function getDestroyerGunSpawnPoint(unit, centerX, centerY) {
+  const image = destroyerImage
+  const sourceWidth = image?.naturalWidth || image?.width || 109
+  const sourceHeight = image?.naturalHeight || image?.height || 342
+  const scale = (TILE_SIZE * 2.6) / Math.max(sourceWidth, sourceHeight)
+  const localX = (SOUTH_FACING_GUN_SOURCE_POINT.x - sourceWidth / 2) * scale
+  const localY = (SOUTH_FACING_GUN_SOURCE_POINT.y - sourceHeight / 2) * scale
+  const rotation = (unit.direction || unit.rotation || 0) - SOUTH_FACING_SOURCE_ANGLE
+
+  return {
+    x: centerX + localX * Math.cos(rotation) - localY * Math.sin(rotation),
+    y: centerY + localX * Math.sin(rotation) + localY * Math.cos(rotation)
+  }
 }
 
 export function renderDestroyerWithImage(ctx, unit, centerX, centerY) {

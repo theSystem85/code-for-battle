@@ -210,6 +210,13 @@ export function setupUnitButtons(controller) {
           requirementsMet = false
           requirementText = 'Requires Shipyard'
         }
+      } else if (unitType === 'supplyShip') {
+        const hasShipyard = gameState.buildings.some(b => b.type === 'shipyard' && b.owner === gameState.humanPlayer)
+        const hasSupplyBuilding = gameState.buildings.some(b => ['gasStation', 'hospital', 'ammunitionFactory', 'vehicleWorkshop'].includes(b.type) && b.owner === gameState.humanPlayer)
+        if (!hasShipyard || !hasSupplyBuilding) {
+          requirementsMet = false
+          requirementText = 'Requires Shipyard and a supply building'
+        }
       } else if (unitType === 'ammunitionTruck') {
         const hasVehicleFactory = gameState.buildings.some(b => b.type === 'vehicleFactory' && b.owner === gameState.humanPlayer)
         const hasAmmunitionFactory = gameState.buildings.some(b => b.type === 'ammunitionFactory' && b.owner === gameState.humanPlayer)

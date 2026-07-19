@@ -27,7 +27,8 @@ const unitDisplayNames = {
   f35: 'F35',
   mineLayer: 'Mine Layer',
   mineSweeper: 'Mine Sweeper',
-  destroyer: 'Destroyer'
+  destroyer: 'Destroyer',
+  supplyShip: 'Supply Ship'
 }
 
 const buildingDescriptions = {

@@ -760,7 +760,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
   const isPadF35 = (factory.type === 'helipad' || factory.type === 'airstrip') && type === 'f35'
   const isAirstripF22 = factory.type === 'airstrip' && type === 'f22Raptor'
-  const isShipyardDestroyer = factory.type === 'shipyard' && type === 'destroyer'
+  const isShipyardNavalUnit = factory.type === 'shipyard' && (type === 'destroyer' || type === 'supplyShip')
 
   if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
@@ -795,7 +795,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     worldPositionOverride = { x: slot.worldX, y: slot.worldY }
     options.airstripParkingSlotIndex = slotIndex
     options.airstripId = getBuildingIdentifier(factory)
-  } else if (isShipyardDestroyer) {
+  } else if (isShipyardNavalUnit) {
     spawnPosition = getShipyardLaunchTile(factory, mapGrid)
   } else if (factory.type === 'vehicleFactory') {
     // Attempt to free the designated spawn tile using algorithm A1
@@ -827,7 +827,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     : options
 
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
-  if (occupancyMap && !isHelipadApache && !isAirstripF22 && !isPadF35 && !isShipyardDestroyer) {
+  if (occupancyMap && !isHelipadApache && !isAirstripF22 && !isPadF35 && !isShipyardNavalUnit) {
     // Use center coordinates for occupancy map consistency
     const centerTileX = Math.floor((newUnit.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -969,7 +969,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
       mapGrid,
       null, // Pass null for occupancyMap initially, pathfinding handles collisions
       undefined,
-      isShipyardDestroyer ? getNavalPathOptions(newUnit) : undefined
+      isShipyardNavalUnit ? getNavalPathOptions(newUnit) : undefined
     )
     if (path && path.length > 1) {
       newUnit.path = path.slice(1)
@@ -1119,6 +1119,19 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     } else if (loaderUnits.includes(actualType)) {
       unit.crew.loader = true
     }
+  }
+
+
+  if (actualType === 'supplyShip') {
+    unit.supplyCrew = unitProps.maxSupplyCrew || 4
+    unit.maxSupplyCrew = unitProps.maxSupplyCrew || 4
+    unit.supplyFuel = unitProps.maxSupplyFuel || 3000
+    unit.maxSupplyFuel = unitProps.maxSupplyFuel || 3000
+    unit.supplyAmmo = unitProps.maxSupplyAmmo || 120
+    unit.maxSupplyAmmo = unitProps.maxSupplyAmmo || 120
+    unit.supplyRepairTools = unitProps.maxSupplyRepairTools || 260
+    unit.maxSupplyRepairTools = unitProps.maxSupplyRepairTools || 260
+    unit.supplyRadiusTiles = unitProps.supplyRadiusTiles || 2
   }
 
   if (unitProps.movementType === 'water' || unitProps.isNaval) {
