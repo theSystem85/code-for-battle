@@ -26,7 +26,8 @@ const unitDisplayNames = {
   f35: 'F35',
   mineLayer: 'Mine Layer',
   mineSweeper: 'Mine Sweeper',
-  destroyer: 'Destroyer'
+  destroyer: 'Destroyer',
+  supplyShip: 'Supply Ship'
 }
 
 const unitSidebarImages = {
@@ -45,6 +46,7 @@ const unitSidebarImages = {
   f35: 'images/sidebar/f35_sidebar.webp',
   howitzer: 'images/sidebar/howitzer_sidebar.webp',
   destroyer: 'images/sidebar/destroyer_sidebar.webp',
+  supplyShip: 'images/sidebar/supply_ship_sidebar.webp',
   mineLayer: 'images/sidebar/mine_layer_sidebar.webp',
   mineSweeper: 'images/sidebar/mine_sweeper_sidebar.webp'
 }

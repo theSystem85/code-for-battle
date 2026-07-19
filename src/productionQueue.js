@@ -19,7 +19,7 @@ import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } fr
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
-const navalUnitTypes = ['destroyer']
+const navalUnitTypes = ['destroyer', 'supplyShip']
 
 const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor', 'f35']
 
@@ -313,6 +313,16 @@ export const productionQueue = {
 
     if (navalUnitTypes.includes(item.type)) {
       const hasShipyard = gameState.buildings.some(b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0)
+      const hasSupplyBuilding = gameState.buildings.some(b => ['gasStation', 'hospital', 'ammunitionFactory', 'vehicleWorkshop'].includes(b.type) && b.owner === gameState.humanPlayer && b.health > 0)
+      if (item.type === 'supplyShip' && !hasSupplyBuilding) {
+        console.error('Attempted to start supply ship production without a supply building.')
+        showNotification('Cannot produce Supply Ship: supply building required.')
+        this.unitItems.shift()
+        gameState.money += cost
+        this.updateBatchCounter(item.button, this.unitItems.filter(i => i.button === item.button).length)
+        this.startNextUnitProduction()
+        return
+      }
       if (!hasShipyard) {
         console.error(`Attempted to start ${item.type} production without a Shipyard.`)
         showNotification(`Cannot produce ${item.type}: Shipyard required.`)

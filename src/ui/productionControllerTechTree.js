@@ -218,6 +218,10 @@ export function syncTechTreeWithBuildings(controller) {
     controller.forceUnlockUnitType('destroyer')
   }
 
+  if (hasShipyard && (hasGasStation || hasHospital || hasAmmunitionFactory || hasWorkshop)) {
+    controller.forceUnlockUnitType('supplyShip')
+  }
+
   if (hasRocketTurret) {
     controller.forceUnlockUnitType('rocketTank')
   }
