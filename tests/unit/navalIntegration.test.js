@@ -11,6 +11,7 @@ import {
 } from '../../src/utils/navalUtils.js'
 import { TILE_SIZE } from '../../src/config.js'
 import { updateShipyardServiceLogic } from '../../src/game/shipyardServiceLogic.js'
+import { BOW_WAKE_INNER_ANGLE_RADIANS } from '../../src/rendering/effectsRenderer.js'
 
 function createMap(width, height, type = 'land') {
   return Array.from({ length: height }, () =>
@@ -55,6 +56,7 @@ describe('naval integration', () => {
     expect(stern.x).toBeCloseTo(centerX - hullOffset)
     expect(bow.x).toBeCloseTo(centerX + hullOffset)
     expect(stern.size).toBeGreaterThan(bow.size)
+    expect(BOW_WAKE_INNER_ANGLE_RADIANS * (180 / Math.PI)).toBeCloseTo(70)
   })
 
   it('finds water-only paths and keeps water terrain free in the occupancy map', () => {

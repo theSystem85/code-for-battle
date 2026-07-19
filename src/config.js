@@ -1028,8 +1028,8 @@ export const UNIT_PROPERTIES = {
     maxSupplyRepairTools: 260
   },
   destroyer: {
-    health: 500,
-    maxHealth: 500,
+    health: 250,
+    maxHealth: 250,
     speed: 0.42,
     rotationSpeed: 0.025,
     turretRotationSpeed: TANK_TURRET_ROT * 0.8,

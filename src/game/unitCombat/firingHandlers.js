@@ -7,6 +7,7 @@ import { getRocketSpawnPoint } from '../../rendering/rocketTankImageRenderer.js'
 import { getApacheRocketSpawnPoints } from '../../rendering/apacheImageRenderer.js'
 import { getF22RocketSpawnPoint } from '../../rendering/f22ImageRenderer.js'
 import { getF35BombSpawnPoint } from '../../rendering/f35ImageRenderer.js'
+import { getDestroyerGunSpawnPoint } from '../../rendering/destroyerImageRenderer.js'
 import { isHowitzerGunReadyToFire, getHowitzerLaunchAngle } from '../howitzerGunController.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
@@ -104,8 +105,6 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         finalTarget = applyTargetingSpread(unitCenterX, unitCenterY, aimX, aimY, projectileType, unit.type)
       }
 
-      const angle = Math.atan2(finalTarget.y - unitCenterY, finalTarget.x - unitCenterX)
-
       const isRocketTankRocket = projectileType === 'rocket' && unit.type === 'rocketTank'
       const isApacheRocket = projectileType === 'rocket' && (unit.type === 'apache' || unit.type === 'f22Raptor')
       const isF35Bomb = projectileType === 'bomb' && unit.type === 'f35'
@@ -125,12 +124,17 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
           : getApacheRocketSpawnPoints(unit, unitCenterX, unitCenterY).left)
       } else if (isF35Bomb) {
         rocketSpawn = unit.customRocketSpawn || getF35BombSpawnPoint(unit, unitCenterX, unitCenterY)
+      } else if (unit.type === 'destroyer') {
+        rocketSpawn = getDestroyerGunSpawnPoint(unit, unitCenterX, unitCenterY)
       }
+
+      const projectileSpawn = rocketSpawn || { x: unitCenterX, y: unitCenterY }
+      const angle = Math.atan2(finalTarget.y - projectileSpawn.y, finalTarget.x - projectileSpawn.x)
 
       const bullet = {
         id: Date.now() + gameRandom(),
-        x: (isRocketTankRocket || isApacheRocket || isF35Bomb) ? rocketSpawn.x : unitCenterX,
-        y: (isRocketTankRocket || isApacheRocket || isF35Bomb) ? rocketSpawn.y : unitCenterY,
+        x: projectileSpawn.x,
+        y: projectileSpawn.y,
         speed: bulletSpeed,
         baseDamage: getDamageForUnitType(unit.type),
         active: true,

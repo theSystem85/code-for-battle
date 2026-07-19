@@ -481,7 +481,9 @@ export class UnitRenderer {
     if (this.hasHudBottomProgressBar(unit)) active.add('experience')
 
     const hit = ranges.find(r => active.has(r.key) && angle >= r.start && angle <= r.end)
-    return hit ? hit.key : null
+    if (!hit) return null
+    if (unit.type === 'supplyShip' && hit.key === 'experience') return 'supply'
+    return hit.key
   }
 
   getCrewRects(unit, scrollOffset, hudBounds, centerX, centerY) {
@@ -789,7 +791,9 @@ export class UnitRenderer {
   renderUtilityServiceRange(ctx, unit, centerX, centerY) {
     if (!unit?.selected) return
 
-    const rangeInTiles = unit?.isUtilityUnit ? SERVICE_SERVING_RANGE : undefined
+    const rangeInTiles = unit.type === 'supplyShip'
+      ? (unit.supplyRadiusTiles || 2)
+      : (unit?.isUtilityUnit ? SERVICE_SERVING_RANGE : undefined)
     if (!rangeInTiles) return
 
     const radius = rangeInTiles * TILE_SIZE
@@ -1027,9 +1031,8 @@ export class UnitRenderer {
 
   drawSupplyShipLinearBar(ctx, unit, x, y, width, height) {
     const segments = [
-      { value: unit.supplyCrew || 0, max: unit.maxSupplyCrew || 1, color: '#00FFFF' },
-      { value: unit.supplyFuel || 0, max: unit.maxSupplyFuel || 1, color: '#4A90E2' },
       { value: unit.supplyAmmo || 0, max: unit.maxSupplyAmmo || 1, color: '#FFA500' },
+      { value: unit.supplyFuel || 0, max: unit.maxSupplyFuel || 1, color: '#4A90E2' },
       { value: unit.supplyRepairTools || 0, max: unit.maxSupplyRepairTools || 1, color: '#32CD32' }
     ]
     const segmentWidth = width / segments.length
@@ -1041,6 +1044,44 @@ export class UnitRenderer {
   }
 
   drawSupplyShipHudBar(ctx, hudBounds, unit) {
+    if (this.isDonutSelectionHud()) {
+      const centerX = (hudBounds.left + hudBounds.right) / 2
+      const centerY = (hudBounds.top + hudBounds.bottom) / 2
+      const donutRadius = (Math.min(hudBounds.width, hudBounds.height) / 2) + 2
+      const barThickness = Math.max(1, this.getSelectionHudBarThickness() - 2)
+      const crewHalfSpanAngle = ((5 / 2) + 3) / donutRadius
+      const quarterStart = (Math.PI / 2) + crewHalfSpanAngle
+      const quarterEnd = Math.PI - crewHalfSpanAngle
+      const segmentSweep = (quarterEnd - quarterStart) / 3
+      const segmentGap = Math.min(0.025, segmentSweep * 0.08)
+      const supplies = [
+        { value: unit.supplyAmmo || 0, max: unit.maxSupplyAmmo || 1, color: '#FFA500' },
+        { value: unit.supplyFuel || 0, max: unit.maxSupplyFuel || 1, color: '#4A90E2' },
+        { value: unit.supplyRepairTools || 0, max: unit.maxSupplyRepairTools || 1, color: '#32CD32' }
+      ]
+
+      ctx.save()
+      ctx.lineCap = 'butt'
+      ctx.lineWidth = barThickness
+      supplies.forEach((supply, index) => {
+        const start = quarterStart + index * segmentSweep + segmentGap
+        const end = quarterStart + (index + 1) * segmentSweep - segmentGap
+        const ratio = Math.max(0, Math.min(1, supply.value / supply.max))
+        ctx.strokeStyle = '#3A3A3A'
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, donutRadius, start, end)
+        ctx.stroke()
+        if (ratio > 0) {
+          ctx.strokeStyle = supply.color
+          ctx.beginPath()
+          ctx.arc(centerX, centerY, donutRadius, start, start + ((end - start) * ratio))
+          ctx.stroke()
+        }
+      })
+      ctx.restore()
+      return
+    }
+
     const rect = this.getHudBarRect(hudBounds, 'bottom')
     ctx.fillStyle = '#333'
     ctx.fillRect(rect.x, rect.y, rect.width, rect.height)

@@ -42,6 +42,7 @@ import {
   updateWreckPhysics
 } from '../../src/game/unitWreckManager.js'
 import { getUnitCost } from '../../src/utils.js'
+import { gameRandom } from '../../src/utils/gameRandom.js'
 
 describe('unitWreckManager.js', () => {
   let gameState
@@ -162,6 +163,27 @@ describe('unitWreckManager.js', () => {
 
       expect(wreck.velocityX).toBe(0)
       expect(wreck.velocityY).toBe(0)
+    })
+
+    it('selects the bow-first naval sinking animation for the lower two-thirds of rolls', () => {
+      gameRandom.mockReturnValueOnce(0.5).mockReturnValueOnce(0.25)
+      const wreck = registerUnitWreck({
+        id: 'destroyer-1', type: 'destroyer', isNaval: true,
+        x: 100, y: 100, health: 0, maxHealth: 250, owner: 'player1'
+      }, gameState)
+
+      expect(wreck.navalSinking).toBe(true)
+      expect(wreck.navalSinkMode).toBe('bow-first')
+    })
+
+    it('selects the split-hull naval sinking animation for the upper third of rolls', () => {
+      gameRandom.mockReturnValueOnce(0.9).mockReturnValueOnce(0.25)
+      const wreck = registerUnitWreck({
+        id: 'destroyer-2', type: 'destroyer', isNaval: true,
+        x: 100, y: 100, health: 0, maxHealth: 250, owner: 'player1'
+      }, gameState)
+
+      expect(wreck.navalSinkMode).toBe('split-hull')
     })
   })
 
@@ -674,6 +696,23 @@ describe('unitWreckManager.js', () => {
 
       // Dead wrecks shouldn't move
       expect(wreck.x).toBe(initialX)
+    })
+
+    it('removes a naval wreck after its sinking animation completes', () => {
+      gameState.simulationTime = 7000
+      gameState.unitWrecks = [{
+        id: 'destroyer-wreck',
+        navalSinking: true,
+        createdAt: 1000,
+        sinkDuration: 6000,
+        health: 250,
+        occupancyTileX: null,
+        occupancyTileY: null
+      }]
+
+      updateWreckPhysics(gameState, [], 16)
+
+      expect(gameState.unitWrecks).toEqual([])
     })
 
     it('should zero out very small velocities', () => {

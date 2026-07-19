@@ -190,4 +190,57 @@ describe('UnitRenderer ammo HUD consistency', () => {
 
     expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'bottom', 0.5, '#32CD32')
   })
+
+  it('splits the Supply Ship donut supply quarter into ammo, fuel, and repair arcs', () => {
+    const renderer = new UnitRenderer()
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      stroke: vi.fn(),
+      set lineCap(_value) {},
+      set lineWidth(_value) {},
+      set strokeStyle(_value) {}
+    }
+    const unit = {
+      type: 'supplyShip',
+      supplyAmmo: 60,
+      maxSupplyAmmo: 120,
+      supplyFuel: 1500,
+      maxSupplyFuel: 3000,
+      supplyRepairTools: 130,
+      maxSupplyRepairTools: 260
+    }
+
+    renderer.drawSupplyShipHudBar(ctx, {
+      left: 0, right: 100, top: 0, bottom: 100, width: 100, height: 100
+    }, unit)
+
+    expect(ctx.arc).toHaveBeenCalledTimes(6)
+    const backgroundStarts = [0, 2, 4].map(index => ctx.arc.mock.calls[index][3])
+    expect(backgroundStarts[1] - backgroundStarts[0]).toBeCloseTo(backgroundStarts[2] - backgroundStarts[1])
+  })
+
+  it('renders the selected Supply Ship support radius from its configured tile range', () => {
+    const renderer = new UnitRenderer()
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      setLineDash: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      stroke: vi.fn(),
+      set strokeStyle(_value) {},
+      set lineWidth(_value) {}
+    }
+
+    renderer.renderUtilityServiceRange(ctx, {
+      type: 'supplyShip',
+      selected: true,
+      supplyRadiusTiles: 2
+    }, 100, 120)
+
+    expect(ctx.arc).toHaveBeenCalledWith(100, 120, 64, 0, Math.PI * 2)
+  })
 })

@@ -4,7 +4,9 @@ const {
   mockGameState,
   mockRenderTankWithImages,
   mockGetTankWreckCanvases,
-  mockGetSingleImageWreckSprite
+  mockGetSingleImageWreckSprite,
+  mockGetDestroyerBaseImage,
+  mockGetSupplyShipBaseImage
 } = vi.hoisted(() => ({
   mockGameState: {
     shadowOfWarEnabled: false,
@@ -13,7 +15,9 @@ const {
   },
   mockRenderTankWithImages: vi.fn(() => true),
   mockGetTankWreckCanvases: vi.fn(() => ({ wagon: {}, turret: {}, barrel: {} })),
-  mockGetSingleImageWreckSprite: vi.fn(() => ({ width: 64, height: 64 }))
+  mockGetSingleImageWreckSprite: vi.fn(() => ({ width: 64, height: 64 })),
+  mockGetDestroyerBaseImage: vi.fn(() => ({ width: 109, height: 342 })),
+  mockGetSupplyShipBaseImage: vi.fn(() => ({ width: 256, height: 256 }))
 }))
 
 vi.mock('../../src/gameState.js', () => ({
@@ -33,20 +37,32 @@ vi.mock('../../src/inputHandler.js', () => ({
   selectedUnits: []
 }))
 
+vi.mock('../../src/rendering/destroyerImageRenderer.js', () => ({
+  getDestroyerBaseImage: mockGetDestroyerBaseImage
+}))
+
+vi.mock('../../src/rendering/supplyShipImageRenderer.js', () => ({
+  getSupplyShipBaseImage: mockGetSupplyShipBaseImage
+}))
+
 import { WreckRenderer } from '../../src/rendering/wreckRenderer.js'
 
 function createMockContext() {
   return {
     rotateCalls: [],
     drawImageCalls: 0,
+    drawImageArgs: [],
     save() {},
     restore() {},
     translate() {},
     rotate(angle) {
       this.rotateCalls.push(angle)
     },
-    drawImage() {
+    scale() {},
+    ellipse() {},
+    drawImage(...args) {
       this.drawImageCalls += 1
+      this.drawImageArgs.push(args)
     },
     fillRect() {},
     strokeRect() {},
@@ -106,5 +122,41 @@ describe('WreckRenderer workshop restoration previews', () => {
     expect(f22Ctx.drawImageCalls).toBeGreaterThan(0)
     expect(f22Ctx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
     expect(harvesterCtx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
+  })
+
+  it('renders the split-hull naval animation as two cropped half sprites', () => {
+    mockGameState.simulationTime = 3000
+    const renderer = new WreckRenderer()
+    const ctx = createMockContext()
+
+    renderer.renderSinkingShipWreck(ctx, {
+      unitType: 'destroyer',
+      direction: Math.PI / 2,
+      createdAt: 0,
+      sinkDuration: 6000,
+      navalSinkMode: 'split-hull'
+    }, 100, 100)
+
+    expect(ctx.drawImageCalls).toBe(2)
+    expect(ctx.drawImageArgs[0][4]).toBeCloseTo(171)
+    expect(ctx.drawImageArgs[1][4]).toBeCloseTo(171)
+  })
+
+  it('renders bow-first sinking by progressively cropping the south-facing bow', () => {
+    mockGameState.simulationTime = 3000
+    const renderer = new WreckRenderer()
+    const ctx = createMockContext()
+
+    renderer.renderSinkingShipWreck(ctx, {
+      unitType: 'supplyShip',
+      direction: Math.PI / 2,
+      createdAt: 0,
+      sinkDuration: 6000,
+      navalSinkMode: 'bow-first'
+    }, 100, 100)
+
+    expect(ctx.drawImageCalls).toBe(1)
+    expect(ctx.drawImageArgs[0][4]).toBeGreaterThan(0)
+    expect(ctx.drawImageArgs[0][4]).toBeLessThan(256)
   })
 })

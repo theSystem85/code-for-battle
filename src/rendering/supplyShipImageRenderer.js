@@ -31,6 +31,10 @@ export function isSupplyShipImageLoaded() {
   return supplyShipLoaded && supplyShipImage?.complete
 }
 
+export function getSupplyShipBaseImage() {
+  return isSupplyShipImageLoaded() ? supplyShipImage : null
+}
+
 export function renderSupplyShipWithImage(ctx, unit, centerX, centerY) {
   if (!isSupplyShipImageLoaded()) {
     if (!supplyShipLoading) preloadSupplyShipImage()

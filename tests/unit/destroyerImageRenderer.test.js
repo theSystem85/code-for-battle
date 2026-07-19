@@ -7,10 +7,10 @@ describe('Destroyer image renderer', () => {
     const createdImages = []
     globalThis.Image = class {
       constructor() {
-        this.naturalWidth = 100
-        this.naturalHeight = 200
-        this.width = 100
-        this.height = 200
+        this.naturalWidth = 109
+        this.naturalHeight = 342
+        this.width = 109
+        this.height = 342
         this.complete = true
         createdImages.push(this)
       }
@@ -25,12 +25,12 @@ describe('Destroyer image renderer', () => {
       }
     }
 
-    const { preloadDestroyerImage, renderDestroyerWithImage } = await import('../../src/rendering/destroyerImageRenderer.js')
+    const { preloadDestroyerImage, renderDestroyerWithImage, getDestroyerGunSpawnPoint } = await import('../../src/rendering/destroyerImageRenderer.js')
     const loaded = vi.fn()
     preloadDestroyerImage(loaded)
 
     expect(createdImages).toHaveLength(1)
-    expect(createdImages[0].src).toBe('images/map/units/destroyer/destroyer_south.webp')
+    expect(createdImages[0].src).toBe('images/map/units/destroyer_map.webp')
     expect(loaded).toHaveBeenCalledWith(true)
 
     const ctx = {
@@ -46,5 +46,11 @@ describe('Destroyer image renderer', () => {
     renderDestroyerWithImage(ctx, { direction: 0 }, 100, 100)
     expect(ctx.rotate).toHaveBeenLastCalledWith(-Math.PI / 2)
     expect(ctx.drawImage).toHaveBeenCalledTimes(2)
+
+    const southGun = getDestroyerGunSpawnPoint({ direction: Math.PI / 2 }, 100, 100)
+    const northGun = getDestroyerGunSpawnPoint({ direction: -Math.PI / 2 }, 100, 100)
+    expect(southGun.x).toBeCloseTo(100, 0)
+    expect(southGun.y).toBeGreaterThan(100)
+    expect(northGun.y).toBeLessThan(100)
   })
 })

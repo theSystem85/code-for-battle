@@ -37,8 +37,10 @@ Use this checklist when adding any new unit type to Code for Battle.
 
 ## Rendering and audio
 - Add map and sidebar assets, or derive them from supplied assets when directed.
-- Treat map and build-button art separately: map sprites normally need clean alpha; sidebar art may intentionally retain terrain/water but must show the entire unit without cropping.
-- Add rotation animation/facing support matching existing unit conventions. Default to one authored top-down sprite facing downward and rotate it programmatically for every angle. Use multiple authored headings only when the user explicitly requests them or perspective cannot rotate coherently.
+- Treat map and build-button art as two mandatory, distinct camera conventions:
+  - **Build-button/sidebar art:** use a photorealistic elevated three-quarter perspective with the entire unit visible. The horizon must always be visible inside the second quarter from the top of the image (25–50% image height). Ships retain a realistic water background.
+  - **Map art:** use a strict 90-degree top-down/orthographic view with clean alpha, the entire unit visible, and the unit facing straight downward (south). Do not use an isometric, three-quarter, diagonal, or horizon-bearing map sprite.
+- Add rotation animation/facing support matching existing unit conventions. Always default to the single authored strict top-down south-facing map sprite and rotate it programmatically for every angle. Use multiple authored headings only when the user explicitly requests them.
 - Add movement effects such as dust, tracks, rotor wash, jet exhaust, wake, or waves as applicable.
 - Verify effect layer order (for example, wakes below a ship), emit movement effects only after actual displacement/current speed, and let residual particles fade after stopping.
 - Add damage smoke/fire and destruction animation, wreck or sink behavior, and sound hooks.

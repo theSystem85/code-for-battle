@@ -270,5 +270,52 @@ describe('guard behavior', () => {
 
       expect(mockUnit.lastGuardPathCalcTime).toBe(now)
     })
+
+    it('refreshes a Supply Ship water guard path before its protected ship leaves supply range', () => {
+      mockUnit.type = 'supplyShip'
+      mockUnit.owner = 'player1'
+      mockUnit.movementType = 'water'
+      mockUnit.supplyRadiusTiles = 2
+      mockUnit.guardTarget = {
+        health: 100,
+        x: 4 * TILE_SIZE,
+        y: 0,
+        tileX: 4,
+        tileY: 0
+      }
+      mockUnit.lastGuardPathCalcTime = now - 300
+
+      updateGuardBehavior(mockUnit, mockMapGrid, mockOccupancyMap, now)
+
+      expect(findPath).toHaveBeenCalledWith(
+        expect.objectContaining({ x: 0, y: 0, owner: 'player1' }),
+        { x: 4, y: 0 },
+        mockMapGrid,
+        mockOccupancyMap,
+        undefined,
+        expect.objectContaining({ movementType: 'water', unitOwner: 'player1' })
+      )
+    })
+
+    it('clears a stale Supply Ship guard path once it is safely inside supply range', () => {
+      mockUnit.type = 'supplyShip'
+      mockUnit.supplyRadiusTiles = 2
+      mockUnit.x = TILE_SIZE
+      mockUnit.tileX = 1
+      mockUnit.path = [{ x: 2, y: 0 }]
+      mockUnit.moveTarget = { x: 2, y: 0 }
+      mockUnit.guardTarget = {
+        health: 100,
+        x: 2 * TILE_SIZE,
+        y: 0,
+        tileX: 2,
+        tileY: 0
+      }
+
+      updateGuardBehavior(mockUnit, mockMapGrid, mockOccupancyMap, now)
+
+      expect(mockUnit.path).toEqual([])
+      expect(mockUnit.moveTarget).toBeNull()
+    })
   })
 })

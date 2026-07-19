@@ -4,6 +4,8 @@ import { drawTeslaCoilLightning, getCanvasLogicalSize } from './renderingUtils.j
 import { getSimulationTime } from '../game/time.js'
 import { renderSpriteSheetAnimation } from './spriteSheetAnimation.js'
 
+export const BOW_WAKE_INNER_ANGLE_RADIANS = 70 * (Math.PI / 180)
+
 // Pre-cached gradient sprites for smoke particles (GPU-friendly)
 // These are created once at initialization and reused via drawImage
 const SMOKE_SPRITE_CACHE = {
@@ -654,7 +656,9 @@ export class EffectsRenderer {
       const progress = age / wake.duration
       const isBowWake = wake.kind === 'bow'
       const length = wake.size * (isBowWake ? 0.65 + progress * 1.2 : 0.8 + progress * 1.8)
-      const halfWidth = wake.size * (isBowWake ? 0.3 + progress * 0.65 : 0.18 + progress * 0.75)
+      const halfWidth = isBowWake
+        ? length * Math.tan(BOW_WAKE_INNER_ANGLE_RADIANS / 2)
+        : wake.size * (0.18 + progress * 0.75)
       ctx.save()
       ctx.translate(wake.x - scrollOffset.x, wake.y - scrollOffset.y)
       ctx.rotate(wake.direction || 0)

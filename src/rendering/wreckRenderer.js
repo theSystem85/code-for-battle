@@ -2,7 +2,8 @@ import { TILE_SIZE, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BO
 import { gameState } from '../gameState.js'
 import { renderTankWithImages } from './tankImageRenderer.js'
 import { getTankWreckCanvases, getSingleImageWreckSprite } from './wreckSpriteCache.js'
-import { isDestroyerImageLoaded, renderDestroyerWithImage } from './destroyerImageRenderer.js'
+import { getDestroyerBaseImage } from './destroyerImageRenderer.js'
+import { getSupplyShipBaseImage } from './supplyShipImageRenderer.js'
 import { selectedUnits } from '../inputHandler.js'
 
 const noiseCanvasCache = new Map()
@@ -148,29 +149,106 @@ export class WreckRenderer {
   }
 
   renderSinkingShipWreck(ctx, wreck, centerX, centerY) {
-    const now = gameState?.simulationTime || performance.now()
-    const elapsed = Math.max(0, now - (wreck.createdAt || now))
+    const simulationNow = Number.isFinite(gameState?.simulationTime) ? gameState.simulationTime : 0
+    const now = simulationNow > 0 ? simulationNow : performance.now()
+    const createdAt = Number.isFinite(wreck.createdAt) ? wreck.createdAt : now
+    const elapsed = Math.max(0, now - createdAt)
     const progress = Math.min(1, elapsed / (wreck.sinkDuration || 6000))
-    const alpha = Math.max(0, 1 - progress * 0.85)
-    const sinkOffset = progress * TILE_SIZE * 0.9
-    const split = progress * TILE_SIZE * 0.45
-    const rotation = wreck.direction || 0
+    const easedProgress = 1 - ((1 - progress) ** 2)
+    const alpha = Math.max(0, 1 - progress)
+    const image = wreck.unitType === 'supplyShip'
+      ? getSupplyShipBaseImage()
+      : getDestroyerBaseImage()
+    const direction = wreck.direction || 0
+    const spriteLengthTiles = wreck.unitType === 'supplyShip' ? 2.2 : 2.6
 
     ctx.save()
-    ctx.globalAlpha = alpha
-    if (isDestroyerImageLoaded()) {
-      const bow = { type: 'destroyer', direction: rotation + progress * 0.16, x: wreck.x + Math.cos(rotation) * split, y: wreck.y + sinkOffset + Math.sin(rotation) * split }
-      const stern = { type: 'destroyer', direction: rotation + Math.PI + progress * -0.14, x: wreck.x - Math.cos(rotation) * split, y: wreck.y + sinkOffset - Math.sin(rotation) * split }
-      renderDestroyerWithImage(ctx, bow, bow.x + TILE_SIZE / 2, bow.y + TILE_SIZE / 2)
-      ctx.globalAlpha = alpha * 0.85
-      renderDestroyerWithImage(ctx, stern, stern.x + TILE_SIZE / 2, stern.y + TILE_SIZE / 2)
+    if (image) {
+      const sourceWidth = image.naturalWidth || image.width
+      const sourceHeight = image.naturalHeight || image.height
+      const scale = (TILE_SIZE * spriteLengthTiles) / Math.max(sourceWidth, sourceHeight)
+      const renderWidth = sourceWidth * scale
+      const renderHeight = sourceHeight * scale
+      const authoredRotation = direction - Math.PI / 2
+
+      if (wreck.navalSinkMode === 'split-hull') {
+        const halfSourceHeight = sourceHeight / 2
+        const halfRenderHeight = renderHeight / 2
+        const separation = easedProgress * TILE_SIZE * 0.55
+        const sinkOffset = easedProgress * TILE_SIZE * 0.35
+        const forwardX = Math.cos(direction)
+        const forwardY = Math.sin(direction)
+        const pieces = [
+          {
+            sourceY: halfSourceHeight,
+            centerX: centerX + forwardX * separation,
+            centerY: centerY + forwardY * separation + sinkOffset,
+            rotationOffset: easedProgress * 0.2,
+            opacity: alpha
+          },
+          {
+            sourceY: 0,
+            centerX: centerX - forwardX * separation,
+            centerY: centerY - forwardY * separation + sinkOffset * 0.75,
+            rotationOffset: easedProgress * -0.16,
+            opacity: alpha * 0.9
+          }
+        ]
+
+        pieces.forEach(piece => {
+          ctx.save()
+          ctx.globalAlpha = piece.opacity
+          ctx.translate(piece.centerX, piece.centerY)
+          ctx.rotate(authoredRotation + piece.rotationOffset)
+          ctx.scale(1, Math.max(0.35, 1 - easedProgress * 0.35))
+          ctx.drawImage(
+            image,
+            0,
+            piece.sourceY,
+            sourceWidth,
+            halfSourceHeight,
+            -renderWidth / 2,
+            -halfRenderHeight / 2,
+            renderWidth,
+            halfRenderHeight
+          )
+          ctx.restore()
+        })
+      } else {
+        // Bow-first sinking: foreshorten the hull to show the nose tilting down,
+        // then crop progressively from the authored south-facing bow upward.
+        const visibleRatio = Math.max(0.02, 1 - easedProgress * 0.98)
+        const visibleSourceHeight = sourceHeight * visibleRatio
+        const visibleRenderHeight = renderHeight * visibleRatio
+        const forwardSink = easedProgress * TILE_SIZE * 0.28
+        ctx.save()
+        ctx.globalAlpha = alpha
+        ctx.translate(
+          centerX + Math.cos(direction) * forwardSink,
+          centerY + Math.sin(direction) * forwardSink + easedProgress * TILE_SIZE * 0.18
+        )
+        ctx.rotate(authoredRotation)
+        ctx.scale(1, Math.max(0.28, 1 - easedProgress * 0.62))
+        ctx.drawImage(
+          image,
+          0,
+          0,
+          sourceWidth,
+          visibleSourceHeight,
+          -renderWidth / 2,
+          -renderHeight / 2,
+          renderWidth,
+          visibleRenderHeight
+        )
+        ctx.restore()
+      }
     } else {
-      this.renderFallback(ctx, wreck, centerX, centerY + sinkOffset, rotation)
+      this.renderFallback(ctx, wreck, centerX, centerY + easedProgress * TILE_SIZE * 0.9, direction)
     }
-    ctx.strokeStyle = `rgba(180, 225, 255, ${0.4 * (1 - progress)})`
+    ctx.strokeStyle = `rgba(180, 225, 255, ${0.5 * (1 - progress)})`
     ctx.lineWidth = 2
     ctx.beginPath()
-    ctx.ellipse(centerX, centerY + sinkOffset, TILE_SIZE * (1 + progress), TILE_SIZE * 0.45, 0, 0, Math.PI * 2)
+    ctx.ellipse(centerX, centerY + easedProgress * TILE_SIZE * 0.25, TILE_SIZE * (1 + progress), TILE_SIZE * 0.45, 0, 0, Math.PI * 2)
     ctx.stroke()
     ctx.restore()
   }

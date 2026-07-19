@@ -89,6 +89,10 @@ export function registerUnitWreck(unit, gameState) {
   }
 
   const baseHealth = Math.max(1, unit.maxHealth || unit.health || 100)
+  const simulationNow = getSimulationTime(gameState)
+  const createdAt = simulationNow > 0 ? simulationNow : performance.now()
+  const isNavalSinking = unit.isNaval === true
+  const navalSinkMode = isNavalSinking && gameRandom() < (2 / 3) ? 'bow-first' : 'split-hull'
 
   const wreck = {
     id: `${unit.id}-wreck`,
@@ -105,7 +109,7 @@ export function registerUnitWreck(unit, gameState) {
     turretDirection: Number.isFinite(unit.frozenDestructionTurretDirection)
       ? unit.frozenDestructionTurretDirection
       : (unit.turretDirection || unit.direction || 0),
-    createdAt: getSimulationTime(gameState),
+    createdAt,
     cost: getUnitCost(unit.type) || 0,
     buildDuration: estimateBuildDuration(unit.type, unit.buildDuration),
     assignedTankId: null,
@@ -121,8 +125,9 @@ export function registerUnitWreck(unit, gameState) {
     velocityY: 0,
     occupancyTileX: null,
     occupancyTileY: null,
-    navalSinking: unit.isNaval === true,
-    sinkDuration: unit.isNaval === true ? 6000 : null
+    navalSinking: isNavalSinking,
+    navalSinkMode: isNavalSinking ? navalSinkMode : null,
+    sinkDuration: isNavalSinking ? 6000 : null
   }
 
   gameState.unitWrecks.push(wreck)
@@ -324,6 +329,16 @@ export function updateWreckPhysics(gameState, unitsOrDelta, maybeDelta) {
 
   const occupancyMap = gameState.occupancyMap
   const mapGrid = Array.isArray(gameState.mapGrid) ? gameState.mapGrid : []
+
+  const simulationNow = getSimulationTime(gameState)
+  const wreckNow = simulationNow > 0 ? simulationNow : performance.now()
+  gameState.unitWrecks = gameState.unitWrecks.filter(wreck => {
+    const expired = wreck?.navalSinking &&
+      Number.isFinite(wreck.createdAt) &&
+      wreckNow - wreck.createdAt >= (wreck.sinkDuration || 6000)
+    if (expired) cleanupWreck(wreck, gameState)
+    return !expired
+  })
 
   gameState.unitWrecks.forEach(wreck => {
     if (!wreck || wreck.health <= 0) {
