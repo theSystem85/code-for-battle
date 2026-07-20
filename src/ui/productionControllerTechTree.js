@@ -215,7 +215,8 @@ export function syncTechTreeWithBuildings(controller) {
   }
 
   if (hasShipyard) {
-    controller.forceUnlockUnitType('destroyer')
+    ;['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
+      .forEach(type => controller.forceUnlockUnitType(type))
   }
 
   if (hasShipyard && (hasGasStation || hasHospital || hasAmmunitionFactory || hasWorkshop)) {

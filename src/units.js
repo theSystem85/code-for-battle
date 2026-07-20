@@ -19,10 +19,11 @@ import { initializeHowitzerGun } from './game/howitzerGunController.js'
 import { gameState } from './gameState.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, getHelipadLandingTopLeft } from './utils/helipadUtils.js'
 import { isFriendlyMineBlocking } from './game/mineSystem.js'
+import { isFriendlyWaterMineBlocking } from './game/waterMineSystem.js'
 import { getSpatialQuadtree } from './game/spatialQuadtree.js'
 import { recordUnitCreated } from './ai-api/transitionCollector.js'
 import { hasBlockingBuilding } from './utils/buildingPassability.js'
-import { getShipyardLaunchTile, getNavalPathOptions, isWaterPassableTile } from './utils/navalUtils.js'
+import { getShipyardLaunchTile, getNavalPathOptions, isNavalUnitType, isWaterPassableTile } from './utils/navalUtils.js'
 import {
   ensureAirstripOperations,
   claimAirstripParkingSlot,
@@ -586,6 +587,10 @@ function isTileBlockedForUnit(occupancyMap, x, y, options = {}) {
     return true
   }
 
+  if (options.movementType === 'water' && owner && isFriendlyWaterMineBlocking(x, y, owner)) {
+    return true
+  }
+
   return false
 }
 
@@ -760,7 +765,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   const isHelipadApache = factory.type === 'helipad' && type === 'apache'
   const isPadF35 = (factory.type === 'helipad' || factory.type === 'airstrip') && type === 'f35'
   const isAirstripF22 = factory.type === 'airstrip' && type === 'f22Raptor'
-  const isShipyardNavalUnit = factory.type === 'shipyard' && (type === 'destroyer' || type === 'supplyShip')
+  const isShipyardNavalUnit = factory.type === 'shipyard' && isNavalUnitType(type)
 
   if (isHelipadApache || (isPadF35 && factory.type === 'helipad')) {
     const landingTopLeft = getHelipadLandingTopLeft(factory)
@@ -1106,8 +1111,8 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   }
 
   // Add unit-specific properties
-  const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer', 'destroyer']
-  const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank']
+  const fullCrewTanks = ['tank_v1', 'tank-v2', 'tank-v3', 'howitzer', 'destroyer', 'battleship', 'submarine', 'aircraftCarrier']
+  const loaderUnits = ['tankerTruck', 'ammunitionTruck', 'ambulance', 'recoveryTank', 'harvester', 'rocketTank', 'hovercraft', 'vehicleFerry', 'navalMineLayer']
 
   // Apache helicopters and F22 Raptors don't have the crew system
   if (actualType !== 'apache' && actualType !== 'f22Raptor' && actualType !== 'f35') {
@@ -1132,6 +1137,46 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.supplyRepairTools = unitProps.maxSupplyRepairTools || 260
     unit.maxSupplyRepairTools = unitProps.maxSupplyRepairTools || 260
     unit.supplyRadiusTiles = unitProps.supplyRadiusTiles || 2
+  }
+
+  if (actualType === 'hovercraft' || actualType === 'vehicleFerry') {
+    unit.transportCapacity = unitProps.transportCapacity
+    unit.embarkedUnitIds = []
+    unit.pendingLoadUnitId = null
+    unit.pendingUnloadTile = null
+  }
+
+  if (actualType === 'aircraftCarrier') {
+    unit.deckSlotCapacity = unitProps.deckSlotCapacity || 4
+    unit.carrierAircraftIds = []
+    unit.carrierFuel = unitProps.maxCarrierFuel || 24000
+    unit.maxCarrierFuel = unitProps.maxCarrierFuel || 24000
+    unit.carrierAmmo = unitProps.maxCarrierAmmo || 64
+    unit.maxCarrierAmmo = unitProps.maxCarrierAmmo || 64
+    unit.carrierOperationAircraftId = null
+  }
+
+  if (actualType === 'navalMineLayer') {
+    unit.waterMineCapacity = unitProps.waterMineCapacity || 20
+    unit.remainingWaterMines = unit.waterMineCapacity
+    unit.waterMineSweepMode = false
+    unit.pendingWaterMineTile = null
+  }
+
+  if (actualType === 'battleship') {
+    unit.selectedBattery = null
+    unit.batteries = {
+      fore: { targetId: null, lastShotTime: 0, direction: unit.direction },
+      aft: { targetId: null, lastShotTime: 0, direction: unit.direction + Math.PI }
+    }
+  }
+
+  if (actualType === 'submarine') {
+    unit.depthState = 'submerged'
+    unit.depthTransitionStartedAt = null
+    unit.depthTransitionProgress = 0
+    unit.detectedByOwners = {}
+    unit.lastTorpedoTime = 0
   }
 
   if (unitProps.movementType === 'water' || unitProps.isNaval) {

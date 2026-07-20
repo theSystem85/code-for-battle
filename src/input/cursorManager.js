@@ -8,6 +8,7 @@ import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { canHarvesterHarvestTile, getRequiredHarvesterLevelForTile } from '../game/harvesterEligibility.js'
+import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
 
 const CURSOR_CLASS_NAMES = [
   'repair-mode',
@@ -64,7 +65,7 @@ export class CursorManager {
   }
 
   getHudVisualSize(unit) {
-    return unit?.type === 'destroyer' ? TILE_SIZE * 2.8 : TILE_SIZE
+    return unit?.isNaval ? TILE_SIZE * (getNavalRenderLengthTiles(unit.type) + 0.2) : TILE_SIZE
   }
 
   getSelectedHudBounds(centerX, centerY, unit = null) {

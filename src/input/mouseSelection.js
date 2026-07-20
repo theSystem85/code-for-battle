@@ -28,6 +28,8 @@ import {
 } from './mouseCommands.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
+import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
+import { selectBattleshipBattery } from '../game/navalFleetSystem.js'
 
 function hasSelectedCombatUnits(selectionManager, selectedUnits) {
   return selectedUnits.some(unit =>
@@ -306,6 +308,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
     if (!isOverEnemy && !isOverFriendlyUnit) {
       const humanPlayer = gameState.humanPlayer || 'player1'
       for (const unit of units) {
+        if (unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
         if (unit.owner !== humanPlayer && !(humanPlayer === 'player1' && unit.owner === 'player')) {
           const { centerX, centerY } = getUnitSelectionCenter(unit)
           if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
@@ -358,6 +361,10 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
         range = baseRange * APACHE_RANGE_REDUCTION
       } else if (unit.type === 'destroyer') {
         range = 18 * TILE_SIZE
+      } else if (unit.type === 'battleship') {
+        range = 24 * TILE_SIZE
+      } else if (unit.type === 'submarine') {
+        range = 12 * TILE_SIZE
       }
 
       if (unit.level >= 1) {
@@ -376,7 +383,9 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
         'rocketTank',
         'howitzer',
         'apache',
-        'destroyer'
+        'destroyer',
+        'battleship',
+        'submarine'
       ])
 
       if (!attackCapableTypes.has(unit.type)) {
@@ -1140,11 +1149,18 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
       const { centerX, centerY } = getUnitSelectionCenter(unit)
       const dx = worldX - centerX
       const dy = worldY - centerY
-      if (Math.hypot(dx, dy) < TILE_SIZE / 2) {
+      const selectionRadius = unit.isNaval
+        ? TILE_SIZE * Math.max(0.65, getNavalRenderLengthTiles(unit.type) / 2)
+        : TILE_SIZE / 2
+      if (Math.hypot(dx, dy) < selectionRadius) {
         clickedUnit = unit
         break
       }
     }
+  }
+
+  if (clickedUnit?.type === 'battleship') {
+    selectBattleshipBattery(clickedUnit, worldX, worldY)
   }
 
   const friendlySelected = selectedUnits.some(u => selectionManager.isHumanPlayerUnit(u) || selectionManager.isHumanPlayerBuilding(u))

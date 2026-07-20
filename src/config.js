@@ -881,7 +881,13 @@ export const UNIT_COSTS = {
   mineLayer: 1000,
   mineSweeper: 1000,
   destroyer: 4500,
-  supplyShip: 3200
+  supplyShip: 3200,
+  hovercraft: 2600,
+  vehicleFerry: 5200,
+  aircraftCarrier: 12000,
+  navalMineLayer: 4800,
+  battleship: 10500,
+  submarine: 6500
 }
 
 // Unit properties
@@ -1035,6 +1041,78 @@ export const UNIT_PROPERTIES = {
     turretRotationSpeed: TANK_TURRET_ROT * 0.8,
     accelerationMultiplier: 0.55,
     armor: 1.5,
+    movementType: 'water',
+    isNaval: true
+  },
+  hovercraft: {
+    health: 140,
+    maxHealth: 140,
+    speed: 0.72,
+    rotationSpeed: 0.045,
+    turretRotationSpeed: 0,
+    accelerationMultiplier: 0.9,
+    armor: 0.5,
+    movementType: 'water',
+    isNaval: true,
+    transportCapacity: 4
+  },
+  vehicleFerry: {
+    health: 520,
+    maxHealth: 520,
+    speed: 0.3,
+    rotationSpeed: 0.022,
+    turretRotationSpeed: 0,
+    accelerationMultiplier: 0.45,
+    armor: 3.5,
+    movementType: 'water',
+    isNaval: true,
+    transportCapacity: 10
+  },
+  aircraftCarrier: {
+    health: 1100,
+    maxHealth: 1100,
+    speed: 0.24,
+    rotationSpeed: 0.012,
+    turretRotationSpeed: 0,
+    accelerationMultiplier: 0.35,
+    armor: 5,
+    movementType: 'water',
+    isNaval: true,
+    deckSlotCapacity: 4,
+    maxCarrierFuel: 24000,
+    maxCarrierAmmo: 64
+  },
+  navalMineLayer: {
+    health: 280,
+    maxHealth: 280,
+    speed: 0.4,
+    rotationSpeed: 0.03,
+    turretRotationSpeed: 0,
+    accelerationMultiplier: 0.55,
+    armor: 1.5,
+    movementType: 'water',
+    isNaval: true,
+    waterMineCapacity: 20
+  },
+  battleship: {
+    health: 950,
+    maxHealth: 950,
+    speed: 0.26,
+    rotationSpeed: 0.014,
+    turretRotationSpeed: 0.018,
+    accelerationMultiplier: 0.35,
+    armor: 5,
+    movementType: 'water',
+    isNaval: true
+  },
+  submarine: {
+    health: 260,
+    maxHealth: 260,
+    speed: 0.36,
+    rotationSpeed: 0.026,
+    turretRotationSpeed: 0,
+    accelerationMultiplier: 0.6,
+    armor: 2,
     movementType: 'water',
     isNaval: true
   },
@@ -1317,7 +1395,10 @@ export const UNIT_AMMO_CAPACITY = {
   apache: 38,
   f22Raptor: 8,
   f35: 6,
-  destroyer: 60
+  destroyer: 60,
+  navalMineLayer: 20,
+  battleship: 160,
+  submarine: 24
 }
 
 const REMOTE_CONTROL_ALLOWED_ACTIONS = [
@@ -1527,8 +1608,23 @@ export const UNIT_GAS_PROPERTIES = {
   mineLayer: { tankSize: 700, consumption: 150 },
   mineSweeper: { tankSize: 1900, consumption: 450 },
   destroyer: { tankSize: 6000, consumption: 220 },
-  supplyShip: { tankSize: 4200, consumption: 180 }
+  supplyShip: { tankSize: 4200, consumption: 180 },
+  hovercraft: { tankSize: 3600, consumption: 260 },
+  vehicleFerry: { tankSize: 7200, consumption: 240 },
+  aircraftCarrier: { tankSize: 18000, consumption: 520 },
+  navalMineLayer: { tankSize: 5600, consumption: 210 },
+  battleship: { tankSize: 15000, consumption: 480 },
+  submarine: { tankSize: 9000, consumption: 260 }
 }
+
+export const WATER_MINE_TRIGGER_RADIUS = TILE_SIZE * 1.15
+export const WATER_MINE_DAMAGE_RADIUS = TILE_SIZE * 3.5
+export const WATER_MINE_DAMAGE = 150
+export const WATER_MINE_ARM_DELAY = 2500
+export const SUBMARINE_DETECTION_RADIUS = TILE_SIZE * 4
+export const SUBMARINE_SURFACE_DURATION = 2500
+export const SUBMARINE_TORPEDO_RANGE = TILE_SIZE * 12
+export const BATTLESHIP_FIRE_RANGE = TILE_SIZE * 24
 
 const EXPORTED_CONFIG_VARIABLES = [
   'XP_MULTIPLIER',

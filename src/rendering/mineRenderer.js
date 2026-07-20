@@ -9,20 +9,43 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
  * @param {object} scrollOffset - Current scroll offset {x, y}
  */
 export function renderMineIndicators(ctx, scrollOffset) {
-  if (!gameState.mines || gameState.mines.length === 0) {
+  const mines = [
+    ...(gameState.mines || []),
+    ...(gameState.waterMines || [])
+  ]
+  if (mines.length === 0) {
     return
   }
 
   ctx.save()
   const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
 
-  gameState.mines.forEach(mine => {
+  mines.forEach(mine => {
     const screenX = mine.tileX * TILE_SIZE - scrollOffset.x + TILE_SIZE / 2
     const screenY = mine.tileY * TILE_SIZE - scrollOffset.y + TILE_SIZE / 2
 
     // Only render if on screen
     if (screenX < -TILE_SIZE || screenY < -TILE_SIZE ||
         screenX > viewportWidth + TILE_SIZE || screenY > viewportHeight + TILE_SIZE) {
+      return
+    }
+
+    if (mine.waterMine) {
+      const size = TILE_SIZE * 0.5
+      ctx.globalAlpha = mine.active ? 0.45 : 0.25
+      ctx.strokeStyle = '#9FE7FF'
+      ctx.fillStyle = '#12394A'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.arc(screenX, screenY, size * 0.34, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+      ctx.beginPath()
+      ctx.moveTo(screenX - size * 0.55, screenY)
+      ctx.lineTo(screenX + size * 0.55, screenY)
+      ctx.moveTo(screenX, screenY - size * 0.55)
+      ctx.lineTo(screenX, screenY + size * 0.55)
+      ctx.stroke()
       return
     }
 

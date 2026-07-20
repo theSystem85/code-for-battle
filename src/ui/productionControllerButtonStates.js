@@ -111,7 +111,7 @@ export function updateVehicleButtonStates(controller) {
         button.classList.add('disabled')
         button.title = 'Requires Helipad or Airstrip and Ammunition Factory'
       }
-    } else if (unitType === 'destroyer') {
+    } else if (controller.navalUnitTypes.includes(unitType) && unitType !== 'supplyShip') {
       if (hasShipyard) {
         button.classList.remove('disabled')
         button.title = ''

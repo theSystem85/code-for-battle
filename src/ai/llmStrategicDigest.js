@@ -50,6 +50,10 @@ const PRIORITY_TARGET_UNIT_TYPES = new Set([
   'f22Raptor',
   'f35',
   'destroyer',
+  'battleship',
+  'submarine',
+  'aircraftCarrier',
+  'navalMineLayer',
   'recoveryTank',
   'mineLayer'
 ])
@@ -69,12 +73,24 @@ const UNIT_ROLE_LABELS = {
   f22Raptor: 'air-superiority',
   f35: 'strike-aircraft',
   destroyer: 'naval-combat',
+  hovercraft: 'naval-transport',
+  vehicleFerry: 'heavy-naval-transport',
+  aircraftCarrier: 'naval-airbase',
+  navalMineLayer: 'naval-mine-utility',
+  battleship: 'naval-long-range',
+  submarine: 'naval-stealth',
   mineLayer: 'mine-utility',
   mineSweeper: 'mine-clearance'
 }
 const UNIT_SPAWN_BUILDINGS = {
   apache: 'helipad',
   destroyer: 'shipyard',
+  hovercraft: 'shipyard',
+  vehicleFerry: 'shipyard',
+  aircraftCarrier: 'shipyard',
+  navalMineLayer: 'shipyard',
+  battleship: 'shipyard',
+  submarine: 'shipyard',
   f22Raptor: 'airstrip',
   f35: 'airstrip'
 }

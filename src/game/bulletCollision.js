@@ -10,7 +10,10 @@ import { TILE_SIZE } from '../config.js'
 export function checkUnitCollision(bullet, unit) {
   try {
     // Validate inputs
-    if (!bullet || !unit || unit.health <= 0) return false
+    if (!bullet || !unit || unit.health <= 0 || unit.embarkedOnId) return false
+    if (bullet.navalOnly && !unit.isNaval) return false
+    if (bullet.strictTarget && bullet.target?.id && unit.id !== bullet.target.id) return false
+    if (unit.type === 'submarine' && unit.depthState !== 'surfaced' && bullet.originType !== 'depthCharge') return false
 
     // Skip collision with self (building that shot the bullet)
     if (bullet.shooter && bullet.shooter.isBuilding &&
@@ -82,7 +85,7 @@ export function checkWreckCollision(bullet, wreck) {
  */
 export function checkBuildingCollision(bullet, building) {
   try {
-    if (!bullet || !building || building.health <= 0) return false
+    if (!bullet || !building || building.health <= 0 || bullet.navalOnly) return false
 
     // Skip friendly buildings unless this is a forced attack
     const forcedTarget = bullet.target || bullet.shooter?.target
@@ -115,7 +118,7 @@ export function checkBuildingCollision(bullet, building) {
  */
 export function checkFactoryCollision(bullet, factory) {
   try {
-    if (!bullet || !factory || factory.destroyed) return false
+    if (!bullet || !factory || factory.destroyed || bullet.navalOnly) return false
 
     // Skip friendly factories unless this is a forced attack
     const forcedTarget = bullet.target || bullet.shooter?.target

@@ -45,7 +45,7 @@ import {
 export class ProductionController {
   constructor() {
     this.vehicleUnitTypes = ['tank', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'ambulance', 'tankerTruck', 'recoveryTank', 'mineLayer', 'mineSweeper']
-    this.navalUnitTypes = ['destroyer', 'supplyShip']
+    this.navalUnitTypes = ['destroyer', 'supplyShip', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
     this.unitButtons = new Map()
     this.buildingButtons = new Map()
     this.isSetup = false // Flag to prevent duplicate event listeners

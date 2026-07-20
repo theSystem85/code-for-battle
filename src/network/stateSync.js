@@ -10,6 +10,7 @@ import { units as mainUnits, bullets as mainBullets, factories as mainFactories,
 import { setMapDimensions, ORE_SPREAD_ENABLED, ORE_SPREAD_INTERVAL, setOreSpreadEnabled, setOreSpreadInterval } from '../config.js'
 import { broadcastGameCommand } from './commandBroadcast.js'
 import { getSimulationTime } from '../game/time.js'
+import { rebuildWaterMineLookup } from '../game/waterMineSystem.js'
 
 // Re-export COMMAND_TYPES for convenience (will need to import from gameCommandSync or define here)
 // For now, we'll assume it's imported where needed
@@ -89,8 +90,8 @@ export function updateUnitInterpolation() {
     unit.y = state.prevY + (state.targetY - state.prevY) * t
 
     // Update tile position based on interpolated position
-    unit.tileX = Math.floor(unit.x / 32) // TILE_SIZE = 32
-    unit.tileY = Math.floor(unit.y / 32)
+    unit.tileX = Math.floor((unit.x + 16) / 32) // Center-based occupancy; TILE_SIZE = 32
+    unit.tileY = Math.floor((unit.y + 16) / 32)
 
     // Interpolate direction (handle wraparound for angles)
     if (state.targetDir !== undefined && state.prevDir !== undefined) {
@@ -282,7 +283,31 @@ export function createGameStateSnapshot() {
     supplyFuel: unit.supplyFuel,
     supplyAmmo: unit.supplyAmmo,
     supplyRepairTools: unit.supplyRepairTools,
-    sweeping: unit.sweeping
+    sweeping: unit.sweeping,
+    isNaval: unit.isNaval,
+    isAirUnit: unit.isAirUnit,
+    embarkedOnId: unit.embarkedOnId,
+    embarkedUnitIds: unit.embarkedUnitIds,
+    transportCapacity: unit.transportCapacity,
+    carrierId: unit.carrierId,
+    carrierDeckSlotIndex: unit.carrierDeckSlotIndex,
+    carrierOperation: unit.carrierOperation,
+    carrierAircraftIds: unit.carrierAircraftIds,
+    carrierFuel: unit.carrierFuel,
+    maxCarrierFuel: unit.maxCarrierFuel,
+    carrierAmmo: unit.carrierAmmo,
+    maxCarrierAmmo: unit.maxCarrierAmmo,
+    remainingWaterMines: unit.remainingWaterMines,
+    waterMineSweepMode: unit.waterMineSweepMode,
+    pendingWaterMineTile: unit.pendingWaterMineTile,
+    selectedBattery: unit.selectedBattery,
+    batteries: unit.batteries,
+    depthState: unit.depthState,
+    depthTransitionStartedAt: unit.depthTransitionStartedAt,
+    depthTransitionProgress: unit.depthTransitionProgress,
+    detectedByOwners: unit.detectedByOwners,
+    lastTorpedoTime: unit.lastTorpedoTime,
+    lastDepthChargeTime: unit.lastDepthChargeTime
   }))
 
   // Serialize buildings with essential properties
@@ -410,6 +435,8 @@ export function createGameStateSnapshot() {
     factories,
     explosions,
     unitWrecks,
+    waterMines: (gameState.waterMines || []).map(mine => ({ ...mine })),
+    depthCharges: (gameState.depthCharges || []).map(charge => ({ ...charge })),
     money: gameState.money,
     partyMoney: createPartyMoneySnapshot(),
     gamePaused: gameState.gamePaused,
@@ -727,6 +754,14 @@ export function applyGameStateSnapshot(snapshot) {
 
     // Also keep gameState.units in sync
     gameState.units = mainUnits
+  }
+
+  if (Array.isArray(snapshot.waterMines)) {
+    gameState.waterMines = snapshot.waterMines.map(mine => ({ ...mine }))
+    rebuildWaterMineLookup()
+  }
+  if (Array.isArray(snapshot.depthCharges)) {
+    gameState.depthCharges = snapshot.depthCharges.map(charge => ({ ...charge }))
   }
 
   // Sync buildings - replace entire array from host snapshot

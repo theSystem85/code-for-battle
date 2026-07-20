@@ -40,6 +40,7 @@ import { updateRecoveryTankLogic } from './game/recoveryTankSystem.js'
 import { updateMines } from './game/mineSystem.js'
 import { updateMineLayerBehavior } from './game/mineLayerBehavior.js'
 import { updateMineSweeperBehavior } from './game/mineSweeperBehavior.js'
+import { updateNavalFleet } from './game/navalFleetSystem.js'
 import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.js'
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
@@ -408,6 +409,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       units.forEach(unit => {
         updateGuardBehavior(unit, mapGrid, occupancyMap, now)
       })
+      updateNavalFleet(units, bullets, mapGrid, gameState, now, delta)
       updateUnitMovement(units, mapGrid, occupancyMap, gameState, now, factories)
       updateSpawnExit(units, factories, mapGrid, occupancyMap)
       updateUnitCombat(units, bullets, mapGrid, gameState, now)
@@ -504,11 +506,12 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
       // Check if unit type should emit smoke when heavily damaged
       // Uses string.includes('tank') to match tank_v1, tank-v2, tank-v3, rocketTank
+      const unitType = typeof unit.type === 'string' ? unit.type : ''
       const isSmokeEmittingType =
-        unit.type.includes('tank') ||
-        unit.type === 'harvester' ||
-        unit.type === 'howitzer' ||
-        unit.type === 'recoveryTank'
+        unitType.includes('tank') ||
+        unitType === 'harvester' ||
+        unitType === 'howitzer' ||
+        unitType === 'recoveryTank'
 
       const shouldEmitSmoke = (healthRatio < 0.25 || isInDestructionFreeze) && isSmokeEmittingType
 

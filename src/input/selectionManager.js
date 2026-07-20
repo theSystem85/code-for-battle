@@ -52,6 +52,8 @@ export class SelectionManager {
 
   // Determine if a unit can be selected based on configuration
   isSelectableUnit(unit) {
+    if (unit?.embarkedOnId) return false
+    if (unit?.type === 'submarine' && unit.depthState === 'submerged' && !this.isHumanPlayerUnit(unit)) return false
     if (this.isHumanPlayerUnit(unit)) {
       return unit.health > 0
     }

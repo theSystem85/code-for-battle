@@ -1,11 +1,30 @@
 import { TILE_SIZE } from '../config.js'
 
 export const WATER_MOVEMENT_TYPE = 'water'
-export const navalUnitTypes = ['destroyer', 'supplyShip']
+export const navalUnitTypes = [
+  'destroyer',
+  'supplyShip',
+  'hovercraft',
+  'vehicleFerry',
+  'aircraftCarrier',
+  'navalMineLayer',
+  'battleship',
+  'submarine'
+]
 export const navalProductionBuildingTypes = ['shipyard']
 export const SHIPYARD_SERVICE_RADIUS_TILES = 3
 export const DESTROYER_RENDER_LENGTH_TILES = 2.6
 export const DESTROYER_HULL_LENGTH_RATIO = 0.895
+export const NAVAL_RENDER_LENGTH_TILES = Object.freeze({
+  destroyer: 2.6,
+  supplyShip: 2.2,
+  hovercraft: 2.2,
+  vehicleFerry: 3.2,
+  aircraftCarrier: 6.24,
+  navalMineLayer: 2.7,
+  battleship: 4.4,
+  submarine: 2.8
+})
 
 const SHIPYARD_SERVICE_REQUIREMENTS = Object.freeze({
   fuel: 'gasStation',
@@ -16,6 +35,10 @@ const SHIPYARD_SERVICE_REQUIREMENTS = Object.freeze({
 
 export function isNavalUnitType(type) {
   return navalUnitTypes.includes(type)
+}
+
+export function getNavalRenderLengthTiles(type) {
+  return NAVAL_RENDER_LENGTH_TILES[type] || DESTROYER_RENDER_LENGTH_TILES
 }
 
 export function isWaterTile(mapGrid, x, y) {
@@ -125,7 +148,7 @@ export function addShipWake(unit, gameState, now = performance.now()) {
   const direction = unit.direction || 0
   const centerX = unit.x + TILE_SIZE / 2
   const centerY = unit.y + TILE_SIZE / 2
-  const hullEndOffset = TILE_SIZE * (DESTROYER_RENDER_LENGTH_TILES / 2) * DESTROYER_HULL_LENGTH_RATIO
+  const hullEndOffset = TILE_SIZE * (getNavalRenderLengthTiles(unit.type) / 2) * DESTROYER_HULL_LENGTH_RATIO
   const directionX = Math.cos(direction)
   const directionY = Math.sin(direction)
   gameState.shipWakes = gameState.shipWakes || []

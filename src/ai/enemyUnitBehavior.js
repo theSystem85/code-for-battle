@@ -329,9 +329,10 @@ function findNavalAttackPath(unit, target, mapGrid, occupancyMap) {
 
 function findNavalAttackTarget(unit, units, gameState, aiPlayerId) {
   const enemyShips = units
-    .filter(candidate => candidate !== unit && candidate.isNaval && candidate.health > 0 && isEnemyTo(candidate, aiPlayerId))
+    .filter(candidate => candidate !== unit && candidate.isNaval && candidate.health > 0 && isEnemyTo(candidate, aiPlayerId) && (candidate.type !== 'submarine' || candidate.depthState === 'surfaced'))
     .sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y))
   if (enemyShips.length > 0) return enemyShips[0]
+  if (unit.type === 'submarine') return null
 
   const priority = ['constructionYard', 'shipyard', 'vehicleFactory', 'oreRefinery', 'powerPlant']
   const enemyBuildings = [...(gameState.buildings || []), ...(gameState.factories || [])]

@@ -220,6 +220,8 @@ export class MinimapRenderer {
 
     // Draw units with party colors
     units.forEach(unit => {
+      if (unit.embarkedOnId) return
+      if (unit.type === 'submarine' && unit.depthState === 'submerged' && !friendlyOwners.has(unit.owner)) return
       const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
       const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
       if (

@@ -91,6 +91,13 @@ function hashUnit(unit) {
   ;['supplyCrew', 'supplyFuel', 'supplyAmmo', 'supplyRepairTools'].forEach(key => {
     if (unit[key] !== undefined) hash = hashCombine(hash, quantize(unit[key], 1))
   })
+  ;['remainingWaterMines', 'carrierFuel', 'carrierAmmo'].forEach(key => {
+    if (unit[key] !== undefined) hash = hashCombine(hash, quantize(unit[key], 1))
+  })
+  hash = hashCombine(hash, hashString(unit.depthState || ''))
+  hash = hashCombine(hash, quantize(unit.depthTransitionProgress || 0, 1000))
+  hash = hashCombine(hash, hashString(unit.embarkedOnId || ''))
+  ;(unit.embarkedUnitIds || []).forEach(id => { hash = hashCombine(hash, hashString(id)) })
 
   // Hash movement state
   if (unit.path) {
@@ -192,10 +199,10 @@ function hashMine(mine) {
 
   hash = hashCombine(hash, hashString(mine.id?.toString() || ''))
   hash = hashCombine(hash, hashString(mine.owner || ''))
-  hash = hashCombine(hash, quantize(mine.x, 1))
-  hash = hashCombine(hash, quantize(mine.y, 1))
+  hash = hashCombine(hash, quantize(mine.tileX ?? mine.x, 1))
+  hash = hashCombine(hash, quantize(mine.tileY ?? mine.y, 1))
   hash = hashCombine(hash, quantize(mine.health || 0, 1))
-  hash = hashCombine(hash, mine.armed ? 1 : 0)
+  hash = hashCombine(hash, mine.active || mine.armed ? 1 : 0)
 
   return hash >>> 0
 }
@@ -295,6 +302,16 @@ export function computeStateHash(gameState, tick) {
   // Hash mines (unordered)
   const minesHash = hashArrayUnordered(gameState.mines || [], hashMine)
   hash = hashCombine(hash, minesHash)
+  const waterMinesHash = hashArrayUnordered(gameState.waterMines || [], hashMine)
+  hash = hashCombine(hash, waterMinesHash)
+  const depthChargesHash = hashArrayUnordered(gameState.depthCharges || [], charge => {
+    let chargeHash = hashString(charge.id?.toString() || '')
+    chargeHash = hashCombine(chargeHash, quantize(charge.x, POSITION_PRECISION))
+    chargeHash = hashCombine(chargeHash, quantize(charge.y, POSITION_PRECISION))
+    chargeHash = hashCombine(chargeHash, quantize(charge.detonateAt, 1))
+    return chargeHash
+  })
+  hash = hashCombine(hash, depthChargesHash)
 
   // Hash party states (money, power)
   if (gameState.partyStates) {
@@ -374,11 +391,13 @@ export function createHashReport(gameState, tick) {
     buildingCount: (gameState.buildings || []).length,
     bulletCount: (gameState.bullets || []).length,
     mineCount: (gameState.mines || []).length,
+    waterMineCount: (gameState.waterMines || []).length,
     money: gameState.money,
     unitsHash: hashArrayUnordered(gameState.units || [], hashUnit).toString(16),
     buildingsHash: hashArrayUnordered(gameState.buildings || [], hashBuilding).toString(16),
     bulletsHash: hashArrayUnordered(gameState.bullets || [], hashBullet).toString(16),
     minesHash: hashArrayUnordered(gameState.mines || [], hashMine).toString(16),
+    waterMinesHash: hashArrayUnordered(gameState.waterMines || [], hashMine).toString(16),
     fullHash: computeStateHash(gameState, tick)
   }
 }

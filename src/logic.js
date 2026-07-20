@@ -40,6 +40,7 @@ export function triggerExplosion(
     factoryDamageMultiplier = 1,
     buildingDamageCaps = {},
     allowAirborneDamage = false,
+    allowSubmergedDamage = false,
     unitDamageMultipliers = {},
     spawnVisual = true
   } = options || {}
@@ -58,6 +59,7 @@ export function triggerExplosion(
 
   // Apply damage to nearby units
   units.forEach(unit => {
+    if (unit.type === 'submarine' && unit.depthState !== 'surfaced' && !allowSubmergedDamage) return
     const isAirUnit = unit.isAirUnit || unit.type === 'apache' || unit.type === 'f35'
     const airborneStates = ['takeoff', 'airborne', 'landing']
     const isAirborne = isAirUnit && airborneStates.includes(unit.flightState)

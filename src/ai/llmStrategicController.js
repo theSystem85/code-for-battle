@@ -999,7 +999,8 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
                   enum: [
                     'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'harvester',
                     'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank',
-                    'howitzer', 'apache', 'destroyer', 'f22Raptor', 'f35', 'mineLayer', 'mineSweeper'
+                    'howitzer', 'apache', 'destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier',
+                    'navalMineLayer', 'battleship', 'submarine', 'f22Raptor', 'f35', 'mineLayer', 'mineSweeper'
                   ]
                 },
                 count: { type: 'number' },

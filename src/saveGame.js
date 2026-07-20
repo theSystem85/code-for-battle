@@ -46,6 +46,7 @@ import { ensurePlayerBuildHistoryLoaded } from './savePlayerBuildPatterns.js'
 import { getUniqueId, getBuildingIdentifier } from './utils.js'
 import { ensureAirstripOperations, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant } from './utils/airstripUtils.js'
 import { rebuildMineLookup } from './game/mineSystem.js'
+import { rebuildWaterMineLookup } from './game/waterMineSystem.js'
 import { getSimulationTime } from './game/time.js'
 import { regenerateAllInviteTokens } from './network/multiplayerStore.js'
 import { refreshSidebarMultiplayer } from './ui/sidebarMultiplayer.js'
@@ -591,6 +592,53 @@ function buildSaveObject(label) {
       serialized.sweeping = Boolean(u.sweeping)
     }
 
+    if (u.type === 'hovercraft' || u.type === 'vehicleFerry') {
+      serialized.transportCapacity = u.transportCapacity
+      serialized.embarkedUnitIds = [...(u.embarkedUnitIds || [])]
+      serialized.pendingLoadUnitId = u.pendingLoadUnitId || null
+      serialized.pendingUnloadTile = u.pendingUnloadTile || null
+    }
+
+    if (u.type === 'aircraftCarrier') {
+      serialized.deckSlotCapacity = u.deckSlotCapacity
+      serialized.carrierAircraftIds = [...(u.carrierAircraftIds || [])]
+      serialized.carrierFuel = u.carrierFuel
+      serialized.maxCarrierFuel = u.maxCarrierFuel
+      serialized.carrierAmmo = u.carrierAmmo
+      serialized.maxCarrierAmmo = u.maxCarrierAmmo
+    }
+
+    if (u.type === 'f22Raptor' || u.type === 'f35') {
+      serialized.carrierId = u.carrierId || null
+      serialized.carrierDeckSlotIndex = Number.isInteger(u.carrierDeckSlotIndex) ? u.carrierDeckSlotIndex : null
+      serialized.carrierOperation = u.carrierOperation ? { ...u.carrierOperation } : null
+    }
+
+    if (u.type === 'navalMineLayer') {
+      serialized.waterMineCapacity = u.waterMineCapacity
+      serialized.remainingWaterMines = u.remainingWaterMines
+      serialized.waterMineSweepMode = Boolean(u.waterMineSweepMode)
+      serialized.pendingWaterMineTile = u.pendingWaterMineTile ? { ...u.pendingWaterMineTile } : null
+    }
+
+    if (u.type === 'battleship') {
+      serialized.selectedBattery = u.selectedBattery || null
+      serialized.batteries = {
+        fore: { ...(u.batteries?.fore || {}) },
+        aft: { ...(u.batteries?.aft || {}) }
+      }
+    }
+
+    if (u.type === 'submarine') {
+      serialized.depthState = u.depthState
+      serialized.depthTransitionProgress = u.depthTransitionProgress
+      serialized.depthTransitionStartedAt = u.depthTransitionStartedAt
+      serialized.detectedByOwners = { ...(u.detectedByOwners || {}) }
+      serialized.lastTorpedoTime = u.lastTorpedoTime
+    }
+
+    if (u.embarkedOnId) serialized.embarkedOnId = u.embarkedOnId
+
     if (u.type === 'f22Raptor' || u.type === 'f35') {
       serialized.f22State = u.f22State
       serialized.airstripId = u.airstripId
@@ -761,6 +809,12 @@ function buildSaveObject(label) {
             ? Math.max(0, mine.armedAt - simulationNow)
             : 0
         }))
+        : [],
+      waterMines: Array.isArray(gameState.waterMines)
+        ? gameState.waterMines.map(mine => ({ ...mine }))
+        : [],
+      depthCharges: Array.isArray(gameState.depthCharges)
+        ? gameState.depthCharges.map(charge => ({ ...charge }))
         : [],
       mineDeploymentPreview: gameState.mineDeploymentPreview
         ? {
@@ -1034,6 +1088,22 @@ function loadGameFromSaveObject(saveObj, key) {
     }
 
     rebuildMineLookup()
+
+    gameState.waterMines = Array.isArray(loaded.gameState?.waterMines)
+      ? loaded.gameState.waterMines.map(mine => ({
+        ...mine,
+        id: mine.id || getUniqueId(),
+        tileX: Number.isFinite(mine.tileX) ? mine.tileX : 0,
+        tileY: Number.isFinite(mine.tileY) ? mine.tileY : 0,
+        owner: mine.owner || gameState.humanPlayer,
+        active: Boolean(mine.active),
+        armedAt: Number.isFinite(mine.armedAt) ? mine.armedAt : simulationNowAfterLoad
+      }))
+      : []
+    rebuildWaterMineLookup()
+    gameState.depthCharges = Array.isArray(loaded.gameState?.depthCharges)
+      ? loaded.gameState.depthCharges.map(charge => ({ ...charge }))
+      : []
 
     const loadedWrecks = Array.isArray(loaded.unitWrecks) ? loaded.unitWrecks : []
     gameState.unitWrecks = loadedWrecks.map(wreck => {
