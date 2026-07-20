@@ -676,6 +676,31 @@ export class EffectsRenderer {
     ctx.restore()
   }
 
+  renderDepthCharges(ctx, gameState, scrollOffset) {
+    const charges = gameState?.depthCharges
+    if (!Array.isArray(charges) || charges.length === 0) return
+    const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
+    ctx.save()
+    charges.forEach(charge => {
+      const progress = Math.max(0, Math.min(1, (now - charge.createdAt) / Math.max(1, charge.detonateAt - charge.createdAt)))
+      const x = charge.x - scrollOffset.x
+      const y = charge.y - scrollOffset.y
+      ctx.strokeStyle = `rgba(170, 225, 255, ${0.8 - progress * 0.35})`
+      ctx.fillStyle = 'rgba(20, 45, 65, 0.85)'
+      ctx.lineWidth = 1.5
+      ctx.beginPath()
+      ctx.arc(x, y, TILE_SIZE * (0.16 + progress * 0.12), 0, Math.PI * 2)
+      ctx.fill()
+      ctx.stroke()
+      for (let i = 0; i < 3; i++) {
+        ctx.beginPath()
+        ctx.arc(x + (i - 1) * 4, y - progress * TILE_SIZE * (0.35 + i * 0.08), 1.5 + i * 0.4, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+    })
+    ctx.restore()
+  }
+
   render(ctx, bullets, gameState, units, scrollOffset) {
     this.renderBullets(ctx, bullets, scrollOffset)
     this.renderSmoke(ctx, gameState, scrollOffset)

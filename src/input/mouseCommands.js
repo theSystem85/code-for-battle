@@ -9,6 +9,11 @@ import { initiateRetreat } from '../behaviours/retreat.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayEntityReference, createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
+import {
+  requestWaterMineAction,
+  setBattleshipTarget,
+  tryHandleFleetCommand
+} from '../game/navalFleetSystem.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
 const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
@@ -84,6 +89,12 @@ export function handleForceAttackCommand(handler, worldX, worldY, units, selecte
   }
   if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
     return false
+  }
+  const navalMineLayers = commandableUnits.filter(unit => unit.type === 'navalMineLayer')
+  const waterMineTileX = Math.floor(worldX / TILE_SIZE)
+  const waterMineTileY = Math.floor(worldY / TILE_SIZE)
+  if (navalMineLayers.length && navalMineLayers.some(unit => requestWaterMineAction(unit, waterMineTileX, waterMineTileY, mapGrid))) {
+    return true
   }
   selectionManager.clearWreckSelection()
   if (commandableUnits[0].type !== 'factory') {
@@ -251,6 +262,9 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
 
   const tileX = Math.floor(worldX / TILE_SIZE)
   const tileY = Math.floor(worldY / TILE_SIZE)
+  if (tryHandleFleetCommand(commandableUnits, worldX, worldY, handler.gameUnits || [], mapGrid)) {
+    return
+  }
   const hasSelectedHarvesters = commandableUnits.some(unit => unit.type === 'harvester')
   const hasSelectedApaches = commandableUnits.some(unit => unit.type === 'apache' || unit.type === 'f35')
 
@@ -429,7 +443,10 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
         })
         markWaypointsAdded()
       } else {
-        unitCommands.handleAttackCommand(commandableUnits, target, mapGrid, false)
+        const battleships = commandableUnits.filter(unit => unit.type === 'battleship')
+        battleships.forEach(unit => setBattleshipTarget(unit, target))
+        const normalAttackers = commandableUnits.filter(unit => unit.type !== 'battleship' && (unit.type !== 'submarine' || target.isNaval))
+        if (normalAttackers.length) unitCommands.handleAttackCommand(normalAttackers, target, mapGrid, false)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
           command: 'attack',
           targetRef: createReplayEntityReference(target)

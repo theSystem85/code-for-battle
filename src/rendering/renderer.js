@@ -416,6 +416,7 @@ export class Renderer {
     this.buildingRenderer.renderBases(gameCtx, factories, mapGrid, scrollOffset)
     // Naval wakes belong to the water layer beneath ships and fade after movement stops.
     this.effectsRenderer.renderShipWakes?.(gameCtx, gameState, scrollOffset)
+    this.effectsRenderer.renderDepthCharges?.(gameCtx, gameState, scrollOffset)
     this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset)
     this.unitRenderer.renderBases(gameCtx, groundedUnits, scrollOffset)
     gameCtx.restore()

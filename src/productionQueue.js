@@ -19,7 +19,7 @@ import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } fr
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
-const navalUnitTypes = ['destroyer', 'supplyShip']
+const navalUnitTypes = ['destroyer', 'supplyShip', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
 
 const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor', 'f35']
 

@@ -60,6 +60,15 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       continue
     }
 
+    if (unit.embarkedOnId || unit.carrierOperation) {
+      initializeUnitMovement(unit)
+      unit.movement.velocity = { x: 0, y: 0 }
+      unit.movement.targetVelocity = { x: 0, y: 0 }
+      unit.movement.currentSpeed = 0
+      unit.movement.isMoving = false
+      continue
+    }
+
     // Initialize movement system for all units
     initializeUnitMovement(unit)
 

@@ -23,6 +23,7 @@ const vehicleUnitTypes = [
   'mineLayer',
   'mineSweeper'
 ]
+const navalUnitTypes = ['destroyer', 'supplyShip', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
 
 /**
  * Ensure the LLM build queue structures exist on the strategic state.
@@ -91,7 +92,7 @@ function resolveFactoryForUnit({ unitType, factoryId, buildings, factories, owne
   if (unitType === 'apache') {
     return allBuildings.find(b => b.type === 'helipad' && b.owner === owner) || null
   }
-  if (unitType === 'destroyer') {
+  if (navalUnitTypes.includes(unitType)) {
     return allBuildings.find(b => b.type === 'shipyard' && b.owner === owner) || null
   }
   if (unitType === 'f22Raptor' || unitType === 'f35') {
@@ -224,7 +225,7 @@ export function applyGameTickOutput(state = gameState, output, options = {}) {
           rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
           return
         }
-        if (unitType === 'destroyer' && factory.type !== 'shipyard') {
+        if (navalUnitTypes.includes(unitType) && factory.type !== 'shipyard') {
           rejected.push({ actionId: action.actionId, reason: 'WRONG_FACTORY' })
           return
         }

@@ -35,6 +35,12 @@ const FULL_UNIT_TECH_TREE = [
   { type: 'mineLayer', req: 'vehicleFactory+vehicleWorkshop+ammunitionFactory', spawn: 'vehicleFactory' },
   { type: 'apache', req: 'helipad', spawn: 'helipad' },
   { type: 'destroyer', req: 'shipyard', spawn: 'shipyard' },
+  { type: 'hovercraft', req: 'shipyard', spawn: 'shipyard' },
+  { type: 'vehicleFerry', req: 'shipyard', spawn: 'shipyard' },
+  { type: 'aircraftCarrier', req: 'shipyard', spawn: 'shipyard' },
+  { type: 'navalMineLayer', req: 'shipyard', spawn: 'shipyard' },
+  { type: 'battleship', req: 'shipyard', spawn: 'shipyard' },
+  { type: 'submarine', req: 'shipyard', spawn: 'shipyard' },
   { type: 'f22Raptor', req: 'airstrip', spawn: 'airstrip' },
   { type: 'f35', req: 'airstrip', spawn: 'airstrip' },
   { type: 'tank-v3', req: '2xvehicleFactory', spawn: 'vehicleFactory' },
@@ -125,7 +131,10 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
   }
   if (hasFactory && hasWorkshop && hasAmmunitionFactory) available.add('mineLayer')
   if (hasHelipad) available.add('apache')
-  if (hasShipyard) available.add('destroyer')
+  if (hasShipyard) {
+    ;['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
+      .forEach(type => available.add(type))
+  }
   if (hasAirstrip) {
     available.add('f22Raptor')
     available.add('f35')

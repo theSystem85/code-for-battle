@@ -1,5 +1,5 @@
 // rendering/unitRenderer.js
-import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE } from '../config.js'
+import { TILE_SIZE, HARVESTER_CAPPACITY, HARVESTER_UNLOAD_TIME, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, TANK_FIRE_RANGE, ATTACK_TARGET_INDICATOR_SIZE, ATTACK_TARGET_BOUNCE_SPEED, UNIT_TYPE_COLORS, PARTY_COLORS, TANKER_SUPPLY_CAPACITY, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED, SERVICE_DISCOVERY_RANGE, SERVICE_SERVING_RANGE, MINE_DEPLOY_STOP_TIME, VIEW_FRUSTUM_MARGIN, CURSOR_METERS_PER_TILE, BATTLESHIP_FIRE_RANGE, SUBMARINE_TORPEDO_RANGE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { selectedUnits } from '../inputHandler.js'
 import { renderTankWithImages, areTankImagesLoaded } from './tankImageRenderer.js'
@@ -17,6 +17,8 @@ import { renderF22WithImage } from './f22ImageRenderer.js'
 import { renderF35WithImage } from './f35ImageRenderer.js'
 import { renderDestroyerWithImage, isDestroyerImageLoaded } from './destroyerImageRenderer.js'
 import { renderSupplyShipWithImage, isSupplyShipImageLoaded } from './supplyShipImageRenderer.js'
+import { renderNavalFleetUnit } from './navalFleetImageRenderer.js'
+import { getNavalRenderLengthTiles, isNavalUnitType } from '../utils/navalUtils.js'
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
@@ -279,7 +281,9 @@ export class UnitRenderer {
   }
 
   getHudVisualSize(unit) {
-    return unit?.type === 'destroyer' ? TILE_SIZE * 2.8 : unit?.type === 'supplyShip' ? TILE_SIZE * 2.4 : TILE_SIZE
+    return unit && (unit.isNaval || isNavalUnitType(unit.type))
+      ? TILE_SIZE * (getNavalRenderLengthTiles(unit.type) + 0.2)
+      : TILE_SIZE
   }
 
   getSelectedHudBounds(centerX, centerY, unit = null) {
@@ -811,7 +815,11 @@ export class UnitRenderer {
 
   renderNavalWeaponRange(ctx, unit, centerX, centerY) {
     if (!unit?.selected || !unit.isNaval) return
-    const range = 18 * TILE_SIZE
+    const range = unit.type === 'battleship'
+      ? BATTLESHIP_FIRE_RANGE
+      : unit.type === 'submarine'
+        ? SUBMARINE_TORPEDO_RANGE
+        : 18 * TILE_SIZE
     if (!range) return
 
     ctx.save()
@@ -1782,6 +1790,18 @@ export class UnitRenderer {
       }
     }
 
+    if (['hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine'].includes(unit.type)) {
+      const ok = renderNavalFleetUnit(ctx, unit, centerX, centerY, gameState.humanPlayer)
+      if (ok) {
+        if (unit.type === 'battleship' || unit.type === 'submarine') {
+          this.renderNavalWeaponRange(ctx, unit, centerX, centerY)
+        }
+        this.renderSelection(ctx, unit, centerX, centerY)
+        this.renderAlertMode(ctx, unit, centerX, centerY)
+        return
+      }
+    }
+
     if (unit.type === 'destroyer' && isDestroyerImageLoaded()) {
       const ok = renderDestroyerWithImage(ctx, unit, centerX, centerY)
       if (ok) {
@@ -2080,6 +2100,9 @@ export class UnitRenderer {
 
   shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight) {
     if (!unit) return false
+    if (unit.embarkedOnId) return false
+    const isFriendlySubmarine = unit.owner === gameState.humanPlayer || (gameState.humanPlayer === 'player1' && unit.owner === 'player')
+    if (unit.type === 'submarine' && unit.depthState === 'submerged' && !isFriendlySubmarine) return false
 
     const pendingDestructionFreeze = this.isPendingDestructionFreeze(unit)
 

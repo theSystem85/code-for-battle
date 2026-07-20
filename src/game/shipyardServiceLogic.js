@@ -132,6 +132,18 @@ function updateSupplyShipService(units, buildings, delta) {
       if (!isInSupplyShipRadius(target, supplier) || !isStationary(target)) return
       if (hasOwnedServiceBuilding(buildings, supplier.owner, 'fuel')) refillFuel(target, delta, supplier)
       if (hasOwnedServiceBuilding(buildings, supplier.owner, 'ammunition')) refillAmmunition(target, delta, supplier)
+      if (target.type === 'aircraftCarrier') {
+        if (hasOwnedServiceBuilding(buildings, supplier.owner, 'fuel') && target.carrierFuel < target.maxCarrierFuel) {
+          const fuel = Math.min(supplier.supplyFuel || 0, target.maxCarrierFuel - target.carrierFuel, delta * 0.5)
+          target.carrierFuel += fuel
+          supplier.supplyFuel -= fuel
+        }
+        if (hasOwnedServiceBuilding(buildings, supplier.owner, 'ammunition') && target.carrierAmmo < target.maxCarrierAmmo) {
+          const ammo = Math.min(supplier.supplyAmmo || 0, target.maxCarrierAmmo - target.carrierAmmo, delta / 1000)
+          target.carrierAmmo += ammo
+          supplier.supplyAmmo -= ammo
+        }
+      }
       if (hasOwnedServiceBuilding(buildings, supplier.owner, 'health')) refillHealth(target, delta, supplier)
       if (hasOwnedServiceBuilding(buildings, supplier.owner, 'crew')) refillCrew(target, delta, supplier)
     })
@@ -161,6 +173,14 @@ export const updateShipyardServiceLogic = logPerformance(function updateShipyard
 
     if (hasShipyardServiceDependency(shipyard, buildings, 'fuel')) refillFuel(unit, delta)
     if (hasShipyardServiceDependency(shipyard, buildings, 'ammunition')) refillAmmunition(unit, delta)
+    if (unit.type === 'aircraftCarrier') {
+      if (hasShipyardServiceDependency(shipyard, buildings, 'fuel')) {
+        unit.carrierFuel = Math.min(unit.maxCarrierFuel, unit.carrierFuel + delta * 0.5)
+      }
+      if (hasShipyardServiceDependency(shipyard, buildings, 'ammunition')) {
+        unit.carrierAmmo = Math.min(unit.maxCarrierAmmo, unit.carrierAmmo + delta / 1000)
+      }
+    }
     if (hasShipyardServiceDependency(shipyard, buildings, 'health')) refillHealth(unit, delta)
     if (hasShipyardServiceDependency(shipyard, buildings, 'crew')) refillCrew(unit, delta)
     else unit.shipyardCrewRefillProgress = 0
