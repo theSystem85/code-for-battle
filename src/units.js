@@ -1143,6 +1143,8 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.transportCapacity = unitProps.transportCapacity
     unit.embarkedUnitIds = []
     unit.pendingLoadUnitId = null
+    unit.pendingLoadUnitIds = []
+    unit.embarkedUnitTypes = []
     unit.pendingUnloadTile = null
   }
 

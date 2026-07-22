@@ -374,6 +374,50 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-into-mode')).toBe(true)
   })
 
+  it('uses move-into cursor for ground vehicle and transport boarding in both selection directions', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas({ left: 0, top: 0, right: 400, bottom: 400 })
+    const mapGrid = createTestMapGrid(12, 12)
+    const ferry = {
+      id: 'ferry', owner: 'player1', type: 'vehicleFerry', isNaval: true,
+      x: 5 * TILE_SIZE, y: 5 * TILE_SIZE, health: 500,
+      transportCapacity: 10, embarkedUnitIds: [], pendingLoadUnitIds: []
+    }
+    const tank = { id: 'tank', owner: 'player1', type: 'tank_v1', x: 2 * TILE_SIZE, y: 2 * TILE_SIZE, health: 100 }
+
+    manager.updateCustomCursor(createMouseEvent(ferry.x + TILE_SIZE / 2, ferry.y + TILE_SIZE / 2), mapGrid, [], [tank], [tank, ferry])
+    expect(canvas.classList.contains('move-into-mode')).toBe(true)
+
+    manager.updateCustomCursor(createMouseEvent(tank.x + TILE_SIZE / 2, tank.y + TILE_SIZE / 2), mapGrid, [], [ferry], [tank, ferry])
+    expect(canvas.classList.contains('move-into-mode')).toBe(true)
+  })
+
+  it('uses carrier move-into cursor for F22, F35, and Apache while weighted deck space remains', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas({ left: 0, top: 0, right: 500, bottom: 500 })
+    const mapGrid = createTestMapGrid(16, 16)
+    const carrier = {
+      id: 'carrier', owner: 'player1', type: 'aircraftCarrier', isNaval: true,
+      x: 7 * TILE_SIZE, y: 7 * TILE_SIZE, health: 1000, deckSlotCapacity: 4
+    }
+    const aircraft = [
+      { id: 'f22', owner: 'player1', type: 'f22Raptor', isAirUnit: true, x: 0, y: 0, health: 100 },
+      { id: 'f35', owner: 'player1', type: 'f35', isAirUnit: true, x: 0, y: TILE_SIZE, health: 100 },
+      { id: 'apache', owner: 'player1', type: 'apache', isAirUnit: true, x: 0, y: TILE_SIZE * 2, health: 100 }
+    ]
+
+    for (const selectedAircraft of aircraft) {
+      manager.updateCustomCursor(
+        createMouseEvent(carrier.x + TILE_SIZE / 2, carrier.y + TILE_SIZE / 2),
+        mapGrid,
+        [],
+        [selectedAircraft],
+        [carrier, ...aircraft]
+      )
+      expect(canvas.classList.contains('move-into-mode')).toBe(true)
+    }
+  })
+
 
   it('uses move-blocked cursor for F22 in landing sequence on the hovered airstrip', () => {
     const manager = new CursorManager()

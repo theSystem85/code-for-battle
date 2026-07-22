@@ -15,6 +15,7 @@ export const navalProductionBuildingTypes = ['shipyard']
 export const SHIPYARD_SERVICE_RADIUS_TILES = 3
 export const DESTROYER_RENDER_LENGTH_TILES = 2.6
 export const DESTROYER_HULL_LENGTH_RATIO = 0.895
+export const SHIP_BOW_WAKE_FORWARD_OFFSET = 6
 export const NAVAL_RENDER_LENGTH_TILES = Object.freeze({
   destroyer: 2.6,
   supplyShip: 2.2,
@@ -141,6 +142,12 @@ export function getShipyardServiceWaterTiles(shipyard, mapGrid) {
 }
 
 export function addShipWake(unit, gameState, now = performance.now()) {
+  if (unit?.type === 'submarine' && unit.depthState === 'submerged') {
+    if (Array.isArray(gameState?.shipWakes)) {
+      gameState.shipWakes = gameState.shipWakes.filter(wake => wake.sourceUnitId !== unit.id)
+    }
+    return
+  }
   const speed = unit?.movement?.currentSpeed || 0
   if (!unit?.isNaval || !gameState || !unit.movement?.isMoving || speed <= 0.01) return
   if (unit.lastWakeTime && now - unit.lastWakeTime < 90) return
@@ -149,6 +156,7 @@ export function addShipWake(unit, gameState, now = performance.now()) {
   const centerX = unit.x + TILE_SIZE / 2
   const centerY = unit.y + TILE_SIZE / 2
   const hullEndOffset = TILE_SIZE * (getNavalRenderLengthTiles(unit.type) / 2) * DESTROYER_HULL_LENGTH_RATIO
+  const bowWakeOffset = hullEndOffset + SHIP_BOW_WAKE_FORWARD_OFFSET
   const directionX = Math.cos(direction)
   const directionY = Math.sin(direction)
   gameState.shipWakes = gameState.shipWakes || []
@@ -160,16 +168,18 @@ export function addShipWake(unit, gameState, now = performance.now()) {
     duration: 1100,
     size: TILE_SIZE * 0.55,
     speed,
-    kind: 'stern'
+    kind: 'stern',
+    sourceUnitId: unit.id
   }, {
-    x: centerX + directionX * hullEndOffset,
-    y: centerY + directionY * hullEndOffset,
+    x: centerX + directionX * bowWakeOffset,
+    y: centerY + directionY * bowWakeOffset,
     direction,
     createdAt: now,
     duration: 650,
     size: TILE_SIZE * 0.24,
     speed,
-    kind: 'bow'
+    kind: 'bow',
+    sourceUnitId: unit.id
   })
   unit.lastWakeTime = now
 }

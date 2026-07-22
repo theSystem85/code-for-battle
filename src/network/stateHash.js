@@ -98,6 +98,7 @@ function hashUnit(unit) {
   hash = hashCombine(hash, quantize(unit.depthTransitionProgress || 0, 1000))
   hash = hashCombine(hash, hashString(unit.embarkedOnId || ''))
   ;(unit.embarkedUnitIds || []).forEach(id => { hash = hashCombine(hash, hashString(id)) })
+  ;(unit.pendingLoadUnitIds || []).forEach(id => { hash = hashCombine(hash, hashString(id)) })
 
   // Hash movement state
   if (unit.path) {
