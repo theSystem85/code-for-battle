@@ -123,6 +123,7 @@ import { createTestMapGrid, resetGameState } from '../testUtils.js'
 import { playSound } from '../../src/sound.js'
 import { showNotification } from '../../src/ui/notifications.js'
 import { findWreckAtTile } from '../../src/game/unitWreckManager.js'
+import { tryHandleDirectFleetInteraction } from '../../src/input/mouseSelection.js'
 
 const createCursorManager = () => ({
   setIsOverEnemy: vi.fn(),
@@ -457,6 +458,85 @@ describe('MouseHandler', () => {
     expect(guardUnit.guardTarget).toBe(ally)
     expect(guardUnit.guardMode).toBe(true)
     expect(playSound).toHaveBeenCalledWith('confirmed', 0.5)
+  })
+
+  it('prioritizes direct transport and carrier interactions over stale guard state', () => {
+    const mapGrid = Array.from({ length: 20 }, (_, y) =>
+      Array.from({ length: 20 }, (_, x) => ({
+        type: x >= 10 ? 'water' : 'land',
+        building: null,
+        seedCrystal: false,
+        x,
+        y
+      }))
+    )
+    const selectionManager = { isCommandableUnit: () => true }
+    const ferry = {
+      id: 'ferry',
+      type: 'vehicleFerry',
+      owner: 'player',
+      isNaval: true,
+      x: 10 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 500,
+      transportCapacity: 10,
+      embarkedUnitIds: []
+    }
+    const tank = {
+      id: 'tank',
+      type: 'tank_v1',
+      owner: 'player',
+      x: 8 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 100,
+      guardMode: true,
+      guardTarget: ferry
+    }
+
+    expect(tryHandleDirectFleetInteraction(
+      [tank],
+      ferry.x + TILE_SIZE / 2,
+      ferry.y + TILE_SIZE / 2,
+      [tank, ferry],
+      mapGrid,
+      selectionManager
+    )).toBe(true)
+    expect(ferry.pendingLoadUnitIds).toEqual([tank.id])
+    expect(tank.guardMode).toBe(false)
+
+    const carrier = {
+      id: 'carrier',
+      type: 'aircraftCarrier',
+      owner: 'player',
+      isNaval: true,
+      x: 14 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 1000,
+      deckSlotCapacity: 4,
+      carrierAircraftIds: []
+    }
+    const f22 = {
+      id: 'f22',
+      type: 'f22Raptor',
+      owner: 'player',
+      x: 6 * TILE_SIZE,
+      y: 6 * TILE_SIZE,
+      health: 100,
+      altitude: TILE_SIZE,
+      guardMode: true,
+      guardTarget: carrier
+    }
+
+    expect(tryHandleDirectFleetInteraction(
+      [f22],
+      carrier.x + TILE_SIZE / 2,
+      carrier.y + TILE_SIZE / 2,
+      [f22, carrier],
+      mapGrid,
+      selectionManager
+    )).toBe(true)
+    expect(f22.carrierOperation?.state).toBe('approach')
+    expect(f22.guardMode).toBe(false)
   })
 
 

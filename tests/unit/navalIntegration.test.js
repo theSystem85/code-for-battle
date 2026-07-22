@@ -7,7 +7,8 @@ import {
   isNavalUnitInShipyardServiceArea,
   addShipWake,
   DESTROYER_RENDER_LENGTH_TILES,
-  DESTROYER_HULL_LENGTH_RATIO
+  DESTROYER_HULL_LENGTH_RATIO,
+  SHIP_BOW_WAKE_FORWARD_OFFSET
 } from '../../src/utils/navalUtils.js'
 import { TILE_SIZE } from '../../src/config.js'
 import { updateShipyardServiceLogic } from '../../src/game/shipyardServiceLogic.js'
@@ -54,7 +55,7 @@ describe('naval integration', () => {
     const centerX = unit.x + TILE_SIZE / 2
     const hullOffset = TILE_SIZE * (DESTROYER_RENDER_LENGTH_TILES / 2) * DESTROYER_HULL_LENGTH_RATIO
     expect(stern.x).toBeCloseTo(centerX - hullOffset)
-    expect(bow.x).toBeCloseTo(centerX + hullOffset)
+    expect(bow.x).toBeCloseTo(centerX + hullOffset + SHIP_BOW_WAKE_FORWARD_OFFSET)
     expect(stern.size).toBeGreaterThan(bow.size)
     expect(BOW_WAKE_INNER_ANGLE_RADIANS * (180 / Math.PI)).toBeCloseTo(70)
   })

@@ -29,20 +29,13 @@ import {
 import { getUnitSelectionCenter } from './selectionManager.js'
 import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
 import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
-import { selectBattleshipBattery } from '../game/navalFleetSystem.js'
+import { selectBattleshipBattery, tryHandleFleetCommand } from '../game/navalFleetSystem.js'
 
-function hasSelectedCombatUnits(selectionManager, selectedUnits) {
-  return selectedUnits.some(unit =>
-    selectionManager.isCommandableUnit(unit) &&
-    !unit.isBuilding &&
-    unit.type !== 'harvester' &&
-    unit.type !== 'ambulance' &&
-    unit.type !== 'tankerTruck' &&
-    unit.type !== 'ammunitionTruck' &&
-    unit.type !== 'recoveryTank' &&
-    unit.type !== 'mineSweeper' &&
-    unit.type !== 'mineLayer'
+export function tryHandleDirectFleetInteraction(selectedUnits, worldX, worldY, units, mapGrid, selectionManager) {
+  const commandableUnits = selectedUnits.filter(unit =>
+    selectionManager.isCommandableUnit(unit) && unit.isBuilding !== true
   )
+  return commandableUnits.length > 0 && tryHandleFleetCommand(commandableUnits, worldX, worldY, units, mapGrid)
 }
 
 function recordHumanUnitCommand(unitIds, command) {
@@ -1199,22 +1192,21 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
   }
 
   if (clickedUnit && !(friendlySelected && clickedIsEnemy)) {
-    const handledService = friendlySelected && handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)
-    if (handledService) {
+    const clickedIsFriendly = selectionManager.isHumanPlayerUnit(clickedUnit)
+    if (clickedIsFriendly && friendlySelected && tryHandleDirectFleetInteraction(
+      selectedUnits,
+      worldX,
+      worldY,
+      units,
+      mapGrid,
+      selectionManager
+    )) {
       return
     }
 
-    const clickedIsFriendly = selectionManager.isHumanPlayerUnit(clickedUnit)
-    const shouldGuardFriendly = clickedIsFriendly &&
-      friendlySelected &&
-      hasSelectedCombatUnits(selectionManager, selectedUnits) &&
-      !clickedUnit.selected
-
-    if (shouldGuardFriendly) {
-      const guardHandled = handleGuardCommand(handler, worldX, worldY, units, selectedUnits, unitCommands, selectionManager, mapGrid)
-      if (guardHandled) {
-        return
-      }
+    const handledService = friendlySelected && handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)
+    if (handledService) {
+      return
     }
 
     selectionManager.handleUnitSelection(clickedUnit, e, units, factories, selectedUnits)

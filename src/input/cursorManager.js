@@ -30,6 +30,8 @@ const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set([
   'ammunitionTruck',
   'recoveryTank'
 ])
+const NAVAL_TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
+const CARRIER_AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2, apache: 2 })
 
 export class CursorManager {
   constructor() {
@@ -56,6 +58,8 @@ export class CursorManager {
     this.activeCursorClasses = new Set()
     this.rangeCursorInfo = null
     this.blockedHarvesterOreLevel = null
+    this.isOverFleetBoardingTarget = false
+    this.isOverBlockedFleetBoardingTarget = false
     this.rangeCursorElements = this.createRangeCursorElements()
   }
 
@@ -454,6 +458,59 @@ export class CursorManager {
     const gridHeight = gridReady ? mapGrid.length : 0
     const tileWithinBounds = gridReady && tileX >= 0 && tileY >= 0 && tileX < gridWidth && tileY < gridHeight
     const hoveredTile = tileWithinBounds && mapGrid[tileY] ? mapGrid[tileY][tileX] : null
+
+    const isFriendlyOwner = owner => owner === gameState.humanPlayer || (gameState.humanPlayer === 'player1' && owner === 'player')
+    const hoveredUnit = (units || [])
+      .filter(unit => unit && unit.health > 0 && !unit.embarkedOnId && isFriendlyOwner(unit.owner))
+      .map(unit => {
+        const centerX = unit.x + TILE_SIZE / 2
+        const centerY = unit.y + TILE_SIZE / 2
+        const radius = unit.isNaval
+          ? TILE_SIZE * Math.max(0.8, getNavalRenderLengthTiles(unit.type) / 2)
+          : TILE_SIZE * 0.8
+        return { unit, score: Math.hypot(worldX - centerX, worldY - centerY) / radius }
+      })
+      .filter(({ score }) => score <= 1)
+      .sort((a, b) => a.score - b.score)[0]?.unit
+    const selectedGroundCargo = selectedUnits.filter(unit =>
+      !unit?.isBuilding &&
+      !unit?.isNaval &&
+      !unit?.isAirUnit &&
+      !CARRIER_AIRCRAFT_SLOT_WEIGHT[unit?.type] &&
+      !unit?.embarkedOnId &&
+      isFriendlyOwner(unit?.owner)
+    )
+    const selectedTransports = selectedUnits.filter(unit => NAVAL_TRANSPORT_TYPES.has(unit?.type) && isFriendlyOwner(unit.owner))
+    const selectedCarrierAircraft = selectedUnits.filter(unit => CARRIER_AIRCRAFT_SLOT_WEIGHT[unit?.type] && isFriendlyOwner(unit.owner))
+    this.isOverFleetBoardingTarget = false
+    this.isOverBlockedFleetBoardingTarget = false
+
+    if (NAVAL_TRANSPORT_TYPES.has(hoveredUnit?.type) && selectedGroundCargo.length > 0) {
+      const reserved = (hoveredUnit.embarkedUnitIds?.length || 0) + (hoveredUnit.pendingLoadUnitIds?.length || (hoveredUnit.pendingLoadUnitId ? 1 : 0))
+      this.isOverFleetBoardingTarget = reserved < (hoveredUnit.transportCapacity || 0)
+      this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
+    } else if (selectedTransports.length > 0 && hoveredUnit && selectedGroundCargo.length === 0) {
+      const canLoadHoveredUnit = !hoveredUnit.isBuilding && !hoveredUnit.isNaval && !hoveredUnit.isAirUnit && !CARRIER_AIRCRAFT_SLOT_WEIGHT[hoveredUnit.type]
+      if (canLoadHoveredUnit) {
+        this.isOverFleetBoardingTarget = selectedTransports.some(transport => {
+          const reserved = (transport.embarkedUnitIds?.length || 0) + (transport.pendingLoadUnitIds?.length || (transport.pendingLoadUnitId ? 1 : 0))
+          return reserved < (transport.transportCapacity || 0)
+        })
+        this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
+      }
+    } else if (hoveredUnit?.type === 'aircraftCarrier' && selectedCarrierAircraft.length > 0) {
+      const usedSlots = (units || []).reduce((total, aircraft) => {
+        const assignedCarrierId = aircraft.carrierOperation?.carrierId || aircraft.carrierId
+        return assignedCarrierId === hoveredUnit.id
+          ? total + (CARRIER_AIRCRAFT_SLOT_WEIGHT[aircraft.type] || 0)
+          : total
+      }, 0)
+      const availableSlots = Math.max(0, (hoveredUnit.deckSlotCapacity || 4) - usedSlots)
+      this.isOverFleetBoardingTarget = selectedCarrierAircraft.some(aircraft =>
+        !aircraft.carrierId && !aircraft.carrierOperation && CARRIER_AIRCRAFT_SLOT_WEIGHT[aircraft.type] <= availableSlots
+      )
+      this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
+    }
 
     const selectedSupportOnlyOnAirstrip =
       selectedUnits.length > 0 &&
@@ -1005,6 +1062,16 @@ export class CursorManager {
           this.isOverFriendlyHelipad ||
           this.isOverAmmoReceivableTarget ||
           this.isOverServiceProvider
+
+      if (this.isOverBlockedFleetBoardingTarget) {
+        setMoveBlockedCursor()
+        return
+      }
+
+      if (this.isOverFleetBoardingTarget) {
+        setMoveIntoCursor()
+        return
+      }
 
       if (this.isOverBlockedHelipad) {
         setMoveBlockedCursor()

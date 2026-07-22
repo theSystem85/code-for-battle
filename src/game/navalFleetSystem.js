@@ -7,7 +7,7 @@ import {
 } from '../config.js'
 import { gameState } from '../gameState.js'
 import { removeUnitOccupancy } from '../units.js'
-import { isWaterPassableTile } from '../utils/navalUtils.js'
+import { getNavalRenderLengthTiles, isWaterPassableTile } from '../utils/navalUtils.js'
 import { getNavalBatteryWorldPoint } from '../rendering/navalFleetImageRenderer.js'
 import {
   clearWaterMineSafely,
@@ -17,7 +17,7 @@ import {
 } from './waterMineSystem.js'
 
 const TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
-const AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2 })
+const AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2, apache: 2 })
 const CARRIER_APPROACH_MS = 1800
 const CARRIER_ROLL_MS = 1800
 const CARRIER_LAUNCH_MS = 1700
@@ -28,13 +28,7 @@ const DEPTH_CHARGE_FUSE_MS = 800
 const DEPTH_CHARGE_RADIUS = TILE_SIZE * 1.8
 
 function centerOf(entity) {
-  if (entity?.tileX !== undefined) {
-    return { x: entity.x + TILE_SIZE / 2, y: entity.y + TILE_SIZE / 2 }
-  }
-  return {
-    x: (entity.x + entity.width / 2) * TILE_SIZE,
-    y: (entity.y + entity.height / 2) * TILE_SIZE
-  }
+  return { x: entity.x + TILE_SIZE / 2, y: entity.y + TILE_SIZE / 2 }
 }
 
 function setStopped(unit) {
@@ -46,6 +40,12 @@ function setStopped(unit) {
     unit.movement.currentSpeed = 0
     unit.movement.isMoving = false
   }
+}
+
+function clearGuardState(unit) {
+  unit.guardMode = false
+  unit.guardTarget = null
+  unit.guardTargets = null
 }
 
 function findNearestWaterTile(worldX, worldY, mapGrid, radius = 6) {
@@ -60,6 +60,18 @@ function findNearestWaterTile(worldX, worldY, mapGrid, radius = 6) {
       if (distance < bestDistance) {
         best = { x, y }
         bestDistance = distance
+      }
+    }
+  }
+  if (!best && Array.isArray(mapGrid)) {
+    for (let y = 0; y < mapGrid.length; y++) {
+      for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
+        if (!isWaterPassableTile(mapGrid, x, y)) continue
+        const distance = Math.hypot(x - originX, y - originY)
+        if (distance < bestDistance) {
+          best = { x, y }
+          bestDistance = distance
+        }
       }
     }
   }
@@ -82,28 +94,76 @@ function findUnloadTiles(targetTile, count, mapGrid, occupancyMap) {
   return candidates
 }
 
-export function requestTransportLoad(transport, target, mapGrid) {
-  if (!TRANSPORT_TYPES.has(transport?.type) || !target || target.isNaval || target.isAirUnit || target.embarkedOnId) return false
-  if (transport.owner !== target.owner || target.health <= 0) return false
+function isTransportableGroundUnit(target, owner) {
+  return Boolean(
+    target &&
+    !target.isBuilding &&
+    !target.isNaval &&
+    !target.isAirUnit &&
+    target.type !== 'apache' &&
+    target.type !== 'f22Raptor' &&
+    target.type !== 'f35' &&
+    !target.embarkedOnId &&
+    target.owner === owner &&
+    target.health > 0
+  )
+}
+
+export function requestTransportLoadGroup(transport, targets, mapGrid, occupancyMap = gameState.occupancyMap) {
+  if (!TRANSPORT_TYPES.has(transport?.type) || !Array.isArray(targets)) return false
   transport.embarkedUnitIds = Array.isArray(transport.embarkedUnitIds) ? transport.embarkedUnitIds : []
-  if (transport.embarkedUnitIds.length >= transport.transportCapacity) return false
-  const waterTile = findNearestWaterTile(target.x + TILE_SIZE / 2, target.y + TILE_SIZE / 2, mapGrid)
+  const existingPendingIds = Array.isArray(transport.pendingLoadUnitIds)
+    ? transport.pendingLoadUnitIds
+    : (transport.pendingLoadUnitId ? [transport.pendingLoadUnitId] : [])
+  const availableCapacity = Math.max(0, transport.transportCapacity - transport.embarkedUnitIds.length - existingPendingIds.length)
+  if (availableCapacity <= 0) return false
+  const candidates = targets
+    .filter(target => isTransportableGroundUnit(target, transport.owner) && !existingPendingIds.includes(target.id))
+    .slice(0, availableCapacity)
+  if (candidates.length === 0) return false
+  const averageX = candidates.reduce((sum, target) => sum + target.x + TILE_SIZE / 2, 0) / candidates.length
+  const averageY = candidates.reduce((sum, target) => sum + target.y + TILE_SIZE / 2, 0) / candidates.length
+  const waterTile = findNearestWaterTile(averageX, averageY, mapGrid)
   if (!waterTile) return false
-  transport.pendingLoadUnitId = target.id
+  const rendezvousTiles = findUnloadTiles(waterTile, candidates.length, mapGrid, occupancyMap)
+  if (rendezvousTiles.length === 0) return false
+  candidates.forEach((target, index) => {
+    const rendezvous = rendezvousTiles[index] || rendezvousTiles[0]
+    if (!rendezvous) return
+    target.moveTarget = { ...rendezvous }
+    target.path = []
+    target.target = null
+    clearGuardState(target)
+  })
+  transport.pendingLoadUnitIds = [...existingPendingIds, ...candidates.map(target => target.id)]
+  transport.pendingLoadUnitId = transport.pendingLoadUnitIds[0] || null
   transport.pendingUnloadTile = null
-  transport.moveTarget = waterTile
+  transport.moveTarget = { ...waterTile }
   transport.path = []
+  clearGuardState(transport)
   return true
+}
+
+export function requestTransportLoad(transport, target, mapGrid, occupancyMap = gameState.occupancyMap) {
+  return requestTransportLoadGroup(transport, [target], mapGrid, occupancyMap)
 }
 
 export function requestTransportUnload(transport, tileX, tileY, mapGrid) {
   if (!TRANSPORT_TYPES.has(transport?.type) || !transport.embarkedUnitIds?.length) return false
+  const destinationTile = mapGrid?.[tileY]?.[tileX]
+  const validLandDestination = destinationTile &&
+    (destinationTile.type === 'land' || destinationTile.type === 'street') &&
+    !destinationTile.building &&
+    !destinationTile.seedCrystal
+  if (!validLandDestination) return false
   const waterTile = findNearestWaterTile(tileX * TILE_SIZE, tileY * TILE_SIZE, mapGrid)
   if (!waterTile) return false
   transport.pendingLoadUnitId = null
+  transport.pendingLoadUnitIds = []
   transport.pendingUnloadTile = { x: tileX, y: tileY, approach: waterTile }
   transport.moveTarget = waterTile
   transport.path = []
+  clearGuardState(transport)
   return true
 }
 
@@ -129,27 +189,30 @@ function updateTransport(transport, units, mapGrid, occupancyMap) {
     return
   }
 
-  if (transport.pendingLoadUnitId) {
-    const target = units.find(unit => unit.id === transport.pendingLoadUnitId && unit.health > 0)
-    if (!target) {
-      transport.pendingLoadUnitId = null
-      return
-    }
+  const pendingIds = Array.isArray(transport.pendingLoadUnitIds)
+    ? transport.pendingLoadUnitIds
+    : (transport.pendingLoadUnitId ? [transport.pendingLoadUnitId] : [])
+  transport.pendingLoadUnitIds = pendingIds.filter(id => {
+    const target = units.find(unit => unit.id === id && isTransportableGroundUnit(unit, transport.owner))
+    if (!target) return false
     const distance = Math.hypot(target.x - transport.x, target.y - transport.y)
-    if (distance <= TILE_SIZE * 2.6 && transport.embarkedUnitIds.length < transport.transportCapacity) {
-      removeUnitOccupancy(target, occupancyMap, { ignoreFlightState: true })
-      target.embarkedOnId = transport.id
-      target.selected = false
-      transport.embarkedUnitIds.push(target.id)
-      transport.pendingLoadUnitId = null
-    }
-  }
+    if (distance > TILE_SIZE * 2.6 || transport.embarkedUnitIds.length >= transport.transportCapacity) return true
+    removeUnitOccupancy(target, occupancyMap, { ignoreFlightState: true })
+    target.embarkedOnId = transport.id
+    target.selected = false
+    transport.embarkedUnitIds.push(target.id)
+    return false
+  })
+  transport.pendingLoadUnitId = transport.pendingLoadUnitIds[0] || null
+  transport.embarkedUnitTypes = transport.embarkedUnitIds
+    .map(id => units.find(unit => unit.id === id)?.type)
+    .filter(Boolean)
 
   const unload = transport.pendingUnloadTile
   if (unload) {
     const approachDistance = Math.hypot(transport.tileX - unload.approach.x, transport.tileY - unload.approach.y)
     if (approachDistance <= 1.5) {
-      const tiles = findUnloadTiles(unload, transport.embarkedUnitIds.length, mapGrid, occupancyMap)
+      const tiles = findUnloadTiles(unload.approach, transport.embarkedUnitIds.length, mapGrid, occupancyMap)
       transport.embarkedUnitIds.slice(0, tiles.length).forEach((id, index) => {
         const cargo = units.find(unit => unit.id === id)
         const tile = tiles[index]
@@ -159,10 +222,17 @@ function updateTransport(transport, units, mapGrid, occupancyMap) {
         cargo.y = tile.y * TILE_SIZE
         cargo.tileX = Math.floor((cargo.x + TILE_SIZE / 2) / TILE_SIZE)
         cargo.tileY = Math.floor((cargo.y + TILE_SIZE / 2) / TILE_SIZE)
+        cargo.moveTarget = { x: unload.x, y: unload.y }
+        cargo.path = []
+        cargo.target = null
+        clearGuardState(cargo)
         if (occupancyMap?.[cargo.tileY]) occupancyMap[cargo.tileY][cargo.tileX] = (occupancyMap[cargo.tileY][cargo.tileX] || 0) + 1
       })
       transport.embarkedUnitIds.splice(0, tiles.length)
-      transport.pendingUnloadTile = null
+      transport.embarkedUnitTypes = transport.embarkedUnitIds
+        .map(id => units.find(unit => unit.id === id)?.type)
+        .filter(Boolean)
+      if (transport.embarkedUnitIds.length === 0) transport.pendingUnloadTile = null
     }
   }
 }
@@ -207,7 +277,10 @@ function carrierUsedSlots(carrier, units, ignoredAircraftId = null) {
 export function requestCarrierLanding(aircraft, carrier, units, now = gameState.simulationTime || 0) {
   const weight = AIRCRAFT_SLOT_WEIGHT[aircraft?.type]
   if (!weight || carrier?.type !== 'aircraftCarrier' || aircraft.owner !== carrier.owner) return false
+  if (aircraft.carrierId || aircraft.carrierOperation) return false
   if (carrierUsedSlots(carrier, units, aircraft.id) + weight > carrier.deckSlotCapacity) return false
+  clearGuardState(aircraft)
+  aircraft.target = null
   aircraft.carrierOperation = {
     state: 'approach',
     startedAt: now,
@@ -265,17 +338,17 @@ function updateCarrierAircraft(aircraft, carrier, units, now, delta) {
   if (!operation) return
   if (operation.state === 'approach') {
     const progress = Math.min(1, (now - operation.startedAt) / CARRIER_APPROACH_MS)
-    const target = aircraft.type === 'f35'
+    const target = aircraft.type === 'f35' || aircraft.type === 'apache'
       ? carrierPoint(carrier, 0.25, 0.65)
       : carrierPoint(carrier, -2.45, 0.05)
     aircraft.x = operation.startX + (target.x - operation.startX) * progress
     aircraft.y = operation.startY + (target.y - operation.startY) * progress
-    aircraft.altitude = aircraft.type === 'f35'
+    aircraft.altitude = aircraft.type === 'f35' || aircraft.type === 'apache'
       ? Math.max(0, operation.startAltitude * (1 - progress))
       : Math.max(TILE_SIZE * 0.8, operation.startAltitude * (1 - progress))
     aircraft.flightState = 'landing'
     if (progress >= 1) {
-      if (aircraft.type === 'f35') parkAircraftOnCarrier(aircraft, carrier, units)
+      if (aircraft.type === 'f35' || aircraft.type === 'apache') parkAircraftOnCarrier(aircraft, carrier, units)
       else aircraft.carrierOperation = { ...operation, state: 'landing_roll', startedAt: now }
     }
   } else if (operation.state === 'landing_roll') {
@@ -307,7 +380,7 @@ function updateCarrierAircraft(aircraft, carrier, units, now, delta) {
     }
   } else if (operation.state === 'launch') {
     const progress = Math.min(1, (now - operation.startedAt) / CARRIER_LAUNCH_MS)
-    const verticalLaunch = aircraft.type === 'f35'
+    const verticalLaunch = aircraft.type === 'f35' || aircraft.type === 'apache'
     const start = verticalLaunch
       ? carrierSlotPoint(carrier, aircraft.carrierDeckSlotIndex || 0)
       : carrierPoint(carrier, -1.75, 0.05)
@@ -567,14 +640,39 @@ export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
 }
 
 export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, mapGrid) {
-  const clickedUnit = (units || []).find(unit => unit.health > 0 && !unit.embarkedOnId && Math.hypot(worldX - centerOf(unit).x, worldY - centerOf(unit).y) <= TILE_SIZE * 0.8)
+  const clickedUnit = (units || [])
+    .map(unit => {
+      const interactionRadius = unit.isNaval
+        ? TILE_SIZE * Math.max(0.8, getNavalRenderLengthTiles(unit.type) / 2)
+        : TILE_SIZE * 0.8
+      return {
+        unit,
+        score: Math.hypot(worldX - centerOf(unit).x, worldY - centerOf(unit).y) / interactionRadius
+      }
+    })
+    .filter(({ unit, score }) => unit.health > 0 && !unit.embarkedOnId && score <= 1)
+    .sort((a, b) => a.score - b.score)[0]?.unit
+  const selectedGroundUnits = commandableUnits.filter(unit => isTransportableGroundUnit(unit, unit.owner))
+  if (TRANSPORT_TYPES.has(clickedUnit?.type) && selectedGroundUnits.length) {
+    if (requestTransportLoadGroup(clickedUnit, selectedGroundUnits, mapGrid)) return true
+  }
   const transports = commandableUnits.filter(unit => TRANSPORT_TYPES.has(unit.type))
   if (transports.length && clickedUnit && transports.some(transport => requestTransportLoad(transport, clickedUnit, mapGrid))) return true
-  if (!clickedUnit && transports.length && transports.some(transport => requestTransportUnload(transport, Math.floor(worldX / TILE_SIZE), Math.floor(worldY / TILE_SIZE), mapGrid))) return true
+  const clickedTileX = Math.floor(worldX / TILE_SIZE)
+  const clickedTileY = Math.floor(worldY / TILE_SIZE)
+  const clickedSelectedTransportHull = clickedUnit && transports.includes(clickedUnit)
+  if (transports.length && (!clickedUnit || clickedSelectedTransportHull) &&
+    transports.some(transport => requestTransportUnload(transport, clickedTileX, clickedTileY, mapGrid))) return true
 
   const carrier = clickedUnit?.type === 'aircraftCarrier' ? clickedUnit : null
   const aircraft = commandableUnits.filter(unit => AIRCRAFT_SLOT_WEIGHT[unit.type])
-  if (carrier && aircraft.some(unit => requestCarrierLanding(unit, carrier, units))) return true
+  if (carrier && aircraft.length > 0) {
+    let landingRequested = false
+    aircraft.forEach(unit => {
+      if (requestCarrierLanding(unit, carrier, units)) landingRequested = true
+    })
+    if (landingRequested) return true
+  }
 
   const parkedAircraft = aircraft.filter(unit => unit.carrierId)
   if (parkedAircraft.length) {

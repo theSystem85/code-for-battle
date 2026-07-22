@@ -11,6 +11,8 @@ import { gameState } from '../../src/gameState.js'
 import {
   requestCarrierLanding,
   requestTransportLoad,
+  requestTransportUnload,
+  tryHandleFleetCommand,
   setBattleshipTarget,
   updateNavalFleet
 } from '../../src/game/navalFleetSystem.js'
@@ -21,7 +23,7 @@ import {
   rebuildWaterMineLookup,
   updateWaterMines
 } from '../../src/game/waterMineSystem.js'
-import { getNavalRenderLengthTiles } from '../../src/utils/navalUtils.js'
+import { addShipWake, getNavalRenderLengthTiles } from '../../src/utils/navalUtils.js'
 
 function createMap(width = 30, height = 20, type = 'water') {
   return Array.from({ length: height }, () =>
@@ -83,6 +85,117 @@ describe('six-ship naval fleet systems', () => {
     expect(requestTransportLoad(hovercraft, tank, map)).toBe(true)
     expect(hovercraft.pendingLoadUnitId).toBe(tank.id)
     expect(map[hovercraft.moveTarget.y][hovercraft.moveTarget.x].type).toBe('water')
+    expect(['land', 'street']).toContain(map[tank.moveTarget.y][tank.moveTarget.x].type)
+  })
+
+  it('supports ground-selected boarding commands and completes loading at the coastal rendezvous', () => {
+    const map = createMap(20, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const ferry = {
+      ...createShip('vehicleFerry', 'ferry', 'player1', 10, 8),
+      transportCapacity: 10,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const tank = { id: 'tank', type: 'tank_v1', owner: 'player1', x: 8 * TILE_SIZE, y: 8 * TILE_SIZE, health: 100, path: [] }
+    const ambulance = { id: 'ambulance', type: 'ambulance', owner: 'player1', x: 8 * TILE_SIZE, y: 9 * TILE_SIZE, health: 100, path: [] }
+    const units = [ferry, tank, ambulance]
+
+    expect(tryHandleFleetCommand([tank, ambulance], ferry.x + TILE_SIZE / 2, ferry.y + TILE_SIZE / 2, units, map)).toBe(true)
+    expect(ferry.pendingLoadUnitIds).toEqual(['tank', 'ambulance'])
+    expect(ferry.moveTarget).toMatchObject({ x: 10 })
+
+    tank.x = 9 * TILE_SIZE
+    tank.y = 8 * TILE_SIZE
+    ambulance.x = 9 * TILE_SIZE
+    ambulance.y = 9 * TILE_SIZE
+    updateNavalFleet(units, [], map, { occupancyMap: [] }, 1000, 16)
+
+    expect(ferry.embarkedUnitIds).toEqual(['tank', 'ambulance'])
+    expect(ferry.embarkedUnitTypes).toEqual(['tank_v1', 'ambulance'])
+    expect(ferry.pendingLoadUnitIds).toEqual([])
+  })
+
+  it('supports the inverse transport-selected boarding command even when the hull overlaps the cargo hit area', () => {
+    const map = createMap(20, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const hovercraft = {
+      ...createShip('hovercraft', 'hover', 'player1', 10, 8),
+      transportCapacity: 4,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const tank = { id: 'tank', type: 'tank_v1', owner: 'player1', x: 9 * TILE_SIZE, y: 8 * TILE_SIZE, health: 100, path: [] }
+
+    expect(tryHandleFleetCommand(
+      [hovercraft],
+      tank.x + TILE_SIZE / 2,
+      tank.y + TILE_SIZE / 2,
+      [hovercraft, tank],
+      map
+    )).toBe(true)
+    expect(hovercraft.pendingLoadUnitIds).toEqual([tank.id])
+  })
+
+  it('disembarks at the shoreline and sends cargo onward to the clicked land destination', () => {
+    const map = createMap(20, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const ferry = {
+      ...createShip('vehicleFerry', 'ferry', 'player1', 10, 8),
+      transportCapacity: 10,
+      embarkedUnitIds: ['tank'],
+      embarkedUnitTypes: ['tank_v1'],
+      guardMode: true,
+      guardTarget: { id: 'old-guard' }
+    }
+    const tank = {
+      id: 'tank',
+      type: 'tank_v1',
+      owner: 'player1',
+      x: ferry.x,
+      y: ferry.y,
+      health: 100,
+      embarkedOnId: ferry.id,
+      guardMode: true,
+      guardTarget: { id: 'old-guard' },
+      path: []
+    }
+    const occupancyMap = Array.from({ length: 20 }, () => Array(20).fill(0))
+
+    expect(requestTransportUnload(ferry, 4, 8, map)).toBe(true)
+    expect(ferry.moveTarget).toEqual({ x: 10, y: 8 })
+    expect(ferry.guardMode).toBe(false)
+
+    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 1000, 16)
+
+    expect(ferry.embarkedUnitIds).toEqual([])
+    expect(ferry.embarkedUnitTypes).toEqual([])
+    expect(tank.embarkedOnId).toBeNull()
+    expect(tank.tileX).toBe(9)
+    expect(tank.moveTarget).toEqual({ x: 4, y: 8 })
+    expect(tank.guardMode).toBe(false)
+    expect(occupancyMap[tank.tileY][tank.tileX]).toBe(1)
+    expect(requestTransportUnload({ ...ferry, embarkedUnitIds: ['tank'] }, 12, 8, map)).toBe(false)
+
+    const overlappingCoastFerry = {
+      ...ferry,
+      embarkedUnitIds: ['tank'],
+      pendingUnloadTile: null
+    }
+    expect(tryHandleFleetCommand(
+      [overlappingCoastFerry],
+      9 * TILE_SIZE + TILE_SIZE / 2,
+      8 * TILE_SIZE + TILE_SIZE / 2,
+      [overlappingCoastFerry],
+      map
+    )).toBe(true)
+    expect(overlappingCoastFerry.pendingUnloadTile).toMatchObject({ x: 9, y: 8 })
   })
 
   it('enforces four weighted carrier deck slots and services fuel/ammo without repairing HP', () => {
@@ -115,6 +228,46 @@ describe('six-ship naval fleet systems', () => {
     expect(f35a.gas).toBeGreaterThan(0)
     expect(f35a.rocketAmmo).toBeGreaterThan(0)
     expect(f35a.health).toBe(damagedHealth)
+  })
+
+  it('accepts Apache VTOL recovery as a two-slot carrier aircraft', () => {
+    const carrier = {
+      ...createShip('aircraftCarrier', 'carrier', 'player1'),
+      deckSlotCapacity: 4,
+      carrierAircraftIds: [],
+      carrierFuel: 500,
+      carrierAmmo: 20
+    }
+    const apacheA = { id: 'apache-a', type: 'apache', owner: 'player1', x: 0, y: 0, health: 100, altitude: TILE_SIZE * 4 }
+    const apacheB = { id: 'apache-b', type: 'apache', owner: 'player1', x: 0, y: 0, health: 100, altitude: TILE_SIZE * 4 }
+    const apacheC = { id: 'apache-c', type: 'apache', owner: 'player1', x: 0, y: 0, health: 100, altitude: TILE_SIZE * 4 }
+    const units = [carrier, apacheA, apacheB, apacheC]
+
+    expect(requestCarrierLanding(apacheA, carrier, units, 100)).toBe(true)
+    expect(requestCarrierLanding(apacheB, carrier, units, 100)).toBe(true)
+    expect(requestCarrierLanding(apacheC, carrier, units, 100)).toBe(false)
+  })
+
+  it('places bow wakes ahead of the hull and suppresses all submerged-submarine wakes', () => {
+    const destroyer = createShip('destroyer', 'destroyer', 'player1')
+    destroyer.movement.currentSpeed = 1
+    destroyer.movement.isMoving = true
+    const wakeState = { shipWakes: [] }
+
+    addShipWake(destroyer, wakeState, 1000)
+    const bow = wakeState.shipWakes.find(wake => wake.kind === 'bow')
+    const hullHalfLength = TILE_SIZE * (getNavalRenderLengthTiles('destroyer') / 2) * 0.895
+    expect(bow.x).toBeCloseTo(destroyer.x + TILE_SIZE / 2 + hullHalfLength + 6)
+
+    const submarine = {
+      ...createShip('submarine', 'sub', 'player1'),
+      depthState: 'submerged'
+    }
+    submarine.movement.currentSpeed = 1
+    submarine.movement.isMoving = true
+    wakeState.shipWakes.push({ sourceUnitId: submarine.id, kind: 'bow' })
+    addShipWake(submarine, wakeState, 1100)
+    expect(wakeState.shipWakes.some(wake => wake.sourceUnitId === submarine.id)).toBe(false)
   })
 
   it('lets fore and aft battleship batteries retain and fire at separate targets', () => {

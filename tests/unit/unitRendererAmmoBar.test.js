@@ -98,6 +98,18 @@ describe('UnitRenderer ammo HUD consistency', () => {
     expect(destroyerBounds.width).toBeGreaterThan(standardBounds.width)
   })
 
+  it('summarizes embarked vehicle types in the transport loading tooltip', () => {
+    const renderer = new UnitRenderer()
+    const ferry = {
+      type: 'vehicleFerry',
+      transportCapacity: 10,
+      embarkedUnitIds: ['tank-1', 'ambulance-1', 'tank-2'],
+      embarkedUnitTypes: ['tank_v1', 'ambulance', 'tank_v1']
+    }
+
+    expect(renderer.getHudAbsoluteTooltipText(ferry, 'cargo')).toBe('loaded 3/10 • 1× ambulance, 2× tank-v1')
+  })
+
   it('uses F22 rocketAmmo for the selected ammo bar even while parked on an airstrip', () => {
     const renderer = new UnitRenderer()
     const drawHudEdgeBar = vi.spyOn(renderer, 'drawHudEdgeBar').mockImplementation(() => {})

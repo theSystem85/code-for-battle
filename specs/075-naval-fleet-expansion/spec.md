@@ -27,9 +27,9 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 ## Aircraft Carrier
 
 - Large naval airbase with a realistic visual length ratio to the existing Destroyer (approximately 2.4× its rendered hull length).
-- Deck capacity is shared as four slots: each F22 uses one slot and each F35 uses two slots, allowing up to four F22 or two F35 (and valid mixed combinations within four slots).
+- Deck capacity is shared as four slots: each F22 uses one slot and each F35 or Apache uses two slots, allowing up to four F22 or two F35/Apache aircraft (and valid mixed combinations within four slots).
 - F22 aircraft use serialized deck takeoff/landing phases analogous to the Airstrip runway lifecycle, but with carrier-local rotating deck points and motion matched to the carrier footprint.
-- F35 uses carrier deck VTOL landing/takeoff behavior.
+- F35 and Apache use carrier deck VTOL landing/takeoff behavior.
 - Parked aircraft refill fuel and ammunition from carrier stores; the carrier never repairs aircraft HP.
 - Carrier stores refill through existing friendly naval/Shipyard supply sources and are represented in HUD/tooltips.
 
@@ -64,15 +64,19 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 
 ## Implemented command model
 
-- Select a Hovercraft or Vehicle Ferry and click a friendly land vehicle to load it; click an empty coastal land destination to unload all cargo onto nearby valid tiles.
-- Select an airborne F22/F35 and click a friendly Aircraft Carrier to recover it; select a parked aircraft and click a destination or enemy to launch it. Approaching aircraft reserve their weighted deck capacity immediately.
+- Select one or more friendly ground vehicles and click a Hovercraft/Vehicle Ferry, or select the transport and click a ground vehicle. The transport moves to the closest navigable coast while queued vehicles move to shoreline rendezvous tiles; loading completes automatically in range. Click a valid land destination with the loaded transport selected to approach the nearest coast, disembark, and send its cargo onward to that destination.
+- Direct clicks on friendly transports, cargo, or carriers resolve valid boarding/recovery commands before ordinary friendly-unit selection or guard behavior. Guard assignment for an unmodified friendly target remains available through an AGF box around that target rather than taking precedence over a direct click.
+- Clicking a valid land destination with a loaded Hovercraft/Vehicle Ferry sends the ship to the nearest water approach, places cargo on free shoreline tiles using center-based occupancy, and then orders every unloaded unit to move to the originally clicked land tile.
+- Hovering either side of a valid vehicle/transport boarding interaction displays the move-into cursor. A selected transport's bottom HUD loading bar reports its occupied capacity and shows a type-count cargo manifest on hover.
+- Select an airborne F22/F35/Apache and click a friendly Aircraft Carrier to recover it; select a parked aircraft and click a destination or enemy to launch it. Hovering a carrier shows move-into while enough weighted deck capacity remains and move-blocked when full. Approaching aircraft reserve their deck capacity immediately.
+- Ship bow wakes originate six pixels beyond the calculated hull endpoint. Submerged submarines emit no wakes and clear any of their still-active wake particles.
 - Select the Naval Mine Layer and force-attack a water tile to deploy a mine. Targeting an occupied water-mine tile switches the same ship into safe clearing mode.
 - Select the Battleship hull to assign both batteries, or click its fore/aft hull region to select and retarget only that battery.
 - Order a Submarine against an enemy ship to begin its timed surfacing sequence and torpedo attack. It automatically submerges after disengaging; nearby enemy Destroyers automatically release delayed depth charges against detected submerged contacts.
 
 ## Verification record
 
-- Added `tests/unit/navalFleetSystem.test.js` with focused coverage for balance ratios, shoreline transport orders, weighted carrier reservations, independent battery targets, surfacing/torpedo gating, depth charges, and naval mines.
+- Added focused naval, cursor, and HUD renderer coverage for balance ratios, bidirectional shoreline transport orders, cargo manifests, weighted F22/F35/Apache carrier reservations, independent battery targets, surfacing/torpedo gating, wake placement/suppression, depth charges, and naval mines.
 - `npm run lint:fix:changed`: pass.
-- `npm run test:unit`: 150 files and 3,758 tests passed.
-- `npm run build`: pass (existing bundle-size/dynamic-import warnings only).
+- `npm run test:unit`: 150 files and 3,767 tests passed.
+- `npx vite build`: pass (existing bundle-size/dynamic-import warnings only).

@@ -393,6 +393,7 @@ export class UnitRenderer {
 
   hasHudBottomProgressBar(unit) {
     if (!unit.selected) return false
+    if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry') return true
     if (unit.type === 'harvester') return (Number.isFinite(unit.level) ? unit.level : 0) < 3
     if (unit.type === 'ambulance' || unit.type === 'tankerTruck' || unit.type === 'ammunitionTruck' || unit.type === 'supplyShip') return true
     if (unit.type === 'mineLayer') return Boolean(unit.deployingMine && unit.deployStartTime)
@@ -451,6 +452,23 @@ export class UnitRenderer {
           return `crew ${this.roundHudValue(unit.supplyCrew || 0)}/${this.roundHudValue(unit.maxSupplyCrew || 0)} • fuel ${this.roundHudValue(unit.supplyFuel || 0)}/${this.roundHudValue(unit.maxSupplyFuel || 0)} • ammo ${this.roundHudValue(unit.supplyAmmo || 0)}/${this.roundHudValue(unit.maxSupplyAmmo || 0)} • repair tools ${this.roundHudValue(unit.supplyRepairTools || 0)}/${this.roundHudValue(unit.maxSupplyRepairTools || 0)}`
         }
         return label
+      case 'cargo': {
+        const cargoTypes = Array.isArray(unit.embarkedUnitTypes)
+          ? unit.embarkedUnitTypes
+          : (unit.embarkedUnitIds || [])
+            .map(id => gameState.units?.find(candidate => candidate.id === id)?.type)
+            .filter(Boolean)
+        const counts = cargoTypes.reduce((result, type) => {
+          result[type] = (result[type] || 0) + 1
+          return result
+        }, {})
+        const manifest = Object.entries(counts)
+          .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
+          .map(([type, count]) => `${count}× ${type.replaceAll('_', '-')}`)
+          .join(', ')
+        const loaded = unit.embarkedUnitIds?.length || cargoTypes.length
+        return `loaded ${loaded}/${unit.transportCapacity || 0}${manifest ? ` • ${manifest}` : ' • empty'}`
+      }
       default:
         return label
     }
@@ -487,6 +505,7 @@ export class UnitRenderer {
     const hit = ranges.find(r => active.has(r.key) && angle >= r.start && angle <= r.end)
     if (!hit) return null
     if (unit.type === 'supplyShip' && hit.key === 'experience') return 'supply'
+    if ((unit.type === 'hovercraft' || unit.type === 'vehicleFerry') && hit.key === 'experience') return 'cargo'
     return hit.key
   }
 
@@ -610,13 +629,17 @@ export class UnitRenderer {
         return 'ammo'
       }
       if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getLegacyProgressBarRect(unit, scrollOffset))) {
-        return unit.type === 'supplyShip' ? 'supply' : 'experience'
+        if (unit.type === 'supplyShip') return 'supply'
+        return unit.type === 'hovercraft' || unit.type === 'vehicleFerry' ? 'cargo' : 'experience'
       }
     } else {
       if (this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'top'))) return 'health'
       if (hasFuel && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'right'))) return 'fuel'
       if (canShowAmmo && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'left'))) return 'ammo'
-      if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'bottom'))) return unit.type === 'supplyShip' ? 'supply' : 'experience'
+      if (hasBottomProgress && this.isPointInRect(mouseScreenX, mouseScreenY, this.getHudBarRect(hudBounds, 'bottom'))) {
+        if (unit.type === 'supplyShip') return 'supply'
+        return unit.type === 'hovercraft' || unit.type === 'vehicleFerry' ? 'cargo' : 'experience'
+      }
     }
 
     if (unit.level > 0) {
@@ -970,6 +993,10 @@ export class UnitRenderer {
       shouldShowBar = true
       progress = 1
       barColor = '#FFFFFF'
+    } else if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry') {
+      shouldShowBar = true
+      progress = (unit.embarkedUnitIds?.length || 0) / Math.max(1, unit.transportCapacity || 1)
+      barColor = '#66D9FF'
     } else if (unit.type === 'mineLayer') {
       // Mine Layer - show deployment progress when deploying
       if (unit.deployingMine && unit.deployStartTime) {

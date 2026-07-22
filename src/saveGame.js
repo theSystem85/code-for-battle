@@ -596,6 +596,8 @@ function buildSaveObject(label) {
       serialized.transportCapacity = u.transportCapacity
       serialized.embarkedUnitIds = [...(u.embarkedUnitIds || [])]
       serialized.pendingLoadUnitId = u.pendingLoadUnitId || null
+      serialized.pendingLoadUnitIds = [...(u.pendingLoadUnitIds || [])]
+      serialized.embarkedUnitTypes = [...(u.embarkedUnitTypes || [])]
       serialized.pendingUnloadTile = u.pendingUnloadTile || null
     }
 
@@ -608,7 +610,7 @@ function buildSaveObject(label) {
       serialized.maxCarrierAmmo = u.maxCarrierAmmo
     }
 
-    if (u.type === 'f22Raptor' || u.type === 'f35') {
+    if (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') {
       serialized.carrierId = u.carrierId || null
       serialized.carrierDeckSlotIndex = Number.isInteger(u.carrierDeckSlotIndex) ? u.carrierDeckSlotIndex : null
       serialized.carrierOperation = u.carrierOperation ? { ...u.carrierOperation } : null
