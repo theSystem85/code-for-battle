@@ -465,9 +465,9 @@ export class UnitRenderer {
         const manifest = Object.entries(counts)
           .sort(([typeA], [typeB]) => typeA.localeCompare(typeB))
           .map(([type, count]) => `${count}× ${type.replaceAll('_', '-')}`)
-          .join(', ')
+          .join('\n')
         const loaded = unit.embarkedUnitIds?.length || cargoTypes.length
-        return `loaded ${loaded}/${unit.transportCapacity || 0}${manifest ? ` • ${manifest}` : ' • empty'}`
+        return `loaded ${loaded}/${unit.transportCapacity || 0}${manifest ? `\n${manifest}` : '\nempty'}`
       }
       default:
         return label
@@ -692,9 +692,11 @@ export class UnitRenderer {
 
     const paddingX = 4
     const paddingY = 2
-    const textWidth = ctx.measureText(tooltipText).width
+    const tooltipLines = String(tooltipText).split('\n')
+    const lineHeight = fontSize + 2
+    const textWidth = Math.max(...tooltipLines.map(line => ctx.measureText(line).width))
     const boxWidth = textWidth + paddingX * 2
-    const boxHeight = fontSize + paddingY * 2
+    const boxHeight = tooltipLines.length * lineHeight + paddingY * 2
 
     let boxX = mouseScreenX + 8
     let boxY = mouseScreenY - boxHeight - 8
@@ -712,7 +714,9 @@ export class UnitRenderer {
     ctx.lineWidth = 1
     ctx.strokeRect(boxX, boxY, boxWidth, boxHeight)
     ctx.fillStyle = '#FFF'
-    ctx.fillText(tooltipText, boxX + paddingX, boxY + boxHeight / 2)
+    tooltipLines.forEach((line, index) => {
+      ctx.fillText(line, boxX + paddingX, boxY + paddingY + (lineHeight / 2) + index * lineHeight)
+    })
     ctx.restore()
   }
 

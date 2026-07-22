@@ -119,7 +119,12 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
 
   const isFactoryOrRefinery = type === 'vehicleFactory' || type === 'oreRefinery' || type === 'vehicleWorkshop'
   const isShipyard = type === 'shipyard'
-  const shipyardWaterTiles = isShipyard ? getShipyardWaterLocalTiles(width, height) : []
+  const shipyardWaterTilesByShore = isShipyard
+    ? ['south', 'north', 'west', 'east'].map(shore => ({ shore, tiles: getShipyardWaterLocalTiles(width, height, shore) }))
+    : []
+  const getMatchingShipyardShore = () => shipyardWaterTilesByShore.find(({ tiles }) => tiles.every(({ x, y }) => isWaterTile(mapGrid, tileX + x, tileY + y)))
+  const matchingShipyardShore = isShipyard ? getMatchingShipyardShore() : null
+  const shipyardWaterTiles = matchingShipyardShore?.tiles || []
   const isShipyardWaterLocalTile = (x, y) => shipyardWaterTiles.some(tile => tile.x === x && tile.y === y)
 
   // Check map boundaries
@@ -179,16 +184,18 @@ export function canPlaceBuilding(type, tileX, tileY, mapGrid, units, buildings, 
   }
 
   if (isShipyard) {
-    const launchY = tileY + height
-    let hasLaunchWater = false
-    if (launchY < mapGrid.length) {
-      for (let x = tileX; x < tileX + width; x++) {
-        if (isWaterTile(mapGrid, x, launchY) && !mapGrid[launchY][x].building) {
-          hasLaunchWater = true
-          break
-        }
-      }
+    if (!matchingShipyardShore) return false
+    const launchCandidates = []
+    if (matchingShipyardShore.shore === 'north') {
+      for (let x = tileX; x < tileX + width; x++) launchCandidates.push({ x, y: tileY - 1 })
+    } else if (matchingShipyardShore.shore === 'west') {
+      for (let y = tileY; y < tileY + height; y++) launchCandidates.push({ x: tileX - 1, y })
+    } else if (matchingShipyardShore.shore === 'east') {
+      for (let y = tileY; y < tileY + height; y++) launchCandidates.push({ x: tileX + width, y })
+    } else {
+      for (let x = tileX; x < tileX + width; x++) launchCandidates.push({ x, y: tileY + height })
     }
+    const hasLaunchWater = launchCandidates.some(({ x, y }) => isWaterTile(mapGrid, x, y) && !mapGrid[y]?.[x]?.building)
     if (!hasLaunchWater) return false
   }
 

@@ -429,3 +429,8 @@
 - [x] Street-triggered iPhone FPS collapse (2026-07-12): replace the oversized combined major sheet used by the WebGL street sampler with the dedicated 1024px street atlas, cache topology-aware final street selections, and group secondary-sampler instances to reduce mobile GPU texture divergence.
 - [x] Revert combined major sprite sheet defaults (2026-07-12): restore separated street, terrain, crystal, rock/cliff, and combat-decal sheets; migrate major-only stored selections; remove the major sheet from SSE registries and runtime fallbacks; and stop generating it during builds.
 - [x] Fix the Destroyer map image loader after the parent-level asset was renamed from `destroyer_south.webp` to `destroyer_map.webp`, including its regression-test expectation and specification path.
+
+## 2026-07-22 Naval transport and shipyard bugs
+- [x] Ferry cargo HUD tooltip now lists different loaded unit types on separate lines.
+- [x] Shipyard placement accepts west/east shore footprints where the water half overlaps straight water columns and the land half remains on land.
+- [ ] Fix loaded ferries jittering back and forth when reaching a commanded water point; verify the movement stop condition and naval inertia together.

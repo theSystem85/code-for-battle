@@ -402,3 +402,16 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Six-ship naval fleet expansion (2026-07-19): generated map/sidebar assets and completed engine integration for a 4-vehicle fast/light Hovercraft, 10-vehicle slow/armored Vehicle Ferry, realistically scaled Aircraft Carrier with a 4×F22/2×F35 deck and ammo/fuel-only service, dual-role naval Mine Layer/Sweeper plus wider-trigger/wider-blast water mines, independently targetable fore/aft Battleship batteries, and a stealth Submarine with owner-only submerged rendering, proximity detection, animated surfacing, ship-only torpedoes, and Destroyer depth charges. Detailed implementation checklist: `specs/075-naval-fleet-expansion/plan.md`.
 - [x] Naval boarding/HUD/wake follow-up (2026-07-20): add bidirectional move-into cursors and shoreline rendezvous loading for ground vehicles and transports, carrier landing/service commands for F22/F35/Apache, transport cargo-manifest HUD tooltips, no wakes while submarines are submerged, and bow wakes positioned ahead of every ship hull.
 - [x] Naval direct-command priority/disembark follow-up (2026-07-20): direct friendly-unit clicks must trigger transport boarding or carrier recovery before ordinary selection/guard behavior, while group guard remains an AGF-box interaction; land clicks with a loaded transport must approach the coast, unload safely, and order cargo onward to the clicked land destination.
+
+## 2026-07-22 Naval, carrier, AI, and map settings requests
+- [x] Add start money as a configurable map setting and apply it to all parties.
+- [x] Render all non-submarine naval units 50% larger.
+- [x] Render F22/F35 aircraft 50% smaller while parked or operating on a carrier deck.
+- [x] Show a move-into cursor when a selected loaded ferry hovers over valid land for disembark.
+- [ ] Add smooth ferry embark/disembark alignment and visible cargo ramp movement animation before units load/unload.
+- [ ] Add smoother carrier landing/takeoff deck animations for jets without rapid position changes.
+- [ ] Add AI naval assault behavior so enemy-built ships actively attack human targets.
+- [ ] Add per-enemy 50/50 naval-first versus air-force-first strategy preference.
+- [ ] Add supply-ship retreat/resupply behavior for damaged, ammo-empty, fuel-empty, or crew-depleted ships.
+- [ ] Add high-performance naval image-footprint collision against ships and shoreline.
+- [ ] Add ship inertia/ease-in/ease-out movement and rotation.

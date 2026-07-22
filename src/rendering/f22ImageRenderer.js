@@ -117,7 +117,8 @@ export function renderF22WithImage(ctx, unit, centerX, centerY) {
 
   const sourceWidth = f22Image.naturalWidth || f22Image.width || TILE_SIZE
   const sourceHeight = f22Image.naturalHeight || f22Image.height || TILE_SIZE
-  const scale = F22_TARGET_WIDTH / Math.max(sourceWidth, 1)
+  const carrierDeckScale = unit.carrierId || unit.carrierOperation?.carrierId ? 0.5 : 1
+  const scale = (F22_TARGET_WIDTH * carrierDeckScale) / Math.max(sourceWidth, 1)
   const targetWidth = sourceWidth * scale
   const targetHeight = sourceHeight * scale
 
@@ -173,7 +174,8 @@ export function getF22RocketSpawnPoint(unit, centerX, centerY) {
 
   const sourceWidth = f22Image?.naturalWidth || f22Image?.width || TILE_SIZE
   const sourceHeight = f22Image?.naturalHeight || f22Image?.height || TILE_SIZE
-  const scale = F22_TARGET_WIDTH / Math.max(sourceWidth, 1)
+  const carrierDeckScale = unit.carrierId || unit.carrierOperation?.carrierId ? 0.5 : 1
+  const scale = (F22_TARGET_WIDTH * carrierDeckScale) / Math.max(sourceWidth, 1)
 
   // Lower fuselage centerline hardpoint so rockets emerge from the rendered jet body, not the ground shadow.
   const hardpoint = { x: sourceWidth / 2, y: sourceHeight * 0.62 }

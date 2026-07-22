@@ -78,6 +78,7 @@ export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
 export const ORE_FIELD_COUNT_STORAGE_KEY = 'rts-ore-field-count'
 export const ORE_TOTAL_VALUE_STORAGE_KEY = 'rts-ore-total-value'
 export const ORE_SPREAD_INTERVAL_STORAGE_KEY = 'rts-ore-spread-interval-ms'
+export const START_MONEY_STORAGE_KEY = 'rts-start-money'
 const MAP_WATER_PERCENT_STORAGE_KEY = 'rts-map-water-percent'
 const MAP_ROCK_PERCENT_STORAGE_KEY = 'rts-map-rock-percent'
 const MAP_SHORE_NORTH_STORAGE_KEY = 'rts-map-shore-north'
@@ -116,6 +117,16 @@ function sanitizeOreFieldCount(value) {
   }
   const fallback = Number.isFinite(gameState.mapOreFieldCount) ? gameState.mapOreFieldCount : 8
   return Math.max(0, Math.min(24, Math.floor(fallback)))
+}
+
+function sanitizeStartMoney(value) {
+  const parsed = parseInt(value, 10)
+  const step = 1000
+  if (Number.isFinite(parsed)) {
+    return Math.floor(Math.max(0, Math.min(5000000, parsed)) / step) * step
+  }
+  const fallback = Number.isFinite(gameState.startMoney) ? gameState.startMoney : 12000
+  return Math.floor(Math.max(0, Math.min(5000000, fallback)) / step) * step
 }
 
 function sanitizeOreTotalValue(value) {
@@ -356,6 +367,16 @@ function loadPersistedSettings() {
     const oreFieldInput = document.getElementById('mapOreFieldCount')
     const oreTotalValueInput = document.getElementById('mapOreTotalValue')
     const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
+    const startMoneyInput = document.getElementById('startMoney')
+    const storedStartMoney = getStoredItem(START_MONEY_STORAGE_KEY)
+    if (startMoneyInput && storedStartMoney !== null) {
+      gameState.startMoney = sanitizeStartMoney(storedStartMoney)
+      startMoneyInput.value = gameState.startMoney
+      gameState.money = gameState.startMoney
+    } else if (startMoneyInput) {
+      gameState.startMoney = sanitizeStartMoney(gameState.startMoney)
+      startMoneyInput.value = gameState.startMoney
+    }
     const storedOreFields = getStoredItem(ORE_FIELD_COUNT_STORAGE_KEY)
     const storedOreTotalValue = getStoredItem(ORE_TOTAL_VALUE_STORAGE_KEY)
     const storedOreSpreadInterval = getStoredItem(ORE_SPREAD_INTERVAL_STORAGE_KEY)
@@ -775,6 +796,7 @@ class Game {
     const oreFieldInput = document.getElementById('mapOreFieldCount')
     const oreTotalValueInput = document.getElementById('mapOreTotalValue')
     const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
+    const startMoneyInput = document.getElementById('startMoney')
     const waterPercentInput = document.getElementById('mapWaterPercent')
     const rockPercentInput = document.getElementById('mapRockPercent')
     const shoreNorthCheckbox = document.getElementById('mapShoreNorthCheckbox')
@@ -794,6 +816,7 @@ class Game {
       const oreTotalValue = oreTotalValueInput
         ? sanitizeOreTotalValue(oreTotalValueInput.value)
         : sanitizeOreTotalValue(gameState.mapOreTotalValue)
+      const startMoney = startMoneyInput ? sanitizeStartMoney(startMoneyInput.value) : sanitizeStartMoney(gameState.startMoney)
       const rawWaterPercent = waterPercentInput
         ? sanitizeTerrainPercent(waterPercentInput.value, gameState.mapWaterPercent)
         : sanitizeTerrainPercent(gameState.mapWaterPercent, 10)
@@ -823,6 +846,12 @@ class Game {
         oreTotalValueInput.max = 5000000
         oreTotalValueInput.value = oreTotalValue
       }
+      if (startMoneyInput) {
+        startMoneyInput.min = 0
+        startMoneyInput.step = 1000
+        startMoneyInput.max = 5000000
+        startMoneyInput.value = startMoney
+      }
       if (waterPercentInput) {
         waterPercentInput.min = 0
         waterPercentInput.max = 50
@@ -837,6 +866,9 @@ class Game {
       gameState.playerCount = Number.isFinite(playerCount) ? Math.max(2, Math.min(4, playerCount)) : (gameState.playerCount || 2)
       gameState.mapOreFieldCount = oreFieldCount
       gameState.mapOreTotalValue = oreTotalValue
+      gameState.startMoney = startMoney
+      gameState.money = startMoney
+      gameState.factories?.forEach(factory => { factory.budget = startMoney })
       gameState.mapWaterPercent = waterPercent
       gameState.mapRockPercent = rockPercent
       gameState.mapShoreNorth = shoreNorth
@@ -851,6 +883,7 @@ class Game {
       persistSetting(PLAYER_COUNT_STORAGE_KEY, gameState.playerCount, 'player count')
       persistSetting(ORE_FIELD_COUNT_STORAGE_KEY, oreFieldCount, 'ore field count')
       persistSetting(ORE_TOTAL_VALUE_STORAGE_KEY, oreTotalValue, 'ore total value')
+      persistSetting(START_MONEY_STORAGE_KEY, startMoney, 'start money')
       persistSetting(MAP_WATER_PERCENT_STORAGE_KEY, waterPercent, 'map water percent')
       persistSetting(MAP_ROCK_PERCENT_STORAGE_KEY, rockPercent, 'map rock percent')
       persistSetting(MAP_SHORE_NORTH_STORAGE_KEY, shoreNorth, 'north shore setting')
@@ -904,6 +937,17 @@ class Game {
       oreTotalValueInput.value = sanitizeOreTotalValue(oreTotalValueInput.value || gameState.mapOreTotalValue)
       oreTotalValueInput.addEventListener('change', () => {
         oreTotalValueInput.value = sanitizeOreTotalValue(oreTotalValueInput.value)
+        applyMapSettingsAndRegenerate()
+      })
+    }
+
+    if (startMoneyInput) {
+      startMoneyInput.min = 0
+      startMoneyInput.step = 1000
+      startMoneyInput.max = 5000000
+      startMoneyInput.value = sanitizeStartMoney(startMoneyInput.value || gameState.startMoney)
+      startMoneyInput.addEventListener('change', () => {
+        startMoneyInput.value = sanitizeStartMoney(startMoneyInput.value)
         applyMapSettingsAndRegenerate()
       })
     }
@@ -1325,7 +1369,7 @@ class Game {
     const preservedWins = gameState.wins
     const preservedLosses = gameState.losses
 
-    gameState.money = 12000
+    gameState.money = sanitizeStartMoney(gameState.startMoney)
     gameState.gameTime = 0
     gameState.frameCount = 0
     gameState.gameStarted = true

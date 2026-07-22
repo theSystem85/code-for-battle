@@ -17,13 +17,13 @@ export const DESTROYER_RENDER_LENGTH_TILES = 2.6
 export const DESTROYER_HULL_LENGTH_RATIO = 0.895
 export const SHIP_BOW_WAKE_FORWARD_OFFSET = 6
 export const NAVAL_RENDER_LENGTH_TILES = Object.freeze({
-  destroyer: 2.6,
-  supplyShip: 2.2,
-  hovercraft: 2.2,
-  vehicleFerry: 3.2,
-  aircraftCarrier: 6.24,
-  navalMineLayer: 2.7,
-  battleship: 4.4,
+  destroyer: 3.9,
+  supplyShip: 3.3,
+  hovercraft: 3.3,
+  vehicleFerry: 4.8,
+  aircraftCarrier: 9.36,
+  navalMineLayer: 4.05,
+  battleship: 6.6,
   submarine: 2.8
 })
 
@@ -51,13 +51,22 @@ export function isWaterPassableTile(mapGrid, x, y) {
   return Boolean(tile && tile.type === 'water' && !tile.building && !tile.seedCrystal)
 }
 
-export function getShipyardWaterLocalTiles(width = 5, height = 5) {
+export function getShipyardWaterLocalTiles(width = 5, height = 5, shore = 'south') {
   const tiles = []
-  const firstWaterRow = Math.floor(height / 2)
-  for (let y = firstWaterRow; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      tiles.push({ x, y })
+  const waterDepth = Math.ceil(height / 2)
+  const waterWidth = Math.ceil(width / 2)
+  if (shore === 'west' || shore === 'east') {
+    const startX = shore === 'west' ? 0 : width - waterWidth
+    const endX = shore === 'west' ? waterWidth : width
+    for (let y = 0; y < height; y++) {
+      for (let x = startX; x < endX; x++) tiles.push({ x, y })
     }
+    return tiles
+  }
+  const startY = shore === 'north' ? 0 : height - waterDepth
+  const endY = shore === 'north' ? waterDepth : height
+  for (let y = startY; y < endY; y++) {
+    for (let x = 0; x < width; x++) tiles.push({ x, y })
   }
   return tiles
 }
