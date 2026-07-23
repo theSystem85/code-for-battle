@@ -56,3 +56,30 @@
 - The transport's desired center is calculated from the shoreline contact point plus half the rendered hull length along the outward shore normal. Transfer cannot begin until the exact stern point and shoreline contact coincide within tolerance and the bow faces away from land.
 - After cargo reaches its assigned land slot, it becomes command-locked, rotates toward the stern/ramp, and only then begins the visible loading tween so the sprite never drifts sideways onto the ship.
 - Transport and cargo tile coordinates remain center-based throughout fine alignment and transfer.
+
+## 2026-07-23 carrier strike and direct naval control follow-up
+
+### Map settings layout
+- The start-money input shares a dedicated row with the SSE biome selector. Each control occupies 50% of the available row width and remains usable when the sidebar narrows.
+
+### Carrier recovery and launch choreography
+- An F35 reserves an empty deck slot before recovery, flies level to that exact carrier-relative parking coordinate, and only then begins vertical descent. Its touchdown coordinate and final parked coordinate are identical.
+- An F22 may enter its carrier approach only when it is within eight tiles and the carrier has no route or meaningful linear speed. It approaches from behind, stays airborne until reaching the rear runway threshold, rolls forward to touchdown, and turns while taxiing to parking instead of sliding sideways.
+- Fixed-wing launches taxi with normal heading changes to the extreme rear runway threshold, remain grounded throughout taxi, and then accelerate along the full carrier runway while altitude and render scale increase continuously.
+- Carrier-relative parking, runway, and approach points are recomputed throughout each operation so a valid stationary-deck operation has no stage-boundary teleport.
+
+### Direct naval control and shoreline response
+- Every naval unit accepts forward/reverse on Up/Down and eased left/right steering with retained angular inertia. Releasing movement input decelerates through the normal movement system rather than stopping instantaneously.
+- Space fires the forward weapon on armed ships; unarmed transports/support ships remain fully steerable without fabricating weapons.
+- After rotation, an oriented hull that intersects land is moved to the nearest clear-water position by a bounded local search. The expensive search only runs after a cheap hull-overlap probe reports a shoreline intersection, and center-based tile coordinates are updated after correction.
+
+### Carrier strike missions
+- An attack command never moves or turns an Aircraft Carrier. It stores one or more marked targets and launches every serviced deck aircraft against the active target.
+- Carrier aircraft retain their originating carrier identifier after launch. Empty aircraft return to that carrier rather than an Airstrip, rearm on deck, relaunch automatically, and repeat until every stored target is destroyed.
+- Shift/Alt-appended carrier targets extend the carrier mission target list without routing the carrier itself into the ordinary attack queue.
+
+## 2026-07-23 carrier collision and bow-stop correction
+
+- Aircraft and Aircraft Carriers do not generate collision blocking, collision response, or avoidance forces against one another. This applies while aircraft are flying, landing, taxiing, or parked on deck; ordinary aircraft-to-aircraft and ship-to-ship collision behavior remains unchanged.
+- An Aircraft Carrier's final waypoint is reached when the forward tip of its oriented rendered hull enters the waypoint tolerance, rather than when the carrier sprite center reaches it.
+- On bow-tip arrival, the carrier clears its path and movement target, zeroes linear and angular velocity, preserves its current heading, and cannot resume autonomous rotation without a new movement command.

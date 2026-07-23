@@ -7,6 +7,7 @@ import {
   APACHE_RANGE_REDUCTION
 } from '../config.js'
 import { fireBullet } from './bulletSystem.js'
+import { handleTankFiring } from './unitCombat/firingHandlers.js'
 import { selectedUnits, getKeyboardHandler } from '../inputHandler.js'
 import { gameState } from '../gameState.js'
 import { angleDiff, normalizeAngle, smoothRotateTowardsAngle } from '../logic.js'
@@ -14,6 +15,83 @@ import { getApacheRocketSpawnPoints } from '../rendering/apacheImageRenderer.js'
 import { getPlayableViewportWidth, getPlayableViewportHeight } from '../utils/layoutMetrics.js'
 
 const APACHE_REMOTE_RANGE_MULTIPLIER = 1.5
+const REMOTE_NAVAL_FIRE_RATES = Object.freeze({
+  destroyer: 900,
+  battleship: 1400,
+  submarine: 1800
+})
+
+function handleNavalRemoteControl(unit, inputs, bullets, units, mapGrid, now) {
+  const {
+    forwardIntensity,
+    backwardIntensity,
+    turnLeftIntensity,
+    turnRightIntensity,
+    fireIntensity
+  } = inputs
+  const movementAxis = Math.max(-1, Math.min(1, forwardIntensity - backwardIntensity))
+  const turnAxis = Math.max(-1, Math.min(1, turnRightIntensity - turnLeftIntensity))
+  const rotationSpeed = unit.rotationSpeed || 0.02
+  const desiredAngularVelocity = turnAxis * rotationSpeed
+  const rotationBlend = turnAxis ? 0.16 : 0.1
+  let angularVelocity = unit.remoteNavalAngularVelocity || 0
+  angularVelocity += (desiredAngularVelocity - angularVelocity) * rotationBlend
+  if (!turnAxis && Math.abs(angularVelocity) < 0.00015) angularVelocity = 0
+
+  unit.remoteNavalAngularVelocity = angularVelocity
+  unit.navalAngularVelocity = angularVelocity
+  unit.isRotating = Math.abs(angularVelocity) > 0.00015
+  unit.direction = normalizeAngle((unit.direction || 0) + angularVelocity)
+  unit.rotation = unit.direction
+  unit.movement.rotation = unit.direction
+  unit.movement.targetRotation = unit.direction
+
+  const effectiveSpeed = (unit.speed || 0.5) * (unit.speedModifier || 1)
+  const forwardX = Math.cos(unit.direction)
+  const forwardY = Math.sin(unit.direction)
+  unit.movement.targetVelocity.x = forwardX * effectiveSpeed * movementAxis
+  unit.movement.targetVelocity.y = forwardY * effectiveSpeed * movementAxis
+  unit.movement.isMoving = Math.abs(movementAxis) > 0.001
+  unit.remoteControlActive = Boolean(movementAxis || turnAxis || angularVelocity)
+
+  if (movementAxis || turnAxis) {
+    unit.path = []
+    unit.moveTarget = null
+    unit.lastRemoteControlTime = now
+  }
+  if (unit.remoteControlActive && !unit.hasUsedRemoteControl) unit.hasUsedRemoteControl = true
+
+  const fireRate = REMOTE_NAVAL_FIRE_RATES[unit.type]
+  const firePressed = fireIntensity > 0
+  unit.remoteFireCommandActive = firePressed
+  if (!fireRate || !firePressed) return
+
+  const range = TANK_FIRE_RANGE * TILE_SIZE
+  const targetX = unit.x + TILE_SIZE / 2 + forwardX * range
+  const targetY = unit.y + TILE_SIZE / 2 + forwardY * range
+  const target = {
+    x: targetX - TILE_SIZE / 2,
+    y: targetY - TILE_SIZE / 2,
+    tileX: Math.floor(targetX / TILE_SIZE),
+    tileY: Math.floor(targetY / TILE_SIZE)
+  }
+  unit.turretDirection = unit.direction
+  handleTankFiring(
+    unit,
+    target,
+    bullets,
+    now,
+    fireRate,
+    targetX,
+    targetY,
+    unit.type === 'submarine' ? 'torpedo' : 'bullet',
+    units,
+    mapGrid,
+    false,
+    { x: targetX, y: targetY },
+    true
+  )
+}
 
 function clampRangeToViewport(rangePx, centerX, centerY, direction) {
   const scroll = gameState.scrollOffset || { x: 0, y: 0 }
@@ -612,6 +690,17 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
     // Units without fuel cannot be remote controlled
     if (unit.gas !== undefined && unit.gas <= 0) {
       unit.remoteControlActive = false
+      return
+    }
+
+    if (unit.isNaval) {
+      handleNavalRemoteControl(unit, {
+        forwardIntensity,
+        backwardIntensity,
+        turnLeftIntensity,
+        turnRightIntensity,
+        fireIntensity
+      }, bullets, units, mapGrid, now)
       return
     }
 

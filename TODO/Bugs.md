@@ -439,3 +439,12 @@
 
 - [x] Stop residual naval angular velocity deterministically when a ship reaches its movement heading or no longer has a path.
 - [x] While a ship rotates, suppress bow/stern V-wakes and render fading circular water-disturbance rings around its hull instead.
+
+## 2026-07-23 Carrier animation and hull-overlap bugs
+
+- [x] Prevent F35 recovery from descending at one coordinate and snapping to a different parking coordinate after touchdown.
+- [x] Prevent carrier approach/landing stages from starting while the carrier is moving or the F22 is still outside its eight-tile recovery envelope.
+- [x] Stop carriers from retaining movement or residual rotation when given an aircraft strike command or after reaching their commanded position.
+- [x] Correct large naval hulls away from land when an in-place or low-speed turn makes the rendered bow/stern overlap the shoreline.
+- [x] Exclude flying, landing, taxiing, and parked aircraft from Aircraft Carrier collision and avoidance calculations.
+- [x] Stop an Aircraft Carrier when its rendered bow tip reaches the final waypoint, clear every residual movement/rotation state, and retain that heading until a new command.

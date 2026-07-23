@@ -427,3 +427,12 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Use 75% landed jet size on carriers and Airstrips, interpolating continuously to full size as altitude increases during takeoff and landing.
 - [x] Route ferries/hovercraft and cargo to one coastal land rendezvous, align the rendered hull stern exactly to the land/water boundary, and begin boarding only after alignment.
 - [x] Keep cargo under ordinary pathfinding until it reaches its assigned shoreline slot, then rotate it toward the stern before the visible boarding tween and lock commands during transfer.
+
+## 2026-07-23 Carrier strikes and naval remote control
+
+- [x] Place Start Money beside the SSE biome selector on a dedicated two-column, 50/50 map-settings row.
+- [x] Reserve the F35 carrier parking slot before descent and keep rendezvous, vertical landing, and parked coordinates continuous.
+- [x] Gate F22 carrier approach to a stationary carrier within eight tiles; approach from astern, touch down near the rear threshold, turn during deck taxi, and launch from the extreme rear runway point.
+- [x] Add forward/reverse, inertial steering, and forward Space firing to direct control for every naval unit, with weapons limited to armed ship types.
+- [x] Push a rotated large-ship hull back into clear water using a bounded shoreline-overlap correction that only searches when the oriented hull probe intersects land.
+- [x] Keep carriers stationary on attack commands and run persistent multi-target aircraft strike cycles that return, rearm, and relaunch from the originating carrier.

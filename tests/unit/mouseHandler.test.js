@@ -535,7 +535,7 @@ describe('MouseHandler', () => {
       mapGrid,
       selectionManager
     )).toBe(true)
-    expect(f22.carrierOperation?.state).toBe('approach')
+    expect(f22.carrierOperation?.state).toBe('carrier_rendezvous')
     expect(f22.guardMode).toBe(false)
   })
 

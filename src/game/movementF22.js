@@ -1119,9 +1119,9 @@ export function updateF22FlightState(unit, movement, now) {
     const hadCombatAssignment = unit.f22AssignedDestination?.mode === 'combat' && Boolean(unit.f22AssignedDestination?.followTargetId)
     const combatTargetDestroyed = hadCombatAssignment && !isFollowTargetAlive(unit)
     const hasLiveCombatTarget = hadCombatAssignment && !combatTargetDestroyed
-    const shouldReturnForFuel = shouldReturnToAirstrip(unit)
-    const shouldReturnForAmmo = outOfAmmo
-    const shouldReturnAfterCombat = combatTargetDestroyed
+    const shouldReturnForFuel = !unit.homeCarrierId && shouldReturnToAirstrip(unit)
+    const shouldReturnForAmmo = !unit.homeCarrierId && outOfAmmo
+    const shouldReturnAfterCombat = !unit.homeCarrierId && combatTargetDestroyed
 
     if (hasLiveCombatTarget && unit.helipadLandingRequested && !shouldReturnForAmmo && !shouldReturnForFuel) {
       unit.helipadLandingRequested = false
