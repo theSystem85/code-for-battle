@@ -26,6 +26,16 @@ export const NAVAL_RENDER_LENGTH_TILES = Object.freeze({
   battleship: 6.6,
   submarine: 2.8
 })
+const NAVAL_HULL_WIDTH_RATIOS = Object.freeze({
+  destroyer: 0.24,
+  supplyShip: 0.3,
+  hovercraft: 0.5,
+  vehicleFerry: 0.42,
+  aircraftCarrier: 0.22,
+  navalMineLayer: 0.3,
+  battleship: 0.27,
+  submarine: 0.24
+})
 
 const SHIPYARD_SERVICE_REQUIREMENTS = Object.freeze({
   fuel: 'gasStation',
@@ -40,6 +50,32 @@ export function isNavalUnitType(type) {
 
 export function getNavalRenderLengthTiles(type) {
   return NAVAL_RENDER_LENGTH_TILES[type] || DESTROYER_RENDER_LENGTH_TILES
+}
+
+export function getNavalHullDimensions(type) {
+  const length = getNavalRenderLengthTiles(type) * TILE_SIZE * DESTROYER_HULL_LENGTH_RATIO
+  const width = Math.max(TILE_SIZE * 0.7, length * (NAVAL_HULL_WIDTH_RATIOS[type] || 0.28))
+  return { length, width, radius: width / 2 }
+}
+
+export function getNavalHullSegment(unit, x = unit?.x, y = unit?.y) {
+  const { length, width, radius } = getNavalHullDimensions(unit?.type)
+  const direction = unit?.direction || unit?.rotation || 0
+  const centerX = (x || 0) + TILE_SIZE / 2
+  const centerY = (y || 0) + TILE_SIZE / 2
+  const halfSegment = Math.max(0, (length - width) / 2)
+  const directionX = Math.cos(direction)
+  const directionY = Math.sin(direction)
+  return {
+    startX: centerX - directionX * halfSegment,
+    startY: centerY - directionY * halfSegment,
+    endX: centerX + directionX * halfSegment,
+    endY: centerY + directionY * halfSegment,
+    centerX,
+    centerY,
+    radius,
+    boundingRadius: length / 2
+  }
 }
 
 export function isWaterTile(mapGrid, x, y) {
@@ -158,17 +194,41 @@ export function addShipWake(unit, gameState, now = performance.now()) {
     return
   }
   const speed = unit?.movement?.currentSpeed || 0
-  if (!unit?.isNaval || !gameState || !unit.movement?.isMoving || speed <= 0.01) return
+  if (!unit?.isNaval || !gameState) return
+  const isRotating = unit.isRotating ||
+    Math.abs(unit.navalAngularVelocity || 0) > 0.001 ||
+    Math.abs(unit.transportAngularVelocity || 0) > 0.001
+  const centerX = unit.x + TILE_SIZE / 2
+  const centerY = unit.y + TILE_SIZE / 2
+  gameState.shipWakes = gameState.shipWakes || []
+
+  if (isRotating) {
+    gameState.shipWakes = gameState.shipWakes.filter(wake =>
+      wake.sourceUnitId !== unit.id || wake.kind === 'turn'
+    )
+    if (unit.lastTurnWakeTime && now - unit.lastTurnWakeTime < 120) return
+    gameState.shipWakes.push({
+      x: centerX,
+      y: centerY,
+      createdAt: now,
+      duration: 850,
+      size: Math.max(TILE_SIZE * 0.6, getNavalHullDimensions(unit.type).width * 0.75),
+      angularSpeed: Math.abs(unit.navalAngularVelocity || unit.transportAngularVelocity || 0),
+      kind: 'turn',
+      sourceUnitId: unit.id
+    })
+    unit.lastTurnWakeTime = now
+    return
+  }
+
+  if (!unit.movement?.isMoving || speed <= 0.01) return
   if (unit.lastWakeTime && now - unit.lastWakeTime < 90) return
 
   const direction = unit.direction || 0
-  const centerX = unit.x + TILE_SIZE / 2
-  const centerY = unit.y + TILE_SIZE / 2
   const hullEndOffset = TILE_SIZE * (getNavalRenderLengthTiles(unit.type) / 2) * DESTROYER_HULL_LENGTH_RATIO
   const bowWakeOffset = hullEndOffset + SHIP_BOW_WAKE_FORWARD_OFFSET
   const directionX = Math.cos(direction)
   const directionY = Math.sin(direction)
-  gameState.shipWakes = gameState.shipWakes || []
   gameState.shipWakes.push({
     x: centerX - directionX * hullEndOffset,
     y: centerY - directionY * hullEndOffset,

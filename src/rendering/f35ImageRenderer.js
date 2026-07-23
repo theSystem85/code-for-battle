@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../config.js'
+import { getJetRenderScale } from './jetRenderScale.js'
 
 let f35Image = null
 let f35Loaded = false
@@ -101,8 +102,8 @@ export function renderF35WithImage(ctx, unit, centerX, centerY) {
 
   const sourceWidth = f35Image.naturalWidth || f35Image.width || TILE_SIZE
   const sourceHeight = f35Image.naturalHeight || f35Image.height || TILE_SIZE
-  const carrierDeckScale = unit.carrierId || unit.carrierOperation?.carrierId ? 0.5 : 1
-  const scale = (F35_TARGET_WIDTH * carrierDeckScale) / Math.max(sourceWidth, 1)
+  const jetRenderScale = getJetRenderScale(unit)
+  const scale = (F35_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
   const targetWidth = sourceWidth * scale
   const targetHeight = sourceHeight * scale
 
@@ -130,8 +131,8 @@ export function getF35BombSpawnPoint(unit, centerX, centerY) {
 
   const sourceWidth = f35Image?.naturalWidth || f35Image?.width || TILE_SIZE
   const sourceHeight = f35Image?.naturalHeight || f35Image?.height || TILE_SIZE
-  const carrierDeckScale = unit.carrierId || unit.carrierOperation?.carrierId ? 0.5 : 1
-  const scale = (F35_TARGET_WIDTH * carrierDeckScale) / Math.max(sourceWidth, 1)
+  const jetRenderScale = getJetRenderScale(unit)
+  const scale = (F35_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
   const hardpoint = { x: sourceWidth / 2, y: sourceHeight * 0.55 }
   const localX = (hardpoint.x - sourceWidth / 2) * scale
   const localY = (hardpoint.y - sourceHeight / 2) * scale

@@ -15,6 +15,9 @@ import { interruptHarvesterAutomation } from '../../game/harvesterLogic.js'
 export function handleMovementCommand(handler, selectedUnits, targetX, targetY, mapGrid, skipQueueClear = false) {
   const now = performance.now()
   const commandableUnits = selectedUnits.filter(unit => {
+    if (unit.transportOperation || unit.transportTransfer) {
+      return false
+    }
     if (unit.crew && typeof unit.crew === 'object' && !unit.crew.commander) {
       return false
     }

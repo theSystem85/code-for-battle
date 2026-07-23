@@ -243,7 +243,7 @@ export class SpatialQuadtree {
 
     for (let i = 0, len = units.length; i < len; i++) {
       const unit = units[i]
-      if (!unit || unit.health <= 0) continue
+      if (!unit || unit.health <= 0 || unit.embarkedOnId || unit.transportTransfer) continue
 
       // Pre-compute and cache center coordinates on the unit
       unit._cx = unit.x + halfTile

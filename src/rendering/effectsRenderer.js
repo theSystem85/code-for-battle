@@ -654,6 +654,18 @@ export class EffectsRenderer {
       const age = Math.max(0, now - wake.createdAt)
       const alpha = Math.max(0, 1 - age / wake.duration)
       const progress = age / wake.duration
+      if (wake.kind === 'turn') {
+        const radius = wake.size * (0.45 + progress * 1.05)
+        ctx.save()
+        ctx.translate(wake.x - scrollOffset.x, wake.y - scrollOffset.y)
+        ctx.strokeStyle = `rgba(205, 240, 255, ${0.45 * alpha})`
+        ctx.lineWidth = 0.8 + alpha * 1.4
+        ctx.beginPath()
+        ctx.arc(0, 0, radius, 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.restore()
+        return
+      }
       const isBowWake = wake.kind === 'bow'
       const length = wake.size * (isBowWake ? 0.65 + progress * 1.2 : 0.8 + progress * 1.8)
       const halfWidth = isBowWake

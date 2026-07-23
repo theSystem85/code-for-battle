@@ -404,14 +404,26 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Naval direct-command priority/disembark follow-up (2026-07-20): direct friendly-unit clicks must trigger transport boarding or carrier recovery before ordinary selection/guard behavior, while group guard remains an AGF-box interaction; land clicks with a loaded transport must approach the coast, unload safely, and order cargo onward to the clicked land destination.
 
 ## 2026-07-22 Naval, carrier, AI, and map settings requests
+- [x] Cluster A — finish ferry shoreline operations as one state machine: stop/jitter fix, stern alignment, sequential visible cargo tweening, and movement lock.
+- [x] Cluster B — finish carrier deck operations as continuous eased approach, roll, taxi, parking, launch-taxi, and takeoff phases.
+- [x] Cluster C — finish naval motion as eased translation/rotation plus quadtree-backed oriented hull/shore collision.
+- [x] Cluster D — finish enemy naval behavior as persisted 50/50 force preference, active assault targeting, and supply-ship/Shipyard recovery logistics.
 - [x] Add start money as a configurable map setting and apply it to all parties.
 - [x] Render all non-submarine naval units 50% larger.
-- [x] Render F22/F35 aircraft 50% smaller while parked or operating on a carrier deck.
+- [x] Render F22/F35 aircraft 25% smaller while parked or operating on a carrier deck or Airstrip, with altitude-driven gradual scaling during landing and takeoff.
 - [x] Show a move-into cursor when a selected loaded ferry hovers over valid land for disembark.
-- [ ] Add smooth ferry embark/disembark alignment and visible cargo ramp movement animation before units load/unload.
-- [ ] Add smoother carrier landing/takeoff deck animations for jets without rapid position changes.
-- [ ] Add AI naval assault behavior so enemy-built ships actively attack human targets.
-- [ ] Add per-enemy 50/50 naval-first versus air-force-first strategy preference.
-- [ ] Add supply-ship retreat/resupply behavior for damaged, ammo-empty, fuel-empty, or crew-depleted ships.
-- [ ] Add high-performance naval image-footprint collision against ships and shoreline.
-- [ ] Add ship inertia/ease-in/ease-out movement and rotation.
+- [x] Add smooth ferry embark/disembark alignment and visible cargo ramp movement animation before units load/unload.
+- [x] Add smoother carrier landing/takeoff deck animations for jets without rapid position changes.
+- [x] Add AI naval assault behavior so enemy-built ships actively attack human targets and retaliate against valid attackers.
+- [x] Add per-enemy 50/50 naval-first versus air-force-first strategy preference.
+- [x] Add supply-ship retreat/resupply behavior for damaged, ammo-empty, fuel-empty, or crew-depleted ships.
+- [x] Add high-performance naval image-footprint collision against ships and shoreline.
+- [x] Add ship inertia/ease-in/ease-out movement and rotation.
+
+## 2026-07-23 AI modularity, jet deck layout, and transport rendezvous
+
+- [x] Split `enemyUnitBehavior.js` by AI domain so every resulting behavior module stays below 500 lines while retaining the existing public entry point.
+- [x] Move carrier jet parking positions to the opposite side of the flight deck.
+- [x] Use 75% landed jet size on carriers and Airstrips, interpolating continuously to full size as altitude increases during takeoff and landing.
+- [x] Route ferries/hovercraft and cargo to one coastal land rendezvous, align the rendered hull stern exactly to the land/water boundary, and begin boarding only after alignment.
+- [x] Keep cargo under ordinary pathfinding until it reaches its assigned shoreline slot, then rotate it toward the stern before the visible boarding tween and lock commands during transfer.

@@ -433,4 +433,9 @@
 ## 2026-07-22 Naval transport and shipyard bugs
 - [x] Ferry cargo HUD tooltip now lists different loaded unit types on separate lines.
 - [x] Shipyard placement accepts west/east shore footprints where the water half overlaps straight water columns and the land half remains on land.
-- [ ] Fix loaded ferries jittering back and forth when reaching a commanded water point; verify the movement stop condition and naval inertia together.
+- [x] Fix loaded ferries jittering back and forth when reaching a commanded water point; transports now clear their route and fully settle before shoreline alignment/transfer, verified together with naval braking inertia.
+
+## 2026-07-23 Naval rotation and wake bugs
+
+- [x] Stop residual naval angular velocity deterministically when a ship reaches its movement heading or no longer has a path.
+- [x] While a ship rotates, suppress bow/stern V-wakes and render fading circular water-disturbance rings around its hull instead.

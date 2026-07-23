@@ -24,6 +24,13 @@ import { observeUnitCommandSignals, pruneUnitCommandHistory } from './unitComman
 
 const REMOTE_ATTACK_CHASE_SUPPRESSION_MS = 5000
 
+function signedAngleDelta(currentAngle, targetAngle) {
+  let difference = (targetAngle - currentAngle) % (Math.PI * 2)
+  if (difference > Math.PI) difference -= Math.PI * 2
+  if (difference < -Math.PI) difference += Math.PI * 2
+  return difference
+}
+
 function isAiControlledUnit(unit, gameState) {
   if (!unit?.owner) return false
   if (Array.isArray(gameState?.partyStates) && gameState.partyStates.length > 0) {
@@ -60,7 +67,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       continue
     }
 
-    if (unit.embarkedOnId || unit.carrierOperation) {
+    if (unit.embarkedOnId || unit.carrierOperation || unit.transportOperation || unit.transportTransfer || unit.transportBoardingLocked) {
       initializeUnitMovement(unit)
       unit.movement.velocity = { x: 0, y: 0 }
       unit.movement.targetVelocity = { x: 0, y: 0 }
@@ -398,11 +405,34 @@ function updateUnitRotation(unit, now) {
 
   // Rotate the body if needed
   const angleDifference = angleDiff(unit.direction, bodyTargetDirection)
-  if (Math.abs(angleDifference) > 0.05) { // Small threshold to avoid jitter
+  const navalAngleDifference = unit.isNaval ? signedAngleDelta(unit.direction, bodyTargetDirection) : 0
+  if (unit.isNaval && Math.abs(navalAngleDifference) > 0.008) {
+    bodyNeedsRotation = true
+    const maxAngularSpeed = Math.max(0.012, (unit.rotationSpeed || 0.1) * 0.6)
+    const desiredAngularVelocity = Math.max(-maxAngularSpeed, Math.min(maxAngularSpeed, navalAngleDifference * 0.2))
+    const nextAngularVelocity = (unit.navalAngularVelocity || 0) * 0.55 + desiredAngularVelocity * 0.45
+    if (Math.abs(nextAngularVelocity) >= Math.abs(navalAngleDifference)) {
+      unit.direction = bodyTargetDirection
+      unit.navalAngularVelocity = 0
+      bodyNeedsRotation = false
+    } else {
+      unit.navalAngularVelocity = nextAngularVelocity
+      unit.direction = signedAngleDelta(0, unit.direction + nextAngularVelocity)
+    }
+  } else if (unit.isNaval) {
+    unit.direction = bodyTargetDirection
+    unit.navalAngularVelocity = 0
+    bodyNeedsRotation = false
+  } else if (Math.abs(angleDifference) > 0.05) { // Small threshold to avoid jitter
     bodyNeedsRotation = true
     unit.direction = smoothRotateTowardsAngle(unit.direction, bodyTargetDirection, unit.rotationSpeed)
   } else {
     bodyNeedsRotation = false
+  }
+  if (unit.isNaval && unit.movement) {
+    unit.movement.rotation = unit.direction
+    unit.movement.targetRotation = bodyTargetDirection
+    unit.rotation = unit.direction
   }
   unit.isRotating = bodyNeedsRotation
 

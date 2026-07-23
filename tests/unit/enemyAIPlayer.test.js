@@ -125,9 +125,10 @@ const createMapGrid = (width, height) =>
   )
 
 let updateAIPlayer
+let ensureAdvancedForcePreference
 
 beforeAll(async() => {
-  ;({ updateAIPlayer } = await import('../../src/ai/enemyAIPlayer.js'))
+  ;({ updateAIPlayer, ensureAdvancedForcePreference } = await import('../../src/ai/enemyAIPlayer.js'))
 })
 
 beforeEach(() => {
@@ -154,6 +155,15 @@ beforeEach(() => {
 })
 
 describe('enemyAIPlayer updateAIPlayer', () => {
+  it('persists one 50/50 advanced-force preference per AI party', () => {
+    const state = {}
+    gameRandom.mockReturnValueOnce(0.49).mockReturnValueOnce(0.75)
+
+    expect(ensureAdvancedForcePreference(state, 'ai1')).toBe('naval-first')
+    expect(ensureAdvancedForcePreference(state, 'ai1')).toBe('naval-first')
+    expect(ensureAdvancedForcePreference(state, 'ai2')).toBe('air-first')
+    expect(gameRandom).toHaveBeenCalledTimes(2)
+  })
   it('sells non-protected buildings to recover refinery funds', () => {
     const aiPlayerId = 'ai1'
     const aiFactory = {

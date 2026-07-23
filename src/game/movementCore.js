@@ -455,8 +455,11 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
           movement.targetRotation = targetDirection
         }
       } else {
-        movement.targetVelocity.x = dirX * effectiveMaxSpeed
-        movement.targetVelocity.y = dirY * effectiveMaxSpeed
+        const finalNavalApproachScale = unit.isNaval && unit.path.length === 1
+          ? Math.max(0.12, Math.min(1, distance / (TILE_SIZE * 2.5)))
+          : 1
+        movement.targetVelocity.x = dirX * effectiveMaxSpeed * finalNavalApproachScale
+        movement.targetVelocity.y = dirY * effectiveMaxSpeed * finalNavalApproachScale
         movement.isMoving = true
 
         movement.targetRotation = Math.atan2(dy, dx)
@@ -488,7 +491,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       shouldDecelerate = !canAccelerate && movement.isMoving
     }
   } else if (unit.type !== 'apache' && unit.type !== 'f35' && !(unit.type === 'f22Raptor' && unit.flightState !== 'grounded')) {
-    const rotationDiff = Math.abs(normalizeAngle(movement.targetRotation - movement.rotation))
+    const currentBodyRotation = unit.isNaval ? (unit.direction || 0) : movement.rotation
+    const rotationDiff = Math.abs(normalizeAngle(movement.targetRotation - currentBodyRotation))
     canAccelerate = rotationDiff < Math.PI / 12
     shouldDecelerate = !canAccelerate && movement.isMoving
   }
@@ -507,12 +511,12 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   let accelRate
   if (shouldDecelerate || !movement.isMoving) {
-    accelRate = MOVEMENT_CONFIG.DECELERATION
+    accelRate = unit.isNaval ? MOVEMENT_CONFIG.DECELERATION * 0.32 : MOVEMENT_CONFIG.DECELERATION
   } else if (canAccelerate && movement.isMoving) {
     if (unit.type === 'ambulance') {
       accelRate = MOVEMENT_CONFIG.ACCELERATION * 0.25
     } else {
-      accelRate = MOVEMENT_CONFIG.ACCELERATION
+      accelRate = unit.isNaval ? MOVEMENT_CONFIG.ACCELERATION * 0.24 : MOVEMENT_CONFIG.ACCELERATION
       if (unit.accelerationMultiplier) {
         accelRate *= unit.accelerationMultiplier
       }
@@ -760,6 +764,12 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
 function updateUnitRotation(unit) {
   const movement = unit.movement
+
+  if (unit.isNaval) {
+    movement.rotation = unit.direction || movement.rotation || 0
+    unit.rotation = movement.rotation
+    return
+  }
 
   const rotationDiff = normalizeAngle(movement.targetRotation - movement.rotation)
 

@@ -41,4 +41,36 @@ describe('EffectsRenderer', () => {
       )
     })
   })
+
+  describe('renderShipWakes', () => {
+    it('draws rotating-ship disturbances as expanding circular rings', () => {
+      const renderer = new EffectsRenderer()
+      const ctx = {
+        save: vi.fn(),
+        restore: vi.fn(),
+        translate: vi.fn(),
+        beginPath: vi.fn(),
+        arc: vi.fn(),
+        stroke: vi.fn(),
+        quadraticCurveTo: vi.fn()
+      }
+      const state = {
+        simulationTime: 1300,
+        shipWakes: [{
+          kind: 'turn',
+          x: 100,
+          y: 120,
+          size: 30,
+          createdAt: 1000,
+          duration: 850
+        }]
+      }
+
+      renderer.renderShipWakes(ctx, state, { x: 10, y: 20 })
+
+      expect(ctx.translate).toHaveBeenCalledWith(90, 100)
+      expect(ctx.arc).toHaveBeenCalledWith(0, 0, expect.any(Number), 0, Math.PI * 2)
+      expect(ctx.quadraticCurveTo).not.toHaveBeenCalled()
+    })
+  })
 })

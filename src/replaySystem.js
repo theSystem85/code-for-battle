@@ -16,6 +16,16 @@ import { spawnEnemyUnit } from './ai/enemySpawner.js'
 import { initializeSessionRNG } from './network/deterministicRandom.js'
 import { terminateAllSounds } from './sound.js'
 import { getStoredEntries, getStoredItem, isGameStorageAvailable, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
+import {
+  createReplayUnitReference,
+  recordReplayCommand
+} from './replayCommandPrimitives.js'
+
+export {
+  createReplayEntityReference,
+  createReplayUnitReference,
+  recordReplayCommand
+} from './replayCommandPrimitives.js'
 
 const REPLAY_STORAGE_PREFIX = 'rts_replay_'
 const TEMP_BASELINE_LABEL_PREFIX = '__replay_baseline__'
@@ -507,20 +517,6 @@ function replaySpawnUnit(command, metadata = {}) {
   return true
 }
 
-export function createReplayUnitReference(unit) {
-  if (!unit || unit.isBuilding) {
-    return null
-  }
-
-  return {
-    id: unit.id || null,
-    owner: unit.owner || null,
-    type: unit.type || null,
-    replaySpawnOrdinal: Number.isFinite(unit.replaySpawnOrdinal) ? unit.replaySpawnOrdinal : null,
-    buildDuration: Number.isFinite(unit.buildDuration) ? unit.buildDuration : null
-  }
-}
-
 export function createReplayUnitReferences(unitsOrIds = []) {
   const sourceItems = Array.isArray(unitsOrIds) ? unitsOrIds : []
   const liveUnits = Array.isArray(gameState.units) ? gameState.units : []
@@ -748,49 +744,6 @@ function executeReplayUnitCommand(command) {
   }
 }
 
-export function createReplayEntityReference(entity) {
-  if (!entity) {
-    return null
-  }
-
-  if (entity.isGroundTarget) {
-    return {
-      kind: 'ground',
-      id: entity.id || null,
-      x: entity.x,
-      y: entity.y,
-      tileX: entity.tileX,
-      tileY: entity.tileY
-    }
-  }
-
-  if (entity.isBuilding) {
-    return {
-      kind: 'building',
-      id: getBuildingIdentifier(entity),
-      type: entity.type,
-      x: entity.x,
-      y: entity.y
-    }
-  }
-
-  if (entity.sourceUnitId || (gameState.unitWrecks || []).some(wreck => wreck.id === entity.id)) {
-    return {
-      kind: 'wreck',
-      id: entity.id
-    }
-  }
-
-  return {
-    kind: 'unit',
-    id: entity.id,
-    owner: entity.owner || null,
-    type: entity.type || null,
-    replaySpawnOrdinal: Number.isFinite(entity.replaySpawnOrdinal) ? entity.replaySpawnOrdinal : null,
-    buildDuration: Number.isFinite(entity.buildDuration) ? entity.buildDuration : null
-  }
-}
-
 export function listReplays() {
   const replays = []
   if (!isGameStorageAvailable()) return replays
@@ -889,16 +842,6 @@ export function toggleReplayRecording() {
     startReplayRecording()
   }
   updateRecordButtonState()
-}
-
-export function recordReplayCommand(command, metadata = {}) {
-  const replay = ensureReplayState()
-  if (!replay.recordingActive) return
-  replay.commands.push({
-    at: Math.max(0, getNowMs() - replay.recordingStartedAt),
-    command,
-    metadata
-  })
 }
 
 function executeReplayCommand(entry) {

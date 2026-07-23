@@ -14,8 +14,10 @@ vi.mock('../../src/buildings.js', () => ({
 import {
   applyStaticObstacleCollisionResponse,
   applyUnitCollisionResponse,
-  calculateCollisionAvoidance
+  calculateCollisionAvoidance,
+  checkUnitCollision
 } from '../../src/game/movementCollision.js'
+import { initSpatialQuadtree, rebuildSpatialQuadtree } from '../../src/game/spatialQuadtree.js'
 
 function createMapGrid(width = 6, height = 6) {
   return Array.from({ length: height }, () =>
@@ -375,5 +377,43 @@ describe('movementCollision environment response', () => {
 
     expect(pushed.moveTarget).toEqual({ x: 3, y: 1 })
     expect(pushed.path).toEqual([{ x: 3, y: 1 }])
+  })
+})
+
+describe('naval image-footprint collision', () => {
+  function createWaterGrid(width = 30, height = 20) {
+    return Array.from({ length: height }, () =>
+      Array.from({ length: width }, () => ({ type: 'water', building: null, seedCrystal: false })))
+  }
+
+  function createShip(id, type, x, y, direction = 0) {
+    return {
+      id, type, isNaval: true, owner: 'player1', health: 100,
+      x, y, direction,
+      movement: { velocity: { x: 0, y: 0 }, targetVelocity: { x: 0, y: 0 }, currentSpeed: 0 }
+    }
+  }
+
+  it('uses quadtree candidates and oriented hull width to reject overlapping parallel ships', () => {
+    const mapGrid = createWaterGrid()
+    const first = createShip('first', 'destroyer', 10 * 32, 8 * 32)
+    const second = createShip('second', 'destroyer', 10 * 32, 8 * 32 + 25)
+    initSpatialQuadtree(30 * 32, 20 * 32)
+    rebuildSpatialQuadtree([first, second])
+
+    const collision = checkUnitCollision(first, mapGrid, [], [first, second])
+
+    expect(collision.type).toBe('unit')
+    expect(collision.other).toBe(second)
+  })
+
+  it('rejects a carrier position when its bow footprint crosses the shoreline', () => {
+    const mapGrid = createWaterGrid()
+    for (let y = 0; y < mapGrid.length; y++) mapGrid[y][3].type = 'land'
+    const carrier = createShip('carrier', 'aircraftCarrier', 6 * 32, 8 * 32, Math.PI)
+    initSpatialQuadtree(30 * 32, 20 * 32)
+    rebuildSpatialQuadtree([carrier])
+
+    expect(checkUnitCollision(carrier, mapGrid, [], [carrier]).type).toBe('terrain')
   })
 })

@@ -10,6 +10,7 @@ import {
 import { gameState } from '../../src/gameState.js'
 import {
   requestCarrierLanding,
+  requestCarrierLaunch,
   requestTransportLoad,
   requestTransportUnload,
   tryHandleFleetCommand,
@@ -23,7 +24,7 @@ import {
   rebuildWaterMineLookup,
   updateWaterMines
 } from '../../src/game/waterMineSystem.js'
-import { addShipWake, getNavalRenderLengthTiles } from '../../src/utils/navalUtils.js'
+import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles } from '../../src/utils/navalUtils.js'
 
 function createMap(width = 30, height = 20, type = 'water') {
   return Array.from({ length: height }, () =>
@@ -105,13 +106,44 @@ describe('six-ship naval fleet systems', () => {
 
     expect(tryHandleFleetCommand([tank, ambulance], ferry.x + TILE_SIZE / 2, ferry.y + TILE_SIZE / 2, units, map)).toBe(true)
     expect(ferry.pendingLoadUnitIds).toEqual(['tank', 'ambulance'])
-    expect(ferry.moveTarget).toMatchObject({ x: 10 })
+    expect(map[ferry.moveTarget.y][ferry.moveTarget.x].type).toBe('water')
 
-    tank.x = 9 * TILE_SIZE
-    tank.y = 8 * TILE_SIZE
-    ambulance.x = 9 * TILE_SIZE
-    ambulance.y = 9 * TILE_SIZE
+    const rendezvous = ferry.pendingLoadRendezvous
+    const tankSlot = rendezvous.cargoSlots[tank.id]
+    const ambulanceSlot = rendezvous.cargoSlots[ambulance.id]
+    ferry.x = rendezvous.desiredCenterX - TILE_SIZE / 2
+    ferry.y = rendezvous.desiredCenterY - TILE_SIZE / 2
+    ferry.tileX = Math.floor((ferry.x + TILE_SIZE / 2) / TILE_SIZE)
+    ferry.tileY = Math.floor((ferry.y + TILE_SIZE / 2) / TILE_SIZE)
+    ferry.moveTarget = null
+
+    tank.x = tankSlot.x * TILE_SIZE
+    tank.y = tankSlot.y * TILE_SIZE
+    ambulance.x = ambulanceSlot.x * TILE_SIZE
+    ambulance.y = ambulanceSlot.y * TILE_SIZE
     updateNavalFleet(units, [], map, { occupancyMap: [] }, 1000, 16)
+    expect(ferry.transportOperation).toMatchObject({ kind: 'load', phase: 'aligning' })
+    expect(ferry.embarkedUnitIds).toEqual([])
+
+    let animationNow = 1016
+    while (!units.some(unit => unit.transportTransfer?.phase === 'moving') && animationNow < 3000) {
+      updateNavalFleet(units, [], map, { occupancyMap: [] }, animationNow, 16)
+      animationNow += 16
+    }
+    const transferringCargo = units.find(unit => unit.transportTransfer)
+    expect(transferringCargo?.transportTransfer).toMatchObject({ kind: 'load', transportId: ferry.id })
+    expect(transferringCargo?.embarkedOnId).toBeUndefined()
+    const cargoCenterX = transferringCargo.x + TILE_SIZE / 2
+    const cargoCenterY = transferringCargo.y + TILE_SIZE / 2
+    const expectedCargoDirection = Math.atan2(rendezvous.contactY - cargoCenterY, rendezvous.contactX - cargoCenterX)
+    expect(transferringCargo.direction).toBeCloseTo(expectedCargoDirection, 1)
+    const sternOffset = getNavalHullDimensions(ferry.type).length / 2
+    expect(ferry.x + TILE_SIZE / 2 - Math.cos(ferry.direction) * sternOffset).toBeCloseTo(rendezvous.contactX, 1)
+    expect(ferry.y + TILE_SIZE / 2 - Math.sin(ferry.direction) * sternOffset).toBeCloseTo(rendezvous.contactY, 1)
+    while (ferry.transportOperation && animationNow < 6000) {
+      updateNavalFleet(units, [], map, { occupancyMap: [] }, animationNow, 16)
+      animationNow += 16
+    }
 
     expect(ferry.embarkedUnitIds).toEqual(['tank', 'ambulance'])
     expect(ferry.embarkedUnitTypes).toEqual(['tank_v1', 'ambulance'])
@@ -173,6 +205,13 @@ describe('six-ship naval fleet systems', () => {
     expect(ferry.guardMode).toBe(false)
 
     updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 1000, 16)
+    expect(ferry.transportOperation).toMatchObject({ kind: 'unload', phase: 'aligning' })
+    expect(ferry.moveTarget).toBeNull()
+    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 1010, 16)
+    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 1020, 16)
+    expect(tank.transportTransfer).toMatchObject({ kind: 'unload', transportId: ferry.id })
+    expect(tank.embarkedOnId).toBeNull()
+    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 2020, 16)
 
     expect(ferry.embarkedUnitIds).toEqual([])
     expect(ferry.embarkedUnitTypes).toEqual([])
@@ -225,6 +264,7 @@ describe('six-ship naval fleet systems', () => {
     carrier.carrierAircraftIds = [f35a.id]
     const damagedHealth = f35a.health
     updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 200, 1000)
+    expect(f35a.y + TILE_SIZE / 2).toBeGreaterThan(carrier.y + TILE_SIZE / 2)
     expect(f35a.gas).toBeGreaterThan(0)
     expect(f35a.rocketAmmo).toBeGreaterThan(0)
     expect(f35a.health).toBe(damagedHealth)
@@ -246,6 +286,40 @@ describe('six-ship naval fleet systems', () => {
     expect(requestCarrierLanding(apacheA, carrier, units, 100)).toBe(true)
     expect(requestCarrierLanding(apacheB, carrier, units, 100)).toBe(true)
     expect(requestCarrierLanding(apacheC, carrier, units, 100)).toBe(false)
+  })
+
+  it('eases fixed-wing taxi and launch through continuous carrier-relative stages', () => {
+    const carrier = {
+      ...createShip('aircraftCarrier', 'carrier', 'player1'),
+      deckSlotCapacity: 4,
+      carrierAircraftIds: ['f22']
+    }
+    const f22 = {
+      id: 'f22', type: 'f22Raptor', owner: 'player1', health: 100,
+      x: carrier.x, y: carrier.y, altitude: 0, direction: 0,
+      carrierId: carrier.id, carrierDeckSlotIndex: 0,
+      carrierOperation: { state: 'parked', carrierId: carrier.id },
+      flightState: 'grounded'
+    }
+    const units = [carrier, f22]
+
+    expect(requestCarrierLaunch(f22, { x: 20, y: 8 }, 100)).toBe(true)
+    expect(f22.carrierOperation.state).toBe('launch_taxi')
+    const parkedX = f22.x
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 750, 16)
+    expect(f22.x).not.toBe(parkedX)
+    expect(f22.altitude).toBe(0)
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 1400, 16)
+    expect(f22.carrierOperation.state).toBe('launch')
+    const runwayStartX = f22.x
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 2250, 16)
+    expect(f22.x).toBeGreaterThan(runwayStartX)
+    expect(f22.altitude).toBeGreaterThan(0)
+    expect(f22.altitude).toBeLessThan(TILE_SIZE * 4.5)
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 3200, 16)
+    expect(f22.carrierOperation).toBeNull()
+    expect(f22.carrierId).toBeNull()
+    expect(f22.moveTarget).toEqual({ x: 20, y: 8 })
   })
 
   it('places bow wakes ahead of the hull and suppresses all submerged-submarine wakes', () => {

@@ -99,6 +99,9 @@ function hashUnit(unit) {
   hash = hashCombine(hash, hashString(unit.embarkedOnId || ''))
   ;(unit.embarkedUnitIds || []).forEach(id => { hash = hashCombine(hash, hashString(id)) })
   ;(unit.pendingLoadUnitIds || []).forEach(id => { hash = hashCombine(hash, hashString(id)) })
+  hash = hashCombine(hash, hashString(unit.transportOperation?.kind || ''))
+  hash = hashCombine(hash, hashString(unit.transportOperation?.phase || ''))
+  hash = hashCombine(hash, hashString(unit.transportTransfer?.kind || ''))
 
   // Hash movement state
   if (unit.path) {

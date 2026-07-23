@@ -60,6 +60,37 @@ describe('naval integration', () => {
     expect(BOW_WAKE_INNER_ANGLE_RADIANS * (180 / Math.PI)).toBeCloseTo(70)
   })
 
+  it('replaces bow/stern wakes with a fading circular disturbance while rotating', () => {
+    const unit = {
+      id: 'turning-destroyer',
+      type: 'destroyer',
+      isNaval: true,
+      isRotating: true,
+      navalAngularVelocity: -0.03,
+      x: 5 * TILE_SIZE,
+      y: 4 * TILE_SIZE,
+      direction: 0,
+      movement: { isMoving: true, currentSpeed: 0.2 }
+    }
+    const state = {
+      shipWakes: [
+        { sourceUnitId: unit.id, kind: 'bow' },
+        { sourceUnitId: unit.id, kind: 'stern' }
+      ]
+    }
+
+    addShipWake(unit, state, 1000)
+
+    expect(state.shipWakes).toHaveLength(1)
+    expect(state.shipWakes[0]).toMatchObject({
+      kind: 'turn',
+      sourceUnitId: unit.id,
+      x: unit.x + TILE_SIZE / 2,
+      y: unit.y + TILE_SIZE / 2,
+      duration: 850
+    })
+  })
+
   it('finds water-only paths and keeps water terrain free in the occupancy map', () => {
     const mapGrid = createMap(8, 8, 'water')
     mapGrid[3][3].type = 'land'
