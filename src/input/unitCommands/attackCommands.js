@@ -9,7 +9,9 @@ import { issueTankerKamikazeCommand, clearAttackGroupState } from './utilityQueu
 import { setBattleshipTarget } from '../../game/navalFleetSystem.js'
 
 function canCommandUnitAttackTarget(unit, target) {
-  return unit.type !== 'submarine' || Boolean(target?.isNaval || target?.type === 'shipyard')
+  return unit.type !== 'submarine' || Boolean(
+    target?.isNaval || target?.type === 'shipyard' || target?.type === 'constructionYard'
+  )
 }
 
 export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isForceAttack = false, skipQueueClear = false) {

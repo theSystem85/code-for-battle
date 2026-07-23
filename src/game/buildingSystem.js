@@ -220,6 +220,10 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
  * @param {number} delta - Time delta
  * @param {Object} gameState - Game state object
  */
+function isSubmergedSubmarineTarget(target) {
+  return target?.type === 'submarine' && target.depthState !== 'surfaced'
+}
+
 const updateDefensiveBuildings = logPerformance(function updateDefensiveBuildings(buildings, units, bullets, delta, gameState) {
   const now = getSimulationTime(gameState)
 
@@ -247,7 +251,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
 
       if (building.forcedAttackTarget) {
         const t = building.forcedAttackTarget
-        if (t.health === undefined || t.health > 0) {
+        if (!isSubmergedSubmarineTarget(t) && (t.health === undefined || t.health > 0)) {
           const tx = t.x + (t.width ? t.width * TILE_SIZE / 2 : 0)
           const ty = t.y + (t.height ? t.height * TILE_SIZE / 2 : 0)
           const dist = Math.hypot(tx - centerX, ty - centerY)
@@ -264,7 +268,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
 
       while (!building.forcedAttackTarget && building.forcedAttackQueue.length > 0) {
         const nextQueuedTarget = building.forcedAttackQueue.shift()
-        if (nextQueuedTarget && (nextQueuedTarget.health === undefined || nextQueuedTarget.health > 0)) {
+        if (nextQueuedTarget && !isSubmergedSubmarineTarget(nextQueuedTarget) && (nextQueuedTarget.health === undefined || nextQueuedTarget.health > 0)) {
           building.forcedAttackTarget = nextQueuedTarget
         }
       }
@@ -272,6 +276,9 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
       if (!closestEnemy) {
         for (const unit of units) {
           if (unit.owner !== building.owner && unit.health > 0) {
+            if (isSubmergedSubmarineTarget(unit)) {
+              continue
+            }
             // Check if target is an airborne Apache - only certain buildings can target them
             const targetIsAirborneApache =
               (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') &&

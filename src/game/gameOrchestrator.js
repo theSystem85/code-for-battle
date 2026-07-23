@@ -43,6 +43,50 @@ import { initMapEditorControls } from '../ui/mapEditorControls.js'
 import { initializeSessionRNG } from '../network/deterministicRandom.js'
 import { resetHarvesterRuntimeState } from './harvesterLogic.js'
 
+
+const TILE_LENGTH_METERS = 10
+
+function formatMapKilometers(tiles) {
+  const km = (sanitizeMapDimension(tiles, DEFAULT_MAP_TILES_X) * TILE_LENGTH_METERS) / 1000
+  return `${Number.isInteger(km) ? km.toFixed(0) : km.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}km`
+}
+
+function estimateMinimumSaveBytes(widthTiles, heightTiles) {
+  const width = sanitizeMapDimension(widthTiles, DEFAULT_MAP_TILES_X)
+  const height = sanitizeMapDimension(heightTiles, DEFAULT_MAP_TILES_Y)
+  const tileCount = width * height
+  const mapGridTypes = Array.from({ length: height }, () => Array.from({ length: width }, () => 'land'))
+  return new TextEncoder().encode(JSON.stringify({
+    gameState: { mapTilesX: width, mapTilesY: height },
+    units: [],
+    buildings: [],
+    mapGridTypes,
+    mapTileState: [],
+    orePositions: []
+  })).length + Math.ceil(tileCount * 0.15)
+}
+
+function formatBytes(bytes) {
+  if (bytes >= 1024 * 1024) return `${(bytes / (1024 * 1024)).toFixed(2)} MB`
+  if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${bytes} B`
+}
+
+function updateMapDimensionLabelsAndSaveEstimate() {
+  const widthInput = document.getElementById('mapWidthTiles')
+  const heightInput = document.getElementById('mapHeightTiles')
+  const widthLabel = document.querySelector('label[for="mapWidthTiles"]')
+  const heightLabel = document.querySelector('label[for="mapHeightTiles"]')
+  const saveEstimate = document.getElementById('mapSaveMinimumEstimate')
+  const width = widthInput ? sanitizeMapDimension(widthInput.value, DEFAULT_MAP_TILES_X) : DEFAULT_MAP_TILES_X
+  const height = heightInput ? sanitizeMapDimension(heightInput.value, DEFAULT_MAP_TILES_Y) : DEFAULT_MAP_TILES_Y
+  if (widthLabel) widthLabel.textContent = `Width (${formatMapKilometers(width)})`
+  if (heightLabel) heightLabel.textContent = `Height (${formatMapKilometers(height)})`
+  if (saveEstimate) {
+    saveEstimate.textContent = `Minimum save memory for ${width}×${height}: ${formatBytes(estimateMinimumSaveBytes(width, height))} without units and decals.`
+  }
+}
+
 function initializeDeterministicGameSession(seed, state = gameState) {
   const sessionSeed = [
     seed || state.mapSeed || '1',
@@ -336,6 +380,7 @@ function loadPersistedSettings() {
       heightInput.value = heightTiles
     }
   }
+  updateMapDimensionLabelsAndSaveEstimate()
 
   const { width, height } = setMapDimensions(widthTiles, heightTiles)
   gameState.mapTilesX = width
@@ -834,6 +879,7 @@ class Game {
 
       if (mapWidthInput) mapWidthInput.value = widthTiles
       if (mapHeightInput) mapHeightInput.value = heightTiles
+      updateMapDimensionLabelsAndSaveEstimate()
       if (playerCountInput) playerCountInput.value = Number.isFinite(playerCount) ? Math.max(2, Math.min(4, playerCount)) : (gameState.playerCount || 2)
       if (oreFieldInput) {
         oreFieldInput.min = 0
@@ -910,12 +956,17 @@ class Game {
         const fallback = storageKey === MAP_WIDTH_TILES_STORAGE_KEY ? MAP_TILES_X : MAP_TILES_Y
         const sanitized = sanitizeMapDimension(input.value, fallback)
         input.value = sanitized
+        updateMapDimensionLabelsAndSaveEstimate()
         applyMapSettingsAndRegenerate()
       })
     }
 
     persistDimension(mapWidthInput, MAP_WIDTH_TILES_STORAGE_KEY)
     persistDimension(mapHeightInput, MAP_HEIGHT_TILES_STORAGE_KEY)
+    ;[mapWidthInput, mapHeightInput].forEach(input => {
+      if (input) input.addEventListener('input', updateMapDimensionLabelsAndSaveEstimate)
+    })
+    updateMapDimensionLabelsAndSaveEstimate()
 
     if (playerCountInput) {
       playerCountInput.addEventListener('change', applyMapSettingsAndRegenerate)

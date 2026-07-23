@@ -19,8 +19,7 @@ import {
 } from './battleshipTurrets.js'
 import {
   canBattleshipTargetEntity,
-  canSubmarineTargetEntity,
-  isPartlyWaterBuilding
+  canSubmarineTargetEntity
 } from './navalTargeting.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 import {
@@ -60,6 +59,10 @@ function centerOf(entity) {
     }
   }
   return { x: entity.x + TILE_SIZE / 2, y: entity.y + TILE_SIZE / 2 }
+}
+
+function isSubmarineYardTarget(target) {
+  return target?.type === 'constructionYard' || target?.type === 'shipyard'
 }
 
 function setStopped(unit) {
@@ -1318,7 +1321,7 @@ function updateSubmarine(submarine, units, bullets, now) {
     startTime: now,
     projectileType: 'torpedo',
     originType: 'torpedo',
-    navalOnly: !isPartlyWaterBuilding(target),
+    navalOnly: !isSubmarineYardTarget(target),
     strictTarget: true
   })
   submarine.ammunition--
