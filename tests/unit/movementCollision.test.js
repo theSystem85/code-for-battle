@@ -31,6 +31,33 @@ function createOccupancyMap(width = 6, height = 6) {
 }
 
 describe('movementCollision environment response', () => {
+  it('detects coincident rotated naval hulls instead of allowing stacked ship images', () => {
+    const mapGrid = Array.from({ length: 20 }, () =>
+      Array.from({ length: 20 }, () => ({ type: 'water', building: null })))
+    const movement = () => ({
+      velocity: { x: 0, y: 0 },
+      targetVelocity: { x: 0, y: 0 },
+      currentSpeed: 0
+    })
+    const first = {
+      id: 'destroyer-a', type: 'destroyer', isNaval: true, health: 100,
+      x: 160, y: 160, direction: 0, movement: movement()
+    }
+    const second = {
+      id: 'destroyer-b', type: 'destroyer', isNaval: true, health: 100,
+      x: 160, y: 160, direction: Math.PI / 2, movement: movement()
+    }
+
+    initSpatialQuadtree(640, 640)
+    rebuildSpatialQuadtree([first, second])
+
+    const collision = checkUnitCollision(first, mapGrid, createOccupancyMap(20, 20), [first, second])
+    expect(collision.collided).toBe(true)
+    expect(collision.type).toBe('unit')
+    expect(collision.other).toBe(second)
+    expect(collision.data.overlap).toBeGreaterThan(0)
+  })
+
   it('stores a decaying repulsion force instead of abruptly rewriting the movement vector', () => {
     const mapGrid = createMapGrid()
     const occupancyMap = createOccupancyMap()

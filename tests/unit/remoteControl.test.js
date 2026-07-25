@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import '../setup.js'
 import {
+  handleNavalRemoteControl,
   updateRemoteControlledUnits,
   suspendRemoteControlAutoFocus
 } from '../../src/game/remoteControl.js'
@@ -76,6 +77,34 @@ vi.mock('../../src/utils/layoutMetrics.js', () => ({
 }))
 
 describe('remoteControl.js', () => {
+  it('ramps a ship to full throttle with up and brakes it to zero with down', () => {
+    const ship = {
+      id: 'ship-1', type: 'destroyer', isNaval: true, direction: 0,
+      speed: 2, speedModifier: 1, rotationSpeed: 0.02, path: [],
+      movement: {
+        velocity: { x: 0, y: 0 }, targetVelocity: { x: 0, y: 0 },
+        currentSpeed: 0, rotation: 0, targetRotation: 0
+      }
+    }
+    const input = (forwardIntensity, backwardIntensity) => ({
+      forwardIntensity, backwardIntensity, turnLeftIntensity: 0,
+      turnRightIntensity: 0, fireIntensity: 0
+    })
+
+    for (let frame = 0; frame < 30; frame++) {
+      handleNavalRemoteControl(ship, input(1, 0), [], [ship], [], frame)
+    }
+    expect(ship.remoteNavalThrottle).toBe(1)
+    expect(ship.movement.targetVelocity.x).toBe(2)
+
+    for (let frame = 30; frame < 60; frame++) {
+      handleNavalRemoteControl(ship, input(0, 1), [], [ship], [], frame)
+    }
+    expect(ship.remoteNavalThrottle).toBe(0)
+    expect(ship.movement.targetVelocity.x).toBe(0)
+    expect(ship.movement.isMoving).toBe(false)
+  })
+
   let mockApache
   let mockRocketTank
   let mockUnits

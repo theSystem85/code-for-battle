@@ -15,6 +15,24 @@ describe('EffectsRenderer', () => {
     vi.clearAllMocks()
   })
 
+  it('renders torpedoes at half opacity to place them below the water surface', () => {
+    const renderer = new EffectsRenderer()
+    const ctx = {
+      globalAlpha: 1,
+      save: vi.fn(), restore: vi.fn(), translate: vi.fn(), rotate: vi.fn(),
+      beginPath: vi.fn(), ellipse: vi.fn(), fill: vi.fn()
+    }
+
+    renderer.renderBullets(ctx, [{
+      id: 'torpedo-1', x: 40, y: 50, vx: 1, vy: 0,
+      projectileType: 'torpedo', originType: 'torpedo'
+    }], { x: 0, y: 0 })
+
+    expect(ctx.globalAlpha).toBe(0.5)
+    expect(ctx.save).toHaveBeenCalled()
+    expect(ctx.restore).toHaveBeenCalled()
+  })
+
   describe('renderTeslaLightning', () => {
     it('keeps Tesla lightning visible using simulation time', () => {
       const renderer = new EffectsRenderer()

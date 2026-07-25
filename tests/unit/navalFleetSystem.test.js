@@ -514,6 +514,9 @@ describe('six-ship naval fleet systems', () => {
 
     updateNavalFleet(units, bullets, map, { occupancyMap: [] }, 1000 + SUBMARINE_SURFACE_DURATION, 16)
     expect(submarine.depthState).toBe('surfaced')
+    expect(bullets).toHaveLength(0)
+
+    updateNavalFleet(units, bullets, map, { occupancyMap: [] }, 5201, 16)
     expect(bullets).toHaveLength(1)
     expect(bullets[0]).toMatchObject({ projectileType: 'torpedo', navalOnly: true, strictTarget: true })
   })

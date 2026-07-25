@@ -494,7 +494,11 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
     const dy = unitCenterY - otherCenterY
     const distSq = dx * dx + dy * dy
 
-    if (distSq < 1) continue
+    // Coincident unit centres normally do not provide a usable separation
+    // normal. Naval hulls are the important exception: their oriented capsule
+    // geometry can still overlap substantially, and ignoring that overlap let
+    // ships remain stacked indefinitely.
+    if (distSq < 1 && !(unit.isNaval && otherUnit.isNaval)) continue
 
     const centerDistance = Math.sqrt(distSq)
     const bothNaval = unit.isNaval && otherUnit.isNaval
@@ -514,7 +518,10 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         continue
       }
 
-      const invDist = 1 / centerDistance
+      const invDist = centerDistance > 0.001 ? 1 / centerDistance : 0
+      const fallbackAngle = unit.direction || 0
+      const separationDx = centerDistance > 0.001 ? dx : -Math.sin(fallbackAngle)
+      const separationDy = centerDistance > 0.001 ? dy : Math.cos(fallbackAngle)
       const normalX = -dx * invDist
       const normalY = -dy * invDist
       const overlap = minimumDistance - distance
@@ -525,8 +532,8 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
       // when units approached each other. The separation forces below are sufficient
       // to push units apart without reducing their overall movement speed.
 
-      const separationX = dx * invDist * separationForce
-      const separationY = dy * invDist * separationForce
+      const separationX = separationDx * (invDist || 1) * separationForce
+      const separationY = separationDy * (invDist || 1) * separationForce
 
       unit.movement.velocity.x += separationX
       unit.movement.velocity.y += separationY
@@ -547,8 +554,8 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
           type: 'unit',
           other: otherUnit,
           data: {
-            normalX,
-            normalY,
+            normalX: centerDistance > 0.001 ? normalX : -separationDx,
+            normalY: centerDistance > 0.001 ? normalY : -separationDy,
             overlap,
             unitSpeed,
             otherSpeed,
@@ -562,8 +569,8 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         type: 'unit',
         other: otherUnit,
         data: {
-          normalX,
-          normalY,
+          normalX: centerDistance > 0.001 ? normalX : -separationDx,
+          normalY: centerDistance > 0.001 ? normalY : -separationDy,
           overlap,
           unitSpeed,
           otherSpeed

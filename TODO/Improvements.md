@@ -803,3 +803,20 @@
 
 - [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
 - [x] Restore iPhone 13 Pro Max map scrolling smoothness by reducing mobile terrain chunk churn and keeping the RAF scheduler from racing native frame cadence during scroll/combat.
+
+## 2026-07-25 Naval and production verification checklist
+
+Use this checklist in a live game and check each item only after confirming the described behavior:
+
+- [ ] Ground, naval, and air production advance concurrently in independent queues.
+- [x] Rotated ship hulls, including ships with coincident centers, cannot retain overlapping rendered hulls.
+- [ ] Hovercraft can navigate continuously across both land and water.
+- [ ] Jet takeoff and landing sounds play once per operation rather than looping.
+- [x] Remote-controlled ships ramp to top speed while Up is held and brake to zero while Down is held.
+- [ ] A carrier attack command holds the carrier stationary and dispatches every deck aircraft to the target.
+- [ ] A carrier-launched F22 move command reaches its requested tile before considering recovery.
+- [ ] Enemy Destroyers fire their gun at ships in range and anti-air rockets against attacking aircraft.
+- [x] Submarines fire half as many torpedoes per minute as before (5.2-second cooldown).
+- [x] Torpedoes render below the water surface at 50% opacity.
+- [ ] Destroyed ships explode immediately, large hulls show distributed explosions, and sinking follows the blast.
+- [ ] A ferry commanded to shore turns offshore first, reverses tail-first to the coast, and prepares even without nearby cargo.

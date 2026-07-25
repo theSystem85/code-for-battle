@@ -21,7 +21,7 @@ const REMOTE_NAVAL_FIRE_RATES = Object.freeze({
   submarine: 1800
 })
 
-function handleNavalRemoteControl(unit, inputs, bullets, units, mapGrid, now) {
+export function handleNavalRemoteControl(unit, inputs, bullets, units, mapGrid, now) {
   const {
     forwardIntensity,
     backwardIntensity,
@@ -29,7 +29,18 @@ function handleNavalRemoteControl(unit, inputs, bullets, units, mapGrid, now) {
     turnRightIntensity,
     fireIntensity
   } = inputs
-  const movementAxis = Math.max(-1, Math.min(1, forwardIntensity - backwardIntensity))
+  // Ships use an engine-order style throttle rather than instantly reversing.
+  // Holding forward steadily opens the throttle to flank speed; holding back
+  // closes it to a full stop. This also avoids the generic movement smoothing
+  // making keyboard-controlled ships feel permanently under-powered.
+  const throttleStep = 0.045
+  let throttle = Number.isFinite(unit.remoteNavalThrottle)
+    ? unit.remoteNavalThrottle
+    : Math.min(1, (unit.movement?.currentSpeed || 0) / Math.max(unit.speed || 0.5, 0.001))
+  if (forwardIntensity > 0) throttle += throttleStep * forwardIntensity
+  if (backwardIntensity > 0) throttle -= throttleStep * backwardIntensity
+  throttle = Math.max(0, Math.min(1, throttle))
+  unit.remoteNavalThrottle = throttle
   const turnAxis = Math.max(-1, Math.min(1, turnRightIntensity - turnLeftIntensity))
   const rotationSpeed = unit.rotationSpeed || 0.02
   const desiredAngularVelocity = turnAxis * rotationSpeed
@@ -49,12 +60,12 @@ function handleNavalRemoteControl(unit, inputs, bullets, units, mapGrid, now) {
   const effectiveSpeed = (unit.speed || 0.5) * (unit.speedModifier || 1)
   const forwardX = Math.cos(unit.direction)
   const forwardY = Math.sin(unit.direction)
-  unit.movement.targetVelocity.x = forwardX * effectiveSpeed * movementAxis
-  unit.movement.targetVelocity.y = forwardY * effectiveSpeed * movementAxis
-  unit.movement.isMoving = Math.abs(movementAxis) > 0.001
-  unit.remoteControlActive = Boolean(movementAxis || turnAxis || angularVelocity)
+  unit.movement.targetVelocity.x = forwardX * effectiveSpeed * throttle
+  unit.movement.targetVelocity.y = forwardY * effectiveSpeed * throttle
+  unit.movement.isMoving = throttle > 0.001
+  unit.remoteControlActive = Boolean(forwardIntensity || backwardIntensity || turnAxis || angularVelocity)
 
-  if (movementAxis || turnAxis) {
+  if (forwardIntensity || backwardIntensity || turnAxis) {
     unit.path = []
     unit.moveTarget = null
     unit.lastRemoteControlTime = now
