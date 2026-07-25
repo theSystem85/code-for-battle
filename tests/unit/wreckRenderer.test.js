@@ -124,7 +124,7 @@ describe('WreckRenderer workshop restoration previews', () => {
     expect(harvesterCtx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
   })
 
-  it('renders the split-hull naval animation as two cropped half sprites', () => {
+  it('renders a lateral sinking mode by progressively cropping from the selected side', () => {
     mockGameState.simulationTime = 3000
     const renderer = new WreckRenderer()
     const ctx = createMockContext()
@@ -134,15 +134,15 @@ describe('WreckRenderer workshop restoration previews', () => {
       direction: Math.PI / 2,
       createdAt: 0,
       sinkDuration: 6000,
-      navalSinkMode: 'split-hull'
+      navalSinkMode: 'left-down'
     }, 100, 100)
 
-    expect(ctx.drawImageCalls).toBe(2)
-    expect(ctx.drawImageArgs[0][4]).toBeCloseTo(171)
-    expect(ctx.drawImageArgs[1][4]).toBeCloseTo(171)
+    expect(ctx.drawImageCalls).toBe(1)
+    expect(ctx.drawImageArgs[0][3]).toBeGreaterThan(0)
+    expect(ctx.drawImageArgs[0][3]).toBeLessThan(109)
   })
 
-  it('renders bow-first sinking by progressively cropping the south-facing bow', () => {
+  it('renders front-down sinking by progressively cropping the south-facing bow', () => {
     mockGameState.simulationTime = 3000
     const renderer = new WreckRenderer()
     const ctx = createMockContext()
@@ -152,7 +152,7 @@ describe('WreckRenderer workshop restoration previews', () => {
       direction: Math.PI / 2,
       createdAt: 0,
       sinkDuration: 6000,
-      navalSinkMode: 'bow-first'
+      navalSinkMode: 'front-down'
     }, 100, 100)
 
     expect(ctx.drawImageCalls).toBe(1)

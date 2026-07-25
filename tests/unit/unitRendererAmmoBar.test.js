@@ -20,7 +20,10 @@ vi.mock('../../src/config.js', () => ({
   SERVICE_SERVING_RANGE: 0,
   MINE_DEPLOY_STOP_TIME: 0,
   VIEW_FRUSTUM_MARGIN: 0,
-  CURSOR_METERS_PER_TILE: 32
+  CURSOR_METERS_PER_TILE: 32,
+  BATTLESHIP_FIRE_RANGE: 32 * 36,
+  SUBMARINE_TORPEDO_RANGE: 32 * 16,
+  MOBILE_CANVAS_PIXEL_RATIO_CAP: 1
 }))
 
 vi.mock('../../src/gameState.js', () => ({
@@ -86,6 +89,62 @@ describe('UnitRenderer ammo HUD consistency', () => {
     renderer.renderAmmunitionBar({}, unit, { x: 0, y: 0 })
 
     expect(drawHudEdgeBar).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'left', 0.5, '#FFA500')
+  })
+
+  it('skips an offscreen battleship range perimeter instead of filling the viewport', () => {
+    const renderer = new UnitRenderer()
+    const ctx = {
+      canvas: {
+        width: 2000,
+        height: 1400,
+        clientWidth: 1000,
+        clientHeight: 700,
+        getBoundingClientRect: () => ({ width: 1000, height: 700 })
+      },
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn()
+    }
+    const battleship = { type: 'battleship', isNaval: true, selected: true }
+
+    renderer.renderNavalWeaponRange(ctx, battleship, 500, 350)
+
+    expect(ctx.beginPath).not.toHaveBeenCalled()
+    expect(ctx.arc).not.toHaveBeenCalled()
+    expect(ctx.fill).not.toHaveBeenCalled()
+    expect(ctx.stroke).not.toHaveBeenCalled()
+  })
+
+  it('renders a visible naval range boundary as a stroke without a large alpha fill', () => {
+    const renderer = new UnitRenderer()
+    const ctx = {
+      canvas: {
+        width: 2000,
+        height: 1400,
+        clientWidth: 1000,
+        clientHeight: 700,
+        getBoundingClientRect: () => ({ width: 1000, height: 700 })
+      },
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      stroke: vi.fn(),
+      setLineDash: vi.fn()
+    }
+    const battleship = { type: 'battleship', isNaval: true, selected: true }
+
+    renderer.renderNavalWeaponRange(ctx, battleship, -300, 350)
+
+    expect(ctx.arc).toHaveBeenCalledWith(-300, 350, 32 * 36, 0, Math.PI * 2)
+    expect(ctx.stroke).toHaveBeenCalledOnce()
+    expect(ctx.fill).not.toHaveBeenCalled()
+    expect(ctx.setLineDash).not.toHaveBeenCalled()
   })
 
   it('sizes the Destroyer HUD beyond the full rendered ship length', () => {

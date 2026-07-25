@@ -263,7 +263,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
       resetUnitVelocityForNewPath(unit)
 
       unit.path = path.length > 1 ? path.slice(1) : path
-      unit.target = null
+      if (unit.type !== 'battleship') unit.target = null
       unit.burstState = null
       unit.remoteRocketTarget = null
       unit.remoteReticleVisible = false

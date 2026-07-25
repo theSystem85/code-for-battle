@@ -11,6 +11,7 @@ import { deterministicRNG, initializeSessionRNG, syncRNGForTick } from './determ
 import { InputBuffer, LOCKSTEP_INPUT_TYPES, createLockstepInput } from './inputBuffer.js'
 import { computeStateHash, compareHashes } from './stateHash.js'
 import { broadcastGameCommand, isHost, createGameStateSnapshot, applyGameStateSnapshot, COMMAND_TYPES } from './gameCommandSync.js'
+import { clearBattleshipFireControl } from '../game/battleshipTurrets.js'
 
 // Lockstep state management
 const localInputBuffer = new InputBuffer()
@@ -442,6 +443,7 @@ function applyStopInput(input) {
   for (const unitId of unitIds) {
     const unit = mainUnits.find(u => u.id === unitId)
     if (unit) {
+      clearBattleshipFireControl(unit)
       unit.moveTarget = null
       unit.attackTarget = null
       unit.path = null

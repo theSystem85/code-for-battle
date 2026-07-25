@@ -529,6 +529,40 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
   })
 
+  it('stops every selected battleship turret and cancels its queued broadside', () => {
+    const target = { id: 'enemy', health: 100 }
+    const battleship = {
+      id: 'battle-1',
+      type: 'battleship',
+      owner: gameState.humanPlayer,
+      direction: 0,
+      target,
+      lastHullTargetId: target.id,
+      batteries: Object.fromEntries(['foreOuter', 'foreInner', 'aftInner', 'aftOuter'].map(name => [name, {
+        targetId: target.id,
+        enabled: true,
+        direction: 0,
+        scheduledAt: 5000,
+        salvoStartedAt: 4000,
+        nextBarrelIndex: 1,
+        barrelRecoilStartTimes: [null, null],
+        muzzleFlashStartTimes: [null, null]
+      }]))
+    }
+    handler.selectedUnits = [battleship]
+
+    handler.handleStopAttacking()
+
+    expect(battleship.target).toBeNull()
+    expect(battleship.lastHullTargetId).toBeNull()
+    Object.values(battleship.batteries).forEach(turret => {
+      expect(turret.targetId).toBeNull()
+      expect(turret.scheduledAt).toBeNull()
+      expect(turret.nextBarrelIndex).toBe(0)
+    })
+    expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
+  })
+
   it('cycles occupancy map modes and updates visibility', () => {
     gameState.playerCount = 2
     gameState.occupancyMapViewIndex = 0

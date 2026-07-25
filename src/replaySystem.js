@@ -15,6 +15,7 @@ import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnEnemyUnit } from './ai/enemySpawner.js'
 import { initializeSessionRNG } from './network/deterministicRandom.js'
 import { terminateAllSounds } from './sound.js'
+import { clearBattleshipFireControl } from './game/battleshipTurrets.js'
 import { getStoredEntries, getStoredItem, isGameStorageAvailable, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 import {
   createReplayUnitReference,
@@ -541,6 +542,7 @@ function stopReplayUnitsAttacking(selectedUnits) {
       return
     }
 
+    clearBattleshipFireControl(unit)
     unit.target = null
     if (unit.isDodging) {
       unit.isDodging = false

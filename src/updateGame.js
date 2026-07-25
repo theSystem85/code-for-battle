@@ -41,6 +41,7 @@ import { updateMines } from './game/mineSystem.js'
 import { updateMineLayerBehavior } from './game/mineLayerBehavior.js'
 import { updateMineSweeperBehavior } from './game/mineSweeperBehavior.js'
 import { setBattleshipTarget, updateNavalFleet } from './game/navalFleetSystem.js'
+import { clearBattleshipFireControl } from './game/battleshipTurrets.js'
 import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.js'
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
@@ -283,6 +284,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               unit.moveTarget = null
               unit.attackTarget = null
               unit.guardPosition = null
+              clearBattleshipFireControl(unit)
               unit.target = null  // Clear the combat target to stop firing
               unit.forcedAttack = false
               unit.attackQueue = []

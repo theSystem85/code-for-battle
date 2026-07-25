@@ -49,6 +49,21 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 - Falling below 80%, 60%, 40%, and 20% hull HP disables one deterministic-random remaining turret at each threshold and spawns an explosion at that turret. Disabled turrets cannot be selected or fired and render a persistent destroyed marker.
 - Repairing the hull above those thresholds re-enables turrets in reverse destruction order until all four are operational above 80% HP.
 - Four-turret targets, damage order, enabled state, and selected-turret commands persist through save/load, replay, and multiplayer state/command synchronization.
+- The battleship map presentation is layered from a turretless hull with four visible empty wells, four independently rotated turret housings, and two independently rendered barrels per turret. Destroyed mounts omit both turret and barrels so the corresponding well remains exposed.
+- Each barrel recoils independently and emits its own muzzle flash. The two barrels in a turret fire 300 ms apart, consecutive turrets begin 1 second apart, and a hull-issued broadside begins a new cycle no sooner than 8 seconds after the preceding cycle began.
+- A hull-issued target makes the battleship turn the nearer side toward that target before firing. Each mount refuses shots whose line crosses the central control-tower exclusion cone, and selection visualization distinguishes its available firing arc from the blocked tower arc.
+- A move command or live remote-control helm input temporarily owns the hull without clearing any marked battleship target. While underway, every turret keeps tracking its assigned target and only fires when its current hull-relative line is in range, aimed, and outside the control-tower exclusion cone. Automatic side-on alignment resumes once the helm has no path or remote input to follow.
+- The S stop command is a hard cease-fire for a selected battleship: it clears the hull target, all four turret target locks, and every pending barrel/turret salvo so no delayed shot can escape after the command.
+- Battleship heavy-gun range is 150% of its original value.
+- Battleship turret hydration is a one-time migration step: subsequent simulation ticks preserve the battery object, turret objects, recoil arrays, and muzzle-flash arrays by identity instead of generating garbage every frame.
+- All active battleships share one reusable per-frame target index, and target-free ships skip target indexing/resolution entirely; turret tracking must not perform nested linear unit/building scans.
+- The selected battleship range indicator is boundary-only. It performs no full-range translucent fill or dashed full-circle rasterization and is culled when its perimeter lies completely outside the viewport.
+
+## Naval target and sinking rules
+
+- Surface ships can attack enemy land units and buildings whenever their normal weapon range and line-of-fire rules permit.
+- Submarines can attack naval units and enemy partly-water buildings such as the Shipyard, but no wholly land-based unit or building.
+- Every sinking naval wreck selects exactly one deterministic-random initial descent side—front, back, left, or right—with equal 25% probability—and animates the hull disappearing from that side.
 
 ## Submarine and Destroyer depth charges
 
@@ -63,6 +78,7 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 
 - Transport speed/armor/capacity relationships match their descriptions; carrier/battleship are expensive capital ships; mine layer and submarine are specialist vessels.
 - Carrier scale and deck transforms remain correct for every heading.
+- Under the focused six-times CPU-throttled browser benchmark, one selected layered battleship must retain at least 80% of the same scene's baseline FPS; the benchmark command is `PERF_BATTLESHIP_RENDER=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 npx playwright test tests/e2e/battleshipPerformance.test.js --project=chromium --reporter=line`.
 - The entire required unit test command (`npm run test:unit`) passes, and changed-file lint (`npm run lint:fix:changed`) completes without errors.
 
 ## Implemented command model
@@ -81,6 +97,10 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 
 - Added focused naval, cursor, and HUD renderer coverage for balance ratios, bidirectional shoreline transport orders, cargo manifests, weighted F22/F35/Apache carrier reservations, independent battery targets, surfacing/torpedo gating, wake placement/suppression, depth charges, and naval mines.
 - Added four-turret battleship coverage for independent mount selection/targeting/firing, hull-wide target assignment, deterministic-random threshold destruction, turret-local explosion effects, reverse repair restoration, save serialization, and multiplayer command payloads.
+- Added layered-battleship coverage for per-barrel/per-turret salvo timing, the 8-second global reload, broadside hull alignment, tower-blocked arcs, 50%-expanded range, saved transient salvo state, surface fire against land buildings, submarine Shipyard targeting, and four equal directional sinking modes.
+- Added mobile-engagement regression coverage proving move orders retain battleship fire control, remote helm input overrides automatic hull alignment, blocked aft mounts stay out of a forward salvo, and S clears all four targets plus pending barrels across local, replay, and multiplayer stop paths.
+- Added battleship performance contracts for stable hot-loop turret identity, viewport-culled boundary-only range rendering, and a live selected-layer benchmark. The final run held the normal 60 FPS cap (59.65 baseline versus 60.14 selected) and retained 80.7% under 6× CPU throttling (27.51 baseline versus 22.20 selected), clearing the 80% regression budget.
+- Runtime visual QA confirmed the generated hull, housing, and barrel layers align at all four wells, hull/turret selection renders the expected free/blocked arcs, individual turret selection is unambiguous, and the browser console remains clear.
 - `npm run lint:fix:changed`: pass.
-- `npm run test:unit`: 151 files and 3,793 tests passed.
+- `npm run test:unit`: 151 files and 3,803 tests passed.
 - `npx vite build`: pass (existing bundle-size/dynamic-import warnings only).

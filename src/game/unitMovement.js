@@ -131,7 +131,8 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       !remoteAttackChaseSuppressed &&
       unit.type !== 'apache' &&
       unit.type !== 'f22Raptor' &&
-      unit.type !== 'f35'
+      unit.type !== 'f35' &&
+      unit.type !== 'battleship'
     ) {
       // Calculate distance to target center
       let targetCenterX, targetCenterY

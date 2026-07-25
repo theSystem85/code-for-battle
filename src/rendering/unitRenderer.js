@@ -849,14 +849,25 @@ export class UnitRenderer {
         : 18 * TILE_SIZE
     if (!range) return
 
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+    if (viewportWidth > 0 && viewportHeight > 0) {
+      const nearestX = Math.max(0, Math.min(viewportWidth, centerX))
+      const nearestY = Math.max(0, Math.min(viewportHeight, centerY))
+      const nearestDistance = Math.hypot(centerX - nearestX, centerY - nearestY)
+      const farthestDistance = Math.max(
+        Math.hypot(centerX, centerY),
+        Math.hypot(centerX - viewportWidth, centerY),
+        Math.hypot(centerX, centerY - viewportHeight),
+        Math.hypot(centerX - viewportWidth, centerY - viewportHeight)
+      )
+      if (nearestDistance > range + 2 || farthestDistance < range - 2) return
+    }
+
     ctx.save()
     ctx.strokeStyle = 'rgba(255, 105, 90, 0.48)'
-    ctx.fillStyle = 'rgba(255, 80, 60, 0.035)'
     ctx.lineWidth = 1.5
-    ctx.setLineDash([8, 6])
     ctx.beginPath()
     ctx.arc(centerX, centerY, range, 0, Math.PI * 2)
-    ctx.fill()
     ctx.stroke()
     ctx.restore()
   }

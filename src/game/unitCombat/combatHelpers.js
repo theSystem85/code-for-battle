@@ -6,7 +6,8 @@ import {
   HOWITZER_MIN_RANGE,
   HOWITZER_FIREPOWER,
   HOWITZER_FIRE_COOLDOWN,
-  APACHE_RANGE_REDUCTION
+  APACHE_RANGE_REDUCTION,
+  BATTLESHIP_FIRE_RANGE
 } from '../../config.js'
 import { hasClearShot, angleDiff, findPositionWithClearShot } from '../../logic.js'
 import { stopUnitMovement } from '../unifiedMovement.js'
@@ -14,6 +15,7 @@ import { gameState } from '../../gameState.js'
 import { isPositionVisibleToPlayer } from '../shadowOfWar.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
+import { canSubmarineTargetEntity } from '../navalTargeting.js'
 
 /**
  * Check if a party is controlled by a human player (not AI)
@@ -46,7 +48,7 @@ export function canUnitTargetEntity(unit, target) {
   if (!unit || !target) return false
   if (target.embarkedOnId) return false
   if (unit.type === 'submarine') {
-    return Boolean(target.isNaval && target.owner !== unit.owner)
+    return canSubmarineTargetEntity(unit, target)
   }
   if (target.type === 'submarine' && target.depthState !== 'surfaced') {
     return unit.type === 'destroyer' && Boolean(target.detectedByOwners?.[unit.owner])
@@ -372,7 +374,7 @@ export function getEffectiveFireRange(unit) {
   } else if (unit.type === 'destroyer') {
     baseRange = 18 * TILE_SIZE
   } else if (unit.type === 'battleship') {
-    baseRange = 24 * TILE_SIZE
+    baseRange = BATTLESHIP_FIRE_RANGE
   } else if (unit.type === 'submarine') {
     baseRange = 12 * TILE_SIZE
   }

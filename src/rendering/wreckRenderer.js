@@ -4,6 +4,8 @@ import { renderTankWithImages } from './tankImageRenderer.js'
 import { getTankWreckCanvases, getSingleImageWreckSprite } from './wreckSpriteCache.js'
 import { getDestroyerBaseImage } from './destroyerImageRenderer.js'
 import { getSupplyShipBaseImage } from './supplyShipImageRenderer.js'
+import { getNavalFleetBaseImage } from './navalFleetImageRenderer.js'
+import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 
 const noiseCanvasCache = new Map()
@@ -158,9 +160,15 @@ export class WreckRenderer {
     const alpha = Math.max(0, 1 - progress)
     const image = wreck.unitType === 'supplyShip'
       ? getSupplyShipBaseImage()
-      : getDestroyerBaseImage()
+      : wreck.unitType === 'destroyer'
+        ? getDestroyerBaseImage()
+        : getNavalFleetBaseImage(wreck.unitType)
     const direction = wreck.direction || 0
-    const spriteLengthTiles = wreck.unitType === 'supplyShip' ? 2.2 : 2.6
+    const spriteLengthTiles = wreck.unitType === 'supplyShip'
+      ? 2.2
+      : wreck.unitType === 'destroyer'
+        ? 2.6
+        : getNavalRenderLengthTiles(wreck.unitType)
 
     ctx.save()
     if (image) {
@@ -171,77 +179,48 @@ export class WreckRenderer {
       const renderHeight = sourceHeight * scale
       const authoredRotation = direction - Math.PI / 2
 
-      if (wreck.navalSinkMode === 'split-hull') {
-        const halfSourceHeight = sourceHeight / 2
-        const halfRenderHeight = renderHeight / 2
-        const separation = easedProgress * TILE_SIZE * 0.55
-        const sinkOffset = easedProgress * TILE_SIZE * 0.35
-        const forwardX = Math.cos(direction)
-        const forwardY = Math.sin(direction)
-        const pieces = [
-          {
-            sourceY: halfSourceHeight,
-            centerX: centerX + forwardX * separation,
-            centerY: centerY + forwardY * separation + sinkOffset,
-            rotationOffset: easedProgress * 0.2,
-            opacity: alpha
-          },
-          {
-            sourceY: 0,
-            centerX: centerX - forwardX * separation,
-            centerY: centerY - forwardY * separation + sinkOffset * 0.75,
-            rotationOffset: easedProgress * -0.16,
-            opacity: alpha * 0.9
-          }
-        ]
+      const visibleRatio = Math.max(0.02, 1 - easedProgress * 0.98)
+      let sourceX = 0
+      let sourceY = 0
+      let visibleSourceWidth = sourceWidth
+      let visibleSourceHeight = sourceHeight
+      let renderX = -renderWidth / 2
+      let renderY = -renderHeight / 2
+      let visibleRenderWidth = renderWidth
+      let visibleRenderHeight = renderHeight
 
-        pieces.forEach(piece => {
-          ctx.save()
-          ctx.globalAlpha = piece.opacity
-          ctx.translate(piece.centerX, piece.centerY)
-          ctx.rotate(authoredRotation + piece.rotationOffset)
-          ctx.scale(1, Math.max(0.35, 1 - easedProgress * 0.35))
-          ctx.drawImage(
-            image,
-            0,
-            piece.sourceY,
-            sourceWidth,
-            halfSourceHeight,
-            -renderWidth / 2,
-            -halfRenderHeight / 2,
-            renderWidth,
-            halfRenderHeight
-          )
-          ctx.restore()
-        })
+      if (wreck.navalSinkMode === 'left-down' || wreck.navalSinkMode === 'right-down') {
+        visibleSourceWidth = sourceWidth * visibleRatio
+        visibleRenderWidth = renderWidth * visibleRatio
+        if (wreck.navalSinkMode === 'left-down') {
+          sourceX = sourceWidth - visibleSourceWidth
+          renderX = renderWidth / 2 - visibleRenderWidth
+        }
       } else {
-        // Bow-first sinking: foreshorten the hull to show the nose tilting down,
-        // then crop progressively from the authored south-facing bow upward.
-        const visibleRatio = Math.max(0.02, 1 - easedProgress * 0.98)
-        const visibleSourceHeight = sourceHeight * visibleRatio
-        const visibleRenderHeight = renderHeight * visibleRatio
-        const forwardSink = easedProgress * TILE_SIZE * 0.28
-        ctx.save()
-        ctx.globalAlpha = alpha
-        ctx.translate(
-          centerX + Math.cos(direction) * forwardSink,
-          centerY + Math.sin(direction) * forwardSink + easedProgress * TILE_SIZE * 0.18
-        )
-        ctx.rotate(authoredRotation)
-        ctx.scale(1, Math.max(0.28, 1 - easedProgress * 0.62))
-        ctx.drawImage(
-          image,
-          0,
-          0,
-          sourceWidth,
-          visibleSourceHeight,
-          -renderWidth / 2,
-          -renderHeight / 2,
-          renderWidth,
-          visibleRenderHeight
-        )
-        ctx.restore()
+        visibleSourceHeight = sourceHeight * visibleRatio
+        visibleRenderHeight = renderHeight * visibleRatio
+        if (wreck.navalSinkMode === 'back-down') {
+          sourceY = sourceHeight - visibleSourceHeight
+          renderY = renderHeight / 2 - visibleRenderHeight
+        }
       }
+
+      ctx.save()
+      ctx.globalAlpha = alpha
+      ctx.translate(centerX, centerY + easedProgress * TILE_SIZE * 0.24)
+      ctx.rotate(authoredRotation)
+      ctx.drawImage(
+        image,
+        sourceX,
+        sourceY,
+        visibleSourceWidth,
+        visibleSourceHeight,
+        renderX,
+        renderY,
+        visibleRenderWidth,
+        visibleRenderHeight
+      )
+      ctx.restore()
     } else {
       this.renderFallback(ctx, wreck, centerX, centerY + easedProgress * TILE_SIZE * 0.9, direction)
     }

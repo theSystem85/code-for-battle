@@ -888,6 +888,30 @@ describe('UnitCommandsHandler attack group and movement', () => {
     expect(showNotification).not.toHaveBeenCalledWith('Cannot reach that location. Move command aborted.', 2200)
   })
 
+  it('handleMovementCommand retains a battleship target while assigning its new path', () => {
+    const target = { id: 'enemy-ship', health: 100 }
+    const battleship = {
+      id: 'battle-1',
+      type: 'battleship',
+      owner: 'player',
+      isNaval: true,
+      tileX: 0,
+      tileY: 0,
+      target,
+      lastHullTargetId: target.id
+    }
+    const waterMap = Array.from({ length: 6 }, () =>
+      Array.from({ length: 6 }, () => ({ type: 'water' })))
+    findPathForOwner.mockReturnValue([{ x: 0, y: 0 }, { x: 2, y: 2 }])
+
+    handler.handleMovementCommand([battleship], 64, 64, waterMap)
+
+    expect(battleship.target).toBe(target)
+    expect(battleship.lastHullTargetId).toBe(target.id)
+    expect(battleship.path).toEqual([{ x: 2, y: 2 }])
+    expect(battleship.moveTarget).toEqual({ x: 2, y: 2 })
+  })
+
   it('handleMovementCommand puts harvesters into manual hold when moving to non-ore tiles', () => {
     const harvester = { id: 'h1', type: 'harvester', owner: 'player', tileX: 0, tileY: 0 }
     const commandMap = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', ore: false })))

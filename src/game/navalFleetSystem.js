@@ -14,8 +14,14 @@ import {
   BATTLESHIP_TURRET_NAMES,
   ensureBattleshipTurrets,
   getBattleshipTurretWorldPoint,
+  isBattleshipTurretAngleBlocked,
   selectBattleshipTurret
 } from './battleshipTurrets.js'
+import {
+  canBattleshipTargetEntity,
+  canSubmarineTargetEntity,
+  isPartlyWaterBuilding
+} from './navalTargeting.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 import {
   clearWaterMineSafely,
@@ -37,11 +43,23 @@ const TRANSPORT_ALIGNMENT_TOLERANCE = 0.035
 const BATTLESHIP_FIRE_COOLDOWN = 3400
 // Half the former rounds-per-minute rate (previously one shot per 2.6s).
 export const SUBMARINE_TORPEDO_COOLDOWN = 5200
+const BATTLESHIP_BARREL_DELAY = 300
+const BATTLESHIP_TURRET_DELAY = 1000
+const BATTLESHIP_RELOAD_DURATION = 8000
+const BATTLESHIP_AIM_TOLERANCE = 0.045
+const BATTLESHIP_BROADSIDE_TOLERANCE = 0.055
 const DEPTH_CHARGE_COOLDOWN = 3000
 const DEPTH_CHARGE_FUSE_MS = 800
 const DEPTH_CHARGE_RADIUS = TILE_SIZE * 1.8
+const fleetTargetsById = new Map()
 
 function centerOf(entity) {
+  if (entity?.tileX === undefined && Number.isFinite(entity?.width) && Number.isFinite(entity?.height)) {
+    return {
+      x: (entity.x + entity.width / 2) * TILE_SIZE,
+      y: (entity.y + entity.height / 2) * TILE_SIZE
+    }
+  }
   return { x: entity.x + TILE_SIZE / 2, y: entity.y + TILE_SIZE / 2 }
 }
 
@@ -60,6 +78,12 @@ function normalizeAngle(angle) {
   while (angle > Math.PI) angle -= Math.PI * 2
   while (angle < -Math.PI) angle += Math.PI * 2
   return angle
+}
+
+function rotateTowards(current, target, maxStep) {
+  const difference = normalizeAngle(target - current)
+  if (Math.abs(difference) <= maxStep) return target
+  return normalizeAngle(current + Math.sign(difference) * maxStep)
 }
 
 function smoothStep(progress) {
@@ -978,7 +1002,7 @@ function updateCarrier(carrier, units, now, delta) {
 
 export function setBattleshipTarget(ship, target) {
   if (ship?.type !== 'battleship' || !target || target.health <= 0) return false
-  if (target.type === 'submarine' && target.depthState !== 'surfaced') return false
+  if (!canBattleshipTargetEntity(target)) return false
   ensureBattleshipTurrets(ship)
   if (BATTLESHIP_TURRET_NAMES.includes(ship.selectedTurret) && ship.batteries[ship.selectedTurret].enabled !== false) {
     ship.batteries[ship.selectedTurret].targetId = target.id
@@ -996,45 +1020,169 @@ export function selectBattleshipBattery(ship, worldX, worldY) {
   return selectBattleshipTurret(ship, worldX, worldY)
 }
 
-function resolveTarget(id, units) {
-  return units.find(unit => unit.id === id) || (gameState.buildings || []).find(building => building.id === id)
+function resolveTarget(id, units, targetLookup = null) {
+  if (id === undefined || id === null) return undefined
+  if (targetLookup) return targetLookup.get(id)
+  return units.find(unit => unit.id === id) ||
+    (gameState.buildings || []).find(building => building.id === id) ||
+    (gameState.factories || []).find(building => building.id === id)
 }
 
-function fireBattleshipTurret(ship, turretName, target, bullets, now) {
-  const turret = ship.batteries[turretName]
-  if (!turret || turret.enabled === false || now - (turret.lastShotTime || 0) < BATTLESHIP_FIRE_COOLDOWN || ship.ammunition < 2) return
+function hasEntityId(id) {
+  return id !== undefined && id !== null
+}
+
+function hasBattleshipAssignedTarget(ship) {
+  if (hasEntityId(ship.target?.id) || hasEntityId(ship.lastHullTargetId)) return true
+  for (const name of BATTLESHIP_TURRET_NAMES) {
+    if (hasEntityId(ship.batteries?.[name]?.targetId)) return true
+  }
+  return false
+}
+
+function createFleetTargetLookup(units) {
+  fleetTargetsById.clear()
+  for (const entity of (units || [])) {
+    if (entity?.id !== undefined && entity?.id !== null) fleetTargetsById.set(entity.id, entity)
+  }
+  for (const entity of (gameState.buildings || [])) {
+    if (entity?.id !== undefined && entity?.id !== null) fleetTargetsById.set(entity.id, entity)
+  }
+  for (const entity of (gameState.factories || [])) {
+    if (entity?.id !== undefined && entity?.id !== null) fleetTargetsById.set(entity.id, entity)
+  }
+  return fleetTargetsById
+}
+
+function getBattleshipTargetSolution(ship, turretName, target) {
   const spawn = getBattleshipTurretWorldPoint(ship, turretName)
   const targetCenter = centerOf(target)
-  const distance = Math.hypot(targetCenter.x - spawn.x, targetCenter.y - spawn.y)
-  if (distance > BATTLESHIP_FIRE_RANGE) return
-  turret.direction = Math.atan2(targetCenter.y - spawn.y, targetCenter.x - spawn.x)
-  for (const lateral of [-4, 4]) {
-    bullets.push({
-      id: `${ship.id}-${turretName}-${now}-${lateral}`,
-      x: spawn.x + Math.cos(turret.direction + Math.PI / 2) * lateral,
-      y: spawn.y + Math.sin(turret.direction + Math.PI / 2) * lateral,
-      startX: spawn.x,
-      startY: spawn.y,
-      dx: targetCenter.x - spawn.x,
-      dy: targetCenter.y - spawn.y,
-      targetPosition: targetCenter,
-      target,
-      shooter: ship,
-      baseDamage: 78,
-      active: true,
-      speed: 7,
-      projectileType: 'shell',
-      parabolic: true,
-      flightDuration: Math.max(650, distance / 0.42),
-      arcHeight: Math.max(45, distance * 0.12),
-      explosionRadius: TILE_SIZE * 1.35,
-      startTime: now,
-      skipCollisionChecks: true
+  const direction = Math.atan2(targetCenter.y - spawn.y, targetCenter.x - spawn.x)
+  return {
+    spawn,
+    targetCenter,
+    direction,
+    distance: Math.hypot(targetCenter.x - spawn.x, targetCenter.y - spawn.y)
+  }
+}
+
+function turnBattleshipForBroadside(ship, target) {
+  if (!target) return true
+  const shipCenter = centerOf(ship)
+  const targetCenter = centerOf(target)
+  const targetBearing = Math.atan2(targetCenter.y - shipCenter.y, targetCenter.x - shipCenter.x)
+  const candidates = [targetBearing - Math.PI / 2, targetBearing + Math.PI / 2]
+  const currentDirection = Number.isFinite(ship.direction) ? ship.direction : 0
+  const desiredDirection = candidates.reduce((best, candidate) =>
+    Math.abs(normalizeAngle(candidate - currentDirection)) < Math.abs(normalizeAngle(best - currentDirection))
+      ? candidate
+      : best)
+  setStopped(ship)
+  ship.navalAngularVelocity = 0
+  ship.isRotating = true
+  ship.direction = rotateTowards(currentDirection, desiredDirection, ship.rotationSpeed || 0.014)
+  const aligned = Math.abs(normalizeAngle(desiredDirection - ship.direction)) <= BATTLESHIP_BROADSIDE_TOLERANCE
+  if (aligned) {
+    ship.direction = normalizeAngle(desiredDirection)
+    ship.isRotating = false
+  }
+  return aligned
+}
+
+function hasBattleshipHullControlOverride(ship) {
+  const velocity = ship.movement?.velocity
+  return Boolean(
+    ship.remoteControlActive ||
+    ship.moveTarget ||
+    ship.path?.length ||
+    ship.movement?.isMoving ||
+    Math.hypot(velocity?.x || 0, velocity?.y || 0) > 0.02
+  )
+}
+
+function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, now) {
+  const turret = ship.batteries[turretName]
+  if (!turret || turret.enabled === false || ship.ammunition < 1) return false
+  const solution = getBattleshipTargetSolution(ship, turretName, target)
+  if (solution.distance > BATTLESHIP_FIRE_RANGE ||
+      isBattleshipTurretAngleBlocked(ship, turretName, solution.direction) ||
+      Math.abs(normalizeAngle(solution.direction - turret.direction)) > BATTLESHIP_AIM_TOLERANCE) return false
+
+  const lateral = barrelIndex === 0 ? -4 : 4
+  const muzzleX = solution.spawn.x + Math.cos(turret.direction + Math.PI / 2) * lateral + Math.cos(turret.direction) * TILE_SIZE * 0.72
+  const muzzleY = solution.spawn.y + Math.sin(turret.direction + Math.PI / 2) * lateral + Math.sin(turret.direction) * TILE_SIZE * 0.72
+  bullets.push({
+    id: `${ship.id}-${turretName}-${barrelIndex}-${now}`,
+    x: muzzleX,
+    y: muzzleY,
+    startX: muzzleX,
+    startY: muzzleY,
+    dx: solution.targetCenter.x - muzzleX,
+    dy: solution.targetCenter.y - muzzleY,
+    targetPosition: solution.targetCenter,
+    target,
+    shooter: ship,
+    baseDamage: 78,
+    active: true,
+    speed: 7,
+    projectileType: 'shell',
+    parabolic: true,
+    flightDuration: Math.max(650, solution.distance / 0.42),
+    arcHeight: Math.max(45, solution.distance * 0.12),
+    explosionRadius: TILE_SIZE * 1.35,
+    startTime: now,
+    skipCollisionChecks: true
+  })
+  ship.ammunition--
+  turret.barrelRecoilStartTimes[barrelIndex] = now
+  turret.muzzleFlashStartTimes[barrelIndex] = now
+  if (barrelIndex === 1) turret.lastShotTime = now
+  return true
+}
+
+function clearBattleshipTurretSalvo(turret) {
+  turret.salvoStartedAt = null
+  turret.scheduledAt = null
+  turret.nextBarrelIndex = 0
+}
+
+function beginBattleshipBroadside(ship, targetEntries, now) {
+  ship.broadsideStartedAt = now
+  ship.broadsideReloadUntil = now + BATTLESHIP_RELOAD_DURATION
+  targetEntries.forEach(({ turretName }, index) => {
+    const turret = ship.batteries[turretName]
+    turret.salvoStartedAt = now
+    turret.scheduledAt = now + index * BATTLESHIP_TURRET_DELAY
+    turret.nextBarrelIndex = 0
+    turret.reloadUntil = ship.broadsideReloadUntil
+  })
+}
+
+function updateBattleshipBroadside(ship, targetEntries, bullets, now) {
+  if (now >= (ship.broadsideReloadUntil || 0)) {
+    BATTLESHIP_TURRET_NAMES.forEach(name => {
+      const turret = ship.batteries[name]
+      if (turret.scheduledAt !== null && turret.nextBarrelIndex < 2) clearBattleshipTurretSalvo(turret)
     })
   }
-  ship.ammunition -= 2
-  turret.lastShotTime = now
-  ship.muzzleFlashStartTime = now
+
+  const hasPendingSalvo = BATTLESHIP_TURRET_NAMES.some(name => {
+    const turret = ship.batteries[name]
+    return turret.scheduledAt !== null && turret.nextBarrelIndex < 2
+  })
+  if (!hasPendingSalvo && now >= (ship.broadsideReloadUntil || 0) && targetEntries.length > 0) {
+    beginBattleshipBroadside(ship, targetEntries, now)
+  }
+
+  targetEntries.forEach(({ turretName, target }) => {
+    const turret = ship.batteries[turretName]
+    if (turret.scheduledAt === null || turret.nextBarrelIndex >= 2) return
+    const fireAt = turret.scheduledAt + turret.nextBarrelIndex * BATTLESHIP_BARREL_DELAY
+    if (now < fireAt) return
+    if (!fireBattleshipBarrel(ship, turretName, target, turret.nextBarrelIndex, bullets, now)) return
+    turret.nextBarrelIndex++
+    if (turret.nextBarrelIndex >= 2) clearBattleshipTurretSalvo(turret)
+  })
 }
 
 function getDisabledTurretCountForHealth(ship) {
@@ -1047,7 +1195,6 @@ function getDisabledTurretCountForHealth(ship) {
 }
 
 function updateBattleshipTurretDamage(ship, state, now) {
-  ensureBattleshipTurrets(ship)
   const desiredDisabledCount = getDisabledTurretCountForHealth(ship)
 
   while (ship.turretDamageOrder.length < desiredDisabledCount) {
@@ -1056,6 +1203,7 @@ function updateBattleshipTurretDamage(ship, state, now) {
     const selectedIndex = Math.floor(gameRandom() * candidates.length)
     const turretName = candidates[selectedIndex]
     ship.batteries[turretName].enabled = false
+    clearBattleshipTurretSalvo(ship.batteries[turretName])
     ship.turretDamageOrder.push(turretName)
     if (ship.selectedTurret === turretName) ship.selectedTurret = null
     const point = getBattleshipTurretWorldPoint(ship, turretName)
@@ -1068,7 +1216,7 @@ function updateBattleshipTurretDamage(ship, state, now) {
   }
 }
 
-function updateBattleship(ship, units, bullets, state, now) {
+function updateBattleship(ship, units, bullets, state, now, targetLookup) {
   ensureBattleshipTurrets(ship)
   updateBattleshipTurretDamage(ship, state, now)
   if (ship.target?.health > 0 && ship.lastHullTargetId !== ship.target.id) {
@@ -1077,14 +1225,33 @@ function updateBattleship(ship, units, bullets, state, now) {
     })
     ship.lastHullTargetId = ship.target.id
   }
+  const hullTarget = resolveTarget(ship.lastHullTargetId, units, targetLookup)
+  const hullControlOverride = hasBattleshipHullControlOverride(ship)
+  const broadsideAligned = !hullControlOverride && hullTarget?.health > 0 && canBattleshipTargetEntity(hullTarget)
+    ? turnBattleshipForBroadside(ship, hullTarget)
+    : true
+
+  const targetEntries = []
   for (const turretName of BATTLESHIP_TURRET_NAMES) {
-    const target = resolveTarget(ship.batteries[turretName].targetId, units)
-    if (!target || target.health <= 0 || (target.type === 'submarine' && target.depthState !== 'surfaced')) {
-      ship.batteries[turretName].targetId = null
+    const turret = ship.batteries[turretName]
+    const target = resolveTarget(ship.batteries[turretName].targetId, units, targetLookup)
+    if (!target || target.health <= 0 || !canBattleshipTargetEntity(target)) {
+      turret.targetId = null
+      clearBattleshipTurretSalvo(turret)
       continue
     }
-    fireBattleshipTurret(ship, turretName, target, bullets, now)
+    const solution = getBattleshipTargetSolution(ship, turretName, target)
+    turret.direction = rotateTowards(
+      Number.isFinite(turret.direction) ? turret.direction : ship.direction,
+      solution.direction,
+      ship.turretRotationSpeed || 0.018
+    )
+    if (turret.enabled !== false && solution.distance <= BATTLESHIP_FIRE_RANGE &&
+        !isBattleshipTurretAngleBlocked(ship, turretName, solution.direction)) {
+      targetEntries.push({ turretName, target })
+    }
   }
+  if (broadsideAligned) updateBattleshipBroadside(ship, targetEntries, bullets, now)
 }
 
 export function isSubmarineDetectedForOwner(submarine, owner, now = gameState.simulationTime || 0) {
@@ -1119,7 +1286,7 @@ function updateSubmarine(submarine, units, bullets, now) {
   }
 
   const target = submarine.target
-  const validTarget = target?.isNaval && target.health > 0 && target.owner !== submarine.owner
+  const validTarget = canSubmarineTargetEntity(submarine, target)
   if (!validTarget) {
     submarine.target = null
     if (submarine.depthState === 'surfaced' && now - (submarine.lastTorpedoTime || 0) > 4500) startDepthTransition(submarine, 'submerging', now)
@@ -1152,7 +1319,7 @@ function updateSubmarine(submarine, units, bullets, now) {
     startTime: now,
     projectileType: 'torpedo',
     originType: 'torpedo',
-    navalOnly: true,
+    navalOnly: !isPartlyWaterBuilding(target),
     strictTarget: true
   })
   submarine.ammunition--
@@ -1217,13 +1384,17 @@ export function requestWaterMineAction(unit, tileX, tileY, mapGrid) {
 
 export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
   updateWaterMines(now, units)
+  let fleetTargetLookup = null
   ;(units || []).forEach(unit => {
     if (TRANSPORT_TYPES.has(unit.type)) {
       updateTransport(unit, units, mapGrid, state.occupancyMap, now)
       if (['turning_offshore', 'reversing_to_shore'].includes(unit.transportOperation?.phase)) addShipWake(unit, state, now)
     }
     else if (unit.type === 'aircraftCarrier') updateCarrier(unit, units, now, delta)
-    else if (unit.type === 'battleship') updateBattleship(unit, units, bullets, state, now)
+    else if (unit.type === 'battleship') {
+      if (hasBattleshipAssignedTarget(unit)) fleetTargetLookup ||= createFleetTargetLookup(units)
+      updateBattleship(unit, units, bullets, state, now, fleetTargetLookup)
+    }
     else if (unit.type === 'submarine') updateSubmarine(unit, units, bullets, now)
     else if (unit.type === 'navalMineLayer') updateNavalMineLayer(unit, mapGrid, now)
   })

@@ -1173,6 +1173,9 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   if (actualType === 'battleship') {
     unit.selectedTurret = null
     unit.turretDamageOrder = []
+    unit.lastHullTargetId = null
+    unit.broadsideStartedAt = null
+    unit.broadsideReloadUntil = 0
     unit.batteries = createBattleshipTurrets(unit)
   }
 

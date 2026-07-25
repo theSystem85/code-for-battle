@@ -165,25 +165,22 @@ describe('unitWreckManager.js', () => {
       expect(wreck.velocityY).toBe(0)
     })
 
-    it('selects the bow-first naval sinking animation for the lower two-thirds of rolls', () => {
-      gameRandom.mockReturnValueOnce(0.5).mockReturnValueOnce(0.25)
-      const wreck = registerUnitWreck({
-        id: 'destroyer-1', type: 'destroyer', isNaval: true,
-        x: 100, y: 100, health: 0, maxHealth: 250, owner: 'player1'
-      }, gameState)
-
-      expect(wreck.navalSinking).toBe(true)
-      expect(wreck.navalSinkMode).toBe('bow-first')
-    })
-
-    it('selects the split-hull naval sinking animation for the upper third of rolls', () => {
-      gameRandom.mockReturnValueOnce(0.9).mockReturnValueOnce(0.25)
-      const wreck = registerUnitWreck({
-        id: 'destroyer-2', type: 'destroyer', isNaval: true,
-        x: 100, y: 100, health: 0, maxHealth: 250, owner: 'player1'
-      }, gameState)
-
-      expect(wreck.navalSinkMode).toBe('split-hull')
+    it('selects each directional naval sinking mode from an equal quarter of deterministic rolls', () => {
+      const cases = [
+        [0, 'front-down'],
+        [0.25, 'back-down'],
+        [0.5, 'left-down'],
+        [0.999, 'right-down']
+      ]
+      cases.forEach(([roll, expected], index) => {
+        gameRandom.mockReturnValueOnce(roll).mockReturnValueOnce(0.25)
+        const wreck = registerUnitWreck({
+          id: `destroyer-${index}`, type: 'destroyer', isNaval: true,
+          x: 100, y: 100, health: 0, maxHealth: 250, owner: 'player1'
+        }, gameState)
+        expect(wreck.navalSinking).toBe(true)
+        expect(wreck.navalSinkMode).toBe(expected)
+      })
     })
   })
 

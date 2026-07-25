@@ -12,7 +12,7 @@
 - Moving Destroyers leave a stern V-wake aligned to the rendered hull endpoint plus a smaller bow V-wake. Both render below the hull, emit only during actual movement, and fade after the ship stops.
 - The bow/frontal wake uses a 70-degree inner V angle so both arms remain visible outside the hull.
 - The south-facing Destroyer's main-gun projectile origin is source-image coordinate (55, 260), transformed with the ship for every heading.
-- Destroyed ships use a deterministic weighted animation choice: 67% bow-first tilt/clip sinking and 33% correctly cropped bow/stern split-hull sinking.
+- Destroyed ships use one of four deterministic-random directional sinking animations—front-down, back-down, left-down, or right-down—with equal 25% probability.
 - Selecting a Destroyer shows its 18-tile weapon radius. Hovering an enemy uses the in-range/out-of-range attack cursor and displays current distance versus maximum range.
 - Selecting a Shipyard shows a three-tile service area measured from its edges, clipped to water tiles. Only friendly naval units can use it.
 - Selecting a Destroyer shows a selection HUD large enough to contain the complete 2.6-tile sprite at any heading.

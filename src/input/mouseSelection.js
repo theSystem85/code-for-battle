@@ -1,5 +1,6 @@
 import {
   APACHE_RANGE_REDUCTION,
+  BATTLESHIP_FIRE_RANGE,
   HOWITZER_FIRE_RANGE,
   SHADOW_OF_WAR_CONFIG,
   TANK_FIRE_RANGE,
@@ -361,7 +362,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
       } else if (unit.type === 'destroyer') {
         range = 18 * TILE_SIZE
       } else if (unit.type === 'battleship') {
-        range = 24 * TILE_SIZE
+        range = BATTLESHIP_FIRE_RANGE
       } else if (unit.type === 'submarine') {
         range = 12 * TILE_SIZE
       }

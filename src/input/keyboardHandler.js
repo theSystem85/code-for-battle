@@ -24,6 +24,7 @@ import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
+import { clearBattleshipFireControl } from '../game/battleshipTurrets.js'
 
 function recordHumanUnitCommand(unitIds, command) {
   const unitRefs = createReplayUnitReferences(unitIds)
@@ -1184,6 +1185,7 @@ export class KeyboardHandler {
 
     let stoppedCount = 0
     const unitsToStop = []
+    setRemoteControlAction('fire', 'keyboard', false)
 
     // Stop attacking for all selected units or buildings
     this.selectedUnits.forEach(unit => {
@@ -1196,7 +1198,8 @@ export class KeyboardHandler {
         return
       }
       // Clear current attack target
-      if (unit.target) {
+      const stoppedBattleshipFire = clearBattleshipFireControl(unit)
+      if (unit.target || stoppedBattleshipFire) {
         unit.target = null
         stoppedCount++
       }

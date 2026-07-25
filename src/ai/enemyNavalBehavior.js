@@ -1,6 +1,6 @@
 import { AI_DECISION_INTERVAL, TILE_SIZE } from '../config.js'
 import { getCachedPath } from '../game/pathfinding.js'
-import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
+import { canUnitTargetEntity, getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 import {
   getNavalPathOptions,
   getShipyardServiceWaterTiles,
@@ -61,7 +61,7 @@ function findNavalAttackPath(unit, target, mapGrid, occupancyMap) {
 
 function findNavalAttackTarget(unit, units, gameState, aiPlayerId) {
   if (unit.lastAttacker?.health > 0 && isEnemyTo(unit.lastAttacker, aiPlayerId)) {
-    if (unit.type !== 'submarine' || unit.lastAttacker.isNaval) return unit.lastAttacker
+    if (canUnitTargetEntity(unit, unit.lastAttacker)) return unit.lastAttacker
   }
   if (unit.type === 'destroyer') {
     const attackingAircraft = units
@@ -73,14 +73,12 @@ function findNavalAttackTarget(unit, units, gameState, aiPlayerId) {
   const enemyShips = units
     .filter(candidate => candidate !== unit && candidate.isNaval && candidate.health > 0 && isEnemyTo(candidate, aiPlayerId) && (candidate.type !== 'submarine' || candidate.depthState === 'surfaced'))
     .sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y))
-  if (enemyShips.length > 0) return enemyShips[0]
-  if (unit.type === 'submarine') return null
-
   const priority = ['constructionYard', 'shipyard', 'vehicleFactory', 'oreRefinery', 'powerPlant']
   const enemyBuildings = [...(gameState.buildings || []), ...(gameState.factories || [])]
     .filter((building, index, entries) =>
       building.health > 0 &&
       isEnemyTo(building, aiPlayerId) &&
+      canUnitTargetEntity(unit, building) &&
       entries.findIndex(candidate => candidate === building || (candidate.id && candidate.id === building.id)) === index
     )
   enemyBuildings.sort((a, b) => {
@@ -94,7 +92,22 @@ function findNavalAttackTarget(unit, units, gameState, aiPlayerId) {
     return Math.hypot(centerA.worldX - unit.x, centerA.worldY - unit.y) -
       Math.hypot(centerB.worldX - unit.x, centerB.worldY - unit.y)
   })
-  return enemyBuildings[0] || null
+  if (enemyShips.length > 0) return enemyShips[0]
+  if (unit.type === 'submarine') return enemyBuildings[0] || null
+
+  const enemyLandUnits = units
+    .filter(candidate =>
+      candidate !== unit &&
+      !candidate.isNaval &&
+      !candidate.isAirUnit &&
+      candidate.type !== 'apache' &&
+      candidate.type !== 'f22Raptor' &&
+      candidate.type !== 'f35' &&
+      candidate.health > 0 &&
+      isEnemyTo(candidate, aiPlayerId) &&
+      canUnitTargetEntity(unit, candidate))
+    .sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y))
+  return enemyLandUnits[0] || enemyBuildings[0] || null
 }
 
 function getNavalServiceNeeds(unit) {

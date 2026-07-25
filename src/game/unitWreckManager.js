@@ -92,7 +92,10 @@ export function registerUnitWreck(unit, gameState) {
   const simulationNow = getSimulationTime(gameState)
   const createdAt = simulationNow > 0 ? simulationNow : performance.now()
   const isNavalSinking = unit.isNaval === true
-  const navalSinkMode = isNavalSinking && gameRandom() < (2 / 3) ? 'bow-first' : 'split-hull'
+  const navalSinkModes = ['front-down', 'back-down', 'left-down', 'right-down']
+  const navalSinkMode = isNavalSinking
+    ? navalSinkModes[Math.min(3, Math.floor(gameRandom() * navalSinkModes.length))]
+    : null
 
   const wreck = {
     id: `${unit.id}-wreck`,

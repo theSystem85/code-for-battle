@@ -627,9 +627,16 @@ function buildSaveObject(label) {
     if (u.type === 'battleship') {
       serialized.selectedTurret = u.selectedTurret || null
       serialized.turretDamageOrder = [...(u.turretDamageOrder || [])]
+      serialized.lastHullTargetId = u.lastHullTargetId || null
+      serialized.broadsideStartedAt = Number.isFinite(u.broadsideStartedAt) ? u.broadsideStartedAt : null
+      serialized.broadsideReloadUntil = Number.isFinite(u.broadsideReloadUntil) ? u.broadsideReloadUntil : 0
       serialized.batteries = Object.fromEntries(Object.entries(u.batteries || {}).map(([name, turret]) => [
         name,
-        { ...turret }
+        {
+          ...turret,
+          barrelRecoilStartTimes: [...(turret.barrelRecoilStartTimes || [])],
+          muzzleFlashStartTimes: [...(turret.muzzleFlashStartTimes || [])]
+        }
       ]))
     }
 

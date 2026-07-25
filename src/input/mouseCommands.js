@@ -14,6 +14,7 @@ import {
   requestWaterMineAction,
   tryHandleFleetCommand
 } from '../game/navalFleetSystem.js'
+import { canUnitTargetEntity } from '../game/unitCombat/combatHelpers.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
 const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
@@ -440,7 +441,8 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
       if (altPressed) {
         const carriers = commandableUnits.filter(unit => unit.type === 'aircraftCarrier')
         carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], true))
-        const queuedAttackers = commandableUnits.filter(unit => unit.type !== 'aircraftCarrier')
+        const queuedAttackers = commandableUnits.filter(unit =>
+          unit.type !== 'aircraftCarrier' && canUnitTargetEntity(unit, target))
         queuedAttackers.forEach(unit => {
           if (!unit.commandQueue) unit.commandQueue = []
           unit.commandQueue.push({ type: 'attack', target })
@@ -454,7 +456,8 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
       } else {
         const carriers = commandableUnits.filter(unit => unit.type === 'aircraftCarrier')
         carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], false))
-        const normalAttackers = commandableUnits.filter(unit => unit.type !== 'aircraftCarrier' && (unit.type !== 'submarine' || target.isNaval))
+        const normalAttackers = commandableUnits.filter(unit =>
+          unit.type !== 'aircraftCarrier' && canUnitTargetEntity(unit, target))
         if (normalAttackers.length) unitCommands.handleAttackCommand(normalAttackers, target, mapGrid, false)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
           command: 'attack',

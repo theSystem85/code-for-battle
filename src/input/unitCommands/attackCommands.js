@@ -8,6 +8,10 @@ import { clearTankerKamikazeState } from '../../game/tankerTruckUtils.js'
 import { issueTankerKamikazeCommand, clearAttackGroupState } from './utilityQueue.js'
 import { setBattleshipTarget } from '../../game/navalFleetSystem.js'
 
+function canCommandUnitAttackTarget(unit, target) {
+  return unit.type !== 'submarine' || Boolean(target?.isNaval || target?.type === 'shipyard')
+}
+
 export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isForceAttack = false, skipQueueClear = false) {
   const now = performance.now()
   if (!handler.isAttackGroupOperation) {
@@ -35,8 +39,10 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
   ) - TILE_SIZE
 
   const tankerUnits = selectedUnits.filter(unit => unit.type === 'tankerTruck')
-  const battleshipUnits = selectedUnits.filter(unit => unit.type === 'battleship')
-  const combatUnits = selectedUnits.filter(unit => unit.type !== 'tankerTruck' && unit.type !== 'battleship')
+  const battleshipUnits = selectedUnits.filter(unit =>
+    unit.type === 'battleship' && canCommandUnitAttackTarget(unit, target))
+  const combatUnits = selectedUnits.filter(unit =>
+    unit.type !== 'tankerTruck' && unit.type !== 'battleship' && canCommandUnitAttackTarget(unit, target))
 
   const formationPositions = calculateSemicircleFormation(combatUnits, target, safeAttackDistance)
 

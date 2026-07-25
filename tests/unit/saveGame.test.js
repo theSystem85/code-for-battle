@@ -485,9 +485,21 @@ describe('saveGame.js', () => {
         maxHealth: 950,
         selectedTurret: 'foreInner',
         turretDamageOrder: ['aftOuter', 'foreOuter'],
+        lastHullTargetId: 'enemy-2',
+        broadsideStartedAt: 8000,
+        broadsideReloadUntil: 16000,
         batteries: {
           foreOuter: { targetId: 'enemy-1', lastShotTime: 1200, direction: 0.2, enabled: false },
-          foreInner: { targetId: 'enemy-2', lastShotTime: 1300, direction: 0.3, enabled: true },
+          foreInner: {
+            targetId: 'enemy-2',
+            lastShotTime: 1300,
+            direction: 0.3,
+            enabled: true,
+            scheduledAt: 9000,
+            nextBarrelIndex: 1,
+            barrelRecoilStartTimes: [9000, null],
+            muzzleFlashStartTimes: [9000, null]
+          },
           aftInner: { targetId: null, lastShotTime: 0, direction: 3.1, enabled: true },
           aftOuter: { targetId: 'enemy-3', lastShotTime: 900, direction: 3.2, enabled: false }
         },
@@ -503,8 +515,20 @@ describe('saveGame.js', () => {
 
       expect(savedUnit.selectedTurret).toBe('foreInner')
       expect(savedUnit.turretDamageOrder).toEqual(['aftOuter', 'foreOuter'])
+      expect(savedUnit).toMatchObject({
+        lastHullTargetId: 'enemy-2',
+        broadsideStartedAt: 8000,
+        broadsideReloadUntil: 16000
+      })
       expect(savedUnit.batteries.foreOuter).toMatchObject({ targetId: 'enemy-1', enabled: false })
-      expect(savedUnit.batteries.foreInner).toMatchObject({ targetId: 'enemy-2', enabled: true })
+      expect(savedUnit.batteries.foreInner).toMatchObject({
+        targetId: 'enemy-2',
+        enabled: true,
+        scheduledAt: 9000,
+        nextBarrelIndex: 1,
+        barrelRecoilStartTimes: [9000, null],
+        muzzleFlashStartTimes: [9000, null]
+      })
     })
 
     it('should save buildings array', async() => {
