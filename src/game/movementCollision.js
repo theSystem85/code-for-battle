@@ -55,6 +55,33 @@ function pointToSegmentDistance(px, py, ax, ay, bx, by) {
   return Math.hypot(px - (ax + abX * t), py - (ay + abY * t))
 }
 
+function closestPointOnSegment(px, py, segment) {
+  const dx = segment.endX - segment.startX
+  const dy = segment.endY - segment.startY
+  const lengthSquared = dx * dx + dy * dy
+  const t = lengthSquared > 0.0001
+    ? Math.max(0, Math.min(1, ((px - segment.startX) * dx + (py - segment.startY) * dy) / lengthSquared))
+    : 0
+  return { x: segment.startX + dx * t, y: segment.startY + dy * t }
+}
+
+function navalContact(a, b) {
+  const candidates = [
+    [a.startX, a.startY, closestPointOnSegment(a.startX, a.startY, b)],
+    [a.endX, a.endY, closestPointOnSegment(a.endX, a.endY, b)],
+    [b.startX, b.startY, closestPointOnSegment(b.startX, b.startY, a), true],
+    [b.endX, b.endY, closestPointOnSegment(b.endX, b.endY, a), true]
+  ]
+  let best = null
+  for (const [x, y, point, reversed] of candidates) {
+    const dx = reversed ? point.x - x : x - point.x
+    const dy = reversed ? point.y - y : y - point.y
+    const distance = Math.hypot(dx, dy)
+    if (!best || distance < best.distance) best = { distance, dx, dy, x: (x + point.x) / 2, y: (y + point.y) / 2 }
+  }
+  return best
+}
+
 function segmentsIntersect(a, b) {
   const cross = (ax, ay, bx, by, cx, cy) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
   const d1 = cross(a.startX, a.startY, a.endX, a.endY, b.startX, b.startY)
@@ -152,9 +179,11 @@ function isTileBlockedForCollision(mapGrid, tileX, tileY, unit = null) {
     return true
   }
 
-  const terrainBlocked = unit?.isNaval
-    ? tile.type !== 'water'
-    : tile.type === 'water' || tile.type === 'rock'
+  const terrainBlocked = unit?.type === 'hovercraft'
+    ? tile.type === 'rock'
+    : unit?.isNaval
+      ? tile.type !== 'water'
+      : tile.type === 'water' || tile.type === 'rock'
   if (terrainBlocked || tile.seedCrystal) {
     return true
   }
@@ -437,7 +466,11 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         return { collided: true, type: 'terrain', tileX, tileY }
       }
     } else {
-      if (unit.isNaval) {
+      if (unit.type === 'hovercraft') {
+        if (tile.type === 'rock' || tile.seedCrystal || hasBlockingBuilding(tile)) {
+          return { collided: true, type: 'terrain', tileX, tileY }
+        }
+      } else if (unit.isNaval) {
         if (tile.type !== 'water' || tile.seedCrystal || hasBlockingBuilding(tile)) {
           return { collided: true, type: 'terrain', tileX, tileY }
         }
@@ -504,6 +537,7 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
     const bothNaval = unit.isNaval && otherUnit.isNaval
     const unitHull = bothNaval ? getNavalHullSegment(unit) : null
     const otherHull = bothNaval ? getNavalHullSegment(otherUnit) : null
+    const contact = bothNaval ? navalContact(unitHull, otherHull) : null
     const distance = bothNaval ? navalHullDistance(unitHull, otherHull) : centerDistance
     const minimumDistance = bothNaval
       ? unitHull.radius + otherHull.radius
@@ -518,12 +552,12 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         continue
       }
 
-      const invDist = centerDistance > 0.001 ? 1 / centerDistance : 0
+      const contactDistance = contact?.distance || 0
       const fallbackAngle = unit.direction || 0
-      const separationDx = centerDistance > 0.001 ? dx : -Math.sin(fallbackAngle)
-      const separationDy = centerDistance > 0.001 ? dy : Math.cos(fallbackAngle)
-      const normalX = -dx * invDist
-      const normalY = -dy * invDist
+      const separationDx = bothNaval && contactDistance > 0.001 ? contact.dx / contactDistance : (centerDistance > 0.001 ? dx / centerDistance : -Math.sin(fallbackAngle))
+      const separationDy = bothNaval && contactDistance > 0.001 ? contact.dy / contactDistance : (centerDistance > 0.001 ? dy / centerDistance : Math.cos(fallbackAngle))
+      const normalX = -separationDx
+      const normalY = -separationDy
       const overlap = minimumDistance - distance
 
       const separationForce = overlap * MOVEMENT_CONFIG.FORCE_FIELD_STRENGTH * 0.1
@@ -532,8 +566,8 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
       // when units approached each other. The separation forces below are sufficient
       // to push units apart without reducing their overall movement speed.
 
-      const separationX = separationDx * (invDist || 1) * separationForce
-      const separationY = separationDy * (invDist || 1) * separationForce
+      const separationX = separationDx * separationForce
+      const separationY = separationDy * separationForce
 
       unit.movement.velocity.x += separationX
       unit.movement.velocity.y += separationY
@@ -554,8 +588,8 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
           type: 'unit',
           other: otherUnit,
           data: {
-            normalX: centerDistance > 0.001 ? normalX : -separationDx,
-            normalY: centerDistance > 0.001 ? normalY : -separationDy,
+            normalX,
+            normalY,
             overlap,
             unitSpeed,
             otherSpeed,
@@ -569,11 +603,13 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         type: 'unit',
         other: otherUnit,
         data: {
-          normalX: centerDistance > 0.001 ? normalX : -separationDx,
-          normalY: centerDistance > 0.001 ? normalY : -separationDy,
+          normalX,
+          normalY,
           overlap,
           unitSpeed,
-          otherSpeed
+          otherSpeed,
+          contactX: contact?.x,
+          contactY: contact?.y
         }
       }
     }
@@ -835,6 +871,32 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
   const { normalX, normalY, overlap, unitSpeed, otherSpeed, airCollision = false } = collisionResult.data
   const factoryList = Array.isArray(factories) ? factories : []
   const otherUnit = collisionResult.other && collisionResult.other.movement ? collisionResult.other : null
+  const navalCollision = Boolean(unit.isNaval && otherUnit?.isNaval)
+
+  if (navalCollision) {
+    const now = gameState?.simulationTime || performance.now()
+    const otherVelocity = otherUnit.movement.velocity || { x: 0, y: 0 }
+    const relativeSpeed = Math.hypot(
+      movement.velocity.x - otherVelocity.x,
+      movement.velocity.y - otherVelocity.y
+    )
+    const angularImpact = Math.max(
+      Math.abs(unit.navalAngularVelocity || unit.remoteNavalAngularVelocity || 0) * getNavalHullDimensions(unit.type).length,
+      Math.abs(otherUnit.navalAngularVelocity || otherUnit.remoteNavalAngularVelocity || 0) * getNavalHullDimensions(otherUnit.type).length
+    )
+    const impact = relativeSpeed + angularImpact
+    if (impact > 0.18 && now - (unit.lastNavalCollisionDamageAt || -Infinity) >= 450) {
+      const unitForwardDot = Math.abs(Math.cos(unit.direction || 0) * normalX + Math.sin(unit.direction || 0) * normalY)
+      const otherForwardDot = Math.abs(Math.cos(otherUnit.direction || 0) * normalX + Math.sin(otherUnit.direction || 0) * normalY)
+      const baseDamage = Math.min(12, Math.max(1, impact * 2.2))
+      // A broadside absorbs the impact poorly, while a bow/stern strike parts
+      // the water and transfers less force into the attacking hull.
+      unit.health = Math.max(0, unit.health - baseDamage * (unitForwardDot < 0.45 ? 1.65 : 0.7))
+      otherUnit.health = Math.max(0, otherUnit.health - baseDamage * (otherForwardDot < 0.45 ? 1.65 : 0.7))
+      unit.lastNavalCollisionDamageAt = now
+      otherUnit.lastNavalCollisionDamageAt = now
+    }
+  }
 
   if (unit.type === 'tankerTruck') {
     const otherUnitForTanker = collisionResult.other
@@ -879,7 +941,7 @@ export function applyUnitCollisionResponse(unit, movement, collisionResult, unit
     movement.currentSpeed = Math.hypot(movement.velocity.x, movement.velocity.y)
     return false
   } else if (separation > 0.001) {
-    const pushOther = Boolean(otherUnit) && (unit.remoteControlActive || otherSpeed <= unitSpeed)
+    const pushOther = Boolean(otherUnit) && (navalCollision || unit.remoteControlActive || otherSpeed <= unitSpeed)
 
     if (pushOther && otherUnit) {
       applySafeSeparation(

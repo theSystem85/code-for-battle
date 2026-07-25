@@ -18,3 +18,7 @@
 ## Delivery note
 
 This iteration implements criteria 2, 5, 9, and 10 with unit regression coverage. The remaining criteria stay explicitly open in `TODO/Improvements.md` rather than receiving lower-confidence partial implementations.
+
+## Completion amendment
+
+All twelve criteria are implemented in this follow-up. Naval collision additionally requires closest-contact capsule normals, physical displacement during rotation, and light collision damage. Damage is rate-limited, and a hull struck broadside receives a larger multiplier than a hull presenting its bow or stern. Candidate lookup remains quadtree-based so the narrow-phase work is limited to nearby ships.

@@ -451,7 +451,7 @@ function tryDodgeMovement(unit, mapGrid, occupancyMap, units, now) {
       mapGrid,
       occupancyMap,
       undefined,
-      { unitOwner: unit.owner, movementType: unit.isNaval ? 'water' : undefined }
+      { unitOwner: unit.owner, movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined }
     )
 
     if (dodgePath.length > 1) {

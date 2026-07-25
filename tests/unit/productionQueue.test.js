@@ -1129,6 +1129,23 @@ describe('Production Queue System', () => {
   })
 
   describe('Simulation time integration', () => {
+    it('starts ground, naval, and air production in independent concurrent lanes', () => {
+      gameState.money = 100000
+      gameState.buildings = [
+        { type: 'vehicleFactory', owner: 'player', health: 100 },
+        { type: 'shipyard', owner: 'player', health: 100 },
+        { type: 'helipad', owner: 'player', health: 100 }
+      ]
+
+      productionQueue.addItem('tank_v1', mockButton, false)
+      productionQueue.addItem('destroyer', mockButton, false)
+      productionQueue.addItem('apache', mockButton, false)
+
+      expect(productionQueue.unitQueues.ground.currentUnit?.type).toBe('tank_v1')
+      expect(productionQueue.unitQueues.naval.currentUnit?.type).toBe('destroyer')
+      expect(productionQueue.unitQueues.air.currentUnit?.type).toBe('apache')
+    })
+
     it('tracks unit production progress from simulation time instead of wall-clock speed multipliers', () => {
       gameState.buildings = [{ type: 'vehicleFactory', owner: 'player', health: 100 }]
       productionQueue.addItem('tank_v1', mockButton, false)

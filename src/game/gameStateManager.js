@@ -33,6 +33,7 @@ import { distributeMineLayerPayload } from './mineSystem.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
+import { getNavalHullDimensions } from '../utils/navalUtils.js'
 import { getSimulationTime } from './time.js'
 import { prewarmDestructionExplosionTexture, spawnDestructionExplosion } from './spriteSheetEffects.js'
 
@@ -457,6 +458,21 @@ export function cleanupDestroyedUnits(units, gameState) {
           unit.apacheDestructionRotorInitialSpeed = Math.max(0, sampledRotorSpeed)
         }
         prewarmDestructionExplosionTexture(gameState)
+        if (unit.isNaval && !unit.destructionExplosionSpawned) {
+          const hull = getNavalHullDimensions(unit.type)
+          const count = Math.max(1, Math.min(6, Math.ceil(hull.length / (TILE_SIZE * 2))))
+          const forwardX = Math.cos(unit.frozenDestructionDirection)
+          const forwardY = Math.sin(unit.frozenDestructionDirection)
+          for (let explosionIndex = 0; explosionIndex < count; explosionIndex++) {
+            const longitudinal = count === 1 ? 0 : (explosionIndex / (count - 1) - 0.5) * hull.length * 0.78
+            const side = (explosionIndex % 2 ? 1 : -1) * hull.width * 0.18
+            const explosionX = unit.x + TILE_SIZE / 2 + forwardX * longitudinal - forwardY * side
+            const explosionY = unit.y + TILE_SIZE / 2 + forwardY * longitudinal + forwardX * side
+            spawnDestructionExplosion(gameState, explosionX, explosionY, { scale: 1.1 + hull.length / (TILE_SIZE * 18) })
+          }
+          playPositionalSound('explosion', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.65)
+          unit.destructionExplosionSpawned = true
+        }
       }
 
       if (now - unit.destructionQueuedAt < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
