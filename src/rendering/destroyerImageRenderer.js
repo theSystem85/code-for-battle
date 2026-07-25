@@ -40,7 +40,7 @@ export function getDestroyerGunSpawnPoint(unit, centerX, centerY) {
   const image = destroyerImage
   const sourceWidth = image?.naturalWidth || image?.width || 109
   const sourceHeight = image?.naturalHeight || image?.height || 342
-  const scale = (TILE_SIZE * 2.6) / Math.max(sourceWidth, sourceHeight)
+  const scale = (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
   const localX = (SOUTH_FACING_GUN_SOURCE_POINT.x - sourceWidth / 2) * scale
   const localY = (SOUTH_FACING_GUN_SOURCE_POINT.y - sourceHeight / 2) * scale
   const rotation = (unit.direction || unit.rotation || 0) - SOUTH_FACING_SOURCE_ANGLE
@@ -61,7 +61,7 @@ export function renderDestroyerWithImage(ctx, unit, centerX, centerY) {
   const image = destroyerImage
   const sourceWidth = image.naturalWidth || image.width
   const sourceHeight = image.naturalHeight || image.height
-  const scale = (TILE_SIZE * 2.6) / Math.max(sourceWidth, sourceHeight)
+  const scale = (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
   const width = sourceWidth * scale
   const height = sourceHeight * scale
 

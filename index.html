@@ -724,14 +724,20 @@
               <div style="font-size: 12px; color: #ccc; margin-bottom: 6px;">Sprite sheets to use</div>
               <div id="integratedSpriteSheetSelectionList" class="integrated-sheet-selection-list"></div>
             </div>
-            <div style="margin: 10px 0;">
-              <label for="integratedSpriteSheetBiomeSelect" style="display:block; margin-bottom: 6px;">SSE Biome</label>
-              <select id="integratedSpriteSheetBiomeSelect" class="sidebar-input" style="width: 100%;">
-                <option value="soil">Soil</option>
-                <option value="sand">Sand</option>
-                <option value="grass" selected>Grass</option>
-                <option value="snow">Snow</option>
-              </select>
+            <div style="display: flex; gap: 10px; margin: 10px 0; align-items: flex-end;">
+              <div style="width: 50%; min-width: 0;">
+                <label for="integratedSpriteSheetBiomeSelect" style="display:block; margin-bottom: 6px;">SSE Biome</label>
+                <select id="integratedSpriteSheetBiomeSelect" class="sidebar-input" style="width: 100%;">
+                  <option value="soil">Soil</option>
+                  <option value="sand">Sand</option>
+                  <option value="grass" selected>Grass</option>
+                  <option value="snow">Snow</option>
+                </select>
+              </div>
+              <div class="floating-label-input" style="width: 50%; min-width: 0;">
+                <input type="number" class="sidebar-input" id="startMoney" min="0" step="1000" max="5000000" value="12000" placeholder=" ">
+                <label for="startMoney">Start Money</label>
+              </div>
             </div>
             <div style="display: flex; gap: 10px; margin: 10px 0;">
               <div class="floating-label-input floating-label-input--narrow" style="width: 120px;">

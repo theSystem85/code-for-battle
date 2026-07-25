@@ -10,6 +10,7 @@ import { getUnitSelectionCenter } from './selectionManager.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayEntityReference, createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 import {
+  commandCarrierStrike,
   requestWaterMineAction,
   setBattleshipTarget,
   tryHandleFleetCommand
@@ -432,7 +433,10 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
 
     if (target) {
       if (altPressed) {
-        commandableUnits.forEach(unit => {
+        const carriers = commandableUnits.filter(unit => unit.type === 'aircraftCarrier')
+        carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], true))
+        const queuedAttackers = commandableUnits.filter(unit => unit.type !== 'aircraftCarrier')
+        queuedAttackers.forEach(unit => {
           if (!unit.commandQueue) unit.commandQueue = []
           unit.commandQueue.push({ type: 'attack', target })
         })
@@ -443,9 +447,11 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
         })
         markWaypointsAdded()
       } else {
+        const carriers = commandableUnits.filter(unit => unit.type === 'aircraftCarrier')
+        carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], false))
         const battleships = commandableUnits.filter(unit => unit.type === 'battleship')
         battleships.forEach(unit => setBattleshipTarget(unit, target))
-        const normalAttackers = commandableUnits.filter(unit => unit.type !== 'battleship' && (unit.type !== 'submarine' || target.isNaval))
+        const normalAttackers = commandableUnits.filter(unit => unit.type !== 'aircraftCarrier' && unit.type !== 'battleship' && (unit.type !== 'submarine' || target.isNaval))
         if (normalAttackers.length) unitCommands.handleAttackCommand(normalAttackers, target, mapGrid, false)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
           command: 'attack',

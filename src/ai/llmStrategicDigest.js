@@ -521,6 +521,7 @@ export function buildCompactStrategicInput(input, options = {}) {
     playerId: input.playerId,
     tick: input.tick,
     sinceTick: input.sinceTick,
+    strategy: input.strategy,
     economy: summarizeEconomy(input, baseStatus, forceGroups),
     baseStatus,
     forceGroups,

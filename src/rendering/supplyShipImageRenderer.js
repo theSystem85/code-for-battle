@@ -45,7 +45,7 @@ export function renderSupplyShipWithImage(ctx, unit, centerX, centerY) {
   const image = supplyShipImage
   const sourceWidth = image.naturalWidth || image.width
   const sourceHeight = image.naturalHeight || image.height
-  const scale = (TILE_SIZE * 2.2) / Math.max(sourceWidth, sourceHeight)
+  const scale = (TILE_SIZE * 3.3) / Math.max(sourceWidth, sourceHeight)
   const width = sourceWidth * scale
   const height = sourceHeight * scale
 

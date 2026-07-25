@@ -68,6 +68,7 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
 import {
   hasFriendlyUnitOnTile,
   initializeUnitMovement,
+  updateUnitPosition,
   stopUnitMovement,
   cancelUnitMovement,
   resetUnitVelocityForNewPath,
@@ -81,8 +82,60 @@ import {
   ownersAreEnemies,
   isValidDodgePosition
 } from '../../src/game/unifiedMovement.js'
+import { getNavalHullSegment } from '../../src/utils/navalUtils.js'
 
 describe('unifiedMovement.js', () => {
+  it('settles a carrier permanently when its bow reaches the final target tile', () => {
+    const mapGrid = Array.from({ length: 20 }, () =>
+      Array.from({ length: 20 }, () => ({ type: 'water', building: null, seedCrystal: false })))
+    const occupancyMap = Array.from({ length: 20 }, () => Array(20).fill(0))
+    const carrier = {
+      id: 'bow-stop-carrier',
+      type: 'aircraftCarrier',
+      isNaval: true,
+      owner: 'player1',
+      health: 100,
+      x: 7 * 32,
+      y: 5 * 32,
+      tileX: 7,
+      tileY: 5,
+      direction: 0,
+      speed: 0.24,
+      rotationSpeed: 0.012,
+      path: [{ x: 10, y: 5 }],
+      moveTarget: { x: 10, y: 5 }
+    }
+    initializeUnitMovement(carrier)
+    const targetCenterX = 10.5 * 32
+    const bowOffset = getNavalHullSegment(carrier).endX - (carrier.x + 16)
+    carrier.x = targetCenterX - 16 - bowOffset - 2
+    carrier.tileX = Math.floor((carrier.x + 16) / 32)
+    carrier.movement.velocity.x = 0.15
+    carrier.movement.targetVelocity.x = 0.24
+    carrier.movement.currentSpeed = 0.15
+    carrier.movement.isMoving = true
+    carrier.navalAngularVelocity = 0.01
+    carrier.isRotating = true
+    const settledHeading = carrier.direction
+
+    updateUnitPosition(
+      carrier,
+      mapGrid,
+      occupancyMap,
+      1000,
+      [carrier],
+      { buildings: [], units: [carrier], unitWrecks: [] }
+    )
+
+    expect(carrier.path).toEqual([])
+    expect(carrier.moveTarget).toBeNull()
+    expect(carrier.movement.velocity).toEqual({ x: 0, y: 0 })
+    expect(carrier.movement.targetVelocity).toEqual({ x: 0, y: 0 })
+    expect(carrier.navalAngularVelocity).toBe(0)
+    expect(carrier.isRotating).toBe(false)
+    expect(carrier.direction).toBe(settledHeading)
+  })
+
   describe('hasFriendlyUnitOnTile', () => {
     it('should return false if no units on tile', () => {
       const unit = { owner: 1, id: 'u1' }

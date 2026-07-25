@@ -28,11 +28,111 @@ import {
 } from './movementConstants.js'
 import { isAirborneUnit, isGroundUnit, ownersAreEnemies } from './movementHelpers.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
+import { getNavalHullDimensions, getNavalHullSegment } from '../utils/navalUtils.js'
 
 const STATIC_COLLISION_FORCE_DECAY = 0.72
 const STATIC_COLLISION_FORCE_MIN = 0.05
 const STATIC_COLLISION_FORCE_MULTIPLIER = 2.4
 const STATIC_COLLISION_SEPARATION_BLEND = 0.35
+const MAX_NAVAL_HULL_BOUNDING_RADIUS = getNavalHullDimensions('aircraftCarrier').length / 2
+const CARRIER_AIRCRAFT_TYPES = new Set(['f22Raptor', 'f35', 'apache'])
+
+function isCarrierAircraftCollisionPair(first, second) {
+  const carrier = first?.type === 'aircraftCarrier'
+    ? first
+    : (second?.type === 'aircraftCarrier' ? second : null)
+  if (!carrier) return false
+  const aircraft = carrier === first ? second : first
+  return Boolean(aircraft?.isAirUnit || CARRIER_AIRCRAFT_TYPES.has(aircraft?.type))
+}
+
+function pointToSegmentDistance(px, py, ax, ay, bx, by) {
+  const abX = bx - ax
+  const abY = by - ay
+  const lengthSquared = abX * abX + abY * abY
+  if (lengthSquared <= 0.0001) return Math.hypot(px - ax, py - ay)
+  const t = Math.max(0, Math.min(1, ((px - ax) * abX + (py - ay) * abY) / lengthSquared))
+  return Math.hypot(px - (ax + abX * t), py - (ay + abY * t))
+}
+
+function segmentsIntersect(a, b) {
+  const cross = (ax, ay, bx, by, cx, cy) => (bx - ax) * (cy - ay) - (by - ay) * (cx - ax)
+  const d1 = cross(a.startX, a.startY, a.endX, a.endY, b.startX, b.startY)
+  const d2 = cross(a.startX, a.startY, a.endX, a.endY, b.endX, b.endY)
+  const d3 = cross(b.startX, b.startY, b.endX, b.endY, a.startX, a.startY)
+  const d4 = cross(b.startX, b.startY, b.endX, b.endY, a.endX, a.endY)
+  return ((d1 <= 0 && d2 >= 0) || (d1 >= 0 && d2 <= 0)) &&
+    ((d3 <= 0 && d4 >= 0) || (d3 >= 0 && d4 <= 0))
+}
+
+function navalHullDistance(a, b) {
+  if (segmentsIntersect(a, b)) return 0
+  return Math.min(
+    pointToSegmentDistance(a.startX, a.startY, b.startX, b.startY, b.endX, b.endY),
+    pointToSegmentDistance(a.endX, a.endY, b.startX, b.startY, b.endX, b.endY),
+    pointToSegmentDistance(b.startX, b.startY, a.startX, a.startY, a.endX, a.endY),
+    pointToSegmentDistance(b.endX, b.endY, a.startX, a.startY, a.endX, a.endY)
+  )
+}
+
+function isNavalHullBlocked(unit, targetX, targetY, mapGrid) {
+  if (!unit?.isNaval) return false
+  const hull = getNavalHullSegment(unit, targetX, targetY)
+  const segmentX = hull.endX - hull.startX
+  const segmentY = hull.endY - hull.startY
+  const segmentLength = Math.hypot(segmentX, segmentY) || 1
+  const sideX = -segmentY / segmentLength
+  const sideY = segmentX / segmentLength
+  const sideOffset = hull.radius * 0.82
+
+  for (let step = 0; step <= 4; step++) {
+    const progress = step / 4
+    const centerX = hull.startX + segmentX * progress
+    const centerY = hull.startY + segmentY * progress
+    for (const side of [-1, 0, 1]) {
+      const sampleX = centerX + sideX * sideOffset * side
+      const sampleY = centerY + sideY * sideOffset * side
+      if (isTileBlockedForCollision(mapGrid, Math.floor(sampleX / TILE_SIZE), Math.floor(sampleY / TILE_SIZE), unit)) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+/**
+ * Moves a naval hull to the nearest water-only position after a rotation made
+ * its long footprint intersect the coast. The bounded search only runs for an
+ * already-overlapping hull, so the normal movement path pays one hull probe.
+ */
+export function resolveNavalShoreOverlap(unit, mapGrid) {
+  if (!unit?.isNaval || !isNavalHullBlocked(unit, unit.x, unit.y, mapGrid)) {
+    return false
+  }
+
+  const { boundingRadius } = getNavalHullSegment(unit, unit.x, unit.y)
+  const searchStep = Math.max(3, TILE_SIZE / 8)
+  const maxDistance = boundingRadius + TILE_SIZE
+  const directionCount = 16
+
+  for (let distance = searchStep; distance <= maxDistance; distance += searchStep) {
+    for (let index = 0; index < directionCount; index++) {
+      const angle = (index / directionCount) * Math.PI * 2
+      const candidateX = unit.x + Math.cos(angle) * distance
+      const candidateY = unit.y + Math.sin(angle) * distance
+      if (isNavalHullBlocked(unit, candidateX, candidateY, mapGrid)) continue
+
+      unit.x = candidateX
+      unit.y = candidateY
+      unit.tileX = Math.floor((candidateX + TILE_SIZE / 2) / TILE_SIZE)
+      unit.tileY = Math.floor((candidateY + TILE_SIZE / 2) / TILE_SIZE)
+      unit.navalShorePushTime = performance.now()
+      return true
+    }
+  }
+
+  return false
+}
 
 function isTileBlockedForCollision(mapGrid, tileX, tileY, unit = null) {
   if (!mapGrid || tileY < 0 || tileY >= mapGrid.length) {
@@ -77,6 +177,10 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
   const tileX = Math.floor(centerX / TILE_SIZE)
   const tileY = Math.floor(centerY / TILE_SIZE)
 
+  if (isNavalHullBlocked(unit, targetX, targetY, mapGrid)) {
+    return true
+  }
+
   if (isTileBlockedForCollision(mapGrid, tileX, tileY, unit)) {
     return true
   }
@@ -115,6 +219,7 @@ function isPositionBlockedForCollision(unit, targetX, targetY, mapGrid, occupanc
   if (units && units.length > 0) {
     for (const other of units) {
       if (!other || other.id === unit.id || other.health <= 0) continue
+      if (isCarrierAircraftCollisionPair(unit, other)) continue
       if (other.type === 'f22Raptor') continue
       if (ignoreSet && ignoreSet.has(other.id)) continue
       if (!isGroundUnit(other)) continue
@@ -322,6 +427,10 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
     return { collided: true, type: 'bounds', tileX, tileY }
   }
 
+  if (!unitAirborne && isNavalHullBlocked(unit, unit.x, unit.y, mapGrid)) {
+    return { collided: true, type: 'terrain', tileX, tileY }
+  }
+
   if (!unitAirborne) {
     if (typeof tile === 'number') {
       if (tile === 1) {
@@ -361,13 +470,17 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
   const unitCenterX = unit._cx ?? (unit.x + TILE_SIZE / 2)
   const unitCenterY = unit._cy ?? (unit.y + TILE_SIZE / 2)
 
+  const collisionQueryRadius = unit.isNaval
+    ? getNavalHullSegment(unit).boundingRadius + MAX_NAVAL_HULL_BOUNDING_RADIUS
+    : MOVEMENT_CONFIG.FORCE_FIELD_RADIUS
   const nearbyUnits = spatialTree
-    ? spatialTree.queryNearbyForUnit(unitCenterX, unitCenterY, MOVEMENT_CONFIG.FORCE_FIELD_RADIUS, unitAirborne, unit.id)
+    ? spatialTree.queryNearbyForUnit(unitCenterX, unitCenterY, collisionQueryRadius, unitAirborne, unit.id)
     : []
 
   for (let i = 0, len = nearbyUnits.length; i < len; i++) {
     const otherUnit = nearbyUnits[i]
     if (otherUnit.health <= 0) continue
+    if (isCarrierAircraftCollisionPair(unit, otherUnit)) continue
 
     const otherAirborne = isAirborneUnit(otherUnit)
     if (unitAirborne !== otherAirborne) continue
@@ -383,9 +496,16 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
 
     if (distSq < 1) continue
 
-    const distance = Math.sqrt(distSq)
+    const centerDistance = Math.sqrt(distSq)
+    const bothNaval = unit.isNaval && otherUnit.isNaval
+    const unitHull = bothNaval ? getNavalHullSegment(unit) : null
+    const otherHull = bothNaval ? getNavalHullSegment(otherUnit) : null
+    const distance = bothNaval ? navalHullDistance(unitHull, otherHull) : centerDistance
+    const minimumDistance = bothNaval
+      ? unitHull.radius + otherHull.radius
+      : MOVEMENT_CONFIG.MIN_UNIT_DISTANCE
 
-    if (distance < MOVEMENT_CONFIG.MIN_UNIT_DISTANCE) {
+    if (distance < minimumDistance) {
       const unitVelX = unit.movement?.velocity?.x || 0
       const unitVelY = unit.movement?.velocity?.y || 0
 
@@ -394,10 +514,10 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
         continue
       }
 
-      const invDist = 1 / distance
+      const invDist = 1 / centerDistance
       const normalX = -dx * invDist
       const normalY = -dy * invDist
-      const overlap = MOVEMENT_CONFIG.MIN_UNIT_DISTANCE - distance
+      const overlap = minimumDistance - distance
 
       const separationForce = overlap * MOVEMENT_CONFIG.FORCE_FIELD_STRENGTH * 0.1
 
@@ -899,6 +1019,7 @@ export function calculateAirCollisionAvoidance(unit, units) {
 
   for (const otherUnit of units) {
     if (!otherUnit || otherUnit.id === unit.id || otherUnit.health <= 0) continue
+    if (isCarrierAircraftCollisionPair(unit, otherUnit)) continue
     if (!isAirborneUnit(otherUnit)) continue
 
     const otherCenterX = otherUnit.x + TILE_SIZE / 2
@@ -955,7 +1076,10 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
   let avoidanceY = 0
 
   const spatialTree = getSpatialQuadtree()
-  const forceRadius = MOVEMENT_CONFIG.FORCE_FIELD_RADIUS
+  const ownHull = unit.isNaval ? getNavalHullSegment(unit) : null
+  const forceRadius = unit.isNaval
+    ? ownHull.boundingRadius + MAX_NAVAL_HULL_BOUNDING_RADIUS + TILE_SIZE * 0.5
+    : MOVEMENT_CONFIG.FORCE_FIELD_RADIUS
   const nearbyUnits = spatialTree
     ? spatialTree.queryNearbyGround(unitCenterX, unitCenterY, forceRadius, unit.id)
     : []
@@ -963,6 +1087,7 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
   for (let i = 0, len = nearbyUnits.length; i < len; i++) {
     const otherUnit = nearbyUnits[i]
     if (otherUnit.health <= 0) continue
+    if (isCarrierAircraftCollisionPair(unit, otherUnit)) continue
     // F22s should never push ground units via avoidance
     if (otherUnit.type === 'f22Raptor') continue
     // Skip avoidance if this unit is our attack target
@@ -976,14 +1101,18 @@ export function calculateCollisionAvoidance(unit, units, mapGrid, occupancyMap) 
 
     if (distSq < 1) continue
 
-    const distance = Math.sqrt(distSq)
+    const centerDistance = Math.sqrt(distSq)
+    const bothNaval = unit.isNaval && otherUnit.isNaval
+    const otherHull = bothNaval ? getNavalHullSegment(otherUnit) : null
+    const hullClearance = bothNaval ? navalHullDistance(ownHull, otherHull) - ownHull.radius - otherHull.radius : centerDistance
+    const avoidanceDistance = bothNaval ? TILE_SIZE * 1.25 : forceRadius
 
-    if (distance < forceRadius) {
-      const normalizedDist = distance / forceRadius
+    if (hullClearance < avoidanceDistance) {
+      const normalizedDist = Math.max(0, hullClearance) / avoidanceDistance
       const forceMagnitude = MOVEMENT_CONFIG.FORCE_FIELD_STRENGTH *
         Math.pow(1 - normalizedDist, MOVEMENT_CONFIG.FORCE_FIELD_FALLOFF)
 
-      const invDist = 1 / distance
+      const invDist = 1 / centerDistance
       avoidanceX += dx * invDist * forceMagnitude
       avoidanceY += dy * invDist * forceMagnitude
     }

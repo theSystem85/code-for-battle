@@ -21,6 +21,7 @@ import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/air
 import { handleStuckHarvester } from '../game/harvesterLogic.js'
 import { createReplayEntityReference, createReplayUnitReference, recordReplayCommand } from '../replaySystem.js'
 import { getClosestEnemyFactory } from './enemyUtils.js'
+import { ensureAdvancedForcePreference } from './advancedForcePreference.js'
 
 const AI_SELL_PRIORITY = [
   'turretGunV1',
@@ -50,6 +51,8 @@ const AI_SELL_PRIORITY_MAP = AI_SELL_PRIORITY.reduce((acc, type, index) => {
 const PROTECTED_AI_BUILDINGS = new Set(['constructionYard', 'oreRefinery'])
 const ENEMY_HARVESTER_STUCK_SCAN_INTERVAL = 60000
 const ENEMY_HARVESTER_STUCK_MOVEMENT_THRESHOLD = 8
+
+export { ensureAdvancedForcePreference }
 
 function recordAiReplayCommand(playerId, command, metadata = {}) {
   recordReplayCommand({
@@ -475,6 +478,8 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     const totalTanks = aiTanks.length + tanksInProduction
     const completedAiApaches = units.filter(u => u.owner === aiPlayerId && u.type === 'apache' && u.health > 0)
     const completedAiDestroyers = units.filter(u => u.owner === aiPlayerId && u.type === 'destroyer' && u.health > 0)
+    const completedAiJets = units.filter(u => u.owner === aiPlayerId && (u.type === 'f22Raptor' || u.type === 'f35') && u.health > 0)
+    const advancedForcePreference = ensureAdvancedForcePreference(gameState, aiPlayerId)
 
     const REQUIRED_HARVESTERS = 4
     const harvesterGoalMet = aiHarvesters.length >= REQUIRED_HARVESTERS
@@ -566,6 +571,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       radarStations.length > 0 &&
       helipads.length > 0 &&
       completedAiApaches.length > 0 &&
+      advancedForcePreference === 'naval-first' &&
       shipyards.length === 0 &&
       aiFactory.budget >= buildingData.shipyard.cost
     ) {
@@ -575,11 +581,32 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       radarStations.length > 0 &&
       shipyards.length > 0 &&
       completedAiDestroyers.length > 0 &&
+      advancedForcePreference === 'naval-first' &&
       airstrips.length === 0 &&
       aiFactory.budget >= buildingData.airstrip.cost
     ) {
       buildingType = 'airstrip'
       cost = buildingData.airstrip.cost
+    } else if (
+      radarStations.length > 0 &&
+      helipads.length > 0 &&
+      completedAiApaches.length > 0 &&
+      advancedForcePreference === 'air-first' &&
+      airstrips.length === 0 &&
+      aiFactory.budget >= buildingData.airstrip.cost
+    ) {
+      buildingType = 'airstrip'
+      cost = buildingData.airstrip.cost
+    } else if (
+      radarStations.length > 0 &&
+      airstrips.length > 0 &&
+      completedAiJets.length > 0 &&
+      advancedForcePreference === 'air-first' &&
+      shipyards.length === 0 &&
+      aiFactory.budget >= buildingData.shipyard.cost
+    ) {
+      buildingType = 'shipyard'
+      cost = buildingData.shipyard.cost
     } else if (turrets.length < 3) {
       // Basic defense: choose turret based on budget
       const allowTurretGun = turretGunCount < 2 || totalTanks >= 4
@@ -894,6 +921,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const aiAmmoTrucks = units.filter(u => u.owner === aiPlayerId && u.type === 'ammunitionTruck')
       const aiApaches = units.filter(u => u.owner === aiPlayerId && u.type === 'apache' && u.health > 0)
       const aiDestroyers = units.filter(u => u.owner === aiPlayerId && u.type === 'destroyer' && u.health > 0)
+      const aiSupplyShips = units.filter(u => u.owner === aiPlayerId && u.type === 'supplyShip' && u.health > 0)
       const aiF22s = units.filter(u => u.owner === aiPlayerId && u.type === 'f22Raptor' && u.health > 0)
       const aiF35s = units.filter(u => u.owner === aiPlayerId && u.type === 'f35' && u.health > 0)
       const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId)
@@ -937,6 +965,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
       const destroyerCapacity = shipyardsForProduction.length * 2
       const needDestroyer = aiApaches.length > 0 && destroyerCapacity > 0 &&
         (aiDestroyers.length + destroyerCountInProduction) < destroyerCapacity
+      const supplyShipCountInProduction = aiFactory.currentlyProducingUnit === 'supplyShip' ? 1 : 0
+      const needSupplyShip = shipyardsForProduction.length > 0 && aiDestroyers.length >= 2 &&
+        (aiSupplyShips.length + supplyShipCountInProduction) < Math.ceil(aiDestroyers.length / 4)
       const multiF22BudgetThreshold = 10000
       const f22PerAirstripTarget = aiFactory.budget > multiF22BudgetThreshold ? 2 : 1
       const f22Capacity = airstripsForProduction.length * f22PerAirstripTarget
@@ -969,9 +1000,11 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
         unitType = 'apache'
       } else if (needDestroyer && aiFactory.budget >= getUnitCost('destroyer')) {
         unitType = 'destroyer'
-      } else if (needF22 && aiDestroyers.length > 0 && aiFactory.budget >= getUnitCost('f22Raptor')) {
+      } else if (needSupplyShip && aiFactory.budget >= getUnitCost('supplyShip')) {
+        unitType = 'supplyShip'
+      } else if (needF22 && (ensureAdvancedForcePreference(gameState, aiPlayerId) === 'air-first' || aiDestroyers.length > 0) && aiFactory.budget >= getUnitCost('f22Raptor')) {
         unitType = 'f22Raptor'
-      } else if (needF35 && aiDestroyers.length > 0 && aiFactory.budget >= getUnitCost('f35')) {
+      } else if (needF35 && (ensureAdvancedForcePreference(gameState, aiPlayerId) === 'air-first' || aiDestroyers.length > 0) && aiFactory.budget >= getUnitCost('f35')) {
         unitType = 'f35'
       } else {
         // Check if we need recovery tanks based on combat unit ratio
@@ -1061,7 +1094,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
             gameState[lastProductionKey] = now
             return
           }
-        } else if (unitType === 'destroyer') {
+        } else if (unitType === 'destroyer' || unitType === 'supplyShip') {
           if (shipyardsForProduction.length > 0) {
             const shipyardIndexKey = `next${aiPlayerId}ShipyardIndex`
             gameState[shipyardIndexKey] = gameState[shipyardIndexKey] ?? 0

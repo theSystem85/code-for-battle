@@ -599,6 +599,7 @@ function buildSaveObject(label) {
       serialized.pendingLoadUnitIds = [...(u.pendingLoadUnitIds || [])]
       serialized.embarkedUnitTypes = [...(u.embarkedUnitTypes || [])]
       serialized.pendingUnloadTile = u.pendingUnloadTile || null
+      serialized.transportOperation = u.transportOperation ? { ...u.transportOperation } : null
     }
 
     if (u.type === 'aircraftCarrier') {
@@ -640,6 +641,7 @@ function buildSaveObject(label) {
     }
 
     if (u.embarkedOnId) serialized.embarkedOnId = u.embarkedOnId
+    if (u.transportTransfer) serialized.transportTransfer = { ...u.transportTransfer }
 
     if (u.type === 'f22Raptor' || u.type === 'f35') {
       serialized.f22State = u.f22State

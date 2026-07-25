@@ -182,7 +182,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             const unit = mainUnits.find(u => u.id === unitId)
             if (unit) {
               // Verify ownership before applying command
-              if (unit.owner === partyId) {
+              if (unit.owner === partyId && !unit.transportOperation && !unit.transportTransfer) {
                 // Set movement target in TILE coordinates - the movement system will handle pathfinding
                 unit.moveTarget = { x: tileX, y: tileY }
                 unit.attackTarget = null

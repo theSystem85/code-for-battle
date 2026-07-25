@@ -60,6 +60,7 @@ export class CursorManager {
     this.blockedHarvesterOreLevel = null
     this.isOverFleetBoardingTarget = false
     this.isOverBlockedFleetBoardingTarget = false
+    this.isOverFleetDisembarkTarget = false
     this.rangeCursorElements = this.createRangeCursorElements()
   }
 
@@ -511,6 +512,12 @@ export class CursorManager {
       )
       this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
     }
+
+    this.isOverFleetDisembarkTarget = selectedTransports.some(transport => (transport.embarkedUnitIds?.length || 0) > 0) &&
+      hoveredTile &&
+      (hoveredTile.type === 'land' || hoveredTile.type === 'street') &&
+      !hoveredTile.building &&
+      !hoveredTile.seedCrystal
 
     const selectedSupportOnlyOnAirstrip =
       selectedUnits.length > 0 &&
@@ -1068,7 +1075,7 @@ export class CursorManager {
         return
       }
 
-      if (this.isOverFleetBoardingTarget) {
+      if (this.isOverFleetBoardingTarget || this.isOverFleetDisembarkTarget) {
         setMoveIntoCursor()
         return
       }

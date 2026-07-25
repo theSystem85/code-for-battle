@@ -107,7 +107,7 @@ describe('UnitRenderer ammo HUD consistency', () => {
       embarkedUnitTypes: ['tank_v1', 'ambulance', 'tank_v1']
     }
 
-    expect(renderer.getHudAbsoluteTooltipText(ferry, 'cargo')).toBe('loaded 3/10 • 1× ambulance, 2× tank-v1')
+    expect(renderer.getHudAbsoluteTooltipText(ferry, 'cargo')).toBe('loaded 3/10\n1× ambulance\n2× tank-v1')
   })
 
   it('uses F22 rocketAmmo for the selected ammo bar even while parked on an airstrip', () => {

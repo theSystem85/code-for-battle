@@ -7,6 +7,7 @@ import {
 import { gameState } from '../../src/gameState.js'
 import { selectedUnits, getKeyboardHandler } from '../../src/inputHandler.js'
 import { fireBullet } from '../../src/game/bulletSystem.js'
+import { handleTankFiring } from '../../src/game/unitCombat/firingHandlers.js'
 
 // Mock dependencies
 vi.mock('../../src/config.js', () => ({
@@ -41,6 +42,10 @@ vi.mock('../../src/inputHandler.js', () => ({
 
 vi.mock('../../src/game/bulletSystem.js', () => ({
   fireBullet: vi.fn()
+}))
+
+vi.mock('../../src/game/unitCombat/firingHandlers.js', () => ({
+  handleTankFiring: vi.fn(() => true)
 }))
 
 vi.mock('../../src/rendering/apacheImageRenderer.js', () => ({
@@ -402,6 +407,94 @@ describe('remoteControl.js', () => {
       expect(fireBullet).toHaveBeenCalled()
 
       nowSpy.mockRestore()
+    })
+  })
+
+  describe('naval controls', () => {
+    it('drives every ship type forward and turns it with angular inertia', () => {
+      const shipTypes = [
+        'destroyer',
+        'supplyShip',
+        'hovercraft',
+        'vehicleFerry',
+        'aircraftCarrier',
+        'navalMineLayer',
+        'battleship',
+        'submarine'
+      ]
+      mockMapGrid.forEach(row => row.forEach(tile => { tile.type = 'water' }))
+      gameState.remoteControl = { forward: 1, backward: 0, turnLeft: 0, turnRight: 1, fire: 0 }
+
+      shipTypes.forEach((type, index) => {
+        const ship = {
+          id: `ship-${index}`,
+          type,
+          owner: 'player1',
+          isNaval: true,
+          x: 320,
+          y: 320,
+          direction: 0,
+          speed: 0.5,
+          rotationSpeed: 0.02,
+          path: [{ x: 20, y: 20 }],
+          moveTarget: { x: 20, y: 20 },
+          movement: {
+            rotation: 0,
+            velocity: { x: 0, y: 0 },
+            targetVelocity: { x: 0, y: 0 },
+            isMoving: false
+          }
+        }
+        selectedUnits.splice(0, selectedUnits.length, ship)
+        updateRemoteControlledUnits([ship], mockBullets, mockMapGrid, mockOccupancyMap)
+
+        expect(ship.path).toEqual([])
+        expect(ship.moveTarget).toBeNull()
+        expect(ship.movement.targetVelocity.x).toBeGreaterThan(0)
+        expect(ship.remoteNavalAngularVelocity).toBeGreaterThan(0)
+        expect(ship.remoteNavalAngularVelocity).toBeLessThan(ship.rotationSpeed)
+      })
+    })
+
+    it('fires armed ships straight ahead with space while leaving steering independent', () => {
+      const destroyer = {
+        id: 'remote-destroyer',
+        type: 'destroyer',
+        owner: 'player1',
+        isNaval: true,
+        x: 320,
+        y: 320,
+        direction: 0,
+        speed: 0.42,
+        rotationSpeed: 0.025,
+        ammunition: 10,
+        movement: {
+          rotation: 0,
+          velocity: { x: 0, y: 0 },
+          targetVelocity: { x: 0, y: 0 },
+          isMoving: false
+        }
+      }
+      gameState.remoteControl = { forward: 0, backward: 0, turnLeft: 0, turnRight: 0, fire: 1 }
+      selectedUnits.push(destroyer)
+
+      updateRemoteControlledUnits([destroyer], mockBullets, mockMapGrid, mockOccupancyMap)
+
+      expect(handleTankFiring).toHaveBeenCalledWith(
+        destroyer,
+        expect.objectContaining({ tileX: expect.any(Number), tileY: expect.any(Number) }),
+        mockBullets,
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number),
+        expect.any(Number),
+        'bullet',
+        [destroyer],
+        mockMapGrid,
+        false,
+        expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }),
+        true
+      )
     })
   })
 })

@@ -5,6 +5,7 @@ import { units as mainUnits, factories as mainFactories, mapGrid as mainMapGrid 
 import { collectTransitionsSince, pruneTransitionsUpTo } from './transitionCollector.js'
 import { getSupportedProtocolVersion } from './validate.js'
 import { getLlmQueueState } from './applier.js'
+import { ensureAdvancedForcePreference } from '../ai/advancedForcePreference.js'
 
 function toWorldPosition(x, y) {
   return { x, y, space: 'world' }
@@ -175,6 +176,9 @@ export function exportGameTickInput(state = gameState, sinceTick = 0, options = 
     tick,
     sinceTick,
     verbosity,
+    strategy: {
+      advancedForcePreference: ensureAdvancedForcePreference(state, playerId)
+    },
     meta: {
       tilesX: state.mapTilesX,
       tilesY: state.mapTilesY,

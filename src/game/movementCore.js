@@ -29,10 +29,11 @@ import {
   applyBuildingCollisionResponse,
   trySlideMovement,
   calculateAirCollisionAvoidance,
-  calculateCollisionAvoidance
+  calculateCollisionAvoidance,
+  resolveNavalShoreOverlap
 } from './movementCollision.js'
 import { handleStuckUnit } from './movementStuck.js'
-import { addShipWake } from '../utils/navalUtils.js'
+import { addShipWake, getNavalHullSegment } from '../utils/navalUtils.js'
 
 const MOVEMENT_SOUND_STOP_FADE_SECONDS = 0.08
 const TANK_ENGINE_LOOP_VOLUME = 0.2
@@ -56,6 +57,32 @@ function stopLoopedMovementSound(soundHandle, fadeSeconds = MOVEMENT_SOUND_STOP_
       console.error('Error stopping movement loop sound:', e)
     }
   }
+}
+
+function getWaypointReachDistance(unit, targetX, targetY, centerDistance, isFinalWaypoint) {
+  if (unit.type !== 'aircraftCarrier' || !isFinalWaypoint) return centerDistance
+  const bow = getNavalHullSegment(unit)
+  const targetCenterX = targetX + TILE_SIZE / 2
+  const targetCenterY = targetY + TILE_SIZE / 2
+  return Math.hypot(bow.endX - targetCenterX, bow.endY - targetCenterY)
+}
+
+function settleCarrierAtBowTarget(unit, movement) {
+  unit.path = []
+  unit.moveTarget = null
+  movement.velocity.x = 0
+  movement.velocity.y = 0
+  movement.targetVelocity.x = 0
+  movement.targetVelocity.y = 0
+  movement.currentSpeed = 0
+  movement.isMoving = false
+  movement.rotation = unit.direction || movement.rotation || 0
+  movement.targetRotation = movement.rotation
+  unit.rotation = movement.rotation
+  unit.navalAngularVelocity = 0
+  unit.remoteNavalAngularVelocity = 0
+  unit.transportAngularVelocity = 0
+  unit.isRotating = false
 }
 
 function shouldPlayTankEngineSound(unit, movement) {
@@ -376,6 +403,14 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     const dx = targetX - unit.x
     const dy = targetY - unit.y
     const distance = Math.hypot(dx, dy)
+    const isFinalWaypoint = unit.path.length === 1
+    const reachDistance = getWaypointReachDistance(
+      unit,
+      targetX,
+      targetY,
+      distance,
+      isFinalWaypoint
+    )
 
     const baseReachDistance = TILE_SIZE / 3
     let waypointReachDistance = baseReachDistance
@@ -385,7 +420,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       waypointReachDistance = Math.max(baseReachDistance, friendlyAllowance)
     }
 
-    if (distance < waypointReachDistance) {
+    if (reachDistance < waypointReachDistance) {
       unit.path.shift()
       if (unit.isDodging && unit.localAvoidanceRemainingSteps > 0) {
         unit.localAvoidanceRemainingSteps = Math.max(0, unit.localAvoidanceRemainingSteps - 1)
@@ -408,9 +443,13 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       checkMineDetonation(unit, nextTile.x, nextTile.y, units, gameState?.buildings || [])
 
       if (unit.path.length === 0) {
-        movement.targetVelocity.x = 0
-        movement.targetVelocity.y = 0
-        movement.isMoving = false
+        if (unit.type === 'aircraftCarrier') {
+          settleCarrierAtBowTarget(unit, movement)
+        } else {
+          movement.targetVelocity.x = 0
+          movement.targetVelocity.y = 0
+          movement.isMoving = false
+        }
       }
     } else {
       const dirX = dx / distance
@@ -455,8 +494,11 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
           movement.targetRotation = targetDirection
         }
       } else {
-        movement.targetVelocity.x = dirX * effectiveMaxSpeed
-        movement.targetVelocity.y = dirY * effectiveMaxSpeed
+        const finalNavalApproachScale = unit.isNaval && unit.path.length === 1
+          ? Math.max(0.12, Math.min(1, reachDistance / (TILE_SIZE * 2.5)))
+          : 1
+        movement.targetVelocity.x = dirX * effectiveMaxSpeed * finalNavalApproachScale
+        movement.targetVelocity.y = dirY * effectiveMaxSpeed * finalNavalApproachScale
         movement.isMoving = true
 
         movement.targetRotation = Math.atan2(dy, dx)
@@ -474,6 +516,9 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
   const isF22Airborne = unit.type === 'f22Raptor' && unit.flightState !== 'grounded'
   if (!noAutoRotationTypes.includes(unit.type) && !isF22Airborne) {
     updateUnitRotation(unit)
+    if (unit.isNaval) {
+      resolveNavalShoreOverlap(unit, mapGrid)
+    }
   }
 
   let canAccelerate = true
@@ -488,7 +533,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       shouldDecelerate = !canAccelerate && movement.isMoving
     }
   } else if (unit.type !== 'apache' && unit.type !== 'f35' && !(unit.type === 'f22Raptor' && unit.flightState !== 'grounded')) {
-    const rotationDiff = Math.abs(normalizeAngle(movement.targetRotation - movement.rotation))
+    const currentBodyRotation = unit.isNaval ? (unit.direction || 0) : movement.rotation
+    const rotationDiff = Math.abs(normalizeAngle(movement.targetRotation - currentBodyRotation))
     canAccelerate = rotationDiff < Math.PI / 12
     shouldDecelerate = !canAccelerate && movement.isMoving
   }
@@ -507,12 +553,12 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   let accelRate
   if (shouldDecelerate || !movement.isMoving) {
-    accelRate = MOVEMENT_CONFIG.DECELERATION
+    accelRate = unit.isNaval ? MOVEMENT_CONFIG.DECELERATION * 0.32 : MOVEMENT_CONFIG.DECELERATION
   } else if (canAccelerate && movement.isMoving) {
     if (unit.type === 'ambulance') {
       accelRate = MOVEMENT_CONFIG.ACCELERATION * 0.25
     } else {
-      accelRate = MOVEMENT_CONFIG.ACCELERATION
+      accelRate = unit.isNaval ? MOVEMENT_CONFIG.ACCELERATION * 0.24 : MOVEMENT_CONFIG.ACCELERATION
       if (unit.accelerationMultiplier) {
         accelRate *= unit.accelerationMultiplier
       }
@@ -760,6 +806,12 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
 function updateUnitRotation(unit) {
   const movement = unit.movement
+
+  if (unit.isNaval) {
+    movement.rotation = unit.direction || movement.rotation || 0
+    unit.rotation = movement.rotation
+    return
+  }
 
   const rotationDiff = normalizeAngle(movement.targetRotation - movement.rotation)
 

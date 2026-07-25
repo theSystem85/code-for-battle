@@ -93,6 +93,28 @@ describe('llmStrategicPolicy', () => {
 
     expect(phases.slice(0, 5)).toEqual(['helipad', 'apache', 'shipyard', 'destroyer', 'destroyer'])
   })
+  it('reverses the advanced branches for an air-first party', () => {
+    const input = createCompactInput({
+      playerId: 'player3',
+      economy: { money: 50000, harvesters: { total: 4 } },
+      advancedForcePreference: 'air-first',
+      baseStatus: {
+        ownedBuildingCounts: {
+          powerPlant: 2, oreRefinery: 2, vehicleFactory: 1, radarStation: 1,
+          vehicleWorkshop: 1, ammunitionFactory: 1, hospital: 1, gasStation: 1,
+          turretGunV1: 2, rocketTurret: 1, artilleryTurret: 1
+        }
+      },
+      productionOptions: {
+        availableBuildings: [{ type: 'helipad' }, { type: 'shipyard' }, { type: 'airstrip' }],
+        availableUnits: [{ type: 'apache' }, { type: 'destroyer' }, { type: 'f22Raptor' }]
+      }
+    })
+    const prioritized = prioritizeEconomyActions({ actions: [] }, input)
+    const phases = prioritized.actions.map(action => action.buildingType || action.unitType)
+
+    expect(phases.slice(0, 5)).toEqual(['helipad', 'apache', 'airstrip', 'f22Raptor', 'shipyard'])
+  })
   it('injects a harvester before non-economy spending when the economy is unstable', () => {
     const input = createCompactInput()
     const output = {

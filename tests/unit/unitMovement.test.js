@@ -559,6 +559,40 @@ describe('unitMovement.js', () => {
       expect(unit.direction).toBeDefined()
     })
 
+    it('settles naval rotation at a negative target heading and clears angular velocity after movement', () => {
+      const unit = {
+        id: 'destroyer-rotation',
+        type: 'destroyer',
+        isNaval: true,
+        health: 100,
+        x: 5 * 32,
+        y: 5 * 32,
+        tileX: 5,
+        tileY: 5,
+        direction: 0,
+        path: [{ x: 5, y: 1 }],
+        rotationSpeed: 0.1,
+        movement: {}
+      }
+
+      for (let frame = 0; frame < 80; frame++) {
+        updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, frame * 16)
+      }
+
+      expect(unit.direction).toBeCloseTo(-Math.PI / 2, 2)
+      expect(unit.navalAngularVelocity).toBe(0)
+      expect(unit.isRotating).toBe(false)
+
+      unit.path = []
+      const settledDirection = unit.direction
+      unit.navalAngularVelocity = -0.02
+      updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, 2000)
+
+      expect(unit.direction).toBe(settledDirection)
+      expect(unit.navalAngularVelocity).toBe(0)
+      expect(unit.isRotating).toBe(false)
+    })
+
     it('should handle howitzer rotation locked to body', () => {
       const unit = {
         health: 100,

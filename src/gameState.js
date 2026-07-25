@@ -3,6 +3,7 @@ import { DEFAULT_MAP_TILES_X, DEFAULT_MAP_TILES_Y } from './config.js'
 
 export const gameState = {
   money: 12000,
+  startMoney: 12000,
   gameTime: 0,
   frameCount: 0, // Add frame counter for milestone checking
   wins: 0,

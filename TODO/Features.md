@@ -402,3 +402,37 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Six-ship naval fleet expansion (2026-07-19): generated map/sidebar assets and completed engine integration for a 4-vehicle fast/light Hovercraft, 10-vehicle slow/armored Vehicle Ferry, realistically scaled Aircraft Carrier with a 4×F22/2×F35 deck and ammo/fuel-only service, dual-role naval Mine Layer/Sweeper plus wider-trigger/wider-blast water mines, independently targetable fore/aft Battleship batteries, and a stealth Submarine with owner-only submerged rendering, proximity detection, animated surfacing, ship-only torpedoes, and Destroyer depth charges. Detailed implementation checklist: `specs/075-naval-fleet-expansion/plan.md`.
 - [x] Naval boarding/HUD/wake follow-up (2026-07-20): add bidirectional move-into cursors and shoreline rendezvous loading for ground vehicles and transports, carrier landing/service commands for F22/F35/Apache, transport cargo-manifest HUD tooltips, no wakes while submarines are submerged, and bow wakes positioned ahead of every ship hull.
 - [x] Naval direct-command priority/disembark follow-up (2026-07-20): direct friendly-unit clicks must trigger transport boarding or carrier recovery before ordinary selection/guard behavior, while group guard remains an AGF-box interaction; land clicks with a loaded transport must approach the coast, unload safely, and order cargo onward to the clicked land destination.
+
+## 2026-07-22 Naval, carrier, AI, and map settings requests
+- [x] Cluster A — finish ferry shoreline operations as one state machine: stop/jitter fix, stern alignment, sequential visible cargo tweening, and movement lock.
+- [x] Cluster B — finish carrier deck operations as continuous eased approach, roll, taxi, parking, launch-taxi, and takeoff phases.
+- [x] Cluster C — finish naval motion as eased translation/rotation plus quadtree-backed oriented hull/shore collision.
+- [x] Cluster D — finish enemy naval behavior as persisted 50/50 force preference, active assault targeting, and supply-ship/Shipyard recovery logistics.
+- [x] Add start money as a configurable map setting and apply it to all parties.
+- [x] Render all non-submarine naval units 50% larger.
+- [x] Render F22/F35 aircraft 25% smaller while parked or operating on a carrier deck or Airstrip, with altitude-driven gradual scaling during landing and takeoff.
+- [x] Show a move-into cursor when a selected loaded ferry hovers over valid land for disembark.
+- [x] Add smooth ferry embark/disembark alignment and visible cargo ramp movement animation before units load/unload.
+- [x] Add smoother carrier landing/takeoff deck animations for jets without rapid position changes.
+- [x] Add AI naval assault behavior so enemy-built ships actively attack human targets and retaliate against valid attackers.
+- [x] Add per-enemy 50/50 naval-first versus air-force-first strategy preference.
+- [x] Add supply-ship retreat/resupply behavior for damaged, ammo-empty, fuel-empty, or crew-depleted ships.
+- [x] Add high-performance naval image-footprint collision against ships and shoreline.
+- [x] Add ship inertia/ease-in/ease-out movement and rotation.
+
+## 2026-07-23 AI modularity, jet deck layout, and transport rendezvous
+
+- [x] Split `enemyUnitBehavior.js` by AI domain so every resulting behavior module stays below 500 lines while retaining the existing public entry point.
+- [x] Move carrier jet parking positions to the opposite side of the flight deck.
+- [x] Use 75% landed jet size on carriers and Airstrips, interpolating continuously to full size as altitude increases during takeoff and landing.
+- [x] Route ferries/hovercraft and cargo to one coastal land rendezvous, align the rendered hull stern exactly to the land/water boundary, and begin boarding only after alignment.
+- [x] Keep cargo under ordinary pathfinding until it reaches its assigned shoreline slot, then rotate it toward the stern before the visible boarding tween and lock commands during transfer.
+
+## 2026-07-23 Carrier strikes and naval remote control
+
+- [x] Place Start Money beside the SSE biome selector on a dedicated two-column, 50/50 map-settings row.
+- [x] Reserve the F35 carrier parking slot before descent and keep rendezvous, vertical landing, and parked coordinates continuous.
+- [x] Gate F22 carrier approach to a stationary carrier within eight tiles; approach from astern, touch down near the rear threshold, turn during deck taxi, and launch from the extreme rear runway point.
+- [x] Add forward/reverse, inertial steering, and forward Space firing to direct control for every naval unit, with weapons limited to armed ship types.
+- [x] Push a rotated large-ship hull back into clear water using a bounded shoreline-overlap correction that only searches when the oriented hull probe intersects land.
+- [x] Keep carriers stationary on attack commands and run persistent multi-target aircraft strike cycles that return, rearm, and relaunch from the originating carrier.

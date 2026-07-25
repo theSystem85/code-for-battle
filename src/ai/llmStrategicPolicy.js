@@ -11,13 +11,21 @@ const BASE_BUILDING_TARGETS = [
   { type: 'rocketTurret', targetCount: 1 },
   { type: 'artilleryTurret', targetCount: 1 }
 ]
-const ADVANCED_FORCE_SEQUENCE = [
+const ADVANCED_FORCE_OPENING = [
   { type: 'build_place', buildingType: 'helipad', targetCount: 1 },
-  { type: 'build_queue', unitType: 'apache', targetCount: 1 },
+  { type: 'build_queue', unitType: 'apache', targetCount: 1 }
+]
+const NAVAL_FIRST_SEQUENCE = [
   { type: 'build_place', buildingType: 'shipyard', targetCount: 1 },
   { type: 'build_queue', unitType: 'destroyer', targetCount: 2 },
   { type: 'build_place', buildingType: 'airstrip', targetCount: 1 },
   { type: 'build_queue', unitType: 'f22Raptor', targetCount: 1 }
+]
+const AIR_FIRST_SEQUENCE = [
+  { type: 'build_place', buildingType: 'airstrip', targetCount: 1 },
+  { type: 'build_queue', unitType: 'f22Raptor', targetCount: 1 },
+  { type: 'build_place', buildingType: 'shipyard', targetCount: 1 },
+  { type: 'build_queue', unitType: 'destroyer', targetCount: 2 }
 ]
 const TARGET_ACTIVE_QUEUE_DEPTH = 5
 const MAX_FORWARD_PLANNING_ACTIONS = 6
@@ -150,7 +158,11 @@ function buildPlanningSteps(input) {
     steps.push({ type: 'build_place', buildingType: type, targetCount })
   })
 
-  steps.push(...ADVANCED_FORCE_SEQUENCE)
+  const explicitPreference = input?.strategy?.advancedForcePreference || input?.advancedForcePreference
+  const partyNumber = Number.parseInt(String(input?.playerId || '').match(/\d+/)?.[0] || '0', 10)
+  const preference = explicitPreference || (partyNumber % 2 === 0 ? 'naval-first' : 'air-first')
+  steps.push(...ADVANCED_FORCE_OPENING)
+  steps.push(...(preference === 'air-first' ? AIR_FIRST_SEQUENCE : NAVAL_FIRST_SEQUENCE))
 
   return steps
 }

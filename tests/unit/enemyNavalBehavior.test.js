@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import '../setup.js'
 import { TILE_SIZE } from '../../src/config.js'
-import { updateNavalAIUnit } from '../../src/ai/enemyUnitBehavior.js'
+import { updateNavalAIUnit } from '../../src/ai/enemyNavalBehavior.js'
 
 function createWaterMap(width, height) {
   return Array.from({ length: height }, () =>
@@ -71,5 +71,53 @@ describe('enemy naval behavior', () => {
     const destination = unit.moveTarget
     expect(mapGrid[destination.y][destination.x].type).toBe('water')
     expect(Math.hypot(destination.x - enemyShip.tileX, destination.y - enemyShip.tileY)).toBeLessThanOrEqual(18)
+  })
+
+  it('routes depleted ships to a capable supply ship and resumes combat after replenishment', () => {
+    const mapGrid = createWaterMap(40, 30)
+    const enemyShip = createDestroyer({ id: 'enemy-ship', owner: 'player1', x: 30 * TILE_SIZE, tileX: 30 })
+    const supplyShip = createDestroyer({
+      id: 'supply', type: 'supplyShip', x: 12 * TILE_SIZE, tileX: 12,
+      supplyAmmo: 80, supplyFuel: 1000, supplyRepairTools: 100, supplyCrew: 2
+    })
+    const unit = createDestroyer({
+      ammunition: 0, maxAmmunition: 60, gas: 5000, maxGas: 5000,
+      crew: { driver: true, commander: true, loader: true, gunner: true },
+      navalAttackTarget: enemyShip
+    })
+    const state = { buildings: [], occupancyMap: [] }
+
+    updateNavalAIUnit(unit, [unit, supplyShip, enemyShip], state, mapGrid, 1000, 'player2')
+
+    expect(unit.navalServiceMode).toBe('supply')
+    expect(unit.navalServiceSupplierId).toBe(supplyShip.id)
+    expect(unit.allowedToAttack).toBe(false)
+    expect(unit.path.length).toBeGreaterThan(0)
+
+    unit.ammunition = 60
+    updateNavalAIUnit(unit, [unit, supplyShip, enemyShip], state, mapGrid, 2000, 'player2')
+
+    expect(unit.navalServiceMode).toBeNull()
+    expect(unit.navalAttackTarget).toBe(enemyShip)
+    expect(unit.allowedToAttack).toBe(true)
+  })
+
+  it('deploys supply ships toward needy fleet members without acquiring attack targets', () => {
+    const mapGrid = createWaterMap(40, 30)
+    const supplyShip = createDestroyer({
+      id: 'supply', type: 'supplyShip', x: 5 * TILE_SIZE, tileX: 5,
+      supplyAmmo: 80, maxSupplyAmmo: 80, supplyFuel: 1000, maxSupplyFuel: 1000,
+      supplyRepairTools: 100, maxSupplyRepairTools: 100, supplyCrew: 2, maxSupplyCrew: 2
+    })
+    const needyShip = createDestroyer({
+      id: 'needy', x: 25 * TILE_SIZE, tileX: 25,
+      ammunition: 0, maxAmmunition: 60
+    })
+
+    updateNavalAIUnit(supplyShip, [supplyShip, needyShip], { buildings: [], occupancyMap: [] }, mapGrid, 1000, 'player2')
+
+    expect(supplyShip.allowedToAttack).toBe(false)
+    expect(supplyShip.navalAttackTarget).toBeNull()
+    expect(supplyShip.path.length).toBeGreaterThan(0)
   })
 })

@@ -567,7 +567,7 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
   if (!unit.target || unit.target.health <= 0 || ammoRemaining <= 0 || fuelRatio <= 0.18) {
     unit.volleyState = null
     const alreadyLanding = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.flightPlan?.mode === 'airstrip')
-    if (!alreadyLanding && (ammoRemaining <= 0 || fuelRatio <= 0.18 || unit.autoReturnToHelipadOnTargetLoss)) {
+    if (!unit.homeCarrierId && !alreadyLanding && (ammoRemaining <= 0 || fuelRatio <= 0.18 || unit.autoReturnToHelipadOnTargetLoss)) {
       const padInfo = findNearestLandingPadForF35(unit, units)
       if (padInfo) {
         initiateF35PadReturn(unit, padInfo)
