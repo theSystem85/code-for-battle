@@ -8,8 +8,15 @@ import {
 import { gameState } from '../gameState.js'
 import { removeUnitOccupancy } from '../units.js'
 import { getBuildingIdentifier } from '../utils.js'
+import { gameRandom } from '../utils/gameRandom.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles, isWaterPassableTile } from '../utils/navalUtils.js'
-import { getNavalBatteryWorldPoint } from '../rendering/navalFleetImageRenderer.js'
+import {
+  BATTLESHIP_TURRET_NAMES,
+  ensureBattleshipTurrets,
+  getBattleshipTurretWorldPoint,
+  selectBattleshipTurret
+} from './battleshipTurrets.js'
+import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 import {
   clearWaterMineSafely,
   deployWaterMine,
@@ -972,44 +979,40 @@ function updateCarrier(carrier, units, now, delta) {
 export function setBattleshipTarget(ship, target) {
   if (ship?.type !== 'battleship' || !target || target.health <= 0) return false
   if (target.type === 'submarine' && target.depthState !== 'surfaced') return false
-  ship.batteries = ship.batteries || { fore: {}, aft: {} }
-  if (ship.selectedBattery === 'fore' || ship.selectedBattery === 'aft') {
-    ship.batteries[ship.selectedBattery].targetId = target.id
+  ensureBattleshipTurrets(ship)
+  if (BATTLESHIP_TURRET_NAMES.includes(ship.selectedTurret) && ship.batteries[ship.selectedTurret].enabled !== false) {
+    ship.batteries[ship.selectedTurret].targetId = target.id
   } else {
-    ship.batteries.fore.targetId = target.id
-    ship.batteries.aft.targetId = target.id
+    BATTLESHIP_TURRET_NAMES.forEach(name => {
+      ship.batteries[name].targetId = target.id
+    })
     ship.target = target
+    ship.lastHullTargetId = target.id
   }
   return true
 }
 
 export function selectBattleshipBattery(ship, worldX, worldY) {
-  if (ship?.type !== 'battleship') return null
-  const center = centerOf(ship)
-  const dx = worldX - center.x
-  const dy = worldY - center.y
-  const longitudinal = dx * Math.cos(ship.direction || 0) + dy * Math.sin(ship.direction || 0)
-  ship.selectedBattery = Math.abs(longitudinal) < TILE_SIZE * 0.6 ? null : (longitudinal > 0 ? 'fore' : 'aft')
-  return ship.selectedBattery
+  return selectBattleshipTurret(ship, worldX, worldY)
 }
 
 function resolveTarget(id, units) {
   return units.find(unit => unit.id === id) || (gameState.buildings || []).find(building => building.id === id)
 }
 
-function fireBattleshipBattery(ship, batteryName, target, bullets, now) {
-  const battery = ship.batteries[batteryName]
-  if (!battery || now - (battery.lastShotTime || 0) < BATTLESHIP_FIRE_COOLDOWN || ship.ammunition < 2) return
-  const spawn = getNavalBatteryWorldPoint(ship, batteryName)
+function fireBattleshipTurret(ship, turretName, target, bullets, now) {
+  const turret = ship.batteries[turretName]
+  if (!turret || turret.enabled === false || now - (turret.lastShotTime || 0) < BATTLESHIP_FIRE_COOLDOWN || ship.ammunition < 2) return
+  const spawn = getBattleshipTurretWorldPoint(ship, turretName)
   const targetCenter = centerOf(target)
   const distance = Math.hypot(targetCenter.x - spawn.x, targetCenter.y - spawn.y)
   if (distance > BATTLESHIP_FIRE_RANGE) return
-  battery.direction = Math.atan2(targetCenter.y - spawn.y, targetCenter.x - spawn.x)
+  turret.direction = Math.atan2(targetCenter.y - spawn.y, targetCenter.x - spawn.x)
   for (const lateral of [-4, 4]) {
     bullets.push({
-      id: `${ship.id}-${batteryName}-${now}-${lateral}`,
-      x: spawn.x + Math.cos(battery.direction + Math.PI / 2) * lateral,
-      y: spawn.y + Math.sin(battery.direction + Math.PI / 2) * lateral,
+      id: `${ship.id}-${turretName}-${now}-${lateral}`,
+      x: spawn.x + Math.cos(turret.direction + Math.PI / 2) * lateral,
+      y: spawn.y + Math.sin(turret.direction + Math.PI / 2) * lateral,
       startX: spawn.x,
       startY: spawn.y,
       dx: targetCenter.x - spawn.x,
@@ -1030,23 +1033,57 @@ function fireBattleshipBattery(ship, batteryName, target, bullets, now) {
     })
   }
   ship.ammunition -= 2
-  battery.lastShotTime = now
+  turret.lastShotTime = now
   ship.muzzleFlashStartTime = now
 }
 
-function updateBattleship(ship, units, bullets, now) {
+function getDisabledTurretCountForHealth(ship) {
+  const healthRatio = Math.max(0, ship.health) / Math.max(1, ship.maxHealth || ship.health || 1)
+  if (healthRatio < 0.2) return 4
+  if (healthRatio < 0.4) return 3
+  if (healthRatio < 0.6) return 2
+  if (healthRatio < 0.8) return 1
+  return 0
+}
+
+function updateBattleshipTurretDamage(ship, state, now) {
+  ensureBattleshipTurrets(ship)
+  const desiredDisabledCount = getDisabledTurretCountForHealth(ship)
+
+  while (ship.turretDamageOrder.length < desiredDisabledCount) {
+    const candidates = BATTLESHIP_TURRET_NAMES.filter(name => ship.batteries[name].enabled !== false)
+    if (!candidates.length) break
+    const selectedIndex = Math.floor(gameRandom() * candidates.length)
+    const turretName = candidates[selectedIndex]
+    ship.batteries[turretName].enabled = false
+    ship.turretDamageOrder.push(turretName)
+    if (ship.selectedTurret === turretName) ship.selectedTurret = null
+    const point = getBattleshipTurretWorldPoint(ship, turretName)
+    spawnDestructionExplosion(state, point.x, point.y, { startTime: now, duration: 720, scale: 0.58 })
+  }
+
+  while (ship.turretDamageOrder.length > desiredDisabledCount) {
+    const turretName = ship.turretDamageOrder.pop()
+    if (ship.batteries[turretName]) ship.batteries[turretName].enabled = true
+  }
+}
+
+function updateBattleship(ship, units, bullets, state, now) {
+  ensureBattleshipTurrets(ship)
+  updateBattleshipTurretDamage(ship, state, now)
   if (ship.target?.health > 0 && ship.lastHullTargetId !== ship.target.id) {
-    ship.batteries.fore.targetId = ship.target.id
-    ship.batteries.aft.targetId = ship.target.id
+    BATTLESHIP_TURRET_NAMES.forEach(name => {
+      ship.batteries[name].targetId = ship.target.id
+    })
     ship.lastHullTargetId = ship.target.id
   }
-  for (const batteryName of ['fore', 'aft']) {
-    const target = resolveTarget(ship.batteries?.[batteryName]?.targetId, units)
+  for (const turretName of BATTLESHIP_TURRET_NAMES) {
+    const target = resolveTarget(ship.batteries[turretName].targetId, units)
     if (!target || target.health <= 0 || (target.type === 'submarine' && target.depthState !== 'surfaced')) {
-      if (ship.batteries?.[batteryName]) ship.batteries[batteryName].targetId = null
+      ship.batteries[turretName].targetId = null
       continue
     }
-    fireBattleshipBattery(ship, batteryName, target, bullets, now)
+    fireBattleshipTurret(ship, turretName, target, bullets, now)
   }
 }
 
@@ -1186,7 +1223,7 @@ export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
       if (['turning_offshore', 'reversing_to_shore'].includes(unit.transportOperation?.phase)) addShipWake(unit, state, now)
     }
     else if (unit.type === 'aircraftCarrier') updateCarrier(unit, units, now, delta)
-    else if (unit.type === 'battleship') updateBattleship(unit, units, bullets, now)
+    else if (unit.type === 'battleship') updateBattleship(unit, units, bullets, state, now)
     else if (unit.type === 'submarine') updateSubmarine(unit, units, bullets, now)
     else if (unit.type === 'navalMineLayer') updateNavalMineLayer(unit, mapGrid, now)
   })

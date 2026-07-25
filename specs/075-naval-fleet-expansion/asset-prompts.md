@@ -27,3 +27,19 @@ Each sidebar prompt was the following shared prompt plus its unit clause:
 - Naval Mine Layer: `Modern mine-layer/mine-countermeasure vessel with visible aft mine rails, sweep gear, cranes, and sonar equipment.`
 - Battleship: `Modernized battleship prominently showing two heavy fore mounts and two heavy aft mounts, with imposing armor and radar systems.`
 - Submarine: `Modern attack submarine running surfaced through the ocean, with a dark streamlined hull and prominent sail.`
+
+## 2026-07-25 battleship correction prompts
+
+The correction used built-in image generation in precise-object-edit mode. The existing battleship map image was the map edit target. The existing battleship sidebar image was the sidebar edit target, and the corrected map source was a supporting turret-layout reference.
+
+### Corrected map prompt
+
+> Use case: precise-object-edit. Asset type: top-down RTS map unit sprite source. Image 1 is the edit target and exact style, silhouette, materials, lighting, scale, and perspective reference. Change only the battleship's main gun configuration. The finished ship must have exactly four main turrets total: exactly two turrets on the forward/bow half and exactly two turrets on the rear/stern half. Every one of the four turrets must have exactly two clearly separated gun barrels, never three. Use a perfectly flat solid #00ff00 chroma-key background for local background removal. Preserve the existing realistic, weathered gray naval RTS sprite style, strict vertical top-down orthographic perspective, centered south-facing ship, full hull silhouette, proportions, padding, deck equipment, shading, wear, palette, and camera angle. The four mounts must be visually distinct enough to click separately. No additional main turrets, ocean, wake, scene elements, shadow, text, watermark, cropping, triple-barrel turret, or angled/isometric perspective.
+
+The accepted source was alpha-matted with border auto-key sampling, soft matte, thresholds 12/80, and despill, then resized and encoded as 256×256 WebP with alpha quality 100 and image quality 90.
+
+### Corrected sidebar prompt
+
+> Use case: precise-object-edit. Asset type: RTS sidebar production/build image. Image 1 is the edit target and exact cinematic ocean style, lighting, framing, ship identity, and elevated three-quarter perspective reference. Image 2 is the authoritative battleship turret-layout reference: exactly four main mounts, each with exactly two barrels. Replace only the main-gun arrangement in Image 1 so this same battleship visibly carries exactly four main turrets total: exactly two on the forward/bow section and exactly two on the aft/stern section. Every turret must have exactly two clearly visible gun barrels. Preserve Image 1's cool gray open ocean, cloudy daylight, horizon, subtle wake, cinematic atmosphere, full-vessel framing, square crop, scale, high three-quarter viewpoint, hull, superstructure, radar/masts, deck material, palette, lighting, and identity. Make all four mounts unambiguous. No triple-barrel turret, fifth turret, hidden mount, changed camera/weather, extra ship, text, insignia, UI, border, or watermark.
+
+The accepted source was resized and encoded as 512×512 WebP at image quality 90.

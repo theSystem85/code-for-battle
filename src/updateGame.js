@@ -40,7 +40,7 @@ import { updateRecoveryTankLogic } from './game/recoveryTankSystem.js'
 import { updateMines } from './game/mineSystem.js'
 import { updateMineLayerBehavior } from './game/mineLayerBehavior.js'
 import { updateMineSweeperBehavior } from './game/mineSweeperBehavior.js'
-import { updateNavalFleet } from './game/navalFleetSystem.js'
+import { setBattleshipTarget, updateNavalFleet } from './game/navalFleetSystem.js'
 import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.js'
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
@@ -211,7 +211,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           }
         } else if (cmd.commandType === COMMAND_TYPES.UNIT_ATTACK && cmd.payload) {
           // Apply unit attack command from client
-          const { unitIds, targetId, targetX, targetY } = cmd.payload
+          const { unitIds, targetId, targetX, targetY, battleshipTurretSelections = {} } = cmd.payload
           const partyId = cmd.sourcePartyId
           window.logger('[Host] Processing UNIT_ATTACK from party:', partyId, 'unitIds:', unitIds, 'targetId:', targetId)
           const unitRefs = createReplayUnitReferences(unitIds)
@@ -227,7 +227,12 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
                              factories.find(f => f.id === targetId)
               if (target) {
                 // Combat system uses unit.target, not unit.attackTarget
-                unit.target = target
+                if (unit.type === 'battleship') {
+                  unit.selectedTurret = battleshipTurretSelections[unit.id] || null
+                  setBattleshipTarget(unit, target)
+                } else {
+                  unit.target = target
+                }
                 unit.moveTarget = null
                 unit.guardPosition = null
                 unit.path = null // Clear path so unit stops and attacks
@@ -252,6 +257,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               unitIds,
               unitRefs,
               command: 'attack',
+              battleshipTurretSelections,
               ...(targetId ? { targetId } : {}),
               ...(replayTarget ? { targetRef: createReplayEntityReference(replayTarget) } : {}),
               ...(targetX !== undefined && targetY !== undefined

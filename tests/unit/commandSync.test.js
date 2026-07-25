@@ -232,6 +232,20 @@ describe('command sync helpers', () => {
     })
   })
 
+  it('includes per-battleship turret selections only when provided', () => {
+    expect(commandSync.createAttackCommand(
+      ['battle-1'],
+      'target-9',
+      'unit',
+      { 'battle-1': 'foreInner' }
+    )).toEqual({
+      unitIds: ['battle-1'],
+      targetId: 'target-9',
+      targetType: 'unit',
+      battleshipTurretSelections: { 'battle-1': 'foreInner' }
+    })
+  })
+
   it('creates building placement payloads', () => {
     expect(commandSync.createBuildingPlaceCommand('powerPlant', 8, 9)).toEqual({
       buildingType: 'powerPlant',
@@ -807,6 +821,20 @@ describe('advanced command synchronization', () => {
     const payload = send.mock.calls[0][0].payload
     expect(payload.targetType).toBe('unit')
     expect(payload.targetId).toBe('unit-1')
+  })
+
+  it('broadcastUnitAttack synchronizes a selected battleship turret', () => {
+    const send = vi.fn()
+    gameState.multiplayerSession = { localRole: 'client', isRemote: true }
+    vi.mocked(getActiveRemoteConnection).mockReturnValue({ send })
+
+    commandSync.broadcastUnitAttack([
+      { id: 'battle-1', type: 'battleship', owner: 'player1', selectedTurret: 'aftOuter' }
+    ], { id: 'unit-1' })
+
+    expect(send.mock.calls[0][0].payload.battleshipTurretSelections).toEqual({
+      'battle-1': 'aftOuter'
+    })
   })
 
   it('processPendingRemoteCommands returns empty when queue is empty', () => {

@@ -1827,7 +1827,9 @@ export class UnitRenderer {
         if (unit.type === 'battleship' || unit.type === 'submarine') {
           this.renderNavalWeaponRange(ctx, unit, centerX, centerY)
         }
-        this.renderSelection(ctx, unit, centerX, centerY)
+        if (unit.type !== 'battleship' || !unit.selectedTurret) {
+          this.renderSelection(ctx, unit, centerX, centerY)
+        }
         this.renderAlertMode(ctx, unit, centerX, centerY)
         return
       }

@@ -6,6 +6,7 @@ import { cancelRetreatForUnits } from '../../behaviours/retreat.js'
 import { broadcastUnitAttack } from '../../network/gameCommandSync.js'
 import { clearTankerKamikazeState } from '../../game/tankerTruckUtils.js'
 import { issueTankerKamikazeCommand, clearAttackGroupState } from './utilityQueue.js'
+import { setBattleshipTarget } from '../../game/navalFleetSystem.js'
 
 export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isForceAttack = false, skipQueueClear = false) {
   const now = performance.now()
@@ -34,9 +35,18 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
   ) - TILE_SIZE
 
   const tankerUnits = selectedUnits.filter(unit => unit.type === 'tankerTruck')
-  const combatUnits = selectedUnits.filter(unit => unit.type !== 'tankerTruck')
+  const battleshipUnits = selectedUnits.filter(unit => unit.type === 'battleship')
+  const combatUnits = selectedUnits.filter(unit => unit.type !== 'tankerTruck' && unit.type !== 'battleship')
 
   const formationPositions = calculateSemicircleFormation(combatUnits, target, safeAttackDistance)
+
+  battleshipUnits.forEach(unit => {
+    unit.canFire = true
+    unit.path = []
+    unit.moveTarget = null
+    unit.forcedAttack = isForceAttack
+    setBattleshipTarget(unit, target)
+  })
 
   combatUnits.forEach((unit, index) => {
     unit.canFire = true

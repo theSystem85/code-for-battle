@@ -184,10 +184,13 @@ export function broadcastUnitAttack(units, target) {
 
   const targetType = target.isBuilding ? 'building' : 'unit'
   const partyId = units[0]?.owner || gameState.humanPlayer
+  const battleshipTurretSelections = Object.fromEntries(units
+    .filter(unit => unit.type === 'battleship')
+    .map(unit => [unit.id, unit.selectedTurret || null]))
 
   broadcastGameCommand(
     COMMAND_TYPES.UNIT_ATTACK,
-    createAttackCommand(unitIds, target.id, targetType),
+    createAttackCommand(unitIds, target.id, targetType, battleshipTurretSelections),
     partyId
   )
 }

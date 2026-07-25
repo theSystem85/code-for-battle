@@ -26,6 +26,12 @@ import {
   updateWaterMines
 } from '../../src/game/waterMineSystem.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles } from '../../src/utils/navalUtils.js'
+import {
+  BATTLESHIP_TURRET_NAMES,
+  createBattleshipTurrets,
+  getBattleshipTurretWorldPoint,
+  selectBattleshipTurret
+} from '../../src/game/battleshipTurrets.js'
 
 function createMap(width = 30, height = 20, type = 'water') {
   return Array.from({ length: height }, () =>
@@ -481,25 +487,87 @@ describe('six-ship naval fleet systems', () => {
     expect(wakeState.shipWakes.some(wake => wake.sourceUnitId === submarine.id)).toBe(false)
   })
 
-  it('lets fore and aft battleship batteries retain and fire at separate targets', () => {
+  it('lets all four battleship turrets be selected, targeted, and fired independently', () => {
     const battleship = {
       ...createShip('battleship', 'battle', 'player1'),
-      selectedBattery: 'fore',
-      batteries: { fore: { lastShotTime: 0 }, aft: { lastShotTime: 0 } }
+      selectedTurret: null,
+      turretDamageOrder: []
     }
-    const foreTarget = createShip('destroyer', 'fore-target', 'player2', 12, 8)
-    const aftTarget = createShip('destroyer', 'aft-target', 'player2', 4, 8)
-    expect(setBattleshipTarget(battleship, foreTarget)).toBe(true)
-    battleship.selectedBattery = 'aft'
-    expect(setBattleshipTarget(battleship, aftTarget)).toBe(true)
+    battleship.batteries = createBattleshipTurrets(battleship)
+    const targets = BATTLESHIP_TURRET_NAMES.map((name, index) =>
+      createShip('destroyer', `${name}-target`, 'player2', 11 + index, 7 + index)
+    )
+
+    BATTLESHIP_TURRET_NAMES.forEach((name, index) => {
+      const point = getBattleshipTurretWorldPoint(battleship, name)
+      expect(selectBattleshipTurret(battleship, point.x, point.y)).toBe(name)
+      expect(setBattleshipTarget(battleship, targets[index])).toBe(true)
+    })
 
     const bullets = []
-    updateNavalFleet([battleship, foreTarget, aftTarget], bullets, createMap(), { occupancyMap: [] }, 4000, 16)
+    updateNavalFleet([battleship, ...targets], bullets, createMap(), { occupancyMap: [], explosions: [] }, 4000, 16)
 
-    expect(battleship.batteries.fore.targetId).toBe(foreTarget.id)
-    expect(battleship.batteries.aft.targetId).toBe(aftTarget.id)
-    expect(bullets.filter(bullet => bullet.id.includes('-fore-'))).toHaveLength(2)
-    expect(bullets.filter(bullet => bullet.id.includes('-aft-'))).toHaveLength(2)
+    BATTLESHIP_TURRET_NAMES.forEach((name, index) => {
+      expect(battleship.batteries[name].targetId).toBe(targets[index].id)
+      expect(bullets.filter(bullet => bullet.id.includes(`-${name}-`))).toHaveLength(2)
+    })
+    expect(bullets).toHaveLength(8)
+  })
+
+  it('assigns a hull-selected battleship target to all four turrets', () => {
+    const battleship = {
+      ...createShip('battleship', 'battle', 'player1'),
+      selectedTurret: null,
+      turretDamageOrder: []
+    }
+    battleship.batteries = createBattleshipTurrets(battleship)
+    const target = createShip('destroyer', 'shared-target', 'player2', 12, 8)
+
+    expect(selectBattleshipTurret(
+      battleship,
+      battleship.x + TILE_SIZE / 2,
+      battleship.y + TILE_SIZE / 2
+    )).toBeNull()
+    expect(setBattleshipTarget(battleship, target)).toBe(true)
+
+    BATTLESHIP_TURRET_NAMES.forEach(name => {
+      expect(battleship.batteries[name].targetId).toBe(target.id)
+    })
+  })
+
+  it('disables a random remaining turret at each 20% damage threshold and restores them in reverse order', () => {
+    const battleship = {
+      ...createShip('battleship', 'battle', 'player1'),
+      selectedTurret: null,
+      turretDamageOrder: []
+    }
+    battleship.batteries = createBattleshipTurrets(battleship)
+    const state = { occupancyMap: [], explosions: [] }
+
+    battleship.health = battleship.maxHealth * 0.79
+    updateNavalFleet([battleship], [], createMap(), state, 1000, 16)
+    expect(battleship.turretDamageOrder).toHaveLength(1)
+    expect(state.explosions).toHaveLength(1)
+    const firstDisabled = battleship.turretDamageOrder[0]
+    expect(battleship.batteries[firstDisabled].enabled).toBe(false)
+
+    battleship.health = battleship.maxHealth * 0.59
+    updateNavalFleet([battleship], [], createMap(), state, 2000, 16)
+    expect(battleship.turretDamageOrder).toHaveLength(2)
+    expect(new Set(battleship.turretDamageOrder).size).toBe(2)
+    expect(state.explosions).toHaveLength(2)
+    const secondDisabled = battleship.turretDamageOrder[1]
+
+    battleship.health = battleship.maxHealth * 0.61
+    updateNavalFleet([battleship], [], createMap(), state, 3000, 16)
+    expect(battleship.turretDamageOrder).toEqual([firstDisabled])
+    expect(battleship.batteries[firstDisabled].enabled).toBe(false)
+    expect(battleship.batteries[secondDisabled].enabled).toBe(true)
+
+    battleship.health = battleship.maxHealth * 0.81
+    updateNavalFleet([battleship], [], createMap(), state, 4000, 16)
+    expect(battleship.turretDamageOrder).toEqual([])
+    expect(BATTLESHIP_TURRET_NAMES.every(name => battleship.batteries[name].enabled)).toBe(true)
   })
 
   it('surfaces gradually before launching a ship-only torpedo', () => {

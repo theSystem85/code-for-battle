@@ -473,6 +473,40 @@ describe('saveGame.js', () => {
       })
     })
 
+    it('should save independent battleship turret targets and damage order', async() => {
+      const { units } = await import('../../src/main.js')
+      units.push({
+        id: 'battle-save-1',
+        type: 'battleship',
+        owner: 'player1',
+        x: 160,
+        y: 192,
+        health: 560,
+        maxHealth: 950,
+        selectedTurret: 'foreInner',
+        turretDamageOrder: ['aftOuter', 'foreOuter'],
+        batteries: {
+          foreOuter: { targetId: 'enemy-1', lastShotTime: 1200, direction: 0.2, enabled: false },
+          foreInner: { targetId: 'enemy-2', lastShotTime: 1300, direction: 0.3, enabled: true },
+          aftInner: { targetId: null, lastShotTime: 0, direction: 3.1, enabled: true },
+          aftOuter: { targetId: 'enemy-3', lastShotTime: 900, direction: 3.2, enabled: false }
+        },
+        path: []
+      })
+
+      saveGameModule.saveGame('BattleshipTurretStateTest')
+
+      const saved = localStorage.getItem('rts_save_BattleshipTurretStateTest')
+      const parsed = JSON.parse(saved)
+      const state = JSON.parse(parsed.state)
+      const savedUnit = state.units.find(unit => unit.id === 'battle-save-1')
+
+      expect(savedUnit.selectedTurret).toBe('foreInner')
+      expect(savedUnit.turretDamageOrder).toEqual(['aftOuter', 'foreOuter'])
+      expect(savedUnit.batteries.foreOuter).toMatchObject({ targetId: 'enemy-1', enabled: false })
+      expect(savedUnit.batteries.foreInner).toMatchObject({ targetId: 'enemy-2', enabled: true })
+    })
+
     it('should save buildings array', async() => {
       const { gameState } = await import('../../src/gameState.js')
       gameState.buildings = [{

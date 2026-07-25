@@ -633,6 +633,11 @@ function executeReplayUnitCommand(command) {
         return true
       }
       if (target) {
+        selectedUnits.forEach(unit => {
+          if (unit.type === 'battleship') {
+            unit.selectedTurret = command.battleshipTurretSelections?.[unit.id] || null
+          }
+        })
         handler.handleAttackCommand(selectedUnits, target, mapGrid, Boolean(command.forceAttack))
         return true
       }

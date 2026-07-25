@@ -625,11 +625,12 @@ function buildSaveObject(label) {
     }
 
     if (u.type === 'battleship') {
-      serialized.selectedBattery = u.selectedBattery || null
-      serialized.batteries = {
-        fore: { ...(u.batteries?.fore || {}) },
-        aft: { ...(u.batteries?.aft || {}) }
-      }
+      serialized.selectedTurret = u.selectedTurret || null
+      serialized.turretDamageOrder = [...(u.turretDamageOrder || [])]
+      serialized.batteries = Object.fromEntries(Object.entries(u.batteries || {}).map(([name, turret]) => [
+        name,
+        { ...turret }
+      ]))
     }
 
     if (u.type === 'submarine') {

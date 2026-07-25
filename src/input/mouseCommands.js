@@ -12,7 +12,6 @@ import { createReplayEntityReference, createReplayUnitReferences, isReplayIntera
 import {
   commandCarrierStrike,
   requestWaterMineAction,
-  setBattleshipTarget,
   tryHandleFleetCommand
 } from '../game/navalFleetSystem.js'
 
@@ -28,6 +27,12 @@ function recordHumanUnitCommand(unitIds, command) {
     ...(unitRefs.length > 0 ? { unitRefs } : {}),
     ...command
   }, { source: 'human' })
+}
+
+function getBattleshipTurretSelections(units) {
+  return Object.fromEntries((units || [])
+    .filter(unit => unit.type === 'battleship')
+    .map(unit => [unit.id, unit.selectedTurret || null]))
 }
 
 
@@ -449,13 +454,12 @@ export function handleStandardCommands(handler, worldX, worldY, selectedUnits, u
       } else {
         const carriers = commandableUnits.filter(unit => unit.type === 'aircraftCarrier')
         carriers.forEach(unit => commandCarrierStrike(unit, target, handler.gameUnits || [], false))
-        const battleships = commandableUnits.filter(unit => unit.type === 'battleship')
-        battleships.forEach(unit => setBattleshipTarget(unit, target))
-        const normalAttackers = commandableUnits.filter(unit => unit.type !== 'aircraftCarrier' && unit.type !== 'battleship' && (unit.type !== 'submarine' || target.isNaval))
+        const normalAttackers = commandableUnits.filter(unit => unit.type !== 'aircraftCarrier' && (unit.type !== 'submarine' || target.isNaval))
         if (normalAttackers.length) unitCommands.handleAttackCommand(normalAttackers, target, mapGrid, false)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
           command: 'attack',
-          targetRef: createReplayEntityReference(target)
+          targetRef: createReplayEntityReference(target),
+          battleshipTurretSelections: getBattleshipTurretSelections(commandableUnits)
         })
       }
     } else {

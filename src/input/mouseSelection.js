@@ -49,6 +49,12 @@ function recordHumanUnitCommand(unitIds, command) {
   }, { source: 'human' })
 }
 
+function getBattleshipTurretSelections(units) {
+  return Object.fromEntries((units || [])
+    .filter(unit => unit.type === 'battleship')
+    .map(unit => [unit.id, unit.selectedTurret || null]))
+}
+
 function recordHumanRallyPointCommand(building, rallyTileX, rallyTileY) {
   const targetRef = createReplayEntityReference(building)
   recordReplayCommand({
@@ -1184,7 +1190,8 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
         unitCommands.handleAttackCommand(commandableUnits, clickedUnit, mapGrid, false)
         recordHumanUnitCommand(commandableUnits.map(unit => unit.id), {
           command: 'attack',
-          targetRef: createReplayEntityReference(clickedUnit)
+          targetRef: createReplayEntityReference(clickedUnit),
+          battleshipTurretSelections: getBattleshipTurretSelections(commandableUnits)
         })
       }
       return
@@ -1193,6 +1200,11 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
 
   if (clickedUnit && !(friendlySelected && clickedIsEnemy)) {
     const clickedIsFriendly = selectionManager.isHumanPlayerUnit(clickedUnit)
+    if (clickedIsFriendly && clickedUnit.type === 'battleship' && clickedUnit.selected &&
+        selectedUnits.length === 1 && !e.shiftKey) {
+      handler.updateAGFCapability(selectedUnits)
+      return
+    }
     if (clickedIsFriendly && friendlySelected && tryHandleDirectFleetInteraction(
       selectedUnits,
       worldX,

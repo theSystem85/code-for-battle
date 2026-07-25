@@ -43,9 +43,12 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 ## Battleship
 
 - Heavy armored combat ship with four long-range heavy-gun mounts: two fore and two aft.
-- Fore and aft batteries can retain and fire on different legal targets simultaneously.
-- The ship body and each battery are independently selectable; commands to a selected battery set only that battery's target, while commands to the selected hull set both batteries.
-- Gun origins rotate with the hull, fire broad ballistic shells, use independent cooldown/ammo state, and remain constrained by each battery's firing arc.
+- Each of the four twin-barrel turrets can retain and fire on a different legal target simultaneously.
+- The ship hull and each turret are independently selectable. Commands to a selected turret set only that turret's target; commands to the selected hull assign the same target to all four turrets.
+- Turret origins rotate with the hull, fire two ballistic shells per salvo, and keep independent target, direction, cooldown, enabled, and selection state.
+- Falling below 80%, 60%, 40%, and 20% hull HP disables one deterministic-random remaining turret at each threshold and spawns an explosion at that turret. Disabled turrets cannot be selected or fired and render a persistent destroyed marker.
+- Repairing the hull above those thresholds re-enables turrets in reverse destruction order until all four are operational above 80% HP.
+- Four-turret targets, damage order, enabled state, and selected-turret commands persist through save/load, replay, and multiplayer state/command synchronization.
 
 ## Submarine and Destroyer depth charges
 
@@ -71,12 +74,13 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 - Select an airborne F22/F35/Apache and click a friendly Aircraft Carrier to recover it; select a parked aircraft and click a destination or enemy to launch it. Hovering a carrier shows move-into while enough weighted deck capacity remains and move-blocked when full. Approaching aircraft reserve their deck capacity immediately.
 - Ship bow wakes originate six pixels beyond the calculated hull endpoint. Submerged submarines emit no wakes and clear any of their still-active wake particles.
 - Select the Naval Mine Layer and force-attack a water tile to deploy a mine. Targeting an occupied water-mine tile switches the same ship into safe clearing mode.
-- Select the Battleship hull to assign both batteries, or click its fore/aft hull region to select and retarget only that battery.
+- Select the Battleship hull to assign all four turrets, or click one of its four turret rings to select and retarget only that mount.
 - Order a Submarine against an enemy ship to begin its timed surfacing sequence and torpedo attack. It automatically submerges after disengaging; nearby enemy Destroyers automatically release delayed depth charges against detected submerged contacts.
 
 ## Verification record
 
 - Added focused naval, cursor, and HUD renderer coverage for balance ratios, bidirectional shoreline transport orders, cargo manifests, weighted F22/F35/Apache carrier reservations, independent battery targets, surfacing/torpedo gating, wake placement/suppression, depth charges, and naval mines.
+- Added four-turret battleship coverage for independent mount selection/targeting/firing, hull-wide target assignment, deterministic-random threshold destruction, turret-local explosion effects, reverse repair restoration, save serialization, and multiplayer command payloads.
 - `npm run lint:fix:changed`: pass.
-- `npm run test:unit`: 150 files and 3,767 tests passed.
+- `npm run test:unit`: 151 files and 3,793 tests passed.
 - `npx vite build`: pass (existing bundle-size/dynamic-import warnings only).

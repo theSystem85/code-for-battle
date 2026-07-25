@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../config.js'
+import { BATTLESHIP_TURRET_NAMES, getBattleshipTurretLocalPoint } from '../game/battleshipTurrets.js'
 import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
 
 const SOUTH_FACING_SOURCE_ANGLE = Math.PI / 2
@@ -90,17 +91,36 @@ export function renderNavalFleetUnit(ctx, unit, centerX, centerY, viewerOwner) {
   }
 
   ctx.drawImage(image, -width / 2, -height / 2, width, height)
+
+  if (unit.type === 'battleship') {
+    BATTLESHIP_TURRET_NAMES.forEach(name => {
+      const point = getBattleshipTurretLocalPoint(name)
+      if (unit.batteries?.[name]?.enabled === false) {
+        ctx.fillStyle = 'rgba(12, 12, 12, 0.82)'
+        ctx.beginPath()
+        ctx.arc(point.x, point.y, TILE_SIZE * 0.3, 0, Math.PI * 2)
+        ctx.fill()
+        ctx.strokeStyle = 'rgba(255, 88, 48, 0.9)'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.moveTo(point.x - 6, point.y - 6)
+        ctx.lineTo(point.x + 6, point.y + 6)
+        ctx.moveTo(point.x + 6, point.y - 6)
+        ctx.lineTo(point.x - 6, point.y + 6)
+        ctx.stroke()
+      }
+    })
+
+    if (unit.selected && unit.selectedTurret && unit.batteries?.[unit.selectedTurret]?.enabled !== false) {
+      const point = getBattleshipTurretLocalPoint(unit.selectedTurret)
+      ctx.strokeStyle = '#ffe46a'
+      ctx.lineWidth = 2.5
+      ctx.beginPath()
+      ctx.arc(point.x, point.y, TILE_SIZE * 0.42, 0, Math.PI * 2)
+      ctx.stroke()
+    }
+  }
+
   ctx.restore()
   return true
-}
-
-export function getNavalBatteryWorldPoint(unit, batteryName) {
-  const direction = unit.direction || unit.rotation || 0
-  const longitudinal = batteryName === 'fore' ? 1.35 : -1.15
-  const centerX = unit.x + TILE_SIZE / 2
-  const centerY = unit.y + TILE_SIZE / 2
-  return {
-    x: centerX + Math.cos(direction) * TILE_SIZE * longitudinal,
-    y: centerY + Math.sin(direction) * TILE_SIZE * longitudinal
-  }
 }

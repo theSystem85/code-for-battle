@@ -30,6 +30,7 @@ import {
   setAirstripSlotOccupant,
   getAirstripRunwayPoints
 } from './utils/airstripUtils.js'
+import { createBattleshipTurrets } from './game/battleshipTurrets.js'
 
 // Add a global variable to track if we've already shown the pathfinding warning
 let pathfindingWarningShown = false
@@ -1170,11 +1171,9 @@ export function createUnit(factory, unitType, x, y, options = {}) {
   }
 
   if (actualType === 'battleship') {
-    unit.selectedBattery = null
-    unit.batteries = {
-      fore: { targetId: null, lastShotTime: 0, direction: unit.direction },
-      aft: { targetId: null, lastShotTime: 0, direction: unit.direction + Math.PI }
-    }
+    unit.selectedTurret = null
+    unit.turretDamageOrder = []
+    unit.batteries = createBattleshipTurrets(unit)
   }
 
   if (actualType === 'submarine') {

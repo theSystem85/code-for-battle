@@ -54,12 +54,16 @@ export function createMoveCommand(unitIds, targetX, targetY) {
  * @param {string} targetType - 'unit' or 'building'
  * @returns {Object}
  */
-export function createAttackCommand(unitIds, targetId, targetType) {
-  return {
+export function createAttackCommand(unitIds, targetId, targetType, battleshipTurretSelections = {}) {
+  const payload = {
     unitIds: Array.isArray(unitIds) ? unitIds : [unitIds],
     targetId,
     targetType
   }
+  if (Object.keys(battleshipTurretSelections).length > 0) {
+    payload.battleshipTurretSelections = battleshipTurretSelections
+  }
+  return payload
 }
 
 /**
