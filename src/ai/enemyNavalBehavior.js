@@ -63,6 +63,13 @@ function findNavalAttackTarget(unit, units, gameState, aiPlayerId) {
   if (unit.lastAttacker?.health > 0 && isEnemyTo(unit.lastAttacker, aiPlayerId)) {
     if (unit.type !== 'submarine' || unit.lastAttacker.isNaval) return unit.lastAttacker
   }
+  if (unit.type === 'destroyer') {
+    const attackingAircraft = units
+      .filter(candidate => candidate?.health > 0 && candidate.isAirUnit && isEnemyTo(candidate, aiPlayerId) &&
+        (candidate.target === unit || candidate.guardTarget === unit || candidate.lastAttacker === unit))
+      .sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y))
+    if (attackingAircraft.length > 0) return attackingAircraft[0]
+  }
   const enemyShips = units
     .filter(candidate => candidate !== unit && candidate.isNaval && candidate.health > 0 && isEnemyTo(candidate, aiPlayerId) && (candidate.type !== 'submarine' || candidate.depthState === 'surfaced'))
     .sort((a, b) => Math.hypot(a.x - unit.x, a.y - unit.y) - Math.hypot(b.x - unit.x, b.y - unit.y))

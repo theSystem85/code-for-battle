@@ -196,7 +196,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
             { x: targetTileX, y: targetTileY },
             mapGrid,
             occupancyMap,
-            unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : { unitOwner: unit.owner }
+            unit.isNaval ? { unitOwner: unit.owner, movementType: unit.type === 'hovercraft' ? 'amphibious' : 'water' } : { unitOwner: unit.owner }
           )
           if (path.length > 1) {
             unit.path = path.slice(1)
@@ -297,7 +297,7 @@ export function updateUnitPathfinding(units, mapGrid, gameState) {
     const isAttackMode = (unit.target && unit.target.health !== undefined) || (unit.attackQueue && unit.attackQueue.length > 0)
     const useOccupancyMap = isAttackMode || distance <= PATHFINDING_THRESHOLD
     const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
-    const pathOptions = unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : { unitOwner: unit.owner }
+    const pathOptions = unit.isNaval ? { unitOwner: unit.owner, movementType: unit.type === 'hovercraft' ? 'amphibious' : 'water' } : { unitOwner: unit.owner }
     const newPath = useOccupancyMap
       ? findPath(startNode, adjustedTarget, mapGrid, occupancyMap, undefined, pathOptions)
       : findPath(startNode, adjustedTarget, mapGrid, null, undefined, pathOptions)
@@ -346,7 +346,7 @@ export function updateSpawnExit(units, factories, mapGrid, occupancyMap) {
             mapGrid,
             occupancyMap,
             undefined,
-            unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : unit.isNaval ? { unitOwner: unit.owner, movementType: 'water' } : { unitOwner: unit.owner }
+            unit.isNaval ? { unitOwner: unit.owner, movementType: unit.type === 'hovercraft' ? 'amphibious' : 'water' } : { unitOwner: unit.owner }
           )
           if (exitPath && exitPath.length > 1) {
             unit.path = exitPath.slice(1)

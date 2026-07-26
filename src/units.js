@@ -349,7 +349,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
     isTileBlockedForUnit(occupancyMap, adjustedEnd.x, adjustedEnd.y, pathContext)
   const destModeBlocked = !isTilePassableForMode(mapGrid, adjustedEnd.x, adjustedEnd.y, pathContext)
   if (
-    (contextOptions.movementType === 'water' ? destType !== 'water' : destType === 'water') ||
+    (contextOptions.movementType === 'water' ? destType !== 'water' : contextOptions.movementType === 'amphibious' ? false : destType === 'water') ||
     destType === 'rock' ||
     destHasBuilding ||
     destSeedCrystal ||
@@ -564,6 +564,10 @@ function isTilePassableForMode(mapGrid, x, y, options = {}) {
   if (options.movementType === 'water') {
     return isWaterPassableTile(mapGrid, x, y)
   }
+  if (options.movementType === 'amphibious') {
+    const tile = mapGrid?.[y]?.[x]
+    return Boolean(tile && tile.type !== 'rock' && !hasBlockingBuilding(tile) && !tile.seedCrystal)
+  }
   if (!isTilePassable(mapGrid, x, y)) {
     return false
   }
@@ -578,7 +582,7 @@ function isTileBlockedForUnit(occupancyMap, x, y, options = {}) {
   // The shared occupancy map encodes water terrain as blocked for land units.
   // Naval paths already validate water terrain separately and use runtime
   // collision/spatial checks for other ships, so they must ignore that layer.
-  if (options.movementType !== 'water' && occupancyMap && occupancyMap[y] && occupancyMap[y][x]) {
+  if (options.movementType !== 'water' && options.movementType !== 'amphibious' && occupancyMap && occupancyMap[y] && occupancyMap[y][x]) {
     return true
   }
 

@@ -956,7 +956,10 @@ export function updateF22FlightState(unit, movement, now) {
     if (reachedWorldPoint(unit, { x: runway.runwayExit.worldX, y: runway.runwayExit.worldY }, TILE_SIZE * 0.5)) {
       unit.f22State = 'landing_roll'
       unit.flightPlan = null
-      playPositionalSound('f22Landing', unit.x, unit.y, 0.55)
+      if (!unit.f22LandingSoundPlayed) {
+        playPositionalSound('f22Landing', unit.x, unit.y, 0.55)
+        unit.f22LandingSoundPlayed = true
+      }
     }
 
     if (stateAgeMs > F22_APPROACH_TIMEOUT_MS) {
@@ -967,7 +970,10 @@ export function updateF22FlightState(unit, movement, now) {
       unit.flightPlan = null
       unit.f22State = 'landing_roll'
       unit.lastF22StateChangeAt = now
-      playPositionalSound('f22Landing', unit.x, unit.y, 0.55)
+      if (!unit.f22LandingSoundPlayed) {
+        playPositionalSound('f22Landing', unit.x, unit.y, 0.55)
+        unit.f22LandingSoundPlayed = true
+      }
     }
     finishTick()
     return
@@ -1114,6 +1120,7 @@ export function updateF22FlightState(unit, movement, now) {
   }
 
   if (unit.f22State === 'airborne') {
+    unit.f22LandingSoundPlayed = false
     unit.flightState = 'airborne'
     const outOfAmmo = typeof unit.maxRocketAmmo === 'number' && (unit.rocketAmmo ?? 0) <= 0 && !unit.volleyState
     const hadCombatAssignment = unit.f22AssignedDestination?.mode === 'combat' && Boolean(unit.f22AssignedDestination?.followTargetId)

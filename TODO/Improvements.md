@@ -803,3 +803,27 @@
 
 - [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
 - [x] Restore iPhone 13 Pro Max map scrolling smoothness by reducing mobile terrain chunk churn and keeping the RAF scheduler from racing native frame cadence during scroll/combat.
+
+## 2026-07-25 Naval and production verification checklist
+
+Use this checklist in a live game and check each item only after confirming the described behavior:
+
+- [x] Ground, naval, and air production advance concurrently in independent queues.
+- [x] Rotated ship hulls, including ships with coincident centers, cannot retain overlapping rendered hulls.
+- [x] Hovercraft can navigate continuously across both land and water.
+- [x] Jet takeoff and landing sounds play once per operation rather than looping.
+- [x] Remote-controlled ships ramp to top speed while Up is held and brake to zero while Down is held.
+- [x] A carrier attack command holds the carrier stationary and dispatches every deck aircraft to the target.
+- [x] A carrier-launched F22 move command reaches its requested tile before considering recovery.
+- [x] Enemy Destroyers fire their gun at ships in range and anti-air rockets against attacking aircraft.
+- [x] Submarines fire half as many torpedoes per minute as before (5.2-second cooldown).
+- [x] Torpedoes render below the water surface at 50% opacity.
+- [x] Destroyed ships explode immediately, large hulls show distributed explosions, and sinking follows the blast.
+- [x] A ferry commanded to shore turns offshore first, reverses tail-first to the coast, and prepares even without nearby cargo.
+
+
+## 2026-07-25 Naval completion follow-up
+
+- [x] Rotation-aware capsule contact pushes adjacent ships when a rotating hull touches them while retaining quadtree broad-phase performance.
+- [x] Naval collisions cause light, cooldown-limited damage; broadside impacts take more damage than bow/stern impacts.
+- [x] Complete every previously deferred naval/domain-production item in the checklist above.

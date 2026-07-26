@@ -82,7 +82,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
     const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
     const cacheOptions = {
       unitOwner: unit.owner,
-      movementType: unit.isNaval ? 'water' : undefined
+      movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined
     }
     const distance = Math.hypot(targetPos.x - unit.tileX, targetPos.y - unit.tileY)
     const useOccupancyMap = distance <= PATHFINDING_THRESHOLD
@@ -220,7 +220,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
       const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
       const cacheOptions = {
         unitOwner: unit.owner,
-        movementType: unit.isNaval ? 'water' : undefined
+        movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined
       }
       const newPath = useOccupancyMap
         ? getCachedPath(startNode, adjustedTarget, mapGrid, occupancyMap, cacheOptions)

@@ -28,7 +28,8 @@ const CARRIER_RUNWAY_FRONT_TILES = 3.2
 const TRANSPORT_TRANSFER_MS = 900
 const TRANSPORT_ALIGNMENT_TOLERANCE = 0.035
 const BATTLESHIP_FIRE_COOLDOWN = 3400
-const SUBMARINE_TORPEDO_COOLDOWN = 2600
+// Half the former rounds-per-minute rate (previously one shot per 2.6s).
+export const SUBMARINE_TORPEDO_COOLDOWN = 5200
 const DEPTH_CHARGE_COOLDOWN = 3000
 const DEPTH_CHARGE_FUSE_MS = 800
 const DEPTH_CHARGE_RADIUS = TILE_SIZE * 1.8
@@ -110,36 +111,6 @@ function clearGuardState(unit) {
   unit.guardMode = false
   unit.guardTarget = null
   unit.guardTargets = null
-}
-
-function findNearestWaterTile(worldX, worldY, mapGrid, radius = 6) {
-  const originX = Math.floor(worldX / TILE_SIZE)
-  const originY = Math.floor(worldY / TILE_SIZE)
-  let best = null
-  let bestDistance = Infinity
-  for (let y = originY - radius; y <= originY + radius; y++) {
-    for (let x = originX - radius; x <= originX + radius; x++) {
-      if (!isWaterPassableTile(mapGrid, x, y)) continue
-      const distance = Math.hypot(x - originX, y - originY)
-      if (distance < bestDistance) {
-        best = { x, y }
-        bestDistance = distance
-      }
-    }
-  }
-  if (!best && Array.isArray(mapGrid)) {
-    for (let y = 0; y < mapGrid.length; y++) {
-      for (let x = 0; x < (mapGrid[y]?.length || 0); x++) {
-        if (!isWaterPassableTile(mapGrid, x, y)) continue
-        const distance = Math.hypot(x - originX, y - originY)
-        if (distance < bestDistance) {
-          best = { x, y }
-          bestDistance = distance
-        }
-      }
-    }
-  }
-  return best
 }
 
 function findUnloadTiles(targetTile, count, mapGrid, occupancyMap) {
@@ -268,19 +239,20 @@ export function requestTransportLoad(transport, target, mapGrid, occupancyMap = 
 }
 
 export function requestTransportUnload(transport, tileX, tileY, mapGrid) {
-  if (!TRANSPORT_TYPES.has(transport?.type) || transport.transportOperation || !transport.embarkedUnitIds?.length) return false
+  const cargoCount = transport?.embarkedUnitIds?.length || 0
+  if (!TRANSPORT_TYPES.has(transport?.type) || transport.transportOperation || (cargoCount === 0 && transport.type !== 'vehicleFerry')) return false
   const destinationTile = mapGrid?.[tileY]?.[tileX]
   const validLandDestination = destinationTile &&
     (destinationTile.type === 'land' || destinationTile.type === 'street') &&
     !destinationTile.building &&
     !destinationTile.seedCrystal
   if (!validLandDestination) return false
-  const waterTile = findNearestWaterTile(tileX * TILE_SIZE, tileY * TILE_SIZE, mapGrid)
-  if (!waterTile) return false
+  const rendezvous = findTransportRendezvous(transport, (tileX + 0.5) * TILE_SIZE, (tileY + 0.5) * TILE_SIZE, cargoCount, mapGrid, gameState.occupancyMap)
+  if (!rendezvous) return false
   transport.pendingLoadUnitId = null
   transport.pendingLoadUnitIds = []
-  transport.pendingUnloadTile = { x: tileX, y: tileY, approach: waterTile }
-  transport.moveTarget = waterTile
+  transport.pendingUnloadTile = { x: tileX, y: tileY, approach: rendezvous.navigationTile, rendezvous }
+  transport.moveTarget = { ...rendezvous.navigationTile }
   transport.path = []
   clearGuardState(transport)
   return true
@@ -296,7 +268,7 @@ function completeTransportOperation(transport) {
 function startTransportAlignment(transport, operation) {
   setStopped(transport)
   transport.transportOperation = {
-    phase: 'aligning',
+    phase: 'turning_offshore',
     nextIndex: 0,
     ...operation
   }
@@ -307,13 +279,22 @@ function updateTransportOperation(transport, units, mapGrid, occupancyMap, now) 
   if (!operation) return
   setStopped(transport)
 
-  if (operation.phase === 'aligning') {
-    const positionAligned = moveTransportToRendezvous(transport, operation.desiredCenterX, operation.desiredCenterY)
-    const rotationAligned = rotateTransportToDirection(transport, operation.desiredDirection)
-    if (positionAligned && rotationAligned) {
-      operation.phase = 'transferring'
+  if (operation.phase === 'turning_offshore') {
+    // Turn while safely offshore; only reverse toward land once the complete
+    // long hull is aligned, preventing the bow from sweeping through coast.
+    if (rotateTransportToDirection(transport, operation.desiredDirection)) operation.phase = 'reversing_to_shore'
+    return
+  }
+
+  if (operation.phase === 'reversing_to_shore') {
+    if (moveTransportToRendezvous(transport, operation.desiredCenterX, operation.desiredCenterY)) {
+      operation.phase = operation.prepareOnly ? 'prepared' : 'transferring'
       operation.transferStartedAt = now
     }
+    return
+  }
+
+  if (operation.phase === 'prepared') {
     return
   }
 
@@ -534,14 +515,14 @@ function updateTransport(transport, units, mapGrid, occupancyMap, now) {
   if (unload) {
     const approachDistance = Math.hypot(transport.tileX - unload.approach.x, transport.tileY - unload.approach.y)
     if (approachDistance <= 1.5) {
-      const shoreX = (unload.x + 0.5) * TILE_SIZE
-      const shoreY = (unload.y + 0.5) * TILE_SIZE
-      const center = centerOf(transport)
+      const rendezvous = unload.rendezvous || findTransportRendezvous(transport, (unload.x + 0.5) * TILE_SIZE, (unload.y + 0.5) * TILE_SIZE, transport.embarkedUnitIds.length, mapGrid, occupancyMap)
+      if (!rendezvous) return
       startTransportAlignment(transport, {
         kind: 'unload',
-        desiredCenterX: center.x,
-        desiredCenterY: center.y,
-        desiredDirection: Math.atan2(center.y - shoreY, center.x - shoreX)
+        prepareOnly: transport.embarkedUnitIds.length === 0,
+        desiredCenterX: rendezvous.desiredCenterX,
+        desiredCenterY: rendezvous.desiredCenterY,
+        desiredDirection: rendezvous.desiredDirection
       })
     }
   }
@@ -833,7 +814,21 @@ function updateCarrierAircraft(aircraft, carrier, units, now, delta) {
       aircraft.f22State = aircraft.type === 'f22Raptor' ? 'airborne' : aircraft.f22State
       aircraft.manualFlightState = 'auto'
       aircraft.groundedOccupancyApplied = false
-      if (destination) aircraft.moveTarget = destination
+      if (destination) {
+        aircraft.moveTarget = destination
+        if (aircraft.type === 'f22Raptor') {
+          aircraft.f22AssignedDestination = {
+            x: (destination.x + 0.5) * TILE_SIZE,
+            y: (destination.y + 0.5) * TILE_SIZE,
+            destinationTile: { ...destination },
+            stopRadius: TILE_SIZE * 0.4,
+            mode: 'manual',
+            followTargetId: null
+          }
+          aircraft.helipadLandingRequested = false
+          aircraft.helipadTargetId = null
+        }
+      }
     }
   }
 }
@@ -1188,7 +1183,7 @@ export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
   ;(units || []).forEach(unit => {
     if (TRANSPORT_TYPES.has(unit.type)) {
       updateTransport(unit, units, mapGrid, state.occupancyMap, now)
-      if (unit.transportOperation?.phase === 'aligning') addShipWake(unit, state, now)
+      if (['turning_offshore', 'reversing_to_shore'].includes(unit.transportOperation?.phase)) addShipWake(unit, state, now)
     }
     else if (unit.type === 'aircraftCarrier') updateCarrier(unit, units, now, delta)
     else if (unit.type === 'battleship') updateBattleship(unit, units, bullets, now)

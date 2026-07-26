@@ -241,7 +241,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
           unit.owner,
           {
             strictDestination: true,
-            movementType: unit.isNaval ? 'water' : undefined
+            movementType: unit.type === 'hovercraft' ? 'amphibious' : unit.isNaval ? 'water' : undefined
           }
         )
 

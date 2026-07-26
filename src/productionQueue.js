@@ -1597,3 +1597,82 @@ export const productionQueue = {
     }
   }
 }
+
+// Unit production is split by factory domain. Each lane reuses the exact same
+// validated payment, duration, spawn and rally-point implementation above, but
+// owns its queue/current/paid/pause state. Buildings remain on the root lane.
+// This avoids duplicating production logic while allowing all three factories
+// to advance in the same simulation tick.
+const unitLaneMethods = {
+  addItem: productionQueue.addItem,
+  updateProgress: productionQueue.updateProgress,
+  tryResumeProduction: productionQueue.tryResumeProduction,
+  resumeProductionAfterUnpause: productionQueue.resumeProductionAfterUnpause,
+  getSerializableState: productionQueue.getSerializableState,
+  restoreFromSerializableState: productionQueue.restoreFromSerializableState
+}
+const airUnitTypes = new Set(['apache', 'f22Raptor', 'f35'])
+const unitProductionLaneForType = type => navalUnitTypes.includes(type) ? 'naval' : airUnitTypes.has(type) ? 'air' : 'ground'
+const createUnitLane = () => {
+  const lane = Object.create(productionQueue)
+  Object.assign(lane, {
+    unitItems: [], currentUnit: null, pausedUnit: false, unitPaid: 0,
+    buildingItems: [], currentBuilding: null, pausedBuilding: false, buildingPaid: 0,
+    completedBuildings: [],
+    updateProgress: unitLaneMethods.updateProgress,
+    tryResumeProduction: unitLaneMethods.tryResumeProduction,
+    resumeProductionAfterUnpause: unitLaneMethods.resumeProductionAfterUnpause
+  })
+  return lane
+}
+
+productionQueue.unitQueues = {
+  ground: productionQueue,
+  naval: createUnitLane(),
+  air: createUnitLane()
+}
+
+const setProductionControllerForAllLanes = productionQueue.setProductionController
+productionQueue.setProductionController = function(controller) {
+  setProductionControllerForAllLanes.call(this, controller)
+  this.unitQueues.naval.productionController = controller
+  this.unitQueues.air.productionController = controller
+}
+
+productionQueue.addItem = function(type, button, isBuilding = false, blueprint = null, rallyPoint = null, options = {}) {
+  const lane = isBuilding ? this : this.unitQueues[unitProductionLaneForType(type)]
+  return unitLaneMethods.addItem.call(lane, type, button, isBuilding, blueprint, rallyPoint, options)
+}
+
+productionQueue.updateProgress = function(timestamp) {
+  unitLaneMethods.updateProgress.call(this, timestamp)
+  unitLaneMethods.updateProgress.call(this.unitQueues.naval, timestamp)
+  unitLaneMethods.updateProgress.call(this.unitQueues.air, timestamp)
+}
+
+productionQueue.tryResumeProduction = function() {
+  unitLaneMethods.tryResumeProduction.call(this)
+  unitLaneMethods.tryResumeProduction.call(this.unitQueues.naval)
+  unitLaneMethods.tryResumeProduction.call(this.unitQueues.air)
+}
+
+productionQueue.resumeProductionAfterUnpause = function() {
+  unitLaneMethods.resumeProductionAfterUnpause.call(this)
+  unitLaneMethods.resumeProductionAfterUnpause.call(this.unitQueues.naval)
+  unitLaneMethods.resumeProductionAfterUnpause.call(this.unitQueues.air)
+}
+
+productionQueue.getSerializableState = function() {
+  const state = unitLaneMethods.getSerializableState.call(this)
+  state.unitProductionLanes = {
+    naval: unitLaneMethods.getSerializableState.call(this.unitQueues.naval),
+    air: unitLaneMethods.getSerializableState.call(this.unitQueues.air)
+  }
+  return state
+}
+
+productionQueue.restoreFromSerializableState = function(state) {
+  unitLaneMethods.restoreFromSerializableState.call(this, state)
+  unitLaneMethods.restoreFromSerializableState.call(this.unitQueues.naval, state?.unitProductionLanes?.naval || {})
+  unitLaneMethods.restoreFromSerializableState.call(this.unitQueues.air, state?.unitProductionLanes?.air || {})
+}

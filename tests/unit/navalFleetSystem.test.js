@@ -123,7 +123,7 @@ describe('six-ship naval fleet systems', () => {
     ambulance.x = ambulanceSlot.x * TILE_SIZE
     ambulance.y = ambulanceSlot.y * TILE_SIZE
     updateNavalFleet(units, [], map, { occupancyMap: [] }, 1000, 16)
-    expect(ferry.transportOperation).toMatchObject({ kind: 'load', phase: 'aligning' })
+    expect(ferry.transportOperation).toMatchObject({ kind: 'load', phase: 'turning_offshore' })
     expect(ferry.embarkedUnitIds).toEqual([])
 
     let animationNow = 1016
@@ -202,17 +202,25 @@ describe('six-ship naval fleet systems', () => {
     const occupancyMap = Array.from({ length: 20 }, () => Array(20).fill(0))
 
     expect(requestTransportUnload(ferry, 4, 8, map)).toBe(true)
-    expect(ferry.moveTarget).toEqual({ x: 10, y: 8 })
+    expect(map[ferry.moveTarget.y][ferry.moveTarget.x].type).toBe('water')
     expect(ferry.guardMode).toBe(false)
 
+    ferry.x = ferry.moveTarget.x * TILE_SIZE
+    ferry.y = ferry.moveTarget.y * TILE_SIZE
+    ferry.tileX = ferry.moveTarget.x
+    ferry.tileY = ferry.moveTarget.y
+
     updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 1000, 16)
-    expect(ferry.transportOperation).toMatchObject({ kind: 'unload', phase: 'aligning' })
+    expect(ferry.transportOperation).toMatchObject({ kind: 'unload', phase: 'turning_offshore' })
     expect(ferry.moveTarget).toBeNull()
-    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 1010, 16)
-    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 1020, 16)
+    let unloadNow = 1010
+    while (!tank.transportTransfer && unloadNow < 5000) {
+      updateNavalFleet([ferry, tank], [], map, { occupancyMap }, unloadNow, 16)
+      unloadNow += 16
+    }
     expect(tank.transportTransfer).toMatchObject({ kind: 'unload', transportId: ferry.id })
     expect(tank.embarkedOnId).toBeNull()
-    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, 2020, 16)
+    updateNavalFleet([ferry, tank], [], map, { occupancyMap }, unloadNow + 1000, 16)
 
     expect(ferry.embarkedUnitIds).toEqual([])
     expect(ferry.embarkedUnitTypes).toEqual([])
@@ -514,6 +522,9 @@ describe('six-ship naval fleet systems', () => {
 
     updateNavalFleet(units, bullets, map, { occupancyMap: [] }, 1000 + SUBMARINE_SURFACE_DURATION, 16)
     expect(submarine.depthState).toBe('surfaced')
+    expect(bullets).toHaveLength(0)
+
+    updateNavalFleet(units, bullets, map, { occupancyMap: [] }, 5201, 16)
     expect(bullets).toHaveLength(1)
     expect(bullets[0]).toMatchObject({ projectileType: 'torpedo', navalOnly: true, strictTarget: true })
   })

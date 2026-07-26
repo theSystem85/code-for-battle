@@ -182,6 +182,10 @@ export class EffectsRenderer {
     bullets.forEach(bullet => {
       const x = bullet.x - scrollOffset.x
       const y = bullet.y - scrollOffset.y
+      const isUnderwaterTorpedo = bullet.projectileType === 'torpedo' || bullet.originType === 'torpedo'
+
+      ctx.save()
+      if (isUnderwaterTorpedo) ctx.globalAlpha *= 0.5
 
       // Draw dissipating trail
       if (bullet.trail && bullet.trail.length > 1) {
@@ -300,6 +304,7 @@ export class EffectsRenderer {
 
         ctx.restore()
       }
+      ctx.restore()
     })
   }
 
