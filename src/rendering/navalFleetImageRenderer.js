@@ -22,6 +22,13 @@ const IMAGE_PATHS = Object.freeze({
 
 const imageStates = new Map()
 const BATTLESHIP_IMAGE_KEYS = Object.freeze(['battleship', 'battleshipTurret', 'battleshipBarrel'])
+export const BATTLESHIP_TURRET_RENDER_SCALE = 0.7
+export const BATTLESHIP_TURRET_RENDER_ORDER = Object.freeze([
+  'foreOuter',
+  'aftOuter',
+  'foreInner',
+  'aftInner'
+])
 
 function getImageState(type) {
   if (!imageStates.has(type)) {
@@ -126,15 +133,15 @@ function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
   const now = getSimulationTime(gameState)
   const direction = unit.direction || unit.rotation || 0
 
-  for (const name of BATTLESHIP_TURRET_NAMES) {
+  for (const name of BATTLESHIP_TURRET_RENDER_ORDER) {
     const turret = unit.batteries?.[name]
     if (!turret || turret.enabled === false) continue
     const localPoint = getBattleshipTurretLocalPoint(name)
     const x = centerX + Math.cos(direction) * localPoint.y
     const y = centerY + Math.sin(direction) * localPoint.y
     const turretDirection = Number.isFinite(turret.direction) ? turret.direction : direction
-    const turretSize = TILE_SIZE * 0.78
-    const barrelHeight = TILE_SIZE * 1.02
+    const turretSize = TILE_SIZE * 0.78 * BATTLESHIP_TURRET_RENDER_SCALE
+    const barrelHeight = TILE_SIZE * 1.02 * BATTLESHIP_TURRET_RENDER_SCALE
     const barrelWidth = barrelHeight * ((barrelImage.naturalWidth || barrelImage.width) / (barrelImage.naturalHeight || barrelImage.height))
 
     ctx.save()
@@ -144,9 +151,9 @@ function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
     ctx.drawImage(turretImage, -turretSize / 2, -turretSize / 2, turretSize, turretSize)
     for (let barrelIndex = 0; barrelIndex < 2; barrelIndex++) {
       const side = barrelIndex === 0 ? -1 : 1
-      const recoil = getRecoilOffset(turret.barrelRecoilStartTimes?.[barrelIndex], now)
-      const barrelX = side * TILE_SIZE * 0.105
-      const barrelY = -TILE_SIZE * 0.12 - recoil
+      const recoil = getRecoilOffset(turret.barrelRecoilStartTimes?.[barrelIndex], now) * BATTLESHIP_TURRET_RENDER_SCALE
+      const barrelX = side * TILE_SIZE * 0.105 * BATTLESHIP_TURRET_RENDER_SCALE
+      const barrelY = -TILE_SIZE * 0.12 * BATTLESHIP_TURRET_RENDER_SCALE - recoil
       ctx.drawImage(barrelImage, barrelX - barrelWidth / 2, barrelY, barrelWidth, barrelHeight)
       renderBattleshipMuzzleFlash(
         ctx,

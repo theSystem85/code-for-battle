@@ -14,6 +14,7 @@ import {
   requestCarrierLaunch,
   requestTransportLoad,
   requestTransportUnload,
+  SUBMARINE_TORPEDO_COOLDOWN,
   tryHandleFleetCommand,
   setBattleshipTarget,
   updateNavalFleet
@@ -694,12 +695,13 @@ describe('six-ship naval fleet systems', () => {
       target: shipyard
     }
     const torpedoes = []
-    updateNavalFleet([submarine], torpedoes, createMap(), { occupancyMap: [], explosions: [] }, 3000, 16)
+    const submarineFireTime = SUBMARINE_TORPEDO_COOLDOWN + 1
+    updateNavalFleet([submarine], torpedoes, createMap(), { occupancyMap: [], explosions: [] }, submarineFireTime, 16)
     expect(torpedoes).toHaveLength(1)
     expect(torpedoes[0]).toMatchObject({ target: shipyard, navalOnly: false, strictTarget: true })
 
     submarine.target = landBuilding
-    updateNavalFleet([submarine], torpedoes, createMap(), { occupancyMap: [], explosions: [] }, 6000, 16)
+    updateNavalFleet([submarine], torpedoes, createMap(), { occupancyMap: [], explosions: [] }, submarineFireTime + 3000, 16)
     expect(submarine.target).toBeNull()
     expect(torpedoes).toHaveLength(1)
   })
