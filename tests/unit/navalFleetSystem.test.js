@@ -663,7 +663,7 @@ describe('six-ship naval fleet systems', () => {
     expect(canUnitTargetEntity(battleship, landUnit)).toBe(true)
   })
 
-  it('lets surface battleships shell land buildings and submarines torpedo only partly-water buildings', () => {
+  it('lets surface battleships shell land buildings and submarines torpedo eligible yard buildings', () => {
     const landBuilding = { id: 'plant', type: 'powerPlant', owner: 'player2', x: 18, y: 8, width: 2, height: 2, health: 200 }
     const shipyard = { id: 'yard', type: 'shipyard', owner: 'player2', x: 12, y: 8, width: 4, height: 4, health: 1000 }
     gameState.buildings = [landBuilding, shipyard]
@@ -787,6 +787,44 @@ describe('six-ship naval fleet systems', () => {
     updateNavalFleet(units, bullets, map, { occupancyMap: [] }, 5201, 16)
     expect(bullets).toHaveLength(1)
     expect(bullets[0]).toMatchObject({ projectileType: 'torpedo', navalOnly: true, strictTarget: true })
+  })
+
+  it('lets surfaced submarines torpedo enemy yards with strict target collision', () => {
+    const submarine = {
+      ...createShip('submarine', 'sub', 'player1', 8, 8),
+      depthState: 'surfaced',
+      depthTransitionProgress: 1,
+      detectedByOwners: {},
+      lastTorpedoTime: 0,
+      ammunition: 4
+    }
+    const yard = {
+      id: 'enemy-yard',
+      type: 'constructionYard',
+      owner: 'player2',
+      isBuilding: true,
+      x: 9,
+      y: 8,
+      width: 3,
+      height: 3,
+      health: 1000
+    }
+    const bullets = []
+    const submarineFireTime = SUBMARINE_TORPEDO_COOLDOWN + 1
+
+    updateNavalFleet([submarine], bullets, createMap(), { occupancyMap: [], buildings: [yard] }, 4000, 16)
+    expect(bullets).toHaveLength(0)
+
+    submarine.target = yard
+    updateNavalFleet([submarine], bullets, createMap(), { occupancyMap: [], buildings: [yard] }, submarineFireTime, 16)
+
+    expect(bullets).toHaveLength(1)
+    expect(bullets[0]).toMatchObject({
+      projectileType: 'torpedo',
+      target: yard,
+      navalOnly: false,
+      strictTarget: true
+    })
   })
 
   it('allows close Destroyers to damage submerged submarines only with delayed depth charges', () => {

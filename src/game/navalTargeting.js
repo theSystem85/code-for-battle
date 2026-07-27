@@ -9,7 +9,7 @@ export function canSubmarineTargetEntity(submarine, target) {
     !target.embarkedOnId &&
     target.health > 0 &&
     target.owner !== submarine.owner &&
-    (target.isNaval || isPartlyWaterBuilding(target))
+    (target.isNaval || isPartlyWaterBuilding(target) || target.type === 'constructionYard')
   )
 }
 

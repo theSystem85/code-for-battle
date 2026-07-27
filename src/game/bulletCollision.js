@@ -86,6 +86,7 @@ export function checkWreckCollision(bullet, wreck) {
 export function checkBuildingCollision(bullet, building) {
   try {
     if (!bullet || !building || building.health <= 0 || bullet.navalOnly) return false
+    if (bullet.strictTarget && bullet.target?.id && building.id !== bullet.target.id) return false
 
     // Skip friendly buildings unless this is a forced attack
     const forcedTarget = bullet.target || bullet.shooter?.target
@@ -119,6 +120,7 @@ export function checkBuildingCollision(bullet, building) {
 export function checkFactoryCollision(bullet, factory) {
   try {
     if (!bullet || !factory || factory.destroyed || bullet.navalOnly) return false
+    if (bullet.strictTarget && bullet.target?.id && factory.id !== bullet.target.id) return false
 
     // Skip friendly factories unless this is a forced attack
     const forcedTarget = bullet.target || bullet.shooter?.target
