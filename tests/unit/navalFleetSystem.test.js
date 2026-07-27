@@ -37,7 +37,7 @@ import {
   isBattleshipTurretAngleBlocked,
   selectBattleshipTurret
 } from '../../src/game/battleshipTurrets.js'
-import { canUnitTargetEntity, getEffectiveFireRange } from '../../src/game/unitCombat/combatHelpers.js'
+import { canUnitTargetEntity, getDamageForUnitType, getEffectiveFireRange } from '../../src/game/unitCombat/combatHelpers.js'
 
 function createMap(width = 30, height = 20, type = 'water') {
   return Array.from({ length: height }, () =>
@@ -83,6 +83,10 @@ describe('six-ship naval fleet systems', () => {
     expect(UNIT_PROPERTIES.hovercraft.speed).toBeGreaterThan(UNIT_PROPERTIES.vehicleFerry.speed)
     expect(UNIT_PROPERTIES.hovercraft.health).toBeLessThan(UNIT_PROPERTIES.vehicleFerry.health)
     expect(getNavalRenderLengthTiles('aircraftCarrier') / getNavalRenderLengthTiles('destroyer')).toBeCloseTo(2.4, 5)
+  })
+
+  it('raises F22 rocket damage by approximately fifty percent', () => {
+    expect(getDamageForUnitType('f22Raptor')).toBe(37.5)
   })
 
   it('routes a friendly land vehicle to a shoreline transport without using land occupancy as the ship tile', () => {
@@ -319,7 +323,7 @@ describe('six-ship naval fleet systems', () => {
     const f22 = {
       id: 'f22', type: 'f22Raptor', owner: 'player1', health: 100,
       x: carrier.x, y: carrier.y, altitude: 0, direction: 0,
-      carrierId: carrier.id, carrierDeckSlotIndex: 0,
+      carrierId: carrier.id, homeCarrierId: carrier.id, carrierDeckSlotIndex: 0,
       carrierOperation: { state: 'parked', carrierId: carrier.id },
       flightState: 'grounded'
     }
@@ -347,6 +351,16 @@ describe('six-ship naval fleet systems', () => {
     expect(f22.carrierOperation).toBeNull()
     expect(f22.carrierId).toBeNull()
     expect(f22.moveTarget).toEqual({ x: 20, y: 8 })
+    expect(f22.f22AssignedDestination).toMatchObject({
+      destinationTile: { x: 20, y: 8 },
+      mode: 'manual',
+      followTargetId: null
+    })
+    expect(f22.carrierStrikeActive).toBe(false)
+
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, launchStartedAt + 1816, 16)
+    expect(f22.carrierOperation).toBeNull()
+    expect(f22.f22AssignedDestination.destinationTile).toEqual({ x: 20, y: 8 })
   })
 
   it('holds F35 altitude until directly above its reserved carrier parking position', () => {
@@ -387,7 +401,7 @@ describe('six-ship naval fleet systems', () => {
     expect(f35.y).toBeCloseTo(touchdownY, 5)
   })
 
-  it('lets an F22 enter the carrier approach only inside eight tiles while the carrier is stopped', () => {
+  it('stages an F22 fourteen tiles astern and descends before the rear runway threshold', () => {
     const carrier = {
       ...createShip('aircraftCarrier', 'carrier', 'player1'),
       deckSlotCapacity: 4,
@@ -395,7 +409,7 @@ describe('six-ship naval fleet systems', () => {
     }
     const f22 = {
       id: 'f22', type: 'f22Raptor', owner: 'player1', health: 100,
-      x: carrier.x - TILE_SIZE * 12, y: carrier.y,
+      x: carrier.x - TILE_SIZE * 10, y: carrier.y,
       altitude: TILE_SIZE * 4, direction: 0,
       movement: { velocity: { x: 0, y: 0 } }
     }
@@ -406,7 +420,7 @@ describe('six-ship naval fleet systems', () => {
     expect(f22.carrierOperation.state).toBe('carrier_rendezvous')
     expect(f22.altitude).toBe(TILE_SIZE * 4)
 
-    f22.x = carrier.x - TILE_SIZE * 7
+    f22.x = carrier.x - TILE_SIZE * 14
     carrier.movement.velocity.x = 0.2
     carrier.movement.currentSpeed = 0.2
     updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 132, 16)
@@ -417,6 +431,80 @@ describe('six-ship naval fleet systems', () => {
     updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 148, 16)
     expect(f22.carrierOperation.state).toBe('approach')
     expect(f22.altitude).toBe(TILE_SIZE * 4)
+
+    let now = 164
+    while (f22.carrierOperation.state === 'approach' && f22.x < carrier.x - TILE_SIZE * 8 && now < 5000) {
+      updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, now, 16)
+      now += 16
+    }
+    expect(f22.carrierOperation.state).toBe('approach')
+    expect(f22.altitude).toBeLessThan(TILE_SIZE * 4)
+    expect(f22.altitude).toBeGreaterThan(TILE_SIZE * 0.8)
+
+    while (f22.carrierOperation.state === 'approach' && now < 8000) {
+      updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, now, 16)
+      now += 16
+    }
+    expect(f22.carrierOperation.state).toBe('landing_roll')
+    expect(f22.altitude).toBeCloseTo(TILE_SIZE * 0.8)
+  })
+
+  it('launches partially armed carrier F22s and recovers them after target loss or ammo exhaustion', () => {
+    const carrier = {
+      ...createShip('aircraftCarrier', 'carrier', 'player1'),
+      deckSlotCapacity: 4,
+      carrierAircraftIds: ['f22-ammo', 'f22-target'],
+      carrierFuel: 500,
+      carrierAmmo: 50
+    }
+    const createDeckF22 = (id, slot, rocketAmmo) => ({
+      id,
+      type: 'f22Raptor',
+      owner: 'player1',
+      health: 100,
+      x: carrier.x,
+      y: carrier.y,
+      altitude: 0,
+      carrierId: carrier.id,
+      homeCarrierId: carrier.id,
+      carrierDeckSlotIndex: slot,
+      carrierOperation: { state: 'parked', carrierId: carrier.id },
+      flightState: 'grounded',
+      rocketAmmo,
+      maxRocketAmmo: 8
+    })
+    const ammoEmptyF22 = createDeckF22('f22-ammo', 0, 3)
+    const targetLostF22 = createDeckF22('f22-target', 1, 5)
+    const target = createShip('destroyer', 'strike-target', 'player2', 18, 8)
+    const units = [carrier, ammoEmptyF22, targetLostF22, target]
+
+    expect(commandCarrierStrike(carrier, target, units, false, 100)).toBe(true)
+    expect(ammoEmptyF22.carrierOperation.state).toBe('launch_taxi')
+    expect(targetLostF22.carrierOperation.state).toBe('launch_taxi')
+
+    ;[ammoEmptyF22, targetLostF22].forEach(f22 => {
+      f22.carrierOperation = null
+      f22.carrierId = null
+      f22.flightState = 'airborne'
+    })
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 200, 16)
+    expect(ammoEmptyF22.target).toBe(target)
+    expect(targetLostF22.target).toBe(target)
+
+    ammoEmptyF22.rocketAmmo = 0
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 216, 16)
+    expect(ammoEmptyF22.carrierOperation).toMatchObject({
+      state: 'carrier_rendezvous',
+      carrierId: carrier.id
+    })
+    expect(ammoEmptyF22.carrierStrikeNeedsFullService).toBe(true)
+
+    target.health = 0
+    updateNavalFleet(units, [], createMap(), { occupancyMap: [] }, 232, 16)
+    expect(targetLostF22.carrierOperation).toMatchObject({
+      state: 'carrier_rendezvous',
+      carrierId: carrier.id
+    })
   })
 
   it('keeps a carrier stopped while its aircraft cycle through strike, recovery, and relaunch', () => {

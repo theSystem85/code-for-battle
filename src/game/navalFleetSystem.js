@@ -34,7 +34,8 @@ const AIRCRAFT_SLOT_WEIGHT = Object.freeze({ f22Raptor: 1, f35: 2, apache: 2 })
 const CARRIER_APPROACH_MS = 1800
 const CARRIER_ROLL_MS = 1800
 const CARRIER_LAUNCH_MS = 1700
-const CARRIER_F22_LANDING_RANGE = TILE_SIZE * 8
+const CARRIER_F22_APPROACH_TILES = -14
+const CARRIER_F22_DECK_ENTRY_ALTITUDE = TILE_SIZE * 0.8
 const CARRIER_RUNWAY_REAR_TILES = -3
 const CARRIER_RUNWAY_FRONT_TILES = 3.2
 const TRANSPORT_TRANSFER_MS = 900
@@ -648,6 +649,10 @@ export function requestCarrierLanding(aircraft, carrier, units, now = gameState.
   assignCarrierSlot(aircraft, carrier, units)
   clearGuardState(aircraft)
   aircraft.target = null
+  aircraft.flightPlan = null
+  aircraft.f22AssignedDestination = null
+  aircraft.helipadLandingRequested = false
+  setStopped(aircraft)
   aircraft.homeCarrierId = carrier.id
   aircraft.carrierOperation = {
     state: 'carrier_rendezvous',
@@ -666,6 +671,12 @@ export function requestCarrierLanding(aircraft, carrier, units, now = gameState.
 
 export function requestCarrierLaunch(aircraft, destination = null, now = gameState.simulationTime || 0) {
   if (!aircraft?.carrierId || !AIRCRAFT_SLOT_WEIGHT[aircraft.type]) return false
+  const isCarrierStrikeLaunch = Boolean(aircraft.pendingCarrierStrikeTargetId)
+  aircraft.carrierStrikeActive = isCarrierStrikeLaunch
+  if (!isCarrierStrikeLaunch) {
+    aircraft.pendingCarrierStrikeTargetId = null
+    aircraft.carrierStrikeNeedsFullService = false
+  }
   aircraft.carrierOperation = {
     state: aircraft.type === 'f22Raptor' ? 'launch_taxi' : 'launch',
     startedAt: now,
@@ -718,12 +729,11 @@ function updateCarrierAircraft(aircraft, carrier, units, now, delta) {
     aircraft.altitude = operation.startAltitude
     const isFixedWing = aircraft.type === 'f22Raptor'
     const target = isFixedWing
-      ? carrierPoint(carrier, -5.5, 0.05)
+      ? carrierPoint(carrier, CARRIER_F22_APPROACH_TILES, 0.05)
       : carrierSlotPoint(carrier, aircraft.carrierDeckSlotIndex || 0)
     const reached = moveAircraftWithHeading(aircraft, target, delta, isFixedWing ? 1.35 : 1)
-    const carrierDistance = Math.hypot(aircraft.x - carrier.x, aircraft.y - carrier.y)
     if (isFixedWing) {
-      if (carrierIsStationary(carrier) && carrierDistance <= CARRIER_F22_LANDING_RANGE) {
+      if (carrierIsStationary(carrier) && reached) {
         aircraft.carrierOperation = { ...operation, state: 'approach', startedAt: now }
       }
     } else if (reached) {
@@ -736,15 +746,23 @@ function updateCarrierAircraft(aircraft, carrier, units, now, delta) {
     }
   } else if (operation.state === 'approach') {
     aircraft.flightState = 'airborne'
-    aircraft.altitude = operation.startAltitude
     if (!carrierIsStationary(carrier)) {
       aircraft.carrierOperation = { ...operation, state: 'carrier_rendezvous', startedAt: now }
       return
     }
+    const approachStart = carrierPoint(carrier, CARRIER_F22_APPROACH_TILES, 0.05)
     const runwayRear = carrierPoint(carrier, CARRIER_RUNWAY_REAR_TILES, 0.05)
-    if (moveAircraftWithHeading(aircraft, runwayRear, delta, 1.15)) {
+    const reachedRunway = moveAircraftWithHeading(aircraft, runwayRear, delta, 1.15)
+    const approachLength = Math.max(TILE_SIZE, Math.hypot(runwayRear.x - approachStart.x, runwayRear.y - approachStart.y))
+    const remainingDistance = Math.hypot(runwayRear.x - aircraft.x, runwayRear.y - aircraft.y)
+    const approachProgress = 1 - Math.min(1, remainingDistance / approachLength)
+    const altitudeProgress = smoothStep(approachProgress)
+    aircraft.altitude = CARRIER_F22_DECK_ENTRY_ALTITUDE +
+      (operation.startAltitude - CARRIER_F22_DECK_ENTRY_ALTITUDE) * (1 - altitudeProgress)
+    if (reachedRunway) {
       aircraft.x = runwayRear.x
       aircraft.y = runwayRear.y
+      aircraft.altitude = CARRIER_F22_DECK_ENTRY_ALTITUDE
       aircraft.direction = carrier.direction || 0
       aircraft.rotation = aircraft.direction
       aircraft.carrierOperation = {
@@ -772,7 +790,7 @@ function updateCarrierAircraft(aircraft, carrier, units, now, delta) {
     const end = carrierPoint(carrier, 1.75, 0.05)
     aircraft.x = start.x + (end.x - start.x) * progress
     aircraft.y = start.y + (end.y - start.y) * progress
-    aircraft.altitude = Math.max(0, TILE_SIZE * 0.8 * (1 - progress))
+    aircraft.altitude = Math.max(0, CARRIER_F22_DECK_ENTRY_ALTITUDE * (1 - progress))
     aircraft.direction = carrier.direction || 0
     aircraft.rotation = aircraft.direction
     if (rawProgress >= 1) {
@@ -935,7 +953,7 @@ function updateCarrierStrikeMission(carrier, units, now) {
   }
 
   units.forEach(aircraft => {
-    if (aircraft.homeCarrierId !== carrier.id || aircraft.health <= 0) return
+    if (aircraft.homeCarrierId !== carrier.id || aircraft.health <= 0 || !aircraft.carrierStrikeActive) return
     if (aircraft.carrierOperation && aircraft.carrierOperation.state !== 'parked') return
 
     const ammo = typeof aircraft.rocketAmmo === 'number' ? aircraft.rocketAmmo : 0
@@ -947,9 +965,14 @@ function updateCarrierStrikeMission(carrier, units, now) {
         aircraft.apacheAmmoEmpty = false
         aircraft.canFire = true
       }
-      if (target && ammo >= maxAmmo) {
+      const readyAfterService = !aircraft.carrierStrikeNeedsFullService || ammo >= maxAmmo
+      if (target && ammo > 0 && readyAfterService) {
         aircraft.pendingCarrierStrikeTargetId = carrierTargetKey(target)
+        aircraft.carrierStrikeNeedsFullService = false
         requestCarrierLaunch(aircraft, null, now)
+      } else if (!target) {
+        aircraft.carrierStrikeActive = false
+        aircraft.pendingCarrierStrikeTargetId = null
       }
       return
     }
@@ -959,6 +982,8 @@ function updateCarrierStrikeMission(carrier, units, now) {
       aircraft.target = null
       aircraft.flightPlan = null
       aircraft.f22AssignedDestination = null
+      aircraft.pendingCarrierStrikeTargetId = null
+      if (ammo <= 0) aircraft.carrierStrikeNeedsFullService = true
       requestCarrierLanding(aircraft, carrier, units, now)
       return
     }
@@ -980,7 +1005,10 @@ export function commandCarrierStrike(carrier, target, units, append = false, now
   carrier.isRotating = false
   ;(units || []).forEach(aircraft => {
     const assignedCarrierId = aircraft.carrierOperation?.carrierId || aircraft.carrierId
-    if (assignedCarrierId === carrier.id) aircraft.homeCarrierId = carrier.id
+    if (assignedCarrierId === carrier.id) {
+      aircraft.homeCarrierId = carrier.id
+      aircraft.carrierStrikeActive = true
+    }
   })
   updateCarrierStrikeMission(carrier, units, now)
   return true

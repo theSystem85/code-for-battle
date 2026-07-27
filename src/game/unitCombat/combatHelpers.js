@@ -344,6 +344,7 @@ export function getDamageForUnitType(unitType) {
     case 'battleship': return 78
     case 'submarine': return 95
     case 'apache': return COMBAT_CONFIG.DAMAGE.APACHE
+    case 'f22Raptor': return COMBAT_CONFIG.DAMAGE.F22
     case 'f35': return COMBAT_CONFIG.DAMAGE.F35_BOMB
     default: return COMBAT_CONFIG.DAMAGE.STANDARD
   }

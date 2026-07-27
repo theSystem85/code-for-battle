@@ -64,7 +64,7 @@
 
 ### Carrier recovery and launch choreography
 - An F35 reserves an empty deck slot before recovery, flies level to that exact carrier-relative parking coordinate, and only then begins vertical descent. Its touchdown coordinate and final parked coordinate are identical.
-- An F22 may enter its carrier approach only when it is within eight tiles and the carrier has no route or meaningful linear speed. It approaches from behind, stays airborne until reaching the rear runway threshold, rolls forward to touchdown, and turns while taxiing to parking instead of sliding sideways.
+- An F22 may enter final carrier approach only after reaching the fourteen-tile astern staging point while the carrier has no route or meaningful linear speed. It descends on the inbound leg, reaches deck-entry altitude at the rear runway threshold, rolls forward to touchdown, and turns while taxiing to parking instead of sliding sideways.
 - Fixed-wing launches taxi with normal heading changes to the extreme rear runway threshold, remain grounded throughout taxi, and then accelerate along the full carrier runway while altitude and render scale increase continuously.
 - Carrier-relative parking, runway, and approach points are recomputed throughout each operation so a valid stationary-deck operation has no stage-boundary teleport.
 
@@ -77,6 +77,27 @@
 - An attack command never moves or turns an Aircraft Carrier. It stores one or more marked targets and launches every serviced deck aircraft against the active target.
 - Carrier aircraft retain their originating carrier identifier after launch. Empty aircraft return to that carrier rather than an Airstrip, rearm on deck, relaunch automatically, and repeat until every stored target is destroyed.
 - Shift/Alt-appended carrier targets extend the carrier mission target list without routing the carrier itself into the ordinary attack queue.
+
+## 2026-07-27 F22 carrier mission and naval control correction
+
+- F22 rocket damage is approximately 50% higher than the prior F22 damage while preserving the existing projectile and splash behavior.
+- A carrier-deck F22 launched by an ordinary move command is not enrolled in a carrier strike mission. After takeoff it flies to the commanded tile and continuously circles that location until a later command replaces the assignment.
+- A carrier attack command enrolls and launches every living carrier aircraft with usable ammunition, including a partially loaded F22. An aircraft returns to its originating carrier when its assigned mission target is destroyed or its ammunition is exhausted. Aircraft returning empty must complete rearming before automatic relaunch.
+- Fixed-wing carrier recovery first establishes an approach point fourteen tiles astern. The F22 then descends continuously on the inbound leg and reaches deck-entry altitude at the rear runway threshold before beginning its landing roll.
+- Direct-control naval throttle uses the same top-speed cap as autonomous naval path movement, with the same health speed modifier, for all ship classes.
+
+### Acceptance coverage
+
+- Unit coverage verifies F22 damage, ordinary carrier launch/orbit persistence, partial-ammunition strike launch, destroyed-target and empty-ammunition recovery, long astern descent geometry, and direct-control naval speed parity.
+- Since carrier and remote-control state update once per simulation tick, the implementation may add scalar state and arithmetic only; it must not add per-frame collections or entity scans.
+
+### Performance verification
+
+- Focused opt-in command: `PERF_CARRIER_NAVAL=1 PERF_CARRIER_NAVAL_DURATION_MS=4000 npx playwright test tests/e2e/carrierNavalControlPerformance.test.js --project=chromium --reporter=line`
+- Scenario: 12 stationary carriers, 48 simultaneous F22 recovery approaches, and direct-control updates for all eight ship classes at device pixel ratio 1.
+- Unchanged `HEAD` baseline: 60.24 FPS, 0.074 ms average carrier/naval workload, 0.143 ms average game update, 3.514 ms average render, 0 MB heap delta.
+- Implemented result: 60.10 FPS, 0.080 ms average carrier/naval workload, 0.134 ms average game update, 3.968 ms average render, 0 MB heap delta.
+- FPS changed by -0.25%, while focused workload remained under 0.1 ms on average and measured heap showed no growth. The result is within the 20% regression gate and the fixed 50 FPS budget.
 
 ## 2026-07-23 carrier collision and bow-stop correction
 

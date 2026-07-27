@@ -13,6 +13,7 @@ import { gameState } from '../gameState.js'
 import { angleDiff, normalizeAngle, smoothRotateTowardsAngle } from '../logic.js'
 import { getApacheRocketSpawnPoints } from '../rendering/apacheImageRenderer.js'
 import { getPlayableViewportWidth, getPlayableViewportHeight } from '../utils/layoutMetrics.js'
+import { MOVEMENT_CONFIG } from './movementConstants.js'
 
 const APACHE_REMOTE_RANGE_MULTIPLIER = 1.5
 const REMOTE_NAVAL_FIRE_RATES = Object.freeze({
@@ -57,7 +58,9 @@ export function handleNavalRemoteControl(unit, inputs, bullets, units, mapGrid, 
   unit.movement.rotation = unit.direction
   unit.movement.targetRotation = unit.direction
 
-  const effectiveSpeed = (unit.speed || 0.5) * (unit.speedModifier || 1)
+  // Autonomous naval pathing uses the shared movement cap, so direct control
+  // must use the same cap instead of each ship's lower balance-table value.
+  const effectiveSpeed = MOVEMENT_CONFIG.MAX_SPEED * (unit.speedModifier || 1)
   const forwardX = Math.cos(unit.direction)
   const forwardY = Math.sin(unit.direction)
   unit.movement.targetVelocity.x = forwardX * effectiveSpeed * throttle

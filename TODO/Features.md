@@ -435,7 +435,15 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 
 - [x] Place Start Money beside the SSE biome selector on a dedicated two-column, 50/50 map-settings row.
 - [x] Reserve the F35 carrier parking slot before descent and keep rendezvous, vertical landing, and parked coordinates continuous.
-- [x] Gate F22 carrier approach to a stationary carrier within eight tiles; approach from astern, touch down near the rear threshold, turn during deck taxi, and launch from the extreme rear runway point.
+- [x] Gate F22 carrier final approach to a stationary carrier after reaching a fourteen-tile astern staging point; descend before the rear threshold, turn during deck taxi, and launch from the extreme rear runway point.
 - [x] Add forward/reverse, inertial steering, and forward Space firing to direct control for every naval unit, with weapons limited to armed ship types.
 - [x] Push a rotated large-ship hull back into clear water using a bounded shoreline-overlap correction that only searches when the oriented hull probe intersects land.
 - [x] Keep carriers stationary on attack commands and run persistent multi-target aircraft strike cycles that return, rearm, and relaunch from the originating carrier.
+
+## 2026-07-27 F22 carrier operations and naval remote speed
+
+- [x] Increase F22 rocket damage by approximately 50%.
+- [x] Keep carrier-launched F22 move orders active after takeoff so the aircraft reaches and circles the ordered location until replaced by a new order.
+- [x] Launch carrier-based F22s for carrier attack commands even when they have a usable partial load; return mission aircraft when the target is destroyed or ammunition is exhausted, then rearm before relaunch.
+- [x] Extend the F22 carrier landing setup substantially astern and descend during final approach so the jet is at deck-entry altitude before crossing the runway threshold.
+- [x] Match remotely controlled ship top speed to autonomous naval top speed for every ship class.

@@ -448,7 +448,7 @@
 ## 2026-07-23 Carrier animation and hull-overlap bugs
 
 - [x] Prevent F35 recovery from descending at one coordinate and snapping to a different parking coordinate after touchdown.
-- [x] Prevent carrier approach/landing stages from starting while the carrier is moving or the F22 is still outside its eight-tile recovery envelope.
+- [x] Prevent carrier final approach/landing stages from starting while the carrier is moving or the F22 has not reached its fourteen-tile astern staging point.
 - [x] Stop carriers from retaining movement or residual rotation when given an aircraft strike command or after reaching their commanded position.
 - [x] Correct large naval hulls away from land when an in-place or low-speed turn makes the rendered bow/stern overlap the shoreline.
 - [x] Exclude flying, landing, taxiing, and parked aircraft from Aircraft Carrier collision and avoidance calculations.

@@ -95,7 +95,7 @@ describe('remoteControl.js', () => {
       handleNavalRemoteControl(ship, input(1, 0), [], [ship], [], frame)
     }
     expect(ship.remoteNavalThrottle).toBe(1)
-    expect(ship.movement.targetVelocity.x).toBe(2)
+    expect(ship.movement.targetVelocity.x).toBe(0.9)
 
     for (let frame = 30; frame < 60; frame++) {
       handleNavalRemoteControl(ship, input(0, 1), [], [ship], [], frame)
@@ -482,6 +482,51 @@ describe('remoteControl.js', () => {
         expect(ship.movement.targetVelocity.x).toBeGreaterThan(0)
         expect(ship.remoteNavalAngularVelocity).toBeGreaterThan(0)
         expect(ship.remoteNavalAngularVelocity).toBeLessThan(ship.rotationSpeed)
+      })
+    })
+
+    it('gives every remotely controlled ship the autonomous naval top speed', () => {
+      const shipTypes = [
+        'destroyer',
+        'supplyShip',
+        'hovercraft',
+        'vehicleFerry',
+        'aircraftCarrier',
+        'navalMineLayer',
+        'battleship',
+        'submarine'
+      ]
+      const input = {
+        forwardIntensity: 1,
+        backwardIntensity: 0,
+        turnLeftIntensity: 0,
+        turnRightIntensity: 0,
+        fireIntensity: 0
+      }
+
+      shipTypes.forEach(type => {
+        const ship = {
+          id: `speed-${type}`,
+          type,
+          isNaval: true,
+          direction: 0,
+          speed: 0.2,
+          speedModifier: 0.75,
+          path: [],
+          movement: {
+            velocity: { x: 0, y: 0 },
+            targetVelocity: { x: 0, y: 0 },
+            currentSpeed: 0,
+            rotation: 0,
+            targetRotation: 0
+          }
+        }
+
+        for (let frame = 0; frame < 30; frame++) {
+          handleNavalRemoteControl(ship, input, [], [ship], mockMapGrid, frame)
+        }
+
+        expect(Math.hypot(ship.movement.targetVelocity.x, ship.movement.targetVelocity.y)).toBeCloseTo(0.675)
       })
     })
 
