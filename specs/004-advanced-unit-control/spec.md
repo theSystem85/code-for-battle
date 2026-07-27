@@ -55,6 +55,7 @@ As a player, I want to assign combat units to guard other units, so that they au
 10. **Given** guard mode is active, **When** guarded unit is within half the guard unit's fire range, **Then** no guard reroute/path recalculation is triggered
 11. **Given** guard mode is active and guarded unit moves beyond half the guard unit's fire range, **When** reroute is needed, **Then** path recalculation occurs at most once every 2 seconds
 12. **Given** guarded unit is attacked, **When** attacker is in guard unit firing range, **Then** guarding unit immediately targets that attacker while staying in guard mode
+13. **Given** one or more units are selected, **When** the player clicks a friendly unit, **Then** exactly one eligible action runs in priority order: board/load into or carrier recovery, request service, then guard; ordinary selection occurs only if all three actions are inapplicable
 
 ---
 
@@ -74,7 +75,7 @@ As a player, I want to queue multiple commands for my units using shift-click, s
 4. **Given** units have queued commands, **When** executing queue, **Then** commands execute in order: first queued → last queued
 5. **Given** units are executing queued commands, **When** player issues non-shift command, **Then** command queue is cleared and new command executes immediately
 6. **Given** shift key is held, **When** dragging box around multiple enemies (AGF), **Then** attack group command is added to queue
-7. **Given** units are selected with shift held, **When** clicking friendly units, **Then** friendly units are added to selection (does not queue command)
+7. **Given** units are selected with shift held, **When** clicking friendly units, **Then** the normal friendly interaction hierarchy runs first and the clicked unit is added to selection only when boarding, service, and guard are all inapplicable
 
 ---
 
@@ -218,6 +219,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-044**: System MUST allow dragging a selection box with any supply provider selected to enqueue every serviceable friendly unit in that box for the appropriate service type.
 - **FR-045**: Cursor MUST switch to the move-into indicator when hovering a supply provider capable of serving the currently selected units.
 - **FR-046**: Supply provider queues MUST add new service requests in LIFO order when already serving other targets.
+- **FR-047**: Friendly-unit direct clicks MUST short-circuit after the first eligible action in this order: boarding/loading/carrier recovery, service request, guard assignment, selection fallback.
 
 ### Key Entities
 

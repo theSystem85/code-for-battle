@@ -123,7 +123,10 @@ import { createTestMapGrid, resetGameState } from '../testUtils.js'
 import { playSound } from '../../src/sound.js'
 import { showNotification } from '../../src/ui/notifications.js'
 import { findWreckAtTile } from '../../src/game/unitWreckManager.js'
-import { tryHandleDirectFleetInteraction } from '../../src/input/mouseSelection.js'
+import {
+  tryHandleDirectFleetInteraction,
+  tryHandleFriendlyUnitInteraction
+} from '../../src/input/mouseSelection.js'
 
 const createCursorManager = () => ({
   setIsOverEnemy: vi.fn(),
@@ -537,6 +540,164 @@ describe('MouseHandler', () => {
     )).toBe(true)
     expect(f22.carrierOperation?.state).toBe('carrier_rendezvous')
     expect(f22.guardMode).toBe(false)
+  })
+
+  it('applies exactly one friendly-click action in boarding, service, guard order', () => {
+    const mapGrid = Array.from({ length: 20 }, (_, y) =>
+      Array.from({ length: 20 }, (_, x) => ({
+        type: x >= 10 ? 'water' : 'land',
+        building: null,
+        seedCrystal: false,
+        x,
+        y
+      }))
+    )
+    const selectionManager = {
+      isCommandableUnit: unit => unit?.owner === 'player',
+      isHumanPlayerUnit: unit => unit?.owner === 'player',
+      isHumanPlayerBuilding: () => false
+    }
+    const handler = { selectionManager }
+    const unitCommands = {
+      handleServiceProviderRequest: vi.fn(() => true)
+    }
+    const ferry = {
+      id: 'ferry',
+      type: 'vehicleFerry',
+      owner: 'player',
+      isNaval: true,
+      x: 10 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 500,
+      transportCapacity: 10,
+      embarkedUnitIds: []
+    }
+    const tank = {
+      id: 'tank',
+      type: 'tank_v1',
+      owner: 'player',
+      x: 8 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 50,
+      maxHealth: 100
+    }
+
+    expect(tryHandleFriendlyUnitInteraction(
+      handler,
+      ferry,
+      ferry.x + TILE_SIZE / 2,
+      ferry.y + TILE_SIZE / 2,
+      [tank],
+      [tank, ferry],
+      mapGrid,
+      unitCommands,
+      selectionManager
+    )).toBe(true)
+    expect(ferry.pendingLoadUnitIds).toEqual([tank.id])
+    expect(unitCommands.handleServiceProviderRequest).not.toHaveBeenCalled()
+    expect(tank.guardTarget).toBeNull()
+
+    const recoveryTank = {
+      id: 'recovery',
+      type: 'recoveryTank',
+      owner: 'player',
+      x: 7 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 100
+    }
+    expect(tryHandleFriendlyUnitInteraction(
+      handler,
+      recoveryTank,
+      recoveryTank.x + TILE_SIZE / 2,
+      recoveryTank.y + TILE_SIZE / 2,
+      [tank],
+      [tank, recoveryTank],
+      mapGrid,
+      unitCommands,
+      selectionManager
+    )).toBe(true)
+    expect(unitCommands.handleServiceProviderRequest).toHaveBeenCalledOnce()
+    expect(tank.guardTarget).toBeNull()
+
+    const ally = {
+      id: 'ally',
+      type: 'harvester',
+      owner: 'player',
+      x: 6 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 100
+    }
+    expect(tryHandleFriendlyUnitInteraction(
+      handler,
+      ally,
+      ally.x + TILE_SIZE / 2,
+      ally.y + TILE_SIZE / 2,
+      [tank],
+      [tank, ally],
+      mapGrid,
+      unitCommands,
+      selectionManager
+    )).toBe(true)
+    expect(tank.guardTarget).toBe(ally)
+    expect(tank.guardMode).toBe(true)
+
+    const nonCommandableSelectionManager = {
+      ...selectionManager,
+      isCommandableUnit: () => false
+    }
+    expect(tryHandleFriendlyUnitInteraction(
+      { selectionManager: nonCommandableSelectionManager },
+      ally,
+      ally.x + TILE_SIZE / 2,
+      ally.y + TILE_SIZE / 2,
+      [{ id: 'observer', owner: 'player', isBuilding: true }],
+      [ally],
+      mapGrid,
+      unitCommands,
+      nonCommandableSelectionManager
+    )).toBe(false)
+  })
+
+  it('does not launch parked carrier aircraft before requesting service from a clicked provider', () => {
+    const selectionManager = {
+      isCommandableUnit: () => true,
+      isHumanPlayerUnit: unit => unit?.owner === 'player',
+      isHumanPlayerBuilding: () => false
+    }
+    const handler = { selectionManager }
+    const unitCommands = { handleServiceProviderRequest: vi.fn(() => true) }
+    const f22 = {
+      id: 'deck-f22',
+      type: 'f22Raptor',
+      owner: 'player',
+      x: 8 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 100,
+      carrierId: 'carrier',
+      carrierOperation: { state: 'parked', carrierId: 'carrier' }
+    }
+    const tanker = {
+      id: 'tanker',
+      type: 'tankerTruck',
+      owner: 'player',
+      x: 9 * TILE_SIZE,
+      y: 8 * TILE_SIZE,
+      health: 100
+    }
+
+    expect(tryHandleFriendlyUnitInteraction(
+      handler,
+      tanker,
+      tanker.x + TILE_SIZE / 2,
+      tanker.y + TILE_SIZE / 2,
+      [f22],
+      [f22, tanker],
+      createTestMapGrid(20, 20),
+      unitCommands,
+      selectionManager
+    )).toBe(true)
+    expect(unitCommands.handleServiceProviderRequest).toHaveBeenCalledOnce()
+    expect(f22.carrierOperation).toEqual({ state: 'parked', carrierId: 'carrier' })
   })
 
 

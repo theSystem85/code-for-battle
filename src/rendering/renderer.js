@@ -59,7 +59,7 @@ export class Renderer {
     const airborneUnits = []
 
     ;(units || []).forEach(unit => {
-      if (isAirborneUnit(unit)) {
+      if (isAirborneUnit(unit) || unit.carrierId || unit.carrierOperation?.carrierId) {
         airborneUnits.push(unit)
         return
       }

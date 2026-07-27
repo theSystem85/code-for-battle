@@ -220,13 +220,6 @@ function applyGuardTargets(commandableUnits, guardTargets) {
 }
 
 export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnits, unitCommands, selectionManager, _mapGrid) {
-  const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))
-  if (commandableUnits.length === 0) {
-    return false
-  }
-  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
-    return false
-  }
   let guardTarget = null
   for (const unit of units) {
     if (selectionManager.isHumanPlayerUnit(unit) && !unit.selected) {
@@ -236,6 +229,20 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
         break
       }
     }
+  }
+
+  return handleGuardTargetCommand(selectedUnits, guardTarget, selectionManager)
+}
+
+export function handleGuardTargetCommand(selectedUnits, guardTarget, selectionManager) {
+  const commandableUnits = selectedUnits.filter(u =>
+    u.id !== guardTarget?.id && selectionManager.isCommandableUnit(u) && u.isBuilding !== true
+  )
+  if (commandableUnits.length === 0) {
+    return false
+  }
+  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) {
+    return false
   }
 
   if (guardTarget && applyGuardTargets(commandableUnits, [guardTarget])) {

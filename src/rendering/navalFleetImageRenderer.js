@@ -1,7 +1,6 @@
 import { MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE, RECOIL_DISTANCE, RECOIL_DURATION, TILE_SIZE } from '../config.js'
 import {
   BATTLESHIP_TURRET_NAMES,
-  getBattleshipTurretBlockedArc,
   getBattleshipTurretLocalPoint
 } from '../game/battleshipTurrets.js'
 import { gameState } from '../gameState.js'
@@ -104,29 +103,6 @@ function renderBattleshipMuzzleFlash(ctx, x, y, startTime, now) {
   ctx.restore()
 }
 
-function renderBattleshipFiringArc(ctx, unit, name, x, y) {
-  const blockedArc = getBattleshipTurretBlockedArc(unit, name)
-  if (!blockedArc) return
-  const radius = TILE_SIZE * 0.72
-  ctx.save()
-  ctx.lineWidth = 2
-  ctx.setLineDash([4, 3])
-  ctx.strokeStyle = 'rgba(92, 255, 128, 0.78)'
-  ctx.beginPath()
-  ctx.arc(x, y, radius, blockedArc.centerAngle + blockedArc.halfAngle, blockedArc.centerAngle - blockedArc.halfAngle + Math.PI * 2)
-  ctx.stroke()
-  ctx.setLineDash([])
-  ctx.fillStyle = 'rgba(255, 58, 42, 0.16)'
-  ctx.strokeStyle = 'rgba(255, 78, 52, 0.9)'
-  ctx.beginPath()
-  ctx.moveTo(x, y)
-  ctx.arc(x, y, radius, blockedArc.centerAngle - blockedArc.halfAngle, blockedArc.centerAngle + blockedArc.halfAngle)
-  ctx.closePath()
-  ctx.fill()
-  ctx.stroke()
-  ctx.restore()
-}
-
 function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
   const turretImage = getImageState('battleshipTurret').image
   const barrelImage = getImageState('battleshipBarrel').image
@@ -166,24 +142,20 @@ function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
     ctx.restore()
   }
 
-  if (!unit.selected) return
-  for (const name of BATTLESHIP_TURRET_NAMES) {
-    if (unit.selectedTurret && unit.selectedTurret !== name) continue
-    if (unit.batteries?.[name]?.enabled === false) continue
-    const point = getBattleshipTurretLocalPoint(name)
-    const x = centerX + Math.cos(direction) * point.y
-    const y = centerY + Math.sin(direction) * point.y
-    renderBattleshipFiringArc(ctx, unit, name, x, y)
-    if (unit.selectedTurret === name) {
-      ctx.save()
-      ctx.strokeStyle = '#ffe46a'
-      ctx.lineWidth = 2.5
-      ctx.beginPath()
-      ctx.arc(x, y, TILE_SIZE * 0.42, 0, Math.PI * 2)
-      ctx.stroke()
-      ctx.restore()
-    }
-  }
+  const selectedTurret = unit.selected && BATTLESHIP_TURRET_NAMES.includes(unit.selectedTurret)
+    ? unit.selectedTurret
+    : null
+  if (!selectedTurret || unit.batteries?.[selectedTurret]?.enabled === false) return
+  const point = getBattleshipTurretLocalPoint(selectedTurret)
+  const x = centerX + Math.cos(direction) * point.y
+  const y = centerY + Math.sin(direction) * point.y
+  ctx.save()
+  ctx.strokeStyle = '#ffe46a'
+  ctx.lineWidth = 2.5
+  ctx.beginPath()
+  ctx.arc(x, y, TILE_SIZE * 0.42, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.restore()
 }
 
 function getSubmarineOpacity(unit, viewerOwner) {

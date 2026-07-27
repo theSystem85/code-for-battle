@@ -135,16 +135,26 @@ describe('Renderer airborne layering', () => {
     ;({ Renderer } = await import('../../src/rendering/renderer.js'))
   })
 
-  it('partitions airborne units into the top render layer', () => {
+  it('partitions airborne and carrier-deck units into the top render layer', () => {
     const renderer = new Renderer()
     const groundedTank = { id: 'ground-1', type: 'tank_v1', x: 0, y: 0, flightState: 'grounded' }
     const airborneApache = { id: 'air-1', type: 'apache', x: 0, y: 0, flightState: 'airborne', isAirUnit: true }
     const parkedApache = { id: 'air-2', type: 'apache', x: 0, y: 0, flightState: 'grounded', isAirUnit: true }
+    const parkedCarrierF22 = {
+      id: 'deck-1',
+      type: 'f22Raptor',
+      x: 0,
+      y: 0,
+      flightState: 'grounded',
+      isAirUnit: true,
+      carrierId: 'carrier-1',
+      carrierOperation: { state: 'parked', carrierId: 'carrier-1' }
+    }
 
-    const result = renderer.partitionUnitsByRenderLayer([groundedTank, airborneApache, parkedApache])
+    const result = renderer.partitionUnitsByRenderLayer([groundedTank, airborneApache, parkedApache, parkedCarrierF22])
 
     expect(result.groundedUnits.map(unit => unit.id)).toEqual(['ground-1', 'air-2'])
-    expect(result.airborneUnits.map(unit => unit.id)).toEqual(['air-1'])
+    expect(result.airborneUnits.map(unit => unit.id)).toEqual(['air-1', 'deck-1'])
   })
 
   it('renders airborne units after grounded units and building overlays', () => {
@@ -152,6 +162,17 @@ describe('Renderer airborne layering', () => {
     const callOrder = []
     const groundedTank = { id: 'ground-1', type: 'tank_v1', x: 0, y: 0, flightState: 'grounded' }
     const airborneApache = { id: 'air-1', type: 'apache', x: 64, y: 64, flightState: 'airborne', isAirUnit: true }
+    const carrier = { id: 'carrier-1', type: 'aircraftCarrier', x: 96, y: 96, flightState: 'grounded' }
+    const parkedCarrierF22 = {
+      id: 'deck-1',
+      type: 'f22Raptor',
+      x: 96,
+      y: 96,
+      flightState: 'grounded',
+      isAirUnit: true,
+      carrierId: carrier.id,
+      carrierOperation: { state: 'parked', carrierId: carrier.id }
+    }
     const gameCtx = {
       canvas: { width: 800, height: 600 },
       globalAlpha: 1,
@@ -195,7 +216,7 @@ describe('Renderer airborne layering', () => {
       { width: 800, height: 600 },
       [[{ type: 'land' }]],
       [{ id: 'factory-1', type: 'constructionYard', x: 0, y: 0, width: 2, height: 2 }],
-      [groundedTank, airborneApache],
+      [groundedTank, airborneApache, parkedCarrierF22, carrier],
       [],
       [{ id: 'building-1', type: 'powerPlant', x: 2, y: 2, width: 2, height: 2 }],
       { x: 0, y: 0 },
@@ -205,15 +226,15 @@ describe('Renderer airborne layering', () => {
       { entityImageOpacityLevel: 0, unitWrecks: [] }
     )
 
-    expect(callOrder).toContain('unit-bases:ground-1')
-    expect(callOrder).toContain('unit-bases:air-1')
-    expect(callOrder).toContain('unit-overlays:ground-1')
-    expect(callOrder).toContain('unit-overlays:air-1')
+    expect(callOrder).toContain('unit-bases:ground-1,carrier-1')
+    expect(callOrder).toContain('unit-bases:air-1,deck-1')
+    expect(callOrder).toContain('unit-overlays:ground-1,carrier-1')
+    expect(callOrder).toContain('unit-overlays:air-1,deck-1')
 
-    expect(callOrder.indexOf('unit-bases:ground-1')).toBeLessThan(callOrder.indexOf('building-overlays:1'))
-    expect(callOrder.indexOf('building-overlays:1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1'))
-    expect(callOrder.indexOf('unit-overlays:ground-1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1'))
-    expect(callOrder.indexOf('unit-bases:air-1')).toBeLessThan(callOrder.indexOf('unit-overlays:air-1'))
+    expect(callOrder.indexOf('unit-bases:ground-1,carrier-1')).toBeLessThan(callOrder.indexOf('building-overlays:1'))
+    expect(callOrder.indexOf('building-overlays:1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1,deck-1'))
+    expect(callOrder.indexOf('unit-overlays:ground-1,carrier-1')).toBeLessThan(callOrder.indexOf('unit-bases:air-1,deck-1'))
+    expect(callOrder.indexOf('unit-bases:air-1,deck-1')).toBeLessThan(callOrder.indexOf('unit-overlays:air-1,deck-1'))
   })
 
   it('keeps GPU procedural water active in water-only mode when custom sheets have no water tags', () => {

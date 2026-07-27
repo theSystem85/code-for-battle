@@ -40,7 +40,6 @@ const CARRIER_RUNWAY_REAR_TILES = -3
 const CARRIER_RUNWAY_FRONT_TILES = 3.2
 const TRANSPORT_TRANSFER_MS = 900
 const TRANSPORT_ALIGNMENT_TOLERANCE = 0.035
-const BATTLESHIP_FIRE_COOLDOWN = 3400
 // Half the former rounds-per-minute rate (previously one shot per 2.6s).
 export const SUBMARINE_TORPEDO_COOLDOWN = 5200
 const BATTLESHIP_BARREL_DELAY = 300
@@ -1401,7 +1400,7 @@ export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
   updateDepthCharges(units, now)
 }
 
-export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, mapGrid) {
+export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, mapGrid, options = {}) {
   const clickedUnit = (units || [])
     .map(unit => {
       const interactionRadius = unit.isNaval
@@ -1435,6 +1434,8 @@ export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, m
     })
     if (landingRequested) return true
   }
+
+  if (options.boardingOnly) return false
 
   const parkedAircraft = aircraft.filter(unit => unit.carrierId)
   if (parkedAircraft.length) {

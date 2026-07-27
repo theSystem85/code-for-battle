@@ -24,6 +24,7 @@ import {
 import {
   handleForceAttackCommand,
   handleGuardCommand,
+  handleGuardTargetCommand,
   handleServiceProviderClick,
   handleFallbackCommand
 } from './mouseCommands.js'
@@ -36,7 +37,36 @@ export function tryHandleDirectFleetInteraction(selectedUnits, worldX, worldY, u
   const commandableUnits = selectedUnits.filter(unit =>
     selectionManager.isCommandableUnit(unit) && unit.isBuilding !== true
   )
-  return commandableUnits.length > 0 && tryHandleFleetCommand(commandableUnits, worldX, worldY, units, mapGrid)
+  return commandableUnits.length > 0 && tryHandleFleetCommand(
+    commandableUnits,
+    worldX,
+    worldY,
+    units,
+    mapGrid,
+    { boardingOnly: true }
+  )
+}
+
+export function tryHandleFriendlyUnitInteraction(
+  handler,
+  clickedUnit,
+  worldX,
+  worldY,
+  selectedUnits,
+  units,
+  mapGrid,
+  unitCommands,
+  selectionManager
+) {
+  if (!clickedUnit || !selectionManager.isHumanPlayerUnit(clickedUnit)) return false
+
+  if (tryHandleDirectFleetInteraction(selectedUnits, worldX, worldY, units, mapGrid, selectionManager)) {
+    return true
+  }
+  if (handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)) {
+    return true
+  }
+  return handleGuardTargetCommand(selectedUnits, clickedUnit, selectionManager)
 }
 
 function recordHumanUnitCommand(unitIds, command) {
@@ -1206,19 +1236,17 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
       handler.updateAGFCapability(selectedUnits)
       return
     }
-    if (clickedIsFriendly && friendlySelected && tryHandleDirectFleetInteraction(
-      selectedUnits,
+    if (clickedIsFriendly && friendlySelected && tryHandleFriendlyUnitInteraction(
+      handler,
+      clickedUnit,
       worldX,
       worldY,
+      selectedUnits,
       units,
       mapGrid,
+      unitCommands,
       selectionManager
     )) {
-      return
-    }
-
-    const handledService = friendlySelected && handleServiceProviderClick(handler, clickedUnit, selectedUnits, unitCommands, mapGrid)
-    if (handledService) {
       return
     }
 
