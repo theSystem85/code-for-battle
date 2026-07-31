@@ -41,6 +41,7 @@ import { updateMines } from './game/mineSystem.js'
 import { updateMineLayerBehavior } from './game/mineLayerBehavior.js'
 import { updateMineSweeperBehavior } from './game/mineSweeperBehavior.js'
 import { setBattleshipTarget, updateNavalFleet } from './game/navalFleetSystem.js'
+import { cancelTransportOperations } from './game/transportOperationCancellation.js'
 import { clearBattleshipFireControl } from './game/battleshipTurrets.js'
 import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.js'
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
@@ -277,6 +278,10 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           const { unitIds } = cmd.payload
           const partyId = cmd.sourcePartyId
           const unitRefs = createReplayUnitReferences(unitIds)
+          const stoppedUnits = unitIds
+            .map(unitId => mainUnits.find(unit => unit.id === unitId && unit.owner === partyId))
+            .filter(Boolean)
+          cancelTransportOperations(stoppedUnits, mainUnits, gameState.occupancyMap)
           unitIds.forEach(unitId => {
             const unit = mainUnits.find(u => u.id === unitId && u.owner === partyId)
             if (unit) {

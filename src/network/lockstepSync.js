@@ -12,6 +12,7 @@ import { InputBuffer, LOCKSTEP_INPUT_TYPES, createLockstepInput } from './inputB
 import { computeStateHash, compareHashes } from './stateHash.js'
 import { broadcastGameCommand, isHost, createGameStateSnapshot, applyGameStateSnapshot, COMMAND_TYPES } from './gameCommandSync.js'
 import { clearBattleshipFireControl } from '../game/battleshipTurrets.js'
+import { cancelTransportOperations } from '../game/transportOperationCancellation.js'
 
 // Lockstep state management
 const localInputBuffer = new InputBuffer()
@@ -439,6 +440,9 @@ function applyAttackInput(input) {
 function applyStopInput(input) {
   const { unitIds } = input.data
   if (!unitIds || !Array.isArray(unitIds)) return
+
+  const stoppedUnits = unitIds.map(unitId => mainUnits.find(unit => unit.id === unitId)).filter(Boolean)
+  cancelTransportOperations(stoppedUnits, mainUnits, gameState.occupancyMap)
 
   for (const unitId of unitIds) {
     const unit = mainUnits.find(u => u.id === unitId)

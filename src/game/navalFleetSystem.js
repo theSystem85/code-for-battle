@@ -6,7 +6,8 @@ import {
   TILE_SIZE
 } from '../config.js'
 import { gameState } from '../gameState.js'
-import { removeUnitOccupancy } from '../units.js'
+import { findPathForOwner, removeUnitOccupancy } from '../units.js'
+export { cancelTransportOperations } from './transportOperationCancellation.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles, isWaterPassableTile } from '../utils/navalUtils.js'
@@ -97,10 +98,11 @@ function smoothStep(progress) {
 function transportRampPoint(transport) {
   const center = centerOf(transport)
   const direction = transport.direction || 0
-  const sternOffset = getNavalHullDimensions(transport.type).length / 2
+  const rampOffset = getNavalHullDimensions(transport.type).length / 2
+  const rampDirection = transport.type === 'hovercraft' ? 1 : -1
   return {
-    x: center.x - Math.cos(direction) * sternOffset - TILE_SIZE / 2,
-    y: center.y - Math.sin(direction) * sternOffset - TILE_SIZE / 2
+    x: center.x + Math.cos(direction) * rampOffset * rampDirection - TILE_SIZE / 2,
+    y: center.y + Math.sin(direction) * rampOffset * rampDirection - TILE_SIZE / 2
   }
 }
 
@@ -147,7 +149,7 @@ function clearGuardState(unit) {
   unit.guardTargets = null
 }
 
-function findUnloadTiles(targetTile, count, mapGrid, occupancyMap) {
+function findUnloadTiles(targetTile, count, mapGrid, occupancyMap, ignoredOccupiedTiles = null) {
   const candidates = []
   for (let radius = 0; radius <= 5; radius++) {
     for (let y = targetTile.y - radius; y <= targetTile.y + radius; y++) {
@@ -155,7 +157,8 @@ function findUnloadTiles(targetTile, count, mapGrid, occupancyMap) {
         if (Math.max(Math.abs(x - targetTile.x), Math.abs(y - targetTile.y)) !== radius) continue
         const tile = mapGrid?.[y]?.[x]
         const passable = tile && (tile.type === 'land' || tile.type === 'street') && !tile.building && !tile.seedCrystal
-        if (passable && !(occupancyMap?.[y]?.[x] > 0)) candidates.push({ x, y })
+        const ignoredCargoOccupancy = ignoredOccupiedTiles?.has(`${x},${y}`)
+        if (passable && (!(occupancyMap?.[y]?.[x] > 0) || ignoredCargoOccupancy)) candidates.push({ x, y })
         if (candidates.length >= count) return candidates
       }
     }
@@ -170,8 +173,9 @@ const COAST_DIRECTIONS = Object.freeze([
   { x: 0, y: -1 }
 ])
 
-function findTransportRendezvous(transport, worldX, worldY, count, mapGrid, occupancyMap) {
-  const sternOffset = getNavalHullDimensions(transport.type).length / 2
+function findTransportRendezvous(transport, worldX, worldY, count, mapGrid, occupancyMap, ignoredOccupiedTiles = null) {
+  const rampOffset = getNavalHullDimensions(transport.type).length / 2
+  const approachesBowFirst = transport.type === 'hovercraft'
   let best = null
   for (let shoreY = 0; shoreY < (mapGrid?.length || 0); shoreY++) {
     for (let shoreX = 0; shoreX < (mapGrid[shoreY]?.length || 0); shoreX++) {
@@ -183,14 +187,14 @@ function findTransportRendezvous(transport, worldX, worldY, count, mapGrid, occu
         if (!isWaterPassableTile(mapGrid, waterX, waterY)) continue
         const contactX = (shoreX + 0.5 + outward.x * 0.5) * TILE_SIZE
         const contactY = (shoreY + 0.5 + outward.y * 0.5) * TILE_SIZE
-        const desiredCenterX = contactX + outward.x * sternOffset
-        const desiredCenterY = contactY + outward.y * sternOffset
+        const desiredCenterX = contactX + outward.x * rampOffset
+        const desiredCenterY = contactY + outward.y * rampOffset
         const navigationTile = {
           x: Math.floor(desiredCenterX / TILE_SIZE),
           y: Math.floor(desiredCenterY / TILE_SIZE)
         }
         if (!isWaterPassableTile(mapGrid, navigationTile.x, navigationTile.y)) continue
-        const cargoSlots = findUnloadTiles({ x: shoreX, y: shoreY }, count, mapGrid, occupancyMap)
+        const cargoSlots = findUnloadTiles({ x: shoreX, y: shoreY }, count, mapGrid, occupancyMap, ignoredOccupiedTiles)
         if (cargoSlots.length < count) continue
         const transportCenter = centerOf(transport)
         const score = Math.hypot(contactX - worldX, contactY - worldY) +
@@ -202,7 +206,9 @@ function findTransportRendezvous(transport, worldX, worldY, count, mapGrid, occu
             contactY,
             desiredCenterX,
             desiredCenterY,
-            desiredDirection: Math.atan2(outward.y, outward.x),
+            desiredDirection: approachesBowFirst
+              ? Math.atan2(-outward.y, -outward.x)
+              : Math.atan2(outward.y, outward.x),
             navigationTile,
             cargoSlots,
             score
@@ -214,7 +220,99 @@ function findTransportRendezvous(transport, worldX, worldY, count, mapGrid, occu
   return best
 }
 
-function isTransportableGroundUnit(target, owner) {
+function findHovercraftLandRendezvous(transport, worldX, worldY, count, mapGrid, occupancyMap, ignoredOccupiedTiles) {
+  if (transport?.type !== 'hovercraft') return null
+  const transportCenter = centerOf(transport)
+  const transportTileX = Math.floor(transportCenter.x / TILE_SIZE)
+  const transportTileY = Math.floor(transportCenter.y / TILE_SIZE)
+  const transportTile = mapGrid?.[transportTileY]?.[transportTileX]
+  if (!transportTile || !['land', 'street'].includes(transportTile.type) || transportTile.building || transportTile.seedCrystal) {
+    return null
+  }
+
+  const desiredDirection = Math.atan2(worldY - transportCenter.y, worldX - transportCenter.x)
+  const rampOffset = getNavalHullDimensions(transport.type).length / 2
+  const contactX = transportCenter.x + Math.cos(desiredDirection) * rampOffset
+  const contactY = transportCenter.y + Math.sin(desiredDirection) * rampOffset
+  const rampTile = {
+    x: Math.floor(contactX / TILE_SIZE),
+    y: Math.floor(contactY / TILE_SIZE)
+  }
+  const cargoSlots = findUnloadTiles(rampTile, count, mapGrid, occupancyMap, ignoredOccupiedTiles)
+  if (cargoSlots.length < count) return null
+
+  return {
+    shoreTile: rampTile,
+    contactX,
+    contactY,
+    desiredCenterX: transportCenter.x,
+    desiredCenterY: transportCenter.y,
+    desiredDirection,
+    navigationTile: { x: transportTileX, y: transportTileY },
+    cargoSlots,
+    landOperation: true,
+    score: 0
+  }
+}
+
+function getCenteredTileKey(unit) {
+  const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+  const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  return `${tileX},${tileY}`
+}
+
+function assignCargoSlots(cargo, availableSlots) {
+  const unusedSlots = availableSlots.slice()
+  const assignments = {}
+
+  cargo.forEach(unit => {
+    const ownTileKey = getCenteredTileKey(unit)
+    const ownSlotIndex = unusedSlots.findIndex(slot => `${slot.x},${slot.y}` === ownTileKey)
+    if (ownSlotIndex === -1) return
+    assignments[unit.id] = unusedSlots.splice(ownSlotIndex, 1)[0]
+  })
+
+  cargo.forEach(unit => {
+    if (assignments[unit.id] || unusedSlots.length === 0) return
+    const centerX = unit.x + TILE_SIZE / 2
+    const centerY = unit.y + TILE_SIZE / 2
+    unusedSlots.sort((left, right) =>
+      Math.hypot((left.x + 0.5) * TILE_SIZE - centerX, (left.y + 0.5) * TILE_SIZE - centerY) -
+      Math.hypot((right.x + 0.5) * TILE_SIZE - centerX, (right.y + 0.5) * TILE_SIZE - centerY)
+    )
+    assignments[unit.id] = unusedSlots.shift()
+  })
+
+  return assignments
+}
+
+function assignTransportRoute(unit, destination, mapGrid, occupancyMap, movementType) {
+  const start = {
+    x: Number.isFinite(unit.tileX)
+      ? unit.tileX
+      : Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE),
+    y: Number.isFinite(unit.tileY)
+      ? unit.tileY
+      : Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+  }
+  unit.tileX = start.x
+  unit.tileY = start.y
+  unit.moveTarget = { ...destination }
+  unit.path = []
+  unit.lastPathCalcTime = null
+  unit.pathComputedWithOccupancy = false
+  const path = findPathForOwner(
+    start,
+    destination,
+    mapGrid,
+    occupancyMap,
+    unit.owner,
+    { strictDestination: true, movementType }
+  )
+  if (path?.length > 1) unit.path = path.slice(1)
+}
+
+function isTransportableGroundUnit(target, owner, pendingTransportId = null) {
   return Boolean(
     target &&
     !target.isBuilding &&
@@ -224,52 +322,83 @@ function isTransportableGroundUnit(target, owner) {
     target.type !== 'f22Raptor' &&
     target.type !== 'f35' &&
     !target.embarkedOnId &&
+    (!target.pendingTransportId || target.pendingTransportId === pendingTransportId) &&
+    !target.transportTransfer &&
     target.owner === owner &&
     target.health > 0
   )
 }
 
-export function requestTransportLoadGroup(transport, targets, mapGrid, occupancyMap = gameState.occupancyMap) {
+export function requestTransportLoadGroup(transport, targets, mapGrid, occupancyMap = gameState.occupancyMap, allUnits = targets) {
   if (!TRANSPORT_TYPES.has(transport?.type) || transport.transportOperation || !Array.isArray(targets)) return false
   transport.embarkedUnitIds = Array.isArray(transport.embarkedUnitIds) ? transport.embarkedUnitIds : []
-  const existingPendingIds = Array.isArray(transport.pendingLoadUnitIds)
+  const requestedExistingIds = Array.isArray(transport.pendingLoadUnitIds)
     ? transport.pendingLoadUnitIds
     : (transport.pendingLoadUnitId ? [transport.pendingLoadUnitId] : [])
+  const availableUnits = Array.isArray(allUnits) ? allUnits : targets
+  const existingPendingCargo = requestedExistingIds
+    .map(id => availableUnits.find(unit => unit.id === id))
+    .filter(unit => unit && unit.health > 0 && unit.owner === transport.owner && !unit.embarkedOnId && !unit.transportTransfer)
+  const existingPendingIds = existingPendingCargo.map(unit => unit.id)
   const availableCapacity = Math.max(0, transport.transportCapacity - transport.embarkedUnitIds.length - existingPendingIds.length)
   if (availableCapacity <= 0) return false
   const candidates = targets
-    .filter(target => isTransportableGroundUnit(target, transport.owner) && !existingPendingIds.includes(target.id))
+    .filter(target => {
+      if (target?.pendingTransportId === transport.id) return !existingPendingIds.includes(target.id)
+      return isTransportableGroundUnit(target, transport.owner) && !existingPendingIds.includes(target.id)
+    })
     .slice(0, availableCapacity)
   if (candidates.length === 0) return false
-  const averageX = candidates.reduce((sum, target) => sum + target.x + TILE_SIZE / 2, 0) / candidates.length
-  const averageY = candidates.reduce((sum, target) => sum + target.y + TILE_SIZE / 2, 0) / candidates.length
-  const rendezvous = findTransportRendezvous(transport, averageX, averageY, candidates.length, mapGrid, occupancyMap)
+  const pendingCargo = [...existingPendingCargo, ...candidates]
+  const averageX = pendingCargo.reduce((sum, target) => sum + target.x + TILE_SIZE / 2, 0) / pendingCargo.length
+  const averageY = pendingCargo.reduce((sum, target) => sum + target.y + TILE_SIZE / 2, 0) / pendingCargo.length
+  const ignoredOccupiedTiles = new Set(pendingCargo.map(getCenteredTileKey))
+  const rendezvous = findHovercraftLandRendezvous(
+    transport,
+    averageX,
+    averageY,
+    pendingCargo.length,
+    mapGrid,
+    occupancyMap,
+    ignoredOccupiedTiles
+  ) || findTransportRendezvous(
+    transport,
+    averageX,
+    averageY,
+    pendingCargo.length,
+    mapGrid,
+    occupancyMap,
+    ignoredOccupiedTiles
+  )
   if (!rendezvous) return false
-  candidates.forEach((target, index) => {
-    const cargoSlot = rendezvous.cargoSlots[index]
-    target.moveTarget = { ...cargoSlot }
-    target.path = []
+  const cargoSlots = assignCargoSlots(pendingCargo, rendezvous.cargoSlots)
+  pendingCargo.forEach(target => {
+    const cargoSlot = cargoSlots[target.id]
+    assignTransportRoute(target, cargoSlot, mapGrid, null)
     target.target = null
+    target.pendingTransportId = transport.id
     clearGuardState(target)
   })
-  transport.pendingLoadUnitIds = [...existingPendingIds, ...candidates.map(target => target.id)]
+  transport.pendingLoadUnitIds = pendingCargo.map(target => target.id)
   transport.pendingLoadUnitId = transport.pendingLoadUnitIds[0] || null
   transport.pendingLoadRendezvous = {
     ...rendezvous,
-    cargoSlots: candidates.reduce((slots, target, index) => {
-      slots[target.id] = rendezvous.cargoSlots[index]
-      return slots
-    }, {})
+    cargoSlots
   }
   transport.pendingUnloadTile = null
-  transport.moveTarget = { ...rendezvous.navigationTile }
-  transport.path = []
+  assignTransportRoute(
+    transport,
+    rendezvous.navigationTile,
+    mapGrid,
+    occupancyMap,
+    transport.type === 'hovercraft' ? 'amphibious' : 'water'
+  )
   clearGuardState(transport)
   return true
 }
 
-export function requestTransportLoad(transport, target, mapGrid, occupancyMap = gameState.occupancyMap) {
-  return requestTransportLoadGroup(transport, [target], mapGrid, occupancyMap)
+export function requestTransportLoad(transport, target, mapGrid, occupancyMap = gameState.occupancyMap, allUnits = [target]) {
+  return requestTransportLoadGroup(transport, [target], mapGrid, occupancyMap, allUnits)
 }
 
 export function requestTransportUnload(transport, tileX, tileY, mapGrid) {
@@ -334,10 +463,17 @@ function updateTransportOperation(transport, units, mapGrid, occupancyMap, now) 
 
   if (operation.kind === 'load') {
     const cargoIds = operation.cargoIds.filter(id => transport.pendingLoadUnitIds?.includes(id))
-    const cargo = units.find(unit => unit.id === cargoIds[0] && isTransportableGroundUnit(unit, transport.owner))
+    const cargo = units.find(unit =>
+      unit.id === cargoIds[0] &&
+      (unit.transportTransfer?.transportId === transport.id ||
+        isTransportableGroundUnit(unit, transport.owner, transport.id))
+    )
     if (!cargo) {
       units.forEach(unit => {
-        if (operation.cargoIds.includes(unit.id)) unit.transportBoardingLocked = false
+        if (operation.cargoIds.includes(unit.id)) {
+          unit.transportBoardingLocked = false
+          unit.pendingTransportId = null
+        }
       })
       transport.pendingLoadUnitIds = (transport.pendingLoadUnitIds || []).filter(id => !operation.cargoIds.includes(id))
       transport.pendingLoadUnitId = transport.pendingLoadUnitIds[0] || null
@@ -386,6 +522,7 @@ function updateTransportOperation(transport, units, mapGrid, occupancyMap, now) 
 
     cargo.transportTransfer = null
     cargo.transportBoardingLocked = false
+    cargo.pendingTransportId = null
     cargo.embarkedOnId = transport.id
     if (!transport.embarkedUnitIds.includes(cargo.id)) transport.embarkedUnitIds.push(cargo.id)
     transport.pendingLoadUnitIds = (transport.pendingLoadUnitIds || []).filter(id => id !== cargo.id)
@@ -428,6 +565,7 @@ function updateTransportOperation(transport, units, mapGrid, occupancyMap, now) 
     operation.activeCargoId = cargo.id
     transport.embarkedUnitIds = transport.embarkedUnitIds.filter(id => id !== cargo.id)
     cargo.embarkedOnId = null
+    cargo.pendingTransportId = transport.id
     cargo.transportTransfer = {
       kind: 'unload',
       transportId: transport.id,
@@ -451,6 +589,7 @@ function updateTransportOperation(transport, units, mapGrid, occupancyMap, now) 
   if (progress < 1) return
 
   cargo.transportTransfer = null
+  cargo.pendingTransportId = null
   cargo.x = destinationX
   cargo.y = destinationY
   cargo.tileX = Math.floor((cargo.x + TILE_SIZE / 2) / TILE_SIZE)
@@ -504,20 +643,33 @@ function updateTransport(transport, units, mapGrid, occupancyMap, now) {
   const pendingIds = Array.isArray(transport.pendingLoadUnitIds)
     ? transport.pendingLoadUnitIds
     : (transport.pendingLoadUnitId ? [transport.pendingLoadUnitId] : [])
-  transport.pendingLoadUnitIds = pendingIds
-    .filter(id => units.some(unit => unit.id === id && isTransportableGroundUnit(unit, transport.owner)))
+  const livePendingIds = pendingIds
+    .filter(id => units.some(unit => {
+      if (unit.id !== id || unit.health <= 0 || unit.owner !== transport.owner || unit.embarkedOnId || unit.transportTransfer) return false
+      return !unit.isBuilding && !unit.isNaval && !unit.isAirUnit && !AIRCRAFT_SLOT_WEIGHT[unit.type]
+    }))
     .slice(0, Math.max(0, transport.transportCapacity - transport.embarkedUnitIds.length))
+  pendingIds.forEach(id => {
+    if (livePendingIds.includes(id)) return
+    const staleCargo = units.find(unit => unit.id === id && unit.pendingTransportId === transport.id)
+    if (staleCargo) {
+      staleCargo.pendingTransportId = null
+      staleCargo.transportBoardingLocked = false
+    }
+  })
+  transport.pendingLoadUnitIds = livePendingIds
   transport.pendingLoadUnitId = transport.pendingLoadUnitIds[0] || null
+  if (transport.pendingLoadUnitIds.length === 0) transport.pendingLoadRendezvous = null
   transport.embarkedUnitTypes = transport.embarkedUnitIds
     .map(id => units.find(unit => unit.id === id)?.type)
     .filter(Boolean)
 
   if (transport.pendingLoadUnitIds.length > 0) {
     const readyCargo = transport.pendingLoadUnitIds
-      .map(id => units.find(unit => unit.id === id && isTransportableGroundUnit(unit, transport.owner)))
+      .map(id => units.find(unit => unit.id === id && isTransportableGroundUnit(unit, transport.owner, transport.id)))
       .filter(Boolean)
     const rendezvous = transport.pendingLoadRendezvous
-    const allReady = readyCargo.length > 0 && readyCargo.every(cargo => {
+    const readyAtSlots = readyCargo.filter(cargo => {
       const slot = rendezvous?.cargoSlots?.[cargo.id]
       if (!slot) return false
       return Math.hypot(
@@ -529,14 +681,14 @@ function updateTransport(transport, units, mapGrid, occupancyMap, now) {
       transport.x + TILE_SIZE / 2 - rendezvous.desiredCenterX,
       transport.y + TILE_SIZE / 2 - rendezvous.desiredCenterY
     ) <= TILE_SIZE * 0.8
-    if (allReady && atRendezvous) {
-      readyCargo.forEach(cargo => {
+    if (readyAtSlots.length > 0 && atRendezvous) {
+      readyAtSlots.forEach(cargo => {
         cargo.transportBoardingLocked = true
         setStopped(cargo)
       })
       startTransportAlignment(transport, {
         kind: 'load',
-        cargoIds: readyCargo.map(cargo => cargo.id),
+        cargoIds: readyAtSlots.map(cargo => cargo.id),
         desiredCenterX: rendezvous.desiredCenterX,
         desiredCenterY: rendezvous.desiredCenterY,
         desiredDirection: rendezvous.desiredDirection
@@ -1432,7 +1584,7 @@ export function updateNavalFleet(units, bullets, mapGrid, state, now, delta) {
 }
 
 export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, mapGrid, options = {}) {
-  const clickedUnit = (units || [])
+  const hitCandidates = (units || [])
     .map(unit => {
       const interactionRadius = unit.isNaval
         ? TILE_SIZE * Math.max(0.8, getNavalRenderLengthTiles(unit.type) / 2)
@@ -1443,13 +1595,39 @@ export function tryHandleFleetCommand(commandableUnits, worldX, worldY, units, m
       }
     })
     .filter(({ unit, score }) => unit.health > 0 && !unit.embarkedOnId && score <= 1)
-    .sort((a, b) => a.score - b.score)[0]?.unit
-  const selectedGroundUnits = commandableUnits.filter(unit => isTransportableGroundUnit(unit, unit.owner))
-  if (TRANSPORT_TYPES.has(clickedUnit?.type) && selectedGroundUnits.length) {
-    if (requestTransportLoadGroup(clickedUnit, selectedGroundUnits, mapGrid)) return true
+    .sort((a, b) => a.score - b.score)
+    .map(({ unit }) => unit)
+  const clickedTransport = hitCandidates.find(unit => TRANSPORT_TYPES.has(unit.type))
+  const selectedGroundCandidates = commandableUnits.filter(unit =>
+    unit &&
+    !unit.isBuilding &&
+    !unit.isNaval &&
+    !unit.isAirUnit &&
+    !AIRCRAFT_SLOT_WEIGHT[unit.type]
+  )
+  if (clickedTransport && selectedGroundCandidates.length) {
+    const selectedGroundUnits = selectedGroundCandidates.filter(unit =>
+      isTransportableGroundUnit(unit, clickedTransport.owner, clickedTransport.id)
+    )
+    requestTransportLoadGroup(clickedTransport, selectedGroundUnits, mapGrid, gameState.occupancyMap, units)
+    return true
   }
   const transports = commandableUnits.filter(unit => TRANSPORT_TYPES.has(unit.type))
-  if (transports.length && clickedUnit && transports.some(transport => requestTransportLoad(transport, clickedUnit, mapGrid))) return true
+  const clickedGroundCargo = transports.length
+    ? hitCandidates.find(unit =>
+      !transports.includes(unit) &&
+      !unit.isBuilding &&
+      !unit.isNaval &&
+      !unit.isAirUnit &&
+      !AIRCRAFT_SLOT_WEIGHT[unit.type] &&
+      unit.owner === transports[0].owner
+    )
+    : null
+  if (clickedGroundCargo) {
+    transports.some(transport => requestTransportLoad(transport, clickedGroundCargo, mapGrid, gameState.occupancyMap, units))
+    return true
+  }
+  const clickedUnit = hitCandidates[0]
   const clickedTileX = Math.floor(worldX / TILE_SIZE)
   const clickedTileY = Math.floor(worldY / TILE_SIZE)
   const clickedSelectedTransportHull = clickedUnit && transports.includes(clickedUnit)

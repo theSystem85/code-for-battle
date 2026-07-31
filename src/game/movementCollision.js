@@ -37,6 +37,19 @@ const STATIC_COLLISION_SEPARATION_BLEND = 0.35
 const MAX_NAVAL_HULL_BOUNDING_RADIUS = getNavalHullDimensions('aircraftCarrier').length / 2
 const CARRIER_AIRCRAFT_TYPES = new Set(['f22Raptor', 'f35', 'apache'])
 
+function isTransportCoastApproachActive(unit) {
+  if (unit?.type !== 'hovercraft' && unit?.type !== 'vehicleFerry') return false
+  const hasPendingLoad = unit.pendingLoadRendezvous && (
+    unit.pendingLoadUnitId ||
+    (Array.isArray(unit.pendingLoadUnitIds) && unit.pendingLoadUnitIds.length > 0)
+  )
+  return Boolean(
+    hasPendingLoad ||
+    unit.pendingUnloadTile ||
+    unit.transportOperation
+  )
+}
+
 function isCarrierAircraftCollisionPair(first, second) {
   const carrier = first?.type === 'aircraftCarrier'
     ? first
@@ -133,7 +146,7 @@ function isNavalHullBlocked(unit, targetX, targetY, mapGrid) {
  * already-overlapping hull, so the normal movement path pays one hull probe.
  */
 export function resolveNavalShoreOverlap(unit, mapGrid) {
-  if (!unit?.isNaval || !isNavalHullBlocked(unit, unit.x, unit.y, mapGrid)) {
+  if (!unit?.isNaval || isTransportCoastApproachActive(unit) || !isNavalHullBlocked(unit, unit.x, unit.y, mapGrid)) {
     return false
   }
 
@@ -456,7 +469,7 @@ export function checkUnitCollision(unit, mapGrid, occupancyMap, units, wrecks = 
     return { collided: true, type: 'bounds', tileX, tileY }
   }
 
-  if (!unitAirborne && isNavalHullBlocked(unit, unit.x, unit.y, mapGrid)) {
+  if (!unitAirborne && !isTransportCoastApproachActive(unit) && isNavalHullBlocked(unit, unit.x, unit.y, mapGrid)) {
     return { collided: true, type: 'terrain', tileX, tileY }
   }
 

@@ -18,6 +18,7 @@ import { canUnitTargetEntity } from '../game/unitCombat/combatHelpers.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret'])
 const AIRSTRIP_SUPPLY_UNIT_TYPES = new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'])
+const NAVAL_TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
 
 function recordHumanUnitCommand(unitIds, command) {
   const unitRefs = createReplayUnitReferences(unitIds)
@@ -235,8 +236,12 @@ export function handleGuardCommand(_handler, worldX, worldY, units, selectedUnit
 }
 
 export function handleGuardTargetCommand(selectedUnits, guardTarget, selectionManager) {
+  if (NAVAL_TRANSPORT_TYPES.has(guardTarget?.type)) return false
   const commandableUnits = selectedUnits.filter(u =>
-    u.id !== guardTarget?.id && selectionManager.isCommandableUnit(u) && u.isBuilding !== true
+    u.id !== guardTarget?.id &&
+    !NAVAL_TRANSPORT_TYPES.has(u.type) &&
+    selectionManager.isCommandableUnit(u) &&
+    u.isBuilding !== true
   )
   if (commandableUnits.length === 0) {
     return false

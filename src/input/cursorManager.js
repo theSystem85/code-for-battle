@@ -360,7 +360,9 @@ export class CursorManager {
 
     const terrainBlocked = movementType === 'water'
       ? tileType !== 'water'
-      : tileType === 'water' || tileType === 'rock'
+      : movementType === 'amphibious'
+        ? tileType === 'rock'
+        : tileType === 'water' || tileType === 'rock'
 
     return (
       terrainBlocked ||
@@ -461,7 +463,7 @@ export class CursorManager {
     const hoveredTile = tileWithinBounds && mapGrid[tileY] ? mapGrid[tileY][tileX] : null
 
     const isFriendlyOwner = owner => owner === gameState.humanPlayer || (gameState.humanPlayer === 'player1' && owner === 'player')
-    const hoveredUnit = (units || [])
+    const hoveredUnits = (units || [])
       .filter(unit => unit && unit.health > 0 && !unit.embarkedOnId && isFriendlyOwner(unit.owner))
       .map(unit => {
         const centerX = unit.x + TILE_SIZE / 2
@@ -472,7 +474,9 @@ export class CursorManager {
         return { unit, score: Math.hypot(worldX - centerX, worldY - centerY) / radius }
       })
       .filter(({ score }) => score <= 1)
-      .sort((a, b) => a.score - b.score)[0]?.unit
+      .sort((a, b) => a.score - b.score)
+      .map(({ unit }) => unit)
+    const hoveredUnit = hoveredUnits[0]
     const selectedGroundCargo = selectedUnits.filter(unit =>
       !unit?.isBuilding &&
       !unit?.isNaval &&
@@ -486,19 +490,29 @@ export class CursorManager {
     this.isOverFleetBoardingTarget = false
     this.isOverBlockedFleetBoardingTarget = false
 
-    if (NAVAL_TRANSPORT_TYPES.has(hoveredUnit?.type) && selectedGroundCargo.length > 0) {
-      const reserved = (hoveredUnit.embarkedUnitIds?.length || 0) + (hoveredUnit.pendingLoadUnitIds?.length || (hoveredUnit.pendingLoadUnitId ? 1 : 0))
-      this.isOverFleetBoardingTarget = reserved < (hoveredUnit.transportCapacity || 0)
+    const hoveredTransport = selectedGroundCargo.length > 0
+      ? hoveredUnits.find(unit => NAVAL_TRANSPORT_TYPES.has(unit.type))
+      : null
+    const hoveredGroundCargo = selectedTransports.length > 0
+      ? hoveredUnits.find(unit =>
+        !selectedTransports.includes(unit) &&
+        !unit.isBuilding &&
+        !unit.isNaval &&
+        !unit.isAirUnit &&
+        !CARRIER_AIRCRAFT_SLOT_WEIGHT[unit.type]
+      )
+      : null
+
+    if (hoveredTransport) {
+      const reserved = (hoveredTransport.embarkedUnitIds?.length || 0) + (hoveredTransport.pendingLoadUnitIds?.length || (hoveredTransport.pendingLoadUnitId ? 1 : 0))
+      this.isOverFleetBoardingTarget = reserved < (hoveredTransport.transportCapacity || 0)
       this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
-    } else if (selectedTransports.length > 0 && hoveredUnit && selectedGroundCargo.length === 0) {
-      const canLoadHoveredUnit = !hoveredUnit.isBuilding && !hoveredUnit.isNaval && !hoveredUnit.isAirUnit && !CARRIER_AIRCRAFT_SLOT_WEIGHT[hoveredUnit.type]
-      if (canLoadHoveredUnit) {
-        this.isOverFleetBoardingTarget = selectedTransports.some(transport => {
-          const reserved = (transport.embarkedUnitIds?.length || 0) + (transport.pendingLoadUnitIds?.length || (transport.pendingLoadUnitId ? 1 : 0))
-          return reserved < (transport.transportCapacity || 0)
-        })
-        this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
-      }
+    } else if (hoveredGroundCargo && selectedGroundCargo.length === 0) {
+      this.isOverFleetBoardingTarget = selectedTransports.some(transport => {
+        const reserved = (transport.embarkedUnitIds?.length || 0) + (transport.pendingLoadUnitIds?.length || (transport.pendingLoadUnitId ? 1 : 0))
+        return reserved < (transport.transportCapacity || 0)
+      })
+      this.isOverBlockedFleetBoardingTarget = !this.isOverFleetBoardingTarget
     } else if (hoveredUnit?.type === 'aircraftCarrier' && selectedCarrierAircraft.length > 0) {
       const usedSlots = (units || []).reduce((total, aircraft) => {
         const assignedCarrierId = aircraft.carrierOperation?.carrierId || aircraft.carrierId
@@ -525,11 +539,12 @@ export class CursorManager {
       this.isFriendlyAirstripTile(tileX, tileY)
     const selectedMovers = selectedUnits.filter(unit => !unit?.isBuilding)
     const selectedNavalOnly = selectedMovers.length > 0 && selectedMovers.every(unit => unit.isNaval)
+    const selectedHovercraftOnly = selectedMovers.length > 0 && selectedMovers.every(unit => unit.type === 'hovercraft')
 
     // Check if mouse is over blocked terrain when in game canvas, with added safety check
     this.isOverBlockedTerrain = this.isOverGameCanvas &&
       gridReady &&
-      this.isBlockedTerrain(tileX, tileY, mapGrid, selectedNavalOnly ? 'water' : 'land') &&
+      this.isBlockedTerrain(tileX, tileY, mapGrid, selectedHovercraftOnly ? 'amphibious' : selectedNavalOnly ? 'water' : 'land') &&
       !selectedSupportOnlyOnAirstrip
 
     // Check if mouse is over a player refinery when harvesters are selected

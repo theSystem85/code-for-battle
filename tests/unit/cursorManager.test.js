@@ -392,6 +392,23 @@ describe('CursorManager', () => {
     expect(canvas.classList.contains('move-into-mode')).toBe(true)
   })
 
+  it('shows the move cursor for a selected hovercraft over passable land and water', () => {
+    const manager = new CursorManager()
+    const canvas = createCanvas({ left: 0, top: 0, right: 400, bottom: 400 })
+    const mapGrid = createTestMapGrid(12, 12)
+    setTileAt(mapGrid, 9, 4, { type: 'water' })
+    const hovercraft = {
+      id: 'hovercraft', owner: 'player1', type: 'hovercraft', isNaval: true,
+      x: TILE_SIZE, y: TILE_SIZE, health: 500
+    }
+
+    manager.updateCustomCursor(createMouseEvent(8 * TILE_SIZE + 1, 3 * TILE_SIZE + 1), mapGrid, [], [hovercraft], [hovercraft])
+    expect(canvas.classList.contains('move-mode')).toBe(true)
+
+    manager.updateCustomCursor(createMouseEvent(9 * TILE_SIZE + 1, 4 * TILE_SIZE + 1), mapGrid, [], [hovercraft], [hovercraft])
+    expect(canvas.classList.contains('move-mode')).toBe(true)
+  })
+
   it('uses carrier move-into cursor for F22, F35, and Apache while weighted deck space remains', () => {
     const manager = new CursorManager()
     const canvas = createCanvas({ left: 0, top: 0, right: 500, bottom: 500 })

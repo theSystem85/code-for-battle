@@ -16,6 +16,7 @@ import { spawnEnemyUnit } from './ai/enemySpawner.js'
 import { initializeSessionRNG } from './network/deterministicRandom.js'
 import { terminateAllSounds } from './sound.js'
 import { clearBattleshipFireControl } from './game/battleshipTurrets.js'
+import { cancelTransportOperations } from './game/transportOperationCancellation.js'
 import { getStoredEntries, getStoredItem, isGameStorageAvailable, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 import {
   createReplayUnitReference,
@@ -533,6 +534,7 @@ export function createReplayUnitReferences(unitsOrIds = []) {
 }
 
 function stopReplayUnitsAttacking(selectedUnits) {
+  cancelTransportOperations(selectedUnits, gameState.units || [], gameState.occupancyMap)
   selectedUnits.forEach(unit => {
     if (unit.isBuilding) {
       unit.forcedAttackTarget = null

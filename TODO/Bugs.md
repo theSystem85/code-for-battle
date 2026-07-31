@@ -453,3 +453,17 @@
 - [x] Correct large naval hulls away from land when an in-place or low-speed turn makes the rendered bow/stern overlap the shoreline.
 - [x] Exclude flying, landing, taxiing, and parked aircraft from Aircraft Carrier collision and avoidance calculations.
 - [x] Stop an Aircraft Carrier when its rendered bow tip reaches the final waypoint, clear every residual movement/rotation state, and retain that heading until a new command.
+
+## 2026-07-28 Naval transport shoreline and AGF bugs
+
+- [x] Load and unload Hovercraft cargo through the bow/front while keeping Vehicle Ferry cargo transfer at the stern/rear.
+- [x] Disable long-hull shoreline terrain collision only while a Hovercraft or Vehicle Ferry is actively approaching/aligned at a loading or unloading rendezvous.
+- [x] When a selected Hovercraft or Vehicle Ferry uses an AGF drag box around friendly ground units, queue every capacity-eligible boxed unit for boarding and never activate guard mode on the transport.
+
+## 2026-07-31 Naval transport reliability follow-up
+
+- [x] Make Ferry and Hovercraft boarding reliable for grouped and sequential cargo orders without replacing earlier rendezvous slots or waiting forever for every queued unit simultaneously.
+- [x] Give embark commands unconditional priority over guard commands in both ground-to-transport and transport-to-ground click directions; transports must never guard ground units.
+- [x] Show the normal move cursor for a selected Hovercraft over passable land as well as water.
+- [x] Make S cancel any selected transport or participating cargo unit's complete embark/disembark operation, restoring occupancy/embarked state and removing every pending lock/reference so a new operation can start immediately.
+- [x] Add one prepared Playwright E2E covering a Ferry with ten tanks, a land-based Hovercraft with five tanks, and a coast-water Hovercraft with five tanks, including command priority, cancellation cleanup, cursor behavior, and completed capacity loading.

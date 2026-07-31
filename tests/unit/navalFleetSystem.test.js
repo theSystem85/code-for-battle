@@ -9,10 +9,12 @@ import {
 } from '../../src/config.js'
 import { gameState } from '../../src/gameState.js'
 import {
+  cancelTransportOperations,
   commandCarrierStrike,
   requestCarrierLanding,
   requestCarrierLaunch,
   requestTransportLoad,
+  requestTransportLoadGroup,
   requestTransportUnload,
   SUBMARINE_TORPEDO_COOLDOWN,
   tryHandleFleetCommand,
@@ -158,7 +160,7 @@ describe('six-ship naval fleet systems', () => {
     const sternOffset = getNavalHullDimensions(ferry.type).length / 2
     expect(ferry.x + TILE_SIZE / 2 - Math.cos(ferry.direction) * sternOffset).toBeCloseTo(rendezvous.contactX, 1)
     expect(ferry.y + TILE_SIZE / 2 - Math.sin(ferry.direction) * sternOffset).toBeCloseTo(rendezvous.contactY, 1)
-    while (ferry.transportOperation && animationNow < 6000) {
+    while (ferry.transportOperation && animationNow < 10000) {
       updateNavalFleet(units, [], map, { occupancyMap: [] }, animationNow, 16)
       animationNow += 16
     }
@@ -189,6 +191,158 @@ describe('six-ship naval fleet systems', () => {
       map
     )).toBe(true)
     expect(hovercraft.pendingLoadUnitIds).toEqual([tank.id])
+  })
+
+  it('preserves every cargo slot across sequential boarding clicks', () => {
+    const map = createMap(24, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 12; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const occupancyMap = Array.from({ length: 20 }, () => Array(24).fill(0))
+    const ferry = {
+      ...createShip('vehicleFerry', 'ferry', 'player1', 15, 8),
+      transportCapacity: 10,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const first = { id: 'first', type: 'tank_v1', owner: 'player1', x: 9 * TILE_SIZE, y: 8 * TILE_SIZE, tileX: 9, tileY: 8, health: 100, path: [] }
+    const second = { id: 'second', type: 'tank_v1', owner: 'player1', x: 10 * TILE_SIZE, y: 8 * TILE_SIZE, tileX: 10, tileY: 8, health: 100, path: [] }
+    occupancyMap[8][9] = 1
+    occupancyMap[8][10] = 1
+    const units = [ferry, first, second]
+
+    expect(requestTransportLoad(ferry, first, map, occupancyMap, units)).toBe(true)
+    expect(requestTransportLoad(ferry, second, map, occupancyMap, units)).toBe(true)
+
+    expect(ferry.pendingLoadUnitIds).toEqual(['first', 'second'])
+    expect(Object.keys(ferry.pendingLoadRendezvous.cargoSlots).sort()).toEqual(['first', 'second'])
+    expect(first.pendingTransportId).toBe(ferry.id)
+    expect(second.pendingTransportId).toBe(ferry.id)
+    expect(first.guardMode).toBe(false)
+    expect(second.guardMode).toBe(false)
+  })
+
+  it('resolves overlapping clicks by embarkation role before generic friendly targeting', () => {
+    const map = createMap(20, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const ferry = {
+      ...createShip('vehicleFerry', 'role-ferry', 'player1', 12, 8),
+      transportCapacity: 10,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const selectedTank = {
+      id: 'selected-tank', type: 'tank_v1', owner: 'player1',
+      x: 8 * TILE_SIZE, y: 8 * TILE_SIZE, tileX: 8, tileY: 8,
+      health: 100, path: [], guardMode: true, guardTarget: { id: 'stale' }
+    }
+    const overlappingTank = {
+      id: 'overlapping-tank', type: 'tank_v1', owner: 'player1',
+      x: ferry.x, y: ferry.y, tileX: ferry.tileX, tileY: ferry.tileY,
+      health: 100, path: []
+    }
+    const units = [selectedTank, overlappingTank, ferry]
+
+    expect(tryHandleFleetCommand(
+      [selectedTank],
+      overlappingTank.x + TILE_SIZE / 2,
+      overlappingTank.y + TILE_SIZE / 2,
+      units,
+      map
+    )).toBe(true)
+    expect(ferry.pendingLoadUnitIds).toContain(selectedTank.id)
+    expect(selectedTank.guardMode).toBe(false)
+    expect(selectedTank.guardTarget).toBeNull()
+
+    const secondFerry = {
+      ...createShip('vehicleFerry', 'reverse-role-ferry', 'player1', 12, 12),
+      transportCapacity: 10,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const clickedTank = {
+      id: 'clicked-tank', type: 'tank_v1', owner: 'player1',
+      x: 8 * TILE_SIZE, y: 12 * TILE_SIZE, tileX: 8, tileY: 12,
+      health: 100, path: []
+    }
+    expect(tryHandleFleetCommand(
+      [secondFerry],
+      clickedTank.x + TILE_SIZE / 2,
+      clickedTank.y + TILE_SIZE / 2,
+      [secondFerry, clickedTank],
+      map
+    )).toBe(true)
+    expect(secondFerry.pendingLoadUnitIds).toEqual([clickedTank.id])
+    expect(secondFerry.guardMode).toBe(false)
+    expect(secondFerry.guardTarget).toBeNull()
+  })
+
+  it('prepares a land-based hovercraft to load four of five boxed tanks through its bow', () => {
+    const map = createMap(24, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 16; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const hovercraft = {
+      ...createShip('hovercraft', 'hover-land', 'player1', 8, 8),
+      transportCapacity: 4,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const tanks = Array.from({ length: 5 }, (_, index) => ({
+      id: `tank-${index}`,
+      type: 'tank_v1',
+      owner: 'player1',
+      x: (11 + index % 2) * TILE_SIZE,
+      y: (6 + index) * TILE_SIZE,
+      tileX: 11 + index % 2,
+      tileY: 6 + index,
+      health: 100,
+      path: []
+    }))
+
+    expect(requestTransportLoadGroup(hovercraft, tanks, map, [], [hovercraft, ...tanks])).toBe(true)
+    expect(hovercraft.pendingLoadUnitIds).toEqual(tanks.slice(0, 4).map(tank => tank.id))
+    expect(hovercraft.pendingLoadRendezvous.landOperation).toBe(true)
+    expect(hovercraft.pendingLoadRendezvous.navigationTile).toEqual({ x: 8, y: 8 })
+  })
+
+  it('aligns a hovercraft bow-first and transfers cargo through its front ramp', () => {
+    const map = createMap(20, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const hovercraft = {
+      ...createShip('hovercraft', 'hover', 'player1', 12, 8),
+      transportCapacity: 4,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const tank = { id: 'tank', type: 'tank_v1', owner: 'player1', x: 8 * TILE_SIZE, y: 8 * TILE_SIZE, health: 100, path: [] }
+    const units = [hovercraft, tank]
+
+    expect(requestTransportLoad(hovercraft, tank, map)).toBe(true)
+    const rendezvous = hovercraft.pendingLoadRendezvous
+    const slot = rendezvous.cargoSlots[tank.id]
+    hovercraft.x = rendezvous.desiredCenterX - TILE_SIZE / 2
+    hovercraft.y = rendezvous.desiredCenterY - TILE_SIZE / 2
+    hovercraft.tileX = Math.floor((hovercraft.x + TILE_SIZE / 2) / TILE_SIZE)
+    hovercraft.tileY = Math.floor((hovercraft.y + TILE_SIZE / 2) / TILE_SIZE)
+    tank.x = slot.x * TILE_SIZE
+    tank.y = slot.y * TILE_SIZE
+
+    updateNavalFleet(units, [], map, { occupancyMap: [] }, 1000, 16)
+    let animationNow = 1016
+    while (!tank.transportTransfer && animationNow < 3000) {
+      updateNavalFleet(units, [], map, { occupancyMap: [] }, animationNow, 16)
+      animationNow += 16
+    }
+
+    const bowOffset = getNavalHullDimensions(hovercraft.type).length / 2
+    expect(hovercraft.x + TILE_SIZE / 2 + Math.cos(hovercraft.direction) * bowOffset).toBeCloseTo(rendezvous.contactX, 1)
+    expect(hovercraft.y + TILE_SIZE / 2 + Math.sin(hovercraft.direction) * bowOffset).toBeCloseTo(rendezvous.contactY, 1)
+    expect(tank.transportTransfer).toMatchObject({ kind: 'load', transportId: hovercraft.id })
   })
 
   it('disembarks at the shoreline and sends cargo onward to the clicked land destination', () => {
@@ -261,6 +415,106 @@ describe('six-ship naval fleet systems', () => {
       map
     )).toBe(true)
     expect(overlappingCoastFerry.pendingUnloadTile).toMatchObject({ x: 9, y: 8 })
+  })
+
+  it('cancels an active load from either participant without dangling transfer state', () => {
+    const map = createMap(20, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const occupancyMap = Array.from({ length: 20 }, () => Array(20).fill(0))
+    const ferry = {
+      ...createShip('vehicleFerry', 'cancel-ferry', 'player1', 12, 8),
+      transportCapacity: 10,
+      embarkedUnitIds: [],
+      pendingLoadUnitIds: []
+    }
+    const tank = { id: 'cancel-tank', type: 'tank_v1', owner: 'player1', x: 8 * TILE_SIZE, y: 8 * TILE_SIZE, tileX: 8, tileY: 8, health: 100, path: [] }
+    const units = [ferry, tank]
+    occupancyMap[8][8] = 1
+
+    expect(requestTransportLoad(ferry, tank, map, occupancyMap, units)).toBe(true)
+    const rendezvous = ferry.pendingLoadRendezvous
+    const slot = rendezvous.cargoSlots[tank.id]
+    ferry.x = rendezvous.desiredCenterX - TILE_SIZE / 2
+    ferry.y = rendezvous.desiredCenterY - TILE_SIZE / 2
+    ferry.tileX = Math.floor((ferry.x + TILE_SIZE / 2) / TILE_SIZE)
+    ferry.tileY = Math.floor((ferry.y + TILE_SIZE / 2) / TILE_SIZE)
+    tank.x = slot.x * TILE_SIZE
+    tank.y = slot.y * TILE_SIZE
+    tank.tileX = slot.x
+    tank.tileY = slot.y
+    occupancyMap[8][8] = 0
+    occupancyMap[slot.y][slot.x] = 1
+
+    let now = 1000
+    while (!tank.transportTransfer && now < 6000) {
+      updateNavalFleet(units, [], map, { occupancyMap }, now, 16)
+      now += 16
+    }
+    expect(tank.transportTransfer?.kind).toBe('load')
+    const restoreTile = {
+      x: Math.floor((tank.transportTransfer.startX + TILE_SIZE / 2) / TILE_SIZE),
+      y: Math.floor((tank.transportTransfer.startY + TILE_SIZE / 2) / TILE_SIZE)
+    }
+
+    expect(cancelTransportOperations([tank], units, occupancyMap)).toBe(1)
+    expect(ferry.transportOperation).toBeNull()
+    expect(ferry.pendingLoadRendezvous).toBeNull()
+    expect(ferry.pendingLoadUnitIds).toEqual([])
+    expect(tank.transportTransfer).toBeNull()
+    expect(tank.pendingTransportId).toBeNull()
+    expect(tank.transportBoardingLocked).toBe(false)
+    expect(occupancyMap[restoreTile.y][restoreTile.x]).toBe(1)
+    expect(requestTransportLoad(ferry, tank, map, occupancyMap, units)).toBe(true)
+  })
+
+  it('restores active disembarking cargo aboard when S-style cancellation occurs', () => {
+    const map = createMap(20, 20, 'land')
+    for (let y = 0; y < map.length; y++) {
+      for (let x = 10; x < map[y].length; x++) map[y][x].type = 'water'
+    }
+    const occupancyMap = Array.from({ length: 20 }, () => Array(20).fill(0))
+    const ferry = {
+      ...createShip('vehicleFerry', 'unload-cancel-ferry', 'player1', 12, 8),
+      transportCapacity: 10,
+      embarkedUnitIds: ['unload-cancel-tank'],
+      embarkedUnitTypes: ['tank_v1']
+    }
+    const tank = {
+      id: 'unload-cancel-tank',
+      type: 'tank_v1',
+      owner: 'player1',
+      x: ferry.x,
+      y: ferry.y,
+      tileX: ferry.tileX,
+      tileY: ferry.tileY,
+      health: 100,
+      embarkedOnId: ferry.id,
+      path: []
+    }
+    const units = [ferry, tank]
+
+    expect(requestTransportUnload(ferry, 6, 8, map)).toBe(true)
+    const rendezvous = ferry.pendingUnloadTile.rendezvous
+    ferry.x = rendezvous.desiredCenterX - TILE_SIZE / 2
+    ferry.y = rendezvous.desiredCenterY - TILE_SIZE / 2
+    ferry.tileX = Math.floor((ferry.x + TILE_SIZE / 2) / TILE_SIZE)
+    ferry.tileY = Math.floor((ferry.y + TILE_SIZE / 2) / TILE_SIZE)
+    let now = 1000
+    while (!tank.transportTransfer && now < 6000) {
+      updateNavalFleet(units, [], map, { occupancyMap }, now, 16)
+      now += 16
+    }
+    expect(tank.transportTransfer?.kind).toBe('unload')
+
+    expect(cancelTransportOperations([tank], units, occupancyMap)).toBe(1)
+    expect(tank.transportTransfer).toBeNull()
+    expect(tank.embarkedOnId).toBe(ferry.id)
+    expect(ferry.embarkedUnitIds).toContain(tank.id)
+    expect(ferry.transportOperation).toBeNull()
+    expect(ferry.pendingUnloadTile).toBeNull()
+    expect(requestTransportUnload(ferry, 6, 8, map)).toBe(true)
   })
 
   it('enforces four weighted carrier deck slots and services fuel/ammo without repairing HP', () => {

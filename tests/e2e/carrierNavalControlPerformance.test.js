@@ -18,16 +18,18 @@ test.describe('Carrier air operations and naval direct-control performance', () 
     })
 
     const result = await page.evaluate(async durationMs => {
-      const [fleetModule, remoteModule, configModule, performanceModule] = await Promise.all([
+      const [fleetModule, remoteModule, configModule, performanceModule, movementCollisionModule] = await Promise.all([
         import('/src/game/navalFleetSystem.js'),
         import('/src/game/remoteControl.js'),
         import('/src/config.js'),
-        import('/src/performance/performanceMonitor.js')
+        import('/src/performance/performanceMonitor.js'),
+        import('/src/game/movementCollision.js')
       ])
       const { updateNavalFleet } = fleetModule
       const { handleNavalRemoteControl } = remoteModule
       const { TILE_SIZE, UNIT_PROPERTIES } = configModule
       const { performanceMonitor } = performanceModule
+      const { checkUnitCollision, resolveNavalShoreOverlap } = movementCollisionModule
       const carrierCount = 12
       const aircraftPerCarrier = 4
       const units = []
@@ -133,68 +135,156 @@ test.describe('Carrier air operations and naval direct-control performance', () 
         fireIntensity: 0
       }
       const map = Array.from({ length: 64 }, () => Array.from({ length: 64 }, () => ({ type: 'water' })))
+      const coastMap = Array.from({ length: 64 }, () =>
+        Array.from({ length: 64 }, (_, x) => ({ type: x < 20 ? 'land' : 'water' })))
+      const shoreTransports = Array.from({ length: 24 }, (_, index) => {
+        const type = index % 2 === 0 ? 'vehicleFerry' : 'hovercraft'
+        const cargoCount = type === 'vehicleFerry' ? 10 : 4
+        const cargoIds = Array.from({ length: cargoCount }, (_, cargoIndex) => `perf-cargo-${index}-${cargoIndex}`)
+        return {
+          id: `perf-shore-${index}`,
+          type,
+          owner: 'player1',
+          isNaval: true,
+          health: UNIT_PROPERTIES[type].health,
+          x: 20 * TILE_SIZE,
+          y: (2 + index * 2) * TILE_SIZE,
+          direction: Math.PI,
+          transportCapacity: cargoCount,
+          embarkedUnitIds: [],
+          pendingLoadRendezvous: {
+            desiredCenterX: 20.5 * TILE_SIZE,
+            desiredCenterY: (2.5 + index * 2) * TILE_SIZE,
+            cargoSlots: Object.fromEntries(cargoIds.map((id, cargoIndex) => [id, {
+              x: 17 - (cargoIndex % 4),
+              y: 2 + index * 2 + Math.floor(cargoIndex / 4)
+            }]))
+          },
+          pendingLoadUnitIds: cargoIds,
+          movement: {
+            velocity: { x: 0, y: 0 },
+            targetVelocity: { x: 0, y: 0 },
+            currentSpeed: 0,
+            isMoving: false
+          }
+        }
+      })
+      const shoreCargo = shoreTransports.flatMap((transport, transportIndex) =>
+        transport.pendingLoadUnitIds.map((id, cargoIndex) => ({
+          id,
+          type: 'tank_v1',
+          owner: 'player1',
+          health: 100,
+          x: (2 + cargoIndex % 4) * TILE_SIZE,
+          y: (2 + transportIndex * 2 + Math.floor(cargoIndex / 4)) * TILE_SIZE,
+          tileX: 2 + cargoIndex % 4,
+          tileY: 2 + transportIndex * 2 + Math.floor(cargoIndex / 4),
+          pendingTransportId: transport.id,
+          path: [],
+          moveTarget: null
+        })))
+      const fleetUnits = [...units, ...shoreTransports, ...shoreCargo]
       const state = { occupancyMap: [], depthCharges: [], waterMines: [], explosions: [] }
-      const frameIntervals = []
-      let workloadTotalMs = 0
-      let workloadMaxMs = 0
-      let workloadSamples = 0
-      let gameUpdateTotalMs = 0
-      let gameRenderTotalMs = 0
-      let gameFrameSamples = 0
-      let previousFrameAt = performance.now()
-      const startedAt = previousFrameAt
       const heapStartBytes = performance.memory?.usedJSHeapSize || null
       const fpsDisplay = window.gameInstance.gameLoop.fpsDisplay
       const originalReportFrameBreakdown = fpsDisplay.reportFrameBreakdown.bind(fpsDisplay)
-      fpsDisplay.reportFrameBreakdown = breakdown => {
-        gameUpdateTotalMs += Number.isFinite(breakdown?.updateMs) ? breakdown.updateMs : 0
-        gameRenderTotalMs += Number.isFinite(breakdown?.renderMs) ? breakdown.renderMs : 0
-        gameFrameSamples++
-        return originalReportFrameBreakdown(breakdown)
-      }
-      performanceMonitor.start()
+      const boardingState = shoreTransports.map(transport => ({
+        transport,
+        pendingLoadUnitIds: transport.pendingLoadUnitIds,
+        pendingLoadRendezvous: transport.pendingLoadRendezvous
+      }))
 
-      await new Promise(resolve => {
-        const frame = now => {
-          frameIntervals.push(now - previousFrameAt)
-          previousFrameAt = now
-          const workloadStartedAt = performance.now()
-          updateNavalFleet(units, [], map, state, now, 16)
-          remoteShips.forEach(ship => handleNavalRemoteControl(ship, inputs, [], remoteShips, map, now))
-          window.gameInstance.gameLoop.requestRender()
-          const workloadMs = performance.now() - workloadStartedAt
-          workloadTotalMs += workloadMs
-          workloadMaxMs = Math.max(workloadMaxMs, workloadMs)
-          workloadSamples++
-          if (now - startedAt >= durationMs) resolve()
-          else requestAnimationFrame(frame)
+      const setBoardingActive = active => {
+        boardingState.forEach(entry => {
+          entry.transport.pendingLoadUnitIds = active ? entry.pendingLoadUnitIds : []
+          entry.transport.pendingLoadUnitId = active ? entry.pendingLoadUnitIds[0] : null
+          entry.transport.pendingLoadRendezvous = active ? entry.pendingLoadRendezvous : null
+        })
+        shoreCargo.forEach(cargo => {
+          cargo.pendingTransportId = active
+            ? boardingState.find(entry => entry.pendingLoadUnitIds.includes(cargo.id))?.transport.id || null
+            : null
+        })
+      }
+
+      const samplePhase = async(active, phaseDurationMs) => {
+        setBoardingActive(active)
+        const frameIntervals = []
+        let workloadTotalMs = 0
+        let workloadMaxMs = 0
+        let workloadSamples = 0
+        let gameUpdateTotalMs = 0
+        let gameRenderTotalMs = 0
+        let gameFrameSamples = 0
+        let shoreCollisions = 0
+        let previousFrameAt = performance.now()
+        const startedAt = previousFrameAt
+        fpsDisplay.reportFrameBreakdown = breakdown => {
+          gameUpdateTotalMs += Number.isFinite(breakdown?.updateMs) ? breakdown.updateMs : 0
+          gameRenderTotalMs += Number.isFinite(breakdown?.renderMs) ? breakdown.renderMs : 0
+          gameFrameSamples++
+          return originalReportFrameBreakdown(breakdown)
         }
-        requestAnimationFrame(frame)
-      })
+        performanceMonitor.start()
+
+        await new Promise(resolve => {
+          const frame = now => {
+            frameIntervals.push(now - previousFrameAt)
+            previousFrameAt = now
+            const workloadStartedAt = performance.now()
+            updateNavalFleet(fleetUnits, [], coastMap, state, now, 16)
+            remoteShips.forEach(ship => handleNavalRemoteControl(ship, inputs, [], remoteShips, map, now))
+            shoreTransports.forEach(transport => {
+              if (checkUnitCollision(transport, coastMap, [], shoreTransports).collided) shoreCollisions++
+              resolveNavalShoreOverlap(transport, coastMap)
+            })
+            window.gameInstance.gameLoop.requestRender()
+            const workloadMs = performance.now() - workloadStartedAt
+            workloadTotalMs += workloadMs
+            workloadMaxMs = Math.max(workloadMaxMs, workloadMs)
+            workloadSamples++
+            if (now - startedAt >= phaseDurationMs) resolve()
+            else requestAnimationFrame(frame)
+          }
+          requestAnimationFrame(frame)
+        })
+
+        const monitor = performanceMonitor.stop()
+        const usableIntervals = frameIntervals.filter(interval => interval > 0 && interval < 250)
+        const elapsedMs = usableIntervals.reduce((sum, interval) => sum + interval, 0)
+        return {
+          fps: elapsedMs > 0 ? usableIntervals.length * 1000 / elapsedMs : 0,
+          frameCount: usableIntervals.length,
+          maxFrameMs: usableIntervals.length ? Math.max(...usableIntervals) : 0,
+          averageWorkloadMs: workloadSamples ? workloadTotalMs / workloadSamples : 0,
+          maxWorkloadMs: workloadMaxMs,
+          averageGameUpdateMs: gameFrameSamples ? gameUpdateTotalMs / gameFrameSamples : 0,
+          averageGameRenderMs: gameFrameSamples ? gameRenderTotalMs / gameFrameSamples : 0,
+          gameFrameSamples,
+          shoreCollisions,
+          timingMs: monitor?.timingMs || null
+        }
+      }
+
+      const phaseDurationMs = Math.max(1500, durationMs / 2)
+      const baseline = await samplePhase(false, phaseDurationMs)
+      const activeBoarding = await samplePhase(true, phaseDurationMs)
 
       fpsDisplay.reportFrameBreakdown = originalReportFrameBreakdown
-      const monitor = performanceMonitor.stop()
       const heapEndBytes = performance.memory?.usedJSHeapSize || null
-      const usableIntervals = frameIntervals.filter(interval => interval > 0 && interval < 250)
-      const elapsedMs = usableIntervals.reduce((sum, interval) => sum + interval, 0)
       return {
-        fps: elapsedMs > 0 ? usableIntervals.length * 1000 / elapsedMs : 0,
-        frameCount: usableIntervals.length,
-        maxFrameMs: usableIntervals.length ? Math.max(...usableIntervals) : 0,
-        averageWorkloadMs: workloadSamples ? workloadTotalMs / workloadSamples : 0,
-        maxWorkloadMs: workloadMaxMs,
-        averageGameUpdateMs: gameFrameSamples ? gameUpdateTotalMs / gameFrameSamples : 0,
-        averageGameRenderMs: gameFrameSamples ? gameRenderTotalMs / gameFrameSamples : 0,
-        gameFrameSamples,
+        baseline,
+        activeBoarding,
         heapStartMb: Number.isFinite(heapStartBytes) ? heapStartBytes / (1024 * 1024) : null,
         heapEndMb: Number.isFinite(heapEndBytes) ? heapEndBytes / (1024 * 1024) : null,
         heapDeltaMb: Number.isFinite(heapStartBytes) && Number.isFinite(heapEndBytes)
           ? (heapEndBytes - heapStartBytes) / (1024 * 1024)
           : null,
-        timingMs: monitor?.timingMs || null,
         carrierCount,
         aircraftCount: carrierCount * aircraftPerCarrier,
-        remoteShipCount: remoteShips.length
+        remoteShipCount: remoteShips.length,
+        shoreTransportCount: shoreTransports.length,
+        shoreCargoCount: shoreCargo.length
       }
     }, SAMPLE_DURATION_MS)
 
@@ -204,10 +294,12 @@ test.describe('Carrier air operations and naval direct-control performance', () 
       contentType: 'application/json'
     })
 
-    expect(result.fps).toBeGreaterThanOrEqual(50)
-    expect(result.averageWorkloadMs).toBeLessThan(4)
-    expect(result.averageGameUpdateMs).toBeLessThan(8)
-    expect(result.averageGameRenderMs).toBeLessThan(8)
+    expect(result.activeBoarding.fps).toBeGreaterThanOrEqual(50)
+    expect(result.activeBoarding.fps).toBeGreaterThanOrEqual(result.baseline.fps * 0.8)
+    expect(result.activeBoarding.averageWorkloadMs).toBeLessThan(4)
+    expect(result.activeBoarding.averageGameUpdateMs).toBeLessThan(8)
+    expect(result.activeBoarding.averageGameRenderMs).toBeLessThan(8)
+    expect(result.activeBoarding.shoreCollisions).toBe(0)
     if (Number.isFinite(result.heapDeltaMb)) expect(result.heapDeltaMb).toBeLessThan(16)
   })
 })

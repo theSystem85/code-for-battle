@@ -4,8 +4,10 @@ import { gameState } from '../gameState.js'
 import { markWaypointsAdded } from '../game/waypointSounds.js'
 import { activateGroupGuard } from './mouseCommands.js'
 import { createReplayEntityReference, createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
+import { requestTransportLoadGroup } from '../game/navalFleetSystem.js'
 
 const DEFENSIVE_BUILDING_TYPES = new Set(['rocketTurret', 'teslaCoil', 'artilleryTurret', 'turretGunV1', 'turretGunV2', 'turretGunV3'])
+const TRANSPORT_TYPES = new Set(['hovercraft', 'vehicleFerry'])
 
 export class AttackGroupHandler {
   constructor() {
@@ -29,7 +31,10 @@ export class AttackGroupHandler {
     // Combat units are human-owned, not buildings, and not utility/service or harvesters
     const hasCombatUnits = hasSelectedUnits && selectedUnits.some(unit =>
       unit.owner === gameState.humanPlayer && !unit.isBuilding &&
-      unit.type !== 'harvester' && !isServiceVehicle(unit)
+      unit.type !== 'harvester' && !TRANSPORT_TYPES.has(unit.type) && !isServiceVehicle(unit)
+    )
+    const hasTransports = hasSelectedUnits && selectedUnits.some(unit =>
+      unit.owner === gameState.humanPlayer && TRANSPORT_TYPES.has(unit.type)
     )
     const hasDefensiveBuildings = hasSelectedUnits && selectedUnits.some(unit =>
       unit.owner === gameState.humanPlayer && unit.isBuilding && DEFENSIVE_BUILDING_TYPES.has(unit.type)
@@ -42,7 +47,7 @@ export class AttackGroupHandler {
                             !gameState.repairMode &&
                             !gameState.sellMode &&
                             !gameState.attackGroupMode
-    return hasSelectedUnits && (hasCombatUnits || hasDefensiveBuildings) && !hasSelectedFactory && notInSpecialMode
+    return hasSelectedUnits && (hasCombatUnits || hasTransports || hasDefensiveBuildings) && !hasSelectedFactory && notInSpecialMode
   }
 
   handleMouseUp(worldX, worldY, units, selectedUnits, unitCommands, mapGrid, standardCommandFn) {
@@ -51,6 +56,7 @@ export class AttackGroupHandler {
 
     if (this.attackGroupWasDragging) {
       const guardTargets = this.findFriendlyUnitsInAttackGroup(units, selectedUnits)
+      this.loadSelectedTransports(selectedUnits, guardTargets, mapGrid, units)
       this.activateGuardForGroup(selectedUnits, guardTargets)
       const enemyTargets = this.findEnemyUnitsInAttackGroup(units)
       if (enemyTargets.length > 0) {
@@ -79,6 +85,28 @@ export class AttackGroupHandler {
     }, 50)
   }
 
+  loadSelectedTransports(selectedUnits, targets, mapGrid, units = targets) {
+    const transports = (selectedUnits || []).filter(unit =>
+      unit.owner === gameState.humanPlayer && TRANSPORT_TYPES.has(unit.type)
+    )
+    let remainingTargets = (targets || []).filter(target =>
+      !target.isBuilding &&
+      !target.isNaval &&
+      !target.isAirUnit &&
+      target.type !== 'apache' &&
+      target.type !== 'f22Raptor' &&
+      target.type !== 'f35' &&
+      !target.embarkedOnId
+    )
+
+    transports.forEach(transport => {
+      if (remainingTargets.length === 0) return
+      requestTransportLoadGroup(transport, remainingTargets, mapGrid, gameState.occupancyMap, units)
+      const queuedIds = transport.pendingLoadUnitIds || []
+      remainingTargets = remainingTargets.filter(target => !queuedIds.includes(target.id))
+    })
+  }
+
   findFriendlyUnitsInAttackGroup(units, selectedUnits) {
     const x1 = Math.min(gameState.attackGroupStart.x, gameState.attackGroupEnd.x)
     const y1 = Math.min(gameState.attackGroupStart.y, gameState.attackGroupEnd.y)
@@ -103,9 +131,11 @@ export class AttackGroupHandler {
     }
     const combatUnits = selectedUnits.filter(unit =>
       unit.type !== 'harvester' &&
+      !TRANSPORT_TYPES.has(unit.type) &&
       unit.owner === gameState.humanPlayer &&
       !unit.isBuilding
     )
+    if (combatUnits.length === 0) return
     if (!activateGroupGuard(combatUnits, guardTargets)) {
       return
     }
@@ -198,7 +228,10 @@ export class AttackGroupHandler {
     unitCommands.isAttackGroupOperation = true
 
     const combatUnits = selectedUnits.filter(unit =>
-      unit.type !== 'harvester' && unit.owner === gameState.humanPlayer && !unit.isBuilding
+      unit.type !== 'harvester' &&
+      !TRANSPORT_TYPES.has(unit.type) &&
+      unit.owner === gameState.humanPlayer &&
+      !unit.isBuilding
     )
 
     combatUnits.forEach((unit) => {

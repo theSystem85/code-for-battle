@@ -43,6 +43,13 @@ vi.mock('../../src/input/mouseCommands.js', () => ({
   activateGroupGuard: vi.fn(() => true)
 }))
 
+vi.mock('../../src/game/navalFleetSystem.js', () => ({
+  requestTransportLoadGroup: vi.fn((transport, targets) => {
+    transport.pendingLoadUnitIds = targets.map(target => target.id)
+    return true
+  })
+}))
+
 vi.mock('../../src/replaySystem.js', () => ({
   createReplayEntityReference: vi.fn(target => target ? { id: target.id || null } : null),
   createReplayUnitReferences: vi.fn(unitIds => (Array.isArray(unitIds) ? unitIds.map(id => ({ id })) : [])),
@@ -53,6 +60,8 @@ import { AttackGroupHandler } from '../../src/input/attackGroupHandler.js'
 import { gameState } from '../../src/gameState.js'
 import { markWaypointsAdded } from '../../src/game/waypointSounds.js'
 import { recordReplayCommand } from '../../src/replaySystem.js'
+import { activateGroupGuard } from '../../src/input/mouseCommands.js'
+import { requestTransportLoadGroup } from '../../src/game/navalFleetSystem.js'
 
 describe('AttackGroupHandler', () => {
   let handler
@@ -153,6 +162,14 @@ describe('AttackGroupHandler', () => {
       const result = handler.shouldStartAttackGroupMode(tankers)
 
       expect(result).toBe(false)
+    })
+
+    it('should return true for a selected naval transport bulk-load drag', () => {
+      const transports = [
+        { id: 'ferry-1', type: 'vehicleFerry', owner: 'player1', health: 100, isNaval: true }
+      ]
+
+      expect(handler.shouldStartAttackGroupMode(transports)).toBe(true)
     })
 
     it('should return false for recovery tanks (service vehicles)', () => {
@@ -348,6 +365,36 @@ describe('AttackGroupHandler', () => {
         unitIds: ['tank-1'],
         guardTargetRefs: [{ id: 'ally-1' }]
       }), { source: 'human' })
+    })
+
+    it('loads boxed ground units into a selected hovercraft without activating guard mode', () => {
+      handler.attackGroupWasDragging = true
+      gameState.attackGroupStart = { x: 0, y: 0 }
+      gameState.attackGroupEnd = { x: 160, y: 160 }
+      selectedUnits = [{
+        id: 'hovercraft-1',
+        type: 'hovercraft',
+        owner: 'player1',
+        health: 100,
+        isNaval: true,
+        transportCapacity: 4,
+        embarkedUnitIds: []
+      }]
+      const tank = { id: 'tank-1', type: 'tank_v1', owner: 'player1', health: 100, x: 32, y: 32 }
+      const ambulance = { id: 'ambulance-1', type: 'ambulance', owner: 'player1', health: 100, x: 64, y: 64 }
+      const apache = { id: 'apache-1', type: 'apache', owner: 'player1', health: 100, isAirUnit: true, x: 96, y: 96 }
+
+      handler.handleMouseUp(160, 160, [selectedUnits[0], tank, ambulance, apache], selectedUnits, unitCommands, mapGrid, null)
+
+      expect(requestTransportLoadGroup).toHaveBeenCalledWith(
+        selectedUnits[0],
+        [tank, ambulance],
+        mapGrid,
+        undefined,
+        [selectedUnits[0], tank, ambulance, apache]
+      )
+      expect(activateGroupGuard).not.toHaveBeenCalled()
+      expect(selectedUnits[0].guardMode).not.toBe(true)
     })
   })
 

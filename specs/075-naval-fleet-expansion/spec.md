@@ -16,13 +16,14 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 ## Hovercraft
 
 - Fast, lightly armored amphibious vehicle transport with capacity for four land vehicles.
-- Loads friendly vehicles by command at shoreline-accessible range and unloads them onto valid unoccupied land near a selected coast destination.
+- Loads and unloads friendly vehicles through its front ramp: it approaches the shoreline bow-first, transfers cargo at the bow, and places unloaded vehicles onto valid unoccupied land near a selected coast destination.
 - Uses water pathing while afloat; it does not act as a combat ship.
 
 ## Vehicle Ferry
 
 - Slower and more heavily armored than the Hovercraft, with capacity for ten land vehicles.
-- Uses the same explicit load/unload lifecycle and safe shoreline placement rules.
+- Uses the same explicit load/unload lifecycle and safe shoreline placement rules, but approaches stern-first and transfers cargo through its rear ramp.
+- While either transport has an active loading/unloading shoreline rendezvous, long-hull terrain collision with the coast is suspended so its designated ramp can reach the land/water boundary; normal center-tile, building, bounds, unit, and non-operation collision rules remain active.
 
 ## Aircraft Carrier
 
@@ -85,6 +86,11 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 ## Implemented command model
 
 - Select one or more friendly ground vehicles and click a Hovercraft/Vehicle Ferry, or select the transport and click a ground vehicle. The transport moves to the closest navigable coast while queued vehicles move to shoreline rendezvous tiles; loading completes automatically in range. Click a valid land destination with the loaded transport selected to approach the nearest coast, disembark, and send its cargo onward to that destination.
+- With a Hovercraft or Vehicle Ferry selected, an AGF drag box over friendly ground units is a bulk boarding command: all valid boxed units up to available transport capacity are queued for loading, aircraft/naval/building targets are ignored, and the transport must not enter guard mode.
+- Boarding target hit-testing is role-aware: selected ground cargo resolves an overlapping Ferry/Hovercraft before friendly guard targets, while a selected transport resolves an overlapping ground vehicle before its own hull. A valid boarding interaction is consumed as boarding even when capacity or shoreline availability blocks the request; it never falls through to guard mode, and transports are never guard-capable.
+- Sequential boarding orders preserve and recompute a complete rendezvous for all existing plus newly queued cargo. Each cargo unit receives a stable reachable staging slot, pathfinding is refreshed immediately, and ready cargo may transfer sequentially without waiting for every queued unit to reach the coast at once.
+- A Hovercraft standing on passable land may load through its front ramp at a land rendezvous and displays the normal move cursor over both passable land and water. A Hovercraft afloat uses the coastal water rendezvous.
+- Pressing S with a transport or any cargo participant selected atomically cancels the linked embark/disembark operation. Mid-load cargo is restored to its center-based land occupancy, mid-unload cargo is restored aboard, every pending id/rendezvous/transfer/boarding lock is cleared, and the transport can accept a new load or unload order immediately.
 - A direct click from selected units onto a friendly unit resolves exactly one action in strict priority order: valid boarding/loading/carrier recovery first, valid service request second, and guard assignment third. The clicked unit is selected only when none of those actions applies; lower-priority actions never run after a higher-priority action succeeds.
 - Clicking a valid land destination with a loaded Hovercraft/Vehicle Ferry sends the ship to the nearest water approach, places cargo on free shoreline tiles using center-based occupancy, and then orders every unloaded unit to move to the originally clicked land tile.
 - Hovering either side of a valid vehicle/transport boarding interaction displays the move-into cursor. A selected transport's bottom HUD loading bar reports its occupied capacity and shows a type-count cargo manifest on hover.
@@ -97,13 +103,17 @@ Add six Shipyard-produced naval units and integrate them with production, prereq
 ## Verification record
 
 - Added focused naval, cursor, and HUD renderer coverage for balance ratios, bidirectional shoreline transport orders, cargo manifests, weighted F22/F35/Apache carrier reservations, independent battery targets, surfacing/torpedo gating, wake placement/suppression, depth charges, and naval mines.
+- Added focused regressions for Hovercraft bow-ramp versus Vehicle Ferry stern-ramp alignment, active-rendezvous shoreline collision bypass, and transport AGF bulk boarding without guard activation.
+- Added grouped/sequential boarding, overlapping role-hit, land-Hovercraft cursor/loading, participant cancellation, occupancy restoration, and immediate load/unload restart regressions. The prepared browser fixture drives real canvas and keyboard input through a Ferry with ten tanks, a land Hovercraft with five tanks, and a coast-water Hovercraft with five tanks; its final run passed in 24.1 seconds.
 - Added four-turret battleship coverage for independent mount selection/targeting/firing, hull-wide target assignment, deterministic-random threshold destruction, turret-local explosion effects, reverse repair restoration, save serialization, and multiplayer command payloads.
 - Added layered-battleship coverage for per-barrel/per-turret salvo timing, the 8-second global reload, broadside hull alignment, tower-blocking behavior without per-turret arc HUD, 50%-expanded range, saved transient salvo state, surface fire against land buildings, submarine Shipyard and Construction Yard targeting, and four equal directional sinking modes.
 - Added mobile-engagement regression coverage proving move orders retain battleship fire control, remote helm input overrides automatic hull alignment, blocked aft mounts stay out of a forward salvo, and S clears all four targets plus pending barrels across local, replay, and multiplayer stop paths.
 - Added battleship performance contracts for stable hot-loop turret identity, viewport-culled boundary-only range rendering, and a live selected-layer benchmark. The final run held the normal 60 FPS cap (59.65 baseline versus 60.14 selected) and retained 80.7% under 6× CPU throttling (27.51 baseline versus 22.20 selected), clearing the 80% regression budget.
 - The 2026-07-26 70%-scale/inner-overlap turret follow-up retained 94.1% under the same 6× CPU-throttled benchmark (28.19 baseline versus 26.53 selected), clearing the 80% regression budget without adding draw calls or per-frame allocations.
 - The 2026-07-27 turret-HUD removal/carrier-deck layering benchmark used the same battleship, carrier, and four F22 entities in both phases. The active feature scene improved from 32.50 to 32.82 FPS (101.0% retention); average render time improved from 15.99 to 15.75 ms, update time from 2.68 to 2.50 ms, entity time from 0.43 to 0.40 ms, and both phases reported 0 MB heap delta.
+- The 2026-07-28 transport-shore collision benchmark used `PERF_CARRIER_NAVAL=1 PERF_CARRIER_NAVAL_DURATION_MS=4000 PLAYWRIGHT_SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 npx playwright test tests/e2e/carrierNavalControlPerformance.test.js --project=chromium --reporter=line`. Before the change, the shared naval workload measured 60.24 FPS, 0.084 ms workload, 0.161 ms game update, 3.238 ms render, and 0 MB heap delta. After adding 24 active shoreline transport collision probes, it measured 60.23 FPS, 0.095 ms workload, 0.126 ms update, 3.864 ms render, 0 MB heap delta, and zero rejected shoreline approaches. FPS retained 100.0% and direct workload cost remained within the 20% regression budget (12.3% increase).
+- The 2026-07-31 active-boarding benchmark runs the transport update once per simulation frame against 24 transports and 168 queued cargo units, then compares it with the same rendered entity scene while boarding is idle. The active scene retained 99.9% FPS (60.22 baseline versus 60.16 active), used 0.850 ms direct naval workload, improved game update time from 0.136 to 0.117 ms, increased render time from 3.280 to 3.532 ms, produced 0 MB heap movement, and reported zero shoreline collision rejections while boarding.
 - Runtime visual QA confirmed the generated hull, housing, and barrel layers align at all four wells, the obsolete free/blocked turret-arc HUD is absent, individual turret selection remains unambiguous, carrier aircraft stay above the deck, and the browser console remains clear.
 - `npm run lint:fix:changed`: pass.
-- `npm run test:unit`: 152 files and 3,813 tests passed.
+- `npm run test:unit`: 152 files and 3,828 tests passed.
 - `npx vite build`: pass (existing bundle-size/dynamic-import warnings only).

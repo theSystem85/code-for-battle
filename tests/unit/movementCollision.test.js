@@ -469,6 +469,24 @@ describe('naval image-footprint collision', () => {
     expect(checkUnitCollision(carrier, mapGrid, [], [carrier]).type).toBe('terrain')
   })
 
+  it('allows a ferry hull to overlap the coast only during an active transport approach', () => {
+    const mapGrid = createWaterGrid()
+    for (let y = 0; y < mapGrid.length; y++) mapGrid[y][3].type = 'land'
+    const ferry = {
+      ...createShip('ferry', 'vehicleFerry', 4 * 32, 8 * 32, Math.PI),
+      pendingLoadRendezvous: { desiredCenterX: 4.5 * 32, desiredCenterY: 8.5 * 32 },
+      pendingLoadUnitIds: ['tank']
+    }
+    initSpatialQuadtree(30 * 32, 20 * 32)
+    rebuildSpatialQuadtree([ferry])
+
+    expect(checkUnitCollision(ferry, mapGrid, [], [ferry]).collided).toBe(false)
+    expect(resolveNavalShoreOverlap(ferry, mapGrid)).toBe(false)
+
+    ferry.pendingLoadRendezvous = null
+    expect(checkUnitCollision(ferry, mapGrid, [], [ferry]).type).toBe('terrain')
+  })
+
   it('pushes a rotated capital ship to the nearest clear-water hull position', () => {
     const mapGrid = createWaterGrid()
     for (let y = 0; y < mapGrid.length; y++) {
@@ -476,6 +494,8 @@ describe('naval image-footprint collision', () => {
     }
     const carrier = createShip('carrier', 'aircraftCarrier', 6 * 32, 8 * 32, Math.PI)
     const originalX = carrier.x
+    initSpatialQuadtree(30 * 32, 20 * 32)
+    rebuildSpatialQuadtree([carrier])
 
     expect(checkUnitCollision(carrier, mapGrid, [], [carrier]).type).toBe('terrain')
     expect(resolveNavalShoreOverlap(carrier, mapGrid)).toBe(true)

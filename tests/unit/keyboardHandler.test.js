@@ -529,6 +529,34 @@ describe('KeyboardHandler', () => {
     expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
   })
 
+  it('cancels a linked embarkation when S is pressed for either participant', () => {
+    const ferry = {
+      id: 'ferry', type: 'vehicleFerry', owner: gameState.humanPlayer,
+      health: 500, x: 10 * TILE_SIZE, y: 8 * TILE_SIZE,
+      pendingLoadUnitId: 'tank', pendingLoadUnitIds: ['tank'],
+      pendingLoadRendezvous: { cargoSlots: { tank: { x: 8, y: 8 } } },
+      embarkedUnitIds: [], path: []
+    }
+    const tank = {
+      id: 'tank', type: 'tank_v1', owner: gameState.humanPlayer,
+      health: 100, x: 8 * TILE_SIZE, y: 8 * TILE_SIZE,
+      pendingTransportId: ferry.id, transportBoardingLocked: true,
+      guardMode: true, guardTarget: ferry, path: []
+    }
+    handler.units = [ferry, tank]
+    handler.selectedUnits = [tank]
+
+    handler.handleStopAttacking()
+
+    expect(ferry.pendingLoadUnitIds).toEqual([])
+    expect(ferry.pendingLoadRendezvous).toBeNull()
+    expect(tank.pendingTransportId).toBeNull()
+    expect(tank.transportBoardingLocked).toBe(false)
+    expect(tank.guardMode).toBe(false)
+    expect(tank.guardTarget).toBeNull()
+    expect(handler.showNotification).toHaveBeenCalledWith('1 unit stopped attacking', 2000)
+  })
+
   it('stops every selected battleship turret and cancels its queued broadside', () => {
     const target = { id: 'enemy', health: 100 }
     const battleship = {
