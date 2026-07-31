@@ -26,6 +26,8 @@
 ## Balancing
 - Shipyard: 5x5 footprint, 5000 credits, -120 power, 450 health, requires Radar Station and Vehicle Factory.
 - Destroyer: 4500 credits, 250 health, armor 1.5, 5% per-crew-member casualty chance on damaging hits, 60 ammunition, 6000 fuel, slow acceleration, naval movement, long 18-tile range.
+- Destroyers continuously aim their gun tracking at an assigned attack target, allowing both player-issued attacks and enemy-AI attacks to fire once aimed and in range.
+- Hot-path verification (2026-07-31): the focused opt-in benchmark is `PERF_DESTROYER_COMBAT=1 npx playwright test tests/e2e/destroyerCombatPerformance.test.js --project=chromium --reporter=line`; it exercises 120 simultaneously targeting Destroyers for 240 live movement frames and reports FPS, movement CPU time, and browser heap delta. The local measurement was blocked before browser launch because Chromium was absent and the Playwright CDN returned HTTP 403 while downloading it; no misleading FPS/CPU/heap result is recorded.
 - Destroyer sidebar build art shows the entire ship from a photorealistic elevated three-quarter perspective over water, with the horizon inside the second quarter from the top; map art remains strict top-down, south-facing, and transparent.
 
 ## Validation

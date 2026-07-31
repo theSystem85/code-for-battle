@@ -593,6 +593,40 @@ describe('unitMovement.js', () => {
       expect(unit.isRotating).toBe(false)
     })
 
+    it('aims a Destroyer gun at its assigned combat target', () => {
+      const target = {
+        id: 'destroyer-target',
+        health: 100,
+        x: 5 * 32,
+        y: 9 * 32,
+        tileX: 5,
+        tileY: 9
+      }
+      const destroyer = {
+        id: 'attacking-destroyer',
+        type: 'destroyer',
+        isNaval: true,
+        health: 250,
+        x: 5 * 32,
+        y: 5 * 32,
+        tileX: 5,
+        tileY: 5,
+        direction: 0,
+        turretDirection: 0,
+        rotationSpeed: 0.1,
+        turretRotationSpeed: 0.1,
+        path: [],
+        movement: {},
+        target
+      }
+
+      for (let frame = 0; frame < 20; frame++) {
+        updateUnitMovement([destroyer], mockMapGrid, mockOccupancyMap, mockGameState, frame * 16)
+      }
+
+      expect(destroyer.turretDirection).toBeCloseTo(Math.PI / 2, 5)
+    })
+
     it('should handle howitzer rotation locked to body', () => {
       const unit = {
         health: 100,
