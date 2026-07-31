@@ -20,7 +20,7 @@ describe('mobile production button interactions', () => {
     gameState.gamePaused = false
   })
 
-  it('suppresses the synthetic click emitted after dragging the build bar to scroll', () => {
+  function setupInteraction() {
     const button = document.querySelector('button')
     const production = document.getElementById('production')
     production.getBoundingClientRect = () => ({ left: 0, right: 300, top: 0, bottom: 100 })
@@ -29,6 +29,11 @@ describe('mobile production button interactions', () => {
 
     attachMobileDragHandlers(controller, button, { kind: 'unit', type: 'tank' })
     button.addEventListener('click', build)
+    return { button, controller, build }
+  }
+
+  it('suppresses the synthetic click emitted after dragging the build bar to scroll', () => {
+    const { button, controller, build } = setupInteraction()
 
     button.dispatchEvent(pointerEvent('pointerdown', {
       pointerType: 'touch', pointerId: 7, clientX: 100, clientY: 50
@@ -43,5 +48,66 @@ describe('mobile production button interactions', () => {
 
     expect(build).not.toHaveBeenCalled()
     expect(controller.suppressNextClick).toBe(false)
+  })
+
+  it('suppresses release after movement even when native scrolling consumed pointermove', () => {
+    const { button, controller, build } = setupInteraction()
+
+    button.dispatchEvent(pointerEvent('pointerdown', {
+      pointerType: 'touch', pointerId: 8, clientX: 100, clientY: 50
+    }))
+    window.dispatchEvent(pointerEvent('pointerup', {
+      pointerType: 'touch', pointerId: 8, clientX: 100, clientY: 60
+    }))
+    button.click()
+
+    expect(build).not.toHaveBeenCalled()
+    expect(controller.suppressNextClick).toBe(false)
+  })
+
+  it('suppresses a long stationary press and pointer cancellation', () => {
+    const now = vi.spyOn(performance, 'now')
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(500)
+      .mockReturnValueOnce(600)
+      .mockReturnValueOnce(610)
+    const { button, build } = setupInteraction()
+
+    button.dispatchEvent(pointerEvent('pointerdown', {
+      pointerType: 'touch', pointerId: 9, clientX: 100, clientY: 50
+    }))
+    window.dispatchEvent(pointerEvent('pointerup', {
+      pointerType: 'touch', pointerId: 9, clientX: 100, clientY: 50
+    }))
+    button.click()
+    button.dispatchEvent(pointerEvent('pointerdown', {
+      pointerType: 'touch', pointerId: 10, clientX: 100, clientY: 50
+    }))
+    window.dispatchEvent(pointerEvent('pointercancel', {
+      pointerType: 'touch', pointerId: 10, clientX: 100, clientY: 50
+    }))
+    button.click()
+
+    expect(build).not.toHaveBeenCalled()
+    now.mockRestore()
+  })
+
+  it('allows a quick stationary tap to reach the build action', () => {
+    const now = vi.spyOn(performance, 'now')
+      .mockReturnValueOnce(100)
+      .mockReturnValueOnce(200)
+    const { button, controller, build } = setupInteraction()
+
+    button.dispatchEvent(pointerEvent('pointerdown', {
+      pointerType: 'touch', pointerId: 11, clientX: 100, clientY: 25
+    }))
+    window.dispatchEvent(pointerEvent('pointerup', {
+      pointerType: 'touch', pointerId: 11, clientX: 102, clientY: 27
+    }))
+    button.click()
+
+    expect(build).toHaveBeenCalledOnce()
+    expect(controller.suppressNextClick).toBe(false)
+    now.mockRestore()
   })
 })

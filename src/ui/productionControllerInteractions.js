@@ -12,6 +12,8 @@ const MOBILE_EDGE_SCROLL_THRESHOLD = 20
 const MOBILE_EDGE_SCROLL_SPEED_PER_MS = 0.14
 const MOBILE_EDGE_SCROLL_DEFAULT_FRAME_MS = 16
 const MOBILE_EDGE_SCROLL_MAX_FRAME_MS = 64
+const MOBILE_TAP_MAX_DURATION_MS = 250
+const MOBILE_TAP_MAX_MOVEMENT_PX = 6
 
 export function attachMobileDragHandlers(controller, button, detail) {
   if (!window.PointerEvent) {
@@ -32,6 +34,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
+      startTime: performance.now(),
       active: false,
       mode: null,
       detail,
@@ -182,6 +185,22 @@ export function attachMobileDragHandlers(controller, button, detail) {
       window.removeEventListener('pointerup', handleEnd, true)
       window.removeEventListener('pointercancel', handleEnd, true)
 
+      const endX = Number.isFinite(endEvent.clientX) ? endEvent.clientX : state.startX
+      const endY = Number.isFinite(endEvent.clientY) ? endEvent.clientY : state.startY
+      const movementX = endX - state.startX
+      const movementY = endY - state.startY
+      const movementSquared = movementX * movementX + movementY * movementY
+      const gestureDuration = performance.now() - state.startTime
+      const isQuickStationaryTap = endEvent.type === 'pointerup' &&
+        state.mode === null &&
+        gestureDuration <= MOBILE_TAP_MAX_DURATION_MS &&
+        movementSquared <= MOBILE_TAP_MAX_MOVEMENT_PX * MOBILE_TAP_MAX_MOVEMENT_PX
+
+      // Native scrolling can consume pointermove events, so the final release
+      // position and elapsed time are authoritative. Only an explicitly short,
+      // nearly stationary gesture may reach the production click handler.
+      controller.suppressNextClick = !isQuickStationaryTap
+
       if (state.active && state.mode === 'drag') {
         document.dispatchEvent(new CustomEvent('mobile-production-drop', {
           detail: {
@@ -192,8 +211,6 @@ export function attachMobileDragHandlers(controller, button, detail) {
             clientY: endEvent.clientY
           }
         }))
-      } else if (state.mode !== 'scroll') {
-        controller.suppressNextClick = false
       }
 
       if (detail.kind === 'building' && gameState.draggedBuildingType === detail.type) {
