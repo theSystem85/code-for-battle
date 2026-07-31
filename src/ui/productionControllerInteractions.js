@@ -156,6 +156,9 @@ export function attachMobileDragHandlers(controller, button, detail) {
         } else if (absDeltaX >= 8 || absDeltaY >= 8) {
           if (absDeltaY > absDeltaX) {
             state.mode = 'scroll'
+            // Browsers still synthesize a click after a touch scroll ends. Keep
+            // suppression set until that click reaches the production handler.
+            controller.suppressNextClick = true
           } else {
             activateDrag()
           }
@@ -189,7 +192,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
             clientY: endEvent.clientY
           }
         }))
-      } else {
+      } else if (state.mode !== 'scroll') {
         controller.suppressNextClick = false
       }
 
