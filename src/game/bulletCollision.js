@@ -1,5 +1,6 @@
 // bulletCollision.js - Handles bullet collision detection
 import { TILE_SIZE } from '../config.js'
+import { getAircraftAltitudeLift } from './aircraftTargeting.js'
 
 /**
  * Checks if a bullet collides with a specific unit
@@ -36,12 +37,9 @@ export function checkUnitCollision(bullet, unit) {
     const unitCenterX = unit.x + TILE_SIZE / 2
     let unitCenterY = unit.y + TILE_SIZE / 2
 
-    // For Apache helicopters, adjust the collision Y to account for altitude visual offset
-    // The Apache visual is rendered at y - (altitude * 0.4), so collision should match
-    if ((unit.type === 'apache' || unit.type === 'f35') && unit.altitude) {
-      const altitudeLift = unit.altitude * 0.4
-      unitCenterY -= altitudeLift
-    }
+    // Airborne sprites render above their ground coordinates, so collide with
+    // the visible aircraft instead of the empty ground position below it.
+    unitCenterY -= getAircraftAltitudeLift(unit)
 
     const dx = unitCenterX - bullet.x
     const dy = unitCenterY - bullet.y

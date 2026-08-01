@@ -17,6 +17,7 @@ import { gameState as globalGameState } from '../gameState.js'
 import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from './turretMuzzleConfig.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 import { setBuildingDebrisDecals } from './tileDecals.js'
+import { getAircraftAltitudeLift } from './aircraftTargeting.js'
 
 
 /**
@@ -313,7 +314,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
         if (targetObj) {
           // Calculate target angle
           const targetX = targetObj.x + (targetObj.width ? targetObj.width * TILE_SIZE / 2 : TILE_SIZE / 2)
-          const targetY = targetObj.y + (targetObj.height ? targetObj.height * TILE_SIZE / 2 : TILE_SIZE / 2)
+          const targetY = targetObj.y + (targetObj.height ? targetObj.height * TILE_SIZE / 2 : TILE_SIZE / 2) - getAircraftAltitudeLift(targetObj)
           const targetAngle = Math.atan2(targetY - centerY, targetX - centerX)
 
           // Smoothly rotate turret towards target
@@ -467,7 +468,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
               }
               // For gun turrets, target angle is already calculated in continuous tracking above
               const targetX = firingTarget.x + (firingTarget.width ? firingTarget.width * TILE_SIZE / 2 : TILE_SIZE / 2)
-              const targetY = firingTarget.y + (firingTarget.height ? firingTarget.height * TILE_SIZE / 2 : TILE_SIZE / 2)
+              const targetY = firingTarget.y + (firingTarget.height ? firingTarget.height * TILE_SIZE / 2 : TILE_SIZE / 2) - getAircraftAltitudeLift(firingTarget)
               const targetDistance = Math.hypot(targetX - centerX, targetY - centerY)
 
               if (targetDistance < minRange) {
@@ -663,7 +664,7 @@ function fireTurretProjectile(building, target, centerX, centerY, now, bullets, 
       // Fallback to current target position if target exists
       projectile.targetPosition = {
         x: target.x + TILE_SIZE / 2,
-        y: target.y + TILE_SIZE / 2
+        y: target.y + TILE_SIZE / 2 - getAircraftAltitudeLift(target)
       }
     } else {
       // No valid target position, don't fire
