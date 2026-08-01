@@ -39,6 +39,7 @@ export function triggerExplosion(
     buildingDamageMultiplier = 1,
     factoryDamageMultiplier = 1,
     buildingDamageCaps = {},
+    factoryDamageCaps = {},
     allowAirborneDamage = false,
     allowSubmergedDamage = false,
     unitDamageMultipliers = {},
@@ -202,6 +203,10 @@ export function triggerExplosion(
       } else {
         const falloff = 1 - distance / explosionRadius
         damage = Math.round(baseDamage * falloff * 0.3) // 30% damage with falloff
+      }
+
+      if (factoryDamageCaps && factoryDamageCaps[factory.type] !== undefined) {
+        damage = Math.min(damage, factoryDamageCaps[factory.type])
       }
 
       // Check for god mode protection for player factories

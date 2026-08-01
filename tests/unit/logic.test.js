@@ -319,6 +319,35 @@ describe('logic.js', () => {
       expect(groundedApache.health).toBe(26)
       expect(airborneApache.health).toBe(26)
     })
+
+    it('caps explosion damage to construction yards stored as factories', () => {
+      const constructionYard = {
+        id: 'enemy',
+        type: 'constructionYard',
+        x: 5,
+        y: 5,
+        width: 3,
+        height: 3,
+        health: 350,
+        maxHealth: 350
+      }
+
+      triggerExplosion(
+        constructionYard.x * TILE_SIZE,
+        constructionYard.y * TILE_SIZE,
+        475,
+        [],
+        [constructionYard],
+        null,
+        1000,
+        [],
+        TILE_SIZE * 5,
+        true,
+        { factoryDamageCaps: { constructionYard: 315 } }
+      )
+
+      expect(constructionYard.health).toBe(35)
+    })
   })
 
   describe('findClosestOre', () => {

@@ -140,6 +140,9 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
               spawnVisual: false,
               buildingDamageCaps: {
                 constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
+              },
+              factoryDamageCaps: {
+                constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
               }
             }
           )

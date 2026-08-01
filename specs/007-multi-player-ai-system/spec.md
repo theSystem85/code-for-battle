@@ -70,6 +70,7 @@ This specification documents the comprehensive multi-player AI system that power
 - [x] AI expands base area when resources permit
 - [x] AI building placement avoids overlaps and invalid positions
 - [x] AI maintains balanced building ratios (defense, economy, production)
+- [x] AI places gas stations and ammunition factories outside their five-tile blast radius from construction yards, power plants, ore refineries, and vehicle factories
 
 ---
 

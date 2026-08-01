@@ -11,6 +11,8 @@ vi.mock('../../src/buildings.js', () => {
     teslaCoil: { width: 2, height: 2 },
     artilleryTurret: { width: 2, height: 2 },
     shipyard: { width: 5, height: 5 },
+    gasStation: { width: 3, height: 3 },
+    ammunitionFactory: { width: 3, height: 3 },
     turretGunSmall: { width: 1, height: 1 }
   }
 
@@ -274,6 +276,33 @@ describe('enemyBuilding.findBuildingPosition', () => {
     const dist = Math.hypot(result.x - largeMapFactory.x, result.y - largeMapFactory.y)
     expect(dist).toBeGreaterThanOrEqual(2)
   })
+
+  it.each(['gasStation', 'ammunitionFactory'])(
+    'places explosive %s outside its blast radius from critical base structures',
+    (buildingType) => {
+      const mapGrid = createGrid(40, 40)
+      const factory = { id: 'enemy', type: 'constructionYard', x: 15, y: 15, width: 3, height: 3 }
+      const criticalBuilding = { type: 'vehicleFactory', x: 20, y: 15, width: 3, height: 3 }
+
+      const result = findBuildingPosition(
+        buildingType,
+        mapGrid,
+        [],
+        [criticalBuilding],
+        [factory, humanFactory],
+        'enemy'
+      )
+
+      expect(result).toBeTruthy()
+      const centerX = result.x + 1.5
+      const centerY = result.y + 1.5
+      for (const structure of [factory, criticalBuilding]) {
+        const closestX = Math.max(structure.x, Math.min(centerX, structure.x + structure.width))
+        const closestY = Math.max(structure.y, Math.min(centerY, structure.y + structure.height))
+        expect(Math.hypot(closestX - centerX, closestY - centerY)).toBeGreaterThanOrEqual(5)
+      }
+    }
+  )
 
   it('handles defensive turret gun placement', () => {
     const mapGrid = createGrid(20, 20)

@@ -828,3 +828,8 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Rotation-aware capsule contact pushes adjacent ships when a rotating hull touches them while retaining quadtree broad-phase performance.
 - [x] Naval collisions cause light, cooldown-limited damage; broadside impacts take more damage than bow/stern impacts.
 - [x] Complete every previously deferred naval/domain-production item in the checklist above.
+
+## 2026-07-31 AI explosive-building safety
+
+- [x] Place enemy gas stations and ammunition factories away from the base center and outside their blast radius from critical infrastructure.
+- [x] Cap gas-station explosion damage to construction yards at 90% of maximum health, including construction yards stored as factories.

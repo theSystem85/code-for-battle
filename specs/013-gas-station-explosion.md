@@ -8,3 +8,4 @@ When a gas station is destroyed, its explosion should severely damage nearby ass
 - Construction yards hit by that explosion take **no more than 90% of their maximum health** as damage (i.e., they always retain at least 10% health after the blast if undamaged beforehand).
 - Other buildings continue to receive the standard gas station explosion damage.
 - The explosion configuration should remain centralized in the gas station destruction logic to avoid altering unrelated explosion behaviors.
+- The 90%-of-maximum-health damage cap applies whether a construction yard is represented in the factory collection or the general building collection.

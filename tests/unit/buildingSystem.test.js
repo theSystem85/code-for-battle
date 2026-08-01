@@ -772,6 +772,9 @@ describe('Building System', () => {
       expect(options).toMatchObject({
         buildingDamageCaps: {
           constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
+        },
+        factoryDamageCaps: {
+          constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
         }
       })
       expect(playPositionalSound).toHaveBeenCalledWith(

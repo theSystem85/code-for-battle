@@ -10,6 +10,15 @@ const defensiveBuildingTypes = new Set([
   'artilleryTurret'
 ])
 
+const explosiveBuildingTypes = new Set(['gasStation', 'ammunitionFactory'])
+const criticalBuildingTypes = new Set([
+  'constructionYard',
+  'oreRefinery',
+  'powerPlant',
+  'vehicleFactory'
+])
+const explosiveBuildingSafetyRadius = 5
+
 function isDefensiveBuildingType(buildingType) {
   return (
     defensiveBuildingTypes.has(buildingType) ||
@@ -19,6 +28,23 @@ function isDefensiveBuildingType(buildingType) {
 
 function isWallBuilding(buildingType) {
   return buildingType === 'concreteWall'
+}
+
+function isExplosiveBuildingPlacementSafe(x, y, width, height, buildingType, buildings, factories) {
+  if (!explosiveBuildingTypes.has(buildingType)) return true
+
+  const centerX = x + width / 2
+  const centerY = y + height / 2
+  const criticalStructures = [
+    ...factories,
+    ...buildings.filter(building => criticalBuildingTypes.has(building.type))
+  ]
+
+  return criticalStructures.every(structure => {
+    const closestX = Math.max(structure.x, Math.min(centerX, structure.x + structure.width))
+    const closestY = Math.max(structure.y, Math.min(centerY, structure.y + structure.height))
+    return Math.hypot(closestX - centerX, closestY - centerY) >= explosiveBuildingSafetyRadius
+  })
 }
 
 function isZeroGapAllowed(buildingType, otherBuildingType) {
@@ -181,9 +207,11 @@ export function findBuildingPosition(buildingType, mapGrid, units, buildings, fa
 
   // Preferred placement distances - increased to ensure more space between buildings
   // For refineries and factories, use larger distances
-  const preferredDistances = (buildingType === 'oreRefinery' || buildingType === 'vehicleFactory')
-    ? [4, 5, 6, 3]
-    : [3, 4, 5, 2]
+  const preferredDistances = explosiveBuildingTypes.has(buildingType)
+    ? [8, 9, 10, 7, 6]
+    : (buildingType === 'oreRefinery' || buildingType === 'vehicleFactory')
+      ? [4, 5, 6, 3]
+      : [3, 4, 5, 2]
   const spacingPreferences = [2, 1]
 
   for (const minSpaceBetweenBuildings of spacingPreferences) {
@@ -333,6 +361,12 @@ function ensurePathsAroundBuilding(x, y, width, height, mapGrid, buildings, fact
   // This checks that there are at least minSpace tiles of clear space between the edge of
   // this building and any other building
 
+  // Volatile support buildings must be outside their blast radius from the
+  // structures that keep an AI base operational.
+  if (!isExplosiveBuildingPlacementSafe(x, y, width, height, buildingType, buildings, factories)) {
+    return false
+  }
+
   // Check the entire perimeter with the required spacing
   for (let spaceLayer = 1; spaceLayer <= minSpace; spaceLayer++) {
     // Check north border (multiple rows if minSpace > 1)
@@ -474,9 +508,11 @@ function fallbackBuildingPosition(buildingType, mapGrid, units, buildings, facto
   const buildingWidth = buildingData[buildingType].width
   const buildingHeight = buildingData[buildingType].height
 
-  const preferredDistances = (buildingType === 'oreRefinery' || buildingType === 'vehicleFactory')
-    ? [4, 5, 6, 3]
-    : [3, 4, 5, 2]
+  const preferredDistances = explosiveBuildingTypes.has(buildingType)
+    ? [8, 9, 10, 7, 6]
+    : (buildingType === 'oreRefinery' || buildingType === 'vehicleFactory')
+      ? [4, 5, 6, 3]
+      : [3, 4, 5, 2]
 
   // Get human player factory for directional placement of defensive buildings
   const playerFactory = getClosestEnemyFactory(factory, factories, aiPlayerId)
