@@ -27,6 +27,7 @@ import { recordDamageValue } from '../utils/combatStats.js'
 import { recordDamage } from '../ai-api/transitionCollector.js'
 import { getSimulationTime } from './time.js'
 import { setWorldDecal } from './tileDecals.js'
+import { getAircraftAltitudeLift } from './aircraftTargeting.js'
 
 const APACHE_REMOTE_DAMAGE = 10
 const APACHE_TANK_DAMAGE_MULTIPLIER = 1.67
@@ -156,10 +157,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             // Unit target
             targetX = bullet.target.x + TILE_SIZE / 2
             targetY = bullet.target.y + TILE_SIZE / 2
-            // Adjust for Apache altitude visual offset
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
-              targetY -= bullet.target.altitude * 0.4
-            }
+            targetY -= getAircraftAltitudeLift(bullet.target)
           }
         } else if (bullet.targetPosition) {
           targetX = bullet.targetPosition.x
@@ -277,12 +275,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             targetCenterX_pixels = bullet.target.x + (typeof bullet.target.width === 'undefined' ? TILE_SIZE / 2 : 0)
             targetCenterY_pixels = bullet.target.y + (typeof bullet.target.height === 'undefined' ? TILE_SIZE / 2 : 0)
 
-            // For Apache helicopters, adjust target Y to account for altitude visual offset
-            // The Apache visual is rendered at y - (altitude * 0.4), so we need to aim higher
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
-              const altitudeLift = bullet.target.altitude * 0.4
-              targetCenterY_pixels -= altitudeLift
-            }
+            targetCenterY_pixels -= getAircraftAltitudeLift(bullet.target)
           }
 
           const dx = targetCenterX_pixels - bullet.x
@@ -581,9 +574,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             // Unit target
             targetX = bullet.target.x + TILE_SIZE / 2
             targetY = bullet.target.y + TILE_SIZE / 2
-            if (bullet.target.type === 'apache' && bullet.target.altitude) {
-              targetY -= bullet.target.altitude * 0.4
-            }
+            targetY -= getAircraftAltitudeLift(bullet.target)
           }
         }
 
@@ -1138,10 +1129,7 @@ export function fireBullet(unit, target, bullets, now) {
   if (target.tileX !== undefined) {
     targetCenterX = target.x + TILE_SIZE / 2
     targetCenterY = target.y + TILE_SIZE / 2
-    // Adjust for Apache altitude visual offset
-    if (target.type === 'apache' && target.altitude) {
-      targetCenterY -= target.altitude * 0.4
-    }
+    targetCenterY -= getAircraftAltitudeLift(target)
   } else {
     targetCenterX = target.x * TILE_SIZE + (target.width * TILE_SIZE) / 2
     targetCenterY = target.y * TILE_SIZE + (target.height * TILE_SIZE) / 2

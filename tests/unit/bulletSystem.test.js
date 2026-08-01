@@ -1316,6 +1316,56 @@ describe('Bullet System', () => {
       )
     })
 
+    it.each([
+      ['apache', 90],
+      ['f22Raptor', 120],
+      ['f35', 110]
+    ])('detonates rocket turret rockets directly on airborne %s sprites', (type, altitude) => {
+      const aircraft = createMockUnit({
+        id: `${type}-air-1`,
+        type,
+        owner: 'enemy',
+        flightState: 'airborne',
+        altitude,
+        x: 160,
+        y: 160
+      })
+      const spriteCenterY = aircraft.y + TILE_SIZE / 2 - altitude * 0.4
+      const bullet = createMockBullet({
+        originType: 'rocketTurret',
+        projectileType: 'rocket',
+        homing: true,
+        speed: 3,
+        x: aircraft.x + TILE_SIZE / 2,
+        y: spriteCenterY,
+        target: aircraft,
+        targetPosition: {
+          x: aircraft.x + TILE_SIZE / 2,
+          y: aircraft.y + TILE_SIZE / 2
+        },
+        creationTime: 1000,
+        startTime: 1000,
+        maxFlightTime: 5000,
+        explosionRadius: TILE_SIZE * 1.5
+      })
+
+      updateBullets([bullet], [aircraft], [], createGameState({ simulationTime: 1200 }), mapGrid)
+
+      expect(triggerExplosion).toHaveBeenCalledWith(
+        aircraft.x + TILE_SIZE / 2,
+        spriteCenterY,
+        bullet.baseDamage,
+        [aircraft],
+        [],
+        bullet.shooter,
+        1200,
+        mapGrid,
+        bullet.explosionRadius,
+        false,
+        expect.objectContaining({ allowAirborneDamage: true })
+      )
+    })
+
     it('explodes rocket tank homing missiles when they reach their target', () => {
       const target = createMockUnit({ owner: 'enemy', x: 160, y: 160 })
       const bullet = createMockBullet({

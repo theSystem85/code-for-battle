@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test'
 
+const RUN_ROCKET_TURRET_PERF = process.env.PERF_ROCKET_TURRET_AIR === '1'
+
 test.describe('Rocket turret anti-air Apache damage', () => {
   /** @type {string[]} */
   let consoleErrors = []
@@ -140,5 +142,94 @@ test.describe('Rocket turret anti-air Apache damage', () => {
     expect(airborneResult.ammoRemaining).toBe(0)
 
     expect(consoleErrors, `Console errors encountered\n${consoleErrors.join('\n')}`).toEqual([])
+  })
+})
+
+test.describe('Rocket turret anti-air performance', () => {
+  test.skip(!RUN_ROCKET_TURRET_PERF, 'Set PERF_ROCKET_TURRET_AIR=1 to run this benchmark.')
+
+  test('keeps 120 homing rockets tracking airborne targets within the frame budget', async({ page }) => {
+    await page.goto('/?seed=11')
+    await page.waitForFunction(() => Boolean(window.gameState?.gameStarted && window.gameInstance?.units))
+
+    const result = await page.evaluate(async() => {
+      const { performanceMonitor } = await import('/src/performance/performanceMonitor.js')
+      const gs = window.gameState
+      const units = window.gameInstance.units
+      const bullets = gs.bullets
+      const owner = gs.humanPlayer === 'player1' ? 'player2' : 'player1'
+      const centerX = (gs.scrollOffset?.x || 0) + 500
+      const centerY = (gs.scrollOffset?.y || 0) + 350
+
+      const sample = duration => new Promise(resolve => {
+        const frames = []
+        const heapStart = performance.memory?.usedJSHeapSize ?? null
+        performanceMonitor.start()
+        let previous = performance.now()
+        const start = previous
+        const record = now => {
+          frames.push(now - previous)
+          previous = now
+          if (now - start >= duration) {
+            const usable = frames.filter(frame => frame > 0 && frame < 250)
+            const elapsed = usable.reduce((sum, frame) => sum + frame, 0)
+            const monitor = performanceMonitor.stop()
+            const heapEnd = performance.memory?.usedJSHeapSize ?? null
+            resolve({
+              fps: elapsed ? usable.length * 1000 / elapsed : 0,
+              frameCount: usable.length,
+              heapDeltaMb: heapStart !== null && heapEnd !== null ? (heapEnd - heapStart) / 1048576 : null,
+              timingMs: monitor?.timingMs || null
+            })
+            return
+          }
+          requestAnimationFrame(record)
+        }
+        requestAnimationFrame(record)
+      })
+
+      const baseline = await sample(2000)
+      for (let index = 0; index < 120; index++) {
+        const aircraft = {
+          id: `perf-air-${index}`,
+          type: index % 3 === 0 ? 'apache' : index % 3 === 1 ? 'f22Raptor' : 'f35',
+          owner,
+          x: centerX + (index % 12) * 8,
+          y: centerY + Math.floor(index / 12) * 8,
+          health: 100000,
+          maxHealth: 100000,
+          flightState: 'airborne',
+          altitude: 90 + (index % 3) * 10,
+          path: []
+        }
+        units.push(aircraft)
+        bullets.push({
+          id: `perf-rocket-${index}`,
+          x: centerX - 300,
+          y: centerY,
+          vx: 0,
+          vy: 0,
+          speed: 0.05,
+          baseDamage: 18,
+          active: true,
+          shooter: { id: `perf-turret-${index}`, type: 'rocketTurret', owner: gs.humanPlayer, isBuilding: true, x: 0, y: 0, width: 2, height: 2 },
+          homing: true,
+          target: aircraft,
+          targetPosition: { x: aircraft.x + 16, y: aircraft.y + 16 },
+          projectileType: 'rocket',
+          originType: 'rocketTurret',
+          skipCollisionChecks: true,
+          creationTime: gs.simulationTime,
+          startTime: gs.simulationTime,
+          maxFlightTime: 60000
+        })
+      }
+      const active = await sample(2000)
+      return { baseline, active }
+    })
+
+    console.log(`ROCKET_TURRET_AIR_PERF ${JSON.stringify(result)}`)
+    expect(result.active.frameCount).toBeGreaterThan(0)
+    expect(result.active.fps).toBeGreaterThanOrEqual(result.baseline.fps * 0.8)
   })
 })

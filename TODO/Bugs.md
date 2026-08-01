@@ -468,3 +468,6 @@
 - [x] Make S cancel any selected transport or participating cargo unit's complete embark/disembark operation, restoring occupancy/embarked state and removing every pending lock/reference so a new operation can start immediately.
 - [x] Add one prepared Playwright E2E covering a Ferry with ten tanks, a land-based Hovercraft with five tanks, and a coast-water Hovercraft with five tanks, including command priority, cancellation cleanup, cursor behavior, and completed capacity loading.
 - [x] Fix player-commanded and enemy-AI Destroyers never firing by making their combat turret tracking follow assigned targets, with human and AI regression coverage.
+## 2026-07-31 Rocket turret anti-air impact bug
+
+- [x] Ensure Rocket Turret homing rockets track the altitude-adjusted visible center of enemy Apache, F22, and F35 aircraft and detonate directly on the aircraft rather than at its ground coordinate.
