@@ -198,6 +198,46 @@ describe('unitCombat.js', () => {
       expect(bullets.length).toBe(0)
     })
 
+    it.each([
+      ['a player command', 'player1', undefined],
+      ['enemy AI permission', 'player2', true]
+    ])('fires an aimed Destroyer for %s', (_scenario, owner, allowedToAttack) => {
+      const target = {
+        id: 'naval-target',
+        owner: owner === 'player1' ? 'player2' : 'player1',
+        type: 'destroyer',
+        isNaval: true,
+        x: 4 * 32,
+        y: 7 * 32,
+        tileX: 4,
+        tileY: 7,
+        health: 250
+      }
+      const destroyer = {
+        id: 'destroyer-attacker',
+        type: 'destroyer',
+        owner,
+        isNaval: true,
+        x: 4 * 32,
+        y: 4 * 32,
+        tileX: 4,
+        tileY: 4,
+        health: 250,
+        target,
+        ammunition: 60,
+        direction: Math.PI / 2,
+        turretDirection: Math.PI / 2,
+        allowedToAttack
+      }
+      const bullets = []
+
+      updateUnitCombat([destroyer, target], bullets, mockMapGrid, mockGameState, 10000)
+
+      expect(bullets).toHaveLength(1)
+      expect(bullets[0].shooter).toBe(destroyer)
+      expect(destroyer.ammunition).toBe(59)
+    })
+
     it('should process attack queue', () => {
       const target1 = { id: 1, x: 64, y: 32, tileX: 2, health: 100 }
       const target2 = { id: 2, x: 96, y: 32, tileX: 3, health: 100 }
