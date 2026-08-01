@@ -3,8 +3,9 @@ import { productionQueue } from '../productionQueue.js'
 export function getUnitProductionCount(_controller, button) {
   if (!button) return 0
 
-  let count = productionQueue.unitItems.filter(item => item.button === button).length
-  if (productionQueue.currentUnit && productionQueue.currentUnit.button === button) {
+  const lane = productionQueue.getUnitLane(button)
+  let count = lane.unitItems.filter(item => item.button === button).length
+  if (lane.currentUnit && lane.currentUnit.button === button) {
     count += 1
   }
 
@@ -14,7 +15,8 @@ export function getUnitProductionCount(_controller, button) {
 export function removeQueuedUnit(controller, button) {
   if (!button) return false
 
-  if (productionQueue.removeQueuedUnitByButton(button)) {
+  const lane = productionQueue.getUnitLane(button)
+  if (lane.removeQueuedUnitByButton(button)) {
     productionQueue.updateBatchCounter(button, controller.getUnitProductionCount(button))
     return true
   }
