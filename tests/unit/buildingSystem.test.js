@@ -769,7 +769,10 @@ describe('Building System', () => {
       expect(triggerExplosion).toHaveBeenCalled()
       const explosionArgs = triggerExplosion.mock.calls[0]
       const options = explosionArgs[10]
+      expect(explosionArgs[8]).toBe(TILE_SIZE * 4)
+      expect(explosionArgs[9]).toBe(false)
       expect(options).toMatchObject({
+        damageRingMultipliers: [1, 0.75, 0.5, 0.25],
         buildingDamageCaps: {
           constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
         },

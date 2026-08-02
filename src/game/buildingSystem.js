@@ -124,7 +124,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
         }
 
         if (building.type === 'gasStation') {
-          const radius = TILE_SIZE * 5
+          const radius = TILE_SIZE * 4
           triggerExplosion(
             buildingCenterX,
             buildingCenterY,
@@ -135,9 +135,10 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
             now,
             undefined,
             radius,
-            true,
+            false,
             {
               spawnVisual: false,
+              damageRingMultipliers: [1, 0.75, 0.5, 0.25],
               buildingDamageCaps: {
                 constructionYard: Math.round(buildingData.constructionYard.health * 0.9)
               },

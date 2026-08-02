@@ -320,6 +320,35 @@ describe('logic.js', () => {
       expect(airborneApache.health).toBe(26)
     })
 
+    it('applies discrete 100%, 75%, 50%, and 25% damage through four tile rings', () => {
+      const distancesInTiles = [1, 2, 3, 4, 4.01]
+      const units = distancesInTiles.map((distance, index) => ({
+        id: `ring-target-${index}`,
+        type: 'tank_v1',
+        owner: 'enemy',
+        x: distance * TILE_SIZE - TILE_SIZE / 2,
+        y: -TILE_SIZE / 2,
+        health: 1000,
+        maxHealth: 1000
+      }))
+
+      triggerExplosion(
+        0,
+        0,
+        400,
+        units,
+        [],
+        null,
+        1000,
+        [],
+        TILE_SIZE * 4,
+        false,
+        { damageRingMultipliers: [1, 0.75, 0.5, 0.25] }
+      )
+
+      expect(units.map(unit => 1000 - unit.health)).toEqual([400, 300, 200, 100, 0])
+    })
+
     it('caps explosion damage to construction yards stored as factories', () => {
       const constructionYard = {
         id: 'enemy',
@@ -341,9 +370,12 @@ describe('logic.js', () => {
         null,
         1000,
         [],
-        TILE_SIZE * 5,
-        true,
-        { factoryDamageCaps: { constructionYard: 315 } }
+        TILE_SIZE * 4,
+        false,
+        {
+          damageRingMultipliers: [1, 0.75, 0.5, 0.25],
+          factoryDamageCaps: { constructionYard: 315 }
+        }
       )
 
       expect(constructionYard.health).toBe(35)

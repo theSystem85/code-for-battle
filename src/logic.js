@@ -20,6 +20,33 @@ export const explosions = [] // Global explosion effects for rocket impacts
 
 // --- Helper Functions ---
 
+function isInsideExplosion(distance, radius, damageRingMultipliers) {
+  return damageRingMultipliers ? distance <= radius : distance < radius
+}
+
+function calculateExplosionDamage(
+  baseDamage,
+  distance,
+  radius,
+  constantDamage,
+  defaultFalloffScale,
+  damageRingMultipliers
+) {
+  if (damageRingMultipliers) {
+    const ringWidth = radius / damageRingMultipliers.length
+    const ringIndex = Math.min(
+      damageRingMultipliers.length - 1,
+      Math.max(0, Math.ceil(distance / ringWidth) - 1)
+    )
+    return Math.round(baseDamage * damageRingMultipliers[ringIndex])
+  }
+
+  if (constantDamage) return baseDamage
+
+  const falloff = 1 - distance / radius
+  return Math.round(baseDamage * falloff * defaultFalloffScale)
+}
+
 // Trigger explosion effect and apply area damage
 export function triggerExplosion(
   x,
@@ -43,8 +70,13 @@ export function triggerExplosion(
     allowAirborneDamage = false,
     allowSubmergedDamage = false,
     unitDamageMultipliers = {},
+    damageRingMultipliers: configuredDamageRingMultipliers,
     spawnVisual = true
   } = options || {}
+  const damageRingMultipliers = Array.isArray(configuredDamageRingMultipliers) &&
+    configuredDamageRingMultipliers.length > 0
+    ? configuredDamageRingMultipliers
+    : null
 
   if (spawnVisual) {
     // Add explosion visual effect
@@ -74,19 +106,20 @@ export function triggerExplosion(
     const distance = Math.hypot(dx, dy)
 
     // Skip the shooter if this was their own bullet
-    if (distance < explosionRadius) {
+    if (isInsideExplosion(distance, explosionRadius, damageRingMultipliers)) {
       if (shooter && unit.id === shooter.id) return
 
       if (isAirborne && !allowAirborneDamage) {
         return
       }
-      let damage
-      if (constantDamage) {
-        damage = baseDamage
-      } else {
-        const falloff = 1 - distance / explosionRadius
-        damage = Math.round(baseDamage * falloff * 0.5) // Half damage with falloff
-      }
+      let damage = calculateExplosionDamage(
+        baseDamage,
+        distance,
+        explosionRadius,
+        constantDamage,
+        0.5,
+        damageRingMultipliers
+      )
 
       if (!constantDamage && shooter) {
         // Apply hit zone damage multiplier for tanks (simulate explosion hitting from all directions)
@@ -164,14 +197,15 @@ export function triggerExplosion(
       const dy = (wreck.y + TILE_SIZE / 2) - y
       const distance = Math.hypot(dx, dy)
 
-      if (distance < explosionRadius) {
-        let damage
-        if (constantDamage) {
-          damage = baseDamage
-        } else {
-          const falloff = 1 - distance / explosionRadius
-          damage = Math.round(baseDamage * falloff * 0.5)
-        }
+      if (isInsideExplosion(distance, explosionRadius, damageRingMultipliers)) {
+        const damage = calculateExplosionDamage(
+          baseDamage,
+          distance,
+          explosionRadius,
+          constantDamage,
+          0.5,
+          damageRingMultipliers
+        )
 
         if (damage > 0) {
           applyDamageToWreck(wreck, damage, gameState, { x, y })
@@ -196,14 +230,15 @@ export function triggerExplosion(
     const dy = closestY - y
     const distance = Math.hypot(dx, dy)
 
-    if (distance < explosionRadius) {
-      let damage
-      if (constantDamage) {
-        damage = baseDamage
-      } else {
-        const falloff = 1 - distance / explosionRadius
-        damage = Math.round(baseDamage * falloff * 0.3) // 30% damage with falloff
-      }
+    if (isInsideExplosion(distance, explosionRadius, damageRingMultipliers)) {
+      let damage = calculateExplosionDamage(
+        baseDamage,
+        distance,
+        explosionRadius,
+        constantDamage,
+        0.3,
+        damageRingMultipliers
+      )
 
       if (factoryDamageCaps && factoryDamageCaps[factory.type] !== undefined) {
         damage = Math.min(damage, factoryDamageCaps[factory.type])
@@ -273,14 +308,15 @@ export function triggerExplosion(
       const dy = closestY - y
       const distance = Math.hypot(dx, dy)
 
-      if (distance < explosionRadius) {
-        let damage
-        if (constantDamage) {
-          damage = baseDamage
-        } else {
-          const falloff = 1 - distance / explosionRadius
-          damage = Math.round(baseDamage * falloff * 0.3) // 30% damage with falloff
-        }
+      if (isInsideExplosion(distance, explosionRadius, damageRingMultipliers)) {
+        let damage = calculateExplosionDamage(
+          baseDamage,
+          distance,
+          explosionRadius,
+          constantDamage,
+          0.3,
+          damageRingMultipliers
+        )
 
         if (shooter && shooter.type === 'howitzer') {
           damage = Math.round(damage * HOWITZER_BUILDING_DAMAGE_MULTIPLIER)

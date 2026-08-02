@@ -4,7 +4,7 @@ import { buildingData, canPlaceBuilding, repairBuilding } from '../buildings.js'
 import { unitCosts } from '../units.js'
 import { units as mainUnits, factories as mainFactories, mapGrid as mainMapGrid } from '../main.js'
 import { validateGameTickOutput } from './validate.js'
-import { findBuildingPosition } from '../ai/enemyBuilding.js'
+import { findBuildingPosition, isExplosiveBuildingPlacementSafe } from '../ai/enemyBuilding.js'
 import { computeAvailableBuildingTypes, computeAvailableUnitTypes } from './techTree.js'
 import { getSimulationTime } from '../game/time.js'
 
@@ -498,7 +498,21 @@ export function processLlmBuildQueue(state, owner, aiFactory, factories, mapGrid
     // 1. Try the LLM's requested position first
     let position = null
     if (item.tilePosition) {
-      if (canPlaceBuilding(item.buildingType, item.tilePosition.x, item.tilePosition.y, mapGrid, units, buildings, factories, owner)) {
+      const buildingConfig = buildingData[item.buildingType]
+      const requestedPositionIsSafe = isExplosiveBuildingPlacementSafe(
+        item.tilePosition.x,
+        item.tilePosition.y,
+        buildingConfig.width,
+        buildingConfig.height,
+        item.buildingType,
+        buildings,
+        factories,
+        owner
+      )
+      if (
+        requestedPositionIsSafe &&
+        canPlaceBuilding(item.buildingType, item.tilePosition.x, item.tilePosition.y, mapGrid, units, buildings, factories, owner)
+      ) {
         position = item.tilePosition
       }
     }

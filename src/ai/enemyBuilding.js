@@ -17,7 +17,8 @@ const criticalBuildingTypes = new Set([
   'powerPlant',
   'vehicleFactory'
 ])
-const explosiveBuildingSafetyRadius = 5
+const explosiveBuildingSafetyRadius = 6
+const minimumExplosiveBuildingFootprintGap = 2
 
 function isDefensiveBuildingType(buildingType) {
   return (
@@ -30,19 +31,45 @@ function isWallBuilding(buildingType) {
   return buildingType === 'concreteWall'
 }
 
-function isExplosiveBuildingPlacementSafe(x, y, width, height, buildingType, buildings, factories) {
+export function isExplosiveBuildingPlacementSafe(
+  x,
+  y,
+  width,
+  height,
+  buildingType,
+  buildings,
+  factories,
+  aiPlayerId
+) {
   if (!explosiveBuildingTypes.has(buildingType)) return true
 
   const centerX = x + width / 2
   const centerY = y + height / 2
+  const isOwnedByAI = structure => (
+    structure.id === aiPlayerId ||
+    structure.owner === aiPlayerId ||
+    (structure.id == null && structure.owner == null)
+  )
   const criticalStructures = [
-    ...factories,
-    ...buildings.filter(building => criticalBuildingTypes.has(building.type))
+    ...factories.filter(isOwnedByAI),
+    ...buildings.filter(building => (
+      criticalBuildingTypes.has(building.type) && isOwnedByAI(building)
+    ))
   ]
 
   return criticalStructures.every(structure => {
-    const closestX = Math.max(structure.x, Math.min(centerX, structure.x + structure.width))
-    const closestY = Math.max(structure.y, Math.min(centerY, structure.y + structure.height))
+    const structureWidth = structure.width || buildingData[structure.type]?.width || 1
+    const structureHeight = structure.height || buildingData[structure.type]?.height || 1
+    const hasMinimumFootprintGap = (
+      x >= structure.x + structureWidth + minimumExplosiveBuildingFootprintGap ||
+      x + width + minimumExplosiveBuildingFootprintGap <= structure.x ||
+      y >= structure.y + structureHeight + minimumExplosiveBuildingFootprintGap ||
+      y + height + minimumExplosiveBuildingFootprintGap <= structure.y
+    )
+    if (!hasMinimumFootprintGap) return false
+
+    const closestX = Math.max(structure.x, Math.min(centerX, structure.x + structureWidth))
+    const closestY = Math.max(structure.y, Math.min(centerY, structure.y + structureHeight))
     return Math.hypot(closestX - centerX, closestY - centerY) >= explosiveBuildingSafetyRadius
   })
 }
@@ -363,7 +390,16 @@ function ensurePathsAroundBuilding(x, y, width, height, mapGrid, buildings, fact
 
   // Volatile support buildings must be outside their blast radius from the
   // structures that keep an AI base operational.
-  if (!isExplosiveBuildingPlacementSafe(x, y, width, height, buildingType, buildings, factories)) {
+  if (!isExplosiveBuildingPlacementSafe(
+    x,
+    y,
+    width,
+    height,
+    buildingType,
+    buildings,
+    factories,
+    aiPlayerId
+  )) {
     return false
   }
 
@@ -787,9 +823,23 @@ function completeEnemyBuilding(gameState, mapGrid) {
   const buildingType = production.type
   const x = production.x
   const y = production.y
+  const buildingConfig = buildingData[buildingType]
+  const placementRemainsSafe = isExplosiveBuildingPlacementSafe(
+    x,
+    y,
+    buildingConfig.width,
+    buildingConfig.height,
+    buildingType,
+    gameState.buildings,
+    gameState.factories || [],
+    'enemy'
+  )
 
   // Validate the building placement one final time
-  if (canPlaceBuilding(buildingType, x, y, gameState.mapGrid || mapGrid, gameState.units, gameState.buildings, gameState.factories || [], 'enemy')) {
+  if (
+    placementRemainsSafe &&
+    canPlaceBuilding(buildingType, x, y, gameState.mapGrid || mapGrid, gameState.units, gameState.buildings, gameState.factories || [], 'enemy')
+  ) {
     // Create and place the building
     const newBuilding = createBuilding(buildingType, x, y)
     newBuilding.owner = 'enemy'

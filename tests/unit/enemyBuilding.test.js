@@ -277,12 +277,16 @@ describe('enemyBuilding.findBuildingPosition', () => {
     expect(dist).toBeGreaterThanOrEqual(2)
   })
 
-  it.each(['gasStation', 'ammunitionFactory'])(
-    'places explosive %s outside its blast radius from critical base structures',
-    (buildingType) => {
+  it.each([
+    ['gasStation', 'oreRefinery'],
+    ['gasStation', 'vehicleFactory'],
+    ['ammunitionFactory', 'vehicleFactory']
+  ])(
+    'places explosive %s at least six tiles from construction yards and %s buildings',
+    (buildingType, criticalBuildingType) => {
       const mapGrid = createGrid(40, 40)
-      const factory = { id: 'enemy', type: 'constructionYard', x: 15, y: 15, width: 3, height: 3 }
-      const criticalBuilding = { type: 'vehicleFactory', x: 20, y: 15, width: 3, height: 3 }
+      const factory = { id: 'enemy', owner: 'enemy', type: 'constructionYard', x: 15, y: 15, width: 3, height: 3 }
+      const criticalBuilding = { owner: 'enemy', type: criticalBuildingType, x: 20, y: 15, width: 3, height: 3 }
 
       const result = findBuildingPosition(
         buildingType,
@@ -297,9 +301,20 @@ describe('enemyBuilding.findBuildingPosition', () => {
       const centerX = result.x + 1.5
       const centerY = result.y + 1.5
       for (const structure of [factory, criticalBuilding]) {
+        const horizontalGap = Math.max(
+          structure.x - (result.x + 3),
+          result.x - (structure.x + structure.width),
+          0
+        )
+        const verticalGap = Math.max(
+          structure.y - (result.y + 3),
+          result.y - (structure.y + structure.height),
+          0
+        )
         const closestX = Math.max(structure.x, Math.min(centerX, structure.x + structure.width))
         const closestY = Math.max(structure.y, Math.min(centerY, structure.y + structure.height))
-        expect(Math.hypot(closestX - centerX, closestY - centerY)).toBeGreaterThanOrEqual(5)
+        expect(Math.max(horizontalGap, verticalGap)).toBeGreaterThanOrEqual(2)
+        expect(Math.hypot(closestX - centerX, closestY - centerY)).toBeGreaterThanOrEqual(6)
       }
     }
   )
