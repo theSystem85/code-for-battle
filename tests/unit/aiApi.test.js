@@ -19,6 +19,7 @@ vi.mock('../../src/data/buildingData.js', () => ({
     constructionYard: { width: 3, height: 3, cost: 5000, health: 300 },
     powerPlant: { width: 3, height: 3, cost: 2000, health: 200 },
     vehicleFactory: { width: 3, height: 2, cost: 3000, health: 200 },
+    gasStation: { width: 3, height: 3, cost: 2000, health: 50 },
     rocketTurret: { fireRange: 16, width: 2, height: 2, cost: 1500, health: 150 }
   }
 }))
@@ -28,6 +29,7 @@ vi.mock('../../src/buildings.js', () => ({
     constructionYard: { width: 3, height: 3, cost: 5000, health: 300 },
     powerPlant: { width: 3, height: 3, cost: 2000, health: 200 },
     vehicleFactory: { width: 3, height: 2, cost: 3000, health: 200 },
+    gasStation: { width: 3, height: 3, cost: 2000, health: 50 },
     rocketTurret: { fireRange: 16, width: 2, height: 2, cost: 1500, health: 150 }
   },
   canPlaceBuilding: vi.fn(() => true),
@@ -56,12 +58,14 @@ vi.mock('../../src/units.js', () => ({
 
 // Mock enemyBuilding.js to prevent import chain issues
 vi.mock('../../src/ai/enemyBuilding.js', () => ({
-  findBuildingPosition: vi.fn(() => null)
+  findBuildingPosition: vi.fn(() => null),
+  isExplosiveBuildingPlacementSafe: vi.fn(() => true)
 }))
 
 import { TILE_SIZE } from '../../src/config.js'
 import { gameState } from '../../src/gameState.js'
-import { applyGameTickOutput } from '../../src/ai-api/applier.js'
+import { applyGameTickOutput, processLlmBuildQueue } from '../../src/ai-api/applier.js'
+import { findBuildingPosition, isExplosiveBuildingPlacementSafe } from '../../src/ai/enemyBuilding.js'
 import { computeAvailableUnitTypes } from '../../src/ai-api/techTree.js'
 import { validateGameTickInput, validateGameTickOutput } from '../../src/ai-api/validate.js'
 import { exportGameTickInput } from '../../src/ai-api/exporter.js'
@@ -191,6 +195,57 @@ describe('LLM Control API applier', () => {
     // Verify queues were populated
     expect(state.llmStrategic.buildQueuesByPlayer['player1']).toHaveLength(1)
     expect(state.llmStrategic.unitQueuesByPlayer['player1']).toHaveLength(1)
+  })
+
+  it('replaces an unsafe LLM-requested gas station position with safe AI placement', () => {
+    const owner = 'ai1'
+    const aiFactory = {
+      id: owner,
+      owner,
+      health: 350,
+      budget: 5000
+    }
+    const state = {
+      enemyPowerSupply: 0,
+      enemyBuildSpeedModifier: 1,
+      llmStrategic: {
+        buildQueuesByPlayer: {
+          [owner]: [{
+            buildingType: 'gasStation',
+            tilePosition: { x: 4, y: 4 },
+            cost: 2000,
+            status: 'queued'
+          }]
+        }
+      }
+    }
+    const safePosition = { x: 20, y: 20 }
+    isExplosiveBuildingPlacementSafe.mockReturnValueOnce(false)
+    findBuildingPosition.mockReturnValueOnce(safePosition)
+
+    processLlmBuildQueue(
+      state,
+      owner,
+      aiFactory,
+      [aiFactory],
+      createTestMapGrid(40, 40),
+      [],
+      [],
+      1000
+    )
+
+    expect(isExplosiveBuildingPlacementSafe).toHaveBeenCalledWith(
+      4,
+      4,
+      expect.any(Number),
+      expect.any(Number),
+      'gasStation',
+      [],
+      [aiFactory],
+      owner
+    )
+    expect(findBuildingPosition).toHaveBeenCalled()
+    expect(aiFactory.buildingPosition).toEqual(safePosition)
   })
 
   it('applies move and attack commands', () => {

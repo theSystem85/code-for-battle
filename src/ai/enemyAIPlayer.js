@@ -11,7 +11,7 @@ import {
 } from './enemyStrategies.js'
 import { getUnitCost } from '../utils.js'
 import { updateAIUnit } from './enemyUnitBehavior.js'
-import { findBuildingPosition } from './enemyBuilding.js'
+import { findBuildingPosition, isExplosiveBuildingPlacementSafe } from './enemyBuilding.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { logPerformance } from '../performanceUtils.js'
 import { RECOVERY_TANK_RATIO, UNIT_COSTS } from '../config.js'
@@ -250,7 +250,7 @@ function ensureAIEconomyRecovery(aiPlayerId, aiFactory, aiBuildings, aiHarvester
   sellBuildingsForEmergencyFunds(aiPlayerId, aiFactory, aiBuildings, requiredBudget, now)
 }
 
-function findSimpleBuildingPosition(buildingType, mapGrid, factories, aiPlayerId) {
+function findSimpleBuildingPosition(buildingType, mapGrid, buildings, factories, aiPlayerId) {
   // Validate inputs
   if (!buildingType) {
     window.logger.warn('findSimpleBuildingPosition called with undefined buildingType')
@@ -347,7 +347,16 @@ function findSimpleBuildingPosition(buildingType, mapGrid, factories, aiPlayerId
         }
       }
 
-      if (valid) {
+      if (valid && isExplosiveBuildingPlacementSafe(
+        x,
+        y,
+        buildingWidth,
+        buildingHeight,
+        buildingType,
+        buildings,
+        factories,
+        aiPlayerId
+      )) {
         return { x, y }
       }
     }
@@ -743,7 +752,13 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
       if (!position) {
         window.logger(`AI ${aiPlayerId} could not find position for ${buildingType}, trying simpler placement`)
-        position = findSimpleBuildingPosition(buildingType, mapGrid, factories, aiPlayerId)
+        position = findSimpleBuildingPosition(
+          buildingType,
+          mapGrid,
+          gameState.buildings,
+          factories,
+          aiPlayerId
+        )
       }
 
       if (position) {
@@ -799,7 +814,20 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
     if (position) {
       // Double-check position is still valid before placing
-      if (canPlaceBuilding(buildingType, position.x, position.y, gameState.mapGrid || mapGrid, units, gameState.buildings, factories, aiPlayerId)) {
+      const placementRemainsSafe = isExplosiveBuildingPlacementSafe(
+        position.x,
+        position.y,
+        buildingData[buildingType].width,
+        buildingData[buildingType].height,
+        buildingType,
+        gameState.buildings,
+        factories,
+        aiPlayerId
+      )
+      if (
+        placementRemainsSafe &&
+        canPlaceBuilding(buildingType, position.x, position.y, gameState.mapGrid || mapGrid, units, gameState.buildings, factories, aiPlayerId)
+      ) {
         const newBuilding = createBuilding(buildingType, position.x, position.y)
         newBuilding.owner = aiPlayerId
         gameState.buildings.push(newBuilding)
@@ -815,7 +843,13 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
 
         // If that fails, try the simple algorithm
         if (!alternativePosition) {
-          alternativePosition = findSimpleBuildingPosition(buildingType, mapGrid, factories, aiPlayerId)
+          alternativePosition = findSimpleBuildingPosition(
+            buildingType,
+            mapGrid,
+            gameState.buildings,
+            factories,
+            aiPlayerId
+          )
         }
 
         if (alternativePosition) {

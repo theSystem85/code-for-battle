@@ -11,6 +11,8 @@ vi.mock('../../src/buildings.js', () => {
     teslaCoil: { width: 2, height: 2 },
     artilleryTurret: { width: 2, height: 2 },
     shipyard: { width: 5, height: 5 },
+    gasStation: { width: 3, height: 3 },
+    ammunitionFactory: { width: 3, height: 3 },
     turretGunSmall: { width: 1, height: 1 }
   }
 
@@ -274,6 +276,48 @@ describe('enemyBuilding.findBuildingPosition', () => {
     const dist = Math.hypot(result.x - largeMapFactory.x, result.y - largeMapFactory.y)
     expect(dist).toBeGreaterThanOrEqual(2)
   })
+
+  it.each([
+    ['gasStation', 'oreRefinery'],
+    ['gasStation', 'vehicleFactory'],
+    ['ammunitionFactory', 'vehicleFactory']
+  ])(
+    'places explosive %s at least six tiles from construction yards and %s buildings',
+    (buildingType, criticalBuildingType) => {
+      const mapGrid = createGrid(40, 40)
+      const factory = { id: 'enemy', owner: 'enemy', type: 'constructionYard', x: 15, y: 15, width: 3, height: 3 }
+      const criticalBuilding = { owner: 'enemy', type: criticalBuildingType, x: 20, y: 15, width: 3, height: 3 }
+
+      const result = findBuildingPosition(
+        buildingType,
+        mapGrid,
+        [],
+        [criticalBuilding],
+        [factory, humanFactory],
+        'enemy'
+      )
+
+      expect(result).toBeTruthy()
+      const centerX = result.x + 1.5
+      const centerY = result.y + 1.5
+      for (const structure of [factory, criticalBuilding]) {
+        const horizontalGap = Math.max(
+          structure.x - (result.x + 3),
+          result.x - (structure.x + structure.width),
+          0
+        )
+        const verticalGap = Math.max(
+          structure.y - (result.y + 3),
+          result.y - (structure.y + structure.height),
+          0
+        )
+        const closestX = Math.max(structure.x, Math.min(centerX, structure.x + structure.width))
+        const closestY = Math.max(structure.y, Math.min(centerY, structure.y + structure.height))
+        expect(Math.max(horizontalGap, verticalGap)).toBeGreaterThanOrEqual(2)
+        expect(Math.hypot(closestX - centerX, closestY - centerY)).toBeGreaterThanOrEqual(6)
+      }
+    }
+  )
 
   it('handles defensive turret gun placement', () => {
     const mapGrid = createGrid(20, 20)

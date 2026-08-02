@@ -45,7 +45,8 @@ vi.mock('../../src/ai/enemyUnitBehavior.js', () => ({
 }))
 
 vi.mock('../../src/ai/enemyBuilding.js', () => ({
-  findBuildingPosition: vi.fn()
+  findBuildingPosition: vi.fn(),
+  isExplosiveBuildingPlacementSafe: vi.fn(() => true)
 }))
 
 vi.mock('../../src/game/dangerZoneMap.js', () => ({
@@ -116,7 +117,7 @@ import { updateAIUnit } from '../../src/ai/enemyUnitBehavior.js'
 import { updateDangerZoneMaps } from '../../src/game/dangerZoneMap.js'
 import { getUnitCost } from '../../src/utils.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
-import { findBuildingPosition } from '../../src/ai/enemyBuilding.js'
+import { findBuildingPosition, isExplosiveBuildingPlacementSafe } from '../../src/ai/enemyBuilding.js'
 import { handleStuckHarvester } from '../../src/game/harvesterLogic.js'
 
 const createMapGrid = (width, height) =>
@@ -133,6 +134,7 @@ beforeAll(async() => {
 
 beforeEach(() => {
   vi.clearAllMocks()
+  isExplosiveBuildingPlacementSafe.mockReturnValue(true)
   getUnitCost.mockImplementation((type) => {
     const costs = {
       harvester: 200,
@@ -249,6 +251,52 @@ describe('enemyAIPlayer updateAIPlayer', () => {
     expect(updateDangerZoneMaps).toHaveBeenCalledWith(gameState)
     expect(aiFactory.currentlyBuilding).toBe(null)
     expect(aiFactory.buildingPosition).toBe(null)
+  })
+
+  it('rejects an unsafe completed gas station in final and simple fallback placement', () => {
+    const aiPlayerId = 'ai1'
+    const aiFactory = {
+      id: aiPlayerId,
+      owner: aiPlayerId,
+      x: 10,
+      y: 10,
+      width: 3,
+      height: 3,
+      health: 100,
+      budget: 0,
+      currentlyBuilding: 'gasStation',
+      buildStartTime: 0,
+      buildDuration: 100,
+      buildingPosition: { x: 12, y: 10 }
+    }
+    const gameState = {
+      buildings: [
+        { type: 'oreRefinery', owner: aiPlayerId, x: 15, y: 10, width: 3, height: 3, health: 100 }
+      ],
+      enemyPowerSupply: 0,
+      enemyBuildSpeedModifier: 1,
+      speedMultiplier: 1
+    }
+    canPlaceBuilding.mockReturnValue(true)
+    findBuildingPosition.mockReturnValue(null)
+    isExplosiveBuildingPlacementSafe.mockReturnValue(false)
+
+    updateAIPlayer(
+      aiPlayerId,
+      [],
+      [aiFactory],
+      [],
+      createMapGrid(40, 40),
+      gameState,
+      null,
+      200,
+      []
+    )
+
+    expect(isExplosiveBuildingPlacementSafe).toHaveBeenCalled()
+    expect(createBuilding).not.toHaveBeenCalled()
+    expect(aiFactory.budget).toBe(buildingData.gasStation.cost)
+    expect(aiFactory.currentlyBuilding).toBe(null)
   })
 
   it('assigns vehicle factories as spawn points for harvester production', () => {
