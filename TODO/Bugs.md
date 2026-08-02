@@ -471,3 +471,7 @@
 ## 2026-07-31 Rocket turret anti-air impact bug
 
 - [x] Ensure Rocket Turret homing rockets track the altitude-adjusted visible center of enemy Apache, F22, and F35 aircraft and detonate directly on the aircraft rather than at its ground coordinate.
+
+## 2026-08-02 Building repair timeout HUD overflow
+
+- [x] Clamp a building's red pending-repair timeout fill so malformed or out-of-range cooldown values can never draw it wider than the building.

@@ -883,7 +883,10 @@ export class BuildingRenderer {
     }
 
     // Calculate progress (reverse progress bar: 100% to 0%)
-    const progress = secondsRemaining / 10 // 10 seconds total
+    // Saved/remote repair state can occasionally contain a cooldown above the
+    // normal ten-second duration. Keep that bad state from drawing beyond the
+    // building HUD while the repair system brings it back into range.
+    const progress = Math.min(secondsRemaining / 10, 1) // 10 seconds total
 
     // Position above the health bar to avoid overlap with selection markers
     // Health bar is at screenY - 10, so we place this at screenY - 13 (3px height)
