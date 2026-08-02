@@ -146,6 +146,13 @@ describe('Production Queue System', () => {
     productionQueue.unitPaid = 0
     productionQueue.buildingPaid = 0
     productionQueue.productionController = null
+    ;['naval', 'air'].forEach(laneName => {
+      const lane = productionQueue.unitQueues[laneName]
+      lane.unitItems = []
+      lane.currentUnit = null
+      lane.pausedUnit = false
+      lane.unitPaid = 0
+    })
   })
 
   describe('Queue Adding', () => {
@@ -1144,6 +1151,28 @@ describe('Production Queue System', () => {
       expect(productionQueue.unitQueues.ground.currentUnit?.type).toBe('tank_v1')
       expect(productionQueue.unitQueues.naval.currentUnit?.type).toBe('destroyer')
       expect(productionQueue.unitQueues.air.currentUnit?.type).toBe('apache')
+    })
+
+    it('resolves and cancels current naval and air stacks in their owning lanes', () => {
+      gameState.buildings = [
+        { type: 'shipyard', owner: 'player', health: 100 },
+        { type: 'helipad', owner: 'player', health: 100 }
+      ]
+      const navalButton = { ...mockButton, getAttribute: vi.fn(() => 'destroyer') }
+      const airButton = { ...mockButton, getAttribute: vi.fn(() => 'apache') }
+
+      productionQueue.addItem('destroyer', navalButton, false)
+      productionQueue.addItem('apache', airButton, false)
+
+      const navalLane = productionQueue.getUnitLane(navalButton)
+      const airLane = productionQueue.getUnitLane(airButton)
+      expect(navalLane.currentUnit?.type).toBe('destroyer')
+      expect(airLane.currentUnit?.type).toBe('apache')
+
+      navalLane.removeQueuedUnitByButton(navalButton)
+      airLane.removeQueuedUnitByButton(airButton)
+      expect(navalLane.currentUnit).toBeNull()
+      expect(airLane.currentUnit).toBeNull()
     })
 
     it('tracks unit production progress from simulation time instead of wall-clock speed multipliers', () => {
