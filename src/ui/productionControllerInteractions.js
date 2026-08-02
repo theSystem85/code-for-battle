@@ -104,6 +104,17 @@ export function attachMobileDragHandlers(controller, button, detail) {
       : (sidebarScroll || sidebar)
 
     state.interactionElement = primaryScrollContainer || button
+    state.startScrollTop = Number(primaryScrollContainer?.scrollTop) || 0
+
+    const handleScroll = () => {
+      if (Math.abs((Number(primaryScrollContainer?.scrollTop) || 0) - state.startScrollTop) < 1) {
+        return
+      }
+      state.mode = 'scroll'
+      controller.suppressNextClick = true
+    }
+
+    primaryScrollContainer?.addEventListener('scroll', handleScroll, { passive: true })
 
     controller.mobileDragState = state
 
@@ -156,6 +167,9 @@ export function attachMobileDragHandlers(controller, button, detail) {
         } else if (absDeltaX >= 8 || absDeltaY >= 8) {
           if (absDeltaY > absDeltaX) {
             state.mode = 'scroll'
+            // Browsers still synthesize a click after a touch scroll ends. Keep
+            // suppression set until that click reaches the production handler.
+            controller.suppressNextClick = true
           } else {
             activateDrag()
           }
@@ -178,6 +192,12 @@ export function attachMobileDragHandlers(controller, button, detail) {
       window.removeEventListener('pointermove', handleMove, true)
       window.removeEventListener('pointerup', handleEnd, true)
       window.removeEventListener('pointercancel', handleEnd, true)
+      primaryScrollContainer?.removeEventListener('scroll', handleScroll)
+
+      if (Math.abs((Number(primaryScrollContainer?.scrollTop) || 0) - state.startScrollTop) >= 1) {
+        state.mode = 'scroll'
+        controller.suppressNextClick = true
+      }
 
       if (state.active && state.mode === 'drag') {
         document.dispatchEvent(new CustomEvent('mobile-production-drop', {
@@ -189,8 +209,20 @@ export function attachMobileDragHandlers(controller, button, detail) {
             clientY: endEvent.clientY
           }
         }))
-      } else {
+      } else if (state.mode !== 'scroll' && endEvent.type !== 'pointercancel') {
         controller.suppressNextClick = false
+      } else if (endEvent.type === 'pointercancel') {
+        // Native touch scrolling commonly cancels the pointer before dispatching
+        // its final scroll event. Treat cancellation as non-tap input.
+        controller.suppressNextClick = true
+      }
+
+      if (controller.suppressNextClick && (state.mode === 'scroll' || endEvent.type === 'pointercancel')) {
+        clearTimeout(controller.mobileScrollClickSuppressionTimer)
+        controller.mobileScrollClickSuppressionTimer = setTimeout(() => {
+          controller.suppressNextClick = false
+          controller.mobileScrollClickSuppressionTimer = null
+        }, 500)
       }
 
       if (detail.kind === 'building' && gameState.draggedBuildingType === detail.type) {
@@ -226,8 +258,10 @@ export function attachMobileDragHandlers(controller, button, detail) {
       event.preventDefault()
       event.stopImmediatePropagation()
       controller.suppressNextClick = false
+      clearTimeout(controller.mobileScrollClickSuppressionTimer)
+      controller.mobileScrollClickSuppressionTimer = null
     }
-  })
+  }, true)
 }
 
 export function isUpperHalfClick(_controller, event, button) {
