@@ -27,7 +27,7 @@ export function initFactories(factories, mapGrid) {
     factory.constructionFinished = true
     factory.constructionStartTime = performance.now() - 5000
     factory.productionCountdown = 0
-    factory.budget = Number.isFinite(gameState.startMoney) ? gameState.startMoney : 12000
+    factory.budget = Number.isFinite(gameState.startMoney) ? gameState.startMoney : 20000
     // Keep legacy compatibility
     factory.isHuman = playerId === gameState.humanPlayer
 

@@ -4,6 +4,7 @@
 Add map generation controls in the sidebar so the host/player can define terrain composition and shoreline shape while preserving fair land connectivity for all bases.
 
 ## Requirements
+0. Fresh installations default to a 200×200 map with four players, 5% rocks, all four shores, a big center lake, and 20,000 starting money. Persisted user settings and explicit startup URL overrides continue to take precedence.
 1. Add two numeric map generation inputs in Map Settings:
    - `Water %` (percent of map tiles targeted as water)
    - `Rocks %` (percent of map tiles targeted as rock)

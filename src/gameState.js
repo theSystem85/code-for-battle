@@ -2,8 +2,8 @@
 import { DEFAULT_MAP_TILES_X, DEFAULT_MAP_TILES_Y } from './config.js'
 
 export const gameState = {
-  money: 12000,
-  startMoney: 12000,
+  money: 20000,
+  startMoney: 20000,
   gameTime: 0,
   frameCount: 0, // Add frame counter for milestone checking
   wins: 0,
@@ -248,7 +248,7 @@ export const gameState = {
   lastGlobalAttackDecision: 0,
 
   // Multiplayer settings
-  playerCount: 2,  // Number of players (2-4)
+  playerCount: 4,  // Number of players (2-4)
   humanPlayer: 'player1',  // Which player is controlled by human
   partyStates: [], // Tracks per-party metadata for invites and AI/human control
   gameInstanceId: null, // UUID tied to this running match
@@ -295,12 +295,12 @@ export const gameState = {
   mapOreFieldCount: 8,
   mapOreTotalValue: 64000,
   mapWaterPercent: 10,
-  mapRockPercent: 10,
-  mapShoreNorth: false,
-  mapShoreWest: false,
-  mapShoreEast: false,
-  mapShoreSouth: false,
-  mapCenterLake: false,
+  mapRockPercent: 5,
+  mapShoreNorth: true,
+  mapShoreWest: true,
+  mapShoreEast: true,
+  mapShoreSouth: true,
+  mapCenterLake: true,
 
   // Lockstep deterministic multiplayer state (spec 015)
   lockstep: {
