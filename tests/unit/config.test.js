@@ -192,8 +192,8 @@ describe('config.js', () => {
     })
 
     it('should have DEFAULT_MAP_TILES defined', () => {
-      expect(DEFAULT_MAP_TILES_X).toBe(100)
-      expect(DEFAULT_MAP_TILES_Y).toBe(100)
+      expect(DEFAULT_MAP_TILES_X).toBe(200)
+      expect(DEFAULT_MAP_TILES_Y).toBe(200)
     })
 
     it('should have DIRECTIONS with 8 cardinal directions', () => {

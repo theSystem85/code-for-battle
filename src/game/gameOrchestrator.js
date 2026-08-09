@@ -169,7 +169,7 @@ function sanitizeStartMoney(value) {
   if (Number.isFinite(parsed)) {
     return Math.floor(Math.max(0, Math.min(5000000, parsed)) / step) * step
   }
-  const fallback = Number.isFinite(gameState.startMoney) ? gameState.startMoney : 12000
+  const fallback = Number.isFinite(gameState.startMoney) ? gameState.startMoney : 20000
   return Math.floor(Math.max(0, Math.min(5000000, fallback)) / step) * step
 }
 

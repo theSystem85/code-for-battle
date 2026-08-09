@@ -234,8 +234,8 @@ export function setXpMultiplier(value) {
 // config.js
 export const TILE_SIZE = 32
 export const MIN_MAP_TILES = 25
-export const DEFAULT_MAP_TILES_X = 100
-export const DEFAULT_MAP_TILES_Y = 100
+export const DEFAULT_MAP_TILES_X = 200
+export const DEFAULT_MAP_TILES_Y = 200
 export let MAP_TILES_X = DEFAULT_MAP_TILES_X
 export let MAP_TILES_Y = DEFAULT_MAP_TILES_Y
 

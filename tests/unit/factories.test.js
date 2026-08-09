@@ -137,7 +137,7 @@ describe('factories.js', () => {
         initFactories(factories, mapGrid)
 
         factories.forEach(factory => {
-          expect(factory.budget).toBe(12000)
+          expect(factory.budget).toBe(20000)
         })
       })
 
