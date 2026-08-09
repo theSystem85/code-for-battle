@@ -1644,6 +1644,13 @@ productionQueue.addItem = function(type, button, isBuilding = false, blueprint =
   return unitLaneMethods.addItem.call(lane, type, button, isBuilding, blueprint, rallyPoint, options)
 }
 
+productionQueue.getUnitLane = function(typeOrButton) {
+  const type = typeof typeOrButton === 'string'
+    ? typeOrButton
+    : typeOrButton?.getAttribute?.('data-unit-type')
+  return this.unitQueues[unitProductionLaneForType(type)]
+}
+
 productionQueue.updateProgress = function(timestamp) {
   unitLaneMethods.updateProgress.call(this, timestamp)
   unitLaneMethods.updateProgress.call(this.unitQueues.naval, timestamp)
