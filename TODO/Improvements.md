@@ -1,4 +1,5 @@
 - [x] Friendly-unit click action hierarchy (2026-07-27): when selected units click a friendly unit, apply exactly one eligible action in strict `board/load into -> request service -> guard` order, and select the clicked unit only when none of those interactions can apply.
+- [x] Remove terrain chunk monitoring from the FPS/performance overlay so the widget no longer shows the verbose `Chunks:` line.
 - [x] Migrate runtime game persistence from direct Web Storage calls to an IndexedDB-backed browser storage layer, including saves, replays, tutorial/settings preferences, aliases, keybindings, LLM settings, sprite-sheet metadata, and legacy data migration.
 - [x] Pin the iOS Simulator benchmark to an explicit `iPhone 13 Pro Max` simulator device by default, create/use the local simulator UDID, and document install/create commands for missing devices.
 - [x] Make benchmark-mode emulator startup leave Safari navigation to the E2E test, so the plain app URL is not opened before Vite is reachable and the Simulator no longer sits on the home screen after an early emulator-script failure.
