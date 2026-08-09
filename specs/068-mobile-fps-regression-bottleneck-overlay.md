@@ -99,3 +99,4 @@ Recent street sprite-sheet routing work introduced a major mobile framerate regr
 - The E2E benchmark can enforce that visible terrain samples do not turn black during fast scroll sweeps.
 - A local non-throttled mobile benchmark profile can reach the 60fps target when mobile terrain pixel density is set to 1x.
 - The benchmark evidence is used to validate that mobile render time improves after fixes.
+- Follow-up: the FPS/performance overlay no longer displays terrain chunk cache monitoring; chunk telemetry can remain available to diagnostics/benchmarks without occupying the in-game overlay.

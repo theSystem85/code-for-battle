@@ -45,7 +45,6 @@ export class FPSDisplay {
     this.frameCpuUpdateEl = document.getElementById('frameCpuUpdate')
     this.frameCpuRenderEl = document.getElementById('frameCpuRender')
     this.frameGpuEstimateEl = document.getElementById('frameGpuEstimate')
-    this.frameChunkStatsEl = document.getElementById('frameChunkStats')
     this.frameJsHeapEl = document.getElementById('frameJsHeap')
 
     // Network stats elements
@@ -190,12 +189,6 @@ export class FPSDisplay {
       }
       if (this.frameGpuEstimateEl) {
         this.frameGpuEstimateEl.textContent = `GPU/Wait: ${idleAvg.toFixed(1)} ms`
-      }
-      if (this.frameChunkStatsEl) {
-        const chunkStats = gameState.renderStats?.mapChunks
-        this.frameChunkStatsEl.textContent = chunkStats
-          ? `Chunks: ${chunkStats.chunksDrawn} drawn, ${chunkStats.chunkHits} hit, ${chunkStats.chunkMisses} miss, ${chunkStats.chunkRedraws} redraw, ${chunkStats.chunksPrewarmed || 0} prewarm, ${chunkStats.chunksQueued || 0} queue, ${chunkStats.chunksWarmed || 0} warm, ${chunkStats.chunkFallbacks || 0} fallback, ${chunkStats.chunksEvicted || 0} evict, ${chunkStats.chunkCacheSize || 0} cache`
-          : 'Chunks: n/a'
       }
       if (this.frameJsHeapEl) {
         const heapBytes = typeof performance !== 'undefined' && performance.memory
