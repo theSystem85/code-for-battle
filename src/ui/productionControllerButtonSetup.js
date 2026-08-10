@@ -135,7 +135,7 @@ export function setupUnitButtons(controller) {
       if (label) label.style.display = 'block'
     }
 
-    button.addEventListener('click', (event) => {
+    const handleActivation = (event) => {
       if (controller.suppressNextClick) {
         controller.suppressNextClick = false
         return
@@ -259,7 +259,9 @@ export function setupUnitButtons(controller) {
 
       // Always allow queuing
       productionQueue.addItem(unitType, button, false)
-    })
+    }
+    button.addEventListener('click', handleActivation)
+    button.addEventListener('production-button-activate', handleActivation)
 
     button.addEventListener('contextmenu', (e) => {
       e.preventDefault()
@@ -509,7 +511,7 @@ export function setupBuildingButtons(controller) {
     controller.attachMobileDragHandlers(button, { kind: 'building', type: buildingType })
     attachProductionTooltipHandlers(button, { kind: 'building', type: buildingType }, controller)
 
-    button.addEventListener('click', (event) => {
+    const handleActivation = (event) => {
       if (controller.suppressNextClick) {
         controller.suppressNextClick = false
         return
@@ -587,7 +589,9 @@ export function setupBuildingButtons(controller) {
 
       productionQueue.addItem(buildingType, button, true)
       lastClickTime = currentTime
-    })
+    }
+    button.addEventListener('click', handleActivation)
+    button.addEventListener('production-button-activate', handleActivation)
 
     button.addEventListener('contextmenu', (e) => {
       e.preventDefault()
