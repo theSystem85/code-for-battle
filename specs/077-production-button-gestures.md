@@ -7,6 +7,7 @@
 - The release coordinate determines the upper/lower action in every viewport orientation.
 - A touch gesture that moves at least five CSS pixels inside the action bar, changes its scroll position, emits a scroll event, or is cancelled is exclusively a non-tap gesture and must not alter a production stack on release.
 - Release displacement is checked independently because mobile browsers may coalesce or consume intermediate move events during native scrolling.
+- Capture-phase touch movement sets an explicit production-bar-drag flag because native scrolling may consume pointer movement; release activation must consume this flag before resetting it.
 - A pointer leaving the action bar retains the existing drag-to-map behavior and must not also activate the button.
 - Desktop building buttons use drag-to-map placement without their pointer gesture bookkeeping clearing the dragged building before the canvas drop.
 - Ground, air, and water unit buttons share identical stack decrement and drag-to-rally behavior.

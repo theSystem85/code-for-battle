@@ -30,6 +30,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
     }
 
     controller.suppressNextClick = false
+    controller.productionBarWasDragged = false
 
     const state = {
       pointerId: event.pointerId,
@@ -115,6 +116,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
     const handleScroll = () => {
       state.scrolled = true
       state.mode = 'scroll'
+      controller.productionBarWasDragged = true
     }
     state.interactionElement.addEventListener('scroll', handleScroll, { passive: true })
 
@@ -129,6 +131,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
       const deltaY = moveEvent.clientY - state.startY
       if (Math.hypot(deltaX, deltaY) >= PRODUCTION_TAP_MOVE_THRESHOLD) {
         state.moved = true
+        controller.productionBarWasDragged = true
       }
       const pointerOutsideBar = (() => {
         if (!state.interactionElement) {
@@ -182,6 +185,23 @@ export function attachMobileDragHandlers(controller, button, detail) {
       }
     }
 
+    const handleTouchMove = (touchEvent) => {
+      const touch = touchEvent.touches?.[0] || touchEvent.changedTouches?.[0]
+      if (!touch) {
+        return
+      }
+
+      if (Math.hypot(touch.clientX - state.startX, touch.clientY - state.startY) >= PRODUCTION_TAP_MOVE_THRESHOLD) {
+        // Native scrolling can consume pointermove before it reaches window.
+        // touchmove remains observable and is the authoritative bar-drag flag.
+        state.moved = true
+        controller.productionBarWasDragged = true
+        if (!state.active) {
+          state.mode = 'scroll'
+        }
+      }
+    }
+
     const handleEnd = (endEvent) => {
       if (endEvent.pointerId !== state.pointerId) {
         return
@@ -190,6 +210,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
       window.removeEventListener('pointermove', handleMove, true)
       window.removeEventListener('pointerup', handleEnd, true)
       window.removeEventListener('pointercancel', handleEnd, true)
+      window.removeEventListener('touchmove', handleTouchMove, true)
       state.interactionElement.removeEventListener('scroll', handleScroll)
 
       const scrollPositionChanged = (state.interactionElement.scrollLeft || 0) !== initialScrollLeft ||
@@ -202,7 +223,14 @@ export function attachMobileDragHandlers(controller, button, detail) {
         // scrolling. The release coordinate is the final independent guard.
         state.moved = true
         state.mode = state.mode || 'scroll'
+        controller.productionBarWasDragged = true
       }
+
+      if (scrollPositionChanged || state.scrolled || endEvent.type === 'pointercancel') {
+        controller.productionBarWasDragged = true
+      }
+
+      const barWasDragged = controller.productionBarWasDragged
 
       if (endEvent.type !== 'pointercancel' && state.active && state.mode === 'drag') {
         document.dispatchEvent(new CustomEvent('mobile-production-drop', {
@@ -214,7 +242,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
             clientY: endEvent.clientY
           }
         }))
-      } else if (endEvent.type !== 'pointercancel' && !state.moved && !state.scrolled && !scrollPositionChanged) {
+      } else if (endEvent.type !== 'pointercancel' && !barWasDragged) {
         // Activate on pointerup rather than waiting for the browser's delayed
         // compatibility click. This keeps rapid touch taps lossless.
         button.dispatchEvent(new CustomEvent('production-button-activate', {
@@ -225,6 +253,10 @@ export function attachMobileDragHandlers(controller, button, detail) {
       } else {
         button._suppressCompatibilityClick = true
       }
+
+      // The release decision above must consume the flag before a future
+      // gesture can reset it.
+      controller.productionBarWasDragged = false
 
       if (detail.kind === 'building' && gameState.draggedBuildingType === detail.type) {
         gameState.draggedBuildingType = null
@@ -252,6 +284,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
     window.addEventListener('pointermove', handleMove, { passive: false, capture: true })
     window.addEventListener('pointerup', handleEnd, { passive: false, capture: true })
     window.addEventListener('pointercancel', handleEnd, { passive: false, capture: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: true, capture: true })
   })
 
   button.addEventListener('click', (event) => {

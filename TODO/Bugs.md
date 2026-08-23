@@ -483,3 +483,4 @@
 - [x] Restore desktop drag-to-map building placement from sidebar production buttons by leaving mouse pointers to native click and HTML drag/drop handling.
 - [x] Make air and water production buttons match ground buttons: lower-half release resolves the owning production lane and drag-to-map queues the completed unit's rally destination.
 - [x] Reproduce and eliminate mobile action-bar scroll gestures triggering a build on release, including coalesced release-only displacement and browser-level touch scrolling across building, ground, air, and water buttons.
+- [x] Mobile follow-up: set an explicit production-bar drag flag from capture-phase touch movement, consume it before release activation, and reset it only after the release decision.
