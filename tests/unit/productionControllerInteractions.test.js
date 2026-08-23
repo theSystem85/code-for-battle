@@ -75,4 +75,26 @@ describe('production button pointer activation', () => {
 
     expect(activation).not.toHaveBeenCalled()
   })
+
+  it('leaves mouse pointers to native desktop click and drag handling', () => {
+    const activation = vi.fn()
+    button.addEventListener('production-button-activate', activation)
+
+    dispatchPointer(button, 'pointerdown', { pointerType: 'mouse' })
+    dispatchPointer(window, 'pointerup', { pointerType: 'mouse' })
+
+    expect(controller.mobileDragState).toBeNull()
+    expect(activation).not.toHaveBeenCalled()
+  })
+
+  it('does not activate when release displacement proves a coalesced scroll drag', () => {
+    const activation = vi.fn()
+    button.addEventListener('production-button-activate', activation)
+
+    dispatchPointer(button, 'pointerdown', { clientX: 20, clientY: 20 })
+    dispatchPointer(window, 'pointerup', { clientX: 20, clientY: 26 })
+    button.click()
+
+    expect(activation).not.toHaveBeenCalled()
+  })
 })

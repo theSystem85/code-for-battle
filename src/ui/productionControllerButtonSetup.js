@@ -268,32 +268,34 @@ export function setupUnitButtons(controller) {
       // Prevent action if game is paused
       if (gameState.gamePaused) return
 
-      // Check if this button has the current production
-      if (productionQueue.currentUnit && productionQueue.currentUnit.button === button) {
-        if (!productionQueue.pausedUnit) {
+      const unitLane = productionQueue.getUnitLane(unitType)
+
+      // Check if this button has the current production in its factory lane
+      if (unitLane.currentUnit && unitLane.currentUnit.button === button) {
+        if (!unitLane.pausedUnit) {
           // First right-click pauses
-          productionQueue.togglePauseUnit()
+          unitLane.togglePauseUnit()
         } else {
           // Second right-click cancels
-          productionQueue.cancelUnitProduction()
+          unitLane.cancelUnitProduction()
         }
       } else {
         // Find the last queued item of this type
         // Allow canceling ALL queued items, including currently producing ones
-        for (let i = productionQueue.unitItems.length - 1; i >= 0; i--) {
-          if (productionQueue.unitItems[i].button === button) {
+        for (let i = unitLane.unitItems.length - 1; i >= 0; i--) {
+          if (unitLane.unitItems[i].button === button) {
             // If we're canceling the currently producing unit, cancel it properly
-            if (i === 0 && productionQueue.currentUnit && productionQueue.currentUnit.button === button) {
-              productionQueue.cancelUnitProduction()
+            if (i === 0 && unitLane.currentUnit && unitLane.currentUnit.button === button) {
+              unitLane.cancelUnitProduction()
               break
             } else {
               // Remove queued unit (no money refund for queued items)
-              productionQueue.tryResumeProduction()
-              productionQueue.unitItems.splice(i, 1)
+              unitLane.tryResumeProduction()
+              unitLane.unitItems.splice(i, 1)
 
-              const remainingCount = productionQueue.unitItems.filter(
+              const remainingCount = unitLane.unitItems.filter(
                 item => item.button === button
-              ).length + (productionQueue.currentUnit && productionQueue.currentUnit.button === button ? 1 : 0)
+              ).length
 
               productionQueue.updateBatchCounter(button, remainingCount)
               break
@@ -358,28 +360,7 @@ export function setupUnitButtons(controller) {
           productionQueue.addItem(unitType, button, false)
         }
       } else if (scrollDown) {
-        // Scroll down - remove last queued unit of this type
-        // Allow canceling ALL blue bubbles, including currently producing ones
-        for (let i = productionQueue.unitItems.length - 1; i >= 0; i--) {
-          if (productionQueue.unitItems[i].button === button) {
-            // If we're canceling the currently producing unit, cancel it properly
-            if (i === 0 && productionQueue.currentUnit && productionQueue.currentUnit.button === button) {
-              productionQueue.cancelUnitProduction()
-              break
-            } else {
-              // Remove queued unit (no money refund for queued items)
-              productionQueue.tryResumeProduction()
-              productionQueue.unitItems.splice(i, 1)
-
-              const remainingCount = productionQueue.unitItems.filter(
-                item => item.button === button
-              ).length + (productionQueue.currentUnit && productionQueue.currentUnit.button === button ? 1 : 0)
-
-              productionQueue.updateBatchCounter(button, remainingCount)
-              break
-            }
-          }
-        }
+        controller.removeQueuedUnit(button)
       }
     }, { passive: false })
 

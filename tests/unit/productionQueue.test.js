@@ -101,6 +101,7 @@ import { isNearExistingBuilding } from '../../src/buildings.js'
 import { spawnUnit, findPath } from '../../src/units.js'
 import { findClosestOre } from '../../src/logic.js'
 import { units } from '../../src/main.js'
+import { getUnitProductionCount, removeQueuedUnit } from '../../src/ui/productionControllerQueue.js'
 
 describe('Production Queue System', () => {
   let mockButton
@@ -146,6 +147,13 @@ describe('Production Queue System', () => {
     productionQueue.unitPaid = 0
     productionQueue.buildingPaid = 0
     productionQueue.productionController = null
+    ;['naval', 'air'].forEach(laneName => {
+      const lane = productionQueue.unitQueues[laneName]
+      lane.unitItems = []
+      lane.currentUnit = null
+      lane.pausedUnit = false
+      lane.unitPaid = 0
+    })
   })
 
   describe('Queue Adding', () => {
@@ -1144,6 +1152,31 @@ describe('Production Queue System', () => {
       expect(productionQueue.unitQueues.ground.currentUnit?.type).toBe('tank_v1')
       expect(productionQueue.unitQueues.naval.currentUnit?.type).toBe('destroyer')
       expect(productionQueue.unitQueues.air.currentUnit?.type).toBe('apache')
+    })
+
+    it.each([
+      ['apache', 'air'],
+      ['destroyer', 'naval']
+    ])('counts and removes %s from its %s production stack', (unitType, laneName) => {
+      gameState.money = 100000
+      gameState.buildings = [
+        { type: 'shipyard', owner: 'player', health: 100 },
+        { type: 'helipad', owner: 'player', health: 100 }
+      ]
+      const button = {
+        ...mockButton,
+        getAttribute: vi.fn(() => unitType)
+      }
+      const controller = {
+        getUnitProductionCount: target => getUnitProductionCount(null, target)
+      }
+
+      productionQueue.addItem(unitType, button, false)
+
+      expect(productionQueue.unitQueues[laneName].currentUnit?.type).toBe(unitType)
+      expect(getUnitProductionCount(controller, button)).toBe(1)
+      expect(removeQueuedUnit(controller, button)).toBe(true)
+      expect(productionQueue.unitQueues[laneName].currentUnit).toBeNull()
     })
 
     it('tracks unit production progress from simulation time instead of wall-clock speed multipliers', () => {

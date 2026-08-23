@@ -12,7 +12,7 @@ const MOBILE_EDGE_SCROLL_THRESHOLD = 20
 const MOBILE_EDGE_SCROLL_SPEED_PER_MS = 0.14
 const MOBILE_EDGE_SCROLL_DEFAULT_FRAME_MS = 16
 const MOBILE_EDGE_SCROLL_MAX_FRAME_MS = 64
-const PRODUCTION_TAP_MOVE_THRESHOLD = 8
+const PRODUCTION_TAP_MOVE_THRESHOLD = 5
 
 export function attachMobileDragHandlers(controller, button, detail) {
   if (!window.PointerEvent) {
@@ -20,6 +20,11 @@ export function attachMobileDragHandlers(controller, button, detail) {
   }
 
   button.addEventListener('pointerdown', (event) => {
+    // Mouse input already has reliable native click and HTML drag/drop. Running
+    // the touch gesture state machine for it races dragstart/drop on desktop.
+    if (event.pointerType !== 'touch') {
+      return
+    }
     if (isReplayModeActive() || gameState.gamePaused || button.classList.contains('disabled')) {
       return
     }
@@ -122,9 +127,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
 
       const deltaX = moveEvent.clientX - state.startX
       const deltaY = moveEvent.clientY - state.startY
-      const absDeltaX = Math.abs(deltaX)
-      const absDeltaY = Math.abs(deltaY)
-      if (absDeltaX >= PRODUCTION_TAP_MOVE_THRESHOLD || absDeltaY >= PRODUCTION_TAP_MOVE_THRESHOLD) {
+      if (Math.hypot(deltaX, deltaY) >= PRODUCTION_TAP_MOVE_THRESHOLD) {
         state.moved = true
       }
       const pointerOutsideBar = (() => {
@@ -162,7 +165,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
       }
 
       if (!state.mode) {
-        if (pointerOutsideBar) {
+        if (state.moved && pointerOutsideBar) {
           activateDrag()
         } else if (state.moved) {
           // Movement inside the action bar belongs to its native scroller. A
@@ -192,7 +195,16 @@ export function attachMobileDragHandlers(controller, button, detail) {
       const scrollPositionChanged = (state.interactionElement.scrollLeft || 0) !== initialScrollLeft ||
         (state.interactionElement.scrollTop || 0) !== initialScrollTop
 
-      if (state.active && state.mode === 'drag') {
+      const endX = Number.isFinite(endEvent.clientX) ? endEvent.clientX : state.startX
+      const endY = Number.isFinite(endEvent.clientY) ? endEvent.clientY : state.startY
+      if (Math.hypot(endX - state.startX, endY - state.startY) >= PRODUCTION_TAP_MOVE_THRESHOLD) {
+        // Some mobile browsers coalesce or consume pointermove during native
+        // scrolling. The release coordinate is the final independent guard.
+        state.moved = true
+        state.mode = state.mode || 'scroll'
+      }
+
+      if (endEvent.type !== 'pointercancel' && state.active && state.mode === 'drag') {
         document.dispatchEvent(new CustomEvent('mobile-production-drop', {
           detail: {
             kind: detail.kind,
@@ -204,7 +216,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
         }))
       } else if (endEvent.type !== 'pointercancel' && !state.moved && !state.scrolled && !scrollPositionChanged) {
         // Activate on pointerup rather than waiting for the browser's delayed
-        // compatibility click. This keeps rapid mouse and touch taps lossless.
+        // compatibility click. This keeps rapid touch taps lossless.
         button.dispatchEvent(new CustomEvent('production-button-activate', {
           bubbles: false,
           detail: { clientX: endEvent.clientX, clientY: endEvent.clientY }
