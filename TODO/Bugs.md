@@ -475,4 +475,5 @@
 ## 2026-08-02 Building repair timeout HUD overflow
 
 - [x] Clamp a building's red pending-repair timeout fill so malformed or out-of-range cooldown values can never draw it wider than the building.
+- [x] Stabilize the repair-countdown HUD unit test in shared CI workers by resetting its dynamically imported module graph and loading mocked `gameState` before its renderer consumer.
 - [x] Production action-bar rapid-tap and scroll regression (2026-08-09): make every land, air, and water unit button respond immediately to upper/lower-half pointer releases, while suppressing stack changes whenever the same gesture moves or scrolls the action bar in portrait or landscape.

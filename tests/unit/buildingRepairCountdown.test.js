@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../src/gameState.js', () => ({
   gameState: {
@@ -13,13 +13,15 @@ vi.mock('../../src/rendering/turretImageRenderer.js', () => ({
   turretImagesAvailable: vi.fn(() => false)
 }))
 
+beforeEach(() => {
+  vi.resetModules()
+})
+
 describe('building repair countdown HUD', () => {
   it('never draws the timeout fill wider than the building', async() => {
     globalThis.Image = class Image {}
-    const [{ BuildingRenderer }, { gameState }] = await Promise.all([
-      import('../../src/rendering/buildingRenderer.js'),
-      import('../../src/gameState.js')
-    ])
+    const { gameState } = await import('../../src/gameState.js')
+    const { BuildingRenderer } = await import('../../src/rendering/buildingRenderer.js')
     const building = { id: 'repairing-building' }
     gameState.buildingsAwaitingRepair = [{ building, remainingCooldown: 100 }]
     const fillRect = vi.fn()
