@@ -1105,6 +1105,7 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active {
 body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-button {
   aspect-ratio: auto;
   min-height: 72px;
+  touch-action: pan-y;
 }
 
 /* Make all button containers maintain the square aspect ratio */

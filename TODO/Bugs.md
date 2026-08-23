@@ -484,3 +484,5 @@
 - [x] Make air and water production buttons match ground buttons: lower-half release resolves the owning production lane and drag-to-map queues the completed unit's rally destination.
 - [x] Reproduce and eliminate mobile action-bar scroll gestures triggering a build on release, including coalesced release-only displacement and browser-level touch scrolling across building, ground, air, and water buttons.
 - [x] Mobile follow-up: set an explicit production-bar drag flag from capture-phase touch movement, consume it before release activation, and reset it only after the release decision.
+- [x] Real-iPhone portrait follow-up: preserve immediate rapid stack taps while observing and locking the production button's actual reparented scroller and declaring its native pan axis so a horizontal bottom-bar scroll can never dispatch build activation.
+- [x] Real-iPhone landscape follow-up: defer only landscape custom tap dispatch for 50 ms so asynchronous vertical WebKit scrolling can veto the release without losing rapid stack taps, including on 120 Hz displays.

@@ -1193,6 +1193,7 @@ body.mobile-landscape #mobileBuildMenuContainer #productionContainer {
 body.mobile-landscape #mobileBuildMenuContainer #production {
   flex: 1;
   overflow-y: auto;
+  touch-action: pan-y;
   margin: 0;
   padding: 0;
   scrollbar-width: none;
@@ -2247,6 +2248,7 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #production {
   padding: 0;
   overflow-x: auto;
   overflow-y: hidden;
+  touch-action: pan-x;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -2304,6 +2306,7 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
   cursor: pointer;
   margin: 0;
   padding: 0;
+  touch-action: pan-x;
 }
 
 body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.active .production-button:not(.unlocked):not(.active):not(.paused):not(.ready-for-placement),

@@ -13,6 +13,7 @@ const MOBILE_EDGE_SCROLL_SPEED_PER_MS = 0.14
 const MOBILE_EDGE_SCROLL_DEFAULT_FRAME_MS = 16
 const MOBILE_EDGE_SCROLL_MAX_FRAME_MS = 64
 const PRODUCTION_TAP_MOVE_THRESHOLD = 5
+const LANDSCAPE_SCROLL_SETTLE_MS = 50
 
 export function attachMobileDragHandlers(controller, button, detail) {
   if (!window.PointerEvent) {
@@ -47,8 +48,8 @@ export function attachMobileDragHandlers(controller, button, detail) {
     const lockables = []
     const sidebarScroll = document.getElementById('sidebarScroll')
     const sidebar = document.getElementById('sidebar')
-    const mobileBuildMenu = document.getElementById('mobileBuildMenuContainer')
-    const mobileProductionScroll = document.querySelector('#mobileBuildMenuContainer #production')
+    const mobileBuildMenu = button.closest('#mobileBuildMenuContainer')
+    const mobileProductionScroll = mobileBuildMenu ? button.closest('#production') : null
 
     const captureLockState = (element) => {
       if (!element) {
@@ -57,14 +58,19 @@ export function attachMobileDragHandlers(controller, button, detail) {
       lockables.push({
         element,
         previousTouchAction: element.style.touchAction,
+        previousOverflowX: element.style.overflowX,
         previousOverflowY: element.style.overflowY,
         previousWebkitOverflowScrolling: element.style.webkitOverflowScrolling,
         applied: false
       })
     }
 
-    const isMobileLandscape = document.body && document.body.classList.contains('mobile-landscape')
-    if (isMobileLandscape) {
+    const isInMobileBuildMenu = Boolean(mobileBuildMenu)
+    const isMobileLandscapeBar = isInMobileBuildMenu && (
+      mobileBuildMenu.dataset.orientation === 'landscape' ||
+      document.body?.classList.contains('mobile-landscape')
+    )
+    if (isInMobileBuildMenu) {
       captureLockState(mobileProductionScroll)
       captureLockState(mobileBuildMenu)
     } else {
@@ -83,6 +89,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
             return
           }
           lock.element.style.touchAction = 'none'
+          lock.element.style.overflowX = 'hidden'
           lock.element.style.overflowY = 'hidden'
           lock.element.style.webkitOverflowScrolling = 'auto'
           lock.applied = true
@@ -94,8 +101,15 @@ export function attachMobileDragHandlers(controller, button, detail) {
           if (!lock.element || !lock.applied) {
             return
           }
-          const { element, previousTouchAction, previousOverflowY, previousWebkitOverflowScrolling } = lock
+          const {
+            element,
+            previousTouchAction,
+            previousOverflowX,
+            previousOverflowY,
+            previousWebkitOverflowScrolling
+          } = lock
           element.style.touchAction = previousTouchAction || ''
+          element.style.overflowX = previousOverflowX || ''
           element.style.overflowY = previousOverflowY || ''
           element.style.webkitOverflowScrolling = previousWebkitOverflowScrolling || ''
           lock.applied = false
@@ -105,7 +119,10 @@ export function attachMobileDragHandlers(controller, button, detail) {
 
     state.scrollLocksApplied = false
 
-    const primaryScrollContainer = isMobileLandscape
+    // mobileLayout reparents the same production DOM into the mobile container
+    // in landscape and portrait-condensed modes. Resolve the actual scroller
+    // from the touched button instead of inferring it from orientation classes.
+    const primaryScrollContainer = isInMobileBuildMenu
       ? (mobileProductionScroll || mobileBuildMenu)
       : (sidebarScroll || sidebar)
 
@@ -116,9 +133,19 @@ export function attachMobileDragHandlers(controller, button, detail) {
     const handleScroll = () => {
       state.scrolled = true
       state.mode = 'scroll'
-      controller.productionBarWasDragged = true
+      if (!state.releasePending) {
+        controller.productionBarWasDragged = true
+      }
     }
     state.interactionElement.addEventListener('scroll', handleScroll, { passive: true })
+    let scrollListenerAttached = true
+    const detachScrollListener = () => {
+      if (!scrollListenerAttached) {
+        return
+      }
+      state.interactionElement.removeEventListener('scroll', handleScroll)
+      scrollListenerAttached = false
+    }
 
     controller.mobileDragState = state
 
@@ -211,7 +238,6 @@ export function attachMobileDragHandlers(controller, button, detail) {
       window.removeEventListener('pointerup', handleEnd, true)
       window.removeEventListener('pointercancel', handleEnd, true)
       window.removeEventListener('touchmove', handleTouchMove, true)
-      state.interactionElement.removeEventListener('scroll', handleScroll)
 
       const scrollPositionChanged = (state.interactionElement.scrollLeft || 0) !== initialScrollLeft ||
         (state.interactionElement.scrollTop || 0) !== initialScrollTop
@@ -232,7 +258,15 @@ export function attachMobileDragHandlers(controller, button, detail) {
 
       const barWasDragged = controller.productionBarWasDragged
 
+      const dispatchTapActivation = () => {
+        button.dispatchEvent(new CustomEvent('production-button-activate', {
+          bubbles: false,
+          detail: { clientX: endEvent.clientX, clientY: endEvent.clientY }
+        }))
+      }
+
       if (endEvent.type !== 'pointercancel' && state.active && state.mode === 'drag') {
+        detachScrollListener()
         document.dispatchEvent(new CustomEvent('mobile-production-drop', {
           detail: {
             kind: detail.kind,
@@ -243,14 +277,31 @@ export function attachMobileDragHandlers(controller, button, detail) {
           }
         }))
       } else if (endEvent.type !== 'pointercancel' && !barWasDragged) {
-        // Activate on pointerup rather than waiting for the browser's delayed
-        // compatibility click. This keeps rapid touch taps lossless.
-        button.dispatchEvent(new CustomEvent('production-button-activate', {
-          bubbles: false,
-          detail: { clientX: endEvent.clientX, clientY: endEvent.clientY }
-        }))
         button._suppressCompatibilityClick = true
+        if (isMobileLandscapeBar) {
+          // iOS performs overflow scrolling asynchronously in landscape and
+          // may update scrollTop/emit scroll only after pointerup. Preserve the
+          // lossless custom activation path, but give the asynchronous scroller
+          // a short fixed window to veto it even on 120 Hz displays.
+          state.releasePending = true
+          const finishLandscapeTapDecision = () => {
+            detachScrollListener()
+            const lateScrollPositionChanged =
+              (state.interactionElement.scrollLeft || 0) !== initialScrollLeft ||
+              (state.interactionElement.scrollTop || 0) !== initialScrollTop
+            if (!state.scrolled && !lateScrollPositionChanged) {
+              dispatchTapActivation()
+            }
+          }
+          window.setTimeout(finishLandscapeTapDecision, LANDSCAPE_SCROLL_SETTLE_MS)
+        } else {
+          detachScrollListener()
+          // Portrait and sidebar taps activate on pointerup so rapid repeated
+          // upper/lower taps remain immediate and lossless.
+          dispatchTapActivation()
+        }
       } else {
+        detachScrollListener()
         button._suppressCompatibilityClick = true
       }
 

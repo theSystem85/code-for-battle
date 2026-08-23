@@ -97,4 +97,101 @@ describe('production button pointer activation', () => {
 
     expect(activation).not.toHaveBeenCalled()
   })
+
+  function moveButtonToPortraitProductionBar() {
+    const mobileContainer = document.createElement('div')
+    mobileContainer.id = 'mobileBuildMenuContainer'
+    const production = document.createElement('div')
+    production.id = 'production'
+    mobileContainer.appendChild(production)
+    production.appendChild(button)
+    document.body.appendChild(mobileContainer)
+    document.body.className = 'mobile-portrait sidebar-condensed'
+    production.getBoundingClientRect = () => ({
+      left: 0,
+      right: 300,
+      top: 0,
+      bottom: 100,
+      width: 300,
+      height: 100
+    })
+    return production
+  }
+
+  function moveButtonToLandscapeProductionBar() {
+    const production = moveButtonToPortraitProductionBar()
+    const mobileContainer = document.getElementById('mobileBuildMenuContainer')
+    mobileContainer.dataset.orientation = 'landscape'
+    document.body.className = 'mobile-landscape'
+    return production
+  }
+
+  it('does not activate when portrait scroll position changes without move or scroll events', () => {
+    const production = moveButtonToPortraitProductionBar()
+    const activation = vi.fn()
+    button.addEventListener('production-button-activate', activation)
+
+    dispatchPointer(button, 'pointerdown', { clientX: 20, clientY: 20 })
+    expect(controller.mobileDragState.interactionElement).toBe(production)
+    production.scrollLeft = 40
+    dispatchPointer(window, 'pointerup', { clientX: 20, clientY: 20 })
+    button.click()
+
+    expect(activation).not.toHaveBeenCalled()
+  })
+
+  it('keeps consecutive portrait upper and lower taps immediately responsive', () => {
+    moveButtonToPortraitProductionBar()
+    const activations = []
+    button.addEventListener('production-button-activate', event => activations.push(event.detail.clientY))
+
+    dispatchPointer(button, 'pointerdown', { clientY: 20 })
+    dispatchPointer(window, 'pointerup', { clientY: 20 })
+    dispatchPointer(button, 'pointerdown', { clientY: 80 })
+    dispatchPointer(window, 'pointerup', { clientY: 80 })
+
+    expect(activations).toEqual([20, 80])
+    expect(isUpperHalfClick(null, { detail: { clientY: activations[0] } }, button)).toBe(true)
+    expect(isUpperHalfClick(null, { detail: { clientY: activations[1] } }, button)).toBe(false)
+  })
+
+  it('cancels a landscape tap when vertical scrolling arrives after pointerup', () => {
+    const production = moveButtonToLandscapeProductionBar()
+    const pendingTimers = []
+    const setTimer = vi.spyOn(window, 'setTimeout')
+      .mockImplementation(callback => pendingTimers.push(callback))
+    const activation = vi.fn()
+    button.addEventListener('production-button-activate', activation)
+
+    dispatchPointer(button, 'pointerdown', { clientX: 20, clientY: 20 })
+    dispatchPointer(window, 'pointerup', { clientX: 20, clientY: 20 })
+    expect(activation).not.toHaveBeenCalled()
+
+    production.scrollTop = 40
+    production.dispatchEvent(new window.Event('scroll'))
+    pendingTimers.shift()()
+
+    expect(activation).not.toHaveBeenCalled()
+    setTimer.mockRestore()
+  })
+
+  it('keeps consecutive landscape taps lossless after scroll classification', () => {
+    moveButtonToLandscapeProductionBar()
+    const pendingTimers = []
+    const setTimer = vi.spyOn(window, 'setTimeout')
+      .mockImplementation(callback => pendingTimers.push(callback))
+    const activations = []
+    button.addEventListener('production-button-activate', event => activations.push(event.detail.clientY))
+
+    dispatchPointer(button, 'pointerdown', { clientY: 20 })
+    dispatchPointer(window, 'pointerup', { clientY: 20 })
+    dispatchPointer(button, 'pointerdown', { clientY: 80 })
+    dispatchPointer(window, 'pointerup', { clientY: 80 })
+    while (pendingTimers.length > 0) {
+      pendingTimers.shift()()
+    }
+
+    expect(activations).toEqual([20, 80])
+    setTimer.mockRestore()
+  })
 })
