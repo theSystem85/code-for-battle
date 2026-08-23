@@ -76,7 +76,8 @@ export const productionQueue = {
       }
 
       if (i === 0 && this.currentUnit && this.currentUnit.button === button) {
-        return this.cancelUnitProduction(options)
+        this.cancelUnitProduction(options)
+        return true
       }
 
       this.tryResumeProduction()
@@ -108,7 +109,8 @@ export const productionQueue = {
       }
 
       if (i === 0 && this.currentBuilding && this.currentBuilding.button === button) {
-        return this.cancelBuildingProduction(options)
+        this.cancelBuildingProduction(options)
+        return true
       }
 
       this.tryResumeProduction()
@@ -1642,6 +1644,13 @@ productionQueue.setProductionController = function(controller) {
 productionQueue.addItem = function(type, button, isBuilding = false, blueprint = null, rallyPoint = null, options = {}) {
   const lane = isBuilding ? this : this.unitQueues[unitProductionLaneForType(type)]
   return unitLaneMethods.addItem.call(lane, type, button, isBuilding, blueprint, rallyPoint, options)
+}
+
+productionQueue.getUnitLane = function(typeOrButton) {
+  const type = typeof typeOrButton === 'string'
+    ? typeOrButton
+    : typeOrButton?.getAttribute?.('data-unit-type')
+  return this.unitQueues[unitProductionLaneForType(type)]
 }
 
 productionQueue.updateProgress = function(timestamp) {

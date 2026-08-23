@@ -475,3 +475,14 @@
 ## 2026-08-02 Building repair timeout HUD overflow
 
 - [x] Clamp a building's red pending-repair timeout fill so malformed or out-of-range cooldown values can never draw it wider than the building.
+- [x] Stabilize the repair-countdown HUD unit test in shared CI workers by resetting its dynamically imported module graph and loading mocked `gameState` before its renderer consumer.
+- [x] Production action-bar rapid-tap and scroll regression (2026-08-09): make every land, air, and water unit button respond immediately to upper/lower-half pointer releases, while suppressing stack changes whenever the same gesture moves or scrolls the action bar in portrait or landscape.
+
+## 2026-08-23 Production button gesture regressions
+
+- [x] Restore desktop drag-to-map building placement from sidebar production buttons by leaving mouse pointers to native click and HTML drag/drop handling.
+- [x] Make air and water production buttons match ground buttons: lower-half release resolves the owning production lane and drag-to-map queues the completed unit's rally destination.
+- [x] Reproduce and eliminate mobile action-bar scroll gestures triggering a build on release, including coalesced release-only displacement and browser-level touch scrolling across building, ground, air, and water buttons.
+- [x] Mobile follow-up: set an explicit production-bar drag flag from capture-phase touch movement, consume it before release activation, and reset it only after the release decision.
+- [x] Real-iPhone portrait follow-up: preserve immediate rapid stack taps while observing and locking the production button's actual reparented scroller and declaring its native pan axis so a horizontal bottom-bar scroll can never dispatch build activation.
+- [x] Real-iPhone landscape follow-up: defer only landscape custom tap dispatch for 50 ms so asynchronous vertical WebKit scrolling can veto the release without losing rapid stack taps, including on 120 Hz displays.

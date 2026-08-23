@@ -12,6 +12,8 @@ const MOBILE_EDGE_SCROLL_THRESHOLD = 20
 const MOBILE_EDGE_SCROLL_SPEED_PER_MS = 0.14
 const MOBILE_EDGE_SCROLL_DEFAULT_FRAME_MS = 16
 const MOBILE_EDGE_SCROLL_MAX_FRAME_MS = 64
+const PRODUCTION_TAP_MOVE_THRESHOLD = 5
+const LANDSCAPE_SCROLL_SETTLE_MS = 50
 
 export function attachMobileDragHandlers(controller, button, detail) {
   if (!window.PointerEvent) {
@@ -19,6 +21,8 @@ export function attachMobileDragHandlers(controller, button, detail) {
   }
 
   button.addEventListener('pointerdown', (event) => {
+    // Mouse input already has reliable native click and HTML drag/drop. Running
+    // the touch gesture state machine for it races dragstart/drop on desktop.
     if (event.pointerType !== 'touch') {
       return
     }
@@ -27,6 +31,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
     }
 
     controller.suppressNextClick = false
+    controller.productionBarWasDragged = false
 
     const state = {
       pointerId: event.pointerId,
@@ -34,6 +39,8 @@ export function attachMobileDragHandlers(controller, button, detail) {
       startY: event.clientY,
       active: false,
       mode: null,
+      moved: false,
+      scrolled: false,
       detail,
       button
     }
@@ -41,8 +48,8 @@ export function attachMobileDragHandlers(controller, button, detail) {
     const lockables = []
     const sidebarScroll = document.getElementById('sidebarScroll')
     const sidebar = document.getElementById('sidebar')
-    const mobileBuildMenu = document.getElementById('mobileBuildMenuContainer')
-    const mobileProductionScroll = document.querySelector('#mobileBuildMenuContainer #production')
+    const mobileBuildMenu = button.closest('#mobileBuildMenuContainer')
+    const mobileProductionScroll = mobileBuildMenu ? button.closest('#production') : null
 
     const captureLockState = (element) => {
       if (!element) {
@@ -51,14 +58,19 @@ export function attachMobileDragHandlers(controller, button, detail) {
       lockables.push({
         element,
         previousTouchAction: element.style.touchAction,
+        previousOverflowX: element.style.overflowX,
         previousOverflowY: element.style.overflowY,
         previousWebkitOverflowScrolling: element.style.webkitOverflowScrolling,
         applied: false
       })
     }
 
-    const isMobileLandscape = document.body && document.body.classList.contains('mobile-landscape')
-    if (isMobileLandscape) {
+    const isInMobileBuildMenu = Boolean(mobileBuildMenu)
+    const isMobileLandscapeBar = isInMobileBuildMenu && (
+      mobileBuildMenu.dataset.orientation === 'landscape' ||
+      document.body?.classList.contains('mobile-landscape')
+    )
+    if (isInMobileBuildMenu) {
       captureLockState(mobileProductionScroll)
       captureLockState(mobileBuildMenu)
     } else {
@@ -77,6 +89,7 @@ export function attachMobileDragHandlers(controller, button, detail) {
             return
           }
           lock.element.style.touchAction = 'none'
+          lock.element.style.overflowX = 'hidden'
           lock.element.style.overflowY = 'hidden'
           lock.element.style.webkitOverflowScrolling = 'auto'
           lock.applied = true
@@ -88,8 +101,15 @@ export function attachMobileDragHandlers(controller, button, detail) {
           if (!lock.element || !lock.applied) {
             return
           }
-          const { element, previousTouchAction, previousOverflowY, previousWebkitOverflowScrolling } = lock
+          const {
+            element,
+            previousTouchAction,
+            previousOverflowX,
+            previousOverflowY,
+            previousWebkitOverflowScrolling
+          } = lock
           element.style.touchAction = previousTouchAction || ''
+          element.style.overflowX = previousOverflowX || ''
           element.style.overflowY = previousOverflowY || ''
           element.style.webkitOverflowScrolling = previousWebkitOverflowScrolling || ''
           lock.applied = false
@@ -99,11 +119,33 @@ export function attachMobileDragHandlers(controller, button, detail) {
 
     state.scrollLocksApplied = false
 
-    const primaryScrollContainer = isMobileLandscape
+    // mobileLayout reparents the same production DOM into the mobile container
+    // in landscape and portrait-condensed modes. Resolve the actual scroller
+    // from the touched button instead of inferring it from orientation classes.
+    const primaryScrollContainer = isInMobileBuildMenu
       ? (mobileProductionScroll || mobileBuildMenu)
       : (sidebarScroll || sidebar)
 
     state.interactionElement = primaryScrollContainer || button
+
+    const initialScrollLeft = state.interactionElement.scrollLeft || 0
+    const initialScrollTop = state.interactionElement.scrollTop || 0
+    const handleScroll = () => {
+      state.scrolled = true
+      state.mode = 'scroll'
+      if (!state.releasePending) {
+        controller.productionBarWasDragged = true
+      }
+    }
+    state.interactionElement.addEventListener('scroll', handleScroll, { passive: true })
+    let scrollListenerAttached = true
+    const detachScrollListener = () => {
+      if (!scrollListenerAttached) {
+        return
+      }
+      state.interactionElement.removeEventListener('scroll', handleScroll)
+      scrollListenerAttached = false
+    }
 
     controller.mobileDragState = state
 
@@ -114,8 +156,10 @@ export function attachMobileDragHandlers(controller, button, detail) {
 
       const deltaX = moveEvent.clientX - state.startX
       const deltaY = moveEvent.clientY - state.startY
-      const absDeltaX = Math.abs(deltaX)
-      const absDeltaY = Math.abs(deltaY)
+      if (Math.hypot(deltaX, deltaY) >= PRODUCTION_TAP_MOVE_THRESHOLD) {
+        state.moved = true
+        controller.productionBarWasDragged = true
+      }
       const pointerOutsideBar = (() => {
         if (!state.interactionElement) {
           return false
@@ -151,14 +195,12 @@ export function attachMobileDragHandlers(controller, button, detail) {
       }
 
       if (!state.mode) {
-        if (pointerOutsideBar) {
+        if (state.moved && pointerOutsideBar) {
           activateDrag()
-        } else if (absDeltaX >= 8 || absDeltaY >= 8) {
-          if (absDeltaY > absDeltaX) {
-            state.mode = 'scroll'
-          } else {
-            activateDrag()
-          }
+        } else if (state.moved) {
+          // Movement inside the action bar belongs to its native scroller. A
+          // production drag begins only after the pointer leaves the bar.
+          state.mode = 'scroll'
         }
       } else if (state.mode === 'scroll' && pointerOutsideBar) {
         activateDrag()
@@ -170,6 +212,23 @@ export function attachMobileDragHandlers(controller, button, detail) {
       }
     }
 
+    const handleTouchMove = (touchEvent) => {
+      const touch = touchEvent.touches?.[0] || touchEvent.changedTouches?.[0]
+      if (!touch) {
+        return
+      }
+
+      if (Math.hypot(touch.clientX - state.startX, touch.clientY - state.startY) >= PRODUCTION_TAP_MOVE_THRESHOLD) {
+        // Native scrolling can consume pointermove before it reaches window.
+        // touchmove remains observable and is the authoritative bar-drag flag.
+        state.moved = true
+        controller.productionBarWasDragged = true
+        if (!state.active) {
+          state.mode = 'scroll'
+        }
+      }
+    }
+
     const handleEnd = (endEvent) => {
       if (endEvent.pointerId !== state.pointerId) {
         return
@@ -178,8 +237,36 @@ export function attachMobileDragHandlers(controller, button, detail) {
       window.removeEventListener('pointermove', handleMove, true)
       window.removeEventListener('pointerup', handleEnd, true)
       window.removeEventListener('pointercancel', handleEnd, true)
+      window.removeEventListener('touchmove', handleTouchMove, true)
 
-      if (state.active && state.mode === 'drag') {
+      const scrollPositionChanged = (state.interactionElement.scrollLeft || 0) !== initialScrollLeft ||
+        (state.interactionElement.scrollTop || 0) !== initialScrollTop
+
+      const endX = Number.isFinite(endEvent.clientX) ? endEvent.clientX : state.startX
+      const endY = Number.isFinite(endEvent.clientY) ? endEvent.clientY : state.startY
+      if (Math.hypot(endX - state.startX, endY - state.startY) >= PRODUCTION_TAP_MOVE_THRESHOLD) {
+        // Some mobile browsers coalesce or consume pointermove during native
+        // scrolling. The release coordinate is the final independent guard.
+        state.moved = true
+        state.mode = state.mode || 'scroll'
+        controller.productionBarWasDragged = true
+      }
+
+      if (scrollPositionChanged || state.scrolled || endEvent.type === 'pointercancel') {
+        controller.productionBarWasDragged = true
+      }
+
+      const barWasDragged = controller.productionBarWasDragged
+
+      const dispatchTapActivation = () => {
+        button.dispatchEvent(new CustomEvent('production-button-activate', {
+          bubbles: false,
+          detail: { clientX: endEvent.clientX, clientY: endEvent.clientY }
+        }))
+      }
+
+      if (endEvent.type !== 'pointercancel' && state.active && state.mode === 'drag') {
+        detachScrollListener()
         document.dispatchEvent(new CustomEvent('mobile-production-drop', {
           detail: {
             kind: detail.kind,
@@ -189,9 +276,38 @@ export function attachMobileDragHandlers(controller, button, detail) {
             clientY: endEvent.clientY
           }
         }))
+      } else if (endEvent.type !== 'pointercancel' && !barWasDragged) {
+        button._suppressCompatibilityClick = true
+        if (isMobileLandscapeBar) {
+          // iOS performs overflow scrolling asynchronously in landscape and
+          // may update scrollTop/emit scroll only after pointerup. Preserve the
+          // lossless custom activation path, but give the asynchronous scroller
+          // a short fixed window to veto it even on 120 Hz displays.
+          state.releasePending = true
+          const finishLandscapeTapDecision = () => {
+            detachScrollListener()
+            const lateScrollPositionChanged =
+              (state.interactionElement.scrollLeft || 0) !== initialScrollLeft ||
+              (state.interactionElement.scrollTop || 0) !== initialScrollTop
+            if (!state.scrolled && !lateScrollPositionChanged) {
+              dispatchTapActivation()
+            }
+          }
+          window.setTimeout(finishLandscapeTapDecision, LANDSCAPE_SCROLL_SETTLE_MS)
+        } else {
+          detachScrollListener()
+          // Portrait and sidebar taps activate on pointerup so rapid repeated
+          // upper/lower taps remain immediate and lossless.
+          dispatchTapActivation()
+        }
       } else {
-        controller.suppressNextClick = false
+        detachScrollListener()
+        button._suppressCompatibilityClick = true
       }
+
+      // The release decision above must consume the flag before a future
+      // gesture can reset it.
+      controller.productionBarWasDragged = false
 
       if (detail.kind === 'building' && gameState.draggedBuildingType === detail.type) {
         gameState.draggedBuildingType = null
@@ -219,15 +335,22 @@ export function attachMobileDragHandlers(controller, button, detail) {
     window.addEventListener('pointermove', handleMove, { passive: false, capture: true })
     window.addEventListener('pointerup', handleEnd, { passive: false, capture: true })
     window.addEventListener('pointercancel', handleEnd, { passive: false, capture: true })
+    window.addEventListener('touchmove', handleTouchMove, { passive: true, capture: true })
   })
 
   button.addEventListener('click', (event) => {
+    if (button._suppressCompatibilityClick) {
+      button._suppressCompatibilityClick = false
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      return
+    }
     if (controller.suppressNextClick) {
       event.preventDefault()
       event.stopImmediatePropagation()
       controller.suppressNextClick = false
     }
-  })
+  }, true)
 }
 
 export function isUpperHalfClick(_controller, event, button) {
@@ -240,7 +363,7 @@ export function isUpperHalfClick(_controller, event, button) {
     return true
   }
 
-  let clientY = typeof event?.clientY === 'number' ? event.clientY : NaN
+  let clientY = typeof event?.clientY === 'number' ? event.clientY : event?.detail?.clientY
 
   if (!Number.isFinite(clientY)) {
     const touch = event?.changedTouches?.[0] || event?.touches?.[0]

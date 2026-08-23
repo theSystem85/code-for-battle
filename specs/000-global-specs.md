@@ -71,6 +71,7 @@ The following unit types are considered attack-capable for cursor/range detectio
 
 - A pending-repair countdown renders as a red fill above the building health bar.
 - The fill width must be capped at the rendered building width even when restored or synchronized cooldown state exceeds the normal ten-second duration.
+- The countdown regression test must reset dynamically imported modules and import mocked `gameState` before its renderer consumer so both use the same state instance in shared CI workers.
 - Hot-path verification command: `PERF_BUILDING_REPAIR_HUD=1 npx playwright test tests/e2e/buildingRepairCountdownPerformance.test.js --project=chromium --reporter=line`.
 - The benchmark compares 120-frame same-scene baseline and 100-building active-countdown samples, enforcing no more than 20% FPS loss, under 50 ms total repair-HUD CPU time, and under 8 MB JS heap growth. The 2026-08-02 container run was blocked before measurement because its Playwright Chromium binary was unavailable and the browser CDN returned HTTP 403 during installation.
 
