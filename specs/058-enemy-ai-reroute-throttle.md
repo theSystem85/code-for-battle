@@ -89,3 +89,18 @@ Enemy AI units must not reroute more often than once every 2 seconds when reacti
 ## Follow-up Requirement 9
 - Keep AI strategic reroute ownership in dedicated enemy AI systems.
 - Restore a narrow `unitMovement` fallback for AI-controlled ground combat units that only rebuilds an initial missing attack path and does not continuously override existing AI chase routes.
+
+## Follow-up Root Cause 10 (2026-08-30)
+- Naval AI treated an empty path as an instruction to retry immediately, even when the preceding full-map search had already proved that an attack or service destination was unreachable.
+- In the supplied 200x200 save, two southeast destroyers were separated from their chosen targets by disconnected water. Each destroyer tried the nearest two firing-position candidates on every simulation tick, driving `findPath` to 180 calls per five seconds and reducing the game to 4.94 FPS while rendering remained inexpensive.
+
+## Follow-up Requirement 10
+- Failed naval attack, shipyard, supplier, and supply-deployment route searches must record their attempt time and wait at least `AI_DECISION_INTERVAL` before retrying.
+- A missing timestamp must still permit the first route attempt, including when simulation time is zero.
+- Successful naval routes retain the existing periodic replanning behavior so moving targets and changing service conditions remain recoverable.
+
+## Verification (2026-08-30)
+- Command: `PERF_SAVEGAME_DESTROYERS=1 PLAYWRIGHT_SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 npx playwright test tests/e2e/savegameDestroyerPerformance.test.js --project=chromium --reporter=line`
+- Before: destroyers alive 4.94 FPS, 200.12 ms average update, 40.58 ms average `updateGame`, 180 path searches in five seconds; after killing the destroyers, 58.41 FPS returned immediately.
+- After: destroyers alive 58.41 FPS, 1.86 ms average update, 1.78 ms average `updateGame`, 21 path searches in five seconds across the full game; the destroyed comparison measured 57.21 FPS and both samples reported 0 MB heap delta.
+- The post-fix active-destroyer workload exceeds the pre-fix FPS by more than 10x and is within measurement noise of the destroyed baseline, with no steady-state regression over the fixed 60 FPS budget.

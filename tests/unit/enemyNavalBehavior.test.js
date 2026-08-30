@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import '../setup.js'
-import { TILE_SIZE } from '../../src/config.js'
+import { AI_DECISION_INTERVAL, TILE_SIZE } from '../../src/config.js'
 import { updateNavalAIUnit } from '../../src/ai/enemyNavalBehavior.js'
 
 function createWaterMap(width, height) {
@@ -119,5 +119,29 @@ describe('enemy naval behavior', () => {
     expect(supplyShip.allowedToAttack).toBe(false)
     expect(supplyShip.navalAttackTarget).toBeNull()
     expect(supplyShip.path.length).toBeGreaterThan(0)
+  })
+
+  it('throttles retries when an attack target is unreachable across disconnected water', () => {
+    const mapGrid = Array.from({ length: 20 }, () =>
+      Array.from({ length: 30 }, () => ({ type: 'land', building: null, seedCrystal: false })))
+    for (let y = 8; y <= 12; y++) {
+      for (let x = 1; x <= 4; x++) mapGrid[y][x].type = 'water'
+      for (let x = 22; x <= 27; x++) mapGrid[y][x].type = 'water'
+    }
+    const unit = createDestroyer({ x: 2 * TILE_SIZE, y: 10 * TILE_SIZE, tileX: 2 })
+    const enemyShip = createDestroyer({
+      id: 'unreachable-ship', owner: 'player1', x: 25 * TILE_SIZE, y: 10 * TILE_SIZE, tileX: 25
+    })
+    const state = { buildings: [], occupancyMap: [] }
+
+    updateNavalAIUnit(unit, [unit, enemyShip], state, mapGrid, 1000, 'player2')
+    expect(unit.path).toHaveLength(0)
+    expect(unit.lastNavalAttackPathTime).toBe(1000)
+
+    updateNavalAIUnit(unit, [unit, enemyShip], state, mapGrid, 1016, 'player2')
+    expect(unit.lastNavalAttackPathTime).toBe(1000)
+
+    updateNavalAIUnit(unit, [unit, enemyShip], state, mapGrid, 1000 + AI_DECISION_INTERVAL, 'player2')
+    expect(unit.lastNavalAttackPathTime).toBe(1000 + AI_DECISION_INTERVAL)
   })
 })
