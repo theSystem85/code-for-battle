@@ -15,3 +15,5 @@ Specification only. This feature is intentionally not implemented with the compa
 7. A future agentic tool API may request bounded state by region, entity ID, player, objective, or revision range, with explicit response/token budgets.
 8. The LLM context schema is independently versioned from disk saves even where both reuse compact map/entity vocabulary.
 9. Deterministic tests must verify initial-state filtering, delta ordering/coalescing, fog-of-war privacy, and bounded tool responses before enabling LLM control.
+10. The Save Game Editor exposes a preview of the proposed strategic transfer using schema/row tables for statistics, units, buildings, wrecks, and mines; this preview is inspection-only and must not imply that live incremental delivery is implemented.
+11. Strategic payloads should follow CFB2's no-envelope, schema-once relational layout so property names are not repeated for each entity.

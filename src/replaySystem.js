@@ -160,8 +160,8 @@ function captureBaselineState() {
   try {
     const raw = getStoredItem(baselineKey)
     if (!raw) return null
-    const parsed = JSON.parse(raw)
-    replay.baselineState = decodeSaveObject(parsed).state || null
+    const parsed = decodeSaveObject(raw)
+    replay.baselineState = parsed.state || null
     return replay.baselineState
   } finally {
     removeStoredItem(baselineKey)

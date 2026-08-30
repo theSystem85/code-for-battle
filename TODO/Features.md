@@ -456,3 +456,11 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Add round-trip and 200×200 reduction unit coverage with a less-than-one-tenth size target.
 - [ ] Implement the separately specified strategic LLM initial filtered snapshot and revisioned incremental change feed.
 - [ ] Add fog-of-war-safe, token-budgeted strategic state tool calls by region/entity/player/objective/revision.
+
+## 2026-08-30 Relational CFB2 and save editor
+
+- [x] Replace the compact JSON envelope with whitespace-minimal CFB2 schema/row tables grouped by entity and unit type.
+- [x] Preserve map palette/RLE compression while converting the palette itself to a relational table.
+- [x] Persist unit paths, current and queued commands, primary/attack targets, multi-target IDs, planning blueprints, and production stacks.
+- [x] Add a Map Settings Save Game Editor modal with editable JSON/table views, read-only map data, metrics, save-as-new, and confirmed override.
+- [x] Add an inspection-only Strategic LLM Preview tab and extend the future strategic-context specification.

@@ -76,6 +76,7 @@ vi.mock('../../src/gameState.js', () => ({
 vi.mock('../../src/main.js', () => ({
   factories: [],
   units: [],
+  bullets: [],
   mapGrid: Array.from({ length: 10 }, () =>
     Array.from({ length: 10 }, () => ({ type: 'land', ore: false, seedCrystal: false, noBuild: 0 }))
   ),
@@ -314,7 +315,7 @@ describe('saveGame.js', () => {
       const savedData = localStorage.getItem('rts_save_My Save')
       expect(savedData).not.toBeNull()
 
-      const parsed = JSON.parse(savedData)
+      const parsed = decodeSaveObject(savedData)
       expect(parsed.label).toBe('My Save')
       expect(parsed.builtin).toBeUndefined() // User saves don't have builtin property
     })
@@ -359,7 +360,7 @@ describe('saveGame.js', () => {
       const saved = localStorage.getItem('rts_save_TestSave')
       expect(saved).toBeDefined()
 
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       expect(parsed.label).toBe('TestSave')
       expect(parsed.time).toBeDefined()
       expect(parsed.state).toBeDefined()
@@ -374,7 +375,7 @@ describe('saveGame.js', () => {
       const saved = localStorage.getItem('rts_save_Unnamed')
       expect(saved).toBeDefined()
 
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       expect(parsed.label).toBe('Unnamed')
     })
 
@@ -386,7 +387,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('StateTest')
 
       const saved = localStorage.getItem('rts_save_StateTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.gameState.money).toBe(25000)
@@ -410,7 +411,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('MapStateTest')
 
       const saved = localStorage.getItem('rts_save_MapStateTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.gameState.mapTilesX).toBe(84)
@@ -443,7 +444,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('UnitsTest')
 
       const saved = localStorage.getItem('rts_save_UnitsTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.units).toBeInstanceOf(Array)
@@ -473,7 +474,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('CrewStateSaveTest')
 
       const saved = localStorage.getItem('rts_save_CrewStateSaveTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
       const savedUnit = state.units.find(unit => unit.id === 'tank-crew-1')
@@ -513,7 +514,7 @@ describe('saveGame.js', () => {
 
       saveGameModule.saveGame('ApacheFlightStateTest')
 
-      const saved = JSON.parse(localStorage.getItem('rts_save_ApacheFlightStateTest'))
+      const saved = decodeSaveObject(localStorage.getItem('rts_save_ApacheFlightStateTest'))
       const state = JSON.parse(decodeSaveObject(saved).state)
       const apache = state.units.find(unit => unit.id === 'apache-save-1')
       expect(apache).toMatchObject({
@@ -563,7 +564,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('BattleshipTurretStateTest')
 
       const saved = localStorage.getItem('rts_save_BattleshipTurretStateTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
       const savedUnit = state.units.find(unit => unit.id === 'battle-save-1')
 
@@ -602,7 +603,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('BuildingsTest')
 
       const saved = localStorage.getItem('rts_save_BuildingsTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.buildings).toBeInstanceOf(Array)
@@ -621,7 +622,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('OreTest')
 
       const saved = localStorage.getItem('rts_save_OreTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.orePositions).toBeInstanceOf(Array)
@@ -632,7 +633,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('MilestoneTest')
 
       const saved = localStorage.getItem('rts_save_MilestoneTest')
-      const parsed = JSON.parse(saved)
+      const parsed = decodeSaveObject(saved)
       const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect('achievedMilestones' in state).toBe(true)
@@ -1080,7 +1081,7 @@ describe('saveGame.js', () => {
       // Verify save was created in localStorage (can't spy on internal saveGame calls)
       const savedData = localStorage.getItem('rts_save_lastGame')
       expect(savedData).not.toBeNull()
-      expect(JSON.parse(savedData).label).toBe('lastGame')
+      expect(decodeSaveObject(savedData).label).toBe('lastGame')
 
       // Clear the save to test pause trigger
       localStorage.removeItem('rts_save_lastGame')

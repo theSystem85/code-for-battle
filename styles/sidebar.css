@@ -1402,6 +1402,25 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
   margin-top: 8px;
 }
 
+.save-game-editor-modal {
+  width: min(1100px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  color: #eee;
+  background: #151a20;
+  border: 1px solid #607d8b;
+}
+
+.save-game-editor-modal::backdrop { background: rgb(0 0 0 / 70%); }
+.save-game-editor-modal textarea { width: 100%; min-height: 55vh; box-sizing: border-box; font: 12px/1.4 monospace; }
+.save-game-editor-modal table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
+.save-game-editor-modal th,
+.save-game-editor-modal td { border: 1px solid #455a64; padding: 3px; }
+.save-game-editor-modal td input { min-width: 90px; width: 100%; box-sizing: border-box; }
+.save-game-editor-modal [data-save-editor-panel] { margin-top: 10px; overflow: auto; }
+.save-game-editor-modal pre { min-height: 45vh; padding: 10px; background: #0c1116; white-space: pre-wrap; }
+.save-editor-tabs { display: flex; gap: 6px; margin-top: 10px; }
+
 #saveGamesPane.hidden,
 #replaysPane.hidden {
   display: none;

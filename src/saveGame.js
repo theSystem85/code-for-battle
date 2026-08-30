@@ -3,6 +3,7 @@ import { gameState } from './gameState.js'
 import { factories } from './main.js'
 import { units } from './main.js'
 import { mapGrid } from './main.js'
+import { bullets } from './main.js'
 import { builtinMissions, getBuiltinMissionById } from './missions/index.js'
 import { cleanupOreFromBuildings } from './gameSetup.js'
 import {
@@ -51,6 +52,7 @@ import { rebuildWaterMineLookup } from './game/waterMineSystem.js'
 import { getSimulationTime } from './game/time.js'
 import { regenerateAllInviteTokens } from './network/multiplayerStore.js'
 import { refreshSidebarMultiplayer } from './ui/sidebarMultiplayer.js'
+import { initSaveGameEditor } from './ui/saveGameEditor.js'
 import { stopHostInvite } from './network/webrtcSession.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { getRNGState } from './utils/gameRandom.js'
@@ -68,6 +70,7 @@ import {
   SAVE_EXPORT_FORMAT_STORAGE_KEY,
   decodeSaveObject,
   encodeCompactSave,
+  getCompactSaveMetadata,
   isCompactSave
 } from './saveFormat.js'
 
@@ -448,7 +451,7 @@ export function getSaveGames() {
 
   for (const [key, rawSave] of getStoredEntries(SAVE_STORAGE_KEY_PREFIX)) {
     try {
-      const save = JSON.parse(rawSave)
+      const save = isCompactSave(rawSave) ? getCompactSaveMetadata(rawSave) : JSON.parse(rawSave)
       const storedSizeBytes = computeStoredStringSize(rawSave)
       saves.push({
         key,
@@ -475,6 +478,21 @@ export function getSaveGames() {
 function computeStoredStringSize(value) {
   if (typeof value !== 'string') return 0
   return new Blob([value]).size
+}
+
+function serializeUnitCommand(command) {
+  if (!command || typeof command !== 'object') return command
+  const serialized = { ...command }
+  if (command.target && typeof command.target === 'object') {
+    serialized.targetId = command.target.id || null
+    serialized.targetType = command.target.type || null
+    delete serialized.target
+  }
+  if (Array.isArray(command.targets)) {
+    serialized.targetIds = command.targets.map(target => target?.id).filter(Boolean)
+    delete serialized.targets
+  }
+  return serialized
 }
 
 function formatMegabytes(bytes) {
@@ -566,9 +584,12 @@ function buildSaveObject(label) {
       pendingHarvesterAction: u.pendingHarvesterAction || null,
       pendingHarvesterActionAt: Number.isFinite(u.pendingHarvesterActionAt) ? u.pendingHarvesterActionAt : null,
       path: u.path || [],
+      commandQueue: Array.isArray(u.commandQueue) ? u.commandQueue.map(serializeUnitCommand) : [],
+      currentCommand: serializeUnitCommand(u.currentCommand),
       // Save target as ID only to avoid circular references
       targetId: u.target?.id || null,
       targetType: u.target ? (u.target.type || 'unknown') : null,
+      attackTargetId: u.attackTarget?.id || null,
       groupNumber: u.groupNumber,
       // Experience/Leveling system properties
       level: u.level || 0,
@@ -867,6 +888,33 @@ function buildSaveObject(label) {
     },
     aiFactoryBudgets,
     units: allUnits,
+    bullets: bullets.map(bullet => ({
+      id: bullet.id,
+      x: bullet.x,
+      y: bullet.y,
+      startX: bullet.startX,
+      startY: bullet.startY,
+      targetX: bullet.targetX,
+      targetY: bullet.targetY,
+      vx: bullet.vx,
+      vy: bullet.vy,
+      owner: bullet.owner,
+      damage: bullet.damage,
+      type: bullet.type,
+      projectileType: bullet.projectileType,
+      originType: bullet.originType,
+      speed: bullet.speed,
+      startTime: bullet.startTime,
+      ballistic: bullet.ballistic,
+      homing: bullet.homing,
+      dx: bullet.dx,
+      dy: bullet.dy,
+      distance: bullet.distance,
+      flightDuration: bullet.flightDuration,
+      ballisticDuration: bullet.ballisticDuration,
+      arcHeight: bullet.arcHeight,
+      targetId: bullet.target?.id || bullet.targetId || null
+    })),
     unitWrecks: allWrecks,
     buildings: allBuildings,
     factoryRallyPoints,
@@ -892,7 +940,7 @@ function buildSaveObject(label) {
 export function saveGame(label) {
   ensurePlayerBuildHistoryLoaded()
   const saveObj = buildSaveObject(label)
-  setStoredItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, JSON.stringify(encodeCompactSave(saveObj)))
+  setStoredItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, encodeCompactSave(saveObj))
   saveQuotaExceeded = false
 }
 
@@ -922,9 +970,8 @@ function getSelectedExportFormat() {
 
 function downloadSaveObject(saveObj) {
   const compact = getSelectedExportFormat() !== 'json'
-  const exportedObject = compact ? encodeCompactSave(saveObj) : decodeSaveObject(saveObj)
-  const payload = JSON.stringify(exportedObject, null, 2)
-  const blob = new Blob([payload], { type: compact ? 'application/x-code-for-battle-save+json' : 'application/json' })
+  const payload = compact ? encodeCompactSave(decodeSaveObject(saveObj)) : JSON.stringify(decodeSaveObject(saveObj), null, 2)
+  const blob = new Blob([payload], { type: compact ? 'application/x-code-for-battle-save' : 'application/json' })
   const objectUrl = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = objectUrl
@@ -1226,6 +1273,8 @@ function loadGameFromSaveObject(saveObj, key) {
     // Restore AI player budgets
     gameState.replayUnitSpawnOrdinals = {}
     units.length = 0
+    bullets.length = 0
+    if (Array.isArray(loaded.bullets)) bullets.push(...loaded.bullets.map(bullet => ({ ...bullet })))
     loaded.units.forEach(u => {
       // Rehydrate unit using createUnit logic
       // Find the factory for owner (player/enemy)
@@ -1481,6 +1530,20 @@ function loadGameFromSaveObject(saveObj, key) {
         delete unit.targetId
         delete unit.targetType
       }
+      if (unit.attackTargetId) {
+        unit.attackTarget = units.find(candidate => candidate.id === unit.attackTargetId)
+          || gameState.buildings.find(building => building.id === unit.attackTargetId)
+          || null
+        delete unit.attackTargetId
+      }
+      const restoreCommand = command => {
+        if (!command || typeof command !== 'object') return command
+        if (command.targetId) command.target = units.find(candidate => candidate.id === command.targetId) || gameState.buildings.find(building => building.id === command.targetId) || null
+        if (Array.isArray(command.targetIds)) command.targets = command.targetIds.map(id => units.find(candidate => candidate.id === id) || gameState.buildings.find(building => building.id === id)).filter(Boolean)
+        return command
+      }
+      unit.commandQueue = Array.isArray(unit.commandQueue) ? unit.commandQueue.map(restoreCommand) : []
+      unit.currentCommand = restoreCommand(unit.currentCommand)
     })
 
     // Rebuild control groups based on restored units
@@ -1908,7 +1971,7 @@ export function loadGame(key) {
       return
     }
     try {
-      saveObj = JSON.parse(raw)
+      saveObj = isCompactSave(raw) ? raw : JSON.parse(raw)
     } catch (err) {
       window.logger.warn('Failed to parse saved game metadata:', err)
       return
@@ -1956,7 +2019,7 @@ export function exportSaveGame(key) {
 
   let saveObj = null
   try {
-    saveObj = JSON.parse(rawSave)
+    saveObj = isCompactSave(rawSave) ? rawSave : JSON.parse(rawSave)
   } catch (err) {
     window.logger.warn('Failed to parse save data for export:', err)
     return
@@ -1988,7 +2051,7 @@ async function importSaveDataFromFile(file, options = {}) {
   let importedObj = null
 
   try {
-    importedObj = JSON.parse(fileText)
+    importedObj = isCompactSave(fileText) ? fileText : JSON.parse(fileText)
   } catch (err) {
     window.logger.warn('Failed to parse imported save file:', err)
     showNotification('Import failed: invalid JSON file')
@@ -2007,24 +2070,25 @@ async function importSaveDataFromFile(file, options = {}) {
       : null
   }
 
-  if (!importedObj || typeof importedObj !== 'object' || typeof importedObj.state === 'undefined') {
+  if (!isCompactSave(importedObj) && (!importedObj || typeof importedObj !== 'object' || typeof importedObj.state === 'undefined')) {
     showNotification('Import failed: unsupported save file format')
     return null
   }
 
-  const importedLabel = typeof importedObj.label === 'string' && importedObj.label.trim()
-    ? importedObj.label.trim()
+  const compactMetadata = isCompactSave(importedObj) ? getCompactSaveMetadata(importedObj) : null
+  const importedLabel = typeof (compactMetadata?.label || importedObj.label) === 'string' && (compactMetadata?.label || importedObj.label).trim()
+    ? (compactMetadata?.label || importedObj.label).trim()
     : `Imported Save ${new Date().toLocaleString()}`
   let normalizedSave = {
     label: importedLabel,
-    time: Number.isFinite(importedObj.time) ? importedObj.time : Date.now(),
+    time: Number.isFinite(compactMetadata?.time ?? importedObj.time) ? (compactMetadata?.time ?? importedObj.time) : Date.now(),
     state: typeof importedObj.state === 'string' ? importedObj.state : JSON.stringify(importedObj.state)
   }
   if (isCompactSave(importedObj)) normalizedSave = decodeSaveObject(importedObj)
 
   const saveKey = `${SAVE_STORAGE_KEY_PREFIX}${normalizedSave.label}`
   if (persistToIndexedDb) {
-    setStoredItem(saveKey, JSON.stringify(encodeCompactSave(normalizedSave)))
+    setStoredItem(saveKey, encodeCompactSave(normalizedSave))
     saveQuotaExceeded = false
   }
 
@@ -2213,6 +2277,7 @@ export function initSaveGameSystem() {
       updateSaveGamesList()
     })
   }
+  initSaveGameEditor({ onSaved: updateSaveGamesList })
 
   // Helper to perform the save action
   const performSave = async() => {
@@ -2360,7 +2425,7 @@ export function maybeResumeLastPausedGame() {
     try {
       const raw = getStoredItem(LAST_GAME_STORAGE_KEY)
       if (raw) {
-        const saveObj = JSON.parse(raw)
+        const saveObj = decodeSaveObject(raw)
         if (saveObj?.state) {
           const stateString = typeof saveObj.state === 'string' ? saveObj.state : JSON.stringify(saveObj.state)
           const loaded = JSON.parse(stateString)

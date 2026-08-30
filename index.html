@@ -723,6 +723,7 @@
             <div class="map-edit-controls" style="display: flex; flex-direction: column; gap: 6px; margin: 10px 0;">
               <button id="mapEditModeBtn" class="action-button" type="button">Edit Mode</button>
               <button id="openSpriteSheetEditorBtn" class="action-button" type="button">Sprite Sheet Editor</button>
+              <button id="openSaveGameEditorBtn" class="action-button" type="button">Save Game Editor</button>
             </div>
             <label style="display:flex; align-items:center; gap:5px; margin: 10px 0;">
               <input type="checkbox" id="integratedSpriteSheetModeCheckbox">
@@ -863,6 +864,28 @@
       </div>
     </div>
   </div>
+
+  <dialog id="saveGameEditorModal" class="save-game-editor-modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2>Save Game Editor</h2><button id="saveEditorClose" type="button">✕</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+      <label>Save game<select id="saveEditorSaveSelect"><option value="">Select a save game</option></select></label>
+      <label>Save label<input id="saveEditorLabel" maxlength="32"></label>
+      <span id="saveEditorMetrics"></span>
+    </div>
+    <p>Map tiles are read-only. Use Map Edit Mode to modify the map.</p>
+    <div class="save-editor-tabs">
+      <button type="button" data-save-editor-tab="json">JSON</button>
+      <button type="button" data-save-editor-tab="tables">Tables</button>
+      <button type="button" data-save-editor-tab="preview">Strategic LLM Preview</button>
+    </div>
+    <section data-save-editor-panel="json"><textarea id="saveEditorJson" spellcheck="false" aria-label="Editable save game JSON"></textarea></section>
+    <section id="saveEditorTables" data-save-editor-panel="tables" hidden></section>
+    <pre id="saveEditorPreview" data-save-editor-panel="preview" hidden></pre>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
+      <button id="saveEditorSaveNew" type="button">Save as new</button>
+      <button id="saveEditorOverwrite" type="button">Override opened save</button>
+    </div>
+  </dialog>
 
   <div id="mobilePortraitHud" aria-hidden="true">
     <div id="mobilePortraitMinimapDock"></div>
