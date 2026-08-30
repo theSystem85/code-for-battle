@@ -1210,11 +1210,11 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   // Run crew management for this AI player
   const aiUnits = units.filter(u => u.owner === aiPlayerId)
   if (aiUnits.length > 0) {
-    manageAICrewHealing(units, gameState, now)
-    manageAITankerTrucks(units, gameState, mapGrid)
-    manageAIRecoveryTanks(units, gameState, mapGrid, now)
-    manageAIAmmunitionTrucks(units, gameState, mapGrid)
-    manageAIAmmunitionMonitoring(units, gameState, mapGrid)
+    manageAICrewHealing(units, gameState, now, aiPlayerId)
+    manageAITankerTrucks(units, gameState, mapGrid, aiPlayerId)
+    manageAIRecoveryTanks(units, gameState, mapGrid, now, aiPlayerId)
+    manageAIAmmunitionTrucks(units, gameState, mapGrid, aiPlayerId)
+    manageAIAmmunitionMonitoring(units, gameState, mapGrid, aiPlayerId)
   }
 }
 

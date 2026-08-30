@@ -11,6 +11,7 @@ import {
   isHumanControlledParty,
   isTurretAimedAtTarget
 } from './combatHelpers.js'
+import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
 import { handleApacheVolley, handleRocketBurstFire, handleTankFiring, handleTankV3BurstFire } from './firingHandlers.js'
 
 /**
@@ -249,9 +250,7 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
       if (unit.target.tileX !== undefined) {
         targetCenterX = unit.target.x + TILE_SIZE / 2
         targetCenterY = unit.target.y + TILE_SIZE / 2
-        if ((unit.target.type === 'apache' || unit.target.type === 'f22Raptor' || unit.target.type === 'f35') && unit.target.altitude) {
-          targetCenterY -= unit.target.altitude * 0.4
-        }
+        targetCenterY -= getAircraftAltitudeLift(unit.target)
       } else {
         targetCenterX = unit.target.x * TILE_SIZE + (unit.target.width * TILE_SIZE) / 2
         targetCenterY = unit.target.y * TILE_SIZE + (unit.target.height * TILE_SIZE) / 2

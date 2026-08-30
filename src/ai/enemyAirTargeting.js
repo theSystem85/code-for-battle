@@ -107,6 +107,52 @@ function isTargetOutsideAntiAirThreat(target, threatSources) {
   return !isPointInsideAntiAirThreat(center, threatSources, F22_ANTI_AIR_BUFFER)
 }
 
+class AirApproachMinHeap {
+  constructor() {
+    this.nodes = []
+  }
+
+  get size() {
+    return this.nodes.length
+  }
+
+  push(node) {
+    const nodes = this.nodes
+    nodes.push(node)
+    let index = nodes.length - 1
+    while (index > 0) {
+      const parentIndex = Math.floor((index - 1) / 2)
+      if (nodes[parentIndex].f <= node.f) break
+      nodes[index] = nodes[parentIndex]
+      index = parentIndex
+    }
+    nodes[index] = node
+  }
+
+  pop() {
+    const nodes = this.nodes
+    const first = nodes[0]
+    const last = nodes.pop()
+    if (nodes.length === 0) return first
+
+    let index = 0
+    nodes[0] = last
+    while (true) {
+      const leftIndex = index * 2 + 1
+      if (leftIndex >= nodes.length) break
+      const rightIndex = leftIndex + 1
+      const childIndex = rightIndex < nodes.length && nodes[rightIndex].f < nodes[leftIndex].f
+        ? rightIndex
+        : leftIndex
+      if (nodes[childIndex].f >= last.f) break
+      nodes[index] = nodes[childIndex]
+      index = childIndex
+    }
+    nodes[index] = last
+    return first
+  }
+}
+
 function findSafeApproachPath(startTile, destinationTile, mapGrid, threatSources) {
   if (!startTile || !destinationTile || !Array.isArray(mapGrid) || !Array.isArray(mapGrid[0])) return null
 
@@ -130,7 +176,8 @@ function findSafeApproachPath(startTile, destinationTile, mapGrid, threatSources
   }
 
   const startBlocked = isBlocked(startTile.x, startTile.y)
-  const open = [{ x: startTile.x, y: startTile.y, g: 0, f: heuristic(startTile.x, startTile.y) }]
+  const open = new AirApproachMinHeap()
+  open.push({ x: startTile.x, y: startTile.y, g: 0, f: heuristic(startTile.x, startTile.y) })
   const gScore = new Map([[makeKey(startTile.x, startTile.y), 0]])
   const cameFrom = new Map()
   const closed = new Set()
@@ -143,16 +190,9 @@ function findSafeApproachPath(startTile, destinationTile, mapGrid, threatSources
   ]
 
   let explored = 0
-  while (open.length > 0 && explored < F22_APPROACH_NODE_LIMIT) {
+  while (open.size > 0 && explored < F22_APPROACH_NODE_LIMIT) {
     explored++
-    let currentIndex = 0
-    for (let i = 1; i < open.length; i++) {
-      if (open[i].f < open[currentIndex].f) {
-        currentIndex = i
-      }
-    }
-
-    const current = open.splice(currentIndex, 1)[0]
+    const current = open.pop()
     const currentKey = makeKey(current.x, current.y)
     if (closed.has(currentKey)) continue
 

@@ -174,7 +174,7 @@ function attemptAssignRecoveryTankToUnit(tank, targetUnit, mapGrid, unitCommands
   })
 }
 
-export function manageAIRecoveryTanks(units, gameState, mapGrid, now) {
+export function manageAIRecoveryTanks(units, gameState, mapGrid, now, onlyPlayerId = null) {
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
   if (!unitCommands) {
     window.logger.warn('manageAIRecoveryTanks: No unit commands handler available')
@@ -185,7 +185,7 @@ export function manageAIRecoveryTanks(units, gameState, mapGrid, now) {
     ? now
     : (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())
 
-  const aiPlayers = getActiveAIPlayers(gameState)
+  const aiPlayers = onlyPlayerId ? [onlyPlayerId] : getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId && u.health > 0)

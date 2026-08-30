@@ -12,6 +12,8 @@ import {
   resetHarvesterRuntimeState
 } from '../../src/game/harvesterLogic.js'
 import { showNotification } from '../../src/ui/notifications.js'
+import { findPath } from '../../src/units.js'
+import { findClosestOre } from '../../src/logic.js'
 
 // Mock dependencies
 vi.mock('../../src/config.js', () => ({
@@ -155,6 +157,14 @@ describe('Harvester Logic', () => {
 
     // Clear tracked state between tests
     vi.clearAllMocks()
+    findClosestOre.mockImplementation((unit, grid) => {
+      for (let y = 0; y < grid.length; y++) {
+        for (let x = 0; x < grid[y].length; x++) {
+          if (grid[y][x].ore && !grid[y][x].seedCrystal) return { x, y }
+        }
+      }
+      return null
+    })
     resetHarvesterRuntimeState(gameState)
   })
 
@@ -730,6 +740,25 @@ describe('Harvester Logic', () => {
   })
 
   describe('Stuck Harvester Recovery', () => {
+    it('bounds alternative ore path searches to one ranked batch', () => {
+      const harvester = createTestHarvester('harv1', 5, 5)
+      const oreTiles = [
+        [15, 15], [16, 15], [17, 15], [18, 15],
+        [15, 16], [16, 16], [17, 16], [18, 16]
+      ]
+      oreTiles.forEach(([x, y]) => { mapGrid[y][x].ore = true })
+      findPath.mockReturnValue([])
+
+      handleStuckHarvester(harvester, mapGrid, gameState.occupancyMap, gameState, factories)
+
+      const pathCallCount = findPath.mock.calls.length
+      findPath.mockImplementation((start, end) => [
+        { x: start.x, y: start.y },
+        { x: end.x, y: end.y }
+      ])
+      expect(pathCallCount).toBe(8)
+    })
+
     it('does not interrupt manually commanded harvesters', () => {
       const harvester = createTestHarvester('harv1', 5, 5)
       harvester.manualOreTarget = { x: 8, y: 8 }
@@ -763,6 +792,27 @@ describe('Harvester Logic', () => {
 
       expect(harvester.targetRefinery).toBe(assignedRefinery.id)
       expect(harvester.moveTarget).toEqual({ x: 10, y: 13 })
+    })
+  })
+
+  describe('Unreachable ore retry throttling', () => {
+    it('releases the failed reservation and waits before trying the same route again', () => {
+      const harvester = createTestHarvester('harv1', 2, 2)
+      mapGrid[15][15].ore = true
+      units.push(harvester)
+      findPath.mockReturnValue([])
+
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now)
+      updateHarvesterLogic(units, mapGrid, gameState.occupancyMap, gameState, factories, now + 1000)
+
+      const pathCallCount = findPath.mock.calls.length
+      const reservation = getTargetedOreTiles()['15,15']
+      findPath.mockImplementation((start, end) => [
+        { x: start.x, y: start.y },
+        { x: end.x, y: end.y }
+      ])
+      expect(pathCallCount).toBe(1)
+      expect(reservation).toBeUndefined()
     })
   })
 
