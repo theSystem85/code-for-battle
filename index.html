@@ -615,7 +615,7 @@
           <button id="importSaveBtn" class="action-button icon-button" title="Import save game or replay">
             <img src="/icons/import.svg" alt="Import" class="button-icon white-icon">
           </button>
-          <input id="importSaveInput" type="file" accept="application/json,.json" multiple style="display:none;" aria-label="Import save game or replay JSON">
+          <input id="importSaveInput" type="file" accept="application/json,.json,.cfb" multiple style="display:none;" aria-label="Import save game or replay">
         </div>
         <div class="save-replay-tabs">
           <button id="saveListTab" class="tab-button active" type="button">Save Games</button>
@@ -712,6 +712,14 @@
             <span id="mapSettingsToggleIcon">▼</span>
           </button>
           <div id="mapSettingsContent" style="display: none; margin-top: 10px;">
+            <div style="margin: 10px 0;">
+              <label for="saveFileFormatSelect" style="display:block; margin-bottom:6px;">Save file export format</label>
+              <select id="saveFileFormatSelect" class="sidebar-input" style="width:100%;">
+                <option value="compact" selected>Compact CFB (recommended)</option>
+                <option value="json">Legacy JSON (debugging)</option>
+              </select>
+              <small>Import accepts both formats. Exporting a loaded save converts it to the selected format.</small>
+            </div>
             <div class="map-edit-controls" style="display: flex; flex-direction: column; gap: 6px; margin: 10px 0;">
               <button id="mapEditModeBtn" class="action-button" type="button">Edit Mode</button>
               <button id="openSpriteSheetEditorBtn" class="action-button" type="button">Sprite Sheet Editor</button>

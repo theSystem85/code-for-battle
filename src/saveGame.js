@@ -63,6 +63,13 @@ import {
   removeStoredItem,
   setStoredItem
 } from './storage/indexedDbStorage.js'
+import {
+  COMPACT_SAVE_FORMAT,
+  SAVE_EXPORT_FORMAT_STORAGE_KEY,
+  decodeSaveObject,
+  encodeCompactSave,
+  isCompactSave
+} from './saveFormat.js'
 
 const BUILTIN_SAVE_PREFIX = 'builtin:'
 const LAST_GAME_LABEL = 'lastGame'
@@ -885,7 +892,7 @@ function buildSaveObject(label) {
 export function saveGame(label) {
   ensurePlayerBuildHistoryLoaded()
   const saveObj = buildSaveObject(label)
-  setStoredItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, JSON.stringify(saveObj))
+  setStoredItem(SAVE_STORAGE_KEY_PREFIX + saveObj.label, JSON.stringify(encodeCompactSave(saveObj)))
   saveQuotaExceeded = false
 }
 
@@ -905,12 +912,23 @@ function canWriteToIndexedDbStorage() {
 export function exportCurrentGameToFile(label = 'Unnamed') {
   ensurePlayerBuildHistoryLoaded()
   const saveObj = buildSaveObject(label)
-  const payload = JSON.stringify(saveObj, null, 2)
-  const blob = new Blob([payload], { type: 'application/json' })
+  downloadSaveObject(saveObj)
+}
+
+function getSelectedExportFormat() {
+  const select = document.getElementById('saveFileFormatSelect')
+  return select?.value || getStoredItem(SAVE_EXPORT_FORMAT_STORAGE_KEY) || 'compact'
+}
+
+function downloadSaveObject(saveObj) {
+  const compact = getSelectedExportFormat() !== 'json'
+  const exportedObject = compact ? encodeCompactSave(saveObj) : decodeSaveObject(saveObj)
+  const payload = JSON.stringify(exportedObject, null, 2)
+  const blob = new Blob([payload], { type: compact ? 'application/x-code-for-battle-save+json' : 'application/json' })
   const objectUrl = URL.createObjectURL(blob)
   const anchor = document.createElement('a')
   anchor.href = objectUrl
-  anchor.download = buildExportFilename(saveObj?.label, saveObj?.time)
+  anchor.download = buildExportFilename(saveObj?.label, saveObj?.time, compact ? 'cfb' : 'json')
   document.body.appendChild(anchor)
   anchor.click()
   anchor.remove()
@@ -918,6 +936,7 @@ export function exportCurrentGameToFile(label = 'Unnamed') {
 }
 
 function loadGameFromSaveObject(saveObj, key) {
+  if (isCompactSave(saveObj)) saveObj = decodeSaveObject(saveObj)
   if (saveObj && saveObj.state !== undefined) {
     let stateString
     if (typeof saveObj.state === 'string') {
@@ -1918,12 +1937,12 @@ function sanitizeFileSegment(value, fallback) {
   return cleaned || fallback
 }
 
-function buildExportFilename(label, time) {
+function buildExportFilename(label, time, extension = 'json') {
   const safeLabel = sanitizeFileSegment(label, 'save')
   const safeDate = Number.isFinite(time)
     ? new Date(time).toISOString().replace(/[:.]/g, '-').replace('T', '_').replace('Z', 'Z')
     : 'unknown-date'
-  return `${safeDate}_${safeLabel}.json`
+  return `${safeDate}_${safeLabel}.${extension}`
 }
 
 export function exportSaveGame(key) {
@@ -1943,16 +1962,7 @@ export function exportSaveGame(key) {
     return
   }
 
-  const payload = JSON.stringify(saveObj, null, 2)
-  const blob = new Blob([payload], { type: 'application/json' })
-  const objectUrl = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = objectUrl
-  anchor.download = buildExportFilename(saveObj?.label, saveObj?.time)
-  document.body.appendChild(anchor)
-  anchor.click()
-  anchor.remove()
-  URL.revokeObjectURL(objectUrl)
+  downloadSaveObject(saveObj)
 }
 
 export async function importSaveGameFromFile(file) {
@@ -2005,15 +2015,16 @@ async function importSaveDataFromFile(file, options = {}) {
   const importedLabel = typeof importedObj.label === 'string' && importedObj.label.trim()
     ? importedObj.label.trim()
     : `Imported Save ${new Date().toLocaleString()}`
-  const normalizedSave = {
+  let normalizedSave = {
     label: importedLabel,
     time: Number.isFinite(importedObj.time) ? importedObj.time : Date.now(),
     state: typeof importedObj.state === 'string' ? importedObj.state : JSON.stringify(importedObj.state)
   }
+  if (isCompactSave(importedObj)) normalizedSave = decodeSaveObject(importedObj)
 
   const saveKey = `${SAVE_STORAGE_KEY_PREFIX}${normalizedSave.label}`
   if (persistToIndexedDb) {
-    setStoredItem(saveKey, JSON.stringify(normalizedSave))
+    setStoredItem(saveKey, JSON.stringify(encodeCompactSave(normalizedSave)))
     saveQuotaExceeded = false
   }
 
@@ -2163,7 +2174,8 @@ export function updateSaveGamesList() {
       label.title = `${label.title}\nSize: ${sizeText} | Browser storage left: ${remainingText}`
 
       const exportBtn = document.createElement('button')
-      exportBtn.title = 'Export save game as JSON'
+      const exportFormat = getSelectedExportFormat()
+      exportBtn.title = exportFormat === 'json' ? 'Export save game as legacy JSON' : `Export save game as ${COMPACT_SAVE_FORMAT}`
       exportBtn.setAttribute('aria-label', 'Export save game')
       exportBtn.classList.add('action-button', 'icon-button')
       exportBtn.style.marginLeft = '6px'
@@ -2192,6 +2204,15 @@ export function initSaveGameSystem() {
   const importSaveInput = document.getElementById('importSaveInput')
   const saveLabelInput = document.getElementById('saveLabelInput')
   const gameCanvas = document.getElementById('gameCanvas')
+  const saveFileFormatSelect = document.getElementById('saveFileFormatSelect')
+
+  if (saveFileFormatSelect) {
+    saveFileFormatSelect.value = getStoredItem(SAVE_EXPORT_FORMAT_STORAGE_KEY) || 'compact'
+    saveFileFormatSelect.addEventListener('change', () => {
+      setStoredItem(SAVE_EXPORT_FORMAT_STORAGE_KEY, saveFileFormatSelect.value)
+      updateSaveGamesList()
+    })
+  }
 
   // Helper to perform the save action
   const performSave = async() => {

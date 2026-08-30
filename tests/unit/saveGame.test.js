@@ -5,6 +5,7 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import '../setup.js'
+import { decodeSaveObject } from '../../src/saveFormat.js'
 
 // Mock dependencies before importing
 vi.mock('../../src/gameState.js', () => ({
@@ -386,7 +387,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_StateTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.gameState.money).toBe(25000)
       expect(state.gameState.gameTime).toBe(120)
@@ -410,7 +411,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_MapStateTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.gameState.mapTilesX).toBe(84)
       expect(state.gameState.mapTilesY).toBe(72)
@@ -443,7 +444,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_UnitsTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.units).toBeInstanceOf(Array)
       expect(state.units.length).toBe(1)
@@ -473,7 +474,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_CrewStateSaveTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
 
       const savedUnit = state.units.find(unit => unit.id === 'tank-crew-1')
       expect(savedUnit).toBeDefined()
@@ -513,7 +514,7 @@ describe('saveGame.js', () => {
       saveGameModule.saveGame('ApacheFlightStateTest')
 
       const saved = JSON.parse(localStorage.getItem('rts_save_ApacheFlightStateTest'))
-      const state = JSON.parse(saved.state)
+      const state = JSON.parse(decodeSaveObject(saved).state)
       const apache = state.units.find(unit => unit.id === 'apache-save-1')
       expect(apache).toMatchObject({
         flightState: 'airborne',
@@ -563,7 +564,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_BattleshipTurretStateTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
       const savedUnit = state.units.find(unit => unit.id === 'battle-save-1')
 
       expect(savedUnit.selectedTurret).toBe('foreInner')
@@ -602,7 +603,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_BuildingsTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.buildings).toBeInstanceOf(Array)
       expect(state.buildings.length).toBe(1)
@@ -621,7 +622,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_OreTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect(state.orePositions).toBeInstanceOf(Array)
       expect(state.orePositions.length).toBe(2)
@@ -632,7 +633,7 @@ describe('saveGame.js', () => {
 
       const saved = localStorage.getItem('rts_save_MilestoneTest')
       const parsed = JSON.parse(saved)
-      const state = JSON.parse(parsed.state)
+      const state = JSON.parse(decodeSaveObject(parsed).state)
 
       expect('achievedMilestones' in state).toBe(true)
     })

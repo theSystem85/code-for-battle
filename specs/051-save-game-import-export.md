@@ -1,7 +1,7 @@
 # Spec 051: Sidebar Save Game Import/Export
 
 ## Goal
-Enable players to share save games by exporting local saves as JSON files and importing JSON save files from disk.
+Enable players to share efficient compact saves while retaining legacy JSON conversion for debugging.
 
 ## Requirements
 1. Add an import icon button next to the existing save button in the sidebar Save/Load section.
@@ -21,6 +21,12 @@ Enable players to share save games by exporting local saves as JSON files and im
 15. The import button tooltip reads "Import save game or replay".
 16. Export filename order is timestamp first, then save label.
 17. Save-game exports and replay baselines must include the full loaded map settings and static resource-tile state so later import/load cannot inherit ore layout or map configuration from another session.
+18. New browser saves use the versioned, readable `code-for-battle-save` compact format by default.
+19. Compact maps store a tile palette plus row-major run lengths and omit the redundant `mapGridTypes` and `orePositions`; loading reconstructs all three legacy views.
+20. Map Settings offers Compact CFB and Legacy JSON export choices, remembers the choice, and uses exporting as a bidirectional converter.
+21. Import accepts `.cfb` compact saves and `.json` legacy saves/replays. Existing legacy save objects remain loadable without migration.
+22. A representative 200×200 uniform-map compact serialization must be under one tenth of the corresponding legacy serialization.
+23. Compact files remain pretty-printable JSON with semantic envelope/map keys so people and LLMs can inspect them without a binary decompressor.
 
 ## Validation
 - E2E covers create save -> export -> delete -> import -> load from label behavior.
