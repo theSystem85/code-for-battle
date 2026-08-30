@@ -140,6 +140,15 @@ export function findNearestAIBuildingTile(unit, gameState, aiPlayerId) {
 }
 
 export function updateApacheAI(unit, units, gameState, mapGrid, now, aiPlayerId) {
+  // Aircraft service themselves at helipads/airstrips. Do not let strategic
+  // targeting replace an active return plan once their weapons are empty.
+  if (unit.type === 'apache' && typeof unit.maxRocketAmmo === 'number' && (unit.rocketAmmo || 0) <= 0) {
+    unit.allowedToAttack = false
+    unit.path = []
+    unit.moveTarget = null
+    return
+  }
+
   const allowDecision = !unit.lastDecisionTime || (now - unit.lastDecisionTime >= AI_DECISION_INTERVAL)
   const unitCenter = getUnitCenter(unit)
   const nearDefense = isAirDefenseNearby(unitCenter, units, gameState)

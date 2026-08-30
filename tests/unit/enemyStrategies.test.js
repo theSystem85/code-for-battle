@@ -519,6 +519,34 @@ describe('enemyStrategies recovery and logistics', () => {
     expect(truck.moveTarget).toEqual({ x: 5, y: 7 })
   })
 
+  it('leaves empty aircraft to their pad return logic instead of dispatching ground ammo trucks', () => {
+    const truck = createUnit({
+      id: 'ammo-truck-1',
+      type: 'ammunitionTruck',
+      owner: 'player2',
+      tileX: 2,
+      tileY: 2,
+      ammoCargo: 100,
+      maxAmmoCargo: 100
+    })
+    const apache = createUnit({
+      id: 'apache-1',
+      type: 'apache',
+      owner: 'player2',
+      tileX: 8,
+      tileY: 8,
+      rocketAmmo: 0,
+      maxRocketAmmo: 38
+    })
+
+    manageAIAmmunitionTrucks([truck, apache], gameState, createMapGrid(12, 12))
+    manageAIAmmunitionMonitoring([truck, apache], gameState, createMapGrid(12, 12))
+
+    expect(truck.ammoResupplyTarget).toBeUndefined()
+    expect(apache.retreatingForAmmo).toBeUndefined()
+    expect(findPathMock).not.toHaveBeenCalled()
+  })
+
   it('triggers ammo retreats when ammunition is low', () => {
     const unit = createUnit({ owner: 'player2', type: 'tank', tileX: 2, tileY: 2, ammunition: 1, maxAmmunition: 100 })
     const factory = createBuilding({ owner: 'player2', type: 'ammunitionFactory', x: 4, y: 4, width: 2, height: 2 })

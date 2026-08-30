@@ -4,14 +4,15 @@ import { getUnitCommandsHandler } from '../inputHandler.js'
 import { getActiveAIPlayers } from './enemyUtils.js'
 
 const AUTO_REFUEL_SCAN_INTERVAL = 10000
+const SELF_SERVICING_AIRCRAFT_TYPES = new Set(['apache', 'f22Raptor', 'f35'])
 
 /**
  * Manages tanker truck refueling and guard behavior for all AI players
  */
-export function manageAITankerTrucks(units, gameState, mapGrid) {
+export function manageAITankerTrucks(units, gameState, mapGrid, onlyPlayerId = null) {
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null
   const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
-  const aiPlayers = getActiveAIPlayers(gameState)
+  const aiPlayers = onlyPlayerId ? [onlyPlayerId] : getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId)
@@ -282,8 +283,9 @@ function sendTankerToUnit(tanker, unit, mapGrid, occupancyMap) {
  * Manages ammunition supply truck deployment and resupply operations for all AI players
  * Implements FR-031, FR-034, FR-036
  */
-export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
-  const aiPlayers = getActiveAIPlayers(gameState)
+export function manageAIAmmunitionTrucks(units, gameState, mapGrid, onlyPlayerId = null) {
+  const now = typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()
+  const aiPlayers = onlyPlayerId ? [onlyPlayerId] : getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId)
@@ -298,7 +300,7 @@ export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
     const criticalUnits = []
     const lowAmmoUnits = []
     aiUnits.forEach(u => {
-      if (u.type === 'ammunitionTruck' || u.health <= 0) return
+      if (u.type === 'ammunitionTruck' || SELF_SERVICING_AIRCRAFT_TYPES.has(u.type) || u.health <= 0) return
 
       // Check for units with ammunition system (maxAmmunition or maxRocketAmmo)
       const hasAmmoSystem = typeof u.maxAmmunition === 'number' || typeof u.maxRocketAmmo === 'number'
@@ -320,6 +322,10 @@ export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
 
       if (needsReload && ammoFactories.length > 0) {
         sendAmmoTruckToFactory(truck, ammoFactories[0], mapGrid)
+        return
+      }
+
+      if (truck.ammoResupplyTarget?.health > 0 && truck.ammoCargo > 0) {
         return
       }
 
@@ -382,7 +388,7 @@ export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
 
         // Stay 3-5 tiles behind the combat group
         const distance = Math.hypot(truck.tileX - centerX, truck.tileY - centerY)
-        if (distance > 7 || distance < 3) {
+        if ((distance > 7 || distance < 3) && now >= (truck.nextAmmunitionFollowPathTime || 0)) {
           // Move to maintain safe distance
           const angle = Math.atan2(truck.tileY - centerY, truck.tileX - centerX)
           const targetX = Math.floor(centerX + Math.cos(angle) * 5)
@@ -391,6 +397,7 @@ export function manageAIAmmunitionTrucks(units, gameState, mapGrid) {
           if (targetX >= 0 && targetY >= 0 && targetX < mapGrid[0].length && targetY < mapGrid.length) {
             const startNode = { x: truck.tileX, y: truck.tileY, owner: truck.owner }
             const path = getCachedPath(startNode, { x: targetX, y: targetY }, mapGrid, null, { unitOwner: truck.owner })
+            truck.nextAmmunitionFollowPathTime = now + AUTO_REFUEL_SCAN_INTERVAL
             if (path && path.length > 1) {
               truck.path = path.slice(1)
               truck.moveTarget = { x: targetX, y: targetY }
@@ -447,8 +454,8 @@ function sendAmmoTruckToUnit(truck, unit, mapGrid, occupancyMap) {
  * Monitors AI unit ammunition levels and triggers resupply retreats
  * Implements FR-032, FR-033
  */
-export function manageAIAmmunitionMonitoring(units, gameState, mapGrid) {
-  const aiPlayers = getActiveAIPlayers(gameState)
+export function manageAIAmmunitionMonitoring(units, gameState, mapGrid, onlyPlayerId = null) {
+  const aiPlayers = onlyPlayerId ? [onlyPlayerId] : getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId && u.health > 0)
@@ -460,7 +467,7 @@ export function manageAIAmmunitionMonitoring(units, gameState, mapGrid) {
     aiUnits.forEach(unit => {
       // Skip units without ammunition system
       const hasAmmoSystem = typeof unit.maxAmmunition === 'number' || typeof unit.maxRocketAmmo === 'number'
-      if (!hasAmmoSystem || unit.type === 'ammunitionTruck') return
+      if (!hasAmmoSystem || unit.type === 'ammunitionTruck' || SELF_SERVICING_AIRCRAFT_TYPES.has(unit.type)) return
 
       const maxAmmo = unit.type === 'apache' ? unit.maxRocketAmmo : unit.maxAmmunition
       const currentAmmo = unit.type === 'apache' ? unit.rocketAmmo : unit.ammunition

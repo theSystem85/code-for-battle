@@ -32,8 +32,8 @@ const targetedOreTiles = {}
 // Track refinery queues
 const refineryQueues = {}
 const HARVESTER_REMOTE_OVERRIDE_GRACE_MS = 2000
-const HARVESTER_ORE_RETRY_MIN_DELAY_MS = 100
-const HARVESTER_ORE_RETRY_MAX_DELAY_MS = 300
+const HARVESTER_ORE_RETRY_MIN_DELAY_MS = 3000
+const HARVESTER_ORE_RETRY_MAX_DELAY_MS = 5000
 const HARVESTER_ORE_WAIT_MIN_DELAY_MS = 500
 const HARVESTER_ORE_WAIT_MAX_DELAY_MS = 1500
 const HARVESTER_ORE_FALLBACK_MIN_DELAY_MS = 1000
@@ -465,7 +465,7 @@ function startHarvesting(unit, tileKey, now, gameState) {
   clearScheduledHarvesterAction(unit)
   stopMovement(unit)
   harvestedTiles.add(tileKey)
-  if (unit.owner === gameState.humanPlayer) {
+  if (unit.owner === gameState?.humanPlayer) {
     playSound('harvest')
   }
 }
@@ -1072,6 +1072,16 @@ function completeUnloading(unit, factories, mapGrid, gameState, now, _occupancyM
  * Finds a new ore target for the harvester
  */
 function findNewOreTarget(unit, mapGrid, occupancyMap, now = performance.now(), _gameState = null) {
+  // Multiple idle/recovery branches can request a new ore target during the same
+  // simulation tick. Preserve a failed-route retry delay across all of them.
+  if (
+    unit.pendingHarvesterAction === 'findNewOre' &&
+    Number.isFinite(unit.pendingHarvesterActionAt) &&
+    now < unit.pendingHarvesterActionAt
+  ) {
+    return
+  }
+
   // Clear any queue position when going to find ore
   if (unit.targetRefinery) {
     removeFromRefineryQueue(unit.targetRefinery, unit.id)
@@ -1106,8 +1116,17 @@ function findNewOreTarget(unit, mapGrid, occupancyMap, now = performance.now(), 
     )
     if (path.length > 1) {
       clearScheduledHarvesterAction(unit, 'findNewOre')
+      unit.lastHarvesterOrePathCalcTime = now
       unit.path = path.slice(1)
       unit.moveTarget = orePos // Set move target so the harvester actually moves
+    } else if (getTileDistance(unit, orePos) <= HARVESTER_ORE_ARRIVAL_TOLERANCE) {
+      clearScheduledHarvesterAction(unit, 'findNewOre')
+      unit.lastHarvesterOrePathCalcTime = now
+      startHarvesting(unit, tileKey, now, _gameState)
+    } else {
+      clearOreField(unit)
+      unit.lastHarvesterOrePathCalcTime = now
+      scheduleHarvesterAction(unit, 'findNewOre', now, HARVESTER_ORE_RETRY_MIN_DELAY_MS, HARVESTER_ORE_RETRY_MAX_DELAY_MS)
     }
   } else {
     scheduleHarvesterAction(unit, 'findNewOre', now, HARVESTER_ORE_FALLBACK_MIN_DELAY_MS, HARVESTER_ORE_FALLBACK_MAX_DELAY_MS)
@@ -1902,7 +1921,10 @@ function findAlternativeOreTarget(unit, mapGrid, occupancyMap, gameState, now = 
     ...candidate,
     randomOrder: gameRandom()
   })).sort((a, b) => a.randomOrder - b.randomOrder)
-  const orderedCandidates = [...shortlist, ...candidateTiles.slice(shortlistSize)]
+  // Stuck recovery runs for multiple harvesters in the same AI scan. Trying every
+  // ore tile can multiply into thousands of full-map A* searches in one tick.
+  // Retry the next ranked batch later instead of blocking the simulation thread.
+  const orderedCandidates = shortlist
 
   for (const orePos of orderedCandidates) {
     const path = findPath(

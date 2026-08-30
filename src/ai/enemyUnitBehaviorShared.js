@@ -4,6 +4,8 @@ import { getEffectiveFireRange } from '../game/unitCombat/combatHelpers.js'
 import { shouldConductGroupAttack } from './enemyStrategies.js'
 import { getEnemyPlayers } from './enemyUtils.js'
 
+const ATTACK_DESTINATION_PATH_ATTEMPT_LIMIT = 16
+
 function isAirborneAirUnit(target) {
   if (!target) return false
   const isAirUnitType = target.type === 'apache' || target.type === 'f22Raptor' || target.type === 'f35'
@@ -50,6 +52,7 @@ export function findReachableAttackDestination(unit, target, mapGrid, occupancyM
   const mapHeight = mapGrid.length
   const mapWidth = mapGrid[0].length
   let bestCandidate = null
+  const candidates = []
 
   for (let y = target.tileY - fireRangeTiles; y <= target.tileY + fireRangeTiles; y++) {
     for (let x = target.tileX - fireRangeTiles; x <= target.tileX + fireRangeTiles; x++) {
@@ -70,25 +73,35 @@ export function findReachableAttackDestination(unit, target, mapGrid, occupancyM
         continue
       }
 
-      const candidatePath = getCachedPath(
-        startNode,
-        { x, y },
-        mapGrid,
-        occupancyMap,
-        { unitOwner: unit.owner, strictDestination: true }
-      )
+      candidates.push({
+        x,
+        y,
+        heuristic: Math.hypot(x - unit.tileX, y - unit.tileY) + Math.hypot(x - target.tileX, y - target.tileY) * 0.25
+      })
+    }
+  }
 
-      if (candidatePath.length <= 1) {
-        continue
-      }
+  candidates.sort((a, b) => a.heuristic - b.heuristic)
 
-      const candidateScore = candidatePath.length + Math.hypot(x - target.tileX, y - target.tileY) * 0.25
-      if (!bestCandidate || candidateScore < bestCandidate.score) {
-        bestCandidate = {
-          destination: { x, y },
-          path: candidatePath,
-          score: candidateScore
-        }
+  for (const candidate of candidates.slice(0, ATTACK_DESTINATION_PATH_ATTEMPT_LIMIT)) {
+    const candidatePath = getCachedPath(
+      startNode,
+      { x: candidate.x, y: candidate.y },
+      mapGrid,
+      occupancyMap,
+      { unitOwner: unit.owner, strictDestination: true }
+    )
+
+    if (candidatePath.length <= 1) {
+      continue
+    }
+
+    const candidateScore = candidatePath.length + Math.hypot(candidate.x - target.tileX, candidate.y - target.tileY) * 0.25
+    if (!bestCandidate || candidateScore < bestCandidate.score) {
+      bestCandidate = {
+        destination: { x: candidate.x, y: candidate.y },
+        path: candidatePath,
+        score: candidateScore
       }
     }
   }

@@ -20,6 +20,7 @@ import {
   isTurretAimedAtTarget
 } from './combatHelpers.js'
 import { canF35ReleaseWeapons, computeF35BombReleasePoint } from '../f35Behavior.js'
+import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
 
 /**
  * Common firing logic helper - handles bullet creation
@@ -275,10 +276,7 @@ export function handleRocketBurstFire(unit, target, bullets, now, targetCenterX,
         // Unit target - use current position
         currentTargetCenterX = burstTarget.x + TILE_SIZE / 2
         currentTargetCenterY = burstTarget.y + TILE_SIZE / 2
-        // Adjust for Apache altitude visual offset
-        if ((burstTarget.type === 'apache' || burstTarget.type === 'f22Raptor') && burstTarget.altitude) {
-          currentTargetCenterY -= burstTarget.altitude * 0.4
-        }
+        currentTargetCenterY -= getAircraftAltitudeLift(burstTarget)
       }
     }
 

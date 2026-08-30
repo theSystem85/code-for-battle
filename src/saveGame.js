@@ -45,6 +45,7 @@ import { getKeyboardHandler } from './inputHandler.js'
 import { ensurePlayerBuildHistoryLoaded } from './savePlayerBuildPatterns.js'
 import { getUniqueId, getBuildingIdentifier } from './utils.js'
 import { ensureAirstripOperations, getAirstripParkingSpots, getAirstripRunwayPoints, setAirstripSlotOccupant } from './utils/airstripUtils.js'
+import { getHelipadLandingCenter } from './utils/helipadUtils.js'
 import { rebuildMineLookup } from './game/mineSystem.js'
 import { rebuildWaterMineLookup } from './game/waterMineSystem.js'
 import { getSimulationTime } from './game/time.js'
@@ -651,7 +652,7 @@ function buildSaveObject(label) {
     if (u.embarkedOnId) serialized.embarkedOnId = u.embarkedOnId
     if (u.transportTransfer) serialized.transportTransfer = { ...u.transportTransfer }
 
-    if (u.type === 'f22Raptor' || u.type === 'f35') {
+    if (u.type === 'f22Raptor' || u.type === 'f35' || u.type === 'apache') {
       serialized.f22State = u.f22State
       serialized.airstripId = u.airstripId
       serialized.airstripParkingSlotIndex = u.airstripParkingSlotIndex
@@ -664,6 +665,15 @@ function buildSaveObject(label) {
       serialized.groundLandingRequested = u.groundLandingRequested
       serialized.groundLandingTarget = u.groundLandingTarget
       serialized.landedOnGround = u.landedOnGround
+      serialized.flightPlan = u.flightPlan ? { ...u.flightPlan } : null
+      serialized.manualFlightState = u.manualFlightState
+      serialized.autoHoldAltitude = u.autoHoldAltitude
+      serialized.helipadLandingRequested = u.helipadLandingRequested
+      serialized.autoHelipadReturnActive = u.autoHelipadReturnActive
+      serialized.autoHelipadReturnTargetId = u.autoHelipadReturnTargetId
+      serialized.autoHelipadReturnAttackTargetId = u.autoHelipadReturnAttackTargetId
+      serialized.autoHelipadReturnAttackTargetType = u.autoHelipadReturnAttackTargetType
+      serialized.autoReturnToHelipadOnTargetLoss = u.autoReturnToHelipadOnTargetLoss
     }
 
     return serialized
@@ -1317,17 +1327,36 @@ function loadGameFromSaveObject(saveObj, key) {
         }
       }
 
-      if (hydrated.type === 'f35') {
-        hydrated.flightState = u.flightState || hydrated.flightState || 'grounded'
+      if (hydrated.type === 'apache' || hydrated.type === 'f35') {
+        let legacyApacheHelipad = null
+        if (hydrated.type === 'apache' && !u.flightState) {
+          legacyApacheHelipad = (loaded.buildings || []).find(building => {
+            if (building.type !== 'helipad' || building.owner !== hydrated.owner || building.health <= 0) return false
+            const landingCenter = getHelipadLandingCenter(building)
+            if (!landingCenter) return false
+            return Math.hypot(
+              hydrated.x + TILE_SIZE / 2 - landingCenter.x,
+              hydrated.y + TILE_SIZE / 2 - landingCenter.y
+            ) <= TILE_SIZE * 1.45
+          }) || null
+        }
+
+        const legacyApacheFlightState = hydrated.type === 'apache'
+          ? (legacyApacheHelipad ? 'grounded' : 'airborne')
+          : 'grounded'
+        hydrated.flightState = u.flightState || legacyApacheFlightState
         hydrated.altitude = typeof u.altitude === 'number' ? u.altitude : (hydrated.flightState === 'grounded' ? 0 : (hydrated.maxAltitude || 0))
         hydrated.airstripId = u.airstripId || null
         hydrated.airstripParkingSlotIndex = Number.isInteger(u.airstripParkingSlotIndex) ? u.airstripParkingSlotIndex : null
-        hydrated.landedHelipadId = u.landedHelipadId || null
-        hydrated.helipadTargetId = u.helipadTargetId || null
+        hydrated.landedHelipadId = u.landedHelipadId || (legacyApacheHelipad ? getBuildingIdentifier(legacyApacheHelipad) : null)
+        hydrated.helipadTargetId = u.helipadTargetId || hydrated.landedHelipadId || null
         hydrated.groundedOccupancyApplied = Boolean(u.groundedOccupancyApplied)
         hydrated.groundLandingRequested = Boolean(u.groundLandingRequested)
         hydrated.groundLandingTarget = u.groundLandingTarget || null
         hydrated.landedOnGround = Boolean(u.landedOnGround)
+        hydrated.autoHoldAltitude = typeof u.autoHoldAltitude === 'boolean'
+          ? u.autoHoldAltitude
+          : hydrated.flightState !== 'grounded'
       }
 
       // Ensure path is always an array

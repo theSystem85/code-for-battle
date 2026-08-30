@@ -9,6 +9,7 @@ import { getEffectiveFireRange, getEffectiveFireRate, isHumanControlledParty } f
 import { getAirstripParkingSpots, reserveAirstripParkingSlot } from '../../utils/airstripUtils.js'
 import { handleApacheVolley, handleF35BombDrop } from './firingHandlers.js'
 import { canF35ReleaseWeapons } from '../f35Behavior.js'
+import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
 
 function getApacheTargetCenter(target) {
   if (!target) {
@@ -18,7 +19,7 @@ function getApacheTargetCenter(target) {
   if (target.tileX !== undefined) {
     return {
       x: target.x + TILE_SIZE / 2,
-      y: target.y + TILE_SIZE / 2
+      y: target.y + TILE_SIZE / 2 - getAircraftAltitudeLift(target)
     }
   }
 
@@ -56,7 +57,7 @@ function clearApacheReturnAttackState(unit) {
   unit.autoReturnToHelipadOnTargetLoss = false
 }
 
-function hasActivePlayerApacheOverride(unit, now) {
+function hasActiveRemoteApacheOverride(unit, now) {
   if (!unit) return false
   const lastRemoteControlTime = typeof unit.lastRemoteControlTime === 'number' ? unit.lastRemoteControlTime : 0
   if (unit.remoteControlActive) {
@@ -70,6 +71,11 @@ function hasActivePlayerApacheOverride(unit, now) {
   if (lastRemoteControlTime > 0 && now - lastRemoteControlTime < 2000) {
     return true
   }
+  return false
+}
+
+function hasRecentPlayerApacheCommand(unit, now) {
+  if (!unit) return false
   const lastPlayerCommandTime = typeof unit.lastPlayerCommandTime === 'number' ? unit.lastPlayerCommandTime : 0
   return lastPlayerCommandTime > 0 && now - lastPlayerCommandTime < 2000
 }
@@ -278,13 +284,25 @@ function initiateF35PadReturn(unit, padInfo) {
 }
 
 export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupancyMap) {
-  if (hasActivePlayerApacheOverride(unit, now)) {
+  if (hasActiveRemoteApacheOverride(unit, now)) {
     if (unit.autoHelipadReturnActive || unit.autoHelipadReturnAttackTargetId || unit.autoReturnToHelipadOnTargetLoss) {
       unit.autoHelipadReturnActive = false
       unit.autoHelipadReturnTargetId = null
       clearApacheReturnAttackState(unit)
     }
     return
+  }
+
+  // A normal player attack command also updates lastPlayerCommandTime. It must
+  // cancel stale automatic return state without suppressing combat: the combat
+  // plan below owns both firing and continuous pursuit of a moving target.
+  if (
+    hasRecentPlayerApacheCommand(unit, now) &&
+    (unit.autoHelipadReturnActive || unit.autoHelipadReturnAttackTargetId || unit.autoReturnToHelipadOnTargetLoss)
+  ) {
+    unit.autoHelipadReturnActive = false
+    unit.autoHelipadReturnTargetId = null
+    clearApacheReturnAttackState(unit)
   }
 
   if ((!unit.target || unit.target.health <= 0) && unit.autoHelipadReturnAttackTargetId) {
@@ -351,7 +369,7 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
 
     if (!alreadyLanding) {
       const retryAt = unit.autoHelipadRetryAt || 0
-      const shouldAttempt = !wasAmmoEmpty || !unit.autoHelipadReturnActive || now >= retryAt
+      const shouldAttempt = !wasAmmoEmpty || now >= retryAt
       if (shouldAttempt) {
         const helipadInfo = findNearestHelipadForApache(unit, units)
         const assigned = helipadInfo ? initiateApacheHelipadReturn(unit, helipadInfo) : false
@@ -471,14 +489,13 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
     const planStopRadius = targetDirectlyBelow
       ? Math.max(12, desiredDistance * 0.3)
       : Math.max(12, desiredDistance * 0.05)
-    const distanceToStandOff = Math.hypot(unitCenterX - standOffX, unitCenterY - standOffY)
     const needsPlanUpdate =
       !existingPlan ||
       existingPlan.followTargetId !== followTargetId ||
       Math.abs((existingPlan.desiredRange || 0) - desiredDistance) > 1 ||
       Boolean(existingPlan?.strafe) !== targetDirectlyBelow
 
-    if (needsPlanUpdate || distanceToStandOff > planStopRadius * 1.25) {
+    if (needsPlanUpdate) {
       unit.flightPlan = {
         x: standOffX,
         y: standOffY,

@@ -167,7 +167,18 @@ vi.mock('../../src/units.js', () => ({
     maxHealth: 100,
     gas: 100,
     maxGas: 100,
-    path: []
+    path: [],
+    ...(type === 'apache'
+      ? {
+        isAirUnit: true,
+        flightState: 'grounded',
+        altitude: 0,
+        maxAltitude: 144,
+        manualFlightState: 'auto',
+        autoHoldAltitude: false,
+        helipadLandingRequested: false
+      }
+      : {})
   })),
   initializeOccupancyMap: vi.fn(() => [])
 }))
@@ -231,7 +242,8 @@ vi.mock('../../src/savePlayerBuildPatterns.js', () => ({
 }))
 
 vi.mock('../../src/utils.js', () => ({
-  getUniqueId: vi.fn(() => `id-${Date.now()}-${Math.random()}`)
+  getUniqueId: vi.fn(() => `id-${Date.now()}-${Math.random()}`),
+  getBuildingIdentifier: vi.fn(building => building?.id || null)
 }))
 
 vi.mock('../../src/game/mineSystem.js', () => ({
@@ -470,6 +482,47 @@ describe('saveGame.js', () => {
         commander: false,
         gunner: true,
         loader: false
+      })
+    })
+
+    it('should preserve Apache flight and helipad return state', async() => {
+      const { units } = await import('../../src/main.js')
+      units.push({
+        id: 'apache-save-1',
+        type: 'apache',
+        owner: 'player1',
+        x: 320,
+        y: 352,
+        tileX: 10,
+        tileY: 11,
+        health: 40,
+        maxHealth: 40,
+        flightState: 'airborne',
+        altitude: 120,
+        maxAltitude: 144,
+        rocketAmmo: 0,
+        maxRocketAmmo: 38,
+        helipadLandingRequested: true,
+        helipadTargetId: 'pad-1',
+        autoHelipadReturnActive: true,
+        autoHelipadReturnTargetId: 'pad-1',
+        flightPlan: { x: 640, y: 672, mode: 'helipad', destinationTile: { x: 20, y: 21 } },
+        path: []
+      })
+
+      saveGameModule.saveGame('ApacheFlightStateTest')
+
+      const saved = JSON.parse(localStorage.getItem('rts_save_ApacheFlightStateTest'))
+      const state = JSON.parse(saved.state)
+      const apache = state.units.find(unit => unit.id === 'apache-save-1')
+      expect(apache).toMatchObject({
+        flightState: 'airborne',
+        altitude: 120,
+        helipadLandingRequested: true,
+        helipadTargetId: 'pad-1',
+        autoHelipadReturnActive: true,
+        autoHelipadReturnTargetId: 'pad-1',
+        flightPlan: { mode: 'helipad', destinationTile: { x: 20, y: 21 } }
       })
     })
 
@@ -779,6 +832,49 @@ describe('saveGame.js', () => {
       saveGameModule.loadGame('rts_save_LegacyMapDims')
 
       expect(setMapDimensions).toHaveBeenCalledWith(14, 12)
+    })
+
+    it('should restore legacy Apaches away from helipads as airborne', async() => {
+      const { units, factories } = await import('../../src/main.js')
+      factories.push({ id: 'player2', owner: 'player2', health: 1000 })
+      const saveData = {
+        gameState: { money: 5000, gameStarted: true, playerCount: 2 },
+        units: [{
+          id: 'legacy-apache-1',
+          type: 'apache',
+          owner: 'player2',
+          x: 320,
+          y: 320,
+          tileX: 10,
+          tileY: 10,
+          health: 40,
+          maxHealth: 40,
+          rocketAmmo: 0,
+          maxRocketAmmo: 38,
+          path: []
+        }],
+        buildings: [{
+          id: 'player2',
+          type: 'constructionYard',
+          owner: 'player2',
+          x: 2,
+          y: 2,
+          width: 3,
+          height: 3,
+          health: 1000
+        }],
+        orePositions: []
+      }
+
+      saveGameModule.loadGameFromState(JSON.stringify(saveData), 'Legacy Apache')
+
+      expect(units).toHaveLength(1)
+      expect(units[0]).toMatchObject({
+        id: 'legacy-apache-1',
+        flightState: 'airborne',
+        altitude: 144,
+        autoHoldAltitude: true
+      })
     })
   })
 

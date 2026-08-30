@@ -103,9 +103,9 @@ function requestAmbulanceSupport(targetUnit, ambulances, mapGrid) {
   return false
 }
 
-export function manageAICrewHealing(units, gameState, now) {
+export function manageAICrewHealing(units, gameState, now, onlyPlayerId = null) {
   // Get all AI players (respect human player and playerCount)
-  const aiPlayers = getActiveAIPlayers(gameState)
+  const aiPlayers = onlyPlayerId ? [onlyPlayerId] : getActiveAIPlayers(gameState)
 
   aiPlayers.forEach(aiPlayerId => {
     const aiUnits = units.filter(u => u.owner === aiPlayerId)

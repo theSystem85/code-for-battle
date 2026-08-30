@@ -364,8 +364,7 @@ export function updateHarvesterHunterTank(unit, units, gameState, mapGrid, now, 
       !unit.harvesterHunterPathTarget ||
       unit.harvesterHunterPathTarget.x !== desiredTile.x ||
       unit.harvesterHunterPathTarget.y !== desiredTile.y ||
-      !unit.path ||
-      unit.path.length === 0 ||
+      !unit.lastPathCalcTime ||
       (unit.lastPathCalcTime && now - unit.lastPathCalcTime > HARVESTER_HUNTER_PATH_REFRESH)
     ) {
       const path = getCachedPath(

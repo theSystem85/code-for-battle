@@ -33,7 +33,9 @@ function findBestNavalPath(unit, candidateTiles, mapGrid, occupancyMap) {
     .map(tile => ({ ...tile, score: Math.hypot(tile.x - unit.tileX, tile.y - unit.tileY) }))
     .sort((a, b) => a.score - b.score)
 
-  for (const candidate of ordered.slice(0, 80)) {
+  // Naval candidates can each require a full 200x200-map search. Try the nearest
+  // few per decision and retry later instead of blocking one simulation tick.
+  for (const candidate of ordered.slice(0, 2)) {
     const path = getCachedPath(start, candidate, mapGrid, occupancyMap, options)
     if (path.length > 0) {
       return { destination: { x: candidate.x, y: candidate.y }, path }
@@ -171,11 +173,11 @@ function updateAISupplyShip(unit, units, gameState, mapGrid, now, aiPlayerId, sh
       return
     }
     if ((!unit.path?.length || now - (unit.lastShipyardPathTime || 0) >= AI_DECISION_INTERVAL) && shipyards.length > 0) {
+      unit.lastShipyardPathTime = now
       const route = findBestNavalPath(unit, shipyards.flatMap(shipyard => getShipyardServiceWaterTiles(shipyard, mapGrid)), mapGrid, gameState.occupancyMap)
       if (route) {
         unit.path = route.path.slice(1)
         unit.moveTarget = route.destination
-        unit.lastShipyardPathTime = now
       }
     }
     return
@@ -196,6 +198,7 @@ function updateAISupplyShip(unit, units, gameState, mapGrid, now, aiPlayerId, sh
     return
   }
   if (!unit.path?.length || now - (unit.lastSupplyDeployPathTime || 0) >= AI_DECISION_INTERVAL) {
+    unit.lastSupplyDeployPathTime = now
     const candidates = []
     for (let y = serviceTarget.tileY - 2; y <= serviceTarget.tileY + 2; y++) {
       for (let x = serviceTarget.tileX - 2; x <= serviceTarget.tileX + 2; x++) {
@@ -206,7 +209,6 @@ function updateAISupplyShip(unit, units, gameState, mapGrid, now, aiPlayerId, sh
     if (route) {
       unit.path = route.path.slice(1)
       unit.moveTarget = route.destination
-      unit.lastSupplyDeployPathTime = now
     }
   }
 }
@@ -269,6 +271,7 @@ export function updateNavalAIUnit(unit, units, gameState, mapGrid, now, aiPlayer
           return
         }
         if (!unit.path?.length || now - (unit.lastSupplyPathTime || 0) >= AI_DECISION_INTERVAL) {
+          unit.lastSupplyPathTime = now
           const candidates = []
           for (let y = supplier.tileY - 2; y <= supplier.tileY + 2; y++) {
             for (let x = supplier.tileX - 2; x <= supplier.tileX + 2; x++) {
@@ -279,7 +282,6 @@ export function updateNavalAIUnit(unit, units, gameState, mapGrid, now, aiPlayer
           if (route) {
             unit.path = route.path.slice(1)
             unit.moveTarget = route.destination
-            unit.lastSupplyPathTime = now
           }
         }
         return
@@ -295,12 +297,12 @@ export function updateNavalAIUnit(unit, units, gameState, mapGrid, now, aiPlayer
 
     const shouldRepath = !unit.path?.length || !unit.lastShipyardPathTime || now - unit.lastShipyardPathTime >= AI_DECISION_INTERVAL
     if (shouldRepath && shipyards.length > 0) {
+      unit.lastShipyardPathTime = now
       const destinations = shipyards.flatMap(shipyard => getShipyardServiceWaterTiles(shipyard, mapGrid))
       const route = findBestNavalPath(unit, destinations, mapGrid, gameState.occupancyMap)
       if (route) {
         unit.path = route.path.slice(1)
         unit.moveTarget = route.destination
-        unit.lastShipyardPathTime = now
       }
     }
     return
@@ -329,11 +331,11 @@ export function updateNavalAIUnit(unit, units, gameState, mapGrid, now, aiPlayer
   unit.target = null
   const shouldRepath = !unit.path?.length || !unit.lastNavalAttackPathTime || now - unit.lastNavalAttackPathTime >= AI_DECISION_INTERVAL
   if (shouldRepath) {
+    unit.lastNavalAttackPathTime = now
     const route = findNavalAttackPath(unit, target, mapGrid, gameState.occupancyMap)
     if (route) {
       unit.path = route.path.slice(1)
       unit.moveTarget = route.destination
-      unit.lastNavalAttackPathTime = now
     }
   }
 }

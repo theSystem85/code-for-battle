@@ -13,6 +13,7 @@ import { hasClearShot, angleDiff, findPositionWithClearShot } from '../../logic.
 import { stopUnitMovement } from '../unifiedMovement.js'
 import { gameState } from '../../gameState.js'
 import { isPositionVisibleToPlayer } from '../shadowOfWar.js'
+import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
 import { canSubmarineTargetEntity } from '../navalTargeting.js'
@@ -261,10 +262,7 @@ export function handleTankMovement(unit, target, now, occupancyMap, chaseThresho
       // Target is a unit
       targetCenterX = target.x + TILE_SIZE / 2
       targetCenterY = target.y + TILE_SIZE / 2
-      // Adjust for Apache altitude visual offset
-      if (target.type === 'apache' && target.altitude) {
-        targetCenterY -= target.altitude * 0.4
-      }
+      targetCenterY -= getAircraftAltitudeLift(target)
     } else {
       // Target is a building
       targetCenterX = target.x * TILE_SIZE + (target.width * TILE_SIZE) / 2
@@ -284,10 +282,7 @@ export function handleTankMovement(unit, target, now, occupancyMap, chaseThresho
     // Target is a unit
     targetCenterX = target.x + TILE_SIZE / 2
     targetCenterY = target.y + TILE_SIZE / 2
-    // Adjust for Apache altitude visual offset
-    if (target.type === 'apache' && target.altitude) {
-      targetCenterY -= target.altitude * 0.4
-    }
+    targetCenterY -= getAircraftAltitudeLift(target)
   } else {
     // Target is a building
     targetCenterX = target.x * TILE_SIZE + (target.width * TILE_SIZE) / 2
