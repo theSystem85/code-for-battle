@@ -864,28 +864,56 @@
       </div>
     </div>
   </div>
-
-  <dialog id="saveGameEditorModal" class="save-game-editor-modal">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px"><h2>Save Game Editor</h2><button id="saveEditorClose" type="button">✕</button></div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
-      <label>Save game<select id="saveEditorSaveSelect"><option value="">Select a save game</option></select></label>
-      <label>Save label<input id="saveEditorLabel" maxlength="32"></label>
-      <span id="saveEditorMetrics"></span>
+  
+  <div id="saveGameEditorModal" class="config-modal save-game-editor-modal" aria-hidden="true">
+    <div class="config-modal__dialog save-game-editor-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="saveEditorTitle">
+      <header class="config-modal__header save-game-editor-modal__header">
+        <div class="config-modal__title-group">
+          <span class="save-game-editor-modal__eyebrow">Game state tools</span>
+          <h2 id="saveEditorTitle">Save Game Editor</h2>
+          <span class="save-game-editor-modal__subtitle">Inspect, convert, and safely edit dynamic match state.</span>
+        </div>
+        <button id="saveEditorClose" class="config-modal__close" type="button" aria-label="Close save game editor">×</button>
+      </header>
+      <div class="config-modal__body save-game-editor-modal__body">
+        <section class="save-game-editor-modal__toolbar" aria-label="Save selection">
+          <label class="config-modal__field save-game-editor-modal__field">
+            <span>Save game</span>
+            <select id="saveEditorSaveSelect"><option value="">Select a save game</option></select>
+          </label>
+          <label class="config-modal__field save-game-editor-modal__field">
+            <span>Save label</span>
+            <input id="saveEditorLabel" maxlength="32" placeholder="Edited Save">
+          </label>
+          <div class="save-game-editor-modal__metrics" aria-live="polite">
+            <span class="save-game-editor-modal__metrics-label">CFB2 file</span>
+            <span id="saveEditorMetrics">Select a save to inspect</span>
+          </div>
+        </section>
+        <div class="save-game-editor-modal__notice" role="note">
+          <span aria-hidden="true">◆</span>
+          <span>Map tiles are protected in this editor. Use Map Edit Mode to change terrain or resources.</span>
+        </div>
+        <div class="config-modal__tabs save-editor-tabs" role="tablist" aria-label="Save editor views">
+          <button class="config-modal__tab config-modal__tab--active" type="button" data-save-editor-tab="json" role="tab" aria-selected="true">JSON</button>
+          <button class="config-modal__tab" type="button" data-save-editor-tab="tables" role="tab" aria-selected="false">Tables</button>
+          <button class="config-modal__tab" type="button" data-save-editor-tab="preview" role="tab" aria-selected="false">Strategic LLM Preview</button>
+        </div>
+        <div class="save-game-editor-modal__workspace">
+          <section class="config-modal__content config-modal__content--active" data-save-editor-panel="json"><textarea id="saveEditorJson" spellcheck="false" aria-label="Editable save game JSON" placeholder="Select a save game to begin"></textarea></section>
+          <section id="saveEditorTables" class="config-modal__content" data-save-editor-panel="tables" hidden></section>
+          <pre id="saveEditorPreview" class="config-modal__content" data-save-editor-panel="preview" hidden></pre>
+        </div>
+      </div>
+      <footer class="save-game-editor-modal__footer">
+        <span class="save-game-editor-modal__footer-hint">Changes affect dynamic state only.</span>
+        <div class="config-modal__actions">
+          <button id="saveEditorSaveNew" class="config-modal__button" type="button">Save as new</button>
+          <button id="saveEditorOverwrite" class="config-modal__button config-modal__button--primary" type="button">Override opened save</button>
+        </div>
+      </footer>
     </div>
-    <p>Map tiles are read-only. Use Map Edit Mode to modify the map.</p>
-    <div class="save-editor-tabs">
-      <button type="button" data-save-editor-tab="json">JSON</button>
-      <button type="button" data-save-editor-tab="tables">Tables</button>
-      <button type="button" data-save-editor-tab="preview">Strategic LLM Preview</button>
-    </div>
-    <section data-save-editor-panel="json"><textarea id="saveEditorJson" spellcheck="false" aria-label="Editable save game JSON"></textarea></section>
-    <section id="saveEditorTables" data-save-editor-panel="tables" hidden></section>
-    <pre id="saveEditorPreview" data-save-editor-panel="preview" hidden></pre>
-    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px">
-      <button id="saveEditorSaveNew" type="button">Save as new</button>
-      <button id="saveEditorOverwrite" type="button">Override opened save</button>
-    </div>
-  </dialog>
+  </div>
 
   <div id="mobilePortraitHud" aria-hidden="true">
     <div id="mobilePortraitMinimapDock"></div>

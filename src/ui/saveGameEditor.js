@@ -14,6 +14,8 @@ export function initSaveGameEditor({ onSaved } = {}) {
   const tableEditor = modal.querySelector('#saveEditorTables')
   const preview = modal.querySelector('#saveEditorPreview')
   const metrics = modal.querySelector('#saveEditorMetrics')
+  const saveNewButton = modal.querySelector('#saveEditorSaveNew')
+  const overwriteButton = modal.querySelector('#saveEditorOverwrite')
   let sourceKey = null
   let sourceState = null
   let editableState = null
@@ -42,17 +44,36 @@ export function initSaveGameEditor({ onSaved } = {}) {
     const compact = isCompactSave(raw) ? raw : encodeCompactSave(decoded)
     const description = describeCompactSave(compact)
     metrics.textContent = `${description.bytes} bytes · ${description.characters} chars · ${description.lines} lines`
+    saveNewButton.disabled = false
+    overwriteButton.disabled = false
+  }
+
+  const closeEditor = () => {
+    modal.classList.remove('config-modal--open')
+    modal.setAttribute('aria-hidden', 'true')
+    document.body.classList.remove('save-game-editor-open')
   }
 
   openButton.addEventListener('click', () => {
     populate()
-    modal.showModal()
+    modal.classList.add('config-modal--open')
+    modal.setAttribute('aria-hidden', 'false')
+    document.body.classList.add('save-game-editor-open')
+    select.focus()
   })
   select.addEventListener('change', loadSelected)
-  modal.querySelector('#saveEditorClose').addEventListener('click', () => modal.close())
+  modal.querySelector('#saveEditorClose').addEventListener('click', closeEditor)
+  modal.addEventListener('click', event => { if (event.target === modal) closeEditor() })
+  modal.addEventListener('keydown', event => { if (event.key === 'Escape') closeEditor() })
   modal.querySelectorAll('[data-save-editor-tab]').forEach(button => button.addEventListener('click', () => {
     if (button.dataset.saveEditorTab !== 'json') syncJson()
+    modal.querySelectorAll('[data-save-editor-tab]').forEach(tab => {
+      const active = tab === button
+      tab.classList.toggle('config-modal__tab--active', active)
+      tab.setAttribute('aria-selected', String(active))
+    })
     modal.querySelectorAll('[data-save-editor-panel]').forEach(panel => { panel.hidden = panel.dataset.saveEditorPanel !== button.dataset.saveEditorTab })
+    modal.querySelectorAll('[data-save-editor-panel]').forEach(panel => panel.classList.toggle('config-modal__content--active', !panel.hidden))
     if (button.dataset.saveEditorTab === 'tables') renderTables(tableEditor, editableState)
     if (button.dataset.saveEditorTab === 'preview') preview.textContent = buildStrategicPreview(editableState)
   }))
@@ -84,12 +105,14 @@ export function initSaveGameEditor({ onSaved } = {}) {
     select.value = targetKey
     loadSelected()
   }
-  modal.querySelector('#saveEditorSaveNew').addEventListener('click', () => save(false))
-  modal.querySelector('#saveEditorOverwrite').addEventListener('click', () => save(true))
+  saveNewButton.disabled = true
+  overwriteButton.disabled = true
+  saveNewButton.addEventListener('click', () => save(false))
+  overwriteButton.addEventListener('click', () => save(true))
 }
 
 function renderTables(container, state) {
-  container.innerHTML = '<p>Map data is read-only and intentionally excluded.</p>'
+  container.innerHTML = '<p class="save-game-editor-modal__table-note">Map data is read-only and intentionally excluded.</p>'
   const sections = [['gameState', [state.gameState || {}]]]
   Object.entries(state).forEach(([name, value]) => {
     if (name !== 'gameState' && Array.isArray(value) && value.every(item => item && typeof item === 'object')) sections.push([name, value])
@@ -97,6 +120,7 @@ function renderTables(container, state) {
   for (const [name, rows] of sections) {
     const columns = [...new Set(rows.flatMap(row => Object.keys(row)))]
     const heading = document.createElement('h4')
+    heading.className = 'config-modal__section-title'
     heading.textContent = name
     container.appendChild(heading)
     const table = document.createElement('table')

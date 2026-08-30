@@ -1403,23 +1403,161 @@ body.mobile-landscape #mobileBuildMenuContainer .tab-content.active .production-
 }
 
 .save-game-editor-modal {
-  width: min(1100px, 94vw);
-  max-height: 90vh;
-  overflow: auto;
-  color: #eee;
-  background: #151a20;
-  border: 1px solid #607d8b;
+  background: rgb(3 7 12 / 78%);
+  backdrop-filter: blur(8px);
 }
 
-.save-game-editor-modal::backdrop { background: rgb(0 0 0 / 70%); }
-.save-game-editor-modal textarea { width: 100%; min-height: 55vh; box-sizing: border-box; font: 12px/1.4 monospace; }
-.save-game-editor-modal table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
+.save-game-editor-modal__dialog.config-modal__dialog {
+  width: min(1120px, calc(100vw - 40px));
+  height: min(850px, calc(100vh - 48px));
+  max-height: calc(100vh - 48px);
+  border-color: #344454;
+  background: #171c22;
+  box-shadow: 0 24px 80px rgb(0 0 0 / 72%), 0 0 0 1px rgb(77 163 255 / 8%);
+}
+
+.save-game-editor-modal__header {
+  min-height: 70px;
+  background: linear-gradient(105deg, rgb(40 59 81 / 92%), rgb(23 31 42 / 96%) 70%);
+}
+
+.save-game-editor-modal__eyebrow {
+  color: #72b7ff;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.save-game-editor-modal__subtitle {
+  color: #9fb3c8;
+  font-size: 12px;
+}
+
+.save-game-editor-modal__body.config-modal__body {
+  gap: 14px;
+  padding: 18px 20px 0;
+  overflow: hidden;
+}
+
+.save-game-editor-modal__toolbar {
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) minmax(190px, 0.8fr) minmax(250px, auto);
+  gap: 14px;
+  align-items: end;
+  padding: 14px;
+  border: 1px solid #2d3640;
+  border-radius: 8px;
+  background: #141920;
+}
+
+.save-game-editor-modal__field { margin: 0; }
+
+.save-game-editor-modal__metrics {
+  display: flex;
+  min-height: 40px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 7px 10px;
+  border: 1px solid #2d3640;
+  border-radius: 6px;
+  background: #0f141b;
+  color: #d9e7f5;
+  font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
+  font-size: 11px;
+}
+
+.save-game-editor-modal__metrics-label {
+  color: #6f879e;
+  font-family: var(--game-font-family);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.save-game-editor-modal__notice {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+  border: 1px solid rgb(255 204 102 / 20%);
+  border-left: 3px solid #ffcc66;
+  border-radius: 6px;
+  background: rgb(255 204 102 / 6%);
+  color: #d9cda9;
+  font-size: 12px;
+}
+
+.save-game-editor-modal__notice > span:first-child { color: #ffcc66; font-size: 9px; }
+.save-editor-tabs { flex: 0 0 auto; }
+
+.save-game-editor-modal__workspace {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid #2d3640;
+  border-radius: 8px 8px 0 0;
+  background: #0e1319;
+}
+
+.save-game-editor-modal [data-save-editor-panel] {
+  height: 100%;
+  margin: 0;
+  overflow: auto;
+}
+
+.save-game-editor-modal textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 390px;
+  box-sizing: border-box;
+  resize: none;
+  border: 0;
+  outline: none;
+  padding: 16px 18px;
+  background: #0e1319;
+  color: #d7e3ef;
+  caret-color: #72b7ff;
+  font: 12px/1.55 'SF Mono', 'Monaco', 'Consolas', monospace;
+}
+
+.save-game-editor-modal textarea:focus { box-shadow: inset 0 0 0 1px #4da3ff; }
+.save-game-editor-modal table { border-collapse: separate; border-spacing: 0; min-width: 100%; font-size: 12px; }
+.save-game-editor-modal thead { position: sticky; top: 0; z-index: 1; }
+.save-game-editor-modal th { background: #202933; color: #9fd2ff; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; }
 .save-game-editor-modal th,
-.save-game-editor-modal td { border: 1px solid #455a64; padding: 3px; }
-.save-game-editor-modal td input { min-width: 90px; width: 100%; box-sizing: border-box; }
-.save-game-editor-modal [data-save-editor-panel] { margin-top: 10px; overflow: auto; }
-.save-game-editor-modal pre { min-height: 45vh; padding: 10px; background: #0c1116; white-space: pre-wrap; }
-.save-editor-tabs { display: flex; gap: 6px; margin-top: 10px; }
+.save-game-editor-modal td { padding: 6px; border-right: 1px solid #27313b; border-bottom: 1px solid #27313b; }
+.save-game-editor-modal tbody tr:nth-child(even) { background: rgb(255 255 255 / 2%); }
+.save-game-editor-modal td input { min-width: 110px; width: 100%; box-sizing: border-box; border: 1px solid transparent; padding: 6px 7px; background: transparent; color: #d7e3ef; font: 11px 'SF Mono', 'Monaco', 'Consolas', monospace; }
+.save-game-editor-modal td input:focus { border-color: #4da3ff; outline: none; background: #111923; box-shadow: 0 0 0 2px rgb(77 163 255 / 14%); }
+.save-game-editor-modal pre { box-sizing: border-box; min-height: 390px; margin: 0; padding: 16px 18px; background: #0e1319; color: #a9d5ff; white-space: pre-wrap; font: 12px/1.55 'SF Mono', 'Monaco', 'Consolas', monospace; }
+.save-game-editor-modal__table-note { margin: 0; padding: 12px 16px; color: #7f92a6; font-size: 11px; }
+.save-game-editor-modal .config-modal__section-title { margin: 14px 16px 8px; }
+
+.save-game-editor-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px 16px;
+  border-top: 1px solid #2d3640;
+  background: #171c22;
+}
+
+.save-game-editor-modal__footer .config-modal__actions { margin: 0; }
+.save-game-editor-modal__footer-hint { color: #75889c; font-size: 11px; }
+body.save-game-editor-open { overflow: hidden; }
+
+@media (max-width: 760px) {
+  .save-game-editor-modal { padding: 8px; }
+  .save-game-editor-modal__dialog.config-modal__dialog { width: calc(100vw - 16px); height: calc(100vh - 16px); max-height: calc(100vh - 16px); }
+  .save-game-editor-modal__toolbar { grid-template-columns: 1fr; }
+  .save-game-editor-modal__metrics { min-height: auto; }
+  .save-game-editor-modal__footer { align-items: stretch; flex-direction: column; }
+  .save-game-editor-modal__footer .config-modal__actions { justify-content: flex-end; }
+}
 
 #saveGamesPane.hidden,
 #replaysPane.hidden {

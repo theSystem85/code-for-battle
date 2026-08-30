@@ -30,6 +30,7 @@ Enable players to share efficient compact saves while retaining legacy JSON conv
 24. Unit rows preserve paths, current/queued user commands, primary and attack targets, and multi-target command IDs; planning blueprints and production build stacks remain serialized.
 25. Map Settings opens a separate Save Game Editor modal with editable JSON and relational-table views, a read-only map boundary, file byte/character/line metrics, and confirmed overwrite or save-as-new actions.
 26. The editor includes a Strategic LLM Preview tab showing the filtered, tabular context shape that would be transferred to a strategic model.
+27. The Save Game Editor must visually match the Settings modal: dark overlay, dark panel and workspace, gradient header, blue active-tab/primary-action accents, consistent typography, fields, focus states, spacing, borders, and responsive mobile layout.
 
 ## Validation
 - E2E covers create save -> export -> delete -> import -> load from label behavior.
