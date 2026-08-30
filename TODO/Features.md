@@ -447,3 +447,25 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Launch carrier-based F22s for carrier attack commands even when they have a usable partial load; return mission aircraft when the target is destroyed or ammunition is exhausted, then rearm before relaunch.
 - [x] Extend the F22 carrier landing setup substantially astern and descend during final approach so the jet is at deck-entry altitude before crossing the runway threshold.
 - [x] Match remotely controlled ship top speed to autonomous naval top speed for every ship class.
+
+## 2026-08-30 Compact save games and strategic LLM preparation
+
+- [x] Store new saves in a versioned readable compact format using palette/run-length map encoding and removing reconstructable map duplication.
+- [x] Keep legacy JSON import/export support and add a persistent Compact CFB versus Legacy JSON converter choice to Map Settings.
+- [x] Accept compact `.cfb` files alongside legacy save and replay JSON files.
+- [x] Add round-trip and 200×200 reduction unit coverage with a less-than-one-tenth size target.
+- [ ] Implement the separately specified strategic LLM initial filtered snapshot and revisioned incremental change feed.
+- [ ] Add fog-of-war-safe, token-budgeted strategic state tool calls by region/entity/player/objective/revision.
+
+## 2026-08-30 Relational CFB2 and save editor
+
+- [x] Replace the compact JSON envelope with whitespace-minimal CFB2 schema/row tables grouped by entity and unit type.
+- [x] Preserve map palette/RLE compression while converting the palette itself to a relational table.
+- [x] Persist unit paths, current and queued commands, primary/attack targets, multi-target IDs, planning blueprints, and production stacks.
+- [x] Add a Map Settings Save Game Editor modal with editable JSON/table views, read-only map data, metrics, save-as-new, and confirmed override.
+- [x] Add an inspection-only Strategic LLM Preview tab and extend the future strategic-context specification.
+
+## 2026-08-30 Save editor visual design
+
+- [x] Restyle the Save Game Editor as a polished dark-mode modal that follows the Settings modal and the game's blue/steel visual language.
+- [x] Add consistent header, tabs, fields, metrics, protected-map notice, editor workspace, table, footer action, focus, backdrop, and responsive mobile treatments.

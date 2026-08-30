@@ -615,7 +615,7 @@
           <button id="importSaveBtn" class="action-button icon-button" title="Import save game or replay">
             <img src="/icons/import.svg" alt="Import" class="button-icon white-icon">
           </button>
-          <input id="importSaveInput" type="file" accept="application/json,.json" multiple style="display:none;" aria-label="Import save game or replay JSON">
+          <input id="importSaveInput" type="file" accept="application/json,.json,.cfb" multiple style="display:none;" aria-label="Import save game or replay">
         </div>
         <div class="save-replay-tabs">
           <button id="saveListTab" class="tab-button active" type="button">Save Games</button>
@@ -712,9 +712,18 @@
             <span id="mapSettingsToggleIcon">▼</span>
           </button>
           <div id="mapSettingsContent" style="display: none; margin-top: 10px;">
+            <div style="margin: 10px 0;">
+              <label for="saveFileFormatSelect" style="display:block; margin-bottom:6px;">Save file export format</label>
+              <select id="saveFileFormatSelect" class="sidebar-input" style="width:100%;">
+                <option value="compact" selected>Compact CFB (recommended)</option>
+                <option value="json">Legacy JSON (debugging)</option>
+              </select>
+              <small>Import accepts both formats. Exporting a loaded save converts it to the selected format.</small>
+            </div>
             <div class="map-edit-controls" style="display: flex; flex-direction: column; gap: 6px; margin: 10px 0;">
               <button id="mapEditModeBtn" class="action-button" type="button">Edit Mode</button>
               <button id="openSpriteSheetEditorBtn" class="action-button" type="button">Sprite Sheet Editor</button>
+              <button id="openSaveGameEditorBtn" class="action-button" type="button">Save Game Editor</button>
             </div>
             <label style="display:flex; align-items:center; gap:5px; margin: 10px 0;">
               <input type="checkbox" id="integratedSpriteSheetModeCheckbox">
@@ -853,6 +862,56 @@
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <div id="saveGameEditorModal" class="config-modal save-game-editor-modal" aria-hidden="true">
+    <div class="config-modal__dialog save-game-editor-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="saveEditorTitle">
+      <header class="config-modal__header save-game-editor-modal__header">
+        <div class="config-modal__title-group">
+          <span class="save-game-editor-modal__eyebrow">Game state tools</span>
+          <h2 id="saveEditorTitle">Save Game Editor</h2>
+          <span class="save-game-editor-modal__subtitle">Inspect, convert, and safely edit dynamic match state.</span>
+        </div>
+        <button id="saveEditorClose" class="config-modal__close" type="button" aria-label="Close save game editor">×</button>
+      </header>
+      <div class="config-modal__body save-game-editor-modal__body">
+        <section class="save-game-editor-modal__toolbar" aria-label="Save selection">
+          <label class="config-modal__field save-game-editor-modal__field">
+            <span>Save game</span>
+            <select id="saveEditorSaveSelect"><option value="">Select a save game</option></select>
+          </label>
+          <label class="config-modal__field save-game-editor-modal__field">
+            <span>Save label</span>
+            <input id="saveEditorLabel" maxlength="32" placeholder="Edited Save">
+          </label>
+          <div class="save-game-editor-modal__metrics" aria-live="polite">
+            <span class="save-game-editor-modal__metrics-label">CFB2 file</span>
+            <span id="saveEditorMetrics">Select a save to inspect</span>
+          </div>
+        </section>
+        <div class="save-game-editor-modal__notice" role="note">
+          <span aria-hidden="true">◆</span>
+          <span>Map tiles are protected in this editor. Use Map Edit Mode to change terrain or resources.</span>
+        </div>
+        <div class="config-modal__tabs save-editor-tabs" role="tablist" aria-label="Save editor views">
+          <button class="config-modal__tab config-modal__tab--active" type="button" data-save-editor-tab="json" role="tab" aria-selected="true">JSON</button>
+          <button class="config-modal__tab" type="button" data-save-editor-tab="tables" role="tab" aria-selected="false">Tables</button>
+          <button class="config-modal__tab" type="button" data-save-editor-tab="preview" role="tab" aria-selected="false">Strategic LLM Preview</button>
+        </div>
+        <div class="save-game-editor-modal__workspace">
+          <section class="config-modal__content config-modal__content--active" data-save-editor-panel="json"><textarea id="saveEditorJson" spellcheck="false" aria-label="Editable save game JSON" placeholder="Select a save game to begin"></textarea></section>
+          <section id="saveEditorTables" class="config-modal__content" data-save-editor-panel="tables" hidden></section>
+          <pre id="saveEditorPreview" class="config-modal__content" data-save-editor-panel="preview" hidden></pre>
+        </div>
+      </div>
+      <footer class="save-game-editor-modal__footer">
+        <span class="save-game-editor-modal__footer-hint">Changes affect dynamic state only.</span>
+        <div class="config-modal__actions">
+          <button id="saveEditorSaveNew" class="config-modal__button" type="button">Save as new</button>
+          <button id="saveEditorOverwrite" class="config-modal__button config-modal__button--primary" type="button">Override opened save</button>
+        </div>
+      </footer>
     </div>
   </div>
 

@@ -1,6 +1,7 @@
 import { gameState } from './gameState.js'
 import { TILE_SIZE } from './config.js'
 import { saveGame, loadGameFromState, updateSaveGamesList } from './saveGame.js'
+import { decodeSaveObject } from './saveFormat.js'
 import { showNotification } from './ui/notifications.js'
 import { applyGameTickOutput } from './ai-api/applier.js'
 import { productionQueue } from './productionQueue.js'
@@ -159,8 +160,8 @@ function captureBaselineState() {
   try {
     const raw = getStoredItem(baselineKey)
     if (!raw) return null
-    const parsed = JSON.parse(raw)
-    replay.baselineState = parsed?.state || null
+    const parsed = decodeSaveObject(raw)
+    replay.baselineState = parsed.state || null
     return replay.baselineState
   } finally {
     removeStoredItem(baselineKey)
