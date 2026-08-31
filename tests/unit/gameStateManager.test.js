@@ -384,7 +384,7 @@ describe('gameStateManager', () => {
       expect(unit.vx).toBe(0)
       expect(unit.vy).toBe(0)
       expect(registerUnitWreck).not.toHaveBeenCalled()
-      expect(playPositionalSound).not.toHaveBeenCalledWith('explosion', expect.any(Number), expect.any(Number), expect.any(Number))
+      expect(playPositionalSound).toHaveBeenCalledWith('explosion', 48, 80, 0.5)
 
       unit.direction = 0.1
       unit.turretDirection = 0.3
@@ -396,6 +396,41 @@ describe('gameStateManager', () => {
       expect(unit.turretDirection).toBe(2.2)
       expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
       expect(playPositionalSound).toHaveBeenCalledWith('explosion', 48, 80, 0.5)
+    })
+
+    it('starts a naval explosion and sinking together while removing turn wakes', () => {
+      const ship = {
+        id: 'destroyer-1',
+        type: 'destroyer',
+        owner: 'enemy',
+        health: 0,
+        x: 64,
+        y: 96,
+        direction: 0,
+        isNaval: true
+      }
+      const units = [ship]
+      const gameState = {
+        factories: [],
+        buildings: [],
+        occupancyMap: [],
+        unitWrecks: [],
+        shipWakes: [
+          { sourceUnitId: 'destroyer-1', kind: 'turn' },
+          { sourceUnitId: 'other-ship', kind: 'turn' }
+        ],
+        playerUnitsDestroyed: 0,
+        enemyUnitsDestroyed: 0,
+        humanPlayer: 'player1'
+      }
+
+      performanceNow.mockReturnValue(1000)
+      cleanupDestroyedUnits(units, gameState)
+
+      expect(playPositionalSound).toHaveBeenCalledWith('explosion', 80, 112, 0.65)
+      expect(registerUnitWreck).toHaveBeenCalledWith(ship, gameState)
+      expect(gameState.shipWakes).toEqual([{ sourceUnitId: 'other-ship', kind: 'turn' }])
+      expect(units).toHaveLength(0)
     })
 
     it('handles specialty unit destruction paths', () => {

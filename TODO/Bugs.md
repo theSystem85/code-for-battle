@@ -489,3 +489,8 @@
 - [x] Real-iPhone landscape follow-up: defer only landscape custom tap dispatch for 50 ms so asynchronous vertical WebKit scrolling can veto the release without losing rapid stack taps, including on 120 Hz displays.
 - [x] Loaded-save CPU collapse + aircraft shadow targeting regression (2026-08-28): reproduce the delayed slowdown with `2026-08-23_19-26-21-591Z_Build.json`, analyze the direct 6 FPS state in `2026-08-28_18-37-40-820Z_issue.json`, stop per-tick failed harvester/naval/logistics pathfinding storms, keep empty Apaches on helipad-return logic instead of ground ammo-truck routes, preserve Apache flight/return state in saves with a legacy airborne fallback, and target the visible altitude-adjusted position of Apache/F22/F35 aircraft.
 - [x] Player Apache attack-order regression (2026-08-30): explicit attack commands must enter Apache combat immediately, fire when in range, and continuously refresh the combat flight plan as a live target moves, while recent direct-flight controls still suppress automatic combat movement.
+
+## 2026-08-31 Immediate destruction animations
+
+- [x] Start every destroyed unit's explosion immediately instead of after the destruction freeze.
+- [x] Start naval sinking in the same cleanup tick as its explosion and remove any lingering circular turning wakes around the sinking ship.
