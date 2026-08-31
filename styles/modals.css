@@ -91,6 +91,126 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
+.tutorial-gesture-guide {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 10px;
+  margin: 12px 16px 2px;
+}
+
+.tutorial-gesture-guide[hidden] {
+  display: none;
+}
+
+.tutorial-gesture-guide__sidebar,
+.tutorial-gesture-guide__build {
+  position: relative;
+  min-height: 92px;
+  overflow: hidden;
+  border: 1px solid rgba(110, 252, 75, 0.45);
+  border-radius: 9px;
+  background: linear-gradient(145deg, rgba(15, 40, 32, 0.95), rgba(12, 18, 24, 0.95));
+  box-shadow: inset 0 0 24px rgba(110, 252, 75, 0.08);
+}
+
+.tutorial-gesture-guide__edge {
+  position: absolute;
+  inset: 9px auto 9px 10px;
+  width: 4px;
+  border-radius: 4px;
+  background: #6efc4b;
+  box-shadow: 0 0 12px #6efc4b;
+}
+
+.tutorial-gesture-guide__trail {
+  position: absolute;
+  top: 39px;
+  left: 22px;
+  width: 70%;
+  height: 2px;
+  background: linear-gradient(90deg, #6efc4b, transparent);
+}
+
+.tutorial-gesture-guide__hand {
+  position: absolute;
+  top: 18px;
+  left: 20px;
+  font-size: 30px;
+  filter: drop-shadow(0 0 6px rgba(110, 252, 75, 0.8));
+  animation: tutorial-sidebar-swipe 2.2s ease-in-out infinite;
+}
+
+.tutorial-gesture-guide__label {
+  position: absolute;
+  right: 8px;
+  bottom: 7px;
+  color: #a9ff96;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.tutorial-gesture-guide__build {
+  display: grid;
+  grid-template-rows: 20px 1fr 1fr;
+  text-align: center;
+}
+
+.tutorial-gesture-guide__build-title {
+  padding-top: 4px;
+  color: #fff;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.tutorial-gesture-guide__build-half {
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.tutorial-gesture-guide__build-half--add {
+  color: #6efc4b;
+  background: rgba(110, 252, 75, 0.12);
+}
+
+.tutorial-gesture-guide__build-half--remove {
+  color: #ffba6b;
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 160, 70, 0.1);
+}
+
+.tutorial-gesture-guide__tap {
+  position: absolute;
+  right: 18px;
+  top: 35px;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  animation: tutorial-build-tap 2.2s ease-out infinite;
+}
+
+@keyframes tutorial-sidebar-swipe {
+  0%, 15% { transform: translateX(0); opacity: 0; }
+  25% { opacity: 1; }
+  55% { transform: translateX(90px); opacity: 1; }
+  75%, 100% { transform: translateX(0); opacity: 0; }
+}
+
+@keyframes tutorial-build-tap {
+  0%, 48% { transform: scale(0.35); opacity: 0; }
+  58% { transform: scale(1); opacity: 0.9; }
+  72%, 100% { transform: scale(1.8); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tutorial-gesture-guide__hand,
+  .tutorial-gesture-guide__tap {
+    animation: none;
+  }
+}
+
 .tutorial-actions {
   display: flex;
   flex-wrap: wrap;

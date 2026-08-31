@@ -10,6 +10,7 @@ export function createTutorialUI(tutorial) {
     tutorial.stepTitle = tutorial.overlay.querySelector('.tutorial-title')
     tutorial.stepText = tutorial.overlay.querySelector('.tutorial-text')
     tutorial.stepHint = tutorial.overlay.querySelector('.tutorial-hint')
+    tutorial.stepVisual = tutorial.overlay.querySelector('.tutorial-gesture-guide')
     tutorial.stepProgress = tutorial.overlay.querySelector('.tutorial-progress')
     tutorial.stepProgressFill = tutorial.overlay.querySelector('.tutorial-progress-fill')
     tutorial.stepProgressLabel = tutorial.overlay.querySelector('.tutorial-progress-label')
@@ -102,6 +103,24 @@ export function createTutorialUI(tutorial) {
   const hint = document.createElement('p')
   hint.className = 'tutorial-hint'
 
+  const gestureGuide = document.createElement('div')
+  gestureGuide.className = 'tutorial-gesture-guide'
+  gestureGuide.hidden = true
+  gestureGuide.setAttribute('aria-label', 'Animated sidebar swipe and build stack controls')
+  gestureGuide.innerHTML = `
+    <div class="tutorial-gesture-guide__sidebar" aria-hidden="true">
+      <span class="tutorial-gesture-guide__edge"></span>
+      <span class="tutorial-gesture-guide__trail"></span>
+      <span class="tutorial-gesture-guide__hand">☝</span>
+      <span class="tutorial-gesture-guide__label">SWIPE TO RESIZE</span>
+    </div>
+    <div class="tutorial-gesture-guide__build" aria-hidden="true">
+      <span class="tutorial-gesture-guide__build-title">BUILD</span>
+      <span class="tutorial-gesture-guide__build-half tutorial-gesture-guide__build-half--add">＋ ADD</span>
+      <span class="tutorial-gesture-guide__build-half tutorial-gesture-guide__build-half--remove">− REMOVE</span>
+      <span class="tutorial-gesture-guide__tap"></span>
+    </div>`
+
   const progress = document.createElement('div')
   progress.className = 'tutorial-progress'
 
@@ -153,6 +172,7 @@ export function createTutorialUI(tutorial) {
   card.appendChild(header)
   card.appendChild(title)
   card.appendChild(text)
+  card.appendChild(gestureGuide)
   card.appendChild(hint)
   card.appendChild(progress)
   card.appendChild(actions)
@@ -185,6 +205,7 @@ export function createTutorialUI(tutorial) {
   tutorial.stepTitle = title
   tutorial.stepText = text
   tutorial.stepHint = hint
+  tutorial.stepVisual = gestureGuide
   tutorial.stepProgress = progress
   tutorial.stepProgressFill = progressFill
   tutorial.stepProgressLabel = progressLabel

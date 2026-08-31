@@ -15,6 +15,7 @@ Introduce an interactive onboarding tutorial that teaches new players the UI/UX 
 - **Extensibility**: Steps are data-driven and easy to expand.
 
 ## Required Step Coverage
+0. **First-time mobile controls**: Before economy instruction, show touch users an animated guide demonstrating the horizontal gestures that switch between dense and extended portrait sidebars. Explain that the upper half of a Build button increases its stack and the lower half decreases it. Do not add this step to desktop onboarding.
 1. **Resources**: Show where money and energy are displayed in the UI.
 2. **Economy setup**: Demonstrate building a Power Plant, Ore Refinery, and Vehicle Factory, then queue ore transporters (Harvesters).
 3. **Harvester behavior**: Explain that harvesters automatically move to the nearest ore field, but can be directed manually.

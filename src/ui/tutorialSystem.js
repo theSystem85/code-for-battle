@@ -16,6 +16,7 @@ import {
   findPlayerBuilding,
   getBoundingCenter,
   getCanvasPointForTile,
+  getIsTouchLayout,
   getPlayerCrewSnapshot,
   getSpokenTextForStep,
   getTextForDevice,
@@ -48,6 +49,7 @@ class TutorialSystem {
     this.stepTitle = null
     this.stepText = null
     this.stepHint = null
+    this.stepVisual = null
     this.stepCount = null
     this.stepPhase = null
     this.nextButton = null
@@ -62,7 +64,7 @@ class TutorialSystem {
     this.animationFrame = null
     this.speaking = false
     this.minimized = false
-    this.steps = buildTutorialSteps()
+    this.steps = buildTutorialSteps().filter(step => !step.mobileOnly || getIsTouchLayout())
     this.isInviteSession = false
 
     if (typeof window !== 'undefined') {
@@ -477,6 +479,9 @@ class TutorialSystem {
     }
     if (this.stepHint) {
       this.stepHint.textContent = step.hint || ''
+    }
+    if (this.stepVisual) {
+      this.stepVisual.hidden = step.visual !== 'mobile-build-gestures'
     }
     this.updateStepProgress(step)
     if (this.stepCount) {
