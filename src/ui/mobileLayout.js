@@ -1,7 +1,7 @@
 // Mobile layout and sidebar management
 import { gameState } from '../gameState.js'
 import { updateEnergyBar } from './energyBar.js'
-import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { setStoredItem } from '../storage/indexedDbStorage.js'
 
 const PORTRAIT_SIDEBAR_STATE_KEY = 'mobilePortraitSidebarState'
 const PORTRAIT_SIDEBAR_DEFAULT_STATE = 'condensed'
@@ -70,16 +70,6 @@ export function setMobileLayoutGameAccessor(fn) {
   getGameInstance = typeof fn === 'function' ? fn : () => null
 }
 
-function getStoredPortraitSidebarState() {
-  try {
-    const stored = getStoredItem(PORTRAIT_SIDEBAR_STATE_KEY)
-    return PORTRAIT_SIDEBAR_STATES.has(stored) ? stored : null
-  } catch (error) {
-    window?.logger?.warn('Failed to read portrait sidebar state from IndexedDB:', error)
-    return null
-  }
-}
-
 function persistPortraitSidebarState(state) {
   if (!PORTRAIT_SIDEBAR_STATES.has(state)) {
     return
@@ -128,12 +118,11 @@ function syncPortraitSidebarState() {
   if (!document.body) {
     return
   }
-  const storedState = getStoredPortraitSidebarState()
-  const desiredState = storedState || mobileLayoutState.portraitSidebarState || PORTRAIT_SIDEBAR_DEFAULT_STATE
-  applyPortraitSidebarState(desiredState)
-  if (!storedState) {
-    persistPortraitSidebarState(desiredState)
-  }
+  // Every fresh portrait session starts with the compact build bar. Restoring an
+  // old expanded preference here makes the map open behind a full-height panel,
+  // which is especially confusing before the first frame has settled.
+  applyPortraitSidebarState(PORTRAIT_SIDEBAR_DEFAULT_STATE)
+  persistPortraitSidebarState(PORTRAIT_SIDEBAR_DEFAULT_STATE)
 }
 
 function ensureMobileLayoutElements() {

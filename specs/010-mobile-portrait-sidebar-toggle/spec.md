@@ -112,3 +112,8 @@ Touch users holding the device in portrait orientation need the ability to recla
 
 - **Condensed Tab Toggle Reliability**: In portrait condensed mode, the `#mobileCategoryToggle` must resolve the active build tab strictly from production tab buttons (`#productionTabs .tab-button[data-tab]`) and ignore unrelated sidebar tab buttons (for example Save/Replays tabs).
 - **First-Load Behavior Guarantee**: On initial portrait condensed load (before any expand/collapse interaction), tapping the category toggle must immediately switch between Buildings and Units when both categories are available.
+
+## Update 2026-08-31
+
+- **Dense Startup Guarantee**: Every fresh portrait-mode session must open in the dense bottom-bar state, even when an earlier session last persisted the extended state. Gesture changes remain available during the session, but an extended sidebar must never obscure the initial portrait view.
+- **First-time Gesture Onboarding**: The mobile tutorial must use an animated guide to teach swiping between dense and extended sidebar states and the upper/lower Build-button stack controls.

@@ -35,6 +35,20 @@ export function buildTutorialSteps() {
       }
     },
     {
+      id: 'mobile-sidebar-gestures',
+      mobileOnly: true,
+      title: 'Master the Build Bar',
+      text: {
+        mobile: 'Swipe right from the left edge to extend the bottom build bar. Swipe left across the extended sidebar to return to the dense bar.'
+      },
+      hint: 'On any Build button, tap the upper half to add to its build stack. Tap the lower half to remove one.',
+      visual: 'mobile-build-gestures',
+      completion: () => true,
+      demo: async() => {
+        await sleep(1200)
+      }
+    },
+    {
       id: 'resources',
       title: 'Resources & Power',
       text: {
