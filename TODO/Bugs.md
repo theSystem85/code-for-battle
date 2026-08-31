@@ -494,3 +494,4 @@
 
 - [x] Start every destroyed unit's explosion immediately instead of after the destruction freeze.
 - [x] Start naval sinking in the same cleanup tick as its explosion and remove any lingering circular turning wakes around the sinking ship.
+- [x] Register and display ground-unit wrecks in the initial destruction tick rather than waiting for the explosion or frozen destruction pose to finish.

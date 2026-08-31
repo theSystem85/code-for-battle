@@ -487,7 +487,9 @@ export function cleanupDestroyedUnits(units, gameState) {
         }
       }
 
-      if (!unit.isNaval && now - unit.destructionQueuedAt < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
+      const usesAirDestructionSequence = unit.isAirUnit === true ||
+        unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35'
+      if (usesAirDestructionSequence && now - unit.destructionQueuedAt < UNIT_DESTRUCTION_FREEZE_DELAY_MS) {
         if (unit.type === 'apache') {
           const elapsed = Math.max(0, now - unit.destructionQueuedAt)
           const progress = Math.max(0, Math.min(1, elapsed / UNIT_DESTRUCTION_FREEZE_DELAY_MS))

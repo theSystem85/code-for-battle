@@ -353,7 +353,7 @@ describe('gameStateManager', () => {
       expect(gameState.enemyUnitsDestroyed).toBe(1)
     })
 
-    it('keeps destroyed units frozen for 2 seconds before cleanup', () => {
+    it('registers and displays a ground-unit wreck in the initial destruction tick', () => {
       const unit = {
         id: 'tank-1',
         type: 'tank_v1',
@@ -380,22 +380,11 @@ describe('gameStateManager', () => {
       performanceNow.mockReturnValue(1000)
       cleanupDestroyedUnits(units, gameState)
 
-      expect(units).toHaveLength(1)
-      expect(unit.vx).toBe(0)
-      expect(unit.vy).toBe(0)
-      expect(registerUnitWreck).not.toHaveBeenCalled()
-      expect(playPositionalSound).toHaveBeenCalledWith('explosion', 48, 80, 0.5)
-
-      unit.direction = 0.1
-      unit.turretDirection = 0.3
-      performanceNow.mockReturnValue(3001)
-      cleanupDestroyedUnits(units, gameState)
-
       expect(units).toHaveLength(0)
-      expect(unit.direction).toBe(1.1)
-      expect(unit.turretDirection).toBe(2.2)
       expect(registerUnitWreck).toHaveBeenCalledWith(unit, gameState)
       expect(playPositionalSound).toHaveBeenCalledWith('explosion', 48, 80, 0.5)
+      expect(unit.direction).toBe(1.1)
+      expect(unit.turretDirection).toBe(2.2)
     })
 
     it('starts a naval explosion and sinking together while removing turn wakes', () => {

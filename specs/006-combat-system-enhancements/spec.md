@@ -459,3 +459,4 @@ As a player, I want Apache air-to-air rockets to avoid harming ground units or b
 - A unit's destruction explosion must start in the first cleanup tick that observes zero health, without waiting for the frozen destruction pose to finish.
 - A naval unit must transition to its sinking wreck in that same tick, so there is no pause between explosion and sinking.
 - Existing bow, stern, and circular turning-wake effects associated with a destroyed naval unit must be removed when sinking starts.
+- A destroyed ground unit's wreck must be registered and visible in the same tick as its explosion starts; wreck creation must not wait for the explosion animation to finish.
