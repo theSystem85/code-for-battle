@@ -247,6 +247,16 @@ function populateProviderSelect(select) {
 }
 
 function bindStrategicSettings(settings) {
+  const pollingInput = document.getElementById('llmStrategicPollingInterval')
+  if (pollingInput) {
+    pollingInput.value = settings.strategic.pollIntervalSeconds || settings.strategic.tickSeconds || 60
+    pollingInput.addEventListener('change', () => {
+      const value = Math.max(5, Math.min(3600, Number.parseInt(pollingInput.value, 10) || 60))
+      pollingInput.value = value
+      updateLlmSettings({ strategic: { pollIntervalSeconds: value } })
+    })
+  }
+
   const verbositySelect = document.getElementById('llmStrategicVerbosity')
   if (verbositySelect) {
     verbositySelect.value = settings.strategic.verbosity || 'minimal'
@@ -282,6 +292,16 @@ function bindCommentarySettings(settings) {
   const promptInput = document.getElementById('llmCommentaryPrompt')
   const ttsToggle = document.getElementById('llmCommentaryTts')
   const voiceSelect = document.getElementById('llmCommentaryVoice')
+  const pollingInput = document.getElementById('llmCommentaryPollingInterval')
+
+  if (pollingInput) {
+    pollingInput.value = settings.commentary.pollIntervalSeconds || 60
+    pollingInput.addEventListener('change', () => {
+      const value = Math.max(5, Math.min(3600, Number.parseInt(pollingInput.value, 10) || 60))
+      pollingInput.value = value
+      updateLlmSettings({ commentary: { pollIntervalSeconds: value } })
+    })
+  }
 
   if (enabledToggle) {
     enabledToggle.checked = Boolean(settings.commentary.enabled)

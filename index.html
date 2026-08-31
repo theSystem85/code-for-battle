@@ -1094,6 +1094,10 @@
               <div id="llmPoolList" class="config-modal__note">No LLM models added yet.</div>
             </div>
             <label class="config-modal__field">
+              <span>Strategic polling interval (seconds):</span>
+              <input type="number" id="llmStrategicPollingInterval" min="5" max="3600" step="1">
+            </label>
+            <label class="config-modal__field">
               <span>Strategic verbosity:</span>
               <select id="llmStrategicVerbosity" class="config-modal__select">
                 <option value="minimal">Minimal</option>
@@ -1104,6 +1108,10 @@
             <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="llmCommentaryEnabled">
               <span>Enable mean enemy commentary (LLM)</span>
+            </label>
+            <label class="config-modal__field">
+              <span>Commentary polling interval (seconds):</span>
+              <input type="number" id="llmCommentaryPollingInterval" min="5" max="3600" step="1">
             </label>
             <label class="config-modal__field">
               <span>Commentary model:</span>
