@@ -3,6 +3,7 @@ import {
   TILE_SIZE,
   SMOKE_EMIT_INTERVAL,
   BUILDING_SMOKE_EMIT_INTERVAL,
+  BUILDING_SMOKE_PARTICLE_COUNT,
   UNIT_SMOKE_SOFT_CAP_RATIO,
   MAX_SMOKE_PARTICLES
 } from './config.js'
@@ -605,7 +606,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             const smokeY = buildingOriginY + cachedSpot.scaledY
 
             // Emit more particles per puff for visible building smoke
-            emitSmokeParticles(gameState, smokeX, smokeY, now, 3)
+            emitSmokeParticles(gameState, smokeX, smokeY, now, BUILDING_SMOKE_PARTICLE_COUNT)
 
             tracker.lastEmissionTime = now
             tracker.emissionStage = (tracker.emissionStage + 1) % 4

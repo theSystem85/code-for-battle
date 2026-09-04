@@ -111,7 +111,38 @@ import {
   MOBILE_CANVAS_PIXEL_RATIO_CAP,
   setMobileCanvasPixelRatioCap,
   RENDERER_BACKEND,
-  setRendererBackend
+  setRendererBackend,
+  SMOKE_PARTICLE_LIFETIME,
+  setSmokeParticleLifetime,
+  SMOKE_PARTICLE_SIZE,
+  setSmokeParticleSize,
+  SMOKE_PARTICLE_GROWTH,
+  setSmokeParticleGrowth,
+  SMOKE_PARTICLE_ALPHA,
+  setSmokeParticleAlpha,
+  SMOKE_PARTICLE_FADE_EXPONENT,
+  setSmokeParticleFadeExponent,
+  SMOKE_PARTICLE_RISE_SPEED,
+  setSmokeParticleRiseSpeed,
+  SMOKE_PARTICLE_SPREAD,
+  setSmokeParticleSpread,
+  SMOKE_PARTICLE_TURBULENCE,
+  setSmokeParticleTurbulence,
+  BUILDING_SMOKE_EMIT_INTERVAL,
+  setBuildingSmokeEmitInterval,
+  BUILDING_SMOKE_PARTICLE_COUNT,
+  setBuildingSmokeParticleCount,
+  MAX_SMOKE_PARTICLES,
+  setMaxSmokeParticles,
+  WIND_DIRECTION,
+  setWindDirectionX,
+  setWindDirectionY,
+  WIND_STRENGTH,
+  setWindStrength,
+  WIND_SWAY_AMPLITUDE,
+  setWindSwayAmplitude,
+  WIND_SWAY_FREQUENCY,
+  setWindSwayFrequency
   , HOWITZER_COST
   , setHowitzerCost
   , HOWITZER_SPEED
@@ -156,6 +187,87 @@ import {
  */
 export const configRegistry = {
   // Graphics
+  buildingSmokeParticleCount: {
+    name: 'Chimney Smoke Particles', description: 'Particles emitted by each chimney puff', type: 'number',
+    get: () => BUILDING_SMOKE_PARTICLE_COUNT, set: setBuildingSmokeParticleCount,
+    min: 1, max: 12, step: 1, category: 'Graphics'
+  },
+  buildingSmokeEmitInterval: {
+    name: 'Chimney Smoke Interval', description: 'Milliseconds between chimney smoke puffs', type: 'number',
+    get: () => BUILDING_SMOKE_EMIT_INTERVAL, set: setBuildingSmokeEmitInterval,
+    min: 100, max: 3000, step: 50, category: 'Graphics'
+  },
+  smokeParticleLifetime: {
+    name: 'Smoke Lifetime', description: 'Milliseconds before a smoke particle disappears', type: 'number',
+    get: () => SMOKE_PARTICLE_LIFETIME, set: setSmokeParticleLifetime,
+    min: 500, max: 15000, step: 250, category: 'Graphics'
+  },
+  smokeParticleStartSize: {
+    name: 'Smoke Start Size', description: 'Starting radius of smoke particles in pixels', type: 'number',
+    get: () => SMOKE_PARTICLE_SIZE, set: setSmokeParticleSize,
+    min: 1, max: 20, step: 0.5, category: 'Graphics'
+  },
+  smokeParticleGrowth: {
+    name: 'Smoke Growth', description: 'Final smoke size as a multiple of its starting size', type: 'number',
+    get: () => SMOKE_PARTICLE_GROWTH, set: setSmokeParticleGrowth,
+    min: 1, max: 6, step: 0.1, category: 'Graphics'
+  },
+  smokeParticleAlpha: {
+    name: 'Smoke Start Opacity', description: 'Initial smoke particle opacity', type: 'number',
+    get: () => SMOKE_PARTICLE_ALPHA, set: setSmokeParticleAlpha,
+    min: 0.05, max: 1, step: 0.05, category: 'Graphics'
+  },
+  smokeParticleFadeExponent: {
+    name: 'Smoke Fade Curve', description: 'Fade exponent; lower values retain smoke longer', type: 'number',
+    get: () => SMOKE_PARTICLE_FADE_EXPONENT, set: setSmokeParticleFadeExponent,
+    min: 0.2, max: 3, step: 0.1, category: 'Graphics'
+  },
+  smokeParticleRiseSpeed: {
+    name: 'Smoke Rise Speed', description: 'Initial upward speed of smoke particles', type: 'number',
+    get: () => SMOKE_PARTICLE_RISE_SPEED, set: setSmokeParticleRiseSpeed,
+    min: 0.05, max: 2, step: 0.05, category: 'Graphics'
+  },
+  smokeParticleSpread: {
+    name: 'Smoke Emission Spread', description: 'Random spread around each chimney in pixels', type: 'number',
+    get: () => SMOKE_PARTICLE_SPREAD, set: setSmokeParticleSpread,
+    min: 0, max: 30, step: 1, category: 'Graphics'
+  },
+  smokeParticleTurbulence: {
+    name: 'Smoke Turbulence', description: 'Random movement applied to smoke each tick', type: 'number',
+    get: () => SMOKE_PARTICLE_TURBULENCE, set: setSmokeParticleTurbulence,
+    min: 0, max: 0.03, step: 0.001, category: 'Graphics'
+  },
+  maxSmokeParticles: {
+    name: 'Maximum Smoke Particles', description: 'Global smoke particle performance budget', type: 'number',
+    get: () => MAX_SMOKE_PARTICLES, set: setMaxSmokeParticles,
+    min: 25, max: 1000, step: 25, category: 'Graphics'
+  },
+  smokeWindDirectionX: {
+    name: 'Smoke Wind X', description: 'Horizontal smoke wind direction', type: 'number',
+    get: () => WIND_DIRECTION.x, set: setWindDirectionX,
+    min: -2, max: 2, step: 0.05, category: 'Graphics'
+  },
+  smokeWindDirectionY: {
+    name: 'Smoke Wind Y', description: 'Vertical smoke wind direction', type: 'number',
+    get: () => WIND_DIRECTION.y, set: setWindDirectionY,
+    min: -2, max: 2, step: 0.05, category: 'Graphics'
+  },
+  smokeWindStrength: {
+    name: 'Smoke Wind Strength', description: 'Strength of wind-driven smoke movement', type: 'number',
+    get: () => WIND_STRENGTH, set: setWindStrength,
+    min: 0, max: 0.1, step: 0.001, category: 'Graphics'
+  },
+  smokeWindSwayAmplitude: {
+    name: 'Smoke Wind Sway', description: 'Size of animated horizontal wind gusts', type: 'number',
+    get: () => WIND_SWAY_AMPLITUDE, set: setWindSwayAmplitude,
+    min: 0, max: 2, step: 0.05, category: 'Graphics'
+  },
+  smokeWindSwayFrequency: {
+    name: 'Smoke Wind Sway Speed', description: 'Frequency of animated wind direction changes', type: 'number',
+    get: () => WIND_SWAY_FREQUENCY, set: setWindSwayFrequency,
+    min: 0, max: 0.01, step: 0.0001, category: 'Graphics'
+  },
+
   proceduralWaterRendering: {
     name: 'Procedural Water Rendering',
     description: 'Switch between the new procedural water shader and the classic animated water tiles',

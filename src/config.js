@@ -701,9 +701,23 @@ export const RECOIL_DURATION = 300 // milliseconds
 export const MUZZLE_FLASH_DURATION = 150 // milliseconds
 export const MUZZLE_FLASH_SIZE = 12 // radius of muzzle flash
 export const TURRET_RECOIL_DISTANCE = 6 // pixels for building turrets
-export const SMOKE_PARTICLE_LIFETIME = 4500 // milliseconds (increased for longer-lasting building smoke)
+export let SMOKE_PARTICLE_LIFETIME = 6000 // milliseconds
+export function setSmokeParticleLifetime(value) { SMOKE_PARTICLE_LIFETIME = value }
 export const SMOKE_EMIT_INTERVAL = 320 // milliseconds between puffs for unit fumes (throttled for performance)
-export const SMOKE_PARTICLE_SIZE = 8 // radius of smoke particles (reduced from 12)
+export let SMOKE_PARTICLE_SIZE = 3 // starting radius; smoke grows while rising
+export function setSmokeParticleSize(value) { SMOKE_PARTICLE_SIZE = value }
+export let SMOKE_PARTICLE_GROWTH = 2.8 // final size as a multiple of starting size
+export function setSmokeParticleGrowth(value) { SMOKE_PARTICLE_GROWTH = value }
+export let SMOKE_PARTICLE_ALPHA = 0.78
+export function setSmokeParticleAlpha(value) { SMOKE_PARTICLE_ALPHA = value }
+export let SMOKE_PARTICLE_FADE_EXPONENT = 0.7 // below 1 keeps smoke visible longer
+export function setSmokeParticleFadeExponent(value) { SMOKE_PARTICLE_FADE_EXPONENT = value }
+export let SMOKE_PARTICLE_RISE_SPEED = 0.72
+export function setSmokeParticleRiseSpeed(value) { SMOKE_PARTICLE_RISE_SPEED = value }
+export let SMOKE_PARTICLE_SPREAD = 6
+export function setSmokeParticleSpread(value) { SMOKE_PARTICLE_SPREAD = value }
+export let SMOKE_PARTICLE_TURBULENCE = 0.003
+export function setSmokeParticleTurbulence(value) { SMOKE_PARTICLE_TURBULENCE = value }
 export const UNIT_SMOKE_SOFT_CAP_RATIO = 0.6 // stop emitting unit fumes once 60% of the smoke budget is reached
 export let MAX_SMOKE_PARTICLES = 300 // Upper limit to keep smoke rendering performant (reduced from 600 for GPU optimization)
 
@@ -715,8 +729,15 @@ export function setMaxSmokeParticles(value) {
 export const BUILDING_SELL_DURATION = 3000
 
 // Wind effects for smoke particles
-export const WIND_DIRECTION = { x: 0.3, y: -0.1 } // Slight eastward and upward wind
-export const WIND_STRENGTH = 0.008 // How much wind affects particle movement
+export const WIND_DIRECTION = { x: 0.45, y: -0.08 }
+export let WIND_STRENGTH = 0.012
+export function setWindStrength(value) { WIND_STRENGTH = value }
+export function setWindDirectionX(value) { WIND_DIRECTION.x = value }
+export function setWindDirectionY(value) { WIND_DIRECTION.y = value }
+export let WIND_SWAY_AMPLITUDE = 0.35
+export function setWindSwayAmplitude(value) { WIND_SWAY_AMPLITUDE = value }
+export let WIND_SWAY_FREQUENCY = 0.0007
+export function setWindSwayFrequency(value) { WIND_SWAY_FREQUENCY = value }
 
 export let ORE_SPREAD_INTERVAL = 90000  // 90 seconds (3x slower ore growth)
 
@@ -804,7 +825,10 @@ export function setRecoveryTankRatio(value) {
 }
 
 // Smoke emission for buildings
-export const BUILDING_SMOKE_EMIT_INTERVAL = 800 // ms between puffs (reduced for more visible smoke)
+export let BUILDING_SMOKE_EMIT_INTERVAL = 450 // ms between chimney puffs
+export function setBuildingSmokeEmitInterval(value) { BUILDING_SMOKE_EMIT_INTERVAL = value }
+export let BUILDING_SMOKE_PARTICLE_COUNT = 5
+export function setBuildingSmokeParticleCount(value) { BUILDING_SMOKE_PARTICLE_COUNT = value }
 
 // Distance threshold for using occupancy map in pathfinding (in tiles)
 export let PATHFINDING_THRESHOLD = 10
@@ -1717,11 +1741,19 @@ const EXPORTED_CONFIG_VARIABLES = [
   'SMOKE_PARTICLE_LIFETIME',
   'SMOKE_EMIT_INTERVAL',
   'SMOKE_PARTICLE_SIZE',
+  'SMOKE_PARTICLE_GROWTH',
+  'SMOKE_PARTICLE_ALPHA',
+  'SMOKE_PARTICLE_FADE_EXPONENT',
+  'SMOKE_PARTICLE_RISE_SPEED',
+  'SMOKE_PARTICLE_SPREAD',
+  'SMOKE_PARTICLE_TURBULENCE',
   'UNIT_SMOKE_SOFT_CAP_RATIO',
   'MAX_SMOKE_PARTICLES',
   'BUILDING_SELL_DURATION',
   'WIND_DIRECTION',
   'WIND_STRENGTH',
+  'WIND_SWAY_AMPLITUDE',
+  'WIND_SWAY_FREQUENCY',
   'ORE_SPREAD_INTERVAL',
   'ORE_SPREAD_PROBABILITY',
   'ORE_SPREAD_ENABLED',
@@ -1730,6 +1762,7 @@ const EXPORTED_CONFIG_VARIABLES = [
   'AI_DECISION_INTERVAL',
   'RECOVERY_TANK_RATIO',
   'BUILDING_SMOKE_EMIT_INTERVAL',
+  'BUILDING_SMOKE_PARTICLE_COUNT',
   'PATHFINDING_THRESHOLD',
   'MOVE_TARGET_REACHED_THRESHOLD',
   'STUCK_CHECK_INTERVAL',

@@ -3,11 +3,12 @@
 import {
   MAX_SMOKE_PARTICLES,
   SMOKE_PARTICLE_LIFETIME,
-  SMOKE_PARTICLE_SIZE
+  SMOKE_PARTICLE_SIZE,
+  SMOKE_PARTICLE_ALPHA,
+  SMOKE_PARTICLE_RISE_SPEED,
+  SMOKE_PARTICLE_SPREAD
 } from '../config.js'
 import { gameRandom } from '../utils/gameRandom.js'
-
-const spread = 4
 
 function ensureSmokeCollections(gameState) {
   if (!Array.isArray(gameState.smokeParticles)) {
@@ -29,6 +30,7 @@ function recycleParticleInstance(gameState, particle) {
   particle.size = 0
   particle.fireIntensity = 0
   particle.smokeShade = 0
+  particle.initialAlpha = 0
 
   gameState.smokeParticlePool.push(particle)
 }
@@ -102,14 +104,16 @@ export function emitSmokeParticles(gameState, x, y, now, countOrOptions = 1) {
 
     const particle = gameState.smokeParticlePool.pop() || {}
 
-    particle.x = x + (gameRandom() - 0.5) * spread
-    particle.y = y + (gameRandom() - 0.5) * spread
+    particle.x = x + (gameRandom() - 0.5) * SMOKE_PARTICLE_SPREAD
+    particle.y = y + (gameRandom() - 0.5) * SMOKE_PARTICLE_SPREAD
     particle.vx = (gameRandom() - 0.5) * 0.2
-    particle.vy = -0.6 + gameRandom() * -0.2 // Increased upward velocity for higher flight
-    particle.size = SMOKE_PARTICLE_SIZE + gameRandom() * 2
+    particle.vy = -SMOKE_PARTICLE_RISE_SPEED * (0.9 + gameRandom() * 0.2)
+    particle.size = SMOKE_PARTICLE_SIZE * (0.85 + gameRandom() * 0.3)
+    particle.originalSize = particle.size
     particle.startTime = now
     particle.duration = SMOKE_PARTICLE_LIFETIME + gameRandom() * 500 // Increased random duration variation
-    particle.alpha = 0.7 + gameRandom() * 0.2
+    particle.initialAlpha = SMOKE_PARTICLE_ALPHA * (0.9 + gameRandom() * 0.1)
+    particle.alpha = particle.initialAlpha
     particle.fireIntensity = fireIntensity > 0
       ? fireIntensity * (0.65 + gameRandom() * 0.35)
       : 0
