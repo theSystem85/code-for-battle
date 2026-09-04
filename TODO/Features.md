@@ -465,3 +465,4 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Add a Map Settings Save Game Editor modal with editable JSON/table views, read-only map data, metrics, save-as-new, and confirmed override.
 - [x] Add an inspection-only Strategic LLM Preview tab and extend the future strategic-context specification.
 - [x] Start every portrait session with the dense bottom build bar and add animated first-time mobile tutorial guidance for sidebar resize gestures and upper/lower Build-button stack controls.
+- [x] Strategic LLM incremental context (spec 079, 2026-08-30): send a fog-filtered schema-once relational bootstrap followed by revisioned/coalesced entity, resource, and event deltas; expose bounded entity/region lookup; and provide independent strategic and commentary polling interval settings in seconds.

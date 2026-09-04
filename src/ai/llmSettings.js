@@ -8,7 +8,8 @@ export const DEFAULT_LLM_SETTINGS = {
     tickSeconds: 60,
     provider: 'openai',
     verbosity: 'minimal',
-    maxActions: 50
+    maxActions: 50,
+    pollIntervalSeconds: 60
   },
   commentary: {
     enabled: false,
@@ -16,7 +17,8 @@ export const DEFAULT_LLM_SETTINGS = {
     modelKey: '',
     promptOverride: '',
     ttsEnabled: true,
-    voiceName: ''
+    voiceName: '',
+    pollIntervalSeconds: 60
   },
   providers: {
     openai: {

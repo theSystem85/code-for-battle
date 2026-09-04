@@ -6,6 +6,7 @@ import { recordLlmUsage } from './llmUsage.js'
 import { recordReplayCommand } from '../replaySystem.js'
 import { LLM_REQUEST_BUDGETS, estimateRequestPromptTokens, shouldResetResponseChain, buildCarryForwardMemory, trimRollingSummary } from './llmRequestBudget.js'
 import { buildCompactStrategicInput } from './llmStrategicDigest.js'
+import { createStrategicContextTracker } from './llmIncrementalContext.js'
 import { buildCompactCommentaryInput, hasInterestingCommentaryEvents } from './llmCommentaryDigest.js'
 import { prioritizeEconomyActions } from './llmStrategicPolicy.js'
 import { showNotification } from '../ui/notifications.js'
@@ -14,6 +15,13 @@ import { gameState } from '../gameState.js'
 import { TILE_SIZE, TANK_FIRE_RANGE, PARTY_COLORS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 import { pruneTransitionsUpTo } from '../ai-api/transitionCollector.js'
+
+const strategicContextTrackers = new Map()
+
+function getStrategicContextTracker(playerId) {
+  if (!strategicContextTrackers.has(playerId)) strategicContextTrackers.set(playerId, createStrategicContextTracker())
+  return strategicContextTrackers.get(playerId)
+}
 
 const STRATEGIC_BOOTSTRAP_PROMPT = `You are the strategic commander for the enemy AI in a real-time strategy game.
 Plan economy, production, expansion, and attacks to defeat the human player. Keep actions practical, achievable, and within budget.
@@ -463,6 +471,12 @@ function buildStrategicRequestPayload(rawInput, summary, memory = null, commenta
 
   return attemptConfigs.map(config => {
     const compactInput = buildCompactStrategicInput(rawInput, config)
+    compactInput.incrementalContext = rawInput.incrementalContext
+    if (rawInput.incrementalContext?.mode === 'delta') {
+      delete compactInput.forceGroups
+      delete compactInput.knownEnemyIntel
+      delete compactInput.baseStatus
+    }
     return {
       compactInput,
       messages: buildStrategicMessages({ input: compactInput, summary, memory, commentary })
@@ -761,6 +775,22 @@ function filterInputByFogOfWar(input, state, playerId) {
     const ty = b.tilePosition?.y ?? b.y
     return isTileVisible(vis, tx, ty)
   })
+  const knownIds = new Set([
+    ...filtered.snapshot.units.map(entity => entity.id),
+    ...filtered.snapshot.buildings.map(entity => entity.id)
+  ])
+  filtered.transitions = {
+    ...input.transitions,
+    events: (input.transitions?.events || []).filter(event => {
+      const referencedIds = [event.unitId, event.buildingId, event.targetId, event.victimId].filter(Boolean)
+      if (referencedIds.some(id => knownIds.has(id))) return true
+      const position = event.tilePosition || event.position
+      if (!position) return false
+      const tx = position.space === 'world' ? Math.floor(position.x / TILE_SIZE) : position.x
+      const ty = position.space === 'world' ? Math.floor(position.y / TILE_SIZE) : position.y
+      return isTileVisible(vis, tx, ty)
+    })
+  }
   return filtered
 }
 
@@ -820,6 +850,8 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
 
   // Apply fog-of-war: only show entities visible to this AI player
   const input = filterInputByFogOfWar(rawInput, state, playerId)
+  const incrementalContext = getStrategicContextTracker(playerId).build(input)
+  input.incrementalContext = incrementalContext
   const payloadAttempts = buildStrategicRequestPayload(input, '', null)
 
   const previousSummary = strategicState.summariesByPlayer[playerId] || ''
@@ -1387,7 +1419,7 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
       const meta = strategicState.perPlayerTick[playerId] || { pending: false, lastTickAt: 0 }
       strategicState.perPlayerTick[playerId] = meta
       const modelConfig = getPlayerStrategicModelConfig(playerId, state, settings)
-      const tickIntervalMs = Math.max(5, modelConfig.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
+      const tickIntervalMs = Math.max(5, settings.strategic.pollIntervalSeconds || modelConfig.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
       if (meta.pending) return
       if (meta.lastTickAt !== 0 && now - meta.lastTickAt < tickIntervalMs) return
 
@@ -1407,7 +1439,7 @@ export function updateLlmStrategicAI(units, factories, _bullets, _mapGrid, state
   const combinedCommentaryMode = commentaryModelConfig
     ? Boolean(getCombinedCommentaryConfig(getCommentaryPlayerId(state), state, settings, commentaryModelConfig))
     : false
-  const commentaryTickIntervalMs = Math.max(5, commentaryModelConfig?.tickSeconds || settings.strategic.tickSeconds || 60) * 1000
+  const commentaryTickIntervalMs = Math.max(5, settings.commentary.pollIntervalSeconds || commentaryModelConfig?.tickSeconds || 60) * 1000
   if (settings.commentary.enabled && commentaryModelConfig && !combinedCommentaryMode && !commentaryState.pending && now - commentaryState.lastTickAt >= commentaryTickIntervalMs) {
     commentaryState.pending = true
     commentaryState.lastTickAt = now
