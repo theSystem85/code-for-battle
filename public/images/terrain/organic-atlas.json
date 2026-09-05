@@ -1,6 +1,7 @@
 {
-  "version": 1,
+  "version": 2,
   "tileSize": 64,
+  "grassBlocks": 2,
   "roadStride": 80,
   "roadY": 512,
   "variants": 4,
@@ -54,23 +55,6 @@
     239,
     255
   ],
-  "rockY": 1472,
-  "rockStride": 160,
-  "templates": [
-    "cluster",
-    "ridge",
-    "diagonal",
-    "corner",
-    "endcap",
-    "mass"
-  ],
-  "source": "OpenAI imagegen; see specs/organic-terrain.md",
-  "grassBlocks": 2,
-  "fringeY": 1632,
-  "bakedRockY": 1712,
-  "bakedRockStride": 80,
-  "bakedRockSizes": [
-    43,
-    75
-  ]
+  "details": "terrain-details.json",
+  "source": "OpenAI imagegen; see specs/organic-terrain.md"
 }

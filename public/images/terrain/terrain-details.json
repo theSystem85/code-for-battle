@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "trianglesY": [
+    0,
+    32
+  ],
+  "coastsY": [
+    64,
+    96
+  ],
+  "banksY": [
+    128,
+    160
+  ],
+  "decorationsY": 192,
+  "cliffsY": 256,
+  "cliffCell": 64,
+  "cliffVariants": 2,
+  "cliffMasks": 256,
+  "isolatedY": 2304,
+  "isolatedCell": 48
+}

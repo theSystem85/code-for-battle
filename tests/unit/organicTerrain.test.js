@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain } from '../../src/rendering/organicTerrain.js'
+import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections } from '../../src/rendering/organicTerrain.js'
 
 describe('organic terrain topology', () => {
   it('covers all 256 neighborhoods with exactly 47 canonical masks', () => {
@@ -29,15 +29,47 @@ describe('organic terrain topology', () => {
     }
     expect(samples.size).toBe(4)
   })
-  it('renders a 2x2 blocked mass once and preserves its logical cells', () => {
-    const grid = Array.from({ length: 2 }, () => Array.from({ length: 2 }, () => ({ type: 'rock' })))
+  it('uses cliffs for chains in all eight directions, preserving every blocked cell', () => {
+    for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) {
+      const grid = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => ({ type: 'land' })))
+      for (let n = -2; n <= 2; n++) grid[4 + dy * n][4 + dx * n].type = 'rock'
+      const before = JSON.stringify(grid)
+      expect(isCliffChain(grid, 4, 4)).toBe(true)
+      expect(isCliffChain(grid, 4 - dx * 2, 4 - dy * 2)).toBe(true)
+      expect(cliffConnections(grid, 4, 4)).not.toBe(0)
+      const terrain = Object.create(OrganicTerrain.prototype)
+      const calls = []
+      terrain.drawRock({ drawImage: (...args) => calls.push(args) }, grid, 4, 4, 128, 128, 32)
+      expect(calls).toHaveLength(1)
+      expect(calls[0][7]).toBe(64)
+      expect(JSON.stringify(grid)).toBe(before)
+    }
+  })
+  it('keeps isolated pairs as boulders', () => {
+    const grid = [[{ type: 'rock' }, { type: 'rock' }]]
+    expect(isCliffChain(grid, 0, 0)).toBe(false)
+    expect(isCliffChain(grid, 1, 0)).toBe(false)
+  })
+  it('connects full roads to the legs of neighboring SOT wedges', () => {
+    const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'land' })))
+    grid[0][0].type = grid[0][1].type = grid[1][0].type = 'street'
+    expect(roadFringeMask(grid, 1, 1) & 1).toBe(1)
+    expect(roadVisualMask(grid, 1, 0) & 4).toBe(4)
+    expect(roadVisualMask(grid, 0, 1) & 2).toBe(2)
+  })
+  it('does not place a ground lip across a connected water SOT leg', () => {
+    const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'water' })))
+    grid[1][2].type = 'land'
+    const sot = Array.from({ length: 3 }, () => Array(3).fill(null))
+    sot[1][2] = { type: 'water', orientation: 'top-left' }
+    const terrain = Object.create(OrganicTerrain.prototype)
     const calls = []
     const ctx = { drawImage: (...args) => calls.push(args) }
-    const terrain = Object.create(OrganicTerrain.prototype)
-    terrain.image = {}
-    for (let y = 0; y < 2; y++) for (let x = 0; x < 2; x++) terrain.drawRock(ctx, grid, x, y, x * 32, y * 32, 32)
+    terrain.drawCoast(ctx, grid, 1, 1, 32, 32, 32, null, sot)
+    expect(calls).toHaveLength(0)
+    sot[1][2] = null
+    terrain.drawCoast(ctx, grid, 1, 1, 32, 32, 32, null, sot)
     expect(calls).toHaveLength(1)
-    expect(calls[0][7]).toBeGreaterThan(64)
-    expect(grid.flat().every(tile => tile.type === 'rock')).toBe(true)
   })
+
 })

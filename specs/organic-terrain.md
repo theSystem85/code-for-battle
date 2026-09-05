@@ -1,34 +1,53 @@
-# Organic terrain rendering
+# Organic terrain, shorelines and connected cliffs
 
-Default terrain now uses an offline-generated atlas. Gameplay tile types, blocked cells, pathfinding, collisions, map serialization, and minimap colors are unchanged. Explicit integrated/custom spritesheet mode retains its original art. Turning textures off or failing to load the new atlas preserves the existing fallback.
+## Behavior
+
+The default terrain uses model-generated materials and props baked into two static PNG atlases. Gameplay tile types, blocked cells, collision, pathfinding, map serialization and minimap colors remain unchanged.
+
+Roads use the full 47 canonical eight-neighbor blob masks and four deterministic material variants. Neighboring SOT triangles now count as connected road edges, preventing rounded holes between the road and its wedges. The SOT triangle's two legs remain fully opaque; only its exposed hypotenuse gets irregular feathering. Grass and road SOT use current materials rather than the previous fallback atlas. Shoreline lips overlap water with pre-baked ragged alpha; water-SOT banks soften the diagonal cut. In CPU fallback, animated water renders below the cached shoreline, matching GPU layering. Water animation and shaders are unchanged.
+
+Grass uses new imagegen meadow artwork without the previous sinusoidal macro pattern or mirrored grass sampling. Two subtly different 8x8 material blocks are coordinate-hashed. Twelve generated low ground decorations are placed sparsely (~1 eligible cell in 19), away from shores, roads, resources, runways and buildings. Placement is deterministic; these decorations do not block movement. Fine source detail still repeats over an eight-cell period.
+
+Rock components of three or more cells use cliffs; isolated cells and pairs use six new neutral boulder variants. A bounded radius-two test classifies chains, including diagonal endpoints. Eight directional connection bits preserve diagonal-only neighbors; redundant diagonals are suppressed when cardinal joins already connect them. The atlas contains 256 connection masks with two subtle tone variants, compiled from generated horizontal, vertical and both diagonal cliff profiles. These also produce corners, branches and endpoints. Wide barriers favor uninterrupted opposing ledges over a lattice of junctions. Profile overlap is baked and uses one sprite draw per cliff cell at chunk-build time.
+
+Cliffs and boulders have neutral transparent feet and debris, with no baked grass/sand/snow disc. The same art is used in default and custom integrated biome modes; the ground under a rock cell comes from the selected land material. Thus snow/sand custom biomes retain their ground. Cliff silhouettes can overlap water; this does not turn a blocked rock cell into a navigable water tile. Custom integrated biome grass/road/water art retains its original rendering; its rock art is replaced by the shared neutral formation set.
 
 ## Assets and rebuild
 
-Run `npm run make:terrain`. Requires the existing `sharp` dependency; no API key or network needed. Commit the generated PNG/JSON and both source PNGs. Assets live in `public/images/terrain/`. Runtime downloads only `organic-atlas.png` (~2.25 MiB compressed; 1280x2032 RGBA, 9.9 MiB decoded). Source images are retained for reproducibility but never loaded by the game.
+Run `npm run make:terrain` from the repository. The existing sharp dependency suffices; no network or API key is needed. Commit generated PNG/JSON files and source art together.
 
-Built-in OpenAI imagegen produced `source/materials.png` and `source/rocks.png`. Prompts: (1) two equal panels of muted olive fine grass and weathered dark gray compact gravel/asphalt, seamless top-down grounded classic RTS material, diffuse lighting, no markings, objects, text or framing; (2) transparent 3x2 formation sheet containing cluster, horizontal ridge, diagonal ridge, corner, endcap and large mass, upper-left lighting, weathered stone with gravel and moss, isolated cells, no square ground patches, labels or borders. Original generated outputs are retained as sources. `build-terrain.mjs` crops, packs, and bakes masks using sharp and deterministic arithmetic, never runtime pixel compositing.
+- `public/images/terrain/organic-atlas.png`: 1280x1472; grass and 188 road sprites.
+- `public/images/terrain/terrain-details.png`: 1024x2352; grass/road SOT, shoreline lips/banks, 12 decorations, 512 cliff variants and 6 boulders.
+- Both atlases have adjacent JSON layout manifests. About 2.6 MiB compressed total, 16.4 MiB decoded RGBA. Old unused rock cells were removed from the original atlas.
+- `source/meadow.png`, `source/decoration.png`, `source/cliffs.png`, `source/boulders.png`: newly generated with the built-in OpenAI imagegen tool.
+- `source/cliffs-layout.json`: inspected crop bounds; generated gutters were unequal, so nominal grid cropping captured neighboring fragments. These bounds prevent that artifact.
+- Existing `source/materials.png` remains the road source; `source/rocks.png` is retained as the previous artwork.
+- `scripts/build-terrain.mjs` compiles materials; `scripts/build-terrain-details.mjs` compiles masked overlays and connection sprites.
 
-## Selection and layering
+Generation prompts requested: quiet realistic overhead olive meadow without sharp stipple/blade noise; twelve isolated passable low props (scrub, bush trio, grass tufts, branch, stones, stump, fern, weeds, leafy plants, twigs, broad-leaf scrub, windswept grass); a neutral continuous stratified cliff sheet containing horizontal/vertical/both diagonal ridges, corners, endcap, junction and a cluster; six neutral boulder silhouettes (squat, angular trio, layered outcrop, gravel cluster, split pair, flat ledge). All use upper-left lighting, transparent backgrounds where appropriate, no text/UI/frames, no biome-colored mats on stone assets. Original generated raster sources are saved in the repository.
 
-Cardinal bits N/E/S/W = 1/2/4/8; NE/SE/SW/NW = 16/32/64/128. A diagonal is kept only if both incident cardinal neighbors connect. This produces the complete 47-mask blob table. Each mask has four coordinate-hashed material variants; missing sides and corners have pre-baked curved, noisy alpha edges. Four additional exterior wedges bridge diagonal stairs on adjacent grass; runways are excluded. Disconnected road cells have rounded caps.
+## Runtime cost and invalidation
 
-Grass uses two sets of 64 continuous 64px source regions over an eight-cell period with periodic macro color variation baked into the texture. Road interior variation is deterministic. Reflected source sampling keeps material edges compatible. Eight-cell blocks select normal/drier macro materials by coordinate hash with matching boundary colors. Fine detail still has a finite repeat, so very large empty areas can reveal repetition.
+All new selection, alpha overlays and grouping execute during chunk rebuilds. Cached frame rendering retains the same bounded chunk count, resolution and blits; there are no new simulation/entity loops, runtime pixel operations, shader effects or full-screen translucent passes. CPU water's existing draw pass moves before terrain; no extra water pass is added. A three-cell topology signature halo covers cliff-neighbor dependencies of overlapping sprites. Only the original one-cell core halo computes decal/resource signatures, reducing unnecessary per-frame string work. Load completion invalidates caches after both atlases are ready; failures retain legacy art.
 
-Rocks are transparent silhouettes selected by topology. Aligned occupied 2x2 regions share one large mass, eligible pairs share a ridge/cluster, and remaining blocked cells get a small cluster/corner/endcap. Deterministic position choices break repetition. All four formation footprints are pre-resized offline to exact 43/75px dimensions, avoiding runtime sprite resampling and cache sampling differences. No logical cells are mutated. Silhouettes overlap adjacent cells; two-cell bake halos and signature halos preserve formations across chunk boundaries and edits.
+## Validation
 
-Base grass/water -> road overlays -> rock formations -> existing combat decals and resources -> existing entities/fog. Water rendering and custom integrated spritesheets retain their original paths. Texture load completion invalidates chunk caches once. Chunk size, maximum cache count, raster resolution and per-frame chunk blits remain unchanged. Added selection, alpha blending and grouping execute on cache rebuilds, not per entity or simulation tick. Signatures inspect a two-cell halo (20x20 versus 18x18 cells for interior chunks). One atlas and fewer rock sprite draws amortize bake costs; no shader/filter/gradient/clip was added to a frame path.
+- `npm run test:unit`: 159 files, 3,879 tests passed.
+- Browser coverage compares all RGBA pixels of direct versus four cached chunks with transparent water holes, before and after editing a chunk-boundary tile; checks that tile data is unchanged; verifies fully opaque SOT legs, partially transparent diagonal pixels and alpha outside cliff silhouettes.
+- Directional unit coverage checks horizontal, vertical and both diagonal chains, endpoints, isolated pairs and road-to-SOT connectivity.
+- `PLAYWRIGHT_BASE_URL=http://127.0.0.1:5173 PLAYWRIGHT_SKIP_WEB_SERVER=1 TERRAIN_BENCHMARK=1 TERRAIN_BASELINE_FPS=41.07 npx playwright test tests/e2e/organicTerrain.test.js --project=chromium --workers=1` runs the optional performance gate. Use the port of the actual server. The performance-monitor button is used to avoid measuring a different module instance after Vite HMR.
+- Required final checks: `npm run lint:fix:changed`, `npm run build`, and `git diff --check`.
 
-## Validation and performance
+Before -> after: Headless Chromium 145, 1440x1000 viewport, DPR 2 (2380x2000 terrain backing), seed 4, 100x100 map, existing combat benchmark and scrolling 8px/frame, 15s. Monitored FPS 41.07 -> 45.15; update CPU 2.61 -> 2.39 ms; render CPU 6.66 -> 6.00 ms; terrain 5.56 -> 4.90 ms; ending JS heap 64.85 -> 57.51 MiB; slow CPU-work frames 5 -> 4. Both final views had 9 cached hits, no direct tile passes. Single-run results vary with combat and camera timing, and heap snapshots are not a GC guarantee. Neither baseline nor updated headless rendering certifies 60 FPS on physical hardware.
 
-Commands:
-- `npm run make:terrain`
-- `npm run test:unit`
-- `npm run lint:fix:changed`
-- `PLAYWRIGHT_SKIP_WEB_SERVER=1 TERRAIN_BENCHMARK=1 TERRAIN_BASELINE_FPS=41.36 npx playwright test tests/e2e/organicTerrain.test.js --project=chromium --workers=1`
-- `npm run build`
+## Further visual suggestions (not implemented)
 
-The browser test compares every RGBA channel of direct rendering against four stitched cached chunks, then repeats after editing a boundary cell. It also confirms rendering does not mutate the logical grid. Unit tests cover all 256 input neighborhoods/47 canonical masks, runway exclusions, deterministic variants and shared rock masses.
+1. Replace the visibly repeating water pattern with a quieter multi-tile animation atlas; retain the existing frame selection and draw budget.
+2. Add sparse reeds and damp silt only at suitable shoreline segments, baked into chunks and kept away from routes.
+3. Introduce several larger cliff-face source variants with different fracture/strata patterns to reduce repetition in very broad formations.
+4. Add subtle traffic wear and gravel shoulders at road junctions and building approaches, using sparse cached decals.
+5. Add biome-specific vegetation palettes over the shared neutral cliffs, rather than separate stone assets per biome.
 
-Measured locally in Headless Chromium 145 on macOS, 1440x1000 viewport, DPR 2 (2380x2000 terrain backing canvas), seed 4, 100x100 map, existing combat benchmark with scrolling at 8px/frame, 15-second sampling. Original -> updated performance monitor: 41.36 -> 40.39 FPS (-2.3%); update 2.68 -> 2.75 ms; render 6.37 -> 6.77 ms; terrain 5.19 -> 5.64 ms; end heap 73.05 -> 61.04 MiB; slow CPU-work frames 5 -> 4. Final viewport used twelve cached chunk hits and zero direct tile passes. These are single-run observations, not guaranteed improvements: simulation timing and camera position vary, and heap snapshots do not establish GC absence. The unchanged game falls below 60 FPS in this headless environment too; hardware/mobile 60 FPS is not certified. The regression test enforces an explicitly configurable floor and an 80% baseline ratio.
+Final repository verification: all four Chromium tests passed, including the opt-in combat performance gate and actual CPU shoreline visibility. Required changed-file lint, production build and whitespace checks passed.
 
-Final validation: 159 unit test files / 3,876 tests passed; both focused Chromium tests passed; required changed-file lint and production build passed. A prior development sample measured 45.31 FPS; the final sample above is the authoritative reported result. This demonstrates the configured regression gate, not a guarantee of equal-or-better FPS on every device.
+Water-SOT legs also participate in coastline neighbor checks, preventing ground lips across water-to-water connections. The added regression test covers this case; all 3,879 unit tests and four browser tests passed after the correction.

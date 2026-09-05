@@ -827,10 +827,10 @@ export class MapRenderer {
   computeChunkSignature(mapGrid, startX, startY, endX, endY) {
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
-    const extraStartX = Math.max(0, startX - 2)
-    const extraStartY = Math.max(0, startY - 2)
-    const extraEndX = Math.min(mapWidth, endX + 2)
-    const extraEndY = Math.min(mapHeight, endY + 2)
+    const extraStartX = Math.max(0, startX - 3)
+    const extraStartY = Math.max(0, startY - 3)
+    const extraEndX = Math.min(mapWidth, endX + 3)
+    const extraEndY = Math.min(mapHeight, endY + 3)
 
     let signature = 2166136261
     let containsWater = false
@@ -850,6 +850,8 @@ export class MapRenderer {
         const tile = row[x]
         mixSignature(tile.type)
         mixSignature(tile.airstripStreet ? 1 : 0)
+        // Only topology reaches the outer halo; decals/resources do not.
+        if (x < startX - 1 || y < startY - 1 || x >= endX + 1 || y >= endY + 1) continue
         mixSignature(tile.ore ? 1 : 0)
         mixSignature(tile.seedCrystal ? 1 : 0)
         mixSignature(tile.noBuild || 0)
@@ -1210,7 +1212,7 @@ export class MapRenderer {
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
-        if (this.sotMask[y]?.[x] && !(this.useOrganicTerrain(useTexture) && this.sotMask[y][x].type === 'street')) {
+        if (this.sotMask[y]?.[x] && !(this.useOrganicTerrain(useTexture) && this.sotMask[y][x].type !== 'water')) {
           const sotInfo = this.sotMask[y][x]
           if (visualTileType === 'street') {
             continue
@@ -1226,14 +1228,16 @@ export class MapRenderer {
 
       }
     }
-    if (this.useOrganicTerrain(useTexture)) {
+    if (useTexture && this.organicTerrain?.ready) {
+      const organicGround = this.useOrganicTerrain(useTexture)
       // Two-cell halo rebuilds the same overlapping sprites on either side of
       // chunk boundaries. Existing neighbor signatures invalidate both chunks.
       for (const type of ['street', 'rock']) {
+        if (type === 'street' && !organicGround) continue
         for (let y = Math.max(0, startTileY - 2); y < Math.min(mapGrid.length, endTileY + 2); y++) {
           for (let x = Math.max(0, startTileX - 2); x < Math.min(mapGrid[0].length, endTileX + 2); x++) {
             const tile = mapGrid[y][x]
-            if (type === 'street' && tile.type === 'land' && !tile.airstripStreet) {
+            if (type === 'street' && (tile.type === 'land' || tile.type === 'water') && !tile.airstripStreet) {
               this.organicTerrain.drawRoadFringe(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - offsetX), Math.floor(y * TILE_SIZE - offsetY), TILE_SIZE)
             }
             if (tile.type !== type || tile.airstripStreet) continue
@@ -1250,6 +1254,10 @@ export class MapRenderer {
         const tile = mapGrid[y][x]
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
+        if (this.useOrganicTerrain(useTexture)) {
+          this.organicTerrain.drawCoast(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x], this.sotMask)
+          this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+        }
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
@@ -1351,6 +1359,10 @@ export class MapRenderer {
 
   drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
     const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+    if (type === 'rock' && useTexture && this.organicTerrain?.ready) {
+      this.drawTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+      return
+    }
     if (this.useOrganicTerrain(useTexture) && ['land', 'street', 'rock'].includes(type)) {
       this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE)
       return
@@ -1687,6 +1699,11 @@ export class MapRenderer {
    * Draw a Smoothening Overlay Texture (SOT) on a single tile
    */
   drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null) {
+    if (this.useOrganicTerrain(useTexture) && type !== 'water') {
+      this.organicTerrain.drawTriangle(ctx, tileX, tileY, Math.floor(tileX * TILE_SIZE - scrollOffset.x),
+        Math.floor(tileY * TILE_SIZE - scrollOffset.y), TILE_SIZE, orientation, type)
+      return
+    }
     const key = `${tileX},${tileY}`
     if (sotApplied.has(key)) return
     sotApplied.add(key)
@@ -1929,7 +1946,7 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if (this.sotMask[y]?.[x] && !(this.useOrganicTerrain(useTexture) && this.sotMask[y][x].type === 'street')) {
+        if (this.sotMask[y]?.[x] && !(this.useOrganicTerrain(useTexture) && this.sotMask[y][x].type !== 'water')) {
           const sotInfo = this.sotMask[y][x]
           if (visualTileType === 'street') {
             continue
@@ -2011,12 +2028,20 @@ export class MapRenderer {
     const endTileY = Math.min(mapGrid.length, startTileY + tilesY)
 
     if (!skipBaseLayer) {
+      const waterBeforeTerrain = separateWaterLayer && this.useOrganicTerrain(USE_TEXTURES && this.textureManager.allTexturesLoaded)
+      // Animated water goes beneath cached alpha shorelines, matching the GPU
+      // layering. Drawing it afterwards erases every shoreline on water cells.
+      if (waterBeforeTerrain && (!skipWaterBase || !skipWaterSot)) {
+        this.renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
+          drawBase: !skipWaterBase, drawSot: !skipWaterSot
+        })
+      }
       this.renderTiles(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, gameState, {
         skipWaterBase: separateWaterLayer ? true : skipWaterBase,
         skipWaterSot: separateWaterLayer ? true : skipWaterSot,
         prewarmStaticTerrain: separateWaterLayer || (skipWaterBase && skipWaterSot)
       })
-      if (separateWaterLayer && (!skipWaterBase || !skipWaterSot)) {
+      if (separateWaterLayer && !waterBeforeTerrain && (!skipWaterBase || !skipWaterSot)) {
         this.renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
           drawBase: !skipWaterBase,
           drawSot: !skipWaterSot
