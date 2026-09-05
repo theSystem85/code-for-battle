@@ -841,3 +841,9 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Replace the five-tile constant-damage gas-station blast with a four-tile blast using discrete inward damage rings of 25%, 50%, 75%, and 100%.
 - [x] Validate full building footprints so every AI gas station has at least two completely empty tiles between its outer occupied tiles and every owned construction yard or other critical building.
 - [x] Default new maps to 200×200 with four players, water on every shore, a center lake, 5% rocks, and 20,000 starting money.
+
+## 2026-09-04 Building chimney smoke
+
+- [x] Increase chimney puff particle density and make particles start small, grow while rising, fade slowly, and drift with animated wind.
+- [x] Expose all chimney smoke emission, particle lifecycle, capacity, and animated wind parameters in the built-in config editor.
+- [x] Add an opt-in full-capacity smoke performance benchmark that records FPS, render CPU time, and heap behavior.

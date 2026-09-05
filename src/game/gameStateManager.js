@@ -10,7 +10,12 @@ import {
   ORE_SPREAD_PROBABILITY,
   ORE_SPREAD_ENABLED,
   WIND_DIRECTION,
-  WIND_STRENGTH
+  WIND_STRENGTH,
+  WIND_SWAY_AMPLITUDE,
+  WIND_SWAY_FREQUENCY,
+  SMOKE_PARTICLE_GROWTH,
+  SMOKE_PARTICLE_FADE_EXPONENT,
+  SMOKE_PARTICLE_TURBULENCE
 } from '../config.js'
 import { resolveUnitCollisions, removeUnitOccupancy } from '../units.js'
 import { explosions } from '../logic.js'
@@ -352,6 +357,10 @@ export function updateExplosions(gameState) {
  */
 export function updateSmokeParticles(gameState) {
   const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
+  // One shared oscillation per tick creates visible gusts without a trigonometric call per particle.
+  const windSway = Math.sin(now * WIND_SWAY_FREQUENCY) * WIND_SWAY_AMPLITUDE
+  const windX = (WIND_DIRECTION.x + windSway) * WIND_STRENGTH
+  const windY = WIND_DIRECTION.y * WIND_STRENGTH
 
   for (let i = gameState.smokeParticles.length - 1; i >= 0; i--) {
     const p = gameState.smokeParticles[i]
@@ -368,28 +377,30 @@ export function updateSmokeParticles(gameState) {
       continue
     } else {
       // Update position with wind effect
-      p.x += p.vx + WIND_DIRECTION.x * WIND_STRENGTH
-      p.y += p.vy + WIND_DIRECTION.y * WIND_STRENGTH
+      p.x += p.vx + windX
+      p.y += p.vy + windY
 
       // Gradually slow down vertical movement (simulate air resistance)
       p.vy *= 0.997
 
       // Apply wind drift more gradually over time
-      p.vx += WIND_DIRECTION.x * WIND_STRENGTH * 0.5
-      p.vy += WIND_DIRECTION.y * WIND_STRENGTH * 0.5
+      p.vx += windX * 0.5
+      p.vy += windY * 0.5
 
       // Add slight turbulence for realism (reduced)
-      p.vx += (gameRandom() - 0.5) * 0.003
-      p.vy += (gameRandom() - 0.5) * 0.003
+      p.vx += (gameRandom() - 0.5) * SMOKE_PARTICLE_TURBULENCE
+      p.vy += (gameRandom() - 0.5) * SMOKE_PARTICLE_TURBULENCE
 
       // Fade out alpha and expand size over time (reduced expansion)
-      p.alpha = Math.max(0, (1 - progress) * p.alpha)
+      const initialAlpha = Number.isFinite(p.initialAlpha) ? p.initialAlpha : p.alpha
+      p.initialAlpha = initialAlpha
+      p.alpha = Math.max(0, initialAlpha * Math.pow(1 - progress, SMOKE_PARTICLE_FADE_EXPONENT))
 
       // Smoke expands as it rises (reduced expansion rate)
       if (!p.originalSize || p.originalSize <= 0) {
         p.originalSize = Math.max(0.1, p.size || 8) // Fallback to a minimum safe size
       }
-      p.size = p.originalSize * (1 + progress * 0.3) // Reduced expansion to 30%
+      p.size = p.originalSize * (1 + progress * (SMOKE_PARTICLE_GROWTH - 1))
     }
   }
 }

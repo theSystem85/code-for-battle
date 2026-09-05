@@ -82,7 +82,10 @@ describe('configRegistry.js', () => {
         'oreSpreadEnabled',
         'harvesterCapacity',
         'defaultRotationSpeed',
-        'mobileCanvasPixelRatioCap'
+        'mobileCanvasPixelRatioCap',
+        'buildingSmokeParticleCount',
+        'smokeParticleGrowth',
+        'smokeWindSwayFrequency'
       ]
 
       knownKeys.forEach(key => {
