@@ -23,11 +23,74 @@ export function terrainMask(grid, x, y, type) {
     (matches(-1, 1) ? 64 : 0) | (matches(-1, -1) ? 128 : 0))
 }
 
+const DIRECTIONS = [[0, -1], [1, 0], [0, 1], [-1, 0], [1, -1], [1, 1], [-1, 1], [-1, -1]]
+const CORNERS = [137, 19, 38, 76]
+const ORIENTATIONS = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
+export function roadFringeMask(grid, x, y) {
+  const tile = grid[y]?.[x]
+  if (!tile || tile.airstripStreet || !['land', 'water'].includes(tile.type)) return 0
+  const mask = terrainMask(grid, x, y, 'street')
+  let corners = 0
+  for (let i = 0; i < 4; i++) if ((mask & CORNERS[i]) === CORNERS[i]) corners |= 1 << i
+  return corners
+}
+export function roadVisualMask(grid, x, y) {
+  let mask = terrainMask(grid, x, y, 'street')
+  // An SOT's legs participate in connectivity just like full tile edges.
+  const oppositeLegs = [12, 9, 3, 6]
+  for (let i = 0; i < 4; i++) {
+    const [dx, dy] = DIRECTIONS[i]
+    if (roadFringeMask(grid, x + dx, y + dy) & oppositeLegs[i]) mask |= 1 << i
+  }
+  const added = (mask & 15) & ~terrainMask(grid, x, y, 'street')
+  for (const [diagonal, sides] of [[16, 3], [32, 6], [64, 12], [128, 9]]) {
+    if ((mask & sides) === sides && (added & sides)) mask |= diagonal
+  }
+  // A fringe diagonal also supplies solid material at the shared corner.
+  const diagonalCorners = [8, 1, 2, 4]
+  for (let i = 4; i < 8; i++) {
+    const [dx, dy] = DIRECTIONS[i]
+    if (roadFringeMask(grid, x + dx, y + dy) & diagonalCorners[i - 4]) mask |= 1 << i
+  }
+  return normalizeBlobMask(mask)
+}
+export function cliffConnections(grid, x, y) {
+  let mask = 0
+  for (let i = 0; i < 8; i++) {
+    const [dx, dy] = DIRECTIONS[i]
+    if (grid[y + dy]?.[x + dx]?.type === 'rock') mask |= 1 << i
+  }
+  // Cardinal paths already cover these diagonal joins; avoid crossing ridges.
+  for (const [diagonal, sides] of [[16, 3], [32, 6], [64, 12], [128, 9]]) if (mask & sides) mask &= ~diagonal
+  return mask
+}
+export function isCliffChain(grid, x, y) {
+  // Bounded two-cell neighborhood distinguishes pairs from chains of 3+.
+  for (const [dx, dy] of DIRECTIONS) {
+    const nx = x + dx, ny = y + dy
+    if (grid[ny]?.[nx]?.type !== 'rock') continue
+    for (const [ex, ey] of DIRECTIONS) {
+      if (nx + ex === x && ny + ey === y) continue
+      if (grid[ny + ey]?.[nx + ex]?.type === 'rock') return true
+    }
+  }
+  return false
+}
+
 export class OrganicTerrain {
   constructor(onReady) {
     this.ready = false
     this.image = new Image()
-    this.image.onload = () => { this.ready = true; onReady() }
+    this.details = new Image()
+    const loaded = () => {
+      if (!this.image.complete || !this.image.naturalWidth || !this.details.complete || !this.details.naturalWidth) return
+      this.ready = true
+      onReady()
+    }
+    this.image.onload = loaded
+    this.details.onload = loaded
+    this.details.onerror = () => { this.ready = false }
+    this.details.src = 'images/terrain/terrain-details.png'
     this.image.onerror = () => { this.ready = false }
     this.image.src = 'images/terrain/organic-atlas.png'
   }
@@ -38,50 +101,70 @@ export class OrganicTerrain {
   }
 
   drawRoad(ctx, grid, x, y, sx, sy, size) {
-    const index = BLOB_INDEX.get(terrainMask(grid, x, y, 'street')) * 4 + terrainHash(x, y) % 4
+    const index = BLOB_INDEX.get(roadVisualMask(grid, x, y)) * 4 + terrainHash(x, y) % 4
     ctx.drawImage(this.image, (index % 16) * 80, 512 + Math.floor(index / 16) * 80,
       80, 80, sx - size / 8, sy - size / 8, size * 1.25, size * 1.25)
   }
 
   drawRoadFringe(ctx, grid, x, y, sx, sy, size) {
-    if (grid[y][x].type !== 'land' || grid[y][x].airstripStreet) return
-    const mask = terrainMask(grid, x, y, 'street')
-    const corners = [137, 19, 38, 76]
+    const corners = roadFringeMask(grid, x, y)
     for (let corner = 0; corner < 4; corner++) {
-      if ((mask & corners[corner]) !== corners[corner]) continue
-      const variant = terrainHash(x, y) % 4
-      ctx.drawImage(this.image, (corner * 4 + variant) * 64, 1632, 64, 64, sx, sy, size, size)
+      if (!(corners & (1 << corner))) continue
+      this.drawTriangle(ctx, x, y, sx, sy, size, ORIENTATIONS[corner], 'street')
     }
   }
 
-  drawRock(ctx, grid, x, y, sx, sy, size) {
-    const rock = (tx, ty) => grid[ty]?.[tx]?.type === 'rock' && !grid[ty]?.[tx]?.airstripStreet
-    const ax = x & ~1, ay = y & ~1
-    let spanX = 1, spanY = 1
-    if (rock(ax, ay) && rock(ax + 1, ay) && rock(ax, ay + 1) && rock(ax + 1, ay + 1)) {
-      if (x !== ax || y !== ay) return
-      spanX = 2; spanY = 2
-    } else if (rock(x, ay) && rock(x, ay + 1)) {
-      if (y !== ay) return
-      spanY = 2
-    } else if (rock(ax, y) && rock(ax + 1, y)) {
-      // Only pair horizontally when neither cell belongs to a vertical pair.
-      if (!rock(ax, y ^ 1) && !rock(ax + 1, y ^ 1)) {
-        if (x !== ax) return
-        spanX = 2
+  drawTriangle(ctx, x, y, sx, sy, size, orientation, type) {
+    const corner = ORIENTATIONS.indexOf(orientation)
+    if (corner < 0) return
+    const variant = terrainHash(x, y) % 4
+    ctx.drawImage(this.details, (corner * 4 + variant) * 32, type === 'street' ? 32 : 0, 32, 32, sx, sy, size, size)
+  }
+
+  drawCoast(ctx, grid, x, y, sx, sy, size, sotInfo, sotMask = null) {
+    const tile = grid[y][x]
+    if (tile.type === 'water') {
+      let grass = 0, road = 0
+      for (let i = 0; i < 4; i++) {
+        const [dx, dy] = DIRECTIONS[i], neighbor = grid[y + dy]?.[x + dx]
+        if (!neighbor || neighbor.type === 'water') continue
+        const neighborSot = sotMask?.[y + dy]?.[x + dx]
+        const corner = ORIENTATIONS.indexOf(neighborSot?.orientation)
+        // A water SOT contributes two water edges, despite its land cell type.
+        if (neighborSot?.type === 'water' && corner >= 0 && ([12, 9, 3, 6][i] & (1 << corner))) continue
+        if (neighbor.type === 'street' && !neighbor.airstripStreet) road |= 1 << i
+        else grass |= 1 << i
       }
+      if (grass) ctx.drawImage(this.details, grass * 32, 64, 32, 32, sx, sy, size, size)
+      if (road) ctx.drawImage(this.details, road * 32, 96, 32, 32, sx, sy, size, size)
+      // Existing SOT topology is retained; only its material and edge change.
+      if (sotInfo && sotInfo.type !== 'water') this.drawTriangle(ctx, x, y, sx, sy, size, sotInfo.orientation, sotInfo.type)
+    } else if (sotInfo?.type === 'water') {
+      const corner = ORIENTATIONS.indexOf(sotInfo.orientation)
+      if (corner >= 0) ctx.drawImage(this.details, corner * 32, tile.type === 'street' ? 160 : 128, 32, 32, sx, sy, size, size)
     }
-    const mask = terrainMask(grid, x, y, 'rock') & 15
-    const variant = terrainHash(x, y, 17)
-    const template = spanX === 2 && spanY === 2 ? 5 : spanX === 2 ? 1 :
-      spanY === 2 ? (variant % 2 ? 0 : 5) :
-        [3, 6, 9, 12].includes(mask) ? 3 : variant % 3 === 0 ? 4 : 0
-    const width = Math.round(size * (spanX + 0.35))
-    const height = Math.round(size * (spanY + 0.35))
-    const jitterX = ((variant % 5) - 2) * size / 32
-    const jitterY = (((variant >>> 3) % 5) - 2) * size / 32
-    const layout = (spanX === 2 ? 1 : 0) | (spanY === 2 ? 2 : 0)
-    ctx.drawImage(this.image, template * 80, 1712 + layout * 80, width, height,
-      Math.round(sx - size * 0.175 + jitterX), Math.round(sy - size * 0.175 + jitterY), width, height)
+  }
+
+  drawDecoration(ctx, grid, x, y, sx, sy, size, sotInfo) {
+    const tile = grid[y][x], h = terrainHash(x, y, 91)
+    if (tile.type !== 'land' || tile.airstripStreet || tile.ore || tile.seedCrystal || tile.building || sotInfo || h % 19 !== 0) return
+    for (const [dx, dy] of DIRECTIONS) if (grid[y + dy]?.[x + dx]?.type !== 'land') return
+    const variant = (h >>> 8) % 12
+    ctx.drawImage(this.details, variant * 32, 192, 32, 32, sx, sy, size, size)
+  }
+
+  drawRock(ctx, grid, x, y, sx, sy, size) {
+    if (isCliffChain(grid, x, y)) {
+      let mask = cliffConnections(grid, x, y)
+      // Thick barriers read as parallel ledges, not a lattice of cross-junctions.
+      if ((mask & 5) === 5) mask = 5
+      else if ((mask & 10) === 10) mask = 10
+      const variant = terrainHash(x, y, 17) % 2
+      ctx.drawImage(this.details, (mask % 16) * 64, 256 + (Math.floor(mask / 16) * 2 + variant) * 64,
+        64, 64, sx - size / 2, sy - size / 2, size * 2, size * 2)
+    } else {
+      const variant = terrainHash(x, y, 37) % 6
+      ctx.drawImage(this.details, variant * 48, 2304, 48, 48, sx - size / 4, sy - size / 4, size * 1.5, size * 1.5)
+    }
   }
 }

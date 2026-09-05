@@ -10,7 +10,7 @@ async function material(top) {
   return source.clone().extract({left: 0, top, width, height: Math.floor(height / 2)})
     .resize(512, 512).removeAlpha().raw().toBuffer()
 }
-const grass = await material(0)
+const grass = await sharp(new URL('source/meadow.png', dir).pathname).resize(512, 512).blur(0.45).removeAlpha().raw().toBuffer()
 const road = await material(Math.floor(height / 2))
 // Periodic reflection gives exact wrap continuity; broad color modulation is
 // also periodic and shared by every tile edge, rather than per-tile tinting.
@@ -20,9 +20,9 @@ function sample(data, x, y, channel) {
 }
 const grassOut = Buffer.alloc(512 * 512 * 4)
 for (let y = 0; y < 512; y++) for (let x = 0; x < 512; x++) {
-  const macro = 1 + 0.065 * Math.sin(x * Math.PI / 256) * Math.cos(y * Math.PI / 256) + 0.035 * Math.cos((x + y) * Math.PI / 128)
+  const macro = 1
   const i = (y * 512 + x) * 4
-  for (let c = 0; c < 3; c++) grassOut[i + c] = Math.min(255, sample(grass, x, y, c) * macro * [1.03, 1.12, 1.02][c])
+  for (let c = 0; c < 3; c++) grassOut[i + c] = Math.min(255, grass[(y * 512 + x) * 3 + c] * macro)
   grassOut[i + 3] = 255
 }
 const layers = [{input: await sharp(grassOut, {raw:{width:512,height:512,channels:4}}).png().toBuffer(), left:0, top:0}]
@@ -65,29 +65,8 @@ for (let m = 0; m < BLOB_MASKS.length; m++) for (let variant = 0; variant < 4; v
   const index=m*4+variant
   layers.push({input:await sharp(pixels,{raw:{width:80,height:80,channels:4}}).png().toBuffer(),left:index%16*80,top:512+Math.floor(index/16)*80})
 }
-// Four exterior wedges bridge diagonal stairs on adjacent grass cells.
-for (let corner=0;corner<4;corner++) for(let variant=0;variant<4;variant++) {
-  const pixels=Buffer.alloc(64*64*4)
-  for(let y=0;y<64;y++)for(let x=0;x<64;x++) {
-    const u=corner===1||corner===2?63-x:x, v=corner>=2?63-y:y
-    const d=60-u-v+1.4*Math.sin((u-v)*0.3)
-    const i=(y*64+x)*4
-    for(let c=0;c<3;c++)pixels[i+c]=sample(road,x+variant*64,y+variant*64,c)
-    pixels[i+3]=Math.round(255*Math.max(0,Math.min(1,d/4)))
-  }
-  layers.push({input:await sharp(pixels,{raw:{width:64,height:64,channels:4}}).png().toBuffer(),left:(corner*4+variant)*64,top:1632})
-}
-const rocks = sharp(new URL('source/rocks.png',dir).pathname)
-const rm = await rocks.metadata()
-for(let i=0;i<6;i++) {
-  const cropped=await rocks.clone().extract({left:Math.floor(i%3*rm.width/3),top:Math.floor(Math.floor(i/3)*rm.height/2),width:Math.floor(rm.width/3),height:Math.floor(rm.height/2)}).png().toBuffer()
-  const input=await sharp(cropped).trim({threshold:8}).resize(160,160,{fit:'contain',background:'#00000000'}).png().toBuffer()
-  layers.push({input,left:i*160,top:1472})
-  for(let layout=0;layout<4;layout++) {
-    const w=layout&1?75:43, h=layout&2?75:43
-    layers.push({input:await sharp(input).resize(w,h,{fit:'fill'}).png().toBuffer(),left:i*80,top:1712+layout*80})
-  }
-}
-await sharp({create:{width:1280,height:2032,channels:4,background:'#00000000'}}).composite(layers).png().toFile(new URL('organic-atlas.png',dir).pathname)
-await writeFile(new URL('organic-atlas.json',dir),JSON.stringify({version:1,tileSize:64,grassBlocks:2,fringeY:1632,bakedRockY:1712,bakedRockStride:80,bakedRockSizes:[43,75],roadStride:80,roadY:512,variants:4,columns:16,masks:BLOB_MASKS,rockY:1472,rockStride:160,templates:['cluster','ridge','diagonal','corner','endcap','mass'],source:'OpenAI imagegen; see specs/organic-terrain.md'},null,2)+'\n')
-console.log('Built organic-atlas.png: 128 grass regions, 188 road sprites, 6 rock formations')
+await sharp({create:{width:1280,height:1472,channels:4,background:'#00000000'}}).composite(layers).png().toFile(new URL('organic-atlas.png',dir).pathname)
+await writeFile(new URL('organic-atlas.json',dir),JSON.stringify({version:2,tileSize:64,grassBlocks:2,roadStride:80,roadY:512,variants:4,columns:16,masks:BLOB_MASKS,details:'terrain-details.json',source:'OpenAI imagegen; see specs/organic-terrain.md'},null,2)+'\n')
+console.log('Built organic-atlas.png: 128 grass regions, 188 road sprites')
+
+await import('./build-terrain-details.mjs')

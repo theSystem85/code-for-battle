@@ -848,3 +848,11 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Integrate macro grass and grouped rock silhouettes in bounded terrain chunk caches.
 - [x] Preserve gameplay grids, runways, water and explicit custom spritesheets.
 - [x] Add topology, chunk-boundary edit and opt-in combat performance coverage; document rebuilds and measured limits in specs/organic-terrain.md.
+
+## Terrain feedback refinement (2026-09-05)
+- [x] Smooth land/water borders and SOT diagonals, preserve opaque connected legs.
+- [x] Connect road tiles to SOT edges without grass holes; replace stale SOT materials.
+- [x] Replace noisy grass with generated meadow art and restore generated natural decorations.
+- [x] Prefer eight-direction connected neutral cliffs for chains, neutral boulders for isolated parts.
+- [x] Preserve cached rendering and verify shorelines, edits, direction masks, units and live performance.
+- [x] Inspect the result and document further visual suggestions in specs/organic-terrain.md.
