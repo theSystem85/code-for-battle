@@ -841,3 +841,10 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Replace the five-tile constant-damage gas-station blast with a four-tile blast using discrete inward damage rings of 25%, 50%, 75%, and 100%.
 - [x] Validate full building footprints so every AI gas station has at least two completely empty tiles between its outer occupied tiles and every owned construction yard or other critical building.
 - [x] Default new maps to 200×200 with four players, water on every shore, a center lake, 5% rocks, and 20,000 starting money.
+
+## Organic terrain (2026-09-05)
+- [x] Generate cohesive grass/road source materials and transparent rock formation art.
+- [x] Bake complete 47-mask road atlas, deterministic variants and diagonal fringe wedges.
+- [x] Integrate macro grass and grouped rock silhouettes in bounded terrain chunk caches.
+- [x] Preserve gameplay grids, runways, water and explicit custom spritesheets.
+- [x] Add topology, chunk-boundary edit and opt-in combat performance coverage; document rebuilds and measured limits in specs/organic-terrain.md.
