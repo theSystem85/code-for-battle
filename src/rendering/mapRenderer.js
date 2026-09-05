@@ -8,6 +8,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
 } from '../config.js'
+import { OrganicTerrain } from './organicTerrain.js'
 import { getTileDecalSignature } from '../game/tileDecals.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 
@@ -237,6 +238,7 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
+    this.organicTerrain = new OrganicTerrain(() => this.invalidateAllChunks())
   }
 
   createEmptyChunkStats() {
@@ -825,10 +827,10 @@ export class MapRenderer {
   computeChunkSignature(mapGrid, startX, startY, endX, endY) {
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
-    const extraStartX = Math.max(0, startX - 1)
-    const extraStartY = Math.max(0, startY - 1)
-    const extraEndX = Math.min(mapWidth, endX + 1)
-    const extraEndY = Math.min(mapHeight, endY + 1)
+    const extraStartX = Math.max(0, startX - 2)
+    const extraStartY = Math.max(0, startY - 2)
+    const extraEndX = Math.min(mapWidth, endX + 2)
+    const extraEndY = Math.min(mapHeight, endY + 2)
 
     let signature = 2166136261
     let containsWater = false
@@ -1176,6 +1178,11 @@ export class MapRenderer {
     ctx.imageSmoothingEnabled = true
   }
 
+  useOrganicTerrain(useTexture) {
+    // Explicit custom biome/spritesheet selections retain their own art.
+    return useTexture && this.organicTerrain?.ready && !this.textureManager.integratedSpriteSheetMode
+  }
+
   drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame, options = {}) {
     const { skipWaterBase = false, skipWaterSot = false } = options
     if (!mapGrid.length || !mapGrid[0]?.length) return
@@ -1203,7 +1210,7 @@ export class MapRenderer {
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
-        if (this.sotMask[y]?.[x]) {
+        if (this.sotMask[y]?.[x] && !(this.useOrganicTerrain(useTexture) && this.sotMask[y][x].type === 'street')) {
           const sotInfo = this.sotMask[y][x]
           if (visualTileType === 'street') {
             continue
@@ -1217,6 +1224,32 @@ export class MapRenderer {
           this.drawSOT(ctx, x, y, sotInfo.orientation, scrollOffset, useTexture, sotApplied, sotInfo.type, currentWaterFrame)
         }
 
+      }
+    }
+    if (this.useOrganicTerrain(useTexture)) {
+      // Two-cell halo rebuilds the same overlapping sprites on either side of
+      // chunk boundaries. Existing neighbor signatures invalidate both chunks.
+      for (const type of ['street', 'rock']) {
+        for (let y = Math.max(0, startTileY - 2); y < Math.min(mapGrid.length, endTileY + 2); y++) {
+          for (let x = Math.max(0, startTileX - 2); x < Math.min(mapGrid[0].length, endTileX + 2); x++) {
+            const tile = mapGrid[y][x]
+            if (type === 'street' && tile.type === 'land' && !tile.airstripStreet) {
+              this.organicTerrain.drawRoadFringe(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - offsetX), Math.floor(y * TILE_SIZE - offsetY), TILE_SIZE)
+            }
+            if (tile.type !== type || tile.airstripStreet) continue
+            const sx = Math.floor(x * TILE_SIZE - offsetX)
+            const sy = Math.floor(y * TILE_SIZE - offsetY)
+            if (type === 'street') this.organicTerrain.drawRoad(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
+            else this.organicTerrain.drawRock(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
+          }
+        }
+      }
+    }
+    for (let y = startTileY; y < endTileY; y++) {
+      for (let x = startTileX; x < endTileX; x++) {
+        const tile = mapGrid[y][x]
+        const screenX = Math.floor(x * TILE_SIZE - offsetX)
+        const screenY = Math.floor(y * TILE_SIZE - offsetY)
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
         if (tile.seedCrystal) {
@@ -1318,6 +1351,10 @@ export class MapRenderer {
 
   drawTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
     const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
+    if (this.useOrganicTerrain(useTexture) && ['land', 'street', 'rock'].includes(type)) {
+      this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE)
+      return
+    }
     if (type === 'street') {
       if (this.textureManager.integratedSpriteSheetMode) {
         const biomeUnderlayTile = mapGrid
@@ -1892,7 +1929,7 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if (this.sotMask[y]?.[x]) {
+        if (this.sotMask[y]?.[x] && !(this.useOrganicTerrain(useTexture) && this.sotMask[y][x].type === 'street')) {
           const sotInfo = this.sotMask[y][x]
           if (visualTileType === 'street') {
             continue
