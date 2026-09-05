@@ -394,8 +394,12 @@ export class GameWebGLRenderer {
         if (!tile) continue
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         if (!waterOnly || visualTileType === 'water') {
-          if (!waterOnly && visualTileType === 'street') {
+          if (!waterOnly && (visualTileType === 'street' || visualTileType === 'rock')) {
             baseInstances.push(this.createInstance('land', x, y, mapGrid, canUseTextures, sotMask))
+          }
+          if (!waterOnly && (visualTileType === 'land' || visualTileType === 'street' || visualTileType === 'rock')) {
+            const macro = this.createOrganicInstance('grass-macro', x, y, mapGrid)
+            if (macro) baseInstances.push(macro)
           }
           baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures, sotMask))
         }
@@ -514,6 +518,26 @@ export class GameWebGLRenderer {
     return selectedStreetTile
   }
 
+  createOrganicInstance(tag, tileX, tileY, mapGrid) {
+    const selected = this.textureManager?.selectOrganicTerrainTile?.(tag, tileX, tileY, mapGrid)
+    if (!selected?.rect || selected.image !== this.secondaryAtlasImage) return null
+    const { rect } = selected
+    return {
+      translation: [tileX, tileY],
+      uvRect: [
+        rect.x / this.secondaryAtlasSize.width,
+        rect.y / this.secondaryAtlasSize.height,
+        (rect.x + rect.width) / this.secondaryAtlasSize.width,
+        (rect.y + rect.height) / this.secondaryAtlasSize.height
+      ],
+      color: this.getColor('land'),
+      textureType: 1,
+      textureSource: 1,
+      waterEdges: [0, 0, 0, 0],
+      clipOrientation: SOT_CLIP_NONE
+    }
+  }
+
   createInstance(type, tileX, tileY, mapGrid, canUseTextures, sotMask = null) {
     const integratedResourceTile = this.getIntegratedResourceTile(type, tileX, tileY, mapGrid)
     const canUseIntegratedResourceTile = Boolean(
@@ -526,12 +550,16 @@ export class GameWebGLRenderer {
     const useTexture = canUseIntegratedResourceTile || (canUseTextures && this.textureManager.tileTextureCache?.[type]?.length)
     const isWaterAnimated = type === 'water'
     const streetTile = this.getStreetTile(type, tileX, tileY, mapGrid)
-    const useSecondaryTexture = Boolean(streetTile)
+    const organicRockTile = type === 'rock'
+      ? this.textureManager?.selectOrganicTerrainTile?.('organic-rock', tileX, tileY, mapGrid)
+      : null
+    const secondaryTile = streetTile || organicRockTile
+    const useSecondaryTexture = Boolean(secondaryTile?.rect && secondaryTile.image === this.secondaryAtlasImage)
     let uvRect = [0, 0, 0, 0]
     if (isWaterAnimated) {
       uvRect = [0, 0, 1, 1]
     } else if (useSecondaryTexture) {
-      const { rect } = streetTile
+      const { rect } = secondaryTile
       const u0 = rect.x / this.secondaryAtlasSize.width
       const v0 = rect.y / this.secondaryAtlasSize.height
       const u1 = (rect.x + rect.width) / this.secondaryAtlasSize.width

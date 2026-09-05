@@ -10,8 +10,8 @@ const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
 const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
 const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
-const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
-const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.json'
+const DEFAULT_STREET_SHEET_PATH = 'images/map/terrain/organic_terrain.webp'
+const DEFAULT_STREET_METADATA_PATH = 'images/map/terrain/organic_terrain.json'
 const STREET_DIRECTION_MASKS = {
   top: 1,
   right: 2,
@@ -69,6 +69,7 @@ export class TextureManager {
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.streetSelectionPoolCache = new Map()
     this.streetTileSelectionCache = new Map()
+    this.organicTerrainPoolCache = new Map()
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
   }
@@ -76,6 +77,7 @@ export class TextureManager {
   clearStreetSelectionPoolCache() {
     this.streetSelectionPoolCache.clear()
     this.streetTileSelectionCache.clear()
+    this.organicTerrainPoolCache.clear()
   }
 
   buildTagSet(tags) {
@@ -733,6 +735,36 @@ export class TextureManager {
     const selected = selectFromBuckets(requiredTags)
     this.streetTileSelectionCache.set(tileCacheKey, selected)
     return selected
+  }
+
+  selectOrganicTerrainTile(tag, x, y, mapGrid) {
+    let candidates = this.organicTerrainPoolCache.get(tag)
+    if (!candidates) {
+      candidates = this.getTagBucketCandidates(this.defaultStreetTagBuckets, [tag])
+      this.organicTerrainPoolCache.set(tag, candidates)
+    }
+    if (!candidates.length) return null
+    if (tag === 'grass-macro') {
+      // One cached overlay per 4x4 macro cell keeps the variation broad and draw cost low.
+      if (TextureManager.coordHash(x >> 2, y >> 2) % 5 !== 0 || (x & 3) !== 1 || (y & 3) !== 2) return null
+      return candidates[TextureManager.coordHash(x >> 2, y >> 2) % candidates.length]
+    }
+
+    const isRock = (tileX, tileY) => mapGrid?.[tileY]?.[tileX]?.type === 'rock'
+    const directionTags = []
+    if (isRock(x, y - 1)) directionTags.push('top')
+    if (isRock(x + 1, y)) directionTags.push('right')
+    if (isRock(x, y + 1)) directionTags.push('bottom')
+    if (isRock(x - 1, y)) directionTags.push('left')
+    const expectedMask = this.getStreetDirectionMask(directionTags)
+    const poolKey = `${tag}:${expectedMask}`
+    let matching = this.organicTerrainPoolCache.get(poolKey)
+    if (!matching) {
+      matching = candidates.filter(tile => tile.streetDirectionMask === expectedMask)
+      this.organicTerrainPoolCache.set(poolKey, matching)
+    }
+    const pool = matching.length ? matching : candidates
+    return pool[TextureManager.coordHash(x, y) % pool.length]
   }
 
   selectFullStreetTileForSOT(x, y, excludedTags = []) {

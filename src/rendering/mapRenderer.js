@@ -1246,6 +1246,13 @@ export class MapRenderer {
     return true
   }
 
+  drawOrganicTerrainOverlay(ctx, tag, tileX, tileY, screenX, screenY, mapGrid) {
+    if (typeof this.textureManager.selectOrganicTerrainTile !== 'function') return false
+    const tile = this.textureManager.selectOrganicTerrainTile(tag, tileX, tileY, mapGrid)
+    if (!tile?.tags?.includes(tag)) return false
+    return this.drawIntegratedTileImage(ctx, tile, screenX, screenY)
+  }
+
   clearTriangleArea(ctx, screenX, screenY, size, orientation) {
     ctx.save()
     ctx.beginPath()
@@ -1356,11 +1363,22 @@ export class MapRenderer {
           }
         }
         this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+        if (type === 'land') {
+          this.drawOrganicTerrainOverlay(ctx, 'grass-macro', tileX, tileY, screenX, screenY, mapGrid)
+        }
         return
       }
     }
 
+    if (type === 'rock') {
+      this.drawTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
+      if (this.drawOrganicTerrainOverlay(ctx, 'organic-rock', tileX, tileY, screenX, screenY, mapGrid)) return
+    }
+
     this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
+    if (type === 'land') {
+      this.drawOrganicTerrainOverlay(ctx, 'grass-macro', tileX, tileY, screenX, screenY, mapGrid)
+    }
   }
 
   drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {

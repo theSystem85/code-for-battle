@@ -450,10 +450,32 @@ describe('TextureManager integrated multi-sheet selection', () => {
     await manager.preloadDefaultStreetSheet()
 
     expect(fetchSpy).toHaveBeenCalledWith(
-      'images/map/sprite_sheets/streets24_q90_1024x1024.json',
+      'images/map/terrain/organic_terrain.json',
       { cache: 'no-store' }
     )
-    expect(imageSpy).toHaveBeenCalledWith('images/map/sprite_sheets/streets24_q90_1024x1024.webp')
+    expect(imageSpy).toHaveBeenCalledWith('images/map/terrain/organic_terrain.webp')
     expect(manager.defaultStreetSheetImage).toEqual({ id: 'street-only' })
+  })
+
+  it('selects deterministic organic rock topology and sparse grass macro overlays', () => {
+    const manager = new TextureManager()
+    const image = { id: 'organic-terrain' }
+    const isolated = { tags: ['organic-rock'], streetDirectionMask: 0, rect: { x: 0, y: 0, width: 64, height: 64 }, image }
+    const horizontal = { tags: ['organic-rock', 'left', 'right'], streetDirectionMask: 10, rect: { x: 64, y: 0, width: 64, height: 64 }, image }
+    const macro = { tags: ['grass-macro'], streetDirectionMask: 0, rect: { x: 128, y: 0, width: 64, height: 64 }, image }
+    manager.defaultStreetTagBuckets = {
+      'organic-rock': [isolated, horizontal],
+      'grass-macro': [macro]
+    }
+    const mapGrid = [[{ type: 'rock' }, { type: 'rock' }, { type: 'rock' }]]
+
+    expect(manager.selectOrganicTerrainTile('organic-rock', 1, 0, mapGrid)).toBe(horizontal)
+    expect(manager.selectOrganicTerrainTile('organic-rock', 1, 0, mapGrid)).toBe(horizontal)
+    const overlays = []
+    for (let y = 0; y < 24; y++) {
+      for (let x = 0; x < 24; x++) overlays.push(manager.selectOrganicTerrainTile('grass-macro', x, y, mapGrid))
+    }
+    expect(overlays.filter(Boolean).length).toBeGreaterThan(0)
+    expect(overlays.filter(Boolean).length).toBeLessThan(20)
   })
 })
