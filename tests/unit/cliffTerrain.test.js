@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildCliffDepth, cliffContourMask, CLIFF_LEVELS } from '../../src/rendering/cliffTerrain.js'
+import { buildCliffDepth, cliffContourMask, isPlateauTile, CLIFF_LEVELS } from '../../src/rendering/cliffTerrain.js'
 
 const plateau = (size, margin = 1) => Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => ({ type: x >= margin && y >= margin && x < size - margin && y < size - margin ? 'rock' : 'land' })))
 
@@ -14,12 +14,16 @@ describe('terraced cliff elevation', () => {
     expect(cliffContourMask(depth, 7, 7, 5)).toBe(15)
     expect(JSON.stringify(grid)).toBe(before)
   })
-  it('preserves all directional cases including diagonal saddles and reversed height', () => {
-    for (let mask = 0; mask < 16; mask++) {
-      const grid = plateau(4, 4)
-      for (const [bit, x, y] of [[1, 1, 1], [2, 2, 1], [4, 2, 2], [8, 1, 2]]) grid[y][x].type = mask & bit ? 'rock' : 'land'
-      expect(cliffContourMask(buildCliffDepth(grid, 0, 0, 4, 4), 1, 1, 1)).toBe(mask)
+  it('requires a solid three-tile width before classifying rocks as plateau', () => {
+    const narrow = Array.from({ length: 9 }, (_, y) => Array.from({ length: 9 }, (_, x) => ({ type: x === 4 || y === 4 ? 'rock' : 'land' })))
+    const wide = plateau(9, 3)
+    const narrowDepth = buildCliffDepth(narrow, 0, 0, 9, 9)
+    const wideDepth = buildCliffDepth(wide, 0, 0, 9, 9)
+    expect(narrow.flatMap((row, y) => row.map((tile, x) => tile.type === 'rock' && isPlateauTile(narrowDepth, x, y))).some(Boolean)).toBe(false)
+    for (let y = 3; y <= 5; y++) for (let x = 3; x <= 5; x++) {
+      expect(isPlateauTile(wideDepth, x, y)).toBe(true)
     }
+    expect(cliffContourMask(wideDepth, 2, 2, 1)).not.toBe(0)
   })
   it('gives identical terrace contours when baked from neighboring chunk patches', () => {
     const grid = plateau(48)
@@ -38,5 +42,14 @@ describe('terraced cliff elevation', () => {
     expect(cliffContourMask(before, 7, 7, 5)).toBe(15)
     expect(cliffContourMask(after, 7, 7, 5)).toBe(0)
     expect(cliffContourMask(after, -1, -1, 1)).toBe(4)
+  })
+
+  it('never classifies a non-rock tile as part of a plateau', () => {
+    const grid = plateau(11)
+    grid[5][5].type = 'land'
+    const depth = buildCliffDepth(grid, 0, 0, 11, 11)
+    for (let y = 0; y < 11; y++) for (let x = 0; x < 11; x++) {
+      if (isPlateauTile(depth, x, y)) expect(grid[y][x].type).toBe('rock')
+    }
   })
 })

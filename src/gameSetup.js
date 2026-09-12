@@ -670,8 +670,10 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
   // -------- Step 2: Generate rock terrain lines first --------
   // Water is dominant and is drawn afterwards so rivers/lakes/coasts can break rock lines.
   growLineTerrainToTarget(rand, mapGrid, 'rock', targetRockTiles, protectedTiles, {
-    minThickness: Math.max(1, Math.floor(1 + (safeRockPercent / 18))),
-    maxThickness: Math.max(2, Math.floor(2 + (safeRockPercent / 8))),
+    // Three tiles is the minimum solid cross-section that can own a plateau.
+    // Higher rock percentages still produce broader, multi-tier formations.
+    minThickness: 3,
+    maxThickness: Math.max(3, Math.floor(3 + (safeRockPercent / 8))),
     maxPasses: 70
   })
 

@@ -91,3 +91,30 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
   expect(result.solid).toBeGreaterThan(10000)
   await page.screenshot({ path: testInfo.outputPath('terraced-cliffs-preview.png') })
 })
+
+test('plateau pixels stay on rock tiles and the top carries detail', async({ page }) => {
+  await page.route('**/__cliff-ownership', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
+  await page.goto('/__cliff-ownership')
+  const result = await page.evaluate(async() => {
+    const { OrganicTerrain } = await import('/src/rendering/organicTerrain.js')
+    const terrain = new OrganicTerrain(() => {})
+    await Promise.all([terrain.image.decode(), terrain.details.decode(), terrain.cliffs.decode()])
+    const grid = Array.from({ length: 7 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
+      type: x >= 2 && x <= 4 && y >= 2 && y <= 4 ? 'rock' : 'land'
+    })))
+    const canvas = document.createElement('canvas'); canvas.width = canvas.height = 224
+    const ctx = canvas.getContext('2d')
+    terrain.drawCliffs(ctx, grid, 0, 0, 7, 7, 0, 0, 32)
+    const pixels = ctx.getImageData(0, 0, 224, 224).data
+    let landAlpha = 0, centerAlpha = 0
+    for (let y = 0; y < 224; y++) for (let x = 0; x < 224; x++) {
+      const alpha = pixels[(y * 224 + x) * 4 + 3]
+      const tileX = Math.floor(x / 32), tileY = Math.floor(y / 32)
+      if (grid[tileY][tileX].type !== 'rock') landAlpha += alpha
+      if (tileX === 3 && tileY === 3) centerAlpha += alpha
+    }
+    return { landAlpha, centerAlpha }
+  })
+  expect(result.landAlpha).toBe(0)
+  expect(result.centerAlpha).toBeGreaterThan(0)
+})

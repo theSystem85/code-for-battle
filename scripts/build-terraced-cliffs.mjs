@@ -88,9 +88,13 @@ for (let variant = 0; variant < variants; variant++) {
   const left = Math.floor(variant * topMeta.width / variants)
   const width = Math.floor((variant + 1) * topMeta.width / variants) - left
   const crop = await sharp(topPath).extract({ left, top: 0, width, height: topMeta.height }).png().toBuffer()
-  const detail = await sharp(crop).trim({ threshold: 16 }).resize(tile, tile, { fit: 'inside' }).modulate({ saturation: .2, brightness: .45 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-  // Thin translucent fissures blend into the selected biome without a ground mat.
-  for (let i = 3; i < detail.data.length; i += 4) detail.data[i] = Math.round(detail.data[i] * .65)
+  const detail = await sharp(crop).trim({ threshold: 16 }).resize(tile - 10, tile - 10, { fit: 'inside' }).modulate({ saturation: .2, brightness: .45 }).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  // Remove the generator's near-transparent square haze, then retain a soft
+  // but visible crack/stone alpha with a five-pixel logical gutter.
+  for (let i = 3; i < detail.data.length; i += 4) {
+    const alpha = detail.data[i]
+    detail.data[i] = alpha < 48 ? 0 : Math.round(((alpha - 48) / 207) * 165)
+  }
   layers.push({ input: await sharp(detail.data, { raw: detail.info }).png().toBuffer(), left: 16 * cell + padding + Math.floor((tile - detail.info.width) / 2), top: variant * cell + padding + Math.floor((tile - detail.info.height) / 2) })
   tiles[`16,${variant}`] = { col: 16, row: variant, tags: ['rocks', 'decorative', 'plateau', `variant-${variant}`], rect: { x: 16 * cell, y: variant * cell, width: cell, height: cell } }
 }
