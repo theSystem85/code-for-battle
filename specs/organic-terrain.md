@@ -2,13 +2,15 @@
 
 ## Behavior
 
+Cliff rendering is superseded by [080-terraced-cliff-rendering.md](080-terraced-cliff-rendering.md): width-dependent plateau contours, five variants per shape, all height directions, and a quality-85 transparent WebP atlas. The narrow-ridge description below applies only to the retained load-failure fallback.
+
 The default terrain uses model-generated materials and props baked into two static PNG atlases. Gameplay tile types, blocked cells, collision, pathfinding, map serialization and minimap colors remain unchanged.
 
 Roads use the full 47 canonical eight-neighbor blob masks and four deterministic material variants. Neighboring SOT triangles now count as connected road edges, preventing rounded holes between the road and its wedges. The SOT triangle's two legs remain fully opaque; only its exposed hypotenuse gets irregular feathering. Grass and road SOT use current materials rather than the previous fallback atlas. Shoreline lips overlap water with pre-baked ragged alpha; water-SOT banks soften the diagonal cut. In CPU fallback, animated water renders below the cached shoreline, matching GPU layering. Water animation and shaders are unchanged.
 
 Grass uses new imagegen meadow artwork without the previous sinusoidal macro pattern or mirrored grass sampling. Two subtly different 8x8 material blocks are coordinate-hashed. Twelve generated low ground decorations are placed sparsely (~1 eligible cell in 19), away from shores, roads, resources, runways and buildings. Placement is deterministic; these decorations do not block movement. Fine source detail still repeats over an eight-cell period.
 
-Rock components of three or more cells use cliffs; isolated cells and pairs use six new neutral boulder variants. A bounded radius-two test classifies chains, including diagonal endpoints. Eight directional connection bits preserve diagonal-only neighbors; redundant diagonals are suppressed when cardinal joins already connect them. The atlas contains 256 connection masks with two subtle tone variants, compiled from generated horizontal, vertical and both diagonal cliff profiles. These also produce corners, branches and endpoints. Wide barriers favor uninterrupted opposing ledges over a lattice of junctions. Profile overlap is baked and uses one sprite draw per cliff cell at chunk-build time.
+The legacy fallback (used if the new cliff atlas fails to load) behaves as follows: rock components of three or more cells use cliffs; isolated cells and pairs use six new neutral boulder variants. A bounded radius-two test classifies chains, including diagonal endpoints. Eight directional connection bits preserve diagonal-only neighbors; redundant diagonals are suppressed when cardinal joins already connect them. The atlas contains 256 connection masks with two subtle tone variants, compiled from generated horizontal, vertical and both diagonal cliff profiles. These also produce corners, branches and endpoints. Wide barriers favor uninterrupted opposing ledges over a lattice of junctions. Profile overlap is baked and uses one sprite draw per cliff cell at chunk-build time.
 
 Cliffs and boulders have neutral transparent feet and debris, with no baked grass/sand/snow disc. The same art is used in default and custom integrated biome modes; the ground under a rock cell comes from the selected land material. Thus snow/sand custom biomes retain their ground. Cliff silhouettes can overlap water; this does not turn a blocked rock cell into a navigable water tile. Custom integrated biome grass/road/water art retains its original rendering; its rock art is replaced by the shared neutral formation set.
 
@@ -44,7 +46,7 @@ Before -> after: Headless Chromium 145, 1440x1000 viewport, DPR 2 (2380x2000 ter
 
 1. Replace the visibly repeating water pattern with a quieter multi-tile animation atlas; retain the existing frame selection and draw budget.
 2. Add sparse reeds and damp silt only at suitable shoreline segments, baked into chunks and kept away from routes.
-3. Introduce several larger cliff-face source variants with different fracture/strata patterns to reduce repetition in very broad formations.
+3. Implemented in spec 080: generated cliff material variants and width-dependent nested plateau contours replace repeated interior ridges.
 4. Add subtle traffic wear and gravel shoulders at road junctions and building approaches, using sparse cached decals.
 5. Add biome-specific vegetation palettes over the shared neutral cliffs, rather than separate stone assets per biome.
 
