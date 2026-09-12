@@ -1,3 +1,4 @@
+- [x] Restrict plateau cliffs and shadows to actual rock tiles, require a solid three-tile rock width, use ordinary boulders for narrower chains, add visible crack/stone overlays to plateau tops, and generate sufficiently broad rock formations.
 - [x] Replace repetitive cliff ridges with continuous biome-transparent plateaus, width-dependent terraces, all eight descending directions, seamless joins and five artwork variants per topology; deliver one quality-85 WebP sprite sheet and verify visual seams and live performance.
 - [x] Friendly-unit click action hierarchy (2026-07-27): when selected units click a friendly unit, apply exactly one eligible action in strict `board/load into -> request service -> guard` order, and select the clicked unit only when none of those interactions can apply.
 - [x] Remove terrain chunk monitoring from the FPS/performance overlay so the widget no longer shows the verbose `Chunks:` line.

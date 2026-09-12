@@ -1,4 +1,4 @@
-import { buildCliffDepth, cliffContourMask, CLIFF_LEVELS, CLIFF_CELL, CLIFF_PADDING, CLIFF_TILE } from './cliffTerrain.js'
+import { buildCliffDepth, cliffContourMask, isPlateauTile, CLIFF_LEVELS, CLIFF_CELL, CLIFF_PADDING, CLIFF_TILE } from './cliffTerrain.js'
 
 // These functions run during chunk baking, never per entity or simulation tick.
 export function terrainHash(x, y, seed = 0) {
@@ -164,6 +164,14 @@ export class OrganicTerrain {
     const right = Math.min(grid[0].length, endX + 2), bottom = Math.min(grid.length, endY + 2)
     const depth = buildCliffDepth(grid, left, top, right + 1, bottom + 1)
     const scale = size / CLIFF_TILE
+    // Generated faces overlap their logical cell. Clip once per chunk bake to
+    // the union of qualifying rock tiles, so no cliff or shadow reaches land.
+    ctx.save()
+    ctx.beginPath()
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      if (isPlateauTile(depth, x, y)) ctx.rect(x * size - offsetX, y * size - offsetY, size, size)
+    }
+    ctx.clip()
     // Lowest terrace first, then nested contours. Interiors have no rock sprite.
     for (const level of CLIFF_LEVELS) {
       for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
@@ -177,14 +185,27 @@ export class OrganicTerrain {
       }
     }
     for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
-      const d = depth.values[(y - depth.top) * depth.width + x - depth.left]
       const hash = terrainHash(x, y, 73)
-      if (d < 2 || hash % 6 !== 0) continue
+      if (!isPlateauTile(depth, x, y)) continue
       ctx.drawImage(this.cliffs, 16 * CLIFF_CELL, ((hash >>> 8) % 5) * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
         x * size - offsetX - CLIFF_PADDING * scale, y * size - offsetY - CLIFF_PADDING * scale,
         CLIFF_CELL * scale, CLIFF_CELL * scale)
     }
+    ctx.restore()
+
+    // Narrow chains and isolated rocks do not form a plateau. Render them as
+    // ordinary boulders, one sprite per actual rock tile.
+    for (let y = Math.max(0, top); y < bottom; y++) for (let x = Math.max(0, left); x < right; x++) {
+      if (grid[y][x].type === 'rock' && !isPlateauTile(depth, x, y)) {
+        this.drawBoulder(ctx, x, y, x * size - offsetX, y * size - offsetY, size)
+      }
+    }
     return true
+  }
+
+  drawBoulder(ctx, x, y, sx, sy, size) {
+    const variant = terrainHash(x, y, 37) % 6
+    ctx.drawImage(this.details, variant * 48, 2304, 48, 48, sx - size / 4, sy - size / 4, size * 1.5, size * 1.5)
   }
 
   drawRock(ctx, grid, x, y, sx, sy, size) {
@@ -197,8 +218,7 @@ export class OrganicTerrain {
       ctx.drawImage(this.details, (mask % 16) * 64, 256 + (Math.floor(mask / 16) * 2 + variant) * 64,
         64, 64, sx - size / 2, sy - size / 2, size * 2, size * 2)
     } else {
-      const variant = terrainHash(x, y, 37) % 6
-      ctx.drawImage(this.details, variant * 48, 2304, 48, 48, sx - size / 4, sy - size / 4, size * 1.5, size * 1.5)
+      this.drawBoulder(ctx, x, y, sx, sy, size)
     }
   }
 }

@@ -14,6 +14,14 @@ The offline compiler curves and textures the generated rock material, varies int
 
 The runtime selects deterministic variants by coordinate and terrace level. It paints terraces from low to high during chunk baking, with no faces on solid interiors. The current terrain material supplies plateau ground. Existing artwork remains the load-failure fallback.
 
+### Plateau eligibility and tile ownership
+
+A rock formation must contain a solid 3x3 rock footprint before it can render as a plateau. The qualifying core expands by one tile only through existing rock cells, so the complete minimum footprint owns its perimeter while one- and two-tile-wide chains remain ordinary boulders. This classification is visual and does not alter tile types.
+
+The renderer clips the complete cliff layer once per chunk bake to the union of qualifying rock-tile rectangles. Rock faces, rim pixels, debris, and alpha shadows therefore cannot paint neighboring land or water cells. Every qualifying plateau tile receives one of five deterministic transparent crack-and-stone overlays on its biome ground. Non-qualifying rock tiles receive one of the existing six boulder sprites.
+
+Generated rock lines now have a minimum requested thickness of three tiles, with broader lines at higher rock percentages. This makes plateau-capable 3x3 areas a normal output of map generation. Later water, roads, and protected base clearing may carve those formations without leaving stale visual eligibility because classification reads the final map grid during chunk baking.
+
 ## Assets and reproducibility
 
 - `public/images/terrain/terraced-cliffs.webp`: the single runtime sprite sheet, 2720x800 pixels, 17 columns by five rows, 160px cells with a 64px logical footprint and 48px transparent overlap padding. At the game's 32px tiles this provides 2x source sampling for DPR 2.
@@ -54,3 +62,13 @@ Final results are recorded below after visual refinement.
 - 160 unit files / 3,883 tests passed. Six browser tests passed, including byte-for-byte direct/chunk RGBA equivalence before and after a deep-terrace boundary edit, all 15 nonempty artwork types having five distinct variants, alpha coverage, water compatibility, and both performance gates.
 - Required changed-file lint, production build, and `git diff --check` passed. Build emitted the existing large-bundle advisory. Build-generated version metadata was restored to avoid unrelated changes.
 - Final preview: `assets/terraced-cliffs-preview.webp`. Artwork follows the reference's plateau/terrace structure; it is not a pixel reproduction of the supplied image.
+
+## Rock-tile ownership follow-up (2026-09-13)
+
+- A solid 3x3 footprint now gates plateau rendering; thinner rock formations use the six ordinary boulder variants.
+- One chunk-local clipping path contains faces, rims, shadows, and top decals within plateau-eligible rock tiles. A browser pixel test renders a 3x3 plateau onto transparency and confirms zero alpha on every land tile while confirming detail pixels on the centre top tile.
+- Generated plateau tops now receive one of five coordinate-stable crack/stone overlays on every eligible tile.
+- Procedural rock lines now request at least three tiles of thickness. Unit coverage verifies the seeded 100x100 generator retains at least one solid 3x3 rock footprint after water, roads, and base protection are applied.
+- Final focused result: 60.00 FPS, 4.38ms mean terrain render, 5.10ms maximum, zero frames over 34ms, and coarse heap samples of 18.41MiB. The previous implementation measured 59.99 FPS and 4.73ms in the same test.
+- Final combat result: 34.90 FPS, 3.59ms update, 8.05ms render, 6.55ms terrain, 57.51MiB ending heap, and five slow CPU-work frames. This variable combat scene remains above its 30 FPS fixed floor and above the 80% regression threshold against the previous 37.48 FPS run.
+- Required verification passed: 160 unit files / 3,886 tests, seven Chromium tests, changed-file lint, production build, and `git diff --check`. The build retained its existing large-bundle advisory.

@@ -257,6 +257,31 @@ describe('gameSetup.js', () => {
         // With 9 clusters connected, we should have substantial rock coverage
         expect(rockCount).toBeGreaterThan(50)
       })
+
+      it('generates solid three-tile-wide rock areas for plateaus', () => {
+        generateMap(12345, mapGrid, 100, 100)
+
+        let hasPlateauFootprint = false
+        for (let y = 1; y < 99 && !hasPlateauFootprint; y++) {
+          for (let x = 1; x < 99; x++) {
+            let solid = true
+            for (let oy = -1; oy <= 1 && solid; oy++) {
+              for (let ox = -1; ox <= 1; ox++) {
+                if (mapGrid[y + oy][x + ox].type !== 'rock') {
+                  solid = false
+                  break
+                }
+              }
+            }
+            if (solid) {
+              hasPlateauFootprint = true
+              break
+            }
+          }
+        }
+
+        expect(hasPlateauFootprint).toBe(true)
+      })
     })
 
     describe('Terrain Features - Water', () => {

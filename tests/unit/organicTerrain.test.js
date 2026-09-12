@@ -50,6 +50,26 @@ describe('organic terrain topology', () => {
     expect(isCliffChain(grid, 0, 0)).toBe(false)
     expect(isCliffChain(grid, 1, 0)).toBe(false)
   })
+  it('renders narrow rock chains exclusively as ordinary boulders', () => {
+    const grid = Array.from({ length: 5 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
+      type: y === 2 && x >= 2 && x <= 4 ? 'rock' : 'land'
+    })))
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.cliffs = { complete: true, naturalWidth: 2720 }
+    terrain.details = { id: 'details' }
+    const calls = []
+    const ctx = {
+      save: () => {},
+      beginPath: () => {},
+      rect: () => {},
+      clip: () => {},
+      restore: () => {},
+      drawImage: (...args) => calls.push(args)
+    }
+    terrain.drawCliffs(ctx, grid, 0, 0, 7, 5, 0, 0, 32)
+    expect(calls).toHaveLength(3)
+    expect(calls.every(call => call[2] === 2304 && call[3] === 48 && call[4] === 48)).toBe(true)
+  })
   it('connects full roads to the legs of neighboring SOT wedges', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'land' })))
     grid[0][0].type = grid[0][1].type = grid[1][0].type = 'street'
