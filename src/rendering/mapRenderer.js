@@ -827,10 +827,10 @@ export class MapRenderer {
   computeChunkSignature(mapGrid, startX, startY, endX, endY) {
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
-    const extraStartX = Math.max(0, startX - 3)
-    const extraStartY = Math.max(0, startY - 3)
-    const extraEndX = Math.min(mapWidth, endX + 3)
-    const extraEndY = Math.min(mapHeight, endY + 3)
+    const extraStartX = Math.max(0, startX - 7)
+    const extraStartY = Math.max(0, startY - 7)
+    const extraEndX = Math.min(mapWidth, endX + 7)
+    const extraEndY = Math.min(mapHeight, endY + 7)
 
     let signature = 2166136261
     let containsWater = false
@@ -1230,10 +1230,15 @@ export class MapRenderer {
     }
     if (useTexture && this.organicTerrain?.ready) {
       const organicGround = this.useOrganicTerrain(useTexture)
+      const terracedCliffs = this.organicTerrain.cliffs?.complete && this.organicTerrain.cliffs.naturalWidth
       // Two-cell halo rebuilds the same overlapping sprites on either side of
       // chunk boundaries. Existing neighbor signatures invalidate both chunks.
       for (const type of ['street', 'rock']) {
         if (type === 'street' && !organicGround) continue
+        if (type === 'rock' && terracedCliffs) {
+          this.organicTerrain.drawCliffs(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, TILE_SIZE)
+          continue
+        }
         for (let y = Math.max(0, startTileY - 2); y < Math.min(mapGrid.length, endTileY + 2); y++) {
           for (let x = Math.max(0, startTileX - 2); x < Math.min(mapGrid[0].length, endTileX + 2); x++) {
             const tile = mapGrid[y][x]

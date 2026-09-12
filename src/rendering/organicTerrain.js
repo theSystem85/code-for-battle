@@ -1,3 +1,5 @@
+import { buildCliffDepth, cliffContourMask, CLIFF_LEVELS, CLIFF_CELL, CLIFF_PADDING, CLIFF_TILE } from './cliffTerrain.js'
+
 // These functions run during chunk baking, never per entity or simulation tick.
 export function terrainHash(x, y, seed = 0) {
   let h = Math.imul(x, 374761393) ^ Math.imul(y, 668265263) ^ seed
@@ -82,11 +84,14 @@ export class OrganicTerrain {
     this.ready = false
     this.image = new Image()
     this.details = new Image()
+    this.cliffs = new Image()
     const loaded = () => {
       if (!this.image.complete || !this.image.naturalWidth || !this.details.complete || !this.details.naturalWidth) return
       this.ready = true
       onReady()
     }
+    this.cliffs.onload = () => onReady()
+    this.cliffs.src = 'images/terrain/terraced-cliffs.webp'
     this.image.onload = loaded
     this.details.onload = loaded
     this.details.onerror = () => { this.ready = false }
@@ -151,6 +156,35 @@ export class OrganicTerrain {
     for (const [dx, dy] of DIRECTIONS) if (grid[y + dy]?.[x + dx]?.type !== 'land') return
     const variant = (h >>> 8) % 12
     ctx.drawImage(this.details, variant * 32, 192, 32, 32, sx, sy, size, size)
+  }
+
+  drawCliffs(ctx, grid, startX, startY, endX, endY, offsetX, offsetY, size) {
+    if (!this.cliffs?.complete || !this.cliffs.naturalWidth) return false
+    const left = Math.max(-1, startX - 2), top = Math.max(-1, startY - 2)
+    const right = Math.min(grid[0].length, endX + 2), bottom = Math.min(grid.length, endY + 2)
+    const depth = buildCliffDepth(grid, left, top, right + 1, bottom + 1)
+    const scale = size / CLIFF_TILE
+    // Lowest terrace first, then nested contours. Interiors have no rock sprite.
+    for (const level of CLIFF_LEVELS) {
+      for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+        const mask = cliffContourMask(depth, x, y, level)
+        if (!mask || mask === 15) continue
+        const variant = terrainHash(x, y, level * 17) % 5
+        ctx.drawImage(this.cliffs, mask * CLIFF_CELL, variant * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
+          (x + .5) * size - offsetX - CLIFF_PADDING * scale,
+          (y + .5) * size - offsetY - CLIFF_PADDING * scale,
+          CLIFF_CELL * scale, CLIFF_CELL * scale)
+      }
+    }
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      const d = depth.values[(y - depth.top) * depth.width + x - depth.left]
+      const hash = terrainHash(x, y, 73)
+      if (d < 2 || hash % 6 !== 0) continue
+      ctx.drawImage(this.cliffs, 16 * CLIFF_CELL, ((hash >>> 8) % 5) * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
+        x * size - offsetX - CLIFF_PADDING * scale, y * size - offsetY - CLIFF_PADDING * scale,
+        CLIFF_CELL * scale, CLIFF_CELL * scale)
+    }
+    return true
   }
 
   drawRock(ctx, grid, x, y, sx, sy, size) {

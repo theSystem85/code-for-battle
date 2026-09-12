@@ -1,0 +1,1570 @@
+{
+  "schemaVersion": 1,
+  "sheetPath": "images/terrain/terraced-cliffs.webp",
+  "tileSize": 160,
+  "rowHeight": 160,
+  "borderWidth": 0,
+  "blendMode": "alpha",
+  "columns": 17,
+  "rows": 5,
+  "tags": [
+    "rocks",
+    "impassable",
+    "cliff"
+  ],
+  "tiles": {
+    "0,0": {
+      "col": 0,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-0",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "0,1": {
+      "col": 0,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-0",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "0,2": {
+      "col": 0,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-0",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "0,3": {
+      "col": 0,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-0",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "0,4": {
+      "col": 0,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-0",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "1,0": {
+      "col": 1,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-1",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 160,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "1,1": {
+      "col": 1,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-1",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 160,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "1,2": {
+      "col": 1,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-1",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 160,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "1,3": {
+      "col": 1,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-1",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 160,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "1,4": {
+      "col": 1,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-1",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 160,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "2,0": {
+      "col": 2,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-2",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "2,1": {
+      "col": 2,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-2",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "2,2": {
+      "col": 2,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-2",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "2,3": {
+      "col": 2,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-2",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "2,4": {
+      "col": 2,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-2",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "3,0": {
+      "col": 3,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-3",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 480,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "3,1": {
+      "col": 3,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-3",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 480,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "3,2": {
+      "col": 3,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-3",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 480,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "3,3": {
+      "col": 3,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-3",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 480,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "3,4": {
+      "col": 3,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-3",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 480,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "4,0": {
+      "col": 4,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-4",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "4,1": {
+      "col": 4,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-4",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "4,2": {
+      "col": 4,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-4",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "4,3": {
+      "col": 4,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-4",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "4,4": {
+      "col": 4,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-4",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "5,0": {
+      "col": 5,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-5",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 800,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "5,1": {
+      "col": 5,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-5",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 800,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "5,2": {
+      "col": 5,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-5",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 800,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "5,3": {
+      "col": 5,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-5",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 800,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "5,4": {
+      "col": 5,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-5",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 800,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "6,0": {
+      "col": 6,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-6",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "6,1": {
+      "col": 6,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-6",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "6,2": {
+      "col": 6,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-6",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "6,3": {
+      "col": 6,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-6",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "6,4": {
+      "col": 6,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-6",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "7,0": {
+      "col": 7,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-7",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 1120,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "7,1": {
+      "col": 7,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-7",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 1120,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "7,2": {
+      "col": 7,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-7",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 1120,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "7,3": {
+      "col": 7,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-7",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 1120,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "7,4": {
+      "col": 7,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-7",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 1120,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "8,0": {
+      "col": 8,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-8",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 1280,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "8,1": {
+      "col": 8,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-8",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 1280,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "8,2": {
+      "col": 8,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-8",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 1280,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "8,3": {
+      "col": 8,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-8",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 1280,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "8,4": {
+      "col": 8,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-8",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 1280,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "9,0": {
+      "col": 9,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-9",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 1440,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "9,1": {
+      "col": 9,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-9",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 1440,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "9,2": {
+      "col": 9,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-9",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 1440,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "9,3": {
+      "col": 9,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-9",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 1440,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "9,4": {
+      "col": 9,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-9",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 1440,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "10,0": {
+      "col": 10,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-10",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 1600,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "10,1": {
+      "col": 10,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-10",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 1600,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "10,2": {
+      "col": 10,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-10",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 1600,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "10,3": {
+      "col": 10,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-10",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 1600,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "10,4": {
+      "col": 10,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-10",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 1600,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "11,0": {
+      "col": 11,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-11",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 1760,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "11,1": {
+      "col": 11,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-11",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 1760,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "11,2": {
+      "col": 11,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-11",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 1760,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "11,3": {
+      "col": 11,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-11",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 1760,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "11,4": {
+      "col": 11,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-11",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 1760,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "12,0": {
+      "col": 12,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-12",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 1920,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "12,1": {
+      "col": 12,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-12",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 1920,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "12,2": {
+      "col": 12,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-12",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 1920,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "12,3": {
+      "col": 12,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-12",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 1920,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "12,4": {
+      "col": 12,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-12",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 1920,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "13,0": {
+      "col": 13,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-13",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 2080,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "13,1": {
+      "col": 13,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-13",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 2080,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "13,2": {
+      "col": 13,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-13",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 2080,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "13,3": {
+      "col": 13,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-13",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 2080,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "13,4": {
+      "col": 13,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-13",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 2080,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "14,0": {
+      "col": 14,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-14",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 2240,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "14,1": {
+      "col": 14,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-14",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 2240,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "14,2": {
+      "col": 14,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-14",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 2240,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "14,3": {
+      "col": 14,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-14",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 2240,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "14,4": {
+      "col": 14,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-14",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 2240,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "15,0": {
+      "col": 15,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-15",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 2400,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "15,1": {
+      "col": 15,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-15",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 2400,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "15,2": {
+      "col": 15,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-15",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 2400,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "15,3": {
+      "col": 15,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-15",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 2400,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "15,4": {
+      "col": 15,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "impassable",
+        "cliff",
+        "mask-15",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 2400,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "16,0": {
+      "col": 16,
+      "row": 0,
+      "tags": [
+        "rocks",
+        "decorative",
+        "plateau",
+        "variant-0"
+      ],
+      "rect": {
+        "x": 2560,
+        "y": 0,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "16,1": {
+      "col": 16,
+      "row": 1,
+      "tags": [
+        "rocks",
+        "decorative",
+        "plateau",
+        "variant-1"
+      ],
+      "rect": {
+        "x": 2560,
+        "y": 160,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "16,2": {
+      "col": 16,
+      "row": 2,
+      "tags": [
+        "rocks",
+        "decorative",
+        "plateau",
+        "variant-2"
+      ],
+      "rect": {
+        "x": 2560,
+        "y": 320,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "16,3": {
+      "col": 16,
+      "row": 3,
+      "tags": [
+        "rocks",
+        "decorative",
+        "plateau",
+        "variant-3"
+      ],
+      "rect": {
+        "x": 2560,
+        "y": 480,
+        "width": 160,
+        "height": 160
+      }
+    },
+    "16,4": {
+      "col": 16,
+      "row": 4,
+      "tags": [
+        "rocks",
+        "decorative",
+        "plateau",
+        "variant-4"
+      ],
+      "rect": {
+        "x": 2560,
+        "y": 640,
+        "width": 160,
+        "height": 160
+      }
+    }
+  },
+  "cliffLayout": {
+    "logicalTileSize": 64,
+    "padding": 48,
+    "variants": 5,
+    "cornerBits": [
+      "NW",
+      "NE",
+      "SE",
+      "SW"
+    ],
+    "emptyMasks": [
+      0,
+      15
+    ],
+    "quality": 85,
+    "alphaQuality": 100,
+    "contours": [
+      [],
+      [
+        [
+          0,
+          3
+        ]
+      ],
+      [
+        [
+          1,
+          0
+        ]
+      ],
+      [
+        [
+          1,
+          3
+        ]
+      ],
+      [
+        [
+          2,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          2,
+          3
+        ]
+      ],
+      [
+        [
+          2,
+          0
+        ]
+      ],
+      [
+        [
+          2,
+          3
+        ]
+      ],
+      [
+        [
+          3,
+          2
+        ]
+      ],
+      [
+        [
+          0,
+          2
+        ]
+      ],
+      [
+        [
+          3,
+          0
+        ],
+        [
+          1,
+          2
+        ]
+      ],
+      [
+        [
+          1,
+          2
+        ]
+      ],
+      [
+        [
+          3,
+          1
+        ]
+      ],
+      [
+        [
+          0,
+          1
+        ]
+      ],
+      [
+        [
+          3,
+          0
+        ]
+      ],
+      []
+    ]
+  }
+}
