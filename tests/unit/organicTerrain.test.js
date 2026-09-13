@@ -50,7 +50,7 @@ describe('organic terrain topology', () => {
     expect(isCliffChain(grid, 0, 0)).toBe(false)
     expect(isCliffChain(grid, 1, 0)).toBe(false)
   })
-  it('renders narrow rock chains exclusively as ordinary boulders', () => {
+  it('renders long narrow rock chains as one-sided textured escarpments', () => {
     const grid = Array.from({ length: 5 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
       type: y === 2 && x >= 2 && x <= 4 ? 'rock' : 'land'
     })))
@@ -67,8 +67,28 @@ describe('organic terrain topology', () => {
       drawImage: (...args) => calls.push(args)
     }
     terrain.drawCliffs(ctx, grid, 0, 0, 7, 5, 0, 0, 32)
-    expect(calls).toHaveLength(3)
-    expect(calls.every(call => call[2] === 2304 && call[3] === 48 && call[4] === 48)).toBe(true)
+    expect(calls.length).toBeGreaterThan(3)
+    expect(calls.every(call => call[0] === terrain.cliffs)).toBe(true)
+    expect(calls.some(call => call[1] === 16 * 160)).toBe(true)
+  })
+  it('uses a continuous macro sprite for aligned two-tile-deep straight runs', () => {
+    const grid = Array.from({ length: 9 }, (_, y) => Array.from({ length: 12 }, (_, x) => ({
+      type: y >= 3 && y <= 4 && x >= 4 && x <= 7 ? 'rock' : 'land'
+    })))
+    const terrain = new OrganicTerrain(() => {})
+    const calls = []
+    terrain.cliffs = { complete: true, naturalWidth: 3600 }
+    terrain.details = {}
+    const ctx = {
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      rect: () => {},
+      clip: () => {},
+      drawImage: (...args) => calls.push(args)
+    }
+    terrain.drawCliffs(ctx, grid, 0, 0, 12, 9, 0, 0, 32)
+    expect(calls.some(call => call[0] === terrain.cliffs && call[2] >= 8 * 160 && (call[3] > 160 || call[4] > 160))).toBe(true)
   })
   it('connects full roads to the legs of neighboring SOT wedges', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'land' })))
