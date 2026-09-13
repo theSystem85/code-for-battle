@@ -31,9 +31,13 @@ test('organic terrain is identical across chunk seams and map edits', async({ pa
         cc.drawImage(chunk.canvas, chunk.padding, chunk.padding, 512, 512, cx * 512, cy * 512, 512, 512)
       }
       const a = dc.getImageData(0, 0, 1024, 1024).data, b = cc.getImageData(0, 0, 1024, 1024).data
-      let differences = 0
-      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) differences++
-      return differences
+      let differences = 0, minX = 1024, minY = 1024, maxX = -1, maxY = -1
+      for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) {
+        differences++
+        const pixel = Math.floor(i / 4), x = pixel % 1024, y = Math.floor(pixel / 1024)
+        minX = Math.min(minX, x); minY = Math.min(minY, y); maxX = Math.max(maxX, x); maxY = Math.max(maxY, y)
+      }
+      return { differences, bounds: differences ? { minX, minY, maxX, maxY } : null }
     }
     const initial = compare()
     const unchanged = JSON.stringify(grid) === before
@@ -42,7 +46,7 @@ test('organic terrain is identical across chunk seams and map edits', async({ pa
     const edited = compare()
     return { initial, edited, unchanged }
   })
-  expect(result).toEqual({ initial: 0, edited: 0, unchanged: true })
+  expect(result).toEqual({ initial: { differences: 0, bounds: null }, edited: { differences: 0, bounds: null }, unchanged: true })
 })
 
 test('terrain combat performance at DPR 2', async({ page }, testInfo) => {

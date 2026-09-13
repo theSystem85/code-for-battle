@@ -361,6 +361,29 @@ function growLineTerrainToTarget(rand, mapGrid, targetType, targetCount, protect
   }
 }
 
+function stampCompatibleRockBlocks(rand, mapGrid, targetCount, protectedTiles) {
+  const height = mapGrid.length, width = mapGrid[0].length
+  const blockTarget = Math.floor(targetCount * 0.35)
+  let placed = 0, attempts = 0
+  while (placed < blockTarget && attempts++ < 160) {
+    const length = 2 + Math.floor(rand() * 3)
+    const horizontal = rand() < 0.5
+    const blockWidth = horizontal ? length : 2
+    const blockHeight = horizontal ? 2 : length
+    const rawX = Math.floor(rand() * Math.max(1, width - blockWidth + 1))
+    const rawY = Math.floor(rand() * Math.max(1, height - blockHeight + 1))
+    const startX = horizontal ? Math.min(width - blockWidth, Math.floor(rawX / 4) * 4) : rawX
+    const startY = horizontal ? rawY : Math.min(height - blockHeight, Math.floor(rawY / 4) * 4)
+    let added = 0
+    for (let y = startY; y < startY + blockHeight; y++) for (let x = startX; x < startX + blockWidth; x++) {
+      if (protectedTiles?.has(`${x},${y}`) || mapGrid[y][x].type === 'rock') continue
+      mapGrid[y][x].type = 'rock'
+      added++
+    }
+    placed += added
+  }
+}
+
 function createBalancedOreClusterCenters(playerPositions, mapWidth, mapHeight, targetDistance) {
   const inwardTargetX = Math.floor(mapWidth / 2)
   const inwardTargetY = Math.floor(mapHeight / 2)
@@ -669,11 +692,14 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
 
   // -------- Step 2: Generate rock terrain lines first --------
   // Water is dominant and is drawn afterwards so rivers/lakes/coasts can break rock lines.
+  // Seed the same 2x2/2x3/2x4 footprints supported by the macro cliff atlas,
+  // then connect and broaden them with the organic line generator.
+  stampCompatibleRockBlocks(rand, mapGrid, targetRockTiles, protectedTiles)
   growLineTerrainToTarget(rand, mapGrid, 'rock', targetRockTiles, protectedTiles, {
     // Three tiles is the minimum solid cross-section that can own a plateau.
     // Higher rock percentages still produce broader, multi-tier formations.
     minThickness: 3,
-    maxThickness: Math.max(3, Math.floor(3 + (safeRockPercent / 8))),
+    maxThickness: Math.max(5, Math.floor(3 + (safeRockPercent / 7))),
     maxPasses: 70
   })
 

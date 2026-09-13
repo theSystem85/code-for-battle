@@ -2,7 +2,7 @@
 
 ## Behavior
 
-Cliff rendering is superseded by [080-terraced-cliff-rendering.md](080-terraced-cliff-rendering.md): width-dependent plateau contours, five variants per shape, all height directions, and a quality-85 transparent WebP atlas. The narrow-ridge description below applies only to the retained load-failure fallback.
+Cliff rendering is superseded by [080-terraced-cliff-rendering.md](080-terraced-cliff-rendering.md): width-dependent plateau contours, eight material variants per shape, 2-4-cell macro faces, all height directions, and a quality-85 transparent WebP atlas. The narrow-ridge description below applies only to the retained load-failure fallback.
 
 The default terrain uses model-generated materials and props baked into two static PNG atlases. Gameplay tile types, blocked cells, collision, pathfinding, map serialization and minimap colors remain unchanged.
 

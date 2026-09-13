@@ -1,4 +1,4 @@
-import { buildCliffDepth, cliffContourMask, isPlateauTile, CLIFF_LEVELS, CLIFF_CELL, CLIFF_PADDING, CLIFF_TILE } from './cliffTerrain.js'
+import { buildCliffDepth, cliffContourMask, cliffMacroRect, escarpmentContourMask, isEscarpmentTile, isPlateauTile, CLIFF_LEVELS, CLIFF_CELL, CLIFF_PADDING, CLIFF_TILE, CLIFF_VARIANTS } from './cliffTerrain.js'
 
 // These functions run during chunk baking, never per entity or simulation tick.
 export function terrainHash(x, y, seed = 0) {
@@ -28,6 +28,44 @@ export function terrainMask(grid, x, y, type) {
 const DIRECTIONS = [[0, -1], [1, 0], [0, 1], [-1, 0], [1, -1], [1, 1], [-1, 1], [-1, -1]]
 const CORNERS = [137, 19, 38, 76]
 const ORIENTATIONS = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
+const VISIBLE_ESCARPMENT_MASKS = new Set([1, 2, 3, 8, 9])
+const MACRO_MASKS = new Set([3, 6, 9, 12])
+const positiveModulo = (value, divisor) => ((value % divisor) + divisor) % divisor
+
+function macroRunLength(depth, x, y, level, mask, escarpment = false) {
+  const horizontal = mask === 3 || mask === 12
+  if (!MACRO_MASKS.has(mask) || positiveModulo(horizontal ? x : y, 4) !== 0) return 0
+  for (let length = 4; length >= 2; length--) {
+    let matches = true
+    for (let offset = 0; offset < length; offset++) {
+      const sampleX = x + (horizontal ? offset : 0)
+      const sampleY = y + (horizontal ? 0 : offset)
+      const sampleMask = escarpment
+        ? escarpmentContourMask(depth, sampleX, sampleY)
+        : cliffContourMask(depth, sampleX, sampleY, level)
+      if (sampleMask !== mask) {
+        matches = false
+        break
+      }
+    }
+    if (matches) {
+      const rockAt = (sampleX, sampleY) => {
+        const localX = sampleX - depth.left, localY = sampleY - depth.top
+        return localX >= 0 && localY >= 0 && localX < depth.width && localY < depth.rockDepth.length / depth.width && depth.rockDepth[localY * depth.width + localX] > 0
+      }
+      for (let offset = 0; offset < length && matches; offset++) {
+        const sampleX = x + (horizontal ? offset : 0)
+        const sampleY = y + (horizontal ? 0 : offset)
+        if (mask === 3) matches = rockAt(sampleX, sampleY) && rockAt(sampleX, sampleY - 1)
+        else if (mask === 12) matches = rockAt(sampleX, sampleY + 1) && rockAt(sampleX, sampleY + 2)
+        else if (mask === 6) matches = rockAt(sampleX + 1, sampleY) && rockAt(sampleX + 2, sampleY)
+        else matches = rockAt(sampleX, sampleY) && rockAt(sampleX - 1, sampleY)
+      }
+    }
+    if (matches) return length
+  }
+  return 0
+}
 export function roadFringeMask(grid, x, y) {
   const tile = grid[y]?.[x]
   if (!tile || tile.airstripStreet || !['land', 'water'].includes(tile.type)) return 0
@@ -160,43 +198,107 @@ export class OrganicTerrain {
 
   drawCliffs(ctx, grid, startX, startY, endX, endY, offsetX, offsetY, size) {
     if (!this.cliffs?.complete || !this.cliffs.naturalWidth) return false
-    const left = Math.max(-1, startX - 2), top = Math.max(-1, startY - 2)
-    const right = Math.min(grid[0].length, endX + 2), bottom = Math.min(grid.length, endY + 2)
+    const left = Math.max(-1, startX - 4), top = Math.max(-1, startY - 4)
+    const right = Math.min(grid[0].length, endX + 4), bottom = Math.min(grid.length, endY + 4)
     const depth = buildCliffDepth(grid, left, top, right + 1, bottom + 1)
     const scale = size / CLIFF_TILE
-    // Generated faces overlap their logical cell. Clip once per chunk bake to
-    // the union of qualifying rock tiles, so no cliff or shadow reaches land.
-    ctx.save()
-    ctx.beginPath()
-    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
-      if (isPlateauTile(depth, x, y)) ctx.rect(x * size - offsetX, y * size - offsetY, size, size)
-    }
-    ctx.clip()
+    // Faces originate only from plateau topology, while their transparent rim,
+    // talus and shadow may cross the tile boundary without rectangular crops.
     // Lowest terrace first, then nested contours. Interiors have no rock sprite.
     for (const level of CLIFF_LEVELS) {
+      const macroClaims = level === CLIFF_LEVELS[0] ? new Uint8Array(depth.values.length) : null
       for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+        const depthIndex = (y - depth.top) * depth.width + x - depth.left
+        if (macroClaims?.[depthIndex]) continue
         const mask = cliffContourMask(depth, x, y, level)
         if (!mask || mask === 15) continue
-        const variant = terrainHash(x, y, level * 17) % 5
+        const variant = terrainHash(Math.floor(x / 16), Math.floor(y / 16), level * 17) % CLIFF_VARIANTS
+        const macroLength = macroClaims ? macroRunLength(depth, x, y, level, mask) : 0
+        if (macroLength) {
+          const rect = cliffMacroRect(mask, macroLength, variant)
+          const horizontal = mask === 3 || mask === 12
+          // Quarter-scale across the wall depth keeps the macro face close to
+          // standard plateau height and lands on integer pixels at 32px tiles.
+          const shallowScale = scale * 0.5
+          for (let offset = 0; offset < macroLength; offset++) {
+            macroClaims[depthIndex + (horizontal ? offset : offset * depth.width)] = 1
+          }
+          ctx.drawImage(this.cliffs, rect.x, rect.y, rect.width, rect.height,
+            horizontal ? (x + .5) * size - offsetX - CLIFF_PADDING * scale : (x + 1) * size - offsetX - (CLIFF_PADDING + CLIFF_TILE) * shallowScale,
+            horizontal ? (y + 1) * size - offsetY - (CLIFF_PADDING + CLIFF_TILE) * shallowScale : (y + .5) * size - offsetY - CLIFF_PADDING * scale,
+            horizontal ? rect.width * scale : rect.width * shallowScale,
+            horizontal ? rect.height * shallowScale : rect.height * scale)
+          continue
+        }
         ctx.drawImage(this.cliffs, mask * CLIFF_CELL, variant * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
           (x + .5) * size - offsetX - CLIFF_PADDING * scale,
           (y + .5) * size - offsetY - CLIFF_PADDING * scale,
           CLIFF_CELL * scale, CLIFF_CELL * scale)
       }
     }
+    // Top detail is ground material and remains strictly inside rock tiles.
+    ctx.save()
+    ctx.beginPath()
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      if (isPlateauTile(depth, x, y)) ctx.rect(x * size - offsetX, y * size - offsetY, size, size)
+    }
+    ctx.clip()
     for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
       const hash = terrainHash(x, y, 73)
       if (!isPlateauTile(depth, x, y)) continue
-      ctx.drawImage(this.cliffs, 16 * CLIFF_CELL, ((hash >>> 8) % 5) * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
+      ctx.drawImage(this.cliffs, 16 * CLIFF_CELL, ((hash >>> 8) % CLIFF_VARIANTS) * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
         x * size - offsetX - CLIFF_PADDING * scale, y * size - offsetY - CLIFF_PADDING * scale,
         CLIFF_CELL * scale, CLIFF_CELL * scale)
     }
     ctx.restore()
 
-    // Narrow chains and isolated rocks do not form a plateau. Render them as
-    // ordinary boulders, one sprite per actual rock tile.
+    // A narrow cardinal chain cannot form a plateau. Give it one exposed
+    // south/east-facing cliff side, which reads as an escarpment instead of a
+    // double-sided wall. Like plateau faces, its transparent fringe is allowed
+    // to blend over the immediately adjacent low biome.
+    const escarpmentMacroClaims = new Uint8Array(depth.values.length)
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      const depthIndex = (y - depth.top) * depth.width + x - depth.left
+      if (escarpmentMacroClaims[depthIndex]) continue
+      const mask = escarpmentContourMask(depth, x, y)
+      if (!VISIBLE_ESCARPMENT_MASKS.has(mask)) continue
+      const variant = terrainHash(Math.floor(x / 16), Math.floor(y / 16), 101) % CLIFF_VARIANTS
+      const macroLength = macroRunLength(depth, x, y, 0, mask, true)
+      if (macroLength) {
+        const rect = cliffMacroRect(mask, macroLength, variant)
+        const horizontal = mask === 3 || mask === 12
+        for (let offset = 0; offset < macroLength; offset++) {
+          escarpmentMacroClaims[depthIndex + (horizontal ? offset : offset * depth.width)] = 1
+        }
+        ctx.drawImage(this.cliffs, rect.x, rect.y, rect.width, rect.height,
+          horizontal ? (x + .5) * size - offsetX - CLIFF_PADDING * scale : (x + 1) * size - offsetX - (CLIFF_PADDING + CLIFF_TILE) * scale,
+          horizontal ? (y + 1) * size - offsetY - (CLIFF_PADDING + CLIFF_TILE) * scale : (y + .5) * size - offsetY - CLIFF_PADDING * scale,
+          rect.width * scale, rect.height * scale)
+        continue
+      }
+      ctx.drawImage(this.cliffs, mask * CLIFF_CELL, variant * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
+        (x + .5) * size - offsetX - CLIFF_PADDING * scale,
+        (y + .5) * size - offsetY - CLIFF_PADDING * scale,
+        CLIFF_CELL * scale, CLIFF_CELL * scale)
+    }
+    ctx.save()
+    ctx.beginPath()
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      if (isEscarpmentTile(depth, x, y)) ctx.rect(x * size - offsetX, y * size - offsetY, size, size)
+    }
+    ctx.clip()
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      if (!isEscarpmentTile(depth, x, y)) continue
+      const hash = terrainHash(x, y, 109)
+      ctx.drawImage(this.cliffs, 16 * CLIFF_CELL, ((hash >>> 8) % CLIFF_VARIANTS) * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
+        x * size - offsetX - CLIFF_PADDING * scale, y * size - offsetY - CLIFF_PADDING * scale,
+        CLIFF_CELL * scale, CLIFF_CELL * scale)
+    }
+    ctx.restore()
+
+    // Rocks too short even for an escarpment remain ordinary boulders.
     for (let y = Math.max(0, top); y < bottom; y++) for (let x = Math.max(0, left); x < right; x++) {
-      if (grid[y][x].type === 'rock' && !isPlateauTile(depth, x, y)) {
+      if (grid[y][x].type === 'rock' && !isPlateauTile(depth, x, y) && !isEscarpmentTile(depth, x, y)) {
         this.drawBoulder(ctx, x, y, x * size - offsetX, y * size - offsetY, size)
       }
     }
