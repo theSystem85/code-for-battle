@@ -1266,7 +1266,7 @@ export class MapRenderer {
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
         if (this.useOrganicTerrain(useTexture)) {
-          this.organicTerrain.drawCoast(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x], this.sotMask)
+          this.drawOrganicWaterTransition(ctx, mapGrid, x, y, screenX, screenY, currentWaterFrame)
           this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
         }
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
@@ -1279,6 +1279,45 @@ export class MapRenderer {
       }
     }
     this.groupingMapGrid = previousGroupingMap
+  }
+
+  drawOrganicWaterTransition(ctx, mapGrid, tileX, tileY, screenX, screenY, currentWaterFrame) {
+    const tile = mapGrid?.[tileY]?.[tileX]
+    if (!tile || tile.type === 'water' || tile.airstripStreet) return
+    const vectors = []
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+      if (mapGrid[tileY + dy]?.[tileX + dx]?.type === 'water') vectors.push({ x: dx, y: dy })
+    }
+    const sot = this.sotMask?.[tileY]?.[tileX]
+    const sotVectors = {
+      'top-left': { x: -1, y: -1 },
+      'top-right': { x: 1, y: -1 },
+      'bottom-left': { x: -1, y: 1 },
+      'bottom-right': { x: 1, y: 1 }
+    }
+    if (sot?.type === 'water' && sotVectors[sot.orientation]) vectors.push(sotVectors[sot.orientation])
+    if (!vectors.length || !this.organicTerrain?.getBiomeBlendMask) return
+    const nearest = vectors.reduce((best, vector) => {
+      const distance = vector.x * vector.x + vector.y * vector.y
+      return !best || distance < best.distance ? { ...vector, distance } : best
+    }, null)
+    if (!this.organicWaterTransitionCanvas) {
+      this.organicWaterTransitionCanvas = document.createElement('canvas')
+      this.organicWaterTransitionCanvas.width = this.organicWaterTransitionCanvas.height = TILE_SIZE
+      this.organicWaterTransitionContext = this.organicWaterTransitionCanvas.getContext('2d')
+    }
+    const transitionContext = this.organicWaterTransitionContext
+    transitionContext.clearRect(0, 0, TILE_SIZE, TILE_SIZE)
+    if (USE_PROCEDURAL_WATER_RENDERING) this.drawProceduralWater(transitionContext, 0, 0, TILE_SIZE, tileX, tileY)
+    else this.drawClassicWater(transitionContext, 0, 0, TILE_SIZE, currentWaterFrame)
+    transitionContext.globalCompositeOperation = 'destination-in'
+    transitionContext.drawImage(this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, {
+      biome: 'water',
+      alpha: 0.5,
+      angle: Math.atan2(nearest.y, nearest.x)
+    }), 0, 0)
+    transitionContext.globalCompositeOperation = 'source-over'
+    ctx.drawImage(this.organicWaterTransitionCanvas, screenX, screenY)
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
