@@ -340,7 +340,12 @@ function createSerializableMapTile(tile = {}) {
       : undefined,
     decalCounter: Number.isFinite(tile.decalCounter) && tile.decalCounter > 0 ? tile.decalCounter : undefined,
     walkable: typeof tile.walkable === 'boolean' ? tile.walkable : undefined,
-    passable: typeof tile.passable === 'boolean' ? tile.passable : undefined
+    passable: typeof tile.passable === 'boolean' ? tile.passable : undefined,
+    biome: typeof tile.biome === 'string' ? tile.biome : undefined,
+    biomeRegion: Number.isFinite(tile.biomeRegion) ? tile.biomeRegion : undefined,
+    biomeBlend: tile.biomeBlend && typeof tile.biomeBlend.biome === 'string'
+      ? { biome: tile.biomeBlend.biome, alpha: Number(tile.biomeBlend.alpha) || 0, angle: Number(tile.biomeBlend.angle) || 0 }
+      : undefined
   }
 }
 
@@ -392,6 +397,11 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
           }
           : null
         targetTile.decalCounter = Number.isFinite(savedTile?.decalCounter) ? savedTile.decalCounter : 0
+        targetTile.biome = typeof savedTile?.biome === 'string' ? savedTile.biome : (targetTile.biome || 'grass')
+        targetTile.biomeRegion = Number.isFinite(savedTile?.biomeRegion) ? savedTile.biomeRegion : undefined
+        targetTile.biomeBlend = savedTile?.biomeBlend && typeof savedTile.biomeBlend.biome === 'string'
+          ? { biome: savedTile.biomeBlend.biome, alpha: Number(savedTile.biomeBlend.alpha) || 0, angle: Number(savedTile.biomeBlend.angle) || 0 }
+          : undefined
 
         if (typeof savedTile?.walkable === 'boolean') {
           targetTile.walkable = savedTile.walkable
@@ -808,6 +818,10 @@ function buildSaveObject(label) {
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
       activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null,
       activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag || 'grass',
+      mapBiomeRegionCount: gameState.mapBiomeRegionCount,
+      mapBiomeDistribution: gameState.mapBiomeDistribution,
+      mapBiomeWeights: { ...gameState.mapBiomeWeights },
+      mapSnowOnPlateaus: gameState.mapSnowOnPlateaus,
       powerSupply: gameState.powerSupply,
       playerBuildHistory: gameState.playerBuildHistory,
       currentSessionId: gameState.currentSessionId,

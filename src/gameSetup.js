@@ -4,6 +4,7 @@ import { preloadTurretImages } from './rendering/turretImageRenderer.js'
 import { PLAYER_POSITIONS } from './config.js'
 import { gameState } from './gameState.js'
 import { sanitizeSeed } from './utils/seedUtils.js'
+import { assignMapBiomes } from './game/mapBiomes.js'
 
 let texturesLoaded = false
 let buildingImagesLoaded = false
@@ -757,6 +758,10 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
       drawOrthogonalStreetPath(mapGrid, hubPosition, playerPositions[i], 'street')
     }
   }
+
+  // Biome topology is generated once and cached on tiles. Rendering only reads
+  // these values while baking static chunks, avoiding simulation-frame work.
+  assignMapBiomes(mapGrid, normalizedSeed, gameState)
 
   // -------- Step 5: Generate Ore Fields (AFTER terrain generation) --------
   // Generate ore clusters around the predefined centers, but only on passable terrain
