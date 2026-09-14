@@ -98,4 +98,21 @@ describe('mixed map biomes', () => {
     expect(grid[5][5].biome).toBe('soil')
     expect(grid[2][2].biome).toBe('soil')
   })
+
+  it('keeps plateau snow dominant over shoreline sand', () => {
+    const grid = makeGrid(20, 20)
+    for (let x = 0; x < 20; x++) grid[0][x].type = 'water'
+    for (let y = 1; y <= 5; y++) for (let x = 5; x <= 9; x++) grid[y][x].type = 'rock'
+    assignMapBiomes(grid, 9, { ...mixedSettings, mapBiomeRegionCount: 1, mapShorelineWidth: 4, mapSnowOnPlateaus: true })
+    expect(grid[2][7].biome).toBe('snow')
+    expect(grid[2][7].biomeBlend).toBeUndefined()
+  })
+
+  it('uses the configured shoreline width in tiles', () => {
+    const grid = makeGrid(20, 20)
+    for (let x = 0; x < 20; x++) grid[0][x].type = 'water'
+    assignMapBiomes(grid, 10, { ...mixedSettings, mapBiomeRegionCount: 1, mapBiomeWeights: { grass: 100, soil: 0, sand: 20, snow: 0 }, mapSnowOnPlateaus: false, mapShorelineWidth: 3 })
+    expect(grid[3][10].biomeBlend?.biome).toBe('sand')
+    expect(grid[4][10].biomeBlend?.biome).not.toBe('sand')
+  })
 })

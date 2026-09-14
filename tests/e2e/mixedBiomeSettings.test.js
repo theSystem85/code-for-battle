@@ -21,4 +21,6 @@ test('mixed biome controls regenerate the map immediately', async({ page }) => {
 
   await page.locator('#mapSnowOnPlateausCheckbox').uncheck()
   await page.waitForFunction(() => window.gameState?.mapSnowOnPlateaus === false)
+  await page.locator('#mapShorelineWidth').fill('4')
+  await page.waitForFunction(() => window.gameState?.mapShorelineWidth === 4)
 })

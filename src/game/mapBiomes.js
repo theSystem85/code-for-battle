@@ -31,6 +31,7 @@ export function sanitizeBiomeSettings(state = {}) {
     regionCount: clamp(Math.round(Number(state.mapBiomeRegionCount) || 12), 1, 64),
     distribution: DISTRIBUTIONS.has(state.mapBiomeDistribution) ? state.mapBiomeDistribution : 'random',
     weights,
+    shorelineWidth: clamp(Math.round(Number.isFinite(Number(state.mapShorelineWidth)) ? Number(state.mapShorelineWidth) : 2), 0, 12),
     snowOnPlateaus: state.mapSnowOnPlateaus !== false
   }
 }
@@ -236,7 +237,8 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
 
     let oceanDistance = Infinity
     let nearestOceanOffset = null
-    if (ocean) for (let offsetY = -3; offsetY <= 3; offsetY++) for (let offsetX = -3; offsetX <= 3; offsetX++) {
+    const shorelineRadius = settings.shorelineWidth + 1
+    if (ocean && shorelineRadius > 0) for (let offsetY = -shorelineRadius; offsetY <= shorelineRadius; offsetY++) for (let offsetX = -shorelineRadius; offsetX <= shorelineRadius; offsetX++) {
       if (!ocean[y + offsetY]?.[x + offsetX]) continue
       const distance = Math.hypot(offsetX, offsetY)
       if (distance < oceanDistance) {
@@ -244,11 +246,11 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
         nearestOceanOffset = { x: offsetX, y: offsetY }
       }
     }
-    if (tile.type !== 'water' && oceanDistance <= 2) {
+    if (tile.type !== 'water' && settings.shorelineWidth > 0 && oceanDistance <= settings.shorelineWidth) {
       // Keep the shoreline transition exactly one tile wide. A broad alpha
       // distance band creates the same chained checkerboard artifact as biome
       // borders, especially where the coast turns a corner.
-      const sandAlpha = oceanDistance <= 1 ? 1 : 0.5
+      const sandAlpha = oceanDistance < settings.shorelineWidth ? 1 : 0.5
       if (sandAlpha >= 1) {
         tile.biome = 'sand'
         delete tile.biomeBlend
