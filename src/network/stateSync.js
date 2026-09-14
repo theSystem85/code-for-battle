@@ -471,6 +471,7 @@ export function createGameStateSnapshot() {
     mapBiomeDistribution: gameState.mapBiomeDistribution,
     mapBiomeWeights: { ...gameState.mapBiomeWeights },
     mapShorelineWidth: gameState.mapShorelineWidth,
+    mapBiomeTransitionPixels: gameState.mapBiomeTransitionPixels,
     mapSnowOnPlateaus: gameState.mapSnowOnPlateaus,
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
@@ -634,6 +635,7 @@ export function applyGameStateSnapshot(snapshot) {
       mapBiomeDistribution: snapshot.mapBiomeDistribution,
       mapBiomeWeights: snapshot.mapBiomeWeights,
       mapShorelineWidth: snapshot.mapShorelineWidth,
+      mapBiomeTransitionPixels: snapshot.mapBiomeTransitionPixels,
       mapSnowOnPlateaus: snapshot.mapSnowOnPlateaus
     })
   }

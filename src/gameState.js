@@ -305,7 +305,9 @@ export const gameState = {
   mapBiomeDistribution: 'random',
   mapBiomeWeights: { grass: 30, soil: 30, sand: 20, snow: 20 },
   mapShorelineWidth: 2,
+  mapBiomeTransitionPixels: 8,
   mapSnowOnPlateaus: true,
+  dynamicWaterLandBlendEnabled: true,
 
   // Lockstep deterministic multiplayer state (spec 015)
   lockstep: {

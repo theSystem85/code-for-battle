@@ -478,3 +478,4 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Mixed-biome coastline direction follow-up (2026-09-15): orient the single shoreline sand feather toward the nearest ocean tile so north/south and east/west coasts use perpendicular transition masks.
 - [x] Mixed-biome shoreline width and plateau priority (2026-09-15): expose shoreline width in tiles and ensure plateau snow overrides nearby shoreline sand.
 - [x] Organic water shoreline transitions (2026-09-15): replace legacy grass-only coast lips with masked water-over-land fades for coasts, lakes, and diagonal SOT corners.
+- [x] Dynamic shoreline blend controls (2026-09-15): add optional animated water-over-land rendering, configurable transition feather pixels, and two-control Map Settings rows with floating select labels.

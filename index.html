@@ -759,14 +759,20 @@
                   <input type="number" class="sidebar-input" id="mapShorelineWidth" min="0" max="12" value="2" placeholder=" ">
                   <label for="mapShorelineWidth">Shore Sand (tiles)</label>
                 </div>
-                <div style="flex:1; min-width:0;">
-                  <label for="mapBiomeDistribution" style="display:block; margin-bottom:6px;">Distribution</label>
+                <div class="floating-label-input floating-label-input--narrow" style="width:120px;">
+                  <input type="number" class="sidebar-input" id="mapBiomeTransitionPixels" min="1" max="64" value="8" placeholder=" ">
+                  <label for="mapBiomeTransitionPixels">Fade (px)</label>
+                </div>
+              </div>
+              <div style="display:flex; gap:10px; margin:10px 0;">
+                <div class="floating-label-input" style="width:100%;">
                   <select id="mapBiomeDistribution" class="sidebar-input" style="width:100%;">
                     <option value="random" selected>Random</option>
                     <option value="vertical">Vertical</option>
                     <option value="horizontal">Horizontal</option>
                     <option value="corners">Four corners</option>
                   </select>
+                  <label for="mapBiomeDistribution">Distribution</label>
                 </div>
               </div>
               <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;">
@@ -1055,6 +1061,10 @@
             <label class="config-modal__field config-modal__field--toggle">
               <input type="checkbox" id="settingsProceduralWaterToggle" checked>
               <span>Use procedural water rendering instead of classic animated water tiles</span>
+            </label>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsDynamicWaterLandBlendToggle" checked>
+              <span>Blend animated water dynamically onto land shoreline tiles</span>
             </label>
             <label class="config-modal__field">
               <span class="config-modal__range-label-row">
