@@ -51,13 +51,13 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
   const result = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
     const { TextureManager } = await import('/src/rendering/textureManager.js')
-    const { cliffMacroRect } = await import('/src/rendering/cliffTerrain.js')
+    const { cliffMacroRect, cliffTallRect } = await import('/src/rendering/cliffTerrain.js')
     const manager = new TextureManager()
     await new Promise(resolve => manager.preloadAllTextures(resolve))
     const renderer = new MapRenderer(manager)
     await Promise.all([renderer.organicTerrain.image.decode(), renderer.organicTerrain.details.decode(), renderer.organicTerrain.cliffs.decode()])
     const grid = Array.from({ length: 32 }, (_, y) => Array.from({ length: 44 }, (_, x) => ({
-      type: (Math.abs(x - 19 - Math.sin(y / 6) * 4) < (y > 10 && y < 24 ? 7 : 2.6) || (y > 5 && y < 11 && x > 2 && x < 37) || (Math.abs(x + y - 41) < 2.2 && y < 18) || (y >= 26 && y <= 27 && x >= 36 && x <= 39)) ? 'rock' : 'land'
+      type: (Math.abs(x - 19 - Math.sin(y / 6) * 4) < (y > 10 && y < 24 ? 7 : 2.6) || (y > 5 && y < 11 && x > 2 && x < 37) || (Math.abs(x + y - 41) < 2.2 && y < 18) || (y >= 25 && y <= 27 && x >= 36 && x <= 39)) ? 'rock' : 'land'
     })))
     const canvas = document.createElement('canvas'); canvas.width = 1408; canvas.height = 1024
     document.body.append(canvas)
@@ -85,7 +85,7 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
       distinct.push(hashes.size)
     }
     const macroDistinct = []
-    for (const mask of [3, 6, 9, 12]) for (const length of [2, 3, 4]) {
+    for (const mask of [3, 6, 9, 12]) for (const length of [1, 2, 3, 4]) {
       const hashes = new Set()
       for (let variant = 0; variant < 8; variant++) {
         const rect = cliffMacroRect(mask, length, variant)
@@ -96,21 +96,39 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
       }
       macroDistinct.push(hashes.size)
     }
-    // Mask 3 is a horizontal northern perimeter. Its wall must occupy a broad
-    // strip on the high-ground side or the rock-only clip reduces it to a line.
-    const northFace = ac.getImageData(3 * 160 + 48, 48, 64, 32).data
-    let northFaceOpaque = 0
-    for (let i = 3; i < northFace.length; i += 4) if (northFace[i] > 240) northFaceOpaque++
-    return { width: atlas.width, height: atlas.height, clear, translucent, solid, distinct, macroDistinct, northFaceOpaque }
+    const tallDistinct = []
+    for (let mask = 1; mask < 15; mask++) {
+      const hashes = new Set()
+      for (let variant = 0; variant < 8; variant++) {
+        const rect = cliffTallRect(mask, variant)
+        const pixels = ac.getImageData(rect.x, rect.y, rect.width, rect.height).data
+        let hash = 2166136261
+        for (const byte of pixels) hash = Math.imul(hash ^ byte, 16777619)
+        hashes.add(hash)
+      }
+      tallDistinct.push(hashes.size)
+    }
+    const opaque = rect => {
+      const pixels = ac.getImageData(rect.x, rect.y, rect.width, rect.height).data
+      let count = 0
+      for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 240) count++
+      return count
+    }
+    // Mask 3 exposes a south-facing wall; reversed mask 12 is the shallow,
+    // self-occluded north-facing rim.
+    const southFaceOpaque = opaque(cliffTallRect(3, 0))
+    const northFaceOpaque = opaque(cliffTallRect(12, 0))
+    return { width: atlas.width, height: atlas.height, clear, translucent, solid, distinct, macroDistinct, tallDistinct, northFaceOpaque, southFaceOpaque }
   })
-  expect(result.width).toBe(3600)
-  expect(result.height).toBe(3584)
+  expect(result.width).toBe(4096)
+  expect(result.height).toBe(5376)
   expect(result.distinct).toEqual(Array(15).fill(8))
-  expect(result.macroDistinct).toEqual(Array(12).fill(8))
+  expect(result.macroDistinct).toEqual(Array(16).fill(8))
+  expect(result.tallDistinct).toEqual(Array(14).fill(8))
   expect(result.clear).toBeGreaterThan(result.solid)
   expect(result.translucent).toBeGreaterThan(10000)
   expect(result.solid).toBeGreaterThan(10000)
-  expect(result.northFaceOpaque).toBeGreaterThan(1000)
+  expect(result.southFaceOpaque).toBeGreaterThan(result.northFaceOpaque * 2)
   await page.screenshot({ path: testInfo.outputPath('terraced-cliffs-preview.png') })
 })
 
@@ -145,9 +163,9 @@ test('plateau ground stays on rock while its irregular face fringe blends into a
   expect(result.centerAlpha).toBeGreaterThan(0)
 })
 
-test('narrow chains render one substantial cliff side with a bounded transparent fringe', async({ page }) => {
-  await page.route('**/__cliff-escarpment', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
-  await page.goto('/__cliff-escarpment')
+test('narrow chains render only the ordinary boulder pool', async({ page }) => {
+  await page.route('**/__cliff-boulders', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
+  await page.goto('/__cliff-boulders')
   const result = await page.evaluate(async() => {
     const { OrganicTerrain } = await import('/src/rendering/organicTerrain.js')
     const terrain = new OrganicTerrain(() => {})
@@ -155,24 +173,20 @@ test('narrow chains render one substantial cliff side with a bounded transparent
     const grid = Array.from({ length: 7 }, (_, y) => Array.from({ length: 9 }, (_, x) => ({
       type: y === 3 && x >= 2 && x <= 6 ? 'rock' : 'land'
     })))
-    const canvas = document.createElement('canvas'); canvas.width = 288; canvas.height = 224
-    const ctx = canvas.getContext('2d')
-    terrain.drawCliffs(ctx, grid, 0, 0, 9, 7, 0, 0, 32)
-    const pixels = ctx.getImageData(0, 0, 288, 224).data
-    let landAlpha = 0, farLandAlpha = 0, upperAlpha = 0, lowerAlpha = 0
-    for (let y = 0; y < 224; y++) for (let x = 0; x < 288; x++) {
-      const alpha = pixels[(y * 288 + x) * 4 + 3]
-      const tileX = Math.floor(x / 32), tileY = Math.floor(y / 32)
-      if (grid[tileY][tileX].type !== 'rock') {
-        landAlpha += alpha
-        if (Math.abs(tileY - 3) > 1) farLandAlpha += alpha
-      }
-      else if (y % 32 < 16) upperAlpha += alpha
-      else lowerAlpha += alpha
+    const actual = document.createElement('canvas'); actual.width = 288; actual.height = 224
+    terrain.drawCliffs(actual.getContext('2d'), grid, 0, 0, 9, 7, 0, 0, 32)
+    const expected = document.createElement('canvas'); expected.width = 288; expected.height = 224
+    const expectedContext = expected.getContext('2d')
+    for (let x = 2; x <= 6; x++) terrain.drawBoulder(expectedContext, x, 3, x * 32, 3 * 32, 32)
+    const actualPixels = actual.getContext('2d').getImageData(0, 0, 288, 224).data
+    const expectedPixels = expectedContext.getImageData(0, 0, 288, 224).data
+    let differences = 0, visible = 0
+    for (let i = 0; i < actualPixels.length; i++) {
+      if (actualPixels[i] !== expectedPixels[i]) differences++
+      if (i % 4 === 3 && actualPixels[i]) visible++
     }
-    return { landAlpha, farLandAlpha, upperAlpha, lowerAlpha }
+    return { differences, visible }
   })
-  expect(result.landAlpha).toBeGreaterThan(0)
-  expect(result.farLandAlpha).toBe(0)
-  expect(result.lowerAlpha).toBeGreaterThan(result.upperAlpha * 1.5)
+  expect(result.visible).toBeGreaterThan(0)
+  expect(result.differences).toBe(0)
 })

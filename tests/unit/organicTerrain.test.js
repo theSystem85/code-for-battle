@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections } from '../../src/rendering/organicTerrain.js'
+import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant } from '../../src/rendering/organicTerrain.js'
 
 describe('organic terrain topology', () => {
   it('covers all 256 neighborhoods with exactly 47 canonical masks', () => {
@@ -50,7 +50,7 @@ describe('organic terrain topology', () => {
     expect(isCliffChain(grid, 0, 0)).toBe(false)
     expect(isCliffChain(grid, 1, 0)).toBe(false)
   })
-  it('renders long narrow rock chains as one-sided textured escarpments', () => {
+  it('renders long narrow rock chains exclusively as ordinary boulders', () => {
     const grid = Array.from({ length: 5 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
       type: y === 2 && x >= 2 && x <= 4 ? 'rock' : 'land'
     })))
@@ -67,13 +67,31 @@ describe('organic terrain topology', () => {
       drawImage: (...args) => calls.push(args)
     }
     terrain.drawCliffs(ctx, grid, 0, 0, 7, 5, 0, 0, 32)
-    expect(calls.length).toBeGreaterThan(3)
-    expect(calls.every(call => call[0] === terrain.cliffs)).toBe(true)
-    expect(calls.some(call => call[1] === 16 * 160)).toBe(true)
+    expect(calls).toHaveLength(3)
+    expect(calls.every(call => call[0] === terrain.details)).toBe(true)
+  })
+  it('keeps a small L-shaped rock cluster in the boulder pool', () => {
+    const grid = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land' })))
+    for (const [x, y] of [[2, 2], [2, 3], [2, 4], [3, 4], [4, 4]]) grid[y][x].type = 'rock'
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.cliffs = { complete: true, naturalWidth: 3600 }
+    terrain.details = { id: 'details' }
+    const calls = []
+    const ctx = {
+      save: () => {},
+      beginPath: () => {},
+      rect: () => {},
+      clip: () => {},
+      restore: () => {},
+      drawImage: (...args) => calls.push(args)
+    }
+    terrain.drawCliffs(ctx, grid, 0, 0, 6, 6, 0, 0, 32)
+    expect(calls).toHaveLength(5)
+    expect(calls.every(call => call[0] === terrain.details)).toBe(true)
   })
   it('uses a continuous macro sprite for aligned two-tile-deep straight runs', () => {
     const grid = Array.from({ length: 9 }, (_, y) => Array.from({ length: 12 }, (_, x) => ({
-      type: y >= 3 && y <= 4 && x >= 4 && x <= 7 ? 'rock' : 'land'
+      type: y >= 3 && y <= 5 && x >= 3 && x <= 6 ? 'rock' : 'land'
     })))
     const terrain = new OrganicTerrain(() => {})
     const calls = []
@@ -89,6 +107,34 @@ describe('organic terrain topology', () => {
     }
     terrain.drawCliffs(ctx, grid, 0, 0, 12, 9, 0, 0, 32)
     expect(calls.some(call => call[0] === terrain.cliffs && call[2] >= 8 * 160 && (call[3] > 160 || call[4] > 160))).toBe(true)
+    expect(calls.some(call => call[0] === terrain.cliffs && call[2] >= 8 * 160 && call[3] === 160 && call[4] === 224)).toBe(true)
+  })
+  it('uses macro artwork for straight segments on every terrace level', () => {
+    const grid = Array.from({ length: 15 }, (_, y) => Array.from({ length: 15 }, (_, x) => ({
+      type: x >= 2 && x <= 12 && y >= 2 && y <= 12 ? 'rock' : 'land'
+    })))
+    const terrain = new OrganicTerrain(() => {})
+    const calls = []
+    terrain.cliffs = { complete: true, naturalWidth: 4096 }
+    terrain.details = {}
+    const ctx = {
+      save: () => {},
+      restore: () => {},
+      beginPath: () => {},
+      rect: () => {},
+      clip: () => {},
+      drawImage: (...args) => calls.push(args)
+    }
+    terrain.drawCliffs(ctx, grid, 0, 0, 15, 15, 0, 0, 32)
+    const straightCellXs = new Set([3, 6, 9, 12].map(mask => mask * 160))
+    const condensedStraightCalls = calls.filter(call => call[0] === terrain.cliffs && call[2] < 1280 && straightCellXs.has(call[1]))
+    expect(condensedStraightCalls).toHaveLength(0)
+  })
+  it('keeps cliff palettes constant inside broad geological regions', () => {
+    const variants = new Set()
+    for (let y = 20; y < 40; y++) for (let x = 20; x < 40; x++) variants.add(cliffVariant(x, y))
+    expect(variants.size).toBe(1)
+    expect(cliffVariant(25, 25, 1)).toBe(cliffVariant(25, 25, 5))
   })
   it('connects full roads to the legs of neighboring SOT wedges', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'land' })))

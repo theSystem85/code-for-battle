@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildCliffDepth, cliffContourMask, cliffMacroRect, isEscarpmentTile, isPlateauTile, CLIFF_LEVELS } from '../../src/rendering/cliffTerrain.js'
+import { buildCliffDepth, cliffContourMask, cliffHeightClass, cliffMacroRect, cliffTallRect, isPlateauTile, CLIFF_LEVELS } from '../../src/rendering/cliffTerrain.js'
 
 const plateau = (size, margin = 1) => Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => ({ type: x >= margin && y >= margin && x < size - margin && y < size - margin ? 'rock' : 'land' })))
 
@@ -25,21 +25,30 @@ describe('terraced cliff elevation', () => {
     }
     expect(cliffContourMask(wideDepth, 2, 2, 1)).not.toBe(0)
   })
-  it('classifies long cardinal narrow chains as escarpments but leaves diagonal fragments as boulders', () => {
+  it('leaves cardinal and diagonal narrow chains outside plateau classification', () => {
     const cardinal = Array.from({ length: 7 }, (_, y) => Array.from({ length: 9 }, (_, x) => ({ type: y === 3 && x >= 2 && x <= 6 ? 'rock' : 'land' })))
     const diagonal = Array.from({ length: 7 }, (_, y) => Array.from({ length: 9 }, (_, x) => ({ type: x === y + 1 && y >= 1 && y <= 5 ? 'rock' : 'land' })))
     const cardinalDepth = buildCliffDepth(cardinal, 0, 0, 9, 7)
     const diagonalDepth = buildCliffDepth(diagonal, 0, 0, 9, 7)
-    for (let x = 2; x <= 6; x++) expect(isEscarpmentTile(cardinalDepth, x, 3)).toBe(true)
-    expect(diagonal.flatMap((row, y) => row.map((tile, x) => tile.type === 'rock' && isEscarpmentTile(diagonalDepth, x, y))).some(Boolean)).toBe(false)
+    expect(cardinal.flatMap((row, y) => row.map((tile, x) => tile.type === 'rock' && isPlateauTile(cardinalDepth, x, y))).some(Boolean)).toBe(false)
+    expect(diagonal.flatMap((row, y) => row.map((tile, x) => tile.type === 'rock' && isPlateauTile(diagonalDepth, x, y))).some(Boolean)).toBe(false)
   })
-  it('maps every 2-4-cell macro direction into a two-tile-deep atlas rectangle', () => {
-    for (let variant = 0; variant < 8; variant++) for (const mask of [3, 6, 9, 12]) for (const length of [2, 3, 4]) {
+  it('maps every 1-4-cell macro direction into a two-tile-deep atlas rectangle', () => {
+    for (let variant = 0; variant < 8; variant++) for (const mask of [3, 6, 9, 12]) for (const length of [1, 2, 3, 4]) {
       const rect = cliffMacroRect(mask, length, variant)
       expect(rect).not.toBeNull()
       expect(mask === 3 || mask === 12 ? rect.height : rect.width).toBe(224)
       expect(mask === 3 || mask === 12 ? rect.width : rect.height).toBe(length * 64 + 96)
     }
+  })
+  it('uses one height class around each outer plateau contour and a separate short inner tier', () => {
+    const depth = buildCliffDepth(plateau(13), 0, 0, 13, 13)
+    for (let y = 0; y < 12; y++) for (let x = 0; x < 12; x++) {
+      const mask = cliffContourMask(depth, x, y, 1)
+      if (mask && mask !== 15) expect(cliffHeightClass(depth, x, y, 1)).toBe(2)
+    }
+    expect(cliffHeightClass(depth, 5, 5, 3)).toBe(1)
+    expect(cliffTallRect(14, 7)).toEqual({ x: 3136, y: 5152, width: 224, height: 224 })
   })
   it('gives identical terrace contours when baked from neighboring chunk patches', () => {
     const grid = plateau(48)
