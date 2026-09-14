@@ -152,6 +152,9 @@ export class OrganicTerrain {
     this.ready = false
     this.textureManager = textureManager
     this.biomeImages = {}
+    this.biomeBlendMasks = new Map()
+    this.biomeBlendCanvas = null
+    this.biomeBlendContext = null
     this.image = new Image()
     this.details = new Image()
     this.cliffs = new Image()
@@ -178,8 +181,7 @@ export class OrganicTerrain {
     }
   }
 
-  drawGrass(ctx, x, y, sx, sy, size) {
-    const biome = this.textureManager?.integratedBiomeTag || 'grass'
+  drawBiome(ctx, x, y, sx, sy, size, biome) {
     const sources = this.biomeImages[biome] || this.biomeImages.grass
     const source = sources?.[terrainHash(x, y, 29) % sources.length]
     if (source?.complete && source.naturalWidth) {
@@ -192,6 +194,63 @@ export class OrganicTerrain {
 
     // The atlas remains a safe fallback while source material images load.
     ctx.drawImage(this.image, (x & 7) * 64 + (terrainHash(x >> 3, y >> 3, 29) % 2) * 512, (y & 7) * 64, 64, 64, sx, sy, size, size)
+  }
+
+  getBiomeBlendMask(size, x, y, blend) {
+    const directionSteps = 8
+    const direction = ((Math.round((((blend.angle || 0) + Math.PI) / (Math.PI * 2)) * directionSteps) % directionSteps) + directionSteps) % directionSteps
+    const coverage = Math.max(1, Math.min(8, Math.round(blend.alpha * 8)))
+    const angle = (direction / directionSteps) * Math.PI * 2 - Math.PI
+    const normalX = Math.cos(angle), normalY = Math.sin(angle)
+    const tangentX = -normalY, tangentY = normalX
+    const worldTangent = (x * size) * tangentX + (y * size) * tangentY
+    const phase = ((Math.round((worldTangent / size) * 2) % 8) + 8) % 8
+    const key = `${size}|${direction}|${coverage}|${phase}`
+    if (this.biomeBlendMasks.has(key)) return this.biomeBlendMasks.get(key)
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = size
+    const context = canvas.getContext('2d')
+    const pixels = context.createImageData(size, size)
+    const threshold = (coverage / 8 - 0.5) * size * 1.35
+    for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
+      const localX = px + 0.5 - size / 2
+      const localY = py + 0.5 - size / 2
+      const tangent = localX * tangentX + localY * tangentY
+      const continuousTangent = tangent / size + phase / 2
+      const wave = Math.sin(continuousTangent * Math.PI * 2) * size * 0.1 + Math.sin(continuousTangent * Math.PI * 5) * size * 0.035
+      const distance = localX * normalX + localY * normalY + threshold + wave
+      const alpha = Math.max(0, Math.min(1, 0.5 + distance / Math.max(3, size * 0.2)))
+      pixels.data[(py * size + px) * 4 + 3] = Math.round(alpha * 255)
+    }
+    context.putImageData(pixels, 0, 0)
+    this.biomeBlendMasks.set(key, canvas)
+    return canvas
+  }
+
+  drawBiomeTransition(ctx, x, y, sx, sy, size, blend) {
+    if (!this.biomeBlendCanvas) {
+      this.biomeBlendCanvas = document.createElement('canvas')
+      this.biomeBlendContext = this.biomeBlendCanvas.getContext('2d')
+    }
+    if (this.biomeBlendCanvas.width !== size || this.biomeBlendCanvas.height !== size) {
+      this.biomeBlendCanvas.width = this.biomeBlendCanvas.height = size
+    }
+    const blendContext = this.biomeBlendContext
+    blendContext.clearRect(0, 0, size, size)
+    this.drawBiome(blendContext, x, y, 0, 0, size, blend.biome)
+    blendContext.globalCompositeOperation = 'destination-in'
+    blendContext.drawImage(this.getBiomeBlendMask(size, x, y, blend), 0, 0)
+    blendContext.globalCompositeOperation = 'source-over'
+    ctx.drawImage(this.biomeBlendCanvas, sx, sy)
+  }
+
+  drawGrass(ctx, x, y, sx, sy, size, tile = null) {
+    const configuredBiome = this.textureManager?.integratedBiomeTag || 'grass'
+    const primaryBiome = tile?.biome || (configuredBiome === 'mixed' ? 'grass' : configuredBiome)
+    this.drawBiome(ctx, x, y, sx, sy, size, primaryBiome)
+    const blend = tile?.biomeBlend
+    if (!blend?.biome || !(blend.alpha > 0)) return
+    this.drawBiomeTransition(ctx, x, y, sx, sy, size, blend)
   }
 
   drawRoad(ctx, grid, x, y, sx, sy, size) {

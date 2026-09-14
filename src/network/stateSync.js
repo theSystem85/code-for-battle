@@ -466,6 +466,11 @@ export function createGameStateSnapshot() {
     mapShoreEast: gameState.mapShoreEast,
     mapShoreSouth: gameState.mapShoreSouth,
     mapCenterLake: gameState.mapCenterLake,
+    activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag,
+    mapBiomeRegionCount: gameState.mapBiomeRegionCount,
+    mapBiomeDistribution: gameState.mapBiomeDistribution,
+    mapBiomeWeights: { ...gameState.mapBiomeWeights },
+    mapSnowOnPlateaus: gameState.mapSnowOnPlateaus,
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
     oreSpreadInterval: ORE_SPREAD_INTERVAL,
@@ -526,6 +531,11 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     gameState.mapShoreEast = !!terrainSettings.mapShoreEast
     gameState.mapShoreSouth = !!terrainSettings.mapShoreSouth
     gameState.mapCenterLake = !!terrainSettings.mapCenterLake
+    gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(terrainSettings.activeSpriteSheetBiomeTag) ? terrainSettings.activeSpriteSheetBiomeTag : 'grass'
+    gameState.mapBiomeRegionCount = terrainSettings.mapBiomeRegionCount
+    gameState.mapBiomeDistribution = terrainSettings.mapBiomeDistribution
+    gameState.mapBiomeWeights = terrainSettings.mapBiomeWeights
+    gameState.mapSnowOnPlateaus = terrainSettings.mapSnowOnPlateaus !== false
   }
 
   // Call main.js function to regenerate map with host's seed and generation settings
@@ -616,7 +626,12 @@ export function applyGameStateSnapshot(snapshot) {
       mapShoreWest: snapshot.mapShoreWest,
       mapShoreEast: snapshot.mapShoreEast,
       mapShoreSouth: snapshot.mapShoreSouth,
-      mapCenterLake: snapshot.mapCenterLake
+      mapCenterLake: snapshot.mapCenterLake,
+      activeSpriteSheetBiomeTag: snapshot.activeSpriteSheetBiomeTag,
+      mapBiomeRegionCount: snapshot.mapBiomeRegionCount,
+      mapBiomeDistribution: snapshot.mapBiomeDistribution,
+      mapBiomeWeights: snapshot.mapBiomeWeights,
+      mapSnowOnPlateaus: snapshot.mapSnowOnPlateaus
     })
   }
 

@@ -416,7 +416,7 @@ export class TextureManager {
 
   async setIntegratedSpriteSheetConfig(config = {}) {
     const enabled = Boolean(config?.enabled)
-    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : this.integratedBiomeTag
+    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : this.integratedBiomeTag
     if (!enabled) {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
@@ -476,7 +476,7 @@ export class TextureManager {
     this.integratedSpriteSheetMetadata = normalizedEntries[0].metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
     this.integratedGroupedTagCatalog = this.buildGroupedTagCatalog(normalizedEntries)
-    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
+    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
     this.integratedBlackKey = normalizedEntries[0].blackKey
     const signatureSheets = normalizedEntries
@@ -831,8 +831,11 @@ export class TextureManager {
     const mapGrid = options?.mapGrid
 
     if (type === 'land') {
+      const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(options?.biomeTag)
+        ? options.biomeTag
+        : (this.integratedBiomeTag === 'mixed' ? 'grass' : this.integratedBiomeTag)
       const classification = this.getLandClassificationTag(x, y)
-      const biomeDecorativeCandidates = this.getIntegratedTileCandidatesByTags([this.integratedBiomeTag, 'decorative'])
+      const biomeDecorativeCandidates = this.getIntegratedTileCandidatesByTags([requestedBiome, 'decorative'])
       if (classification === 'decorative') {
         if (mapGrid) {
           selected = this.selectGroupedTileForMapTile('decorative', x, y, mapGrid, (cellX, cellY) => {
@@ -844,10 +847,10 @@ export class TextureManager {
           selected = selected || this.selectIntegratedTileFromCandidates(biomeDecorativeCandidates, x, y)
         }
       } else if (classification === 'impassable') {
-        selected = this.selectIntegratedTileByTags([this.integratedBiomeTag, 'impassable'], x, y)
+        selected = this.selectIntegratedTileByTags([requestedBiome, 'impassable'], x, y)
       } else {
-        selected = this.selectIntegratedTileByTags([this.integratedBiomeTag, 'passable'], x, y, ['decorative', 'impassable'])
-          || this.selectIntegratedTileByTags([this.integratedBiomeTag], x, y, ['decorative', 'impassable'])
+        selected = this.selectIntegratedTileByTags([requestedBiome, 'passable'], x, y, ['decorative', 'impassable'])
+          || this.selectIntegratedTileByTags([requestedBiome], x, y, ['decorative', 'impassable'])
       }
     } else if (type === 'rock') {
       if (mapGrid) {

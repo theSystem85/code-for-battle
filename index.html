@@ -735,18 +735,47 @@
             </div>
             <div style="display: flex; gap: 10px; margin: 10px 0; align-items: flex-end;">
               <div style="width: 50%; min-width: 0;">
-                <label for="integratedSpriteSheetBiomeSelect" style="display:block; margin-bottom: 6px;">SSE Biome</label>
+                <label for="integratedSpriteSheetBiomeSelect" style="display:block; margin-bottom: 6px;">Map Biome</label>
                 <select id="integratedSpriteSheetBiomeSelect" class="sidebar-input" style="width: 100%;">
                   <option value="soil">Soil</option>
                   <option value="sand">Sand</option>
                   <option value="grass" selected>Grass</option>
                   <option value="snow">Snow</option>
+                  <option value="mixed">Mixed</option>
                 </select>
               </div>
               <div class="floating-label-input" style="width: 50%; min-width: 0;">
                 <input type="number" class="sidebar-input" id="startMoney" min="0" step="1000" max="5000000" value="20000" placeholder=" ">
                 <label for="startMoney">Start Money</label>
               </div>
+            </div>
+            <div id="mixedBiomeSettings" style="margin: 10px 0;">
+              <div style="display:flex; gap:10px; margin:10px 0;">
+                <div class="floating-label-input floating-label-input--narrow" style="width:120px;">
+                  <input type="number" class="sidebar-input" id="mapBiomeRegionCount" min="1" max="64" value="12" placeholder=" ">
+                  <label for="mapBiomeRegionCount">Biome Regions</label>
+                </div>
+                <div style="flex:1; min-width:0;">
+                  <label for="mapBiomeDistribution" style="display:block; margin-bottom:6px;">Distribution</label>
+                  <select id="mapBiomeDistribution" class="sidebar-input" style="width:100%;">
+                    <option value="random" selected>Random</option>
+                    <option value="vertical">Vertical</option>
+                    <option value="horizontal">Horizontal</option>
+                    <option value="corners">Four corners</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:10px 0;">
+                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeGrassWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeGrassWeight">Grass Size</label></div>
+                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSoilWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeSoilWeight">Soil Size</label></div>
+                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSandWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSandWeight">Sand Size</label></div>
+                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSnowWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSnowWeight">Snow Size</label></div>
+              </div>
+              <label style="display:flex; align-items:center; gap:5px; margin:10px 0;">
+                <input type="checkbox" id="mapSnowOnPlateausCheckbox" checked>
+                <span>Snow on plateau tops</span>
+              </label>
+              <small>Sizes are relative weights. Shore sand only follows ocean-connected water, not lakes.</small>
             </div>
             <div style="display: flex; gap: 10px; margin: 10px 0;">
               <div class="floating-label-input floating-label-input--narrow" style="width: 120px;">

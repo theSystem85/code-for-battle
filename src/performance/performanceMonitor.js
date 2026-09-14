@@ -171,6 +171,11 @@ export class PerformanceMonitor {
         shoreEast: Boolean(gameState.mapShoreEast),
         shoreSouth: Boolean(gameState.mapShoreSouth),
         centerLake: Boolean(gameState.mapCenterLake),
+        biome: gameState.activeSpriteSheetBiomeTag,
+        biomeRegions: gameState.mapBiomeRegionCount,
+        biomeDistribution: gameState.mapBiomeDistribution,
+        biomeWeights: { ...gameState.mapBiomeWeights },
+        snowOnPlateaus: Boolean(gameState.mapSnowOnPlateaus),
         scrollOffset: { x: round(gameState.scrollOffset?.x || 0), y: round(gameState.scrollOffset?.y || 0) }
       },
       game: {

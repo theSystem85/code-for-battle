@@ -51,6 +51,18 @@ test('organic terrain is identical across chunk seams and map edits', async({ pa
 
 test('terrain combat performance at DPR 2', async({ page }, testInfo) => {
   test.skip(process.env.TERRAIN_BENCHMARK !== '1', 'Opt in with TERRAIN_BENCHMARK=1')
+  if (process.env.TERRAIN_MIXED_BIOME === '1') {
+    await page.goto('/?seed=4')
+    await page.evaluate(async() => {
+      const { setStoredItem, flushGameStorageWrites } = await import('/src/storage/indexedDbStorage.js')
+      setStoredItem('rts-integrated-spritesheet-biome', 'mixed')
+      setStoredItem('rts-map-biome-region-count', '32')
+      setStoredItem('rts-map-biome-distribution', 'random')
+      setStoredItem('rts-map-biome-weights', JSON.stringify({ grass: 25, soil: 25, sand: 25, snow: 25 }))
+      setStoredItem('rts-map-snow-on-plateaus', 'true')
+      await flushGameStorageWrites()
+    })
+  }
   await page.goto('/?seed=4&size=100&monitor=1&e2eIosBenchmark=1&benchmarkDurationMs=15000&benchmarkScroll=1&benchmarkScrollPixelsPerFrame=8')
   await page.waitForFunction(() => window.gameInstance)
   await page.locator('#performanceMonitorButton').dispatchEvent('click')
@@ -62,6 +74,57 @@ test('terrain combat performance at DPR 2', async({ page }, testInfo) => {
   expect(report.averageFps).toBeGreaterThanOrEqual(Number(process.env.TERRAIN_MIN_FPS || 30))
   if (process.env.TERRAIN_BASELINE_FPS) expect(report.averageFps).toBeGreaterThanOrEqual(Number(process.env.TERRAIN_BASELINE_FPS) * 0.8)
   expect(report.renderer.mapChunks.directTilePasses).toBe(0)
+})
+
+test('mixed-biome cached terrain stays within the static chunk-bake budget', async({ page }, testInfo) => {
+  test.skip(process.env.TERRAIN_BENCHMARK !== '1', 'Opt in with TERRAIN_BENCHMARK=1')
+  await page.goto('/?seed=4')
+  const report = await page.evaluate(async() => {
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const { TextureManager } = await import('/src/rendering/textureManager.js')
+    const { assignMapBiomes } = await import('/src/game/mapBiomes.js')
+    const manager = new TextureManager()
+    await new Promise(resolve => manager.preloadAllTextures(resolve))
+    const renderer = new MapRenderer(manager)
+    await Promise.all(Object.values(renderer.organicTerrain.biomeImages).flat().map(image => image.decode()))
+    const buildGrid = () => Array.from({ length: 100 }, (_, y) => Array.from({ length: 100 }, (_, x) => ({
+      type: x > 90 + Math.floor(Math.sin(y / 5) * 3) ? 'water' : x > 35 && x < 65 && y > 20 && y < 80 ? 'rock' : 'land'
+    })))
+    const measure = mode => {
+      const grid = buildGrid()
+      assignMapBiomes(grid, 4, {
+        activeSpriteSheetBiomeTag: mode,
+        mapBiomeRegionCount: 32,
+        mapBiomeDistribution: 'random',
+        mapBiomeWeights: { grass: 25, soil: 25, sand: 25, snow: 25 },
+        mapSnowOnPlateaus: true
+      })
+      renderer.invalidateAllChunks()
+      const started = performance.now()
+      for (let cy = 0; cy < 7; cy++) for (let cx = 0; cx < 7; cx++) {
+        const startX = cx * 16, startY = cy * 16
+        const chunk = renderer.getOrCreateChunk(cx, cy, startX, startY, Math.min(100, startX + 16), Math.min(100, startY + 16))
+        renderer.updateChunkCache(chunk, grid, true, null, { skipWaterBase: true, skipWaterSot: true })
+      }
+      const coldBakeMs = performance.now() - started
+      const cachedStarted = performance.now()
+      for (const chunk of renderer.chunkCache.values()) renderer.updateChunkCache(chunk, grid, true, null, { skipWaterBase: true, skipWaterSot: true })
+      return { coldBakeMs, cachedPassMs: performance.now() - cachedStarted }
+    }
+    const baseline = measure('grass')
+    const mixed = measure('mixed')
+    return {
+      baseline,
+      mixed,
+      coldRatio: mixed.coldBakeMs / baseline.coldBakeMs,
+      cachedRatio: mixed.cachedPassMs / baseline.cachedPassMs,
+      heapBytes: performance.memory?.usedJSHeapSize || null
+    }
+  })
+  console.log('MIXED_BIOME_TERRAIN_BENCHMARK', JSON.stringify(report))
+  await testInfo.attach('mixed-biome-terrain-performance', { body: JSON.stringify(report, null, 2), contentType: 'application/json' })
+  expect(report.cachedRatio).toBeLessThan(1.2)
+  expect(report.coldRatio).toBeLessThan(1.8)
 })
 
 

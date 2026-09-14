@@ -239,6 +239,8 @@ export class MapRenderer {
     this.sotMask = null
     this.sotMaskVersion = 0
     this.organicTerrain = new OrganicTerrain(() => this.invalidateAllChunks(), textureManager)
+    this.integratedBiomeBlendCanvas = null
+    this.integratedBiomeBlendContext = null
   }
 
   createEmptyChunkStats() {
@@ -855,6 +857,10 @@ export class MapRenderer {
         mixSignature(tile.ore ? 1 : 0)
         mixSignature(tile.seedCrystal ? 1 : 0)
         mixSignature(tile.noBuild || 0)
+        mixSignature(tile.biome || '')
+        mixSignature(tile.biomeBlend?.biome || '')
+        mixSignature(tile.biomeBlend?.alpha || 0)
+        mixSignature(tile.biomeBlend?.angle || 0)
         mixSignature(getTileDecalSignature(tile))
         if (tile.type === 'water') containsWater = true
       }
@@ -1292,6 +1298,23 @@ export class MapRenderer {
     return true
   }
 
+  drawIntegratedBiomeTransition(ctx, integratedTile, screenX, screenY, tileX, tileY, blend) {
+    if (!integratedTile?.image || !integratedTile?.rect || !this.canUseOffscreen) return false
+    if (!this.integratedBiomeBlendCanvas) {
+      this.integratedBiomeBlendCanvas = document.createElement('canvas')
+      this.integratedBiomeBlendCanvas.width = this.integratedBiomeBlendCanvas.height = TILE_SIZE
+      this.integratedBiomeBlendContext = this.integratedBiomeBlendCanvas.getContext('2d')
+    }
+    const blendContext = this.integratedBiomeBlendContext
+    blendContext.clearRect(0, 0, TILE_SIZE, TILE_SIZE)
+    this.drawIntegratedTileImage(blendContext, integratedTile, 0, 0)
+    blendContext.globalCompositeOperation = 'destination-in'
+    blendContext.drawImage(this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend), 0, 0)
+    blendContext.globalCompositeOperation = 'source-over'
+    ctx.drawImage(this.integratedBiomeBlendCanvas, screenX, screenY)
+    return true
+  }
+
   clearTriangleArea(ctx, screenX, screenY, size, orientation) {
     ctx.save()
     ctx.beginPath()
@@ -1369,13 +1392,13 @@ export class MapRenderer {
       return
     }
     if (this.useOrganicTerrain(useTexture) && ['land', 'street', 'rock'].includes(type)) {
-      this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE)
+      this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, mapGrid?.[tileY]?.[tileX])
       return
     }
     if (type === 'street') {
       if (this.textureManager.integratedSpriteSheetMode) {
         const biomeUnderlayTile = mapGrid
-          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
+          ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: mapGrid[tileY]?.[tileX]?.biome })
           : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
         if (!this.drawIntegratedTileImage(ctx, biomeUnderlayTile, screenX, screenY)) {
           this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
@@ -1397,19 +1420,25 @@ export class MapRenderer {
     }
 
     if (this.textureManager.integratedSpriteSheetMode) {
+      const tileBiome = mapGrid?.[tileY]?.[tileX]?.biome
       const integratedTile = mapGrid
-        ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid })
+        ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid, biomeTag: tileBiome })
         : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
         if (type === 'rock' && this.textureManager.integratedSpriteSheetMode) {
           const landTile = mapGrid
-            ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })
+            ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: tileBiome })
             : this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY)
           if (!this.drawIntegratedTileImage(ctx, landTile, screenX, screenY)) {
             this.drawFallbackTileBase(ctx, tileX, tileY, 'land', screenX, screenY, useTexture, currentWaterFrame)
           }
         }
         this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+        const blend = mapGrid?.[tileY]?.[tileX]?.biomeBlend
+        if (type === 'land' && blend?.biome && blend.alpha > 0) {
+          const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: blend.biome })
+          this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, blend)
+        }
         return
       }
     }
