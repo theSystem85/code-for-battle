@@ -8,6 +8,7 @@
 - Grass, soil, sand, and snow size weights control their relative region coverage. Disabled (zero-weight) biomes are excluded.
 - Neighboring regions are assigned with a four-color-style greedy pass that avoids the same biome on connected regions whenever the enabled palette permits it.
 - Ocean-connected shorelines prefer sand with a one-tile feather; enclosed lakes do not create sand belts.
+- Shoreline sand feather normals follow the nearest ocean direction: north/south coasts blend vertically, east/west coasts horizontally, and corner coastlines diagonally.
 - `Snow on plateaus` independently paints rock/plateau tops without consuming one of the configured mixed-biome regions.
 - Each generated tile caches its primary biome, optional neighboring biome, and blend opacity. The renderer uses that cached data during static terrain chunk baking, with warped boundaries and transparent cross-fades rather than straight or circular seams.
 - Changes to any biome control are persisted and immediately regenerate and rerender the map while preserving the camera position.
