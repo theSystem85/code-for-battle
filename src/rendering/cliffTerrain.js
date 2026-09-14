@@ -5,20 +5,28 @@ export const CLIFF_PADDING = 48
 export const CLIFF_TILE = 64
 export const CLIFF_VARIANTS = 8
 export const CLIFF_MACRO_BASE_Y = CLIFF_CELL * CLIFF_VARIANTS
-export const CLIFF_MACRO_VARIANT_WIDTH = 1800
+export const CLIFF_MACRO_VARIANT_WIDTH = 2048
 export const CLIFF_MACRO_VARIANT_HEIGHT = 576
+export const CLIFF_TALL_CELL = 224
+export const CLIFF_TALL_PADDING = 80
+export const CLIFF_TALL_BASE_Y = 3584
 
 export function cliffMacroRect(mask, length, variant) {
-  if (![3, 6, 9, 12].includes(mask) || length < 2 || length > 4 || variant < 0 || variant >= CLIFF_VARIANTS) return null
+  if (![3, 6, 9, 12].includes(mask) || length < 1 || length > 4 || variant < 0 || variant >= CLIFF_VARIANTS) return null
   const originX = (variant % 2) * CLIFF_MACRO_VARIANT_WIDTH
   const originY = CLIFF_MACRO_BASE_Y + Math.floor(variant / 2) * CLIFF_MACRO_VARIANT_HEIGHT
   if (mask === 3 || mask === 12) {
-    let x = originX + (mask === 12 ? 864 : 0)
-    for (let currentLength = 2; currentLength < length; currentLength++) x += currentLength * CLIFF_TILE + CLIFF_PADDING * 2
+    let x = originX + (mask === 12 ? 1024 : 0)
+    for (let currentLength = 1; currentLength < length; currentLength++) x += currentLength * CLIFF_TILE + CLIFF_PADDING * 2
     return { x, y: originY, width: length * CLIFF_TILE + CLIFF_PADDING * 2, height: CLIFF_TILE * 2 + CLIFF_PADDING * 2 }
   }
-  const item = (mask === 9 ? 3 : 0) + length - 2
+  const item = (mask === 9 ? 4 : 0) + length - 1
   return { x: originX + item * (CLIFF_TILE * 2 + CLIFF_PADDING * 2), y: originY + CLIFF_TILE * 2 + CLIFF_PADDING * 2, width: CLIFF_TILE * 2 + CLIFF_PADDING * 2, height: length * CLIFF_TILE + CLIFF_PADDING * 2 }
+}
+
+export function cliffTallRect(mask, variant) {
+  if (mask < 0 || mask > 15 || variant < 0 || variant >= CLIFF_VARIANTS) return null
+  return { x: mask * CLIFF_TALL_CELL, y: CLIFF_TALL_BASE_Y + variant * CLIFF_TALL_CELL, width: CLIFF_TALL_CELL, height: CLIFF_TALL_CELL }
 }
 
 function distanceTransform(values, width, height) {
@@ -61,39 +69,12 @@ export function buildCliffDepth(grid, startX, startY, endX, endY) {
   const values = plateau.slice()
   distanceTransform(values, width, height)
 
-  // Cardinal chains of at least three rocks can carry a one-sided escarpment
-  // even when they are too narrow for a closed plateau.
-  const escarpment = new Uint8Array(width * height)
-  const visited = new Uint8Array(width * height)
-  const stack = new Int32Array(width * height)
-  const component = new Int32Array(width * height)
-  for (let y = 1; y < height - 1; y++) for (let x = 1; x < width - 1; x++) {
-    const i = y * width + x
-    if (!rockDepth[i] || plateau[i] || visited[i]) continue
-
-    let stackLength = 1, componentLength = 0
-    stack[0] = i
-    visited[i] = 1
-    while (stackLength) {
-      const current = stack[--stackLength]
-      component[componentLength++] = current
-      const currentX = current % width, currentY = Math.floor(current / width)
-      for (let direction = 0; direction < 4; direction++) {
-        if ((direction === 0 && currentY === 0) ||
-          (direction === 1 && currentX === width - 1) ||
-          (direction === 2 && currentY === height - 1) ||
-          (direction === 3 && currentX === 0)) continue
-        const neighbor = direction === 0 ? current - width : direction === 1 ? current + 1
-          : direction === 2 ? current + width : current - 1
-        if (!visited[neighbor] && rockDepth[neighbor] && !plateau[neighbor]) {
-          visited[neighbor] = 1
-          stack[stackLength++] = neighbor
-        }
-      }
-    }
-    if (componentLength >= 3) for (let j = 0; j < componentLength; j++) escarpment[component[j]] = 1
-  }
-  return { values, plateau, escarpment, rockDepth, width, left, top }
+  // Every qualifying plateau uses the tall pool around its complete outer
+  // contour. Short sprites are reserved for separate inner terrace contours,
+  // so the two height classes never meet along one connected cliff line.
+  const heightClass = plateau.slice()
+  for (let i = 0; i < heightClass.length; i++) if (heightClass[i]) heightClass[i] = 2
+  return { values, plateau, heightClass, rockDepth, width, left, top }
 }
 
 export function isPlateauTile(depth, x, y) {
@@ -103,25 +84,22 @@ export function isPlateauTile(depth, x, y) {
   return localY < Math.floor(depth.plateau.length / depth.width) && depth.plateau[i] > 0
 }
 
-export function isEscarpmentTile(depth, x, y) {
-  const localX = x - depth.left, localY = y - depth.top
-  if (localX < 0 || localY < 0 || localX >= depth.width) return false
-  const i = localY * depth.width + localX
-  return localY < Math.floor(depth.escarpment.length / depth.width) && depth.escarpment[i] > 0
-}
-
-export function escarpmentContourMask(depth, x, y) {
-  const i = (y - depth.top) * depth.width + x - depth.left
-  return (depth.escarpment[i] ? 1 : 0) |
-    (depth.escarpment[i + 1] ? 2 : 0) |
-    (depth.escarpment[i + depth.width + 1] ? 4 : 0) |
-    (depth.escarpment[i + depth.width] ? 8 : 0)
-}
-
 export function cliffContourMask(depth, x, y, level) {
   const i = (y - depth.top) * depth.width + x - depth.left
   return (depth.values[i] >= level ? 1 : 0) |
     (depth.values[i + 1] >= level ? 2 : 0) |
     (depth.values[i + depth.width + 1] >= level ? 4 : 0) |
     (depth.values[i + depth.width] >= level ? 8 : 0)
+}
+
+export function cliffHeightClass(depth, x, y, level) {
+  // Nested contours are separate terrace steps. Only the component-wide outer
+  // contour uses the two-tile artwork.
+  if (level !== CLIFF_LEVELS[0]) return 1
+  const i = (y - depth.top) * depth.width + x - depth.left
+  let result = 1
+  for (const offset of [0, 1, depth.width + 1, depth.width]) {
+    if (depth.values[i + offset] >= level) result = Math.max(result, depth.heightClass[i + offset] || 1)
+  }
+  return result
 }

@@ -860,3 +860,5 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Prefer eight-direction connected neutral cliffs for chains, neutral boulders for isolated parts.
 - [x] Preserve cached rendering and verify shorelines, edits, direction masks, units and live performance.
 - [x] Inspect the result and document further visual suggestions in specs/organic-terrain.md.
+- [x] Restrict cliff art to qualifying plateaus, make cliff exposure camera-directional, prevent mixed one/two-tile height joins, and cluster cliff geology palettes across complete formations.
+- [x] Replace condensed one-cell straight cliff rendering with the same broad macro artwork used by the preferred non-condensed cliff style on every terrace level.
