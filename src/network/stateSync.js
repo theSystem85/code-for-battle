@@ -470,6 +470,7 @@ export function createGameStateSnapshot() {
     mapBiomeRegionCount: gameState.mapBiomeRegionCount,
     mapBiomeDistribution: gameState.mapBiomeDistribution,
     mapBiomeWeights: { ...gameState.mapBiomeWeights },
+    mapShorelineWidth: gameState.mapShorelineWidth,
     mapSnowOnPlateaus: gameState.mapSnowOnPlateaus,
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
@@ -535,6 +536,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     gameState.mapBiomeRegionCount = terrainSettings.mapBiomeRegionCount
     gameState.mapBiomeDistribution = terrainSettings.mapBiomeDistribution
     gameState.mapBiomeWeights = terrainSettings.mapBiomeWeights
+    gameState.mapShorelineWidth = terrainSettings.mapShorelineWidth
     gameState.mapSnowOnPlateaus = terrainSettings.mapSnowOnPlateaus !== false
   }
 
@@ -631,6 +633,7 @@ export function applyGameStateSnapshot(snapshot) {
       mapBiomeRegionCount: snapshot.mapBiomeRegionCount,
       mapBiomeDistribution: snapshot.mapBiomeDistribution,
       mapBiomeWeights: snapshot.mapBiomeWeights,
+      mapShorelineWidth: snapshot.mapShorelineWidth,
       mapSnowOnPlateaus: snapshot.mapSnowOnPlateaus
     })
   }

@@ -821,6 +821,7 @@ function buildSaveObject(label) {
       mapBiomeRegionCount: gameState.mapBiomeRegionCount,
       mapBiomeDistribution: gameState.mapBiomeDistribution,
       mapBiomeWeights: { ...gameState.mapBiomeWeights },
+      mapShorelineWidth: gameState.mapShorelineWidth,
       mapSnowOnPlateaus: gameState.mapSnowOnPlateaus,
       powerSupply: gameState.powerSupply,
       playerBuildHistory: gameState.playerBuildHistory,
