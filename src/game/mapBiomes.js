@@ -32,6 +32,7 @@ export function sanitizeBiomeSettings(state = {}) {
     distribution: DISTRIBUTIONS.has(state.mapBiomeDistribution) ? state.mapBiomeDistribution : 'random',
     weights,
     shorelineWidth: clamp(Math.round(Number.isFinite(Number(state.mapShorelineWidth)) ? Number(state.mapShorelineWidth) : 2), 0, 12),
+    transitionPixels: clamp(Math.round(Number.isFinite(Number(state.mapBiomeTransitionPixels)) ? Number(state.mapBiomeTransitionPixels) : 8), 1, 64),
     snowOnPlateaus: state.mapSnowOnPlateaus !== false
   }
 }
@@ -231,6 +232,7 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
       tile.biomeBlend = {
         biome: edgeBiome,
         alpha: 0.5,
+        featherPixels: settings.transitionPixels,
         angle: Math.atan2(y - edgeNeighbor.y, x - edgeNeighbor.x)
       }
     } else delete tile.biomeBlend
@@ -261,7 +263,8 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
         tile.biomeBlend = {
           biome: 'sand',
           alpha: Math.round(sandAlpha * 100) / 100,
-          angle: nearestOceanOffset ? Math.atan2(nearestOceanOffset.y, nearestOceanOffset.x) : 0
+          angle: nearestOceanOffset ? Math.atan2(nearestOceanOffset.y, nearestOceanOffset.x) : 0,
+          featherPixels: settings.transitionPixels
         }
       }
     }

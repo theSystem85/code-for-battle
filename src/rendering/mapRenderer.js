@@ -1266,7 +1266,7 @@ export class MapRenderer {
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
         if (this.useOrganicTerrain(useTexture)) {
-          this.drawOrganicWaterTransition(ctx, mapGrid, x, y, screenX, screenY, currentWaterFrame)
+          if (!this.dynamicWaterLandBlendEnabled) this.drawOrganicWaterTransition(ctx, mapGrid, x, y, screenX, screenY, currentWaterFrame)
           this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
         }
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
@@ -2091,6 +2091,7 @@ export class MapRenderer {
       return
     }
     this.resetFrameChunkStats()
+    this.dynamicWaterLandBlendEnabled = gameState?.dynamicWaterLandBlendEnabled !== false
     // Calculate visible tile range - improved for better performance
     const startTileX = Math.max(0, Math.floor(scrollOffset.x / TILE_SIZE))
     const startTileY = Math.max(0, Math.floor(scrollOffset.y / TILE_SIZE))
@@ -2114,6 +2115,12 @@ export class MapRenderer {
         skipWaterSot: separateWaterLayer ? true : skipWaterSot,
         prewarmStaticTerrain: separateWaterLayer || (skipWaterBase && skipWaterSot)
       })
+      if (this.dynamicWaterLandBlendEnabled && this.useOrganicTerrain(USE_TEXTURES && this.textureManager.allTexturesLoaded)) {
+        const frame = this.textureManager.waterFrames.length ? this.textureManager.getCurrentWaterFrame() : null
+        for (let y = startTileY; y < endTileY; y++) for (let x = startTileX; x < endTileX; x++) {
+          this.drawOrganicWaterTransition(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - scrollOffset.x), Math.floor(y * TILE_SIZE - scrollOffset.y), frame)
+        }
+      }
       if (separateWaterLayer && !waterBeforeTerrain && (!skipWaterBase || !skipWaterSot)) {
         this.renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
           drawBase: !skipWaterBase,

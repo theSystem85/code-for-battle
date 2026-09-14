@@ -211,6 +211,7 @@ export class OrganicTerrain {
     canvas.width = canvas.height = size
     const context = canvas.getContext('2d')
     const pixels = context.createImageData(size, size)
+    const featherPixels = Math.max(1, Math.min(size, Number(blend.featherPixels) || size * 0.2))
     const threshold = (coverage / 8 - 0.5) * size * 1.35
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
       const localX = px + 0.5 - size / 2
@@ -219,7 +220,7 @@ export class OrganicTerrain {
       const continuousTangent = tangent / size + phase / 2
       const wave = Math.sin(continuousTangent * Math.PI * 2) * size * 0.1 + Math.sin(continuousTangent * Math.PI * 5) * size * 0.035
       const distance = localX * normalX + localY * normalY + threshold + wave
-      const alpha = Math.max(0, Math.min(1, 0.5 + distance / Math.max(3, size * 0.2)))
+      const alpha = Math.max(0, Math.min(1, 0.5 + distance / Math.max(3, featherPixels)))
       pixels.data[(py * size + px) * 4 + 3] = Math.round(alpha * 255)
     }
     context.putImageData(pixels, 0, 0)
