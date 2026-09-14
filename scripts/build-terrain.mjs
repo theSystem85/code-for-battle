@@ -10,7 +10,7 @@ async function material(top) {
   return source.clone().extract({left: 0, top, width, height: Math.floor(height / 2)})
     .resize(512, 512).removeAlpha().raw().toBuffer()
 }
-const grass = await sharp(new URL('source/meadow.png', dir).pathname).resize(512, 512).blur(0.45).removeAlpha().raw().toBuffer()
+const grass = await sharp(new URL('source/meadow.webp', dir).pathname).resize(512, 512).blur(0.45).removeAlpha().raw().toBuffer()
 const road = await material(Math.floor(height / 2))
 // Periodic reflection gives exact wrap continuity; broad color modulation is
 // also periodic and shared by every tile edge, rather than per-tile tinting.

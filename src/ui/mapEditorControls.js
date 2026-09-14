@@ -505,7 +505,10 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   cacheRuntimeIntegratedMetadata(metadata)
 
   if (!gameState.useIntegratedSpriteSheetMode) {
-    await textureManager.setIntegratedSpriteSheetConfig({ enabled: false })
+    await textureManager.setIntegratedSpriteSheetConfig({
+      enabled: false,
+      biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
+    })
     const mapRenderer = getMapRenderer()
     if (mapRenderer) {
       if (Array.isArray(gameState.mapGrid)) {

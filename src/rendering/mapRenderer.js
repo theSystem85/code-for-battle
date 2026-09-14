@@ -238,7 +238,7 @@ export class MapRenderer {
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
     this.sotMaskVersion = 0
-    this.organicTerrain = new OrganicTerrain(() => this.invalidateAllChunks())
+    this.organicTerrain = new OrganicTerrain(() => this.invalidateAllChunks(), textureManager)
   }
 
   createEmptyChunkStats() {

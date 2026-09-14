@@ -78,6 +78,16 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.integratedTagBuckets).toEqual({})
   })
 
+  it('keeps the selected biome for legacy terrain when integrated mode is disabled', async() => {
+    const manager = new TextureManager()
+
+    await manager.setIntegratedSpriteSheetConfig({ enabled: false, biomeTag: 'sand' })
+
+    expect(manager.integratedSpriteSheetMode).toBe(false)
+    expect(manager.integratedBiomeTag).toBe('sand')
+    expect(manager.integratedRenderSignature).toBe('off|sand')
+  })
+
   it('falls back to bundled combat decal candidates when integrated sheets do not provide decal tags', () => {
     const manager = new TextureManager()
     manager.defaultCombatDecalTagBuckets = {

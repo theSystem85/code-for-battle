@@ -140,9 +140,18 @@ export function isCliffChain(grid, x, y) {
   return false
 }
 
+const BIOME_SOURCE_PATHS = {
+  grass: ['images/terrain/source/meadow.webp'],
+  soil: ['images/terrain/source/soil.webp'],
+  snow: ['images/terrain/source/snow.webp'],
+  sand: ['images/terrain/source/sand.webp']
+}
+
 export class OrganicTerrain {
-  constructor(onReady) {
+  constructor(onReady, textureManager = null) {
     this.ready = false
+    this.textureManager = textureManager
+    this.biomeImages = {}
     this.image = new Image()
     this.details = new Image()
     this.cliffs = new Image()
@@ -159,10 +168,29 @@ export class OrganicTerrain {
     this.details.src = 'images/terrain/terrain-details.png'
     this.image.onerror = () => { this.ready = false }
     this.image.src = 'images/terrain/organic-atlas.png'
+    for (const [biome, paths] of Object.entries(BIOME_SOURCE_PATHS)) {
+      this.biomeImages[biome] = paths.map((path) => {
+        const image = new Image()
+        image.onload = onReady
+        image.src = path
+        return image
+      })
+    }
   }
 
   drawGrass(ctx, x, y, sx, sy, size) {
-    // 8x8 continuous material includes baked macro variation; no extra draw.
+    const biome = this.textureManager?.integratedBiomeTag || 'grass'
+    const sources = this.biomeImages[biome] || this.biomeImages.grass
+    const source = sources?.[terrainHash(x, y, 29) % sources.length]
+    if (source?.complete && source.naturalWidth) {
+      const sourceSize = source.naturalWidth
+      const sourceX = ((x * size) % sourceSize + sourceSize) % sourceSize
+      const sourceY = ((y * size) % source.naturalHeight + source.naturalHeight) % source.naturalHeight
+      ctx.drawImage(source, sourceX, sourceY, size, size, sx, sy, size, size)
+      return
+    }
+
+    // The atlas remains a safe fallback while source material images load.
     ctx.drawImage(this.image, (x & 7) * 64 + (terrainHash(x >> 3, y >> 3, 29) % 2) * 512, (y & 7) * 64, 64, 64, sx, sy, size, size)
   }
 
