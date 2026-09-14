@@ -477,3 +477,4 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Mixed-biome intersection follow-up (2026-09-15): replaced multi-tile distance-band fades with a single deterministic edge tile and feathered curved mask; shoreline sand now uses the same one-tile feather to prevent chained checkerboards.
 - [x] Mixed-biome coastline direction follow-up (2026-09-15): orient the single shoreline sand feather toward the nearest ocean tile so north/south and east/west coasts use perpendicular transition masks.
 - [x] Mixed-biome shoreline width and plateau priority (2026-09-15): expose shoreline width in tiles and ensure plateau snow overrides nearby shoreline sand.
+- [x] Organic water shoreline transitions (2026-09-15): replace legacy grass-only coast lips with masked water-over-land fades for coasts, lakes, and diagonal SOT corners.

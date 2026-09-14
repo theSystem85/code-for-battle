@@ -10,6 +10,7 @@
 - Ocean-connected shorelines prefer sand with a one-tile feather; enclosed lakes do not create sand belts.
 - Shoreline sand feather normals follow the nearest ocean direction: north/south coasts blend vertically, east/west coasts horizontally, and corner coastlines diagonally.
 - Map Settings exposes a shoreline width in tiles; plateau snow is applied after shoreline processing and always dominates sand on plateau interiors.
+- Organic terrain renders water over adjacent land with the same warped transparent mask used by biome transitions, including enclosed lakes and 45-degree SOT corners; the legacy grass-only coastline lip is not used.
 - `Snow on plateaus` independently paints rock/plateau tops without consuming one of the configured mixed-biome regions.
 - Each generated tile caches its primary biome, optional neighboring biome, and blend opacity. The renderer uses that cached data during static terrain chunk baking, with warped boundaries and transparent cross-fades rather than straight or circular seams.
 - Changes to any biome control are persisted and immediately regenerate and rerender the map while preserving the camera position.
