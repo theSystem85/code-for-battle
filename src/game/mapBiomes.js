@@ -235,8 +235,14 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
     } else delete tile.biomeBlend
 
     let oceanDistance = Infinity
+    let nearestOceanOffset = null
     if (ocean) for (let offsetY = -3; offsetY <= 3; offsetY++) for (let offsetX = -3; offsetX <= 3; offsetX++) {
-      if (ocean[y + offsetY]?.[x + offsetX]) oceanDistance = Math.min(oceanDistance, Math.hypot(offsetX, offsetY))
+      if (!ocean[y + offsetY]?.[x + offsetX]) continue
+      const distance = Math.hypot(offsetX, offsetY)
+      if (distance < oceanDistance) {
+        oceanDistance = distance
+        nearestOceanOffset = { x: offsetX, y: offsetY }
+      }
     }
     if (tile.type !== 'water' && oceanDistance <= 2) {
       // Keep the shoreline transition exactly one tile wide. A broad alpha
@@ -247,7 +253,14 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
         tile.biome = 'sand'
         delete tile.biomeBlend
       } else if (tile.biome !== 'sand') {
-        tile.biomeBlend = { biome: 'sand', alpha: Math.round(sandAlpha * 100) / 100, angle: 0 }
+        // The feather normal must point toward the nearest ocean tile. This
+        // keeps north/south coasts vertical and east/west coasts horizontal,
+        // instead of applying one fixed mask direction to every shoreline.
+        tile.biomeBlend = {
+          biome: 'sand',
+          alpha: Math.round(sandAlpha * 100) / 100,
+          angle: nearestOceanOffset ? Math.atan2(nearestOceanOffset.y, nearestOceanOffset.x) : 0
+        }
       }
     }
     if (settings.snowOnPlateaus && isPlateauInterior(grid, x, y)) {

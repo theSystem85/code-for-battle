@@ -65,6 +65,27 @@ describe('mixed map biomes', () => {
     expect(grid[20][17].biomeBlend?.biome).not.toBe('sand')
   })
 
+  it('orients shoreline feathering perpendicular to each coast', () => {
+    const cases = [
+      ['north', grid => { for (let x = 0; x < 24; x++) grid[0][x].type = 'water' }, 2, 12, -Math.PI / 2],
+      ['south', grid => { for (let x = 0; x < 24; x++) grid[23][x].type = 'water' }, 21, 12, Math.PI / 2],
+      ['west', grid => { for (let y = 0; y < 24; y++) grid[y][0].type = 'water' }, 12, 2, Math.PI],
+      ['east', grid => { for (let y = 0; y < 24; y++) grid[y][23].type = 'water' }, 12, 21, 0]
+    ]
+    for (const [name, setup, y, x, expectedAngle] of cases) {
+      const grid = makeGrid(24, 24)
+      setup(grid)
+      assignMapBiomes(grid, 123, {
+        ...mixedSettings,
+        mapBiomeRegionCount: 1,
+        mapBiomeWeights: { grass: 100, soil: 0, sand: 20, snow: 0 }
+      })
+      const blend = grid[y][x].biomeBlend
+      expect(blend?.biome, name).toBe('sand')
+      expect(blend.angle, name).toBeCloseTo(expectedAngle, 5)
+    }
+  })
+
   it('treats plateau snow as an independent overlay setting', () => {
     const grid = makeGrid(15, 15)
     for (let y = 5; y <= 9; y++) for (let x = 5; x <= 9; x++) grid[y][x].type = 'rock'
