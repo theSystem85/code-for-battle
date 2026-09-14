@@ -416,6 +416,7 @@ export class TextureManager {
 
   async setIntegratedSpriteSheetConfig(config = {}) {
     const enabled = Boolean(config?.enabled)
+    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(config?.biomeTag) ? config.biomeTag : this.integratedBiomeTag
     if (!enabled) {
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
@@ -424,7 +425,7 @@ export class TextureManager {
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
-      this.integratedRenderSignature = 'off'
+      this.integratedRenderSignature = `off|${this.integratedBiomeTag}`
       this.clearStreetSelectionPoolCache()
       this.integratedConfigVersion++
       return

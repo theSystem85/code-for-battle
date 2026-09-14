@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant } from '../../src/rendering/organicTerrain.js'
 
 describe('organic terrain topology', () => {
@@ -28,6 +28,17 @@ describe('organic terrain topology', () => {
       samples.add(terrainHash(x, 10000) % 4)
     }
     expect(samples.size).toBe(4)
+  })
+  it('draws the selected biome source material as a continuously addressed base tile', () => {
+    const source = { complete: true, naturalWidth: 1024, naturalHeight: 1024 }
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.textureManager = { integratedBiomeTag: 'snow' }
+    terrain.biomeImages = { snow: [source], grass: [] }
+    const drawImage = vi.fn()
+
+    terrain.drawGrass({ drawImage }, 17, 19, 64, 96, 32)
+
+    expect(drawImage).toHaveBeenCalledWith(source, 544, 608, 32, 32, 64, 96, 32, 32)
   })
   it('uses cliffs for chains in all eight directions, preserving every blocked cell', () => {
     for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) {

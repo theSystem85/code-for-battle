@@ -471,3 +471,5 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 
 - [x] Restyle the Save Game Editor as a polished dark-mode modal that follows the Settings modal and the game's blue/steel visual language.
 - [x] Add consistent header, tabs, fields, metrics, protected-map notice, editor workspace, table, footer action, focus, backdrop, and responsive mobile treatments.
+- [x] Add seamless biome base-ground materials for legacy non-custom terrain rendering: convert meadow source to quality-85 WebP, add soil/snow/sand sources, and route the Map Settings biome choice to the selected ground material without baking structures into the base tile (2026-09-14).
+- [x] Terrain visual follow-up (2026-09-14): keep grass on the original meadow material, remove the overly green alternate grass asset, and replace soil with a muted olive-brown aerial ground texture matching the supplied reference.

@@ -73,6 +73,7 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - `TextureManager` resolves map tile draw source from SSE tag buckets when mode is enabled.
 - `MapRenderer` chunk cache redraw now also keys by integrated metadata signature.
 - Occupancy map checks integrated tile tags and treats `impassable` as blocked.
+- Legacy non-SSE terrain rendering uses seamless quality-85 WebP source materials from `images/terrain/source/`: meadow grass, muted olive-brown soil, snow, and sand. The Map Settings biome selection applies to this base ground even when custom sprite sheets are disabled; structures, roads, resources, and decals remain independent overlays.
 
 ## Acceptance Criteria
 - SSE modal opens/closes from Map Settings and uses consistent modal visual language.
@@ -95,6 +96,13 @@ Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segme
 - `rock` map tiles use `rocks` (or legacy `rock`) tag bucket when present, else fall back to legacy non-SSE rendering.
 - Movement blocking matches existing behavior for `impassable` in integrated mode.
 - No full-map forced redraw on each paint step; chunk-based invalidation remains in place.
+
+## Verification
+
+- `npm run lint:fix:changed` completed successfully.
+- `npm run test:unit` passed: 160 files, 3,896 tests.
+- Asset validation confirmed `meadow.webp`, `soil.webp`, `snow.webp`, and `sand.webp` are 1024×1024 WebP files encoded at quality 85 by the conversion step. Grass intentionally uses only the original meadow material after visual review.
+- Opt-in command `PERF_BENCHMARK=1 PERF_BENCHMARK_DURATION_MS=6000 PERF_ENFORCE_FIXED_BUDGET=1 PERF_MOBILE_FIXED_MIN_FPS=8 npx playwright test tests/e2e/mobileFpsRegressionBenchmark.test.js --project=chromium --reporter=line` executed the live scene but failed the existing desktop assertion: desktop 54.11 FPS (required >60), mobile 7.22 FPS, average mobile CPU render 47.27 ms, mobile heap 57.5 MB. No before/after regression comparison was available in this environment; this result is recorded as a baseline/environment gate failure.
 
 ## Follow-up (2026-04-15): Version B Animated Sprite-Sheet Editor
 - SSE sidebar now has mode tabs:
