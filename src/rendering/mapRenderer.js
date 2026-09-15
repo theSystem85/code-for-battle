@@ -8,7 +8,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
 } from '../config.js'
-import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
+import { biomeTransitionCornerMask, BIOME_CORNER_FEATHER, getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature } from '../game/tileDecals.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 
@@ -1362,7 +1362,7 @@ export class MapRenderer {
     return true
   }
 
-  drawIntegratedBiomeTransition(ctx, integratedTile, screenX, screenY, tileX, tileY, blend) {
+  drawIntegratedBiomeTransition(ctx, integratedTile, screenX, screenY, tileX, tileY, blend, cornerMask = null) {
     if (!integratedTile?.image || !integratedTile?.rect || !this.canUseOffscreen) return false
     if (!this.integratedBiomeBlendCanvas) {
       this.integratedBiomeBlendCanvas = document.createElement('canvas')
@@ -1373,7 +1373,9 @@ export class MapRenderer {
     blendContext.clearRect(0, 0, TILE_SIZE, TILE_SIZE)
     this.drawIntegratedTileImage(blendContext, integratedTile, 0, 0)
     blendContext.globalCompositeOperation = 'destination-in'
-    blendContext.drawImage(this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend), 0, 0)
+    blendContext.drawImage(cornerMask === null
+      ? this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend)
+      : this.organicTerrain.getShorelineMask(TILE_SIZE, cornerMask, BIOME_CORNER_FEATHER), 0, 0)
     blendContext.globalCompositeOperation = 'source-over'
     ctx.drawImage(this.integratedBiomeBlendCanvas, screenX, screenY)
     return true
@@ -1461,7 +1463,7 @@ export class MapRenderer {
     }
     if (this.useOrganicTerrain(useTexture) && ['land', 'street', 'rock'].includes(type)) {
       if (type === 'street' && this.isStreetWaterTransitionTile(mapGrid, tileX, tileY)) return
-      this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, mapGrid?.[tileY]?.[tileX])
+      this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, mapGrid?.[tileY]?.[tileX], mapGrid)
       return
     }
     if (type === 'street') {
@@ -1506,7 +1508,8 @@ export class MapRenderer {
         const blend = mapGrid?.[tileY]?.[tileX]?.biomeBlend
         if (type === 'land' && blend?.biome && blend.alpha > 0) {
           const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: blend.biome })
-          this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, blend)
+          this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, blend,
+            biomeTransitionCornerMask(mapGrid, tileX, tileY, blend))
         }
         return
       }

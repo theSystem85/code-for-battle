@@ -15,6 +15,8 @@
 - One-pixel oriented SOT overlap remains for legacy and street triangles. It is not a substitute for matching organic shoreline edge coverage.
 - Rock is a shoreline land owner for organic transitions. A water tile adjacent to a rock formation must receive the same sand coastline material that would be rendered beneath the rock, including when snow is the visible biome of a snow-enabled plateau.
 - Snow-enabled plateau surfaces include every rock tile belonging to a qualifying solid 3x3 plateau footprint, including the north and west-facing surface tiles; cliff faces remain separate transparent overlays.
+- Land-to-land biome transitions use the same shared tile-junction coverage as water shorelines, so biome turns have matching edge endpoints and no detached corner notches.
+- Street fringes currently retain the original `roadFringeMask` plus oriented triangle path. Shared-junction biome coverage is intentionally limited to biome transitions until the street rendering is revisited.
 
 ## Validation
 
@@ -24,6 +26,8 @@
 - Unit coverage verifies water underlays for shoreline streets, absence of their land underlays, street ownership of mixed SOT corners, and biome-colored land rendering through the oriented SOT alpha mask.
 - Unit/browser coverage verifies the shared one-pixel corner placement for all four outward and inward SOT orientations.
 - Unit/browser coverage verifies rock-owned shoreline transitions select sand and that a 3x3 plateau assigns snow to all nine surface tiles without changing the rock gameplay type.
+- Unit/browser coverage verifies biome turn orientations share alpha at tile boundaries.
+- Unit coverage verifies street fringe rendering continues to use the original corner-triangle path.
 
 ## Performance
 
@@ -45,6 +49,18 @@ npx playwright test tests/e2e/organicTerrain.test.js --project=chromium --grep '
 ```
 
 The combat benchmark additionally asserts that shoreline masks are active and caches stay within their bounds. Its final run passed at 43.65 FPS, update 2.39 ms, render 8.65 ms, terrain 7.53 ms and heap 64.85 MiB. The cache check imports Vite's exact loaded renderer URL, including its HMR timestamp, to avoid accidentally inspecting a second unused renderer instance. Previous measurements below describe earlier implementations.
+
+### Biome and street corner correction (2026-09-15)
+
+The second supplied image set showed the same detached-junction geometry at land biome turns and road/cliff/sand edges. Biome overlays now derive their source material from all incident tile corners, including neighboring transition tiles, and use a wider feather to soften the remaining staircase. Street fringe rendering remains on the original road mask and oriented triangle path. The focused browser test renders a biome turn and checks shared seam alpha.
+
+The focused Chromium DPR-2 scrolling combat benchmark averaged 46.30 FPS, 2.18 ms update, 8.11 ms render, 6.98 ms terrain and 61.04 MiB heap, compared with the prior 43.73 FPS baseline. The complete organic terrain suite averaged 43.92 FPS, 2.42 ms update, 8.51 ms render, 7.37 ms terrain and 77.63 MiB heap; this is a 0.4% FPS improvement over baseline and remains inside normal host variance. Both runs pass the 20% regression gate. The full organic terrain browser suite passed 10/10, and the full unit suite passed 3,927 tests. The CPU fallback was selected on this host; WebGL/WebGPU hardware performance was not measured.
+
+```sh
+npx playwright test tests/e2e/organicTerrain.test.js --project=chromium --grep 'land biome turns' --reporter=line --workers=1
+TERRAIN_BENCHMARK=1 TERRAIN_BASELINE_FPS=43.73 npx playwright test tests/e2e/organicTerrain.test.js --project=chromium --reporter=line --workers=1
+npm run test:unit
+```
 
 The shoreline compositor runs once per visible terrain frame. Street-water detection performs a bounded eight-neighbor check only for street cells. Land/SOT composites use bounded 512-entry caches, preserving canvas identity after their first render and avoiding repeated offscreen compositing.
 
