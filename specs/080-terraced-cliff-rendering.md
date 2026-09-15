@@ -26,8 +26,8 @@ Generated rock lines now have a minimum requested thickness of three tiles, with
 
 - `public/images/terrain/terraced-cliffs.webp`: the single runtime sprite sheet, 4096x5376 pixels. Its top section contains 17 columns by eight rows of 160px short cells, the middle packs 128 variable-size macro sprites, and the final section contains eight rows of 16 224px tall contour cells. At the game's 32px tiles this provides 2x source sampling for DPR 2.
 - `public/images/terrain/terraced-cliffs.json`: schemaVersion 3, alpha blend mode, exact source rectangles, rock/cliff tags, eight variants, corner-bit layout, contour definitions, all macro rectangles, and all tall contour rectangles. The runtime reads matching fixed layout constants to avoid an extra metadata request; tests cover the dimensions and coordinates.
-- `public/images/terrain/source/terraced-cliffs.png`: built-in imagegen source sheet. Generated row orientations were not sufficiently dependable for direct tiling, so the compiler uses solid frontal stone samples and deterministic directional geometry to guarantee topology and lighting.
-- `source/plateau-details.png`: five generated transparent crack/chip patterns. `source/terraced-cliffs-canyon.png` supplies the new warm and canyon material families. `source/terraced-cliffs-prompts.md` records all complete generation prompts.
+- `public/images/terrain/source/terraced-cliffs.webp`: quality-85 WebP source sheet. Generated row orientations were not sufficiently dependable for direct tiling, so the compiler uses solid frontal stone samples and deterministic directional geometry to guarantee topology and lighting.
+- `source/plateau-details.webp`: five generated transparent crack/chip patterns. `source/terraced-cliffs-canyon.webp` supplies the new warm and canyon material families. `source/terraced-cliffs-prompts.md` records all complete generation prompts.
 - `scripts/build-terraced-cliffs.mjs`: offline Sharp compiler; rebuild with `node scripts/build-terraced-cliffs.mjs`. No API key needed to rebuild. WebP `quality: 85` means the encoder quality setting, not an 85% reduction in bytes. Alpha uses `alphaQuality: 100`.
 
 ## Performance gate and invalidation
@@ -145,3 +145,7 @@ Directional cliff faces are normalized toward the preferred south-facing horizon
 ## Diagonal texture density and north perspective follow-up (2026-09-15)
 
 Diagonal contour faces sample their rock material along the contour path rather than repeating a screen-space X strip at every tile. Directional depth is now interpolated from the south-facing reference: north-facing faces are shorter, side faces are intermediate, and diagonal north-facing faces retain the shorter projected depth.
+
+## Transition layer ordering (2026-09-15)
+
+Organic shoreline transition tiles are drawn immediately after water/base terrain and before cliffs, rock artwork, decorations, and tile decals. Buildings and units remain later renderer passes. The same ordering is used when the GPU supplies the base terrain and the CPU renders remaining overlays.

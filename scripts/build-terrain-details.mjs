@@ -10,8 +10,8 @@ function material(x,y,road=false) {
  const i=(sy*terrain.info.width+sx)*4
  return terrain.data.subarray(i,i+3)
 }
-const roadSource=await sharp(new URL('source/materials.png',dir).pathname).metadata()
-const road=await sharp(new URL('source/materials.png',dir).pathname).extract({left:0,top:Math.floor(roadSource.height/2),width:roadSource.width,height:Math.floor(roadSource.height/2)}).resize(128,128).removeAlpha().raw().toBuffer()
+const roadSource=await sharp(new URL('source/materials.webp',dir).pathname).metadata()
+const road=await sharp(new URL('source/materials.webp',dir).pathname).extract({left:0,top:Math.floor(roadSource.height/2),width:roadSource.width,height:Math.floor(roadSource.height/2)}).resize(128,128).removeAlpha().raw().toBuffer()
 function color(x,y,isRoad=false) {return isRoad?road.subarray((((y&127)*128)+(x&127))*3,(((y&127)*128)+(x&127))*3+3):material(x,y)}
 async function addPixels(pixels,width,height,left,top) {layers.push({input:await sharp(pixels,{raw:{width,height,channels:4}}).png().toBuffer(),left,top})}
 const cornerUV=(corner,x,y)=>[corner===1||corner===2?31-x:x,corner>=2?31-y:y]
@@ -59,7 +59,7 @@ for(let kind=0;kind<2;kind++)for(let corner=0;corner<4;corner++) {
  await addPixels(p,32,32,corner*32,128+kind*32)
 }
 async function cropSheet(name,cols,rows) {
- const path=new URL(`source/${name}.png`,dir).pathname,m=await sharp(path).metadata(),out=[]
+ const path=new URL(`source/${name}.webp`,dir).pathname,m=await sharp(path).metadata(),out=[]
  for(let i=0;i<cols*rows;i++) {
   const b=await sharp(path).extract({left:Math.floor(i%cols*m.width/cols),top:Math.floor(Math.floor(i/cols)*m.height/rows),width:Math.floor(m.width/cols),height:Math.floor(m.height/rows)}).png().toBuffer()
   out.push(await sharp(b).trim({threshold:8}).png().toBuffer())
@@ -72,7 +72,7 @@ for(let i=0;i<12;i++)layers.push({input:await sharp(decorations[i]).resize(32,32
 // accidentally packing fragments of neighboring sprites.
 const bounds=JSON.parse(await readFile(new URL('source/cliffs-layout.json',dir),'utf8'))
 const cliffs=await Promise.all(bounds.map(async rect=>{
- const b=await sharp(new URL('source/cliffs.png',dir).pathname).extract(rect).png().toBuffer()
+ const b=await sharp(new URL('source/cliffs.webp',dir).pathname).extract(rect).png().toBuffer()
  return sharp(b).trim({threshold:8}).png().toBuffer()
 }))
 // Draw-direction-specific samples retain the generated lighting (no rotations).

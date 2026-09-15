@@ -110,6 +110,28 @@ describe('MapRenderer water rendering', () => {
     expect(mapRenderer.organicTerrain.drawBiomeTransition).not.toHaveBeenCalled()
   })
 
+  it('draws organic transitions above water but below cliffs and tile decals', () => {
+    const textureManager = { ...makeTextureManager(), allTexturesLoaded: true }
+    const mapRenderer = new MapRenderer(textureManager)
+    mapRenderer.organicTerrain.ready = true
+    mapRenderer.organicTerrain.cliffs = { complete: true, naturalWidth: 1 }
+    mapRenderer.sotMask = [[null, null]]
+    mapRenderer.drawTileBase = vi.fn()
+    mapRenderer.drawOrganicLandTransitions = vi.fn()
+    mapRenderer.organicTerrain.drawCliffs = vi.fn()
+    mapRenderer.organicTerrain.drawDecoration = vi.fn()
+    mapRenderer.drawTileDecalOverlay = vi.fn()
+    const ctx = {}
+
+    mapRenderer.drawBaseLayer(ctx, [[{ type: 'water' }, { type: 'rock', decal: { tag: 'crack' } }]], 0, 0, 2, 1, 0, 0, true, null)
+
+    expect(mapRenderer.drawTileBase).toHaveBeenCalledWith(ctx, 0, 0, 'water', 0, 0, true, null)
+    expect(mapRenderer.drawOrganicLandTransitions).toHaveBeenCalledWith(ctx, expect.any(Array), 0, 0, 2, 1, 0, 0)
+    expect(mapRenderer.drawOrganicLandTransitions.mock.invocationCallOrder[0]).toBeGreaterThan(mapRenderer.drawTileBase.mock.invocationCallOrder[0])
+    expect(mapRenderer.drawOrganicLandTransitions.mock.invocationCallOrder[0]).toBeLessThan(mapRenderer.organicTerrain.drawCliffs.mock.invocationCallOrder[0])
+    expect(mapRenderer.organicTerrain.drawCliffs.mock.invocationCallOrder[0]).toBeLessThan(mapRenderer.drawTileDecalOverlay.mock.invocationCallOrder[0])
+  })
+
   it('keeps the chunk cache active for static CPU terrain over GPU water-only rendering', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.canUseOffscreen = true

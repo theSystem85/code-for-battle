@@ -49,7 +49,7 @@ test('organic terrain is identical across chunk seams and map edits', async({ pa
   expect(result).toEqual({ initial: { differences: 0, bounds: null }, edited: { differences: 0, bounds: null }, unchanged: true })
 })
 
-test('shoreline water is composited below the land transition and SOT direction', async({ page }) => {
+test('shoreline water is composited before the terrain transition pass', async({ page }) => {
   await page.goto('/?seed=4')
   const result = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
@@ -62,7 +62,6 @@ test('shoreline water is composited below the land transition and SOT direction'
     renderer.applyVisibilityOverlay = () => {}
     renderer.renderGrid = () => {}
     renderer.renderOccupancyMap = () => {}
-    renderer.drawOrganicLandTransition = () => events.push('land-transition')
 
     const canvas = document.createElement('canvas')
     canvas.width = canvas.height = 64
@@ -91,7 +90,7 @@ test('shoreline water is composited below the land transition and SOT direction'
     return { events, landSot, streetSot }
   })
 
-  expect(result.events).toEqual(['water', 'terrain', 'land-transition', 'land-transition', 'land-transition', 'land-transition'])
+  expect(result.events).toEqual(['water', 'terrain'])
   expect(result.landSot).toEqual({ orientation: 'top-left', biome: 'sand' })
   expect(result.streetSot).toEqual({ orientation: 'bottom-right', type: 'street' })
 })

@@ -21,9 +21,9 @@ Run `npm run make:terrain` from the repository. The existing sharp dependency su
 - `public/images/terrain/organic-atlas.png`: 1280x1472; grass and 188 road sprites.
 - `public/images/terrain/terrain-details.png`: 1024x2352; grass/road SOT, shoreline lips/banks, 12 decorations, 512 cliff variants and 6 boulders.
 - Both atlases have adjacent JSON layout manifests. About 2.6 MiB compressed total, 16.4 MiB decoded RGBA. Old unused rock cells were removed from the original atlas.
-- `source/meadow.png`, `source/decoration.png`, `source/cliffs.png`, `source/boulders.png`: newly generated with the built-in OpenAI imagegen tool.
+- `source/meadow.webp`, `source/decoration.webp`, `source/cliffs.webp`, `source/boulders.webp`: generated terrain sources, stored as quality-85 WebP.
 - `source/cliffs-layout.json`: inspected crop bounds; generated gutters were unequal, so nominal grid cropping captured neighboring fragments. These bounds prevent that artifact.
-- Existing `source/materials.png` remains the road source; `source/rocks.png` is retained as the previous artwork.
+- Existing `source/materials.webp` remains the road source; `source/rocks.webp` is retained as the previous artwork.
 - `scripts/build-terrain.mjs` compiles materials; `scripts/build-terrain-details.mjs` compiles masked overlays and connection sprites.
 
 Generation prompts requested: quiet realistic overhead olive meadow without sharp stipple/blade noise; twelve isolated passable low props (scrub, bush trio, grass tufts, branch, stones, stump, fern, weeds, leafy plants, twigs, broad-leaf scrub, windswept grass); a neutral continuous stratified cliff sheet containing horizontal/vertical/both diagonal ridges, corners, endcap, junction and a cluster; six neutral boulder silhouettes (squat, angular trio, layered outcrop, gravel cluster, split pair, flat ledge). All use upper-left lighting, transparent backgrounds where appropriate, no text/UI/frames, no biome-colored mats on stone assets. Original generated raster sources are saved in the repository.
