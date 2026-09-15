@@ -4,7 +4,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { BLOB_MASKS, terrainHash } from '../src/rendering/organicTerrain.js'
 const dir = new URL('../public/images/terrain/', import.meta.url)
 await mkdir(dir, { recursive: true })
-const source = sharp(new URL('source/materials.png', dir).pathname)
+const source = sharp(new URL('source/materials.webp', dir).pathname)
 const { width, height } = await source.metadata()
 async function material(top) {
   return source.clone().extract({left: 0, top, width, height: Math.floor(height / 2)})

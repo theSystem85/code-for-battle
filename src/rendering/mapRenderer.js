@@ -1272,6 +1272,11 @@ export class MapRenderer {
 
       }
     }
+    // Coastline transitions are a ground underlay: they must cover water but
+    // remain beneath organic rock/cliffs, tile decals and all entities.
+    if (useTexture && this.useOrganicTerrain(useTexture)) {
+      this.drawOrganicLandTransitions(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY)
+    }
     if (useTexture && this.organicTerrain?.ready) {
       const organicGround = this.useOrganicTerrain(useTexture)
       const terracedCliffs = this.organicTerrain.cliffs?.complete && this.organicTerrain.cliffs.naturalWidth
@@ -1369,6 +1374,12 @@ export class MapRenderer {
       })
     }
 
+  }
+
+  drawOrganicLandTransitions(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY) {
+    for (let y = startTileY; y < endTileY; y++) for (let x = startTileX; x < endTileX; x++) {
+      this.drawOrganicLandTransition(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - offsetX), Math.floor(y * TILE_SIZE - offsetY))
+    }
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
@@ -2063,6 +2074,13 @@ export class MapRenderer {
       }
     }
 
+    // Match the CPU terrain order when the GPU supplies the base water/ground:
+    // coastline material belongs above water and below every remaining terrain
+    // overlay and entity pass.
+    if (useTexture && this.useOrganicTerrain(useTexture)) {
+      this.drawOrganicLandTransitions(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, scrollOffset.x, scrollOffset.y)
+    }
+
     // First pass: render all SOT overlays.
     // Street-type SOT is generated only for full-street cluster corners on terrain tiles.
     // Allow water SOT on street-hosted tiles so coastline smoothing still works against the
@@ -2167,13 +2185,6 @@ export class MapRenderer {
         skipWaterSot: separateWaterLayer ? true : skipWaterSot,
         prewarmStaticTerrain: separateWaterLayer || (skipWaterBase && skipWaterSot)
       })
-      // Keep the transition as a land-material overlay. The water layer is rendered
-      // first (GPU or CPU), so shoreline animation cannot overwrite the land edge.
-      if (this.useOrganicTerrain(USE_TEXTURES && this.textureManager.allTexturesLoaded)) {
-        for (let y = startTileY; y < endTileY; y++) for (let x = startTileX; x < endTileX; x++) {
-          this.drawOrganicLandTransition(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - scrollOffset.x), Math.floor(y * TILE_SIZE - scrollOffset.y))
-        }
-      }
       if (separateWaterLayer && !waterBeforeTerrain && (!skipWaterBase || !skipWaterSot)) {
         this.renderDynamicWaterLayer(ctx, mapGrid, scrollOffset, startTileX, startTileY, endTileX, endTileY, {
           drawBase: !skipWaterBase,

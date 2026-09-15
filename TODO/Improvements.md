@@ -814,6 +814,9 @@
 - [x] Normalize directional cliff-face depth and scaling so north, east, west, corner, and short cliff textures have the same open rock detail density as the preferred south-facing horizontal macro cliffs.
 - [x] Reduce repeated dense sampling on diagonal cliffs while restoring a shorter north-facing perspective depth than the south-facing cliffs.
 
+## Transition layer ordering (2026-09-15)
+- [x] Render sand and other shoreline transition tiles above water but below rock/cliff artwork, decals, buildings, and units in CPU and GPU terrain paths.
+
 ## 2026-07-25 Naval and production verification checklist
 
 Use this checklist in a live game and check each item only after confirming the described behavior:
@@ -866,3 +869,6 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Inspect the result and document further visual suggestions in specs/organic-terrain.md.
 - [x] Restrict cliff art to qualifying plateaus, make cliff exposure camera-directional, prevent mixed one/two-tile height joins, and cluster cliff geology palettes across complete formations.
 - [x] Replace condensed one-cell straight cliff rendering with the same broad macro artwork used by the preferred non-condensed cliff style on every terrace level.
+# Terrain source asset format
+
+- Convert all raster files in `public/images/terrain/source` to quality-85 WebP and keep terrain build scripts and specifications aligned with the renamed assets.
