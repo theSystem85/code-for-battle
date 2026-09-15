@@ -180,11 +180,22 @@ function colorRegions(adjacency, weights) {
   return colors
 }
 
-function isPlateauInterior(grid, x, y) {
-  for (let offsetY = -1; offsetY <= 1; offsetY++) for (let offsetX = -1; offsetX <= 1; offsetX++) {
-    if (grid[y + offsetY]?.[x + offsetX]?.type !== 'rock') return false
+function isPlateauSurfaceTile(grid, x, y) {
+  if (grid[y]?.[x]?.type !== 'rock') return false
+
+  // Match buildCliffDepth: every rock tile covered by a solid 3x3 footprint
+  // belongs to the visible plateau surface, not only the footprint's centre.
+  for (let startY = y - 2; startY <= y; startY++) for (let startX = x - 2; startX <= x; startX++) {
+    let solid = true
+    for (let offsetY = 0; offsetY < 3 && solid; offsetY++) for (let offsetX = 0; offsetX < 3; offsetX++) {
+      if (grid[startY + offsetY]?.[startX + offsetX]?.type !== 'rock') {
+        solid = false
+        break
+      }
+    }
+    if (solid) return true
   }
-  return true
+  return false
 }
 
 export function assignMapBiomes(grid, seed, rawSettings = {}) {
@@ -196,7 +207,8 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
   if (settings.mode !== 'mixed') {
     for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
       const tile = grid[y][x]
-      tile.biome = settings.snowOnPlateaus && isPlateauInterior(grid, x, y) ? 'snow' : settings.mode
+      delete tile.shorelineBiome
+      tile.biome = settings.snowOnPlateaus && isPlateauSurfaceTile(grid, x, y) ? 'snow' : settings.mode
       delete tile.biomeBlend
       delete tile.biomeRegion
     }
@@ -211,6 +223,7 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
 
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
     const tile = grid[y][x]
+    delete tile.shorelineBiome
     const region = regions[y][x]
     tile.biomeRegion = region
     tile.biome = colors[region]
@@ -253,6 +266,9 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
       // distance band creates the same chained checkerboard artifact as biome
       // borders, especially where the coast turns a corner.
       const sandAlpha = oceanDistance < settings.shorelineWidth ? 1 : 0.5
+      // Snow changes the visible plateau top, but the coast beside a rock
+      // face still needs to source its transition from the sand beneath it.
+      tile.shorelineBiome = 'sand'
       if (sandAlpha >= 1) {
         tile.biome = 'sand'
         delete tile.biomeBlend
@@ -268,7 +284,7 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
         }
       }
     }
-    if (settings.snowOnPlateaus && isPlateauInterior(grid, x, y)) {
+    if (settings.snowOnPlateaus && isPlateauSurfaceTile(grid, x, y)) {
       tile.biome = 'snow'
       delete tile.biomeBlend
     }

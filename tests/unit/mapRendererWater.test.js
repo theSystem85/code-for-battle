@@ -46,6 +46,24 @@ describe('MapRenderer water rendering', () => {
     )
   })
 
+  it('treats rock as shoreline land and uses its sand underlay', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const waterGrid = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ type: 'water' })))
+    waterGrid[1][2] = { type: 'rock', biome: 'snow', shorelineBiome: 'sand' }
+    waterGrid[2][1] = { type: 'rock', biome: 'snow', shorelineBiome: 'sand' }
+    const sot = mapRenderer.computeSOTForTile(waterGrid, 2, 2, 5, 5, 'water')
+    expect(sot).toEqual({ orientation: 'top-left', type: 'land' })
+
+    mapRenderer.sotMask = Array.from({ length: 5 }, () => Array(5).fill(null))
+    mapRenderer.sotMask[2][2] = sot
+    mapRenderer.organicTerrain.drawBiomeSot = vi.fn()
+    mapRenderer.drawOrganicLandTransition({}, waterGrid, 2, 2, 64, 64)
+
+    expect(mapRenderer.organicTerrain.drawBiomeSot).toHaveBeenCalledWith(
+      expect.anything(), 2, 2, 64, 64, expect.any(Number), 'top-left', 'sand'
+    )
+  })
+
   it('keeps street SOT transitions on street material instead of painting land', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'street' }], [null, null]]
