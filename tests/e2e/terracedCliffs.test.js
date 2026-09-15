@@ -114,8 +114,8 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
       for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 240) count++
       return count
     }
-    // Mask 3 exposes a south-facing wall; reversed mask 12 is the shallow,
-    // self-occluded north-facing rim.
+    // Mask 3 is the preferred south-facing wall; the opposite cardinal face
+    // must retain comparable material coverage instead of a squeezed lip.
     const southFaceOpaque = opaque(cliffTallRect(3, 0))
     const northFaceOpaque = opaque(cliffTallRect(12, 0))
     return { width: atlas.width, height: atlas.height, clear, translucent, solid, distinct, macroDistinct, tallDistinct, northFaceOpaque, southFaceOpaque }
@@ -128,7 +128,8 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
   expect(result.clear).toBeGreaterThan(result.solid)
   expect(result.translucent).toBeGreaterThan(10000)
   expect(result.solid).toBeGreaterThan(10000)
-  expect(result.southFaceOpaque).toBeGreaterThan(result.northFaceOpaque * 2)
+  expect(result.northFaceOpaque).toBeGreaterThan(result.southFaceOpaque * .4)
+  expect(result.northFaceOpaque).toBeLessThan(result.southFaceOpaque * .85)
   await page.screenshot({ path: testInfo.outputPath('terraced-cliffs-preview.png') })
 })
 

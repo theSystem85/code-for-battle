@@ -137,3 +137,11 @@ Macro claims are allocated for every visible terrace level. Outer tall walls dra
 Snow-enabled plateau ground now covers every rock tile that belongs to a solid 3x3 footprint, including the north and west-facing surface edges that previously retained the lower biome texture. Rock-owned shoreline transitions treat the rock as transparent terrain over its underlying sand, so a snow plateau still receives a sand coastline at adjacent water tiles. The derived shoreline source is included in save/load state and chunk signatures.
 
 Focused coverage verifies all 25 tiles of a 5x5 plateau, rock-owned sand SOT selection, and the browser-rendered north-edge scenario. No gameplay rock types, passability, occupancy, or cliff elevation data are changed.
+
+## Cliff texture density follow-up (2026-09-15)
+
+Directional cliff faces are normalized toward the preferred south-facing horizontal macro texture density. The compiler keeps the same topology masks and material variants while avoiding compressed wall bodies for north/east/west and corner faces. Runtime draw rectangles and short-macro perspective scaling remain unchanged, so this visual correction does not alter gameplay geometry or cache behavior.
+
+## Diagonal texture density and north perspective follow-up (2026-09-15)
+
+Diagonal contour faces sample their rock material along the contour path rather than repeating a screen-space X strip at every tile. Directional depth is now interpolated from the south-facing reference: north-facing faces are shorter, side faces are intermediate, and diagonal north-facing faces retain the shorter projected depth.

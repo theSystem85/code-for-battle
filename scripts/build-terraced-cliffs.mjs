@@ -72,12 +72,14 @@ async function makeContour(mask, variant, outputCell, outputPadding, heightClass
       const rough = Math.sin(Math.PI * u) ** 2 * (Math.sin(u * Math.PI * 6 + variant) * 5 + Math.sin(u * 39 + variant * 2) * 1.5)
       const signed = (wx - l.ax) * l.nx + (wy - l.ay) * l.ny
       const d = Math.sqrt(closest) * Math.sign(signed) - rough
-      // Screen-space height follows the elevated-camera perspective. North
-      // faces collapse into a self-occluded lip; south faces expose the full
-      // wall, with east/west between those extremes.
+      // Keep the material scale open while retaining the camera's slight tilt:
+      // south faces are longest, north faces are shorter, and diagonal/side
+      // faces interpolate between those projected depths.
+      const southBias = Math.max(0, l.ny)
+      const sideBias = Math.abs(l.nx)
       const depth = heightClass === 2
-        ? 24 + 84 * Math.max(0, l.ny) + 50 * Math.abs(l.nx)
-        : 10 + 40 * Math.max(0, l.ny) + 22 * Math.abs(l.nx)
+        ? 64 + 44 * southBias + 28 * sideBias
+        : 30 + 20 * southBias + 14 * sideBias
       const shadeLength = 6 + Math.max(0, l.nx + l.ny) * 14
       // The contour keeps high ground on its left (negative signed distance).
       // Place the complete wall body inside that rock footprint; otherwise the
@@ -88,9 +90,12 @@ async function makeContour(mask, variant, outputCell, outputPadding, heightClass
       }
       if (d >= -depth && d <= 3) {
         const v = Math.max(0, Math.min(1, (3 - d) / (depth + 3)))
-        // Curved corners sample material in screen-space X. Following curve
-        // distance here turns strata into radial fans at tall concave corners.
-        const textureU = l.steps > 1 ? (((wx % tile) + tile) % tile) / tile : u
+        // Keep diagonal strata aligned to screen space so corners do not turn
+        // into radial fans, but double the repeat length to avoid the dense
+        // vertical bands produced by the old one-tile strip.
+        const textureU = l.steps > 1
+          ? (((wx % (tile * 2)) + tile * 2) % (tile * 2)) / (tile * 2)
+          : u
         const rgb = sample(variant, textureU, v)
         const light = 1.08 - .24 * Math.max(0, l.nx) - .28 * Math.max(0, l.ny) + .03 * Math.max(0, -l.ny)
         const rim = d < 1 ? 1.15 : 1
@@ -131,9 +136,11 @@ async function makeMacro(mask, length, variant) {
     const signed = mask === 3 ? wy - line : mask === 12 ? line - wy : mask === 6 ? line - wx : wx - line
     const rimRough = envelope * (Math.sin(u * 47 + variant * 1.7) * 3 + Math.sin(u * 19) * 2)
     const d = signed - rimRough
-    const directionalDepth = mask === 3 ? 108 : mask === 12 ? 30 : mask === 9 ? 76 : 64
+    // Use the south-facing macro as the density reference while preserving a
+    // shorter north-facing projection and intermediate side projections.
+    const directionalDepth = mask === 3 ? 108 : mask === 12 ? 64 : 92
     const wallDepth = Math.max(24, directionalDepth + Math.sin(u * 13 + variant) * 9 + Math.sin(u * 29 + variant * 3) * 6)
-    const shadeLength = mask === 3 || mask === 9 ? 22 : 12
+    const shadeLength = 22
     let pixel = [0, 0, 0, 0]
     if (d > 3 && d < 3 + shadeLength) {
       pixel = [24, 17, 13, Math.round(145 * (1 - (d - 3) / shadeLength) ** 1.5)]
