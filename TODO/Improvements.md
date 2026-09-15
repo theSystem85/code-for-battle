@@ -1,6 +1,9 @@
+- [x] Increase the baked ground shadow length for south-facing cliffs and remove north-facing cliff shadows (2026-09-15).
 - [x] Remove rectangular cropping from outer plateau silhouettes, add 2x2/2x3/2x4 cliff-block assets with more gray-to-canyon color variants, and make generated rock formations prefer compatible broad blocks.
 - [x] Strengthen thin outer plateau faces, render one-sided south/east escarpments on long narrow rock chains, and broaden generated formations to better match the layered reference terrain.
 - [x] Restrict plateau cliffs and shadows to actual rock tiles, require a solid three-tile rock width, use ordinary boulders for narrower chains, add visible crack/stone overlays to plateau tops, and generate sufficiently broad rock formations.
+- [x] Enlarge plateau crack decals to span multiple tiles while clipping them to plateau-owned rock surfaces (2026-09-15).
+- [x] Distribute enlarged plateau crack decals sparsely at one deterministic tile in ten and keep them beneath cliff faces on plateau ground (2026-09-15).
 - [x] Replace repetitive cliff ridges with continuous biome-transparent plateaus, width-dependent terraces, all eight descending directions, seamless joins and five artwork variants per topology; deliver one quality-85 WebP sprite sheet and verify visual seams and live performance.
 - [x] Friendly-unit click action hierarchy (2026-07-27): when selected units click a friendly unit, apply exactly one eligible action in strict `board/load into -> request service -> guard` order, and select the clicked unit only when none of those interactions can apply.
 - [x] Remove terrain chunk monitoring from the FPS/performance overlay so the widget no longer shows the verbose `Chunks:` line.

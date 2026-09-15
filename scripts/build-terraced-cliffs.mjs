@@ -80,11 +80,15 @@ async function makeContour(mask, variant, outputCell, outputPadding, heightClass
       const depth = heightClass === 2
         ? 64 + 44 * southBias + 28 * sideBias
         : 30 + 20 * southBias + 14 * sideBias
-      const shadeLength = 6 + Math.max(0, l.nx + l.ny) * 14
+      // Shadows land on the ground south of a cliff. North-facing cliffs must
+      // not receive a shadow on their north-side ground, and east/west faces
+      // do not need a cast shadow either. The larger south bias gives the
+      // preferred front face a readable ground shadow at runtime scale.
+      const shadeLength = Math.max(0, l.ny) * 30
       // The contour keeps high ground on its left (negative signed distance).
       // Place the complete wall body inside that rock footprint; otherwise the
       // runtime ownership clip truncates upper and left perimeter faces.
-      if (d > 3 && d < 3 + shadeLength) {
+      if (shadeLength > 0 && d > 3 && d < 3 + shadeLength) {
         const alpha = Math.round(150 * (1 - (d - 3) / shadeLength) ** 1.5)
         if (alpha > pixel[3]) pixel = [20, 18, 16, alpha]
       }
@@ -140,9 +144,11 @@ async function makeMacro(mask, length, variant) {
     // shorter north-facing projection and intermediate side projections.
     const directionalDepth = mask === 3 ? 108 : mask === 12 ? 64 : 92
     const wallDepth = Math.max(24, directionalDepth + Math.sin(u * 13 + variant) * 9 + Math.sin(u * 29 + variant * 3) * 6)
-    const shadeLength = 22
+    // Only the south-facing macro casts onto the ground. In particular, mask
+    // 12 is the north-facing opposite of mask 3 and must remain shadow-free.
+    const shadeLength = mask === 3 ? 44 : 0
     let pixel = [0, 0, 0, 0]
-    if (d > 3 && d < 3 + shadeLength) {
+    if (shadeLength > 0 && d > 3 && d < 3 + shadeLength) {
       pixel = [24, 17, 13, Math.round(145 * (1 - (d - 3) / shadeLength) ** 1.5)]
     }
     if (d >= -wallDepth && d <= 3) {

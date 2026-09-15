@@ -114,11 +114,22 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
       for (let i = 3; i < pixels.length; i += 4) if (pixels[i] > 240) count++
       return count
     }
+    const shadowStats = rect => {
+      const pixels = ac.getImageData(rect.x, rect.y, rect.width, rect.height).data
+      let count = 0, minY = rect.height
+      for (let y = 0; y < rect.height; y++) for (let x = 0; x < rect.width; x++) {
+        const alpha = pixels[(y * rect.width + x) * 4 + 3]
+        if (alpha > 0 && alpha < 255) { count++; minY = Math.min(minY, y) }
+      }
+      return { count, minY }
+    }
     // Mask 3 is the preferred south-facing wall; the opposite cardinal face
     // must retain comparable material coverage instead of a squeezed lip.
     const southFaceOpaque = opaque(cliffTallRect(3, 0))
     const northFaceOpaque = opaque(cliffTallRect(12, 0))
-    return { width: atlas.width, height: atlas.height, clear, translucent, solid, distinct, macroDistinct, tallDistinct, northFaceOpaque, southFaceOpaque }
+    const southGroundShadow = shadowStats(cliffTallRect(3, 0))
+    const northGroundShadow = shadowStats(cliffTallRect(12, 0))
+    return { width: atlas.width, height: atlas.height, clear, translucent, solid, distinct, macroDistinct, tallDistinct, northFaceOpaque, southFaceOpaque, southGroundShadow, northGroundShadow }
   })
   expect(result.width).toBe(4096)
   expect(result.height).toBe(5376)
@@ -130,6 +141,9 @@ test('terraced cliff preview and alpha atlas', async({ page }, testInfo) => {
   expect(result.solid).toBeGreaterThan(10000)
   expect(result.northFaceOpaque).toBeGreaterThan(result.southFaceOpaque * .4)
   expect(result.northFaceOpaque).toBeLessThan(result.southFaceOpaque * .85)
+  expect(result.southGroundShadow.count).toBeGreaterThan(1500)
+  expect(result.southGroundShadow.minY).toBeGreaterThan(100)
+  expect(result.northGroundShadow.count).toBe(0)
   await page.screenshot({ path: testInfo.outputPath('terraced-cliffs-preview.png') })
 })
 
