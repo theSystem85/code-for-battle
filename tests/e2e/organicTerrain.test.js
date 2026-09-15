@@ -74,17 +74,26 @@ test('shoreline water is composited below the land transition and SOT direction'
 
     const sotRenderer = new MapRenderer(new TextureManager())
     sotRenderer.sotMask = [[null, null], [null, { type: 'land', orientation: 'top-left' }]]
-    let sotOrientation = null
-    sotRenderer.drawSOT = (_ctx, _x, _y, orientation) => { sotOrientation = orientation }
+    let landSot = null
+    sotRenderer.organicTerrain.drawBiomeSot = (_ctx, _x, _y, _sx, _sy, _size, orientation, biome) => { landSot = { orientation, biome } }
     sotRenderer.drawOrganicLandTransition({}, [
       [{ type: 'land', biome: 'sand' }, { type: 'water' }],
       [{ type: 'water' }, { type: 'water' }]
     ], 1, 1, 32, 32)
-    return { events, sotOrientation }
+
+    sotRenderer.sotMask[1][1] = { type: 'street', orientation: 'bottom-right' }
+    let streetSot = null
+    sotRenderer.organicTerrain.drawTriangle = (_ctx, _x, _y, _sx, _sy, _size, orientation, type) => { streetSot = { orientation, type } }
+    sotRenderer.drawOrganicLandTransition({}, [
+      [{ type: 'water' }, { type: 'water' }],
+      [{ type: 'water' }, { type: 'water' }]
+    ], 1, 1, 32, 32)
+    return { events, landSot, streetSot }
   })
 
   expect(result.events).toEqual(['water', 'terrain', 'land-transition', 'land-transition', 'land-transition', 'land-transition'])
-  expect(result.sotOrientation).toBe('top-left')
+  expect(result.landSot).toEqual({ orientation: 'top-left', biome: 'sand' })
+  expect(result.streetSot).toEqual({ orientation: 'bottom-right', type: 'street' })
 })
 
 test('terrain combat performance at DPR 2', async({ page }, testInfo) => {

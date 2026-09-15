@@ -40,6 +40,40 @@ describe('organic terrain topology', () => {
 
     expect(drawImage).toHaveBeenCalledWith(source, 544, 608, 32, 32, 64, 96, 32, 32)
   })
+  it('uses the oriented SOT alpha as the biome transition mask', () => {
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.details = { id: 'details' }
+    terrain.drawBiome = vi.fn()
+    terrain.biomeSotTileCache = new Map()
+    const operations = []
+    const sotContext = {
+      clearRect: vi.fn(),
+      drawImage: (...args) => operations.push(args),
+      globalCompositeOperation: 'source-over'
+    }
+    const sotCanvas = { width: 0, height: 0, getContext: () => sotContext }
+    const createElement = vi.spyOn(document, 'createElement').mockReturnValueOnce(sotCanvas)
+    const output = { drawImage: vi.fn() }
+
+    terrain.drawBiomeSot(output, 3, 7, 96, 224, 32, 'bottom-right', 'sand')
+
+    expect(terrain.drawBiome).toHaveBeenCalledWith(sotContext, 3, 7, 0, 0, 32, 'sand')
+    expect(operations).toHaveLength(1)
+    expect(operations[0][0]).toBe(terrain.details)
+    expect(operations[0][2]).toBe(0)
+    expect(output.drawImage).toHaveBeenCalledWith(sotCanvas, 96, 224)
+    expect(sotContext.globalCompositeOperation).toBe('source-over')
+    createElement.mockRestore()
+  })
+  it('reuses cached biome SOT composites after the first draw', () => {
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.biomeSotTileCache = new Map([['32|3|7|bottom-right|sand', { id: 'cached-sot' }]])
+    const output = { drawImage: vi.fn() }
+
+    terrain.drawBiomeSot(output, 3, 7, 96, 224, 32, 'bottom-right', 'sand')
+
+    expect(output.drawImage).toHaveBeenCalledWith({ id: 'cached-sot' }, 96, 224)
+  })
   it('uses cliffs for chains in all eight directions, preserving every blocked cell', () => {
     for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) {
       const grid = Array.from({ length: 9 }, () => Array.from({ length: 9 }, () => ({ type: 'land' })))

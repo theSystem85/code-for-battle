@@ -29,6 +29,7 @@ const DIRECTIONS = [[0, -1], [1, 0], [0, 1], [-1, 0], [1, -1], [1, 1], [-1, 1], 
 const CORNERS = [137, 19, 38, 76]
 const ORIENTATIONS = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
 const MACRO_MASKS = new Set([3, 6, 9, 12])
+const TERRAIN_TRANSITION_CACHE_LIMIT = 512
 const positiveModulo = (value, divisor) => ((value % divisor) + divisor) % divisor
 
 export function cliffVariant(x, y, level = 1) {
@@ -153,8 +154,8 @@ export class OrganicTerrain {
     this.textureManager = textureManager
     this.biomeImages = {}
     this.biomeBlendMasks = new Map()
-    this.biomeBlendCanvas = null
-    this.biomeBlendContext = null
+    this.biomeTransitionTileCache = new Map()
+    this.biomeSotTileCache = new Map()
     this.image = new Image()
     this.details = new Image()
     this.cliffs = new Image()
@@ -174,7 +175,11 @@ export class OrganicTerrain {
     for (const [biome, paths] of Object.entries(BIOME_SOURCE_PATHS)) {
       this.biomeImages[biome] = paths.map((path) => {
         const image = new Image()
-        image.onload = onReady
+        image.onload = () => {
+          this.biomeTransitionTileCache.clear()
+          this.biomeSotTileCache.clear()
+          onReady()
+        }
         image.src = path
         return image
       })
@@ -229,20 +234,44 @@ export class OrganicTerrain {
   }
 
   drawBiomeTransition(ctx, x, y, sx, sy, size, blend) {
-    if (!this.biomeBlendCanvas) {
-      this.biomeBlendCanvas = document.createElement('canvas')
-      this.biomeBlendContext = this.biomeBlendCanvas.getContext('2d')
+    const key = `${size}|${x}|${y}|${blend.biome}|${blend.alpha}|${blend.angle}|${blend.featherPixels || 0}`
+    let canvas = this.biomeTransitionTileCache.get(key)
+    if (!canvas) {
+      canvas = document.createElement('canvas')
+      canvas.width = canvas.height = size
+      const blendContext = canvas.getContext('2d')
+      this.drawBiome(blendContext, x, y, 0, 0, size, blend.biome)
+      blendContext.globalCompositeOperation = 'destination-in'
+      blendContext.drawImage(this.getBiomeBlendMask(size, x, y, blend), 0, 0)
+      blendContext.globalCompositeOperation = 'source-over'
+      if (this.biomeTransitionTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
+        this.biomeTransitionTileCache.delete(this.biomeTransitionTileCache.keys().next().value)
+      }
+      this.biomeTransitionTileCache.set(key, canvas)
     }
-    if (this.biomeBlendCanvas.width !== size || this.biomeBlendCanvas.height !== size) {
-      this.biomeBlendCanvas.width = this.biomeBlendCanvas.height = size
+    ctx.drawImage(canvas, sx, sy)
+  }
+
+  drawBiomeSot(ctx, x, y, sx, sy, size, orientation, biome) {
+    const corner = ORIENTATIONS.indexOf(orientation)
+    if (corner < 0) return
+    const key = `${size}|${x}|${y}|${orientation}|${biome}`
+    let canvas = this.biomeSotTileCache.get(key)
+    if (!canvas) {
+      canvas = document.createElement('canvas')
+      canvas.width = canvas.height = size
+      const sotContext = canvas.getContext('2d')
+      this.drawBiome(sotContext, x, y, 0, 0, size, biome)
+      sotContext.globalCompositeOperation = 'destination-in'
+      const variant = terrainHash(x, y) % 4
+      sotContext.drawImage(this.details, (corner * 4 + variant) * 32, 0, 32, 32, 0, 0, size, size)
+      sotContext.globalCompositeOperation = 'source-over'
+      if (this.biomeSotTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
+        this.biomeSotTileCache.delete(this.biomeSotTileCache.keys().next().value)
+      }
+      this.biomeSotTileCache.set(key, canvas)
     }
-    const blendContext = this.biomeBlendContext
-    blendContext.clearRect(0, 0, size, size)
-    this.drawBiome(blendContext, x, y, 0, 0, size, blend.biome)
-    blendContext.globalCompositeOperation = 'destination-in'
-    blendContext.drawImage(this.getBiomeBlendMask(size, x, y, blend), 0, 0)
-    blendContext.globalCompositeOperation = 'source-over'
-    ctx.drawImage(this.biomeBlendCanvas, sx, sy)
+    ctx.drawImage(canvas, sx, sy)
   }
 
   drawGrass(ctx, x, y, sx, sy, size, tile = null) {
