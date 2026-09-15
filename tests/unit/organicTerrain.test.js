@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant, getSotDrawBounds } from '../../src/rendering/organicTerrain.js'
+import { BLOB_MASKS, biomeTransitionCornerMask, normalizeBlobMask, shorelineCoverage, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant, getSotDrawBounds } from '../../src/rendering/organicTerrain.js'
 
 describe('organic terrain topology', () => {
   it('covers all 256 neighborhoods with exactly 47 canonical masks', () => {
@@ -219,6 +219,35 @@ describe('organic terrain topology', () => {
     expect(roadFringeMask(grid, 1, 1) & 1).toBe(1)
     expect(roadVisualMask(grid, 1, 0) & 4).toBe(4)
     expect(roadVisualMask(grid, 0, 1) & 2).toBe(2)
+  })
+  it('keeps legacy road fringes on oriented corner triangles', () => {
+    const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'land' })))
+    grid[0][0].type = grid[0][1].type = grid[1][0].type = 'street'
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.drawTriangle = vi.fn()
+    terrain.drawRoadFringe({}, grid, 1, 1, 32, 32, 32)
+    expect(terrain.drawTriangle).toHaveBeenCalledWith({}, 1, 1, 32, 32, 32, 'top-left', 'street')
+  })
+  it('shares biome transition endpoints across turned land boundaries', () => {
+    const grid = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', biome: 'target' })))
+    for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) {
+      if (x < 2 || y < 2) grid[y][x].biome = 'source'
+    }
+    const blend = { biome: 'source', angle: 0 }
+    for (const [x, y, angle] of [[2, 2, 0], [3, 2, 0], [2, 3, Math.PI / 2]]) {
+      grid[y][x].biomeBlend = { ...blend, angle }
+    }
+    const mask = (x, y) => biomeTransitionCornerMask(grid, x, y, grid[y][x].biomeBlend)
+    for (const [x, y] of [[2, 2]]) {
+      for (let t = 0; t <= 1; t += 0.125) {
+        expect(shorelineCoverage(mask(x, y), 1, t)).toBeCloseTo(shorelineCoverage(mask(x + 1, y), 0, t), 10)
+      }
+    }
+    for (const [x, y] of [[2, 2]]) {
+      for (let t = 0; t <= 1; t += 0.125) {
+        expect(shorelineCoverage(mask(x, y), t, 1)).toBeCloseTo(shorelineCoverage(mask(x, y + 1), t, 0), 10)
+      }
+    }
   })
   it('does not place a ground lip across a connected water SOT leg', () => {
     const grid = Array.from({ length: 3 }, () => Array.from({ length: 3 }, () => ({ type: 'water' })))

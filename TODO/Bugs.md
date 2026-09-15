@@ -499,3 +499,5 @@
 - [x] Start naval sinking in the same cleanup tick as its explosion and remove any lingering circular turning wakes around the sinking ship.
 - [x] Register and display ground-unit wrecks in the initial destruction tick rather than waiting for the explosion or frozen destruction pose to finish.
 - [x] Correct shoreline corner coverage, not just pixel overlap: connect all four convex and four concave land/water corners using shared junction masks and remove isolated organic water cutouts shown in the supplied screenshot. Verified rendered alpha continuity, opaque land, chunk parity, unit tests and DPR-2 combat performance.
+- [x] Extend shared-junction transition coverage to land-to-land biome borders; remove stepped corners and detached triangular notches shown in the supplied biome image. The street experiment was reverted in the follow-up below.
+- [x] Restore legacy street fringe rendering after the shared-junction road experiment caused visual regressions; widen biome corner feathering to remove the remaining sharp staircase edges shown in the supplied image.

@@ -55,6 +55,39 @@ test('all eight organic shoreline corners have continuous rendered alpha', async
   await page.locator('#shoreline-gallery').screenshot({ path: '/tmp/shoreline-corner-gallery.png' })
 })
 
+test('land biome turns share junction coverage', async({ page }) => {
+  await page.goto('/?seed=4')
+  const result = await page.evaluate(async() => {
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const { TextureManager } = await import('/src/rendering/textureManager.js')
+    const { biomeTransitionCornerMask } = await import('/src/rendering/organicTerrain.js')
+    const manager = new TextureManager()
+    await new Promise(resolve => manager.preloadAllTextures(resolve))
+    const renderer = new MapRenderer(manager)
+    await Promise.all([renderer.organicTerrain.image.decode(), renderer.organicTerrain.details.decode()])
+
+    const biomeGrid = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', biome: 'target' })))
+    for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) if (x < 2 || y < 2) biomeGrid[y][x].biome = 'source'
+    for (const [x, y, angle] of [[2, 2, 0], [3, 2, 0], [2, 3, Math.PI / 2]]) {
+      biomeGrid[y][x].biomeBlend = { biome: 'source', angle }
+    }
+    const biomeCanvas = document.createElement('canvas')
+    biomeCanvas.width = biomeCanvas.height = 192
+    const biomeContext = biomeCanvas.getContext('2d')
+    for (const [x, y] of [[2, 2], [3, 2], [2, 3]]) {
+      const blend = biomeGrid[y][x].biomeBlend
+      renderer.organicTerrain.drawBiomeTransition(biomeContext, x, y, x * 32, y * 32, 32,
+        { ...blend, cornerMask: biomeTransitionCornerMask(biomeGrid, x, y, blend) })
+    }
+    const biomePixels = biomeContext.getImageData(0, 0, 192, 192).data
+    const alpha = (pixels, x, y, width) => pixels[(y * width + x) * 4 + 3]
+    const biomeSeam = Math.max(...Array.from({ length: 32 }, (_, i) => Math.abs(alpha(biomePixels, 95, 64 + i, 192) - alpha(biomePixels, 96, 64 + i, 192))))
+
+    return { biomeSeam }
+  })
+  expect(result.biomeSeam).toBeLessThanOrEqual(1)
+})
+
 test('organic terrain is identical across chunk seams and map edits', async({ page }) => {
   await page.goto('/?seed=4')
   const result = await page.evaluate(async() => {
