@@ -175,6 +175,28 @@ describe('organic terrain topology', () => {
     const condensedStraightCalls = calls.filter(call => call[0] === terrain.cliffs && call[2] < 1280 && straightCellXs.has(call[1]))
     expect(condensedStraightCalls).toHaveLength(0)
   })
+  it('enlarges plateau crack details while retaining the plateau clip', () => {
+    const grid = Array.from({ length: 7 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
+      type: x >= 2 && x <= 4 && y >= 2 && y <= 4 ? 'rock' : 'land'
+    })))
+    const terrain = Object.create(OrganicTerrain.prototype)
+    terrain.cliffs = { complete: true, naturalWidth: 4096 }
+    terrain.details = {}
+    const calls = []
+    const ctx = {
+      save: () => {}, restore: () => {}, beginPath: () => {}, rect: () => {}, clip: () => {},
+      drawImage: (...args) => calls.push(args)
+    }
+    terrain.drawCliffs(ctx, grid, 0, 0, 7, 7, 0, 0, 32)
+    const detailCalls = calls.filter(call => call[0] === terrain.cliffs && call[1] === 16 * 160)
+    const plateauDetail = detailCalls[0]
+    expect(plateauDetail).toBeDefined()
+    expect(detailCalls).toHaveLength(1)
+    expect(plateauDetail.slice(-2)).toEqual([160, 160])
+    expect(calls.findIndex(call => call === plateauDetail)).toBeLessThan(
+      calls.findIndex(call => call[0] === terrain.cliffs && call !== plateauDetail)
+    )
+  })
   it('keeps cliff palettes constant inside broad geological regions', () => {
     const variants = new Set()
     for (let y = 20; y < 40; y++) for (let x = 20; x < 40; x++) variants.add(cliffVariant(x, y))

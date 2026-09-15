@@ -30,6 +30,8 @@ const CORNERS = [137, 19, 38, 76]
 const ORIENTATIONS = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
 const MACRO_MASKS = new Set([3, 6, 9, 12])
 const TERRAIN_TRANSITION_CACHE_LIMIT = 512
+const PLATEAU_DETAIL_SCALE = 2
+const PLATEAU_DETAIL_FREQUENCY = 10
 const positiveModulo = (value, divisor) => ((value % divisor) + divisor) % divisor
 
 export function cliffVariant(x, y, level = 1) {
@@ -342,6 +344,24 @@ export class OrganicTerrain {
     const right = Math.min(grid[0].length, endX + 4), bottom = Math.min(grid.length, endY + 4)
     const depth = buildCliffDepth(grid, left, top, right + 1, bottom + 1)
     const scale = size / CLIFF_TILE
+    // Sparse, deterministic details keep broad plateau tops readable. Draw
+    // them before the faces so enlarged artwork belongs to the plateau ground
+    // texture and cannot paint over cliff walls.
+    ctx.save()
+    ctx.beginPath()
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      if (isPlateauTile(depth, x, y)) ctx.rect(x * size - offsetX, y * size - offsetY, size, size)
+    }
+    ctx.clip()
+    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
+      if (!isPlateauTile(depth, x, y) || terrainHash(x, y, 313) % PLATEAU_DETAIL_FREQUENCY !== 0) continue
+      ctx.drawImage(this.cliffs, 16 * CLIFF_CELL, cliffVariant(x, y) * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
+        x * size - offsetX - CLIFF_PADDING * scale - (size * (PLATEAU_DETAIL_SCALE - 1)) / 2,
+        y * size - offsetY - CLIFF_PADDING * scale - (size * (PLATEAU_DETAIL_SCALE - 1)) / 2,
+        CLIFF_CELL * scale * PLATEAU_DETAIL_SCALE, CLIFF_CELL * scale * PLATEAU_DETAIL_SCALE)
+    }
+    ctx.restore()
+
     // Faces originate only from plateau topology, while their transparent rim,
     // talus and shadow may cross the tile boundary without rectangular crops.
     // Lowest terrace first, then nested contours. Interiors have no rock sprite.
@@ -380,21 +400,6 @@ export class OrganicTerrain {
           (heightClass === 2 ? CLIFF_TALL_CELL : CLIFF_CELL) * scale)
       }
     }
-    // Top detail is ground material and remains strictly inside rock tiles.
-    ctx.save()
-    ctx.beginPath()
-    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
-      if (isPlateauTile(depth, x, y)) ctx.rect(x * size - offsetX, y * size - offsetY, size, size)
-    }
-    ctx.clip()
-    for (let y = top; y < bottom; y++) for (let x = left; x < right; x++) {
-      if (!isPlateauTile(depth, x, y)) continue
-      ctx.drawImage(this.cliffs, 16 * CLIFF_CELL, cliffVariant(x, y) * CLIFF_CELL, CLIFF_CELL, CLIFF_CELL,
-        x * size - offsetX - CLIFF_PADDING * scale, y * size - offsetY - CLIFF_PADDING * scale,
-        CLIFF_CELL * scale, CLIFF_CELL * scale)
-    }
-    ctx.restore()
-
     // Every non-plateau rock remains an ordinary boulder, regardless of whether
     // it belongs to a short pair, a bend, or a thin cardinal chain.
     for (let y = Math.max(0, top); y < bottom; y++) for (let x = Math.max(0, left); x < right; x++) {

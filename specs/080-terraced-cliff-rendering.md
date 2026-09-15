@@ -18,7 +18,7 @@ The runtime selects deterministic variants by coordinate and terrace level. It p
 
 A rock formation must contain a solid 3x3 rock footprint before it can render as a plateau. The qualifying core expands by one tile only through existing rock cells, so the complete minimum footprint owns its perimeter. Every non-plateau formation, including long cardinal chains, diagonal fragments, bends, pairs, and isolated rocks, uses ordinary boulders. This classification is visual and does not alter tile types.
 
-The renderer derives every face from qualifying rock topology while allowing the irregular rim, debris, and alpha shadow fringe to blend onto immediately adjacent low terrain. Plateau ground details remain clipped to qualifying rock-tile rectangles. Every qualifying plateau tile receives one of five deterministic transparent crack-and-stone overlays on its biome ground. Non-qualifying rock tiles receive one of the existing six boulder sprites.
+The renderer derives every face from qualifying rock topology while allowing the irregular rim, debris, and alpha shadow fringe to blend onto immediately adjacent low terrain. Plateau ground details remain clipped to qualifying rock-tile rectangles. One deterministic tile in ten receives one of five transparent crack-and-stone overlays on its biome ground. These details render at twice the tile footprint so fractures span neighboring plateau tiles, while the complete pass remains clipped to the qualifying plateau mask and cannot spill onto lower ground. Details are painted before cliff faces, so they belong only to the plateau top material (such as snow) and cannot cover cliff-wall texture. Non-qualifying rock tiles receive one of the existing six boulder sprites.
 
 Generated rock lines now have a minimum requested thickness of three tiles, with broader lines at higher rock percentages. This makes plateau-capable 3x3 areas a normal output of map generation. Later water, roads, and protected base clearing may carve those formations without leaving stale visual eligibility because classification reads the final map grid during chunk baking.
 
@@ -149,3 +149,13 @@ Diagonal contour faces sample their rock material along the contour path rather 
 ## Transition layer ordering (2026-09-15)
 
 Organic shoreline transition tiles are drawn immediately after water/base terrain and before cliffs, rock artwork, decorations, and tile decals. Buildings and units remain later renderer passes. The same ordering is used when the GPU supplies the base terrain and the CPU renders remaining overlays.
+
+## South-facing cliff shadow follow-up (2026-09-15)
+
+Cliff cast shadows are ground-only artwork. The compiler now omits shadows on the north-facing side, including the opposite north horizontal macro face (mask 12), and omits cast shadows from east/west macro faces. South-facing horizontal cliffs (mask 3) use a 44px source shadow instead of 22px, while curved/diagonal contours scale their shadow length from the positive south-facing normal up to 30px. This enlarges the shadow visible on the ground before south-facing cliffs without changing gameplay geometry, terrain ownership, cache behavior, or runtime draw count.
+
+The atlas must be rebuilt after changing these baked values:
+
+```sh
+node scripts/build-terraced-cliffs.mjs
+```
