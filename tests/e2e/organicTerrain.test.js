@@ -202,6 +202,39 @@ test('SOT legs stay opaque and only the diagonal fades; cliffs have no ground ma
   expect(report.cliffCornerAlpha).toBe(0)
 })
 
+test('rock shorelines use sand transitions while every snow plateau surface tile stays snow', async({ page }) => {
+  await page.route('**/__rock-shore-plateau', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
+  await page.goto('/__rock-shore-plateau')
+  const report = await page.evaluate(async() => {
+    const { assignMapBiomes } = await import('/src/game/mapBiomes.js')
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const { TextureManager } = await import('/src/rendering/textureManager.js')
+    const grid = Array.from({ length: 20 }, (_, y) => Array.from({ length: 20 }, () => ({ type: y === 0 ? 'water' : 'land' })))
+    for (let y = 1; y <= 5; y++) for (let x = 5; x <= 9; x++) grid[y][x].type = 'rock'
+    assignMapBiomes(grid, 10, {
+      activeSpriteSheetBiomeTag: 'mixed',
+      mapBiomeRegionCount: 1,
+      mapBiomeWeights: { grass: 100, soil: 0, sand: 20, snow: 0 },
+      mapShorelineWidth: 4,
+      mapSnowOnPlateaus: true
+    })
+    const plateauTiles = grid.flat().filter(tile => tile.type === 'rock')
+    const manager = new TextureManager()
+    const renderer = new MapRenderer(manager)
+    renderer.sotMask = Array.from({ length: 20 }, () => Array(20).fill(null))
+    renderer.organicTerrain.drawBiomeTransition = (...args) => { window.__rockShoreTransition = args.at(-1) }
+    renderer.drawOrganicLandTransition({}, grid, 5, 0, 160, 0)
+    return {
+      plateauSurfaceBiomeSet: [...new Set(plateauTiles.map(tile => tile.biome))],
+      shoreSourceSet: [...new Set(plateauTiles.map(tile => tile.shorelineBiome).filter(Boolean))],
+      transitionBiome: window.__rockShoreTransition?.biome || null
+    }
+  })
+  expect(report.plateauSurfaceBiomeSet).toEqual(['snow'])
+  expect(report.shoreSourceSet).toEqual(['sand'])
+  expect(report.transitionBiome).toBe('sand')
+})
+
 test('CPU animated water does not erase the cached grass shore', async({ page }) => {
   await page.goto('/?seed=4')
   const pixel = await page.evaluate(async() => {

@@ -94,8 +94,9 @@ describe('mixed map biomes', () => {
       mapSnowOnPlateaus: true
     })
 
-    expect(grid[7][7].biome).toBe('snow')
-    expect(grid[5][5].biome).toBe('soil')
+    for (let y = 5; y <= 9; y++) for (let x = 5; x <= 9; x++) {
+      expect(grid[y][x].biome).toBe('snow')
+    }
     expect(grid[2][2].biome).toBe('soil')
   })
 
@@ -106,6 +107,17 @@ describe('mixed map biomes', () => {
     assignMapBiomes(grid, 9, { ...mixedSettings, mapBiomeRegionCount: 1, mapShorelineWidth: 4, mapSnowOnPlateaus: true })
     expect(grid[2][7].biome).toBe('snow')
     expect(grid[2][7].biomeBlend).toBeUndefined()
+  })
+
+  it('keeps the sand coastline source when snow covers a shore plateau', () => {
+    const grid = makeGrid(20, 20)
+    for (let x = 0; x < 20; x++) grid[0][x].type = 'water'
+    for (let y = 1; y <= 5; y++) for (let x = 5; x <= 9; x++) grid[y][x].type = 'rock'
+    assignMapBiomes(grid, 10, { ...mixedSettings, mapBiomeRegionCount: 1, mapShorelineWidth: 4, mapSnowOnPlateaus: true })
+
+    expect(grid[1][5].biome).toBe('snow')
+    expect(grid[1][5].shorelineBiome).toBe('sand')
+    expect(grid[5][9].biome).toBe('snow')
   })
 
   it('uses the configured shoreline width in tiles', () => {

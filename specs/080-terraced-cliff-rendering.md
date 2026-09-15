@@ -131,3 +131,9 @@ Macro claims are allocated for every visible terrace level. Outer tall walls dra
 - Eight Chromium tests passed, including byte-identical direct/chunk RGBA output, all eight variants for every 1-4-cell macro topology, alpha ownership, boulder-only narrow rocks, and both DPR-2 performance scenes.
 - Dense cliffs measured 58.92 FPS against the 58.92 FPS baseline, with 5.46ms mean render, 6.10ms maximum, five slow frames, and eight flat 18.41MiB heap samples. Combat measured 39.37 FPS against the 40.11 FPS baseline, with 2.62ms update, 7.93ms render, 6.72ms terrain, 68.86MiB ending heap, and four slow CPU-work frames. The 1.8% combat decrease and effectively unchanged dense result remain comfortably inside the 20% gate.
 - Required verification passed: 160 unit files / 3,894 tests, eight Chromium rendering and performance tests, changed-file lint, production build, and `git diff --check`. The build retained its existing large-chunk and mixed-import advisories; generated version metadata was restored afterward.
+
+## Coastal plateau biome ownership follow-up (2026-09-15)
+
+Snow-enabled plateau ground now covers every rock tile that belongs to a solid 3x3 footprint, including the north and west-facing surface edges that previously retained the lower biome texture. Rock-owned shoreline transitions treat the rock as transparent terrain over its underlying sand, so a snow plateau still receives a sand coastline at adjacent water tiles. The derived shoreline source is included in save/load state and chunk signatures.
+
+Focused coverage verifies all 25 tiles of a 5x5 plateau, rock-owned sand SOT selection, and the browser-rendered north-edge scenario. No gameplay rock types, passability, occupancy, or cliff elevation data are changed.

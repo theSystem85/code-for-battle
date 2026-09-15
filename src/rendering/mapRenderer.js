@@ -399,9 +399,9 @@ export class MapRenderer {
       return null
     }
 
-    const isLandLike = tile => tile && (tile.type === 'land' || tile.type === 'street')
+    const isLandLike = tile => tile && (tile.type === 'land' || tile.type === 'street' || tile.type === 'rock')
 
-    // Coastline smoothing for water tiles near land/street: draw biome land triangles on water,
+    // Coastline smoothing for water tiles near land/street/rock: draw biome land triangles on water,
     // i.e. the ground cuts into water instead of water cutting street overlays.
     if (tileType === 'water') {
       const streetSotInfo = this.computeFullStreetSOTForTile(mapGrid, x, y, top, right, bottom, left)
@@ -425,6 +425,26 @@ export class MapRenderer {
       if (isLandLike(bottom) && isLandLike(right) && (bottom.type === 'street' || right.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
           ? { orientation: 'bottom-right', type: 'street' }
+          : null
+      }
+      if ((top?.type === 'rock' || left?.type === 'rock') && isLandLike(top) && isLandLike(left)) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
+          ? { orientation: 'top-left', type: 'land' }
+          : null
+      }
+      if ((top?.type === 'rock' || right?.type === 'rock') && isLandLike(top) && isLandLike(right)) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
+          ? { orientation: 'top-right', type: 'land' }
+          : null
+      }
+      if ((bottom?.type === 'rock' || left?.type === 'rock') && isLandLike(bottom) && isLandLike(left)) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
+          ? { orientation: 'bottom-left', type: 'land' }
+          : null
+      }
+      if ((bottom?.type === 'rock' || right?.type === 'rock') && isLandLike(bottom) && isLandLike(right)) {
+        return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
+          ? { orientation: 'bottom-right', type: 'land' }
           : null
       }
     }
@@ -874,6 +894,7 @@ export class MapRenderer {
         mixSignature(tile.seedCrystal ? 1 : 0)
         mixSignature(tile.noBuild || 0)
         mixSignature(tile.biome || '')
+        mixSignature(tile.shorelineBiome || '')
         mixSignature(tile.biomeBlend?.biome || '')
         mixSignature(tile.biomeBlend?.alpha || 0)
         mixSignature(tile.biomeBlend?.angle || 0)
@@ -1308,7 +1329,7 @@ export class MapRenderer {
         let sourceTile = null
         for (const [dx, dy] of SOT_SOURCE_OFFSETS[sot.orientation] || []) {
           const candidate = mapGrid[tileY + dy]?.[tileX + dx]
-          if (candidate?.type === 'land') {
+          if ((candidate?.type === 'land' || candidate?.type === 'rock') && !candidate.airstripStreet) {
             sourceTile = candidate
             break
           }
@@ -1321,7 +1342,7 @@ export class MapRenderer {
           screenY,
           TILE_SIZE,
           sot.orientation,
-          sourceTile?.biome || 'grass'
+          sourceTile?.shorelineBiome || sourceTile?.biome || 'grass'
         )
       }
       return
@@ -1332,6 +1353,8 @@ export class MapRenderer {
       const neighbor = mapGrid[tileY + dy]?.[tileX + dx]
       if (neighbor?.type === 'land' && !neighbor.airstripStreet) {
         vectors.push({ x: dx, y: dy, biome: neighbor.biome || 'grass' })
+      } else if (neighbor?.type === 'rock' && !neighbor.airstripStreet) {
+        vectors.push({ x: dx, y: dy, biome: neighbor.shorelineBiome || neighbor.biome || 'grass' })
       }
     }
     if (vectors.length && this.organicTerrain?.getBiomeBlendMask) {

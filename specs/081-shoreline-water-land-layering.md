@@ -12,6 +12,8 @@
 - A street tile with any cardinal or diagonal water neighbor has no land/biome underlay. Procedural water is drawn beneath its transparent street image in CPU, WebGL, and WebGPU water paths.
 - A water-hosted SOT involving street terrain is typed and rendered as street, including mixed street/land corner legs.
 - A water tile with a land or street SOT must not also receive the cardinal biome feather. The SOT alpha is the sole transition mask on that tile, keeping the fade perpendicular to its diagonal edge and its opaque legs aligned with neighboring cardinal transitions.
+- Rock is a shoreline land owner for organic transitions. A water tile adjacent to a rock formation must receive the same sand coastline material that would be rendered beneath the rock, including when snow is the visible biome of a snow-enabled plateau.
+- Snow-enabled plateau surfaces include every rock tile belonging to a qualifying solid 3x3 plateau footprint, including the north and west-facing surface tiles; cliff faces remain separate transparent overlays.
 
 ## Validation
 
@@ -19,6 +21,7 @@
 - Browser coverage should verify shoreline pixels remain land-material dominant at the transition edge while the adjacent full-water sample continues to animate.
 - Browser coverage should verify a street-over-water SOT samples street material and that a horizontal/SOT/vertical sequence has no opaque land replacement at the diagonal.
 - Unit coverage verifies water underlays for shoreline streets, absence of their land underlays, street ownership of mixed SOT corners, and biome-colored land rendering through the oriented SOT alpha mask.
+- Unit/browser coverage verifies rock-owned shoreline transitions select sand and that a 3x3 plateau assigns snow to all nine surface tiles without changing the rock gameplay type.
 
 ## Performance
 
@@ -30,3 +33,5 @@ Local Chromium DPR-2 comparison (100×100 map, 15-second scrolling combat scene,
 PLAYWRIGHT_SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5175 TERRAIN_BENCHMARK=1 npx playwright test tests/e2e/organicTerrain.test.js --project=chromium --grep "terrain combat performance" --reporter=line --workers=1
 PLAYWRIGHT_SKIP_WEB_SERVER=1 PLAYWRIGHT_BASE_URL=http://127.0.0.1:5174 TERRAIN_BENCHMARK=1 npx playwright test tests/e2e/organicTerrain.test.js --project=chromium --grep "terrain combat performance" --reporter=line --workers=1
 ```
+
+The rock-coast follow-up adds no per-frame allocations or entity scans. A clean local Chromium DPR-2 sample on 2026-09-15 reported 27.47 FPS, 11.56 ms render, 9.77 ms terrain, and 68.86 MiB heap (456 samples; 100×100 map, 36 units, 83 buildings, 288 smoke particles). Two adjacent samples reported 27.38 FPS / 9.73 ms terrain and 24.18 FPS / 11.37 ms terrain, showing host scheduling variance. The unchanged fixed-floor run was below 30 FPS on this host; the 27.47 FPS sample remains within 20% of the documented 33.53 FPS comparison baseline, and the focused behavior test plus all unit tests pass.
