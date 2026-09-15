@@ -2,6 +2,59 @@ import { test, expect } from '@playwright/test'
 
 test.use({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 2 })
 
+test('all eight organic shoreline corners have continuous rendered alpha', async({ page }) => {
+  await page.goto('/?seed=4')
+  const result = await page.evaluate(async() => {
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const { TextureManager } = await import('/src/rendering/textureManager.js')
+    const manager = new TextureManager()
+    const renderer = new MapRenderer(manager)
+    await Promise.all(Object.values(renderer.organicTerrain.biomeImages).flat().map(image => image.decode()))
+    renderer.useOrganicTerrain = () => true
+    const gallery = document.createElement('canvas')
+    gallery.width = 4 * 224
+    gallery.height = 2 * 224
+    gallery.id = 'shoreline-gallery'
+    const display = gallery.getContext('2d')
+    display.fillStyle = '#315c67'
+    display.fillRect(0, 0, gallery.width, gallery.height)
+    let seams = 0, faded = 0, holes = 0
+    for (const inward of [false, true]) for (let rotation = 0; rotation < 4; rotation++) {
+      let grid = Array.from({ length: 7 }, (_, y) => Array.from({ length: 7 }, (_, x) => ({
+        type: ((x < 3 && y < 3) !== inward) ? 'land' : 'water', biome: 'sand'
+      })))
+      for (let r = 0; r < rotation; r++) grid = grid[0].map((_, x) => grid.map(row => row[x]).reverse())
+      renderer.computeSOTMask(grid)
+      const canvas = document.createElement('canvas')
+      canvas.width = canvas.height = 224
+      const ctx = canvas.getContext('2d')
+      for (let y = 0; y < 7; y++) for (let x = 0; x < 7; x++) {
+        if (grid[y][x].type === 'land') renderer.organicTerrain.drawBiome(ctx, x, y, x * 32, y * 32, 32, 'sand')
+        renderer.drawOrganicLandTransition(ctx, grid, x, y, x * 32, y * 32)
+        const sot = renderer.sotMask[y][x]
+        if (sot?.type === 'water') renderer.drawSOT(ctx, x, y, sot.orientation, { x: 0, y: 0 }, true, new Set(), 'water')
+      }
+      const rgba = ctx.getImageData(0, 0, 224, 224).data
+      const alpha = (x, y) => rgba[(y * 224 + x) * 4 + 3]
+      for (let y = 0; y < 224; y++) for (let x = 0; x < 224; x++) {
+        const a = alpha(x, y)
+        if (a > 0 && a < 255) faded++
+        if (grid[Math.floor(y / 32)][Math.floor(x / 32)].type === 'land' && a !== 255) holes++
+        if (x > 0 && x % 32 === 0 && a !== alpha(x - 1, y)) seams++
+        if (y > 0 && y % 32 === 0 && a !== alpha(x, y - 1)) seams++
+      }
+      display.drawImage(canvas, rotation * 224, Number(inward) * 224)
+    }
+    document.body.replaceChildren(gallery)
+    document.body.style.margin = '0'
+    return { seams, faded, holes }
+  })
+  expect(result.seams).toBe(0)
+  expect(result.holes).toBe(0)
+  expect(result.faded).toBeGreaterThan(0)
+  await page.locator('#shoreline-gallery').screenshot({ path: '/tmp/shoreline-corner-gallery.png' })
+})
+
 test('organic terrain is identical across chunk seams and map edits', async({ page }) => {
   await page.goto('/?seed=4')
   const result = await page.evaluate(async() => {
@@ -74,7 +127,7 @@ test('shoreline water is composited before the terrain transition pass', async({
     const sotRenderer = new MapRenderer(new TextureManager())
     sotRenderer.sotMask = [[null, null], [null, { type: 'land', orientation: 'top-left' }]]
     let landSot = null
-    sotRenderer.organicTerrain.drawBiomeSot = (_ctx, _x, _y, _sx, _sy, _size, orientation, biome) => { landSot = { orientation, biome } }
+    sotRenderer.organicTerrain.drawBiomeShore = (_ctx, _x, _y, _sx, _sy, _size, mask, biome) => { landSot = { mask, biome } }
     sotRenderer.drawOrganicLandTransition({}, [
       [{ type: 'land', biome: 'sand' }, { type: 'water' }],
       [{ type: 'water' }, { type: 'water' }]
@@ -91,7 +144,7 @@ test('shoreline water is composited before the terrain transition pass', async({
   })
 
   expect(result.events).toEqual(['water', 'terrain'])
-  expect(result.landSot).toEqual({ orientation: 'top-left', biome: 'sand' })
+  expect(result.landSot).toEqual({ mask: 1, biome: 'sand' })
   expect(result.streetSot).toEqual({ orientation: 'bottom-right', type: 'street' })
 })
 
@@ -115,6 +168,19 @@ test('terrain combat performance at DPR 2', async({ page }, testInfo) => {
   await page.waitForFunction(() => window.__iosBenchmarkResult, null, { timeout: 90000 })
   await page.locator('#performanceMonitorButton').dispatchEvent('click')
   const report = await page.evaluate(() => window.getPerformanceMonitorReport())
+  const shoreCache = await page.evaluate(async() => {
+    // Reuse Vite's exact runtime module URL (including any HMR timestamp).
+    const renderingUrl = performance.getEntriesByType('resource').find(entry => /\/src\/rendering\.js(?:\?|$)/.test(entry.name))?.name || '/src/rendering.js'
+    const { getMapRenderer } = await import(renderingUrl)
+    const terrain = getMapRenderer().organicTerrain
+    return {
+      masks: [...terrain.biomeBlendMasks.keys()].filter(key => key.startsWith('shore|')).length,
+      composites: terrain.biomeTransitionTileCache.size
+    }
+  })
+  expect(shoreCache.masks).toBeGreaterThan(0)
+  expect(shoreCache.masks).toBeLessThanOrEqual(15)
+  expect(shoreCache.composites).toBeLessThanOrEqual(512)
   console.log('TERRAIN_BENCHMARK', JSON.stringify(report))
   await testInfo.attach('terrain-performance', { body: JSON.stringify(report, null, 2), contentType: 'application/json' })
   expect(report.averageFps).toBeGreaterThanOrEqual(Number(process.env.TERRAIN_MIN_FPS || 30))
@@ -201,6 +267,63 @@ test('SOT legs stay opaque and only the diagonal fades; cliffs have no ground ma
   expect(report.cliffCornerAlpha).toBe(0)
 })
 
+test('outward and inward SOT corners share stitched bounds in all four orientations', async({ page }) => {
+  await page.goto('/?seed=4')
+  const report = await page.evaluate(async() => {
+    const { getSotDrawBounds } = await import('/src/rendering/organicTerrain.js')
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const renderer = new MapRenderer({ integratedSpriteSheetMode: false })
+    await renderer.organicTerrain.details.decode()
+
+    const orientations = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
+    const triangleCalls = []
+    const triangleContext = { drawImage: (...args) => triangleCalls.push(args) }
+    for (const orientation of orientations) {
+      renderer.organicTerrain.drawTriangle(triangleContext, 2, 2, 64, 64, 32, orientation, 'land')
+    }
+
+    const inwardCalls = []
+    renderer.drawProceduralWater = (_ctx, x, y, size) => inwardCalls.push([x, y, size])
+    const waterContext = {
+      save: () => {},
+      beginPath: () => {},
+      moveTo: () => {},
+      lineTo: () => {},
+      closePath: () => {},
+      clip: () => {},
+      restore: () => {}
+    }
+    for (const orientation of orientations) {
+      renderer.drawSOT(waterContext, 2, 2, orientation, { x: 0, y: 0 }, false, new Set(), 'water', null)
+    }
+
+    return {
+      bounds: orientations.map(orientation => getSotDrawBounds(64, 64, 32, orientation)),
+      triangleDestinations: triangleCalls.map(call => call.slice(-4)),
+      inwardDestinations: inwardCalls
+    }
+  })
+
+  expect(report.bounds).toEqual([
+    { x: 64, y: 64, size: 33 },
+    { x: 63, y: 64, size: 33 },
+    { x: 63, y: 63, size: 33 },
+    { x: 64, y: 63, size: 33 }
+  ])
+  expect(report.triangleDestinations).toEqual([
+    [64, 64, 33, 33],
+    [63, 64, 33, 33],
+    [63, 63, 33, 33],
+    [64, 63, 33, 33]
+  ])
+  expect(report.inwardDestinations).toEqual([
+    [64, 64, 33],
+    [63, 64, 33],
+    [63, 63, 33],
+    [64, 63, 33]
+  ])
+})
+
 test('rock shorelines use sand transitions while every snow plateau surface tile stays snow', async({ page }) => {
   await page.route('**/__rock-shore-plateau', route => route.fulfill({ contentType: 'text/html', body: '<html></html>' }))
   await page.goto('/__rock-shore-plateau')
@@ -221,7 +344,7 @@ test('rock shorelines use sand transitions while every snow plateau surface tile
     const manager = new TextureManager()
     const renderer = new MapRenderer(manager)
     renderer.sotMask = Array.from({ length: 20 }, () => Array(20).fill(null))
-    renderer.organicTerrain.drawBiomeTransition = (...args) => { window.__rockShoreTransition = args.at(-1) }
+    renderer.organicTerrain.drawBiomeShore = (...args) => { window.__rockShoreTransition = { biome: args.at(-1) } }
     renderer.drawOrganicLandTransition({}, grid, 5, 0, 160, 0)
     return {
       plateauSurfaceBiomeSet: [...new Set(plateauTiles.map(tile => tile.biome))],

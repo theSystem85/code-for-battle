@@ -32,7 +32,7 @@ describe('MapRenderer water rendering', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'land' }], [null, null]]
     mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
-    mapRenderer.organicTerrain.drawBiomeSot = vi.fn()
+    mapRenderer.organicTerrain.drawBiomeShore = vi.fn()
     const mapGrid = [
       [{ type: 'land', biome: 'sand' }, { type: 'water' }],
       [{ type: 'water' }, { type: 'water' }]
@@ -41,8 +41,8 @@ describe('MapRenderer water rendering', () => {
     mapRenderer.drawOrganicLandTransition({}, mapGrid, 1, 0, 20, 0)
 
     expect(mapRenderer.organicTerrain.drawBiomeTransition).not.toHaveBeenCalled()
-    expect(mapRenderer.organicTerrain.drawBiomeSot).toHaveBeenCalledWith(
-      expect.anything(), 1, 0, 20, 0, expect.any(Number), 'top-left', 'sand'
+    expect(mapRenderer.organicTerrain.drawBiomeShore).toHaveBeenCalledWith(
+      expect.anything(), 1, 0, 20, 0, expect.any(Number), 9, 'sand'
     )
   })
 
@@ -56,11 +56,11 @@ describe('MapRenderer water rendering', () => {
 
     mapRenderer.sotMask = Array.from({ length: 5 }, () => Array(5).fill(null))
     mapRenderer.sotMask[2][2] = sot
-    mapRenderer.organicTerrain.drawBiomeSot = vi.fn()
+    mapRenderer.organicTerrain.drawBiomeShore = vi.fn()
     mapRenderer.drawOrganicLandTransition({}, waterGrid, 2, 2, 64, 64)
 
-    expect(mapRenderer.organicTerrain.drawBiomeSot).toHaveBeenCalledWith(
-      expect.anything(), 2, 2, 64, 64, expect.any(Number), 'top-left', 'sand'
+    expect(mapRenderer.organicTerrain.drawBiomeShore).toHaveBeenCalledWith(
+      expect.anything(), 2, 2, 64, 64, expect.any(Number), 11, 'sand'
     )
   })
 
@@ -630,7 +630,7 @@ describe('MapRenderer water rendering', () => {
       null
     )
     expect(clearTriangleSpy).toHaveBeenCalledTimes(1)
-    expect(clearTriangleSpy).toHaveBeenCalledWith(ctx, 32, 0, 33, 'top-left')
+    expect(clearTriangleSpy).toHaveBeenCalledWith(ctx, 32, 0, 32, 'top-left')
   })
 
   it('adds water SOT triangles to the WebGL tile batch so they match shader-rendered water', () => {

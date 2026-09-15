@@ -844,6 +844,11 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Naval collisions cause light, cooldown-limited damage; broadside impacts take more damage than bow/stern impacts.
 - [x] Complete every previously deferred naval/domain-production item in the checklist above.
 
+# SOT corner continuity (2026-09-15)
+
+- [x] Make outward land/street and inward water corner transition tiles share a one-pixel orientation-aware overlap on all four edges, keeping solid legs aligned while eliminating diagonal join gaps.
+- [x] Keep the shared SOT geometry in the organic terrain and legacy/GPU fallback renderers so CPU, WebGL and WebGPU-visible paths use identical corner placement.
+
 ## 2026-07-31 AI explosive-building safety
 
 - [x] Place enemy gas stations and ammunition factories away from the base center and outside their blast radius from critical infrastructure.
