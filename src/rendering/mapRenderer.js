@@ -1266,7 +1266,6 @@ export class MapRenderer {
         const screenX = Math.floor(x * TILE_SIZE - offsetX)
         const screenY = Math.floor(y * TILE_SIZE - offsetY)
         if (this.useOrganicTerrain(useTexture)) {
-          if (!this.dynamicWaterLandBlendEnabled) this.drawOrganicWaterTransition(ctx, mapGrid, x, y, screenX, screenY, currentWaterFrame)
           this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
         }
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
@@ -1281,12 +1280,15 @@ export class MapRenderer {
     this.groupingMapGrid = previousGroupingMap
   }
 
-  drawOrganicWaterTransition(ctx, mapGrid, tileX, tileY, screenX, screenY, currentWaterFrame) {
+  drawOrganicLandTransition(ctx, mapGrid, tileX, tileY, screenX, screenY) {
     const tile = mapGrid?.[tileY]?.[tileX]
-    if (!tile || tile.type === 'water' || tile.airstripStreet) return
+    if (!tile || tile.type !== 'water' || tile.airstripStreet) return
     const vectors = []
     for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-      if (mapGrid[tileY + dy]?.[tileX + dx]?.type === 'water') vectors.push({ x: dx, y: dy })
+      const neighbor = mapGrid[tileY + dy]?.[tileX + dx]
+      if (neighbor && (neighbor.type === 'land' || neighbor.type === 'street') && !neighbor.airstripStreet) {
+        vectors.push({ x: dx, y: dy, biome: neighbor.biome || 'grass' })
+      }
     }
     const sot = this.sotMask?.[tileY]?.[tileX]
     const sotVectors = {
@@ -1295,29 +1297,21 @@ export class MapRenderer {
       'bottom-left': { x: -1, y: 1 },
       'bottom-right': { x: 1, y: 1 }
     }
-    if (sot?.type === 'water' && sotVectors[sot.orientation]) vectors.push(sotVectors[sot.orientation])
+    if ((sot?.type === 'land' || sot?.type === 'street') && sotVectors[sot.orientation]) {
+      const vector = sotVectors[sot.orientation]
+      const diagonalNeighbor = mapGrid[tileY + vector.y]?.[tileX + vector.x]
+      vectors.push({ ...vector, biome: diagonalNeighbor?.biome || 'grass' })
+    }
     if (!vectors.length || !this.organicTerrain?.getBiomeBlendMask) return
     const nearest = vectors.reduce((best, vector) => {
       const distance = vector.x * vector.x + vector.y * vector.y
       return !best || distance < best.distance ? { ...vector, distance } : best
     }, null)
-    if (!this.organicWaterTransitionCanvas) {
-      this.organicWaterTransitionCanvas = document.createElement('canvas')
-      this.organicWaterTransitionCanvas.width = this.organicWaterTransitionCanvas.height = TILE_SIZE
-      this.organicWaterTransitionContext = this.organicWaterTransitionCanvas.getContext('2d')
-    }
-    const transitionContext = this.organicWaterTransitionContext
-    transitionContext.clearRect(0, 0, TILE_SIZE, TILE_SIZE)
-    if (USE_PROCEDURAL_WATER_RENDERING) this.drawProceduralWater(transitionContext, 0, 0, TILE_SIZE, tileX, tileY)
-    else this.drawClassicWater(transitionContext, 0, 0, TILE_SIZE, currentWaterFrame)
-    transitionContext.globalCompositeOperation = 'destination-in'
-    transitionContext.drawImage(this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, {
-      biome: 'water',
+    this.organicTerrain.drawBiomeTransition(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, {
+      biome: nearest.biome || 'grass',
       alpha: 0.5,
       angle: Math.atan2(nearest.y, nearest.x)
-    }), 0, 0)
-    transitionContext.globalCompositeOperation = 'source-over'
-    ctx.drawImage(this.organicWaterTransitionCanvas, screenX, screenY)
+    })
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
@@ -2115,10 +2109,11 @@ export class MapRenderer {
         skipWaterSot: separateWaterLayer ? true : skipWaterSot,
         prewarmStaticTerrain: separateWaterLayer || (skipWaterBase && skipWaterSot)
       })
-      if (this.dynamicWaterLandBlendEnabled && this.useOrganicTerrain(USE_TEXTURES && this.textureManager.allTexturesLoaded)) {
-        const frame = this.textureManager.waterFrames.length ? this.textureManager.getCurrentWaterFrame() : null
+      // Keep the transition as a land-material overlay. The water layer is rendered
+      // first (GPU or CPU), so shoreline animation cannot overwrite the land edge.
+      if (this.useOrganicTerrain(USE_TEXTURES && this.textureManager.allTexturesLoaded)) {
         for (let y = startTileY; y < endTileY; y++) for (let x = startTileX; x < endTileX; x++) {
-          this.drawOrganicWaterTransition(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - scrollOffset.x), Math.floor(y * TILE_SIZE - scrollOffset.y), frame)
+          this.drawOrganicLandTransition(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - scrollOffset.x), Math.floor(y * TILE_SIZE - scrollOffset.y))
         }
       }
       if (separateWaterLayer && !waterBeforeTerrain && (!skipWaterBase || !skipWaterSot)) {

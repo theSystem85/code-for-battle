@@ -28,6 +28,38 @@ describe('MapRenderer water rendering', () => {
     expect(ctx.fillRect).toHaveBeenCalled()
   })
 
+  it('renders a land transition over a water tile, including land SOT corners', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'land' }], [null, null]]
+    mapRenderer.organicTerrain.getBiomeBlendMask = vi.fn(() => ({ id: 'land-mask' }))
+    mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+    const mapGrid = [
+      [{ type: 'land', biome: 'sand' }, { type: 'water' }],
+      [{ type: 'water' }, { type: 'water' }]
+    ]
+
+    mapRenderer.drawOrganicLandTransition({}, mapGrid, 1, 0, 20, 0)
+
+    expect(mapRenderer.organicTerrain.drawBiomeTransition).toHaveBeenCalledWith(
+      expect.anything(),
+      1,
+      0,
+      20,
+      0,
+      expect.any(Number),
+      expect.objectContaining({ biome: 'sand', alpha: 0.5, angle: expect.any(Number) })
+    )
+  })
+
+  it('does not paint animated water over a land tile for the organic shoreline transition', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+
+    mapRenderer.drawOrganicLandTransition({}, [[{ type: 'land' }, { type: 'water' }]], 0, 0, 0, 0)
+
+    expect(mapRenderer.organicTerrain.drawBiomeTransition).not.toHaveBeenCalled()
+  })
+
   it('keeps the chunk cache active for static CPU terrain over GPU water-only rendering', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.canUseOffscreen = true
