@@ -393,11 +393,12 @@ export class GameWebGLRenderer {
         const tile = row[x]
         if (!tile) continue
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if (!waterOnly || visualTileType === 'water') {
+        const streetWaterUnderlay = visualTileType === 'street' && this.mapRenderer?.isStreetWaterTransitionTile(mapGrid, x, y)
+        if (!waterOnly || visualTileType === 'water' || streetWaterUnderlay) {
           if (!waterOnly && visualTileType === 'street') {
-            baseInstances.push(this.createInstance('land', x, y, mapGrid, canUseTextures, sotMask))
+            baseInstances.push(this.createInstance(streetWaterUnderlay ? 'water' : 'land', x, y, mapGrid, canUseTextures, sotMask))
           }
-          baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures, sotMask))
+          baseInstances.push(this.createInstance(waterOnly && streetWaterUnderlay ? 'water' : visualTileType, x, y, mapGrid, canUseTextures, sotMask))
         }
 
         const sotInfo = sotMask?.[y]?.[x]

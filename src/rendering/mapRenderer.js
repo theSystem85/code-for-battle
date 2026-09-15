@@ -16,6 +16,12 @@ const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
 const MIN_SOT_CLUSTER_SIZE = 5
+const SOT_SOURCE_OFFSETS = {
+  'top-left': [[0, -1], [-1, 0], [-1, -1]],
+  'top-right': [[0, -1], [1, 0], [1, -1]],
+  'bottom-left': [[0, 1], [-1, 0], [-1, 1]],
+  'bottom-right': [[0, 1], [1, 0], [1, 1]]
+}
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -317,6 +323,16 @@ export class MapRenderer {
     return null
   }
 
+  isStreetWaterTransitionTile(mapGrid, x, y) {
+    if (mapGrid?.[y]?.[x]?.type !== 'street' || mapGrid[y][x].airstripStreet) return false
+    for (let dy = -1; dy <= 1; dy++) {
+      for (let dx = -1; dx <= 1; dx++) {
+        if ((dx || dy) && mapGrid[y + dy]?.[x + dx]?.type === 'water') return true
+      }
+    }
+    return false
+  }
+
   /**
    * Compute the SOT (Smoothening Overlay Texture) mask for the entire map.
    * This should be called once when the map is loaded and when tile types change.
@@ -393,22 +409,22 @@ export class MapRenderer {
 
       if (isLandLike(top) && isLandLike(left) && (top.type === 'street' || left.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'top-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-left', type: 'land' }
+          ? { orientation: 'top-left', type: 'street' }
           : null
       }
       if (isLandLike(top) && isLandLike(right) && (top.type === 'street' || right.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'top-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'top-right', type: 'land' }
+          ? { orientation: 'top-right', type: 'street' }
           : null
       }
       if (isLandLike(bottom) && isLandLike(left) && (bottom.type === 'street' || left.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-left', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-left', type: 'land' }
+          ? { orientation: 'bottom-left', type: 'street' }
           : null
       }
       if (isLandLike(bottom) && isLandLike(right) && (bottom.type === 'street' || right.type === 'street')) {
         return canApplySotCorner(mapGrid, x, y, tileType, 'bottom-right', top, right, bottom, left, analysisCache)
-          ? { orientation: 'bottom-right', type: 'land' }
+          ? { orientation: 'bottom-right', type: 'street' }
           : null
       }
     }
@@ -1172,7 +1188,8 @@ export class MapRenderer {
         const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
         const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
 
-        if (drawBase && tile.type === 'water' && !tile.airstripStreet) {
+        if (drawBase && ((tile.type === 'water' && !tile.airstripStreet) ||
+          (tile.type === 'street' && this.isStreetWaterTransitionTile(mapGrid, x, y)))) {
           this.drawTileBase(ctx, x, y, 'water', screenX, screenY, useTexture, currentWaterFrame)
         }
 
@@ -1283,10 +1300,37 @@ export class MapRenderer {
   drawOrganicLandTransition(ctx, mapGrid, tileX, tileY, screenX, screenY) {
     const tile = mapGrid?.[tileY]?.[tileX]
     if (!tile || tile.type !== 'water' || tile.airstripStreet) return
+    const sot = this.sotMask?.[tileY]?.[tileX]
+    if (sot && (sot.type === 'land' || sot.type === 'street')) {
+      if (sot.type === 'street') {
+        this.organicTerrain.drawTriangle(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, sot.orientation, 'street')
+      } else {
+        let sourceTile = null
+        for (const [dx, dy] of SOT_SOURCE_OFFSETS[sot.orientation] || []) {
+          const candidate = mapGrid[tileY + dy]?.[tileX + dx]
+          if (candidate?.type === 'land') {
+            sourceTile = candidate
+            break
+          }
+        }
+        this.organicTerrain.drawBiomeSot(
+          ctx,
+          tileX,
+          tileY,
+          screenX,
+          screenY,
+          TILE_SIZE,
+          sot.orientation,
+          sourceTile?.biome || 'grass'
+        )
+      }
+      return
+    }
+
     const vectors = []
     for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
       const neighbor = mapGrid[tileY + dy]?.[tileX + dx]
-      if (neighbor && (neighbor.type === 'land' || neighbor.type === 'street') && !neighbor.airstripStreet) {
+      if (neighbor?.type === 'land' && !neighbor.airstripStreet) {
         vectors.push({ x: dx, y: dy, biome: neighbor.biome || 'grass' })
       }
     }
@@ -1302,13 +1346,6 @@ export class MapRenderer {
       })
     }
 
-    // SOTs are the authoritative diagonal transition. Render them after the
-    // cardinal feather so street corners retain street material instead of
-    // inheriting the land underlay, and their alpha edge joins the feather.
-    const sot = this.sotMask?.[tileY]?.[tileX]
-    if (sot && (sot.type === 'land' || sot.type === 'street')) {
-      this.drawSOT(ctx, tileX, tileY, sot.orientation, { x: -screenX + tileX * TILE_SIZE, y: -screenY + tileY * TILE_SIZE }, true, new Set(), sot.type)
-    }
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
@@ -1422,6 +1459,7 @@ export class MapRenderer {
       return
     }
     if (this.useOrganicTerrain(useTexture) && ['land', 'street', 'rock'].includes(type)) {
+      if (type === 'street' && this.isStreetWaterTransitionTile(mapGrid, tileX, tileY)) return
       this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, mapGrid?.[tileY]?.[tileX])
       return
     }
