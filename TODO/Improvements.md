@@ -810,6 +810,10 @@
 - [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
 - [x] Restore iPhone 13 Pro Max map scrolling smoothness by reducing mobile terrain chunk churn and keeping the RAF scheduler from racing native frame cadence during scroll/combat.
 
+## Cliff texture density follow-up (2026-09-15)
+- [x] Normalize directional cliff-face depth and scaling so north, east, west, corner, and short cliff textures have the same open rock detail density as the preferred south-facing horizontal macro cliffs.
+- [x] Reduce repeated dense sampling on diagonal cliffs while restoring a shorter north-facing perspective depth than the south-facing cliffs.
+
 ## 2026-07-25 Naval and production verification checklist
 
 Use this checklist in a live game and check each item only after confirming the described behavior:
