@@ -30,9 +30,57 @@ const CORNERS = [137, 19, 38, 76]
 const ORIENTATIONS = ['top-left', 'top-right', 'bottom-right', 'bottom-left']
 const MACRO_MASKS = new Set([3, 6, 9, 12])
 const TERRAIN_TRANSITION_CACHE_LIMIT = 512
+const SOT_EDGE_OVERLAP = 1
+const SOT_DRAW_OFFSETS = Object.freeze({
+  'top-left': Object.freeze({ x: 0, y: 0 }),
+  'top-right': Object.freeze({ x: -SOT_EDGE_OVERLAP, y: 0 }),
+  'bottom-right': Object.freeze({ x: -SOT_EDGE_OVERLAP, y: -SOT_EDGE_OVERLAP }),
+  'bottom-left': Object.freeze({ x: 0, y: -SOT_EDGE_OVERLAP })
+})
+const ZERO_SOT_DRAW_OFFSET = Object.freeze({ x: 0, y: 0 })
+const SHORE_CORNERS = [[0, 0], [1, 0], [1, 1], [0, 1]]
+
+// Each junction belongs to four cells. Both sides of a shared edge therefore
+// interpolate exactly the same endpoints, including diagonal-only shoulders.
+export function shorelineCornerMask(grid, x, y) {
+  let mask = 0
+  for (let corner = 0; corner < 4; corner++) {
+    const [cx, cy] = SHORE_CORNERS[corner]
+    for (let dy = cy - 1; dy <= cy; dy++) for (let dx = cx - 1; dx <= cx; dx++) {
+      const tile = grid[y + dy]?.[x + dx]
+      if (tile && !tile.airstripStreet && (tile.type === 'land' || tile.type === 'rock')) mask |= 1 << corner
+    }
+  }
+  return mask
+}
+
+export function shorelineCoverage(mask, u, v) {
+  const top = (mask & 1 ? 1 - u : 0) + (mask & 2 ? u : 0)
+  const bottom = (mask & 8 ? 1 - u : 0) + (mask & 4 ? u : 0)
+  // Small interior variation vanishes with its first derivative at shared
+  // edges, preserving both coverage and shoreline tangent across tile joins.
+  const wave = Math.sin(u * Math.PI * 4) * Math.sin(v * Math.PI * 4) *
+    u * (1 - u) * v * (1 - v) * 0.6
+  const alpha = Math.max(0, Math.min(1, 0.5 + (top * (1 - v) + bottom * v - 0.5 + wave) / 0.2))
+  return alpha * alpha * (3 - 2 * alpha)
+}
 const PLATEAU_DETAIL_SCALE = 2
 const PLATEAU_DETAIL_FREQUENCY = 10
 const positiveModulo = (value, divisor) => ((value % divisor) + divisor) % divisor
+
+// Expand only across the exposed side of the corner. The two solid SOT legs
+// stay on their owning tile, while the hypotenuse gets one shared pixel of
+// overlap with its neighboring transition tile.
+export function getSotDrawBounds(sx, sy, size, orientation) {
+  const offset = getSotDrawOffset(orientation)
+  return { x: sx + offset.x, y: sy + offset.y, size: size + (SOT_DRAW_OFFSETS[orientation] ? SOT_EDGE_OVERLAP : 0) }
+}
+
+// Returns shared immutable offsets so visible-tile rendering does not allocate
+// a bounds object for every SOT.
+export function getSotDrawOffset(orientation) {
+  return SOT_DRAW_OFFSETS[orientation] || ZERO_SOT_DRAW_OFFSET
+}
 
 export function cliffVariant(x, y, level = 1) {
   // Irregular 256-tile Voronoi regions keep complete cliff systems in one
@@ -254,6 +302,37 @@ export class OrganicTerrain {
     ctx.drawImage(canvas, sx, sy)
   }
 
+  drawBiomeShore(ctx, x, y, sx, sy, size, mask, biome) {
+    const key = `shore|${size}|${x}|${y}|${mask}|${biome}`
+    let canvas = this.biomeTransitionTileCache.get(key)
+    if (!canvas) {
+      const maskKey = `shore|${size}|${mask}`
+      let alphaMask = this.biomeBlendMasks.get(maskKey)
+      if (!alphaMask) {
+        alphaMask = document.createElement('canvas')
+        alphaMask.width = alphaMask.height = size
+        const context = alphaMask.getContext('2d')
+        const pixels = context.createImageData(size, size)
+        for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
+          pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * shorelineCoverage(mask, px / (size - 1), py / (size - 1)))
+        }
+        context.putImageData(pixels, 0, 0)
+        this.biomeBlendMasks.set(maskKey, alphaMask)
+      }
+      canvas = document.createElement('canvas')
+      canvas.width = canvas.height = size
+      const context = canvas.getContext('2d')
+      this.drawBiome(context, x, y, 0, 0, size, biome)
+      context.globalCompositeOperation = 'destination-in'
+      context.drawImage(alphaMask, 0, 0)
+      if (this.biomeTransitionTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
+        this.biomeTransitionTileCache.delete(this.biomeTransitionTileCache.keys().next().value)
+      }
+      this.biomeTransitionTileCache.set(key, canvas)
+    }
+    ctx.drawImage(canvas, sx, sy)
+  }
+
   drawBiomeSot(ctx, x, y, sx, sy, size, orientation, biome) {
     const corner = ORIENTATIONS.indexOf(orientation)
     if (corner < 0) return
@@ -273,7 +352,9 @@ export class OrganicTerrain {
       }
       this.biomeSotTileCache.set(key, canvas)
     }
-    ctx.drawImage(canvas, sx, sy)
+    const offset = getSotDrawOffset(orientation)
+    const drawSize = size + SOT_EDGE_OVERLAP
+    ctx.drawImage(canvas, 0, 0, size, size, sx + offset.x, sy + offset.y, drawSize, drawSize)
   }
 
   drawGrass(ctx, x, y, sx, sy, size, tile = null) {
@@ -303,7 +384,9 @@ export class OrganicTerrain {
     const corner = ORIENTATIONS.indexOf(orientation)
     if (corner < 0) return
     const variant = terrainHash(x, y) % 4
-    ctx.drawImage(this.details, (corner * 4 + variant) * 32, type === 'street' ? 32 : 0, 32, 32, sx, sy, size, size)
+    const offset = getSotDrawOffset(orientation)
+    ctx.drawImage(this.details, (corner * 4 + variant) * 32, type === 'street' ? 32 : 0, 32, 32,
+      sx + offset.x, sy + offset.y, size + SOT_EDGE_OVERLAP, size + SOT_EDGE_OVERLAP)
   }
 
   drawCoast(ctx, grid, x, y, sx, sy, size, sotInfo, sotMask = null) {

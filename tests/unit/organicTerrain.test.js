@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant } from '../../src/rendering/organicTerrain.js'
+import { BLOB_MASKS, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant, getSotDrawBounds } from '../../src/rendering/organicTerrain.js'
 
 describe('organic terrain topology', () => {
   it('covers all 256 neighborhoods with exactly 47 canonical masks', () => {
@@ -61,7 +61,7 @@ describe('organic terrain topology', () => {
     expect(operations).toHaveLength(1)
     expect(operations[0][0]).toBe(terrain.details)
     expect(operations[0][2]).toBe(0)
-    expect(output.drawImage).toHaveBeenCalledWith(sotCanvas, 96, 224)
+    expect(output.drawImage).toHaveBeenCalledWith(sotCanvas, 0, 0, 32, 32, 95, 223, 33, 33)
     expect(sotContext.globalCompositeOperation).toBe('source-over')
     createElement.mockRestore()
   })
@@ -72,7 +72,17 @@ describe('organic terrain topology', () => {
 
     terrain.drawBiomeSot(output, 3, 7, 96, 224, 32, 'bottom-right', 'sand')
 
-    expect(output.drawImage).toHaveBeenCalledWith({ id: 'cached-sot' }, 96, 224)
+    expect(output.drawImage).toHaveBeenCalledWith({ id: 'cached-sot' }, 0, 0, 32, 32, 95, 223, 33, 33)
+  })
+  it('stitches the exposed side of every outward and inward SOT corner', () => {
+    expect(['top-left', 'top-right', 'bottom-right', 'bottom-left'].map(orientation =>
+      getSotDrawBounds(100, 200, 32, orientation)
+    )).toEqual([
+      { x: 100, y: 200, size: 33 },
+      { x: 99, y: 200, size: 33 },
+      { x: 99, y: 199, size: 33 },
+      { x: 100, y: 199, size: 33 }
+    ])
   })
   it('uses cliffs for chains in all eight directions, preserving every blocked cell', () => {
     for (const [dx, dy] of [[1, 0], [0, 1], [1, 1], [1, -1]]) {

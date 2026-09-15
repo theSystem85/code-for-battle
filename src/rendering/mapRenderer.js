@@ -8,7 +8,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
 } from '../config.js'
-import { OrganicTerrain } from './organicTerrain.js'
+import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature } from '../game/tileDecals.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 
@@ -16,12 +16,7 @@ const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
 const SHADOW_GRADIENT_SIZE = 6
 const MIN_SOT_CLUSTER_SIZE = 5
-const SOT_SOURCE_OFFSETS = {
-  'top-left': [[0, -1], [-1, 0], [-1, -1]],
-  'top-right': [[0, -1], [1, 0], [1, -1]],
-  'bottom-left': [[0, 1], [-1, 0], [-1, 1]],
-  'bottom-right': [[0, 1], [1, 0], [1, 1]]
-}
+const SHORE_SOURCE_OFFSETS = [[0, -1], [-1, 0], [1, 0], [0, 1], [-1, -1], [1, -1], [-1, 1], [1, 1]]
 
 function clampChannel(value) {
   return Math.max(0, Math.min(255, Math.round(value)))
@@ -1256,14 +1251,14 @@ export class MapRenderer {
 
         // Use precomputed SOT mask instead of computing neighbors each frame.
         // Water tiles can also host inverse SOT so enclosed islands smooth inward.
-        if (this.sotMask[y]?.[x] && !(this.useOrganicTerrain(useTexture) && this.sotMask[y][x].type !== 'water')) {
+        if (this.sotMask[y]?.[x] && !this.useOrganicTerrain(useTexture)) {
           const sotInfo = this.sotMask[y][x]
           if (visualTileType === 'street') {
             continue
           }
           if (skipWaterSot && sotInfo.type === 'water') {
             if (skipWaterBase && visualTileType !== 'water') {
-              this.clearTriangleArea(ctx, screenX, screenY, TILE_SIZE + 1, sotInfo.orientation)
+              this.clearTriangleArea(ctx, screenX, screenY, TILE_SIZE, sotInfo.orientation)
             }
             continue
           }
@@ -1327,51 +1322,19 @@ export class MapRenderer {
     const tile = mapGrid?.[tileY]?.[tileX]
     if (!tile || tile.type !== 'water' || tile.airstripStreet) return
     const sot = this.sotMask?.[tileY]?.[tileX]
-    if (sot && (sot.type === 'land' || sot.type === 'street')) {
-      if (sot.type === 'street') {
-        this.organicTerrain.drawTriangle(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, sot.orientation, 'street')
-      } else {
-        let sourceTile = null
-        for (const [dx, dy] of SOT_SOURCE_OFFSETS[sot.orientation] || []) {
-          const candidate = mapGrid[tileY + dy]?.[tileX + dx]
-          if ((candidate?.type === 'land' || candidate?.type === 'rock') && !candidate.airstripStreet) {
-            sourceTile = candidate
-            break
-          }
-        }
-        this.organicTerrain.drawBiomeSot(
-          ctx,
-          tileX,
-          tileY,
-          screenX,
-          screenY,
-          TILE_SIZE,
-          sot.orientation,
-          sourceTile?.shorelineBiome || sourceTile?.biome || 'grass'
-        )
-      }
+    if (sot?.type === 'street') {
+      this.organicTerrain.drawTriangle(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, sot.orientation, 'street')
       return
     }
-
-    const vectors = []
-    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
-      const neighbor = mapGrid[tileY + dy]?.[tileX + dx]
-      if (neighbor?.type === 'land' && !neighbor.airstripStreet) {
-        vectors.push({ x: dx, y: dy, biome: neighbor.biome || 'grass' })
-      } else if (neighbor?.type === 'rock' && !neighbor.airstripStreet) {
-        vectors.push({ x: dx, y: dy, biome: neighbor.shorelineBiome || neighbor.biome || 'grass' })
+    const mask = shorelineCornerMask(mapGrid, tileX, tileY)
+    if (!mask) return
+    for (const [dx, dy] of SHORE_SOURCE_OFFSETS) {
+      const source = mapGrid[tileY + dy]?.[tileX + dx]
+      if (!source?.airstripStreet && (source?.type === 'land' || source?.type === 'rock')) {
+        this.organicTerrain.drawBiomeShore(ctx, tileX, tileY, screenX, screenY, TILE_SIZE,
+          mask, source.shorelineBiome || source.biome || 'grass')
+        return
       }
-    }
-    if (vectors.length && this.organicTerrain?.getBiomeBlendMask) {
-      const nearest = vectors.reduce((best, vector) => {
-        const distance = vector.x * vector.x + vector.y * vector.y
-        return !best || distance < best.distance ? { ...vector, distance } : best
-      }, null)
-      this.organicTerrain.drawBiomeTransition(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, {
-        biome: nearest.biome || 'grass',
-        alpha: 0.5,
-        angle: Math.atan2(nearest.y, nearest.x)
-      })
     }
 
   }
@@ -1417,28 +1380,32 @@ export class MapRenderer {
   }
 
   clearTriangleArea(ctx, screenX, screenY, size, orientation) {
+    const offset = getSotDrawOffset(orientation)
+    const drawX = screenX + offset.x
+    const drawY = screenY + offset.y
+    const drawSize = size + 1
     ctx.save()
     ctx.beginPath()
     switch (orientation) {
       case 'top-left':
-        ctx.moveTo(screenX, screenY)
-        ctx.lineTo(screenX + size, screenY)
-        ctx.lineTo(screenX, screenY + size)
+        ctx.moveTo(drawX, drawY)
+        ctx.lineTo(drawX + drawSize, drawY)
+        ctx.lineTo(drawX, drawY + drawSize)
         break
       case 'top-right':
-        ctx.moveTo(screenX + size, screenY)
-        ctx.lineTo(screenX, screenY)
-        ctx.lineTo(screenX + size, screenY + size)
+        ctx.moveTo(drawX + drawSize, drawY)
+        ctx.lineTo(drawX, drawY)
+        ctx.lineTo(drawX + drawSize, drawY + drawSize)
         break
       case 'bottom-left':
-        ctx.moveTo(screenX, screenY + size)
-        ctx.lineTo(screenX, screenY)
-        ctx.lineTo(screenX + size, screenY + size)
+        ctx.moveTo(drawX, drawY + drawSize)
+        ctx.lineTo(drawX, drawY)
+        ctx.lineTo(drawX + drawSize, drawY + drawSize)
         break
       case 'bottom-right':
-        ctx.moveTo(screenX + size, screenY + size)
-        ctx.lineTo(screenX, screenY + size)
-        ctx.lineTo(screenX + size, screenY)
+        ctx.moveTo(drawX + drawSize, drawY + drawSize)
+        ctx.lineTo(drawX, drawY + drawSize)
+        ctx.lineTo(drawX + drawSize, drawY)
         break
       default:
         ctx.restore()
@@ -1446,7 +1413,7 @@ export class MapRenderer {
     }
     ctx.closePath()
     ctx.clip()
-    ctx.clearRect(screenX, screenY, size, size)
+    ctx.clearRect(drawX, drawY, drawSize, drawSize)
     ctx.restore()
   }
 
@@ -1835,6 +1802,9 @@ export class MapRenderer {
    * Draw a Smoothening Overlay Texture (SOT) on a single tile
    */
   drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null) {
+    // Organic shores own the complete land alpha. A legacy water triangle
+    // would punch an isolated hole behind the water-hosted feathered edge.
+    if (this.useOrganicTerrain(useTexture) && type === 'water') return
     if (this.useOrganicTerrain(useTexture) && type !== 'water') {
       this.organicTerrain.drawTriangle(ctx, tileX, tileY, Math.floor(tileX * TILE_SIZE - scrollOffset.x),
         Math.floor(tileY * TILE_SIZE - scrollOffset.y), TILE_SIZE, orientation, type)
@@ -1844,34 +1814,35 @@ export class MapRenderer {
     if (sotApplied.has(key)) return
     sotApplied.add(key)
 
-    // Offset SOT slightly to hide gaps on left/top edges and expand a bit
-    const isWaterSot = type === 'water'
-    const screenX = tileX * TILE_SIZE - scrollOffset.x - (isWaterSot ? 0 : 1)
-    const screenY = tileY * TILE_SIZE - scrollOffset.y - (isWaterSot ? 0 : 1)
-    const size = TILE_SIZE + (isWaterSot ? 1 : 3)
+    const screenX = tileX * TILE_SIZE - scrollOffset.x
+    const screenY = tileY * TILE_SIZE - scrollOffset.y
+    const offset = getSotDrawOffset(orientation)
+    const drawX = screenX + offset.x
+    const drawY = screenY + offset.y
+    const drawSize = TILE_SIZE + 1
 
     ctx.save()
     ctx.beginPath()
     switch (orientation) {
       case 'top-left':
-        ctx.moveTo(screenX, screenY)
-        ctx.lineTo(screenX + size, screenY)
-        ctx.lineTo(screenX, screenY + size)
+        ctx.moveTo(drawX, drawY)
+        ctx.lineTo(drawX + drawSize, drawY)
+        ctx.lineTo(drawX, drawY + drawSize)
         break
       case 'top-right':
-        ctx.moveTo(screenX + size, screenY)
-        ctx.lineTo(screenX, screenY)
-        ctx.lineTo(screenX + size, screenY + size)
+        ctx.moveTo(drawX + drawSize, drawY)
+        ctx.lineTo(drawX, drawY)
+        ctx.lineTo(drawX + drawSize, drawY + drawSize)
         break
       case 'bottom-left':
-        ctx.moveTo(screenX, screenY + size)
-        ctx.lineTo(screenX, screenY)
-        ctx.lineTo(screenX + size, screenY + size)
+        ctx.moveTo(drawX, drawY + drawSize)
+        ctx.lineTo(drawX, drawY)
+        ctx.lineTo(drawX + drawSize, drawY + drawSize)
         break
       case 'bottom-right':
-        ctx.moveTo(screenX + size, screenY + size)
-        ctx.lineTo(screenX, screenY + size)
-        ctx.lineTo(screenX + size, screenY)
+        ctx.moveTo(drawX + drawSize, drawY + drawSize)
+        ctx.lineTo(drawX, drawY + drawSize)
+        ctx.lineTo(drawX + drawSize, drawY)
         break
     }
     ctx.closePath()
@@ -1881,17 +1852,17 @@ export class MapRenderer {
       const integratedWaterTile = this.textureManager.integratedSpriteSheetMode
         ? this.textureManager.getIntegratedTileForMapTile('water', tileX, tileY)
         : null
-      if (!this.drawIntegratedTileImage(ctx, integratedWaterTile, screenX, screenY)) {
+      if (!this.drawIntegratedTileImage(ctx, integratedWaterTile, drawX, drawY)) {
         if (USE_PROCEDURAL_WATER_RENDERING) {
-          this.drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY)
+          this.drawProceduralWater(ctx, drawX, drawY, drawSize, tileX, tileY)
         } else {
-          this.drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame)
+          this.drawClassicWater(ctx, drawX, drawY, drawSize, currentWaterFrame)
         }
       }
     } else if (type === 'street') {
       const fullStreetTile = this.textureManager.selectFullStreetTileForSOT?.(tileX, tileY)
       if (fullStreetTile?.image && fullStreetTile?.rect) {
-        this.drawIntegratedTileImage(ctx, fullStreetTile, screenX, screenY)
+        this.drawIntegratedTileImage(ctx, fullStreetTile, drawX, drawY)
       }
     } else if (type === 'land') {
       const mapGrid = Array.isArray(this.groupingMapGrid) ? this.groupingMapGrid : undefined
@@ -1923,7 +1894,7 @@ export class MapRenderer {
           ? this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y, { mapGrid })
           : this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y))
         : null
-      if (!this.drawIntegratedTileImage(ctx, integratedLandTile, screenX, screenY) && useTexture) {
+      if (!this.drawIntegratedTileImage(ctx, integratedLandTile, drawX, drawY) && useTexture) {
         const idx = this.textureManager.getTileVariation(type, sourceCoord.x, sourceCoord.y)
         if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
           const info = this.textureManager.tileTextureCache[type][idx]
@@ -1933,10 +1904,10 @@ export class MapRenderer {
             info.y,
             info.width,
             info.height,
-            screenX,
-            screenY,
-            size,
-            size
+            drawX,
+            drawY,
+            drawSize,
+            drawSize
           )
         } else {
           ctx.fillStyle = TILE_COLORS[type]
@@ -1956,10 +1927,10 @@ export class MapRenderer {
           info.y,
           info.width,
           info.height,
-          screenX,
-          screenY,
-          size,
-          size
+          drawX,
+          drawY,
+          drawSize,
+          drawSize
         )
       } else {
         ctx.fillStyle = TILE_COLORS[type]
