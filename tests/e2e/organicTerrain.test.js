@@ -74,17 +74,17 @@ test('shoreline water is composited below the land transition and SOT direction'
 
     const sotRenderer = new MapRenderer(new TextureManager())
     sotRenderer.sotMask = [[null, null], [null, { type: 'land', orientation: 'top-left' }]]
-    let sotAngle = null
-    sotRenderer.organicTerrain.drawBiomeTransition = (_ctx, _x, _y, _sx, _sy, _size, blend) => { sotAngle = blend.angle }
+    let sotOrientation = null
+    sotRenderer.drawSOT = (_ctx, _x, _y, orientation) => { sotOrientation = orientation }
     sotRenderer.drawOrganicLandTransition({}, [
       [{ type: 'land', biome: 'sand' }, { type: 'water' }],
       [{ type: 'water' }, { type: 'water' }]
     ], 1, 1, 32, 32)
-    return { events, sotAngle }
+    return { events, sotOrientation }
   })
 
   expect(result.events).toEqual(['water', 'terrain', 'land-transition', 'land-transition', 'land-transition', 'land-transition'])
-  expect(result.sotAngle).toBeCloseTo(-Math.PI * 0.75)
+  expect(result.sotOrientation).toBe('top-left')
 })
 
 test('terrain combat performance at DPR 2', async({ page }, testInfo) => {

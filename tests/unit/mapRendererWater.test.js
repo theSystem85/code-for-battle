@@ -33,6 +33,7 @@ describe('MapRenderer water rendering', () => {
     mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'land' }], [null, null]]
     mapRenderer.organicTerrain.getBiomeBlendMask = vi.fn(() => ({ id: 'land-mask' }))
     mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+    const drawSotSpy = vi.spyOn(mapRenderer, 'drawSOT').mockImplementation(() => {})
     const mapGrid = [
       [{ type: 'land', biome: 'sand' }, { type: 'water' }],
       [{ type: 'water' }, { type: 'water' }]
@@ -48,6 +49,23 @@ describe('MapRenderer water rendering', () => {
       0,
       expect.any(Number),
       expect.objectContaining({ biome: 'sand', alpha: 0.5, angle: expect.any(Number) })
+    )
+    expect(drawSotSpy).toHaveBeenCalledWith(
+      expect.anything(), 1, 0, 'top-left', expect.any(Object), true, expect.any(Set), 'land'
+    )
+  })
+
+  it('keeps street SOT transitions on street material instead of painting land', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'street' }], [null, null]]
+    mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+    const drawSotSpy = vi.spyOn(mapRenderer, 'drawSOT').mockImplementation(() => {})
+
+    mapRenderer.drawOrganicLandTransition({}, [[{ type: 'street' }, { type: 'water' }], [{ type: 'water' }, { type: 'water' }]], 1, 0, 20, 0)
+
+    expect(mapRenderer.organicTerrain.drawBiomeTransition).toHaveBeenCalledTimes(1)
+    expect(drawSotSpy).toHaveBeenCalledWith(
+      expect.anything(), 1, 0, 'top-left', expect.any(Object), true, expect.any(Set), 'street'
     )
   })
 

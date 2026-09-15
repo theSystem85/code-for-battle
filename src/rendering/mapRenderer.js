@@ -1290,28 +1290,25 @@ export class MapRenderer {
         vectors.push({ x: dx, y: dy, biome: neighbor.biome || 'grass' })
       }
     }
+    if (vectors.length && this.organicTerrain?.getBiomeBlendMask) {
+      const nearest = vectors.reduce((best, vector) => {
+        const distance = vector.x * vector.x + vector.y * vector.y
+        return !best || distance < best.distance ? { ...vector, distance } : best
+      }, null)
+      this.organicTerrain.drawBiomeTransition(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, {
+        biome: nearest.biome || 'grass',
+        alpha: 0.5,
+        angle: Math.atan2(nearest.y, nearest.x)
+      })
+    }
+
+    // SOTs are the authoritative diagonal transition. Render them after the
+    // cardinal feather so street corners retain street material instead of
+    // inheriting the land underlay, and their alpha edge joins the feather.
     const sot = this.sotMask?.[tileY]?.[tileX]
-    const sotVectors = {
-      'top-left': { x: -1, y: -1 },
-      'top-right': { x: 1, y: -1 },
-      'bottom-left': { x: -1, y: 1 },
-      'bottom-right': { x: 1, y: 1 }
+    if (sot && (sot.type === 'land' || sot.type === 'street')) {
+      this.drawSOT(ctx, tileX, tileY, sot.orientation, { x: -screenX + tileX * TILE_SIZE, y: -screenY + tileY * TILE_SIZE }, true, new Set(), sot.type)
     }
-    if ((sot?.type === 'land' || sot?.type === 'street') && sotVectors[sot.orientation]) {
-      const vector = sotVectors[sot.orientation]
-      const diagonalNeighbor = mapGrid[tileY + vector.y]?.[tileX + vector.x]
-      vectors.push({ ...vector, biome: diagonalNeighbor?.biome || 'grass' })
-    }
-    if (!vectors.length || !this.organicTerrain?.getBiomeBlendMask) return
-    const nearest = vectors.reduce((best, vector) => {
-      const distance = vector.x * vector.x + vector.y * vector.y
-      return !best || distance < best.distance ? { ...vector, distance } : best
-    }, null)
-    this.organicTerrain.drawBiomeTransition(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, {
-      biome: nearest.biome || 'grass',
-      alpha: 0.5,
-      angle: Math.atan2(nearest.y, nearest.x)
-    })
   }
 
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
