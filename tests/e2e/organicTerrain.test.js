@@ -49,6 +49,44 @@ test('organic terrain is identical across chunk seams and map edits', async({ pa
   expect(result).toEqual({ initial: { differences: 0, bounds: null }, edited: { differences: 0, bounds: null }, unchanged: true })
 })
 
+test('shoreline water is composited below the land transition and SOT direction', async({ page }) => {
+  await page.goto('/?seed=4')
+  const result = await page.evaluate(async() => {
+    const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
+    const { TextureManager } = await import('/src/rendering/textureManager.js')
+    const renderer = new MapRenderer(new TextureManager())
+    const events = []
+    renderer.useOrganicTerrain = () => true
+    renderer.renderDynamicWaterLayer = () => events.push('water')
+    renderer.renderTiles = () => events.push('terrain')
+    renderer.applyVisibilityOverlay = () => {}
+    renderer.renderGrid = () => {}
+    renderer.renderOccupancyMap = () => {}
+    renderer.drawOrganicLandTransition = () => events.push('land-transition')
+
+    const canvas = document.createElement('canvas')
+    canvas.width = canvas.height = 64
+    const grid = [
+      [{ type: 'land' }, { type: 'water' }],
+      [{ type: 'water' }, { type: 'water' }]
+    ]
+    renderer.render({}, grid, { x: 0, y: 0 }, canvas, {}, null, { separateWaterLayer: true })
+
+    const sotRenderer = new MapRenderer(new TextureManager())
+    sotRenderer.sotMask = [[null, null], [null, { type: 'land', orientation: 'top-left' }]]
+    let sotAngle = null
+    sotRenderer.organicTerrain.drawBiomeTransition = (_ctx, _x, _y, _sx, _sy, _size, blend) => { sotAngle = blend.angle }
+    sotRenderer.drawOrganicLandTransition({}, [
+      [{ type: 'land', biome: 'sand' }, { type: 'water' }],
+      [{ type: 'water' }, { type: 'water' }]
+    ], 1, 1, 32, 32)
+    return { events, sotAngle }
+  })
+
+  expect(result.events).toEqual(['water', 'terrain', 'land-transition', 'land-transition', 'land-transition', 'land-transition'])
+  expect(result.sotAngle).toBeCloseTo(-Math.PI * 0.75)
+})
+
 test('terrain combat performance at DPR 2', async({ page }, testInfo) => {
   test.skip(process.env.TERRAIN_BENCHMARK !== '1', 'Opt in with TERRAIN_BENCHMARK=1')
   if (process.env.TERRAIN_MIXED_BIOME === '1') {

@@ -479,3 +479,4 @@ The DZM overlay will look like a height map overlay with red 1px width lines tha
 - [x] Mixed-biome shoreline width and plateau priority (2026-09-15): expose shoreline width in tiles and ensure plateau snow overrides nearby shoreline sand.
 - [x] Organic water shoreline transitions (2026-09-15): replace legacy grass-only coast lips with masked water-over-land fades for coasts, lakes, and diagonal SOT corners.
 - [x] Dynamic shoreline blend controls (2026-09-15): add optional animated water-over-land rendering, configurable transition feather pixels, and two-control Map Settings rows with floating select labels.
+- [x] Shoreline water/land layering correction (2026-09-15): keep procedural water and water SOT tiles beneath land-material shoreline transitions, including water-hosted land/street SOT corners, so all visible shoreline animation comes from the continuous water layer.
