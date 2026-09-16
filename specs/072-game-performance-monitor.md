@@ -1,5 +1,9 @@
 # Game Performance Monitor
 
+## Planned extension — 2026-09-16
+
+The [75 FPS rendering specification](rendering-pipeline-75fps.md) and [detailed design](../performance_improvement.md#8-live-bottleneck-monitor-and-helper-tools) require a separately toggled live function timing list in the overlay, ranked by aggregate self time, with inclusive time/calls/tails, CPU/GPU/memory capability labels, cache/upload/resize counters and bounded storage. Unsupported GPU data must not be represented by residual wait. Disabled detailed profiling must add no timer/allocation/sorting work. These are planned requirements, not current features. Implementation ownership: P00 in [the delegation checklist](../rendering_improvement_todos.md).
+
 ## Goal
 
 Provide an opt-in on-device performance recorder for diagnosing normal gameplay on real mobile hardware, where automated benchmark mode may not reproduce the issue.

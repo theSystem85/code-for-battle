@@ -884,3 +884,13 @@ Use this checklist in a live game and check each item only after confirming the 
 # Terrain source asset format
 
 - Convert all raster files in `public/images/terrain/source` to quality-85 WebP and keep terrain build scripts and specifications aligned with the renamed assets.
+
+## Rendering pipeline performance — 2026-09-16
+
+- [x] Analyze the reported 75-to-40 FPS scrolling regression with source audits, GPT-5.6 Luna subagents, the existing mixed-biome benchmark and a function-level CPU profile; document measured findings in `rendering_analysis.md`.
+- [x] Create `performance_improvement.md` and `rendering_improvement_todos.md` with detailed design, file ownership, parallel waves, integration barriers and validation gates; this is documentation only.
+- [x] Replace the AGENTS.md 20% regression allowance with the strict 75 FPS / 13.333 ms requirement, retaining unchanged visual quality and animated procedural water.
+- [ ] Implement mutation-driven terrain validity, startup readiness/baking, bounded byte residency and retained animated-water geometry per the delegation checklist.
+- [ ] Add opt-in live function rankings (self/inclusive time, calls, tails), CPU/GPU/memory diagnostics, cache/upload counters and resize auditing to the performance overlay.
+- [ ] Prepare final-size map/entity imagery before gameplay; audit DPR/transforms and resolve changing raster-effect sizes without degrading visuals; allow only aircraft takeoff/landing size-animation exceptions.
+- [ ] Certify the combined pipeline at 75 FPS on qualifying reference hardware through first/repeat full-map fast scrolling and worst-case combat, with visual parity, live procedural water and bounded memory. Current local results do not pass this target.

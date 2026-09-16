@@ -1,5 +1,9 @@
 # Organic terrain, shorelines and connected cliffs
 
+## Performance requirement supersession — 2026-09-16
+
+Historical benchmark numbers and relative acceptance ratios below are retained as history. The current requirement is the [strict 75 FPS specification](rendering-pipeline-75fps.md); neither a 20% allowance nor 30/40/60 FPS qualifies. The [current analysis](../rendering_analysis.md) shows substantial signature hashing even on cached terrain and incomplete preparation for normal maps. Follow [the implementation checklist](../rendering_improvement_todos.md) to remove this work while retaining all visuals and procedural-water animation. No optimization is implemented by this documentation update.
+
 ## Behavior
 
 Cliff rendering is superseded by [080-terraced-cliff-rendering.md](080-terraced-cliff-rendering.md): width-dependent plateau contours, eight material variants per shape, 2-4-cell macro faces, all height directions, and a quality-85 transparent WebP atlas. The narrow-ridge description below applies only to the retained load-failure fallback.

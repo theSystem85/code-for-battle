@@ -1,5 +1,7 @@
 # Spec 075: Mixed map biomes
 
+Current performance acceptance is governed by [rendering-pipeline-75fps.md](rendering-pipeline-75fps.md). Historical 20%/relative budgets below do not certify the required minimum 75 FPS. The [new analysis](../rendering_analysis.md) and [optimization plan](../performance_improvement.md) preserve the current biome contours while replacing steady-state signature scans and preparing static content before gameplay.
+
 ## Requirements
 
 - Map Settings exposes `Mixed` alongside soil, sand, grass, and snow.
