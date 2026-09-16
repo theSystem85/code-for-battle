@@ -820,6 +820,9 @@
 ## Transition layer ordering (2026-09-15)
 - [x] Render sand and other shoreline transition tiles above water but below rock/cliff artwork, decals, buildings, and units in CPU and GPU terrain paths.
 
+## Beach transition reassignment (2026-09-16)
+- [x] Move the irregular beach-like contour from the inland grass/sand edge to the sand/water edge, and render the inland shoreline edge with the longer corner-weighted blend used by other biome intersections.
+
 ## 2026-07-25 Naval and production verification checklist
 
 Use this checklist in a live game and check each item only after confirming the described behavior:

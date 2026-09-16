@@ -29,6 +29,26 @@ function getBiomeCornerWeights(grid, regions, colors, x, y, sourceBiome) {
   })
 }
 
+// Treat the outermost shoreline tile as part of the sand source while
+// sampling junction ownership. This gives the sand-to-inland-biome edge the
+// same full-tile, corner-continuous transition used by ordinary biome pairs.
+function getShorelineCornerWeights(grid, oceanDistances, width, x, y, shorelineWidth) {
+  return BIOME_BLEND_CORNERS.map(([cornerX, cornerY]) => {
+    let sourceCount = 0
+    let terrainCount = 0
+    for (let offsetY = cornerY - 1; offsetY <= cornerY; offsetY++) {
+      for (let offsetX = cornerX - 1; offsetX <= cornerX; offsetX++) {
+        const sampleY = y + offsetY
+        const sampleX = x + offsetX
+        if (!isBiomeTerrainTile(grid[sampleY]?.[sampleX])) continue
+        terrainCount++
+        if (oceanDistances[sampleY * width + sampleX] <= shorelineWidth) sourceCount++
+      }
+    }
+    return terrainCount > 0 ? sourceCount / terrainCount : 0
+  })
+}
+
 function seededRandom(seed) {
   let state = (Number(seed) || 1) >>> 0
   return () => {
@@ -245,6 +265,22 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
   const { regions, adjacency } = buildRegionMap(width, height, seeds, numericSeed, settings.distribution)
   const colors = colorRegions(adjacency, settings.weights)
   const ocean = settings.weights.sand > 0 ? findOceanWater(grid) : null
+  const shorelineRadius = settings.shorelineWidth + 1
+  const oceanDistances = ocean ? new Float32Array(width * height).fill(Infinity) : null
+
+  if (oceanDistances && shorelineRadius > 0) {
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      for (let offsetY = -shorelineRadius; offsetY <= shorelineRadius; offsetY++) {
+        for (let offsetX = -shorelineRadius; offsetX <= shorelineRadius; offsetX++) {
+          if (!ocean[y + offsetY]?.[x + offsetX]) continue
+          oceanDistances[y * width + x] = Math.min(
+            oceanDistances[y * width + x],
+            Math.hypot(offsetX, offsetY)
+          )
+        }
+      }
+    }
+  }
 
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
     const tile = grid[y][x]
@@ -290,17 +326,7 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
       }
     } else delete tile.biomeBlend
 
-    let oceanDistance = Infinity
-    let nearestOceanOffset = null
-    const shorelineRadius = settings.shorelineWidth + 1
-    if (ocean && shorelineRadius > 0) for (let offsetY = -shorelineRadius; offsetY <= shorelineRadius; offsetY++) for (let offsetX = -shorelineRadius; offsetX <= shorelineRadius; offsetX++) {
-      if (!ocean[y + offsetY]?.[x + offsetX]) continue
-      const distance = Math.hypot(offsetX, offsetY)
-      if (distance < oceanDistance) {
-        oceanDistance = distance
-        nearestOceanOffset = { x: offsetX, y: offsetY }
-      }
-    }
+    const oceanDistance = oceanDistances?.[y * width + x] ?? Infinity
     if (tile.type !== 'water' && settings.shorelineWidth > 0 && oceanDistance <= settings.shorelineWidth) {
       // Keep the shoreline transition exactly one tile wide. A broad alpha
       // distance band creates the same chained checkerboard artifact as biome
@@ -313,14 +339,21 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
         tile.biome = 'sand'
         delete tile.biomeBlend
       } else if (tile.biome !== 'sand') {
-        // The feather normal must point toward the nearest ocean tile. This
-        // keeps north/south coasts vertical and east/west coasts horizontal,
-        // instead of applying one fixed mask direction to every shoreline.
+        // Use the same corner-owned full-tile blend as every other biome
+        // boundary. The irregular beach contour now belongs at water/sand.
         tile.biomeBlend = {
           biome: 'sand',
           alpha: Math.round(sandAlpha * 100) / 100,
-          angle: nearestOceanOffset ? Math.atan2(nearestOceanOffset.y, nearestOceanOffset.x) : 0,
-          featherPixels: settings.transitionPixels
+          angle: 0,
+          featherPixels: settings.transitionPixels,
+          cornerWeights: getShorelineCornerWeights(
+            grid,
+            oceanDistances,
+            width,
+            x,
+            y,
+            settings.shorelineWidth
+          )
         }
       }
     }

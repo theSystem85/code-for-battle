@@ -66,13 +66,17 @@ export function biomeTransitionCoverage(cornerWeights, u, v) {
   return alpha * alpha * (3 - 2 * alpha)
 }
 
-export function shorelineCoverage(mask, u, v, featherWidth = 0.2) {
+export function shorelineCoverage(mask, u, v, featherWidth = 0.2, beachPattern = false) {
   const top = (mask & 1 ? 1 - u : 0) + (mask & 2 ? u : 0)
   const bottom = (mask & 8 ? 1 - u : 0) + (mask & 4 ? u : 0)
-  // Small interior variation vanishes with its first derivative at shared
-  // edges, preserving both coverage and shoreline tangent across tile joins.
-  const wave = Math.sin(u * Math.PI * 4) * Math.sin(v * Math.PI * 4) *
-    u * (1 - u) * v * (1 - v) * 0.6
+  // Sand/water uses the former beach-like biome contour. Both periodic terms
+  // are zero at tile endpoints, so neighboring masks still meet without an
+  // alpha seam while straight shores gain a clearly irregular silhouette.
+  const wave = beachPattern
+    ? (Math.sin(u * Math.PI * 2) + Math.sin(v * Math.PI * 2)) * 0.07 +
+      (Math.sin(u * Math.PI * 5) + Math.sin(v * Math.PI * 5)) * 0.025
+    : Math.sin(u * Math.PI * 4) * Math.sin(v * Math.PI * 4) *
+      u * (1 - u) * v * (1 - v) * 0.6
   const alpha = Math.max(0, Math.min(1, 0.5 + (top * (1 - v) + bottom * v - 0.5 + wave) / featherWidth))
   return alpha * alpha * (3 - 2 * alpha)
 }
@@ -337,8 +341,8 @@ export class OrganicTerrain {
     ctx.drawImage(canvas, sx, sy)
   }
 
-  getShorelineMask(size, mask, featherWidth = 0.2) {
-    const key = `shore|${size}|${mask}|${featherWidth}`
+  getShorelineMask(size, mask, featherWidth = 0.2, beachPattern = false) {
+    const key = `shore|${size}|${mask}|${featherWidth}|${beachPattern ? 'beach' : 'smooth'}`
     let alphaMask = this.biomeBlendMasks.get(key)
     if (alphaMask) return alphaMask
     alphaMask = document.createElement('canvas')
@@ -346,7 +350,13 @@ export class OrganicTerrain {
     const context = alphaMask.getContext('2d')
     const pixels = context.createImageData(size, size)
     for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
-      pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * shorelineCoverage(mask, px / (size - 1), py / (size - 1), featherWidth))
+      pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * shorelineCoverage(
+        mask,
+        px / (size - 1),
+        py / (size - 1),
+        featherWidth,
+        beachPattern
+      ))
     }
     context.putImageData(pixels, 0, 0)
     this.biomeBlendMasks.set(key, alphaMask)
@@ -357,7 +367,7 @@ export class OrganicTerrain {
     const key = `shore|${size}|${x}|${y}|${mask}|${biome}`
     let canvas = this.biomeTransitionTileCache.get(key)
     if (!canvas) {
-      const alphaMask = this.getShorelineMask(size, mask)
+      const alphaMask = this.getShorelineMask(size, mask, 0.2, biome === 'sand')
       canvas = document.createElement('canvas')
       canvas.width = canvas.height = size
       const context = canvas.getContext('2d')
