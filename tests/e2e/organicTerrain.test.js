@@ -243,7 +243,7 @@ test('terrain combat performance at DPR 2', async({ page }, testInfo) => {
     }
   })
   expect(shoreCache.masks).toBeGreaterThan(0)
-  expect(shoreCache.masks).toBeLessThanOrEqual(15)
+  expect(shoreCache.masks).toBeLessThanOrEqual(90)
   expect(shoreCache.composites).toBeLessThanOrEqual(512)
   console.log('TERRAIN_BENCHMARK', JSON.stringify(report))
   await testInfo.attach('terrain-performance', { body: JSON.stringify(report, null, 2), contentType: 'application/json' })

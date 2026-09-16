@@ -822,6 +822,7 @@
 
 ## Beach transition reassignment (2026-09-16)
 - [x] Move the irregular beach-like contour from the inland grass/sand edge to the sand/water edge, and render the inland shoreline edge with the longer corner-weighted blend used by other biome intersections.
+- [x] Add five deterministic beach-contour variations, select them per shoreline tile, and keep every variation edge-compatible so adjacent tiles remain seamless.
 
 ## 2026-07-25 Naval and production verification checklist
 
