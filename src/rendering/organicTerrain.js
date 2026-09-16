@@ -39,6 +39,14 @@ const SOT_DRAW_OFFSETS = Object.freeze({
 })
 const ZERO_SOT_DRAW_OFFSET = Object.freeze({ x: 0, y: 0 })
 const SHORE_CORNERS = [[0, 0], [1, 0], [1, 1], [0, 1]]
+const SHORELINE_PATTERN_VARIATIONS = Object.freeze([
+  Object.freeze({ primaryU: 2, secondaryU: 5, primaryV: 2, secondaryV: 5 }),
+  Object.freeze({ primaryU: 3, secondaryU: 7, primaryV: 2, secondaryV: 5 }),
+  Object.freeze({ primaryU: 2, secondaryU: 5, primaryV: 3, secondaryV: 7 }),
+  Object.freeze({ primaryU: 3, secondaryU: 5, primaryV: 3, secondaryV: 5 }),
+  Object.freeze({ primaryU: 4, secondaryU: 7, primaryV: 2, secondaryV: 7 }),
+  Object.freeze({ primaryU: 2, secondaryU: 7, primaryV: 4, secondaryV: 5 })
+])
 
 // Each junction belongs to four cells. Both sides of a shared edge therefore
 // interpolate exactly the same endpoints, including diagonal-only shoulders.
@@ -72,9 +80,20 @@ export function shorelineCoverage(mask, u, v, featherWidth = 0.2, beachPattern =
   // Sand/water uses the former beach-like biome contour. Both periodic terms
   // are zero at tile endpoints, so neighboring masks still meet without an
   // alpha seam while straight shores gain a clearly irregular silhouette.
-  const wave = beachPattern
-    ? (Math.sin(u * Math.PI * 2) + Math.sin(v * Math.PI * 2)) * 0.07 +
-      (Math.sin(u * Math.PI * 5) + Math.sin(v * Math.PI * 5)) * 0.025
+  const patternVariant = Number.isInteger(beachPattern) ? beachPattern : beachPattern ? 0 : -1
+  const wave = patternVariant >= 0
+    ? (() => {
+      const variation = SHORELINE_PATTERN_VARIATIONS[patternVariant % SHORELINE_PATTERN_VARIATIONS.length]
+      // The envelope makes every variant exactly zero on all four tile
+      // edges, allowing neighboring tiles to choose different variants.
+      const edgeEnvelope = u * (1 - u) * v * (1 - v)
+      return edgeEnvelope * (
+        Math.sin(u * Math.PI * variation.primaryU) * 0.52 +
+          Math.sin(u * Math.PI * variation.secondaryU) * 0.18 +
+          Math.sin(v * Math.PI * variation.primaryV) * 0.52 +
+          Math.sin(v * Math.PI * variation.secondaryV) * 0.18
+      )
+    })()
     : Math.sin(u * Math.PI * 4) * Math.sin(v * Math.PI * 4) *
       u * (1 - u) * v * (1 - v) * 0.6
   const alpha = Math.max(0, Math.min(1, 0.5 + (top * (1 - v) + bottom * v - 0.5 + wave) / featherWidth))
@@ -367,7 +386,8 @@ export class OrganicTerrain {
     const key = `shore|${size}|${x}|${y}|${mask}|${biome}`
     let canvas = this.biomeTransitionTileCache.get(key)
     if (!canvas) {
-      const alphaMask = this.getShorelineMask(size, mask, 0.2, biome === 'sand')
+      const patternVariant = biome === 'sand' ? terrainHash(x, y, 157) % SHORELINE_PATTERN_VARIATIONS.length : false
+      const alphaMask = this.getShorelineMask(size, mask, 0.2, patternVariant)
       canvas = document.createElement('canvas')
       canvas.width = canvas.height = size
       const context = canvas.getContext('2d')
