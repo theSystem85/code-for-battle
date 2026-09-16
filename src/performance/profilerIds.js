@@ -1,0 +1,16 @@
+export const PROFILER_SPAN_IDS = Object.freeze({
+  FRAME: 1, UPDATE: 2, RENDER: 3,
+  TERRAIN: 10, RENDER_TILES: 11, CHUNK_STATE: 12, CHUNK_SIGNATURE: 13, WARM_QUEUE: 14, CHUNK_REBUILD: 15,
+  CPU_WATER_PASS: 20, CPU_WATER_TILE: 21,
+  WEBGL_BUILD: 30, WEBGL_UPLOAD: 31, WEBGL_SUBMIT: 32,
+  WEBGPU_PACK: 40, WEBGPU_UPLOAD: 41, WEBGPU_SUBMIT: 42,
+  ENTITY_BASES: 50, ENTITY_OVERLAYS: 51, EFFECTS: 52,
+  MINIMAP_BASE: 60, MINIMAP_FOG: 61, MINIMAP_VIDEO: 62, MINIMAP_ENTITIES: 63,
+  HUD: 70, PREP_CLIFF: 80, PREP_BIOME_MASK: 81
+})
+
+export const PROFILER_SPANS = Object.freeze(Object.entries(PROFILER_SPAN_IDS).map(([name, id]) => Object.freeze({ id, name })))
+
+export function getProfilerDefinition(id) {
+  return PROFILER_SPANS.find(definition => definition.id === id)
+}

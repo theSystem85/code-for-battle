@@ -1,6 +1,6 @@
 # Rendering improvement delegation checklist
 
-Status: **planning complete; no optimization implemented**. Date: 2026-09-16. Read [rendering_analysis.md](rendering_analysis.md) and [performance_improvement.md](performance_improvement.md) before taking a task. Use model `gpt-5.6-luna` (GPT-5.6 Luna, requested as “lunar”), medium reasoning unless explicitly changed by the user.
+Status: **C00 foundation implemented; performance optimizations not yet integrated**. Date: 2026-09-16. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
 
 Model roles are intentional: Astra leads this analysis/documentation task; the implementation tasks below are assigned to Luna agents.
 
@@ -27,13 +27,13 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 “Parallel” applies within a wave and within disjoint files; it does not mean each task is dependency-free. T10/T11 share `mapRenderer.js` and must be one agent or sequential. B10/B11 share asset/preparation state and must be one agent. W10/W11 share water contracts and should be one agent initially. A10/A11 share image renderers; E10/E11 share effects/entity rendering. Integration must not overlap file edits from these lanes.
 
-## C00 — contract and ownership freeze [not implemented]
+## C00 — contract and ownership freeze [implemented 2026-09-16]
 
-- [ ] Inventory the current map mutation producers and record every file to be owned by M10. Confirm no new changes invalidate the measured baseline.
-- [ ] Specify `RenderRevisionStore`, `PreparedMap`, `PreparedSpriteRegistry`, `FrameViewport`, profiler numeric IDs, diagnostics schema and explicit byte-budget ownership. Implement only the small shared contract modules necessary for independent lanes; avoid competing singleton implementations.
-- [ ] Declare which module publishes map/asset/layout generations, who owns disposal, and how cancellation rejects stale jobs. Keep device caches out of serialized game state.
-- [ ] Define mutation domains and old/new dependency footprints, water-phase rules, final-size sprite metadata and full-transform resizing classification.
-- [ ] Record qualifying hardware/environment matrix and requests still needed for reference-scene certification. Local analysis can proceed without it; certification cannot be fabricated.
+- [x] Inventory the current map mutation producers and record every file to be owned by M10. Confirm no new changes invalidate the measured baseline.
+- [x] Specify `RenderRevisionStore`, `PreparedMap`, `PreparedSpriteRegistry`, `FrameViewport`, profiler numeric IDs, diagnostics schema and explicit byte-budget ownership. Implement only the small shared contract modules necessary for independent lanes; avoid competing singleton implementations.
+- [x] Declare which module publishes map/asset/layout generations, who owns disposal, and how cancellation rejects stale jobs. Keep device caches out of serialized game state.
+- [x] Define mutation domains and old/new dependency footprints, water-phase rules, final-size sprite metadata and full-transform resizing classification.
+- [x] Record qualifying hardware/environment matrix and requests still needed for reference-scene certification. Local analysis can proceed without it; certification cannot be fabricated.
 
 **Exclusive write set:** new contract modules under `src/rendering/prepared/` and `src/performance/` with filenames fixed before dispatch; shared docs and specs; dependency/package scripts only if needed. Downstream agents consume these modules and do not redefine them. Do not alter game behavior in C00.
 
