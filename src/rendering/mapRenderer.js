@@ -8,7 +8,7 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
 } from '../config.js'
-import { biomeTransitionCornerMask, BIOME_CORNER_FEATHER, getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
+import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature } from '../game/tileDecals.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 
@@ -893,6 +893,9 @@ export class MapRenderer {
         mixSignature(tile.biomeBlend?.biome || '')
         mixSignature(tile.biomeBlend?.alpha || 0)
         mixSignature(tile.biomeBlend?.angle || 0)
+        if (Array.isArray(tile.biomeBlend?.cornerWeights)) {
+          for (const weight of tile.biomeBlend.cornerWeights) mixSignature(weight)
+        }
         mixSignature(getTileDecalSignature(tile))
         if (tile.type === 'water') containsWater = true
       }
@@ -1362,7 +1365,7 @@ export class MapRenderer {
     return true
   }
 
-  drawIntegratedBiomeTransition(ctx, integratedTile, screenX, screenY, tileX, tileY, blend, cornerMask = null) {
+  drawIntegratedBiomeTransition(ctx, integratedTile, screenX, screenY, tileX, tileY, blend) {
     if (!integratedTile?.image || !integratedTile?.rect || !this.canUseOffscreen) return false
     if (!this.integratedBiomeBlendCanvas) {
       this.integratedBiomeBlendCanvas = document.createElement('canvas')
@@ -1373,9 +1376,9 @@ export class MapRenderer {
     blendContext.clearRect(0, 0, TILE_SIZE, TILE_SIZE)
     this.drawIntegratedTileImage(blendContext, integratedTile, 0, 0)
     blendContext.globalCompositeOperation = 'destination-in'
-    blendContext.drawImage(cornerMask === null
-      ? this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend)
-      : this.organicTerrain.getShorelineMask(TILE_SIZE, cornerMask, BIOME_CORNER_FEATHER), 0, 0)
+    blendContext.drawImage(Array.isArray(blend.cornerWeights) && blend.cornerWeights.length === 4
+      ? this.organicTerrain.getBiomeTransitionMask(TILE_SIZE, blend.cornerWeights)
+      : this.organicTerrain.getBiomeBlendMask(TILE_SIZE, tileX, tileY, blend), 0, 0)
     blendContext.globalCompositeOperation = 'source-over'
     ctx.drawImage(this.integratedBiomeBlendCanvas, screenX, screenY)
     return true
@@ -1463,7 +1466,7 @@ export class MapRenderer {
     }
     if (this.useOrganicTerrain(useTexture) && ['land', 'street', 'rock'].includes(type)) {
       if (type === 'street' && this.isStreetWaterTransitionTile(mapGrid, tileX, tileY)) return
-      this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, mapGrid?.[tileY]?.[tileX], mapGrid)
+      this.organicTerrain.drawGrass(ctx, tileX, tileY, screenX, screenY, TILE_SIZE, mapGrid?.[tileY]?.[tileX])
       return
     }
     if (type === 'street') {
@@ -1508,8 +1511,7 @@ export class MapRenderer {
         const blend = mapGrid?.[tileY]?.[tileX]?.biomeBlend
         if (type === 'land' && blend?.biome && blend.alpha > 0) {
           const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: blend.biome })
-          this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, blend,
-            biomeTransitionCornerMask(mapGrid, tileX, tileY, blend))
+          this.drawIntegratedBiomeTransition(ctx, blendTile, screenX, screenY, tileX, tileY, blend)
         }
         return
       }

@@ -501,3 +501,5 @@
 - [x] Correct shoreline corner coverage, not just pixel overlap: connect all four convex and four concave land/water corners using shared junction masks and remove isolated organic water cutouts shown in the supplied screenshot. Verified rendered alpha continuity, opaque land, chunk parity, unit tests and DPR-2 combat performance.
 - [x] Extend shared-junction transition coverage to land-to-land biome borders; remove stepped corners and detached triangular notches shown in the supplied biome image. The street experiment was reverted in the follow-up below.
 - [x] Restore legacy street fringe rendering after the shared-junction road experiment caused visual regressions; widen biome corner feathering to remove the remaining sharp staircase edges shown in the supplied image.
+- [x] Add missing diagonal-only biome transition metadata and combine matching neighbor directions at region turns so shared masks can smooth the remaining full-tile staircase corners.
+- [x] Replace binary biome-junction ownership with cached fractional corner weights so leftover land-biome steps and square turns render as continuous sub-tile contours; preserve legacy street rendering.

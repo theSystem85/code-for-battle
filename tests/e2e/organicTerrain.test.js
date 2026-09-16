@@ -60,7 +60,7 @@ test('land biome turns share junction coverage', async({ page }) => {
   const result = await page.evaluate(async() => {
     const { MapRenderer } = await import('/src/rendering/mapRenderer.js')
     const { TextureManager } = await import('/src/rendering/textureManager.js')
-    const { biomeTransitionCornerMask } = await import('/src/rendering/organicTerrain.js')
+    const { assignMapBiomes } = await import('/src/game/mapBiomes.js')
     const manager = new TextureManager()
     await new Promise(resolve => manager.preloadAllTextures(resolve))
     const renderer = new MapRenderer(manager)
@@ -68,24 +68,55 @@ test('land biome turns share junction coverage', async({ page }) => {
 
     const biomeGrid = Array.from({ length: 6 }, () => Array.from({ length: 6 }, () => ({ type: 'land', biome: 'target' })))
     for (let y = 0; y < 6; y++) for (let x = 0; x < 6; x++) if (x < 2 || y < 2) biomeGrid[y][x].biome = 'source'
-    for (const [x, y, angle] of [[2, 2, 0], [3, 2, 0], [2, 3, Math.PI / 2]]) {
-      biomeGrid[y][x].biomeBlend = { biome: 'source', angle }
+    for (const [x, y, cornerWeights] of [
+      [2, 2, [0, 0.5, 0.75, 0]],
+      [3, 2, [0.5, 1, 1, 0.75]],
+      [2, 3, [0, 0.75, 1, 0]]
+    ]) {
+      biomeGrid[y][x].biomeBlend = { biome: 'source', alpha: 0.5, angle: 0, cornerWeights }
     }
     const biomeCanvas = document.createElement('canvas')
     biomeCanvas.width = biomeCanvas.height = 192
     const biomeContext = biomeCanvas.getContext('2d')
     for (const [x, y] of [[2, 2], [3, 2], [2, 3]]) {
       const blend = biomeGrid[y][x].biomeBlend
-      renderer.organicTerrain.drawBiomeTransition(biomeContext, x, y, x * 32, y * 32, 32,
-        { ...blend, cornerMask: biomeTransitionCornerMask(biomeGrid, x, y, blend) })
+      renderer.organicTerrain.drawBiomeTransition(biomeContext, x, y, x * 32, y * 32, 32, blend)
     }
     const biomePixels = biomeContext.getImageData(0, 0, 192, 192).data
     const alpha = (pixels, x, y, width) => pixels[(y * width + x) * 4 + 3]
     const biomeSeam = Math.max(...Array.from({ length: 32 }, (_, i) => Math.abs(alpha(biomePixels, 95, 64 + i, 192) - alpha(biomePixels, 96, 64 + i, 192))))
 
-    return { biomeSeam }
+    const generatedGrid = Array.from({ length: 80 }, () => Array.from({ length: 80 }, () => ({ type: 'land' })))
+    assignMapBiomes(generatedGrid, 9123, {
+      activeSpriteSheetBiomeTag: 'mixed',
+      mapBiomeRegionCount: 32,
+      mapBiomeDistribution: 'random',
+      mapBiomeWeights: { grass: 25, soil: 25, sand: 25, snow: 25 },
+      mapSnowOnPlateaus: false
+    })
+    const regionBiomes = new Map()
+    for (const tile of generatedGrid.flat()) {
+      if (!regionBiomes.has(tile.biomeRegion)) regionBiomes.set(tile.biomeRegion, tile.biomeBlend?.biome || tile.biome)
+    }
+    let diagonalTransitions = 0, fractionalCorners = 0
+    for (let y = 1; y < 79; y++) for (let x = 1; x < 79; x++) {
+      const tile = generatedGrid[y][x]
+      if (!tile.biomeBlend) continue
+      if (tile.biomeBlend.cornerWeights?.some(weight => weight > 0 && weight < 1)) fractionalCorners++
+      const lowerDifferent = (dx, dy) => {
+        const neighbor = generatedGrid[y + dy][x + dx]
+        return neighbor.biomeRegion < tile.biomeRegion &&
+          regionBiomes.get(neighbor.biomeRegion) !== regionBiomes.get(tile.biomeRegion)
+      }
+      const cardinal = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([dx, dy]) => lowerDifferent(dx, dy))
+      const diagonal = [[-1, -1], [1, -1], [1, 1], [-1, 1]].some(([dx, dy]) => lowerDifferent(dx, dy))
+      if (!cardinal && diagonal) diagonalTransitions++
+    }
+    return { biomeSeam, diagonalTransitions, fractionalCorners }
   })
   expect(result.biomeSeam).toBeLessThanOrEqual(1)
+  expect(result.diagonalTransitions).toBeGreaterThan(0)
+  expect(result.fractionalCorners).toBeGreaterThan(result.diagonalTransitions)
 })
 
 test('organic terrain is identical across chunk seams and map edits', async({ page }) => {

@@ -39,7 +39,6 @@ const SOT_DRAW_OFFSETS = Object.freeze({
 })
 const ZERO_SOT_DRAW_OFFSET = Object.freeze({ x: 0, y: 0 })
 const SHORE_CORNERS = [[0, 0], [1, 0], [1, 1], [0, 1]]
-export const BIOME_CORNER_FEATHER = 0.36
 
 // Each junction belongs to four cells. Both sides of a shared edge therefore
 // interpolate exactly the same endpoints, including diagonal-only shoulders.
@@ -55,47 +54,16 @@ export function shorelineCornerMask(grid, x, y) {
   return mask
 }
 
-const tileTouchesCorner = (tileX, tileY, corner) => {
-  const [cx, cy] = SHORE_CORNERS[corner]
-  return [
-    [tileX + cx - 1, tileY + cy - 1, 2],
-    [tileX + cx, tileY + cy - 1, 3],
-    [tileX + cx - 1, tileY + cy, 1],
-    [tileX + cx, tileY + cy, 0]
-  ]
-}
-
-const isTerrainTile = tile => tile && !tile.airstripStreet &&
-  (tile.type === 'land' || tile.type === 'rock' || tile.type === 'street')
-
-// Returns the source-material side of a biome boundary at each tile junction.
-// Transition tiles contribute only on the side selected by their own normal,
-// so the same junction value is visible from every incident tile.
-export function biomeTransitionCornerMask(grid, x, y, blend) {
-  if (!blend?.biome) return 0
-  let mask = 0
-  for (let corner = 0; corner < 4; corner++) {
-    const touchesSource = tileTouchesCorner(x, y, corner).some(([tx, ty, localCorner]) => {
-      const tile = grid?.[ty]?.[tx]
-      if (!isTerrainTile(tile)) return false
-      if (tile.biome === blend.biome) return true
-      if (tile.biomeBlend?.biome !== blend.biome) return false
-      const [cx, cy] = SHORE_CORNERS[localCorner]
-      const normalX = Math.cos(tile.biomeBlend.angle || 0), normalY = Math.sin(tile.biomeBlend.angle || 0)
-      return (cx - 0.5) * normalX + (cy - 0.5) * normalY >= 0
-    })
-    if (touchesSource) mask |= 1 << corner
-  }
-  if (mask) return mask
-
-  // Map edges and one-tile regions can have no neighboring base source cell.
-  // Preserve the authored transition direction as a bounded fallback.
-  const normalX = Math.cos(blend.angle || 0), normalY = Math.sin(blend.angle || 0)
-  for (let corner = 0; corner < 4; corner++) {
-    const [cx, cy] = SHORE_CORNERS[corner]
-    if ((cx - 0.5) * normalX + (cy - 0.5) * normalY > 0) mask |= 1 << corner
-  }
-  return mask
+export function biomeTransitionCoverage(cornerWeights, u, v) {
+  if (!Array.isArray(cornerWeights) || cornerWeights.length !== 4) return 0
+  const top = cornerWeights[0] * (1 - u) + cornerWeights[1] * u
+  const bottom = cornerWeights[3] * (1 - u) + cornerWeights[2] * u
+  const field = top * (1 - v) + bottom * v
+  // Transition tiles are based on the neighboring biome. Their shared region
+  // boundary (field 0.5) must therefore remain fully base-colored, while the
+  // source material ramps smoothly toward the transition tile's interior.
+  const alpha = Math.max(0, Math.min(1, (field - 0.5) * 2))
+  return alpha * alpha * (3 - 2 * alpha)
 }
 
 export function shorelineCoverage(mask, u, v, featherWidth = 0.2) {
@@ -327,9 +295,29 @@ export class OrganicTerrain {
     return canvas
   }
 
+  getBiomeTransitionMask(size, cornerWeights) {
+    const key = `biome|${size}|${cornerWeights.join(':')}`
+    let alphaMask = this.biomeBlendMasks.get(key)
+    if (alphaMask) return alphaMask
+    alphaMask = document.createElement('canvas')
+    alphaMask.width = alphaMask.height = size
+    const context = alphaMask.getContext('2d')
+    const pixels = context.createImageData(size, size)
+    for (let py = 0; py < size; py++) for (let px = 0; px < size; px++) {
+      pixels.data[(py * size + px) * 4 + 3] = Math.round(255 * biomeTransitionCoverage(
+        cornerWeights,
+        px / (size - 1),
+        py / (size - 1)
+      ))
+    }
+    context.putImageData(pixels, 0, 0)
+    this.biomeBlendMasks.set(key, alphaMask)
+    return alphaMask
+  }
+
   drawBiomeTransition(ctx, x, y, sx, sy, size, blend) {
-    const cornerMask = Number.isInteger(blend.cornerMask) ? blend.cornerMask : null
-    const key = `${size}|${x}|${y}|${blend.biome}|${blend.alpha}|${blend.angle}|${blend.featherPixels || 0}|${cornerMask ?? 'directional'}`
+    const cornerWeights = Array.isArray(blend.cornerWeights) && blend.cornerWeights.length === 4 ? blend.cornerWeights : null
+    const key = `${size}|${x}|${y}|${blend.biome}|${blend.alpha}|${blend.angle}|${blend.featherPixels || 0}|${cornerWeights?.join(':') || 'directional'}`
     let canvas = this.biomeTransitionTileCache.get(key)
     if (!canvas) {
       canvas = document.createElement('canvas')
@@ -337,9 +325,9 @@ export class OrganicTerrain {
       const blendContext = canvas.getContext('2d')
       this.drawBiome(blendContext, x, y, 0, 0, size, blend.biome)
       blendContext.globalCompositeOperation = 'destination-in'
-      blendContext.drawImage(cornerMask === null
+      blendContext.drawImage(cornerWeights === null
         ? this.getBiomeBlendMask(size, x, y, blend)
-        : this.getShorelineMask(size, cornerMask, BIOME_CORNER_FEATHER), 0, 0)
+        : this.getBiomeTransitionMask(size, cornerWeights), 0, 0)
       blendContext.globalCompositeOperation = 'source-over'
       if (this.biomeTransitionTileCache.size >= TERRAIN_TRANSITION_CACHE_LIMIT) {
         this.biomeTransitionTileCache.delete(this.biomeTransitionTileCache.keys().next().value)
@@ -408,14 +396,13 @@ export class OrganicTerrain {
     ctx.drawImage(canvas, 0, 0, size, size, sx + offset.x, sy + offset.y, drawSize, drawSize)
   }
 
-  drawGrass(ctx, x, y, sx, sy, size, tile = null, grid = null) {
+  drawGrass(ctx, x, y, sx, sy, size, tile = null) {
     const configuredBiome = this.textureManager?.integratedBiomeTag || 'grass'
     const primaryBiome = tile?.biome || (configuredBiome === 'mixed' ? 'grass' : configuredBiome)
     this.drawBiome(ctx, x, y, sx, sy, size, primaryBiome)
     const blend = tile?.biomeBlend
     if (!blend?.biome || !(blend.alpha > 0)) return
-    const cornerMask = biomeTransitionCornerMask(grid, x, y, blend)
-    this.drawBiomeTransition(ctx, x, y, sx, sy, size, { ...blend, cornerMask })
+    this.drawBiomeTransition(ctx, x, y, sx, sy, size, blend)
   }
 
   drawRoad(ctx, grid, x, y, sx, sy, size) {
