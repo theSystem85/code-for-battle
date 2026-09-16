@@ -92,14 +92,14 @@ describe('mixed map biomes', () => {
     expect(grid[20][17].biomeBlend?.biome).not.toBe('sand')
   })
 
-  it('orients shoreline feathering perpendicular to each coast', () => {
+  it('uses corner-weighted biome blending around every inland shoreline edge', () => {
     const cases = [
-      ['north', grid => { for (let x = 0; x < 24; x++) grid[0][x].type = 'water' }, 2, 12, -Math.PI / 2],
-      ['south', grid => { for (let x = 0; x < 24; x++) grid[23][x].type = 'water' }, 21, 12, Math.PI / 2],
-      ['west', grid => { for (let y = 0; y < 24; y++) grid[y][0].type = 'water' }, 12, 2, Math.PI],
-      ['east', grid => { for (let y = 0; y < 24; y++) grid[y][23].type = 'water' }, 12, 21, 0]
+      ['north', grid => { for (let x = 0; x < 24; x++) grid[0][x].type = 'water' }, 2, 12, [1, 1, 0.5, 0.5]],
+      ['south', grid => { for (let x = 0; x < 24; x++) grid[23][x].type = 'water' }, 21, 12, [0.5, 0.5, 1, 1]],
+      ['west', grid => { for (let y = 0; y < 24; y++) grid[y][0].type = 'water' }, 12, 2, [1, 0.5, 0.5, 1]],
+      ['east', grid => { for (let y = 0; y < 24; y++) grid[y][23].type = 'water' }, 12, 21, [0.5, 1, 1, 0.5]]
     ]
-    for (const [name, setup, y, x, expectedAngle] of cases) {
+    for (const [name, setup, y, x, expectedCornerWeights] of cases) {
       const grid = makeGrid(24, 24)
       setup(grid)
       assignMapBiomes(grid, 123, {
@@ -109,7 +109,7 @@ describe('mixed map biomes', () => {
       })
       const blend = grid[y][x].biomeBlend
       expect(blend?.biome, name).toBe('sand')
-      expect(blend.angle, name).toBeCloseTo(expectedAngle, 5)
+      expect(blend.cornerWeights, name).toEqual(expectedCornerWeights)
     }
   })
 
