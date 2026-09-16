@@ -12,6 +12,7 @@
 - [x] Make benchmark-mode emulator startup leave Safari navigation to the E2E test, so the plain app URL is not opened before Vite is reachable and the Simulator no longer sits on the home screen after an early emulator-script failure.
 - [x] Add an opt-in iOS Simulator Safari benchmark E2E that starts the emulator script, opens the app benchmark in Simulator Safari, collects the in-app FPS result, and currently fails below 55 average FPS while keeping the threshold configurable.
 - [ ] Mobile performance recovery plan (2026-05-24): evaluate and implement prioritized render-path improvements to move mobile back from ~10fps toward 60fps, starting with the most critical selected item after reviewing the plan.
+- [ ] Rendering preparation program (2026-09-16): continue `rendering_improvement_todos.md` after completing C00 shared revision, preparation, viewport, profiling/diagnostic and byte-budget contracts; next implement and measure P00/P01 before renderer lanes, preserving the strict 75 FPS gate and current visual quality.
 - [x] Remove borders from multiplayer sidebar colored owner badges (party bubbles) so the solid fill style matches the updated multiplayer row visuals.
 - [x] Make multiplayer owner badge width content-driven, force dark text on green/yellow badges, and add right-side spacing in party-info row alignment for consistent sidebar padding.
 - [x] Move multiplayer owner labels into the colored party badge to save row space and force dark text on yellow-like badge colors for readability contrast.
