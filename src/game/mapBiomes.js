@@ -1,8 +1,33 @@
 const BIOMES = ['grass', 'soil', 'sand', 'snow']
 const BIOME_MODES = [...BIOMES, 'mixed']
 const DISTRIBUTIONS = new Set(['vertical', 'horizontal', 'corners', 'random'])
+const BIOME_BLEND_CORNERS = [[0, 0], [1, 0], [1, 1], [0, 1]]
 
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value))
+
+const isBiomeTerrainTile = tile => tile && !tile.airstripStreet &&
+  (tile.type === 'land' || tile.type === 'rock' || tile.type === 'street')
+
+// Sample the immutable region map at each tile junction. Fractional ownership
+// preserves sub-tile turns that a binary corner flag expands into stair steps.
+function getBiomeCornerWeights(grid, regions, colors, x, y, sourceBiome) {
+  return BIOME_BLEND_CORNERS.map(([cornerX, cornerY]) => {
+    let sourceCount = 0
+    let terrainCount = 0
+    for (let offsetY = cornerY - 1; offsetY <= cornerY; offsetY++) {
+      for (let offsetX = cornerX - 1; offsetX <= cornerX; offsetX++) {
+        const sampleY = y + offsetY
+        const sampleX = x + offsetX
+        if (!isBiomeTerrainTile(grid[sampleY]?.[sampleX])) continue
+        const sampleRegion = regions[sampleY]?.[sampleX]
+        if (!Number.isFinite(sampleRegion)) continue
+        terrainCount++
+        if (colors[sampleRegion] === sourceBiome) sourceCount++
+      }
+    }
+    return terrainCount > 0 ? sourceCount / terrainCount : 0
+  })
+}
 
 function seededRandom(seed) {
   let state = (Number(seed) || 1) >>> 0
@@ -228,25 +253,40 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
     tile.biomeRegion = region
     tile.biome = colors[region]
     // Only the higher-numbered side of a region edge gets a transition tile.
-    // This guarantees a one-tile intersection line instead of a distance band
-    // that chains perpendicular to the boundary.
-    let edgeNeighbor = null
-    for (const [offsetX, offsetY] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
+    // Include diagonal-only contacts so every turn receives a corner mask;
+    // cardinal candidates stay first to preserve established edge ownership.
+    const edgeNeighbors = []
+    for (const [offsetX, offsetY] of [
+      [-1, 0], [1, 0], [0, -1], [0, 1],
+      [-1, -1], [1, -1], [1, 1], [-1, 1]
+    ]) {
       const neighborX = x + offsetX
       const neighborY = y + offsetY
       const neighborRegion = regions[neighborY]?.[neighborX]
       if (!Number.isFinite(neighborRegion) || neighborRegion >= region || colors[neighborRegion] === tile.biome) continue
-      edgeNeighbor = { region: neighborRegion, x: neighborX, y: neighborY }
-      break
+      edgeNeighbors.push({ region: neighborRegion, x: neighborX, y: neighborY })
     }
+    const edgeNeighbor = edgeNeighbors[0]
     if (edgeNeighbor) {
       const edgeBiome = tile.biome
-      tile.biome = colors[edgeNeighbor.region]
+      const targetBiome = colors[edgeNeighbor.region]
+      let normalX = 0, normalY = 0
+      for (const neighbor of edgeNeighbors) {
+        if (colors[neighbor.region] !== targetBiome) continue
+        normalX += x - neighbor.x
+        normalY += y - neighbor.y
+      }
+      if (normalX === 0 && normalY === 0) {
+        normalX = x - edgeNeighbor.x
+        normalY = y - edgeNeighbor.y
+      }
+      tile.biome = targetBiome
       tile.biomeBlend = {
         biome: edgeBiome,
         alpha: 0.5,
         featherPixels: settings.transitionPixels,
-        angle: Math.atan2(y - edgeNeighbor.y, x - edgeNeighbor.x)
+        angle: Math.atan2(normalY, normalX),
+        cornerWeights: getBiomeCornerWeights(grid, regions, colors, x, y, edgeBiome)
       }
     } else delete tile.biomeBlend
 

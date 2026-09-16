@@ -345,7 +345,14 @@ function createSerializableMapTile(tile = {}) {
     shorelineBiome: typeof tile.shorelineBiome === 'string' ? tile.shorelineBiome : undefined,
     biomeRegion: Number.isFinite(tile.biomeRegion) ? tile.biomeRegion : undefined,
     biomeBlend: tile.biomeBlend && typeof tile.biomeBlend.biome === 'string'
-      ? { biome: tile.biomeBlend.biome, alpha: Number(tile.biomeBlend.alpha) || 0, angle: Number(tile.biomeBlend.angle) || 0 }
+      ? {
+        biome: tile.biomeBlend.biome,
+        alpha: Number(tile.biomeBlend.alpha) || 0,
+        angle: Number(tile.biomeBlend.angle) || 0,
+        cornerWeights: Array.isArray(tile.biomeBlend.cornerWeights)
+          ? tile.biomeBlend.cornerWeights.slice(0, 4).map(weight => Math.max(0, Math.min(1, Number(weight) || 0)))
+          : undefined
+      }
       : undefined
   }
 }
@@ -402,7 +409,14 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         targetTile.shorelineBiome = typeof savedTile?.shorelineBiome === 'string' ? savedTile.shorelineBiome : undefined
         targetTile.biomeRegion = Number.isFinite(savedTile?.biomeRegion) ? savedTile.biomeRegion : undefined
         targetTile.biomeBlend = savedTile?.biomeBlend && typeof savedTile.biomeBlend.biome === 'string'
-          ? { biome: savedTile.biomeBlend.biome, alpha: Number(savedTile.biomeBlend.alpha) || 0, angle: Number(savedTile.biomeBlend.angle) || 0 }
+          ? {
+            biome: savedTile.biomeBlend.biome,
+            alpha: Number(savedTile.biomeBlend.alpha) || 0,
+            angle: Number(savedTile.biomeBlend.angle) || 0,
+            cornerWeights: Array.isArray(savedTile.biomeBlend.cornerWeights) && savedTile.biomeBlend.cornerWeights.length === 4
+              ? savedTile.biomeBlend.cornerWeights.map(weight => Math.max(0, Math.min(1, Number(weight) || 0)))
+              : undefined
+          }
           : undefined
 
         if (typeof savedTile?.walkable === 'boolean') {

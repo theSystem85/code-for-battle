@@ -27,6 +27,33 @@ describe('mixed map biomes', () => {
     expect(first.flat().filter(tile => tile.biomeBlend?.alpha > 0).length).toBeGreaterThan(20)
   })
 
+  it('adds transition metadata where biome regions meet only diagonally', () => {
+    const grid = makeGrid(80, 80)
+    assignMapBiomes(grid, 9123, { ...mixedSettings, mapBiomeRegionCount: 32 })
+    const regionBiomes = new Map()
+    for (const tile of grid.flat()) {
+      if (!regionBiomes.has(tile.biomeRegion)) regionBiomes.set(tile.biomeRegion, tile.biomeBlend?.biome || tile.biome)
+    }
+    let diagonalOnlyTransitions = 0
+    let fractionalCornerTransitions = 0
+    for (let y = 1; y < grid.length - 1; y++) for (let x = 1; x < grid[0].length - 1; x++) {
+      const tile = grid[y][x]
+      if (!tile.biomeBlend) continue
+      expect(tile.biomeBlend.cornerWeights).toHaveLength(4)
+      if (tile.biomeBlend.cornerWeights.some(weight => weight > 0 && weight < 1)) fractionalCornerTransitions++
+      const isLowerDifferentRegion = (dx, dy) => {
+        const neighbor = grid[y + dy][x + dx]
+        return neighbor.biomeRegion < tile.biomeRegion &&
+          regionBiomes.get(neighbor.biomeRegion) !== regionBiomes.get(tile.biomeRegion)
+      }
+      const cardinal = [[-1, 0], [1, 0], [0, -1], [0, 1]].some(([dx, dy]) => isLowerDifferentRegion(dx, dy))
+      const diagonal = [[-1, -1], [1, -1], [1, 1], [-1, 1]].some(([dx, dy]) => isLowerDifferentRegion(dx, dy))
+      if (!cardinal && diagonal) diagonalOnlyTransitions++
+    }
+    expect(diagonalOnlyTransitions).toBeGreaterThan(0)
+    expect(fractionalCornerTransitions).toBeGreaterThan(diagonalOnlyTransitions)
+  })
+
   it('uses four-color-style region assignment to avoid matching adjacent regions', () => {
     const grid = makeGrid(70, 70)
     assignMapBiomes(grid, 44, mixedSettings)
