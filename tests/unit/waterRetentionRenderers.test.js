@@ -102,6 +102,27 @@ describe('retained GPU water topology', () => {
     expect(renderer.ensureInitialized).toHaveBeenCalledOnce()
   })
 
+  it('binds WebGL context lifecycle listeners once', () => {
+    const renderer = new GameWebGLRenderer(null, {}, null)
+    const listeners = new Map()
+    const canvas = {
+      addEventListener: vi.fn((name, listener) => listeners.set(name, listener)),
+      removeEventListener: vi.fn()
+    }
+    const preventDefault = vi.fn()
+
+    renderer.bindContextEvents(canvas)
+    renderer.bindContextEvents(canvas)
+    listeners.get('webglcontextlost')({ preventDefault })
+
+    expect(canvas.addEventListener).toHaveBeenCalledTimes(2)
+    expect(preventDefault).toHaveBeenCalledOnce()
+    expect(renderer.getStatus()).toMatchObject({
+      contextLost: true,
+      gpuTiming: { available: false, reason: 'context-lost', milliseconds: null }
+    })
+  })
+
   it('labels unsupported WebGPU timestamp queries as unavailable', () => {
     const renderer = new GameWebGPURenderer({}, null)
     renderer.timestampSupported = false
@@ -115,5 +136,14 @@ describe('retained GPU water topology', () => {
         milliseconds: null
       }
     })
+  })
+
+  it('requests WebGPU reinitialization on the first frame after device loss', () => {
+    const renderer = new GameWebGPURenderer({}, null)
+    renderer.handleDeviceLost({ message: 'device removed' })
+    renderer.restore = vi.fn()
+
+    expect(renderer.render([[{ type: 'water' }]], { x: 0, y: 0 }, {}, { waterOnly: true })).toBe(false)
+    expect(renderer.restore).toHaveBeenCalledOnce()
   })
 })

@@ -18,6 +18,15 @@ const WATER_CHUNK_SIZE = 16
 const WATER_CHUNK_TILE_CAPACITY = WATER_CHUNK_SIZE * WATER_CHUNK_SIZE
 const WATER_PLANES = 2
 const TIMER_QUERY_LIMIT = 4
+const WATER_ATTRIBUTES = Object.freeze([
+  Object.freeze([1, 2, 0]),
+  Object.freeze([2, 4, 8]),
+  Object.freeze([3, 4, 24]),
+  Object.freeze([4, 1, 40]),
+  Object.freeze([5, 4, 44]),
+  Object.freeze([6, 1, 60]),
+  Object.freeze([7, 1, 64])
+])
 
 const SOT_CLIP_NONE = 0
 const SOT_CLIP_TOP_LEFT = 1
@@ -292,6 +301,13 @@ export class GameWebGLRenderer {
     this.timerExtension = null
     this.timerQueries = []
     this.gpuTiming = { available: false, reason: 'not-initialized', milliseconds: null }
+    this.boundCanvas = null
+    this.capabilityUpdate = { backend: 'webgl', devicePixelRatio: null }
+    this.onContextLost = event => {
+      event?.preventDefault?.()
+      this.handleContextLost()
+    }
+    this.onContextRestored = () => this.handleContextRestored(this.gl)
     this.stats = {
       topologyBuilds: 0,
       topologyUploadBytes: 0,
@@ -322,6 +338,17 @@ export class GameWebGLRenderer {
 
   setMapRenderer(mapRenderer) {
     this.mapRenderer = mapRenderer
+  }
+
+  bindContextEvents(canvas) {
+    if (!canvas?.addEventListener || this.boundCanvas === canvas) return
+    if (this.boundCanvas?.removeEventListener) {
+      this.boundCanvas.removeEventListener('webglcontextlost', this.onContextLost)
+      this.boundCanvas.removeEventListener('webglcontextrestored', this.onContextRestored)
+    }
+    this.boundCanvas = canvas
+    canvas.addEventListener('webglcontextlost', this.onContextLost)
+    canvas.addEventListener('webglcontextrestored', this.onContextRestored)
   }
 
   ensureInitialized() {
@@ -986,16 +1013,7 @@ export class GameWebGLRenderer {
     const gl = this.gl
     const byteOffset = slotOffset * WATER_INSTANCE_STRIDE
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.waterTopology)
-    const attributes = [
-      [1, 2, 0],
-      [2, 4, 8],
-      [3, 4, 24],
-      [4, 1, 40],
-      [5, 4, 44],
-      [6, 1, 60],
-      [7, 1, 64]
-    ]
-    for (const [location, size, offset] of attributes) {
+    for (const [location, size, offset] of WATER_ATTRIBUTES) {
       gl.enableVertexAttribArray(location)
       gl.vertexAttribPointer(location, size, gl.FLOAT, false, WATER_INSTANCE_STRIDE, byteOffset + offset)
       gl.vertexAttribDivisor(location, 1)
@@ -1054,7 +1072,8 @@ export class GameWebGLRenderer {
     gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
     this.stats.uniformUploadBytes += 40
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 40)
-    this.diagnostics.setCapabilities({ backend: 'webgl', devicePixelRatio: pixelRatio })
+    this.capabilityUpdate.devicePixelRatio = pixelRatio
+    this.diagnostics.setCapabilities(this.capabilityUpdate)
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
@@ -1101,6 +1120,7 @@ export class GameWebGLRenderer {
 
   render(mapGrid, scrollOffset, canvas, options = {}) {
     if (!this.gl || !mapGrid?.length || !canvas) return false
+    this.bindContextEvents(canvas)
     if (!this.ensureInitialized()) return false
     this.syncAtlasTexture()
     this.syncSecondaryAtlasTexture()
@@ -1256,7 +1276,8 @@ export class GameWebGLRenderer {
     this.stats.drawCalls++
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, geometryUploadBytes + 40)
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.DRAW_CALLS)
-    this.diagnostics.setCapabilities({ backend: 'webgl', devicePixelRatio: pixelRatio })
+    this.capabilityUpdate.devicePixelRatio = pixelRatio
+    this.diagnostics.setCapabilities(this.capabilityUpdate)
 
     gl.bindTexture(gl.TEXTURE_2D, null)
     gl.activeTexture(gl.TEXTURE0)

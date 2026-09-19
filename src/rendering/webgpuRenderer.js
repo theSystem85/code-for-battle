@@ -134,6 +134,8 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.timestampReadPending = false
     this.uniformData = new Float32Array(12)
     this.gpuTiming = { available: false, reason: 'not-initialized', milliseconds: null }
+    this.needsRestore = false
+    this.capabilityUpdate.backend = 'webgpu'
   }
 
   getTopologyBuildSpanId() {
@@ -232,6 +234,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
   handleDeviceLost(info = null) {
     this.status = 'failed'
     this.failureReason = info?.message || 'WebGPU device lost'
+    this.needsRestore = true
     this.timestampReadPending = false
     this.gpuTiming = { available: false, reason: 'device-lost', milliseconds: null }
     this.diagnostics.setCapabilities({ backend: 'webgpu', gpuTiming: this.gpuTiming })
@@ -259,6 +262,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.validationCheckScheduled = false
     this.validationComplete = false
     this.timestampReadPending = false
+    this.needsRestore = false
     this.beginInitialize(canvas)
   }
 
@@ -518,7 +522,8 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData)
     this.stats.uniformUploadBytes += this.uniformData.byteLength
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, this.uniformData.byteLength)
-    this.diagnostics.setCapabilities({ backend: 'webgpu', devicePixelRatio: dimensions.ratio })
+    this.capabilityUpdate.devicePixelRatio = dimensions.ratio
+    this.diagnostics.setCapabilities(this.capabilityUpdate)
 
     const timestampWrites = this.getTimestampWrites()
     const encoder = this.device.createCommandEncoder()
@@ -571,6 +576,10 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
 
   render(mapGrid, scrollOffset, canvas, options = {}) {
     if (!mapGrid?.length || !canvas) return false
+    if (this.needsRestore) {
+      this.restore(canvas)
+      return false
+    }
     if (this.status === 'idle') this.beginInitialize(canvas)
     if (this.status !== 'ready') return false
     this.beginFrameValidation()
@@ -621,7 +630,8 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.stats.topologyUploadBytes += packed.byteLength
     this.stats.uniformUploadBytes += this.uniformData.byteLength
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, uploadBytes)
-    this.diagnostics.setCapabilities({ backend: 'webgpu', devicePixelRatio: ratio })
+    this.capabilityUpdate.devicePixelRatio = ratio
+    this.diagnostics.setCapabilities(this.capabilityUpdate)
     const timestampWrites = this.getTimestampWrites()
     const encoder = this.device.createCommandEncoder()
     const pass = encoder.beginRenderPass({

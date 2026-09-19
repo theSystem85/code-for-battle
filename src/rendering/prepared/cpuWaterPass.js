@@ -87,7 +87,13 @@ export class CpuWaterPass {
     this.mapGrid = null
     this.sotMask = null
     this.topologyRevision = null
-    this.visibleKey = ''
+    this.visibleRevision = null
+    this.visibleStartX = -1
+    this.visibleStartY = -1
+    this.visibleEndX = -1
+    this.visibleEndY = -1
+    this.visibleDrawBase = false
+    this.visibleDrawSot = false
     this.runs = new Int32Array(24)
     this.runLength = 0
     this.sot = new Int32Array(24)
@@ -121,7 +127,7 @@ export class CpuWaterPass {
     this.mapGrid = mapGrid
     this.sotMask = sotMask
     this.topologyRevision = topologyRevision
-    this.visibleKey = ''
+    this.visibleRevision = null
     this.stats.topologyBuilds++
     return true
   }
@@ -154,9 +160,22 @@ export class CpuWaterPass {
   }
 
   prepareVisible(startX, startY, endX, endY, drawBase, drawSot) {
-    const key = `${this.topologyRevision}:${startX},${startY},${endX},${endY}:${drawBase ? 1 : 0}:${drawSot ? 1 : 0}`
-    if (key === this.visibleKey) return false
-    this.visibleKey = key
+    if (
+      this.visibleRevision === this.topologyRevision &&
+      this.visibleStartX === startX &&
+      this.visibleStartY === startY &&
+      this.visibleEndX === endX &&
+      this.visibleEndY === endY &&
+      this.visibleDrawBase === drawBase &&
+      this.visibleDrawSot === drawSot
+    ) return false
+    this.visibleRevision = this.topologyRevision
+    this.visibleStartX = startX
+    this.visibleStartY = startY
+    this.visibleEndX = endX
+    this.visibleEndY = endY
+    this.visibleDrawBase = drawBase
+    this.visibleDrawSot = drawSot
     this.runLength = 0
     this.sotLength = 0
     const mapGrid = this.mapGrid
