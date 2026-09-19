@@ -1,6 +1,6 @@
 # 069 — Rendering preparation contracts
 
-Status: implemented foundation (C00), 2026-09-16.
+Status: implemented foundation (C00) and profiler tooling (P00), 2026-09-19.
 
 ## Purpose and acceptance boundary
 
@@ -70,6 +70,16 @@ Still required from a qualifying physical run:
 
 Headless/software-only evidence may diagnose behavior but cannot certify 75 presented FPS.
 
+## P00 profiler implementation
+
+`src/performance/renderProfiler.js` owns the opt-in bounded profiler. Its fixed span definitions come from the append-only C00 registry; legacy `logPerformance` sites receive a bounded dynamic registration (maximum 128 names) without allocating call/frame buffers until timing is enabled. The profiler uses a reusable depth-64 stack, 300-frame rings and 512-call rings per observed span. It reports self and inclusive cost, calls, rolling milliseconds per frame/second, call and frame tails, aggregate-self sorting, and overlap with frames exceeding the 13.333 ms deadline.
+
+The `Function timings` preference continues to use `codeForBattle.functionTimingsEnabled`. Only that boolean is stored. Samples and legacy statistics remain in memory and reset on explicit reset or page reload. Disabled wrappers preserve receiver, return and thrown-error identity while taking a no-clock/no-statistics-write path. `GameLoop.animate` is the fixed root frame span; later rendering lanes own their narrower fixed spans.
+
+`RenderDiagnostics` accumulates stable draw, upload-byte, resize, decoded/prepared/staging-byte, eviction and backlog counters. Performance recordings subtract a start baseline, so the report retains all events during the recording instead of reading only a final-frame snapshot. Heap is sampled at most once per second into a 120-sample bound. Heap and GPU timing/memory use explicit unavailable records when browser/backend APIs do not supply evidence. Frame residual is named `unattributedWait`; it is never presented as GPU time.
+
+The live table refreshes at 4 Hz only while visible and does no snapshot/sort/DOM work while hidden or timing-disabled. Local Node microbenchmarks on 2026-09-19 measured 0.000272–0.000278 ms added per frame for three spans across five 250,000-frame runs. A 50-span stress probe measured 0.004617–0.004660 ms/frame across three 100,000-frame runs. Both are below the 0.25 ms/frame design budget, but they do not replace production-browser route measurement or physical 75 Hz certification.
+
 ## Verification
 
-`tests/unit/renderingPreparationContracts.test.js` covers unioned old/new halo invalidation, transaction publication, prepared generation readiness/disposal, stale cancellation, sprite budgets, stable viewport updates, append-only profiler lookup and idempotent byte release.
+`tests/unit/renderingPreparationContracts.test.js` covers unioned old/new halo invalidation, transaction publication, prepared generation readiness/disposal, stale cancellation, sprite budgets, stable viewport updates, append-only profiler lookup and idempotent byte release. `tests/unit/renderProfiler.test.js`, `functionTiming.test.js`, `performanceDialog.test.js` and `performanceMonitor.test.js` cover bounded nesting/windows, recursion, tails, sorting, persistence, disabled behavior, legacy semantics, visibility-gated refresh, capability labeling and recording-wide counters.

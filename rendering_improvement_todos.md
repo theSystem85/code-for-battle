@@ -1,6 +1,6 @@
 # Rendering improvement delegation checklist
 
-Status: **C00 foundation implemented; performance optimizations not yet integrated**. Date: 2026-09-16. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
+Status: **C00 foundation and P00 profiling implemented; renderer optimizations not yet integrated**. Date: 2026-09-19. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
 
 Model roles are intentional: Astra leads this analysis/documentation task; the implementation tasks below are assigned to Luna agents.
 
@@ -39,20 +39,20 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 **Done:** contracts import cleanly, version/disposal semantics are tested, ownership table has no duplicated path. Public signatures are stable for wave 2.
 
-## P00 — opt-in function profiler and overlay [not implemented]
+## P00 — opt-in function profiler and overlay [implemented 2026-09-19]
 
 **Prerequisite:** C00. **Parallel with:** P01.
 
 - [x] Add “Function timings” toggle to existing performance overlay, usable independently of recorder; persist only the preference, not traces (2026-09-19).
-- [ ] Implement bounded nested spans with self/inclusive times, call counts, rolling ms/frame and ms/s, p95/p99/max, sorting by aggregate self cost and slow-frame correlation.
-- [ ] Remove always-on object-replacing behavior from legacy `logPerformance` when detailed profiling is disabled; preserve callers and error/return semantics.
-- [ ] Add low-rate memory trends, capability fields and explicit unavailable GPU/heap values; separate unattributed wait from GPU time. Other lanes add their own spans later.
-- [ ] Add diagnostic byte/upload/draw/resize counters with stable IDs; retain totals through a recording rather than only final-frame snapshots.
-- [ ] Measure off/on overhead. No hidden per-frame sorting/DOM updates; no arbitrary-function wrapper explosion.
+- [x] Implement bounded nested spans with self/inclusive times, call counts, rolling ms/frame and ms/s, p95/p99/max, sorting by aggregate self cost and slow-frame correlation.
+- [x] Remove always-on object-replacing behavior from legacy `logPerformance` when detailed profiling is disabled; preserve callers and error/return semantics.
+- [x] Add low-rate memory trends, capability fields and explicit unavailable GPU/heap values; separate unattributed wait from GPU time. Other lanes add their own spans later.
+- [x] Add diagnostic byte/upload/draw/resize counters with stable IDs; retain totals through a recording rather than only final-frame snapshots.
+- [x] Measure off/on overhead. No hidden per-frame sorting/DOM updates; no arbitrary-function wrapper explosion.
 
 **Exclusive write set:** `src/performance/performanceMonitor.js`, new profiler implementation files designated by C00, `src/performanceUtils.js`, `src/ui/performanceDialog.js`, `src/ui/fpsDisplay.js`, necessary overlay markup/styles, `src/game/gameLoop.js` for root timing only; profiler unit tests. P01 must not edit these files.
 
-**Done:** toggle works; parent/child/recursion/exception accounting correct; off mode has no detailed timing allocations; exported table identifies registered functions; unknown capabilities are labeled; measured profiler overhead meets design budget. API timing is CPU submission unless explicitly measured otherwise.
+**Done:** toggle works independently of recording; parent/child/recursion/exception accounting is covered; off mode has no clock reads, statistics writes or detailed timing allocations; the exported table identifies fixed and bounded legacy registrations; unknown GPU/heap capabilities are labeled. A five-run Node microbenchmark of the reusable profiler core measured 0.000272–0.000278 ms added per frame for three spans, and a 50-span stress probe measured 0.004617–0.004660 ms/frame, below the 0.25 ms/frame design budget. These are local CPU instrumentation measurements, not physical 75 FPS certification. API timing is CPU submission unless explicitly measured otherwise.
 
 ## P01 — strict benchmark and diagnostic tooling [not implemented]
 
