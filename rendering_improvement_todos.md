@@ -43,7 +43,7 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 **Prerequisite:** C00. **Parallel with:** P01.
 
-- [ ] Add “Function timings” toggle to existing performance overlay, usable independently of recorder; persist only the preference, not traces.
+- [x] Add “Function timings” toggle to existing performance overlay, usable independently of recorder; persist only the preference, not traces (2026-09-19).
 - [ ] Implement bounded nested spans with self/inclusive times, call counts, rolling ms/frame and ms/s, p95/p99/max, sorting by aggregate self cost and slow-frame correlation.
 - [ ] Remove always-on object-replacing behavior from legacy `logPerformance` when detailed profiling is disabled; preserve callers and error/return semantics.
 - [ ] Add low-rate memory trends, capability fields and explicit unavailable GPU/heap values; separate unattributed wait from GPU time. Other lanes add their own spans later.

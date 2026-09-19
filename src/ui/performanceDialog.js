@@ -1,4 +1,5 @@
 import { gameState } from '../gameState.js'
+import { isFunctionTimingEnabled, setFunctionTimingEnabled } from '../performance/functionTiming.js'
 
 class PerformanceDialog {
   constructor() {
@@ -8,6 +9,7 @@ class PerformanceDialog {
     if (this.container) {
       this.container.innerHTML = `
         <div class="perf-controls">
+          <label><input type="checkbox" id="perfFunctionTimings"> Function timings</label>
           <button id="perfSortName">Name</button>
           <button id="perfSortDuration">Avg</button>
           <button id="perfReset">Reset</button>
@@ -15,6 +17,13 @@ class PerformanceDialog {
         <div id="perfContent"></div>
       `
       this.contentEl = document.getElementById('perfContent')
+      this.functionTimingsEl = document.getElementById('perfFunctionTimings')
+      this.functionTimingsEl.checked = isFunctionTimingEnabled()
+      this.functionTimingsEl.addEventListener('change', event => {
+        setFunctionTimingEnabled(event.currentTarget.checked)
+        if (!event.currentTarget.checked) this.resetStatistics()
+        else this.render()
+      })
       document.getElementById('perfSortName').addEventListener('click', () => {
         this.sortMode = 'name'
         this.render()

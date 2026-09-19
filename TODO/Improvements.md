@@ -893,5 +893,6 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Replace the AGENTS.md 20% regression allowance with the strict 75 FPS / 13.333 ms requirement, retaining unchanged visual quality and animated procedural water.
 - [ ] Implement mutation-driven terrain validity, startup readiness/baking, bounded byte residency and retained animated-water geometry per the delegation checklist.
 - [ ] Add opt-in live function rankings (self/inclusive time, calls, tails), CPU/GPU/memory diagnostics, cache/upload counters and resize auditing to the performance overlay.
+- [x] Add the independent, persisted Function timings toggle to the performance overlay with a disabled fast path for legacy `logPerformance` callers (2026-09-19).
 - [ ] Prepare final-size map/entity imagery before gameplay; audit DPR/transforms and resolve changing raster-effect sizes without degrading visuals; allow only aircraft takeoff/landing size-animation exceptions.
 - [ ] Certify the combined pipeline at 75 FPS on qualifying reference hardware through first/repeat full-map fast scrolling and worst-case combat, with visual parity, live procedural water and bounded memory. Current local results do not pass this target.
