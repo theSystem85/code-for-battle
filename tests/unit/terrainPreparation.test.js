@@ -90,6 +90,10 @@ describe('terrain preparation lifecycle', () => {
       baked: false,
       source: 'live-water-pass'
     })
+    expect(prepared.resources.descriptors.shoreMaskDescriptorIds[0]).toBeGreaterThan(0)
+    expect(prepared.resources.descriptors.biomeNames[
+      prepared.resources.descriptors.shorelineBiomeIds[0]
+    ]).toBe('grass')
     expect(prepared.byteUsage).toMatchObject({
       decodedSourceBytes: 512,
       preparedRasterBytes: 0,
@@ -168,6 +172,44 @@ describe('terrain preparation lifecycle', () => {
     expect(budget.getUsage().decodedSources).toBe(second.byteUsage.decodedSourceBytes)
     pipeline.dispose()
     expect(Object.values(budget.getUsage()).every(bytes => bytes === 0)).toBe(true)
+  })
+
+  it('prepares canonical masks at the requested backing density', async() => {
+    const createdSizes = []
+    const pipeline = new TerrainPreparationPipeline({
+      byteBudget: createTerrainByteBudget(limits()),
+      assetLoader: async() => ({ naturalWidth: 4, naturalHeight: 4 }),
+      canvasFactory: (size) => {
+        createdSizes.push(size)
+        return {
+          width: size,
+          height: size,
+          getContext: () => ({
+            createImageData: (width, height) => ({ data: new Uint8ClampedArray(width * height * 4) }),
+            putImageData: vi.fn()
+          })
+        }
+      }
+    })
+    const grid = gridOf(2, 2)
+    grid[1][1].biomeBlend = {
+      biome: 'snow',
+      alpha: 0.5,
+      angle: 0,
+      featherPixels: 4
+    }
+    const prepared = await pipeline.prepare({
+      grid,
+      generation: 1,
+      assetGeneration: 1,
+      density: 2,
+      tileSize: 32,
+      assets
+    })
+
+    expect(createdSizes).toEqual([64, 64])
+    expect(prepared.resources.preparedMasks.size).toBe(2)
+    expect(prepared.byteUsage.preparedRasterBytes).toBe(2 * 64 * 64 * 4)
   })
 
   it('keeps a 200x200 DPR-2 map in retained-descriptor mode under the raster limit', async() => {

@@ -24,6 +24,16 @@ const ORIENTATION_IDS = Object.freeze({
   'bottom-right': 2,
   'bottom-left': 3
 })
+const SHORE_SOURCE_OFFSETS = Object.freeze([
+  Object.freeze([0, -1]),
+  Object.freeze([-1, 0]),
+  Object.freeze([1, 0]),
+  Object.freeze([0, 1]),
+  Object.freeze([-1, -1]),
+  Object.freeze([1, -1]),
+  Object.freeze([-1, 1]),
+  Object.freeze([1, 1])
+])
 const MASK_RASTER_BYTES_PER_PIXEL = 4
 
 function abortError(reason = 'Terrain preparation aborted') {
@@ -122,12 +132,11 @@ function exactBlendDescriptor(size, density, blend) {
   })
 }
 
-function shorelineDescriptor(size, density, mask, biome, patternVariant) {
+function shorelineDescriptor(size, density, mask, patternVariant) {
   return Object.freeze({
     kind: 'shoreline',
     key: `shore|${size}|${density}|${mask}|0.2|${patternVariant === false ? 'smooth' : patternVariant}`,
     mask,
-    biome,
     patternVariant
   })
 }
@@ -166,6 +175,7 @@ function descriptorByteLength(descriptors) {
   return descriptors.typeIds.byteLength + descriptors.sotTypes.byteLength +
     descriptors.sotOrientations.byteLength + descriptors.shorelineMasks.byteLength +
     descriptors.biomeIds.byteLength + descriptors.shorelineBiomeIds.byteLength +
+    descriptors.shoreMaskDescriptorIds.byteLength +
     descriptors.blendMaskIds.byteLength + descriptors.cliffDepth.values.byteLength +
     descriptors.cliffDepth.plateau.byteLength + descriptors.cliffDepth.heightClass.byteLength +
     descriptors.cliffDepth.rockDepth.byteLength
@@ -305,6 +315,7 @@ export class TerrainPreparationPipeline {
       const shorelineMasks = new Uint8Array(width * height)
       const biomeIds = new Uint8Array(width * height)
       const shorelineBiomeIds = new Uint8Array(width * height)
+      const shoreMaskDescriptorIds = new Uint32Array(width * height)
       const blendMaskIds = new Uint32Array(width * height)
       const biomeNames = ['']
       const biomeNameIds = new Map([['', 0]])
@@ -335,7 +346,6 @@ export class TerrainPreparationPipeline {
           const tile = grid[y][x] || {}
           typeIds[index] = TYPE_IDS[tile.type] ?? 255
           biomeIds[index] = idForBiome(tile.biome)
-          shorelineBiomeIds[index] = idForBiome(tile.shorelineBiome)
           shorelineMasks[index] = shorelineCornerMask(grid, x, y)
           const sot = sotMask?.[y]?.[x]
           if (sot) {
@@ -349,10 +359,18 @@ export class TerrainPreparationPipeline {
               : directionalBlendDescriptor(tileSize, density, x, y, blend)
             blendMaskIds[index] = idForMask(descriptor)
           }
-          if (tile.shorelineBiome && shorelineMasks[index]) {
-            const biome = tile.shorelineBiome || tile.biome || 'grass'
-            const patternVariant = biome === 'sand' ? terrainHash(x, y, 157) % 6 : false
-            idForMask(shorelineDescriptor(tileSize, density, shorelineMasks[index], biome, patternVariant))
+          if (tile.type === 'water' && !tile.airstripStreet && shorelineMasks[index]) {
+            for (const [offsetX, offsetY] of SHORE_SOURCE_OFFSETS) {
+              const source = grid[y + offsetY]?.[x + offsetX]
+              if (source?.airstripStreet || (source?.type !== 'land' && source?.type !== 'rock')) continue
+              const biome = source.shorelineBiome || source.biome || 'grass'
+              const patternVariant = biome === 'sand' ? terrainHash(x, y, 157) % 6 : false
+              shorelineBiomeIds[index] = idForBiome(biome)
+              shoreMaskDescriptorIds[index] = idForMask(
+                shorelineDescriptor(tileSize, density, shorelineMasks[index], patternVariant)
+              )
+              break
+            }
           }
         }
         this.updateProgress({
@@ -370,6 +388,7 @@ export class TerrainPreparationPipeline {
         shorelineMasks,
         biomeIds,
         shorelineBiomeIds,
+        shoreMaskDescriptorIds,
         blendMaskIds,
         biomeNames: Object.freeze(biomeNames),
         maskDescriptors: Object.freeze(maskDescriptors),

@@ -290,12 +290,16 @@ export class OrganicTerrain {
         const image = await this.assetLoader(entry, { signal: controller.signal })
         controller.signal.throwIfAborted()
         if (generation !== this.assetGeneration) throw new globalThis.DOMException('Organic terrain asset generation is stale', 'AbortError')
+        if (!image) throw new Error(`Required organic terrain asset did not decode: ${entry.key}`)
         this.assetProgress.completed++
         return [entry.key, image]
       }))
       controller.signal.throwIfAborted()
       if (generation !== this.assetGeneration) throw new globalThis.DOMException('Organic terrain asset generation is stale', 'AbortError')
       const byKey = new Map(decoded)
+      for (const required of TERRAIN_ASSET_MANIFEST) {
+        if (!byKey.has(required.key)) throw new Error(`Missing required organic terrain asset: ${required.key}`)
+      }
       const biomeImages = { grass: [], soil: [], snow: [], sand: [] }
       for (const [key, image] of decoded) {
         if (key.startsWith('biome:')) biomeImages[key.slice(6)]?.push(image)
