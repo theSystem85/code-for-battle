@@ -24,6 +24,7 @@ import {
   getHarvesterMaxHarvestDensity,
   getTileDensity
 } from './harvesterEligibility.js'
+import { notifyResourceTileMutation } from '../rendering/prepared/mapMutationNotifier.js'
 
 // Track tiles currently being harvested
 const harvestedTiles = new Set()
@@ -646,6 +647,8 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         }
         unit.harvesting = false
         const tileKey = `${unit.oreField.x},${unit.oreField.y}`
+        const harvestedTileX = unit.oreField.x
+        const harvestedTileY = unit.oreField.y
         harvestedTiles.delete(tileKey) // Free up the tile
         unit.activeHarvestTileKey = null
 
@@ -679,6 +682,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
         } else {
           targetTile.ore = true
         }
+        notifyResourceTileMutation(mapGrid, harvestedTileX, harvestedTileY)
       }
     }
 
