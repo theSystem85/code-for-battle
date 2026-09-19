@@ -16,6 +16,7 @@ import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSy
 import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
 import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
 import { performanceMonitor } from '../performance/performanceMonitor.js'
+import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 
 const MOBILE_FRAME_WATCHDOG_MS = 250
@@ -298,7 +299,7 @@ export class GameLoop {
       renderMs,
       minimapMs,
       frameWorkMs: totalPausedFrameMs,
-      compositorWaitMs: Math.max(0, frameInterval - totalPausedFrameMs),
+      unattributedWaitMs: Math.max(0, frameInterval - totalPausedFrameMs),
       schedulerSource: this.lastSchedulerSource,
       schedulerDelayMs: this.lastSchedulerDelayMs
     })
@@ -479,7 +480,7 @@ export class GameLoop {
       renderMs,
       minimapMs,
       frameWorkMs: frameEnd - frameStart,
-      compositorWaitMs: Math.max(0, frameInterval - (frameEnd - frameStart)),
+      unattributedWaitMs: Math.max(0, frameInterval - (frameEnd - frameStart)),
       schedulerSource: this.lastSchedulerSource,
       schedulerDelayMs: this.lastSchedulerDelayMs
     })
@@ -537,7 +538,7 @@ export class GameLoop {
     }
 
     this.scheduleNextFrame()
-  }, false, 'animate')
+  }, false, 'GameLoop.animate', PROFILER_SPAN_IDS.FRAME)
 
   // Legacy game loop for compatibility (if needed)
   legacyGameLoop(timestamp) {

@@ -25,19 +25,19 @@
 
 /* FPS color classes */
 .fps-overlay.fps-good {
-  color: #00ff00; /* Green for 60+ FPS */
+  color: #00ff00; /* Green for 75+ FPS */
 }
 
 .fps-overlay.fps-ok {
-  color: #ffff00; /* Yellow for 30-59 FPS */
+  color: #ffff00; /* Yellow for 60-74 FPS */
 }
 
 .fps-overlay.fps-poor {
-  color: #ff8800; /* Orange for 15-29 FPS */
+  color: #ff8800; /* Orange for 30-59 FPS */
 }
 
 .fps-overlay.fps-bad {
-  color: #ff0000; /* Red for <15 FPS */
+  color: #ff0000; /* Red for <30 FPS */
 }
 
 .benchmark-countdown {
@@ -63,7 +63,7 @@
   position: absolute;
   top: 220px;
   right: 10px;
-  width: 260px;
+  width: min(960px, calc(100vw - 20px));
   max-height: 95vh;
   overflow-y: auto;
   background: #333;
@@ -82,6 +82,10 @@
 
 .performance-dialog .perf-controls {
   margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .performance-dialog button {
@@ -91,6 +95,42 @@
   padding: 2px 6px;
   margin-right: 4px;
   cursor: pointer;
+}
+
+.performance-dialog .perf-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 8px;
+}
+
+.performance-dialog .perf-capabilities {
+  margin: 6px 0;
+  color: #b8c5d6;
+}
+
+.performance-dialog .perf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.performance-dialog .perf-table th,
+.performance-dialog .perf-table td {
+  padding: 3px 5px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: right;
+}
+
+.performance-dialog .perf-table th:first-child,
+.performance-dialog .perf-table td:first-child {
+  text-align: left;
+}
+
+.performance-dialog .perf-table .perf-over-budget {
+  color: #ff8a80;
 }
 
 
