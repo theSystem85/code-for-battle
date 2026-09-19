@@ -152,6 +152,20 @@ function attachAuditMetadata(image, sprite) {
   return metadata
 }
 
+function disposePreparedImage(sprite) {
+  const image = sprite.image
+  if (typeof image.close === 'function') {
+    image.close()
+  } else if (typeof image.getContext === 'function') {
+    image.width = 0
+    image.height = 0
+  } else if ('src' in image) {
+    image.onload = null
+    image.onerror = null
+    image.src = ''
+  }
+}
+
 function createSpriteHandle(entry, image, density, manifest) {
   const backingWidth = Math.max(1, Math.round(entry.logicalWidth * density))
   const backingHeight = Math.max(1, Math.round(entry.logicalHeight * density))
@@ -233,7 +247,6 @@ export async function prepareSpriteRegistry({
         : entry.source
       const source = await getSource(sourceUrl)
       let image = source
-      let disposable = null
       if (
         selection.variant.sourceRect ||
         !selection.exact ||
@@ -249,7 +262,6 @@ export async function prepareSpriteRegistry({
           canvasFactory
         )
         if (typeof image.close === 'function') {
-          disposable = preparedSprite => preparedSprite.image.close()
           stagedDisposables.push(image)
         }
       }
@@ -257,7 +269,7 @@ export async function prepareSpriteRegistry({
       registry.register(
         getPreparedSpriteCacheKey(manifest.assetVersion, density, entry.id),
         sprite,
-        { decodedBytes: targetWidth * targetHeight * 4, dispose: disposable }
+        { decodedBytes: targetWidth * targetHeight * 4, dispose: disposePreparedImage }
       )
     }
     throwIfAborted(signal)

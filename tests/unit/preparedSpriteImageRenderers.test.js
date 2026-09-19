@@ -201,10 +201,19 @@ describe('prepared aircraft rendering states', () => {
     const flight = { airstripId: 'a', flightState: 'airborne', altitude: 64, maxAltitude: 128, f22State: 'airborne' }
     const takeoff = { airstripId: 'a', flightState: 'takeoff', altitude: 64, maxAltitude: 128, f22State: 'liftoff' }
     const landing = { carrierId: 'c', flightState: 'landing', altitude: 64, maxAltitude: 128 }
+    const carrierTaxi = {
+      carrierId: 'c',
+      flightState: 'takingOff',
+      altitude: 0,
+      maxAltitude: 128,
+      carrierOperation: { state: 'launch_taxi', carrierId: 'c' }
+    }
 
     expect(getJetRenderScale(grounded)).toBe(LANDED_JET_SCALE)
     expect(getJetRenderScale(flight)).toBe(1)
     expect(getJetResizeAuditTag(flight)).toBeNull()
+    expect(getJetRenderScale(carrierTaxi)).toBe(LANDED_JET_SCALE)
+    expect(getJetResizeAuditTag(carrierTaxi)).toBeNull()
     expect(getJetResizeAuditTag(takeoff)).toBe(AIRCRAFT_RESIZE_AUDIT_TAGS.TAKEOFF)
     expect(getJetResizeAuditTag(landing)).toBe(AIRCRAFT_RESIZE_AUDIT_TAGS.LANDING)
     expect(getJetRenderScale(takeoff)).toBe((LANDED_JET_SCALE + 1) / 2)
