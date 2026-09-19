@@ -133,7 +133,7 @@ describe('terrain preparation lifecycle', () => {
     expect(retried.state).toBe('ready')
     expect(publish).toHaveBeenCalledOnce()
 
-    const controller = new AbortController()
+    const controller = new globalThis.AbortController()
     controller.abort()
     await expect(pipeline.prepare({
       ...options,

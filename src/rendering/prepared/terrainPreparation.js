@@ -27,8 +27,8 @@ const ORIENTATION_IDS = Object.freeze({
 const MASK_RASTER_BYTES_PER_PIXEL = 4
 
 function abortError(reason = 'Terrain preparation aborted') {
-  if (reason instanceof DOMException && reason.name === 'AbortError') return reason
-  return new DOMException(String(reason), 'AbortError')
+  if (reason instanceof globalThis.DOMException && reason.name === 'AbortError') return reason
+  return new globalThis.DOMException(String(reason), 'AbortError')
 }
 
 function checkedProduct(...values) {

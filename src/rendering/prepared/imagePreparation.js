@@ -1,6 +1,6 @@
 function abortError(reason = 'Image preparation aborted') {
-  if (reason instanceof DOMException && reason.name === 'AbortError') return reason
-  return new DOMException(String(reason), 'AbortError')
+  if (reason instanceof globalThis.DOMException && reason.name === 'AbortError') return reason
+  return new globalThis.DOMException(String(reason), 'AbortError')
 }
 
 function throwIfAborted(signal) {

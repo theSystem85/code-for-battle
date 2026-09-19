@@ -260,7 +260,7 @@ export class OrganicTerrain {
 
   cancel(reason = 'Organic terrain preparation cancelled') {
     if (!this.assetController?.signal.aborted) {
-      this.assetController?.abort(new DOMException(reason, 'AbortError'))
+      this.assetController?.abort(new globalThis.DOMException(reason, 'AbortError'))
     }
   }
 
@@ -274,10 +274,10 @@ export class OrganicTerrain {
   async prepareAssets({ signal, assets = TERRAIN_ASSET_MANIFEST } = {}) {
     this.cancel('Organic terrain assets superseded')
     const generation = ++this.assetGeneration
-    const controller = new AbortController()
+    const controller = new globalThis.AbortController()
     this.assetController = controller
     this.lastAssetOptions = { signal, assets }
-    const abortFromCaller = () => controller.abort(signal.reason || new DOMException('Organic terrain preparation aborted', 'AbortError'))
+    const abortFromCaller = () => controller.abort(signal.reason || new globalThis.DOMException('Organic terrain preparation aborted', 'AbortError'))
     signal?.addEventListener?.('abort', abortFromCaller, { once: true })
     if (signal?.aborted) abortFromCaller()
     this.ready = false
@@ -289,12 +289,12 @@ export class OrganicTerrain {
       const decoded = await Promise.all(assets.map(async(entry) => {
         const image = await this.assetLoader(entry, { signal: controller.signal })
         controller.signal.throwIfAborted()
-        if (generation !== this.assetGeneration) throw new DOMException('Organic terrain asset generation is stale', 'AbortError')
+        if (generation !== this.assetGeneration) throw new globalThis.DOMException('Organic terrain asset generation is stale', 'AbortError')
         this.assetProgress.completed++
         return [entry.key, image]
       }))
       controller.signal.throwIfAborted()
-      if (generation !== this.assetGeneration) throw new DOMException('Organic terrain asset generation is stale', 'AbortError')
+      if (generation !== this.assetGeneration) throw new globalThis.DOMException('Organic terrain asset generation is stale', 'AbortError')
       const byKey = new Map(decoded)
       const biomeImages = { grass: [], soil: [], snow: [], sand: [] }
       for (const [key, image] of decoded) {
