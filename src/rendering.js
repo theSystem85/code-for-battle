@@ -1,5 +1,8 @@
 // rendering.js - Refactored to use modular components
 import { Renderer } from './rendering/renderer.js'
+import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
+
+export { RENDER_REVISION_DOMAINS }
 
 // Create a single renderer instance
 const gameRenderer = new Renderer()
@@ -38,6 +41,14 @@ export function notifyTileMutation(mapGrid, tileX, tileY) {
   if (gameRenderer.mapRenderer) {
     gameRenderer.mapRenderer.updateSOTMaskForTile(mapGrid, tileX, tileY)
   }
+}
+
+/**
+ * Notify terrain rendering about a mutation using the C00 revision-domain contract.
+ * Mutation producers pass both footprints when a visual moves or changes dimensions.
+ */
+export function notifyTerrainMutation(mapGrid, domain, oldBounds, newBounds = oldBounds) {
+  gameRenderer.mapRenderer?.notifyTerrainMutation(mapGrid, domain, oldBounds, newBounds)
 }
 
 /**
