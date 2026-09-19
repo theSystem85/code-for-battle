@@ -251,6 +251,7 @@ export class MapRenderer {
     this.chunkUseCounter = 0
     this.chunkWarmQueueCounter = 0
     this.idleChunksWarmedSinceLastFrame = 0
+    this.pendingTopologyReconstructions = 0
     this.deferChunkWarmUntil = 0
     this.cachedUseTexture = null
     this.cachedMapWidth = 0
@@ -292,7 +293,15 @@ export class MapRenderer {
       mutationGeneration: -1,
       mapGeneration: -1
     }
-    this.prewarmedCacheKey = null
+    this.prewarmedState = {
+      mapGeneration: -1,
+      mutationGeneration: -1,
+      useTexture: null,
+      integratedSignature: null,
+      sotMaskVersion: -1,
+      skipWaterBase: null,
+      skipWaterSot: null
+    }
     // Precomputed SOT (Smoothening Overlay Texture) mask for performance optimization
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
@@ -331,7 +340,9 @@ export class MapRenderer {
     const stats = this.frameChunkStats
     for (const key of this.chunkStatKeys) stats[key] = 0
     stats.chunksWarmed = this.idleChunksWarmedSinceLastFrame
+    stats.topologyReconstructions = this.pendingTopologyReconstructions
     this.idleChunksWarmedSinceLastFrame = 0
+    this.pendingTopologyReconstructions = 0
   }
 
   getLastFrameChunkStats() {
@@ -582,7 +593,7 @@ export class MapRenderer {
         }
       }
     }
-    this.frameChunkStats.topologyReconstructions++
+    this.pendingTopologyReconstructions++
     renderProfiler.endSpan(profilerToken)
   }
 
@@ -590,7 +601,7 @@ export class MapRenderer {
     const halo = TERRAIN_REVISION_HALOS[domain]
     const bounds = this.terrainRevisions.invalidate(mapGrid, domain, oldBounds, newBounds, halo)
     if (!bounds) return
-    this.prewarmedCacheKey = null
+    this.prewarmedState.mutationGeneration = -1
     this.cancelChunkWarmQueue()
     if (domain === RENDER_REVISION_DOMAINS.TOPOLOGY) {
       this.updateSOTMaskInBounds(mapGrid, bounds)
@@ -602,7 +613,7 @@ export class MapRenderer {
     this.chunkCache.clear()
     this.chunkWarmQueue.clear()
     this.chunkWarmGeneration++
-    this.prewarmedCacheKey = null
+    this.prewarmedState.mapGeneration = -1
     this.chunkUseCounter = 0
     this.terrainRevisions.dispose()
     this.hasLastScrollOffset = false
@@ -647,18 +658,12 @@ export class MapRenderer {
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
     const { skipWaterBase = false, skipWaterSot = false } = options
-    return [
-      `${mapWidth}x${mapHeight}`,
-      useTexture ? 'tex' : 'flat',
-      this.textureManager.integratedRenderSignature || 'none',
-      USE_PROCEDURAL_WATER_RENDERING ? 'proc-water' : 'classic-water',
-      WATER_EFFECT_TONE,
-      WATER_EFFECT_SATURATION,
-      WATER_EFFECT_ZOOM,
-      this.sotMaskVersion,
-      skipWaterBase ? 'skip-water-base' : 'draw-water-base',
-      skipWaterSot ? 'skip-water-sot' : 'draw-water-sot'
-    ].join('|')
+    return `${mapWidth}x${mapHeight}|${useTexture ? 'tex' : 'flat'}|` +
+      `${this.textureManager.integratedRenderSignature || 'none'}|` +
+      `${USE_PROCEDURAL_WATER_RENDERING ? 'proc-water' : 'classic-water'}|` +
+      `${WATER_EFFECT_TONE}|${WATER_EFFECT_SATURATION}|${WATER_EFFECT_ZOOM}|` +
+      `${this.sotMaskVersion}|${skipWaterBase ? 'skip-water-base' : 'draw-water-base'}|` +
+      `${skipWaterSot ? 'skip-water-sot' : 'draw-water-sot'}`
   }
 
   prewarmStaticChunks(mapGrid, useTexture, currentWaterFrame, options = {}) {
@@ -673,8 +678,18 @@ export class MapRenderer {
     const maxPrewarmChunks = Math.min(24, this.maxCachedChunks)
     if (!totalChunks || totalChunks > maxPrewarmChunks) return
 
-    const cacheKey = this.getChunkRenderCacheKey(mapGrid, useTexture, { skipWaterBase, skipWaterSot })
-    if (this.prewarmedCacheKey === cacheKey) return
+    const prewarmed = this.prewarmedState
+    if (
+      prewarmed.mapGeneration === this.terrainRevisions.mapGeneration &&
+      prewarmed.mutationGeneration === this.terrainRevisions.mutationGeneration &&
+      prewarmed.useTexture === useTexture &&
+      prewarmed.integratedSignature === this.textureManager.integratedRenderSignature &&
+      prewarmed.sotMaskVersion === this.sotMaskVersion &&
+      prewarmed.skipWaterBase === skipWaterBase &&
+      prewarmed.skipWaterSot === skipWaterSot
+    ) {
+      return
+    }
 
     for (let chunkY = 0; chunkY < chunkRows; chunkY++) {
       const chunkStartY = chunkY * this.chunkSize
@@ -690,7 +705,13 @@ export class MapRenderer {
       }
     }
 
-    this.prewarmedCacheKey = cacheKey
+    prewarmed.mapGeneration = this.terrainRevisions.mapGeneration
+    prewarmed.mutationGeneration = this.terrainRevisions.mutationGeneration
+    prewarmed.useTexture = useTexture
+    prewarmed.integratedSignature = this.textureManager.integratedRenderSignature
+    prewarmed.sotMaskVersion = this.sotMaskVersion
+    prewarmed.skipWaterBase = skipWaterBase
+    prewarmed.skipWaterSot = skipWaterSot
   }
 
   getOrCreateChunk(chunkX, chunkY, startX, startY, endX, endY) {
@@ -793,7 +814,7 @@ export class MapRenderer {
     this.chunkCache.delete(candidate.key)
     this.frameChunkStats.chunksEvicted++
     renderDiagnostics.addCounter(RENDER_COUNTER_IDS.EVICTIONS)
-    this.prewarmedCacheKey = null
+    this.prewarmedState.mapGeneration = -1
     return true
   }
 
