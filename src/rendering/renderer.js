@@ -66,6 +66,7 @@ export class Renderer {
       visibleFactories: []
     }
     this.frameEntityIndex = new Map()
+    this.attackQueueBuffer = []
   }
 
   partitionUnitsByRenderLayer(units) {
@@ -123,7 +124,7 @@ export class Renderer {
         return true
       }
     }
-    return Boolean((factories?.length && buildings?.length) || wrecks?.some(wreck => wreck?.id !== undefined))
+    return false
   }
 
   prepareFrameEntityIndex(units, buildings, factories, wrecks, currentGameState) {
@@ -218,26 +219,32 @@ export class Renderer {
   }
 
   getRenderableAttackQueue(entity) {
+    const queue = this.attackQueueBuffer
+    queue.length = 0
     if (!entity) {
-      return []
+      return queue
     }
 
     if (Array.isArray(entity.attackQueue) && entity.attackQueue.length > 0) {
-      return entity.attackQueue.filter(target => target && (target.health === undefined || target.health > 0))
-    }
-
-    if (entity.isBuilding) {
-      const queue = []
-      if (entity.forcedAttackTarget && (entity.forcedAttackTarget.health === undefined || entity.forcedAttackTarget.health > 0)) {
-        queue.push(entity.forcedAttackTarget)
-      }
-      if (Array.isArray(entity.forcedAttackQueue) && entity.forcedAttackQueue.length > 0) {
-        queue.push(...entity.forcedAttackQueue.filter(target => target && (target.health === undefined || target.health > 0)))
+      for (const target of entity.attackQueue) {
+        if (target && (target.health === undefined || target.health > 0)) queue.push(target)
       }
       return queue
     }
 
-    return []
+    if (entity.isBuilding) {
+      if (entity.forcedAttackTarget && (entity.forcedAttackTarget.health === undefined || entity.forcedAttackTarget.health > 0)) {
+        queue.push(entity.forcedAttackTarget)
+      }
+      if (Array.isArray(entity.forcedAttackQueue) && entity.forcedAttackQueue.length > 0) {
+        for (const target of entity.forcedAttackQueue) {
+          if (target && (target.health === undefined || target.health > 0)) queue.push(target)
+        }
+      }
+      return queue
+    }
+
+    return queue
   }
 
   getEntityCenterWorld(entity) {

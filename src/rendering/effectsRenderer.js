@@ -328,7 +328,10 @@ export class EffectsRenderer {
         ? TILE_SIZE * Math.max(1, exp.scale || 1)
         : (Number.isFinite(exp.maxRadius) && exp.maxRadius > 0 ? exp.maxRadius : TILE_SIZE * 2)
 
-      if (isCircleOutsideViewport(centerX, centerY, maxRadius, canvasWidth, canvasHeight)) {
+      if (
+        exp.type !== 'spriteSheet' &&
+        isCircleOutsideViewport(centerX, centerY, maxRadius, canvasWidth, canvasHeight)
+      ) {
         continue
       }
 
@@ -519,82 +522,92 @@ export class EffectsRenderer {
   renderShipWakes(ctx, gameState, scrollOffset) {
     const wakes = gameState?.shipWakes
     if (!Array.isArray(wakes) || wakes.length === 0) return
-    const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
-    const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
-    ctx.save()
-    let writeIndex = 0
-    for (let readIndex = 0; readIndex < wakes.length; readIndex++) {
-      const wake = wakes[readIndex]
-      if (now - wake.createdAt >= wake.duration) continue
-      wakes[writeIndex++] = wake
-      const age = Math.max(0, now - wake.createdAt)
-      const alpha = Math.max(0, 1 - age / wake.duration)
-      const progress = age / wake.duration
-      const screenX = wake.x - scrollOffset.x
-      const screenY = wake.y - scrollOffset.y
-      if (wake.kind === 'turn') {
-        const radius = wake.size * (0.45 + progress * 1.05)
-        if (isCircleOutsideViewport(screenX, screenY, radius + 3, canvasWidth, canvasHeight)) continue
+    const span = renderProfiler.startSpan(PROFILER_SPAN_IDS.EFFECTS)
+    try {
+      const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
+      const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
+      ctx.save()
+      let writeIndex = 0
+      for (let readIndex = 0; readIndex < wakes.length; readIndex++) {
+        const wake = wakes[readIndex]
+        if (now - wake.createdAt >= wake.duration) continue
+        wakes[writeIndex++] = wake
+        const age = Math.max(0, now - wake.createdAt)
+        const alpha = Math.max(0, 1 - age / wake.duration)
+        const progress = age / wake.duration
+        const screenX = wake.x - scrollOffset.x
+        const screenY = wake.y - scrollOffset.y
+        if (wake.kind === 'turn') {
+          const radius = wake.size * (0.45 + progress * 1.05)
+          if (isCircleOutsideViewport(screenX, screenY, radius + 3, canvasWidth, canvasHeight)) continue
+          ctx.save()
+          ctx.translate(screenX, screenY)
+          ctx.strokeStyle = `rgba(205, 240, 255, ${0.45 * alpha})`
+          ctx.lineWidth = 0.8 + alpha * 1.4
+          ctx.beginPath()
+          ctx.arc(0, 0, radius, 0, Math.PI * 2)
+          ctx.stroke()
+          ctx.restore()
+          continue
+        }
+        const isBowWake = wake.kind === 'bow'
+        const length = wake.size * (isBowWake ? 0.65 + progress * 1.2 : 0.8 + progress * 1.8)
+        const halfWidth = isBowWake
+          ? length * Math.tan(BOW_WAKE_INNER_ANGLE_RADIANS / 2)
+          : wake.size * (0.18 + progress * 0.75)
+        if (isCircleOutsideViewport(screenX, screenY, Math.hypot(length, halfWidth) + 3, canvasWidth, canvasHeight)) continue
         ctx.save()
         ctx.translate(screenX, screenY)
-        ctx.strokeStyle = `rgba(205, 240, 255, ${0.45 * alpha})`
-        ctx.lineWidth = 0.8 + alpha * 1.4
+        ctx.rotate(wake.direction || 0)
+        ctx.strokeStyle = `rgba(205, 240, 255, ${0.5 * alpha})`
+        ctx.lineWidth = (isBowWake ? 0.8 : 1.4) + alpha
+        ctx.lineCap = 'round'
         ctx.beginPath()
-        ctx.arc(0, 0, radius, 0, Math.PI * 2)
+        ctx.moveTo(0, 0)
+        ctx.quadraticCurveTo(-length * 0.48, -halfWidth * 0.35, -length, -halfWidth)
+        ctx.moveTo(0, 0)
+        ctx.quadraticCurveTo(-length * 0.48, halfWidth * 0.35, -length, halfWidth)
         ctx.stroke()
         ctx.restore()
-        continue
       }
-      const isBowWake = wake.kind === 'bow'
-      const length = wake.size * (isBowWake ? 0.65 + progress * 1.2 : 0.8 + progress * 1.8)
-      const halfWidth = isBowWake
-        ? length * Math.tan(BOW_WAKE_INNER_ANGLE_RADIANS / 2)
-        : wake.size * (0.18 + progress * 0.75)
-      if (isCircleOutsideViewport(screenX, screenY, Math.hypot(length, halfWidth) + 3, canvasWidth, canvasHeight)) continue
-      ctx.save()
-      ctx.translate(screenX, screenY)
-      ctx.rotate(wake.direction || 0)
-      ctx.strokeStyle = `rgba(205, 240, 255, ${0.5 * alpha})`
-      ctx.lineWidth = (isBowWake ? 0.8 : 1.4) + alpha
-      ctx.lineCap = 'round'
-      ctx.beginPath()
-      ctx.moveTo(0, 0)
-      ctx.quadraticCurveTo(-length * 0.48, -halfWidth * 0.35, -length, -halfWidth)
-      ctx.moveTo(0, 0)
-      ctx.quadraticCurveTo(-length * 0.48, halfWidth * 0.35, -length, halfWidth)
-      ctx.stroke()
+      wakes.length = writeIndex
       ctx.restore()
+    } finally {
+      renderProfiler.endSpan(span)
     }
-    wakes.length = writeIndex
-    ctx.restore()
   }
 
   renderDepthCharges(ctx, gameState, scrollOffset) {
     const charges = gameState?.depthCharges
     if (!Array.isArray(charges) || charges.length === 0) return
-    const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
-    const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
-    ctx.save()
-    charges.forEach(charge => {
-      const progress = Math.max(0, Math.min(1, (now - charge.createdAt) / Math.max(1, charge.detonateAt - charge.createdAt)))
-      const x = charge.x - scrollOffset.x
-      const y = charge.y - scrollOffset.y
-      const cullRadius = TILE_SIZE * 0.8
-      if (isCircleOutsideViewport(x, y, cullRadius, canvasWidth, canvasHeight)) return
-      ctx.strokeStyle = `rgba(170, 225, 255, ${0.8 - progress * 0.35})`
-      ctx.fillStyle = 'rgba(20, 45, 65, 0.85)'
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.arc(x, y, TILE_SIZE * (0.16 + progress * 0.12), 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-      for (let i = 0; i < 3; i++) {
+    const span = renderProfiler.startSpan(PROFILER_SPAN_IDS.EFFECTS)
+    try {
+      const now = Number.isFinite(gameState?.simulationTime) ? getSimulationTime(gameState) : performance.now()
+      const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
+      ctx.save()
+      charges.forEach(charge => {
+        const progress = Math.max(0, Math.min(1, (now - charge.createdAt) / Math.max(1, charge.detonateAt - charge.createdAt)))
+        const x = charge.x - scrollOffset.x
+        const y = charge.y - scrollOffset.y
+        const cullRadius = TILE_SIZE * 0.8
+        if (isCircleOutsideViewport(x, y, cullRadius, canvasWidth, canvasHeight)) return
+        ctx.strokeStyle = `rgba(170, 225, 255, ${0.8 - progress * 0.35})`
+        ctx.fillStyle = 'rgba(20, 45, 65, 0.85)'
+        ctx.lineWidth = 1.5
         ctx.beginPath()
-        ctx.arc(x + (i - 1) * 4, y - progress * TILE_SIZE * (0.35 + i * 0.08), 1.5 + i * 0.4, 0, Math.PI * 2)
+        ctx.arc(x, y, TILE_SIZE * (0.16 + progress * 0.12), 0, Math.PI * 2)
+        ctx.fill()
         ctx.stroke()
-      }
-    })
-    ctx.restore()
+        for (let i = 0; i < 3; i++) {
+          ctx.beginPath()
+          ctx.arc(x + (i - 1) * 4, y - progress * TILE_SIZE * (0.35 + i * 0.08), 1.5 + i * 0.4, 0, Math.PI * 2)
+          ctx.stroke()
+        }
+      })
+      ctx.restore()
+    } finally {
+      renderProfiler.endSpan(span)
+    }
   }
 
   render(ctx, bullets, gameState, units, scrollOffset) {

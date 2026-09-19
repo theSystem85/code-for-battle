@@ -2,9 +2,10 @@ import { TILE_SIZE, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BO
 import { gameState } from '../gameState.js'
 import { renderTankWithImages } from './tankImageRenderer.js'
 import {
+  getCachedPreparedSingleImageWreckSprite,
   getCachedPreparedSinkingWreckSprite,
-  getPreparedSingleImageWreckSprite,
   getPreparedSinkingWreckSprite,
+  getSingleImageWreckSprite,
   getTankWreckCanvases,
   prewarmWreckSpriteCache
 } from './wreckSpriteCache.js'
@@ -18,6 +19,7 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
 const noiseCanvasCache = new Map()
 const MAX_NOISE_CACHE_ENTRIES = 32
 const WORKSHOP_RESTORATION_ROTATION = Math.PI / 4
+const TANK_WRECK_TYPES = new Set(['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3'])
 
 function getNoiseCanvas(seedKey, density) {
   const safeDensity = Number.isFinite(density) && density > 0 ? density : 1
@@ -106,10 +108,10 @@ export class WreckRenderer {
     const centerY = wreck.y + TILE_SIZE / 2 - scrollOffset.y
     const navalLength = wreck.navalSinking
       ? (wreck.unitType === 'supplyShip'
-          ? 2.2
-          : wreck.unitType === 'destroyer'
-            ? 2.6
-            : getNavalRenderLengthTiles(wreck.unitType))
+        ? 2.2
+        : wreck.unitType === 'destroyer'
+          ? 2.6
+          : getNavalRenderLengthTiles(wreck.unitType))
       : 1.2
     // Includes the sinking ring, selection bars/noise, and queue indicator.
     const margin = TILE_SIZE * Math.max(2.5, navalLength + 1)
@@ -132,12 +134,11 @@ export class WreckRenderer {
       return true
     }
 
-    const friendlyOwners = new Set([gameState.humanPlayer, 'player'])
-    if (gameState.humanPlayer === 'player1') {
-      friendlyOwners.add('player1')
-    }
-
-    if (friendlyOwners.has(wreck.owner)) {
+    if (
+      wreck.owner === gameState.humanPlayer ||
+      wreck.owner === 'player' ||
+      (gameState.humanPlayer === 'player1' && wreck.owner === 'player1')
+    ) {
       return true
     }
 
@@ -166,8 +167,7 @@ export class WreckRenderer {
       return
     }
 
-    const tankTypes = new Set(['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3'])
-    const isTank = wreck.unitType && tankTypes.has(wreck.unitType)
+    const isTank = wreck.unitType && TANK_WRECK_TYPES.has(wreck.unitType)
 
     // Check if wreck is being restored (show as unit preview)
     const isBeingRestored = wreck.isBeingRestored || false
@@ -201,7 +201,7 @@ export class WreckRenderer {
         this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
       }
     } else {
-      const sprite = getPreparedSingleImageWreckSprite(wreck.unitType, this.preparedDensity)
+      const sprite = getCachedPreparedSingleImageWreckSprite(wreck.unitType, this.preparedDensity)
       if (sprite) {
         ctx.save()
         ctx.translate(centerX, centerY)
@@ -225,7 +225,32 @@ export class WreckRenderer {
         )
         ctx.restore()
       } else {
-        this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
+        // A source that decoded after startup remains an explicit I20
+        // readiness conflict. Preserve the old visual via its legacy cache
+        // path rather than replacing it with a broken placeholder.
+        const source = getSingleImageWreckSprite(wreck.unitType)
+        if (source) {
+          ctx.save()
+          ctx.translate(centerX, centerY)
+          const rotation = isBeingRestored
+            ? WORKSHOP_RESTORATION_ROTATION
+            : (wreck.unitType === 'f22Raptor' || wreck.unitType === 'f35')
+              ? (wreck.direction || 0) + Math.PI / 2
+              : (wreck.direction || 0) - Math.PI / 2
+          ctx.rotate(rotation)
+          const scale = TILE_SIZE / Math.max(source.width, source.height)
+          ctx.globalAlpha = 0.95
+          ctx.drawImage(
+            source,
+            -source.width * scale / 2,
+            -source.height * scale / 2,
+            source.width * scale,
+            source.height * scale
+          )
+          ctx.restore()
+        } else {
+          this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
+        }
       }
     }
 

@@ -6,6 +6,7 @@ const {
   mockGetTankWreckCanvases,
   mockGetSingleImageWreckSprite,
   mockGetPreparedSingleImageWreckSprite,
+  mockGetCachedPreparedSingleImageWreckSprite,
   mockGetPreparedSinkingWreckSprite,
   mockGetCachedPreparedSinkingWreckSprite,
   mockGetDestroyerBaseImage,
@@ -20,6 +21,11 @@ const {
   mockGetTankWreckCanvases: vi.fn(() => ({ wagon: {}, turret: {}, barrel: {} })),
   mockGetSingleImageWreckSprite: vi.fn(() => ({ width: 64, height: 64 })),
   mockGetPreparedSingleImageWreckSprite: vi.fn(() => ({
+    canvas: { width: 64, height: 64 },
+    logicalWidth: 32,
+    logicalHeight: 32
+  })),
+  mockGetCachedPreparedSingleImageWreckSprite: vi.fn(() => ({
     canvas: { width: 64, height: 64 },
     logicalWidth: 32,
     logicalHeight: 32
@@ -42,6 +48,7 @@ vi.mock('../../src/rendering/wreckSpriteCache.js', () => ({
   getTankWreckCanvases: mockGetTankWreckCanvases,
   getSingleImageWreckSprite: mockGetSingleImageWreckSprite,
   getPreparedSingleImageWreckSprite: mockGetPreparedSingleImageWreckSprite,
+  getCachedPreparedSingleImageWreckSprite: mockGetCachedPreparedSingleImageWreckSprite,
   getPreparedSinkingWreckSprite: mockGetPreparedSinkingWreckSprite,
   getCachedPreparedSinkingWreckSprite: mockGetCachedPreparedSinkingWreckSprite,
   prewarmWreckSpriteCache: vi.fn()
@@ -104,6 +111,7 @@ describe('WreckRenderer workshop restoration previews', () => {
     mockGetTankWreckCanvases.mockClear()
     mockGetSingleImageWreckSprite.mockClear()
     mockGetPreparedSingleImageWreckSprite.mockClear()
+    mockGetCachedPreparedSingleImageWreckSprite.mockClear()
   })
 
   it('uses the F22 wreck sprite and rotates restored wrecks by 45 degrees', () => {
@@ -133,7 +141,7 @@ describe('WreckRenderer workshop restoration previews', () => {
       isBeingRestored: true
     }, { x: 0, y: 0 })
 
-    expect(mockGetPreparedSingleImageWreckSprite).toHaveBeenCalledWith('f22Raptor', 1)
+    expect(mockGetCachedPreparedSingleImageWreckSprite).toHaveBeenCalledWith('f22Raptor', 1)
     expect(f22Ctx.drawImageCalls).toBeGreaterThan(0)
     expect(f22Ctx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
     expect(harvesterCtx.rotateCalls[0]).toBeCloseTo(Math.PI / 4)
@@ -191,7 +199,7 @@ describe('WreckRenderer workshop restoration previews', () => {
       maxHealth: 100
     }], { x: 0, y: 0 })
 
-    expect(mockGetPreparedSingleImageWreckSprite).not.toHaveBeenCalled()
+    expect(mockGetCachedPreparedSingleImageWreckSprite).not.toHaveBeenCalled()
     expect(ctx.drawImageCalls).toBe(0)
   })
 })

@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../config.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
 const BLACK_ALPHA_CUTOFF_BRIGHTNESS = 24
@@ -302,6 +303,19 @@ export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
   const drawHeight = drawWidth * aspectRatio
   const centerX = animation.x - scrollOffset.x
   const centerY = animation.y - scrollOffset.y
+  const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+  if (
+    viewportWidth > 0 &&
+    viewportHeight > 0 &&
+    (
+      centerX + drawWidth / 2 < 0 ||
+      centerY + drawHeight / 2 < 0 ||
+      centerX - drawWidth / 2 > viewportWidth ||
+      centerY - drawHeight / 2 > viewportHeight
+    )
+  ) {
+    return
+  }
 
   // Resize audit: arbitrary custom sheets can combine runtime frameRects,
   // scale, blob URLs and density. Preparing these exact finite frames requires

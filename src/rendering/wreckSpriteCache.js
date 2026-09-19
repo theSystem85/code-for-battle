@@ -185,6 +185,13 @@ export function getPreparedSingleImageWreckSprite(unitType, density = 1) {
   )
 }
 
+export function getCachedPreparedSingleImageWreckSprite(unitType, density = 1) {
+  const safeDensity = Number.isFinite(density) && density > 0 ? density : 1
+  const entry = preparedWreckCache.get(`single:${unitType}@${safeDensity}`) || null
+  if (entry) entry.lastUsed = ++accessSequence
+  return entry
+}
+
 export function getPreparedSinkingWreckSprite(unitType, source, spriteLengthTiles, density = 1) {
   if (!source) return null
   const sourceWidth = source.naturalWidth || source.width
