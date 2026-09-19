@@ -1,6 +1,6 @@
 # Rendering improvement delegation checklist
 
-Status: **C00 foundation and P00 profiling implemented; renderer optimizations not yet integrated**. Date: 2026-09-19. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
+Status: **C00/P00/P01 landed; Wave 2 renderer lanes in progress (2026-09-19)**. Date: 2026-09-19. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
 
 Model roles are intentional: Astra leads this analysis/documentation task; the implementation tasks below are assigned to Luna agents.
 
