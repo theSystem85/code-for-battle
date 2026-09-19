@@ -82,6 +82,7 @@
 - [ ] Follow-up HUD tweak: constrain selected-unit edge bars to max 75% tile span so 1px selection outline remains visible, and center crew indicators horizontally beneath the bottom bar.
 - [ ] Refactor selected-unit HUD: 1px yellow outline, 3px stat bars (ammo/hp/fuel/load/xp) centered on outline with dark grey background and no borders, move crew indicator below bottom bar, place XP stars overlapping HP bar by ~33%, and enlarge HUD footprint beyond tile size to avoid occluding the selected unit.
 ## Improvements
+- [x] Implement rendering P01 strict benchmark and diagnostic tooling (2026-09-20): add timed full-map/repeat-lap route evidence, 75 FPS deadline tails and missed-frame reporting, cold/steady CDP captures, backend/refresh eligibility labels, opt-in resize/decode/asset audits, and WebP-85 visual golden manifests. See `specs/083-rendering-p01-diagnostics.md`.
 - [x] Make generated ore-field density fall off with distance from each seed crystal so richer ore visually radiates outward from the seed in deterministic bands.
 - [x] Improve bullet-impact explosion visuals with layered cached fireball/core sprites, shockwave jitter rings, and low-count ember accents while preserving frustum culling and sprite-cache performance.
 - [x] Ensure GitHub PR CI explicitly reruns unit tests on `pull_request.synchronize` so every new commit pushed to an open PR exercises `npm run test:unit`.

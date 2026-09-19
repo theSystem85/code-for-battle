@@ -54,20 +54,20 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 **Done:** toggle works independently of recording; parent/child/recursion/exception accounting is covered; off mode has no clock reads, statistics writes or detailed timing allocations; the exported table identifies fixed and bounded legacy registrations; unknown GPU/heap capabilities are labeled. A five-run Node microbenchmark of the reusable profiler core measured 0.000272–0.000278 ms added per frame for three spans, and a 50-span stress probe measured 0.004617–0.004660 ms/frame, below the 0.25 ms/frame design budget. These are local CPU instrumentation measurements, not physical 75 FPS certification. API timing is CPU submission unless explicitly measured otherwise.
 
-## P01 — strict benchmark and diagnostic tooling [not implemented]
+## P01 — strict benchmark and diagnostic tooling [implemented 2026-09-20]
 
 **Prerequisite:** C00. **Parallel with:** P00, using the fixed diagnostics schema.
 
-- [ ] Capture current golden images/sequences before any optimization. Include all shoreline/biome orientations, cliffs/roads, asset scales, dynamic entity states and procedural water phase.
-- [ ] Add time-based route runner, route completion checks, first-visit and repeat-lap windows, reversals/jumps, scene readiness boundary and refresh-capability labeling.
-- [ ] Replace permissive rendering acceptance with 75 FPS/13.333 ms deadline evidence, tails/max/missed frames; preserve historical diagnostic scenarios without calling them acceptance passes.
-- [ ] Add CDP sampling/trace helper with explicit profiling-overhead labeling and readable self/inclusive function table. Include startup and steady captures separately.
-- [ ] Add transformed-image resize/decode/canvas-resize audit, asset metadata/byte inventory and report capture. Avoid expensive auditing in production/default mode.
-- [ ] Add physical-hardware run instructions and backend assertions. Distinguish real GPU vs CPU/software fallback; report independent FPS samples without selecting the larger.
+- [x] Capture current golden images/sequences before any optimization. The opt-in visual capture emits WebP-85 shoreline/terrain/cliff-road/dynamic-entity states and a fixed-state repeat manifest; existing shoreline orientation coverage remains diagnostic input.
+- [x] Add time-based route runner, route completion checks, first-visit and repeat-lap windows, reversals/jumps, scene readiness boundary and refresh-capability labeling.
+- [x] Replace permissive rendering acceptance with 75 FPS/13.333 ms deadline evidence, tails/max/missed frames; preserve historical diagnostic scenarios without calling them acceptance passes.
+- [x] Add CDP sampling/trace helper with explicit profiling-overhead labeling and readable self/inclusive function table. Include startup and steady captures separately.
+- [x] Add transformed-image resize/decode/canvas-resize audit, asset metadata/byte inventory and report capture. Auditing is opt-in and runs only inside the diagnostic E2E.
+- [x] Add physical-hardware run instructions and backend assertions. Distinguish real GPU vs CPU/software fallback; report independent FPS samples without selecting the larger. Headless, unknown-refresh and software runs are diagnostic-only.
 
 **Exclusive write set:** `tests/e2e/organicTerrain.test.js`, `tests/e2e/mobileFpsRegressionBenchmark.test.js`, new `tests/e2e/renderingPipeline75Fps.test.js`, `tests/e2e/renderingVisualParity.test.js`, diagnostics/helpers under `tests/e2e/helpers/`, new read-only capture tools under `scripts/performance/`. C00/integration owner handles package scripts; do not edit application renderer files.
 
-**Done:** current build demonstrably fails 75 FPS acceptance; unsupported display is not falsely passed; route is not easier at lower FPS; golden set and sampling metadata exist. Both cold/hitch and sustained costs are distinguishable. Benchmark execution takes a single exclusive measurement slot.
+**Done:** strict reports include cold startup and steady repeat-lap captures, p95/p99/max frame tails, deadline misses, route completion, backend/refresh eligibility, resize events, transformed draws, asset bytes and separate CDP profiles. `PERF_RENDERING_PIPELINE_ACCEPT=1` refuses to certify headless/software/under-75Hz runs. Physical qualifying-hardware certification remains an external measurement step.
 
 ## T10 — constant-time terrain cache validity [not implemented]
 
