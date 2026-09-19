@@ -147,10 +147,10 @@ export class CanvasManager {
     window.addEventListener('orientationchange', this.handleLayoutChange)
     window.visualViewport?.addEventListener('resize', this.handleLayoutChange)
     document.addEventListener('canvas-layout-invalidated', this.handleLayoutChange)
-    if (typeof ResizeObserver === 'function') {
+    if (typeof globalThis.ResizeObserver === 'function') {
       const sidebar = document.getElementById('sidebar')
       if (sidebar) {
-        this.resizeObserver = new ResizeObserver(this.handleLayoutChange)
+        this.resizeObserver = new globalThis.ResizeObserver(this.handleLayoutChange)
         this.resizeObserver.observe(sidebar)
       }
     }

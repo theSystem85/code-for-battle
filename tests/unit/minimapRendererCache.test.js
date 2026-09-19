@@ -74,7 +74,7 @@ describe('MinimapRenderer prepared caches', () => {
     expect(renderer.terrainCacheCanvas).toMatchObject({ width: 320, height: 192 })
     expect(renderer.resourceCacheCanvas).toMatchObject({ width: 320, height: 192 })
     expect(renderer.visibilityCacheCanvas).toMatchObject({ width: 320, height: 192 })
-    const cacheDrawCalls = drawImage.mock.calls.filter(call => call[0] instanceof HTMLCanvasElement)
+    const cacheDrawCalls = drawImage.mock.calls.filter(call => call[0]?.tagName === 'CANVAS')
     expect(cacheDrawCalls.every(call => call.length === 3)).toBe(true)
     expect(startSpan).toHaveBeenCalledWith(PROFILER_SPAN_IDS.MINIMAP_BASE)
     expect(startSpan).toHaveBeenCalledWith(PROFILER_SPAN_IDS.MINIMAP_FOG)
