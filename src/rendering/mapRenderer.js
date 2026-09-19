@@ -835,9 +835,36 @@ export class MapRenderer {
     renderDiagnostics.setByteUsage(RENDER_BYTE_BUDGET_OWNERS.TERRAIN, usage.terrainResident)
   }
 
+  ensureChunkRevisionMetadata(chunk) {
+    if (!Number.isInteger(chunk.chunkX)) chunk.chunkX = Math.floor(chunk.startX / this.chunkSize)
+    if (!Number.isInteger(chunk.chunkY)) chunk.chunkY = Math.floor(chunk.startY / this.chunkSize)
+    if (!chunk.revisionSnapshot) {
+      chunk.revisionSnapshot = {
+        topology: 0,
+        surface: 0,
+        water: 0,
+        resource: 0,
+        decal: 0,
+        asset: 0,
+        layout: 0
+      }
+    }
+    if (!chunk.renderState) {
+      chunk.renderState = {
+        containsWater: false,
+        containsAnimatedWaterSot: false,
+        hasWaterAnimation: false,
+        waterFrameIndex: null,
+        needsRedraw: true,
+        revisionsChanged: true
+      }
+    }
+  }
+
   getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
     const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_STATE)
     const { skipWaterBase = false, skipWaterSot = false } = options
+    this.ensureChunkRevisionMetadata(chunk)
     const revisions = this.terrainRevisions.getChunkRevisions(
       chunk.chunkX,
       chunk.chunkY,
