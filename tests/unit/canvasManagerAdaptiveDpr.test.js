@@ -8,6 +8,7 @@ function createAdaptiveManager(cap = 3) {
   manager.lastAdaptivePixelRatioCheck = 0
   manager.lastAdaptivePixelRatioChange = 0
   manager.stableCameraSince = 0
+  manager.automaticDensityAdjustmentEnabled = true
   manager.resizeCanvases = vi.fn()
   return manager
 }
@@ -26,6 +27,16 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.updateAdaptivePixelRatio(60, 1000, true)).toBe(true)
     expect(manager.adaptivePixelRatioCap).toBe(1)
     expect(manager.resizeCanvases).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps density fixed during scrolling unless automatic adjustment is explicitly enabled', () => {
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
+    const manager = createAdaptiveManager()
+    manager.automaticDensityAdjustmentEnabled = false
+
+    expect(manager.updateAdaptivePixelRatio(30, 1000, true)).toBe(false)
+    expect(manager.adaptivePixelRatioCap).toBe(3)
+    expect(manager.resizeCanvases).not.toHaveBeenCalled()
   })
 
   it('keeps the entity and UI overlay at native DPR when terrain is capped', () => {
@@ -57,6 +68,7 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.getMinimapCanvas().width).toBe(230)
     expect(manager.pixelRatio).toBe(1)
     expect(manager.overlayPixelRatio).toBe(3)
+    manager.dispose()
   })
 
   it('does not raise DPR until the camera and frame rate have stayed stable', () => {
