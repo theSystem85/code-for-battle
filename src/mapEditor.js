@@ -4,6 +4,13 @@ import { initializeOccupancyMap, createUnit, unitCosts } from './units.js'
 import { buildingData, canPlaceBuilding, createBuilding, placeBuilding, updatePowerSupply } from './buildings.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { gameRandom } from './utils/gameRandom.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifyResourceTileMutation,
+  notifySurfaceMutation,
+  notifyTopologyTileMutation
+} from './rendering/prepared/mapMutationNotifier.js'
 const baseTilePalette = [
   { id: 'grass', type: 'land', label: 'Grass', variantGroup: 'passable' },
   { id: 'decor', type: 'land', label: 'Decoration', variantGroup: 'decorative' },
@@ -122,6 +129,12 @@ function applyTile(tileX, tileY, entry, { randomize = false } = {}) {
   const row = grid[tileY]
   if (!row || !row[tileX]) return
   const tile = row[tileX]
+  const oldType = tile.type
+  const oldAirstripStreet = tile.airstripStreet
+  const oldOre = tile.ore
+  const oldOreDensity = tile.oreDensity
+  const oldSeedCrystal = tile.seedCrystal
+  const oldSeedCrystalDensity = tile.seedCrystalDensity
 
   // Special handling for ore placement
   if (entry.type === 'ore') {
@@ -176,6 +189,17 @@ function applyTile(tileX, tileY, entry, { randomize = false } = {}) {
 
   if (tileMutationNotifier) {
     tileMutationNotifier(grid, tileX, tileY)
+  }
+  if (oldType !== tile.type || oldAirstripStreet !== tile.airstripStreet) {
+    notifyTopologyTileMutation(grid, tileX, tileY)
+  }
+  if (
+    oldOre !== tile.ore ||
+    oldOreDensity !== tile.oreDensity ||
+    oldSeedCrystal !== tile.seedCrystal ||
+    oldSeedCrystalDensity !== tile.seedCrystalDensity
+  ) {
+    notifyResourceTileMutation(grid, tileX, tileY)
   }
   mapEditorState.lastPaintKey = `${tileX},${tileY},${entry.id}`
   scheduleOccupancyRefresh()
@@ -242,6 +266,10 @@ function removeBuildingAtTile(tileX, tileY) {
     if (tileX >= bx && tileX < bx + bw && tileY >= by && tileY < by + bh) {
       // Remove from buildings array
       gameState.buildings.splice(i, 1)
+      notifySurfaceMutation(
+        currentMapGrid(),
+        { left: bx, top: by, right: bx + bw, bottom: by + bh }
+      )
 
       // Clear occupancy map for this building
       const occupancyMap = gameState.occupancyMap
@@ -351,12 +379,17 @@ function fillBox(toX, toY, button = 0, shiftKey = false, metaKey = false) {
   const endX = Math.max(mapEditorState.boxStart.x, toX)
   const endY = Math.max(mapEditorState.boxStart.y, toY)
 
-  for (let y = startY; y <= endY; y++) {
-    for (let x = startX; x <= endX; x++) {
-      // Clear lastPaintedTile for each tile in the box so all tiles get painted
-      mapEditorState.lastPaintedTile = null
-      applyBrush(x, y, { button, shiftKey, metaKey })
+  const transaction = beginMapMutationTransaction(currentMapGrid())
+  try {
+    for (let y = startY; y <= endY; y++) {
+      for (let x = startX; x <= endX; x++) {
+        // Clear lastPaintedTile for each tile in the box so all tiles get painted
+        mapEditorState.lastPaintedTile = null
+        applyBrush(x, y, { button, shiftKey, metaKey })
+      }
     }
+  } finally {
+    commitMapMutationTransaction(transaction)
   }
 }
 

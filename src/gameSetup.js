@@ -5,6 +5,11 @@ import { PLAYER_POSITIONS } from './config.js'
 import { gameState } from './gameState.js'
 import { sanitizeSeed } from './utils/seedUtils.js'
 import { assignMapBiomes } from './game/mapBiomes.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifyResourceTileMutation
+} from './rendering/prepared/mapMutationNotifier.js'
 
 let texturesLoaded = false
 let buildingImagesLoaded = false
@@ -646,6 +651,18 @@ function distributeOreAcrossSeeds(seedClusters, mapGrid, mapWidth, mapHeight, fa
 
 // Generate a new map using the given seed and organic features
 export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
+  const transaction = beginMapMutationTransaction(
+    { width: MAP_TILES_X, height: MAP_TILES_Y },
+    { replace: true }
+  )
+  try {
+    generateMapInTransaction(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+  } finally {
+    commitMapMutationTransaction(transaction)
+  }
+}
+
+function generateMapInTransaction(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
   const { value: normalizedSeed } = sanitizeSeed(seed)
   const rand = seededRandom(normalizedSeed)
   // Clear any old content
@@ -796,29 +813,36 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
  * This ensures no ore overlaps with any structures
  */
 export function cleanupOreFromBuildings(mapGrid, buildings = [], factories = []) {
-  // Clean ore from factory tiles
-  factories.forEach(factory => {
-    for (let y = factory.y; y < factory.y + factory.height; y++) {
-      for (let x = factory.x; x < factory.x + factory.width; x++) {
-        if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
-          mapGrid[y][x].ore = false
-          // Clear any cached texture variations for this tile to force re-render
-          mapGrid[y][x].textureVariation = null
+  const transaction = beginMapMutationTransaction(mapGrid)
+  try {
+    // Clean ore from factory tiles
+    factories.forEach(factory => {
+      for (let y = factory.y; y < factory.y + factory.height; y++) {
+        for (let x = factory.x; x < factory.x + factory.width; x++) {
+          if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
+            mapGrid[y][x].ore = false
+            notifyResourceTileMutation(mapGrid, x, y)
+            // Clear any cached texture variations for this tile to force re-render
+            mapGrid[y][x].textureVariation = null
+          }
         }
       }
-    }
-  })
+    })
 
-  // Clean ore from building tiles
-  buildings.forEach(building => {
-    for (let y = building.y; y < building.y + building.height; y++) {
-      for (let x = building.x; x < building.x + building.width; x++) {
-        if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
-          mapGrid[y][x].ore = false
-          // Clear any cached texture variations for this tile to force re-render
-          mapGrid[y][x].textureVariation = null
+    // Clean ore from building tiles
+    buildings.forEach(building => {
+      for (let y = building.y; y < building.y + building.height; y++) {
+        for (let x = building.x; x < building.x + building.width; x++) {
+          if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
+            mapGrid[y][x].ore = false
+            notifyResourceTileMutation(mapGrid, x, y)
+            // Clear any cached texture variations for this tile to force re-render
+            mapGrid[y][x].textureVariation = null
+          }
         }
       }
-    }
-  })
+    })
+  } finally {
+    commitMapMutationTransaction(transaction)
+  }
 }

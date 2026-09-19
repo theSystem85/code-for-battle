@@ -11,6 +11,10 @@ import { setMapDimensions, ORE_SPREAD_ENABLED, ORE_SPREAD_INTERVAL, setOreSpread
 import { broadcastGameCommand } from './commandBroadcast.js'
 import { getSimulationTime } from '../game/time.js'
 import { rebuildWaterMineLookup } from '../game/waterMineSystem.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction
+} from '../rendering/prepared/mapMutationNotifier.js'
 
 // Re-export COMMAND_TYPES for convenience (will need to import from gameCommandSync or define here)
 // For now, we'll assume it's imported where needed
@@ -506,7 +510,12 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     return true
   }
 
-  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
+  const mapRestoreTransaction = beginMapMutationTransaction(
+    { width, height },
+    { replace: true }
+  )
+  try {
+    window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
 
   // Update map dimensions in config module
   setMapDimensions(width, height)
@@ -570,8 +579,11 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     }
   }
 
-  mapSynced = true
-  return true
+    mapSynced = true
+    return true
+  } finally {
+    commitMapMutationTransaction(mapRestoreTransaction)
+  }
 }
 
 /**

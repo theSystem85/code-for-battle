@@ -116,6 +116,10 @@ import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../st
 import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction
+} from '../rendering/prepared/mapMutationNotifier.js'
 
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
@@ -710,20 +714,28 @@ class Game {
     }
 
     gameState.mapSeed = seed
-    generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
-    initializeDeterministicGameSession(seed)
+    const mapLifecycleTransaction = beginMapMutationTransaction(
+      { width: MAP_TILES_X, height: MAP_TILES_Y },
+      { replace: true }
+    )
+    try {
+      generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+      initializeDeterministicGameSession(seed)
 
-    gameState.mapTilesX = MAP_TILES_X
-    gameState.mapTilesY = MAP_TILES_Y
-    gameState.lastOreUpdate = 0
+      gameState.mapTilesX = MAP_TILES_X
+      gameState.mapTilesY = MAP_TILES_Y
+      gameState.lastOreUpdate = 0
 
-    initFactories(factories, mapGrid)
-    gameState.buildings.push(...factories)
+      initFactories(factories, mapGrid)
+      gameState.buildings.push(...factories)
 
-    initializeShadowOfWar(gameState, mapGrid)
-    updateShadowOfWar(gameState, units, mapGrid, factories)
+      initializeShadowOfWar(gameState, mapGrid)
+      updateShadowOfWar(gameState, units, mapGrid, factories)
 
-    cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+      cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+    } finally {
+      commitMapMutationTransaction(mapLifecycleTransaction)
+    }
     updatePowerSupply(gameState.buildings, gameState)
 
     factories.forEach(factory => {
@@ -1484,18 +1496,26 @@ class Game {
     }
 
     gameState.mapSeed = normalizedSeed
-    generateMapFromSetup(normalizedSeed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
-    initializeDeterministicGameSession(normalizedSeed)
+    const mapLifecycleTransaction = beginMapMutationTransaction(
+      { width: MAP_TILES_X, height: MAP_TILES_Y },
+      { replace: true }
+    )
+    try {
+      generateMapFromSetup(normalizedSeed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+      initializeDeterministicGameSession(normalizedSeed)
 
-    gameState.mapTilesX = MAP_TILES_X
-    gameState.mapTilesY = MAP_TILES_Y
-    gameState.lastOreUpdate = 0
+      gameState.mapTilesX = MAP_TILES_X
+      gameState.mapTilesY = MAP_TILES_Y
+      gameState.lastOreUpdate = 0
 
-    factories.length = 0
-    initFactories(factories, mapGrid)
-    gameState.buildings.push(...factories)
+      factories.length = 0
+      initFactories(factories, mapGrid)
+      gameState.buildings.push(...factories)
 
-    cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+      cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+    } finally {
+      commitMapMutationTransaction(mapLifecycleTransaction)
+    }
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1654,16 +1674,24 @@ class Game {
     const seedInput = document.getElementById('mapSeed')
     const seed = resolveMapSeed(gameState.mapSeed || seedInput?.value || '4')
     gameState.mapSeed = seed
-    generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+    const mapLifecycleTransaction = beginMapMutationTransaction(
+      { width: MAP_TILES_X, height: MAP_TILES_Y },
+      { replace: true }
+    )
+    try {
+      generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
 
-    gameState.mapTilesX = MAP_TILES_X
-    gameState.mapTilesY = MAP_TILES_Y
+      gameState.mapTilesX = MAP_TILES_X
+      gameState.mapTilesY = MAP_TILES_Y
 
-    factories.length = 0
-    initFactories(factories, mapGrid)
-    gameState.buildings.push(...factories)
+      factories.length = 0
+      initFactories(factories, mapGrid)
+      gameState.buildings.push(...factories)
 
-    cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+      cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+    } finally {
+      commitMapMutationTransaction(mapLifecycleTransaction)
+    }
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1826,10 +1854,18 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
 
   gameState.unitWrecks = []
 
-  mapGrid.length = 0
-  generateMapFromSetup(normalizedSeed, mapGrid, widthTiles, heightTiles)
-  initializeDeterministicGameSession(normalizedSeed)
-  gameState.lastOreUpdate = 0
+  const mapLifecycleTransaction = beginMapMutationTransaction(
+    { width: widthTiles, height: heightTiles },
+    { replace: true }
+  )
+  try {
+    mapGrid.length = 0
+    generateMapFromSetup(normalizedSeed, mapGrid, widthTiles, heightTiles)
+    initializeDeterministicGameSession(normalizedSeed)
+    gameState.lastOreUpdate = 0
+  } finally {
+    commitMapMutationTransaction(mapLifecycleTransaction)
+  }
 
   gameState.occupancyMap = []
   for (let y = 0; y < heightTiles; y++) {
