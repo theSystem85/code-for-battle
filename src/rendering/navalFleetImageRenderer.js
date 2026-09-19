@@ -6,6 +6,11 @@ import {
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
 import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
+import {
+  drawPreparedSpriteCentered,
+  drawPreparedSpriteTopLeft,
+  getPreparedSprite
+} from './prepared/preparedSpritePipeline.js'
 
 const SOUTH_FACING_SOURCE_ANGLE = Math.PI / 2
 const IMAGE_PATHS = Object.freeze({
@@ -20,6 +25,16 @@ const IMAGE_PATHS = Object.freeze({
 })
 
 const imageStates = new Map()
+const PREPARED_HULL_IDS = Object.freeze({
+  hovercraft: 'naval:hovercraft:hull',
+  vehicleFerry: 'naval:vehicleFerry:hull',
+  aircraftCarrier: 'naval:aircraftCarrier:hull',
+  navalMineLayer: 'naval:navalMineLayer:hull',
+  battleship: 'naval:battleship:hull',
+  submarine: 'naval:submarine:hull'
+})
+const PREPARED_BATTLESHIP_TURRET_ID = 'naval:battleship:turret'
+const PREPARED_BATTLESHIP_BARREL_ID = 'naval:battleship:barrel'
 const BATTLESHIP_IMAGE_KEYS = Object.freeze(['battleship', 'battleshipTurret', 'battleshipBarrel'])
 export const BATTLESHIP_TURRET_RENDER_SCALE = 0.7
 export const BATTLESHIP_TURRET_RENDER_ORDER = Object.freeze([
@@ -106,6 +121,8 @@ function renderBattleshipMuzzleFlash(ctx, x, y, startTime, now) {
 function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
   const turretImage = getImageState('battleshipTurret').image
   const barrelImage = getImageState('battleshipBarrel').image
+  const preparedTurret = getPreparedSprite(PREPARED_BATTLESHIP_TURRET_ID)
+  const preparedBarrel = getPreparedSprite(PREPARED_BATTLESHIP_BARREL_ID)
   const now = getSimulationTime(gameState)
   const direction = unit.direction || unit.rotation || 0
 
@@ -116,21 +133,30 @@ function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
     const x = centerX + Math.cos(direction) * localPoint.y
     const y = centerY + Math.sin(direction) * localPoint.y
     const turretDirection = Number.isFinite(turret.direction) ? turret.direction : direction
-    const turretSize = TILE_SIZE * 0.78 * BATTLESHIP_TURRET_RENDER_SCALE
-    const barrelHeight = TILE_SIZE * 1.02 * BATTLESHIP_TURRET_RENDER_SCALE
-    const barrelWidth = barrelHeight * ((barrelImage.naturalWidth || barrelImage.width) / (barrelImage.naturalHeight || barrelImage.height))
+    const turretSize = preparedTurret?.logicalWidth || TILE_SIZE * 0.78 * BATTLESHIP_TURRET_RENDER_SCALE
+    const barrelHeight = preparedBarrel?.logicalHeight || TILE_SIZE * 1.02 * BATTLESHIP_TURRET_RENDER_SCALE
+    const barrelWidth = preparedBarrel?.logicalWidth ||
+      barrelHeight * ((barrelImage.naturalWidth || barrelImage.width) / (barrelImage.naturalHeight || barrelImage.height))
 
     ctx.save()
     ctx.globalAlpha *= opacity
     ctx.translate(x, y)
     ctx.rotate(turretDirection - SOUTH_FACING_SOURCE_ANGLE)
-    ctx.drawImage(turretImage, -turretSize / 2, -turretSize / 2, turretSize, turretSize)
+    if (preparedTurret) {
+      drawPreparedSpriteCentered(ctx, preparedTurret, 0, 0)
+    } else {
+      ctx.drawImage(turretImage, -turretSize / 2, -turretSize / 2, turretSize, turretSize)
+    }
     for (let barrelIndex = 0; barrelIndex < 2; barrelIndex++) {
       const side = barrelIndex === 0 ? -1 : 1
       const recoil = getRecoilOffset(turret.barrelRecoilStartTimes?.[barrelIndex], now) * BATTLESHIP_TURRET_RENDER_SCALE
       const barrelX = side * TILE_SIZE * 0.105 * BATTLESHIP_TURRET_RENDER_SCALE
       const barrelY = -TILE_SIZE * 0.12 * BATTLESHIP_TURRET_RENDER_SCALE - recoil
-      ctx.drawImage(barrelImage, barrelX - barrelWidth / 2, barrelY, barrelWidth, barrelHeight)
+      if (preparedBarrel) {
+        drawPreparedSpriteTopLeft(ctx, preparedBarrel, barrelX - barrelWidth / 2, barrelY)
+      } else {
+        ctx.drawImage(barrelImage, barrelX - barrelWidth / 2, barrelY, barrelWidth, barrelHeight)
+      }
       renderBattleshipMuzzleFlash(
         ctx,
         barrelX,
@@ -174,18 +200,21 @@ function getSubmarineOpacity(unit, viewerOwner) {
 
 export function renderNavalFleetUnit(ctx, unit, centerX, centerY, viewerOwner) {
   if (!IMAGE_PATHS[unit?.type]) return false
-  if (!isNavalFleetImageLoaded(unit.type)) {
+  const prepared = getPreparedSprite(PREPARED_HULL_IDS[unit.type])
+  if (!prepared && !isNavalFleetImageLoaded(unit.type)) {
     preloadNavalFleetImage(unit.type)
     return false
   }
 
   const state = getImageState(unit.type)
   const image = state.image
-  const sourceWidth = image.naturalWidth || image.width
-  const sourceHeight = image.naturalHeight || image.height
-  const scale = (TILE_SIZE * getNavalRenderLengthTiles(unit.type)) / Math.max(sourceWidth, sourceHeight)
-  const width = sourceWidth * scale
-  const height = sourceHeight * scale
+  const sourceWidth = prepared?.sourceWidth || image.naturalWidth || image.width
+  const sourceHeight = prepared?.sourceHeight || image.naturalHeight || image.height
+  const scale = prepared
+    ? prepared.logicalWidth / sourceWidth
+    : (TILE_SIZE * getNavalRenderLengthTiles(unit.type)) / Math.max(sourceWidth, sourceHeight)
+  const width = prepared?.logicalWidth || sourceWidth * scale
+  const height = prepared?.logicalHeight || sourceHeight * scale
   const direction = unit.direction || unit.rotation || 0
   const opacity = getSubmarineOpacity(unit, viewerOwner)
   if (opacity <= 0) return true
@@ -204,7 +233,11 @@ export function renderNavalFleetUnit(ctx, unit, centerX, centerY, viewerOwner) {
     ctx.clip()
   }
 
-  ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  }
 
   ctx.restore()
   if (unit.type === 'battleship') renderBattleshipLayers(ctx, unit, centerX, centerY, opacity)
