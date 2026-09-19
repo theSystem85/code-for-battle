@@ -1,23 +1,36 @@
 import { TILE_SIZE, UTILITY_SERVICE_INDICATOR_SIZE, UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED } from '../config.js'
 import { gameState } from '../gameState.js'
 import { renderTankWithImages } from './tankImageRenderer.js'
-import { getTankWreckCanvases, getSingleImageWreckSprite } from './wreckSpriteCache.js'
+import {
+  getCachedPreparedSingleImageWreckSprite,
+  getCachedPreparedSinkingWreckSprite,
+  getPreparedSinkingWreckSprite,
+  getSingleImageWreckSprite,
+  getTankWreckCanvases,
+  prewarmWreckSpriteCache
+} from './wreckSpriteCache.js'
 import { getDestroyerBaseImage } from './destroyerImageRenderer.js'
 import { getSupplyShipBaseImage } from './supplyShipImageRenderer.js'
 import { getNavalFleetBaseImage } from './navalFleetImageRenderer.js'
-import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
+import { getNavalRenderLengthTiles, navalUnitTypes } from '../utils/navalUtils.js'
 import { selectedUnits } from '../inputHandler.js'
+import { getCanvasLogicalSize } from './renderingUtils.js'
 
 const noiseCanvasCache = new Map()
+const MAX_NOISE_CACHE_ENTRIES = 32
 const WORKSHOP_RESTORATION_ROTATION = Math.PI / 4
+const TANK_WRECK_TYPES = new Set(['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3'])
 
-function getNoiseCanvas(seedKey) {
-  if (noiseCanvasCache.has(seedKey)) {
-    return noiseCanvasCache.get(seedKey)
+function getNoiseCanvas(seedKey, density) {
+  const safeDensity = Number.isFinite(density) && density > 0 ? density : 1
+  const cacheKey = `${seedKey}@${safeDensity}`
+  if (noiseCanvasCache.has(cacheKey)) {
+    return noiseCanvasCache.get(cacheKey)
   }
   const canvas = document.createElement('canvas')
-  canvas.width = 64
-  canvas.height = 64
+  const logicalSize = TILE_SIZE * 1.2
+  canvas.width = Math.max(1, Math.round(logicalSize * safeDensity))
+  canvas.height = Math.max(1, Math.round(logicalSize * safeDensity))
   const ctx = canvas.getContext('2d')
   const imageData = ctx.createImageData(canvas.width, canvas.height)
   const { data } = imageData
@@ -30,19 +43,84 @@ function getNoiseCanvas(seedKey) {
     data[i + 3] = 60
   }
   ctx.putImageData(imageData, 0, 0)
-  noiseCanvasCache.set(seedKey, canvas)
+  noiseCanvasCache.set(cacheKey, canvas)
+  if (noiseCanvasCache.size > MAX_NOISE_CACHE_ENTRIES) {
+    noiseCanvasCache.delete(noiseCanvasCache.keys().next().value)
+  }
   return canvas
 }
 
 export class WreckRenderer {
-  render(ctx, wrecks, scrollOffset) {
+  constructor() {
+    this.preparedSpriteRegistry = null
+    this.preparedDensity = 1
+  }
+
+  setPreparedSpriteRegistry(registry) {
+    this.preparedSpriteRegistry = registry || null
+    if (Number.isFinite(registry?.density) && registry.density > 0) {
+      this.preparedDensity = registry.density
+    }
+    this.prepareCaches()
+  }
+
+  prepareCaches(density = this.preparedDensity) {
+    this.preparedDensity = Number.isFinite(density) && density > 0 ? density : 1
+    prewarmWreckSpriteCache(this.preparedDensity)
+    this.prepareSinkingSprite('supplyShip', getSupplyShipBaseImage(), 2.2)
+    this.prepareSinkingSprite('destroyer', getDestroyerBaseImage(), 2.6)
+    for (const unitType of navalUnitTypes) {
+      if (unitType === 'supplyShip' || unitType === 'destroyer') continue
+      this.prepareSinkingSprite(
+        unitType,
+        getNavalFleetBaseImage(unitType),
+        getNavalRenderLengthTiles(unitType)
+      )
+    }
+  }
+
+  prepareSinkingSprite(unitType, source, spriteLengthTiles) {
+    return getPreparedSinkingWreckSprite(
+      unitType,
+      source,
+      spriteLengthTiles,
+      this.preparedDensity
+    )
+  }
+
+  render(ctx, wrecks, scrollOffset, entityIndex = null) {
     if (!wrecks || wrecks.length === 0) return
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
     wrecks.forEach(wreck => {
-      if (!this.shouldRenderWreck(wreck)) {
+      if (
+        !this.isWreckInViewport(wreck, scrollOffset, viewportWidth, viewportHeight) ||
+        !this.shouldRenderWreck(wreck)
+      ) {
         return
       }
-      this.renderWreck(ctx, wreck, scrollOffset)
+      this.renderWreck(ctx, wreck, scrollOffset, entityIndex)
     })
+  }
+
+  isWreckInViewport(wreck, scrollOffset, viewportWidth, viewportHeight) {
+    if (!wreck || viewportWidth <= 0 || viewportHeight <= 0) return true
+    const centerX = wreck.x + TILE_SIZE / 2 - scrollOffset.x
+    const centerY = wreck.y + TILE_SIZE / 2 - scrollOffset.y
+    const navalLength = wreck.navalSinking
+      ? (wreck.unitType === 'supplyShip'
+        ? 2.2
+        : wreck.unitType === 'destroyer'
+          ? 2.6
+          : getNavalRenderLengthTiles(wreck.unitType))
+      : 1.2
+    // Includes the sinking ring, selection bars/noise, and queue indicator.
+    const margin = TILE_SIZE * Math.max(2.5, navalLength + 1)
+    return !(
+      centerX + margin < 0 ||
+      centerY + margin < 0 ||
+      centerX - margin > viewportWidth ||
+      centerY - margin > viewportHeight
+    )
   }
 
   shouldRenderWreck(wreck) {
@@ -56,12 +134,11 @@ export class WreckRenderer {
       return true
     }
 
-    const friendlyOwners = new Set([gameState.humanPlayer, 'player'])
-    if (gameState.humanPlayer === 'player1') {
-      friendlyOwners.add('player1')
-    }
-
-    if (friendlyOwners.has(wreck.owner)) {
+    if (
+      wreck.owner === gameState.humanPlayer ||
+      wreck.owner === 'player' ||
+      (gameState.humanPlayer === 'player1' && wreck.owner === 'player1')
+    ) {
       return true
     }
 
@@ -81,7 +158,7 @@ export class WreckRenderer {
     return Boolean(visibility && visibility.visible)
   }
 
-  renderWreck(ctx, wreck, scrollOffset) {
+  renderWreck(ctx, wreck, scrollOffset, entityIndex = null) {
     const centerX = wreck.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = wreck.y + TILE_SIZE / 2 - scrollOffset.y
 
@@ -90,8 +167,7 @@ export class WreckRenderer {
       return
     }
 
-    const tankTypes = new Set(['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3'])
-    const isTank = wreck.unitType && tankTypes.has(wreck.unitType)
+    const isTank = wreck.unitType && TANK_WRECK_TYPES.has(wreck.unitType)
 
     // Check if wreck is being restored (show as unit preview)
     const isBeingRestored = wreck.isBeingRestored || false
@@ -113,6 +189,9 @@ export class WreckRenderer {
         ctx.globalAlpha = 0.8
       }
       const rendered = renderTankWithImages(ctx, pseudoUnit, centerX, centerY, {
+        // The tank renderer is an A10-owned boundary. Its layered wreck draw
+        // remains a known resize audit item until prepared wagon/turret/barrel
+        // handles are published; E11 must not duplicate that renderer here.
         images: images || undefined,
         disableRecoil: true,
         disableMuzzleFlash: true
@@ -122,7 +201,7 @@ export class WreckRenderer {
         this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
       }
     } else {
-      const sprite = getSingleImageWreckSprite(wreck.unitType)
+      const sprite = getCachedPreparedSingleImageWreckSprite(wreck.unitType, this.preparedDensity)
       if (sprite) {
         ctx.save()
         ctx.translate(centerX, centerY)
@@ -132,21 +211,53 @@ export class WreckRenderer {
             ? (wreck.direction || 0) + Math.PI / 2
             : (wreck.direction || 0) - Math.PI / 2
         ctx.rotate(rotation)
-        const scale = TILE_SIZE / Math.max(sprite.width, sprite.height)
-        const width = sprite.width * scale
-        const height = sprite.height * scale
         ctx.globalAlpha = 0.95
-        ctx.drawImage(sprite, -width / 2, -height / 2, width, height)
+        ctx.drawImage(
+          sprite.canvas,
+          0,
+          0,
+          sprite.canvas.width,
+          sprite.canvas.height,
+          -sprite.logicalWidth / 2,
+          -sprite.logicalHeight / 2,
+          sprite.logicalWidth,
+          sprite.logicalHeight
+        )
         ctx.restore()
       } else {
-        this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
+        // A source that decoded after startup remains an explicit I20
+        // readiness conflict. Preserve the old visual via its legacy cache
+        // path rather than replacing it with a broken placeholder.
+        const source = getSingleImageWreckSprite(wreck.unitType)
+        if (source) {
+          ctx.save()
+          ctx.translate(centerX, centerY)
+          const rotation = isBeingRestored
+            ? WORKSHOP_RESTORATION_ROTATION
+            : (wreck.unitType === 'f22Raptor' || wreck.unitType === 'f35')
+              ? (wreck.direction || 0) + Math.PI / 2
+              : (wreck.direction || 0) - Math.PI / 2
+          ctx.rotate(rotation)
+          const scale = TILE_SIZE / Math.max(source.width, source.height)
+          ctx.globalAlpha = 0.95
+          ctx.drawImage(
+            source,
+            -source.width * scale / 2,
+            -source.height * scale / 2,
+            source.width * scale,
+            source.height * scale
+          )
+          ctx.restore()
+        } else {
+          this.renderFallback(ctx, wreck, centerX, centerY, isBeingRestored ? WORKSHOP_RESTORATION_ROTATION : null)
+        }
       }
     }
 
     if (!isBeingRestored) {
       this.renderNoiseOverlay(ctx, wreck, centerX, centerY)
     }
-    this.renderUtilityQueueIndicator(ctx, wreck, centerX, centerY)
+    this.renderUtilityQueueIndicator(ctx, wreck, centerX, centerY, entityIndex)
     this.renderHealthBar(ctx, wreck, scrollOffset)
   }
 
@@ -158,7 +269,7 @@ export class WreckRenderer {
     const progress = Math.min(1, elapsed / (wreck.sinkDuration || 6000))
     const easedProgress = 1 - ((1 - progress) ** 2)
     const alpha = Math.max(0, 1 - progress)
-    const image = wreck.unitType === 'supplyShip'
+    const sourceImage = wreck.unitType === 'supplyShip'
       ? getSupplyShipBaseImage()
       : wreck.unitType === 'destroyer'
         ? getDestroyerBaseImage()
@@ -171,56 +282,46 @@ export class WreckRenderer {
         : getNavalRenderLengthTiles(wreck.unitType)
 
     ctx.save()
-    if (image) {
-      const sourceWidth = image.naturalWidth || image.width
-      const sourceHeight = image.naturalHeight || image.height
+    const prepared = getCachedPreparedSinkingWreckSprite(wreck.unitType, this.preparedDensity)
+    if (prepared) {
+      this.drawSinkingSprite(
+        ctx,
+        prepared.canvas,
+        prepared.canvas.width,
+        prepared.canvas.height,
+        prepared.logicalWidth,
+        prepared.logicalHeight,
+        wreck,
+        centerX,
+        centerY,
+        direction,
+        easedProgress,
+        alpha
+      )
+    } else if (sourceImage) {
+      // Preparation can miss when a custom/naval image decodes after the
+      // startup barrier. Preserve the existing visual for that exceptional
+      // generation, but keep the resize conflict explicit for I20 to resolve
+      // by republishing and prewarming the complete asset generation.
+      const sourceWidth = sourceImage.naturalWidth || sourceImage.width
+      const sourceHeight = sourceImage.naturalHeight || sourceImage.height
       const scale = (TILE_SIZE * spriteLengthTiles) / Math.max(sourceWidth, sourceHeight)
       const renderWidth = sourceWidth * scale
       const renderHeight = sourceHeight * scale
-      const authoredRotation = direction - Math.PI / 2
-
-      const visibleRatio = Math.max(0.02, 1 - easedProgress * 0.98)
-      let sourceX = 0
-      let sourceY = 0
-      let visibleSourceWidth = sourceWidth
-      let visibleSourceHeight = sourceHeight
-      let renderX = -renderWidth / 2
-      let renderY = -renderHeight / 2
-      let visibleRenderWidth = renderWidth
-      let visibleRenderHeight = renderHeight
-
-      if (wreck.navalSinkMode === 'left-down' || wreck.navalSinkMode === 'right-down') {
-        visibleSourceWidth = sourceWidth * visibleRatio
-        visibleRenderWidth = renderWidth * visibleRatio
-        if (wreck.navalSinkMode === 'left-down') {
-          sourceX = sourceWidth - visibleSourceWidth
-          renderX = renderWidth / 2 - visibleRenderWidth
-        }
-      } else {
-        visibleSourceHeight = sourceHeight * visibleRatio
-        visibleRenderHeight = renderHeight * visibleRatio
-        if (wreck.navalSinkMode === 'back-down') {
-          sourceY = sourceHeight - visibleSourceHeight
-          renderY = renderHeight / 2 - visibleRenderHeight
-        }
-      }
-
-      ctx.save()
-      ctx.globalAlpha = alpha
-      ctx.translate(centerX, centerY + easedProgress * TILE_SIZE * 0.24)
-      ctx.rotate(authoredRotation)
-      ctx.drawImage(
-        image,
-        sourceX,
-        sourceY,
-        visibleSourceWidth,
-        visibleSourceHeight,
-        renderX,
-        renderY,
-        visibleRenderWidth,
-        visibleRenderHeight
+      this.drawSinkingSprite(
+        ctx,
+        sourceImage,
+        sourceWidth,
+        sourceHeight,
+        renderWidth,
+        renderHeight,
+        wreck,
+        centerX,
+        centerY,
+        direction,
+        easedProgress,
+        alpha
       )
-      ctx.restore()
     } else {
       this.renderFallback(ctx, wreck, centerX, centerY + easedProgress * TILE_SIZE * 0.9, direction)
     }
@@ -229,6 +330,64 @@ export class WreckRenderer {
     ctx.beginPath()
     ctx.ellipse(centerX, centerY + easedProgress * TILE_SIZE * 0.25, TILE_SIZE * (1 + progress), TILE_SIZE * 0.45, 0, 0, Math.PI * 2)
     ctx.stroke()
+    ctx.restore()
+  }
+
+  drawSinkingSprite(
+    ctx,
+    image,
+    sourceWidth,
+    sourceHeight,
+    renderWidth,
+    renderHeight,
+    wreck,
+    centerX,
+    centerY,
+    direction,
+    easedProgress,
+    alpha
+  ) {
+    const visibleRatio = Math.max(0.02, 1 - easedProgress * 0.98)
+    let sourceX = 0
+    let sourceY = 0
+    let visibleSourceWidth = sourceWidth
+    let visibleSourceHeight = sourceHeight
+    let renderX = -renderWidth / 2
+    let renderY = -renderHeight / 2
+    let visibleRenderWidth = renderWidth
+    let visibleRenderHeight = renderHeight
+
+    if (wreck.navalSinkMode === 'left-down' || wreck.navalSinkMode === 'right-down') {
+      visibleSourceWidth = sourceWidth * visibleRatio
+      visibleRenderWidth = renderWidth * visibleRatio
+      if (wreck.navalSinkMode === 'left-down') {
+        sourceX = sourceWidth - visibleSourceWidth
+        renderX = renderWidth / 2 - visibleRenderWidth
+      }
+    } else {
+      visibleSourceHeight = sourceHeight * visibleRatio
+      visibleRenderHeight = renderHeight * visibleRatio
+      if (wreck.navalSinkMode === 'back-down') {
+        sourceY = sourceHeight - visibleSourceHeight
+        renderY = renderHeight / 2 - visibleRenderHeight
+      }
+    }
+
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.translate(centerX, centerY + easedProgress * TILE_SIZE * 0.24)
+    ctx.rotate(direction - Math.PI / 2)
+    ctx.drawImage(
+      image,
+      sourceX,
+      sourceY,
+      visibleSourceWidth,
+      visibleSourceHeight,
+      renderX,
+      renderY,
+      visibleRenderWidth,
+      visibleRenderHeight
+    )
     ctx.restore()
   }
 
@@ -261,24 +420,26 @@ export class WreckRenderer {
     return (queue.currentTargetId ? 2 : 1) + index
   }
 
-  renderUtilityQueueIndicator(ctx, wreck, centerX, centerY) {
+  renderUtilityQueueIndicator(ctx, wreck, centerX, centerY, entityIndex = null) {
     if (!selectedUnits || selectedUnits.length === 0) {
       return
     }
 
-    let queuePosition = null
-    selectedUnits.forEach(selectedUnit => {
-      if (!selectedUnit?.selected) {
-        return
-      }
-      if (selectedUnit.type !== 'recoveryTank') {
-        return
-      }
-      const position = this.getUtilityQueuePosition(selectedUnit, wreck)
-      if (position !== null) {
-        queuePosition = queuePosition === null ? position : Math.min(queuePosition, position)
-      }
-    })
+    let queuePosition = entityIndex?.get(`utilityPosition:wreck:${wreck.id}`) ?? null
+    if (!entityIndex) {
+      selectedUnits.forEach(selectedUnit => {
+        if (!selectedUnit?.selected) {
+          return
+        }
+        if (selectedUnit.type !== 'recoveryTank') {
+          return
+        }
+        const position = this.getUtilityQueuePosition(selectedUnit, wreck)
+        if (position !== null) {
+          queuePosition = queuePosition === null ? position : Math.min(queuePosition, position)
+        }
+      })
+    }
 
     if (queuePosition === null) {
       return
@@ -325,7 +486,10 @@ export class WreckRenderer {
   }
 
   renderNoiseOverlay(ctx, wreck, centerX, centerY) {
-    const noiseCanvas = getNoiseCanvas(wreck.spriteCacheKey || wreck.unitType || 'default')
+    const noiseCanvas = getNoiseCanvas(
+      wreck.spriteCacheKey || wreck.unitType || 'default',
+      this.preparedDensity
+    )
     if (!noiseCanvas) return
     const size = TILE_SIZE * 1.2
     ctx.save()
