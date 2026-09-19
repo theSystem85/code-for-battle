@@ -1,10 +1,10 @@
 # 084 — Rendering Wave 2 ownership lanes
 
-Status: in progress (2026-09-19). Prerequisite: [069](069-rendering-preparation-contracts.md), P00 profiler, P01 diagnostics.
+Status: Wave 2 implemented and I20 wired (2026-09-19). Prerequisite: [069](069-rendering-preparation-contracts.md), P00 profiler, P01 diagnostics.
 
 ## Purpose
 
-Implement the seven disjoint Wave 2 lanes from `rendering_improvement_todos.md` without redefining C00 contracts. Integration into live start/load/settings flows is deferred to I20. Physical 75 FPS certification remains Q30.
+Seven disjoint Wave 2 lanes from `rendering_improvement_todos.md` are merged. I20 publishes prepared sprites/maps on startup, load and restore, shares the M10 revision store with terrain cache, and draws CPU procedural water through `CpuWaterPass`. Physical 75 FPS certification remains Q30.
 
 ## Lanes
 

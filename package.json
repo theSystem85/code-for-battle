@@ -17,6 +17,7 @@
     "lint:fix:changed": "node scripts/lint-changed.js",
     "map:analyse": "node map_analyse.js",
     "make:sprites": "node makeSprites.js",
+    "make:prepared-sprites": "node scripts/build-prepared-sprites.mjs",
     "count:locs": "node countLocs.js",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit/",

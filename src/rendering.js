@@ -1,6 +1,11 @@
 // rendering.js - Refactored to use modular components
 import { Renderer } from './rendering/renderer.js'
 import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
+import {
+  bindRenderingDensityPreparation,
+  prepareRuntimeMap,
+  prepareRuntimeSprites
+} from './rendering/prepared/renderingPipeline.js'
 
 export { RENDER_REVISION_DOMAINS }
 
@@ -61,3 +66,17 @@ export function recomputeSOTMask(mapGrid) {
     gameRenderer.mapRenderer.computeSOTMask(mapGrid)
   }
 }
+
+export function publishPreparedRuntimeMap(mapGrid) {
+  const mapRenderer = gameRenderer.mapRenderer
+  mapRenderer?.attachMutationStore?.(mapGrid)
+  bindRenderingDensityPreparation()
+  if (!mapGrid?.length) return Promise.resolve(null)
+  if (mapRenderer && !mapRenderer.sotMask) mapRenderer.computeSOTMask(mapGrid)
+  return prepareRuntimeMap({ grid: mapGrid, sotMask: mapRenderer?.sotMask }).catch(error => {
+    if (typeof window !== 'undefined') window.logger?.warn?.('Prepared map generation failed', error)
+    return null
+  })
+}
+
+export { prepareRuntimeSprites }

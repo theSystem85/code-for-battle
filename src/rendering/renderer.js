@@ -35,6 +35,10 @@ import { RENDERER_BACKEND, TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../
 import { isAirborneUnit } from '../game/movementHelpers.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
+import {
+  bindRenderingDensityPreparation,
+  prepareRuntimeSprites
+} from './prepared/renderingPipeline.js'
 
 export class Renderer {
   constructor() {
@@ -322,8 +326,10 @@ export class Renderer {
     let destroyerLoaded = false
     let supplyShipLoaded = false
 
+    let spritesPrepared = false
+
     const checkAllLoaded = () => {
-      if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded) {
+      if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded && spritesPrepared) {
         this.wreckRenderer.prepareCaches?.(
           this.buildingRenderer.preparedSpriteRegistry?.density ||
           (typeof window !== 'undefined' ? window.devicePixelRatio : 1)
@@ -331,6 +337,16 @@ export class Renderer {
         if (callback) callback()
       }
     }
+
+    bindRenderingDensityPreparation()
+    prepareRuntimeSprites().then(prepared => {
+      if (prepared?.registry) this.buildingRenderer.setPreparedSpriteRegistry(prepared.registry)
+    }).catch(error => {
+      if (typeof window !== 'undefined') window.logger?.warn?.('Prepared sprites unavailable, using source images', error)
+    }).finally(() => {
+      spritesPrepared = true
+      checkAllLoaded()
+    })
 
     // Load tile textures
     this.textureManager.preloadAllTextures(() => {

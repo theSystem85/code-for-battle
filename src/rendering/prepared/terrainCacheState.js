@@ -34,24 +34,45 @@ export class TerrainRevisionState {
     this.chunkSize = chunkSize
     this.mapGrid = null
     this.store = null
+    this.ownsStore = false
     this.width = 0
     this.height = 0
     this.mapGeneration = 0
     this.mutationGeneration = 0
   }
 
+  attachStore(store, mapGrid = this.mapGrid) {
+    if (!store || store.disposed) return false
+    const width = mapGrid?.[0]?.length || store.width
+    const height = mapGrid?.length || store.height
+    if (!width || !height) return false
+    const changed = this.store !== store || this.mapGrid !== mapGrid || this.width !== width || this.height !== height
+    if (this.ownsStore && this.store && this.store !== store) this.store.dispose()
+    this.store = store
+    this.ownsStore = false
+    this.mapGrid = mapGrid || this.mapGrid
+    this.width = width
+    this.height = height
+    if (changed) {
+      this.mapGeneration++
+      this.mutationGeneration++
+    }
+    return changed
+  }
+
   ensureMap(mapGrid) {
     const width = mapGrid?.[0]?.length || 0
     const height = mapGrid?.length || 0
     if (!width || !height) return false
-    if (this.mapGrid === mapGrid && this.width === width && this.height === height && this.store) {
+    if (this.mapGrid === mapGrid && this.width === width && this.height === height && this.store && !this.store.disposed) {
       return false
     }
-    this.store?.dispose()
+    if (this.ownsStore) this.store?.dispose()
     this.mapGrid = mapGrid
     this.width = width
     this.height = height
     this.store = new RenderRevisionStore({ width, height, chunkSize: this.chunkSize })
+    this.ownsStore = true
     this.mapGeneration++
     this.mutationGeneration++
     return true
@@ -89,8 +110,9 @@ export class TerrainRevisionState {
   }
 
   dispose() {
-    this.store?.dispose()
+    if (this.ownsStore) this.store?.dispose()
     this.store = null
+    this.ownsStore = false
     this.mapGrid = null
     this.width = 0
     this.height = 0

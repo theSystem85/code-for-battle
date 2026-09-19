@@ -19,6 +19,8 @@ import {
   TerrainRevisionState,
   TerrainWarmQueue
 } from './prepared/terrainCacheState.js'
+import { CpuWaterPass } from './prepared/cpuWaterPass.js'
+import { consumePendingTerrainSync, getMapMutationRevisionStore } from './prepared/mapMutationNotifier.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import {
@@ -309,6 +311,8 @@ export class MapRenderer {
     this.organicTerrain = new OrganicTerrain(() => this.invalidateAllChunks(), textureManager)
     this.integratedBiomeBlendCanvas = null
     this.integratedBiomeBlendContext = null
+    this.cpuWaterPass = new CpuWaterPass()
+    this.appliedMutationEpoch = 0
   }
 
   createEmptyChunkStats() {
@@ -570,7 +574,11 @@ export class MapRenderer {
   }
 
   updateSOTMaskInBounds(mapGrid, bounds) {
-    if (!this.sotMask || !bounds) return
+    if (!bounds) return
+    if (!this.sotMask) {
+      this.computeSOTMask(mapGrid)
+      return
+    }
     const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_REBUILD)
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
@@ -606,6 +614,28 @@ export class MapRenderer {
     if (domain === RENDER_REVISION_DOMAINS.TOPOLOGY) {
       this.updateSOTMaskInBounds(mapGrid, bounds)
     }
+  }
+
+  attachMutationStore(mapGrid) {
+    const shared = getMapMutationRevisionStore()
+    if (!shared) {
+      this.terrainRevisions.ensureMap(mapGrid)
+      return this.terrainRevisions.store
+    }
+    const sync = consumePendingTerrainSync()
+    this.terrainRevisions.attachStore(sync.store || shared, mapGrid)
+    if (sync.mutationEpoch !== this.appliedMutationEpoch) {
+      this.appliedMutationEpoch = sync.mutationEpoch
+      this.prewarmedState.mutationGeneration = -1
+      this.cancelChunkWarmQueue()
+      if (sync.topologyBounds) this.updateSOTMaskInBounds(mapGrid, {
+        left: Math.max(0, Math.floor(sync.topologyBounds.left)),
+        top: Math.max(0, Math.floor(sync.topologyBounds.top)),
+        right: Math.min(mapGrid[0]?.length || 0, Math.ceil(sync.topologyBounds.right)),
+        bottom: Math.min(mapGrid.length, Math.ceil(sync.topologyBounds.bottom))
+      })
+    }
+    return this.terrainRevisions.store
   }
 
   invalidateAllChunks() {
@@ -651,7 +681,7 @@ export class MapRenderer {
     this.cachedMapWidth = mapWidth
     this.cachedMapHeight = mapHeight
     this.cachedUseTexture = useTexture
-    this.terrainRevisions.ensureMap(mapGrid)
+    this.attachMutationStore(mapGrid)
   }
 
   getChunkRenderCacheKey(mapGrid, useTexture, options = {}) {
@@ -1489,13 +1519,34 @@ export class MapRenderer {
     const { drawBase = true, drawSot = true } = options
     if (!drawBase && !drawSot) return
 
+    if (!this.sotMask) {
+      this.computeSOTMask(mapGrid)
+    }
+
+    if (USE_PROCEDURAL_WATER_RENDERING) {
+      this.cpuWaterPass.render(ctx, {
+        mapGrid,
+        sotMask: this.sotMask,
+        topologyRevision: this.terrainRevisions.store?.getGeneration(RENDER_REVISION_DOMAINS.WATER)
+          || this.sotMaskVersion,
+        scrollOffset,
+        startX: startTileX,
+        startY: startTileY,
+        endX: endTileX,
+        endY: endTileY,
+        drawBase,
+        drawSot,
+        tone: WATER_EFFECT_TONE,
+        saturation: WATER_EFFECT_SATURATION,
+        zoom: WATER_EFFECT_ZOOM
+      })
+      return
+    }
+
     const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
     const currentWaterFrame = this.textureManager.waterFrames.length
       ? this.textureManager.getCurrentWaterFrame()
       : null
-    if (!this.sotMask) {
-      this.computeSOTMask(mapGrid)
-    }
 
     const sotApplied = new Set()
     ctx.imageSmoothingEnabled = false

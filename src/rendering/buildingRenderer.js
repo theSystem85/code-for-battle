@@ -10,6 +10,7 @@ import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '.
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { getShipyardServiceWaterTiles } from '../utils/navalUtils.js'
+import { getPreparedSprite as getPublishedPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 const AMMO_TURRET_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret'])
 
@@ -26,12 +27,16 @@ export class BuildingRenderer {
   }
 
   getPreparedSprite(key) {
-    if (!this.preparedSpriteRegistry) return null
+    if (this.preparedSpriteRegistry) {
+      try {
+        return this.preparedSpriteRegistry.get(key) || null
+      } catch {
+        return null
+      }
+    }
     try {
-      return this.preparedSpriteRegistry.get(key) || null
+      return getPublishedPreparedSprite(key)
     } catch {
-      // A disposed generation must fall back until I20 atomically publishes
-      // its replacement; never retain or draw a stale prepared handle.
       return null
     }
   }

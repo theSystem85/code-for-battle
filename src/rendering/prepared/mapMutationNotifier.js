@@ -57,6 +57,9 @@ const BULK_DOMAINS = Object.freeze([
 ])
 
 let revisionStore = null
+let pendingTopologyBounds = null
+let pendingSurfaceBounds = null
+let mutationEpoch = 0
 
 function getDimensions(source) {
   if (Array.isArray(source)) {
@@ -101,10 +104,43 @@ function tileBounds(tileX, tileY) {
   return { left: tileX, top: tileY, right: tileX + 1, bottom: tileY + 1 }
 }
 
+function recordPendingBounds(domain, oldBounds, newBounds, halo) {
+  const store = revisionStore
+  if (!store) return
+  const merged = {
+    left: Math.min(oldBounds.left, newBounds.left) - halo,
+    top: Math.min(oldBounds.top, newBounds.top) - halo,
+    right: Math.max(oldBounds.right, newBounds.right) + halo,
+    bottom: Math.max(oldBounds.bottom, newBounds.bottom) + halo
+  }
+  if (domain === RENDER_REVISION_DOMAINS.TOPOLOGY || domain === RENDER_REVISION_DOMAINS.WATER) {
+    pendingTopologyBounds = pendingTopologyBounds
+      ? {
+        left: Math.min(pendingTopologyBounds.left, merged.left),
+        top: Math.min(pendingTopologyBounds.top, merged.top),
+        right: Math.max(pendingTopologyBounds.right, merged.right),
+        bottom: Math.max(pendingTopologyBounds.bottom, merged.bottom)
+      }
+      : merged
+  }
+  if (domain === RENDER_REVISION_DOMAINS.SURFACE) {
+    pendingSurfaceBounds = pendingSurfaceBounds
+      ? {
+        left: Math.min(pendingSurfaceBounds.left, merged.left),
+        top: Math.min(pendingSurfaceBounds.top, merged.top),
+        right: Math.max(pendingSurfaceBounds.right, merged.right),
+        bottom: Math.max(pendingSurfaceBounds.bottom, merged.bottom)
+      }
+      : merged
+  }
+}
+
 function invalidate(source, domain, oldBounds, newBounds, halo) {
   const store = ensureRevisionStore(source)
   if (!store || !oldBounds || !newBounds) return
   store.invalidate(domain, oldBounds, newBounds, halo)
+  recordPendingBounds(domain, oldBounds, newBounds, halo)
+  mutationEpoch++
 }
 
 export function getMapMutationRevisionStore() {
@@ -114,6 +150,21 @@ export function getMapMutationRevisionStore() {
 export function resetMapMutationRevisionStore() {
   revisionStore?.dispose()
   revisionStore = null
+  pendingTopologyBounds = null
+  pendingSurfaceBounds = null
+  mutationEpoch = 0
+}
+
+export function consumePendingTerrainSync() {
+  const snapshot = {
+    store: revisionStore,
+    mutationEpoch,
+    topologyBounds: pendingTopologyBounds,
+    surfaceBounds: pendingSurfaceBounds
+  }
+  pendingTopologyBounds = null
+  pendingSurfaceBounds = null
+  return snapshot
 }
 
 export function beginMapMutationTransaction(source, { replace = false } = {}) {
@@ -123,7 +174,11 @@ export function beginMapMutationTransaction(source, { replace = false } = {}) {
   store.beginTransaction()
   if (replace) {
     const bounds = fullMapBounds(store)
-    BULK_DOMAINS.forEach(domain => store.invalidate(domain, bounds))
+    BULK_DOMAINS.forEach(domain => {
+      store.invalidate(domain, bounds)
+      recordPendingBounds(domain, bounds, bounds, 0)
+    })
+    mutationEpoch++
   }
   return store
 }
@@ -134,6 +189,7 @@ export function commitMapMutationTransaction(store) {
     throw new Error('Cannot commit a stale map mutation transaction')
   }
   store.commitTransaction()
+  mutationEpoch++
 }
 
 export function cancelMapMutationTransaction(store) {

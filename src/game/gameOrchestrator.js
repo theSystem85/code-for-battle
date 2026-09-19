@@ -29,7 +29,7 @@ import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, pe
 import { initReplaySystem } from '../replaySystem.js'
 import { showNotification } from '../ui/notifications.js'
 import { resetAttackDirections } from '../ai/enemyStrategies.js'
-import { getTextureManager, preloadTileTextures, getMapRenderer } from '../rendering.js'
+import { getTextureManager, preloadTileTextures, getMapRenderer, publishPreparedRuntimeMap } from '../rendering.js'
 import { milestoneSystem } from '../game/milestoneSystem.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { APP_VERSION } from '../version.js'
@@ -736,6 +736,7 @@ class Game {
     } finally {
       commitMapMutationTransaction(mapLifecycleTransaction)
     }
+    publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     factories.forEach(factory => {
@@ -1516,6 +1517,7 @@ class Game {
     } finally {
       commitMapMutationTransaction(mapLifecycleTransaction)
     }
+    publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1692,6 +1694,7 @@ class Game {
     } finally {
       commitMapMutationTransaction(mapLifecycleTransaction)
     }
+    publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1866,6 +1869,7 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
   } finally {
     commitMapMutationTransaction(mapLifecycleTransaction)
   }
+  publishPreparedRuntimeMap(mapGrid)
 
   gameState.occupancyMap = []
   for (let y = 0; y < heightTiles; y++) {

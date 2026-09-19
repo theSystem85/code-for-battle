@@ -24,7 +24,7 @@ import { buildingData, placeBuilding } from './buildings.js'
 import { showNotification } from './ui/notifications.js'
 import { milestoneSystem } from './game/milestoneSystem.js'
 import { initializeOccupancyMap } from './units.js'
-import { getTextureManager, getMapRenderer } from './rendering.js'
+import { getTextureManager, getMapRenderer, publishPreparedRuntimeMap } from './rendering.js'
 import {
   assignHarvesterToOptimalRefinery,
   getHarvestedTiles,
@@ -1807,6 +1807,7 @@ function loadGameFromSaveObject(saveObj, key) {
     if (mapRenderer) {
       mapRenderer.invalidateAllChunks()
     }
+    publishPreparedRuntimeMap(mapGrid)
 
     const textureManager = getTextureManager()
     if (textureManager?.setIntegratedSpriteSheetConfig) {
