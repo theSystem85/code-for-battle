@@ -130,20 +130,20 @@ describe('prepared sprite generation and registry', () => {
       naturalHeight: 20,
       width: 10,
       height: 20,
-      decode: vi.fn(async () => {})
+      decode: vi.fn(async() => {})
     }
     const preparedPromise = prepareSpriteRegistry({
       density: 1.25,
       byteBudget: 10_000,
-      fetchImpl: vi.fn(async () => ({ ok: true, json: async () => manifest })),
+      fetchImpl: vi.fn(async() => ({ ok: true, json: async() => manifest })),
       imageFactory: () => {
         const image = { ...fakeImage }
         Object.defineProperty(image, 'src', {
-          set() { queueMicrotask(() => image.onload()) }
+          set() { globalThis.queueMicrotask(() => image.onload()) }
         })
         return image
       },
-      createBitmap: vi.fn(async (_image, options) => ({
+      createBitmap: vi.fn(async(_image, options) => ({
         width: options.resizeWidth,
         height: options.resizeHeight,
         close: closed

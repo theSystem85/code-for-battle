@@ -32,7 +32,13 @@ export function getPreparedSpriteCacheKey(assetVersion, density, id) {
 }
 
 function throwIfAborted(signal) {
-  if (signal?.aborted) throw signal.reason || new DOMException('Sprite preparation aborted', 'AbortError')
+  if (signal?.aborted) throw signal.reason || createAbortError()
+}
+
+function createAbortError() {
+  const error = new Error('Sprite preparation aborted')
+  error.name = 'AbortError'
+  return error
 }
 
 function loadImage(url, imageFactory, signal) {
@@ -43,9 +49,9 @@ function loadImage(url, imageFactory, signal) {
     const abort = () => {
       cleanup()
       image.src = ''
-      reject(signal.reason || new DOMException('Sprite preparation aborted', 'AbortError'))
+      reject(signal.reason || createAbortError())
     }
-    image.onload = async () => {
+    image.onload = async() => {
       try {
         if (typeof image.decode === 'function') await image.decode()
         cleanup()
@@ -119,7 +125,7 @@ async function createSizedBitmap(image, sourceRect, width, height, createBitmap,
 }
 
 function defaultCanvasFactory(width, height) {
-  if (typeof OffscreenCanvas !== 'undefined') return new OffscreenCanvas(width, height)
+  if (typeof globalThis.OffscreenCanvas !== 'undefined') return new globalThis.OffscreenCanvas(width, height)
   if (typeof document === 'undefined') return null
   return document.createElement('canvas')
 }

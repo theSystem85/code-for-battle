@@ -432,7 +432,7 @@ async function main() {
     entries
   }
   await writeFile(path.join(OUTPUT_ROOT, 'sprite-manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
-  console.log(`Prepared ${manifest.inventory.generatedVariantCount} variants (${entries.length} entries), version ${assetVersion}`)
+  process.stdout.write(`Prepared ${manifest.inventory.generatedVariantCount} variants (${entries.length} entries), version ${assetVersion}\n`)
 }
 
 await main()
