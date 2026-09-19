@@ -33,6 +33,8 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import { RENDERER_BACKEND, TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
+import { renderProfiler } from '../performance/renderProfiler.js'
+import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 
 export class Renderer {
   constructor() {
@@ -52,11 +54,24 @@ export class Renderer {
     this.wreckRenderer = new WreckRenderer()
     this.gpuRenderer = null
     this.webgpuRenderer = null
+    // renderGame runs once per animation frame. These containers are mutated in
+    // place so a 200-entity scene does not allocate six replacement lists and
+    // a target index on every one of the 75 expected frames per second.
+    this.frameLayers = {
+      groundedUnits: [],
+      airborneUnits: [],
+      visibleGroundedUnits: [],
+      visibleAirborneUnits: [],
+      visibleBuildings: [],
+      visibleFactories: []
+    }
+    this.frameEntityIndex = new Map()
   }
 
   partitionUnitsByRenderLayer(units) {
-    const groundedUnits = []
-    const airborneUnits = []
+    const { groundedUnits, airborneUnits } = this.frameLayers
+    groundedUnits.length = 0
+    airborneUnits.length = 0
 
     ;(units || []).forEach(unit => {
       if (isAirborneUnit(unit) || unit.carrierId || unit.carrierOperation?.carrierId) {
@@ -66,9 +81,141 @@ export class Renderer {
       groundedUnits.push(unit)
     })
 
-    return { groundedUnits, airborneUnits }
+    return this.frameLayers
   }
 
+  setPreparedSpriteRegistry(registry) {
+    this.buildingRenderer.setPreparedSpriteRegistry(registry)
+    this.wreckRenderer.setPreparedSpriteRegistry?.(registry)
+  }
+
+  frameNeedsEntityIndex(units, buildings, factories, wrecks, currentGameState) {
+    if (currentGameState?.attackGroupTargets?.length) return true
+    if (selectedUnits?.some(entity =>
+      entity?.selected && (
+        entity.target?.id !== undefined ||
+        entity.attackQueue?.length ||
+        entity.forcedAttackTarget?.id !== undefined ||
+        entity.forcedAttackQueue?.length ||
+        entity.utilityQueue?.currentTargetId ||
+        entity.utilityQueue?.targets?.length
+      )
+    )) {
+      return true
+    }
+    for (const unit of units || []) {
+      if (
+        unit?.refuelTarget?.id !== undefined ||
+        unit?.ammoResupplyTarget?.id !== undefined ||
+        unit?.targetRefinery ||
+        unit?.utilityQueue?.currentTargetId ||
+        unit?.utilityQueue?.targets?.length ||
+        (unit?.selected && unit?.embarkedUnitIds?.length)
+      ) {
+        return true
+      }
+    }
+    for (const building of buildings || []) {
+      if (
+        building?.type === 'constructionYard' ||
+        building?.type === 'vehicleFactory'
+      ) {
+        return true
+      }
+    }
+    return Boolean((factories?.length && buildings?.length) || wrecks?.some(wreck => wreck?.id !== undefined))
+  }
+
+  prepareFrameEntityIndex(units, buildings, factories, wrecks, currentGameState) {
+    const index = this.frameEntityIndex
+    index.clear()
+    if (!this.frameNeedsEntityIndex(units, buildings, factories, wrecks, currentGameState)) {
+      return null
+    }
+
+    for (const unit of units || []) {
+      if (unit?.id !== undefined) index.set(`unit:${unit.id}`, unit)
+    }
+    for (const building of buildings || []) {
+      if (!building) continue
+      if (building.id !== undefined) index.set(`building:${building.id}`, building)
+      if (building.type === 'oreRefinery') {
+        index.set(`refinery:${building.id || `refinery_${building.x}_${building.y}`}`, building)
+      }
+    }
+    for (const factory of factories || []) {
+      if (!factory) continue
+      if (factory.id !== undefined) {
+        index.set(`factory:${factory.id}`, factory)
+        index.set(`building:${factory.id}`, factory)
+      }
+      if (factory.type === 'oreRefinery') {
+        index.set(`refinery:${factory.id || `refinery_${factory.x}_${factory.y}`}`, factory)
+      }
+    }
+    for (const wreck of wrecks || []) {
+      if (wreck?.id !== undefined) index.set(`wreck:${wreck.id}`, wreck)
+    }
+    for (const target of currentGameState.attackGroupTargets || []) {
+      if (target?.id !== undefined) index.set(`attackIndicator:${target.id}`, true)
+    }
+    for (const selected of selectedUnits || []) {
+      if (!selected?.selected) continue
+      if (selected.target?.id !== undefined) index.set(`attackIndicator:${selected.target.id}`, true)
+      for (const target of selected.attackQueue || []) {
+        if (target?.id !== undefined) index.set(`attackIndicator:${target.id}`, true)
+      }
+      if (selected.isBuilding && selected.owner === currentGameState.humanPlayer) {
+        let position = 1
+        if (selected.forcedAttackTarget?.id !== undefined) {
+          this.setMinimumFramePosition(index, `forcedAttackPosition:${selected.forcedAttackTarget.id}`, position++)
+        }
+        for (const target of selected.forcedAttackQueue || []) {
+          if (target?.id !== undefined) {
+            this.setMinimumFramePosition(index, `forcedAttackPosition:${target.id}`, position)
+          }
+          position++
+        }
+      }
+      this.indexUtilityTargets(index, selected)
+    }
+    return index
+  }
+
+  setMinimumFramePosition(index, key, position) {
+    const current = index.get(key)
+    if (!Number.isFinite(current) || position < current) index.set(key, position)
+  }
+
+  indexUtilityTargets(index, selected) {
+    if (!['ambulance', 'tankerTruck', 'recoveryTank'].includes(selected.type)) return
+    const queue = selected.utilityQueue
+    let position = 1
+    if (queue?.currentTargetId) {
+      this.setMinimumFramePosition(
+        index,
+        `utilityPosition:${queue.currentTargetType || 'unit'}:${queue.currentTargetId}`,
+        position++
+      )
+    }
+    for (const entry of queue?.targets || []) {
+      const id = typeof entry === 'object' ? entry?.id : entry
+      const type = typeof entry === 'object' ? (entry?.type || 'unit') : 'unit'
+      if (id !== undefined) this.setMinimumFramePosition(index, `utilityPosition:${type}:${id}`, position)
+      position++
+    }
+    const directTargets = [
+      selected.repairTarget,
+      selected.repairTargetUnit,
+      selected.towedUnit,
+      selected.healingTarget,
+      selected.refuelTarget,
+      selected.emergencyTarget
+    ]
+    for (const target of directTargets) {
+      if (target?.id !== undefined) this.setMinimumFramePosition(index, `utilityPosition:unit:${target.id}`, 1)
+    }
+  }
 
   getRenderableAttackQueue(entity) {
     if (!entity) {
@@ -117,8 +264,8 @@ export class Renderer {
       return
     }
 
-    const selectedAttackers = selectedUnits.filter(entity => entity?.selected)
-    selectedAttackers.forEach(attacker => {
+    selectedUnits.forEach(attacker => {
+      if (!attacker?.selected) return
       const queue = this.getRenderableAttackQueue(attacker)
       if (queue.length < 2) {
         return
@@ -170,6 +317,10 @@ export class Renderer {
 
     const checkAllLoaded = () => {
       if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded) {
+        this.wreckRenderer.prepareCaches?.(
+          this.buildingRenderer.preparedSpriteRegistry?.density ||
+          (typeof window !== 'undefined' ? window.devicePixelRatio : 1)
+        )
         if (callback) callback()
       }
     }
@@ -406,20 +557,40 @@ export class Renderer {
       : 0
     const entityImageAlpha = opacityLevel === 1 ? 0.5 : (opacityLevel === 2 ? 0 : 1)
 
-    const { groundedUnits, airborneUnits } = this.partitionUnitsByRenderLayer(units)
+    const {
+      groundedUnits,
+      airborneUnits,
+      visibleGroundedUnits,
+      visibleAirborneUnits,
+      visibleBuildings,
+      visibleFactories
+    } = this.partitionUnitsByRenderLayer(units)
+    const frameEntityIndex = this.prepareFrameEntityIndex(
+      units,
+      buildings,
+      factories,
+      gameState.unitWrecks,
+      gameState
+    )
+    this.unitRenderer.collectVisibleUnits(gameCtx, groundedUnits, scrollOffset, visibleGroundedUnits)
+    this.unitRenderer.collectVisibleUnits(gameCtx, airborneUnits, scrollOffset, visibleAirborneUnits)
+    this.buildingRenderer.collectVisibleBuildings(gameCtx, buildings, scrollOffset, visibleBuildings)
+    this.buildingRenderer.collectVisibleBuildings(gameCtx, factories, scrollOffset, visibleFactories)
 
     const entitiesStartedAt = monitorTiming ? performance.now() : 0
+    const entityBasesSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_BASES)
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
-    this.buildingRenderer.renderBases(gameCtx, buildings, mapGrid, scrollOffset)
+    this.buildingRenderer.renderBases(gameCtx, visibleBuildings, mapGrid, scrollOffset, true)
     // Render initial construction yards using the same renderer
-    this.buildingRenderer.renderBases(gameCtx, factories, mapGrid, scrollOffset)
+    this.buildingRenderer.renderBases(gameCtx, visibleFactories, mapGrid, scrollOffset, true)
     // Naval wakes belong to the water layer beneath ships and fade after movement stops.
     this.effectsRenderer.renderShipWakes?.(gameCtx, gameState, scrollOffset)
     this.effectsRenderer.renderDepthCharges?.(gameCtx, gameState, scrollOffset)
-    this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset)
-    this.unitRenderer.renderBases(gameCtx, groundedUnits, scrollOffset)
+    this.wreckRenderer.render(gameCtx, gameState.unitWrecks || [], scrollOffset, frameEntityIndex)
+    this.unitRenderer.renderBases(gameCtx, visibleGroundedUnits, scrollOffset, true)
     gameCtx.restore()
+    renderProfiler.endSpan(entityBasesSpan)
     if (monitorTiming) entitiesMs = performance.now() - entitiesStartedAt
 
     const effectsStartedAt = monitorTiming ? performance.now() : 0
@@ -441,9 +612,10 @@ export class Renderer {
     if (monitorTiming) effectsMs = performance.now() - effectsStartedAt
 
     const uiStartedAt = monitorTiming ? performance.now() : 0
+    const hudSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.HUD)
     // Render movement target indicators (green triangles)
     this.movementTargetRenderer.render(gameCtx, units, scrollOffset)
-    this.pathPlanningRenderer.render(gameCtx, units, scrollOffset)
+    this.pathPlanningRenderer.render(gameCtx, units, scrollOffset, frameEntityIndex)
 
     // Render retreat target indicators (orange circles)
     this.retreatTargetRenderer.renderRetreatTargets(gameCtx, units, scrollOffset)
@@ -455,19 +627,22 @@ export class Renderer {
     this.renderQueuedAttackLines(gameCtx, scrollOffset)
 
     // Render harvester HUD overlay (if enabled)
-    this.harvesterHUD.render(gameCtx, units, gameState, scrollOffset)
+    this.harvesterHUD.render(gameCtx, units, gameState, scrollOffset, frameEntityIndex)
 
-    this.buildingRenderer.renderOverlays(gameCtx, buildings, scrollOffset)
-    this.buildingRenderer.renderOverlays(gameCtx, factories, scrollOffset)
-    this.unitRenderer.renderOverlays(gameCtx, groundedUnits, scrollOffset)
+    const entityOverlaysSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_OVERLAYS)
+    this.buildingRenderer.renderOverlays(gameCtx, visibleBuildings, scrollOffset, true, frameEntityIndex)
+    this.buildingRenderer.renderOverlays(gameCtx, visibleFactories, scrollOffset, true, frameEntityIndex)
+    this.unitRenderer.renderOverlays(gameCtx, visibleGroundedUnits, scrollOffset, frameEntityIndex, units, true)
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
-    this.unitRenderer.renderBases(gameCtx, airborneUnits, scrollOffset)
+    this.unitRenderer.renderBases(gameCtx, visibleAirborneUnits, scrollOffset, true)
     gameCtx.restore()
-    this.unitRenderer.renderOverlays(gameCtx, airborneUnits, scrollOffset)
-    this.buildingRenderer.renderHudHoverTooltip(gameCtx, [...(buildings || []), ...(factories || [])], scrollOffset)
+    this.unitRenderer.renderOverlays(gameCtx, visibleAirborneUnits, scrollOffset, frameEntityIndex, units, true)
+    renderProfiler.endSpan(entityOverlaysSpan)
+    this.buildingRenderer.renderHudHoverTooltip(gameCtx, buildings, scrollOffset, factories)
 
     this.uiRenderer.render(gameCtx, gameCanvas, gameState, selectionActive, selectionStart, selectionEnd, scrollOffset, factories, buildings, mapGrid, units)
+    renderProfiler.endSpan(hudSpan)
     if (monitorTiming) {
       uiMs = performance.now() - uiStartedAt
       performanceMonitor.recordRendererPhases({ terrainMs, entitiesMs, effectsMs, uiMs })

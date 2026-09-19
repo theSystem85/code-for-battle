@@ -303,6 +303,12 @@ export function renderSpriteSheetAnimation(ctx, animation, scrollOffset, now) {
   const centerX = animation.x - scrollOffset.x
   const centerY = animation.y - scrollOffset.y
 
+  // Resize audit: arbitrary custom sheets can combine runtime frameRects,
+  // scale, blob URLs and density. Preparing these exact finite frames requires
+  // I20 to pass the selected animation metadata into the startup readiness
+  // barrier. Until that owner wiring exists, keep this parity-preserving
+  // source draw explicit; do not hide it behind an aircraft exception or
+  // quantize the time-based animation further.
   ctx.drawImage(
     texture,
     sourceX,

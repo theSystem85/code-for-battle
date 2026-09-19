@@ -671,11 +671,10 @@ export class UnitRenderer {
 
     const mouseScreenX = gameState.cursorX - scrollOffset.x
     const mouseScreenY = gameState.cursorY - scrollOffset.y
-    const selected = units.filter(unit => unit?.selected)
-    if (selected.length === 0) return
 
     let tooltipText = null
-    for (const unit of selected) {
+    for (const unit of units) {
+      if (!unit?.selected) continue
       const label = this.getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY)
       if (!label) continue
 
@@ -1484,7 +1483,22 @@ export class UnitRenderer {
     return (selectedBuilding.forcedAttackTarget ? 2 : 1) + index
   }
 
-  renderAttackTargetIndicator(ctx, unit, centerX, centerY) {
+  renderAttackTargetIndicator(ctx, unit, centerX, centerY, entityIndex = null) {
+    if (entityIndex) {
+      const forcedAttackQueuePosition = entityIndex.get(`forcedAttackPosition:${unit.id}`) ?? null
+      const shouldShowAttackIndicator =
+        entityIndex.has(`attackIndicator:${unit.id}`) ||
+        forcedAttackQueuePosition !== null
+      this.drawAttackTargetIndicator(
+        ctx,
+        centerX,
+        centerY - TILE_SIZE / 2 - 15,
+        shouldShowAttackIndicator,
+        forcedAttackQueuePosition
+      )
+      return
+    }
+
     // Check if this unit is in the attack group targets OR if it's currently being targeted by selected units
     const isInAttackGroupTargets = gameState.attackGroupTargets &&
                                    gameState.attackGroupTargets.some(target => target === unit)
@@ -1512,13 +1526,18 @@ export class UnitRenderer {
     // Show red indicator if: unit is in AGF targets OR being targeted by a selected unit OR queued by selected defense buildings
     const shouldShowAttackIndicator = isInAttackGroupTargets || isTargetedBySelectedUnit || forcedAttackQueuePosition !== null
 
-    if (shouldShowAttackIndicator) {
-      const now = performance.now()
-      const bounceOffset = Math.sin(now * ATTACK_TARGET_BOUNCE_SPEED) * 3 // 3 pixel bounce
+    this.drawAttackTargetIndicator(
+      ctx,
+      centerX,
+      centerY - TILE_SIZE / 2 - 15,
+      shouldShowAttackIndicator,
+      forcedAttackQueuePosition
+    )
+  }
 
-      // Position above the health bar
-      const indicatorX = centerX
-      const indicatorY = centerY - TILE_SIZE / 2 - 15 + bounceOffset
+  drawAttackTargetIndicator(ctx, indicatorX, indicatorBaseY, shouldShowAttackIndicator, forcedAttackQueuePosition) {
+    if (shouldShowAttackIndicator) {
+      const indicatorY = indicatorBaseY + Math.sin(performance.now() * ATTACK_TARGET_BOUNCE_SPEED) * 3
 
       // Draw semi-transparent red triangle (50% transparency, half size)
       ctx.save()
@@ -1593,7 +1612,7 @@ export class UnitRenderer {
     }
   }
 
-  renderUtilityServiceIndicator(ctx, unit, centerX, centerY) {
+  renderUtilityServiceIndicator(ctx, unit, centerX, centerY, entityIndex = null) {
     const isBeingServedByAmbulance = Boolean(unit?.beingServedByAmbulance)
 
     let queuePosition = null
@@ -1601,7 +1620,9 @@ export class UnitRenderer {
 
     // Avoid drawing duplicate utility indicators while path planning mode (Alt) is active.
     // However, still show active service indicators even when path planning is enabled.
-    if (hasSelectedUnits && !gameState.altKeyDown) {
+    if (entityIndex && !gameState.altKeyDown) {
+      queuePosition = entityIndex.get(`utilityPosition:unit:${unit.id}`) ?? null
+    } else if (hasSelectedUnits && !gameState.altKeyDown) {
       selectedUnits.forEach(selectedUnit => {
         if (!selectedUnit?.selected) return
         if (!selectedUnit.type || (selectedUnit.type !== 'ambulance' && selectedUnit.type !== 'tankerTruck' && selectedUnit.type !== 'recoveryTank')) {
@@ -1734,8 +1755,8 @@ export class UnitRenderer {
     ctx.restore()
   }
 
-  renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight) {
-    if (!this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
+  renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible = false) {
+    if (!alreadyVisible && !this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
@@ -1927,8 +1948,8 @@ export class UnitRenderer {
     this.renderTurret(ctx, unit, centerX, centerY)
   }
 
-  renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight) {
-    if (!this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
+  renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible = false, entityIndex = null) {
+    if (!alreadyVisible && !this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
@@ -1941,26 +1962,38 @@ export class UnitRenderer {
     this.renderQueueNumber(ctx, unit, scrollOffset)
     this.renderGroupNumber(ctx, unit, scrollOffset)
     this.renderCrewStatus(ctx, unit, scrollOffset)
-    this.renderAttackTargetIndicator(ctx, unit, centerX, centerY)
-    this.renderUtilityServiceIndicator(ctx, unit, centerX, centerY)
+    this.renderAttackTargetIndicator(ctx, unit, centerX, centerY, entityIndex)
+    this.renderUtilityServiceIndicator(ctx, unit, centerX, centerY, entityIndex)
     this.renderWorkshopRepairIndicator(ctx, unit, centerX, centerY)
     this.renderRecoveryProgressBar(ctx, unit, scrollOffset)
   }
 
-  renderBases(ctx, units, scrollOffset) {
+  collectVisibleUnits(ctx, units, scrollOffset, output = []) {
+    output.length = 0
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+    for (const unit of units || []) {
+      if (this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) output.push(unit)
+    }
+    return output
+  }
+
+  renderBases(ctx, units, scrollOffset, alreadyVisible = false) {
     const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
     units.forEach(unit => {
-      this.renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight)
+      this.renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible)
     })
   }
 
-  renderOverlays(ctx, units, scrollOffset) {
+  renderOverlays(ctx, units, scrollOffset, entityIndex = null, connectionUnits = units, alreadyVisible = false) {
+    for (const unit of connectionUnits) {
+      this.renderTowCable(ctx, unit, scrollOffset)
+      this.renderFuelHose(ctx, unit, entityIndex, scrollOffset)
+      this.renderAmmoHose(ctx, unit, entityIndex, scrollOffset)
+    }
+
     const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
     units.forEach(unit => {
-      this.renderTowCable(ctx, unit, scrollOffset)
-      this.renderFuelHose(ctx, unit, units, scrollOffset)
-      this.renderAmmoHose(ctx, unit, units, scrollOffset)
-      this.renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight)
+      this.renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible, entityIndex)
       this.renderApacheRemoteReticle(ctx, unit, scrollOffset)
     })
     this.renderHudHoverTooltip(ctx, units, scrollOffset)
@@ -2010,14 +2043,14 @@ export class UnitRenderer {
     ctx.restore()
   }
 
-  renderFuelHose(ctx, unit, units, scrollOffset) {
+  renderFuelHose(ctx, unit, entityIndex, scrollOffset) {
     if (!unit || unit.type !== 'tankerTruck' || !unit.refuelTarget) {
       return
     }
 
     const targetInfo = unit.refuelTarget
     const target = (targetInfo && targetInfo.id !== undefined)
-      ? units.find(u => u.id === targetInfo.id) || targetInfo
+      ? entityIndex?.get(`unit:${targetInfo.id}`) || targetInfo
       : targetInfo
 
     if (!target || target.health <= 0) {
@@ -2056,14 +2089,14 @@ export class UnitRenderer {
     ctx.restore()
   }
 
-  renderAmmoHose(ctx, unit, units, scrollOffset) {
+  renderAmmoHose(ctx, unit, entityIndex, scrollOffset) {
     if (!unit || unit.type !== 'ammunitionTruck' || !unit.ammoResupplyTarget) {
       return
     }
 
     const targetInfo = unit.ammoResupplyTarget
     const target = (targetInfo && targetInfo.id !== undefined)
-      ? units.find(u => u.id === targetInfo.id) || targetInfo
+      ? entityIndex?.get(`unit:${targetInfo.id}`) || targetInfo
       : targetInfo
 
     if (!target || (target.health !== undefined && target.health <= 0)) {
@@ -2178,12 +2211,11 @@ export class UnitRenderer {
       return true
     }
 
-    const friendlyOwners = new Set([gameState.humanPlayer, 'player'])
-    if (gameState.humanPlayer === 'player1') {
-      friendlyOwners.add('player1')
-    }
-
-    if (friendlyOwners.has(unit.owner)) {
+    if (
+      unit.owner === gameState.humanPlayer ||
+      unit.owner === 'player' ||
+      (gameState.humanPlayer === 'player1' && unit.owner === 'player1')
+    ) {
       return true
     }
 
