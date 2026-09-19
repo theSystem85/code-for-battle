@@ -6,6 +6,8 @@ Status: implemented foundation (C00), 2026-09-16.
 
 This specification freezes the shared contracts required by the staged rendering improvement plan. It intentionally does not connect them to the live renderer. No frame-path behavior or visual output changes in C00, so it cannot claim the 75 FPS performance gate. Physical certification remains required after integration.
 
+The P00 function-timing preference is persisted as a boolean UI preference only. Timing samples remain in-memory and are discarded when the overlay is reset or the page unloads; disabled timing takes a fast path without statistics writes.
+
 ## Stable modules and ownership
 
 | Contract | Module | Owner after integration |
