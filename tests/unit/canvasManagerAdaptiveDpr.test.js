@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { CanvasManager } from '../../src/rendering/canvasManager.js'
+import { getCanvasViewportRecord } from '../../src/rendering/prepared/canvasViewportRegistry.js'
 
 function createAdaptiveManager(cap = 3) {
   const manager = Object.create(CanvasManager.prototype)
@@ -69,6 +70,61 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.pixelRatio).toBe(1)
     expect(manager.overlayPixelRatio).toBe(3)
     manager.dispose()
+  })
+
+  it('publishes one coherent density generation after an explicit graphics change', () => {
+    document.body.innerHTML = `
+      <canvas id="gameCanvasGPU"></canvas>
+      <canvas id="gameCanvasGL"></canvas>
+      <canvas id="gameCanvas"></canvas>
+      <canvas id="minimap"></canvas>
+    `
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(500)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(300)
+    vi.spyOn(window, 'visualViewport', 'get').mockReturnValue(null)
+    const densityEvents = []
+    const handleDensityChange = event => densityEvents.push(event.detail)
+    document.addEventListener('canvas-density-changed', handleDensityChange)
+
+    const manager = new CanvasManager()
+    expect(manager.densityGeneration).toBe(1)
+    expect(densityEvents).toHaveLength(1)
+    manager.resizeCanvases()
+    expect(manager.densityGeneration).toBe(1)
+    expect(densityEvents).toHaveLength(1)
+
+    expect(manager.setGraphicsPixelRatioCap(1.5)).toBe(true)
+    expect(manager.densityGeneration).toBe(2)
+    expect(densityEvents).toHaveLength(2)
+    expect(densityEvents[1]).toMatchObject({
+      generation: 2,
+      pixelRatio: 1.5,
+      overlayPixelRatio: 3
+    })
+    expect(getCanvasViewportRecord(manager.getGameGlCanvas())).toMatchObject({
+      densityGeneration: 2,
+      viewport: {
+        density: 1.5,
+        logicalWidth: 250,
+        logicalHeight: 300,
+        backingWidth: 375,
+        backingHeight: 450
+      }
+    })
+    expect(getCanvasViewportRecord(manager.getGameCanvas())).toMatchObject({
+      densityGeneration: 2,
+      viewport: {
+        density: 3,
+        logicalWidth: 250,
+        logicalHeight: 300,
+        backingWidth: 750,
+        backingHeight: 900
+      }
+    })
+
+    manager.dispose()
+    document.removeEventListener('canvas-density-changed', handleDensityChange)
   })
 
   it('does not raise DPR until the camera and frame rate have stayed stable', () => {
