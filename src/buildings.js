@@ -403,8 +403,8 @@ export function clearBuildingFromMapGrid(building, mapGrid, occupancyMap = gameS
           const localY = y - building.y
           const isStreetTile = building.type === 'street'
           const isAirstripPassableTile =
-          building.type === 'airstrip' &&
-          !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
+            building.type === 'airstrip' &&
+            !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
           const isBuildOnlyTile = isStreetTile || isAirstripPassableTile
 
           if (isBuildOnlyTile) {

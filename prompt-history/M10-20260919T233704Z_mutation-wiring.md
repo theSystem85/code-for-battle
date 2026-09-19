@@ -2,6 +2,7 @@
 
 Model: GPT-5.6 Sol
 Harness: Cursor Cloud Agent
+Task duration: approximately 8 minutes (prompt timestamp has minute precision)
 
 ## Prompt
 
