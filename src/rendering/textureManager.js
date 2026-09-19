@@ -5,6 +5,8 @@ import { getDevicePixelRatio } from './renderingUtils.js'
 import { discoverGrassTiles } from '../utils/grassTileDiscovery.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
+import { decodePreparedImage, estimateDecodedImageBytes, loadPreparedImage } from './prepared/imagePreparation.js'
+import { PreparationGeneration } from './prepared/preparedMap.js'
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
@@ -51,6 +53,7 @@ export class TextureManager {
     this.integratedSpriteSheetImage = null
     this.integratedSpriteSheetMetadata = null
     this.integratedSpriteSheetImagesByPath = {}
+    this.integratedSpriteSheetLoadsByPath = {}
     this.integratedSpriteSheets = []
     this.integratedTagBuckets = {}
     this.integratedBiomeTag = 'grass'
@@ -71,6 +74,18 @@ export class TextureManager {
     this.streetTileSelectionCache = new Map()
     this.integratedConfigVersion = 0
     this.integratedRenderSignature = 'off'
+    this.integratedPreparationGeneration = null
+    this.texturePreparationGeneration = 0
+    this.texturePreparationState = 'idle'
+    this.texturePreparationError = null
+    this.texturePreparationProgress = { completed: 0, total: 0 }
+    this.textureByteUsage = {
+      decodedSourceBytes: 0,
+      preparedRasterBytes: 0,
+      transferBytes: 0,
+      gpuStagingBytes: 0
+    }
+    this.preloadPromise = null
   }
 
   clearStreetSelectionPoolCache() {
@@ -133,25 +148,25 @@ export class TextureManager {
     if (this.integratedSpriteSheetImagesByPath[sheetPath]) {
       return this.integratedSpriteSheetImagesByPath[sheetPath]
     }
-
-    const image = await new Promise((resolve) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = () => resolve(null)
-      const isDirectPath = sheetPath.startsWith('/')
-        || sheetPath.startsWith('blob:')
-        || sheetPath.startsWith('data:')
-        || /^https?:\/\//i.test(sheetPath)
-      img.src = isDirectPath ? sheetPath : `/${sheetPath}`
-    })
-
-    if (image) {
-      this.integratedSpriteSheetImagesByPath[sheetPath] = image
-      this.integratedSpriteSheetPath = sheetPath
-      this.integratedSpriteSheetImage = image
+    if (this.integratedSpriteSheetLoadsByPath[sheetPath]) {
+      return this.integratedSpriteSheetLoadsByPath[sheetPath]
     }
-
-    return image
+    const isDirectPath = sheetPath.startsWith('/')
+      || sheetPath.startsWith('blob:')
+      || sheetPath.startsWith('data:')
+      || /^https?:\/\//i.test(sheetPath)
+    const source = isDirectPath ? sheetPath : `/${sheetPath}`
+    const loading = loadPreparedImage(source)
+      .then((image) => {
+        this.integratedSpriteSheetImagesByPath[sheetPath] = image
+        return image
+      })
+      .catch(() => null)
+      .finally(() => {
+        delete this.integratedSpriteSheetLoadsByPath[sheetPath]
+      })
+    this.integratedSpriteSheetLoadsByPath[sheetPath] = loading
+    return loading
   }
 
   buildIntegratedTagBuckets(sheetEntries) {
@@ -415,9 +430,16 @@ export class TextureManager {
   }
 
   async setIntegratedSpriteSheetConfig(config = {}) {
+    this.integratedPreparationGeneration?.cancel('Integrated sprite-sheet preparation superseded')
+    const preparation = new PreparationGeneration(++this.texturePreparationGeneration)
+    this.integratedPreparationGeneration = preparation
     const enabled = Boolean(config?.enabled)
-    this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : this.integratedBiomeTag
+    const requestedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag)
+      ? config.biomeTag
+      : this.integratedBiomeTag
     if (!enabled) {
+      preparation.assertCurrent(this.texturePreparationGeneration)
+      this.integratedBiomeTag = requestedBiomeTag
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedSpriteSheets = []
@@ -445,6 +467,7 @@ export class TextureManager {
       if (!sheetPath || !metadata) continue
       if (!this.hasTaggedIntegratedTiles(metadata)) continue
       const image = await this.loadIntegratedSpriteSheetImage(sheetPath)
+      preparation.assertCurrent(this.texturePreparationGeneration)
       if (!image) continue
       normalizedEntries.push({
         sheetPath,
@@ -456,6 +479,8 @@ export class TextureManager {
     }
 
     if (!normalizedEntries.length) {
+      preparation.assertCurrent(this.texturePreparationGeneration)
+      this.integratedBiomeTag = requestedBiomeTag
       this.integratedSpriteSheetMode = false
       this.integratedSpriteSheetMetadata = null
       this.integratedSpriteSheets = []
@@ -469,6 +494,7 @@ export class TextureManager {
       return
     }
 
+    preparation.assertCurrent(this.texturePreparationGeneration)
     this.integratedSpriteSheetMode = true
     this.integratedSpriteSheets = normalizedEntries
     this.integratedSpriteSheetPath = normalizedEntries[0].sheetPath
@@ -915,17 +941,22 @@ export class TextureManager {
       }
 
       const img = new Image()
-      img.onload = () => {
-        // Cache the loaded image
-        this.imageCache[baseName] = img
-        console.debug(`✅ Successfully loaded: ${baseName}.${extensions[index]}`)
+      img.onload = async() => {
+        try {
+          await decodePreparedImage(img)
+          // Cache only decoded images. This prevents an onload callback from
+          // publishing an asset generation that is not renderable yet.
+          this.imageCache[baseName] = img
+          console.debug(`✅ Successfully loaded: ${baseName}.${extensions[index]}`)
 
-        // Notify all waiting callbacks
-        while (this.loadingImages[baseName].length > 0) {
-          const cb = this.loadingImages[baseName].shift()
-          cb(img)
+          while (this.loadingImages[baseName].length > 0) {
+            const cb = this.loadingImages[baseName].shift()
+            cb(img)
+          }
+          delete this.loadingImages[baseName]
+        } catch {
+          tryLoadImage(baseName, extensions, index + 1)
         }
-        delete this.loadingImages[baseName]
       }
 
       img.onerror = () => {
@@ -943,90 +974,146 @@ export class TextureManager {
 
   // Preload all tile textures at startup
   async preloadAllTextures(callback) {
-    if (this.loadingStarted) return
+    if (this.preloadPromise) {
+      const result = await this.preloadPromise
+      if (callback) callback()
+      return result
+    }
     this.loadingStarted = true
+    this.allTexturesLoaded = false
+    this.texturePreparationState = 'preparing'
+    this.texturePreparationError = null
+    this.texturePreparationProgress.completed = 0
+    this.texturePreparationProgress.total = 6
 
-    const mappingRes = await fetch(TILE_SPRITE_MAP)
-    const spriteMap = await mappingRes.json()
-    this.spriteMap = spriteMap
-
-    const spriteImg = await new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = reject
-      img.src = TILE_SPRITE_SHEET
-    })
-    this.spriteImage = spriteImg
-
-    // Load water animation frames
-    const waterImg = await new Promise((resolve, reject) => {
-      const img = new Image()
-      img.onload = () => resolve(img)
-      img.onerror = reject
-      img.src = 'images/map/water_spritesheet.webp'
-    })
-    this.waterFrames = []
-    for (let i = 0; i < 16; i++) {
-      const canvas = document.createElement('canvas')
-      canvas.width = TILE_SIZE
-      canvas.height = TILE_SIZE
-      const ctx = canvas.getContext('2d')
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = 'high'
-      const sx = (i % 8) * 64
-      const sy = Math.floor(i / 8) * 64
-      ctx.drawImage(waterImg, sx, sy, 64, 64, 0, 0, TILE_SIZE, TILE_SIZE)
-      this.waterFrames.push(canvas)
-    }
-
-    // Discover grass tiles configuration
-    let grassTileData = null
-    const landInfo = TILE_IMAGES.land
-    if (landInfo && landInfo.useGrassTileDiscovery) {
+    this.preloadPromise = (async() => {
       try {
-        grassTileData = await discoverGrassTiles()
-      } catch (err) {
-        console.error('Failed to load grass tiles configuration:', err)
+        const mappingRes = await fetch(TILE_SPRITE_MAP)
+        if (!mappingRes.ok) throw new Error(`Failed to load tile sprite map: ${mappingRes.status}`)
+        const spriteMap = await mappingRes.json()
+        this.texturePreparationProgress.completed++
+
+        const [spriteImg, waterImg] = await Promise.all([
+          loadPreparedImage(TILE_SPRITE_SHEET),
+          loadPreparedImage('images/map/water_spritesheet.webp')
+        ])
+        this.texturePreparationProgress.completed += 2
+
+        // Water remains a separate animated frame set. These frames are
+        // prepared before readiness and are never included in static pages.
+        const waterFrames = []
+        for (let i = 0; i < 16; i++) {
+          const canvas = document.createElement('canvas')
+          canvas.width = TILE_SIZE
+          canvas.height = TILE_SIZE
+          const ctx = canvas.getContext('2d')
+          ctx.imageSmoothingEnabled = true
+          ctx.imageSmoothingQuality = 'high'
+          const sx = (i % 8) * 64
+          const sy = Math.floor(i / 8) * 64
+          ctx.drawImage(waterImg, sx, sy, 64, 64, 0, 0, TILE_SIZE, TILE_SIZE)
+          waterFrames.push(canvas)
+        }
+
+        let grassTileData = null
+        const landInfo = TILE_IMAGES.land
+        if (landInfo && landInfo.useGrassTileDiscovery) {
+          grassTileData = await discoverGrassTiles()
+        }
+
+        const tileTextureCache = {}
+        for (const [tileType] of Object.entries(TILE_IMAGES)) tileTextureCache[tileType] = []
+        const addFromPath = (path, type) => {
+          const key = path.replace(/^images\/map\//, '')
+          const info = spriteMap[key]
+          if (info) tileTextureCache[type].push({ key, ...info })
+        }
+        for (const [tileType, tileInfo] of Object.entries(TILE_IMAGES)) {
+          if (tileType === 'land' && grassTileData) {
+            grassTileData.passablePaths.forEach(path => addFromPath(path, tileType))
+            grassTileData.decorativePaths.forEach(path => addFromPath(path, tileType))
+            grassTileData.impassablePaths.forEach(path => addFromPath(path, tileType))
+          }
+          if (tileInfo.paths) tileInfo.paths.forEach(path => addFromPath(path, tileType))
+          if (tileInfo.passablePaths) tileInfo.passablePaths.forEach(path => addFromPath(path, tileType))
+          if (tileInfo.impassablePaths) tileInfo.impassablePaths.forEach(path => addFromPath(path, tileType))
+        }
+
+        await Promise.all([
+          this.preloadDefaultCombatDecalSheet(),
+          this.preloadDefaultCrystalSheet(),
+          this.preloadDefaultStreetSheet()
+        ])
+        this.texturePreparationProgress.completed += 3
+
+        // Publish one complete texture generation after every source decoded
+        // and every finite prepared variant was built.
+        this.spriteMap = spriteMap
+        this.spriteImage = spriteImg
+        this.waterFrames = waterFrames
+        this.tileTextureCache = tileTextureCache
+        if (grassTileData) {
+          this.grassTileMetadata = {
+            passableCount: grassTileData.passablePaths.length,
+            decorativeCount: grassTileData.decorativePaths.length,
+            impassableCount: grassTileData.impassablePaths.length
+          }
+        }
+        const decodedImages = new Set([
+          spriteImg,
+          waterImg,
+          this.defaultCombatDecalSheetImage,
+          this.defaultCrystalSheetImage,
+          this.defaultStreetSheetImage
+        ].filter(Boolean))
+        this.textureByteUsage = {
+          decodedSourceBytes: [...decodedImages].reduce((total, image) => total + estimateDecodedImageBytes(image), 0),
+          preparedRasterBytes: waterFrames.length * TILE_SIZE * TILE_SIZE * 4,
+          transferBytes: 0,
+          gpuStagingBytes: 0
+        }
+        this.allTexturesLoaded = true
+        this.texturePreparationState = 'ready'
+        return this
+      } catch (error) {
+        this.loadingStarted = false
+        this.allTexturesLoaded = false
+        this.texturePreparationState = 'failed'
+        this.texturePreparationError = error
+        throw error
       }
+    })()
+
+    try {
+      const result = await this.preloadPromise
+      if (callback) callback()
+      return result
+    } finally {
+      if (!this.allTexturesLoaded) this.preloadPromise = null
     }
+  }
 
-    for (const [tileType] of Object.entries(TILE_IMAGES)) {
-      this.tileTextureCache[tileType] = []
+  getPreparationProgress() {
+    return {
+      state: this.texturePreparationState,
+      error: this.texturePreparationError,
+      ...this.texturePreparationProgress
     }
+  }
 
-    if (grassTileData) {
-      this.grassTileMetadata = {
-        passableCount: grassTileData.passablePaths.length,
-        decorativeCount: grassTileData.decorativePaths.length,
-        impassableCount: grassTileData.impassablePaths.length
-      }
-    }
+  getPreparedTerrainAssets() {
+    return [
+      { key: 'tile-sprite-sheet', image: this.spriteImage, animated: false },
+      { key: 'water-animation-source', image: null, animated: true, frames: this.waterFrames },
+      { key: 'combat-decals', image: this.defaultCombatDecalSheetImage, animated: false },
+      { key: 'crystals', image: this.defaultCrystalSheetImage, animated: false },
+      { key: 'streets', image: this.defaultStreetSheetImage, animated: false }
+    ].filter(asset => asset.image || asset.frames?.length)
+  }
 
-    const addFromPath = (p, type) => {
-      const key = p.replace(/^images\/map\//, '')
-      const info = this.spriteMap[key]
-      if (info) {
-        this.tileTextureCache[type].push({ key, ...info })
-      }
-    }
-
-    for (const [tileType, tileInfo] of Object.entries(TILE_IMAGES)) {
-      if (tileType === 'land' && grassTileData) {
-        grassTileData.passablePaths.forEach(p => addFromPath(p, tileType))
-        grassTileData.decorativePaths.forEach(p => addFromPath(p, tileType))
-        grassTileData.impassablePaths.forEach(p => addFromPath(p, tileType))
-      }
-      if (tileInfo.paths) tileInfo.paths.forEach(p => addFromPath(p, tileType))
-      if (tileInfo.passablePaths) tileInfo.passablePaths.forEach(p => addFromPath(p, tileType))
-      if (tileInfo.impassablePaths) tileInfo.impassablePaths.forEach(p => addFromPath(p, tileType))
-    }
-
-    await this.preloadDefaultCombatDecalSheet()
-    await this.preloadDefaultCrystalSheet()
-    await this.preloadDefaultStreetSheet()
-
-    this.allTexturesLoaded = true
-    if (callback) callback()
+  retryPreloadAllTextures(callback) {
+    if (this.texturePreparationState !== 'failed') return this.preloadPromise || Promise.resolve(this)
+    return this.preloadAllTextures(callback)
   }
 
   // Helper method to load a single texture

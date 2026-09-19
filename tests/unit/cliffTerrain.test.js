@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { buildCliffDepth, cliffContourMask, cliffHeightClass, cliffMacroRect, cliffTallRect, isPlateauTile, CLIFF_LEVELS } from '../../src/rendering/cliffTerrain.js'
+import { buildCliffDepth, cliffContourMask, cliffHeightClass, cliffMacroRect, cliffTallRect, isPlateauTile, prepareCliffDescriptor, CLIFF_LEVELS } from '../../src/rendering/cliffTerrain.js'
 
 const plateau = (size, margin = 1) => Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => ({ type: x >= margin && y >= margin && x < size - margin && y < size - margin ? 'rock' : 'land' })))
 
@@ -67,6 +67,18 @@ describe('terraced cliff elevation', () => {
     expect(cliffContourMask(before, 7, 7, 5)).toBe(15)
     expect(cliffContourMask(after, 7, 7, 5)).toBe(0)
     expect(cliffContourMask(after, -1, -1, 1)).toBe(4)
+  })
+
+  it('retains one generation-tagged cliff descriptor with explicit native bytes', () => {
+    const descriptor = prepareCliffDescriptor(plateau(17), 0, 0, 17, 17, 9)
+    expect(descriptor.generation).toBe(9)
+    expect(descriptor.byteLength).toBe(
+      descriptor.values.byteLength +
+      descriptor.plateau.byteLength +
+      descriptor.heightClass.byteLength +
+      descriptor.rockDepth.byteLength
+    )
+    expect(Object.isFrozen(descriptor)).toBe(true)
   })
 
   it('never classifies a non-rock tile as part of a plateau', () => {

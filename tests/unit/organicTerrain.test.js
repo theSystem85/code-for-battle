@@ -2,6 +2,27 @@ import { describe, it, expect, vi } from 'vitest'
 import { BLOB_MASKS, biomeTransitionCoverage, normalizeBlobMask, terrainMask, terrainHash, OrganicTerrain, roadVisualMask, roadFringeMask, isCliffChain, cliffConnections, cliffVariant, getSotDrawBounds } from '../../src/rendering/organicTerrain.js'
 
 describe('organic terrain topology', () => {
+  it('publishes terrain readiness once after every required asset has decoded', async() => {
+    const ready = vi.fn()
+    const resolvers = new Map()
+    const terrain = new OrganicTerrain(ready, null, {
+      assetLoader: (entry) => new Promise(resolve => resolvers.set(entry.key, resolve))
+    })
+
+    expect(terrain.ready).toBe(false)
+    for (const [key, resolve] of resolvers) {
+      if (key !== 'cliffs') resolve({ key, naturalWidth: 64, naturalHeight: 64 })
+    }
+    await Promise.resolve()
+    expect(ready).not.toHaveBeenCalled()
+    resolvers.get('cliffs')({ key: 'cliffs', naturalWidth: 64, naturalHeight: 64 })
+    await terrain.readiness
+
+    expect(terrain.ready).toBe(true)
+    expect(terrain.getProgress()).toMatchObject({ state: 'ready', completed: 7, total: 7 })
+    expect(ready).toHaveBeenCalledOnce()
+  })
+
   it('covers all 256 neighborhoods with exactly 47 canonical masks', () => {
     expect(BLOB_MASKS).toHaveLength(47)
     for (let mask = 0; mask < 256; mask++) {
