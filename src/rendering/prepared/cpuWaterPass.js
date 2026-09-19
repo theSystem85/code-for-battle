@@ -301,7 +301,8 @@ export class CpuWaterPass {
     ctx.fillStyle = this.palette.band
     for (let index = 0; index < 5; index++) {
       const phase = animationPhase + originX * this.coefficients[0] + originY * this.coefficients[1] + index * 1.17
-      ctx.globalAlpha = baseAlpha * Math.max(0.12, Math.min(0.36, 0.22 + 0.08 * Math.sin(phase * 1.4)))
+      const alpha = Math.max(0.12, Math.min(0.36, 0.22 + 0.08 * Math.sin(phase * 1.4)))
+      ctx.globalAlpha = baseAlpha * (Math.round(alpha * 1000) / 1000)
       ctx.fillRect(screenX, Math.floor(screenY + (index + 1) * bandHeight + Math.sin(phase) * 2), size, 1)
     }
 
@@ -309,7 +310,8 @@ export class CpuWaterPass {
     ctx.fillStyle = this.palette.column
     for (let index = 0; index < 3; index++) {
       const phase = animationPhase * 0.72 + originX * this.coefficients[2] - originY * this.coefficients[0] + index * 1.9
-      ctx.globalAlpha = baseAlpha * Math.max(0.05, Math.min(0.24, 0.1 + 0.08 * Math.cos(phase * 1.7)))
+      const alpha = Math.max(0.05, Math.min(0.24, 0.1 + 0.08 * Math.cos(phase * 1.7)))
+      ctx.globalAlpha = baseAlpha * (Math.round(alpha * 1000) / 1000)
       ctx.fillRect(Math.floor(screenX + (index + 1) * columnWidth + Math.cos(phase) * 1.5), screenY, 1, size)
     }
 

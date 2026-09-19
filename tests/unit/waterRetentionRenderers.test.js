@@ -67,6 +67,46 @@ describe('retained GPU water topology', () => {
     expect(updated.data).not.toEqual(unchangedChunkCopy)
   })
 
+  it('keeps the WebGL topology buffer upload-free on clean scrolling frames', () => {
+    const mapRenderer = makeMapRenderer([
+      [null, null, null],
+      [null, null, null]
+    ])
+    const renderer = new GameWebGLRenderer(null, {}, mapRenderer)
+    const gl = {
+      ARRAY_BUFFER: 1,
+      DYNAMIC_DRAW: 2,
+      bindBuffer: vi.fn(),
+      bufferData: vi.fn(),
+      bufferSubData: vi.fn()
+    }
+    renderer.gl = gl
+    renderer.buffers.waterTopology = { id: 'retained-water-buffer' }
+    const map = makeMap()
+    const first = renderer.prepareRetainedWaterTopology(map, { topologyRevision: 1 })
+
+    renderer.uploadRetainedWaterTopology(first)
+    const initialUploads = gl.bufferSubData.mock.calls.length
+    const initialUploadBytes = renderer.getStatus().stats.topologyUploadBytes
+    const clean = renderer.prepareRetainedWaterTopology(map, { topologyRevision: 1 })
+    renderer.uploadRetainedWaterTopology(clean)
+
+    expect(gl.bufferData).toHaveBeenCalledTimes(1)
+    expect(gl.bufferSubData).toHaveBeenCalledTimes(initialUploads)
+    expect(renderer.getStatus().stats.topologyUploadBytes).toBe(initialUploadBytes)
+
+    map[0][1].type = 'water'
+    const changed = renderer.prepareRetainedWaterTopology(map, {
+      topologyRevision: 2,
+      changedTopologyRanges: [{ x: 1, y: 0, width: 1, height: 1 }]
+    })
+    renderer.uploadRetainedWaterTopology(changed)
+
+    expect(renderer.buffers.waterTopology).toEqual({ id: 'retained-water-buffer' })
+    expect(gl.bufferData).toHaveBeenCalledTimes(1)
+    expect(gl.bufferSubData.mock.calls.length).toBeGreaterThan(initialUploads)
+  })
+
   it('retains topology independently for the WebGPU backend', () => {
     const renderer = new GameWebGPURenderer({}, makeMapRenderer([[null]]))
     const map = [[{ type: 'water' }]]
