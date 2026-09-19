@@ -1280,6 +1280,9 @@ export function createUnit(factory, unitType, x, y, options = {}) {
     unit.f22State = 'parked'
     unit.f22AssignedDestination = null
     unit.f22PendingTakeoff = false
+    unit.landedOnGround = false
+    unit.groundLandingRequested = false
+    unit.groundLandingTarget = null
   }
 
   if (actualType === 'f35') {

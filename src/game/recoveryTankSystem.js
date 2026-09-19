@@ -301,8 +301,8 @@ export const updateRecoveryTankLogic = logPerformance(function(units, gameState,
       const t = tank.towedUnit
       t.x = tank.x
       t.y = tank.y - TILE_SIZE / 2
-      t.tileX = Math.floor(t.x / TILE_SIZE)
-      t.tileY = Math.floor(t.y / TILE_SIZE)
+      t.tileX = Math.floor((t.x + TILE_SIZE / 2) / TILE_SIZE)
+      t.tileY = Math.floor((t.y + TILE_SIZE / 2) / TILE_SIZE)
 
       // Update speed when towing
       const unitProps = tank.loadedSpeed || 0.33

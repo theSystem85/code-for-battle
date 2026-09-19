@@ -4,6 +4,13 @@ import { playPositionalSound, audioContext, getMasterVolume } from '../sound.js'
 import { calculatePositionalAudio, consumeUnitGas } from './movementHelpers.js'
 import { BASE_FRAME_SECONDS, MOVEMENT_CONFIG } from './movementConstants.js'
 import { canF35StartLanding } from './f35Behavior.js'
+import {
+  canJetTakeOffFromCurrentTile,
+  completeJetEmergencyFuelLanding,
+  isStrikeJet,
+  JET_NEEDS_STREET_TAKEOFF_MESSAGE,
+  notifyHumanJet
+} from './jetFuel.js'
 
 const ROTOR_AIRBORNE_SPEED = 0.35
 const ROTOR_GROUNDED_SPEED = 0
@@ -85,7 +92,10 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
   let manualState = unit.manualFlightState || 'auto'
   let landingBlocked = false
-  const hasGroundLandingRequest = Boolean(unit.type === 'f35' && unit.groundLandingRequested && unit.groundLandingTarget)
+  const hasGroundLandingRequest = Boolean(
+    unit.type === 'f35' &&
+    ((unit.groundLandingRequested && unit.groundLandingTarget) || unit.emergencyFuelLanding)
+  )
   const helipadLandingIntentActive = unit.type === 'f35'
     ? Boolean(unit.helipadLandingRequested && canF35StartLanding(unit))
     : Boolean(unit.helipadLandingRequested)
@@ -143,7 +153,18 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
 
   let desiredAltitude = 0
   if (manualState === 'takeoff') {
-    desiredAltitude = unit.maxAltitude
+    if (isStrikeJet(unit) && !canJetTakeOffFromCurrentTile(unit)) {
+      unit.manualFlightState = 'auto'
+      manualState = 'auto'
+      if (!unit.streetTakeoffBlockedNotified) {
+        unit.streetTakeoffBlockedNotified = true
+        notifyHumanJet(unit, JET_NEEDS_STREET_TAKEOFF_MESSAGE)
+      }
+      desiredAltitude = 0
+    } else {
+      unit.streetTakeoffBlockedNotified = false
+      desiredAltitude = unit.maxAltitude
+    }
   } else if (manualState === 'land') {
     desiredAltitude = 0
   } else if (manualState === 'hover') {
@@ -223,6 +244,9 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
       unit.moveTarget = { x: unit.tileX, y: unit.tileY }
       unit.flightPlan = null
       unit.landedOnGround = true
+      if (unit.emergencyFuelLanding) {
+        completeJetEmergencyFuelLanding(unit)
+      }
     }
   }
 
@@ -244,6 +268,9 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
   shadow.scale = 1 + altitudeRatio * 0.5
 
   if (manualState === 'takeoff' && unit.altitude >= unit.maxAltitude * 0.95) {
+    unit.landedOnGround = false
+    unit.streetTakeoffBlockedNotified = false
+    unit.emergencyFuelLandingNotified = false
     if (unit.type === 'f35' && !unit._f35TakeoffSoundAt) {
       playPositionalSound('f35Takeoff', unit.x + TILE_SIZE / 2, unit.y + TILE_SIZE / 2, 0.55)
       unit._f35TakeoffSoundAt = now
@@ -255,6 +282,9 @@ export function updateApacheFlightState(unit, movement, occupancyMap, now) {
       unit._f35LandingSoundAt = now
     }
     unit.manualFlightState = 'auto'
+    if (unit.emergencyFuelLanding) {
+      completeJetEmergencyFuelLanding(unit)
+    }
   }
 
   if (unit.dodgeVelocity) {

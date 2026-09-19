@@ -26,6 +26,7 @@ import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { createReplayUnitReferences, isReplayInteractionLocked, recordReplayCommand } from '../replaySystem.js'
 import { clearBattleshipFireControl } from '../game/battleshipTurrets.js'
 import { cancelTransportOperations } from '../game/transportOperationCancellation.js'
+import { releaseMountedCargo } from '../game/jetFuel.js'
 
 function recordHumanUnitCommand(unitIds, command) {
   const unitRefs = createReplayUnitReferences(unitIds)
@@ -1185,12 +1186,17 @@ export class KeyboardHandler {
     }
 
     let stoppedCount = 0
+    let releasedMounts = 0
     const unitsToStop = []
     setRemoteControlAction('fire', 'keyboard', false)
     stoppedCount += cancelTransportOperations(this.selectedUnits, this.units || [], gameState.occupancyMap)
 
     // Stop attacking for all selected units or buildings
     this.selectedUnits.forEach(unit => {
+      if (releaseMountedCargo(unit)) {
+        releasedMounts++
+        stoppedCount++
+      }
       if (unit.isBuilding) {
         unit.forcedAttackTarget = null
         unit.forcedAttackQueue = []
@@ -1246,7 +1252,13 @@ export class KeyboardHandler {
       recordHumanUnitCommand(this.selectedUnits.map(unit => unit.id), {
         command: 'stop_attack'
       })
-      this.showNotification(`${stoppedCount} unit${stoppedCount > 1 ? 's' : ''} stopped attacking`, 2000)
+      if (releasedMounts > 0 && stoppedCount === releasedMounts) {
+        this.showNotification(`Released ${releasedMounts} mounted unit${releasedMounts > 1 ? 's' : ''}`, 2000)
+      } else if (releasedMounts > 0) {
+        this.showNotification(`${stoppedCount} unit${stoppedCount > 1 ? 's' : ''} stopped; released ${releasedMounts} mounted unit${releasedMounts > 1 ? 's' : ''}`, 2000)
+      } else {
+        this.showNotification(`${stoppedCount} unit${stoppedCount > 1 ? 's' : ''} stopped attacking`, 2000)
+      }
     } else {
       this.showNotification('Selected units were not attacking', 2000)
     }
