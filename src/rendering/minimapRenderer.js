@@ -613,7 +613,7 @@ export class MinimapRenderer {
         let discoveredValue = cell.discovered
         const discoveredTokenA = getCellToken(cellIndex, 0)
         const discoveredTokenB = getCellToken(cellIndex, 2)
-        if (Boolean(discoveredValue)) {
+        if (discoveredValue) {
           state.hashA = (state.hashA ^ discoveredTokenA) >>> 0
           state.hashB = (state.hashB ^ discoveredTokenB) >>> 0
         }
@@ -635,7 +635,7 @@ export class MinimapRenderer {
         let visibleValue = cell.visible
         const visibleTokenA = getCellToken(cellIndex, 1)
         const visibleTokenB = getCellToken(cellIndex, 3)
-        if (Boolean(visibleValue)) {
+        if (visibleValue) {
           state.hashA = (state.hashA ^ visibleTokenA) >>> 0
           state.hashB = (state.hashB ^ visibleTokenB) >>> 0
         }
