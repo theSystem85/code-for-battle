@@ -4,7 +4,7 @@ UTC timestamp: 2026-09-19T23:42:22Z
 
 Model: Cursor Cloud Agent using GPT-5.6 Sol
 
-Token counts and reasoning level are unavailable and therefore omitted.
+Token counts, reasoning level, and exact task duration are unavailable and therefore omitted.
 
 ## Prompt
 
