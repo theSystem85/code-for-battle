@@ -5,17 +5,6 @@ import { RenderByteBudget, RENDER_BYTE_OWNERS } from './renderByteBudget.js'
 import { decodePreparedImage, estimateDecodedImageBytes, loadPreparedImage } from './imagePreparation.js'
 import { TERRAIN_ASSET_MANIFEST } from './terrainAssetManifest.js'
 
-const MEBIBYTE = 1024 * 1024
-const DEFAULT_LIMITS = Object.freeze({
-  terrainResident: 128 * MEBIBYTE,
-  terrainStaging: 128 * MEBIBYTE,
-  decodedSources: 256 * MEBIBYTE,
-  sprites: 128 * MEBIBYTE,
-  transfer: 64 * MEBIBYTE,
-  gpuStaging: 128 * MEBIBYTE,
-  minimap: 64 * MEBIBYTE,
-  effects: 64 * MEBIBYTE
-})
 const TYPE_IDS = Object.freeze({ water: 0, land: 1, street: 2, rock: 3 })
 const SOT_TYPE_IDS = Object.freeze({ none: 0, water: 1, street: 2, land: 3, rock: 4 })
 const ORIENTATION_IDS = Object.freeze({
@@ -186,28 +175,28 @@ export function estimateAllResidentTerrainBytes(width, height, tileSize, density
   return checkedProduct(width, height, backingTileSize, backingTileSize, 4)
 }
 
-export function createTerrainByteBudget(limits = {}) {
-  return new RenderByteBudget(Object.fromEntries(RENDER_BYTE_OWNERS.map(owner => [
-    owner,
-    limits[owner] ?? DEFAULT_LIMITS[owner]
-  ])))
+export function createTerrainByteBudget(limits) {
+  return new RenderByteBudget(Object.fromEntries(RENDER_BYTE_OWNERS.map(owner => [owner, limits?.[owner]])))
 }
 
 export class TerrainPreparationPipeline {
   constructor({
-    byteBudget = createTerrainByteBudget(),
+    byteBudget,
     assetLoader,
     canvasFactory = makeCanvas,
-    maxAllResidentRasterBytes = 96 * MEBIBYTE,
+    maxAllResidentRasterBytes,
     onPublish,
     onProgress
   } = {}) {
+    if (!(byteBudget instanceof RenderByteBudget)) {
+      throw new TypeError('Terrain preparation requires an explicit RenderByteBudget')
+    }
     this.byteBudget = byteBudget
     this.assetLoader = assetLoader || ((entry, { signal }) => entry.image
       ? decodePreparedImage(entry.image, { signal })
       : loadPreparedImage(entry.src, { signal }))
     this.canvasFactory = canvasFactory
-    this.maxAllResidentRasterBytes = maxAllResidentRasterBytes
+    this.maxAllResidentRasterBytes = maxAllResidentRasterBytes ?? byteBudget.limits.terrainResident
     this.onPublish = onPublish
     this.onProgress = onProgress
     this.current = null
