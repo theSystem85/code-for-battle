@@ -280,7 +280,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
 
   readTimestampQuery() {
     if (!this.timestampReadPending) return
-    const readMode = typeof GPUMapMode !== 'undefined' ? GPUMapMode.READ : 1
+    const readMode = globalThis.GPUMapMode?.READ ?? 1
     this.timestampReadBuffer.mapAsync(readMode).then(() => {
       const values = new BigUint64Array(this.timestampReadBuffer.getMappedRange())
       const elapsed = values[1] >= values[0] ? Number(values[1] - values[0]) : NaN

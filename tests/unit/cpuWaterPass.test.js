@@ -103,10 +103,11 @@ describe('CpuWaterPass', () => {
     ]]
     const pass = new CpuWaterPass({ profiler, diagnostics })
     const runs = pass.runs
+    const sotMask = [[]]
 
     pass.render(createContext(), {
       mapGrid: map,
-      sotMask: [[]],
+      sotMask,
       topologyRevision: 1,
       scrollOffset: { x: 0, y: 0 },
       startX: 0,
@@ -117,7 +118,7 @@ describe('CpuWaterPass', () => {
     })
     pass.render(createContext(), {
       mapGrid: map,
-      sotMask: [[]],
+      sotMask,
       topologyRevision: 1,
       scrollOffset: { x: 20, y: 0 },
       startX: 1,
@@ -129,7 +130,7 @@ describe('CpuWaterPass', () => {
     map[0][1].type = 'water'
     pass.render(createContext(), {
       mapGrid: map,
-      sotMask: [[]],
+      sotMask,
       topologyRevision: 2,
       scrollOffset: { x: 20, y: 0 },
       startX: 1,
