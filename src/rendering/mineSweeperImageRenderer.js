@@ -1,5 +1,6 @@
 // mineSweeperImageRenderer.js - render mine sweeper tanks using a single image asset
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let mineSweeperImg = null
 let mineSweeperLoaded = false
@@ -33,7 +34,8 @@ export function isMineSweeperImageLoaded() {
 }
 
 export function renderMineSweeperWithImage(ctx, unit, centerX, centerY) {
-  if (!isMineSweeperImageLoaded()) return false
+  const prepared = getPreparedSprite('unit:mineSweeper:base')
+  if (!prepared && !isMineSweeperImageLoaded()) return false
 
   ctx.save()
   ctx.translate(centerX, centerY)
@@ -42,11 +44,14 @@ export function renderMineSweeperWithImage(ctx, unit, centerX, centerY) {
   const rotation = unit.direction - Math.PI / 2
   ctx.rotate(rotation)
 
-  const scale = TILE_SIZE / Math.max(mineSweeperImg.width, mineSweeperImg.height)
-  const width = mineSweeperImg.width * scale
-  const height = mineSweeperImg.height * scale
-
-  ctx.drawImage(mineSweeperImg, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const scale = TILE_SIZE / Math.max(mineSweeperImg.width, mineSweeperImg.height)
+    const width = mineSweeperImg.width * scale
+    const height = mineSweeperImg.height * scale
+    ctx.drawImage(mineSweeperImg, -width / 2, -height / 2, width, height)
+  }
 
   ctx.restore()
   return true

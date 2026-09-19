@@ -1,5 +1,6 @@
 import { TILE_SIZE } from '../config.js'
-import { getJetRenderScale } from './jetRenderScale.js'
+import { getJetRenderScale, getJetResizeAuditTag, LANDED_JET_SCALE } from './jetRenderScale.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let f35Image = null
 let f35Loaded = false
@@ -89,7 +90,14 @@ function drawEngineGlow(ctx, unit, centerX, centerY, altitudeLift, sourceWidth, 
 }
 
 export function renderF35WithImage(ctx, unit, centerX, centerY) {
-  if (!isF35ImageLoaded()) {
+  const jetRenderScale = getJetRenderScale(unit)
+  const resizeAuditTag = getJetResizeAuditTag(unit)
+  const prepared = getPreparedSprite(
+    !resizeAuditTag && jetRenderScale === LANDED_JET_SCALE
+      ? 'aircraft:f35:ground'
+      : 'aircraft:f35:flight'
+  )
+  if (!prepared && !isF35ImageLoaded()) {
     preloadF35Images()
     return false
   }
@@ -100,19 +108,25 @@ export function renderF35WithImage(ctx, unit, centerX, centerY) {
     renderShadow(ctx, unit, centerX, centerY)
   }
 
-  const sourceWidth = f35Image.naturalWidth || f35Image.width || TILE_SIZE
-  const sourceHeight = f35Image.naturalHeight || f35Image.height || TILE_SIZE
-  const jetRenderScale = getJetRenderScale(unit)
-  const scale = (F35_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
-  const targetWidth = sourceWidth * scale
-  const targetHeight = sourceHeight * scale
+  const sourceWidth = prepared?.sourceWidth || f35Image.naturalWidth || f35Image.width || TILE_SIZE
+  const sourceHeight = prepared?.sourceHeight || f35Image.naturalHeight || f35Image.height || TILE_SIZE
+  const preparedScale = resizeAuditTag ? jetRenderScale : 1
+  const scale = prepared
+    ? prepared.logicalWidth * preparedScale / Math.max(sourceWidth, 1)
+    : (F35_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
+  const targetWidth = prepared?.logicalWidth || sourceWidth * scale
+  const targetHeight = prepared?.logicalHeight || sourceHeight * scale
 
   drawEngineGlow(ctx, unit, centerX, centerY, altitudeLift, sourceWidth, sourceHeight, scale)
 
   ctx.save()
   ctx.translate(centerX, centerY - altitudeLift)
   ctx.rotate((unit.direction || 0) + Math.PI / 2)
-  ctx.drawImage(f35Image, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0, preparedScale, resizeAuditTag)
+  } else {
+    ctx.drawImage(f35Image, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
+  }
   ctx.restore()
 
   return true
@@ -120,8 +134,15 @@ export function renderF35WithImage(ctx, unit, centerX, centerY) {
 
 export function getF35BombSpawnPoint(unit, centerX, centerY) {
   const altitudeLift = (unit.altitude || 0) * 0.4
+  const jetRenderScale = getJetRenderScale(unit)
+  const resizeAuditTag = getJetResizeAuditTag(unit)
+  const prepared = getPreparedSprite(
+    !resizeAuditTag && jetRenderScale === LANDED_JET_SCALE
+      ? 'aircraft:f35:ground'
+      : 'aircraft:f35:flight'
+  )
 
-  if (!isF35ImageLoaded()) {
+  if (!prepared && !isF35ImageLoaded()) {
     const offsetForward = TILE_SIZE * 0.1
     return {
       x: centerX + Math.cos((unit.direction || 0) + Math.PI / 2) * offsetForward,
@@ -129,10 +150,11 @@ export function getF35BombSpawnPoint(unit, centerX, centerY) {
     }
   }
 
-  const sourceWidth = f35Image?.naturalWidth || f35Image?.width || TILE_SIZE
-  const sourceHeight = f35Image?.naturalHeight || f35Image?.height || TILE_SIZE
-  const jetRenderScale = getJetRenderScale(unit)
-  const scale = (F35_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
+  const sourceWidth = prepared?.sourceWidth || f35Image?.naturalWidth || f35Image?.width || TILE_SIZE
+  const sourceHeight = prepared?.sourceHeight || f35Image?.naturalHeight || f35Image?.height || TILE_SIZE
+  const scale = prepared
+    ? prepared.logicalWidth * (resizeAuditTag ? jetRenderScale : 1) / Math.max(sourceWidth, 1)
+    : (F35_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
   const hardpoint = { x: sourceWidth / 2, y: sourceHeight * 0.55 }
   const localX = (hardpoint.x - sourceWidth / 2) * scale
   const localY = (hardpoint.y - sourceHeight / 2) * scale

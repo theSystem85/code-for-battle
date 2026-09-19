@@ -1,5 +1,6 @@
 // ambulanceImageRenderer.js - render ambulances using a single image asset
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let ambulanceImg = null
 let ambulanceLoaded = false
@@ -33,7 +34,8 @@ export function isAmbulanceImageLoaded() {
 }
 
 export function renderAmbulanceWithImage(ctx, unit, centerX, centerY) {
-  if (!isAmbulanceImageLoaded()) return false
+  const prepared = getPreparedSprite('unit:ambulance:base')
+  if (!prepared && !isAmbulanceImageLoaded()) return false
 
   ctx.save()
   ctx.translate(centerX, centerY)
@@ -42,11 +44,14 @@ export function renderAmbulanceWithImage(ctx, unit, centerX, centerY) {
   const rotation = unit.direction - Math.PI / 2
   ctx.rotate(rotation)
 
-  const scale = TILE_SIZE / Math.max(ambulanceImg.width, ambulanceImg.height)
-  const width = ambulanceImg.width * scale
-  const height = ambulanceImg.height * scale
-
-  ctx.drawImage(ambulanceImg, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const scale = TILE_SIZE / Math.max(ambulanceImg.width, ambulanceImg.height)
+    const width = ambulanceImg.width * scale
+    const height = ambulanceImg.height * scale
+    ctx.drawImage(ambulanceImg, -width / 2, -height / 2, width, height)
+  }
 
   ctx.restore()
   return true
