@@ -13,13 +13,6 @@ export const TERRAIN_REVISION_HALOS = Object.freeze({
 
 const MAX_WARM_PRIORITY = 3
 
-function getMapDimensions(mapGrid) {
-  return {
-    width: mapGrid?.[0]?.length || 0,
-    height: mapGrid?.length || 0
-  }
-}
-
 export function mergeTerrainMutationBounds(oldBounds, newBounds = oldBounds, halo = 0, width, height) {
   const first = oldBounds || newBounds
   const second = newBounds || oldBounds
@@ -48,7 +41,8 @@ export class TerrainRevisionState {
   }
 
   ensureMap(mapGrid) {
-    const { width, height } = getMapDimensions(mapGrid)
+    const width = mapGrid?.[0]?.length || 0
+    const height = mapGrid?.length || 0
     if (!width || !height) return false
     if (this.mapGrid === mapGrid && this.width === width && this.height === height && this.store) {
       return false

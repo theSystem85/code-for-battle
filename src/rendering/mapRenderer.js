@@ -252,13 +252,13 @@ export class MapRenderer {
     this.chunkWarmQueueCounter = 0
     this.idleChunksWarmedSinceLastFrame = 0
     this.deferChunkWarmUntil = 0
-    this.lastScrollOffset = null
     this.cachedUseTexture = null
     this.cachedMapWidth = 0
     this.cachedMapHeight = 0
     this.canUseOffscreen = typeof document !== 'undefined' && typeof document.createElement === 'function'
     this.frameChunkStats = this.createEmptyChunkStats()
     this.lastFrameChunkStats = this.createEmptyChunkStats()
+    this.chunkStatKeys = Object.keys(this.frameChunkStats)
     this.activeChunkKeys = new Set()
     this.emptyActiveChunkKeys = new Set()
     this.chunkOptions = {
@@ -329,7 +329,7 @@ export class MapRenderer {
 
   resetFrameChunkStats() {
     const stats = this.frameChunkStats
-    for (const key of Object.keys(stats)) stats[key] = 0
+    for (const key of this.chunkStatKeys) stats[key] = 0
     stats.chunksWarmed = this.idleChunksWarmedSinceLastFrame
     this.idleChunksWarmedSinceLastFrame = 0
   }
@@ -829,7 +829,7 @@ export class MapRenderer {
   }
 
   updateTerrainByteTelemetry() {
-    const usage = this.terrainByteBudget.getUsage()
+    const usage = this.terrainByteBudget.usage
     this.frameChunkStats.terrainResidentBytes = usage.terrainResident
     this.frameChunkStats.terrainStagingBytes = usage.terrainStaging
     renderDiagnostics.setByteUsage(RENDER_BYTE_BUDGET_OWNERS.TERRAIN, usage.terrainResident)
@@ -1558,7 +1558,7 @@ export class MapRenderer {
       const organicGround = this.useOrganicTerrain(useTexture)
       const terracedCliffs = this.organicTerrain.cliffs?.complete && this.organicTerrain.cliffs.naturalWidth
       // Two-cell halo rebuilds the same overlapping sprites on either side of
-      // chunk boundaries. Existing neighbor signatures invalidate both chunks.
+      // chunk boundaries. Surface revisions invalidate both chunks.
       for (const type of ['street', 'rock']) {
         if (type === 'street' && !organicGround) continue
         if (type === 'rock' && terracedCliffs) {
@@ -2465,7 +2465,7 @@ export class MapRenderer {
     this.frameChunkStats.warmMaxJobAgeMs = this.chunkWarmQueue.getOldestAge(now)
     this.updateTerrainByteTelemetry()
     renderDiagnostics.addCounter(RENDER_COUNTER_IDS.BACKLOG, this.chunkWarmQueue.size)
-    for (const key of Object.keys(this.frameChunkStats)) {
+    for (const key of this.chunkStatKeys) {
       this.lastFrameChunkStats[key] = this.frameChunkStats[key]
     }
     this.lastScrollOffset.x = scrollOffset.x
