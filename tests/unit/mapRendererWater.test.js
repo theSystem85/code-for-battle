@@ -93,12 +93,21 @@ describe('MapRenderer water rendering', () => {
   it('renders water beneath shoreline street tiles in the CPU water pass', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.sotMask = [[null, null]]
-    const drawTileBaseSpy = vi.spyOn(mapRenderer, 'drawTileBase').mockImplementation(() => {})
-    const ctx = { imageSmoothingEnabled: true }
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      fillRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn()
+    }
 
     mapRenderer.renderDynamicWaterLayer(ctx, [[{ type: 'street' }, { type: 'water' }]], { x: 0, y: 0 }, 0, 0, 2, 1)
 
-    expect(drawTileBaseSpy).toHaveBeenCalledWith(ctx, 0, 0, 'water', 0, 0, false, expect.anything())
+    expect(mapRenderer.cpuWaterPass.runLength).toBeGreaterThan(0)
+    expect(ctx.fillRect).toHaveBeenCalled()
   })
 
   it('does not paint animated water over a land tile for the organic shoreline transition', () => {

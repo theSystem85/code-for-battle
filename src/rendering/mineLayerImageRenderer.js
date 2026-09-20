@@ -1,5 +1,6 @@
 // mineLayerImageRenderer.js - render mine layer trucks using a single image asset
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let mineLayerImg = null
 let mineLayerLoaded = false
@@ -33,7 +34,8 @@ export function isMineLayerImageLoaded() {
 }
 
 export function renderMineLayerWithImage(ctx, unit, centerX, centerY) {
-  if (!isMineLayerImageLoaded()) return false
+  const prepared = getPreparedSprite('unit:mineLayer:base')
+  if (!prepared && !isMineLayerImageLoaded()) return false
 
   ctx.save()
   ctx.translate(centerX, centerY)
@@ -42,11 +44,14 @@ export function renderMineLayerWithImage(ctx, unit, centerX, centerY) {
   const rotation = unit.direction + Math.PI / 2
   ctx.rotate(rotation)
 
-  const scale = TILE_SIZE / Math.max(mineLayerImg.width, mineLayerImg.height)
-  const width = mineLayerImg.width * scale
-  const height = mineLayerImg.height * scale
-
-  ctx.drawImage(mineLayerImg, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const scale = TILE_SIZE / Math.max(mineLayerImg.width, mineLayerImg.height)
+    const width = mineLayerImg.width * scale
+    const height = mineLayerImg.height * scale
+    ctx.drawImage(mineLayerImg, -width / 2, -height / 2, width, height)
+  }
 
   ctx.restore()
   return true

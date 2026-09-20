@@ -1,3 +1,9 @@
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifySurfaceMutation
+} from '../rendering/prepared/mapMutationNotifier.js'
+
 const BIOMES = ['grass', 'soil', 'sand', 'snow']
 const BIOME_MODES = [...BIOMES, 'mixed']
 const DISTRIBUTIONS = new Set(['vertical', 'horizontal', 'corners', 'random'])
@@ -247,6 +253,18 @@ export function assignMapBiomes(grid, seed, rawSettings = {}) {
   const height = grid.length
   const width = grid[0]?.length || 0
   if (!width || !height) return
+  const transaction = beginMapMutationTransaction(grid)
+  try {
+    assignMapBiomesInTransaction(grid, seed, rawSettings)
+  } finally {
+    notifySurfaceMutation(grid, { left: 0, top: 0, right: width, bottom: height })
+    commitMapMutationTransaction(transaction)
+  }
+}
+
+function assignMapBiomesInTransaction(grid, seed, rawSettings) {
+  const height = grid.length
+  const width = grid[0].length
   const settings = sanitizeBiomeSettings(rawSettings)
 
   if (settings.mode !== 'mixed') {

@@ -24,7 +24,7 @@ import { buildingData, placeBuilding } from './buildings.js'
 import { showNotification } from './ui/notifications.js'
 import { milestoneSystem } from './game/milestoneSystem.js'
 import { initializeOccupancyMap } from './units.js'
-import { getTextureManager, getMapRenderer } from './rendering.js'
+import { getTextureManager, getMapRenderer, publishPreparedRuntimeMap } from './rendering.js'
 import {
   assignHarvesterToOptimalRefinery,
   getHarvestedTiles,
@@ -73,6 +73,10 @@ import {
   getCompactSaveMetadata,
   isCompactSave
 } from './saveFormat.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction
+} from './rendering/prepared/mapMutationNotifier.js'
 
 const BUILTIN_SAVE_PREFIX = 'builtin:'
 const LAST_GAME_LABEL = 'lastGame'
@@ -349,6 +353,9 @@ function createSerializableMapTile(tile = {}) {
         biome: tile.biomeBlend.biome,
         alpha: Number(tile.biomeBlend.alpha) || 0,
         angle: Number(tile.biomeBlend.angle) || 0,
+        featherPixels: Number.isFinite(tile.biomeBlend.featherPixels)
+          ? Math.max(0, tile.biomeBlend.featherPixels)
+          : undefined,
         cornerWeights: Array.isArray(tile.biomeBlend.cornerWeights)
           ? tile.biomeBlend.cornerWeights.slice(0, 4).map(weight => Math.max(0, Math.min(1, Number(weight) || 0)))
           : undefined
@@ -413,6 +420,9 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
             biome: savedTile.biomeBlend.biome,
             alpha: Number(savedTile.biomeBlend.alpha) || 0,
             angle: Number(savedTile.biomeBlend.angle) || 0,
+            featherPixels: Number.isFinite(savedTile.biomeBlend.featherPixels)
+              ? Math.max(0, savedTile.biomeBlend.featherPixels)
+              : undefined,
             cornerWeights: Array.isArray(savedTile.biomeBlend.cornerWeights) && savedTile.biomeBlend.cornerWeights.length === 4
               ? savedTile.biomeBlend.cornerWeights.map(weight => Math.max(0, Math.min(1, Number(weight) || 0)))
               : undefined
@@ -1730,58 +1740,66 @@ function loadGameFromSaveObject(saveObj, key) {
     // Initialize mapGrid as 2D array if not already done
     const mapWidth = gameState.mapTilesX || 100
     const mapHeight = gameState.mapTilesY || 100
-    const normalizedMapGrid = ensureMapGridMatchesDimensions(mapGrid, mapWidth, mapHeight)
-    if (normalizedMapGrid !== mapGrid) {
-      mapGrid.length = 0
-      normalizedMapGrid.forEach((row, index) => {
-        mapGrid[index] = row
+    const mapRestoreTransaction = beginMapMutationTransaction(
+      { width: mapWidth, height: mapHeight },
+      { replace: true }
+    )
+    try {
+      const normalizedMapGrid = ensureMapGridMatchesDimensions(mapGrid, mapWidth, mapHeight)
+      if (normalizedMapGrid !== mapGrid) {
+        mapGrid.length = 0
+        normalizedMapGrid.forEach((row, index) => {
+          mapGrid[index] = row
+        })
+      }
+      // Ensure gameState.mapGrid points at the canonical exported mapGrid (avoid destructive sync)
+      if (gameState.mapGrid !== mapGrid) {
+        gameState.mapGrid = mapGrid
+      }
+      // Initialize occupancyMap as 2D array
+      if (!gameState.occupancyMap) {
+        gameState.occupancyMap = []
+      }
+      gameState.occupancyMap.length = 0
+      for (let y = 0; y < mapHeight; y++) {
+        gameState.occupancyMap[y] = []
+        for (let x = 0; x < mapWidth; x++) {
+          gameState.occupancyMap[y][x] = 0
+        }
+      }
+      // Clear stale building references before re-placing buildings from the save
+      for (let y = 0; y < mapGrid.length; y++) {
+        if (!mapGrid[y]) continue
+        for (let x = 0; x < mapGrid[y].length; x++) {
+          const tile = mapGrid[y][x]
+          if (tile && tile.building) {
+            delete tile.building
+          }
+          if (tile && tile.buildOnlyOccupied) {
+            delete tile.buildOnlyOccupied
+          }
+          if (tile && tile.airstripStreet) {
+            delete tile.airstripStreet
+          }
+          if (tile) {
+            tile.noBuild = 0
+          }
+        }
+      }
+
+      restoreStaticMapTiles(loaded, mapGrid)
+
+      // Re-place all buildings through canonical placement logic so occupancy and passability
+      // are restored exactly like a freshly built structure.
+      gameState.buildings.forEach(building => {
+        placeBuilding(building, mapGrid, gameState.occupancyMap, { recordTransition: false })
       })
-    }
-    // Ensure gameState.mapGrid points at the canonical exported mapGrid (avoid destructive sync)
-    if (gameState.mapGrid !== mapGrid) {
-      gameState.mapGrid = mapGrid
-    }
-    // Initialize occupancyMap as 2D array
-    if (!gameState.occupancyMap) {
-      gameState.occupancyMap = []
-    }
-    gameState.occupancyMap.length = 0
-    for (let y = 0; y < mapHeight; y++) {
-      gameState.occupancyMap[y] = []
-      for (let x = 0; x < mapWidth; x++) {
-        gameState.occupancyMap[y][x] = 0
-      }
-    }
-    // Clear stale building references before re-placing buildings from the save
-    for (let y = 0; y < mapGrid.length; y++) {
-      if (!mapGrid[y]) continue
-      for (let x = 0; x < mapGrid[y].length; x++) {
-        const tile = mapGrid[y][x]
-        if (tile && tile.building) {
-          delete tile.building
-        }
-        if (tile && tile.buildOnlyOccupied) {
-          delete tile.buildOnlyOccupied
-        }
-        if (tile && tile.airstripStreet) {
-          delete tile.airstripStreet
-        }
-        if (tile) {
-          tile.noBuild = 0
-        }
-      }
-    }
 
-    restoreStaticMapTiles(loaded, mapGrid)
-
-    // Re-place all buildings through canonical placement logic so occupancy and passability
-    // are restored exactly like a freshly built structure.
-    gameState.buildings.forEach(building => {
-      placeBuilding(building, mapGrid, gameState.occupancyMap, { recordTransition: false })
-    })
-
-    // Ensure no ore overlaps with buildings or factories after loading
-    cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+      // Ensure no ore overlaps with buildings or factories after loading
+      cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+    } finally {
+      commitMapMutationTransaction(mapRestoreTransaction)
+    }
 
     // Invalidate SOT (Smoothening Overlay Texture) mask to force recomputation
     // This ensures the map renders correctly after loading a new map
@@ -1789,6 +1807,7 @@ function loadGameFromSaveObject(saveObj, key) {
     if (mapRenderer) {
       mapRenderer.invalidateAllChunks()
     }
+    publishPreparedRuntimeMap(mapGrid)
 
     const textureManager = getTextureManager()
     if (textureManager?.setIntegratedSpriteSheetConfig) {

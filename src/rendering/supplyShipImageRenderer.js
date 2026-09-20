@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 const SOUTH_FACING_SOURCE_ANGLE = Math.PI / 2
 let supplyShipImage = null
@@ -36,23 +37,27 @@ export function getSupplyShipBaseImage() {
 }
 
 export function renderSupplyShipWithImage(ctx, unit, centerX, centerY) {
-  if (!isSupplyShipImageLoaded()) {
+  const prepared = getPreparedSprite('naval:supplyShip:hull')
+  if (!prepared && !isSupplyShipImageLoaded()) {
     if (!supplyShipLoading) preloadSupplyShipImage()
     return false
   }
 
   const direction = unit.direction || unit.rotation || 0
-  const image = supplyShipImage
-  const sourceWidth = image.naturalWidth || image.width
-  const sourceHeight = image.naturalHeight || image.height
-  const scale = (TILE_SIZE * 3.3) / Math.max(sourceWidth, sourceHeight)
-  const width = sourceWidth * scale
-  const height = sourceHeight * scale
-
   ctx.save()
   ctx.translate(centerX, centerY)
   ctx.rotate(direction - SOUTH_FACING_SOURCE_ANGLE)
-  ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const image = supplyShipImage
+    const sourceWidth = image.naturalWidth || image.width
+    const sourceHeight = image.naturalHeight || image.height
+    const scale = (TILE_SIZE * 3.3) / Math.max(sourceWidth, sourceHeight)
+    const width = sourceWidth * scale
+    const height = sourceHeight * scale
+    ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  }
   ctx.restore()
 
   return true

@@ -11,6 +11,23 @@ import {
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
 import { getTileDecalSignature } from '../game/tileDecals.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
+import { RENDER_REVISION_DOMAINS } from './prepared/renderRevisionStore.js'
+import {
+  createTerrainByteBudget,
+  getTerrainRasterBytes,
+  TERRAIN_REVISION_HALOS,
+  TerrainRevisionState,
+  TerrainWarmQueue
+} from './prepared/terrainCacheState.js'
+import { CpuWaterPass } from './prepared/cpuWaterPass.js'
+import { consumePendingTerrainSync, getMapMutationRevisionStore } from './prepared/mapMutationNotifier.js'
+import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
+import { renderProfiler } from '../performance/renderProfiler.js'
+import {
+  RENDER_BYTE_BUDGET_OWNERS,
+  RENDER_COUNTER_IDS,
+  renderDiagnostics
+} from '../performance/renderDiagnostics.js'
 
 const UNDISCOVERED_COLOR = '#111111'
 const FOG_OVERLAY_STYLE = 'rgba(30, 30, 30, 0.6)'
@@ -219,22 +236,74 @@ export class MapRenderer {
     this.chunkPadding = 2
     this.maxCachedChunks = this.mobileMemoryProfile ? 56 : 48
     this.maxChunkWarmQueue = this.mobileMemoryProfile ? 40 : 96
+    const maximumChunkPixels = this.chunkSize * TILE_SIZE + this.chunkPadding * 2 + 1
+    const maximumChunkBytes = getTerrainRasterBytes(maximumChunkPixels, maximumChunkPixels)
     this.chunkCache = new Map()
-    this.chunkWarmQueue = new Map()
+    this.chunkWarmQueue = new TerrainWarmQueue({
+      maxEntries: this.maxChunkWarmQueue,
+      maxJobAgeMs: 500
+    })
+    this.terrainRevisions = new TerrainRevisionState({ chunkSize: this.chunkSize })
+    this.terrainByteBudget = createTerrainByteBudget({
+      residentBytes: maximumChunkBytes * this.maxCachedChunks,
+      stagingBytes: maximumChunkBytes
+    })
     this.chunkWarmScheduled = false
     this.chunkWarmGeneration = 0
     this.chunkUseCounter = 0
     this.chunkWarmQueueCounter = 0
     this.idleChunksWarmedSinceLastFrame = 0
+    this.pendingTopologyReconstructions = 0
     this.deferChunkWarmUntil = 0
-    this.lastScrollOffset = null
     this.cachedUseTexture = null
     this.cachedMapWidth = 0
     this.cachedMapHeight = 0
     this.canUseOffscreen = typeof document !== 'undefined' && typeof document.createElement === 'function'
     this.frameChunkStats = this.createEmptyChunkStats()
     this.lastFrameChunkStats = this.createEmptyChunkStats()
-    this.prewarmedCacheKey = null
+    this.chunkStatKeys = Object.keys(this.frameChunkStats)
+    this.activeChunkKeys = new Set()
+    this.emptyActiveChunkKeys = new Set()
+    this.chunkOptions = {
+      skipWaterBase: false,
+      skipWaterSot: false
+    }
+    this.chunkUpdateOptions = {
+      skipWaterBase: false,
+      skipWaterSot: false,
+      precomputedState: null,
+      countHit: true,
+      countMiss: true
+    }
+    this.warmUpdateOptions = {
+      skipWaterBase: false,
+      skipWaterSot: false,
+      precomputedState: null,
+      countHit: false,
+      countMiss: false
+    }
+    this.scrollDelta = { x: 0, y: 0 }
+    this.lastScrollOffset = { x: 0, y: 0 }
+    this.hasLastScrollOffset = false
+    this.warmDiscoveryState = {
+      startChunkX: -1,
+      startChunkY: -1,
+      endChunkX: -1,
+      endChunkY: -1,
+      directionX: 0,
+      directionY: 0,
+      mutationGeneration: -1,
+      mapGeneration: -1
+    }
+    this.prewarmedState = {
+      mapGeneration: -1,
+      mutationGeneration: -1,
+      useTexture: null,
+      integratedSignature: null,
+      sotMaskVersion: -1,
+      skipWaterBase: null,
+      skipWaterSot: null
+    }
     // Precomputed SOT (Smoothening Overlay Texture) mask for performance optimization
     // sotMask[y][x] = { orientation: 'top-left'|'top-right'|'bottom-left'|'bottom-right', type: 'street'|'water' } or null
     this.sotMask = null
@@ -242,6 +311,8 @@ export class MapRenderer {
     this.organicTerrain = new OrganicTerrain(() => this.invalidateAllChunks(), textureManager)
     this.integratedBiomeBlendCanvas = null
     this.integratedBiomeBlendContext = null
+    this.cpuWaterPass = new CpuWaterPass()
+    this.appliedMutationEpoch = 0
   }
 
   createEmptyChunkStats() {
@@ -257,14 +328,25 @@ export class MapRenderer {
       chunkFallbacks: 0,
       chunkCacheSize: 0,
       chunkWarmQueueSize: 0,
-      directTilePasses: 0
+      directTilePasses: 0,
+      chunkSignatureCalls: 0,
+      topologyReconstructions: 0,
+      warmBacklog: 0,
+      warmMaxJobAgeMs: 0,
+      warmExpiredJobs: 0,
+      warmCancelledJobs: 0,
+      terrainResidentBytes: 0,
+      terrainStagingBytes: 0
     }
   }
 
   resetFrameChunkStats() {
-    this.frameChunkStats = this.createEmptyChunkStats()
-    this.frameChunkStats.chunksWarmed = this.idleChunksWarmedSinceLastFrame
+    const stats = this.frameChunkStats
+    for (const key of this.chunkStatKeys) stats[key] = 0
+    stats.chunksWarmed = this.idleChunksWarmedSinceLastFrame
+    stats.topologyReconstructions = this.pendingTopologyReconstructions
     this.idleChunksWarmedSinceLastFrame = 0
+    this.pendingTopologyReconstructions = 0
   }
 
   getLastFrameChunkStats() {
@@ -334,8 +416,10 @@ export class MapRenderer {
    * @param {Array} mapGrid - The map grid
    */
   computeSOTMask(mapGrid) {
+    const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_REBUILD)
     if (!mapGrid || !mapGrid.length || !mapGrid[0]?.length) {
       this.sotMask = null
+      renderProfiler.endSpan(profilerToken)
       return
     }
 
@@ -365,6 +449,8 @@ export class MapRenderer {
     }
 
     this.sotMaskVersion++
+    this.frameChunkStats.topologyReconstructions++
+    renderProfiler.endSpan(profilerToken)
   }
 
   /**
@@ -482,62 +568,98 @@ export class MapRenderer {
    * @param {number} tileY - The Y coordinate of the changed tile
    */
   updateSOTMaskForTile(mapGrid, tileX, tileY) {
-    if (!this.sotMask || !mapGrid || !mapGrid.length) return
+    if (!mapGrid || !mapGrid.length || tileX < 0 || tileY < 0) return
+    const bounds = { left: tileX, top: tileY, right: tileX + 1, bottom: tileY + 1 }
+    this.notifyTerrainMutation(mapGrid, RENDER_REVISION_DOMAINS.TOPOLOGY, bounds, bounds)
+  }
 
+  updateSOTMaskInBounds(mapGrid, bounds) {
+    if (!bounds) return
+    if (!this.sotMask) {
+      this.computeSOTMask(mapGrid)
+      return
+    }
+    const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_REBUILD)
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
     const analysisCache = new Map()
-
-    // Update the tile and its immediate neighbors (SOT depends on adjacent tiles)
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const x = tileX + dx
-        const y = tileY + dy
-
-        if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight) continue
-
-        const tile = mapGrid[y][x]
-        if (tile.type === 'land' || tile.type === 'street' || tile.type === 'water') {
-          this.sotMask[y][x] = this.computeSOTForTile(mapGrid, x, y, mapWidth, mapHeight, tile.type, analysisCache)
-        } else {
+    for (let y = bounds.top; y < bounds.bottom; y++) {
+      for (let x = bounds.left; x < bounds.right; x++) {
+        const tile = mapGrid[y]?.[x]
+        if (tile && (tile.type === 'land' || tile.type === 'street' || tile.type === 'water')) {
+          this.sotMask[y][x] = this.computeSOTForTile(
+            mapGrid,
+            x,
+            y,
+            mapWidth,
+            mapHeight,
+            tile.type,
+            analysisCache
+          )
+        } else if (this.sotMask[y]) {
           this.sotMask[y][x] = null
         }
       }
     }
+    this.pendingTopologyReconstructions++
+    renderProfiler.endSpan(profilerToken)
+  }
 
-    this.sotMaskVersion++
-    // Mark affected chunks as dirty
-    this.markTileDirty(tileX, tileY)
+  notifyTerrainMutation(mapGrid, domain, oldBounds, newBounds = oldBounds) {
+    const halo = TERRAIN_REVISION_HALOS[domain]
+    const bounds = this.terrainRevisions.invalidate(mapGrid, domain, oldBounds, newBounds, halo)
+    if (!bounds) return
+    this.prewarmedState.mutationGeneration = -1
+    this.cancelChunkWarmQueue()
+    if (domain === RENDER_REVISION_DOMAINS.TOPOLOGY) {
+      this.updateSOTMaskInBounds(mapGrid, bounds)
+    }
+  }
+
+  attachMutationStore(mapGrid) {
+    const shared = getMapMutationRevisionStore()
+    if (!shared) {
+      this.terrainRevisions.ensureMap(mapGrid)
+      return this.terrainRevisions.store
+    }
+    const sync = consumePendingTerrainSync()
+    this.terrainRevisions.attachStore(sync.store || shared, mapGrid)
+    if (sync.mutationEpoch !== this.appliedMutationEpoch) {
+      this.appliedMutationEpoch = sync.mutationEpoch
+      this.prewarmedState.mutationGeneration = -1
+      this.cancelChunkWarmQueue()
+      if (sync.topologyBounds) this.updateSOTMaskInBounds(mapGrid, {
+        left: Math.max(0, Math.floor(sync.topologyBounds.left)),
+        top: Math.max(0, Math.floor(sync.topologyBounds.top)),
+        right: Math.min(mapGrid[0]?.length || 0, Math.ceil(sync.topologyBounds.right)),
+        bottom: Math.min(mapGrid.length, Math.ceil(sync.topologyBounds.bottom))
+      })
+    }
+    return this.terrainRevisions.store
   }
 
   invalidateAllChunks() {
-    if (this.chunkCache.size) {
-      this.chunkCache.clear()
-    }
+    for (const chunk of this.chunkCache.values()) this.releaseChunkResources(chunk)
+    this.chunkCache.clear()
     this.chunkWarmQueue.clear()
     this.chunkWarmGeneration++
-    this.prewarmedCacheKey = null
+    this.prewarmedState.mapGeneration = -1
     this.chunkUseCounter = 0
+    this.terrainRevisions.dispose()
+    this.hasLastScrollOffset = false
+    this.warmDiscoveryState.mapGeneration = -1
     // Also invalidate SOT mask since map dimensions may have changed
     this.sotMask = null
   }
 
   markTileDirty(tileX, tileY) {
-    this.prewarmedCacheKey = null
-    if (!this.canUseOffscreen || !this.chunkCache.size) return
-    const chunkX = Math.floor(tileX / this.chunkSize)
-    const chunkY = Math.floor(tileY / this.chunkSize)
-
-    for (let dy = -1; dy <= 1; dy++) {
-      for (let dx = -1; dx <= 1; dx++) {
-        const key = this.getChunkKey(chunkX + dx, chunkY + dy)
-        const chunk = this.chunkCache.get(key)
-        if (chunk) {
-          chunk.signature = null
-          chunk.lastWaterFrameIndex = null
-        }
-      }
-    }
+    const mapGrid = this.terrainRevisions.mapGrid
+    if (!mapGrid || tileX < 0 || tileY < 0) return
+    const bounds = { left: tileX, top: tileY, right: tileX + 1, bottom: tileY + 1 }
+    this.notifyTerrainMutation(mapGrid, RENDER_REVISION_DOMAINS.TOPOLOGY, bounds, bounds)
+    this.terrainRevisions.invalidate(mapGrid, RENDER_REVISION_DOMAINS.SURFACE, bounds, bounds)
+    this.terrainRevisions.invalidate(mapGrid, RENDER_REVISION_DOMAINS.RESOURCE, bounds, bounds)
+    this.terrainRevisions.invalidate(mapGrid, RENDER_REVISION_DOMAINS.DECAL, bounds, bounds)
   }
 
   getChunkKey(chunkX, chunkY) {
@@ -547,35 +669,31 @@ export class MapRenderer {
   ensureCacheValidity(mapGrid, useTexture) {
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
-
-    if (mapWidth !== this.cachedMapWidth || mapHeight !== this.cachedMapHeight) {
+    const mapChanged = this.terrainRevisions.mapGrid && this.terrainRevisions.mapGrid !== mapGrid
+    if (
+      mapChanged ||
+      mapWidth !== this.cachedMapWidth ||
+      mapHeight !== this.cachedMapHeight ||
+      this.cachedUseTexture !== useTexture
+    ) {
       this.invalidateAllChunks()
-      this.cachedMapWidth = mapWidth
-      this.cachedMapHeight = mapHeight
     }
-
-    if (this.cachedUseTexture !== useTexture) {
-      this.invalidateAllChunks()
-      this.cachedUseTexture = useTexture
-    }
+    this.cachedMapWidth = mapWidth
+    this.cachedMapHeight = mapHeight
+    this.cachedUseTexture = useTexture
+    this.attachMutationStore(mapGrid)
   }
 
   getChunkRenderCacheKey(mapGrid, useTexture, options = {}) {
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
     const { skipWaterBase = false, skipWaterSot = false } = options
-    return [
-      `${mapWidth}x${mapHeight}`,
-      useTexture ? 'tex' : 'flat',
-      this.textureManager.integratedRenderSignature || 'none',
-      USE_PROCEDURAL_WATER_RENDERING ? 'proc-water' : 'classic-water',
-      WATER_EFFECT_TONE,
-      WATER_EFFECT_SATURATION,
-      WATER_EFFECT_ZOOM,
-      this.sotMaskVersion,
-      skipWaterBase ? 'skip-water-base' : 'draw-water-base',
-      skipWaterSot ? 'skip-water-sot' : 'draw-water-sot'
-    ].join('|')
+    return `${mapWidth}x${mapHeight}|${useTexture ? 'tex' : 'flat'}|` +
+      `${this.textureManager.integratedRenderSignature || 'none'}|` +
+      `${USE_PROCEDURAL_WATER_RENDERING ? 'proc-water' : 'classic-water'}|` +
+      `${WATER_EFFECT_TONE}|${WATER_EFFECT_SATURATION}|${WATER_EFFECT_ZOOM}|` +
+      `${this.sotMaskVersion}|${skipWaterBase ? 'skip-water-base' : 'draw-water-base'}|` +
+      `${skipWaterSot ? 'skip-water-sot' : 'draw-water-sot'}`
   }
 
   prewarmStaticChunks(mapGrid, useTexture, currentWaterFrame, options = {}) {
@@ -590,8 +708,18 @@ export class MapRenderer {
     const maxPrewarmChunks = Math.min(24, this.maxCachedChunks)
     if (!totalChunks || totalChunks > maxPrewarmChunks) return
 
-    const cacheKey = this.getChunkRenderCacheKey(mapGrid, useTexture, { skipWaterBase, skipWaterSot })
-    if (this.prewarmedCacheKey === cacheKey) return
+    const prewarmed = this.prewarmedState
+    if (
+      prewarmed.mapGeneration === this.terrainRevisions.mapGeneration &&
+      prewarmed.mutationGeneration === this.terrainRevisions.mutationGeneration &&
+      prewarmed.useTexture === useTexture &&
+      prewarmed.integratedSignature === this.textureManager.integratedRenderSignature &&
+      prewarmed.sotMaskVersion === this.sotMaskVersion &&
+      prewarmed.skipWaterBase === skipWaterBase &&
+      prewarmed.skipWaterSot === skipWaterSot
+    ) {
+      return
+    }
 
     for (let chunkY = 0; chunkY < chunkRows; chunkY++) {
       const chunkStartY = chunkY * this.chunkSize
@@ -607,7 +735,13 @@ export class MapRenderer {
       }
     }
 
-    this.prewarmedCacheKey = cacheKey
+    prewarmed.mapGeneration = this.terrainRevisions.mapGeneration
+    prewarmed.mutationGeneration = this.terrainRevisions.mutationGeneration
+    prewarmed.useTexture = useTexture
+    prewarmed.integratedSignature = this.textureManager.integratedRenderSignature
+    prewarmed.sotMaskVersion = this.sotMaskVersion
+    prewarmed.skipWaterBase = skipWaterBase
+    prewarmed.skipWaterSot = skipWaterSot
   }
 
   getOrCreateChunk(chunkX, chunkY, startX, startY, endX, endY) {
@@ -619,13 +753,15 @@ export class MapRenderer {
         : null
       const ctx = canvas ? canvas.getContext('2d') : null
       chunk = {
+        key,
+        chunkX,
+        chunkY,
         canvas,
         ctx,
         startX,
         startY,
         endX,
         endY,
-        signature: null,
         lastUseTexture: null,
         lastIntegratedSignature: null,
         lastWaterFrameIndex: null,
@@ -636,9 +772,39 @@ export class MapRenderer {
         lastSotMaskVersion: null,
         lastSkipWaterBase: null,
         lastSkipWaterSot: null,
+        lastMapGeneration: -1,
+        lastTopologyRevision: -1,
+        lastSurfaceRevision: -1,
+        lastWaterRevision: -1,
+        lastResourceRevision: -1,
+        lastDecalRevision: -1,
+        lastAssetRevision: -1,
+        lastLayoutRevision: -1,
+        revisionSnapshot: {
+          topology: 0,
+          surface: 0,
+          water: 0,
+          resource: 0,
+          decal: 0,
+          asset: 0,
+          layout: 0
+        },
+        renderState: {
+          containsWater: false,
+          containsAnimatedWaterSot: false,
+          hasWaterAnimation: false,
+          waterFrameIndex: null,
+          needsRedraw: true,
+          revisionsChanged: true
+        },
+        invariantsValid: false,
+        containsWater: false,
+        containsAnimatedWaterSot: false,
         containsWaterAnimation: false,
         everRendered: false,
         lastUsedAt: 0,
+        residentBytes: 0,
+        residentToken: null,
         padding: this.chunkPadding,
         offsetX: startX * TILE_SIZE - this.chunkPadding,
         offsetY: startY * TILE_SIZE - this.chunkPadding
@@ -650,6 +816,8 @@ export class MapRenderer {
       chunk.endX = endX
       chunk.endY = endY
       chunk.padding = this.chunkPadding
+      chunk.chunkX = chunkX
+      chunk.chunkY = chunkY
     }
 
     chunk.offsetX = startX * TILE_SIZE - chunk.padding
@@ -658,51 +826,120 @@ export class MapRenderer {
     return chunk
   }
 
-  evictOldChunks(activeChunkKeys = new Set()) {
-    if (this.chunkCache.size <= this.maxCachedChunks) return
+  evictOldChunks(activeChunkKeys = this.emptyActiveChunkKeys) {
+    while (this.chunkCache.size > this.maxCachedChunks) {
+      if (!this.evictOneOldestChunk(activeChunkKeys)) break
+    }
+    this.updateTerrainByteTelemetry()
+  }
 
-    const protectedKeys = new Set([...activeChunkKeys, ...this.chunkWarmQueue.keys()])
-    const candidates = [...this.chunkCache.entries()]
-      .filter(([key]) => !protectedKeys.has(key))
-      .sort(([, a], [, b]) => (a.lastUsedAt || 0) - (b.lastUsedAt || 0))
+  evictOneOldestChunk(activeChunkKeys = this.emptyActiveChunkKeys, excludedKey = null) {
+    let candidate = null
+    for (const chunk of this.chunkCache.values()) {
+      if (chunk.key === excludedKey || activeChunkKeys.has(chunk.key)) continue
+      if (!candidate || chunk.lastUsedAt < candidate.lastUsedAt) candidate = chunk
+    }
+    if (!candidate) return false
+    this.releaseChunkResources(candidate)
+    this.chunkCache.delete(candidate.key)
+    this.frameChunkStats.chunksEvicted++
+    renderDiagnostics.addCounter(RENDER_COUNTER_IDS.EVICTIONS)
+    this.prewarmedState.mapGeneration = -1
+    return true
+  }
 
-    for (const [key] of candidates) {
-      if (this.chunkCache.size <= this.maxCachedChunks) break
-      const chunk = this.chunkCache.get(key)
-      if (chunk?.canvas) {
-        chunk.canvas.width = 1
-        chunk.canvas.height = 1
+  releaseChunkResources(chunk) {
+    chunk.residentToken?.release()
+    chunk.residentToken = null
+    chunk.residentBytes = 0
+    if (chunk.canvas) {
+      chunk.canvas.width = 1
+      chunk.canvas.height = 1
+    }
+  }
+
+  reserveChunkRaster(chunk, bytes) {
+    const stagingToken = this.terrainByteBudget.reserve('terrainStaging', bytes)
+    chunk.residentToken?.release()
+    chunk.residentToken = null
+    chunk.residentBytes = 0
+    let residentToken = null
+    while (!residentToken) {
+      try {
+        residentToken = this.terrainByteBudget.reserve('terrainResident', bytes)
+      } catch (error) {
+        if (!this.evictOneOldestChunk(this.activeChunkKeys, chunk.key)) {
+          stagingToken.release()
+          throw error
+        }
       }
-      this.chunkCache.delete(key)
-      this.frameChunkStats.chunksEvicted++
-      if (this.prewarmedCacheKey) {
-        this.prewarmedCacheKey = null
+    }
+    chunk.residentToken = residentToken
+    chunk.residentBytes = bytes
+    return stagingToken
+  }
+
+  updateTerrainByteTelemetry() {
+    const usage = this.terrainByteBudget.usage
+    this.frameChunkStats.terrainResidentBytes = usage.terrainResident
+    this.frameChunkStats.terrainStagingBytes = usage.terrainStaging
+    renderDiagnostics.setByteUsage(RENDER_BYTE_BUDGET_OWNERS.TERRAIN, usage.terrainResident)
+  }
+
+  ensureChunkRevisionMetadata(chunk) {
+    if (!Number.isInteger(chunk.chunkX)) chunk.chunkX = Math.floor(chunk.startX / this.chunkSize)
+    if (!Number.isInteger(chunk.chunkY)) chunk.chunkY = Math.floor(chunk.startY / this.chunkSize)
+    if (!chunk.revisionSnapshot) {
+      chunk.revisionSnapshot = {
+        topology: 0,
+        surface: 0,
+        water: 0,
+        resource: 0,
+        decal: 0,
+        asset: 0,
+        layout: 0
+      }
+    }
+    if (!chunk.renderState) {
+      chunk.renderState = {
+        containsWater: false,
+        containsAnimatedWaterSot: false,
+        hasWaterAnimation: false,
+        waterFrameIndex: null,
+        needsRedraw: true,
+        revisionsChanged: true
       }
     }
   }
 
   getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
+    const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_STATE)
     const { skipWaterBase = false, skipWaterSot = false } = options
-    const { signature, containsWater } = this.computeChunkSignature(
-      mapGrid,
-      chunk.startX,
-      chunk.startY,
-      chunk.endX,
-      chunk.endY
+    this.ensureChunkRevisionMetadata(chunk)
+    const revisions = this.terrainRevisions.getChunkRevisions(
+      chunk.chunkX,
+      chunk.chunkY,
+      chunk.revisionSnapshot
     )
-
-    const containsAnimatedWaterSot = !skipWaterSot && this.chunkContainsAnimatedWaterSot(
-      chunk.startX,
-      chunk.startY,
-      chunk.endX,
-      chunk.endY
-    )
+    const revisionsChanged =
+      chunk.lastMapGeneration !== this.terrainRevisions.mapGeneration ||
+      chunk.lastTopologyRevision !== revisions.topology ||
+      chunk.lastSurfaceRevision !== revisions.surface ||
+      chunk.lastWaterRevision !== revisions.water ||
+      chunk.lastResourceRevision !== revisions.resource ||
+      chunk.lastDecalRevision !== revisions.decal ||
+      chunk.lastAssetRevision !== revisions.asset ||
+      chunk.lastLayoutRevision !== revisions.layout
     const waterAnimationEnabled = USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0
-    const hasWaterAnimation = waterAnimationEnabled && ((containsWater && !skipWaterBase) || containsAnimatedWaterSot)
+    const hasWaterAnimation = waterAnimationEnabled && (
+      (chunk.containsWater && !skipWaterBase) ||
+      (chunk.containsAnimatedWaterSot && !skipWaterSot)
+    )
     const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
 
     const needsRedraw =
-      chunk.signature !== signature ||
+      !chunk.everRendered ||
+      revisionsChanged ||
       chunk.lastUseTexture !== useTexture ||
       chunk.lastIntegratedSignature !== this.textureManager.integratedRenderSignature ||
       chunk.lastProceduralWaterEnabled !== USE_PROCEDURAL_WATER_RENDERING ||
@@ -715,22 +952,33 @@ export class MapRenderer {
       chunk.containsWaterAnimation !== hasWaterAnimation ||
       (hasWaterAnimation && chunk.lastWaterFrameIndex !== waterFrameIndex)
 
-    return {
-      signature,
-      containsWater,
-      hasWaterAnimation,
-      waterFrameIndex,
-      needsRedraw
-    }
+    const state = chunk.renderState
+    state.containsWater = chunk.containsWater
+    state.containsAnimatedWaterSot = chunk.containsAnimatedWaterSot
+    state.hasWaterAnimation = hasWaterAnimation
+    state.waterFrameIndex = waterFrameIndex
+    state.needsRedraw = needsRedraw
+    state.revisionsChanged = revisionsChanged
+    renderProfiler.endSpan(profilerToken)
+    return state
   }
 
   queueChunkForWarm(mapGrid, chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY, useTexture, currentWaterFrame, options = {}, priority = 1) {
     if (!this.canUseOffscreen) return
     const key = this.getChunkKey(chunkX, chunkY)
     const existing = this.chunkWarmQueue.get(key)
-    if (existing && existing.priority >= priority) return
-
-    this.chunkWarmQueue.set(key, {
+    if (existing) {
+      existing.mapGrid = mapGrid
+      existing.useTexture = useTexture
+      existing.currentWaterFrame = currentWaterFrame
+      existing.skipWaterBase = Boolean(options.skipWaterBase)
+      existing.skipWaterSot = Boolean(options.skipWaterSot)
+      existing.generation = this.chunkWarmGeneration
+      if (existing.priority < priority) this.chunkWarmQueue.reprioritize(existing, priority)
+      return
+    }
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    this.chunkWarmQueue.enqueue({
       key,
       chunkX,
       chunkY,
@@ -745,21 +993,25 @@ export class MapRenderer {
       skipWaterSot: Boolean(options.skipWaterSot),
       priority,
       generation: this.chunkWarmGeneration,
-      order: ++this.chunkWarmQueueCounter
+      order: ++this.chunkWarmQueueCounter,
+      queuedAt: now,
+      previousWarmTask: null,
+      nextWarmTask: null
     })
-    this.frameChunkStats.chunksQueued++
     this.trimChunkWarmQueue()
+    this.frameChunkStats.chunksQueued++
     this.scheduleChunkWarmProcessing()
   }
 
   trimChunkWarmQueue() {
-    if (this.chunkWarmQueue.size <= this.maxChunkWarmQueue) return
-    const removable = [...this.chunkWarmQueue.values()]
-      .sort((a, b) => (a.priority - b.priority) || (a.order - b.order))
-    for (const task of removable) {
-      if (this.chunkWarmQueue.size <= this.maxChunkWarmQueue) break
-      this.chunkWarmQueue.delete(task.key)
-    }
+    this.chunkWarmQueue.maxEntries = this.maxChunkWarmQueue
+    while (this.chunkWarmQueue.size > this.maxChunkWarmQueue) this.chunkWarmQueue.dropLowestPriority()
+  }
+
+  cancelChunkWarmQueue() {
+    this.chunkWarmQueue.clear()
+    this.chunkWarmGeneration++
+    this.warmDiscoveryState.mutationGeneration = -1
   }
 
   scheduleChunkWarmProcessing() {
@@ -801,13 +1053,21 @@ export class MapRenderer {
   }
 
   processChunkWarmQueue(deadline = null, generation = this.chunkWarmGeneration) {
+    const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.WARM_QUEUE)
     if (typeof document === 'undefined') {
       this.chunkWarmQueue.clear()
+      renderProfiler.endSpan(profilerToken)
       return
     }
-    if (!this.chunkWarmQueue.size || generation !== this.chunkWarmGeneration) return
+    if (!this.chunkWarmQueue.size || generation !== this.chunkWarmGeneration) {
+      renderProfiler.endSpan(profilerToken)
+      return
+    }
     const startTime = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
-    if (startTime < this.deferChunkWarmUntil) return
+    if (startTime < this.deferChunkWarmUntil) {
+      renderProfiler.endSpan(profilerToken)
+      return
+    }
     let warmed = 0
 
     while (this.chunkWarmQueue.size) {
@@ -816,11 +1076,8 @@ export class MapRenderer {
         break
       }
 
-      const task = [...this.chunkWarmQueue.values()]
-        .sort((a, b) => (b.priority - a.priority) || (a.order - b.order))[0]
+      const task = this.chunkWarmQueue.take(startTime, this.chunkWarmGeneration)
       if (!task) break
-      this.chunkWarmQueue.delete(task.key)
-      if (task.generation !== this.chunkWarmGeneration) continue
 
       const chunk = this.getOrCreateChunk(
         task.chunkX,
@@ -830,18 +1087,14 @@ export class MapRenderer {
         task.chunkEndX,
         task.chunkEndY
       )
-      const options = {
-        skipWaterBase: task.skipWaterBase,
-        skipWaterSot: task.skipWaterSot,
-        countHit: false,
-        countMiss: false
-      }
+      const options = this.warmUpdateOptions
+      options.skipWaterBase = task.skipWaterBase
+      options.skipWaterSot = task.skipWaterSot
+      options.precomputedState = null
       const state = this.getChunkRenderState(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, options)
       if (state.needsRedraw) {
-        this.updateChunkCache(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, {
-          ...options,
-          precomputedState: state
-        })
+        options.precomputedState = state
+        this.updateChunkCache(chunk, task.mapGrid, task.useTexture, task.currentWaterFrame, options)
         warmed++
       }
 
@@ -855,15 +1108,18 @@ export class MapRenderer {
       this.idleChunksWarmedSinceLastFrame += warmed
       this.evictOldChunks()
     }
+    renderProfiler.endSpan(profilerToken)
   }
 
   computeChunkSignature(mapGrid, startX, startY, endX, endY) {
+    const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_SIGNATURE)
+    this.frameChunkStats.chunkSignatureCalls++
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
-    const extraStartX = Math.max(0, startX - 7)
-    const extraStartY = Math.max(0, startY - 7)
-    const extraEndX = Math.min(mapWidth, endX + 7)
-    const extraEndY = Math.min(mapHeight, endY + 7)
+    const extraStartX = Math.max(0, startX - TERRAIN_REVISION_HALOS[RENDER_REVISION_DOMAINS.TOPOLOGY])
+    const extraStartY = Math.max(0, startY - TERRAIN_REVISION_HALOS[RENDER_REVISION_DOMAINS.TOPOLOGY])
+    const extraEndX = Math.min(mapWidth, endX + TERRAIN_REVISION_HALOS[RENDER_REVISION_DOMAINS.TOPOLOGY])
+    const extraEndY = Math.min(mapHeight, endY + TERRAIN_REVISION_HALOS[RENDER_REVISION_DOMAINS.TOPOLOGY])
 
     let signature = 2166136261
     let containsWater = false
@@ -886,13 +1142,15 @@ export class MapRenderer {
         // Only topology reaches the outer halo; decals/resources do not.
         if (x < startX - 1 || y < startY - 1 || x >= endX + 1 || y >= endY + 1) continue
         mixSignature(tile.ore ? 1 : 0)
+        mixSignature(tile.oreDensity || 0)
         mixSignature(tile.seedCrystal ? 1 : 0)
-        mixSignature(tile.noBuild || 0)
+        mixSignature(tile.seedCrystalDensity || 0)
         mixSignature(tile.biome || '')
         mixSignature(tile.shorelineBiome || '')
         mixSignature(tile.biomeBlend?.biome || '')
         mixSignature(tile.biomeBlend?.alpha || 0)
         mixSignature(tile.biomeBlend?.angle || 0)
+        mixSignature(tile.biomeBlend?.featherPixels || 0)
         if (Array.isArray(tile.biomeBlend?.cornerWeights)) {
           for (const weight of tile.biomeBlend.cornerWeights) mixSignature(weight)
         }
@@ -901,6 +1159,7 @@ export class MapRenderer {
       }
     }
 
+    renderProfiler.endSpan(profilerToken)
     return { signature, containsWater }
   }
 
@@ -916,6 +1175,26 @@ export class MapRenderer {
     return false
   }
 
+  refreshChunkInvariants(chunk, mapGrid) {
+    let containsWater = false
+    for (let y = chunk.startY; y < chunk.endY && !containsWater; y++) {
+      for (let x = chunk.startX; x < chunk.endX; x++) {
+        if (mapGrid[y]?.[x]?.type === 'water') {
+          containsWater = true
+          break
+        }
+      }
+    }
+    chunk.containsWater = containsWater
+    chunk.containsAnimatedWaterSot = this.chunkContainsAnimatedWaterSot(
+      chunk.startX,
+      chunk.startY,
+      chunk.endX,
+      chunk.endY
+    )
+    chunk.invariantsValid = true
+  }
+
   updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, options = {}) {
     if (!chunk.canvas || !chunk.ctx) return
     const {
@@ -925,14 +1204,15 @@ export class MapRenderer {
       countHit = true,
       countMiss = true
     } = options
-    const {
-      signature,
-      hasWaterAnimation,
-      waterFrameIndex,
-      needsRedraw
-    } = precomputedState || this.getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, options)
+    const state = precomputedState || this.getChunkRenderState(
+      chunk,
+      mapGrid,
+      useTexture,
+      currentWaterFrame,
+      options
+    )
 
-    if (!needsRedraw) {
+    if (!state.needsRedraw) {
       if (countHit) {
         this.frameChunkStats.chunkHits++
       }
@@ -951,31 +1231,48 @@ export class MapRenderer {
     const tileHeight = chunk.endY - chunk.startY
     const width = tileWidth * TILE_SIZE + chunk.padding * 2 + 1
     const height = tileHeight * TILE_SIZE + chunk.padding * 2 + 1
+    const stagingToken = this.reserveChunkRaster(chunk, getTerrainRasterBytes(width, height))
+    const profilerToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.CHUNK_REBUILD)
+    try {
+      const topologyChanged =
+        !chunk.invariantsValid ||
+        chunk.lastTopologyRevision !== chunk.revisionSnapshot.topology ||
+        chunk.lastSotMaskVersion !== this.sotMaskVersion
+      if (topologyChanged) this.refreshChunkInvariants(chunk, mapGrid)
 
-    if (chunk.canvas.width !== width || chunk.canvas.height !== height) {
-      chunk.canvas.width = width
-      chunk.canvas.height = height
-      chunk.ctx = chunk.canvas.getContext('2d')
-    } else {
-      chunk.ctx.clearRect(0, 0, width, height)
+      if (chunk.canvas.width !== width || chunk.canvas.height !== height) {
+        chunk.canvas.width = width
+        chunk.canvas.height = height
+        chunk.ctx = chunk.canvas.getContext('2d')
+      } else {
+        chunk.ctx.clearRect(0, 0, width, height)
+      }
+
+      chunk.ctx.imageSmoothingEnabled = false
+      this.drawBaseLayer(
+        chunk.ctx,
+        mapGrid,
+        chunk.startX,
+        chunk.startY,
+        chunk.endX,
+        chunk.endY,
+        chunk.offsetX,
+        chunk.offsetY,
+        useTexture,
+        currentWaterFrame,
+        { skipWaterBase, skipWaterSot }
+      )
+    } finally {
+      stagingToken.release()
+      renderProfiler.endSpan(profilerToken)
     }
 
-    chunk.ctx.imageSmoothingEnabled = false
-    this.drawBaseLayer(
-      chunk.ctx,
-      mapGrid,
-      chunk.startX,
-      chunk.startY,
-      chunk.endX,
-      chunk.endY,
-      chunk.offsetX,
-      chunk.offsetY,
-      useTexture,
-      currentWaterFrame,
-      { skipWaterBase, skipWaterSot }
+    const waterAnimationEnabled = USE_PROCEDURAL_WATER_RENDERING || this.textureManager.waterFrames.length > 0
+    const hasWaterAnimation = waterAnimationEnabled && (
+      (chunk.containsWater && !skipWaterBase) ||
+      (chunk.containsAnimatedWaterSot && !skipWaterSot)
     )
-
-    chunk.signature = signature
+    const waterFrameIndex = hasWaterAnimation ? this.textureManager.waterFrameIndex : null
     chunk.lastUseTexture = useTexture
     chunk.lastIntegratedSignature = this.textureManager.integratedRenderSignature
     chunk.lastProceduralWaterEnabled = USE_PROCEDURAL_WATER_RENDERING
@@ -987,7 +1284,16 @@ export class MapRenderer {
     chunk.lastSkipWaterSot = skipWaterSot
     chunk.containsWaterAnimation = hasWaterAnimation
     chunk.lastWaterFrameIndex = hasWaterAnimation ? waterFrameIndex : null
+    chunk.lastMapGeneration = this.terrainRevisions.mapGeneration
+    chunk.lastTopologyRevision = chunk.revisionSnapshot.topology
+    chunk.lastSurfaceRevision = chunk.revisionSnapshot.surface
+    chunk.lastWaterRevision = chunk.revisionSnapshot.water
+    chunk.lastResourceRevision = chunk.revisionSnapshot.resource
+    chunk.lastDecalRevision = chunk.revisionSnapshot.decal
+    chunk.lastAssetRevision = chunk.revisionSnapshot.asset
+    chunk.lastLayoutRevision = chunk.revisionSnapshot.layout
     chunk.everRendered = true
+    this.updateTerrainByteTelemetry()
     return true
   }
 
@@ -1015,10 +1321,32 @@ export class MapRenderer {
 
   queueWarmChunksAroundViewport(mapGrid, startChunkX, startChunkY, endChunkX, endChunkY, mapWidth, mapHeight, useTexture, currentWaterFrame, options, scrollDelta) {
     if (!this.canUseOffscreen) return
-    const chunkColumns = Math.ceil(mapWidth / this.chunkSize)
-    const chunkRows = Math.ceil(mapHeight / this.chunkSize)
     const directionX = Math.sign(scrollDelta.x || 0)
     const directionY = Math.sign(scrollDelta.y || 0)
+    const discovery = this.warmDiscoveryState
+    if (
+      discovery.startChunkX === startChunkX &&
+      discovery.startChunkY === startChunkY &&
+      discovery.endChunkX === endChunkX &&
+      discovery.endChunkY === endChunkY &&
+      discovery.directionX === directionX &&
+      discovery.directionY === directionY &&
+      discovery.mutationGeneration === this.terrainRevisions.mutationGeneration &&
+      discovery.mapGeneration === this.terrainRevisions.mapGeneration
+    ) {
+      return
+    }
+    discovery.startChunkX = startChunkX
+    discovery.startChunkY = startChunkY
+    discovery.endChunkX = endChunkX
+    discovery.endChunkY = endChunkY
+    discovery.directionX = directionX
+    discovery.directionY = directionY
+    discovery.mutationGeneration = this.terrainRevisions.mutationGeneration
+    discovery.mapGeneration = this.terrainRevisions.mapGeneration
+
+    const chunkColumns = Math.ceil(mapWidth / this.chunkSize)
+    const chunkRows = Math.ceil(mapHeight / this.chunkSize)
     const warmRadius = this.mobileMemoryProfile ? 1 : 2
 
     for (let chunkY = Math.max(0, startChunkY - warmRadius); chunkY < Math.min(chunkRows, endChunkY + warmRadius); chunkY++) {
@@ -1098,28 +1426,28 @@ export class MapRenderer {
 
     const mapWidth = mapGrid[0]?.length || 0
     const mapHeight = mapGrid.length
-    const scrollDelta = this.lastScrollOffset
-      ? {
-        x: scrollOffset.x - this.lastScrollOffset.x,
-        y: scrollOffset.y - this.lastScrollOffset.y
-      }
-      : { x: 0, y: 0 }
+    const scrollDelta = this.scrollDelta
+    scrollDelta.x = this.hasLastScrollOffset ? scrollOffset.x - this.lastScrollOffset.x : 0
+    scrollDelta.y = this.hasLastScrollOffset ? scrollOffset.y - this.lastScrollOffset.y : 0
     const isScrolling = Math.abs(scrollDelta.x) > 0.5 || Math.abs(scrollDelta.y) > 0.5
     if (isScrolling && this.mobileMemoryProfile) {
       const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
       this.deferChunkWarmUntil = now + 90
     }
 
-    if (prewarmStaticTerrain) {
-      this.prewarmStaticChunks(mapGrid, useTexture, currentWaterFrame, { skipWaterBase, skipWaterSot })
-    }
-
     const startChunkX = Math.max(0, Math.floor(startTileX / this.chunkSize))
     const startChunkY = Math.max(0, Math.floor(startTileY / this.chunkSize))
     const endChunkX = Math.ceil(endTileX / this.chunkSize)
     const endChunkY = Math.ceil(endTileY / this.chunkSize)
-    const activeChunkKeys = new Set()
-    const chunkOptions = { skipWaterBase, skipWaterSot }
+    const activeChunkKeys = this.activeChunkKeys
+    activeChunkKeys.clear()
+    const chunkOptions = this.chunkOptions
+    chunkOptions.skipWaterBase = skipWaterBase
+    chunkOptions.skipWaterSot = skipWaterSot
+
+    if (prewarmStaticTerrain) {
+      this.prewarmStaticChunks(mapGrid, useTexture, currentWaterFrame, chunkOptions)
+    }
 
     this.queueWarmChunksAroundViewport(
       mapGrid,
@@ -1146,7 +1474,8 @@ export class MapRenderer {
         const chunkEndX = Math.min(mapWidth, chunkStartX + this.chunkSize)
 
         const chunk = this.getOrCreateChunk(chunkX, chunkY, chunkStartX, chunkStartY, chunkEndX, chunkEndY)
-        activeChunkKeys.add(this.getChunkKey(chunkX, chunkY))
+        activeChunkKeys.add(chunk.key)
+        this.chunkWarmQueue.delete(chunk.key)
 
         if (!chunk.canvas || !chunk.ctx) {
           this.frameChunkStats.directTilePasses++
@@ -1167,10 +1496,11 @@ export class MapRenderer {
         }
 
         const state = this.getChunkRenderState(chunk, mapGrid, useTexture, currentWaterFrame, chunkOptions)
-        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, {
-          ...chunkOptions,
-          precomputedState: state
-        })
+        const updateOptions = this.chunkUpdateOptions
+        updateOptions.skipWaterBase = skipWaterBase
+        updateOptions.skipWaterSot = skipWaterSot
+        updateOptions.precomputedState = state
+        this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, updateOptions)
 
         const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
         const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
@@ -1189,13 +1519,34 @@ export class MapRenderer {
     const { drawBase = true, drawSot = true } = options
     if (!drawBase && !drawSot) return
 
+    if (!this.sotMask) {
+      this.computeSOTMask(mapGrid)
+    }
+
+    if (USE_PROCEDURAL_WATER_RENDERING) {
+      this.cpuWaterPass.render(ctx, {
+        mapGrid,
+        sotMask: this.sotMask,
+        topologyRevision: this.terrainRevisions.store?.getGeneration(RENDER_REVISION_DOMAINS.WATER)
+          || this.sotMaskVersion,
+        scrollOffset,
+        startX: startTileX,
+        startY: startTileY,
+        endX: endTileX,
+        endY: endTileY,
+        drawBase,
+        drawSot,
+        tone: WATER_EFFECT_TONE,
+        saturation: WATER_EFFECT_SATURATION,
+        zoom: WATER_EFFECT_ZOOM
+      })
+      return
+    }
+
     const useTexture = USE_TEXTURES && this.textureManager.allTexturesLoaded
     const currentWaterFrame = this.textureManager.waterFrames.length
       ? this.textureManager.getCurrentWaterFrame()
       : null
-    if (!this.sotMask) {
-      this.computeSOTMask(mapGrid)
-    }
 
     const sotApplied = new Set()
     ctx.imageSmoothingEnabled = false
@@ -1279,7 +1630,7 @@ export class MapRenderer {
       const organicGround = this.useOrganicTerrain(useTexture)
       const terracedCliffs = this.organicTerrain.cliffs?.complete && this.organicTerrain.cliffs.naturalWidth
       // Two-cell halo rebuilds the same overlapping sprites on either side of
-      // chunk boundaries. Existing neighbor signatures invalidate both chunks.
+      // chunk boundaries. Surface revisions invalidate both chunks.
       for (const type of ['street', 'rock']) {
         if (type === 'street' && !organicGround) continue
         if (type === 'rock' && terracedCliffs) {
@@ -2179,7 +2530,18 @@ export class MapRenderer {
     this.renderOccupancyMap(ctx, occupancyMap, startTileX, startTileY, endTileX, endTileY, scrollOffset, gameState)
     this.frameChunkStats.chunkCacheSize = this.chunkCache.size
     this.frameChunkStats.chunkWarmQueueSize = this.chunkWarmQueue.size
-    this.lastFrameChunkStats = { ...this.frameChunkStats }
-    this.lastScrollOffset = { x: scrollOffset.x, y: scrollOffset.y }
+    this.frameChunkStats.warmBacklog = this.chunkWarmQueue.size
+    this.frameChunkStats.warmExpiredJobs = this.chunkWarmQueue.expiredJobs
+    this.frameChunkStats.warmCancelledJobs = this.chunkWarmQueue.cancelledJobs
+    const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now()
+    this.frameChunkStats.warmMaxJobAgeMs = this.chunkWarmQueue.getOldestAge(now)
+    this.updateTerrainByteTelemetry()
+    renderDiagnostics.addCounter(RENDER_COUNTER_IDS.BACKLOG, this.chunkWarmQueue.size)
+    for (const key of this.chunkStatKeys) {
+      this.lastFrameChunkStats[key] = this.frameChunkStats[key]
+    }
+    this.lastScrollOffset.x = scrollOffset.x
+    this.lastScrollOffset.y = scrollOffset.y
+    this.hasLastScrollOffset = true
   }
 }

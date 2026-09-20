@@ -1,5 +1,6 @@
 // ammunitionTruckImageRenderer.js - render ammunition trucks using a single image asset
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let ammunitionImg = null
 let ammunitionLoaded = false
@@ -20,15 +21,20 @@ export function isAmmunitionTruckImageLoaded() {
 }
 
 export function renderAmmunitionTruckWithImage(ctx, unit, centerX, centerY) {
-  if (!isAmmunitionTruckImageLoaded()) return false
+  const prepared = getPreparedSprite('unit:ammunitionTruck:base')
+  if (!prepared && !isAmmunitionTruckImageLoaded()) return false
   ctx.save()
   ctx.translate(centerX, centerY)
   const rotation = unit.direction - Math.PI / 2
   ctx.rotate(rotation)
-  const scale = TILE_SIZE / Math.max(ammunitionImg.width, ammunitionImg.height)
-  const width = ammunitionImg.width * scale
-  const height = ammunitionImg.height * scale
-  ctx.drawImage(ammunitionImg, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const scale = TILE_SIZE / Math.max(ammunitionImg.width, ammunitionImg.height)
+    const width = ammunitionImg.width * scale
+    const height = ammunitionImg.height * scale
+    ctx.drawImage(ammunitionImg, -width / 2, -height / 2, width, height)
+  }
   ctx.restore()
   return true
 }

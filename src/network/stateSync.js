@@ -11,6 +11,11 @@ import { setMapDimensions, ORE_SPREAD_ENABLED, ORE_SPREAD_INTERVAL, setOreSpread
 import { broadcastGameCommand } from './commandBroadcast.js'
 import { getSimulationTime } from '../game/time.js'
 import { rebuildWaterMineLookup } from '../game/waterMineSystem.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction
+} from '../rendering/prepared/mapMutationNotifier.js'
+import { bindRenderingDensityPreparation, prepareRuntimeMap } from '../rendering/prepared/renderingPipeline.js'
 
 // Re-export COMMAND_TYPES for convenience (will need to import from gameCommandSync or define here)
 // For now, we'll assume it's imported where needed
@@ -506,72 +511,87 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     return true
   }
 
-  window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
+  const mapRestoreTransaction = beginMapMutationTransaction(
+    { width, height },
+    { replace: true }
+  )
+  try {
+    window.logger('[GameCommandSync] Syncing map from host - seed:', seed, 'dimensions:', width, 'x', height, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
 
-  // Update map dimensions in config module
-  setMapDimensions(width, height)
+    // Update map dimensions in config module
+    setMapDimensions(width, height)
 
-  // Store the host's map seed and player count BEFORE map generation
-  // Player count affects road generation in gameSetup.js
-  gameState.mapSeed = seed
-  gameState.mapTilesX = width
-  gameState.mapTilesY = height
-  if (playerCount) {
-    gameState.playerCount = playerCount
-  }
-  if (Number.isFinite(mapOreFieldCount)) {
-    gameState.mapOreFieldCount = mapOreFieldCount
-  }
-  if (Number.isFinite(mapOreTotalValue)) {
-    gameState.mapOreTotalValue = mapOreTotalValue
-  }
-  if (terrainSettings && typeof terrainSettings === 'object') {
-    gameState.mapWaterPercent = terrainSettings.mapWaterPercent
-    gameState.mapRockPercent = terrainSettings.mapRockPercent
-    gameState.mapShoreNorth = !!terrainSettings.mapShoreNorth
-    gameState.mapShoreWest = !!terrainSettings.mapShoreWest
-    gameState.mapShoreEast = !!terrainSettings.mapShoreEast
-    gameState.mapShoreSouth = !!terrainSettings.mapShoreSouth
-    gameState.mapCenterLake = !!terrainSettings.mapCenterLake
-    gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(terrainSettings.activeSpriteSheetBiomeTag) ? terrainSettings.activeSpriteSheetBiomeTag : 'grass'
-    gameState.mapBiomeRegionCount = terrainSettings.mapBiomeRegionCount
-    gameState.mapBiomeDistribution = terrainSettings.mapBiomeDistribution
-    gameState.mapBiomeWeights = terrainSettings.mapBiomeWeights
-    gameState.mapShorelineWidth = terrainSettings.mapShorelineWidth
-    gameState.mapSnowOnPlateaus = terrainSettings.mapSnowOnPlateaus !== false
-  }
+    // Store the host's map seed and player count BEFORE map generation
+    // Player count affects road generation in gameSetup.js
+    gameState.mapSeed = seed
+    gameState.mapTilesX = width
+    gameState.mapTilesY = height
+    if (playerCount) {
+      gameState.playerCount = playerCount
+    }
+    if (Number.isFinite(mapOreFieldCount)) {
+      gameState.mapOreFieldCount = mapOreFieldCount
+    }
+    if (Number.isFinite(mapOreTotalValue)) {
+      gameState.mapOreTotalValue = mapOreTotalValue
+    }
+    if (terrainSettings && typeof terrainSettings === 'object') {
+      gameState.mapWaterPercent = terrainSettings.mapWaterPercent
+      gameState.mapRockPercent = terrainSettings.mapRockPercent
+      gameState.mapShoreNorth = !!terrainSettings.mapShoreNorth
+      gameState.mapShoreWest = !!terrainSettings.mapShoreWest
+      gameState.mapShoreEast = !!terrainSettings.mapShoreEast
+      gameState.mapShoreSouth = !!terrainSettings.mapShoreSouth
+      gameState.mapCenterLake = !!terrainSettings.mapCenterLake
+      gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(terrainSettings.activeSpriteSheetBiomeTag) ? terrainSettings.activeSpriteSheetBiomeTag : 'grass'
+      gameState.mapBiomeRegionCount = terrainSettings.mapBiomeRegionCount
+      gameState.mapBiomeDistribution = terrainSettings.mapBiomeDistribution
+      gameState.mapBiomeWeights = terrainSettings.mapBiomeWeights
+      gameState.mapShorelineWidth = terrainSettings.mapShorelineWidth
+      gameState.mapSnowOnPlateaus = terrainSettings.mapSnowOnPlateaus !== false
+    }
 
-  // Call main.js function to regenerate map with host's seed and generation settings
-  if (typeof regenerateMapForClient === 'function') {
-    regenerateMapForClient(seed, width, height, playerCount, mapOreFieldCount, mapOreTotalValue, terrainSettings)
-    window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
-  } else {
+    // Call main.js function to regenerate map with host's seed and generation settings
+    if (typeof regenerateMapForClient === 'function') {
+      regenerateMapForClient(seed, width, height, playerCount, mapOreFieldCount, mapOreTotalValue, terrainSettings)
+      window.logger('[GameCommandSync] Client map regenerated with host seed:', seed, 'playerCount:', playerCount, 'mapOreFieldCount:', mapOreFieldCount, 'mapOreTotalValue:', mapOreTotalValue, 'terrainSettings:', terrainSettings)
+    } else {
     // Fallback: Initialize empty map grid if regenerateMapForClient is not available
-    window.logger.warn('[GameCommandSync] regenerateMapForClient not available, creating empty map grid')
-    gameState.mapGrid = []
-    for (let y = 0; y < height; y++) {
-      gameState.mapGrid[y] = []
-      for (let x = 0; x < width; x++) {
-        gameState.mapGrid[y][x] = { type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0, noBuild: 0 }
+      window.logger.warn('[GameCommandSync] regenerateMapForClient not available, creating empty map grid')
+      gameState.mapGrid = []
+      for (let y = 0; y < height; y++) {
+        gameState.mapGrid[y] = []
+        for (let x = 0; x < width; x++) {
+          gameState.mapGrid[y][x] = { type: 'land', ore: false, oreDensity: 0, seedCrystal: false, seedCrystalDensity: 0, noBuild: 0 }
+        }
       }
     }
-  }
 
-  // Initialize occupancyMap
-  if (!gameState.occupancyMap || gameState.occupancyMap.length !== height ||
+    // Initialize occupancyMap
+    if (!gameState.occupancyMap || gameState.occupancyMap.length !== height ||
       (gameState.occupancyMap[0] && gameState.occupancyMap[0].length !== width)) {
-    window.logger('[GameCommandSync] Initializing client occupancyMap:', width, 'x', height)
-    gameState.occupancyMap = []
-    for (let y = 0; y < height; y++) {
-      gameState.occupancyMap[y] = []
-      for (let x = 0; x < width; x++) {
-        gameState.occupancyMap[y][x] = 0
+      window.logger('[GameCommandSync] Initializing client occupancyMap:', width, 'x', height)
+      gameState.occupancyMap = []
+      for (let y = 0; y < height; y++) {
+        gameState.occupancyMap[y] = []
+        for (let x = 0; x < width; x++) {
+          gameState.occupancyMap[y][x] = 0
+        }
       }
     }
-  }
 
-  mapSynced = true
-  return true
+    mapSynced = true
+    return true
+  } finally {
+    commitMapMutationTransaction(mapRestoreTransaction)
+    const restoredGrid = gameState.mapGrid
+    if (Array.isArray(restoredGrid) && restoredGrid.length) {
+      bindRenderingDensityPreparation()
+      prepareRuntimeMap({ grid: restoredGrid }).catch(error => {
+        window.logger?.warn?.('Prepared map generation failed after network restore', error)
+      })
+    }
+  }
 }
 
 /**

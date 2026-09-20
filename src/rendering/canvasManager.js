@@ -1,6 +1,7 @@
 // canvasManager.js
 // Handle canvas setup, resizing, and management
 import { MOBILE_CANVAS_PIXEL_RATIO_CAP } from '../config.js'
+import { publishCanvasViewport } from './prepared/canvasViewportRegistry.js'
 
 export class CanvasManager {
   constructor() {
@@ -12,11 +13,19 @@ export class CanvasManager {
     this.minimapCanvas = document.getElementById('minimap')
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
     this.adaptivePixelRatioCap = this.isTouchLayout() ? 1 : MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.graphicsPixelRatioCap = Infinity
+    this.automaticDensityAdjustmentEnabled = false
     this.pixelRatio = this.resolvePixelRatio()
     this.overlayPixelRatio = this.resolveOverlayPixelRatio()
+    this.densityGeneration = 0
+    this.layoutGeneration = 0
+    this.lastPublishedTerrainPixelRatio = null
+    this.lastPublishedOverlayPixelRatio = null
     this.lastAdaptivePixelRatioCheck = 0
     this.lastAdaptivePixelRatioChange = 0
     this.stableCameraSince = 0
+    this.handleLayoutChange = () => this.resizeCanvases()
+    this.resizeObserver = null
 
     this.setupEventListeners()
   }
@@ -31,10 +40,15 @@ export class CanvasManager {
   }
 
   resolvePixelRatio(rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1) {
-    if (!this.isTouchLayout()) return Math.max(1, rawPixelRatio || 1)
-    const configuredCap = Number.isFinite(MOBILE_CANVAS_PIXEL_RATIO_CAP) ? MOBILE_CANVAS_PIXEL_RATIO_CAP : 1
-    const adaptiveCap = Number.isFinite(this.adaptivePixelRatioCap) ? this.adaptivePixelRatioCap : configuredCap
-    const cap = Math.min(configuredCap, adaptiveCap)
+    const touchLayout = this.isTouchLayout()
+    const configuredCap = touchLayout && Number.isFinite(MOBILE_CANVAS_PIXEL_RATIO_CAP)
+      ? MOBILE_CANVAS_PIXEL_RATIO_CAP
+      : Infinity
+    const adaptiveCap = touchLayout && Number.isFinite(this.adaptivePixelRatioCap)
+      ? this.adaptivePixelRatioCap
+      : Infinity
+    const graphicsCap = Number.isFinite(this.graphicsPixelRatioCap) ? this.graphicsPixelRatioCap : configuredCap
+    const cap = Math.min(configuredCap, adaptiveCap, graphicsCap)
     return Math.max(1, Math.min(rawPixelRatio || 1, cap))
   }
 
@@ -48,9 +62,27 @@ export class CanvasManager {
     this.resizeCanvases()
   }
 
+  setGraphicsPixelRatioCap(cap) {
+    const nextCap = Number.isFinite(cap) ? Math.max(1, cap) : Infinity
+    if (nextCap === this.graphicsPixelRatioCap) return false
+    this.graphicsPixelRatioCap = nextCap
+    this.resizeCanvases()
+    return true
+  }
+
+  setAutomaticDensityAdjustmentEnabled(enabled) {
+    this.automaticDensityAdjustmentEnabled = Boolean(enabled)
+  }
+
   updateAdaptivePixelRatio(fps, now = performance.now(), cameraMoving = false) {
     const rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
-    if (!this.isTouchLayout() || rawPixelRatio <= 1 || !Number.isFinite(fps) || fps <= 0) {
+    if (
+      !this.automaticDensityAdjustmentEnabled ||
+      !this.isTouchLayout() ||
+      rawPixelRatio <= 1 ||
+      !Number.isFinite(fps) ||
+      fps <= 0
+    ) {
       return false
     }
 
@@ -111,14 +143,41 @@ export class CanvasManager {
   }
 
   setupEventListeners() {
-    window.addEventListener('resize', () => this.resizeCanvases())
+    window.addEventListener('resize', this.handleLayoutChange)
+    window.addEventListener('orientationchange', this.handleLayoutChange)
+    window.visualViewport?.addEventListener('resize', this.handleLayoutChange)
+    document.addEventListener('canvas-layout-invalidated', this.handleLayoutChange)
+    if (typeof globalThis.ResizeObserver === 'function') {
+      const sidebar = document.getElementById('sidebar')
+      if (sidebar) {
+        this.resizeObserver = new globalThis.ResizeObserver(this.handleLayoutChange)
+        this.resizeObserver.observe(sidebar)
+      }
+    }
     this.resizeCanvases()
+  }
+
+  dispose() {
+    window.removeEventListener('resize', this.handleLayoutChange)
+    window.removeEventListener('orientationchange', this.handleLayoutChange)
+    window.visualViewport?.removeEventListener('resize', this.handleLayoutChange)
+    document.removeEventListener('canvas-layout-invalidated', this.handleLayoutChange)
+    this.resizeObserver?.disconnect()
+    this.resizeObserver = null
   }
 
   resizeCanvases() {
     const rawPixelRatio = window.devicePixelRatio || 1
     const terrainPixelRatio = this.resolvePixelRatio(rawPixelRatio)
     const overlayPixelRatio = this.resolveOverlayPixelRatio(rawPixelRatio)
+    const densityChanged = terrainPixelRatio !== this.lastPublishedTerrainPixelRatio ||
+      overlayPixelRatio !== this.lastPublishedOverlayPixelRatio
+    if (densityChanged) {
+      this.densityGeneration++
+      this.lastPublishedTerrainPixelRatio = terrainPixelRatio
+      this.lastPublishedOverlayPixelRatio = overlayPixelRatio
+    }
+    this.layoutGeneration++
     this.pixelRatio = terrainPixelRatio
     this.overlayPixelRatio = overlayPixelRatio
     const body = document.body
@@ -218,6 +277,19 @@ export class CanvasManager {
       ? Math.max(0, baseCanvasWidth)
       : Math.max(0, layoutViewportWidth - effectiveSidebarWidth)
     const canvasCssHeight = Math.max(0, baseCanvasHeight)
+    const rightUi = mobileLandscape
+      ? document.getElementById('mobileBuildMenuContainer')
+      : null
+    const rightUiVisible = rightUi && rightUi.getAttribute('aria-hidden') !== 'true'
+    const measuredRightUiWidth = rightUiVisible && typeof rightUi.getBoundingClientRect === 'function'
+      ? rightUi.getBoundingClientRect().width
+      : 0
+    const rightUiWidth = Number.isFinite(measuredRightUiWidth) ? measuredRightUiWidth : 0
+    const playableCanvasWidth = Math.max(
+      0,
+      canvasCssWidth - safeLeft - Math.max(safeRight, rightUiWidth)
+    )
+    const playableCanvasHeight = Math.max(0, canvasCssHeight - safeTop - safeBottom)
 
     const applyCanvasLayout = (canvas) => {
       if (!canvas) return
@@ -262,6 +334,37 @@ export class CanvasManager {
     if (this.gameCanvas.width !== overlayTargetWidth) this.gameCanvas.width = overlayTargetWidth
     if (this.gameCanvas.height !== overlayTargetHeight) this.gameCanvas.height = overlayTargetHeight
 
+    publishCanvasViewport(this.gameGlCanvas, {
+      logicalWidth: canvasCssWidth,
+      logicalHeight: canvasCssHeight,
+      backingWidth: terrainTargetWidth,
+      backingHeight: terrainTargetHeight,
+      density: terrainPixelRatio,
+      playableWidth: playableCanvasWidth,
+      playableHeight: playableCanvasHeight,
+      densityGeneration: this.densityGeneration
+    })
+    publishCanvasViewport(this.gameGpuCanvas, {
+      logicalWidth: canvasCssWidth,
+      logicalHeight: canvasCssHeight,
+      backingWidth: terrainTargetWidth,
+      backingHeight: terrainTargetHeight,
+      density: terrainPixelRatio,
+      playableWidth: playableCanvasWidth,
+      playableHeight: playableCanvasHeight,
+      densityGeneration: this.densityGeneration
+    })
+    publishCanvasViewport(this.gameCanvas, {
+      logicalWidth: canvasCssWidth,
+      logicalHeight: canvasCssHeight,
+      backingWidth: overlayTargetWidth,
+      backingHeight: overlayTargetHeight,
+      density: overlayPixelRatio,
+      playableWidth: playableCanvasWidth,
+      playableHeight: playableCanvasHeight,
+      densityGeneration: this.densityGeneration
+    })
+
     // Scale the drawing context to counter the device pixel ratio
     if (this.gameCtx) {
       this.gameCtx.setTransform(1, 0, 0, 1, 0, 0)
@@ -281,6 +384,14 @@ export class CanvasManager {
     const minimapTargetHeight = Math.max(1, Math.round(minimapHeight * terrainPixelRatio))
     if (this.minimapCanvas.width !== minimapTargetWidth) this.minimapCanvas.width = minimapTargetWidth
     if (this.minimapCanvas.height !== minimapTargetHeight) this.minimapCanvas.height = minimapTargetHeight
+    publishCanvasViewport(this.minimapCanvas, {
+      logicalWidth: minimapWidth,
+      logicalHeight: minimapHeight,
+      backingWidth: minimapTargetWidth,
+      backingHeight: minimapTargetHeight,
+      density: terrainPixelRatio,
+      densityGeneration: this.densityGeneration
+    })
 
     // Scale minimap context
     if (this.minimapCtx) {
@@ -301,9 +412,21 @@ export class CanvasManager {
           width: canvasCssWidth,
           height: canvasCssHeight,
           pixelRatio: terrainPixelRatio,
-          overlayPixelRatio
+          overlayPixelRatio,
+          densityGeneration: this.densityGeneration,
+          layoutGeneration: this.layoutGeneration
         }
       }))
+      if (densityChanged) {
+        document.dispatchEvent(new CustomEvent('canvas-density-changed', {
+          detail: {
+            generation: this.densityGeneration,
+            pixelRatio: terrainPixelRatio,
+            overlayPixelRatio,
+            rawPixelRatio
+          }
+        }))
+      }
     }
   }
 

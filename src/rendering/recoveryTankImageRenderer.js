@@ -1,5 +1,6 @@
 // recoveryTankImageRenderer.js - render recovery tanks using a single image
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let image = null
 let loaded = false
@@ -20,15 +21,20 @@ export function isRecoveryTankImageLoaded() {
 }
 
 export function renderRecoveryTankWithImage(ctx, unit, centerX, centerY) {
-  if (!isRecoveryTankImageLoaded()) return false
+  const prepared = getPreparedSprite('unit:recoveryTank:base')
+  if (!prepared && !isRecoveryTankImageLoaded()) return false
   ctx.save()
   ctx.translate(centerX, centerY)
   const rotation = unit.direction - Math.PI / 2
   ctx.rotate(rotation)
-  const scale = TILE_SIZE / Math.max(image.width, image.height)
-  const width = image.width * scale
-  const height = image.height * scale
-  ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const scale = TILE_SIZE / Math.max(image.width, image.height)
+    const width = image.width * scale
+    const height = image.height * scale
+    ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  }
   ctx.restore()
   return true
 }

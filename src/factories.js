@@ -2,8 +2,31 @@
 import { buildingData, createBuilding } from './buildings.js'
 import { MAP_TILES_X, MAP_TILES_Y, PLAYER_POSITIONS } from './config.js'
 import { gameState } from './gameState.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifyResourceTileMutation,
+  notifySurfaceMutation,
+  notifyTopologyTileMutation
+} from './rendering/prepared/mapMutationNotifier.js'
 
 export function initFactories(factories, mapGrid) {
+  const transaction = beginMapMutationTransaction(mapGrid)
+  try {
+    initFactoriesInTransaction(factories, mapGrid)
+  } finally {
+    commitMapMutationTransaction(transaction)
+  }
+}
+
+function setFactoryTileType(mapGrid, x, y, type) {
+  const tile = mapGrid[y]?.[x]
+  if (!tile || tile.type === type) return
+  tile.type = type
+  notifyTopologyTileMutation(mapGrid, x, y)
+}
+
+function initFactoriesInTransaction(factories, mapGrid) {
   // Clear existing factories
   factories.length = 0
 
@@ -43,7 +66,7 @@ export function initFactories(factories, mapGrid) {
         if (!mapGrid[y] || !mapGrid[y][x] || !mapGrid[y][x].type || mapGrid[y][x].type === 'building') {
           if (!mapGrid[y]) mapGrid[y] = []
           if (!mapGrid[y][x]) mapGrid[y][x] = {}
-          mapGrid[y][x].type = 'street'
+          setFactoryTileType(mapGrid, x, y, 'street')
         }
       }
     }
@@ -67,6 +90,7 @@ export function initFactories(factories, mapGrid) {
         // Remove any ore from tiles where factories are placed
         if (mapGrid[y][x].ore) {
           mapGrid[y][x].ore = false
+          notifyResourceTileMutation(mapGrid, x, y)
           // Clear any cached texture variations for this tile to force re-render
           mapGrid[y][x].textureVariation = null
         }
@@ -75,6 +99,12 @@ export function initFactories(factories, mapGrid) {
         // mapGrid[y][x].type = 'building' // REMOVED: This was causing solid color rendering
       }
     }
+    notifySurfaceMutation(mapGrid, {
+      left: factory.x,
+      top: factory.y,
+      right: factory.x + factory.width,
+      bottom: factory.y + factory.height
+    })
   })
 
   // Add minimal local connectivity between factories if needed
@@ -92,20 +122,20 @@ export function initFactories(factories, mapGrid) {
     // Create L-shaped connection (horizontal then vertical) with 2-tile thickness
     for (let x = Math.min(startX, endX); x <= Math.max(startX, endX); x++) {
       if (mapGrid[startY] && mapGrid[startY][x]) {
-        mapGrid[startY][x].type = 'street'
+        setFactoryTileType(mapGrid, x, startY, 'street')
       }
       // Add thickness
       if (mapGrid[startY + 1] && mapGrid[startY + 1][x]) {
-        mapGrid[startY + 1][x].type = 'street'
+        setFactoryTileType(mapGrid, x, startY + 1, 'street')
       }
     }
     for (let y = Math.min(startY, endY); y <= Math.max(startY, endY); y++) {
       if (mapGrid[y] && mapGrid[y][endX]) {
-        mapGrid[y][endX].type = 'street'
+        setFactoryTileType(mapGrid, endX, y, 'street')
       }
       // Add thickness
       if (mapGrid[y] && mapGrid[y][endX + 1]) {
-        mapGrid[y][endX + 1].type = 'street'
+        setFactoryTileType(mapGrid, endX + 1, y, 'street')
       }
     }
   } else if (factories.length > 2) {
@@ -128,20 +158,20 @@ export function initFactories(factories, mapGrid) {
           // Simple horizontal then vertical connection with 2-tile thickness
           for (let x = Math.min(centerX1, centerX2); x <= Math.max(centerX1, centerX2); x++) {
             if (mapGrid[centerY1] && mapGrid[centerY1][x]) {
-              mapGrid[centerY1][x].type = 'street'
+              setFactoryTileType(mapGrid, x, centerY1, 'street')
             }
             // Add thickness
             if (mapGrid[centerY1 + 1] && mapGrid[centerY1 + 1][x]) {
-              mapGrid[centerY1 + 1][x].type = 'street'
+              setFactoryTileType(mapGrid, x, centerY1 + 1, 'street')
             }
           }
           for (let y = Math.min(centerY1, centerY2); y <= Math.max(centerY1, centerY2); y++) {
             if (mapGrid[y] && mapGrid[y][centerX2]) {
-              mapGrid[y][centerX2].type = 'street'
+              setFactoryTileType(mapGrid, centerX2, y, 'street')
             }
             // Add thickness
             if (mapGrid[y] && mapGrid[y][centerX2 + 1]) {
-              mapGrid[y][centerX2 + 1].type = 'street'
+              setFactoryTileType(mapGrid, centerX2 + 1, y, 'street')
             }
           }
           // Only connect the first close pair to avoid redundancy
@@ -157,24 +187,36 @@ export function initFactories(factories, mapGrid) {
  * Similar to clearBuildingFromMapGrid but for factories
  */
 export function clearFactoryFromMapGrid(factory, mapGrid) {
-  for (let y = factory.y; y < factory.y + factory.height; y++) {
-    for (let x = factory.x; x < factory.x + factory.width; x++) {
-      if (mapGrid[y] && mapGrid[y][x]) {
-        // Restore the original tile type if it was saved, otherwise default to 'land'
-        if (factory.originalTiles &&
+  const transaction = beginMapMutationTransaction(mapGrid)
+  try {
+    for (let y = factory.y; y < factory.y + factory.height; y++) {
+      for (let x = factory.x; x < factory.x + factory.width; x++) {
+        if (mapGrid[y] && mapGrid[y][x]) {
+          // Restore the original tile type if it was saved, otherwise default to 'land'
+          if (factory.originalTiles &&
             factory.originalTiles[y - factory.y] &&
             factory.originalTiles[y - factory.y][x - factory.x]) {
-          mapGrid[y][x].type = factory.originalTiles[y - factory.y][x - factory.x]
-        } else {
-          mapGrid[y][x].type = 'land'
-          // Make sure ore property exists when restoring tiles
-          if (mapGrid[y][x].ore === undefined) {
-            mapGrid[y][x].ore = false
+            setFactoryTileType(mapGrid, x, y, factory.originalTiles[y - factory.y][x - factory.x])
+          } else {
+            setFactoryTileType(mapGrid, x, y, 'land')
+            // Make sure ore property exists when restoring tiles
+            if (mapGrid[y][x].ore === undefined) {
+              mapGrid[y][x].ore = false
+              notifyResourceTileMutation(mapGrid, x, y)
+            }
           }
+          // Clear any building reference to unblock this tile for pathfinding
+          delete mapGrid[y][x].building
         }
-        // Clear any building reference to unblock this tile for pathfinding
-        delete mapGrid[y][x].building
       }
     }
+    notifySurfaceMutation(mapGrid, {
+      left: factory.x,
+      top: factory.y,
+      right: factory.x + factory.width,
+      bottom: factory.y + factory.height
+    })
+  } finally {
+    commitMapMutationTransaction(transaction)
   }
 }

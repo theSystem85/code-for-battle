@@ -1,4 +1,6 @@
 import { buildCliffDepth, cliffContourMask, cliffHeightClass, cliffMacroRect, cliffTallRect, isPlateauTile, CLIFF_LEVELS, CLIFF_CELL, CLIFF_PADDING, CLIFF_TILE, CLIFF_TALL_CELL, CLIFF_TALL_PADDING, CLIFF_VARIANTS } from './cliffTerrain.js'
+import { loadPreparedImage } from './prepared/imagePreparation.js'
+import { TERRAIN_ASSET_MANIFEST } from './prepared/terrainAssetManifest.js'
 
 // These functions run during chunk baking, never per entity or simulation tick.
 export function terrainHash(x, y, seed = 0) {
@@ -226,49 +228,115 @@ export function isCliffChain(grid, x, y) {
   return false
 }
 
-const BIOME_SOURCE_PATHS = {
-  grass: ['images/terrain/source/meadow.webp'],
-  soil: ['images/terrain/source/soil.webp'],
-  snow: ['images/terrain/source/snow.webp'],
-  sand: ['images/terrain/source/sand.webp']
-}
-
 export class OrganicTerrain {
-  constructor(onReady, textureManager = null) {
+  constructor(onReady, textureManager = null, options = {}) {
     this.ready = false
     this.textureManager = textureManager
     this.biomeImages = {}
     this.biomeBlendMasks = new Map()
     this.biomeTransitionTileCache = new Map()
     this.biomeSotTileCache = new Map()
-    this.image = new Image()
-    this.details = new Image()
-    this.cliffs = new Image()
-    const loaded = () => {
-      if (!this.image.complete || !this.image.naturalWidth || !this.details.complete || !this.details.naturalWidth) return
+    this.image = null
+    this.details = null
+    this.cliffs = null
+    this.assetGeneration = 0
+    this.assetState = 'idle'
+    this.assetError = null
+    this.assetProgress = { completed: 0, total: 0 }
+    this.assetController = null
+    this.assetLoader = options.assetLoader || ((entry, { signal }) =>
+      loadPreparedImage(entry.src, { signal, imageFactory: options.imageFactory }))
+    this.onReady = typeof onReady === 'function' ? onReady : () => {}
+    this.lastAssetOptions = null
+    this.readiness = this.prepareAssets()
+    // The renderer can consume readiness explicitly during I20. Until then,
+    // preserve constructor compatibility without an unhandled rejection.
+    this.readiness.catch(() => {})
+  }
+
+  getProgress() {
+    return { state: this.assetState, ...this.assetProgress }
+  }
+
+  cancel(reason = 'Organic terrain preparation cancelled') {
+    if (!this.assetController?.signal.aborted) {
+      this.assetController?.abort(new globalThis.DOMException(reason, 'AbortError'))
+    }
+  }
+
+  retry() {
+    if (this.assetState !== 'failed') return this.readiness
+    this.readiness = this.prepareAssets(this.lastAssetOptions || {})
+    this.readiness.catch(() => {})
+    return this.readiness
+  }
+
+  async prepareAssets({ signal, assets = TERRAIN_ASSET_MANIFEST } = {}) {
+    this.cancel('Organic terrain assets superseded')
+    const generation = ++this.assetGeneration
+    const controller = new globalThis.AbortController()
+    this.assetController = controller
+    this.lastAssetOptions = { signal, assets }
+    const abortFromCaller = () => controller.abort(signal.reason || new globalThis.DOMException('Organic terrain preparation aborted', 'AbortError'))
+    signal?.addEventListener?.('abort', abortFromCaller, { once: true })
+    if (signal?.aborted) abortFromCaller()
+    this.ready = false
+    this.assetState = 'preparing'
+    this.assetError = null
+    this.assetProgress.completed = 0
+    this.assetProgress.total = assets.length
+    try {
+      const decoded = await Promise.all(assets.map(async(entry) => {
+        const image = await this.assetLoader(entry, { signal: controller.signal })
+        controller.signal.throwIfAborted()
+        if (generation !== this.assetGeneration) throw new globalThis.DOMException('Organic terrain asset generation is stale', 'AbortError')
+        if (!image) throw new Error(`Required organic terrain asset did not decode: ${entry.key}`)
+        this.assetProgress.completed++
+        return [entry.key, image]
+      }))
+      controller.signal.throwIfAborted()
+      if (generation !== this.assetGeneration) throw new globalThis.DOMException('Organic terrain asset generation is stale', 'AbortError')
+      const byKey = new Map(decoded)
+      for (const required of TERRAIN_ASSET_MANIFEST) {
+        if (!byKey.has(required.key)) throw new Error(`Missing required organic terrain asset: ${required.key}`)
+      }
+      const biomeImages = { grass: [], soil: [], snow: [], sand: [] }
+      for (const [key, image] of decoded) {
+        if (key.startsWith('biome:')) biomeImages[key.slice(6)]?.push(image)
+      }
+      this.image = byKey.get('atlas') || null
+      this.details = byKey.get('details') || null
+      this.cliffs = byKey.get('cliffs') || null
+      this.biomeImages = biomeImages
+      this.biomeBlendMasks.clear()
+      this.biomeTransitionTileCache.clear()
+      this.biomeSotTileCache.clear()
       this.ready = true
-      onReady()
+      this.assetState = 'ready'
+      this.onReady()
+      return this
+    } catch (error) {
+      this.ready = false
+      this.assetError = error
+      this.assetState = controller.signal.aborted || error?.name === 'AbortError' ? 'cancelled' : 'failed'
+      throw error
+    } finally {
+      signal?.removeEventListener?.('abort', abortFromCaller)
     }
-    this.cliffs.onload = () => onReady()
-    this.cliffs.src = 'images/terrain/terraced-cliffs.webp'
-    this.image.onload = loaded
-    this.details.onload = loaded
-    this.details.onerror = () => { this.ready = false }
-    this.details.src = 'images/terrain/terrain-details.png'
-    this.image.onerror = () => { this.ready = false }
-    this.image.src = 'images/terrain/organic-atlas.png'
-    for (const [biome, paths] of Object.entries(BIOME_SOURCE_PATHS)) {
-      this.biomeImages[biome] = paths.map((path) => {
-        const image = new Image()
-        image.onload = () => {
-          this.biomeTransitionTileCache.clear()
-          this.biomeSotTileCache.clear()
-          onReady()
-        }
-        image.src = path
-        return image
-      })
-    }
+  }
+
+  dispose() {
+    this.cancel('Organic terrain disposed')
+    this.assetGeneration++
+    this.ready = false
+    this.assetState = 'disposed'
+    this.biomeBlendMasks.clear()
+    this.biomeTransitionTileCache.clear()
+    this.biomeSotTileCache.clear()
+    this.biomeImages = {}
+    this.image = null
+    this.details = null
+    this.cliffs = null
   }
 
   drawBiome(ctx, x, y, sx, sy, size, biome) {

@@ -77,6 +77,17 @@ export function buildCliffDepth(grid, startX, startY, endX, endY) {
   return { values, plateau, heightClass, rockDepth, width, left, top }
 }
 
+export function prepareCliffDescriptor(grid, startX, startY, endX, endY, generation) {
+  if (!Number.isInteger(generation) || generation < 0) throw new RangeError('Invalid cliff descriptor generation')
+  const depth = buildCliffDepth(grid, startX, startY, endX, endY)
+  return Object.freeze({
+    ...depth,
+    generation,
+    byteLength: depth.values.byteLength + depth.plateau.byteLength +
+      depth.heightClass.byteLength + depth.rockDepth.byteLength
+  })
+}
+
 export function isPlateauTile(depth, x, y) {
   const localX = x - depth.left, localY = y - depth.top
   if (localX < 0 || localY < 0 || localX >= depth.width) return false
