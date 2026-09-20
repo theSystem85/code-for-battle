@@ -15,7 +15,7 @@ import {
   beginMapMutationTransaction,
   commitMapMutationTransaction
 } from '../rendering/prepared/mapMutationNotifier.js'
-import { publishPreparedRuntimeMap } from '../rendering.js'
+import { bindRenderingDensityPreparation, prepareRuntimeMap } from '../rendering/prepared/renderingPipeline.js'
 
 // Re-export COMMAND_TYPES for convenience (will need to import from gameCommandSync or define here)
 // For now, we'll assume it's imported where needed
@@ -584,7 +584,13 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     return true
   } finally {
     commitMapMutationTransaction(mapRestoreTransaction)
-    publishPreparedRuntimeMap(gameState.mapGrid)
+    const restoredGrid = gameState.mapGrid
+    if (Array.isArray(restoredGrid) && restoredGrid.length) {
+      bindRenderingDensityPreparation()
+      prepareRuntimeMap({ grid: restoredGrid }).catch(error => {
+        window.logger?.warn?.('Prepared map generation failed after network restore', error)
+      })
+    }
   }
 }
 

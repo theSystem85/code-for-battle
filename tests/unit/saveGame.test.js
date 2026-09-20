@@ -210,7 +210,8 @@ vi.mock('../../src/rendering.js', () => ({
   getTextureManager: vi.fn(() => ({})),
   getMapRenderer: vi.fn(() => ({
     invalidateAllChunks: vi.fn()
-  }))
+  })),
+  publishPreparedRuntimeMap: vi.fn(() => Promise.resolve(null))
 }))
 
 vi.mock('../../src/game/harvesterLogic.js', () => ({
