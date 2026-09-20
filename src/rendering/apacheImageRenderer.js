@@ -1,6 +1,11 @@
 // apacheImageRenderer.js - rendering for Apache helicopter unit
 import { TILE_SIZE } from '../config.js'
 import { angleDiff } from '../logic.js'
+import {
+  drawPreparedSpriteCentered,
+  drawPreparedSpriteTopLeft,
+  getPreparedSprite
+} from './prepared/preparedSpritePipeline.js'
 
 let bodyImage = null
 let rotorImage = null
@@ -12,6 +17,16 @@ const BODY_TARGET_WIDTH = TILE_SIZE * 0.7 * 1.5 // 50% larger
 const ROTOR_TARGET_WIDTH = TILE_SIZE * 1.5 // 50% larger
 const ROTOR_ANCHOR = { x: 31, y: 30 }
 const SPRITE_CACHE = new Map()
+const ROTATION_BUCKET_SIZE = 7.5
+const ROTATION_BUCKET_COUNT = 48
+const TILT_STATES = Object.freeze(['neutral', 'forward', 'backward', 'left', 'right'])
+const PREPARED_BODY_IDS = Object.freeze(Array.from({ length: ROTATION_BUCKET_COUNT }, (_, index) => {
+  const bucket = index * ROTATION_BUCKET_SIZE
+  return Object.freeze(Object.fromEntries(
+    TILT_STATES.map(tilt => [tilt, `aircraft:apache:body:${bucket}:${tilt}`])
+  ))
+}))
+const PREPARED_ROTOR_ID = 'aircraft:apache:rotor'
 
 function ensureImagesLoaded(callback) {
   if (bodyLoaded && rotorLoaded) {
@@ -69,8 +84,7 @@ export function isApacheImageLoaded() {
 function getRotationBucket(angle) {
   const normalized = (angle % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2)
   const degrees = normalized * 180 / Math.PI
-  const bucketSize = 7.5  // Doubled rotation states (was 15, now 7.5)
-  return Math.round(degrees / bucketSize) * bucketSize
+  return (Math.round(degrees / ROTATION_BUCKET_SIZE) % ROTATION_BUCKET_COUNT) * ROTATION_BUCKET_SIZE
 }
 
 function getTiltState(unit) {
@@ -167,52 +181,71 @@ function renderShadow(ctx, unit, centerX, centerY) {
   ctx.restore()
 }
 
-function renderBody(ctx, unit, centerX, centerY) {
-  if (!isApacheImageLoaded()) return false
-  const sprite = getBodySprite(getRotationBucket(unit.direction || 0), getTiltState(unit))
-  const altitudeLift = (unit.altitude || 0) * 0.4
-  const drawX = centerX - sprite.width / 2
-  const drawY = centerY - sprite.height / 2 - altitudeLift
+function getPreparedBodySprite(rotationBucket, tiltState) {
+  return getPreparedSprite(PREPARED_BODY_IDS[rotationBucket / ROTATION_BUCKET_SIZE][tiltState])
+}
 
-  ctx.drawImage(sprite, drawX, drawY)
+function renderBody(ctx, unit, centerX, centerY, preparedBody) {
+  if (!preparedBody && !isApacheImageLoaded()) return false
+  const sprite = preparedBody || getBodySprite(getRotationBucket(unit.direction || 0), getTiltState(unit))
+  const altitudeLift = (unit.altitude || 0) * 0.4
+  if (preparedBody) {
+    drawPreparedSpriteCentered(ctx, preparedBody, centerX, centerY - altitudeLift)
+  } else {
+    const drawX = centerX - sprite.width / 2
+    const drawY = centerY - sprite.height / 2 - altitudeLift
+    ctx.drawImage(sprite, drawX, drawY)
+  }
   return true
 }
 
-function renderRotor(ctx, unit, centerX, centerY) {
-  if (!isApacheImageLoaded()) return
+function renderRotor(ctx, unit, centerX, centerY, preparedRotor) {
+  if (!preparedRotor && !isApacheImageLoaded()) return
   const altitudeLift = (unit.altitude || 0) * 0.4
-  const sourceWidth = rotorImage?.naturalWidth || rotorImage?.width || TILE_SIZE
-  const scale = ROTOR_TARGET_WIDTH / Math.max(sourceWidth, 1)
-  const targetWidth = (rotorImage?.naturalWidth || rotorImage?.width || TILE_SIZE) * scale
-  const targetHeight = (rotorImage?.naturalHeight || rotorImage?.height || TILE_SIZE) * scale
-  const anchorX = ROTOR_ANCHOR.x * scale
-  const anchorY = ROTOR_ANCHOR.y * scale
+  const sourceWidth = preparedRotor?.sourceWidth || rotorImage?.naturalWidth || rotorImage?.width || TILE_SIZE
+  const sourceHeight = preparedRotor?.sourceHeight || rotorImage?.naturalHeight || rotorImage?.height || TILE_SIZE
+  const scale = preparedRotor
+    ? preparedRotor.logicalWidth / sourceWidth
+    : ROTOR_TARGET_WIDTH / Math.max(sourceWidth, 1)
+  const targetWidth = preparedRotor?.logicalWidth || sourceWidth * scale
+  const targetHeight = preparedRotor?.logicalHeight || sourceHeight * scale
+  const anchorX = preparedRotor?.anchors.rotor.x || ROTOR_ANCHOR.x * scale
+  const anchorY = preparedRotor?.anchors.rotor.y || ROTOR_ANCHOR.y * scale
 
   ctx.save()
   ctx.translate(centerX, centerY - altitudeLift)
   ctx.rotate((unit.direction || 0) + Math.PI / 2)
-  ctx.translate(-anchorX, -anchorY)
-  ctx.translate(anchorX, anchorY)
   ctx.rotate(unit.rotor?.angle || 0)
-  ctx.translate(-anchorX, -anchorY)
-  ctx.drawImage(rotorImage, 0, 0, targetWidth, targetHeight)
+  if (preparedRotor) {
+    drawPreparedSpriteTopLeft(ctx, preparedRotor, -anchorX, -anchorY)
+  } else {
+    ctx.drawImage(rotorImage, -anchorX, -anchorY, targetWidth, targetHeight)
+  }
   ctx.restore()
 }
 
 export function renderApacheWithImage(ctx, unit, centerX, centerY) {
-  if (!isApacheImageLoaded()) {
+  const rotationBucket = getRotationBucket(unit.direction || 0)
+  const tiltState = getTiltState(unit)
+  const preparedBody = getPreparedBodySprite(rotationBucket, tiltState)
+  const preparedRotor = getPreparedSprite(PREPARED_ROTOR_ID)
+  if (!preparedBody && !isApacheImageLoaded()) {
     preloadApacheImages()
     return false
   }
 
   renderShadow(ctx, unit, centerX, centerY)
-  const rendered = renderBody(ctx, unit, centerX, centerY)
-  renderRotor(ctx, unit, centerX, centerY)
+  const rendered = renderBody(ctx, unit, centerX, centerY, preparedBody)
+  renderRotor(ctx, unit, centerX, centerY, preparedRotor)
   return rendered
 }
 
 export function getApacheRocketSpawnPoints(unit, centerX, centerY) {
-  if (!isApacheImageLoaded()) {
+  const preparedBody = getPreparedBodySprite(
+    getRotationBucket(unit.direction || 0),
+    getTiltState(unit)
+  )
+  if (!preparedBody && !isApacheImageLoaded()) {
     const offsetForward = TILE_SIZE * 0.4
     const offsetSide = TILE_SIZE * 0.25
     const cos = Math.cos(unit.direction || 0)
@@ -229,7 +262,8 @@ export function getApacheRocketSpawnPoints(unit, centerX, centerY) {
     }
   }
 
-  const bodyWidth = bodyImage?.naturalWidth || bodyImage?.width || TILE_SIZE
+  const bodyWidth = preparedBody?.sourceWidth || bodyImage?.naturalWidth || bodyImage?.width || TILE_SIZE
+  const bodyHeight = preparedBody?.sourceHeight || bodyImage?.naturalHeight || bodyImage?.height || TILE_SIZE
   const scale = BODY_TARGET_WIDTH / Math.max(bodyWidth, 1)
   const hardpoints = {
     left: { x: 21, y: 25 },
@@ -240,7 +274,7 @@ export function getApacheRocketSpawnPoints(unit, centerX, centerY) {
   const rotation = (unit.direction || 0) + Math.PI / 2
   Object.entries(hardpoints).forEach(([key, point]) => {
     const localX = (point.x - bodyWidth / 2) * scale
-    const localY = (point.y - (bodyImage?.naturalHeight || bodyImage?.height || TILE_SIZE) / 2) * scale
+    const localY = (point.y - bodyHeight / 2) * scale
     const rotatedX = localX * Math.cos(rotation) - localY * Math.sin(rotation)
     const rotatedY = localX * Math.sin(rotation) + localY * Math.cos(rotation)
     const altitudeLift = (unit.altitude || 0) * 0.4

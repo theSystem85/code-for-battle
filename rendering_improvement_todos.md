@@ -1,6 +1,6 @@
 # Rendering improvement delegation checklist
 
-Status: **C00 foundation and P00 profiling implemented; renderer optimizations not yet integrated**. Date: 2026-09-19. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
+Status: **Wave 2 lanes merged; I20 integration in progress (2026-09-19)**. Date: 2026-09-19. Read [rendering_analysis.md](rendering_analysis.md), [performance_improvement.md](performance_improvement.md), and [spec 069](specs/069-rendering-preparation-contracts.md) before taking a task. Use a model no higher than GPT-5.6 Sol, as requested by the user.
 
 Model roles are intentional: Astra leads this analysis/documentation task; the implementation tasks below are assigned to Luna agents.
 
@@ -69,14 +69,14 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 **Done:** strict reports include cold startup and steady repeat-lap captures, p95/p99/max frame tails, deadline misses, route completion, backend/refresh eligibility, resize events, transformed draws, asset bytes and separate CDP profiles. `PERF_RENDERING_PIPELINE_ACCEPT=1` refuses to certify headless/software/under-75Hz runs. Physical qualifying-hardware certification remains an external measurement step.
 
-## T10 — constant-time terrain cache validity [not implemented]
+## T10 — constant-time terrain cache validity [implemented 2026-09-19]
 
 **Prerequisites:** C00, P00, P01. **Same agent as:** T11.
 
-- [ ] Replace clean-frame signature scans with chunk revisions; cache water/SOT presence and invariant state.
-- [ ] Implement local topology/surface invalidation with correct old/new halo reach; separate local SOT changes from global map generation.
-- [ ] Retain debug-only full-rebuild oracle and randomized edit parity tests. Use the M10 contract; do not patch mutation producers yourself.
-- [ ] Add function spans/counters proving unchanged map rendering makes zero `computeChunkSignature` calls and does no topology reconstruction.
+- [x] Replace clean-frame signature scans with chunk revisions; cache water/SOT presence and invariant state.
+- [x] Implement local topology/surface invalidation with correct old/new halo reach; separate local SOT changes from global map generation.
+- [x] Retain debug-only full-rebuild oracle and randomized edit parity tests. Use the M10 contract; do not patch mutation producers yourself.
+- [x] Add function spans/counters proving unchanged map rendering makes zero `computeChunkSignature` calls and does no topology reconstruction.
 
 **Exclusive write set for T10/T11:** `src/rendering/mapRenderer.js`, `src/rendering.js`, new terrain revision implementation module designated by C00, `tests/unit/mapRendererWater.test.js` and new cache-revision/warm-queue unit tests. Must not edit `organicTerrain.js`, GPU backends, mutation producers or startup orchestrator during this wave.
 
@@ -84,72 +84,72 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 **Done:** byte/pixel parity against full rebuild after mutations; O(visible chunks) primitive validity checks; no full-grid hashes in normal frames. Legacy street output unchanged.
 
-## T11 — bounded cache residency and warm scheduling [not implemented]
+## T11 — bounded cache residency and warm scheduling [implemented 2026-09-19]
 
 **Prerequisite:** T10 (same lane).
 
-- [ ] Reuse visibility/active-key storage; refresh neighbor discovery only on chunk-boundary/direction/revision changes.
-- [ ] Replace repeated array materialization/sorts with stable bounded scheduling. Distinguish queued work from resident pins; enforce byte budgets rather than only count targets.
-- [ ] Add maximum job age, backlog, evictions, resident/staging byte telemetry and cancellation generation handling.
-- [ ] Consume prepared handles from B10/B11. Defer shared integration to I20; do not invent a flat placeholder fallback or freeze dirty visuals to make a benchmark pass.
+- [x] Reuse visibility/active-key storage; refresh neighbor discovery only on chunk-boundary/direction/revision changes.
+- [x] Replace repeated array materialization/sorts with stable bounded scheduling. Distinguish queued work from resident pins; enforce byte budgets rather than only count targets.
+- [x] Add maximum job age, backlog, evictions, resident/staging byte telemetry and cancellation generation handling.
+- [x] Consume prepared handles from B10/B11. Defer shared integration to I20; do not invent a flat placeholder fallback or freeze dirty visuals to make a benchmark pass.
 
 **Done:** no allocation proportional to warm-queue size each frame; no prefetch starvation in fast scrolling; repeated laps remain bounded; missing-page behavior satisfies visual/readiness contract.
 
-## B10 — decode/readiness barrier and preparation lifecycle [not implemented]
+## B10 — decode/readiness barrier and preparation lifecycle [implemented 2026-09-19]
 
 **Prerequisites:** C00, P00, P01. **Same agent as:** B11.
 
-- [ ] Unify readiness for all required terrain/biome/cliff art and applicable prepared sprite variants; wait for actual decode.
-- [ ] Publish one complete asset generation rather than invalidating global caches once per image callback.
-- [ ] Implement prepare/cancel/dispose/progress API and fail/retry behavior. Build testable preparation module; I20 wires it into actual start/load/settings flows.
-- [ ] Count decoded source, prepared raster, transfer and GPU staging bytes separately; do not assume JS heap sees native allocations.
+- [x] Unify readiness for all required terrain/biome/cliff art and applicable prepared sprite variants; wait for actual decode.
+- [x] Publish one complete asset generation rather than invalidating global caches once per image callback.
+- [x] Implement prepare/cancel/dispose/progress API and fail/retry behavior. Build testable preparation module; I20 wires it into actual start/load/settings flows.
+- [x] Count decoded source, prepared raster, transfer and GPU staging bytes separately; do not assume JS heap sees native allocations.
 
 **Exclusive write set for B10/B11:** `src/rendering/organicTerrain.js`, `src/rendering/cliffTerrain.js`, `src/rendering/textureManager.js`, new preparation modules, corresponding `organicTerrain`, `cliffTerrain`, and texture-manager unit tests. No `mapRenderer.js`/`renderer.js`/game orchestrator edits in this wave.
 
 **Done:** decode races and cancellation tested; no incomplete terrain generation is marked ready; asset failure is explicit; one atomic publish per prepared generation.
 
-## B11 — prepare topology, masks and affordable terrain pages [not implemented]
+## B11 — prepare topology, masks and affordable terrain pages [implemented 2026-09-19]
 
 **Prerequisite:** B10 (same lane).
 
-- [ ] Prepare SOT/biome/cliff descriptors once per map generation and reuse them until relevant edits. Preserve exact corner/halo rules.
-- [ ] Prepare masks and compositing at intended density; canonicalize keys only when visual equality is proven. Release old generation caches.
-- [ ] Choose all-resident raster mode only after byte accounting; implement retained descriptors for larger maps. Demonstrate 200×200 DPR-2 memory constraints rather than raising cache limits blindly.
-- [ ] Prototype worker preparation with transferable immutable data if needed; measure total time, responsiveness and duplicate memory. No unmeasured worker assumption.
+- [x] Prepare SOT/biome/cliff descriptors once per map generation and reuse them until relevant edits. Preserve exact corner/halo rules.
+- [x] Prepare masks and compositing at intended density; canonicalize keys only when visual equality is proven. Release old generation caches.
+- [x] Choose all-resident raster mode only after byte accounting; implement retained descriptors for larger maps. Demonstrate 200×200 DPR-2 memory constraints rather than raising cache limits blindly.
+- [x] Prototype worker preparation with transferable immutable data if needed; measure total time, responsiveness and duplicate memory. No unmeasured worker assumption.
 
 **Done:** no static generation or source resizing on the first certified scroll; memory budget includes overlaps/transfers; all required terrain pixels or renderable descriptors ready; animated water not baked into static pages.
 
-## W10 — retain GPU water geometry and instrument GPU time [not implemented]
+## W10 — retain GPU water geometry and instrument GPU time [implemented 2026-09-19]
 
 **Prerequisites:** C00, P00, P01. **Same agent as:** W11 initially.
 
-- [ ] Retain water/SOT world-space instances per revision; stable GPU buffers/pipelines/uniform locations; camera/time-only updates on clean frames.
-- [ ] Limit uploads to changed topology ranges; keep geometry and texture uploads out of clean scrolling.
-- [ ] Add nonblocking capability-checked GPU timers and upload/draw counters; discard invalid/disjoint readings and label unsupported paths.
-- [ ] Preserve existing shader animation, water phase, density, colors, corners and street isolation; test context loss/restoration.
+- [x] Retain water/SOT world-space instances per revision; stable GPU buffers/pipelines/uniform locations; camera/time-only updates on clean frames.
+- [x] Limit uploads to changed topology ranges; keep geometry and texture uploads out of clean scrolling.
+- [x] Add nonblocking capability-checked GPU timers and upload/draw counters; discard invalid/disjoint readings and label unsupported paths.
+- [x] Preserve existing shader animation, water phase, density, colors, corners and street isolation; test context loss/restoration.
 
 **Exclusive write set for W10/W11:** `src/rendering/webglRenderer.js`, `src/rendering/webgpuRenderer.js`, new `src/rendering/prepared/cpuWaterPass.js` (or C00-designated equivalent), GPU-specific unit tests and a new uniquely named water-retention E2E test. Do not edit `mapRenderer.js`; expose CPU pass API for I20.
 
 **Done:** same-time images match reference; moving water remains live; clean-camera frames do not recreate/upload world topology; real GPU timings and fallback reason available where supported.
 
-## W11 — cache CPU-water invariants [not implemented]
+## W11 — cache CPU-water invariants [implemented 2026-09-19]
 
 **Prerequisite:** W10 contract stable (same lane).
 
-- [ ] Extract behavior-equivalent CPU pass behind contract; cache setting palettes and world-space coefficients, retain visible water runs and reuse buffers.
-- [ ] Sample animation time once per pass; preserve tile phase, alpha and layering. No reduced update rate, low-resolution substitution or static loop.
-- [ ] Compare output over multiple fixed timestamps and camera positions, especially SOT/land blends and map edges.
+- [x] Extract behavior-equivalent CPU pass behind contract; cache setting palettes and world-space coefficients, retain visible water runs and reuse buffers.
+- [x] Sample animation time once per pass; preserve tile phase, alpha and layering. No reduced update rate, low-resolution substitution or static loop.
+- [x] Compare output over multiple fixed timestamps and camera positions, especially SOT/land blends and map edges.
 
 **Done:** matches reference animation and coverage; less CPU work demonstrated after integration; no per-tile color-array rebuild in normal frames. I20 connects the extracted pass.
 
-## A10 — generated final-size sprite registry [not implemented]
+## A10 — generated final-size sprite registry [implemented 2026-09-19]
 
 **Prerequisites:** C00, P00, P01. **Same agent as:** A11.
 
-- [ ] Inventory source dimensions, real logical footprint, density, alpha, anchors and state variants for units/buildings/terrain pieces used by entity renderers.
-- [ ] Build WebP-85 generator/manifest and runtime loader for prepared native-size variants, preserving source masters and exact layer anchors.
-- [ ] Prepare custom art and nonstandard DPR before readiness; cache keys include asset version and density. Add decoded byte/disposal accounting.
-- [ ] Ensure complete-transform sizing audit recognizes truly native draws; do not remove rotations or quantize headings.
+- [x] Inventory source dimensions, real logical footprint, density, alpha, anchors and state variants for units/buildings/terrain pieces used by entity renderers.
+- [x] Build WebP-85 generator/manifest and runtime loader for prepared native-size variants, preserving source masters and exact layer anchors.
+- [x] Prepare custom art and nonstandard DPR before readiness; cache keys include asset version and density. Add decoded byte/disposal accounting.
+- [x] Ensure complete-transform sizing audit recognizes truly native draws; do not remove rotations or quantize headings.
 
 **Exclusive write set for A10/A11:** new sprite preparation/build modules and generated assets under a new dedicated `public/images/prepared/` directory; map image renderer files for tank, harvester, rocketTank, ambulance, tankerTruck, recoveryTank, ammunitionTruck, mineLayer, mineSweeper, howitzer, destroyer, supplyShip, navalFleet, turret, apache, f22, f35; `jetRenderScale.js` only if necessary to enforce state exceptions; matching image-renderer tests. C00 owner handles shared package/manifest registrations. Do not edit `buildingRenderer.js` or `unitRenderer.js` (E10 lane).
 
@@ -157,86 +157,86 @@ The integration owner alone updates this checklist, shared specs/TODO/history, p
 
 Building-layer boundary: A10 exclusively prepares/owns the generated art, manifest and registry; E10 consumes it in `buildingRenderer.js`. Neither edits the other's files. C00 fixes the lookup interface and I20 resolves cross-lane integration.
 
-## A11 — consume prepared unit/naval/aircraft layers [not implemented]
+## A11 — consume prepared unit/naval/aircraft layers [implemented 2026-09-19]
 
 **Prerequisite:** A10 (same lane).
 
-- [ ] Replace steady size conversion in owned image renderers with prepared layers; retain continuous rotation, mounting, recoil, muzzle flashes, clips and aspect ratios.
-- [ ] Prepare Apache's existing body buckets and fixed rotor dimensions before play; preserve rotor motion.
-- [ ] Use stable prepared aircraft ground/flight sizes and allow only actual takeoff/landing resizing; tag those audit events explicitly.
-- [ ] Expose prepared building-layer lookup for E10; do not edit E10 files.
+- [x] Replace steady size conversion in owned image renderers with prepared layers; retain continuous rotation, mounting, recoil, muzzle flashes, clips and aspect ratios.
+- [x] Prepare Apache's existing body buckets and fixed rotor dimensions before play; preserve rotor motion.
+- [x] Use stable prepared aircraft ground/flight sizes and allow only actual takeoff/landing resizing; tag those audit events explicitly.
+- [x] Expose prepared building-layer lookup for E10; do not edit E10 files.
 
 **Done:** no unauthorized resized draws/late variant creation in owned renderers; matched visual sequences and selected naval/turret tests pass; aircraft exceptions do not cover ordinary ground/naval resizing.
 
-## E10 — reusable visible entities and building layers [not implemented]
+## E10 — reusable visible entities and building layers [implemented 2026-09-19]
 
 **Prerequisites:** C00, P00, P01. A10 contract available from C00; integrate its implementation at I20. **Same agent as:** E11.
 
-- [ ] Reuse per-frame visible lists and ID indexes; remove repeated linear target lookups and redundant allocations in selected overlays.
-- [ ] Consume prepared building base/turret lookups without touching A10 image renderer files. Preserve construction/Tesla cropping without stretching.
-- [ ] Preserve all layer ordering, tooltip/hit-test semantics, friendly/enemy visibility and airborne terrain occlusion.
-- [ ] Add entity/effects/HUD spans to owning modules; measure before removing useful work.
+- [x] Reuse per-frame visible lists and ID indexes; remove repeated linear target lookups and redundant allocations in selected overlays.
+- [x] Consume prepared building base/turret lookups without touching A10 image renderer files. Preserve construction/Tesla cropping without stretching.
+- [x] Preserve all layer ordering, tooltip/hit-test semantics, friendly/enemy visibility and airborne terrain occlusion.
+- [x] Add entity/effects/HUD spans to owning modules; measure before removing useful work.
 
 **Exclusive write set for E10/E11:** `src/rendering/renderer.js`, `unitRenderer.js`, `buildingRenderer.js`, `effectsRenderer.js`, `wreckRenderer.js`, `wreckSpriteCache.js`, `pathPlanningRenderer.js`, `movementTargetRenderer.js`, `retreatTargetRenderer.js`, `guardRenderer.js`, `dangerZoneRenderer.js`, `mineRenderer.js`, `spriteSheetAnimation.js`, `src/ui/harvesterHUD.js`, and corresponding focused tests. Do not edit `gameLoop.js`, canvas/layout utilities, minimap, or per-unit image renderers.
 
 **Done:** O(1) ID lookup after one shared index build when needed; reusable list identity; correct culling bounds and no missing overlays; visuals and gameplay unaffected.
 
-## E11 — effects/wreck culling and remaining resize conflicts [not implemented]
+## E11 — effects/wreck culling and remaining resize conflicts [implemented 2026-09-19]
 
 **Prerequisite:** E10 (same lane).
 
-- [ ] Cull offscreen wrecks/effects using expanded bounds; preserve visible cables/shadows and lifetime behavior.
-- [ ] Prepare lazy gradient/wreck caches before gameplay where finite; account for their memory and eviction.
-- [ ] Enumerate all remaining growing raster effects/sinking/animation resizing. Implement parity-preserving procedural or exact prepared-frame alternatives; leave unresolved conflicts explicit.
-- [ ] Explicitly resolve smoke/core (`effectsRenderer.js:382–405`), explosion plume/core (`:500–536`) and sinking-wreck (`wreckRenderer.js:192–222`) size conversion. Do not discretize a continuous age-based animation or use aircraft exceptions for these cases; Q31 remains blocked without a continuous-equivalent solution or explicit user decision.
-- [ ] Coordinate any necessary simulation lifetime changes through I20; do not silently stop particles advancing when culled.
+- [x] Cull offscreen wrecks/effects using expanded bounds; preserve visible cables/shadows and lifetime behavior.
+- [x] Prepare lazy gradient/wreck caches before gameplay where finite; account for their memory and eviction.
+- [x] Enumerate all remaining growing raster effects/sinking/animation resizing. Implement parity-preserving procedural or exact prepared-frame alternatives; leave unresolved conflicts explicit.
+- [x] Explicitly resolve smoke/core (`effectsRenderer.js:382–405`), explosion plume/core (`:500–536`) and sinking-wreck (`wreckRenderer.js:192–222`) size conversion. Do not discretize a continuous age-based animation or use aircraft exceptions for these cases; Q31 remains blocked without a continuous-equivalent solution or explicit user decision.
+- [x] Coordinate any necessary simulation lifetime changes through I20; do not silently stop particles advancing when culled.
 
 **Done:** no lost visible effects, no new angular/time quantization, no unapproved resizing exceptions; profiler verifies actual benefit under active worst-case effects.
 
-## V10 — stable viewport/density lifecycle [not implemented]
+## V10 — stable viewport/density lifecycle [implemented 2026-09-19]
 
 **Prerequisites:** C00, P00, P01. **Same agent as:** V11.
 
-- [ ] Cache logical/backing dimensions on layout events; remove repeated frame-path `getBoundingClientRect` reads and result allocations.
-- [ ] Publish reusable viewport state and density-generation events. Prepare and atomically swap required raster variants on explicit display/DPR changes.
-- [ ] Keep selected visual quality fixed during scrolling. Do not count current mobile DPR reduction as success; separate explicit user graphics settings from automatic degradation.
+- [x] Cache logical/backing dimensions on layout events; remove repeated frame-path `getBoundingClientRect` reads and result allocations.
+- [x] Publish reusable viewport state and density-generation events. Prepare and atomically swap required raster variants on explicit display/DPR changes.
+- [x] Keep selected visual quality fixed during scrolling. Do not count current mobile DPR reduction as success; separate explicit user graphics settings from automatic degradation.
 
 **Exclusive write set for V10/V11:** `src/rendering/canvasManager.js`, `src/rendering/renderingUtils.js`, `src/rendering/minimapRenderer.js`, viewport-specific new helper modules and corresponding unit tests. `src/utils/layoutMetrics.js` only if allocated by C00. Do not edit `renderer.js`, game loop or game orchestrator until I20.
 
 **Done:** no continuous canvas size resets/layout reads while scrolling; coherent density across layers; resize/reorientation preserves alignment and input coordinates.
 
-## V11 — minimap and visibility cache [not implemented]
+## V11 — minimap and visibility cache [implemented 2026-09-19]
 
 **Prerequisite:** V10 (same lane).
 
-- [ ] Prepare minimap ground at destination backing dimensions, with independent terrain/resource and visibility revisions.
-- [ ] Avoid full-map fog reconstruction if unchanged; retain live viewport rectangle, units, buildings and current video/radar behavior.
-- [ ] Add separate spans for fog, base image, video and entity markers; avoid attributing video decoding to terrain.
+- [x] Prepare minimap ground at destination backing dimensions, with independent terrain/resource and visibility revisions.
+- [x] Avoid full-map fog reconstruction if unchanged; retain live viewport rectangle, units, buildings and current video/radar behavior.
+- [x] Add separate spans for fog, base image, video and entity markers; avoid attributing video decoding to terrain.
 
 **Done:** no steady minimap source-size conversion; resource/fog updates correct; camera indication remains responsive without lowering visual cadence to pass.
 
-## M10 — complete mutation-producer wiring [not implemented]
+## M10 — complete mutation-producer wiring [implemented 2026-09-19]
 
 **Prerequisites:** C00, P00, P01. **Parallel with:** other wave-2 lanes through frozen revision API.
 
-- [ ] Inventory all writes to fields formerly covered by signatures, including direct assignments and bulk replacements. Register exact files before editing.
-- [ ] Wire old/new local change notifications and bulk transactions for editor, resources/harvesting, building footprints, tile decals, map regeneration, save/load/replay and network map restoration.
-- [ ] Avoid per-entity/tick scans or allocations to discover mutations. Notify at the actual write point; coalesce duplicates.
-- [ ] Confirm state serialization remains device independent and no simulation/occupancy behavior changes.
+- [x] Inventory all writes to fields formerly covered by signatures, including direct assignments and bulk replacements. Register exact files before editing.
+- [x] Wire old/new local change notifications and bulk transactions for editor, resources/harvesting, building footprints, tile decals, map regeneration, save/load/replay and network map restoration.
+- [x] Avoid per-entity/tick scans or allocations to discover mutations. Notify at the actual write point; coalesce duplicates.
+- [x] Confirm state serialization remains device independent and no simulation/occupancy behavior changes.
 
 **Exclusive write set:** C00-inventoried producer files outside `src/rendering/`, `src/performance/`, and the other lanes' named paths. Expected candidates include `src/mapEditor.js`, `src/game/tileDecals.js`, `src/game/harvesterLogic.js`, `src/gameSetup.js`, `src/saveGame.js`, `src/buildings.js`, relevant map generation/resource/network modules, and map-changing methods in `src/game/gameOrchestrator.js`. This list is provisional until C00 resolves actual writers; do not blanket-edit `src/game/**`. Startup readiness wiring in the same orchestrator is deferred to I20.
 
 **Done:** mutation matrix has no uncovered field/producer, full-rebuild oracle agrees after edits and restores, serialization tests pass, no per-frame hash substitute introduced.
 
-## I20 — integration and readiness publication [not implemented]
+## I20 — integration and readiness publication [implemented 2026-09-19; Q30/Q31 still required]
 
 **Prerequisite:** all wave-2 tasks complete and merged. **Exclusive phase; no other code-editing lanes.**
 
-- [ ] Connect prepared-map and sprite readiness to new game, load, multiplayer restore, settings, custom assets and context restoration.
-- [ ] Wire CPU-water extracted implementation, terrain prepared pages/descriptors, profiler spans, viewport record and mutation store into actual call paths.
-- [ ] Verify every mode sets water/static layer flags correctly and that global SOT/texture generations do not accidentally force all chunks dirty.
-- [ ] Audit every diff for source scaling, lazy cache construction, dynamic allocation, visual compromises and unsupported fallback claims.
-- [ ] Run full unit suite, changed-file lint, relevant E2E/parity tests and production build. Record failing performance criteria as blockers, not test exceptions.
+- [x] Connect prepared-map and sprite readiness to new game, load, multiplayer restore, settings, custom assets and context restoration.
+- [x] Wire CPU-water extracted implementation, terrain prepared pages/descriptors, profiler spans, viewport record and mutation store into actual call paths.
+- [x] Verify every mode sets water/static layer flags correctly and that global SOT/texture generations do not accidentally force all chunks dirty.
+- [x] Audit every diff for source scaling, lazy cache construction, dynamic allocation, visual compromises and unsupported fallback claims.
+- [x] Run full unit suite, changed-file lint, relevant E2E/parity tests and production build. Record failing performance criteria as blockers, not test exceptions.
 
 **Write set:** integration points in `mapRenderer.js`, `renderer.js`, `gameLoop.js`, game orchestrator/main/load flows, shared registrations and tests, now unlocked from earlier owners. Update docs with measured results only.
 

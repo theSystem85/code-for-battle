@@ -1,6 +1,7 @@
 // f22ImageRenderer.js - rendering for F22 Raptor stealth fighter unit
 import { TILE_SIZE } from '../config.js'
-import { getJetRenderScale } from './jetRenderScale.js'
+import { getJetRenderScale, getJetResizeAuditTag, LANDED_JET_SCALE } from './jetRenderScale.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let f22Image = null
 let f22Loaded = false
@@ -104,7 +105,14 @@ function renderShadow(ctx, unit, centerX, centerY) {
 }
 
 export function renderF22WithImage(ctx, unit, centerX, centerY) {
-  if (!isF22ImageLoaded()) {
+  const jetRenderScale = getJetRenderScale(unit)
+  const resizeAuditTag = getJetResizeAuditTag(unit)
+  const prepared = getPreparedSprite(
+    !resizeAuditTag && jetRenderScale === LANDED_JET_SCALE
+      ? 'aircraft:f22:ground'
+      : 'aircraft:f22:flight'
+  )
+  if (!prepared && !isF22ImageLoaded()) {
     preloadF22Images()
     return false
   }
@@ -116,12 +124,14 @@ export function renderF22WithImage(ctx, unit, centerX, centerY) {
     renderShadow(ctx, unit, centerX, centerY)
   }
 
-  const sourceWidth = f22Image.naturalWidth || f22Image.width || TILE_SIZE
-  const sourceHeight = f22Image.naturalHeight || f22Image.height || TILE_SIZE
-  const jetRenderScale = getJetRenderScale(unit)
-  const scale = (F22_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
-  const targetWidth = sourceWidth * scale
-  const targetHeight = sourceHeight * scale
+  const sourceWidth = prepared?.sourceWidth || f22Image.naturalWidth || f22Image.width || TILE_SIZE
+  const sourceHeight = prepared?.sourceHeight || f22Image.naturalHeight || f22Image.height || TILE_SIZE
+  const preparedScale = resizeAuditTag ? jetRenderScale : 1
+  const scale = prepared
+    ? prepared.logicalWidth * preparedScale / Math.max(sourceWidth, 1)
+    : (F22_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
+  const targetWidth = prepared?.logicalWidth || sourceWidth * scale
+  const targetHeight = prepared?.logicalHeight || sourceHeight * scale
 
   const drawJetBurst = () => {
     const movingFast = unit.movement?.currentSpeed > 0.7 || unit.f22State === 'takeoff_roll' || unit.f22State === 'liftoff'
@@ -156,7 +166,11 @@ export function renderF22WithImage(ctx, unit, centerX, centerY) {
   ctx.save()
   ctx.translate(centerX, centerY - altitudeLift)
   ctx.rotate((unit.direction || 0) + Math.PI / 2)
-  ctx.drawImage(f22Image, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0, preparedScale, resizeAuditTag)
+  } else {
+    ctx.drawImage(f22Image, -targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight)
+  }
   ctx.restore()
 
   return true
@@ -164,8 +178,15 @@ export function renderF22WithImage(ctx, unit, centerX, centerY) {
 
 export function getF22RocketSpawnPoint(unit, centerX, centerY) {
   const altitudeLift = (unit.altitude || 0) * 0.4
+  const jetRenderScale = getJetRenderScale(unit)
+  const resizeAuditTag = getJetResizeAuditTag(unit)
+  const prepared = getPreparedSprite(
+    !resizeAuditTag && jetRenderScale === LANDED_JET_SCALE
+      ? 'aircraft:f22:ground'
+      : 'aircraft:f22:flight'
+  )
 
-  if (!isF22ImageLoaded()) {
+  if (!prepared && !isF22ImageLoaded()) {
     const offsetForward = TILE_SIZE * 0.46
     return {
       x: centerX + Math.cos(unit.direction || 0) * offsetForward,
@@ -173,10 +194,11 @@ export function getF22RocketSpawnPoint(unit, centerX, centerY) {
     }
   }
 
-  const sourceWidth = f22Image?.naturalWidth || f22Image?.width || TILE_SIZE
-  const sourceHeight = f22Image?.naturalHeight || f22Image?.height || TILE_SIZE
-  const jetRenderScale = getJetRenderScale(unit)
-  const scale = (F22_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
+  const sourceWidth = prepared?.sourceWidth || f22Image?.naturalWidth || f22Image?.width || TILE_SIZE
+  const sourceHeight = prepared?.sourceHeight || f22Image?.naturalHeight || f22Image?.height || TILE_SIZE
+  const scale = prepared
+    ? prepared.logicalWidth * (resizeAuditTag ? jetRenderScale : 1) / Math.max(sourceWidth, 1)
+    : (F22_TARGET_WIDTH * jetRenderScale) / Math.max(sourceWidth, 1)
 
   // Lower fuselage centerline hardpoint so rockets emerge from the rendered jet body, not the ground shadow.
   const hardpoint = { x: sourceWidth / 2, y: sourceHeight * 0.62 }

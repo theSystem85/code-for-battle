@@ -142,7 +142,8 @@ vi.mock('../../src/rendering.js', () => ({
   getMapRenderer: vi.fn(() => ({
     invalidateAllChunks: vi.fn()
   })),
-  notifyTileMutation: vi.fn()
+  notifyTileMutation: vi.fn(),
+  publishPreparedRuntimeMap: vi.fn(() => Promise.resolve(null))
 }))
 
 vi.mock('../../src/game/milestoneSystem.js', () => ({

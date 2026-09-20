@@ -1,4 +1,9 @@
 import { TILE_SIZE } from '../config.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifyDecalTileMutation
+} from '../rendering/prepared/mapMutationNotifier.js'
 
 const DECAL_TAGS = new Set(['impact', 'crater', 'debris'])
 const DEFAULT_SEED = 1
@@ -80,6 +85,7 @@ export function setTileDecal(mapGrid, gameState, tileX, tileY, tag, options = {}
     groupOriginX: Number.isFinite(options.groupOriginX) ? Math.floor(options.groupOriginX) : tileX,
     groupOriginY: Number.isFinite(options.groupOriginY) ? Math.floor(options.groupOriginY) : tileY
   }
+  notifyDecalTileMutation(mapGrid, tileX, tileY)
 
   return tile.decal
 }
@@ -98,15 +104,20 @@ export function setBuildingDebrisDecals(mapGrid, gameState, buildingLike) {
   const width = Math.max(1, Math.floor(buildingLike.width || 1))
   const height = Math.max(1, Math.floor(buildingLike.height || 1))
 
-  for (let y = startY; y < startY + height; y++) {
-    for (let x = startX; x < startX + width; x++) {
-      setTileDecal(mapGrid, gameState, x, y, 'debris', {
-        groupWidth: width,
-        groupHeight: height,
-        groupOriginX: startX,
-        groupOriginY: startY
-      })
+  const transaction = beginMapMutationTransaction(mapGrid)
+  try {
+    for (let y = startY; y < startY + height; y++) {
+      for (let x = startX; x < startX + width; x++) {
+        setTileDecal(mapGrid, gameState, x, y, 'debris', {
+          groupWidth: width,
+          groupHeight: height,
+          groupOriginX: startX,
+          groupOriginY: startY
+        })
+      }
     }
+  } finally {
+    commitMapMutationTransaction(transaction)
   }
 }
 
