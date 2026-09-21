@@ -623,6 +623,236 @@ describe('gameSetup.js', () => {
         expect(typeof hasOreInFactory).toBe('boolean')
       })
     })
+
+    describe('Organic shorelines and center lake', () => {
+      const mapDefaults = {
+        playerCount: 2,
+        mapOreFieldCount: 8,
+        mapOreTotalValue: 64000,
+        mapWaterPercent: 10,
+        mapRockPercent: 5,
+        mapShoreNorth: true,
+        mapShoreWest: true,
+        mapShoreEast: true,
+        mapShoreSouth: true,
+        mapCenterLake: true
+      }
+
+      function restoreMapDefaults() {
+        Object.assign(gameState, mapDefaults)
+      }
+
+      function configureQuietTerrain(overrides = {}) {
+        Object.assign(gameState, {
+          playerCount: 1,
+          mapRockPercent: 0,
+          mapOreFieldCount: 0,
+          mapOreTotalValue: 0,
+          mapWaterPercent: 0,
+          mapShoreNorth: false,
+          mapShoreWest: false,
+          mapShoreEast: false,
+          mapShoreSouth: false,
+          mapCenterLake: false
+        }, overrides)
+      }
+
+      function coastDepthsFromNorth(grid, xStart = 0, xEnd = grid[0].length) {
+        const depths = []
+        for (let x = xStart; x < xEnd; x++) {
+          let depth = 0
+          for (let y = 0; y < grid.length; y++) {
+            if (grid[y][x].type !== 'water') break
+            depth++
+          }
+          depths.push(depth)
+        }
+        return depths
+      }
+
+      function depthRunStats(depths) {
+        let maxStep = 0
+        let run = 1
+        let longest = 1
+        for (let i = 1; i < depths.length; i++) {
+          maxStep = Math.max(maxStep, Math.abs(depths[i] - depths[i - 1]))
+          if (depths[i] === depths[i - 1]) {
+            run += 1
+            longest = Math.max(longest, run)
+          } else {
+            run = 1
+          }
+        }
+        return {
+          min: Math.min(...depths),
+          max: Math.max(...depths),
+          maxStep,
+          longest
+        }
+      }
+
+      function lakeBoundaryRadii(grid, samples = 24) {
+        const height = grid.length
+        const width = grid[0].length
+        const centerX = Math.floor(width / 2)
+        const centerY = Math.floor(height / 2)
+        const radii = []
+        for (let i = 0; i < samples; i++) {
+          const angle = (i / samples) * Math.PI * 2
+          let radius = 0
+          for (let step = 1; step < Math.max(width, height); step++) {
+            const x = Math.round(centerX + (Math.cos(angle) * step))
+            const y = Math.round(centerY + (Math.sin(angle) * step))
+            if (y < 0 || x < 0 || y >= height || x >= width || grid[y][x].type !== 'water') {
+              radius = step - 1
+              break
+            }
+            radius = step
+          }
+          radii.push(radius)
+        }
+        return radii
+      }
+
+      afterEach(() => {
+        restoreMapDefaults()
+      })
+
+      it('curves enabled shorelines instead of stamping a constant-depth band', () => {
+        configureQuietTerrain({
+          mapWaterPercent: 16,
+          mapShoreNorth: true,
+          mapShoreWest: true,
+          mapShoreEast: true,
+          mapShoreSouth: true
+        })
+
+        generateMap(12345, mapGrid, 100, 100)
+
+        for (let x = 0; x < 100; x++) {
+          expect(mapGrid[0][x].type).toBe('water')
+          expect(mapGrid[99][x].type).toBe('water')
+        }
+        for (let y = 0; y < 100; y++) {
+          expect(mapGrid[y][0].type).toBe('water')
+          expect(mapGrid[y][99].type).toBe('water')
+        }
+
+        const middle = coastDepthsFromNorth(mapGrid, 34, 66)
+        const stats = depthRunStats(middle)
+        expect(stats.max - stats.min).toBeGreaterThanOrEqual(3)
+        expect(stats.maxStep).toBeLessThanOrEqual(2)
+        expect(stats.longest).toBeLessThan(18)
+      })
+
+      it('rounds the corner where two shores meet', () => {
+        configureQuietTerrain({
+          mapWaterPercent: 18,
+          mapShoreNorth: true,
+          mapShoreWest: true
+        })
+
+        generateMap(12345, mapGrid, 96, 96)
+
+        const depths = coastDepthsFromNorth(mapGrid)
+        const openSlice = depths.slice(Math.floor(depths.length * 0.35), Math.floor(depths.length * 0.65))
+        const openLevel = openSlice.reduce((sum, depth) => sum + depth, 0) / openSlice.length
+        let descentStart = 0
+        while (descentStart < depths.length - 1 && depths[descentStart] > mapGrid.length * 0.8) {
+          descentStart += 1
+        }
+        let descentEnd = descentStart
+        while (descentEnd < depths.length - 1 && depths[descentEnd] > openLevel + 2) {
+          descentEnd += 1
+        }
+        const descent = depths.slice(descentStart, descentEnd + 1)
+        const stats = depthRunStats(descent)
+        expect(descent.length).toBeGreaterThanOrEqual(4)
+        expect(stats.maxStep).toBeLessThan(mapGrid.length * 0.35)
+      })
+
+      it('keeps a disabled shore dry when no other water source reaches it', () => {
+        configureQuietTerrain({ mapShoreNorth: true })
+
+        generateMap(12345, mapGrid, 80, 80)
+
+        let southWater = 0
+        for (let x = 0; x < 80; x++) {
+          if (mapGrid[79][x].type === 'water') southWater++
+        }
+        expect(southWater).toBe(0)
+        expect(mapGrid[0][40].type).toBe('water')
+      })
+
+      it('shapes the center lake as one irregular blob around the map center', () => {
+        ;[4, 42, 99, 12345].forEach(seed => {
+          configureQuietTerrain({ mapCenterLake: true })
+          const lakeGrid = []
+          generateMap(seed, lakeGrid, 90, 90)
+
+          const centerX = Math.floor(90 / 2)
+          const centerY = Math.floor(90 / 2)
+          expect(lakeGrid[centerY][centerX].type).toBe('water')
+
+          const radii = lakeBoundaryRadii(lakeGrid)
+          const radiusSpan = Math.max(...radii) - Math.min(...radii)
+          expect(radiusSpan).toBeGreaterThanOrEqual(3)
+          expect(new Set(radii).size).toBeGreaterThanOrEqual(4)
+
+          const seen = new Set([`${centerX},${centerY}`])
+          const queue = [[centerX, centerY]]
+          const directions = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+          while (queue.length > 0) {
+            const [x, y] = queue.pop()
+            directions.forEach(([dx, dy]) => {
+              const nx = x + dx
+              const ny = y + dy
+              const key = `${nx},${ny}`
+              if (seen.has(key)) return
+              if (lakeGrid[ny]?.[nx]?.type !== 'water') return
+              seen.add(key)
+              queue.push([nx, ny])
+            })
+          }
+
+          let waterCount = 0
+          for (let y = 0; y < 90; y++) {
+            for (let x = 0; x < 90; x++) {
+              if (lakeGrid[y][x].type === 'water') waterCount++
+            }
+          }
+          expect(seen.size).toBe(waterCount)
+          expect(lakeGrid[0][0].type).not.toBe('water')
+        })
+      })
+
+      it('reproduces organic water from the same seed and changes it for another seed', () => {
+        configureQuietTerrain({
+          mapWaterPercent: 12,
+          mapShoreNorth: true,
+          mapShoreWest: true,
+          mapCenterLake: true
+        })
+
+        const first = []
+        const second = []
+        const other = []
+        generateMap(42, first, 70, 70)
+        generateMap(42, second, 70, 70)
+        generateMap(9001, other, 70, 70)
+
+        let same = true
+        let different = false
+        for (let y = 0; y < 70; y++) {
+          for (let x = 0; x < 70; x++) {
+            if (first[y][x].type !== second[y][x].type) same = false
+            if (first[y][x].type !== other[y][x].type) different = true
+          }
+        }
+        expect(same).toBe(true)
+        expect(different).toBe(true)
+      })
+    })
   })
 
   describe('cleanupOreFromBuildings', () => {

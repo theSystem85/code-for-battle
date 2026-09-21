@@ -841,3 +841,10 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Replace the five-tile constant-damage gas-station blast with a four-tile blast using discrete inward damage rings of 25%, 50%, 75%, and 100%.
 - [x] Validate full building footprints so every AI gas station has at least two completely empty tiles between its outer occupied tiles and every owned construction yard or other critical building.
 - [x] Default new maps to 200×200 with four players, water on every shore, a center lake, 5% rocks, and 20,000 starting money.
+
+## 2026-09-21 Organic coast and lake generation
+
+- [x] Shape procedural shorelines and the center lake in map generation only, leaving coastline shaders, sprites, and autotiles unchanged.
+- [x] Vary shore depth with seeded smooth noise and round corners where two shores meet, so coasts are irregular curves at the tile level.
+- [x] Replace the circular center-lake stamp with a seeded radial blob that stays connected around the map center.
+- [x] Keep base land, land routes, water-percentage scaling, and hand-authored mission maps intact.

@@ -224,13 +224,176 @@ function setTileToType(mapGrid, x, y, type) {
   mapGrid[y][x].type = type
 }
 
-function stampCircle(mapGrid, centerX, centerY, radius, type) {
+// Coast shaping uses its own hash so sampling the shoreline does not advance
+// the map RNG stream that places rivers and ore.
+const SHORE_CORNER_SMOOTH_K = 1.15
+const SHORE_CORNER_REACH_SCALE = 1.28
+
+function mixSeed(seed, salt) {
+  return (Math.imul(seed | 0, 747796405) + Math.imul(salt | 0, 2891336453)) | 0
+}
+
+function hashUnitFloat(seed, x, y) {
+  let n = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263) + Math.imul(seed | 0, 1442695041)
+  n = Math.imul(n ^ (n >>> 13), 1274126177)
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296
+}
+
+function smoothstep01(t) {
+  const x = clamp(t, 0, 1)
+  return x * x * (3 - (2 * x))
+}
+
+function valueNoise1D(seed, x, period) {
+  const spacing = Math.max(2, period)
+  const cell = Math.floor(x / spacing)
+  const blend = smoothstep01((x / spacing) - cell)
+  const left = hashUnitFloat(seed, cell, spacing)
+  const right = hashUnitFloat(seed, cell + 1, spacing)
+  return left + ((right - left) * blend)
+}
+
+function periodicValueNoise(seed, angle, lobes) {
+  const count = Math.max(2, lobes | 0)
+  const cycle = Math.PI * 2
+  const wrapped = ((angle % cycle) + cycle) % cycle
+  const t = (wrapped / cycle) * count
+  const cell = Math.floor(t)
+  const blend = smoothstep01(t - cell)
+  const left = hashUnitFloat(seed, cell % count, count)
+  const right = hashUnitFloat(seed, (cell + 1) % count, count)
+  return left + ((right - left) * blend)
+}
+
+function smoothMin(a, b, k) {
+  if (!(k > 0)) return Math.min(a, b)
+  const h = clamp(0.5 + ((0.5 * (b - a)) / k), 0, 1)
+  return ((b * (1 - h)) + (a * h)) - (k * h * (1 - h))
+}
+
+function buildShoreDepthProfile(length, baseDepth, seed, salt, depthCap) {
+  const profile = new Array(length)
+  const noiseSeed = mixSeed(seed, salt)
+  const safeBase = clamp(baseDepth, 1, depthCap)
+  const amplitude = Math.max(2, safeBase * 0.62)
+  const periods = [
+    Math.max(8, Math.round(length / 4.2)),
+    Math.max(6, Math.round(length / 9)),
+    Math.max(4, Math.round(length / 16)),
+    Math.max(3, Math.round(length / 27))
+  ]
+  const weights = [0.4, 0.28, 0.2, 0.12]
+
+  for (let i = 0; i < length; i++) {
+    let wave = 0
+    for (let octave = 0; octave < periods.length; octave++) {
+      const sample = (valueNoise1D(noiseSeed + (octave * 104729), i, periods[octave]) * 2) - 1
+      wave += weights[octave] * sample
+    }
+    profile[i] = clamp(safeBase + (wave * amplitude), 1, depthCap)
+  }
+
+  return profile
+}
+
+function shoreCornerClaimsTile(distanceA, depthA, distanceB, depthB) {
+  if (!(depthA > 0) || !(depthB > 0)) return false
+  const reach = Math.max(depthA, depthB) * SHORE_CORNER_REACH_SCALE
+  if (distanceA > reach || distanceB > reach) return false
+  const blended = smoothMin(distanceA / depthA, distanceB / depthB, SHORE_CORNER_SMOOTH_K)
+  return blended < 1
+}
+
+function isOrganicShoreTile(x, y, width, height, profiles) {
+  const northDepth = profiles.north ? profiles.north[x] : 0
+  const southDepth = profiles.south ? profiles.south[x] : 0
+  const westDepth = profiles.west ? profiles.west[y] : 0
+  const eastDepth = profiles.east ? profiles.east[y] : 0
+  const northDist = y + 0.5
+  const southDist = height - y - 0.5
+  const westDist = x + 0.5
+  const eastDist = width - x - 0.5
+
+  if (northDepth > 0 && northDist < northDepth) return true
+  if (southDepth > 0 && southDist < southDepth) return true
+  if (westDepth > 0 && westDist < westDepth) return true
+  if (eastDepth > 0 && eastDist < eastDepth) return true
+
+  if (shoreCornerClaimsTile(northDist, northDepth, westDist, westDepth)) return true
+  if (shoreCornerClaimsTile(northDist, northDepth, eastDist, eastDepth)) return true
+  if (shoreCornerClaimsTile(southDist, southDepth, westDist, westDepth)) return true
+  if (shoreCornerClaimsTile(southDist, southDepth, eastDist, eastDepth)) return true
+  return false
+}
+
+function applyOrganicShoreWater(mapGrid, sides, baseDepth, seed) {
+  if (!sides || sides.length === 0) return
   const height = mapGrid.length
   const width = mapGrid[0]?.length || 0
-  for (let y = Math.max(0, centerY - radius); y <= Math.min(height - 1, centerY + radius); y++) {
-    for (let x = Math.max(0, centerX - radius); x <= Math.min(width - 1, centerX + radius); x++) {
-      if (Math.hypot(x - centerX, y - centerY) <= radius) {
-        setTileToType(mapGrid, x, y, type)
+  if (width === 0 || height === 0) return
+
+  const enabled = new Set(sides)
+  const depthCap = Math.max(1, Math.floor(Math.min(width, height) * 0.45))
+  const profiles = {
+    north: enabled.has('north') ? buildShoreDepthProfile(width, baseDepth, seed, 11, depthCap) : null,
+    south: enabled.has('south') ? buildShoreDepthProfile(width, baseDepth, seed, 29, depthCap) : null,
+    west: enabled.has('west') ? buildShoreDepthProfile(height, baseDepth, seed, 47, depthCap) : null,
+    east: enabled.has('east') ? buildShoreDepthProfile(height, baseDepth, seed, 71, depthCap) : null
+  }
+
+  let maxDepth = 1
+  Object.values(profiles).forEach(profile => {
+    if (!profile) return
+    for (let i = 0; i < profile.length; i++) {
+      if (profile[i] > maxDepth) maxDepth = profile[i]
+    }
+  })
+  const reach = Math.ceil(maxDepth * SHORE_CORNER_REACH_SCALE) + 1
+
+  for (let y = 0; y < height; y++) {
+    const nearVerticalEdge = y < reach || y >= height - reach
+    for (let x = 0; x < width; x++) {
+      if (!nearVerticalEdge && x >= reach && x < width - reach) continue
+      if (isOrganicShoreTile(x, y, width, height, profiles)) {
+        setTileToType(mapGrid, x, y, 'water')
+      }
+    }
+  }
+}
+
+function organicLakeRadius(angle, baseRadius, seed) {
+  const safeRadius = Math.max(3, baseRadius)
+  const phaseA = hashUnitFloat(seed, 2, 11) * Math.PI * 2
+  const phaseB = hashUnitFloat(seed, 3, 13) * Math.PI * 2
+  const phaseC = hashUnitFloat(seed, 5, 17) * Math.PI * 2
+  const phaseD = hashUnitFloat(seed, 7, 19) * Math.PI * 2
+  const harmonic = (0.2 * Math.sin((angle * 2) + phaseA))
+    + (0.34 * Math.sin((angle * 3) + phaseB))
+    + (0.24 * Math.sin((angle * 5) + phaseC))
+    + (0.16 * Math.sin((angle * 7) + phaseD))
+  const detail = ((periodicValueNoise(mixSeed(seed, 23), angle, 6) * 2) - 1) * 0.16
+    + ((periodicValueNoise(mixSeed(seed, 41), angle, 11) * 2) - 1) * 0.1
+  const wave = harmonic + detail
+  const amplitude = Math.max(2.6, safeRadius * 0.38)
+  return clamp(safeRadius + (wave * amplitude), Math.max(3, safeRadius * 0.55), safeRadius * 1.38)
+}
+
+function stampOrganicLake(mapGrid, centerX, centerY, baseRadius, seed) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  const radiusLimit = (Math.max(3, baseRadius) * 1.38) + 1
+  const minY = Math.max(0, Math.floor(centerY - radiusLimit))
+  const maxY = Math.min(height - 1, Math.ceil(centerY + radiusLimit))
+  const minX = Math.max(0, Math.floor(centerX - radiusLimit))
+  const maxX = Math.min(width - 1, Math.ceil(centerX + radiusLimit))
+
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const dx = x - centerX
+      const dy = y - centerY
+      const distance = Math.hypot(dx, dy)
+      if (distance === 0 || distance <= organicLakeRadius(Math.atan2(dy, dx), baseRadius, seed)) {
+        setTileToType(mapGrid, x, y, 'water')
       }
     }
   }
@@ -305,30 +468,6 @@ function enforceLandAroundBases(mapGrid, playerPositions) {
       }
     }
   })
-}
-
-function applyShoreWater(mapGrid, side, depth) {
-  const height = mapGrid.length
-  const width = mapGrid[0].length
-  const normalizedDepth = Math.max(1, Math.min(Math.floor(depth), Math.floor(Math.min(width, height) * 0.45)))
-
-  if (side === 'north') {
-    for (let y = 0; y < normalizedDepth; y++) {
-      for (let x = 0; x < width; x++) setTileToType(mapGrid, x, y, 'water')
-    }
-  } else if (side === 'south') {
-    for (let y = height - normalizedDepth; y < height; y++) {
-      for (let x = 0; x < width; x++) setTileToType(mapGrid, x, y, 'water')
-    }
-  } else if (side === 'west') {
-    for (let x = 0; x < normalizedDepth; x++) {
-      for (let y = 0; y < height; y++) setTileToType(mapGrid, x, y, 'water')
-    }
-  } else if (side === 'east') {
-    for (let x = width - normalizedDepth; x < width; x++) {
-      for (let y = 0; y < height; y++) setTileToType(mapGrid, x, y, 'water')
-    }
-  }
 }
 
 function growLineTerrainToTarget(rand, mapGrid, targetType, targetCount, protectedTiles, options = {}) {
@@ -688,15 +827,15 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     1,
     Math.floor(Math.min(MAP_TILES_X, MAP_TILES_Y) * (0.03 + (0.22 * shoreDepthScale)))
   )
-  enabledShoreSides.forEach(side => {
-    applyShoreWater(mapGrid, side, shoreDepth)
-  })
+  if (enabledShoreSides.length > 0) {
+    applyOrganicShoreWater(mapGrid, enabledShoreSides, shoreDepth, normalizedSeed)
+  }
 
   if (gameState.mapCenterLake) {
     const centerX = Math.floor(MAP_TILES_X / 2)
     const centerY = Math.floor(MAP_TILES_Y / 2)
     const radius = Math.max(5, Math.floor(Math.min(MAP_TILES_X, MAP_TILES_Y) * (0.1 + (0.22 * shoreDepthScale))))
-    stampCircle(mapGrid, centerX, centerY, radius, 'water')
+    stampOrganicLake(mapGrid, centerX, centerY, radius, normalizedSeed)
   }
 
   growLineTerrainToTarget(rand, mapGrid, 'water', targetWaterTiles, protectedTiles, {
