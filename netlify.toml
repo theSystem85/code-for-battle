@@ -1,5 +1,8 @@
 [build]
-  command = "rm -rf node_modules package-lock.json && npm install && npm run build && npm run test:smoke"
+  # Keep the committed lockfile. Deleting it and running a floating `npm install`
+  # crashes current npm/arborist while resolving vitest optional peers
+  # (`Cannot read properties of null (reading 'edgesOut')`) and fails the deploy.
+  command = "npm ci --include=dev && npm run build && npm run test:smoke"
   publish = "dist"
 
 [build.environment]
