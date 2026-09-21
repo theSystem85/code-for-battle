@@ -21,3 +21,4 @@ The unfinished timer is `idealTree:node_modules/vitest` while optional peers pul
 ## Acceptance Criteria
 - `npm ci --include=dev && npm run build && npm run test:smoke` succeeds locally and is what Netlify runs.
 - Wang-tile / rendering behavior is unchanged.
+- `tests/unit/netlifyDeployInstall.test.js` reads `netlify.toml` and fails CI when the primary `[build]` command drops `npm ci --include=dev`, deletes `package-lock.json` (`rm ... package-lock`), or uses bare `npm install` as the install step. The explanatory comment in `netlify.toml` stays in place; the test ignores comments when reading the command.
