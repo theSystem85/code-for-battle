@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 vi.mock('../../src/gameState.js', () => ({
   gameState: {
-    buildingsAwaitingRepair: []
+    buildingsAwaitingRepair: [],
+    simulationTime: 200
   }
 }))
 
@@ -36,5 +37,45 @@ describe('building repair countdown HUD', () => {
 
     expect(fillRect).toHaveBeenNthCalledWith(1, 20, 17, 96, 3)
     expect(fillRect).toHaveBeenNthCalledWith(2, 20, 17, 96, 3)
+  })
+
+  it('uses prepared Tesla source rectangles with proportional construction cropping', async() => {
+    globalThis.Image = class Image {}
+    const { BuildingRenderer } = await import('../../src/rendering/buildingRenderer.js')
+    const image = { width: 384, height: 384 }
+    const sprite = {
+      image,
+      sourceRect: { x: 10, y: 20, width: 384, height: 384 }
+    }
+    const renderer = new BuildingRenderer()
+    renderer.setPreparedSpriteRegistry({ get: vi.fn(() => sprite) })
+    const drawImage = vi.fn()
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      drawImage
+    }
+
+    renderer.drawTeslaCoilImage(
+      ctx,
+      renderer.getPreparedSprite('building:teslaCoil:base'),
+      { teslaState: 'charging', teslaChargeStartTime: 0 },
+      5,
+      7,
+      64,
+      64
+    )
+
+    expect(drawImage).toHaveBeenCalledWith(
+      image,
+      10,
+      71,
+      384,
+      333,
+      5,
+      15.5,
+      64,
+      55.5
+    )
   })
 })

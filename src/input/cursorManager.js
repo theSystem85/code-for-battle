@@ -9,6 +9,7 @@ import { getUnitSelectionCenter } from './selectionManager.js'
 import { getBuildingIdentifier } from '../utils.js'
 import { canHarvesterHarvestTile, getRequiredHarvesterLevelForTile } from '../game/harvesterEligibility.js'
 import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
+import { canRecoveryTankTowTarget } from '../game/jetFuel.js'
 
 const CURSOR_CLASS_NAMES = [
   'repair-mode',
@@ -560,6 +561,7 @@ export class CursorManager {
     this.isOverRecoveryTank = false
     // Check if mouse is over a wreck when recovery tanks are selected
     this.isOverWreck = false
+    this.isOverTowableUnit = false
     this.isOverFriendlyHelipad = false
     this.isOverBlockedHelipad = false
     // Check if mouse is over ammo-receivable units/buildings when ammo trucks are selected
@@ -852,6 +854,18 @@ export class CursorManager {
             this.isOverWreck = true
           }
         }
+        if (!this.isOverTowableUnit && units && Array.isArray(units)) {
+          for (const unit of units) {
+            if (!unit || unit.health <= 0) continue
+            const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+            const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+            if (unitTileX !== tileX || unitTileY !== tileY) continue
+            if (selectedUnits.some(tank => canRecoveryTankTowTarget(tank, unit))) {
+              this.isOverTowableUnit = true
+              break
+            }
+          }
+        }
       }
     }
 
@@ -1078,6 +1092,7 @@ export class CursorManager {
                           !gameState.attackGroupMode
 
       const hasImmediateMoveIntoTarget = this.isOverWreck ||
+          this.isOverTowableUnit ||
           this.isOverRepairableUnit ||
           this.isOverRecoveryTank ||
           this.isOverPlayerWorkshop ||

@@ -1,4 +1,5 @@
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 const SOUTH_FACING_SOURCE_ANGLE = Math.PI / 2
 const SOUTH_FACING_GUN_SOURCE_POINT = Object.freeze({ x: 55, y: 260 })
@@ -37,12 +38,19 @@ export function getDestroyerBaseImage() {
 }
 
 export function getDestroyerGunSpawnPoint(unit, centerX, centerY) {
+  const prepared = getPreparedSprite('naval:destroyer:hull')
   const image = destroyerImage
-  const sourceWidth = image?.naturalWidth || image?.width || 109
-  const sourceHeight = image?.naturalHeight || image?.height || 342
-  const scale = (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
-  const localX = (SOUTH_FACING_GUN_SOURCE_POINT.x - sourceWidth / 2) * scale
-  const localY = (SOUTH_FACING_GUN_SOURCE_POINT.y - sourceHeight / 2) * scale
+  const sourceWidth = prepared?.sourceWidth || image?.naturalWidth || image?.width || 109
+  const sourceHeight = prepared?.sourceHeight || image?.naturalHeight || image?.height || 342
+  const scale = prepared
+    ? prepared.logicalWidth / sourceWidth
+    : (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
+  const localX = prepared
+    ? prepared.anchors.gun.x - prepared.logicalWidth / 2
+    : (SOUTH_FACING_GUN_SOURCE_POINT.x - sourceWidth / 2) * scale
+  const localY = prepared
+    ? prepared.anchors.gun.y - prepared.logicalHeight / 2
+    : (SOUTH_FACING_GUN_SOURCE_POINT.y - sourceHeight / 2) * scale
   const rotation = (unit.direction || unit.rotation || 0) - SOUTH_FACING_SOURCE_ANGLE
 
   return {
@@ -52,23 +60,28 @@ export function getDestroyerGunSpawnPoint(unit, centerX, centerY) {
 }
 
 export function renderDestroyerWithImage(ctx, unit, centerX, centerY) {
-  if (!isDestroyerImageLoaded()) {
+  const prepared = getPreparedSprite('naval:destroyer:hull')
+  if (!prepared && !isDestroyerImageLoaded()) {
     if (!destroyerLoading) preloadDestroyerImage()
     return false
   }
 
   const direction = unit.direction || unit.rotation || 0
-  const image = destroyerImage
-  const sourceWidth = image.naturalWidth || image.width
-  const sourceHeight = image.naturalHeight || image.height
-  const scale = (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
-  const width = sourceWidth * scale
-  const height = sourceHeight * scale
 
   ctx.save()
   ctx.translate(centerX, centerY)
   ctx.rotate(direction - SOUTH_FACING_SOURCE_ANGLE)
-  ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const image = destroyerImage
+    const sourceWidth = image.naturalWidth || image.width
+    const sourceHeight = image.naturalHeight || image.height
+    const scale = (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
+    const width = sourceWidth * scale
+    const height = sourceHeight * scale
+    ctx.drawImage(image, -width / 2, -height / 2, width, height)
+  }
   ctx.restore()
 
   return true

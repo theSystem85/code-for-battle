@@ -210,7 +210,8 @@ vi.mock('../../src/rendering.js', () => ({
   getTextureManager: vi.fn(() => ({})),
   getMapRenderer: vi.fn(() => ({
     invalidateAllChunks: vi.fn()
-  }))
+  })),
+  publishPreparedRuntimeMap: vi.fn(() => Promise.resolve(null))
 }))
 
 vi.mock('../../src/game/harvesterLogic.js', () => ({
@@ -407,6 +408,9 @@ describe('saveGame.js', () => {
       mapGrid[1][2].type = 'water'
       mapGrid[1][2].ore = true
       mapGrid[1][2].seedCrystal = true
+      mapGrid[1][2].biome = 'soil'
+      mapGrid[1][2].biomeRegion = 4
+      mapGrid[1][2].biomeBlend = { biome: 'grass', alpha: 0.5, angle: Math.PI / 4, cornerWeights: [0, 0.5, 0.75, 1] }
 
       saveGameModule.saveGame('MapStateTest')
 
@@ -424,7 +428,10 @@ describe('saveGame.js', () => {
         ore: true,
         seedCrystal: true,
         walkable: undefined,
-        passable: undefined
+        passable: undefined,
+        biome: 'soil',
+        biomeRegion: 4,
+        biomeBlend: { biome: 'grass', alpha: 0.5, angle: Math.PI / 4, cornerWeights: [0, 0.5, 0.75, 1] }
       })
     })
 

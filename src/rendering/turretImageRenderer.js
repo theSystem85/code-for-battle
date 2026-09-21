@@ -5,6 +5,10 @@ import turretImageConfig from '../turretImageConfig.json' with { type: 'json' }
 import { MUZZLE_FLASH_DURATION } from '../config.js'
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
+import {
+  drawPreparedSpriteCentered,
+  getPreparedBuildingLayer
+} from './prepared/preparedSpritePipeline.js'
 
 // Cache for loaded turret images
 const turretImageCache = {}
@@ -110,8 +114,10 @@ export function turretImagesAvailable(buildingType) {
  * @returns {boolean} True if rendered with images, false to use fallback
  */
 export function renderTurretWithImages(ctx, building, screenX, screenY, width, height) {
+  const preparedBase = getPreparedBuildingLayer(building.type, 'base')
+  const preparedTop = getPreparedBuildingLayer(building.type, 'top')
   // Check if images are available for this building type
-  if (!turretImagesAvailable(building.type)) {
+  if (!preparedBase && !turretImagesAvailable(building.type)) {
     return false // Use fallback rendering
   }
 
@@ -124,18 +130,19 @@ export function renderTurretWithImages(ctx, building, screenX, screenY, width, h
   ctx.save()
 
   // 1. Render the static base
-  const baseImg = images.base
-  const baseScale = Math.min(width / baseImg.width, height / baseImg.height)
-  const baseWidth = baseImg.width * baseScale
-  const baseHeight = baseImg.height * baseScale
-
-  ctx.drawImage(
-    baseImg,
-    centerX - baseWidth / 2,
-    centerY - baseHeight / 2,
-    baseWidth,
-    baseHeight
-  )
+  const baseImg = images?.base
+  const baseSourceWidth = preparedBase?.sourceWidth || baseImg.width
+  const baseSourceHeight = preparedBase?.sourceHeight || baseImg.height
+  const baseScale = preparedBase
+    ? preparedBase.logicalWidth / baseSourceWidth
+    : Math.min(width / baseSourceWidth, height / baseSourceHeight)
+  if (preparedBase) {
+    drawPreparedSpriteCentered(ctx, preparedBase, centerX, centerY)
+  } else {
+    const baseWidth = baseSourceWidth * baseScale
+    const baseHeight = baseSourceHeight * baseScale
+    ctx.drawImage(baseImg, centerX - baseWidth / 2, centerY - baseHeight / 2, baseWidth, baseHeight)
+  }
 
   // 2. Render the rotating top
   ctx.save()
@@ -147,18 +154,18 @@ export function renderTurretWithImages(ctx, building, screenX, screenY, width, h
   const turretRotation = (building.turretDirection || 0) + rotationOffset
   ctx.rotate(turretRotation)
 
-  const topImg = images.top
+  const topImg = images?.top
   const topScale = baseScale // Use same scale as base to maintain proportions
-  const topWidth = topImg.width * topScale
-  const topHeight = topImg.height * topScale
+  const topSourceWidth = preparedTop?.sourceWidth || topImg.width
+  const topSourceHeight = preparedTop?.sourceHeight || topImg.height
+  const topWidth = preparedTop?.logicalWidth || topSourceWidth * topScale
+  const topHeight = preparedTop?.logicalHeight || topSourceHeight * topScale
 
-  ctx.drawImage(
-    topImg,
-    -topWidth / 2,
-    -topHeight / 2,
-    topWidth,
-    topHeight
-  )
+  if (preparedTop) {
+    drawPreparedSpriteCentered(ctx, preparedTop, 0, 0)
+  } else {
+    ctx.drawImage(topImg, -topWidth / 2, -topHeight / 2, topWidth, topHeight)
+  }
 
   // 3. Render muzzle flash if active
   if (building.muzzleFlashStartTime && now - building.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
@@ -176,8 +183,8 @@ export function renderTurretWithImages(ctx, building, screenX, screenY, width, h
 
     // Position flash at the configured offset from top-left of turret top image
     // Convert from image coordinates to centered coordinates
-    const flashX = (offset.x - topImg.width / 2) * topScale
-    const flashY = (offset.y - topImg.height / 2) * topScale
+    const flashX = (offset.x - topSourceWidth / 2) * topScale
+    const flashY = (offset.y - topSourceHeight / 2) * topScale
 
     // Create radial gradient for muzzle flash
     const gradient = ctx.createRadialGradient(flashX, flashY, 0, flashX, flashY, flashSize)

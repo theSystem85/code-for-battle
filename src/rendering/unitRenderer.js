@@ -26,6 +26,8 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
 export class UnitRenderer {
   constructor() {
     this.repairIcon = null
+    this.aliveCrewRoles = []
+    this.donutGlowColorStops = new Map()
     this.loadRepairIcon()
   }
 
@@ -217,11 +219,12 @@ export class UnitRenderer {
   renderSelection(ctx, unit, centerX, centerY) {
     // Draw selection corner indicators if unit is selected (like buildings)
     if (unit.selected) {
-      if (this.getSelectionHudMode() === 'modern-no-border') {
+      if (this.isDonutSelectionHud()) {
+        this.renderDonutSelectionGlow(ctx, unit, centerX, centerY)
         return
       }
 
-      if (this.isDonutSelectionHud()) {
+      if (this.getSelectionHudMode() === 'modern-no-border') {
         return
       }
 
@@ -438,7 +441,7 @@ export class UnitRenderer {
     return null
   }
 
-  getHudAbsoluteTooltipText(unit, label) {
+  getHudAbsoluteTooltipText(unit, label, entityIndex = null) {
     switch (label) {
       case 'health':
         return `health ${this.roundHudValue(unit.health)}`
@@ -456,7 +459,10 @@ export class UnitRenderer {
         const cargoTypes = Array.isArray(unit.embarkedUnitTypes)
           ? unit.embarkedUnitTypes
           : (unit.embarkedUnitIds || [])
-            .map(id => gameState.units?.find(candidate => candidate.id === id)?.type)
+            .map(id => (
+              entityIndex?.get(`unit:${id}`) ||
+              gameState.units?.find(candidate => candidate.id === id)
+            )?.type)
             .filter(Boolean)
         const counts = cargoTypes.reduce((result, type) => {
           result[type] = (result[type] || 0) + 1
@@ -491,22 +497,30 @@ export class UnitRenderer {
     const crewGap = 3
     const crewHalfSpanAngle = ((crewSize / 2) + crewGap) / donutRadius
     const angle = (Math.atan2(dy, dx) + (Math.PI * 2)) % (Math.PI * 2)
-    const ranges = [
-      { key: 'ammo', start: Math.PI + crewHalfSpanAngle, end: (Math.PI * 1.5) - crewHalfSpanAngle },
-      { key: 'health', start: (Math.PI * 1.5) + crewHalfSpanAngle, end: (Math.PI * 2) - crewHalfSpanAngle },
-      { key: 'fuel', start: crewHalfSpanAngle, end: (Math.PI / 2) - crewHalfSpanAngle },
-      { key: 'experience', start: (Math.PI / 2) + crewHalfSpanAngle, end: Math.PI - crewHalfSpanAngle }
-    ]
-    const active = new Set(['health'])
-    if (this.hasHudFuelBar(unit)) active.add('fuel')
-    if (this.hasHudAmmoBar(unit)) active.add('ammo')
-    if (this.hasHudBottomProgressBar(unit)) active.add('experience')
-
-    const hit = ranges.find(r => active.has(r.key) && angle >= r.start && angle <= r.end)
-    if (!hit) return null
-    if (unit.type === 'supplyShip' && hit.key === 'experience') return 'supply'
-    if ((unit.type === 'hovercraft' || unit.type === 'vehicleFerry') && hit.key === 'experience') return 'cargo'
-    return hit.key
+    if (
+      this.hasHudAmmoBar(unit) &&
+      angle >= Math.PI + crewHalfSpanAngle &&
+      angle <= (Math.PI * 1.5) - crewHalfSpanAngle
+    ) return 'ammo'
+    if (
+      angle >= (Math.PI * 1.5) + crewHalfSpanAngle &&
+      angle <= (Math.PI * 2) - crewHalfSpanAngle
+    ) return 'health'
+    if (
+      this.hasHudFuelBar(unit) &&
+      angle >= crewHalfSpanAngle &&
+      angle <= (Math.PI / 2) - crewHalfSpanAngle
+    ) return 'fuel'
+    if (
+      this.hasHudBottomProgressBar(unit) &&
+      angle >= (Math.PI / 2) + crewHalfSpanAngle &&
+      angle <= Math.PI - crewHalfSpanAngle
+    ) {
+      if (unit.type === 'supplyShip') return 'supply'
+      if (unit.type === 'hovercraft' || unit.type === 'vehicleFerry') return 'cargo'
+      return 'experience'
+    }
+    return null
   }
 
   getCrewRects(unit, scrollOffset, hudBounds, centerX, centerY) {
@@ -514,7 +528,7 @@ export class UnitRenderer {
 
     const size = 5
     const rectHeight = size * 2 * 0.7
-    const aliveCrew = Object.entries(unit.crew).filter(([_role, alive]) => alive)
+    const aliveCrew = this.getAliveCrewRoles(unit)
     if (aliveCrew.length === 0) return []
 
     if (this.isModernCornerCrewHud()) {
@@ -524,7 +538,7 @@ export class UnitRenderer {
         gunner: { cx: hudBounds.left, cy: hudBounds.bottom },
         loader: { cx: hudBounds.right, cy: hudBounds.bottom }
       }
-      return aliveCrew.map(([role], idx) => {
+      return aliveCrew.map((role, idx) => {
         const fallback = [
           { cx: hudBounds.left, cy: hudBounds.top },
           { cx: hudBounds.right, cy: hudBounds.top },
@@ -550,7 +564,7 @@ export class UnitRenderer {
         loader: { x: 0, y: donutRadius },
         driver: { x: -donutRadius, y: 0 }
       }
-      return aliveCrew.map(([role], idx) => {
+      return aliveCrew.map((role, idx) => {
         const fallback = [
           { x: 0, y: -donutRadius },
           { x: donutRadius, y: 0 },
@@ -573,7 +587,7 @@ export class UnitRenderer {
     if (this.isLegacySelectionHud()) {
       const baseX = unit.x - scrollOffset.x
       const baseY = unit.y + TILE_SIZE - scrollOffset.y
-      return aliveCrew.map(([role], idx) => ({
+      return aliveCrew.map((role, idx) => ({
         role,
         x: baseX + idx * (size + 2),
         y: baseY - rectHeight,
@@ -587,13 +601,22 @@ export class UnitRenderer {
     const baseX = centerX - (totalCrewWidth / 2)
     const baseY = hudBounds.bottom + 8
 
-    return aliveCrew.map(([role], idx) => ({
+    return aliveCrew.map((role, idx) => ({
       role,
       x: baseX + idx * slotSpacing,
       y: baseY - rectHeight,
       width: size,
       height: rectHeight
     }))
+  }
+
+  getAliveCrewRoles(unit) {
+    const roles = this.aliveCrewRoles
+    roles.length = 0
+    for (const role in unit?.crew) {
+      if (unit.crew[role]) roles.push(role)
+    }
+    return roles
   }
 
   getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY) {
@@ -666,20 +689,19 @@ export class UnitRenderer {
     return null
   }
 
-  renderHudHoverTooltip(ctx, units, scrollOffset) {
+  renderHudHoverTooltip(ctx, units, scrollOffset, entityIndex = null) {
     if (!gameState?.desktopEdgeScroll?.overCanvas) return
 
     const mouseScreenX = gameState.cursorX - scrollOffset.x
     const mouseScreenY = gameState.cursorY - scrollOffset.y
-    const selected = units.filter(unit => unit?.selected)
-    if (selected.length === 0) return
 
     let tooltipText = null
-    for (const unit of selected) {
+    for (const unit of units) {
+      if (!unit?.selected) continue
       const label = this.getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY)
       if (!label) continue
 
-      tooltipText = this.getHudAbsoluteTooltipText(unit, label)
+      tooltipText = this.getHudAbsoluteTooltipText(unit, label, entityIndex)
       if (tooltipText) break
     }
     if (!tooltipText) return
@@ -817,6 +839,66 @@ export class UnitRenderer {
 
   isDonutSelectionHud() {
     return this.getSelectionHudMode() === 'modern-donut'
+  }
+
+  parsePartyGlowColor(color) {
+    const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(color || '').trim())
+    if (!match) {
+      return { r: 0, g: 255, b: 0 }
+    }
+
+    let digits = match[1]
+    if (digits.length === 3) {
+      digits = digits.split('').map(channel => channel + channel).join('')
+    }
+
+    return {
+      r: Number.parseInt(digits.slice(0, 2), 16),
+      g: Number.parseInt(digits.slice(2, 4), 16),
+      b: Number.parseInt(digits.slice(4, 6), 16)
+    }
+  }
+
+  getDonutGlowColorStops(color) {
+    const key = color || ''
+    const cached = this.donutGlowColorStops.get(key)
+    if (cached) return cached
+
+    const { r, g, b } = this.parsePartyGlowColor(key)
+    const rgba = alpha => `rgba(${r}, ${g}, ${b}, ${alpha})`
+    const stops = [
+      [0, rgba(0)],
+      [0.18, rgba(0.02)],
+      [0.42, rgba(0.07)],
+      [0.66, rgba(0.18)],
+      [0.88, rgba(0.46)],
+      [1, rgba(0.12)]
+    ]
+    this.donutGlowColorStops.set(key, stops)
+    return stops
+  }
+
+  renderDonutSelectionGlow(ctx, unit, centerX, centerY) {
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
+    const outerRadius = (Math.min(hudBounds.width, hudBounds.height) / 2) + 2
+    if (!(outerRadius > 1)) return
+
+    // Leave the unit's center clear and fade the party color inward from the donut ring.
+    const innerRadius = outerRadius * 0.36
+    const partyColor = PARTY_COLORS[unit.owner] || PARTY_COLORS.player
+    const colorStops = this.getDonutGlowColorStops(partyColor)
+    const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius)
+    for (let index = 0; index < colorStops.length; index += 1) {
+      gradient.addColorStop(colorStops[index][0], colorStops[index][1])
+    }
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2)
+    ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2, true)
+    ctx.fillStyle = gradient
+    ctx.fill('evenodd')
+    ctx.restore()
   }
 
   renderUtilityServiceRange(ctx, unit, centerX, centerY) {
@@ -1331,7 +1413,7 @@ export class UnitRenderer {
     const colors = { driver: '#00F', gunner: '#F00', loader: '#FFA500', commander: '#006400' }
     const letters = { driver: 'D', gunner: 'G', loader: 'L', commander: 'C' }
 
-    const aliveCrew = Object.entries(unit.crew).filter(([_role, alive]) => alive)
+    const aliveCrew = this.getAliveCrewRoles(unit)
     if (aliveCrew.length === 0) return
 
     if (this.isModernCornerCrewHud()) {
@@ -1351,7 +1433,7 @@ export class UnitRenderer {
       ]
 
       ctx.save()
-      aliveCrew.forEach(([role], idx) => {
+      aliveCrew.forEach((role, idx) => {
         const anchor = centerAnchors[role] || fallbackAnchors[idx % fallbackAnchors.length]
         const x = anchor.cx - (size / 2)
         const y = anchor.cy + (rectHeight / 2)
@@ -1390,7 +1472,7 @@ export class UnitRenderer {
       ]
 
       ctx.save()
-      aliveCrew.forEach(([role], idx) => {
+      aliveCrew.forEach((role, idx) => {
         const offset = anchorOffsets[role] || fallbackOffsets[idx % fallbackOffsets.length]
         const centerPx = centerX + offset.x
         const centerPy = centerY + offset.y
@@ -1419,7 +1501,7 @@ export class UnitRenderer {
 
       ctx.save()
       let idx = 0
-      aliveCrew.forEach(([role]) => {
+      aliveCrew.forEach(role => {
         const x = baseX + idx * (size + 2)
         const y = baseY
         const rectHeight = size * 2 * 0.7
@@ -1445,7 +1527,7 @@ export class UnitRenderer {
     const baseX = centerX - (totalCrewWidth / 2)
 
     ctx.save()
-    aliveCrew.forEach(([role], idx) => {
+    aliveCrew.forEach((role, idx) => {
       const x = baseX + idx * slotSpacing
       const y = baseY
 
@@ -1484,7 +1566,22 @@ export class UnitRenderer {
     return (selectedBuilding.forcedAttackTarget ? 2 : 1) + index
   }
 
-  renderAttackTargetIndicator(ctx, unit, centerX, centerY) {
+  renderAttackTargetIndicator(ctx, unit, centerX, centerY, entityIndex = null) {
+    if (entityIndex) {
+      const forcedAttackQueuePosition = entityIndex.get(`forcedAttackPosition:${unit.id}`) ?? null
+      const shouldShowAttackIndicator =
+        entityIndex.has(`attackIndicator:${unit.id}`) ||
+        forcedAttackQueuePosition !== null
+      this.drawAttackTargetIndicator(
+        ctx,
+        centerX,
+        centerY - TILE_SIZE / 2 - 15,
+        shouldShowAttackIndicator,
+        forcedAttackQueuePosition
+      )
+      return
+    }
+
     // Check if this unit is in the attack group targets OR if it's currently being targeted by selected units
     const isInAttackGroupTargets = gameState.attackGroupTargets &&
                                    gameState.attackGroupTargets.some(target => target === unit)
@@ -1512,13 +1609,18 @@ export class UnitRenderer {
     // Show red indicator if: unit is in AGF targets OR being targeted by a selected unit OR queued by selected defense buildings
     const shouldShowAttackIndicator = isInAttackGroupTargets || isTargetedBySelectedUnit || forcedAttackQueuePosition !== null
 
-    if (shouldShowAttackIndicator) {
-      const now = performance.now()
-      const bounceOffset = Math.sin(now * ATTACK_TARGET_BOUNCE_SPEED) * 3 // 3 pixel bounce
+    this.drawAttackTargetIndicator(
+      ctx,
+      centerX,
+      centerY - TILE_SIZE / 2 - 15,
+      shouldShowAttackIndicator,
+      forcedAttackQueuePosition
+    )
+  }
 
-      // Position above the health bar
-      const indicatorX = centerX
-      const indicatorY = centerY - TILE_SIZE / 2 - 15 + bounceOffset
+  drawAttackTargetIndicator(ctx, indicatorX, indicatorBaseY, shouldShowAttackIndicator, forcedAttackQueuePosition) {
+    if (shouldShowAttackIndicator) {
+      const indicatorY = indicatorBaseY + Math.sin(performance.now() * ATTACK_TARGET_BOUNCE_SPEED) * 3
 
       // Draw semi-transparent red triangle (50% transparency, half size)
       ctx.save()
@@ -1593,7 +1695,7 @@ export class UnitRenderer {
     }
   }
 
-  renderUtilityServiceIndicator(ctx, unit, centerX, centerY) {
+  renderUtilityServiceIndicator(ctx, unit, centerX, centerY, entityIndex = null) {
     const isBeingServedByAmbulance = Boolean(unit?.beingServedByAmbulance)
 
     let queuePosition = null
@@ -1601,7 +1703,9 @@ export class UnitRenderer {
 
     // Avoid drawing duplicate utility indicators while path planning mode (Alt) is active.
     // However, still show active service indicators even when path planning is enabled.
-    if (hasSelectedUnits && !gameState.altKeyDown) {
+    if (entityIndex && !gameState.altKeyDown) {
+      queuePosition = entityIndex.get(`utilityPosition:unit:${unit.id}`) ?? null
+    } else if (hasSelectedUnits && !gameState.altKeyDown) {
       selectedUnits.forEach(selectedUnit => {
         if (!selectedUnit?.selected) return
         if (!selectedUnit.type || (selectedUnit.type !== 'ambulance' && selectedUnit.type !== 'tankerTruck' && selectedUnit.type !== 'recoveryTank')) {
@@ -1734,8 +1838,8 @@ export class UnitRenderer {
     ctx.restore()
   }
 
-  renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight) {
-    if (!this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
+  renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible = false) {
+    if (!alreadyVisible && !this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
@@ -1927,8 +2031,8 @@ export class UnitRenderer {
     this.renderTurret(ctx, unit, centerX, centerY)
   }
 
-  renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight) {
-    if (!this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
+  renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible = false, entityIndex = null) {
+    if (!alreadyVisible && !this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) return
 
     const centerX = unit.x + TILE_SIZE / 2 - scrollOffset.x
     const centerY = unit.y + TILE_SIZE / 2 - scrollOffset.y
@@ -1941,29 +2045,41 @@ export class UnitRenderer {
     this.renderQueueNumber(ctx, unit, scrollOffset)
     this.renderGroupNumber(ctx, unit, scrollOffset)
     this.renderCrewStatus(ctx, unit, scrollOffset)
-    this.renderAttackTargetIndicator(ctx, unit, centerX, centerY)
-    this.renderUtilityServiceIndicator(ctx, unit, centerX, centerY)
+    this.renderAttackTargetIndicator(ctx, unit, centerX, centerY, entityIndex)
+    this.renderUtilityServiceIndicator(ctx, unit, centerX, centerY, entityIndex)
     this.renderWorkshopRepairIndicator(ctx, unit, centerX, centerY)
     this.renderRecoveryProgressBar(ctx, unit, scrollOffset)
   }
 
-  renderBases(ctx, units, scrollOffset) {
+  collectVisibleUnits(ctx, units, scrollOffset, output = []) {
+    output.length = 0
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+    for (const unit of units || []) {
+      if (this.shouldRenderUnit(unit, scrollOffset, viewportWidth, viewportHeight)) output.push(unit)
+    }
+    return output
+  }
+
+  renderBases(ctx, units, scrollOffset, alreadyVisible = false) {
     const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
     units.forEach(unit => {
-      this.renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight)
+      this.renderUnitBase(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible)
     })
   }
 
-  renderOverlays(ctx, units, scrollOffset) {
+  renderOverlays(ctx, units, scrollOffset, entityIndex = null, connectionUnits = units, alreadyVisible = false) {
+    for (const unit of connectionUnits) {
+      this.renderTowCable(ctx, unit, scrollOffset)
+      this.renderFuelHose(ctx, unit, entityIndex, scrollOffset)
+      this.renderAmmoHose(ctx, unit, entityIndex, scrollOffset)
+    }
+
     const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
     units.forEach(unit => {
-      this.renderTowCable(ctx, unit, scrollOffset)
-      this.renderFuelHose(ctx, unit, units, scrollOffset)
-      this.renderAmmoHose(ctx, unit, units, scrollOffset)
-      this.renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight)
+      this.renderUnitOverlay(ctx, unit, scrollOffset, viewportWidth, viewportHeight, alreadyVisible, entityIndex)
       this.renderApacheRemoteReticle(ctx, unit, scrollOffset)
     })
-    this.renderHudHoverTooltip(ctx, units, scrollOffset)
+    this.renderHudHoverTooltip(ctx, units, scrollOffset, entityIndex)
   }
 
   renderApacheRemoteReticle(ctx, unit, scrollOffset) {
@@ -2010,14 +2126,14 @@ export class UnitRenderer {
     ctx.restore()
   }
 
-  renderFuelHose(ctx, unit, units, scrollOffset) {
+  renderFuelHose(ctx, unit, entityIndex, scrollOffset) {
     if (!unit || unit.type !== 'tankerTruck' || !unit.refuelTarget) {
       return
     }
 
     const targetInfo = unit.refuelTarget
     const target = (targetInfo && targetInfo.id !== undefined)
-      ? units.find(u => u.id === targetInfo.id) || targetInfo
+      ? entityIndex?.get(`unit:${targetInfo.id}`) || targetInfo
       : targetInfo
 
     if (!target || target.health <= 0) {
@@ -2056,14 +2172,14 @@ export class UnitRenderer {
     ctx.restore()
   }
 
-  renderAmmoHose(ctx, unit, units, scrollOffset) {
+  renderAmmoHose(ctx, unit, entityIndex, scrollOffset) {
     if (!unit || unit.type !== 'ammunitionTruck' || !unit.ammoResupplyTarget) {
       return
     }
 
     const targetInfo = unit.ammoResupplyTarget
     const target = (targetInfo && targetInfo.id !== undefined)
-      ? units.find(u => u.id === targetInfo.id) || targetInfo
+      ? entityIndex?.get(`unit:${targetInfo.id}`) || targetInfo
       : targetInfo
 
     if (!target || (target.health !== undefined && target.health <= 0)) {
@@ -2178,12 +2294,11 @@ export class UnitRenderer {
       return true
     }
 
-    const friendlyOwners = new Set([gameState.humanPlayer, 'player'])
-    if (gameState.humanPlayer === 'player1') {
-      friendlyOwners.add('player1')
-    }
-
-    if (friendlyOwners.has(unit.owner)) {
+    if (
+      unit.owner === gameState.humanPlayer ||
+      unit.owner === 'player' ||
+      (gameState.humanPlayer === 'player1' && unit.owner === 'player1')
+    ) {
       return true
     }
 

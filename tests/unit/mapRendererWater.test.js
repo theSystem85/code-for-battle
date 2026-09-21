@@ -28,6 +28,119 @@ describe('MapRenderer water rendering', () => {
     expect(ctx.fillRect).toHaveBeenCalled()
   })
 
+  it('renders a land transition over a water tile, including land SOT corners', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'land' }], [null, null]]
+    mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+    mapRenderer.organicTerrain.drawBiomeShore = vi.fn()
+    const mapGrid = [
+      [{ type: 'land', biome: 'sand' }, { type: 'water' }],
+      [{ type: 'water' }, { type: 'water' }]
+    ]
+
+    mapRenderer.drawOrganicLandTransition({}, mapGrid, 1, 0, 20, 0)
+
+    expect(mapRenderer.organicTerrain.drawBiomeTransition).not.toHaveBeenCalled()
+    expect(mapRenderer.organicTerrain.drawBiomeShore).toHaveBeenCalledWith(
+      expect.anything(), 1, 0, 20, 0, expect.any(Number), 9, 'sand'
+    )
+  })
+
+  it('treats rock as shoreline land and uses its sand underlay', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const waterGrid = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ type: 'water' })))
+    waterGrid[1][2] = { type: 'rock', biome: 'snow', shorelineBiome: 'sand' }
+    waterGrid[2][1] = { type: 'rock', biome: 'snow', shorelineBiome: 'sand' }
+    const sot = mapRenderer.computeSOTForTile(waterGrid, 2, 2, 5, 5, 'water')
+    expect(sot).toEqual({ orientation: 'top-left', type: 'land' })
+
+    mapRenderer.sotMask = Array.from({ length: 5 }, () => Array(5).fill(null))
+    mapRenderer.sotMask[2][2] = sot
+    mapRenderer.organicTerrain.drawBiomeShore = vi.fn()
+    mapRenderer.drawOrganicLandTransition({}, waterGrid, 2, 2, 64, 64)
+
+    expect(mapRenderer.organicTerrain.drawBiomeShore).toHaveBeenCalledWith(
+      expect.anything(), 2, 2, 64, 64, expect.any(Number), 11, 'sand'
+    )
+  })
+
+  it('keeps street SOT transitions on street material instead of painting land', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.sotMask = [[null, { orientation: 'top-left', type: 'street' }], [null, null]]
+    mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+    mapRenderer.organicTerrain.drawTriangle = vi.fn()
+
+    mapRenderer.drawOrganicLandTransition({}, [[{ type: 'street' }, { type: 'water' }], [{ type: 'water' }, { type: 'water' }]], 1, 0, 20, 0)
+
+    expect(mapRenderer.organicTerrain.drawBiomeTransition).not.toHaveBeenCalled()
+    expect(mapRenderer.organicTerrain.drawTriangle).toHaveBeenCalledWith(
+      expect.anything(), 1, 0, 20, 0, expect.any(Number), 'top-left', 'street'
+    )
+  })
+
+  it('omits the organic land underlay beneath shoreline street tiles', () => {
+    const textureManager = { ...makeTextureManager(), allTexturesLoaded: true }
+    const mapRenderer = new MapRenderer(textureManager)
+    mapRenderer.organicTerrain.ready = true
+    mapRenderer.organicTerrain.drawGrass = vi.fn()
+    mapRenderer.groupingMapGrid = [[{ type: 'street' }, { type: 'water' }]]
+
+    mapRenderer.drawTileBase({}, 0, 0, 'street', 0, 0, true, null)
+
+    expect(mapRenderer.organicTerrain.drawGrass).not.toHaveBeenCalled()
+  })
+
+  it('renders water beneath shoreline street tiles in the CPU water pass', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.sotMask = [[null, null]]
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      fillRect: vi.fn(),
+      beginPath: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      closePath: vi.fn(),
+      clip: vi.fn()
+    }
+
+    mapRenderer.renderDynamicWaterLayer(ctx, [[{ type: 'street' }, { type: 'water' }]], { x: 0, y: 0 }, 0, 0, 2, 1)
+
+    expect(mapRenderer.cpuWaterPass.runLength).toBeGreaterThan(0)
+    expect(ctx.fillRect).toHaveBeenCalled()
+  })
+
+  it('does not paint animated water over a land tile for the organic shoreline transition', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    mapRenderer.organicTerrain.drawBiomeTransition = vi.fn()
+
+    mapRenderer.drawOrganicLandTransition({}, [[{ type: 'land' }, { type: 'water' }]], 0, 0, 0, 0)
+
+    expect(mapRenderer.organicTerrain.drawBiomeTransition).not.toHaveBeenCalled()
+  })
+
+  it('draws organic transitions above water but below cliffs and tile decals', () => {
+    const textureManager = { ...makeTextureManager(), allTexturesLoaded: true }
+    const mapRenderer = new MapRenderer(textureManager)
+    mapRenderer.organicTerrain.ready = true
+    mapRenderer.organicTerrain.cliffs = { complete: true, naturalWidth: 1 }
+    mapRenderer.sotMask = [[null, null]]
+    mapRenderer.drawTileBase = vi.fn()
+    mapRenderer.drawOrganicLandTransitions = vi.fn()
+    mapRenderer.organicTerrain.drawCliffs = vi.fn()
+    mapRenderer.organicTerrain.drawDecoration = vi.fn()
+    mapRenderer.drawTileDecalOverlay = vi.fn()
+    const ctx = {}
+
+    mapRenderer.drawBaseLayer(ctx, [[{ type: 'water' }, { type: 'rock', decal: { tag: 'crack' } }]], 0, 0, 2, 1, 0, 0, true, null)
+
+    expect(mapRenderer.drawTileBase).toHaveBeenCalledWith(ctx, 0, 0, 'water', 0, 0, true, null)
+    expect(mapRenderer.drawOrganicLandTransitions).toHaveBeenCalledWith(ctx, expect.any(Array), 0, 0, 2, 1, 0, 0)
+    expect(mapRenderer.drawOrganicLandTransitions.mock.invocationCallOrder[0]).toBeGreaterThan(mapRenderer.drawTileBase.mock.invocationCallOrder[0])
+    expect(mapRenderer.drawOrganicLandTransitions.mock.invocationCallOrder[0]).toBeLessThan(mapRenderer.organicTerrain.drawCliffs.mock.invocationCallOrder[0])
+    expect(mapRenderer.organicTerrain.drawCliffs.mock.invocationCallOrder[0]).toBeLessThan(mapRenderer.drawTileDecalOverlay.mock.invocationCallOrder[0])
+  })
+
   it('keeps the chunk cache active for static CPU terrain over GPU water-only rendering', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     mapRenderer.canUseOffscreen = true
@@ -526,7 +639,7 @@ describe('MapRenderer water rendering', () => {
       null
     )
     expect(clearTriangleSpy).toHaveBeenCalledTimes(1)
-    expect(clearTriangleSpy).toHaveBeenCalledWith(ctx, 32, 0, 33, 'top-left')
+    expect(clearTriangleSpy).toHaveBeenCalledWith(ctx, 32, 0, 32, 'top-left')
   })
 
   it('adds water SOT triangles to the WebGL tile batch so they match shader-rendered water', () => {
@@ -563,6 +676,22 @@ describe('MapRenderer water rendering', () => {
 
     expect(waterSotInstances).toHaveLength(1)
     expect(waterSotInstances[0].translation).toEqual([1, 1])
+  })
+
+  it('adds procedural water beneath shoreline streets in the GPU water-only batch', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = [[{ type: 'street' }, { type: 'water' }]]
+    const webglRenderer = new GameWebGLRenderer(null, makeTextureManager(), mapRenderer)
+
+    const instances = webglRenderer.buildTileInstances(mapGrid, 0, 0, 2, 1, { waterOnly: true })
+    const streetUnderlay = instances.find(instance =>
+      instance.textureType === 2 &&
+      instance.clipOrientation === 0 &&
+      instance.translation[0] === 0 &&
+      instance.translation[1] === 0
+    )
+
+    expect(streetUnderlay).toBeDefined()
   })
 
   it('uses the actual canvas backing-store ratio for WebGL water placement', () => {
@@ -845,6 +974,17 @@ describe('MapRenderer water rendering', () => {
       [{ type: 'street' }, { type: 'street' }, { type: 'water' }, { type: 'land' }],
       [{ type: 'land' }, { type: 'land' }, { type: 'land' }, { type: 'land' }]
     ]
+
+    mapRenderer.computeSOTMask(mapGrid)
+
+    expect(mapRenderer.sotMask[2][2]).toEqual({ orientation: 'top-left', type: 'street' })
+  })
+
+  it('gives street material ownership to mixed street-land corners over water', () => {
+    const mapRenderer = new MapRenderer(makeTextureManager())
+    const mapGrid = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => ({ type: 'water' })))
+    mapGrid[1][2] = { type: 'street' }
+    mapGrid[2][1] = { type: 'land' }
 
     mapRenderer.computeSOTMask(mapGrid)
 

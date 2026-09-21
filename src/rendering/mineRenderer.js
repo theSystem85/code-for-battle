@@ -9,18 +9,17 @@ import { getCanvasLogicalSize } from './renderingUtils.js'
  * @param {object} scrollOffset - Current scroll offset {x, y}
  */
 export function renderMineIndicators(ctx, scrollOffset) {
-  const mines = [
-    ...(gameState.mines || []),
-    ...(gameState.waterMines || [])
-  ]
-  if (mines.length === 0) {
+  const landMines = gameState.mines || []
+  const waterMines = gameState.waterMines || []
+  if (landMines.length === 0 && waterMines.length === 0) {
     return
   }
 
   ctx.save()
   const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+  const now = performance.now()
 
-  mines.forEach(mine => {
+  const renderMine = mine => {
     const screenX = mine.tileX * TILE_SIZE - scrollOffset.x + TILE_SIZE / 2
     const screenY = mine.tileY * TILE_SIZE - scrollOffset.y + TILE_SIZE / 2
 
@@ -95,7 +94,6 @@ export function renderMineIndicators(ctx, scrollOffset) {
 
     // If mine is not yet armed, show a subtle pulsing indicator
     if (!mine.active) {
-      const now = performance.now()
       const pulse = Math.sin(now / 200) * 0.3 + 0.7
       ctx.globalAlpha = pulse * 0.5
       ctx.strokeStyle = '#FFFF00'
@@ -104,7 +102,9 @@ export function renderMineIndicators(ctx, scrollOffset) {
       ctx.arc(screenX, screenY, size * 0.5, 0, Math.PI * 2)
       ctx.stroke()
     }
-  })
+  }
+  landMines.forEach(renderMine)
+  waterMines.forEach(renderMine)
 
   ctx.restore()
 }
@@ -126,10 +126,15 @@ export function renderMineDeploymentPreview(ctx, area, scrollOffset) {
   const maxX = Math.max(area.startX, area.endX)
   const minY = Math.min(area.startY, area.endY)
   const maxY = Math.max(area.startY, area.endY)
+  const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+  const visibleMinX = Math.max(minX, Math.floor(scrollOffset.x / TILE_SIZE) - 1)
+  const visibleMaxX = Math.min(maxX, Math.ceil((scrollOffset.x + viewportWidth) / TILE_SIZE) + 1)
+  const visibleMinY = Math.max(minY, Math.floor(scrollOffset.y / TILE_SIZE) - 1)
+  const visibleMaxY = Math.min(maxY, Math.ceil((scrollOffset.y + viewportHeight) / TILE_SIZE) + 1)
 
   // Draw checkerboard pattern
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
+  for (let y = visibleMinY; y <= visibleMaxY; y++) {
+    for (let x = visibleMinX; x <= visibleMaxX; x++) {
       // Checkerboard: deploy on tiles where (x + y) is even
       if ((x + y) % 2 === 0) {
         const screenX = x * TILE_SIZE - scrollOffset.x
@@ -159,10 +164,15 @@ export function renderSweepAreaPreview(ctx, area, scrollOffset) {
   const maxX = Math.max(area.startX, area.endX)
   const minY = Math.min(area.startY, area.endY)
   const maxY = Math.max(area.startY, area.endY)
+  const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+  const visibleMinX = Math.max(minX, Math.floor(scrollOffset.x / TILE_SIZE) - 1)
+  const visibleMaxX = Math.min(maxX, Math.ceil((scrollOffset.x + viewportWidth) / TILE_SIZE) + 1)
+  const visibleMinY = Math.max(minY, Math.floor(scrollOffset.y / TILE_SIZE) - 1)
+  const visibleMaxY = Math.min(maxY, Math.ceil((scrollOffset.y + viewportHeight) / TILE_SIZE) + 1)
 
   // Fill entire rectangular area
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
+  for (let y = visibleMinY; y <= visibleMaxY; y++) {
+    for (let x = visibleMinX; x <= visibleMaxX; x++) {
       const screenX = x * TILE_SIZE - scrollOffset.x
       const screenY = y * TILE_SIZE - scrollOffset.y
       ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE)
@@ -184,11 +194,18 @@ export function renderFreeformSweepPreview(ctx, paintedTiles, scrollOffset) {
   ctx.save()
   ctx.globalAlpha = 0.3
   ctx.fillStyle = '#FF8800' // Orange
+  const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
 
   paintedTiles.forEach(tileKey => {
     const [x, y] = tileKey.split(',').map(Number)
     const screenX = x * TILE_SIZE - scrollOffset.x
     const screenY = y * TILE_SIZE - scrollOffset.y
+    if (
+      screenX + TILE_SIZE < 0 ||
+      screenY + TILE_SIZE < 0 ||
+      screenX > viewportWidth ||
+      screenY > viewportHeight
+    ) return
     ctx.fillRect(screenX, screenY, TILE_SIZE, TILE_SIZE)
   })
 

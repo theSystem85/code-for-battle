@@ -6,9 +6,14 @@ import { getBuildingIdentifier } from '../../utils.js'
 import { getHelipadLandingCenter, getHelipadLandingTile, isHelipadAvailableForUnit } from '../../utils/helipadUtils.js'
 import { getAirstripParkingSpots, getAirstripRunwayPoints, reserveAirstripParkingSlot, releaseAirstripParkingSlotReservation } from '../../utils/airstripUtils.js'
 import { units } from '../../main.js'
+import { rejectJetMissionIfImpossible } from '../../game/jetFuel.js'
 
 export function assignApacheFlight(unit, destTile, destCenter, options = {}) {
   if (!unit || (unit.type !== 'apache' && unit.type !== 'f22Raptor' && unit.type !== 'f35') || !destCenter) {
+    return false
+  }
+
+  if (rejectJetMissionIfImpossible(unit, destCenter, options.mode)) {
     return false
   }
 

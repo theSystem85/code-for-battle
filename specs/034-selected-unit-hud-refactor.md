@@ -55,3 +55,4 @@ Refactor the selected-unit HUD to improve readability and reduce occlusion of th
 24. Implementation should be extensible for additional HUD modes by centralizing mode-aware hit zone helpers.
 
 18. Default selected-unit HUD mode must be **HUD 4 (modern donut)** on fresh loads before any local storage override.
+25. In HUD mode 4 only, selected units draw an inward party-colored glow inside the circular HUD. The glow is an annulus from 36% of the donut radius to the donut ring. Opacity is zero at the inner edge, rises toward the ring, and softens again at the outer clip so the rim does not form a hard disc. The color is `PARTY_COLORS[unit.owner]`. The fill runs once per selected unit per frame, after the sprite and before the status arcs, and is clipped to the HUD disc (not the map or weapon range). Color-stop strings are cached per party color. Rectangular HUD modes do not draw this glow.

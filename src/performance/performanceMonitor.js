@@ -1,6 +1,10 @@
 import { gameState } from '../gameState.js'
+import { renderDiagnostics } from './renderDiagnostics.js'
+import { renderProfiler } from './renderProfiler.js'
 
-const SLOW_FRAME_MS = 1000 / 30
+const SLOW_FRAME_MS = 1000 / 75
+const HEAP_SAMPLE_INTERVAL_MS = 1000
+const MAX_HEAP_SAMPLES = 120
 
 function isFiniteNumber(value) {
   return Number.isFinite(value)
@@ -41,10 +45,20 @@ function getQueryMonitorEnabled() {
   return new URLSearchParams(window.location.search).has('monitor')
 }
 
+function defaultNow() {
+  return performance.now()
+}
+
+function readHeapBytes() {
+  return typeof performance !== 'undefined' ? performance.memory?.usedJSHeapSize : null
+}
+
 export const isPerformanceMonitorEnabled = getQueryMonitorEnabled()
 
 export class PerformanceMonitor {
-  constructor() {
+  constructor({ now = defaultNow, heapBytes = readHeapBytes } = {}) {
+    this.now = now
+    this.readHeapBytes = heapBytes
     this.recording = false
     this.startedAt = 0
     this.endedAt = 0
@@ -52,6 +66,9 @@ export class PerformanceMonitor {
     this.lastRendererPhases = null
     this.schedulerSources = this.createSchedulerSources()
     this.report = null
+    this.heapSamples = []
+    this.nextHeapSampleAt = 0
+    this.counterBaseline = renderDiagnostics.getCounterTotals()
   }
 
   createMetrics() {
@@ -61,7 +78,7 @@ export class PerformanceMonitor {
       render: createMetric(),
       minimap: createMetric(),
       frameWork: createMetric(),
-      compositorWait: createMetric(),
+      unattributedWait: createMetric(),
       schedulerDelay: createMetric(),
       terrain: createMetric(),
       entities: createMetric(),
@@ -76,19 +93,24 @@ export class PerformanceMonitor {
 
   start() {
     this.recording = true
-    this.startedAt = performance.now()
+    this.startedAt = this.now()
     this.endedAt = 0
     this.metrics = this.createMetrics()
     this.lastRendererPhases = null
     this.schedulerSources = this.createSchedulerSources()
     this.report = null
+    this.heapSamples = []
+    this.nextHeapSampleAt = this.startedAt
+    this.counterBaseline = renderDiagnostics.getCounterTotals()
+    this.sampleHeap(this.startedAt)
     return this.getStatus()
   }
 
   stop() {
     if (!this.recording) return this.report
+    this.endedAt = this.now()
+    this.sampleHeap(this.endedAt)
     this.recording = false
-    this.endedAt = performance.now()
     this.report = this.buildReport()
     return this.report
   }
@@ -98,7 +120,32 @@ export class PerformanceMonitor {
     this.lastRendererPhases = phases
   }
 
+  recordDiagnosticCounter(id, amount = 1) {
+    return renderDiagnostics.addCounter(id, amount)
+  }
+
+  recordDiagnostics(snapshot) {
+    if (!snapshot) return
+    renderDiagnostics.addCounters(snapshot.counters)
+    if (snapshot.backend || snapshot.devicePixelRatio || snapshot.refreshRateHz || snapshot.gpuTiming) {
+      renderDiagnostics.setCapabilities(snapshot)
+    }
+    for (const [owner, bytes] of Object.entries(snapshot.byteUsage || {})) {
+      renderDiagnostics.setByteUsage(owner, bytes)
+    }
+  }
+
+  sampleHeap(now = this.now()) {
+    if (!this.recording || now < this.nextHeapSampleAt) return
+    this.nextHeapSampleAt = now + HEAP_SAMPLE_INTERVAL_MS
+    const bytes = this.readHeapBytes()
+    if (!isFiniteNumber(bytes)) return
+    if (this.heapSamples.length >= MAX_HEAP_SAMPLES) this.heapSamples.shift()
+    this.heapSamples.push({ atMs: Math.max(0, now - this.startedAt), usedBytes: bytes })
+  }
+
   recordFrame(frame) {
+    renderProfiler.recordFrameTiming(frame?.frameInterval)
     if (!this.recording) return
     const {
       frameInterval,
@@ -107,6 +154,7 @@ export class PerformanceMonitor {
       minimapMs,
       frameWorkMs,
       compositorWaitMs,
+      unattributedWaitMs,
       schedulerSource,
       schedulerDelayMs
     } = frame || {}
@@ -115,7 +163,7 @@ export class PerformanceMonitor {
     addMetric(this.metrics.render, renderMs)
     addMetric(this.metrics.minimap, minimapMs)
     addMetric(this.metrics.frameWork, frameWorkMs)
-    addMetric(this.metrics.compositorWait, compositorWaitMs)
+    addMetric(this.metrics.unattributedWait, unattributedWaitMs ?? compositorWaitMs)
     addMetric(this.metrics.schedulerDelay, schedulerDelayMs)
     const source = Object.hasOwn(this.schedulerSources, schedulerSource) ? schedulerSource : 'unknown'
     this.schedulerSources[source]++
@@ -125,12 +173,13 @@ export class PerformanceMonitor {
       addMetric(this.metrics.effects, this.lastRendererPhases.effectsMs)
       addMetric(this.metrics.ui, this.lastRendererPhases.uiMs)
     }
+    this.sampleHeap()
   }
 
   getStatus() {
     return {
       recording: this.recording,
-      durationMs: this.recording ? performance.now() - this.startedAt : Math.max(0, this.endedAt - this.startedAt)
+      durationMs: this.recording ? this.now() - this.startedAt : Math.max(0, this.endedAt - this.startedAt)
     }
   }
 
@@ -143,9 +192,10 @@ export class PerformanceMonitor {
     const durationMs = Math.max(0, this.endedAt - this.startedAt)
     const frameAverage = metrics.frameInterval.averageMs
     const renderStats = gameState.renderStats || {}
+    const diagnostics = renderDiagnostics.snapshot()
 
     return {
-      version: 1,
+      version: 2,
       kind: 'code-for-battle-performance-monitor',
       recordedAt: new Date().toISOString(),
       durationMs: round(durationMs),
@@ -171,6 +221,11 @@ export class PerformanceMonitor {
         shoreEast: Boolean(gameState.mapShoreEast),
         shoreSouth: Boolean(gameState.mapShoreSouth),
         centerLake: Boolean(gameState.mapCenterLake),
+        biome: gameState.activeSpriteSheetBiomeTag,
+        biomeRegions: gameState.mapBiomeRegionCount,
+        biomeDistribution: gameState.mapBiomeDistribution,
+        biomeWeights: { ...gameState.mapBiomeWeights },
+        snowOnPlateaus: Boolean(gameState.mapSnowOnPlateaus),
         scrollOffset: { x: round(gameState.scrollOffset?.x || 0), y: round(gameState.scrollOffset?.y || 0) }
       },
       game: {
@@ -202,9 +257,21 @@ export class PerformanceMonitor {
       renderer: {
         gpuTerrain: renderStats.gpuTerrain || null,
         mapChunks: renderStats.mapChunks || null,
-        jsHeapMb: getJsHeapMb()
+        gpuTiming: normalizeGpuTiming(renderStats.gpuTiming || diagnostics.gpuTiming),
+        gpuMemory: { available: false, reason: 'browser API unavailable', bytes: null },
+        heap: summarizeHeap(this.heapSamples),
+        byteUsage: diagnostics.byteUsage
       },
       timingMs: metrics,
+      profiler: renderProfiler.exportReport(),
+      diagnostics: {
+        schemaVersion: diagnostics.schemaVersion,
+        backend: diagnostics.backend,
+        devicePixelRatio: diagnostics.devicePixelRatio,
+        refreshRateHz: diagnostics.refreshRateHz,
+        recordingCounterTotals: renderDiagnostics.getCounterDelta(this.counterBaseline),
+        lifetimeCounterTotals: diagnostics.counters
+      },
       scheduler: {
         sources: { ...this.schedulerSources },
         watchdogShare: round(
@@ -228,9 +295,52 @@ function getCanvasSnapshot(canvas) {
   }
 }
 
-function getJsHeapMb() {
-  const bytes = typeof performance !== 'undefined' ? performance.memory?.usedJSHeapSize : null
-  return isFiniteNumber(bytes) ? round(bytes / (1024 * 1024)) : null
+function normalizeGpuTiming(timing) {
+  if (timing?.available === true && isFiniteNumber(timing.milliseconds)) {
+    return { available: true, reason: null, milliseconds: round(timing.milliseconds) }
+  }
+  return {
+    available: false,
+    reason: timing?.reason || 'GPU timer query unavailable or not instrumented',
+    milliseconds: null
+  }
+}
+
+function summarizeHeap(samples) {
+  if (!samples.length) {
+    return {
+      available: false,
+      reason: 'performance.memory unavailable',
+      usedBytes: null,
+      trend: null
+    }
+  }
+  let minimum = Infinity
+  let maximum = -Infinity
+  let suspectedDrops = 0
+  for (let index = 0; index < samples.length; index++) {
+    const value = samples[index].usedBytes
+    minimum = Math.min(minimum, value)
+    maximum = Math.max(maximum, value)
+    if (index > 0 && value < samples[index - 1].usedBytes) suspectedDrops++
+  }
+  const first = samples[0].usedBytes
+  const last = samples[samples.length - 1].usedBytes
+  return {
+    available: true,
+    reason: null,
+    usedBytes: last,
+    trend: {
+      samples: samples.length,
+      firstBytes: first,
+      lastBytes: last,
+      minBytes: minimum,
+      maxBytes: maximum,
+      deltaBytes: last - first,
+      suspectedCollectionDrops: suspectedDrops,
+      note: 'Heap drops are suspected collections unless confirmed by a trace'
+    }
+  }
 }
 
 export const performanceMonitor = new PerformanceMonitor()

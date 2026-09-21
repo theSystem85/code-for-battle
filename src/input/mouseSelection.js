@@ -11,6 +11,7 @@ import { playSound, playPositionalSound } from '../sound.js'
 import { showNotification } from '../ui/notifications.js'
 import { isForceAttackModifierActive, isGuardModifierActive } from '../utils/inputUtils.js'
 import { findWreckAtTile } from '../game/unitWreckManager.js'
+import { canRecoveryTankTowTarget } from '../game/jetFuel.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import * as mineInput from './mineInputHandler.js'
 import { isWithinBaseRange } from '../utils/baseUtils.js'
@@ -1032,7 +1033,7 @@ function handleUnitSelection(handler, worldX, worldY, e, units, factories, selec
           const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
           const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
           if (unitTileX === tileX && unitTileY === tileY) {
-            if (unit.crew && (!unit.crew.driver || !unit.crew.commander)) {
+            if (commandableUnits.some(tank => canRecoveryTankTowTarget(tank, unit))) {
               unitCommands.handleRecoveryTowCommand(commandableUnits, unit)
               recordHumanUnitCommand(commandableUnits.map(selected => selected.id), {
                 command: 'recovery_tow',

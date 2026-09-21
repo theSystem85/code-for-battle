@@ -1,5 +1,6 @@
 // tankerTruckImageRenderer.js - render tanker trucks using a single image asset
 import { TILE_SIZE } from '../config.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let tankerImg = null
 let tankerLoaded = false
@@ -20,15 +21,20 @@ export function isTankerTruckImageLoaded() {
 }
 
 export function renderTankerTruckWithImage(ctx, unit, centerX, centerY) {
-  if (!isTankerTruckImageLoaded()) return false
+  const prepared = getPreparedSprite('unit:tankerTruck:base')
+  if (!prepared && !isTankerTruckImageLoaded()) return false
   ctx.save()
   ctx.translate(centerX, centerY)
   const rotation = unit.direction - Math.PI / 2
   ctx.rotate(rotation)
-  const scale = TILE_SIZE / Math.max(tankerImg.width, tankerImg.height)
-  const width = tankerImg.width * scale
-  const height = tankerImg.height * scale
-  ctx.drawImage(tankerImg, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    const scale = TILE_SIZE / Math.max(tankerImg.width, tankerImg.height)
+    const width = tankerImg.width * scale
+    const height = tankerImg.height * scale
+    ctx.drawImage(tankerImg, -width / 2, -height / 2, width, height)
+  }
   ctx.restore()
   return true
 }

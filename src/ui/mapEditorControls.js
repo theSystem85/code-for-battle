@@ -505,7 +505,10 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   cacheRuntimeIntegratedMetadata(metadata)
 
   if (!gameState.useIntegratedSpriteSheetMode) {
-    await textureManager.setIntegratedSpriteSheetConfig({ enabled: false })
+    await textureManager.setIntegratedSpriteSheetConfig({
+      enabled: false,
+      biomeTag: gameState.activeSpriteSheetBiomeTag || 'grass'
+    })
     const mapRenderer = getMapRenderer()
     if (mapRenderer) {
       if (Array.isArray(gameState.mapGrid)) {
@@ -650,7 +653,7 @@ export function initMapEditorControls() {
   gameState.activeSpriteSheetBiomeTag = gameState.activeSpriteSheetBiomeTag || 'grass'
   try {
     const storedBiome = getStoredItem(INTEGRATED_BIOME_STORAGE_KEY)
-    if (storedBiome && ['soil', 'sand', 'grass', 'snow'].includes(storedBiome)) {
+    if (storedBiome && ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(storedBiome)) {
       gameState.activeSpriteSheetBiomeTag = storedBiome
     }
   } catch (err) {
@@ -772,7 +775,7 @@ export function initMapEditorControls() {
     integratedSpriteSheetBiomeSelect.value = gameState.activeSpriteSheetBiomeTag
     integratedSpriteSheetBiomeSelect.addEventListener('change', async(e) => {
       const biome = e.target.value
-      gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow'].includes(biome) ? biome : 'grass'
+      gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(biome) ? biome : 'grass'
       try {
         setStoredItem(INTEGRATED_BIOME_STORAGE_KEY, gameState.activeSpriteSheetBiomeTag)
       } catch (err) {

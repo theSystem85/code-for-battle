@@ -17,6 +17,13 @@ import { getMapRenderer } from './rendering.js'
 import { getBuildingImage } from './buildingImageMap.js'
 import { isAirstripBlockedLocalTile } from './utils/buildingPassability.js'
 import { ensureAirstripOperations } from './utils/airstripUtils.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifyResourceMutation,
+  notifySurfaceMutation,
+  notifyTopologyMutation
+} from './rendering/prepared/mapMutationNotifier.js'
 
 // Re-export buildingData from the data module to maintain backwards compatibility
 export { buildingData } from './data/buildingData.js'
@@ -248,48 +255,66 @@ function calculateInitialTurretDirection(buildingX, buildingY, owner) {
 export function placeBuilding(building, mapGrid, occupancyMap = gameState.occupancyMap, options = {}) {
   // Create an array to store original tile types
   building.originalTiles = []
+  const transaction = beginMapMutationTransaction(mapGrid)
+  let resourceChanged = false
+  const footprint = {
+    left: building.x,
+    top: building.y,
+    right: building.x + building.width,
+    bottom: building.y + building.height
+  }
 
-  for (let y = building.y; y < building.y + building.height; y++) {
-    building.originalTiles[y - building.y] = []
+  try {
+    for (let y = building.y; y < building.y + building.height; y++) {
+      building.originalTiles[y - building.y] = []
 
-    for (let x = building.x; x < building.x + building.width; x++) {
-      // Store the original tile type before changing it
-      building.originalTiles[y - building.y][x - building.x] = mapGrid[y][x].type
+      for (let x = building.x; x < building.x + building.width; x++) {
+        // Store the original tile type before changing it
+        building.originalTiles[y - building.y][x - building.x] = mapGrid[y][x].type
 
-      // Mark tile as having a building (for collision detection) but preserve the original tile type for rendering
-      mapGrid[y][x].building = building
-      const localX = x - building.x
-      const localY = y - building.y
-      const isStreetTile = building.type === 'street'
-      const isAirstripPassableTile =
-        building.type === 'airstrip' &&
-        !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
-      const isBuildOnlyTile = isStreetTile || isAirstripPassableTile
+        // Mark tile as having a building (for collision detection) but preserve the original tile type for rendering
+        mapGrid[y][x].building = building
+        const localX = x - building.x
+        const localY = y - building.y
+        const isStreetTile = building.type === 'street'
+        const isAirstripPassableTile =
+          building.type === 'airstrip' &&
+          !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
+        const isBuildOnlyTile = isStreetTile || isAirstripPassableTile
 
-      if (isBuildOnlyTile) {
-        mapGrid[y][x].buildOnlyOccupied = (mapGrid[y][x].buildOnlyOccupied || 0) + 1
-      } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
-        occupancyMap[y][x] = (occupancyMap[y][x] || 0) + 1
+        if (isBuildOnlyTile) {
+          mapGrid[y][x].buildOnlyOccupied = (mapGrid[y][x].buildOnlyOccupied || 0) + 1
+        } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
+          occupancyMap[y][x] = (occupancyMap[y][x] || 0) + 1
+        }
+
+        // Remove any ore from tiles where buildings are placed
+        if (mapGrid[y][x].ore) {
+          mapGrid[y][x].ore = false
+          resourceChanged = true
+          // Clear any cached texture variations for this tile to force re-render
+          mapGrid[y][x].textureVariation = null
+        }
+
+        if (isStreetTile) {
+          mapGrid[y][x].type = 'street'
+        }
+
+        if (isAirstripPassableTile) {
+          mapGrid[y][x].airstripStreet = true
+        }
+
+        // DON'T change the tile type - keep the original background texture visible
+        // mapGrid[y][x].type = 'building' // REMOVED: This was causing solid color rendering
       }
-
-      // Remove any ore from tiles where buildings are placed
-      if (mapGrid[y][x].ore) {
-        mapGrid[y][x].ore = false
-        // Clear any cached texture variations for this tile to force re-render
-        mapGrid[y][x].textureVariation = null
-      }
-
-      if (isStreetTile) {
-        mapGrid[y][x].type = 'street'
-      }
-
-      if (isAirstripPassableTile) {
-        mapGrid[y][x].airstripStreet = true
-      }
-
-      // DON'T change the tile type - keep the original background texture visible
-      // mapGrid[y][x].type = 'building' // REMOVED: This was causing solid color rendering
     }
+  } finally {
+    notifySurfaceMutation(mapGrid, footprint)
+    if (building.type === 'street' || building.type === 'airstrip') {
+      notifyTopologyMutation(mapGrid, footprint)
+    }
+    if (resourceChanged) notifyResourceMutation(mapGrid, footprint)
+    commitMapMutationTransaction(transaction)
   }
 
   // Reserve tiles around certain buildings for pathing but keep them passable
@@ -342,46 +367,62 @@ export function placeBuilding(building, mapGrid, occupancyMap = gameState.occupa
 // Remove building from the map grid: restore original tiles and clear building flag
 export function clearBuildingFromMapGrid(building, mapGrid, occupancyMap = gameState.occupancyMap) {
   const changedTiles = [] // Track tiles that had type changes for SOT mask update
+  const transaction = beginMapMutationTransaction(mapGrid)
+  let resourceChanged = false
+  const footprint = {
+    left: building.x,
+    top: building.y,
+    right: building.x + building.width,
+    bottom: building.y + building.height
+  }
 
-  for (let y = building.y; y < building.y + building.height; y++) {
-    for (let x = building.x; x < building.x + building.width; x++) {
-      if (mapGrid[y] && mapGrid[y][x]) {
-        // Restore the original tile type if it was saved, otherwise default to 'land'
-        if (building.originalTiles &&
+  try {
+    for (let y = building.y; y < building.y + building.height; y++) {
+      for (let x = building.x; x < building.x + building.width; x++) {
+        if (mapGrid[y] && mapGrid[y][x]) {
+          // Restore the original tile type if it was saved, otherwise default to 'land'
+          if (building.originalTiles &&
             building.originalTiles[y - building.y] &&
             building.originalTiles[y - building.y][x - building.x]) {
-          mapGrid[y][x].type = building.originalTiles[y - building.y][x - building.x]
-        } else {
-          mapGrid[y][x].type = 'land'
-          // Make sure ore property exists when restoring tiles
-          if (mapGrid[y][x].ore === undefined) {
-            mapGrid[y][x].ore = false
+            mapGrid[y][x].type = building.originalTiles[y - building.y][x - building.x]
+          } else {
+            mapGrid[y][x].type = 'land'
+            // Make sure ore property exists when restoring tiles
+            if (mapGrid[y][x].ore === undefined) {
+              mapGrid[y][x].ore = false
+              resourceChanged = true
+            }
           }
-        }
-        changedTiles.push({ x, y })
-        // Clear any building reference to unblock this tile for pathfinding
-        delete mapGrid[y][x].building
-        if (mapGrid[y][x].airstripStreet) {
-          delete mapGrid[y][x].airstripStreet
-        }
-        const localX = x - building.x
-        const localY = y - building.y
-        const isStreetTile = building.type === 'street'
-        const isAirstripPassableTile =
-          building.type === 'airstrip' &&
-          !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
-        const isBuildOnlyTile = isStreetTile || isAirstripPassableTile
+          changedTiles.push({ x, y })
+          // Clear any building reference to unblock this tile for pathfinding
+          delete mapGrid[y][x].building
+          if (mapGrid[y][x].airstripStreet) {
+            delete mapGrid[y][x].airstripStreet
+          }
+          const localX = x - building.x
+          const localY = y - building.y
+          const isStreetTile = building.type === 'street'
+          const isAirstripPassableTile =
+            building.type === 'airstrip' &&
+            !isAirstripBlockedLocalTile(localX, localY, building.width, building.height)
+          const isBuildOnlyTile = isStreetTile || isAirstripPassableTile
 
-        if (isBuildOnlyTile) {
-          mapGrid[y][x].buildOnlyOccupied = Math.max(0, (mapGrid[y][x].buildOnlyOccupied || 0) - 1)
-          if (mapGrid[y][x].buildOnlyOccupied <= 0) {
-            delete mapGrid[y][x].buildOnlyOccupied
+          if (isBuildOnlyTile) {
+            mapGrid[y][x].buildOnlyOccupied = Math.max(0, (mapGrid[y][x].buildOnlyOccupied || 0) - 1)
+            if (mapGrid[y][x].buildOnlyOccupied <= 0) {
+              delete mapGrid[y][x].buildOnlyOccupied
+            }
+          } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
+            occupancyMap[y][x] = Math.max(0, (occupancyMap[y][x] || 0) - 1)
           }
-        } else if (occupancyMap && occupancyMap[y] && occupancyMap[y][x] !== undefined) {
-          occupancyMap[y][x] = Math.max(0, (occupancyMap[y][x] || 0) - 1)
         }
       }
     }
+  } finally {
+    notifySurfaceMutation(mapGrid, footprint)
+    notifyTopologyMutation(mapGrid, footprint)
+    if (resourceChanged) notifyResourceMutation(mapGrid, footprint)
+    commitMapMutationTransaction(transaction)
   }
 
   const removeNoBuild = (x, y) => {

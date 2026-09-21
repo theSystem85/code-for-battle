@@ -21,6 +21,7 @@ import {
 } from './movementHelpers.js'
 import { updateApacheFlightState } from './movementApache.js'
 import { updateF22FlightState } from './movementF22.js'
+import { beginJetEmergencyFuelLanding, isStrikeJet } from './jetFuel.js'
 import {
   checkUnitCollision,
   applyWreckCollisionResponse,
@@ -209,21 +210,26 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       playSound('outOfGas')
       unit.outOfGasPlayed = true
     }
-    unit.path = []
-    unit.moveTarget = null
-    unit.movement.velocity = { x: 0, y: 0 }
-    unit.movement.targetVelocity = { x: 0, y: 0 }
-    unit.movement.isMoving = false
-    unit.movement.currentSpeed = 0
-    if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
-      unit.flightPlan = null
-      unit.autoHoldAltitude = false
-      unit.helipadLandingRequested = false
-      if (unit.flightState !== 'grounded') {
-        unit.manualFlightState = 'land'
+    const canEmergencyLand = isStrikeJet(unit) && unit.flightState !== 'grounded'
+    if (canEmergencyLand) {
+      beginJetEmergencyFuelLanding(unit, now)
+    } else {
+      unit.path = []
+      unit.moveTarget = null
+      unit.movement.velocity = { x: 0, y: 0 }
+      unit.movement.targetVelocity = { x: 0, y: 0 }
+      unit.movement.isMoving = false
+      unit.movement.currentSpeed = 0
+      if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
+        unit.flightPlan = null
+        unit.autoHoldAltitude = false
+        unit.helipadLandingRequested = false
+        if (unit.flightState !== 'grounded') {
+          unit.manualFlightState = 'land'
+        }
       }
+      return
     }
-    return
   } else if (unit.gas > 0 && unit.needsEmergencyFuel) {
     unit.needsEmergencyFuel = false
     unit.emergencyFuelRequestTime = null

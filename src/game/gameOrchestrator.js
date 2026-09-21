@@ -29,7 +29,7 @@ import { initSaveGameSystem, initLastGameRecovery, maybeResumeLastPausedGame, pe
 import { initReplaySystem } from '../replaySystem.js'
 import { showNotification } from '../ui/notifications.js'
 import { resetAttackDirections } from '../ai/enemyStrategies.js'
-import { getTextureManager, preloadTileTextures, getMapRenderer } from '../rendering.js'
+import { getTextureManager, preloadTileTextures, getMapRenderer, publishPreparedRuntimeMap } from '../rendering.js'
 import { milestoneSystem } from '../game/milestoneSystem.js'
 import { updateDangerZoneMaps } from '../game/dangerZoneMap.js'
 import { APP_VERSION } from '../version.js'
@@ -123,6 +123,10 @@ import {
 import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction
+} from '../rendering/prepared/mapMutationNotifier.js'
 
 export const MAP_SEED_STORAGE_KEY = 'rts-map-seed'
 export const PLAYER_COUNT_STORAGE_KEY = 'rts-player-count'
@@ -137,6 +141,13 @@ const MAP_SHORE_WEST_STORAGE_KEY = 'rts-map-shore-west'
 const MAP_SHORE_EAST_STORAGE_KEY = 'rts-map-shore-east'
 const MAP_SHORE_SOUTH_STORAGE_KEY = 'rts-map-shore-south'
 const MAP_CENTER_LAKE_STORAGE_KEY = 'rts-map-center-lake'
+const MAP_BIOME_STORAGE_KEY = 'rts-integrated-spritesheet-biome'
+const MAP_BIOME_REGION_COUNT_STORAGE_KEY = 'rts-map-biome-region-count'
+const MAP_BIOME_DISTRIBUTION_STORAGE_KEY = 'rts-map-biome-distribution'
+const MAP_BIOME_WEIGHTS_STORAGE_KEY = 'rts-map-biome-weights'
+const MAP_SHORELINE_WIDTH_STORAGE_KEY = 'rts-map-shoreline-width'
+const MAP_BIOME_TRANSITION_PIXELS_STORAGE_KEY = 'rts-map-biome-transition-pixels'
+const MAP_SNOW_ON_PLATEAUS_STORAGE_KEY = 'rts-map-snow-on-plateaus'
 export const MAP_WIDTH_TILES_STORAGE_KEY = 'rts-map-width-tiles'
 export const MAP_HEIGHT_TILES_STORAGE_KEY = 'rts-map-height-tiles'
 const SHADOW_OF_WAR_STORAGE_KEY = 'rts-shadow-of-war-enabled'
@@ -215,6 +226,29 @@ function sanitizeTerrainPercent(value, fallback) {
     return Math.max(0, Math.min(50, parsed))
   }
   return Math.max(0, Math.min(50, Number.isFinite(fallback) ? Math.floor(fallback) : 10))
+}
+
+function sanitizeBiomeWeight(value, fallback = 25) {
+  const parsed = parseInt(value, 10)
+  return Number.isFinite(parsed) ? Math.max(0, Math.min(100, parsed)) : Math.max(0, Math.min(100, fallback))
+}
+
+function sanitizeBiomeRegionCount(value, fallback = 12) {
+  const parsed = parseInt(value, 10)
+  return Number.isFinite(parsed) ? Math.max(1, Math.min(64, parsed)) : Math.max(1, Math.min(64, fallback))
+}
+
+function sanitizeShorelineWidth(value, fallback = 2) {
+  const parsed = parseInt(value, 10)
+  return Number.isFinite(parsed) ? Math.max(0, Math.min(12, parsed)) : Math.max(0, Math.min(12, fallback))
+}
+function sanitizeTransitionPixels(value, fallback = 8) {
+  const parsed = parseInt(value, 10)
+  return Number.isFinite(parsed) ? Math.max(1, Math.min(64, parsed)) : Math.max(1, Math.min(64, fallback))
+}
+
+function sanitizeBiomeDistribution(value) {
+  return ['vertical', 'horizontal', 'corners', 'random'].includes(value) ? value : 'random'
 }
 
 function parseStoredBoolean(value, fallback = false) {
@@ -478,7 +512,6 @@ function loadPersistedSettings() {
     const shoreEastCheckbox = document.getElementById('mapShoreEastCheckbox')
     const shoreSouthCheckbox = document.getElementById('mapShoreSouthCheckbox')
     const centerLakeCheckbox = document.getElementById('mapCenterLakeCheckbox')
-
     const storedWater = getStoredItem(MAP_WATER_PERCENT_STORAGE_KEY)
     const storedRock = getStoredItem(MAP_ROCK_PERCENT_STORAGE_KEY)
     const storedShoreNorth = getStoredItem(MAP_SHORE_NORTH_STORAGE_KEY)
@@ -510,6 +543,47 @@ function loadPersistedSettings() {
     if (centerLakeCheckbox) centerLakeCheckbox.checked = gameState.mapCenterLake
   } catch (e) {
     window.logger.warn('Failed to load terrain map settings from IndexedDB:', e)
+  }
+
+  try {
+    const biomeSelect = document.getElementById('integratedSpriteSheetBiomeSelect')
+    const regionCountInput = document.getElementById('mapBiomeRegionCount')
+    const distributionSelect = document.getElementById('mapBiomeDistribution')
+    const snowOnPlateausCheckbox = document.getElementById('mapSnowOnPlateausCheckbox')
+    const storedBiome = getStoredItem(MAP_BIOME_STORAGE_KEY)
+    const storedRegionCount = getStoredItem(MAP_BIOME_REGION_COUNT_STORAGE_KEY)
+    const storedDistribution = getStoredItem(MAP_BIOME_DISTRIBUTION_STORAGE_KEY)
+    const storedWeights = getStoredItem(MAP_BIOME_WEIGHTS_STORAGE_KEY)
+    const storedShorelineWidth = getStoredItem(MAP_SHORELINE_WIDTH_STORAGE_KEY)
+    const storedTransitionPixels = getStoredItem(MAP_BIOME_TRANSITION_PIXELS_STORAGE_KEY)
+    const storedSnowOnPlateaus = getStoredItem(MAP_SNOW_ON_PLATEAUS_STORAGE_KEY)
+    const validBiomes = ['soil', 'sand', 'grass', 'snow', 'mixed']
+    gameState.activeSpriteSheetBiomeTag = validBiomes.includes(storedBiome) ? storedBiome : (validBiomes.includes(gameState.activeSpriteSheetBiomeTag) ? gameState.activeSpriteSheetBiomeTag : 'grass')
+    gameState.mapBiomeRegionCount = sanitizeBiomeRegionCount(storedRegionCount, gameState.mapBiomeRegionCount)
+    gameState.mapBiomeDistribution = sanitizeBiomeDistribution(storedDistribution || gameState.mapBiomeDistribution)
+    gameState.mapShorelineWidth = sanitizeShorelineWidth(storedShorelineWidth, gameState.mapShorelineWidth)
+    gameState.mapBiomeTransitionPixels = sanitizeTransitionPixels(storedTransitionPixels, gameState.mapBiomeTransitionPixels)
+    try {
+      const parsedWeights = storedWeights ? JSON.parse(storedWeights) : gameState.mapBiomeWeights
+      gameState.mapBiomeWeights = Object.fromEntries(['grass', 'soil', 'sand', 'snow'].map(biome => [biome, sanitizeBiomeWeight(parsedWeights?.[biome], gameState.mapBiomeWeights?.[biome])]))
+    } catch {
+      gameState.mapBiomeWeights = { grass: 30, soil: 30, sand: 20, snow: 20 }
+    }
+    gameState.mapSnowOnPlateaus = parseStoredBoolean(storedSnowOnPlateaus, gameState.mapSnowOnPlateaus)
+    if (biomeSelect) biomeSelect.value = gameState.activeSpriteSheetBiomeTag
+    if (regionCountInput) regionCountInput.value = gameState.mapBiomeRegionCount
+    if (distributionSelect) distributionSelect.value = gameState.mapBiomeDistribution
+    const shorelineWidthInput = document.getElementById('mapShorelineWidth')
+    if (shorelineWidthInput) shorelineWidthInput.value = gameState.mapShorelineWidth
+    const transitionPixelsInput = document.getElementById('mapBiomeTransitionPixels')
+    if (transitionPixelsInput) transitionPixelsInput.value = gameState.mapBiomeTransitionPixels
+    if (snowOnPlateausCheckbox) snowOnPlateausCheckbox.checked = gameState.mapSnowOnPlateaus
+    for (const biome of ['grass', 'soil', 'sand', 'snow']) {
+      const input = document.getElementById(`mapBiome${biome[0].toUpperCase()}${biome.slice(1)}Weight`)
+      if (input) input.value = gameState.mapBiomeWeights[biome]
+    }
+  } catch (e) {
+    window.logger.warn('Failed to load biome map settings from IndexedDB:', e)
   }
 
   try {
@@ -712,20 +786,29 @@ class Game {
     }
 
     gameState.mapSeed = seed
-    generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
-    initializeDeterministicGameSession(seed)
+    const mapLifecycleTransaction = beginMapMutationTransaction(
+      { width: MAP_TILES_X, height: MAP_TILES_Y },
+      { replace: true }
+    )
+    try {
+      generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+      initializeDeterministicGameSession(seed)
 
-    gameState.mapTilesX = MAP_TILES_X
-    gameState.mapTilesY = MAP_TILES_Y
-    gameState.lastOreUpdate = 0
+      gameState.mapTilesX = MAP_TILES_X
+      gameState.mapTilesY = MAP_TILES_Y
+      gameState.lastOreUpdate = 0
 
-    initFactories(factories, mapGrid)
-    gameState.buildings.push(...factories)
+      initFactories(factories, mapGrid)
+      gameState.buildings.push(...factories)
 
-    initializeShadowOfWar(gameState, mapGrid)
-    updateShadowOfWar(gameState, units, mapGrid, factories)
+      initializeShadowOfWar(gameState, mapGrid)
+      updateShadowOfWar(gameState, units, mapGrid, factories)
 
-    cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+      cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+    } finally {
+      commitMapMutationTransaction(mapLifecycleTransaction)
+    }
+    publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     factories.forEach(factory => {
@@ -920,6 +1003,16 @@ class Game {
     const shoreEastCheckbox = document.getElementById('mapShoreEastCheckbox')
     const shoreSouthCheckbox = document.getElementById('mapShoreSouthCheckbox')
     const centerLakeCheckbox = document.getElementById('mapCenterLakeCheckbox')
+    const biomeSelect = document.getElementById('integratedSpriteSheetBiomeSelect')
+    const biomeRegionCountInput = document.getElementById('mapBiomeRegionCount')
+    const biomeDistributionSelect = document.getElementById('mapBiomeDistribution')
+    const shorelineWidthInput = document.getElementById('mapShorelineWidth')
+    const transitionPixelsInput = document.getElementById('mapBiomeTransitionPixels')
+    const snowOnPlateausCheckbox = document.getElementById('mapSnowOnPlateausCheckbox')
+    const biomeWeightInputs = Object.fromEntries(['grass', 'soil', 'sand', 'snow'].map(biome => [
+      biome,
+      document.getElementById(`mapBiome${biome[0].toUpperCase()}${biome.slice(1)}Weight`)
+    ]))
 
     const applyMapSettingsAndRegenerate = async(changedField = null) => {
       const seed = seedInput ? seedInput.value || '1' : '1'
@@ -947,6 +1040,17 @@ class Game {
       const shoreEast = !!shoreEastCheckbox?.checked
       const shoreSouth = !!shoreSouthCheckbox?.checked
       const centerLake = !!centerLakeCheckbox?.checked
+      const biome = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(biomeSelect?.value) ? biomeSelect.value : 'grass'
+      const biomeRegionCount = sanitizeBiomeRegionCount(biomeRegionCountInput?.value, gameState.mapBiomeRegionCount)
+      const biomeDistribution = sanitizeBiomeDistribution(biomeDistributionSelect?.value)
+      const shorelineWidth = sanitizeShorelineWidth(shorelineWidthInput?.value, gameState.mapShorelineWidth)
+      const transitionPixels = sanitizeTransitionPixels(transitionPixelsInput?.value, gameState.mapBiomeTransitionPixels)
+      const biomeWeights = Object.fromEntries(Object.entries(biomeWeightInputs).map(([name, input]) => [
+        name,
+        sanitizeBiomeWeight(input?.value, gameState.mapBiomeWeights?.[name])
+      ]))
+      if (!Object.values(biomeWeights).some(weight => weight > 0)) biomeWeights.grass = 100
+      const snowOnPlateaus = !!snowOnPlateausCheckbox?.checked
 
       if (mapWidthInput) mapWidthInput.value = widthTiles
       if (mapHeightInput) mapHeightInput.value = heightTiles
@@ -993,6 +1097,13 @@ class Game {
       gameState.mapShoreEast = shoreEast
       gameState.mapShoreSouth = shoreSouth
       gameState.mapCenterLake = centerLake
+      gameState.activeSpriteSheetBiomeTag = biome
+      gameState.mapBiomeRegionCount = biomeRegionCount
+      gameState.mapBiomeDistribution = biomeDistribution
+      gameState.mapShorelineWidth = shorelineWidth
+      gameState.mapBiomeTransitionPixels = transitionPixels
+      gameState.mapBiomeWeights = biomeWeights
+      gameState.mapSnowOnPlateaus = snowOnPlateaus
 
       persistSetting(MAP_SEED_STORAGE_KEY, seed, 'map seed')
       persistSetting(MAP_WIDTH_TILES_STORAGE_KEY, widthTiles, 'map width')
@@ -1008,6 +1119,13 @@ class Game {
       persistSetting(MAP_SHORE_EAST_STORAGE_KEY, shoreEast, 'east shore setting')
       persistSetting(MAP_SHORE_SOUTH_STORAGE_KEY, shoreSouth, 'south shore setting')
       persistSetting(MAP_CENTER_LAKE_STORAGE_KEY, centerLake, 'center lake setting')
+      persistSetting(MAP_BIOME_STORAGE_KEY, biome, 'map biome')
+      persistSetting(MAP_BIOME_REGION_COUNT_STORAGE_KEY, biomeRegionCount, 'biome region count')
+      persistSetting(MAP_BIOME_DISTRIBUTION_STORAGE_KEY, biomeDistribution, 'biome distribution')
+      persistSetting(MAP_SHORELINE_WIDTH_STORAGE_KEY, shorelineWidth, 'shoreline width')
+      persistSetting(MAP_BIOME_TRANSITION_PIXELS_STORAGE_KEY, transitionPixels, 'biome transition pixels')
+      persistSetting(MAP_BIOME_WEIGHTS_STORAGE_KEY, JSON.stringify(biomeWeights), 'biome size weights')
+      persistSetting(MAP_SNOW_ON_PLATEAUS_STORAGE_KEY, snowOnPlateaus, 'plateau snow setting')
 
       const { width, height } = setMapDimensions(widthTiles, heightTiles)
       gameState.mapTilesX = width
@@ -1124,6 +1242,47 @@ class Game {
       .forEach((checkbox) => {
         checkbox.addEventListener('change', applyMapSettingsAndRegenerate)
       })
+
+    if (biomeSelect) biomeSelect.addEventListener('change', applyMapSettingsAndRegenerate)
+    if (biomeDistributionSelect) biomeDistributionSelect.addEventListener('change', applyMapSettingsAndRegenerate)
+    if (snowOnPlateausCheckbox) snowOnPlateausCheckbox.addEventListener('change', applyMapSettingsAndRegenerate)
+    let biomeInputTimer = null
+    const scheduleBiomeRegeneration = () => {
+      clearTimeout(biomeInputTimer)
+      biomeInputTimer = setTimeout(() => applyMapSettingsAndRegenerate(), 120)
+    }
+    if (shorelineWidthInput) {
+      shorelineWidthInput.min = 0
+      shorelineWidthInput.max = 12
+      shorelineWidthInput.value = sanitizeShorelineWidth(shorelineWidthInput.value, gameState.mapShorelineWidth)
+      shorelineWidthInput.addEventListener('input', scheduleBiomeRegeneration)
+      shorelineWidthInput.addEventListener('change', () => {
+        clearTimeout(biomeInputTimer)
+        shorelineWidthInput.value = sanitizeShorelineWidth(shorelineWidthInput.value, gameState.mapShorelineWidth)
+        applyMapSettingsAndRegenerate()
+      })
+    }
+    if (transitionPixelsInput) {
+      transitionPixelsInput.min = 1
+      transitionPixelsInput.max = 64
+      transitionPixelsInput.value = sanitizeTransitionPixels(transitionPixelsInput.value, gameState.mapBiomeTransitionPixels)
+      transitionPixelsInput.addEventListener('input', scheduleBiomeRegeneration)
+      transitionPixelsInput.addEventListener('change', () => { clearTimeout(biomeInputTimer); applyMapSettingsAndRegenerate() })
+    }
+    if (biomeRegionCountInput) {
+      biomeRegionCountInput.addEventListener('input', scheduleBiomeRegeneration)
+      biomeRegionCountInput.addEventListener('change', () => {
+        clearTimeout(biomeInputTimer)
+        applyMapSettingsAndRegenerate()
+      })
+    }
+    Object.values(biomeWeightInputs).filter(Boolean).forEach(input => {
+      input.addEventListener('input', scheduleBiomeRegeneration)
+      input.addEventListener('change', () => {
+        clearTimeout(biomeInputTimer)
+        applyMapSettingsAndRegenerate()
+      })
+    })
   }
 
   setupMapSettings() {
@@ -1420,18 +1579,27 @@ class Game {
     }
 
     gameState.mapSeed = normalizedSeed
-    generateMapFromSetup(normalizedSeed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
-    initializeDeterministicGameSession(normalizedSeed)
+    const mapLifecycleTransaction = beginMapMutationTransaction(
+      { width: MAP_TILES_X, height: MAP_TILES_Y },
+      { replace: true }
+    )
+    try {
+      generateMapFromSetup(normalizedSeed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+      initializeDeterministicGameSession(normalizedSeed)
 
-    gameState.mapTilesX = MAP_TILES_X
-    gameState.mapTilesY = MAP_TILES_Y
-    gameState.lastOreUpdate = 0
+      gameState.mapTilesX = MAP_TILES_X
+      gameState.mapTilesY = MAP_TILES_Y
+      gameState.lastOreUpdate = 0
 
-    factories.length = 0
-    initFactories(factories, mapGrid)
-    gameState.buildings.push(...factories)
+      factories.length = 0
+      initFactories(factories, mapGrid)
+      gameState.buildings.push(...factories)
 
-    cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+      cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+    } finally {
+      commitMapMutationTransaction(mapLifecycleTransaction)
+    }
+    publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1590,16 +1758,25 @@ class Game {
     const seedInput = document.getElementById('mapSeed')
     const seed = resolveMapSeed(gameState.mapSeed || seedInput?.value || '4')
     gameState.mapSeed = seed
-    generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+    const mapLifecycleTransaction = beginMapMutationTransaction(
+      { width: MAP_TILES_X, height: MAP_TILES_Y },
+      { replace: true }
+    )
+    try {
+      generateMapFromSetup(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
 
-    gameState.mapTilesX = MAP_TILES_X
-    gameState.mapTilesY = MAP_TILES_Y
+      gameState.mapTilesX = MAP_TILES_X
+      gameState.mapTilesY = MAP_TILES_Y
 
-    factories.length = 0
-    initFactories(factories, mapGrid)
-    gameState.buildings.push(...factories)
+      factories.length = 0
+      initFactories(factories, mapGrid)
+      gameState.buildings.push(...factories)
 
-    cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+      cleanupOreFromBuildings(mapGrid, gameState.buildings, factories)
+    } finally {
+      commitMapMutationTransaction(mapLifecycleTransaction)
+    }
+    publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     units.length = 0
@@ -1751,14 +1928,30 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
     gameState.mapShoreEast = !!terrainSettings.mapShoreEast
     gameState.mapShoreSouth = !!terrainSettings.mapShoreSouth
     gameState.mapCenterLake = !!terrainSettings.mapCenterLake
+    gameState.activeSpriteSheetBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(terrainSettings.activeSpriteSheetBiomeTag) ? terrainSettings.activeSpriteSheetBiomeTag : 'grass'
+    gameState.mapBiomeRegionCount = sanitizeBiomeRegionCount(terrainSettings.mapBiomeRegionCount, gameState.mapBiomeRegionCount)
+    gameState.mapBiomeDistribution = sanitizeBiomeDistribution(terrainSettings.mapBiomeDistribution)
+    gameState.mapBiomeWeights = terrainSettings.mapBiomeWeights || gameState.mapBiomeWeights
+    gameState.mapShorelineWidth = sanitizeShorelineWidth(terrainSettings.mapShorelineWidth, gameState.mapShorelineWidth)
+    gameState.mapBiomeTransitionPixels = sanitizeTransitionPixels(terrainSettings.mapBiomeTransitionPixels, gameState.mapBiomeTransitionPixels)
+    gameState.mapSnowOnPlateaus = terrainSettings.mapSnowOnPlateaus !== false
   }
 
   gameState.unitWrecks = []
 
-  mapGrid.length = 0
-  generateMapFromSetup(normalizedSeed, mapGrid, widthTiles, heightTiles)
-  initializeDeterministicGameSession(normalizedSeed)
-  gameState.lastOreUpdate = 0
+  const mapLifecycleTransaction = beginMapMutationTransaction(
+    { width: widthTiles, height: heightTiles },
+    { replace: true }
+  )
+  try {
+    mapGrid.length = 0
+    generateMapFromSetup(normalizedSeed, mapGrid, widthTiles, heightTiles)
+    initializeDeterministicGameSession(normalizedSeed)
+    gameState.lastOreUpdate = 0
+  } finally {
+    commitMapMutationTransaction(mapLifecycleTransaction)
+  }
+  publishPreparedRuntimeMap(mapGrid)
 
   gameState.occupancyMap = []
   for (let y = 0; y < heightTiles; y++) {

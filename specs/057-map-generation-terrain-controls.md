@@ -33,6 +33,10 @@ Add map generation controls in the sidebar so the host/player can define terrain
   - Water percentage control materially affects generated water coverage.
   - Shore toggles produce water on requested map edges.
   - High-water/high-rock combined settings still preserve land-reachable base anchors.
+  - Middle-of-shore depth varies, changes gradually, and does not stay flat for a long straight run.
+  - Two enabled shores ease into each other over several columns instead of a one-tile cliff.
+  - The center lake's boundary radius varies by angle, contains the center tile, and is a single water component.
+  - The same seed reproduces the organic water mask and a different seed does not.
 
 ## Follow-up Constraints (2026-03-24)
 - Terrain percentages should generate **line/chain-based formations** (wider/longer lines as % increases), not random isolated scatter across the whole map.
@@ -43,3 +47,11 @@ Add map generation controls in the sidebar so the host/player can define terrain
 - Rock line generation is applied before water; water generation is dominant and overwrites/cuts rock where paths intersect.
 
 - Regenerating from map-settings changes preserves current camera position (clamped to new map bounds) rather than forcing recenter on base.
+
+## Organic shorelines and center lake (2026-09-21)
+- Enabled shores are no longer constant-depth rectangles. Depth along each shore follows a seeded smooth-noise profile, so the tile coastline curves into bays and headlands. The map-edge row or column of an enabled shore stays water.
+- Where two enabled shores meet, their normalized distances are blended with a smooth minimum, so the corner is a curve instead of a right-angle step.
+- The big center lake is a seeded radial blob. Radius varies by angle around the same base radius the circular stamp used, and the lake stays one connected body containing the map center.
+- Average shore depth and lake radius still scale with the configured water percentage. Base anchors stay on land, and streets still reconnect bases after water is stamped.
+- Coastline rendering (shaders, sprites, autotiles, SOT) is unchanged. Only the generated tile types change.
+- Hand-authored mission maps are stored maps and are not passed through this generator.

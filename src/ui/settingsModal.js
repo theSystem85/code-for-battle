@@ -9,6 +9,7 @@ import { getConfigValue, setConfigValue } from '../configRegistry.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
+const DYNAMIC_WATER_LAND_BLEND_KEY = 'rts_dynamic_water_land_blend'
 const WATER_SETTINGS_CONFIG_IDS = {
   enabled: 'proceduralWaterRendering',
   tone: 'waterEffectTone',
@@ -173,6 +174,7 @@ export function initSettingsModal() {
   const frameLimiterToggle = document.getElementById('settingsFrameLimiterToggle')
   const radarOfflineAnimationToggle = document.getElementById('settingsRadarOfflineAnimationToggle')
   const proceduralWaterToggle = document.getElementById('settingsProceduralWaterToggle')
+  const dynamicWaterLandBlendToggle = document.getElementById('settingsDynamicWaterLandBlendToggle')
   const waterToneRange = document.getElementById('settingsWaterToneRange')
   const waterSaturationRange = document.getElementById('settingsWaterSaturationRange')
   const mobilePixelDensityRange = document.getElementById('settingsMobilePixelDensityRange')
@@ -181,6 +183,12 @@ export function initSettingsModal() {
   if (!modal) return
 
   gameState.radarOfflineAnimationEnabled = loadRadarOfflineAnimationSetting()
+  try {
+    const storedDynamicWaterBlend = getStoredItem(DYNAMIC_WATER_LAND_BLEND_KEY)
+    if (storedDynamicWaterBlend !== null) gameState.dynamicWaterLandBlendEnabled = storedDynamicWaterBlend !== 'false'
+  } catch (error) {
+    window.logger.warn('Failed to load dynamic water shoreline setting:', error)
+  }
 
   bindTabs(modal)
   initLlmSettingsPanel()
@@ -222,6 +230,14 @@ export function initSettingsModal() {
     proceduralWaterToggle.addEventListener('change', (event) => {
       setConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled, event.target.checked)
       syncWaterGraphicsControls(modal)
+    })
+  }
+
+  if (dynamicWaterLandBlendToggle) {
+    dynamicWaterLandBlendToggle.checked = gameState.dynamicWaterLandBlendEnabled !== false
+    dynamicWaterLandBlendToggle.addEventListener('change', (event) => {
+      gameState.dynamicWaterLandBlendEnabled = event.target.checked
+      try { setStoredItem(DYNAMIC_WATER_LAND_BLEND_KEY, event.target.checked ? 'true' : 'false') } catch (error) { window.logger.warn('Failed to save dynamic water shoreline setting:', error) }
     })
   }
 

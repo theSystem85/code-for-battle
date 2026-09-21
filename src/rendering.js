@@ -1,5 +1,13 @@
 // rendering.js - Refactored to use modular components
 import { Renderer } from './rendering/renderer.js'
+import { RENDER_REVISION_DOMAINS } from './rendering/prepared/renderRevisionStore.js'
+import {
+  bindRenderingDensityPreparation,
+  prepareRuntimeMap,
+  prepareRuntimeSprites
+} from './rendering/prepared/renderingPipeline.js'
+
+export { RENDER_REVISION_DOMAINS }
 
 // Create a single renderer instance
 const gameRenderer = new Renderer()
@@ -41,6 +49,14 @@ export function notifyTileMutation(mapGrid, tileX, tileY) {
 }
 
 /**
+ * Notify terrain rendering about a mutation using the C00 revision-domain contract.
+ * Mutation producers pass both footprints when a visual moves or changes dimensions.
+ */
+export function notifyTerrainMutation(mapGrid, domain, oldBounds, newBounds = oldBounds) {
+  gameRenderer.mapRenderer?.notifyTerrainMutation(mapGrid, domain, oldBounds, newBounds)
+}
+
+/**
  * Force recomputation of the entire SOT mask.
  * Call this when loading a new map or after bulk tile changes.
  * @param {Array} mapGrid - The map grid
@@ -50,3 +66,17 @@ export function recomputeSOTMask(mapGrid) {
     gameRenderer.mapRenderer.computeSOTMask(mapGrid)
   }
 }
+
+export function publishPreparedRuntimeMap(mapGrid) {
+  const mapRenderer = gameRenderer.mapRenderer
+  mapRenderer?.attachMutationStore?.(mapGrid)
+  bindRenderingDensityPreparation()
+  if (!mapGrid?.length) return Promise.resolve(null)
+  if (mapRenderer && !mapRenderer.sotMask) mapRenderer.computeSOTMask(mapGrid)
+  return prepareRuntimeMap({ grid: mapGrid, sotMask: mapRenderer?.sotMask }).catch(error => {
+    if (typeof window !== 'undefined') window.logger?.warn?.('Prepared map generation failed', error)
+    return null
+  })
+}
+
+export { prepareRuntimeSprites }

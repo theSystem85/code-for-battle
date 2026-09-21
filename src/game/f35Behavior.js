@@ -18,6 +18,7 @@ export function canF35ReleaseWeapons(unit) {
 
 export function canF35StartLanding(unit) {
   if (!unit || unit.type !== 'f35') return false
+  if (unit.emergencyFuelLanding) return true
   const intent = unit.commandIntent || 'move'
   if (intent !== 'landAtStructure' && intent !== 'explicitLand' && intent !== 'returnToBase') {
     return false

@@ -647,4 +647,22 @@ describe('KeyboardHandler', () => {
     // Only non-building player units are broadcast
     expect(broadcastUnitStop).toHaveBeenCalledWith([unit])
   })
+
+  it('releases any mounted unit when S is pressed on a recovery tank', () => {
+    const mounted = { id: 'jet-1', type: 'f22Raptor', towedBy: 'rt1' }
+    const tank = {
+      id: 'rt1',
+      type: 'recoveryTank',
+      owner: gameState.humanPlayer,
+      towedUnit: mounted,
+      recoveryTask: { wreckId: null }
+    }
+    handler.selectedUnits = [tank]
+
+    handler.handleStopAttacking()
+
+    expect(tank.towedUnit).toBeNull()
+    expect(mounted.towedBy).toBeNull()
+    expect(handler.showNotification).toHaveBeenCalledWith('Released 1 mounted unit', 2000)
+  })
 })

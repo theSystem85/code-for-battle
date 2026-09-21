@@ -73,11 +73,14 @@ export function handleAttackCommand(handler, selectedUnits, target, mapGrid, isF
       }
 
       if (handler.assignApacheFlight) {
-        handler.assignApacheFlight(unit, destTile, targetCenter, {
+        const assigned = handler.assignApacheFlight(unit, destTile, targetCenter, {
           mode: 'combat',
           stopRadius: TILE_SIZE * 0.25,
           followTargetId: target.id || null
         })
+        if (!assigned) {
+          return
+        }
       }
       unit.lastPlayerCommandTime = now
       unit.autoHelipadReturnActive = false

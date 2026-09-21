@@ -229,7 +229,8 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
           // Placeholder for start-refuel logging
         }
         // Emergency units get faster refueling rate
-        const isEmergencyRefuel = target.gas <= 0
+        const isStrikeJetTarget = target.type === 'f22Raptor' || target.type === 'f35'
+        const isEmergencyRefuel = target.gas <= 0 && !isStrikeJetTarget
         const baseRate = target.maxGas / GAS_REFILL_TIME
         const fillRate = isEmergencyRefuel ? baseRate * 2 : baseRate // 2x speed for emergency
 
@@ -245,7 +246,7 @@ export const updateTankerTruckLogic = logPerformance(function(units, gameState, 
         }
 
         // For emergency refueling, only fill to 20% to quickly get unit moving
-        // For normal refueling, fill to 98% to avoid floating point precision issues
+        // Grounded jets and normal refueling fill to 98% so aircraft can take off again
         const emergencyThreshold = isEmergencyRefuel ? target.maxGas * 0.2 : target.maxGas * 0.98
 
         if (target.gas >= emergencyThreshold || tanker.supplyGas <= 0 || tanker.refuelTimer >= GAS_REFILL_TIME) {

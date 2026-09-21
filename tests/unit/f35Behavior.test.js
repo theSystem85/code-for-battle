@@ -22,6 +22,11 @@ describe('f35Behavior helpers', () => {
       groundLandingRequested: true,
       groundLandingTarget: { x: 100, y: 100 }
     })).toBe(true)
+    expect(canF35StartLanding({
+      type: 'f35',
+      commandIntent: 'move',
+      emergencyFuelLanding: true
+    })).toBe(true)
   })
 
   it('computes pre-target release points', () => {
