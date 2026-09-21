@@ -14,6 +14,14 @@ import {
   releaseAirstripRunwayOperation
 } from '../utils/airstripUtils.js'
 import { getBuildingIdentifier } from '../utils.js'
+import {
+  canJetTakeOffFromCurrentTile,
+  JET_NEEDS_STREET_TAKEOFF_MESSAGE,
+  notifyHumanJet,
+  shouldJetReturnHomeForFuel,
+  updateF22EmergencyLanding,
+  updateF22StreetTakeoff
+} from './jetFuel.js'
 
 const F22_GROUND_TAKEOFF_SPEED_MIN = 1.5
 const F22_GROUND_TAKEOFF_SPEED_MAX = 2.2
@@ -27,7 +35,6 @@ const F22_COMBAT_ORBIT_RADIUS = TILE_SIZE * 10
 const F22_COMBAT_ORBIT_MIN_RADIUS = TILE_SIZE * 7
 const F22_COMBAT_ORBIT_MAX_RADIUS = TILE_SIZE * 14
 const F22_ORBIT_RPS = 0.16
-const F22_RTB_FUEL_RATIO = 0.2
 const F22_ORBIT_CRUISE_SPEED_MULTIPLIER = 0.62
 const F22_MAP_EDGE_MARGIN = TILE_SIZE * 2.5
 const F22_MAP_EDGE_EVADE_RADIUS = TILE_SIZE * 5
@@ -367,10 +374,7 @@ function isRunwayStartClear(unit, runway) {
 }
 
 function shouldReturnToAirstrip(unit) {
-  if (typeof unit.gas !== 'number' || typeof unit.maxGas !== 'number' || unit.maxGas <= 0) {
-    return false
-  }
-  return unit.gas <= unit.maxGas * F22_RTB_FUEL_RATIO
+  return shouldJetReturnHomeForFuel(unit)
 }
 
 function getFollowTargetEntity(unit) {
@@ -663,6 +667,18 @@ export function updateF22FlightState(unit, movement, now) {
     return
   }
 
+  if (unit.f22State === 'emergency_landing' || unit.emergencyFuelLanding) {
+    updateF22EmergencyLanding(unit, movement, now)
+    finishTick()
+    return
+  }
+
+  if (unit.f22State === 'street_takeoff') {
+    updateF22StreetTakeoff(unit, movement, now)
+    finishTick()
+    return
+  }
+
   if (unit.target && unit.target.health <= 0) {
     unit.target = null
   }
@@ -686,6 +702,20 @@ export function updateF22FlightState(unit, movement, now) {
 
   const runway = unit.runwayPoints
   if (!runway) {
+    if (unit.f22PendingTakeoff && unit.flightState === 'grounded') {
+      if (!canJetTakeOffFromCurrentTile(unit)) {
+        unit.f22PendingTakeoff = false
+        if (!unit.streetTakeoffBlockedNotified) {
+          unit.streetTakeoffBlockedNotified = true
+          notifyHumanJet(unit, JET_NEEDS_STREET_TAKEOFF_MESSAGE)
+        }
+        finishTick()
+        return
+      }
+      unit.streetTakeoffBlockedNotified = false
+      unit.f22State = 'street_takeoff'
+      updateF22StreetTakeoff(unit, movement, now)
+    }
     finishTick()
     return
   }
@@ -708,10 +738,25 @@ export function updateF22FlightState(unit, movement, now) {
   }
 
   if (unit.f22State === 'parked' && unit.f22PendingTakeoff) {
+    if (!canJetTakeOffFromCurrentTile(unit)) {
+      unit.f22PendingTakeoff = false
+      if (!unit.streetTakeoffBlockedNotified) {
+        unit.streetTakeoffBlockedNotified = true
+        notifyHumanJet(unit, JET_NEEDS_STREET_TAKEOFF_MESSAGE)
+      }
+      finishTick()
+      return
+    }
+    unit.streetTakeoffBlockedNotified = false
     if (airstrip) {
       enqueueAirstripRunwayOperation(airstrip, unit.id, 'takeoff')
+      unit.f22State = 'wait_takeoff_clearance'
+    } else {
+      unit.f22State = 'street_takeoff'
+      updateF22StreetTakeoff(unit, movement, now)
+      finishTick()
+      return
     }
-    unit.f22State = 'wait_takeoff_clearance'
   }
 
   if (unit.f22State === 'wait_takeoff_clearance') {
@@ -855,6 +900,8 @@ export function updateF22FlightState(unit, movement, now) {
       unit.f22State = 'airborne'
       unit.flightState = 'airborne'
       unit.f22TakeoffSoundPlayed = false
+      unit.landedOnGround = false
+      unit.emergencyFuelLandingNotified = false
       movement.isMoving = true
       if (airstrip) {
         releaseAirstripRunwayOperation(airstrip, unit.id)
@@ -903,6 +950,8 @@ export function updateF22FlightState(unit, movement, now) {
       unit.f22State = 'airborne'
       unit.flightState = 'airborne'
       unit.f22TakeoffSoundPlayed = false
+      unit.landedOnGround = false
+      unit.emergencyFuelLandingNotified = false
       if (airstrip) {
         releaseAirstripRunwayOperation(airstrip, unit.id)
       }
