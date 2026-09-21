@@ -2,7 +2,7 @@
 
 **LLM:** Cursor Cloud Agent using Grok 4.7
 **Harness:** Cursor Cloud Agent
-**Tokens / duration:** exact token counts are not available from this run. Duration will be recorded after verification finishes.
+**Tokens / duration:** exact token counts are not available from this run. Wall clock from the prompt timestamp (2026-09-21T23:37:00Z) through `npm run test:unit` was about 3m21s. Local verification used npm 10.9.7 and Node v22.14.0: `npm ci --include=dev`, `npm run build`, and `npm run test:smoke` all passed. `npm run test:unit` passed 158 files / 3877 tests. `package-lock.json` was not regenerated.
 
 ## Prompt
 
