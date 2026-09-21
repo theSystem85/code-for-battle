@@ -207,3 +207,7 @@ describe('Building Placement', () => {
 ## 2026-04 DOM Teardown Stability Update
 - Updated `src/ui/deviceLifecycle.js` so delayed safe-area inset sync callbacks bail out when `document` is unavailable.
 - This prevents post-test timer callbacks from throwing unhandled `ReferenceError: document is not defined` exceptions during Vitest environment teardown.
+
+## 2026-09 Netlify Lockfile Install
+- Netlify must install from the committed `package-lock.json` with `npm ci --include=dev` before `npm run build && npm run test:smoke`.
+- Do not delete `package-lock.json` or run a floating `npm install` on Netlify. Current npm/arborist crashes while resolving vitest optional peers (`Cannot read properties of null (reading 'edgesOut')`), which fails the deploy during `building site`.
