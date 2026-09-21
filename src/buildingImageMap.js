@@ -74,10 +74,15 @@ export function getBuildingImage(buildingType, callback) {
 }
 
 // Preload all building images
-export function preloadBuildingImages(callback) {
+export function preloadBuildingImages(callback, onProgress) {
+  const reportProgress = (fraction) => {
+    if (typeof onProgress === 'function') onProgress(fraction)
+  }
+
   // Don't reload if already loaded or loading
   if (buildingImagesPreloaded || buildingImagesLoading) {
     if (callback && buildingImagesPreloaded) {
+      reportProgress(1)
       callback()
     }
     return
@@ -93,6 +98,7 @@ export function preloadBuildingImages(callback) {
   for (const buildingType of Object.keys(buildingImageMap)) {
     getBuildingImage(buildingType, (_img) => {
       loadedImages++
+      reportProgress(totalImages === 0 ? 1 : loadedImages / totalImages)
 
       if (loadedImages === totalImages) {
         buildingImagesPreloaded = true

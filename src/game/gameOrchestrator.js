@@ -113,6 +113,13 @@ import { closeMobileSidebarModal, isMobileSidebarModalVisible } from '../ui/mobi
 import { resetLlmUsage } from '../ai/llmUsage.js'
 import { terminateAllSounds } from '../sound.js'
 import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../startupScheduler.js'
+import {
+  hideLoadingScreen,
+  runWithLoadingScreen,
+  showLoadingScreen,
+  updateLoadingScreen,
+  waitForLoadingPaint
+} from '../ui/loadingScreen.js'
 import { UnitRenderer } from '../rendering/unitRenderer.js'
 import { preloadRocketTankImage } from '../rendering/rocketTankImageRenderer.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
@@ -583,16 +590,79 @@ class Game {
   }
 
   async initializeGame() {
-    await runMeasuredTask('startup:initialize-game', async() => {
-      await this.loadAssets()
-      this.setupGameWorld()
-      this.setupUI()
-      this.startGameLoop()
-      this.setupDeferredStartupTasks()
+    const session = showLoadingScreen({
+      phase: 'boot',
+      kicker: 'THEATER COMMAND',
+      detail: 'Initializing systems',
+      progress: 0.05
     })
+
+    try {
+      await runMeasuredTask('startup:initialize-game', async() => {
+        updateLoadingScreen({
+          phase: 'assets',
+          detail: 'Loading battlefield assets',
+          progress: 0.08
+        }, session)
+        await this.loadAssets((fraction) => {
+          const assetFraction = Number.isFinite(fraction) ? fraction : 0
+          updateLoadingScreen({
+            phase: 'assets',
+            detail: 'Loading battlefield assets',
+            progress: 0.08 + (assetFraction * 0.64)
+          }, session)
+        })
+
+        updateLoadingScreen({
+          phase: 'map',
+          detail: 'Generating the map',
+          progress: 0.76
+        }, session)
+        await waitForLoadingPaint()
+        this.setupGameWorld()
+
+        updateLoadingScreen({
+          phase: 'systems',
+          detail: 'Bringing command systems online',
+          progress: 0.9
+        }, session)
+        await waitForLoadingPaint()
+        this.setupUI()
+        this.startGameLoop()
+
+        updateLoadingScreen({
+          phase: 'resume',
+          detail: 'Checking for a saved battle',
+          progress: 0.96
+        }, session)
+        await waitForLoadingPaint()
+        try {
+          this.setupAutoSaveResume()
+        } catch (error) {
+          window.logger.warn('Failed to restore the saved battle during startup', error)
+        }
+
+        updateLoadingScreen({
+          phase: 'ready',
+          detail: 'Forces deployed',
+          progress: 1
+        }, session)
+        await waitForLoadingPaint()
+      })
+      hideLoadingScreen(session)
+      this.setupDeferredStartupTasks()
+    } catch (error) {
+      updateLoadingScreen({
+        phase: 'error',
+        detail: 'Startup failed. Reload the page to try again.',
+        progress: null
+      }, session)
+      console.error('Game startup failed', error)
+      throw error
+    }
   }
 
-  async loadAssets() {
+  async loadAssets(onProgress) {
     return new Promise((resolve) => {
       initializeGameAssets(() => {
         allAssetsLoaded = true
@@ -607,6 +677,8 @@ class Game {
         })
 
         resolve()
+      }, (fraction) => {
+        if (typeof onProgress === 'function') onProgress(fraction)
       })
     })
   }
@@ -764,7 +836,6 @@ class Game {
       initUserDocs()
       initSidebarMultiplayer()
       initAiPartySync()
-      this.setupAutoSaveResume()
     })
 
     scheduleIdleTask('startup:idle-settings-and-save', () => {
@@ -850,7 +921,7 @@ class Game {
     const shoreSouthCheckbox = document.getElementById('mapShoreSouthCheckbox')
     const centerLakeCheckbox = document.getElementById('mapCenterLakeCheckbox')
 
-    const applyMapSettingsAndRegenerate = (changedField = null) => {
+    const applyMapSettingsAndRegenerate = async(changedField = null) => {
       const seed = seedInput ? seedInput.value || '1' : '1'
       const widthTiles = mapWidthInput ? sanitizeMapDimension(mapWidthInput.value, MAP_TILES_X) : MAP_TILES_X
       const heightTiles = mapHeightInput ? sanitizeMapDimension(mapHeightInput.value, MAP_TILES_Y) : MAP_TILES_Y
@@ -942,7 +1013,18 @@ class Game {
       gameState.mapTilesX = width
       gameState.mapTilesY = height
 
-      this.resetGameWithNewMap(seed, { preserveCamera: true })
+      try {
+        await runWithLoadingScreen(() => {
+          this.resetGameWithNewMap(seed, { preserveCamera: true })
+        }, {
+          phase: 'map',
+          kicker: 'MAP CONTROL',
+          detail: 'Generating the map',
+          progress: null
+        })
+      } catch (error) {
+        console.error('Map regeneration failed', error)
+      }
       refreshSidebarMultiplayer()
     }
 

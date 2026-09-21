@@ -152,7 +152,7 @@ export class Renderer {
   }
 
   // Initialize texture loading
-  preloadTextures(callback) {
+  preloadTextures(callback, onProgress) {
     // Load both tile textures and tank images in parallel
     let texturesLoaded = false
     let tankImagesLoaded = false
@@ -169,6 +169,24 @@ export class Renderer {
     let supplyShipLoaded = false
 
     const checkAllLoaded = () => {
+      if (typeof onProgress === 'function') {
+        const loadedCount = [
+          texturesLoaded,
+          tankImagesLoaded,
+          harvesterLoaded,
+          rocketTankLoaded,
+          ambulanceLoaded,
+          tankerLoaded,
+          recoveryTankLoaded,
+          ammunitionLoaded,
+          howitzerLoaded,
+          mineLayerLoaded,
+          mineSweeperLoaded,
+          destroyerLoaded,
+          supplyShipLoaded
+        ].filter(Boolean).length
+        onProgress(loadedCount / 13)
+      }
       if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded) {
         if (callback) callback()
       }

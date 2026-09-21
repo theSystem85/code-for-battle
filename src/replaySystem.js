@@ -3,6 +3,7 @@ import { TILE_SIZE } from './config.js'
 import { saveGame, loadGameFromState, updateSaveGamesList } from './saveGame.js'
 import { decodeSaveObject } from './saveFormat.js'
 import { showNotification } from './ui/notifications.js'
+import { runWithLoadingScreen } from './ui/loadingScreen.js'
 import { applyGameTickOutput } from './ai-api/applier.js'
 import { productionQueue } from './productionQueue.js'
 import { CheatSystem } from './input/cheatSystem.js'
@@ -1257,7 +1258,16 @@ export function updateReplayList() {
     const replayLabel = formatReplayListLabel(startTs, durationMs)
     btn.title = `Load ${replayLabel}`
     btn.textContent = replayLabel
-    btn.onclick = () => loadReplay(replay.key)
+    btn.onclick = () => {
+      const name = String(replay.label || replayLabel || 'replay').replace(/\s+/g, ' ').trim()
+      const detailSource = `Loading ${name}`
+      void runWithLoadingScreen(() => loadReplay(replay.key), {
+        phase: 'replay',
+        kicker: 'REPLAY',
+        detail: detailSource.length > 64 ? `${detailSource.slice(0, 61)}...` : detailSource,
+        progress: null
+      })
+    }
     li.appendChild(btn)
 
     li.appendChild(createReplayRowActionButton({

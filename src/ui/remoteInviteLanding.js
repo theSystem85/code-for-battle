@@ -6,6 +6,7 @@ import { TILE_SIZE, MAP_TILES_X, MAP_TILES_Y } from '../config.js'
 import { showHostNotification } from '../network/hostNotifications.js'
 import { ensureMultiplayerState, generateRandomId } from '../network/multiplayerStore.js'
 import { getStoredPlayerAlias, setStoredPlayerAlias } from './sidebarMultiplayer.js'
+import { runWithLoadingScreen } from './loadingScreen.js'
 
 const STATUS_MESSAGES = {
   [RemoteConnectionStatus.IDLE]: 'Awaiting alias submission.',
@@ -394,11 +395,17 @@ function showKickedModal(payload) {
     // Get the game instance and reset
     const gameInstance = window.gameInstance
     if (gameInstance && typeof gameInstance.resetGame === 'function') {
-      gameInstance.resetGame()
-    } else {
-      // Fallback: reload the page
-      window.location.href = window.location.origin + window.location.pathname
+      void runWithLoadingScreen(() => gameInstance.resetGame(), {
+        phase: 'restart',
+        kicker: 'NEW BATTLE',
+        detail: 'Rebuilding the battlefield',
+        progress: null
+      }).finally(cleanup)
+      return
     }
+
+    // Fallback: reload the page
+    window.location.href = window.location.origin + window.location.pathname
     cleanup()
   }
 

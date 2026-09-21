@@ -84,6 +84,20 @@ describe('gameSetup.js', () => {
       expect(callback).toHaveBeenCalled()
     })
 
+    it('should report asset progress while preload groups finish', () => {
+      const onProgress = vi.fn()
+
+      initializeGameAssets(() => {}, onProgress)
+
+      expect(onProgress).toHaveBeenCalled()
+      const values = onProgress.mock.calls.map(call => call[0])
+      values.forEach((value) => {
+        expect(value).toBeGreaterThanOrEqual(0)
+        expect(value).toBeLessThanOrEqual(1)
+      })
+      expect(values[values.length - 1]).toBe(1)
+    })
+
     it('should wait to invoke callback until all assets are reported loaded', async() => {
       // Reset module state to get fresh state variables
       vi.resetModules()

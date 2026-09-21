@@ -22,6 +22,7 @@ import { enforceSmokeParticleCapacity } from './utils/smokeUtils.js'
 import { createUnit } from './units.js'
 import { buildingData, placeBuilding } from './buildings.js'
 import { showNotification } from './ui/notifications.js'
+import { runWithLoadingScreen } from './ui/loadingScreen.js'
 import { milestoneSystem } from './game/milestoneSystem.js'
 import { initializeOccupancyMap } from './units.js'
 import { getTextureManager, getMapRenderer } from './rendering.js'
@@ -1946,6 +1947,20 @@ export function loadGameFromState(state, label = 'Direct load') {
   loadGameFromSaveObject({ label, state }, label)
 }
 
+function presentGameLoad(task, { builtin = false, label = '', kicker = null } = {}) {
+  const name = String(label || '').replace(/\s+/g, ' ').trim()
+  const prefix = builtin ? 'Starting' : 'Loading'
+  const fallback = builtin ? 'Starting mission' : 'Loading saved game'
+  const detailSource = name ? `${prefix} ${name}` : fallback
+  const detail = detailSource.length > 64 ? `${detailSource.slice(0, 61)}...` : detailSource
+  return runWithLoadingScreen(() => task(), {
+    phase: builtin ? 'mission' : 'save',
+    kicker: kicker || (builtin ? 'MISSION' : 'SAVE FILE'),
+    detail,
+    progress: null
+  })
+}
+
 export function loadGame(key) {
   let saveObj = null
 
@@ -2133,11 +2148,17 @@ export async function importSaveGamesFromFiles(fileList) {
     showNotification(`Imported ${singleEntry.type}: ${singleEntry.label}`)
     if (singleEntry.type === 'replay') {
       const { loadReplay } = await import('./replaySystem.js')
-      loadReplay(singleEntry.key)
+      await presentGameLoad(() => loadReplay(singleEntry.key), {
+        label: singleEntry.label,
+        kicker: 'REPLAY'
+      })
       return
     }
 
-    loadGame(singleEntry.key)
+    await presentGameLoad(() => loadGame(singleEntry.key), {
+      builtin: String(singleEntry.key || '').startsWith(BUILTIN_SAVE_PREFIX),
+      label: singleEntry.label
+    })
     return
   }
 
@@ -2166,7 +2187,9 @@ async function loadDroppedFilesWithoutPersisting(fileList) {
   if (loadedSaveEntries.length === 0) return
 
   const [firstSave] = loadedSaveEntries
-  loadGameFromState(firstSave.state, firstSave.label)
+  await presentGameLoad(() => {
+    loadGameFromState(firstSave.state, firstSave.label)
+  }, { label: firstSave.label })
 
   if (loadedSaveEntries.length === 1) {
     showNotification(`Loaded dropped save without browser storage import: ${firstSave.label}`)
@@ -2218,7 +2241,12 @@ export function updateSaveGamesList() {
     label.innerHTML = `${save.label}${missionBadge}${subtitleText ? `<br><small>${subtitleText}</small>` : ''}`
     label.style.flex = '1'
     label.title = `Load ${save.label}`
-    label.onclick = () => { loadGame(save.key) }
+    label.onclick = () => {
+      void presentGameLoad(() => loadGame(save.key), {
+        builtin: !!save.builtin,
+        label: save.label
+      })
+    }
     // Add tooltip for mission description on hover/tap
     if (save.builtin && save.description) {
       label.title = save.description
