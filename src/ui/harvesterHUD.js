@@ -1,6 +1,5 @@
 // ui/harvesterHUD.js - HUD overlay for harvester assignment visualization
 import { TILE_SIZE } from '../config.js'
-import { getRefineryQueues } from '../game/harvesterLogic.js'
 import { isInputFieldFocused } from '../utils/inputUtils.js'
 import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 
@@ -29,35 +28,35 @@ export class HarvesterHUD {
     this.isVisible = !this.isVisible
   }
 
-  render(ctx, units, gameState, scrollOffset) {
+  render(ctx, units, gameState, scrollOffset, entityIndex = null) {
     if (!this.isVisible || !gameState.buildings) return
 
-    // Get all refineries
-    const refineries = gameState.buildings.filter(b =>
-      b.type === 'oreRefinery' &&
-      b.health > 0
-    )
-
-    // Get all harvesters
-    const harvesters = units.filter(u =>
-      u.type === 'harvester' &&
-      u.health > 0 &&
-      u.targetRefinery
-    )
-
-    // Get refinery queues
-    const _queues = getRefineryQueues()
-
     // Draw assignment lines for each harvester
-    harvesters.forEach(harvester => {
-      if (!harvester.targetRefinery) return
+    for (const harvester of units) {
+      if (
+        harvester.type !== 'harvester' ||
+        harvester.health <= 0 ||
+        !harvester.targetRefinery
+      ) {
+        continue
+      }
 
       // Find the assigned refinery
-      const assignedRefinery = refineries.find(r =>
-        (r.id || `refinery_${r.x}_${r.y}`) === harvester.targetRefinery
-      )
+      let assignedRefinery = entityIndex?.get(`refinery:${harvester.targetRefinery}`)
+      if (!assignedRefinery) {
+        for (const refinery of gameState.buildings) {
+          if (
+            refinery.type === 'oreRefinery' &&
+            refinery.health > 0 &&
+            (refinery.id || `refinery_${refinery.x}_${refinery.y}`) === harvester.targetRefinery
+          ) {
+            assignedRefinery = refinery
+            break
+          }
+        }
+      }
 
-      if (!assignedRefinery) return
+      if (!assignedRefinery || assignedRefinery.health <= 0) continue
 
       // Calculate positions
       const harvesterX = harvester.x + TILE_SIZE / 2 - scrollOffset.x
@@ -75,7 +74,7 @@ export class HarvesterHUD {
         const midY = (harvesterY + refineryY) / 2
         this.drawQueueBubble(ctx, midX, midY, harvester.queuePosition)
       }
-    })
+    }
 
     // Draw HUD status indicator
     this.drawStatusIndicator(ctx)

@@ -13,6 +13,7 @@ import {
   canAmmunitionTruckProvideAmmo,
   canRecoveryTankRepair
 } from './utilityQueue.js'
+import { canRecoveryTankTowTarget } from '../../game/jetFuel.js'
 
 function isHarvestableOreTile(tile) {
   return Boolean(tile?.ore && !tile.seedCrystal)
@@ -604,10 +605,11 @@ export function handleRecoveryTowCommand(handler, selectedUnits, targetUnit) {
       tank.towedUnit = null
       return
     }
-    if (!tank.towedUnit && targetUnit.crew && (!targetUnit.crew.driver || !targetUnit.crew.commander)) {
-      tank.towedUnit = targetUnit
-      targetUnit.towedBy = tank
+    if (!canRecoveryTankTowTarget(tank, targetUnit)) {
+      return
     }
+    tank.towedUnit = targetUnit
+    targetUnit.towedBy = tank
   })
 }
 

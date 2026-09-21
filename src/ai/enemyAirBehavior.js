@@ -13,6 +13,7 @@ import {
   getUnitCenter,
   isAirDefenseNearby
 } from './enemyAirTargeting.js'
+import { canJetCompleteRoundTrip, canJetTakeOffFromCurrentTile, isStrikeJet } from '../game/jetFuel.js'
 
 export function findPlayerBaseCenter(gameState, aiPlayerId) {
   if (!gameState?.buildings) {
@@ -218,6 +219,24 @@ export function updateApacheAI(unit, units, gameState, mapGrid, now, aiPlayerId)
     unit.path = []
     unit.lastDecisionTime = now
     return
+  }
+
+  const targetCenter = target.tileX !== undefined
+    ? { x: target.x + TILE_SIZE / 2, y: target.y + TILE_SIZE / 2 }
+    : {
+      x: (target.x + (target.width || 1) / 2) * TILE_SIZE,
+      y: (target.y + (target.height || 1) / 2) * TILE_SIZE
+    }
+
+  if (isStrikeJet(unit)) {
+    if (unit.flightState === 'grounded' && !canJetTakeOffFromCurrentTile(unit)) {
+      unit.lastDecisionTime = now
+      return
+    }
+    if (!canJetCompleteRoundTrip(unit, targetCenter.x, targetCenter.y)) {
+      unit.lastDecisionTime = now
+      return
+    }
   }
 
   unit.target = target

@@ -12,7 +12,7 @@ vi.mock('../../src/config.js', () => ({
   ATTACK_TARGET_INDICATOR_SIZE: 0,
   ATTACK_TARGET_BOUNCE_SPEED: 0,
   UNIT_TYPE_COLORS: {},
-  PARTY_COLORS: { player1: '#00f', player: '#00f' },
+  PARTY_COLORS: { player1: '#00f', player2: '#FF0000', player: '#00f' },
   TANKER_SUPPLY_CAPACITY: 100,
   UTILITY_SERVICE_INDICATOR_SIZE: 0,
   UTILITY_SERVICE_INDICATOR_BOUNCE_SPEED: 0,
@@ -60,6 +60,7 @@ vi.mock('../../src/game/time.js', () => ({
   getSimulationTime: vi.fn(() => 10000)
 }))
 
+import { gameState } from '../../src/gameState.js'
 import { UnitRenderer } from '../../src/rendering/unitRenderer.js'
 
 describe('UnitRenderer ammo HUD consistency', () => {
@@ -313,5 +314,75 @@ describe('UnitRenderer ammo HUD consistency', () => {
     }, 100, 120)
 
     expect(ctx.arc).toHaveBeenCalledWith(100, 120, 64, 0, Math.PI * 2)
+  })
+
+  it('draws an inward party-colored glow for the circular selected-unit HUD', () => {
+    gameState.selectionHudMode = 'modern-donut'
+    const renderer = new UnitRenderer()
+    const gradient = { addColorStop: vi.fn() }
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      fill: vi.fn(),
+      createRadialGradient: vi.fn(() => gradient)
+    }
+
+    renderer.renderSelection(ctx, {
+      selected: true,
+      owner: 'player2',
+      type: 'tank_v1'
+    }, 100, 80)
+
+    expect(ctx.createRadialGradient).toHaveBeenCalledTimes(1)
+    const [x0, y0, innerRadius, x1, y1, outerRadius] = ctx.createRadialGradient.mock.calls[0]
+    expect(x0).toBe(100)
+    expect(y0).toBe(80)
+    expect(x1).toBe(100)
+    expect(y1).toBe(80)
+    expect(innerRadius).toBeGreaterThan(0)
+    expect(innerRadius).toBeLessThan(outerRadius)
+    expect(ctx.arc).toHaveBeenCalledWith(100, 80, outerRadius, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledWith(100, 80, innerRadius, 0, Math.PI * 2, true)
+    expect(ctx.fill).toHaveBeenCalledWith('evenodd')
+
+    const stopColors = gradient.addColorStop.mock.calls.map(call => call[1])
+    expect(stopColors[0]).toBe('rgba(255, 0, 0, 0)')
+    expect(stopColors.at(-1)).toContain('rgba(255, 0, 0,')
+    const alphas = stopColors.map(color => Number(color.match(/rgba\(\d+, \d+, \d+, ([0-9.]+)\)/)[1]))
+    expect(Math.max(...alphas)).toBeGreaterThan(alphas[0])
+    expect(Math.max(...alphas)).toBeGreaterThan(alphas.at(-1))
+    expect(alphas[1]).toBeLessThan(alphas[3])
+  })
+
+  it('does not draw the inward glow unless the circular HUD is selected', () => {
+    gameState.selectionHudMode = 'modern'
+    const renderer = new UnitRenderer()
+    const ctx = {
+      save: vi.fn(),
+      restore: vi.fn(),
+      beginPath: vi.fn(),
+      rect: vi.fn(),
+      stroke: vi.fn(),
+      createRadialGradient: vi.fn(),
+      set strokeStyle(_value) {},
+      set lineWidth(_value) {}
+    }
+
+    renderer.renderSelection(ctx, {
+      selected: true,
+      owner: 'player2',
+      type: 'tank_v1'
+    }, 100, 80)
+    renderer.renderSelection(ctx, {
+      selected: false,
+      owner: 'player2',
+      type: 'tank_v1'
+    }, 100, 80)
+
+    expect(ctx.createRadialGradient).not.toHaveBeenCalled()
+    expect(ctx.stroke).toHaveBeenCalledTimes(1)
+    gameState.selectionHudMode = 'modern-donut'
   })
 })

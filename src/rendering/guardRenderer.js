@@ -3,6 +3,7 @@ import { TILE_SIZE } from '../config.js'
 export class GuardRenderer {
   constructor() {
     this.guardIcon = null
+    this.drawnTargets = new Set()
     if (typeof Image !== 'undefined') {
       this.guardIcon = new Image()
       this.guardIcon.src = '/cursors/guard.svg'
@@ -15,7 +16,8 @@ export class GuardRenderer {
     const now = performance.now()
     const lineOpacity = 0.25 * (Math.sin(now * 0.003) + 1) // 0 to 0.5
 
-    const drawnTargets = new Set()
+    const drawnTargets = this.drawnTargets
+    drawnTargets.clear()
 
     units.forEach(unit => {
       if (!unit.selected || !unit.guardMode || !unit.guardTarget) return

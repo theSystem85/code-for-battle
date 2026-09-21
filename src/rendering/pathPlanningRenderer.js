@@ -2,40 +2,58 @@ import { TILE_SIZE, MOVE_TARGET_INDICATOR_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 
 export class PathPlanningRenderer {
-  render(ctx, units, scrollOffset) {
+  constructor() {
+    this.actionBuffer = []
+    this.utilityActionPool = []
+    this.seenUnitTargetIds = new Set()
+    this.seenWreckTargetIds = new Set()
+  }
+
+  render(ctx, units, scrollOffset, entityIndex = null) {
     if (!units) return
 
     const buildUtilityQueueActions = unit => {
-      const list = []
+      const list = this.actionBuffer
       const queue = unit.utilityQueue
       if (!queue) {
         return list
       }
 
-      const seen = new Set()
+      const seenUnitIds = this.seenUnitTargetIds
+      const seenWreckIds = this.seenWreckTargetIds
       const pushTarget = (targetId, targetType) => {
-        if (!targetId || seen.has(`${targetType}:${targetId}`)) {
+        const seen = targetType === 'wreck' ? seenWreckIds : seenUnitIds
+        if (!targetId || seen.has(targetId)) {
           return
         }
         let targetX
         let targetY
         if (targetType === 'wreck') {
-          const wreck = (gameState.unitWrecks || []).find(w => w.id === targetId)
+          const wreck = entityIndex?.get(`wreck:${targetId}`)
           if (!wreck) {
             return
           }
           targetX = wreck.x + TILE_SIZE / 2
           targetY = wreck.y + TILE_SIZE / 2
         } else {
-          const targetUnit = units.find(u => u.id === targetId)
+          const targetUnit = entityIndex?.get(`unit:${targetId}`)
           if (!targetUnit) {
             return
           }
           targetX = targetUnit.x + TILE_SIZE / 2
           targetY = targetUnit.y + TILE_SIZE / 2
         }
-        seen.add(`${targetType}:${targetId}`)
-        list.push({ type: 'utility', target: { x: targetX, y: targetY } })
+        seen.add(targetId)
+        const poolIndex = list.length
+        const action = this.utilityActionPool[poolIndex] || {
+          type: 'utility',
+          target: { x: 0, y: 0 }
+        }
+        action.type = 'utility'
+        action.target.x = targetX
+        action.target.y = targetY
+        this.utilityActionPool[poolIndex] = action
+        list.push(action)
       }
 
       if (queue.currentTargetId) {
@@ -57,7 +75,10 @@ export class PathPlanningRenderer {
     }
 
     const actionsForUnit = unit => {
-      const list = []
+      const list = this.actionBuffer
+      list.length = 0
+      this.seenUnitTargetIds.clear()
+      this.seenWreckTargetIds.clear()
       if (unit.currentCommand) list.push(unit.currentCommand)
       if (unit.commandQueue && unit.commandQueue.length > 0) {
         list.push(...unit.commandQueue)
@@ -134,16 +155,13 @@ export class PathPlanningRenderer {
             break
           }
           case 'workshopRepair': {
-            const workshops = gameState.buildings.filter(b =>
-              b.type === 'vehicleWorkshop' && b.owner === gameState.humanPlayer && b.health > 0
-            )
-            if (workshops.length === 0) return
             let nearest = null
             let nearestDist = Infinity
-            workshops.forEach(ws => {
+            for (const ws of gameState.buildings || []) {
+              if (ws.type !== 'vehicleWorkshop' || ws.owner !== gameState.humanPlayer || ws.health <= 0) continue
               const dist = Math.hypot(unit.tileX - ws.x, unit.tileY - ws.y)
               if (dist < nearestDist) { nearest = ws; nearestDist = dist }
-            })
+            }
             if (!nearest) return
             targetX = (nearest.x + nearest.width / 2) * TILE_SIZE
             targetY = (nearest.y + nearest.height) * TILE_SIZE

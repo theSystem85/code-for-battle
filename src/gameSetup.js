@@ -4,6 +4,12 @@ import { preloadTurretImages } from './rendering/turretImageRenderer.js'
 import { PLAYER_POSITIONS } from './config.js'
 import { gameState } from './gameState.js'
 import { sanitizeSeed } from './utils/seedUtils.js'
+import { assignMapBiomes } from './game/mapBiomes.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifyResourceTileMutation
+} from './rendering/prepared/mapMutationNotifier.js'
 
 let texturesLoaded = false
 let buildingImagesLoaded = false
@@ -500,6 +506,29 @@ function growLineTerrainToTarget(rand, mapGrid, targetType, targetCount, protect
   }
 }
 
+function stampCompatibleRockBlocks(rand, mapGrid, targetCount, protectedTiles) {
+  const height = mapGrid.length, width = mapGrid[0].length
+  const blockTarget = Math.floor(targetCount * 0.35)
+  let placed = 0, attempts = 0
+  while (placed < blockTarget && attempts++ < 160) {
+    const length = 2 + Math.floor(rand() * 3)
+    const horizontal = rand() < 0.5
+    const blockWidth = horizontal ? length : 2
+    const blockHeight = horizontal ? 2 : length
+    const rawX = Math.floor(rand() * Math.max(1, width - blockWidth + 1))
+    const rawY = Math.floor(rand() * Math.max(1, height - blockHeight + 1))
+    const startX = horizontal ? Math.min(width - blockWidth, Math.floor(rawX / 4) * 4) : rawX
+    const startY = horizontal ? rawY : Math.min(height - blockHeight, Math.floor(rawY / 4) * 4)
+    let added = 0
+    for (let y = startY; y < startY + blockHeight; y++) for (let x = startX; x < startX + blockWidth; x++) {
+      if (protectedTiles?.has(`${x},${y}`) || mapGrid[y][x].type === 'rock') continue
+      mapGrid[y][x].type = 'rock'
+      added++
+    }
+    placed += added
+  }
+}
+
 function createBalancedOreClusterCenters(playerPositions, mapWidth, mapHeight, targetDistance) {
   const inwardTargetX = Math.floor(mapWidth / 2)
   const inwardTargetY = Math.floor(mapHeight / 2)
@@ -761,6 +790,18 @@ function distributeOreAcrossSeeds(seedClusters, mapGrid, mapWidth, mapHeight, fa
 
 // Generate a new map using the given seed and organic features
 export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
+  const transaction = beginMapMutationTransaction(
+    { width: MAP_TILES_X, height: MAP_TILES_Y },
+    { replace: true }
+  )
+  try {
+    generateMapInTransaction(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y)
+  } finally {
+    commitMapMutationTransaction(transaction)
+  }
+}
+
+function generateMapInTransaction(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
   const { value: normalizedSeed } = sanitizeSeed(seed)
   const rand = seededRandom(normalizedSeed)
   // Clear any old content
@@ -808,9 +849,14 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
 
   // -------- Step 2: Generate rock terrain lines first --------
   // Water is dominant and is drawn afterwards so rivers/lakes/coasts can break rock lines.
+  // Seed the same 2x2/2x3/2x4 footprints supported by the macro cliff atlas,
+  // then connect and broaden them with the organic line generator.
+  stampCompatibleRockBlocks(rand, mapGrid, targetRockTiles, protectedTiles)
   growLineTerrainToTarget(rand, mapGrid, 'rock', targetRockTiles, protectedTiles, {
-    minThickness: Math.max(1, Math.floor(1 + (safeRockPercent / 18))),
-    maxThickness: Math.max(2, Math.floor(2 + (safeRockPercent / 8))),
+    // Three tiles is the minimum solid cross-section that can own a plateau.
+    // Higher rock percentages still produce broader, multi-tier formations.
+    minThickness: 3,
+    maxThickness: Math.max(5, Math.floor(3 + (safeRockPercent / 7))),
     maxPasses: 70
   })
 
@@ -869,6 +915,10 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
     }
   }
 
+  // Biome topology is generated once and cached on tiles. Rendering only reads
+  // these values while baking static chunks, avoiding simulation-frame work.
+  assignMapBiomes(mapGrid, normalizedSeed, gameState)
+
   // -------- Step 5: Generate Ore Fields (AFTER terrain generation) --------
   // Generate ore clusters around the predefined centers, but only on passable terrain
   // and avoid factory and building locations
@@ -902,29 +952,36 @@ export function generateMap(seed, mapGrid, MAP_TILES_X, MAP_TILES_Y) {
  * This ensures no ore overlaps with any structures
  */
 export function cleanupOreFromBuildings(mapGrid, buildings = [], factories = []) {
-  // Clean ore from factory tiles
-  factories.forEach(factory => {
-    for (let y = factory.y; y < factory.y + factory.height; y++) {
-      for (let x = factory.x; x < factory.x + factory.width; x++) {
-        if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
-          mapGrid[y][x].ore = false
-          // Clear any cached texture variations for this tile to force re-render
-          mapGrid[y][x].textureVariation = null
+  const transaction = beginMapMutationTransaction(mapGrid)
+  try {
+    // Clean ore from factory tiles
+    factories.forEach(factory => {
+      for (let y = factory.y; y < factory.y + factory.height; y++) {
+        for (let x = factory.x; x < factory.x + factory.width; x++) {
+          if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
+            mapGrid[y][x].ore = false
+            notifyResourceTileMutation(mapGrid, x, y)
+            // Clear any cached texture variations for this tile to force re-render
+            mapGrid[y][x].textureVariation = null
+          }
         }
       }
-    }
-  })
+    })
 
-  // Clean ore from building tiles
-  buildings.forEach(building => {
-    for (let y = building.y; y < building.y + building.height; y++) {
-      for (let x = building.x; x < building.x + building.width; x++) {
-        if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
-          mapGrid[y][x].ore = false
-          // Clear any cached texture variations for this tile to force re-render
-          mapGrid[y][x].textureVariation = null
+    // Clean ore from building tiles
+    buildings.forEach(building => {
+      for (let y = building.y; y < building.y + building.height; y++) {
+        for (let x = building.x; x < building.x + building.width; x++) {
+          if (mapGrid[y] && mapGrid[y][x] && mapGrid[y][x].ore) {
+            mapGrid[y][x].ore = false
+            notifyResourceTileMutation(mapGrid, x, y)
+            // Clear any cached texture variations for this tile to force re-render
+            mapGrid[y][x].textureVariation = null
+          }
         }
       }
-    }
-  })
+    })
+  } finally {
+    commitMapMutationTransaction(transaction)
+  }
 }

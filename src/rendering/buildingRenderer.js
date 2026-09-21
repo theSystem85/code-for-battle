@@ -10,12 +10,48 @@ import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '.
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { getShipyardServiceWaterTiles } from '../utils/navalUtils.js'
+import { getPreparedSprite as getPublishedPreparedSprite } from './prepared/preparedSpritePipeline.js'
+
+const AMMO_TURRET_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret'])
 
 export class BuildingRenderer {
   constructor() {
     // Cache for the wrench icon
     this.wrenchIcon = null
+    this.preparedSpriteRegistry = null
     this.loadWrenchIcon()
+  }
+
+  setPreparedSpriteRegistry(registry) {
+    this.preparedSpriteRegistry = registry || null
+  }
+
+  getPreparedSprite(key) {
+    if (this.preparedSpriteRegistry) {
+      try {
+        return this.preparedSpriteRegistry.get(key) || null
+      } catch {
+        return null
+      }
+    }
+    try {
+      return getPublishedPreparedSprite(key)
+    } catch {
+      return null
+    }
+  }
+
+  getSpriteDescriptor(sprite) {
+    if (!sprite) return null
+    const image = sprite.image || sprite.canvas || sprite
+    if (!image) return null
+    const sourceRect = sprite.sourceRect || {
+      x: 0,
+      y: 0,
+      width: image.naturalWidth || image.width,
+      height: image.naturalHeight || image.height
+    }
+    return { image, sourceRect }
   }
 
   getConcreteWallImageKey(building, mapGrid) {
@@ -60,7 +96,7 @@ export class BuildingRenderer {
     }
 
     // Try to get the building image synchronously first
-    const img = getBuildingImage(imageKey)
+    const img = this.getPreparedSprite(`building:${imageKey}:base`) || getBuildingImage(imageKey)
 
     if (img) {
       const now = performance.now()
@@ -110,7 +146,21 @@ export class BuildingRenderer {
           ctx.save()
           ctx.translate(centerX, centerY)
           ctx.rotate((building.turretDirection || 0) + Math.PI * 3 / 4)
-          ctx.drawImage(img, -width / 2, -height / 2, width, height)
+          const descriptor = this.getSpriteDescriptor(img)
+          if (descriptor) {
+            const { image, sourceRect } = descriptor
+            ctx.drawImage(
+              image,
+              sourceRect.x,
+              sourceRect.y,
+              sourceRect.width,
+              sourceRect.height,
+              -width / 2,
+              -height / 2,
+              width,
+              height
+            )
+          }
           // Big muzzle flash when firing
           if (building.muzzleFlashStartTime && simulationNow - building.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
             const progress = (simulationNow - building.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION
@@ -152,7 +202,7 @@ export class BuildingRenderer {
     this.renderPendingRepairCountdown(ctx, building, screenX, screenY, width, height)
   }
 
-  renderBuildingOverlays(ctx, building, scrollOffset) {
+  renderBuildingOverlays(ctx, building, scrollOffset, entityIndex = null) {
     if (building.isBeingSold) {
       return
     }
@@ -165,12 +215,12 @@ export class BuildingRenderer {
     this.renderHelipadFuel(ctx, building, screenX, screenY, width, height)
     this.renderHelipadAmmo(ctx, building, screenX, screenY, width, height)
     this.renderTurretAmmo(ctx, building, screenX, screenY, width, height)
-    this.renderAttackTargetIndicator(ctx, building, screenX, screenY, width, height)
-    this.renderFactoryProductionProgress(ctx, building, screenX, screenY, width, height)
+    this.renderAttackTargetIndicator(ctx, building, screenX, screenY, width, height, entityIndex)
+    this.renderFactoryProductionProgress(ctx, building, screenX, screenY, width, height, entityIndex)
     this.renderWorkshopRestoration(ctx, building, screenX, screenY, width, height)
     this.renderHospitalHealing(ctx, building, screenX, screenY, width, height)
     this.renderPlayerAlias(ctx, building, screenX, screenY, width, height)
-    this.renderFactoryBudget(ctx, building, screenX, screenY, width, height)
+    this.renderFactoryBudget(ctx, building, screenX, screenY, width, height, entityIndex)
     this.renderFactoryPowerStatus(ctx, building, screenX, screenY, width, height)
   }
 
@@ -185,7 +235,21 @@ export class BuildingRenderer {
 
     // Draw the image to fill the entire building grid space
     // This ensures buildings appear at the correct size and position
-    ctx.drawImage(img, screenX, screenY, maxWidth, maxHeight)
+    const descriptor = this.getSpriteDescriptor(img)
+    if (descriptor) {
+      const { image, sourceRect } = descriptor
+      ctx.drawImage(
+        image,
+        sourceRect.x,
+        sourceRect.y,
+        sourceRect.width,
+        sourceRect.height,
+        screenX,
+        screenY,
+        maxWidth,
+        maxHeight
+      )
+    }
 
     // Restore canvas state
     ctx.restore()
@@ -207,11 +271,29 @@ export class BuildingRenderer {
       clipY = 0
     }
 
-    const sourceHeight = SOURCE_HEIGHT - clipY
-    const destHeight = maxHeight * (sourceHeight / SOURCE_HEIGHT)
+    const descriptor = this.getSpriteDescriptor(img)
+    if (!descriptor) {
+      ctx.restore()
+      return
+    }
+    const { image, sourceRect } = descriptor
+    const clipRatio = clipY / SOURCE_HEIGHT
+    const croppedSourceY = sourceRect.y + sourceRect.height * clipRatio
+    const croppedSourceHeight = sourceRect.height * (1 - clipRatio)
+    const destHeight = maxHeight * (1 - clipRatio)
     const destY = screenY + maxHeight - destHeight
 
-    ctx.drawImage(img, 0, clipY, SOURCE_HEIGHT, sourceHeight, screenX, destY, maxWidth, destHeight)
+    ctx.drawImage(
+      image,
+      sourceRect.x,
+      croppedSourceY,
+      sourceRect.width,
+      croppedSourceHeight,
+      screenX,
+      destY,
+      maxWidth,
+      destHeight
+    )
     ctx.restore()
   }
 
@@ -237,7 +319,7 @@ export class BuildingRenderer {
     ctx.rect(screenX, screenY + maxHeight - clipHeight, maxWidth, clipHeight)
     ctx.clip()
 
-    ctx.drawImage(img, screenX, screenY, maxWidth, maxHeight)
+    this.drawBuildingImageNatural(ctx, img, screenX, screenY, maxWidth, maxHeight)
 
     ctx.restore()
   }
@@ -303,6 +385,10 @@ export class BuildingRenderer {
       }
       // For turret guns, try image-based rendering first
       else if (building.type.startsWith('turretGun')) {
+        const preparedTurret = this.getPreparedSprite(`building:${building.type}:turret`)
+        if (preparedTurret && this.drawPreparedTurret(ctx, preparedTurret, building, centerX, centerY, width, height)) {
+          return
+        }
         // Try to render with images first (for turretGunV1) if the toggle is enabled
         if (gameState.useTurretImages && turretImagesAvailable(building.type)) {
           const rendered = renderTurretWithImages(ctx, building, screenX, screenY, width, height)
@@ -448,6 +534,40 @@ export class BuildingRenderer {
         ctx.stroke()
       }
     }
+  }
+
+  drawPreparedTurret(ctx, sprite, building, centerX, centerY, width, height) {
+    const descriptor = this.getSpriteDescriptor(sprite)
+    if (!descriptor) return false
+    const { image, sourceRect } = descriptor
+    const now = getSimulationTime(gameState)
+    let recoilOffset = 0
+    if (building.recoilStartTime && now - building.recoilStartTime <= RECOIL_DURATION) {
+      const progress = (now - building.recoilStartTime) / RECOIL_DURATION
+      recoilOffset = TURRET_RECOIL_DISTANCE * (1 - (1 - Math.pow(1 - progress, 3)))
+    }
+    const logicalWidth = Number.isFinite(sprite.logicalWidth) ? sprite.logicalWidth : width
+    const logicalHeight = Number.isFinite(sprite.logicalHeight) ? sprite.logicalHeight : height
+    const anchorX = Number.isFinite(sprite.anchorX) ? sprite.anchorX : logicalWidth / 2
+    const anchorY = Number.isFinite(sprite.anchorY) ? sprite.anchorY : logicalHeight / 2
+
+    ctx.save()
+    ctx.translate(centerX, centerY)
+    ctx.rotate(building.turretDirection || 0)
+    ctx.translate(-recoilOffset, 0)
+    ctx.drawImage(
+      image,
+      sourceRect.x,
+      sourceRect.y,
+      sourceRect.width,
+      sourceRect.height,
+      -anchorX,
+      -anchorY,
+      logicalWidth,
+      logicalHeight
+    )
+    ctx.restore()
+    return true
   }
 
   renderServiceRadius(ctx, building, screenX, screenY, width, height, mapGrid = null, scrollOffset = { x: 0, y: 0 }) {
@@ -620,8 +740,7 @@ export class BuildingRenderer {
 
 
   renderTurretAmmo(ctx, building, screenX, screenY, width, height) {
-    const ammoTurretTypes = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret'])
-    if (!ammoTurretTypes.has(building.type)) {
+    if (!AMMO_TURRET_TYPES.has(building.type)) {
       return
     }
 
@@ -741,7 +860,22 @@ export class BuildingRenderer {
     return (selectedBuilding.forcedAttackTarget ? 2 : 1) + index
   }
 
-  renderAttackTargetIndicator(ctx, building, screenX, screenY, width, _height) {
+  renderAttackTargetIndicator(ctx, building, screenX, screenY, width, _height, entityIndex = null) {
+    if (entityIndex) {
+      const forcedAttackQueuePosition = entityIndex.get(`forcedAttackPosition:${building.id}`) ?? null
+      const shouldShowAttackIndicator =
+        entityIndex.has(`attackIndicator:${building.id}`) ||
+        forcedAttackQueuePosition !== null
+      this.drawAttackTargetIndicator(
+        ctx,
+        screenX + width / 2,
+        screenY - 15,
+        shouldShowAttackIndicator,
+        forcedAttackQueuePosition
+      )
+      return
+    }
+
     // Check if this building is in the attack group targets OR if it's currently being targeted by selected units
     const isInAttackGroupTargets = gameState.attackGroupTargets &&
                                    gameState.attackGroupTargets.some(target => target === building)
@@ -769,13 +903,18 @@ export class BuildingRenderer {
     // Show red indicator if: building is in AGF targets OR being targeted by a selected unit OR queued by selected defense buildings
     const shouldShowAttackIndicator = isInAttackGroupTargets || isTargetedBySelectedUnit || forcedAttackQueuePosition !== null
 
-    if (shouldShowAttackIndicator) {
-      const now = performance.now()
-      const bounceOffset = Math.sin(now * ATTACK_TARGET_BOUNCE_SPEED) * 3 // 3 pixel bounce
+    this.drawAttackTargetIndicator(
+      ctx,
+      screenX + width / 2,
+      screenY - 15,
+      shouldShowAttackIndicator,
+      forcedAttackQueuePosition
+    )
+  }
 
-      // Position above the building center
-      const indicatorX = screenX + width / 2
-      const indicatorY = screenY - 15 + bounceOffset
+  drawAttackTargetIndicator(ctx, indicatorX, indicatorBaseY, shouldShowAttackIndicator, forcedAttackQueuePosition) {
+    if (shouldShowAttackIndicator) {
+      const indicatorY = indicatorBaseY + Math.sin(performance.now() * ATTACK_TARGET_BOUNCE_SPEED) * 3
 
       // Draw semi-transparent red triangle (50% transparency, half size)
       ctx.save()
@@ -908,7 +1047,7 @@ export class BuildingRenderer {
     ctx.restore()
   }
 
-  renderFactoryProductionProgress(ctx, building, screenX, screenY, width, _height) {
+  renderFactoryProductionProgress(ctx, building, screenX, screenY, width, _height, entityIndex = null) {
     // Check if this is a factory (construction yard or vehicle factory) that's currently building something
     let factory = null
     let isFactory = false
@@ -918,7 +1057,8 @@ export class BuildingRenderer {
 
     // Check if it's a construction yard factory
     if (building.type === 'constructionYard' && building.id && gameState.factories) {
-      factory = gameState.factories.find(f => f.id === building.owner)
+      factory = entityIndex?.get(`factory:${building.owner}`) ||
+        gameState.factories.find(f => f.id === building.owner)
       if (factory && factory.currentlyBuilding) {
         isFactory = true
         currentlyBuilding = factory.currentlyBuilding
@@ -930,7 +1070,8 @@ export class BuildingRenderer {
     else if (building.type === 'vehicleFactory' && building.owner && building.owner !== gameState.humanPlayer) {
       // For enemy vehicle factories, we need to check if they're producing something
       // We can use the factory system to track this
-      factory = gameState.factories?.find(f => f.id === building.owner)
+      factory = entityIndex?.get(`factory:${building.owner}`) ||
+        gameState.factories?.find(f => f.id === building.owner)
       if (factory && factory.currentlyProducingUnit &&
           ['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'tankerTruck', 'howitzer'].includes(factory.currentlyProducingUnit)) {
         isFactory = true
@@ -1089,7 +1230,7 @@ export class BuildingRenderer {
     })
   }
 
-  renderFactoryBudget(ctx, building, screenX, screenY, width, _height) {
+  renderFactoryBudget(ctx, building, screenX, screenY, width, _height, entityIndex = null) {
     // Show enemy budget only when their construction yard is selected AND showEnemyResources is enabled
     if (
       building.type === 'constructionYard' &&
@@ -1098,7 +1239,8 @@ export class BuildingRenderer {
       gameState.factories &&
       gameState.showEnemyResources
     ) {
-      const factory = gameState.factories.find(f => f.id === building.owner)
+      const factory = entityIndex?.get(`factory:${building.owner}`) ||
+        gameState.factories.find(f => f.id === building.owner)
       if (factory && typeof factory.budget === 'number') {
         const budgetText = `$${Math.round(factory.budget)}`
         ctx.save()
@@ -1230,7 +1372,7 @@ export class BuildingRenderer {
       }
     }
 
-    const isAmmoTurret = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret']).has(building.type)
+    const isAmmoTurret = AMMO_TURRET_TYPES.has(building.type)
     const hasAmmoBar = (
       ((building.type === 'helipad' || building.type === 'airstrip') || isAmmoTurret) &&
       typeof building.maxAmmo === 'number' &&
@@ -1251,7 +1393,7 @@ export class BuildingRenderer {
     return null
   }
 
-  renderHudHoverTooltip(ctx, buildings, scrollOffset) {
+  renderHudHoverTooltip(ctx, buildings, scrollOffset, additionalBuildings = null) {
     if (!gameState?.desktopEdgeScroll?.overCanvas || !Array.isArray(buildings) || buildings.length === 0) {
       return
     }
@@ -1264,6 +1406,12 @@ export class BuildingRenderer {
       label = this.getBuildingHudHoverLabel(building, scrollOffset, mouseScreenX, mouseScreenY)
       if (label) {
         break
+      }
+    }
+    if (!label && additionalBuildings) {
+      for (const building of additionalBuildings) {
+        label = this.getBuildingHudHoverLabel(building, scrollOffset, mouseScreenX, mouseScreenY)
+        if (label) break
       }
     }
 
@@ -1305,22 +1453,31 @@ export class BuildingRenderer {
     ctx.restore()
   }
 
-  renderBases(ctx, buildings, mapGrid, scrollOffset) {
+  collectVisibleBuildings(ctx, buildings, scrollOffset, output = []) {
+    output.length = 0
+    const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
+    for (const building of buildings || []) {
+      if (this.shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight)) output.push(building)
+    }
+    return output
+  }
+
+  renderBases(ctx, buildings, mapGrid, scrollOffset, alreadyVisible = false) {
     if (buildings && buildings.length > 0) {
       const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
       buildings.forEach(building => {
-        if (!this.shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight)) return
+        if (!alreadyVisible && !this.shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight)) return
         this.renderBuildingBase(ctx, building, mapGrid, scrollOffset)
       })
     }
   }
 
-  renderOverlays(ctx, buildings, scrollOffset) {
+  renderOverlays(ctx, buildings, scrollOffset, alreadyVisible = false, entityIndex = null) {
     if (buildings && buildings.length > 0) {
       const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(ctx.canvas)
       buildings.forEach(building => {
-        if (!this.shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight)) return
-        this.renderBuildingOverlays(ctx, building, scrollOffset)
+        if (!alreadyVisible && !this.shouldRenderBuilding(building, scrollOffset, viewportWidth, viewportHeight)) return
+        this.renderBuildingOverlays(ctx, building, scrollOffset, entityIndex)
       })
     }
   }
@@ -1358,12 +1515,11 @@ export class BuildingRenderer {
       return true
     }
 
-    const friendlyOwners = new Set([gameState.humanPlayer, 'player'])
-    if (gameState.humanPlayer === 'player1') {
-      friendlyOwners.add('player1')
-    }
-
-    if (friendlyOwners.has(building.owner)) {
+    if (
+      building.owner === gameState.humanPlayer ||
+      building.owner === 'player' ||
+      (gameState.humanPlayer === 'player1' && building.owner === 'player1')
+    ) {
       return true
     }
 

@@ -36,6 +36,11 @@ import { beginF22CrashSequence } from './movementF22.js'
 import { getNavalHullDimensions } from '../utils/navalUtils.js'
 import { getSimulationTime } from './time.js'
 import { prewarmDestructionExplosionTexture, spawnDestructionExplosion } from './spriteSheetEffects.js'
+import {
+  beginMapMutationTransaction,
+  commitMapMutationTransaction,
+  notifyResourceTileMutation
+} from '../rendering/prepared/mapMutationNotifier.js'
 
 const MINIMAP_SCROLL_SMOOTHING = 0.2
 const MINIMAP_SCROLL_STOP_DISTANCE = 0.75
@@ -248,69 +253,79 @@ export const updateOreSpread = logPerformance(function updateOreSpread(gameState
   }
 
   if (now - gameState.lastOreUpdate >= ORE_SPREAD_INTERVAL) {
-    const occupancyMap = Array.isArray(gameState.occupancyMap) ? gameState.occupancyMap : null
-    const buildings = Array.isArray(gameState.buildings) ? gameState.buildings : []
-    const factoryList = Array.isArray(factories) ? factories : []
-    const height = mapGrid.length
-    const width = mapGrid[0].length
+    const transaction = beginMapMutationTransaction(mapGrid)
+    try {
+      const occupancyMap = Array.isArray(gameState.occupancyMap) ? gameState.occupancyMap : null
+      const buildings = Array.isArray(gameState.buildings) ? gameState.buildings : []
+      const factoryList = Array.isArray(factories) ? factories : []
+      const height = mapGrid.length
+      const width = mapGrid[0].length
 
-    const directions = [
-      { x: 1, y: 0 },
-      { x: -1, y: 0 },
-      { x: 0, y: 1 },
-      { x: 0, y: -1 }
-    ]
+      const directions = [
+        { x: 1, y: 0 },
+        { x: -1, y: 0 },
+        { x: 0, y: 1 },
+        { x: 0, y: -1 }
+      ]
 
-    for (let y = 0; y < height; y++) {
-      const row = mapGrid[y]
-      if (!Array.isArray(row)) continue
-      for (let x = 0; x < width; x++) {
-        const tile = row[x]
-        if (!tile) continue
-        if (tile.ore || tile.seedCrystal) {
-          const sourceSeedDensity = Math.max(1, Math.min(5, Number.isFinite(tile.seedCrystalDensity) ? tile.seedCrystalDensity : 1))
-          const spreadProb = ORE_SPREAD_PROBABILITY * (tile.seedCrystal ? sourceSeedDensity : 1)
-          if (gameRandom() >= spreadProb) {
-            continue
-          }
-
-          directions.forEach(dir => {
-            const nx = x + dir.x
-            const ny = y + dir.y
-            if (nx < 0 || nx >= width || ny < 0 || ny >= height || !Array.isArray(mapGrid[ny])) return
-            if ((occupancyMap?.[ny]?.[nx] || 0) > 0) return
-
-            const hasBuilding = buildings.some(building => {
-              const bx = building.x
-              const by = building.y
-              const bw = building.width || 1
-              const bh = building.height || 1
-              return nx >= bx && nx < bx + bw && ny >= by && ny < by + bh
-            })
-            if (hasBuilding) return
-
-            const hasFactory = factoryList.some(factory => {
-              return nx >= factory.x && nx < factory.x + factory.width &&
-                     ny >= factory.y && ny < factory.y + factory.height
-            })
-            if (hasFactory) return
-
-            const neighborTile = mapGrid[ny]?.[nx]
-            if (!neighborTile) return
-            const tileType = neighborTile.type
-            if (tileType !== 'land' && tileType !== 'street') return
-
-            if (!neighborTile.ore && !neighborTile.seedCrystal) {
-              neighborTile.ore = true
-              neighborTile.oreDensity = 1
-            } else if (neighborTile.ore) {
-              neighborTile.oreDensity = Math.min(5, Math.max(1, Number.isFinite(neighborTile.oreDensity) ? neighborTile.oreDensity : 1) + 1)
+      for (let y = 0; y < height; y++) {
+        const row = mapGrid[y]
+        if (!Array.isArray(row)) continue
+        for (let x = 0; x < width; x++) {
+          const tile = row[x]
+          if (!tile) continue
+          if (tile.ore || tile.seedCrystal) {
+            const sourceSeedDensity = Math.max(1, Math.min(5, Number.isFinite(tile.seedCrystalDensity) ? tile.seedCrystalDensity : 1))
+            const spreadProb = ORE_SPREAD_PROBABILITY * (tile.seedCrystal ? sourceSeedDensity : 1)
+            if (gameRandom() >= spreadProb) {
+              continue
             }
-          })
+
+            directions.forEach(dir => {
+              const nx = x + dir.x
+              const ny = y + dir.y
+              if (nx < 0 || nx >= width || ny < 0 || ny >= height || !Array.isArray(mapGrid[ny])) return
+              if ((occupancyMap?.[ny]?.[nx] || 0) > 0) return
+
+              const hasBuilding = buildings.some(building => {
+                const bx = building.x
+                const by = building.y
+                const bw = building.width || 1
+                const bh = building.height || 1
+                return nx >= bx && nx < bx + bw && ny >= by && ny < by + bh
+              })
+              if (hasBuilding) return
+
+              const hasFactory = factoryList.some(factory => {
+                return nx >= factory.x && nx < factory.x + factory.width &&
+                     ny >= factory.y && ny < factory.y + factory.height
+              })
+              if (hasFactory) return
+
+              const neighborTile = mapGrid[ny]?.[nx]
+              if (!neighborTile) return
+              const tileType = neighborTile.type
+              if (tileType !== 'land' && tileType !== 'street') return
+
+              if (!neighborTile.ore && !neighborTile.seedCrystal) {
+                neighborTile.ore = true
+                neighborTile.oreDensity = 1
+                notifyResourceTileMutation(mapGrid, nx, ny)
+              } else if (neighborTile.ore) {
+                const nextDensity = Math.min(5, Math.max(1, Number.isFinite(neighborTile.oreDensity) ? neighborTile.oreDensity : 1) + 1)
+                if (nextDensity !== neighborTile.oreDensity) {
+                  neighborTile.oreDensity = nextDensity
+                  notifyResourceTileMutation(mapGrid, nx, ny)
+                }
+              }
+            })
+          }
         }
       }
+      gameState.lastOreUpdate = now
+    } finally {
+      commitMapMutationTransaction(transaction)
     }
-    gameState.lastOreUpdate = now
   }
 }, false)
 

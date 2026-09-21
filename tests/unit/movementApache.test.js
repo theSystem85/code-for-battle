@@ -1,9 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32,
-  TILE_LENGTH_METERS: 1
-}))
+vi.mock('../../src/config.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    TILE_SIZE: 32,
+    TILE_LENGTH_METERS: 1
+  }
+})
 
 vi.mock('../../src/units.js', () => ({
   removeUnitOccupancy: vi.fn()

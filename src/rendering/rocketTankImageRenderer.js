@@ -2,6 +2,7 @@
 import { TILE_SIZE, MUZZLE_FLASH_DURATION, MUZZLE_FLASH_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
+import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 let rocketTankImg = null
 let rocketTankLoaded = false
@@ -38,7 +39,8 @@ export function isRocketTankImageLoaded() {
 }
 
 export function renderRocketTankWithImage(ctx, unit, centerX, centerY) {
-  if (!isRocketTankImageLoaded()) return false
+  const prepared = getPreparedSprite('unit:rocketTank:base')
+  if (!prepared && !isRocketTankImageLoaded()) return false
 
   const now = getSimulationTime(gameState)
 
@@ -49,11 +51,15 @@ export function renderRocketTankWithImage(ctx, unit, centerX, centerY) {
   const rotation = unit.direction - Math.PI / 2
   ctx.rotate(rotation)
 
-  const scale = TILE_SIZE / Math.max(rocketTankImg.width, rocketTankImg.height)
-  const width = rocketTankImg.width * scale
-  const height = rocketTankImg.height * scale
+  const scale = prepared ? prepared.logicalWidth / prepared.sourceWidth : TILE_SIZE / Math.max(rocketTankImg.width, rocketTankImg.height)
+  const width = prepared?.logicalWidth || rocketTankImg.width * scale
+  const height = prepared?.logicalHeight || rocketTankImg.height * scale
 
-  ctx.drawImage(rocketTankImg, -width / 2, -height / 2, width, height)
+  if (prepared) {
+    drawPreparedSpriteCentered(ctx, prepared, 0, 0)
+  } else {
+    ctx.drawImage(rocketTankImg, -width / 2, -height / 2, width, height)
+  }
 
   // Render muzzle flash when firing
   if (unit.muzzleFlashStartTime && now - unit.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
@@ -64,8 +70,10 @@ export function renderRocketTankWithImage(ctx, unit, centerX, centerY) {
     ctx.save()
     ctx.globalAlpha = flashAlpha
 
-    const localX = (SPAWN_POINT.x - rocketTankImg.width / 2) * scale
-    const localY = (SPAWN_POINT.y - rocketTankImg.height / 2) * scale
+    const sourceWidth = prepared?.sourceWidth || rocketTankImg.width
+    const sourceHeight = prepared?.sourceHeight || rocketTankImg.height
+    const localX = (SPAWN_POINT.x - sourceWidth / 2) * scale
+    const localY = (SPAWN_POINT.y - sourceHeight / 2) * scale
     const rotatedX = localX
     const rotatedY = localY
 
@@ -90,7 +98,8 @@ export function getRocketTankBaseImage() {
 }
 
 export function getRocketSpawnPoint(unit, centerX, centerY) {
-  if (!isRocketTankImageLoaded()) {
+  const prepared = getPreparedSprite('unit:rocketTank:base')
+  if (!prepared && !isRocketTankImageLoaded()) {
     const muzzleOffset = TILE_SIZE * 0.4
     return {
       x: centerX + Math.cos(unit.direction) * muzzleOffset,
@@ -99,9 +108,11 @@ export function getRocketSpawnPoint(unit, centerX, centerY) {
   }
 
   const rotation = unit.direction - Math.PI / 2
-  const scale = TILE_SIZE / Math.max(rocketTankImg.width, rocketTankImg.height)
-  const localX = (SPAWN_POINT.x - rocketTankImg.width / 2) * scale
-  const localY = (SPAWN_POINT.y - rocketTankImg.height / 2) * scale
+  const sourceWidth = prepared?.sourceWidth || rocketTankImg.width
+  const sourceHeight = prepared?.sourceHeight || rocketTankImg.height
+  const scale = prepared ? prepared.logicalWidth / sourceWidth : TILE_SIZE / Math.max(sourceWidth, sourceHeight)
+  const localX = (SPAWN_POINT.x - sourceWidth / 2) * scale
+  const localY = (SPAWN_POINT.y - sourceHeight / 2) * scale
   const rotatedX = localX * Math.cos(rotation) - localY * Math.sin(rotation)
   const rotatedY = localX * Math.sin(rotation) + localY * Math.cos(rotation)
   return {

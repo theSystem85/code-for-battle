@@ -8,6 +8,11 @@ import {
 } from '../config.js'
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
+import {
+  drawPreparedSpriteCentered,
+  drawPreparedSpriteTopLeft,
+  getPreparedSprite
+} from './prepared/preparedSpritePipeline.js'
 
 let howitzerBaseImg = null
 let howitzerBarrelImg = null
@@ -94,7 +99,9 @@ export function isHowitzerImageLoaded() {
 }
 
 export function renderHowitzerWithImage(ctx, unit, centerX, centerY) {
-  if (!isHowitzerImageLoaded()) return false
+  const preparedBase = getPreparedSprite('unit:howitzer:base')
+  const preparedBarrel = getPreparedSprite('unit:howitzer:barrel')
+  if (!preparedBase && !isHowitzerImageLoaded()) return false
 
   const now = getSimulationTime(gameState)
   ctx.save()
@@ -103,13 +110,21 @@ export function renderHowitzerWithImage(ctx, unit, centerX, centerY) {
   const baseRotation = (unit.direction || 0) + Math.PI / 2
   ctx.rotate(baseRotation)
 
-  const baseScale = TILE_SIZE / Math.max(howitzerBaseImg.width, howitzerBaseImg.height)
-  const baseWidth = howitzerBaseImg.width * baseScale
-  const baseHeight = howitzerBaseImg.height * baseScale
-  ctx.drawImage(howitzerBaseImg, -baseWidth / 2, -baseHeight / 2, baseWidth, baseHeight)
+  const baseSourceWidth = preparedBase?.sourceWidth || howitzerBaseImg.width
+  const baseSourceHeight = preparedBase?.sourceHeight || howitzerBaseImg.height
+  const baseScale = preparedBase
+    ? preparedBase.logicalWidth / baseSourceWidth
+    : TILE_SIZE / Math.max(baseSourceWidth, baseSourceHeight)
+  if (preparedBase) {
+    drawPreparedSpriteCentered(ctx, preparedBase, 0, 0)
+  } else {
+    const baseWidth = baseSourceWidth * baseScale
+    const baseHeight = baseSourceHeight * baseScale
+    ctx.drawImage(howitzerBaseImg, -baseWidth / 2, -baseHeight / 2, baseWidth, baseHeight)
+  }
 
-  const mountLocalX = (HOWITZER_BARREL_MOUNT.x - howitzerBaseImg.width / 2) * baseScale
-  const mountLocalY = (HOWITZER_BARREL_MOUNT.y - howitzerBaseImg.height / 2) * baseScale
+  const mountLocalX = (HOWITZER_BARREL_MOUNT.x - baseSourceWidth / 2) * baseScale
+  const mountLocalY = (HOWITZER_BARREL_MOUNT.y - baseSourceHeight / 2) * baseScale
 
   ctx.save()
   ctx.translate(mountLocalX, mountLocalY)
@@ -125,12 +140,16 @@ export function renderHowitzerWithImage(ctx, unit, centerX, centerY) {
   }
 
   const barrelScale = baseScale
-  const barrelWidth = howitzerBarrelImg.width * barrelScale
-  const barrelHeight = howitzerBarrelImg.height * barrelScale
   const drawX = -BARREL_MOUNT_POINT.x * barrelScale
   const drawY = -BARREL_MOUNT_POINT.y * barrelScale - recoilOffset
 
-  ctx.drawImage(howitzerBarrelImg, drawX, drawY, barrelWidth, barrelHeight)
+  if (preparedBarrel) {
+    drawPreparedSpriteTopLeft(ctx, preparedBarrel, drawX, drawY)
+  } else {
+    const barrelWidth = howitzerBarrelImg.width * barrelScale
+    const barrelHeight = howitzerBarrelImg.height * barrelScale
+    ctx.drawImage(howitzerBarrelImg, drawX, drawY, barrelWidth, barrelHeight)
+  }
 
   const muzzleLocalX = (barrelMuzzlePoint.x - BARREL_MOUNT_POINT.x) * barrelScale
   const muzzleLocalY = (barrelMuzzlePoint.y - BARREL_MOUNT_POINT.y) * barrelScale - recoilOffset

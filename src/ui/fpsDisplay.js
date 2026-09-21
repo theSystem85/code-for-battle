@@ -45,6 +45,7 @@ export class FPSDisplay {
     this.frameCpuUpdateEl = document.getElementById('frameCpuUpdate')
     this.frameCpuRenderEl = document.getElementById('frameCpuRender')
     this.frameGpuEstimateEl = document.getElementById('frameGpuEstimate')
+    this.frameUnattributedWaitEl = document.getElementById('frameUnattributedWait')
     this.frameJsHeapEl = document.getElementById('frameJsHeap')
 
     // Network stats elements
@@ -146,7 +147,7 @@ export class FPSDisplay {
     if (dominant <= 0.01) return 'Unknown'
     if (dominant === updateAvg) return 'CPU (simulation/update)'
     if (dominant === renderAvg) return 'CPU render / draw submission'
-    return 'GPU/compositor/wait'
+    return 'Scheduler / unattributed wait'
   }
 
   updateDisplay(currentTime = performance.now()) {
@@ -188,7 +189,13 @@ export class FPSDisplay {
         this.frameCpuRenderEl.textContent = `CPU Render: ${renderAvg.toFixed(1)} ms`
       }
       if (this.frameGpuEstimateEl) {
-        this.frameGpuEstimateEl.textContent = `GPU/Wait: ${idleAvg.toFixed(1)} ms`
+        const gpuTiming = gameState.renderStats?.gpuTiming
+        this.frameGpuEstimateEl.textContent = gpuTiming?.available && Number.isFinite(gpuTiming.milliseconds)
+          ? `GPU: ${gpuTiming.milliseconds.toFixed(1)} ms (instrumented passes)`
+          : `GPU timing: unavailable (${gpuTiming?.reason || 'not instrumented'})`
+      }
+      if (this.frameUnattributedWaitEl) {
+        this.frameUnattributedWaitEl.textContent = `Unattributed wait: ${idleAvg.toFixed(1)} ms`
       }
       if (this.frameJsHeapEl) {
         const heapBytes = typeof performance !== 'undefined' && performance.memory
@@ -196,7 +203,7 @@ export class FPSDisplay {
           : null
         this.frameJsHeapEl.textContent = Number.isFinite(heapBytes)
           ? `JS Heap: ${(heapBytes / (1024 * 1024)).toFixed(1)} MB`
-          : 'JS Heap: n/a'
+          : 'JS Heap: unavailable (browser API)'
       }
 
       const llmSettings = getLlmSettings()
@@ -317,12 +324,12 @@ export class FPSDisplay {
 
   getFPSColorClass(fps) {
     // Return CSS class based on FPS performance
-    if (fps >= 60) {
-      return 'fps-good' // Green for good performance
+    if (fps >= 75) {
+      return 'fps-good' // Green when the 75 FPS gate is met
+    } else if (fps >= 60) {
+      return 'fps-ok'
     } else if (fps >= 30) {
-      return 'fps-ok' // Yellow for acceptable performance
-    } else if (fps >= 15) {
-      return 'fps-poor' // Orange for poor performance
+      return 'fps-poor'
     } else {
       return 'fps-bad' // Red for very poor performance
     }

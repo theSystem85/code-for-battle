@@ -1,5 +1,7 @@
 # 068 — Mobile FPS regression after sprite-sheet routing + realtime bottleneck overlay
 
+2026-09-16 supersession: the 60 FPS targets, DPR-reduction tactics and older cache-policy descriptions below are historical. New rendering work must satisfy [rendering-pipeline-75fps.md](rendering-pipeline-75fps.md) without lowering visual quality. Below-75-Hz devices remain diagnostic/non-certifying environments, not a relaxed pass. See [current source-based analysis](../rendering_analysis.md) for differences from the historical implementation and [the staged checklist](../rendering_improvement_todos.md) for future work.
+
 ## Context
 Recent street sprite-sheet routing work introduced a major mobile framerate regression (reported from ~60fps to <10fps).
 

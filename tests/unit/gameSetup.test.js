@@ -257,6 +257,53 @@ describe('gameSetup.js', () => {
         // With 9 clusters connected, we should have substantial rock coverage
         expect(rockCount).toBeGreaterThan(50)
       })
+
+      it('generates solid three-tile-wide rock areas for plateaus', () => {
+        generateMap(12345, mapGrid, 100, 100)
+
+        let hasPlateauFootprint = false
+        for (let y = 1; y < 99 && !hasPlateauFootprint; y++) {
+          for (let x = 1; x < 99; x++) {
+            let solid = true
+            for (let oy = -1; oy <= 1 && solid; oy++) {
+              for (let ox = -1; ox <= 1; ox++) {
+                if (mapGrid[y + oy][x + ox].type !== 'rock') {
+                  solid = false
+                  break
+                }
+              }
+            }
+            if (solid) {
+              hasPlateauFootprint = true
+              break
+            }
+          }
+        }
+
+        expect(hasPlateauFootprint).toBe(true)
+      })
+
+      it('prefers rock footprints compatible with two-tile-deep macro cliffs', () => {
+        generateMap(12345, mapGrid, 100, 100)
+
+        let compatibleBlocks = 0
+        for (let y = 0; y < 99; y++) for (let x = 0; x < 97; x++) {
+          let horizontal = true
+          for (let oy = 0; oy < 2 && horizontal; oy++) for (let ox = 0; ox < 4; ox++) {
+            if (mapGrid[y + oy][x + ox].type !== 'rock') horizontal = false
+          }
+          if (horizontal) compatibleBlocks++
+        }
+        for (let y = 0; y < 97; y++) for (let x = 0; x < 99; x++) {
+          let vertical = true
+          for (let oy = 0; oy < 4 && vertical; oy++) for (let ox = 0; ox < 2; ox++) {
+            if (mapGrid[y + oy][x + ox].type !== 'rock') vertical = false
+          }
+          if (vertical) compatibleBlocks++
+        }
+
+        expect(compatibleBlocks).toBeGreaterThan(10)
+      })
     })
 
     describe('Terrain Features - Water', () => {

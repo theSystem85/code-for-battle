@@ -1,3 +1,11 @@
+- [x] Circular selected-unit HUD (mode 4) draws an inward party-colored glow: strongest just inside the donut ring and fading toward the center, only while the circular HUD is selected (2026-09-21).
+- [x] Increase the baked ground shadow length for south-facing cliffs and remove north-facing cliff shadows (2026-09-15).
+- [x] Remove rectangular cropping from outer plateau silhouettes, add 2x2/2x3/2x4 cliff-block assets with more gray-to-canyon color variants, and make generated rock formations prefer compatible broad blocks.
+- [x] Strengthen thin outer plateau faces, render one-sided south/east escarpments on long narrow rock chains, and broaden generated formations to better match the layered reference terrain.
+- [x] Restrict plateau cliffs and shadows to actual rock tiles, require a solid three-tile rock width, use ordinary boulders for narrower chains, add visible crack/stone overlays to plateau tops, and generate sufficiently broad rock formations.
+- [x] Enlarge plateau crack decals to span multiple tiles while clipping them to plateau-owned rock surfaces (2026-09-15).
+- [x] Distribute enlarged plateau crack decals sparsely at one deterministic tile in ten and keep them beneath cliff faces on plateau ground (2026-09-15).
+- [x] Replace repetitive cliff ridges with continuous biome-transparent plateaus, width-dependent terraces, all eight descending directions, seamless joins and five artwork variants per topology; deliver one quality-85 WebP sprite sheet and verify visual seams and live performance.
 - [x] Friendly-unit click action hierarchy (2026-07-27): when selected units click a friendly unit, apply exactly one eligible action in strict `board/load into -> request service -> guard` order, and select the clicked unit only when none of those interactions can apply.
 - [x] Remove terrain chunk monitoring from the FPS/performance overlay so the widget no longer shows the verbose `Chunks:` line.
 - [x] Migrate runtime game persistence from direct Web Storage calls to an IndexedDB-backed browser storage layer, including saves, replays, tutorial/settings preferences, aliases, keybindings, LLM settings, sprite-sheet metadata, and legacy data migration.
@@ -5,6 +13,7 @@
 - [x] Make benchmark-mode emulator startup leave Safari navigation to the E2E test, so the plain app URL is not opened before Vite is reachable and the Simulator no longer sits on the home screen after an early emulator-script failure.
 - [x] Add an opt-in iOS Simulator Safari benchmark E2E that starts the emulator script, opens the app benchmark in Simulator Safari, collects the in-app FPS result, and currently fails below 55 average FPS while keeping the threshold configurable.
 - [ ] Mobile performance recovery plan (2026-05-24): evaluate and implement prioritized render-path improvements to move mobile back from ~10fps toward 60fps, starting with the most critical selected item after reviewing the plan.
+- [ ] Rendering preparation program (2026-09-19): Wave 2 lanes and I20 wiring are in the codebase. Remaining work is Q30/Q31 physical 75 FPS, visual, resize and memory certification on qualifying hardware. Headless/software runs stay diagnostic-only.
 - [x] Remove borders from multiplayer sidebar colored owner badges (party bubbles) so the solid fill style matches the updated multiplayer row visuals.
 - [x] Make multiplayer owner badge width content-driven, force dark text on green/yellow badges, and add right-side spacing in party-info row alignment for consistent sidebar padding.
 - [x] Move multiplayer owner labels into the colored party badge to save row space and force dark text on yellow-like badge colors for readability contrast.
@@ -74,6 +83,7 @@
 - [ ] Follow-up HUD tweak: constrain selected-unit edge bars to max 75% tile span so 1px selection outline remains visible, and center crew indicators horizontally beneath the bottom bar.
 - [ ] Refactor selected-unit HUD: 1px yellow outline, 3px stat bars (ammo/hp/fuel/load/xp) centered on outline with dark grey background and no borders, move crew indicator below bottom bar, place XP stars overlapping HP bar by ~33%, and enlarge HUD footprint beyond tile size to avoid occluding the selected unit.
 ## Improvements
+- [x] Implement rendering P01 strict benchmark and diagnostic tooling (2026-09-20): add timed full-map/repeat-lap route evidence, 75 FPS deadline tails and missed-frame reporting, cold/steady CDP captures, backend/refresh eligibility labels, opt-in resize/decode/asset audits, and WebP-85 visual golden manifests. See `specs/083-rendering-p01-diagnostics.md`.
 - [x] Make generated ore-field density fall off with distance from each seed crystal so richer ore visually radiates outward from the seed in deterministic bands.
 - [x] Improve bullet-impact explosion visuals with layered cached fireball/core sprites, shockwave jitter rings, and low-count ember accents while preserving frustum culling and sprite-cache performance.
 - [x] Ensure GitHub PR CI explicitly reruns unit tests on `pull_request.synchronize` so every new commit pushed to an open PR exercises `npm run test:unit`.
@@ -806,6 +816,17 @@
 - [x] ✅ Add fuzzy runtime-config search that matches variable names/IDs/current values and allows editing directly from filtered results.
 - [x] Restore iPhone 13 Pro Max map scrolling smoothness by reducing mobile terrain chunk churn and keeping the RAF scheduler from racing native frame cadence during scroll/combat.
 
+## Cliff texture density follow-up (2026-09-15)
+- [x] Normalize directional cliff-face depth and scaling so north, east, west, corner, and short cliff textures have the same open rock detail density as the preferred south-facing horizontal macro cliffs.
+- [x] Reduce repeated dense sampling on diagonal cliffs while restoring a shorter north-facing perspective depth than the south-facing cliffs.
+
+## Transition layer ordering (2026-09-15)
+- [x] Render sand and other shoreline transition tiles above water but below rock/cliff artwork, decals, buildings, and units in CPU and GPU terrain paths.
+
+## Beach transition reassignment (2026-09-16)
+- [x] Move the irregular beach-like contour from the inland grass/sand edge to the sand/water edge, and render the inland shoreline edge with the longer corner-weighted blend used by other biome intersections.
+- [x] Add five deterministic beach-contour variations, select them per shoreline tile, and keep every variation edge-compatible so adjacent tiles remain seamless.
+
 ## 2026-07-25 Naval and production verification checklist
 
 Use this checklist in a live game and check each item only after confirming the described behavior:
@@ -830,6 +851,11 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Naval collisions cause light, cooldown-limited damage; broadside impacts take more damage than bow/stern impacts.
 - [x] Complete every previously deferred naval/domain-production item in the checklist above.
 
+# SOT corner continuity (2026-09-15)
+
+- [x] Make outward land/street and inward water corner transition tiles share a one-pixel orientation-aware overlap on all four edges, keeping solid legs aligned while eliminating diagonal join gaps.
+- [x] Keep the shared SOT geometry in the organic terrain and legacy/GPU fallback renderers so CPU, WebGL and WebGPU-visible paths use identical corner placement.
+
 ## 2026-07-31 AI explosive-building safety
 
 - [x] Place enemy gas stations and ammunition factories away from the base center and outside their blast radius from critical infrastructure.
@@ -848,3 +874,34 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Vary shore depth with seeded smooth noise and round corners where two shores meet, so coasts are irregular curves at the tile level.
 - [x] Replace the circular center-lake stamp with a seeded radial blob that stays connected around the map center.
 - [x] Keep base land, land routes, water-percentage scaling, and hand-authored mission maps intact.
+
+## Organic terrain (2026-09-05)
+- [x] Generate cohesive grass/road source materials and transparent rock formation art.
+- [x] Bake complete 47-mask road atlas, deterministic variants and diagonal fringe wedges.
+- [x] Integrate macro grass and grouped rock silhouettes in bounded terrain chunk caches.
+- [x] Preserve gameplay grids, runways, water and explicit custom spritesheets.
+- [x] Add topology, chunk-boundary edit and opt-in combat performance coverage; document rebuilds and measured limits in specs/organic-terrain.md.
+
+## Terrain feedback refinement (2026-09-05)
+- [x] Smooth land/water borders and SOT diagonals, preserve opaque connected legs.
+- [x] Connect road tiles to SOT edges without grass holes; replace stale SOT materials.
+- [x] Replace noisy grass with generated meadow art and restore generated natural decorations.
+- [x] Prefer eight-direction connected neutral cliffs for chains, neutral boulders for isolated parts.
+- [x] Preserve cached rendering and verify shorelines, edits, direction masks, units and live performance.
+- [x] Inspect the result and document further visual suggestions in specs/organic-terrain.md.
+- [x] Restrict cliff art to qualifying plateaus, make cliff exposure camera-directional, prevent mixed one/two-tile height joins, and cluster cliff geology palettes across complete formations.
+- [x] Replace condensed one-cell straight cliff rendering with the same broad macro artwork used by the preferred non-condensed cliff style on every terrace level.
+# Terrain source asset format
+
+- Convert all raster files in `public/images/terrain/source` to quality-85 WebP and keep terrain build scripts and specifications aligned with the renamed assets.
+
+## Rendering pipeline performance — 2026-09-16
+
+- [x] Analyze the reported 75-to-40 FPS scrolling regression with source audits, GPT-5.6 Luna subagents, the existing mixed-biome benchmark and a function-level CPU profile; document measured findings in `rendering_analysis.md`.
+- [x] Create `performance_improvement.md` and `rendering_improvement_todos.md` with detailed design, file ownership, parallel waves, integration barriers and validation gates; this is documentation only.
+- [x] Replace the AGENTS.md 20% regression allowance with the strict 75 FPS / 13.333 ms requirement, retaining unchanged visual quality and animated procedural water.
+- [ ] Implement mutation-driven terrain validity, startup readiness/baking, bounded byte residency and retained animated-water geometry per the delegation checklist.
+- [x] Add opt-in live function rankings (self/inclusive time, calls, tails), CPU/GPU/memory capability diagnostics, and cumulative draw/upload/resize counters to the performance overlay. The transformed-image resize audit itself remains owned by P01.
+- [x] Add the independent, persisted Function timings toggle to the performance overlay with a disabled fast path for legacy `logPerformance` callers (2026-09-19).
+- [ ] Prepare final-size map/entity imagery before gameplay; audit DPR/transforms and resolve changing raster-effect sizes without degrading visuals; allow only aircraft takeoff/landing size-animation exceptions.
+- [ ] Certify the combined pipeline at 75 FPS on qualifying reference hardware through first/repeat full-map fast scrolling and worst-case combat, with visual parity, live procedural water and bounded memory. Current local results do not pass this target.

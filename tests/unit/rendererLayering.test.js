@@ -23,6 +23,11 @@ vi.mock('../../src/rendering/mapRenderer.js', () => ({
 
 vi.mock('../../src/rendering/buildingRenderer.js', () => ({
   BuildingRenderer: createSimpleRendererClass({
+    setPreparedSpriteRegistry: vi.fn(),
+    collectVisibleBuildings: vi.fn((_ctx, entities, _scroll, output) => {
+      output.push(...entities)
+      return output
+    }),
     renderBases: vi.fn(),
     renderOverlays: vi.fn(),
     renderHudHoverTooltip: vi.fn()
@@ -31,6 +36,10 @@ vi.mock('../../src/rendering/buildingRenderer.js', () => ({
 
 vi.mock('../../src/rendering/unitRenderer.js', () => ({
   UnitRenderer: createSimpleRendererClass({
+    collectVisibleUnits: vi.fn((_ctx, entities, _scroll, output) => {
+      output.push(...entities)
+      return output
+    }),
     renderBases: vi.fn(),
     renderOverlays: vi.fn()
   })
@@ -155,6 +164,24 @@ describe('Renderer airborne layering', () => {
 
     expect(result.groundedUnits.map(unit => unit.id)).toEqual(['ground-1', 'air-2'])
     expect(result.airborneUnits.map(unit => unit.id)).toEqual(['air-1', 'deck-1'])
+  })
+
+  it('reuses frame lists and only builds the shared ID index when a target needs it', () => {
+    const renderer = new Renderer()
+    const first = renderer.partitionUnitsByRenderLayer([{ id: 'one', type: 'tank_v1' }])
+    const groundedIdentity = first.groundedUnits
+    const second = renderer.partitionUnitsByRenderLayer([{ id: 'two', type: 'tank_v1' }])
+
+    expect(second.groundedUnits).toBe(groundedIdentity)
+    expect(second.groundedUnits.map(unit => unit.id)).toEqual(['two'])
+    expect(renderer.prepareFrameEntityIndex([], [], [], [], {})).toBeNull()
+
+    const target = { id: 'target', type: 'tank_v1' }
+    const tanker = { id: 'tanker', type: 'tankerTruck', refuelTarget: { id: target.id } }
+    const index = renderer.prepareFrameEntityIndex([tanker, target], [], [], [], {})
+
+    expect(index).toBe(renderer.frameEntityIndex)
+    expect(index.get('unit:target')).toBe(target)
   })
 
   it('renders airborne units after grounded units and building overlays', () => {

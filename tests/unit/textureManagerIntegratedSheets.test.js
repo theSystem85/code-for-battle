@@ -78,6 +78,16 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.integratedTagBuckets).toEqual({})
   })
 
+  it('keeps the selected biome for legacy terrain when integrated mode is disabled', async() => {
+    const manager = new TextureManager()
+
+    await manager.setIntegratedSpriteSheetConfig({ enabled: false, biomeTag: 'sand' })
+
+    expect(manager.integratedSpriteSheetMode).toBe(false)
+    expect(manager.integratedBiomeTag).toBe('sand')
+    expect(manager.integratedRenderSignature).toBe('off|sand')
+  })
+
   it('falls back to bundled combat decal candidates when integrated sheets do not provide decal tags', () => {
     const manager = new TextureManager()
     manager.defaultCombatDecalTagBuckets = {
@@ -132,6 +142,68 @@ describe('TextureManager integrated multi-sheet selection', () => {
       'data:image/webp;base64,abc123',
       '/images/map/sprite_sheets/default.webp'
     ])
+  })
+
+  it('does not publish integrated images until decode completes', async() => {
+    const manager = new TextureManager()
+    let finishDecode
+    class MockImage {
+      constructor() {
+        this.naturalWidth = 64
+        this.naturalHeight = 64
+      }
+
+      decode() {
+        return new Promise(resolve => { finishDecode = resolve })
+      }
+
+      set src(value) {
+        this.loadedSource = value
+        this.onload()
+      }
+    }
+    const OriginalImage = globalThis.Image
+    globalThis.Image = MockImage
+    try {
+      let settled = false
+      const loading = manager.loadIntegratedSpriteSheetImage('images/map/sprite_sheets/decode.webp')
+        .then(() => { settled = true })
+      await Promise.resolve()
+      expect(settled).toBe(false)
+      expect(manager.integratedSpriteSheetImagesByPath).not.toHaveProperty('images/map/sprite_sheets/decode.webp')
+      finishDecode()
+      await loading
+      expect(manager.integratedSpriteSheetImagesByPath).toHaveProperty('images/map/sprite_sheets/decode.webp')
+    } finally {
+      globalThis.Image = OriginalImage
+    }
+  })
+
+  it('prevents a superseded sprite-sheet generation from publishing', async() => {
+    const manager = new TextureManager()
+    let resolveFirst
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockImplementation((path) => {
+      if (path === 'first.webp') return new Promise(resolve => { resolveFirst = resolve })
+      return Promise.resolve({ id: path })
+    })
+    const metadata = {
+      tiles: {
+        '0,0': { tags: ['rocks'], rect: { x: 0, y: 0, width: 64, height: 64 } }
+      }
+    }
+    const first = manager.setIntegratedSpriteSheetConfig({
+      enabled: true,
+      sheets: [{ sheetPath: 'first.webp', metadata }]
+    })
+    await manager.setIntegratedSpriteSheetConfig({
+      enabled: true,
+      sheets: [{ sheetPath: 'second.webp', metadata }]
+    })
+    resolveFirst({ id: 'first.webp' })
+
+    await expect(first).rejects.toMatchObject({ name: 'AbortError' })
+    expect(manager.integratedSpriteSheetPath).toBe('second.webp')
+    expect(manager.integratedConfigVersion).toBe(1)
   })
 
   it('builds rectangular grouped variants and returns tile slices by offset', async() => {

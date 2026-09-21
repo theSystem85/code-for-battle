@@ -1,6 +1,7 @@
 // rendering/renderingUtils.js
 import { MOBILE_CANVAS_PIXEL_RATIO_CAP, TILE_SIZE } from '../config.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { getCanvasViewportRecord } from './prepared/canvasViewportRegistry.js'
 
 // Get device pixel ratio for high-DPI rendering
 export const getDevicePixelRatio = () => {
@@ -14,37 +15,26 @@ export const getDevicePixelRatio = () => {
   return isTouch ? Math.min(nativeRatio, MOBILE_CANVAS_PIXEL_RATIO_CAP) : nativeRatio
 }
 
-export function getCanvasPixelRatio(canvas, fallback = getDevicePixelRatio()) {
+export function getCanvasPixelRatio(canvas, fallback) {
+  const effectiveFallback = Number.isFinite(fallback) && fallback > 0
+    ? fallback
+    : getDevicePixelRatio()
   if (!canvas) {
-    return fallback || 1
+    return effectiveFallback
   }
 
-  const bounds = typeof canvas.getBoundingClientRect === 'function'
-    ? canvas.getBoundingClientRect()
-    : null
-  const logicalWidth = bounds?.width || canvas.clientWidth || 0
-  if (logicalWidth > 0 && canvas.width > 0) {
-    return canvas.width / logicalWidth
-  }
-
-  return fallback || 1
+  return getCanvasViewportRecord(canvas, effectiveFallback)?.viewport.density || effectiveFallback
 }
 
 export function getCanvasLogicalSize(canvas) {
   if (!canvas) {
-    return { width: 0, height: 0, pixelRatio: 1 }
+    return EMPTY_CANVAS_LOGICAL_SIZE
   }
 
-  const bounds = typeof canvas.getBoundingClientRect === 'function'
-    ? canvas.getBoundingClientRect()
-    : null
-  const pixelRatio = getCanvasPixelRatio(canvas)
-  return {
-    width: bounds?.width || canvas.clientWidth || (canvas.width / pixelRatio) || canvas.width || 0,
-    height: bounds?.height || canvas.clientHeight || (canvas.height / pixelRatio) || canvas.height || 0,
-    pixelRatio
-  }
+  return getCanvasViewportRecord(canvas, getDevicePixelRatio()).logicalSize
 }
+
+const EMPTY_CANVAS_LOGICAL_SIZE = Object.freeze({ width: 0, height: 0, pixelRatio: 1, revision: 0 })
 
 // Tesla Coil Lightning Rendering
 export function drawTeslaCoilLightning(gameCtx, fromX, fromY, toX, toY, scatterRadius = TILE_SIZE, colorStops = [

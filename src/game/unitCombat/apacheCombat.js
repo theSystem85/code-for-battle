@@ -9,6 +9,7 @@ import { getEffectiveFireRange, getEffectiveFireRate, isHumanControlledParty } f
 import { getAirstripParkingSpots, reserveAirstripParkingSlot } from '../../utils/airstripUtils.js'
 import { handleApacheVolley, handleF35BombDrop } from './firingHandlers.js'
 import { canF35ReleaseWeapons } from '../f35Behavior.js'
+import { shouldJetReturnHomeForFuel } from '../jetFuel.js'
 import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
 
 function getApacheTargetCenter(target) {
@@ -570,9 +571,7 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
   const ammoRemaining = Math.max(0, Math.floor(unit.rocketAmmo || 0))
   unit.apacheAmmoEmpty = ammoRemaining <= 0
 
-  const fuelRatio = typeof unit.maxGas === 'number' && unit.maxGas > 0
-    ? (unit.gas || 0) / unit.maxGas
-    : 1
+  const shouldReturnForFuel = shouldJetReturnHomeForFuel(unit)
 
   if ((!unit.target || unit.target.health <= 0) && Array.isArray(unit.attackQueue) && unit.attackQueue.length > 0) {
     unit.attackQueue = unit.attackQueue.filter(target => target && target.health > 0 && target.owner !== unit.owner)
@@ -581,10 +580,10 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     }
   }
 
-  if (!unit.target || unit.target.health <= 0 || ammoRemaining <= 0 || fuelRatio <= 0.18) {
+  if (!unit.target || unit.target.health <= 0 || ammoRemaining <= 0 || shouldReturnForFuel) {
     unit.volleyState = null
     const alreadyLanding = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.flightPlan?.mode === 'airstrip')
-    if (!unit.homeCarrierId && !alreadyLanding && (ammoRemaining <= 0 || fuelRatio <= 0.18 || unit.autoReturnToHelipadOnTargetLoss)) {
+    if (!unit.homeCarrierId && !alreadyLanding && (ammoRemaining <= 0 || shouldReturnForFuel || unit.autoReturnToHelipadOnTargetLoss)) {
       const padInfo = findNearestLandingPadForF35(unit, units)
       if (padInfo) {
         initiateF35PadReturn(unit, padInfo)

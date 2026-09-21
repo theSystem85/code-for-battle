@@ -6,7 +6,27 @@ import {
   WATER_EFFECT_SATURATION,
   WATER_EFFECT_ZOOM
 } from '../config.js'
+import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
+import { renderProfiler } from '../performance/renderProfiler.js'
+import { RENDER_COUNTER_IDS, renderDiagnostics } from '../performance/renderDiagnostics.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
+
+export const WATER_INSTANCE_FLOATS = 17
+export const WATER_INSTANCE_STRIDE = WATER_INSTANCE_FLOATS * 4
+
+const WATER_CHUNK_SIZE = 16
+const WATER_CHUNK_TILE_CAPACITY = WATER_CHUNK_SIZE * WATER_CHUNK_SIZE
+const WATER_PLANES = 2
+const TIMER_QUERY_LIMIT = 4
+const WATER_ATTRIBUTES = Object.freeze([
+  Object.freeze([1, 2, 0]),
+  Object.freeze([2, 4, 8]),
+  Object.freeze([3, 4, 24]),
+  Object.freeze([4, 1, 40]),
+  Object.freeze([5, 4, 44]),
+  Object.freeze([6, 1, 60]),
+  Object.freeze([7, 1, 64])
+])
 
 const SOT_CLIP_NONE = 0
 const SOT_CLIP_TOP_LEFT = 1
@@ -222,12 +242,48 @@ function parseColor(color) {
   return defaultColor
 }
 
+function packInstance(data, offset, instance) {
+  data[offset] = instance.translation[0]
+  data[offset + 1] = instance.translation[1]
+  data.set(instance.uvRect, offset + 2)
+  data.set(instance.color, offset + 6)
+  data[offset + 10] = instance.textureType
+  data.set(instance.waterEdges, offset + 11)
+  data[offset + 15] = instance.clipOrientation
+  data[offset + 16] = instance.textureSource || 0
+}
+
+function getTopologyRanges(options) {
+  const ranges = options.changedTopologyRanges || options.topologyChanges
+  return Array.isArray(ranges) ? ranges : null
+}
+
+function normalizeTopologyRange(range, width, height) {
+  const left = Number.isFinite(range?.left) ? range.left : range?.x
+  const top = Number.isFinite(range?.top) ? range.top : range?.y
+  const right = Number.isFinite(range?.right) ? range.right : left + (range?.width || 1)
+  const bottom = Number.isFinite(range?.bottom) ? range.bottom : top + (range?.height || 1)
+  if (![left, top, right, bottom].every(Number.isFinite)) return null
+  return {
+    left: Math.max(0, Math.floor(left) - 1),
+    top: Math.max(0, Math.floor(top) - 1),
+    right: Math.min(width, Math.ceil(right) + 1),
+    bottom: Math.min(height, Math.ceil(bottom) + 1)
+  }
+}
+
 export class GameWebGLRenderer {
-  constructor(gl, textureManager, mapRenderer = null) {
+  constructor(gl, textureManager, mapRenderer = null, {
+    profiler = renderProfiler,
+    diagnostics = renderDiagnostics
+  } = {}) {
     this.gl = gl
     this.textureManager = textureManager
     this.mapRenderer = mapRenderer
+    this.profiler = profiler
+    this.diagnostics = diagnostics
     this.program = null
+    this.uniformLocations = null
     this.buffers = {}
     this.instanceCapacity = 0
     this.atlasTexture = null
@@ -238,12 +294,34 @@ export class GameWebGLRenderer {
     this.colorCache = new Map()
     this.pixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
     this.rendersWaterSot = true
+    this.waterTopology = null
+    this.uploadedWaterTopology = null
+    this.uploadedWaterTopologyVersion = -1
+    this.contextLost = false
+    this.timerExtension = null
+    this.timerQueries = []
+    this.gpuTiming = { available: false, reason: 'not-initialized', milliseconds: null }
+    this.boundCanvas = null
+    this.capabilityUpdate = { backend: 'webgl', devicePixelRatio: null }
+    this.onContextLost = event => {
+      event?.preventDefault?.()
+      this.handleContextLost()
+    }
+    this.onContextRestored = () => this.handleContextRestored(this.gl)
+    this.stats = {
+      topologyBuilds: 0,
+      topologyUploadBytes: 0,
+      textureUploadBytes: 0,
+      uniformUploadBytes: 0,
+      drawCalls: 0
+    }
   }
 
   setContext(gl) {
     if (this.gl === gl) return
     this.gl = gl
     this.program = null
+    this.uniformLocations = null
     this.buffers = {}
     this.instanceCapacity = 0
     this.atlasTexture = null
@@ -251,15 +329,32 @@ export class GameWebGLRenderer {
     this.secondaryAtlasTexture = null
     this.secondaryAtlasImage = null
     this.secondaryAtlasSize = { ...DEFAULT_ATLAS_SIZE }
+    this.uploadedWaterTopology = null
+    this.uploadedWaterTopologyVersion = -1
+    this.contextLost = false
+    this.timerExtension = null
+    this.timerQueries.length = 0
   }
 
   setMapRenderer(mapRenderer) {
     this.mapRenderer = mapRenderer
   }
 
+  bindContextEvents(canvas) {
+    if (!canvas?.addEventListener || this.boundCanvas === canvas) return
+    if (this.boundCanvas?.removeEventListener) {
+      this.boundCanvas.removeEventListener('webglcontextlost', this.onContextLost)
+      this.boundCanvas.removeEventListener('webglcontextrestored', this.onContextRestored)
+    }
+    this.boundCanvas = canvas
+    canvas.addEventListener('webglcontextlost', this.onContextLost)
+    canvas.addEventListener('webglcontextrestored', this.onContextRestored)
+  }
+
   ensureInitialized() {
     if (
       !this.gl ||
+      this.contextLost ||
       typeof WebGL2RenderingContext === 'undefined' ||
       !(this.gl instanceof WebGL2RenderingContext)
     ) {
@@ -290,18 +385,241 @@ export class GameWebGLRenderer {
     this.buffers.uv = gl.createBuffer()
     this.buffers.color = gl.createBuffer()
     this.buffers.textureType = gl.createBuffer()
+    this.buffers.waterEdges = gl.createBuffer()
     this.buffers.clipOrientation = gl.createBuffer()
     this.buffers.textureSource = gl.createBuffer()
+    this.buffers.waterTopology = gl.createBuffer()
+
+    this.uniformLocations = {
+      resolution: gl.getUniformLocation(this.program, 'uResolution'),
+      scroll: gl.getUniformLocation(this.program, 'uScroll'),
+      tileSize: gl.getUniformLocation(this.program, 'uTileSize'),
+      tileStep: gl.getUniformLocation(this.program, 'uTileStep'),
+      time: gl.getUniformLocation(this.program, 'uTime'),
+      waterZoom: gl.getUniformLocation(this.program, 'uWaterZoom'),
+      waterTone: gl.getUniformLocation(this.program, 'uWaterTone'),
+      waterSaturation: gl.getUniformLocation(this.program, 'uWaterSaturation'),
+      atlas: gl.getUniformLocation(this.program, 'uAtlas'),
+      secondaryAtlas: gl.getUniformLocation(this.program, 'uSecondaryAtlas')
+    }
 
     gl.useProgram(this.program)
-    gl.uniform1i(gl.getUniformLocation(this.program, 'uAtlas'), 0)
-    gl.uniform1i(gl.getUniformLocation(this.program, 'uSecondaryAtlas'), 1)
+    gl.uniform1i(this.uniformLocations.atlas, 0)
+    gl.uniform1i(this.uniformLocations.secondaryAtlas, 1)
     gl.useProgram(null)
 
     gl.enable(gl.BLEND)
     gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+    this.initializeGpuTimer()
 
     return true
+  }
+
+  initializeGpuTimer() {
+    const gl = this.gl
+    this.timerExtension = gl?.getExtension?.('EXT_disjoint_timer_query_webgl2') || null
+    this.gpuTiming = this.timerExtension
+      ? { available: false, reason: 'pending-first-valid-sample', milliseconds: null }
+      : { available: false, reason: 'EXT_disjoint_timer_query_webgl2-unavailable', milliseconds: null }
+    this.diagnostics.setCapabilities({ backend: 'webgl', gpuTiming: this.gpuTiming })
+  }
+
+  pollGpuTimers() {
+    const gl = this.gl
+    const extension = this.timerExtension
+    if (!gl || !extension || !this.timerQueries.length) return
+    const disjoint = Boolean(gl.getParameter(extension.GPU_DISJOINT_EXT))
+    for (let index = this.timerQueries.length - 1; index >= 0; index--) {
+      const query = this.timerQueries[index]
+      if (!gl.getQueryParameter(query, gl.QUERY_RESULT_AVAILABLE)) continue
+      this.timerQueries.splice(index, 1)
+      if (disjoint) {
+        gl.deleteQuery(query)
+        this.gpuTiming = { available: false, reason: 'disjoint-reading-discarded', milliseconds: null }
+        this.diagnostics.setCapabilities({ backend: 'webgl', gpuTiming: this.gpuTiming })
+        continue
+      }
+      const nanoseconds = gl.getQueryParameter(query, gl.QUERY_RESULT)
+      gl.deleteQuery(query)
+      if (!Number.isFinite(nanoseconds) || nanoseconds < 0) {
+        this.gpuTiming = { available: false, reason: 'invalid-reading-discarded', milliseconds: null }
+      } else {
+        this.gpuTiming = { available: true, reason: null, milliseconds: nanoseconds / 1e6 }
+      }
+      this.diagnostics.setCapabilities({ backend: 'webgl', gpuTiming: this.gpuTiming })
+    }
+  }
+
+  beginGpuTimer() {
+    const gl = this.gl
+    if (!this.timerExtension || this.timerQueries.length >= TIMER_QUERY_LIMIT) return null
+    const query = gl.createQuery()
+    if (!query) return null
+    gl.beginQuery(this.timerExtension.TIME_ELAPSED_EXT, query)
+    return query
+  }
+
+  endGpuTimer(query) {
+    if (!query) return
+    this.gl.endQuery(this.timerExtension.TIME_ELAPSED_EXT)
+    this.timerQueries.push(query)
+  }
+
+  handleContextLost() {
+    this.contextLost = true
+    this.program = null
+    this.uniformLocations = null
+    this.buffers = {}
+    this.atlasTexture = null
+    this.secondaryAtlasTexture = null
+    this.uploadedWaterTopology = null
+    this.uploadedWaterTopologyVersion = -1
+    this.timerQueries.length = 0
+    this.gpuTiming = { available: false, reason: 'context-lost', milliseconds: null }
+    this.diagnostics.setCapabilities({ backend: 'webgl', gpuTiming: this.gpuTiming })
+  }
+
+  handleContextRestored(gl = this.gl) {
+    this.gl = gl
+    this.contextLost = false
+    this.program = null
+    this.uniformLocations = null
+    this.buffers = {}
+    this.atlasTexture = null
+    this.secondaryAtlasTexture = null
+    this.secondaryAtlasImage = null
+    this.uploadedWaterTopology = null
+    this.uploadedWaterTopologyVersion = -1
+    return this.ensureInitialized()
+  }
+
+  getWaterTopologyRevision(options = {}) {
+    return options.topologyRevision ?? this.mapRenderer?.sotMaskVersion ?? 0
+  }
+
+  getTopologyBuildSpanId() {
+    return PROFILER_SPAN_IDS.WEBGL_BUILD
+  }
+
+  createWaterTopology(mapGrid, revision) {
+    const height = mapGrid.length
+    const width = mapGrid[0]?.length || 0
+    const chunkColumns = Math.ceil(width / WATER_CHUNK_SIZE)
+    const chunkRows = Math.ceil(height / WATER_CHUNK_SIZE)
+    const chunkCount = chunkColumns * chunkRows
+    const slotsPerPlane = chunkCount * WATER_CHUNK_TILE_CAPACITY
+    return {
+      mapGrid,
+      revision,
+      width,
+      height,
+      chunkColumns,
+      chunkRows,
+      chunkCount,
+      slotsPerPlane,
+      data: new Float32Array(slotsPerPlane * WATER_PLANES * WATER_INSTANCE_FLOATS),
+      baseCounts: new Uint16Array(chunkCount),
+      sotCounts: new Uint16Array(chunkCount),
+      dirtyFlags: new Uint8Array(chunkCount),
+      dirtyChunks: [],
+      version: 0
+    }
+  }
+
+  markAllWaterChunksDirty(topology) {
+    topology.dirtyChunks.length = 0
+    topology.dirtyFlags.fill(1)
+    for (let index = 0; index < topology.chunkCount; index++) topology.dirtyChunks.push(index)
+  }
+
+  markWaterRangesDirty(topology, ranges) {
+    topology.dirtyChunks.length = 0
+    topology.dirtyFlags.fill(0)
+    for (const sourceRange of ranges) {
+      const range = normalizeTopologyRange(sourceRange, topology.width, topology.height)
+      if (!range) continue
+      const firstChunkX = Math.floor(range.left / WATER_CHUNK_SIZE)
+      const firstChunkY = Math.floor(range.top / WATER_CHUNK_SIZE)
+      const lastChunkX = Math.floor(Math.max(range.left, range.right - 1) / WATER_CHUNK_SIZE)
+      const lastChunkY = Math.floor(Math.max(range.top, range.bottom - 1) / WATER_CHUNK_SIZE)
+      for (let chunkY = firstChunkY; chunkY <= lastChunkY; chunkY++) {
+        for (let chunkX = firstChunkX; chunkX <= lastChunkX; chunkX++) {
+          const index = chunkY * topology.chunkColumns + chunkX
+          if (topology.dirtyFlags[index]) continue
+          topology.dirtyFlags[index] = 1
+          topology.dirtyChunks.push(index)
+        }
+      }
+    }
+  }
+
+  rebuildWaterChunk(topology, chunkIndex) {
+    const chunkX = chunkIndex % topology.chunkColumns
+    const chunkY = Math.floor(chunkIndex / topology.chunkColumns)
+    const startX = chunkX * WATER_CHUNK_SIZE
+    const startY = chunkY * WATER_CHUNK_SIZE
+    const endX = Math.min(topology.width, startX + WATER_CHUNK_SIZE)
+    const endY = Math.min(topology.height, startY + WATER_CHUNK_SIZE)
+    const instances = this.buildTileInstances(topology.mapGrid, startX, startY, endX, endY, { waterOnly: true })
+    let baseCount = 0
+    let sotCount = 0
+    const baseSlot = chunkIndex * WATER_CHUNK_TILE_CAPACITY
+    const sotSlot = topology.slotsPerPlane + baseSlot
+    for (const instance of instances) {
+      if (instance.clipOrientation > SOT_CLIP_NONE) {
+        if (sotCount >= WATER_CHUNK_TILE_CAPACITY) continue
+        packInstance(topology.data, (sotSlot + sotCount++) * WATER_INSTANCE_FLOATS, instance)
+      } else {
+        if (baseCount >= WATER_CHUNK_TILE_CAPACITY) continue
+        packInstance(topology.data, (baseSlot + baseCount++) * WATER_INSTANCE_FLOATS, instance)
+      }
+    }
+    topology.baseCounts[chunkIndex] = baseCount
+    topology.sotCounts[chunkIndex] = sotCount
+  }
+
+  prepareRetainedWaterTopology(mapGrid, options = {}) {
+    this.getSotMask(mapGrid)
+    const revision = this.getWaterTopologyRevision(options)
+    const ranges = getTopologyRanges(options)
+    const dimensionsChanged = !this.waterTopology ||
+      this.waterTopology.width !== (mapGrid[0]?.length || 0) ||
+      this.waterTopology.height !== mapGrid.length
+    const mapChanged = !this.waterTopology || this.waterTopology.mapGrid !== mapGrid
+    const revisionChanged = !this.waterTopology || this.waterTopology.revision !== revision
+
+    if (dimensionsChanged || mapChanged) {
+      this.waterTopology = this.createWaterTopology(mapGrid, revision)
+      this.markAllWaterChunksDirty(this.waterTopology)
+    } else if (revisionChanged) {
+      this.waterTopology.revision = revision
+      if (ranges?.length) this.markWaterRangesDirty(this.waterTopology, ranges)
+      else this.markAllWaterChunksDirty(this.waterTopology)
+    } else {
+      this.waterTopology.dirtyChunks.length = 0
+      return this.waterTopology
+    }
+
+    const buildToken = this.profiler.startSpan(this.getTopologyBuildSpanId())
+    for (const chunkIndex of this.waterTopology.dirtyChunks) {
+      this.rebuildWaterChunk(this.waterTopology, chunkIndex)
+    }
+    this.waterTopology.version++
+    this.stats.topologyBuilds++
+    this.profiler.endSpan(buildToken)
+    return this.waterTopology
+  }
+
+  forEachVisibleWaterChunk(topology, startX, startY, endX, endY, callback) {
+    const firstChunkX = Math.floor(startX / WATER_CHUNK_SIZE)
+    const firstChunkY = Math.floor(startY / WATER_CHUNK_SIZE)
+    const lastChunkX = Math.floor(Math.max(startX, endX - 1) / WATER_CHUNK_SIZE)
+    const lastChunkY = Math.floor(Math.max(startY, endY - 1) / WATER_CHUNK_SIZE)
+    for (let chunkY = firstChunkY; chunkY <= lastChunkY; chunkY++) {
+      for (let chunkX = firstChunkX; chunkX <= lastChunkX; chunkX++) {
+        callback(chunkY * topology.chunkColumns + chunkX)
+      }
+    }
   }
 
   syncAtlasTexture() {
@@ -328,6 +646,9 @@ export class GameWebGLRenderer {
       width: this.textureManager.spriteImage.width || DEFAULT_ATLAS_SIZE.width,
       height: this.textureManager.spriteImage.height || DEFAULT_ATLAS_SIZE.height
     }
+    const uploadBytes = this.atlasSize.width * this.atlasSize.height * 4
+    this.stats.textureUploadBytes += uploadBytes
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, uploadBytes)
   }
 
   getSecondaryAtlasImage() {
@@ -370,6 +691,9 @@ export class GameWebGLRenderer {
       width: image.width || image.naturalWidth || DEFAULT_ATLAS_SIZE.width,
       height: image.height || image.naturalHeight || DEFAULT_ATLAS_SIZE.height
     }
+    const uploadBytes = this.secondaryAtlasSize.width * this.secondaryAtlasSize.height * 4
+    this.stats.textureUploadBytes += uploadBytes
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, uploadBytes)
   }
 
   getColor(type) {
@@ -393,11 +717,12 @@ export class GameWebGLRenderer {
         const tile = row[x]
         if (!tile) continue
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        if (!waterOnly || visualTileType === 'water') {
+        const streetWaterUnderlay = visualTileType === 'street' && this.mapRenderer?.isStreetWaterTransitionTile(mapGrid, x, y)
+        if (!waterOnly || visualTileType === 'water' || streetWaterUnderlay) {
           if (!waterOnly && visualTileType === 'street') {
-            baseInstances.push(this.createInstance('land', x, y, mapGrid, canUseTextures, sotMask))
+            baseInstances.push(this.createInstance(streetWaterUnderlay ? 'water' : 'land', x, y, mapGrid, canUseTextures, sotMask))
           }
-          baseInstances.push(this.createInstance(visualTileType, x, y, mapGrid, canUseTextures, sotMask))
+          baseInstances.push(this.createInstance(waterOnly && streetWaterUnderlay ? 'water' : visualTileType, x, y, mapGrid, canUseTextures, sotMask))
         }
 
         const sotInfo = sotMask?.[y]?.[x]
@@ -636,8 +961,166 @@ export class GameWebGLRenderer {
     return getCanvasPixelRatio(canvas, this.pixelRatio || 1)
   }
 
+  uploadRetainedWaterTopology(topology) {
+    const gl = this.gl
+    const uploadToken = this.profiler.startSpan(PROFILER_SPAN_IDS.WEBGL_UPLOAD)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.waterTopology)
+    const newAllocation = this.uploadedWaterTopology !== topology
+    if (newAllocation) {
+      gl.bufferData(gl.ARRAY_BUFFER, topology.data.byteLength, gl.DYNAMIC_DRAW)
+      this.uploadedWaterTopology = topology
+      this.uploadedWaterTopologyVersion = -1
+    }
+    if (this.uploadedWaterTopologyVersion === topology.version) {
+      this.profiler.endSpan(uploadToken)
+      return
+    }
+
+    let uploadedBytes = 0
+    const uploadAll = newAllocation || this.uploadedWaterTopologyVersion < 0
+    const uploadChunk = chunkIndex => {
+      const baseSlot = chunkIndex * WATER_CHUNK_TILE_CAPACITY
+      const baseCount = topology.baseCounts[chunkIndex]
+      const sotSlot = topology.slotsPerPlane + baseSlot
+      const sotCount = topology.sotCounts[chunkIndex]
+      if (baseCount) {
+        const start = baseSlot * WATER_INSTANCE_FLOATS
+        const end = start + baseCount * WATER_INSTANCE_FLOATS
+        const view = topology.data.subarray(start, end)
+        gl.bufferSubData(gl.ARRAY_BUFFER, baseSlot * WATER_INSTANCE_STRIDE, view)
+        uploadedBytes += view.byteLength
+      }
+      if (sotCount) {
+        const start = sotSlot * WATER_INSTANCE_FLOATS
+        const end = start + sotCount * WATER_INSTANCE_FLOATS
+        const view = topology.data.subarray(start, end)
+        gl.bufferSubData(gl.ARRAY_BUFFER, sotSlot * WATER_INSTANCE_STRIDE, view)
+        uploadedBytes += view.byteLength
+      }
+    }
+    if (uploadAll) {
+      for (let index = 0; index < topology.chunkCount; index++) uploadChunk(index)
+    } else {
+      for (const chunkIndex of topology.dirtyChunks) uploadChunk(chunkIndex)
+    }
+    this.uploadedWaterTopologyVersion = topology.version
+    this.stats.topologyUploadBytes += uploadedBytes
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, uploadedBytes)
+    this.profiler.endSpan(uploadToken)
+  }
+
+  bindRetainedWaterAttributes(slotOffset) {
+    const gl = this.gl
+    const byteOffset = slotOffset * WATER_INSTANCE_STRIDE
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.waterTopology)
+    for (const [location, size, offset] of WATER_ATTRIBUTES) {
+      gl.enableVertexAttribArray(location)
+      gl.vertexAttribPointer(location, size, gl.FLOAT, false, WATER_INSTANCE_STRIDE, byteOffset + offset)
+      gl.vertexAttribDivisor(location, 1)
+    }
+  }
+
+  drawRetainedWaterPlane(topology, firstChunkX, firstChunkY, lastChunkX, lastChunkY, overlay) {
+    const gl = this.gl
+    let drawCalls = 0
+    const planeOffset = overlay ? topology.slotsPerPlane : 0
+    const counts = overlay ? topology.sotCounts : topology.baseCounts
+    for (let chunkY = firstChunkY; chunkY <= lastChunkY; chunkY++) {
+      for (let chunkX = firstChunkX; chunkX <= lastChunkX; chunkX++) {
+        const chunkIndex = chunkY * topology.chunkColumns + chunkX
+        const count = counts[chunkIndex]
+        if (!count) continue
+        this.bindRetainedWaterAttributes(planeOffset + chunkIndex * WATER_CHUNK_TILE_CAPACITY)
+        gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, count)
+        drawCalls++
+      }
+    }
+    return drawCalls
+  }
+
+  renderRetainedWater(mapGrid, scrollOffset, canvas, options, bounds) {
+    const gl = this.gl
+    const topology = this.prepareRetainedWaterTopology(mapGrid, options)
+    this.uploadRetainedWaterTopology(topology)
+    const {
+      pixelRatio,
+      tileStep,
+      tileSize,
+      scrollX,
+      scrollY,
+      startTileX,
+      startTileY,
+      endTileX,
+      endTileY
+    } = bounds
+    const locations = this.uniformLocations
+    const sampledTime = Number.isFinite(options.time)
+      ? options.time
+      : (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now())
+
+    gl.viewport(0, 0, canvas.width, canvas.height)
+    gl.clearColor(0, 0, 0, 0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.useProgram(this.program)
+    gl.uniform2f(locations.resolution, canvas.width, canvas.height)
+    gl.uniform2f(locations.scroll, scrollX, scrollY)
+    gl.uniform1f(locations.tileSize, tileSize)
+    gl.uniform1f(locations.tileStep, tileStep)
+    gl.uniform1f(locations.time, sampledTime)
+    gl.uniform1f(locations.waterZoom, WATER_EFFECT_ZOOM)
+    gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
+    gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
+    this.stats.uniformUploadBytes += 40
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 40)
+    this.capabilityUpdate.devicePixelRatio = pixelRatio
+    this.diagnostics.setCapabilities(this.capabilityUpdate)
+
+    gl.activeTexture(gl.TEXTURE0)
+    gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
+    gl.activeTexture(gl.TEXTURE1)
+    gl.bindTexture(gl.TEXTURE_2D, this.secondaryAtlasTexture || this.atlasTexture)
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.quad)
+    gl.enableVertexAttribArray(0)
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+    gl.vertexAttribDivisor(0, 0)
+
+    this.pollGpuTimers()
+    const timerQuery = this.beginGpuTimer()
+    const submitToken = this.profiler.startSpan(PROFILER_SPAN_IDS.WEBGL_SUBMIT)
+    const firstChunkX = Math.floor(startTileX / WATER_CHUNK_SIZE)
+    const firstChunkY = Math.floor(startTileY / WATER_CHUNK_SIZE)
+    const lastChunkX = Math.floor(Math.max(startTileX, endTileX - 1) / WATER_CHUNK_SIZE)
+    const lastChunkY = Math.floor(Math.max(startTileY, endTileY - 1) / WATER_CHUNK_SIZE)
+    let drawCalls = this.drawRetainedWaterPlane(
+      topology,
+      firstChunkX,
+      firstChunkY,
+      lastChunkX,
+      lastChunkY,
+      false
+    )
+    drawCalls += this.drawRetainedWaterPlane(
+      topology,
+      firstChunkX,
+      firstChunkY,
+      lastChunkX,
+      lastChunkY,
+      true
+    )
+    this.profiler.endSpan(submitToken)
+    this.endGpuTimer(timerQuery)
+    this.stats.drawCalls += drawCalls
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.DRAW_CALLS, drawCalls)
+
+    gl.bindTexture(gl.TEXTURE_2D, null)
+    gl.activeTexture(gl.TEXTURE0)
+    gl.useProgram(null)
+    return drawCalls > 0
+  }
+
   render(mapGrid, scrollOffset, canvas, options = {}) {
     if (!this.gl || !mapGrid?.length || !canvas) return false
+    this.bindContextEvents(canvas)
     if (!this.ensureInitialized()) return false
     this.syncAtlasTexture()
     this.syncSecondaryAtlasTexture()
@@ -656,6 +1139,20 @@ export class GameWebGLRenderer {
     const startTileY = Math.max(0, Math.floor(scrollY / tileStep) - bufferTiles)
     const endTileX = Math.min(mapGrid[0].length, startTileX + tilesX)
     const endTileY = Math.min(mapGrid.length, startTileY + tilesY)
+
+    if (options.waterOnly) {
+      return this.renderRetainedWater(mapGrid, scrollOffset, canvas, options, {
+        pixelRatio,
+        tileStep,
+        tileSize,
+        scrollX,
+        scrollY,
+        startTileX,
+        startTileY,
+        endTileX,
+        endTileY
+      })
+    }
 
     const instances = this.buildTileInstances(mapGrid, startTileX, startTileY, endTileX, endTileY, options)
     if (!instances.length) return false
@@ -697,23 +1194,17 @@ export class GameWebGLRenderer {
 
     gl.useProgram(this.program)
 
-    const resolutionLocation = gl.getUniformLocation(this.program, 'uResolution')
-    const scrollLocation = gl.getUniformLocation(this.program, 'uScroll')
-    const tileSizeLocation = gl.getUniformLocation(this.program, 'uTileSize')
-    const tileStepLocation = gl.getUniformLocation(this.program, 'uTileStep')
-    const timeLocation = gl.getUniformLocation(this.program, 'uTime')
-    const waterZoomLocation = gl.getUniformLocation(this.program, 'uWaterZoom')
-    const waterToneLocation = gl.getUniformLocation(this.program, 'uWaterTone')
-    const waterSaturationLocation = gl.getUniformLocation(this.program, 'uWaterSaturation')
-
-    gl.uniform2f(resolutionLocation, canvas.width, canvas.height)
-    gl.uniform2f(scrollLocation, scrollX, scrollY)
-    gl.uniform1f(tileSizeLocation, tileSize)
-    gl.uniform1f(tileStepLocation, tileStep)
-    gl.uniform1f(timeLocation, (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()))
-    gl.uniform1f(waterZoomLocation, WATER_EFFECT_ZOOM)
-    gl.uniform1f(waterToneLocation, WATER_EFFECT_TONE)
-    gl.uniform1f(waterSaturationLocation, WATER_EFFECT_SATURATION)
+    const locations = this.uniformLocations
+    gl.uniform2f(locations.resolution, canvas.width, canvas.height)
+    gl.uniform2f(locations.scroll, scrollX, scrollY)
+    gl.uniform1f(locations.tileSize, tileSize)
+    gl.uniform1f(locations.tileStep, tileStep)
+    gl.uniform1f(locations.time, Number.isFinite(options.time)
+      ? options.time
+      : (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()))
+    gl.uniform1f(locations.waterZoom, WATER_EFFECT_ZOOM)
+    gl.uniform1f(locations.waterTone, WATER_EFFECT_TONE)
+    gl.uniform1f(locations.waterSaturation, WATER_EFFECT_SATURATION)
 
     gl.activeTexture(gl.TEXTURE0)
     gl.bindTexture(gl.TEXTURE_2D, this.atlasTexture)
@@ -754,9 +1245,6 @@ export class GameWebGLRenderer {
     gl.vertexAttribDivisor(4, 1)
 
     // Water edge masks (top, right, bottom, left)
-    if (!this.buffers.waterEdges) {
-      this.buffers.waterEdges = gl.createBuffer()
-    }
     gl.bindBuffer(gl.ARRAY_BUFFER, this.buffers.waterEdges)
     gl.bufferData(gl.ARRAY_BUFFER, waterEdges, gl.DYNAMIC_DRAW)
     gl.enableVertexAttribArray(5)
@@ -777,12 +1265,36 @@ export class GameWebGLRenderer {
     gl.vertexAttribPointer(7, 1, gl.FLOAT, false, 0, 0)
     gl.vertexAttribDivisor(7, 1)
 
+    this.pollGpuTimers()
+    const timerQuery = this.beginGpuTimer()
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, instances.length)
+    this.endGpuTimer(timerQuery)
+    const geometryUploadBytes = translations.byteLength + uvData.byteLength + colors.byteLength +
+      textureType.byteLength + textureSource.byteLength + waterEdges.byteLength + clipOrientation.byteLength
+    this.stats.topologyUploadBytes += geometryUploadBytes
+    this.stats.uniformUploadBytes += 40
+    this.stats.drawCalls++
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, geometryUploadBytes + 40)
+    this.diagnostics.addCounter(RENDER_COUNTER_IDS.DRAW_CALLS)
+    this.capabilityUpdate.devicePixelRatio = pixelRatio
+    this.diagnostics.setCapabilities(this.capabilityUpdate)
 
     gl.bindTexture(gl.TEXTURE_2D, null)
     gl.activeTexture(gl.TEXTURE0)
     gl.useProgram(null)
 
     return true
+  }
+
+  getStatus() {
+    return {
+      contextLost: this.contextLost,
+      topologyRevision: this.waterTopology?.revision ?? null,
+      topologyBuffer: this.buffers.waterTopology || null,
+      topologyData: this.waterTopology?.data || null,
+      gpuTiming: { ...this.gpuTiming },
+      timerCapability: this.timerExtension ? 'supported' : 'unsupported',
+      stats: { ...this.stats }
+    }
   }
 }
