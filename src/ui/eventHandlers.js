@@ -35,6 +35,7 @@ import {
   isReplayModeActive,
   recordReplayCommand
 } from '../replaySystem.js'
+import { runWithLoadingScreen } from './loadingScreen.js'
 
 export class EventHandlers {
   constructor(canvasManager, factories, units, mapGrid, moneyEl, gameInstance = null) {
@@ -116,7 +117,12 @@ export class EventHandlers {
         }
 
         if (gameInstance && typeof gameInstance.resetGame === 'function') {
-          await gameInstance.resetGame()
+          await runWithLoadingScreen(() => gameInstance.resetGame(), {
+            phase: 'restart',
+            kicker: 'NEW BATTLE',
+            detail: 'Rebuilding the battlefield',
+            progress: null
+          })
           showNotification('Game restarted while preserving win/loss statistics')
         } else {
           window.logger.warn('Game instance not found or resetGame method missing, falling back to page reload')

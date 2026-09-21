@@ -21,8 +21,8 @@ export function renderMinimap(minimapCtx, minimapCanvas, mapGrid, scrollOffset, 
 }
 
 // Export the preload function so it can be called from main.js
-export function preloadTileTextures(callback) {
-  gameRenderer.preloadTextures(callback)
+export function preloadTileTextures(callback, onProgress) {
+  gameRenderer.preloadTextures(callback, onProgress)
 }
 
 // Export the textureManager for accessing texture-related functions

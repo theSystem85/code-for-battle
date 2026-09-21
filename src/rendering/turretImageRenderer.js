@@ -27,8 +27,13 @@ export function getTurretImageConfig(turretType) {
  * Preload all turret images
  * @param {Function} callback - Called when all images are loaded or on error
  */
-export function preloadTurretImages(callback) {
+export function preloadTurretImages(callback, onProgress) {
+  const reportProgress = (fraction) => {
+    if (typeof onProgress === 'function') onProgress(fraction)
+  }
+
   if (turretImagesPreloaded) {
+    reportProgress(1)
     if (callback) callback()
     return
   }
@@ -40,6 +45,7 @@ export function preloadTurretImages(callback) {
 
   function onImageComplete() {
     loadedCount++
+    reportProgress(totalImages === 0 ? 1 : loadedCount / totalImages)
     if (loadedCount + errorCount >= totalImages) {
       turretImagesPreloaded = true
       window.logger(`Turret images loaded: ${loadedCount}/${totalImages}`)
@@ -78,6 +84,7 @@ export function preloadTurretImages(callback) {
   // Handle case where no turret types are configured
   if (totalImages === 0) {
     turretImagesPreloaded = true
+    reportProgress(1)
     if (callback) callback(true)
   }
 }

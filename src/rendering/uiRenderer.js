@@ -4,6 +4,7 @@ import { buildingData, isTileValid, canPlaceBuilding } from '../buildings.js'
 import { gameState } from '../gameState.js'
 import { showNotification } from '../ui/notifications.js'
 import { getCurrentGame } from '../main.js'
+import { runWithLoadingScreen } from '../ui/loadingScreen.js'
 import { renderMapEditorOverlay } from '../mapEditor.js'
 import { mapBlueprintsToFootprints } from '../planning/blueprintPlanning.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
@@ -755,7 +756,12 @@ export class UIRenderer {
         const gameInstance = getCurrentGame()
 
         if (gameInstance && typeof gameInstance.resetGame === 'function') {
-          await gameInstance.resetGame()
+          await runWithLoadingScreen(() => gameInstance.resetGame(), {
+            phase: 'restart',
+            kicker: 'NEW BATTLE',
+            detail: 'Rebuilding the battlefield',
+            progress: null
+          })
           showNotification('Game restarted while preserving win/loss statistics')
         } else {
           window.logger.warn('Game instance not found or resetGame method missing, falling back to page reload')

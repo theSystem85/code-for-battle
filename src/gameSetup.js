@@ -14,7 +14,27 @@ import {
 let texturesLoaded = false
 let buildingImagesLoaded = false
 let turretImagesLoaded = false
+let textureProgress = 0
+let buildingProgress = 0
+let turretProgress = 0
 let onAllAssetsLoadedCallback = null
+let onAssetsProgressCallback = null
+
+function clampAssetProgress(value) {
+  const number = Number(value)
+  if (!Number.isFinite(number)) return 0
+  return Math.max(0, Math.min(1, number))
+}
+
+function emitAssetProgress() {
+  if (typeof onAssetsProgressCallback !== 'function') return
+  if (textureProgress === 1 && buildingProgress === 1 && turretProgress === 1) {
+    onAssetsProgressCallback(1)
+    return
+  }
+  const fraction = (textureProgress * 0.7) + (buildingProgress * 0.2) + (turretProgress * 0.1)
+  onAssetsProgressCallback(clampAssetProgress(fraction))
+}
 
 function checkAllAssetsLoaded() {
   if (texturesLoaded && buildingImagesLoaded && turretImagesLoaded && onAllAssetsLoadedCallback) {
@@ -22,22 +42,42 @@ function checkAllAssetsLoaded() {
   }
 }
 
-export function initializeGameAssets(callback) {
+export function initializeGameAssets(callback, onProgress) {
   onAllAssetsLoadedCallback = callback
+  onAssetsProgressCallback = typeof onProgress === 'function' ? onProgress : null
+  textureProgress = texturesLoaded ? 1 : 0
+  buildingProgress = buildingImagesLoaded ? 1 : 0
+  turretProgress = turretImagesLoaded ? 1 : 0
+  emitAssetProgress()
 
   preloadTileTextures(() => {
     texturesLoaded = true
+    textureProgress = 1
+    emitAssetProgress()
     checkAllAssetsLoaded()
+  }, (fraction) => {
+    textureProgress = clampAssetProgress(fraction)
+    emitAssetProgress()
   })
 
   preloadBuildingImages(() => {
     buildingImagesLoaded = true
+    buildingProgress = 1
+    emitAssetProgress()
     checkAllAssetsLoaded()
+  }, (fraction) => {
+    buildingProgress = clampAssetProgress(fraction)
+    emitAssetProgress()
   })
 
   preloadTurretImages(() => {
     turretImagesLoaded = true
+    turretProgress = 1
+    emitAssetProgress()
     checkAllAssetsLoaded()
+  }, (fraction) => {
+    turretProgress = clampAssetProgress(fraction)
+    emitAssetProgress()
   })
 }
 
