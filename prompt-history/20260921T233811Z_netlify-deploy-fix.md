@@ -27,3 +27,6 @@ Push to `cursor/loading-screen-f29f` so PR 685 updates. Verify build/smoke if pr
 
 ## Fix applied
 `netlify.toml` now matches `main`: keep the committed lockfile and run `npm ci --include=dev && npm run build && npm run test:smoke`. Loading-screen feature code is unchanged.
+
+## Verification
+Local `npm ci --include=dev && npm run build && npm run test:smoke` passed on Node v22.14.0 / npm 10.9.7. `npm run test:unit` passed (159 files, 3879 tests). `npm run lint:fix:changed` reported no lintable changes. `package-lock.json` was not regenerated.
