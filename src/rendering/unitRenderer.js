@@ -27,6 +27,7 @@ export class UnitRenderer {
   constructor() {
     this.repairIcon = null
     this.aliveCrewRoles = []
+    this.donutGlowColorStops = new Map()
     this.loadRepairIcon()
   }
 
@@ -218,11 +219,12 @@ export class UnitRenderer {
   renderSelection(ctx, unit, centerX, centerY) {
     // Draw selection corner indicators if unit is selected (like buildings)
     if (unit.selected) {
-      if (this.getSelectionHudMode() === 'modern-no-border') {
+      if (this.isDonutSelectionHud()) {
+        this.renderDonutSelectionGlow(ctx, unit, centerX, centerY)
         return
       }
 
-      if (this.isDonutSelectionHud()) {
+      if (this.getSelectionHudMode() === 'modern-no-border') {
         return
       }
 
@@ -837,6 +839,66 @@ export class UnitRenderer {
 
   isDonutSelectionHud() {
     return this.getSelectionHudMode() === 'modern-donut'
+  }
+
+  parsePartyGlowColor(color) {
+    const match = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(String(color || '').trim())
+    if (!match) {
+      return { r: 0, g: 255, b: 0 }
+    }
+
+    let digits = match[1]
+    if (digits.length === 3) {
+      digits = digits.split('').map(channel => channel + channel).join('')
+    }
+
+    return {
+      r: Number.parseInt(digits.slice(0, 2), 16),
+      g: Number.parseInt(digits.slice(2, 4), 16),
+      b: Number.parseInt(digits.slice(4, 6), 16)
+    }
+  }
+
+  getDonutGlowColorStops(color) {
+    const key = color || ''
+    const cached = this.donutGlowColorStops.get(key)
+    if (cached) return cached
+
+    const { r, g, b } = this.parsePartyGlowColor(key)
+    const rgba = alpha => `rgba(${r}, ${g}, ${b}, ${alpha})`
+    const stops = [
+      [0, rgba(0)],
+      [0.18, rgba(0.02)],
+      [0.42, rgba(0.07)],
+      [0.66, rgba(0.18)],
+      [0.88, rgba(0.46)],
+      [1, rgba(0.12)]
+    ]
+    this.donutGlowColorStops.set(key, stops)
+    return stops
+  }
+
+  renderDonutSelectionGlow(ctx, unit, centerX, centerY) {
+    const hudBounds = this.getSelectedHudBounds(centerX, centerY, unit)
+    const outerRadius = (Math.min(hudBounds.width, hudBounds.height) / 2) + 2
+    if (!(outerRadius > 1)) return
+
+    // Leave the unit's center clear and fade the party color inward from the donut ring.
+    const innerRadius = outerRadius * 0.36
+    const partyColor = PARTY_COLORS[unit.owner] || PARTY_COLORS.player
+    const colorStops = this.getDonutGlowColorStops(partyColor)
+    const gradient = ctx.createRadialGradient(centerX, centerY, innerRadius, centerX, centerY, outerRadius)
+    for (let index = 0; index < colorStops.length; index += 1) {
+      gradient.addColorStop(colorStops[index][0], colorStops[index][1])
+    }
+
+    ctx.save()
+    ctx.beginPath()
+    ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2)
+    ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2, true)
+    ctx.fillStyle = gradient
+    ctx.fill('evenodd')
+    ctx.restore()
   }
 
   renderUtilityServiceRange(ctx, unit, centerX, centerY) {

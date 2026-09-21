@@ -1,3 +1,4 @@
+- [x] Circular selected-unit HUD (mode 4) draws an inward party-colored glow: strongest just inside the donut ring and fading toward the center, only while the circular HUD is selected (2026-09-21).
 - [x] Increase the baked ground shadow length for south-facing cliffs and remove north-facing cliff shadows (2026-09-15).
 - [x] Remove rectangular cropping from outer plateau silhouettes, add 2x2/2x3/2x4 cliff-block assets with more gray-to-canyon color variants, and make generated rock formations prefer compatible broad blocks.
 - [x] Strengthen thin outer plateau faces, render one-sided south/east escarpments on long narrow rock chains, and broaden generated formations to better match the layered reference terrain.
