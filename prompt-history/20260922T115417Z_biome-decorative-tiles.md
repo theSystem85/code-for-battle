@@ -19,3 +19,9 @@ Implement biome-aware decorative map tiles (hybrid with existing organic DT), pe
 - Biome-tagged rock/stone groups in new DT sheets
 - Keep existing cliffs/boulders on neutral system
 - Skill doc at `skills/map-assets/SKILL.md`
+
+## Completion
+UTC finished: 2026-09-22T12:10:23Z
+Cursor Cloud Agent using Grok-4.7 (harness: Cursor Cloud / sand). Token counts unavailable for this run.
+PR: https://github.com/theSystem85/code-for-battle/pull/688
+Unit tests: 4086 passed.
