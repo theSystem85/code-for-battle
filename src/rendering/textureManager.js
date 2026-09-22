@@ -212,6 +212,16 @@ export class TextureManager {
         impassable: this.getTagBucketCandidates(tagBuckets, [biome, 'impassable'])
       }
     }
+    catalog.universal = {
+      decorative: this.getTagBucketCandidates(tagBuckets, ['universal', 'decorative']),
+      impassable: this.getTagBucketCandidates(tagBuckets, ['universal', 'impassable'])
+    }
+    for (const biome of ['grass', 'soil', 'sand', 'snow']) {
+      // Universal props only supplement biomes that have their own decorative art.
+      catalog[biome].decorativeWithUniversal = catalog[biome].decorative.length
+        ? catalog[biome].decorative.concat(catalog.universal.decorative)
+        : catalog.universal.decorative
+    }
     return catalog
   }
 
@@ -794,22 +804,65 @@ export class TextureManager {
     return integrated.length ? integrated : fallback
   }
 
+  static collectGroupTagSet(group) {
+    const tagSet = new Set()
+    if (!group?.tilesByOffset) return tagSet
+    Object.values(group.tilesByOffset).forEach((tile) => {
+      if (!Array.isArray(tile?.tags)) return
+      tile.tags.forEach((tag) => {
+        if (tag === 'group' || /^group_\d+$/.test(tag)) return
+        tagSet.add(tag)
+      })
+    })
+    return tagSet
+  }
+
+  filterGroupedTagCandidates(groups, options = {}) {
+    if (!Array.isArray(groups) || !groups.length) return []
+    const requiredAnyTags = Array.isArray(options.requiredAnyTags) ? options.requiredAnyTags.filter(Boolean) : []
+    const requiredAllTags = Array.isArray(options.requiredAllTags) ? options.requiredAllTags.filter(Boolean) : []
+    if (!requiredAnyTags.length && !requiredAllTags.length) return groups
+
+    // Catalog arrays are rebuilt on every sheet/config change, so a WeakMap keyed by
+    // the array invalidates itself and keeps per-tile lookups allocation-free.
+    if (!this.filteredGroupCandidateCache) this.filteredGroupCandidateCache = new WeakMap()
+    let perGroups = this.filteredGroupCandidateCache.get(groups)
+    if (!perGroups) {
+      perGroups = new Map()
+      this.filteredGroupCandidateCache.set(groups, perGroups)
+    }
+    const cacheKey = `${requiredAnyTags.join(',')}|${requiredAllTags.join(',')}`
+    const cachedGroups = perGroups.get(cacheKey)
+    if (cachedGroups) return cachedGroups
+
+    const filteredGroups = groups.filter((group) => {
+      const tagSet = TextureManager.collectGroupTagSet(group)
+      if (requiredAllTags.length && !requiredAllTags.every(tag => tagSet.has(tag))) return false
+      if (requiredAnyTags.length && !requiredAnyTags.some(tag => tagSet.has(tag))) return false
+      return true
+    })
+    perGroups.set(cacheKey, filteredGroups)
+    return filteredGroups
+  }
+
   selectGroupedTileVariant(tag, options = {}) {
     const width = Math.max(1, Math.floor(options.width || 1))
     const height = Math.max(1, Math.floor(options.height || 1))
     const offsetX = Math.max(0, Math.floor(options.offsetX || 0))
     const offsetY = Math.max(0, Math.floor(options.offsetY || 0))
     const includeDefaultDecals = Boolean(options.includeDefaultDecals)
-    const groups = this.getGroupedTagCandidates(tag, { includeDefaultDecals })
-      .filter(group => group.width === width && group.height === height)
+    const groups = this.filterGroupedTagCandidates(
+      this.getGroupedTagCandidates(tag, { includeDefaultDecals }),
+      options
+    ).filter(group => group.width === width && group.height === height)
     if (!groups.length) return null
     const seed = Number.isFinite(options.seed) ? options.seed : 0
     const selectedGroup = groups[Math.abs(seed) % groups.length]
     return selectedGroup.tilesByOffset[`${offsetX},${offsetY}`] || null
   }
 
-  selectGroupedTileForMapTile(tag, x, y, mapGrid, matchesCell) {
-    const groups = this.getGroupedTagCandidates(tag)
+  selectGroupedTileForMapTile(tag, x, y, mapGrid, matchesCell, options = {}) {
+    const groups = this.filterGroupedTagCandidates(this.getGroupedTagCandidates(tag), options)
     if (!Array.isArray(groups) || !groups.length || !Array.isArray(mapGrid)) return null
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
@@ -861,23 +914,41 @@ export class TextureManager {
     const mapGrid = options?.mapGrid
 
     if (type === 'land') {
+      const tileBiome = mapGrid?.[y]?.[x]?.biome
       const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(options?.biomeTag)
         ? options.biomeTag
-        : (this.integratedBiomeTag === 'mixed' ? 'grass' : this.integratedBiomeTag)
+        : (['soil', 'sand', 'grass', 'snow'].includes(tileBiome)
+          ? tileBiome
+          : (this.integratedBiomeTag === 'mixed' ? 'grass' : this.integratedBiomeTag))
       const landBuckets = this.integratedLandBuckets[requestedBiome]
+      const universalBuckets = this.integratedLandBuckets.universal
       const classification = this.getLandClassificationTag(x, y, requestedBiome)
       if (classification === 'decorative') {
         if (mapGrid) {
-          selected = this.selectGroupedTileForMapTile('decorative', x, y, mapGrid, (cellX, cellY) => {
-            const tile = mapGrid[cellY]?.[cellX]
-            return tile?.type === 'land' && this.getLandClassificationTag(cellX, cellY, requestedBiome) === 'decorative'
-          })
+          // Multi-tile groups (lakes, ponds) must fit entirely inside the anchor biome on mixed maps.
+          const anchorBiome = requestedBiome
+          selected = this.selectGroupedTileForMapTile(
+            'decorative',
+            x,
+            y,
+            mapGrid,
+            (cellX, cellY) => {
+              const tile = mapGrid[cellY]?.[cellX]
+              if (tile?.type !== 'land') return false
+              const cellBiome = ['soil', 'sand', 'grass', 'snow'].includes(tile.biome) ? tile.biome : anchorBiome
+              if (cellBiome !== anchorBiome) return false
+              return this.getLandClassificationTag(cellX, cellY, anchorBiome) === 'decorative'
+            },
+            { requiredAnyTags: [anchorBiome, 'universal'] }
+          )
         }
-        if (landBuckets?.decorative.length) {
-          selected = selected || this.selectIntegratedTileFromCandidates(landBuckets.decorative, x, y)
+        const decorativeCandidates = landBuckets?.decorativeWithUniversal
+        if (decorativeCandidates?.length) {
+          selected = selected || this.selectIntegratedTileFromCandidates(decorativeCandidates, x, y)
         }
       } else if (classification === 'impassable') {
         selected = this.selectIntegratedTileFromCandidates(landBuckets?.impassable, x, y)
+          || this.selectIntegratedTileFromCandidates(universalBuckets?.impassable, x, y)
       } else {
         selected = this.selectIntegratedTileFromCandidates(landBuckets?.passable, x, y)
       }
