@@ -790,22 +790,51 @@ export class TextureManager {
     return integrated.length ? integrated : fallback
   }
 
+  static collectGroupTagSet(group) {
+    const tagSet = new Set()
+    if (!group?.tilesByOffset) return tagSet
+    Object.values(group.tilesByOffset).forEach((tile) => {
+      if (!Array.isArray(tile?.tags)) return
+      tile.tags.forEach((tag) => {
+        if (tag === 'group' || /^group_\d+$/.test(tag)) return
+        tagSet.add(tag)
+      })
+    })
+    return tagSet
+  }
+
+  filterGroupedTagCandidates(groups, options = {}) {
+    if (!Array.isArray(groups) || !groups.length) return []
+    const requiredAnyTags = Array.isArray(options.requiredAnyTags) ? options.requiredAnyTags.filter(Boolean) : []
+    const requiredAllTags = Array.isArray(options.requiredAllTags) ? options.requiredAllTags.filter(Boolean) : []
+    if (!requiredAnyTags.length && !requiredAllTags.length) return groups
+
+    return groups.filter((group) => {
+      const tagSet = TextureManager.collectGroupTagSet(group)
+      if (requiredAllTags.length && !requiredAllTags.every(tag => tagSet.has(tag))) return false
+      if (requiredAnyTags.length && !requiredAnyTags.some(tag => tagSet.has(tag))) return false
+      return true
+    })
+  }
+
   selectGroupedTileVariant(tag, options = {}) {
     const width = Math.max(1, Math.floor(options.width || 1))
     const height = Math.max(1, Math.floor(options.height || 1))
     const offsetX = Math.max(0, Math.floor(options.offsetX || 0))
     const offsetY = Math.max(0, Math.floor(options.offsetY || 0))
     const includeDefaultDecals = Boolean(options.includeDefaultDecals)
-    const groups = this.getGroupedTagCandidates(tag, { includeDefaultDecals })
-      .filter(group => group.width === width && group.height === height)
+    const groups = this.filterGroupedTagCandidates(
+      this.getGroupedTagCandidates(tag, { includeDefaultDecals }),
+      options
+    ).filter(group => group.width === width && group.height === height)
     if (!groups.length) return null
     const seed = Number.isFinite(options.seed) ? options.seed : 0
     const selectedGroup = groups[Math.abs(seed) % groups.length]
     return selectedGroup.tilesByOffset[`${offsetX},${offsetY}`] || null
   }
 
-  selectGroupedTileForMapTile(tag, x, y, mapGrid, matchesCell) {
-    const groups = this.getGroupedTagCandidates(tag)
+  selectGroupedTileForMapTile(tag, x, y, mapGrid, matchesCell, options = {}) {
+    const groups = this.filterGroupedTagCandidates(this.getGroupedTagCandidates(tag), options)
     if (!Array.isArray(groups) || !groups.length || !Array.isArray(mapGrid)) return null
     const mapHeight = mapGrid.length
     const mapWidth = mapGrid[0]?.length || 0
@@ -857,23 +886,43 @@ export class TextureManager {
     const mapGrid = options?.mapGrid
 
     if (type === 'land') {
+      const tileBiome = mapGrid?.[y]?.[x]?.biome
       const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(options?.biomeTag)
         ? options.biomeTag
-        : (this.integratedBiomeTag === 'mixed' ? 'grass' : this.integratedBiomeTag)
+        : (['soil', 'sand', 'grass', 'snow'].includes(tileBiome)
+          ? tileBiome
+          : (this.integratedBiomeTag === 'mixed' ? 'grass' : this.integratedBiomeTag))
       const classification = this.getLandClassificationTag(x, y)
       const biomeDecorativeCandidates = this.getIntegratedTileCandidatesByTags([requestedBiome, 'decorative'])
+      const universalDecorativeCandidates = this.getIntegratedTileCandidatesByTags(['universal', 'decorative'])
+      const decorativeCandidates = biomeDecorativeCandidates.length
+        ? biomeDecorativeCandidates.concat(universalDecorativeCandidates)
+        : universalDecorativeCandidates
       if (classification === 'decorative') {
         if (mapGrid) {
-          selected = this.selectGroupedTileForMapTile('decorative', x, y, mapGrid, (cellX, cellY) => {
-            const tile = mapGrid[cellY]?.[cellX]
-            return tile?.type === 'land' && this.getLandClassificationTag(cellX, cellY) === 'decorative'
-          })
+          const anchorBiome = requestedBiome
+          selected = this.selectGroupedTileForMapTile(
+            'decorative',
+            x,
+            y,
+            mapGrid,
+            (cellX, cellY) => {
+              const tile = mapGrid[cellY]?.[cellX]
+              if (tile?.type !== 'land' || this.getLandClassificationTag(cellX, cellY) !== 'decorative') {
+                return false
+              }
+              const cellBiome = ['soil', 'sand', 'grass', 'snow'].includes(tile.biome) ? tile.biome : anchorBiome
+              return cellBiome === anchorBiome
+            },
+            { requiredAnyTags: [requestedBiome, 'universal'] }
+          )
         }
-        if (biomeDecorativeCandidates.length) {
-          selected = selected || this.selectIntegratedTileFromCandidates(biomeDecorativeCandidates, x, y)
+        if (decorativeCandidates.length) {
+          selected = selected || this.selectIntegratedTileFromCandidates(decorativeCandidates, x, y)
         }
       } else if (classification === 'impassable') {
         selected = this.selectIntegratedTileByTags([requestedBiome, 'impassable'], x, y)
+          || this.selectIntegratedTileByTags(['universal', 'impassable'], x, y)
       } else {
         selected = this.selectIntegratedTileByTags([requestedBiome, 'passable'], x, y, ['decorative', 'impassable'])
           || this.selectIntegratedTileByTags([requestedBiome], x, y, ['decorative', 'impassable'])
@@ -1323,13 +1372,14 @@ export class TextureManager {
   }
 
   // Check if a land tile at given position uses an impassable grass texture
-  isLandTileImpassable(x, y) {
+  isLandTileImpassable(x, y, options = {}) {
     if (this.integratedSpriteSheetMode) {
-      const integratedTile = this.getIntegratedTileForMapTile('land', x, y)
+      const integratedTile = this.getIntegratedTileForMapTile('land', x, y, options)
       if (integratedTile?.tags?.includes('impassable')) {
         return true
       }
       if (integratedTile?.tags?.includes('passable') || integratedTile?.tags?.includes('decorative')) {
+        // Decorative tiles may also carry impassable (frozen lakes); checked above.
         return false
       }
     }

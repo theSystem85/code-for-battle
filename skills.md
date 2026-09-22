@@ -1,5 +1,10 @@
 # Skills: OpenAI Image Generator (Codex Workflow)
 
+Agent skills for this repo also live under `skills/`:
+- `skills/new-unit/SKILL.md` — new unit checklist
+- `skills/ship-unit/SKILL.md` — ship unit checklist
+- `skills/map-assets/SKILL.md` — biome decorative map tiles / SSE sheet pipeline
+
 Use this skill to generate new RTS art assets directly during coding tasks (units/buildings, sidebar + map variants).
 
 ## Official references (web-searched)
