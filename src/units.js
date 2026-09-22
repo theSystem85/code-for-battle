@@ -82,15 +82,20 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
       let isImpassableGrass = false
       let isImpassableTagged = false
 
+      const tileLookupOptions = {
+        mapGrid,
+        biomeTag: typeof tile?.biome === 'string' ? tile.biome : undefined
+      }
+
       if (textureManager?.integratedSpriteSheetMode && textureManager.getIntegratedTileForMapTile) {
-        const taggedTile = textureManager.getIntegratedTileForMapTile(tile.type, x, y)
+        const taggedTile = textureManager.getIntegratedTileForMapTile(tile.type, x, y, tileLookupOptions)
         if (taggedTile?.tags?.includes('impassable')) {
           isImpassableTagged = true
         }
       }
 
       if (tile.type === 'land' && textureManager?.getIntegratedTileForMapTile) {
-        const taggedTile = textureManager.getIntegratedTileForMapTile('land', x, y)
+        const taggedTile = textureManager.getIntegratedTileForMapTile('land', x, y, tileLookupOptions)
         isImpassableGrass = taggedTile?.tags?.includes('impassable') || false
         if (isImpassableGrass) impassableGrassCount++
       }

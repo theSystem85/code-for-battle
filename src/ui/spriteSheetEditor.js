@@ -39,6 +39,11 @@ export const DEFAULT_SSE_TAGS = [
   'soil',
   'snow',
   'sand',
+  'universal',
+  'spring',
+  'summer',
+  'autumn',
+  'winter',
   'rocks',
   'concrete',
   'street',
@@ -61,7 +66,12 @@ const fallbackSheets = [
   'images/map/sprite_sheets/desert.webp',
   'images/map/sprite_sheets/water.webp',
   'images/map/sprite_sheets/multiTerrainSpriteSheet.webp',
-  'images/map/sprite_sheets/debris_craters_tracks.webp'
+  'images/map/sprite_sheets/debris_craters_tracks.webp',
+  'images/map/sprite_sheets/dt_grass_1024_q85.webp',
+  'images/map/sprite_sheets/dt_soil_1024_q85.webp',
+  'images/map/sprite_sheets/dt_sand_1024_q85.webp',
+  'images/map/sprite_sheets/dt_snow_1024_q85.webp',
+  'images/map/sprite_sheets/dt_universal_1024_q85.webp'
 ]
 
 function safeParseJson(raw, fallback) {
@@ -2182,7 +2192,7 @@ export async function initSpriteSheetEditor(options = {}) {
     },
     suggestTileForMap(x, y, tagBuckets) {
       if (!tagBuckets || typeof tagBuckets !== 'object') return null
-      const preferredTags = ['passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow']
+      const preferredTags = ['passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow', 'universal', 'spring', 'summer', 'autumn', 'winter']
       for (const tag of preferredTags) {
         const list = tagBuckets[tag]
         if (Array.isArray(list) && list.length) {

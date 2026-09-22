@@ -1,0 +1,580 @@
+{
+  "schemaVersion": 1,
+  "sheetPath": "images/map/sprite_sheets/dt_universal_1024_q85.webp",
+  "tileSize": 64,
+  "rowHeight": 64,
+  "borderWidth": 1,
+  "blendMode": "black",
+  "tags": [
+    "decorative",
+    "universal"
+  ],
+  "columns": 16,
+  "rows": 16,
+  "tiles": {
+    "0,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_1"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 0
+    },
+    "1,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_1"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 0
+    },
+    "0,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_1"
+      ],
+      "rect": {
+        "x": 1,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 0,
+      "row": 1
+    },
+    "1,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_1"
+      ],
+      "rect": {
+        "x": 65,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 1,
+      "row": 1
+    },
+    "2,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_2"
+      ],
+      "rect": {
+        "x": 129,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 2,
+      "row": 0
+    },
+    "3,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_2"
+      ],
+      "rect": {
+        "x": 193,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 3,
+      "row": 0
+    },
+    "4,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_3"
+      ],
+      "rect": {
+        "x": 257,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 4,
+      "row": 0
+    },
+    "5,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_4"
+      ],
+      "rect": {
+        "x": 321,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 5,
+      "row": 0
+    },
+    "5,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_4"
+      ],
+      "rect": {
+        "x": 321,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 5,
+      "row": 1
+    },
+    "6,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 0
+    },
+    "7,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 449,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 7,
+      "row": 0
+    },
+    "8,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 0
+    },
+    "6,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 1
+    },
+    "7,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 449,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 7,
+      "row": 1
+    },
+    "8,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 1
+    },
+    "6,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 385,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 6,
+      "row": 2
+    },
+    "7,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 449,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 7,
+      "row": 2
+    },
+    "8,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_5"
+      ],
+      "rect": {
+        "x": 513,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 8,
+      "row": 2
+    },
+    "9,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_6"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 0
+    },
+    "10,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_6"
+      ],
+      "rect": {
+        "x": 641,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 10,
+      "row": 0
+    },
+    "9,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_6"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 1
+    },
+    "10,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_6"
+      ],
+      "rect": {
+        "x": 641,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 10,
+      "row": 1
+    },
+    "9,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_6"
+      ],
+      "rect": {
+        "x": 577,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 9,
+      "row": 2
+    },
+    "10,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_6"
+      ],
+      "rect": {
+        "x": 641,
+        "y": 129,
+        "width": 62,
+        "height": 62
+      },
+      "col": 10,
+      "row": 2
+    },
+    "11,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_7"
+      ],
+      "rect": {
+        "x": 705,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 11,
+      "row": 0
+    },
+    "12,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_7"
+      ],
+      "rect": {
+        "x": 769,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 12,
+      "row": 0
+    },
+    "13,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_7"
+      ],
+      "rect": {
+        "x": 833,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 13,
+      "row": 0
+    },
+    "11,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_7"
+      ],
+      "rect": {
+        "x": 705,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 11,
+      "row": 1
+    },
+    "12,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_7"
+      ],
+      "rect": {
+        "x": 769,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 12,
+      "row": 1
+    },
+    "13,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_7"
+      ],
+      "rect": {
+        "x": 833,
+        "y": 65,
+        "width": 62,
+        "height": 62
+      },
+      "col": 13,
+      "row": 1
+    },
+    "14,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "group_8"
+      ],
+      "rect": {
+        "x": 897,
+        "y": 1,
+        "width": 62,
+        "height": 62
+      },
+      "col": 14,
+      "row": 0
+    }
+  },
+  "displayName": "dt_universal_1024_q85.webp",
+  "propLayout": [
+    {
+      "id": "universal_deadwood_2x2",
+      "col": 0,
+      "row": 0,
+      "w": 2,
+      "h": 2,
+      "groupId": 1,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    },
+    {
+      "id": "universal_logs_2x1",
+      "col": 2,
+      "row": 0,
+      "w": 2,
+      "h": 1,
+      "groupId": 2,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    },
+    {
+      "id": "universal_stump_1x1",
+      "col": 4,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 3,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    },
+    {
+      "id": "universal_brush_1x2",
+      "col": 5,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 4,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    },
+    {
+      "id": "universal_clearing_3x3",
+      "col": 6,
+      "row": 0,
+      "w": 3,
+      "h": 3,
+      "groupId": 5,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    },
+    {
+      "id": "universal_rubble_2x3",
+      "col": 9,
+      "row": 0,
+      "w": 2,
+      "h": 3,
+      "groupId": 6,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    },
+    {
+      "id": "universal_path_stones_3x2",
+      "col": 11,
+      "row": 0,
+      "w": 3,
+      "h": 2,
+      "groupId": 7,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    },
+    {
+      "id": "universal_camp_1x1",
+      "col": 14,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 8,
+      "tags": [
+        "universal",
+        "decorative"
+      ]
+    }
+  ]
+}
