@@ -911,3 +911,9 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Increase chimney puff particle density and make particles start small, grow while rising, fade slowly, and drift with animated wind.
 - [x] Expose all chimney smoke emission, particle lifecycle, capacity, and animated wind parameters in the built-in config editor.
 - [x] Add an opt-in full-capacity smoke performance benchmark that records FPS, render CPU time, and heap behavior.
+
+## 2026-09-22 GPU chimney smoke
+
+- [x] Replace per-frame radial-gradient smoke paints with one prepared 128px sprite sampled at the puff's continuous radius. Keep flame and shade sprites, wind/growth/fade, and the gradient fallback when sprite preparation fails.
+- [x] Do not composite smoke through a WebGL framebuffer blit. That readback measured slower than the canvas gradients on the entity layer.
+- [x] Record the isolated before/after smoke-pass times and the pixel comparison in `specs/087-gpu-chimney-smoke.md`. Qualifying-hardware 75 FPS certification is still outstanding.

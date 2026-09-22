@@ -3,7 +3,7 @@
 
 import './utils/debugLogger.js'
 import { registerMapEditorRendering } from './mapEditor.js'
-import { getTextureManager, notifyTileMutation } from './rendering.js'
+import { getGameRenderer, getTextureManager, notifyTileMutation } from './rendering.js'
 import { initializeMobileViewportLock } from './ui/mobileViewportLock.js'
 import { scheduleAfterNextPaint, scheduleIdleTask } from './startupScheduler.js'
 import { updateLoadingScreen } from './ui/loadingScreen.js'
@@ -149,6 +149,7 @@ document.addEventListener('DOMContentLoaded', async() => {
   const gameInstance = new Game()
   window.gameInstance = gameInstance
   window.gameInstance.units = units
+  window.gameInstance.renderer = getGameRenderer()
   initializePerformanceMonitor()
 })
 

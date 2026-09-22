@@ -35,6 +35,10 @@ export function getMapRenderer() {
   return gameRenderer.mapRenderer
 }
 
+export function getGameRenderer() {
+  return gameRenderer
+}
+
 /**
  * Notify the map renderer that a tile has changed and SOT mask needs update.
  * Call this when tile.type changes (e.g., land <-> street <-> water transitions).
