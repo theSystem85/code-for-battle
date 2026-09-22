@@ -6,10 +6,12 @@
  *   node scripts/pack-biome-decorative-tiles.mjs
  */
 import sharp from 'sharp'
-import { mkdir, readFile, writeFile, access } from 'node:fs/promises'
+import { mkdir, writeFile, access } from 'node:fs/promises'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { Buffer } from 'node:buffer'
 
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..')
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const PROP_DIR = path.join(ROOT, 'tmp', 'dt-props')
 const OUT_DIR = path.join(ROOT, 'public', 'images', 'map', 'sprite_sheets')
 
@@ -123,9 +125,6 @@ async function exists(p) {
 
 async function makePlaceholder(prop, outPath) {
   // Deterministic colored placeholder so packing/tests work before art lands
-  const w = prop.w * CONTENT + (prop.w - 1) * BORDER * 2
-  const h = prop.h * CONTENT + (prop.h - 1) * BORDER * 2
-  // Actually for packing we resize to exact footprint pixel size including borders between cells
   const pw = prop.w * TILE_SIZE - BORDER * 2
   const ph = prop.h * TILE_SIZE - BORDER * 2
   const hue = [...prop.id].reduce((a, c) => a + c.charCodeAt(0), 0) % 360
@@ -239,7 +238,7 @@ async function main() {
   }
 }
 
-const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname)
+const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isDirectRun) {
   main().catch((err) => {
     console.error(err)
