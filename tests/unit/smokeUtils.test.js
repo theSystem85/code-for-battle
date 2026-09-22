@@ -9,7 +9,10 @@ import {
 vi.mock('../../src/config.js', () => ({
   MAX_SMOKE_PARTICLES: 10,
   SMOKE_PARTICLE_LIFETIME: 1000,
-  SMOKE_PARTICLE_SIZE: 5
+  SMOKE_PARTICLE_SIZE: 5,
+  SMOKE_PARTICLE_ALPHA: 0.8,
+  SMOKE_PARTICLE_RISE_SPEED: 0.7,
+  SMOKE_PARTICLE_SPREAD: 4
 }))
 
 vi.mock('../../src/utils/gameRandom.js', () => ({
@@ -162,6 +165,8 @@ describe('smokeUtils', () => {
       expect(particle.size).toBeDefined()
       expect(particle.duration).toBeDefined()
       expect(particle.alpha).toBeDefined()
+      expect(particle.initialAlpha).toBe(particle.alpha)
+      expect(particle.originalSize).toBe(particle.size)
     })
 
     it('respects max particle capacity', () => {

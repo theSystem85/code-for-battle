@@ -905,3 +905,9 @@ Use this checklist in a live game and check each item only after confirming the 
 - [x] Add the independent, persisted Function timings toggle to the performance overlay with a disabled fast path for legacy `logPerformance` callers (2026-09-19).
 - [ ] Prepare final-size map/entity imagery before gameplay; audit DPR/transforms and resolve changing raster-effect sizes without degrading visuals; allow only aircraft takeoff/landing size-animation exceptions.
 - [ ] Certify the combined pipeline at 75 FPS on qualifying reference hardware through first/repeat full-map fast scrolling and worst-case combat, with visual parity, live procedural water and bounded memory. Current local results do not pass this target.
+
+## 2026-09-04 Building chimney smoke
+
+- [x] Increase chimney puff particle density and make particles start small, grow while rising, fade slowly, and drift with animated wind.
+- [x] Expose all chimney smoke emission, particle lifecycle, capacity, and animated wind parameters in the built-in config editor.
+- [x] Add an opt-in full-capacity smoke performance benchmark that records FPS, render CPU time, and heap behavior.

@@ -14,6 +14,7 @@ vi.mock('../../src/config.js', async(importOriginal) => {
     TILE_SIZE: 32,
     SMOKE_EMIT_INTERVAL: 500,
     BUILDING_SMOKE_EMIT_INTERVAL: 1000,
+    BUILDING_SMOKE_PARTICLE_COUNT: 5,
     UNIT_SMOKE_SOFT_CAP_RATIO: 0.5,
     MAX_SMOKE_PARTICLES: 100
   }

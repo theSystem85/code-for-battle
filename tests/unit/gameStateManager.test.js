@@ -84,7 +84,9 @@ import {
   ORE_SPREAD_INTERVAL,
   TILE_SIZE,
   WIND_DIRECTION,
-  WIND_STRENGTH
+  WIND_STRENGTH,
+  WIND_SWAY_AMPLITUDE,
+  WIND_SWAY_FREQUENCY
 } from '../../src/config.js'
 import { explosions } from '../../src/logic.js'
 import { isHost as isHostImport } from '../../src/network/gameCommandSync.js'
@@ -270,7 +272,8 @@ describe('gameStateManager', () => {
       expect(removeSmokeParticle).toHaveBeenCalledTimes(2)
       expect(gameState.smokeParticles).toHaveLength(1)
       const particle = gameState.smokeParticles[0]
-      expect(particle.x).toBeCloseTo(5 + 0.2 + WIND_DIRECTION.x * WIND_STRENGTH, 5)
+      const animatedWindX = (WIND_DIRECTION.x + Math.sin(1000 * WIND_SWAY_FREQUENCY) * WIND_SWAY_AMPLITUDE) * WIND_STRENGTH
+      expect(particle.x).toBeCloseTo(5 + 0.2 + animatedWindX, 5)
       expect(particle.y).toBeCloseTo(6 - 0.1 + WIND_DIRECTION.y * WIND_STRENGTH, 5)
       expect(particle.alpha).toBeLessThan(1)
       expect(particle.size).toBeGreaterThan(4)
