@@ -75,3 +75,8 @@ Bullet impact explosions should look more realistic and visually rich, but rende
 1. `impact` decals must not be stamped on tiles whose terrain type is `water`.
 2. `crater` decals must not be stamped on tiles whose terrain type is `water`.
 3. `debris` decals remain allowed for destroyed structure footprints, even when any covered footprint tile is `water`.
+
+## Follow-up (2026-09-22): Networked decals and impact alignment
+1. Host snapshots include every live map decal (`impact`, `crater`, `debris`) and clients replace local decals with that list, so mid-match and late-joining clients show the same craters and debris as the host.
+2. Explosion and bullet-impact effects stay in world pixels. Clients rebase effect age onto the simulation clock and do not add a second camera, tile, or center offset.
+3. Client parabolic shells and ballistic rockets replay the host arc. Linear bullets dead-reckon from the snapshot velocity so impacts are not left a snapshot interval behind the detonation.

@@ -80,7 +80,9 @@ vi.mock('../../src/config.js', () => ({
   TILE_SIZE: 32,
   setMapDimensions: vi.fn(),
   ORE_SPREAD_ENABLED: false,
-  setOreSpreadEnabled: vi.fn()
+  ORE_SPREAD_INTERVAL: 1000,
+  setOreSpreadEnabled: vi.fn(),
+  setOreSpreadInterval: vi.fn()
 }))
 
 // Mock other dependencies
@@ -142,6 +144,7 @@ vi.mock('../../src/network/inputBuffer.js', () => ({
 
 import * as commandSync from '../../src/network/gameCommandSync.js'
 import { gameState } from '../../src/gameState.js'
+import { bullets as syncedBullets } from '../../src/main.js'
 import { getActiveRemoteConnection } from '../../src/network/remoteConnection.js'
 import { getActiveHostMonitor } from '../../src/network/webrtcSession.js'
 import { deterministicRNG, initializeSessionRNG } from '../../src/network/deterministicRandom.js'
@@ -947,5 +950,159 @@ describe('advanced command synchronization', () => {
     })
 
     // No assertion needed - we're testing it handles gracefully
+  })
+})
+
+describe('multiplayer client snapshot sync', () => {
+  function asClient() {
+    gameState.multiplayerSession = { localRole: 'client', isRemote: true }
+  }
+
+  it('includes sparse map decals and omits default explosion frame rects', () => {
+    gameState.mapBiomeWeights = {}
+    gameState.simulationTime = 1000
+    gameState.mapGrid = [
+      [{ type: 'land', decal: { tag: 'crater', variantSeed: 42, groupWidth: 1, groupHeight: 1, groupOriginX: 0, groupOriginY: 0 } }],
+      [{ type: 'land', decal: { tag: 'debris', variantSeed: 7, groupWidth: 2, groupHeight: 1, groupOriginX: 0, groupOriginY: 1 } }]
+    ]
+    gameState.explosions = [{
+      x: 368,
+      y: 400,
+      startTime: 800,
+      duration: 1050,
+      type: 'spriteSheet',
+      assetPath: 'images/map/animations/explosion.webp',
+      frameRects: Array.from({ length: 229 }, () => ({ x: 1, y: 1, width: 62, height: 62 }))
+    }]
+
+    const snapshot = commandSync.createGameStateSnapshot()
+
+    expect(snapshot.simulationTime).toBe(1000)
+    expect(snapshot.mapDecals).toEqual([
+      { x: 0, y: 0, tag: 'crater', variantSeed: 42, groupWidth: 1, groupHeight: 1, groupOriginX: 0, groupOriginY: 0 },
+      { x: 0, y: 1, tag: 'debris', variantSeed: 7, groupWidth: 2, groupHeight: 1, groupOriginX: 0, groupOriginY: 1 }
+    ])
+    expect(snapshot.explosions[0].x).toBe(368)
+    expect(snapshot.explosions[0].y).toBe(400)
+    expect(snapshot.explosions[0].startElapsed).toBe(200)
+    expect(snapshot.explosions[0].frameRects).toBeUndefined()
+    expect(snapshot.explosions[0].id).toBeTruthy()
+  })
+
+  it('applies decals, keeps explosion world pixels, and replays ballistic arcs', () => {
+    asClient()
+    gameState.simulationTime = 10000
+    gameState.mapGrid = [
+      [{ type: 'land', decal: { tag: 'impact', variantSeed: 1, groupWidth: 1, groupHeight: 1, groupOriginX: 0, groupOriginY: 0 } }, { type: 'land' }],
+      [{ type: 'land' }, { type: 'land' }]
+    ]
+    syncedBullets.length = 0
+
+    commandSync.applyGameStateSnapshot({
+      mapDecals: [{
+        x: 1,
+        y: 0,
+        tag: 'crater',
+        variantSeed: 99,
+        groupWidth: 1,
+        groupHeight: 1,
+        groupOriginX: 1,
+        groupOriginY: 0
+      }],
+      simulationTime: 10500,
+      explosions: [{
+        id: 'e1',
+        x: 368,
+        y: 400,
+        startElapsed: 200,
+        duration: 1050,
+        type: 'spriteSheet',
+        assetPath: 'images/map/animations/explosion.webp'
+      }],
+      bullets: [
+        {
+          id: 'shell',
+          x: 0,
+          y: 0,
+          startX: 0,
+          startY: 0,
+          dx: 100,
+          dy: 0,
+          flightDuration: 1000,
+          arcHeight: 80,
+          parabolic: true,
+          startTime: 10000,
+          vx: 0,
+          vy: 0
+        },
+        {
+          id: 'rocket',
+          x: 20,
+          y: 20,
+          startX: 20,
+          startY: 40,
+          ballistic: true,
+          ballisticDuration: 1000,
+          arcHeight: 80,
+          startTime: 10000,
+          vx: 0,
+          vy: 0
+        },
+        {
+          id: 'round',
+          x: 0,
+          y: 5,
+          vx: 8,
+          vy: 0,
+          startTime: 10000
+        }
+      ]
+    })
+
+    expect(gameState.mapGrid[0][0].decal).toBeFalsy()
+    expect(gameState.mapGrid[0][1].decal).toMatchObject({ tag: 'crater', variantSeed: 99 })
+    expect(gameState.explosions).toHaveLength(1)
+    expect(gameState.explosions[0].x).toBe(368)
+    expect(gameState.explosions[0].y).toBe(400)
+    expect(gameState.explosions[0].startTime).toBe(9800)
+    expect(gameState.explosions[0].frameRects).toHaveLength(229)
+
+    commandSync.updateUnitInterpolation()
+    const shell = syncedBullets.find(bullet => bullet.id === 'shell')
+    const rocket = syncedBullets.find(bullet => bullet.id === 'rocket')
+    expect(shell.x).toBeCloseTo(50, 5)
+    expect(shell.y).toBeCloseTo(-80, 5)
+    expect(rocket.x).toBeCloseTo(20, 5)
+    expect(rocket.y).toBeCloseTo(40 - 80 * Math.sin((0.5 * Math.PI) / 2), 5)
+
+    gameState.simulationTime = 10100
+    commandSync.updateUnitInterpolation()
+    const round = syncedBullets.find(bullet => bullet.id === 'round')
+    expect(round.x).toBeCloseTo(8 * (100 / (1000 / 60)), 5)
+    expect(round.y).toBeCloseTo(5, 5)
+
+    commandSync.applyGameStateSnapshot({
+      mapDecals: [],
+      simulationTime: 10600,
+      explosions: [{
+        id: 'e1',
+        x: 368,
+        y: 400,
+        startElapsed: 400,
+        duration: 1050,
+        type: 'spriteSheet',
+        assetPath: 'images/map/animations/explosion.webp'
+      }]
+    })
+    expect(gameState.mapGrid[0][1].decal).toBeFalsy()
+    expect(gameState.explosions).toHaveLength(1)
+    expect(gameState.explosions[0].startTime).toBe(9800)
+
+    commandSync.applyGameStateSnapshot({
+      explosions: [],
+      simulationTime: 11000
+    })
+    expect(gameState.explosions).toHaveLength(0)
+    syncedBullets.length = 0
   })
 })

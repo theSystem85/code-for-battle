@@ -362,6 +362,17 @@ export function updateExplosions(gameState) {
   }
 
   if (hostAuthority) {
+    // Sprite-sheet explosions are pushed onto gameState.explosions. Until the
+    // first host update aliases that array with the logic.js list, those
+    // effects would be dropped and never reach the client snapshot.
+    if (Array.isArray(gameState.explosions) && gameState.explosions !== explosions) {
+      for (let i = 0; i < gameState.explosions.length; i++) {
+        const exp = gameState.explosions[i]
+        if (exp && !explosions.includes(exp)) {
+          explosions.push(exp)
+        }
+      }
+    }
     gameState.explosions = explosions
   }
 }

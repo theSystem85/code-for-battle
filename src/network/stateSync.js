@@ -9,11 +9,13 @@ import { placeBuilding } from '../buildings.js'
 import { units as mainUnits, bullets as mainBullets, factories as mainFactories, regenerateMapForClient } from '../main.js'
 import { setMapDimensions, ORE_SPREAD_ENABLED, ORE_SPREAD_INTERVAL, setOreSpreadEnabled, setOreSpreadInterval } from '../config.js'
 import { broadcastGameCommand } from './commandBroadcast.js'
-import { getSimulationTime } from '../game/time.js'
+import { getFixedSimulationStepMs, getSimulationTime } from '../game/time.js'
 import { rebuildWaterMineLookup } from '../game/waterMineSystem.js'
+import { isDefaultDestructionAsset, rehydrateSyncedExplosion } from '../game/spriteSheetEffects.js'
 import {
   beginMapMutationTransaction,
-  commitMapMutationTransaction
+  commitMapMutationTransaction,
+  notifyDecalTileMutation
 } from '../rendering/prepared/mapMutationNotifier.js'
 import { bindRenderingDensityPreparation, prepareRuntimeMap } from '../rendering/prepared/renderingPipeline.js'
 
@@ -48,6 +50,8 @@ const unitInterpolationState = new Map() // unitId -> { prevX, prevY, targetX, t
 const bulletInterpolationState = new Map() // bulletId -> { prevX, prevY, targetX, targetY }
 let lastSnapshotTime = 0
 const INTERPOLATION_DURATION_MS = GAME_STATE_SYNC_INTERVAL_MS // Match the sync interval
+const MAX_BULLET_EXTRAPOLATION_MS = 250
+let nextExplosionSyncId = 1
 
 /**
  * Set reference to production controller for tech tree sync
@@ -116,17 +120,242 @@ export function updateUnitInterpolation() {
     }
   })
 
-  // Interpolate each bullet's position
+  // Project bullets from the host snapshot. Called once per frame per live bullet:
+  // parabolic/ballistic replay is a few arithmetic ops and does not allocate.
+  const simNow = getSimulationTime(gameState)
+  const stepMs = getFixedSimulationStepMs(gameState)
   mainBullets.forEach(bullet => {
-    const state = bulletInterpolationState.get(bullet.id)
-    if (!state) {
-      return // No interpolation state for this bullet
+    projectSyncedBullet(bullet, simNow, stepMs, t)
+  })
+}
+
+/**
+ * Replay host projectile motion on the client.
+ * Parabolic and ballistic shots follow the same formulas the host simulates.
+ * Linear shots dead-reckon from the snapshot using per-tick velocity, capped
+ * so a stalled snapshot cannot fling them across the map.
+ */
+function projectSyncedBullet(bullet, simNow, stepMs, lerpT) {
+  if (!bullet) return
+
+  if (
+    bullet.parabolic &&
+    bullet.flightDuration > 0 &&
+    Number.isFinite(bullet.startTime) &&
+    Number.isFinite(bullet.startX) &&
+    Number.isFinite(bullet.startY)
+  ) {
+    const age = simNow - bullet.startTime
+    const t = age <= 0 ? 0 : Math.min(1, age / bullet.flightDuration)
+    const arc = bullet.arcHeight || 0
+    bullet.x = bullet.startX + (bullet.dx || 0) * t
+    bullet.y = bullet.startY + (bullet.dy || 0) * t - arc * Math.sin(Math.PI * t)
+    return
+  }
+
+  if (
+    bullet.ballistic &&
+    bullet.ballisticDuration > 0 &&
+    Number.isFinite(bullet.startTime) &&
+    Number.isFinite(bullet.startX) &&
+    Number.isFinite(bullet.startY)
+  ) {
+    const age = simNow - bullet.startTime
+    const progress = age <= 0 ? 0 : age / bullet.ballisticDuration
+    const arc = bullet.arcHeight || 0
+    if (progress < 1) {
+      bullet.x = bullet.startX
+      bullet.y = bullet.startY - arc * Math.sin((progress * Math.PI) / 2)
+      return
+    }
+    bullet.x = bullet.startX
+    bullet.y = bullet.startY - arc
+    return
+  }
+
+  if (Number.isFinite(bullet._syncSimTime) && Number.isFinite(bullet._syncX) && Number.isFinite(bullet._syncY)) {
+    const elapsed = Math.min(MAX_BULLET_EXTRAPOLATION_MS, Math.max(0, simNow - bullet._syncSimTime))
+    const ticks = stepMs > 0 ? elapsed / stepMs : 0
+    bullet.x = bullet._syncX + (bullet.vx || 0) * ticks
+    bullet.y = bullet._syncY + (bullet.vy || 0) * ticks
+    return
+  }
+
+  const state = bulletInterpolationState.get(bullet.id)
+  if (!state) return
+  bullet.x = state.prevX + (state.targetX - state.prevX) * lerpT
+  bullet.y = state.prevY + (state.targetY - state.prevY) * lerpT
+}
+
+function simulationElapsed(simNow, startTime) {
+  return typeof startTime === 'number' ? Math.max(0, simNow - startTime) : null
+}
+
+function ensureExplosionSyncId(exp) {
+  if (!exp) return null
+  if (!exp.id) {
+    exp.id = `exp-${nextExplosionSyncId++}`
+  }
+  return exp.id
+}
+
+function serializeExplosion(exp, explosionTime) {
+  const payload = {
+    id: ensureExplosionSyncId(exp),
+    x: exp.x,
+    y: exp.y,
+    startElapsed: typeof exp.startTime === 'number' ? Math.max(0, explosionTime - exp.startTime) : 0,
+    duration: exp.duration,
+    maxRadius: exp.maxRadius,
+    type: exp.type,
+    assetPath: exp.assetPath,
+    tileWidth: exp.tileWidth,
+    tileHeight: exp.tileHeight,
+    columns: exp.columns,
+    rows: exp.rows,
+    frameCount: exp.frameCount,
+    loop: exp.loop,
+    scale: exp.scale,
+    blendMode: exp.blendMode
+  }
+  const defaultSheet = exp.type === 'spriteSheet' && isDefaultDestructionAsset(exp.assetPath)
+  if (!defaultSheet && Array.isArray(exp.frameRects) && exp.frameRects.length > 0) {
+    payload.frameRects = exp.frameRects
+  }
+  if (Array.isArray(exp.frameSequence) && exp.frameSequence.length > 0) {
+    payload.frameSequence = exp.frameSequence
+  }
+  return payload
+}
+
+function serializeMapDecals(mapGrid) {
+  if (!Array.isArray(mapGrid)) return []
+  const decals = []
+  for (let y = 0; y < mapGrid.length; y++) {
+    const row = mapGrid[y]
+    if (!Array.isArray(row)) continue
+    for (let x = 0; x < row.length; x++) {
+      const decal = row[x]?.decal
+      if (!decal || typeof decal !== 'object' || !decal.tag) continue
+      decals.push({
+        x,
+        y,
+        tag: decal.tag,
+        variantSeed: decal.variantSeed,
+        groupWidth: decal.groupWidth,
+        groupHeight: decal.groupHeight,
+        groupOriginX: decal.groupOriginX,
+        groupOriginY: decal.groupOriginY
+      })
+    }
+  }
+  return decals
+}
+
+function decalFieldsMatch(current, next) {
+  return Boolean(
+    current &&
+    current.tag === next.tag &&
+    current.variantSeed === next.variantSeed &&
+    current.groupWidth === next.groupWidth &&
+    current.groupHeight === next.groupHeight &&
+    current.groupOriginX === next.groupOriginX &&
+    current.groupOriginY === next.groupOriginY
+  )
+}
+
+function applyMapDecals(mapGrid, decals) {
+  if (!Array.isArray(mapGrid) || !Array.isArray(decals)) return
+  const transaction = beginMapMutationTransaction(mapGrid)
+  try {
+    const wanted = new Map()
+    for (let i = 0; i < decals.length; i++) {
+      const decal = decals[i]
+      if (!decal || !Number.isFinite(decal.x) || !Number.isFinite(decal.y) || !decal.tag) continue
+      wanted.set(`${Math.floor(decal.x)},${Math.floor(decal.y)}`, decal)
     }
 
-    // Linear interpolation for position
-    bullet.x = state.prevX + (state.targetX - state.prevX) * t
-    bullet.y = state.prevY + (state.targetY - state.prevY) * t
-  })
+    for (let y = 0; y < mapGrid.length; y++) {
+      const row = mapGrid[y]
+      if (!Array.isArray(row)) continue
+      for (let x = 0; x < row.length; x++) {
+        const tile = row[x]
+        if (!tile) continue
+        const next = wanted.get(`${x},${y}`)
+        if (!next) {
+          if (tile.decal) {
+            tile.decal = null
+            notifyDecalTileMutation(mapGrid, x, y)
+          }
+          continue
+        }
+        if (decalFieldsMatch(tile.decal, next)) continue
+        tile.decal = {
+          tag: next.tag,
+          variantSeed: next.variantSeed,
+          groupWidth: next.groupWidth,
+          groupHeight: next.groupHeight,
+          groupOriginX: next.groupOriginX,
+          groupOriginY: next.groupOriginY
+        }
+        notifyDecalTileMutation(mapGrid, x, y)
+      }
+    }
+  } finally {
+    commitMapMutationTransaction(transaction)
+  }
+}
+
+function rebaseBulletTiming(bullet, snapshotBullet, hostSim, clientSim) {
+  bullet._syncX = snapshotBullet.x
+  bullet._syncY = snapshotBullet.y
+  bullet._syncSimTime = clientSim
+  if (Number.isFinite(hostSim) && Number.isFinite(snapshotBullet.startTime)) {
+    const age = Math.max(0, hostSim - snapshotBullet.startTime)
+    bullet._syncAgeAtSnapshot = age
+    bullet.startTime = clientSim - age
+  }
+}
+
+function applySyncedExplosions(snapshotExplosions, simNow) {
+  const existing = Array.isArray(gameState.explosions) ? gameState.explosions : []
+  const byId = new Map()
+  for (let i = 0; i < existing.length; i++) {
+    const exp = existing[i]
+    if (exp?.id) byId.set(exp.id, exp)
+  }
+
+  const next = []
+  for (let i = 0; i < snapshotExplosions.length; i++) {
+    const exp = snapshotExplosions[i]
+    if (!exp) continue
+    const startElapsed = Number.isFinite(exp.startElapsed) ? exp.startElapsed : 0
+    const id = exp.id || `${exp.x}_${exp.y}_${exp.type || 'blast'}_${startElapsed}`
+    let local = byId.get(id)
+    if (!local) {
+      local = {
+        ...exp,
+        id,
+        startTime: simNow - startElapsed,
+        duration: exp.duration ?? 500
+      }
+      delete local.startElapsed
+      rehydrateSyncedExplosion(local)
+    } else {
+      local.x = exp.x
+      local.y = exp.y
+      if (exp.duration != null) local.duration = exp.duration
+      if (exp.maxRadius != null) local.maxRadius = exp.maxRadius
+      if (exp.scale != null) local.scale = exp.scale
+      if (exp.type) local.type = exp.type
+      if (exp.assetPath) local.assetPath = exp.assetPath
+      if (exp.loop != null) local.loop = exp.loop
+      if (exp.blendMode) local.blendMode = exp.blendMode
+      rehydrateSyncedExplosion(local)
+    }
+    next.push(local)
+  }
+  gameState.explosions = next
 }
 
 /**
@@ -241,6 +470,7 @@ function createPartyMoneySnapshot() {
  */
 export function createGameStateSnapshot() {
   const now = performance.now()
+  const simNow = getSimulationTime(gameState)
 
   // Serialize units with essential properties - use mainUnits from main.js as that's the authoritative array
   const units = (mainUnits || []).map(unit => ({
@@ -263,9 +493,9 @@ export function createGameStateSnapshot() {
     maxAmmunition: unit.maxAmmunition,
     oreCarried: unit.oreCarried,
     crew: unit.crew,
-    // Animation/firing state - convert to elapsed time for cross-machine sync
-    muzzleFlashElapsed: unit.muzzleFlashStartTime ? now - unit.muzzleFlashStartTime : null,
-    recoilElapsed: unit.recoilStartTime ? now - unit.recoilStartTime : null,
+    // Animation/firing state uses the simulation clock on both peers
+    muzzleFlashElapsed: simulationElapsed(simNow, unit.muzzleFlashStartTime),
+    recoilElapsed: simulationElapsed(simNow, unit.recoilStartTime),
     lastShotTime: unit.lastShotTime,
     // Movement state
     path: unit.path,
@@ -354,9 +584,9 @@ export function createGameStateSnapshot() {
       ammo: building.ammo,
       maxAmmo: building.maxAmmo,
       turretDirection: building.turretDirection,
-      // Animation state - convert to elapsed time for cross-machine sync
-      muzzleFlashElapsed: building.muzzleFlashStartTime ? now - building.muzzleFlashStartTime : null,
-      recoilElapsed: building.recoilStartTime ? now - building.recoilStartTime : null
+      // Animation state uses the simulation clock on both peers
+      muzzleFlashElapsed: simulationElapsed(simNow, building.muzzleFlashStartTime),
+      recoilElapsed: simulationElapsed(simNow, building.recoilStartTime)
     }
   })
 
@@ -385,7 +615,8 @@ export function createGameStateSnapshot() {
     distance: bullet.distance,
     flightDuration: bullet.flightDuration,
     ballisticDuration: bullet.ballisticDuration,
-    arcHeight: bullet.arcHeight
+    arcHeight: bullet.arcHeight,
+    parabolic: bullet.parabolic
   }))
 
   // Serialize factories (construction yards) with essential properties
@@ -404,26 +635,9 @@ export function createGameStateSnapshot() {
     productionCountdown: factory.productionCountdown
   }))
 
-  // Serialize explosions
-  const explosionTime = getSimulationTime(gameState)
-  const explosions = (gameState.explosions || []).map(exp => ({
-    x: exp.x,
-    y: exp.y,
-    startElapsed: typeof exp.startTime === 'number' ? Math.max(0, explosionTime - exp.startTime) : 0,
-    duration: exp.duration,
-    maxRadius: exp.maxRadius,
-    type: exp.type,
-    assetPath: exp.assetPath,
-    tileWidth: exp.tileWidth,
-    tileHeight: exp.tileHeight,
-    columns: exp.columns,
-    rows: exp.rows,
-    frameCount: exp.frameCount,
-    frameSequence: exp.frameSequence,
-    frameRects: exp.frameRects,
-    loop: exp.loop,
-    scale: exp.scale
-  }))
+  // Serialize explosions in world pixels. Default destruction frame rects are
+  // rehydrated on the client so the snapshot does not carry the full sheet.
+  const explosions = (gameState.explosions || []).map(exp => serializeExplosion(exp, simNow))
 
   // Serialize unit wrecks
   const unitWrecks = (gameState.unitWrecks || []).map(wreck => ({
@@ -481,6 +695,8 @@ export function createGameStateSnapshot() {
     // Game settings that clients must inherit from host
     oreSpreadEnabled: ORE_SPREAD_ENABLED,
     oreSpreadInterval: ORE_SPREAD_INTERVAL,
+    mapDecals: serializeMapDecals(gameState.mapGrid),
+    simulationTime: simNow,
     shadowOfWarEnabled: gameState.shadowOfWarEnabled,
     showEnemyResources: gameState.showEnemyResources,
     // Sync defeated players so clients can detect their own defeat
@@ -612,8 +828,10 @@ export function applyGameStateSnapshot(snapshot) {
     clientInitialized = true
   }
 
-  // Get current time for animation timestamp conversions (used by units and buildings)
+  // Wall clock for construction/sell timers. Muzzle, recoil, explosions, and
+  // bullets use the simulation clock so clients do not freeze or offset them.
   const now = performance.now()
+  const simNow = getSimulationTime(gameState)
 
   // Remote clients are host-authoritative for economy and must adopt host party money.
   const localPartyId = clientPartyId || gameState.humanPlayer
@@ -658,6 +876,10 @@ export function applyGameStateSnapshot(snapshot) {
       mapBiomeTransitionPixels: snapshot.mapBiomeTransitionPixels,
       mapSnowOnPlateaus: snapshot.mapSnowOnPlateaus
     })
+  }
+
+  if (Array.isArray(snapshot.mapDecals)) {
+    applyMapDecals(gameState.mapGrid, snapshot.mapDecals)
   }
 
   // Sync game settings from host - clients cannot change these
@@ -733,10 +955,10 @@ export function applyGameStateSnapshot(snapshot) {
       // Convert elapsed times back to absolute start times for animations
       // This allows animations to work correctly across machines with different performance.now() bases
       const muzzleFlashStartTime = snapshotUnit.muzzleFlashElapsed != null
-        ? now - snapshotUnit.muzzleFlashElapsed
+        ? simNow - snapshotUnit.muzzleFlashElapsed
         : null
       const recoilStartTime = snapshotUnit.recoilElapsed != null
-        ? now - snapshotUnit.recoilElapsed
+        ? simNow - snapshotUnit.recoilElapsed
         : null
 
       if (existing) {
@@ -834,10 +1056,10 @@ export function applyGameStateSnapshot(snapshot) {
 
       // Convert elapsed times back to absolute start times for animations
       const muzzleFlashStartTime = snapshotBuilding.muzzleFlashElapsed != null
-        ? now - snapshotBuilding.muzzleFlashElapsed
+        ? simNow - snapshotBuilding.muzzleFlashElapsed
         : null
       const recoilStartTime = snapshotBuilding.recoilElapsed != null
-        ? now - snapshotBuilding.recoilElapsed
+        ? simNow - snapshotBuilding.recoilElapsed
         : null
 
       const constructionStartTime = snapshotBuilding.constructionElapsed != null
@@ -927,24 +1149,22 @@ export function applyGameStateSnapshot(snapshot) {
     mainFactories.push(...gameState.factories)
   }
 
-  // Sync bullets - update the mainBullets array from main.js with interpolation
+  // Sync bullets - update the mainBullets array from main.js.
+  // Positions are projected in updateUnitInterpolation from this baseline.
   if (Array.isArray(snapshot.bullets)) {
-    // Create a map of existing bullets by ID
+    const hostSim = Number.isFinite(snapshot.simulationTime) ? snapshot.simulationTime : null
     const existingById = new Map()
     mainBullets.forEach(b => {
       if (b.id) existingById.set(b.id, b)
     })
 
-    // Track which bullet IDs are in this snapshot
     const snapshotBulletIds = new Set()
 
-    // Build the updated bullets array with interpolation
     const updatedBullets = snapshot.bullets.map(snapshotBullet => {
       snapshotBulletIds.add(snapshotBullet.id)
       const existing = existingById.get(snapshotBullet.id)
 
       if (existing) {
-        // Set up interpolation for existing bullet
         bulletInterpolationState.set(snapshotBullet.id, {
           prevX: existing.x,
           prevY: existing.y,
@@ -952,61 +1172,38 @@ export function applyGameStateSnapshot(snapshot) {
           targetY: snapshotBullet.y
         })
 
-        // Merge non-position data
         const { x, y, ...nonPositionData } = snapshotBullet
         Object.assign(existing, nonPositionData)
         existing._targetX = x
         existing._targetY = y
+        rebaseBulletTiming(existing, snapshotBullet, hostSim, simNow)
         return existing
-      } else {
-        // New bullet - no interpolation needed
-        bulletInterpolationState.set(snapshotBullet.id, {
-          prevX: snapshotBullet.x,
-          prevY: snapshotBullet.y,
-          targetX: snapshotBullet.x,
-          targetY: snapshotBullet.y
-        })
-        return { ...snapshotBullet }
       }
+
+      bulletInterpolationState.set(snapshotBullet.id, {
+        prevX: snapshotBullet.x,
+        prevY: snapshotBullet.y,
+        targetX: snapshotBullet.x,
+        targetY: snapshotBullet.y
+      })
+      const created = { ...snapshotBullet }
+      rebaseBulletTiming(created, snapshotBullet, hostSim, simNow)
+      return created
     })
 
-    // Clean up interpolation state for bullets that no longer exist
     for (const bulletId of bulletInterpolationState.keys()) {
       if (!snapshotBulletIds.has(bulletId)) {
         bulletInterpolationState.delete(bulletId)
       }
     }
 
-    // Replace contents of mainBullets array in-place
     mainBullets.length = 0
     mainBullets.push(...updatedBullets)
-
-    // Also keep gameState.bullets in sync
     gameState.bullets = mainBullets
   }
 
-  // Sync explosions
   if (Array.isArray(snapshot.explosions)) {
-    // Merge explosions - add new ones that don't exist locally
-    const existingExplosions = gameState.explosions || []
-    const existingKeys = new Set(existingExplosions.map(e => `${e.x}_${e.y}_${e.startTime}`))
-
-    snapshot.explosions.forEach(exp => {
-      const startTime = exp.startElapsed != null
-        ? now - exp.startElapsed
-        : (exp.startTime ?? now)
-      const normalized = {
-        ...exp,
-        startTime,
-        duration: exp.duration ?? 500
-      }
-      const key = `${normalized.x}_${normalized.y}_${Math.round(startTime)}`
-      if (!existingKeys.has(key)) {
-        existingExplosions.push(normalized)
-        existingKeys.add(key)
-      }
-    })
-    gameState.explosions = existingExplosions
+    applySyncedExplosions(snapshot.explosions, simNow)
   }
 
   // Sync unit wrecks
@@ -1038,6 +1235,8 @@ export function applyGameStateSnapshot(snapshot) {
     // Replace wrecks array
     gameState.unitWrecks = updatedWrecks
   }
+
+  lastSnapshotTime = now
 }
 
 /**

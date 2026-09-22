@@ -30,6 +30,11 @@
    - Party state model preserves per-party responsiveness metadata.
    - Reconnect handling is party-local and does not assume fixed party count beyond configured 2-4 bounds.
 
+6. **Kick removes reconnect state**
+   - Host kick marks the session kicked before the data channel and peer connection close.
+   - The later disconnect must not set `unresponsiveSince` or show `Reconnecting`.
+   - A kick clears an existing reconnect timer and releases a network pause that the drop started.
+
 ## Non-goals
 - No dev server/runtime orchestration changes.
 - No direct network transport replacement (WebRTC remains transport).

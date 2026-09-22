@@ -449,4 +449,38 @@ describe('kickPlayer', () => {
     expect(hostNotifications.showHostNotification).toHaveBeenCalledWith('New invite ready for party party-1')
     expect(commandSync.stopGameStateSync).toHaveBeenCalled()
   })
+
+  it('does not mark a kicked player as reconnecting when the session closes', async() => {
+    const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
+    const dataChannel = createDataChannel()
+    const session = {
+      alias: 'Remote',
+      sourceId: 'remote-party-1-peer-1',
+      peerId: 'peer-1',
+      dataChannel,
+      connectionState: 'connected',
+      unresponsiveSince: null,
+      aiFallbackHandle: null,
+      dispose: vi.fn(() => {
+        setTimeout(() => {
+          monitor._handleSessionState(session, 'disconnected')
+        }, 0)
+      })
+    }
+    monitor.sessions.set('peer-1', session)
+    monitor.activeSession = session
+    monitor._markSessionUnresponsive(session, 'Connection interrupted. Waiting for reconnection...')
+    expect(gameState.gamePaused).toBe(true)
+
+    const kickPromise = kickPlayer('party-1')
+    await vi.advanceTimersByTimeAsync(100)
+    const kicked = await kickPromise
+    await vi.advanceTimersByTimeAsync(0)
+
+    expect(kicked).toBe(true)
+    const unresponsiveCalls = multiplayerStore.setPartyUnresponsiveState.mock.calls
+    expect(unresponsiveCalls.at(-1)).toEqual(['party-1', null])
+    expect(unresponsiveCalls.filter((call) => typeof call[1] === 'number')).toHaveLength(1)
+    expect(gameState.gamePaused).toBe(false)
+  })
 })

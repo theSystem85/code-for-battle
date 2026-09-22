@@ -30,6 +30,8 @@ The refactored `gameCommandSync.js` now serves only as a coordinator that:
   - Bullets/projectiles (position, velocity, type)
   - Factories (production state, rally points)
   - Explosions and unit wrecks
+  - Map decals (`impact`, `crater`, `debris`) as a sparse tile list, including clears
+  - Host simulation time, used to rebase effect and projectile ages onto the client clock
   - Map configuration (seed, dimensions, player count)
   - Game settings (ore spread enabled state, ore spread interval, shadow of war, etc.)
   - Defeated players tracking
@@ -44,10 +46,14 @@ The refactored `gameCommandSync.js` now serves only as a coordinator that:
   - Manages interpolation state for smooth visuals
   - Syncs game settings and defeated players
   - Syncs the local client party's money from host-authoritative `partyMoney`
+  - Replaces map decals with the host sparse list so late joiners match craters and debris
+  - Rebases explosion `startTime` onto the client simulation clock and keeps world-pixel `x`/`y`
+  - Replays parabolic and ballistic projectiles with the host formulas; linear shots dead-reckon from snapshot velocity
 
 ### 3. Interpolation System
 - **updateUnitInterpolation()**: Provides smooth movement for clients between snapshots:
-  - Linear position interpolation for units and bullets
+  - Linear position interpolation for units
+  - Projectile projection between snapshots: parabolic and ballistic arcs use the host motion formulas; linear shots move by `vx`/`vy` per simulation step, capped at 250ms
   - Angle interpolation with wraparound handling for directions
   - Turret direction interpolation for units
   - Updates every frame on client side

@@ -252,6 +252,17 @@ describe('gameStateManager', () => {
 
       expect(Array.isArray(gameState.explosions)).toBe(true)
     })
+
+    it('merges sprite explosions onto the host list before aliasing', () => {
+      const sprite = { id: 'sheet', type: 'spriteSheet', x: 368, y: 400, startTime: 1500, duration: 1050 }
+      const gameState = { explosions: [sprite], simulationTime: 1600 }
+      isHost.mockReturnValue(true)
+
+      updateExplosions(gameState)
+
+      expect(gameState.explosions).toBe(explosions)
+      expect(explosions).toContain(sprite)
+    })
   })
 
   describe('updateSmokeParticles', () => {
