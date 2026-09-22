@@ -35,6 +35,8 @@ test.describe('Building chimney smoke performance', () => {
         resolve({
           fps: frameTimes.length * 1000 / elapsed,
           smokeRenderCpuMs,
+          smokeBackend: renderer.gpuSmoke?.backend || 'procedural',
+          smokePresents: renderer.gpuSmoke?.presentCount || 0,
           heapDeltaMb: heapStart === null || heapEnd === null ? null : (heapEnd - heapStart) / 1048576
         })
       }

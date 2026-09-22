@@ -189,6 +189,7 @@ Building-layer boundary: A10 exclusively prepares/owns the generated art, manife
 - [x] Prepare lazy gradient/wreck caches before gameplay where finite; account for their memory and eviction.
 - [x] Enumerate all remaining growing raster effects/sinking/animation resizing. Implement parity-preserving procedural or exact prepared-frame alternatives; leave unresolved conflicts explicit.
 - [x] Explicitly resolve smoke/core (`effectsRenderer.js:382–405`), explosion plume/core (`:500–536`) and sinking-wreck (`wreckRenderer.js:192–222`) size conversion. Do not discretize a continuous age-based animation or use aircraft exceptions for these cases; Q31 remains blocked without a continuous-equivalent solution or explicit user decision.
+- [x] 2026-09-22: chimney smoke now samples one prepared sprite at the continuous radius (`preparedSmokeSprites.js`). The radius is not bucketed. The procedural gradient loop remains the fallback. Explosions are still procedural. See `specs/087-gpu-chimney-smoke.md`.
 - [x] Coordinate any necessary simulation lifetime changes through I20; do not silently stop particles advancing when culled.
 
 **Done:** no lost visible effects, no new angular/time quantization, no unapproved resizing exceptions; profiler verifies actual benefit under active worst-case effects.

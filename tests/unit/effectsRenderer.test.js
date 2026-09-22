@@ -123,7 +123,7 @@ describe('EffectsRenderer', () => {
     })
   })
 
-  it('renders continuous smoke and explosion radii procedurally without resized rasters', () => {
+  it('samples chimney smoke from a prepared sprite and keeps explosion radii procedural', () => {
     const renderer = new EffectsRenderer()
     const gradient = { addColorStop: vi.fn() }
     const ctx = {
@@ -145,7 +145,15 @@ describe('EffectsRenderer', () => {
       explosions: [{ x: 80, y: 90, startTime: 0, duration: 1000, maxRadius: 40 }]
     }, { x: 0, y: 0 })
 
-    expect(ctx.arc).toHaveBeenCalledWith(50, 60, 7.25, 0, Math.PI * 2)
-    expect(ctx.drawImage).not.toHaveBeenCalled()
+    expect(ctx.drawImage).toHaveBeenCalledWith(
+      renderer.gpuSmoke.sprites.smoke,
+      50 - 7.25,
+      60 - 7.25,
+      14.5,
+      14.5
+    )
+    expect(ctx.createRadialGradient).toHaveBeenCalled()
+    expect(ctx.arc).not.toHaveBeenCalledWith(50, 60, 7.25, 0, Math.PI * 2)
+    expect(ctx.arc).toHaveBeenCalledWith(80, 90, expect.any(Number), 0, Math.PI * 2)
   })
 })

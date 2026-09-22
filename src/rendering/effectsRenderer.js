@@ -5,6 +5,7 @@ import { getSimulationTime } from '../game/time.js'
 import { renderSpriteSheetAnimation } from './spriteSheetAnimation.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
+import { PreparedSmokeBatch } from './preparedSmokeSprites.js'
 
 export const BOW_WAKE_INNER_ANGLE_RADIANS = 70 * (Math.PI / 180)
 
@@ -17,6 +18,7 @@ export class EffectsRenderer {
   constructor() {
     this.blackBlendAnimations = []
     this.alphaBlendAnimations = []
+    this.gpuSmoke = new PreparedSmokeBatch()
   }
   renderBullets(ctx, bullets, scrollOffset) {
     // Draw bullets with improved appearance
@@ -178,10 +180,32 @@ export class EffectsRenderer {
 
     const visibilityMap = gameState?.visibilityMap
     const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
-
-    // Get canvas dimensions for view frustum culling
     const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
     const particles = gameState.smokeParticles
+    const gpuSmoke = this.gpuSmoke
+
+    if (
+      gpuSmoke &&
+      !gpuSmoke.failed &&
+      gpuSmoke.render(
+        ctx,
+        particles,
+        scrollOffset.x,
+        scrollOffset.y,
+        canvasWidth,
+        canvasHeight,
+        shadowEnabled ? visibilityMap : null
+      )
+    ) {
+      ctx.globalAlpha = 1
+      return
+    }
+
+    this.renderSmokeProcedural(ctx, particles, scrollOffset, canvasWidth, canvasHeight, shadowEnabled, visibilityMap)
+    ctx.globalAlpha = 1
+  }
+
+  renderSmokeProcedural(ctx, particles, scrollOffset, canvasWidth, canvasHeight, shadowEnabled, visibilityMap) {
     const len = particles.length
 
     for (let i = 0; i < len; i++) {
