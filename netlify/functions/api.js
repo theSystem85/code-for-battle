@@ -1,5 +1,5 @@
 import { getStore } from '@netlify/blobs'
-import { countCandidateSummaries, safeAlias, summarizeIceCandidate } from '../../src/network/iceSummary.js'
+import { countCandidateSummaries, summarizeIceCandidate } from '../../src/network/iceSummary.js'
 import { buildIceServerPayload } from '../../src/network/turnCredentials.js'
 
 // Session storage using Netlify Blobs
@@ -79,6 +79,7 @@ async function listCandidateRecords(store, inviteToken, peerId) {
 
 function loadTurnEnv() {
   return {
+    ICE_SERVERS: readFunctionEnv('ICE_SERVERS'),
     TURN_URLS: readFunctionEnv('TURN_URLS'),
     TURN_SECRET: readFunctionEnv('TURN_SECRET'),
     TURN_USERNAME: readFunctionEnv('TURN_USERNAME'),
@@ -142,7 +143,6 @@ export default async(request, _context) => {
         createdAt: Date.now()
       })
       logSignalling('offer', {
-        alias: safeAlias(alias),
         peerId,
         inviteSuffix: String(inviteToken).slice(-8),
         offerRevision,
@@ -200,7 +200,7 @@ export default async(request, _context) => {
 
     // POST /signalling/candidate
     if (path === '/signalling/candidate' && method === 'POST') {
-      const { inviteToken, peerId, candidate, origin, alias } = await request.json()
+      const { inviteToken, peerId, candidate, origin } = await request.json()
 
       if (!inviteToken || !peerId || !candidate) {
         return new Response(
@@ -225,7 +225,6 @@ export default async(request, _context) => {
       const candidateId = `${record.timestamp.toString(36)}-${Math.random().toString(36).slice(2, 8)}`
       await setBlob(store, `${candidatePrefix(inviteToken, peerId)}${candidateId}`, record)
       logSignalling('candidate', {
-        alias: safeAlias(alias),
         peerId,
         inviteSuffix: String(inviteToken).slice(-8),
         origin: record.origin,
@@ -289,7 +288,6 @@ export default async(request, _context) => {
         logSignalling('pending', {
           inviteSuffix: String(inviteToken).slice(-8),
           sessions: sessions.map((session) => ({
-            alias: safeAlias(session.alias),
             peerId: session.peerId,
             hasOffer: Boolean(session.offer),
             hasAnswer: Boolean(session.answer),

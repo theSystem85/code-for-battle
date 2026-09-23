@@ -542,10 +542,14 @@ export function initRemoteInviteLanding() {
   }
 
   const handleStatusChange = (status) => {
+    const connection = getActiveRemoteConnection()
     let message = STATUS_MESSAGES[status] || STATUS_MESSAGES[RemoteConnectionStatus.CONNECTING]
     const isError = status === RemoteConnectionStatus.FAILED
+    if (status === RemoteConnectionStatus.CONNECTING && connection?.transportDetail) {
+      message = `${message} ${connection.transportDetail}`
+    }
     if (isError) {
-      const hint = getActiveRemoteConnection()?.failureHint
+      const hint = connection?.failureHint
       if (hint) message = hint
     }
     updateStatus(statusElement, message, isError)

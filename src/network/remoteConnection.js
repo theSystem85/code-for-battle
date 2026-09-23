@@ -11,10 +11,10 @@ import {
   buildJoinFailureHint,
   buildPeerConnectionConfig,
   emptyCandidateStats,
+  formatIceProgress,
   isBenignIceError,
   recordCandidateStat,
   resolveIceServers,
-  safeAlias,
   summarizeIceServers,
   waitForIceGathering
 } from './iceConfig.js'
@@ -83,6 +83,7 @@ class RemoteConnection {
     this.iceRestartCount = 0
     this._restarting = false
     this.failureHint = null
+    this.transportDetail = null
     this.candidateStats = emptyCandidateStats()
     this.pollErrorCount = 0
     this._onVisibility = null
@@ -99,7 +100,6 @@ class RemoteConnection {
       this.credentialMode = ice.credentialMode || 'none'
       this.rtcConfig = buildPeerConnectionConfig(ice.iceServers)
       window.logger('[webrtc] client ice config', {
-        alias: safeAlias(this.alias),
         source: ice.source,
         turnConfigured: this.turnConfigured,
         credentialMode: this.credentialMode,
@@ -161,7 +161,6 @@ class RemoteConnection {
     this.pc.addEventListener('icecandidate', (event) => {
       if (!event.candidate) {
         window.logger('[webrtc] client gathering complete', {
-          alias: safeAlias(this.alias),
           stats: this.candidateStats,
           turnConfigured: this.turnConfigured
         })
@@ -169,7 +168,6 @@ class RemoteConnection {
       }
       const summary = recordCandidateStat(this.candidateStats, event.candidate)
       window.logger('[webrtc] client local candidate', {
-        alias: safeAlias(this.alias),
         type: summary.type,
         protocol: summary.protocol,
         mdns: summary.mdns,
@@ -197,8 +195,12 @@ class RemoteConnection {
     }
     const connectionState = this.pc.connectionState
     const iceConnectionState = this.pc.iceConnectionState
+    this.transportDetail = formatIceProgress({
+      connectionState,
+      iceConnectionState,
+      iceGatheringState: this.pc.iceGatheringState
+    })
     window.logger('[webrtc] client transport', {
-      alias: safeAlias(this.alias),
       connectionState,
       iceConnectionState,
       turnConfigured: this.turnConfigured,
@@ -219,17 +221,21 @@ class RemoteConnection {
       }
       this._stopPolling()
     }
+    if (this.connectionState === RemoteConnectionStatus.CONNECTING) {
+      this.onStatusChange(this.connectionState)
+    }
   }
 
   _failJoin() {
-    this.failureHint = buildJoinFailureHint({
+    const reason = buildJoinFailureHint({
       turnConfigured: this.turnConfigured,
       stats: this.candidateStats
     })
+    this.failureHint = this.transportDetail ? `${reason} (${this.transportDetail})` : reason
     window.logger('[webrtc] join failed', {
-      alias: safeAlias(this.alias),
       turnConfigured: Boolean(this.turnConfigured),
       stats: this.candidateStats,
+      ice: this.transportDetail,
       hint: this.failureHint
     })
     this._updateStatus(RemoteConnectionStatus.FAILED)
@@ -278,7 +284,6 @@ class RemoteConnection {
       offerRevision: this.offerRevision
     })
     window.logger('[webrtc] ICE restart posted', {
-      alias: safeAlias(this.alias),
       offerRevision: this.offerRevision,
       turnConfigured: Boolean(this.turnConfigured)
     })
@@ -348,6 +353,7 @@ class RemoteConnection {
         this.pollErrorCount += 1
         window.logger.warn('Remote session polling failed:', err)
         if (this.pollErrorCount >= 3) {
+          this.failureHint = 'Could not reach the signalling server. Check that this device can open the invite page, then try again.'
           this._updateStatus(RemoteConnectionStatus.FAILED)
           this._stopPolling()
           return
@@ -362,14 +368,15 @@ class RemoteConnection {
     tick()
     this.handshakeTimer = setTimeout(() => {
       if (this.connectionState === RemoteConnectionStatus.CONNECTING) {
-        this.failureHint = buildJoinFailureHint({
+        const reason = buildJoinFailureHint({
           turnConfigured: this.turnConfigured,
           stats: this.candidateStats
         })
+        this.failureHint = this.transportDetail ? `${reason} (${this.transportDetail})` : reason
         window.logger('[webrtc] join timed out', {
-          alias: safeAlias(this.alias),
           turnConfigured: Boolean(this.turnConfigured),
-          stats: this.candidateStats
+          stats: this.candidateStats,
+          ice: this.transportDetail
         })
         this._updateStatus(RemoteConnectionStatus.FAILED)
         this._stopPolling()

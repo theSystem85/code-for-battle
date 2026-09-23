@@ -2,7 +2,9 @@ import {
   countCandidateSummaries,
   describeIceUrl,
   emptyCandidateStats,
+  iceServerHasTurnCredentials,
   isBenignIceError,
+  parseIceServersConfig,
   parseTurnUrls,
   recordCandidateStat,
   safeAlias,
@@ -14,7 +16,9 @@ export {
   countCandidateSummaries,
   describeIceUrl,
   emptyCandidateStats,
+  iceServerHasTurnCredentials,
   isBenignIceError,
+  parseIceServersConfig,
   parseTurnUrls,
   recordCandidateStat,
   safeAlias,
@@ -66,22 +70,34 @@ export function normalizeIceServers(payload) {
   return normalized
 }
 
-export function fallbackIceConfig() {
-  const iceServers = [{ urls: DEFAULT_STUN_URLS.slice() }]
-  const turnUrls = parseTurnUrls(readVite('VITE_TURN_URLS'))
-  const username = readVite('VITE_TURN_USERNAME')
-  const credential = readVite('VITE_TURN_CREDENTIAL')
-  let turnConfigured = false
-  if (turnUrls.length && username && credential) {
+export function buildFallbackIceConfigFromEnv(env = {}) {
+  const configured = parseIceServersConfig(env.VITE_ICE_SERVERS || env.ICE_SERVERS)
+  const iceServers = [{ urls: DEFAULT_STUN_URLS.slice() }, ...configured]
+  const turnUrls = parseTurnUrls(env.VITE_TURN_URLS)
+  const username = String(env.VITE_TURN_USERNAME || '').trim()
+  const credential = String(env.VITE_TURN_CREDENTIAL || '').trim()
+  if (!iceServers.some(iceServerHasTurnCredentials) && turnUrls.length && username && credential) {
     iceServers.push({ urls: turnUrls, username, credential })
-    turnConfigured = true
   }
+  const turnConfigured = iceServers.some(iceServerHasTurnCredentials)
+  let credentialMode = 'none'
+  if (turnConfigured && configured.some(iceServerHasTurnCredentials)) credentialMode = 'vite-ice-servers'
+  else if (turnConfigured) credentialMode = 'vite-static'
   return {
     iceServers,
     turnConfigured,
-    credentialMode: turnConfigured ? 'vite-static' : 'none',
+    credentialMode,
     source: 'fallback'
   }
+}
+
+export function fallbackIceConfig() {
+  return buildFallbackIceConfigFromEnv({
+    VITE_ICE_SERVERS: readVite('VITE_ICE_SERVERS'),
+    VITE_TURN_URLS: readVite('VITE_TURN_URLS'),
+    VITE_TURN_USERNAME: readVite('VITE_TURN_USERNAME'),
+    VITE_TURN_CREDENTIAL: readVite('VITE_TURN_CREDENTIAL')
+  })
 }
 
 export function buildPeerConnectionConfig(iceServers) {
@@ -94,6 +110,16 @@ export function buildPeerConnectionConfig(iceServers) {
     rtcpMuxPolicy: 'require',
     iceCandidatePoolSize: 0
   }
+}
+
+export function formatIceProgress({ connectionState, iceConnectionState, iceGatheringState } = {}) {
+  const ice = iceConnectionState || 'unknown'
+  const connection = connectionState || 'unknown'
+  const parts = [`ICE ${ice}`, `connection ${connection}`]
+  if (iceGatheringState && iceGatheringState !== 'complete') {
+    parts.push(`gathering ${iceGatheringState}`)
+  }
+  return parts.join(', ')
 }
 
 export function buildJoinFailureHint({ turnConfigured = false, stats = null } = {}) {

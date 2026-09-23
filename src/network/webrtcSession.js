@@ -12,7 +12,6 @@ import {
   isBenignIceError,
   recordCandidateStat,
   resolveIceServers,
-  safeAlias,
   summarizeIceServers,
   waitForIceGathering
 } from './iceConfig.js'
@@ -180,7 +179,6 @@ class HostSession {
     this.pc.addEventListener('icecandidate', (event) => {
       if (!event.candidate) {
         window.logger('[webrtc] host gathering complete', {
-          alias: safeAlias(this.alias),
           stats: this.candidateStats,
           turnConfigured: this.turnConfigured
         })
@@ -188,7 +186,6 @@ class HostSession {
       }
       const summary = recordCandidateStat(this.candidateStats, event.candidate)
       window.logger('[webrtc] host local candidate', {
-        alias: safeAlias(this.alias),
         type: summary.type,
         protocol: summary.protocol,
         mdns: summary.mdns,
@@ -221,7 +218,6 @@ class HostSession {
     const connectionState = this.pc.connectionState
     const iceConnectionState = this.pc.iceConnectionState
     window.logger('[webrtc] host transport', {
-      alias: safeAlias(this.alias),
       peerId: this.peerId,
       connectionState,
       iceConnectionState,
@@ -251,7 +247,7 @@ class HostSession {
       stats: this.candidateStats
     })
     window.logger('[webrtc] host join failed', {
-      alias: safeAlias(this.alias),
+      peerId: this.peerId,
       turnConfigured: Boolean(this.turnConfigured),
       stats: this.candidateStats,
       hint
@@ -485,7 +481,6 @@ class HostInviteMonitor {
       })
       this.sessions.set(entry.peerId, session)
       window.logger('[webrtc] host saw offer', {
-        alias: safeAlias(entry.alias),
         peerId: entry.peerId,
         offerRevision: entry.offerRevision || null,
         candidates: Array.isArray(entry.candidates) ? entry.candidates.length : 0

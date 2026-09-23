@@ -35,8 +35,10 @@ describe('signalling API', () => {
   })
 
   it('keeps concurrent ICE candidates and reports them with the offer', async() => {
+    const logs = []
+    const spy = vi.spyOn(console, 'log').mockImplementation((line) => logs.push(String(line)))
     const offer = await handler(request('POST', '/api/signalling/offer', {
-      inviteToken: 'invite-galina',
+      inviteToken: 'lobby-token-aaaa',
       alias: 'galina',
       peerId: 'peer-1',
       offer: JSON.stringify({ type: 'offer', sdp: 'v=0' }),
@@ -48,14 +50,14 @@ describe('signalling API', () => {
     const relayLine = 'candidate:2 1 udp 1 203.0.113.4 3478 typ relay'
     await Promise.all([
       handler(request('POST', '/api/signalling/candidate', {
-        inviteToken: 'invite-galina',
+        inviteToken: 'lobby-token-aaaa',
         peerId: 'peer-1',
         alias: 'galina',
         origin: 'peer',
         candidate: JSON.stringify({ candidate: hostLine, sdpMid: '0', sdpMLineIndex: 0 })
       })),
       handler(request('POST', '/api/signalling/candidate', {
-        inviteToken: 'invite-galina',
+        inviteToken: 'lobby-token-aaaa',
         peerId: 'peer-1',
         alias: 'galina',
         origin: 'host',
@@ -63,13 +65,21 @@ describe('signalling API', () => {
       }))
     ])
 
-    const pending = await handler(request('GET', '/api/signalling/pending/invite-galina'))
+    const pending = await handler(request('GET', '/api/signalling/pending/lobby-token-aaaa'))
     const sessions = await pending.json()
     expect(sessions).toHaveLength(1)
     expect(sessions[0].alias).toBe('galina')
     expect(sessions[0].offerRevision).toBe(1)
     expect(sessions[0].candidates).toHaveLength(2)
     expect(sessions[0].candidates.map((entry) => entry.origin).sort()).toEqual(['host', 'peer'])
+    const logged = logs.join('\n')
+    expect(logged).toContain('"event":"offer"')
+    expect(logged).toContain('"event":"candidate"')
+    expect(logged).toContain('"event":"pending"')
+    expect(logged).not.toContain('galina')
+    expect(logged).not.toContain('192.168.0.2')
+    expect(logged).not.toContain('203.0.113.4')
+    spy.mockRestore()
   })
 
   it('returns STUN-only config and does not log a TURN secret', async() => {
@@ -96,24 +106,56 @@ describe('signalling API', () => {
     spy.mockRestore()
   })
 
+  it('wires TURN from ICE_SERVERS without logging the credential', async() => {
+    const logs = []
+    const spy = vi.spyOn(console, 'log').mockImplementation((line) => logs.push(String(line)))
+    globalThis.Netlify = {
+      env: {
+        get(name) {
+          if (name === 'ICE_SERVERS') {
+            return JSON.stringify([{
+              urls: 'turns:turn.example.com:443?transport=tcp',
+              username: 'metered-user',
+              credential: 'metered-do-not-log'
+            }])
+          }
+          return ''
+        }
+      }
+    }
+
+    const response = await handler(request('GET', '/api/signalling/ice-servers'))
+    const payload = await response.json()
+    expect(payload.turnConfigured).toBe(true)
+    expect(payload.credentialMode).toBe('ice-servers')
+    expect(payload.iceServers.some((server) => server.credential === 'metered-do-not-log')).toBe(true)
+    expect(logs.join('\n')).not.toContain('metered-do-not-log')
+    expect(logs.join('\n')).not.toContain('metered-user')
+    spy.mockRestore()
+  })
+
   it('echoes the answer revision so an ICE restart can ignore a stale answer', async() => {
+    const logs = []
+    const spy = vi.spyOn(console, 'log').mockImplementation((line) => logs.push(String(line)))
     await handler(request('POST', '/api/signalling/offer', {
-      inviteToken: 'invite-max',
+      inviteToken: 'lobby-token-bbbb',
       alias: 'max',
       peerId: 'peer-9',
       offer: JSON.stringify({ type: 'offer', sdp: 'first' }),
       offerRevision: 2
     }))
     await handler(request('POST', '/api/signalling/answer', {
-      inviteToken: 'invite-max',
+      inviteToken: 'lobby-token-bbbb',
       peerId: 'peer-9',
       answer: JSON.stringify({ type: 'answer', sdp: 'reply' }),
       offerRevision: 2
     }))
 
-    const response = await handler(request('GET', '/api/signalling/session/invite-max/peer-9'))
+    const response = await handler(request('GET', '/api/signalling/session/lobby-token-bbbb/peer-9'))
     const payload = await response.json()
     expect(payload.answerRevision).toBe(2)
     expect(payload.offerRevision).toBe(2)
+    expect(logs.join('\n')).not.toContain('max')
+    spy.mockRestore()
   })
 })

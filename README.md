@@ -70,13 +70,43 @@ For invite-based WebRTC multiplayer testing, run the signalling helper in a seco
 npm run stun
 ```
 
-Cross-device joins (iPhone, iPad, or a client on another network) need a TURN relay in addition to STUN. Same-computer browsers can connect with host candidates alone. Set these variables for Netlify Functions (production, deploy previews, and branch deploys) or in the environment of `npm run stun`:
+Cross-device joins (iPhone, iPad, or a client on another network) need a TURN relay in addition to STUN. Same-computer browsers can connect with host candidates alone. Phones cannot open an invite whose host is `localhost`, and iOS Safari will not start WebRTC on a plain `http://` page. Create the invite on the public HTTPS site.
 
+Set these variables for Netlify Functions (production, deploy previews, and branch deploys) or in the environment of `npm run stun`. In the Netlify UI: Site configuration → Environment variables → add the key for Functions. Do not put TURN passwords in `VITE_*` variables for a production build; those are embedded in the client bundle and are only a fallback when `GET /api/signalling/ice-servers` fails.
+
+- `ICE_SERVERS` — JSON array of RTCIceServer objects, or `{ "iceServers": [ ... ] }`. Use this when a provider dashboard gives you the whole list. Public STUN is always added as well.
 - `TURN_URLS` — comma-separated `turn:` and `turns:` URLs. Include TCP and `turns:` on port 443 so iOS Safari and cellular networks can connect.
 - `TURN_SECRET` — coturn `static-auth-secret` / `use-auth-secret`. The signalling API mints a 12-hour username (`<expiry>:cfb`) and HMAC-SHA1 credential and does not log the secret.
-- Or, instead of `TURN_SECRET`, set `TURN_USERNAME` and `TURN_CREDENTIAL` for a provider that issues a static username and password.
+- Or, instead of `TURN_SECRET`, set `TURN_USERNAME` and `TURN_CREDENTIAL` for a provider that issues a username and password.
+- Optional build-time fallback, only if the ice-servers request fails: `VITE_ICE_SERVERS` (same JSON as `ICE_SERVERS`), or `VITE_TURN_URLS` plus `VITE_TURN_USERNAME` and `VITE_TURN_CREDENTIAL`.
 
-The browser asks `GET /api/signalling/ice-servers` when a peer connection starts. Function logs include the player alias and candidate type (`host`, `srflx`, `relay`, mDNS) without IP addresses, usernames, or credentials. A join that only gathered mDNS host candidates and `relay: 0` cannot reach another device until TURN is configured.
+The browser asks `GET /api/signalling/ice-servers` when a peer connection starts. Function logs record candidate type (`host`, `srflx`, `relay`, mDNS) without player names, IP addresses, usernames, or credentials. A join that only gathered mDNS host candidates and `relay: 0` cannot reach another device until TURN is configured. The phone's join screen shows the ICE state (`ICE checking`, `ICE failed`) and the failure reason.
+
+### TURN providers
+
+Paste credentials from the provider dashboard. This repo does not ship a live relay password.
+
+**Metered.ca (free Open Relay or metered TURN).** Sign up at [Metered TURN](https://www.metered.ca/tools/openrelay/), create a credential, and copy the `iceServers` JSON into `ICE_SERVERS`. Prefer the `turns:` URL on port 443. Open Relay credentials from their REST API expire; when they do, paste a fresh JSON value (or use `TURN_URLS` / `TURN_USERNAME` / `TURN_CREDENTIAL` if the dashboard shows a longer-lived username and password). Example shape, with placeholder values:
+
+```json
+[
+  {
+    "urls": [
+      "turn:global.relay.metered.ca:80",
+      "turn:global.relay.metered.ca:443",
+      "turns:global.relay.metered.ca:443?transport=tcp"
+    ],
+    "username": "<from the Metered dashboard>",
+    "credential": "<from the Metered dashboard>"
+  }
+]
+```
+
+**Twilio Network Traversal.** Create a token with the [Network Traversal Service](https://www.twilio.com/docs/stun-turn). The response `ice_servers` entries expire (often within a day). Map `url`/`urls`, `username`, and `credential` into `ICE_SERVERS`. Do not put the Twilio auth token in the client.
+
+**Cloudflare Realtime TURN.** Generate short-lived TURN credentials from the Cloudflare dashboard or API and paste the resulting `turn`/`turns` URLs plus username and credential into `ICE_SERVERS` or `TURN_URLS` + `TURN_USERNAME` + `TURN_CREDENTIAL`. Refresh them before they expire. Include a `turns:` URL on port 443 for iOS.
+
+**Self-hosted coturn.** Set `TURN_URLS` and `TURN_SECRET` to the server's `static-auth-secret`. The function mints the username and HMAC itself, so you do not rotate a password by hand.
 
 ### 🧪 Optional Netlify local multiplayer test
 

@@ -1,4 +1,9 @@
-const INVITE_BASE_URL = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'
+function inviteOrigin() {
+  if (typeof window !== 'undefined' && window.location && window.location.origin) {
+    return window.location.origin
+  }
+  return 'http://localhost:5173'
+}
 
 export function composeInviteToken(gameInstanceId, partyId) {
   return `${gameInstanceId}-${partyId}-${Date.now()}`
@@ -40,7 +45,25 @@ export function parsePartyIdFromToken(token) {
 }
 
 export function buildInviteUrl(token) {
-  return `${INVITE_BASE_URL}?invite=${token}`
+  return `${inviteOrigin()}?invite=${token}`
+}
+
+export function describeInviteReachability(url) {
+  let parsed
+  try {
+    parsed = new URL(url)
+  } catch {
+    return 'This invite link is not a valid URL, so another device cannot open it.'
+  }
+  const host = String(parsed.hostname || '').toLowerCase().replace(/^\[|\]$/g, '')
+  const loopback = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host === '0.0.0.0'
+  if (loopback) {
+    return 'This link points at this computer (localhost). A phone or tablet cannot open it. Open the game on the public HTTPS site and create the invite there.'
+  }
+  if (parsed.protocol !== 'https:') {
+    return 'This page is not HTTPS. A phone can open an http link on the same Wi-Fi, but iPhone and iPad Safari will not start WebRTC unless the page is a secure context. Use the public HTTPS site to invite another device.'
+  }
+  return ''
 }
 
 export function humanReadablePartyLabel(color, owner) {

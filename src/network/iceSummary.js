@@ -5,6 +5,50 @@ export function parseTurnUrls(value) {
     .filter((part) => part.startsWith('turn:') || part.startsWith('turns:'))
 }
 
+function isIceUrl(url) {
+  return /^(?:stuns?|turns?):/i.test(String(url || ''))
+}
+
+export function parseIceServersConfig(value) {
+  if (!value) return []
+  let parsed = value
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return []
+    try {
+      parsed = JSON.parse(trimmed)
+    } catch {
+      return []
+    }
+  }
+  const list = Array.isArray(parsed)
+    ? parsed
+    : (Array.isArray(parsed?.iceServers) ? parsed.iceServers : [])
+  const normalized = []
+  for (const server of list) {
+    if (!server || typeof server !== 'object') continue
+    const rawUrls = Array.isArray(server.urls) ? server.urls : [server.urls]
+    const urls = rawUrls.map((url) => String(url || '').trim()).filter(isIceUrl)
+    if (!urls.length) continue
+    const next = { urls }
+    const username = String(server.username || '').trim()
+    const credential = String(server.credential || '').trim()
+    if (username) next.username = username
+    if (credential) next.credential = credential
+    normalized.push(next)
+  }
+  return normalized
+}
+
+export function iceServerHasTurnCredentials(server) {
+  const urls = Array.isArray(server?.urls) ? server.urls : [server?.urls]
+  const hasTurn = urls.some((url) => {
+    const value = String(url || '')
+    return value.startsWith('turn:') || value.startsWith('turns:')
+  })
+  return Boolean(hasTurn && String(server?.username || '').trim() && String(server?.credential || '').trim())
+}
+
 export function describeIceUrl(url) {
   const value = String(url || '')
   const scheme = value.split(':')[0] || 'unknown'

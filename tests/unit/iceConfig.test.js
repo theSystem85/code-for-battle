@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import { createHmac } from 'node:crypto'
 import {
+  buildFallbackIceConfigFromEnv,
   buildJoinFailureHint,
   countCandidateSummaries,
   describeIceUrl,
+  formatIceProgress,
   summarizeIceCandidate,
   waitForIceGathering
 } from '../../src/network/iceConfig.js'
+import { describeInviteReachability } from '../../src/network/invites.js'
 import { buildIceServerPayload, createEphemeralTurnCredential } from '../../src/network/turnCredentials.js'
 import { shouldBypassServiceWorkerCache } from '../../src/pwa/serviceWorkerCachePolicy.js'
 import { readFileSync } from 'node:fs'
@@ -57,6 +60,19 @@ describe('ICE candidate summaries', () => {
     expect(buildJoinFailureHint({ turnConfigured: true, stats: { relay: 0 } }))
       .toContain('no relay candidates')
   })
+
+  it('describes ICE progress without addresses', () => {
+    expect(formatIceProgress({
+      connectionState: 'connecting',
+      iceConnectionState: 'checking',
+      iceGatheringState: 'gathering'
+    })).toBe('ICE checking, connection connecting, gathering gathering')
+    expect(formatIceProgress({
+      connectionState: 'failed',
+      iceConnectionState: 'failed',
+      iceGatheringState: 'complete'
+    })).toBe('ICE failed, connection failed')
+  })
 })
 
 describe('TURN credentials', () => {
@@ -88,6 +104,53 @@ describe('TURN credentials', () => {
     })
     expect(payload.credentialMode).toBe('static')
     expect(payload.iceServers[1]).toMatchObject({ username: 'player', credential: 'password' })
+  })
+
+  it('accepts an ICE_SERVERS JSON list and still includes public STUN', () => {
+    const payload = buildIceServerPayload({
+      ICE_SERVERS: JSON.stringify({
+        iceServers: [
+          { urls: 'stun:stun.example.com:3478' },
+          {
+            urls: ['turn:turn.example.com:3478?transport=udp', 'turns:turn.example.com:443?transport=tcp'],
+            username: 'metered-user',
+            credential: 'metered-secret'
+          },
+          { urls: 'http://evil.example/steal' }
+        ]
+      })
+    })
+    expect(payload.turnConfigured).toBe(true)
+    expect(payload.credentialMode).toBe('ice-servers')
+    expect(payload.iceServers[0].urls).toEqual([
+      'stun:stun.l.google.com:19302',
+      'stun:stun1.l.google.com:19302'
+    ])
+    expect(payload.turnHosts).toEqual(['turn.example.com:3478', 'turn.example.com:443'])
+    expect(JSON.stringify(payload.iceServers)).not.toContain('http://evil.example')
+    expect(buildIceServerPayload({ ICE_SERVERS: '{not json' }).turnConfigured).toBe(false)
+  })
+
+  it('builds the Vite fallback from VITE_ICE_SERVERS when the signalling request fails', () => {
+    const fallback = buildFallbackIceConfigFromEnv({
+      VITE_ICE_SERVERS: JSON.stringify([{
+        urls: 'turns:turn.example.com:443?transport=tcp',
+        username: 'user',
+        credential: 'pass'
+      }])
+    })
+    expect(fallback.turnConfigured).toBe(true)
+    expect(fallback.credentialMode).toBe('vite-ice-servers')
+    expect(fallback.iceServers[0].urls[0]).toBe('stun:stun.l.google.com:19302')
+  })
+})
+
+describe('invite reachability', () => {
+  it('warns when a phone cannot open the host page', () => {
+    expect(describeInviteReachability('http://localhost:5173?invite=abc')).toContain('localhost')
+    expect(describeInviteReachability('http://127.0.0.1:5173?invite=abc')).toContain('localhost')
+    expect(describeInviteReachability('http://192.168.1.20:5173?invite=abc')).toContain('HTTPS')
+    expect(describeInviteReachability('https://code-for-battle.netlify.app?invite=abc')).toBe('')
   })
 })
 

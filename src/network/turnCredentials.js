@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto'
-import { describeIceUrl, parseTurnUrls } from './iceSummary.js'
+import { describeIceUrl, iceServerHasTurnCredentials, parseIceServersConfig, parseTurnUrls } from './iceSummary.js'
 
 export const DEFAULT_STUN_URLS = [
   'stun:stun.l.google.com:19302',
@@ -15,16 +15,32 @@ export function createEphemeralTurnCredential(secret, ttlSeconds = DEFAULT_TURN_
   return { username, credential, ttlSeconds, expiresAt: expiry }
 }
 
+function collectTurnHosts(iceServers) {
+  const hosts = []
+  for (const server of iceServers) {
+    const urls = Array.isArray(server?.urls) ? server.urls : [server?.urls]
+    for (const url of urls) {
+      const value = String(url || '')
+      if (value.startsWith('turn:') || value.startsWith('turns:')) {
+        hosts.push(describeIceUrl(value).host)
+      }
+    }
+  }
+  return hosts
+}
+
 export function buildIceServerPayload(env = {}) {
+  const configured = parseIceServersConfig(env.ICE_SERVERS)
   const turnUrls = parseTurnUrls(env.TURN_URLS)
   const secret = String(env.TURN_SECRET || '').trim()
   const username = String(env.TURN_USERNAME || '').trim()
   const credential = String(env.TURN_CREDENTIAL || '').trim()
-  const iceServers = [{ urls: DEFAULT_STUN_URLS.slice() }]
-  let credentialMode = 'none'
+  const iceServers = [{ urls: DEFAULT_STUN_URLS.slice() }, ...configured]
+  let credentialMode = configured.some(iceServerHasTurnCredentials) ? 'ice-servers' : 'none'
   let ttlSeconds = null
+  const turnAlreadyPresent = iceServers.some(iceServerHasTurnCredentials)
 
-  if (turnUrls.length && secret) {
+  if (!turnAlreadyPresent && turnUrls.length && secret) {
     const ephemeral = createEphemeralTurnCredential(secret)
     iceServers.push({
       urls: turnUrls,
@@ -33,16 +49,16 @@ export function buildIceServerPayload(env = {}) {
     })
     credentialMode = 'ephemeral'
     ttlSeconds = ephemeral.ttlSeconds
-  } else if (turnUrls.length && username && credential) {
+  } else if (!turnAlreadyPresent && turnUrls.length && username && credential) {
     iceServers.push({ urls: turnUrls, username, credential })
     credentialMode = 'static'
   }
 
   return {
     iceServers,
-    turnConfigured: credentialMode !== 'none',
-    credentialMode,
+    turnConfigured: iceServers.some(iceServerHasTurnCredentials),
+    credentialMode: iceServers.some(iceServerHasTurnCredentials) ? credentialMode : 'none',
     ttlSeconds,
-    turnHosts: turnUrls.map((url) => describeIceUrl(url).host)
+    turnHosts: collectTurnHosts(iceServers)
   }
 }

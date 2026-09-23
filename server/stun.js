@@ -1,7 +1,7 @@
 import express from 'express'
 
 import cors from 'cors'
-import { safeAlias, summarizeIceCandidate } from '../src/network/iceConfig.js'
+import { summarizeIceCandidate } from '../src/network/iceSummary.js'
 import { buildIceServerPayload } from '../src/network/turnCredentials.js'
 
 const PORT = process.env.STUN_PORT ?? 3333
@@ -35,7 +35,6 @@ app.post('/signalling/offer', (req, res) => {
   console.log(JSON.stringify({
     scope: 'signalling',
     event: 'offer',
-    alias: safeAlias(alias),
     peerId,
     inviteSuffix: String(inviteToken).slice(-8),
     offerRevision
@@ -99,7 +98,6 @@ app.post('/signalling/candidate', (req, res) => {
   console.log(JSON.stringify({
     scope: 'signalling',
     event: 'candidate',
-    alias: safeAlias(session.alias || req.body.alias),
     peerId,
     origin: req.body.origin || 'peer',
     type: summary.type,
@@ -151,6 +149,7 @@ app.get('/signalling/session/:inviteToken/:peerId', (req, res) => {
 
 app.get('/signalling/ice-servers', (_req, res) => {
   const payload = buildIceServerPayload({
+    ICE_SERVERS: process.env.ICE_SERVERS,
     TURN_URLS: process.env.TURN_URLS,
     TURN_SECRET: process.env.TURN_SECRET,
     TURN_USERNAME: process.env.TURN_USERNAME,
