@@ -5,11 +5,21 @@ import { applyRemoteControlSnapshot, releaseRemoteControlSource } from '../input
 import { emitMultiplayerSessionChange } from './multiplayerSessionEvents.js'
 import { fetchPendingSessions, postAnswer, postCandidate } from './signalling.js'
 import { handleReceivedCommand, startGameStateSync, stopGameStateSync, updateNetworkStats, notifyClientConnected, initializeLockstepSession, isLockstepEnabled, disableLockstep } from './gameCommandSync.js'
+import {
+  buildJoinFailureHint,
+  buildPeerConnectionConfig,
+  emptyCandidateStats,
+  isBenignIceError,
+  recordCandidateStat,
+  resolveIceServers,
+  safeAlias,
+  summarizeIceServers,
+  waitForIceGathering
+} from './iceConfig.js'
 
-const DEFAULT_POLL_INTERVAL_MS = 2000
+const DEFAULT_POLL_INTERVAL_MS = 1000
 const DEFAULT_HOST_STATUS_INTERVAL_MS = 1500
 const HEARTBEAT_TIMEOUT_MS = 6000
-const DEFAULT_ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }]
 const _AI_FALLBACK_DELAY_MS = 30000
 
 // Event type for AI reactivation
@@ -57,7 +67,7 @@ export function observeAiReactivation(handler) {
 }
 
 class HostSession {
-  constructor({ inviteToken, peerId, alias, partyId, rtcConfig, onStateChange, onControlMessage }) {
+  constructor({ inviteToken, peerId, alias, partyId, rtcConfig, turnConfigured = false, onStateChange, onControlMessage }) {
     this.inviteToken = inviteToken
     this.peerId = peerId
     this.alias = alias || 'Remote'
@@ -71,28 +81,48 @@ class HostSession {
     this.unresponsiveSince = null
     this.aiFallbackHandle = null
     this.dataChannel = null
+    this.turnConfigured = Boolean(turnConfigured)
+    this.candidateStats = emptyCandidateStats()
+    this.failureNotified = false
+    this.answeredRevision = null
+    this.lastOfferSdp = ''
     this.pc = new RTCPeerConnection(rtcConfig)
     this.onStateChange = onStateChange
     this.onControlMessage = onControlMessage
     this._setupPeerConnection()
   }
 
-  async answerOffer(offerPayload) {
-    if (!this.pc || this.answerSent || !offerPayload) {
+  async answerOffer(offerPayload, offerRevision = null) {
+    if (!this.pc || !offerPayload) {
       return
     }
 
+    const offer = typeof offerPayload === 'string' ? JSON.parse(offerPayload) : offerPayload
+    const revision = offerRevision || null
+    if (this.answerSent) {
+      if (revision) {
+        if (revision === this.answeredRevision) return
+      } else if (this.lastOfferSdp === offer?.sdp) {
+        return
+      }
+    }
+
     try {
-      const offer = typeof offerPayload === 'string' ? JSON.parse(offerPayload) : offerPayload
       await this.pc.setRemoteDescription(offer)
       const answer = await this.pc.createAnswer()
       await this.pc.setLocalDescription(answer)
-      await postAnswer({
+      await waitForIceGathering(this.pc)
+      const local = this.pc.localDescription || answer
+      const body = {
         inviteToken: this.inviteToken,
         peerId: this.peerId,
-        answer: JSON.stringify(answer)
-      })
+        answer: JSON.stringify(local)
+      }
+      if (revision) body.offerRevision = revision
+      await postAnswer(body)
       this.answerSent = true
+      this.answeredRevision = revision
+      this.lastOfferSdp = offer?.sdp || ''
       this._flushPendingCandidates()
     } catch (err) {
       console.error('Failed to answer WebRTC offer:', err)
@@ -149,40 +179,84 @@ class HostSession {
 
     this.pc.addEventListener('icecandidate', (event) => {
       if (!event.candidate) {
+        window.logger('[webrtc] host gathering complete', {
+          alias: safeAlias(this.alias),
+          stats: this.candidateStats,
+          turnConfigured: this.turnConfigured
+        })
         return
       }
+      const summary = recordCandidateStat(this.candidateStats, event.candidate)
+      window.logger('[webrtc] host local candidate', {
+        alias: safeAlias(this.alias),
+        type: summary.type,
+        protocol: summary.protocol,
+        mdns: summary.mdns,
+        privateOrLoopback: summary.privateOrLoopback
+      })
       postCandidate({
         inviteToken: this.inviteToken,
         peerId: this.peerId,
         candidate: JSON.stringify(event.candidate),
-        origin: 'host'
+        origin: 'host',
+        alias: this.alias
       }).catch((err) => {
         window.logger.warn('Failed to post host ICE candidate:', err)
       })
     })
 
-    this.pc.addEventListener('connectionstatechange', () => {
-      if (!this.pc) {
-        return
-      }
-      const state = this.pc.connectionState
-      let normalized = SESSION_STATES.PENDING
-      if (state === 'connected') {
-        normalized = SESSION_STATES.CONNECTED
-      } else if (state === 'disconnected') {
-        normalized = SESSION_STATES.DISCONNECTED
-      } else if (state === 'failed' || state === 'closed') {
-        normalized = SESSION_STATES.FAILED
-      }
-      if (this.connectionState !== normalized) {
-        this.connectionState = normalized
-        this.onStateChange?.(this, normalized)
-      }
-    })
+    const onTransport = () => this._handleTransportState()
+    this.pc.addEventListener('connectionstatechange', onTransport)
+    this.pc.addEventListener('iceconnectionstatechange', onTransport)
 
     this.pc.addEventListener('datachannel', (event) => {
       this._attachDataChannel(event.channel)
     })
+  }
+
+  _handleTransportState() {
+    if (!this.pc) {
+      return
+    }
+    const connectionState = this.pc.connectionState
+    const iceConnectionState = this.pc.iceConnectionState
+    window.logger('[webrtc] host transport', {
+      alias: safeAlias(this.alias),
+      peerId: this.peerId,
+      connectionState,
+      iceConnectionState,
+      turnConfigured: this.turnConfigured,
+      stats: this.candidateStats
+    })
+    let normalized = SESSION_STATES.PENDING
+    if (connectionState === 'connected' || iceConnectionState === 'connected' || iceConnectionState === 'completed') {
+      normalized = SESSION_STATES.CONNECTED
+    } else if (connectionState === 'disconnected') {
+      normalized = SESSION_STATES.DISCONNECTED
+    } else if (connectionState === 'failed' || connectionState === 'closed' || iceConnectionState === 'failed') {
+      normalized = SESSION_STATES.FAILED
+      this._notifyJoinFailure()
+    }
+    if (normalized !== SESSION_STATES.PENDING && this.connectionState !== normalized) {
+      this.connectionState = normalized
+      this.onStateChange?.(this, normalized)
+    }
+  }
+
+  _notifyJoinFailure() {
+    if (this.failureNotified) return
+    this.failureNotified = true
+    const hint = buildJoinFailureHint({
+      turnConfigured: this.turnConfigured,
+      stats: this.candidateStats
+    })
+    window.logger('[webrtc] host join failed', {
+      alias: safeAlias(this.alias),
+      turnConfigured: Boolean(this.turnConfigured),
+      stats: this.candidateStats,
+      hint
+    })
+    showHostNotification(`${this.alias || 'Remote client'} could not connect. ${hint}`)
   }
 
   _attachDataChannel(channel) {
@@ -190,6 +264,10 @@ class HostSession {
       return
     }
     this.dataChannel = channel
+    if (channel.readyState === 'open' && this.connectionState !== SESSION_STATES.CONNECTED) {
+      this.connectionState = SESSION_STATES.CONNECTED
+      this.onStateChange?.(this, SESSION_STATES.CONNECTED)
+    }
     this.dataChannel.addEventListener('message', (event) => {
       window.logger('[HostSession] Raw message received from client:', event.data?.substring?.(0, 200) || event.data)
       // Track bytes received
@@ -210,6 +288,12 @@ class HostSession {
         this.onControlMessage?.(this, payload)
       }
     })
+    this.dataChannel.addEventListener('open', () => {
+      if (this.connectionState !== SESSION_STATES.CONNECTED) {
+        this.connectionState = SESSION_STATES.CONNECTED
+        this.onStateChange?.(this, SESSION_STATES.CONNECTED)
+      }
+    })
     this.dataChannel.addEventListener('close', () => {
       this.onStateChange?.(this, SESSION_STATES.DISCONNECTED)
     })
@@ -225,7 +309,9 @@ class HostSession {
       return
     }
     this.pc.addIceCandidate(candidate).catch((err) => {
-      window.logger.warn('Failed to add ICE candidate to host session:', err)
+      if (!isBenignIceError(err)) {
+        window.logger.warn('Failed to add ICE candidate to host session:', err?.message || 'unknown')
+      }
     })
   }
 
@@ -235,7 +321,9 @@ class HostSession {
     }
     this.pendingCandidates.forEach((candidate) => {
       this.pc.addIceCandidate(candidate).catch((err) => {
-        window.logger.warn('Failed to add queued host ICE candidate:', err)
+        if (!isBenignIceError(err)) {
+          window.logger.warn('Failed to add queued host ICE candidate:', err?.message || 'unknown')
+        }
       })
     })
     this.pendingCandidates = []
@@ -267,9 +355,12 @@ class HostInviteMonitor {
   constructor({ partyId, inviteToken, rtcConfig = {}, pollInterval = DEFAULT_POLL_INTERVAL_MS }) {
     this.partyId = partyId
     this.inviteToken = inviteToken
-    this.rtcConfig = {
-      iceServers: rtcConfig?.iceServers || DEFAULT_ICE_SERVERS
-    }
+    this.rtcConfig = rtcConfig?.iceServers
+      ? buildPeerConnectionConfig(rtcConfig.iceServers)
+      : buildPeerConnectionConfig()
+    this.turnConfigured = Boolean(rtcConfig?.turnConfigured)
+    this._iceReady = null
+    this._onVisibility = null
     this.pollInterval = pollInterval
     this.sessions = new Map()
     this.pollHandle = null
@@ -288,14 +379,30 @@ class HostInviteMonitor {
       return
     }
     this.running = true
+    this._iceReady = resolveIceServers().then((ice) => {
+      if (ice?.iceServers?.length) {
+        this.rtcConfig = buildPeerConnectionConfig(ice.iceServers)
+        this.turnConfigured = Boolean(ice.turnConfigured)
+      }
+      window.logger('[webrtc] host ice config', {
+        source: ice?.source || 'fallback',
+        turnConfigured: this.turnConfigured,
+        credentialMode: ice?.credentialMode || 'none',
+        servers: summarizeIceServers(this.rtcConfig.iceServers)
+      })
+    }).catch((err) => {
+      window.logger.warn('[webrtc] host ice config failed', err?.message || 'unknown')
+    })
     this._schedulePoll()
     this._startStatusBroadcast()
+    this._watchVisibility()
   }
 
   stop() {
     this.running = false
     this._stopPolling()
     this._stopStatusBroadcast()
+    this._unwatchVisibility()
     this.sessions.forEach((session) => {
       session.dispose()
       releaseRemoteControlSource(session.sourceId)
@@ -345,6 +452,13 @@ class HostInviteMonitor {
     if (!this.inviteToken) {
       return
     }
+    if (this._iceReady) {
+      try {
+        await this._iceReady
+      } catch {
+        // ICE config failure already logged; keep polling with the STUN fallback.
+      }
+    }
     try {
       const entries = await fetchPendingSessions(this.inviteToken)
       entries.forEach((entry) => this._processEntry(entry))
@@ -365,17 +479,44 @@ class HostInviteMonitor {
         alias: entry.alias,
         partyId: this.partyId,
         rtcConfig: this.rtcConfig,
+        turnConfigured: this.turnConfigured,
         onStateChange: (s, state) => this._handleSessionState(s, state),
         onControlMessage: (s, payload) => this._handleControlMessage(s, payload)
       })
       this.sessions.set(entry.peerId, session)
-      session.answerOffer(entry.offer).catch((err) => {
-        window.logger.warn('Failed to answer remote offer:', err)
+      window.logger('[webrtc] host saw offer', {
+        alias: safeAlias(entry.alias),
+        peerId: entry.peerId,
+        offerRevision: entry.offerRevision || null,
+        candidates: Array.isArray(entry.candidates) ? entry.candidates.length : 0
       })
     } else if (entry.alias && entry.alias !== session.alias) {
       session.alias = entry.alias
     }
+    session.answerOffer(entry.offer, entry.offerRevision || null).catch((err) => {
+      window.logger.warn('Failed to answer remote offer:', err)
+    })
     session.processCandidateEntries(entry.candidates)
+  }
+
+  _watchVisibility() {
+    if (typeof document === 'undefined' || this._onVisibility) return
+    this._onVisibility = () => {
+      if (!this.running) return
+      if (document.visibilityState && document.visibilityState !== 'visible') return
+      this._pollSessions().catch((err) => {
+        window.logger.warn('Host refresh after visibility change failed:', err)
+      })
+    }
+    document.addEventListener('visibilitychange', this._onVisibility)
+    document.addEventListener('pageshow', this._onVisibility)
+  }
+
+  _unwatchVisibility() {
+    if (typeof document === 'undefined' || !this._onVisibility) return
+    document.removeEventListener('visibilitychange', this._onVisibility)
+    document.removeEventListener('pageshow', this._onVisibility)
+    this._onVisibility = null
   }
 
   _handleSessionState(session, state) {

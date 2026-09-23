@@ -70,6 +70,14 @@ For invite-based WebRTC multiplayer testing, run the signalling helper in a seco
 npm run stun
 ```
 
+Cross-device joins (iPhone, iPad, or a client on another network) need a TURN relay in addition to STUN. Same-computer browsers can connect with host candidates alone. Set these variables for Netlify Functions (production, deploy previews, and branch deploys) or in the environment of `npm run stun`:
+
+- `TURN_URLS` — comma-separated `turn:` and `turns:` URLs. Include TCP and `turns:` on port 443 so iOS Safari and cellular networks can connect.
+- `TURN_SECRET` — coturn `static-auth-secret` / `use-auth-secret`. The signalling API mints a 12-hour username (`<expiry>:cfb`) and HMAC-SHA1 credential and does not log the secret.
+- Or, instead of `TURN_SECRET`, set `TURN_USERNAME` and `TURN_CREDENTIAL` for a provider that issues a static username and password.
+
+The browser asks `GET /api/signalling/ice-servers` when a peer connection starts. Function logs include the player alias and candidate type (`host`, `srflx`, `relay`, mDNS) without IP addresses, usernames, or credentials. A join that only gathered mDNS host candidates and `relay: 0` cannot reach another device until TURN is configured.
+
 ### 🧪 Optional Netlify local multiplayer test
 
 If Netlify CLI is installed globally, you can run a local Netlify environment for multiplayer/signalling endpoints:

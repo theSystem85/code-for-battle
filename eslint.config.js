@@ -26,6 +26,8 @@ export default [
         localStorage: 'readonly',
         sessionStorage: 'readonly',
         fetch: 'readonly',
+        Request: 'readonly',
+        Response: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
         Image: 'readonly',
@@ -50,7 +52,8 @@ export default [
         BarcodeDetector: 'readonly',
         WebGL2RenderingContext: 'readonly',
         alert: 'readonly',
-        process: 'readonly'
+        process: 'readonly',
+        Netlify: 'readonly'
       }
     },
     rules: {

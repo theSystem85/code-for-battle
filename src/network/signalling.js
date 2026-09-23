@@ -40,6 +40,22 @@ export function postCandidate(payload) {
   return postJson('/signalling/candidate', payload)
 }
 
+export function fetchIceServers() {
+  const cacheBuster = `_t=${Date.now()}`
+  const url = STUN_HOST === ''
+    ? `/api/signalling/ice-servers?${cacheBuster}`
+    : `${STUN_HOST}/signalling/ice-servers?${cacheBuster}`
+
+  return fetch(url, {
+    cache: 'no-store'
+  }).then((response) => {
+    if (!response.ok) {
+      throw new Error(`Failed to fetch ICE servers (${response.status})`)
+    }
+    return response.json().catch(() => ({}))
+  })
+}
+
 export function fetchPendingSessions(inviteToken) {
   if (!inviteToken) {
     throw new Error('Invite token is required to fetch pending sessions')

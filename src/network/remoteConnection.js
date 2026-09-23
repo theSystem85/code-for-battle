@@ -7,9 +7,20 @@ import {
   postCandidate,
   fetchSessionStatus
 } from './signalling.js'
+import {
+  buildJoinFailureHint,
+  buildPeerConnectionConfig,
+  emptyCandidateStats,
+  isBenignIceError,
+  recordCandidateStat,
+  resolveIceServers,
+  safeAlias,
+  summarizeIceServers,
+  waitForIceGathering
+} from './iceConfig.js'
 
-const DEFAULT_POLL_INTERVAL_MS = 2500
-const DEFAULT_ICE_SERVERS = [{ urls: 'stun:stun.l.google.com:19302' }]
+const DEFAULT_POLL_INTERVAL_MS = 1000
+const HANDSHAKE_TIMEOUT_MS = 25000
 
 export const RemoteConnectionStatus = {
   IDLE: 'idle',
@@ -50,21 +61,31 @@ class RemoteConnection {
     this.onDataChannelOpen = typeof onDataChannelOpen === 'function' ? onDataChannelOpen : () => {}
     this.onDataChannelMessage = typeof onDataChannelMessage === 'function' ? onDataChannelMessage : () => {}
     this.onDataChannelClose = typeof onDataChannelClose === 'function' ? onDataChannelClose : () => {}
-    this.rtcConfig = {
-      ...rtcConfig,
-      iceServers: rtcConfig?.iceServers || DEFAULT_ICE_SERVERS
-    }
+    this._explicitIceServers = Boolean(rtcConfig?.iceServers)
+    this.rtcConfig = rtcConfig?.iceServers
+      ? buildPeerConnectionConfig(rtcConfig.iceServers)
+      : buildPeerConnectionConfig()
+    this.turnConfigured = Boolean(rtcConfig?.turnConfigured)
+    this.credentialMode = rtcConfig?.credentialMode || 'none'
 
     this.connectionState = RemoteConnectionStatus.IDLE
     this.peerId = null
     this.pc = null
     this.dataChannel = null
     this.pollHandle = null
+    this.handshakeTimer = null
     this.pollActive = false
     this.remoteCandidateIndex = 0
     this.pendingRemoteCandidates = []
     this.answerApplied = false
+    this.appliedAnswerRevision = null
+    this.offerRevision = 0
+    this.iceRestartCount = 0
+    this._restarting = false
+    this.failureHint = null
+    this.candidateStats = emptyCandidateStats()
     this.pollErrorCount = 0
+    this._onVisibility = null
   }
 
   async start() {
@@ -72,11 +93,27 @@ class RemoteConnection {
       return this
     }
 
+    if (!this._explicitIceServers) {
+      const ice = await resolveIceServers()
+      this.turnConfigured = Boolean(ice.turnConfigured)
+      this.credentialMode = ice.credentialMode || 'none'
+      this.rtcConfig = buildPeerConnectionConfig(ice.iceServers)
+      window.logger('[webrtc] client ice config', {
+        alias: safeAlias(this.alias),
+        source: ice.source,
+        turnConfigured: this.turnConfigured,
+        credentialMode: this.credentialMode,
+        servers: summarizeIceServers(this.rtcConfig.iceServers)
+      })
+    }
+
     this.peerId = generateRandomId('peer')
+    this.offerRevision = 1
     this.pc = new RTCPeerConnection(this.rtcConfig)
     this._preconfigurePeerConnection()
     this._updateStatus(RemoteConnectionStatus.CONNECTING)
     this._attachDataChannel()
+    this._watchVisibility()
 
     await this._publishOffer()
     this._beginPolling()
@@ -85,6 +122,7 @@ class RemoteConnection {
 
   async stop() {
     this._stopPolling()
+    this._unwatchVisibility()
     if (this.dataChannel) {
       this.dataChannel.close()
       this.dataChannel = null
@@ -122,34 +160,129 @@ class RemoteConnection {
 
     this.pc.addEventListener('icecandidate', (event) => {
       if (!event.candidate) {
+        window.logger('[webrtc] client gathering complete', {
+          alias: safeAlias(this.alias),
+          stats: this.candidateStats,
+          turnConfigured: this.turnConfigured
+        })
         return
       }
+      const summary = recordCandidateStat(this.candidateStats, event.candidate)
+      window.logger('[webrtc] client local candidate', {
+        alias: safeAlias(this.alias),
+        type: summary.type,
+        protocol: summary.protocol,
+        mdns: summary.mdns,
+        privateOrLoopback: summary.privateOrLoopback
+      })
       postCandidate({
         inviteToken: this.inviteToken,
         peerId: this.peerId,
+        origin: 'peer',
+        alias: this.alias,
         candidate: JSON.stringify(event.candidate)
       }).catch((err) => {
         window.logger.warn('Failed to send ICE candidate to STUN helper:', err)
       })
     })
 
-    this.pc.addEventListener('connectionstatechange', () => {
-      if (!this.pc) {
-        return
-      }
-      const state = this.pc.connectionState
-      if (state === 'connected') {
-        this._updateStatus(RemoteConnectionStatus.CONNECTED)
-        updateSessionState({ connectedAt: Date.now() })
-      } else if (state === 'failed') {
-        this._updateStatus(RemoteConnectionStatus.FAILED)
-      } else if (state === 'disconnected' || state === 'closed') {
-        if (this.connectionState === RemoteConnectionStatus.CONNECTED) {
-          this._updateStatus(RemoteConnectionStatus.DISCONNECTED)
-        }
-        this._stopPolling()
-      }
+    const onTransport = () => this._handleTransportState()
+    this.pc.addEventListener('connectionstatechange', onTransport)
+    this.pc.addEventListener('iceconnectionstatechange', onTransport)
+  }
+
+  _handleTransportState() {
+    if (!this.pc) {
+      return
+    }
+    const connectionState = this.pc.connectionState
+    const iceConnectionState = this.pc.iceConnectionState
+    window.logger('[webrtc] client transport', {
+      alias: safeAlias(this.alias),
+      connectionState,
+      iceConnectionState,
+      turnConfigured: this.turnConfigured,
+      stats: this.candidateStats
     })
+    if (connectionState === 'failed' || iceConnectionState === 'failed') {
+      this._handleIceFailure()
+      return
+    }
+    if (connectionState === 'connected' || iceConnectionState === 'connected' || iceConnectionState === 'completed') {
+      this._updateStatus(RemoteConnectionStatus.CONNECTED)
+      updateSessionState({ connectedAt: Date.now() })
+      return
+    }
+    if (connectionState === 'disconnected' || connectionState === 'closed') {
+      if (this.connectionState === RemoteConnectionStatus.CONNECTED) {
+        this._updateStatus(RemoteConnectionStatus.DISCONNECTED)
+      }
+      this._stopPolling()
+    }
+  }
+
+  _failJoin() {
+    this.failureHint = buildJoinFailureHint({
+      turnConfigured: this.turnConfigured,
+      stats: this.candidateStats
+    })
+    window.logger('[webrtc] join failed', {
+      alias: safeAlias(this.alias),
+      turnConfigured: Boolean(this.turnConfigured),
+      stats: this.candidateStats,
+      hint: this.failureHint
+    })
+    this._updateStatus(RemoteConnectionStatus.FAILED)
+  }
+
+  _handleIceFailure() {
+    if (this._restarting || this.connectionState === RemoteConnectionStatus.FAILED) {
+      return
+    }
+    const canRestart = this.iceRestartCount < 1
+      && this.answerApplied
+      && this.pc
+      && typeof this.pc.restartIce === 'function'
+    if (!canRestart) {
+      this._failJoin()
+      return
+    }
+    this._restarting = true
+    this.iceRestartCount += 1
+    this._restartIce().then((restarted) => {
+      if (!restarted) this._failJoin()
+    }).catch((err) => {
+      window.logger.warn('[webrtc] ICE restart failed', err?.message || 'unknown')
+      this._failJoin()
+    }).finally(() => {
+      this._restarting = false
+    })
+  }
+
+  async _restartIce() {
+    if (!this.pc || !this.answerApplied || typeof this.pc.restartIce !== 'function') {
+      return false
+    }
+    this.offerRevision += 1
+    this.answerApplied = false
+    this.pc.restartIce()
+    const offer = await this.pc.createOffer({ iceRestart: true })
+    await this.pc.setLocalDescription(offer)
+    await waitForIceGathering(this.pc)
+    const local = this.pc.localDescription || offer
+    await postOffer({
+      inviteToken: this.inviteToken,
+      alias: this.alias,
+      peerId: this.peerId,
+      offer: JSON.stringify(local),
+      offerRevision: this.offerRevision
+    })
+    window.logger('[webrtc] ICE restart posted', {
+      alias: safeAlias(this.alias),
+      offerRevision: this.offerRevision,
+      turnConfigured: Boolean(this.turnConfigured)
+    })
+    return true
   }
 
   _attachDataChannel() {
@@ -159,6 +292,8 @@ class RemoteConnection {
 
     this.dataChannel = this.pc.createDataChannel('remote-control')
     this.dataChannel.addEventListener('open', () => {
+      this._updateStatus(RemoteConnectionStatus.CONNECTED)
+      updateSessionState({ connectedAt: Date.now() })
       this.onDataChannelOpen()
     })
     this.dataChannel.addEventListener('message', (event) => {
@@ -179,11 +314,14 @@ class RemoteConnection {
 
     const offer = await this.pc.createOffer()
     await this.pc.setLocalDescription(offer)
+    await waitForIceGathering(this.pc)
+    const local = this.pc.localDescription || offer
     await postOffer({
       inviteToken: this.inviteToken,
       alias: this.alias,
       peerId: this.peerId,
-      offer: JSON.stringify(offer)
+      offer: JSON.stringify(local),
+      offerRevision: this.offerRevision
     })
 
     updateSessionState({
@@ -222,6 +360,21 @@ class RemoteConnection {
     }
 
     tick()
+    this.handshakeTimer = setTimeout(() => {
+      if (this.connectionState === RemoteConnectionStatus.CONNECTING) {
+        this.failureHint = buildJoinFailureHint({
+          turnConfigured: this.turnConfigured,
+          stats: this.candidateStats
+        })
+        window.logger('[webrtc] join timed out', {
+          alias: safeAlias(this.alias),
+          turnConfigured: Boolean(this.turnConfigured),
+          stats: this.candidateStats
+        })
+        this._updateStatus(RemoteConnectionStatus.FAILED)
+        this._stopPolling()
+      }
+    }, HANDSHAKE_TIMEOUT_MS)
   }
 
   _stopPolling() {
@@ -230,6 +383,34 @@ class RemoteConnection {
       clearTimeout(this.pollHandle)
       this.pollHandle = null
     }
+    if (this.handshakeTimer) {
+      clearTimeout(this.handshakeTimer)
+      this.handshakeTimer = null
+    }
+  }
+
+  _watchVisibility() {
+    if (typeof document === 'undefined' || this._onVisibility) {
+      return
+    }
+    this._onVisibility = () => {
+      if (!this.pollActive) return
+      if (document.visibilityState && document.visibilityState !== 'visible') return
+      this._synchronizeSession().catch((err) => {
+        window.logger.warn('Remote session refresh after visibility change failed:', err)
+      })
+    }
+    document.addEventListener('visibilitychange', this._onVisibility)
+    document.addEventListener('pageshow', this._onVisibility)
+  }
+
+  _unwatchVisibility() {
+    if (typeof document === 'undefined' || !this._onVisibility) {
+      return
+    }
+    document.removeEventListener('visibilitychange', this._onVisibility)
+    document.removeEventListener('pageshow', this._onVisibility)
+    this._onVisibility = null
   }
 
   async _synchronizeSession() {
@@ -239,12 +420,18 @@ class RemoteConnection {
 
     const payload = await fetchSessionStatus(this.inviteToken, this.peerId)
 
-    if (payload.answer && !this.answerApplied) {
+    const answerRevision = payload.answerRevision || null
+    const revisionMatches = answerRevision == null || answerRevision === this.offerRevision
+    const revisionIsNew = answerRevision == null
+      ? !this.answerApplied
+      : answerRevision !== this.appliedAnswerRevision
+    if (payload.answer && revisionMatches && revisionIsNew) {
       try {
         const answer = typeof payload.answer === 'string' ? JSON.parse(payload.answer) : payload.answer
         if (answer) {
           await this.pc.setRemoteDescription(answer)
           this.answerApplied = true
+          this.appliedAnswerRevision = answerRevision
           this._processPendingCandidates()
         }
       } catch (err) {
@@ -305,7 +492,9 @@ class RemoteConnection {
     try {
       await this.pc.addIceCandidate(candidate)
     } catch (err) {
-      window.logger.warn('Failed to add ICE candidate to peer connection:', err)
+      if (!isBenignIceError(err)) {
+        window.logger.warn('Failed to add ICE candidate to peer connection:', err?.message || 'unknown')
+      }
     }
   }
 
@@ -320,7 +509,9 @@ class RemoteConnection {
         return
       }
       this.pc.addIceCandidate(candidate).catch((err) => {
-        window.logger.warn('Failed to add queued ICE candidate:', err)
+        if (!isBenignIceError(err)) {
+          window.logger.warn('Failed to add queued ICE candidate:', err?.message || 'unknown')
+        }
       })
     })
     this.pendingRemoteCandidates = []
@@ -331,6 +522,10 @@ class RemoteConnection {
       return
     }
     this.connectionState = status
+    if (status === RemoteConnectionStatus.CONNECTED && this.handshakeTimer) {
+      clearTimeout(this.handshakeTimer)
+      this.handshakeTimer = null
+    }
     this.onStatusChange(status)
     updateSessionState({ status })
   }

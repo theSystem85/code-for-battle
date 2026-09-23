@@ -1,6 +1,8 @@
 import express from 'express'
 
 import cors from 'cors'
+import { safeAlias, summarizeIceCandidate } from '../src/network/iceConfig.js'
+import { buildIceServerPayload } from '../src/network/turnCredentials.js'
 
 const PORT = process.env.STUN_PORT ?? 3333
 const app = express()
@@ -17,15 +19,27 @@ app.post('/signalling/offer', (req, res) => {
     return res.status(400).json({ error: 'inviteToken, alias, peerId, and offer are required' })
   }
 
+  const offerRevision = Number.isFinite(Number(req.body.offerRevision)) ? Number(req.body.offerRevision) : null
   sessions.set(sessionKey(inviteToken, peerId), {
     inviteToken,
     peerId,
     alias,
     offer,
-     answer: null,
-     candidates: [],
-     createdAt: Date.now()
+    offerRevision,
+    answer: null,
+    answerRevision: null,
+    candidates: [],
+    createdAt: Date.now()
   })
+
+  console.log(JSON.stringify({
+    scope: 'signalling',
+    event: 'offer',
+    alias: safeAlias(alias),
+    peerId,
+    inviteSuffix: String(inviteToken).slice(-8),
+    offerRevision
+  }))
 
   res.status(200).json({ message: 'offer stored' })
 })
@@ -42,6 +56,14 @@ app.post('/signalling/answer', (req, res) => {
   }
 
   session.answer = answer
+  session.answerRevision = Number.isFinite(Number(req.body.offerRevision)) ? Number(req.body.offerRevision) : null
+  console.log(JSON.stringify({
+    scope: 'signalling',
+    event: 'answer',
+    peerId,
+    inviteSuffix: String(inviteToken).slice(-8),
+    offerRevision: session.answerRevision
+  }))
   res.status(200).json({ message: 'answer stored' })
 })
 
@@ -51,16 +73,40 @@ app.post('/signalling/candidate', (req, res) => {
     return res.status(400).json({ error: 'inviteToken, peerId, and candidate are required' })
   }
 
-  const session = sessions.get(sessionKey(inviteToken, peerId))
+  const key = sessionKey(inviteToken, peerId)
+  let session = sessions.get(key)
   if (!session) {
-    return res.status(404).json({ error: 'session not found' })
+    session = {
+      inviteToken,
+      peerId,
+      alias: req.body.alias || null,
+      offer: null,
+      offerRevision: null,
+      answer: null,
+      answerRevision: null,
+      candidates: [],
+      createdAt: Date.now()
+    }
+    sessions.set(key, session)
   }
 
+  const summary = summarizeIceCandidate(candidate)
   session.candidates.push({
     candidate,
     origin: req.body.origin || 'peer',
     timestamp: Date.now()
   })
+  console.log(JSON.stringify({
+    scope: 'signalling',
+    event: 'candidate',
+    alias: safeAlias(session.alias || req.body.alias),
+    peerId,
+    origin: req.body.origin || 'peer',
+    type: summary.type,
+    protocol: summary.protocol,
+    mdns: summary.mdns,
+    privateOrLoopback: summary.privateOrLoopback
+  }))
   res.sendStatus(204)
 })
 
@@ -78,7 +124,9 @@ app.get('/signalling/pending/:inviteToken', (req, res) => {
     peerId: session.peerId,
     alias: session.alias,
     offer: session.offer,
+    offerRevision: session.offerRevision || null,
     answer: session.answer,
+    answerRevision: session.answerRevision || null,
     candidates: session.candidates,
     connectionState: session.answer ? 'connected' : 'pending'
   }))
@@ -94,9 +142,29 @@ app.get('/signalling/session/:inviteToken/:peerId', (req, res) => {
 
   res.json({
     offer: session.offer,
+    offerRevision: session.offerRevision || null,
     answer: session.answer,
+    answerRevision: session.answerRevision || null,
     candidates: session.candidates
   })
+})
+
+app.get('/signalling/ice-servers', (_req, res) => {
+  const payload = buildIceServerPayload({
+    TURN_URLS: process.env.TURN_URLS,
+    TURN_SECRET: process.env.TURN_SECRET,
+    TURN_USERNAME: process.env.TURN_USERNAME,
+    TURN_CREDENTIAL: process.env.TURN_CREDENTIAL
+  })
+  console.log(JSON.stringify({
+    scope: 'signalling',
+    event: 'ice-servers',
+    turnConfigured: payload.turnConfigured,
+    credentialMode: payload.credentialMode,
+    ttlSeconds: payload.ttlSeconds,
+    turnHosts: payload.turnHosts
+  }))
+  res.json(payload)
 })
 
 app.post('/game-instance/:instanceId/invite-regenerate', (req, res) => {
