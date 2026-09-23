@@ -299,6 +299,10 @@ async function enableObserverAutomation(page) {
 }
 
 async function saveGameSnapshot(page, label) {
+  const saveSectionOpen = await page.locator('#saveLoadContent').evaluate((el) => el.style.display !== 'none')
+  if (!saveSectionOpen) {
+    await page.locator('#saveLoadToggle').click()
+  }
   await page.click('#saveListTab')
   await page.fill('#saveLabelInput', label)
   await page.click('#saveGameBtn')

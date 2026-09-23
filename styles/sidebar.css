@@ -726,6 +726,198 @@ body.is-touch .money-tooltip__meta {
   border-top: 1px solid #444;
 }
 
+/* Expanded left sidebar spacing. Scoped so the collapsed rail, portrait HUD,
+   right-side overlays, and settings modal keep their own layout. */
+#sidebar.expanded-left-sidebar #sidebarScroll {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#sidebar.expanded-left-sidebar #sidebarScroll > * {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#sidebar.expanded-left-sidebar #stats {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #444;
+}
+
+#sidebar.expanded-left-sidebar #stats p {
+  margin: 4px 0;
+}
+
+#sidebar.expanded-left-sidebar #speedControl,
+#sidebar.expanded-left-sidebar #shuffleControl {
+  margin-top: 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-section-title {
+  margin: 0 0 8px;
+  padding: 0;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-accordion {
+  margin: 0;
+  padding: 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-accordion__toggle {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-accordion__content {
+  margin-top: 8px;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-accordion__icon {
+  flex: 0 0 auto;
+  font-size: 12px;
+  line-height: 1;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-tool-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-save-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-icon-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-field {
+  margin: 8px 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-field-label {
+  display: block;
+  margin: 0 0 6px;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-field > .sidebar-input,
+#sidebar.expanded-left-sidebar .sidebar-form-row .sidebar-input {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: end;
+  margin: 8px 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-form-row > :last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-form-row > .floating-label-input,
+#sidebar.expanded-left-sidebar .sidebar-form-row > .sidebar-field,
+#sidebar.expanded-left-sidebar .sidebar-form-row > div {
+  width: auto;
+  max-width: none;
+  min-width: 0;
+  margin: 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-field > .sidebar-form-row:first-child {
+  margin-top: 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-field > .sidebar-form-row:last-child {
+  margin-bottom: 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-hint {
+  display: block;
+  margin: 0 0 8px;
+  color: #ccc;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+#sidebar.expanded-left-sidebar #mapSaveMinimumEstimate {
+  margin: 0 0 8px;
+  color: #9fd39f;
+}
+
+#sidebar.expanded-left-sidebar .map-edit-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+#sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-check-row,
+#sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-field,
+#sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-hint {
+  margin: 0;
+}
+
+#sidebar.expanded-left-sidebar .multiplayer-party-list {
+  margin-top: 0;
+}
+
+#sidebar.expanded-left-sidebar .multiplayer-join-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 8px 0 0;
+}
+
+#sidebar.expanded-left-sidebar .multiplayer-join-status {
+  margin-top: 0;
+}
+
+#sidebar.expanded-left-sidebar .multiplayer-join-input-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  align-items: center;
+}
+
+#sidebar.expanded-left-sidebar .multiplayer-join-input-row .multiplayer-join-input {
+  grid-column: 1 / -1;
+}
+
+#sidebar.expanded-left-sidebar .multiplayer-join-btn,
+#sidebar.expanded-left-sidebar .multiplayer-scan-btn {
+  width: 100%;
+}
+
 .sse-image-converter-accordion {
   margin: 10px 0;
 }

@@ -40,6 +40,7 @@ import { setMapEditorRenderScheduler, setMapEditorProductionController, deactiva
 import { attachBenchmarkButton } from '../benchmark/benchmarkRunner.js'
 import { getPlayableViewportWidth, getPlayableViewportHeight } from '../utils/layoutMetrics.js'
 import { initMapEditorControls } from '../ui/mapEditorControls.js'
+import { bindSidebarAccordions } from '../ui/sidebarAccordion.js'
 import { initializeSessionRNG } from '../network/deterministicRandom.js'
 import { resetHarvesterRuntimeState } from './harvesterLogic.js'
 
@@ -1287,9 +1288,6 @@ class Game {
 
   setupMapSettings() {
     const settingsBtn = document.getElementById('mapSettingsBtn')
-    const mapSettingsToggle = document.getElementById('mapSettingsToggle')
-    const mapSettingsContent = document.getElementById('mapSettingsContent')
-    const mapSettingsToggleIcon = document.getElementById('mapSettingsToggleIcon')
     const oreCheckbox = document.getElementById('oreSpreadCheckbox')
     const oreSpreadIntervalInput = document.getElementById('mapOreSpreadIntervalSeconds')
     const shadowCheckbox = document.getElementById('shadowOfWarCheckbox')
@@ -1359,39 +1357,7 @@ class Game {
       renderSelectionHudPreview()
     })
 
-    if (mapSettingsToggle && mapSettingsContent && mapSettingsToggleIcon) {
-      mapSettingsToggle.addEventListener('click', () => {
-        const isExpanded = mapSettingsContent.style.display !== 'none'
-        mapSettingsToggle.setAttribute('aria-expanded', !isExpanded)
-        mapSettingsContent.style.display = isExpanded ? 'none' : 'block'
-        mapSettingsToggleIcon.textContent = isExpanded ? '▼' : '▲'
-
-        if (!isExpanded) {
-          setTimeout(() => {
-            const sidebarScroll = document.getElementById('sidebarScroll')
-            if (sidebarScroll && mapSettingsContent) {
-              const contentRect = mapSettingsContent.getBoundingClientRect()
-              const sidebarRect = sidebarScroll.getBoundingClientRect()
-
-              const contentTopOffset = contentRect.top - sidebarRect.top
-              const contentBottomOffset = contentRect.bottom - sidebarRect.bottom
-              const isContentOutsideViewport = contentTopOffset < 0 || contentBottomOffset > 0
-
-              if (isContentOutsideViewport) {
-                const scrollTop = Math.max(
-                  0,
-                  sidebarScroll.scrollTop + contentTopOffset - 8
-                )
-                sidebarScroll.scrollTo({
-                  top: scrollTop,
-                  behavior: 'smooth'
-                })
-              }
-            }
-          }, 50)
-        }
-      })
-    }
+    bindSidebarAccordions()
 
     if (!settingsBtn) return
 

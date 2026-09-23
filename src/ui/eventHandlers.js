@@ -3,7 +3,8 @@
 
 import { gameState } from '../gameState.js'
 import { productionQueue } from '../productionQueue.js'
-import { toggleBackgroundMusic, bgMusicAudio, setMasterVolume, getMasterVolume } from '../sound.js'
+import { toggleBackgroundMusic, bgMusicAudio } from '../sound.js'
+import { initMasterVolumeControl } from './volumeControl.js'
 import { buildingRepairHandler } from '../buildingRepairHandler.js'
 import { buildingSellHandler } from '../buildingSellHandler.js'
 import { showNotification } from './notifications.js'
@@ -1094,31 +1095,6 @@ export class EventHandlers {
   }
 
   setupVolumeControl() {
-    const volumeSlider = document.getElementById('masterVolumeSlider')
-    const volumeValue = document.getElementById('volumeValue')
-
-    if (volumeSlider && volumeValue) {
-      // Set initial values based on current master volume
-      const currentVolume = Math.round(getMasterVolume() * 100)
-      volumeSlider.value = currentVolume
-      volumeValue.textContent = currentVolume + '%'
-
-      // Handle volume changes
-      volumeSlider.addEventListener('input', (e) => {
-        const volumePercent = parseInt(e.target.value)
-        const volumeDecimal = volumePercent / 100
-
-        // Update master volume
-        setMasterVolume(volumeDecimal)
-
-        // Update display
-        volumeValue.textContent = volumePercent + '%'
-
-        // Play a brief test sound to give feedback
-        if (volumePercent > 0) {
-          playSound('confirmed', 0.3)
-        }
-      })
-    }
+    initMasterVolumeControl()
   }
 }

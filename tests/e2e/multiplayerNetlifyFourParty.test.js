@@ -122,7 +122,22 @@ async function ensureMapSettingsExpanded(page) {
   }
 
   await expect(page.locator('#mapSettingsContent')).toBeVisible({ timeout: 30000 })
+  await ensureSidebarAccordionExpanded(page, '#multiplayerToggle', '#multiplayerContent')
   await expect(page.locator('#playerCount')).toBeVisible({ timeout: 30000 })
+}
+
+async function ensureSidebarAccordionExpanded(page, toggleSelector, contentSelector) {
+  const contentVisible = await page.evaluate((selector) => {
+    const content = document.querySelector(selector)
+    if (!content) return false
+    return content.style.display !== 'none'
+  }, contentSelector)
+
+  if (!contentVisible) {
+    await page.locator(toggleSelector).click()
+  }
+
+  await expect(page.locator(contentSelector)).toBeVisible({ timeout: 30000 })
 }
 
 async function ensureMultiplayerInviteSectionVisible(page) {
@@ -133,6 +148,7 @@ async function ensureMultiplayerInviteSectionVisible(page) {
       multiplayer.scrollIntoView({ behavior: 'instant', block: 'center' })
     }
   })
+  await ensureSidebarAccordionExpanded(page, '#multiplayerToggle', '#multiplayerContent')
   await expect(page.locator('#inviteLinkInput')).toBeVisible({ timeout: 30000 })
 }
 
