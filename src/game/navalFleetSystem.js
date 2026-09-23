@@ -23,6 +23,8 @@ import {
   canSubmarineTargetEntity
 } from './navalTargeting.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
+import { playPositionalSound } from '../sound.js'
+import { notifyEntityUnderAttack } from './attackAlertBridge.js'
 import {
   clearWaterMineSafely,
   deployWaterMine,
@@ -1319,6 +1321,7 @@ function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, no
   turret.barrelRecoilStartTimes[barrelIndex] = now
   turret.muzzleFlashStartTimes[barrelIndex] = now
   if (barrelIndex === 1) turret.lastShotTime = now
+  playPositionalSound('battleshipFire', muzzleX, muzzleY, 0.65)
   return true
 }
 
@@ -1462,8 +1465,15 @@ function updateSubmarine(submarine, units, bullets, now) {
   if (submarine.depthState === 'surfacing' || submarine.depthState === 'submerging') {
     submarine.depthTransitionProgress = Math.min(1, (now - submarine.depthTransitionStartedAt) / SUBMARINE_SURFACE_DURATION)
     if (submarine.depthTransitionProgress >= 1) {
-      submarine.depthState = submarine.depthState === 'surfacing' ? 'surfaced' : 'submerged'
-      submarine.depthTransitionProgress = submarine.depthState === 'surfaced' ? 1 : 0
+      const finishedSurfacing = submarine.depthState === 'surfacing'
+      submarine.depthState = finishedSurfacing ? 'surfaced' : 'submerged'
+      submarine.depthTransitionProgress = finishedSurfacing ? 1 : 0
+      playPositionalSound(
+        finishedSurfacing ? 'submarineSurfacing' : 'submarineDiving',
+        submarine.x,
+        submarine.y,
+        0.7
+      )
     }
   }
 
@@ -1506,6 +1516,7 @@ function updateSubmarine(submarine, units, bullets, now) {
   })
   submarine.ammunition--
   submarine.lastTorpedoTime = now
+  playPositionalSound('submarineTorpedo', start.x, start.y, 0.7)
 }
 
 function updateDepthCharges(units, now) {
@@ -1531,6 +1542,7 @@ function updateDepthCharges(units, now) {
     const target = units.find(unit => unit.id === charge.targetId && unit.health > 0)
     if (target && Math.hypot(centerOf(target).x - charge.x, centerOf(target).y - charge.y) <= DEPTH_CHARGE_RADIUS) {
       target.health = Math.max(0, target.health - 110)
+      notifyEntityUnderAttack(target, { id: charge.id, owner: charge.owner }, now)
     }
     gameState.explosions.push({ x: charge.x, y: charge.y, maxRadius: DEPTH_CHARGE_RADIUS, startTime: now, duration: 520, underwater: true })
     return false

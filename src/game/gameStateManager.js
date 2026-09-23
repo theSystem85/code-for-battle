@@ -501,6 +501,7 @@ export function cleanupDestroyedUnits(units, gameState) {
           playPositionalSound('explosion', unitCenterX, unitCenterY, unit.isNaval ? 0.65 : 0.5)
 
           if (unit.isNaval) {
+            playPositionalSound('shipSinking', unitCenterX, unitCenterY, 0.75)
             const hull = getNavalHullDimensions(unit.type)
             const count = Math.max(1, Math.min(6, Math.ceil(hull.length / (TILE_SIZE * 2))))
             const forwardX = Math.cos(unit.frozenDestructionDirection)

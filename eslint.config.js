@@ -28,6 +28,8 @@ export default [
         fetch: 'readonly',
         Request: 'readonly',
         Response: 'readonly',
+        AbortController: 'readonly',
+        DOMException: 'readonly',
         URL: 'readonly',
         URLSearchParams: 'readonly',
         Image: 'readonly',

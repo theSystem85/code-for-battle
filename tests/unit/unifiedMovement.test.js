@@ -25,12 +25,14 @@ vi.mock('../../src/game/harvesterLogic.js', () => ({
   handleStuckHarvester: vi.fn()
 }))
 
-vi.mock('../../src/sound.js', () => ({
-  playPositionalSound: vi.fn(),
+const soundMock = vi.hoisted(() => ({
+  playPositionalSound: vi.fn(() => Promise.resolve(null)),
   playSound: vi.fn(),
-  audioContext: null,
+  audioContext: { currentTime: 0 },
   getMasterVolume: vi.fn(() => 1)
 }))
+
+vi.mock('../../src/sound.js', () => soundMock)
 
 vi.mock('../../src/gameState.js', () => ({
   gameState: {
@@ -84,6 +86,22 @@ import {
 } from '../../src/game/unifiedMovement.js'
 import { getNavalHullSegment } from '../../src/utils/navalUtils.js'
 
+function createMovementLoopHandle() {
+  return {
+    source: { stop: vi.fn() },
+    gainNode: {
+      gain: {
+        value: 0,
+        cancelScheduledValues: vi.fn(),
+        setValueAtTime: vi.fn(),
+        linearRampToValueAtTime: vi.fn(),
+        setTargetAtTime: vi.fn()
+      }
+    },
+    panner: { pan: { value: 0 } }
+  }
+}
+
 describe('unifiedMovement.js', () => {
   it('settles a carrier permanently when its bow reaches the final target tile', () => {
     const mapGrid = Array.from({ length: 20 }, () =>
@@ -134,6 +152,78 @@ describe('unifiedMovement.js', () => {
     expect(carrier.navalAngularVelocity).toBe(0)
     expect(carrier.isRotating).toBe(false)
     expect(carrier.direction).toBe(settledHeading)
+  })
+
+  it.each([
+    ['battleship', 'battleshipCruise'],
+    ['hovercraft', 'hovercraftMoving']
+  ])('loops %s audio while moving and stops it when idle', async(unitType, soundName) => {
+    const handle = createMovementLoopHandle()
+    soundMock.playPositionalSound.mockClear()
+    soundMock.playPositionalSound.mockImplementation(() => Promise.resolve(handle))
+    const mapGrid = Array.from({ length: 20 }, () =>
+      Array.from({ length: 20 }, () => ({ type: 'water', building: null, seedCrystal: false })))
+    const occupancyMap = Array.from({ length: 20 }, () => Array(20).fill(0))
+    const unit = {
+      id: `${unitType}-mover`,
+      type: unitType,
+      isNaval: true,
+      owner: 'player1',
+      health: 400,
+      x: 8 * 32,
+      y: 8 * 32,
+      tileX: 8,
+      tileY: 8,
+      direction: 0,
+      speed: 0.4,
+      path: [{ x: 14, y: 8 }],
+      moveTarget: { x: 14, y: 8 }
+    }
+    initializeUnitMovement(unit)
+    unit.movement.velocity = { x: 0.4, y: 0 }
+    unit.movement.targetVelocity = { x: 0.4, y: 0 }
+    unit.movement.currentSpeed = 0.4
+    unit.movement.isMoving = true
+
+    updateUnitPosition(
+      unit,
+      mapGrid,
+      occupancyMap,
+      1000,
+      [unit],
+      { buildings: [], units: [unit], unitWrecks: [] }
+    )
+
+    expect(unit.movement.currentSpeed).toBeGreaterThan(0.05)
+    await Promise.resolve()
+    expect(soundMock.playPositionalSound).toHaveBeenCalledWith(
+      soundName,
+      unit.x,
+      unit.y,
+      0.22,
+      0,
+      false,
+      { playLoop: true }
+    )
+    expect(unit.engineSound).toBe(handle)
+
+    unit.path = []
+    unit.moveTarget = null
+    unit.movement.velocity = { x: 0, y: 0 }
+    unit.movement.targetVelocity = { x: 0, y: 0 }
+    unit.movement.currentSpeed = 0
+    unit.movement.isMoving = false
+    updateUnitPosition(
+      unit,
+      mapGrid,
+      occupancyMap,
+      1100,
+      [unit],
+      { buildings: [], units: [unit], unitWrecks: [] }
+    )
+
+    expect(unit.engineSound).toBeNull()
+    expect(handle.source.stop).toHaveBeenCalled()
   })
 
   describe('hasFriendlyUnitOnTile', () => {

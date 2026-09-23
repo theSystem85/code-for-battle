@@ -160,6 +160,57 @@ describe('attackNotifications', () => {
       expect(playSound).toHaveBeenCalledWith('ourBaseIsUnderAttack', 1.0, 0, true)
     })
 
+    it.each([
+      ['ourBattleshipGotAttacked', 'battleship'],
+      ['ourSubmarineGotAttacked', 'submarine'],
+      ['ourCarrierGotAttacked', 'aircraftCarrier'],
+      ['ourHovercraftGotAttacked', 'hovercraft'],
+      ['ourShipsGotAttacked', 'destroyer'],
+      ['ourShipsGotAttacked', 'supplyShip'],
+      ['ourShipsGotAttacked', 'vehicleFerry'],
+      ['ourShipsGotAttacked', 'navalMineLayer']
+    ])('plays %s when a player %s is attacked', (soundName, unitType) => {
+      const target = { id: `${unitType}-1`, owner: 'player1', type: unitType, isNaval: true, health: 100 }
+      const attacker = { owner: 'enemy' }
+
+      handleAttackNotification(target, attacker, NOW)
+
+      expect(playSound).toHaveBeenCalledWith(soundName, 1.0, 0, true)
+      expect(showNotification).toHaveBeenCalled()
+    })
+
+    it('keeps a separate 60s cooldown for each naval narration line', () => {
+      const attacker = { owner: 'enemy' }
+      const battleship = { id: 'bb-1', owner: 'player1', type: 'battleship', isNaval: true, health: 100 }
+      const destroyer = { id: 'dd-1', owner: 'player1', type: 'destroyer', isNaval: true, health: 100 }
+
+      handleAttackNotification(battleship, attacker, NOW)
+      handleAttackNotification(destroyer, attacker, NOW)
+      handleAttackNotification(battleship, attacker, NOW + 1000)
+
+      expect(playSound).toHaveBeenCalledTimes(2)
+      expect(playSound).toHaveBeenNthCalledWith(1, 'ourBattleshipGotAttacked', 1.0, 0, true)
+      expect(playSound).toHaveBeenNthCalledWith(2, 'ourShipsGotAttacked', 1.0, 0, true)
+
+      handleAttackNotification(battleship, attacker, NOW + MINUTE + 100)
+      expect(playSound).toHaveBeenLastCalledWith('ourBattleshipGotAttacked', 1.0, 0, true)
+    })
+
+    it('does not narrate enemy naval units or non-naval units', () => {
+      handleAttackNotification(
+        { id: 'enemy-bb', owner: 'enemy', type: 'battleship', isNaval: true, health: 100 },
+        { owner: 'player1' },
+        NOW
+      )
+      handleAttackNotification(
+        { id: 'tank-2', owner: 'player1', type: 'tank_v1', health: 100 },
+        { owner: 'enemy' },
+        NOW
+      )
+
+      expect(playSound).not.toHaveBeenCalled()
+    })
+
     it('shows a unit under attack notification for player non-base non-harvester units', () => {
       const target = { id: 'tank-1', owner: 'player1', type: 'tank_v1', health: 100 }
       const attacker = { owner: 'enemy' }

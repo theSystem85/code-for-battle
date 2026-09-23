@@ -8,6 +8,7 @@ import {
 } from '../config.js'
 import { gameState } from '../gameState.js'
 import { getUniqueId } from '../utils.js'
+import { notifyEntityUnderAttack } from './attackAlertBridge.js'
 
 const waterMineLookup = new Map()
 
@@ -90,6 +91,7 @@ function applyWaterMineDamage(mine, units, now) {
     if (unit.type === 'navalMineLayer' && unit.waterMineSweepMode) return
     unit.health = Math.max(0, unit.health - WATER_MINE_DAMAGE * falloff)
     unit.lastAttackedTime = now
+    notifyEntityUnderAttack(unit, { id: mine.id, owner: mine.owner }, now)
   })
 }
 

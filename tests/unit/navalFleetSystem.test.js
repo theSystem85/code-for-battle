@@ -1,5 +1,14 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import '../setup.js'
+
+vi.mock('../../src/sound.js', async(importOriginal) => {
+  const actual = await importOriginal()
+  return {
+    ...actual,
+    playPositionalSound: vi.fn(),
+    playSound: vi.fn()
+  }
+})
 import {
   SUBMARINE_SURFACE_DURATION,
   TILE_SIZE,
@@ -29,6 +38,7 @@ import {
   updateWaterMines
 } from '../../src/game/waterMineSystem.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles } from '../../src/utils/navalUtils.js'
+import { playPositionalSound } from '../../src/sound.js'
 import {
   BATTLESHIP_TURRET_NAMES,
   clearBattleshipFireControl,
@@ -70,6 +80,7 @@ function createShip(type, id, owner, x = 8, y = 8) {
 
 describe('six-ship naval fleet systems', () => {
   beforeEach(() => {
+    playPositionalSound.mockClear()
     gameState.waterMines = []
     gameState.depthCharges = []
     gameState.explosions = []
@@ -1027,6 +1038,7 @@ describe('six-ship naval fleet systems', () => {
     updateNavalFleet([battleship], shells, createMap(), { occupancyMap: [], explosions: [] }, 4000, 16)
     expect(shells).toHaveLength(1)
     expect(shells[0].target).toBe(landBuilding)
+    expect(playPositionalSound).toHaveBeenCalledWith('battleshipFire', expect.any(Number), expect.any(Number), 0.65)
 
     const submarine = {
       ...createShip('submarine', 'sub', 'player1'),
@@ -1125,10 +1137,30 @@ describe('six-ship naval fleet systems', () => {
     updateNavalFleet(units, bullets, map, { occupancyMap: [] }, 1000 + SUBMARINE_SURFACE_DURATION, 16)
     expect(submarine.depthState).toBe('surfaced')
     expect(bullets).toHaveLength(0)
+    expect(playPositionalSound).toHaveBeenCalledWith('submarineSurfacing', submarine.x, submarine.y, 0.7)
 
     updateNavalFleet(units, bullets, map, { occupancyMap: [] }, 5201, 16)
     expect(bullets).toHaveLength(1)
     expect(bullets[0]).toMatchObject({ projectileType: 'torpedo', navalOnly: true, strictTarget: true })
+    expect(playPositionalSound).toHaveBeenCalledWith('submarineTorpedo', expect.any(Number), expect.any(Number), 0.7)
+  })
+
+  it('plays the diving sound when a surfaced submarine finishes submerging', () => {
+    const submarine = {
+      ...createShip('submarine', 'sub-dive', 'player1'),
+      depthState: 'surfaced',
+      depthTransitionProgress: 1,
+      detectedByOwners: {},
+      lastTorpedoTime: 0
+    }
+
+    updateNavalFleet([submarine], [], createMap(), { occupancyMap: [] }, 5000, 16)
+    expect(submarine.depthState).toBe('submerging')
+    expect(playPositionalSound).not.toHaveBeenCalledWith('submarineDiving', submarine.x, submarine.y, 0.7)
+
+    updateNavalFleet([submarine], [], createMap(), { occupancyMap: [] }, 5000 + SUBMARINE_SURFACE_DURATION, 16)
+    expect(submarine.depthState).toBe('submerged')
+    expect(playPositionalSound).toHaveBeenCalledWith('submarineDiving', submarine.x, submarine.y, 0.7)
   })
 
   it('lets surfaced submarines torpedo enemy yards with strict target collision', () => {
