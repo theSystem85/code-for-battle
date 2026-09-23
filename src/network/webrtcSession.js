@@ -379,6 +379,21 @@ class HostInviteMonitor {
   }
 
   _handleSessionState(session, state) {
+    if (session?.kicked) {
+      session.unresponsiveSince = null
+      if (session.aiFallbackHandle) {
+        clearTimeout(session.aiFallbackHandle)
+        session.aiFallbackHandle = null
+      }
+      setPartyUnresponsiveState(this.partyId, null)
+      this._releaseNetworkPauseIfResolved()
+      if (state === SESSION_STATES.DISCONNECTED || state === SESSION_STATES.FAILED) {
+        releaseRemoteControlSource(session.sourceId)
+        updateGlobalSession({ alias: null, isRemote: false, status: SESSION_STATES.DISCONNECTED })
+      }
+      return
+    }
+
     if (state === SESSION_STATES.CONNECTED) {
       this.activeSession = session
       this._markSessionResponsive(session)
@@ -659,10 +674,22 @@ export async function kickPlayer(partyId) {
     }
   }
 
+  // Mark the session kicked before close. Data-channel and peer-connection
+  // close events are often async and would otherwise look like a drop,
+  // which paints the party as reconnecting and pauses the match.
+  session.kicked = true
+  session.unresponsiveSince = null
+  if (session.aiFallbackHandle) {
+    clearTimeout(session.aiFallbackHandle)
+    session.aiFallbackHandle = null
+  }
+  setPartyUnresponsiveState(partyId, null)
+
   // Dispose the session
   session.dispose()
   monitor.sessions.delete(session.peerId)
   monitor.activeSession = null
+  monitor._releaseNetworkPauseIfResolved()
 
   // Manually trigger the state change to ensure AI takeover
   releaseRemoteControlSource(session.sourceId)

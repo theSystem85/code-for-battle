@@ -28,6 +28,29 @@ function buildDefaultDestructionFrameRects() {
 
 const DEFAULT_DESTRUCTION_FRAME_RECTS = buildDefaultDestructionFrameRects()
 
+export function isDefaultDestructionAsset(assetPath) {
+  if (typeof assetPath !== 'string' || assetPath.length === 0) return true
+  return assetPath === DEFAULT_DESTRUCTION_SPRITE || assetPath.endsWith('images/map/animations/explosion.webp')
+}
+
+/**
+ * Restore omitted default explosion sheet metadata after a network snapshot.
+ * Default frame rects are shared and must not be mutated.
+ */
+export function rehydrateSyncedExplosion(exp) {
+  if (!exp || exp.type !== 'spriteSheet') return exp
+  if (Array.isArray(exp.frameRects) && exp.frameRects.length > 0) return exp
+  if (!isDefaultDestructionAsset(exp.assetPath)) return exp
+  if (!exp.assetPath) exp.assetPath = DEFAULT_DESTRUCTION_SPRITE
+  exp.frameRects = DEFAULT_DESTRUCTION_FRAME_RECTS
+  if (!Number.isFinite(exp.frameCount)) exp.frameCount = DEFAULT_DESTRUCTION_FRAME_COUNT
+  if (!Number.isFinite(exp.columns)) exp.columns = DEFAULT_DESTRUCTION_COLUMNS
+  if (!Number.isFinite(exp.rows)) exp.rows = DEFAULT_DESTRUCTION_ROWS
+  if (!Number.isFinite(exp.tileWidth)) exp.tileWidth = DEFAULT_DESTRUCTION_TILE_SIZE
+  if (!Number.isFinite(exp.tileHeight)) exp.tileHeight = DEFAULT_DESTRUCTION_TILE_SIZE
+  return exp
+}
+
 function getConfiguredDestructionAnimation(gameState) {
   const metadata = gameState?.activeAnimationSpriteSheetMetadata
   if (!metadata || typeof metadata !== 'object') return null
