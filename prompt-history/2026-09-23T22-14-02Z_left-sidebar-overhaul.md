@@ -2,7 +2,7 @@
 
 Grok 4.7 in Cursor Cloud Agent.
 
-Token counts were not available for this run, so they are omitted.
+Token counts and a single wall-clock timer were not available, so those numbers are omitted. `npm run test:unit` finished at 2026-09-23T22:20:25Z with 185 files and 4130 tests passed. `npm run lint:fix:changed` passed. A headless Chrome check confirmed the Statistics headline, collapsed accordions, a 2-column Biome Regions row, and no sidebar input row with more than two visible controls.
 
 ## Prompt
 
