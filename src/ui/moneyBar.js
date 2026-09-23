@@ -294,8 +294,8 @@ export function addMoneyIndicator() {
   moneyText.style.justifyContent = 'center'
   moneyText.style.fontSize = '12px'
   moneyText.style.fontWeight = '600'
-  moneyText.style.textShadow = '0 0 3px #000'
-  moneyText.style.color = '#fff' // White text for orange background
+  moneyText.style.textShadow = '0 0 2px rgba(255, 255, 255, 0.85)'
+  moneyText.style.color = '#000' // Black text for higher contrast on bar fill
   moneyText.textContent = '$0'
 
   moneyTrack.appendChild(moneyBar)

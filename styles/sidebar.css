@@ -41,6 +41,8 @@ body.mobile-landscape #moneyLabel::after {
 
 #energyText {
   font-weight: 600;
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 body.mobile-landscape #energyBarContainer {
@@ -87,8 +89,8 @@ body.mobile-landscape .energy-bar-value {
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
-  color: #fff;
-  text-shadow: 0 0 3px #000;
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 /* Money bar positioned right below the energy bar */
@@ -119,8 +121,8 @@ body.mobile-landscape .energy-bar-value {
 
 #moneyText {
   font-weight: 600;
-  color: #fff; /* White text like energy bar */
-  text-shadow: 0 0 3px #000; /* Black shadow like energy bar */
+  color: #000; /* Black text for higher contrast on bar fill */
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 body.mobile-landscape #moneyBarContainer {
@@ -171,8 +173,8 @@ body.mobile-landscape .money-bar-value {
   justify-content: center;
   font-size: 12px;
   font-weight: 600;
-  color: #fff; /* White text like energy bar */
-  text-shadow: 0 0 3px #000; /* Black shadow like energy bar */
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 /* Money tooltip styling */

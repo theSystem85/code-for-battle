@@ -54,8 +54,8 @@ export function addPowerIndicator() {
   energyText.style.justifyContent = 'center'
   energyText.style.fontSize = '12px'
   energyText.style.fontWeight = '600'
-  energyText.style.textShadow = '0 0 3px #000'
-  energyText.style.color = '#fff'
+  energyText.style.textShadow = '0 0 2px rgba(255, 255, 255, 0.85)'
+  energyText.style.color = '#000'
   energyText.textContent = '0 MW'
 
   energyTrack.appendChild(energyBar)

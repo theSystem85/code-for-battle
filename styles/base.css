@@ -1261,7 +1261,8 @@ body.mobile-landscape #mobileBuildMenuContainer #mobileStatusBar .mobile-resourc
   font-size: 10px;
   font-weight: 400;
   letter-spacing: 0;
-  color: #f2f2f2;
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
   width: 100%;
   text-align: center;
 }
@@ -1319,8 +1320,8 @@ body.mobile-landscape #mobileEnergyValue {
   font-family: inherit;
   font-size: 12px;
   font-weight: 400;
-  color: #f4f4f4;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.65);
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
   letter-spacing: 0;
   pointer-events: none;
 }
@@ -1935,10 +1936,10 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileBuildMenuContainer 
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: #f2f2f2;
+  color: #000;
   width: 100%;
   text-align: center;
-  text-shadow: 0 0 3px #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
 }
 
 body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileEnergyBarContainer {
@@ -1980,8 +1981,8 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileEnergyValue {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: #f2f2f2;
-  text-shadow: 0 0 3px #000;
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
   pointer-events: none;
 }
 
@@ -1997,8 +1998,8 @@ body.mobile-portrait.sidebar-condensed.pwa-standalone #mobileMoneyValue {
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.02em;
-  color: #f2f2f2;
-  text-shadow: 0 0 3px #000;
+  color: #000;
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
   pointer-events: none;
 }
 
@@ -2093,10 +2094,10 @@ body.mobile-portrait.sidebar-condensed:not(.pwa-standalone) #mobileBuildMenuCont
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: #f8f8f8;
+  color: #000;
   text-align: center;
   transform: translate(-50%, -50%) rotate(90deg);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
   white-space: nowrap;
 }
 
@@ -2149,11 +2150,12 @@ body.mobile-portrait.sidebar-condensed:not(.pwa-standalone) #mobileEnergyValue {
   font-size: 9px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  color: #f8f8f8;
+  color: #000;
   text-align: center;
   transform: translate(-50%, -50%) rotate(90deg);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.55);
+  text-shadow: 0 0 2px rgba(255, 255, 255, 0.85);
   white-space: nowrap;
+  pointer-events: none;
 }
 
 body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #productionArea {
