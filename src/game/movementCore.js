@@ -38,6 +38,13 @@ import { addShipWake, getNavalHullSegment } from '../utils/navalUtils.js'
 
 const MOVEMENT_SOUND_STOP_FADE_SECONDS = 0.08
 const TANK_ENGINE_LOOP_VOLUME = 0.2
+const NAVAL_CRUISE_LOOP_VOLUME = 0.22
+
+function navalCruiseLoopEvent(unit) {
+  if (unit?.type === 'battleship') return 'battleshipCruise'
+  if (unit?.type === 'hovercraft') return 'hovercraftMoving'
+  return null
+}
 
 function stopLoopedMovementSound(soundHandle, fadeSeconds = MOVEMENT_SOUND_STOP_FADE_SECONDS) {
   if (!soundHandle || !audioContext) return
@@ -92,38 +99,54 @@ function shouldPlayTankEngineSound(unit, movement) {
   return movement.currentSpeed > MOVEMENT_CONFIG.MIN_SPEED
 }
 
-function beginTankEngineLoop(unit) {
+function shouldPlayNavalCruiseSound(unit, movement) {
+  if (!navalCruiseLoopEvent(unit) || !movement) return false
+  if (unit.health <= 0 || unit.destroyed) return false
+  return movement.currentSpeed > MOVEMENT_CONFIG.MIN_SPEED
+}
+
+function beginLoopedMovementSound(unit, eventName, volume, stillPlaying) {
   if (!unit || unit.engineSound || unit.engineSoundLoading) return
 
   unit.engineSoundLoading = true
   const requestId = (unit.engineSoundRequestId || 0) + 1
   unit.engineSoundRequestId = requestId
 
-  playPositionalSound('tankDriveLoop', unit.x, unit.y, TANK_ENGINE_LOOP_VOLUME, 0, false, { playLoop: true })
+  Promise.resolve(playPositionalSound(eventName, unit.x, unit.y, volume, 0, false, { playLoop: true }))
     .then(handle => {
       unit.engineSoundLoading = false
       if (!handle) return
 
       const requestStillValid = unit.engineSoundRequestId === requestId
-      const stillMoving = shouldPlayTankEngineSound(unit, unit.movement)
-      if (!requestStillValid || !stillMoving || unit.engineSound) {
+      if (!requestStillValid || !stillPlaying(unit, unit.movement) || unit.engineSound) {
         stopLoopedMovementSound(handle)
         return
       }
 
       const { pan, volumeFactor } = calculatePositionalAudio(unit.x, unit.y)
-      const targetGain = TANK_ENGINE_LOOP_VOLUME * volumeFactor * getMasterVolume()
-      if (handle.gainNode) {
+      const targetGain = volume * volumeFactor * getMasterVolume()
+      if (handle.gainNode && audioContext) {
         handle.gainNode.gain.setValueAtTime(0, audioContext.currentTime)
         handle.gainNode.gain.linearRampToValueAtTime(targetGain, audioContext.currentTime + 0.08)
       }
       if (handle.panner) handle.panner.pan.value = pan
+      handle.baseVolume = volume
       unit.engineSound = handle
     })
     .catch(error => {
       unit.engineSoundLoading = false
-      console.error('Error playing tank engine loop:', error)
+      console.error(`Error playing ${eventName} loop:`, error)
     })
+}
+
+function beginTankEngineLoop(unit) {
+  beginLoopedMovementSound(unit, 'tankDriveLoop', TANK_ENGINE_LOOP_VOLUME, shouldPlayTankEngineSound)
+}
+
+function beginNavalCruiseLoop(unit) {
+  const eventName = navalCruiseLoopEvent(unit)
+  if (!eventName) return
+  beginLoopedMovementSound(unit, eventName, NAVAL_CRUISE_LOOP_VOLUME, shouldPlayNavalCruiseSound)
 }
 
 function stopTankEngineLoop(unit) {
@@ -799,6 +822,23 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
       } else {
         const { pan, volumeFactor } = calculatePositionalAudio(unit.x, unit.y)
         const targetGain = TANK_ENGINE_LOOP_VOLUME * volumeFactor * getMasterVolume()
+        if (unit.engineSound.panner) unit.engineSound.panner.pan.value = pan
+        if (unit.engineSound.gainNode) {
+          unit.engineSound.gainNode.gain.setTargetAtTime(targetGain, audioContext.currentTime, 0.05)
+        }
+      }
+    } else {
+      stopTankEngineLoop(unit)
+    }
+  }
+
+  if (navalCruiseLoopEvent(unit)) {
+    if (shouldPlayNavalCruiseSound(unit, movement)) {
+      if (!unit.engineSound) {
+        beginNavalCruiseLoop(unit)
+      } else if (audioContext) {
+        const { pan, volumeFactor } = calculatePositionalAudio(unit.x, unit.y)
+        const targetGain = (unit.engineSound.baseVolume || NAVAL_CRUISE_LOOP_VOLUME) * volumeFactor * getMasterVolume()
         if (unit.engineSound.panner) unit.engineSound.panner.pan.value = pan
         if (unit.engineSound.gainNode) {
           unit.engineSound.gainNode.gain.setTargetAtTime(targetGain, audioContext.currentTime, 0.05)

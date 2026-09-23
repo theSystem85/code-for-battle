@@ -6,6 +6,7 @@ Add a notification when a player-owned unit (non-base) is attacked by an enemy. 
 ## Requirements
 - Trigger only when attacker is enemy-owned.
 - Keep existing base/harvester voice notifications unchanged.
+- Player naval units also play a stackable narrator line (see spec 088). That voice line does not replace this focus notification.
 - For player-owned units that are not base structures, display a notification with:
   - Message: `<Unit Type> is under attack!`
   - Inline clickable unit type element.

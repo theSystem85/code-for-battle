@@ -109,10 +109,26 @@ const soundFiles = {
   movingAlongThePath: ['movingAlongThePath.mp3'],
   ourBaseIsUnderAttack: ['ourBaseIsUnderAttack.mp3'],
   ourHarvestersAreUnderAttack: ['ourHarvestersAreUnderAttack.mp3'],
+  ourBattleshipGotAttacked: ['ourBattleshipGotAttacked.mp3'],
+  ourSubmarineGotAttacked: ['ourSubmarineGotAttacked.mp3'],
+  ourCarrierGotAttacked: ['ourCarrierGotAttacked.mp3'],
+  ourHovercraftGotAttacked: ['ourHovercraftGotAttacked.mp3'],
+  ourShipsGotAttacked: ['ourShipsGotAttacked.mp3'],
   chainOfCommandsReceived: ['chainOfCommandsReceived.mp3'],
 
   // Looping tank drive sound
   tankDriveLoop: ['tankDrive4sLoop.mp3'],
+
+  // Naval movement loops (same playLoop path as tankDriveLoop / apache_fly)
+  battleshipCruise: ['battleshipCruise.mp3'],
+  hovercraftMoving: ['hovercraftMoving.mp3'],
+
+  // Naval one-shots. battleshipFire picks one variant per playback via gameRandom.
+  submarineSurfacing: ['submarineSurfacing.mp3'],
+  submarineDiving: ['submarineDiving.mp3'],
+  submarineTorpedo: ['submarineTorpedo.mp3'],
+  battleshipFire: ['battleshipFire1.mp3', 'battleshipFire2.mp3', 'battleshipFire3.mp3'],
+  shipSinking: ['shipSinking.mp3'],
 
   // Apache helicopter flight loop
   apache_fly: ['apache_fly.mp3'],

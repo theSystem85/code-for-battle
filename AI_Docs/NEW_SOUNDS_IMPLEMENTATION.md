@@ -54,6 +54,16 @@
 ✅ **ourBaseIsUnderAttack.mp3**: Plays when player's base gets attacked (max once per minute)  
 ✅ **ourHarvestersAreUnderAttack.mp3**: Plays when player's harvesters get attacked (max once per minute)
 
+## Naval audio (2026-09-23)
+
+Registered in `src/sound.js` and specified in `specs/088-naval-unit-audio.md`.
+
+- Submarine surfacing, diving, and torpedo one-shots play from `updateSubmarine`.
+- `battleshipCruise` and `hovercraftMoving` are positional movement loops, stopped when speed drops, using the tank-engine loop handle.
+- `battleshipFire` randomly plays `battleshipFire1/2/3.mp3` on each barrel shot.
+- `shipSinking` plays once when any naval unit is destroyed.
+- `ourBattleshipGotAttacked`, `ourSubmarineGotAttacked`, `ourCarrierGotAttacked` (`aircraftCarrier`), `ourHovercraftGotAttacked`, and `ourShipsGotAttacked` (destroyer and every other naval type) use the stackable narrator queue with a separate 60-second cooldown per line.
+
 ## Technical Features:
 - Proper throttling for attack notifications (60 seconds)
 - Positional audio for waypoint sounds

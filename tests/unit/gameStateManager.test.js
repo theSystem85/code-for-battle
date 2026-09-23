@@ -431,6 +431,7 @@ describe('gameStateManager', () => {
       cleanupDestroyedUnits(units, gameState)
 
       expect(playPositionalSound).toHaveBeenCalledWith('explosion', 80, 112, 0.65)
+      expect(playPositionalSound).toHaveBeenCalledWith('shipSinking', 80, 112, 0.75)
       expect(registerUnitWreck).toHaveBeenCalledWith(ship, gameState)
       expect(gameState.shipWakes).toEqual([{ sourceUnitId: 'other-ship', kind: 'turn' }])
       expect(units).toHaveLength(0)

@@ -1,6 +1,7 @@
 // attackNotifications.js - System for playing attack notification sounds with throttling
 import { playSound } from '../sound.js'
 import { gameState } from '../gameState.js'
+import { registerAttackAlertDispatcher } from './attackAlertBridge.js'
 import { showNotification } from '../ui/notifications.js'
 import { selectedUnits } from '../inputHandler.js'
 import { TILE_SIZE } from '../config.js'
@@ -11,6 +12,25 @@ const NOTIFICATION_COOLDOWN = 60000 // 60 seconds
 
 let lastBaseAttackNotification = 0
 let lastHarvesterAttackNotification = 0
+const lastNavalAttackNotification = new Map()
+
+const NAVAL_UNDER_ATTACK_SOUNDS = {
+  battleship: 'ourBattleshipGotAttacked',
+  submarine: 'ourSubmarineGotAttacked',
+  aircraftCarrier: 'ourCarrierGotAttacked',
+  hovercraft: 'ourHovercraftGotAttacked'
+}
+
+const NAVAL_UNIT_TYPES = new Set([
+  'destroyer',
+  'supplyShip',
+  'hovercraft',
+  'vehicleFerry',
+  'aircraftCarrier',
+  'navalMineLayer',
+  'battleship',
+  'submarine'
+])
 
 const attackedUnitNotificationTimes = new Map()
 const UNIT_ATTACK_NOTIFICATION_COOLDOWN = 8000
@@ -27,7 +47,15 @@ const UNIT_TYPE_DISPLAY_NAMES = {
   ambulance: 'Ambulance',
   howitzer: 'Howitzer',
   apache: 'Apache',
-  f35: 'F35'
+  f35: 'F35',
+  destroyer: 'Destroyer',
+  supplyShip: 'Supply Ship',
+  hovercraft: 'Hovercraft',
+  vehicleFerry: 'Vehicle Ferry',
+  aircraftCarrier: 'Aircraft Carrier',
+  navalMineLayer: 'Naval Mine Layer',
+  battleship: 'Battleship',
+  submarine: 'Submarine'
 }
 
 function getUnitDisplayName(unitType) {
@@ -169,6 +197,23 @@ function isPlayerHarvester(unit) {
   return isPlayerOwned(unit) && unit.type === 'harvester'
 }
 
+function getNavalUnderAttackSound(target) {
+  if (!target?.type || !isPlayerOwned(target)) return null
+  if (target.isNaval !== true && !NAVAL_UNIT_TYPES.has(target.type)) return null
+  return NAVAL_UNDER_ATTACK_SOUNDS[target.type] || 'ourShipsGotAttacked'
+}
+
+function notifyNavalUnderAttack(target, now) {
+  const sound = getNavalUnderAttackSound(target)
+  if (!sound) return
+
+  const lastNotification = lastNavalAttackNotification.get(sound) || 0
+  if (now - lastNotification < NOTIFICATION_COOLDOWN) return
+
+  playSound(sound, 1.0, 0, true)
+  lastNavalAttackNotification.set(sound, now)
+}
+
 /**
  * Handle attack notifications when units/buildings take damage
  * Should be called from the bullet system when damage is dealt
@@ -193,6 +238,8 @@ export function handleAttackNotification(target, attacker, now) {
     }
   }
 
+  notifyNavalUnderAttack(target, now)
+
   if (isPlayerOwned(target) && !isPlayerBase(target) && target.type) {
     showUnitUnderAttackNotification(target, now)
   }
@@ -204,5 +251,8 @@ export function handleAttackNotification(target, attacker, now) {
 export function resetAttackNotifications() {
   lastBaseAttackNotification = 0
   lastHarvesterAttackNotification = 0
+  lastNavalAttackNotification.clear()
   attackedUnitNotificationTimes.clear()
 }
+
+registerAttackAlertDispatcher(handleAttackNotification)
