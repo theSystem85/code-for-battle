@@ -36,6 +36,13 @@ export class MilestoneSystem {
         description: 'Your first military unit is ready',
         priority: 'medium'
       },
+      firstTank: {
+        id: 'firstTank',
+        displayName: 'First Tank Produced',
+        description: 'Your first tank has rolled out of the factory',
+        videoFilename: 'first_tank',
+        priority: 'high'
+      },
       firstTeslaCoil: {
         id: 'firstTeslaCoil',
         displayName: 'First Tesla Coil Built',
@@ -304,6 +311,18 @@ export class MilestoneSystem {
       )
       if (hasUnit) {
         this.triggerMilestone('firstUnit')
+      }
+    }
+
+    // Standard land tank only. Production queues the alias "tank", which
+    // createUnit stores as tank_v1. Later tanks and other vehicles do not match.
+    if (!this.achievedMilestones.has('firstTank')) {
+      const hasTank = gameState.units?.some(unit =>
+        unit.owner === gameState.humanPlayer &&
+        (unit.type === 'tank' || unit.type === 'tank_v1')
+      )
+      if (hasTank) {
+        this.triggerMilestone('firstTank')
       }
     }
 
