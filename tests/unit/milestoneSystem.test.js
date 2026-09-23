@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import '../setup.js'
 import { MilestoneSystem, milestoneSystem } from '../../src/game/milestoneSystem.js'
+import { playSyncedVideoAudio } from '../../src/ui/videoOverlay.js'
 
 // Mock the dependencies
 vi.mock('../../src/ui/videoOverlay.js', () => ({
@@ -283,6 +284,54 @@ describe('milestoneSystem.js', () => {
       }
       system.checkMilestones(gameState)
       expect(system.isAchieved('firstUnit')).toBe(false)
+    })
+
+    it('should detect the first standard tank and play its milestone video once', () => {
+      const gameState = {
+        humanPlayer: 'player1',
+        buildings: [],
+        units: [{ type: 'tank_v1', owner: 'player1' }]
+      }
+      system.checkMilestones(gameState)
+      expect(system.isAchieved('firstTank')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('first_tank', expect.objectContaining({
+        title: 'First Tank Produced',
+        description: 'Your first tank has rolled out of the factory',
+        priority: 'high'
+      }))
+
+      playSyncedVideoAudio.mockClear()
+      gameState.units.push({ type: 'tank_v1', owner: 'player1' })
+      system.checkMilestones(gameState)
+      expect(playSyncedVideoAudio).not.toHaveBeenCalled()
+    })
+
+    it('should treat the production alias tank as the standard land tank', () => {
+      const gameState = {
+        humanPlayer: 'player1',
+        buildings: [],
+        units: [{ type: 'tank', owner: 'player1' }]
+      }
+      system.checkMilestones(gameState)
+      expect(system.isAchieved('firstTank')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('first_tank', expect.any(Object))
+    })
+
+    it('should not play the first tank video for other vehicles or enemy tanks', () => {
+      const gameState = {
+        humanPlayer: 'player1',
+        buildings: [],
+        units: [
+          { type: 'tank-v2', owner: 'player1' },
+          { type: 'tank-v3', owner: 'player1' },
+          { type: 'rocketTank', owner: 'player1' },
+          { type: 'harvester', owner: 'player1' },
+          { type: 'tank_v1', owner: 'enemy' }
+        ]
+      }
+      system.checkMilestones(gameState)
+      expect(system.isAchieved('firstTank')).toBe(false)
+      expect(playSyncedVideoAudio).not.toHaveBeenCalled()
     })
 
     it('should detect first tesla coil milestone', () => {
