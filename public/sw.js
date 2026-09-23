@@ -1,4 +1,4 @@
-const CACHE_NAME = 'code-for-battle-cache-v1'
+const CACHE_NAME = 'code-for-battle-cache-v2'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -50,6 +50,16 @@ self.addEventListener('fetch', (event) => {
   const { request } = event
 
   if (request.method !== 'GET') {
+    return
+  }
+
+  const requestUrl = new URL(request.url)
+  // Signalling responses are polled and must come from the network.
+  // A cache hit can replay an empty lobby or a session that has no answer yet.
+  if (requestUrl.origin === self.location.origin && (
+    requestUrl.pathname.startsWith('/api/') ||
+    requestUrl.pathname.startsWith('/.netlify/functions/')
+  )) {
     return
   }
 

@@ -266,6 +266,34 @@ describe('signalling.js', () => {
     })
   })
 
+  describe('fetchIceServers', () => {
+    it('fetches ICE server config without caching', async() => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => Promise.resolve({ turnConfigured: false, iceServers: [] })
+      })
+
+      const { fetchIceServers } = await import('../../src/network/signalling.js')
+      const result = await fetchIceServers()
+
+      expect(globalThis.fetch).toHaveBeenCalledWith(
+        expect.stringMatching(/\/signalling\/ice-servers\?_t=\d+/),
+        { cache: 'no-store' }
+      )
+      expect(result).toEqual({ turnConfigured: false, iceServers: [] })
+    })
+
+    it('throws when the ICE config request fails', async() => {
+      globalThis.fetch = vi.fn().mockResolvedValue({
+        ok: false,
+        status: 503
+      })
+
+      const { fetchIceServers } = await import('../../src/network/signalling.js')
+      await expect(fetchIceServers()).rejects.toThrow('Failed to fetch ICE servers (503)')
+    })
+  })
+
   describe('generateSessionKey', () => {
     it('combines inviteToken and peerId with a hyphen', async() => {
       const { generateSessionKey } = await import('../../src/network/signalling.js')

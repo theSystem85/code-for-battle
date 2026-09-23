@@ -449,6 +449,18 @@ body.is-touch {
   text-align: center;
 }
 
+.multiplayer-qr-modal__warning {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #ffb020;
+  text-align: center;
+}
+
+.multiplayer-qr-modal__warning[hidden] {
+  display: none;
+}
+
 .multiplayer-qr-modal__link-container {
   display: flex;
   width: 100%;

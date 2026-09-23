@@ -9,6 +9,7 @@ import {
   isHost
 } from '../network/multiplayerStore.js'
 import { watchHostInvite, kickPlayer } from '../network/webrtcSession.js'
+import { buildInviteUrl, describeInviteReachability } from '../network/invites.js'
 import { showHostNotification } from '../network/hostNotifications.js'
 import { gameState } from '../gameState.js'
 import { observeMultiplayerSession } from '../network/multiplayerSessionEvents.js'
@@ -833,8 +834,7 @@ function updateInviteButtonState(button, partyState) {
 async function handleInviteClick(partyState, button, status) {
   // If invite already exists, show the QR modal immediately
   if (partyState.inviteToken) {
-    const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173'
-    const inviteUrl = `${baseUrl}?invite=${partyState.inviteToken}`
+    const inviteUrl = buildInviteUrl(partyState.inviteToken)
     await tryCopyToClipboard(inviteUrl)
     showHostNotification('Invite link copied to clipboard')
     showQRCodeModal(partyState, inviteUrl)
@@ -937,6 +937,7 @@ function getOrCreateQRModal() {
       <div class="multiplayer-qr-modal__body">
         <div class="multiplayer-qr-modal__qr-container"></div>
         <p class="multiplayer-qr-modal__instruction">Scan QR code or share the link below</p>
+        <p class="multiplayer-qr-modal__warning" hidden></p>
         <div class="multiplayer-qr-modal__link-container">
           <input type="text" class="multiplayer-qr-modal__link-input" readonly>
           <button type="button" class="multiplayer-qr-modal__copy-btn">Copy</button>
@@ -987,6 +988,7 @@ function showQRCodeModal(partyState, inviteUrl) {
   const qrContainer = modal.querySelector('.multiplayer-qr-modal__qr-container')
   const linkInput = modal.querySelector('.multiplayer-qr-modal__link-input')
   const copyBtn = modal.querySelector('.multiplayer-qr-modal__copy-btn')
+  const warning = modal.querySelector('.multiplayer-qr-modal__warning')
 
   // Set title with party color
   const partyName = getPartyDisplayName(partyState.partyId, partyState.color)
@@ -1006,6 +1008,11 @@ function showQRCodeModal(partyState, inviteUrl) {
   // Set link input value
   linkInput.value = inviteUrl
   copyBtn.textContent = 'Copy'
+  const reachability = describeInviteReachability(inviteUrl)
+  if (warning) {
+    warning.textContent = reachability
+    warning.hidden = !reachability
+  }
 
   // Show modal
   modal.classList.add('visible')

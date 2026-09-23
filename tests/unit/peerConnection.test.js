@@ -28,7 +28,12 @@ vi.mock('../../src/network/gameCommandSync.js', () => ({
 vi.mock('../../src/network/signalling.js', () => ({
   postOffer: vi.fn().mockResolvedValue(),
   postCandidate: vi.fn().mockResolvedValue(),
-  fetchSessionStatus: vi.fn()
+  fetchSessionStatus: vi.fn(),
+  fetchIceServers: vi.fn().mockResolvedValue({
+    iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
+    turnConfigured: false,
+    credentialMode: 'none'
+  })
 }))
 
 import {
@@ -40,7 +45,8 @@ import { gameState } from '../../src/gameState.js'
 import { generateRandomId } from '../../src/network/multiplayerStore.js'
 import { emitMultiplayerSessionChange } from '../../src/network/multiplayerSessionEvents.js'
 import { updateNetworkStats } from '../../src/network/gameCommandSync.js'
-import { fetchSessionStatus, postCandidate, postOffer } from '../../src/network/signalling.js'
+import { fetchIceServers, fetchSessionStatus, postCandidate, postOffer } from '../../src/network/signalling.js'
+import { resetIceServerCache } from '../../src/network/iceConfig.js'
 
 class MockRTCDataChannel {
   constructor() {
@@ -106,10 +112,13 @@ describe('remoteConnection (peerConnection task)', () => {
       inviteToken: null,
       isRemote: false
     }
+    resetIceServerCache()
     vi.clearAllMocks()
   })
 
-  afterEach(() => {
+  afterEach(async() => {
+    const active = getActiveRemoteConnection()
+    if (active) await active.stop()
     vi.useRealTimers()
   })
 
@@ -133,7 +142,8 @@ describe('remoteConnection (peerConnection task)', () => {
       inviteToken: 'invite-123',
       alias: 'Player One',
       peerId: 'peer-1',
-      offer: JSON.stringify({ type: 'offer', sdp: 'fake-sdp' })
+      offer: JSON.stringify({ type: 'offer', sdp: 'fake-sdp' }),
+      offerRevision: 1
     })
     expect(connection.connectionState).toBe(RemoteConnectionStatus.CONNECTING)
     expect(onStatusChange).toHaveBeenCalledWith(RemoteConnectionStatus.CONNECTING)
@@ -142,7 +152,7 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(onDataChannelOpen).toHaveBeenCalled()
 
     expect(gameState.multiplayerSession).toMatchObject({
-      status: RemoteConnectionStatus.CONNECTING,
+      status: RemoteConnectionStatus.CONNECTED,
       alias: 'Player One',
       inviteToken: 'invite-123',
       isRemote: true,
@@ -187,6 +197,33 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.pc.addIceCandidate).toHaveBeenCalledTimes(2)
   })
 
+  it('applies host ICE candidates even when the candidate cursor was cleared', async() => {
+    const connection = createConnection()
+    expect(connection.remoteCandidateIndex).toBe(0)
+    connection.remoteCandidateIndex = undefined
+    connection.peerId = 'peer-1'
+    connection.pc = new MockRTCPeerConnection()
+    connection.answerApplied = true
+
+    fetchSessionStatus.mockResolvedValue({
+      answer: null,
+      candidates: [
+        { candidate: JSON.stringify({ candidate: 'peer-line', sdpMid: '0', sdpMLineIndex: 0 }), origin: 'peer' },
+        { candidate: JSON.stringify({ candidate: 'host-line', sdpMid: '0', sdpMLineIndex: 0 }), origin: 'host' }
+      ]
+    })
+
+    await connection._synchronizeSession()
+
+    expect(connection.pc.addIceCandidate).toHaveBeenCalledTimes(1)
+    expect(connection.pc.addIceCandidate).toHaveBeenCalledWith({
+      candidate: 'host-line',
+      sdpMid: '0',
+      sdpMLineIndex: 0
+    })
+    expect(connection.remoteCandidateIndex).toBe(2)
+  })
+
   it('posts ICE candidates and updates status on connection state changes', () => {
     const connection = createConnection()
     connection.peerId = 'peer-1'
@@ -198,6 +235,8 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(postCandidate).toHaveBeenCalledWith({
       inviteToken: 'invite-123',
       peerId: 'peer-1',
+      origin: 'peer',
+      alias: 'Player One',
       candidate: JSON.stringify({ candidate: 'ice' })
     })
 
@@ -258,5 +297,58 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.pollActive).toBe(false)
 
     vi.useRealTimers()
+  })
+
+  it('marks the client connected from ICE state when connectionState has not caught up', async() => {
+    const connection = createConnection()
+    await connection.start()
+    connection.pc.connectionState = 'connecting'
+    connection.pc.iceConnectionState = 'connected'
+    connection.pc.trigger('iceconnectionstatechange')
+    expect(connection.connectionState).toBe(RemoteConnectionStatus.CONNECTED)
+  })
+
+  it('uses TURN servers returned by signalling', async() => {
+    fetchIceServers.mockResolvedValueOnce({
+      iceServers: [
+        { urls: ['stun:stun.l.google.com:19302'] },
+        { urls: ['turn:turn.example.com:3478'], username: 'user', credential: 'secret' }
+      ],
+      turnConfigured: true,
+      credentialMode: 'static'
+    })
+
+    const connection = createConnection()
+    await connection.start()
+
+    expect(connection.turnConfigured).toBe(true)
+    expect(connection.pc.config.iceServers).toEqual([
+      { urls: ['stun:stun.l.google.com:19302'] },
+      { urls: ['turn:turn.example.com:3478'], username: 'user', credential: 'secret' }
+    ])
+    expect(connection.pc.config.bundlePolicy).toBe('max-bundle')
+  })
+
+  it('restarts ICE once and posts the next offer revision', async() => {
+    const connection = createConnection()
+    await connection.start()
+    connection.answerApplied = true
+    connection.pc.restartIce = vi.fn()
+    connection.pc.localDescription = { type: 'offer', sdp: 'restart-sdp' }
+    connection.pc.createOffer.mockResolvedValue({ type: 'offer', sdp: 'restart-sdp' })
+    postOffer.mockClear()
+
+    connection.pc.connectionState = 'failed'
+    connection.pc.iceConnectionState = 'failed'
+    connection.pc.trigger('iceconnectionstatechange')
+
+    await vi.waitFor(() => {
+      expect(postOffer).toHaveBeenCalledWith(expect.objectContaining({
+        offerRevision: 2,
+        offer: JSON.stringify({ type: 'offer', sdp: 'restart-sdp' })
+      }))
+    })
+    expect(connection.pc.restartIce).toHaveBeenCalled()
+    expect(connection.connectionState).toBe(RemoteConnectionStatus.CONNECTING)
   })
 })

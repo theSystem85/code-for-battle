@@ -195,6 +195,30 @@ describe('Host session behavior', () => {
     expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledWith({ candidate: 'candidate-1' })
   })
 
+  it('answers an ICE restart with the new offer revision', async() => {
+    const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
+    monitor._processEntry({
+      peerId: 'peer-1',
+      alias: 'galina',
+      offer: { type: 'offer', sdp: 'first-offer' },
+      offerRevision: 1,
+      candidates: []
+    })
+    const session = monitor.sessions.get('peer-1')
+    session.answerSent = true
+    session.answeredRevision = 1
+    session.lastOfferSdp = 'first-offer'
+    signalling.postAnswer.mockClear()
+
+    await session.answerOffer({ type: 'offer', sdp: 'restart-offer' }, 2)
+
+    expect(signalling.postAnswer).toHaveBeenCalledWith(expect.objectContaining({
+      inviteToken: 'token-1',
+      peerId: 'peer-1',
+      offerRevision: 2
+    }))
+  })
+
   it('processes and forwards data channel control messages', () => {
     const onControlMessage = vi.fn()
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
@@ -235,6 +259,30 @@ describe('Host session behavior', () => {
 
     expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledTimes(1)
     expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledWith({ candidate: 'peer-candidate' })
+  })
+
+  it('applies peer ICE candidates even when the host cursor was cleared', () => {
+    const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
+    monitor._processEntry({
+      peerId: 'peer-1',
+      offer: { type: 'offer', sdp: 'mock-offer' },
+      candidates: []
+    })
+
+    const session = monitor.sessions.get('peer-1')
+    expect(session.candidateCursor).toBe(0)
+    session.candidateCursor = undefined
+    session.answerSent = true
+    lastPeerConnection.addIceCandidate.mockClear()
+
+    session.processCandidateEntries([
+      { candidate: { candidate: 'host-candidate' }, origin: 'host' },
+      { candidate: { candidate: 'peer-candidate', sdpMid: '0' }, origin: 'peer' }
+    ])
+
+    expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledTimes(1)
+    expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledWith({ candidate: 'peer-candidate', sdpMid: '0' })
+    expect(session.candidateCursor).toBe(2)
   })
 
   it('sends host status updates through the data channel', () => {
