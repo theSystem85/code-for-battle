@@ -5,6 +5,8 @@ test.describe('Sidebar floating label inputs', () => {
     await page.goto('/')
 
     await page.waitForSelector('#sidebar', { state: 'visible' })
+    await page.click('#saveLoadToggle')
+    await page.click('#multiplayerToggle')
     await page.click('#mapSettingsToggle')
     await expect(page.locator('#mapSettingsContent')).toBeVisible()
 

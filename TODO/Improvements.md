@@ -1,3 +1,5 @@
+- [x] Expanded left sidebar follow-up (2026-09-23): order the accordions Save/Load, Multiplayer, then Map Settings; keep the settings button row on one line; animate accordion height for 200ms and honor reduced motion.
+- [x] Expanded left sidebar polish (2026-09-23): Multiplayer and Save/Load Game collapse with the Map Settings accordion, Statistics has a visible headline, section spacing is scoped to `#sidebar.expanded-left-sidebar`, form rows cap at two controls, and the master volume sample plays on release instead of every drag tick.
 - [x] Circular selected-unit HUD (mode 4) draws an inward party-colored glow: strongest just inside the donut ring and fading toward the center, only while the circular HUD is selected (2026-09-21).
 - [x] Increase the baked ground shadow length for south-facing cliffs and remove north-facing cliff shadows (2026-09-15).
 - [x] Remove rectangular cropping from outer plateau silhouettes, add 2x2/2x3/2x4 cliff-block assets with more gray-to-canyon color variants, and make generated rock formations prefer compatible broad blocks.

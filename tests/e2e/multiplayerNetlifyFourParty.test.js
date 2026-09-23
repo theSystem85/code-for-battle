@@ -111,9 +111,8 @@ async function ensureMapSettingsExpanded(page) {
   })
 
   const mapSettingsVisible = await page.evaluate(() => {
-    const content = document.getElementById('mapSettingsContent')
-    if (!content) return false
-    return content.style.display !== 'none'
+    const toggle = document.getElementById('mapSettingsToggle')
+    return toggle?.getAttribute('aria-expanded') === 'true'
   })
 
   if (!mapSettingsVisible) {
@@ -122,7 +121,21 @@ async function ensureMapSettingsExpanded(page) {
   }
 
   await expect(page.locator('#mapSettingsContent')).toBeVisible({ timeout: 30000 })
+  await ensureSidebarAccordionExpanded(page, '#multiplayerToggle', '#multiplayerContent')
   await expect(page.locator('#playerCount')).toBeVisible({ timeout: 30000 })
+}
+
+async function ensureSidebarAccordionExpanded(page, toggleSelector, contentSelector) {
+  const contentVisible = await page.evaluate((selector) => {
+    const toggle = document.querySelector(selector)
+    return toggle?.getAttribute('aria-expanded') === 'true'
+  }, toggleSelector)
+
+  if (!contentVisible) {
+    await page.locator(toggleSelector).click()
+  }
+
+  await expect(page.locator(contentSelector)).toBeVisible({ timeout: 30000 })
 }
 
 async function ensureMultiplayerInviteSectionVisible(page) {
@@ -133,6 +146,7 @@ async function ensureMultiplayerInviteSectionVisible(page) {
       multiplayer.scrollIntoView({ behavior: 'instant', block: 'center' })
     }
   })
+  await ensureSidebarAccordionExpanded(page, '#multiplayerToggle', '#multiplayerContent')
   await expect(page.locator('#inviteLinkInput')).toBeVisible({ timeout: 30000 })
 }
 

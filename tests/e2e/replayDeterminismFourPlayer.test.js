@@ -299,6 +299,10 @@ async function enableObserverAutomation(page) {
 }
 
 async function saveGameSnapshot(page, label) {
+  const saveSectionOpen = await page.locator('#saveLoadToggle').getAttribute('aria-expanded') === 'true'
+  if (!saveSectionOpen) {
+    await page.locator('#saveLoadToggle').click()
+  }
   await page.click('#saveListTab')
   await page.fill('#saveLabelInput', label)
   await page.click('#saveGameBtn')

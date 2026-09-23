@@ -3,7 +3,12 @@ import { test, expect } from '@playwright/test'
 test.describe('Save game import/export from sidebar', () => {
   test('exports saves, supports multi-import without auto-load, and auto-loads single import', async({ page }, testInfo) => {
     await page.goto('/')
-    await page.waitForSelector('#saveLoadMenu', { state: 'visible' })
+    await page.waitForSelector('#saveLoadToggle', { state: 'visible' })
+    const saveSectionOpen = await page.locator('#saveLoadToggle').getAttribute('aria-expanded') === 'true'
+    if (!saveSectionOpen) {
+      await page.click('#saveLoadToggle')
+    }
+    await expect(page.locator('#saveLoadContent')).toBeVisible()
 
     const uniqueSuffix = Date.now().toString().slice(-6)
     const saveLabelA = `Shareable Save A ${uniqueSuffix}`

@@ -6,7 +6,8 @@ When the user expands **Map Settings** in the sidebar, the auto-scroll behavior 
 ## Requirements
 1. Expanding `#mapSettingsContent` must not auto-scroll to the end of the section.
 2. If the expanded content is outside the sidebar viewport, sidebar scroll should align the top of map settings near the top of the visible area (small padding allowed).
-3. Existing collapse/expand toggle behavior (`aria-expanded`, icon state, and display toggling) remains unchanged.
+3. Collapse/expand still updates `aria-expanded` and the chevron. Open and closed height is animated with a class (`is-open`) instead of toggling `display`.
+4. Save/Load Game and Multiplayer use the same accordion helper, including this scroll alignment when their sections open. Open state stays session-only, matching Map Settings.
 
 ## Acceptance criteria
 - Given Map Settings is collapsed and positioned partly below the current sidebar viewport,
