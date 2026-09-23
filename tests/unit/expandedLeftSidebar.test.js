@@ -27,8 +27,21 @@ describe('expanded left sidebar markup', () => {
       expect(toggle?.getAttribute('aria-controls')).toBe(contentId)
       expect(toggle?.getAttribute('aria-expanded')).toBe('false')
       expect(toggle?.querySelector('[data-sidebar-accordion-icon]')?.textContent).toBe('▼')
-      expect(content?.style.display).toBe('none')
+      expect(content?.classList.contains('is-open')).toBe(false)
+      expect(content?.firstElementChild?.classList.contains('sidebar-accordion__body')).toBe(true)
     }
+  })
+
+  it('orders Save, Multiplayer, then Map Settings as adjacent sections', () => {
+    const children = [...document.getElementById('sidebarScroll').children]
+    const indexOf = (id) => children.findIndex((element) => element.id === id)
+    const saveIndex = indexOf('saveLoadMenu')
+    const multiplayerIndex = indexOf('multiplayerSettings')
+    const mapIndex = indexOf('mapSettingsAccordion')
+
+    expect(multiplayerIndex).toBe(saveIndex + 1)
+    expect(mapIndex).toBe(multiplayerIndex + 1)
+    expect(document.getElementById('stats').contains(document.getElementById('mapSettingsAccordion'))).toBe(false)
   })
 
   it('shows a Statistics headline', () => {
@@ -49,5 +62,9 @@ describe('expanded left sidebar markup', () => {
 
     expect(sidebarCss).toMatch(/#sidebar\.expanded-left-sidebar \.sidebar-form-row\s*\{[^}]*grid-template-columns:\s*repeat\(2,\s*minmax\(0,\s*1fr\)\)/)
     expect(sidebarCss).toMatch(/#sidebar\.expanded-left-sidebar \.sidebar-form-row > :last-child:nth-child\(odd\)/)
+    expect(sidebarCss).toMatch(/#sidebar\.expanded-left-sidebar \.sidebar-tool-row\s*\{[^}]*flex-wrap:\s*nowrap/)
+    expect(sidebarCss).toMatch(/grid-template-rows:\s*0fr/)
+    expect(sidebarCss).toMatch(/transition:\s*grid-template-rows 200ms ease-in-out/)
+    expect(sidebarCss).toMatch(/@media \(prefers-reduced-motion: reduce\) \{[\s\S]*?\.sidebar-accordion__content \{[\s\S]*?transition: none/)
   })
 })

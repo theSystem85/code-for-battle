@@ -780,7 +780,26 @@ body.is-touch .money-tooltip__meta {
 }
 
 #sidebar.expanded-left-sidebar .sidebar-accordion__content {
+  display: grid;
+  grid-template-rows: 0fr;
+  margin-top: 0;
+  transition: grid-template-rows 200ms ease-in-out, margin-top 200ms ease-in-out;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-accordion__content.is-open {
+  grid-template-rows: 1fr;
   margin-top: 8px;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-accordion__body {
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #sidebar.expanded-left-sidebar .sidebar-accordion__content {
+    transition: none;
+  }
 }
 
 #sidebar.expanded-left-sidebar .sidebar-accordion__icon {
@@ -791,10 +810,21 @@ body.is-touch .money-tooltip__meta {
 
 #sidebar.expanded-left-sidebar .sidebar-tool-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 4px;
+  width: 100%;
+  min-width: 0;
   margin: 0;
+}
+
+#sidebar.expanded-left-sidebar .sidebar-tool-row > .action-button.icon-button {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  height: 40px;
+  padding: 0;
 }
 
 #sidebar.expanded-left-sidebar .sidebar-save-toolbar {

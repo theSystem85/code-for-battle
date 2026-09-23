@@ -111,9 +111,8 @@ async function ensureMapSettingsExpanded(page) {
   })
 
   const mapSettingsVisible = await page.evaluate(() => {
-    const content = document.getElementById('mapSettingsContent')
-    if (!content) return false
-    return content.style.display !== 'none'
+    const toggle = document.getElementById('mapSettingsToggle')
+    return toggle?.getAttribute('aria-expanded') === 'true'
   })
 
   if (!mapSettingsVisible) {
@@ -128,10 +127,9 @@ async function ensureMapSettingsExpanded(page) {
 
 async function ensureSidebarAccordionExpanded(page, toggleSelector, contentSelector) {
   const contentVisible = await page.evaluate((selector) => {
-    const content = document.querySelector(selector)
-    if (!content) return false
-    return content.style.display !== 'none'
-  }, contentSelector)
+    const toggle = document.querySelector(selector)
+    return toggle?.getAttribute('aria-expanded') === 'true'
+  }, toggleSelector)
 
   if (!contentVisible) {
     await page.locator(toggleSelector).click()

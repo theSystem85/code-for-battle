@@ -299,7 +299,7 @@ async function enableObserverAutomation(page) {
 }
 
 async function saveGameSnapshot(page, label) {
-  const saveSectionOpen = await page.locator('#saveLoadContent').evaluate((el) => el.style.display !== 'none')
+  const saveSectionOpen = await page.locator('#saveLoadToggle').getAttribute('aria-expanded') === 'true'
   if (!saveSectionOpen) {
     await page.locator('#saveLoadToggle').click()
   }

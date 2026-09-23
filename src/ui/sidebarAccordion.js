@@ -2,12 +2,13 @@ const SIDEBAR_ACCORDION_SCROLL_DELAY_MS = 50
 
 export function isSidebarAccordionOpen(content) {
   if (!content) return false
-  return content.style.display !== 'none'
+  return content.classList.contains('is-open')
 }
 
 export function setSidebarAccordionOpen(toggle, content, icon, open) {
   if (!toggle || !content) return
-  content.style.display = open ? 'block' : 'none'
+  content.classList.toggle('is-open', open)
+  content.style.display = ''
   toggle.setAttribute('aria-expanded', open ? 'true' : 'false')
   if (icon) icon.textContent = open ? '▲' : '▼'
 }

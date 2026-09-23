@@ -612,45 +612,6 @@
         <div id="productionProgress"></div>
       </div>
 
-      <!-- Save/Load Game Menu -->
-      <div id="saveLoadMenu" class="sidebar-accordion">
-        <button id="saveLoadToggle" class="action-button sidebar-accordion__toggle" type="button"
-          data-sidebar-accordion-toggle aria-expanded="false" aria-controls="saveLoadContent">
-          <span>Save/Load Game</span>
-          <span id="saveLoadToggleIcon" class="sidebar-accordion__icon" data-sidebar-accordion-icon>▼</span>
-        </button>
-        <div id="saveLoadContent" class="sidebar-accordion__content" style="display: none;">
-        <div class="sidebar-save-toolbar">
-          <div class="floating-label-input">
-            <input id="saveLabelInput" class="sidebar-input" type="text" placeholder=" " maxlength="32">
-            <label for="saveLabelInput">Save label</label>
-          </div>
-          <div class="sidebar-icon-actions">
-            <button id="saveGameBtn" class="action-button icon-button" title="Save Game">
-              <img src="/icons/save.svg" alt="Save" class="button-icon white-icon">
-            </button>
-            <button id="downloadSaveBtn" class="action-button icon-button" title="Download save file">
-              <img src="/icons/export.svg" alt="Download" class="button-icon white-icon">
-            </button>
-            <button id="importSaveBtn" class="action-button icon-button" title="Import save game or replay">
-              <img src="/icons/import.svg" alt="Import" class="button-icon white-icon">
-            </button>
-            <input id="importSaveInput" type="file" accept="application/json,.json,.cfb" multiple style="display:none;" aria-label="Import save game or replay">
-          </div>
-        </div>
-        <div class="save-replay-tabs">
-          <button id="saveListTab" class="tab-button active" type="button">Save Games</button>
-          <button id="replayListTab" class="tab-button" type="button">Replays</button>
-        </div>
-        <div id="saveGamesPane">
-          <ul id="saveGamesList" class="save-replay-list"></ul>
-        </div>
-        <div id="replaysPane" class="hidden">
-          <ul id="replayList" class="save-replay-list"></ul>
-        </div>
-        </div>
-      </div>
-
       <div id="speedControl">
         <div class="speed-control-row">
           <label for="speedMultiplier" class="speed-control-label">Speed(<span id="speedMultiplierValue" class="slider-inline-value">1.0x</span>):</label>
@@ -681,13 +642,55 @@
         </button>
       </div>
 
+      <!-- Save/Load Game Menu -->
+      <div id="saveLoadMenu" class="sidebar-accordion">
+        <button id="saveLoadToggle" class="action-button sidebar-accordion__toggle" type="button"
+          data-sidebar-accordion-toggle aria-expanded="false" aria-controls="saveLoadContent">
+          <span>Save/Load Game</span>
+          <span id="saveLoadToggleIcon" class="sidebar-accordion__icon" data-sidebar-accordion-icon>▼</span>
+        </button>
+        <div id="saveLoadContent" class="sidebar-accordion__content">
+        <div class="sidebar-accordion__body">
+        <div class="sidebar-save-toolbar">
+          <div class="floating-label-input">
+            <input id="saveLabelInput" class="sidebar-input" type="text" placeholder=" " maxlength="32">
+            <label for="saveLabelInput">Save label</label>
+          </div>
+          <div class="sidebar-icon-actions">
+            <button id="saveGameBtn" class="action-button icon-button" title="Save Game">
+              <img src="/icons/save.svg" alt="Save" class="button-icon white-icon">
+            </button>
+            <button id="downloadSaveBtn" class="action-button icon-button" title="Download save file">
+              <img src="/icons/export.svg" alt="Download" class="button-icon white-icon">
+            </button>
+            <button id="importSaveBtn" class="action-button icon-button" title="Import save game or replay">
+              <img src="/icons/import.svg" alt="Import" class="button-icon white-icon">
+            </button>
+            <input id="importSaveInput" type="file" accept="application/json,.json,.cfb" multiple style="display:none;" aria-label="Import save game or replay">
+          </div>
+        </div>
+        <div class="save-replay-tabs">
+          <button id="saveListTab" class="tab-button active" type="button">Save Games</button>
+          <button id="replayListTab" class="tab-button" type="button">Replays</button>
+        </div>
+        <div id="saveGamesPane">
+          <ul id="saveGamesList" class="save-replay-list"></ul>
+        </div>
+        <div id="replaysPane" class="hidden">
+          <ul id="replayList" class="save-replay-list"></ul>
+        </div>
+        </div>
+        </div>
+      </div>
+
       <div id="multiplayerSettings" class="sidebar-accordion">
         <button id="multiplayerToggle" class="action-button sidebar-accordion__toggle" type="button"
           data-sidebar-accordion-toggle aria-expanded="false" aria-controls="multiplayerContent">
           <span>Multiplayer</span>
           <span id="multiplayerToggleIcon" class="sidebar-accordion__icon" data-sidebar-accordion-icon>▼</span>
         </button>
-        <div id="multiplayerContent" class="sidebar-accordion__content" style="display: none;">
+        <div id="multiplayerContent" class="sidebar-accordion__content">
+        <div class="sidebar-accordion__body">
         <div class="sidebar-form-row">
           <div class="floating-label-input">
             <input type="number" class="sidebar-input" id="playerCount" min="2" max="4" value="4" placeholder=" ">
@@ -723,6 +726,191 @@
           <span id="joinInviteLinkStatus" class="multiplayer-join-status"></span>
         </div>
         </div>
+        </div>
+      </div>
+
+      <!-- Map Settings Accordion -->
+      <div id="mapSettingsAccordion" class="sidebar-accordion">
+        <button id="mapSettingsToggle" class="action-button sidebar-accordion__toggle" type="button"
+          data-sidebar-accordion-toggle
+          aria-expanded="false" aria-controls="mapSettingsContent">
+          <span>Map Settings</span>
+          <span id="mapSettingsToggleIcon" class="sidebar-accordion__icon" data-sidebar-accordion-icon>▼</span>
+        </button>
+        <div id="mapSettingsContent" class="sidebar-accordion__content">
+          <div class="sidebar-accordion__body">
+          <div class="sidebar-field">
+            <label for="saveFileFormatSelect" class="sidebar-field-label">Save file export format</label>
+            <select id="saveFileFormatSelect" class="sidebar-input">
+              <option value="compact" selected>Compact CFB (recommended)</option>
+              <option value="json">Legacy JSON (debugging)</option>
+            </select>
+            <small class="sidebar-hint">Import accepts both formats. Exporting a loaded save converts it to the selected format.</small>
+          </div>
+          <div class="map-edit-controls">
+            <button id="mapEditModeBtn" class="action-button" type="button">Edit Mode</button>
+            <button id="openSpriteSheetEditorBtn" class="action-button" type="button">Sprite Sheet Editor</button>
+            <button id="openSaveGameEditorBtn" class="action-button" type="button">Save Game Editor</button>
+          </div>
+          <label class="sidebar-check-row">
+            <input type="checkbox" id="integratedSpriteSheetModeCheckbox">
+            <span>Custom sprite sheets</span>
+          </label>
+          <div id="integratedSpriteSheetSelectionContainer" class="sidebar-field" hidden>
+            <div class="sidebar-hint">Sprite sheets to use</div>
+            <div id="integratedSpriteSheetSelectionList" class="integrated-sheet-selection-list"></div>
+          </div>
+          <div class="sidebar-form-row">
+            <div class="sidebar-field">
+              <label for="integratedSpriteSheetBiomeSelect" class="sidebar-field-label">Map Biome</label>
+              <select id="integratedSpriteSheetBiomeSelect" class="sidebar-input">
+                <option value="soil">Soil</option>
+                <option value="sand">Sand</option>
+                <option value="grass" selected>Grass</option>
+                <option value="snow">Snow</option>
+                <option value="mixed">Mixed</option>
+              </select>
+            </div>
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="startMoney" min="0" step="1000" max="5000000" value="20000" placeholder=" ">
+              <label for="startMoney">Start Money</label>
+            </div>
+          </div>
+          <div id="mixedBiomeSettings" class="sidebar-field">
+            <div class="sidebar-form-row">
+              <div class="floating-label-input">
+                <input type="number" class="sidebar-input" id="mapBiomeRegionCount" min="1" max="64" value="12" placeholder=" ">
+                <label for="mapBiomeRegionCount">Biome Regions</label>
+              </div>
+              <div class="floating-label-input">
+                <input type="number" class="sidebar-input" id="mapShorelineWidth" min="0" max="12" value="2" placeholder=" ">
+                <label for="mapShorelineWidth">Shore Sand (tiles)</label>
+              </div>
+              <div class="floating-label-input">
+                <input type="number" class="sidebar-input" id="mapBiomeTransitionPixels" min="1" max="64" value="8" placeholder=" ">
+                <label for="mapBiomeTransitionPixels">Fade (px)</label>
+              </div>
+            </div>
+            <div class="sidebar-form-row">
+              <div class="floating-label-input">
+                <select id="mapBiomeDistribution" class="sidebar-input">
+                  <option value="random" selected>Random</option>
+                  <option value="vertical">Vertical</option>
+                  <option value="horizontal">Horizontal</option>
+                  <option value="corners">Four corners</option>
+                </select>
+                <label for="mapBiomeDistribution">Distribution</label>
+              </div>
+            </div>
+            <div class="sidebar-form-row">
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeGrassWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeGrassWeight">Grass Size</label></div>
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSoilWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeSoilWeight">Soil Size</label></div>
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSandWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSandWeight">Sand Size</label></div>
+              <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSnowWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSnowWeight">Snow Size</label></div>
+            </div>
+            <label class="sidebar-check-row">
+              <input type="checkbox" id="mapSnowOnPlateausCheckbox" checked>
+              <span>Snow on plateau tops</span>
+            </label>
+            <small class="sidebar-hint">Sizes are relative weights. Shore sand only follows ocean-connected water, not lakes.</small>
+          </div>
+          <div class="sidebar-form-row">
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapSeed" value="4" placeholder=" ">
+              <label for="mapSeed">Seed</label>
+            </div>
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapOreFieldCount" min="0" max="24" value="8" placeholder=" ">
+              <label for="mapOreFieldCount">Ore Fields:</label>
+            </div>
+          </div>
+          <div class="sidebar-form-row">
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapOreTotalValue" min="0" step="1000" max="5000000" value="64000" placeholder=" ">
+              <label for="mapOreTotalValue">Total Ore Value</label>
+            </div>
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapOreSpreadIntervalSeconds" min="1" step="1" max="3600" value="90" placeholder=" ">
+              <label for="mapOreSpreadIntervalSeconds">Ore Spread s</label>
+            </div>
+          </div>
+          <div class="sidebar-form-row">
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapWidthTiles" min="32" value="200" placeholder=" ">
+              <label for="mapWidthTiles">Width</label>
+            </div>
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapHeightTiles" min="32" value="200" placeholder=" ">
+              <label for="mapHeightTiles">Height</label>
+            </div>
+          </div>
+          <div id="mapSaveMinimumEstimate" class="map-save-minimum-estimate sidebar-hint">Minimum save memory for 200×200: calculating…</div>
+          <div class="sidebar-form-row">
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapWaterPercent" min="0" max="50" value="10" placeholder=" ">
+              <label for="mapWaterPercent">Water %</label>
+            </div>
+            <div class="floating-label-input">
+              <input type="number" class="sidebar-input" id="mapRockPercent" min="0" max="50" value="5" placeholder=" ">
+              <label for="mapRockPercent">Rocks %</label>
+            </div>
+          </div>
+          <div class="map-edit-controls">
+            <span class="sidebar-hint">Shore / Lake</span>
+            <label class="sidebar-check-row">
+              <input type="checkbox" id="mapShoreNorthCheckbox" checked>
+              <span>North Shore</span>
+            </label>
+            <label class="sidebar-check-row">
+              <input type="checkbox" id="mapShoreWestCheckbox" checked>
+              <span>West Shore</span>
+            </label>
+            <label class="sidebar-check-row">
+              <input type="checkbox" id="mapShoreEastCheckbox" checked>
+              <span>East Shore</span>
+            </label>
+            <label class="sidebar-check-row">
+              <input type="checkbox" id="mapShoreSouthCheckbox" checked>
+              <span>South Shore</span>
+            </label>
+            <label class="sidebar-check-row">
+              <input type="checkbox" id="mapCenterLakeCheckbox" checked>
+              <span>Big Center Lake</span>
+            </label>
+          </div>
+          <div class="map-edit-controls">
+            <div class="sidebar-field">
+              <label for="mapEditTileSelect" class="sidebar-field-label">Tile</label>
+              <select id="mapEditTileSelect" class="sidebar-input">
+                <option value="grass">Grass</option>
+                <option value="decor">Decoration</option>
+                <option value="rugged">Rugged Grass</option>
+                <option value="street">Street</option>
+                <option value="rock">Rock</option>
+                <option value="water">Water</option>
+                <option value="ore">Ore</option>
+              </select>
+            </div>
+            <label class="sidebar-check-row">
+              <input type="checkbox" id="mapEditRandomToggle" checked>
+              <span>Random variations</span>
+            </label>
+            <div id="mapEditStatus" class="map-edit-status sidebar-hint" aria-live="polite"></div>
+          </div>
+          <label class="sidebar-check-row">
+            <input type="checkbox" id="oreSpreadCheckbox">
+            <span>ORE_SPREAD_ENABLED</span>
+          </label>
+          <label class="sidebar-check-row">
+            <input type="checkbox" id="shadowOfWarCheckbox">
+            <span>Shadow of War</span>
+          </label>
+          <label id="showEnemyResourcesLabel" class="sidebar-check-row">
+            <input type="checkbox" id="showEnemyResourcesCheckbox">
+            <span>Show Enemy Resources</span>
+          </label>
+          </div>
+        </div>
       </div>
 
       <!-- Stats and game speed moved to the bottom -->
@@ -731,187 +919,6 @@
         <p>Time: <span id="gameTime">0</span></p>
         <p>Wins: <span id="wins">0</span></p>
         <p>Losses: <span id="losses">0</span></p>
-        <!-- Map Settings Accordion -->
-        <div id="mapSettingsAccordion" class="sidebar-accordion">
-          <button id="mapSettingsToggle" class="action-button sidebar-accordion__toggle" type="button"
-            data-sidebar-accordion-toggle
-            aria-expanded="false" aria-controls="mapSettingsContent">
-            <span>Map Settings</span>
-            <span id="mapSettingsToggleIcon" class="sidebar-accordion__icon" data-sidebar-accordion-icon>▼</span>
-          </button>
-          <div id="mapSettingsContent" class="sidebar-accordion__content" style="display: none;">
-            <div class="sidebar-field">
-              <label for="saveFileFormatSelect" class="sidebar-field-label">Save file export format</label>
-              <select id="saveFileFormatSelect" class="sidebar-input">
-                <option value="compact" selected>Compact CFB (recommended)</option>
-                <option value="json">Legacy JSON (debugging)</option>
-              </select>
-              <small class="sidebar-hint">Import accepts both formats. Exporting a loaded save converts it to the selected format.</small>
-            </div>
-            <div class="map-edit-controls">
-              <button id="mapEditModeBtn" class="action-button" type="button">Edit Mode</button>
-              <button id="openSpriteSheetEditorBtn" class="action-button" type="button">Sprite Sheet Editor</button>
-              <button id="openSaveGameEditorBtn" class="action-button" type="button">Save Game Editor</button>
-            </div>
-            <label class="sidebar-check-row">
-              <input type="checkbox" id="integratedSpriteSheetModeCheckbox">
-              <span>Custom sprite sheets</span>
-            </label>
-            <div id="integratedSpriteSheetSelectionContainer" class="sidebar-field" hidden>
-              <div class="sidebar-hint">Sprite sheets to use</div>
-              <div id="integratedSpriteSheetSelectionList" class="integrated-sheet-selection-list"></div>
-            </div>
-            <div class="sidebar-form-row">
-              <div class="sidebar-field">
-                <label for="integratedSpriteSheetBiomeSelect" class="sidebar-field-label">Map Biome</label>
-                <select id="integratedSpriteSheetBiomeSelect" class="sidebar-input">
-                  <option value="soil">Soil</option>
-                  <option value="sand">Sand</option>
-                  <option value="grass" selected>Grass</option>
-                  <option value="snow">Snow</option>
-                  <option value="mixed">Mixed</option>
-                </select>
-              </div>
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="startMoney" min="0" step="1000" max="5000000" value="20000" placeholder=" ">
-                <label for="startMoney">Start Money</label>
-              </div>
-            </div>
-            <div id="mixedBiomeSettings" class="sidebar-field">
-              <div class="sidebar-form-row">
-                <div class="floating-label-input">
-                  <input type="number" class="sidebar-input" id="mapBiomeRegionCount" min="1" max="64" value="12" placeholder=" ">
-                  <label for="mapBiomeRegionCount">Biome Regions</label>
-                </div>
-                <div class="floating-label-input">
-                  <input type="number" class="sidebar-input" id="mapShorelineWidth" min="0" max="12" value="2" placeholder=" ">
-                  <label for="mapShorelineWidth">Shore Sand (tiles)</label>
-                </div>
-                <div class="floating-label-input">
-                  <input type="number" class="sidebar-input" id="mapBiomeTransitionPixels" min="1" max="64" value="8" placeholder=" ">
-                  <label for="mapBiomeTransitionPixels">Fade (px)</label>
-                </div>
-              </div>
-              <div class="sidebar-form-row">
-                <div class="floating-label-input">
-                  <select id="mapBiomeDistribution" class="sidebar-input">
-                    <option value="random" selected>Random</option>
-                    <option value="vertical">Vertical</option>
-                    <option value="horizontal">Horizontal</option>
-                    <option value="corners">Four corners</option>
-                  </select>
-                  <label for="mapBiomeDistribution">Distribution</label>
-                </div>
-              </div>
-              <div class="sidebar-form-row">
-                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeGrassWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeGrassWeight">Grass Size</label></div>
-                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSoilWeight" min="0" max="100" value="30" placeholder=" "><label for="mapBiomeSoilWeight">Soil Size</label></div>
-                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSandWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSandWeight">Sand Size</label></div>
-                <div class="floating-label-input"><input type="number" class="sidebar-input" id="mapBiomeSnowWeight" min="0" max="100" value="20" placeholder=" "><label for="mapBiomeSnowWeight">Snow Size</label></div>
-              </div>
-              <label class="sidebar-check-row">
-                <input type="checkbox" id="mapSnowOnPlateausCheckbox" checked>
-                <span>Snow on plateau tops</span>
-              </label>
-              <small class="sidebar-hint">Sizes are relative weights. Shore sand only follows ocean-connected water, not lakes.</small>
-            </div>
-            <div class="sidebar-form-row">
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapSeed" value="4" placeholder=" ">
-                <label for="mapSeed">Seed</label>
-              </div>
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapOreFieldCount" min="0" max="24" value="8" placeholder=" ">
-                <label for="mapOreFieldCount">Ore Fields:</label>
-              </div>
-            </div>
-            <div class="sidebar-form-row">
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapOreTotalValue" min="0" step="1000" max="5000000" value="64000" placeholder=" ">
-                <label for="mapOreTotalValue">Total Ore Value</label>
-              </div>
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapOreSpreadIntervalSeconds" min="1" step="1" max="3600" value="90" placeholder=" ">
-                <label for="mapOreSpreadIntervalSeconds">Ore Spread s</label>
-              </div>
-            </div>
-            <div class="sidebar-form-row">
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapWidthTiles" min="32" value="200" placeholder=" ">
-                <label for="mapWidthTiles">Width</label>
-              </div>
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapHeightTiles" min="32" value="200" placeholder=" ">
-                <label for="mapHeightTiles">Height</label>
-              </div>
-            </div>
-            <div id="mapSaveMinimumEstimate" class="map-save-minimum-estimate sidebar-hint">Minimum save memory for 200×200: calculating…</div>
-            <div class="sidebar-form-row">
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapWaterPercent" min="0" max="50" value="10" placeholder=" ">
-                <label for="mapWaterPercent">Water %</label>
-              </div>
-              <div class="floating-label-input">
-                <input type="number" class="sidebar-input" id="mapRockPercent" min="0" max="50" value="5" placeholder=" ">
-                <label for="mapRockPercent">Rocks %</label>
-              </div>
-            </div>
-            <div class="map-edit-controls">
-              <span class="sidebar-hint">Shore / Lake</span>
-              <label class="sidebar-check-row">
-                <input type="checkbox" id="mapShoreNorthCheckbox" checked>
-                <span>North Shore</span>
-              </label>
-              <label class="sidebar-check-row">
-                <input type="checkbox" id="mapShoreWestCheckbox" checked>
-                <span>West Shore</span>
-              </label>
-              <label class="sidebar-check-row">
-                <input type="checkbox" id="mapShoreEastCheckbox" checked>
-                <span>East Shore</span>
-              </label>
-              <label class="sidebar-check-row">
-                <input type="checkbox" id="mapShoreSouthCheckbox" checked>
-                <span>South Shore</span>
-              </label>
-              <label class="sidebar-check-row">
-                <input type="checkbox" id="mapCenterLakeCheckbox" checked>
-                <span>Big Center Lake</span>
-              </label>
-            </div>
-            <div class="map-edit-controls">
-              <div class="sidebar-field">
-                <label for="mapEditTileSelect" class="sidebar-field-label">Tile</label>
-                <select id="mapEditTileSelect" class="sidebar-input">
-                  <option value="grass">Grass</option>
-                  <option value="decor">Decoration</option>
-                  <option value="rugged">Rugged Grass</option>
-                  <option value="street">Street</option>
-                  <option value="rock">Rock</option>
-                  <option value="water">Water</option>
-                  <option value="ore">Ore</option>
-                </select>
-              </div>
-              <label class="sidebar-check-row">
-                <input type="checkbox" id="mapEditRandomToggle" checked>
-                <span>Random variations</span>
-              </label>
-              <div id="mapEditStatus" class="map-edit-status sidebar-hint" aria-live="polite"></div>
-            </div>
-            <label class="sidebar-check-row">
-              <input type="checkbox" id="oreSpreadCheckbox">
-              <span>ORE_SPREAD_ENABLED</span>
-            </label>
-            <label class="sidebar-check-row">
-              <input type="checkbox" id="shadowOfWarCheckbox">
-              <span>Shadow of War</span>
-            </label>
-            <label id="showEnemyResourcesLabel" class="sidebar-check-row">
-              <input type="checkbox" id="showEnemyResourcesCheckbox">
-              <span>Show Enemy Resources</span>
-            </label>
-          </div>
-        </div>
         <div id="sidebarFooterVersion" class="sidebar-version">
           <div class="sidebar-version__row">
             <span class="sidebar-version__label">Version:</span>

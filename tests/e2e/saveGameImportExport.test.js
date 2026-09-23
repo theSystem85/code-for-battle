@@ -4,7 +4,7 @@ test.describe('Save game import/export from sidebar', () => {
   test('exports saves, supports multi-import without auto-load, and auto-loads single import', async({ page }, testInfo) => {
     await page.goto('/')
     await page.waitForSelector('#saveLoadToggle', { state: 'visible' })
-    const saveSectionOpen = await page.locator('#saveLoadContent').evaluate((el) => el.style.display !== 'none')
+    const saveSectionOpen = await page.locator('#saveLoadToggle').getAttribute('aria-expanded') === 'true'
     if (!saveSectionOpen) {
       await page.click('#saveLoadToggle')
     }

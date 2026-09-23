@@ -170,6 +170,7 @@ function hideMapSettingsForClient() {
 function showMapSettings() {
   const mapSettingsContainer = document.querySelector('#mapSettingsContent')?.parentElement
   const mapSettingsToggle = document.getElementById('mapSettingsToggle')
+  const mapSettingsContent = document.getElementById('mapSettingsContent')
 
   // Re-enable ore spread and shadow of war checkboxes
   const oreCheckbox = document.getElementById('oreSpreadCheckbox')
@@ -211,6 +212,9 @@ function showMapSettings() {
   }
   if (mapSettingsToggle) {
     mapSettingsToggle.style.display = ''
+  }
+  if (mapSettingsContent) {
+    mapSettingsContent.style.display = ''
   }
 
   window.logger('[RemoteInviteLanding] Map settings restored, ore/shadow controls re-enabled')

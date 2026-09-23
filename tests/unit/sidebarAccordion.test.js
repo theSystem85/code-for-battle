@@ -32,12 +32,14 @@ describe('sidebar accordion', () => {
 
     expect(isSidebarAccordionOpen(content)).toBe(false)
     toggle.click()
-    expect(content.style.display).toBe('block')
+    expect(content.classList.contains('is-open')).toBe(true)
+    expect(content.style.display).toBe('')
     expect(toggle.getAttribute('aria-expanded')).toBe('true')
     expect(icon.textContent).toBe('▲')
 
     toggle.click()
-    expect(content.style.display).toBe('none')
+    expect(content.classList.contains('is-open')).toBe(false)
+    expect(content.style.display).toBe('')
     expect(toggle.getAttribute('aria-expanded')).toBe('false')
     expect(icon.textContent).toBe('▼')
   })
