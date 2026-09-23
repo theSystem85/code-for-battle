@@ -261,6 +261,30 @@ describe('Host session behavior', () => {
     expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledWith({ candidate: 'peer-candidate' })
   })
 
+  it('applies peer ICE candidates even when the host cursor was cleared', () => {
+    const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
+    monitor._processEntry({
+      peerId: 'peer-1',
+      offer: { type: 'offer', sdp: 'mock-offer' },
+      candidates: []
+    })
+
+    const session = monitor.sessions.get('peer-1')
+    expect(session.candidateCursor).toBe(0)
+    session.candidateCursor = undefined
+    session.answerSent = true
+    lastPeerConnection.addIceCandidate.mockClear()
+
+    session.processCandidateEntries([
+      { candidate: { candidate: 'host-candidate' }, origin: 'host' },
+      { candidate: { candidate: 'peer-candidate', sdpMid: '0' }, origin: 'peer' }
+    ])
+
+    expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledTimes(1)
+    expect(lastPeerConnection.addIceCandidate).toHaveBeenCalledWith({ candidate: 'peer-candidate', sdpMid: '0' })
+    expect(session.candidateCursor).toBe(2)
+  })
+
   it('sends host status updates through the data channel', () => {
     const monitor = watchHostInvite({ partyId: 'party-1', inviteToken: 'token-1' })
     monitor._processEntry({

@@ -447,6 +447,10 @@ class RemoteConnection {
     }
 
     const candidates = Array.isArray(payload.candidates) ? payload.candidates : []
+    // `undefined < n` is false, which would skip every host candidate.
+    if (!Number.isInteger(this.remoteCandidateIndex) || this.remoteCandidateIndex < 0) {
+      this.remoteCandidateIndex = 0
+    }
     for (let i = this.remoteCandidateIndex; i < candidates.length; i += 1) {
       const candidateValue = candidates[i]
 

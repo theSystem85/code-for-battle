@@ -10,6 +10,7 @@ Invite joins succeed when the host and the client are two browsers on the same c
 - Candidate writes used one shared blob with read-modify-write. Concurrent host and client posts could drop the only routable candidate. Same-computer joins still succeed if any host candidate survives.
 - iOS WebKit can leave `connectionState` at `connecting` after ICE is `connected` or the data channel is open. Command send and the host "human joined" transition waited on `connectionState`.
 - Netlify's available API does not expose function logs, so older failed joins could not be reconstructed. Player aliases stay in the session blob for the host UI and are not written to function logs.
+- Audited against current `main`: `RemoteConnection.remoteCandidateIndex` and `HostSession.candidateCursor` are both initialized to `0` (client cursor since the original multiplayer commit). An undefined cursor would make `undefined < length` false and skip `addIceCandidate`. Both scans now reset a missing cursor to `0` before reading. That was not the cross-device failure; STUN-only still is.
 
 ## Behavior
 1. On connect, the browser requests `GET /api/signalling/ice-servers` (and the local `server/stun.js` helper exposes the same route).

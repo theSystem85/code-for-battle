@@ -197,6 +197,33 @@ describe('remoteConnection (peerConnection task)', () => {
     expect(connection.pc.addIceCandidate).toHaveBeenCalledTimes(2)
   })
 
+  it('applies host ICE candidates even when the candidate cursor was cleared', async() => {
+    const connection = createConnection()
+    expect(connection.remoteCandidateIndex).toBe(0)
+    connection.remoteCandidateIndex = undefined
+    connection.peerId = 'peer-1'
+    connection.pc = new MockRTCPeerConnection()
+    connection.answerApplied = true
+
+    fetchSessionStatus.mockResolvedValue({
+      answer: null,
+      candidates: [
+        { candidate: JSON.stringify({ candidate: 'peer-line', sdpMid: '0', sdpMLineIndex: 0 }), origin: 'peer' },
+        { candidate: JSON.stringify({ candidate: 'host-line', sdpMid: '0', sdpMLineIndex: 0 }), origin: 'host' }
+      ]
+    })
+
+    await connection._synchronizeSession()
+
+    expect(connection.pc.addIceCandidate).toHaveBeenCalledTimes(1)
+    expect(connection.pc.addIceCandidate).toHaveBeenCalledWith({
+      candidate: 'host-line',
+      sdpMid: '0',
+      sdpMLineIndex: 0
+    })
+    expect(connection.remoteCandidateIndex).toBe(2)
+  })
+
   it('posts ICE candidates and updates status on connection state changes', () => {
     const connection = createConnection()
     connection.peerId = 'peer-1'

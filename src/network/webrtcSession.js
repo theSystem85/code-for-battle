@@ -132,6 +132,10 @@ class HostSession {
     if (!Array.isArray(entries) || !this.pc) {
       return
     }
+    // `undefined < n` is false, which would skip every peer candidate.
+    if (!Number.isInteger(this.candidateCursor) || this.candidateCursor < 0) {
+      this.candidateCursor = 0
+    }
     for (let i = this.candidateCursor; i < entries.length; i += 1) {
       const entry = this._normalizeCandidateEntry(entries[i])
       this.candidateCursor = i + 1
