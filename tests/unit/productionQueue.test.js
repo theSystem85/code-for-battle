@@ -102,6 +102,11 @@ import { spawnUnit, findPath } from '../../src/units.js'
 import { findClosestOre } from '../../src/logic.js'
 import { units } from '../../src/main.js'
 import { getUnitProductionCount, removeQueuedUnit } from '../../src/ui/productionControllerQueue.js'
+import {
+  clearMilestoneMediaPreload,
+  isMilestoneMediaPreloaded,
+  setMilestoneAchievedCheck
+} from '../../src/ui/milestoneMediaCache.js'
 
 describe('Production Queue System', () => {
   let mockButton
@@ -163,6 +168,23 @@ describe('Production Queue System', () => {
         { type: 'vehicleFactory', owner: 'player', health: 100 },
         { type: 'constructionYard', owner: 'player', health: 100 }
       ]
+    })
+
+    it('preloads an unachieved milestone video when that unit or building starts production', () => {
+      clearMilestoneMediaPreload()
+      const achieved = new Set(['firstTank'])
+      setMilestoneAchievedCheck(id => achieved.has(id))
+
+      productionQueue.addItem('howitzer', mockButton, false)
+      expect(isMilestoneMediaPreloaded('first_artillery')).toBe(true)
+      expect(isMilestoneMediaPreloaded('first_tank')).toBe(false)
+
+      productionQueue.currentBuilding = null
+      productionQueue.addItem('airstrip', mockButton, true)
+      expect(isMilestoneMediaPreloaded('air_strip')).toBe(true)
+
+      clearMilestoneMediaPreload()
+      setMilestoneAchievedCheck(null)
     })
 
     it('should add unit to queue', () => {

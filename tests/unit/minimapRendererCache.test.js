@@ -132,4 +132,39 @@ describe('MinimapRenderer prepared caches', () => {
     expect(startSpan).toHaveBeenCalledWith(PROFILER_SPAN_IDS.MINIMAP_VIDEO)
     expect(startSpan).not.toHaveBeenCalledWith(PROFILER_SPAN_IDS.MINIMAP_BASE)
   })
+
+  it('fades a milestone video over the radar while opacity is below 1', () => {
+    const renderer = new MinimapRenderer()
+    const minimapCanvas = createCanvas(160, 96, 2)
+    const gameCanvas = createCanvas(400, 240, 2)
+    const minimapCtx = minimapCanvas.getContext('2d')
+    const alphasAtDraw = []
+    minimapCtx.drawImage = () => {
+      alphasAtDraw.push(minimapCtx.globalAlpha)
+    }
+    vi.spyOn(videoOverlay, 'isVideoPlaying').mockReturnValue(true)
+    vi.spyOn(videoOverlay, 'getMilestoneVideoOpacity').mockReturnValue(0.5)
+    vi.spyOn(videoOverlay, 'getCurrentVideo').mockReturnValue({
+      readyState: 2,
+      videoWidth: 960,
+      videoHeight: 576
+    })
+    const startSpan = vi.spyOn(renderProfiler, 'startSpan')
+
+    renderer.render(
+      minimapCtx,
+      minimapCanvas,
+      createMap(),
+      { x: 0, y: 0 },
+      gameCanvas,
+      [],
+      [],
+      { radarActive: true }
+    )
+
+    expect(startSpan).toHaveBeenCalledWith(PROFILER_SPAN_IDS.MINIMAP_BASE)
+    expect(startSpan).toHaveBeenCalledWith(PROFILER_SPAN_IDS.MINIMAP_VIDEO)
+    expect(alphasAtDraw).toContain(0.5)
+    expect(minimapCtx.globalAlpha).toBe(1)
+  })
 })

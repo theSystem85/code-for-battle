@@ -1,5 +1,36 @@
 // ui/videoOverlay.js
 import { getMasterVolume } from '../sound.js'
+import {
+  computeMilestoneVideoOpacity,
+  takePreloadedMilestoneMedia
+} from './milestoneMediaCache.js'
+
+function waitForMediaEvent(media, eventName, timeoutMs) {
+  if (!media) return Promise.reject(new Error('missing media'))
+  if (eventName === 'canplay' && media.readyState >= 2) return Promise.resolve()
+  if (eventName === 'canplaythrough' && media.readyState >= 4) return Promise.resolve()
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup()
+      reject(new Error(`Media ${eventName} timeout`))
+    }, timeoutMs)
+    const onReady = () => {
+      cleanup()
+      resolve()
+    }
+    const onError = (event) => {
+      cleanup()
+      reject(event)
+    }
+    const cleanup = () => {
+      clearTimeout(timeout)
+      media.removeEventListener(eventName, onReady)
+      media.removeEventListener('error', onError)
+    }
+    media.addEventListener(eventName, onReady, { once: true })
+    media.addEventListener('error', onError, { once: true })
+  })
+}
 
 /**
  * Video overlay system for playing milestone videos over the minimap
@@ -12,6 +43,7 @@ export class VideoOverlay {
     this.currentAudio = null
     this.overlayElement = null
     this.videoQueue = []
+    this.playbackStartedAt = 0
     this.createOverlayElement()
   }
 
@@ -220,9 +252,12 @@ export class VideoOverlay {
     }
 
     try {
-      const video = this.overlayElement.querySelector('.milestone-video')
       const titleElement = this.overlayElement.querySelector('.milestone-title')
       const descriptionElement = this.overlayElement.querySelector('.milestone-description')
+      const baseFilename = String(videoFile || '').replace(/\.mp4$/i, '')
+      const preloaded = takePreloadedMilestoneMedia(baseFilename)
+      let video = this.overlayElement.querySelector('.milestone-video')
+      let usedPreloadedVideo = false
 
       // Set milestone info
       titleElement.textContent = milestoneInfo.title || 'Milestone Achieved'
@@ -267,32 +302,59 @@ export class VideoOverlay {
         })
       }
 
-      // Try multiple video paths
-      const videoPaths = [
-        `video/${videoFile}`,
-        `/video/${videoFile}`,
-        `./video/${videoFile}`
-      ]
-
-      let videoLoaded = false
-      for (const path of videoPaths) {
+      if (preloaded?.video) {
         try {
-          await tryLoadVideo(path)
-          videoLoaded = true
-          break
-        } catch (e) {
-          window.logger.warn(`Failed to load video from ${path}:`, e)
+          if (preloaded.video.readyState < 2) {
+            await waitForMediaEvent(preloaded.video, 'canplay', 10000)
+          }
+          video = preloaded.video
+          usedPreloadedVideo = true
+        } catch (preloadError) {
+          window.logger.warn('Preloaded milestone video was not ready, loading normally:', preloadError)
+          try {
+            preloaded.video.pause()
+            preloaded.video.removeAttribute('src')
+            if (preloaded.video.parentNode) preloaded.video.parentNode.removeChild(preloaded.video)
+          } catch {
+            // The normal load path below still plays the milestone.
+          }
+        }
+      }
+
+      // Try multiple video paths when nothing is already buffered.
+      let videoLoaded = usedPreloadedVideo
+      if (!videoLoaded) {
+        const videoPaths = [
+          `video/${videoFile}`,
+          `/video/${videoFile}`,
+          `./video/${videoFile}`
+        ]
+        for (const path of videoPaths) {
+          try {
+            await tryLoadVideo(path)
+            video = this.overlayElement.querySelector('.milestone-video')
+            videoLoaded = true
+            break
+          } catch (e) {
+            window.logger.warn(`Failed to load video from ${path}:`, e)
+          }
         }
       }
 
       if (!videoLoaded) {
-        console.error('Failed to load video from all attempted paths:', videoPaths)
+        console.error('Failed to load milestone video:', videoFile)
         this.stopCurrentVideo()
         return
       }
 
-      // Load and play audio with error handling
-      if (audioFile) {
+      // Prefer a companion mp3 that was preloaded with the video. A failed mp3
+      // falls through to the existing path, which plays embedded video audio.
+      let audioFromPreload = false
+      if (usedPreloadedVideo && preloaded?.audio && !preloaded.audioFailed) {
+        this.currentAudio = preloaded.audio
+        this.currentAudio.volume = 0.28 * getMasterVolume()
+        audioFromPreload = true
+      } else if (audioFile) {
         const audioPaths = [
           `video/${audioFile}`,
           `/video/${audioFile}`,
@@ -351,6 +413,23 @@ export class VideoOverlay {
       this.overlayElement.style.pointerEvents = 'none' // Disable all interactions
       this.isPlaying = true
       this.currentVideo = video
+      this.playbackStartedAt = performance.now()
+
+      if (usedPreloadedVideo) {
+        const onEnded = () => {
+          setTimeout(() => {
+            if (this.isPlaying && this.currentVideo === video) {
+              this.stopCurrentVideo()
+            }
+          }, 100)
+        }
+        video.addEventListener('ended', onEnded, { once: true })
+        video.addEventListener('error', () => {
+          if (this.isPlaying && this.currentVideo === video && video.src) {
+            this.stopCurrentVideo()
+          }
+        }, { once: true })
+      }
 
       // Start video playback with error handling
       try {
@@ -366,16 +445,35 @@ export class VideoOverlay {
         throw playError // Re-throw to be caught by outer try-catch
       }
 
-      // Synchronize audio
+      // Synchronize audio. Preloaded mp3 may still be buffering; do not delay the picture.
       if (this.currentAudio) {
-        // Small delay to account for video start time
-        setTimeout(() => {
-          if (this.isPlaying && this.currentAudio) {
-            this.currentAudio.play().catch(e => {
-              window.logger.warn('Audio playback failed:', e)
-            })
-          }
-        }, 50)
+        const audio = this.currentAudio
+        const startAudio = () => {
+          if (!this.isPlaying || this.currentAudio !== audio) return
+          audio.play().catch(e => {
+            window.logger.warn('Audio playback failed:', e)
+            if (this.currentAudio === audio) {
+              this.currentAudio = null
+              if (this.currentVideo) {
+                this.currentVideo.muted = false
+                this.currentVideo.volume = 0.28 * getMasterVolume()
+              }
+            }
+          })
+        }
+        if (!audioFromPreload || audio.readyState >= 2) {
+          setTimeout(startAudio, 50)
+        } else {
+          audio.addEventListener('canplay', () => setTimeout(startAudio, 50), { once: true })
+          audio.addEventListener('error', () => {
+            if (this.currentAudio !== audio) return
+            this.currentAudio = null
+            if (this.currentVideo) {
+              this.currentVideo.muted = false
+              this.currentVideo.volume = 0.28 * getMasterVolume()
+            }
+          }, { once: true })
+        }
       }
 
     } catch (error) {
@@ -397,6 +495,7 @@ export class VideoOverlay {
     }
 
     this.isPlaying = false
+    this.playbackStartedAt = 0
 
     // Hide overlay completely
     this.overlayElement.classList.remove('show')
@@ -405,12 +504,17 @@ export class VideoOverlay {
 
     // Stop and clean up video with error handling
     if (this.currentVideo) {
+      const playing = this.currentVideo
+      const mainVideo = this.overlayElement?.querySelector('.milestone-video')
       try {
-        this.currentVideo.pause()
-        this.currentVideo.currentTime = 0
+        playing.pause()
+        playing.currentTime = 0
         // Remove src to prevent further events
-        this.currentVideo.removeAttribute('src')
-        this.currentVideo.load() // Reset the video element
+        playing.removeAttribute('src')
+        playing.load() // Reset the video element
+        if (playing !== mainVideo && playing.parentNode) {
+          playing.parentNode.removeChild(playing)
+        }
       } catch (e) {
         window.logger.warn('Error during video cleanup:', e)
       } finally {
@@ -456,6 +560,21 @@ export class VideoOverlay {
    */
   getCurrentVideo() {
     return this.currentVideo
+  }
+
+  /**
+   * Opacity used when the minimap paints the current milestone video.
+   * Fades in over ~220ms and out over the last ~220ms. Fully opaque in between.
+   */
+  getMilestoneVideoOpacity(now = performance.now()) {
+    const video = this.currentVideo
+    return computeMilestoneVideoOpacity(
+      this.isVideoPlaying(),
+      this.playbackStartedAt,
+      now,
+      video ? video.duration : NaN,
+      video ? video.currentTime : NaN
+    )
   }
 
   /**
