@@ -17,6 +17,9 @@ import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
 import { gameRandom } from '../../utils/gameRandom.js'
 import { COMBAT_CONFIG } from './combatConfig.js'
 import { canSubmarineTargetEntity } from '../navalTargeting.js'
+import { getSimulationTime } from '../time.js'
+
+const CLEAR_SHOT_SEARCH_INTERVAL_MS = 300
 
 /**
  * Check if a party is controlled by a human player (not AI)
@@ -320,9 +323,15 @@ export function ensureLineOfSight(unit, target, units, mapGrid) {
 
   const clearShot = hasClearShot(unit, target, units, mapGrid)
 
-  if (!clearShot && !unit.findingClearShot) {
-    unit.findingClearShot = true
-    findPositionWithClearShot(unit, target, units, mapGrid)
+  // A packed formation blocks the shot every tick. Searching a sidestep every
+  // frame cloned work and rewrote the path; a few searches per second is enough.
+  if (!clearShot) {
+    const now = getSimulationTime(gameState)
+    if (now >= (unit.clearShotSearchAt || 0)) {
+      unit.clearShotSearchAt = now + CLEAR_SHOT_SEARCH_INTERVAL_MS
+      unit.findingClearShot = true
+      findPositionWithClearShot(unit, target, units, mapGrid)
+    }
   }
 
   return clearShot

@@ -15,6 +15,26 @@ import { gameRandom } from './utils/gameRandom.js'
 import { recordDamageValue } from './utils/combatStats.js'
 import { recordDamage } from './ai-api/transitionCollector.js'
 import { getHarvesterMaxHarvestDensity, getTileDensity } from './game/harvesterEligibility.js'
+import { ownerUnitList } from './game/unitOwnerIndex.js'
+
+const clearShotProbe = {
+  x: 0,
+  y: 0,
+  tileX: 0,
+  tileY: 0,
+  owner: null
+}
+
+const CLEAR_SHOT_OFFSETS = [
+  { x: 0, y: -1 },
+  { x: 1, y: 0 },
+  { x: 0, y: 1 },
+  { x: -1, y: 0 },
+  { x: 1, y: -1 },
+  { x: 1, y: 1 },
+  { x: -1, y: 1 },
+  { x: -1, y: -1 }
+]
 
 export const explosions = [] // Global explosion effects for rocket impacts
 
@@ -579,32 +599,52 @@ function isLineObstructedByBuilding(shooterCenter, target, mapGrid) {
 // Prevent friendly fire by ensuring clear line-of-sight.
 // Returns true if no friendly unit (other than shooter and target) is in the bullet's path.
 export function hasClearShot(shooter, target, units, mapGrid) {
-  const shooterCenter = { x: shooter.x + TILE_SIZE / 2, y: shooter.y + TILE_SIZE / 2 }
-  const targetCenter = target.tileX !== undefined
-    ? { x: target.x + TILE_SIZE / 2, y: target.y + TILE_SIZE / 2 }
-    : { x: target.x * TILE_SIZE + (target.width * TILE_SIZE) / 2, y: target.y * TILE_SIZE + (target.height * TILE_SIZE) / 2 }
-  const dx = targetCenter.x - shooterCenter.x
-  const dy = targetCenter.y - shooterCenter.y
+  const shooterCenterX = shooter.x + TILE_SIZE / 2
+  const shooterCenterY = shooter.y + TILE_SIZE / 2
+  const targetCenterX = target.tileX !== undefined
+    ? target.x + TILE_SIZE / 2
+    : target.x * TILE_SIZE + (target.width * TILE_SIZE) / 2
+  const targetCenterY = target.tileX !== undefined
+    ? target.y + TILE_SIZE / 2
+    : target.y * TILE_SIZE + (target.height * TILE_SIZE) / 2
+  const dx = targetCenterX - shooterCenterX
+  const dy = targetCenterY - shooterCenterY
   const segmentLengthSq = dx * dx + dy * dy
   // Threshold distance that counts as being "in the way"
   const threshold = TILE_SIZE / 2.5
+  const thresholdSq = threshold * threshold
+  const minX = Math.min(shooterCenterX, targetCenterX) - threshold
+  const maxX = Math.max(shooterCenterX, targetCenterX) + threshold
+  const minY = Math.min(shooterCenterY, targetCenterY) - threshold
+  const maxY = Math.max(shooterCenterY, targetCenterY) + threshold
 
-  if (isLineObstructedByBuilding(shooterCenter, target, mapGrid)) {
+  clearShotProbe.x = shooterCenterX
+  clearShotProbe.y = shooterCenterY
+  if (isLineObstructedByBuilding(clearShotProbe, target, mapGrid)) {
     return false
   }
 
-  for (const other of units) {
+  const indexedFriendlies = ownerUnitList(shooter.owner)
+  const candidates = indexedFriendlies || units
+  for (let index = 0; index < candidates.length; index++) {
+    const other = candidates[index]
     // Only check for friendly units that are not the shooter or the intended target.
-    if (other === shooter || other === target) continue
-    if (other.owner !== shooter.owner) continue
-    const otherCenter = { x: other.x + TILE_SIZE / 2, y: other.y + TILE_SIZE / 2 }
-    const px = otherCenter.x - shooterCenter.x
-    const py = otherCenter.y - shooterCenter.y
-    const t = (px * dx + py * dy) / segmentLengthSq
+    if (!other || other === shooter || other === target) continue
+    if (!indexedFriendlies && other.owner !== shooter.owner) continue
+    const otherCenterX = other.x + TILE_SIZE / 2
+    const otherCenterY = other.y + TILE_SIZE / 2
+    if (otherCenterX < minX || otherCenterX > maxX || otherCenterY < minY || otherCenterY > maxY) {
+      continue
+    }
+    const px = otherCenterX - shooterCenterX
+    const py = otherCenterY - shooterCenterY
+    const t = segmentLengthSq > 0 ? (px * dx + py * dy) / segmentLengthSq : 0
     if (t < 0 || t > 1) continue
-    const closestPoint = { x: shooterCenter.x + t * dx, y: shooterCenter.y + t * dy }
-    const distToSegment = Math.hypot(otherCenter.x - closestPoint.x, otherCenter.y - closestPoint.y)
-    if (distToSegment < threshold) {
+    const closestX = shooterCenterX + t * dx
+    const closestY = shooterCenterY + t * dy
+    const distX = otherCenterX - closestX
+    const distY = otherCenterY - closestY
+    if (distX * distX + distY * distY < thresholdSq) {
       return false
     }
   }
@@ -620,29 +660,20 @@ export function findPositionWithClearShot(unit, target, units, mapGrid) {
   const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
   const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
 
-  // Check adjacent tiles in a spiral pattern, including diagonal moves for better positioning
-  const directions = [
-    { x: 0, y: -1 },  // up
-    { x: 1, y: 0 },   // right
-    { x: 0, y: 1 },   // down
-    { x: -1, y: 0 },  // left
-    { x: 1, y: -1 },  // up-right
-    { x: 1, y: 1 },   // down-right
-    { x: -1, y: 1 },  // down-left
-    { x: -1, y: -1 }  // up-left
-  ]
+  // Adjacent tiles, including diagonals, checked at radius 1 then 2.
 
   // Use the global occupancy map
   const occupancyMap = gameState.occupancyMap
 
-  // Create a temporary unit copy for testing line of sight
-  const testUnit = { ...unit, path: [...(unit.path || [])] }
+  // Reused probe so a blocked shot does not clone the unit and its path.
+  const testUnit = clearShotProbe
+  testUnit.owner = unit.owner
 
   let bestPosition = null
   let bestDistance = Infinity
 
   for (let radius = 1; radius <= 2; radius++) {
-    for (const dir of directions) {
+    for (const dir of CLEAR_SHOT_OFFSETS) {
       const testX = unitTileX + dir.x * radius
       const testY = unitTileY + dir.y * radius
 

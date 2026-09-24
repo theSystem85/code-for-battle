@@ -5,6 +5,7 @@ import { handleTeslaEffects, processAttackQueue, updateGuardTargeting } from './
 import { updateTankCombat, updateTankV2Combat, updateTankV3Combat, updateRocketTankCombat } from './unitCombat/tankCombat.js'
 import { updateApacheCombat, updateF35Combat } from './unitCombat/apacheCombat.js'
 import { updateHowitzerCombat } from './unitCombat/howitzerCombat.js'
+import { rebuildOwnerUnitIndex } from './unitOwnerIndex.js'
 
 /**
  * Clean up attack group targets that have been destroyed
@@ -21,6 +22,7 @@ export function cleanupAttackGroupTargets() {
  * Updates unit combat behavior including targeting and shooting
  */
 export const updateUnitCombat = logPerformance(function updateUnitCombat(units, bullets, mapGrid, gameState, now) {
+  rebuildOwnerUnitIndex(units)
   const occupancyMap = gameState.occupancyMap
 
   units.forEach(unit => {
