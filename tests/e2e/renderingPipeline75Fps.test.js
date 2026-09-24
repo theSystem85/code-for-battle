@@ -78,7 +78,10 @@ async function collectRouteEvidence(page, route, speedPxPerFrame, durationMs) {
     }))
     const glCanvas = document.getElementById('gameCanvasGL')
     const gl = glCanvas?.getContext?.('webgl2') || glCanvas?.getContext?.('webgl')
-    const backend = gl ? 'webgl' : 'canvas-2d'
+    const activeBackend = window.gameState?.renderStats?.gpuTerrain?.backend
+    const backend = activeBackend && activeBackend !== 'cpu'
+      ? activeBackend
+      : (gl ? 'webgl' : 'canvas-2d')
     const refreshRateHz = Number.isFinite(window.screen?.refreshRate) ? window.screen.refreshRate : null
     return {
       intervals,

@@ -65,7 +65,9 @@ async function createProfileContext(browser, profile) {
       useProceduralWaterRendering: true,
       waterEffectTone: 0.35,
       waterEffectSaturation: 0.4,
-      mobileCanvasPixelRatioCap: 1
+      mobileCanvasPixelRatioCap: 1,
+      rendererBackend: 'webgl',
+      rendererBackendChoice: 'webgl'
     }))
   })
 

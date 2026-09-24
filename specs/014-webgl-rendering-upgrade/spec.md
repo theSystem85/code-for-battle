@@ -57,8 +57,16 @@ Upgrade the rendering stack to prioritize GPU-backed pipelines for the main play
 
 - WebGPU adoption is optional but the abstraction should leave room for a future adapter.
 - Texture atlases should remain source-of-truth for both tiles and sprite layers to simplify batching and asset management.
-- Implemented follow-up: Settings now provides `WebGL (legacy)` and `WebGPU (experimental)`. WebGPU uses a separate transparent canvas, asynchronously initializes an instanced atlas terrain pipeline, mirrors procedural water/SOT clipping, and keeps WebGL active until WebGPU succeeds. Unsupported initialization and device loss fall back to WebGL without blanking the map.
+- Implemented follow-up: Settings offers Automatic, WebGL, and WebGPU. Automatic is the default and uses WebGPU when `requestAdapter` and `requestDevice` both succeed; otherwise it uses WebGL. An explicit WebGL or WebGPU choice is stored separately from that default. WebGPU uses a separate transparent canvas, asynchronously initializes an instanced atlas terrain pipeline, mirrors procedural water/SOT clipping, and keeps WebGL active until WebGPU succeeds. Unsupported initialization and device loss fall back to WebGL without blanking the map.
 - WebGPU activation is transactional: pipeline creation, primary/secondary atlas uploads, and the first submitted frame must pass a WebGPU validation error scope before WebGPU can suppress the established terrain path. Validation failures retain the WebGL fallback rather than exposing a partial or black terrain frame.
+
+## Default renderer selection
+
+Fresh profiles and records with no explicit renderer choice use Automatic. Availability means a WebGPU adapter and device can be created, with a one-second probe timeout so a hung `requestAdapter` cannot block startup. The temporary probe device is destroyed before gameplay creates its own. If that probe or a later WebGPU frame fails, the frame path keeps the existing WebGL canvas.
+
+`rts_graphics_settings` now stores `rendererBackendChoice` as `auto`, `webgl`, or `webgpu`. Older blobs stored `rendererBackend` on every graphics save, and the code default was `webgl`, so a stored `webgl` does not prove the player opened the renderer dropdown. Those records migrate to Automatic. A stored `webgpu` without choice metadata migrates to an explicit WebGPU choice, because the old setter was the only writer of that value. Choosing WebGL or WebGPU in settings after this change writes `rendererBackendChoice` and is reloaded as that choice. Saving water or pixel-density settings persists the current choice and does not stamp an implicit WebGL selection.
+
+The settings dropdown shows the choice. The line under it shows the backend in use, including the WebGL fallback when WebGPU was requested but did not initialize. This choice is local graphics state and is not part of multiplayer snapshots or battle saves. The mobile terrain benchmark and the procedural WebGL water checks pin an explicit WebGL choice so those WebGL measurements stay on WebGL. 75 FPS certification of the new default is outstanding on qualifying hardware; this headless session does not certify it.
 
 ---
 

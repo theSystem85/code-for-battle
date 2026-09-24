@@ -8,7 +8,7 @@ import { initializeMobileViewportLock } from './ui/mobileViewportLock.js'
 import { scheduleAfterNextPaint, scheduleIdleTask } from './startupScheduler.js'
 import { updateLoadingScreen } from './ui/loadingScreen.js'
 import { initializeGameStorage } from './storage/indexedDbStorage.js'
-import { loadGraphicsSettingsFromIndexedDb } from './config.js'
+import { loadGraphicsSettingsFromIndexedDb, resolveRendererBackendAvailability } from './config.js'
 import './ui/mobileJoysticks.js'
 import './ui/mobileControlGroups.js'
 import {
@@ -127,6 +127,7 @@ document.addEventListener('DOMContentLoaded', async() => {
   })
   await initializeGameStorage()
   loadGraphicsSettingsFromIndexedDb()
+  await resolveRendererBackendAvailability()
   reloadMasterVolumeFromStorage()
   updateTouchClass()
   updateMobileLayoutClasses()

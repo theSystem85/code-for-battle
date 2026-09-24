@@ -94,6 +94,10 @@ test.describe('Procedural WebGL water rendering', () => {
     await page.addInitScript(() => {
       localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
       localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
+      localStorage.setItem('rts_graphics_settings', JSON.stringify({
+        rendererBackend: 'webgl',
+        rendererBackendChoice: 'webgl'
+      }))
     })
 
     await page.goto('/?seed=9')
@@ -545,6 +549,12 @@ test.describe('Procedural WebGL water rendering', () => {
     await page.addInitScript(() => {
       localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
       localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
+      if (!localStorage.getItem('rts_graphics_settings')) {
+        localStorage.setItem('rts_graphics_settings', JSON.stringify({
+          rendererBackend: 'webgl',
+          rendererBackendChoice: 'webgl'
+        }))
+      }
     })
 
     await page.goto('/?seed=9')

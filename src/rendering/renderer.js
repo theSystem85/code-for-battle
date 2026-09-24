@@ -31,7 +31,13 @@ import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
-import { RENDERER_BACKEND, TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
+import {
+  RENDERER_BACKEND,
+  TILE_SIZE,
+  USE_PROCEDURAL_WATER_RENDERING,
+  getRendererBackendChoice,
+  noteActiveRendererBackend
+} from '../config.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -471,6 +477,12 @@ export class Renderer {
     })
   }
 
+  requestWebGPUAttempt() {
+    const webgpuRenderer = this.webgpuRenderer
+    if (!webgpuRenderer || webgpuRenderer.status !== 'failed') return
+    webgpuRenderer.needsRestore = true
+  }
+
   renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null, webgpuCanvas = null) {
     if (!gameState || !gameCtx) {
       return
@@ -551,6 +563,13 @@ export class Renderer {
 
     if (webgpuCanvas?.style) webgpuCanvas.style.display = gpuBackend === 'webgpu' ? 'block' : 'none'
     if (gpuCanvas?.style) gpuCanvas.style.display = gpuBackend === 'webgpu' ? 'none' : 'block'
+    if (gpuBackend === 'webgpu') {
+      noteActiveRendererBackend('webgpu')
+    } else if (wantsWebGPU && this.webgpuRenderer?.status === 'failed') {
+      noteActiveRendererBackend('webgl')
+    } else if (!wantsWebGPU && RENDERER_BACKEND !== 'webgpu') {
+      noteActiveRendererBackend('webgl')
+    }
 
     // Build occupancy map for visualization if needed
     let occupancyMap = null
@@ -583,6 +602,7 @@ export class Renderer {
         rendered: gpuRendered,
         backend: gpuBackend,
         requestedBackend: RENDERER_BACKEND,
+        rendererBackendChoice: getRendererBackendChoice(),
         webgpuStatus: this.webgpuRenderer?.getStatus?.() || null,
         waterOnly: gpuWaterOnly,
         streetAtlas: gpuRendered && !gpuWaterOnly && hasGpuStreetAtlas

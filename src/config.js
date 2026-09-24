@@ -1,4 +1,11 @@
 import { getStoredItem, initializeGameStorage, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
+import {
+  describeRendererBackendStatus,
+  migrateRendererBackendChoice,
+  normalizeRendererBackendChoice,
+  probeWebGPUAvailability,
+  resolveRequestedRendererBackend
+} from './rendering/rendererBackendSelection.js'
 
 const configRegistry = new Map()
 const activeOverrides = new Map()
@@ -354,7 +361,13 @@ export const TILE_IMAGES = {
   }
 }
 
-const GRAPHICS_SETTINGS_STORAGE_KEY = 'rts_graphics_settings'
+export const GRAPHICS_SETTINGS_STORAGE_KEY = 'rts_graphics_settings'
+
+let RENDERER_BACKEND_CHOICE = 'auto'
+let ACTIVE_RENDERER_BACKEND = null
+let probeGeneration = 0
+let rendererBackendProbePending = false
+let rendererBackendResolvePromise = Promise.resolve('webgl')
 
 function clampNumber(value, min, max, fallback) {
   const numericValue = Number(value)
@@ -363,6 +376,10 @@ function clampNumber(value, min, max, fallback) {
   }
 
   return Math.min(max, Math.max(min, numericValue))
+}
+
+function persistedRendererBackend() {
+  return RENDERER_BACKEND_CHOICE === 'auto' ? 'auto' : RENDERER_BACKEND_CHOICE
 }
 
 function saveGraphicsSettingsToIndexedDb() {
@@ -374,7 +391,8 @@ function saveGraphicsSettingsToIndexedDb() {
         waterEffectTone: WATER_EFFECT_TONE,
         waterEffectSaturation: WATER_EFFECT_SATURATION,
         mobileCanvasPixelRatioCap: MOBILE_CANVAS_PIXEL_RATIO_CAP,
-        rendererBackend: RENDERER_BACKEND
+        rendererBackend: persistedRendererBackend(),
+        rendererBackendChoice: RENDERER_BACKEND_CHOICE
       })
     )
   } catch (error) {
@@ -405,10 +423,26 @@ export function loadGraphicsSettingsFromIndexedDb() {
     WATER_EFFECT_TONE = clampNumber(parsed?.waterEffectTone, -1, 1, WATER_EFFECT_TONE)
     WATER_EFFECT_SATURATION = clampNumber(parsed?.waterEffectSaturation, 0, 2, WATER_EFFECT_SATURATION)
     MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(parsed?.mobileCanvasPixelRatioCap, 1, 3, MOBILE_CANVAS_PIXEL_RATIO_CAP)
-    RENDERER_BACKEND = parsed?.rendererBackend === 'webgpu' ? 'webgpu' : 'webgl'
+    applyStoredRendererBackendChoice(parsed)
   } catch (error) {
     window.logger?.warn('Failed to load graphics settings from IndexedDB:', error)
   }
+}
+
+function applyStoredRendererBackendChoice(parsed) {
+  RENDERER_BACKEND_CHOICE = migrateRendererBackendChoice(parsed)
+  if (RENDERER_BACKEND_CHOICE === 'webgl') {
+    RENDERER_BACKEND = 'webgl'
+    ACTIVE_RENDERER_BACKEND = 'webgl'
+  }
+}
+
+function hasLiveWebGPUDevice() {
+  return globalThis.window?.gameInstance?.renderer?.webgpuRenderer?.status === 'ready'
+}
+
+function requestWebGPURetry() {
+  globalThis.window?.gameInstance?.renderer?.requestWebGPUAttempt?.()
 }
 
 export let USE_PROCEDURAL_WATER_RENDERING = true
@@ -434,11 +468,98 @@ export function setMobileCanvasPixelRatioCap(value) {
 
 export let RENDERER_BACKEND = 'webgl'
 
+export function getRendererBackendChoice() {
+  return RENDERER_BACKEND_CHOICE
+}
+
+export function getActiveRendererBackend() {
+  return ACTIVE_RENDERER_BACKEND
+}
+
+export function noteActiveRendererBackend(backend) {
+  if (backend !== 'webgl' && backend !== 'webgpu') return ACTIVE_RENDERER_BACKEND
+  if (ACTIVE_RENDERER_BACKEND === backend) return ACTIVE_RENDERER_BACKEND
+  ACTIVE_RENDERER_BACKEND = backend
+  const status = globalThis.document?.getElementById?.('settingsRendererBackendStatus')
+  if (status) status.textContent = getRendererBackendStatusText()
+  return ACTIVE_RENDERER_BACKEND
+}
+
+export function getRendererBackendStatusText() {
+  if (rendererBackendProbePending && RENDERER_BACKEND_CHOICE !== 'webgl') {
+    return 'Checking WebGPU support…'
+  }
+  return describeRendererBackendStatus({
+    choice: RENDERER_BACKEND_CHOICE,
+    requested: RENDERER_BACKEND,
+    active: ACTIVE_RENDERER_BACKEND
+  })
+}
+
+export function whenRendererBackendResolved() {
+  return rendererBackendResolvePromise
+}
+
+export function resetRendererBackendStateForTests() {
+  probeGeneration += 1
+  rendererBackendProbePending = false
+  RENDERER_BACKEND_CHOICE = 'auto'
+  RENDERER_BACKEND = 'webgl'
+  ACTIVE_RENDERER_BACKEND = null
+  rendererBackendResolvePromise = Promise.resolve(RENDERER_BACKEND)
+}
+
+export function resolveRendererBackendAvailability(probe = probeWebGPUAvailability) {
+  const generation = ++probeGeneration
+  if (RENDERER_BACKEND_CHOICE === 'webgl') {
+    rendererBackendProbePending = false
+    RENDERER_BACKEND = 'webgl'
+    ACTIVE_RENDERER_BACKEND = 'webgl'
+    rendererBackendResolvePromise = Promise.resolve(RENDERER_BACKEND)
+    return rendererBackendResolvePromise
+  }
+
+  if (hasLiveWebGPUDevice()) {
+    rendererBackendProbePending = false
+    RENDERER_BACKEND = 'webgpu'
+    ACTIVE_RENDERER_BACKEND = 'webgpu'
+    rendererBackendResolvePromise = Promise.resolve(RENDERER_BACKEND)
+    return rendererBackendResolvePromise
+  }
+
+  rendererBackendProbePending = true
+  rendererBackendResolvePromise = Promise.resolve()
+    .then(() => probe())
+    .catch(() => false)
+    .then(available => {
+      if (generation !== probeGeneration) return RENDERER_BACKEND
+      rendererBackendProbePending = false
+      if (RENDERER_BACKEND_CHOICE === 'webgl') {
+        RENDERER_BACKEND = 'webgl'
+        ACTIVE_RENDERER_BACKEND = 'webgl'
+        return RENDERER_BACKEND
+      }
+      const usable = Boolean(available) || hasLiveWebGPUDevice()
+      RENDERER_BACKEND = resolveRequestedRendererBackend(RENDERER_BACKEND_CHOICE, usable)
+      if (RENDERER_BACKEND === 'webgpu') {
+        if (ACTIVE_RENDERER_BACKEND === 'webgl') ACTIVE_RENDERER_BACKEND = null
+        requestWebGPURetry()
+      } else {
+        ACTIVE_RENDERER_BACKEND = 'webgl'
+      }
+      return RENDERER_BACKEND
+    })
+  return rendererBackendResolvePromise
+}
+
 export function setRendererBackend(value) {
-  RENDERER_BACKEND = value === 'webgpu' ? 'webgpu' : 'webgl'
+  RENDERER_BACKEND_CHOICE = normalizeRendererBackendChoice(value) || 'webgl'
   saveGraphicsSettingsToIndexedDb()
-  requestGraphicsSettingsRender()
-  return RENDERER_BACKEND
+  const pending = resolveRendererBackendAvailability()
+  void pending.then(() => {
+    requestGraphicsSettingsRender()
+  })
+  return pending.then(() => RENDERER_BACKEND_CHOICE)
 }
 
 // Water tone controls the palette blend from cooler blue toward greener teal.
