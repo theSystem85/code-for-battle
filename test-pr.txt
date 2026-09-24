@@ -1,3 +1,5 @@
 This is a test file created by Grok to verify the pull request and merge workflow.
 
 Timestamp: 2026-09-24
+
+Follow-up commit: new change on the same PR branch.
