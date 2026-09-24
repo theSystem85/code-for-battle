@@ -42,7 +42,7 @@ describe('Full Base Test locked save', () => {
 
   it('is registered as a locked builtin save without replacing Mission 01', () => {
     expect(builtinMissions.map(mission => mission.id)).toEqual(['Mission_01', 'Full_Base_Test'])
-    expect(getBuiltinMissionById('Mission_01').label).toBe('Mission 01: Midnight Siege')
+    expect(getBuiltinMissionById('Mission_01').label).toBe('Mission 01: Fordline')
     expect(getBuiltinMissionById('Full_Base_Test')).toBe(fullBaseTest)
     expect(fullBaseTest.label).toBe('Full Base Test')
     expect(fullBaseTest.description).toMatch(/Locked test save/)

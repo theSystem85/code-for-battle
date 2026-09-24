@@ -1,0 +1,18 @@
+{
+  "missions": {
+    "mission01": {
+      "label": "Mission 01: Furtlinie",
+      "description": "Sichere die Furt bei Ashford. Du beginnst mit einem Bauhof, einem Panzer und genug Credits für Kraftwerk, Raffinerie und Fabrik. Ernte das Erz neben deinem Bauhof, stelle eine kleine Truppe auf und zerstöre den leichten Außenposten jenseits des Flusses.",
+      "objectives": {
+        "power": "Baue ein Kraftwerk, bevor du die Raffinerie setzt, damit die Basis unter Strom bleibt.",
+        "economy": "Baue eine Erzraffinerie und eine Fahrzeugfabrik, produziere dann einen Harvester und sammle das Erz neben deinem Bauhof.",
+        "fight": "Zerstöre jedes feindliche Gebäude jenseits der Furt. Verlierst du alle eigenen Gebäude, ist die Mission verloren."
+      }
+    },
+    "intro": {
+      "kicker": "Mission",
+      "skip": "Überspringen",
+      "standby": "Intro"
+    }
+  }
+}

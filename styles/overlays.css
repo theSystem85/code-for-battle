@@ -1141,3 +1141,130 @@ body.config-modal-open {
     flex-direction: column;
   }
 }
+
+.mission-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 12000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  padding:
+    calc(24px + var(--safe-area-top, 0px))
+    calc(24px + var(--safe-area-right, 0px))
+    calc(24px + var(--safe-area-bottom, 0px))
+    calc(24px + var(--safe-area-left, 0px));
+  background: rgba(8, 10, 12, 0.82);
+  color: #fff;
+  font-family: var(--game-font-family);
+}
+
+.mission-intro__panel {
+  position: relative;
+  width: min(960px, 100%);
+  box-sizing: border-box;
+  padding: 22px 22px 16px;
+  background-color: var(--sidebar-shared-bg-color, #1b232c);
+  background-image: var(--sidebar-shared-bg-image, none);
+  border: 1px solid #2d3640;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.55);
+}
+
+.mission-intro__panel::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #4f9cff;
+}
+
+.mission-intro__kicker {
+  margin: 0 0 6px;
+  color: #6efc4b;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.mission-intro__title {
+  margin: 0 0 12px;
+  color: #fff;
+  font-size: clamp(22px, 4vw, 34px);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
+
+.mission-intro__stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  margin-bottom: 12px;
+  background: #05070a;
+  border: 1px solid #2d3640;
+  overflow: hidden;
+}
+
+.mission-intro__video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.mission-intro__standby {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  color: #6efc4b;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.mission-intro__description {
+  margin: 0 0 10px;
+  color: #d5dde6;
+  font-size: 16px;
+  line-height: 1.35;
+}
+
+.mission-intro__objectives {
+  margin: 0 0 14px;
+  padding-left: 1.2em;
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.mission-intro__bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mission-intro__skip {
+  background: rgba(255, 0, 0, 0.8);
+  color: #fff;
+  border: 1px solid #ff0000;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+.mission-intro__skip:hover,
+.mission-intro__skip:focus-visible {
+  background: #ff0000;
+}

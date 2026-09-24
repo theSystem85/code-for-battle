@@ -8,7 +8,7 @@ A locked builtin save named **Full Base Test** sits beside Mission 01 in the Sav
 2. Choose **Full Base Test**. It has the green **MISSION** badge and no delete or export button.
 3. The camera centers on the local construction yard, same as other builtin missions.
 
-Mission 01 stays the first builtin row. Full Base Test uses an earlier timestamp so it sorts after Midnight Siege. Its id is `Full_Base_Test` and its storage key is `builtin:Full_Base_Test`.
+Mission 01 stays the first builtin row. Full Base Test uses an earlier timestamp so it sorts after Mission 01 (Fordline). Its id is `Full_Base_Test` and its storage key is `builtin:Full_Base_Test`.
 
 ## Starting state
 - Map is 100×100. The southern band from row 72 down is open water. A rock patch sits in the southeast, and ore is on land beside the player's refinery.
