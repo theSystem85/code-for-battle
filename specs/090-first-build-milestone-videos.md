@@ -34,6 +34,9 @@ All new and replaced clips live in `public/video/`. Picture files are 960×576 (
 
 Preload runs only when that milestone is not yet achieved. It fetches the mp4 and mp3 into hidden media elements and does not set the overlay's current video, so the radar stays on the map until the milestone fires. If the browser cannot buffer the file, playback still uses the existing load path. A preloaded element that is ready is what the minimap draws, so the clip does not wait on a second fetch.
 
+## Unit-ready sting
+The first time a Mine Layer, Mine Sweeper, Rocket Tank, Howitzer, or standard tank finishes production, the production-line narrator plays instead of `unitReady01` / `unitReady02` / `unitReady03`. That claim marks the milestone achieved, so the video starts with the unit and a second unit of the same type plays the ready sting as usual. Harvesters and other units without that narrator still play the sting. Buildings are unchanged.
+
 ## Fade
 `MILESTONE_VIDEO_FADE_MS` is 220. While a milestone video is playing, the minimap asks `getMilestoneVideoOpacity()`:
 

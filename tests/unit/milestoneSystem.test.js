@@ -403,6 +403,23 @@ describe('milestoneSystem.js', () => {
       expect(playSyncedVideoAudio).not.toHaveBeenCalled()
     })
 
+    it('replaces the unit-ready sting with the production-line narrator only the first time', () => {
+      expect(system.claimFirstProductionNarration('howitzer')).toBe(true)
+      expect(system.isAchieved('firstHowitzer')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('first_artillery', expect.any(Object))
+
+      playSyncedVideoAudio.mockClear()
+      expect(system.claimFirstProductionNarration('howitzer')).toBe(false)
+      expect(playSyncedVideoAudio).not.toHaveBeenCalled()
+
+      expect(system.claimFirstProductionNarration('tank')).toBe(true)
+      expect(system.claimFirstProductionNarration('tank_v1')).toBe(false)
+      expect(system.claimFirstProductionNarration('harvester')).toBe(false)
+      expect(system.claimFirstProductionNarration('mineLayer')).toBe(true)
+      expect(system.claimFirstProductionNarration('mineSweeper')).toBe(true)
+      expect(system.claimFirstProductionNarration('rocketTank')).toBe(true)
+    })
+
     it('should detect first tesla coil milestone', () => {
       const gameState = {
         humanPlayer: 'player1',

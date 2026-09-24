@@ -1,6 +1,6 @@
 // game/milestoneSystem.js
 import { playSyncedVideoAudio } from '../ui/videoOverlay.js'
-import { setMilestoneAchievedCheck } from '../ui/milestoneMediaCache.js'
+import { firstProductionNarrationMilestoneId, setFirstProductionNarrationClaim, setMilestoneAchievedCheck } from '../ui/milestoneMediaCache.js'
 import { showNotification } from '../ui/notifications.js'
 
 /**
@@ -474,6 +474,18 @@ export class MilestoneSystem {
   }
 
   /**
+   * Play the first-production narrator for this unit and report that the
+   * unit-ready sting should be skipped. A later unit of the same type returns
+   * false so the sting plays as usual.
+   */
+  claimFirstProductionNarration(unitType) {
+    const milestoneId = firstProductionNarrationMilestoneId(unitType)
+    if (!milestoneId || this.achievedMilestones.has(milestoneId)) return false
+    this.triggerMilestone(milestoneId)
+    return this.achievedMilestones.has(milestoneId)
+  }
+
+  /**
    * Check if a milestone is achieved
    */
   isAchieved(milestoneId) {
@@ -495,3 +507,4 @@ export class MilestoneSystem {
 export const milestoneSystem = new MilestoneSystem()
 
 setMilestoneAchievedCheck(milestoneId => milestoneSystem.isAchieved(milestoneId))
+setFirstProductionNarrationClaim(unitType => milestoneSystem.claimFirstProductionNarration(unitType))

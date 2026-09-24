@@ -20,6 +20,7 @@ const BUILDING_VIDEO_MILESTONES = Object.freeze({
 
 const preloadCache = new Map()
 let achievedCheck = null
+let claimNarration = null
 let mediaPreloadSupported = null
 
 function browserCanPreloadMilestoneMedia() {
@@ -37,6 +38,25 @@ function browserCanPreloadMilestoneMedia() {
 
 export function setMilestoneAchievedCheck(check) {
   achievedCheck = typeof check === 'function' ? check : null
+}
+
+export function setFirstProductionNarrationClaim(claim) {
+  claimNarration = typeof claim === 'function' ? claim : null
+}
+
+export function firstProductionNarrationMilestoneId(unitType) {
+  const match = UNIT_VIDEO_MILESTONES[unitType]
+  return match ? match[0] : null
+}
+
+/**
+ * When the first "running off the production line" narrator plays, the caller
+ * should skip the unit-ready sting. Later units of that type return false.
+ * Unregistered callers (tests that do not load the milestone system) do not skip.
+ */
+export function claimFirstProductionNarration(unitType) {
+  if (typeof claimNarration !== 'function') return false
+  return claimNarration(unitType) === true
 }
 
 export function isMilestoneMediaPreloaded(baseFilename) {

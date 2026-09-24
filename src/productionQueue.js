@@ -15,7 +15,14 @@ import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airs
 import { getSimulationTime } from './game/time.js'
 import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
-import { preloadMilestoneForProduction } from './ui/milestoneMediaCache.js'
+import { claimFirstProductionNarration, preloadMilestoneForProduction } from './ui/milestoneMediaCache.js'
+
+function playUnitReadySound(unitType) {
+  if (claimFirstProductionNarration(unitType)) return
+  const readySounds = ['unitReady01', 'unitReady02', 'unitReady03']
+  const randomSound = readySounds[Math.floor(gameRandom() * readySounds.length)]
+  playSound(randomSound, 1.0, 0, true)
+}
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
@@ -755,10 +762,8 @@ export const productionQueue = {
         // The host will spawn the unit and it will appear in the next snapshot
         broadcastUnitSpawn(unitType, spawnFactory.id, rallyPointTarget)
 
-        // Play sound locally for feedback
-        const readySounds = ['unitReady01', 'unitReady02', 'unitReady03']
-        const randomSound = readySounds[Math.floor(gameRandom() * readySounds.length)]
-        playSound(randomSound, 1.0, 0, true)
+        // Narrator replaces the ready sting the first time this unit rolls off the line.
+        playUnitReadySound(unitType)
       } else {
         // Host or single player: Spawn unit locally
         // Pass the specific factory's rally point to spawnUnit
@@ -773,10 +778,8 @@ export const productionQueue = {
         )
         if (newUnit) {
           units.push(newUnit)
-          // Play random unit ready sound
-          const readySounds = ['unitReady01', 'unitReady02', 'unitReady03']
-          const randomSound = readySounds[Math.floor(gameRandom() * readySounds.length)]
-          playSound(randomSound, 1.0, 0, true)
+          // Narrator replaces the ready sting the first time this unit rolls off the line.
+          playUnitReadySound(unitType)
 
           // If the produced unit is a harvester and no custom rally point was set, automatically send it to harvest
           if (newUnit.type === 'harvester' && !rallyPointTarget) {
