@@ -118,113 +118,130 @@ export class MinimapRenderer {
     const scaleX = minimapLogicalWidth / (mapWidth * TILE_SIZE)
     const scaleY = minimapLogicalHeight / (mapHeight * TILE_SIZE)
 
-    if (videoOverlay.isVideoPlaying()) {
+    const videoPlaying = videoOverlay.isVideoPlaying()
+    const videoOpacity = videoPlaying ? videoOverlay.getMilestoneVideoOpacity() : 0
+    // Fully opaque clips replace the radar. Fading clips composite over it.
+    if (videoPlaying && videoOpacity >= 1) {
       const token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_VIDEO)
       try {
-        this.renderVideoOverlay(minimapCtx, backingWidth, backingHeight, pixelRatio)
+        this.renderVideoOverlay(minimapCtx, backingWidth, backingHeight, pixelRatio, 1)
       } finally {
         renderProfiler.endSpan(token)
       }
       return
     }
 
+    let radarOffline = false
     if (gameState && gameState.radarActive === false) {
+      radarOffline = true
       const token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_BASE)
       try {
         this.renderRadarOffline(minimapCtx, backingWidth, backingHeight, pixelRatio)
       } finally {
         renderProfiler.endSpan(token)
       }
-      return
     }
 
-    const visibilityMap = gameState?.visibilityMap
-    const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
-    const humanPlayer = gameState?.humanPlayer
+    if (!radarOffline) {
 
-    let token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_BASE)
-    try {
-      this.ensureMapCache(mapGrid, backingWidth, backingHeight)
-      minimapCtx.drawImage(this.terrainCacheCanvas, 0, 0)
-      minimapCtx.drawImage(this.resourceCacheCanvas, 0, 0)
-    } finally {
-      renderProfiler.endSpan(token)
-    }
+      const visibilityMap = gameState?.visibilityMap
+      const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
+      const humanPlayer = gameState?.humanPlayer
 
-    if (shadowEnabled) {
-      token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_FOG)
+      let token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_BASE)
       try {
-        this.ensureVisibilityCache(visibilityMap, mapWidth, mapHeight, backingWidth, backingHeight)
-        minimapCtx.drawImage(this.visibilityCacheCanvas, 0, 0)
+        this.ensureMapCache(mapGrid, backingWidth, backingHeight)
+        minimapCtx.drawImage(this.terrainCacheCanvas, 0, 0)
+        minimapCtx.drawImage(this.resourceCacheCanvas, 0, 0)
+      } finally {
+        renderProfiler.endSpan(token)
+      }
+
+      if (shadowEnabled) {
+        token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_FOG)
+        try {
+          this.ensureVisibilityCache(visibilityMap, mapWidth, mapHeight, backingWidth, backingHeight)
+          minimapCtx.drawImage(this.visibilityCacheCanvas, 0, 0)
+        } finally {
+          renderProfiler.endSpan(token)
+        }
+      }
+
+      minimapCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+      token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_ENTITIES)
+      try {
+        for (let index = 0; index < units.length; index++) {
+          const unit = units[index]
+          if (unit.embarkedOnId) continue
+          const friendly = isFriendlyOwner(unit.owner, humanPlayer)
+          if (unit.type === 'submarine' && unit.depthState === 'submerged' && !friendly) continue
+          const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+          const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+          if (
+            shadowEnabled &&
+            !friendly &&
+            (!this.isTileDiscovered(visibilityMap, tileX, tileY) ||
+              !this.isTileVisible(visibilityMap, tileX, tileY))
+          ) {
+            continue
+          }
+
+          minimapCtx.fillStyle = PARTY_COLORS[unit.owner] || '#888'
+          minimapCtx.beginPath()
+          minimapCtx.arc(
+            (unit.x + TILE_SIZE / 2) * scaleX,
+            (unit.y + TILE_SIZE / 2) * scaleY,
+            3,
+            0,
+            2 * Math.PI
+          )
+          minimapCtx.fill()
+        }
+
+        if (buildings) {
+          for (let index = 0; index < buildings.length; index++) {
+            const building = buildings[index]
+            if (
+              shadowEnabled &&
+              !isFriendlyOwner(building.owner, humanPlayer) &&
+              (!this.isStructureDiscovered(visibilityMap, building) ||
+                !this.isStructureVisible(visibilityMap, building))
+            ) {
+              continue
+            }
+
+            minimapCtx.fillStyle = PARTY_COLORS[building.owner] || '#888'
+            minimapCtx.fillRect(
+              building.x * TILE_SIZE * scaleX,
+              building.y * TILE_SIZE * scaleY,
+              building.width * TILE_SIZE * scaleX,
+              building.height * TILE_SIZE * scaleY
+            )
+          }
+        }
+
+        const gameRecord = getCanvasViewportRecord(gameCanvas)
+        minimapCtx.strokeStyle = '#FF0'
+        minimapCtx.lineWidth = 2
+        minimapCtx.strokeRect(
+          scrollOffset.x * scaleX,
+          scrollOffset.y * scaleY,
+          gameRecord.playableWidth * scaleX,
+          gameRecord.playableHeight * scaleY
+        )
       } finally {
         renderProfiler.endSpan(token)
       }
     }
 
-    minimapCtx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
-    token = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_ENTITIES)
-    try {
-      for (let index = 0; index < units.length; index++) {
-        const unit = units[index]
-        if (unit.embarkedOnId) continue
-        const friendly = isFriendlyOwner(unit.owner, humanPlayer)
-        if (unit.type === 'submarine' && unit.depthState === 'submerged' && !friendly) continue
-        const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
-        const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-        if (
-          shadowEnabled &&
-          !friendly &&
-          (!this.isTileDiscovered(visibilityMap, tileX, tileY) ||
-            !this.isTileVisible(visibilityMap, tileX, tileY))
-        ) {
-          continue
-        }
-
-        minimapCtx.fillStyle = PARTY_COLORS[unit.owner] || '#888'
-        minimapCtx.beginPath()
-        minimapCtx.arc(
-          (unit.x + TILE_SIZE / 2) * scaleX,
-          (unit.y + TILE_SIZE / 2) * scaleY,
-          3,
-          0,
-          2 * Math.PI
-        )
-        minimapCtx.fill()
+    if (videoPlaying && videoOpacity > 0) {
+      minimapCtx.setTransform(1, 0, 0, 1, 0, 0)
+      const fadeToken = renderProfiler.startSpan(PROFILER_SPAN_IDS.MINIMAP_VIDEO)
+      try {
+        this.renderVideoOverlay(minimapCtx, backingWidth, backingHeight, pixelRatio, videoOpacity)
+      } finally {
+        renderProfiler.endSpan(fadeToken)
       }
-
-      if (buildings) {
-        for (let index = 0; index < buildings.length; index++) {
-          const building = buildings[index]
-          if (
-            shadowEnabled &&
-            !isFriendlyOwner(building.owner, humanPlayer) &&
-            (!this.isStructureDiscovered(visibilityMap, building) ||
-              !this.isStructureVisible(visibilityMap, building))
-          ) {
-            continue
-          }
-
-          minimapCtx.fillStyle = PARTY_COLORS[building.owner] || '#888'
-          minimapCtx.fillRect(
-            building.x * TILE_SIZE * scaleX,
-            building.y * TILE_SIZE * scaleY,
-            building.width * TILE_SIZE * scaleX,
-            building.height * TILE_SIZE * scaleY
-          )
-        }
-      }
-
-      const gameRecord = getCanvasViewportRecord(gameCanvas)
-      minimapCtx.strokeStyle = '#FF0'
-      minimapCtx.lineWidth = 2
-      minimapCtx.strokeRect(
-        scrollOffset.x * scaleX,
-        scrollOffset.y * scaleY,
-        gameRecord.playableWidth * scaleX,
-        gameRecord.playableHeight * scaleY
-      )
-    } finally {
-      renderProfiler.endSpan(token)
     }
   }
 
@@ -272,67 +289,81 @@ export class MinimapRenderer {
   }
 
   /**
-   * Render video overlay directly on the minimap canvas
+   * Render video overlay directly on the minimap canvas.
+   * Sources are fit inside the 5:3 radar (contain). They are not cropped.
+   * opacity < 1 fades the frame over the radar already drawn underneath.
    */
-  renderVideoOverlay(minimapCtx, minimapWidth, minimapHeight, pixelRatio = 1) {
-    // Get the current video element from the overlay
-    const videoElement = videoOverlay.getCurrentVideo()
-
-    if (!videoElement || videoElement.readyState < 2) {
-      // Video not ready, show loading state
-      minimapCtx.fillStyle = '#000'
-      minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight)
-
-      minimapCtx.fillStyle = '#00ff00'
-      minimapCtx.font = `${14 * pixelRatio}px "Rajdhani", "Arial Narrow", sans-serif`
-      minimapCtx.textAlign = 'center'
-      minimapCtx.fillText('Loading...', minimapWidth / 2, minimapHeight / 2)
-      return
+  renderVideoOverlay(minimapCtx, minimapWidth, minimapHeight, pixelRatio = 1, opacity = 1) {
+    const partial = opacity < 1
+    const previousAlpha = minimapCtx.globalAlpha
+    if (partial) {
+      minimapCtx.globalAlpha = previousAlpha * opacity
     }
 
-    // Calculate video dimensions maintaining aspect ratio
-    const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
-    const minimapAspectRatio = minimapWidth / minimapHeight
-
-    let renderWidth, renderHeight, offsetX, offsetY
-
-    if (videoAspectRatio > minimapAspectRatio) {
-      // Video is wider, fit to width
-      renderWidth = minimapWidth
-      renderHeight = minimapWidth / videoAspectRatio
-      offsetX = 0
-      offsetY = (minimapHeight - renderHeight) / 2
-    } else {
-      // Video is taller or same ratio, fit to height
-      renderHeight = minimapHeight
-      renderWidth = minimapHeight * videoAspectRatio
-      offsetX = (minimapWidth - renderWidth) / 2
-      offsetY = 0
-    }
-
-    // Clear the minimap area
-    minimapCtx.fillStyle = '#000'
-    minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight)
-
-    // Draw the video frame
     try {
-      minimapCtx.drawImage(
-        videoElement,
-        offsetX,
-        offsetY,
-        renderWidth,
-        renderHeight
-      )
-    } catch (error) {
-      window.logger.warn('Failed to draw video frame:', error)
-      // Fallback to loading text
-      minimapCtx.fillStyle = '#ff0000'
-      minimapCtx.font = `${12 * pixelRatio}px "Rajdhani", "Arial Narrow", sans-serif`
-      minimapCtx.textAlign = 'center'
-      minimapCtx.fillText('Video Error', minimapWidth / 2, minimapHeight / 2)
-    }
+      // Get the current video element from the overlay
+      const videoElement = videoOverlay.getCurrentVideo()
 
-    // Draw the video without additional borders or progress bars
+      if (!videoElement || videoElement.readyState < 2) {
+        if (!partial) {
+          minimapCtx.fillStyle = '#000'
+          minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight)
+        }
+
+        minimapCtx.fillStyle = '#00ff00'
+        minimapCtx.font = `${14 * pixelRatio}px "Rajdhani", "Arial Narrow", sans-serif`
+        minimapCtx.textAlign = 'center'
+        minimapCtx.fillText('Loading...', minimapWidth / 2, minimapHeight / 2)
+        return
+      }
+
+      // Calculate video dimensions maintaining aspect ratio. Contain, never cover.
+      const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
+      const minimapAspectRatio = minimapWidth / minimapHeight
+
+      let renderWidth, renderHeight, offsetX, offsetY
+
+      if (videoAspectRatio > minimapAspectRatio) {
+        // Video is wider, fit to width
+        renderWidth = minimapWidth
+        renderHeight = minimapWidth / videoAspectRatio
+        offsetX = 0
+        offsetY = (minimapHeight - renderHeight) / 2
+      } else {
+        // Video is taller or same ratio, fit to height
+        renderHeight = minimapHeight
+        renderWidth = minimapHeight * videoAspectRatio
+        offsetX = (minimapWidth - renderWidth) / 2
+        offsetY = 0
+      }
+
+      if (!partial) {
+        minimapCtx.fillStyle = '#000'
+        minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight)
+      }
+
+      // Draw the video frame
+      try {
+        minimapCtx.drawImage(
+          videoElement,
+          offsetX,
+          offsetY,
+          renderWidth,
+          renderHeight
+        )
+      } catch (error) {
+        window.logger.warn('Failed to draw video frame:', error)
+        // Fallback to loading text
+        minimapCtx.fillStyle = '#ff0000'
+        minimapCtx.font = `${12 * pixelRatio}px "Rajdhani", "Arial Narrow", sans-serif`
+        minimapCtx.textAlign = 'center'
+        minimapCtx.fillText('Video Error', minimapWidth / 2, minimapHeight / 2)
+      }
+    } finally {
+      if (partial) {
+        minimapCtx.globalAlpha = previousAlpha
+      }
+    }
   }
 
   ensureMapCache(mapGrid, backingWidth, backingHeight) {

@@ -15,6 +15,14 @@ import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airs
 import { getSimulationTime } from './game/time.js'
 import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
+import { claimFirstProductionNarration, preloadMilestoneForProduction } from './ui/milestoneMediaCache.js'
+
+function playUnitReadySound(unitType) {
+  if (claimFirstProductionNarration(unitType)) return
+  const readySounds = ['unitReady01', 'unitReady02', 'unitReady03']
+  const randomSound = readySounds[Math.floor(gameRandom() * readySounds.length)]
+  playSound(randomSound, 1.0, 0, true)
+}
 
 // List of unit types considered vehicles requiring a Vehicle Factory
 // Ambulance should spawn from the vehicle factory as well
@@ -364,6 +372,9 @@ export const productionQueue = {
       rallyPoint: item.rallyPoint || null
     }
 
+    // Warm the milestone clip before the unit exists. Playback waits for the milestone.
+    preloadMilestoneForProduction(item.type, false)
+
     // Mark button as active
     item.button.classList.add('active')
     playSound('constructionStarted', 1.0, 0, true)
@@ -478,6 +489,9 @@ export const productionQueue = {
       isBuilding: item.isBuilding,
       blueprint: item.blueprint || null
     }
+
+    // Warm the milestone clip before the building exists. Playback waits for the milestone.
+    preloadMilestoneForProduction(item.type, true)
 
     // Mark button as active
     item.button.classList.add('active')
@@ -748,10 +762,8 @@ export const productionQueue = {
         // The host will spawn the unit and it will appear in the next snapshot
         broadcastUnitSpawn(unitType, spawnFactory.id, rallyPointTarget)
 
-        // Play sound locally for feedback
-        const readySounds = ['unitReady01', 'unitReady02', 'unitReady03']
-        const randomSound = readySounds[Math.floor(gameRandom() * readySounds.length)]
-        playSound(randomSound, 1.0, 0, true)
+        // Narrator replaces the ready sting the first time this unit rolls off the line.
+        playUnitReadySound(unitType)
       } else {
         // Host or single player: Spawn unit locally
         // Pass the specific factory's rally point to spawnUnit
@@ -766,10 +778,8 @@ export const productionQueue = {
         )
         if (newUnit) {
           units.push(newUnit)
-          // Play random unit ready sound
-          const readySounds = ['unitReady01', 'unitReady02', 'unitReady03']
-          const randomSound = readySounds[Math.floor(gameRandom() * readySounds.length)]
-          playSound(randomSound, 1.0, 0, true)
+          // Narrator replaces the ready sting the first time this unit rolls off the line.
+          playUnitReadySound(unitType)
 
           // If the produced unit is a harvester and no custom rally point was set, automatically send it to harvest
           if (newUnit.type === 'harvester' && !rallyPointTarget) {
@@ -1523,6 +1533,7 @@ export const productionQueue = {
         if (this.pausedUnit) {
           match.button.classList.add('paused')
         }
+        preloadMilestoneForProduction(match.type, false)
         const progressBar = match.button.querySelector('.production-progress')
         if (progressBar) {
           progressBar.style.width = `${progress * 100}%`
@@ -1556,6 +1567,7 @@ export const productionQueue = {
         if (this.pausedBuilding) {
           match.button.classList.add('paused')
         }
+        preloadMilestoneForProduction(match.type, true)
         const progressBar = match.button.querySelector('.production-progress')
         if (progressBar) {
           progressBar.style.width = `${progress * 100}%`

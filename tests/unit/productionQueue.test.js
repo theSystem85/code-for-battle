@@ -99,9 +99,16 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
 import { productionQueue } from '../../src/productionQueue.js'
 import { isNearExistingBuilding } from '../../src/buildings.js'
 import { spawnUnit, findPath } from '../../src/units.js'
+import { playSound } from '../../src/sound.js'
 import { findClosestOre } from '../../src/logic.js'
 import { units } from '../../src/main.js'
 import { getUnitProductionCount, removeQueuedUnit } from '../../src/ui/productionControllerQueue.js'
+import {
+  clearMilestoneMediaPreload,
+  isMilestoneMediaPreloaded,
+  setFirstProductionNarrationClaim,
+  setMilestoneAchievedCheck
+} from '../../src/ui/milestoneMediaCache.js'
 
 describe('Production Queue System', () => {
   let mockButton
@@ -163,6 +170,23 @@ describe('Production Queue System', () => {
         { type: 'vehicleFactory', owner: 'player', health: 100 },
         { type: 'constructionYard', owner: 'player', health: 100 }
       ]
+    })
+
+    it('preloads an unachieved milestone video when that unit or building starts production', () => {
+      clearMilestoneMediaPreload()
+      const achieved = new Set(['firstTank'])
+      setMilestoneAchievedCheck(id => achieved.has(id))
+
+      productionQueue.addItem('howitzer', mockButton, false)
+      expect(isMilestoneMediaPreloaded('first_artillery')).toBe(true)
+      expect(isMilestoneMediaPreloaded('first_tank')).toBe(false)
+
+      productionQueue.currentBuilding = null
+      productionQueue.addItem('airstrip', mockButton, true)
+      expect(isMilestoneMediaPreloaded('air_strip')).toBe(true)
+
+      clearMilestoneMediaPreload()
+      setMilestoneAchievedCheck(null)
     })
 
     it('should add unit to queue', () => {
@@ -768,6 +792,60 @@ describe('Production Queue System', () => {
       productionQueue.startNextUnitProduction()
 
       expect(productionQueue.currentUnit.rallyPoint).toEqual(rallyPoint)
+    })
+
+    it('skips the unit ready sting only while the first production-line narrator plays', () => {
+      const claim = vi.fn(type => type === 'howitzer')
+      setFirstProductionNarrationClaim(claim)
+      try {
+        gameState.buildings = [
+          { id: 'vf-1', type: 'vehicleFactory', owner: 'player', health: 100, rallyPoint: null }
+        ]
+        productionQueue.currentUnit = {
+          type: 'howitzer',
+          button: mockButton,
+          duration: 1000,
+          rallyPoint: null
+        }
+        productionQueue.unitItems = [productionQueue.currentUnit]
+        vi.mocked(spawnUnit).mockReturnValueOnce({
+          id: 'howitzer-1',
+          type: 'howitzer',
+          owner: 'player',
+          tileX: 1,
+          tileY: 1
+        })
+
+        productionQueue.completeCurrentUnitProduction()
+
+        expect(claim).toHaveBeenCalledWith('howitzer')
+        expect(playSound).not.toHaveBeenCalledWith('unitReady01', expect.anything(), expect.anything(), expect.anything())
+        expect(playSound).not.toHaveBeenCalledWith('unitReady02', expect.anything(), expect.anything(), expect.anything())
+        expect(playSound).not.toHaveBeenCalledWith('unitReady03', expect.anything(), expect.anything(), expect.anything())
+
+        playSound.mockClear()
+        claim.mockReturnValue(false)
+        productionQueue.currentUnit = {
+          type: 'howitzer',
+          button: mockButton,
+          duration: 1000,
+          rallyPoint: null
+        }
+        productionQueue.unitItems = [productionQueue.currentUnit]
+        vi.mocked(spawnUnit).mockReturnValueOnce({
+          id: 'howitzer-2',
+          type: 'howitzer',
+          owner: 'player',
+          tileX: 2,
+          tileY: 2
+        })
+
+        productionQueue.completeCurrentUnitProduction()
+
+        expect(playSound).toHaveBeenCalledWith(expect.stringMatching(/^unitReady0[123]$/), 1.0, 0, true)
+      } finally {
+        setFirstProductionNarrationClaim(null)
+      }
     })
 
     it('assigns spawned harvesters an immediate ore move target when auto-harvest starts', () => {
