@@ -46,14 +46,28 @@ export function resolveRequestedRendererBackend(choice, webgpuAvailable) {
   return webgpuAvailable ? RENDERER_CHOICE_WEBGPU : RENDERER_CHOICE_WEBGL
 }
 
-export function describeRendererBackendStatus({ choice, requested, active } = {}) {
+export function summarizeWebGPUFailure(message) {
+  const text = String(message || '').replace(/\s+/g, ' ').trim()
+  const lower = text.toLowerCase()
+  if (!text) return 'initialization failed'
+  if (lower.includes('texturesample') || lower.includes('wgsl') || lower.includes('shader')) return 'shader validation'
+  if (lower.includes('pipeline')) return 'pipeline validation'
+  if (lower.includes('no webgpu adapter') || lower.includes('no adapter')) return 'no adapter'
+  if (lower.includes('device request') || lower.includes('requestdevice')) return 'device request failed'
+  if (lower.includes('canvas context') || lower.includes('getcontext')) return 'canvas context failed'
+  if (lower.includes('device lost')) return 'device lost'
+  return text.length > 80 ? `${text.slice(0, 77)}...` : text
+}
+
+export function describeRendererBackendStatus({ choice, requested, active, failureSummary } = {}) {
   if (choice === RENDERER_CHOICE_WEBGL) return 'Using WebGL.'
-  const webgpuInUse = active === RENDERER_CHOICE_WEBGPU ||
-    (requested === RENDERER_CHOICE_WEBGPU && active !== RENDERER_CHOICE_WEBGL)
-  if (webgpuInUse) return 'Using WebGPU.'
-  if (choice === RENDERER_CHOICE_WEBGPU || requested === RENDERER_CHOICE_WEBGPU) {
+  if (active === RENDERER_CHOICE_WEBGPU) return 'Using WebGPU.'
+  const webgpuRequested = choice === RENDERER_CHOICE_WEBGPU || requested === RENDERER_CHOICE_WEBGPU
+  if (webgpuRequested && active === RENDERER_CHOICE_WEBGL) {
+    if (failureSummary) return `WebGPU failed: ${failureSummary} – using WebGL`
     return 'WebGPU did not initialize. Using WebGL.'
   }
+  if (webgpuRequested && active !== RENDERER_CHOICE_WEBGL) return 'Using WebGPU.'
   return 'Using WebGL. WebGPU is not available in this browser.'
 }
 

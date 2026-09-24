@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest'
-import { GameWebGPURenderer } from '../../src/rendering/webgpuRenderer.js'
+import { GameWebGPURenderer, WEBGPU_TERRAIN_SHADER } from '../../src/rendering/webgpuRenderer.js'
 
 describe('GameWebGPURenderer', () => {
+  it('samples both atlases before any per-fragment branch', () => {
+    const fragment = WEBGPU_TERRAIN_SHADER.slice(WEBGPU_TERRAIN_SHADER.indexOf('@fragment'))
+    const firstBranch = fragment.search(/\bif\s*\(/)
+    const sampleIndexes = [...fragment.matchAll(/textureSample\s*\(/g)].map(match => match.index)
+
+    expect(sampleIndexes).toHaveLength(2)
+    expect(Math.max(...sampleIndexes)).toBeLessThan(firstBranch)
+    expect(fragment).not.toMatch(/return\s+textureSample\s*\(/)
+  })
+
   it('packs the WebGL-compatible tile instance layout for WebGPU instancing', () => {
     const renderer = new GameWebGPURenderer({}, null)
     const packed = renderer.packInstances([{

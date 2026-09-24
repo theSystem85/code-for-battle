@@ -23,6 +23,10 @@
   display: block;
 }
 
+.fps-overlay .fps-vram-row {
+  pointer-events: auto;
+}
+
 /* FPS color classes */
 .fps-overlay.fps-good {
   color: #00ff00; /* Green for 75+ FPS */
