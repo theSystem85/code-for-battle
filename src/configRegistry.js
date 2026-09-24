@@ -110,7 +110,7 @@ import {
   setWaterEffectZoom,
   MOBILE_CANVAS_PIXEL_RATIO_CAP,
   setMobileCanvasPixelRatioCap,
-  RENDERER_BACKEND,
+  getRendererBackendChoice,
   setRendererBackend,
   SMOKE_PARTICLE_LIFETIME,
   setSmokeParticleLifetime,
@@ -327,9 +327,9 @@ export const configRegistry = {
 
   rendererBackend: {
     name: 'Terrain Renderer',
-    description: 'Choose WebGPU when available or WebGL for broad compatibility.',
+    description: 'Automatic uses WebGPU when a device can be created, and WebGL otherwise. WebGL or WebGPU here is an explicit choice and is kept.',
     type: 'string',
-    get: () => RENDERER_BACKEND,
+    get: () => getRendererBackendChoice(),
     set: setRendererBackend,
     category: 'Graphics'
   },

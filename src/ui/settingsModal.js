@@ -6,6 +6,7 @@ import { renderKeybindingsEditor } from './keybindingsEditor.js'
 import { initLlmSettingsPanel } from './llmSettingsPanel.js'
 import { gameState } from '../gameState.js'
 import { getConfigValue, setConfigValue } from '../configRegistry.js'
+import { getRendererBackendStatusText, whenRendererBackendResolved } from '../config.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
@@ -40,6 +41,10 @@ function formatPixelDensity(value) {
     return `Native (${deviceRatio.toFixed(2).replace(/\.?0+$/, '')}x)`
   }
   return `${numericValue.toFixed(2).replace(/\.?0+$/, '')}x`
+}
+
+function rendererBackendSelectValue(value) {
+  return value === 'webgl' || value === 'webgpu' || value === 'auto' ? value : 'auto'
 }
 
 function syncWaterGraphicsControls(modal) {
@@ -82,8 +87,20 @@ function syncWaterGraphicsControls(modal) {
     }
   }
   if (rendererSelect) {
-    rendererSelect.value = getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend) || 'webgl'
+    rendererSelect.value = rendererBackendSelectValue(getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend))
   }
+  const rendererStatus = modal.querySelector('#settingsRendererBackendStatus')
+  if (rendererStatus) {
+    rendererStatus.textContent = getRendererBackendStatusText()
+  }
+}
+
+function refreshRendererBackendControls(modal) {
+  syncWaterGraphicsControls(modal)
+  void whenRendererBackendResolved().then(() => {
+    if (!modal?.isConnected) return
+    syncWaterGraphicsControls(modal)
+  })
 }
 
 function loadRadarOfflineAnimationSetting() {
@@ -143,7 +160,7 @@ function openModal(modal, defaultTab = 'keybindings') {
   if (radarOfflineAnimationToggle) {
     radarOfflineAnimationToggle.checked = gameState.radarOfflineAnimationEnabled !== false
   }
-  syncWaterGraphicsControls(modal)
+  refreshRendererBackendControls(modal)
   if (keybindingsPanel) {
     renderKeybindingsEditor(keybindingsPanel)
   }
@@ -265,12 +282,12 @@ export function initSettingsModal() {
     })
   }
   if (rendererBackendSelect) {
-    rendererBackendSelect.value = getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend) || 'webgl'
+    rendererBackendSelect.value = rendererBackendSelectValue(getConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend))
     rendererBackendSelect.addEventListener('change', event => {
       setConfigValue(WATER_SETTINGS_CONFIG_IDS.rendererBackend, event.target.value)
-      syncWaterGraphicsControls(modal)
+      refreshRendererBackendControls(modal)
     })
   }
 
-  syncWaterGraphicsControls(modal)
+  refreshRendererBackendControls(modal)
 }

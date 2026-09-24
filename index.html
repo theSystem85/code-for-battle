@@ -1126,9 +1126,11 @@
             <label class="config-modal__field">
               <span>Terrain renderer</span>
               <select id="settingsRendererBackend">
-                <option value="webgl">WebGL (legacy)</option>
-                <option value="webgpu">WebGPU (experimental)</option>
+                <option value="auto" selected>Automatic (WebGPU when available)</option>
+                <option value="webgl">WebGL</option>
+                <option value="webgpu">WebGPU</option>
               </select>
+              <span id="settingsRendererBackendStatus" class="config-modal__hint"></span>
             </label>
           </div>
           <div class="config-modal__section">

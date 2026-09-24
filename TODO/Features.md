@@ -165,6 +165,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Rendering and WebGPU
 
+- [x] **WebGPU default terrain renderer (2026-09-24)** — Fresh profiles and legacy implicit `webgl` graphics records use WebGPU when an adapter and device can be created, and WebGL otherwise. An explicit WebGL or WebGPU settings choice is stored as `rendererBackendChoice` and kept. Legacy stored `webgpu` stays explicit because that value was never the old default.
+  - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
+
 - [x] **Generic sprite-sheet destruction VFX (2026-04-14)** — parse tile/grid/frame metadata from animation filenames (`<tileW>x<tileH>_<cols>x<rows>_*.webp`), add reusable time-based sprite-sheet animation rendering with additive blending, and trigger one centered one-shot explosion animation for destroyed units/buildings/factories.
   - Spec: none
 
