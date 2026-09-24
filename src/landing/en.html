@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code for Battle</title>
+  <meta name="description" content="" data-i18n-content="landing.meta.description">
+  <meta name="theme-color" content="#060c1a">
+  <link rel="canonical" href="/en/landing">
+  <link rel="alternate" hreflang="en" href="/en/landing">
+  <link rel="alternate" hreflang="de" href="/de/landing">
+  <link rel="alternate" hreflang="x-default" href="/en/landing">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Code for Battle" data-i18n-content="landing.meta.title">
+  <meta property="og:description" content="" data-i18n-content="landing.meta.description">
+  <meta property="og:image" content="/images/docs/GamePlayDesktop(FEB2026).webp">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/landing/landing.css">
+</head>
+
+<body data-landing-page="true" data-landing-locale="en">
+  <a class="skip-link" href="#content" data-i18n="landing.nav.skip"></a>
+  <header class="landing-bar">
+    <a class="landing-brand" href="/" data-i18n="landing.hero.title"></a>
+    <div class="landing-bar-nav">
+      <nav class="landing-section-nav" data-i18n-aria="landing.nav.sectionsLabel">
+        <a href="#gallery" data-i18n="landing.nav.gallery"></a>
+        <a href="#features" data-i18n="landing.nav.features"></a>
+        <a href="#vibe" data-i18n="landing.nav.vibe"></a>
+        <a href="#tech" data-i18n="landing.nav.tech"></a>
+      </nav>
+      <nav class="landing-lang" data-i18n-aria="landing.nav.languageLabel">
+        <a href="/en/landing" data-locale-link="en" hreflang="en" lang="en" data-i18n="landing.nav.english"></a>
+        <a href="/de/landing" data-locale-link="de" hreflang="de" lang="de" data-i18n="landing.nav.german"></a>
+      </nav>
+      <a class="landing-cta" href="/" data-play-link data-i18n="landing.nav.play"></a>
+    </div>
+  </header>
+  <main id="content" class="landing-main">
+    <section class="hero">
+      <div>
+        <p class="eyebrow" data-i18n="landing.hero.eyebrow"></p>
+        <h1 data-i18n="landing.hero.title"></h1>
+        <p class="tagline" data-i18n="landing.hero.tagline"></p>
+        <p class="lead" data-i18n="landing.hero.lead"></p>
+        <div class="hero-actions">
+          <a class="landing-cta" href="/" data-play-link data-i18n="landing.hero.cta"></a>
+          <a class="landing-cta-secondary" href="#features" data-i18n="landing.hero.secondary"></a>
+        </div>
+        <ul class="roster" aria-hidden="true">
+          <li><img src="/images/sidebar/tank.webp" alt="" width="64" height="64"></li>
+          <li><img src="/images/sidebar/harvester.webp" alt="" width="64" height="64"></li>
+          <li><img src="/images/sidebar/apache_sidebar.webp" alt="" width="64" height="64"></li>
+          <li><img src="/images/sidebar/f22_raptor_sidebar.webp" alt="" width="64" height="64"></li>
+          <li><img src="/images/sidebar/battleship_sidebar.webp" alt="" width="64" height="64"></li>
+          <li><img src="/images/sidebar/tesla_coil.webp" alt="" width="64" height="64"></li>
+        </ul>
+      </div>
+      <figure class="hero-frame">
+        <img
+          src="/images/docs/GamePlayDesktop(FEB2026).webp"
+          width="1254"
+          height="784"
+          data-i18n-alt="landing.gallery.desktop.alt"
+          fetchpriority="high"
+          decoding="async">
+      </figure>
+    </section>
+
+    <section id="gallery" class="landing-section">
+      <h2 data-i18n="landing.gallery.title"></h2>
+      <p class="section-lead" data-i18n="landing.gallery.lead"></p>
+      <div class="gallery">
+        <figure class="shot">
+          <img
+            src="/images/docs/GamePlayDesktop(FEB2026).webp"
+            width="1254"
+            height="784"
+            alt=""
+            data-i18n-alt="landing.gallery.desktop.alt"
+            loading="lazy"
+            decoding="async">
+          <figcaption data-i18n="landing.gallery.desktop.caption"></figcaption>
+        </figure>
+        <figure class="shot">
+          <img
+            src="/images/docs/GamePlayLandscape(FEB2026).webp"
+            width="845"
+            height="392"
+            alt=""
+            data-i18n-alt="landing.gallery.landscape.alt"
+            loading="lazy"
+            decoding="async">
+          <figcaption data-i18n="landing.gallery.landscape.caption"></figcaption>
+        </figure>
+        <figure class="shot">
+          <img
+            src="/images/docs/GamePlayPortrait(FEB2026).webp"
+            width="391"
+            height="846"
+            alt=""
+            data-i18n-alt="landing.gallery.portrait.alt"
+            loading="lazy"
+            decoding="async">
+          <figcaption data-i18n="landing.gallery.portrait.caption"></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section id="features" class="landing-section">
+      <h2 data-i18n="landing.features.title"></h2>
+      <p class="section-lead" data-i18n="landing.features.lead"></p>
+      <div class="feature-grid" data-landing-features></div>
+    </section>
+
+    <section id="vibe" class="landing-section">
+      <h2 data-i18n="landing.vibe.title"></h2>
+      <div class="hud-panel vibe-panel">
+        <p class="lead" data-i18n="landing.vibe.lead"></p>
+        <h3 data-i18n="landing.vibe.assetsTitle"></h3>
+        <p class="section-lead" data-i18n="landing.vibe.assetsLead"></p>
+        <div class="asset-grid" data-landing-assets></div>
+      </div>
+    </section>
+
+    <section id="tech" class="landing-section">
+      <h2 data-i18n="landing.tech.title"></h2>
+      <p class="section-lead" data-i18n="landing.tech.lead"></p>
+      <div data-landing-tech></div>
+      <p class="tech-note" data-i18n="landing.tech.note"></p>
+    </section>
+
+    <footer class="landing-footer">
+      <p data-i18n="landing.footer.rights"></p>
+      <nav data-i18n-aria="landing.footer.navLabel">
+        <a data-legal-link="imprint" href="/imprint" data-i18n="landing.footer.imprint"></a>
+        <a data-legal-link="privacy" href="/privacy" data-i18n="landing.footer.privacy"></a>
+        <a data-legal-link="contact" href="/contact" data-i18n="landing.footer.contact"></a>
+        <a href="/docs/user-documentation.html" data-i18n="landing.nav.manual"></a>
+        <a href="/" data-play-link data-i18n="landing.footer.play"></a>
+      </nav>
+    </footer>
+  </main>
+  <script type="module" src="/src/landing/landingPage.js"></script>
+</body>
+
+</html>

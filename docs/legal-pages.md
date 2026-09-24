@@ -67,6 +67,7 @@ They are linked from:
 
 - Sidebar footer links in-game
 - The legal notice contact link when `contactFormUrl` is configured
+- The marketing landing footer (`/en/landing` uses the English routes, `/de/landing` uses the German routes)
 
 ## Privacy sections inferred from current codebase
 The privacy text currently reflects observed technical behavior in the repository:
