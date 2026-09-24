@@ -7,6 +7,12 @@ vi.mock('../../src/benchmark/benchmarkScenario.js', () => ({
   teardownBenchmarkScenario: vi.fn()
 }))
 
+vi.mock('../../src/benchmark/heavyBattleScenario.js', () => ({
+  setupHeavyBattleScenario: vi.fn(),
+  stepHeavyBattleCamera: vi.fn(),
+  clampHeavyBattleUnitCount: vi.fn(count => count)
+}))
+
 vi.mock('../../src/benchmark/benchmarkTracker.js', () => ({
   startBenchmarkSession: vi.fn(),
   isBenchmarkRunning: vi.fn(() => false)

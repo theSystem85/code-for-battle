@@ -130,9 +130,6 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Performance
 
-- [ ] **Heavy-battle frame time (2026-09-24)** — Profile a deterministic multi-player battle (hundreds of units, projectiles, explosions, smoke, dust, fog) and cut the measured hot phases without dropping the WebGL fallback. The performance widget shows sim/move/combat/path/AI/fog/terrain/units/effects/UI/minimap average and p95, refreshed once per second.
-  - Spec: [Heavy-battle frame phases](../specs/072-heavy-battle-frame-phases.md)
-
 - [ ] **Mobile performance recovery plan (2026-05-24)** — evaluate and implement prioritized render-path improvements to move mobile back from ~10fps toward 60fps, starting with the most critical selected item after reviewing the plan.
   - Spec: [Mobile FPS regression after sprite-sheet routing + realtime bottleneck overlay](../specs/068-mobile-fps-regression-bottleneck-overlay.md)
 
@@ -1024,6 +1021,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
   - Spec: none
 
 ### Performance
+
+- [x] **Heavy-battle frame time (2026-09-24)** — Profile a deterministic multi-player battle and cut the measured hot phases without dropping the WebGL fallback. The performance widget shows sim/move/combat/path/AI/fog/terrain/units/effects/UI/minimap average and p95, refreshed once per second. On headless Playwright Chromium 145 (Linux VM, WebGL water-only because no WebGPU adapter, 1280×720, DPR 1, seed 11, map 96, 240 units, 2s warmup, 5s measure) frame time went from 58.63 ms avg / 73.8 ms p95 (17.06 FPS, 86 frames) to 27.25 ms avg / 36.1 ms p95 (36.70 FPS, 184 frames). Sim 39.02→9.05 ms, movement 18.25→5.15 ms, combat 13.94→0.81 ms. Terrain draw calls stayed at 8. GPU pass time was unavailable. This run does not certify 75 presented FPS.
+  - Spec: [Heavy-battle frame phases](../specs/072-heavy-battle-frame-phases.md)
 
 - [x] **Replace repetitive cliff ridges with continuous biome-transparent plateaus, width-dependent terraces, all eight** — descending directions, seamless joins and five artwork variants per topology; deliver one quality-85 WebP sprite sheet and verify visual seams and live performance.
   - Spec: [Terrain source WebP conversion](../specs/082-terrain-source-webp.md)
