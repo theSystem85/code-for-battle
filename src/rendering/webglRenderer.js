@@ -623,7 +623,7 @@ export class GameWebGLRenderer {
   }
 
   syncAtlasTexture() {
-    if (!this.gl || this.atlasTexture || !this.textureManager?.spriteImage) return
+    if (!this.gl || this.atlasTexture || !this.textureManager?.primarySpriteSheetImage) return
 
     const gl = this.gl
     this.atlasTexture = gl.createTexture()
@@ -639,12 +639,12 @@ export class GameWebGLRenderer {
       gl.RGBA,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      this.textureManager.spriteImage
+      this.textureManager.primarySpriteSheetImage
     )
     gl.bindTexture(gl.TEXTURE_2D, null)
     this.atlasSize = {
-      width: this.textureManager.spriteImage.width || DEFAULT_ATLAS_SIZE.width,
-      height: this.textureManager.spriteImage.height || DEFAULT_ATLAS_SIZE.height
+      width: this.textureManager.primarySpriteSheetImage.width || DEFAULT_ATLAS_SIZE.width,
+      height: this.textureManager.primarySpriteSheetImage.height || DEFAULT_ATLAS_SIZE.height
     }
     const uploadBytes = this.atlasSize.width * this.atlasSize.height * 4
     this.stats.textureUploadBytes += uploadBytes
@@ -841,14 +841,16 @@ export class GameWebGLRenderer {
 
   createInstance(type, tileX, tileY, mapGrid, canUseTextures, sotMask = null) {
     const integratedResourceTile = this.getIntegratedResourceTile(type, tileX, tileY, mapGrid)
+    const integratedTerrainTile = this.textureManager.getIntegratedTileForMapTile?.(type, tileX, tileY, { mapGrid })
+    const integratedTile = integratedResourceTile || integratedTerrainTile
     const canUseIntegratedResourceTile = Boolean(
-      integratedResourceTile?.rect && integratedResourceTile?.image === this.textureManager.spriteImage
+      integratedTile?.rect && integratedTile?.image === this.textureManager.primarySpriteSheetImage
     )
     const isCrystalResource = type === 'ore' || type === 'seedCrystal'
     if (isCrystalResource && integratedResourceTile?.rect && !canUseIntegratedResourceTile) {
       return null
     }
-    const useTexture = canUseIntegratedResourceTile || (canUseTextures && this.textureManager.tileTextureCache?.[type]?.length)
+    const useTexture = canUseIntegratedResourceTile
     const isWaterAnimated = type === 'water'
     const streetTile = this.getStreetTile(type, tileX, tileY, mapGrid)
     const useSecondaryTexture = Boolean(streetTile)
@@ -863,23 +865,12 @@ export class GameWebGLRenderer {
       const v1 = (rect.y + rect.height) / this.secondaryAtlasSize.height
       uvRect = [u0, v0, u1, v1]
     } else if (canUseIntegratedResourceTile) {
-      const { rect } = integratedResourceTile
+      const { rect } = integratedTile
       const u0 = rect.x / this.atlasSize.width
       const v0 = rect.y / this.atlasSize.height
       const u1 = (rect.x + rect.width) / this.atlasSize.width
       const v1 = (rect.y + rect.height) / this.atlasSize.height
       uvRect = [u0, v0, u1, v1]
-    } else if (useTexture) {
-      const cache = this.textureManager.tileTextureCache[type]
-      const idx = this.textureManager.getTileVariation(type, tileX, tileY)
-      const info = cache[idx % cache.length]
-      if (info) {
-        const u0 = info.x / this.atlasSize.width
-        const v0 = info.y / this.atlasSize.height
-        const u1 = (info.x + info.width) / this.atlasSize.width
-        const v1 = (info.y + info.height) / this.atlasSize.height
-        uvRect = [u0, v0, u1, v1]
-      }
     }
 
     return {

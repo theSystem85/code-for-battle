@@ -32,11 +32,8 @@ describe('GameWebGPURenderer', () => {
   it('builds instances for every terrain asset class', () => {
     const textureManager = {
       allTexturesLoaded: true,
-      tileTextureCache: {
-        land: [{ x: 0, y: 0, width: 32, height: 32 }],
-        rock: [{ x: 32, y: 0, width: 32, height: 32 }]
-      },
-      getTileVariation: () => 0,
+      primarySpriteSheetImage: {},
+      getIntegratedTileForMapTile: () => ({ image: textureManager.primarySpriteSheetImage, rect: { x: 0, y: 0, width: 32, height: 32 } }),
       selectStreetTileByTags: () => ({ image: streetAtlas, rect: { x: 0, y: 0, width: 32, height: 32 } })
     }
     const streetAtlas = {}

@@ -88,11 +88,10 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
         }
       }
 
-      if (tile.type === 'land' && textureManager && textureManager.isLandTileImpassable) {
-        isImpassableGrass = textureManager.isLandTileImpassable(x, y)
-        if (isImpassableGrass) {
-          impassableGrassCount++
-        }
+      if (tile.type === 'land' && textureManager?.getIntegratedTileForMapTile) {
+        const taggedTile = textureManager.getIntegratedTileForMapTile('land', x, y)
+        isImpassableGrass = taggedTile?.tags?.includes('impassable') || false
+        if (isImpassableGrass) impassableGrassCount++
       }
 
       occupancy[y][x] =

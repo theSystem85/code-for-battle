@@ -3,6 +3,15 @@
 ## Summary
 Add a new Sprite Sheet Editor (SSE) modal in Map Settings that allows tile segmentation and per-tile tag authoring on sprite sheets, then apply this metadata to an optional integrated sprite-sheet rendering mode used by both map editor and gameplay.
 
+## Follow-up (2026-09-24): Retire legacy individual tile assets
+
+- Runtime terrain and resource rendering must not load or select individual map tile assets or the generated `map_sprites` atlas.
+- Grass-tile discovery and its JSON contract are retired; land classification comes from SSE tags (`passable`, `decorative`, and `impassable`).
+- The map editor preview and occupancy classification must resolve terrain art and classification through SSE metadata. Animated/procedural water remains the explicit water fallback when no tagged SSE water tile is available.
+- Legacy grass-tile generation scripts and tests must be removed together with their asset references.
+- Enabling custom sprite sheets must classify land without recursively re-entering land selection. Land candidates and fallback tiles must come exclusively from the currently enabled SSE sheets; disabled sheets must neither load nor render.
+- Performance note: land selection runs once per rendered land tile and during occupancy rebuilds. Enabled-sheet land candidates are therefore indexed once per SSE configuration generation; classification performs only hash arithmetic and bounded array lookups, with no per-tile `Set`/`Map` construction or candidate-array filtering.
+
 ## Goals
 - Add `Sprite Sheet Editor` button under Map Settings.
 - Add SSE modal with existing modal styling conventions.

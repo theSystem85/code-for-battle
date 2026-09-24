@@ -1,8 +1,6 @@
 // rendering/textureManager.js
-import { TILE_SIZE, TILE_IMAGES, GRASS_DECORATIVE_RATIO, GRASS_IMPASSABLE_RATIO, TILE_SPRITE_SHEET, TILE_SPRITE_MAP } from '../config.js'
+import { TILE_SIZE } from '../config.js'
 import { buildingImageMap } from '../buildingImageMap.js'
-import { getDevicePixelRatio } from './renderingUtils.js'
-import { discoverGrassTiles } from '../utils/grassTileDiscovery.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
 import { decodePreparedImage, estimateDecodedImageBytes, loadPreparedImage } from './prepared/imagePreparation.js'
@@ -14,6 +12,8 @@ const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1
 const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
 const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
 const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.json'
+const LAND_DECORATIVE_INTERVAL = 33
+const LAND_IMPASSABLE_INTERVAL = 50
 const STREET_DIRECTION_MASKS = {
   top: 1,
   right: 2,
@@ -39,10 +39,6 @@ export class TextureManager {
   constructor() {
     this.imageCache = {}
     this.loadingImages = {}
-    this.tileTextureCache = {}
-    this.tileVariationMap = {}
-    this.spriteImage = null
-    this.spriteMap = {}
     this.allTexturesLoaded = false
     this.loadingStarted = false
     this.waterFrames = []
@@ -51,11 +47,13 @@ export class TextureManager {
     this.integratedSpriteSheetMode = false
     this.integratedSpriteSheetPath = null
     this.integratedSpriteSheetImage = null
+    this.primarySpriteSheetImage = null
     this.integratedSpriteSheetMetadata = null
     this.integratedSpriteSheetImagesByPath = {}
     this.integratedSpriteSheetLoadsByPath = {}
     this.integratedSpriteSheets = []
     this.integratedTagBuckets = {}
+    this.integratedLandBuckets = {}
     this.integratedBiomeTag = 'grass'
     this.integratedBlendMode = 'black'
     this.integratedBlackKey = null
@@ -198,6 +196,19 @@ export class TextureManager {
     })
 
     return buckets
+  }
+
+  buildIntegratedLandBuckets(tagBuckets) {
+    const catalog = {}
+    for (const biome of ['grass', 'soil', 'sand', 'snow']) {
+      catalog[biome] = {
+        all: this.getTagBucketCandidates(tagBuckets, [biome]),
+        passable: this.getTagBucketCandidates(tagBuckets, [biome, 'passable'], ['decorative', 'impassable']),
+        decorative: this.getTagBucketCandidates(tagBuckets, [biome, 'decorative']),
+        impassable: this.getTagBucketCandidates(tagBuckets, [biome, 'impassable'])
+      }
+    }
+    return catalog
   }
 
   static getGroupTagId(tags) {
@@ -441,9 +452,11 @@ export class TextureManager {
       preparation.assertCurrent(this.texturePreparationGeneration)
       this.integratedBiomeTag = requestedBiomeTag
       this.integratedSpriteSheetMode = false
+      this.primarySpriteSheetImage = null
       this.integratedSpriteSheetMetadata = null
       this.integratedSpriteSheets = []
       this.integratedTagBuckets = {}
+      this.integratedLandBuckets = {}
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
@@ -482,9 +495,11 @@ export class TextureManager {
       preparation.assertCurrent(this.texturePreparationGeneration)
       this.integratedBiomeTag = requestedBiomeTag
       this.integratedSpriteSheetMode = false
+      this.primarySpriteSheetImage = null
       this.integratedSpriteSheetMetadata = null
       this.integratedSpriteSheets = []
       this.integratedTagBuckets = {}
+      this.integratedLandBuckets = {}
       this.integratedBlendMode = 'black'
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
@@ -499,8 +514,10 @@ export class TextureManager {
     this.integratedSpriteSheets = normalizedEntries
     this.integratedSpriteSheetPath = normalizedEntries[0].sheetPath
     this.integratedSpriteSheetImage = normalizedEntries[0].image
+    this.primarySpriteSheetImage = normalizedEntries[0].image
     this.integratedSpriteSheetMetadata = normalizedEntries[0].metadata
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
+    this.integratedLandBuckets = this.buildIntegratedLandBuckets(this.integratedTagBuckets)
     this.integratedGroupedTagCatalog = this.buildGroupedTagCatalog(normalizedEntries)
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
@@ -521,17 +538,22 @@ export class TextureManager {
     return Math.abs(hash)
   }
 
-  getLandClassificationTag(x, y) {
-    const landIndex = this.getTileVariation('land', x, y)
-    const info = this.grassTileMetadata
-    if (!info || !Number.isFinite(landIndex)) {
-      return 'passable'
-    }
+  getLandClassificationTag(x, y, biomeTag = this.integratedBiomeTag) {
+    const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(biomeTag)
+      ? biomeTag
+      : 'grass'
+    const hash = TextureManager.coordHash(x, y)
+    const landBuckets = this.integratedLandBuckets[requestedBiome]
+    const hasImpassable = Boolean(landBuckets?.impassable.length)
+    const hasDecorative = Boolean(landBuckets?.decorative.length)
+    const hasPassable = Boolean(landBuckets?.passable.length)
 
-    const { passableCount, decorativeCount } = info
-    if (landIndex < passableCount) return 'passable'
-    if (landIndex < passableCount + decorativeCount) return 'decorative'
-    return 'impassable'
+    if (hasImpassable && hash % LAND_IMPASSABLE_INTERVAL === 0) return 'impassable'
+    if (hasDecorative && hash % LAND_DECORATIVE_INTERVAL === 0) return 'decorative'
+    if (hasPassable) return 'passable'
+    if (hasDecorative) return 'decorative'
+    if (hasImpassable) return 'impassable'
+    return 'passable'
   }
 
   selectIntegratedTileByTags(requiredTags, x, y, excludedTags = []) {
@@ -860,24 +882,28 @@ export class TextureManager {
       const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(options?.biomeTag)
         ? options.biomeTag
         : (this.integratedBiomeTag === 'mixed' ? 'grass' : this.integratedBiomeTag)
-      const classification = this.getLandClassificationTag(x, y)
-      const biomeDecorativeCandidates = this.getIntegratedTileCandidatesByTags([requestedBiome, 'decorative'])
+      const landBuckets = this.integratedLandBuckets[requestedBiome]
+      const classification = this.getLandClassificationTag(x, y, requestedBiome)
       if (classification === 'decorative') {
         if (mapGrid) {
           selected = this.selectGroupedTileForMapTile('decorative', x, y, mapGrid, (cellX, cellY) => {
             const tile = mapGrid[cellY]?.[cellX]
-            return tile?.type === 'land' && this.getLandClassificationTag(cellX, cellY) === 'decorative'
+            return tile?.type === 'land' && this.getLandClassificationTag(cellX, cellY, requestedBiome) === 'decorative'
           })
         }
-        if (biomeDecorativeCandidates.length) {
-          selected = selected || this.selectIntegratedTileFromCandidates(biomeDecorativeCandidates, x, y)
+        if (landBuckets?.decorative.length) {
+          selected = selected || this.selectIntegratedTileFromCandidates(landBuckets.decorative, x, y)
         }
       } else if (classification === 'impassable') {
-        selected = this.selectIntegratedTileByTags([requestedBiome, 'impassable'], x, y)
+        selected = this.selectIntegratedTileFromCandidates(landBuckets?.impassable, x, y)
       } else {
-        selected = this.selectIntegratedTileByTags([requestedBiome, 'passable'], x, y, ['decorative', 'impassable'])
-          || this.selectIntegratedTileByTags([requestedBiome], x, y, ['decorative', 'impassable'])
+        selected = this.selectIntegratedTileFromCandidates(landBuckets?.passable, x, y)
       }
+      selected = selected || this.selectIntegratedTileFromCandidates(
+        landBuckets?.all,
+        x,
+        y
+      )
     } else if (type === 'rock') {
       if (mapGrid) {
         selected = this.selectGroupedTileForMapTile('rocks', x, y, mapGrid, (cellX, cellY) => mapGrid[cellY]?.[cellX]?.type === 'rock')
@@ -984,20 +1010,12 @@ export class TextureManager {
     this.texturePreparationState = 'preparing'
     this.texturePreparationError = null
     this.texturePreparationProgress.completed = 0
-    this.texturePreparationProgress.total = 6
+    this.texturePreparationProgress.total = 4
 
     this.preloadPromise = (async() => {
       try {
-        const mappingRes = await fetch(TILE_SPRITE_MAP)
-        if (!mappingRes.ok) throw new Error(`Failed to load tile sprite map: ${mappingRes.status}`)
-        const spriteMap = await mappingRes.json()
+        const waterImg = await loadPreparedImage('images/map/water_spritesheet.webp')
         this.texturePreparationProgress.completed++
-
-        const [spriteImg, waterImg] = await Promise.all([
-          loadPreparedImage(TILE_SPRITE_SHEET),
-          loadPreparedImage('images/map/water_spritesheet.webp')
-        ])
-        this.texturePreparationProgress.completed += 2
 
         // Water remains a separate animated frame set. These frames are
         // prepared before readiness and are never included in static pages.
@@ -1015,30 +1033,6 @@ export class TextureManager {
           waterFrames.push(canvas)
         }
 
-        let grassTileData = null
-        const landInfo = TILE_IMAGES.land
-        if (landInfo && landInfo.useGrassTileDiscovery) {
-          grassTileData = await discoverGrassTiles()
-        }
-
-        const tileTextureCache = {}
-        for (const [tileType] of Object.entries(TILE_IMAGES)) tileTextureCache[tileType] = []
-        const addFromPath = (path, type) => {
-          const key = path.replace(/^images\/map\//, '')
-          const info = spriteMap[key]
-          if (info) tileTextureCache[type].push({ key, ...info })
-        }
-        for (const [tileType, tileInfo] of Object.entries(TILE_IMAGES)) {
-          if (tileType === 'land' && grassTileData) {
-            grassTileData.passablePaths.forEach(path => addFromPath(path, tileType))
-            grassTileData.decorativePaths.forEach(path => addFromPath(path, tileType))
-            grassTileData.impassablePaths.forEach(path => addFromPath(path, tileType))
-          }
-          if (tileInfo.paths) tileInfo.paths.forEach(path => addFromPath(path, tileType))
-          if (tileInfo.passablePaths) tileInfo.passablePaths.forEach(path => addFromPath(path, tileType))
-          if (tileInfo.impassablePaths) tileInfo.impassablePaths.forEach(path => addFromPath(path, tileType))
-        }
-
         await Promise.all([
           this.preloadDefaultCombatDecalSheet(),
           this.preloadDefaultCrystalSheet(),
@@ -1048,19 +1042,8 @@ export class TextureManager {
 
         // Publish one complete texture generation after every source decoded
         // and every finite prepared variant was built.
-        this.spriteMap = spriteMap
-        this.spriteImage = spriteImg
         this.waterFrames = waterFrames
-        this.tileTextureCache = tileTextureCache
-        if (grassTileData) {
-          this.grassTileMetadata = {
-            passableCount: grassTileData.passablePaths.length,
-            decorativeCount: grassTileData.decorativePaths.length,
-            impassableCount: grassTileData.impassablePaths.length
-          }
-        }
         const decodedImages = new Set([
-          spriteImg,
           waterImg,
           this.defaultCombatDecalSheetImage,
           this.defaultCrystalSheetImage,
@@ -1103,7 +1086,6 @@ export class TextureManager {
 
   getPreparedTerrainAssets() {
     return [
-      { key: 'tile-sprite-sheet', image: this.spriteImage, animated: false },
       { key: 'water-animation-source', image: null, animated: true, frames: this.waterFrames },
       { key: 'combat-decals', image: this.defaultCombatDecalSheetImage, animated: false },
       { key: 'crystals', image: this.defaultCrystalSheetImage, animated: false },
@@ -1114,246 +1096,6 @@ export class TextureManager {
   retryPreloadAllTextures(callback) {
     if (this.texturePreparationState !== 'failed') return this.preloadPromise || Promise.resolve(this)
     return this.preloadAllTextures(callback)
-  }
-
-  // Helper method to load a single texture
-  loadSingleTexture(imagePath, tileType, onComplete) {
-    // Determine appropriate extensions based on tile type and path
-    let extensions = ['webp', 'jpg', 'png'] // Default order
-
-    // For ore and seed crystal files, try webp first since they're primarily webp
-    if (imagePath.includes('ore') || tileType === 'ore' || tileType === 'seedCrystal') {
-      extensions = ['webp', 'jpg', 'png']
-    }
-    // For grass tiles, try png first since they're png files
-    else if (imagePath.includes('grass_tiles') || tileType === 'land') {
-      extensions = ['png', 'jpg', 'webp']
-    }
-
-    this.getOrLoadImage(imagePath, extensions, (img) => {
-      if (img) {
-        const pixelRatio = Math.min(3, getDevicePixelRatio())
-
-        // Create a canvas for the texture at the correct size, accounting for pixel ratio
-        const baseCanvas = document.createElement('canvas')
-        baseCanvas.width = TILE_SIZE * pixelRatio
-        baseCanvas.height = TILE_SIZE * pixelRatio
-
-        // Set display size (CSS) to maintain aspect
-        baseCanvas.style.width = `${TILE_SIZE}px`
-        baseCanvas.style.height = `${TILE_SIZE}px`
-
-        const baseCtx = baseCanvas.getContext('2d')
-
-        // Apply high-quality image rendering
-        baseCtx.imageSmoothingEnabled = true
-        baseCtx.imageSmoothingQuality = 'high'
-
-        // Apply pixel ratio scaling
-        baseCtx.scale(pixelRatio, pixelRatio)
-
-        // Use a two-step scaling process for better quality
-        // First draw to an intermediate canvas at 2x size for better downscaling
-        const tempCanvas = document.createElement('canvas')
-        const tempSize = TILE_SIZE * 2
-        tempCanvas.width = tempSize
-        tempCanvas.height = tempSize
-
-        const tempCtx = tempCanvas.getContext('2d')
-        tempCtx.imageSmoothingEnabled = true
-        tempCtx.imageSmoothingQuality = 'high'
-
-        // Draw original image to the intermediate canvas, maintaining aspect ratio
-        const aspectRatio = img.width / img.height
-        let drawWidth, drawHeight
-
-        if (aspectRatio > 1) {
-          // Image is wider than tall
-          drawWidth = tempSize
-          drawHeight = tempSize / aspectRatio
-        } else {
-          // Image is taller than wide
-          drawWidth = tempSize * aspectRatio
-          drawHeight = tempSize
-        }
-
-        // Center the image in the canvas
-        tempCtx.drawImage(img, (tempSize - drawWidth) / 2, (tempSize - drawHeight) / 2, drawWidth, drawHeight)
-
-        // Draw from the intermediate canvas to the final canvas
-        baseCtx.drawImage(tempCanvas, 0, 0, TILE_SIZE, TILE_SIZE)
-
-        // Add the single texture to the cache (no variations)
-        this.tileTextureCache[tileType].push(baseCanvas)
-      }
-
-      onComplete()
-    })
-  }
-
-  // Get a consistent tile variation based on position
-  getTileVariation(tileType, x, y) {
-    // Create unique key for this tile position and type
-    const key = `${tileType}_${x}_${y}`
-
-    // If we already determined a variation for this tile, use it
-    if (this.tileVariationMap[key] !== undefined) {
-      return this.tileVariationMap[key]
-    }
-
-    // If no variations available, return -1 to use color fallback
-    if (!this.tileTextureCache[tileType] || this.tileTextureCache[tileType].length === 0) {
-      return -1
-    }
-
-    // Special handling for land tiles with dynamically discovered grass tiles
-    if (tileType === 'land' && this.grassTileMetadata) {
-      const { passableCount, decorativeCount, impassableCount } = this.grassTileMetadata
-
-      // Better hash function - more random but still reliable
-      // Mix x and y coordinates in a non-linear way to avoid patterns
-      let hash = ((x * 73856093) ^ (y * 19349663) ^ ((x + y) * 83492791)) >>> 0
-      hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
-      hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
-      hash = (hash >>> 16) ^ hash
-      hash = Math.abs(hash)
-
-      // Simple ratio-based selection
-      // Check for impassable first (rarer)
-      if (hash % GRASS_IMPASSABLE_RATIO === 0) {
-        // Select from impassable tiles (they start after passable + decorative)
-        const impassableStartIndex = passableCount + decorativeCount
-        const selectedIndex = impassableStartIndex + (hash % impassableCount)
-
-        // Bounds check
-        if (selectedIndex >= this.tileTextureCache[tileType].length) {
-          window.logger.warn(`Impassable index out of bounds: ${selectedIndex} >= ${this.tileTextureCache[tileType].length}`)
-          return 0 // Default to first tile
-        }
-
-        this.tileVariationMap[key] = selectedIndex
-        return selectedIndex
-      }
-
-      // Check for decorative second
-      if (hash % GRASS_DECORATIVE_RATIO === 0) {
-        // Select from decorative tiles (they start after passable)
-        const decorativeStartIndex = passableCount
-        const selectedIndex = decorativeStartIndex + (hash % decorativeCount)
-
-        // Bounds check
-        if (selectedIndex >= this.tileTextureCache[tileType].length) {
-          window.logger.warn(`Decorative index out of bounds: ${selectedIndex} >= ${this.tileTextureCache[tileType].length}`)
-          return 0 // Default to first tile
-        }
-
-        this.tileVariationMap[key] = selectedIndex
-        return selectedIndex
-      }
-
-      // Default to passable tiles
-      const selectedIndex = hash % passableCount
-
-      // Bounds check
-      if (selectedIndex >= this.tileTextureCache[tileType].length) {
-        window.logger.warn(`Passable index out of bounds: ${selectedIndex} >= ${this.tileTextureCache[tileType].length}`)
-        return 0 // Default to first tile
-      }
-
-      this.tileVariationMap[key] = selectedIndex
-
-      return selectedIndex
-    }
-
-    // Legacy handling for hardcoded grass tiles
-    if (tileType === 'land') {
-      const tileInfo = TILE_IMAGES[tileType]
-      if (tileInfo && tileInfo.passablePaths && tileInfo.impassablePaths) {
-        // Calculate how many textures we have for each type (no multiplier needed)
-        const legacyCount = tileInfo.paths ? tileInfo.paths.length : 0
-        const passableCount = tileInfo.passablePaths.length
-        const impassableCount = tileInfo.impassablePaths.length
-
-        // Better hash function for good randomness without patterns
-        let hash = ((x * 73856093) ^ (y * 19349663) ^ ((x + y) * 83492791)) >>> 0
-        hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
-        hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
-        hash = (hash >>> 16) ^ hash
-        hash = Math.abs(hash)
-
-        // Create weighted selection: prefer new grass tiles over legacy
-        // If we have new tiles, use 50:1 ratio for passable:impassable
-        // Total weight = 50 (passable) + 1 (impassable) = 51
-        const weightedChoice = hash % 51
-
-        let selectedIndex
-        if (weightedChoice < 50) {
-          // Select from passable tiles (0-49 out of 51)
-          selectedIndex = legacyCount + (hash % passableCount)
-        } else {
-          // Select from impassable tiles (50 out of 51)
-          selectedIndex = legacyCount + passableCount + (hash % impassableCount)
-        }
-
-        // Ensure we don't exceed the available textures
-        selectedIndex = selectedIndex % this.tileTextureCache[tileType].length
-
-        // Store the variation for this position
-        this.tileVariationMap[key] = selectedIndex
-        return selectedIndex
-      }
-    }
-
-    // For all other tile types, use improved randomization
-    // Generate a deterministic but more random variation based on position
-    // Better hash function that provides good randomness without visible patterns
-    // This ensures the same tile always gets the same variation but without diagonal lines
-    let hash = ((x * 73856093) ^ (y * 19349663) ^ ((x + y) * 83492791)) >>> 0
-    hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
-    hash = ((hash >>> 16) ^ hash) * 0x45d9f3b
-    hash = (hash >>> 16) ^ hash
-    hash = Math.abs(hash)
-
-    const variationIndex = hash % this.tileTextureCache[tileType].length
-
-    // Store the variation for this position
-    this.tileVariationMap[key] = variationIndex
-
-    return variationIndex
-  }
-
-  // Check if a land tile at given position uses an impassable grass texture
-  isLandTileImpassable(x, y) {
-    if (this.integratedSpriteSheetMode) {
-      const integratedTile = this.getIntegratedTileForMapTile('land', x, y)
-      if (integratedTile?.tags?.includes('impassable')) {
-        return true
-      }
-      if (integratedTile?.tags?.includes('passable') || integratedTile?.tags?.includes('decorative')) {
-        return false
-      }
-    }
-
-    if (!this.grassTileMetadata || !this.allTexturesLoaded) {
-      return false // Return false if grass tiles aren't loaded yet
-    }
-
-    const key = `land_${x}_${y}`
-    let selectedIndex = this.tileVariationMap[key]
-
-    if (selectedIndex === undefined) {
-      // Calculate the index if not cached yet
-      selectedIndex = this.getTileVariation('land', x, y)
-    }
-
-    if (selectedIndex === -1) return false
-
-    const { passableCount, decorativeCount, impassableCount } = this.grassTileMetadata
-    const impassableStartIndex = passableCount + decorativeCount
-    const totalTextureCount = passableCount + decorativeCount + impassableCount
-
-    // Check if the selected index falls in the impassable range
-    return selectedIndex >= impassableStartIndex && selectedIndex < totalTextureCount
   }
 
   getCurrentWaterFrame() {

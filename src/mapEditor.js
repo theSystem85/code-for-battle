@@ -3,7 +3,6 @@ import { gameState } from './gameState.js'
 import { initializeOccupancyMap, createUnit, unitCosts } from './units.js'
 import { buildingData, canPlaceBuilding, createBuilding, placeBuilding, updatePowerSupply } from './buildings.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
-import { gameRandom } from './utils/gameRandom.js'
 import {
   beginMapMutationTransaction,
   commitMapMutationTransaction,
@@ -78,8 +77,7 @@ function requestRenderFrame() {
 
 function getTextureInfo() {
   const textureManager = textureManagerGetter ? textureManagerGetter() : null
-  const grassInfo = textureManager?.grassTileMetadata
-  return { textureManager, grassInfo }
+  return { textureManager }
 }
 
 function getPaletteEntry() {
@@ -92,39 +90,7 @@ function cycleTile(delta = 1) {
   mapEditorState.currentTileIndex = (mapEditorState.currentTileIndex + delta + total) % total
 }
 
-function pickLandVariant(variantGroup, x, y, randomize) {
-  const { textureManager, grassInfo } = getTextureInfo()
-  if (!textureManager || !grassInfo) return textureManager?.getTileVariation('land', x, y) ?? 0
-
-  const { passableCount, decorativeCount, impassableCount } = grassInfo
-  const ranges = {
-    passable: { start: 0, count: passableCount },
-    decorative: { start: passableCount, count: decorativeCount },
-    impassable: { start: passableCount + decorativeCount, count: impassableCount }
-  }
-  const target = ranges[variantGroup] || ranges.passable
-  if (!target.count) return textureManager.getTileVariation('land', x, y)
-  if (!randomize) return target.start
-
-  const idx = target.start + Math.floor(gameRandom() * target.count)
-  return idx
-}
-
-function pickVariant(entry, x, y, randomize) {
-  const { textureManager } = getTextureInfo()
-  if (!textureManager) return 0
-  if (entry.type === 'land') {
-    return pickLandVariant(entry.variantGroup || 'passable', x, y, randomize)
-  }
-  const cache = textureManager.tileTextureCache?.[entry.type]
-  if (!cache?.length) return 0
-  if (!randomize) {
-    return textureManager.getTileVariation(entry.type, x, y)
-  }
-  return Math.floor(gameRandom() * cache.length)
-}
-
-function applyTile(tileX, tileY, entry, { randomize = false } = {}) {
+function applyTile(tileX, tileY, entry, _options = {}) {
   const grid = currentMapGrid()
   const row = grid[tileY]
   if (!row || !row[tileX]) return
@@ -179,12 +145,6 @@ function applyTile(tileX, tileY, entry, { randomize = false } = {}) {
     tile.seedCrystal = entry.type === 'seedCrystal'
     tile.seedCrystalDensity = tile.seedCrystal ? 1 : 0
     tile.noBuild = 0
-  }
-
-  const variant = pickVariant(entry, tileX, tileY, randomize)
-  const textureManager = textureManagerGetter ? textureManagerGetter() : null
-  if (textureManager) {
-    textureManager.tileVariationMap[`${entry.type}_${tileX}_${tileY}`] = variant
   }
 
   if (tileMutationNotifier) {
@@ -427,21 +387,8 @@ export function pipetteTile(tileX, tileY) {
   } else if (tile.seedCrystal) {
     matchedId = 'seedCrystal'
   } else if (tile.type === 'land') {
-    // Check variant to determine which land type
-    const textureManager = textureManagerGetter ? textureManagerGetter() : null
-    const grassInfo = textureManager?.grassTileMetadata
-    if (grassInfo) {
-      const variantKey = `land_${tileX}_${tileY}`
-      const variant = textureManager?.tileVariationMap?.[variantKey] ?? 0
-      const { passableCount, decorativeCount } = grassInfo
-      if (variant < passableCount) {
-        matchedId = 'grass'
-      } else if (variant < passableCount + decorativeCount) {
-        matchedId = 'decor'
-      } else {
-        matchedId = 'rugged'
-      }
-    }
+    // SSE land tags are intentionally not persisted in map tiles; the active
+    // sprite-sheet metadata determines the visual classification at render time.
   } else if (tile.type === 'street') {
     matchedId = 'street'
   } else if (tile.type === 'rock') {
@@ -688,32 +635,12 @@ export function renderMapEditorOverlay(ctx, scrollOffset) {
   const entry = getPaletteEntry()
   const { textureManager } = getTextureInfo()
 
-  const key = `${entry.id}:${x},${y}:${mapEditorState.randomMode}`
-  if (mapEditorState.previewKey !== key) {
-    mapEditorState.previewVariant = pickVariant(entry, x, y, mapEditorState.randomMode)
-    mapEditorState.previewKey = key
-  }
-
-  if (textureManager && textureManager.spriteImage) {
-    const variant = mapEditorState.previewVariant
-    const cache = textureManager.tileTextureCache?.[entry.type]
-    if (cache && cache[variant]) {
-      const info = cache[variant]
-      ctx.save()
-      ctx.globalAlpha = 0.7
-      ctx.drawImage(
-        textureManager.spriteImage,
-        info.x,
-        info.y,
-        info.width,
-        info.height,
-        screenX,
-        screenY,
-        TILE_SIZE + 1,
-        TILE_SIZE + 1
-      )
-      ctx.restore()
-    }
+  const integratedTile = textureManager?.getIntegratedTileForMapTile(entry.type, x, y, { mapGrid: currentMapGrid() })
+  if (integratedTile?.image && integratedTile?.rect) {
+    ctx.save()
+    ctx.globalAlpha = 0.7
+    ctx.drawImage(integratedTile.image, integratedTile.rect.x, integratedTile.rect.y, integratedTile.rect.width, integratedTile.rect.height, screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
+    ctx.restore()
   }
 
   if (mapEditorState.boxStart) {

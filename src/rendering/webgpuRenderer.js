@@ -319,7 +319,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
   }
 
   syncTextures() {
-    const primaryImage = this.textureManager?.spriteImage
+    const primaryImage = this.textureManager?.primarySpriteSheetImage
     if (!primaryImage) return false
     const secondaryImage = this.getSecondaryAtlasImage() || primaryImage
     let changed = false

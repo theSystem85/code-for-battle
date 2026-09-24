@@ -782,12 +782,7 @@ describe('mapEditor - Tile Painting', () => {
   it('notifies tile updates and schedules renders for painted tiles', () => {
     const notifier = vi.fn()
     const scheduler = vi.fn()
-    const textureManager = {
-      tileVariationMap: {},
-      tileTextureCache: { land: [1] },
-      grassTileMetadata: { passableCount: 1, decorativeCount: 0, impassableCount: 0 },
-      getTileVariation: vi.fn(() => 0)
-    }
+    const textureManager = {}
 
     mapEditor.registerMapEditorRendering(() => textureManager, notifier)
     mapEditor.setMapEditorRenderScheduler(scheduler)
@@ -803,7 +798,6 @@ describe('mapEditor - Tile Painting', () => {
 
     expect(notifier).toHaveBeenCalledWith(gameState.mapGrid, 1, 1)
     expect(scheduler).toHaveBeenCalled()
-    expect(textureManager.tileVariationMap).toHaveProperty('land_1_1')
 
     globalThis.requestAnimationFrame = originalRaf
   })

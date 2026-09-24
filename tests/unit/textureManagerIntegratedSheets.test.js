@@ -3,6 +3,35 @@ import { describe, it, expect, vi } from 'vitest'
 import { TextureManager } from '../../src/rendering/textureManager.js'
 
 describe('TextureManager integrated multi-sheet selection', () => {
+  it('selects land without recursion and only from enabled SSE sheets', async() => {
+    const manager = new TextureManager()
+    const enabledImage = { id: 'enabled-land-sheet' }
+    const loadImage = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue(enabledImage)
+
+    await manager.setIntegratedSpriteSheetConfig({
+      enabled: true,
+      biomeTag: 'grass',
+      sheets: [{
+        sheetPath: 'enabled.webp',
+        metadata: {
+          blendMode: 'alpha',
+          tiles: {
+            '0,0': { tags: ['grass', 'passable'], rect: { x: 0, y: 0, width: 64, height: 64 } }
+          }
+        }
+      }]
+    })
+
+    expect(() => manager.getLandClassificationTag(4, 7)).not.toThrow()
+    expect(manager.getIntegratedTileForMapTile('land', 4, 7)).toEqual(expect.objectContaining({
+      image: enabledImage,
+      sheetPath: 'enabled.webp',
+      tags: expect.arrayContaining(['grass', 'passable'])
+    }))
+    expect(loadImage).toHaveBeenCalledTimes(1)
+    expect(loadImage).toHaveBeenCalledWith('enabled.webp')
+  })
+
   it('combines tagged tiles from multiple selected sprite sheets', async() => {
     const manager = new TextureManager()
     const imageByPath = {

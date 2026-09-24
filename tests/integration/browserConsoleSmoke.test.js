@@ -33,26 +33,13 @@ const waitFor = async(predicate, timeoutMs, errorMessage) => {
   }
 }
 
-const createFetchMock = () => vi.fn(async(input) => {
-  const url = typeof input === 'string' ? input : input?.url ?? ''
+const createFetchMock = () => vi.fn(async(_input) => {
   const baseResponse = {
     ok: true,
     status: 200,
     statusText: 'OK',
     arrayBuffer: async() => new ArrayBuffer(0),
     text: async() => ''
-  }
-
-  if (url.includes('grass_tiles.json')) {
-    return {
-      ...baseResponse,
-      json: async() => ({
-        passablePaths: [],
-        decorativePaths: [],
-        impassablePaths: [],
-        metadata: { generatedAt: 'smoke-test' }
-      })
-    }
   }
 
   return {

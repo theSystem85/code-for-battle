@@ -1783,28 +1783,6 @@ export class MapRenderer {
       return
     }
 
-    if (useTexture && this.textureManager.tileTextureCache[type]) {
-      const cache = this.textureManager.tileTextureCache[type]
-      if (cache && cache.length) {
-        const idx = this.textureManager.getTileVariation(type, tileX, tileY)
-        if (idx >= 0 && idx < cache.length) {
-          const info = cache[idx]
-          ctx.drawImage(
-            this.textureManager.spriteImage,
-            info.x,
-            info.y,
-            info.width,
-            info.height,
-            screenX,
-            screenY,
-            TILE_SIZE + 1,
-            TILE_SIZE + 1
-          )
-          return
-        }
-      }
-    }
-
     ctx.fillStyle = TILE_COLORS[type]
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
@@ -1939,26 +1917,6 @@ export class MapRenderer {
       return
     }
 
-    const cache = this.textureManager.tileTextureCache.ore
-    if (useTexture && cache && cache.length) {
-      const idx = Math.min(cache.length - 1, Math.max(0, normalizedDensity - 1))
-      if (idx >= 0 && idx < cache.length) {
-        const info = cache[idx]
-        ctx.drawImage(
-          this.textureManager.spriteImage,
-          info.x,
-          info.y,
-          info.width,
-          info.height,
-          screenX,
-          screenY,
-          TILE_SIZE + 1,
-          TILE_SIZE + 1
-        )
-        return
-      }
-    }
-
     ctx.fillStyle = TILE_COLORS.ore
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
@@ -1981,26 +1939,6 @@ export class MapRenderer {
     if (integratedTile?.rect && integratedTile?.image) {
       this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
       return
-    }
-
-    const cache = this.textureManager.tileTextureCache.seedCrystal
-    if (useTexture && cache && cache.length) {
-      const idx = this.textureManager.getTileVariation('seedCrystal', tileX, tileY)
-      if (idx >= 0 && idx < cache.length) {
-        const info = cache[idx]
-        ctx.drawImage(
-          this.textureManager.spriteImage,
-          info.x,
-          info.y,
-          info.width,
-          info.height,
-          screenX,
-          screenY,
-          TILE_SIZE + 1,
-          TILE_SIZE + 1
-        )
-        return
-      }
     }
 
     ctx.fillStyle = TILE_COLORS.seedCrystal
@@ -2250,51 +2188,16 @@ export class MapRenderer {
           ? this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y, { mapGrid })
           : this.textureManager.getIntegratedTileForMapTile('land', sourceCoord.x, sourceCoord.y))
         : null
-      if (!this.drawIntegratedTileImage(ctx, integratedLandTile, drawX, drawY) && useTexture) {
-        const idx = this.textureManager.getTileVariation(type, sourceCoord.x, sourceCoord.y)
-        if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
-          const info = this.textureManager.tileTextureCache[type][idx]
-          ctx.drawImage(
-            this.textureManager.spriteImage,
-            info.x,
-            info.y,
-            info.width,
-            info.height,
-            drawX,
-            drawY,
-            drawSize,
-            drawSize
-          )
-        } else {
-          ctx.fillStyle = TILE_COLORS[type]
-          ctx.fill()
-        }
-      } else if (!useTexture && !integratedLandTile) {
-        ctx.fillStyle = TILE_COLORS[type]
-        ctx.fill()
-      }
-    } else if (useTexture) {
-      const idx = this.textureManager.getTileVariation(type, tileX, tileY)
-      if (idx >= 0 && idx < this.textureManager.tileTextureCache[type].length) {
-        const info = this.textureManager.tileTextureCache[type][idx]
-        ctx.drawImage(
-          this.textureManager.spriteImage,
-          info.x,
-          info.y,
-          info.width,
-          info.height,
-          drawX,
-          drawY,
-          drawSize,
-          drawSize
-        )
-      } else {
+      if (!this.drawIntegratedTileImage(ctx, integratedLandTile, drawX, drawY)) {
         ctx.fillStyle = TILE_COLORS[type]
         ctx.fill()
       }
     } else {
-      ctx.fillStyle = TILE_COLORS[type]
-      ctx.fill()
+      const integratedTile = this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
+      if (!this.drawIntegratedTileImage(ctx, integratedTile, drawX, drawY)) {
+        ctx.fillStyle = TILE_COLORS[type]
+        ctx.fill()
+      }
     }
     ctx.restore()
   }
@@ -2478,7 +2381,7 @@ export class MapRenderer {
       return false
     }
 
-    return integratedTile.image !== this.textureManager.spriteImage
+    return integratedTile.image !== this.textureManager.primarySpriteSheetImage
   }
 
   render(ctx, mapGrid, scrollOffset, gameCanvas, gameState, occupancyMap = null, options = {}) {

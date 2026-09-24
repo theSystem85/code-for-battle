@@ -331,29 +331,6 @@ export const TILE_COLORS = {
   building: 'transparent' // Buildings should be transparent so background shows through
 }
 
-// Image paths for tile types
-export const TILE_IMAGES = {
-  land: {
-    // Use programmatic discovery for grass tiles
-    useGrassTileDiscovery: true
-  },
-  water: {
-    animated: true
-  },
-  rock: {
-    paths: ['images/map/rock_on_grass01', 'images/map/rock01', 'images/map/rock02', 'images/map/rock03', 'images/map/rock04', 'images/map/rock05']
-  },
-  street: {
-    paths: ['images/map/street01']
-  },
-  ore: {
-    paths: ['images/map/ore01', 'images/map/ore02', 'images/map/ore03', 'images/map/ore04']
-  },
-  seedCrystal: {
-    paths: ['images/map/ore1_red']
-  }
-}
-
 const GRAPHICS_SETTINGS_STORAGE_KEY = 'rts_graphics_settings'
 
 function clampNumber(value, min, max, fallback) {
@@ -477,20 +454,11 @@ export function setWaterEffectZoom(value) {
 
 loadGraphicsSettingsFromIndexedDb()
 
-// Sprite sheet and mapping for map tiles
-export const TILE_SPRITE_SHEET = 'images/map/map_sprites.webp'
-export const TILE_SPRITE_MAP = 'images/map/map_sprites.json'
-
 // Enable/disable texture usage (for performance testing/fallback)
 export const USE_TEXTURES = true
 
 // Enable/disable tank image-based rendering (T key to toggle during gameplay)
 export const USE_TANK_IMAGES = true
-
-// Grass tile ratio configuration (higher numbers = rarer)
-// 1 out of X tiles will be decorative/impassable
-export const GRASS_DECORATIVE_RATIO = 33  // 1 in x tiles will be decorative
-export const GRASS_IMPASSABLE_RATIO = 50  // 1 in x tiles will be impassable
 
 export const INERTIA_DECAY = 0.983  // Increased from 0.95 to make inertia 3x longer
 export let INERTIA_STOP_THRESHOLD = 1  // Velocity magnitude below this stops inertia entirely
@@ -1670,19 +1638,14 @@ const EXPORTED_CONFIG_VARIABLES = [
   'HARVESTER_UNLOAD_TIME',
   'TANKER_SUPPLY_CAPACITY',
   'TILE_COLORS',
-  'TILE_IMAGES',
   'USE_PROCEDURAL_WATER_RENDERING',
   'WATER_EFFECT_TONE',
   'WATER_EFFECT_SATURATION',
   'WATER_EFFECT_ZOOM',
   'MOBILE_CANVAS_PIXEL_RATIO_CAP',
   'RENDERER_BACKEND',
-  'TILE_SPRITE_SHEET',
-  'TILE_SPRITE_MAP',
   'USE_TEXTURES',
   'USE_TANK_IMAGES',
-  'GRASS_DECORATIVE_RATIO',
-  'GRASS_IMPASSABLE_RATIO',
   'INERTIA_DECAY',
   'INERTIA_STOP_THRESHOLD',
   'WRECK_IMPACT_FORCE_MULTIPLIER',
