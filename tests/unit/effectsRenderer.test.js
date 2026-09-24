@@ -156,4 +156,63 @@ describe('EffectsRenderer', () => {
     expect(ctx.arc).not.toHaveBeenCalledWith(50, 60, 7.25, 0, Math.PI * 2)
     expect(ctx.arc).toHaveBeenCalledWith(80, 90, expect.any(Number), 0, Math.PI * 2)
   })
+
+  describe('renderDust', () => {
+    it('does not arc a negative radius when sweep dust was stamped ahead of the simulation clock', () => {
+      const renderer = new EffectsRenderer()
+      const ctx = {
+        canvas: { width: 200, height: 200 },
+        save: vi.fn(),
+        restore: vi.fn(),
+        beginPath: vi.fn(),
+        arc: vi.fn(),
+        fill: vi.fn()
+      }
+      const dust = {
+        x: 40,
+        y: 50,
+        startTime: 11661.2375,
+        lifetime: 500,
+        size: 8,
+        alpha: 1,
+        currentSize: -85.2899,
+        color: '#D2B48C'
+      }
+
+      expect(() => renderer.renderDust(ctx, {
+        simulationTime: 0,
+        dustParticles: [dust]
+      }, { x: 0, y: 0 })).not.toThrow()
+
+      expect(ctx.arc).toHaveBeenCalledWith(40, 50, 8, 0, Math.PI * 2)
+      const radii = ctx.arc.mock.calls.map(call => call[2])
+      expect(radii.every(radius => radius > 0)).toBe(true)
+    })
+
+    it('draws a growing positive radius for in-progress sweep dust', () => {
+      const renderer = new EffectsRenderer()
+      const ctx = {
+        canvas: { width: 200, height: 200 },
+        save: vi.fn(),
+        restore: vi.fn(),
+        beginPath: vi.fn(),
+        arc: vi.fn(),
+        fill: vi.fn()
+      }
+
+      renderer.renderDustParticles(ctx, {
+        simulationTime: 1250,
+        dustParticles: [{
+          x: 30,
+          y: 30,
+          startTime: 1000,
+          lifetime: 500,
+          size: 8,
+          color: '#D2B48C'
+        }]
+      }, { x: 0, y: 0 })
+
+      expect(ctx.arc).toHaveBeenCalledWith(30, 30, 10, 0, Math.PI * 2)
+    })
+  })
 })
