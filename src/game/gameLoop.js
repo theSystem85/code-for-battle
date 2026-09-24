@@ -16,6 +16,7 @@ import { isLockstepEnabled, processLockstepTick } from '../network/gameCommandSy
 import { LOCKSTEP_CONFIG, MS_PER_TICK } from '../network/lockstepManager.js'
 import { advanceSimulationTime, getFixedSimulationStepMs, getSimulationTime } from './time.js'
 import { performanceMonitor } from '../performance/performanceMonitor.js'
+import { FRAME_PHASE, framePhases } from '../performance/framePhases.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 
@@ -278,7 +279,9 @@ export class GameLoop {
         gameGpuCanvas
       )
 
+      framePhases.begin(FRAME_PHASE.minimap)
       minimapMs = this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas, this.forceRender || pauseStateChanged)
+      framePhases.end(FRAME_PHASE.minimap)
     }
 
     const renderEnd = performance.now()
@@ -304,6 +307,7 @@ export class GameLoop {
       schedulerDelayMs: this.lastSchedulerDelayMs
     })
     this.lastFrameTimestampForMonitor = now
+    framePhases.finishFrame(frameInterval)
 
     this.forceRender = false
 
@@ -464,7 +468,9 @@ export class GameLoop {
       gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas, gameGpuCanvas)
 
     // Render minimap with low energy effects if applicable
+    framePhases.begin(FRAME_PHASE.minimap)
     const minimapMs = this.renderMinimapIfDue(now, minimapCtx, minimapCanvas, gameCanvas)
+    framePhases.end(FRAME_PHASE.minimap)
     const renderEnd = performance.now()
 
     // Render FPS overlay on top of everything when game is running
@@ -485,6 +491,7 @@ export class GameLoop {
       schedulerDelayMs: this.lastSchedulerDelayMs
     })
     this.lastFrameTimestampForMonitor = now
+    framePhases.finishFrame(frameInterval)
     this.canvasManager.updateAdaptivePixelRatio?.(this.fpsDisplay.fps, now, this.hasActiveScrollActivity())
 
     this.forceRender = false

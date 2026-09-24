@@ -11,6 +11,7 @@ import {
 import { emitSmokeParticles } from './utils/smokeUtils.js'
 
 import { logPerformance } from './performanceUtils.js'
+import { FRAME_PHASE, framePhases } from './performance/framePhases.js'
 
 import { updateEnemyAI } from './enemy.js'
 import { cleanupDestroyedSelectedUnits, getUnitCommandsHandler } from './inputHandler.js'
@@ -87,6 +88,7 @@ const DESTRUCTION_FREEZE_SMOKE_COUNT = 3
 const DESTRUCTION_FREEZE_SMOKE_SHADE = 0.9
 
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
+  framePhases.begin(FRAME_PHASE.sim)
   try {
     const now = getSimulationTime(gameState)
     const occupancyMap = gameState.occupancyMap
@@ -424,9 +426,13 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         updateGuardBehavior(unit, mapGrid, occupancyMap, now)
       })
       updateNavalFleet(units, bullets, mapGrid, gameState, now, delta)
+      framePhases.begin(FRAME_PHASE.movement)
       updateUnitMovement(units, mapGrid, occupancyMap, gameState, now, factories)
       updateSpawnExit(units, factories, mapGrid, occupancyMap)
+      framePhases.end(FRAME_PHASE.movement)
+      framePhases.begin(FRAME_PHASE.combat)
       updateUnitCombat(units, bullets, mapGrid, gameState, now)
+      framePhases.end(FRAME_PHASE.combat)
       updateHarvesterLogic(units, mapGrid, occupancyMap, gameState, factories, now)
       updateWorkshopLogic(units, gameState.buildings, mapGrid, delta)
 
@@ -451,8 +457,9 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
         handleSelfRepair(unit, now)
       })
 
-      // Global pathfinding recalculation
+      framePhases.begin(FRAME_PHASE.pathfinding)
       updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState)
+      framePhases.end(FRAME_PHASE.pathfinding)
 
       // Bullet system updates
       updateBullets(bullets, units, factories, gameState, mapGrid)
@@ -484,8 +491,9 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       // Check for game end conditions after factory/building destruction
       checkGameEndConditions(factories, gameState)
 
-      // Enemy AI updates
+      framePhases.begin(FRAME_PHASE.ai)
       updateEnemyAI(units, factories, bullets, mapGrid, gameState)
+      framePhases.end(FRAME_PHASE.ai)
 
       // Update buildings under repair
       if (gameState.buildingsUnderRepair && gameState.buildingsUnderRepair.length > 0) {
@@ -623,8 +631,9 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
     updateSmokeParticles(gameState)
     updateDustParticles(gameState)
 
-    // Update fog of war visibility (visual, both need this)
+    framePhases.begin(FRAME_PHASE.fog)
     updateShadowOfWar(gameState, units, mapGrid, factories)
+    framePhases.end(FRAME_PHASE.fog)
 
     // Log status changes for units with logging enabled
     units.forEach(unit => {
@@ -640,6 +649,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
     console.error('Critical error in updateGame:', error)
     console.trace() // Add stack trace to see exactly where the error occurs
     // Don't allow the game to completely crash
+  } finally {
+    framePhases.end(FRAME_PHASE.sim)
   }
 }, false)
 

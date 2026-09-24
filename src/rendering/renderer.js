@@ -40,6 +40,7 @@ import {
   setRendererBackendFailureSummary
 } from '../config.js'
 import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
+import { FRAME_PHASE, framePhases } from '../performance/framePhases.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -540,8 +541,7 @@ export class Renderer {
     }
 
     const monitorTiming = performanceMonitor.recording
-    const renderStartedAt = monitorTiming ? performance.now() : 0
-    let terrainMs = 0
+    framePhases.begin(FRAME_PHASE.terrain)
     let entitiesMs = 0
     let effectsMs = 0
     let uiMs = 0
@@ -650,7 +650,8 @@ export class Renderer {
         gpuRenderedStreetTerrain: gpuRendered && !gpuWaterOnly && hasGpuStreetAtlas
       }
     )
-    if (monitorTiming) terrainMs = performance.now() - renderStartedAt
+    const terrainMs = framePhases.end(FRAME_PHASE.terrain)
+    framePhases.noteDrawCalls(frameDrawCalls)
 
     const activeGpuRenderer = gpuBackend === 'webgpu' ? this.webgpuRenderer : this.gpuRenderer
     gameState.renderStats = {
@@ -699,7 +700,7 @@ export class Renderer {
     this.buildingRenderer.collectVisibleBuildings(gameCtx, buildings, scrollOffset, visibleBuildings)
     this.buildingRenderer.collectVisibleBuildings(gameCtx, factories, scrollOffset, visibleFactories)
 
-    const entitiesStartedAt = monitorTiming ? performance.now() : 0
+    framePhases.begin(FRAME_PHASE.entities)
     const entityBasesSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_BASES)
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
@@ -713,9 +714,9 @@ export class Renderer {
     this.unitRenderer.renderBases(gameCtx, visibleGroundedUnits, scrollOffset, true)
     gameCtx.restore()
     renderProfiler.endSpan(entityBasesSpan)
-    if (monitorTiming) entitiesMs = performance.now() - entitiesStartedAt
+    entitiesMs += framePhases.end(FRAME_PHASE.entities)
 
-    const effectsStartedAt = monitorTiming ? performance.now() : 0
+    framePhases.begin(FRAME_PHASE.effects)
     this.effectsRenderer.render(gameCtx, bullets, gameState, units, scrollOffset)
 
     // Render mine indicators (skull overlays)
@@ -731,9 +732,9 @@ export class Renderer {
     if (gameState.mineFreeformPaint) {
       renderFreeformSweepPreview(gameCtx, gameState.mineFreeformPaint, scrollOffset)
     }
-    if (monitorTiming) effectsMs = performance.now() - effectsStartedAt
+    effectsMs = framePhases.end(FRAME_PHASE.effects)
 
-    const uiStartedAt = monitorTiming ? performance.now() : 0
+    framePhases.begin(FRAME_PHASE.ui)
     const hudSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.HUD)
     // Render movement target indicators (green triangles)
     this.movementTargetRenderer.render(gameCtx, units, scrollOffset)
@@ -751,6 +752,8 @@ export class Renderer {
     // Render harvester HUD overlay (if enabled)
     this.harvesterHUD.render(gameCtx, units, gameState, scrollOffset, frameEntityIndex)
 
+    uiMs += framePhases.end(FRAME_PHASE.ui)
+    framePhases.begin(FRAME_PHASE.entities)
     const entityOverlaysSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_OVERLAYS)
     this.buildingRenderer.renderOverlays(gameCtx, visibleBuildings, scrollOffset, true, frameEntityIndex)
     this.buildingRenderer.renderOverlays(gameCtx, visibleFactories, scrollOffset, true, frameEntityIndex)
@@ -761,12 +764,14 @@ export class Renderer {
     gameCtx.restore()
     this.unitRenderer.renderOverlays(gameCtx, visibleAirborneUnits, scrollOffset, frameEntityIndex, units, true)
     renderProfiler.endSpan(entityOverlaysSpan)
+    entitiesMs += framePhases.end(FRAME_PHASE.entities)
+    framePhases.begin(FRAME_PHASE.ui)
     this.buildingRenderer.renderHudHoverTooltip(gameCtx, buildings, scrollOffset, factories)
 
     this.uiRenderer.render(gameCtx, gameCanvas, gameState, selectionActive, selectionStart, selectionEnd, scrollOffset, factories, buildings, mapGrid, units)
     renderProfiler.endSpan(hudSpan)
+    uiMs += framePhases.end(FRAME_PHASE.ui)
     if (monitorTiming) {
-      uiMs = performance.now() - uiStartedAt
       performanceMonitor.recordRendererPhases({ terrainMs, entitiesMs, effectsMs, uiMs })
     }
   }

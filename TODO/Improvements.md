@@ -130,6 +130,9 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Performance
 
+- [ ] **Heavy-battle frame time (2026-09-24)** — Profile a deterministic multi-player battle (hundreds of units, projectiles, explosions, smoke, dust, fog) and cut the measured hot phases without dropping the WebGL fallback. The performance widget shows sim/move/combat/path/AI/fog/terrain/units/effects/UI/minimap average and p95, refreshed once per second.
+  - Spec: [Heavy-battle frame phases](../specs/072-heavy-battle-frame-phases.md)
+
 - [ ] **Mobile performance recovery plan (2026-05-24)** — evaluate and implement prioritized render-path improvements to move mobile back from ~10fps toward 60fps, starting with the most critical selected item after reviewing the plan.
   - Spec: [Mobile FPS regression after sprite-sheet routing + realtime bottleneck overlay](../specs/068-mobile-fps-regression-bottleneck-overlay.md)
 

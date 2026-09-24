@@ -4,6 +4,7 @@ import { notifyBenchmarkFrame } from '../benchmark/benchmarkTracker.js'
 import { getNetworkStats, isLockstepEnabled } from '../network/gameCommandSync.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
 import { formatVramInUse, formatVramLabel, VRAM_LIMIT_TITLE } from '../rendering/gpuMemory.js'
+import { framePhases } from '../performance/framePhases.js'
 
 export class FPSDisplay {
   constructor() {
@@ -45,6 +46,12 @@ export class FPSDisplay {
     this.frameBottleneckEl = document.getElementById('frameBottleneck')
     this.frameCpuUpdateEl = document.getElementById('frameCpuUpdate')
     this.frameCpuRenderEl = document.getElementById('frameCpuRender')
+    this.framePhaseSimEl = document.getElementById('framePhaseSim')
+    this.framePhaseSimDetailEl = document.getElementById('framePhaseSimDetail')
+    this.framePhaseTerrainEl = document.getElementById('framePhaseTerrain')
+    this.framePhaseEntitiesEl = document.getElementById('framePhaseEntities')
+    this.framePhaseEffectsEl = document.getElementById('framePhaseEffects')
+    this.framePhaseUiEl = document.getElementById('framePhaseUi')
     this.frameRendererEl = document.getElementById('frameRenderer')
     this.frameGpuAdapterEl = document.getElementById('frameGpuAdapter')
     this.frameResolutionEl = document.getElementById('frameResolution')
@@ -141,6 +148,35 @@ export class FPSDisplay {
     this.updatePhaseSamples.push(updateMs)
     this.renderPhaseSamples.push(renderMs)
     this.idlePhaseSamples.push(idleMs)
+  }
+
+  formatPhase(phase) {
+    if (!phase?.samples) return '--'
+    return `${phase.averageMs.toFixed(1)}/${phase.p95Ms.toFixed(1)}`
+  }
+
+  updateFramePhaseRows() {
+    const snapshot = framePhases.snapshot()
+    const phases = snapshot.phases || {}
+    if (this.framePhaseSimEl) {
+      this.framePhaseSimEl.textContent = `Sim: ${this.formatPhase(phases.sim)} ms`
+    }
+    if (this.framePhaseSimDetailEl) {
+      this.framePhaseSimDetailEl.textContent =
+        `Move ${this.formatPhase(phases.movement)} · Combat ${this.formatPhase(phases.combat)} · Path ${this.formatPhase(phases.pathfinding)} · AI ${this.formatPhase(phases.ai)} · Fog ${this.formatPhase(phases.fog)}`
+    }
+    if (this.framePhaseTerrainEl) {
+      this.framePhaseTerrainEl.textContent = `Terrain: ${this.formatPhase(phases.terrain)} ms`
+    }
+    if (this.framePhaseEntitiesEl) {
+      this.framePhaseEntitiesEl.textContent = `Units: ${this.formatPhase(phases.entities)} ms`
+    }
+    if (this.framePhaseEffectsEl) {
+      this.framePhaseEffectsEl.textContent = `Effects: ${this.formatPhase(phases.effects)} ms`
+    }
+    if (this.framePhaseUiEl) {
+      this.framePhaseUiEl.textContent = `UI ${this.formatPhase(phases.ui)} · Minimap ${this.formatPhase(phases.minimap)}`
+    }
   }
 
   setRowVisible(element, visible) {
@@ -242,6 +278,7 @@ export class FPSDisplay {
       if (this.frameCpuRenderEl) {
         this.frameCpuRenderEl.textContent = `CPU Render: ${renderAvg.toFixed(1)} ms`
       }
+      this.updateFramePhaseRows()
       this.updateRendererRows(gameState.renderStats?.gpuOverlay)
       if (this.frameUnattributedWaitEl) {
         this.frameUnattributedWaitEl.textContent = `Unattributed wait: ${idleAvg.toFixed(1)} ms`
