@@ -344,6 +344,7 @@ let RENDERER_BACKEND_CHOICE = 'auto'
 let ACTIVE_RENDERER_BACKEND = null
 let probeGeneration = 0
 let rendererBackendProbePending = false
+let rendererBackendFailureSummary = null
 let rendererBackendResolvePromise = Promise.resolve('webgl')
 
 function clampNumber(value, min, max, fallback) {
@@ -453,12 +454,24 @@ export function getActiveRendererBackend() {
   return ACTIVE_RENDERER_BACKEND
 }
 
+function writeRendererBackendStatus() {
+  const status = globalThis.document?.getElementById?.('settingsRendererBackendStatus')
+  if (status) status.textContent = getRendererBackendStatusText()
+}
+
+export function setRendererBackendFailureSummary(summary) {
+  const next = summary ? String(summary) : null
+  if (rendererBackendFailureSummary === next) return false
+  rendererBackendFailureSummary = next
+  writeRendererBackendStatus()
+  return true
+}
+
 export function noteActiveRendererBackend(backend) {
   if (backend !== 'webgl' && backend !== 'webgpu') return ACTIVE_RENDERER_BACKEND
   if (ACTIVE_RENDERER_BACKEND === backend) return ACTIVE_RENDERER_BACKEND
   ACTIVE_RENDERER_BACKEND = backend
-  const status = globalThis.document?.getElementById?.('settingsRendererBackendStatus')
-  if (status) status.textContent = getRendererBackendStatusText()
+  writeRendererBackendStatus()
   return ACTIVE_RENDERER_BACKEND
 }
 
@@ -469,7 +482,8 @@ export function getRendererBackendStatusText() {
   return describeRendererBackendStatus({
     choice: RENDERER_BACKEND_CHOICE,
     requested: RENDERER_BACKEND,
-    active: ACTIVE_RENDERER_BACKEND
+    active: ACTIVE_RENDERER_BACKEND,
+    failureSummary: rendererBackendFailureSummary
   })
 }
 
@@ -480,6 +494,7 @@ export function whenRendererBackendResolved() {
 export function resetRendererBackendStateForTests() {
   probeGeneration += 1
   rendererBackendProbePending = false
+  rendererBackendFailureSummary = null
   RENDERER_BACKEND_CHOICE = 'auto'
   RENDERER_BACKEND = 'webgl'
   ACTIVE_RENDERER_BACKEND = null

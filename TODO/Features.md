@@ -165,6 +165,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Rendering and WebGPU
 
+- [x] **WebGPU terrain shader and performance overlay (2026-09-24)** — Sample both atlases before any per-fragment branch so `textureSample` stays in uniform control flow. When WebGPU still fails, log one `[WebGPU]` validation line and show a short reason in settings. The performance widget shows the active backend, fallback reason, adapter, canvas resolution, draw calls, timestamp-query GPU time when available, `maxBufferSize` as VRAM, and tracked buffer/texture bytes in use.
+  - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
+
 - [x] **WebGPU default terrain renderer (2026-09-24)** — Fresh profiles and legacy implicit `webgl` graphics records use WebGPU when an adapter and device can be created, and WebGL otherwise. An explicit WebGL or WebGPU settings choice is stored as `rendererBackendChoice` and kept. Legacy stored `webgpu` stays explicit because that value was never the old default.
   - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
 

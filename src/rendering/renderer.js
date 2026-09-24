@@ -36,8 +36,10 @@ import {
   TILE_SIZE,
   USE_PROCEDURAL_WATER_RENDERING,
   getRendererBackendChoice,
-  noteActiveRendererBackend
+  noteActiveRendererBackend,
+  setRendererBackendFailureSummary
 } from '../config.js'
+import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -64,6 +66,19 @@ export class Renderer {
     this.wreckRenderer = new WreckRenderer()
     this.gpuRenderer = null
     this.webgpuRenderer = null
+    this.gpuOverlay = {
+      backend: 'cpu',
+      fallbackReason: null,
+      bytesInUse: null,
+      maxBufferSize: null,
+      vendor: '',
+      architecture: '',
+      drawCalls: 0,
+      canvasWidth: 0,
+      canvasHeight: 0,
+      devicePixelRatio: 1,
+      gpuMilliseconds: null
+    }
     // renderGame runs once per animation frame. These containers are mutated in
     // place so a 200-entity scene does not allocate six replacement lists and
     // a target index on every one of the 75 expected frames per second.
@@ -77,6 +92,27 @@ export class Renderer {
     }
     this.frameEntityIndex = new Map()
     this.attackQueueBuffer = []
+  }
+
+  publishGpuOverlay(gpuBackend, frameDrawCalls, wantsWebGPU, webgpuCanvas, gpuCanvas) {
+    const overlay = this.gpuOverlay
+    const webgpu = this.webgpuRenderer
+    const activeCanvas = gpuBackend === 'webgpu' ? webgpuCanvas : gpuCanvas
+    const activeRenderer = gpuBackend === 'webgpu' ? webgpu : this.gpuRenderer
+    const timing = activeRenderer?.gpuTiming
+    overlay.backend = gpuBackend
+    overlay.fallbackReason = gpuBackend !== 'webgpu' && wantsWebGPU && webgpu?.status === 'failed'
+      ? summarizeWebGPUFailure(webgpu.failureReason)
+      : null
+    overlay.bytesInUse = gpuBackend === 'webgpu' ? webgpu.gpuMemory.bytesInUse : null
+    overlay.maxBufferSize = Number.isFinite(webgpu?.maxBufferSize) ? webgpu.maxBufferSize : null
+    overlay.vendor = webgpu?.adapterInfo?.vendor || ''
+    overlay.architecture = webgpu?.adapterInfo?.architecture || ''
+    overlay.drawCalls = frameDrawCalls
+    overlay.canvasWidth = activeCanvas?.width || 0
+    overlay.canvasHeight = activeCanvas?.height || 0
+    overlay.devicePixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    overlay.gpuMilliseconds = timing?.available && Number.isFinite(timing.milliseconds) ? timing.milliseconds : null
   }
 
   partitionUnitsByRenderLayer(units) {
@@ -535,6 +571,7 @@ export class Renderer {
     )
 
     let gpuBackend = 'cpu'
+    let frameDrawCalls = 0
     const wantsWebGPU = RENDERER_BACKEND === 'webgpu' && Boolean(webgpuCanvas) && typeof navigator !== 'undefined' && Boolean(navigator.gpu)
     if (shouldUseGpuTerrain && wantsWebGPU) {
       if (!this.webgpuRenderer) {
@@ -542,8 +579,12 @@ export class Renderer {
       } else {
         this.webgpuRenderer.setMapRenderer(this.mapRenderer)
       }
+      const drawsBefore = this.webgpuRenderer.stats?.drawCalls || 0
       gpuRendered = this.webgpuRenderer.render(mapGrid, scrollOffset, webgpuCanvas, { waterOnly: gpuWaterOnly })
-      if (gpuRendered) gpuBackend = 'webgpu'
+      if (gpuRendered) {
+        gpuBackend = 'webgpu'
+        frameDrawCalls = (this.webgpuRenderer.stats?.drawCalls || 0) - drawsBefore
+      }
     }
 
     if (shouldUseGpuTerrain && !gpuRendered) {
@@ -553,8 +594,12 @@ export class Renderer {
         this.gpuRenderer.setContext(gpuContext)
         this.gpuRenderer.setMapRenderer(this.mapRenderer)
       }
+      const drawsBefore = this.gpuRenderer.stats?.drawCalls || 0
       gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas, { waterOnly: gpuWaterOnly })
-      if (gpuRendered) gpuBackend = 'webgl'
+      if (gpuRendered) {
+        gpuBackend = 'webgl'
+        frameDrawCalls = (this.gpuRenderer.stats?.drawCalls || 0) - drawsBefore
+      }
     } else if (gpuContext && gpuCanvas) {
       gpuContext.viewport(0, 0, gpuCanvas.width, gpuCanvas.height)
       gpuContext.clearColor(0, 0, 0, 0)
@@ -564,12 +609,16 @@ export class Renderer {
     if (webgpuCanvas?.style) webgpuCanvas.style.display = gpuBackend === 'webgpu' ? 'block' : 'none'
     if (gpuCanvas?.style) gpuCanvas.style.display = gpuBackend === 'webgpu' ? 'none' : 'block'
     if (gpuBackend === 'webgpu') {
+      setRendererBackendFailureSummary(null)
       noteActiveRendererBackend('webgpu')
     } else if (wantsWebGPU && this.webgpuRenderer?.status === 'failed') {
+      setRendererBackendFailureSummary(summarizeWebGPUFailure(this.webgpuRenderer.failureReason))
       noteActiveRendererBackend('webgl')
     } else if (!wantsWebGPU && RENDERER_BACKEND !== 'webgpu') {
+      setRendererBackendFailureSummary(null)
       noteActiveRendererBackend('webgl')
     }
+    this.publishGpuOverlay(gpuBackend, frameDrawCalls, wantsWebGPU, webgpuCanvas, gpuCanvas)
 
     // Build occupancy map for visualization if needed
     let occupancyMap = null
@@ -595,9 +644,12 @@ export class Renderer {
     )
     if (monitorTiming) terrainMs = performance.now() - renderStartedAt
 
+    const activeGpuRenderer = gpuBackend === 'webgpu' ? this.webgpuRenderer : this.gpuRenderer
     gameState.renderStats = {
       ...(gameState.renderStats || {}),
       mapChunks: this.mapRenderer.getLastFrameChunkStats?.() || null,
+      gpuTiming: activeGpuRenderer?.gpuTiming || null,
+      gpuOverlay: this.gpuOverlay,
       gpuTerrain: {
         rendered: gpuRendered,
         backend: gpuBackend,

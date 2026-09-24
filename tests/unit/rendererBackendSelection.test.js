@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getStoredItem, resetGameStorageForTests } from '../../src/storage/indexedDbStorage.js'
 import {
   describeRendererBackendStatus,
+  summarizeWebGPUFailure,
   migrateRendererBackendChoice,
   probeWebGPUAvailability,
   resolveRequestedRendererBackend
@@ -15,6 +16,7 @@ import {
   loadGraphicsSettingsFromIndexedDb,
   noteActiveRendererBackend,
   resetRendererBackendStateForTests,
+  setRendererBackendFailureSummary,
   resolveRendererBackendAvailability,
   setRendererBackend,
   setWaterEffectTone,
@@ -90,6 +92,26 @@ describe('renderer backend selection', () => {
       expect(describeRendererBackendStatus({ choice: 'webgl', requested: 'webgl', active: 'webgl' })).toBe('Using WebGL.')
       expect(describeRendererBackendStatus({ choice: 'webgpu', requested: 'webgl', active: 'webgl' })).toBe('WebGPU did not initialize. Using WebGL.')
       expect(describeRendererBackendStatus({ choice: 'webgpu', requested: 'webgpu', active: 'webgl' })).toBe('WebGPU did not initialize. Using WebGL.')
+      expect(describeRendererBackendStatus({
+        choice: 'webgpu',
+        requested: 'webgpu',
+        active: 'webgl',
+        failureSummary: 'shader validation'
+      })).toBe('WebGPU failed: shader validation – using WebGL')
+    })
+  })
+
+  describe('summarizeWebGPUFailure', () => {
+    it('maps shader, pipeline, adapter, and device failures to a short settings reason', () => {
+      expect(summarizeWebGPUFailure(
+        "WebGPU pipeline validation failed: Error while parsing WGSL: :91:45 error: 'textureSample' must only be called from uniform control flow"
+      )).toBe('shader validation')
+      expect(summarizeWebGPUFailure('WebGPU pipeline validation failed: invalid blend')).toBe('pipeline validation')
+      expect(summarizeWebGPUFailure('No WebGPU adapter is available')).toBe('no adapter')
+      expect(summarizeWebGPUFailure('device request failed')).toBe('device request failed')
+      expect(summarizeWebGPUFailure('Could not create a WebGPU canvas context')).toBe('canvas context failed')
+      expect(summarizeWebGPUFailure('WebGPU device lost')).toBe('device lost')
+      expect(summarizeWebGPUFailure('')).toBe('initialization failed')
     })
   })
 
@@ -257,6 +279,16 @@ describe('renderer backend selection', () => {
       noteActiveRendererBackend('webgl')
       expect(document.getElementById('settingsRendererBackendStatus').textContent).toBe('WebGPU did not initialize. Using WebGL.')
       expect(getRendererBackendChoice()).toBe('auto')
+    })
+
+    it('shows the short WebGPU failure reason in the settings status', async() => {
+      document.body.innerHTML = '<span id="settingsRendererBackendStatus"></span>'
+      await resolveRendererBackendAvailability(async() => true)
+      setRendererBackendFailureSummary('shader validation')
+      noteActiveRendererBackend('webgl')
+      expect(document.getElementById('settingsRendererBackendStatus').textContent)
+        .toBe('WebGPU failed: shader validation – using WebGL')
+      expect(getRendererBackendStatusText()).toBe('WebGPU failed: shader validation – using WebGL')
     })
   })
 })
