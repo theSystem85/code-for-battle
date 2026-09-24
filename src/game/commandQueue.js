@@ -1,8 +1,10 @@
-import { startMineDeployment } from './mineLayerBehavior.js'
+import { startMineDeployment, isMinePlantTileBlocked } from './mineLayerBehavior.js'
 import { safeSweeperDetonation, getMineAtTile } from './mineSystem.js'
 import { activateSweepingMode } from './mineSweeperBehavior.js'
 import { TILE_SIZE } from '../config.js'
 import { playSound } from '../sound.js'
+import { gameState } from '../gameState.js'
+import { getSimulationTime } from './time.js'
 
 export function processCommandQueues(units, mapGrid, unitCommands, buildings = []) {
   units.forEach(unit => {
@@ -91,6 +93,17 @@ function isActionComplete(unit, action, units = [], buildings = [], _mapGrid, _u
         return true
       }
 
+      // Occupied, mined, or impassable tiles are not plant spots. Drop the order
+      // immediately so the layer moves on instead of waiting or deploying there.
+      if (isMinePlantTileBlocked(action.x, action.y, unit, {
+        mapGrid: _mapGrid,
+        buildings,
+        units
+      })) {
+        cancelMinePlantAttempt(unit)
+        return true
+      }
+
       const unitTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
       const unitTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
       const distanceToTarget = Math.hypot(unitTileX - action.x, unitTileY - action.y)
@@ -98,7 +111,7 @@ function isActionComplete(unit, action, units = [], buildings = [], _mapGrid, _u
       const movementComplete = (!unit.path || unit.path.length === 0) && !unit.moveTarget
 
       if ((atLocation || movementComplete) && !unit.deployingMine) {
-        startMineDeployment(unit, action.x, action.y, performance.now())
+        startMineDeployment(unit, action.x, action.y, getSimulationTime(gameState))
         return false
       }
 
@@ -162,6 +175,14 @@ function handleCommandCompletion(unit, action) {
 function clearSweepingOverride(unit) {
   if (!unit) return
   unit.sweepingOverrideMovement = false
+}
+
+function cancelMinePlantAttempt(unit) {
+  if (!unit) return
+  unit.deployingMine = false
+  unit.deployStartTime = null
+  unit.path = []
+  unit.moveTarget = null
 }
 
 function notifyMineFieldDeployed(unit, fieldId) {

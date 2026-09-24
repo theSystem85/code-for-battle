@@ -4,11 +4,16 @@ import { startMineDeployment } from '../../src/game/mineLayerBehavior.js'
 import { safeSweeperDetonation, getMineAtTile } from '../../src/game/mineSystem.js'
 import { activateSweepingMode } from '../../src/game/mineSweeperBehavior.js'
 import { playSound } from '../../src/sound.js'
+import { gameState } from '../../src/gameState.js'
 
 // Mock all dependencies
-vi.mock('../../src/game/mineLayerBehavior.js', () => ({
-  startMineDeployment: vi.fn()
-}))
+vi.mock('../../src/game/mineLayerBehavior.js', async() => {
+  const actual = await vi.importActual('../../src/game/mineLayerBehavior.js')
+  return {
+    ...actual,
+    startMineDeployment: vi.fn()
+  }
+})
 
 vi.mock('../../src/game/mineSystem.js', () => ({
   safeSweeperDetonation: vi.fn(),
@@ -19,9 +24,13 @@ vi.mock('../../src/game/mineSweeperBehavior.js', () => ({
   activateSweepingMode: vi.fn()
 }))
 
-vi.mock('../../src/config.js', () => ({
-  TILE_SIZE: 32
-}))
+vi.mock('../../src/config.js', async() => {
+  const actual = await vi.importActual('../../src/config.js')
+  return {
+    ...actual,
+    TILE_SIZE: 32
+  }
+})
 
 vi.mock('../../src/sound.js', () => ({
   playSound: vi.fn()
@@ -32,6 +41,7 @@ describe('commandQueue', () => {
   let mapGrid
 
   beforeEach(() => {
+    vi.clearAllMocks()
     mockUnitCommands = {
       handleMovementCommand: vi.fn(),
       handleAttackCommand: vi.fn(),
@@ -41,6 +51,10 @@ describe('commandQueue', () => {
     mapGrid = Array.from({ length: 10 }, () =>
       Array.from({ length: 10 }, () => ({ type: 'grass' }))
     )
+    gameState.simulationTime = 0
+    gameState.mines = []
+    gameState.buildings = []
+    gameState.unitWrecks = []
   })
 
   describe('processCommandQueues', () => {
@@ -309,7 +323,8 @@ describe('commandQueue', () => {
     })
 
     it('starts mine deployment when at destination', () => {
-      vi.spyOn(performance, 'now').mockReturnValue(1234)
+      vi.spyOn(performance, 'now').mockReturnValue(999999)
+      gameState.simulationTime = 1234
       const units = [
         {
           id: 'unit1',
@@ -327,6 +342,83 @@ describe('commandQueue', () => {
       processCommandQueues(units, mapGrid, mockUnitCommands)
 
       expect(startMineDeployment).toHaveBeenCalledWith(units[0], 2, 3, 1234)
+    })
+
+    it('skips an occupied plant tile and continues to the next order', () => {
+      const blocker = {
+        id: 'tank1',
+        type: 'tank',
+        health: 100,
+        x: 2 * 32,
+        y: 3 * 32
+      }
+      const miner = {
+        id: 'unit1',
+        type: 'mineLayer',
+        health: 30,
+        deployingMine: true,
+        deployStartTime: 50,
+        x: 0,
+        y: 0,
+        path: [{ x: 2, y: 3 }],
+        moveTarget: { x: 2, y: 3 },
+        commandQueue: [{ type: 'deployMine', x: 4, y: 4 }],
+        currentCommand: { type: 'deployMine', x: 2, y: 3 }
+      }
+
+      processCommandQueues([miner, blocker], mapGrid, mockUnitCommands, [])
+
+      expect(startMineDeployment).not.toHaveBeenCalled()
+      expect(miner.deployingMine).toBe(false)
+      expect(miner.deployStartTime).toBeNull()
+      expect(miner.path).toEqual([])
+      expect(miner.moveTarget).toBeNull()
+      expect(miner.currentCommand).toBeNull()
+
+      processCommandQueues([miner, blocker], mapGrid, mockUnitCommands, [])
+
+      expect(miner.currentCommand).toEqual({ type: 'deployMine', x: 4, y: 4 })
+      expect(mockUnitCommands.handleMovementCommand).toHaveBeenCalled()
+    })
+
+    it('does not treat the mine layer itself as occupying its plant tile', () => {
+      gameState.simulationTime = 2500
+      const miner = {
+        id: 'unit1',
+        type: 'mineLayer',
+        health: 30,
+        deployingMine: false,
+        x: 4 * 32,
+        y: 4 * 32,
+        path: [],
+        moveTarget: null,
+        commandQueue: [],
+        currentCommand: { type: 'deployMine', x: 4, y: 4 }
+      }
+
+      processCommandQueues([miner], mapGrid, mockUnitCommands, [])
+
+      expect(startMineDeployment).toHaveBeenCalledWith(miner, 4, 4, 2500)
+    })
+
+    it('skips a tile blocked by a building without starting deployment', () => {
+      const miner = {
+        id: 'unit1',
+        type: 'mineLayer',
+        health: 30,
+        x: 0,
+        y: 0,
+        path: [{ x: 1, y: 1 }],
+        moveTarget: { x: 1, y: 1 },
+        commandQueue: [],
+        currentCommand: { type: 'deployMine', x: 1, y: 1 }
+      }
+      const buildings = [{ type: 'vehicleFactory', health: 100, x: 1, y: 1, width: 3, height: 3 }]
+
+      processCommandQueues([miner], mapGrid, mockUnitCommands, buildings)
+
+      expect(startMineDeployment).not.toHaveBeenCalled()
+      expect(miner.currentCommand).toBeNull()
     })
 
     it('clears minefield tracking when deployment completes', () => {

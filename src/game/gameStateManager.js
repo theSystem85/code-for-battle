@@ -40,6 +40,7 @@ import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
 import { getNavalHullDimensions } from '../utils/navalUtils.js'
 import { getSimulationTime } from './time.js'
+import { computeSweepDustRadius, getDustEffectNow } from './mineSweeperBehavior.js'
 import { prewarmDestructionExplosionTexture, spawnDestructionExplosion } from './spriteSheetEffects.js'
 import {
   beginMapMutationTransaction,
@@ -436,33 +437,32 @@ export function updateSmokeParticles(gameState) {
  * @param {Object} gameState - Game state object
  */
 export function updateDustParticles(gameState) {
-  const now = performance.now()
+  // Same clock as generateSweepDust (simulation time). Wall-clock aging made
+  // progress negative whenever simulation time led performance.now(), and
+  // currentSize = size * (1 + progress * 0.5) became a negative arc radius.
+  const now = getDustEffectNow(gameState)
 
   if (!gameState.dustParticles) return
 
   for (let i = gameState.dustParticles.length - 1; i >= 0; i--) {
     const p = gameState.dustParticles[i]
-
-    if (!p || typeof p.startTime !== 'number' || typeof p.lifetime !== 'number') {
+    const radius = computeSweepDustRadius(p, now)
+    if (!(radius > 0)) {
       gameState.dustParticles.splice(i, 1)
       continue
     }
 
-    const progress = (now - p.startTime) / p.lifetime
-    if (progress >= 1) {
-      gameState.dustParticles.splice(i, 1)
-      continue
-    } else {
-      // Update position
-      p.x += p.velocity.x
-      p.y += p.velocity.y
-
-      // Fade out alpha
-      p.alpha = 1 - progress
-
-      // Expand size slightly
-      p.currentSize = p.size * (1 + progress * 0.5)
+    if (p.velocity) {
+      const vx = Number.isFinite(p.velocity.x) ? p.velocity.x : 0
+      const vy = Number.isFinite(p.velocity.y) ? p.velocity.y : 0
+      p.x += vx
+      p.y += vy
     }
+
+    const age = Math.max(0, now - p.startTime)
+    const progress = Math.min(1, age / p.lifetime)
+    p.alpha = 1 - progress
+    p.currentSize = radius
   }
 }
 

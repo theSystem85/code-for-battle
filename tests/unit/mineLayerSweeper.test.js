@@ -62,7 +62,8 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
 
 import {
   updateMineLayerBehavior,
-  startMineDeployment
+  startMineDeployment,
+  isMinePlantTileBlocked
 } from '../../src/game/mineLayerBehavior.js'
 
 import {
@@ -71,7 +72,8 @@ import {
   deactivateSweepingMode,
   calculateZigZagSweepPath,
   calculateFreeformSweepPath,
-  generateSweepDust
+  generateSweepDust,
+  computeSweepDustRadius
 } from '../../src/game/mineSweeperBehavior.js'
 
 import { UNIT_PROPERTIES, MINE_DEPLOY_STOP_TIME } from '../../src/config.js'
@@ -241,6 +243,8 @@ describe('Mine Layer Behavior', () => {
       const mineLayer2 = {
         ...mineLayer,
         id: 'ml-2',
+        x: 64,
+        y: 64,
         deployingMine: true,
         deployStartTime: 1000,
         remainingMines: 3
@@ -283,7 +287,57 @@ describe('Mine Layer Behavior', () => {
 
       expect(result).toBe(false)
     })
+
+    it('restarts a deploy timer that was stamped ahead of the simulation clock', () => {
+      mineLayer.deployingMine = true
+      mineLayer.deployStartTime = 50000
+      mineLayer.remainingMines = 5
+
+      updateMineLayerBehavior([mineLayer], 1000)
+
+      expect(deployMine).not.toHaveBeenCalled()
+      expect(mineLayer.deployingMine).toBe(true)
+      expect(mineLayer.deployStartTime).toBe(1000)
+
+      updateMineLayerBehavior([mineLayer], 1000 + MINE_DEPLOY_STOP_TIME)
+
+      expect(deployMine).toHaveBeenCalled()
+      expect(mineLayer.deployingMine).toBe(false)
+      expect(mineLayer.deploymentCompleted).toBe(true)
+    })
   })
+
+  describe('isMinePlantTileBlocked()', () => {
+    it('ignores the mine layer standing on its own plant tile', () => {
+      expect(isMinePlantTileBlocked(5, 5, mineLayer, {
+        units: [mineLayer],
+        mapGrid: gameState.mapGrid,
+        buildings: [],
+        mines: []
+      })).toBe(false)
+    })
+
+    it('blocks a tile occupied by another unit center', () => {
+      const tank = { id: 'tank-1', type: 'tank', health: 80, x: 5 * 32, y: 5 * 32 }
+
+      expect(isMinePlantTileBlocked(5, 5, mineLayer, {
+        units: [mineLayer, tank],
+        mapGrid: gameState.mapGrid,
+        buildings: [],
+        mines: []
+      })).toBe(true)
+    })
+
+    it('does not block a neighboring tile', () => {
+      const tank = { id: 'tank-1', type: 'tank', health: 80, x: 6 * 32, y: 5 * 32 }
+
+      expect(isMinePlantTileBlocked(5, 5, mineLayer, {
+        units: [mineLayer, tank],
+        mapGrid: gameState.mapGrid
+      })).toBe(false)
+    })
+  })
+
 })
 
 describe('Mine Sweeper Behavior', () => {
@@ -613,6 +667,30 @@ describe('Mine Sweeper Behavior', () => {
       const dust = generateSweepDust(mineSweeper, 1000)
 
       expect(dust.velocity.y).toBeGreaterThan(0)
+    })
+  })
+
+  describe('computeSweepDustRadius()', () => {
+    it('keeps a positive radius when the dust timestamp is ahead of the render clock', () => {
+      // size * (1 + ((now - startTime) / lifetime) * 0.5) with this skew is about -85.29
+      const dust = {
+        startTime: 11661.2375,
+        lifetime: 500,
+        size: 8,
+        currentSize: -85.2899
+      }
+
+      const radius = computeSweepDustRadius(dust, 0)
+
+      expect(radius).toBe(8)
+      expect(radius).toBeGreaterThan(0)
+    })
+
+    it('grows dust over its lifetime and drops expired particles', () => {
+      const dust = { startTime: 1000, lifetime: 500, size: 8 }
+
+      expect(computeSweepDustRadius(dust, 1250)).toBeCloseTo(8 * 1.25)
+      expect(computeSweepDustRadius(dust, 1600)).toBe(0)
     })
   })
 })

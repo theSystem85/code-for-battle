@@ -95,9 +95,9 @@ Introduce a complete land-mine gameplay system with two new units (Mine Layer tr
 | FR-013 | Mine indicator overlay renders skull icon with 70% opacity; persists until mine removed.
 | FR-014 | Mines block friendly occupancy map entries but remain passable to enemies; explosion triggers 90/50 damage when a unit center passes through the mine tile's inner circle; chain reaction for adjacent mines.
 | FR-015 | Mine Layer destruction deals remaining payload damage evenly to surrounding tiles (including units/buildings).
-| FR-016 | Area mining uses checkerboard coverage and PPF chain markers; auto-refill/resume behavior when mines depleted mid-plan. *Updated 2025-11-20 so Mine Layer trucks follow the same serpentine lane ordering as the Mine Sweeper for efficient routing.*
+| FR-016 | Area mining uses checkerboard coverage and PPF chain markers; auto-refill/resume behavior when mines depleted mid-plan. *Updated 2025-11-20 so Mine Layer trucks follow the same serpentine lane ordering as the Mine Sweeper for efficient routing. Updated 2026-09-24: an occupied, mined, or impassable plant tile is skipped and the next deploy order starts. The layer does not wait on that cell. Deployment timing uses the simulation clock so the progress bar advances on a free tile.*
 | FR-017 | Mine Sweeper inherits tank chassis stats (except turret) with 2× armor; speed modifiers 0.7/0.3 vs baseline tank.
-| FR-018 | Sweeper dust animation plays in front when sweeping; sweeping over mine causes detonation without sweeper damage.
+| FR-018 | Sweeper dust animation plays in front when sweeping; sweeping over mine causes detonation without sweeper damage. Dust age uses the simulation clock and the drawn radius stays positive for the particle lifetime.
 | FR-019 | Sweeper rectangle sweep uses PPF-generated zig-zag paths covering all tiles; ctrl-draw sweep paints orange overlay before committing.
 | FR-020 | AI builds/uses Mine Layers and Mine Sweepers following specified triggers and priorities.
 | FR-021 | Rectangle sweep commands route the sweeper to the nearest entry tile, activate clearance mode (30% speed + dust) before crossing the boundary, and choose the serpentine coverage direction based on the approach side so every marked tile is cleared systematically.

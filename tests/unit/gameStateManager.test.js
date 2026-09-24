@@ -327,6 +327,30 @@ describe('gameStateManager', () => {
       expect(particle.alpha).toBeLessThan(1)
       expect(particle.currentSize).toBeGreaterThan(2)
     })
+
+    it('ages dust on the simulation clock so a leading start time cannot invert the radius', () => {
+      const gameState = {
+        simulationTime: 1000,
+        dustParticles: [
+          {
+            startTime: 11661.2375,
+            lifetime: 500,
+            size: 8,
+            x: 10,
+            y: 12,
+            velocity: { x: 0, y: 0 },
+            currentSize: -85.2899
+          }
+        ]
+      }
+      performanceNow.mockReturnValue(0)
+
+      updateDustParticles(gameState)
+
+      expect(gameState.dustParticles).toHaveLength(1)
+      expect(gameState.dustParticles[0].currentSize).toBe(8)
+      expect(gameState.dustParticles[0].currentSize).toBeGreaterThan(0)
+    })
   })
 
   describe('cleanupDestroyedUnits', () => {

@@ -166,12 +166,42 @@ export function generateSweepDust(unit, now) {
     x: dustX,
     y: dustY,
     startTime: now,
-    lifetime: 500, // 0.5 seconds
+    lifetime: SWEEP_DUST_LIFETIME_MS,
     color: '#D2B48C', // Tan/sandy color
-    size: 8,
+    size: SWEEP_DUST_SIZE,
+    alpha: 1,
     velocity: {
       x: Math.cos(unit.direction) * 0.5,
       y: Math.sin(unit.direction) * 0.5
     }
   }
+}
+
+export const SWEEP_DUST_LIFETIME_MS = 500
+export const SWEEP_DUST_SIZE = 8
+
+/**
+ * Sweep-dust radius grows from its base size over its lifetime.
+ * Age is clamped to the lifetime so a clock skew (simulation time vs
+ * performance.now()) cannot feed canvas.arc a negative radius.
+ * @param {object} dust
+ * @param {number} now
+ * @returns {number} Positive radius, or 0 when the particle should not be drawn
+ */
+export function computeSweepDustRadius(dust, now) {
+  const baseSize = Number.isFinite(dust?.size) ? dust.size : 0
+  const lifetime = Number.isFinite(dust?.lifetime) ? dust.lifetime : 0
+  if (!(baseSize > 0) || !(lifetime > 0) || !Number.isFinite(dust?.startTime) || !Number.isFinite(now)) {
+    return 0
+  }
+
+  const age = now - dust.startTime
+  if (age >= lifetime) return 0
+
+  const progress = Math.min(1, Math.max(0, age / lifetime))
+  return baseSize * (1 + progress * 0.5)
+}
+
+export function getDustEffectNow(state) {
+  return Number.isFinite(state?.simulationTime) ? state.simulationTime : performance.now()
 }

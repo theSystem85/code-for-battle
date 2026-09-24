@@ -2,6 +2,7 @@
 import { TILE_SIZE } from '../config.js'
 import { drawTeslaCoilLightning, getCanvasLogicalSize } from './renderingUtils.js'
 import { getSimulationTime } from '../game/time.js'
+import { computeSweepDustRadius, getDustEffectNow } from '../game/mineSweeperBehavior.js'
 import { renderSpriteSheetAnimation } from './spriteSheetAnimation.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -307,22 +308,28 @@ export class EffectsRenderer {
   }
 
   renderDust(ctx, gameState, scrollOffset) {
-    if (gameState?.dustParticles && gameState.dustParticles.length > 0) {
-      const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
-      gameState.dustParticles.forEach(p => {
-        const x = p.x - scrollOffset.x
-        const y = p.y - scrollOffset.y
-        const size = p.currentSize || p.size
-        if (isCircleOutsideViewport(x, y, size, canvasWidth, canvasHeight)) return
-        ctx.save()
-        ctx.globalAlpha = p.alpha
+    const particles = gameState?.dustParticles
+    if (!particles || particles.length === 0) return
 
-        ctx.fillStyle = p.color || '#D2B48C'
-        ctx.beginPath()
-        ctx.arc(x, y, size, 0, Math.PI * 2)
-        ctx.fill()
-        ctx.restore()
-      })
+    const now = getDustEffectNow(gameState)
+    const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i]
+      if (!p) continue
+      // Recompute from lifetime instead of trusting a stale negative currentSize.
+      const size = computeSweepDustRadius(p, now)
+      if (!(size > 0)) continue
+      const x = p.x - scrollOffset.x
+      const y = p.y - scrollOffset.y
+      if (isCircleOutsideViewport(x, y, size, canvasWidth, canvasHeight)) continue
+      ctx.save()
+      ctx.globalAlpha = p.alpha
+
+      ctx.fillStyle = p.color || '#D2B48C'
+      ctx.beginPath()
+      ctx.arc(x, y, size, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
     }
   }
 
@@ -473,24 +480,23 @@ export class EffectsRenderer {
   renderDustParticles(ctx, gameState, scrollOffset) {
     // Draw dust particles from Mine Sweeper
     if (gameState?.dustParticles && gameState?.dustParticles.length > 0) {
-      const currentTime = performance.now()
+      const currentTime = getDustEffectNow(gameState)
       const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
       const particles = gameState.dustParticles
       let writeIndex = 0
       for (let readIndex = 0; readIndex < particles.length; readIndex++) {
         const dust = particles[readIndex]
         if (!dust) continue
-        const age = currentTime - dust.startTime
-        if (age >= dust.lifetime) continue
+        const currentSize = computeSweepDustRadius(dust, currentTime)
+        if (!(currentSize > 0)) continue
         particles[writeIndex++] = dust
-        const progress = age / dust.lifetime
+        const age = Math.max(0, currentTime - dust.startTime)
+        const progress = dust.lifetime > 0 ? Math.min(1, age / dust.lifetime) : 0
         const alpha = Math.max(0, 1 - progress)
 
         const screenX = dust.x - scrollOffset.x
         const screenY = dust.y - scrollOffset.y
 
-        // Particle expands and fades
-        const currentSize = dust.size * (1 + progress * 0.5)
         if (isCircleOutsideViewport(screenX, screenY, currentSize, canvasWidth, canvasHeight)) continue
 
         ctx.save()

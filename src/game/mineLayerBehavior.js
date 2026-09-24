@@ -3,6 +3,7 @@ import { TILE_SIZE, MINE_DEPLOY_STOP_TIME, UNIT_PROPERTIES } from '../config.js'
 import { gameState } from '../gameState.js'
 import { deployMine } from './mineSystem.js'
 import { gameRandom } from '../utils/gameRandom.js'
+import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 
 /**
  * Update Mine Layer behaviors - deployment mode, speed modulation, auto-refill
@@ -25,6 +26,12 @@ export function updateMineLayerBehavior(units, now) {
 
     // Handle active mine deployment
     if (unit.deployingMine) {
+      // Deployment is timed on the simulation clock. A wall-clock timestamp
+      // (performance.now()) sits ahead of simulation time, so elapsed stays
+      // negative, the progress bar clamps to 0, and the truck never finishes.
+      if (!Number.isFinite(unit.deployStartTime) || unit.deployStartTime > now) {
+        unit.deployStartTime = now
+      }
       const elapsedTime = now - unit.deployStartTime
 
       if (elapsedTime >= MINE_DEPLOY_STOP_TIME) {
@@ -93,6 +100,101 @@ export function startMineDeployment(unit, tileX, tileY, now) {
   unit.moveTarget = null
 
   return true
+}
+
+function centerTileOf(entity) {
+  return {
+    x: Math.floor((entity.x + TILE_SIZE / 2) / TILE_SIZE),
+    y: Math.floor((entity.y + TILE_SIZE / 2) / TILE_SIZE)
+  }
+}
+
+/**
+ * A plant spot is blocked when the mine layer cannot lay a mine there.
+ * The layer's own tile is not blocked: it has to stand on the spot to plant.
+ * @param {number} tileX
+ * @param {number} tileY
+ * @param {object} unit - Mine layer that would plant
+ * @param {object} [context]
+ * @returns {boolean}
+ */
+export function isMinePlantTileBlocked(tileX, tileY, unit, context = {}) {
+  if (!Number.isFinite(tileX) || !Number.isFinite(tileY)) return true
+
+  const mapGrid = context.mapGrid || gameState.mapGrid
+  const buildings = context.buildings || gameState.buildings
+  const units = context.units || gameState.units
+  const wrecks = context.unitWrecks || gameState.unitWrecks
+  const mines = context.mines || gameState.mines
+
+  if (Array.isArray(mapGrid) && mapGrid.length > 0 && Array.isArray(mapGrid[0]) && mapGrid[0].length > 0) {
+    const height = mapGrid.length
+    const width = mapGrid[0].length
+    if (tileX < 0 || tileY < 0 || tileX >= width || tileY >= height) return true
+    const tile = mapGrid[tileY]?.[tileX]
+    if (tile) {
+      if (typeof tile === 'number') {
+        if (tile === 1) return true
+      } else if (tile.type === 'water' || tile.type === 'rock' || tile.seedCrystal || hasBlockingBuilding(tile)) {
+        return true
+      }
+    }
+  }
+
+  if (Array.isArray(mines)) {
+    for (let i = 0; i < mines.length; i++) {
+      const mine = mines[i]
+      if (!mine) continue
+      const mineX = Number.isFinite(mine.tileX) ? mine.tileX : mine.x
+      const mineY = Number.isFinite(mine.tileY) ? mine.tileY : mine.y
+      if (mineX === tileX && mineY === tileY) return true
+    }
+  }
+
+  if (Array.isArray(buildings)) {
+    for (let i = 0; i < buildings.length; i++) {
+      const building = buildings[i]
+      if (!building || building.health <= 0) continue
+      const width = building.width || 1
+      const height = building.height || 1
+      if (
+        tileX >= building.x &&
+        tileX < building.x + width &&
+        tileY >= building.y &&
+        tileY < building.y + height
+      ) {
+        return true
+      }
+    }
+  }
+
+  if (Array.isArray(units)) {
+    for (let i = 0; i < units.length; i++) {
+      const other = units[i]
+      if (!other || other === unit) continue
+      if (unit && other.id != null && other.id === unit.id) continue
+      if (other.health <= 0) continue
+      if (!Number.isFinite(other.x) || !Number.isFinite(other.y)) continue
+      const center = centerTileOf(other)
+      if (center.x === tileX && center.y === tileY) return true
+    }
+  }
+
+  if (Array.isArray(wrecks)) {
+    for (let i = 0; i < wrecks.length; i++) {
+      const wreck = wrecks[i]
+      if (!wreck) continue
+      const centerX = Number.isFinite(wreck.tileX)
+        ? wreck.tileX
+        : (Number.isFinite(wreck.x) ? Math.floor((wreck.x + TILE_SIZE / 2) / TILE_SIZE) : null)
+      const centerY = Number.isFinite(wreck.tileY)
+        ? wreck.tileY
+        : (Number.isFinite(wreck.y) ? Math.floor((wreck.y + TILE_SIZE / 2) / TILE_SIZE) : null)
+      if (centerX === tileX && centerY === tileY) return true
+    }
+  }
+
+  return false
 }
 
 /**
