@@ -740,7 +740,7 @@ const fileContents = `/* eslint-disable quotes */\nexport const mission01 = ${JS
 
 fs.writeFileSync(path.join(outputDir, 'mission_01.js'), fileContents)
 
-const indexContents = `import { mission01 } from './mission_01.js'\n\nexport const builtinMissions = [mission01]\n\nexport function getBuiltinMissionById(id) {\n  return builtinMissions.find(mission => mission.id === id) || null\n}\n`
+const indexContents = 'import { mission01 } from \'./mission_01.js\'\nimport { fullBaseTest } from \'./mission_full_base_test.js\'\n\nexport const builtinMissions = [mission01, fullBaseTest]\n\nexport function getBuiltinMissionById(id) {\n  return builtinMissions.find(mission => mission.id === id) || null\n}\n'
 
 fs.writeFileSync(path.join(outputDir, 'index.js'), indexContents)
 
