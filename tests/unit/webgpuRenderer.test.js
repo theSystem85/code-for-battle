@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest'
-import { GameWebGPURenderer, WEBGPU_TERRAIN_SHADER } from '../../src/rendering/webgpuRenderer.js'
+import { describe, expect, it, vi } from 'vitest'
+import {
+  GameWebGPURenderer,
+  WEBGPU_ATLAS_TEXTURE_USAGE,
+  WEBGPU_TERRAIN_SHADER
+} from '../../src/rendering/webgpuRenderer.js'
 
 describe('GameWebGPURenderer', () => {
   it('samples both atlases before any per-fragment branch', () => {
@@ -71,6 +75,57 @@ describe('GameWebGPURenderer', () => {
 
     expect(renderer.validationComplete).toBe(false)
     expect(renderer.getStatus()).toMatchObject({ validationPending: true, validationComplete: false })
+  })
+
+  it('uploads atlas images with the usage copyExternalImageToTexture requires', () => {
+    const renderer = new GameWebGPURenderer({}, null)
+    const created = []
+    renderer.device = {
+      createTexture: (descriptor) => {
+        created.push(descriptor)
+        return { label: descriptor.label }
+      },
+      queue: {
+        copyExternalImageToTexture: (_source, destination) => {
+          created.push({ uploaded: destination.texture })
+        }
+      }
+    }
+
+    const uploaded = renderer.createTextureFromImage({ width: 8, height: 4 }, 'terrain-primary-atlas')
+
+    expect(WEBGPU_ATLAS_TEXTURE_USAGE & 0x02).toBe(0x02)
+    expect(WEBGPU_ATLAS_TEXTURE_USAGE & 0x04).toBe(0x04)
+    expect(WEBGPU_ATLAS_TEXTURE_USAGE & 0x10).toBe(0x10)
+    expect(created[0]).toMatchObject({
+      label: 'terrain-primary-atlas',
+      size: [8, 4, 1],
+      format: 'rgba8unorm',
+      usage: WEBGPU_ATLAS_TEXTURE_USAGE
+    })
+    expect(created[1].uploaded).toBe(uploaded.texture)
+  })
+
+  it('logs the full frame-validation message in the console', async() => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const renderer = new GameWebGPURenderer({}, null)
+    renderer.validationPending = true
+    const detail = 'Destination texture needs to have CopyDst and RenderAttachment usage flags. The terrain-primary-atlas upload was rejected.'
+    renderer.device = {
+      popErrorScope: () => Promise.resolve({ message: detail }),
+      queue: {
+        onSubmittedWorkDone: () => Promise.resolve()
+      }
+    }
+
+    renderer.finishFrameValidation()
+    await Promise.resolve()
+    await Promise.resolve()
+
+    const logged = warn.mock.calls.map(call => call.join(' ')).join('\n')
+    expect(logged).toContain(`[WebGPU] WebGPU frame validation failed: ${detail}`)
+    expect(logged.includes('...')).toBe(false)
+    warn.mockRestore()
   })
 
   it('schedules only one completion check for a pending validation frame', () => {

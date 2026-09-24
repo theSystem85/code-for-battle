@@ -121,6 +121,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Rendering and WebGPU
 
+- [x] **WebGPU atlas upload fallback (2026-09-24)** — Primary and secondary terrain atlases were created with `COPY_DST | TEXTURE_BINDING` only. `copyExternalImageToTexture` also requires `RENDER_ATTACHMENT`, so the first frame's validation scope failed with "Destination texture needs to have CopyDst and..." and settings fell back to WebGL. Those atlases are the only `createTexture` calls in the WebGPU renderer. The console logs the full validation message.
+  - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
+
 - [x] **Combat decal crater priority + bundled-sheet fallback follow-up (2026-04-18)** — `impact` events can no longer overwrite an existing `crater`, howitzer shells now always stamp `crater` decals on their impact tile, and decal rendering now falls back to the bundled `debris_craters_tracks.json/.webp` combat sheet whenever active custom sprite sheets are disabled or do not provide decal tags.
   - Spec: [Sprite Sheet Editor and Integrated Tile Rendering](../specs/047-sprite-sheet-editor-integrated-rendering.md)
 

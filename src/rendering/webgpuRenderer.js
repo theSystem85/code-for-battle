@@ -18,7 +18,13 @@ import { getCanvasPixelRatio } from './renderingUtils.js'
 
 const BUFFER_USAGE = { COPY_DST: 8, VERTEX: 32, UNIFORM: 64 }
 const QUERY_BUFFER_USAGE = { MAP_READ: 1, COPY_SRC: 4, COPY_DST: 8, QUERY_RESOLVE: 512 }
-const TEXTURE_USAGE = { COPY_DST: 2, TEXTURE_BINDING: 4 }
+const TEXTURE_USAGE = { COPY_DST: 0x02, TEXTURE_BINDING: 0x04, RENDER_ATTACHMENT: 0x10 }
+
+// copyExternalImageToTexture rejects a destination that lacks COPY_DST and
+// RENDER_ATTACHMENT. The terrain shader also samples the atlas, so it needs
+// TEXTURE_BINDING. These are the only textures this renderer creates.
+export const WEBGPU_ATLAS_TEXTURE_USAGE =
+  TEXTURE_USAGE.COPY_DST | TEXTURE_USAGE.TEXTURE_BINDING | TEXTURE_USAGE.RENDER_ATTACHMENT
 
 export const WEBGPU_TERRAIN_SHADER = `
 struct Uniforms {
@@ -435,13 +441,14 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     })
   }
 
-  createTextureFromImage(image) {
+  createTextureFromImage(image, label = 'terrain-atlas') {
     const width = image.width || image.naturalWidth || 1
     const height = image.height || image.naturalHeight || 1
     const texture = this.device.createTexture({
+      label,
       size: [width, height, 1],
       format: 'rgba8unorm',
-      usage: TEXTURE_USAGE.TEXTURE_BINDING | TEXTURE_USAGE.COPY_DST
+      usage: WEBGPU_ATLAS_TEXTURE_USAGE
     })
     this.device.queue.copyExternalImageToTexture({ source: image }, { texture }, [width, height])
     const uploadBytes = width * height * 4
@@ -456,7 +463,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     const secondaryImage = this.getSecondaryAtlasImage() || primaryImage
     let changed = false
     if (primaryImage !== this.uploadedPrimaryImage) {
-      const uploaded = this.createTextureFromImage(primaryImage)
+      const uploaded = this.createTextureFromImage(primaryImage, 'terrain-primary-atlas')
       this.primaryTexture = this.replaceResource(
         this.primaryTexture,
         uploaded.texture,
@@ -468,7 +475,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       changed = true
     }
     if (secondaryImage !== this.uploadedSecondaryImage) {
-      const uploaded = this.createTextureFromImage(secondaryImage)
+      const uploaded = this.createTextureFromImage(secondaryImage, 'terrain-secondary-atlas')
       this.secondaryTexture = this.replaceResource(
         this.secondaryTexture,
         uploaded.texture,
@@ -509,7 +516,8 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       this.validationPending = false
       this.validationCheckScheduled = false
       if (error) {
-        this.fail(`WebGPU frame validation failed: ${error.message}`)
+        const message = error.message || String(error)
+        this.fail(`WebGPU frame validation failed: ${message}`)
         return
       }
       this.validationComplete = true
