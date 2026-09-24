@@ -46,4 +46,4 @@ Use this checklist when adding ship or naval units.
 - Add tests for shoreline placement, water path passability, naval production routing, and ship target filtering.
 - Add tests for movement-command water options, path-cache domain isolation, collision/stuck water passability, service radius water clipping/prerequisite gating, and aiming-cursor range eligibility.
 - Add tests for water-only cheat spawn, Shipyard rally creation-to-launch routing, AI shoreline placement/production order, naval attack staging, low-health return/repair/resume, single-source sprite rotation, and stern/bow wake anchors.
-- Update specs/TODO and prompt history for every naval feature request.
+- Update specs, `TODO/Features.md` (Naval, above Done), and prompt history for every naval feature request. Use `- [ ] **Title** — description` and `Spec: [Title](../specs/....md)` or `Spec: none`.

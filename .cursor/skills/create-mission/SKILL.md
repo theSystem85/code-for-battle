@@ -126,7 +126,7 @@ Player saves, direct state loads, and `multiplayerSession.isRemote` do not show 
 5. Pick `time` so the row sorts where it should. Higher timestamps sort first among builtin rows.
 6. Add a unit test that imports the real module and parses `state`. The index test mocks `mission_01.js` and will not see generator output.
 7. Run `node scripts/generateMission01.js` (or the new generator), then `npm run test:unit` and `npm run lint:fix:changed`.
-8. Update `TODO/Features.md` and add or adjust a spec under `specs/`.
+8. Update `TODO/Features.md` under **Missions and Campaign** (above Done) and add or adjust a spec under `specs/`. Use `- [ ]`, a short **bold title**, one description, and `Spec: [Title](../specs/....md)` or `Spec: none`.
 
 ## Done checklist
 
