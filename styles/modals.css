@@ -958,6 +958,15 @@ body.benchmark-modal-open {
   margin-bottom: 24px;
 }
 
+.benchmark-modal__phases {
+  margin: 0;
+  white-space: pre-wrap;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #d7dde3;
+}
+
 .benchmark-modal__metric {
   background: rgba(50, 50, 50, 0.6);
   border-radius: 6px;

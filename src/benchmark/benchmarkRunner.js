@@ -1,5 +1,6 @@
 import { setupBenchmarkScenario, teardownBenchmarkScenario } from './benchmarkScenario.js'
 import { setupHeavyBattleScenario, stepHeavyBattleCamera, clampHeavyBattleUnitCount } from './heavyBattleScenario.js'
+import { uiText } from '../ui/uiText.js'
 import { framePhases } from '../performance/framePhases.js'
 import { startBenchmarkSession, isBenchmarkRunning } from './benchmarkTracker.js'
 import {
@@ -9,6 +10,7 @@ import {
   setBenchmarkRunningState,
   showBenchmarkCountdownMessage,
   showBenchmarkResults,
+  showHeavyBattleResults,
   showBenchmarkStatus,
   startBenchmarkCountdown
 } from '../ui/benchmarkModal.js'
@@ -25,6 +27,15 @@ const AUTO_IOS_BENCHMARK_SCROLL_PIXELS_PARAM = 'benchmarkScrollPixelsPerFrame'
 let buttonInitialized = false
 let autoBenchmarkStarted = false
 let heavyBattleStarted = false
+let heavyBattleRunning = false
+let lastBenchmarkKind = 'standard'
+
+const SETTINGS_HEAVY_BATTLE = Object.freeze({
+  seed: '11',
+  unitCount: 320,
+  warmupMs: 3000,
+  durationMs: 8000
+})
 
 const HEAVY_BATTLE_PARAM = 'heavyBattle'
 const HEAVY_BATTLE_UNITS_PARAM = 'battleUnits'
@@ -313,13 +324,15 @@ async function runBenchmarkInternal(durationMs = BENCHMARK_DURATION_MS, options 
 
   const benchmarkDurationMs = getBenchmarkDuration(durationMs)
 
-  const button = document.getElementById('runBenchmarkBtn')
+  const button = document.getElementById('settingsBenchmarkSelect')
   if (button) {
     button.disabled = true
   }
 
   let scenarioInitialized = false
   let stopCountdown = null
+
+  lastBenchmarkKind = 'standard'
 
   try {
     setBenchmarkRunningState(true)
@@ -428,23 +441,32 @@ async function runHeavyBattleMeasurement(config) {
     uncapped: true
   })
   const stopCamera = startHeavyBattleCameraLoop()
-  await waitForAnimationFrames(2)
-  if (config.warmupMs > 0) {
-    await new Promise(resolve => setTimeout(resolve, config.warmupMs))
-  }
-  framePhases.reset()
-  const started = performance.now()
-  await new Promise(resolve => {
-    const step = () => {
-      if (performance.now() - started >= config.durationMs) {
-        resolve()
-        return
+  let phases
+  try {
+    await waitForAnimationFrames(2)
+    if (config.warmupMs > 0) {
+      await new Promise(resolve => setTimeout(resolve, config.warmupMs))
+    }
+    showBenchmarkCountdownMessage(uiText('settings.benchmark.heavy'))
+    const stopCountdown = startBenchmarkCountdown(config.durationMs)
+    framePhases.reset()
+    const started = performance.now()
+    await new Promise(resolve => {
+      const step = () => {
+        if (performance.now() - started >= config.durationMs) {
+          resolve()
+          return
+        }
+        requestAnimationFrame(step)
       }
       requestAnimationFrame(step)
-    }
-    requestAnimationFrame(step)
-  })
-  const phases = framePhases.snapshot()
+    })
+    if (stopCountdown) stopCountdown()
+    phases = framePhases.snapshot()
+  } finally {
+    stopCamera()
+    hideBenchmarkCountdown()
+  }
   const overlay = gameState.renderStats?.gpuOverlay || null
   const terrain = gameState.renderStats?.gpuTerrain || null
   const result = {
@@ -475,7 +497,6 @@ async function runHeavyBattleMeasurement(config) {
     }
   }
   window.__heavyBattleResult = result
-  stopCamera()
   return result
 }
 
@@ -493,6 +514,44 @@ async function maybeRunHeavyBattle() {
   }
 }
 
+function applyBenchmarkSelectLabels(select) {
+  const label = document.getElementById('settingsBenchmarkLabel')
+  if (label) label.textContent = uiText('settings.benchmark.label')
+  const options = select?.options
+  if (!options) return
+  if (options[0]) options[0].textContent = uiText('settings.benchmark.placeholder')
+  if (options[1]) options[1].textContent = uiText('settings.benchmark.standard')
+  if (options[2]) options[2].textContent = uiText('settings.benchmark.heavy')
+}
+
+async function runHeavyBattleFromSettings() {
+  if (heavyBattleRunning || isBenchmarkRunning()) return null
+  heavyBattleRunning = true
+  lastBenchmarkKind = 'heavy'
+  const select = document.getElementById('settingsBenchmarkSelect')
+  if (select) select.disabled = true
+  try {
+    setBenchmarkRunningState(true)
+    showBenchmarkStatus(uiText('settings.benchmark.heavy'))
+    await waitForGameReady()
+    const summary = await runHeavyBattleMeasurement({ ...SETTINGS_HEAVY_BATTLE })
+    showHeavyBattleResults(summary)
+    setBenchmarkRunningState(false)
+    openBenchmarkModal()
+    return summary
+  } catch (error) {
+    console.error('Heavy battle benchmark failed:', error)
+    showBenchmarkStatus(uiText('settings.benchmark.heavyFailed'))
+    setBenchmarkRunningState(false)
+    openBenchmarkModal()
+    return null
+  } finally {
+    heavyBattleRunning = false
+    if (select) select.disabled = false
+    hideBenchmarkCountdown()
+  }
+}
+
 export function attachBenchmarkButton() {
   if (buttonInitialized) {
     maybeRunAutoIosBenchmark()
@@ -500,22 +559,35 @@ export function attachBenchmarkButton() {
     return
   }
 
-  const button = document.getElementById('runBenchmarkBtn')
-  if (!button) {
+  const select = document.getElementById('settingsBenchmarkSelect')
+  if (!select) {
     return
   }
 
+  applyBenchmarkSelectLabels(select)
+
   initializeBenchmarkModal({
-    onRunAgain: () => runBenchmarkInternal(),
-    onClose: () => {
-      if (button) {
-        button.disabled = false
+    onRunAgain: () => {
+      if (lastBenchmarkKind === 'heavy') {
+        void runHeavyBattleFromSettings()
+        return
       }
+      void runBenchmarkInternal()
+    },
+    onClose: () => {
+      select.disabled = false
     }
   })
 
-  button.addEventListener('click', () => {
-    runBenchmarkInternal()
+  select.addEventListener('change', () => {
+    const kind = select.value
+    if (kind !== 'standard' && kind !== 'heavy') return
+    select.value = ''
+    if (kind === 'heavy') {
+      void runHeavyBattleFromSettings()
+      return
+    }
+    void runBenchmarkInternal()
   })
 
   buttonInitialized = true

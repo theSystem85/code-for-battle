@@ -33,6 +33,10 @@ npx playwright test tests/e2e/heavyBattleProfile.test.js --project=chromium --re
 
 Force the WebGL fallback with `HEAVY_BATTLE_BACKEND=webgl`.
 
+Settings → Runtime Config has a benchmark dropdown. Map scroll benchmark keeps the previous 60 second run and chart. Heavy battle uses seed 11, four players, 320 units, a 3 second warmup, and an 8 second measure window, then opens the same results dialog with min/avg/max FPS plus one phase per line. Copy is `settings.benchmark.*` in `src/ui/locales/en.json` and `de.json`, chosen with the landing locale.
+
+The performance widget lists Sim, Move, Combat, Path, AI, Fog, Terrain, Units, Effects, UI, and Minimap on separate rows. The overlay caps at 260px so a long renderer line wraps instead of widening the box.
+
 On a Mac, in Chrome:
 
 ```text

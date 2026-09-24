@@ -713,6 +713,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Heavy-battle benchmark in settings (2026-09-24)** — The runtime settings button is a dropdown for the existing map-scroll benchmark and a heavy battle (seed 11, 4 players, 320 units, 3 s warmup, 8 s measure). The heavy battle uses the same results dialog plus a vertical phase breakdown. Labels follow the landing locale (`settings.benchmark.*` in EN and DE). The performance widget lists each phase on its own row and stays within the previous overlay width.
+  - Spec: [Heavy-battle frame phases](../specs/072-heavy-battle-frame-phases.md)
+
 - [x] **Ensure in mobile portrait that long-press production tooltips do not open when** — the user is dragging a build button (drag-to-build gesture).
   - Spec: [Mobile Portrait Sidebar Expand Button](../specs/022-mobile-portrait-sidebar-expand-button.md)
 

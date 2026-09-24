@@ -207,9 +207,14 @@ export function setupHeavyBattleScenario(options = {}) {
   const unitCount = clampHeavyBattleUnitCount(options.unitCount)
   const perPlayer = Math.floor(unitCount / HEAVY_BATTLE_PLAYERS.length)
   const rows = Math.max(1, Math.ceil(perPlayer / COLUMNS_PER_PLAYER))
-  const seed = options.seed ?? gameState.mapSeed ?? '11'
+  const seed = String(options.seed ?? gameState.mapSeed ?? '11')
+  gameState.mapSeed = seed
+  const seedInput = typeof document !== 'undefined' ? document.getElementById('mapSeed') : null
+  if (seedInput) seedInput.value = seed
 
   gameState.playerCount = 4
+  const playerCountInput = typeof document !== 'undefined' ? document.getElementById('playerCount') : null
+  if (playerCountInput) playerCountInput.value = '4'
   gameState.humanPlayer = 'player1'
   gameState.speedMultiplier = 1
   game.resetGame()

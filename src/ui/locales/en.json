@@ -1,0 +1,26 @@
+{
+  "settings": {
+    "benchmark": {
+      "label": "Performance benchmark",
+      "placeholder": "Choose a benchmark…",
+      "standard": "Map scroll benchmark",
+      "heavy": "Heavy battle (320 units)",
+      "heavyComplete": "Heavy battle complete",
+      "heavyFailed": "Heavy battle failed. Check the console for details.",
+      "phasesTitle": "Phase breakdown (avg / p95 ms)",
+      "phase": {
+        "sim": "Sim",
+        "move": "Move",
+        "combat": "Combat",
+        "path": "Path",
+        "ai": "AI",
+        "fog": "Fog",
+        "terrain": "Terrain",
+        "units": "Units",
+        "effects": "Effects",
+        "ui": "UI",
+        "minimap": "Minimap"
+      }
+    }
+  }
+}

@@ -109,20 +109,23 @@ export class FramePhaseTracker {
 
   summarizeColumn(readValue, percentileValue) {
     const count = this.filled
-    if (!count) return { samples: 0, averageMs: 0, p95Ms: 0, maxMs: 0 }
+    if (!count) return { samples: 0, averageMs: 0, p95Ms: 0, minMs: 0, maxMs: 0 }
     let total = 0
+    let min = Infinity
     let max = 0
     for (let index = 0; index < count; index++) {
       const slot = (this.cursor - count + index + this.windowSize) % this.windowSize
       const value = readValue(slot)
       this.scratch[index] = value
       total += value
+      if (value < min) min = value
       if (value > max) max = value
     }
     return {
       samples: count,
       averageMs: roundMs(total / count),
       p95Ms: roundMs(this.percentileFromScratch(count, percentileValue)),
+      minMs: roundMs(min),
       maxMs: roundMs(max)
     }
   }

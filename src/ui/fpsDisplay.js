@@ -47,11 +47,16 @@ export class FPSDisplay {
     this.frameCpuUpdateEl = document.getElementById('frameCpuUpdate')
     this.frameCpuRenderEl = document.getElementById('frameCpuRender')
     this.framePhaseSimEl = document.getElementById('framePhaseSim')
-    this.framePhaseSimDetailEl = document.getElementById('framePhaseSimDetail')
+    this.framePhaseMoveEl = document.getElementById('framePhaseMove')
+    this.framePhaseCombatEl = document.getElementById('framePhaseCombat')
+    this.framePhasePathEl = document.getElementById('framePhasePath')
+    this.framePhaseAiEl = document.getElementById('framePhaseAi')
+    this.framePhaseFogEl = document.getElementById('framePhaseFog')
     this.framePhaseTerrainEl = document.getElementById('framePhaseTerrain')
     this.framePhaseEntitiesEl = document.getElementById('framePhaseEntities')
     this.framePhaseEffectsEl = document.getElementById('framePhaseEffects')
     this.framePhaseUiEl = document.getElementById('framePhaseUi')
+    this.framePhaseMinimapEl = document.getElementById('framePhaseMinimap')
     this.frameRendererEl = document.getElementById('frameRenderer')
     this.frameGpuAdapterEl = document.getElementById('frameGpuAdapter')
     this.frameResolutionEl = document.getElementById('frameResolution')
@@ -158,25 +163,20 @@ export class FPSDisplay {
   updateFramePhaseRows() {
     const snapshot = framePhases.snapshot()
     const phases = snapshot.phases || {}
-    if (this.framePhaseSimEl) {
-      this.framePhaseSimEl.textContent = `Sim: ${this.formatPhase(phases.sim)} ms`
+    const row = (element, label, phase) => {
+      if (element) element.textContent = `${label}: ${this.formatPhase(phase)} ms`
     }
-    if (this.framePhaseSimDetailEl) {
-      this.framePhaseSimDetailEl.textContent =
-        `Move ${this.formatPhase(phases.movement)} · Combat ${this.formatPhase(phases.combat)} · Path ${this.formatPhase(phases.pathfinding)} · AI ${this.formatPhase(phases.ai)} · Fog ${this.formatPhase(phases.fog)}`
-    }
-    if (this.framePhaseTerrainEl) {
-      this.framePhaseTerrainEl.textContent = `Terrain: ${this.formatPhase(phases.terrain)} ms`
-    }
-    if (this.framePhaseEntitiesEl) {
-      this.framePhaseEntitiesEl.textContent = `Units: ${this.formatPhase(phases.entities)} ms`
-    }
-    if (this.framePhaseEffectsEl) {
-      this.framePhaseEffectsEl.textContent = `Effects: ${this.formatPhase(phases.effects)} ms`
-    }
-    if (this.framePhaseUiEl) {
-      this.framePhaseUiEl.textContent = `UI ${this.formatPhase(phases.ui)} · Minimap ${this.formatPhase(phases.minimap)}`
-    }
+    row(this.framePhaseSimEl, 'Sim', phases.sim)
+    row(this.framePhaseMoveEl, 'Move', phases.movement)
+    row(this.framePhaseCombatEl, 'Combat', phases.combat)
+    row(this.framePhasePathEl, 'Path', phases.pathfinding)
+    row(this.framePhaseAiEl, 'AI', phases.ai)
+    row(this.framePhaseFogEl, 'Fog', phases.fog)
+    row(this.framePhaseTerrainEl, 'Terrain', phases.terrain)
+    row(this.framePhaseEntitiesEl, 'Units', phases.entities)
+    row(this.framePhaseEffectsEl, 'Effects', phases.effects)
+    row(this.framePhaseUiEl, 'UI', phases.ui)
+    row(this.framePhaseMinimapEl, 'Minimap', phases.minimap)
   }
 
   setRowVisible(element, visible) {

@@ -1037,11 +1037,16 @@
     <div id="frameCpuRender">CPU Render: -- ms</div>
     <div id="framePhaseRows" class="fps-phase-rows">
       <div id="framePhaseSim">Sim: --</div>
-      <div id="framePhaseSimDetail">Move -- · Combat -- · Path -- · AI -- · Fog --</div>
+      <div id="framePhaseMove">Move: --</div>
+      <div id="framePhaseCombat">Combat: --</div>
+      <div id="framePhasePath">Path: --</div>
+      <div id="framePhaseAi">AI: --</div>
+      <div id="framePhaseFog">Fog: --</div>
       <div id="framePhaseTerrain">Terrain: --</div>
       <div id="framePhaseEntities">Units: --</div>
       <div id="framePhaseEffects">Effects: --</div>
-      <div id="framePhaseUi">UI -- · Minimap --</div>
+      <div id="framePhaseUi">UI: --</div>
+      <div id="framePhaseMinimap">Minimap: --</div>
     </div>
     <div id="frameRenderer">Renderer: --</div>
     <div id="frameGpuAdapter" hidden></div>
@@ -1096,7 +1101,14 @@
           <div class="config-modal__actions">
             <button id="openRuntimeConfigDialogBtn" class="config-modal__button config-modal__button--primary"
               type="button">Open Runtime Config Dialog</button>
-            <button id="runBenchmarkBtn" class="config-modal__button" type="button">Run Performance Benchmark</button>
+            <label class="config-modal__benchmark" for="settingsBenchmarkSelect">
+              <span id="settingsBenchmarkLabel">Performance benchmark</span>
+              <select id="settingsBenchmarkSelect">
+                <option value="">Choose a benchmark…</option>
+                <option value="standard">Map scroll benchmark</option>
+                <option value="heavy">Heavy battle (320 units)</option>
+              </select>
+            </label>
           </div>
           <label class="config-modal__checkbox-row" for="settingsFrameLimiterToggle">
             <input id="settingsFrameLimiterToggle" type="checkbox" checked>
@@ -1595,6 +1607,7 @@
             <div class="benchmark-modal__metric">Duration: <span id="benchmarkDuration">--</span></div>
           </div>
           <canvas id="benchmarkChart" width="480" height="240" aria-label="Benchmark FPS chart"></canvas>
+          <pre id="benchmarkPhaseBreakdown" class="benchmark-modal__phases" hidden></pre>
         </div>
       </div>
       <div class="benchmark-modal__footer">

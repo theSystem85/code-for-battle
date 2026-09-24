@@ -25,6 +25,7 @@ vi.mock('../../src/ui/benchmarkModal.js', () => ({
   setBenchmarkRunningState: vi.fn(),
   showBenchmarkCountdownMessage: vi.fn(),
   showBenchmarkResults: vi.fn(),
+  showHeavyBattleResults: vi.fn(),
   showBenchmarkStatus: vi.fn(),
   startBenchmarkCountdown: vi.fn(() => vi.fn())
 }))
@@ -75,7 +76,7 @@ describe('benchmarkRunner.js', () => {
     // Save original and mock getElementById
     originalGetElementById = document.getElementById
     document.getElementById = vi.fn((id) => {
-      if (id === 'runBenchmarkBtn') {
+      if (id === 'settingsBenchmarkSelect') {
         return mockButton
       }
       return null
@@ -110,12 +111,12 @@ describe('benchmarkRunner.js', () => {
       })
     })
 
-    it('should attach click listener to button', async() => {
+    it('should attach a change listener to the benchmark dropdown', async() => {
       const { attachBenchmarkButton: attach } = await import('../../src/benchmark/benchmarkRunner.js')
 
       attach()
 
-      expect(mockButton.addEventListener).toHaveBeenCalledWith('click', expect.any(Function))
+      expect(mockButton.addEventListener).toHaveBeenCalledWith('change', expect.any(Function))
     })
 
     it('should not initialize twice when called multiple times', async() => {
