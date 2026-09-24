@@ -1,5 +1,6 @@
 // game/milestoneSystem.js
 import { playSyncedVideoAudio } from '../ui/videoOverlay.js'
+import { firstProductionNarrationMilestoneId, setFirstProductionNarrationClaim, setMilestoneAchievedCheck } from '../ui/milestoneMediaCache.js'
 import { showNotification } from '../ui/notifications.js'
 
 /**
@@ -41,6 +42,34 @@ export class MilestoneSystem {
         displayName: 'First Tank Produced',
         description: 'Your first tank has rolled out of the factory',
         videoFilename: 'first_tank',
+        priority: 'high'
+      },
+      firstMineLayer: {
+        id: 'firstMineLayer',
+        displayName: 'First Mine Layer Produced',
+        description: 'Your first Mine Layer is running off the production line.',
+        videoFilename: 'first_mine_layer',
+        priority: 'high'
+      },
+      firstMineSweeper: {
+        id: 'firstMineSweeper',
+        displayName: 'First Mine Sweeper Produced',
+        description: 'Your first Mine Sweeper is running off the production line.',
+        videoFilename: 'first_mine_sweeper',
+        priority: 'high'
+      },
+      firstRocketTankBuilt: {
+        id: 'firstRocketTankBuilt',
+        displayName: 'First Rocket Tank Produced',
+        description: 'Your first Rocket Tank is running off the production line.',
+        videoFilename: 'first_rocket_tank',
+        priority: 'high'
+      },
+      firstHowitzer: {
+        id: 'firstHowitzer',
+        displayName: 'First Howitzer Produced',
+        description: 'Your first Howitzer is running off the production line.',
+        videoFilename: 'first_artillery',
         priority: 'high'
       },
       firstTeslaCoil: {
@@ -326,6 +355,43 @@ export class MilestoneSystem {
       }
     }
 
+    if (!this.achievedMilestones.has('firstMineLayer')) {
+      const hasMineLayer = gameState.units?.some(unit =>
+        unit.owner === gameState.humanPlayer && unit.type === 'mineLayer'
+      )
+      if (hasMineLayer) {
+        this.triggerMilestone('firstMineLayer')
+      }
+    }
+
+    if (!this.achievedMilestones.has('firstMineSweeper')) {
+      const hasMineSweeper = gameState.units?.some(unit =>
+        unit.owner === gameState.humanPlayer && unit.type === 'mineSweeper'
+      )
+      if (hasMineSweeper) {
+        this.triggerMilestone('firstMineSweeper')
+      }
+    }
+
+    // Distinct from rocketTankUnlocked, which only unlocks the unit.
+    if (!this.achievedMilestones.has('firstRocketTankBuilt')) {
+      const hasRocketTank = gameState.units?.some(unit =>
+        unit.owner === gameState.humanPlayer && unit.type === 'rocketTank'
+      )
+      if (hasRocketTank) {
+        this.triggerMilestone('firstRocketTankBuilt')
+      }
+    }
+
+    if (!this.achievedMilestones.has('firstHowitzer')) {
+      const hasHowitzer = gameState.units?.some(unit =>
+        unit.owner === gameState.humanPlayer && unit.type === 'howitzer'
+      )
+      if (hasHowitzer) {
+        this.triggerMilestone('firstHowitzer')
+      }
+    }
+
     // Check for first Tesla coil
     if (!this.achievedMilestones.has('firstTeslaCoil')) {
       const hasTeslaCoil = gameState.buildings?.some(building =>
@@ -408,6 +474,18 @@ export class MilestoneSystem {
   }
 
   /**
+   * Play the first-production narrator for this unit and report that the
+   * unit-ready sting should be skipped. A later unit of the same type returns
+   * false so the sting plays as usual.
+   */
+  claimFirstProductionNarration(unitType) {
+    const milestoneId = firstProductionNarrationMilestoneId(unitType)
+    if (!milestoneId || this.achievedMilestones.has(milestoneId)) return false
+    this.triggerMilestone(milestoneId)
+    return this.achievedMilestones.has(milestoneId)
+  }
+
+  /**
    * Check if a milestone is achieved
    */
   isAchieved(milestoneId) {
@@ -427,3 +505,6 @@ export class MilestoneSystem {
 
 // Create global instance
 export const milestoneSystem = new MilestoneSystem()
+
+setMilestoneAchievedCheck(milestoneId => milestoneSystem.isAchieved(milestoneId))
+setFirstProductionNarrationClaim(unitType => milestoneSystem.claimFirstProductionNarration(unitType))

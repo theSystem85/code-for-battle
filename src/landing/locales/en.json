@@ -76,7 +76,7 @@
         },
         "battlefield": {
           "title": "Living map",
-          "body": "Generated maps carry biomes, ore, coasts, cliffs, and procedural water. Milestone films mark the first refinery, the first tank, the Tesla coil, and the airstrip. A loading screen and a phone HUD ship with the game."
+          "body": "Generated maps carry biomes, ore, coasts, cliffs, and procedural water. Milestone films mark the first refinery, tank, mine layer, mine sweeper, rocket tank, howitzer, Tesla coil, and airstrip. A loading screen and a phone HUD ship with the game."
         },
         "workshop": {
           "title": "Map workshop",
@@ -129,7 +129,7 @@
       },
       "video": {
         "title": "Milestone videos",
-        "body": "Films for the first refinery, the first tank, the Tesla coil, and the airstrip."
+        "body": "Narrated films for the first refinery, tank, mine layer, mine sweeper, rocket tank, howitzer, Tesla coil, and airstrip."
       }
     },
     "tech": {

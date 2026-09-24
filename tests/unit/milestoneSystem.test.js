@@ -324,7 +324,6 @@ describe('milestoneSystem.js', () => {
         units: [
           { type: 'tank-v2', owner: 'player1' },
           { type: 'tank-v3', owner: 'player1' },
-          { type: 'rocketTank', owner: 'player1' },
           { type: 'harvester', owner: 'player1' },
           { type: 'tank_v1', owner: 'enemy' }
         ]
@@ -332,6 +331,93 @@ describe('milestoneSystem.js', () => {
       system.checkMilestones(gameState)
       expect(system.isAchieved('firstTank')).toBe(false)
       expect(playSyncedVideoAudio).not.toHaveBeenCalled()
+    })
+
+    it('should play a video the first time each new production unit appears', () => {
+      const cases = [
+        ['mineLayer', 'firstMineLayer', 'first_mine_layer', 'First Mine Layer Produced'],
+        ['mineSweeper', 'firstMineSweeper', 'first_mine_sweeper', 'First Mine Sweeper Produced'],
+        ['rocketTank', 'firstRocketTankBuilt', 'first_rocket_tank', 'First Rocket Tank Produced'],
+        ['howitzer', 'firstHowitzer', 'first_artillery', 'First Howitzer Produced']
+      ]
+      cases.forEach(([unitType, milestoneId, videoFilename, title]) => {
+        const local = new MilestoneSystem()
+        local.checkMilestones({
+          humanPlayer: 'player1',
+          buildings: [],
+          units: [{ type: unitType, owner: 'player1' }]
+        })
+        expect(local.isAchieved(milestoneId)).toBe(true)
+        expect(playSyncedVideoAudio).toHaveBeenCalledWith(videoFilename, expect.objectContaining({
+          title,
+          priority: 'high'
+        }))
+        playSyncedVideoAudio.mockClear()
+        local.checkMilestones({
+          humanPlayer: 'player1',
+          buildings: [],
+          units: [
+            { type: unitType, owner: 'player1' },
+            { type: unitType, owner: 'player1' }
+          ]
+        })
+        expect(playSyncedVideoAudio).not.toHaveBeenCalled()
+      })
+    })
+
+    it('should not play first-build videos for enemy units or the rocket unlock milestone', () => {
+      system.checkMilestones({
+        humanPlayer: 'player1',
+        buildings: [],
+        units: [
+          { type: 'mineLayer', owner: 'enemy' },
+          { type: 'mineSweeper', owner: 'enemy' },
+          { type: 'rocketTank', owner: 'enemy' },
+          { type: 'howitzer', owner: 'enemy' }
+        ]
+      })
+      expect(system.isAchieved('firstMineLayer')).toBe(false)
+      expect(system.isAchieved('firstMineSweeper')).toBe(false)
+      expect(system.isAchieved('firstRocketTankBuilt')).toBe(false)
+      expect(system.isAchieved('firstHowitzer')).toBe(false)
+      expect(system.isAchieved('rocketTankUnlocked')).toBe(false)
+      expect(playSyncedVideoAudio).not.toHaveBeenCalled()
+    })
+
+    it('should keep achieved first-build milestones across save and load', () => {
+      system.setAchievedMilestones(['firstMineLayer', 'firstHowitzer', 'firstRocketTankBuilt'])
+      expect(system.getAchievedMilestones()).toEqual(expect.arrayContaining([
+        'firstMineLayer',
+        'firstHowitzer',
+        'firstRocketTankBuilt'
+      ]))
+      system.checkMilestones({
+        humanPlayer: 'player1',
+        buildings: [],
+        units: [
+          { type: 'mineLayer', owner: 'player1' },
+          { type: 'howitzer', owner: 'player1' },
+          { type: 'rocketTank', owner: 'player1' }
+        ]
+      })
+      expect(playSyncedVideoAudio).not.toHaveBeenCalled()
+    })
+
+    it('replaces the unit-ready sting with the production-line narrator only the first time', () => {
+      expect(system.claimFirstProductionNarration('howitzer')).toBe(true)
+      expect(system.isAchieved('firstHowitzer')).toBe(true)
+      expect(playSyncedVideoAudio).toHaveBeenCalledWith('first_artillery', expect.any(Object))
+
+      playSyncedVideoAudio.mockClear()
+      expect(system.claimFirstProductionNarration('howitzer')).toBe(false)
+      expect(playSyncedVideoAudio).not.toHaveBeenCalled()
+
+      expect(system.claimFirstProductionNarration('tank')).toBe(true)
+      expect(system.claimFirstProductionNarration('tank_v1')).toBe(false)
+      expect(system.claimFirstProductionNarration('harvester')).toBe(false)
+      expect(system.claimFirstProductionNarration('mineLayer')).toBe(true)
+      expect(system.claimFirstProductionNarration('mineSweeper')).toBe(true)
+      expect(system.claimFirstProductionNarration('rocketTank')).toBe(true)
     })
 
     it('should detect first tesla coil milestone', () => {

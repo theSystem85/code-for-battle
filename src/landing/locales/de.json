@@ -76,7 +76,7 @@
         },
         "battlefield": {
           "title": "Lebendige Karte",
-          "body": "Erzeugte Karten tragen Biome, Erz, Küsten, Klippen und prozedurales Wasser. Meilensteinfilme markieren die erste Raffinerie, den ersten Panzer, die Teslaspule und die Landebahn. Ladebildschirm und Telefon-HUD gehören zum Spiel."
+          "body": "Erzeugte Karten tragen Biome, Erz, Küsten, Klippen und prozedurales Wasser. Meilensteinfilme markieren die erste Raffinerie, den Panzer, den Minenleger, den Minenräumer, den Raketenpanzer, die Haubitze, die Teslaspule und die Landebahn. Ladebildschirm und Telefon-HUD gehören zum Spiel."
         },
         "workshop": {
           "title": "Kartenwerkstatt",
@@ -129,7 +129,7 @@
       },
       "video": {
         "title": "Meilenstein-Videos",
-        "body": "Filme zur ersten Raffinerie, zum ersten Panzer, zur Teslaspule und zur Landebahn."
+        "body": "Filme mit Erzähler zur ersten Raffinerie, zum Panzer, Minenleger, Minenräumer, Raketenpanzer, zur Haubitze, zur Teslaspule und zur Landebahn."
       }
     },
     "tech": {
