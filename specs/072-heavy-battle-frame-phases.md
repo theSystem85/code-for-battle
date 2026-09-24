@@ -48,12 +48,12 @@ Same command, `HEAVY_BATTLE_BACKEND=webgpu`. Playwright Chromium 145.0.7632.6, L
 | Metric | Before | After |
 | --- | --- | --- |
 | Frames in the window | 86 | 184 |
-| FPS | 17.06 | 36.70 |
+| FPS | 17.06 | 36.7 |
 | Frame avg / p95 / max ms | 58.63 / 73.8 / 121.6 | 27.25 / 36.1 / 45.0 |
 | Sim avg / p95 ms | 39.02 / 53.2 | 9.05 / 13.3 |
 | Movement avg / p95 ms | 18.25 / 24.3 | 5.15 / 8.2 |
 | Combat avg / p95 ms | 13.94 / 17.8 | 0.81 / 1.4 |
-| AI avg / p95 ms | 4.40 / 7.5 | 2.01 / 4.6 |
+| AI avg / p95 ms | 4.4 / 7.5 | 2.01 / 4.6 |
 | Fog avg ms | 0.60 | 0.26 |
 | Terrain avg ms | 0.33 | 0.25 |
 | Units avg ms | 0.89 | 0.87 |
