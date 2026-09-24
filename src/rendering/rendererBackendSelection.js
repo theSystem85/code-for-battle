@@ -55,7 +55,7 @@ export function summarizeWebGPUFailure(message) {
   if (lower.includes('no webgpu adapter') || lower.includes('no adapter')) return 'no adapter'
   if (lower.includes('device request') || lower.includes('requestdevice')) return 'device request failed'
   if (lower.includes('canvas context') || lower.includes('getcontext')) return 'canvas context failed'
-  if (lower.includes('device lost')) return 'device lost'
+  if (lower.includes('device lost') || lower.includes('destroyed') || lower.includes('instance reference')) return 'device lost'
   return text.length > 80 ? `${text.slice(0, 77)}...` : text
 }
 
@@ -98,5 +98,6 @@ export async function probeWebGPUAvailability(gpu = globalThis.navigator?.gpu, {
   }
 
   destroyDevice(device)
+  await withTimeout(device.lost, timeoutMs)
   return true
 }
