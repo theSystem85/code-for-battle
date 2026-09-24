@@ -51,6 +51,9 @@ describe('Mission 01 Fordline', () => {
     expect(german.label).toBe('Mission 01: Furtlinie')
     expect(german.description).toContain('Ashford')
     expect(german.objectives[2]).toContain('Furt')
+    expect(german.objectives[2]).toContain('Öffnung')
+    expect(english.description).toContain('walled outpost')
+    expect(german.description).toContain('umwallten Außenposten')
     expect(missionText('missions.intro.skip', 'de')).toBe('Überspringen')
   })
 
@@ -73,25 +76,50 @@ describe('Mission 01 Fordline', () => {
     ]))
   })
 
-  it('fields a small outpost instead of a walled fortress', () => {
+  it('fields a walled camp instead of a fortress', () => {
     const enemyBuildings = buildings.filter(building => building.owner === ENEMY)
-    const enemyTypes = enemyBuildings.map(building => building.type).sort()
-    expect(enemyTypes).toEqual(['constructionYard', 'oreRefinery', 'powerPlant', 'turretGunV1'].sort())
+    const enemyTypes = [...new Set(enemyBuildings.map(building => building.type))].sort()
+    expect(enemyTypes).toEqual(['concreteWall', 'constructionYard', 'oreRefinery', 'powerPlant', 'turretGunV1'].sort())
     expect(enemyBuildings.find(building => building.type === 'constructionYard').id).toBe(ENEMY)
+    expect(enemyBuildings.filter(building => building.type === 'concreteWall').length).toBeGreaterThanOrEqual(40)
+    expect(enemyBuildings.filter(building => building.type === 'concreteWall').length).toBeLessThanOrEqual(90)
+    expect(enemyBuildings.filter(building => building.type === 'turretGunV1')).toHaveLength(2)
     expect(state.aiFactoryBudgets[ENEMY]).toBe(500)
+    expect(state.gameState.enemyPowerSupply).toBeGreaterThan(0)
     expect(units.filter(unit => unit.owner === ENEMY && unit.type === 'tank_v1')).toHaveLength(2)
     expect(units.filter(unit => unit.owner === ENEMY && unit.type === 'harvester')).toHaveLength(1)
     expect(buildings.some(building => (
-      building.type === 'concreteWall'
-      || building.type === 'teslaCoil'
+      building.type === 'teslaCoil'
       || building.type === 'artilleryTurret'
       || building.type === 'rocketTurret'
     ))).toBe(false)
+
+    const southGate = []
+    for (let x = 70; x <= 74; x++) southGate.push({ x, y: 30 })
+    southGate.forEach(tile => {
+      expect(buildings.some(building => building.x === tile.x && building.y === tile.y)).toBe(false)
+      expect(state.mapGridTypes[tile.y][tile.x] === 'land' || state.mapGridTypes[tile.y][tile.x] === 'street').toBe(true)
+    })
+  })
+
+  it('keeps visible land under the player yard', () => {
+    for (let y = 78; y <= 80; y++) {
+      for (let x = 14; x <= 16; x++) {
+        expect(state.mapGridTypes[y][x]).toBe('land')
+      }
+    }
+    let nearbyStreets = 0
+    for (let y = 76; y <= 84; y++) {
+      for (let x = 10; x <= 22; x++) {
+        if (state.mapGridTypes[y][x] === 'street') nearbyStreets++
+      }
+    }
+    expect(nearbyStreets).toBeLessThanOrEqual(24)
   })
 
   it('keeps a southern ore seam, a river ford, and a clear approach', () => {
     const playerOre = state.orePositions.filter(pos => pos.y > 60)
-    const enemyOre = state.orePositions.filter(pos => pos.y < 20)
+    const enemyOre = state.orePositions.filter(pos => pos.y < 40 && pos.x > 60)
     expect(playerOre.length).toBeGreaterThanOrEqual(12)
     expect(enemyOre.length).toBeGreaterThan(0)
     expect(enemyOre.length).toBeLessThan(playerOre.length)

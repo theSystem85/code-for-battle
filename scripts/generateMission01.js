@@ -74,6 +74,22 @@ function addRoad(points, thickness = 2) {
   }
 }
 
+function addWallRing(x0, y0, x1, y1, openings) {
+  const open = new Set(openings.map(tile => keyOf(tile.x, tile.y)))
+  const place = (x, y) => {
+    if (open.has(keyOf(x, y))) return
+    buildings.push(createBuilding('concreteWall', ENEMY, x, y, `mission01-p2-wall-${x}-${y}`))
+  }
+  for (let x = x0; x <= x1; x++) {
+    place(x, y0)
+    if (y1 !== y0) place(x, y1)
+  }
+  for (let y = y0 + 1; y <= y1 - 1; y++) {
+    place(x0, y)
+    place(x1, y)
+  }
+}
+
 function addRockCluster(cx, cy, radius) {
   for (let y = cy - radius; y <= cy + radius; y++) {
     for (let x = cx - radius; x <= cx + radius; x++) {
@@ -243,36 +259,72 @@ function assertReachable(from, to) {
 }
 
 fillRect(0, RIVER_Y0, MAP_WIDTH - 1, RIVER_Y1, 'water')
-fillRect(10, 76, 22, 84, 'street')
+// The yard sits on land. A solid street pad renders as dark asphalt and looks
+// like missing ground around the start camera. Keep only a narrow road.
 addRoad([
-  { x: 18, y: 76 },
+  { x: 18, y: 80 },
   { x: 18, y: 56 },
   { x: 43, y: 50 },
   { x: 70, y: 32 },
-  { x: 72, y: 28 }
+  { x: 72, y: 31 }
 ])
 fillRect(FORD_X0, RIVER_Y0, FORD_X1, RIVER_Y1, 'street')
 addRockCluster(6, 36, 3)
 addRockCluster(92, 34, 3)
 addRockCluster(54, 88, 2)
 
+const WALL_X0 = 62
+const WALL_Y0 = 11
+const WALL_X1 = 84
+const WALL_Y1 = 30
+const GATE = []
+for (let x = 70; x <= 74; x++) GATE.push({ x, y: WALL_Y1 })
+
 const buildings = []
 buildings.push(createBuilding('constructionYard', PLAYER, 14, 78, PLAYER))
-buildings.push(createBuilding('constructionYard', ENEMY, 72, 16, ENEMY))
-buildings.push(createBuilding('powerPlant', ENEMY, 66, 16, 'mission01-p2-power'))
-buildings.push(createBuilding('oreRefinery', ENEMY, 78, 16, 'mission01-p2-refinery'))
-buildings.push(createBuilding('turretGunV1', ENEMY, 74, 24, 'mission01-p2-turret'))
+buildings.push(createBuilding('powerPlant', ENEMY, 64, 13, 'mission01-p2-power'))
+buildings.push(createBuilding('constructionYard', ENEMY, 70, 13, ENEMY))
+buildings.push(createBuilding('oreRefinery', ENEMY, 76, 13, 'mission01-p2-refinery'))
+buildings.push(createBuilding('turretGunV1', ENEMY, 66, 24, 'mission01-p2-turret-w'))
+buildings.push(createBuilding('turretGunV1', ENEMY, 78, 24, 'mission01-p2-turret-e'))
+addWallRing(WALL_X0, WALL_Y0, WALL_X1, WALL_Y1, GATE)
 
 const units = []
 units.push(createUnit('tank_v1', PLAYER, 20, 82, 'mission01-player-tank'))
-units.push(createUnit('tank_v1', ENEMY, 68, 26, 'mission01-p2-tank-1'))
-units.push(createUnit('tank_v1', ENEMY, 76, 28, 'mission01-p2-tank-2'))
-units.push(createUnit('harvester', ENEMY, 82, 20, 'mission01-p2-harvester', {
+units.push(createUnit('tank_v1', ENEMY, 68, 22, 'mission01-p2-tank-1'))
+units.push(createUnit('tank_v1', ENEMY, 74, 22, 'mission01-p2-tank-2'))
+units.push(createUnit('harvester', ENEMY, 81, 18, 'mission01-p2-harvester', {
   needsRefineryAssignment: true
 }))
 
 addOreCluster(28, 74, 3)
-addOreCluster(86, 12, 1)
+addOreCluster(81, 21, 1)
+
+let startPadStreets = 0
+for (let y = 76; y <= 84; y++) {
+  for (let x = 10; x <= 22; x++) {
+    if (grid[y][x] === 'street') startPadStreets++
+  }
+}
+if (startPadStreets > 24) {
+  throw new Error(`Player start still has a street slab (${startPadStreets} street tiles)`)
+}
+for (let y = 78; y <= 80; y++) {
+  for (let x = 14; x <= 16; x++) {
+    if (grid[y][x] !== 'land') throw new Error(`Player yard tile ${x},${y} is ${grid[y][x]}`)
+  }
+}
+
+const enemyWalls = buildings.filter(building => building.type === 'concreteWall')
+if (enemyWalls.length < 40 || enemyWalls.length > 90) {
+  throw new Error(`Enemy wall count should stay a camp, not a fortress (${enemyWalls.length})`)
+}
+if (!GATE.every(tile => !occupied.has(keyOf(tile.x, tile.y)))) {
+  throw new Error('South gate is blocked')
+}
+if (buildings.filter(building => building.type === 'turretGunV1').length !== 2) {
+  throw new Error('Enemy camp should have two gun turrets')
+}
 
 const playerOre = orePositions.filter(pos => pos.x < 50)
 const enemyOre = orePositions.filter(pos => pos.x >= 50)
@@ -281,7 +333,7 @@ if (enemyOre.length < 4 || enemyOre.length > 10) {
   throw new Error(`Enemy ore patch should stay small (${enemyOre.length})`)
 }
 
-assertReachable({ x: 20, y: 82 }, { x: 74, y: 23 })
+assertReachable({ x: 20, y: 82 }, { x: 72, y: 28 })
 
 const playerPower = sidePower(PLAYER)
 const enemyPower = sidePower(ENEMY)

@@ -18,19 +18,19 @@ Locale follows the landing-page key `cfb-landing-locale`, then the browser langu
 The player (`player1`) starts in the south with:
 
 - one construction yard, id `player1`
-- one `tank_v1` on the street pad
+- one `tank_v1` on grass just east of the yard
 - 11000 credits, enough for a Power Plant (2000), Ore Refinery (2500), Vehicle Factory (3000), and Harvester (1500), with 2000 left
 - a large density-1 ore seam immediately east of the yard
 - the normal early sidebar (power, refinery, factory, workshop, radar, hospital, helipad, gas station, turret v1, street, wall)
 
-The enemy (`player2`) holds a light outpost north of a river:
+The enemy (`player2`) holds a walled camp north of a river. It is larger than the first layout and still a first fight: no Tesla coil, artillery, or rocket turret.
 
-- construction yard, power plant, ore refinery, one turret gun v1
+- construction yard, power plant, ore refinery, two turret gun v1
+- a concrete-wall ring with a five-tile opening on the south side, facing the road
 - two light tanks and one harvester
-- a small ore patch and a 500 credit budget
-- no walls, Tesla coil, artillery, or rocket turrets
+- a small ore patch inside the walls and a 500 credit budget
 
-A street road runs from the player pad to a ford through the river (rows 48–53). Rock clusters sit off that road.
+The player yard and the tiles under it are land. A narrow road runs from beside the yard to a ford through the river (rows 48–53). Rock clusters sit off that road. A solid street rectangle is not used around the start: organic road sprites are dark asphalt drawn over the grass underlay, and a plaza of them reads as black missing ground while the surrounding land stays visible grass.
 
 Win and lose use the existing annihilation rules in `checkGameEndConditions`: destroy every enemy building that is not a concrete wall, or lose if the player has none left. There is no separate objective tracker. The three briefing lines are the teaching text.
 

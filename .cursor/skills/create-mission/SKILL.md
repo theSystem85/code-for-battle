@@ -143,6 +143,7 @@ Player saves, direct state loads, and `multiplayerSession.isRemote` do not show 
 ## Pitfalls
 
 - Hand-editing `mission_01.js` fights the generator. Change the script and regenerate.
+- Do not paint a solid street rectangle under a starting base. Organic road art is dark asphalt on top of the grass underlay, so a plaza reads as black missing ground. Put the yard on `land` and keep roads narrow. `mapGridTypes` does not store biome; land still draws as grass. A camera move does not fix a bad tile type.
 - Putting `buildings` inside `gameState` in the blob swaps the live array on load.
 - Using owner `player` instead of `player1` still works in some alias checks, but the camera looks for id `player1` first. Use `player1`.
 - A zero-budget enemy with no refinery sells its turret to buy one. That silently deletes the defense you authored.
