@@ -1,0 +1,18 @@
+{
+  "missions": {
+    "mission01": {
+      "label": "Mission 01: Fordline",
+      "description": "Secure the Ashford ford. You start with a construction yard, one tank, and enough credits for a power plant, refinery, and factory. Harvest the ore beside your yard, build a small force, and destroy the walled outpost across the river.",
+      "objectives": {
+        "power": "Build a Power Plant before the refinery so the base stays powered.",
+        "economy": "Build an Ore Refinery and a Vehicle Factory, then produce a Harvester and gather the ore beside your yard.",
+        "fight": "Cross the ford and destroy every enemy building. The outpost is walled, with an opening on the south side. Losing all of your buildings ends the mission."
+      }
+    },
+    "intro": {
+      "kicker": "Mission",
+      "skip": "Skip",
+      "standby": "Intro"
+    }
+  }
+}

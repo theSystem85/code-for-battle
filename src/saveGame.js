@@ -5,6 +5,8 @@ import { units } from './main.js'
 import { mapGrid } from './main.js'
 import { bullets } from './main.js'
 import { builtinMissions, getBuiltinMissionById } from './missions/index.js'
+import { localizeMission } from './missions/missionText.js'
+import { flushQueuedMissionIntro, queueMissionIntro } from './ui/missionIntro.js'
 import { cleanupOreFromBuildings } from './gameSetup.js'
 import {
   TILE_SIZE,
@@ -478,13 +480,16 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
 
 // === Save/Load Game Logic ===
 export function getSaveGames() {
-  const saves = builtinMissions.map(mission => ({
-    key: `${BUILTIN_SAVE_PREFIX}${mission.id}`,
-    label: mission.label,
-    time: mission.time,
-    builtin: true,
-    description: mission.description
-  }))
+  const saves = builtinMissions.map(mission => {
+    const text = localizeMission(mission)
+    return {
+      key: `${BUILTIN_SAVE_PREFIX}${mission.id}`,
+      label: text.label,
+      time: mission.time,
+      builtin: true,
+      description: text.description
+    }
+  })
 
   for (const [key, rawSave] of getStoredEntries(SAVE_STORAGE_KEY_PREFIX)) {
     try {
@@ -1990,6 +1995,10 @@ function loadGameFromSaveObject(saveObj, key) {
       window.logger.warn('Failed to regenerate multiplayer tokens on load:', err)
     })
 
+    if (typeof key === 'string' && key.startsWith(BUILTIN_SAVE_PREFIX)) {
+      queueMissionIntro(getBuiltinMissionById(key.slice(BUILTIN_SAVE_PREFIX.length)))
+    }
+
     showNotification('Game loaded: ' + (saveObj.label || key))
   }
 }
@@ -2009,6 +2018,8 @@ function presentGameLoad(task, { builtin = false, label = '', kicker = null } = 
     kicker: kicker || (builtin ? 'MISSION' : 'SAVE FILE'),
     detail,
     progress: null
+  }).finally(() => {
+    void flushQueuedMissionIntro()
   })
 }
 

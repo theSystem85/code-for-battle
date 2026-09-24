@@ -11,8 +11,8 @@ import { describe, it, expect, vi } from 'vitest'
 vi.mock('../../../src/missions/mission_01.js', () => ({
   mission01: {
     id: 'Mission_01',
-    label: 'Mission 01: Midnight Siege',
-    description: 'Infiltrate the Scarlet Dominion stronghold before their patrols discover your lone construction yard.',
+    label: 'Mission 01: Fordline',
+    description: 'Secure the Ashford ford. You start with a construction yard, one tank, and enough credits for a power plant, refinery, and factory.',
     time: 1735689600000,
     state: '{}'
   }
@@ -80,12 +80,12 @@ describe('missions/index.js', () => {
 
     it('should return correct mission label', () => {
       const mission = getBuiltinMissionById('Mission_01')
-      expect(mission.label).toBe('Mission 01: Midnight Siege')
+      expect(mission.label).toBe('Mission 01: Fordline')
     })
 
     it('should return correct mission description', () => {
       const mission = getBuiltinMissionById('Mission_01')
-      expect(mission.description).toContain('Scarlet Dominion')
+      expect(mission.description).toContain('Ashford ford')
     })
 
     it('should be case-sensitive when looking up missions', () => {
