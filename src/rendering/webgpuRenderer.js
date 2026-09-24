@@ -151,6 +151,8 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.adapterInfo = { vendor: '', architecture: '', device: '', description: '' }
     this.maxBufferSize = null
     this.loggedFailure = null
+    this.restoreAttempts = 0
+    this.restorePending = false
     this.capabilityUpdate.backend = 'webgpu'
   }
 
@@ -338,15 +340,15 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.timestampReadPending = false
     this.gpuTiming = { available: false, reason: 'device-lost', milliseconds: null }
     this.diagnostics.setCapabilities({ backend: 'webgpu', gpuTiming: this.gpuTiming })
-    this.fail(info?.message || 'WebGPU device lost', { restore: true })
+    const allowRestore = this.restoreAttempts < 1
+    this.restoreAttempts += 1
+    this.fail(info?.message || 'WebGPU device lost', { restore: allowRestore })
   }
 
   restore(canvas) {
-    try {
-      this.device?.destroy?.()
-    } catch {
-      // The lost device may already be destroyed.
-    }
+    if (this.restorePending) return
+    this.restorePending = true
+    const previousDevice = this.device
     this.gpuMemory.reset()
     this.status = 'idle'
     this.failureReason = null
@@ -355,6 +357,11 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.context = null
     this.pipeline = null
     this.bindGroup = null
+    this.uniformBuffer = null
+    this.quadBuffer = null
+    this.timestampQuerySet = null
+    this.timestampResolveBuffer = null
+    this.timestampReadBuffer = null
     this.instanceBuffer = null
     this.instanceCapacity = 0
     this.uploadedWaterTopology = null
@@ -368,7 +375,27 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.validationComplete = false
     this.timestampReadPending = false
     this.needsRestore = false
-    this.beginInitialize(canvas)
+    const start = () => {
+      this.restorePending = false
+      if (this.needsRestore) return
+      this.beginInitialize(canvas)
+    }
+    if (!previousDevice) {
+      start()
+      return
+    }
+    try {
+      previousDevice.destroy?.()
+    } catch {
+      // The lost device may already be destroyed.
+    }
+    const lost = typeof previousDevice.lost?.then === 'function'
+      ? previousDevice.lost.catch(() => {})
+      : Promise.resolve()
+    Promise.race([
+      lost,
+      new Promise(resolve => setTimeout(resolve, 300))
+    ]).then(start)
   }
 
   getTimestampWrites() {
@@ -486,6 +513,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
         return
       }
       this.validationComplete = true
+      this.restoreAttempts = 0
     }).catch(error => {
       this.validationPending = false
       this.validationCheckScheduled = false
@@ -702,6 +730,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     }
     if (this.status === 'idle') this.beginInitialize(canvas)
     if (this.status !== 'ready') return false
+    if (this.validationPending && !this.validationComplete) return false
     this.beginFrameValidation()
     try {
       if (!this.syncTextures()) return false

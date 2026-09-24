@@ -111,6 +111,7 @@ describe('renderer backend selection', () => {
       expect(summarizeWebGPUFailure('device request failed')).toBe('device request failed')
       expect(summarizeWebGPUFailure('Could not create a WebGPU canvas context')).toBe('canvas context failed')
       expect(summarizeWebGPUFailure('WebGPU device lost')).toBe('device lost')
+      expect(summarizeWebGPUFailure('Device was destroyed.')).toBe('device lost')
       expect(summarizeWebGPUFailure('')).toBe('initialization failed')
     })
   })

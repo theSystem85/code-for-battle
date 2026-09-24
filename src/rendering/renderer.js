@@ -112,7 +112,9 @@ export class Renderer {
     overlay.canvasWidth = activeCanvas?.width || 0
     overlay.canvasHeight = activeCanvas?.height || 0
     overlay.devicePixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
-    overlay.gpuMilliseconds = timing?.available && Number.isFinite(timing.milliseconds) ? timing.milliseconds : null
+    overlay.gpuMilliseconds = gpuBackend === 'webgpu' && timing?.available && Number.isFinite(timing.milliseconds)
+      ? timing.milliseconds
+      : null
   }
 
   partitionUnitsByRenderLayer(units) {
@@ -606,7 +608,13 @@ export class Renderer {
       gpuContext.clear(gpuContext.COLOR_BUFFER_BIT)
     }
 
-    if (webgpuCanvas?.style) webgpuCanvas.style.display = gpuBackend === 'webgpu' ? 'block' : 'none'
+    const showWebGPUCanvas = gpuBackend === 'webgpu' || (
+      wantsWebGPU &&
+      this.webgpuRenderer &&
+      this.webgpuRenderer.status !== 'failed' &&
+      this.webgpuRenderer.status !== 'idle'
+    )
+    if (webgpuCanvas?.style) webgpuCanvas.style.display = showWebGPUCanvas ? 'block' : 'none'
     if (gpuCanvas?.style) gpuCanvas.style.display = gpuBackend === 'webgpu' ? 'none' : 'block'
     if (gpuBackend === 'webgpu') {
       setRendererBackendFailureSummary(null)
