@@ -18,6 +18,24 @@
   to = "/.netlify/functions/api"
   status = 200
 
+# Marketing landing pages. Pretty URLs also serve the built HTML files.
+# /landing stays a small client redirect so a saved language choice wins
+# over the browser default. English is the fallback locale.
+[[redirects]]
+  from = "/en/landing"
+  to = "/en/landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/de/landing"
+  to = "/de/landing.html"
+  status = 200
+
+[[redirects]]
+  from = "/landing"
+  to = "/landing.html"
+  status = 200
+
 # SPA fallback for client-side routing
 # force = false ensures functions and assets are served first
 [[redirects]]

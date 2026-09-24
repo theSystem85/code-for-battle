@@ -1,0 +1,209 @@
+{
+  "landing": {
+    "meta": {
+      "title": "Code for Battle — Echtzeitstrategie im Browser",
+      "description": "Code for Battle ist ein kachelbasiertes Echtzeitstrategiespiel im Browser. Errichte eine versorgte Basis, ernte Erz und führe Panzer, Jets und eine Flotte."
+    },
+    "nav": {
+      "play": "Spielen",
+      "sidebar": "Über das Spiel",
+      "languageLabel": "Sprache",
+      "sectionsLabel": "Auf dieser Seite",
+      "english": "English",
+      "german": "Deutsch",
+      "gallery": "Galerie",
+      "features": "Merkmale",
+      "vibe": "Vibe-coded",
+      "tech": "Tech-Baum",
+      "manual": "Spielanleitung (Englisch)",
+      "skip": "Zum Inhalt"
+    },
+    "hero": {
+      "eyebrow": "Echtzeitstrategie im Browser",
+      "title": "Code for Battle",
+      "tagline": "Führe das Schlachtfeld direkt im Browser.",
+      "lead": "Errichte eine versorgte Basis, ernte Erz und schicke Panzer, Jets und eine Flotte in dasselbe Gefecht. Ein kachelbasiertes RTS, das sofort startet — ohne Installation.",
+      "cta": "In die Schlacht",
+      "secondary": "Arsenal ansehen"
+    },
+    "gallery": {
+      "title": "Vom Schlachtfeld",
+      "lead": "Aufnahmen aus dem laufenden Spiel auf dem Desktop und auf dem Telefon.",
+      "desktop": {
+        "caption": "Gefechtsansicht auf dem Desktop",
+        "alt": "Code for Battle auf dem Desktop mit Karte, Einheiten und Befehlsleiste"
+      },
+      "landscape": {
+        "caption": "Telefon, Querformat",
+        "alt": "Code for Battle auf einem Telefon im Querformat"
+      },
+      "portrait": {
+        "caption": "Telefon, Hochformat",
+        "alt": "Code for Battle auf einem Telefon im Hochformat mit dem mobilen Befehls-HUD"
+      }
+    },
+    "features": {
+      "title": "Im aktuellen Spiel",
+      "lead": "Alles auf dieser Seite ist heute im Spiel enthalten.",
+      "items": {
+        "economy": {
+          "title": "Basiswirtschaft",
+          "body": "Kraftwerke, Erzfelder und Raffinerien finanzieren die Produktion. Aufträge laufen über Warteschlangen, Sammelpunkte und gestapelte Baukommandos."
+        },
+        "tech": {
+          "title": "Freischaltungsbaum",
+          "body": "Fabriken, Radar und die Werft öffnen neue Fahrzeuge, Geschütze, Flugzeuge und Schiffe. Neue Optionen erscheinen in der Produktionsleiste."
+        },
+        "arms": {
+          "title": "Land, Luft und See",
+          "body": "Stelle Panzervarianten, Raketenpanzer und Haubitzen auf. Halte das Gelände mit Geschütz-, Raketen-, Tesla- und Artillerietürmen. Schicke einen Apache, eine F-22 und eine F-35 in die Luft. Zur See fahren Zerstörer, Schlachtschiff, Träger, U-Boot, Luftkissenboot, Fähre, Versorger und Minenleger."
+        },
+        "logistics": {
+          "title": "Versorgung und Besatzung",
+          "body": "Treibstoff und Munition gehen zur Neige. Tanklaster, Munitionslaster, das Lazarett und Sanitäter halten die Einheiten im Kampf. Minen, Räumer und Bergepanzer arbeiten im Feld. Beförderungen verbessern Reichweite, Panzerung oder Feuerrate."
+        },
+        "command": {
+          "title": "Führung",
+          "body": "Rahmenauswahl, Kontrollgruppen, Wegpunkte, Bewachen und Angriffsgruppen. Gebäude verkaufen oder reparieren, Mauern und Straßen ziehen."
+        },
+        "persistence": {
+          "title": "Speichern und Wiederholen",
+          "body": "Speichere ein Gefecht im Browser und setze es fort, exportiere die Datei oder prüfe sie im Speichereditor. Nimm ein Gefecht auf und spiele das Befehlsprotokoll ab."
+        },
+        "multiplayer": {
+          "title": "Gegner",
+          "body": "Eröffne ein Einladungsgefecht über WebRTC, kämpfe gegen den eingebauten Gegner oder übergib eine Partei an einen optionalen LLM-Kommandeur. Gegnerkommentare können vorgelesen werden."
+        },
+        "battlefield": {
+          "title": "Lebendige Karte",
+          "body": "Erzeugte Karten tragen Biome, Erz, Küsten, Klippen und prozedurales Wasser. Meilensteinfilme markieren die erste Raffinerie, den ersten Panzer, die Teslaspule und die Landebahn. Ladebildschirm und Telefon-HUD gehören zum Spiel."
+        },
+        "workshop": {
+          "title": "Kartenwerkstatt",
+          "body": "Stelle Wasser, Fels und Erz ein, male Kacheln im Karteneditor und setze die Sprite-Sheets zusammen, die das Gefecht zeichnet."
+        }
+      }
+    },
+    "vibe": {
+      "title": "Vollständig vibe-coded",
+      "lead": "Code for Battle ist vollständig durch promptgetriebene Entwicklung entstanden. Simulation, Oberfläche und die Produktionsassets wurden erzeugt und zu einem spielbaren Browser-RTS verbunden.",
+      "assetsTitle": "Erzeugte Asset-Arten",
+      "assetsLead": "Diese Arten liegen im Repository und werden vom laufenden Spiel verwendet."
+    },
+    "assets": {
+      "units": {
+        "title": "Einheiten-Sprites",
+        "body": "Karten- und Seitenleistenbilder für Fahrzeuge, Flugzeuge und Schiffe, einschließlich eigener Türme und Rohre."
+      },
+      "buildings": {
+        "title": "Gebäude-Sprites",
+        "body": "Karten- und Seitenleistenbilder für Fabriken, Verteidigung, Landeplätze, die Landebahn und die Werft."
+      },
+      "terrain": {
+        "title": "Gelände und Kacheln",
+        "body": "Gras, Straßen, Fels, Klippen, Kristalle, Trümmer und Biom-Atlanten als Sprite-Sheets."
+      },
+      "vfx": {
+        "title": "Explosionsanimationen",
+        "body": "Sprite-Sheet-Folgen für Zerstörung und Einschläge."
+      },
+      "ui": {
+        "title": "Oberflächen-Icons",
+        "body": "Icons für Speichern, Reparieren, Import und Export sowie das Befehls-HUD."
+      },
+      "cursors": {
+        "title": "Befehlszeiger",
+        "body": "Zeiger für Bewegung, Angriff, Bewachen, Reparieren und Verkaufen, einschließlich gesperrter und außer Reichweite liegender Zustände."
+      },
+      "sfx": {
+        "title": "Soundeffekte",
+        "body": "Waffen, Motoren, Explosionen, Bau und Bewegung."
+      },
+      "music": {
+        "title": "Musik",
+        "body": "Hintergrundmusik für das Gefecht."
+      },
+      "narrator": {
+        "title": "Erzählerstimmen",
+        "body": "Gesprochene Meldungen zu Befehlen, Angriffen, Verlusten und Einsatzbereitschaft."
+      },
+      "video": {
+        "title": "Meilenstein-Videos",
+        "body": "Filme zur ersten Raffinerie, zum ersten Panzer, zur Teslaspule und zur Landebahn."
+      }
+    },
+    "tech": {
+      "title": "Tech-Baum",
+      "lead": "Gebäude und Einheiten schalten sich frei, sobald die Voraussetzungen stehen. Der Baum folgt den Freischaltregeln im Spiel und dem Spielerhandbuch, einschließlich der Marine.",
+      "note": "Ein weiterer Bauhof setzt eine Fahrzeugwerkstatt voraus. Die Werft muss an einer Küste stehen.",
+      "arrow": "schaltet frei",
+      "plus": "und",
+      "or": "oder",
+      "then": "dann",
+      "suffix": {
+        "two": "×2"
+      },
+      "groups": {
+        "opening": "Eröffnung",
+        "openingLead": "Das Gefecht beginnt mit einem Bauhof auf der Karte. Straßen lassen sich sofort ziehen. Kraftwerk, Erz und eine Fahrzeugfabrik folgen, und diese Fabrik öffnet den Rest der Basis.",
+        "buildings": "Gebäudefreischaltungen",
+        "buildingsLead": "Weitere Bauwerke erscheinen, sobald die Gebäude links stehen.",
+        "units": "Einheitenfreischaltungen",
+        "unitsLead": "Eine Einheit erscheint in der Produktionsleiste, wenn jede Voraussetzung links erfüllt ist."
+      },
+      "nodes": {
+        "constructionYard": "Bauhof",
+        "powerPlant": "Kraftwerk",
+        "oreRefinery": "Erzraffinerie",
+        "vehicleFactory": "Fahrzeugfabrik",
+        "vehicleWorkshop": "Fahrzeugwerkstatt",
+        "radarStation": "Radarstation",
+        "gasStation": "Tankstelle",
+        "hospital": "Lazarett",
+        "helipad": "Hubschrauberlandeplatz",
+        "airstrip": "Landebahn",
+        "shipyard": "Werft",
+        "ammunitionFactory": "Munitionsfabrik",
+        "turretGunV1": "Geschützturm V1",
+        "turretGunV2": "Geschützturm V2",
+        "turretGunV3": "Geschützturm V3",
+        "rocketTurret": "Raketenturm",
+        "teslaCoil": "Teslaspule",
+        "artilleryTurret": "Artillerieturm",
+        "concreteWall": "Betonmauer",
+        "street": "Straße",
+        "tank": "Panzer V1",
+        "tankV2": "Panzer V2",
+        "tankV3": "Panzer V3",
+        "rocketTank": "Raketenpanzer",
+        "harvester": "Ernter",
+        "tankerTruck": "Tanklaster",
+        "ammunitionTruck": "Munitionslaster",
+        "ambulance": "Sanitäter",
+        "recoveryTank": "Bergepanzer",
+        "mineSweeper": "Minenräumer",
+        "mineLayer": "Minenleger",
+        "howitzer": "Haubitze",
+        "apache": "Apache",
+        "f22Raptor": "F-22 Raptor",
+        "f35": "F-35",
+        "destroyer": "Zerstörer",
+        "hovercraft": "Luftkissenboot",
+        "vehicleFerry": "Fahrzeugfähre",
+        "aircraftCarrier": "Flugzeugträger",
+        "navalMineLayer": "Seeminenleger",
+        "battleship": "Schlachtschiff",
+        "submarine": "U-Boot",
+        "supplyShip": "Versorgungsschiff"
+      }
+    },
+    "footer": {
+      "rights": "Ein Browser-RTS. Quelloffen unter der MIT-Lizenz.",
+      "imprint": "Impressum",
+      "privacy": "Datenschutz",
+      "contact": "Kontakt",
+      "play": "Spiel starten",
+      "navLabel": "Rechtliches"
+    }
+  }
+}

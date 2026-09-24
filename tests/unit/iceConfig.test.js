@@ -180,6 +180,6 @@ describe('service worker signalling bypass', () => {
     expect(shouldBypassServiceWorkerCache('/images/map/buildings/yard.webp', 'GET')).toBe(false)
     const worker = readFileSync(path.join(process.cwd(), 'public/sw.js'), 'utf8')
     expect(worker).toContain("pathname.startsWith('/api/')")
-    expect(worker).toContain('code-for-battle-cache-v2')
+    expect(worker).toContain('code-for-battle-cache-v3')
   })
 })

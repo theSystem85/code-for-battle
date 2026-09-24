@@ -1831,3 +1831,15 @@ body.save-game-editor-open { overflow: hidden; }
 .sidebar-legal-links a:hover {
   text-decoration: underline;
 }
+
+.sidebar-landing-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #9ed3ff;
+  font-size: 12px;
+  text-decoration: none;
+}
+
+.sidebar-landing-link:hover {
+  text-decoration: underline;
+}

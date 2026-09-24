@@ -1,0 +1,209 @@
+{
+  "landing": {
+    "meta": {
+      "title": "Code for Battle — Browser real-time strategy",
+      "description": "Code for Battle is a tile-based real-time strategy game in the browser. Build a powered base, harvest ore, and command tanks, jets, and a navy."
+    },
+    "nav": {
+      "play": "Play",
+      "sidebar": "About the game",
+      "languageLabel": "Language",
+      "sectionsLabel": "On this page",
+      "english": "English",
+      "german": "Deutsch",
+      "gallery": "Gallery",
+      "features": "Features",
+      "vibe": "Vibe-coded",
+      "tech": "Tech tree",
+      "manual": "Player guide",
+      "skip": "Skip to content"
+    },
+    "hero": {
+      "eyebrow": "Browser real-time strategy",
+      "title": "Code for Battle",
+      "tagline": "Command the battlefield from your browser.",
+      "lead": "Raise a powered base, harvest ore, and send tanks, jets, and a fleet into the same fight. A tile-based RTS that starts immediately, with nothing to install.",
+      "cta": "Enter the battle",
+      "secondary": "Review the arsenal"
+    },
+    "gallery": {
+      "title": "From the battlefield",
+      "lead": "Screenshots from the live game on desktop and on a phone.",
+      "desktop": {
+        "caption": "Desktop command view",
+        "alt": "Code for Battle on desktop, with the map, units, and command sidebar"
+      },
+      "landscape": {
+        "caption": "Phone, landscape",
+        "alt": "Code for Battle on a phone in landscape orientation"
+      },
+      "portrait": {
+        "caption": "Phone, portrait",
+        "alt": "Code for Battle on a phone in portrait orientation with the mobile command layout"
+      }
+    },
+    "features": {
+      "title": "In the current build",
+      "lead": "Everything on this page is in the game today.",
+      "items": {
+        "economy": {
+          "title": "Base economy",
+          "body": "Power plants, ore fields, and refineries pay for production. Orders run through queues, rally points, and stacked build commands."
+        },
+        "tech": {
+          "title": "Unlock tree",
+          "body": "Factories, radar, and the shipyard open new vehicles, guns, aircraft, and ships. Fresh options appear in the production sidebar."
+        },
+        "arms": {
+          "title": "Land, air, and sea",
+          "body": "Field tank variants, rocket tanks, and howitzers. Hold ground with gun, rocket, tesla, and artillery turrets. Launch an Apache, an F-22, and an F-35. Put to sea with a destroyer, battleship, carrier, submarine, hovercraft, ferry, supply ship, and mine layers."
+        },
+        "logistics": {
+          "title": "Supply and crews",
+          "body": "Fuel and ammunition run out. Tankers, ammo trucks, the hospital, and ambulances keep units fighting. Mines, sweepers, and recovery tanks work the field. Promotions improve range, armor, or rate of fire."
+        },
+        "command": {
+          "title": "Command",
+          "body": "Box-select, assign control groups, queue waypoints, guard friendlies, and drag attack groups. Sell or repair structures, and lay walls and streets."
+        },
+        "persistence": {
+          "title": "Save and replay",
+          "body": "Save and resume a battle in the browser, export the file, or inspect it in the save editor. Record a match and play the command log back."
+        },
+        "multiplayer": {
+          "title": "Opponents",
+          "body": "Host an invite-based WebRTC match, fight the built-in opponent, or assign a party to an optional LLM commander. Enemy commentary can be read aloud."
+        },
+        "battlefield": {
+          "title": "Living map",
+          "body": "Generated maps carry biomes, ore, coasts, cliffs, and procedural water. Milestone films mark the first refinery, the first tank, the Tesla coil, and the airstrip. A loading screen and a phone HUD ship with the game."
+        },
+        "workshop": {
+          "title": "Map workshop",
+          "body": "Set water, rock, and ore, paint tiles in the map editor, and compose the sprite sheets the battle renders."
+        }
+      }
+    },
+    "vibe": {
+      "title": "Fully vibe-coded",
+      "lead": "Code for Battle was built entirely through prompt-driven development. The simulation, the interface, and the production assets were generated, then wired into a playable browser RTS.",
+      "assetsTitle": "Generated asset kinds",
+      "assetsLead": "These kinds are in the repository and used by the live game."
+    },
+    "assets": {
+      "units": {
+        "title": "Unit sprites",
+        "body": "Map and sidebar art for vehicles, aircraft, and ships, including separate turrets and barrels."
+      },
+      "buildings": {
+        "title": "Building sprites",
+        "body": "Map and sidebar art for factories, defenses, pads, the airstrip, and the shipyard."
+      },
+      "terrain": {
+        "title": "Terrain and tiles",
+        "body": "Grass, streets, rock, cliffs, crystals, debris, and biome atlases as sprite sheets."
+      },
+      "vfx": {
+        "title": "Explosion animations",
+        "body": "Sprite-sheet sequences for destruction and impacts."
+      },
+      "ui": {
+        "title": "Interface icons",
+        "body": "Icons for save, repair, import, and export, plus the command HUD."
+      },
+      "cursors": {
+        "title": "Command cursors",
+        "body": "Pointers for move, attack, guard, repair, and sell, including blocked and out-of-range states."
+      },
+      "sfx": {
+        "title": "Sound effects",
+        "body": "Weapons, engines, explosions, construction, and movement."
+      },
+      "music": {
+        "title": "Music",
+        "body": "Background music for the battle."
+      },
+      "narrator": {
+        "title": "Narrator voice-over",
+        "body": "Spoken reports for orders, attacks, losses, and unit readiness."
+      },
+      "video": {
+        "title": "Milestone videos",
+        "body": "Films for the first refinery, the first tank, the Tesla coil, and the airstrip."
+      }
+    },
+    "tech": {
+      "title": "Tech tree",
+      "lead": "Buildings and units unlock as the prerequisites are constructed. The diagram follows the in-game unlock rules and the player guide, including the naval branch.",
+      "note": "A replacement Construction Yard requires a Vehicle Workshop. The Shipyard must be placed on a shoreline.",
+      "arrow": "unlocks",
+      "plus": "and",
+      "or": "or",
+      "then": "then",
+      "suffix": {
+        "two": "×2"
+      },
+      "groups": {
+        "opening": "Opening base",
+        "openingLead": "The match starts with a Construction Yard on the map. Streets can be laid immediately. Power, ore, and a vehicle factory follow, and that factory opens the rest of the base.",
+        "buildings": "Building unlocks",
+        "buildingsLead": "Further structures appear after the buildings on the left are standing.",
+        "units": "Unit unlocks",
+        "unitsLead": "A unit enters the production sidebar when every requirement on the left is met."
+      },
+      "nodes": {
+        "constructionYard": "Construction Yard",
+        "powerPlant": "Power Plant",
+        "oreRefinery": "Ore Refinery",
+        "vehicleFactory": "Vehicle Factory",
+        "vehicleWorkshop": "Vehicle Workshop",
+        "radarStation": "Radar Station",
+        "gasStation": "Gas Station",
+        "hospital": "Hospital",
+        "helipad": "Helipad",
+        "airstrip": "Airstrip",
+        "shipyard": "Shipyard",
+        "ammunitionFactory": "Ammunition Factory",
+        "turretGunV1": "Turret Gun V1",
+        "turretGunV2": "Turret Gun V2",
+        "turretGunV3": "Turret Gun V3",
+        "rocketTurret": "Rocket Turret",
+        "teslaCoil": "Tesla Coil",
+        "artilleryTurret": "Artillery Turret",
+        "concreteWall": "Concrete Wall",
+        "street": "Street",
+        "tank": "Tank V1",
+        "tankV2": "Tank V2",
+        "tankV3": "Tank V3",
+        "rocketTank": "Rocket Tank",
+        "harvester": "Harvester",
+        "tankerTruck": "Tanker Truck",
+        "ammunitionTruck": "Ammo Truck",
+        "ambulance": "Ambulance",
+        "recoveryTank": "Recovery Tank",
+        "mineSweeper": "Mine Sweeper",
+        "mineLayer": "Mine Layer",
+        "howitzer": "Howitzer",
+        "apache": "Apache",
+        "f22Raptor": "F-22 Raptor",
+        "f35": "F-35",
+        "destroyer": "Destroyer",
+        "hovercraft": "Hovercraft",
+        "vehicleFerry": "Vehicle Ferry",
+        "aircraftCarrier": "Aircraft Carrier",
+        "navalMineLayer": "Naval Mine Layer",
+        "battleship": "Battleship",
+        "submarine": "Submarine",
+        "supplyShip": "Supply Ship"
+      }
+    },
+    "footer": {
+      "rights": "A browser RTS. Source available under the MIT license.",
+      "imprint": "Imprint",
+      "privacy": "Privacy",
+      "contact": "Contact",
+      "play": "Launch the game",
+      "navLabel": "Legal"
+    }
+  }
+}

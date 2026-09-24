@@ -116,6 +116,16 @@ If Netlify CLI is installed globally, you can run a local Netlify environment fo
 netlify dev
 ```
 
+## Landing page
+
+The marketing page is served on the same site:
+
+- `/en/landing`
+- `/de/landing`
+- `/landing` (browser language, or the last locale opened)
+
+The in-game sidebar links to it under the legal links. See [specs/090-marketing-landing-page.md](./specs/090-marketing-landing-page.md).
+
 ## 📘 How to Play
 
 User documentation and gameplay reference:

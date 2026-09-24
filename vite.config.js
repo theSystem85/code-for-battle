@@ -1,7 +1,8 @@
-import { existsSync, renameSync, rmSync } from 'fs'
+import { existsSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
+import { LANDING_BUILD_MOVES, rewriteLandingUrl } from './src/landing/routes.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const LEGAL_ENTRY_DIR = resolve(__dirname, 'src/legal')
@@ -35,34 +36,55 @@ function getRewrittenLegalUrl(url = '') {
   return target ? `${target}${suffix}` : null
 }
 
+function rewriteStaticPageUrl(url = '', mode = 'dev') {
+  if (mode === 'preview') {
+    return rewriteLandingUrl(url, 'preview')
+  }
+  return getRewrittenLegalUrl(url) || rewriteLandingUrl(url, 'dev')
+}
+
+function attachStaticPageRoutes(server, mode) {
+  server.middlewares.use((req, _res, next) => {
+    const rewrittenUrl = rewriteStaticPageUrl(req.url, mode)
+    if (rewrittenUrl) {
+      req.url = rewrittenUrl
+    }
+    next()
+  })
+}
+
 const legalRoutePlugin = {
   name: 'legal-route-rewrite',
   configureServer(server) {
-    server.middlewares.use((req, _res, next) => {
-      const rewrittenUrl = getRewrittenLegalUrl(req.url)
-      if (rewrittenUrl) {
-        req.url = rewrittenUrl
-      }
-      next()
-    })
+    attachStaticPageRoutes(server, 'dev')
+  },
+  configurePreviewServer(server) {
+    attachStaticPageRoutes(server, 'preview')
   },
   closeBundle() {
-    const distLegalDir = resolve(__dirname, 'dist/src/legal')
+    const distDir = resolve(__dirname, 'dist')
+    const distLegalDir = resolve(distDir, 'src/legal')
 
-    if (!existsSync(distLegalDir)) {
-      return
-    }
+    if (existsSync(distLegalDir)) {
+      for (const fileName of LEGAL_OUTPUT_FILES) {
+        const sourcePath = resolve(distLegalDir, fileName)
+        const targetPath = resolve(distDir, fileName)
 
-    for (const fileName of LEGAL_OUTPUT_FILES) {
-      const sourcePath = resolve(distLegalDir, fileName)
-      const targetPath = resolve(__dirname, 'dist', fileName)
-
-      if (existsSync(sourcePath)) {
-        renameSync(sourcePath, targetPath)
+        if (existsSync(sourcePath)) {
+          renameSync(sourcePath, targetPath)
+        }
       }
     }
 
-    rmSync(resolve(__dirname, 'dist/src'), { recursive: true, force: true })
+    for (const [fromRel, toRel] of LANDING_BUILD_MOVES) {
+      const sourcePath = resolve(distDir, fromRel)
+      const targetPath = resolve(distDir, toRel)
+      if (!existsSync(sourcePath)) continue
+      mkdirSync(dirname(targetPath), { recursive: true })
+      renameSync(sourcePath, targetPath)
+    }
+
+    rmSync(resolve(distDir, 'src'), { recursive: true, force: true })
   }
 }
 
@@ -80,7 +102,10 @@ export default defineConfig({
         kontakt: resolve(LEGAL_ENTRY_DIR, 'kontakt.html'),
         contact: resolve(LEGAL_ENTRY_DIR, 'contact.html'),
         kontaktSuccess: resolve(LEGAL_ENTRY_DIR, 'kontakt-erfolg.html'),
-        contactSuccess: resolve(LEGAL_ENTRY_DIR, 'contact-success.html')
+        contactSuccess: resolve(LEGAL_ENTRY_DIR, 'contact-success.html'),
+        landingEn: resolve(__dirname, 'src/landing/en.html'),
+        landingDe: resolve(__dirname, 'src/landing/de.html'),
+        landing: resolve(__dirname, 'src/landing/index.html')
       }
     }
   }

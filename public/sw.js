@@ -1,4 +1,4 @@
-const CACHE_NAME = 'code-for-battle-cache-v2'
+const CACHE_NAME = 'code-for-battle-cache-v3'
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -64,9 +64,13 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
+    const path = requestUrl.pathname
+    const isAppShell = path === '/' || path === '/index.html'
     event.respondWith(
       fetch(request).then(response => {
-        cacheResponse('/index.html', request, response)
+        if (isAppShell) {
+          cacheResponse('/index.html', request, response)
+        }
         return response
       }).catch(() => caches.match('/index.html'))
     )
