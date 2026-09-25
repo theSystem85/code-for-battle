@@ -1409,9 +1409,11 @@ body.config-modal-open {
 
 .gamepad-slot__name {
   font-weight: 500;
+  flex: 1 1 auto;
   min-width: 0;
-  overflow-wrap: anywhere;
-  white-space: normal;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .gamepad-columns {
@@ -1419,6 +1421,7 @@ body.config-modal-open {
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   min-width: 0;
+  align-items: start;
 }
 
 .gamepad-column,
@@ -1609,26 +1612,30 @@ body.config-modal-open {
 }
 
 .gamepad-defaults__table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: collapse;
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, max-content);
+  justify-content: start;
+  width: max-content;
+  max-width: 100%;
+  column-gap: 16px;
+  row-gap: 2px;
   font-size: 12px;
 }
 
-.gamepad-defaults__table td {
-  padding: 4px 8px 4px 0;
-  color: #c5d4e4;
-  vertical-align: top;
-  overflow-wrap: anywhere;
+.gamepad-defaults__table tr {
+  display: contents;
 }
 
-.gamepad-defaults__table td:first-child {
-  width: 46%;
+.gamepad-defaults__table td {
+  padding: 4px 0;
+  color: #c5d4e4;
+  vertical-align: top;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .gamepad-defaults__table td:last-child {
   color: #8fb4d6;
-  white-space: normal;
 }
 
 .gamepad-profile-fields,
@@ -1686,9 +1693,11 @@ body.config-modal-open {
 }
 
 .gamepad-slot {
+  box-sizing: border-box;
   max-width: 100%;
   min-width: 0;
-  flex-wrap: wrap;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
 }
 
 @container settings-dialog (min-width: 760px) {

@@ -540,7 +540,9 @@ function renderSlotLights(host) {
     button.classList.toggle('gamepad-indicator--on', Boolean(monitor.connected))
     const light = element('i', 'gamepad-light')
     const label = element('span', null, slot === 0 ? 'P1' : 'P2')
-    const name = element('span', 'gamepad-slot__name', monitor.connected ? monitor.id : text('settings.gamepad.disconnected', 'Not connected'))
+    const nameText = monitor.connected ? monitor.id : text('settings.gamepad.disconnected', 'Not connected')
+    const name = element('span', 'gamepad-slot__name', nameText)
+    if (monitor.connected) name.title = monitor.id
     button.append(light, label, name)
     button.addEventListener('click', () => {
       if (activeSlot !== slot) pulseMenu()

@@ -180,6 +180,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Controller settings layout (2026-09-25)** — The Controllers tab stacks on a narrow dialog and uses two columns only when the dialog is wide enough. Player profiles, live inputs with deadzones, the command list, and the standard-layout table no longer overlap. Settings tabs scroll in the modal body only, and app scrollbars use a slim themed thumb.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
+- [x] **Controller menu column and chip polish (2026-09-25)** — The two-column cards size to their content. The standard-layout table uses content-sized columns. A long controller id stays on one line in the slot chip, with the full name in the tooltip.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
 ### Rendering and WebGPU
 
 - [x] **WebGPU terrain shader and performance overlay (2026-09-24)** — Sample both atlases before any per-fragment branch so `textureSample` stays in uniform control flow. When WebGPU still fails, log one `[WebGPU]` validation line and show a short reason in settings. The performance widget shows the active backend, fallback reason, adapter, canvas resolution, draw calls, timestamp-query GPU time when available, `maxBufferSize` as VRAM, and tracked buffer/texture bytes in use.
