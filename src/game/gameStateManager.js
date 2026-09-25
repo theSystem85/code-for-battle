@@ -40,6 +40,7 @@ import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
 import { getNavalHullDimensions } from '../utils/navalUtils.js'
 import { getSimulationTime } from './time.js'
+import { computeCoopCameraFocus, coopFocusToScroll } from '../input/gamepad/coopCamera.js'
 import { computeSweepDustRadius, getDustEffectNow } from './mineSweeperBehavior.js'
 import { prewarmDestructionExplosionTexture, spawnDestructionExplosion } from './spriteSheetEffects.js'
 import {
@@ -164,9 +165,13 @@ export function updateMapScrolling(gameState, mapGrid) {
   const smoothState = gameState.smoothScroll
   const keyScrollActive = gameState.keyScroll.left || gameState.keyScroll.right ||
     gameState.keyScroll.up || gameState.keyScroll.down
+  const padScroll = gameState.gamepadScroll
+  const padX = padScroll ? padScroll.x : 0
+  const padY = padScroll ? padScroll.y : 0
+  const padScrollActive = padX !== 0 || padY !== 0
 
   if (smoothState) {
-    if (gameState.isRightDragging || keyScrollActive) {
+    if (gameState.isRightDragging || keyScrollActive || padScrollActive) {
       smoothState.active = false
     } else {
       smoothState.targetX = Math.max(0, Math.min(smoothState.targetX, maxScrollX))
@@ -181,6 +186,8 @@ export function updateMapScrolling(gameState, mapGrid) {
         gameState.dragVelocity.x = KEYBOARD_SCROLL_SPEED
       } else if (gameState.keyScroll.right) {
         gameState.dragVelocity.x = -KEYBOARD_SCROLL_SPEED
+      } else if (padX !== 0) {
+        gameState.dragVelocity.x = -padX * KEYBOARD_SCROLL_SPEED
       } else {
         gameState.dragVelocity.x *= INERTIA_DECAY
         if (Math.abs(gameState.dragVelocity.x) < INERTIA_STOP_THRESHOLD) {
@@ -192,6 +199,8 @@ export function updateMapScrolling(gameState, mapGrid) {
         gameState.dragVelocity.y = KEYBOARD_SCROLL_SPEED
       } else if (gameState.keyScroll.down) {
         gameState.dragVelocity.y = -KEYBOARD_SCROLL_SPEED
+      } else if (padY !== 0) {
+        gameState.dragVelocity.y = -padY * KEYBOARD_SCROLL_SPEED
       } else {
         gameState.dragVelocity.y *= INERTIA_DECAY
         if (Math.abs(gameState.dragVelocity.y) < INERTIA_STOP_THRESHOLD) {
@@ -946,7 +955,69 @@ export function handleRightClickDeselect(gameState, units) {
  * @param {Array} units - Array of unit objects
  * @param {Array} mapGrid - 2D array representing the map
  */
+function localPartyUnit(unit, owner) {
+  return Boolean(unit) && (unit.owner === owner || (owner === 'player1' && unit.owner === 'player'))
+}
+
+function firstSelectedLocalUnit(units, owner) {
+  if (!units) return null
+  for (let i = 0; i < units.length; i++) {
+    const unit = units[i]
+    if (!unit || !unit.selected || unit.health <= 0 || unit.isBuilding) continue
+    if (localPartyUnit(unit, owner)) return unit
+  }
+  return null
+}
+
+function manualCameraActive(state) {
+  const keys = state.keyScroll
+  const pad = state.gamepadScroll
+  return Boolean(
+    state.isRightDragging ||
+    (keys && (keys.left || keys.right || keys.up || keys.down)) ||
+    (pad && (pad.x !== 0 || pad.y !== 0))
+  )
+}
+
+function applyCoopCamera(state, units, mapGrid) {
+  const owner = state.humanPlayer || 'player1'
+  const slot = state.coopRemoteByOwner && state.coopRemoteByOwner[owner]
+  const p2 = slot && slot.unit && slot.unit.health > 0 && slot.unit.id === slot.unitId ? slot.unit : null
+  if (!p2 || !mapGrid || !mapGrid.length || !mapGrid[0]) return false
+  if (manualCameraActive(state)) {
+    state.coopCameraHold = true
+    return true
+  }
+  const p1 = firstSelectedLocalUnit(units, owner)
+  if (!p1 || p1 === p2) return false
+  const canvas = typeof document !== 'undefined' ? document.getElementById('gameCanvas') : null
+  if (!canvas) return false
+  const { width: viewportWidth, height: viewportHeight } = getCanvasLogicalSize(canvas)
+  if (!viewportWidth || !viewportHeight) return false
+  const focus = computeCoopCameraFocus({
+    p1: { x: p1.x + TILE_SIZE / 2, y: p1.y + TILE_SIZE / 2 },
+    p2: { x: p2.x + TILE_SIZE / 2, y: p2.y + TILE_SIZE / 2 },
+    viewportWidth,
+    viewportHeight,
+    previousMode: state.coopCameraMode === 'both' ? 'both' : 'p1'
+  })
+  state.coopCameraMode = focus.mode
+  state.coopCameraHold = false
+  const maxScrollX = Math.max(0, mapGrid[0].length * TILE_SIZE - viewportWidth)
+  const maxScrollY = Math.max(0, mapGrid.length * TILE_SIZE - viewportHeight)
+  const target = coopFocusToScroll(focus.focusX, focus.focusY, viewportWidth, viewportHeight, maxScrollX, maxScrollY)
+  if (state.smoothScroll) {
+    state.smoothScroll.targetX = target.x
+    state.smoothScroll.targetY = target.y
+    state.smoothScroll.active = true
+  }
+  state.dragVelocity.x = 0
+  state.dragVelocity.y = 0
+  return true
+}
+
 export function updateCameraFollow(gameState, units, mapGrid) {
+  if (applyCoopCamera(gameState, units, mapGrid)) return
   if (!gameState.cameraFollowUnitId) return
 
   const followUnit = units.find(u => u.id === gameState.cameraFollowUnitId)

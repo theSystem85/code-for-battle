@@ -163,6 +163,26 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 Completed entries stay here so the detail is not dropped. Do not add new work in this section.
 
+### Input and Controls
+
+- [x] **Gamepad and couch co-op (2026-09-25)** — Settings lists every button, axis, and trigger of up to two controllers with live meters and click-to-bind. Each controller keeps its own saved profiles. Player 1 drives the cursor; player 2 remote-controls another unit of the same party, including off screen, and the camera eases between that unit and player 1. Controller commands reuse the mouse, keyboard, and remote-control paths so lockstep stays in sync.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
+- [x] **Player profiles for controllers (2026-09-25)** — A player profile stores one person's standard-button layout and can be chosen separately for P1 and P2. A controller-type profile overrides only controls that have no standard equivalent. Resolution is player, then controller type, then that controller's profile, then the slot defaults.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
+- [x] **Stick deadzones, vibration, and controller-type suggestion (2026-09-25)** — Each player profile stores a left and right stick deadzone, with a live preview in the mapping menu. A remote-controlled unit firing or taking damage, and menu navigation, can pulse the pad when the browser supports vibration, with an on/off switch and intensity. Connecting a pad suggests its Xbox, PlayStation, or generic type layout and does not replace an explicitly chosen player profile.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
+- [x] **Standard gamepad defaults (2026-09-25)** — Every controller command has a Standard Gamepad binding. Hold the left trigger and the left stick drives while the right stick turns the turret; otherwise those sticks are the cursor and the map. Start pauses. The mapping menu lists the layout that Reset restores.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
+- [x] **Controller settings layout (2026-09-25)** — The Controllers tab stacks on a narrow dialog and uses two columns only when the dialog is wide enough. Player profiles, live inputs with deadzones, the command list, and the standard-layout table no longer overlap. Settings tabs scroll in the modal body only, and app scrollbars use a slim themed thumb.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
+- [x] **Controller menu column and chip polish (2026-09-25)** — The two-column cards size to their content. The standard-layout table uses content-sized columns. A long controller id stays on one line in the slot chip, with the full name in the tooltip.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
 ### Rendering and WebGPU
 
 - [x] **WebGPU terrain shader and performance overlay (2026-09-24)** — Sample both atlases before any per-fragment branch so `textureSample` stays in uniform control flow. When WebGPU still fails, log one `[WebGPU]` validation line and show a short reason in settings. The performance widget shows the active backend, fallback reason, adapter, canvas resolution, draw calls, timestamp-query GPU time when available, `maxBufferSize` as VRAM, and tracked buffer/texture bytes in use.

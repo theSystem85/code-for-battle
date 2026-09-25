@@ -9,6 +9,7 @@ import { isForceAttackModifierActive, isGuardModifierActive } from './utils/inpu
 import { GAME_DEFAULT_CURSOR, preloadCursorAssets } from './input/cursorStyles.js'
 import { observeMultiplayerSession } from './network/multiplayerSessionEvents.js'
 import { showNotification } from './ui/notifications.js'
+import { bindGamepadCommands } from './input/gamepad/gamepadCommandBridge.js'
 
 export const selectedUnits = []
 export const selectionActive = false
@@ -147,3 +148,5 @@ export function getKeyboardHandler() {
 export function getUnitCommandsHandler() {
   return unitCommands
 }
+
+bindGamepadCommands({ selectedUnits, getKeyboardHandler })

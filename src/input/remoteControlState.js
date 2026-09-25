@@ -1,6 +1,7 @@
 import { gameState } from '../gameState.js'
 import { getActiveRemoteConnection } from '../network/remoteConnection.js'
 import { createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
+import { bindGamepadCommands } from './gamepad/gamepadCommandBridge.js'
 
 function getRemoteControlActionList() {
   return [
@@ -147,7 +148,7 @@ function recomputeAction(action) {
   gameState.remoteControl[action] = maxIntensity
 }
 
-export function setRemoteControlAction(action, source, active, intensity = 1) {
+function writeRemoteControlAction(action, source, active, intensity, record) {
   if (!getRemoteControlActionList().includes(action)) {
     throw new Error(`Unsupported remote control action: ${action}`)
   }
@@ -157,30 +158,34 @@ export function setRemoteControlAction(action, source, active, intensity = 1) {
 
   ensureRemoteControlSources()
   const sources = gameState.remoteControlSources[action]
-  if (active) {
-    const clamped = clampIntensity(intensity)
-    if (clamped > 0) {
-      sources[source] = clamped
-    } else {
-      delete sources[source]
-    }
-  } else {
-    delete sources[source]
-  }
+  const clamped = active ? clampIntensity(intensity) : 0
+  const previous = sources[source] || 0
+  if (clamped > 0) sources[source] = clamped
+  else delete sources[source]
   recomputeAction(action)
-  if (!gameState.replay?.isApplyingReplayCommand) {
-    recordReplayCommand({
-      type: 'remote_control_action',
-      owner: gameState.humanPlayer,
-      action,
-      source,
-      selectedUnitIds: getSelectedRemoteControlUnitIds(),
-      selectedUnitRefs: getSelectedRemoteControlUnitRefs(),
-      active: Boolean(active),
-      intensity: clampIntensity(intensity)
-    }, { source: 'human-remote-control' })
-  }
+  if (!record || previous === clamped || gameState.replay?.isApplyingReplayCommand) return previous !== clamped
+  recordReplayCommand({
+    type: 'remote_control_action',
+    owner: gameState.humanPlayer,
+    action,
+    source,
+    selectedUnitIds: getSelectedRemoteControlUnitIds(),
+    selectedUnitRefs: getSelectedRemoteControlUnitRefs(),
+    active: clamped > 0,
+    intensity: clamped
+  }, { source: 'human-remote-control' })
   broadcastRemoteControlState()
+  return true
+}
+
+export function setRemoteControlAction(action, source, active, intensity = 1) {
+  writeRemoteControlAction(action, source, active, intensity, true)
+}
+
+export function syncRemoteControlAction(action, source, active, intensity = 1) {
+  if (!getRemoteControlActionList().includes(action) || !source) return
+  const stepped = active ? Math.round(clampIntensity(intensity) * 20) / 20 : 0
+  writeRemoteControlAction(action, source, stepped > 0, stepped, true)
 }
 
 export function clearRemoteControlSource(source) {
@@ -271,6 +276,125 @@ function isRemoteSessionActive() {
   return Boolean(gameState.multiplayerSession && gameState.multiplayerSession.isRemote)
 }
 
+function createCoopSlot() {
+  const actions = {}
+  getRemoteControlActionList().forEach(action => {
+    actions[action] = 0
+  })
+  return {
+    unitId: null,
+    unit: null,
+    actions,
+    absolute: {
+      wagonDirection: null,
+      wagonSpeed: 0,
+      turretDirection: null,
+      turretTurnFactor: 0
+    },
+    publishState: null
+  }
+}
+
+export function getCoopSlot(owner) {
+  const key = owner || gameState.humanPlayer || 'player1'
+  if (!gameState.coopRemoteByOwner) gameState.coopRemoteByOwner = {}
+  if (!gameState.coopRemoteByOwner[key]) gameState.coopRemoteByOwner[key] = createCoopSlot()
+  return gameState.coopRemoteByOwner[key]
+}
+
+function coopSlotChanged(slot) {
+  const state = slot.publishState
+  if (!state) return true
+  if (state.unitId !== slot.unitId) return true
+  const absolute = slot.absolute
+  if (state.wagonDirection !== absolute.wagonDirection) return true
+  if (Math.abs((state.wagonSpeed || 0) - (absolute.wagonSpeed || 0)) > 0.04) return true
+  if (state.turretDirection !== absolute.turretDirection) return true
+  if (Math.abs((state.turretTurnFactor || 0) - (absolute.turretTurnFactor || 0)) > 0.04) return true
+  const names = getRemoteControlActionList()
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i]
+    if (Math.abs((state.actions[name] || 0) - (slot.actions[name] || 0)) > 0.04) return true
+  }
+  return false
+}
+
+function rememberCoopPublishState(slot) {
+  if (!slot.publishState) {
+    slot.publishState = {
+      unitId: null,
+      actions: {},
+      wagonDirection: null,
+      wagonSpeed: 0,
+      turretDirection: null,
+      turretTurnFactor: 0
+    }
+  }
+  const state = slot.publishState
+  state.unitId = slot.unitId
+  state.wagonDirection = slot.absolute.wagonDirection
+  state.wagonSpeed = slot.absolute.wagonSpeed
+  state.turretDirection = slot.absolute.turretDirection
+  state.turretTurnFactor = slot.absolute.turretTurnFactor
+  const names = getRemoteControlActionList()
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i]
+    state.actions[name] = slot.actions[name] || 0
+  }
+}
+
+export function publishCoopSlot(owner) {
+  const slot = getCoopSlot(owner)
+  if (!coopSlotChanged(slot)) return
+  rememberCoopPublishState(slot)
+  if (!gameState.replay?.isApplyingReplayCommand) {
+    recordReplayCommand({
+      type: 'remote_control_coop',
+      owner: owner || gameState.humanPlayer,
+      unitId: slot.unitId,
+      actions: { ...slot.actions },
+      wagonDirection: slot.absolute.wagonDirection,
+      wagonSpeed: slot.absolute.wagonSpeed,
+      turretDirection: slot.absolute.turretDirection,
+      turretTurnFactor: slot.absolute.turretTurnFactor
+    }, { source: 'human-remote-control' })
+  }
+  broadcastRemoteControlState()
+}
+
+export function applyCoopRemoteSnapshot(coop) {
+  if (!coop || typeof coop !== 'object' || !coop.owner) return
+  const slot = getCoopSlot(coop.owner)
+  slot.unitId = coop.unitId || null
+  if (!slot.unit || slot.unit.id !== slot.unitId) slot.unit = null
+  const names = getRemoteControlActionList()
+  const actions = coop.actions || {}
+  for (let i = 0; i < names.length; i++) {
+    const name = names[i]
+    slot.actions[name] = clampIntensity(Number(actions[name]) || 0)
+  }
+  slot.absolute.wagonDirection = Number.isFinite(coop.wagonDirection) ? coop.wagonDirection : null
+  slot.absolute.wagonSpeed = clampIntensity(coop.wagonSpeed)
+  slot.absolute.turretDirection = Number.isFinite(coop.turretDirection) ? coop.turretDirection : null
+  slot.absolute.turretTurnFactor = clampIntensity(coop.turretTurnFactor)
+  rememberCoopPublishState(slot)
+}
+
+function snapshotLocalCoop() {
+  const owner = gameState.humanPlayer || 'player1'
+  const slot = gameState.coopRemoteByOwner && gameState.coopRemoteByOwner[owner]
+  if (!slot) return { owner, unitId: null }
+  return {
+    owner,
+    unitId: slot.unitId,
+    actions: { ...slot.actions },
+    wagonDirection: slot.absolute.wagonDirection,
+    wagonSpeed: slot.absolute.wagonSpeed,
+    turretDirection: slot.absolute.turretDirection,
+    turretTurnFactor: slot.absolute.turretTurnFactor
+  }
+}
+
 function broadcastRemoteControlState() {
   if (!isRemoteSessionActive()) {
     return
@@ -286,6 +410,7 @@ function broadcastRemoteControlState() {
       type: REMOTE_CONTROL_MESSAGE_TYPE,
       actions: { ...gameState.remoteControl },
       absolute: { ...gameState.remoteControlAbsolute },
+      coop: snapshotLocalCoop(),
       timestamp: Date.now()
     })
   } catch (err) {
@@ -310,6 +435,10 @@ export function applyRemoteControlSnapshot(source, payload = {}) {
   if (payload.absolute && typeof payload.absolute === 'object') {
     setRemoteControlAbsolute(source, payload.absolute)
   }
+
+  if (payload.coop && typeof payload.coop === 'object') {
+    applyCoopRemoteSnapshot(payload.coop)
+  }
 }
 
 export function releaseRemoteControlSource(source) {
@@ -320,11 +449,19 @@ export function releaseRemoteControlSource(source) {
   clearRemoteControlAbsoluteSource(source)
 }
 
+bindGamepadCommands({
+  syncRemoteControlAction,
+  clearRemoteControlSource,
+  getCoopSlot,
+  publishCoopSlot
+})
+
 if (typeof window !== 'undefined') {
   window.remoteControlApi = {
     setRemoteControlAction,
     setRemoteControlAbsolute,
     clearRemoteControlSource,
-    clearRemoteControlAbsoluteSource
+    clearRemoteControlAbsoluteSource,
+    applyCoopRemoteSnapshot
   }
 }

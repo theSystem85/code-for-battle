@@ -523,10 +523,82 @@ function handleApacheRemoteControl(unit, params) {
   }
 }
 
+const appendedCoopUnits = []
+
+function coopSlotForUnit(unit) {
+  const buckets = gameState.coopRemoteByOwner
+  if (!buckets || !unit) return null
+  for (const owner in buckets) {
+    const slot = buckets[owner]
+    if (slot && slot.unitId && slot.unit === unit) return slot
+  }
+  return null
+}
+
+function appendCoopControlledUnits(units) {
+  appendedCoopUnits.length = 0
+  const buckets = gameState.coopRemoteByOwner
+  if (!buckets || !units) return
+  for (const owner in buckets) {
+    const slot = buckets[owner]
+    if (!slot || !slot.unitId) continue
+    let unit = slot.unit
+    if (!unit || unit.id !== slot.unitId || unit.health <= 0) {
+      unit = null
+      for (let i = 0; i < units.length; i++) {
+        const candidate = units[i]
+        if (candidate && candidate.id === slot.unitId && candidate.health > 0) {
+          unit = candidate
+          break
+        }
+      }
+      slot.unit = unit
+      if (!unit && units.length > 0) slot.unitId = null
+    }
+    if (!unit) continue
+    let found = false
+    for (let i = 0; i < selectedUnits.length; i++) {
+      if (selectedUnits[i] === unit) {
+        found = true
+        break
+      }
+    }
+    if (!found) {
+      selectedUnits.push(unit)
+      appendedCoopUnits.push(unit)
+    }
+  }
+}
+
+function releaseAppendedCoopUnits() {
+  for (let i = appendedCoopUnits.length - 1; i >= 0; i--) {
+    const unit = appendedCoopUnits[i]
+    const index = selectedUnits.lastIndexOf(unit)
+    if (index >= 0) selectedUnits.splice(index, 1)
+  }
+  appendedCoopUnits.length = 0
+}
+
+function clearCoopFirePulses() {
+  const buckets = gameState.coopRemoteByOwner
+  if (!buckets) return
+  for (const owner in buckets) {
+    const slot = buckets[owner]
+    if (slot && slot.actions) slot.actions.fire = 0
+  }
+}
+
 export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMap) {
   const rc = gameState.remoteControl
   if (!rc) return
-  if (!selectedUnits || selectedUnits.length === 0) {
+  const buckets = gameState.coopRemoteByOwner
+  let coopActive = false
+  if (buckets) {
+    for (const owner in buckets) {
+      if (buckets[owner] && buckets[owner].unitId) coopActive = true
+    }
+  }
+  if ((!selectedUnits || selectedUnits.length === 0) && !coopActive) {
     lastAutoFocusUnitId = null
     return
   }
@@ -544,11 +616,7 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
   const strafeLeftIntensity = rc.strafeLeft || 0
   const strafeRightIntensity = rc.strafeRight || 0
   const rcAbsolute = gameState.remoteControlAbsolute || {}
-  const rawWagonDirection =
-    Number.isFinite(rcAbsolute.wagonDirection) ? rcAbsolute.wagonDirection : null
   const rawWagonSpeed = typeof rcAbsolute.wagonSpeed === 'number' ? rcAbsolute.wagonSpeed : 0
-  const rawTurretDirection =
-    Number.isFinite(rcAbsolute.turretDirection) ? rcAbsolute.turretDirection : null
   const rawTurretTurnFactor =
     typeof rcAbsolute.turretTurnFactor === 'number' ? rcAbsolute.turretTurnFactor : 0
   const remoteControlEngaged =
@@ -587,40 +655,68 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
     }
   }
 
-  selectedUnits.forEach(unit => {
-    if (!unit || !unit.movement) return
+  try {
+    appendCoopControlledUnits(units)
+    selectedUnits.forEach(unit => {
+      if (!unit || !unit.movement) return
+      const scoped = coopSlotForUnit(unit)
+      const scopedActions = scoped ? scoped.actions : null
+      const scopedAbsolute = scoped ? scoped.absolute : null
+      const forwardIntensity = scopedActions ? (scopedActions.forward || 0) : (rc.forward || 0)
+      const backwardIntensity = scopedActions ? (scopedActions.backward || 0) : (rc.backward || 0)
+      const turnLeftIntensity = scopedActions ? (scopedActions.turnLeft || 0) : (rc.turnLeft || 0)
+      const turnRightIntensity = scopedActions ? (scopedActions.turnRight || 0) : (rc.turnRight || 0)
+      const turretLeftIntensity = scopedActions ? (scopedActions.turretLeft || 0) : (rc.turretLeft || 0)
+      const turretRightIntensity = scopedActions ? (scopedActions.turretRight || 0) : (rc.turretRight || 0)
+      const fireIntensity = scopedActions ? (scopedActions.fire || 0) : (rc.fire || 0)
+      const ascendIntensity = scopedActions ? (scopedActions.ascend || 0) : (rc.ascend || 0)
+      const descendIntensity = scopedActions ? (scopedActions.descend || 0) : (rc.descend || 0)
+      const strafeLeftIntensity = scopedActions ? (scopedActions.strafeLeft || 0) : (rc.strafeLeft || 0)
+      const strafeRightIntensity = scopedActions ? (scopedActions.strafeRight || 0) : (rc.strafeRight || 0)
+      const rawWagonDirection = scopedAbsolute
+        ? (Number.isFinite(scopedAbsolute.wagonDirection) ? scopedAbsolute.wagonDirection : null)
+        : (Number.isFinite(rcAbsolute.wagonDirection) ? rcAbsolute.wagonDirection : null)
+      const rawWagonSpeed = scopedAbsolute
+        ? (typeof scopedAbsolute.wagonSpeed === 'number' ? scopedAbsolute.wagonSpeed : 0)
+        : (typeof rcAbsolute.wagonSpeed === 'number' ? rcAbsolute.wagonSpeed : 0)
+      const rawTurretDirection = scopedAbsolute
+        ? (Number.isFinite(scopedAbsolute.turretDirection) ? scopedAbsolute.turretDirection : null)
+        : (Number.isFinite(rcAbsolute.turretDirection) ? rcAbsolute.turretDirection : null)
+      const rawTurretTurnFactor = scopedAbsolute
+        ? (typeof scopedAbsolute.turretTurnFactor === 'number' ? scopedAbsolute.turretTurnFactor : 0)
+        : (typeof rcAbsolute.turretTurnFactor === 'number' ? rcAbsolute.turretTurnFactor : 0)
 
-    const hasTurret = isTurretTankUnitType(unit.type)
-    const isApache = unit.type === 'apache' || unit.type === 'f35'
-    const isTouchLayout = typeof document !== 'undefined' && document.body?.classList.contains('is-touch')
+      const hasTurret = isTurretTankUnitType(unit.type)
+      const isApache = unit.type === 'apache' || unit.type === 'f35'
+      const isTouchLayout = typeof document !== 'undefined' && document.body?.classList.contains('is-touch')
 
-    // Only allow remote control for player units unless enemy control is enabled
-    const humanPlayer = gameState.humanPlayer || 'player1'
-    const isPlayerUnit =
+      // Only allow remote control for player units unless enemy control is enabled
+      const humanPlayer = gameState.humanPlayer || 'player1'
+      const isPlayerUnit =
       unit.owner === humanPlayer || (humanPlayer === 'player1' && unit.owner === 'player')
-    if (!isPlayerUnit && !ENABLE_ENEMY_CONTROL) {
-      return
-    }
+      if (!isPlayerUnit && !ENABLE_ENEMY_CONTROL) {
+        return
+      }
 
-    const absoluteMovementActive =
+      const absoluteMovementActive =
       hasTurret && rawWagonDirection !== null && rawWagonSpeed > 0
-    const hasMovementInput =
+      const hasMovementInput =
       absoluteMovementActive ||
       forwardIntensity > 0 ||
       backwardIntensity > 0 ||
       turnLeftIntensity > 0 ||
       turnRightIntensity > 0
-    const hasTurretInput =
+      const hasTurretInput =
       hasTurret && ((rawTurretDirection !== null && rawTurretTurnFactor > 0) || turretLeftIntensity > 0 || turretRightIntensity > 0)
-    const hasRemoteCommandInput = hasMovementInput || hasTurretInput || fireIntensity > 0
+      const hasRemoteCommandInput = hasMovementInput || hasTurretInput || fireIntensity > 0
 
-    if (isApache) {
-      const landingInProgress = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.landedHelipadId)
-      const landingOverrideThreshold = landingInProgress && isTouchLayout ? 0.2 : 0
-      const effectiveWagonSpeed = rawWagonSpeed > landingOverrideThreshold ? rawWagonSpeed : 0
-      const effectiveWagonDirection = effectiveWagonSpeed > 0 ? rawWagonDirection : null
-      const apacheAbsoluteActive = effectiveWagonDirection !== null && effectiveWagonSpeed > 0
-      const apacheHasMovementInput =
+      if (isApache) {
+        const landingInProgress = Boolean(unit.helipadLandingRequested || unit.flightPlan?.mode === 'helipad' || unit.landedHelipadId)
+        const landingOverrideThreshold = landingInProgress && isTouchLayout ? 0.2 : 0
+        const effectiveWagonSpeed = rawWagonSpeed > landingOverrideThreshold ? rawWagonSpeed : 0
+        const effectiveWagonDirection = effectiveWagonSpeed > 0 ? rawWagonDirection : null
+        const apacheAbsoluteActive = effectiveWagonDirection !== null && effectiveWagonSpeed > 0
+        const apacheHasMovementInput =
         apacheAbsoluteActive ||
         forwardIntensity > landingOverrideThreshold ||
         backwardIntensity > landingOverrideThreshold ||
@@ -631,435 +727,438 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
         ascendIntensity > landingOverrideThreshold ||
         descendIntensity > landingOverrideThreshold
 
-      if (apacheHasMovementInput) {
+        if (apacheHasMovementInput) {
+          unit.path = []
+          unit.moveTarget = null
+          unit.remoteControlActive = true
+          unit.lastRemoteControlTime = now
+          unit.lastPlayerCommandTime = now
+        } else {
+          unit.remoteControlActive = false
+        }
+
+        handleApacheRemoteControl(unit, {
+          forwardIntensity,
+          backwardIntensity,
+          turnLeftIntensity,
+          turnRightIntensity,
+          ascendIntensity,
+          descendIntensity,
+          strafeLeftIntensity,
+          strafeRightIntensity,
+          rawWagonDirection: effectiveWagonDirection,
+          rawWagonSpeed: effectiveWagonSpeed,
+          fireIntensity
+        })
+
+        const firePressed = fireIntensity > 0
+        const previouslyPressed = Boolean(unit.remoteFireCommandActive)
+        unit.remoteFireCommandActive = firePressed
+
+        if (firePressed && !previouslyPressed && unit.canFire !== false) {
+          const ammoRemaining = Math.max(0, Math.floor(unit.rocketAmmo || 0))
+          if (ammoRemaining > 0 && (!unit.lastShotTime || now - unit.lastShotTime >= 300)) {
+            const direction = unit.direction || 0
+            const aimTarget = unit.remoteRocketTarget || computeApacheRemoteAim(unit, direction)
+            const target = {
+              tileX: aimTarget.tileX,
+              tileY: aimTarget.tileY,
+              x: aimTarget.x,
+              y: aimTarget.y
+            }
+
+            const centerX = unit.x + TILE_SIZE / 2
+            const centerY = unit.y + TILE_SIZE / 2
+            const spawnPoints = getApacheRocketSpawnPoints(unit, centerX, centerY)
+            const spawn = spawnPoints.left || { x: centerX, y: centerY }
+
+            unit.customRocketSpawn = spawn
+            const fired = fireBullet(unit, target, bullets, now)
+            unit.customRocketSpawn = null
+
+            if (fired) {
+              unit.lastShotTime = now
+              unit.rocketAmmo = Math.max(0, (unit.rocketAmmo || 0) - 1)
+              unit.apacheAmmoEmpty = unit.rocketAmmo <= 0
+              if (unit.apacheAmmoEmpty) {
+                unit.canFire = false
+              }
+              unit.remoteReticleVisible = true
+            }
+          }
+        } else if (!firePressed && !unit.remoteControlActive) {
+          unit.remoteReticleVisible = false
+        }
+
+        return
+      }
+      if (unit.crew && typeof unit.crew === 'object' && !unit.crew.commander) {
+        unit.remoteControlActive = false
+        return
+      }
+
+      // Units without fuel cannot be remote controlled
+      if (unit.gas !== undefined && unit.gas <= 0) {
+        unit.remoteControlActive = false
+        return
+      }
+
+      if (unit.isNaval) {
+        handleNavalRemoteControl(unit, {
+          forwardIntensity,
+          backwardIntensity,
+          turnLeftIntensity,
+          turnRightIntensity,
+          fireIntensity
+        }, bullets, units, mapGrid, now)
+        return
+      }
+
+      // Cancel pathing when using remote control
+      if (hasMovementInput) {
         unit.path = []
         unit.moveTarget = null
-        unit.remoteControlActive = true
+      }
+
+      // Track whether this unit is actively being moved via remote control
+      unit.remoteControlActive = !!hasMovementInput
+      if (hasRemoteCommandInput) {
         unit.lastRemoteControlTime = now
-        unit.lastPlayerCommandTime = now
-      } else {
-        unit.remoteControlActive = false
-      }
-
-      handleApacheRemoteControl(unit, {
-        forwardIntensity,
-        backwardIntensity,
-        turnLeftIntensity,
-        turnRightIntensity,
-        ascendIntensity,
-        descendIntensity,
-        strafeLeftIntensity,
-        strafeRightIntensity,
-        rawWagonDirection: effectiveWagonDirection,
-        rawWagonSpeed: effectiveWagonSpeed,
-        fireIntensity
-      })
-
-      const firePressed = fireIntensity > 0
-      const previouslyPressed = Boolean(unit.remoteFireCommandActive)
-      unit.remoteFireCommandActive = firePressed
-
-      if (firePressed && !previouslyPressed && unit.canFire !== false) {
-        const ammoRemaining = Math.max(0, Math.floor(unit.rocketAmmo || 0))
-        if (ammoRemaining > 0 && (!unit.lastShotTime || now - unit.lastShotTime >= 300)) {
-          const direction = unit.direction || 0
-          const aimTarget = unit.remoteRocketTarget || computeApacheRemoteAim(unit, direction)
-          const target = {
-            tileX: aimTarget.tileX,
-            tileY: aimTarget.tileY,
-            x: aimTarget.x,
-            y: aimTarget.y
-          }
-
-          const centerX = unit.x + TILE_SIZE / 2
-          const centerY = unit.y + TILE_SIZE / 2
-          const spawnPoints = getApacheRocketSpawnPoints(unit, centerX, centerY)
-          const spawn = spawnPoints.left || { x: centerX, y: centerY }
-
-          unit.customRocketSpawn = spawn
-          const fired = fireBullet(unit, target, bullets, now)
-          unit.customRocketSpawn = null
-
-          if (fired) {
-            unit.lastShotTime = now
-            unit.rocketAmmo = Math.max(0, (unit.rocketAmmo || 0) - 1)
-            unit.apacheAmmoEmpty = unit.rocketAmmo <= 0
-            if (unit.apacheAmmoEmpty) {
-              unit.canFire = false
-            }
-            unit.remoteReticleVisible = true
-          }
+        if (unit.type === 'harvester' && hasMovementInput) {
+          unit.lastPlayerCommandTime = now
         }
-      } else if (!firePressed && !unit.remoteControlActive) {
-        unit.remoteReticleVisible = false
       }
 
-      return
-    }
-    if (unit.crew && typeof unit.crew === 'object' && !unit.crew.commander) {
-      unit.remoteControlActive = false
-      return
-    }
-
-    // Units without fuel cannot be remote controlled
-    if (unit.gas !== undefined && unit.gas <= 0) {
-      unit.remoteControlActive = false
-      return
-    }
-
-    if (unit.isNaval) {
-      handleNavalRemoteControl(unit, {
-        forwardIntensity,
-        backwardIntensity,
-        turnLeftIntensity,
-        turnRightIntensity,
-        fireIntensity
-      }, bullets, units, mapGrid, now)
-      return
-    }
-
-    // Cancel pathing when using remote control
-    if (hasMovementInput) {
-      unit.path = []
-      unit.moveTarget = null
-    }
-
-    // Track whether this unit is actively being moved via remote control
-    unit.remoteControlActive = !!hasMovementInput
-    if (hasRemoteCommandInput) {
-      unit.lastRemoteControlTime = now
-      if (unit.type === 'harvester' && hasMovementInput) {
-        unit.lastPlayerCommandTime = now
-      }
-    }
-
-    if (unit.remoteControlActive && !unit.hasUsedRemoteControl) {
-      unit.hasUsedRemoteControl = true
-    }
-
-    // Adjust rotation of the wagon directly so movement aligns with it
-    const rotationSpeed = unit.rotationSpeed || 0.05
-    let absoluteMovementDirectionSign = 1
-    if (absoluteMovementActive) {
-      const desiredDirection = normalizeAngle(rawWagonDirection)
-      const currentDirection = unit.direction || 0
-      let targetDirection = desiredDirection
-
-      const reverseDirection = normalizeAngle(desiredDirection + Math.PI)
-      const frontDiff = angleDiff(currentDirection, desiredDirection)
-      const backDiff = angleDiff(currentDirection, reverseDirection)
-
-      if (backDiff + 0.0001 < frontDiff) {
-        targetDirection = reverseDirection
-        absoluteMovementDirectionSign = -1
+      if (unit.remoteControlActive && !unit.hasUsedRemoteControl) {
+        unit.hasUsedRemoteControl = true
       }
 
-      unit.direction = smoothRotateTowardsAngle(currentDirection, targetDirection, rotationSpeed)
-    } else {
-      const netTurn = turnRightIntensity - turnLeftIntensity
-      if (netTurn) {
-        unit.direction = normalizeAngle((unit.direction || 0) + rotationSpeed * netTurn)
-      }
-    }
+      // Adjust rotation of the wagon directly so movement aligns with it
+      const rotationSpeed = unit.rotationSpeed || 0.05
+      let absoluteMovementDirectionSign = 1
+      if (absoluteMovementActive) {
+        const desiredDirection = normalizeAngle(rawWagonDirection)
+        const currentDirection = unit.direction || 0
+        let targetDirection = desiredDirection
 
-    // Manual turret rotation when shift-modified keys are used
-    const turretSpeed = unit.turretRotationSpeed || unit.rotationSpeed || 0.05
-    const absoluteTurretActive =
+        const reverseDirection = normalizeAngle(desiredDirection + Math.PI)
+        const frontDiff = angleDiff(currentDirection, desiredDirection)
+        const backDiff = angleDiff(currentDirection, reverseDirection)
+
+        if (backDiff + 0.0001 < frontDiff) {
+          targetDirection = reverseDirection
+          absoluteMovementDirectionSign = -1
+        }
+
+        unit.direction = smoothRotateTowardsAngle(currentDirection, targetDirection, rotationSpeed)
+      } else {
+        const netTurn = turnRightIntensity - turnLeftIntensity
+        if (netTurn) {
+          unit.direction = normalizeAngle((unit.direction || 0) + rotationSpeed * netTurn)
+        }
+      }
+
+      // Manual turret rotation when shift-modified keys are used
+      const turretSpeed = unit.turretRotationSpeed || unit.rotationSpeed || 0.05
+      const absoluteTurretActive =
       hasTurret && rawTurretDirection !== null && rawTurretTurnFactor > 0
-    const netTurret = turretRightIntensity - turretLeftIntensity
-    if (hasTurret && absoluteTurretActive) {
-      const current =
+      const netTurret = turretRightIntensity - turretLeftIntensity
+      if (hasTurret && absoluteTurretActive) {
+        const current =
         unit.turretDirection !== undefined ? unit.turretDirection : unit.direction
-      const desiredTurret = normalizeAngle(rawTurretDirection)
-      const rotationRate = turretSpeed * Math.max(0, Math.min(rawTurretTurnFactor, 1))
-      unit.turretDirection = smoothRotateTowardsAngle(current, desiredTurret, rotationRate)
-      unit.turretShouldFollowMovement = false
-      unit.manualTurretOverrideUntil = now + 150
-    } else if (hasTurret && netTurret) {
-      const current =
+        const desiredTurret = normalizeAngle(rawTurretDirection)
+        const rotationRate = turretSpeed * Math.max(0, Math.min(rawTurretTurnFactor, 1))
+        unit.turretDirection = smoothRotateTowardsAngle(current, desiredTurret, rotationRate)
+        unit.turretShouldFollowMovement = false
+        unit.manualTurretOverrideUntil = now + 150
+      } else if (hasTurret && netTurret) {
+        const current =
         unit.turretDirection !== undefined ? unit.turretDirection : unit.direction
-      unit.turretDirection = normalizeAngle(current + turretSpeed * netTurret)
-      unit.turretShouldFollowMovement = false
-      unit.manualTurretOverrideUntil = now + 150
-    }
+        unit.turretDirection = normalizeAngle(current + turretSpeed * netTurret)
+        unit.turretShouldFollowMovement = false
+        unit.manualTurretOverrideUntil = now + 150
+      }
 
-    const manualTurretInput =
+      const manualTurretInput =
       hasTurret &&
       (absoluteTurretActive || turretLeftIntensity > 0 || turretRightIntensity > 0)
-    if (!manualTurretInput && hasTurret && unit.manualTurretOverrideUntil && now >= unit.manualTurretOverrideUntil) {
-      unit.manualTurretOverrideUntil = null
-    }
+      if (!manualTurretInput && hasTurret && unit.manualTurretOverrideUntil && now >= unit.manualTurretOverrideUntil) {
+        unit.manualTurretOverrideUntil = null
+      }
 
-    const manualOverrideActive =
+      const manualOverrideActive =
       manualTurretInput || (hasTurret && unit.manualTurretOverrideUntil && now < unit.manualTurretOverrideUntil)
 
-    // Keep movement rotation in sync with wagon direction
-    unit.movement.rotation = unit.direction
-    unit.movement.targetRotation = unit.direction
+      // Keep movement rotation in sync with wagon direction
+      unit.movement.rotation = unit.direction
+      unit.movement.targetRotation = unit.direction
 
-    // Compute effective max speed similar to unified movement
-    const speedModifier = unit.speedModifier || 1
-    const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
-    const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-    const onStreet = mapGrid[tileY] && mapGrid[tileY][tileX] && mapGrid[tileY][tileX].type === 'street'
-    let terrainMultiplier = onStreet ? STREET_SPEED_MULTIPLIER : 1
-    if (unit.type === 'ambulance' && onStreet) {
-      const props = unit.ambulanceProps || { streetSpeedMultiplier: 6.0 }
-      terrainMultiplier = props.streetSpeedMultiplier || 6.0
-    } else if (unit.type === 'rocketTank' && onStreet) {
+      // Compute effective max speed similar to unified movement
+      const speedModifier = unit.speedModifier || 1
+      const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+      const tileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+      const onStreet = mapGrid[tileY] && mapGrid[tileY][tileX] && mapGrid[tileY][tileX].type === 'street'
+      let terrainMultiplier = onStreet ? STREET_SPEED_MULTIPLIER : 1
+      if (unit.type === 'ambulance' && onStreet) {
+        const props = unit.ambulanceProps || { streetSpeedMultiplier: 6.0 }
+        terrainMultiplier = props.streetSpeedMultiplier || 6.0
+      } else if (unit.type === 'rocketTank' && onStreet) {
       // Rocket tanks are 30% faster on streets than regular tanks
-      terrainMultiplier = STREET_SPEED_MULTIPLIER * 1.3
-    }
-    const effectiveMaxSpeed = 0.9 * speedModifier * terrainMultiplier
-
-    // Move forward/backward relative to wagon direction
-    if (absoluteMovementActive) {
-      const movementMagnitude = Math.max(0, Math.min(rawWagonSpeed, 1))
-      const fx = Math.cos(unit.direction)
-      const fy = Math.sin(unit.direction)
-
-      const checkDistance = TILE_SIZE
-      const checkX =
-        unit.x + TILE_SIZE / 2 + fx * checkDistance * absoluteMovementDirectionSign
-      const checkY =
-        unit.y + TILE_SIZE / 2 + fy * checkDistance * absoluteMovementDirectionSign
-      const nextTileX = Math.floor(checkX / TILE_SIZE)
-      const nextTileY = Math.floor(checkY / TILE_SIZE)
-      const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
-      const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
-      const occupied =
-        occupancyMap &&
-        occupancyMap[nextTileY] &&
-        occupancyMap[nextTileY][nextTileX] &&
-        !(nextTileX === currentTileX && nextTileY === currentTileY)
-
-      if (!occupied) {
-        unit.movement.targetVelocity.x =
-          fx * effectiveMaxSpeed * movementMagnitude * absoluteMovementDirectionSign
-        unit.movement.targetVelocity.y =
-          fy * effectiveMaxSpeed * movementMagnitude * absoluteMovementDirectionSign
-        unit.movement.isMoving = movementMagnitude > 0
-      } else {
-        unit.movement.targetVelocity.x = 0
-        unit.movement.targetVelocity.y = 0
-        unit.movement.isMoving = false
+        terrainMultiplier = STREET_SPEED_MULTIPLIER * 1.3
       }
-    } else {
-      const movementAxis = forwardIntensity - backwardIntensity
-      if (movementAxis) {
-        const directionSign = movementAxis > 0 ? 1 : -1
-        const movementMagnitude = Math.min(Math.abs(movementAxis), 1)
+      const effectiveMaxSpeed = 0.9 * speedModifier * terrainMultiplier
+
+      // Move forward/backward relative to wagon direction
+      if (absoluteMovementActive) {
+        const movementMagnitude = Math.max(0, Math.min(rawWagonSpeed, 1))
         const fx = Math.cos(unit.direction)
         const fy = Math.sin(unit.direction)
 
-        // Check the tile one tile ahead (or behind) for occupancy
         const checkDistance = TILE_SIZE
-        const checkX = unit.x + TILE_SIZE / 2 + fx * checkDistance * directionSign
-        const checkY = unit.y + TILE_SIZE / 2 + fy * checkDistance * directionSign
+        const checkX =
+        unit.x + TILE_SIZE / 2 + fx * checkDistance * absoluteMovementDirectionSign
+        const checkY =
+        unit.y + TILE_SIZE / 2 + fy * checkDistance * absoluteMovementDirectionSign
         const nextTileX = Math.floor(checkX / TILE_SIZE)
         const nextTileY = Math.floor(checkY / TILE_SIZE)
         const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
         const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
         const occupied =
-          occupancyMap &&
-          occupancyMap[nextTileY] &&
-          occupancyMap[nextTileY][nextTileX] &&
-          !(nextTileX === currentTileX && nextTileY === currentTileY)
+        occupancyMap &&
+        occupancyMap[nextTileY] &&
+        occupancyMap[nextTileY][nextTileX] &&
+        !(nextTileX === currentTileX && nextTileY === currentTileY)
 
         if (!occupied) {
-          unit.movement.targetVelocity.x = fx * effectiveMaxSpeed * directionSign * movementMagnitude
-          unit.movement.targetVelocity.y = fy * effectiveMaxSpeed * directionSign * movementMagnitude
-          unit.movement.isMoving = true
+          unit.movement.targetVelocity.x =
+          fx * effectiveMaxSpeed * movementMagnitude * absoluteMovementDirectionSign
+          unit.movement.targetVelocity.y =
+          fy * effectiveMaxSpeed * movementMagnitude * absoluteMovementDirectionSign
+          unit.movement.isMoving = movementMagnitude > 0
         } else {
           unit.movement.targetVelocity.x = 0
           unit.movement.targetVelocity.y = 0
           unit.movement.isMoving = false
         }
       } else {
-        unit.movement.targetVelocity.x = 0
-        unit.movement.targetVelocity.y = 0
-        unit.movement.isMoving = false
-      }
-    }
+        const movementAxis = forwardIntensity - backwardIntensity
+        if (movementAxis) {
+          const directionSign = movementAxis > 0 ? 1 : -1
+          const movementMagnitude = Math.min(Math.abs(movementAxis), 1)
+          const fx = Math.cos(unit.direction)
+          const fy = Math.sin(unit.direction)
 
-    if (hasTurret && unit.target && !manualOverrideActive) {
-      aimTurretAtTarget(unit, unit.target)
-    }
+          // Check the tile one tile ahead (or behind) for occupancy
+          const checkDistance = TILE_SIZE
+          const checkX = unit.x + TILE_SIZE / 2 + fx * checkDistance * directionSign
+          const checkY = unit.y + TILE_SIZE / 2 + fy * checkDistance * directionSign
+          const nextTileX = Math.floor(checkX / TILE_SIZE)
+          const nextTileY = Math.floor(checkY / TILE_SIZE)
+          const currentTileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
+          const currentTileY = Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE)
+          const occupied =
+          occupancyMap &&
+          occupancyMap[nextTileY] &&
+          occupancyMap[nextTileY][nextTileX] &&
+          !(nextTileX === currentTileX && nextTileY === currentTileY)
 
-    // Handle remote control aim reticle and firing for rocket tanks
-    const isRocketTank = unit.type === 'rocketTank'
-    if (isRocketTank) {
-      // Track remote control activity
-      const remoteControlActive = hasMovementInput || manualTurretInput || fireIntensity > 0
-      unit.remoteControlActive = remoteControlActive
-
-      if (unit.remoteControlActive && !unit.hasUsedRemoteControl) {
-        unit.hasUsedRemoteControl = true
-      }
-      if (remoteControlActive) {
-        unit.lastRemoteControlTime = now
-      }
-
-      // Determine aim target: use selected target if available, otherwise use forward direction
-      let aimTarget = null
-      let targetDir = unit.movement.rotation
-
-      if (unit.target && unit.target.health > 0) {
-        // Use selected target's current position
-        const targetCenterX = unit.target.x + TILE_SIZE / 2
-        const targetCenterY = unit.target.y + TILE_SIZE / 2
-        const centerX = unit.x + TILE_SIZE / 2
-        const centerY = unit.y + TILE_SIZE / 2
-        targetDir = Math.atan2(targetCenterY - centerY, targetCenterX - centerX)
-
-        // Create aim target at the selected unit's position
-        aimTarget = {
-          x: targetCenterX,
-          y: targetCenterY,
-          tileX: Math.floor(targetCenterX / TILE_SIZE),
-          tileY: Math.floor(targetCenterY / TILE_SIZE),
-          range: Math.hypot(targetCenterX - centerX, targetCenterY - centerY)
-        }
-      } else {
-        // Clear dead target
-        if (unit.target && unit.target.health <= 0) {
-          unit.target = null
-        }
-        // No target: compute aim direction based on current rotation
-        const dir = unit.movement.rotation
-        aimTarget = computeRocketTankRemoteAim(unit, dir)
-        targetDir = dir
-      }
-
-      if (Number.isFinite(aimTarget.x) && Number.isFinite(aimTarget.y)) {
-        unit.remoteRocketTarget = aimTarget
-        // Show reticle only up to 1s after remote control ends
-        const timeSinceLastControl = unit.lastRemoteControlTime ? (now - unit.lastRemoteControlTime) : Infinity
-        unit.remoteReticleVisible = timeSinceLastControl <= 1000
-      } else {
-        unit.remoteRocketTarget = null
-        unit.remoteReticleVisible = false
-      }
-
-      // Rotate unit towards remote rocket target - use fast rotation for immediate response
-      if (unit.remoteRocketTarget) {
-        const _centerX = unit.x + TILE_SIZE / 2
-        const _centerY = unit.y + TILE_SIZE / 2
-
-        // If there's a selected target, rotate immediately and aggressively towards it
-        // Otherwise, smoothly rotate in the current direction
-        let rotationSpeed = unit.rotationSpeed || 0.1
-        if (unit.target && unit.target.health > 0) {
-          // Fast rotation towards selected target (10x normal speed)
-          rotationSpeed = Math.max(0.5, rotationSpeed * 10)
-        }
-
-        unit.movement.rotation = smoothRotateTowardsAngle(
-          unit.movement.rotation,
-          targetDir,
-          rotationSpeed
-        )
-
-        // Check if unit is facing the target (within 5 degrees)
-        const angleDifference = Math.abs(angleDiff(unit.movement.rotation, targetDir))
-        const isFacingTarget = angleDifference < (5 * Math.PI / 180)
-
-        // Store facing state and fire when ready
-        unit.isFacingRemoteTarget = isFacingTarget
-      }
-
-      // Fire rocket burst when space is pressed OR when unit is reloaded and has a target
-      const shouldFire =
-        fireIntensity > 0 ||
-        (remoteControlActive && unit.remoteRocketTarget && unit.isFacingRemoteTarget)
-      if (shouldFire && unit.canFire !== false) {
-        const baseRate = getFireRateForUnit(unit)
-        const effectiveRate = unit.level >= 3 ? baseRate / (unit.fireRateMultiplier || 1.33) : baseRate
-
-        // Check if we need to start a new burst or continue existing one
-        if (!unit.burstState) {
-          // Start new burst if cooldown has passed
-          if (!unit.lastShotTime || now - unit.lastShotTime >= effectiveRate) {
-            // Check ammunition
-            const hasAmmo = unit.ammunition === undefined || unit.ammunition > 0
-            if (hasAmmo && unit.isFacingRemoteTarget) {
-              // Fire as many rockets as we have ammo for, up to 4
-              const rocketsToFire = typeof unit.ammunition === 'number'
-                ? Math.min(4, unit.ammunition)
-                : 4
-              // Start burst - don't set lastShotTime yet, only after burst completes
-              unit.burstState = {
-                rocketsToFire: rocketsToFire,
-                lastRocketTime: 0,
-                remoteControlTarget: {
-                  tileX: aimTarget.tileX,
-                  tileY: aimTarget.tileY,
-                  x: aimTarget.x,
-                  y: aimTarget.y
-                }
-              }
-            }
+          if (!occupied) {
+            unit.movement.targetVelocity.x = fx * effectiveMaxSpeed * directionSign * movementMagnitude
+            unit.movement.targetVelocity.y = fy * effectiveMaxSpeed * directionSign * movementMagnitude
+            unit.movement.isMoving = true
+          } else {
+            unit.movement.targetVelocity.x = 0
+            unit.movement.targetVelocity.y = 0
+            unit.movement.isMoving = false
           }
         } else {
-          // Continue existing burst (fire remaining rockets)
-          if (unit.burstState.rocketsToFire > 0 &&
-              now - unit.burstState.lastRocketTime >= 200) { // 200ms delay between rockets
-            const target = unit.burstState.remoteControlTarget
-            // Only fire if we have a valid remote control target (burst may have been started by normal combat)
-            if (target) {
-              fireBullet(unit, target, bullets, now)
-              unit.burstState.rocketsToFire--
-              unit.burstState.lastRocketTime = now
+          unit.movement.targetVelocity.x = 0
+          unit.movement.targetVelocity.y = 0
+          unit.movement.isMoving = false
+        }
+      }
 
-              if (unit.burstState.rocketsToFire <= 0) {
-                unit.burstState = null // Reset burst state
-                unit.lastShotTime = now // Set cooldown for next burst - reload phase begins now
+      if (hasTurret && unit.target && !manualOverrideActive) {
+        aimTurretAtTarget(unit, unit.target)
+      }
+
+      // Handle remote control aim reticle and firing for rocket tanks
+      const isRocketTank = unit.type === 'rocketTank'
+      if (isRocketTank) {
+      // Track remote control activity
+        const remoteControlActive = hasMovementInput || manualTurretInput || fireIntensity > 0
+        unit.remoteControlActive = remoteControlActive
+
+        if (unit.remoteControlActive && !unit.hasUsedRemoteControl) {
+          unit.hasUsedRemoteControl = true
+        }
+        if (remoteControlActive) {
+          unit.lastRemoteControlTime = now
+        }
+
+        // Determine aim target: use selected target if available, otherwise use forward direction
+        let aimTarget = null
+        let targetDir = unit.movement.rotation
+
+        if (unit.target && unit.target.health > 0) {
+        // Use selected target's current position
+          const targetCenterX = unit.target.x + TILE_SIZE / 2
+          const targetCenterY = unit.target.y + TILE_SIZE / 2
+          const centerX = unit.x + TILE_SIZE / 2
+          const centerY = unit.y + TILE_SIZE / 2
+          targetDir = Math.atan2(targetCenterY - centerY, targetCenterX - centerX)
+
+          // Create aim target at the selected unit's position
+          aimTarget = {
+            x: targetCenterX,
+            y: targetCenterY,
+            tileX: Math.floor(targetCenterX / TILE_SIZE),
+            tileY: Math.floor(targetCenterY / TILE_SIZE),
+            range: Math.hypot(targetCenterX - centerX, targetCenterY - centerY)
+          }
+        } else {
+        // Clear dead target
+          if (unit.target && unit.target.health <= 0) {
+            unit.target = null
+          }
+          // No target: compute aim direction based on current rotation
+          const dir = unit.movement.rotation
+          aimTarget = computeRocketTankRemoteAim(unit, dir)
+          targetDir = dir
+        }
+
+        if (Number.isFinite(aimTarget.x) && Number.isFinite(aimTarget.y)) {
+          unit.remoteRocketTarget = aimTarget
+          // Show reticle only up to 1s after remote control ends
+          const timeSinceLastControl = unit.lastRemoteControlTime ? (now - unit.lastRemoteControlTime) : Infinity
+          unit.remoteReticleVisible = timeSinceLastControl <= 1000
+        } else {
+          unit.remoteRocketTarget = null
+          unit.remoteReticleVisible = false
+        }
+
+        // Rotate unit towards remote rocket target - use fast rotation for immediate response
+        if (unit.remoteRocketTarget) {
+          const _centerX = unit.x + TILE_SIZE / 2
+          const _centerY = unit.y + TILE_SIZE / 2
+
+          // If there's a selected target, rotate immediately and aggressively towards it
+          // Otherwise, smoothly rotate in the current direction
+          let rotationSpeed = unit.rotationSpeed || 0.1
+          if (unit.target && unit.target.health > 0) {
+          // Fast rotation towards selected target (10x normal speed)
+            rotationSpeed = Math.max(0.5, rotationSpeed * 10)
+          }
+
+          unit.movement.rotation = smoothRotateTowardsAngle(
+            unit.movement.rotation,
+            targetDir,
+            rotationSpeed
+          )
+
+          // Check if unit is facing the target (within 5 degrees)
+          const angleDifference = Math.abs(angleDiff(unit.movement.rotation, targetDir))
+          const isFacingTarget = angleDifference < (5 * Math.PI / 180)
+
+          // Store facing state and fire when ready
+          unit.isFacingRemoteTarget = isFacingTarget
+        }
+
+        // Fire rocket burst when space is pressed OR when unit is reloaded and has a target
+        const shouldFire =
+        fireIntensity > 0 ||
+        (remoteControlActive && unit.remoteRocketTarget && unit.isFacingRemoteTarget)
+        if (shouldFire && unit.canFire !== false) {
+          const baseRate = getFireRateForUnit(unit)
+          const effectiveRate = unit.level >= 3 ? baseRate / (unit.fireRateMultiplier || 1.33) : baseRate
+
+          // Check if we need to start a new burst or continue existing one
+          if (!unit.burstState) {
+          // Start new burst if cooldown has passed
+            if (!unit.lastShotTime || now - unit.lastShotTime >= effectiveRate) {
+            // Check ammunition
+              const hasAmmo = unit.ammunition === undefined || unit.ammunition > 0
+              if (hasAmmo && unit.isFacingRemoteTarget) {
+              // Fire as many rockets as we have ammo for, up to 4
+                const rocketsToFire = typeof unit.ammunition === 'number'
+                  ? Math.min(4, unit.ammunition)
+                  : 4
+                // Start burst - don't set lastShotTime yet, only after burst completes
+                unit.burstState = {
+                  rocketsToFire: rocketsToFire,
+                  lastRocketTime: 0,
+                  remoteControlTarget: {
+                    tileX: aimTarget.tileX,
+                    tileY: aimTarget.tileY,
+                    x: aimTarget.x,
+                    y: aimTarget.y
+                  }
+                }
               }
-            } else {
+            }
+          } else {
+          // Continue existing burst (fire remaining rockets)
+            if (unit.burstState.rocketsToFire > 0 &&
+              now - unit.burstState.lastRocketTime >= 200) { // 200ms delay between rockets
+              const target = unit.burstState.remoteControlTarget
+              // Only fire if we have a valid remote control target (burst may have been started by normal combat)
+              if (target) {
+                fireBullet(unit, target, bullets, now)
+                unit.burstState.rocketsToFire--
+                unit.burstState.lastRocketTime = now
+
+                if (unit.burstState.rocketsToFire <= 0) {
+                  unit.burstState = null // Reset burst state
+                  unit.lastShotTime = now // Set cooldown for next burst - reload phase begins now
+                }
+              } else {
               // Burst was started by normal combat, not remote control - clear it and let normal combat handle it
               // Or if in remote control mode, reinitialize with current aim target
-              if (aimTarget) {
-                unit.burstState.remoteControlTarget = {
-                  tileX: aimTarget.tileX,
-                  tileY: aimTarget.tileY,
-                  x: aimTarget.x,
-                  y: aimTarget.y
+                if (aimTarget) {
+                  unit.burstState.remoteControlTarget = {
+                    tileX: aimTarget.tileX,
+                    tileY: aimTarget.tileY,
+                    x: aimTarget.x,
+                    y: aimTarget.y
+                  }
                 }
               }
             }
           }
         }
-      }
-    } else if (hasTurret && fireIntensity > 0 && unit.canFire !== false) {
+      } else if (hasTurret && fireIntensity > 0 && unit.canFire !== false) {
       // Fire forward when requested (for non-rocket tank turret units)
-      const baseRate = getFireRateForUnit(unit)
-      const effectiveRate =
+        const baseRate = getFireRateForUnit(unit)
+        const effectiveRate =
         unit.level >= 3 ? baseRate / (unit.fireRateMultiplier || 1.33) : baseRate
 
-      if (!unit.lastShotTime || now - unit.lastShotTime >= effectiveRate) {
-        const rangePx = TANK_FIRE_RANGE * TILE_SIZE
-        const dir =
+        if (!unit.lastShotTime || now - unit.lastShotTime >= effectiveRate) {
+          const rangePx = TANK_FIRE_RANGE * TILE_SIZE
+          const dir =
           unit.turretDirection !== undefined
             ? unit.turretDirection
             : unit.movement.rotation
-        const tx = unit.x + TILE_SIZE / 2 + Math.cos(dir) * rangePx
-        const ty = unit.y + TILE_SIZE / 2 + Math.sin(dir) * rangePx
-        const target = {
-          tileX: Math.floor(tx / TILE_SIZE),
-          tileY: Math.floor(ty / TILE_SIZE),
-          x: tx,
-          y: ty
+          const tx = unit.x + TILE_SIZE / 2 + Math.cos(dir) * rangePx
+          const ty = unit.y + TILE_SIZE / 2 + Math.sin(dir) * rangePx
+          const target = {
+            tileX: Math.floor(tx / TILE_SIZE),
+            tileY: Math.floor(ty / TILE_SIZE),
+            x: tx,
+            y: ty
+          }
+          fireBullet(unit, target, bullets, now)
         }
-        fireBullet(unit, target, bullets, now)
       }
-    }
 
-    // Clear reticle for non-rocket tank turret units
-    if (!isRocketTank && hasTurret) {
-      unit.remoteReticleVisible = false
-      unit.remoteRocketTarget = null
-    }
-  })
-
-  rc.fire = 0
+      // Clear reticle for non-rocket tank turret units
+      if (!isRocketTank && hasTurret) {
+        unit.remoteReticleVisible = false
+        unit.remoteRocketTarget = null
+      }
+    })
+  } finally {
+    releaseAppendedCoopUnits()
+    rc.fire = 0
+    clearCoopFirePulses()
+  }
 }

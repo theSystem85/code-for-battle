@@ -13,6 +13,8 @@
       "german": "Deutsch",
       "gallery": "Gallery",
       "features": "Features",
+      "multiplayer": "Multiplayer",
+      "controllers": "Controllers",
       "vibe": "Vibe-coded",
       "tech": "Tech tree",
       "manual": "Player guide",
@@ -64,15 +66,19 @@
         },
         "command": {
           "title": "Command",
-          "body": "Box-select, assign control groups, queue waypoints, guard friendlies, and drag attack groups. Sell or repair structures, and lay walls and streets."
+          "body": "Box-select, assign control groups, queue waypoints, guard friendlies, and drag attack groups. Sell or repair structures, and lay walls and streets. Two gamepads can share one side."
+        },
+        "controllers": {
+          "title": "Controllers",
+          "body": "Plug in up to two gamepads. Player 1 moves the cursor; player 2 can remote-control another unit of the same side, on or off screen. Mappings and profiles are saved in the browser."
         },
         "persistence": {
           "title": "Save and replay",
           "body": "Save and resume a battle in the browser, export the file, or inspect it in the save editor. Record a match and play the command log back."
         },
         "multiplayer": {
-          "title": "Opponents",
-          "body": "Host an invite-based WebRTC match, fight the built-in opponent, or assign a party to an optional LLM commander. Enemy commentary can be read aloud."
+          "title": "Multiplayer",
+          "body": "Host an invite link or QR code and let another person join that party over WebRTC. Lockstep keeps both simulations on the same inputs. A dropped link pauses the match until they reconnect."
         },
         "battlefield": {
           "title": "Living map",
@@ -196,6 +202,32 @@
         "submarine": "Submarine",
         "supplyShip": "Supply Ship"
       }
+    },
+    "multiplayer": {
+      "title": "Multiplayer",
+      "lead": "A human can take a party in a match you host. Parties left empty stay with the built-in opponent, and a party can instead be handed to an optional LLM commander.",
+      "hostTitle": "Host and join",
+      "hostBody": "The host creates an invite link and a QR code for one party. The guest opens that link, enters an alias, and connects with WebRTC through the signalling server.",
+      "partiesTitle": "Up to four parties",
+      "partiesBody": "A match can have two, three, or four parties. Each non-host party can be a human invite or stay under AI control.",
+      "lockstepTitle": "Lockstep",
+      "lockstepBody": "When a guest connects, both peers share a session seed and exchange inputs. Periodic state hashes check that the simulations still match. If they diverge, the host can send a full snapshot to resync.",
+      "reconnectTitle": "Reconnect",
+      "reconnectBody": "If the link drops, the match pauses and waits for that player to return. An unresponsive peer does not keep the simulation running ahead alone.",
+      "devicesTitle": "Phones, tablets, and other computers",
+      "devicesBody": "The same invite works from another browser on this computer, or from an iPhone, iPad, or Mac, when the page is the public HTTPS site. Google STUN is always used. A TURN relay is added when the signalling server is configured with one, which is what makes many phone, cellular, and off-network joins possible. A localhost link cannot be opened by a phone, and iPhone or iPad Safari will not start WebRTC on a page that is not a secure context."
+    },
+    "controllers": {
+      "title": "Controllers",
+      "lead": "The browser Gamepad API drives the same commands as the mouse and keyboard. Two people can share one screen.",
+      "mapTitle": "Mapping menu",
+      "mapBody": "Settings lists every button, stick axis, and trigger on each connected controller and lights the row while you press it. Click a command, then press or move the control to bind it. Noise inside the deadzone is ignored. Escape cancels. A conflict names the command that already uses that control.",
+      "profilesTitle": "Profiles",
+      "profilesBody": "A player profile keeps one person's button layout on any controller. A controller-type profile fills only controls that have no standard button or stick, and each physical controller can still keep its own profile. You can save, load, rename, delete, and reset them. Disconnecting does not erase a profile.",
+      "coopTitle": "Couch co-op",
+      "coopBody": "Only player 1 moves the cursor. Player 2 claims a unit of the same party and remote-controls it even when it is off screen. The camera eases to the midpoint between the two units, stays with player 1 when player 2 leaves the view, and frames both again when player 2 comes back.",
+      "defaultsTitle": "Standard layout",
+      "defaultsBody": "Left stick moves the cursor for player 1 and drives player 2's unit. Right stick scrolls the map. Face buttons click, repair, and jump to the last attack notice. Bumpers turn the turret, the right trigger fires, and the d-pad matches the keyboard remote controls."
     },
     "footer": {
       "rights": "A browser RTS. Source available under the MIT license.",

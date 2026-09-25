@@ -32,6 +32,8 @@ The tech tree matches `src/ui/productionControllerTechTree.js` and the building 
 
 Generated asset kinds listed on the page: unit sprites, building sprites, terrain tiles and sprite sheets, explosion animations, interface icons, command cursors, sound effects, music, narrator voice-over, and milestone videos.
 
+The page also has a Multiplayer section and a Controllers section, in both locales, between Features and Vibe-coded. Multiplayer copy is limited to what the client implements: host invite link and QR code, WebRTC signalling, up to four parties, optional LLM commanders for empty parties, lockstep seed and input exchange with hash checks and host resync, pause-until-reconnect, Google STUN always, and TURN only when the signalling server is configured with it. Localhost invites and non-HTTPS iOS Safari are called out as limits. Controllers copy matches spec 092: mapping menu, per-controller profiles, and two-player couch co-op. The nav lists both sections.
+
 ## Performance
 
 The page is a separate document. It does not run inside the simulation or render loop. The sidebar hook runs once at startup. Gallery images below the hero use lazy loading. The service worker cache is `code-for-battle-cache-v3` and no longer stores landing or legal navigations as the offline app shell.

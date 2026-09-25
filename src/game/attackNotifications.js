@@ -6,6 +6,7 @@ import { showNotification } from '../ui/notifications.js'
 import { selectedUnits } from '../inputHandler.js'
 import { TILE_SIZE } from '../config.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
+import { bindGamepadCommands } from '../input/gamepad/gamepadCommandBridge.js'
 
 // Track last notification times to implement throttling (only once per minute)
 const NOTIFICATION_COOLDOWN = 60000 // 60 seconds
@@ -34,6 +35,11 @@ const NAVAL_UNIT_TYPES = new Set([
 
 const attackedUnitNotificationTimes = new Map()
 const UNIT_ATTACK_NOTIFICATION_COOLDOWN = 8000
+let lastAttackFocusUnit = null
+
+export function focusLastAttackEvent() {
+  focusAndSelectUnit(lastAttackFocusUnit)
+}
 
 const UNIT_TYPE_DISPLAY_NAMES = {
   tank_v1: 'Tank',
@@ -119,6 +125,7 @@ function showUnitUnderAttackNotification(target, now) {
   if (now - lastNotificationTime < UNIT_ATTACK_NOTIFICATION_COOLDOWN) return
 
   attackedUnitNotificationTimes.set(target.id, now)
+  lastAttackFocusUnit = target
   const unitTypeLabel = getUnitDisplayName(target.type)
   const message = `${unitTypeLabel} is under attack!`
 
@@ -253,6 +260,8 @@ export function resetAttackNotifications() {
   lastHarvesterAttackNotification = 0
   lastNavalAttackNotification.clear()
   attackedUnitNotificationTimes.clear()
+  lastAttackFocusUnit = null
 }
 
 registerAttackAlertDispatcher(handleAttackNotification)
+bindGamepadCommands({ focusLastAttack: focusLastAttackEvent })

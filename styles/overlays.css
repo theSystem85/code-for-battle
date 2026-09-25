@@ -187,8 +187,6 @@
 }
 
 .integrated-sheet-selection-list {
-  max-height: calc(5 * 28px);
-  overflow-y: auto;
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   padding: 6px 8px;
@@ -231,12 +229,14 @@ body.config-modal-open {
   border-radius: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
   color: #e5e5e5;
-  width: min(560px, calc(100% - 24px));
-  max-height: min(80vh, 700px);
+  width: min(920px, calc(100vw - 32px));
+  max-height: min(86vh, 900px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
   font-family: var(--game-font-family);
+  container-type: inline-size;
+  container-name: settings-dialog;
 }
 
 .config-modal__header {
@@ -290,6 +290,9 @@ body.config-modal-open {
   flex-direction: column;
   gap: 16px;
   flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-x: hidden;
   overflow-y: auto;
 }
 
@@ -338,6 +341,7 @@ body.config-modal-open {
   flex-direction: column;
   gap: 16px;
   min-height: 0;
+  min-width: 0;
 }
 
 .config-modal__content--active {
@@ -383,13 +387,6 @@ body.config-modal-open {
   gap: 8px;
   min-height: 0;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.sprite-sheet-editor__sidebar::-webkit-scrollbar {
-  width: 0;
-  height: 0;
 }
 
 .sprite-sheet-editor__field {
@@ -938,8 +935,8 @@ body.config-modal-open {
 .config-modal__api-key-security:focus-within .config-modal__api-key-security-note,
 .config-modal__api-key-security-note.is-visible {
   opacity: 1;
-  max-height: 460px;
-  overflow-y: auto;
+  max-height: 80rem;
+  overflow: hidden;
   transform: translateY(0);
   pointer-events: auto;
 }
@@ -1310,4 +1307,401 @@ body.config-modal-open {
 .mission-intro__skip:hover,
 .mission-intro__skip:focus-visible {
   background: #ff0000;
+}
+
+.gamepad-indicators {
+  position: fixed;
+  top: 10px;
+  left: calc(var(--sidebar-width, 250px) + 12px);
+  z-index: 30;
+  display: flex;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.gamepad-indicator,
+.gamepad-slot {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(12, 18, 24, 0.82);
+  border: 1px solid #2d3640;
+  color: #c5d4e4;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.gamepad-light,
+.gamepad-indicator i,
+.gamepad-slot i {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1c3d24;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.45);
+  display: inline-block;
+}
+
+.gamepad-indicator--on .gamepad-light,
+.gamepad-indicator--on i,
+.gamepad-slot.gamepad-indicator--on .gamepad-light {
+  background: #3dff7a;
+  box-shadow: 0 0 8px #3dff7a;
+}
+
+.gamepad-cursor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 2px solid #d7fff0;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65);
+  pointer-events: none;
+  z-index: 40;
+}
+
+.gamepad-cursor::before,
+.gamepad-cursor::after {
+  content: '';
+  position: absolute;
+  background: #d7fff0;
+}
+
+.gamepad-cursor::before {
+  left: 7px;
+  top: -4px;
+  width: 2px;
+  height: 22px;
+}
+
+.gamepad-cursor::after {
+  top: 7px;
+  left: -4px;
+  width: 22px;
+  height: 2px;
+}
+
+.gamepad-slot-row,
+.gamepad-profile-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.gamepad-slot {
+  cursor: pointer;
+  background: #232b33;
+  color: #9fb3c8;
+}
+
+.gamepad-slot--active {
+  border-color: #4da3ff;
+  color: #fff;
+}
+
+.gamepad-slot__name {
+  font-weight: 500;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gamepad-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  min-width: 0;
+  align-items: start;
+}
+
+.gamepad-column,
+.gamepad-profiles,
+.gamepad-section,
+.gamepad-profile-block,
+.gamepad-defaults,
+.gamepad-deadzones {
+  min-width: 0;
+}
+
+.gamepad-input-list,
+.gamepad-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.gamepad-input,
+.gamepad-command {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 12px;
+  align-items: center;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #1b242d;
+  border: 1px solid #2d3640;
+  color: #d5e2ee;
+  font: inherit;
+  text-align: left;
+}
+
+.gamepad-input > span:first-child,
+.gamepad-command__label {
+  flex: 1 1 8rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-command {
+  cursor: pointer;
+  width: 100%;
+}
+
+.gamepad-command--listen,
+.gamepad-input--active {
+  border-color: #3dff7a;
+  background: rgba(61, 255, 122, 0.08);
+}
+
+.gamepad-input__meter {
+  display: inline-block;
+  flex: 0 0 72px;
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: #3dff7a;
+  transform-origin: left center;
+  transform: scaleX(0.04);
+}
+
+.gamepad-command__binding {
+  flex: 1 1 6rem;
+  min-width: 0;
+  color: #8fb4d6;
+  font-size: 12px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-conflict {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #e2b657;
+  border-radius: 6px;
+  background: rgba(226, 182, 87, 0.12);
+  color: #ffe7a3;
+}
+
+.gamepad-conflict p {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-profiles {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gamepad-section,
+.gamepad-profile-block,
+.gamepad-defaults {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #2d3640;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.gamepad-section > .config-modal__section-title,
+.gamepad-profile-block > .config-modal__section-title,
+.gamepad-defaults > .config-modal__section-title {
+  margin: 0;
+}
+
+[data-config-tab-panel='gamepads'] > .config-modal__hint,
+.gamepad-section .config-modal__hint,
+.gamepad-profile-block .config-modal__hint,
+.gamepad-defaults .config-modal__hint,
+.gamepad-deadzones .config-modal__hint {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-command__source {
+  flex: 0 1 auto;
+  min-width: 0;
+  color: #8aa0b5;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-deadzones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.gamepad-deadzone {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 6px 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.gamepad-deadzone > span:first-child {
+  grid-column: 1 / -1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-deadzone input[type='range'] {
+  width: 100%;
+  min-width: 0;
+}
+
+.gamepad-deadzone .gamepad-input__meter {
+  grid-column: 1 / -1;
+  flex: none;
+  width: 100%;
+}
+
+.gamepad-suggestion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid #4da3ff;
+  border-radius: 6px;
+  background: rgba(77, 163, 255, 0.12);
+  color: #d6e8ff;
+}
+
+.gamepad-suggestion p {
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-defaults__table {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, max-content);
+  justify-content: start;
+  width: max-content;
+  max-width: 100%;
+  column-gap: 16px;
+  row-gap: 2px;
+  font-size: 12px;
+}
+
+.gamepad-defaults__table tr {
+  display: contents;
+}
+
+.gamepad-defaults__table td {
+  padding: 4px 0;
+  color: #c5d4e4;
+  vertical-align: top;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-defaults__table td:last-child {
+  color: #8fb4d6;
+}
+
+.gamepad-profile-fields,
+.gamepad-profile-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.gamepad-profile-fields select,
+.gamepad-profile-name {
+  box-sizing: border-box;
+  flex: 1 1 180px;
+  min-width: 0;
+  max-width: 100%;
+  width: auto;
+  background: #11161e;
+  color: #e7eef5;
+  border: 1px solid #2d3640;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.gamepad-profile-fields select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding-right: 32px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23e5e5e5' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px 8px;
+}
+
+.gamepad-profile-actions .config-modal__button {
+  box-sizing: border-box;
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.gamepad-profile-row {
+  min-width: 0;
+}
+
+.gamepad-profile-row input[type='range'] {
+  flex: 1 1 140px;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.gamepad-slot {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
+}
+
+@container settings-dialog (min-width: 760px) {
+  .gamepad-columns {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  }
 }

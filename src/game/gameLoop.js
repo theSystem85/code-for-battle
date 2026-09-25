@@ -19,6 +19,7 @@ import { performanceMonitor } from '../performance/performanceMonitor.js'
 import { FRAME_PHASE, framePhases } from '../performance/framePhases.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
+import { initGamepadSupport, pollGamepads } from '../input/gamepad/gamepadRuntime.js'
 
 const MOBILE_FRAME_WATCHDOG_MS = 250
 const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
@@ -69,6 +70,7 @@ export class GameLoop {
     this.wasPaused = gameState.gamePaused
 
     this.refreshMobileDisplays()
+    initGamepadSupport()
   }
 
   refreshMobileDisplays() {
@@ -335,6 +337,7 @@ export class GameLoop {
     // Always update FPS tracking
     this.fpsDisplay.updateFPS(now)
 
+    pollGamepads(now)
     const pauseStateChanged = gameState.gamePaused !== this.wasPaused
     // Pause or resume sounds when game pause state changes
     if (pauseStateChanged) {

@@ -13,6 +13,8 @@
       "german": "Deutsch",
       "gallery": "Galerie",
       "features": "Merkmale",
+      "multiplayer": "Mehrspieler",
+      "controllers": "Controller",
       "vibe": "Vibe-coded",
       "tech": "Tech-Baum",
       "manual": "Spielanleitung (Englisch)",
@@ -64,15 +66,19 @@
         },
         "command": {
           "title": "Führung",
-          "body": "Rahmenauswahl, Kontrollgruppen, Wegpunkte, Bewachen und Angriffsgruppen. Gebäude verkaufen oder reparieren, Mauern und Straßen ziehen."
+          "body": "Rahmenauswahl, Kontrollgruppen, Wegpunkte, Bewachen und Angriffsgruppen. Gebäude verkaufen oder reparieren, Mauern und Straßen ziehen. Zwei Gamepads können sich eine Seite teilen."
+        },
+        "controllers": {
+          "title": "Controller",
+          "body": "Schließe bis zu zwei Gamepads an. Spieler 1 bewegt den Zeiger; Spieler 2 kann eine weitere Einheit derselben Seite fernsteuern, auch außerhalb des Bildschirms. Belegungen und Profile bleiben im Browser gespeichert."
         },
         "persistence": {
           "title": "Speichern und Wiederholen",
           "body": "Speichere ein Gefecht im Browser und setze es fort, exportiere die Datei oder prüfe sie im Speichereditor. Nimm ein Gefecht auf und spiele das Befehlsprotokoll ab."
         },
         "multiplayer": {
-          "title": "Gegner",
-          "body": "Eröffne ein Einladungsgefecht über WebRTC, kämpfe gegen den eingebauten Gegner oder übergib eine Partei an einen optionalen LLM-Kommandeur. Gegnerkommentare können vorgelesen werden."
+          "title": "Mehrspieler",
+          "body": "Erzeuge einen Einladungslink oder QR-Code und lass eine weitere Person dieser Partei über WebRTC beitreten. Lockstep hält beide Simulationen auf denselben Eingaben. Reißt die Verbindung ab, pausiert das Gefecht bis zur Rückkehr."
         },
         "battlefield": {
           "title": "Lebendige Karte",
@@ -196,6 +202,32 @@
         "submarine": "U-Boot",
         "supplyShip": "Versorgungsschiff"
       }
+    },
+    "multiplayer": {
+      "title": "Mehrspieler",
+      "lead": "Ein Mensch kann eine Partei in einem Gefecht übernehmen, das du hostest. Leere Parteien bleiben beim eingebauten Gegner, und eine Partei kann stattdessen an einen optionalen LLM-Kommandeur gehen.",
+      "hostTitle": "Host und Beitritt",
+      "hostBody": "Der Host erzeugt einen Einladungslink und einen QR-Code für eine Partei. Der Gast öffnet den Link, gibt ein Alias ein und verbindet sich per WebRTC über den Signalisierungsserver.",
+      "partiesTitle": "Bis zu vier Parteien",
+      "partiesBody": "Ein Gefecht kann zwei, drei oder vier Parteien haben. Jede Partei außer dem Host kann eine menschliche Einladung sein oder unter KI-Kontrolle bleiben.",
+      "lockstepTitle": "Lockstep",
+      "lockstepBody": "Sobald ein Gast verbunden ist, teilen beide Peers einen Sitzungs-Seed und tauschen Eingaben aus. Regelmäßige Zustandshashes prüfen, ob die Simulationen noch übereinstimmen. Weichen sie ab, kann der Host einen vollständigen Snapshot zum Resync senden.",
+      "reconnectTitle": "Wiederverbinden",
+      "reconnectBody": "Reißt die Verbindung ab, pausiert das Gefecht und wartet auf die Rückkehr dieses Spielers. Ein nicht antwortender Peer lässt die Simulation nicht allein weiterlaufen.",
+      "devicesTitle": "Telefone, Tablets und andere Computer",
+      "devicesBody": "Dieselbe Einladung funktioniert aus einem anderen Browser auf diesem Computer oder von einem iPhone, iPad oder Mac, wenn die Seite die öffentliche HTTPS-Adresse ist. Google STUN wird immer verwendet. Ein TURN-Relay kommt hinzu, wenn der Signalisierungsserver dafür konfiguriert ist; darüber laufen viele Telefon-, Mobilfunk- und netzübergreifende Beitritte. Ein Localhost-Link lässt sich auf einem Telefon nicht öffnen, und Safari auf iPhone oder iPad startet WebRTC nicht auf einer Seite ohne sicheren Kontext."
+    },
+    "controllers": {
+      "title": "Controller",
+      "lead": "Die Gamepad-API des Browsers löst dieselben Befehle aus wie Maus und Tastatur. Zwei Personen können sich einen Bildschirm teilen.",
+      "mapTitle": "Belegungsmenü",
+      "mapBody": "Die Einstellungen listen jede Taste, jede Stick-Achse und jeden Trigger jedes verbundenen Controllers und heben die Zeile hervor, während du sie betätigst. Klicke einen Befehl und drücke oder bewege dann die Steuerung. Rauschen innerhalb der Totzone wird ignoriert. Escape bricht ab. Ein Konflikt nennt den Befehl, der diese Steuerung schon nutzt.",
+      "profilesTitle": "Profile",
+      "profilesBody": "Ein Spielerprofil behält die Tastenbelegung einer Person auf jedem Controller. Ein Controller-Typ-Profil füllt nur Steuerungen ohne Standardtaste oder Stick, und jeder physische Controller kann zusätzlich ein eigenes Profil behalten. Du kannst sie speichern, laden, umbenennen, löschen und zurücksetzen. Trennen löscht ein Profil nicht.",
+      "coopTitle": "Couch-Koop",
+      "coopBody": "Nur Spieler 1 bewegt den Zeiger. Spieler 2 übernimmt eine Einheit derselben Partei und steuert sie fern, auch außerhalb des Bildschirms. Die Kamera gleitet zur Mitte zwischen beiden Einheiten, bleibt bei Spieler 1, wenn Spieler 2 den Ausschnitt verlässt, und rahmt beide wieder, sobald Spieler 2 zurückkommt.",
+      "defaultsTitle": "Standardbelegung",
+      "defaultsBody": "Der linke Stick bewegt den Zeiger von Spieler 1 und steuert die Einheit von Spieler 2. Der rechte Stick scrollt die Karte. Die vorderen Tasten klicken, reparieren und springen zur letzten Angriffsmeldung. Die Schultertasten drehen den Turm, der rechte Trigger feuert, und das Steuerkreuz entspricht der Tastatur-Fernsteuerung."
     },
     "footer": {
       "rights": "Ein Browser-RTS. Quelloffen unter der MIT-Lizenz.",

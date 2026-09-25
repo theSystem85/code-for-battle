@@ -12,6 +12,36 @@ html, body {
   font-family: var(--game-font-family);
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(143, 180, 214, 0.55) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(143, 180, 214, 0.55);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(77, 163, 255, 0.85);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 :root {
   --sidebar-width: 250px;
   --mobile-action-size: 48px;
@@ -68,8 +98,6 @@ body.is-touch {
   font-family: var(--game-font-family);
   display: flex;
   flex-direction: column;
-  scrollbar-width: none; /* Hide scrollbar for Firefox */
-  -ms-overflow-style: none; /* Hide scrollbar for IE and Edge */
   -webkit-touch-callout: none;
 }
 
@@ -697,38 +725,6 @@ body.is-touch {
   color: #aaa;
 }
 
-/* Hide scrollbar for Chrome, Safari and Opera */
-#sidebar::-webkit-scrollbar {
-  display: none;
-}
-
-#sidebarScroll::-webkit-scrollbar {
-  display: none;
-}
-
-/* Dark mode scrollbar styling for save games list */
-#saveGamesList::-webkit-scrollbar,
-#replayList::-webkit-scrollbar {
-  width: 8px;
-}
-
-#saveGamesList::-webkit-scrollbar-track,
-#replayList::-webkit-scrollbar-track {
-  background: #2c2c2c; /* Dark track that blends with sidebar background */
-  border-radius: 4px;
-}
-
-#saveGamesList::-webkit-scrollbar-thumb,
-#replayList::-webkit-scrollbar-thumb {
-  background: #555; /* Slightly lighter than track for visibility */
-  border-radius: 4px;
-}
-
-#saveGamesList::-webkit-scrollbar-thumb:hover,
-#replayList::-webkit-scrollbar-thumb:hover {
-  background: #666; /* Lighter on hover for better interaction feedback */
-}
-
 #gameCanvasGPU,
 #gameCanvasGL,
 #gameCanvas {
@@ -1208,11 +1204,6 @@ body.mobile-landscape #mobileBuildMenuContainer #production {
   touch-action: pan-y;
   margin: 0;
   padding: 0;
-  scrollbar-width: none;
-}
-
-body.mobile-landscape #mobileBuildMenuContainer #production::-webkit-scrollbar {
-  display: none;
 }
 
 body.mobile-landscape #mobileBuildMenuContainer #productionTabs {
@@ -2261,16 +2252,7 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #production {
   overflow-x: auto;
   overflow-y: hidden;
   touch-action: pan-x;
-  scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-}
-
-body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #production::-webkit-scrollbar {
-  display: none;
-}
-
-body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer #production::-webkit-scrollbar {
-  display: none;
 }
 
 body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content {

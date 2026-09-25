@@ -9,6 +9,7 @@ export const FEATURE_IDS = [
   'arms',
   'logistics',
   'command',
+  'controllers',
   'persistence',
   'multiplayer',
   'battlefield',

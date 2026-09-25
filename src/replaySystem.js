@@ -1009,6 +1009,22 @@ function executeReplayCommand(entry) {
       return
     }
 
+    if (command.type === 'remote_control_coop') {
+      const remoteControlApi = getReplayRemoteControlApi()
+      if (remoteControlApi?.applyCoopRemoteSnapshot) {
+        remoteControlApi.applyCoopRemoteSnapshot({
+          owner: command.owner,
+          unitId: command.unitId || null,
+          actions: command.actions || {},
+          wagonDirection: command.wagonDirection ?? null,
+          wagonSpeed: command.wagonSpeed,
+          turretDirection: command.turretDirection ?? null,
+          turretTurnFactor: command.turretTurnFactor
+        })
+      }
+      return
+    }
+
     if (command.type === 'cheat_code') {
       if (!executeReplayCommand.cheatSystemInstance) {
         executeReplayCommand.cheatSystemInstance = new CheatSystem()
