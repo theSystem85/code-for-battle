@@ -122,6 +122,24 @@
         "pause": "Pause",
         "claimUnit": "Einheit für Spieler 2 übernehmen"
       }
+    },
+    "renderer": {
+      "usingWebgl": "WebGL wird verwendet.",
+      "usingWebgpu": "WebGPU wird verwendet.",
+      "starting": "WebGPU startet…",
+      "unavailable": "WebGL wird verwendet. WebGPU ist in diesem Browser nicht verfügbar.",
+      "didNotInitialize": "WebGPU wurde nicht initialisiert. WebGL wird verwendet.",
+      "failed": "WebGPU fehlgeschlagen: {reason} – WebGL wird verwendet",
+      "fallback": "WebGPU fällt auf WebGL zurück: {reason}",
+      "checking": "WebGPU-Unterstützung wird geprüft…",
+      "reason": {
+        "notReady": "nicht bereit",
+        "validationPending": "Validierung ausstehend",
+        "textureSyncFailed": "Textursynchronisierung fehlgeschlagen",
+        "noInstances": "keine Instanzen",
+        "restore": "Wiederherstellung",
+        "initializationFailed": "Initialisierung fehlgeschlagen"
+      }
     }
   }
 }

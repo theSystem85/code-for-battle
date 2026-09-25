@@ -20,6 +20,10 @@ const BUFFER_USAGE = { COPY_DST: 8, VERTEX: 32, UNIFORM: 64 }
 const QUERY_BUFFER_USAGE = { MAP_READ: 1, COPY_SRC: 4, COPY_DST: 8, QUERY_RESOLVE: 512 }
 const TEXTURE_USAGE = { COPY_DST: 0x02, TEXTURE_BINDING: 0x04, RENDER_ATTACHMENT: 0x10 }
 
+// writeTexture requires bytesPerRow to be a multiple of 256. A 1×1 texel only
+// needs 4 bytes of payload, so the upload buffer is padded to that stride.
+const PLACEHOLDER_ATLAS_BYTES = new Uint8Array(256)
+
 // copyExternalImageToTexture rejects a destination that lacks COPY_DST and
 // RENDER_ATTACHMENT. The terrain shader also samples the atlas, so it needs
 // TEXTURE_BINDING. These are the only textures this renderer creates.
@@ -159,6 +163,9 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.loggedFailure = null
     this.restoreAttempts = 0
     this.restorePending = false
+    this.placeholderTexture = null
+    this.usingPlaceholderAtlas = false
+    this.frameFallbackReason = null
     this.capabilityUpdate.backend = 'webgpu'
   }
 
@@ -380,6 +387,9 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.validationCheckScheduled = false
     this.validationComplete = false
     this.timestampReadPending = false
+    this.placeholderTexture = null
+    this.usingPlaceholderAtlas = false
+    this.frameFallbackReason = null
     this.needsRestore = false
     const start = () => {
       this.restorePending = false
@@ -457,9 +467,75 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     return { texture, width, height }
   }
 
+  rebuildBindGroup() {
+    if (!this.device || !this.pipeline || !this.uniformBuffer || !this.primaryTexture || !this.secondaryTexture) {
+      return false
+    }
+    const sampler = this.device.createSampler({ magFilter: 'nearest', minFilter: 'nearest' })
+    this.bindGroup = this.device.createBindGroup({
+      layout: this.pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: { buffer: this.uniformBuffer } },
+        { binding: 1, resource: sampler },
+        { binding: 2, resource: this.primaryTexture.createView() },
+        { binding: 3, resource: this.secondaryTexture.createView() }
+      ]
+    })
+    return true
+  }
+
+  ensurePlaceholderAtlas() {
+    if (
+      this.usingPlaceholderAtlas &&
+      this.placeholderTexture &&
+      this.bindGroup &&
+      this.primaryTexture === this.placeholderTexture &&
+      this.secondaryTexture === this.placeholderTexture
+    ) {
+      return true
+    }
+    if (!this.device || !this.pipeline || !this.uniformBuffer) return false
+    if (!this.placeholderTexture) {
+      const texture = this.device.createTexture({
+        label: 'terrain-placeholder-atlas',
+        size: [1, 1, 1],
+        format: 'rgba8unorm',
+        usage: WEBGPU_ATLAS_TEXTURE_USAGE
+      })
+      this.device.queue.writeTexture(
+        { texture },
+        PLACEHOLDER_ATLAS_BYTES,
+        { bytesPerRow: 256 },
+        [1, 1, 1]
+      )
+      this.placeholderTexture = this.replaceResource(null, texture, 4)
+    }
+    this.primaryTexture = this.placeholderTexture
+    this.secondaryTexture = this.placeholderTexture
+    this.usingPlaceholderAtlas = true
+    this.uploadedPrimaryImage = null
+    this.uploadedSecondaryImage = null
+    this.atlasSize = { width: 1, height: 1 }
+    this.secondaryAtlasSize = { width: 1, height: 1 }
+    return this.rebuildBindGroup()
+  }
+
   syncTextures() {
-    const primaryImage = this.textureManager?.primarySpriteSheetImage
-    if (!primaryImage) return false
+    const primaryImage = this.textureManager?.primarySpriteSheetImage || null
+    // The default map is water-only on the GPU. primarySpriteSheetImage stays
+    // null unless an integrated sprite sheet is enabled, but the terrain shader
+    // still samples both atlases in uniform control flow. A 1×1 placeholder
+    // keeps that legal until a real atlas exists.
+    if (!primaryImage) return this.ensurePlaceholderAtlas()
+
+    if (this.usingPlaceholderAtlas) {
+      this.usingPlaceholderAtlas = false
+      this.uploadedPrimaryImage = null
+      this.uploadedSecondaryImage = null
+      if (this.secondaryTexture === this.placeholderTexture) this.secondaryTexture = null
+      this.placeholderTexture = null
+    }
+
     const secondaryImage = this.getSecondaryAtlasImage() || primaryImage
     let changed = false
     if (primaryImage !== this.uploadedPrimaryImage) {
@@ -487,18 +563,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       this.uploadedSecondaryImage = secondaryImage
       changed = true
     }
-    if (changed || !this.bindGroup) {
-      const sampler = this.device.createSampler({ magFilter: 'nearest', minFilter: 'nearest' })
-      this.bindGroup = this.device.createBindGroup({
-        layout: this.pipeline.getBindGroupLayout(0),
-        entries: [
-          { binding: 0, resource: { buffer: this.uniformBuffer } },
-          { binding: 1, resource: sampler },
-          { binding: 2, resource: this.primaryTexture.createView() },
-          { binding: 3, resource: this.secondaryTexture.createView() }
-        ]
-      })
-    }
+    if (changed || !this.bindGroup) return this.rebuildBindGroup()
     return true
   }
 
@@ -682,6 +747,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.diagnostics.setCapabilities(this.capabilityUpdate)
 
     const timestampWrites = this.getTimestampWrites()
+    this.beginFrameValidation()
     const encoder = this.device.createCommandEncoder()
     const pass = encoder.beginRenderPass({
       colorAttachments: [{
@@ -730,88 +796,109 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     return this.validationComplete
   }
 
+  noteSkippedFrame(reason) {
+    this.frameFallbackReason = reason
+    return false
+  }
+
+  abortOpenValidationScope() {
+    if (!this.validationPending || this.validationComplete || this.validationCheckScheduled) return
+    this.validationPending = false
+    try {
+      const pending = this.device?.popErrorScope?.()
+      if (pending && typeof pending.then === 'function') pending.catch(() => {})
+    } catch {
+      // An unbalanced scope still must not pin every later frame to WebGL.
+    }
+  }
+
   render(mapGrid, scrollOffset, canvas, options = {}) {
-    if (!mapGrid?.length || !canvas) return false
+    this.frameFallbackReason = null
+    if (!canvas) return this.noteSkippedFrame('not-ready')
+    if (!mapGrid?.length) return this.noteSkippedFrame('no-instances')
     if (this.needsRestore) {
       this.restore(canvas)
-      return false
+      return this.noteSkippedFrame('restore')
     }
     if (this.status === 'idle') this.beginInitialize(canvas)
-    if (this.status !== 'ready') return false
-    if (this.validationPending && !this.validationComplete) return false
-    this.beginFrameValidation()
+    if (this.status === 'failed') return this.noteSkippedFrame('failed')
+    if (this.status !== 'ready') return this.noteSkippedFrame('not-ready')
+    if (this.validationPending && !this.validationComplete) return this.noteSkippedFrame('validation-pending')
     try {
-      if (!this.syncTextures()) return false
-    } catch (error) {
-      this.fail(error?.message || String(error))
-      return false
-    }
-    const ratio = getCanvasPixelRatio(canvas)
-    const tileStep = TILE_SIZE * ratio
-    const tileSize = (TILE_SIZE + 1) * ratio
-    const scrollX = (scrollOffset?.x || 0) * ratio
-    const scrollY = (scrollOffset?.y || 0) * ratio
-    const buffer = 2
-    const startX = Math.max(0, Math.floor(scrollX / tileStep) - buffer)
-    const startY = Math.max(0, Math.floor(scrollY / tileStep) - buffer)
-    const endX = Math.min(mapGrid[0].length, startX + Math.ceil(canvas.width / tileStep) + buffer * 2 + 1)
-    const endY = Math.min(mapGrid.length, startY + Math.ceil(canvas.height / tileStep) + buffer * 2 + 1)
-    if (options.waterOnly) {
-      return this.renderRetainedWater(mapGrid, scrollOffset, canvas, options, {
-        ratio,
-        tileStep,
-        tileSize,
-        scrollX,
-        scrollY,
-        startX,
-        startY,
-        endX,
-        endY
-      })
-    }
-    const instances = this.buildTileInstances(mapGrid, startX, startY, endX, endY, options)
-    if (!instances.length) return false
-    this.lastInstanceCounts = this.countInstances(instances)
+      if (!this.syncTextures()) return this.noteSkippedFrame('texture-sync-failed')
+      const ratio = getCanvasPixelRatio(canvas)
+      const tileStep = TILE_SIZE * ratio
+      const tileSize = (TILE_SIZE + 1) * ratio
+      const scrollX = (scrollOffset?.x || 0) * ratio
+      const scrollY = (scrollOffset?.y || 0) * ratio
+      const buffer = 2
+      const startX = Math.max(0, Math.floor(scrollX / tileStep) - buffer)
+      const startY = Math.max(0, Math.floor(scrollY / tileStep) - buffer)
+      const endX = Math.min(mapGrid[0].length, startX + Math.ceil(canvas.width / tileStep) + buffer * 2 + 1)
+      const endY = Math.min(mapGrid.length, startY + Math.ceil(canvas.height / tileStep) + buffer * 2 + 1)
+      if (options.waterOnly) {
+        const drew = this.renderRetainedWater(mapGrid, scrollOffset, canvas, options, {
+          ratio,
+          tileStep,
+          tileSize,
+          scrollX,
+          scrollY,
+          startX,
+          startY,
+          endX,
+          endY
+        })
+        return drew ? true : this.noteSkippedFrame('validation-pending')
+      }
+      const instances = this.buildTileInstances(mapGrid, startX, startY, endX, endY, options)
+      if (!instances.length) return this.noteSkippedFrame('no-instances')
+      this.lastInstanceCounts = this.countInstances(instances)
 
-    this.ensureInstanceBuffer(instances.length)
-    const packed = this.packInstances(instances)
-    this.device.queue.writeBuffer(this.instanceBuffer, 0, packed)
-    this.uniformData.set([
-      canvas.width, canvas.height, scrollX, scrollY, tileSize, tileStep,
-      Number.isFinite(options.time) ? options.time : performance.now(),
-      WATER_EFFECT_ZOOM, WATER_EFFECT_TONE, WATER_EFFECT_SATURATION, 0, 0
-    ])
-    this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData)
-    const uploadBytes = packed.byteLength + this.uniformData.byteLength
-    this.stats.topologyUploadBytes += packed.byteLength
-    this.stats.uniformUploadBytes += this.uniformData.byteLength
-    this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, uploadBytes)
-    this.capabilityUpdate.devicePixelRatio = ratio
-    this.diagnostics.setCapabilities(this.capabilityUpdate)
-    const timestampWrites = this.getTimestampWrites()
-    const encoder = this.device.createCommandEncoder()
-    const pass = encoder.beginRenderPass({
-      colorAttachments: [{
-        view: this.context.getCurrentTexture().createView(),
-        clearValue: { r: 0, g: 0, b: 0, a: 0 },
-        loadOp: 'clear',
-        storeOp: 'store'
-      }],
-      ...(timestampWrites ? { timestampWrites } : {})
-    })
-    pass.setPipeline(this.pipeline)
-    pass.setBindGroup(0, this.bindGroup)
-    pass.setVertexBuffer(0, this.quadBuffer)
-    pass.setVertexBuffer(1, this.instanceBuffer)
-    pass.draw(6, instances.length)
-    pass.end()
-    this.resolveTimestampQuery(encoder, timestampWrites)
-    this.device.queue.submit([encoder.finish()])
-    if (timestampWrites) this.readTimestampQuery()
-    this.stats.drawCalls++
-    this.diagnostics.addCounter(RENDER_COUNTER_IDS.DRAW_CALLS)
-    this.finishFrameValidation()
-    return this.validationComplete
+      this.ensureInstanceBuffer(instances.length)
+      const packed = this.packInstances(instances)
+      this.device.queue.writeBuffer(this.instanceBuffer, 0, packed)
+      this.uniformData.set([
+        canvas.width, canvas.height, scrollX, scrollY, tileSize, tileStep,
+        Number.isFinite(options.time) ? options.time : performance.now(),
+        WATER_EFFECT_ZOOM, WATER_EFFECT_TONE, WATER_EFFECT_SATURATION, 0, 0
+      ])
+      this.device.queue.writeBuffer(this.uniformBuffer, 0, this.uniformData)
+      const uploadBytes = packed.byteLength + this.uniformData.byteLength
+      this.stats.topologyUploadBytes += packed.byteLength
+      this.stats.uniformUploadBytes += this.uniformData.byteLength
+      this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, uploadBytes)
+      this.capabilityUpdate.devicePixelRatio = ratio
+      this.diagnostics.setCapabilities(this.capabilityUpdate)
+      const timestampWrites = this.getTimestampWrites()
+      this.beginFrameValidation()
+      const encoder = this.device.createCommandEncoder()
+      const pass = encoder.beginRenderPass({
+        colorAttachments: [{
+          view: this.context.getCurrentTexture().createView(),
+          clearValue: { r: 0, g: 0, b: 0, a: 0 },
+          loadOp: 'clear',
+          storeOp: 'store'
+        }],
+        ...(timestampWrites ? { timestampWrites } : {})
+      })
+      pass.setPipeline(this.pipeline)
+      pass.setBindGroup(0, this.bindGroup)
+      pass.setVertexBuffer(0, this.quadBuffer)
+      pass.setVertexBuffer(1, this.instanceBuffer)
+      pass.draw(6, instances.length)
+      pass.end()
+      this.resolveTimestampQuery(encoder, timestampWrites)
+      this.device.queue.submit([encoder.finish()])
+      if (timestampWrites) this.readTimestampQuery()
+      this.stats.drawCalls++
+      this.diagnostics.addCounter(RENDER_COUNTER_IDS.DRAW_CALLS)
+      this.finishFrameValidation()
+      return this.validationComplete ? true : this.noteSkippedFrame('validation-pending')
+    } catch (error) {
+      this.abortOpenValidationScope()
+      this.fail(error?.message || String(error))
+      return this.noteSkippedFrame('failed')
+    }
   }
 
   getStatus() {

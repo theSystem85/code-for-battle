@@ -122,6 +122,24 @@
         "pause": "Pause",
         "claimUnit": "Claim unit for player 2"
       }
+    },
+    "renderer": {
+      "usingWebgl": "Using WebGL.",
+      "usingWebgpu": "Using WebGPU.",
+      "starting": "WebGPU starting…",
+      "unavailable": "Using WebGL. WebGPU is not available in this browser.",
+      "didNotInitialize": "WebGPU did not initialize. Using WebGL.",
+      "failed": "WebGPU failed: {reason} – using WebGL",
+      "fallback": "WebGPU falling back to WebGL: {reason}",
+      "checking": "Checking WebGPU support…",
+      "reason": {
+        "notReady": "not ready",
+        "validationPending": "validation pending",
+        "textureSyncFailed": "texture sync failed",
+        "noInstances": "no instances",
+        "restore": "restore",
+        "initializationFailed": "initialization failed"
+      }
     }
   }
 }

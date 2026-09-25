@@ -36,10 +36,12 @@ import {
   TILE_SIZE,
   USE_PROCEDURAL_WATER_RENDERING,
   getRendererBackendChoice,
-  noteActiveRendererBackend,
-  setRendererBackendFailureSummary
+  publishRenderedTerrainFrame
 } from '../config.js'
-import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
+import {
+  getRendererFrameReport,
+  summarizeWebGPUFailure
+} from './rendererBackendSelection.js'
 import { FRAME_PHASE, framePhases } from '../performance/framePhases.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
@@ -93,18 +95,32 @@ export class Renderer {
     }
     this.frameEntityIndex = new Map()
     this.attackQueueBuffer = []
+    this.terrainFrameEvent = {
+      drawing: null,
+      phase: null,
+      reasonCode: null,
+      failureSummary: null
+    }
   }
 
-  publishGpuOverlay(gpuBackend, frameDrawCalls, wantsWebGPU, webgpuCanvas, gpuCanvas) {
+  publishTerrainFrame(drawing, phase, reasonCode = null, failureSummary = null) {
+    const event = this.terrainFrameEvent
+    event.drawing = drawing
+    event.phase = phase
+    event.reasonCode = reasonCode
+    event.failureSummary = failureSummary
+    publishRenderedTerrainFrame(event)
+  }
+
+  publishGpuOverlay(gpuBackend, frameDrawCalls, webgpuCanvas, gpuCanvas) {
     const overlay = this.gpuOverlay
     const webgpu = this.webgpuRenderer
+    const frame = getRendererFrameReport()
     const activeCanvas = gpuBackend === 'webgpu' ? webgpuCanvas : gpuCanvas
     const activeRenderer = gpuBackend === 'webgpu' ? webgpu : this.gpuRenderer
     const timing = activeRenderer?.gpuTiming
-    overlay.backend = gpuBackend
-    overlay.fallbackReason = gpuBackend !== 'webgpu' && wantsWebGPU && webgpu?.status === 'failed'
-      ? summarizeWebGPUFailure(webgpu.failureReason)
-      : null
+    overlay.backend = frame.phase ? (frame.drawing || gpuBackend) : gpuBackend
+    overlay.fallbackReason = frame.reasonText || null
     overlay.bytesInUse = gpuBackend === 'webgpu' ? webgpu.gpuMemory.bytesInUse : null
     overlay.maxBufferSize = Number.isFinite(webgpu?.maxBufferSize) ? webgpu.maxBufferSize : null
     overlay.vendor = webgpu?.adapterInfo?.vendor || ''
@@ -617,16 +633,22 @@ export class Renderer {
     if (webgpuCanvas?.style) webgpuCanvas.style.display = showWebGPUCanvas ? 'block' : 'none'
     if (gpuCanvas?.style) gpuCanvas.style.display = gpuBackend === 'webgpu' ? 'none' : 'block'
     if (gpuBackend === 'webgpu') {
-      setRendererBackendFailureSummary(null)
-      noteActiveRendererBackend('webgpu')
-    } else if (wantsWebGPU && this.webgpuRenderer?.status === 'failed') {
-      setRendererBackendFailureSummary(summarizeWebGPUFailure(this.webgpuRenderer.failureReason))
-      noteActiveRendererBackend('webgl')
-    } else if (!wantsWebGPU && RENDERER_BACKEND !== 'webgpu') {
-      setRendererBackendFailureSummary(null)
-      noteActiveRendererBackend('webgl')
+      this.publishTerrainFrame('webgpu', 'active')
+    } else if (wantsWebGPU) {
+      const reasonCode = this.webgpuRenderer?.frameFallbackReason || 'not-ready'
+      const failureSummary = reasonCode === 'failed'
+        ? summarizeWebGPUFailure(this.webgpuRenderer?.failureReason)
+        : null
+      this.publishTerrainFrame(
+        gpuBackend === 'cpu' ? 'cpu' : 'webgl',
+        reasonCode === 'not-ready' ? 'starting' : 'fallback',
+        reasonCode,
+        failureSummary
+      )
+    } else {
+      this.publishTerrainFrame(gpuBackend === 'cpu' ? 'cpu' : 'webgl', 'chosen')
     }
-    this.publishGpuOverlay(gpuBackend, frameDrawCalls, wantsWebGPU, webgpuCanvas, gpuCanvas)
+    this.publishGpuOverlay(gpuBackend, frameDrawCalls, webgpuCanvas, gpuCanvas)
 
     // Build occupancy map for visualization if needed
     let occupancyMap = null

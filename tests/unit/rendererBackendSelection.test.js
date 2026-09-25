@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { getStoredItem, resetGameStorageForTests } from '../../src/storage/indexedDbStorage.js'
 import {
   describeRendererBackendStatus,
+  formatRendererOverlayBackend,
+  getRendererFrameReport,
+  recordRendererFrame,
   summarizeWebGPUFailure,
   migrateRendererBackendChoice,
   probeWebGPUAvailability,
@@ -15,6 +18,7 @@ import {
   getRendererBackendStatusText,
   loadGraphicsSettingsFromIndexedDb,
   noteActiveRendererBackend,
+  publishRenderedTerrainFrame,
   resetRendererBackendStateForTests,
   setRendererBackendFailureSummary,
   resolveRendererBackendAvailability,
@@ -87,7 +91,7 @@ describe('renderer backend selection', () => {
 
   describe('describeRendererBackendStatus', () => {
     it('describes the backend actually in use without hiding an explicit choice', () => {
-      expect(describeRendererBackendStatus({ choice: 'auto', requested: 'webgpu', active: null })).toBe('Using WebGPU.')
+      expect(describeRendererBackendStatus({ choice: 'auto', requested: 'webgpu', active: null })).toBe('WebGPU starting…')
       expect(describeRendererBackendStatus({ choice: 'auto', requested: 'webgl', active: 'webgl' })).toBe('Using WebGL. WebGPU is not available in this browser.')
       expect(describeRendererBackendStatus({ choice: 'webgl', requested: 'webgl', active: 'webgl' })).toBe('Using WebGL.')
       expect(describeRendererBackendStatus({ choice: 'webgpu', requested: 'webgl', active: 'webgl' })).toBe('WebGPU did not initialize. Using WebGL.')
@@ -98,6 +102,42 @@ describe('renderer backend selection', () => {
         active: 'webgl',
         failureSummary: 'shader validation'
       })).toBe('WebGPU failed: shader validation – using WebGL')
+      expect(describeRendererBackendStatus({
+        choice: 'auto',
+        requested: 'webgpu',
+        active: 'webgpu',
+        frame: { phase: 'active', drawing: 'webgpu' }
+      })).toBe('Using WebGPU.')
+      expect(describeRendererBackendStatus({
+        choice: 'auto',
+        requested: 'webgpu',
+        active: 'webgpu',
+        frame: { phase: 'fallback', drawing: 'webgl', reasonCode: 'validation-pending' }
+      })).toBe('WebGPU falling back to WebGL: validation pending')
+      expect(describeRendererBackendStatus({
+        choice: 'auto',
+        requested: 'webgpu',
+        active: 'webgpu',
+        frame: { phase: 'starting', drawing: 'webgl', reasonCode: 'not-ready' }
+      })).toBe('WebGPU starting…')
+      expect(describeRendererBackendStatus({
+        choice: 'auto',
+        requested: 'webgpu',
+        frame: { phase: 'fallback', drawing: 'webgl', reasonCode: 'texture-sync-failed' },
+        locale: 'de'
+      })).toBe('WebGPU fällt auf WebGL zurück: Textursynchronisierung fehlgeschlagen')
+    })
+
+    it('uses the same fallback reason in the performance widget row', () => {
+      const frame = { phase: 'fallback', drawing: 'webgl', reasonCode: 'no-instances' }
+      expect(formatRendererOverlayBackend(frame, 'en')).toBe('Renderer: WebGL (no instances)')
+      expect(formatRendererOverlayBackend(frame, 'de')).toBe('Renderer: WebGL (keine Instanzen)')
+      expect(formatRendererOverlayBackend({ phase: 'active', drawing: 'webgpu' }, 'en')).toBe('Renderer: WebGPU')
+      expect(describeRendererBackendStatus({
+        choice: 'auto',
+        requested: 'webgpu',
+        frame
+      })).toContain('no instances')
     })
   })
 
@@ -168,7 +208,7 @@ describe('renderer backend selection', () => {
       await expect(resolveRendererBackendAvailability(async() => true)).resolves.toBe('webgpu')
       expect(RENDERER_BACKEND).toBe('webgpu')
       expect(getRendererBackendChoice()).toBe('auto')
-      expect(getRendererBackendStatusText()).toBe('Using WebGPU.')
+      expect(getRendererBackendStatusText()).toBe('WebGPU starting…')
       expect(storedGraphics()).toBeNull()
     })
 
@@ -280,6 +320,78 @@ describe('renderer backend selection', () => {
       noteActiveRendererBackend('webgl')
       expect(document.getElementById('settingsRendererBackendStatus').textContent).toBe('WebGPU did not initialize. Using WebGL.')
       expect(getRendererBackendChoice()).toBe('auto')
+    })
+
+    it('logs each WebGPU fallback reason once and lets a later WebGPU frame clear it', () => {
+      const warn = vi.fn()
+      expect(recordRendererFrame({
+        drawing: 'webgl',
+        phase: 'starting',
+        reasonCode: 'not-ready',
+        log: warn
+      })).toBe(true)
+      expect(recordRendererFrame({
+        drawing: 'webgl',
+        phase: 'starting',
+        reasonCode: 'not-ready',
+        log: warn
+      })).toBe(false)
+      expect(warn).toHaveBeenCalledTimes(1)
+      expect(warn.mock.calls[0][0]).toBe('[WebGPU] frame fell back to WebGL: not ready')
+
+      recordRendererFrame({
+        drawing: 'webgl',
+        phase: 'fallback',
+        reasonCode: 'restore',
+        log: warn
+      })
+      expect(warn).toHaveBeenCalledTimes(2)
+      expect(warn.mock.calls[1][0]).toBe('[WebGPU] frame fell back to WebGL: restore')
+      expect(getRendererFrameReport()).toMatchObject({
+        drawing: 'webgl',
+        phase: 'fallback',
+        reasonCode: 'restore'
+      })
+
+      recordRendererFrame({ drawing: 'webgpu', phase: 'active', log: warn })
+      recordRendererFrame({
+        drawing: 'webgl',
+        phase: 'fallback',
+        reasonCode: 'restore',
+        log: warn
+      })
+      expect(warn).toHaveBeenCalledTimes(3)
+    })
+
+    it('keeps settings and the recorded frame on the backend that just drew', async() => {
+      document.body.innerHTML = '<span id="settingsRendererBackendStatus"></span>'
+      await resolveRendererBackendAvailability(async() => true)
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      publishRenderedTerrainFrame({ drawing: 'webgpu', phase: 'active' })
+      expect(getRendererBackendStatusText()).toBe('Using WebGPU.')
+      expect(getActiveRendererBackend()).toBe('webgpu')
+      expect(document.getElementById('settingsRendererBackendStatus').textContent).toBe('Using WebGPU.')
+
+      publishRenderedTerrainFrame({
+        drawing: 'webgl',
+        phase: 'fallback',
+        reasonCode: 'validation-pending'
+      })
+      publishRenderedTerrainFrame({
+        drawing: 'webgl',
+        phase: 'fallback',
+        reasonCode: 'validation-pending'
+      })
+      expect(getRendererBackendStatusText()).toBe('WebGPU falling back to WebGL: validation pending')
+      expect(getActiveRendererBackend()).toBe('webgl')
+      expect(document.getElementById('settingsRendererBackendStatus').textContent)
+        .toBe('WebGPU falling back to WebGL: validation pending')
+      expect(formatRendererOverlayBackend(getRendererFrameReport(), 'en'))
+        .toBe('Renderer: WebGL (validation pending)')
+      expect(warn).toHaveBeenCalledTimes(1)
+
+      warn.mockRestore()
     })
 
     it('shows the short WebGPU failure reason in the settings status', async() => {
