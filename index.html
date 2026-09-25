@@ -112,24 +112,26 @@
         <div class="remote-invite-header__icon">🎮</div>
         <h2>Join Remote Match</h2>
       </div>
-      <p class="remote-invite-description">You were invited to control a party. Enter your alias to start the connection
-        with the host.</p>
-      <div class="remote-invite-token">
-        <span class="remote-invite-token__label">Invite token:</span>
-        <code id="remoteInviteTokenText" class="remote-invite-token__value">loading...</code>
-      </div>
-      <form id="remoteInviteForm">
-        <label for="remoteAliasInput">Alias</label>
-        <input id="remoteAliasInput" name="alias" type="text" autocomplete="off" placeholder="Enter your display name"
-          required>
-        <div class="remote-invite-buttons">
-          <button id="remoteInviteSubmit" type="submit" class="remote-invite-btn remote-invite-btn--primary">Join
-            game</button>
-          <button id="remoteInviteCancel" type="button"
-            class="remote-invite-btn remote-invite-btn--secondary">Cancel</button>
+      <div class="remote-invite-body">
+        <p class="remote-invite-description">You were invited to control a party. Enter your alias to start the connection
+          with the host.</p>
+        <div class="remote-invite-token">
+          <span class="remote-invite-token__label">Invite token:</span>
+          <code id="remoteInviteTokenText" class="remote-invite-token__value">loading...</code>
         </div>
-      </form>
-      <p id="remoteInviteStatus" class="remote-invite-status" aria-live="polite"></p>
+        <form id="remoteInviteForm">
+          <label for="remoteAliasInput">Alias</label>
+          <input id="remoteAliasInput" name="alias" type="text" autocomplete="off" placeholder="Enter your display name"
+            required>
+          <div class="remote-invite-buttons">
+            <button id="remoteInviteSubmit" type="submit" class="remote-invite-btn remote-invite-btn--primary">Join
+              game</button>
+            <button id="remoteInviteCancel" type="button"
+              class="remote-invite-btn remote-invite-btn--secondary">Cancel</button>
+          </div>
+        </form>
+        <p id="remoteInviteStatus" class="remote-invite-status" aria-live="polite"></p>
+      </div>
     </div>
   </div>
   <div id="mobileSidebarControls" aria-hidden="true">
