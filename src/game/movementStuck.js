@@ -13,6 +13,17 @@ import { gameRandom } from '../utils/gameRandom.js'
 import { hasBlockingBuilding } from '../utils/buildingPassability.js'
 import { getSimulationTime } from './time.js'
 
+const F22_STATE_MACHINE_STATES = new Set([
+  'wait_takeoff_clearance',
+  'taxi_to_runway_start',
+  'takeoff_roll',
+  'liftoff',
+  'wait_landing_clearance',
+  'approach_runway',
+  'landing_roll',
+  'taxi_to_parking'
+])
+
 function ensureMovement(unit) {
   if (!unit.movement) {
     unit.movement = {
@@ -141,17 +152,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
 
   // Skip stuck detection for F22 state-machine controlled runway/taxi phases —
   // random dodge/rotation recovery interferes with deterministic takeoff/landing flows.
-  const f22StateMachineControlledStates = new Set([
-    'wait_takeoff_clearance',
-    'taxi_to_runway_start',
-    'takeoff_roll',
-    'liftoff',
-    'wait_landing_clearance',
-    'approach_runway',
-    'landing_roll',
-    'taxi_to_parking'
-  ])
-  if (unit.type === 'f22Raptor' && f22StateMachineControlledStates.has(unit.f22State)) {
+  if (unit.type === 'f22Raptor' && F22_STATE_MACHINE_STATES.has(unit.f22State)) {
     return
   }
 

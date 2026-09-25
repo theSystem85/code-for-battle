@@ -1,3 +1,5 @@
+import { uiText } from './uiText.js'
+
 const modalId = 'benchmarkModal'
 const statusId = 'benchmarkModalStatus'
 const resultsContainerId = 'benchmarkResultsContainer'
@@ -339,6 +341,9 @@ export function showBenchmarkResults(result) {
 
   status.textContent = 'Benchmark complete'
   results.hidden = false
+  chart.hidden = false
+  const phaseEl = document.getElementById('benchmarkPhaseBreakdown')
+  if (phaseEl) phaseEl.hidden = true
 
   minEl.textContent = formatFps(result.minFps)
   maxEl.textContent = formatFps(result.maxFps)
@@ -346,4 +351,57 @@ export function showBenchmarkResults(result) {
   durationEl.textContent = `${(result.durationMs / 1000).toFixed(1)}s`
 
   drawBenchmarkChart(chart, result.intervalAverages, result)
+}
+
+const HEAVY_BATTLE_PHASE_ROWS = [
+  ['sim', 'settings.benchmark.phase.sim'],
+  ['movement', 'settings.benchmark.phase.move'],
+  ['combat', 'settings.benchmark.phase.combat'],
+  ['pathfinding', 'settings.benchmark.phase.path'],
+  ['ai', 'settings.benchmark.phase.ai'],
+  ['fog', 'settings.benchmark.phase.fog'],
+  ['terrain', 'settings.benchmark.phase.terrain'],
+  ['entities', 'settings.benchmark.phase.units'],
+  ['effects', 'settings.benchmark.phase.effects'],
+  ['ui', 'settings.benchmark.phase.ui'],
+  ['minimap', 'settings.benchmark.phase.minimap']
+]
+
+export function formatHeavyBattlePhases(phases) {
+  return HEAVY_BATTLE_PHASE_ROWS.map(([name, key]) => {
+    const phase = phases?.[name]
+    const value = phase?.samples
+      ? `${Number(phase.averageMs).toFixed(1)}/${Number(phase.p95Ms).toFixed(1)}`
+      : '--'
+    return `${uiText(key)}: ${value}`
+  }).join('\n')
+}
+
+export function showHeavyBattleResults(result) {
+  const {
+    status,
+    results,
+    minEl,
+    maxEl,
+    avgEl,
+    durationEl,
+    chart
+  } = getModalElements()
+  const frame = result?.phases?.frame || {}
+  const minFps = frame.maxMs > 0 ? 1000 / frame.maxMs : 0
+  const maxFps = frame.minMs > 0 ? 1000 / frame.minMs : 0
+
+  status.textContent = uiText('settings.benchmark.heavyComplete')
+  results.hidden = false
+  chart.hidden = true
+  minEl.textContent = formatFps(minFps)
+  maxEl.textContent = formatFps(maxFps)
+  avgEl.textContent = formatFps(frame.fps)
+  durationEl.textContent = `${((result?.durationMs || 0) / 1000).toFixed(1)}s`
+
+  const phaseEl = document.getElementById('benchmarkPhaseBreakdown')
+  if (phaseEl) {
+    phaseEl.hidden = false
+    phaseEl.textContent = `${uiText('settings.benchmark.phasesTitle')}\n${formatHeavyBattlePhases(result?.phases?.phases)}`
+  }
 }

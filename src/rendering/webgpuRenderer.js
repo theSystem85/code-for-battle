@@ -1,4 +1,10 @@
-import { TILE_SIZE, WATER_EFFECT_SATURATION, WATER_EFFECT_TONE, WATER_EFFECT_ZOOM } from '../config.js'
+import {
+  TILE_SIZE,
+  WATER_EFFECT_SATURATION,
+  WATER_EFFECT_TONE,
+  WATER_EFFECT_ZOOM,
+  setRendererBackendFailureSummary
+} from '../config.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { RENDER_COUNTER_IDS } from '../performance/renderDiagnostics.js'
 import {
@@ -6,13 +12,21 @@ import {
   WATER_INSTANCE_FLOATS,
   WATER_INSTANCE_STRIDE
 } from './webglRenderer.js'
+import { estimateTextureBytes, GpuMemoryTracker } from './gpuMemory.js'
+import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
 
 const BUFFER_USAGE = { COPY_DST: 8, VERTEX: 32, UNIFORM: 64 }
 const QUERY_BUFFER_USAGE = { MAP_READ: 1, COPY_SRC: 4, COPY_DST: 8, QUERY_RESOLVE: 512 }
-const TEXTURE_USAGE = { COPY_DST: 2, TEXTURE_BINDING: 4 }
+const TEXTURE_USAGE = { COPY_DST: 0x02, TEXTURE_BINDING: 0x04, RENDER_ATTACHMENT: 0x10 }
 
-const SHADER = `
+// copyExternalImageToTexture rejects a destination that lacks COPY_DST and
+// RENDER_ATTACHMENT. The terrain shader also samples the atlas, so it needs
+// TEXTURE_BINDING. These are the only textures this renderer creates.
+export const WEBGPU_ATLAS_TEXTURE_USAGE =
+  TEXTURE_USAGE.COPY_DST | TEXTURE_USAGE.TEXTURE_BINDING | TEXTURE_USAGE.RENDER_ATTACHMENT
+
+export const WEBGPU_TERRAIN_SHADER = `
 struct Uniforms {
   resolution: vec2f,
   scroll: vec2f,
@@ -69,6 +83,10 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
   return mix(vec3f(luma), color, max(saturation, 0.0));
 }
 @fragment fn fragmentMain(input: VertexOutput) -> @location(0) vec4f {
+  // textureSample is legal only in uniform control flow. Sample both atlases
+  // before any per-fragment branch or discard, then select the color.
+  let primarySample = textureSample(atlas, atlasSampler, input.uv);
+  let secondarySample = textureSample(secondaryAtlas, atlasSampler, input.uv);
   if (input.clipOrientation > 0.5) {
     var inside = true;
     if (input.clipOrientation < 1.5) { inside = input.localPos.x + input.localPos.y <= 1.0; }
@@ -102,8 +120,8 @@ fn applySaturation(color: vec3f, saturation: f32) -> vec3f {
     return vec4f(color, 1.0);
   }
   if (input.textureType > 0.5) {
-    if (input.textureSource > 0.5) { return textureSample(secondaryAtlas, atlasSampler, input.uv); }
-    return textureSample(atlas, atlasSampler, input.uv);
+    if (input.textureSource > 0.5) { return secondarySample; }
+    return primarySample;
   }
   return input.color;
 }`
@@ -135,7 +153,40 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.uniformData = new Float32Array(12)
     this.gpuTiming = { available: false, reason: 'not-initialized', milliseconds: null }
     this.needsRestore = false
+    this.gpuMemory = new GpuMemoryTracker()
+    this.adapterInfo = { vendor: '', architecture: '', device: '', description: '' }
+    this.maxBufferSize = null
+    this.loggedFailure = null
+    this.restoreAttempts = 0
+    this.restorePending = false
     this.capabilityUpdate.backend = 'webgpu'
+  }
+
+  fail(message, { restore = false } = {}) {
+    const reason = message || 'WebGPU initialization failed'
+    const alreadyLogged = this.loggedFailure === reason
+    this.status = 'failed'
+    this.failureReason = reason
+    if (restore) this.needsRestore = true
+    setRendererBackendFailureSummary(summarizeWebGPUFailure(reason))
+    if (alreadyLogged) return
+    this.loggedFailure = reason
+    console.warn(`[WebGPU] ${reason}`)
+  }
+
+  replaceResource(previous, next, bytes, { destroy = false } = {}) {
+    if (previous && previous !== next) {
+      if (destroy) {
+        try {
+          previous.destroy?.()
+        } catch {
+          // A destroyed or lost resource still leaves the tracker.
+        }
+      }
+      this.gpuMemory.release(previous)
+    }
+    if (next) this.gpuMemory.track(next, bytes)
+    return next
   }
 
   getTopologyBuildSpanId() {
@@ -146,9 +197,7 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     if (this.status !== 'idle') return
     this.status = 'initializing'
     this.initialize(canvas).catch(error => {
-      this.status = 'failed'
-      this.failureReason = error?.message || String(error)
-      window.logger?.warn('WebGPU terrain initialization failed; using WebGL fallback:', error)
+      this.fail(error?.message || String(error))
     })
   }
 
@@ -156,27 +205,69 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     if (!navigator?.gpu || !canvas?.getContext) throw new Error('WebGPU is unavailable')
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' })
     if (!adapter) throw new Error('No WebGPU adapter is available')
+    this.captureAdapterInfo(adapter)
     this.timestampSupported = Boolean(adapter.features?.has?.('timestamp-query'))
-    this.device = await adapter.requestDevice(this.timestampSupported
-      ? { requiredFeatures: ['timestamp-query'] }
-      : undefined)
+    this.device = await this.requestDevice(adapter)
+    this.device.onuncapturederror = event => {
+      this.fail(`WebGPU uncaptured error: ${event?.error?.message || 'unknown error'}`)
+    }
     this.context = canvas.getContext('webgpu')
     if (!this.context) throw new Error('Could not create a WebGPU canvas context')
     this.format = navigator.gpu.getPreferredCanvasFormat()
     this.context.configure({ device: this.device, format: this.format, alphaMode: 'premultiplied' })
     this.device.pushErrorScope('validation')
-    this.createPipeline()
+    const shaderModule = this.device.createShaderModule({ code: WEBGPU_TERRAIN_SHADER })
+    const compilationMessages = await this.readShaderCompilationErrors(shaderModule)
+    this.createPipeline(shaderModule)
     this.createTimestampResources()
     const pipelineError = await this.device.popErrorScope()
-    if (pipelineError) throw new Error(`WebGPU pipeline validation failed: ${pipelineError.message}`)
+    if (pipelineError || compilationMessages.length) {
+      const detail = [pipelineError?.message, ...compilationMessages].filter(Boolean).join('; ')
+      throw new Error(`WebGPU pipeline validation failed: ${detail}`)
+    }
     this.status = 'ready'
+    this.loggedFailure = null
+    setRendererBackendFailureSummary(null)
     this.device.lost.then(info => {
       this.handleDeviceLost(info)
     })
   }
 
-  createPipeline() {
-    const module = this.device.createShaderModule({ code: SHADER })
+  captureAdapterInfo(adapter) {
+    const info = adapter?.info || {}
+    this.adapterInfo = {
+      vendor: info.vendor || '',
+      architecture: info.architecture || '',
+      device: info.device || '',
+      description: info.description || ''
+    }
+    const maxBufferSize = adapter?.limits?.maxBufferSize
+    this.maxBufferSize = Number.isFinite(maxBufferSize) ? maxBufferSize : null
+  }
+
+  async requestDevice(adapter) {
+    if (!this.timestampSupported) return adapter.requestDevice()
+    try {
+      return await adapter.requestDevice({ requiredFeatures: ['timestamp-query'] })
+    } catch {
+      this.timestampSupported = false
+      return adapter.requestDevice()
+    }
+  }
+
+  async readShaderCompilationErrors(shaderModule) {
+    if (typeof shaderModule?.getCompilationInfo !== 'function') return []
+    const info = await shaderModule.getCompilationInfo()
+    return (info?.messages || [])
+      .filter(message => message.type === 'error')
+      .map(message => {
+        const line = Number.isFinite(message.lineNum) ? `:${message.lineNum}` : ''
+        return `${message.message}${line}`
+      })
+  }
+
+  createPipeline(shaderModule) {
+    const module = shaderModule || this.device.createShaderModule({ code: WEBGPU_TERRAIN_SHADER })
     this.pipeline = this.device.createRenderPipeline({
       layout: 'auto',
       vertex: {
@@ -205,8 +296,18 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       },
       primitive: { topology: 'triangle-list' }
     })
-    this.uniformBuffer = this.device.createBuffer({ size: 48, usage: BUFFER_USAGE.UNIFORM | BUFFER_USAGE.COPY_DST })
-    this.quadBuffer = this.device.createBuffer({ size: 48, usage: BUFFER_USAGE.VERTEX | BUFFER_USAGE.COPY_DST })
+    this.uniformBuffer = this.replaceResource(
+      this.uniformBuffer,
+      this.device.createBuffer({ size: 48, usage: BUFFER_USAGE.UNIFORM | BUFFER_USAGE.COPY_DST }),
+      48,
+      { destroy: true }
+    )
+    this.quadBuffer = this.replaceResource(
+      this.quadBuffer,
+      this.device.createBuffer({ size: 48, usage: BUFFER_USAGE.VERTEX | BUFFER_USAGE.COPY_DST }),
+      48,
+      { destroy: true }
+    )
     this.device.queue.writeBuffer(this.quadBuffer, 0, new Float32Array([0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1]))
     this.stats.topologyUploadBytes += 48
     this.diagnostics.addCounter(RENDER_COUNTER_IDS.UPLOAD_BYTES, 48)
@@ -219,37 +320,54 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       return
     }
     this.timestampQuerySet = this.device.createQuerySet({ type: 'timestamp', count: 2 })
-    this.timestampResolveBuffer = this.device.createBuffer({
-      size: 16,
-      usage: QUERY_BUFFER_USAGE.QUERY_RESOLVE | QUERY_BUFFER_USAGE.COPY_SRC
-    })
-    this.timestampReadBuffer = this.device.createBuffer({
-      size: 16,
-      usage: QUERY_BUFFER_USAGE.COPY_DST | QUERY_BUFFER_USAGE.MAP_READ
-    })
+    this.timestampResolveBuffer = this.replaceResource(
+      this.timestampResolveBuffer,
+      this.device.createBuffer({
+        size: 16,
+        usage: QUERY_BUFFER_USAGE.QUERY_RESOLVE | QUERY_BUFFER_USAGE.COPY_SRC
+      }),
+      16,
+      { destroy: true }
+    )
+    this.timestampReadBuffer = this.replaceResource(
+      this.timestampReadBuffer,
+      this.device.createBuffer({
+        size: 16,
+        usage: QUERY_BUFFER_USAGE.COPY_DST | QUERY_BUFFER_USAGE.MAP_READ
+      }),
+      16,
+      { destroy: true }
+    )
     this.gpuTiming = { available: false, reason: 'pending-first-valid-sample', milliseconds: null }
     this.diagnostics.setCapabilities({ backend: 'webgpu', gpuTiming: this.gpuTiming })
   }
 
   handleDeviceLost(info = null) {
-    this.status = 'failed'
-    this.failureReason = info?.message || 'WebGPU device lost'
-    this.needsRestore = true
     this.timestampReadPending = false
     this.gpuTiming = { available: false, reason: 'device-lost', milliseconds: null }
     this.diagnostics.setCapabilities({ backend: 'webgpu', gpuTiming: this.gpuTiming })
-    if (typeof window !== 'undefined') {
-      window.logger?.warn('WebGPU device lost; using WebGL fallback:', this.failureReason)
-    }
+    const allowRestore = this.restoreAttempts < 1
+    this.restoreAttempts += 1
+    this.fail(info?.message || 'WebGPU device lost', { restore: allowRestore })
   }
 
   restore(canvas) {
+    if (this.restorePending) return
+    this.restorePending = true
+    const previousDevice = this.device
+    this.gpuMemory.reset()
     this.status = 'idle'
     this.failureReason = null
+    this.loggedFailure = null
     this.device = null
     this.context = null
     this.pipeline = null
     this.bindGroup = null
+    this.uniformBuffer = null
+    this.quadBuffer = null
+    this.timestampQuerySet = null
+    this.timestampResolveBuffer = null
+    this.timestampReadBuffer = null
     this.instanceBuffer = null
     this.instanceCapacity = 0
     this.uploadedWaterTopology = null
@@ -263,7 +381,27 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.validationComplete = false
     this.timestampReadPending = false
     this.needsRestore = false
-    this.beginInitialize(canvas)
+    const start = () => {
+      this.restorePending = false
+      if (this.needsRestore) return
+      this.beginInitialize(canvas)
+    }
+    if (!previousDevice) {
+      start()
+      return
+    }
+    try {
+      previousDevice.destroy?.()
+    } catch {
+      // The lost device may already be destroyed.
+    }
+    const lost = typeof previousDevice.lost?.then === 'function'
+      ? previousDevice.lost.catch(() => {})
+      : Promise.resolve()
+    Promise.race([
+      lost,
+      new Promise(resolve => setTimeout(resolve, 300))
+    ]).then(start)
   }
 
   getTimestampWrites() {
@@ -303,13 +441,14 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     })
   }
 
-  createTextureFromImage(image) {
+  createTextureFromImage(image, label = 'terrain-atlas') {
     const width = image.width || image.naturalWidth || 1
     const height = image.height || image.naturalHeight || 1
     const texture = this.device.createTexture({
+      label,
       size: [width, height, 1],
       format: 'rgba8unorm',
-      usage: TEXTURE_USAGE.TEXTURE_BINDING | TEXTURE_USAGE.COPY_DST
+      usage: WEBGPU_ATLAS_TEXTURE_USAGE
     })
     this.device.queue.copyExternalImageToTexture({ source: image }, { texture }, [width, height])
     const uploadBytes = width * height * 4
@@ -324,17 +463,25 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     const secondaryImage = this.getSecondaryAtlasImage() || primaryImage
     let changed = false
     if (primaryImage !== this.uploadedPrimaryImage) {
-      this.primaryTexture?.destroy?.()
-      const uploaded = this.createTextureFromImage(primaryImage)
-      this.primaryTexture = uploaded.texture
+      const uploaded = this.createTextureFromImage(primaryImage, 'terrain-primary-atlas')
+      this.primaryTexture = this.replaceResource(
+        this.primaryTexture,
+        uploaded.texture,
+        estimateTextureBytes({ width: uploaded.width, height: uploaded.height }),
+        { destroy: true }
+      )
       this.atlasSize = { width: uploaded.width, height: uploaded.height }
       this.uploadedPrimaryImage = primaryImage
       changed = true
     }
     if (secondaryImage !== this.uploadedSecondaryImage) {
-      this.secondaryTexture?.destroy?.()
-      const uploaded = this.createTextureFromImage(secondaryImage)
-      this.secondaryTexture = uploaded.texture
+      const uploaded = this.createTextureFromImage(secondaryImage, 'terrain-secondary-atlas')
+      this.secondaryTexture = this.replaceResource(
+        this.secondaryTexture,
+        uploaded.texture,
+        estimateTextureBytes({ width: uploaded.width, height: uploaded.height }),
+        { destroy: true }
+      )
       this.secondaryAtlasSize = { width: uploaded.width, height: uploaded.height }
       this.secondaryAtlasImage = secondaryImage
       this.uploadedSecondaryImage = secondaryImage
@@ -369,17 +516,16 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       this.validationPending = false
       this.validationCheckScheduled = false
       if (error) {
-        this.status = 'failed'
-        this.failureReason = `WebGPU frame validation failed: ${error.message}`
-        window.logger?.warn(`${this.failureReason}; using WebGL fallback`)
+        const message = error.message || String(error)
+        this.fail(`WebGPU frame validation failed: ${message}`)
         return
       }
       this.validationComplete = true
+      this.restoreAttempts = 0
     }).catch(error => {
       this.validationPending = false
       this.validationCheckScheduled = false
-      this.status = 'failed'
-      this.failureReason = error?.message || String(error)
+      this.fail(error?.message || String(error))
     })
   }
 
@@ -397,12 +543,17 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
 
   ensureInstanceBuffer(count) {
     if (this.instanceBuffer && count <= this.instanceCapacity) return
-    this.instanceBuffer?.destroy?.()
     this.instanceCapacity = Math.max(256, 2 ** Math.ceil(Math.log2(Math.max(1, count))))
-    this.instanceBuffer = this.device.createBuffer({
-      size: this.instanceCapacity * WATER_INSTANCE_STRIDE,
-      usage: BUFFER_USAGE.VERTEX | BUFFER_USAGE.COPY_DST
-    })
+    const bytes = this.instanceCapacity * WATER_INSTANCE_STRIDE
+    this.instanceBuffer = this.replaceResource(
+      this.instanceBuffer,
+      this.device.createBuffer({
+        size: bytes,
+        usage: BUFFER_USAGE.VERTEX | BUFFER_USAGE.COPY_DST
+      }),
+      bytes,
+      { destroy: true }
+    )
   }
 
   packInstances(instances) {
@@ -426,12 +577,17 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     const newAllocation = !this.instanceBuffer || this.instanceCapacity < requiredCapacity ||
       this.uploadedWaterTopology !== topology
     if (newAllocation) {
-      this.instanceBuffer?.destroy?.()
       this.instanceCapacity = requiredCapacity
-      this.instanceBuffer = this.device.createBuffer({
-        size: requiredCapacity * WATER_INSTANCE_STRIDE,
-        usage: BUFFER_USAGE.VERTEX | BUFFER_USAGE.COPY_DST
-      })
+      const bytes = requiredCapacity * WATER_INSTANCE_STRIDE
+      this.instanceBuffer = this.replaceResource(
+        this.instanceBuffer,
+        this.device.createBuffer({
+          size: bytes,
+          usage: BUFFER_USAGE.VERTEX | BUFFER_USAGE.COPY_DST
+        }),
+        bytes,
+        { destroy: true }
+      )
       this.uploadedWaterTopology = topology
       this.uploadedWaterTopologyVersion = -1
     }
@@ -582,12 +738,12 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     }
     if (this.status === 'idle') this.beginInitialize(canvas)
     if (this.status !== 'ready') return false
+    if (this.validationPending && !this.validationComplete) return false
     this.beginFrameValidation()
     try {
       if (!this.syncTextures()) return false
     } catch (error) {
-      this.status = 'failed'
-      this.failureReason = error?.message || String(error)
+      this.fail(error?.message || String(error))
       return false
     }
     const ratio = getCanvasPixelRatio(canvas)
@@ -670,6 +826,9 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       topologyData: this.waterTopology?.data || null,
       timestampCapability: this.timestampSupported ? 'supported' : 'unsupported',
       gpuTiming: { ...this.gpuTiming },
+      adapterInfo: { ...this.adapterInfo },
+      maxBufferSize: this.maxBufferSize,
+      bytesInUse: this.gpuMemory.bytesInUse,
       stats: { ...this.stats }
     }
   }

@@ -34,10 +34,23 @@ import {
   resolveNavalShoreOverlap
 } from './movementCollision.js'
 import { handleStuckUnit } from './movementStuck.js'
+import { ownerUnitList } from './unitOwnerIndex.js'
 import { addShipWake, getNavalHullSegment } from '../utils/navalUtils.js'
 
 const MOVEMENT_SOUND_STOP_FADE_SECONDS = 0.08
 const TANK_ENGINE_LOOP_VOLUME = 0.2
+const ENGINE_AUDIO_UPDATE_MS = 100
+const NO_AUTO_ROTATION_TYPES = new Set([
+  'tank',
+  'tank_v1',
+  'tank-v2',
+  'tank-v3',
+  'rocketTank',
+  'howitzer',
+  'apache',
+  'f35'
+])
+const friendlyCandidateLists = [null, null]
 const NAVAL_CRUISE_LOOP_VOLUME = 0.22
 
 function navalCruiseLoopEvent(unit) {
@@ -192,15 +205,31 @@ export function hasFriendlyUnitOnTile(unit, tileX, tileY, units = []) {
     return false
   }
 
-  for (const otherUnit of units) {
-    if (!otherUnit || otherUnit.id === unit.id || otherUnit.health <= 0) continue
-    if (!isGroundUnit(otherUnit)) continue
+  const indexedFriendlies = ownerUnitList(unit.owner)
+  let listCount = 0
+  if (indexedFriendlies) {
+    friendlyCandidateLists[0] = indexedFriendlies
+    listCount = 1
+    const aliasOwner = unit.owner === 'player' ? 'player1' : (unit.owner === 'player1' ? 'player' : null)
+    const aliasFriendlies = aliasOwner ? ownerUnitList(aliasOwner) : null
+    if (aliasFriendlies && aliasFriendlies.length && aliasFriendlies !== indexedFriendlies) {
+      friendlyCandidateLists[1] = aliasFriendlies
+      listCount = 2
+    }
+  }
 
-    const otherTileX = Math.floor((otherUnit.x + TILE_SIZE / 2) / TILE_SIZE)
-    const otherTileY = Math.floor((otherUnit.y + TILE_SIZE / 2) / TILE_SIZE)
+  const scans = listCount || 1
+  for (let listIndex = 0; listIndex < scans; listIndex++) {
+    const candidates = listCount ? friendlyCandidateLists[listIndex] : units
+    for (let index = 0; index < candidates.length; index++) {
+      const otherUnit = candidates[index]
+      if (!otherUnit || otherUnit.id === unit.id || otherUnit.health <= 0) continue
+      if (!listCount && ownersAreEnemies(unit.owner, otherUnit.owner)) continue
+      if (!isGroundUnit(otherUnit)) continue
 
-    if (otherTileX === tileX && otherTileY === tileY) {
-      if (!ownersAreEnemies(unit.owner, otherUnit.owner)) {
+      const otherTileX = Math.floor((otherUnit.x + TILE_SIZE / 2) / TILE_SIZE)
+      const otherTileY = Math.floor((otherUnit.y + TILE_SIZE / 2) / TILE_SIZE)
+      if (otherTileX === tileX && otherTileY === tileY && !ownersAreEnemies(unit.owner, otherUnit.owner)) {
         return true
       }
     }
@@ -541,9 +570,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     }
   }
 
-  const noAutoRotationTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f35']
   const isF22Airborne = unit.type === 'f22Raptor' && unit.flightState !== 'grounded'
-  if (!noAutoRotationTypes.includes(unit.type) && !isF22Airborne) {
+  if (!NO_AUTO_ROTATION_TYPES.has(unit.type) && !isF22Airborne) {
     updateUnitRotation(unit)
     if (unit.isNaval) {
       resolveNavalShoreOverlap(unit, mapGrid)
@@ -819,7 +847,8 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     if (shouldPlayEngineLoop) {
       if (!unit.engineSound) {
         beginTankEngineLoop(unit)
-      } else {
+      } else if (!unit.nextEngineAudioAt || now >= unit.nextEngineAudioAt) {
+        unit.nextEngineAudioAt = now + ENGINE_AUDIO_UPDATE_MS
         const { pan, volumeFactor } = calculatePositionalAudio(unit.x, unit.y)
         const targetGain = TANK_ENGINE_LOOP_VOLUME * volumeFactor * getMasterVolume()
         if (unit.engineSound.panner) unit.engineSound.panner.pan.value = pan

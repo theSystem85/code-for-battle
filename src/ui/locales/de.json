@@ -1,0 +1,26 @@
+{
+  "settings": {
+    "benchmark": {
+      "label": "Leistungsbenchmark",
+      "placeholder": "Benchmark wählen…",
+      "standard": "Karten-Scroll-Benchmark",
+      "heavy": "Schwere Schlacht (320 Einheiten)",
+      "heavyComplete": "Schwere Schlacht abgeschlossen",
+      "heavyFailed": "Schwere Schlacht fehlgeschlagen. Details stehen in der Konsole.",
+      "phasesTitle": "Phasen (Mittel / p95 ms)",
+      "phase": {
+        "sim": "Simulation",
+        "move": "Bewegung",
+        "combat": "Kampf",
+        "path": "Pfad",
+        "ai": "KI",
+        "fog": "Nebel",
+        "terrain": "Gelände",
+        "units": "Einheiten",
+        "effects": "Effekte",
+        "ui": "UI",
+        "minimap": "Minikarte"
+      }
+    }
+  }
+}

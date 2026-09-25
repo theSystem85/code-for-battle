@@ -1035,7 +1035,26 @@
     <div id="frameBottleneck">Bottleneck: --</div>
     <div id="frameCpuUpdate">CPU Update: -- ms</div>
     <div id="frameCpuRender">CPU Render: -- ms</div>
-    <div id="frameGpuEstimate">GPU timing: unavailable</div>
+    <div id="framePhaseRows" class="fps-phase-rows">
+      <div id="framePhaseSim">Sim: --</div>
+      <div id="framePhaseMove">Move: --</div>
+      <div id="framePhaseCombat">Combat: --</div>
+      <div id="framePhasePath">Path: --</div>
+      <div id="framePhaseAi">AI: --</div>
+      <div id="framePhaseFog">Fog: --</div>
+      <div id="framePhaseTerrain">Terrain: --</div>
+      <div id="framePhaseEntities">Units: --</div>
+      <div id="framePhaseEffects">Effects: --</div>
+      <div id="framePhaseUi">UI: --</div>
+      <div id="framePhaseMinimap">Minimap: --</div>
+    </div>
+    <div id="frameRenderer">Renderer: --</div>
+    <div id="frameGpuAdapter" hidden></div>
+    <div id="frameResolution">Canvas: --</div>
+    <div id="frameDrawCalls">Draws: --</div>
+    <div id="frameVram" class="fps-vram-row" title="Maximum single-buffer size reported by WebGPU (maxBufferSize), not true video memory.">VRAM: n/a</div>
+    <div id="frameVramInUse">VRAM in use: n/a</div>
+    <div id="frameGpuEstimate" hidden>GPU: -- ms</div>
     <div id="frameUnattributedWait">Unattributed wait: -- ms</div>
     <div id="frameJsHeap">JS Heap: --</div>
     <div id="fpsLlmTokens">Tokens: 0</div>
@@ -1082,7 +1101,14 @@
           <div class="config-modal__actions">
             <button id="openRuntimeConfigDialogBtn" class="config-modal__button config-modal__button--primary"
               type="button">Open Runtime Config Dialog</button>
-            <button id="runBenchmarkBtn" class="config-modal__button" type="button">Run Performance Benchmark</button>
+            <label class="config-modal__benchmark" for="settingsBenchmarkSelect">
+              <span id="settingsBenchmarkLabel">Performance benchmark</span>
+              <select id="settingsBenchmarkSelect">
+                <option value="">Choose a benchmark…</option>
+                <option value="standard">Map scroll benchmark</option>
+                <option value="heavy">Heavy battle (320 units)</option>
+              </select>
+            </label>
           </div>
           <label class="config-modal__checkbox-row" for="settingsFrameLimiterToggle">
             <input id="settingsFrameLimiterToggle" type="checkbox" checked>
@@ -1126,9 +1152,11 @@
             <label class="config-modal__field">
               <span>Terrain renderer</span>
               <select id="settingsRendererBackend">
-                <option value="webgl">WebGL (legacy)</option>
-                <option value="webgpu">WebGPU (experimental)</option>
+                <option value="auto" selected>Automatic (WebGPU when available)</option>
+                <option value="webgl">WebGL</option>
+                <option value="webgpu">WebGPU</option>
               </select>
+              <span id="settingsRendererBackendStatus" class="config-modal__hint"></span>
             </label>
           </div>
           <div class="config-modal__section">
@@ -1579,6 +1607,7 @@
             <div class="benchmark-modal__metric">Duration: <span id="benchmarkDuration">--</span></div>
           </div>
           <canvas id="benchmarkChart" width="480" height="240" aria-label="Benchmark FPS chart"></canvas>
+          <pre id="benchmarkPhaseBreakdown" class="benchmark-modal__phases" hidden></pre>
         </div>
       </div>
       <div class="benchmark-modal__footer">

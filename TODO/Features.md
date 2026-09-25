@@ -165,6 +165,12 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Rendering and WebGPU
 
+- [x] **WebGPU terrain shader and performance overlay (2026-09-24)** — Sample both atlases before any per-fragment branch so `textureSample` stays in uniform control flow. When WebGPU still fails, log one `[WebGPU]` validation line and show a short reason in settings. The performance widget shows the active backend, fallback reason, adapter, canvas resolution, draw calls, timestamp-query GPU time when available, `maxBufferSize` as VRAM, and tracked buffer/texture bytes in use.
+  - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
+
+- [x] **WebGPU default terrain renderer (2026-09-24)** — Fresh profiles and legacy implicit `webgl` graphics records use WebGPU when an adapter and device can be created, and WebGL otherwise. An explicit WebGL or WebGPU settings choice is stored as `rendererBackendChoice` and kept. Legacy stored `webgpu` stays explicit because that value was never the old default.
+  - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
+
 - [x] **Generic sprite-sheet destruction VFX (2026-04-14)** — parse tile/grid/frame metadata from animation filenames (`<tileW>x<tileH>_<cols>x<rows>_*.webp`), add reusable time-based sprite-sheet animation rendering with additive blending, and trigger one centered one-shot explosion animation for destroyed units/buildings/factories.
   - Spec: none
 
@@ -706,6 +712,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
   - Spec: [Mixed map biomes](../specs/075-mixed-map-biomes.md)
 
 ### UI, Sidebar, and Settings
+
+- [x] **Heavy-battle benchmark in settings (2026-09-24)** — The runtime settings button is a dropdown for the existing map-scroll benchmark and a heavy battle (seed 11, 4 players, 320 units, 3 s warmup, 8 s measure). The heavy battle uses the same results dialog plus a vertical phase breakdown. Labels follow the landing locale (`settings.benchmark.*` in EN and DE). The performance widget lists each phase on its own row and stays within the previous overlay width.
+  - Spec: [Heavy-battle frame phases](../specs/072-heavy-battle-frame-phases.md)
 
 - [x] **Ensure in mobile portrait that long-press production tooltips do not open when** — the user is dragging a build button (drag-to-build gesture).
   - Spec: [Mobile Portrait Sidebar Expand Button](../specs/022-mobile-portrait-sidebar-expand-button.md)

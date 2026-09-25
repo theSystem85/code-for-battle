@@ -31,7 +31,16 @@ import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
-import { RENDERER_BACKEND, TILE_SIZE, USE_PROCEDURAL_WATER_RENDERING } from '../config.js'
+import {
+  RENDERER_BACKEND,
+  TILE_SIZE,
+  USE_PROCEDURAL_WATER_RENDERING,
+  getRendererBackendChoice,
+  noteActiveRendererBackend,
+  setRendererBackendFailureSummary
+} from '../config.js'
+import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
+import { FRAME_PHASE, framePhases } from '../performance/framePhases.js'
 import { isAirborneUnit } from '../game/movementHelpers.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
@@ -58,6 +67,19 @@ export class Renderer {
     this.wreckRenderer = new WreckRenderer()
     this.gpuRenderer = null
     this.webgpuRenderer = null
+    this.gpuOverlay = {
+      backend: 'cpu',
+      fallbackReason: null,
+      bytesInUse: null,
+      maxBufferSize: null,
+      vendor: '',
+      architecture: '',
+      drawCalls: 0,
+      canvasWidth: 0,
+      canvasHeight: 0,
+      devicePixelRatio: 1,
+      gpuMilliseconds: null
+    }
     // renderGame runs once per animation frame. These containers are mutated in
     // place so a 200-entity scene does not allocate six replacement lists and
     // a target index on every one of the 75 expected frames per second.
@@ -71,6 +93,29 @@ export class Renderer {
     }
     this.frameEntityIndex = new Map()
     this.attackQueueBuffer = []
+  }
+
+  publishGpuOverlay(gpuBackend, frameDrawCalls, wantsWebGPU, webgpuCanvas, gpuCanvas) {
+    const overlay = this.gpuOverlay
+    const webgpu = this.webgpuRenderer
+    const activeCanvas = gpuBackend === 'webgpu' ? webgpuCanvas : gpuCanvas
+    const activeRenderer = gpuBackend === 'webgpu' ? webgpu : this.gpuRenderer
+    const timing = activeRenderer?.gpuTiming
+    overlay.backend = gpuBackend
+    overlay.fallbackReason = gpuBackend !== 'webgpu' && wantsWebGPU && webgpu?.status === 'failed'
+      ? summarizeWebGPUFailure(webgpu.failureReason)
+      : null
+    overlay.bytesInUse = gpuBackend === 'webgpu' ? webgpu.gpuMemory.bytesInUse : null
+    overlay.maxBufferSize = Number.isFinite(webgpu?.maxBufferSize) ? webgpu.maxBufferSize : null
+    overlay.vendor = webgpu?.adapterInfo?.vendor || ''
+    overlay.architecture = webgpu?.adapterInfo?.architecture || ''
+    overlay.drawCalls = frameDrawCalls
+    overlay.canvasWidth = activeCanvas?.width || 0
+    overlay.canvasHeight = activeCanvas?.height || 0
+    overlay.devicePixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    overlay.gpuMilliseconds = gpuBackend === 'webgpu' && timing?.available && Number.isFinite(timing.milliseconds)
+      ? timing.milliseconds
+      : null
   }
 
   partitionUnitsByRenderLayer(units) {
@@ -471,6 +516,12 @@ export class Renderer {
     })
   }
 
+  requestWebGPUAttempt() {
+    const webgpuRenderer = this.webgpuRenderer
+    if (!webgpuRenderer || webgpuRenderer.status !== 'failed') return
+    webgpuRenderer.needsRestore = true
+  }
+
   renderGame(gameCtx, gameCanvas, mapGrid, factories, units, bullets, buildings, scrollOffset, selectionActive, selectionStart, selectionEnd, gameState, gpuContext = null, gpuCanvas = null, webgpuCanvas = null) {
     if (!gameState || !gameCtx) {
       return
@@ -490,8 +541,7 @@ export class Renderer {
     }
 
     const monitorTiming = performanceMonitor.recording
-    const renderStartedAt = monitorTiming ? performance.now() : 0
-    let terrainMs = 0
+    framePhases.begin(FRAME_PHASE.terrain)
     let entitiesMs = 0
     let effectsMs = 0
     let uiMs = 0
@@ -523,6 +573,7 @@ export class Renderer {
     )
 
     let gpuBackend = 'cpu'
+    let frameDrawCalls = 0
     const wantsWebGPU = RENDERER_BACKEND === 'webgpu' && Boolean(webgpuCanvas) && typeof navigator !== 'undefined' && Boolean(navigator.gpu)
     if (shouldUseGpuTerrain && wantsWebGPU) {
       if (!this.webgpuRenderer) {
@@ -530,8 +581,12 @@ export class Renderer {
       } else {
         this.webgpuRenderer.setMapRenderer(this.mapRenderer)
       }
+      const drawsBefore = this.webgpuRenderer.stats?.drawCalls || 0
       gpuRendered = this.webgpuRenderer.render(mapGrid, scrollOffset, webgpuCanvas, { waterOnly: gpuWaterOnly })
-      if (gpuRendered) gpuBackend = 'webgpu'
+      if (gpuRendered) {
+        gpuBackend = 'webgpu'
+        frameDrawCalls = (this.webgpuRenderer.stats?.drawCalls || 0) - drawsBefore
+      }
     }
 
     if (shouldUseGpuTerrain && !gpuRendered) {
@@ -541,16 +596,37 @@ export class Renderer {
         this.gpuRenderer.setContext(gpuContext)
         this.gpuRenderer.setMapRenderer(this.mapRenderer)
       }
+      const drawsBefore = this.gpuRenderer.stats?.drawCalls || 0
       gpuRendered = this.gpuRenderer.render(mapGrid, scrollOffset, gpuCanvas, { waterOnly: gpuWaterOnly })
-      if (gpuRendered) gpuBackend = 'webgl'
+      if (gpuRendered) {
+        gpuBackend = 'webgl'
+        frameDrawCalls = (this.gpuRenderer.stats?.drawCalls || 0) - drawsBefore
+      }
     } else if (gpuContext && gpuCanvas) {
       gpuContext.viewport(0, 0, gpuCanvas.width, gpuCanvas.height)
       gpuContext.clearColor(0, 0, 0, 0)
       gpuContext.clear(gpuContext.COLOR_BUFFER_BIT)
     }
 
-    if (webgpuCanvas?.style) webgpuCanvas.style.display = gpuBackend === 'webgpu' ? 'block' : 'none'
+    const showWebGPUCanvas = gpuBackend === 'webgpu' || (
+      wantsWebGPU &&
+      this.webgpuRenderer &&
+      this.webgpuRenderer.status !== 'failed' &&
+      this.webgpuRenderer.status !== 'idle'
+    )
+    if (webgpuCanvas?.style) webgpuCanvas.style.display = showWebGPUCanvas ? 'block' : 'none'
     if (gpuCanvas?.style) gpuCanvas.style.display = gpuBackend === 'webgpu' ? 'none' : 'block'
+    if (gpuBackend === 'webgpu') {
+      setRendererBackendFailureSummary(null)
+      noteActiveRendererBackend('webgpu')
+    } else if (wantsWebGPU && this.webgpuRenderer?.status === 'failed') {
+      setRendererBackendFailureSummary(summarizeWebGPUFailure(this.webgpuRenderer.failureReason))
+      noteActiveRendererBackend('webgl')
+    } else if (!wantsWebGPU && RENDERER_BACKEND !== 'webgpu') {
+      setRendererBackendFailureSummary(null)
+      noteActiveRendererBackend('webgl')
+    }
+    this.publishGpuOverlay(gpuBackend, frameDrawCalls, wantsWebGPU, webgpuCanvas, gpuCanvas)
 
     // Build occupancy map for visualization if needed
     let occupancyMap = null
@@ -574,15 +650,20 @@ export class Renderer {
         gpuRenderedStreetTerrain: gpuRendered && !gpuWaterOnly && hasGpuStreetAtlas
       }
     )
-    if (monitorTiming) terrainMs = performance.now() - renderStartedAt
+    const terrainMs = framePhases.end(FRAME_PHASE.terrain)
+    framePhases.noteDrawCalls(frameDrawCalls)
 
+    const activeGpuRenderer = gpuBackend === 'webgpu' ? this.webgpuRenderer : this.gpuRenderer
     gameState.renderStats = {
       ...(gameState.renderStats || {}),
       mapChunks: this.mapRenderer.getLastFrameChunkStats?.() || null,
+      gpuTiming: activeGpuRenderer?.gpuTiming || null,
+      gpuOverlay: this.gpuOverlay,
       gpuTerrain: {
         rendered: gpuRendered,
         backend: gpuBackend,
         requestedBackend: RENDERER_BACKEND,
+        rendererBackendChoice: getRendererBackendChoice(),
         webgpuStatus: this.webgpuRenderer?.getStatus?.() || null,
         waterOnly: gpuWaterOnly,
         streetAtlas: gpuRendered && !gpuWaterOnly && hasGpuStreetAtlas
@@ -619,7 +700,7 @@ export class Renderer {
     this.buildingRenderer.collectVisibleBuildings(gameCtx, buildings, scrollOffset, visibleBuildings)
     this.buildingRenderer.collectVisibleBuildings(gameCtx, factories, scrollOffset, visibleFactories)
 
-    const entitiesStartedAt = monitorTiming ? performance.now() : 0
+    framePhases.begin(FRAME_PHASE.entities)
     const entityBasesSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_BASES)
     gameCtx.save()
     gameCtx.globalAlpha *= entityImageAlpha
@@ -633,9 +714,9 @@ export class Renderer {
     this.unitRenderer.renderBases(gameCtx, visibleGroundedUnits, scrollOffset, true)
     gameCtx.restore()
     renderProfiler.endSpan(entityBasesSpan)
-    if (monitorTiming) entitiesMs = performance.now() - entitiesStartedAt
+    entitiesMs += framePhases.end(FRAME_PHASE.entities)
 
-    const effectsStartedAt = monitorTiming ? performance.now() : 0
+    framePhases.begin(FRAME_PHASE.effects)
     this.effectsRenderer.render(gameCtx, bullets, gameState, units, scrollOffset)
 
     // Render mine indicators (skull overlays)
@@ -651,9 +732,9 @@ export class Renderer {
     if (gameState.mineFreeformPaint) {
       renderFreeformSweepPreview(gameCtx, gameState.mineFreeformPaint, scrollOffset)
     }
-    if (monitorTiming) effectsMs = performance.now() - effectsStartedAt
+    effectsMs = framePhases.end(FRAME_PHASE.effects)
 
-    const uiStartedAt = monitorTiming ? performance.now() : 0
+    framePhases.begin(FRAME_PHASE.ui)
     const hudSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.HUD)
     // Render movement target indicators (green triangles)
     this.movementTargetRenderer.render(gameCtx, units, scrollOffset)
@@ -671,6 +752,8 @@ export class Renderer {
     // Render harvester HUD overlay (if enabled)
     this.harvesterHUD.render(gameCtx, units, gameState, scrollOffset, frameEntityIndex)
 
+    uiMs += framePhases.end(FRAME_PHASE.ui)
+    framePhases.begin(FRAME_PHASE.entities)
     const entityOverlaysSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_OVERLAYS)
     this.buildingRenderer.renderOverlays(gameCtx, visibleBuildings, scrollOffset, true, frameEntityIndex)
     this.buildingRenderer.renderOverlays(gameCtx, visibleFactories, scrollOffset, true, frameEntityIndex)
@@ -681,12 +764,14 @@ export class Renderer {
     gameCtx.restore()
     this.unitRenderer.renderOverlays(gameCtx, visibleAirborneUnits, scrollOffset, frameEntityIndex, units, true)
     renderProfiler.endSpan(entityOverlaysSpan)
+    entitiesMs += framePhases.end(FRAME_PHASE.entities)
+    framePhases.begin(FRAME_PHASE.ui)
     this.buildingRenderer.renderHudHoverTooltip(gameCtx, buildings, scrollOffset, factories)
 
     this.uiRenderer.render(gameCtx, gameCanvas, gameState, selectionActive, selectionStart, selectionEnd, scrollOffset, factories, buildings, mapGrid, units)
     renderProfiler.endSpan(hudSpan)
+    uiMs += framePhases.end(FRAME_PHASE.ui)
     if (monitorTiming) {
-      uiMs = performance.now() - uiStartedAt
       performanceMonitor.recordRendererPhases({ terrainMs, entitiesMs, effectsMs, uiMs })
     }
   }

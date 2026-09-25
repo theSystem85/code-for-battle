@@ -5,6 +5,9 @@
   position: absolute;
   top: 58px;
   right: 10px;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: 260px;
   background: rgba(0, 0, 0, 0.7);
   color: #00ff00;
   padding: 8px 12px;
@@ -21,6 +24,46 @@
 
 .fps-overlay.visible {
   display: block;
+}
+
+.fps-overlay .fps-vram-row {
+  pointer-events: auto;
+}
+
+.fps-overlay .fps-phase-rows {
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.fps-overlay .fps-phase-rows > div,
+.fps-overlay #frameRenderer,
+.fps-overlay #frameGpuAdapter,
+.fps-overlay #frameVram,
+.fps-overlay #frameVramInUse {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.config-modal__benchmark {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 220px;
+  color: #e5e5e5;
+  font-size: 13px;
+}
+
+.config-modal__benchmark select {
+  background: #2d3640;
+  border: 1px solid #3c4a58;
+  border-radius: 6px;
+  color: #e5e5e5;
+  font: inherit;
+  padding: 10px 14px;
 }
 
 /* FPS color classes */

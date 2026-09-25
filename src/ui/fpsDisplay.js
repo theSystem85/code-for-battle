@@ -3,6 +3,8 @@ import { gameState } from '../gameState.js'
 import { notifyBenchmarkFrame } from '../benchmark/benchmarkTracker.js'
 import { getNetworkStats, isLockstepEnabled } from '../network/gameCommandSync.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
+import { formatVramInUse, formatVramLabel, VRAM_LIMIT_TITLE } from '../rendering/gpuMemory.js'
+import { framePhases } from '../performance/framePhases.js'
 
 export class FPSDisplay {
   constructor() {
@@ -44,6 +46,23 @@ export class FPSDisplay {
     this.frameBottleneckEl = document.getElementById('frameBottleneck')
     this.frameCpuUpdateEl = document.getElementById('frameCpuUpdate')
     this.frameCpuRenderEl = document.getElementById('frameCpuRender')
+    this.framePhaseSimEl = document.getElementById('framePhaseSim')
+    this.framePhaseMoveEl = document.getElementById('framePhaseMove')
+    this.framePhaseCombatEl = document.getElementById('framePhaseCombat')
+    this.framePhasePathEl = document.getElementById('framePhasePath')
+    this.framePhaseAiEl = document.getElementById('framePhaseAi')
+    this.framePhaseFogEl = document.getElementById('framePhaseFog')
+    this.framePhaseTerrainEl = document.getElementById('framePhaseTerrain')
+    this.framePhaseEntitiesEl = document.getElementById('framePhaseEntities')
+    this.framePhaseEffectsEl = document.getElementById('framePhaseEffects')
+    this.framePhaseUiEl = document.getElementById('framePhaseUi')
+    this.framePhaseMinimapEl = document.getElementById('framePhaseMinimap')
+    this.frameRendererEl = document.getElementById('frameRenderer')
+    this.frameGpuAdapterEl = document.getElementById('frameGpuAdapter')
+    this.frameResolutionEl = document.getElementById('frameResolution')
+    this.frameDrawCallsEl = document.getElementById('frameDrawCalls')
+    this.frameVramEl = document.getElementById('frameVram')
+    this.frameVramInUseEl = document.getElementById('frameVramInUse')
     this.frameGpuEstimateEl = document.getElementById('frameGpuEstimate')
     this.frameUnattributedWaitEl = document.getElementById('frameUnattributedWait')
     this.frameJsHeapEl = document.getElementById('frameJsHeap')
@@ -136,6 +155,77 @@ export class FPSDisplay {
     this.idlePhaseSamples.push(idleMs)
   }
 
+  formatPhase(phase) {
+    if (!phase?.samples) return '--'
+    return `${phase.averageMs.toFixed(1)}/${phase.p95Ms.toFixed(1)}`
+  }
+
+  updateFramePhaseRows() {
+    const snapshot = framePhases.snapshot()
+    const phases = snapshot.phases || {}
+    const row = (element, label, phase) => {
+      if (element) element.textContent = `${label}: ${this.formatPhase(phase)} ms`
+    }
+    row(this.framePhaseSimEl, 'Sim', phases.sim)
+    row(this.framePhaseMoveEl, 'Move', phases.movement)
+    row(this.framePhaseCombatEl, 'Combat', phases.combat)
+    row(this.framePhasePathEl, 'Path', phases.pathfinding)
+    row(this.framePhaseAiEl, 'AI', phases.ai)
+    row(this.framePhaseFogEl, 'Fog', phases.fog)
+    row(this.framePhaseTerrainEl, 'Terrain', phases.terrain)
+    row(this.framePhaseEntitiesEl, 'Units', phases.entities)
+    row(this.framePhaseEffectsEl, 'Effects', phases.effects)
+    row(this.framePhaseUiEl, 'UI', phases.ui)
+    row(this.framePhaseMinimapEl, 'Minimap', phases.minimap)
+  }
+
+  setRowVisible(element, visible) {
+    if (!element) return
+    element.hidden = !visible
+  }
+
+  updateRendererRows(overlay = null) {
+    const backend = overlay?.backend === 'webgpu' ? 'WebGPU' : overlay?.backend === 'webgl' ? 'WebGL' : 'CPU'
+    if (this.frameRendererEl) {
+      this.frameRendererEl.textContent = overlay?.fallbackReason
+        ? `Renderer: ${backend} (${overlay.fallbackReason})`
+        : `Renderer: ${backend}`
+    }
+    if (this.frameGpuAdapterEl) {
+      const label = [overlay?.vendor, overlay?.architecture].filter(Boolean).join(' / ')
+      this.setRowVisible(this.frameGpuAdapterEl, Boolean(label))
+      if (label) this.frameGpuAdapterEl.textContent = `GPU: ${label}`
+    }
+    if (this.frameResolutionEl) {
+      const width = overlay?.canvasWidth || 0
+      const height = overlay?.canvasHeight || 0
+      const ratio = Number.isFinite(overlay?.devicePixelRatio) ? overlay.devicePixelRatio : 1
+      this.frameResolutionEl.textContent = width && height
+        ? `Canvas: ${width}×${height} @ ${ratio.toFixed(1)}x`
+        : 'Canvas: n/a'
+    }
+    if (this.frameDrawCallsEl) {
+      const draws = Number.isFinite(overlay?.drawCalls) ? overlay.drawCalls : 0
+      this.frameDrawCallsEl.textContent = `Draws: ${draws}`
+    }
+    if (this.frameVramEl) {
+      this.frameVramEl.textContent = formatVramLabel(overlay?.maxBufferSize)
+      this.frameVramEl.title = VRAM_LIMIT_TITLE
+    }
+    if (this.frameVramInUseEl) {
+      this.frameVramInUseEl.textContent = formatVramInUse(
+        overlay?.backend === 'webgpu' ? overlay.bytesInUse : null,
+        overlay?.backend === 'webgpu' ? overlay.maxBufferSize : null
+      )
+    }
+    if (this.frameGpuEstimateEl) {
+      const milliseconds = overlay?.gpuMilliseconds
+      const showGpuTime = Number.isFinite(milliseconds)
+      this.setRowVisible(this.frameGpuEstimateEl, showGpuTime)
+      if (showGpuTime) this.frameGpuEstimateEl.textContent = `GPU: ${milliseconds.toFixed(2)} ms`
+    }
+  }
+
   getAverage(samples) {
     if (!Array.isArray(samples) || !samples.length) return 0
     const sum = samples.reduce((acc, value) => acc + value, 0)
@@ -188,12 +278,8 @@ export class FPSDisplay {
       if (this.frameCpuRenderEl) {
         this.frameCpuRenderEl.textContent = `CPU Render: ${renderAvg.toFixed(1)} ms`
       }
-      if (this.frameGpuEstimateEl) {
-        const gpuTiming = gameState.renderStats?.gpuTiming
-        this.frameGpuEstimateEl.textContent = gpuTiming?.available && Number.isFinite(gpuTiming.milliseconds)
-          ? `GPU: ${gpuTiming.milliseconds.toFixed(1)} ms (instrumented passes)`
-          : `GPU timing: unavailable (${gpuTiming?.reason || 'not instrumented'})`
-      }
+      this.updateFramePhaseRows()
+      this.updateRendererRows(gameState.renderStats?.gpuOverlay)
       if (this.frameUnattributedWaitEl) {
         this.frameUnattributedWaitEl.textContent = `Unattributed wait: ${idleAvg.toFixed(1)} ms`
       }
