@@ -1,5 +1,7 @@
 import { uiText } from './uiText.js'
+import { applyDeadzone } from '../input/gamepad/deadzone.js'
 import { commandById, controllerTypeFromId, defaultBindingsForSlot, detectBindingCandidate, emptyBindingMap, findBindingConflict, GAMEPAD_COMMANDS } from '../input/gamepad/gamepadBinding.js'
+import { pulseGamepadIndex } from '../input/gamepad/gamepadHaptics.js'
 import {
   createControllerTypeProfile,
   createGamepadProfile,
@@ -7,9 +9,12 @@ import {
   deleteControllerTypeProfile,
   deleteGamepadProfile,
   deletePlayerProfile,
+  dismissControllerSuggestion,
   getActiveControllerTypeProfileId,
   getActiveBindings,
   getActiveProfileId,
+  getControllerSuggestion,
+  getHapticSettings,
   getPlayerProfileBindings,
   getSlotPlayerProfileId,
   listControllerTypeProfiles,
@@ -22,10 +27,13 @@ import {
   resetControllerTypeProfile,
   resetGamepadProfile,
   resetPlayerProfile,
+  resolveDeadzones,
   resolveGamepadBindings,
   saveActiveGamepadProfile,
   setActiveControllerTypeProfile,
   setActiveGamepadProfile,
+  setHapticSettings,
+  setPlayerDeadzones,
   setSlotPlayerProfile
 } from '../input/gamepad/gamepadProfiles.js'
 import { gamepadMonitor, requestGamepadPoll } from '../input/gamepad/gamepadMonitor.js'
@@ -132,6 +140,7 @@ function bindingContext(slot) {
 function beginCapture(slot, commandId) {
   const command = commandById(commandId)
   if (!command) return
+  pulseMenu()
   stopCapture()
   capture = { slot, commandId, kind: command.kind }
   const row = panel && panel.querySelector(`[data-command="${commandId}"]`)
@@ -189,6 +198,12 @@ function element(tag, className, textContent) {
   return node
 }
 
+function pulseMenu() {
+  const monitor = gamepadMonitor.slots[activeSlot]
+  const index = monitor && Number.isInteger(monitor.index) && monitor.index >= 0 ? monitor.index : activeSlot
+  pulseGamepadIndex(index, 'menu')
+}
+
 function profileSelect(profiles, activeId, onChange) {
   const select = document.createElement('select')
   select.className = 'config-modal__select'
@@ -199,8 +214,39 @@ function profileSelect(profiles, activeId, onChange) {
     if (profile.id === activeId) option.selected = true
     select.append(option)
   })
-  select.addEventListener('change', onChange)
+  select.addEventListener('change', () => {
+    pulseMenu()
+    onChange()
+  })
   return select
+}
+
+function deadzoneControl(slot, side, zones) {
+  const field = element('label', 'config-modal__field gamepad-deadzone')
+  field.append(element('span', null, text(side === 'left' ? 'settings.gamepad.deadzoneLeft' : 'settings.gamepad.deadzoneRight', side === 'left' ? 'Left stick deadzone' : 'Right stick deadzone')))
+  const range = document.createElement('input')
+  range.type = 'range'
+  range.min = '0'
+  range.max = '0.9'
+  range.step = '0.01'
+  range.value = String(zones[side])
+  range.dataset.deadzone = side
+  const readout = element('span', 'config-modal__range-value', Number(zones[side]).toFixed(2))
+  const preview = element('span', 'gamepad-input__meter')
+  preview.dataset.deadzonePreview = side
+  range.addEventListener('input', () => {
+    const store = getGamepadStore()
+    const current = resolveDeadzones(store, { slot, instanceKey: slotIdentity(slot) })
+    const next = { left: current.left, right: current.right, [side]: Number(range.value) }
+    const saved = setPlayerDeadzones(store, slot, next)
+    persistGamepadStore()
+    notifyBindings()
+    const shown = saved ? saved[side] : Number(range.value)
+    readout.textContent = shown.toFixed(2)
+    range.value = String(shown)
+  })
+  field.append(range, readout, preview)
+  return field
 }
 
 function renderPlayerProfiles(host, slot) {
@@ -257,6 +303,9 @@ function renderPlayerProfiles(host, slot) {
   })
   row.append(create, rename, remove, reset)
   block.append(row)
+  const zones = resolveDeadzones(store, { slot, instanceKey: slotIdentity(slot) })
+  block.append(element('p', 'config-modal__hint', text('settings.gamepad.deadzoneHint', 'Motion inside the deadzone is ignored so a resting stick does not jitter.')))
+  block.append(deadzoneControl(slot, 'left', zones), deadzoneControl(slot, 'right', zones))
   host.append(block)
 }
 
@@ -343,6 +392,7 @@ function renderProfiles(host, slot) {
     select.append(option)
   })
   select.addEventListener('change', () => {
+    pulseMenu()
     setActiveGamepadProfile(store, identity, select.value)
     persistGamepadStore()
     notifyBindings()
@@ -463,6 +513,7 @@ function renderSlotLights(host) {
     const name = element('span', 'gamepad-slot__name', monitor.connected ? monitor.id : text('settings.gamepad.disconnected', 'Not connected'))
     button.append(light, label, name)
     button.addEventListener('click', () => {
+      if (activeSlot !== slot) pulseMenu()
       activeSlot = slot
       stopCapture()
       renderGamepadMappingMenu(panel, slot)
@@ -481,6 +532,11 @@ export function renderGamepadMappingMenu(root, slot = activeSlot) {
   lights.dataset.gamepadLights = 'true'
   renderSlotLights(lights)
   root.append(lights)
+  const suggestion = element('div')
+  suggestion.dataset.gamepadSuggestion = 'true'
+  suggestion.hidden = true
+  root.append(suggestion)
+  root.append(renderHaptics())
   const ignored = element('p', 'config-modal__hint')
   ignored.dataset.gamepadIgnored = 'true'
   ignored.hidden = gamepadMonitor.ignored < 1
@@ -523,7 +579,72 @@ export function renderGamepadMappingMenu(root, slot = activeSlot) {
   profiles.dataset.gamepadProfiles = 'true'
   renderProfiles(profiles, slot)
   root.append(profiles)
+  syncSuggestion(slot)
   if (!menuFrame) menuFrame = requestAnimationFrame(pumpMenu)
+}
+
+function renderHaptics() {
+  const store = getGamepadStore()
+  const settings = getHapticSettings(store)
+  const block = element('div', 'gamepad-profile-block')
+  block.append(element('h3', 'config-modal__section-title', text('settings.gamepad.haptics', 'Vibration')))
+  const row = element('div', 'gamepad-profile-row')
+  const toggle = element('label', 'gamepad-deadzone')
+  const checkbox = document.createElement('input')
+  checkbox.type = 'checkbox'
+  checkbox.checked = settings.enabled !== false
+  const intensity = document.createElement('input')
+  intensity.type = 'range'
+  intensity.min = '0'
+  intensity.max = '1'
+  intensity.step = '0.01'
+  intensity.value = String(settings.intensity)
+  intensity.dataset.hapticIntensity = 'true'
+  intensity.setAttribute('aria-label', text('settings.gamepad.hapticsIntensity', 'Intensity'))
+  const readout = element('span', 'config-modal__range-value', Number(settings.intensity).toFixed(2))
+  checkbox.addEventListener('change', () => {
+    setHapticSettings(store, { enabled: checkbox.checked, intensity: Number(intensity.value) })
+    persistGamepadStore()
+    if (checkbox.checked) pulseMenu()
+  })
+  intensity.addEventListener('input', () => {
+    const saved = setHapticSettings(store, { intensity: Number(intensity.value) })
+    persistGamepadStore()
+    readout.textContent = Number(saved.intensity).toFixed(2)
+  })
+  toggle.append(checkbox, element('span', null, text('settings.gamepad.hapticsOn', 'Vibration on')))
+  row.append(toggle, intensity, readout)
+  block.append(row)
+  return block
+}
+
+function syncSuggestion(slot) {
+  const host = panel && panel.querySelector('[data-gamepad-suggestion]')
+  if (!host) return
+  const suggestion = getControllerSuggestion(getGamepadStore(), slot)
+  const signature = suggestion ? `${suggestion.type}:${suggestion.profileId}` : ''
+  if (host._signature === signature) return
+  host._signature = signature
+  host.replaceChildren()
+  if (!suggestion) {
+    host.hidden = true
+    host.className = ''
+    return
+  }
+  host.hidden = false
+  host.className = 'gamepad-suggestion'
+  const typeName = text(`settings.gamepad.types.${suggestion.type}`, suggestion.type)
+  const body = text('settings.gamepad.suggestBody', 'This controller looks like {type}. The {type} layout is selected. Your player profile is unchanged.')
+  host.append(element('p', null, body.split('{type}').join(typeName)))
+  const dismiss = element('button', 'config-modal__button', text('settings.gamepad.dismiss', 'Dismiss'))
+  dismiss.type = 'button'
+  dismiss.addEventListener('click', () => {
+    dismissControllerSuggestion(getGamepadStore(), slot)
+    persistGamepadStore()
+    pulseMenu()
+    syncSuggestion(slot)
+  })
+  host.append(dismiss)
 }
 
 function menuSignature(slot) {
@@ -575,6 +696,24 @@ export function syncGamepadMenu(monitor) {
     const meter = row.querySelector('.gamepad-input__meter')
     if (meter) meter.style.transform = `scaleX(${Math.max(0.04, level)})`
   }
+  const previews = panel.querySelectorAll('[data-deadzone-preview]')
+  for (let i = 0; i < previews.length; i++) {
+    const preview = previews[i]
+    const side = preview.dataset.deadzonePreview
+    const slider = panel.querySelector(`[data-deadzone="${side}"]`)
+    const zone = slider ? Number(slider.value) : 0
+    const axisX = side === 'right' ? 2 : 0
+    const magnitude = Math.hypot(
+      applyDeadzone(slot.axes[axisX] || 0, zone),
+      applyDeadzone(slot.axes[axisX + 1] || 0, zone)
+    )
+    const level = magnitude > 1 ? 1 : magnitude
+    const quant = (level * 20) | 0
+    if (preview._level === quant) continue
+    preview._level = quant
+    preview.style.transform = `scaleX(${Math.max(0.04, level)})`
+  }
+  syncSuggestion(activeSlot)
 }
 
 export function stopGamepadMenu() {

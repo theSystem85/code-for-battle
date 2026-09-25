@@ -1501,6 +1501,29 @@ body.config-modal-open {
   text-transform: uppercase;
 }
 
+.gamepad-deadzone {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.gamepad-deadzone input[type='range'] {
+  width: 140px;
+}
+
+.gamepad-suggestion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #4da3ff;
+  border-radius: 6px;
+  background: rgba(77, 163, 255, 0.12);
+  color: #d6e8ff;
+}
+
 .gamepad-profile-name {
   min-width: 140px;
   background: #10161c;

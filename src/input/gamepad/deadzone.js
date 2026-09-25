@@ -15,3 +15,10 @@ export function applyDeadzone(value, deadzone = STICK_DEADZONE) {
 export function axisMagnitude(value, deadzone = STICK_DEADZONE) {
   return Math.abs(applyDeadzone(value, deadzone))
 }
+
+export function clampDeadzone(value, fallback = STICK_DEADZONE) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return fallback
+  const clamped = numeric < 0 ? 0 : (numeric > 0.9 ? 0.9 : numeric)
+  return Math.round(clamped * 100) / 100
+}

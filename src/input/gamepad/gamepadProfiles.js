@@ -1,3 +1,4 @@
+import { STICK_DEADZONE, clampDeadzone } from './deadzone.js'
 import {
   GAMEPAD_PROFILE_VERSION,
   GAMEPAD_PROFILE_VERSION_V1,
@@ -18,7 +19,9 @@ export function createGamepadProfileStore() {
     assignments: [],
     libraries: {},
     typeLibraries: {},
-    playerProfiles: emptyPlayerCatalog()
+    playerProfiles: emptyPlayerCatalog(),
+    haptics: { enabled: true, intensity: 0.65 },
+    suggestions: [null, null]
   }
 }
 
@@ -26,7 +29,8 @@ function emptyPlayerCatalog() {
   return {
     nextId: 1,
     slots: ['default', 'default'],
-    profiles: [{ id: 'default', name: 'Standard', builtin: true, bindings: null }]
+    explicit: [false, false],
+    profiles: [{ id: 'default', name: 'Standard', builtin: true, bindings: null, deadzones: null }]
   }
 }
 
@@ -66,6 +70,43 @@ function ensurePlayerProfiles(store) {
   return players
 }
 
+function clampIntensity(value) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return 0.65
+  const clamped = numeric < 0 ? 0 : (numeric > 1 ? 1 : numeric)
+  return Math.round(clamped * 100) / 100
+}
+
+function ensureStoreExtras(store) {
+  const players = ensurePlayerProfiles(store)
+  if (!Array.isArray(players.explicit) || players.explicit.length < 2) {
+    players.explicit = [players.slots[0] !== 'default', players.slots[1] !== 'default']
+  } else {
+    players.explicit[0] = Boolean(players.explicit[0])
+    players.explicit[1] = Boolean(players.explicit[1])
+  }
+  if (!store.haptics || typeof store.haptics !== 'object') {
+    store.haptics = { enabled: true, intensity: 0.65 }
+  } else {
+    store.haptics.enabled = store.haptics.enabled == null ? true : Boolean(store.haptics.enabled)
+    store.haptics.intensity = clampIntensity(store.haptics.intensity)
+  }
+  if (!Array.isArray(store.suggestions) || store.suggestions.length < 2) {
+    const previous = Array.isArray(store.suggestions) ? store.suggestions : []
+    store.suggestions = [previous[0] || null, previous[1] || null]
+  }
+  return store
+}
+
+function deadzonePair(source) {
+  if (!source || typeof source !== 'object') return null
+  if (source.left == null && source.right == null) return null
+  return {
+    left: clampDeadzone(source.left),
+    right: clampDeadzone(source.right)
+  }
+}
+
 function typeKey(typeOrId) {
   if (typeOrId === 'xbox' || typeOrId === 'playstation' || typeOrId === 'generic') return typeOrId
   return controllerTypeFromId(typeOrId)
@@ -97,6 +138,7 @@ export function loadGamepadProfileStore(storage) {
     parsed.version = GAMEPAD_PROFILE_VERSION
     ensurePlayerProfiles(parsed)
     if (!parsed.typeLibraries || typeof parsed.typeLibraries !== 'object') parsed.typeLibraries = {}
+    ensureStoreExtras(parsed)
     return parsed
   } catch {
     return createGamepadProfileStore()
@@ -205,6 +247,7 @@ export function resetGamepadProfile(store, instanceKey, profileId) {
   const profile = profileById(library, profileId)
   if (!profile) return false
   profile.bindings = null
+  profile.deadzones = null
   return true
 }
 
@@ -235,9 +278,13 @@ export function getPlayerProfileBindings(store, profileId) {
 
 export function setSlotPlayerProfile(store, slot, profileId) {
   const players = ensurePlayerProfiles(store)
+  ensureStoreExtras(store)
   const profile = players.profiles.find(item => item.id === profileId)
   if (!profile) return false
-  players.slots[slot === 1 ? 1 : 0] = profile.id
+  const index = slot === 1 ? 1 : 0
+  players.slots[index] = profile.id
+  players.explicit[index] = true
+  store.suggestions[index] = null
   return true
 }
 
@@ -251,10 +298,18 @@ export function createPlayerProfile(store, name, slot, bindings) {
     id,
     name: trimmed,
     builtin: false,
-    bindings: bindings ? sanitizeSparseBindings(bindings) : null
+    bindings: bindings ? sanitizeSparseBindings(bindings) : null,
+    deadzones: null
+  }
+  if (slot === 0 || slot === 1) {
+    ensureStoreExtras(store)
+    const previous = players.profiles.find(item => item.id === players.slots[slot])
+    profile.deadzones = previous ? deadzonePair(previous.deadzones) : null
+    players.slots[slot] = id
+    players.explicit[slot] = true
+    store.suggestions[slot] = null
   }
   players.profiles.push(profile)
-  if (slot === 0 || slot === 1) players.slots[slot] = id
   return profile
 }
 
@@ -271,9 +326,16 @@ export function deletePlayerProfile(store, profileId) {
   const players = ensurePlayerProfiles(store)
   const profile = players.profiles.find(item => item.id === profileId)
   if (!profile || profile.builtin) return false
+  ensureStoreExtras(store)
   players.profiles = players.profiles.filter(item => item.id !== profileId)
-  if (players.slots[0] === profileId) players.slots[0] = 'default'
-  if (players.slots[1] === profileId) players.slots[1] = 'default'
+  if (players.slots[0] === profileId) {
+    players.slots[0] = 'default'
+    players.explicit[0] = false
+  }
+  if (players.slots[1] === profileId) {
+    players.slots[1] = 'default'
+    players.explicit[1] = false
+  }
   return true
 }
 
@@ -282,6 +344,7 @@ export function resetPlayerProfile(store, profileId) {
   const profile = players.profiles.find(item => item.id === profileId)
   if (!profile) return false
   profile.bindings = null
+  profile.deadzones = null
   return true
 }
 
@@ -448,4 +511,84 @@ export function placeGamepadBinding(store, { slot = 0, instanceKey = '', gamepad
     writeSparse(playerProfileForSlot(store, slot), commandId, input)
   }
   return { conflict, layer: useType ? 'type' : 'player' }
+}
+
+function savedDeviceProfile(store, instanceKey) {
+  const library = store.libraries && store.libraries[instanceKey]
+  if (!library || !Array.isArray(library.profiles) || library.profiles.length === 0) return null
+  return library.profiles.find(item => item.id === library.activeProfileId) || library.profiles[0]
+}
+
+export function resolveDeadzones(store, { slot = 0, instanceKey = '' } = {}) {
+  ensureStoreExtras(store)
+  const fromPlayer = deadzonePair(playerProfileForSlot(store, slot)?.deadzones)
+  if (fromPlayer) return fromPlayer
+  const fromDevice = deadzonePair(savedDeviceProfile(store, instanceKey)?.deadzones)
+  if (fromDevice) return fromDevice
+  return { left: STICK_DEADZONE, right: STICK_DEADZONE }
+}
+
+export function setPlayerDeadzones(store, slot, { left, right } = {}) {
+  const profile = playerProfileForSlot(store, slot)
+  if (!profile) return null
+  profile.deadzones = {
+    left: clampDeadzone(left),
+    right: clampDeadzone(right)
+  }
+  return profile.deadzones
+}
+
+export function setDeviceDeadzones(store, instanceKey, { left, right } = {}) {
+  const profile = activeProfile(libraryFor(store, instanceKey))
+  if (!profile) return null
+  profile.deadzones = {
+    left: clampDeadzone(left),
+    right: clampDeadzone(right)
+  }
+  return profile.deadzones
+}
+
+export function getHapticSettings(store) {
+  ensureStoreExtras(store)
+  return store.haptics
+}
+
+export function setHapticSettings(store, { enabled, intensity } = {}) {
+  ensureStoreExtras(store)
+  if (typeof enabled === 'boolean') store.haptics.enabled = enabled
+  if (intensity !== undefined) store.haptics.intensity = clampIntensity(intensity)
+  return store.haptics
+}
+
+export function getControllerSuggestion(store, slot) {
+  ensureStoreExtras(store)
+  const entry = store.suggestions[slot === 1 ? 1 : 0]
+  if (!entry || entry.dismissed) return null
+  return entry
+}
+
+export function dismissControllerSuggestion(store, slot) {
+  ensureStoreExtras(store)
+  const entry = store.suggestions[slot === 1 ? 1 : 0]
+  if (!entry) return false
+  entry.dismissed = true
+  return true
+}
+
+export function suggestControllerLayout(store, slot, gamepadId) {
+  ensureStoreExtras(store)
+  const index = slot === 1 ? 1 : 0
+  const players = ensurePlayerProfiles(store)
+  if (players.explicit[index]) {
+    store.suggestions[index] = null
+    return { applied: false, reason: 'explicit' }
+  }
+  const type = controllerTypeFromId(gamepadId)
+  const previous = store.suggestions[index]
+  if (previous && previous.dismissed && previous.type === type) {
+    return { applied: false, reason: 'dismissed' }
+  }
+  const profileId = getActiveControllerTypeProfileId(store, type)
+  store.suggestions[index] = { type, profileId, dismissed: false }
+  return { applied: true, type, profileId }
 }

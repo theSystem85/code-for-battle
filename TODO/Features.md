@@ -171,6 +171,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Player profiles for controllers (2026-09-25)** — A player profile stores one person's standard-button layout and can be chosen separately for P1 and P2. A controller-type profile overrides only controls that have no standard equivalent. Resolution is player, then controller type, then that controller's profile, then the slot defaults.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
+- [x] **Stick deadzones, vibration, and controller-type suggestion (2026-09-25)** — Each player profile stores a left and right stick deadzone, with a live preview in the mapping menu. A remote-controlled unit firing or taking damage, and menu navigation, can pulse the pad when the browser supports vibration, with an on/off switch and intensity. Connecting a pad suggests its Xbox, PlayStation, or generic type layout and does not replace an explicitly chosen player profile.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
 ### Rendering and WebGPU
 
 - [x] **WebGPU terrain shader and performance overlay (2026-09-24)** — Sample both atlases before any per-fragment branch so `textureSample` stays in uniform control flow. When WebGPU still fails, log one `[WebGPU]` validation line and show a short reason in settings. The performance widget shows the active backend, fallback reason, adapter, canvas resolution, draw calls, timestamp-query GPU time when available, `maxBufferSize` as VRAM, and tracked buffer/texture bytes in use.

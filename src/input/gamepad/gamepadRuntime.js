@@ -1,10 +1,11 @@
 import { TILE_SIZE } from '../../config.js'
 import { gameState } from '../../gameState.js'
 import { showNotification } from '../../ui/notifications.js'
-import { TRIGGER_THRESHOLD } from './deadzone.js'
+import { STICK_DEADZONE, TRIGGER_THRESHOLD } from './deadzone.js'
 import { readBinding } from './gamepadBinding.js'
 import { gamepadBridge } from './gamepadCommandBridge.js'
-import { knownGamepadInstanceKeys, rememberGamepadAssignments, resolveGamepadBindings } from './gamepadProfiles.js'
+import { pulseGamepad } from './gamepadHaptics.js'
+import { knownGamepadInstanceKeys, rememberGamepadAssignments, resolveDeadzones, resolveGamepadBindings, suggestControllerLayout } from './gamepadProfiles.js'
 import { reconcileGamepadSlots } from './gamepadIdentity.js'
 import { GAMEPAD_MONITOR_AXES, GAMEPAD_MONITOR_BUTTONS, gamepadMonitor, setGamepadPoller } from './gamepadMonitor.js'
 import { getGamepadStore, persistGamepadStore } from './gamepadStore.js'
@@ -44,6 +45,13 @@ const mergedRemote = {
 const previousButtons = [new Float32Array(GAMEPAD_MONITOR_BUTTONS), new Float32Array(GAMEPAD_MONITOR_BUTTONS)]
 const previousAxes = [new Float32Array(GAMEPAD_MONITOR_AXES), new Float32Array(GAMEPAD_MONITOR_AXES)]
 const bindingCache = [null, null]
+const deadzoneCache = [
+  { left: STICK_DEADZONE, right: STICK_DEADZONE },
+  { left: STICK_DEADZONE, right: STICK_DEADZONE }
+]
+const lastControlledHealth = [-1, -1]
+const lastControlledId = ['', '']
+const lastDamagePulseAt = [0, 0]
 const idCache = ['', '', '', '']
 const indexCache = [-1, -1, -1, -1]
 const assignments = [null, null]
@@ -147,11 +155,15 @@ function bindingsFor(slot) {
   if (bindingCache[slot]) return bindingCache[slot]
   const assignment = assignments[slot]
   if (!assignment) return null
-  bindingCache[slot] = resolveGamepadBindings(getGamepadStore(), {
+  const store = getGamepadStore()
+  bindingCache[slot] = resolveGamepadBindings(store, {
     slot,
     instanceKey: assignment.instanceKey,
     gamepadId: assignment.id
   }).bindings
+  const zones = resolveDeadzones(store, { slot, instanceKey: assignment.instanceKey })
+  deadzoneCache[slot].left = zones.left
+  deadzoneCache[slot].right = zones.right
   return bindingCache[slot]
 }
 
@@ -247,8 +259,15 @@ function movePointer(dx, dy) {
   else dispatchPointer('mousemove', 0)
 }
 
-function pressedEdge(binding, buttons, axes, prevButtons, prevAxes) {
-  if (!binding || readBinding(binding, buttons, axes) <= 0) return false
+function readSlotBinding(padSlot, binding, buttons, axes) {
+  const zone = !binding || binding.type !== 'axis'
+    ? STICK_DEADZONE
+    : (binding.index <= 1 ? deadzoneCache[padSlot].left : deadzoneCache[padSlot].right)
+  return readBinding(binding, buttons, axes, zone)
+}
+
+function pressedEdge(padSlot, binding, buttons, axes, prevButtons, prevAxes) {
+  if (!binding || readSlotBinding(padSlot, binding, buttons, axes) <= 0) return false
   if (binding.type === 'button') return (prevButtons[binding.index] || 0) < TRIGGER_THRESHOLD
   const previous = prevAxes[binding.index] || 0
   if (binding.sign === -1) return previous > -TRIGGER_THRESHOLD
@@ -256,16 +275,16 @@ function pressedEdge(binding, buttons, axes, prevButtons, prevAxes) {
   return Math.abs(previous) < TRIGGER_THRESHOLD
 }
 
-function applyGlobalRemote(bindings, buttons, axes) {
-  const moveX = readBinding(bindings.remoteMoveX, buttons, axes)
-  const moveY = readBinding(bindings.remoteMoveY, buttons, axes)
-  mergedRemote.forward = Math.max(readBinding(bindings.remoteUp, buttons, axes), moveY < 0 ? -moveY : 0)
-  mergedRemote.backward = Math.max(readBinding(bindings.remoteDown, buttons, axes), moveY > 0 ? moveY : 0)
-  mergedRemote.turnLeft = Math.max(readBinding(bindings.remoteLeft, buttons, axes), moveX < 0 ? -moveX : 0)
-  mergedRemote.turnRight = Math.max(readBinding(bindings.remoteRight, buttons, axes), moveX > 0 ? moveX : 0)
-  mergedRemote.turretLeft = readBinding(bindings.turretLeft, buttons, axes)
-  mergedRemote.turretRight = readBinding(bindings.turretRight, buttons, axes)
-  mergedRemote.fire = readBinding(bindings.fire, buttons, axes)
+function applyGlobalRemote(padSlot, bindings, buttons, axes) {
+  const moveX = readSlotBinding(padSlot, bindings.remoteMoveX, buttons, axes)
+  const moveY = readSlotBinding(padSlot, bindings.remoteMoveY, buttons, axes)
+  mergedRemote.forward = Math.max(readSlotBinding(padSlot, bindings.remoteUp, buttons, axes), moveY < 0 ? -moveY : 0)
+  mergedRemote.backward = Math.max(readSlotBinding(padSlot, bindings.remoteDown, buttons, axes), moveY > 0 ? moveY : 0)
+  mergedRemote.turnLeft = Math.max(readSlotBinding(padSlot, bindings.remoteLeft, buttons, axes), moveX < 0 ? -moveX : 0)
+  mergedRemote.turnRight = Math.max(readSlotBinding(padSlot, bindings.remoteRight, buttons, axes), moveX > 0 ? moveX : 0)
+  mergedRemote.turretLeft = readSlotBinding(padSlot, bindings.turretLeft, buttons, axes)
+  mergedRemote.turretRight = readSlotBinding(padSlot, bindings.turretRight, buttons, axes)
+  mergedRemote.fire = readSlotBinding(padSlot, bindings.fire, buttons, axes)
   const syncRemoteControlAction = gamepadBridge.syncRemoteControlAction
   if (!syncRemoteControlAction) return
   for (let i = 0; i < GLOBAL_REMOTE_ACTIONS.length; i++) {
@@ -274,7 +293,7 @@ function applyGlobalRemote(bindings, buttons, axes) {
   }
 }
 
-function applyCoopRemote(bindings, buttons, axes) {
+function applyCoopRemote(padSlot, bindings, buttons, axes) {
   const getCoopSlot = gamepadBridge.getCoopSlot
   const publishCoopSlot = gamepadBridge.publishCoopSlot
   if (!getCoopSlot || !publishCoopSlot) return
@@ -282,10 +301,10 @@ function applyCoopRemote(bindings, buttons, axes) {
   const actions = slot.actions
   for (let i = 0; i < COOP_ACTION_NAMES.length; i++) actions[COOP_ACTION_NAMES[i]] = 0
   for (let i = 0; i < COOP_PAIRS.length; i++) {
-    actions[COOP_PAIRS[i][1]] = readBinding(bindings[COOP_PAIRS[i][0]], buttons, axes)
+    actions[COOP_PAIRS[i][1]] = readSlotBinding(padSlot, bindings[COOP_PAIRS[i][0]], buttons, axes)
   }
-  const moveX = readBinding(bindings.remoteMoveX, buttons, axes)
-  const moveY = readBinding(bindings.remoteMoveY, buttons, axes)
+  const moveX = readSlotBinding(padSlot, bindings.remoteMoveX, buttons, axes)
+  const moveY = readSlotBinding(padSlot, bindings.remoteMoveY, buttons, axes)
   const magnitude = Math.hypot(moveX, moveY)
   if (magnitude > 0) {
     slot.absolute.wagonDirection = Math.atan2(moveY, moveX)
@@ -310,7 +329,46 @@ function zeroCoopStick() {
   publishCoopSlot(gameState.humanPlayer || 'player1')
 }
 
-function applySlot(slot, pad, dt, gameplay) {
+function controlledUnit(slot) {
+  if (slot === 1) {
+    const getCoopSlot = gamepadBridge.getCoopSlot
+    if (!getCoopSlot) return null
+    const coop = getCoopSlot(gameState.humanPlayer || 'player1')
+    if (!coop || !coop.unit || coop.unitId == null || coop.unit.id !== coop.unitId) return null
+    return coop.unit
+  }
+  const selected = gamepadBridge.selectedUnits
+  if (!selected) return null
+  const stickActive = remoteWasActive[0]
+  for (let i = 0; i < selected.length; i++) {
+    const candidate = selected[i]
+    if (!candidate || typeof candidate.health !== 'number') continue
+    if (stickActive || candidate.remoteControlActive) return candidate
+  }
+  return null
+}
+
+function sampleControlledDamage(slot, pad, now) {
+  const unit = controlledUnit(slot)
+  if (!unit || typeof unit.health !== 'number') {
+    lastControlledHealth[slot] = -1
+    lastControlledId[slot] = ''
+    return
+  }
+  if (lastControlledId[slot] !== unit.id) {
+    lastControlledId[slot] = unit.id
+    lastControlledHealth[slot] = unit.health
+    return
+  }
+  const previous = lastControlledHealth[slot]
+  lastControlledHealth[slot] = unit.health
+  if (previous < 0 || unit.health >= previous) return
+  if (now - lastDamagePulseAt[slot] < 100) return
+  lastDamagePulseAt[slot] = now
+  pulseGamepad(pad, 'damage')
+}
+
+function applySlot(slot, pad, dt, gameplay, now) {
   const monitor = gamepadMonitor.slots[slot]
   const buttons = monitor.buttons
   const axes = monitor.axes
@@ -323,44 +381,46 @@ function applySlot(slot, pad, dt, gameplay) {
     offerCapturedInput(capture, buttons, axes, prevButtons, prevAxes)
   } else if (gameplay && bindings) {
     if (slot === 0) {
-      const stickX = readBinding(bindings.cursorX, buttons, axes)
-      const stickY = readBinding(bindings.cursorY, buttons, axes)
+      const stickX = readSlotBinding(slot, bindings.cursorX, buttons, axes)
+      const stickY = readSlotBinding(slot, bindings.cursorY, buttons, axes)
       if (stickX || stickY) movePointer(stickX * CURSOR_SPEED * dt, stickY * CURSOR_SPEED * dt)
-      const left = readBinding(bindings.leftClick, buttons, axes) > 0
-      const right = readBinding(bindings.rightClick, buttons, axes) > 0
+      const left = readSlotBinding(slot, bindings.leftClick, buttons, axes) > 0
+      const right = readSlotBinding(slot, bindings.rightClick, buttons, axes) > 0
       updatePointer(0, left && !right)
       updatePointer(2, right)
     }
-    const scrollX = readBinding(bindings.mapScrollX, buttons, axes)
-    const scrollY = readBinding(bindings.mapScrollY, buttons, axes)
+    const scrollX = readSlotBinding(slot, bindings.mapScrollX, buttons, axes)
+    const scrollY = readSlotBinding(slot, bindings.mapScrollY, buttons, axes)
     gameState.gamepadScroll.x = Math.max(-1, Math.min(1, gameState.gamepadScroll.x + scrollX))
     gameState.gamepadScroll.y = Math.max(-1, Math.min(1, gameState.gamepadScroll.y + scrollY))
-    if (pressedEdge(bindings.jumpToLastEvent, buttons, axes, prevButtons, prevAxes) && gamepadBridge.focusLastAttack) {
+    if (pressedEdge(slot, bindings.jumpToLastEvent, buttons, axes, prevButtons, prevAxes) && gamepadBridge.focusLastAttack) {
       gamepadBridge.focusLastAttack()
     }
-    if (pressedEdge(bindings.toggleRepair, buttons, axes, prevButtons, prevAxes)) {
+    if (pressedEdge(slot, bindings.toggleRepair, buttons, axes, prevButtons, prevAxes)) {
       const keyboard = gamepadBridge.getKeyboardHandler ? gamepadBridge.getKeyboardHandler() : null
       if (keyboard) keyboard.handleRepairMode()
     }
-    if (pressedEdge(bindings.toggleSell, buttons, axes, prevButtons, prevAxes)) {
+    if (pressedEdge(slot, bindings.toggleSell, buttons, axes, prevButtons, prevAxes)) {
       const keyboard = gamepadBridge.getKeyboardHandler ? gamepadBridge.getKeyboardHandler() : null
       if (keyboard) keyboard.handleSellMode()
     }
-    if (slot === 1 && pressedEdge(bindings.claimUnit, buttons, axes, prevButtons, prevAxes)) claimUnit()
-    if (slot === 0) applyGlobalRemote(bindings, buttons, axes)
-    else applyCoopRemote(bindings, buttons, axes)
-    const remoteActive = readBinding(bindings.remoteUp, buttons, axes) ||
-      readBinding(bindings.remoteDown, buttons, axes) ||
-      readBinding(bindings.remoteLeft, buttons, axes) ||
-      readBinding(bindings.remoteRight, buttons, axes) ||
-      readBinding(bindings.remoteMoveX, buttons, axes) ||
-      readBinding(bindings.remoteMoveY, buttons, axes) ||
-      readBinding(bindings.fire, buttons, axes)
+    if (slot === 1 && pressedEdge(slot, bindings.claimUnit, buttons, axes, prevButtons, prevAxes)) claimUnit()
+    if (pressedEdge(slot, bindings.fire, buttons, axes, prevButtons, prevAxes)) pulseGamepad(pad, 'fire')
+    if (slot === 0) applyGlobalRemote(slot, bindings, buttons, axes)
+    else applyCoopRemote(slot, bindings, buttons, axes)
+    const remoteActive = readSlotBinding(slot, bindings.remoteUp, buttons, axes) ||
+      readSlotBinding(slot, bindings.remoteDown, buttons, axes) ||
+      readSlotBinding(slot, bindings.remoteLeft, buttons, axes) ||
+      readSlotBinding(slot, bindings.remoteRight, buttons, axes) ||
+      readSlotBinding(slot, bindings.remoteMoveX, buttons, axes) ||
+      readSlotBinding(slot, bindings.remoteMoveY, buttons, axes) ||
+      readSlotBinding(slot, bindings.fire, buttons, axes)
     if (slot === 1 && remoteActive > 0 && !remoteWasActive[slot] && gamepadBridge.getCoopSlot) {
       const coop = gamepadBridge.getCoopSlot(gameState.humanPlayer || 'player1')
       if (coop && !coop.unitId) claimUnit()
     }
     remoteWasActive[slot] = remoteActive > 0
+    sampleControlledDamage(slot, pad, now)
   } else {
     remoteWasActive[slot] = false
   }
@@ -378,6 +438,8 @@ function clearSlot(slot) {
   monitor.axes.fill(0)
   previousButtons[slot].fill(0)
   previousAxes[slot].fill(0)
+  lastControlledHealth[slot] = -1
+  lastControlledId[slot] = ''
   if (gamepadBridge.clearRemoteControlSource) gamepadBridge.clearRemoteControlSource(SOURCE[slot])
   if (slot === 1) zeroCoopStick()
   if (slot === 0 && pointerButton !== -1) {
@@ -420,7 +482,9 @@ function reconcile(pads) {
     monitor.id = next.id
     monitor.index = next.index
     monitor.instanceKey = next.instanceKey
+    const becameConnected = !previous || !previous.connected
     if (identityChanged) bindingCache[slot] = null
+    if (identityChanged || becameConnected) suggestControllerLayout(store, slot, next.id)
   }
   gamepadMonitor.ignored = result.ignored
   rememberGamepadAssignments(store, result.slots)
@@ -472,7 +536,7 @@ export function pollGamepads(now = (typeof performance !== 'undefined' ? perform
       continue
     }
     if (slot === 0) playerOne = true
-    applySlot(slot, pad, dt, gameplay)
+    applySlot(slot, pad, dt, gameplay, now)
   }
   if (!playerOne) placeCursor(false)
   else if (cursorVisible) placeCursor(true)

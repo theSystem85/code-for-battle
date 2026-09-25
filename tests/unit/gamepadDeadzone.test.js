@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { STICK_DEADZONE, applyDeadzone, axisMagnitude } from '../../src/input/gamepad/deadzone.js'
+import { STICK_DEADZONE, applyDeadzone, axisMagnitude, clampDeadzone } from '../../src/input/gamepad/deadzone.js'
 
 describe('applyDeadzone', () => {
   it('returns 0 at and inside the deadzone', () => {
@@ -28,5 +28,14 @@ describe('applyDeadzone', () => {
   it('reports magnitude without sign', () => {
     expect(axisMagnitude(-1)).toBe(1)
     expect(axisMagnitude(0.05)).toBe(0)
+  })
+})
+
+describe('clampDeadzone', () => {
+  it('keeps a stick deadzone inside 0 to 0.9 and rounds to 0.01', () => {
+    expect(clampDeadzone(0.156)).toBe(0.16)
+    expect(clampDeadzone(1.4)).toBe(0.9)
+    expect(clampDeadzone(-0.2)).toBe(0)
+    expect(clampDeadzone(Number.NaN)).toBe(STICK_DEADZONE)
   })
 })

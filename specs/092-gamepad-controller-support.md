@@ -67,7 +67,8 @@ A button command bound to an axis stores `sign` 1 or -1. An axis command bound t
 
 Deadzone and thresholds:
 
-- `STICK_DEADZONE` 0.18. `applyDeadzone` returns 0 inside the zone and scales the remainder so the output reaches ±1 at a raw value of ±1.
+- `STICK_DEADZONE` 0.18 is the fallback. `applyDeadzone` returns 0 inside the zone and scales the remainder so the output reaches ±1 at a raw value of ±1.
+- Each player profile can store its own left-stick and right-stick deadzone. See Stick deadzones.
 - `TRIGGER_THRESHOLD` 0.4. A button or trigger below that reads as 0 during play.
 - `BIND_THRESHOLD` 0.65. Capture ignores noise below it.
 
@@ -82,11 +83,14 @@ Deadzone and thresholds:
   "playerProfiles": {
     "nextId": 2,
     "slots": ["player1", "default"],
+    "explicit": [true, false],
     "profiles": [
-      { "id": "default", "name": "Standard", "builtin": true, "bindings": null },
-      { "id": "player1", "name": "Alex", "builtin": false, "bindings": { "fire": { "type": "button", "index": 0 } } }
+      { "id": "default", "name": "Standard", "builtin": true, "bindings": null, "deadzones": null },
+      { "id": "player1", "name": "Alex", "builtin": false, "bindings": { "fire": { "type": "button", "index": 0 } }, "deadzones": { "left": 0.2, "right": 0.18 } }
     ]
   },
+  "haptics": { "enabled": true, "intensity": 0.65 },
+  "suggestions": [null, null],
   "typeLibraries": {
     "xbox": {
       "activeProfileId": "default",
@@ -104,7 +108,7 @@ Deadzone and thresholds:
 }
 ```
 
-Three layers are stored. Each can be created, renamed, and deleted. The builtin `default` profile of a layer cannot be deleted. Reset sets that profile's `bindings` back to `null`.
+Three layers are stored. Each can be created, renamed, and deleted. The builtin `default` profile of a layer cannot be deleted. Reset sets that profile's `bindings` back to `null`. Reset on a player profile or a per-controller profile also clears `deadzones`.
 
 - **Player profile.** One person's layout, chosen independently for slot P1 and slot P2. Bindings use standard Gamepad indexes (buttons 0–16 and axes 0–3). The same profile can be selected on both slots. A missing key falls through. An explicit `null` means the player unbound that command. `bindings: null` means the profile sets nothing.
 - **Controller-type profile.** Shared by pads of the same type: `xbox` (id contains Xbox, XInput, or Microsoft), `playstation` (PlayStation, DualShock, DualSense, Sony, vendor `054c`, or the Chrome id `Wireless Controller`), otherwise `generic`. A binding here is for a physical control that has no standard equivalent (button index above 16 or axis index above 3).
@@ -118,6 +122,42 @@ Resolution for each command, first hit wins:
 4. `defaultBindingsForSlot` for the slot.
 
 Click-to-bind writes a standard logical input onto the active player profile and a non-standard input onto the active controller-type profile. A conflict is cleared on the layer that currently owns the other command.
+
+`playerProfiles.explicit` is a pair of booleans. Choosing a player profile for a slot, including the builtin Standard profile, sets that slot's flag. A store saved before the flag existed treats a non-default slot id as explicit. Deleting the profile that a slot was using clears the flag for that slot.
+
+## Stick deadzones
+
+Each analog stick has its own deadzone so a resting stick does not jitter. `clampDeadzone` keeps a value in 0–0.9 and rounds it to 0.01. A non-finite value falls back to 0.18.
+
+`profile.deadzones` is `{ left, right }` or `null`. `null` means that layer has no opinion. Resolution:
+
+1. The active player profile for the slot, when `deadzones` is set.
+2. The active per-controller profile, when `deadzones` is set.
+3. `STICK_DEADZONE` (0.18) for both sticks.
+
+Left stick is axes 0 and 1. Right stick is axes 2 and 3. Axis commands on indexes 0–1 use the left value. Any other axis uses the right value. Buttons ignore the stick deadzone and still use `TRIGGER_THRESHOLD`. The poll copies the resolved pair into a two-slot cache when the binding cache refreshes, and reuses that pair every frame.
+
+The mapping menu shows a slider for each stick on the active player profile. Moving a slider saves immediately and does not rebuild the menu. A meter beside each slider shows `hypot` of that stick after `applyDeadzone`, quantized to 20 steps, and writes a transform only when the step changes. Reset on a player profile clears `deadzones` as well as bindings. Save-as copies the current profile's deadzones onto the new player profile.
+
+## Haptics
+
+`store.haptics` is `{ enabled, intensity }`. The default is on, intensity 0.65. Intensity is clamped to 0–1 and rounded to 0.01. The mapping menu has a checkbox and an intensity slider. The slider persists without rebuilding the menu and does not pulse.
+
+`pulseGamepad` uses `gamepad.vibrationActuator.playEffect('dual-rumble', { startDelay: 0, duration, weakMagnitude, strongMagnitude })`. When that actuator is missing it tries `gamepad.hapticActuators[0].pulse(value, duration)`. A missing actuator, a thrown call, or a rejected promise is ignored and the call returns false. Disabled vibration or intensity 0 returns false without touching the pad.
+
+Pulses, not a rumble held every frame:
+
+- Fire: rising edge of the fire binding while gameplay commands are allowed. About 70 ms.
+- Damage: health of the remote-controlled unit drops. Slot 0 samples the first selected unit while that slot's remote stick is active or the unit's `remoteControlActive` is set. Slot 1 samples the co-op unit when `unit.id` matches `unitId`. A new unit id does not pulse. Repeats are at least 100 ms apart. About 120 ms.
+- Menu: click-to-bind, profile select, P1/P2 slot switch, suggestion dismiss, and turning vibration on. About 28 ms. Slider drags do not pulse.
+
+## Controller-type suggestion
+
+When a slot becomes connected, or its instance key or index changes, `suggestControllerLayout` records a suggestion from `controllerTypeFromId` (`xbox`, `playstation`, or `generic`). The suggestion is `{ type, profileId, dismissed }`. `profileId` is the active profile of that controller-type library. The call does not change `playerProfiles.slots`.
+
+An explicit slot stores no suggestion and returns `{ applied: false, reason: 'explicit' }`. A suggestion the player dismissed stays dismissed for the same type and returns `{ applied: false, reason: 'dismissed' }`. A different type replaces it.
+
+The mapping menu shows one line: this controller looks like that type, that type layout is selected, and the player profile is unchanged. Dismiss sets `dismissed` and hides the line. There is no action that replaces an explicit player profile.
 
 A per-controller saved profile stores a sanitized full map: each command for that slot is `null` or `{ type, index, sign? }` with `index` in 0–31. Unknown commands and illegal inputs are dropped. Player and controller-type profiles store a sparse map of the same input shape. Per library the user can save the active device profile, save as a new profile (`p1`, `p2`, …), load, rename, and delete. Player ids are `player1`, `player2`, …. Controller-type ids are `t1`, `t2`, ….
 
@@ -164,11 +204,11 @@ Couch co-op is local to one machine and one party: the human player's party. It 
 - Safari's non-standard mapping still lists raw indexes. Defaults assume the standard index layout.
 - Firefox extra axes are bindable and otherwise ignored.
 - Opening settings before the game loop exists: the menu poll is a no-op until `initGamepadSupport` runs from the `GameLoop` constructor.
-- This environment cannot certify 75 presented FPS. The poll is one `getGamepads()` read per frame into preallocated buffers, with no per-frame `Set`, `Map`, or object allocation on the held-input path. The cursor is one DOM node updated only when it moves. No canvas fill, gradient, or shadow was added. A qualifying-hardware 75 FPS check remains outstanding.
+- This environment cannot certify 75 presented FPS. The poll is one `getGamepads()` read per frame into preallocated buffers, with no per-frame `Set`, `Map`, or object allocation on the held-input path. Stick deadzones are read from a two-slot cache filled when bindings refresh. Vibration runs on a rising edge, a throttled health drop, or a menu click, not every frame. The deadzone preview writes a transform only while the mapping menu is open and only when its 20-step level changes. The cursor is one DOM node updated only when it moves. No canvas fill, gradient, or shadow was added. A qualifying-hardware 75 FPS check remains outstanding.
 
 ## Test plan
 
-Unit tests cover `applyDeadzone`, binding conflicts and capture edges, profile save/load/rename/delete/reset, player-profile slot assignment, controller-type detection, the player → type → device → default resolution order, corrupt storage, slot reconcile (index change, identical ids, third pad), and the co-op camera hysteresis. `npm run test:unit` and eslint on the changed files are required.
+Unit tests cover `applyDeadzone` and `clampDeadzone`, per-stick deadzone resolution (player, then device, then 0.18) and reset, binding conflicts and capture edges, profile save/load/rename/delete/reset, player-profile slot assignment, the explicit-slot flag, controller-type detection, connect-time layout suggestion without replacing an explicit player profile, haptic on/off and a missing or rejected vibration actuator, the player → type → device → default resolution order, corrupt storage, slot reconcile (index change, identical ids, third pad), and the co-op camera hysteresis. `npm run test:unit` and eslint on the changed files are required.
 
 Manual:
 
