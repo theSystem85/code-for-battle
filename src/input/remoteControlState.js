@@ -1,6 +1,7 @@
 import { gameState } from '../gameState.js'
 import { getActiveRemoteConnection } from '../network/remoteConnection.js'
 import { createReplayUnitReferences, recordReplayCommand } from '../replaySystem.js'
+import { bindGamepadCommands } from './gamepad/gamepadCommandBridge.js'
 
 function getRemoteControlActionList() {
   return [
@@ -447,6 +448,13 @@ export function releaseRemoteControlSource(source) {
   clearRemoteControlSource(source)
   clearRemoteControlAbsoluteSource(source)
 }
+
+bindGamepadCommands({
+  syncRemoteControlAction,
+  clearRemoteControlSource,
+  getCoopSlot,
+  publishCoopSlot
+})
 
 if (typeof window !== 'undefined') {
   window.remoteControlApi = {

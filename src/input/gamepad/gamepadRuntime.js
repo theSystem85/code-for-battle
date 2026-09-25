@@ -1,23 +1,13 @@
 import { TILE_SIZE } from '../../config.js'
 import { gameState } from '../../gameState.js'
-import { focusLastAttackEvent } from '../../game/attackNotifications.js'
-import { selectedUnits, getKeyboardHandler } from '../../inputHandler.js'
 import { showNotification } from '../../ui/notifications.js'
-import { isReplayInteractionLocked } from '../../replaySystem.js'
-import {
-  TRIGGER_THRESHOLD,
-  readBinding
-} from './gamepadBinding.js'
+import { TRIGGER_THRESHOLD } from './deadzone.js'
+import { readBinding } from './gamepadBinding.js'
+import { gamepadBridge } from './gamepadCommandBridge.js'
 import { getActiveBindings, knownGamepadInstanceKeys, rememberGamepadAssignments } from './gamepadProfiles.js'
 import { reconcileGamepadSlots } from './gamepadIdentity.js'
 import { GAMEPAD_MONITOR_AXES, GAMEPAD_MONITOR_BUTTONS, gamepadMonitor, setGamepadPoller } from './gamepadMonitor.js'
 import { getGamepadStore, persistGamepadStore } from './gamepadStore.js'
-import {
-  clearRemoteControlSource,
-  getCoopSlot,
-  publishCoopSlot,
-  syncRemoteControlAction
-} from '../remoteControlState.js'
 import { uiText } from '../../ui/uiText.js'
 import {
   getGamepadCapture,
@@ -188,8 +178,10 @@ function findClaimTarget() {
     }
   }
   if (best) return best
-  for (let i = 0; i < selectedUnits.length; i++) {
-    const unit = selectedUnits[i]
+  const selected = gamepadBridge.selectedUnits
+  if (!selected) return null
+  for (let i = 0; i < selected.length; i++) {
+    const unit = selected[i]
     if (localPartyUnit(unit) && unit.health > 0 && !unit.isBuilding) return unit
   }
   return null
@@ -197,13 +189,16 @@ function findClaimTarget() {
 
 function claimUnit() {
   const unit = findClaimTarget()
-  if (!unit) return
+  const getCoopSlot = gamepadBridge.getCoopSlot
+  const publishCoopSlot = gamepadBridge.publishCoopSlot
+  if (!unit || !getCoopSlot || !publishCoopSlot) return
   const slot = getCoopSlot(gameState.humanPlayer || 'player1')
   slot.unitId = unit.id
   slot.unit = unit
   unit.selected = false
-  const index = selectedUnits.indexOf(unit)
-  if (index >= 0) selectedUnits.splice(index, 1)
+  const selected = gamepadBridge.selectedUnits
+  const index = selected ? selected.indexOf(unit) : -1
+  if (index >= 0) selected.splice(index, 1)
   showNotification(uiText('settings.gamepad.claimed'), 1600)
   publishCoopSlot(gameState.humanPlayer || 'player1')
 }
@@ -267,6 +262,8 @@ function applyGlobalRemote(bindings, buttons, axes) {
   mergedRemote.turretLeft = readBinding(bindings.turretLeft, buttons, axes)
   mergedRemote.turretRight = readBinding(bindings.turretRight, buttons, axes)
   mergedRemote.fire = readBinding(bindings.fire, buttons, axes)
+  const syncRemoteControlAction = gamepadBridge.syncRemoteControlAction
+  if (!syncRemoteControlAction) return
   for (let i = 0; i < GLOBAL_REMOTE_ACTIONS.length; i++) {
     const action = GLOBAL_REMOTE_ACTIONS[i]
     syncRemoteControlAction(action, SOURCE[0], mergedRemote[action] > 0, mergedRemote[action])
@@ -274,6 +271,9 @@ function applyGlobalRemote(bindings, buttons, axes) {
 }
 
 function applyCoopRemote(bindings, buttons, axes) {
+  const getCoopSlot = gamepadBridge.getCoopSlot
+  const publishCoopSlot = gamepadBridge.publishCoopSlot
+  if (!getCoopSlot || !publishCoopSlot) return
   const slot = getCoopSlot(gameState.humanPlayer || 'player1')
   const actions = slot.actions
   for (let i = 0; i < COOP_ACTION_NAMES.length; i++) actions[COOP_ACTION_NAMES[i]] = 0
@@ -294,6 +294,9 @@ function applyCoopRemote(bindings, buttons, axes) {
 }
 
 function zeroCoopStick() {
+  const getCoopSlot = gamepadBridge.getCoopSlot
+  const publishCoopSlot = gamepadBridge.publishCoopSlot
+  if (!getCoopSlot || !publishCoopSlot) return
   const slot = getCoopSlot(gameState.humanPlayer || 'player1')
   for (let i = 0; i < COOP_ACTION_NAMES.length; i++) slot.actions[COOP_ACTION_NAMES[i]] = 0
   slot.absolute.wagonDirection = null
@@ -328,13 +331,15 @@ function applySlot(slot, pad, dt, gameplay) {
     const scrollY = readBinding(bindings.mapScrollY, buttons, axes)
     gameState.gamepadScroll.x = Math.max(-1, Math.min(1, gameState.gamepadScroll.x + scrollX))
     gameState.gamepadScroll.y = Math.max(-1, Math.min(1, gameState.gamepadScroll.y + scrollY))
-    if (pressedEdge(bindings.jumpToLastEvent, buttons, axes, prevButtons, prevAxes)) focusLastAttackEvent()
+    if (pressedEdge(bindings.jumpToLastEvent, buttons, axes, prevButtons, prevAxes) && gamepadBridge.focusLastAttack) {
+      gamepadBridge.focusLastAttack()
+    }
     if (pressedEdge(bindings.toggleRepair, buttons, axes, prevButtons, prevAxes)) {
-      const keyboard = getKeyboardHandler()
+      const keyboard = gamepadBridge.getKeyboardHandler ? gamepadBridge.getKeyboardHandler() : null
       if (keyboard) keyboard.handleRepairMode()
     }
     if (pressedEdge(bindings.toggleSell, buttons, axes, prevButtons, prevAxes)) {
-      const keyboard = getKeyboardHandler()
+      const keyboard = gamepadBridge.getKeyboardHandler ? gamepadBridge.getKeyboardHandler() : null
       if (keyboard) keyboard.handleSellMode()
     }
     if (slot === 1 && pressedEdge(bindings.claimUnit, buttons, axes, prevButtons, prevAxes)) claimUnit()
@@ -347,9 +352,9 @@ function applySlot(slot, pad, dt, gameplay) {
       readBinding(bindings.remoteMoveX, buttons, axes) ||
       readBinding(bindings.remoteMoveY, buttons, axes) ||
       readBinding(bindings.fire, buttons, axes)
-    if (slot === 1 && remoteActive > 0 && !remoteWasActive[slot]) {
-      const coop = getCoopSlot(gameState.humanPlayer || 'player1')
-      if (!coop.unitId) claimUnit()
+    if (slot === 1 && remoteActive > 0 && !remoteWasActive[slot] && gamepadBridge.getCoopSlot) {
+      const coop = gamepadBridge.getCoopSlot(gameState.humanPlayer || 'player1')
+      if (coop && !coop.unitId) claimUnit()
     }
     remoteWasActive[slot] = remoteActive > 0
   } else {
@@ -369,7 +374,7 @@ function clearSlot(slot) {
   monitor.axes.fill(0)
   previousButtons[slot].fill(0)
   previousAxes[slot].fill(0)
-  clearRemoteControlSource(SOURCE[slot])
+  if (gamepadBridge.clearRemoteControlSource) gamepadBridge.clearRemoteControlSource(SOURCE[slot])
   if (slot === 1) zeroCoopStick()
   if (slot === 0 && pointerButton !== -1) {
     dispatchPointer('mouseup', pointerButton)
@@ -437,7 +442,7 @@ function padsChanged(pads) {
 function gameplayAllowed() {
   if (!gameState.gameStarted || gameState.gamePaused || gameState.gameOver) return false
   if (typeof document !== 'undefined' && document.body && document.body.classList.contains('config-modal-open')) return false
-  if (isReplayInteractionLocked()) return false
+  if (gameState.replayMode && !gameState.replay?.isApplyingReplayCommand) return false
   if (gameState.isSpectator || gameState.localPlayerDefeated || gameState.hostPausedByRemote) return false
   return true
 }

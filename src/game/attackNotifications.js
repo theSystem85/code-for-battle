@@ -6,6 +6,7 @@ import { showNotification } from '../ui/notifications.js'
 import { selectedUnits } from '../inputHandler.js'
 import { TILE_SIZE } from '../config.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../utils/layoutMetrics.js'
+import { bindGamepadCommands } from '../input/gamepad/gamepadCommandBridge.js'
 
 // Track last notification times to implement throttling (only once per minute)
 const NOTIFICATION_COOLDOWN = 60000 // 60 seconds
@@ -263,3 +264,4 @@ export function resetAttackNotifications() {
 }
 
 registerAttackAlertDispatcher(handleAttackNotification)
+bindGamepadCommands({ focusLastAttack: focusLastAttackEvent })

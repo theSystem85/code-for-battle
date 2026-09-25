@@ -367,12 +367,34 @@ export function renderGamepadMappingMenu(root, slot = activeSlot) {
   if (!menuFrame) menuFrame = requestAnimationFrame(pumpMenu)
 }
 
+function menuSignature(slot) {
+  if (!slot || !slot.connected) return 0
+  return slot.buttonCount * 100 + slot.axisCount + (slot.mapping === 'standard' ? 1 : 2)
+}
+
+function refreshMenuConnection(slot) {
+  const inputList = panel.querySelector('[data-gamepad-inputs]')
+  if (!inputList) return
+  const signature = menuSignature(slot)
+  if (inputList._signature === signature) return
+  inputList._signature = signature
+  renderInputs(inputList, activeSlot)
+  const lights = panel.querySelector('[data-gamepad-lights]')
+  if (lights) renderSlotLights(lights)
+  if (getGamepadCapture()) return
+  const commands = panel.querySelector('[data-gamepad-commands]')
+  if (commands) renderCommands(commands, activeSlot)
+  const profiles = panel.querySelector('[data-gamepad-profiles]')
+  if (profiles) renderProfiles(profiles, activeSlot)
+}
+
 export function syncGamepadMenu(monitor) {
   if (!isGamepadMenuOpen() || !panel) return
   const ignored = panel.querySelector('[data-gamepad-ignored]')
   if (ignored) ignored.hidden = monitor.ignored < 1
   const slot = monitor.slots[activeSlot]
   if (!slot) return
+  refreshMenuConnection(slot)
   const lights = panel.querySelectorAll('.gamepad-slot')
   for (let i = 0; i < lights.length; i++) {
     const on = Boolean(monitor.slots[i] && monitor.slots[i].connected)
