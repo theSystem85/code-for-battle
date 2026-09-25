@@ -4,7 +4,7 @@ import { showNotification } from '../../ui/notifications.js'
 import { TRIGGER_THRESHOLD } from './deadzone.js'
 import { readBinding } from './gamepadBinding.js'
 import { gamepadBridge } from './gamepadCommandBridge.js'
-import { getActiveBindings, knownGamepadInstanceKeys, rememberGamepadAssignments } from './gamepadProfiles.js'
+import { knownGamepadInstanceKeys, rememberGamepadAssignments, resolveGamepadBindings } from './gamepadProfiles.js'
 import { reconcileGamepadSlots } from './gamepadIdentity.js'
 import { GAMEPAD_MONITOR_AXES, GAMEPAD_MONITOR_BUTTONS, gamepadMonitor, setGamepadPoller } from './gamepadMonitor.js'
 import { getGamepadStore, persistGamepadStore } from './gamepadStore.js'
@@ -147,7 +147,11 @@ function bindingsFor(slot) {
   if (bindingCache[slot]) return bindingCache[slot]
   const assignment = assignments[slot]
   if (!assignment) return null
-  bindingCache[slot] = getActiveBindings(getGamepadStore(), assignment.instanceKey, slot)
+  bindingCache[slot] = resolveGamepadBindings(getGamepadStore(), {
+    slot,
+    instanceKey: assignment.instanceKey,
+    gamepadId: assignment.id
+  }).bindings
   return bindingCache[slot]
 }
 

@@ -223,7 +223,7 @@
       "mapTitle": "Belegungsmenü",
       "mapBody": "Die Einstellungen listen jede Taste, jede Stick-Achse und jeden Trigger jedes verbundenen Controllers und heben die Zeile hervor, während du sie betätigst. Klicke einen Befehl und drücke oder bewege dann die Steuerung. Rauschen innerhalb der Totzone wird ignoriert. Escape bricht ab. Ein Konflikt nennt den Befehl, der diese Steuerung schon nutzt.",
       "profilesTitle": "Profile",
-      "profilesBody": "Jeder Controller behält eigene Profile im Browser. Du kannst sie speichern, laden, umbenennen, löschen und zurücksetzen. Trennen löscht ein Profil nicht, und derselbe Controller erhält beim erneuten Anschließen seinen Slot zurück.",
+      "profilesBody": "Ein Spielerprofil behält die Tastenbelegung einer Person auf jedem Controller. Ein Controller-Typ-Profil füllt nur Steuerungen ohne Standardtaste oder Stick, und jeder physische Controller kann zusätzlich ein eigenes Profil behalten. Du kannst sie speichern, laden, umbenennen, löschen und zurücksetzen. Trennen löscht ein Profil nicht.",
       "coopTitle": "Couch-Koop",
       "coopBody": "Nur Spieler 1 bewegt den Zeiger. Spieler 2 übernimmt eine Einheit derselben Partei und steuert sie fern, auch außerhalb des Bildschirms. Die Kamera gleitet zur Mitte zwischen beiden Einheiten, bleibt bei Spieler 1, wenn Spieler 2 den Ausschnitt verlässt, und rahmt beide wieder, sobald Spieler 2 zurückkommt.",
       "defaultsTitle": "Standardbelegung",

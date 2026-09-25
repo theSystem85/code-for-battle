@@ -1,15 +1,32 @@
 import { uiText } from './uiText.js'
-import { assignBinding, commandById, defaultBindingsForSlot, detectBindingCandidate, emptyBindingMap, findBindingConflict, GAMEPAD_COMMANDS } from '../input/gamepad/gamepadBinding.js'
+import { commandById, controllerTypeFromId, defaultBindingsForSlot, detectBindingCandidate, emptyBindingMap, findBindingConflict, GAMEPAD_COMMANDS } from '../input/gamepad/gamepadBinding.js'
 import {
+  createControllerTypeProfile,
   createGamepadProfile,
+  createPlayerProfile,
+  deleteControllerTypeProfile,
   deleteGamepadProfile,
+  deletePlayerProfile,
+  getActiveControllerTypeProfileId,
   getActiveBindings,
   getActiveProfileId,
+  getPlayerProfileBindings,
+  getSlotPlayerProfileId,
+  listControllerTypeProfiles,
   listGamepadProfiles,
+  listPlayerProfiles,
+  placeGamepadBinding,
+  renameControllerTypeProfile,
   renameGamepadProfile,
+  renamePlayerProfile,
+  resetControllerTypeProfile,
   resetGamepadProfile,
+  resetPlayerProfile,
+  resolveGamepadBindings,
   saveActiveGamepadProfile,
-  setActiveGamepadProfile
+  setActiveControllerTypeProfile,
+  setActiveGamepadProfile,
+  setSlotPlayerProfile
 } from '../input/gamepad/gamepadProfiles.js'
 import { gamepadMonitor, requestGamepadPoll } from '../input/gamepad/gamepadMonitor.js'
 import { getGamepadStore, persistGamepadStore } from '../input/gamepad/gamepadStore.js'
@@ -103,9 +120,18 @@ function stopCapture() {
   if (conflict) conflict.hidden = true
 }
 
+function bindingContext(slot) {
+  const monitor = gamepadMonitor.slots[slot]
+  return {
+    slot,
+    instanceKey: slotIdentity(slot),
+    gamepadId: (monitor && monitor.id) || ''
+  }
+}
+
 function beginCapture(slot, commandId) {
   const command = commandById(commandId)
-  if (!command || !slotIdentity(slot)) return
+  if (!command) return
   stopCapture()
   capture = { slot, commandId, kind: command.kind }
   const row = panel && panel.querySelector(`[data-command="${commandId}"]`)
@@ -122,11 +148,7 @@ function beginCapture(slot, commandId) {
 }
 
 function applyBinding(slot, commandId, input) {
-  const bindings = mutableBindings(slot)
-  if (!bindings) return
-  const assigned = assignBinding(bindings, commandId, input)
-  const identity = slotIdentity(slot)
-  saveActiveGamepadProfile(getGamepadStore(), identity, slot, assigned.bindings)
+  placeGamepadBinding(getGamepadStore(), { ...bindingContext(slot), commandId, input })
   persistGamepadStore()
   notifyBindings()
   stopCapture()
@@ -150,9 +172,8 @@ export function offerCapturedInput(captureState, buttons, axes, previousButtons,
   if (!command) return
   const input = detectBindingCandidate(previousButtons, previousAxes, buttons, axes, command.kind)
   if (!input) return
-  const bindings = mutableBindings(capture.slot)
-  if (!bindings) return
-  const conflict = findBindingConflict(bindings, capture.commandId, input)
+  const resolved = resolveGamepadBindings(getGamepadStore(), bindingContext(capture.slot))
+  const conflict = findBindingConflict(resolved.bindings, capture.commandId, input)
   if (!conflict) {
     applyBinding(capture.slot, capture.commandId, input)
     return
@@ -168,10 +189,146 @@ function element(tag, className, textContent) {
   return node
 }
 
+function profileSelect(profiles, activeId, onChange) {
+  const select = document.createElement('select')
+  select.className = 'config-modal__select'
+  profiles.forEach(profile => {
+    const option = document.createElement('option')
+    option.value = profile.id
+    option.textContent = profile.builtin ? text('settings.gamepad.standardProfile', 'Standard') : profile.name
+    if (profile.id === activeId) option.selected = true
+    select.append(option)
+  })
+  select.addEventListener('change', onChange)
+  return select
+}
+
+function renderPlayerProfiles(host, slot) {
+  const store = getGamepadStore()
+  const block = element('div', 'gamepad-profile-block')
+  block.append(element('h3', 'config-modal__section-title', text('settings.gamepad.playerTitle', 'Player profile')))
+  block.append(element('p', 'config-modal__hint', text('settings.gamepad.playerHint', 'A player keeps this layout on any controller. Standard buttons and sticks are saved here.')))
+  const profiles = listPlayerProfiles(store)
+  const activeId = getSlotPlayerProfileId(store, slot)
+  const row = element('div', 'gamepad-profile-row')
+  const name = document.createElement('input')
+  name.type = 'text'
+  name.className = 'gamepad-profile-name'
+  name.value = profiles.find(profile => profile.id === activeId)?.name || ''
+  name.setAttribute('aria-label', text('settings.gamepad.playerName', 'Player profile name'))
+  row.append(profileSelect(profiles, activeId, () => {
+    setSlotPlayerProfile(store, slot, row.querySelector('select').value)
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  }))
+  row.append(name)
+  const create = element('button', 'config-modal__button', text('settings.gamepad.saveAs', 'Save as new'))
+  create.type = 'button'
+  create.addEventListener('click', () => {
+    const created = createPlayerProfile(store, name.value, slot, getPlayerProfileBindings(store, activeId))
+    if (!created) return
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  const rename = element('button', 'config-modal__button', text('settings.gamepad.rename', 'Rename'))
+  rename.type = 'button'
+  rename.addEventListener('click', () => {
+    if (!renamePlayerProfile(store, activeId, name.value)) return
+    persistGamepadStore()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  const remove = element('button', 'config-modal__button', text('settings.gamepad.delete', 'Delete'))
+  remove.type = 'button'
+  remove.addEventListener('click', () => {
+    if (!deletePlayerProfile(store, activeId)) return
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  const reset = element('button', 'config-modal__button', text('settings.gamepad.reset', 'Reset to defaults'))
+  reset.type = 'button'
+  reset.addEventListener('click', () => {
+    resetPlayerProfile(store, activeId)
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  row.append(create, rename, remove, reset)
+  block.append(row)
+  host.append(block)
+}
+
+function renderTypeProfiles(host, slot) {
+  const store = getGamepadStore()
+  const gamepadId = bindingContext(slot).gamepadId
+  const type = controllerTypeFromId(gamepadId)
+  const block = element('div', 'gamepad-profile-block')
+  const typeName = text(`settings.gamepad.types.${type}`, type)
+  block.append(element('h3', 'config-modal__section-title', text('settings.gamepad.typeTitle', 'Controller type') + ': ' + typeName))
+  block.append(element('p', 'config-modal__hint', text('settings.gamepad.typeHint', 'Saved only for controls this controller type has no standard button or stick for.')))
+  const profiles = listControllerTypeProfiles(store, type)
+  const activeId = getActiveControllerTypeProfileId(store, type)
+  const row = element('div', 'gamepad-profile-row')
+  const name = document.createElement('input')
+  name.type = 'text'
+  name.className = 'gamepad-profile-name'
+  name.value = profiles.find(profile => profile.id === activeId)?.name || ''
+  name.setAttribute('aria-label', text('settings.gamepad.typeName', 'Controller type profile name'))
+  row.append(profileSelect(profiles, activeId, () => {
+    setActiveControllerTypeProfile(store, type, row.querySelector('select').value)
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  }))
+  row.append(name)
+  const create = element('button', 'config-modal__button', text('settings.gamepad.saveAs', 'Save as new'))
+  create.type = 'button'
+  create.addEventListener('click', () => {
+    if (!createControllerTypeProfile(store, type, name.value, null)) return
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  const rename = element('button', 'config-modal__button', text('settings.gamepad.rename', 'Rename'))
+  rename.type = 'button'
+  rename.addEventListener('click', () => {
+    if (!renameControllerTypeProfile(store, type, activeId, name.value)) return
+    persistGamepadStore()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  const remove = element('button', 'config-modal__button', text('settings.gamepad.delete', 'Delete'))
+  remove.type = 'button'
+  remove.addEventListener('click', () => {
+    if (!deleteControllerTypeProfile(store, type, activeId)) return
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  const reset = element('button', 'config-modal__button', text('settings.gamepad.reset', 'Reset to defaults'))
+  reset.type = 'button'
+  reset.addEventListener('click', () => {
+    resetControllerTypeProfile(store, type, activeId)
+    persistGamepadStore()
+    notifyBindings()
+    renderGamepadMappingMenu(panel, slot)
+  })
+  row.append(create, rename, remove, reset)
+  block.append(row)
+  host.append(block)
+}
+
 function renderProfiles(host, slot) {
   const identity = slotIdentity(slot)
   host.replaceChildren()
+  renderPlayerProfiles(host, slot)
+  renderTypeProfiles(host, slot)
   if (!identity) return
+  const device = element('div', 'gamepad-profile-block')
+  device.append(element('h3', 'config-modal__section-title', text('settings.gamepad.deviceTitle', 'This controller')))
+  device.append(element('p', 'config-modal__hint', text('settings.gamepad.deviceHint', 'A layout stored on this controller. It is used when the player profile and the controller type leave a command unset.')))
+  host.append(device)
   const store = getGamepadStore()
   const profiles = listGamepadProfiles(store, identity)
   const activeId = getActiveProfileId(store, identity)
@@ -243,22 +400,23 @@ function renderProfiles(host, slot) {
     renderGamepadMappingMenu(panel, slot)
   })
   row.append(select, name, save, saveAs, rename, remove, reset)
-  host.append(row)
+  device.append(row)
 }
 
 function renderCommands(host, slot) {
   host.replaceChildren()
-  const identity = slotIdentity(slot)
-  const bindings = identity ? getActiveBindings(getGamepadStore(), identity, slot) : null
-  const standard = gamepadMonitor.slots[slot] && gamepadMonitor.slots[slot].mapping === 'standard'
+  const resolved = resolveGamepadBindings(getGamepadStore(), bindingContext(slot))
+  const standard = !gamepadMonitor.slots[slot] || !gamepadMonitor.slots[slot].id || gamepadMonitor.slots[slot].mapping === 'standard'
   GAMEPAD_COMMANDS.forEach(command => {
     if (command.slot !== undefined && command.slot !== slot) return
     const row = element('button', 'gamepad-command')
     row.type = 'button'
     row.dataset.command = command.id
     const label = element('span', 'gamepad-command__label', text(`settings.gamepad.commands.${command.id}`, command.id))
-    const value = element('span', 'gamepad-command__binding', inputLabel(bindings && bindings[command.id], standard))
-    row.append(label, value)
+    const sourceKey = resolved.sources[command.id] || 'default'
+    const source = element('span', 'gamepad-command__source', text(`settings.gamepad.source.${sourceKey}`, sourceKey))
+    const value = element('span', 'gamepad-command__binding', inputLabel(resolved.bindings[command.id], standard))
+    row.append(label, source, value)
     row.addEventListener('click', () => beginCapture(slot, command.id))
     host.append(row)
   })
@@ -337,6 +495,7 @@ export function renderGamepadMappingMenu(root, slot = activeSlot) {
   inputs.append(inputList)
   const commands = element('div', 'gamepad-column')
   commands.append(element('h3', 'config-modal__section-title', text('settings.gamepad.commandsTitle', 'Commands')))
+  commands.append(element('p', 'config-modal__hint', text('settings.gamepad.bindHint', 'A standard button or stick is saved on the player profile. A control with no standard equivalent is saved on the controller type.')))
   const status = element('p', 'config-modal__hint')
   status.dataset.gamepadStatus = 'true'
   const conflict = element('div', 'gamepad-conflict')

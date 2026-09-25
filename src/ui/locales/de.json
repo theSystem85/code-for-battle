@@ -24,7 +24,27 @@
     },
     "gamepad": {
       "tab": "Controller",
-      "intro": "Jeder Controller behält eigene Profile. Spieler 1 bewegt den Zeiger. Spieler 2 kann eine zweite Einheit derselben Seite steuern.",
+      "intro": "Jede Person behält ein Spielerprofil. Ein Controller-Typ füllt nur Steuerungen, die keine Standardtaste oder keinen Stick haben. Spieler 1 bewegt den Zeiger. Spieler 2 kann eine zweite Einheit derselben Seite steuern.",
+      "bindHint": "Eine Standardtaste oder ein Stick wird im Spielerprofil gespeichert. Eine Steuerung ohne Standardentsprechung wird am Controller-Typ gespeichert.",
+      "playerTitle": "Spielerprofil",
+      "playerHint": "Diese Belegung folgt der Person, egal welcher Controller in diesem Slot steckt.",
+      "playerName": "Name des Spielerprofils",
+      "typeTitle": "Controller-Typ",
+      "typeHint": "Wird genutzt, wenn dieser Controller eine physische Steuerung ohne Standardtaste oder Stick hat.",
+      "typeName": "Name des Controller-Typ-Profils",
+      "deviceTitle": "Dieser Controller",
+      "deviceHint": "Auf diesem Controller gespeichert. Gilt, wenn Spielerprofil und Controller-Typ einen Befehl nicht setzen.",
+      "source": {
+        "player": "Spieler",
+        "type": "Typ",
+        "device": "Pad",
+        "default": "Standard"
+      },
+      "types": {
+        "xbox": "Xbox",
+        "playstation": "PlayStation",
+        "generic": "Allgemein"
+      },
       "pressAny": "Drücke eine Taste am Controller. Browser melden ein Gamepad erst nach einem Tastendruck.",
       "nonStandard": "Dieser Browser hat kein Standard-Mapping gemeldet. Belege die hier gelisteten Tasten und Achsen.",
       "ignored": "Es können nur zwei Controller genutzt werden. Weitere Controller werden ignoriert.",

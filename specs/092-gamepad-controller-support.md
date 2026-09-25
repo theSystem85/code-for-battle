@@ -73,12 +73,27 @@ Deadzone and thresholds:
 
 ## Profiles and persistence
 
-`localStorage` key `rts-gamepad-profiles`, version 1:
+`localStorage` key `rts-gamepad-profiles`, version 2. A version 1 store (assignments and per-controller libraries only) loads and gains empty player and controller-type catalogs. Corrupt JSON, an unknown version, or a storage failure loads an empty store.
 
 ```json
 {
-  "version": 1,
+  "version": 2,
   "assignments": [{ "slot": 0, "id": "Xbox …", "index": 0, "instanceKey": "Xbox …#0" }],
+  "playerProfiles": {
+    "nextId": 2,
+    "slots": ["player1", "default"],
+    "profiles": [
+      { "id": "default", "name": "Standard", "builtin": true, "bindings": null },
+      { "id": "player1", "name": "Alex", "builtin": false, "bindings": { "fire": { "type": "button", "index": 0 } } }
+    ]
+  },
+  "typeLibraries": {
+    "xbox": {
+      "activeProfileId": "default",
+      "nextId": 1,
+      "profiles": [{ "id": "default", "name": "Standard", "builtin": true, "bindings": null }]
+    }
+  },
   "libraries": {
     "Xbox …#0": {
       "activeProfileId": "default",
@@ -89,9 +104,22 @@ Deadzone and thresholds:
 }
 ```
 
-`bindings: null` means `defaultBindingsForSlot` for the slot the pad currently occupies. A saved profile stores a sanitized map: each command is `null` or `{ type, index, sign? }` with `index` in 0–31. Unknown commands and illegal inputs are dropped. Corrupt JSON, a missing version, or a storage failure loads an empty store.
+Three layers are stored. Each can be created, renamed, and deleted. The builtin `default` profile of a layer cannot be deleted. Reset sets that profile's `bindings` back to `null`.
 
-Per library the user can save the active profile, save as a new profile (`p1`, `p2`, …), load, rename, and delete. The builtin `default` profile cannot be deleted. Reset sets that profile's `bindings` back to `null`. Each `instanceKey` has its own library.
+- **Player profile.** One person's layout, chosen independently for slot P1 and slot P2. Bindings use standard Gamepad indexes (buttons 0–16 and axes 0–3). The same profile can be selected on both slots. A missing key falls through. An explicit `null` means the player unbound that command. `bindings: null` means the profile sets nothing.
+- **Controller-type profile.** Shared by pads of the same type: `xbox` (id contains Xbox, XInput, or Microsoft), `playstation` (PlayStation, DualShock, DualSense, Sony, vendor `054c`, or the Chrome id `Wireless Controller`), otherwise `generic`. A binding here is for a physical control that has no standard equivalent (button index above 16 or axis index above 3).
+- **This controller.** The existing per-`instanceKey` library. A saved profile is a full command map. `bindings: null` means the device profile sets nothing.
+
+Resolution for each command, first hit wins:
+
+1. The active player profile for that slot, when the command key is present.
+2. The active controller-type profile for the connected pad, when the command key is present.
+3. The active per-controller profile, when that profile has a saved bindings object and the command key is present.
+4. `defaultBindingsForSlot` for the slot.
+
+Click-to-bind writes a standard logical input onto the active player profile and a non-standard input onto the active controller-type profile. A conflict is cleared on the layer that currently owns the other command.
+
+A per-controller saved profile stores a sanitized full map: each command for that slot is `null` or `{ type, index, sign? }` with `index` in 0–31. Unknown commands and illegal inputs are dropped. Player and controller-type profiles store a sparse map of the same input shape. Per library the user can save the active device profile, save as a new profile (`p1`, `p2`, …), load, rename, and delete. Player ids are `player1`, `player2`, …. Controller-type ids are `t1`, `t2`, ….
 
 ## Commands and existing paths
 
@@ -140,7 +168,7 @@ Couch co-op is local to one machine and one party: the human player's party. It 
 
 ## Test plan
 
-Unit tests cover `applyDeadzone`, binding conflicts and capture edges, profile save/load/rename/delete/reset, corrupt storage, slot reconcile (index change, identical ids, third pad), and the co-op camera hysteresis. `npm run test:unit` and eslint on the changed files are required.
+Unit tests cover `applyDeadzone`, binding conflicts and capture edges, profile save/load/rename/delete/reset, player-profile slot assignment, controller-type detection, the player → type → device → default resolution order, corrupt storage, slot reconcile (index change, identical ids, third pad), and the co-op camera hysteresis. `npm run test:unit` and eslint on the changed files are required.
 
 Manual:
 

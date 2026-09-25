@@ -24,7 +24,27 @@
     },
     "gamepad": {
       "tab": "Controllers",
-      "intro": "Each controller keeps its own profiles. Player 1 moves the cursor. Player 2 can drive a second unit of the same side.",
+      "intro": "Each person keeps a player profile. A controller type only fills controls that have no standard button or stick. Player 1 moves the cursor. Player 2 can drive a second unit of the same side.",
+      "bindHint": "A standard button or stick is saved on the player profile. A control with no standard equivalent is saved on the controller type.",
+      "playerTitle": "Player profile",
+      "playerHint": "This layout follows the person onto whichever controller is in this slot.",
+      "playerName": "Player profile name",
+      "typeTitle": "Controller type",
+      "typeHint": "Used when this controller has a physical control with no standard button or stick.",
+      "typeName": "Controller type profile name",
+      "deviceTitle": "This controller",
+      "deviceHint": "Stored on this controller. Used when the player profile and the controller type leave a command unset.",
+      "source": {
+        "player": "Player",
+        "type": "Type",
+        "device": "Pad",
+        "default": "Default"
+      },
+      "types": {
+        "xbox": "Xbox",
+        "playstation": "PlayStation",
+        "generic": "Generic"
+      },
       "pressAny": "Press any button on the controller. Browsers hide a gamepad until a button is pressed.",
       "nonStandard": "This browser did not report a standard mapping. Bind the raw buttons and axes listed here.",
       "ignored": "Only two controllers can be used. Extra controllers are ignored.",

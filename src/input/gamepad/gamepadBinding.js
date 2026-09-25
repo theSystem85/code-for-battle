@@ -1,8 +1,11 @@
 import { BIND_THRESHOLD, STICK_DEADZONE, TRIGGER_THRESHOLD, applyDeadzone } from './deadzone.js'
 
 export const GAMEPAD_STORAGE_KEY = 'rts-gamepad-profiles'
-export const GAMEPAD_PROFILE_VERSION = 1
+export const GAMEPAD_PROFILE_VERSION = 2
+export const GAMEPAD_PROFILE_VERSION_V1 = 1
 export const MAX_GAMEPAD_SLOTS = 2
+export const STANDARD_BUTTON_MAX = 16
+export const STANDARD_AXIS_MAX = 3
 
 export const GAMEPAD_COMMANDS = Object.freeze([
   { id: 'cursorX', kind: 'axis', group: 'pointer', slot: 0 },
@@ -137,6 +140,31 @@ export function sanitizeBindings(bindings, slot) {
     map[commandId] = sanitizeInput(bindings[commandId])
   })
   return map
+}
+
+export function sanitizeSparseBindings(bindings) {
+  const map = {}
+  if (!bindings || typeof bindings !== 'object') return map
+  GAMEPAD_COMMANDS.forEach(command => {
+    if (!Object.prototype.hasOwnProperty.call(bindings, command.id)) return
+    map[command.id] = sanitizeInput(bindings[command.id])
+  })
+  return map
+}
+
+export function isStandardLogicalInput(input) {
+  const clean = sanitizeInput(input)
+  if (!clean) return false
+  if (clean.type === 'button') return clean.index <= STANDARD_BUTTON_MAX
+  return clean.index <= STANDARD_AXIS_MAX
+}
+
+export function controllerTypeFromId(id) {
+  const text = String(id || '').toLowerCase()
+  if (/xbox|xinput|microsoft/.test(text)) return 'xbox'
+  if (/playstation|dualshock|dualsense|sony|054c/.test(text)) return 'playstation'
+  if (/wireless controller/.test(text)) return 'playstation'
+  return 'generic'
 }
 
 export function readBinding(binding, buttons, axes, deadzone = STICK_DEADZONE, triggerThreshold = TRIGGER_THRESHOLD) {

@@ -61,7 +61,7 @@ describe('gamepad profiles', () => {
   it('returns an empty store for corrupt JSON', () => {
     const storage = memoryStorage({ [GAMEPAD_STORAGE_KEY]: '{not json' })
     const store = loadGamepadProfileStore(storage)
-    expect(store.version).toBe(1)
+    expect(store.version).toBe(2)
     expect(store.libraries).toEqual({})
     expect(storage.dump()[GAMEPAD_STORAGE_KEY]).toBe('{not json')
   })

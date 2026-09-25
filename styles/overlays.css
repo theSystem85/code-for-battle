@@ -1488,6 +1488,19 @@ body.config-modal-open {
   color: #ffe7a3;
 }
 
+.gamepad-profile-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gamepad-command__source {
+  color: #8aa0b5;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
 .gamepad-profile-name {
   min-width: 140px;
   background: #10161c;

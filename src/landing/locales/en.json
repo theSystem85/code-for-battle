@@ -223,7 +223,7 @@
       "mapTitle": "Mapping menu",
       "mapBody": "Settings lists every button, stick axis, and trigger on each connected controller and lights the row while you press it. Click a command, then press or move the control to bind it. Noise inside the deadzone is ignored. Escape cancels. A conflict names the command that already uses that control.",
       "profilesTitle": "Profiles",
-      "profilesBody": "Each controller keeps its own profiles in the browser. You can save, load, rename, delete, and reset them. Disconnecting does not erase a profile, and plugging the same controller back in restores its slot.",
+      "profilesBody": "A player profile keeps one person's button layout on any controller. A controller-type profile fills only controls that have no standard button or stick, and each physical controller can still keep its own profile. You can save, load, rename, delete, and reset them. Disconnecting does not erase a profile.",
       "coopTitle": "Couch co-op",
       "coopBody": "Only player 1 moves the cursor. Player 2 claims a unit of the same party and remote-controls it even when it is off screen. The camera eases to the midpoint between the two units, stays with player 1 when player 2 leaves the view, and frames both again when player 2 comes back.",
       "defaultsTitle": "Standard layout",
