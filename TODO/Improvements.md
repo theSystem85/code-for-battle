@@ -1173,6 +1173,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Landing Page and i18n
 
+- [x] **Landing gameplay shots and parallax backdrop (2026-09-25)** — replace the February 2026 desktop, landscape, and portrait shots with captures of the demo battle, and show a large blurred gameplay image behind the page with scroll parallax that stays still under reduced motion.
+  - Spec: [Marketing landing page](../specs/090-marketing-landing-page.md)
+
 - [x] **Adjust legal quick links visibility** — hide floating shell links when mobile portrait sidebar is condensed or collapsed; keep them visible only when the sidebar is expanded.
   - Spec: [Mobile Portrait Sidebar Toggle](../specs/010-mobile-portrait-sidebar-toggle/spec.md)
 

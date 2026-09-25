@@ -41,7 +41,7 @@ describe('Full Base Test locked save', () => {
   const playableUnitTypes = Object.keys(UNIT_PROPERTIES).filter(type => type !== 'base')
 
   it('is registered as a locked builtin save without replacing Mission 01', () => {
-    expect(builtinMissions.map(mission => mission.id)).toEqual(['Mission_01', 'Full_Base_Test'])
+    expect(builtinMissions.map(mission => mission.id)).toEqual(['Mission_01', 'Full_Base_Test', 'demo'])
     expect(getBuiltinMissionById('Mission_01').label).toBe('Mission 01: Fordline')
     expect(getBuiltinMissionById('Full_Base_Test')).toBe(fullBaseTest)
     expect(fullBaseTest.label).toBe('Full Base Test')

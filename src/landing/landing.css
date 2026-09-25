@@ -29,12 +29,53 @@ html {
 
 body {
   margin: 0;
-  background:
-    radial-gradient(900px 420px at 10% -10%, rgba(93, 194, 255, 0.16), transparent 60%),
-    var(--landing-bg);
+  background: var(--landing-bg);
   color: var(--landing-text);
   font-family: var(--landing-font);
   line-height: 1.45;
+}
+
+.landing-backdrop,
+.landing-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-backdrop {
+  overflow: hidden;
+}
+
+.landing-backdrop__shift {
+  position: absolute;
+  left: 0;
+  top: -18%;
+  width: 100%;
+  height: 136%;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.landing-backdrop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(6px);
+  transform: translate3d(0, 0, 0) scale(1.08);
+}
+
+.landing-scrim {
+  background:
+    linear-gradient(180deg, rgba(6, 12, 26, 0.78) 0%, rgba(6, 12, 26, 0.62) 46%, rgba(6, 12, 26, 0.74) 100%),
+    radial-gradient(900px 420px at 10% -10%, rgba(93, 194, 255, 0.14), transparent 60%);
+}
+
+.skip-link,
+.landing-main {
+  position: relative;
+  z-index: 1;
 }
 
 img {
@@ -304,6 +345,8 @@ h1 {
 .feature-card,
 .asset-card {
   padding: 16px 14px 14px;
+  background: rgba(16, 26, 51, 0.92);
+  border: 1px solid var(--landing-line);
 }
 
 .feature-card h3,
@@ -490,5 +533,10 @@ a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .landing-backdrop__shift {
+    transform: none;
+    will-change: auto;
   }
 }

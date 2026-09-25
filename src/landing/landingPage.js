@@ -172,6 +172,38 @@ export function applyLocaleChrome(root, locale) {
   })
 }
 
+export function mountLandingBackdrop(doc = document, win = window) {
+  const shift = doc.querySelector('.landing-backdrop__shift')
+  if (!shift || !win?.matchMedia || !win.requestAnimationFrame) return () => {}
+  const reduce = win.matchMedia('(prefers-reduced-motion: reduce)')
+  const apply = () => {
+    if (reduce.matches) {
+      shift.style.transform = ''
+      return
+    }
+    const view = win.innerHeight || 1
+    const maxScroll = Math.max(1, doc.documentElement.scrollHeight - view)
+    const travel = view * 0.12
+    const y = (win.scrollY / maxScroll) * travel
+    shift.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`
+  }
+  if (reduce.matches) return () => {}
+  let frame = 0
+  const onScroll = () => {
+    if (frame) return
+    frame = win.requestAnimationFrame(() => {
+      frame = 0
+      apply()
+    })
+  }
+  win.addEventListener('scroll', onScroll, { passive: true })
+  apply()
+  return () => {
+    win.removeEventListener('scroll', onScroll)
+    if (frame) win.cancelAnimationFrame(frame)
+  }
+}
+
 export async function bootLandingPage(doc = document, storage) {
   const locale = doc.body?.dataset?.landingLocale === 'de' ? 'de' : 'en'
   rememberLandingLocale(locale, storage || (typeof localStorage !== 'undefined' ? localStorage : null))
@@ -181,6 +213,7 @@ export async function bootLandingPage(doc = document, storage) {
   renderAssets(doc.querySelector('[data-landing-assets]'), dict)
   renderTechTree(doc.querySelector('[data-landing-tech]'), dict)
   applyLocaleChrome(doc, locale)
+  mountLandingBackdrop(doc)
   return dict
 }
 
