@@ -121,6 +121,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Rendering and WebGPU
 
+- [x] **Settings and FPS widget disagreed about WebGPU (2026-09-25)** — After a successful probe, settings said "Using WebGPU." whenever the sticky active flag was not WebGL, including while every terrain frame still drew with WebGL. The default water-only path has no sprite-sheet image, so texture sync returned false after a validation scope was already open and WebGPU never retried. Both read the latest drawn frame now. A handoff records not ready, validation pending, texture sync failed, no instances, restore, or the init failure, shows that reason on the widget's renderer row, and logs it once per change with a `[WebGPU]` prefix. Water-only frames bind a 1×1 placeholder atlas until a real sprite sheet exists.
+  - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
+
 - [x] **WebGPU atlas upload fallback (2026-09-24)** — Primary and secondary terrain atlases were created with `COPY_DST | TEXTURE_BINDING` only. `copyExternalImageToTexture` also requires `RENDER_ATTACHMENT`, so the first frame's validation scope failed with "Destination texture needs to have CopyDst and..." and settings fell back to WebGL. Those atlases are the only `createTexture` calls in the WebGPU renderer. The console logs the full validation message.
   - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
 

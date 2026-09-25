@@ -128,6 +128,117 @@ describe('GameWebGPURenderer', () => {
     warn.mockRestore()
   })
 
+  function placeholderDevice() {
+    const created = []
+    const writes = []
+    const device = {
+      createTexture: (descriptor) => {
+        const texture = {
+          label: descriptor.label,
+          destroy: vi.fn(),
+          createView: () => texture
+        }
+        created.push({ descriptor, texture })
+        return texture
+      },
+      createSampler: () => ({ sampler: true }),
+      createBindGroup: (descriptor) => ({ descriptor }),
+      queue: {
+        writeTexture: (...args) => {
+          writes.push(args)
+        },
+        copyExternalImageToTexture: vi.fn()
+      }
+    }
+    return { device, created, writes }
+  }
+
+  it('binds one placeholder atlas when the default map has no sprite sheet', () => {
+    const renderer = new GameWebGPURenderer({}, null)
+    const { device, created, writes } = placeholderDevice()
+    renderer.device = device
+    renderer.pipeline = { getBindGroupLayout: () => ({}) }
+    renderer.uniformBuffer = { buffer: true }
+
+    expect(renderer.syncTextures()).toBe(true)
+    expect(renderer.syncTextures()).toBe(true)
+
+    expect(created).toHaveLength(1)
+    expect(created[0].descriptor).toMatchObject({
+      label: 'terrain-placeholder-atlas',
+      size: [1, 1, 1],
+      usage: WEBGPU_ATLAS_TEXTURE_USAGE
+    })
+    expect(writes).toHaveLength(1)
+    expect(writes[0][2]).toMatchObject({ bytesPerRow: 256 })
+    expect(writes[0][1]).toHaveLength(256)
+    expect(renderer.bindGroup.descriptor.entries[2].resource).toBe(renderer.bindGroup.descriptor.entries[3].resource)
+  })
+
+  it('replaces the placeholder once a sprite sheet image exists', () => {
+    const renderer = new GameWebGPURenderer({}, null)
+    const { device } = placeholderDevice()
+    renderer.device = device
+    renderer.pipeline = { getBindGroupLayout: () => ({}) }
+    renderer.uniformBuffer = { buffer: true }
+    expect(renderer.syncTextures()).toBe(true)
+
+    renderer.textureManager = { primarySpriteSheetImage: { width: 4, height: 2 } }
+    expect(renderer.syncTextures()).toBe(true)
+
+    expect(renderer.usingPlaceholderAtlas).toBe(false)
+    expect(device.queue.copyExternalImageToTexture).toHaveBeenCalled()
+    expect(renderer.uploadedPrimaryImage).toBe(renderer.textureManager.primarySpriteSheetImage)
+  })
+
+  it('does not leave validation pending when texture sync cannot start', () => {
+    const renderer = new GameWebGPURenderer({}, null)
+    renderer.status = 'ready'
+    renderer.syncTextures = () => false
+    renderer.device = { pushErrorScope: vi.fn() }
+
+    expect(renderer.render([[{ type: 'water' }]], { x: 0, y: 0 }, { width: 32, height: 32 }, { waterOnly: true })).toBe(false)
+    expect(renderer.frameFallbackReason).toBe('texture-sync-failed')
+    expect(renderer.validationPending).toBe(false)
+    expect(renderer.device.pushErrorScope).not.toHaveBeenCalled()
+  })
+
+  it('names a validation-pending frame without opening another scope', () => {
+    const renderer = new GameWebGPURenderer({}, null)
+    renderer.status = 'ready'
+    renderer.validationPending = true
+    renderer.device = { pushErrorScope: vi.fn() }
+
+    expect(renderer.render([[{ type: 'water' }]], { x: 0, y: 0 }, { width: 8, height: 8 }, {})).toBe(false)
+    expect(renderer.frameFallbackReason).toBe('validation-pending')
+    expect(renderer.device.pushErrorScope).not.toHaveBeenCalled()
+  })
+
+  it('names restore, not-ready, and empty-instance skips', () => {
+    const restoring = new GameWebGPURenderer({}, null)
+    restoring.needsRestore = true
+    restoring.restore = () => {}
+    expect(restoring.render([[{ type: 'water' }]], { x: 0, y: 0 }, { width: 8, height: 8 }, {})).toBe(false)
+    expect(restoring.frameFallbackReason).toBe('restore')
+
+    const starting = new GameWebGPURenderer({}, null)
+    starting.beginInitialize = () => {
+      starting.status = 'initializing'
+    }
+    expect(starting.render([[{ type: 'water' }]], { x: 0, y: 0 }, { width: 8, height: 8 }, {})).toBe(false)
+    expect(starting.frameFallbackReason).toBe('not-ready')
+
+    const empty = new GameWebGPURenderer({}, null)
+    empty.status = 'ready'
+    empty.syncTextures = () => true
+    empty.buildTileInstances = () => []
+    empty.device = { pushErrorScope: vi.fn() }
+    expect(empty.render([[{ type: 'land' }]], { x: 0, y: 0 }, { width: 8, height: 8 }, {})).toBe(false)
+    expect(empty.frameFallbackReason).toBe('no-instances')
+    expect(empty.validationPending).toBe(false)
+    expect(empty.device.pushErrorScope).not.toHaveBeenCalled()
+  })
+
   it('schedules only one completion check for a pending validation frame', () => {
     let completionChecks = 0
     const renderer = new GameWebGPURenderer({}, null)

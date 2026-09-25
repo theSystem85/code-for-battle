@@ -4,7 +4,9 @@ import { notifyBenchmarkFrame } from '../benchmark/benchmarkTracker.js'
 import { getNetworkStats, isLockstepEnabled } from '../network/gameCommandSync.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
 import { formatVramInUse, formatVramLabel, VRAM_LIMIT_TITLE } from '../rendering/gpuMemory.js'
+import { formatRendererOverlayBackend, getRendererFrameReport } from '../rendering/rendererBackendSelection.js'
 import { framePhases } from '../performance/framePhases.js'
+import { resolveUiLocale } from './uiText.js'
 
 export class FPSDisplay {
   constructor() {
@@ -185,11 +187,17 @@ export class FPSDisplay {
   }
 
   updateRendererRows(overlay = null) {
-    const backend = overlay?.backend === 'webgpu' ? 'WebGPU' : overlay?.backend === 'webgl' ? 'WebGL' : 'CPU'
+    const frame = getRendererFrameReport()
+    const backend = frame.phase
+      ? frame.drawing
+      : overlay?.backend
+    const backendLabel = backend === 'webgpu' ? 'WebGPU' : backend === 'webgl' ? 'WebGL' : 'CPU'
     if (this.frameRendererEl) {
-      this.frameRendererEl.textContent = overlay?.fallbackReason
-        ? `Renderer: ${backend} (${overlay.fallbackReason})`
-        : `Renderer: ${backend}`
+      this.frameRendererEl.textContent = frame.phase
+        ? formatRendererOverlayBackend(frame, resolveUiLocale())
+        : (overlay?.fallbackReason
+          ? `Renderer: ${backendLabel} (${overlay.fallbackReason})`
+          : `Renderer: ${backendLabel}`)
     }
     if (this.frameGpuAdapterEl) {
       const label = [overlay?.vendor, overlay?.architecture].filter(Boolean).join(' / ')

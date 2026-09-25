@@ -1,9 +1,13 @@
 import { getStoredItem, initializeGameStorage, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
+import { resolveUiLocale, uiText } from './ui/uiText.js'
 import {
   describeRendererBackendStatus,
+  getRendererFrameReport,
   migrateRendererBackendChoice,
   normalizeRendererBackendChoice,
   probeWebGPUAvailability,
+  recordRendererFrame,
+  resetRendererFrameReport,
   resolveRequestedRendererBackend
 } from './rendering/rendererBackendSelection.js'
 
@@ -476,15 +480,49 @@ export function noteActiveRendererBackend(backend) {
 }
 
 export function getRendererBackendStatusText() {
+  const locale = resolveUiLocale()
   if (rendererBackendProbePending && RENDERER_BACKEND_CHOICE !== 'webgl') {
-    return 'Checking WebGPU support…'
+    return uiText('settings.renderer.checking', locale)
   }
   return describeRendererBackendStatus({
     choice: RENDERER_BACKEND_CHOICE,
     requested: RENDERER_BACKEND,
     active: ACTIVE_RENDERER_BACKEND,
-    failureSummary: rendererBackendFailureSummary
+    failureSummary: rendererBackendFailureSummary,
+    frame: getRendererFrameReport(),
+    locale
   })
+}
+
+/**
+ * Once per terrain frame. The settings line is rewritten only when the
+ * drawing backend or the fallback reason actually changes.
+ */
+export function publishRenderedTerrainFrame({
+  drawing = null,
+  phase = null,
+  reasonCode = null,
+  failureSummary = null
+} = {}) {
+  const resolvedPhase = phase || (drawing === 'webgpu' ? 'active' : null)
+  if (resolvedPhase === 'active' || drawing === 'webgpu') {
+    rendererBackendFailureSummary = null
+  } else if (reasonCode === 'failed') {
+    rendererBackendFailureSummary = failureSummary ? String(failureSummary) : null
+  }
+
+  const reportChanged = recordRendererFrame({
+    drawing,
+    phase: resolvedPhase,
+    reasonCode,
+    failureSummary: reasonCode === 'failed' ? rendererBackendFailureSummary : failureSummary
+  })
+  const activeBackend = (resolvedPhase === 'fallback' || resolvedPhase === 'starting')
+    ? 'webgl'
+    : (drawing === 'webgl' || drawing === 'webgpu' ? drawing : null)
+  const activeChanged = Boolean(activeBackend) && ACTIVE_RENDERER_BACKEND !== activeBackend
+  if (activeChanged) ACTIVE_RENDERER_BACKEND = activeBackend
+  if (reportChanged || activeChanged) writeRendererBackendStatus()
 }
 
 export function whenRendererBackendResolved() {
@@ -498,6 +536,7 @@ export function resetRendererBackendStateForTests() {
   RENDERER_BACKEND_CHOICE = 'auto'
   RENDERER_BACKEND = 'webgl'
   ACTIVE_RENDERER_BACKEND = null
+  resetRendererFrameReport()
   rendererBackendResolvePromise = Promise.resolve(RENDERER_BACKEND)
 }
 
