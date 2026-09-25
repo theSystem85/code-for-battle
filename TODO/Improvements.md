@@ -1247,6 +1247,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Tooling and CI
 
+- [x] **Rebase-only history (2026-09-25)** — Feature branches rebase onto main (`git fetch && git rebase origin/main`) and push with `git push --force-with-lease`. Do not merge main into a feature branch and do not create merge commits. Pull requests merge by squash or rebase. The rule is in `AGENTS.md` under Git / Workflow.
+  - Spec: none
+
 - [x] **Fix building system unit tests failing due to missing `hasLineOfSightToTarget` mock export.**
   - Spec: [Building System Enhancements](../specs/005-building-system-enhancements/spec.md)
 
