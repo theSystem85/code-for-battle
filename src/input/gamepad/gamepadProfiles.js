@@ -21,6 +21,7 @@ export function createGamepadProfileStore() {
     typeLibraries: {},
     playerProfiles: emptyPlayerCatalog(),
     haptics: { enabled: true, intensity: 0.65 },
+    scrollSpeed: 8,
     suggestions: [null, null]
   }
 }
@@ -70,6 +71,15 @@ function ensurePlayerProfiles(store) {
   return players
 }
 
+export const DEFAULT_GAMEPAD_SCROLL_SPEED = 8
+
+export function clampGamepadScrollSpeed(value) {
+  const numeric = Number(value)
+  if (!Number.isFinite(numeric)) return DEFAULT_GAMEPAD_SCROLL_SPEED
+  const clamped = numeric < 1 ? 1 : (numeric > 24 ? 24 : numeric)
+  return Math.round(clamped * 2) / 2
+}
+
 function clampIntensity(value) {
   const numeric = Number(value)
   if (!Number.isFinite(numeric)) return 0.65
@@ -91,6 +101,7 @@ function ensureStoreExtras(store) {
     store.haptics.enabled = store.haptics.enabled == null ? true : Boolean(store.haptics.enabled)
     store.haptics.intensity = clampIntensity(store.haptics.intensity)
   }
+  store.scrollSpeed = clampGamepadScrollSpeed(store.scrollSpeed)
   if (!Array.isArray(store.suggestions) || store.suggestions.length < 2) {
     const previous = Array.isArray(store.suggestions) ? store.suggestions : []
     store.suggestions = [previous[0] || null, previous[1] || null]
@@ -546,6 +557,17 @@ export function setDeviceDeadzones(store, instanceKey, { left, right } = {}) {
     right: clampDeadzone(right)
   }
   return profile.deadzones
+}
+
+export function getGamepadScrollSpeed(store) {
+  ensureStoreExtras(store)
+  return store.scrollSpeed
+}
+
+export function setGamepadScrollSpeed(store, value) {
+  ensureStoreExtras(store)
+  store.scrollSpeed = clampGamepadScrollSpeed(value)
+  return store.scrollSpeed
 }
 
 export function getHapticSettings(store) {

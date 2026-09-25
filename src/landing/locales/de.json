@@ -227,7 +227,7 @@
       "coopTitle": "Couch-Koop",
       "coopBody": "Nur Spieler 1 bewegt den Zeiger. Spieler 2 übernimmt eine Einheit derselben Partei und steuert sie fern, auch außerhalb des Bildschirms. Die Kamera gleitet zur Mitte zwischen beiden Einheiten, bleibt bei Spieler 1, wenn Spieler 2 den Ausschnitt verlässt, und rahmt beide wieder, sobald Spieler 2 zurückkommt.",
       "defaultsTitle": "Standardbelegung",
-      "defaultsBody": "Der linke Stick bewegt den Zeiger von Spieler 1 und steuert die Einheit von Spieler 2. Der rechte Stick scrollt die Karte. Die vorderen Tasten klicken, reparieren und springen zur letzten Angriffsmeldung. Die Schultertasten drehen den Turm, der rechte Trigger feuert, und das Steuerkreuz entspricht der Tastatur-Fernsteuerung."
+      "defaultsBody": "Der linke Stick bewegt den Zeiger von Spieler 1 und steuert die Einheit von Spieler 2. Der rechte Stick scrollt die Karte. Den linken Trigger drücken schaltet die Fernsteuerung der gewählten Einheiten um: der linke Stick fährt sie und der rechte Stick dreht den Turm. Nochmal drücken oder die Auswahl aufheben beendet den Modus. Der rechte Trigger feuert, und das Steuerkreuz fährt auch ohne diesen Umschalter."
     },
     "footer": {
       "rights": "Ein Browser-RTS. Quelloffen unter der MIT-Lizenz.",

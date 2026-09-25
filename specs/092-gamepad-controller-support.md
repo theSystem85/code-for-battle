@@ -4,7 +4,7 @@
 
 The browser Gamepad API drives the same commands the mouse and keyboard already use. Up to two controllers can be connected at once. Each controller has its own mapping. The types can differ (Xbox, PlayStation, or a generic pad).
 
-Settings gains a Controllers tab, in English and German, that matches the existing settings modal. For each connected controller the tab lists every button, stick axis, and trigger and shows a live meter while that input is held or moved. A green P1 / P2 lamp sits in the HUD and on the matching slot in the menu. A lamp is on only while that slot has a connected pad.
+Settings gains a Controllers tab, in English and German, that matches the existing settings modal. For each connected controller the tab lists every button, stick axis, and trigger and shows a live meter while that input is held or moved. The in-game P1 / P2 overlay stays fully hidden until a pad is connected: no empty container and no disconnected chip. One connected pad shows only the P1 chip. A second pad adds the P2 chip. `gamepadconnected` and `gamepaddisconnected` poll immediately, so a chip appears or disappears with the pad. The Controllers tab still lists both slots, including one that says it is not connected. A lamp is green only while that slot has a connected pad.
 
 The settings dialog grows up to 920px so two columns fit on a desktop window, and it stacks those columns when the dialog itself is narrower than 760px. Those two cards align to the start of the row, so the shorter card does not stretch into an empty box. The Controllers tab is one flow: player, controller-type, and per-controller profiles, then vibration, then live inputs with the deadzone sliders beside the command list when there is room, then the standard-layout table. The table sizes its columns to the text. Labels and buttons wrap. A connected controller's name stays on one line in the P1 / P2 chip, with the full id in the tooltip. Nothing in that tab is positioned on top of another control. The modal body is the only scroller for Runtime Config, Key Bindings, and Controllers. Scrollbars use a thin thumb and a transparent track: `scrollbar-width` and `scrollbar-color` for Firefox, and `::-webkit-scrollbar` for Chromium and Safari.
 
@@ -37,7 +37,7 @@ Every command has a binding on the W3C Standard Gamepad map. Reset on a player p
 
 Indexes: 0 A/Cross, 1 B/Circle, 2 X/Square, 3 Y/Triangle, 4 LB/L1, 5 RB/R1, 6 LT/L2, 7 RT/R2, 8 Back/Share, 9 Start/Options, 10 L3, 11 R3, 12–15 D-pad up/down/left/right. Axes 0–1 are the left stick. Axes 2–3 are the right stick. Triggers are buttons whose `value` runs from 0 to 1.
 
-Hold LT/L2 (`remoteStickMode`) to switch the sticks. Released, the left stick is the cursor and the right stick drags the map. Held, the left stick drives the selected unit and the right stick's horizontal axis turns the turret. The vertical right-stick axis does not scroll while LT is held. Player 2 has no cursor: the left stick always drives, and LT still switches the right stick from map drag to turret. The D-pad drives in either mode, so a unit can move without giving up the cursor. LB is sell rather than the D-pad, because the D-pad is that always-available drive. RB/R1 is left free.
+Press LT/L2 (`remoteStickMode`) once to enter remote control, and press it again to leave. There is no hold mode. While it is on, the left stick drives the selected units and the right stick's horizontal axis turns the turret instead of dragging the map. A green "Remote control" chip stays on screen for that time. The mode turns off when the selection no longer has a living unit, or when player 2's claimed unit is gone. A press with nothing to drive does not turn it on. Player 2 has no cursor: the left stick always drives, and the same toggle switches player 2's right stick from map drag to turret. The D-pad drives in either mode, so a unit can move without giving up the cursor. LB is sell rather than the D-pad, because the D-pad is that always-available drive. RB/R1 is left free.
 
 B/Circle is right click. When repair, sell, placement, chain build, or attack-group mode is active, B cancels that mode instead of right-clicking. Start pauses and resumes through the existing pause button, including while the match is already paused.
 
@@ -45,16 +45,16 @@ Player 1:
 
 | Command | Input |
 | --- | --- |
-| Cursor X / Y | Left stick, while LT is released |
-| Remote move X / Y | Left stick, while LT is held |
-| Map scroll X / Y | Right stick, while LT is released |
-| Turret left / right | Right stick X − / +, while LT is held |
+| Cursor X / Y | Left stick, while remote control is off |
+| Remote move X / Y | Left stick, while remote control is on |
+| Map scroll X / Y | Right stick, while remote control is off |
+| Turret left / right | Right stick X − / +, while remote control is on |
 | Left click | A / Cross (0) |
 | Right click / cancel | B / Circle (1) |
 | Toggle repair | X / Square (2) |
 | Jump to last event | Y / Triangle (3) |
 | Toggle sell | LB / L1 (4) |
-| Remote sticks (hold) | LT / L2 (6) |
+| Remote sticks | LT / L2 (6), toggle |
 | Fire | RT / R2 (7) |
 | Pause | Start / Options (9) |
 | Remote up / down / left / right | D-pad (12–15) |
@@ -68,7 +68,7 @@ Player 2 uses the same face, bumper, trigger, D-pad, and pause bindings, plus:
 
 Player 2 has no cursor or click binding. Cursor, click, and claim commands are honored only on the slot they belong to, even if a profile binds them on the other slot. A rising edge of player 2's remote move claims the selected friendly unit, or the unit under player 1's cursor, when player 2 does not already hold a unit. Claiming deselects that unit so player 1 can select another.
 
-`cursorX` may share axis 0 with `remoteMoveX`, `cursorY` may share axis 1 with `remoteMoveY`, and `mapScrollX` may share axis 2 with `turretLeft` and `turretRight`. Those pairs are not binding conflicts. Any other shared button or axis still conflicts. An axis turret binding is read only while LT is held. A button turret binding is read all the time. Slot 0 reads the remote-move axes only while LT is held. Slot 1 reads them all the time.
+`cursorX` may share axis 0 with `remoteMoveX`, `cursorY` may share axis 1 with `remoteMoveY`, and `mapScrollX` may share axis 2 with `turretLeft` and `turretRight`. Those pairs are not binding conflicts. Any other shared button or axis still conflicts. An axis turret binding is read only while remote control is toggled on. A button turret binding is read all the time. Slot 0 reads the remote-move axes only while remote control is on. Slot 1 reads them all the time.
 
 ## Binding
 
@@ -176,13 +176,13 @@ A per-controller saved profile stores a sanitized full map: each command for tha
 
 ## Commands and existing paths
 
-Polling runs once per animation frame at the start of `GameLoop.animate`, with a 4 ms reentry guard. Samples live in two preallocated button and axis buffers. The mapping menu, while open, asks for the same poll so the meters work. The menu writes DOM only when a quantized value changes.
+Polling runs once per animation frame at the start of `GameLoop.animate`, with a 4 ms reentry guard. Samples live in two preallocated button and axis buffers. The mapping menu, while open, asks for the same poll so the meters work. Button rows show a magnitude bar. Stick axes show a centered bar that grows left for negative and right for positive, plus a signed readout such as `-0.73` or `+0.42`. The menu writes DOM only when a quantized value changes.
 
 | Command | Path |
 | --- | --- |
 | Cursor | Synthetic `mousemove` on `#gameCanvas` from a DOM cursor. Only slot 0. |
 | Left / right click | Synthetic `mousedown` / `mouseup` with `button` 0 or 2 on `#gameCanvas`. |
-| Map scroll | `gameState.gamepadScroll`, applied in `updateMapScrolling` with the keyboard scroll speed. Positive stick X increases `scrollOffset`. Positive stick Y moves the view down. |
+| Map scroll | `gameState.gamepadScroll`, applied in `updateMapScrolling` with `gameState.gamepadScrollSpeed`. That speed is stored on the gamepad profile (`scrollSpeed`, default 8, range 1–24) and does not follow the keyboard scroll speed. Positive stick X increases `scrollOffset`. Positive stick Y moves the view down. While player 1's cursor is active and remote control is off, the same vector also scrolls when the cursor is inside a 20px margin of the canvas edge: 0 at 20px, full at the edge, and both axes at a corner. The cursor is one prepared 27px bitmap (1x and 2x) whose circle, crosshair, and hotspot share the center, placed with `translate(-50%, -50%)`. |
 | Jump to last event | `focusLastAttackEvent()`, the unit stored by the attack notification. |
 | Remote D-pad and player 1 move stick | `syncRemoteControlAction` on source `gamepad:0`, merged into the existing remote-control vector. |
 | Player 2 move | A per-owner co-op slot with an absolute direction `atan2(moveY, moveX)`. |
@@ -222,7 +222,7 @@ Couch co-op is local to one machine and one party: the human player's party. It 
 
 ## Test plan
 
-Unit tests cover `applyDeadzone` and `clampDeadzone`, per-stick deadzone resolution (player, then device, then 0.18) and reset, a default binding for every command, stick-mode pairs that share an axis without counting as a conflict, binding conflicts and capture edges, profile save/load/rename/delete/reset, player-profile slot assignment, the explicit-slot flag, controller-type detection, connect-time layout suggestion without replacing an explicit player profile, haptic on/off and a missing or rejected vibration actuator, the player → type → device → default resolution order, corrupt storage, slot reconcile (index change, identical ids, third pad), and the co-op camera hysteresis. `npm run test:unit` and eslint on the changed files are required.
+Unit tests cover `applyDeadzone` and `clampDeadzone`, per-stick deadzone resolution (player, then device, then 0.18) and reset, a default binding for every command, stick-mode pairs that share an axis without counting as a conflict, binding conflicts and capture edges, profile save/load/rename/delete/reset, player-profile slot assignment, the explicit-slot flag, controller-type detection, connect-time layout suggestion without replacing an explicit player profile, haptic on/off and a missing or rejected vibration actuator, the player → type → device → default resolution order, corrupt storage, slot reconcile (index change, identical ids, third pad), the co-op camera hysteresis, the 20px edge-scroll ramp including corners, the remote-stick toggle (including a dead target), signed axis readouts, gamepad scroll-speed clamping, map scrolling at that speed, and the in-game P1 / P2 overlay (hidden with no pad, P1 only for one pad, both chips for two). `npm run test:unit` and eslint on the changed files are required.
 
 Manual:
 

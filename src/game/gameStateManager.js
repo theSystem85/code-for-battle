@@ -151,6 +151,11 @@ function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScroll
  * @param {Object} gameState - Game state object
  * @param {Array} mapGrid - 2D array representing the map
  */
+function gamepadMapScrollSpeed(state) {
+  const speed = state && state.gamepadScrollSpeed
+  return Number.isFinite(speed) && speed > 0 ? speed : 8
+}
+
 export function updateMapScrolling(gameState, mapGrid) {
   if (!Array.isArray(mapGrid) || mapGrid.length === 0 || !Array.isArray(mapGrid[0]) || mapGrid[0].length === 0) {
     return
@@ -187,7 +192,7 @@ export function updateMapScrolling(gameState, mapGrid) {
       } else if (gameState.keyScroll.right) {
         gameState.dragVelocity.x = -KEYBOARD_SCROLL_SPEED
       } else if (padX !== 0) {
-        gameState.dragVelocity.x = -padX * KEYBOARD_SCROLL_SPEED
+        gameState.dragVelocity.x = -padX * gamepadMapScrollSpeed(gameState)
       } else {
         gameState.dragVelocity.x *= INERTIA_DECAY
         if (Math.abs(gameState.dragVelocity.x) < INERTIA_STOP_THRESHOLD) {
@@ -200,7 +205,7 @@ export function updateMapScrolling(gameState, mapGrid) {
       } else if (gameState.keyScroll.down) {
         gameState.dragVelocity.y = -KEYBOARD_SCROLL_SPEED
       } else if (padY !== 0) {
-        gameState.dragVelocity.y = -padY * KEYBOARD_SCROLL_SPEED
+        gameState.dragVelocity.y = -padY * gamepadMapScrollSpeed(gameState)
       } else {
         gameState.dragVelocity.y *= INERTIA_DECAY
         if (Math.abs(gameState.dragVelocity.y) < INERTIA_STOP_THRESHOLD) {

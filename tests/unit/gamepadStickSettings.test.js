@@ -5,10 +5,12 @@ import {
   createPlayerProfile,
   dismissControllerSuggestion,
   getControllerSuggestion,
+  getGamepadScrollSpeed,
   getHapticSettings,
   resetPlayerProfile,
   resolveDeadzones,
   setDeviceDeadzones,
+  setGamepadScrollSpeed,
   setHapticSettings,
   setPlayerDeadzones,
   setSlotPlayerProfile,
@@ -30,6 +32,19 @@ describe('stick deadzones', () => {
     expect(resolveDeadzones(store, { slot: 0, instanceKey: 'pad#0' })).toEqual({ left: 0.05, right: 0.4 })
     expect(resetPlayerProfile(store, 'default')).toBe(true)
     expect(resolveDeadzones(store, { slot: 0, instanceKey: 'pad#0' })).toEqual({ left: 0.3, right: 0.22 })
+  })
+})
+
+describe('gamepad map scroll speed', () => {
+  it('stays independent of other settings and clamps to 1–24', () => {
+    const store = createGamepadProfileStore()
+    expect(getGamepadScrollSpeed(store)).toBe(8)
+    expect(setGamepadScrollSpeed(store, 12.2)).toBe(12)
+    expect(setGamepadScrollSpeed(store, 0)).toBe(1)
+    expect(setGamepadScrollSpeed(store, 99)).toBe(24)
+    expect(setGamepadScrollSpeed(store, Number.NaN)).toBe(8)
+    setHapticSettings(store, { intensity: 0.2 })
+    expect(getGamepadScrollSpeed(store)).toBe(8)
   })
 })
 
