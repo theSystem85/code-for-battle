@@ -249,6 +249,27 @@ function deadzoneControl(slot, side, zones) {
   return field
 }
 
+function profileFields(select, name) {
+  const row = element('div', 'gamepad-profile-fields')
+  row.append(select, name)
+  return row
+}
+
+function profileActions(buttons) {
+  const row = element('div', 'gamepad-profile-actions')
+  buttons.forEach(button => row.append(button))
+  return row
+}
+
+function renderDeadzones(host, slot) {
+  const zones = resolveDeadzones(getGamepadStore(), { slot, instanceKey: slotIdentity(slot) })
+  const block = element('div', 'gamepad-deadzones')
+  block.dataset.gamepadDeadzones = 'true'
+  block.append(element('p', 'config-modal__hint', text('settings.gamepad.deadzoneHint', 'Motion inside the deadzone is ignored so a resting stick does not jitter.')))
+  block.append(deadzoneControl(slot, 'left', zones), deadzoneControl(slot, 'right', zones))
+  host.append(block)
+}
+
 function renderPlayerProfiles(host, slot) {
   const store = getGamepadStore()
   const block = element('div', 'gamepad-profile-block')
@@ -256,19 +277,17 @@ function renderPlayerProfiles(host, slot) {
   block.append(element('p', 'config-modal__hint', text('settings.gamepad.playerHint', 'A player keeps this layout on any controller. Standard buttons and sticks are saved here.')))
   const profiles = listPlayerProfiles(store)
   const activeId = getSlotPlayerProfileId(store, slot)
-  const row = element('div', 'gamepad-profile-row')
   const name = document.createElement('input')
   name.type = 'text'
   name.className = 'gamepad-profile-name'
   name.value = profiles.find(profile => profile.id === activeId)?.name || ''
   name.setAttribute('aria-label', text('settings.gamepad.playerName', 'Player profile name'))
-  row.append(profileSelect(profiles, activeId, () => {
-    setSlotPlayerProfile(store, slot, row.querySelector('select').value)
+  const select = profileSelect(profiles, activeId, () => {
+    setSlotPlayerProfile(store, slot, select.value)
     persistGamepadStore()
     notifyBindings()
     renderGamepadMappingMenu(panel, slot)
-  }))
-  row.append(name)
+  })
   const create = element('button', 'config-modal__button', text('settings.gamepad.saveAs', 'Save as new'))
   create.type = 'button'
   create.addEventListener('click', () => {
@@ -301,13 +320,8 @@ function renderPlayerProfiles(host, slot) {
     notifyBindings()
     renderGamepadMappingMenu(panel, slot)
   })
-  row.append(create, rename, remove, reset)
-  block.append(row)
-  const zones = resolveDeadzones(store, { slot, instanceKey: slotIdentity(slot) })
-  block.append(element('p', 'config-modal__hint', text('settings.gamepad.deadzoneHint', 'Motion inside the deadzone is ignored so a resting stick does not jitter.')))
-  block.append(deadzoneControl(slot, 'left', zones), deadzoneControl(slot, 'right', zones))
+  block.append(profileFields(select, name), profileActions([create, rename, remove, reset]))
   host.append(block)
-  renderDefaultTable(host, slot)
 }
 
 function renderDefaultTable(host, slot) {
@@ -340,19 +354,17 @@ function renderTypeProfiles(host, slot) {
   block.append(element('p', 'config-modal__hint', text('settings.gamepad.typeHint', 'Saved only for controls this controller type has no standard button or stick for.')))
   const profiles = listControllerTypeProfiles(store, type)
   const activeId = getActiveControllerTypeProfileId(store, type)
-  const row = element('div', 'gamepad-profile-row')
   const name = document.createElement('input')
   name.type = 'text'
   name.className = 'gamepad-profile-name'
   name.value = profiles.find(profile => profile.id === activeId)?.name || ''
   name.setAttribute('aria-label', text('settings.gamepad.typeName', 'Controller type profile name'))
-  row.append(profileSelect(profiles, activeId, () => {
-    setActiveControllerTypeProfile(store, type, row.querySelector('select').value)
+  const select = profileSelect(profiles, activeId, () => {
+    setActiveControllerTypeProfile(store, type, select.value)
     persistGamepadStore()
     notifyBindings()
     renderGamepadMappingMenu(panel, slot)
-  }))
-  row.append(name)
+  })
   const create = element('button', 'config-modal__button', text('settings.gamepad.saveAs', 'Save as new'))
   create.type = 'button'
   create.addEventListener('click', () => {
@@ -384,8 +396,7 @@ function renderTypeProfiles(host, slot) {
     notifyBindings()
     renderGamepadMappingMenu(panel, slot)
   })
-  row.append(create, rename, remove, reset)
-  block.append(row)
+  block.append(profileFields(select, name), profileActions([create, rename, remove, reset]))
   host.append(block)
 }
 
@@ -402,7 +413,6 @@ function renderProfiles(host, slot) {
   const store = getGamepadStore()
   const profiles = listGamepadProfiles(store, identity)
   const activeId = getActiveProfileId(store, identity)
-  const row = element('div', 'gamepad-profile-row')
   const select = document.createElement('select')
   select.className = 'config-modal__select'
   profiles.forEach(profile => {
@@ -470,8 +480,7 @@ function renderProfiles(host, slot) {
     notifyBindings()
     renderGamepadMappingMenu(panel, slot)
   })
-  row.append(select, name, save, saveAs, rename, remove, reset)
-  device.append(row)
+  device.append(profileFields(select, name), profileActions([save, saveAs, rename, remove, reset]))
 }
 
 function renderCommands(host, slot) {
@@ -557,20 +566,25 @@ export function renderGamepadMappingMenu(root, slot = activeSlot) {
   suggestion.dataset.gamepadSuggestion = 'true'
   suggestion.hidden = true
   root.append(suggestion)
-  root.append(renderHaptics())
   const ignored = element('p', 'config-modal__hint')
   ignored.dataset.gamepadIgnored = 'true'
   ignored.hidden = gamepadMonitor.ignored < 1
   ignored.textContent = text('settings.gamepad.ignored', 'Only two controllers can be used. Extra controllers are ignored.')
   root.append(ignored)
+  const profiles = element('div', 'gamepad-profiles')
+  profiles.dataset.gamepadProfiles = 'true'
+  renderProfiles(profiles, slot)
+  root.append(profiles)
+  root.append(renderHaptics())
   const columns = element('div', 'gamepad-columns')
-  const inputs = element('div', 'gamepad-column')
+  const inputs = element('div', 'gamepad-column gamepad-section')
   inputs.append(element('h3', 'config-modal__section-title', text('settings.gamepad.liveInputs', 'Live inputs')))
   const inputList = element('div', 'gamepad-input-list')
   inputList.dataset.gamepadInputs = 'true'
   renderInputs(inputList, slot)
   inputs.append(inputList)
-  const commands = element('div', 'gamepad-column')
+  renderDeadzones(inputs, slot)
+  const commands = element('div', 'gamepad-column gamepad-section')
   commands.append(element('h3', 'config-modal__section-title', text('settings.gamepad.commandsTitle', 'Commands')))
   commands.append(element('p', 'config-modal__hint', text('settings.gamepad.bindHint', 'A standard button or stick is saved on the player profile. A control with no standard equivalent is saved on the controller type.')))
   const status = element('p', 'config-modal__hint')
@@ -589,17 +603,16 @@ export function renderGamepadMappingMenu(root, slot = activeSlot) {
   const cancel = element('button', 'config-modal__button', text('settings.gamepad.cancel', 'Cancel'))
   cancel.type = 'button'
   cancel.addEventListener('click', stopCapture)
-  conflict.append(reassign, cancel)
+  const conflictActions = element('div', 'gamepad-profile-actions')
+  conflictActions.append(reassign, cancel)
+  conflict.append(conflictActions)
   const commandList = element('div', 'gamepad-command-list')
   commandList.dataset.gamepadCommands = 'true'
   renderCommands(commandList, slot)
   commands.append(status, conflict, commandList)
   columns.append(inputs, commands)
   root.append(columns)
-  const profiles = element('div', 'gamepad-profiles')
-  profiles.dataset.gamepadProfiles = 'true'
-  renderProfiles(profiles, slot)
-  root.append(profiles)
+  renderDefaultTable(root, slot)
   syncSuggestion(slot)
   if (!menuFrame) menuFrame = requestAnimationFrame(pumpMenu)
 }

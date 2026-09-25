@@ -177,6 +177,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Standard gamepad defaults (2026-09-25)** — Every controller command has a Standard Gamepad binding. Hold the left trigger and the left stick drives while the right stick turns the turret; otherwise those sticks are the cursor and the map. Start pauses. The mapping menu lists the layout that Reset restores.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
+- [x] **Controller settings layout (2026-09-25)** — The Controllers tab stacks on a narrow dialog and uses two columns only when the dialog is wide enough. Player profiles, live inputs with deadzones, the command list, and the standard-layout table no longer overlap. Settings tabs scroll in the modal body only, and app scrollbars use a slim themed thumb.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
 ### Rendering and WebGPU
 
 - [x] **WebGPU terrain shader and performance overlay (2026-09-24)** — Sample both atlases before any per-fragment branch so `textureSample` stays in uniform control flow. When WebGPU still fails, log one `[WebGPU]` validation line and show a short reason in settings. The performance widget shows the active backend, fallback reason, adapter, canvas resolution, draw calls, timestamp-query GPU time when available, `maxBufferSize` as VRAM, and tracked buffer/texture bytes in use.

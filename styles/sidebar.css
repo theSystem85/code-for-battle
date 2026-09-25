@@ -205,13 +205,6 @@ body.mobile-landscape .money-bar-value {
 .production-tooltip .money-tooltip__panel {
   max-height: 90vh;
   overflow-y: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.production-tooltip .money-tooltip__panel::-webkit-scrollbar {
-  width: 0;
-  height: 0;
 }
 
 .money-tooltip__header {

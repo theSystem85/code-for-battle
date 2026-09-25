@@ -6,6 +6,8 @@ The browser Gamepad API drives the same commands the mouse and keyboard already 
 
 Settings gains a Controllers tab, in English and German, that matches the existing settings modal. For each connected controller the tab lists every button, stick axis, and trigger and shows a live meter while that input is held or moved. A green P1 / P2 lamp sits in the HUD and on the matching slot in the menu. A lamp is on only while that slot has a connected pad.
 
+The settings dialog grows up to 920px so two columns fit on a desktop window, and it stacks those columns when the dialog itself is narrower than 760px. The Controllers tab is one flow: player, controller-type, and per-controller profiles, then vibration, then live inputs with the deadzone sliders beside the command list when there is room, then the standard-layout table. Labels and buttons wrap. Nothing in that tab is positioned on top of another control. The modal body is the only scroller for Runtime Config, Key Bindings, and Controllers. Scrollbars across the app use a thin thumb and a transparent track.
+
 Player 1 owns the mouse cursor, left click, and right click. Player 2 does not move the cursor. Both players can remote-control units of the local human party at the same time. Player 2's unit stays controllable when it is off screen. The camera eases to the midpoint between the two controlled units, stays on player 1 when player 2 leaves the view, and frames both again when player 2 returns inside the view.
 
 Controller input enters the existing remote-control, cursor, scroll, repair, sell, and attack-focus paths. Those paths already record replay commands and broadcast WebRTC messages, so lockstep sees controller input the same way it sees keyboard and mouse input.
@@ -148,7 +150,7 @@ Each analog stick has its own deadzone so a resting stick does not jitter. `clam
 
 Left stick is axes 0 and 1. Right stick is axes 2 and 3. Axis commands on indexes 0–1 use the left value. Any other axis uses the right value. Buttons ignore the stick deadzone and still use `TRIGGER_THRESHOLD`. The poll copies the resolved pair into a two-slot cache when the binding cache refreshes, and reuses that pair every frame.
 
-The mapping menu shows a slider for each stick on the active player profile. Moving a slider saves immediately and does not rebuild the menu. A meter beside each slider shows `hypot` of that stick after `applyDeadzone`, quantized to 20 steps, and writes a transform only when the step changes. Reset on a player profile clears `deadzones` as well as bindings. Save-as copies the current profile's deadzones onto the new player profile.
+The mapping menu shows a slider for each stick on the active player profile, in the live-inputs section and outside the list that is replaced when a pad connects. Moving a slider saves immediately and does not rebuild the menu. A meter under each slider shows `hypot` of that stick after `applyDeadzone`, quantized to 20 steps, and writes a transform only when the step changes. Reset on a player profile clears `deadzones` as well as bindings. Save-as copies the current profile's deadzones onto the new player profile.
 
 ## Haptics
 
