@@ -186,6 +186,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Gamepad cursor, toggle, and scroll (2026-09-25)** — The gamepad crosshair shares the circle's center. Stick axes in settings show signed deflection. Left trigger toggles remote control of the selected units and shows an on-screen chip until they are gone. Gamepad map scroll has its own speed, and the cursor scrolls the map inside a 20px screen margin.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
+- [x] **Gamepad player overlay only while connected (2026-09-25)** — The in-game P1 / P2 lights stay hidden until a controller connects. One pad shows only P1. Two pads show P1 and P2. Disconnecting a pad removes that chip, and with none connected the overlay is gone. The Controllers tab still shows slot status.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
 ### Rendering and WebGPU
 
 - [x] **WebGPU terrain shader and performance overlay (2026-09-24)** — Sample both atlases before any per-fragment branch so `textureSample` stays in uniform control flow. When WebGPU still fails, log one `[WebGPU]` validation line and show a short reason in settings. The performance widget shows the active backend, fallback reason, adapter, canvas resolution, draw calls, timestamp-query GPU time when available, `maxBufferSize` as VRAM, and tracked buffer/texture bytes in use.

@@ -1319,6 +1319,11 @@ body.config-modal-open {
   pointer-events: none;
 }
 
+.gamepad-indicators[hidden],
+.gamepad-indicator[hidden] {
+  display: none;
+}
+
 .gamepad-indicator,
 .gamepad-slot {
   display: inline-flex;

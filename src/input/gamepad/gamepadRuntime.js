@@ -6,6 +6,7 @@ import { readBinding, stickAxisEnabled } from './gamepadBinding.js'
 import { gamepadBridge } from './gamepadCommandBridge.js'
 import { pulseGamepad } from './gamepadHaptics.js'
 import { writeGamepadEdgeScroll } from './gamepadEdgeScroll.js'
+import { applyGamepadIndicatorVisibility } from './gamepadIndicators.js'
 import { knownGamepadInstanceKeys, getGamepadScrollSpeed, rememberGamepadAssignments, resolveDeadzones, resolveGamepadBindings, suggestControllerLayout } from './gamepadProfiles.js'
 import { nextRemoteStickToggle } from './remoteStickToggle.js'
 import { reconcileGamepadSlots } from './gamepadIdentity.js'
@@ -124,17 +125,20 @@ function placeCursor(visible) {
   element.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`
 }
 
+const indicatorChips = [null, null]
+const indicatorConnected = [false, false]
+
 function paintIndicators() {
-  for (let slot = 0; slot < 2; slot++) {
-    const hud = typeof document !== 'undefined' ? document.getElementById(slot === 0 ? 'gamepadIndicatorP1' : 'gamepadIndicatorP2') : null
-    const monitor = gamepadMonitor.slots[slot]
-    if (!hud) continue
-    const on = monitor.connected ? '1' : '0'
-    if (hud.dataset.on === on) continue
-    hud.dataset.on = on
-    hud.classList.toggle('gamepad-indicator--on', monitor.connected)
-    hud.hidden = !monitor.connected
-  }
+  if (typeof document === 'undefined') return
+  const host = document.getElementById('gamepadIndicators')
+  indicatorChips[0] = document.getElementById('gamepadIndicatorP1')
+  indicatorChips[1] = document.getElementById('gamepadIndicatorP2')
+  indicatorConnected[0] = Boolean(gamepadMonitor.slots[0] && gamepadMonitor.slots[0].connected)
+  indicatorConnected[1] = Boolean(gamepadMonitor.slots[1] && gamepadMonitor.slots[1].connected)
+  const signature = (indicatorConnected[0] ? 1 : 0) + (indicatorConnected[1] ? 2 : 0)
+  if (host && host._indicatorMode === signature) return
+  if (host) host._indicatorMode = signature
+  applyGamepadIndicatorVisibility(host, indicatorChips, indicatorConnected)
 }
 
 function readPad(pad, slot) {
