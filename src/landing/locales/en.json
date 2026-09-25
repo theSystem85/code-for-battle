@@ -227,7 +227,7 @@
       "coopTitle": "Couch co-op",
       "coopBody": "Only player 1 moves the cursor. Player 2 claims a unit of the same party and remote-controls it even when it is off screen. The camera eases to the midpoint between the two units, stays with player 1 when player 2 leaves the view, and frames both again when player 2 comes back.",
       "defaultsTitle": "Standard layout",
-      "defaultsBody": "Left stick moves the cursor for player 1 and drives player 2's unit. Right stick scrolls the map. Face buttons click, repair, and jump to the last attack notice. Bumpers turn the turret, the right trigger fires, and the d-pad matches the keyboard remote controls."
+      "defaultsBody": "Left stick moves the cursor for player 1 and drives player 2's unit. Right stick scrolls the map. Press the left trigger to toggle remote control of the selected units: the left stick drives them and the right stick turns the turret. Press it again, or clear the selection, to leave. The right trigger fires and the d-pad drives without that toggle."
     },
     "footer": {
       "rights": "A browser RTS. Source available under the MIT license.",

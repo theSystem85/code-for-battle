@@ -140,6 +140,26 @@ describe('gameStateManager', () => {
       expect(gameState.scrollOffset.x).toBe(200 - KEYBOARD_SCROLL_SPEED)
     })
 
+    it('scrolls the map with the gamepad speed instead of the keyboard speed', () => {
+      const gameState = {
+        scrollOffset: { x: 200, y: 150 },
+        dragVelocity: { x: 0, y: 0 },
+        keyScroll: { left: false, right: false, up: false, down: false },
+        gamepadScroll: { x: 1, y: -0.5 },
+        gamepadScrollSpeed: 12,
+        smoothScroll: null,
+        isRightDragging: false
+      }
+      const mapGrid = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'land' })))
+
+      updateMapScrolling(gameState, mapGrid)
+
+      expect(gameState.dragVelocity.x).toBe(-12)
+      expect(gameState.dragVelocity.y).toBe(6)
+      expect(gameState.scrollOffset).toEqual({ x: 212, y: 144 })
+      expect(KEYBOARD_SCROLL_SPEED).not.toBe(12)
+    })
+
     it('smoothly interpolates minimap scrolling targets', () => {
       const gameState = {
         scrollOffset: { x: 0, y: 0 },

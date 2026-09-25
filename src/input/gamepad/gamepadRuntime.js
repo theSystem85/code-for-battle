@@ -5,7 +5,9 @@ import { STICK_DEADZONE, TRIGGER_THRESHOLD } from './deadzone.js'
 import { readBinding, stickAxisEnabled } from './gamepadBinding.js'
 import { gamepadBridge } from './gamepadCommandBridge.js'
 import { pulseGamepad } from './gamepadHaptics.js'
-import { knownGamepadInstanceKeys, rememberGamepadAssignments, resolveDeadzones, resolveGamepadBindings, suggestControllerLayout } from './gamepadProfiles.js'
+import { writeGamepadEdgeScroll } from './gamepadEdgeScroll.js'
+import { knownGamepadInstanceKeys, getGamepadScrollSpeed, rememberGamepadAssignments, resolveDeadzones, resolveGamepadBindings, suggestControllerLayout } from './gamepadProfiles.js'
+import { nextRemoteStickToggle } from './remoteStickToggle.js'
 import { reconcileGamepadSlots } from './gamepadIdentity.js'
 import { GAMEPAD_MONITOR_AXES, GAMEPAD_MONITOR_BUTTONS, gamepadMonitor, setGamepadPoller } from './gamepadMonitor.js'
 import { getGamepadStore, persistGamepadStore } from './gamepadStore.js'
@@ -52,6 +54,9 @@ const deadzoneCache = [
 const lastControlledHealth = [-1, -1]
 const lastControlledId = ['', '']
 const lastDamagePulseAt = [0, 0]
+const remoteStickToggle = [false, false]
+const edgeScroll = { x: 0, y: 0 }
+let cachedScrollSpeed = 8
 const idCache = ['', '', '', '']
 const indexCache = [-1, -1, -1, -1]
 const assignments = [null, null]
@@ -83,9 +88,13 @@ function refreshRect(force) {
   rectTop = rect.top
   viewWidth = rect.width
   viewHeight = rect.height
-  if (cursorX < 0 && viewWidth > 0) {
+  if (viewWidth > 0 && cursorX < 0) {
     cursorX = viewWidth / 2
     cursorY = viewHeight / 2
+  } else if (viewWidth > 0) {
+    if (cursorX > viewWidth) cursorX = viewWidth
+    if (cursorY > viewHeight) cursorY = viewHeight
+    if (cursorY < 0) cursorY = 0
   }
 }
 
@@ -112,7 +121,7 @@ function placeCursor(visible) {
   if (element._px === x && element._py === y) return
   element._px = x
   element._py = y
-  element.style.transform = `translate3d(${x}px, ${y}px, 0)`
+  element.style.transform = `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`
 }
 
 function paintIndicators() {
@@ -170,6 +179,45 @@ function bindingsFor(slot) {
 export function refreshGamepadBindingCache() {
   bindingCache[0] = null
   bindingCache[1] = null
+  cachedScrollSpeed = getGamepadScrollSpeed(getGamepadStore())
+  gameState.gamepadScrollSpeed = cachedScrollSpeed
+}
+
+function livingSelectedUnit() {
+  const selected = gamepadBridge.selectedUnits
+  if (!selected) return false
+  for (let i = 0; i < selected.length; i++) {
+    const unit = selected[i]
+    if (unit && !unit.isBuilding && unit.health > 0) return true
+  }
+  return false
+}
+
+function remoteTargetAlive(slot) {
+  if (slot === 1) {
+    const getCoopSlot = gamepadBridge.getCoopSlot
+    if (!getCoopSlot) return false
+    const coop = getCoopSlot(gameState.humanPlayer || 'player1')
+    return Boolean(coop && coop.unit && coop.unit.health > 0 && coop.unit.id === coop.unitId)
+  }
+  return livingSelectedUnit()
+}
+
+function paintRemoteIndicator() {
+  const element = typeof document !== 'undefined' ? document.getElementById('gamepadRemoteIndicator') : null
+  if (!element) return
+  const mode = (remoteStickToggle[0] ? 1 : 0) + (remoteStickToggle[1] ? 2 : 0)
+  if (element._mode === mode) return
+  element._mode = mode
+  element.hidden = mode === 0
+  if (!mode) return
+  const label = element.querySelector('[data-gamepad-remote-label]')
+  if (!label) return
+  const key = mode === 2
+    ? 'settings.gamepad.remoteActiveP2'
+    : (mode === 3 ? 'settings.gamepad.remoteActiveBoth' : 'settings.gamepad.remoteActive')
+  const fallback = mode === 2 ? 'P2 remote control' : (mode === 3 ? 'Remote control · P2' : 'Remote control')
+  label.textContent = uiText(key) || fallback
 }
 
 function localPartyUnit(unit) {
@@ -412,13 +460,17 @@ function applySlot(slot, pad, dt, gameplay, now) {
   } else if (bindings) {
     if (pauseAllowed() && pressedEdge(slot, bindings.pause, buttons, axes, prevButtons, prevAxes)) togglePause()
     if (!gameplay) {
+      remoteStickToggle[slot] = nextRemoteStickToggle(remoteStickToggle[slot], false, remoteTargetAlive(slot))
       remoteWasActive[slot] = false
       prevButtons.set(buttons)
       prevAxes.set(axes)
       return
     }
-    const aim = readSlotBinding(slot, bindings.remoteStickMode, buttons, axes) > 0
+    const togglePressed = pressedEdge(slot, bindings.remoteStickMode, buttons, axes, prevButtons, prevAxes)
+    remoteStickToggle[slot] = nextRemoteStickToggle(remoteStickToggle[slot], togglePressed, remoteTargetAlive(slot))
+    const aim = remoteStickToggle[slot]
     if (slot === 0) {
+      refreshRect(true)
       const stickX = axisValue(slot, 'cursorX', bindings.cursorX, buttons, axes, aim)
       const stickY = axisValue(slot, 'cursorY', bindings.cursorY, buttons, axes, aim)
       if (stickX || stickY) movePointer(stickX * CURSOR_SPEED * dt, stickY * CURSOR_SPEED * dt)
@@ -434,8 +486,15 @@ function applySlot(slot, pad, dt, gameplay, now) {
     }
     const scrollX = axisValue(slot, 'mapScrollX', bindings.mapScrollX, buttons, axes, aim)
     const scrollY = axisValue(slot, 'mapScrollY', bindings.mapScrollY, buttons, axes, aim)
-    gameState.gamepadScroll.x = Math.max(-1, Math.min(1, gameState.gamepadScroll.x + scrollX))
-    gameState.gamepadScroll.y = Math.max(-1, Math.min(1, gameState.gamepadScroll.y + scrollY))
+    let edgeX = 0
+    let edgeY = 0
+    if (slot === 0 && !aim && viewWidth > 0 && viewHeight > 0 && cursorX >= 0) {
+      writeGamepadEdgeScroll(edgeScroll, cursorX, cursorY, viewWidth, viewHeight)
+      edgeX = edgeScroll.x
+      edgeY = edgeScroll.y
+    }
+    gameState.gamepadScroll.x = Math.max(-1, Math.min(1, gameState.gamepadScroll.x + scrollX + edgeX))
+    gameState.gamepadScroll.y = Math.max(-1, Math.min(1, gameState.gamepadScroll.y + scrollY + edgeY))
     if (pressedEdge(slot, bindings.jumpToLastEvent, buttons, axes, prevButtons, prevAxes) && gamepadBridge.focusLastAttack) {
       gamepadBridge.focusLastAttack()
     }
@@ -483,6 +542,7 @@ function clearSlot(slot) {
   previousAxes[slot].fill(0)
   lastControlledHealth[slot] = -1
   lastControlledId[slot] = ''
+  remoteStickToggle[slot] = false
   if (gamepadBridge.clearRemoteControlSource) gamepadBridge.clearRemoteControlSource(SOURCE[slot])
   if (slot === 1) zeroCoopStick()
   if (slot === 0 && pointerButton !== -1) {
@@ -568,6 +628,7 @@ export function pollGamepads(now = (typeof performance !== 'undefined' ? perform
     gameState.gamepadScroll.x = 0
     gameState.gamepadScroll.y = 0
   }
+  gameState.gamepadScrollSpeed = cachedScrollSpeed
   const gameplay = gameplayAllowed()
   let playerOne = false
   for (let slot = 0; slot < 2; slot++) {
@@ -584,12 +645,15 @@ export function pollGamepads(now = (typeof performance !== 'undefined' ? perform
   if (!playerOne) placeCursor(false)
   else if (cursorVisible) placeCursor(true)
   paintIndicators()
+  paintRemoteIndicator()
   if (isGamepadMenuOpen()) syncGamepadMenu(gamepadMonitor)
 }
 
 export function initGamepadSupport() {
   if (started || typeof window === 'undefined') return
   started = true
+  cachedScrollSpeed = getGamepadScrollSpeed(getGamepadStore())
+  gameState.gamepadScrollSpeed = cachedScrollSpeed
   window.addEventListener('gamepadconnected', () => pollGamepads(performance.now()))
   window.addEventListener('gamepaddisconnected', () => pollGamepads(performance.now()))
   setGamepadBindingsListener(refreshGamepadBindingCache)

@@ -1,0 +1,12 @@
+2026-09-25T22:52:00Z
+Cursor Cloud Agent using Grok 4.7
+
+PR #706 has been squash-merged into main (commit e0341c07). The user tested it on Windows fullscreen as a PWA and loved it. Now start a NEW branch from the latest origin/main (do not reuse the old branch) and open a NEW draft PR with these small gamepad improvements:
+
+1. Gamepad cursor: the crosshair inside the gamepad cursor circle is slightly off-center. Make it visually centered (check at different devicePixelRatios / sizes; ensure hotspot, circle and crosshair share the same center).
+2. Controllers settings live view: for stick axes, show the direction of the deflection (-1 to +1), not just a magnitude bar. E.g. a centered bar that fills left for negative and right for positive, plus the signed numeric value (e.g. -0.73 / +0.42).
+3. Remote control: make the 'Remote sticks (hold)' command (LT/L2 by default) a TOGGLE instead of hold: press once to enter remote control of the selected unit(s), press again to leave. Show a clear on-screen indicator while remote mode is active, and make sure it exits sensibly (e.g. when selection is cleared / units die). Update labels (en/de), the standard-layout table, spec, and landing page text wherever 'hold' is mentioned. Consider keeping hold as an option in settings only if it's trivial; toggle must be the default.
+4. Gamepad map scroll speed: add a separate setting for gamepad map scroll speed (right stick map drag), independent from the existing mouse/keyboard scroll speed. Persist it with the other gamepad settings, en/de labels.
+5. Edge scrolling with gamepad cursor: when the cursor is gamepad-controlled, the map should scroll when the cursor is within a 20px margin of any screen edge/corner, faster the closer to the edge (0 at 20px, max at the edge; diagonal at corners). This must work consistently every time, including fullscreen/PWA, and must respect the new gamepad scroll speed setting.
+
+Add/adjust unit tests, keep `npm run test:unit` and lint green, update the gamepad spec (specs/092-gamepad-controller-support.md). Follow AGENTS.md (rebase only, never merge main in, --force-with-lease). Verify visually with a simulated pad (tutorial completed so it doesn't cover the screen): screenshots of the centered cursor (zoomed), the signed axis live view, and the remote-mode indicator, in both en and de where relevant. Report the PR URL, what changed, and the screenshot paths.

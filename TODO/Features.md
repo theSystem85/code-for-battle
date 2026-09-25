@@ -174,13 +174,16 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Stick deadzones, vibration, and controller-type suggestion (2026-09-25)** — Each player profile stores a left and right stick deadzone, with a live preview in the mapping menu. A remote-controlled unit firing or taking damage, and menu navigation, can pulse the pad when the browser supports vibration, with an on/off switch and intensity. Connecting a pad suggests its Xbox, PlayStation, or generic type layout and does not replace an explicitly chosen player profile.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
-- [x] **Standard gamepad defaults (2026-09-25)** — Every controller command has a Standard Gamepad binding. Hold the left trigger and the left stick drives while the right stick turns the turret; otherwise those sticks are the cursor and the map. Start pauses. The mapping menu lists the layout that Reset restores.
+- [x] **Standard gamepad defaults (2026-09-25)** — Every controller command has a Standard Gamepad binding. The left trigger toggles remote control: the left stick drives and the right stick turns the turret, and otherwise those sticks are the cursor and the map. Start pauses. The mapping menu lists the layout that Reset restores.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
 - [x] **Controller settings layout (2026-09-25)** — The Controllers tab stacks on a narrow dialog and uses two columns only when the dialog is wide enough. Player profiles, live inputs with deadzones, the command list, and the standard-layout table no longer overlap. Settings tabs scroll in the modal body only, and app scrollbars use a slim themed thumb.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
 - [x] **Controller menu column and chip polish (2026-09-25)** — The two-column cards size to their content. The standard-layout table uses content-sized columns. A long controller id stays on one line in the slot chip, with the full name in the tooltip.
+  - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
+
+- [x] **Gamepad cursor, toggle, and scroll (2026-09-25)** — The gamepad crosshair shares the circle's center. Stick axes in settings show signed deflection. Left trigger toggles remote control of the selected units and shows an on-screen chip until they are gone. Gamepad map scroll has its own speed, and the cursor scrolls the map inside a 20px screen margin.
   - Spec: [Gamepad and Controller Support](../specs/092-gamepad-controller-support.md)
 
 ### Rendering and WebGPU

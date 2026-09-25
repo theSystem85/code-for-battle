@@ -1357,35 +1357,43 @@ body.config-modal-open {
   position: fixed;
   top: 0;
   left: 0;
-  width: 18px;
-  height: 18px;
-  margin: -9px 0 0 -9px;
-  border: 2px solid #d7fff0;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.65);
+  box-sizing: border-box;
+  width: 27px;
+  height: 27px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: image-set(
+    url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAA0ElEQVR4nOXW0RHDIAgAUOx1gKyRkeKAdiTXcAP7pUcpCJir16Z85Tz1HYYEAzgj11Lb8x624Fl782Jn4m6clwzjUdtEO4YEAJBrObSN9rA9NHSEJQsioCwoYS8QLgSpQMg4C3IFIkKjIPABzHum2BRkBcXS90KWdRjrWc1CFKTZLf2ol2IBl+yn47rHiCPlWqp2rG2OdR78RTViLLY2cbZC23r6QxYzmwVH6ygWURN0g1qb4TKbAi397Cs6dQcB1txB3lAK4+MeIV6sx89cUp++e41I/VFDlwAAAABJRU5ErkJggg==") 1x,
+    url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADYAAAA2CAYAAACMRWrdAAAB50lEQVR4nO2a23XDIAyGTU8H8BoeqRkwHclreAP65ByX6PILkMHE/2NskL5IXIwIk7PWuEXq9yXMwdPul2fnLTUs2Ldj30/w+cPDeG0wDUZrUw2yxgAmYda4/SCNlzD/Mo+KIEvB/kGhMJwIyGy4XLCqQKlqAOaAvaBqA6VKAE1w1uneBCUtwsgCndgwTUyWiD0JY29KHUZ3Htx7h/f36EGRQyOmQi1hDiXbJK39wTYUOQRMhCoFsvRngdPAxA48N7JA36JvUCpS0fLenXM20JlYAmNT8AwoyRaSkhwY2+BMKNAm6auYit4LcIk030wLdIto5dqmwKCFuAdJYw2OWMto5fgw7NFACnaZNNzFpSMUsR7ScBfqS9B21VfVx4yxYXSDXU3DgqVTJ7mOlUz3HtWWtE/qPAT90OxmSUB9ScEe0yQeO3cn7vRq2DEGg/WQjhYfKLDLpKN0iGpKxZZRs9oWwXqOmuYbB8aej7eImmKT9FWKGDvWzoSjbCEFCvRDswmcAiVKAxNLNp5wQN+ib0jExOl/jVusCSj1Z6mRodO9uraVAmrtrYU/6w7bXKqVdvfIH5Fbhx62uH5fh2A03AWWo4a8cpTqDVIoylNA1S6J1b79dnQMvXDicq3P/Uz+vjpbWcOC/QEYJgreQJIfFgAAAABJRU5ErkJggg==") 2x
+  ) center / 27px 27px no-repeat;
   pointer-events: none;
   z-index: 40;
 }
 
-.gamepad-cursor::before,
-.gamepad-cursor::after {
-  content: '';
-  position: absolute;
-  background: #d7fff0;
+.gamepad-remote {
+  position: fixed;
+  top: 38px;
+  left: calc(var(--sidebar-width, 250px) + 12px);
+  z-index: 31;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(12, 18, 24, 0.92);
+  border: 1px solid #3dff7a;
+  color: #d7fff0;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  pointer-events: none;
 }
 
-.gamepad-cursor::before {
-  left: 7px;
-  top: -4px;
-  width: 2px;
-  height: 22px;
-}
-
-.gamepad-cursor::after {
-  top: 7px;
-  left: -4px;
-  width: 22px;
-  height: 2px;
+.gamepad-remote .gamepad-light {
+  background: #3dff7a;
+  box-shadow: 0 0 8px #3dff7a;
 }
 
 .gamepad-slot-row,
@@ -1487,6 +1495,56 @@ body.config-modal-open {
   background: #3dff7a;
   transform-origin: left center;
   transform: scaleX(0.04);
+}
+
+.gamepad-axis {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 160px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.gamepad-axis__track {
+  position: relative;
+  flex: 1 1 auto;
+  height: 8px;
+  min-width: 72px;
+  border-radius: 999px;
+  background: #10161c;
+  box-shadow: inset 0 0 0 1px rgba(61, 255, 122, 0.28);
+  overflow: hidden;
+}
+
+.gamepad-axis__track::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  background: rgba(215, 255, 240, 0.55);
+}
+
+.gamepad-axis__fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 50%;
+  background: #3dff7a;
+  transform-origin: left center;
+  transform: scaleX(0);
+}
+
+.gamepad-axis__value {
+  flex: 0 0 3.4rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SF Mono', 'Monaco', Consolas, monospace;
+  font-size: 12px;
+  color: #9fd2ff;
 }
 
 .gamepad-command__binding {

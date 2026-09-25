@@ -1,4 +1,5 @@
 import { uiText } from './uiText.js'
+import { formatSignedAxis } from '../input/gamepad/axisReadout.js'
 import { applyDeadzone } from '../input/gamepad/deadzone.js'
 import { commandById, controllerTypeFromId, defaultBindingsForSlot, detectBindingCandidate, emptyBindingMap, findBindingConflict, GAMEPAD_COMMANDS } from '../input/gamepad/gamepadBinding.js'
 import { pulseGamepadIndex } from '../input/gamepad/gamepadHaptics.js'
@@ -14,6 +15,7 @@ import {
   getActiveBindings,
   getActiveProfileId,
   getControllerSuggestion,
+  getGamepadScrollSpeed,
   getHapticSettings,
   getPlayerProfileBindings,
   getSlotPlayerProfileId,
@@ -32,6 +34,7 @@ import {
   saveActiveGamepadProfile,
   setActiveControllerTypeProfile,
   setActiveGamepadProfile,
+  setGamepadScrollSpeed,
   setHapticSettings,
   setPlayerDeadzones,
   setSlotPlayerProfile
@@ -327,7 +330,7 @@ function renderPlayerProfiles(host, slot) {
 function renderDefaultTable(host, slot) {
   const wrap = element('div', 'gamepad-defaults')
   wrap.append(element('h3', 'config-modal__section-title', text('settings.gamepad.defaultsTitle', 'Standard layout')))
-  wrap.append(element('p', 'config-modal__hint', text('settings.gamepad.defaultsHint', 'Reset restores this layout. Hold the left trigger and the left stick drives the unit instead of the cursor. The right stick then turns the turret instead of dragging the map.')))
+  wrap.append(element('p', 'config-modal__hint', text('settings.gamepad.defaultsHint', 'Reset restores this layout. Press the left trigger to drive the selected units with the left stick and turn the turret with the right stick. Press it again to return to the cursor and the map.')))
   const table = document.createElement('table')
   table.className = 'gamepad-defaults__table'
   const defaults = emptyBindingMap(slot)
@@ -524,7 +527,10 @@ function renderInputs(host, slot) {
     const row = element('div', 'gamepad-input')
     row.dataset.axis = String(i)
     const name = element('span', null, inputLabel({ type: 'axis', index: i }, monitor.mapping === 'standard'))
-    const meter = element('span', 'gamepad-input__meter')
+    const meter = element('span', 'gamepad-axis')
+    const track = element('span', 'gamepad-axis__track')
+    track.append(element('span', 'gamepad-axis__fill'))
+    meter.append(track, element('span', 'gamepad-axis__value', '0.00'))
     row.append(name, meter)
     host.append(row)
   }
@@ -578,6 +584,7 @@ export function renderGamepadMappingMenu(root, slot = activeSlot) {
   renderProfiles(profiles, slot)
   root.append(profiles)
   root.append(renderHaptics())
+  root.append(renderScrollSpeed())
   const columns = element('div', 'gamepad-columns')
   const inputs = element('div', 'gamepad-column gamepad-section')
   inputs.append(element('h3', 'config-modal__section-title', text('settings.gamepad.liveInputs', 'Live inputs')))
@@ -654,6 +661,33 @@ function renderHaptics() {
   return block
 }
 
+function renderScrollSpeed() {
+  const store = getGamepadStore()
+  const speed = getGamepadScrollSpeed(store)
+  const block = element('div', 'gamepad-profile-block')
+  block.append(element('h3', 'config-modal__section-title', text('settings.gamepad.scrollSpeed', 'Gamepad map scroll')))
+  block.append(element('p', 'config-modal__hint', text('settings.gamepad.scrollSpeedHint', 'How fast the right stick and the cursor edge drag the map. This does not change keyboard or mouse scrolling.')))
+  const row = element('div', 'gamepad-profile-row')
+  const range = document.createElement('input')
+  range.type = 'range'
+  range.min = '1'
+  range.max = '24'
+  range.step = '0.5'
+  range.value = String(speed)
+  range.setAttribute('aria-label', text('settings.gamepad.scrollSpeed', 'Gamepad map scroll'))
+  const readout = element('span', 'config-modal__range-value', Number(speed).toFixed(1))
+  range.addEventListener('input', () => {
+    const saved = setGamepadScrollSpeed(store, Number(range.value))
+    persistGamepadStore()
+    notifyBindings()
+    readout.textContent = Number(saved).toFixed(1)
+    range.value = String(saved)
+  })
+  row.append(range, readout)
+  block.append(row)
+  return block
+}
+
 function syncSuggestion(slot) {
   const host = panel && panel.querySelector('[data-gamepad-suggestion]')
   if (!host) return
@@ -723,7 +757,17 @@ export function syncGamepadMenu(monitor) {
     if (row.dataset.button !== undefined) {
       level = slot.buttons[Number(row.dataset.button)] || 0
     } else if (row.dataset.axis !== undefined) {
-      level = Math.abs(slot.axes[Number(row.dataset.axis)] || 0)
+      const raw = slot.axes[Number(row.dataset.axis)] || 0
+      const clamped = raw > 1 ? 1 : (raw < -1 ? -1 : raw)
+      const quant = Math.round(clamped * 100)
+      if (row._level === quant) continue
+      row._level = quant
+      row.classList.toggle('gamepad-input--active', quant > 8 || quant < -8)
+      const fill = row.querySelector('.gamepad-axis__fill')
+      const readout = row.querySelector('.gamepad-axis__value')
+      if (fill) fill.style.transform = `scaleX(${quant / 100})`
+      if (readout) readout.textContent = formatSignedAxis(quant / 100)
+      continue
     }
     const quant = (level * 20) | 0
     if (row._level === quant) continue
