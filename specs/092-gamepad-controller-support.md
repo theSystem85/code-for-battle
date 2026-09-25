@@ -31,31 +31,42 @@ Chrome and Edge hide a pad from `navigator.getGamepads()` until the user presses
 
 ## Default mapping
 
-Standard Gamepad indexes: 0 A/Cross, 1 B/Circle, 2 X/Square, 3 Y/Triangle, 4 LB, 5 RB, 6 LT, 7 RT, 8 Back/Share, 9 Start, 10 L3, 11 R3, 12–15 D-pad up/down/left/right. Axes 0–1 are the left stick. Axes 2–3 are the right stick. Triggers are buttons whose `value` runs from 0 to 1.
+Every command has a binding on the W3C Standard Gamepad map. Reset on a player profile or a per-controller profile clears that layer so these defaults show again. The Controllers tab lists the same table under Standard layout.
+
+Indexes: 0 A/Cross, 1 B/Circle, 2 X/Square, 3 Y/Triangle, 4 LB/L1, 5 RB/R1, 6 LT/L2, 7 RT/R2, 8 Back/Share, 9 Start/Options, 10 L3, 11 R3, 12–15 D-pad up/down/left/right. Axes 0–1 are the left stick. Axes 2–3 are the right stick. Triggers are buttons whose `value` runs from 0 to 1.
+
+Hold LT/L2 (`remoteStickMode`) to switch the sticks. Released, the left stick is the cursor and the right stick drags the map. Held, the left stick drives the selected unit and the right stick's horizontal axis turns the turret. The vertical right-stick axis does not scroll while LT is held. Player 2 has no cursor: the left stick always drives, and LT still switches the right stick from map drag to turret. The D-pad drives in either mode, so a unit can move without giving up the cursor. LB is sell rather than the D-pad, because the D-pad is that always-available drive. RB/R1 is left free.
+
+B/Circle is right click. When repair, sell, placement, chain build, or attack-group mode is active, B cancels that mode instead of right-clicking. Start pauses and resumes through the existing pause button, including while the match is already paused.
 
 Player 1:
 
 | Command | Input |
 | --- | --- |
-| Cursor X / Y | Left stick |
-| Map scroll X / Y | Right stick |
+| Cursor X / Y | Left stick, while LT is released |
+| Remote move X / Y | Left stick, while LT is held |
+| Map scroll X / Y | Right stick, while LT is released |
+| Turret left / right | Right stick X − / +, while LT is held |
 | Left click | A / Cross (0) |
-| Right click | B / Circle (1) |
+| Right click / cancel | B / Circle (1) |
 | Toggle repair | X / Square (2) |
 | Jump to last event | Y / Triangle (3) |
-| Turret left / right | LB / RB (4 / 5) |
-| Fire | RT (7) |
-| Toggle sell | Back / Share (8) |
+| Toggle sell | LB / L1 (4) |
+| Remote sticks (hold) | LT / L2 (6) |
+| Fire | RT / R2 (7) |
+| Pause | Start / Options (9) |
 | Remote up / down / left / right | D-pad (12–15) |
 
-Player 2 uses the same face, bumper, trigger, and D-pad commands except:
+Player 2 uses the same face, bumper, trigger, D-pad, and pause bindings, plus:
 
 | Command | Input |
 | --- | --- |
-| Remote move X / Y | Left stick, as an absolute wagon direction |
+| Remote move X / Y | Left stick, always, as an absolute wagon direction |
 | Claim unit | R3 (11) |
 
 Player 2 has no cursor or click binding. Cursor, click, and claim commands are honored only on the slot they belong to, even if a profile binds them on the other slot. A rising edge of player 2's remote move claims the selected friendly unit, or the unit under player 1's cursor, when player 2 does not already hold a unit. Claiming deselects that unit so player 1 can select another.
+
+`cursorX` may share axis 0 with `remoteMoveX`, `cursorY` may share axis 1 with `remoteMoveY`, and `mapScrollX` may share axis 2 with `turretLeft` and `turretRight`. Those pairs are not binding conflicts. Any other shared button or axis still conflicts. An axis turret binding is read only while LT is held. A button turret binding is read all the time. Slot 0 reads the remote-move axes only while LT is held. Slot 1 reads them all the time.
 
 ## Binding
 
@@ -175,6 +186,7 @@ Polling runs once per animation frame at the start of `GameLoop.animate`, with a
 | Player 2 move | A per-owner co-op slot with an absolute direction `atan2(moveY, moveX)`. |
 | Turret / fire | The same remote-control actions. Fire is reapplied every frame because the simulator clears the pulse after each update. Intensities are quantized to 0.05 and broadcast only when the value changes. |
 | Repair / sell | The existing repair and sell mode toggles, on the rising edge. |
+| Pause | A click on `#pauseBtn`, on the rising edge. This still runs while the match is paused so Start can resume. |
 
 Gameplay commands are suppressed while the match is paused, a modal is open, replay is locked, or the local player is a spectator, defeated, or paused by the host. Capture in the mapping menu still works while settings is open.
 
@@ -208,7 +220,7 @@ Couch co-op is local to one machine and one party: the human player's party. It 
 
 ## Test plan
 
-Unit tests cover `applyDeadzone` and `clampDeadzone`, per-stick deadzone resolution (player, then device, then 0.18) and reset, binding conflicts and capture edges, profile save/load/rename/delete/reset, player-profile slot assignment, the explicit-slot flag, controller-type detection, connect-time layout suggestion without replacing an explicit player profile, haptic on/off and a missing or rejected vibration actuator, the player → type → device → default resolution order, corrupt storage, slot reconcile (index change, identical ids, third pad), and the co-op camera hysteresis. `npm run test:unit` and eslint on the changed files are required.
+Unit tests cover `applyDeadzone` and `clampDeadzone`, per-stick deadzone resolution (player, then device, then 0.18) and reset, a default binding for every command, stick-mode pairs that share an axis without counting as a conflict, binding conflicts and capture edges, profile save/load/rename/delete/reset, player-profile slot assignment, the explicit-slot flag, controller-type detection, connect-time layout suggestion without replacing an explicit player profile, haptic on/off and a missing or rejected vibration actuator, the player → type → device → default resolution order, corrupt storage, slot reconcile (index change, identical ids, third pad), and the co-op camera hysteresis. `npm run test:unit` and eslint on the changed files are required.
 
 Manual:
 

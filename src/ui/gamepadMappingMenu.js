@@ -307,6 +307,27 @@ function renderPlayerProfiles(host, slot) {
   block.append(element('p', 'config-modal__hint', text('settings.gamepad.deadzoneHint', 'Motion inside the deadzone is ignored so a resting stick does not jitter.')))
   block.append(deadzoneControl(slot, 'left', zones), deadzoneControl(slot, 'right', zones))
   host.append(block)
+  renderDefaultTable(host, slot)
+}
+
+function renderDefaultTable(host, slot) {
+  const wrap = element('div', 'gamepad-defaults')
+  wrap.append(element('h3', 'config-modal__section-title', text('settings.gamepad.defaultsTitle', 'Standard layout')))
+  wrap.append(element('p', 'config-modal__hint', text('settings.gamepad.defaultsHint', 'Reset restores this layout. Hold the left trigger and the left stick drives the unit instead of the cursor. The right stick then turns the turret instead of dragging the map.')))
+  const table = document.createElement('table')
+  table.className = 'gamepad-defaults__table'
+  const defaults = emptyBindingMap(slot)
+  GAMEPAD_COMMANDS.forEach(command => {
+    if (command.slot !== undefined && command.slot !== slot) return
+    const row = document.createElement('tr')
+    row.append(
+      element('td', null, text(`settings.gamepad.commands.${command.id}`, command.id)),
+      element('td', null, inputLabel(defaults[command.id], true))
+    )
+    table.append(row)
+  })
+  wrap.append(table)
+  host.append(wrap)
 }
 
 function renderTypeProfiles(host, slot) {

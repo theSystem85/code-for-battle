@@ -4,10 +4,13 @@ import {
   detectBindingCandidate,
   emptyBindingMap,
   findBindingConflict,
+  GAMEPAD_COMMANDS,
   inputKey,
   inputsConflict,
   readBinding,
-  sanitizeBindings
+  sanitizeBindings,
+  stickAxisEnabled,
+  stickModesShare
 } from '../../src/input/gamepad/gamepadBinding.js'
 import { allocateInstanceKey, reconcileGamepadSlots } from '../../src/input/gamepad/gamepadIdentity.js'
 
@@ -58,6 +61,43 @@ describe('gamepad binding', () => {
     expect(readBinding({ type: 'axis', index: 0, sign: 1 }, [], [0.5])).toBeGreaterThan(0)
     expect(readBinding({ type: 'axis', index: 0, sign: -1 }, [], [0.5])).toBe(0)
     expect(readBinding({ type: 'axis', index: 0, sign: -1 }, [], [-0.5])).toBeGreaterThan(0)
+  })
+
+  it('gives every command a standard binding and lets stick roles share an axis', () => {
+    for (const slot of [0, 1]) {
+      const bindings = emptyBindingMap(slot)
+      GAMEPAD_COMMANDS.forEach(command => {
+        if (command.slot !== undefined && command.slot !== slot) {
+          expect(bindings[command.id]).toBeUndefined()
+          return
+        }
+        expect(bindings[command.id], command.id).not.toBeNull()
+      })
+      expect(bindings.fire).toEqual({ type: 'button', index: 7 })
+      expect(bindings.toggleSell).toEqual({ type: 'button', index: 4 })
+      expect(bindings.pause).toEqual({ type: 'button', index: 9 })
+      expect(bindings.remoteStickMode).toEqual({ type: 'button', index: 6 })
+      expect(findBindingConflict(bindings, 'remoteMoveX', bindings.cursorX || bindings.remoteMoveX)).toBeNull()
+      expect(stickModesShare('mapScrollX', 'turretLeft')).toBe(true)
+      expect(stickModesShare('fire', 'pause')).toBe(false)
+    }
+    const playerOne = emptyBindingMap(0)
+    expect(playerOne.cursorX).toEqual({ type: 'axis', index: 0 })
+    expect(playerOne.remoteMoveX).toEqual({ type: 'axis', index: 0 })
+    expect(playerOne.turretLeft).toEqual({ type: 'axis', index: 2, sign: -1 })
+    expect(playerOne.leftClick).toEqual({ type: 'button', index: 0 })
+    expect(playerOne.rightClick).toEqual({ type: 'button', index: 1 })
+    expect(stickAxisEnabled('cursorX', playerOne.cursorX, 0, false)).toBe(true)
+    expect(stickAxisEnabled('cursorX', playerOne.cursorX, 0, true)).toBe(false)
+    expect(stickAxisEnabled('remoteMoveX', playerOne.remoteMoveX, 0, false)).toBe(false)
+    expect(stickAxisEnabled('remoteMoveX', playerOne.remoteMoveX, 0, true)).toBe(true)
+    expect(stickAxisEnabled('remoteMoveX', playerOne.remoteMoveX, 1, false)).toBe(true)
+    expect(stickAxisEnabled('turretLeft', playerOne.turretLeft, 0, false)).toBe(false)
+    expect(stickAxisEnabled('turretLeft', { type: 'button', index: 5 }, 0, false)).toBe(true)
+    expect(stickAxisEnabled('mapScrollY', playerOne.mapScrollY, 0, true)).toBe(false)
+    const playerTwo = emptyBindingMap(1)
+    expect(playerTwo.claimUnit).toEqual({ type: 'button', index: 11 })
+    expect(playerTwo.cursorX).toBeUndefined()
   })
 
   it('drops illegal inputs while keeping the slot command set', () => {

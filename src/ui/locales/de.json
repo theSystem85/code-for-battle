@@ -73,6 +73,8 @@
       "hapticsIntensity": "Stärke",
       "suggestBody": "Das sieht nach einem {type}-Controller aus. Das {type}-Layout ist ausgewählt. Dein Spielerprofil bleibt unverändert.",
       "dismiss": "Ausblenden",
+      "defaultsTitle": "Standardbelegung",
+      "defaultsHint": "Zurücksetzen stellt diese Belegung wieder her. Den linken Trigger halten: der linke Stick fährt die Einheit statt den Zeiger zu bewegen, der rechte Stick dreht den Turm statt die Karte zu ziehen. Das Steuerkreuz fährt auch ohne diesen Halt. B / Kreis bricht Reparatur, Verkauf oder Platzierung ab und ist sonst ein Rechtsklick.",
       "claimed": "Spieler 2 hat die Einheit",
       "inputs": {
         "button0": "A / Kreuz",
@@ -114,8 +116,10 @@
         "turretLeft": "Turm links",
         "turretRight": "Turm rechts",
         "fire": "Feuern",
+        "remoteStickMode": "Sticks für Fernsteuerung (halten)",
         "toggleRepair": "Reparaturmodus umschalten",
         "toggleSell": "Verkaufsmodus umschalten",
+        "pause": "Pause",
         "claimUnit": "Einheit für Spieler 2 übernehmen"
       }
     }

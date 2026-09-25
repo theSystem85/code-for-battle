@@ -23,25 +23,31 @@ export const GAMEPAD_COMMANDS = Object.freeze([
   { id: 'remoteMoveY', kind: 'axis', group: 'remote' },
   { id: 'turretLeft', kind: 'button', group: 'remote' },
   { id: 'turretRight', kind: 'button', group: 'remote' },
+  { id: 'remoteStickMode', kind: 'button', group: 'remote' },
   { id: 'fire', kind: 'button', group: 'remote' },
   { id: 'toggleRepair', kind: 'button', group: 'modes' },
   { id: 'toggleSell', kind: 'button', group: 'modes' },
+  { id: 'pause', kind: 'button', group: 'modes' },
   { id: 'claimUnit', kind: 'button', group: 'remote', slot: 1 }
 ])
 
 const P1_DEFAULTS = Object.freeze({
   cursorX: Object.freeze({ type: 'axis', index: 0 }),
   cursorY: Object.freeze({ type: 'axis', index: 1 }),
+  remoteMoveX: Object.freeze({ type: 'axis', index: 0 }),
+  remoteMoveY: Object.freeze({ type: 'axis', index: 1 }),
   mapScrollX: Object.freeze({ type: 'axis', index: 2 }),
   mapScrollY: Object.freeze({ type: 'axis', index: 3 }),
+  turretLeft: Object.freeze({ type: 'axis', index: 2, sign: -1 }),
+  turretRight: Object.freeze({ type: 'axis', index: 2, sign: 1 }),
   leftClick: Object.freeze({ type: 'button', index: 0 }),
   rightClick: Object.freeze({ type: 'button', index: 1 }),
   toggleRepair: Object.freeze({ type: 'button', index: 2 }),
   jumpToLastEvent: Object.freeze({ type: 'button', index: 3 }),
-  turretLeft: Object.freeze({ type: 'button', index: 4 }),
-  turretRight: Object.freeze({ type: 'button', index: 5 }),
+  toggleSell: Object.freeze({ type: 'button', index: 4 }),
+  remoteStickMode: Object.freeze({ type: 'button', index: 6 }),
   fire: Object.freeze({ type: 'button', index: 7 }),
-  toggleSell: Object.freeze({ type: 'button', index: 8 }),
+  pause: Object.freeze({ type: 'button', index: 9 }),
   remoteUp: Object.freeze({ type: 'button', index: 12 }),
   remoteDown: Object.freeze({ type: 'button', index: 13 }),
   remoteLeft: Object.freeze({ type: 'button', index: 14 }),
@@ -53,18 +59,27 @@ const P2_DEFAULTS = Object.freeze({
   remoteMoveY: Object.freeze({ type: 'axis', index: 1 }),
   mapScrollX: Object.freeze({ type: 'axis', index: 2 }),
   mapScrollY: Object.freeze({ type: 'axis', index: 3 }),
+  turretLeft: Object.freeze({ type: 'axis', index: 2, sign: -1 }),
+  turretRight: Object.freeze({ type: 'axis', index: 2, sign: 1 }),
   toggleRepair: Object.freeze({ type: 'button', index: 2 }),
   jumpToLastEvent: Object.freeze({ type: 'button', index: 3 }),
-  turretLeft: Object.freeze({ type: 'button', index: 4 }),
-  turretRight: Object.freeze({ type: 'button', index: 5 }),
+  toggleSell: Object.freeze({ type: 'button', index: 4 }),
+  remoteStickMode: Object.freeze({ type: 'button', index: 6 }),
   fire: Object.freeze({ type: 'button', index: 7 }),
-  toggleSell: Object.freeze({ type: 'button', index: 8 }),
+  pause: Object.freeze({ type: 'button', index: 9 }),
   claimUnit: Object.freeze({ type: 'button', index: 11 }),
   remoteUp: Object.freeze({ type: 'button', index: 12 }),
   remoteDown: Object.freeze({ type: 'button', index: 13 }),
   remoteLeft: Object.freeze({ type: 'button', index: 14 }),
   remoteRight: Object.freeze({ type: 'button', index: 15 })
 })
+
+const STICK_MODE_SHARE = [
+  ['cursorX', 'remoteMoveX'],
+  ['cursorY', 'remoteMoveY'],
+  ['mapScrollX', 'turretLeft'],
+  ['mapScrollX', 'turretRight']
+]
 
 const COMMAND_BY_ID = new Map(GAMEPAD_COMMANDS.map(command => [command.id, command]))
 
@@ -104,12 +119,30 @@ export function inputsConflict(left, right) {
   return left.sign === right.sign
 }
 
+export function stickModesShare(leftId, rightId) {
+  if (!leftId || !rightId || leftId === rightId) return false
+  for (let i = 0; i < STICK_MODE_SHARE.length; i++) {
+    const group = STICK_MODE_SHARE[i]
+    if ((group[0] === leftId && group[1] === rightId) || (group[0] === rightId && group[1] === leftId)) return true
+  }
+  return false
+}
+
+export function stickAxisEnabled(commandId, binding, slot, aim) {
+  if (!binding || binding.type !== 'axis') return true
+  if (commandId === 'cursorX' || commandId === 'cursorY') return slot === 0 && !aim
+  if (commandId === 'mapScrollX' || commandId === 'mapScrollY') return !aim
+  if (commandId === 'remoteMoveX' || commandId === 'remoteMoveY') return slot === 1 || Boolean(aim)
+  if (commandId === 'turretLeft' || commandId === 'turretRight') return Boolean(aim)
+  return true
+}
+
 export function findBindingConflict(bindings, commandId, input) {
   if (!bindings || !input) return null
   const ids = Object.keys(bindings)
   for (let i = 0; i < ids.length; i++) {
     const id = ids[i]
-    if (id === commandId) continue
+    if (id === commandId || stickModesShare(commandId, id)) continue
     if (inputsConflict(bindings[id], input)) return id
   }
   return null

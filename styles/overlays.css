@@ -1524,6 +1524,23 @@ body.config-modal-open {
   color: #d6e8ff;
 }
 
+.gamepad-defaults__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.gamepad-defaults__table td {
+  padding: 3px 8px 3px 0;
+  color: #c5d4e4;
+  vertical-align: top;
+}
+
+.gamepad-defaults__table td:last-child {
+  color: #8fb4d6;
+  white-space: nowrap;
+}
+
 .gamepad-profile-name {
   min-width: 140px;
   background: #10161c;

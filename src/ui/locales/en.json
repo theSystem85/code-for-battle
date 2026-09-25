@@ -73,6 +73,8 @@
       "hapticsIntensity": "Intensity",
       "suggestBody": "This controller looks like {type}. The {type} layout is selected. Your player profile is unchanged.",
       "dismiss": "Dismiss",
+      "defaultsTitle": "Standard layout",
+      "defaultsHint": "Reset restores this layout. Hold the left trigger and the left stick drives the unit instead of the cursor. The right stick then turns the turret instead of dragging the map. The D-pad drives without that hold. B / Circle cancels repair, sell, or placement, and otherwise right-clicks.",
       "claimed": "Player 2 has the unit",
       "inputs": {
         "button0": "A / Cross",
@@ -114,8 +116,10 @@
         "turretLeft": "Turret left",
         "turretRight": "Turret right",
         "fire": "Fire",
+        "remoteStickMode": "Remote sticks (hold)",
         "toggleRepair": "Toggle repair mode",
         "toggleSell": "Toggle sell mode",
+        "pause": "Pause",
         "claimUnit": "Claim unit for player 2"
       }
     }
