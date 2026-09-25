@@ -51,4 +51,4 @@ Use this checklist when adding any new unit type to Code for Battle.
 - Test domain-aware cheat spawning, rally paths, AI production routing, low-health service retreat/resume, renderer source selection/rotation, and visual-effect anchor calculations where applicable.
 - Run `npm run test:unit` and fix root causes.
 - Run `npm run lint:fix:changed` and manually resolve remaining lint issues.
-- Update relevant TODO and specs files, and record the prompt in `prompt-history/`.
+- Update the matching TODO file and specs, and record the prompt in `prompt-history/`. A new unit is a feature: add it under the right area heading in `TODO/Features.md` (above Done) as `- [ ] **Title** — description` plus `Spec: [Title](../specs/....md)` or `Spec: none`. Do not append it to Done or to the end of the file.
