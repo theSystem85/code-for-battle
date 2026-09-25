@@ -3,6 +3,8 @@
 
 import { runtimeConfigDialog } from './runtimeConfigDialog.js'
 import { renderKeybindingsEditor } from './keybindingsEditor.js'
+import { renderGamepadMappingMenu, stopGamepadMenu } from './gamepadMappingMenu.js'
+import { uiText } from './uiText.js'
 import { initLlmSettingsPanel } from './llmSettingsPanel.js'
 import { gameState } from '../gameState.js'
 import { getConfigValue, setConfigValue } from '../configRegistry.js'
@@ -142,6 +144,12 @@ function bindTabs(modal) {
     tab.addEventListener('click', () => {
       const tabId = tab.dataset.configTab
       setActiveTab(modal, tabId)
+      if (tabId === 'gamepads') {
+        const gamepadPanel = modal.querySelector('[data-config-tab-panel="gamepads"]')
+        renderGamepadMappingMenu(gamepadPanel)
+      } else {
+        stopGamepadMenu()
+      }
     })
   })
 }
@@ -164,9 +172,14 @@ function openModal(modal, defaultTab = 'keybindings') {
   if (keybindingsPanel) {
     renderKeybindingsEditor(keybindingsPanel)
   }
+  const gamepadPanel = modal.querySelector('[data-config-tab-panel="gamepads"]')
+  if (gamepadPanel && defaultTab === 'gamepads') {
+    renderGamepadMappingMenu(gamepadPanel)
+  }
 }
 
 function closeModal(modal) {
+  stopGamepadMenu()
   modal.classList.remove('config-modal--open')
   modal.setAttribute('aria-hidden', 'true')
   document.body.classList.remove('config-modal-open')
@@ -198,6 +211,9 @@ export function initSettingsModal() {
   const rendererBackendSelect = document.getElementById('settingsRendererBackend')
 
   if (!modal) return
+
+  const gamepadTab = modal.querySelector('[data-config-tab="gamepads"]')
+  if (gamepadTab) gamepadTab.textContent = uiText('settings.gamepad.tab')
 
   gameState.radarOfflineAnimationEnabled = loadRadarOfflineAnimationSetting()
   try {

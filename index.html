@@ -1025,6 +1025,11 @@
   <canvas id="gameCanvasGPU" aria-hidden="true"></canvas>
   <canvas id="gameCanvasGL" aria-hidden="true"></canvas>
   <canvas id="gameCanvas"></canvas>
+  <div id="gamepadCursor" class="gamepad-cursor" hidden></div>
+  <div id="gamepadIndicators" class="gamepad-indicators">
+    <span id="gamepadIndicatorP1" class="gamepad-indicator" hidden><i class="gamepad-light"></i>P1</span>
+    <span id="gamepadIndicatorP2" class="gamepad-indicator" hidden><i class="gamepad-light"></i>P2</span>
+  </div>
 
   <!-- FPS Display Overlay -->
   <div id="fpsDisplay" class="fps-overlay">
@@ -1088,6 +1093,7 @@
               aria-selected="true">Runtime Config</button>
             <button class="config-modal__tab" data-config-tab="keybindings" role="tab" aria-selected="false">Key
               Bindings</button>
+            <button class="config-modal__tab" data-config-tab="gamepads" role="tab" aria-selected="false" data-i18n="settings.gamepad.tab">Controllers</button>
           </div>
         </div>
         <button id="configModalCloseBtn" class="config-modal__close" aria-label="Close settings">×</button>
@@ -1355,6 +1361,7 @@
           </div>
           <div id="keybindingsEditor"></div>
         </div>
+        <div class="config-modal__content" data-config-tab-panel="gamepads" hidden></div>
       </div>
     </div>
   </div>

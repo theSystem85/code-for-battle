@@ -38,6 +38,9 @@ export const gameState = {
   activeSpriteSheetBiomeTag: 'grass',
   // Arrow key scrolling state
   keyScroll: { up: false, down: false, left: false, right: false },
+  gamepadScroll: { x: 0, y: 0 },
+  coopCameraMode: 'p1',
+  coopCameraHold: false,
   // ID of the unit the camera should follow when auto-focus is enabled
   cameraFollowUnitId: null,
   isRightDragging: false,

@@ -523,10 +523,82 @@ function handleApacheRemoteControl(unit, params) {
   }
 }
 
+const appendedCoopUnits = []
+
+function coopSlotForUnit(unit) {
+  const buckets = gameState.coopRemoteByOwner
+  if (!buckets || !unit) return null
+  for (const owner in buckets) {
+    const slot = buckets[owner]
+    if (slot && slot.unitId && slot.unit === unit) return slot
+  }
+  return null
+}
+
+function appendCoopControlledUnits(units) {
+  appendedCoopUnits.length = 0
+  const buckets = gameState.coopRemoteByOwner
+  if (!buckets || !units) return
+  for (const owner in buckets) {
+    const slot = buckets[owner]
+    if (!slot || !slot.unitId) continue
+    let unit = slot.unit
+    if (!unit || unit.id !== slot.unitId || unit.health <= 0) {
+      unit = null
+      for (let i = 0; i < units.length; i++) {
+        const candidate = units[i]
+        if (candidate && candidate.id === slot.unitId && candidate.health > 0) {
+          unit = candidate
+          break
+        }
+      }
+      slot.unit = unit
+      if (!unit && units.length > 0) slot.unitId = null
+    }
+    if (!unit) continue
+    let found = false
+    for (let i = 0; i < selectedUnits.length; i++) {
+      if (selectedUnits[i] === unit) {
+        found = true
+        break
+      }
+    }
+    if (!found) {
+      selectedUnits.push(unit)
+      appendedCoopUnits.push(unit)
+    }
+  }
+}
+
+function releaseAppendedCoopUnits() {
+  for (let i = appendedCoopUnits.length - 1; i >= 0; i--) {
+    const unit = appendedCoopUnits[i]
+    const index = selectedUnits.lastIndexOf(unit)
+    if (index >= 0) selectedUnits.splice(index, 1)
+  }
+  appendedCoopUnits.length = 0
+}
+
+function clearCoopFirePulses() {
+  const buckets = gameState.coopRemoteByOwner
+  if (!buckets) return
+  for (const owner in buckets) {
+    const slot = buckets[owner]
+    if (slot && slot.actions) slot.actions.fire = 0
+  }
+}
+
 export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMap) {
   const rc = gameState.remoteControl
   if (!rc) return
-  if (!selectedUnits || selectedUnits.length === 0) {
+  const buckets = gameState.coopRemoteByOwner
+  let coopActive = false
+  if (buckets) {
+    for (const owner in buckets) {
+      if (buckets[owner] && buckets[owner].unitId) coopActive = true
+    }
+  }
+  if ((!selectedUnits || selectedUnits.length === 0) && !coopActive) {
     lastAutoFocusUnitId = null
     return
   }
@@ -587,8 +659,36 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
     }
   }
 
+  try {
+    appendCoopControlledUnits(units)
   selectedUnits.forEach(unit => {
     if (!unit || !unit.movement) return
+    const scoped = coopSlotForUnit(unit)
+    const scopedActions = scoped ? scoped.actions : null
+    const scopedAbsolute = scoped ? scoped.absolute : null
+    const forwardIntensity = scopedActions ? (scopedActions.forward || 0) : (rc.forward || 0)
+    const backwardIntensity = scopedActions ? (scopedActions.backward || 0) : (rc.backward || 0)
+    const turnLeftIntensity = scopedActions ? (scopedActions.turnLeft || 0) : (rc.turnLeft || 0)
+    const turnRightIntensity = scopedActions ? (scopedActions.turnRight || 0) : (rc.turnRight || 0)
+    const turretLeftIntensity = scopedActions ? (scopedActions.turretLeft || 0) : (rc.turretLeft || 0)
+    const turretRightIntensity = scopedActions ? (scopedActions.turretRight || 0) : (rc.turretRight || 0)
+    const fireIntensity = scopedActions ? (scopedActions.fire || 0) : (rc.fire || 0)
+    const ascendIntensity = scopedActions ? (scopedActions.ascend || 0) : (rc.ascend || 0)
+    const descendIntensity = scopedActions ? (scopedActions.descend || 0) : (rc.descend || 0)
+    const strafeLeftIntensity = scopedActions ? (scopedActions.strafeLeft || 0) : (rc.strafeLeft || 0)
+    const strafeRightIntensity = scopedActions ? (scopedActions.strafeRight || 0) : (rc.strafeRight || 0)
+    const rawWagonDirection = scopedAbsolute
+      ? (Number.isFinite(scopedAbsolute.wagonDirection) ? scopedAbsolute.wagonDirection : null)
+      : (Number.isFinite(rcAbsolute.wagonDirection) ? rcAbsolute.wagonDirection : null)
+    const rawWagonSpeed = scopedAbsolute
+      ? (typeof scopedAbsolute.wagonSpeed === 'number' ? scopedAbsolute.wagonSpeed : 0)
+      : (typeof rcAbsolute.wagonSpeed === 'number' ? rcAbsolute.wagonSpeed : 0)
+    const rawTurretDirection = scopedAbsolute
+      ? (Number.isFinite(scopedAbsolute.turretDirection) ? scopedAbsolute.turretDirection : null)
+      : (Number.isFinite(rcAbsolute.turretDirection) ? rcAbsolute.turretDirection : null)
+    const rawTurretTurnFactor = scopedAbsolute
+      ? (typeof scopedAbsolute.turretTurnFactor === 'number' ? scopedAbsolute.turretTurnFactor : 0)
+      : (typeof rcAbsolute.turretTurnFactor === 'number' ? rcAbsolute.turretTurnFactor : 0)
 
     const hasTurret = isTurretTankUnitType(unit.type)
     const isApache = unit.type === 'apache' || unit.type === 'f35'
@@ -1060,6 +1160,9 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
       unit.remoteRocketTarget = null
     }
   })
-
-  rc.fire = 0
+  } finally {
+    releaseAppendedCoopUnits()
+    rc.fire = 0
+    clearCoopFirePulses()
+  }
 }
