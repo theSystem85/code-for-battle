@@ -8,7 +8,9 @@
 
 export const APP_HEIGHT_VAR = '--app-height'
 export const APP_OFFSET_TOP_VAR = '--app-viewport-offset-top'
+export const APP_LAYOUT_WIDTH_VAR = '--app-layout-width'
 export const VIEWPORT_SETTLE_DELAYS_MS = [120, 320, 700]
+const LAYOUT_WIDTH_CHANGE_PX = 48
 
 function positive(value) {
   return Number.isFinite(value) && value > 0 ? value : 0
@@ -50,12 +52,23 @@ function readBorderBox(element) {
   }
 }
 
+function isPortraitHold(win) {
+  const body = win?.document?.body
+  if (body?.classList?.contains('mobile-landscape')) return false
+  if (body?.classList?.contains('mobile-portrait')) return true
+  if (typeof win?.matchMedia !== 'function') return false
+  const coarse = win.matchMedia('(pointer: coarse)')
+  const portrait = win.matchMedia('(orientation: portrait)')
+  return Boolean(coarse?.matches && portrait?.matches)
+}
+
 export function readLayoutBox(win = globalThis.window) {
   const root = win?.document?.documentElement || null
   const body = win?.document?.body || null
   const live = readLiveSize(win)
   const rootBox = readBorderBox(root)
   const bodyBox = readBorderBox(body)
+  const heldHeight = parsePx(root?.style?.getPropertyValue?.(APP_HEIGHT_VAR))
   return {
     width: maxPositive([
       live.width,
@@ -69,7 +82,8 @@ export function readLayoutBox(win = globalThis.window) {
       positive(root?.clientHeight),
       positive(body?.clientHeight),
       rootBox.height,
-      bodyBox.height
+      bodyBox.height,
+      heldHeight
     ]),
     offsetTop: live.offsetTop,
     offsetLeft: live.offsetLeft
@@ -88,8 +102,15 @@ function setPx(root, name, value) {
  * Publish a pixel height only when the live viewport is taller than the
  * laid-out document. A shorter reading must not override 100dvh: the
  * stylesheet treats --app-height as a minimum, so a stale first paint cannot
- * pin the page short. Real resize/orientation/pageshow passes may drop the
- * pixel lock so a later, smaller dynamic viewport can take over.
+ * pin the page short.
+ *
+ * Phone portrait keeps the tallest height for the current width. Chrome on
+ * iOS shrinks the layout viewport when a fixed bottom bar appears (the
+ * Netlify Drawer is 48px, position:fixed, bottom:0). That fires resize with
+ * the same width and a shorter height. Dropping the floor there leaves a gap
+ * and the next passes keep the short value. A real orientation change (width
+ * moves) replaces the floor. Desktop and landscape still release it on
+ * resize so a smaller window can take over.
  */
 export function syncViewportLayout(win = globalThis.window, { allowShrink = false } = {}) {
   const root = win?.document?.documentElement
@@ -99,30 +120,47 @@ export function syncViewportLayout(win = globalThis.window, { allowShrink = fals
 
   const live = readLiveSize(win)
   const rootBox = readBorderBox(root)
-  const bodyBox = readBorderBox(win.document?.body)
+  const body = win.document?.body
+  const bodyBox = readBorderBox(body)
   const laidOutHeight = maxPositive([
     positive(root.clientHeight),
-    positive(win.document?.body?.clientHeight),
+    positive(body?.clientHeight),
     rootBox.height,
     bodyBox.height
   ])
+  const laidOutWidth = maxPositive([
+    live.width,
+    positive(root.clientWidth),
+    positive(body?.clientWidth),
+    rootBox.width,
+    bodyBox.width
+  ])
   const appliedHeight = parsePx(root.style.getPropertyValue(APP_HEIGHT_VAR))
+  const appliedWidth = parsePx(root.style.getPropertyValue(APP_LAYOUT_WIDTH_VAR))
+  const widthChanged = appliedWidth > 0 && Math.abs(laidOutWidth - appliedWidth) > LAYOUT_WIDTH_CHANGE_PX
+  const portraitHold = isPortraitHold(win)
   let changed = false
 
-  if (live.height > laidOutHeight + 1) {
+  if (portraitHold && !widthChanged) {
+    const hold = Math.max(appliedHeight, live.height, laidOutHeight)
+    if (hold > 0) changed = setPx(root, APP_HEIGHT_VAR, hold) || changed
+  } else if (live.height > laidOutHeight + 1 && live.height > appliedHeight + 1) {
     changed = setPx(root, APP_HEIGHT_VAR, live.height) || changed
-  } else if (allowShrink && appliedHeight > live.height + 1 && live.height > 0) {
+  } else if ((allowShrink || widthChanged) && !portraitHold && appliedHeight > live.height + 1 && live.height > 0) {
     root.style.removeProperty(APP_HEIGHT_VAR)
     changed = true
+  } else if (portraitHold && widthChanged && live.height > 0) {
+    changed = setPx(root, APP_HEIGHT_VAR, live.height) || changed
   }
 
+  if (laidOutWidth > 0) changed = setPx(root, APP_LAYOUT_WIDTH_VAR, laidOutWidth) || changed
   changed = setPx(root, APP_OFFSET_TOP_VAR, live.offsetTop) || changed
 
   const box = readLayoutBox(win)
   // readLayoutBox sees the post-sync document. Also keep a live viewport that
   // is taller than a client height which has not reflowed yet.
   box.width = maxPositive([box.width, live.width])
-  box.height = maxPositive([box.height, live.height])
+  box.height = maxPositive([box.height, live.height, portraitHold && !widthChanged ? appliedHeight : 0])
   box.changed = changed
   return box
 }

@@ -14,7 +14,8 @@ function createFakeWindow({
   visualHeight = null,
   offsetTop = 0,
   rectHeight = null,
-  rectWidth = null
+  rectWidth = null,
+  portrait = false
 } = {}) {
   const state = {
     innerWidth,
@@ -90,6 +91,15 @@ function createFakeWindow({
     },
     document: {
       documentElement: root,
+      body: portrait
+        ? {
+          classList: {
+            contains(name) {
+              return name === 'mobile-portrait'
+            }
+          }
+        }
+        : null,
       readyState: 'loading',
       addEventListener(type, handler) {
         documentListeners[type] = documentListeners[type] || []
@@ -184,6 +194,54 @@ describe('viewport layout measurement', () => {
     expect(win.vars[APP_HEIGHT_VAR]).toBeUndefined()
     expect(box.changed).toBe(true)
     expect(box.height).toBe(700)
+  })
+
+  it('keeps the portrait floor when a same-width resize reports the Netlify drawer height', () => {
+    const win = createFakeWindow({
+      innerWidth: 390,
+      innerHeight: 844,
+      clientWidth: 390,
+      clientHeight: 844,
+      portrait: true
+    })
+
+    syncViewportLayout(win)
+    expect(win.vars[APP_HEIGHT_VAR]).toBe('844px')
+
+    const drawerHeight = 48
+    win.state.innerHeight = 844 - drawerHeight
+    win.state.clientHeight = 844 - drawerHeight
+    const box = syncViewportLayout(win, { allowShrink: true })
+
+    expect(win.vars[APP_HEIGHT_VAR]).toBe('844px')
+    expect(box.height).toBe(844)
+  })
+
+  it('replaces the portrait floor when the width changes and grows again afterwards', () => {
+    const win = createFakeWindow({
+      innerWidth: 390,
+      innerHeight: 844,
+      clientWidth: 390,
+      clientHeight: 844,
+      portrait: true
+    })
+    syncViewportLayout(win)
+
+    win.state.innerWidth = 844
+    win.state.clientWidth = 844
+    win.state.innerHeight = 390
+    win.state.clientHeight = 390
+    const landscape = syncViewportLayout(win, { allowShrink: true })
+    expect(landscape.height).toBe(390)
+    expect(win.vars[APP_HEIGHT_VAR]).toBe('390px')
+
+    win.state.innerWidth = 390
+    win.state.clientWidth = 390
+    win.state.innerHeight = 900
+    win.state.clientHeight = 900
+    const grown = syncViewportLayout(win, { allowShrink: true })
+    expect(grown.height).toBe(900)
+    expect(win.vars[APP_HEIGHT_VAR]).toBe('900px')
   })
 
   it('keeps a taller document when a settle pass sees a stale short viewport', () => {

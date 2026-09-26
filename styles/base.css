@@ -6,7 +6,9 @@ html, body {
      without firing window or visualViewport resize, and dvh/innerHeight can
      stay on the small viewport. Stretching between top and bottom tracks the
      webview frame itself. A definite height would override bottom and pin the
-     short first measurement. --app-height can only grow the box. */
+     short first measurement. --app-height is a floor: phone portrait keeps
+     the tallest height for this width so a later fixed bottom bar (the
+     Netlify Drawer) cannot latch the layout short. */
   position: fixed;
   top: 0;
   right: 0;

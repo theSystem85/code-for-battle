@@ -1005,6 +1005,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Chrome on iOS portrait gap matches the condensed sidebar (2026-09-26)** — the condensed build bar was `position: fixed; bottom: 0` (`styles/base.css`). CriOS shrinks the layout viewport by that bar, then places `bottom: 0` one bar-height above the webview. The bar is now `position: absolute` in the fixed body, `#sidebar` is no longer bottom-anchored, and condensed/collapsed portrait layouts do not subtract the sidebar box from the canvas. The canvas is recomputed when those classes change.
   - Spec: [Mobile Initial Layout Stability](../specs/044-mobile-initial-layout-stability.md)
 
+- [x] **Netlify Drawer brings the portrait gap back (2026-09-26)** — deploy previews inject a 48px `position: fixed; bottom: 0` iframe. The resize that follows cleared `--app-height` in `syncViewportLayout` and the canvas latched the shorter height. Phone portrait now keeps the tallest height for the current width, replaces it when the width changes, and grows again when the viewport does. Production has no drawer, so it was not affected.
+  - Spec: [Mobile Initial Layout Stability](../specs/044-mobile-initial-layout-stability.md)
+
 - [x] **Battleship HUD and carrier deck layering follow-up (2026-07-27)** — remove the obsolete per-turret green dashed/red blocked-angle HUD while retaining turret selection feedback, and always render carrier-bound landed/taxiing aircraft above the carrier hull.
   - Spec: [Airborne Render Layering](../specs/052-airborne-render-layering.md)
 

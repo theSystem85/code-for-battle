@@ -215,6 +215,61 @@ test.describe('portrait viewport growth', () => {
 })
 
 const CRIOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.54 Mobile/15E148 Safari/604.1'
+const NETLIFY_DRAWER_HEIGHT = 48
+
+async function injectNetlifyDrawer(page) {
+  // The real drawer mounts about 1–2s after load, then CriOS shrinks the
+  // layout viewport by the drawer height and fires resize.
+  await page.waitForTimeout(1500)
+  await page.evaluate(drawerHeight => {
+    const host = document.createElement('div')
+    host.setAttribute('data-netlify-deploy-id', 'preview')
+    host.setAttribute('data-netlify-site-id', 'preview')
+    host.id = 'netlify-drawer-simulation'
+    host.style.background = 'transparent'
+    host.style.bottom = '0'
+    host.style.margin = '0'
+    host.style.padding = '0'
+    host.style.position = 'fixed'
+    host.style.left = '0'
+    host.style.zIndex = '2147483647'
+    const frame = document.createElement('iframe')
+    frame.title = 'Netlify Drawer'
+    frame.style.border = '0'
+    frame.style.display = 'block'
+    frame.style.height = `${drawerHeight}px`
+    frame.style.width = '100vw'
+    host.appendChild(frame)
+    document.body.appendChild(host)
+
+    const full = window.innerHeight
+    const shortPx = Math.round(full - drawerHeight)
+    const short = `${shortPx}px`
+    const root = document.documentElement
+    const visual = window.visualViewport
+    // Chromium does not shrink the layout viewport when a fixed bar appears.
+    // Report the shorter height the way CriOS does, and pin the root box to
+    // that height so a latch would leave a gap under the build bar.
+    try {
+      Object.defineProperty(window, 'innerHeight', { configurable: true, get: () => shortPx })
+    } catch {
+      // innerHeight stays at the webview size; the forced box height still latches.
+    }
+    if (visual) {
+      try {
+        Object.defineProperty(visual, 'height', { configurable: true, get: () => shortPx })
+      } catch {
+        // visualViewport.height is not configurable in every browser.
+      }
+    }
+    root.style.height = short
+    document.body.style.height = short
+    window.dispatchEvent(new window.Event('resize'))
+    if (visual && typeof visual.dispatchEvent === 'function') {
+      visual.dispatchEvent(new window.Event('resize'))
+    }
+  }, NETLIFY_DRAWER_HEIGHT)
+}
 
 test.describe('Chrome iOS portrait layout', () => {
   test.use({
@@ -246,5 +301,40 @@ test.describe('Chrome iOS portrait layout', () => {
     expect(grown.rootPosition).toBe('fixed')
     expect(grown.barPosition).toBe('absolute')
     await shoot(page, 'crios-portrait-resize-observer-390x844.png')
+  })
+
+  test('keeps the build bar at the bottom after the Netlify drawer injects', async({ page }) => {
+    await markTutorialComplete(page)
+    await openPortraitGame(page)
+    const before = await readPortraitMetrics(page)
+    expectFilledPortrait(before)
+    await shoot(page, 'netlify-drawer-before-390x844.png')
+
+    const webviewHeight = before.innerHeight
+    await injectNetlifyDrawer(page)
+    await page.waitForFunction(({ drawerHeight, webviewHeight: fullHeight }) => {
+      const bar = document.querySelector('#mobileBuildMenuContainer')
+      const canvas = document.querySelector('#gameCanvas')
+      const drawer = document.querySelector('#netlify-drawer-simulation')
+      if (!bar || !canvas || !drawer) return false
+      const rootBottom = document.documentElement.getBoundingClientRect().bottom
+      const barBox = bar.getBoundingClientRect()
+      const canvasBox = canvas.getBoundingClientRect()
+      return drawer.getBoundingClientRect().height === drawerHeight
+        && canvasBox.height >= fullHeight - 2
+        && rootBottom >= fullHeight - 2
+        && Math.abs(rootBottom - barBox.bottom) <= 3
+        && Math.abs((rootBottom - barBox.bottom) - barBox.height) > 8
+    }, { drawerHeight: NETLIFY_DRAWER_HEIGHT, webviewHeight }, { timeout: 10000 })
+
+    const after = await readPortraitMetrics(page)
+    expect(after.canvasHeight).toBeGreaterThanOrEqual(before.innerHeight - 2)
+    expect(after.rootBorderHeight).toBeGreaterThanOrEqual(before.innerHeight - 2)
+    expect(after.barPosition).toBe('absolute')
+    expect(after.canvasPosition).toBe('absolute')
+    expect(Math.abs(after.gapBelowBarInRoot)).toBeLessThanOrEqual(3)
+    expect(Math.abs(after.gapBelowBarInRoot - after.barHeight)).toBeGreaterThan(8)
+    expect(after.appHeight.trim()).toBe(`${before.innerHeight}px`)
+    await shoot(page, 'netlify-drawer-after-390x844.png')
   })
 })

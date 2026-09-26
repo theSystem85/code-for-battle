@@ -1,7 +1,7 @@
 // canvasManager.js
 // Handle canvas setup, resizing, and management
 import { MOBILE_CANVAS_PIXEL_RATIO_CAP } from '../config.js'
-import { readLayoutBox } from '../ui/viewportLayout.js'
+import { readLayoutBox, syncViewportLayout } from '../ui/viewportLayout.js'
 import { publishCanvasViewport } from './prepared/canvasViewportRegistry.js'
 
 export class CanvasManager {
@@ -222,6 +222,10 @@ export class CanvasManager {
     const isTouchLayout = body ? body.classList.contains('is-touch') : false
 
     const viewport = window.visualViewport
+    // Apply the portrait height floor before reading the box. A same-width
+    // shrink (Netlify Drawer, or CriOS treating that fixed bar as chrome)
+    // must not replace the webview height the canvas already filled.
+    syncViewportLayout(window, { allowShrink: false })
     const measuredLayout = readLayoutBox(window)
     const layoutViewportWidth = measuredLayout.width || this.gameCanvas.clientWidth || 0
     const layoutViewportHeight = measuredLayout.height || this.gameCanvas.clientHeight || 0

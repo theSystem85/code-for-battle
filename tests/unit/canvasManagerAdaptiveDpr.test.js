@@ -19,6 +19,8 @@ describe('CanvasManager adaptive DPR', () => {
     vi.restoreAllMocks()
     document.body.className = ''
     document.body.innerHTML = ''
+    document.documentElement.style.removeProperty('--app-height')
+    document.documentElement.style.removeProperty('--app-layout-width')
   })
 
   it('drops immediately to 1x while the camera is moving', () => {
