@@ -37,6 +37,11 @@ async function readPortraitMetrics(page) {
       bodyHeight: document.body.clientHeight,
       appHeight: rootStyle.getPropertyValue('--app-height'),
       bodyCssHeight: bodyStyle.height,
+      rootPosition: rootStyle.position,
+      rootTop: rootStyle.top,
+      rootBottom: rootStyle.bottom,
+      rootOverflow: rootStyle.overflow,
+      rootOverscroll: rootStyle.overscrollBehavior,
       canvasHeight: canvasBox?.height ?? null,
       canvasBottom: canvasBox?.bottom ?? null,
       canvasStyleHeight: canvas?.style.height ?? null,
@@ -55,6 +60,12 @@ async function readPortraitMetrics(page) {
 function expectFilledPortrait(metrics) {
   expect(metrics.portrait).toBe(true)
   expect(metrics.tutorialHidden).toBe(true)
+  expect(metrics.rootPosition).toBe('fixed')
+  expect(Number.parseFloat(metrics.rootTop)).toBe(0)
+  expect(Number.parseFloat(metrics.rootBottom)).toBe(0)
+  expect(metrics.rootOverflow).toBe('hidden')
+  expect(metrics.rootOverscroll).toBe('none')
+  expect(metrics.barPosition).toBe('fixed')
   expect(metrics.canvasHeight).toBeGreaterThanOrEqual(metrics.innerHeight - 2)
   expect(metrics.canvasBottom).toBeGreaterThanOrEqual(metrics.innerHeight - 2)
   expect(Math.abs(metrics.gapBelowBar)).toBeLessThanOrEqual(3)
@@ -139,5 +150,40 @@ test.describe('portrait viewport growth', () => {
     expect(grown.innerHeight).toBe(844)
     expectFilledPortrait(grown)
     await shoot(page, 'portrait-after-viewport-grow-390x844.png')
+  })
+})
+
+const CRIOS_USER_AGENT = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.6478.54 Mobile/15E148 Safari/604.1'
+
+test.describe('Chrome iOS portrait layout', () => {
+  test.use({
+    ...iphoneUse('iPhone 13', 390, 844),
+    userAgent: CRIOS_USER_AGENT
+  })
+
+  test('pins the root with fixed inset and follows a ResizeObserver growth', async({ page }) => {
+    await markTutorialComplete(page)
+    await openPortraitGame(page)
+    const initial = await readPortraitMetrics(page)
+    expect(initial.innerWidth).toBe(390)
+    expect(initial.innerHeight).toBe(844)
+    expectFilledPortrait(initial)
+    await shoot(page, 'crios-portrait-initial-390x844.png')
+
+    await page.evaluate(() => {
+      const root = document.documentElement
+      root.style.bottom = 'auto'
+      root.style.height = '920px'
+    })
+    await page.waitForFunction(() => {
+      const canvas = document.querySelector('#gameCanvas')
+      return Boolean(canvas) && canvas.getBoundingClientRect().height >= 918
+    }, null, { timeout: 10000 })
+
+    const grown = await readPortraitMetrics(page)
+    expect(grown.canvasHeight).toBeGreaterThanOrEqual(918)
+    expect(grown.rootPosition).toBe('fixed')
+    expect(grown.barPosition).toBe('fixed')
+    await shoot(page, 'crios-portrait-resize-observer-390x844.png')
   })
 })

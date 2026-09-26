@@ -12,7 +12,9 @@ function createFakeWindow({
   clientWidth = 390,
   clientHeight = 700,
   visualHeight = null,
-  offsetTop = 0
+  offsetTop = 0,
+  rectHeight = null,
+  rectWidth = null
 } = {}) {
   const state = {
     innerWidth,
@@ -20,11 +22,14 @@ function createFakeWindow({
     clientWidth,
     clientHeight,
     visualHeight,
-    offsetTop
+    offsetTop,
+    rectHeight,
+    rectWidth
   }
   const vars = {}
   const listeners = {}
   const visualListeners = {}
+  const documentListeners = {}
   const root = {
     get clientWidth() {
       return state.clientWidth
@@ -33,6 +38,14 @@ function createFakeWindow({
       const locked = parseFloat(vars[APP_HEIGHT_VAR] || '')
       const lockedHeight = Number.isFinite(locked) ? locked : 0
       return Math.max(state.clientHeight, lockedHeight)
+    },
+    getBoundingClientRect() {
+      return {
+        width: state.rectWidth == null ? state.clientWidth : state.rectWidth,
+        height: state.rectHeight == null ? this.clientHeight : state.rectHeight,
+        top: 0,
+        left: 0
+      }
     },
     style: {
       getPropertyValue(name) {
@@ -77,7 +90,14 @@ function createFakeWindow({
     },
     document: {
       documentElement: root,
-      readyState: 'loading'
+      readyState: 'loading',
+      addEventListener(type, handler) {
+        documentListeners[type] = documentListeners[type] || []
+        documentListeners[type].push(handler)
+      },
+      removeEventListener(type, handler) {
+        documentListeners[type] = (documentListeners[type] || []).filter(item => item !== handler)
+      }
     },
     addEventListener(type, handler) {
       listeners[type] = listeners[type] || []
@@ -89,7 +109,8 @@ function createFakeWindow({
     state,
     vars,
     listeners,
-    visualListeners
+    visualListeners,
+    documentListeners
   }
 
   return win
@@ -124,6 +145,21 @@ describe('viewport layout measurement', () => {
 
     expect(win.vars[APP_HEIGHT_VAR]).toBeUndefined()
     expect(box.height).toBe(844)
+  })
+
+  it('prefers the fixed root border box when CriOS innerHeight stays short', () => {
+    const win = createFakeWindow({
+      innerHeight: 700,
+      visualHeight: 700,
+      clientHeight: 700,
+      rectHeight: 844
+    })
+
+    const box = syncViewportLayout(win)
+
+    expect(win.vars[APP_HEIGHT_VAR]).toBeUndefined()
+    expect(box.height).toBe(844)
+    expect(readLayoutBox(win).height).toBe(844)
   })
 
   it('prefers a taller visualViewport over a stale innerHeight', () => {
@@ -243,7 +279,7 @@ describe('viewport layout controller', () => {
     expect(sizes).toEqual([640, 844])
   })
 
-  it('listens for visual viewport, orientation, pageshow, and load', () => {
+  it('listens for visual viewport, orientation, pageshow, scroll, focus, and visibility', () => {
     const win = createFakeWindow()
     install(win, { onChange() {} })
 
@@ -251,7 +287,46 @@ describe('viewport layout controller', () => {
     expect(win.listeners.orientationchange).toHaveLength(1)
     expect(win.listeners.pageshow).toHaveLength(1)
     expect(win.listeners.load).toHaveLength(1)
+    expect(win.listeners.scroll).toHaveLength(1)
+    expect(win.listeners.focus).toHaveLength(1)
+    expect(win.documentListeners.visibilitychange).toHaveLength(1)
     expect(win.visualListeners.resize).toHaveLength(1)
+    expect(win.visualListeners.scroll).toHaveLength(1)
+  })
+
+  it('grows from a ResizeObserver on the fixed root when no resize event fires', () => {
+    const win = createFakeWindow({ innerHeight: 700, clientHeight: 700, rectHeight: 700 })
+    const observed = []
+    let observerCallback = null
+    win.ResizeObserver = class {
+      constructor(callback) {
+        observerCallback = callback
+      }
+      observe(target) {
+        observed.push(target)
+      }
+      disconnect() {}
+    }
+    const sizes = []
+    const { frames } = install(win, {
+      onChange(size) {
+        sizes.push(size.height)
+      }
+    })
+
+    expect(observed).toEqual([win.document.documentElement])
+    expect(sizes).toEqual([700])
+    const framesBefore = frames.length
+    win.state.rectHeight = 844
+    win.state.clientHeight = 700
+    win.state.innerHeight = 700
+    observerCallback()
+    const pending = frames.slice(framesBefore).filter(Boolean)
+    expect(pending).toHaveLength(1)
+    pending[0]()
+
+    expect(sizes).toEqual([700, 844])
+    expect(win.vars[APP_HEIGHT_VAR]).toBeUndefined()
   })
 
   it('does not publish another change after dispose', () => {

@@ -2,21 +2,26 @@
 html, body {
   margin: 0;
   padding: 0;
-  /* 100% / 100vh resolve before iOS browser chrome settles and leave a black
-     band under the portrait build bar. dvh tracks the visible viewport;
-     -webkit-fill-available covers older WKWebView. --app-height can only grow
-     the box (see viewportLayout.js), so a short first reading cannot pin it. */
+  /* Chrome iOS (CriOS) resizes the WKWebView when its toolbars collapse
+     without firing window or visualViewport resize, and dvh/innerHeight can
+     stay on the small viewport. Stretching between top and bottom tracks the
+     webview frame itself. A definite height would override bottom and pin the
+     short first measurement. --app-height can only grow the box. */
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
   height: 100%;
   height: 100vh;
   height: -webkit-fill-available;
   height: 100dvh;
-  height: var(--app-height, 100dvh);
-  min-height: 100%;
-  min-height: -webkit-fill-available;
-  min-height: 100dvh;
-  min-height: max(100dvh, var(--app-height, 0px));
-  width: 100vw;
+  height: auto;
+  min-height: 0;
+  min-height: var(--app-height, 0px);
   overflow: hidden;
+  overscroll-behavior: none;
   background-color: #000;
   cursor: var(--game-default-cursor);
   touch-action: manipulation;
@@ -1393,9 +1398,13 @@ body.mobile-portrait #sidebar {
 }
 
 body.mobile-portrait {
-  /* Absolute portrait HUD (build bar, canvas) anchors to this box, which
-     follows the dynamic viewport instead of a stale layout viewport. */
-  position: relative;
+  /* Stay fixed to the webview. position:relative would size the body from
+     content/dvh and let CriOS leave a black band under the build bar. */
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   --sidebar-width: clamp(220px, 74vw, 320px);
   --portrait-condensed-bar-height: 96px;
   --portrait-condensed-toggle-width: calc(var(--mobile-action-size) * 0.44);
@@ -1862,7 +1871,7 @@ body.mobile-portrait.sidebar-collapsed #musicControl {
 
 body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer[aria-hidden="false"] {
   display: flex;
-  position: absolute;
+  position: fixed;
   left: 0;
   right: 0;
   bottom: 0;

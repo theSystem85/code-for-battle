@@ -1,8 +1,10 @@
-// Keeps the mobile document height aligned with the visible viewport.
-// iOS WKWebView (Safari, Chrome, in-app browsers) often reports a short
-// layout height on the first portrait paint and does not emit resize until
-// the device rotates. This module is event-driven: it must never run from
-// the simulation frame loop.
+// Keeps the mobile document height aligned with the visible webview.
+// Safari usually settles through dvh and resize. Chrome on iOS resizes the
+// WKWebView when its toolbars collapse without firing window or
+// visualViewport resize, and innerHeight can stay on the small viewport.
+// The root is position:fixed; top/bottom:0, so its border box is the webview.
+// ResizeObserver reports that box even when no viewport event fires.
+// This module is event-driven: it must never run from the simulation frame loop.
 
 export const APP_HEIGHT_VAR = '--app-height'
 export const APP_OFFSET_TOP_VAR = '--app-viewport-offset-top'
@@ -37,12 +39,38 @@ function readLiveSize(win) {
   }
 }
 
+function readBorderBox(element) {
+  if (!element || typeof element.getBoundingClientRect !== 'function') {
+    return { width: 0, height: 0 }
+  }
+  const rect = element.getBoundingClientRect()
+  return {
+    width: positive(rect?.width),
+    height: positive(rect?.height)
+  }
+}
+
 export function readLayoutBox(win = globalThis.window) {
   const root = win?.document?.documentElement || null
+  const body = win?.document?.body || null
   const live = readLiveSize(win)
+  const rootBox = readBorderBox(root)
+  const bodyBox = readBorderBox(body)
   return {
-    width: maxPositive([live.width, positive(root?.clientWidth)]),
-    height: maxPositive([live.height, positive(root?.clientHeight)]),
+    width: maxPositive([
+      live.width,
+      positive(root?.clientWidth),
+      positive(body?.clientWidth),
+      rootBox.width,
+      bodyBox.width
+    ]),
+    height: maxPositive([
+      live.height,
+      positive(root?.clientHeight),
+      positive(body?.clientHeight),
+      rootBox.height,
+      bodyBox.height
+    ]),
     offsetTop: live.offsetTop,
     offsetLeft: live.offsetLeft
   }
@@ -70,11 +98,18 @@ export function syncViewportLayout(win = globalThis.window, { allowShrink = fals
   }
 
   const live = readLiveSize(win)
-  const clientHeight = positive(root.clientHeight)
+  const rootBox = readBorderBox(root)
+  const bodyBox = readBorderBox(win.document?.body)
+  const laidOutHeight = maxPositive([
+    positive(root.clientHeight),
+    positive(win.document?.body?.clientHeight),
+    rootBox.height,
+    bodyBox.height
+  ])
   const appliedHeight = parsePx(root.style.getPropertyValue(APP_HEIGHT_VAR))
   let changed = false
 
-  if (live.height > clientHeight + 1) {
+  if (live.height > laidOutHeight + 1) {
     changed = setPx(root, APP_HEIGHT_VAR, live.height) || changed
   } else if (allowShrink && appliedHeight > live.height + 1 && live.height > 0) {
     root.style.removeProperty(APP_HEIGHT_VAR)
@@ -192,13 +227,19 @@ export function createViewportLayoutController({
   listen(win, 'orientationchange', onOrientationOrPageShow)
   listen(win, 'pageshow', onOrientationOrPageShow)
   listen(win, 'load', settle)
+  listen(win, 'scroll', onVisualResize)
+  listen(win, 'focus', onVisualResize)
+  listen(win.document, 'visibilitychange', onVisualResize)
   listen(win.visualViewport, 'resize', onVisualResize)
+  listen(win.visualViewport, 'scroll', onVisualResize)
 
   const root = win.document?.documentElement
+  const body = win.document?.body
   let observer = null
-  if (root && typeof win.ResizeObserver === 'function') {
+  if ((root || body) && typeof win.ResizeObserver === 'function') {
     observer = new win.ResizeObserver(() => schedule(false))
-    observer.observe(root)
+    if (root) observer.observe(root)
+    if (body && body !== root) observer.observe(body)
   }
 
   settle()

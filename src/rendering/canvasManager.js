@@ -264,7 +264,7 @@ export class CanvasManager {
 
     const applyCanvasLayout = (canvas) => {
       if (!canvas) return
-      canvas.style.position = mobileLandscape ? 'fixed' : 'absolute'
+      canvas.style.position = (mobileLandscape || mobilePortrait) ? 'fixed' : 'absolute'
       if (mobileLandscape) {
         canvas.style.left = `${-safeLeft}px`
         canvas.style.right = `${-safeRight}px`

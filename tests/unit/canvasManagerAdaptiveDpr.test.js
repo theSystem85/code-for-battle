@@ -147,7 +147,55 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.getGameCanvas().style.height).toBe('844px')
     expect(manager.getGameCanvas().height).toBe(2532)
     expect(getCanvasViewportRecord(manager.getGameCanvas()).viewport.logicalHeight).toBe(844)
+    expect(manager.getGameCanvas().style.position).toBe('fixed')
     manager.dispose()
+    if (previousHeight) {
+      Object.defineProperty(document.documentElement, 'clientHeight', previousHeight)
+    } else {
+      delete document.documentElement.clientHeight
+    }
+  })
+
+  it('sizes a portrait canvas from the fixed root border box when clientHeight stays short', () => {
+    document.body.className = 'is-touch mobile-portrait'
+    document.body.innerHTML = `
+      <canvas id="gameCanvasGPU"></canvas>
+      <canvas id="gameCanvasGL"></canvas>
+      <canvas id="gameCanvas"></canvas>
+      <canvas id="minimap"></canvas>
+    `
+    const previousHeight = Object.getOwnPropertyDescriptor(document.documentElement, 'clientHeight')
+    Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, get: () => 700 })
+    const rectSpy = vi.spyOn(document.documentElement, 'getBoundingClientRect').mockReturnValue({
+      width: 390,
+      height: 844,
+      top: 0,
+      left: 0,
+      right: 390,
+      bottom: 844,
+      x: 0,
+      y: 0,
+      toJSON() { return {} }
+    })
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(2)
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(700)
+    vi.spyOn(window, 'visualViewport', 'get').mockReturnValue({
+      width: 390,
+      height: 700,
+      offsetTop: 0,
+      offsetLeft: 0,
+      addEventListener() {},
+      removeEventListener() {}
+    })
+
+    const manager = new CanvasManager()
+
+    expect(manager.getGameCanvas().style.height).toBe('844px')
+    expect(manager.getGameCanvas().style.position).toBe('fixed')
+    expect(getCanvasViewportRecord(manager.getGameCanvas()).viewport.logicalHeight).toBe(844)
+    manager.dispose()
+    rectSpy.mockRestore()
     if (previousHeight) {
       Object.defineProperty(document.documentElement, 'clientHeight', previousHeight)
     } else {
