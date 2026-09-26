@@ -857,6 +857,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Full-screen phone-portrait dialogs** — settings (Runtime Config, Key Bindings, Controllers), runtime config, save editor, QR invite/scanner, remote invite, kicked, benchmark, keybinding conflict, user docs, mission briefing, cheat console, and performance dialogs fill the dynamic viewport with safe-area insets and a single body scroller.
+  - Spec: [Key Bindings Editor Modal](../specs/spec-keybindings-editor.md)
+
 - [x] **Physical iPhone foreground RAF starvation (2026-07-12)** — a monitor capture showed 2.41fps despite only 2.02ms frame work; race mobile RAF with a display-cadence watchdog, preserve bounded simulation catch-up, and report scheduler source/delay telemetry.
   - Spec: none
 

@@ -90,12 +90,14 @@ function ensureRoot() {
     <div class="mission-intro__panel">
       <p class="mission-intro__kicker"></p>
       <h2 id="mission-intro-title" class="mission-intro__title"></h2>
-      <div class="mission-intro__stage">
-        <video class="mission-intro__video" playsinline preload="auto"></video>
-        <p class="mission-intro__standby"></p>
+      <div class="mission-intro__body">
+        <div class="mission-intro__stage">
+          <video class="mission-intro__video" playsinline preload="auto"></video>
+          <p class="mission-intro__standby"></p>
+        </div>
+        <p class="mission-intro__description"></p>
+        <ol class="mission-intro__objectives"></ol>
       </div>
-      <p class="mission-intro__description"></p>
-      <ol class="mission-intro__objectives"></ol>
       <div class="mission-intro__bar">
         <button type="button" class="mission-intro__skip"></button>
       </div>
