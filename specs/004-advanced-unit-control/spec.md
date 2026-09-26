@@ -26,10 +26,13 @@ As a player, I want to directly control selected tanks using arrow keys and spac
 5. **Given** one or more tanks are selected, **When** space key is pressed, **Then** tanks fire at the farthest point within firing range in their current facing direction
 6. **Given** remote control is active, **When** tanks move or turn, **Then** turrets continue tracking targets independently of wagon rotation
 7. **Given** remote control keys are released, **When** player gives normal move/attack commands, **Then** units seamlessly transition back to standard control mode
+8. **Given** a phone in portrait with one controllable unit selected, **When** remote-control joysticks are shown, **Then** both sticks render above the action buttons and clear of the bottom build bar, the home-indicator and notch safe areas, and each other
+9. **Given** remote control is active on a phone, **When** the device rotates between portrait and landscape, **Then** movement, aiming, fire, and releasing the sticks still work, and landscape placement stays the lower-corner layout
 
 **Automated Tests**
 
 - Unit tests cover remote control action aggregation, clamping, snapshot application, and remote broadcast gating in `src/input/remoteControlState.js` to keep keyboard/remote inputs deterministic.
+- Unit tests cover portrait joystick placement (above the action row, clear of the build bar, safe areas, and each other) and portrait touch input for movement, fire, release, and rotation in `tests/unit/portraitRemoteControlLayout.test.js`.
 
 ---
 
@@ -126,6 +129,7 @@ As a player, I want to select multiple enemy units at once for my combat units t
 - **FR-006**: System MUST disable remote control when input fields have focus (prevent interference with typing)
 - **FR-007**: System MUST allow turret to track targets independently during remote control wagon movement
 - **FR-008**: System MUST seamlessly transition from remote control to standard control when normal commands issued
+- **FR-008A**: On a phone in portrait, remote-control joysticks MUST render above the action buttons, clear of the fixed bottom build bar and safe-area insets, and MUST accept the same movement, aim, fire, and release input as landscape. Rotating while remote control is active MUST keep the sticks usable. Landscape and desktop placement MUST stay unchanged.
 
 **Guard Mode Feature (GMF):**
 - **FR-009**: System MUST display guard cursor (guard.svg) when hovering over friendly unit with guard-capable combat unit selected (desktop and mobile parity)

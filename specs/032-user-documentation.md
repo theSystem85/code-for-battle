@@ -18,7 +18,7 @@ Provide a professional, in-game user documentation experience that can be opened
    - XP & promotions — level thresholds, standard vs howitzer bonuses, visual indicators
    - Fuel, ammo & logistics — fuel tank sizes/consumption per unit, ammo system, logistics chain advice
    - Mine system — mine layer deployment, mine properties, mine sweeper UX
-   - Remote control — desktop keyboard controls, Apache extras, mobile joystick profiles
+   - Remote control — desktop keyboard controls, Apache extras, mobile joystick profiles, including portrait sticks placed above the action buttons
    - Multiplayer — WebRTC flow, party colors/positions, host rules, cross-platform play
    - Keyboard reference — full hotkey table with contexts
 3. Add a sidebar button to open the documentation in a modal.

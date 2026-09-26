@@ -532,6 +532,22 @@ function handlePointerDown(side, event) {
   startProfileWatcher()
 }
 
+export function vectorFromJoystickCenter(rect, clientX, clientY) {
+  const width = Number(rect?.width) || 0
+  const height = Number(rect?.height) || 0
+  const left = Number(rect?.left) || 0
+  const top = Number(rect?.top) || 0
+  const centerX = left + width / 2
+  const centerY = top + height / 2
+  const dx = clientX - centerX
+  const dy = clientY - centerY
+  const radius = width / 2
+  const normalizedX = radius ? Math.max(-1, Math.min(dx / radius, 1)) : 0
+  const normalizedY = radius ? Math.max(-1, Math.min(dy / radius, 1)) : 0
+  const distance = Math.min(Math.hypot(normalizedX, normalizedY), 1)
+  return { dx, dy, radius, normalizedX, normalizedY, distance }
+}
+
 function handlePointerMove(side, event, fromDown = false) {
   const state = joystickState[side]
   if (state.pointerId !== event.pointerId) {
@@ -544,14 +560,11 @@ function handlePointerMove(side, event, fromDown = false) {
   }
 
   const rect = state.base.getBoundingClientRect()
-  const centerX = rect.left + rect.width / 2
-  const centerY = rect.top + rect.height / 2
-  const dx = event.clientX - centerX
-  const dy = event.clientY - centerY
-  const radius = rect.width / 2
-  const normalizedX = radius ? Math.max(-1, Math.min(dx / radius, 1)) : 0
-  const normalizedY = radius ? Math.max(-1, Math.min(dy / radius, 1)) : 0
-  const distance = Math.min(Math.hypot(normalizedX, normalizedY), 1)
+  const { dx, dy, radius, normalizedX, normalizedY, distance } = vectorFromJoystickCenter(
+    rect,
+    event.clientX,
+    event.clientY
+  )
 
   state.normalizedX = normalizedX
   state.normalizedY = normalizedY
@@ -620,12 +633,62 @@ function attachJoystickEvents(side) {
   state.base.addEventListener('pointercancel', handleEnd)
 }
 
-function initializeJoysticks() {
-  if (initialized || typeof document === 'undefined') {
+export function resolveMobileJoystickMode(detail) {
+  if (!detail || typeof detail !== 'object') {
+    return null
+  }
+  if (detail.mode === 'portrait' || detail.mode === 'landscape') {
+    return detail.mode
+  }
+  if (detail.enabled === true) {
+    return 'landscape'
+  }
+  return null
+}
+
+let activeJoystickLayoutMode = null
+
+export function handleMobileJoystickLayoutChange(detail) {
+  const mode = resolveMobileJoystickMode(detail)
+  if (!mode) {
+    stopProfileWatcher()
+    JOYSTICK_SIDES.forEach((side) => {
+      resetJoystick(side)
+    })
+    if (container) {
+      container.setAttribute('data-selection-active', 'false')
+    }
+    lastProfile = null
+    activeJoystickLayoutMode = null
+    updateTankReloadIndicator(null)
     return
   }
 
-  container = document.getElementById('mobileJoystickContainer')
+  const orientationChanged = activeJoystickLayoutMode !== null && activeJoystickLayoutMode !== mode
+  activeJoystickLayoutMode = mode
+  if (orientationChanged) {
+    JOYSTICK_SIDES.forEach((side) => {
+      if (joystickState[side].pointerId !== null) {
+        resetJoystick(side)
+      }
+    })
+  }
+  startProfileWatcher()
+  applyJoystickMappings(true)
+}
+
+export function initializeJoysticks() {
+  if (typeof document === 'undefined') {
+    return
+  }
+
+  const nextContainer = document.getElementById('mobileJoystickContainer')
+  if (initialized && container && container.isConnected && container === nextContainer) {
+    return
+  }
+
+  initialized = false
+  container = nextContainer
   if (!container) {
     return
   }
@@ -680,20 +743,6 @@ if (typeof document !== 'undefined') {
   }
 
   document.addEventListener('mobile-landscape-layout-changed', (event) => {
-    const enabled = !!(event && event.detail && event.detail.enabled)
-    if (!enabled) {
-      stopProfileWatcher()
-      JOYSTICK_SIDES.forEach((side) => {
-        resetJoystick(side)
-      })
-      if (container) {
-        container.setAttribute('data-selection-active', 'false')
-      }
-      lastProfile = null
-      updateTankReloadIndicator(null)
-    } else {
-      startProfileWatcher()
-      applyJoystickMappings(true)
-    }
+    handleMobileJoystickLayoutChange(event && event.detail)
   })
 }
