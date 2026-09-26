@@ -184,6 +184,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Rendering and WebGPU
 
+- [x] **Strengthen in-world status bar gradient and rail** — fills start about 22% toward black and reach 40% white at the growing edge, with a dark translucent rail, inset hairline, and a 1px gloss on the fill.
+  - Spec: [In-world status bar gradient](../specs/094-in-world-status-bar-gradient.md)
+
 - [x] **Lighten in-world status bars toward white along the fill** — HP, ammo, fuel, repair timeout, and the other small unit/building bars blend up to 25% white at the growing edge, using the energy bar’s 0%–100% linear ramp on a cached sprite.
   - Spec: [In-world status bar gradient](../specs/094-in-world-status-bar-gradient.md)
 

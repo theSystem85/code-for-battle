@@ -11,7 +11,7 @@ import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { getShipyardServiceWaterTiles } from '../utils/navalUtils.js'
 import { getPreparedSprite as getPublishedPreparedSprite } from './prepared/preparedSpritePipeline.js'
-import { fillStatusBar } from '../utils/statusBarGradient.js'
+import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack } from '../utils/statusBarGradient.js'
 
 const AMMO_TURRET_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret'])
 
@@ -667,18 +667,15 @@ export class BuildingRenderer {
     const healthBarHeight = 5
     const healthPercentage = building.health / building.maxHealth
 
-    // Background
-    ctx.fillStyle = '#333'
-    ctx.fillRect(screenX, screenY - 10, healthBarWidth, healthBarHeight)
-
     const healthColor = healthPercentage > 0.6 ? '#0f0' :
       healthPercentage > 0.3 ? '#ff0' : '#f00'
-    fillStatusBar(
+    drawStatusBar(
       ctx,
       screenX,
       screenY - 10,
-      healthBarWidth * healthPercentage,
+      healthBarWidth,
       healthBarHeight,
+      healthPercentage,
       healthColor,
       'horizontal'
     )
@@ -704,14 +701,7 @@ export class BuildingRenderer {
     const barX = screenX + width - barWidth - margin / 2
     const barY = screenY + margin
 
-    ctx.fillStyle = '#333'
-    ctx.fillRect(barX, barY, barWidth, barHeight)
-
-    const fillHeight = barHeight * ratio
-    fillStatusBar(ctx, barX, barY + barHeight - fillHeight, barWidth, fillHeight, '#4A90E2', 'vertical')
-
-    ctx.strokeStyle = '#000'
-    ctx.strokeRect(barX, barY, barWidth, barHeight)
+    drawStatusBar(ctx, barX, barY, barWidth, barHeight, ratio, '#4A90E2', 'vertical')
   }
 
   renderHelipadAmmo(ctx, building, screenX, screenY, width, height) {
@@ -734,14 +724,7 @@ export class BuildingRenderer {
     const barX = screenX + margin / 2
     const barY = screenY + margin
 
-    ctx.fillStyle = '#333'
-    ctx.fillRect(barX, barY, barWidth, barHeight)
-
-    const fillHeight = barHeight * ratio
-    fillStatusBar(ctx, barX, barY + barHeight - fillHeight, barWidth, fillHeight, '#FFA500', 'vertical')
-
-    ctx.strokeStyle = '#000'
-    ctx.strokeRect(barX, barY, barWidth, barHeight)
+    drawStatusBar(ctx, barX, barY, barWidth, barHeight, ratio, '#FFA500', 'vertical')
   }
 
 
@@ -765,11 +748,10 @@ export class BuildingRenderer {
     const barX = screenX + margin / 2
     const barY = screenY + margin
 
-    ctx.fillStyle = '#333'
-    ctx.fillRect(barX, barY, barWidth, barHeight)
-
+    paintStatusBarTrack(ctx, barX, barY, barWidth, barHeight)
     const fillHeight = barHeight * ratio
     fillStatusBar(ctx, barX, barY + barHeight - fillHeight, barWidth, fillHeight, '#FFA500', 'vertical')
+    paintStatusBarOutline(ctx, barX, barY, barWidth, barHeight)
 
     const cooldown = Math.max(1, building.fireCooldown || 1)
     const now = performance.now()
@@ -782,9 +764,6 @@ export class BuildingRenderer {
     ctx.moveTo(barX, reloadLineY)
     ctx.lineTo(barX + barWidth, reloadLineY)
     ctx.stroke()
-
-    ctx.strokeStyle = '#000'
-    ctx.strokeRect(barX, barY, barWidth, barHeight)
   }
 
   renderOwnerIndicator(ctx, building, screenX, screenY) {
@@ -1041,11 +1020,7 @@ export class BuildingRenderer {
 
     ctx.save()
 
-    // Background bar
-    ctx.fillStyle = '#333'
-    ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
-
-    fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, '#ff4444', 'horizontal')
+    drawStatusBar(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, progress, '#ff4444', 'horizontal')
 
     ctx.restore()
   }
@@ -1105,19 +1080,10 @@ export class BuildingRenderer {
 
     ctx.save()
 
-    // Background bar
-    ctx.fillStyle = '#333'
-    ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
-
     const productionColor = ['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'tankerTruck', 'howitzer'].includes(currentlyBuilding)
       ? '#2196F3'
       : '#4CAF50'
-    fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, productionColor, 'horizontal')
-
-    // Border
-    ctx.strokeStyle = '#000'
-    ctx.lineWidth = 1
-    ctx.strokeRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
+    drawStatusBar(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, progress, productionColor, 'horizontal')
 
     // Show what's being built (text above the progress bar)
     if (building.owner !== gameState.humanPlayer) { // Only show for enemy factories
@@ -1175,16 +1141,7 @@ export class BuildingRenderer {
 
     ctx.save()
 
-    // Background bar
-    ctx.fillStyle = '#333'
-    ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
-
-    fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, '#FFD700', 'horizontal')
-
-    // Border
-    ctx.strokeStyle = '#000'
-    ctx.lineWidth = 1
-    ctx.strokeRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
+    drawStatusBar(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, progress, '#FFD700', 'horizontal')
 
     ctx.restore()
   }
@@ -1212,16 +1169,7 @@ export class BuildingRenderer {
 
       ctx.save()
 
-      // Background bar
-      ctx.fillStyle = '#333'
-      ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
-
-      fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, '#00FF00', 'horizontal')
-
-      // Border
-      ctx.strokeStyle = '#000'
-      ctx.lineWidth = 1
-      ctx.strokeRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
+      drawStatusBar(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, progress, '#00FF00', 'horizontal')
 
       ctx.restore()
     })

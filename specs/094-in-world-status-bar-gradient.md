@@ -7,10 +7,12 @@ In-world status bars keep their current base color and lighten slightly toward w
 ## Look
 
 - Shared helper: `src/utils/statusBarGradient.js`.
-- Leading-edge mix: `STATUS_BAR_LEADING_WHITE_MIX` = 0.25 (within the 20–30% white range).
-- Energy bar CSS stays `linear-gradient(90deg, start 0%, end 100%)` via `linearFillGradientCss`. Those HUD end colors stay hand-tuned. In-world bars compute the end color by mixing the existing base toward white so red, yellow, green, ammo orange, and fuel blue all use the same ramp.
-- Horizontal fills lighten left → right. Vertical fills lighten bottom → top. Donut HUD arcs lighten along the sweep, from the arc start toward the filled end.
-- The gray track is unchanged.
+- Fill start: `STATUS_BAR_START_BLACK_MIX` = 0.22 (within 20–25% toward black), matching the energy bar’s darker start.
+- Growing edge: `STATUS_BAR_LEADING_WHITE_MIX` = 0.40.
+- A 1px gloss line sits inside the top of a horizontal fill, and on the leading edge of a vertical fill. It is a little lighter than the fill at the same position (`STATUS_BAR_GLOSS_EXTRA_WHITE` = 0.16).
+- Energy bar CSS stays `linear-gradient(90deg, start 0%, end 100%)` via `linearFillGradientCss`. Those HUD end colors stay hand-tuned. In-world bars compute both stops from the existing base color.
+- Horizontal fills run dark → light, left → right. Vertical fills run dark → light, bottom → top. Donut HUD arcs do the same along the sweep. Thick arcs stay inset so the rail edge remains visible.
+- The empty track is a dark semi-transparent rail, slightly darker on the top pixel, with a 1px inset hairline (`STATUS_BAR_RAIL_EDGE`). Ring tracks use the same edge color and, when the stroke is at least 3px, a lighter inner stroke. Bar size and position are unchanged.
 
 ## Bars
 
@@ -29,15 +31,15 @@ The harvester mining slug is a moving marker, not a fill, and stays flat.
 
 WebGL and WebGPU rasterize terrain. Unit, building, and wreck bars are drawn on the 2D overlay in every backend, so one canvas helper covers WebGL, WebGPU, and the CPU terrain path. There is no per-bar GPU draw.
 
-Rectangular fills are one `drawImage` of a 64px sprite cached per base color and direction. The sprite is built once. Later frames do not call `createLinearGradient` and do not allocate a gradient, pattern, or color string. Donut arcs stroke eight cached color steps. That extra work runs only for selected HUD arcs, not for the many unselected HP bars in a battle.
+Rectangular fills draw a cached 64px ramp sprite plus a cached gloss sprite. Rails draw a cached height sprite (or a top pixel plus a body pixel when the bar is taller than 8px) and one hairline stroke. Later frames do not call `createLinearGradient` and do not allocate a gradient, pattern, or color string. Donut arcs stroke eight cached color steps inside the rail. That arc work runs only for selected HUD arcs, not for the many unselected HP bars in a battle.
 
 ## Performance
 
-Call count for a rectangular bar is unchanged (the gradient sprite replaces the solid fill). This environment cannot certify 75 presented FPS. The qualifying-hardware check stays outstanding. Do not reduce resolution or effects to chase that gate here.
+A rectangular bar is a handful of cached blits plus one stroke, with no per-frame gradient. This environment cannot certify 75 presented FPS. The qualifying-hardware check stays outstanding. Do not reduce resolution or effects to chase that gate here.
 
 ## Tests
 
-`tests/unit/statusBarGradient.test.js` covers the energy-bar gradient string, the 25% white mix, sprite reuse, and donut arc colors.
+`tests/unit/statusBarGradient.test.js` covers the energy-bar gradient string, the darkened start, the 40% white tip, gloss, sprite reuse, the inset rail, and donut arc colors.
 
 ## Visual check
 
@@ -45,4 +47,4 @@ Tutorial completion was set before capture. WebGPU was requested in settings and
 
 - Desktop energy bar, healthy green, computed `linear-gradient(90deg, rgb(63, 143, 68), rgb(124, 226, 132))`. Left of the fill about rgb(65, 145, 70); right edge about rgb(121, 222, 129).
 - Portrait condensed `#mobileEnergyBar` (touch, `mobile-portrait sidebar-condensed`, 80% height, same CSS gradient left to right). Left about rgb(64, 144, 69); right about rgb(121, 221, 129).
-- Unselected in-world green HP. Left rgb(0, 255, 0); leading edge rgb(64, 255, 64), which is a 25% mix toward white. Yellow and short red HP bars, the repair-timeout red, and legacy vertical ammo/fuel bars show the same leading-edge lift on the filled portion only.
+- A later pass darkens the fill start by 22% and reaches 40% white at the growing edge. On a captured green HP bar the body runs from about rgb(15, 208, 15) to rgb(95, 252, 95), with a brighter gloss row above it, a black hairline, and the empty track left dark. Yellow, red, orange ammo, and blue fuel bars use the same ramp.

@@ -295,12 +295,12 @@ describe('UnitRenderer ammo HUD consistency', () => {
       left: 0, right: 100, top: 0, bottom: 100, width: 100, height: 100
     }, unit)
 
-    const tracks = strokes.filter(stroke => stroke.style === '#3A3A3A')
+    const tracks = strokes.filter(stroke => stroke.style === 'rgba(0, 0, 0, 0.95)')
     expect(tracks).toHaveLength(3)
     const starts = tracks.map(stroke => stroke.args[3])
     expect(starts[1] - starts[0]).toBeCloseTo(starts[2] - starts[1])
 
-    const fills = strokes.filter(stroke => stroke.style !== '#3A3A3A')
+    const fills = strokes.filter(stroke => String(stroke.style).startsWith('rgb('))
     expect(fills).toHaveLength(3 * 8)
     tracks.forEach((track, group) => {
       const groupFills = fills.slice(group * 8, (group + 1) * 8)
