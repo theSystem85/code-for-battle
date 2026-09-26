@@ -821,6 +821,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Missions and Campaign
 
+- [x] **Demo battle save (2026-09-25)** — locked builtin save `demo` (`builtin:demo`) with EN/DE labels, generated from the live terrain so the map has mixed biomes, rocks, cliffs, and water, plus two armies with land, air, and naval units.
+  - Spec: [Demo battle save](../specs/093-demo-battle-save.md)
+
 - [x] **Mission 01 Fordline ground and camp (2026-09-24)** — the player yard sits on land, with only a narrow road north. The enemy camp is larger, ringed with concrete walls, and has a south gate plus a second gun turret. Id `Mission_01` and the intro hook stay.
   - Spec: [Mission 01 Fordline and intro video](../specs/091-mission-01-fordline.md)
 

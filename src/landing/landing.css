@@ -24,17 +24,63 @@
 }
 
 html {
-  scroll-behavior: smooth;
+  /* Instant scrolling keeps the sticky header and the fixed backdrop on the
+     same frame. Smooth scrolling paints a gap above the bar in Chromium. */
+  scroll-behavior: auto;
 }
 
 body {
   margin: 0;
-  background:
-    radial-gradient(900px 420px at 10% -10%, rgba(93, 194, 255, 0.16), transparent 60%),
-    var(--landing-bg);
+  background: var(--landing-bg);
   color: var(--landing-text);
   font-family: var(--landing-font);
   line-height: 1.45;
+}
+
+.landing-backdrop,
+.landing-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.landing-backdrop {
+  overflow: hidden;
+}
+
+.landing-backdrop__shift {
+  position: absolute;
+  left: -12%;
+  top: -32%;
+  width: 124%;
+  height: 164%;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
+}
+
+.landing-backdrop img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: blur(6px);
+  /* Scale lives on the image so the blur fringe stays inside the overscan.
+     The scroll transform stays on the wrapper (Safari paints a filtered
+     element that is also translated as a blurry box). */
+  transform: translate3d(0, 0, 0) scale(1.14);
+}
+
+.landing-scrim {
+  background:
+    linear-gradient(180deg, rgba(6, 12, 26, 0.78) 0%, rgba(6, 12, 26, 0.62) 46%, rgba(6, 12, 26, 0.74) 100%),
+    radial-gradient(900px 420px at 10% -10%, rgba(93, 194, 255, 0.14), transparent 60%);
+}
+
+.skip-link,
+.landing-main {
+  position: relative;
+  z-index: 1;
 }
 
 img {
@@ -66,6 +112,7 @@ a {
   position: sticky;
   top: 0;
   z-index: 10;
+  transform: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -243,7 +290,8 @@ h1 {
 .shot img {
   display: block;
   width: 100%;
-  background: #040812;
+  height: auto;
+  background: transparent;
 }
 
 .roster {
@@ -275,9 +323,25 @@ h1 {
 
 .gallery {
   display: grid;
-  grid-template-columns: 1.4fr 0.8fr 0.7fr;
+  grid-template-columns: minmax(0, 1.88fr) minmax(0, 1fr);
+  grid-template-areas:
+    "desktop portrait"
+    "landscape portrait";
   gap: 12px;
+  align-items: start;
   margin-top: 16px;
+}
+
+.shot--desktop {
+  grid-area: desktop;
+}
+
+.shot--landscape {
+  grid-area: landscape;
+}
+
+.shot--portrait {
+  grid-area: portrait;
 }
 
 .shot {
@@ -304,6 +368,8 @@ h1 {
 .feature-card,
 .asset-card {
   padding: 16px 14px 14px;
+  background: rgba(16, 26, 51, 0.92);
+  border: 1px solid var(--landing-line);
 }
 
 .feature-card h3,
@@ -466,6 +532,13 @@ a:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .gallery {
+    grid-template-areas:
+      "desktop"
+      "landscape"
+      "portrait";
+  }
+
   .landing-bar {
     align-items: flex-start;
     flex-direction: column;
@@ -490,5 +563,10 @@ a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .landing-backdrop__shift {
+    transform: none;
+    will-change: auto;
   }
 }

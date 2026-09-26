@@ -14,7 +14,7 @@ The project is fully vibe coded.
 
 <p align="center">
 	<img
-		src="./public/images/docs/GamePlayDesktop(FEB2026).webp"
+		src="./public/images/docs/GamePlayDesktop.webp"
 		alt="Code for Battle gameplay on desktop"
 		width="900"
 	/>
@@ -25,7 +25,7 @@ The project is fully vibe coded.
 		<td width="60%" valign="top">
 			<strong>Mobile (Landscape)</strong><br />
 			<img
-				src="./public/images/docs/GamePlayLandscape(FEB2026).webp"
+				src="./public/images/docs/GamePlayLandscape.webp"
 				alt="Code for Battle gameplay on mobile in landscape"
 				width="520"
 			/>
@@ -33,7 +33,7 @@ The project is fully vibe coded.
 		<td width="40%" valign="top">
 			<strong>Mobile (Portrait)</strong><br />
 			<img
-				src="./public/images/docs/GamePlayPortrait(FEB2026).webp"
+				src="./public/images/docs/GamePlayPortrait.webp"
 				alt="Code for Battle gameplay on mobile in portrait"
 				width="260"
 			/>

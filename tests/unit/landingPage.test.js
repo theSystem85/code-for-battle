@@ -7,6 +7,7 @@ import { ASSET_IDS, FEATURE_IDS, collectTechNodeIds } from '../../src/landing/la
 import {
   applyLocaleChrome,
   applyTranslations,
+  mountLandingBackdrop,
   renderAssets,
   renderFeatures,
   renderTechTree
@@ -23,6 +24,8 @@ import { rewriteLandingUrl } from '../../src/landing/routes.js'
 import { mountSidebarLandingLink } from '../../src/landing/sidebarLink.js'
 
 const indexHtml = readFileSync(path.join(process.cwd(), 'index.html'), 'utf8')
+const landingCss = readFileSync(path.join(process.cwd(), 'src/landing/landing.css'), 'utf8')
+const landingEn = readFileSync(path.join(process.cwd(), 'src/landing/en.html'), 'utf8')
 
 describe('landing locales', () => {
   it('keeps English and German message keys aligned and filled', () => {
@@ -105,6 +108,55 @@ describe('landing rendering', () => {
     expect(document.querySelector('[data-landing-tech]').textContent).toContain('Werft')
     expect(document.querySelector('[data-landing-tech]').textContent).toContain('Schlachtschiff')
     expect(document.body.textContent).not.toContain('landing.')
+  })
+})
+
+describe('landing backdrop', () => {
+  it('parallax follows scroll and stays still when motion is reduced', () => {
+    document.body.innerHTML = '<div class="landing-backdrop__shift"></div>'
+    const frames = []
+    const listeners = {}
+    const win = {
+      scrollY: 400,
+      innerHeight: 800,
+      matchMedia: () => ({ matches: false }),
+      requestAnimationFrame(callback) {
+        frames.push(callback)
+        return frames.length
+      },
+      cancelAnimationFrame() {},
+      addEventListener(name, fn) { listeners[name] = fn },
+      removeEventListener() {}
+    }
+    Object.defineProperty(document.documentElement, 'scrollHeight', { configurable: true, value: 2400 })
+    const stop = mountLandingBackdrop(document, win)
+    expect(document.querySelector('.landing-backdrop__shift').style.transform).toContain('translate3d')
+    listeners.scroll()
+    expect(frames.length).toBe(1)
+    frames[0]()
+    expect(document.querySelector('.landing-backdrop__shift').style.transform).toContain('translate3d')
+    stop()
+
+    document.querySelector('.landing-backdrop__shift').style.transform = ''
+    const still = mountLandingBackdrop(document, {
+      ...win,
+      matchMedia: () => ({ matches: true }),
+      addEventListener() { throw new Error('should not listen') }
+    })
+    expect(document.querySelector('.landing-backdrop__shift').style.transform).toBe('')
+    still()
+  })
+
+  it('keeps the header outside the parallax layer and overscans the backdrop', () => {
+    expect(landingCss).toMatch(/html\s*\{[^}]*scroll-behavior:\s*auto/)
+    expect(landingCss).toMatch(/\.landing-backdrop__shift\s*\{[^}]*top:\s*-32%/)
+    expect(landingCss).toMatch(/\.landing-bar\s*\{[^}]*position:\s*sticky[^}]*top:\s*0/)
+    expect(landingEn.indexOf('landing-backdrop')).toBeLessThan(landingEn.indexOf('class="landing-bar"'))
+    expect(landingEn).toContain('shot--desktop')
+    expect(landingEn).toContain('shot--landscape')
+    expect(landingEn).toContain('shot--portrait')
+    const header = landingEn.slice(landingEn.indexOf('<header'), landingEn.indexOf('</header>'))
+    expect(header).not.toContain('landing-backdrop')
   })
 })
 

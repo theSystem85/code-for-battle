@@ -9,6 +9,10 @@
         "fight": "Überquere die Furt und zerstöre jedes feindliche Gebäude. Der Außenposten ist umwallt und hat eine Öffnung im Süden. Verlierst du alle eigenen Gebäude, ist die Mission verloren."
       }
     },
+    "demo": {
+      "label": "Demo",
+      "description": "Eingebaute Schlacht auf dem aktuellen Gelände. Zwei Armeen treffen mit Panzern, Flugzeugen und Schiffen auf Klippen, Seen und eine Küste."
+    },
     "intro": {
       "kicker": "Mission",
       "skip": "Überspringen",

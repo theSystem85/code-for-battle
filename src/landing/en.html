@@ -14,7 +14,7 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="Code for Battle" data-i18n-content="landing.meta.title">
   <meta property="og:description" content="" data-i18n-content="landing.meta.description">
-  <meta property="og:image" content="/images/docs/GamePlayDesktop(FEB2026).webp">
+  <meta property="og:image" content="/images/docs/GamePlayDesktop.webp">
   <link rel="icon" href="/favicon.ico" sizes="any">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,21 @@
 </head>
 
 <body data-landing-page="true" data-landing-locale="en">
+  <div class="landing-backdrop" aria-hidden="true">
+    <div class="landing-backdrop__shift">
+      <picture>
+        <source media="(max-width: 700px)" srcset="/images/docs/GamePlayBackdropMobile.webp" type="image/webp">
+        <img
+          src="/images/docs/GamePlayBackdrop.webp"
+          alt=""
+          width="1920"
+          height="1080"
+          decoding="async"
+          fetchpriority="low">
+      </picture>
+    </div>
+  </div>
+  <div class="landing-scrim" aria-hidden="true"></div>
   <a class="skip-link" href="#content" data-i18n="landing.nav.skip"></a>
   <header class="landing-bar">
     <a class="landing-brand" href="/" data-i18n="landing.hero.title"></a>
@@ -64,7 +79,7 @@
       </div>
       <figure class="hero-frame">
         <img
-          src="/images/docs/GamePlayDesktop(FEB2026).webp"
+          src="/images/docs/GamePlayDesktop.webp"
           width="1254"
           height="784"
           data-i18n-alt="landing.gallery.desktop.alt"
@@ -77,9 +92,9 @@
       <h2 data-i18n="landing.gallery.title"></h2>
       <p class="section-lead" data-i18n="landing.gallery.lead"></p>
       <div class="gallery">
-        <figure class="shot">
+        <figure class="shot shot--desktop">
           <img
-            src="/images/docs/GamePlayDesktop(FEB2026).webp"
+            src="/images/docs/GamePlayDesktop.webp"
             width="1254"
             height="784"
             alt=""
@@ -88,9 +103,9 @@
             decoding="async">
           <figcaption data-i18n="landing.gallery.desktop.caption"></figcaption>
         </figure>
-        <figure class="shot">
+        <figure class="shot shot--landscape">
           <img
-            src="/images/docs/GamePlayLandscape(FEB2026).webp"
+            src="/images/docs/GamePlayLandscape.webp"
             width="845"
             height="392"
             alt=""
@@ -99,9 +114,9 @@
             decoding="async">
           <figcaption data-i18n="landing.gallery.landscape.caption"></figcaption>
         </figure>
-        <figure class="shot">
+        <figure class="shot shot--portrait">
           <img
-            src="/images/docs/GamePlayPortrait(FEB2026).webp"
+            src="/images/docs/GamePlayPortrait.webp"
             width="391"
             height="846"
             alt=""

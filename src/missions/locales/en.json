@@ -9,6 +9,10 @@
         "fight": "Cross the ford and destroy every enemy building. The outpost is walled, with an opening on the south side. Losing all of your buildings ends the mission."
       }
     },
+    "demo": {
+      "label": "Demo",
+      "description": "Built-in battle on the current terrain. Two armies meet with tanks, aircraft, and ships beside cliffs, lakes, and a coast."
+    },
     "intro": {
       "kicker": "Mission",
       "skip": "Skip",
