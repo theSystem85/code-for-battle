@@ -167,4 +167,43 @@ describe('MinimapRenderer prepared caches', () => {
     expect(alphasAtDraw).toContain(0.5)
     expect(minimapCtx.globalAlpha).toBe(1)
   })
+
+  it('stretches milestone video to the full radar when the clip or the radar aspect changes', () => {
+    const renderer = new MinimapRenderer()
+    const gameCanvas = createCanvas(400, 240, 2)
+    const draws = []
+    vi.spyOn(videoOverlay, 'isVideoPlaying').mockReturnValue(true)
+    vi.spyOn(videoOverlay, 'getMilestoneVideoOpacity').mockReturnValue(1)
+    const currentVideo = vi.spyOn(videoOverlay, 'getCurrentVideo')
+    const renderClip = (logicalWidth, logicalHeight, density, videoWidth, videoHeight) => {
+      const minimapCanvas = createCanvas(logicalWidth, logicalHeight, density)
+      const minimapCtx = minimapCanvas.getContext('2d')
+      minimapCtx.drawImage = (...args) => {
+        draws.push(args)
+      }
+      currentVideo.mockReturnValue({
+        readyState: 2,
+        videoWidth,
+        videoHeight
+      })
+      renderer.render(
+        minimapCtx,
+        minimapCanvas,
+        createMap(),
+        { x: 0, y: 0 },
+        gameCanvas,
+        [],
+        [],
+        { radarActive: true }
+      )
+    }
+
+    renderClip(160, 96, 2, 1920, 1080)
+    renderClip(220, 80, 1, 100, 800)
+
+    expect(draws).toEqual([
+      [expect.objectContaining({ videoWidth: 1920, videoHeight: 1080 }), 0, 0, 320, 192],
+      [expect.objectContaining({ videoWidth: 100, videoHeight: 800 }), 0, 0, 220, 80]
+    ])
+  })
 })

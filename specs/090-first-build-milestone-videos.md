@@ -4,7 +4,7 @@
 The local player gets a radar milestone video with narrator voice-over the first time they produce a Mine Layer, Mine Sweeper, Rocket Tank, or Howitzer. The same playback path covers the existing refinery, tank, Tesla coil, and airstrip clips. Every milestone video fades in and out on the minimap. Production of a still-unachieved video milestone preloads that clip so playback can start as soon as the milestone fires.
 
 ## Assets
-All new and replaced clips live in `public/video/`. Picture files are 960×576 (5:3) H.264, about 6 seconds, with the unit fully visible and letterboxed inside the frame. The minimap is also 5:3 (`minimapHeight = round(minimapWidth * 0.6)`). `renderVideoOverlay` fits the frame inside the radar (contain). It does not crop.
+All new and replaced clips live in `public/video/`. Most picture files are 960×576 (5:3) H.264, about 6 seconds. `tank_over_crystals.mp4` and `tesla_coil_hits_tank.mp4` are 1280×720 (16:9). The minimap is 5:3 on desktop (`minimapHeight = round(minimapWidth * 0.6)`) and follows the sidebar when phone portrait or phone landscape resizes it. `renderVideoOverlay` stretches every frame to the radar's current backing width and height (`object-fit: fill`). It does not letterbox or pillarbox. The hidden `<video>` uses the same `object-fit: fill` rule.
 
 | Milestone id | Trigger | Video base | Narration |
 | --- | --- | --- | --- |
@@ -19,7 +19,14 @@ All new and replaced clips live in `public/video/`. Picture files are 960×576 (
 
 `firstRocketTankBuilt` is separate from `rocketTankUnlocked`. The unlock milestone still only unlocks production when a rocket turret exists and does not play a video.
 
-`playSyncedVideoAudio(base)` loads `video/{base}.mp4` and `video/{base}.mp3`. If the mp3 fails, the overlay keeps the previous fallback and plays audio embedded in the mp4 when that track exists.
+`playSyncedVideoAudio(base)` loads `video/{base}.mp4` and tries `video/{base}.mp3`. `resolveMilestoneAudioMode` / `milestoneClipUsesEmbeddedAudio` decide the track:
+
+- A usable companion MP3 keeps the `<video>` muted (`muted` attribute, `defaultMuted`, and `volume` 0) and plays the MP3, so the voice-over is not heard twice.
+- No companion file, a failed load, or a failed `audio.play()` unmutes the video and plays the audio embedded in the mp4. Preloaded elements clear `defaultMuted` and the `muted` attribute before that `play()`.
+
+Level is `0.28 * master * sfx * voice * fade`. The game's only slider is master volume; sfx and voice are fully open (`1`). Master `0`, or the headless test mute, forces silence. The 220ms radar fade multiplies that level, including the fade to 0 at the end. Skip, restart, and a queued handoff set volume to 0 and pause both elements immediately.
+
+Unmuted `play()` is attempted because the match starts after a user gesture. `NotAllowedError` plays the picture muted and retries the embedded track on the next pointer or key gesture. A companion-MP3 clip does not take that unmute path.
 
 ## Trigger and persistence
 `MilestoneSystem.checkMilestones` scans for a unit or building owned by `gameState.humanPlayer`. The first match records the milestone id, shows the achievement notification, and plays the video once. Enemy owners do not count. A second unit of the same type does not play the clip again.
@@ -44,15 +51,15 @@ The first time a Mine Layer, Mine Sweeper, Rocket Tank, Howitzer, or standard ta
 - 1 through the middle of the clip
 - falling to 0 over the last 220ms
 
-At full opacity the video still replaces the radar, which is the previous behavior. Below 1 the radar is drawn first and the video frame is painted with `globalAlpha`, then alpha is restored. The fade does not add a full-widget translucent fill, gradient, or shadow. The opacity math does not allocate.
+At full opacity the video still replaces the radar, which is the previous behavior. Below 1 the radar is drawn first and the video frame is painted with `globalAlpha`, then alpha is restored. The fade does not add a full-widget translucent fill, gradient, or shadow. The opacity math does not allocate. While a clip is playing, one reused animation frame writes the faded volume onto the companion MP3 or the unmuted video element. That write does not allocate.
 
 ## How to test
 1. Start a match and begin production of a Mine Layer, Mine Sweeper, Rocket Tank, or Howitzer before you have built one. The radar should stay on the map while the bar runs (preload does not show the video).
-2. When that first unit finishes, the matching 5:3 clip plays on the radar with the narrator line above, fades in within about a quarter second, and fades out at the end. The unit is fully visible and not cropped.
+2. When that first unit finishes, the matching clip plays on the radar with the narrator line above, fades in within about a quarter second, and fades out at the end. The picture covers the whole radar, stretched if its aspect ratio is not the radar's.
 3. Build a second one. The video does not play again.
 4. Save after the video, reload, and confirm it does not replay. Restart the match and confirm a new first unit can play it again.
 5. Repeat for the first tank and the first airstrip. Both should still play, now with their companion narration, and should fade the same way.
 6. Build the first refinery and the first Tesla coil and confirm those existing narrated clips still play and fade.
 
 ## Performance
-Preload runs once when production starts, not per simulation tick. The new milestone scans run inside the existing every-60-frames pass and stop once each id is achieved. While a clip is fully opaque, the minimap still draws only the video. The radar is drawn underneath only during the 220ms fade in and fade out. No per-frame objects, sets, or linear entity searches were added to the video draw. 75 presented FPS is not certified here: this session is headless and has no 75 Hz display. The qualifying-hardware check remains outstanding.
+Preload runs once when production starts, not per simulation tick. The new milestone scans run inside the existing every-60-frames pass and stop once each id is achieved. While a clip is fully opaque, the minimap still draws only the video, now as one full-radar `drawImage` instead of a contain fit. The radar is drawn underneath only during the 220ms fade in and fade out. No per-frame objects, sets, or linear entity searches were added to the video draw. The audio fade is one reused frame callback and two volume property writes for the duration of the clip. 75 presented FPS is not certified here: this session is headless and has no 75 Hz display. The qualifying-hardware check remains outstanding.

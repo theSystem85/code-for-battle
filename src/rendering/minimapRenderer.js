@@ -290,7 +290,8 @@ export class MinimapRenderer {
 
   /**
    * Render video overlay directly on the minimap canvas.
-   * Sources are fit inside the 5:3 radar (contain). They are not cropped.
+   * The frame is stretched to the radar's current backing size (object-fit: fill),
+   * so a 16:9 clip and a 5:3 clip both cover the widget with no side bars.
    * opacity < 1 fades the frame over the radar already drawn underneath.
    */
   renderVideoOverlay(minimapCtx, minimapWidth, minimapHeight, pixelRatio = 1, opacity = 1) {
@@ -317,39 +318,20 @@ export class MinimapRenderer {
         return
       }
 
-      // Calculate video dimensions maintaining aspect ratio. Contain, never cover.
-      const videoAspectRatio = videoElement.videoWidth / videoElement.videoHeight
-      const minimapAspectRatio = minimapWidth / minimapHeight
-
-      let renderWidth, renderHeight, offsetX, offsetY
-
-      if (videoAspectRatio > minimapAspectRatio) {
-        // Video is wider, fit to width
-        renderWidth = minimapWidth
-        renderHeight = minimapWidth / videoAspectRatio
-        offsetX = 0
-        offsetY = (minimapHeight - renderHeight) / 2
-      } else {
-        // Video is taller or same ratio, fit to height
-        renderHeight = minimapHeight
-        renderWidth = minimapHeight * videoAspectRatio
-        offsetX = (minimapWidth - renderWidth) / 2
-        offsetY = 0
-      }
-
       if (!partial) {
         minimapCtx.fillStyle = '#000'
         minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight)
       }
 
-      // Draw the video frame
+      // Stretch to the live radar size. drawImage ignores CSS object-fit, so the
+      // destination rectangle is the full backing store (equivalent to object-fit: fill).
       try {
         minimapCtx.drawImage(
           videoElement,
-          offsetX,
-          offsetY,
-          renderWidth,
-          renderHeight
+          0,
+          0,
+          minimapWidth,
+          minimapHeight
         )
       } catch (error) {
         window.logger.warn('Failed to draw video frame:', error)

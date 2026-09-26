@@ -8,8 +8,8 @@ When the local player produces their first standard land tank, play `public/vide
 - Companion narration: `public/video/first_tank.mp3`
 - Source: 5:3 H.264 remaster, 960×576, about 6 seconds, with the tank fully visible inside the frame
 - Playback name passed to `playSyncedVideoAudio`: `first_tank`
-- The overlay plays `first_tank.mp3` in sync and keeps the video muted. If that mp3 fails to load, playback falls back to the AAC track embedded in the mp4 (`src/ui/videoOverlay.js`).
-- The radar draws the frame with contain sizing. It is not cropped. Fade and production preload are specified in `specs/090-first-build-milestone-videos.md`.
+- The overlay plays `first_tank.mp3` in sync and keeps the video muted. If that mp3 fails to load or fails to play, playback uses the AAC track embedded in the mp4 (`src/ui/milestoneAudioMode.js`, `src/ui/videoOverlay.js`).
+- The radar stretches the frame to the full minimap (`object-fit: fill`). Fade, volume, and production preload are specified in `specs/090-first-build-milestone-videos.md`.
 
 ## Trigger
 - Milestone id: `firstTank`
