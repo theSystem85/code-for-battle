@@ -38,3 +38,11 @@ Call count for a rectangular bar is unchanged (the gradient sprite replaces the 
 ## Tests
 
 `tests/unit/statusBarGradient.test.js` covers the energy-bar gradient string, the 25% white mix, sprite reuse, and donut arc colors.
+
+## Visual check
+
+Tutorial completion was set before capture. WebGPU was requested in settings and stayed unavailable in this environment (`gpuTerrain.backend` remained `webgl`), so the bars were checked on the shared overlay. Measured device pixels:
+
+- Desktop energy bar, healthy green, computed `linear-gradient(90deg, rgb(63, 143, 68), rgb(124, 226, 132))`. Left of the fill about rgb(65, 145, 70); right edge about rgb(121, 222, 129).
+- Portrait condensed `#mobileEnergyBar` (touch, `mobile-portrait sidebar-condensed`, 80% height, same CSS gradient left to right). Left about rgb(64, 144, 69); right about rgb(121, 221, 129).
+- Unselected in-world green HP. Left rgb(0, 255, 0); leading edge rgb(64, 255, 64), which is a 25% mix toward white. Yellow and short red HP bars, the repair-timeout red, and legacy vertical ammo/fuel bars show the same leading-edge lift on the filled portion only.
