@@ -1,5 +1,4 @@
 import { gameState } from '../../gameState.js'
-import { isReplayInteractionLocked } from '../../replaySystem.js'
 import { isLocalPartyAutomationLocked } from '../../network/multiplayerStore.js'
 import { createLongPressTracker, LONG_PRESS_MS } from '../radialMenu/longPressTracker.js'
 import { createRadialMenu } from '../radialMenu/radialMenu.js'
@@ -9,14 +8,25 @@ import {
   productionBuildingAnchor,
   productionMenuRadius
 } from './productionBuildingTarget.js'
-import { selectProductionRadialItem } from './productionRadialSelect.js'
+
+function replayInteractionLocked() {
+  return Boolean(gameState.replayMode && !gameState.replay?.isApplyingReplayCommand)
+}
+
+let selectItemPromise = null
+function loadSelectItem() {
+  if (!selectItemPromise) {
+    selectItemPromise = import('./productionRadialSelect.js')
+  }
+  return selectItemPromise
+}
 
 function gestureBlocked() {
   if (gameState.mapEditMode) return true
   if (gameState.buildingPlacementMode || gameState.mobileBuildPaintMode) return true
   if (gameState.repairMode || gameState.sellMode) return true
   if (gameState.isSpectator || gameState.localPlayerDefeated) return true
-  if (isReplayInteractionLocked() || isLocalPartyAutomationLocked()) return true
+  if (replayInteractionLocked() || isLocalPartyAutomationLocked()) return true
   return false
 }
 
@@ -48,11 +58,19 @@ function dispatchTouchPointer(canvas, type, source, x, y) {
   }))
 }
 
-export function installProductionRadialMenu(canvas) {
-  if (!canvas || canvas.dataset.productionRadialMenu === 'true') return null
-  canvas.dataset.productionRadialMenu = 'true'
+const installedCanvases = new WeakSet()
 
-  const menu = createRadialMenu()
+export function installProductionRadialMenu(canvas) {
+  if (!canvas || installedCanvases.has(canvas)) return null
+  if (canvas.dataset && canvas.dataset.productionRadialMenu === 'true') return null
+  installedCanvases.add(canvas)
+  if (canvas.dataset) canvas.dataset.productionRadialMenu = 'true'
+
+  let menu = null
+  const ensureMenu = () => {
+    if (!menu) menu = createRadialMenu()
+    return menu
+  }
   let session = null
   let bypass = false
 
@@ -78,12 +96,14 @@ export function installProductionRadialMenu(canvas) {
 
   const finishMenu = (x, y) => {
     const building = session && session.building
-    const hovered = menu.isOpen() ? menu.updatePointer(x, y) : null
+    const hovered = menu && menu.isOpen() ? menu.updatePointer(x, y) : null
     setMenuFlag(false)
     session = null
-    menu.close()
+    if (menu) menu.close()
     if (hovered && building) {
-      selectProductionRadialItem(hovered, building)
+      loadSelectItem().then(({ selectProductionRadialItem }) => {
+        selectProductionRadialItem(hovered, building)
+      })
     }
   }
 
@@ -134,7 +154,7 @@ export function installProductionRadialMenu(canvas) {
     setMenuFlag(true)
     const anchor = productionBuildingAnchor(session.building, canvas)
     const buttonSize = radialProductionButtonSize()
-    menu.open(anchor, items, {
+    ensureMenu().open(anchor, items, {
       buttonSize,
       radius: productionMenuRadius(session.building, buttonSize),
       duration: 220,
@@ -145,6 +165,7 @@ export function installProductionRadialMenu(canvas) {
 
   const begin = (event, pointerType) => {
     if (bypass || session || gestureBlocked()) return false
+    loadSelectItem()
     if (pointerType !== 'touch' && event.button !== 0) return false
     const building = findOwnedProductionBuildingFromClient(event.clientX, event.clientY, canvas)
     if (!building) return false
@@ -197,7 +218,7 @@ export function installProductionRadialMenu(canvas) {
       handOff(snapshot, event.clientX, event.clientY)
       return
     }
-    if (session.opened) {
+    if (session.opened && menu) {
       menu.updatePointer(event.clientX, event.clientY)
     }
     event.preventDefault()
@@ -228,7 +249,7 @@ export function installProductionRadialMenu(canvas) {
     }
     session = null
     setMenuFlag(false)
-    menu.close()
+    if (menu) menu.close()
     if (decision.action === 'short' || decision.action === 'release' || snapshot.empty) {
       replayShort(snapshot, event.clientX, event.clientY)
     }
@@ -288,8 +309,13 @@ export function installProductionRadialMenu(canvas) {
     clearTimer()
     setMenuFlag(false)
     session = null
-    menu.close()
+    if (menu) menu.close()
   })
 
-  return menu
+  return {
+    isOpen: () => Boolean(menu && menu.isOpen()),
+    close: () => {
+      if (menu) menu.close()
+    }
+  }
 }

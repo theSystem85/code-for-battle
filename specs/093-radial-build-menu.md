@@ -73,7 +73,7 @@ An option is included only when its sidebar button is visible the way the sideba
 
 Button diameter is half the condensed sidebar button (`--portrait-condensed-bar-height`, 96px, so 48px) unless the viewport fit has to shrink it.
 
-Selection uses the sidebar command path:
+Selection uses the sidebar command path. The production command module loads on the first gesture, so installing the menu does not pull the audio and video overlay into input setup:
 
 - Buildings that are ready for placement call `productionQueue.enableBuildingPlacementMode`.
 - Other buildings call `productionQueue.addItem(type, button, true)`.
