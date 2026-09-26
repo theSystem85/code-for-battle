@@ -18,7 +18,9 @@
       "vibe": "Vibe-coded",
       "tech": "Tech tree",
       "manual": "Player guide",
-      "skip": "Skip to content"
+      "skip": "Skip to content",
+      "github": "View on GitHub",
+      "githubShort": "GitHub"
     },
     "hero": {
       "eyebrow": "Browser real-time strategy",

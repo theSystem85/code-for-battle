@@ -21,11 +21,42 @@ import {
 } from '../../src/landing/landingLocale.js'
 import { landingRedirectTarget } from '../../src/landing/redirect.js'
 import { rewriteLandingUrl } from '../../src/landing/routes.js'
-import { mountSidebarLandingLink } from '../../src/landing/sidebarLink.js'
+import { GITHUB_REPO_URL, mountSidebarGithubLink, mountSidebarLandingLink } from '../../src/landing/sidebarLink.js'
 
 const indexHtml = readFileSync(path.join(process.cwd(), 'index.html'), 'utf8')
 const landingCss = readFileSync(path.join(process.cwd(), 'src/landing/landing.css'), 'utf8')
 const landingEn = readFileSync(path.join(process.cwd(), 'src/landing/en.html'), 'utf8')
+const landingDe = readFileSync(path.join(process.cwd(), 'src/landing/de.html'), 'utf8')
+
+function expectGithubPlacement(html) {
+  const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'))
+  const footer = html.slice(html.indexOf('<footer'), html.indexOf('</footer>'))
+  const headerGithub = header.indexOf('class="landing-github"')
+  expect(header.indexOf('landing.nav.gallery')).toBeLessThan(header.indexOf('landing.nav.features'))
+  expect(header.indexOf('landing-lang')).toBeLessThan(headerGithub)
+  expect(headerGithub).toBeLessThan(header.indexOf('landing.nav.play'))
+  expect(header).toContain(`href="${GITHUB_REPO_URL}"`)
+  expect(header).toContain('target="_blank"')
+  expect(header).toContain('rel="noopener noreferrer"')
+  expect(header).toContain('<svg')
+  expect(header).toContain('data-i18n="landing.nav.github"')
+
+  const imprint = footer.indexOf('landing.footer.imprint')
+  const privacy = footer.indexOf('landing.footer.privacy')
+  const contact = footer.indexOf('landing.footer.contact')
+  const manual = footer.indexOf('landing.nav.manual')
+  const play = footer.indexOf('landing.footer.play')
+  const footerGithub = footer.indexOf('landing-github--footer')
+  expect(imprint).toBeLessThan(privacy)
+  expect(privacy).toBeLessThan(contact)
+  expect(contact).toBeLessThan(manual)
+  expect(manual).toBeLessThan(play)
+  expect(play).toBeLessThan(footerGithub)
+  expect(footer).toContain(`href="${GITHUB_REPO_URL}"`)
+  expect(footer).toContain('target="_blank"')
+  expect(footer).toContain('rel="noopener noreferrer"')
+  expect(footer).toContain('<svg')
+}
 
 describe('landing locales', () => {
   it('keeps English and German message keys aligned and filled', () => {
@@ -36,6 +67,10 @@ describe('landing locales', () => {
       expect(translate(en, key).trim().length).toBeGreaterThan(0)
       expect(translate(de, key).trim().length).toBeGreaterThan(0)
     })
+    expect(translate(en, 'landing.nav.github')).toBe('View on GitHub')
+    expect(translate(de, 'landing.nav.github')).toBe('Auf GitHub ansehen')
+    expect(translate(en, 'landing.nav.githubShort')).toBe('GitHub')
+    expect(translate(de, 'landing.nav.githubShort')).toBe('GitHub')
   })
 
   it('names every tech node, feature, and asset kind in both locales', () => {
@@ -109,6 +144,27 @@ describe('landing rendering', () => {
     expect(document.querySelector('[data-landing-tech]').textContent).toContain('Schlachtschiff')
     expect(document.body.textContent).not.toContain('landing.')
   })
+
+  it('keeps the GitHub mark when filling the link label', () => {
+    document.body.innerHTML = `
+      <a class="landing-github" href="${GITHUB_REPO_URL}" target="_blank" rel="noopener noreferrer">
+        <svg class="landing-github__mark" aria-hidden="true"></svg>
+        <span data-i18n="landing.nav.github"></span>
+      </a>
+    `
+    applyTranslations(document, en)
+    const link = document.querySelector('.landing-github')
+    expect(link.querySelector('svg')).not.toBeNull()
+    expect(link.querySelector('span').textContent).toBe('View on GitHub')
+    expect(link.getAttribute('href')).toBe(GITHUB_REPO_URL)
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer')
+  })
+
+  it('places the repository link on the English and German landing pages', () => {
+    expectGithubPlacement(landingEn)
+    expectGithubPlacement(landingDe)
+  })
 })
 
 describe('landing backdrop', () => {
@@ -176,5 +232,31 @@ describe('sidebar landing link', () => {
     expect(locale).toBe('de')
     expect(link.getAttribute('href')).toBe('/de/landing')
     expect(link.textContent).toBe(translate(de, 'landing.nav.sidebar'))
+  })
+
+  it('places GitHub after Privacy and opens the repository in a new tab', async() => {
+    const privacyAt = indexHtml.indexOf('href="/privacy"')
+    const githubAt = indexHtml.indexOf('id="sidebarGithubLink"')
+    const landingAt = indexHtml.indexOf('id="sidebarLandingLink"')
+    expect(privacyAt).toBeGreaterThan(-1)
+    expect(githubAt).toBeGreaterThan(privacyAt)
+    expect(landingAt).toBeGreaterThan(githubAt)
+    const githubTag = indexHtml.slice(githubAt, githubAt + 180)
+    expect(githubTag).toContain(`href="${GITHUB_REPO_URL}"`)
+    expect(githubTag).toContain('target="_blank"')
+    expect(githubTag).toContain('rel="noopener noreferrer"')
+
+    document.body.innerHTML = `<a id="sidebarGithubLink" href="${GITHUB_REPO_URL}">GitHub</a>`
+    const locale = await mountSidebarGithubLink(document.getElementById('sidebarGithubLink'), {
+      storage: { getItem: () => 'de' },
+      languages: ['en']
+    })
+    const link = document.getElementById('sidebarGithubLink')
+    expect(locale).toBe('de')
+    expect(link.textContent).toBe(translate(de, 'landing.nav.githubShort'))
+    expect(link.getAttribute('href')).toBe(GITHUB_REPO_URL)
+    expect(link.getAttribute('target')).toBe('_blank')
+    expect(link.getAttribute('rel')).toBe('noopener noreferrer')
+    expect(link.lang).toBe('de')
   })
 })

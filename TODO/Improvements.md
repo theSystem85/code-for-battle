@@ -863,6 +863,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Landing and sidebar GitHub link** — `/en/landing` and `/de/landing` show a header and footer link to the repository, and the sidebar footer adds GitHub after Privacy. Each link opens in a new tab.
+  - Spec: [Marketing landing page](../specs/090-marketing-landing-page.md)
+
 - [x] **Full-screen phone-portrait dialogs** — settings (Runtime Config, Key Bindings, Controllers), runtime config, save editor, QR invite/scanner, remote invite, kicked, benchmark, keybinding conflict, user docs, mission briefing, cheat console, and performance dialogs fill the dynamic viewport with safe-area insets and a single body scroller.
   - Spec: [Key Bindings Editor Modal](../specs/spec-keybindings-editor.md)
 
