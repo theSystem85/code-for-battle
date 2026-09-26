@@ -996,6 +996,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Radial placement ghost stays after a successful place (2026-09-26)** — a successful radial blueprint place from release-then-drag or the 500ms hold-drag ends planning immediately, and cancel clears the same ghost. One radial selection places one building. Sidebar shift-chain is the repeat path and is not used here.
+  - Spec: [Radial build menu](../specs/093-radial-build-menu.md)
+
 - [x] **Battleship HUD and carrier deck layering follow-up (2026-07-27)** — remove the obsolete per-turret green dashed/red blocked-angle HUD while retaining turret selection feedback, and always render carrier-bound landed/taxiing aircraft above the carrier hull.
   - Spec: [Airborne Render Layering](../specs/052-airborne-render-layering.md)
 

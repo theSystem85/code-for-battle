@@ -16,6 +16,7 @@ import { getSimulationTime } from './game/time.js'
 import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
 import { claimFirstProductionNarration, preloadMilestoneForProduction } from './ui/milestoneMediaCache.js'
+import { resolveExplicitSpawnFactory } from './production/spawnFactorySelection.js'
 
 function playUnitReadySound(unitType) {
   if (claimFirstProductionNarration(unitType)) return
@@ -221,6 +222,7 @@ export const productionQueue = {
         itemType: type,
         isBuilding: Boolean(isBuilding),
         rallyPoint: rallyPoint || null,
+        factoryId: options.factoryId || null,
         blueprint: blueprint
           ? {
             type: blueprint.type,
@@ -260,7 +262,13 @@ export const productionQueue = {
         const label = button.querySelector('.new-label')
         if (label) label.style.display = 'none'
       }
-      this.unitItems.push({ type, button, isBuilding, rallyPoint })
+      this.unitItems.push({
+        type,
+        button,
+        isBuilding,
+        rallyPoint,
+        factoryId: options.factoryId || null
+      })
       const currentCount = this.unitItems.filter(item => item.button === button).length
       this.updateBatchCounter(button, currentCount)
 
@@ -369,7 +377,8 @@ export const productionQueue = {
       startTime: getSimulationTime(gameState),
       duration: duration,
       isBuilding: item.isBuilding, // Should always be false here
-      rallyPoint: item.rallyPoint || null
+      rallyPoint: item.rallyPoint || null,
+      factoryId: item.factoryId || null
     }
 
     // Warm the milestone clip before the unit exists. Playback waits for the milestone.
@@ -625,10 +634,24 @@ export const productionQueue = {
         return
       }
 
-      gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
-      const chosenIndex = gameState.nextAirstripIndex % availableAirstrips.length
-      spawnFactory = availableAirstrips[chosenIndex]
-      gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % availableAirstrips.length
+      const requestedAirstrip = resolveExplicitSpawnFactory(
+        allAirstrips,
+        availableAirstrips,
+        this.currentUnit.factoryId
+      )
+      if (requestedAirstrip.status === 'unavailable') {
+        showNotification('Airstrip parking is full. F22 production is waiting for a free slot.')
+        this.pausedUnit = true
+        return
+      }
+      if (requestedAirstrip.status === 'chosen') {
+        spawnFactory = requestedAirstrip.factory
+      } else {
+        gameState.nextAirstripIndex = gameState.nextAirstripIndex ?? 0
+        const chosenIndex = gameState.nextAirstripIndex % availableAirstrips.length
+        spawnFactory = availableAirstrips[chosenIndex]
+        gameState.nextAirstripIndex = (gameState.nextAirstripIndex + 1) % availableAirstrips.length
+      }
 
       if (!rallyPointTarget && spawnFactory.rallyPoint) {
         rallyPointTarget = spawnFactory.rallyPoint
@@ -649,13 +672,21 @@ export const productionQueue = {
 
       const availableHelipads = allHelipads.filter(h => !h.landedUnitId)
       const selectionPool = availableHelipads.length > 0 ? availableHelipads : allHelipads
+      const requestedHelipad = resolveExplicitSpawnFactory(
+        allHelipads,
+        allHelipads,
+        this.currentUnit.factoryId
+      )
+      if (requestedHelipad.status === 'chosen') {
+        spawnFactory = requestedHelipad.factory
+      } else {
+        gameState.nextHelipadIndex = gameState.nextHelipadIndex ?? 0
+        const chosenIndex = gameState.nextHelipadIndex % selectionPool.length
+        spawnFactory = selectionPool[chosenIndex]
+        gameState.nextHelipadIndex = (gameState.nextHelipadIndex + 1) % selectionPool.length
+      }
 
-      gameState.nextHelipadIndex = gameState.nextHelipadIndex ?? 0
-      const chosenIndex = gameState.nextHelipadIndex % selectionPool.length
-      spawnFactory = selectionPool[chosenIndex]
-      gameState.nextHelipadIndex = (gameState.nextHelipadIndex + 1) % selectionPool.length
-
-      if (!availableHelipads.length && spawnFactory.landedUnitId) {
+      if (spawnFactory && spawnFactory.landedUnitId) {
         const occupyingUnit = units.find(u => u && u.id === spawnFactory.landedUnitId)
         if (occupyingUnit) {
           occupyingUnit.manualFlightState = 'takeoff'
@@ -697,10 +728,20 @@ export const productionQueue = {
         return
       }
 
-      gameState.nextF35PadIndex = gameState.nextF35PadIndex ?? 0
-      const chosenIndex = gameState.nextF35PadIndex % availablePads.length
-      spawnFactory = availablePads[chosenIndex]
-      gameState.nextF35PadIndex = (gameState.nextF35PadIndex + 1) % availablePads.length
+      const requestedPad = resolveExplicitSpawnFactory(allPads, availablePads, this.currentUnit.factoryId)
+      if (requestedPad.status === 'unavailable') {
+        showNotification('The selected pad is full. F35 production is waiting for a free slot.')
+        this.pausedUnit = true
+        return
+      }
+      if (requestedPad.status === 'chosen') {
+        spawnFactory = requestedPad.factory
+      } else {
+        gameState.nextF35PadIndex = gameState.nextF35PadIndex ?? 0
+        const chosenIndex = gameState.nextF35PadIndex % availablePads.length
+        spawnFactory = availablePads[chosenIndex]
+        gameState.nextF35PadIndex = (gameState.nextF35PadIndex + 1) % availablePads.length
+      }
 
       if (!rallyPointTarget && spawnFactory.rallyPoint) {
         rallyPointTarget = spawnFactory.rallyPoint
@@ -710,9 +751,18 @@ export const productionQueue = {
         b => b.type === 'shipyard' && b.owner === gameState.humanPlayer && b.health > 0
       )
       if (shipyards.length > 0) {
-        gameState.nextShipyardIndex = gameState.nextShipyardIndex ?? 0
-        spawnFactory = shipyards[gameState.nextShipyardIndex % shipyards.length]
-        gameState.nextShipyardIndex++
+        const requestedShipyard = resolveExplicitSpawnFactory(
+          shipyards,
+          shipyards,
+          this.currentUnit.factoryId
+        )
+        if (requestedShipyard.status === 'chosen') {
+          spawnFactory = requestedShipyard.factory
+        } else {
+          gameState.nextShipyardIndex = gameState.nextShipyardIndex ?? 0
+          spawnFactory = shipyards[gameState.nextShipyardIndex % shipyards.length]
+          gameState.nextShipyardIndex++
+        }
         if (!rallyPointTarget && spawnFactory.rallyPoint) {
           rallyPointTarget = spawnFactory.rallyPoint
         }
@@ -725,10 +775,18 @@ export const productionQueue = {
       )
 
       if (vehicleFactories.length > 0) {
-        // Use round-robin to select the next factory
-        gameState.nextVehicleFactoryIndex = gameState.nextVehicleFactoryIndex ?? 0
-        spawnFactory = vehicleFactories[gameState.nextVehicleFactoryIndex % vehicleFactories.length]
-        gameState.nextVehicleFactoryIndex++
+        const requestedFactory = resolveExplicitSpawnFactory(
+          vehicleFactories,
+          vehicleFactories,
+          this.currentUnit.factoryId
+        )
+        if (requestedFactory.status === 'chosen') {
+          spawnFactory = requestedFactory.factory
+        } else {
+          gameState.nextVehicleFactoryIndex = gameState.nextVehicleFactoryIndex ?? 0
+          spawnFactory = vehicleFactories[gameState.nextVehicleFactoryIndex % vehicleFactories.length]
+          gameState.nextVehicleFactoryIndex++
+        }
 
         // Use this specific factory's rally point if no custom one was set
         if (!rallyPointTarget) {
@@ -1316,7 +1374,8 @@ export const productionQueue = {
     const serializeQueueItem = (item) => ({
       type: item.type,
       rallyPoint: serializeRallyPoint(item.rallyPoint),
-      blueprint: serializeBlueprint(item.blueprint)
+      blueprint: serializeBlueprint(item.blueprint),
+      factoryId: item.factoryId || null
     })
 
     return {
@@ -1327,7 +1386,8 @@ export const productionQueue = {
           type: this.currentUnit.type,
           progress: clampProgress(this.currentUnit),
           duration: Number.isFinite(this.currentUnit.duration) ? this.currentUnit.duration : 0,
-          rallyPoint: serializeRallyPoint(this.currentUnit.rallyPoint)
+          rallyPoint: serializeRallyPoint(this.currentUnit.rallyPoint),
+          factoryId: this.currentUnit.factoryId || null
         }
         : null,
       currentBuilding: this.currentBuilding
@@ -1456,7 +1516,8 @@ export const productionQueue = {
           type: item.type,
           button,
           isBuilding: false,
-          rallyPoint
+          rallyPoint,
+          factoryId: item.factoryId || null
         })
       })
     }
@@ -1527,7 +1588,8 @@ export const productionQueue = {
             : now,
           duration,
           isBuilding: false,
-          rallyPoint
+          rallyPoint,
+          factoryId: state.currentUnit.factoryId || match.factoryId || null
         }
         match.button.classList.add('active')
         if (this.pausedUnit) {

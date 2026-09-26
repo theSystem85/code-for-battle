@@ -931,7 +931,7 @@ function executeReplayCommand(entry) {
           isBuilding,
           command.blueprint || null,
           command.rallyPoint || null,
-          { allowReplay: true, record: false }
+          { allowReplay: true, record: false, factoryId: command.factoryId || null }
         )
       }
       return

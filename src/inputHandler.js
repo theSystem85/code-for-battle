@@ -10,6 +10,7 @@ import { GAME_DEFAULT_CURSOR, preloadCursorAssets } from './input/cursorStyles.j
 import { observeMultiplayerSession } from './network/multiplayerSessionEvents.js'
 import { showNotification } from './ui/notifications.js'
 import { bindGamepadCommands } from './input/gamepad/gamepadCommandBridge.js'
+import { installProductionRadialMenu } from './ui/productionRadial/productionRadialController.js'
 
 export const selectedUnits = []
 export const selectionActive = false
@@ -69,6 +70,7 @@ export function setupInputHandlers(units, factories, mapGrid) {
 
   // Setup input handlers
   mouseHandler.setupMouseEvents(gameCanvas, units, factories, mapGrid, selectedUnits, selectionManager, unitCommands, cursorManager)
+  installProductionRadialMenu(gameCanvas)
   keyboardHandler.setupKeyboardEvents(units, selectedUnits, mapGrid, factories)
 
   // Give keyboard handler access to mouse handler for ESC key functionality
