@@ -940,7 +940,7 @@ function getOrCreateQRModal() {
         <div class="multiplayer-qr-modal__field">
           <p class="multiplayer-qr-modal__field-label multiplayer-qr-modal__code-label"></p>
           <div class="multiplayer-qr-modal__link-container">
-            <input type="text" class="multiplayer-qr-modal__code-input" readonly>
+            <input type="text" class="multiplayer-qr-modal__link-input multiplayer-qr-modal__code-input" readonly>
             <button type="button" class="multiplayer-qr-modal__copy-btn">Copy</button>
           </div>
         </div>

@@ -1002,6 +1002,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Loading bar sat near 66–69% for most of boot (2026-09-26)** — boot progress is weighted by measured phase time. Prepared sprites and tile sheets report sub-progress, the sprite pass yields often enough for the bar to paint, and 100% waits until the first frame and any in-flight WebGPU init actually finish.
   - Spec: [Loading Screen](../specs/080-loading-screen.md)
 
+- [x] **Invite code field matches the link field (2026-09-26)** — the host dialog code input used an unstyled class, so it kept the browser's white background. It now shares the link field's class and styles: background, border, radius, font, padding, height, and copy-button alignment.
+  - Spec: [Cross-device WebRTC join](../specs/072-cross-device-webrtc-join.md)
+
 - [x] **Gamepad indicator notch with no controller (2026-09-26)** — the empty remote-control pill stayed visible because its `display: inline-flex` beat the `hidden` attribute and painted a black notch with a green lamp. Indicator, remote, and cursor chrome are `display: none` whenever no pad is connected, and each player pill only appears for its own connected controller.
   - Spec: [Gamepad and controller support](../specs/092-gamepad-controller-support.md)
 

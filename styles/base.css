@@ -527,7 +527,8 @@ body.is-touch {
   gap: 8px;
 }
 
-.multiplayer-qr-modal__link-input {
+.multiplayer-qr-modal__link-input,
+.multiplayer-qr-modal__code-input {
   flex: 1;
   padding: 10px 12px;
   background: #1a1a1a;
@@ -538,7 +539,8 @@ body.is-touch {
   min-width: 0;
 }
 
-.multiplayer-qr-modal__link-input:focus {
+.multiplayer-qr-modal__link-input:focus,
+.multiplayer-qr-modal__code-input:focus {
   outline: none;
   border-color: rgba(110, 252, 75, 0.5);
 }
