@@ -3,6 +3,12 @@ import express from 'express'
 import cors from 'cors'
 import { summarizeIceCandidate } from '../src/network/iceSummary.js'
 import { buildIceServerPayload } from '../src/network/turnCredentials.js'
+import {
+  createMemoryInviteCodeStorage,
+  issueStoredInviteCode,
+  releaseStoredInviteCode,
+  resolveStoredInviteCode
+} from '../src/network/inviteCodes.js'
 
 const PORT = process.env.STUN_PORT ?? 3333
 const app = express()
@@ -10,6 +16,7 @@ app.use(cors({ origin: true, credentials: true }))
 app.use(express.json())
 
 const sessions = new Map()
+const inviteCodes = createMemoryInviteCodeStorage()
 
 const sessionKey = (inviteToken, peerId) => `${inviteToken}-${peerId}`
 
@@ -166,7 +173,28 @@ app.get('/signalling/ice-servers', (_req, res) => {
   res.json(payload)
 })
 
-app.post('/game-instance/:instanceId/invite-regenerate', (req, res) => {
+app.get('/signalling/invite-code/:code', async(req, res) => {
+  const record = await resolveStoredInviteCode(inviteCodes, req.params.code)
+  if (!record) {
+    return res.status(404).json({ error: 'invite code not found' })
+  }
+  res.status(200).json({
+    inviteToken: record.inviteToken,
+    shortCode: record.shortCode,
+    expiresAt: record.expiresAt
+  })
+})
+
+app.delete('/signalling/invite-code', async(req, res) => {
+  const { instanceId, partyId } = req.body || {}
+  if (!instanceId || !partyId) {
+    return res.status(400).json({ error: 'instanceId and partyId are required' })
+  }
+  await releaseStoredInviteCode(inviteCodes, instanceId, partyId)
+  res.status(204).end()
+})
+
+app.post('/game-instance/:instanceId/invite-regenerate', async(req, res) => {
   const { instanceId } = req.params
   const { partyId } = req.body
   if (!partyId) {
@@ -174,7 +202,12 @@ app.post('/game-instance/:instanceId/invite-regenerate', (req, res) => {
   }
 
   const inviteToken = `${instanceId}-${partyId}-${Date.now()}`
-  res.status(200).json({ inviteToken })
+  const record = await issueStoredInviteCode(inviteCodes, { instanceId, partyId, inviteToken })
+  res.status(200).json({
+    inviteToken,
+    shortCode: record.shortCode,
+    expiresAt: record.expiresAt
+  })
 })
 
 app.listen(PORT, () => {

@@ -716,7 +716,7 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Multiplayer and Networking
 
-- [x] **Join with an invite code or a full link** — the multiplayer join field accepts a bare invite code or a full invite URL from any origin, including a trailing slash, extra query parameters, a hash, and surrounding whitespace. Anything else shows a validation error. The host invite dialog also shows the bare code with its own copy button. Labels follow the UI locale (`Invite code or link` / `Einladungscode oder Link`).
+- [x] **Join with an invite code or a full link** — the multiplayer join field accepts a full invite URL, a 6-character per-party code, or the long token. Short codes use an unambiguous alphabet, display as `ABC-DEF`, ignore case, spaces, and dashes, and resolve through signalling to the long token. Collisions regenerate, and the code expires with the invite. Labels stay `Invite code or link` / `Einladungscode oder Link`.
   - Spec: [Online Multiplayer Takeover](../specs/001-add-online-multiplayer/spec.md)
 
 - [x] **Show defeated players with a clear "Defeated" status in the multiplayer sidebar overview.**

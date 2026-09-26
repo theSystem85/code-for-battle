@@ -10,6 +10,9 @@ vi.mock('@netlify/blobs', () => ({
     async setJSON(key, value) {
       blobs.set(key, value)
     },
+    async delete(key) {
+      blobs.delete(key)
+    },
     async list({ prefix }) {
       return {
         blobs: [...blobs.keys()].filter((key) => key.startsWith(prefix)).map((key) => ({ key }))
@@ -157,5 +160,54 @@ describe('signalling API', () => {
     expect(payload.offerRevision).toBe(2)
     expect(logs.join('\n')).not.toContain('max')
     spy.mockRestore()
+  })
+
+  it('issues a distinct short code per party and resolves it case-insensitively', async() => {
+    const red = await handler(request('POST', '/api/game-instance/game-1/invite-regenerate', { partyId: 'player2' }))
+    const blue = await handler(request('POST', '/api/game-instance/game-1/invite-regenerate', { partyId: 'player3' }))
+    const redBody = await red.json()
+    const blueBody = await blue.json()
+    expect(red.status).toBe(200)
+    expect(blue.status).toBe(200)
+    expect(redBody.shortCode).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/)
+    expect(blueBody.shortCode).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/)
+    expect(redBody.shortCode).not.toBe(blueBody.shortCode)
+    expect(redBody.inviteToken).toContain('player2')
+    expect(blueBody.inviteToken).toContain('player3')
+
+    const grouped = `${redBody.shortCode.slice(0, 3)}-${redBody.shortCode.slice(3)}`.toLowerCase()
+    const resolved = await handler(request('GET', `/api/signalling/invite-code/${grouped}`))
+    expect(resolved.status).toBe(200)
+    expect(await resolved.json()).toMatchObject({
+      inviteToken: redBody.inviteToken,
+      shortCode: redBody.shortCode
+    })
+  })
+
+  it('expires a short code with the invite and replaces it when that party is regenerated', async() => {
+    const first = await handler(request('POST', '/api/game-instance/game-9/invite-regenerate', { partyId: 'player2' }))
+    const firstBody = await first.json()
+    blobs.set(`invite-code:${firstBody.shortCode}`, {
+      ...blobs.get(`invite-code:${firstBody.shortCode}`),
+      expiresAt: Date.now() - 1000
+    })
+    const expired = await handler(request('GET', `/api/signalling/invite-code/${firstBody.shortCode}`))
+    expect(expired.status).toBe(404)
+
+    const second = await handler(request('POST', '/api/game-instance/game-9/invite-regenerate', { partyId: 'player2' }))
+    const secondBody = await second.json()
+    expect(secondBody.shortCode).not.toBe(firstBody.shortCode)
+    const oldCode = await handler(request('GET', `/api/signalling/invite-code/${firstBody.shortCode}`))
+    const newCode = await handler(request('GET', `/api/signalling/invite-code/${secondBody.shortCode.toLowerCase()}`))
+    expect(oldCode.status).toBe(404)
+    expect((await newCode.json()).inviteToken).toBe(secondBody.inviteToken)
+
+    const released = await handler(request('DELETE', '/api/signalling/invite-code', {
+      instanceId: 'game-9',
+      partyId: 'player2'
+    }))
+    expect(released.status).toBe(204)
+    const afterRelease = await handler(request('GET', `/api/signalling/invite-code/${secondBody.shortCode}`))
+    expect(afterRelease.status).toBe(404)
   })
 })

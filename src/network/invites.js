@@ -1,3 +1,5 @@
+import { normalizeShortCode } from './inviteCodes.js'
+
 function inviteOrigin() {
   if (typeof window !== 'undefined' && window.location && window.location.origin) {
     return window.location.origin
@@ -92,24 +94,25 @@ export function isInviteCode(code) {
   return parts.some(part => INVITE_PARTY_PATTERN.test(part))
 }
 
-function inviteCodeFromUrl(url) {
+function inviteValueFromUrl(url) {
   const fromQuery = cleanInviteCode(url.searchParams.get('invite') || '')
-  if (fromQuery && isInviteCode(fromQuery)) {
-    return fromQuery
-  }
+  if (fromQuery) return fromQuery
 
   const hash = String(url.hash || '').replace(/^#/, '')
-  if (!hash.includes('invite=')) {
+  if (!hash.includes('invite=')) return null
+  const query = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : hash
+  try {
+    return cleanInviteCode(new URLSearchParams(query).get('invite') || '')
+  } catch {
     return null
   }
-  const query = hash.includes('?') ? hash.slice(hash.indexOf('?') + 1) : hash
-  let fromHash = null
-  try {
-    fromHash = cleanInviteCode(new URLSearchParams(query).get('invite') || '')
-  } catch {
-    fromHash = null
-  }
-  return fromHash && isInviteCode(fromHash) ? fromHash : null
+}
+
+function classifiedValue(value) {
+  if (value && isInviteCode(value)) return { kind: 'token', token: value }
+  const shortCode = normalizeShortCode(value || '')
+  if (shortCode) return { kind: 'short', code: shortCode }
+  return null
 }
 
 function collectInviteUrls(trimmed) {
@@ -150,35 +153,39 @@ function looksLikeUrl(value) {
 }
 
 /**
- * Read an invite code from a full invite URL or from the code on its own.
- * URL parsing uses the same `invite` query value the landing page reads
- * from the address bar. Extra query parameters, a hash, any origin, and a
- * trailing slash are ignored. Surrounding whitespace is ignored.
+ * Classify join input as a long invite token or a short typeable code.
+ * A full URL yields the long token in `invite`. A short code ignores case,
+ * spaces, and dashes. Anything else is null.
+ * @param {string} input
+ * @returns {{ kind: 'token', token: string } | { kind: 'short', code: string } | null}
+ */
+export function classifyInviteInput(input) {
+  if (typeof input !== 'string') return null
+  const trimmed = input.trim().replace(/^['"]+|['"]+$/g, '').trim()
+  if (!trimmed) return null
+
+  for (const url of collectInviteUrls(trimmed)) {
+    const classified = classifiedValue(inviteValueFromUrl(url))
+    if (classified) return classified
+  }
+
+  if (looksLikeUrl(trimmed)) return null
+
+  const bare = cleanInviteCode(trimmed)
+  const fromBare = classifiedValue(bare)
+  if (fromBare) return fromBare
+  return classifiedValue(trimmed)
+}
+
+/**
+ * Long invite token from a full URL or from the token pasted on its own.
+ * Short codes are not returned here; use classifyInviteInput for those.
  * @param {string} input
  * @returns {string|null}
  */
 export function parseInviteInput(input) {
-  if (typeof input !== 'string') {
-    return null
-  }
-  const trimmed = input.trim().replace(/^['"]+|['"]+$/g, '').trim()
-  if (!trimmed) {
-    return null
-  }
-
-  for (const url of collectInviteUrls(trimmed)) {
-    const code = inviteCodeFromUrl(url)
-    if (code) {
-      return code
-    }
-  }
-
-  if (looksLikeUrl(trimmed)) {
-    return null
-  }
-
-  const bare = cleanInviteCode(trimmed)
-  return bare && isInviteCode(bare) ? bare : null
+  const classified = classifyInviteInput(input)
+  return classified?.kind === 'token' ? classified.token : null
 }
 
 export function describeInviteReachability(url) {

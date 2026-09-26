@@ -1,6 +1,7 @@
 import {
   listPartyStates,
   generateInviteForParty,
+  ensureInviteShortCode,
   getHostInviteStatus,
   setHostInviteStatus,
   observePartyOwnershipChange,
@@ -9,7 +10,9 @@ import {
   isHost
 } from '../network/multiplayerStore.js'
 import { watchHostInvite, kickPlayer } from '../network/webrtcSession.js'
-import { buildInviteUrl, describeInviteReachability, parseInviteInput } from '../network/invites.js'
+import { buildInviteUrl, describeInviteReachability, classifyInviteInput, parseInviteInput } from '../network/invites.js'
+import { formatShortCode } from '../network/inviteCodes.js'
+import { fetchInviteTokenForCode } from '../network/signalling.js'
 import { uiText } from './uiText.js'
 import { showHostNotification } from '../network/hostNotifications.js'
 import { gameState } from '../gameState.js'
@@ -18,7 +21,6 @@ import { createQRCodeCanvas } from './qrCode.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
 import { getStoredItem, removeStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 import { isEffectivelyOffline } from '../pwa/offlineState.js'
-import { uiText } from './uiText.js'
 
 const PARTY_LIST_ID = 'multiplayerPartyList'
 const PLAYER_ALIAS_STORAGE_KEY = 'rts-player-alias'
@@ -153,17 +155,30 @@ function setupJoinInviteLinkInput() {
     }
   }
 
-  const handleJoin = () => {
+  const handleJoin = async() => {
     if (isEffectivelyOffline()) {
       showStatus(uiText('offline.multiplayerDisabled'), true)
       return
     }
-    const inputValue = input.value
-    const token = parseInviteInput(inputValue)
-
-    if (!token) {
+    const parsed = classifyInviteInput(input.value)
+    if (!parsed) {
       showStatus(uiText('multiplayer.joinInvalid'), true)
       return
+    }
+
+    let token = parsed.kind === 'token' ? parsed.token : null
+    if (parsed.kind === 'short') {
+      showStatus(uiText('multiplayer.joinConnecting'), false, false)
+      try {
+        token = await fetchInviteTokenForCode(parsed.code)
+      } catch (err) {
+        window.logger.warn('Invite code lookup failed:', err)
+        token = null
+      }
+      if (!token) {
+        showStatus(uiText('multiplayer.joinNotFound'), true)
+        return
+      }
     }
 
     // Clear the input
@@ -808,6 +823,9 @@ function updateInviteButtonState(button, partyState) {
 async function handleInviteClick(partyState, button, status) {
   // If invite already exists, show the QR modal immediately
   if (partyState.inviteToken) {
+    if (!partyState.shortCode) {
+      partyState.shortCode = await ensureInviteShortCode(partyState.partyId)
+    }
     const inviteUrl = buildInviteUrl(partyState.inviteToken)
     await tryCopyToClipboard(inviteUrl)
     showHostNotification('Invite link copied to clipboard')
@@ -1000,7 +1018,7 @@ function showQRCodeModal(partyState, inviteUrl) {
     linkInput.value = inviteUrl
     linkInput.setAttribute('aria-label', uiText('multiplayer.inviteLink'))
   }
-  const inviteCode = parseInviteInput(inviteUrl) || ''
+  const inviteCode = formatShortCode(partyState.shortCode || '')
   const codeField = codeInput?.closest('.multiplayer-qr-modal__field')
   if (codeInput) {
     codeInput.value = inviteCode

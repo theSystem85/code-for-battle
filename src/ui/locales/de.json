@@ -176,8 +176,9 @@
   },
   "multiplayer": {
     "joinLabel": "Einladungscode oder Link",
-    "joinHint": "Füge einen Einladungscode oder einen vollständigen Einladungslink ein.",
+    "joinHint": "Füge einen kurzen Einladungscode, einen vollständigen Link oder das lange Token ein.",
     "joinInvalid": "Gib einen gültigen Einladungscode oder Link ein.",
+    "joinNotFound": "Dieser Einladungscode wurde nicht gefunden oder ist abgelaufen.",
     "joinConnecting": "Verbinden…",
     "inviteLink": "Einladungslink",
     "inviteCode": "Einladungscode",

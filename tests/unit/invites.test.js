@@ -6,6 +6,7 @@ import {
   parsePartyIdFromToken,
   buildInviteUrl,
   humanReadablePartyLabel,
+  classifyInviteInput,
   isInviteCode,
   parseInviteInput
 } from '../../src/network/invites.js'
@@ -193,6 +194,21 @@ describe('invites.js', () => {
       expect(parseInviteInput(token)).toBe(token)
       expect(parseInviteInput(buildInviteUrl(token))).toBe(token)
       expect(parseInviteInput(`  ${buildInviteUrl(token)}  `)).toBe(token)
+    })
+
+    it('accepts a short code with any case, spaces, or dashes', () => {
+      expect(classifyInviteInput('ABCDEF')).toEqual({ kind: 'short', code: 'ABCDEF' })
+      expect(classifyInviteInput('  abc-def  ')).toEqual({ kind: 'short', code: 'ABCDEF' })
+      expect(classifyInviteInput('ab c def')).toEqual({ kind: 'short', code: 'ABCDEF' })
+      expect(parseInviteInput('ABCDEF')).toBeNull()
+    })
+
+    it('keeps a full link and a long bare token on the token path', () => {
+      expect(classifyInviteInput(`https://example.com/?invite=${INVITE_CODE}`)).toEqual({
+        kind: 'token',
+        token: INVITE_CODE
+      })
+      expect(classifyInviteInput(INVITE_CODE)).toEqual({ kind: 'token', token: INVITE_CODE })
     })
 
     it('rejects input that is neither an invite URL nor an invite code', () => {
