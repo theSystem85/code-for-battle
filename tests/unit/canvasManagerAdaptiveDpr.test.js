@@ -147,7 +147,7 @@ describe('CanvasManager adaptive DPR', () => {
     expect(manager.getGameCanvas().style.height).toBe('844px')
     expect(manager.getGameCanvas().height).toBe(2532)
     expect(getCanvasViewportRecord(manager.getGameCanvas()).viewport.logicalHeight).toBe(844)
-    expect(manager.getGameCanvas().style.position).toBe('fixed')
+    expect(manager.getGameCanvas().style.position).toBe('absolute')
     manager.dispose()
     if (previousHeight) {
       Object.defineProperty(document.documentElement, 'clientHeight', previousHeight)
@@ -192,10 +192,149 @@ describe('CanvasManager adaptive DPR', () => {
     const manager = new CanvasManager()
 
     expect(manager.getGameCanvas().style.height).toBe('844px')
-    expect(manager.getGameCanvas().style.position).toBe('fixed')
+    expect(manager.getGameCanvas().style.position).toBe('absolute')
     expect(getCanvasViewportRecord(manager.getGameCanvas()).viewport.logicalHeight).toBe(844)
     manager.dispose()
     rectSpy.mockRestore()
+    if (previousHeight) {
+      Object.defineProperty(document.documentElement, 'clientHeight', previousHeight)
+    } else {
+      delete document.documentElement.clientHeight
+    }
+  })
+
+  it('does not reserve a condensed or collapsed sidebar box in the portrait canvas', () => {
+    document.body.className = 'is-touch mobile-portrait sidebar-condensed'
+    document.body.innerHTML = `
+      <div id="sidebar"></div>
+      <div id="mobileBuildMenuContainer" aria-hidden="false"></div>
+      <canvas id="gameCanvasGPU"></canvas>
+      <canvas id="gameCanvasGL"></canvas>
+      <canvas id="gameCanvas"></canvas>
+      <canvas id="minimap"></canvas>
+    `
+    const sidebar = document.getElementById('sidebar')
+    const barHeight = 96
+    vi.spyOn(sidebar, 'getBoundingClientRect').mockReturnValue({
+      width: barHeight,
+      height: barHeight,
+      top: 0,
+      left: -barHeight,
+      right: 0,
+      bottom: barHeight,
+      x: -barHeight,
+      y: 0,
+      toJSON() { return {} }
+    })
+    const previousHeight = Object.getOwnPropertyDescriptor(document.documentElement, 'clientHeight')
+    Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, get: () => 748 })
+    vi.spyOn(document.documentElement, 'getBoundingClientRect').mockReturnValue({
+      width: 390,
+      height: 844,
+      top: 0,
+      left: 0,
+      right: 390,
+      bottom: 844,
+      x: 0,
+      y: 0,
+      toJSON() { return {} }
+    })
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(2)
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(748)
+    vi.spyOn(window, 'visualViewport', 'get').mockReturnValue({
+      width: 390,
+      height: 748,
+      offsetTop: 0,
+      offsetLeft: 0,
+      addEventListener() {},
+      removeEventListener() {}
+    })
+
+    const manager = new CanvasManager()
+    const canvas = manager.getGameCanvas()
+    const bar = document.getElementById('mobileBuildMenuContainer')
+
+    expect(canvas.style.height).toBe('844px')
+    expect(canvas.style.width).toBe('390px')
+    expect(canvas.style.left).toBe('0px')
+    expect(canvas.style.position).toBe('absolute')
+    expect(bar.style.position).toBe('absolute')
+    expect(bar.style.bottom).toBe('0px')
+    expect(document.documentElement.style.getPropertyValue('--sidebar-width')).toBe('')
+
+    document.body.classList.remove('sidebar-condensed')
+    manager.resizeCanvases()
+    expect(canvas.style.left).toBe(`${barHeight}px`)
+    expect(canvas.style.width).toBe(`${390 - barHeight}px`)
+    expect(canvas.style.height).toBe('844px')
+    expect(bar.style.position).toBe('')
+
+    document.body.classList.add('sidebar-collapsed')
+    manager.resizeCanvases()
+    expect(canvas.style.left).toBe('0px')
+    expect(canvas.style.width).toBe('390px')
+    expect(canvas.style.height).toBe('844px')
+
+    document.body.classList.remove('sidebar-collapsed')
+    document.body.classList.add('sidebar-condensed')
+    manager.resizeCanvases()
+    expect(canvas.style.left).toBe('0px')
+    expect(canvas.style.height).toBe('844px')
+    expect(bar.style.bottom).toBe('0px')
+
+    manager.dispose()
+    if (previousHeight) {
+      Object.defineProperty(document.documentElement, 'clientHeight', previousHeight)
+    } else {
+      delete document.documentElement.clientHeight
+    }
+  })
+
+  it('keeps landscape full-bleed and desktop sidebar width', () => {
+    document.body.className = 'is-touch mobile-landscape'
+    document.body.innerHTML = `
+      <div id="sidebar"></div>
+      <div id="mobileBuildMenuContainer" aria-hidden="false"></div>
+      <canvas id="gameCanvasGPU"></canvas>
+      <canvas id="gameCanvasGL"></canvas>
+      <canvas id="gameCanvas"></canvas>
+      <canvas id="minimap"></canvas>
+    `
+    vi.spyOn(document.getElementById('sidebar'), 'getBoundingClientRect').mockReturnValue({
+      width: 250,
+      height: 390,
+      top: 0,
+      left: 0,
+      right: 250,
+      bottom: 390,
+      x: 0,
+      y: 0,
+      toJSON() { return {} }
+    })
+    const previousHeight = Object.getOwnPropertyDescriptor(document.documentElement, 'clientHeight')
+    Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, get: () => 390 })
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(1)
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(844)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(390)
+    vi.spyOn(window.screen, 'width', 'get').mockReturnValue(844)
+    vi.spyOn(window.screen, 'height', 'get').mockReturnValue(390)
+    vi.spyOn(window, 'visualViewport', 'get').mockReturnValue(null)
+
+    const landscape = new CanvasManager()
+    expect(landscape.getGameCanvas().style.position).toBe('fixed')
+    expect(landscape.getGameCanvas().style.width).toBe('844px')
+    expect(landscape.getGameCanvas().style.height).toBe('390px')
+    expect(document.getElementById('mobileBuildMenuContainer').style.position).toBe('')
+    landscape.dispose()
+
+    document.body.className = ''
+    const desktop = new CanvasManager()
+    expect(desktop.getGameCanvas().style.position).toBe('absolute')
+    expect(desktop.getGameCanvas().style.left).toBe('250px')
+    expect(desktop.getGameCanvas().style.width).toBe('594px')
+    desktop.dispose()
+
     if (previousHeight) {
       Object.defineProperty(document.documentElement, 'clientHeight', previousHeight)
     } else {

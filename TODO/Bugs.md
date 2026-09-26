@@ -1002,6 +1002,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Chrome on iOS still leaves a black band under the portrait build bar (2026-09-26)** — CriOS resizes the WKWebView when its toolbars collapse without firing `resize` or `visualViewport` `resize`, and `dvh`/`innerHeight` can stay on the small viewport. `html`/`body` are now `position: fixed` stretched with `top`/`bottom: 0` (`height: auto`), the build bar is `position: fixed; bottom: 0`, and the canvas follows the root border box through a `ResizeObserver` (plus scroll, focus, and visibility). Safari's filled first paint stays in place.
   - Spec: [Mobile Initial Layout Stability](../specs/044-mobile-initial-layout-stability.md)
 
+- [x] **Chrome on iOS portrait gap matches the condensed sidebar (2026-09-26)** — the condensed build bar was `position: fixed; bottom: 0` (`styles/base.css`). CriOS shrinks the layout viewport by that bar, then places `bottom: 0` one bar-height above the webview. The bar is now `position: absolute` in the fixed body, `#sidebar` is no longer bottom-anchored, and condensed/collapsed portrait layouts do not subtract the sidebar box from the canvas. The canvas is recomputed when those classes change.
+  - Spec: [Mobile Initial Layout Stability](../specs/044-mobile-initial-layout-stability.md)
+
 - [x] **Battleship HUD and carrier deck layering follow-up (2026-07-27)** — remove the obsolete per-turret green dashed/red blocked-angle HUD while retaining turret selection feedback, and always render carrier-bound landed/taxiing aircraft above the carrier hull.
   - Spec: [Airborne Render Layering](../specs/052-airborne-render-layering.md)
 

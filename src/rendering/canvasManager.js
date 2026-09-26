@@ -167,6 +167,31 @@ export class CanvasManager {
     this.resizeObserver = null
   }
 
+  syncPortraitBuildBar(mobilePortrait) {
+    const bar = document.getElementById('mobileBuildMenuContainer')
+    if (!bar) return
+    const overlay = mobilePortrait
+      && document.body?.classList.contains('sidebar-condensed')
+      && bar.getAttribute('aria-hidden') !== 'true'
+    if (overlay) {
+      bar.dataset.portraitOverlayPinned = 'true'
+      bar.style.position = 'absolute'
+      bar.style.left = '0px'
+      bar.style.right = '0px'
+      bar.style.top = 'auto'
+      bar.style.bottom = '0px'
+      return
+    }
+    if (bar.dataset.portraitOverlayPinned === 'true') {
+      bar.style.position = ''
+      bar.style.left = ''
+      bar.style.right = ''
+      bar.style.top = ''
+      bar.style.bottom = ''
+      delete bar.dataset.portraitOverlayPinned
+    }
+  }
+
   resizeCanvases() {
     const rawPixelRatio = window.devicePixelRatio || 1
     const terrainPixelRatio = this.resolvePixelRatio(rawPixelRatio)
@@ -232,12 +257,22 @@ export class CanvasManager {
     const sidebarCollapsed = body
       ? body.classList.contains('sidebar-collapsed') || body.classList.contains('sidebar-condensed')
       : false
+    // Portrait condensed/collapsed sidebars are off-canvas overlays. Their
+    // measured width AND height must not inset the canvas. Landscape keeps the
+    // map full-bleed as well. Only an in-flow desktop column, or an expanded
+    // portrait sidebar, reserves horizontal space. Nothing reserves vertical space.
     const reserveSidebarSpace = !mobileLandscape && !(mobilePortrait && sidebarCollapsed)
     const safeAdjustment = mobileLandscape ? safeLeft : 0
     const sidebarBaseWidth = Math.max(0, rawSidebarWidth - safeAdjustment)
 
     if (document.documentElement) {
-      document.documentElement.style.setProperty('--sidebar-width', `${sidebarBaseWidth}px`)
+      if (reserveSidebarSpace || mobileLandscape) {
+        document.documentElement.style.setProperty('--sidebar-width', `${sidebarBaseWidth}px`)
+      } else if (mobilePortrait) {
+        // Drop a width captured before the overlay class existed. The stylesheet
+        // clamp is the expanded width; it must not keep insetting the map.
+        document.documentElement.style.removeProperty('--sidebar-width')
+      }
     }
 
     const baseCanvasWidth = mobileLandscape
@@ -264,7 +299,10 @@ export class CanvasManager {
 
     const applyCanvasLayout = (canvas) => {
       if (!canvas) return
-      canvas.style.position = (mobileLandscape || mobilePortrait) ? 'fixed' : 'absolute'
+      // Landscape extends into the safe area with negative offsets, so it stays
+      // viewport-fixed. Portrait stays absolute in the fixed body so it shares
+      // that box with the build bar and cannot paint past a shorter fixed viewport.
+      canvas.style.position = mobileLandscape ? 'fixed' : 'absolute'
       if (mobileLandscape) {
         canvas.style.left = `${-safeLeft}px`
         canvas.style.right = `${-safeRight}px`
@@ -286,6 +324,7 @@ export class CanvasManager {
     applyCanvasLayout(this.gameGlCanvas)
     applyCanvasLayout(this.gameGpuCanvas)
     applyCanvasLayout(this.gameCanvas)
+    this.syncPortraitBuildBar(mobilePortrait)
 
     const playableCanvasWidth = Math.max(
       0,

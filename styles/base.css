@@ -102,9 +102,12 @@ body.is-touch {
   position: fixed;
   top: 0;
   left: 0;
-  bottom: 0;
+  /* Do not anchor with bottom:0. A bottom-anchored fixed box is what Chrome on
+     iOS subtracts from the layout viewport, which left a gap the size of the
+     condensed build bar under that bar. */
+  bottom: auto;
   width: var(--sidebar-width);
-  height: auto;
+  height: 100%;
   background-color: var(--sidebar-shared-bg-color);
   background-image: var(--sidebar-shared-bg-image);
   color: #fff;
@@ -1356,9 +1359,9 @@ body.mobile-portrait #gameCanvasGL {
   transition: left 0.25s ease, width 0.25s ease;
 }
 
-body.mobile-portrait:not(.sidebar-collapsed) #gameCanvas,
-body.mobile-portrait:not(.sidebar-collapsed) #gameCanvasGPU,
-body.mobile-portrait:not(.sidebar-collapsed) #gameCanvasGL {
+body.mobile-portrait:not(.sidebar-collapsed):not(.sidebar-condensed) #gameCanvas,
+body.mobile-portrait:not(.sidebar-collapsed):not(.sidebar-condensed) #gameCanvasGPU,
+body.mobile-portrait:not(.sidebar-collapsed):not(.sidebar-condensed) #gameCanvasGL {
   left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
 }
@@ -1412,6 +1415,8 @@ body.mobile-portrait {
 
 body.mobile-portrait #sidebar {
   top: var(--safe-area-top);
+  bottom: auto;
+  height: calc(100% - var(--safe-area-top));
   background-color: var(--sidebar-shared-bg-color);
   background-image: var(--sidebar-shared-bg-image);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -1871,9 +1876,13 @@ body.mobile-portrait.sidebar-collapsed #musicControl {
 
 body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer[aria-hidden="false"] {
   display: flex;
-  position: fixed;
+  /* Absolute inside the fixed body, not position:fixed. CriOS treats a fixed
+     bottom bar as layout chrome and shrinks the viewport by the bar height,
+     so bottom:0 then sits one condensed-sidebar height too high. */
+  position: absolute;
   left: 0;
   right: 0;
+  top: auto;
   bottom: 0;
   height: calc(var(--portrait-condensed-bar-height) + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   padding: 0;

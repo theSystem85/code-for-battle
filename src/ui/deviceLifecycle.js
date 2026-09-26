@@ -4,6 +4,7 @@ import { createViewportLayoutController } from './viewportLayout.js'
 
 let lastIsTouchState = null
 let lastMobileLayoutMode = null
+let lastSidebarOccupiesLayout = null
 let portraitQuery = null
 let coarsePointerQuery = null
 let standaloneQuery = null
@@ -96,6 +97,18 @@ function scheduleSafeAreaInsetSync() {
   window.setTimeout(() => syncSafeAreaInsets(), 650)
 }
 
+function sidebarReservesLayoutSpace(body) {
+  if (!body || body.classList.contains('mobile-landscape')) {
+    return false
+  }
+  if (body.classList.contains('mobile-portrait')) {
+    // Condensed and collapsed portrait sidebars are off-canvas overlays.
+    // Their box must not keep a layout slot after the class lands.
+    return !body.classList.contains('sidebar-condensed') && !body.classList.contains('sidebar-collapsed')
+  }
+  return true
+}
+
 function ensureViewportController() {
   if (viewportController || runningUnitTests || typeof window === 'undefined' || typeof document === 'undefined') {
     return
@@ -163,8 +176,10 @@ export function updateMobileLayoutClasses() {
   applyMobileSidebarLayout(mobileMode)
   scheduleSafeAreaInsetSync()
 
-  if (lastMobileLayoutMode !== mobileMode) {
+  const sidebarOccupiesLayout = sidebarReservesLayoutSpace(document.body)
+  if (lastMobileLayoutMode !== mobileMode || lastSidebarOccupiesLayout !== sidebarOccupiesLayout) {
     lastMobileLayoutMode = mobileMode
+    lastSidebarOccupiesLayout = sidebarOccupiesLayout
     const canvasManager = getGameInstance()?.canvasManager
     if (canvasManager && typeof canvasManager.resizeCanvases === 'function') {
       canvasManager.resizeCanvases()
