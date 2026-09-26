@@ -2,6 +2,11 @@
 import { gameState } from '../gameState.js'
 import { updateEnergyBar } from './energyBar.js'
 import { setStoredItem } from '../storage/indexedDbStorage.js'
+import {
+  applyPortraitRemoteJoystickLayout,
+  clearPortraitRemoteJoystickLayout,
+  readPortraitJoystickMetrics
+} from './portraitRemoteControlLayout.js'
 
 const PORTRAIT_SIDEBAR_STATE_KEY = 'mobilePortraitSidebarState'
 const PORTRAIT_SIDEBAR_DEFAULT_STATE = 'condensed'
@@ -1041,12 +1046,18 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
   }
 
   if (mobileJoystickContainer) {
-    if (isLandscape) {
+    if (isLandscape || isPortrait) {
       mobileJoystickContainer.setAttribute('aria-hidden', 'false')
       mobileJoystickContainer.setAttribute('data-orientation', mode)
+      if (isPortrait) {
+        applyPortraitRemoteJoystickLayout(mobileJoystickContainer, readPortraitJoystickMetrics())
+      } else {
+        clearPortraitRemoteJoystickLayout(mobileJoystickContainer)
+      }
     } else {
       mobileJoystickContainer.setAttribute('aria-hidden', 'true')
       mobileJoystickContainer.removeAttribute('data-orientation')
+      clearPortraitRemoteJoystickLayout(mobileJoystickContainer)
     }
   }
 }
