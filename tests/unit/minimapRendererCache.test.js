@@ -4,6 +4,7 @@ import { publishCanvasViewport } from '../../src/rendering/prepared/canvasViewpo
 import { renderProfiler } from '../../src/performance/renderProfiler.js'
 import { PROFILER_SPAN_IDS } from '../../src/performance/profilerIds.js'
 import { videoOverlay } from '../../src/ui/videoOverlay.js'
+import { MILESTONE_VIDEO_CROPS } from '../../src/ui/milestoneVideoCrop.js'
 
 function createCanvas(width, height, density, playableWidth = width, playableHeight = height) {
   const canvas = document.createElement('canvas')
@@ -202,8 +203,59 @@ describe('MinimapRenderer prepared caches', () => {
     renderClip(220, 80, 1, 100, 800)
 
     expect(draws).toEqual([
-      [expect.objectContaining({ videoWidth: 1920, videoHeight: 1080 }), 0, 0, 320, 192],
-      [expect.objectContaining({ videoWidth: 100, videoHeight: 800 }), 0, 0, 220, 80]
+      [expect.objectContaining({ videoWidth: 1920, videoHeight: 1080 }), 0, 0, 1920, 1080, 0, 0, 320, 192],
+      [expect.objectContaining({ videoWidth: 100, videoHeight: 800 }), 0, 0, 100, 800, 0, 0, 220, 80]
     ])
+  })
+
+  it('crops baked pillarbox bars and still fills the radar destination', () => {
+    const renderer = new MinimapRenderer()
+    const gameCanvas = createCanvas(400, 240, 2)
+    const draws = []
+    vi.spyOn(videoOverlay, 'isVideoPlaying').mockReturnValue(true)
+    vi.spyOn(videoOverlay, 'getMilestoneVideoOpacity').mockReturnValue(1)
+    const crop = MILESTONE_VIDEO_CROPS.first_tank
+    const minimapCanvas = createCanvas(160, 96, 2)
+    const minimapCtx = minimapCanvas.getContext('2d')
+    minimapCtx.drawImage = (...args) => {
+      draws.push(args)
+    }
+    vi.spyOn(videoOverlay, 'getCurrentVideo').mockReturnValue({
+      readyState: 2,
+      videoWidth: 960,
+      videoHeight: 576,
+      dataset: { milestoneBase: 'first_tank' }
+    })
+
+    renderer.render(
+      minimapCtx,
+      minimapCanvas,
+      createMap(),
+      { x: 0, y: 0 },
+      gameCanvas,
+      [],
+      [],
+      { radarActive: true }
+    )
+
+    expect(draws).toEqual([
+      [
+        expect.objectContaining({ videoWidth: 960, videoHeight: 576 }),
+        crop.x,
+        crop.y,
+        crop.width,
+        crop.height,
+        0,
+        0,
+        320,
+        192
+      ]
+    ])
+    expect(renderer.videoSourceRect).toEqual({
+      x: crop.x,
+      y: crop.y,
+      width: crop.width,
+      height: crop.height
+    })
   })
 })

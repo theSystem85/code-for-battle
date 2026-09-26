@@ -4,7 +4,17 @@
 The local player gets a radar milestone video with narrator voice-over the first time they produce a Mine Layer, Mine Sweeper, Rocket Tank, or Howitzer. The same playback path covers the existing refinery, tank, Tesla coil, and airstrip clips. Every milestone video fades in and out on the minimap. Production of a still-unachieved video milestone preloads that clip so playback can start as soon as the milestone fires.
 
 ## Assets
-All new and replaced clips live in `public/video/`. Most picture files are 960×576 (5:3) H.264, about 6 seconds. `tank_over_crystals.mp4` and `tesla_coil_hits_tank.mp4` are 1280×720 (16:9). The minimap is 5:3 on desktop (`minimapHeight = round(minimapWidth * 0.6)`) and follows the sidebar when phone portrait or phone landscape resizes it. `renderVideoOverlay` stretches every frame to the radar's current backing width and height (`object-fit: fill`). It does not letterbox or pillarbox. The hidden `<video>` uses the same `object-fit: fill` rule.
+All new and replaced clips live in `public/video/`. Most picture files are 960×576 (5:3) H.264, about 6 seconds. `tank_over_crystals.mp4` and `tesla_coil_hits_tank.mp4` are 1280×720 (16:9). The minimap is 5:3 on desktop (`minimapHeight = round(minimapWidth * 0.6)`) and follows the sidebar when phone portrait or phone landscape resizes it. `renderVideoOverlay` stretches the picture to the radar's current backing width and height (`object-fit: fill` via a full-destination `drawImage`). It does not letterbox or pillarbox. The hidden `<video>` uses the same `object-fit: fill` rule.
+
+Several masters bake black bars into the file. Those bars are not part of the radar picture. `src/ui/milestoneVideoCrop.js` stores a content rect per clip. `drawImage` uses that source rect and the destination is always the full radar backing store. Clips measured with no bars use the whole frame, so a 16:9 picture still stretches to the 5:3 radar. A clip with no manifest entry is scanned once on the first decoded frame (near-black threshold 12 on three rows and three columns; insets under 4px are kept). The result is cached on the video element. Later frames only write numbers into the renderer's reused `videoSourceRect`.
+
+| Video base | Decoded frame | Content rect (x, y, w, h) |
+| --- | --- | --- |
+| `first_tank` | 960×576 | 52, 0, 854, 576 |
+| `air_strip`, `first_artillery`, `first_mine_layer`, `first_mine_sweeper`, `first_rocket_tank` | 960×576 | 192, 0, 576, 576 |
+| `tank_over_crystals`, `tesla_coil_hits_tank` | 1280×720 | full frame |
+
+Playback still follows the milestone table below.
 
 | Milestone id | Trigger | Video base | Narration |
 | --- | --- | --- | --- |

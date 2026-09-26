@@ -1130,6 +1130,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Audio and Voice
 
+- [x] **Baked black bars in milestone videos still show in the radar (2026-09-26)** — each milestone clip's content rect is cropped before the radar stretch, so pillarbox baked into `first_tank` and the square-inset clips is not drawn. Clips measured with no bars keep the full frame. An unlisted clip detects near-black borders once and reuses that rect.
+  - Spec: [First-build milestone videos, preload, and radar fade](../specs/090-first-build-milestone-videos.md)
+
 - [x] **Milestone clips with no separate MP3 play silently, and milestone video letterboxes in the radar (2026-09-26)** — clips without a usable companion MP3 unmute the video and play its embedded track at the master-volume narration level; companion MP3 clips stay muted. Autoplay rejection falls back to muted playback and retries on the next gesture. Audio fades with the radar and stops when the clip ends or is interrupted. Every milestone frame stretches to the full radar box and follows desktop, phone portrait, and phone landscape resizes.
   - Spec: [First-build milestone videos, preload, and radar fade](../specs/090-first-build-milestone-videos.md)
 

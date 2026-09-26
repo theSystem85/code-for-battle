@@ -1,6 +1,7 @@
 // rendering/minimapRenderer.js
 import { TILE_SIZE, TILE_COLORS, PARTY_COLORS } from '../config.js'
 import { videoOverlay } from '../ui/videoOverlay.js'
+import { writeMilestoneVideoSourceRect } from '../ui/milestoneVideoCrop.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { gameState } from '../gameState.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
@@ -67,6 +68,8 @@ export class MinimapRenderer {
     this.cachedOfflineWidth = 0
     this.cachedOfflineHeight = 0
     this.radarOfflineAnimationStart = performance.now()
+    // Reused source rect so milestone video draws do not allocate per frame.
+    this.videoSourceRect = { x: 0, y: 0, width: 0, height: 0 }
   }
 
   invalidateCache() {
@@ -290,8 +293,8 @@ export class MinimapRenderer {
 
   /**
    * Render video overlay directly on the minimap canvas.
-   * The frame is stretched to the radar's current backing size (object-fit: fill),
-   * so a 16:9 clip and a 5:3 clip both cover the widget with no side bars.
+   * Baked letterbox and pillarbox bars are cropped out, then the picture is
+   * stretched to the radar's current backing size (object-fit: fill).
    * opacity < 1 fades the frame over the radar already drawn underneath.
    */
   renderVideoOverlay(minimapCtx, minimapWidth, minimapHeight, pixelRatio = 1, opacity = 1) {
@@ -323,11 +326,17 @@ export class MinimapRenderer {
         minimapCtx.fillRect(0, 0, minimapWidth, minimapHeight)
       }
 
-      // Stretch to the live radar size. drawImage ignores CSS object-fit, so the
-      // destination rectangle is the full backing store (equivalent to object-fit: fill).
+      // Stretch the picture to the live radar size. drawImage ignores CSS
+      // object-fit, so the destination is the full backing store. The source
+      // rect drops baked-in black bars before that stretch.
       try {
+        const source = writeMilestoneVideoSourceRect(this.videoSourceRect, videoElement)
         minimapCtx.drawImage(
           videoElement,
+          source.x,
+          source.y,
+          source.width,
+          source.height,
           0,
           0,
           minimapWidth,

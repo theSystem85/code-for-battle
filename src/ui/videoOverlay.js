@@ -392,6 +392,7 @@ export class VideoOverlay {
       this.lastAudioFade = 0
       this.rememberMilestoneMute()
       if (video.dataset) {
+        video.dataset.milestoneBase = baseFilename
         video.dataset.milestoneAudio = this.usesEmbeddedAudio ? 'embedded' : 'separate'
       }
 
