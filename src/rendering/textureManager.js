@@ -1,5 +1,7 @@
 // rendering/textureManager.js
 import { TILE_SIZE } from '../config.js'
+import { bootMark } from '../ui/bootTiming.js'
+import { reportBootTextures } from '../ui/bootProgress.js'
 import { buildingImageMap } from '../buildingImageMap.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
@@ -998,10 +1000,18 @@ export class TextureManager {
   }
 
 
-  // Preload all tile textures at startup
-  async preloadAllTextures(callback) {
+  // Preload all tile textures at startup.
+  // Water decode was ~346ms and the three sheets ~1492ms together on a cold load.
+  async preloadAllTextures(callback, onProgress) {
+    const totalWeight = 346 + (497 * 3)
+    let completedWeight = 0
+    const report = (fraction) => {
+      if (typeof onProgress === 'function') onProgress(fraction)
+      reportBootTextures(fraction)
+    }
     if (this.preloadPromise) {
       const result = await this.preloadPromise
+      report(1)
       if (callback) callback()
       return result
     }
@@ -1014,7 +1024,11 @@ export class TextureManager {
 
     this.preloadPromise = (async() => {
       try {
+        bootMark('tile-textures:start')
         const waterImg = await loadPreparedImage('images/map/water_spritesheet.webp')
+        bootMark('tile-textures:water-decoded')
+        completedWeight += 346
+        report(completedWeight / totalWeight)
         this.texturePreparationProgress.completed++
 
         // Water remains a separate animated frame set. These frames are
@@ -1032,13 +1046,20 @@ export class TextureManager {
           ctx.drawImage(waterImg, sx, sy, 64, 64, 0, 0, TILE_SIZE, TILE_SIZE)
           waterFrames.push(canvas)
         }
+        bootMark('tile-textures:water-frames')
 
+        const reportSheet = async(promise) => {
+          const result = await promise
+          completedWeight += 497
+          report(Math.min(1, completedWeight / totalWeight))
+          this.texturePreparationProgress.completed++
+          return result
+        }
         await Promise.all([
-          this.preloadDefaultCombatDecalSheet(),
-          this.preloadDefaultCrystalSheet(),
-          this.preloadDefaultStreetSheet()
+          reportSheet(this.preloadDefaultCombatDecalSheet()),
+          reportSheet(this.preloadDefaultCrystalSheet()),
+          reportSheet(this.preloadDefaultStreetSheet())
         ])
-        this.texturePreparationProgress.completed += 3
 
         // Publish one complete texture generation after every source decoded
         // and every finite prepared variant was built.
@@ -1057,6 +1078,7 @@ export class TextureManager {
         }
         this.allTexturesLoaded = true
         this.texturePreparationState = 'ready'
+        bootMark('tile-textures:end')
         return this
       } catch (error) {
         this.loadingStarted = false

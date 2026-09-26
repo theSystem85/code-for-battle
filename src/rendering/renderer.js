@@ -29,6 +29,7 @@ import { WreckRenderer } from './wreckRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
+import { bootMark } from '../ui/bootTiming.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import {
@@ -408,6 +409,12 @@ export class Renderer {
           spritesPrepared
         ].filter(Boolean).length
         onProgress(loadedCount / 14)
+        bootMark('texture-flags', {
+          loadedCount,
+          texturesLoaded,
+          spritesPrepared,
+          tankImagesLoaded
+        })
       }
       if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded && spritesPrepared) {
         this.wreckRenderer.prepareCaches?.(

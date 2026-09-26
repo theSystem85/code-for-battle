@@ -6,9 +6,11 @@ import { registerMapEditorRendering } from './mapEditor.js'
 import { getGameRenderer, getTextureManager, notifyTileMutation } from './rendering.js'
 import { initializeMobileViewportLock } from './ui/mobileViewportLock.js'
 import { scheduleAfterNextPaint, scheduleIdleTask } from './startupScheduler.js'
-import { updateLoadingScreen } from './ui/loadingScreen.js'
+import { trackBootProgress } from './ui/loadingScreen.js'
+import { bootMark } from './ui/bootTiming.js'
+import { beginBootProgress, getBootProgress } from './ui/bootProgress.js'
 import { initializeGameStorage } from './storage/indexedDbStorage.js'
-import { loadGraphicsSettingsFromIndexedDb, resolveRendererBackendAvailability } from './config.js'
+import { RENDERER_BACKEND, loadGraphicsSettingsFromIndexedDb, resolveRendererBackendAvailability } from './config.js'
 import './ui/mobileJoysticks.js'
 import './ui/mobileControlGroups.js'
 import {
@@ -120,14 +122,19 @@ function setupAudioUnlock() {
 }
 
 document.addEventListener('DOMContentLoaded', async() => {
-  updateLoadingScreen({
-    phase: 'storage',
-    detail: 'Restoring command data',
-    progress: 0.02
-  })
+  bootMark('dom-content-loaded')
+  const boot = beginBootProgress()
+  trackBootProgress()
+  boot.start('storage')
   await initializeGameStorage()
+  boot.finish('storage')
+  bootMark('storage-ready')
   loadGraphicsSettingsFromIndexedDb()
+  boot.start('backend')
   await resolveRendererBackendAvailability()
+  if (RENDERER_BACKEND !== 'webgpu') getBootProgress()?.applyWebGLProfile()
+  getBootProgress()?.finish('backend')
+  bootMark('renderer-backend-ready')
   reloadMasterVolumeFromStorage()
   updateTouchClass()
   updateMobileLayoutClasses()
@@ -147,6 +154,7 @@ document.addEventListener('DOMContentLoaded', async() => {
     initDebugUnitCommandOverlay()
   })
 
+  bootMark('game-construct')
   const gameInstance = new Game()
   window.gameInstance = gameInstance
   window.gameInstance.units = units

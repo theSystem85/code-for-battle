@@ -10,6 +10,7 @@ import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { renderProfiler } from '../performance/renderProfiler.js'
 import { RENDER_COUNTER_IDS, renderDiagnostics } from '../performance/renderDiagnostics.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
+import { bootMark } from '../ui/bootTiming.js'
 
 export const WATER_INSTANCE_FLOATS = 17
 export const WATER_INSTANCE_STRIDE = WATER_INSTANCE_FLOATS * 4
@@ -363,7 +364,9 @@ export class GameWebGLRenderer {
     if (this.program) return true
 
     const gl = this.gl
+    bootMark('webgl-shader:start')
     this.program = createProgram(gl, VERTEX_SHADER_SOURCE, FRAGMENT_SHADER_SOURCE)
+    bootMark('webgl-shader:end')
     if (!this.program) return false
 
     this.buffers.quad = gl.createBuffer()

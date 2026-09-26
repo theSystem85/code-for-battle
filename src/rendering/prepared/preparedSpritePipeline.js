@@ -1,4 +1,6 @@
 import { PreparedSpriteRegistry } from './preparedSpriteRegistry.js'
+import { bootMark } from '../../ui/bootTiming.js'
+import { reportBootSprites, yieldBootPaint } from '../../ui/bootProgress.js'
 
 export const PREPARED_SPRITE_MANIFEST_URL = '/images/prepared/sprite-manifest.json'
 export const AIRCRAFT_RESIZE_AUDIT_TAGS = Object.freeze({
@@ -204,7 +206,8 @@ export async function prepareSpriteRegistry({
   imageFactory = () => new Image(),
   createBitmap = globalThis.createImageBitmap?.bind(globalThis),
   canvasFactory = defaultCanvasFactory,
-  signal
+  signal,
+  onProgress
 } = {}) {
   assertDensity(density)
   if (typeof fetchImpl !== 'function') throw new TypeError('fetchImpl is required')
@@ -227,6 +230,12 @@ export async function prepareSpriteRegistry({
   const registry = new PreparedSpriteRegistry({ assetGeneration, density, byteBudget })
   const sourcePromises = new Map()
   const stagedDisposables = []
+  const entryCount = manifest.entries.length
+  let preparedEntries = 0
+  let lastPaintYield = typeof performance !== 'undefined' ? performance.now() : 0
+  bootMark('sprites:start', { entries: entryCount, density })
+  onProgress?.(0, entryCount)
+  reportBootSprites(0, entryCount)
   const getSource = url => {
     let promise = sourcePromises.get(url)
     if (!promise) {
@@ -266,6 +275,18 @@ export async function prepareSpriteRegistry({
         }
       }
       const sprite = createSpriteHandle(entry, image, density, manifest)
+      preparedEntries += 1
+      if (preparedEntries === 1 || preparedEntries === entryCount || preparedEntries % 50 === 0) {
+        bootMark('sprites:entry', { index: preparedEntries, entries: entryCount })
+      }
+      onProgress?.(preparedEntries, entryCount)
+      reportBootSprites(preparedEntries, entryCount)
+      const paintDue = preparedEntries === 1 ||
+        (typeof performance !== 'undefined' && performance.now() - lastPaintYield >= 80)
+      if (paintDue) {
+        lastPaintYield = typeof performance !== 'undefined' ? performance.now() : lastPaintYield
+        await yieldBootPaint()
+      }
       registry.register(
         getPreparedSpriteCacheKey(manifest.assetVersion, density, entry.id),
         sprite,
@@ -273,6 +294,7 @@ export async function prepareSpriteRegistry({
       )
     }
     throwIfAborted(signal)
+    bootMark('sprites:end', { entries: entryCount })
     return { registry, manifest, density, decodedBytes: registry.decodedBytes }
   } catch (error) {
     registry.dispose()
