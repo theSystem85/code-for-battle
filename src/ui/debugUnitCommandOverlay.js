@@ -27,7 +27,7 @@ function createOverlayElement() {
   overlay.style.fontFamily = 'monospace'
   overlay.style.fontSize = '12px'
   overlay.style.lineHeight = '1.35'
-  overlay.style.zIndex = '9999'
+  overlay.style.zIndex = 'var(--z-hud-popover)'
   overlay.style.display = 'none'
   overlay.style.pointerEvents = 'auto'
   document.body.appendChild(overlay)

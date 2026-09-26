@@ -26,7 +26,7 @@ Landscaped touch layouts on iPhone 13 Pro Max still leave a black bar on the rig
 
 ## Update 2026-02-17
 
-- **Notification Bell Placement**: In mobile landscape mode, the notification history bell icon must render at the top-left and respect `var(--safe-area-left)` so it stays clear of notches and system insets.
+- **Notification Bell Placement**: In mobile landscape mode, the notification history bell icon must render at the top-left and respect `var(--safe-area-left)` so it stays clear of notches and system insets. It stays above the game canvas and behind every modal backdrop.
 
 ## Update 2026-02-18
 

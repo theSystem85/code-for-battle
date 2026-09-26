@@ -116,7 +116,7 @@ export class CheatSystem {
       style.id = 'cheat-dialog-styles'
       style.textContent = `
         .cheat-dialog-overlay {
-          z-index: 1600;
+          z-index: var(--z-modal-raised);
         }
 
         .cheat-dialog__body {

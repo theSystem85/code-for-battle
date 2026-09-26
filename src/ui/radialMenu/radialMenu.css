@@ -1,7 +1,7 @@
 .radial-menu {
   position: fixed;
   inset: 0;
-  z-index: 2200;
+  z-index: var(--z-hud-popover);
   display: none;
   pointer-events: none;
   touch-action: none;

@@ -178,7 +178,7 @@ body.mobile-landscape .money-bar-value {
 /* Money tooltip styling */
 .money-tooltip {
   position: fixed;
-  z-index: 2500;
+  z-index: var(--z-hud-popover);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.15s ease, transform 0.15s ease;
@@ -613,7 +613,7 @@ body.is-touch .money-tooltip__meta {
   position: fixed;
   right: max(12px, env(safe-area-inset-right));
   bottom: calc(max(12px, env(safe-area-inset-bottom)) + 56px);
-  z-index: 3200;
+  z-index: var(--z-hud-float);
   width: 44px;
   height: 44px;
   background-color: #b42318;
@@ -631,7 +631,7 @@ body.is-touch .money-tooltip__meta {
 .performance-monitor-dialog {
   position: fixed;
   inset: 0;
-  z-index: 4000;
+  z-index: var(--z-modal);
   display: grid;
   place-items: center;
   padding: 16px;

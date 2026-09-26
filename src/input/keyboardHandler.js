@@ -1275,7 +1275,7 @@ export class KeyboardHandler {
     notificationDiv.style.color = 'white'
     notificationDiv.style.padding = '8px 16px'
     notificationDiv.style.borderRadius = '4px'
-    notificationDiv.style.zIndex = '1000'
+    notificationDiv.style.zIndex = 'var(--z-hud-popover)'
     document.body.appendChild(notificationDiv)
 
     // Remove the message after specified duration
