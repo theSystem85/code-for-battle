@@ -15,6 +15,7 @@ const menu = createRadialMenu({ container }) // container defaults to document.b
 
 menu.open(anchor, items, options)
 menu.updatePointer(clientX, clientY) // returns the item under the point, including disabled items
+menu.setHoldProgress(id, progress) // 0..1 ring on one button; id null or progress 0 clears it
 menu.release(clientX, clientY) // calls item.onSelect when the item is enabled, then closes
 menu.close()
 menu.isOpen()
@@ -52,6 +53,7 @@ Behavior that does not depend on production:
 - `layoutRadialItems` uses one or more rings so neighboring buttons do not overlap. If the circle would leave the viewport, the center shifts and, when needed, the button size shrinks down to `minButtonSize`.
 - `hitTestRadial` returns the nearest button whose center is within half the button size, or `null`.
 - `createLongPressTracker` is the pointer gesture state machine: hold `500` ms (`holdMs`), cancel if the pointer moves more than `12` px (`moveCancelPx`) before the hold completes. `poll(time)` returns `fire` once. `pointerUp` returns `short`, `release`, or `cancelled`.
+- `setHoldProgress(id, progress)` paints a CSS conic-gradient ring on that button. It changes one custom property and a class. It does not run while the menu is closed.
 
 The production adapter is the first caller. The same `open` API can later host unit command menus by passing different items.
 
@@ -75,11 +77,14 @@ Button diameter is half the condensed sidebar button (`--portrait-condensed-bar-
 
 Selection uses the sidebar command path. The production command module loads on the first gesture, so installing the menu does not pull the audio and video overlay into input setup:
 
-- Buildings that are ready for placement call `productionQueue.enableBuildingPlacementMode`.
-- Other buildings call `productionQueue.addItem(type, button, true)`.
-- Units call `productionQueue.addItem(type, button, false, null, null, { factoryId })`.
+- A building option enters planning mode instead of queueing immediately. The placement ghost follows the pointer, with the same valid and invalid tile colors as sidebar planning.
+- Releasing on a building, then pressing the map, drags that ghost. Releasing on a valid tile places it. A tap with no drag places on that tile too. An invalid tile does not place and leaves planning mode active.
+- Resting on a building button for 500ms, while the menu is still held, closes the menu and attaches the ghost to the pointer. The button shows a progress ring during that hover. Leaving the button before 500ms resets the timer. The release places the blueprint the same way. An invalid release keeps planning mode so the player can drag again.
+- Releasing that drag over the sidebar or other UI, or pressing `B`, `Escape`, or the right button, cancels planning. The map does not box-select or scroll-drag during the blueprint drag. Desktop edge scroll still follows the pointer while the ghost is dragged.
+- A building that is already ready for placement uses `productionQueue.enableBuildingPlacementMode` and the existing click-to-place path. Any other building places a blueprint with `productionQueue.addItem(type, button, true, blueprint)`, the same command the sidebar drag uses, so construction starts at that tile and stays in lockstep.
+- Units call `productionQueue.addItem(type, button, false, null, null, { factoryId })`. Hovering a unit does not arm a timer.
 - Disabled options show the same failure notification as the sidebar and do not queue.
-- Paused games do not queue.
+- Paused games do not queue or enter planning.
 
 `factoryId` is stored on the queue item, copied onto the active production, serialized with the queue, and recorded on the `production_add` replay command. When the unit completes, spawn uses that factory when it still exists and can accept the unit. A missing factory falls back to the existing round-robin. A full explicit airstrip or pad waits instead of spawning from a different building. Sidebar clicks omit `factoryId` and keep round-robin.
 
@@ -102,4 +107,6 @@ Closed: the root is `display: none` with no children and no requestAnimationFram
 - A 20-item menu on a 390×844 viewport stays inside the padding and does not overlap.
 - Construction yard, vehicle factory, helipad, airstrip, and shipyard item lists follow sidebar visibility and disabled state.
 - `selectProductionRadialItem` queues a unit with the chosen `factoryId` and enables placement for a ready building.
+- A building-button hold fires at 500ms, resets when the pointer leaves, and never fires for a unit.
+- A valid blueprint drag calls `addItem` with the tile blueprint. An invalid tile keeps planning mode. A release over UI cancels. Unit release still queues on the chosen factory.
 - `completeCurrentUnitProduction` spawns from that factory and does not advance the round-robin index.

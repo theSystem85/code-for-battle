@@ -85,6 +85,7 @@ export const gameState = {
   enemyBuildSpeedModifier: 1.0,
   buildingPlacementMode: false,
   currentBuildingType: null,
+  radialBuildingPlan: null,
   mapEditRandomMode: true,
   cursorX: 0,
   cursorY: 0,

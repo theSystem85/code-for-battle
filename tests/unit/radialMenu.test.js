@@ -14,7 +14,8 @@ import { findOwnedProductionBuildingAt } from '../../src/ui/productionRadial/pro
 import { resolveExplicitSpawnFactory } from '../../src/production/spawnFactorySelection.js'
 import { gameState } from '../../src/gameState.js'
 import { productionQueue } from '../../src/productionQueue.js'
-import { selectProductionRadialItem } from '../../src/ui/productionRadial/productionRadialSelect.js'
+import { selectProductionRadialItem, enterRadialBuildingPlan, finishRadialBlueprintDrag } from '../../src/ui/productionRadial/productionRadialSelect.js'
+import { createBuildingButtonHold, resolvePlanPointerUp } from '../../src/ui/productionRadial/radialBlueprintGesture.js'
 
 function button(kind, type, options = {}) {
   const el = document.createElement('button')
@@ -203,5 +204,116 @@ describe('radial production commands', () => {
     })
     expect(resolveExplicitSpawnFactory([first], [first], 'missing').status).toBe('fallback')
     expect(resolveExplicitSpawnFactory([first, second], [first], 'vf-2').status).toBe('unavailable')
+  })
+})
+
+describe('radial blueprint drag', () => {
+  const originalAddItem = productionQueue.addItem
+  const buildingButton = { classList: { contains: () => false } }
+  const powerPlant = {
+    id: 'building:powerPlant',
+    kind: 'building',
+    type: 'powerPlant',
+    disabled: false,
+    button: buildingButton
+  }
+  const tank = {
+    id: 'unit:tank',
+    kind: 'unit',
+    type: 'tank',
+    disabled: false,
+    button: buildingButton
+  }
+
+  beforeEach(() => {
+    gameState.gamePaused = false
+    gameState.buildingPlacementMode = false
+    gameState.currentBuildingType = null
+    gameState.radialBuildingPlan = null
+    gameState.blueprints = []
+    gameState.humanPlayer = 'player'
+    productionQueue.addItem = vi.fn()
+  })
+
+  afterEach(() => {
+    productionQueue.addItem = originalAddItem
+    gameState.radialBuildingPlan = null
+    gameState.buildingPlacementMode = false
+    gameState.currentBuildingType = null
+    gameState.blueprints = []
+  })
+
+  it('arms a building button for 500ms and ignores unit buttons', () => {
+    const hold = createBuildingButtonHold(500)
+    expect(hold.track(tank, 0)).toEqual({ phase: 'idle', progress: 0, item: null })
+    expect(hold.track(powerPlant, 1000)).toMatchObject({ phase: 'arming', progress: 0 })
+    expect(hold.poll(1499).phase).toBe('arming')
+    expect(hold.poll(1499).progress).toBeCloseTo(0.998, 2)
+    const fired = hold.poll(1500)
+    expect(fired.phase).toBe('fire')
+    expect(fired.item).toBe(powerPlant)
+    expect(hold.poll(2000).phase).toBe('idle')
+  })
+
+  it('resets the building hold when the pointer leaves the button', () => {
+    const hold = createBuildingButtonHold(500)
+    hold.track(powerPlant, 0)
+    expect(hold.poll(400).phase).toBe('arming')
+    expect(hold.track(tank, 450).phase).toBe('idle')
+    expect(hold.track(powerPlant, 450)).toMatchObject({ phase: 'arming', progress: 0 })
+    expect(hold.poll(949).phase).toBe('arming')
+    expect(hold.poll(950).phase).toBe('fire')
+  })
+
+  it('places a blueprint on a valid drag release and keeps planning when the tile is invalid', () => {
+    expect(enterRadialBuildingPlan(powerPlant)).toBe(true)
+    expect(productionQueue.addItem).not.toHaveBeenCalled()
+    expect(gameState.buildingPlacementMode).toBe(true)
+    expect(gameState.radialBuildingPlan.type).toBe('powerPlant')
+
+    expect(resolvePlanPointerUp({ overUi: false, canPlace: false })).toBe('invalid')
+    expect(finishRadialBlueprintDrag(gameState.radialBuildingPlan, {
+      overUi: false,
+      canPlace: false,
+      tileX: 4,
+      tileY: 5
+    })).toBe('invalid')
+    expect(productionQueue.addItem).not.toHaveBeenCalled()
+    expect(gameState.buildingPlacementMode).toBe(true)
+    expect(gameState.radialBuildingPlan.type).toBe('powerPlant')
+
+    expect(finishRadialBlueprintDrag(gameState.radialBuildingPlan, {
+      overUi: false,
+      canPlace: true,
+      tileX: 8,
+      tileY: 9
+    })).toBe('place')
+    expect(productionQueue.addItem).toHaveBeenCalledWith('powerPlant', buildingButton, true, {
+      type: 'powerPlant',
+      x: 8,
+      y: 9
+    })
+    expect(gameState.blueprints).toEqual([{ type: 'powerPlant', x: 8, y: 9 }])
+    expect(gameState.buildingPlacementMode).toBe(false)
+    expect(gameState.radialBuildingPlan).toBeNull()
+  })
+
+  it('cancels planning when the drag ends over UI and leaves unit production on release', () => {
+    enterRadialBuildingPlan(powerPlant)
+    expect(finishRadialBlueprintDrag(gameState.radialBuildingPlan, {
+      overUi: true,
+      canPlace: true,
+      tileX: 1,
+      tileY: 1
+    })).toBe('cancel')
+    expect(productionQueue.addItem).not.toHaveBeenCalled()
+    expect(gameState.buildingPlacementMode).toBe(false)
+    expect(gameState.radialBuildingPlan).toBeNull()
+
+    expect(selectProductionRadialItem(tank, { id: 'vf-2' })).toBe(true)
+    expect(productionQueue.addItem).toHaveBeenCalledWith('tank', buildingButton, false, null, null, {
+      factoryId: 'vf-2'
+    })
+    expect(gameState.radialBuildingPlan).toBeNull()
   })
 })

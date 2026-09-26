@@ -117,6 +117,16 @@ export function createRadialMenu(options = {}) {
     return highlightedItem()
   }
 
+  function setHoldProgress(id, progress) {
+    if (!openState) return
+    const amount = Number.isFinite(progress) ? Math.max(0, Math.min(1, progress)) : 0
+    openState.entries.forEach(entry => {
+      const active = id != null && entry.item.id === id && amount > 0
+      entry.button.classList.toggle('is-arming', active)
+      entry.button.style.setProperty('--arm', active ? `${Math.round(amount * 360)}deg` : '0deg')
+    })
+  }
+
   function release(x, y) {
     const item = updatePointer(x, y)
     const selectable = item && !item.disabled ? item : null
@@ -131,6 +141,7 @@ export function createRadialMenu(options = {}) {
     open,
     close,
     updatePointer,
+    setHoldProgress,
     release,
     isOpen: () => Boolean(openState),
     element: root,
