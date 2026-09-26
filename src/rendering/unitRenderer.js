@@ -22,6 +22,7 @@ import { getNavalRenderLengthTiles, isNavalUnitType } from '../utils/navalUtils.
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
+import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
 
 export class UnitRenderer {
   constructor() {
@@ -772,35 +773,30 @@ export class UnitRenderer {
       ctx.save()
       ctx.lineCap = 'round'
       ctx.lineWidth = donutBarThickness
-      ctx.strokeStyle = '#3A3A3A'
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, donutRadius, startAngle, endAngle)
-      ctx.stroke()
+      strokeStatusRailArc(ctx, centerX, centerY, donutRadius, startAngle, endAngle)
 
       if (clampedRatio > 0) {
-        ctx.strokeStyle = color
-        ctx.beginPath()
-        ctx.arc(centerX, centerY, donutRadius, startAngle, startAngle + (sweep * clampedRatio))
-        ctx.stroke()
+        strokeStatusArc(
+          ctx,
+          centerX,
+          centerY,
+          donutRadius,
+          startAngle,
+          startAngle + (sweep * clampedRatio),
+          color
+        )
       }
 
       ctx.restore()
       return
     }
 
-    ctx.fillStyle = '#3A3A3A'
-
     if (edge === 'top' || edge === 'bottom') {
       const y = edge === 'top'
         ? hudBounds.top - (barThickness / 2)
         : hudBounds.bottom - (barThickness / 2)
       const barX = ((hudBounds.left + hudBounds.right) / 2) - (barSpan / 2)
-      ctx.fillRect(barX, y, barSpan, barThickness)
-
-      if (clampedRatio > 0) {
-        ctx.fillStyle = color
-        ctx.fillRect(barX, y, barSpan * clampedRatio, barThickness)
-      }
+      drawStatusBar(ctx, barX, y, barSpan, barThickness, clampedRatio, color, 'horizontal')
       return
     }
 
@@ -808,13 +804,7 @@ export class UnitRenderer {
       ? hudBounds.left - (barThickness / 2)
       : hudBounds.right - (barThickness / 2)
     const barY = ((hudBounds.top + hudBounds.bottom) / 2) - (barSpan / 2)
-    ctx.fillRect(x, barY, barThickness, barSpan)
-
-    if (clampedRatio > 0) {
-      const fillHeight = barSpan * clampedRatio
-      ctx.fillStyle = color
-      ctx.fillRect(x, barY + barSpan - fillHeight, barThickness, fillHeight)
-    }
+    drawStatusBar(ctx, x, barY, barThickness, barSpan, clampedRatio, color, 'vertical')
   }
 
   getSelectionHudMode() {
@@ -1023,19 +1013,21 @@ export class UnitRenderer {
     const healthBarX = unit.x + TILE_SIZE / 2 - scrollOffset.x - healthBarWidth / 2
     const healthBarY = unit.y - 10 - scrollOffset.y - altitudeLift
 
-    if (this.isLegacySelectionHud()) {
-      ctx.strokeStyle = '#000'
-      ctx.strokeRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight)
-    }
-
     // Use red color for critically damaged units (below 25% health when speed penalty kicks in)
     // Otherwise use party colors for health bar fill
-    if (unitHealthRatio < 0.25) {
-      ctx.fillStyle = '#FF0000' // Red for critical health
-    } else {
-      ctx.fillStyle = PARTY_COLORS[unit.owner] || PARTY_COLORS.player
-    }
-    ctx.fillRect(healthBarX, healthBarY, healthBarWidth * unitHealthRatio, healthBarHeight)
+    const healthColor = unitHealthRatio < 0.25
+      ? '#FF0000'
+      : (PARTY_COLORS[unit.owner] || PARTY_COLORS.player)
+    drawStatusBar(
+      ctx,
+      healthBarX,
+      healthBarY,
+      healthBarWidth,
+      healthBarHeight,
+      unitHealthRatio,
+      healthColor,
+      'horizontal'
+    )
   }
 
   renderHarvesterProgress(ctx, unit, scrollOffset) {
@@ -1141,22 +1133,21 @@ export class UnitRenderer {
       const progressBarX = unit.x + TILE_SIZE / 2 - scrollOffset.x - progressBarWidth / 2
       const progressBarY = unit.y - 5 - scrollOffset.y - altitudeLift
 
-      // Background bar
-      ctx.fillStyle = '#333'
-      ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
-
-      // Progress fill
+      paintStatusBarTrack(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight)
       if (unit.type === 'supplyShip') {
         this.drawSupplyShipLinearBar(ctx, unit, progressBarX, progressBarY, progressBarWidth, progressBarHeight)
       } else {
-        ctx.fillStyle = barColor
-        ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight)
+        fillStatusBar(
+          ctx,
+          progressBarX,
+          progressBarY,
+          progressBarWidth * progress,
+          progressBarHeight,
+          barColor,
+          'horizontal'
+        )
       }
-
-      if (this.isLegacySelectionHud()) {
-        ctx.strokeStyle = '#000'
-        ctx.strokeRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
-      }
+      paintStatusBarOutline(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight)
     }
   }
 
@@ -1170,8 +1161,7 @@ export class UnitRenderer {
     const segmentWidth = width / segments.length
     segments.forEach((segment, index) => {
       const fill = Math.max(0, Math.min(1, segment.value / segment.max))
-      ctx.fillStyle = segment.color
-      ctx.fillRect(x + index * segmentWidth, y, segmentWidth * fill, height)
+      fillStatusBar(ctx, x + index * segmentWidth, y, segmentWidth * fill, height, segment.color, 'horizontal')
     })
   }
 
@@ -1199,15 +1189,9 @@ export class UnitRenderer {
         const start = quarterStart + index * segmentSweep + segmentGap
         const end = quarterStart + (index + 1) * segmentSweep - segmentGap
         const ratio = Math.max(0, Math.min(1, supply.value / supply.max))
-        ctx.strokeStyle = '#3A3A3A'
-        ctx.beginPath()
-        ctx.arc(centerX, centerY, donutRadius, start, end)
-        ctx.stroke()
+        strokeStatusRailArc(ctx, centerX, centerY, donutRadius, start, end)
         if (ratio > 0) {
-          ctx.strokeStyle = supply.color
-          ctx.beginPath()
-          ctx.arc(centerX, centerY, donutRadius, start, start + ((end - start) * ratio))
-          ctx.stroke()
+          strokeStatusArc(ctx, centerX, centerY, donutRadius, start, start + ((end - start) * ratio), supply.color)
         }
       })
       ctx.restore()
@@ -1215,11 +1199,9 @@ export class UnitRenderer {
     }
 
     const rect = this.getHudBarRect(hudBounds, 'bottom')
-    ctx.fillStyle = '#333'
-    ctx.fillRect(rect.x, rect.y, rect.width, rect.height)
+    paintStatusBarTrack(ctx, rect.x, rect.y, rect.width, rect.height)
     this.drawSupplyShipLinearBar(ctx, unit, rect.x, rect.y, rect.width, rect.height)
-    ctx.strokeStyle = '#000'
-    ctx.strokeRect(rect.x, rect.y, rect.width, rect.height)
+    paintStatusBarOutline(ctx, rect.x, rect.y, rect.width, rect.height)
   }
 
   renderGasBar(ctx, unit, scrollOffset) {
@@ -1246,15 +1228,7 @@ export class UnitRenderer {
       const barX = right - barWidth - 1
       const barTop = top + cornerSize
 
-      ctx.fillStyle = '#333'
-      ctx.fillRect(barX, barTop, barWidth, barHeight)
-
-      const fillHeight = barHeight * ratio
-      ctx.fillStyle = '#4A90E2'
-      ctx.fillRect(barX, barTop + barHeight - fillHeight, barWidth, fillHeight)
-
-      ctx.strokeStyle = '#000'
-      ctx.strokeRect(barX, barTop, barWidth, barHeight)
+      drawStatusBar(ctx, barX, barTop, barWidth, barHeight, ratio, '#4A90E2', 'vertical')
       return
     }
 
@@ -1342,12 +1316,10 @@ export class UnitRenderer {
       const barX = left + 1
       const barTop = top + cornerSize
 
-      ctx.fillStyle = '#333'
-      ctx.fillRect(barX, barTop, barWidth, barHeight)
-
+      paintStatusBarTrack(ctx, barX, barTop, barWidth, barHeight)
       const fillHeight = barHeight * ratio
-      ctx.fillStyle = barColor
-      ctx.fillRect(barX, barTop + barHeight - fillHeight, barWidth, fillHeight)
+      fillStatusBar(ctx, barX, barTop + barHeight - fillHeight, barWidth, fillHeight, barColor, 'vertical')
+      paintStatusBarOutline(ctx, barX, barTop, barWidth, barHeight)
 
       if (reloadRatio !== null) {
         const reloadLineY = barTop + barHeight - (barHeight * reloadRatio)
@@ -1359,8 +1331,6 @@ export class UnitRenderer {
         ctx.stroke()
       }
 
-      ctx.strokeStyle = '#000'
-      ctx.strokeRect(barX, barTop, barWidth, barHeight)
       return
     }
 
@@ -2248,13 +2218,7 @@ export class UnitRenderer {
     const y = unit.y - scrollOffset.y - 6
 
     ctx.save()
-    ctx.fillStyle = 'rgba(30, 70, 140, 0.35)'
-    ctx.fillRect(x, y, barWidth, barHeight)
-    ctx.fillStyle = '#4BA6FF'
-    ctx.fillRect(x, y, barWidth * progress, barHeight)
-    ctx.strokeStyle = '#0D2A57'
-    ctx.lineWidth = 1
-    ctx.strokeRect(x, y, barWidth, barHeight)
+    drawStatusBar(ctx, x, y, barWidth, barHeight, progress, '#4BA6FF', 'horizontal')
     ctx.restore()
   }
 

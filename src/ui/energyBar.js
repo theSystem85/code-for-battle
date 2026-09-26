@@ -2,9 +2,10 @@
 // Handle energy bar display and management
 
 import { gameState } from '../gameState.js'
+import { linearFillGradientCss } from '../utils/statusBarGradient.js'
 
 function getEnergyBarGradient(startColor, endColor) {
-  return `linear-gradient(90deg, ${startColor} 0%, ${endColor} 100%)`
+  return linearFillGradientCss(startColor, endColor, 90)
 }
 
 // Add power indicator to sidebar with energy bar
