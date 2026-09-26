@@ -1,6 +1,7 @@
 // canvasManager.js
 // Handle canvas setup, resizing, and management
 import { MOBILE_CANVAS_PIXEL_RATIO_CAP } from '../config.js'
+import { readLayoutBox } from '../ui/viewportLayout.js'
 import { publishCanvasViewport } from './prepared/canvasViewportRegistry.js'
 
 export class CanvasManager {
@@ -196,34 +197,9 @@ export class CanvasManager {
     const isTouchLayout = body ? body.classList.contains('is-touch') : false
 
     const viewport = window.visualViewport
-
-    const layoutWidthCandidates = []
-    layoutWidthCandidates.push(window.innerWidth)
-    if (viewport && viewport.width) {
-      layoutWidthCandidates.push(viewport.width)
-    }
-    if (document.documentElement && document.documentElement.clientWidth) {
-      layoutWidthCandidates.push(document.documentElement.clientWidth)
-    }
-
-    const validLayoutWidths = layoutWidthCandidates.filter(v => Number.isFinite(v) && v > 0)
-    const layoutViewportWidth = validLayoutWidths.length
-      ? Math.max(...validLayoutWidths)
-      : this.gameCanvas.clientWidth || 0
-
-    const layoutHeightCandidates = []
-    layoutHeightCandidates.push(window.innerHeight)
-    if (viewport && viewport.height) {
-      layoutHeightCandidates.push(viewport.height)
-    }
-    if (document.documentElement && document.documentElement.clientHeight) {
-      layoutHeightCandidates.push(document.documentElement.clientHeight)
-    }
-
-    const validLayoutHeights = layoutHeightCandidates.filter(v => Number.isFinite(v) && v > 0)
-    const layoutViewportHeight = validLayoutHeights.length
-      ? Math.max(...validLayoutHeights)
-      : this.gameCanvas.clientHeight || 0
+    const measuredLayout = readLayoutBox(window)
+    const layoutViewportWidth = measuredLayout.width || this.gameCanvas.clientWidth || 0
+    const layoutViewportHeight = measuredLayout.height || this.gameCanvas.clientHeight || 0
 
     const screenWidth = isTouchLayout && window.screen && window.screen.width
       ? window.screen.width / rawPixelRatio
@@ -285,11 +261,6 @@ export class CanvasManager {
       ? rightUi.getBoundingClientRect().width
       : 0
     const rightUiWidth = Number.isFinite(measuredRightUiWidth) ? measuredRightUiWidth : 0
-    const playableCanvasWidth = Math.max(
-      0,
-      canvasCssWidth - safeLeft - Math.max(safeRight, rightUiWidth)
-    )
-    const playableCanvasHeight = Math.max(0, canvasCssHeight - safeTop - safeBottom)
 
     const applyCanvasLayout = (canvas) => {
       if (!canvas) return
@@ -297,19 +268,30 @@ export class CanvasManager {
       if (mobileLandscape) {
         canvas.style.left = `${-safeLeft}px`
         canvas.style.right = `${-safeRight}px`
-      } else {
-        canvas.style.left = `${effectiveSidebarWidth}px`
-        canvas.style.right = 'auto'
+        canvas.style.width = `${canvasCssWidth}px`
+        canvas.style.height = `${canvasCssHeight}px`
+        canvas.style.top = `${-safeTop}px`
+        canvas.style.bottom = `${-safeBottom}px`
+        return
       }
+
+      canvas.style.left = `${effectiveSidebarWidth}px`
+      canvas.style.right = 'auto'
       canvas.style.width = `${canvasCssWidth}px`
       canvas.style.height = `${canvasCssHeight}px`
-      canvas.style.top = mobileLandscape ? `${-safeTop}px` : '0px'
-      canvas.style.bottom = mobileLandscape ? `${-safeBottom}px` : 'auto'
+      canvas.style.top = '0px'
+      canvas.style.bottom = 'auto'
     }
 
     applyCanvasLayout(this.gameGlCanvas)
     applyCanvasLayout(this.gameGpuCanvas)
     applyCanvasLayout(this.gameCanvas)
+
+    const playableCanvasWidth = Math.max(
+      0,
+      canvasCssWidth - safeLeft - Math.max(safeRight, rightUiWidth)
+    )
+    const playableCanvasHeight = Math.max(0, canvasCssHeight - safeTop - safeBottom)
 
     // Keep the expensive terrain layers on the adaptive DPR budget. The
     // transparent 2D canvas contains units, buildings, labels, and gameplay UI,

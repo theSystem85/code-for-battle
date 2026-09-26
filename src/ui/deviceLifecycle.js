@@ -1,5 +1,6 @@
 // Device and orientation lifecycle helpers
 import { applyMobileSidebarLayout } from './mobileLayout.js'
+import { createViewportLayoutController } from './viewportLayout.js'
 
 let lastIsTouchState = null
 let lastMobileLayoutMode = null
@@ -9,7 +10,9 @@ let standaloneQuery = null
 let getGameInstance = () => null
 let requestRenderAfterResize = () => {}
 let listenersInitialized = false
+let viewportController = null
 const TABLET_LANDSCAPE_MIN_SHORT_EDGE = 600
+const runningUnitTests = typeof import.meta !== 'undefined' && import.meta.env?.VITEST === true
 
 export function initDeviceLifecycle({ getGameInstanceAccessor, requestRender }) {
   getGameInstance = typeof getGameInstanceAccessor === 'function' ? getGameInstanceAccessor : () => null
@@ -23,6 +26,7 @@ export function initDeviceLifecycle({ getGameInstanceAccessor, requestRender }) 
   updateStandaloneClass()
   scheduleSafeAreaInsetSync()
   updateMobileLayoutClasses()
+  ensureViewportController()
 
   if (!listenersInitialized) {
     bindListeners()
@@ -90,6 +94,18 @@ function scheduleSafeAreaInsetSync() {
   window.setTimeout(() => syncSafeAreaInsets(), 140)
   window.setTimeout(() => syncSafeAreaInsets(), 320)
   window.setTimeout(() => syncSafeAreaInsets(), 650)
+}
+
+function ensureViewportController() {
+  if (viewportController || runningUnitTests || typeof window === 'undefined' || typeof document === 'undefined') {
+    return
+  }
+
+  viewportController = createViewportLayoutController({
+    onChange() {
+      document.dispatchEvent(new CustomEvent('canvas-layout-invalidated'))
+    }
+  })
 }
 
 function bindListeners() {

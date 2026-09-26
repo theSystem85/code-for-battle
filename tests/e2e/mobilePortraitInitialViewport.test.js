@@ -1,0 +1,143 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { devices, expect, test } from '@playwright/test'
+
+const screenshotDir = process.env.PORTRAIT_SCREENSHOT_DIR || '/opt/cursor/artifacts/screenshots'
+
+function iphoneUse(deviceName, width, height) {
+  const device = { ...devices[deviceName], viewport: { width, height } }
+  delete device.defaultBrowserType
+  return device
+}
+
+async function markTutorialComplete(page) {
+  await page.addInitScript(() => {
+    const settings = JSON.stringify({ showTutorial: false, speechEnabled: false })
+    const progress = JSON.stringify({ completed: true, stepIndex: 0 })
+    localStorage.setItem('rts_tutorial_settings', settings)
+    localStorage.setItem('rts_tutorial_progress', progress)
+    localStorage.setItem('tutorial-settings', settings)
+    localStorage.setItem('tutorial-progress', progress)
+  })
+}
+
+async function readPortraitMetrics(page) {
+  return page.evaluate(() => {
+    const canvas = document.querySelector('#gameCanvas')
+    const bar = document.querySelector('#mobileBuildMenuContainer')
+    const canvasBox = canvas ? canvas.getBoundingClientRect() : null
+    const barBox = bar ? bar.getBoundingClientRect() : null
+    const tutorial = document.querySelector('#tutorialOverlay')
+    const rootStyle = window.getComputedStyle(document.documentElement)
+    const bodyStyle = window.getComputedStyle(document.body)
+    return {
+      innerHeight: window.innerHeight,
+      innerWidth: window.innerWidth,
+      clientHeight: document.documentElement.clientHeight,
+      bodyHeight: document.body.clientHeight,
+      appHeight: rootStyle.getPropertyValue('--app-height'),
+      bodyCssHeight: bodyStyle.height,
+      canvasHeight: canvasBox?.height ?? null,
+      canvasBottom: canvasBox?.bottom ?? null,
+      canvasStyleHeight: canvas?.style.height ?? null,
+      barHidden: bar?.getAttribute('aria-hidden') ?? null,
+      barBottom: barBox?.bottom ?? null,
+      barTop: barBox?.top ?? null,
+      barPosition: bar ? window.getComputedStyle(bar).position : null,
+      gapBelowBar: barBox ? window.innerHeight - barBox.bottom : null,
+      portrait: document.body.classList.contains('mobile-portrait'),
+      classes: document.body.className,
+      tutorialHidden: !tutorial || tutorial.hidden || tutorial.getAttribute('aria-hidden') === 'true'
+    }
+  })
+}
+
+function expectFilledPortrait(metrics) {
+  expect(metrics.portrait).toBe(true)
+  expect(metrics.tutorialHidden).toBe(true)
+  expect(metrics.canvasHeight).toBeGreaterThanOrEqual(metrics.innerHeight - 2)
+  expect(metrics.canvasBottom).toBeGreaterThanOrEqual(metrics.innerHeight - 2)
+  expect(Math.abs(metrics.gapBelowBar)).toBeLessThanOrEqual(3)
+  expect(metrics.barTop).toBeLessThan(metrics.innerHeight - 40)
+}
+
+async function openPortraitGame(page) {
+  await page.goto('/?seed=11')
+  await page.waitForFunction(() => Boolean(window.gameState?.gameStarted), null, { timeout: 90000 })
+  await page.evaluate(() => {
+    window.tutorialSystem?.stop?.()
+    window.tutorialSystem?.hideUI?.()
+  })
+  await page.waitForTimeout(800)
+  const metrics = await readPortraitMetrics(page)
+  expect(metrics, JSON.stringify(metrics)).toMatchObject({
+    portrait: true,
+    barHidden: 'false'
+  })
+  expect(metrics.canvasHeight, JSON.stringify(metrics)).toBeGreaterThanOrEqual(metrics.innerHeight - 2)
+  expect(Math.abs(metrics.gapBelowBar), JSON.stringify(metrics)).toBeLessThanOrEqual(3)
+}
+
+async function shoot(page, filename) {
+  fs.mkdirSync(screenshotDir, { recursive: true })
+  const filePath = path.join(screenshotDir, filename)
+  await page.screenshot({ path: filePath, fullPage: false })
+  return filePath
+}
+
+test.describe('iPhone portrait initial layout 390x844', () => {
+  test.use(iphoneUse('iPhone 13', 390, 844))
+
+  test('fills the screen on first portrait load without rotating', async({ page }) => {
+    await markTutorialComplete(page)
+    await openPortraitGame(page)
+    const metrics = await readPortraitMetrics(page)
+    expect(metrics.innerWidth).toBe(390)
+    expect(metrics.innerHeight).toBe(844)
+    expectFilledPortrait(metrics)
+    await shoot(page, 'portrait-initial-390x844.png')
+  })
+})
+
+test.describe('iPhone portrait initial layout 430x932', () => {
+  test.use(iphoneUse('iPhone 14 Pro Max', 430, 932))
+
+  test('fills the screen on first portrait load without rotating', async({ page }) => {
+    await markTutorialComplete(page)
+    await openPortraitGame(page)
+    const metrics = await readPortraitMetrics(page)
+    expect(metrics.innerWidth).toBe(430)
+    expect(metrics.innerHeight).toBe(932)
+    expectFilledPortrait(metrics)
+    await shoot(page, 'portrait-initial-430x932.png')
+  })
+})
+
+test.describe('portrait viewport growth', () => {
+  test.use(iphoneUse('iPhone 13', 390, 844))
+
+  test('fills the screen after the viewport grows from a short first height', async({ page }) => {
+    await markTutorialComplete(page)
+    await page.setViewportSize({ width: 390, height: 640 })
+    await openPortraitGame(page)
+    const collapsed = await readPortraitMetrics(page)
+    expect(collapsed.innerHeight).toBe(640)
+    expectFilledPortrait(collapsed)
+
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.waitForFunction(() => {
+      const bar = document.querySelector('#mobileBuildMenuContainer')
+      const canvas = document.querySelector('#gameCanvas')
+      if (!bar || !canvas) return false
+      const height = window.innerHeight
+      return height >= 844
+        && canvas.getBoundingClientRect().height >= height - 2
+        && Math.abs(height - bar.getBoundingClientRect().bottom) <= 3
+    }, null, { timeout: 10000 })
+
+    const grown = await readPortraitMetrics(page)
+    expect(grown.innerHeight).toBe(844)
+    expectFilledPortrait(grown)
+    await shoot(page, 'portrait-after-viewport-grow-390x844.png')
+  })
+})

@@ -127,6 +127,34 @@ describe('CanvasManager adaptive DPR', () => {
     document.removeEventListener('canvas-density-changed', handleDensityChange)
   })
 
+  it('sizes a portrait canvas from the laid-out document height instead of a stale short innerHeight', () => {
+    document.body.className = 'is-touch mobile-portrait'
+    document.body.innerHTML = `
+      <canvas id="gameCanvasGPU"></canvas>
+      <canvas id="gameCanvasGL"></canvas>
+      <canvas id="gameCanvas"></canvas>
+      <canvas id="minimap"></canvas>
+    `
+    const previousHeight = Object.getOwnPropertyDescriptor(document.documentElement, 'clientHeight')
+    Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, get: () => 844 })
+    vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
+    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(390)
+    vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(700)
+    vi.spyOn(window, 'visualViewport', 'get').mockReturnValue(null)
+
+    const manager = new CanvasManager()
+
+    expect(manager.getGameCanvas().style.height).toBe('844px')
+    expect(manager.getGameCanvas().height).toBe(2532)
+    expect(getCanvasViewportRecord(manager.getGameCanvas()).viewport.logicalHeight).toBe(844)
+    manager.dispose()
+    if (previousHeight) {
+      Object.defineProperty(document.documentElement, 'clientHeight', previousHeight)
+    } else {
+      delete document.documentElement.clientHeight
+    }
+  })
+
   it('does not raise DPR until the camera and frame rate have stayed stable', () => {
     vi.spyOn(window, 'devicePixelRatio', 'get').mockReturnValue(3)
     const manager = createAdaptiveManager(1)

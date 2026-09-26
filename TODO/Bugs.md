@@ -78,9 +78,6 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Fix attack cursor to toggle between in-range and out-of-range states on hover** — based on distance, and ensure range labels render in red.
   - Spec: [Combat System Enhancements](../specs/006-combat-system-enhancements/spec.md)
 
-- [ ] **On mobile PWA portrait mode, stretch the sidebar to the very bottom so no unused black bar remains.**
-  - Spec: none
-
 - [ ] **Remove the blue progress bar from sidebar build buttons once a unit finishes production.**
   - Spec: none
 
@@ -998,6 +995,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 - [x] **Radial placement ghost stays after a successful place (2026-09-26)** — a successful radial blueprint place from release-then-drag or the 500ms hold-drag ends planning immediately, and cancel clears the same ghost. One radial selection places one building. Sidebar shift-chain is the repeat path and is not used here.
   - Spec: [Radial build menu](../specs/093-radial-build-menu.md)
+
+- [x] **Portrait first load leaves a black band under the build bar (2026-09-26)** — iOS WKWebView measured a short viewport before browser chrome settled and locked it into an inline canvas height that only refreshed on rotation. The document now uses `100dvh` (with `100vh` / `-webkit-fill-available` fallbacks) and a debounced viewport sync on resize, visualViewport, orientation, pageshow, load, and a short post-load settle, so the portrait build bar and canvas fill the screen on the first paint. The same fill removes the unused black bar under the portrait sidebar / PWA build bar.
+  - Spec: [Mobile Initial Layout Stability](../specs/044-mobile-initial-layout-stability.md)
 
 - [x] **Battleship HUD and carrier deck layering follow-up (2026-07-27)** — remove the obsolete per-turret green dashed/red blocked-angle HUD while retaining turret selection feedback, and always render carrier-bound landed/taxiing aircraft above the carrier hull.
   - Spec: [Airborne Render Layering](../specs/052-airborne-render-layering.md)
