@@ -16,7 +16,7 @@
   font-size: 14px;
   font-weight: bold;
   border: 1px solid rgba(0, 255, 255, 0.8);
-  z-index: 1000;
+  z-index: var(--z-hud);
   pointer-events: none; /* Make it transparent to clicks */
   display: none; /* Initially hidden */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -97,7 +97,7 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
-  z-index: 1100;
+  z-index: var(--z-hud-float);
   pointer-events: none;
 }
 
@@ -115,7 +115,7 @@
   border-radius: 4px;
   font-family: var(--game-font-family);
   font-size: 12px;
-  z-index: 1000;
+  z-index: var(--z-modal);
   display: none;
 }
 
@@ -215,7 +215,7 @@ body.config-modal-open {
   align-items: center;
   justify-content: center;
   background: rgba(0, 0, 0, 0.55);
-  z-index: 1500;
+  z-index: var(--z-modal);
   padding: 20px;
 }
 
@@ -453,7 +453,7 @@ body.config-modal-open {
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
   color: #d8e0ea;
   white-space: pre-line;
-  z-index: 9999;
+  z-index: var(--z-modal-popover);
   display: none;
 }
 
@@ -1185,7 +1185,7 @@ body.config-modal-open {
 .mission-intro {
   position: fixed;
   inset: 0;
-  z-index: 12000;
+  z-index: var(--z-takeover);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1313,7 +1313,7 @@ body.config-modal-open {
   position: fixed;
   top: 10px;
   left: calc(var(--sidebar-width, 250px) + 12px);
-  z-index: 30;
+  z-index: var(--z-hud-float);
   display: flex;
   gap: 8px;
   pointer-events: none;
@@ -1373,14 +1373,14 @@ body.config-modal-open {
     url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADYAAAA2CAYAAACMRWrdAAAB50lEQVR4nO2a23XDIAyGTU8H8BoeqRkwHclreAP65ByX6PILkMHE/2NskL5IXIwIk7PWuEXq9yXMwdPul2fnLTUs2Ldj30/w+cPDeG0wDUZrUw2yxgAmYda4/SCNlzD/Mo+KIEvB/kGhMJwIyGy4XLCqQKlqAOaAvaBqA6VKAE1w1uneBCUtwsgCndgwTUyWiD0JY29KHUZ3Htx7h/f36EGRQyOmQi1hDiXbJK39wTYUOQRMhCoFsvRngdPAxA48N7JA36JvUCpS0fLenXM20JlYAmNT8AwoyRaSkhwY2+BMKNAm6auYit4LcIk030wLdIto5dqmwKCFuAdJYw2OWMto5fgw7NFACnaZNNzFpSMUsR7ScBfqS9B21VfVx4yxYXSDXU3DgqVTJ7mOlUz3HtWWtE/qPAT90OxmSUB9ScEe0yQeO3cn7vRq2DEGg/WQjhYfKLDLpKN0iGpKxZZRs9oWwXqOmuYbB8aej7eImmKT9FWKGDvWzoSjbCEFCvRDswmcAiVKAxNLNp5wQN+ib0jExOl/jVusCSj1Z6mRodO9uraVAmrtrYU/6w7bXKqVdvfIH5Fbhx62uH5fh2A03AWWo4a8cpTqDVIoylNA1S6J1b79dnQMvXDicq3P/Uz+vjpbWcOC/QEYJgreQJIfFgAAAABJRU5ErkJggg==") 2x
   ) center / 27px 27px no-repeat;
   pointer-events: none;
-  z-index: 40;
+  z-index: var(--z-hud-popover);
 }
 
 .gamepad-remote {
   position: fixed;
   top: 38px;
   left: calc(var(--sidebar-width, 250px) + 12px);
-  z-index: 31;
+  z-index: var(--z-hud-float);
   display: inline-flex;
   align-items: center;
   gap: 8px;

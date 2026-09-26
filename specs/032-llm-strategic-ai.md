@@ -77,6 +77,7 @@ Introduce configurable LLM support for enemy strategic planning and optional ene
 - Commentary prompt now consumes `inputMode: compact-commentary-v1`, with strict owner-aware narration based on `input.ownerContext` and each highlight's `side` field.
 - Commentary prompt is now host-focused: it talks about the host player's losses, exposed economy, and impending defeat rather than narrating the AI's own situation.
 - All commentary notifications are recorded in a persistent notification history log (up to 100 entries) accessible via a bell icon in the top-right corner.
+- The notification bell and its history panel are HUD layers. They stay above the game canvas and below every modal backdrop, including settings, save/load, the tutorial and command briefing, full-screen phone dialogs, and confirmation dialogs. Top HUD status pills use the same HUD layer.
 - Commentary requests now use a much smaller output-token cap than strategic planning and participate in the same response-chain reset policy for OpenAI-backed sessions.
 - Commentary requests now degrade by trimming highlight depth and anti-repeat history before skipping a request on budget grounds.
 - When commentary and strategic planning use the same provider/model for the first AI player, commentary is generated as a structured `commentary` field inside the strategic response rather than through a separate request.

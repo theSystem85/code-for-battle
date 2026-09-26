@@ -996,6 +996,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Notification bell paints over modals (2026-09-26)** — the bell, its history panel, and top HUD status pills stay above the game canvas and behind every modal backdrop on desktop, landscape phone, and portrait phone. Shared `--z-*` layers keep HUD chrome below settings, save/load, tutorial and command briefing, full-screen phone dialogs, and confirmation dialogs.
+  - Spec: [LLM Strategic AI & Commentary Integration](../specs/032-llm-strategic-ai.md)
+
 - [x] **Radial placement ghost stays after a successful place (2026-09-26)** — a successful radial blueprint place from release-then-drag or the 500ms hold-drag ends planning immediately, and cancel clears the same ghost. One radial selection places one building. Sidebar shift-chain is the repeat path and is not used here.
   - Spec: [Radial build menu](../specs/093-radial-build-menu.md)
 

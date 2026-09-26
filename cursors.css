@@ -92,7 +92,7 @@
   position: fixed;
   transform: translate(-50%, 0);
   pointer-events: none;
-  z-index: 10002;
+  z-index: var(--z-hud-popover);
   opacity: 0;
   transition: opacity 0.05s ease-in-out;
   margin-top: 20px;
@@ -131,5 +131,5 @@
 .attack-blocked-mode.active,
 .attack-out-of-range-mode.active,
 .guard-mode.active {
-  z-index: 10001;
+  z-index: var(--z-hud);
 }

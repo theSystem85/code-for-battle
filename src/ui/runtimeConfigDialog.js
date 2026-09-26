@@ -36,7 +36,7 @@ export class RuntimeConfigDialog {
           display: flex;
           justify-content: center;
           align-items: center;
-          z-index: 10000;
+          z-index: var(--z-modal-raised);
           backdrop-filter: blur(2px);
           padding: 16px;
           box-sizing: border-box;

@@ -47,7 +47,7 @@ export function showNotification(message, duration = 3000, options = {}) {
   notification.style.color = 'white'
   notification.style.padding = '10px 15px'
   notification.style.borderRadius = '5px'
-  notification.style.zIndex = '1000'
+  notification.style.zIndex = 'var(--z-hud-popover)'
 
   document.body.appendChild(notification)
 

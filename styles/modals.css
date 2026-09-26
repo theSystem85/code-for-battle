@@ -3,7 +3,7 @@
 .tutorial-overlay {
   position: fixed;
   inset: 0;
-  z-index: 12000;
+  z-index: var(--z-takeover);
   pointer-events: none;
 }
 
@@ -304,7 +304,7 @@
 
 .tutorial-cursor {
   position: fixed;
-  z-index: 12001;
+  z-index: var(--z-takeover-raised);
   width: 34px;
   height: 34px;
   margin-left: -17px;
@@ -334,7 +334,7 @@
 
 .tutorial-highlight {
   position: relative;
-  z-index: 11000;
+  z-index: calc(var(--z-hud-popover) + 1);
   box-shadow: 0 0 0 3px rgba(127, 214, 255, 0.9), 0 0 14px rgba(127, 214, 255, 0.6);
 }
 
@@ -351,7 +351,7 @@
   font-size: 20px;
   font-weight: 700;
   cursor: pointer;
-  z-index: 12002;
+  z-index: var(--z-takeover-raised);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
   transform-origin: center center;
 }
@@ -477,7 +477,7 @@ body.mobile-portrait .tutorial-dock {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: var(--z-modal-raised);
   padding: 16px;
   animation: conflict-fade-in 0.15s ease-out;
 }
@@ -758,7 +758,7 @@ body.kicked-modal-open {
   justify-content: center;
   background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(3px);
-  z-index: 2500;
+  z-index: var(--z-modal);
   padding: 20px;
 }
 
@@ -877,7 +877,7 @@ body.benchmark-modal-open {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: var(--z-modal);
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
@@ -1045,7 +1045,7 @@ body.benchmark-modal-open {
 body.mobile-landscape .mobile-sidebar-modal {
   position: fixed;
   inset: 0;
-  z-index: 2000;
+  z-index: var(--z-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1151,7 +1151,7 @@ body.mobile-sidebar-modal-open #sidebarScroll {
   justify-content: center;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
-  z-index: 10000;
+  z-index: var(--z-takeover);
   padding: 20px;
 }
 
@@ -1364,7 +1364,7 @@ body.mobile-sidebar-modal-open #sidebarScroll {
   top: 0;
   left: 0;
   right: 0;
-  z-index: 9999;
+  z-index: var(--z-hud-float);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -1417,7 +1417,7 @@ body.mobile-sidebar-modal-open #sidebarScroll {
   width: 100%;
   height: 100%;
   pointer-events: none;
-  z-index: 12000;
+  z-index: var(--z-takeover);
 }
 
 .tutorial-card {
@@ -1609,7 +1609,7 @@ body.mobile-sidebar-modal-open #sidebarScroll {
   align-items: center;
   justify-content: center;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  z-index: 1001;
+  z-index: var(--z-takeover-raised);
   transition: all 0.2s ease;
 }
 
@@ -1621,7 +1621,7 @@ body.mobile-sidebar-modal-open #sidebarScroll {
 .tutorial-cursor {
   position: absolute;
   pointer-events: none;
-  z-index: 1002;
+  z-index: var(--z-takeover-raised);
   transition: all 0.15s ease-out;
 }
 
@@ -1648,7 +1648,7 @@ body.mobile-sidebar-modal-open #sidebarScroll {
 
 .tutorial-highlight {
   position: relative;
-  z-index: 999;
+  z-index: calc(var(--z-hud-popover) + 1);
   box-shadow: 0 0 0 3px #6efc4b, 0 0 20px rgba(110, 252, 75, 0.5);
   animation: tutorialHighlightPulse 2s ease-in-out infinite;
 }
@@ -1691,7 +1691,7 @@ body.mobile-portrait .tutorial-card {
 .user-docs-modal {
   position: fixed;
   inset: 0;
-  z-index: 1800;
+  z-index: var(--z-takeover-top);
   background: rgba(6, 10, 18, 0.8);
   backdrop-filter: blur(6px);
   display: flex;
@@ -1757,7 +1757,7 @@ body.mobile-portrait .tutorial-card {
 
 
 .user-docs-modal {
-  z-index: 13000;
+  z-index: var(--z-takeover-top);
 }
 
 @media (orientation: portrait) and (max-width: 1024px) {
