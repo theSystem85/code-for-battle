@@ -9,7 +9,8 @@ import {
   isHost
 } from '../network/multiplayerStore.js'
 import { watchHostInvite, kickPlayer } from '../network/webrtcSession.js'
-import { buildInviteUrl, describeInviteReachability } from '../network/invites.js'
+import { buildInviteUrl, describeInviteReachability, parseInviteInput } from '../network/invites.js'
+import { uiText } from './uiText.js'
 import { showHostNotification } from '../network/hostNotifications.js'
 import { gameState } from '../gameState.js'
 import { observeMultiplayerSession } from '../network/multiplayerSessionEvents.js'
@@ -109,57 +110,22 @@ function setupAliasInput() {
   })
 }
 
-/**
- * Extract invite token from a URL or raw token string
- * @param {string} input - URL or token string
- * @returns {string|null} The extracted token or null if invalid
- */
-function extractInviteToken(input) {
-  if (!input || typeof input !== 'string') {
-    return null
+function applyJoinInviteCopy(input) {
+  const labelText = uiText('multiplayer.joinLabel')
+  const label = input?.labels?.[0] || input?.nextElementSibling
+  if (label) {
+    label.textContent = labelText
   }
-
-  const trimmed = input.trim()
-  if (!trimmed) {
-    return null
+  if (!input) {
+    return
   }
-
-  // Try to parse as URL first
-  try {
-    const url = new URL(trimmed)
-    const token = url.searchParams.get('invite')
-    if (token && token.trim()) {
-      return token.trim()
-    }
-  } catch {
-    // Not a valid URL, check if it's a raw token
-  }
-
-  // Check if it looks like a URL with invite param but missing protocol
-  if (trimmed.includes('?invite=') || trimmed.includes('&invite=')) {
-    try {
-      // Add protocol and try again
-      const url = new URL('https://' + trimmed)
-      const token = url.searchParams.get('invite')
-      if (token && token.trim()) {
-        return token.trim()
-      }
-    } catch {
-      // Still not valid
-    }
-  }
-
-  // Check if it's just the raw token (alphanumeric with dashes/underscores)
-  // Invite tokens are typically in format: partyId-timestamp-random
-  if (/^[a-zA-Z0-9_-]+$/.test(trimmed) && trimmed.length > 10) {
-    return trimmed
-  }
-
-  return null
+  input.placeholder = labelText
+  input.setAttribute('aria-label', labelText)
+  input.title = uiText('multiplayer.joinHint')
 }
 
 /**
- * Setup the join via invite link input
+ * Setup the join input. A full invite URL or the bare invite code both work.
  */
 function setupJoinInviteLinkInput() {
   const input = document.getElementById('inviteLinkInput')
@@ -169,6 +135,8 @@ function setupJoinInviteLinkInput() {
   if (!input || !button) {
     return
   }
+
+  applyJoinInviteCopy(input)
 
   const showStatus = (message, isError = false, isSuccess = false) => {
     if (status) {
@@ -191,10 +159,10 @@ function setupJoinInviteLinkInput() {
       return
     }
     const inputValue = input.value
-    const token = extractInviteToken(inputValue)
+    const token = parseInviteInput(inputValue)
 
     if (!token) {
-      showStatus('Invalid invite link or token', true)
+      showStatus(uiText('multiplayer.joinInvalid'), true)
       return
     }
 
@@ -207,7 +175,7 @@ function setupJoinInviteLinkInput() {
     const baseUrl = window.location.origin + window.location.pathname
     const inviteUrl = `${baseUrl}?invite=${encodeURIComponent(token)}`
 
-    showStatus('Connecting...', false, false)
+    showStatus(uiText('multiplayer.joinConnecting'), false, false)
 
     // Use location.href to navigate (this will reload the page with the invite token)
     window.location.href = inviteUrl
@@ -370,7 +338,7 @@ async function startQrScanner() {
 
         if (barcodes.length > 0) {
           const qrValue = barcodes[0].rawValue
-          const token = extractInviteToken(qrValue)
+          const token = parseInviteInput(qrValue)
 
           if (token) {
             updateQrScannerStatus('QR code detected! Connecting...', false, true)
@@ -942,11 +910,21 @@ function getOrCreateQRModal() {
       </div>
       <div class="multiplayer-qr-modal__body">
         <div class="multiplayer-qr-modal__qr-container"></div>
-        <p class="multiplayer-qr-modal__instruction">Scan QR code or share the link below</p>
+        <p class="multiplayer-qr-modal__instruction"></p>
         <p class="multiplayer-qr-modal__warning" hidden></p>
-        <div class="multiplayer-qr-modal__link-container">
-          <input type="text" class="multiplayer-qr-modal__link-input" readonly>
-          <button type="button" class="multiplayer-qr-modal__copy-btn">Copy</button>
+        <div class="multiplayer-qr-modal__field">
+          <p class="multiplayer-qr-modal__field-label multiplayer-qr-modal__link-label"></p>
+          <div class="multiplayer-qr-modal__link-container">
+            <input type="text" class="multiplayer-qr-modal__link-input" readonly>
+            <button type="button" class="multiplayer-qr-modal__copy-btn">Copy</button>
+          </div>
+        </div>
+        <div class="multiplayer-qr-modal__field">
+          <p class="multiplayer-qr-modal__field-label multiplayer-qr-modal__code-label"></p>
+          <div class="multiplayer-qr-modal__link-container">
+            <input type="text" class="multiplayer-qr-modal__code-input" readonly>
+            <button type="button" class="multiplayer-qr-modal__copy-btn">Copy</button>
+          </div>
         </div>
       </div>
     </div>
@@ -955,19 +933,20 @@ function getOrCreateQRModal() {
   // Add event listeners
   const backdrop = qrModal.querySelector('.multiplayer-qr-modal__backdrop')
   const closeBtn = qrModal.querySelector('.multiplayer-qr-modal__close')
-  const copyBtn = qrModal.querySelector('.multiplayer-qr-modal__copy-btn')
-  const linkInput = qrModal.querySelector('.multiplayer-qr-modal__link-input')
 
   backdrop.addEventListener('click', hideQRCodeModal)
   closeBtn.addEventListener('click', hideQRCodeModal)
-  copyBtn.addEventListener('click', async() => {
-    const success = await tryCopyToClipboard(linkInput.value)
-    if (success) {
-      copyBtn.textContent = 'Copied!'
-      setTimeout(() => {
-        copyBtn.textContent = 'Copy'
-      }, 2000)
-    }
+  qrModal.querySelectorAll('.multiplayer-qr-modal__copy-btn').forEach((copyBtn) => {
+    copyBtn.addEventListener('click', async() => {
+      const field = copyBtn.parentElement?.querySelector('input')
+      const success = await tryCopyToClipboard(field?.value || '')
+      if (success) {
+        copyBtn.textContent = uiText('multiplayer.copied')
+        setTimeout(() => {
+          copyBtn.textContent = uiText('multiplayer.copy')
+        }, 2000)
+      }
+    })
   })
 
   // Close on Escape key
@@ -993,8 +972,11 @@ function showQRCodeModal(partyState, inviteUrl) {
   const title = modal.querySelector('.multiplayer-qr-modal__title')
   const qrContainer = modal.querySelector('.multiplayer-qr-modal__qr-container')
   const linkInput = modal.querySelector('.multiplayer-qr-modal__link-input')
-  const copyBtn = modal.querySelector('.multiplayer-qr-modal__copy-btn')
+  const codeInput = modal.querySelector('.multiplayer-qr-modal__code-input')
   const warning = modal.querySelector('.multiplayer-qr-modal__warning')
+  const instruction = modal.querySelector('.multiplayer-qr-modal__instruction')
+  const linkLabel = modal.querySelector('.multiplayer-qr-modal__link-label')
+  const codeLabel = modal.querySelector('.multiplayer-qr-modal__code-label')
 
   // Set title with party color
   const partyName = getPartyDisplayName(partyState.partyId, partyState.color)
@@ -1011,9 +993,25 @@ function showQRCodeModal(partyState, inviteUrl) {
     qrContainer.innerHTML = '<p class="multiplayer-qr-modal__error">Failed to generate QR code</p>'
   }
 
-  // Set link input value
-  linkInput.value = inviteUrl
-  copyBtn.textContent = 'Copy'
+  if (instruction) instruction.textContent = uiText('multiplayer.shareInstruction')
+  if (linkLabel) linkLabel.textContent = uiText('multiplayer.inviteLink')
+  if (codeLabel) codeLabel.textContent = uiText('multiplayer.inviteCode')
+  if (linkInput) {
+    linkInput.value = inviteUrl
+    linkInput.setAttribute('aria-label', uiText('multiplayer.inviteLink'))
+  }
+  const inviteCode = parseInviteInput(inviteUrl) || ''
+  const codeField = codeInput?.closest('.multiplayer-qr-modal__field')
+  if (codeInput) {
+    codeInput.value = inviteCode
+    codeInput.setAttribute('aria-label', uiText('multiplayer.inviteCode'))
+  }
+  if (codeField) {
+    codeField.hidden = !inviteCode
+  }
+  modal.querySelectorAll('.multiplayer-qr-modal__copy-btn').forEach((copyBtn) => {
+    copyBtn.textContent = uiText('multiplayer.copy')
+  })
   const reachability = describeInviteReachability(inviteUrl)
   if (warning) {
     warning.textContent = reachability

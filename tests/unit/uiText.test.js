@@ -9,6 +9,13 @@ describe('settings benchmark copy', () => {
     expect(uiText('settings.benchmark.standard', 'de')).toBe('Karten-Scroll-Benchmark')
   })
 
+  it('names the multiplayer join field for a code or a link', () => {
+    expect(uiText('multiplayer.joinLabel', 'en')).toBe('Invite code or link')
+    expect(uiText('multiplayer.joinLabel', 'de')).toBe('Einladungscode oder Link')
+    expect(uiText('multiplayer.joinInvalid', 'en')).toBe('Enter a valid invite code or link.')
+    expect(uiText('multiplayer.joinInvalid', 'de')).toBe('Gib einen gültigen Einladungscode oder Link ein.')
+  })
+
   it('stacks heavy-battle phases in the existing results dialog', () => {
     document.body.innerHTML = `
       <div id="benchmarkModal">
