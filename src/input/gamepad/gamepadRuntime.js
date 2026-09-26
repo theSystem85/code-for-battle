@@ -6,7 +6,7 @@ import { readBinding, stickAxisEnabled } from './gamepadBinding.js'
 import { gamepadBridge } from './gamepadCommandBridge.js'
 import { pulseGamepad } from './gamepadHaptics.js'
 import { writeGamepadEdgeScroll } from './gamepadEdgeScroll.js'
-import { applyGamepadIndicatorVisibility } from './gamepadIndicators.js'
+import { applyGamepadIndicatorVisibility, gamepadRemoteIndicatorMode } from './gamepadIndicators.js'
 import { knownGamepadInstanceKeys, getGamepadScrollSpeed, rememberGamepadAssignments, resolveDeadzones, resolveGamepadBindings, suggestControllerLayout } from './gamepadProfiles.js'
 import { nextRemoteStickToggle } from './remoteStickToggle.js'
 import { reconcileGamepadSlots } from './gamepadIdentity.js'
@@ -210,7 +210,7 @@ function remoteTargetAlive(slot) {
 function paintRemoteIndicator() {
   const element = typeof document !== 'undefined' ? document.getElementById('gamepadRemoteIndicator') : null
   if (!element) return
-  const mode = (remoteStickToggle[0] ? 1 : 0) + (remoteStickToggle[1] ? 2 : 0)
+  const mode = gamepadRemoteIndicatorMode(indicatorConnected, remoteStickToggle)
   if (element._mode === mode) return
   element._mode = mode
   element.hidden = mode === 0

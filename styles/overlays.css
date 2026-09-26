@@ -1319,9 +1319,14 @@ body.config-modal-open {
   pointer-events: none;
 }
 
+/* Chromium lets an author display value beat the user-agent [hidden] rule.
+   position:fixed also blockifies inline-flex to flex, so the empty remote
+   pill (dark background, green lamp) stays on screen unless hidden wins. */
 .gamepad-indicators[hidden],
-.gamepad-indicator[hidden] {
-  display: none;
+.gamepad-indicator[hidden],
+.gamepad-remote[hidden],
+.gamepad-cursor[hidden] {
+  display: none !important;
 }
 
 .gamepad-indicator,
