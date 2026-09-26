@@ -18,7 +18,9 @@
       "vibe": "Vibe-coded",
       "tech": "Tech-Baum",
       "manual": "Spielanleitung (Englisch)",
-      "skip": "Zum Inhalt"
+      "skip": "Zum Inhalt",
+      "github": "Auf GitHub ansehen",
+      "githubShort": "GitHub"
     },
     "hero": {
       "eyebrow": "Echtzeitstrategie im Browser",

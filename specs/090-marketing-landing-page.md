@@ -40,6 +40,14 @@ The tech tree matches `src/ui/productionControllerTechTree.js` and the building 
 
 Generated asset kinds listed on the page: unit sprites, building sprites, terrain tiles and sprite sheets, explosion animations, interface icons, command cursors, sound effects, music, narrator voice-over, and milestone videos.
 
+The repository link is `https://github.com/theSystem85/code-for-battle` (`GITHUB_REPO_URL` in `src/landing/sidebarLink.js`). English and German are the supported landing locales.
+
+- Header, on the right, after the language switch and before Play: a button with an inline GitHub mark SVG (no external icon request) and `landing.nav.github` ("View on GitHub" / "Auf GitHub ansehen").
+- Footer, after imprint, privacy, contact, the player guide, and launch: the same label and mark. Those existing footer links stay in that order.
+- In-game sidebar, inside the small footer links, after Privacy and before the landing link: `landing.nav.githubShort` ("GitHub" in both locales), styled like the other footer links.
+
+Each of those links opens in a new tab with `rel="noopener noreferrer"`. Section nav order (gallery through tech) is unchanged.
+
 The page also has a Multiplayer section and a Controllers section, in both locales, between Features and Vibe-coded. Multiplayer copy is limited to what the client implements: host invite link and QR code, WebRTC signalling, up to four parties, optional LLM commanders for empty parties, lockstep seed and input exchange with hash checks and host resync, pause-until-reconnect, Google STUN always, and TURN only when the signalling server is configured with it. Localhost invites and non-HTTPS iOS Safari are called out as limits. Controllers copy matches spec 092: mapping menu, per-controller profiles, and two-player couch co-op. The nav lists both sections.
 
 ## Performance
@@ -59,3 +67,5 @@ npm run dev
 - Open `/landing` and confirm it follows the browser language, or the last landing locale visited
 - In the game sidebar, confirm the new link sits under Privacy and opens the matching locale
 - Footer imprint, privacy, and contact links follow the page language
+- Header and footer show "View on GitHub" in English and "Auf GitHub ansehen" in German, and both open the repository in a new tab
+- The game sidebar shows GitHub after Privacy and before the landing link, also in a new tab
