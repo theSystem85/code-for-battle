@@ -72,6 +72,10 @@ function applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScroll
     return
   }
 
+  if (gameState.productionRadialMenuOpen) {
+    return
+  }
+
   const edgeState = gameState.desktopEdgeScroll
   if (!edgeState || !edgeState.overCanvas) {
     if (edgeState) {

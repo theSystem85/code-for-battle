@@ -629,6 +629,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Economy and Buildings
 
+- [x] **Radial build menu on production buildings (2026-09-25)** — Long-press a construction yard or unit factory to open a circular menu of that building's current sidebar options. Release on a button queues one unit at that factory or enters building placement, using the sidebar command path.
+  - Spec: [Radial build menu](../specs/093-radial-build-menu.md)
+
 - [x] **Map Settings total ore value control (2026-04-19)** — added `Total Ore Value` number input (step 1000) and deterministic map-generation distribution that evenly allocates non-seed ore value across all seed crystals; `0` now generates seed crystals only (from ore-field count).
   - Spec: none
 

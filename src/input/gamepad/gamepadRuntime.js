@@ -492,7 +492,7 @@ function applySlot(slot, pad, dt, gameplay, now) {
     const scrollY = axisValue(slot, 'mapScrollY', bindings.mapScrollY, buttons, axes, aim)
     let edgeX = 0
     let edgeY = 0
-    if (slot === 0 && !aim && viewWidth > 0 && viewHeight > 0 && cursorX >= 0) {
+    if (slot === 0 && !aim && !gameState.productionRadialMenuOpen && viewWidth > 0 && viewHeight > 0 && cursorX >= 0) {
       writeGamepadEdgeScroll(edgeScroll, cursorX, cursorY, viewWidth, viewHeight)
       edgeX = edgeScroll.x
       edgeY = edgeScroll.y

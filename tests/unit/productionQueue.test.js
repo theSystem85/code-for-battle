@@ -920,6 +920,66 @@ describe('Production Queue System', () => {
         { buildDuration: 1000 }
       )
     })
+
+    it('spawns a unit from the factory requested by the radial menu', () => {
+      const first = {
+        id: 'vf-1',
+        type: 'vehicleFactory',
+        owner: 'player',
+        health: 100,
+        rallyPoint: { x: 2, y: 2 }
+      }
+      const second = {
+        id: 'vf-2',
+        type: 'vehicleFactory',
+        owner: 'player',
+        health: 100,
+        rallyPoint: { x: 8, y: 9 }
+      }
+      gameState.buildings = [first, second]
+      gameState.nextVehicleFactoryIndex = 0
+      productionQueue.currentUnit = {
+        type: 'tank',
+        button: mockButton,
+        duration: 1000,
+        rallyPoint: null,
+        factoryId: 'vf-2'
+      }
+      productionQueue.unitItems = [productionQueue.currentUnit]
+      vi.mocked(spawnUnit).mockReturnValueOnce({
+        id: 'tank-explicit',
+        type: 'tank',
+        owner: 'player',
+        tileX: 3,
+        tileY: 3
+      })
+
+      productionQueue.completeCurrentUnitProduction()
+
+      expect(spawnUnit).toHaveBeenCalledWith(
+        second,
+        'tank',
+        units,
+        gameState.mapGrid,
+        second.rallyPoint,
+        gameState.occupancyMap,
+        { buildDuration: 1000 }
+      )
+      expect(gameState.nextVehicleFactoryIndex).toBe(0)
+    })
+
+    it('keeps an explicit factory id from queue through production start', () => {
+      gameState.buildings = [
+        { id: 'vf-9', type: 'vehicleFactory', owner: 'player', health: 100 }
+      ]
+      productionQueue.addItem('tank', mockButton, false, null, null, {
+        factoryId: 'vf-9',
+        record: false
+      })
+      expect(productionQueue.unitItems[0].factoryId).toBe('vf-9')
+      productionQueue.startNextUnitProduction()
+      expect(productionQueue.currentUnit.factoryId).toBe('vf-9')
+    })
   })
 
   describe('Start Next Building Production', () => {
