@@ -265,15 +265,21 @@ describe('UnitRenderer ammo HUD consistency', () => {
 
   it('splits the Supply Ship donut supply quarter into ammo, fuel, and repair arcs', () => {
     const renderer = new UnitRenderer()
+    const strokes = []
     const ctx = {
       save: vi.fn(),
       restore: vi.fn(),
       beginPath: vi.fn(),
       arc: vi.fn(),
-      stroke: vi.fn(),
-      set lineCap(_value) {},
-      set lineWidth(_value) {},
-      set strokeStyle(_value) {}
+      stroke() {
+        strokes.push({
+          style: this.strokeStyle,
+          args: ctx.arc.mock.calls[ctx.arc.mock.calls.length - 1]
+        })
+      },
+      lineCap: 'butt',
+      lineWidth: 4,
+      strokeStyle: ''
     }
     const unit = {
       type: 'supplyShip',
@@ -289,9 +295,22 @@ describe('UnitRenderer ammo HUD consistency', () => {
       left: 0, right: 100, top: 0, bottom: 100, width: 100, height: 100
     }, unit)
 
-    expect(ctx.arc).toHaveBeenCalledTimes(6)
-    const backgroundStarts = [0, 2, 4].map(index => ctx.arc.mock.calls[index][3])
-    expect(backgroundStarts[1] - backgroundStarts[0]).toBeCloseTo(backgroundStarts[2] - backgroundStarts[1])
+    const tracks = strokes.filter(stroke => stroke.style === '#3A3A3A')
+    expect(tracks).toHaveLength(3)
+    const starts = tracks.map(stroke => stroke.args[3])
+    expect(starts[1] - starts[0]).toBeCloseTo(starts[2] - starts[1])
+
+    const fills = strokes.filter(stroke => stroke.style !== '#3A3A3A')
+    expect(fills).toHaveLength(3 * 8)
+    tracks.forEach((track, group) => {
+      const groupFills = fills.slice(group * 8, (group + 1) * 8)
+      const sweep = track.args[4] - track.args[3]
+      expect(groupFills[0].args[3]).toBeCloseTo(track.args[3])
+      expect(groupFills[7].args[4]).toBeCloseTo(track.args[3] + sweep * 0.5)
+      const startGreen = Number(groupFills[0].style.match(/rgb\((\d+), (\d+), (\d+)\)/)[2])
+      const endGreen = Number(groupFills[7].style.match(/rgb\((\d+), (\d+), (\d+)\)/)[2])
+      expect(endGreen).toBeGreaterThan(startGreen)
+    })
   })
 
   it('renders the selected Supply Ship support radius from its configured tile range', () => {

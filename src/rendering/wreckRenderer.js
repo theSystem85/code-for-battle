@@ -15,6 +15,7 @@ import { getNavalFleetBaseImage } from './navalFleetImageRenderer.js'
 import { getNavalRenderLengthTiles, navalUnitTypes } from '../utils/navalUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
+import { fillStatusBar } from '../utils/statusBarGradient.js'
 
 const noiseCanvasCache = new Map()
 const MAX_NOISE_CACHE_ENTRIES = 32
@@ -514,7 +515,6 @@ export class WreckRenderer {
     ctx.fillStyle = '#333'
     ctx.fillRect(healthBarX, healthBarY, healthBarWidth, healthBarHeight)
 
-    ctx.fillStyle = '#FFD700'
-    ctx.fillRect(healthBarX, healthBarY, healthBarWidth * ratio, healthBarHeight)
+    fillStatusBar(ctx, healthBarX, healthBarY, healthBarWidth * ratio, healthBarHeight, '#FFD700', 'horizontal')
   }
 }

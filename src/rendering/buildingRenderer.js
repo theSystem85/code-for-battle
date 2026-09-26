@@ -11,6 +11,7 @@ import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { getShipyardServiceWaterTiles } from '../utils/navalUtils.js'
 import { getPreparedSprite as getPublishedPreparedSprite } from './prepared/preparedSpritePipeline.js'
+import { fillStatusBar } from '../utils/statusBarGradient.js'
 
 const AMMO_TURRET_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'artilleryTurret'])
 
@@ -670,10 +671,17 @@ export class BuildingRenderer {
     ctx.fillStyle = '#333'
     ctx.fillRect(screenX, screenY - 10, healthBarWidth, healthBarHeight)
 
-    // Health
-    ctx.fillStyle = healthPercentage > 0.6 ? '#0f0' :
+    const healthColor = healthPercentage > 0.6 ? '#0f0' :
       healthPercentage > 0.3 ? '#ff0' : '#f00'
-    ctx.fillRect(screenX, screenY - 10, healthBarWidth * healthPercentage, healthBarHeight)
+    fillStatusBar(
+      ctx,
+      screenX,
+      screenY - 10,
+      healthBarWidth * healthPercentage,
+      healthBarHeight,
+      healthColor,
+      'horizontal'
+    )
   }
 
   renderHelipadFuel(ctx, building, screenX, screenY, width, height) {
@@ -700,8 +708,7 @@ export class BuildingRenderer {
     ctx.fillRect(barX, barY, barWidth, barHeight)
 
     const fillHeight = barHeight * ratio
-    ctx.fillStyle = '#4A90E2'
-    ctx.fillRect(barX, barY + barHeight - fillHeight, barWidth, fillHeight)
+    fillStatusBar(ctx, barX, barY + barHeight - fillHeight, barWidth, fillHeight, '#4A90E2', 'vertical')
 
     ctx.strokeStyle = '#000'
     ctx.strokeRect(barX, barY, barWidth, barHeight)
@@ -731,8 +738,7 @@ export class BuildingRenderer {
     ctx.fillRect(barX, barY, barWidth, barHeight)
 
     const fillHeight = barHeight * ratio
-    ctx.fillStyle = '#FFA500' // Orange color for ammunition
-    ctx.fillRect(barX, barY + barHeight - fillHeight, barWidth, fillHeight)
+    fillStatusBar(ctx, barX, barY + barHeight - fillHeight, barWidth, fillHeight, '#FFA500', 'vertical')
 
     ctx.strokeStyle = '#000'
     ctx.strokeRect(barX, barY, barWidth, barHeight)
@@ -763,8 +769,7 @@ export class BuildingRenderer {
     ctx.fillRect(barX, barY, barWidth, barHeight)
 
     const fillHeight = barHeight * ratio
-    ctx.fillStyle = '#FFA500'
-    ctx.fillRect(barX, barY + barHeight - fillHeight, barWidth, fillHeight)
+    fillStatusBar(ctx, barX, barY + barHeight - fillHeight, barWidth, fillHeight, '#FFA500', 'vertical')
 
     const cooldown = Math.max(1, building.fireCooldown || 1)
     const now = performance.now()
@@ -1040,9 +1045,7 @@ export class BuildingRenderer {
     ctx.fillStyle = '#333'
     ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
 
-    // Progress fill (red color for attack cooldown)
-    ctx.fillStyle = '#ff4444'
-    ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight)
+    fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, '#ff4444', 'horizontal')
 
     ctx.restore()
   }
@@ -1106,12 +1109,10 @@ export class BuildingRenderer {
     ctx.fillStyle = '#333'
     ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
 
-    // Progress fill (blue color for production)
-    ctx.fillStyle = '#4CAF50' // Green for building production
-    if (['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'tankerTruck', 'howitzer'].includes(currentlyBuilding)) {
-      ctx.fillStyle = '#2196F3' // Blue for unit production
-    }
-    ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight)
+    const productionColor = ['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'tankerTruck', 'howitzer'].includes(currentlyBuilding)
+      ? '#2196F3'
+      : '#4CAF50'
+    fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, productionColor, 'horizontal')
 
     // Border
     ctx.strokeStyle = '#000'
@@ -1178,9 +1179,7 @@ export class BuildingRenderer {
     ctx.fillStyle = '#333'
     ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
 
-    // Progress fill (gold color for restoration)
-    ctx.fillStyle = '#FFD700'
-    ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight)
+    fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, '#FFD700', 'horizontal')
 
     // Border
     ctx.strokeStyle = '#000'
@@ -1217,9 +1216,7 @@ export class BuildingRenderer {
       ctx.fillStyle = '#333'
       ctx.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight)
 
-      // Progress fill (green color for healing)
-      ctx.fillStyle = '#00FF00'
-      ctx.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight)
+      fillStatusBar(ctx, progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight, '#00FF00', 'horizontal')
 
       // Border
       ctx.strokeStyle = '#000'
