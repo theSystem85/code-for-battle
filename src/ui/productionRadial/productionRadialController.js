@@ -209,7 +209,9 @@ export function installProductionRadialMenu(canvas) {
           clientY,
           button: 0
         }))
-        if (!gameState.buildingPlacementMode) gameState.radialBuildingPlan = null
+      }
+      if (decision === 'place' || decision === 'place-ready') {
+        radialCommands.clearRadialPlacementGhost()
       }
     }
     if (drag.pending && enterPromise) enterPromise.then(run)

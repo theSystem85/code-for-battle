@@ -80,6 +80,8 @@ Selection uses the sidebar command path. The production command module loads on 
 - A building option enters planning mode instead of queueing immediately. The placement ghost follows the pointer, with the same valid and invalid tile colors as sidebar planning.
 - Releasing on a building, then pressing the map, drags that ghost. Releasing on a valid tile places it. A tap with no drag places on that tile too. An invalid tile does not place and leaves planning mode active.
 - Resting on a building button for 500ms, while the menu is still held, closes the menu and attaches the ghost to the pointer. The button shows a progress ring during that hover. Leaving the button before 500ms resets the timer. The release places the blueprint the same way. An invalid release keeps planning mode so the player can drag again.
+- A successful place from either flow clears planning mode immediately. `buildingPlacementMode`, `currentBuildingType`, and `radialBuildingPlan` are cleared, so the placement ghost disappears. One radial selection places one building. Sidebar shift-chain can keep laying blueprints; that repeat path is not used here.
+- Cancel, including release over UI, `B`, `Escape`, and right-click, clears the same flags. The ghost does not stay on screen.
 - Releasing that drag over the sidebar or other UI, or pressing `B`, `Escape`, or the right button, cancels planning. The map does not box-select or scroll-drag during the blueprint drag. Desktop edge scroll still follows the pointer while the ghost is dragged.
 - A building that is already ready for placement uses `productionQueue.enableBuildingPlacementMode` and the existing click-to-place path. Any other building places a blueprint with `productionQueue.addItem(type, button, true, blueprint)`, the same command the sidebar drag uses, so construction starts at that tile and stays in lockstep.
 - Units call `productionQueue.addItem(type, button, false, null, null, { factoryId })`. Hovering a unit does not arm a timer.
@@ -108,5 +110,5 @@ Closed: the root is `display: none` with no children and no requestAnimationFram
 - Construction yard, vehicle factory, helipad, airstrip, and shipyard item lists follow sidebar visibility and disabled state.
 - `selectProductionRadialItem` queues a unit with the chosen `factoryId` and enables placement for a ready building.
 - A building-button hold fires at 500ms, resets when the pointer leaves, and never fires for a unit.
-- A valid blueprint drag calls `addItem` with the tile blueprint. An invalid tile keeps planning mode. A release over UI cancels. Unit release still queues on the chosen factory.
+- A valid blueprint drag calls `addItem` with the tile blueprint and clears the placement ghost. The same clear happens for a release-then-drag place and for a 500ms hold-drag place. An invalid tile keeps planning mode. Cancel and a release over UI clear the ghost. Unit release still queues on the chosen factory.
 - `completeCurrentUnitProduction` spawns from that factory and does not advance the round-robin index.

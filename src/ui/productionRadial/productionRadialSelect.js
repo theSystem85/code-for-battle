@@ -82,19 +82,28 @@ export function canRadialPlace(plan, tileX, tileY) {
   )
 }
 
+export function radialPlacementGhostVisible(state = gameState) {
+  return Boolean(state.buildingPlacementMode && state.currentBuildingType)
+}
+
+export function clearRadialPlacementGhost() {
+  gameState.radialBuildingPlan = null
+  gameState.buildingPlacementMode = false
+  gameState.currentBuildingType = null
+  gameState.draggedBuildingType = null
+  gameState.draggedBuildingButton = null
+}
+
 export function cancelRadialBuildingPlan() {
   const plan = gameState.radialBuildingPlan
-  gameState.radialBuildingPlan = null
-  if (plan?.ready) {
+  const ghost = radialPlacementGhostVisible()
+  if (plan?.ready && gameState.buildingPlacementMode) {
     productionQueue.exitBuildingPlacementMode()
-    return true
-  }
-  if (gameState.buildingPlacementMode || gameState.currentBuildingType) {
-    gameState.buildingPlacementMode = false
-    gameState.currentBuildingType = null
+  } else if (plan || ghost || gameState.currentBuildingType) {
     showNotification('Placement canceled')
   }
-  return Boolean(plan)
+  clearRadialPlacementGhost()
+  return Boolean(plan || ghost)
 }
 
 export function finishRadialBlueprintDrag(plan, { overUi, canPlace, tileX, tileY }) {
@@ -115,8 +124,6 @@ export function finishRadialBlueprintDrag(plan, { overUi, canPlace, tileX, tileY
   productionQueue.addItem(plan.type, plan.button, true, blueprint)
   const name = buildingData[plan.type]?.displayName || plan.type
   showNotification(`Blueprint placed for ${name}`)
-  gameState.buildingPlacementMode = false
-  gameState.currentBuildingType = null
-  gameState.radialBuildingPlan = null
+  clearRadialPlacementGhost()
   return 'place'
 }

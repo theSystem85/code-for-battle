@@ -14,7 +14,7 @@ import { findOwnedProductionBuildingAt } from '../../src/ui/productionRadial/pro
 import { resolveExplicitSpawnFactory } from '../../src/production/spawnFactorySelection.js'
 import { gameState } from '../../src/gameState.js'
 import { productionQueue } from '../../src/productionQueue.js'
-import { selectProductionRadialItem, enterRadialBuildingPlan, finishRadialBlueprintDrag } from '../../src/ui/productionRadial/productionRadialSelect.js'
+import { selectProductionRadialItem, enterRadialBuildingPlan, finishRadialBlueprintDrag, cancelRadialBuildingPlan, radialPlacementGhostVisible } from '../../src/ui/productionRadial/productionRadialSelect.js'
 import { createBuildingButtonHold, resolvePlanPointerUp } from '../../src/ui/productionRadial/radialBlueprintGesture.js'
 
 function button(kind, type, options = {}) {
@@ -295,7 +295,52 @@ describe('radial blueprint drag', () => {
     })
     expect(gameState.blueprints).toEqual([{ type: 'powerPlant', x: 8, y: 9 }])
     expect(gameState.buildingPlacementMode).toBe(false)
+    expect(gameState.currentBuildingType).toBeNull()
     expect(gameState.radialBuildingPlan).toBeNull()
+    expect(radialPlacementGhostVisible()).toBe(false)
+  })
+
+  it('clears the placement ghost after a successful place from both radial flows', () => {
+    const place = (tileX, tileY) => finishRadialBlueprintDrag(gameState.radialBuildingPlan, {
+      overUi: false,
+      canPlace: true,
+      tileX,
+      tileY
+    })
+    const expectGhostGone = () => {
+      expect(gameState.buildingPlacementMode).toBe(false)
+      expect(gameState.currentBuildingType).toBeNull()
+      expect(gameState.radialBuildingPlan).toBeNull()
+      expect(gameState.draggedBuildingType).toBeNull()
+      expect(radialPlacementGhostVisible()).toBe(false)
+    }
+
+    enterRadialBuildingPlan(powerPlant)
+    expect(radialPlacementGhostVisible()).toBe(true)
+    expect(place(2, 3)).toBe('place')
+    expectGhostGone()
+
+    const hold = createBuildingButtonHold(500)
+    hold.track(powerPlant, 0)
+    const fired = hold.poll(500)
+    expect(fired.phase).toBe('fire')
+    expect(fired.item.type).toBe('powerPlant')
+    enterRadialBuildingPlan(fired.item)
+    expect(radialPlacementGhostVisible()).toBe(true)
+    expect(place(6, 7)).toBe('place')
+    expectGhostGone()
+    expect(productionQueue.addItem).toHaveBeenCalledTimes(2)
+  })
+
+  it('clears the placement ghost when planning is canceled', () => {
+    enterRadialBuildingPlan(powerPlant)
+    gameState.draggedBuildingType = 'powerPlant'
+    expect(cancelRadialBuildingPlan()).toBe(true)
+    expect(gameState.buildingPlacementMode).toBe(false)
+    expect(gameState.currentBuildingType).toBeNull()
+    expect(gameState.radialBuildingPlan).toBeNull()
+    expect(gameState.draggedBuildingType).toBeNull()
+    expect(radialPlacementGhostVisible()).toBe(false)
   })
 
   it('cancels planning when the drag ends over UI and leaves unit production on release', () => {
