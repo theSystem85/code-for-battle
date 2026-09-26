@@ -55,21 +55,32 @@ async function loadDemo(page) {
   })
 }
 
-async function frameBattle(page) {
-  await page.evaluate(async ({ tileX, tileY }) => {
+async function frameBattle(page, offset = { du: 0, dv: 0 }) {
+  await page.evaluate(async ({ tileX, tileY, du, dv }) => {
     const input = await import('/src/inputHandler.js')
     if (Array.isArray(input.selectedUnits)) input.selectedUnits.length = 0
+    const clearSelected = (list) => {
+      (list || []).forEach(entity => {
+        if (entity) entity.selected = false
+      })
+    }
+    clearSelected(window.gameState.units)
+    clearSelected(window.gameState.buildings)
+    clearSelected(window.gameState.factories)
     const canvas = document.getElementById('gameCanvas')
     const tile = 32
     const viewW = canvas?.clientWidth || window.innerWidth
     const viewH = canvas?.clientHeight || window.innerHeight
+    const focusX = tileX + du
+    const focusY = tileY + dv
     const maxX = Math.max(0, window.gameState.mapTilesX * tile - viewW)
     const maxY = Math.max(0, window.gameState.mapTilesY * tile - viewH)
-    window.gameState.scrollOffset.x = Math.max(0, Math.min(tileX * tile + tile / 2 - viewW / 2, maxX))
-    window.gameState.scrollOffset.y = Math.max(0, Math.min(tileY * tile + tile / 2 - viewH / 2, maxY))
+    window.gameState.scrollOffset.x = Math.max(0, Math.min(focusX * tile + tile / 2 - viewW / 2, maxX))
+    window.gameState.scrollOffset.y = Math.max(0, Math.min(focusY * tile + tile / 2 - viewH / 2, maxY))
     window.gameState.smoothScroll.active = false
+    window.gameState.gamePaused = true
     document.querySelectorAll('.notification').forEach(node => node.remove())
-  }, FOCUS)
+  }, { ...FOCUS, ...offset })
 }
 
 async function waitForCombat(page) {
@@ -86,14 +97,23 @@ async function waitForCombat(page) {
     if (combat.bullets > 0 || combat.explosions > 0) break
     await page.waitForTimeout(250)
   }
-  await page.waitForTimeout(700)
+  await page.waitForTimeout(1100)
+  combat = await page.evaluate(async () => {
+    const mod = await import('/src/game/gameOrchestrator.js')
+    const logic = await import('/src/logic.js')
+    return {
+      bullets: mod.bullets?.length || 0,
+      explosions: (window.gameState.explosions?.length || 0) + (logic.explosions?.length || 0)
+    }
+  })
   return combat
 }
 
 async function hideChrome(page) {
   await page.addStyleTag({
     content: `
-      #fpsDisplay, .notification, .tutorial-overlay, .tutorial-card, #gamepadCursor, .loading-screen {
+      #fpsDisplay, .notification, .tutorial-overlay, .tutorial-card, #gamepadCursor, .loading-screen,
+      #mobileMinimapOverlay, #minimapViewport {
         display: none !important;
       }
       * { cursor: none !important; }
@@ -102,7 +122,7 @@ async function hideChrome(page) {
 }
 
 async function shoot(page, file, options = {}) {
-  await frameBattle(page)
+  await frameBattle(page, options.offset)
   await page.waitForTimeout(options.settle || 350)
   const png = await page.screenshot({ type: 'png', animations: 'disabled' })
   await sharp(png).webp({ quality: options.quality || 85, effort: 4 }).toFile(file)
@@ -141,7 +161,7 @@ async function main() {
   const desktop = await captureSet(browser, false)
   await desktop.page.setViewportSize({ width: 1254, height: 784 })
   await desktop.page.waitForTimeout(400)
-  await shoot(desktop.page, path.join(OUT_DIR, 'GamePlayDesktop.webp'))
+  await shoot(desktop.page, path.join(OUT_DIR, 'GamePlayDesktop.webp'), { offset: { du: 0, dv: 0 } })
   console.log('wrote GamePlayDesktop.webp')
 
   await desktop.page.setViewportSize({ width: 1920, height: 1080 })
@@ -153,7 +173,7 @@ async function main() {
   })
   await desktop.page.waitForTimeout(800)
   const backdropPng = await (async () => {
-    await frameBattle(desktop.page)
+    await frameBattle(desktop.page, { du: 0, dv: 0 })
     await desktop.page.waitForTimeout(500)
     return desktop.page.screenshot({ type: 'png', animations: 'disabled' })
   })()
@@ -170,7 +190,8 @@ async function main() {
   for (const shot of UI_SHOTS.filter(item => item.mobile)) {
     await phone.page.setViewportSize({ width: shot.width, height: shot.height })
     await phone.page.waitForTimeout(600)
-    await shoot(phone.page, path.join(OUT_DIR, shot.name))
+    const offset = shot.name.includes('Landscape') ? { du: 0, dv: 1 } : { du: 0, dv: 0 }
+    await shoot(phone.page, path.join(OUT_DIR, shot.name), { offset })
     console.log('wrote', shot.name)
   }
   await phone.context.close()

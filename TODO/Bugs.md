@@ -1343,6 +1343,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Other
 
+- [x] **Landing header gap while scrolled (2026-09-25)** — smooth scrolling painted a dark band above the sticky header and left the blurred backdrop short of the viewport. Landing scroll is instant, the header stays outside the parallax layer, and the backdrop is overscanned so the shift never reveals an edge.
+  - Spec: [Marketing landing page](../specs/090-marketing-landing-page.md)
+
 - [x] **Rebase conflict cleanup (2026-04-16)** — resolved the `spriteSheetAnimation.js` merge markers by keeping the constant-based black-key blend implementation and preserving the widened near-black cutoff/soften thresholds from the stashed changes.
   - Spec: none
 

@@ -54,36 +54,36 @@ const ORIENTATIONS = [
 ]
 
 const GROUND_LINE = [
-  ['tank_v1', -4, -3, 24],
+  ['tank_v1', -3, 0, 18],
   ['tank_v1', -4, -1, 100],
-  ['tank_v1', -4, 1, 70],
-  ['tank-v2', -5, -2, 100],
-  ['tank-v3', -5, 2, 100],
-  ['rocketTank', -6, 0, 80],
-  ['howitzer', -9, 0, 100]
+  ['tank_v1', -5, 1, 36],
+  ['tank-v2', -5, 0, 100],
+  ['tank-v3', -3, 1, 70],
+  ['rocketTank', -4, 1, 48],
+  ['howitzer', -7, 0, 100]
 ]
 
 const SUPPORT = [
-  ['harvester', -12, 4],
-  ['tankerTruck', -11, 5],
-  ['ambulance', -13, 3],
-  ['ammunitionTruck', -12, 6],
-  ['recoveryTank', -14, 2],
-  ['mineSweeper', -13, 6]
+  ['harvester', -13, -1],
+  ['tankerTruck', -14, 0],
+  ['ambulance', -13, -3],
+  ['ammunitionTruck', -15, -2],
+  ['recoveryTank', -15, 0],
+  ['mineSweeper', -14, -3]
 ]
 
 const AIR = [
-  ['apache', -1, -2, 3.4],
-  ['apache', 1, 2, 2.8],
-  ['f22Raptor', 0, -4, 4.1],
-  ['f35', 2, 0, 3.6]
+  ['apache', -2, -1, 3.2],
+  ['apache', -1, 1, 2.6],
+  ['f22Raptor', 0, -2, 4.0],
+  ['f35', 1, 0, 3.4]
 ]
 
 const NAVAL = [
-  ['destroyer', -6, 11],
-  ['battleship', 2, 12],
-  ['submarine', 7, 10],
-  ['hovercraft', -2, 10]
+  ['destroyer', -4, 4],
+  ['battleship', -2, 5],
+  ['submarine', 2, 4],
+  ['hovercraft', 5, 3]
 ]
 
 function key(x, y) {
@@ -162,6 +162,67 @@ function countBand(grid, toWorld, box, type) {
     }
   }
   return { count, biomes }
+}
+
+function coastRow(u) {
+  if (Math.abs(u) >= 12) return 2
+  return 2 + Math.round(Math.sin(u * 0.85) * 0.85)
+}
+
+function cliffRow(u) {
+  if (Math.abs(u) >= 12) return -7
+  return -4 + Math.round(Math.sin(u * 0.62 + 0.8) * 0.85)
+}
+
+function paintTile(grid, x, y, type, biome) {
+  const tile = grid[y][x]
+  tile.type = type
+  tile.biome = biome
+  tile.shorelineBiome = biome
+  tile.biomeRegion = biome === 'grass' ? 1 : biome === 'sand' ? 2 : biome === 'snow' ? 3 : 4
+  delete tile.biomeBlend
+  if (type !== 'land') {
+    tile.ore = false
+    tile.oreDensity = 0
+    tile.seedCrystal = false
+    tile.seedCrystalDensity = 0
+  }
+}
+
+function sculptShowcase(grid, toWorld) {
+  for (let y = 0; y < MAP_SIZE; y++) {
+    for (let x = 0; x < MAP_SIZE; x++) {
+      if (grid[y][x].type === 'street') grid[y][x].type = 'land'
+    }
+  }
+
+  for (let v = -18; v <= 18; v++) {
+    for (let u = -34; u <= 34; u++) {
+      const { x, y } = toWorld(u, v)
+      if (!inBounds(x, y)) continue
+      const shore = coastRow(u)
+      const cliff = cliffRow(u)
+      let type = 'land'
+      let biome = u < 0 ? 'grass' : 'sand'
+      if (v <= cliff) {
+        type = 'rock'
+        biome = 'snow'
+      } else if (v >= shore) {
+        type = 'water'
+        biome = 'sand'
+      } else if (Math.abs(u) <= 1) {
+        biome = 'soil'
+      }
+      paintTile(grid, x, y, type, biome)
+    }
+  }
+
+  for (let v = -3; v <= -1; v++) {
+    for (let u = -9; u <= -6; u++) {
+      const { x, y } = toWorld(u, v)
+      if (inBounds(x, y)) paintTile(grid, x, y, 'rock', 'snow')
+    }
+  }
 }
 
 function scoreSite(grid, cx, cy) {
@@ -348,8 +409,8 @@ function stampShipyard(grid, occupied, toWorld) {
   const width = buildingData.shipyard.width
   const height = buildingData.shipyard.height
   const waterDepth = Math.ceil(height / 2)
-  for (let v = 6; v <= 12; v++) {
-    for (let u = -14; u <= 6; u++) {
+  for (let v = -1; v <= 1; v++) {
+    for (let u = -22; u <= -14; u++) {
       const origin = toWorld(u, v)
       let landRows = 0
       let waterRows = 0
@@ -377,8 +438,8 @@ function stampShipyard(grid, occupied, toWorld) {
     }
   }
 
-  for (let v = 7; v <= 11; v++) {
-    for (let u = -12; u <= 4; u++) {
+  for (let v = -1; v <= 1; v++) {
+    for (let u = -22; u <= -14; u++) {
       const origin = toWorld(u, v)
       if (origin.x < 2 || origin.y < 2 || origin.x + width >= MAP_SIZE - 2 || origin.y + height >= MAP_SIZE - 2) continue
       let nearWater = false
@@ -575,8 +636,8 @@ function buildArmies(grid, occupied, toWorld) {
 function placePacked(grid, occupied, buildings, toWorld, owner, sign, queue) {
   const prefix = owner === PLAYER ? 'demo-p1' : 'demo-p2'
   let serial = 0
-  for (let v = -10; v <= 8; v++) {
-    for (let u = -18; u <= -7; u++) {
+  for (let v = -6; v <= -2; v++) {
+    for (let u = -13; u >= -22; u--) {
       if (queue.length === 0) return
       const [type, required] = queue[0]
       const localU = sign * u
@@ -653,6 +714,7 @@ export function getBuiltinMissionById(id) {
 
 const site = findBestSite()
 const { grid, toWorld, seed, orientation, cx, cy } = site
+sculptShowcase(grid, toWorld)
 const occupied = makeOccupied()
 const buildings = []
 const playerPowerNet = placeBase(grid, occupied, buildings, toWorld, PLAYER, 1)

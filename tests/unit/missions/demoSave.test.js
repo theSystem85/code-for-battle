@@ -55,6 +55,33 @@ describe('demo builtin save', () => {
       })
     })
 
+    const focus = demoSave.focus
+    let water = 0
+    let rock = 0
+    let street = 0
+    const landBiomes = new Set()
+    for (let y = focus.tileY - 6; y <= focus.tileY + 6; y++) {
+      for (let x = focus.tileX - 12; x <= focus.tileX + 12; x++) {
+        const tile = state.mapTileState[y]?.[x]
+        if (!tile) continue
+        if (tile.type === 'water') water += 1
+        else if (tile.type === 'rock') rock += 1
+        else if (tile.type === 'street') street += 1
+        else if (tile.biome) landBiomes.add(tile.biome)
+      }
+    }
+    expect(water).toBeGreaterThan(40)
+    expect(rock).toBeGreaterThan(20)
+    expect(street).toBe(0)
+    expect(landBiomes.has('grass')).toBe(true)
+    expect(landBiomes.has('sand')).toBe(true)
+
+    const naval = state.units.filter(unit => UNIT_PROPERTIES[unit.type]?.isNaval)
+    expect(naval.length).toBeGreaterThanOrEqual(4)
+    naval.forEach(unit => {
+      expect(state.mapGridTypes[unit.tileY][unit.tileX]).toBe('water')
+    })
+
     const yard = state.buildings.find(building => building.id === 'player1')
     expect(yard.isHuman).toBe(true)
     expect(state.gameState.humanPlayer).toBe('player1')

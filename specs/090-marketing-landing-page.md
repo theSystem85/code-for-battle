@@ -30,7 +30,9 @@ Slots keep the previous viewport sizes:
 - `GamePlayLandscape.webp` — 845×392 phone landscape
 - `GamePlayPortrait.webp` — 391×846 phone portrait
 
-`GamePlayBackdrop.webp` (1920×1080) and `GamePlayBackdropMobile.webp` (960×540) are the fixed page background. The background image is blurred, covered by a dark gradient so the copy stays readable, and shifted with `translate3d` on scroll. The shift is a fraction of the viewport mapped across the full scroll range. `prefers-reduced-motion: reduce` leaves it still. The mobile source is selected with a `picture` media query. The image is decoded asynchronously at low fetch priority so it does not compete with the hero shot.
+`GamePlayBackdrop.webp` (1920×1080) and `GamePlayBackdropMobile.webp` (960×540) are the fixed page background. The background image is blurred, covered by a dark gradient so the copy stays readable, and shifted with `translate3d` on a wrapper (not on the filtered image) by at most 8% of the viewport. The wrapper is larger than the viewport on every side, so that shift never uncovers the page color. The sticky header is a sibling of that layer and stays at the top of the viewport. Landing scroll behavior is instant, because smooth scrolling painted a gap above the header. `prefers-reduced-motion: reduce` leaves the backdrop still. The mobile source is selected with a `picture` media query. The image is decoded asynchronously at low fetch priority so it does not compete with the hero shot.
+
+Gallery cards size to their screenshots. On wide layouts the desktop and landscape shots stack on the left and the portrait shot sits beside them.
 
 The February 2026 captures were removed. They showed the map from before organic coasts, biomes, rocks, and cliffs.
 

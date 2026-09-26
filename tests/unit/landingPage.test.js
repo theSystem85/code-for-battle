@@ -24,6 +24,8 @@ import { rewriteLandingUrl } from '../../src/landing/routes.js'
 import { mountSidebarLandingLink } from '../../src/landing/sidebarLink.js'
 
 const indexHtml = readFileSync(path.join(process.cwd(), 'index.html'), 'utf8')
+const landingCss = readFileSync(path.join(process.cwd(), 'src/landing/landing.css'), 'utf8')
+const landingEn = readFileSync(path.join(process.cwd(), 'src/landing/en.html'), 'utf8')
 
 describe('landing locales', () => {
   it('keeps English and German message keys aligned and filled', () => {
@@ -143,6 +145,18 @@ describe('landing backdrop', () => {
     })
     expect(document.querySelector('.landing-backdrop__shift').style.transform).toBe('')
     still()
+  })
+
+  it('keeps the header outside the parallax layer and overscans the backdrop', () => {
+    expect(landingCss).toMatch(/html\s*\{[^}]*scroll-behavior:\s*auto/)
+    expect(landingCss).toMatch(/\.landing-backdrop__shift\s*\{[^}]*top:\s*-32%/)
+    expect(landingCss).toMatch(/\.landing-bar\s*\{[^}]*position:\s*sticky[^}]*top:\s*0/)
+    expect(landingEn.indexOf('landing-backdrop')).toBeLessThan(landingEn.indexOf('class="landing-bar"'))
+    expect(landingEn).toContain('shot--desktop')
+    expect(landingEn).toContain('shot--landscape')
+    expect(landingEn).toContain('shot--portrait')
+    const header = landingEn.slice(landingEn.indexOf('<header'), landingEn.indexOf('</header>'))
+    expect(header).not.toContain('landing-backdrop')
   })
 })
 

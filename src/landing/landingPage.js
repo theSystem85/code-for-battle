@@ -183,7 +183,7 @@ export function mountLandingBackdrop(doc = document, win = window) {
     }
     const view = win.innerHeight || 1
     const maxScroll = Math.max(1, doc.documentElement.scrollHeight - view)
-    const travel = view * 0.12
+    const travel = view * 0.08
     const y = (win.scrollY / maxScroll) * travel
     shift.style.transform = `translate3d(0, ${y.toFixed(2)}px, 0)`
   }
