@@ -1,6 +1,7 @@
 // canvasManager.js
 // Handle canvas setup, resizing, and management
 import { MOBILE_CANVAS_PIXEL_RATIO_CAP } from '../config.js'
+import { readLayoutBox, syncViewportLayout } from '../ui/viewportLayout.js'
 import { publishCanvasViewport } from './prepared/canvasViewportRegistry.js'
 
 export class CanvasManager {
@@ -166,6 +167,31 @@ export class CanvasManager {
     this.resizeObserver = null
   }
 
+  syncPortraitBuildBar(mobilePortrait) {
+    const bar = document.getElementById('mobileBuildMenuContainer')
+    if (!bar) return
+    const overlay = mobilePortrait
+      && document.body?.classList.contains('sidebar-condensed')
+      && bar.getAttribute('aria-hidden') !== 'true'
+    if (overlay) {
+      bar.dataset.portraitOverlayPinned = 'true'
+      bar.style.position = 'absolute'
+      bar.style.left = '0px'
+      bar.style.right = '0px'
+      bar.style.top = 'auto'
+      bar.style.bottom = '0px'
+      return
+    }
+    if (bar.dataset.portraitOverlayPinned === 'true') {
+      bar.style.position = ''
+      bar.style.left = ''
+      bar.style.right = ''
+      bar.style.top = ''
+      bar.style.bottom = ''
+      delete bar.dataset.portraitOverlayPinned
+    }
+  }
+
   resizeCanvases() {
     const rawPixelRatio = window.devicePixelRatio || 1
     const terrainPixelRatio = this.resolvePixelRatio(rawPixelRatio)
@@ -196,34 +222,13 @@ export class CanvasManager {
     const isTouchLayout = body ? body.classList.contains('is-touch') : false
 
     const viewport = window.visualViewport
-
-    const layoutWidthCandidates = []
-    layoutWidthCandidates.push(window.innerWidth)
-    if (viewport && viewport.width) {
-      layoutWidthCandidates.push(viewport.width)
-    }
-    if (document.documentElement && document.documentElement.clientWidth) {
-      layoutWidthCandidates.push(document.documentElement.clientWidth)
-    }
-
-    const validLayoutWidths = layoutWidthCandidates.filter(v => Number.isFinite(v) && v > 0)
-    const layoutViewportWidth = validLayoutWidths.length
-      ? Math.max(...validLayoutWidths)
-      : this.gameCanvas.clientWidth || 0
-
-    const layoutHeightCandidates = []
-    layoutHeightCandidates.push(window.innerHeight)
-    if (viewport && viewport.height) {
-      layoutHeightCandidates.push(viewport.height)
-    }
-    if (document.documentElement && document.documentElement.clientHeight) {
-      layoutHeightCandidates.push(document.documentElement.clientHeight)
-    }
-
-    const validLayoutHeights = layoutHeightCandidates.filter(v => Number.isFinite(v) && v > 0)
-    const layoutViewportHeight = validLayoutHeights.length
-      ? Math.max(...validLayoutHeights)
-      : this.gameCanvas.clientHeight || 0
+    // Apply the portrait height floor before reading the box. A same-width
+    // shrink (Netlify Drawer, or CriOS treating that fixed bar as chrome)
+    // must not replace the webview height the canvas already filled.
+    syncViewportLayout(window, { allowShrink: false })
+    const measuredLayout = readLayoutBox(window)
+    const layoutViewportWidth = measuredLayout.width || this.gameCanvas.clientWidth || 0
+    const layoutViewportHeight = measuredLayout.height || this.gameCanvas.clientHeight || 0
 
     const screenWidth = isTouchLayout && window.screen && window.screen.width
       ? window.screen.width / rawPixelRatio
@@ -256,12 +261,22 @@ export class CanvasManager {
     const sidebarCollapsed = body
       ? body.classList.contains('sidebar-collapsed') || body.classList.contains('sidebar-condensed')
       : false
+    // Portrait condensed/collapsed sidebars are off-canvas overlays. Their
+    // measured width AND height must not inset the canvas. Landscape keeps the
+    // map full-bleed as well. Only an in-flow desktop column, or an expanded
+    // portrait sidebar, reserves horizontal space. Nothing reserves vertical space.
     const reserveSidebarSpace = !mobileLandscape && !(mobilePortrait && sidebarCollapsed)
     const safeAdjustment = mobileLandscape ? safeLeft : 0
     const sidebarBaseWidth = Math.max(0, rawSidebarWidth - safeAdjustment)
 
     if (document.documentElement) {
-      document.documentElement.style.setProperty('--sidebar-width', `${sidebarBaseWidth}px`)
+      if (reserveSidebarSpace || mobileLandscape) {
+        document.documentElement.style.setProperty('--sidebar-width', `${sidebarBaseWidth}px`)
+      } else if (mobilePortrait) {
+        // Drop a width captured before the overlay class existed. The stylesheet
+        // clamp is the expanded width; it must not keep insetting the map.
+        document.documentElement.style.removeProperty('--sidebar-width')
+      }
     }
 
     const baseCanvasWidth = mobileLandscape
@@ -285,31 +300,41 @@ export class CanvasManager {
       ? rightUi.getBoundingClientRect().width
       : 0
     const rightUiWidth = Number.isFinite(measuredRightUiWidth) ? measuredRightUiWidth : 0
-    const playableCanvasWidth = Math.max(
-      0,
-      canvasCssWidth - safeLeft - Math.max(safeRight, rightUiWidth)
-    )
-    const playableCanvasHeight = Math.max(0, canvasCssHeight - safeTop - safeBottom)
 
     const applyCanvasLayout = (canvas) => {
       if (!canvas) return
+      // Landscape extends into the safe area with negative offsets, so it stays
+      // viewport-fixed. Portrait stays absolute in the fixed body so it shares
+      // that box with the build bar and cannot paint past a shorter fixed viewport.
       canvas.style.position = mobileLandscape ? 'fixed' : 'absolute'
       if (mobileLandscape) {
         canvas.style.left = `${-safeLeft}px`
         canvas.style.right = `${-safeRight}px`
-      } else {
-        canvas.style.left = `${effectiveSidebarWidth}px`
-        canvas.style.right = 'auto'
+        canvas.style.width = `${canvasCssWidth}px`
+        canvas.style.height = `${canvasCssHeight}px`
+        canvas.style.top = `${-safeTop}px`
+        canvas.style.bottom = `${-safeBottom}px`
+        return
       }
+
+      canvas.style.left = `${effectiveSidebarWidth}px`
+      canvas.style.right = 'auto'
       canvas.style.width = `${canvasCssWidth}px`
       canvas.style.height = `${canvasCssHeight}px`
-      canvas.style.top = mobileLandscape ? `${-safeTop}px` : '0px'
-      canvas.style.bottom = mobileLandscape ? `${-safeBottom}px` : 'auto'
+      canvas.style.top = '0px'
+      canvas.style.bottom = 'auto'
     }
 
     applyCanvasLayout(this.gameGlCanvas)
     applyCanvasLayout(this.gameGpuCanvas)
     applyCanvasLayout(this.gameCanvas)
+    this.syncPortraitBuildBar(mobilePortrait)
+
+    const playableCanvasWidth = Math.max(
+      0,
+      canvasCssWidth - safeLeft - Math.max(safeRight, rightUiWidth)
+    )
+    const playableCanvasHeight = Math.max(0, canvasCssHeight - safeTop - safeBottom)
 
     // Keep the expensive terrain layers on the adaptive DPR budget. The
     // transparent 2D canvas contains units, buildings, labels, and gameplay UI,

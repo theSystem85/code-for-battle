@@ -2,9 +2,28 @@
 html, body {
   margin: 0;
   padding: 0;
+  /* Chrome iOS (CriOS) resizes the WKWebView when its toolbars collapse
+     without firing window or visualViewport resize, and dvh/innerHeight can
+     stay on the small viewport. Stretching between top and bottom tracks the
+     webview frame itself. A definite height would override bottom and pin the
+     short first measurement. --app-height is a floor: phone portrait keeps
+     the tallest height for this width so a later fixed bottom bar (the
+     Netlify Drawer) cannot latch the layout short. */
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
   height: 100%;
-  width: 100vw;
+  height: 100vh;
+  height: -webkit-fill-available;
+  height: 100dvh;
+  height: auto;
+  min-height: 0;
+  min-height: var(--app-height, 0px);
   overflow: hidden;
+  overscroll-behavior: none;
   background-color: #000;
   cursor: var(--game-default-cursor);
   touch-action: manipulation;
@@ -85,9 +104,12 @@ body.is-touch {
   position: fixed;
   top: 0;
   left: 0;
-  bottom: 0;
+  /* Do not anchor with bottom:0. A bottom-anchored fixed box is what Chrome on
+     iOS subtracts from the layout viewport, which left a gap the size of the
+     condensed build bar under that bar. */
+  bottom: auto;
   width: var(--sidebar-width);
-  height: auto;
+  height: 100%;
   background-color: var(--sidebar-shared-bg-color);
   background-image: var(--sidebar-shared-bg-image);
   color: #fff;
@@ -1334,12 +1356,14 @@ body.mobile-landscape #gameCanvasGL {
 body.mobile-portrait #gameCanvas,
 body.mobile-portrait #gameCanvasGPU,
 body.mobile-portrait #gameCanvasGL {
+  top: 0;
+  height: 100%;
   transition: left 0.25s ease, width 0.25s ease;
 }
 
-body.mobile-portrait:not(.sidebar-collapsed) #gameCanvas,
-body.mobile-portrait:not(.sidebar-collapsed) #gameCanvasGPU,
-body.mobile-portrait:not(.sidebar-collapsed) #gameCanvasGL {
+body.mobile-portrait:not(.sidebar-collapsed):not(.sidebar-condensed) #gameCanvas,
+body.mobile-portrait:not(.sidebar-collapsed):not(.sidebar-condensed) #gameCanvasGPU,
+body.mobile-portrait:not(.sidebar-collapsed):not(.sidebar-condensed) #gameCanvasGL {
   left: var(--sidebar-width);
   width: calc(100% - var(--sidebar-width));
 }
@@ -1379,6 +1403,13 @@ body.mobile-portrait #sidebar {
 }
 
 body.mobile-portrait {
+  /* Stay fixed to the webview. position:relative would size the body from
+     content/dvh and let CriOS leave a black band under the build bar. */
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
   --sidebar-width: clamp(220px, 74vw, 320px);
   --portrait-condensed-bar-height: 96px;
   --portrait-condensed-toggle-width: calc(var(--mobile-action-size) * 0.44);
@@ -1386,6 +1417,8 @@ body.mobile-portrait {
 
 body.mobile-portrait #sidebar {
   top: var(--safe-area-top);
+  bottom: auto;
+  height: calc(100% - var(--safe-area-top));
   background-color: var(--sidebar-shared-bg-color);
   background-image: var(--sidebar-shared-bg-image);
   border-right: 1px solid rgba(255, 255, 255, 0.08);
@@ -1845,12 +1878,17 @@ body.mobile-portrait.sidebar-collapsed #musicControl {
 
 body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer[aria-hidden="false"] {
   display: flex;
-  position: fixed;
+  /* Absolute inside the fixed body, not position:fixed. CriOS treats a fixed
+     bottom bar as layout chrome and shrinks the viewport by the bar height,
+     so bottom:0 then sits one condensed-sidebar height too high. */
+  position: absolute;
   left: 0;
   right: 0;
+  top: auto;
   bottom: 0;
-  height: var(--portrait-condensed-bar-height);
+  height: calc(var(--portrait-condensed-bar-height) + var(--safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   padding: 0;
+  padding-bottom: var(--safe-area-bottom, env(safe-area-inset-bottom, 0px));
   background-color: var(--sidebar-shared-bg-color);
   background-image: var(--sidebar-shared-bg-image);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
