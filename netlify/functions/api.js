@@ -9,6 +9,7 @@ import {
 import {
   adaptNetlifyBlobStore,
   handleMultiplayerStatsRequest,
+  readRuntimeRedisEnv,
   statsRoute
 } from '../../src/network/multiplayerStats.js'
 
@@ -163,15 +164,21 @@ export default async(request, _context) => {
     const store = await getSessionStore()
 
     if (statsRoute(path)) {
-      const env = {
-        UPSTASH_REDIS_REST_URL: readFunctionEnv('UPSTASH_REDIS_REST_URL') || process.env.UPSTASH_REDIS_REST_URL || '',
-        UPSTASH_REDIS_REST_TOKEN: readFunctionEnv('UPSTASH_REDIS_REST_TOKEN') || process.env.UPSTASH_REDIS_REST_TOKEN || ''
-      }
+      const redis = readRuntimeRedisEnv({
+        UPSTASH_REDIS_REST_URL: readFunctionEnv('UPSTASH_REDIS_REST_URL'),
+        UPSTASH_REDIS_REST_TOKEN: readFunctionEnv('UPSTASH_REDIS_REST_TOKEN')
+      })
       return handleMultiplayerStatsRequest(request, {
-        env,
+        env: redis
+          ? {
+            UPSTASH_REDIS_REST_URL: redis.url,
+            UPSTASH_REDIS_REST_TOKEN: redis.token
+          }
+          : {},
         blobs: adaptNetlifyBlobStore(store),
         fetchImpl: fetch,
-        now: () => Date.now()
+        now: () => Date.now(),
+        handler: 'function'
       })
     }
 

@@ -120,11 +120,73 @@ const JSON_HEADERS = {
   'Cache-Control': 'no-store'
 }
 
+function stringEnv(value) {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function readEnvKey(bag, key) {
+  try {
+    if (!bag) return ''
+    return stringEnv(bag[key])
+  } catch {
+    return ''
+  }
+}
+
+function readNetlifyEnvKey(key) {
+  const netlify = globalThis.Netlify
+  if (!netlify || !netlify.env) return ''
+  if (typeof netlify.env.get === 'function') {
+    try {
+      const value = stringEnv(netlify.env.get(key))
+      if (value) return value
+    } catch {
+      // Unset keys throw. Keep going so toObject or another runtime can answer.
+    }
+  }
+  if (typeof netlify.env.toObject === 'function') {
+    try {
+      return readEnvKey(netlify.env.toObject(), key)
+    } catch {
+      return ''
+    }
+  }
+  return ''
+}
+
+function readDenoEnvKey(key) {
+  const deno = globalThis['Deno']
+  if (!deno || !deno.env || typeof deno.env.get !== 'function') return ''
+  try {
+    return stringEnv(deno.env.get(key))
+  } catch {
+    return ''
+  }
+}
+
 export function readRedisEnv(env = {}) {
-  const url = String(env.UPSTASH_REDIS_REST_URL || '').trim().replace(/\/$/, '')
-  const token = String(env.UPSTASH_REDIS_REST_TOKEN || '').trim()
+  const url = stringEnv(env.UPSTASH_REDIS_REST_URL).replace(/\/$/, '')
+  const token = stringEnv(env.UPSTASH_REDIS_REST_TOKEN)
   if (!url || !token) return null
   return { url, token }
+}
+
+// Literal key reads. Netlify injects Functions-scoped values, including secrets,
+// when the access is visible to the deploy. A dynamic name alone is not enough.
+// Bracket access stays so a build-time inlined empty process.env.KEY cannot hide
+// the runtime value.
+export function readRuntimeRedisEnv(env = {}) {
+  const proc = typeof process !== 'undefined' ? process.env : null
+  return readRedisEnv({
+    UPSTASH_REDIS_REST_URL: stringEnv(env.UPSTASH_REDIS_REST_URL)
+      || readNetlifyEnvKey('UPSTASH_REDIS_REST_URL')
+      || readDenoEnvKey('UPSTASH_REDIS_REST_URL')
+      || readEnvKey(proc, 'UPSTASH_REDIS_REST_URL'),
+    UPSTASH_REDIS_REST_TOKEN: stringEnv(env.UPSTASH_REDIS_REST_TOKEN)
+      || readNetlifyEnvKey('UPSTASH_REDIS_REST_TOKEN')
+      || readDenoEnvKey('UPSTASH_REDIS_REST_TOKEN')
+      || readEnvKey(proc, 'UPSTASH_REDIS_REST_TOKEN')
+  })
 }
 
 export function statsRoute(pathname) {
@@ -526,7 +588,7 @@ function jsonResponse(status, body, extraHeaders = {}) {
   })
 }
 
-function outcomeResponse(outcome) {
+function outcomeResponse(outcome, options = {}) {
   if (outcome.rateLimited) {
     return jsonResponse(429, { error: 'rate_limited' }, { 'Retry-After': '15' })
   }
@@ -538,6 +600,8 @@ function outcomeResponse(outcome) {
     : 'blobs'
   body.backend = backend
   body.storage = backend
+  body.redisConfigured = backend === 'redis'
+  if (options.handler) body.handler = options.handler
   return jsonResponse(200, body)
 }
 
@@ -558,7 +622,7 @@ export async function handleMultiplayerStatsRequest(request, options = {}) {
 
   const now = typeof options.now === 'function' ? options.now() : Date.now()
   const input = { ...parsed, now }
-  const redis = readRedisEnv(options.env || {})
+  const redis = readRuntimeRedisEnv(options.env || {})
   try {
     let outcome
     if (redis) {
@@ -577,7 +641,7 @@ export async function handleMultiplayerStatsRequest(request, options = {}) {
     } else {
       return jsonResponse(503, { error: 'unavailable' })
     }
-    return outcomeResponse(outcome)
+    return outcomeResponse(outcome, options)
   } catch {
     return jsonResponse(503, { error: 'unavailable' })
   }

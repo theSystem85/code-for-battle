@@ -82,8 +82,8 @@ Set these variables for Netlify Functions (production, deploy previews, and bran
 
 Player counts and Quick match use the same Functions scope:
 
-- `UPSTASH_REDIS_REST_URL` — Upstash Redis REST URL. The presence edge function reads it with `Netlify.env.get`.
-- `UPSTASH_REDIS_REST_TOKEN` — Upstash Redis REST token. Do not put either value in a `VITE_*` variable.
+- `UPSTASH_REDIS_REST_URL` — Upstash Redis REST URL. The presence edge function reads it with `Netlify.env.get('UPSTASH_REDIS_REST_URL')`.
+- `UPSTASH_REDIS_REST_TOKEN` — Upstash Redis REST token. The edge function reads it with `Netlify.env.get('UPSTASH_REDIS_REST_TOKEN')`, including when the value is marked secret. Do not put either value in a `VITE_*` variable.
 
 In the Netlify UI: Site configuration → Environment variables → scope **Functions** (production, deploy previews, and branch deploys), same as `ICE_SERVERS` and `TURN_*`. `POST /api/presence` and `POST /api/quick-match` run as edge functions and talk to Upstash over HTTPS. Heartbeats store only an anonymous session id, a status, and a timestamp. `POST /api/presence` includes `backend`: `redis` when Upstash handled the heartbeat, or `blobs` when the fallback did. If either Upstash variable is missing, the edge function forwards that request to the serverless function, which keeps approximate counts in Netlify Blobs (`onlyIfNew` for Quick match claims) so previews and local dev still work. `npm run stun` uses the same rules in memory when those variables are unset. Cross-network play still needs the TURN variables above. Same-computer Quick match can connect with public STUN.
 

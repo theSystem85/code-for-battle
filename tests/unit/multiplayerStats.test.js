@@ -12,6 +12,7 @@ import {
   claimPipeline,
   createMemoryStatsDb,
   handleMultiplayerStatsRequest,
+  readRuntimeRedisEnv,
   interpretClaimEval,
   interpretPresenceEval,
   parsePresenceBody,
@@ -336,6 +337,7 @@ describe('multiplayer stats server', () => {
     expect(body.playing).toBe(1)
     expect(body.storage).toBe('blobs')
     expect(body.backend).toBe('blobs')
+    expect(body.redisConfigured).toBe(false)
     expect(JSON.stringify([...store.blobs.values()])).not.toContain('Ada Lovelace')
 
     const missing = await handleMultiplayerStatsRequest(request('/api/presence', {
@@ -366,9 +368,51 @@ describe('multiplayer stats server', () => {
     const body = await response.json()
     expect(body.backend).toBe('redis')
     expect(body.storage).toBe('redis')
+    expect(body.redisConfigured).toBe(true)
     expect(body.playing).toBe(1)
     expect(fetchImpl).toHaveBeenCalledTimes(1)
     expect(blobs.blobs.size).toBe(0)
+  })
+
+  it('reads a secret Upstash token from Netlify.env when process.env is empty', async() => {
+    const previous = globalThis.Netlify
+    globalThis.Netlify = {
+      env: {
+        get(key) {
+          if (key === 'UPSTASH_REDIS_REST_TOKEN') return 'secret-token'
+          throw new Error(`missing ${key}`)
+        },
+        toObject() {
+          return { UPSTASH_REDIS_REST_URL: 'https://example.upstash.io' }
+        }
+      }
+    }
+    try {
+      expect(readRuntimeRedisEnv({})).toEqual({
+        url: 'https://example.upstash.io',
+        token: 'secret-token'
+      })
+      const fetchImpl = vi.fn(async() => new Response(JSON.stringify([
+        { result: [1, 0, 0, 0, 0, 'closed'] }
+      ]), { status: 200 }))
+      const response = await handleMultiplayerStatsRequest(request('/api/presence', {
+        sessionId: 'session-1234',
+        status: 'menu'
+      }), {
+        env: {},
+        fetchImpl,
+        blobs: createBlobStore(),
+        now: () => NOW,
+        handler: 'edge'
+      })
+      const body = await response.json()
+      expect(body.backend).toBe('redis')
+      expect(body.handler).toBe('edge')
+      expect(body.redisConfigured).toBe(true)
+    } finally {
+      if (previous === undefined) delete globalThis.Netlify
+      else globalThis.Netlify = previous
+    }
   })
 
   it('adapts Netlify blob conditional writes', async() => {

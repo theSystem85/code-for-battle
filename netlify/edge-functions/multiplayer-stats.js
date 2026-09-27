@@ -1,35 +1,4 @@
-import { handleMultiplayerStatsRequest, readRedisEnv, statsRoute } from '../../src/network/multiplayerStats.js'
-
-function readNamedEnv(name) {
-  try {
-    if (typeof Netlify !== 'undefined' && Netlify.env && typeof Netlify.env.get === 'function') {
-      const value = Netlify.env.get(name)
-      if (typeof value === 'string' && value.trim()) return value.trim()
-    }
-  } catch {
-    // An unset key throws. A secret scoped to Functions and Runtime should not.
-  }
-  try {
-    const deno = globalThis['Deno']
-    if (deno && deno.env && typeof deno.env.get === 'function') {
-      const value = deno.env.get(name)
-      if (typeof value === 'string' && value.trim()) return value.trim()
-    }
-  } catch {
-    // The edge runtime env is not the source for Netlify secrets.
-  }
-  if (typeof process !== 'undefined' && process.env && typeof process.env[name] === 'string') {
-    return process.env[name].trim()
-  }
-  return ''
-}
-
-function readEdgeEnv() {
-  return {
-    UPSTASH_REDIS_REST_URL: readNamedEnv('UPSTASH_REDIS_REST_URL'),
-    UPSTASH_REDIS_REST_TOKEN: readNamedEnv('UPSTASH_REDIS_REST_TOKEN')
-  }
-}
+import { handleMultiplayerStatsRequest, readRuntimeRedisEnv, statsRoute } from '../../src/network/multiplayerStats.js'
 
 async function forwardToBlobs(request) {
   const url = new URL(request.url)
@@ -40,10 +9,50 @@ async function forwardToBlobs(request) {
   const headers = new Headers(request.headers)
   headers.delete('host')
   const body = await request.text()
-  return fetch(url, {
+  const response = await fetch(url, {
     method: request.method,
     headers,
     body: body || undefined
+  })
+  const text = await response.text()
+  let nextBody = text
+  try {
+    const parsed = JSON.parse(text)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      parsed.handler = 'edge-forward'
+      nextBody = JSON.stringify(parsed)
+    }
+  } catch {
+    // Keep a non-JSON function response unchanged.
+  }
+  const responseHeaders = new Headers(response.headers)
+  responseHeaders.set('x-cfb-stats-handler', 'edge-forward')
+  responseHeaders.delete('content-length')
+  return new Response(nextBody, { status: response.status, statusText: response.statusText, headers: responseHeaders })
+}
+
+function readEdgeRedis() {
+  let url = ''
+  let token = ''
+  try {
+    if (typeof Netlify !== 'undefined' && Netlify.env && typeof Netlify.env.get === 'function') {
+      try {
+        url = Netlify.env.get('UPSTASH_REDIS_REST_URL') || ''
+      } catch {
+        // An unset key throws. A configured secret should return a string.
+      }
+      try {
+        token = Netlify.env.get('UPSTASH_REDIS_REST_TOKEN') || ''
+      } catch {
+        // Same as the URL read.
+      }
+    }
+  } catch {
+    // The Netlify global is missing outside the edge runtime.
+  }
+  return readRuntimeRedisEnv({
+    UPSTASH_REDIS_REST_URL: typeof url === 'string' ? url : '',
+    UPSTASH_REDIS_REST_TOKEN: typeof token === 'string' ? token : ''
   })
 }
 
@@ -56,11 +65,16 @@ async function forwardToBlobs(request) {
 export default async(request) => {
   const route = statsRoute(new URL(request.url).pathname)
   if (!route) return new Response('Not found', { status: 404 })
-  if (!readRedisEnv(readEdgeEnv())) return forwardToBlobs(request)
+  const redis = readEdgeRedis()
+  if (!redis) return forwardToBlobs(request)
   return handleMultiplayerStatsRequest(request, {
-    env: readEdgeEnv(),
+    env: {
+      UPSTASH_REDIS_REST_URL: redis.url,
+      UPSTASH_REDIS_REST_TOKEN: redis.token
+    },
     fetchImpl: fetch,
-    now: () => Date.now()
+    now: () => Date.now(),
+    handler: 'edge'
   })
 }
 
