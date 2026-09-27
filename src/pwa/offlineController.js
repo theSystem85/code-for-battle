@@ -41,32 +41,55 @@ export function offlineModeCopy(locale) {
   }
 }
 
+const MULTIPLAYER_HINT_ID = 'multiplayerOfflineTip'
+
+export function placeFloatingTip(anchor, tip) {
+  if (!anchor || !tip || typeof anchor.getBoundingClientRect !== 'function') return
+  const margin = 8
+  const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 0
+  const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 0
+  tip.hidden = false
+  tip.style.position = 'fixed'
+  const anchorBounds = anchor.getBoundingClientRect()
+  const bounds = tip.getBoundingClientRect()
+  let left = anchorBounds.left
+  let top = anchorBounds.bottom + margin
+  const maxLeft = Math.max(margin, viewportWidth - bounds.width - margin)
+  if (left > maxLeft) left = maxLeft
+  if (left < margin) left = margin
+  if (viewportHeight > 0 && top + bounds.height > viewportHeight - margin) {
+    top = Math.max(margin, anchorBounds.top - bounds.height - margin)
+  }
+  tip.style.left = `${Math.round(left)}px`
+  tip.style.top = `${Math.round(top)}px`
+}
+
+function forgetNativeTitle(node) {
+  if (node?.hasAttribute?.('title')) node.removeAttribute('title')
+}
+
 export function applyOfflineModeDom(elements, view) {
   const button = elements?.button
-  const sidebar = elements?.sidebar
   const shield = elements?.shield
   const multiplayer = elements?.multiplayer
   const updatePrompt = elements?.updatePrompt
   const offline = view?.effective === true
 
   if (button) {
+    button.hidden = false
     button.classList.toggle('offline-mode-button--offline', offline)
     button.setAttribute('aria-pressed', offline ? 'true' : 'false')
     button.setAttribute('aria-label', view.toggleLabel || (offline ? view.offlineLabel : view.onlineLabel))
     button.dataset.forced = view.forced ? 'true' : 'false'
     button.dataset.offlineCache = view.cacheReady ? 'ready' : 'preparing'
+    forgetNativeTitle(button)
     const label = button.querySelector('[data-offline-label]')
     if (label) label.textContent = offline ? view.offlineLabel : view.onlineLabel
-    const tooltip = view.tooltip || ''
-    button.title = tooltip
-    const tip = elements.tip || button.querySelector('#offlineModeTip')
-    if (tip) tip.textContent = tooltip
-  }
-
-  if (sidebar) {
-    sidebar.hidden = !offline
-    const sideLabel = sidebar.querySelector('[data-offline-sidebar-label]')
-    if (sideLabel) sideLabel.textContent = view.offlineLabel || ''
+    const tip = elements.tip || button.ownerDocument?.getElementById('offlineModeTip')
+    if (tip) {
+      tip.textContent = view.tooltip || ''
+      if (!tip.hidden) placeFloatingTip(button, tip)
+    }
   }
 
   if (multiplayer) {
@@ -75,16 +98,26 @@ export function applyOfflineModeDom(elements, view) {
     controls.forEach(control => {
       if (control === shield) return
       if (offline) {
+        if (control.dataset.offlineTitleSaved !== '1') {
+          control.dataset.offlineTitleSaved = '1'
+          if (control.hasAttribute('title')) control.dataset.offlineTitle = control.getAttribute('title')
+        }
+        forgetNativeTitle(control)
         if (control.dataset.offlineLocked == null) {
           control.dataset.offlineLocked = control.disabled ? 'was-disabled' : 'locked'
         }
         control.disabled = true
-        control.setAttribute('title', view.multiplayerHint || '')
-      } else if (control.dataset.offlineLocked === 'locked') {
-        control.disabled = false
-        control.removeAttribute('title')
-        delete control.dataset.offlineLocked
+        control.setAttribute('aria-describedby', MULTIPLAYER_HINT_ID)
       } else if (control.dataset.offlineLocked) {
+        if (control.dataset.offlineLocked === 'locked') control.disabled = false
+        if (control.getAttribute('aria-describedby') === MULTIPLAYER_HINT_ID) {
+          control.removeAttribute('aria-describedby')
+        }
+        if (control.dataset.offlineTitleSaved === '1') {
+          if (control.dataset.offlineTitle) control.setAttribute('title', control.dataset.offlineTitle)
+          delete control.dataset.offlineTitle
+          delete control.dataset.offlineTitleSaved
+        }
         delete control.dataset.offlineLocked
       }
     })
@@ -98,10 +131,13 @@ export function applyOfflineModeDom(elements, view) {
 
   if (shield) {
     shield.hidden = !offline
-    if (offline) shield.title = view.multiplayerHint || ''
-    else shield.removeAttribute('title')
-    const hint = shield.querySelector('[data-offline-multiplayer-hint]')
-    if (hint) hint.textContent = view.multiplayerHint || ''
+    forgetNativeTitle(shield)
+    shield.setAttribute('aria-describedby', MULTIPLAYER_HINT_ID)
+    const hint = elements.multiplayerHint || shield.ownerDocument?.getElementById(MULTIPLAYER_HINT_ID)
+    if (hint) {
+      hint.textContent = view.multiplayerHint || ''
+      if (!hint.hidden) placeFloatingTip(shield, hint)
+    }
   }
 
   if (updatePrompt) {
@@ -155,11 +191,12 @@ export function startOfflineMode(options = {}) {
   let stopped = false
   let tipTimer = null
   let probeTimer = null
+  let lastPointerType = 'mouse'
 
   const elements = () => ({
     button: win.document.getElementById('offlineModeButton'),
     tip: win.document.getElementById('offlineModeTip'),
-    sidebar: win.document.getElementById('offlineSidebarStatus'),
+    multiplayerHint: win.document.getElementById('multiplayerOfflineTip'),
     multiplayer: win.document.getElementById('multiplayerSettings'),
     multiplayerContent: win.document.getElementById('multiplayerContent'),
     multiplayerToggle: win.document.getElementById('multiplayerToggle'),
@@ -283,8 +320,19 @@ export function startOfflineMode(options = {}) {
     publish()
   }
 
+  function showFloatingTip(anchor, tip) {
+    if (!anchor || !tip) return
+    tip.hidden = false
+    placeFloatingTip(anchor, tip)
+  }
+
+  function hideFloatingTip(tip) {
+    if (tip) tip.hidden = true
+  }
+
   function openClearConfirm() {
     if (dialogPhase === 'confirm' || clearingCache) return
+    hideFloatingTip(elements().tip)
     dialogPhase = 'confirm'
     publish()
     elements().cancel?.focus()
@@ -317,9 +365,21 @@ export function startOfflineMode(options = {}) {
     publish()
   }
 
+  function holdFloatingTip(anchor, tip, duration = 2500) {
+    showFloatingTip(anchor, tip)
+    if (tipTimer) clearTimeout(tipTimer)
+    tipTimer = setTimeout(() => hideFloatingTip(tip), duration)
+  }
+
   function bindUi() {
-    const { button, shield, updatePrompt, clearButton, dialog, confirm, cancel, reload } = elements()
-    const longPress = createOfflineLongPress(openClearConfirm)
+    const { button, tip, shield, multiplayerHint, updatePrompt, clearButton, dialog, confirm, cancel, reload } = elements()
+    const longPress = createOfflineLongPress(() => {
+      if (lastPointerType !== 'mouse') {
+        holdFloatingTip(button, tip, 4000)
+        return
+      }
+      openClearConfirm()
+    })
     if (button && button.dataset.offlineBound !== 'true') {
       button.dataset.offlineBound = 'true'
       button.addEventListener('click', (event) => {
@@ -329,23 +389,36 @@ export function startOfflineMode(options = {}) {
         }
         toggleForced()
       })
-      button.addEventListener('pointerenter', () => {
+      button.addEventListener('pointerenter', (event) => {
+        if (event.pointerType && event.pointerType !== 'mouse') return
+        showFloatingTip(button, tip)
         refreshBytes()
+      })
+      button.addEventListener('pointerleave', (event) => {
+        if (event.pointerType && event.pointerType !== 'mouse') return
+        hideFloatingTip(tip)
       })
       button.addEventListener('focus', () => {
+        showFloatingTip(button, tip)
         refreshBytes()
       })
+      button.addEventListener('blur', () => hideFloatingTip(tip))
       button.addEventListener('contextmenu', (event) => {
         event.preventDefault()
+        if (lastPointerType !== 'mouse') {
+          holdFloatingTip(button, tip, 4000)
+          refreshBytes()
+          return
+        }
         openClearConfirm()
       })
       button.addEventListener('pointerdown', (event) => {
+        lastPointerType = event.pointerType || 'mouse'
         if (event.button != null && event.button !== 0) return
         longPress.pointerDown(event)
         if (event.pointerType === 'mouse') return
-        button.classList.add('is-touch-tip')
-        if (tipTimer) clearTimeout(tipTimer)
-        tipTimer = setTimeout(() => button.classList.remove('is-touch-tip'), 2500)
+        holdFloatingTip(button, tip)
+        refreshBytes()
       })
       button.addEventListener('pointermove', (event) => longPress.pointerMove(event))
       button.addEventListener('pointerup', () => longPress.pointerUp())
@@ -387,9 +460,23 @@ export function startOfflineMode(options = {}) {
     }
     if (shield && shield.dataset.offlineBound !== 'true') {
       shield.dataset.offlineBound = 'true'
+      shield.addEventListener('pointerenter', (event) => {
+        if (event.pointerType && event.pointerType !== 'mouse') return
+        showFloatingTip(shield, multiplayerHint)
+      })
+      shield.addEventListener('pointerleave', (event) => {
+        if (event.pointerType && event.pointerType !== 'mouse') return
+        hideFloatingTip(multiplayerHint)
+      })
+      shield.addEventListener('focus', () => showFloatingTip(shield, multiplayerHint))
+      shield.addEventListener('blur', () => hideFloatingTip(multiplayerHint))
       shield.addEventListener('pointerdown', (event) => {
         if (event.pointerType === 'mouse') return
-        shield.classList.toggle('is-touch-tip')
+        holdFloatingTip(shield, multiplayerHint)
+      })
+      shield.addEventListener('contextmenu', (event) => {
+        event.preventDefault()
+        holdFloatingTip(shield, multiplayerHint, 4000)
       })
     }
     const updateReload = updatePrompt?.querySelector('#offlineUpdateReload')

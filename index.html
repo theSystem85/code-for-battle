@@ -158,10 +158,10 @@
   </div>
 
   <div id="sidebar" class="expanded-left-sidebar">
-    <div id="offlineSidebarStatus" class="offline-sidebar-status" hidden>
-      <i class="offline-sidebar-status__light" aria-hidden="true"></i>
-      <span data-offline-sidebar-label>Offline</span>
-    </div>
+    <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
+      <i class="offline-mode-button__light" aria-hidden="true"></i>
+      <span data-offline-label>Online</span>
+    </button>
     <canvas id="minimap"></canvas>
 
     <!-- Money bar positioned right above the energy bar -->
@@ -690,9 +690,7 @@
       </div>
 
       <div id="multiplayerSettings" class="sidebar-accordion">
-        <div id="multiplayerOfflineShield" class="multiplayer-offline-shield" hidden tabindex="0" role="note">
-          <span class="multiplayer-offline-shield__tip" data-offline-multiplayer-hint>Multiplayer is not available in offline mode!</span>
-        </div>
+        <div id="multiplayerOfflineShield" class="multiplayer-offline-shield" hidden tabindex="0" role="note" aria-describedby="multiplayerOfflineTip"></div>
         <button id="multiplayerToggle" class="action-button sidebar-accordion__toggle" type="button"
           data-sidebar-accordion-toggle aria-expanded="false" aria-controls="multiplayerContent">
           <span>Multiplayer</span>
@@ -1036,11 +1034,6 @@
   <canvas id="gameCanvasGL" aria-hidden="true"></canvas>
   <canvas id="gameCanvas"></canvas>
   <div id="hudStatusCluster" class="hud-status-cluster">
-    <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
-      <i class="offline-mode-button__light" aria-hidden="true"></i>
-      <span data-offline-label>Online</span>
-      <span id="offlineModeTip" class="offline-mode-tip" role="tooltip"></span>
-    </button>
     <div id="gamepadIndicators" class="gamepad-indicators" hidden>
     <span id="gamepadIndicatorP1" class="gamepad-indicator" hidden><i class="gamepad-light"></i>P1</span>
     <span id="gamepadIndicatorP2" class="gamepad-indicator" hidden><i class="gamepad-light"></i>P2</span>
@@ -1048,6 +1041,8 @@
   </div>
   <div id="gamepadCursor" class="gamepad-cursor" hidden></div>
   <div id="gamepadRemoteIndicator" class="gamepad-remote" hidden><i class="gamepad-light"></i><span data-gamepad-remote-label></span></div>
+  <div id="offlineModeTip" class="offline-mode-tip" role="tooltip" hidden></div>
+  <div id="multiplayerOfflineTip" class="offline-mode-tip offline-mode-tip--warn" role="tooltip" hidden></div>
   <div id="offlineUpdatePrompt" class="offline-update-prompt" hidden>
     <button id="offlineUpdateReload" class="offline-update-prompt__button" type="button" data-offline-update-label>Update available – reload</button>
   </div>

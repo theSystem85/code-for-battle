@@ -23,7 +23,7 @@ import {
   sumCachedResponseBytes
 } from '../../src/pwa/offlineCacheSize.js'
 import { isNetlifyDrawerRequest, shouldBypassServiceWorkerCache } from '../../src/pwa/serviceWorkerCachePolicy.js'
-import { applyOfflineModeDom, offlineStringsForTest } from '../../src/pwa/offlineController.js'
+import { applyOfflineModeDom, offlineStringsForTest, placeFloatingTip } from '../../src/pwa/offlineController.js'
 import {
   applyOfflineCacheSettings,
   applyOfflineClearDialog,
@@ -178,19 +178,19 @@ describe('offline mode UI', () => {
 
   it('reflects effective offline on the button and locks multiplayer with the hint', () => {
     document.body.innerHTML = `
-      <button id="offlineModeButton" type="button" aria-pressed="false">
-        <span data-offline-label>Online</span>
-        <span id="offlineModeTip"></span>
-      </button>
-      <div id="offlineSidebarStatus" hidden><span data-offline-sidebar-label></span></div>
+      <div id="sidebar">
+        <button id="offlineModeButton" type="button" aria-pressed="false" title="native" aria-describedby="offlineModeTip">
+          <span data-offline-label>Online</span>
+        </button>
+      </div>
+      <div id="offlineModeTip" role="tooltip" hidden></div>
+      <div id="multiplayerOfflineTip" role="tooltip" hidden></div>
       <div id="multiplayerSettings">
-        <div id="multiplayerOfflineShield" hidden>
-          <span data-offline-multiplayer-hint></span>
-        </div>
-        <button id="multiplayerToggle" type="button" aria-expanded="true">Multiplayer</button>
+        <div id="multiplayerOfflineShield" hidden title="native"></div>
+        <button id="multiplayerToggle" type="button" aria-expanded="true" title="native">Multiplayer</button>
         <div id="multiplayerContent" class="is-open">
-          <button id="joinInviteLinkBtn" type="button">Join</button>
-          <input id="playerCount" />
+          <button id="joinInviteLinkBtn" type="button" title="native">Join</button>
+          <input id="playerCount" title="native" />
         </div>
       </div>
       <div id="offlineUpdatePrompt" hidden>
@@ -199,7 +199,8 @@ describe('offline mode UI', () => {
 
     const elements = {
       button: document.getElementById('offlineModeButton'),
-      sidebar: document.getElementById('offlineSidebarStatus'),
+      tip: document.getElementById('offlineModeTip'),
+      multiplayerHint: document.getElementById('multiplayerOfflineTip'),
       multiplayer: document.getElementById('multiplayerSettings'),
       shield: document.getElementById('multiplayerOfflineShield'),
       updatePrompt: document.getElementById('offlineUpdatePrompt')
@@ -215,17 +216,24 @@ describe('offline mode UI', () => {
     })
 
     expect(elements.button.getAttribute('aria-pressed')).toBe('true')
+    expect(elements.button.hidden).toBe(false)
     expect(elements.button.classList.contains('offline-mode-button--offline')).toBe(true)
-    expect(elements.button.title).toBe('Offline ready, 42.3 MB cached')
+    expect(elements.button.hasAttribute('title')).toBe(false)
+    expect(elements.button.getAttribute('aria-describedby')).toBe('offlineModeTip')
+    expect(elements.tip.textContent).toBe('Offline ready, 42.3 MB cached')
     expect(elements.button.querySelector('[data-offline-label]').textContent).toBe('Offline')
-    expect(elements.sidebar.hidden).toBe(false)
+    expect(document.querySelectorAll('#offlineModeButton')).toHaveLength(1)
     expect(elements.multiplayer.classList.contains('multiplayer-settings--offline')).toBe(true)
     expect(elements.shield.hidden).toBe(false)
-    expect(elements.shield.title).toBe('Multiplayer is not available in offline mode!')
-    expect(elements.shield.querySelector('[data-offline-multiplayer-hint]').textContent)
-      .toBe('Multiplayer is not available in offline mode!')
+    expect(elements.shield.hasAttribute('title')).toBe(false)
+    expect(elements.shield.getAttribute('aria-describedby')).toBe('multiplayerOfflineTip')
+    expect(elements.multiplayerHint.textContent).toBe('Multiplayer is not available in offline mode!')
     expect(document.getElementById('multiplayerToggle').disabled).toBe(true)
+    expect(document.getElementById('multiplayerToggle').hasAttribute('title')).toBe(false)
+    expect(document.getElementById('multiplayerToggle').getAttribute('aria-describedby')).toBe('multiplayerOfflineTip')
     expect(document.getElementById('joinInviteLinkBtn').disabled).toBe(true)
+    expect(document.getElementById('joinInviteLinkBtn').hasAttribute('title')).toBe(false)
+    expect(document.getElementById('playerCount').hasAttribute('title')).toBe(false)
     expect(document.getElementById('multiplayerContent').classList.contains('is-open')).toBe(false)
     expect(elements.updatePrompt.hidden).toBe(false)
     expect(elements.updatePrompt.querySelector('[data-offline-update-label]').textContent)
@@ -241,10 +249,15 @@ describe('offline mode UI', () => {
       updateAvailable: false
     })
     expect(elements.button.getAttribute('aria-pressed')).toBe('false')
-    expect(elements.sidebar.hidden).toBe(true)
+    expect(elements.button.hidden).toBe(false)
+    expect(elements.button.querySelector('[data-offline-label]').textContent).toBe('Online')
+    expect(elements.tip.textContent).toBe('Preparing offline cache… 10%')
     expect(elements.shield.hidden).toBe(true)
+    expect(elements.shield.hasAttribute('title')).toBe(false)
     expect(document.getElementById('multiplayerToggle').disabled).toBe(false)
     expect(document.getElementById('joinInviteLinkBtn').disabled).toBe(false)
+    expect(document.getElementById('multiplayerToggle').getAttribute('title')).toBe('native')
+    expect(document.getElementById('joinInviteLinkBtn').getAttribute('title')).toBe('native')
     expect(elements.updatePrompt.hidden).toBe(true)
   })
 })
@@ -400,7 +413,36 @@ describe('offline cache clear', () => {
 
   it('places portrait toasts below the offline pill', () => {
     const css = readFileSync(path.join(process.cwd(), 'styles/notificationHistory.css'), 'utf8')
-    expect(css).toMatch(/body\.mobile-portrait \.notification\s*\{[^}]*top:\s*calc\(var\(--safe-area-top\)\s*\+\s*64px\)/)
+    expect(css).toMatch(/body\.mobile-portrait \.notification\s*\{[^}]*top:\s*calc\(var\(--safe-area-top\)\s*\*\s*2\s*\+\s*72px\)/)
+  })
+})
+
+describe('offline sidebar toggle', () => {
+  it('keeps a single sidebar toggle and floats its tooltip outside the sidebar', () => {
+    const html = readFileSync(path.join(process.cwd(), 'index.html'), 'utf8')
+    const sidebarStart = html.indexOf('id="sidebar"')
+    const scrollStart = html.indexOf('id="sidebarScroll"')
+    const clusterStart = html.indexOf('id="hudStatusCluster"')
+    const clusterEnd = html.indexOf('id="gamepadCursor"')
+    expect(html.match(/id="offlineModeButton"/g)).toHaveLength(1)
+    expect(html).not.toContain('offlineSidebarStatus')
+    expect(html.slice(sidebarStart, scrollStart)).toContain('id="offlineModeButton"')
+    expect(html.slice(clusterStart, clusterEnd)).not.toContain('offlineModeButton')
+    expect(html).not.toMatch(/id="offlineModeButton"[^>]*\stitle=/)
+    expect(html).not.toMatch(/id="multiplayerOfflineShield"[^>]*\stitle=/)
+
+    document.body.innerHTML = `
+      <button id="offlineModeButton" type="button">Online</button>
+      <div id="offlineModeTip" hidden>Offline ready, 26.8 MB cached</div>`
+    const button = document.getElementById('offlineModeButton')
+    const tip = document.getElementById('offlineModeTip')
+    button.getBoundingClientRect = () => ({ left: 16, top: 20, right: 120, bottom: 52, width: 104, height: 32 })
+    tip.getBoundingClientRect = () => ({ left: 0, top: 0, right: 220, bottom: 28, width: 220, height: 28 })
+    placeFloatingTip(button, tip)
+    expect(tip.hidden).toBe(false)
+    expect(tip.style.position).toBe('fixed')
+    expect(tip.style.top).toBe('60px')
+    expect(button.hasAttribute('title')).toBe(false)
   })
 })
 

@@ -863,6 +863,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Single sidebar online/offline toggle (2026-09-27)** — remove the map pill and the second sidebar chip. One gamepad-style button stays at the top of the sidebar in both states, with a body-level cache tooltip and no native `title`.
+  - Spec: [Offline mode](../specs/095-offline-mode.md)
+
 - [x] **Landing and sidebar GitHub link** — `/en/landing` and `/de/landing` show a header and footer link to the repository, and the sidebar footer adds GitHub after Privacy. Each link opens in a new tab.
   - Spec: [Marketing landing page](../specs/090-marketing-landing-page.md)
 

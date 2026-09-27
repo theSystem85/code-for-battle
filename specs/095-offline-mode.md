@@ -10,13 +10,13 @@ Effective offline is true when any of these hold:
 - the player forced offline
 - a same-origin connectivity probe of `/offline-probe.txt` failed (`navigator.onLine` can report online while the network is dead)
 
-Forced offline is a checkbox-style toggle stored in `localStorage` under `cfb-forced-offline`. Clicking the status control flips that flag. The sidebar chip shows the same effective state.
+Forced offline is a checkbox-style toggle stored in `localStorage` under `cfb-forced-offline`. Clicking the status control flips that flag.
 
 ## Controls
 
-The toggle is a pill at the top left of the playfield, in the same cluster as the gamepad player chips and styled like `.gamepad-remote`. On a phone with the sidebar collapsed or condensed, that cluster stays at the top left of the screen instead of keeping the desktop sidebar offset. It is a `<button type="button">` with `aria-pressed` set to the effective offline state. Online uses the green lamp. Offline uses an amber lamp and the label Offline. `display: inline-flex` does not override `[hidden]`: hidden offline chrome uses `display: none !important`.
+There is one online/offline control. It is a button at the top of the sidebar, above the minimap, in both the online and offline states. It is not repeated over the map and it is not a second sidebar chip. It is a `<button type="button">` styled like `.gamepad-remote`, with `aria-pressed` set to the effective offline state and `aria-label` set to the toggle name. Online uses the green lamp and the label Online. Offline uses an amber lamp and the label Offline. The button stays in the document; other offline chrome that uses `[hidden]` is `display: none !important` so `inline-flex` cannot paint a hidden control.
 
-On hover, focus, or a touch press, the pill shows the cache status:
+Hover and keyboard focus show the cache status in one custom tooltip (`#offlineModeTip`). The button has no `title` attribute, so the browser tooltip does not appear beside it. The tip is a body-level `position: fixed` element placed from the button's box, so sidebar `overflow: hidden` and the scrolling sidebar pane do not clip it. A touch tap or long-press shows the same tip. A mouse long-press or right-click still opens clear-cache. While the tip is already visible, a cache-size refresh only moves that same element. The text is:
 
 - `Preparing offline cache… {percent}%` until the worker finishes precaching
 - `Offline ready, {size} cached` after that, for example `Offline ready, 42.3 MB cached`
@@ -25,17 +25,15 @@ The size is the sum of Cache Storage responses, using `Content-Length` when pres
 
 ## Clear cache
 
-Settings → Runtime Config has an Offline section with the cached size and **Clear offline cache**. A long press or right-click on the top-left pill opens the same action. The control asks with the in-game confirm dialog before it does anything. Confirming deletes only this app's `workbox-*`, `cfb-*`, and `code-for-battle-cache-*` Cache Storage entries and unregisters the service worker. Saved games, settings, `localStorage`, and IndexedDB are left in place.
+Settings → Runtime Config has an Offline section with the cached size and **Clear offline cache**. A mouse long-press or right-click on the sidebar toggle opens the same action. A touch long-press shows the cache tooltip instead, because that gesture is the touch equivalent of hover. The control asks with the in-game confirm dialog before it does anything. Confirming deletes only this app's `workbox-*`, `cfb-*`, and `code-for-battle-cache-*` Cache Storage entries and unregisters the service worker. Saved games, settings, `localStorage`, and IndexedDB are left in place.
 
 After clearing, the section and the dialog show the new size as not cached (`0.0 MB`) and say the game downloads the cache again the next time it loads while online. The dialog offers reload. When the game is already offline, the confirm and the result both warn that clearing makes the game unavailable offline until the next visit with a connection.
 
 English and German strings live under `offline.clear`.
 
-Portrait phone toasts are full-width and fixed, starting 64px below the safe area so they sit under the offline pill instead of covering it.
+Portrait phone toasts are full-width and fixed. Their top is `calc(var(--safe-area-top) * 2 + 72px)`, which sits below the sidebar toggle. The portrait sidebar already starts at the safe area and then pads by the safe area again, so a single inset would cover the button on a notched phone.
 
-The sidebar shows an Offline chip, hidden while the game is online, with the same `[hidden]` rule.
-
-While offline, the Multiplayer accordion is covered by a shield. Controls inside it are disabled and the section cannot open. Hover, focus, and a touch press show the hint. While that hint is showing, the accordion stacks above the following sidebar sections so the hint is not covered. The English hint is exactly `Multiplayer is not available in offline mode!`. The shield also sets that string as its `title`. German uses `Mehrspieler ist im Offlinemodus nicht verfügbar!`.
+While offline, the Multiplayer accordion is covered by a shield. Controls inside it are disabled and the section cannot open. Hover, focus, a touch tap, and a touch long-press show the hint in one custom tooltip (`#multiplayerOfflineTip`), also `position: fixed` on the body so the sidebar cannot clip it. The English hint is exactly `Multiplayer is not available in offline mode!`. The shield, the toggle, and the disabled multiplayer controls do not use a `title` attribute for that hint. Disabled controls point at the tip with `aria-describedby`. Their previous `title` values are restored when the game is online again. German uses `Mehrspieler ist im Offlinemodus nicht verfügbar!`.
 
 ## Precache
 
@@ -60,19 +58,19 @@ The worker does not call `skipWaiting` during install. When a new worker is wait
 
 ## Performance
 
-This feature does not add work to the simulation tick, the render loop, or per-entity drawing. Cache size is measured on hover and when precache completes. The connectivity probe runs on online/offline events and every 30 seconds. The 75 FPS gate is unchanged because there is no hot-path edit. The performance widget is untouched.
+This feature does not add work to the simulation tick, the render loop, or per-entity drawing. Cache size is measured on hover, focus, touch, and when precache completes. The connectivity probe runs on online/offline events and every 30 seconds. The performance widget is untouched. The 75 FPS gate is not certified in this headless session.
 
 ## Verification
 
 Unit coverage lives in `tests/unit/offlineMode.test.js`.
 
-A production build precaches 486 files, 27407.74 KiB. The pill reports that as `Offline ready, 26.8 MB cached` before runtime font responses are added. After the first controlled visit the same sum was `Offline ready, 27.2 MB cached` (498 Cache Storage entries, including the Google font cache). No `.mp4`, `.webm`, `.mov`, or `.m4v` response was stored.
+A production build precaches 486 files, 27407.74 KiB. The sidebar toggle reports that as `Offline ready, 26.8 MB cached` before runtime font responses are added. After the first controlled visit the same sum was `Offline ready, 27.2 MB cached` (498 Cache Storage entries, including the Google font cache). No `.mp4`, `.webm`, `.mov`, or `.m4v` response was stored.
 
 Production check, from a built `dist` served by `vite preview`:
 
-1. Load once online and wait until the pill reports the cache ready.
-2. `context.setOffline(true)`, reload, and confirm the match runs (`gameState.gameStarted` and advancing `gameTime`), the offline pill and sidebar chip are visible, and Multiplayer shows the hint.
-3. Go online and toggle forced offline from the pill.
+1. Load once online and wait until the sidebar toggle's tooltip reports the cache ready.
+2. `context.setOffline(true)`, reload, and confirm the match runs (`gameState.gameStarted` and advancing `gameTime`), the same sidebar toggle shows Offline, and Multiplayer shows the custom hint.
+3. Go online and toggle forced offline from that sidebar button.
 4. Build a second worker (append a comment to `dist/sw.js`), call `registration.update()`, and confirm the reload prompt appears without an automatic reload. Accepting it reloads onto the new worker.
 
-Screenshots: desktop and phone portrait of the pill in both states, the cache-size tooltip, the sidebar chip, and the disabled Multiplayer hint.
+Screenshots: desktop and phone portrait of the sidebar top with the button online, offline, and the hover tooltip. The tooltip shot shows only the custom tip. Portrait toasts start below the button.

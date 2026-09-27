@@ -1431,6 +1431,15 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   max-width: calc(100vw - 24px - var(--safe-area-left, 0px));
 }
 
+#sidebar > .offline-mode-button {
+  position: relative;
+  z-index: 3;
+  align-self: flex-start;
+  flex: 0 0 auto;
+  max-width: calc(100% - 4px);
+  margin: 12px 0 8px;
+}
+
 .offline-mode-button {
   position: relative;
   pointer-events: auto;
@@ -1478,12 +1487,9 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
 }
 
 .offline-mode-tip {
-  display: none;
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  z-index: 1;
-  max-width: 240px;
+  position: fixed;
+  z-index: var(--z-hud-popover);
+  max-width: min(280px, calc(100vw - 16px));
   padding: 6px 10px;
   border-radius: 8px;
   background: rgba(12, 18, 24, 0.96);
@@ -1493,14 +1499,17 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1.3;
-  white-space: nowrap;
+  white-space: normal;
   pointer-events: none;
 }
 
-.offline-mode-button:hover .offline-mode-tip,
-.offline-mode-button:focus-visible .offline-mode-tip,
-.offline-mode-button.is-touch-tip .offline-mode-tip {
-  display: block;
+.offline-mode-tip[hidden] {
+  display: none !important;
+}
+
+.offline-mode-tip--warn {
+  border-color: #ffb020;
+  color: #ffe7c2;
 }
 
 .offline-update-prompt {
