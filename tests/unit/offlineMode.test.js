@@ -795,6 +795,17 @@ describe('offline navigation and storage', () => {
       unavailable: 'Storage: persistence unavailable'
     })).toBe('Storage: persistence unavailable')
     expect(formatPersistentStorageStatus(null, {})).toBe('')
+
+    const hung = await requestPersistentStorage({
+      persisted() {
+        return new Promise(() => {})
+      },
+      persist() {
+        return new Promise(() => {})
+      }
+    }, { standalone: true, timeoutMs: 20 })
+    expect(hung).toMatchObject({ supported: true, persisted: false, called: true })
+    expect(hung.error).toMatch(/timed out/)
   })
 
   it('leaves same-origin audio non-CORS so Safari can play a cached 200', () => {

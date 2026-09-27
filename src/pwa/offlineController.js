@@ -876,11 +876,16 @@ export function startOfflineMode(options = {}) {
 
   const persistentStorage = win.navigator?.storage
   const standalone = isStandaloneDisplayMode(win)
-  if (persistentStorage && (standalone || import.meta.env.PROD)) {
-    requestPersistentStorage(persistentStorage, { standalone: standalone || import.meta.env.PROD }).then(result => {
-      persistStatus = result
-      if (!stopped) publish()
-    }).catch(() => {})
+  if (standalone || import.meta.env.PROD) {
+    if (!persistentStorage || typeof persistentStorage.persist !== 'function') {
+      persistStatus = { supported: false, persisted: false, called: false }
+      publish()
+    } else {
+      requestPersistentStorage(persistentStorage, { standalone: true }).then(result => {
+        persistStatus = result
+        if (!stopped) publish()
+      }).catch(() => {})
+    }
   }
 
   return {

@@ -1,3 +1,18 @@
+const PERSIST_CALL_TIMEOUT_MS = 4000
+
+function withTimeout(promise, ms) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('persistent storage timed out')), ms)
+    Promise.resolve(promise).then(value => {
+      clearTimeout(timer)
+      resolve(value)
+    }, error => {
+      clearTimeout(timer)
+      reject(error)
+    })
+  })
+}
+
 export function isStandaloneDisplayMode(target) {
   const win = target || (typeof window !== 'undefined' ? window : null)
   if (!win) return false
@@ -9,14 +24,14 @@ export function isStandaloneDisplayMode(target) {
   return win.navigator?.standalone === true
 }
 
-export async function requestPersistentStorage(storage, { standalone = true, force = false } = {}) {
+export async function requestPersistentStorage(storage, { standalone = true, force = false, timeoutMs = PERSIST_CALL_TIMEOUT_MS } = {}) {
   if (!storage || typeof storage.persist !== 'function') {
     return { supported: false, persisted: false, called: false }
   }
   let already = false
   if (typeof storage.persisted === 'function') {
     try {
-      already = await storage.persisted() === true
+      already = await withTimeout(storage.persisted(), timeoutMs) === true
     } catch {
       already = false
     }
@@ -26,7 +41,7 @@ export async function requestPersistentStorage(storage, { standalone = true, for
     return { supported: true, persisted: false, called: false }
   }
   try {
-    const granted = await storage.persist()
+    const granted = await withTimeout(storage.persist(), timeoutMs)
     return { supported: true, persisted: granted === true, called: true }
   } catch (error) {
     return {

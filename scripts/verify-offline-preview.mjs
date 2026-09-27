@@ -31,8 +31,20 @@ async function waitUntilReady(page, timeout = 300000) {
 }
 
 async function openOfflineSettings(page) {
-  await page.keyboard.press('i')
-  await page.locator('[data-config-tab="runtime"]').click()
+  const opened = await page.evaluate(() => {
+    const button = document.querySelector('#helpBtn')
+    if (button) button.click()
+    return document.querySelector('#configSettingsModal')?.classList.contains('config-modal--open') === true
+  })
+  if (!opened) await page.keyboard.press('i')
+  await page.waitForSelector('#configSettingsModal.config-modal--open', { timeout: 10000 })
+  await page.evaluate(() => {
+    document.querySelector('#configSettingsModal [data-config-tab="runtime"]')?.click()
+  })
+  await page.waitForFunction(() => {
+    const text = document.querySelector('#offlineStoragePersistText')?.textContent || ''
+    return text.trim().length > 0
+  }, null, { timeout: 10000 })
   const section = page.locator('#offlineCacheSettings')
   await section.scrollIntoViewIfNeeded()
   return section
@@ -170,24 +182,31 @@ async function runInterruptedFlow(browserType) {
   if (!match || match[1] !== match[2]) throw new Error(`interrupt resume incomplete: ${ready.files}`)
 }
 
+const only = (process.env.OFFLINE_VERIFY_FLOW || 'all').split(',').map(item => item.trim()).filter(Boolean)
 const failures = []
-try {
-  await runCompleteFlow(chromium, 'chromium')
-} catch (error) {
-  failures.push(error)
-  log('[chromium] failed', error?.stack || error?.message || error)
+if (only.includes('all') || only.includes('chromium')) {
+  try {
+    await runCompleteFlow(chromium, 'chromium')
+  } catch (error) {
+    failures.push(error)
+    log('[chromium] failed', error?.stack || error?.message || error)
+  }
 }
-try {
-  await runInterruptedFlow(chromium)
-} catch (error) {
-  failures.push(error)
-  log('[interrupt] failed', error?.stack || error?.message || error)
+if (only.includes('all') || only.includes('interrupt')) {
+  try {
+    await runInterruptedFlow(chromium)
+  } catch (error) {
+    failures.push(error)
+    log('[interrupt] failed', error?.stack || error?.message || error)
+  }
 }
-try {
-  await runCompleteFlow(webkit, 'webkit', { ...devices['iPhone 13'] })
-} catch (error) {
-  failures.push(error)
-  log('[webkit] failed', error?.stack || error?.message || error)
+if (only.includes('all') || only.includes('webkit')) {
+  try {
+    await runCompleteFlow(webkit, 'webkit', { ...devices['iPhone 13'] })
+  } catch (error) {
+    failures.push(error)
+    log('[webkit] failed', error?.stack || error?.message || error)
+  }
 }
 
 if (failures.length) {

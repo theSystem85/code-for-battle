@@ -69,7 +69,7 @@ Document navigations try the network for 3 seconds and are not written to Cache 
 
 Offline ready means a service worker is controlling the page and every expected boot and bulk entry is present in Cache Storage. The sidebar tooltip and Settings → Offline show that measured size and `done/total` file count. Settings also shows the persistent-storage result.
 
-The page calls `navigator.storage.persist()` in production and whenever the app is running standalone (Home Screen). `navigator.storage.persisted()` is checked first. The Settings line reads `Storage: persistent`, `Storage: not persistent`, or `Storage: persistence unavailable`.
+The page calls `navigator.storage.persist()` in production and whenever the app is running standalone (Home Screen). `navigator.storage.persisted()` is checked first. Each call gives up after 4 seconds so a hung browser promise still fills the Settings line: `Storage: persistent`, `Storage: not persistent`, or `Storage: persistence unavailable` when the API is missing.
 
 Clearing the cache still deletes only this app's `workbox-*`, `cfb-*` (including `cfb-offline-assets-v1`), and `code-for-battle-cache-*` Cache Storage entries and unregisters the service worker. Saved games, settings, `localStorage`, and IndexedDB stay. The in-progress download stops and does not start again until the next online load.
 
