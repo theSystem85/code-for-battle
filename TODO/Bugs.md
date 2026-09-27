@@ -1130,6 +1130,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Audio and Voice
 
+- [x] **Milestone video stays silent while the narrator MP3 plays (2026-09-27)** — a usable companion MP3 was muting the `<video>` and setting its volume to 0. The sound manager does not duck that element. `first_tank` and `air_strip` are the only clips with an embedded AAC track, and that track is not the narrator line, so both now play together: the MP3 at the voice level and the video soundtrack unmuted underneath it.
+  - Spec: [First-build milestone videos, preload, and radar fade](../specs/090-first-build-milestone-videos.md)
+
 - [x] **Baked black bars in milestone videos still show in the radar (2026-09-26)** — each milestone clip's content rect is cropped before the radar stretch, so pillarbox baked into `first_tank` and the square-inset clips is not drawn. Clips measured with no bars keep the full frame. An unlisted clip detects near-black borders once and reuses that rect.
   - Spec: [First-build milestone videos, preload, and radar fade](../specs/090-first-build-milestone-videos.md)
 

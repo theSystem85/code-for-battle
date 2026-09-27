@@ -3,6 +3,7 @@ import { getMasterVolume, setMasterVolume } from '../../src/sound.js'
 import {
   MILESTONE_NARRATION_GAIN,
   applyMilestoneVideoAudioState,
+  MILESTONE_VIDEO_BED_GAIN,
   milestoneClipUsesEmbeddedAudio,
   playMilestoneVideoWithAudioPolicy,
   resolveMilestoneAudioMode,
@@ -41,12 +42,12 @@ describe('milestone embedded vs separate audio', () => {
     expect(failed.muteVideo).toBe(false)
   })
 
-  it('keeps the video muted when a separate MP3 is usable', () => {
+  it('keeps the video audible when a separate MP3 is usable', () => {
     expect(milestoneClipUsesEmbeddedAudio(true)).toBe(false)
     expect(resolveMilestoneAudioMode(true)).toEqual({
       useSeparateAudio: true,
-      useEmbeddedAudio: false,
-      muteVideo: true
+      useEmbeddedAudio: true,
+      muteVideo: false
     })
   })
 
@@ -61,9 +62,11 @@ describe('milestone embedded vs separate audio', () => {
     expect(resolveMilestonePlaybackVolume(1, 1, 1, true, 1)).toBe(0)
     expect(resolveMilestonePlaybackVolume(2, 2, 2, false, 2)).toBeCloseTo(MILESTONE_NARRATION_GAIN)
     expect(resolveMilestonePlaybackVolume(Number.NaN, 1, 1, false, 1)).toBe(0)
+    expect(resolveMilestonePlaybackVolume(1, 1, 1, false, 1, MILESTONE_VIDEO_BED_GAIN)).toBeCloseTo(MILESTONE_VIDEO_BED_GAIN)
+    expect(resolveMilestonePlaybackVolume(0.5, 0.5, 1, false, 1, MILESTONE_VIDEO_BED_GAIN)).toBeCloseTo(MILESTONE_VIDEO_BED_GAIN * 0.25)
   })
 
-  it('unmutes a clip with no separate MP3 and leaves a companion clip muted', () => {
+  it('unmutes when asked and mutes when the caller forces silence', () => {
     const embedded = fakeVideo()
     applyMilestoneVideoAudioState(embedded, false, 0.28)
     expect(embedded.muted).toBe(false)
@@ -103,13 +106,33 @@ describe('milestone embedded vs separate audio', () => {
     expect(blocked.play).toHaveBeenCalledTimes(2)
   })
 
-  it('does not unmute a companion-MP3 clip when play() is rejected', async() => {
-    const video = fakeVideo(vi.fn().mockRejectedValue(Object.assign(new Error('nope'), { name: 'NotAllowedError' })))
-    await expect(playMilestoneVideoWithAudioPolicy(video, true, 0.2, false)).rejects.toMatchObject({
-      name: 'NotAllowedError'
+  it('plays the video unmuted at bed level while a companion MP3 is in use', async() => {
+    const video = fakeVideo()
+    const result = await playMilestoneVideoWithAudioPolicy(video, true, MILESTONE_VIDEO_BED_GAIN, false)
+    expect(result).toMatchObject({
+      useSeparateAudio: true,
+      useEmbeddedAudio: true,
+      blockedByAutoplay: false,
+      playingMuted: false
     })
+    expect(video.muted).toBe(false)
+    expect(video.defaultMuted).toBe(false)
+    expect(video.hasAttribute('muted')).toBe(false)
+    expect(video.volume).toBeGreaterThan(0)
+    expect(video.volume).toBeCloseTo(MILESTONE_VIDEO_BED_GAIN)
+  })
+
+  it('falls back to a muted picture when unmuted playback is blocked for a companion clip', async() => {
+    const video = fakeVideo(vi.fn()
+      .mockRejectedValueOnce(Object.assign(new Error('play blocked'), { name: 'NotAllowedError' }))
+      .mockResolvedValueOnce(undefined))
+    const result = await playMilestoneVideoWithAudioPolicy(video, true, MILESTONE_VIDEO_BED_GAIN, false)
+    expect(result.useSeparateAudio).toBe(true)
+    expect(result.blockedByAutoplay).toBe(true)
+    expect(result.playingMuted).toBe(true)
     expect(video.muted).toBe(true)
-    expect(video.play).toHaveBeenCalledTimes(1)
+    expect(video.volume).toBe(0)
+    expect(video.play).toHaveBeenCalledTimes(2)
   })
 
   it('keeps a muted game silent without treating a zero fade as a missing MP3', async() => {
@@ -162,9 +185,14 @@ describe('milestone embedded vs separate audio', () => {
     videoOverlay.embeddedUnmutePending = false
     videoOverlay.usesEmbeddedAudio = false
     videoOverlay.currentAudio = audio
+    video.muted = false
     videoOverlay.applyMilestoneAudioFade(1)
     expect(audio.volume).toBeCloseTo(MILESTONE_NARRATION_GAIN)
+    expect(audio.volume).toBeGreaterThan(0)
     expect(video.muted).toBe(false)
+    expect(video.volume).toBeGreaterThan(0)
+    expect(video.volume).toBeCloseTo(MILESTONE_VIDEO_BED_GAIN)
+    expect(video.volume).toBeLessThan(audio.volume)
 
     videoOverlay.audioFadeFrame = 7
     videoOverlay.stopCurrentVideo()

@@ -29,14 +29,18 @@ Playback still follows the milestone table below.
 
 `firstRocketTankBuilt` is separate from `rocketTankUnlocked`. The unlock milestone still only unlocks production when a rocket turret exists and does not play a video.
 
-`playSyncedVideoAudio(base)` loads `video/{base}.mp4` and tries `video/{base}.mp3`. `resolveMilestoneAudioMode` / `milestoneClipUsesEmbeddedAudio` decide the track:
+`playSyncedVideoAudio(base)` loads `video/{base}.mp4` and tries `video/{base}.mp3`. Both play at once. `resolveMilestoneAudioMode` does not mute the video when the MP3 is usable.
 
-- A usable companion MP3 keeps the `<video>` muted (`muted` attribute, `defaultMuted`, and `volume` 0) and plays the MP3, so the voice-over is not heard twice.
-- No companion file, a failed load, or a failed `audio.play()` unmutes the video and plays the audio embedded in the mp4. Preloaded elements clear `defaultMuted` and the `muted` attribute before that `play()`.
+Only `first_tank.mp4` and `air_strip.mp4` contain an audio track (stereo AAC, about 6 seconds). The other milestone mp4 files are silent pictures: `first_artillery`, `first_mine_layer`, `first_mine_sweeper`, `first_rocket_tank`, `tank_over_crystals`, and `tesla_coil_hits_tank`. Every clip has a companion MP3. The AAC in `first_tank` and `air_strip` does not match the narrator MP3 (cross-correlation about 0), so playing both is not a doubled voice line.
 
-Level is `0.28 * master * sfx * voice * fade`. The game's only slider is master volume; sfx and voice are fully open (`1`). Master `0`, or the headless test mute, forces silence. The 220ms radar fade multiplies that level, including the fade to 0 at the end. Skip, restart, and a queued handoff set volume to 0 and pause both elements immediately.
+- The MP3 plays at `0.28 * master * sfx * voice * fade`.
+- The video element stays unmuted. While the MP3 is playing its volume is the bed `0.1 * master * sfx * voice * fade`, under the voice. With no MP3, or after the MP3 fails, the video uses the `0.28` narration level.
+- Master `0`, or the headless test mute, sets `muted` and volume 0 on the video and volume 0 on the MP3. Nothing in the sound manager ducks or pauses the video element. Level is `HTMLMediaElement.volume`, multiplied by the master slider. The video is not wired through the Web Audio graph.
+- Preloaded elements clear `defaultMuted` and the `muted` attribute before `play()`.
 
-Unmuted `play()` is attempted because the match starts after a user gesture. `NotAllowedError` plays the picture muted and retries the embedded track on the next pointer or key gesture. A companion-MP3 clip does not take that unmute path.
+The game's only slider is master volume; sfx and voice are fully open (`1`). The 220ms radar fade multiplies both levels, including the fade to 0 at the end. Skip, restart, and a queued handoff set volume to 0 and pause both elements immediately.
+
+Unmuted `play()` is attempted because the match starts after a user gesture. `NotAllowedError` plays the picture muted and retries the video soundtrack on the next pointer or key gesture. The companion MP3 still starts.
 
 ## Trigger and persistence
 `MilestoneSystem.checkMilestones` scans for a unit or building owned by `gameState.humanPlayer`. The first match records the milestone id, shows the achievement notification, and plays the video once. Enemy owners do not count. A second unit of the same type does not play the clip again.

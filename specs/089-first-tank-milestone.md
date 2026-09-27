@@ -8,7 +8,7 @@ When the local player produces their first standard land tank, play `public/vide
 - Companion narration: `public/video/first_tank.mp3`
 - Source: 5:3 H.264 remaster, 960×576, about 6 seconds, with the tank fully visible inside the frame
 - Playback name passed to `playSyncedVideoAudio`: `first_tank`
-- The overlay plays `first_tank.mp3` in sync and keeps the video muted. If that mp3 fails to load or fails to play, playback uses the AAC track embedded in the mp4 (`src/ui/milestoneAudioMode.js`, `src/ui/videoOverlay.js`).
+- The overlay plays `first_tank.mp3` together with the AAC track embedded in `first_tank.mp4`. The MP3 is the narrator. The AAC is the clip soundtrack and is not the same voice line, so the video stays unmuted under the narration. If that mp3 fails to load or fails to play, the AAC continues at the narration level (`src/ui/milestoneAudioMode.js`, `src/ui/videoOverlay.js`).
 - The radar stretches the picture to the full minimap (`object-fit: fill`). `first_tank.mp4` has baked black bars of about 5% on each side. The draw uses the content rect `(52, 0, 854, 576)` inside the 960×576 frame, so those bars are not visible. Fade, volume, production preload, and the other clip crops are specified in `specs/090-first-build-milestone-videos.md`.
 
 ## Trigger

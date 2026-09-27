@@ -7,6 +7,8 @@ import {
 } from './milestoneMediaCache.js'
 import {
   applyMilestoneVideoAudioState,
+  MILESTONE_NARRATION_GAIN,
+  MILESTONE_VIDEO_BED_GAIN,
   playMilestoneVideoWithAudioPolicy,
   resolveMilestonePlaybackVolume
 } from './milestoneAudioMode.js'
@@ -366,8 +368,9 @@ export class VideoOverlay {
         return
       }
 
-      // A usable companion MP3 mutes the picture so narration is not doubled.
-      // A missing or failed MP3 plays the audio track embedded in the mp4.
+      // The narrator MP3 and the video soundtrack play together. The MP3 is the
+      // voice. The mp4 audio, when the file has a track, stays under that voice.
+      // A missing MP3 leaves the embedded track as the only audio.
       let audioFromPreload = false
       const preloadedAudio = preloaded?.audio
       const preloadedAudioUnusable = !preloadedAudio || preloaded.audioFailed || preloadedAudio.error
@@ -393,7 +396,7 @@ export class VideoOverlay {
       this.rememberMilestoneMute()
       if (video.dataset) {
         video.dataset.milestoneBase = baseFilename
-        video.dataset.milestoneAudio = this.usesEmbeddedAudio ? 'embedded' : 'separate'
+        video.dataset.milestoneAudio = this.currentAudio ? 'mixed' : 'embedded'
       }
 
       if (usedPreloadedVideo) {
@@ -415,8 +418,8 @@ export class VideoOverlay {
       try {
         const playback = await playMilestoneVideoWithAudioPolicy(
           video,
-          !this.usesEmbeddedAudio,
-          this.computeMilestoneVolume(0),
+          Boolean(this.currentAudio),
+          this.computeMilestoneVideoVolume(0),
           this.milestoneAudioMuted
         )
         if (playback.blockedByAutoplay) {
@@ -591,22 +594,35 @@ export class VideoOverlay {
       1,
       1,
       this.milestoneAudioMuted,
-      fade
+      fade,
+      MILESTONE_NARRATION_GAIN
+    )
+  }
+
+  computeMilestoneVideoVolume(fade) {
+    const gain = this.currentAudio ? MILESTONE_VIDEO_BED_GAIN : MILESTONE_NARRATION_GAIN
+    return resolveMilestonePlaybackVolume(
+      this.milestoneMasterVolume,
+      1,
+      1,
+      this.milestoneAudioMuted,
+      fade,
+      gain
     )
   }
 
   /**
    * Fade milestone audio with the radar opacity. One rAF while a clip plays.
-   * No per-frame objects. Companion MP3 and embedded video audio share this.
+   * No per-frame objects. The narrator MP3 uses the voice level. The video
+   * soundtrack uses the quieter bed while that MP3 is playing.
    */
   applyMilestoneAudioFade(opacity) {
     const fade = opacity > 0 ? (opacity < 1 ? opacity : 1) : 0
     this.lastAudioFade = fade
-    const volume = this.computeMilestoneVolume(fade)
-    if (this.currentAudio) this.currentAudio.volume = volume
+    if (this.currentAudio) this.currentAudio.volume = this.computeMilestoneVolume(fade)
     const video = this.currentVideo
-    if (!this.usesEmbeddedAudio || !video || this.embeddedUnmutePending || video.muted) return
-    video.volume = volume
+    if (!video || this.embeddedUnmutePending || video.muted) return
+    video.volume = this.computeMilestoneVideoVolume(fade)
   }
 
   startAudioFadeLoop() {
@@ -639,10 +655,10 @@ export class VideoOverlay {
       if (this.embeddedUnmuteRetry === retry) this.embeddedUnmuteRetry = null
       if (!this.embeddedUnmutePending) return
       this.embeddedUnmutePending = false
-      if (!this.isPlaying || !this.usesEmbeddedAudio || this.currentVideo !== video) return
+      if (!this.isPlaying || this.currentVideo !== video) return
       this.rememberMilestoneMute()
       if (this.milestoneAudioMuted) return
-      const volume = this.computeMilestoneVolume(this.lastAudioFade > 0 ? this.lastAudioFade : 1)
+      const volume = this.computeMilestoneVideoVolume(this.lastAudioFade > 0 ? this.lastAudioFade : 1)
       applyMilestoneVideoAudioState(video, false, volume)
       const pending = video.play()
       if (pending && typeof pending.catch === 'function') {
@@ -760,11 +776,11 @@ export class VideoOverlay {
     this.rememberMilestoneMute()
     if (!this.isPlaying) return
     const video = this.currentVideo
-    if (this.usesEmbeddedAudio && video && !this.embeddedUnmutePending) {
+    if (video && !this.embeddedUnmutePending) {
       if (this.milestoneAudioMuted) {
         applyMilestoneVideoAudioState(video, true, 0)
       } else if (video.muted) {
-        applyMilestoneVideoAudioState(video, false, this.computeMilestoneVolume(this.lastAudioFade))
+        applyMilestoneVideoAudioState(video, false, this.computeMilestoneVideoVolume(this.lastAudioFade))
       }
     }
     this.applyMilestoneAudioFade(this.lastAudioFade)
