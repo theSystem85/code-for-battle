@@ -40,6 +40,10 @@ The heartbeat is a 45 second timer plus a 1 second signature check that only com
 
 With `npm run stun` and `VITE_STUN_HOST=http://127.0.0.1:3333 npm run dev`, `node scripts/verify-multiplayer-stats.mjs` opens two browsers. Both showed `2 playing now · 0 in online multiplayer`, the host dialog toggle listed a free slot, and Quick match connected the joiner (the host sidebar showed that player with Kick). That run uses the signalling helper's in-memory store, which follows the same rules as Redis. Upstash was not configured in the check environment. Blob claims are covered by the unit tests.
 
+## Preview check
+
+`POST /api/presence` on `https://deploy-preview-722--code-for-battle.netlify.app` for commit `bb4730db` returned `backend: "blobs"`, `redisConfigured: false`, `handler: "edge-forward"`. The edge function ran and forwarded because neither runtime saw both Upstash variables. The site environment API lists `IMPRESSUM_CONFIG_JSON` only, and the team shared list is empty.
+
 ## Not covered here
 
 Qualifying-hardware 75 FPS measurement is not required for this change because no update/render hot path was modified. A headless browser cannot certify presented FPS.
