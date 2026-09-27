@@ -1,9 +1,17 @@
 // ui/videoOverlay.js
 import { getMasterVolume } from '../sound.js'
+import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import {
   computeMilestoneVideoOpacity,
   takePreloadedMilestoneMedia
 } from './milestoneMediaCache.js'
+import {
+  applyMilestoneVideoAudioState,
+  MILESTONE_NARRATION_GAIN,
+  MILESTONE_VIDEO_BED_GAIN,
+  playMilestoneVideoWithAudioPolicy,
+  resolveMilestonePlaybackVolume
+} from './milestoneAudioMode.js'
 
 function waitForMediaEvent(media, eventName, timeoutMs) {
   if (!media) return Promise.reject(new Error('missing media'))
@@ -44,6 +52,19 @@ export class VideoOverlay {
     this.overlayElement = null
     this.videoQueue = []
     this.playbackStartedAt = 0
+    this.usesEmbeddedAudio = false
+    this.lastAudioFade = 1
+    this.milestoneAudioMuted = false
+    this.milestoneMasterVolume = 1
+    this.embeddedUnmutePending = false
+    this.embeddedUnmuteRetry = null
+    this.audioFadeFrame = 0
+    this.boundAudioFadeStep = () => {
+      this.audioFadeFrame = 0
+      if (!this.isPlaying) return
+      this.applyMilestoneAudioFade(this.getMilestoneVideoOpacity())
+      this.audioFadeFrame = requestAnimationFrame(this.boundAudioFadeStep)
+    }
     this.createOverlayElement()
   }
 
@@ -124,8 +145,8 @@ export class VideoOverlay {
 
       .milestone-video {
         width: 100%;
-        height: 110px;
-        object-fit: cover;
+        height: 100%;
+        object-fit: fill;
         background: #000;
       }
 
@@ -347,64 +368,20 @@ export class VideoOverlay {
         return
       }
 
-      // Prefer a companion mp3 that was preloaded with the video. A failed mp3
-      // falls through to the existing path, which plays embedded video audio.
+      // The narrator MP3 and the video soundtrack play together. The MP3 is the
+      // voice. The mp4 audio, when the file has a track, stays under that voice.
+      // A missing MP3 leaves the embedded track as the only audio.
       let audioFromPreload = false
-      if (usedPreloadedVideo && preloaded?.audio && !preloaded.audioFailed) {
-        this.currentAudio = preloaded.audio
-        this.currentAudio.volume = 0.28 * getMasterVolume()
+      const preloadedAudio = preloaded?.audio
+      const preloadedAudioUnusable = !preloadedAudio || preloaded.audioFailed || preloadedAudio.error
+      if (usedPreloadedVideo && preloadedAudio && !preloadedAudioUnusable) {
+        this.currentAudio = preloadedAudio
         audioFromPreload = true
       } else if (audioFile) {
-        const audioPaths = [
-          `video/${audioFile}`,
-          `/video/${audioFile}`,
-          `./video/${audioFile}`
-        ]
-
-        let audioLoaded = false
-        for (const path of audioPaths) {
-          try {
-            this.currentAudio = new Audio(path)
-            this.currentAudio.volume = 0.28 * getMasterVolume() // Apply master volume to video audio (60% quieter)
-
-            // Test if audio can load
-            await new Promise((resolve, reject) => {
-              const onLoad = () => {
-                this.currentAudio.removeEventListener('canplaythrough', onLoad)
-                this.currentAudio.removeEventListener('error', onError)
-                resolve()
-              }
-              const onError = (e) => {
-                this.currentAudio.removeEventListener('canplaythrough', onLoad)
-                this.currentAudio.removeEventListener('error', onError)
-                reject(e)
-              }
-              this.currentAudio.addEventListener('canplaythrough', onLoad, { once: true })
-              this.currentAudio.addEventListener('error', onError, { once: true })
-            })
-
-            audioLoaded = true
-            break
-          } catch (e) {
-            window.logger.warn(`Failed to load audio from ${path}:`, e)
-            if (this.currentAudio) {
-              this.currentAudio = null
-            }
-          }
+        this.currentAudio = await this.loadCompanionAudio(audioFile)
+        if (!this.currentAudio) {
+          window.logger.warn('No separate milestone MP3. Playing audio embedded in the video.')
         }
-
-        if (!audioLoaded) {
-          window.logger.warn('Failed to load audio from all attempted paths, video will play without separate sound. Re-enabling embedded video audio.')
-          this.currentAudio = null
-        }
-      }
-
-      // Configure video volume based on separate audio presence
-      if (this.currentAudio) {
-        video.muted = true
-      } else {
-        video.muted = false
-        video.volume = 0.28 * getMasterVolume()
       }
 
       // Keep overlay hidden - only use for video element, render on minimap instead
@@ -414,6 +391,13 @@ export class VideoOverlay {
       this.isPlaying = true
       this.currentVideo = video
       this.playbackStartedAt = performance.now()
+      this.usesEmbeddedAudio = !this.currentAudio
+      this.lastAudioFade = 0
+      this.rememberMilestoneMute()
+      if (video.dataset) {
+        video.dataset.milestoneBase = baseFilename
+        video.dataset.milestoneAudio = this.currentAudio ? 'mixed' : 'embedded'
+      }
 
       if (usedPreloadedVideo) {
         const onEnded = () => {
@@ -431,49 +415,32 @@ export class VideoOverlay {
         }, { once: true })
       }
 
-      // Start video playback with error handling
       try {
-        await video.play()
+        const playback = await playMilestoneVideoWithAudioPolicy(
+          video,
+          Boolean(this.currentAudio),
+          this.computeMilestoneVideoVolume(0),
+          this.milestoneAudioMuted
+        )
+        if (playback.blockedByAutoplay) {
+          window.logger.warn('Unmuted milestone playback was blocked. Picture is muted until the next gesture.')
+          this.armEmbeddedUnmuteGesture(video)
+        }
       } catch (playError) {
         console.error('Video play() failed:', playError)
-        // Try to handle specific play errors
         if (playError.name === 'NotAllowedError') {
           window.logger.warn('Video autoplay blocked by browser - user interaction required')
         } else if (playError.name === 'NotSupportedError') {
           window.logger.warn('Video format not supported')
         }
-        throw playError // Re-throw to be caught by outer try-catch
+        throw playError
       }
 
-      // Synchronize audio. Preloaded mp3 may still be buffering; do not delay the picture.
-      if (this.currentAudio) {
-        const audio = this.currentAudio
-        const startAudio = () => {
-          if (!this.isPlaying || this.currentAudio !== audio) return
-          audio.play().catch(e => {
-            window.logger.warn('Audio playback failed:', e)
-            if (this.currentAudio === audio) {
-              this.currentAudio = null
-              if (this.currentVideo) {
-                this.currentVideo.muted = false
-                this.currentVideo.volume = 0.28 * getMasterVolume()
-              }
-            }
-          })
-        }
-        if (!audioFromPreload || audio.readyState >= 2) {
-          setTimeout(startAudio, 50)
-        } else {
-          audio.addEventListener('canplay', () => setTimeout(startAudio, 50), { once: true })
-          audio.addEventListener('error', () => {
-            if (this.currentAudio !== audio) return
-            this.currentAudio = null
-            if (this.currentVideo) {
-              this.currentVideo.muted = false
-              this.currentVideo.volume = 0.28 * getMasterVolume()
-            }
-          }, { once: true })
-        }
+      this.startAudioFadeLoop()
+
+      // Synchronize companion audio. A preloaded MP3 may still be buffering.
+      if (this.currentAudio && !this.usesEmbeddedAudio) {
+        this.watchCompanionAudio(this.currentAudio, audioFromPreload)
       }
 
     } catch (error) {
@@ -496,6 +463,9 @@ export class VideoOverlay {
 
     this.isPlaying = false
     this.playbackStartedAt = 0
+    this.usesEmbeddedAudio = false
+    this.stopAudioFadeLoop()
+    this.clearEmbeddedUnmuteGesture()
 
     // Hide overlay completely
     this.overlayElement.classList.remove('show')
@@ -507,6 +477,7 @@ export class VideoOverlay {
       const playing = this.currentVideo
       const mainVideo = this.overlayElement?.querySelector('.milestone-video')
       try {
+        playing.volume = 0
         playing.pause()
         playing.currentTime = 0
         // Remove src to prevent further events
@@ -525,6 +496,7 @@ export class VideoOverlay {
     // Stop and clean up audio with error handling
     if (this.currentAudio) {
       try {
+        this.currentAudio.volume = 0
         this.currentAudio.pause()
         this.currentAudio.currentTime = 0
       } catch (e) {
@@ -606,15 +578,212 @@ export class VideoOverlay {
   }
 
   /**
+   * Master volume is the game's only mixer. Zero master volume, and headless
+   * test mute, silence both the companion MP3 and the embedded track.
+   * SFX and voice stay fully open because those channels are not separate sliders.
+   */
+  rememberMilestoneMute() {
+    const master = getMasterVolume()
+    this.milestoneMasterVolume = master
+    this.milestoneAudioMuted = master <= 0 || isHeadlessAudioMuted()
+  }
+
+  computeMilestoneVolume(fade) {
+    return resolveMilestonePlaybackVolume(
+      this.milestoneMasterVolume,
+      1,
+      1,
+      this.milestoneAudioMuted,
+      fade,
+      MILESTONE_NARRATION_GAIN
+    )
+  }
+
+  computeMilestoneVideoVolume(fade) {
+    const gain = this.currentAudio ? MILESTONE_VIDEO_BED_GAIN : MILESTONE_NARRATION_GAIN
+    return resolveMilestonePlaybackVolume(
+      this.milestoneMasterVolume,
+      1,
+      1,
+      this.milestoneAudioMuted,
+      fade,
+      gain
+    )
+  }
+
+  /**
+   * Fade milestone audio with the radar opacity. One rAF while a clip plays.
+   * No per-frame objects. The narrator MP3 uses the voice level. The video
+   * soundtrack uses the quieter bed while that MP3 is playing.
+   */
+  applyMilestoneAudioFade(opacity) {
+    const fade = opacity > 0 ? (opacity < 1 ? opacity : 1) : 0
+    this.lastAudioFade = fade
+    if (this.currentAudio) this.currentAudio.volume = this.computeMilestoneVolume(fade)
+    const video = this.currentVideo
+    if (!video || this.embeddedUnmutePending || video.muted) return
+    video.volume = this.computeMilestoneVideoVolume(fade)
+  }
+
+  startAudioFadeLoop() {
+    if (this.audioFadeFrame) return
+    this.audioFadeFrame = requestAnimationFrame(this.boundAudioFadeStep)
+  }
+
+  stopAudioFadeLoop() {
+    if (!this.audioFadeFrame) return
+    cancelAnimationFrame(this.audioFadeFrame)
+    this.audioFadeFrame = 0
+  }
+
+  clearEmbeddedUnmuteGesture() {
+    const retry = this.embeddedUnmuteRetry
+    this.embeddedUnmuteRetry = null
+    this.embeddedUnmutePending = false
+    if (!retry || typeof window === 'undefined') return
+    window.removeEventListener('pointerdown', retry, true)
+    window.removeEventListener('keydown', retry, true)
+  }
+
+  armEmbeddedUnmuteGesture(video) {
+    this.clearEmbeddedUnmuteGesture()
+    if (!video || typeof window === 'undefined') return
+    this.embeddedUnmutePending = true
+    const retry = () => {
+      window.removeEventListener('pointerdown', retry, true)
+      window.removeEventListener('keydown', retry, true)
+      if (this.embeddedUnmuteRetry === retry) this.embeddedUnmuteRetry = null
+      if (!this.embeddedUnmutePending) return
+      this.embeddedUnmutePending = false
+      if (!this.isPlaying || this.currentVideo !== video) return
+      this.rememberMilestoneMute()
+      if (this.milestoneAudioMuted) return
+      const volume = this.computeMilestoneVideoVolume(this.lastAudioFade > 0 ? this.lastAudioFade : 1)
+      applyMilestoneVideoAudioState(video, false, volume)
+      const pending = video.play()
+      if (pending && typeof pending.catch === 'function') {
+        pending.catch(error => {
+          if (error?.name !== 'NotAllowedError') return
+          if (!this.isPlaying || this.currentVideo !== video) return
+          applyMilestoneVideoAudioState(video, true, 0)
+          this.armEmbeddedUnmuteGesture(video)
+        })
+      }
+    }
+    this.embeddedUnmuteRetry = retry
+    window.addEventListener('pointerdown', retry, true)
+    window.addEventListener('keydown', retry, true)
+  }
+
+  loadCompanionAudio(audioFile) {
+    const audioPaths = [
+      `video/${audioFile}`,
+      `/video/${audioFile}`,
+      `./video/${audioFile}`
+    ]
+    const tryPath = (path) => new Promise((resolve, reject) => {
+      const audio = new Audio()
+      audio.preload = 'auto'
+      let settled = false
+      const finish = (handler, value) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timeout)
+        audio.removeEventListener('canplaythrough', onLoad)
+        audio.removeEventListener('error', onError)
+        handler(value)
+      }
+      const timeout = setTimeout(() => {
+        finish(reject, new Error(`Audio load timeout for ${path}`))
+      }, 4000)
+      const onLoad = () => finish(resolve, audio)
+      const onError = (event) => finish(reject, event)
+      audio.addEventListener('canplaythrough', onLoad, { once: true })
+      audio.addEventListener('error', onError, { once: true })
+      audio.src = path
+      if (audio.error) {
+        finish(reject, audio.error)
+        return
+      }
+      audio.load()
+    })
+
+    return (async() => {
+      for (const path of audioPaths) {
+        try {
+          return await tryPath(path)
+        } catch (error) {
+          window.logger.warn(`Failed to load audio from ${path}:`, error)
+        }
+      }
+      return null
+    })()
+  }
+
+  watchCompanionAudio(audio, audioFromPreload) {
+    const startAudio = () => {
+      if (!this.isPlaying || this.currentAudio !== audio || this.usesEmbeddedAudio) return
+      audio.volume = this.computeMilestoneVolume(this.lastAudioFade)
+      const pending = audio.play()
+      if (!pending || typeof pending.catch !== 'function') return
+      pending.catch(error => {
+        window.logger.warn('Audio playback failed:', error)
+        if (this.currentAudio !== audio) return
+        this.switchToEmbeddedAudio()
+      })
+    }
+    const onAudioError = () => {
+      if (this.currentAudio !== audio) return
+      this.switchToEmbeddedAudio()
+    }
+    audio.addEventListener('error', onAudioError, { once: true })
+    if (!audioFromPreload || audio.readyState >= 2) {
+      setTimeout(startAudio, 50)
+      return
+    }
+    audio.addEventListener('canplay', () => setTimeout(startAudio, 50), { once: true })
+  }
+
+  switchToEmbeddedAudio() {
+    const audio = this.currentAudio
+    this.currentAudio = null
+    this.usesEmbeddedAudio = true
+    if (audio) {
+      try {
+        audio.volume = 0
+        audio.pause()
+      } catch (error) {
+        window.logger.warn('Error stopping failed milestone MP3:', error)
+      }
+    }
+    const video = this.currentVideo
+    if (!video || !this.isPlaying) return
+    if (video.dataset) video.dataset.milestoneAudio = 'embedded'
+    this.embeddedUnmutePending = false
+    const volume = this.computeMilestoneVolume(this.lastAudioFade > 0 ? this.lastAudioFade : 1)
+    playMilestoneVideoWithAudioPolicy(video, false, volume, this.milestoneAudioMuted).then(playback => {
+      if (!this.isPlaying || this.currentVideo !== video) return
+      if (playback.blockedByAutoplay) this.armEmbeddedUnmuteGesture(video)
+    }).catch(error => {
+      window.logger.warn('Embedded milestone audio failed:', error)
+    })
+  }
+
+  /**
    * Update the volume of current audio to match master volume
    */
   updateAudioVolume() {
-    if (this.currentAudio) {
-      this.currentAudio.volume = 0.28 * getMasterVolume()
+    this.rememberMilestoneMute()
+    if (!this.isPlaying) return
+    const video = this.currentVideo
+    if (video && !this.embeddedUnmutePending) {
+      if (this.milestoneAudioMuted) {
+        applyMilestoneVideoAudioState(video, true, 0)
+      } else if (video.muted) {
+        applyMilestoneVideoAudioState(video, false, this.computeMilestoneVideoVolume(this.lastAudioFade))
+      }
     }
-    if (this.currentVideo && !this.currentVideo.muted) {
-      this.currentVideo.volume = 0.28 * getMasterVolume()
-    }
+    this.applyMilestoneAudioFade(this.lastAudioFade)
   }
 }
 
