@@ -64,7 +64,7 @@ This feature does not add work to the simulation tick, the render loop, or per-e
 
 Unit coverage lives in `tests/unit/offlineMode.test.js`.
 
-A production build precaches 486 files, 27407.74 KiB. The sidebar toggle reports that as `Offline ready, 26.8 MB cached` before runtime font responses are added. After the first controlled visit the same sum was `Offline ready, 27.2 MB cached` (498 Cache Storage entries, including the Google font cache). No `.mp4`, `.webm`, `.mov`, or `.m4v` response was stored.
+A production build precaches 486 files, 27418.45 KiB. The sidebar toggle reports that as about `26.8 MB` before runtime font responses are added. After the first controlled visit the tooltip read `Offline ready, 27.2 MB cached`. No `.mp4`, `.webm`, `.mov`, or `.m4v` response was stored.
 
 Production check, from a built `dist` served by `vite preview`:
 
