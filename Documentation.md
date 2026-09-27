@@ -444,7 +444,6 @@ This system transforms combat from simple unit expenditure to strategic unit dev
 ## Online Multiplayer STUN Helper
 
 - Start the Express-based signalling helper with `npm run stun` before sending or opening invite links.
-- The multiplayer join field accepts a full invite URL, the 6-character invite code (`ABC-DEF`), or the long token. The code is case-insensitive and ignores spaces and dashes. The signalling server maps each party's code to that invite's long token until the invite expires. Other text shows a validation error.
 - Run `npm run dev` for the Vite client simultaneously so the helper listening on http://localhost:3333 can fulfill `/signalling/offer`, `/signalling/answer`, `/signalling/candidate`, and `/game-instance/:id/invite-regenerate` per `specs/001-add-online-multiplayer/contracts/multiplayer-api.yaml`.
 - Keep both processes alive while testing invites so browsers can exchange WebRTC metadata without a dedicated gaming server.
 

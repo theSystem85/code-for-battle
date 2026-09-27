@@ -10,7 +10,6 @@ import { ensureMultiplayerState, generateRandomId } from '../network/multiplayer
 import { getStoredPlayerAlias, setStoredPlayerAlias } from './sidebarMultiplayer.js'
 import { runWithLoadingScreen } from './loadingScreen.js'
 import { isEffectivelyOffline } from '../pwa/offlineState.js'
-import { uiText } from './uiText.js'
 
 const STATUS_MESSAGES = {
   [RemoteConnectionStatus.IDLE]: 'Awaiting alias submission.',
@@ -499,6 +498,13 @@ function resolveShortInviteCode(code) {
   const overlay = document.getElementById('remoteInviteLanding')
   const statusElement = document.getElementById('remoteInviteStatus')
   const tokenText = document.getElementById('remoteInviteTokenText')
+  if (isEffectivelyOffline()) {
+    if (overlay && statusElement) {
+      showOverlay(overlay, statusElement)
+      updateStatus(statusElement, uiText('offline.multiplayerDisabled'), true)
+    }
+    return
+  }
   if (overlay && statusElement) {
     showOverlay(overlay, statusElement)
     updateStatus(statusElement, 'Connecting to host...', false)

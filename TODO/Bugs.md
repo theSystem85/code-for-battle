@@ -958,12 +958,6 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Multiplayer and Networking
 
-- [x] **Preview link and short-code joins look dead without TURN (2026-09-27)** — on the #717 deploy preview, neither the full invite link nor the short code connected for a tester who has no TURN env vars on Netlify. Diff against main: WebRTC session, remote connection, ICE config, TURN credential minting, and the service worker are unchanged. Preview and production `GET /api/signalling/ice-servers` both return Google STUN only with `turnConfigured: false`. Missing TURN env does not throw, and Blobs still store offers, answers, and invite codes. Two browser contexts on that preview connected by the full link and by the short code with no extra setup. Same-computer play still uses public STUN. A phone or another network still needs the existing TURN variables; this change does not add a new secret.
-  - Spec: [Cross-device WebRTC join](../specs/072-cross-device-webrtc-join.md)
-
-- [x] **Short invite code does not join the host (2026-09-27)** — a short code was still shown when signalling never stored it (the host page kept one in memory, or regenerate returned a token with no code). The link kept working because the host was already watching that token, and the joiner's lookup missed. The dialog now shows a code only after the shared signalling store confirms it, and `?invite=` resolves a short code the same way as the join field.
-  - Spec: [Cross-device WebRTC join](../specs/072-cross-device-webrtc-join.md)
-
 - [x] **Candidate cursor audit (2026-09-23)** — `remoteCandidateIndex` and the host `candidateCursor` are initialized to `0` on current `main`. Both loops now treat a missing cursor as `0` so `undefined < length` cannot skip `addIceCandidate`. Cross-device joins still need TURN.
   - Spec: none
 
@@ -1007,9 +1001,6 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 - [x] **Loading bar sat near 66–69% for most of boot (2026-09-26)** — boot progress is weighted by measured phase time. Prepared sprites and tile sheets report sub-progress, the sprite pass yields often enough for the bar to paint, and 100% waits until the first frame and any in-flight WebGPU init actually finish.
   - Spec: [Loading Screen](../specs/080-loading-screen.md)
-
-- [x] **Invite code field matches the link field (2026-09-26)** — the host dialog code input used an unstyled class, so it kept the browser's white background. It now shares the link field's class and styles: background, border, radius, font, padding, height, and copy-button alignment.
-  - Spec: [Cross-device WebRTC join](../specs/072-cross-device-webrtc-join.md)
 
 - [x] **Gamepad indicator notch with no controller (2026-09-26)** — the empty remote-control pill stayed visible because its `display: inline-flex` beat the `hidden` attribute and painted a black notch with a green lamp. Indicator, remote, and cursor chrome are `display: none` whenever no pad is connected, and each player pill only appears for its own connected controller.
   - Spec: [Gamepad and controller support](../specs/092-gamepad-controller-support.md)
