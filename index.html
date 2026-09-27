@@ -1051,6 +1051,18 @@
   <div id="offlineUpdatePrompt" class="offline-update-prompt" hidden>
     <button id="offlineUpdateReload" class="offline-update-prompt__button" type="button" data-offline-update-label>Update available – reload</button>
   </div>
+  <div id="offlineClearDialog" class="offline-clear-dialog" hidden>
+    <div class="offline-clear-dialog__panel" role="alertdialog" aria-modal="true" aria-labelledby="offlineClearDialogTitle" aria-describedby="offlineClearDialogBody">
+      <h2 id="offlineClearDialogTitle" class="offline-clear-dialog__title">Clear offline cache?</h2>
+      <p id="offlineClearDialogBody" class="offline-clear-dialog__body"></p>
+      <p id="offlineClearDialogWarning" class="offline-clear-dialog__warning" hidden></p>
+      <div class="offline-clear-dialog__actions">
+        <button id="offlineClearCancel" class="offline-clear-dialog__button" type="button">Cancel</button>
+        <button id="offlineClearConfirm" class="offline-clear-dialog__button offline-clear-dialog__button--danger" type="button">Clear cache</button>
+        <button id="offlineClearReload" class="offline-clear-dialog__button offline-clear-dialog__button--primary" type="button" hidden>Reload</button>
+      </div>
+    </div>
+  </div>
 
   <!-- FPS Display Overlay -->
   <div id="fpsDisplay" class="fps-overlay">
@@ -1145,6 +1157,14 @@
             <input id="settingsRadarOfflineAnimationToggle" type="checkbox" checked>
             Animate minimap radar-offline grain (old TV white-snow flicker)
           </label>
+          <div id="offlineCacheSettings" class="config-modal__section">
+            <h3 class="config-modal__section-title" data-offline-clear-title>Offline</h3>
+            <p class="config-modal__hint" data-offline-clear-hint>Removes the downloaded game files. Saved games and settings stay on this device.</p>
+            <p id="offlineCacheSizeText" class="config-modal__hint">Not cached (0.0 MB)</p>
+            <div class="config-modal__actions">
+              <button id="offlineClearCacheButton" class="config-modal__button" type="button">Clear offline cache</button>
+            </div>
+          </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Graphics</h3>
             <label class="config-modal__field config-modal__field--toggle">

@@ -21,7 +21,17 @@ On hover, focus, or a touch press, the pill shows the cache status:
 - `Preparing offline cache… {percent}%` until the worker finishes precaching
 - `Offline ready, {size} cached` after that, for example `Offline ready, 42.3 MB cached`
 
-The size is the sum of Cache Storage responses, using `Content-Length` when present and the blob size otherwise. If that sum cannot be read, the UI uses `navigator.storage.estimate().usage`.
+The size is the sum of Cache Storage responses, using `Content-Length` when present and the blob size otherwise. An empty Cache Storage reports `0`. If Cache Storage cannot be read, the UI uses `navigator.storage.estimate().usage`.
+
+## Clear cache
+
+Settings → Runtime Config has an Offline section with the cached size and **Clear offline cache**. A long press or right-click on the top-left pill opens the same action. The control asks with the in-game confirm dialog before it does anything. Confirming deletes only this app's `workbox-*`, `cfb-*`, and `code-for-battle-cache-*` Cache Storage entries and unregisters the service worker. Saved games, settings, `localStorage`, and IndexedDB are left in place.
+
+After clearing, the section and the dialog show the new size as not cached (`0.0 MB`) and say the game downloads the cache again the next time it loads while online. The dialog offers reload. When the game is already offline, the confirm and the result both warn that clearing makes the game unavailable offline until the next visit with a connection.
+
+English and German strings live under `offline.clear`.
+
+Portrait phone toasts are full-width and fixed, starting 64px below the safe area so they sit under the offline pill instead of covering it.
 
 The sidebar shows an Offline chip, hidden while the game is online, with the same `[hidden]` rule.
 

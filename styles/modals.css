@@ -607,6 +607,88 @@ body.mobile-portrait .tutorial-dock {
   background: linear-gradient(135deg, #ffd480, #ffb800);
 }
 
+.offline-clear-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-raised);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.offline-clear-dialog[hidden] {
+  display: none !important;
+}
+
+.offline-clear-dialog__panel {
+  width: min(440px, calc(100% - 8px));
+  background: #1b1f24;
+  border: 2px solid #ffcc66;
+  border-radius: 12px;
+  box-shadow: 0 16px 48px rgba(255, 204, 102, 0.2);
+  color: #f4f4f4;
+  font-family: var(--game-font-family);
+}
+
+.offline-clear-dialog__title {
+  margin: 0;
+  padding: 16px 20px 0;
+  font-size: 18px;
+  color: #ffd089;
+}
+
+.offline-clear-dialog__body,
+.offline-clear-dialog__warning {
+  margin: 12px 20px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: #d7e6f5;
+}
+
+.offline-clear-dialog__warning {
+  color: #ffe7c2;
+}
+
+.offline-clear-dialog__warning[hidden],
+.offline-clear-dialog__button[hidden] {
+  display: none !important;
+}
+
+.offline-clear-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 20px 20px;
+}
+
+.offline-clear-dialog__button {
+  margin: 0;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: 1px solid #3c4a58;
+  background: transparent;
+  color: #d7e6f5;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.offline-clear-dialog__button--danger {
+  border-color: #ffb020;
+  background: #ffb020;
+  color: #1b1f24;
+}
+
+.offline-clear-dialog__button--primary {
+  border-color: #4da3ff;
+  background: #16324d;
+  color: #d7e6f5;
+}
+
 /* Mobile responsive styles for config modal and keybindings */
 @media screen and (max-width: 600px) {
   .config-modal {

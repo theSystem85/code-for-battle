@@ -996,6 +996,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **Phone toasts cover the offline pill (2026-09-27)** — portrait toasts are full-width and now start below the top-left offline pill so both stay visible.
+  - Spec: [Offline mode](../specs/095-offline-mode.md)
+
 - [x] **Loading bar sat near 66–69% for most of boot (2026-09-26)** — boot progress is weighted by measured phase time. Prepared sprites and tile sheets report sub-progress, the sprite pass yields often enough for the bar to paint, and 100% waits until the first frame and any in-flight WebGPU init actually finish.
   - Spec: [Loading Screen](../specs/080-loading-screen.md)
 

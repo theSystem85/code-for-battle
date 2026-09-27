@@ -6,7 +6,25 @@
     "preparing": "Offline-Cache wird vorbereitet… {percent}%",
     "ready": "Offline bereit, {size} im Cache",
     "multiplayerDisabled": "Mehrspieler ist im Offlinemodus nicht verfügbar!",
-    "updateAvailable": "Update verfügbar – neu laden"
+    "updateAvailable": "Update verfügbar – neu laden",
+    "clear": {
+      "sectionTitle": "Offline",
+      "hint": "Entfernt die heruntergeladenen Spieldateien. Spielstände und Einstellungen bleiben auf diesem Gerät.",
+      "size": "Im Cache: {size}",
+      "notCached": "Nicht im Cache ({size})",
+      "emptyTooltip": "Nicht im Cache, {size}",
+      "action": "Offline-Cache leeren",
+      "confirmTitle": "Offline-Cache leeren?",
+      "confirmBody": "Das entfernt die heruntergeladenen Spieldateien und den Service Worker. Spielstände, Einstellungen und andere Spieldaten bleiben auf diesem Gerät. Das Spiel lädt den Cache beim nächsten Online-Start erneut.",
+      "confirmOfflineWarning": "Du bist offline. Wenn du den Cache leerst, ist das Spiel offline nicht verfügbar, bis du es das nächste Mal mit Verbindung öffnest.",
+      "confirmAction": "Cache leeren",
+      "cancel": "Abbrechen",
+      "close": "Schließen",
+      "clearedTitle": "Offline-Cache geleert",
+      "clearedBody": "Die Cache-Größe ist jetzt {size}. Das Spiel lädt den Offline-Cache beim nächsten Online-Start erneut.",
+      "clearedOfflineWarning": "Du bist offline. Ein Neuladen jetzt macht das Spiel unbenutzbar, bis du es das nächste Mal mit Verbindung öffnest.",
+      "reload": "Neu laden"
+    }
   },
   "settings": {
     "benchmark": {

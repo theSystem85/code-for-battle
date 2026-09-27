@@ -70,10 +70,10 @@ export async function resolveOfflineCacheBytes({ cacheStorage, estimate } = {}) 
   try {
     if (cacheStorage) {
       const summed = await sumCachedResponseBytes(cacheStorage)
-      if (summed.entries > 0) return { bytes: summed.bytes, source: 'cache', entries: summed.entries }
+      return { bytes: summed.bytes, source: 'cache', entries: summed.entries }
     }
   } catch {
-    // Fall through to the storage estimate.
+    // Fall through to the storage estimate when Cache Storage cannot be read.
   }
 
   try {

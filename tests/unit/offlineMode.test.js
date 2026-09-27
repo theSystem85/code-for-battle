@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import {
   PRECACHE_GLOB_IGNORES,
   PRECACHE_GLOB_PATTERNS,
@@ -24,6 +24,15 @@ import {
 } from '../../src/pwa/offlineCacheSize.js'
 import { isNetlifyDrawerRequest, shouldBypassServiceWorkerCache } from '../../src/pwa/serviceWorkerCachePolicy.js'
 import { applyOfflineModeDom, offlineStringsForTest } from '../../src/pwa/offlineController.js'
+import {
+  applyOfflineCacheSettings,
+  applyOfflineClearDialog,
+  clearOfflineAppCache,
+  createOfflineLongPress,
+  formatOfflineSettingsSize,
+  isAppOfflineCacheName,
+  offlineClearCopy
+} from '../../src/pwa/offlineCacheClear.js'
 
 function memoryStorage(initial = {}) {
   const data = { ...initial }
@@ -127,12 +136,12 @@ describe('offline cache size', () => {
     expect(summed).toEqual({ bytes: 1006, entries: 2 })
   })
 
-  it('falls back to navigator.storage.estimate when the cache is empty or unreadable', async() => {
+  it('reports an empty cache as zero and uses the storage estimate only when Cache Storage cannot be read', async() => {
     const empty = await resolveOfflineCacheBytes({
       cacheStorage: cacheStorageFrom({}),
       estimate: async() => ({ usage: 4096 })
     })
-    expect(empty).toMatchObject({ bytes: 4096, source: 'estimate' })
+    expect(empty).toMatchObject({ bytes: 0, source: 'cache', entries: 0 })
 
     const failed = await resolveOfflineCacheBytes({
       cacheStorage: {
@@ -237,6 +246,161 @@ describe('offline mode UI', () => {
     expect(document.getElementById('multiplayerToggle').disabled).toBe(false)
     expect(document.getElementById('joinInviteLinkBtn').disabled).toBe(false)
     expect(elements.updatePrompt.hidden).toBe(true)
+  })
+})
+
+describe('offline cache clear', () => {
+  it('deletes only this app caches and unregisters the service worker', async() => {
+    const deleted = []
+    const storage = {
+      removed: [],
+      getItem() {
+        return 'saved-game'
+      },
+      removeItem(key) {
+        this.removed.push(key)
+      }
+    }
+    const result = await clearOfflineAppCache({
+      cacheStorage: {
+        async keys() {
+          return ['workbox-precache-v2-http://game/', 'cfb-runtime', 'cfb-google-fonts', 'code-for-battle-cache-v3', 'other-app']
+        },
+        async delete(name) {
+          deleted.push(name)
+          return true
+        }
+      },
+      serviceWorker: {
+        async getRegistrations() {
+          return [{ scope: 'http://game/', async unregister() { return true } }]
+        }
+      }
+    })
+
+    expect(deleted).toEqual([
+      'workbox-precache-v2-http://game/',
+      'cfb-runtime',
+      'cfb-google-fonts',
+      'code-for-battle-cache-v3'
+    ])
+    expect(result.unregistered).toEqual(['http://game/'])
+    expect(isAppOfflineCacheName('other-app')).toBe(false)
+    expect(storage.removed).toEqual([])
+    expect(storage.getItem()).toBe('saved-game')
+
+    const source = readFileSync(path.join(process.cwd(), 'src/pwa/offlineCacheClear.js'), 'utf8')
+    expect(source).not.toMatch(/localStorage|indexedDB|deleteDatabase|window\.confirm/)
+  })
+
+  it('confirms before clearing, warns while offline, then shows an empty cache and a reload', () => {
+    const english = offlineClearCopy('en')
+    const german = offlineClearCopy('de')
+    expect(english.action).toBe('Clear offline cache')
+    expect(english.confirmOfflineWarning).toBe('You are offline. Clearing the cache makes the game unavailable offline until the next visit with a connection.')
+    expect(german.confirmOfflineWarning).toBe('Du bist offline. Wenn du den Cache leerst, ist das Spiel offline nicht verfügbar, bis du es das nächste Mal mit Verbindung öffnest.')
+    expect(german.action).toBe('Offline-Cache leeren')
+    expect(formatOfflineSettingsSize({
+      bytes: 26.8 * 1024 * 1024,
+      ready: true,
+      copy: english
+    })).toBe('Cached: 26.8 MB')
+    expect(formatOfflineSettingsSize({
+      bytes: 0,
+      ready: true,
+      cleared: true,
+      copy: english
+    })).toBe('Not cached (0.0 MB)')
+
+    document.body.innerHTML = `
+      <h3 data-offline-clear-title></h3>
+      <p data-offline-clear-hint></p>
+      <p id="offlineCacheSizeText"></p>
+      <button id="offlineClearCacheButton" type="button"></button>
+      <div id="offlineClearDialog" hidden>
+        <h2 id="offlineClearDialogTitle"></h2>
+        <p id="offlineClearDialogBody"></p>
+        <p id="offlineClearDialogWarning" hidden></p>
+        <button id="offlineClearCancel" type="button"></button>
+        <button id="offlineClearConfirm" type="button"></button>
+        <button id="offlineClearReload" type="button" hidden></button>
+      </div>`
+    const settings = {
+      sectionTitle: document.querySelector('[data-offline-clear-title]'),
+      hint: document.querySelector('[data-offline-clear-hint]'),
+      size: document.getElementById('offlineCacheSizeText'),
+      clearButton: document.getElementById('offlineClearCacheButton')
+    }
+    applyOfflineCacheSettings(settings, {
+      ...english,
+      sizeText: 'Cached: 26.8 MB'
+    })
+    expect(settings.sectionTitle.textContent).toBe('Offline')
+    expect(settings.clearButton.textContent).toBe('Clear offline cache')
+    expect(settings.size.textContent).toBe('Cached: 26.8 MB')
+
+    const dialog = {
+      dialog: document.getElementById('offlineClearDialog'),
+      title: document.getElementById('offlineClearDialogTitle'),
+      body: document.getElementById('offlineClearDialogBody'),
+      warning: document.getElementById('offlineClearDialogWarning'),
+      confirm: document.getElementById('offlineClearConfirm'),
+      cancel: document.getElementById('offlineClearCancel'),
+      reload: document.getElementById('offlineClearReload')
+    }
+    applyOfflineClearDialog(dialog, { ...english, phase: 'confirm', offline: true, clearing: false })
+    expect(dialog.dialog.hidden).toBe(false)
+    expect(dialog.title.textContent).toBe('Clear offline cache?')
+    expect(dialog.body.textContent).toContain('Saved games, settings, and other game data stay')
+    expect(dialog.warning.hidden).toBe(false)
+    expect(dialog.warning.textContent).toBe(english.confirmOfflineWarning)
+    expect(dialog.confirm.hidden).toBe(false)
+    expect(dialog.reload.hidden).toBe(true)
+
+    applyOfflineClearDialog(dialog, { ...english, phase: 'confirm', offline: false, clearing: false })
+    expect(dialog.warning.hidden).toBe(true)
+
+    applyOfflineClearDialog(dialog, {
+      ...english,
+      phase: 'cleared',
+      offline: true,
+      clearing: false,
+      clearedBody: english.clearedBody.replaceAll('{size}', '0.0 MB')
+    })
+    expect(dialog.title.textContent).toBe('Offline cache cleared')
+    expect(dialog.body.textContent).toContain('0.0 MB')
+    expect(dialog.body.textContent).toContain('next time it loads while online')
+    expect(dialog.confirm.hidden).toBe(true)
+    expect(dialog.reload.hidden).toBe(false)
+    expect(dialog.reload.textContent).toBe('Reload')
+    expect(dialog.cancel.textContent).toBe('Close')
+    expect(dialog.warning.textContent).toBe(english.clearedOfflineWarning)
+  })
+
+  it('opens the confirm dialog on a long press and leaves a short press as a click', () => {
+    vi.useFakeTimers()
+    try {
+      let opened = 0
+      const press = createOfflineLongPress(() => {
+        opened += 1
+      }, { delay: 650 })
+      press.pointerDown({ button: 0, clientX: 0, clientY: 0 })
+      press.pointerUp()
+      expect(press.consumeClick()).toBe(false)
+      expect(opened).toBe(0)
+
+      press.pointerDown({ button: 0, clientX: 2, clientY: 2 })
+      vi.advanceTimersByTime(650)
+      expect(opened).toBe(1)
+      expect(press.consumeClick()).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('places portrait toasts below the offline pill', () => {
+    const css = readFileSync(path.join(process.cwd(), 'styles/notificationHistory.css'), 'utf8')
+    expect(css).toMatch(/body\.mobile-portrait \.notification\s*\{[^}]*top:\s*calc\(var\(--safe-area-top\)\s*\+\s*64px\)/)
   })
 })
 

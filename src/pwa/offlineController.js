@@ -1,4 +1,13 @@
 import { uiText } from '../ui/uiText.js'
+import {
+  applyOfflineCacheSettings,
+  applyOfflineClearDialog,
+  clearOfflineAppCache,
+  createOfflineLongPress,
+  formatOfflineByteSize,
+  formatOfflineSettingsSize,
+  offlineClearCopy
+} from './offlineCacheClear.js'
 import { formatOfflineCacheTooltip, resolveOfflineCacheBytes } from './offlineCacheSize.js'
 import {
   getOfflineSnapshot,
@@ -138,6 +147,9 @@ export function startOfflineMode(options = {}) {
   let cacheReady = !import.meta.env.PROD
   let precachePercent = cacheReady ? 100 : 0
   let cacheBytes = null
+  let cacheCleared = false
+  let dialogPhase = null
+  let clearingCache = false
   let updateRegistration = null
   let applyingUpdate = false
   let stopped = false
@@ -152,8 +164,47 @@ export function startOfflineMode(options = {}) {
     multiplayerContent: win.document.getElementById('multiplayerContent'),
     multiplayerToggle: win.document.getElementById('multiplayerToggle'),
     shield: win.document.getElementById('multiplayerOfflineShield'),
-    updatePrompt: win.document.getElementById('offlineUpdatePrompt')
+    updatePrompt: win.document.getElementById('offlineUpdatePrompt'),
+    sectionTitle: win.document.querySelector('[data-offline-clear-title]'),
+    hint: win.document.querySelector('[data-offline-clear-hint]'),
+    size: win.document.getElementById('offlineCacheSizeText'),
+    clearButton: win.document.getElementById('offlineClearCacheButton'),
+    dialog: win.document.getElementById('offlineClearDialog'),
+    title: win.document.getElementById('offlineClearDialogTitle'),
+    body: win.document.getElementById('offlineClearDialogBody'),
+    warning: win.document.getElementById('offlineClearDialogWarning'),
+    confirm: win.document.getElementById('offlineClearConfirm'),
+    cancel: win.document.getElementById('offlineClearCancel'),
+    reload: win.document.getElementById('offlineClearReload')
   })
+
+  function cacheTooltip(copy, clearCopy) {
+    if (!cacheReady && !cacheCleared) {
+      return formatOfflineCacheTooltip({
+        ready: false,
+        percent: precachePercent,
+        preparingTemplate: copy.preparingTemplate,
+        readyTemplate: copy.readyTemplate
+      })
+    }
+    if (cacheBytes === 0 || (cacheCleared && !(cacheBytes > 0))) {
+      return String(clearCopy.emptyTooltip || '').replaceAll('{size}', formatOfflineByteSize(cacheBytes))
+    }
+    if (cacheBytes == null) {
+      return formatOfflineCacheTooltip({
+        ready: false,
+        percent: precachePercent,
+        preparingTemplate: copy.preparingTemplate,
+        readyTemplate: copy.readyTemplate
+      })
+    }
+    return formatOfflineCacheTooltip({
+      ready: true,
+      bytes: cacheBytes,
+      preparingTemplate: copy.preparingTemplate,
+      readyTemplate: copy.readyTemplate
+    })
+  }
 
   function publish() {
     const next = setOfflineSnapshot({
@@ -162,20 +213,34 @@ export function startOfflineMode(options = {}) {
       probeFailed
     })
     const copy = offlineModeCopy()
+    const clearCopy = offlineClearCopy()
     const view = {
       ...next,
       ...copy,
       cacheReady,
-      tooltip: formatOfflineCacheTooltip({
-        ready: cacheReady,
-        percent: precachePercent,
-        bytes: cacheBytes ?? 0,
-        preparingTemplate: copy.preparingTemplate,
-        readyTemplate: copy.readyTemplate
-      }),
+      tooltip: cacheTooltip(copy, clearCopy),
       updateAvailable: Boolean(updateRegistration?.waiting) && Boolean(win.navigator.serviceWorker?.controller) && !applyingUpdate
     }
     applyOfflineModeDom(elements(), view)
+    const sizeText = formatOfflineSettingsSize({
+      bytes: cacheBytes,
+      ready: cacheReady,
+      cleared: cacheCleared,
+      preparingText: view.tooltip,
+      copy: clearCopy
+    })
+    applyOfflineCacheSettings(elements(), {
+      ...clearCopy,
+      sizeText
+    })
+    const clearedSize = formatOfflineByteSize(cacheBytes)
+    applyOfflineClearDialog(elements(), {
+      ...clearCopy,
+      phase: dialogPhase,
+      offline: next.effective === true,
+      clearing: clearingCache,
+      clearedBody: String(clearCopy.clearedBody || '').replaceAll('{size}', clearedSize)
+    })
     return view
   }
 
@@ -218,22 +283,106 @@ export function startOfflineMode(options = {}) {
     publish()
   }
 
+  function openClearConfirm() {
+    if (dialogPhase === 'confirm' || clearingCache) return
+    dialogPhase = 'confirm'
+    publish()
+    elements().cancel?.focus()
+  }
+
+  async function confirmClear() {
+    if (clearingCache || dialogPhase !== 'confirm') return
+    clearingCache = true
+    publish()
+    try {
+      await clearOfflineAppCache({
+        cacheStorage: typeof caches !== 'undefined' ? caches : null,
+        serviceWorker: win.navigator?.serviceWorker
+      })
+      cacheCleared = true
+      cacheReady = true
+      precachePercent = 100
+      updateRegistration = null
+      dialogPhase = 'cleared'
+      await refreshBytes()
+      if (cacheBytes > 0) cacheCleared = false
+    } finally {
+      clearingCache = false
+      if (!stopped) publish()
+    }
+  }
+
+  function closeClearDialog() {
+    dialogPhase = null
+    publish()
+  }
+
   function bindUi() {
-    const { button, shield, updatePrompt } = elements()
+    const { button, shield, updatePrompt, clearButton, dialog, confirm, cancel, reload } = elements()
+    const longPress = createOfflineLongPress(openClearConfirm)
     if (button && button.dataset.offlineBound !== 'true') {
       button.dataset.offlineBound = 'true'
-      button.addEventListener('click', toggleForced)
+      button.addEventListener('click', (event) => {
+        if (longPress.consumeClick()) {
+          event.preventDefault()
+          return
+        }
+        toggleForced()
+      })
       button.addEventListener('pointerenter', () => {
         refreshBytes()
       })
       button.addEventListener('focus', () => {
         refreshBytes()
       })
+      button.addEventListener('contextmenu', (event) => {
+        event.preventDefault()
+        openClearConfirm()
+      })
       button.addEventListener('pointerdown', (event) => {
+        if (event.button != null && event.button !== 0) return
+        longPress.pointerDown(event)
         if (event.pointerType === 'mouse') return
         button.classList.add('is-touch-tip')
         if (tipTimer) clearTimeout(tipTimer)
         tipTimer = setTimeout(() => button.classList.remove('is-touch-tip'), 2500)
+      })
+      button.addEventListener('pointermove', (event) => longPress.pointerMove(event))
+      button.addEventListener('pointerup', () => longPress.pointerUp())
+      button.addEventListener('pointercancel', () => longPress.pointerUp())
+    }
+    if (clearButton && clearButton.dataset.offlineBound !== 'true') {
+      clearButton.dataset.offlineBound = 'true'
+      clearButton.addEventListener('click', () => openClearConfirm())
+    }
+    if (confirm && confirm.dataset.offlineBound !== 'true') {
+      confirm.dataset.offlineBound = 'true'
+      confirm.addEventListener('click', () => {
+        confirmClear()
+      })
+    }
+    if (cancel && cancel.dataset.offlineBound !== 'true') {
+      cancel.dataset.offlineBound = 'true'
+      cancel.addEventListener('click', closeClearDialog)
+    }
+    if (reload && reload.dataset.offlineBound !== 'true') {
+      reload.dataset.offlineBound = 'true'
+      reload.addEventListener('click', () => {
+        win.location.reload()
+      })
+    }
+    if (dialog && dialog.dataset.offlineBound !== 'true') {
+      dialog.dataset.offlineBound = 'true'
+      dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) closeClearDialog()
+      })
+    }
+    if (win.document.documentElement.dataset.offlineClearKeys !== 'true') {
+      win.document.documentElement.dataset.offlineClearKeys = 'true'
+      win.document.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape' || !dialogPhase) return
+        event.preventDefault()
+        closeClearDialog()
       })
     }
     if (shield && shield.dataset.offlineBound !== 'true') {
@@ -243,10 +392,10 @@ export function startOfflineMode(options = {}) {
         shield.classList.toggle('is-touch-tip')
       })
     }
-    const reload = updatePrompt?.querySelector('#offlineUpdateReload')
-    if (reload && reload.dataset.offlineBound !== 'true') {
-      reload.dataset.offlineBound = 'true'
-      reload.addEventListener('click', () => {
+    const updateReload = updatePrompt?.querySelector('#offlineUpdateReload')
+    if (updateReload && updateReload.dataset.offlineBound !== 'true') {
+      updateReload.dataset.offlineBound = 'true'
+      updateReload.addEventListener('click', () => {
         if (updateRegistration) applyWaitingWorker(updateRegistration, { userAccepted: true })
       })
     }
