@@ -1,4 +1,13 @@
 {
+  "offline": {
+    "online": "Online",
+    "offline": "Offline",
+    "toggleLabel": "Offline mode",
+    "preparing": "Preparing offline cache… {percent}%",
+    "ready": "Offline ready, {size} cached",
+    "multiplayerDisabled": "Multiplayer is not available in offline mode!",
+    "updateAvailable": "Update available – reload"
+  },
   "settings": {
     "benchmark": {
       "label": "Performance benchmark",

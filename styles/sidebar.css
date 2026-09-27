@@ -1836,3 +1836,79 @@ body.save-game-editor-open { overflow: hidden; }
 .sidebar-landing-link:hover {
   text-decoration: underline;
 }
+
+.offline-sidebar-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #ffb020;
+  background: rgba(12, 18, 24, 0.92);
+  color: #ffe7c2;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  flex: 0 0 auto;
+}
+
+.offline-sidebar-status__light {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffb020;
+  box-shadow: 0 0 8px #ffb020;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+
+.offline-sidebar-status[hidden] {
+  display: none !important;
+}
+
+.multiplayer-settings--offline {
+  position: relative;
+}
+
+.multiplayer-settings--offline:hover,
+.multiplayer-settings--offline:focus-within,
+.multiplayer-settings--offline:has(.is-touch-tip) {
+  z-index: 6;
+}
+
+.multiplayer-offline-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.multiplayer-offline-shield[hidden] {
+  display: none !important;
+}
+
+.multiplayer-offline-shield__tip {
+  display: none;
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: calc(100% + 6px);
+  z-index: 4;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #ffb020;
+  background: rgba(12, 18, 24, 0.96);
+  color: #ffe7c2;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.multiplayer-offline-shield:hover .multiplayer-offline-shield__tip,
+.multiplayer-offline-shield:focus .multiplayer-offline-shield__tip,
+.multiplayer-offline-shield:focus-visible .multiplayer-offline-shield__tip,
+.multiplayer-offline-shield.is-touch-tip .multiplayer-offline-shield__tip {
+  display: block;
+}

@@ -1,4 +1,13 @@
 {
+  "offline": {
+    "online": "Online",
+    "offline": "Offline",
+    "toggleLabel": "Offlinemodus",
+    "preparing": "Offline-Cache wird vorbereitet… {percent}%",
+    "ready": "Offline bereit, {size} im Cache",
+    "multiplayerDisabled": "Mehrspieler ist im Offlinemodus nicht verfügbar!",
+    "updateAvailable": "Update verfügbar – neu laden"
+  },
   "settings": {
     "benchmark": {
       "label": "Leistungsbenchmark",

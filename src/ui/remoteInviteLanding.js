@@ -7,6 +7,8 @@ import { showHostNotification } from '../network/hostNotifications.js'
 import { ensureMultiplayerState, generateRandomId } from '../network/multiplayerStore.js'
 import { getStoredPlayerAlias, setStoredPlayerAlias } from './sidebarMultiplayer.js'
 import { runWithLoadingScreen } from './loadingScreen.js'
+import { isEffectivelyOffline } from '../pwa/offlineState.js'
+import { uiText } from './uiText.js'
 
 const STATUS_MESSAGES = {
   [RemoteConnectionStatus.IDLE]: 'Awaiting alias submission.',
@@ -507,6 +509,11 @@ export function initRemoteInviteLanding() {
   tokenText.textContent = inviteToken
   showOverlay(overlay, statusElement)
 
+  if (isEffectivelyOffline()) {
+    updateStatus(statusElement, uiText('offline.multiplayerDisabled'), true)
+    submitButton.disabled = true
+  }
+
   // Pre-fill alias from persisted browser storage if available
   const storedAlias = getStoredPlayerAlias()
   if (storedAlias) {
@@ -674,6 +681,12 @@ export function initRemoteInviteLanding() {
     if (!alias) {
       updateStatus(statusElement, 'Alias is required to join.', true)
       aliasInput.focus()
+      return
+    }
+
+    if (isEffectivelyOffline()) {
+      updateStatus(statusElement, uiText('offline.multiplayerDisabled'), true)
+      setFormDisabled(false)
       return
     }
 

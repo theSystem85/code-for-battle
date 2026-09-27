@@ -1,4 +1,5 @@
 import { getProviderSettings } from './llmSettings.js'
+import { isEffectivelyOffline } from '../pwa/offlineState.js'
 
 const LOCAL_COSTS_URL = '/data/llm-costs.json'
 
@@ -218,6 +219,9 @@ export async function requestLlmCompletion(providerId, {
   promptBudget = null,
   resetContextReason = null
 }) {
+  if (isEffectivelyOffline()) {
+    throw new Error('LLM requests are skipped while the game is offline')
+  }
   const settings = getProviderSettings(providerId)
   if (!settings) {
     throw new Error(`Unknown provider: ${providerId}`)

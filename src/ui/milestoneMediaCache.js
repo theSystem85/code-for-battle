@@ -1,6 +1,8 @@
 // Hidden preload cache for milestone mp4/mp3 pairs.
 // Creating these elements must not start playback or mark a video as current.
 
+import { isEffectivelyOffline } from '../pwa/offlineState.js'
+
 export const MILESTONE_VIDEO_FADE_MS = 220
 
 const UNIT_VIDEO_MILESTONES = Object.freeze({
@@ -93,7 +95,8 @@ export function preloadMilestoneMedia(baseFilename) {
     audio: null,
     audioFailed: false
   }
-  if (browserCanPreloadMilestoneMedia()) {
+  const skipVideo = isEffectivelyOffline()
+  if (!skipVideo && browserCanPreloadMilestoneMedia()) {
     try {
       const video = document.createElement('video')
       video.muted = true
@@ -118,6 +121,19 @@ export function preloadMilestoneMedia(baseFilename) {
       entry.audio = audio
     } catch {
       entry.video = null
+      entry.audio = null
+    }
+  } else if (skipVideo && typeof document !== 'undefined') {
+    try {
+      const audio = document.createElement('audio')
+      audio.preload = 'auto'
+      audio.addEventListener('error', () => {
+        entry.audioFailed = true
+      })
+      audio.src = `video/${baseFilename}.mp3`
+      audio.load()
+      entry.audio = audio
+    } catch {
       entry.audio = null
     }
   }

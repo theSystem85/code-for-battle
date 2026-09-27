@@ -2,7 +2,13 @@ import { existsSync, mkdirSync, renameSync, rmSync } from 'fs'
 import { resolve, dirname } from 'path'
 import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
 import { LANDING_BUILD_MOVES, rewriteLandingUrl } from './src/landing/routes.js'
+import {
+  PRECACHE_GLOB_IGNORES,
+  PRECACHE_GLOB_PATTERNS,
+  PRECACHE_MAX_FILE_BYTES
+} from './src/pwa/precachePolicy.js'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const LEGAL_ENTRY_DIR = resolve(__dirname, 'src/legal')
@@ -90,7 +96,28 @@ const legalRoutePlugin = {
 
 export default defineConfig({
   appType: 'mpa',
-  plugins: [legalRoutePlugin],
+  plugins: [
+    legalRoutePlugin,
+    VitePWA({
+      strategies: 'injectManifest',
+      srcDir: 'src/pwa',
+      filename: 'sw.js',
+      injectRegister: false,
+      manifest: false,
+      registerType: 'prompt',
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: PRECACHE_MAX_FILE_BYTES,
+        globPatterns: [...PRECACHE_GLOB_PATTERNS],
+        globIgnores: [...PRECACHE_GLOB_IGNORES]
+      },
+      integration: {
+        closeBundleOrder: 'post'
+      },
+      devOptions: {
+        enabled: false
+      }
+    })
+  ],
   build: {
     rollupOptions: {
       input: {

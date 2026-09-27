@@ -926,6 +926,11 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Add a persistent "lastGame" autosave that runs every minute, saves immediately on** — pause, and automatically reloads after iOS/PWA resumes from a killed paused session.
   - Spec: none
 
+### Platform
+
+- [x] **Full offline mode** — Precache the single-player shell with Workbox, show a top-left offline toggle and a sidebar indicator, disable multiplayer with a hint, skip milestone videos while keeping narrator audio, and prompt before reloading for a deployed update.
+  - Spec: [Offline mode](../specs/095-offline-mode.md)
+
 ### Tooling and CI
 
 - [x] **Playwright E2E Testing** — Setup Playwright for end-to-end browser testing with real user interactions.

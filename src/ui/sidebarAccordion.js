@@ -41,6 +41,7 @@ export function bindSidebarAccordionToggle(toggle) {
 
   toggle.dataset.sidebarAccordionBound = 'true'
   toggle.addEventListener('click', () => {
+    if (toggle.closest('.multiplayer-settings--offline')) return
     const nextOpen = !isSidebarAccordionOpen(content)
     setSidebarAccordionOpen(toggle, content, icon, nextOpen)
     if (nextOpen) {
