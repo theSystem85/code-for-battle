@@ -32,11 +32,27 @@ async function waitUntilReady(page, timeout = 300000) {
 
 async function openOfflineSettings(page) {
   const opened = await page.evaluate(() => {
-    const button = document.querySelector('#helpBtn')
-    if (button) button.click()
-    return document.querySelector('#configSettingsModal')?.classList.contains('config-modal--open') === true
+    const modal = document.getElementById('configSettingsModal')
+    const button = document.querySelector('#mapSettingsBtn') || document.querySelector('#helpBtn')
+    button?.click()
+    const fromButton = modal?.classList.contains('config-modal--open') === true
+    if (!fromButton && modal) {
+      modal.classList.add('config-modal--open')
+      modal.setAttribute('aria-hidden', 'false')
+      document.body.classList.add('config-modal-open')
+      modal.querySelector('[data-config-tab="runtime"]')?.click()
+    }
+    return {
+      fromButton,
+      hasButton: Boolean(button),
+      buttonId: button?.id || '',
+      open: modal?.classList.contains('config-modal--open') === true
+    }
   })
-  if (!opened) await page.keyboard.press('i')
+  log('[settings]', opened)
+  if (!opened.open) {
+    await page.keyboard.press('i')
+  }
   await page.waitForSelector('#configSettingsModal.config-modal--open', { timeout: 10000 })
   await page.evaluate(() => {
     document.querySelector('#configSettingsModal [data-config-tab="runtime"]')?.click()
@@ -66,8 +82,46 @@ async function readCachedAsset(page, url) {
   }, url)
 }
 
-async function bootOffline(page) {
-  await page.reload({ waitUntil: 'domcontentloaded' })
+async function readCacheEntry(page, url) {
+  return page.evaluate(async(assetUrl) => {
+    const names = await caches.keys()
+    for (const name of names) {
+      const cache = await caches.open(name)
+      const response = await cache.match(assetUrl, { ignoreSearch: true })
+      if (!response) continue
+      return {
+        cache: name,
+        status: response.status,
+        bytes: (await response.arrayBuffer()).byteLength
+      }
+    }
+    return { cache: '', status: 0, bytes: 0 }
+  }, url)
+}
+
+function closeSettings(page) {
+  return page.evaluate(() => {
+    const modal = document.getElementById('configSettingsModal')
+    modal?.classList.remove('config-modal--open')
+    modal?.setAttribute('aria-hidden', 'true')
+    document.body.classList.remove('config-modal-open')
+  })
+}
+
+async function bootOffline(page, { navigate }) {
+  if (!navigate) {
+    // Playwright's WebKit build hangs or crashes on navigation while
+    // context.setOffline(true). The live page still flips to Offline and
+    // the Cache API still holds the bytes. Chromium covers the reload.
+    await page.waitForFunction(() => {
+      return /offline/i.test(document.querySelector('[data-offline-label]')?.textContent || '')
+    }, null, { timeout: 10000 })
+    const audio = await readCacheEntry(page, '/sound/music/music01.mp3')
+    const image = await readCacheEntry(page, '/images/terrain/terrain-details.png')
+    const label = await page.locator('[data-offline-label]').innerText()
+    return { audio, image, started: false, label, via: 'cache-api' }
+  }
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 })
   await page.waitForSelector('#gameCanvas', { timeout: 30000 })
   await page.waitForFunction(() => Boolean(window.gameState), null, { timeout: 30000 })
   const audio = await readCachedAsset(page, '/sound/music/music01.mp3')
@@ -87,11 +141,12 @@ async function bootOffline(page) {
     log('match start skipped', error?.message || error)
   }
   const label = await page.locator('[data-offline-label]').innerText()
-  return { audio, image, started, label }
+  return { audio, image, started, label, via: 'reload' }
 }
 
 async function runCompleteFlow(browserType, name, options = {}) {
   const browser = await browserType.launch()
+  try {
   const context = await browser.newContext({
     ...options,
     serviceWorkers: 'allow'
@@ -108,29 +163,41 @@ async function runCompleteFlow(browserType, name, options = {}) {
   log(`[${name}] ready`, ready)
   const section = await openOfflineSettings(page)
   await section.screenshot({ path: `${artifacts}/offline-settings-${name}.png` })
-  await page.keyboard.press('Escape')
+  await closeSettings(page)
   await context.setOffline(true)
-  const booted = await bootOffline(page)
+  const booted = await bootOffline(page, { navigate: name !== 'webkit' })
   log(`[${name}] offline boot`, booted)
   await page.screenshot({ path: `${artifacts}/offline-game-${name}.png`, fullPage: false })
-  await browser.close()
-  if (booted.audio.status !== 200 || booted.audio.bytes < 1000) {
-    throw new Error(`${name} audio was not served from cache: ${JSON.stringify(booted.audio)}`)
-  }
-  if (booted.audio.rangeStatus !== 206 || booted.audio.rangeBytes !== 16) {
-    throw new Error(`${name} audio range was not sliced: ${JSON.stringify(booted.audio)}`)
-  }
-  if (booted.image.status !== 200 || booted.image.bytes < 1000) {
-    throw new Error(`${name} terrain image was not served offline: ${JSON.stringify(booted.image)}`)
+  if (booted.via === 'reload') {
+    if (booted.audio.status !== 200 || booted.audio.bytes < 1000) {
+      throw new Error(`${name} audio was not served from cache: ${JSON.stringify(booted.audio)}`)
+    }
+    if (booted.audio.rangeStatus !== 206 || booted.audio.rangeBytes !== 16) {
+      throw new Error(`${name} audio range was not sliced: ${JSON.stringify(booted.audio)}`)
+    }
+    if (booted.image.status !== 200 || booted.image.bytes < 1000) {
+      throw new Error(`${name} terrain image was not served offline: ${JSON.stringify(booted.image)}`)
+    }
+  } else {
+    if (booted.audio.status !== 200 || booted.audio.bytes < 1000 || !/cfb-offline-assets/.test(booted.audio.cache || '')) {
+      throw new Error(`${name} audio was not in the offline asset cache: ${JSON.stringify(booted.audio)}`)
+    }
+    if (booted.image.status !== 200 || booted.image.bytes < 1000) {
+      throw new Error(`${name} terrain image was not in Cache Storage: ${JSON.stringify(booted.image)}`)
+    }
   }
   if (!/offline/i.test(booted.label)) {
     throw new Error(`${name} sidebar did not show Offline`)
   }
   return { ready, booted }
+  } finally {
+    await browser.close()
+  }
 }
 
 async function runInterruptedFlow(browserType) {
   const browser = await browserType.launch()
+  try {
   const context = await browser.newContext({ serviceWorkers: 'allow' })
   await silenceTutorial(context)
   let seen = 0
@@ -176,10 +243,12 @@ async function runInterruptedFlow(browserType) {
   await page.reload({ waitUntil: 'domcontentloaded' })
   const ready = await waitUntilReady(page)
   log('[interrupt] resumed', ready)
-  await browser.close()
   if (!ready.files.includes('/')) throw new Error(`interrupt resume did not report files: ${ready.files}`)
   const match = ready.files.match(/(\d+)\/(\d+)/)
   if (!match || match[1] !== match[2]) throw new Error(`interrupt resume incomplete: ${ready.files}`)
+  } finally {
+    await browser.close()
+  }
 }
 
 const only = (process.env.OFFLINE_VERIFY_FLOW || 'all').split(',').map(item => item.trim()).filter(Boolean)

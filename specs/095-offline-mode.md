@@ -92,7 +92,7 @@ The boot shell is what Workbox precaches. The offline-asset manifest adds the re
 Production check, from a built `dist` served by `vite preview`, in Chromium and WebKit:
 
 1. Load once online and wait until Settings → Offline and the sidebar button report the real size and `done/total` with `data-offline-ready="true"`.
-2. `context.setOffline(true)`, reload, and confirm the shell boots (`#gameCanvas`, `gameState`), a bulk asset and an audio Range request are served from the cache, the sidebar toggle shows Offline, and Multiplayer shows the custom hint.
+2. `context.setOffline(true)`, reload, and confirm the shell boots (`#gameCanvas`, `gameState`), a bulk asset and an audio Range request are served from the cache, the sidebar toggle shows Offline, and Multiplayer shows the custom hint. Playwright's bundled WebKit hangs or crashes on that offline navigation, so the phone run checks the completed cache, the Offline label, and the Cache Storage bytes instead. Chromium performs the reload. A real iPhone relaunch is still required.
 3. Interrupt the fill (abort bulk requests or drop offline after some files land), reload, restore the network, and confirm the loop skips what is already cached and reaches the full count.
 4. Go online and toggle forced offline before the count is complete. The tooltip and Settings warn that the download is incomplete.
 5. Build a second worker (append a comment to `dist/sw.js`), call `registration.update()`, and confirm the reload prompt appears without an automatic reload while a battle is running. Accepting it reloads onto the new worker.
