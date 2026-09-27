@@ -6,6 +6,11 @@ import {
   releaseStoredInviteCode,
   resolveStoredInviteCode
 } from '../../src/network/inviteCodes.js'
+import {
+  adaptNetlifyBlobStore,
+  handleMultiplayerStatsRequest,
+  statsRoute
+} from '../../src/network/multiplayerStats.js'
 
 // Session storage using Netlify Blobs
 // Uses separate keys for offer, answer, and candidates to avoid race conditions
@@ -156,6 +161,19 @@ export default async(request, _context) => {
 
   try {
     const store = await getSessionStore()
+
+    if (statsRoute(path)) {
+      const env = {
+        UPSTASH_REDIS_REST_URL: readFunctionEnv('UPSTASH_REDIS_REST_URL') || process.env.UPSTASH_REDIS_REST_URL || '',
+        UPSTASH_REDIS_REST_TOKEN: readFunctionEnv('UPSTASH_REDIS_REST_TOKEN') || process.env.UPSTASH_REDIS_REST_TOKEN || ''
+      }
+      return handleMultiplayerStatsRequest(request, {
+        env,
+        blobs: adaptNetlifyBlobStore(store),
+        fetchImpl: fetch,
+        now: () => Date.now()
+      })
+    }
 
     // POST /signalling/offer
     if (path === '/signalling/offer' && method === 'POST') {

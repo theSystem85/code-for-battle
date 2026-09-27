@@ -80,6 +80,13 @@ Set these variables for Netlify Functions (production, deploy previews, and bran
 - Or, instead of `TURN_SECRET`, set `TURN_USERNAME` and `TURN_CREDENTIAL` for a provider that issues a username and password.
 - Optional build-time fallback, only if the ice-servers request fails: `VITE_ICE_SERVERS` (same JSON as `ICE_SERVERS`), or `VITE_TURN_URLS` plus `VITE_TURN_USERNAME` and `VITE_TURN_CREDENTIAL`.
 
+Player counts and Quick match use the same Functions scope:
+
+- `UPSTASH_REDIS_REST_URL` — Upstash Redis REST URL. The presence edge function reads it with `Netlify.env.get`.
+- `UPSTASH_REDIS_REST_TOKEN` — Upstash Redis REST token. Do not put either value in a `VITE_*` variable.
+
+In the Netlify UI: Site configuration → Environment variables → scope **Functions** (production, deploy previews, and branch deploys), same as `ICE_SERVERS` and `TURN_*`. `POST /api/presence` and `POST /api/quick-match` run as edge functions and talk to Upstash over HTTPS. Heartbeats store only an anonymous session id, a status, and a timestamp. If either Upstash variable is missing, the edge function forwards that request to the serverless function, which keeps approximate counts in Netlify Blobs (`onlyIfNew` for Quick match claims) so previews and local dev still work. `npm run stun` uses the same rules in memory when those variables are unset. Cross-network play still needs the TURN variables above. Same-computer Quick match can connect with public STUN.
+
 The browser asks `GET /api/signalling/ice-servers` when a peer connection starts. Function logs record candidate type (`host`, `srflx`, `relay`, mDNS) without player names, IP addresses, usernames, or credentials. A join that only gathered mDNS host candidates and `relay: 0` cannot reach another device until TURN is configured. The phone's join screen shows the ICE state (`ICE checking`, `ICE failed`) and the failure reason.
 
 ### TURN providers

@@ -21,6 +21,9 @@ import { createQRCodeCanvas } from './qrCode.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
 import { getStoredItem, removeStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
 import { isEffectivelyOffline } from '../pwa/offlineState.js'
+import { getOpenHostListing, setOpenHostListing, subscribeOpenHostListing } from '../network/openHostListing.js'
+import { presenceSnapshotFromState } from '../network/presenceClient.js'
+import { bindMultiplayerTurnTip, initMultiplayerPresenceUi, notifyPresenceChange } from './multiplayerPresenceUi.js'
 
 const PARTY_LIST_ID = 'multiplayerPartyList'
 const PLAYER_ALIAS_STORAGE_KEY = 'rts-player-alias'
@@ -452,6 +455,8 @@ export function initSidebarMultiplayer() {
   setupAliasInput()
   setupJoinInviteLinkInput()
   setupQrScanner()
+  setupOpenHostListing()
+  initMultiplayerPresenceUi()
   if (!llmModelPoolListenerBound && typeof document !== 'undefined') {
     document.addEventListener('llmModelPoolChanged', () => {
       refreshSidebarMultiplayer()
@@ -945,6 +950,16 @@ function getOrCreateQRModal() {
             <button type="button" class="multiplayer-qr-modal__copy-btn">Copy</button>
           </div>
         </div>
+        <label class="multiplayer-open-host">
+          <input type="checkbox" class="multiplayer-open-host__input">
+          <span>
+            <span class="multiplayer-open-host__text"></span>
+            <span class="multiplayer-open-host__hint"></span>
+          </span>
+        </label>
+        <p class="multiplayer-turn-note">
+          <button type="button" class="multiplayer-turn-note__button multiplayer-qr-modal__turn"></button>
+        </p>
       </div>
     </div>
   `
@@ -955,6 +970,22 @@ function getOrCreateQRModal() {
 
   backdrop.addEventListener('click', hideQRCodeModal)
   closeBtn.addEventListener('click', hideQRCodeModal)
+  const openHostInput = qrModal.querySelector('.multiplayer-open-host__input')
+  openHostInput?.addEventListener('change', () => {
+    const party = listPartyStates().find(entry => entry.partyId === qrModal.dataset.partyId)
+    if (!openHostInput.checked || !party?.inviteToken || openHostInput.disabled) {
+      setOpenHostListing({ enabled: false })
+      notifyPresenceChange()
+      return
+    }
+    setOpenHostListing({
+      enabled: true,
+      partyId: party.partyId,
+      inviteToken: party.inviteToken
+    })
+    notifyPresenceChange()
+  })
+  bindMultiplayerTurnTip(qrModal.querySelector('.multiplayer-qr-modal__turn'))
   qrModal.querySelectorAll('.multiplayer-qr-modal__copy-btn').forEach((copyBtn) => {
     copyBtn.addEventListener('click', async() => {
       const field = copyBtn.parentElement?.querySelector('input')
@@ -1028,6 +1059,8 @@ function showQRCodeModal(partyState, inviteUrl) {
   if (codeField) {
     codeField.hidden = !inviteCode
   }
+  modal.dataset.partyId = partyState.partyId
+  syncOpenHostToggle(partyState)
   modal.querySelectorAll('.multiplayer-qr-modal__copy-btn').forEach((copyBtn) => {
     copyBtn.textContent = uiText('multiplayer.copy')
   })
@@ -1044,6 +1077,72 @@ function showQRCodeModal(partyState, inviteUrl) {
   // Focus close button for accessibility
   const closeBtn = modal.querySelector('.multiplayer-qr-modal__close')
   closeBtn.focus()
+}
+
+function findFirstFreeParty() {
+  const localPartyId = getLocalPartyId()
+  return listPartyStates().find(party => (
+    party.partyId !== localPartyId
+    && party.aiActive !== false
+    && (party.owner === 'AI' || !party.owner)
+  )) || null
+}
+
+function syncOpenHostToggle(partyState) {
+  if (!qrModal) return
+  const input = qrModal.querySelector('.multiplayer-open-host__input')
+  const text = qrModal.querySelector('.multiplayer-open-host__text')
+  const hint = qrModal.querySelector('.multiplayer-open-host__hint')
+  const turn = qrModal.querySelector('.multiplayer-qr-modal__turn')
+  if (text) text.textContent = uiText('multiplayer.lookingForPlayers')
+  if (hint) hint.textContent = uiText('multiplayer.lookingForPlayersHint')
+  if (turn) turn.textContent = uiText('multiplayer.turnNote')
+  const listing = getOpenHostListing()
+  const snapshot = presenceSnapshotFromState(gameState, { listing, searching: false })
+  if (!input) return
+  input.checked = listing.enabled === true && listing.partyId === partyState?.partyId
+  input.disabled = isEffectivelyOffline() || snapshot.matchLive === true || snapshot.gameOver === true
+}
+
+async function becomeOpenHost() {
+  if (isEffectivelyOffline()) return
+  const party = findFirstFreeParty()
+  const status = document.getElementById('quickMatchStatus')
+  if (!party) {
+    if (status) status.textContent = uiText('multiplayer.noFreeSlot')
+    return
+  }
+  try {
+    if (!party.inviteToken) {
+      await generateInviteForParty(party.partyId)
+    }
+    if (!party.shortCode) {
+      party.shortCode = await ensureInviteShortCode(party.partyId)
+    }
+    const inviteUrl = buildInviteUrl(party.inviteToken)
+    watchHostInvite({ partyId: party.partyId, inviteToken: party.inviteToken })
+    showQRCodeModal(party, inviteUrl)
+    setOpenHostListing({
+      enabled: true,
+      partyId: party.partyId,
+      inviteToken: party.inviteToken
+    })
+    syncOpenHostToggle(party)
+    notifyPresenceChange()
+  } catch (error) {
+    if (status) status.textContent = uiText('multiplayer.quickMatchError')
+    showHostNotification(`Invite creation failed: ${error?.message || 'unknown error'}`)
+  }
+}
+
+function setupOpenHostListing() {
+  document.addEventListener('cfb-become-open-host', () => {
+    void becomeOpenHost()
+  })
+  subscribeOpenHostListing(() => {
+    const party = listPartyStates().find(entry => entry.partyId === qrModal?.dataset.partyId)
+    if (party) syncOpenHostToggle(party)
+  })
 }
 
 /**

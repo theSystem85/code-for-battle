@@ -9,6 +9,7 @@ import {
   releaseStoredInviteCode,
   resolveStoredInviteCode
 } from '../src/network/inviteCodes.js'
+import { createMemoryStatsDb, handleMultiplayerStatsRequest } from '../src/network/multiplayerStats.js'
 
 const PORT = process.env.STUN_PORT ?? 3333
 const app = express()
@@ -17,6 +18,40 @@ app.use(express.json())
 
 const sessions = new Map()
 const inviteCodes = createMemoryInviteCodeStorage()
+const statsMemory = createMemoryStatsDb()
+
+async function handleStats(req, res, path) {
+  const request = new Request(`http://localhost${path}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req.body || {})
+  })
+  const response = await handleMultiplayerStatsRequest(request, {
+    env: process.env,
+    memory: statsMemory,
+    fetchImpl: fetch,
+    now: () => Date.now()
+  })
+  const text = await response.text()
+  res.status(response.status)
+  const retryAfter = response.headers.get('Retry-After')
+  if (retryAfter) res.setHeader('Retry-After', retryAfter)
+  res.type('application/json').send(text || '{}')
+}
+
+app.post('/presence', (req, res) => {
+  handleStats(req, res, '/presence').catch(error => {
+    console.error('presence failed', error)
+    res.status(500).json({ error: 'unavailable' })
+  })
+})
+
+app.post('/quick-match', (req, res) => {
+  handleStats(req, res, '/quick-match').catch(error => {
+    console.error('quick-match failed', error)
+    res.status(500).json({ error: 'unavailable' })
+  })
+})
 
 const sessionKey = (inviteToken, peerId) => `${inviteToken}-${peerId}`
 

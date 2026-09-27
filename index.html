@@ -699,6 +699,15 @@
         </button>
         <div id="multiplayerContent" class="sidebar-accordion__content">
         <div class="sidebar-accordion__body">
+        <p id="multiplayerPresenceLine" class="multiplayer-presence" hidden aria-live="polite"></p>
+        <div class="multiplayer-quick-match">
+          <button type="button" id="quickMatchBtn" class="multiplayer-invite-button">Quick match</button>
+          <button type="button" id="becomeOpenHostBtn" class="multiplayer-invite-button" hidden>Host an open match</button>
+          <span id="quickMatchStatus" class="multiplayer-join-status" aria-live="polite"></span>
+          <p class="multiplayer-turn-note">
+            <button type="button" id="multiplayerTurnTipButton" class="multiplayer-turn-note__button">Cross-network play still needs TURN.</button>
+          </p>
+        </div>
         <div class="sidebar-form-row">
           <div class="floating-label-input">
             <input type="number" class="sidebar-input" id="playerCount" min="2" max="4" value="4" placeholder=" ">
@@ -1044,6 +1053,7 @@
   <div id="gamepadRemoteIndicator" class="gamepad-remote" hidden><i class="gamepad-light"></i><span data-gamepad-remote-label></span></div>
   <div id="offlineModeTip" class="offline-mode-tip" role="tooltip" hidden></div>
   <div id="multiplayerOfflineTip" class="offline-mode-tip offline-mode-tip--warn" role="tooltip" hidden></div>
+  <div id="multiplayerTurnTip" class="offline-mode-tip" role="tooltip" hidden></div>
   <div id="offlineUpdatePrompt" class="offline-update-prompt" hidden>
     <button id="offlineUpdateReload" class="offline-update-prompt__button" type="button" data-offline-update-label>Update available – reload</button>
   </div>
