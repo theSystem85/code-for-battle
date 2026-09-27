@@ -5,8 +5,13 @@ import {
   composeInviteToken,
   parsePartyIdFromToken,
   buildInviteUrl,
-  humanReadablePartyLabel
+  humanReadablePartyLabel,
+  classifyInviteInput,
+  isInviteCode,
+  parseInviteInput
 } from '../../src/network/invites.js'
+
+const INVITE_CODE = '11111111-2222-4333-8444-555555555555-player2-1710000000000'
 
 describe('invites.js', () => {
   beforeEach(() => {
@@ -128,6 +133,98 @@ describe('invites.js', () => {
       const fullToken = composeInviteToken('myGame', 'player2')
       const url = buildInviteUrl(fullToken)
       expect(url).toContain(fullToken)
+    })
+  })
+
+  describe('parseInviteInput', () => {
+    const origins = [
+      'https://code-for-battle.netlify.app',
+      'https://deploy-preview-42--code-for-battle.netlify.app',
+      'http://localhost:5173',
+      'http://127.0.0.1:4173',
+      'https://example.com/play'
+    ]
+
+    it.each(origins)('reads the invite query from %s', (origin) => {
+      expect(parseInviteInput(`${origin}?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`${origin}/?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+    })
+
+    it('accepts a trailing slash on the path or on the code', () => {
+      expect(parseInviteInput(`https://code-for-battle.netlify.app/?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`https://code-for-battle.netlify.app/play/?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`https://localhost:5173/?invite=${INVITE_CODE}/`)).toBe(INVITE_CODE)
+    })
+
+    it('ignores extra query parameters and a hash fragment', () => {
+      const url = `https://deploy-preview-7--code-for-battle.netlify.app/?utm=mail&invite=${INVITE_CODE}&ref=1#lobby`
+      expect(parseInviteInput(url)).toBe(INVITE_CODE)
+    })
+
+    it('reads an invite code carried only in the hash', () => {
+      expect(parseInviteInput(`https://code-for-battle.netlify.app/#invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`https://code-for-battle.netlify.app/#/?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`https://code-for-battle.netlify.app/?utm=1#invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+    })
+
+    it('prefers the query code when the hash also has an invite', () => {
+      const other = 'aaaaaaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee-player3-1710000000001'
+      expect(parseInviteInput(`https://example.com/?invite=${INVITE_CODE}#invite=${other}`)).toBe(INVITE_CODE)
+    })
+
+    it('accepts a URL without a protocol and a path-only invite', () => {
+      expect(parseInviteInput(`code-for-battle.netlify.app/?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`localhost:5173/?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`/?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`?invite=${INVITE_CODE}`)).toBe(INVITE_CODE)
+    })
+
+    it('accepts a bare invite code', () => {
+      expect(parseInviteInput(INVITE_CODE)).toBe(INVITE_CODE)
+      expect(isInviteCode(INVITE_CODE)).toBe(true)
+    })
+
+    it('trims surrounding whitespace and wrapping quotes', () => {
+      expect(parseInviteInput(`  \n${INVITE_CODE}\t`)).toBe(INVITE_CODE)
+      expect(parseInviteInput(`  "https://example.com/?invite=${INVITE_CODE}"  `)).toBe(INVITE_CODE)
+    })
+
+    it('returns the same code from a full URL and from the code alone', () => {
+      const token = composeInviteToken('game-instance', 'player1')
+      expect(parseInviteInput(token)).toBe(token)
+      expect(parseInviteInput(buildInviteUrl(token))).toBe(token)
+      expect(parseInviteInput(`  ${buildInviteUrl(token)}  `)).toBe(token)
+    })
+
+    it('accepts a short code with any case, spaces, or dashes', () => {
+      expect(classifyInviteInput('ABCDEF')).toEqual({ kind: 'short', code: 'ABCDEF' })
+      expect(classifyInviteInput('  abc-def  ')).toEqual({ kind: 'short', code: 'ABCDEF' })
+      expect(classifyInviteInput('ab c def')).toEqual({ kind: 'short', code: 'ABCDEF' })
+      expect(classifyInviteInput('K7M–Q4P')).toEqual({ kind: 'short', code: 'K7MQ4P' })
+      expect(parseInviteInput('ABCDEF')).toBeNull()
+    })
+
+    it('keeps a full link and a long bare token on the token path', () => {
+      expect(classifyInviteInput(`https://example.com/?invite=${INVITE_CODE}`)).toEqual({
+        kind: 'token',
+        token: INVITE_CODE
+      })
+      expect(classifyInviteInput(INVITE_CODE)).toEqual({ kind: 'token', token: INVITE_CODE })
+    })
+
+    it('rejects input that is neither an invite URL nor an invite code', () => {
+      expect(parseInviteInput('')).toBeNull()
+      expect(parseInviteInput('   ')).toBeNull()
+      expect(parseInviteInput('hello')).toBeNull()
+      expect(parseInviteInput('not a code')).toBeNull()
+      expect(parseInviteInput('player2')).toBeNull()
+      expect(parseInviteInput('https://code-for-battle.netlify.app/')).toBeNull()
+      expect(parseInviteInput('https://example.com/?foo=bar')).toBeNull()
+      expect(parseInviteInput('https://example.com/?invite=not-a-code')).toBeNull()
+      expect(parseInviteInput('https://example.com/#section')).toBeNull()
+      expect(parseInviteInput(null)).toBeNull()
+      expect(parseInviteInput(undefined)).toBeNull()
+      expect(parseInviteInput(1710000000000)).toBeNull()
     })
   })
 

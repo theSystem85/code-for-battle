@@ -94,6 +94,7 @@ beforeEach(() => {
   inviteMocks.buildInviteUrl.mockReturnValue('http://invite.local')
   inviteMocks.humanReadablePartyLabel.mockReturnValue('Green: AI')
   gameRandomMock.gameRandom.mockReturnValue(0.42)
+  globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline'))
 })
 
 afterEach(() => {
@@ -218,7 +219,10 @@ describe('multiplayerStore', () => {
     })
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
-      json: vi.fn().mockResolvedValue({ inviteToken: 'server-token' })
+      json: vi.fn().mockResolvedValue({
+        inviteToken: 'server-token',
+        shortCode: 'ABCDEF'
+      })
     })
     inviteMocks.buildInviteUrl.mockReturnValue('http://invite.local/server')
     inviteMocks.humanReadablePartyLabel.mockReturnValue('Red: AI')
@@ -230,11 +234,12 @@ describe('multiplayerStore', () => {
 
     const result = await generateInviteForParty('player2')
 
-    expect(result).toEqual({
+    expect(result).toMatchObject({
       token: 'server-token',
-      url: 'http://invite.local/server',
-      expiresAt: expect.any(Number)
+      shortCode: 'ABCDEF',
+      url: 'http://invite.local/server'
     })
+    expect(result.expiresAt).toBeGreaterThan(Date.now() - 1000)
     expect(inviteMocks.composeInviteToken).not.toHaveBeenCalled()
     expect(hostNotificationMocks.showHostNotification).toHaveBeenCalledWith(
       'Invite ready for Red: AI'
@@ -247,6 +252,62 @@ describe('multiplayerStore', () => {
     expect(record.hostId).toBeTruthy()
   })
 
+  it('does not publish a short code the signalling store cannot resolve', async() => {
+    resetGameStateMock({
+      gameInstanceId: 'instance-1',
+      hostId: 'host-1',
+      partyStates: []
+    })
+    globalThis.fetch = vi.fn(async(url) => {
+      if (String(url).includes('invite-regenerate')) {
+        return {
+          ok: true,
+          json: async() => ({ inviteToken: 'server-token', shortCode: 'ABCDEF' })
+        }
+      }
+      return { ok: false, status: 404, json: async() => ({ error: 'invite code not found' }) }
+    })
+
+    const { generateInviteForParty, ensureMultiplayerState } = await loadStore()
+    ensureMultiplayerState()
+    const result = await generateInviteForParty('player2')
+
+    expect(result.token).toBe('server-token')
+    expect(result.shortCode).toBeNull()
+    expect(result.url).toBe('http://invite.local')
+  })
+
+  it('registers a short code when regenerate returns only the long token', async() => {
+    resetGameStateMock({
+      gameInstanceId: 'instance-1',
+      hostId: 'host-1',
+      partyStates: []
+    })
+    globalThis.fetch = vi.fn(async(url, options = {}) => {
+      const href = String(url)
+      if (href.includes('invite-regenerate')) {
+        return { ok: true, json: async() => ({ inviteToken: 'server-token' }) }
+      }
+      if (options.method === 'POST') {
+        return {
+          ok: true,
+          json: async() => ({ inviteToken: 'server-token', shortCode: 'ABCDEF', expiresAt: Date.now() + 60000 })
+        }
+      }
+      return { ok: true, json: async() => ({ inviteToken: 'server-token', shortCode: 'ABCDEF' }) }
+    })
+
+    const { generateInviteForParty, ensureMultiplayerState } = await loadStore()
+    ensureMultiplayerState()
+    const result = await generateInviteForParty('player2')
+
+    expect(result.token).toBe('server-token')
+    expect(result.shortCode).toBe('ABCDEF')
+    const methods = globalThis.fetch.mock.calls.map((call) => [String(call[0]), call[1]?.method || 'GET'])
+    expect(methods.some(([url, method]) => url.includes('/signalling/invite-code') && method === 'POST')).toBe(true)
+    expect(methods.some(([url, method]) => url.includes('/signalling/invite-code/ABCDEF') && method === 'GET')).toBe(true)
+  })
+
   it('falls back to local invite tokens when server requests fail', async() => {
     // Initialize with 3 players so player3 exists
     resetGameStateMock({
@@ -255,6 +316,7 @@ describe('multiplayerStore', () => {
       partyStates: []
     })
 
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline'))
     const { ensureMultiplayerState, generateInviteForParty, validateInviteToken } = await loadStore()
 
     // Initialize multiplayer state first so player3 exists
@@ -264,6 +326,7 @@ describe('multiplayerStore', () => {
 
     expect(inviteMocks.composeInviteToken).toHaveBeenCalledTimes(1)
     expect(result.token).toBe('local-token')
+    expect(result.shortCode).toBeNull()
     expect(result.url).toBe('http://invite.local')
 
     const record = validateInviteToken('local-token')
@@ -328,6 +391,7 @@ describe('multiplayerStore', () => {
   })
 
   it('rebuilds invite tokens and resets multiplayer session on regeneration', async() => {
+    globalThis.fetch = vi.fn().mockRejectedValue(new Error('offline'))
     inviteMocks.composeInviteToken.mockImplementation((instanceId, partyId) => `${instanceId}-${partyId}-token`)
 
     const { regenerateAllInviteTokens, getPartyState } = await loadStore()

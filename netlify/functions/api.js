@@ -1,6 +1,11 @@
 import { getStore } from '@netlify/blobs'
 import { countCandidateSummaries, summarizeIceCandidate } from '../../src/network/iceSummary.js'
 import { buildIceServerPayload } from '../../src/network/turnCredentials.js'
+import {
+  issueStoredInviteCode,
+  releaseStoredInviteCode,
+  resolveStoredInviteCode
+} from '../../src/network/inviteCodes.js'
 
 // Session storage using Netlify Blobs
 // Uses separate keys for offer, answer, and candidates to avoid race conditions
@@ -24,6 +29,36 @@ async function getBlob(store, key) {
 
 async function setBlob(store, key, value) {
   await store.setJSON(key, value)
+}
+
+async function deleteBlob(store, key) {
+  if (typeof store.delete === 'function') {
+    await store.delete(key)
+  }
+}
+
+function blobInviteStorage(store) {
+  return {
+    async getCode(code) {
+      return getBlob(store, `invite-code:${code}`)
+    },
+    async setCode(record) {
+      await setBlob(store, `invite-code:${record.shortCode}`, record)
+    },
+    async deleteCode(code) {
+      await deleteBlob(store, `invite-code:${code}`)
+    },
+    async getParty(instanceId, partyId) {
+      const pointer = await getBlob(store, `invite-party:${instanceId}:${partyId}`)
+      return pointer?.shortCode || null
+    },
+    async setParty(instanceId, partyId, shortCode) {
+      await setBlob(store, `invite-party:${instanceId}:${partyId}`, { shortCode })
+    },
+    async deleteParty(instanceId, partyId) {
+      await deleteBlob(store, `invite-party:${instanceId}:${partyId}`)
+    }
+  }
 }
 
 function readFunctionEnv(name) {
@@ -335,6 +370,64 @@ export default async(request, _context) => {
       )
     }
 
+    const inviteCodeMatch = path.match(/^\/signalling\/invite-code\/([^/]+)$/)
+    if (inviteCodeMatch && method === 'GET') {
+      const record = await resolveStoredInviteCode(
+        blobInviteStorage(store),
+        decodeURIComponent(inviteCodeMatch[1])
+      )
+      if (!record) {
+        return new Response(
+          JSON.stringify({ error: 'invite code not found' }),
+          { status: 404, headers: corsHeaders }
+        )
+      }
+      logSignalling('invite-code', { inviteSuffix: String(record.inviteToken).slice(-8) })
+      return new Response(
+        JSON.stringify({
+          inviteToken: record.inviteToken,
+          shortCode: record.shortCode,
+          expiresAt: record.expiresAt
+        }),
+        { status: 200, headers: corsHeaders }
+      )
+    }
+
+    if (path === '/signalling/invite-code' && method === 'POST') {
+      const { instanceId, partyId, inviteToken } = await request.json()
+      if (!instanceId || !partyId || !inviteToken) {
+        return new Response(
+          JSON.stringify({ error: 'instanceId, partyId, and inviteToken are required' }),
+          { status: 400, headers: corsHeaders }
+        )
+      }
+      const record = await issueStoredInviteCode(blobInviteStorage(store), {
+        instanceId,
+        partyId,
+        inviteToken
+      })
+      return new Response(
+        JSON.stringify({
+          inviteToken: record.inviteToken,
+          shortCode: record.shortCode,
+          expiresAt: record.expiresAt
+        }),
+        { status: 200, headers: corsHeaders }
+      )
+    }
+
+    if (path === '/signalling/invite-code' && method === 'DELETE') {
+      const { instanceId, partyId } = await request.json()
+      if (!instanceId || !partyId) {
+        return new Response(
+          JSON.stringify({ error: 'instanceId and partyId are required' }),
+          { status: 400, headers: corsHeaders }
+        )
+      }
+      await releaseStoredInviteCode(blobInviteStorage(store), instanceId, partyId)
+      return new Response(null, { status: 204, headers: corsHeaders })
+    }
+
     // POST /game-instance/:instanceId/invite-regenerate
     const regenerateMatch = path.match(/^\/game-instance\/([^/]+)\/invite-regenerate$/)
     if (regenerateMatch && method === 'POST') {
@@ -349,8 +442,17 @@ export default async(request, _context) => {
       }
 
       const inviteToken = `${instanceId}-${partyId}-${Date.now()}`
+      const record = await issueStoredInviteCode(blobInviteStorage(store), {
+        instanceId,
+        partyId,
+        inviteToken
+      })
       return new Response(
-        JSON.stringify({ inviteToken }),
+        JSON.stringify({
+          inviteToken,
+          shortCode: record.shortCode,
+          expiresAt: record.expiresAt
+        }),
         { status: 200, headers: corsHeaders }
       )
     }

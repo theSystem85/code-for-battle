@@ -1,3 +1,5 @@
+import { normalizeShortCode } from './inviteCodes.js'
+
 const detectStunHost = () => {
   // Check for explicit environment variable override first (for custom setups)
   if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_STUN_HOST) {
@@ -101,4 +103,27 @@ export async function fetchSessionStatus(inviteToken, peerId) {
 
 export function generateSessionKey(inviteToken, peerId) {
   return `${inviteToken}-${peerId}`
+}
+
+function signallingBase() {
+  return STUN_HOST === '' ? '/api' : STUN_HOST
+}
+
+/**
+ * Resolve a short invite code to the long token the session is stored under.
+ * @param {string} code
+ * @returns {Promise<string|null>}
+ */
+export async function fetchInviteTokenForCode(code) {
+  const normalized = normalizeShortCode(code)
+  if (!normalized) return null
+  const cacheBuster = `_t=${Date.now()}`
+  const url = `${signallingBase()}/signalling/invite-code/${encodeURIComponent(normalized)}?${cacheBuster}`
+  const response = await fetch(url, { cache: 'no-store' })
+  if (response.status === 404) return null
+  if (!response.ok) {
+    throw new Error(`Failed to resolve invite code (${response.status})`)
+  }
+  const payload = await response.json().catch(() => null)
+  return payload?.inviteToken || null
 }

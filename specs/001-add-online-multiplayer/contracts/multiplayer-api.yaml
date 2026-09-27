@@ -95,7 +95,7 @@ paths:
               required: [partyId]
       responses:
         '200':
-          description: Returns new inviteToken tied to the instance+party
+          description: Returns the long invite token and that party's short code
           content:
             application/json:
               schema:
@@ -103,4 +103,86 @@ paths:
                 properties:
                   inviteToken:
                     type: string
-**NOTE**: This API lives inside the minimal Express helper and is used only for the initial WebRTC handshake; all actual game state remains inside the host browser.
+                  shortCode:
+                    type: string
+                    description: 6-character code, unambiguous alphabet, unique among active invites
+                  expiresAt:
+                    type: number
+                    description: Unix milliseconds when the token and short code expire together
+  /signalling/invite-code/:code:
+    get:
+      summary: Resolve a short invite code to the long invite token
+      parameters:
+        - name: code
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Short code. Case, spaces, and dashes are ignored.
+      responses:
+        '200':
+          description: Active invite for that code
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inviteToken:
+                    type: string
+                  shortCode:
+                    type: string
+                  expiresAt:
+                    type: number
+        '404':
+          description: Unknown or expired code
+  /signalling/invite-code:
+    post:
+      summary: Store a short code for an existing long invite token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instanceId:
+                  type: string
+                partyId:
+                  type: string
+                inviteToken:
+                  type: string
+              required: [instanceId, partyId, inviteToken]
+      responses:
+        '200':
+          description: Short code saved in the signalling store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inviteToken:
+                    type: string
+                  shortCode:
+                    type: string
+                  expiresAt:
+                    type: number
+        '400':
+          description: Missing instanceId, partyId, or inviteToken
+    delete:
+      summary: Drop the active short code for one party
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instanceId:
+                  type: string
+                partyId:
+                  type: string
+              required: [instanceId, partyId]
+      responses:
+        '204':
+          description: Code released
+**NOTE**: This API lives inside the minimal Express helper and the Netlify `/api` function and is used only for the initial WebRTC handshake; all actual game state remains inside the host browser.

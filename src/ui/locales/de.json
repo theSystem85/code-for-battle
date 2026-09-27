@@ -173,5 +173,17 @@
         "initializationFailed": "Initialisierung fehlgeschlagen"
       }
     }
+  },
+  "multiplayer": {
+    "joinLabel": "Einladungscode oder Link",
+    "joinHint": "Füge einen kurzen Einladungscode, einen vollständigen Link oder das lange Token ein.",
+    "joinInvalid": "Gib einen gültigen Einladungscode oder Link ein.",
+    "joinNotFound": "Dieser Einladungscode wurde nicht gefunden oder ist abgelaufen.",
+    "joinConnecting": "Verbinden…",
+    "inviteLink": "Einladungslink",
+    "inviteCode": "Einladungscode",
+    "shareInstruction": "QR-Code scannen oder den Link bzw. Code unten teilen",
+    "copy": "Kopieren",
+    "copied": "Kopiert!"
   }
 }

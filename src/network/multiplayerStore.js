@@ -6,6 +6,7 @@ import {
   INVITE_TOKEN_TTL_MS
 } from '../config.js'
 import { composeInviteToken, buildInviteUrl, humanReadablePartyLabel } from './invites.js'
+import { normalizeShortCode } from './inviteCodes.js'
 import { showHostNotification } from './hostNotifications.js'
 import { STUN_HOST } from './signalling.js'
 import { gameRandom } from '../utils/gameRandom.js'
@@ -13,6 +14,10 @@ import { getStoredItem } from '../storage/indexedDbStorage.js'
 
 const inviteRecords = new Map()
 const HOST_ALIAS_STORAGE_KEY = 'rts-player-alias'
+
+function signallingBase() {
+  return STUN_HOST === '' ? '/api' : STUN_HOST
+}
 
 function normalizePartyId(partyId) {
   return partyId === 'player' ? 'player1' : partyId
@@ -70,6 +75,7 @@ function ensurePartyStates() {
         color: PARTY_COLORS[partyId] || PARTY_COLORS.player1,
         owner: isHost ? getHostAliasLabel() : 'AI',
         inviteToken: null,
+        shortCode: null,
         aiActive: !isHost,
         localAutomationEnabled: false,
         llmControlled: false,
@@ -171,21 +177,15 @@ export function listPartyStates() {
   return ensurePartyStates()
 }
 
-async function requestServerInviteToken(partyId) {
+async function requestServerInvite(partyId) {
   const instanceId = ensureGameInstanceId()
-  if (!instanceId) {
-    return null
-  }
-
-  if (typeof fetch !== 'function') {
+  if (!instanceId || typeof fetch !== 'function') {
     return null
   }
 
   try {
-    // Use relative URL with /api prefix for Netlify Functions, or full STUN_HOST for local dev
-    const baseUrl = STUN_HOST === '' ? '/api' : STUN_HOST
     const response = await fetch(
-      `${baseUrl}/game-instance/${encodeURIComponent(instanceId)}/invite-regenerate`,
+      `${signallingBase()}/game-instance/${encodeURIComponent(instanceId)}/invite-regenerate`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -198,10 +198,74 @@ async function requestServerInviteToken(partyId) {
     }
 
     const payload = await response.json()
-    return payload?.inviteToken || null
+    if (!payload?.inviteToken) return null
+    return payload
   } catch (err) {
     window.logger.warn('Could not sync invite token with STUN helper:', err)
     return null
+  }
+}
+
+function releaseServerInviteCode(instanceId, partyId) {
+  if (!instanceId || !partyId || typeof fetch !== 'function') return
+  fetch(`${signallingBase()}/signalling/invite-code`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ instanceId, partyId })
+  }).catch(() => {})
+}
+
+async function registerServerInviteCode(partyId, inviteToken) {
+  const instanceId = ensureGameInstanceId()
+  if (!instanceId || !partyId || !inviteToken || typeof fetch !== 'function') return null
+  try {
+    const response = await fetch(`${signallingBase()}/signalling/invite-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ instanceId, partyId, inviteToken })
+    })
+    if (!response.ok) return null
+    const payload = await response.json()
+    return payload?.shortCode ? payload : null
+  } catch (err) {
+    window.logger.warn('Could not register invite code:', err)
+    return null
+  }
+}
+
+async function confirmServerInviteCode(shortCode, inviteToken) {
+  if (!shortCode || !inviteToken || typeof fetch !== 'function') return false
+  try {
+    const response = await fetch(
+      `${signallingBase()}/signalling/invite-code/${encodeURIComponent(shortCode)}?_t=${Date.now()}`,
+      { cache: 'no-store' }
+    )
+    if (!response.ok) return false
+    const payload = await response.json()
+    return payload?.inviteToken === inviteToken
+  } catch (err) {
+    window.logger.warn('Could not confirm invite code:', err)
+    return false
+  }
+}
+
+async function durableShortCode(partyId, inviteToken, payload) {
+  let shortCode = normalizeShortCode(payload?.shortCode || '')
+  let expiresAt = Number(payload?.expiresAt) || 0
+  if (shortCode && !(await confirmServerInviteCode(shortCode, inviteToken))) {
+    shortCode = ''
+  }
+  if (!shortCode) {
+    const registered = await registerServerInviteCode(partyId, inviteToken)
+    shortCode = normalizeShortCode(registered?.shortCode || '')
+    expiresAt = Number(registered?.expiresAt) || expiresAt
+    if (shortCode && !(await confirmServerInviteCode(shortCode, inviteToken))) {
+      shortCode = ''
+    }
+  }
+  return {
+    shortCode: shortCode || null,
+    expiresAt: expiresAt || (Date.now() + INVITE_TOKEN_TTL_MS)
   }
 }
 
@@ -212,13 +276,14 @@ export async function generateInviteForParty(partyId) {
     throw new Error(`Unknown party: ${partyId}`)
   }
 
-  let token = await requestServerInviteToken(partyId)
-  if (!token) {
-    token = composeInviteToken(gameState.gameInstanceId, partyId)
-  }
-  const expiresAt = Date.now() + INVITE_TOKEN_TTL_MS
+  const payload = await requestServerInvite(partyId)
+  const token = payload?.inviteToken || composeInviteToken(gameState.gameInstanceId, partyId)
+  const durable = await durableShortCode(partyId, token, payload)
+  const shortCode = durable.shortCode
+  const expiresAt = durable.expiresAt
   inviteRecords.set(token, {
     token,
+    shortCode,
     partyId,
     gameInstanceId: gameState.gameInstanceId,
     expiresAt,
@@ -227,13 +292,30 @@ export async function generateInviteForParty(partyId) {
   })
 
   party.inviteToken = token
-  showHostNotification(`Invite ready for ${humanReadablePartyLabel(party.color, party.owner)}`)
+  party.shortCode = shortCode
+  const label = humanReadablePartyLabel(party.color, party.owner)
+  showHostNotification(shortCode
+    ? `Invite ready for ${label}`
+    : `Invite link ready for ${label}. The short code could not be registered.`)
 
   return {
     token,
+    shortCode,
     url: buildInviteUrl(token),
     expiresAt
   }
+}
+
+export async function ensureInviteShortCode(partyId) {
+  const party = getPartyState(partyId)
+  if (!party?.inviteToken) return null
+  const existing = normalizeShortCode(party.shortCode || '')
+  if (existing && await confirmServerInviteCode(existing, party.inviteToken)) return existing
+  const durable = await durableShortCode(party.partyId, party.inviteToken, null)
+  party.shortCode = durable.shortCode
+  const stored = inviteRecords.get(party.inviteToken)
+  if (stored) stored.shortCode = durable.shortCode
+  return durable.shortCode
 }
 
 export function regenerateInviteToken(partyId) {
@@ -250,9 +332,11 @@ export function invalidateInviteToken(partyId) {
     return
   }
 
-  // Remove from local records
+  const instanceId = party.gameInstanceId || gameState.gameInstanceId
+  releaseServerInviteCode(instanceId, party.partyId)
   inviteRecords.delete(party.inviteToken)
   party.inviteToken = null
+  party.shortCode = null
 }
 
 /**
@@ -288,6 +372,7 @@ export async function regenerateAllInviteTokens() {
       party.lastConnectedAt = null
       party.unresponsiveSince = null
       party.inviteToken = null
+      party.shortCode = null
 
       // Generate new invite token
       try {

@@ -16,7 +16,7 @@ test.describe('Sidebar floating label inputs', () => {
     await expect(floatingWrappers).toHaveCount(8)
 
     await expect(page.locator('#saveLabelInput + label')).toHaveText('Save label')
-    await expect(page.locator('#inviteLinkInput + label')).toHaveText('Join via invite link')
+    await expect(page.locator('#inviteLinkInput + label')).toHaveText('Invite code or link')
     await expect(page.locator('#speedMultiplier + label')).toHaveText('Game Speed')
     await expect(page.locator('#mapSeed + label')).toHaveText('Seed')
     await expect(page.locator('#playerCount + label')).toHaveText('Players')

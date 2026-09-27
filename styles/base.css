@@ -501,13 +501,34 @@ body.is-touch {
   display: none;
 }
 
+.multiplayer-qr-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.multiplayer-qr-modal__field[hidden] {
+  display: none;
+}
+
+.multiplayer-qr-modal__field-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: #6efc4b;
+  text-align: left;
+}
+
 .multiplayer-qr-modal__link-container {
   display: flex;
   width: 100%;
   gap: 8px;
 }
 
-.multiplayer-qr-modal__link-input {
+.multiplayer-qr-modal__link-input,
+.multiplayer-qr-modal__code-input {
   flex: 1;
   padding: 10px 12px;
   background: #1a1a1a;
@@ -518,7 +539,8 @@ body.is-touch {
   min-width: 0;
 }
 
-.multiplayer-qr-modal__link-input:focus {
+.multiplayer-qr-modal__link-input:focus,
+.multiplayer-qr-modal__code-input:focus {
   outline: none;
   border-color: rgba(110, 252, 75, 0.5);
 }

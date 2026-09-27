@@ -173,5 +173,17 @@
         "initializationFailed": "initialization failed"
       }
     }
+  },
+  "multiplayer": {
+    "joinLabel": "Invite code or link",
+    "joinHint": "Paste a short invite code, a full invite link, or the long token.",
+    "joinInvalid": "Enter a valid invite code or link.",
+    "joinNotFound": "That invite code was not found or has expired.",
+    "joinConnecting": "Connecting…",
+    "inviteLink": "Invite link",
+    "inviteCode": "Invite code",
+    "shareInstruction": "Scan the QR code, or share the link or code below",
+    "copy": "Copy",
+    "copied": "Copied!"
   }
 }
