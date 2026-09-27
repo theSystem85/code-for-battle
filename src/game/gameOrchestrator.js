@@ -114,6 +114,9 @@ import { closeMobileSidebarModal, isMobileSidebarModalVisible } from '../ui/mobi
 import { resetLlmUsage } from '../ai/llmUsage.js'
 import { terminateAllSounds } from '../sound.js'
 import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../startupScheduler.js'
+import { bootMark } from '../ui/bootTiming.js'
+import { beginBootProgress, getBootProgress, waitForBootPhase } from '../ui/bootProgress.js'
+import { stopBootProgressPaint } from '../ui/loadingScreen.js'
 import {
   hideLoadingScreen,
   runWithLoadingScreen,
@@ -665,68 +668,65 @@ class Game {
   }
 
   async initializeGame() {
+    if (!getBootProgress()) beginBootProgress()
+    const boot = getBootProgress()
     const session = showLoadingScreen({
-      phase: 'boot',
+      phase: boot?.phaseId || 'boot',
       kicker: 'THEATER COMMAND',
-      detail: 'Initializing systems',
-      progress: 0.05
+      detail: boot?.detail || 'Initializing systems',
+      progress: boot?.sample() ?? 0.04
     })
 
     try {
       await runMeasuredTask('startup:initialize-game', async() => {
-        updateLoadingScreen({
-          phase: 'assets',
-          detail: 'Loading battlefield assets',
-          progress: 0.08
-        }, session)
-        await this.loadAssets((fraction) => {
-          const assetFraction = Number.isFinite(fraction) ? fraction : 0
-          updateLoadingScreen({
-            phase: 'assets',
-            detail: 'Loading battlefield assets',
-            progress: 0.08 + (assetFraction * 0.64)
-          }, session)
-        })
+        bootMark('assets-start')
+        boot?.start('assets')
+        await this.loadAssets()
+        boot?.finish('assets')
+        bootMark('assets-end')
 
-        updateLoadingScreen({
-          phase: 'map',
-          detail: 'Generating the map',
-          progress: 0.76
-        }, session)
+        boot?.start('map')
         await waitForLoadingPaint()
-        this.setupGameWorld()
+        bootMark('map-start')
+        const terrainPromise = this.setupGameWorld()
+        await Promise.race([
+          Promise.resolve(terrainPromise),
+          new Promise(resolve => setTimeout(resolve, 10000))
+        ])
+        bootMark('map-end')
+        boot?.finish('map')
 
-        updateLoadingScreen({
-          phase: 'systems',
-          detail: 'Bringing command systems online',
-          progress: 0.9
-        }, session)
+        boot?.start('systems')
         await waitForLoadingPaint()
+        bootMark('systems-start')
         this.setupUI()
-        this.startGameLoop()
-
-        updateLoadingScreen({
-          phase: 'resume',
-          detail: 'Checking for a saved battle',
-          progress: 0.96
-        }, session)
-        await waitForLoadingPaint()
         try {
           this.setupAutoSaveResume()
         } catch (error) {
           window.logger.warn('Failed to restore the saved battle during startup', error)
         }
+        bootMark('systems-end')
+        boot?.finish('systems')
 
+        boot?.start('present')
+        await waitForLoadingPaint()
+        this.startGameLoop()
+        await waitForBootPhase('present')
+
+        stopBootProgressPaint()
+        boot?.finishAll()
         updateLoadingScreen({
           phase: 'ready',
           detail: 'Forces deployed',
           progress: 1
         }, session)
         await waitForLoadingPaint()
+        bootMark('loading-screen-ready')
       })
       hideLoadingScreen(session)
       this.setupDeferredStartupTasks()
     } catch (error) {
+      stopBootProgressPaint()
       updateLoadingScreen({
         phase: 'error',
         detail: 'Startup failed. Reload the page to try again.',
@@ -809,7 +809,7 @@ class Game {
     } finally {
       commitMapMutationTransaction(mapLifecycleTransaction)
     }
-    publishPreparedRuntimeMap(mapGrid)
+    const terrainPromise = publishPreparedRuntimeMap(mapGrid)
     updatePowerSupply(gameState.buildings, gameState)
 
     factories.forEach(factory => {
@@ -844,6 +844,7 @@ class Game {
     updateDangerZoneMaps(gameState)
     updateDangerZoneMaps(gameState)
     updateShadowOfWar(gameState, units, mapGrid, factories)
+    return terrainPromise
   }
 
   centerOnPlayerFactory() {

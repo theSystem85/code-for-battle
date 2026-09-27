@@ -20,6 +20,8 @@ import { FRAME_PHASE, framePhases } from '../performance/framePhases.js'
 import { PROFILER_SPAN_IDS } from '../performance/profilerIds.js'
 import { getCanvasLogicalSize } from '../rendering/renderingUtils.js'
 import { initGamepadSupport, pollGamepads } from '../input/gamepad/gamepadRuntime.js'
+import { bootMark } from '../ui/bootTiming.js'
+import { finishBootFrame } from '../ui/bootProgress.js'
 
 const MOBILE_FRAME_WATCHDOG_MS = 250
 const MAX_FOREGROUND_SIMULATION_DELTA_MS = 100
@@ -451,6 +453,10 @@ export class GameLoop {
 
     updateMapScrolling(gameState, this.mapGrid)
     const updateEnd = performance.now()
+    if (!this.bootFrameMarked) {
+      this.bootFrameMarked = true
+      bootMark('first-frame:start')
+    }
 
     // Refresh production buttons if a building was destroyed
     if (gameState.pendingButtonUpdate) {
@@ -469,6 +475,11 @@ export class GameLoop {
     renderGame(gameCtx, gameCanvas, this.mapGrid, this.factories, this.units, this.bullets, gameState.buildings,
       gameState.scrollOffset, gameState.selectionActive,
       gameState.selectionStart, gameState.selectionEnd, gameState, gameGl, gameGlCanvas, gameGpuCanvas)
+    if (this.bootFrameMarked && !this.bootFrameEnded) {
+      this.bootFrameEnded = true
+      bootMark('first-frame:end')
+      finishBootFrame()
+    }
 
     // Render minimap with low energy effects if applicable
     framePhases.begin(FRAME_PHASE.minimap)

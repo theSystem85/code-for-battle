@@ -14,6 +14,8 @@ import {
 } from './webglRenderer.js'
 import { estimateTextureBytes, GpuMemoryTracker } from './gpuMemory.js'
 import { summarizeWebGPUFailure } from './rendererBackendSelection.js'
+import { bootMark } from '../ui/bootTiming.js'
+import { finishBootGpu, reportBootGpuSteps } from '../ui/bootProgress.js'
 import { getCanvasPixelRatio } from './renderingUtils.js'
 
 const BUFFER_USAGE = { COPY_DST: 8, VERTEX: 32, UNIFORM: 64 }
@@ -205,16 +207,23 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.status = 'initializing'
     this.initialize(canvas).catch(error => {
       this.fail(error?.message || String(error))
+      finishBootGpu()
     })
   }
 
   async initialize(canvas) {
+    bootMark('webgpu-init:start')
+    reportBootGpuSteps(0)
     if (!navigator?.gpu || !canvas?.getContext) throw new Error('WebGPU is unavailable')
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' })
+    bootMark('webgpu-init:adapter')
+    reportBootGpuSteps(1)
     if (!adapter) throw new Error('No WebGPU adapter is available')
     this.captureAdapterInfo(adapter)
     this.timestampSupported = Boolean(adapter.features?.has?.('timestamp-query'))
     this.device = await this.requestDevice(adapter)
+    bootMark('webgpu-init:device')
+    reportBootGpuSteps(2)
     this.device.onuncapturederror = event => {
       this.fail(`WebGPU uncaptured error: ${event?.error?.message || 'unknown error'}`)
     }
@@ -225,7 +234,9 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.device.pushErrorScope('validation')
     const shaderModule = this.device.createShaderModule({ code: WEBGPU_TERRAIN_SHADER })
     const compilationMessages = await this.readShaderCompilationErrors(shaderModule)
+    bootMark('webgpu-init:shader')
     this.createPipeline(shaderModule)
+    bootMark('webgpu-init:pipeline')
     this.createTimestampResources()
     const pipelineError = await this.device.popErrorScope()
     if (pipelineError || compilationMessages.length) {
@@ -233,6 +244,9 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
       throw new Error(`WebGPU pipeline validation failed: ${detail}`)
     }
     this.status = 'ready'
+    bootMark('webgpu-init:ready')
+    reportBootGpuSteps(3)
+    finishBootGpu()
     this.loggedFailure = null
     setRendererBackendFailureSummary(null)
     this.device.lost.then(info => {

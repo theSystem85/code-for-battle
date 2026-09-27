@@ -1,4 +1,5 @@
 import { APP_VERSION } from '../version.js'
+import { getBootProgress } from './bootProgress.js'
 
 const state = {
   visible: true,
@@ -159,6 +160,38 @@ async function performLoadingTask(task, options) {
     }
     hideLoadingScreen(session)
   }
+}
+
+let stopBootPaint = null
+
+export function trackBootProgress(sessionId = null) {
+  stopBootPaint?.()
+  let frame = 0
+  let stopped = false
+  const tick = (now) => {
+    if (stopped) return
+    const boot = getBootProgress()
+    if (!boot || boot.isComplete()) return
+    updateLoadingScreen({
+      phase: boot.phaseId,
+      detail: boot.detail,
+      progress: boot.sample(now)
+    }, sessionId)
+    frame = requestAnimationFrame(tick)
+  }
+  frame = requestAnimationFrame(tick)
+  const stop = () => {
+    stopped = true
+    if (frame) cancelAnimationFrame(frame)
+    if (stopBootPaint === stop) stopBootPaint = null
+  }
+  stopBootPaint = stop
+  return stop
+}
+
+export function stopBootProgressPaint() {
+  stopBootPaint?.()
+  stopBootPaint = null
 }
 
 export function runWithLoadingScreen(task, options = {}) {

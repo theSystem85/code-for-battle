@@ -1,4 +1,6 @@
 import { TILE_SIZE } from '../../config.js'
+import { bootMark } from '../../ui/bootTiming.js'
+import { reportBootSprites } from '../../ui/bootProgress.js'
 import { RenderByteBudget, RENDER_BYTE_OWNERS } from './renderByteBudget.js'
 import { TerrainPreparationPipeline } from './terrainPreparation.js'
 import {
@@ -42,15 +44,21 @@ export function bindRenderingDensityPreparation() {
 
 export async function prepareRuntimeSprites({
   density = (typeof window !== 'undefined' && window.devicePixelRatio) || 1,
-  signal
+  signal,
+  onProgress
 } = {}) {
   bindRenderingDensityPreparation()
   const state = getPreparedSpriteState()
-  if (state.ready && Math.abs((state.density || 0) - density) < 0.0001) return state
+  if (state.ready && Math.abs((state.density || 0) - density) < 0.0001) {
+    onProgress?.(1, 1)
+    reportBootSprites(1, 1)
+    return state
+  }
   const prepared = await prepareSpriteRegistry({
     density,
     assetGeneration: ++spriteAssetGeneration,
-    signal
+    signal,
+    onProgress
   })
   publishPreparedSpriteRegistry(prepared)
   lastPreparedDensity = density
@@ -68,6 +76,7 @@ export async function prepareRuntimeMap({
   if (key === lastPreparedMapKey && getTerrainPreparationPipeline().current?.state === 'ready') {
     return getTerrainPreparationPipeline().current
   }
+  bootMark('terrain-prepare:start', { rows: grid.length, cols: grid[0]?.length || 0 })
   const prepared = await getTerrainPreparationPipeline().prepare({
     grid,
     sotMask,
@@ -78,6 +87,7 @@ export async function prepareRuntimeMap({
     signal
   })
   lastPreparedMapKey = key
+  bootMark('terrain-prepare:end', { rows: grid.length, cols: grid[0]?.length || 0 })
   return prepared
 }
 
