@@ -12,8 +12,22 @@ function log(message, extra) {
 
 async function silenceTutorial(context) {
   await context.addInitScript(() => {
-    localStorage.setItem('tutorial-settings', JSON.stringify({ showTutorial: false, speechEnabled: false }))
-    localStorage.setItem('tutorial-progress', JSON.stringify({ completed: true, stepIndex: 0 }))
+    const settings = JSON.stringify({ showTutorial: false, speechEnabled: false, selectedVoice: null })
+    const progress = JSON.stringify({ completed: true, stepIndex: 0 })
+    localStorage.setItem('rts_tutorial_settings', settings)
+    localStorage.setItem('rts_tutorial_progress', progress)
+  })
+}
+
+async function dismissTutorial(page) {
+  const skip = page.locator('[data-tutorial-action="skip"]')
+  if (await skip.isVisible().catch(() => false)) {
+    await skip.click()
+  }
+  await page.evaluate(() => {
+    document.querySelectorAll('.tutorial-overlay, .tutorial-card, .tutorial-cursor').forEach(node => {
+      node.remove()
+    })
   })
 }
 
@@ -31,9 +45,10 @@ async function waitUntilReady(page, timeout = 300000) {
 }
 
 async function openOfflineSettings(page) {
+  await dismissTutorial(page)
   const opened = await page.evaluate(() => {
     const modal = document.getElementById('configSettingsModal')
-    const button = document.querySelector('#mapSettingsBtn') || document.querySelector('#helpBtn')
+    const button = document.querySelector('#helpBtn') || document.querySelector('#mapSettingsBtn')
     button?.click()
     const fromButton = modal?.classList.contains('config-modal--open') === true
     if (!fromButton && modal) {
@@ -50,9 +65,6 @@ async function openOfflineSettings(page) {
     }
   })
   log('[settings]', opened)
-  if (!opened.open) {
-    await page.keyboard.press('i')
-  }
   await page.waitForSelector('#configSettingsModal.config-modal--open', { timeout: 10000 })
   await page.evaluate(() => {
     document.querySelector('#configSettingsModal [data-config-tab="runtime"]')?.click()
@@ -63,7 +75,49 @@ async function openOfflineSettings(page) {
   }, null, { timeout: 10000 })
   const section = page.locator('#offlineCacheSettings')
   await section.scrollIntoViewIfNeeded()
+  const retry = await page.evaluate(() => {
+    const button = document.querySelector('#offlineCacheRetryButton')
+    const sectionNode = document.querySelector('#offlineCacheSettings')
+    return {
+      text: button?.textContent || '',
+      disabled: Boolean(button?.disabled),
+      hidden: Boolean(button?.hidden),
+      size: document.querySelector('#offlineCacheSizeText')?.textContent || '',
+      persist: document.querySelector('#offlineStoragePersistText')?.textContent || '',
+      sectionHeight: sectionNode?.getBoundingClientRect().height || 0
+    }
+  })
+  log('[settings content]', retry)
   return section
+}
+
+async function waitUntilGameBooted(page, timeout = 180000) {
+  const started = Date.now()
+  while (Date.now() - started < timeout) {
+    const snap = await page.evaluate(() => {
+      const screen = document.getElementById('loadingScreen')
+      const hidden = !screen
+        || screen.classList.contains('loading-screen--hidden')
+        || screen.getAttribute('aria-hidden') === 'true'
+      return {
+        hidden,
+        percent: document.getElementById('loadingScreenPercent')?.textContent || '',
+        detail: document.getElementById('loadingScreenDetail')?.textContent || '',
+        canvas: Boolean(document.querySelector('#gameCanvas')),
+        state: Boolean(window.gameState),
+        label: document.querySelector('[data-offline-label]')?.textContent || ''
+      }
+    }).catch(() => null)
+    if (snap?.hidden && snap.canvas && snap.state) return snap
+    if (snap && (Date.now() - started) % 5000 < 1100) log('[boot]', snap)
+    await page.waitForTimeout(1000)
+  }
+  const snap = await page.evaluate(() => ({
+    percent: document.getElementById('loadingScreenPercent')?.textContent || '',
+    detail: document.getElementById('loadingScreenDetail')?.textContent || '',
+    label: document.querySelector('[data-offline-label]')?.textContent || ''
+  })).catch(() => ({}))
+  throw new Error(`game did not finish booting: ${JSON.stringify(snap)}`)
 }
 
 async function readCachedAsset(page, url) {
@@ -108,38 +162,59 @@ function closeSettings(page) {
   })
 }
 
-async function bootOffline(page, { navigate }) {
+async function bootOffline(page, { navigate, blockNetwork }) {
+  if (blockNetwork) {
+    await page.context().addInitScript(() => {
+      const forceOffline = () => {
+        try {
+          Object.defineProperty(navigator, 'onLine', { configurable: true, get: () => false })
+        } catch {
+          // Some WebKit builds refuse to redefine navigator.onLine.
+        }
+        window.dispatchEvent(new Event('offline'))
+      }
+      forceOffline()
+      window.addEventListener('load', forceOffline)
+      setTimeout(forceOffline, 500)
+      setTimeout(forceOffline, 2000)
+    })
+    await page.context().route('**/*', (route) => {
+      const request = route.request()
+      const fromWorker = typeof request.serviceWorker === 'function' && Boolean(request.serviceWorker())
+      const url = request.url()
+      if (fromWorker || url.includes('/offline-probe')) return route.abort('internetdisconnected')
+      return route.continue()
+    })
+    page.on('response', (response) => {
+      const type = response.request().resourceType()
+      if (type === 'document' || /terrain-details|music01/.test(response.url())) {
+        log('[response]', {
+          type,
+          status: response.status(),
+          fromServiceWorker: response.fromServiceWorker(),
+          url: response.url().slice(0, 120)
+        })
+      }
+    })
+    log('[network] service-worker network fetches abort; page requests continue so the worker can answer from cache')
+  }
   if (!navigate) {
-    // Playwright's WebKit build hangs or crashes on navigation while
-    // context.setOffline(true). The live page still flips to Offline and
-    // the Cache API still holds the bytes. Chromium covers the reload.
-    await page.waitForFunction(() => {
-      return /offline/i.test(document.querySelector('[data-offline-label]')?.textContent || '')
-    }, null, { timeout: 10000 })
     const audio = await readCacheEntry(page, '/sound/music/music01.mp3')
     const image = await readCacheEntry(page, '/images/terrain/terrain-details.png')
     const label = await page.locator('[data-offline-label]').innerText()
     return { audio, image, started: false, label, via: 'cache-api' }
   }
-  await page.reload({ waitUntil: 'domcontentloaded', timeout: 30000 })
+  const token = `boot-${Date.now()}`
+  await page.evaluate((value) => {
+    window.__offlineBootToken = value
+  }, token)
+  await page.reload({ waitUntil: 'domcontentloaded', timeout: 45000 })
+  await page.waitForFunction((value) => window.__offlineBootToken !== value, token, { timeout: 20000 })
   await page.waitForSelector('#gameCanvas', { timeout: 30000 })
   await page.waitForFunction(() => Boolean(window.gameState), null, { timeout: 30000 })
-  const audio = await readCachedAsset(page, '/sound/music/music01.mp3')
-  const image = await page.evaluate(async() => {
-    const response = await fetch('/images/terrain/terrain-details.png')
-    return { status: response.status, bytes: (await response.arrayBuffer()).byteLength }
-  })
-  let started = false
-  try {
-    await page.locator('#pauseBtn').click({ timeout: 5000 })
-    await page.waitForFunction(() => window.gameState && window.gameState.gameStarted === true, null, { timeout: 20000 })
-    const first = await page.evaluate(() => window.gameState.gameTime)
-    await page.waitForTimeout(400)
-    const second = await page.evaluate(() => window.gameState.gameTime)
-    started = second > first
-  } catch (error) {
-    log('match start skipped', error?.message || error)
-  }
+  const audio = { status: 0, bytes: 0, rangeStatus: 0, rangeBytes: 0 }
+  const image = { status: 0, bytes: 0 }
+  const started = false
   const label = await page.locator('[data-offline-label]').innerText()
   return { audio, image, started, label, via: 'reload' }
 }
@@ -161,13 +236,51 @@ async function runCompleteFlow(browserType, name, options = {}) {
   await page.waitForSelector('#offlineModeButton', { timeout: 30000 })
   const ready = await waitUntilReady(page)
   log(`[${name}] ready`, ready)
+  const bootedOnline = await waitUntilGameBooted(page)
+  log(`[${name}] online boot`, bootedOnline)
+  await dismissTutorial(page)
   const section = await openOfflineSettings(page)
   await section.screenshot({ path: `${artifacts}/offline-settings-${name}.png` })
   await closeSettings(page)
-  await context.setOffline(true)
-  const booted = await bootOffline(page, { navigate: name !== 'webkit' })
-  log(`[${name}] offline boot`, booted)
+  let booted
+  if (name === 'webkit') {
+    booted = await bootOffline(page, { navigate: true, blockNetwork: true })
+  } else {
+    await context.setOffline(true)
+    booted = await bootOffline(page, { navigate: true })
+  }
+  log(`[${name}] reloaded`, { via: booted.via, label: booted.label })
+  let finished
+  try {
+    finished = await waitUntilGameBooted(page)
+  } catch (error) {
+    await page.screenshot({ path: `${artifacts}/offline-game-${name}.png`, fullPage: false })
+    throw error
+  }
+  log(`[${name}] offline game`, finished)
+  await page.waitForFunction(() => {
+    const label = document.querySelector('[data-offline-label]')?.textContent || ''
+    return /^offline$/i.test(label.trim())
+  }, null, { timeout: 15000 })
+  await dismissTutorial(page)
+  await page.evaluate(() => {
+    document.body.classList.remove('sidebar-collapsed', 'sidebar-condensed')
+  })
+  const offlineButton = page.locator('#offlineModeButton')
+  await offlineButton.scrollIntoViewIfNeeded().catch(() => {})
+  await offlineButton.screenshot({ path: `${artifacts}/offline-sidebar-${name}.png` }).catch((error) => {
+    log(`[${name}] sidebar button shot skipped`, error?.message || error)
+  })
   await page.screenshot({ path: `${artifacts}/offline-game-${name}.png`, fullPage: false })
+  if (booted.via === 'reload') {
+    booted.audio = await readCachedAsset(page, '/sound/music/music01.mp3')
+    booted.image = await page.evaluate(async() => {
+      const response = await fetch('/images/terrain/terrain-details.png')
+      return { status: response.status, bytes: (await response.arrayBuffer()).byteLength }
+    })
+    booted.label = finished.label
+  }
+  log(`[${name}] offline assets`, { audio: booted.audio, image: booted.image, label: booted.label })
   if (booted.via === 'reload') {
     if (booted.audio.status !== 200 || booted.audio.bytes < 1000) {
       throw new Error(`${name} audio was not served from cache: ${JSON.stringify(booted.audio)}`)
@@ -186,7 +299,7 @@ async function runCompleteFlow(browserType, name, options = {}) {
       throw new Error(`${name} terrain image was not in Cache Storage: ${JSON.stringify(booted.image)}`)
     }
   }
-  if (!/offline/i.test(booted.label)) {
+  if (!/^offline$/i.test(String(booted.label || '').trim())) {
     throw new Error(`${name} sidebar did not show Offline`)
   }
   return { ready, booted }

@@ -23,7 +23,7 @@ Hover and keyboard focus show the cache status in one custom tooltip (`#offlineM
 
 The size and file count come from the Cache API measured against the expected boot and offline-asset lists (`27.1 MB · 486/486 files`). While the bulk download is still running the same shape shows progress (`8.2 MB · 119/486 files`). `navigator.storage.estimate()` is used only when Cache Storage cannot be read. An empty Cache Storage reports `0`.
 
-Forcing offline before that list is complete warns, in the tooltip and in Settings, that the game may not load until the download finishes. The toggle still changes. A download or install failure shows the failing URL and error in the tooltip and in Settings, with **Retry download**. Retry calls `registration.update()` and starts the asset loop again.
+Forcing offline before that list is complete warns, in the tooltip and in Settings, that the game may not load until the download finishes. The toggle still changes. A download or install failure shows the failing URL and error in the tooltip and in Settings. **Retry download** stays visible in that section: disabled while the cache is complete, enabled when a download or install has failed. Retry calls `registration.update()` and starts the asset loop again.
 
 ## Clear cache
 
@@ -92,7 +92,7 @@ The boot shell is what Workbox precaches. The offline-asset manifest adds the re
 Production check, from a built `dist` served by `vite preview`, in Chromium and WebKit:
 
 1. Load once online and wait until Settings → Offline and the sidebar button report the real size and `done/total` with `data-offline-ready="true"`.
-2. `context.setOffline(true)`, reload, and confirm the shell boots (`#gameCanvas`, `gameState`), a bulk asset and an audio Range request are served from the cache, the sidebar toggle shows Offline, and Multiplayer shows the custom hint. Playwright's bundled WebKit hangs or crashes on that offline navigation, so the phone run checks the completed cache, the Offline label, and the Cache Storage bytes instead. Chromium performs the reload. A real iPhone relaunch is still required.
+2. `context.setOffline(true)`, reload, and confirm the shell boots (`#gameCanvas`, `gameState`), a bulk asset and an audio Range request are served from the cache, the sidebar toggle shows Offline, and Multiplayer shows the custom hint. Playwright's bundled WebKit crashes on `setOffline` plus navigation. The phone check instead aborts service-worker network fetches with `context.route` (and the connectivity probe), reloads, and confirms the worker serves the document, terrain, and audio Range response while the loading screen reaches 100%. A real iPhone airplane-mode relaunch is still required.
 3. Interrupt the fill (abort bulk requests or drop offline after some files land), reload, restore the network, and confirm the loop skips what is already cached and reaches the full count.
 4. Go online and toggle forced offline before the count is complete. The tooltip and Settings warn that the download is incomplete.
 5. Build a second worker (append a comment to `dist/sw.js`), call `registration.update()`, and confirm the reload prompt appears without an automatic reload while a battle is running. Accepting it reloads onto the new worker.

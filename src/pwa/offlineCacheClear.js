@@ -104,8 +104,11 @@ export function applyOfflineCacheSettings(elements, view) {
     elements.error.textContent = error
   }
   if (elements.retry) {
-    elements.retry.hidden = view.showRetry !== true
-    elements.retry.textContent = view.retryLabel || ''
+    const canRetry = view.showRetry === true
+    elements.retry.hidden = false
+    elements.retry.disabled = !canRetry
+    elements.retry.setAttribute('aria-disabled', canRetry ? 'false' : 'true')
+    elements.retry.textContent = view.retryLabel || 'Retry download'
   }
   if (elements.clearButton) elements.clearButton.textContent = view.action || ''
 }

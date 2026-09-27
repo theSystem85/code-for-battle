@@ -808,6 +808,24 @@ describe('offline navigation and storage', () => {
     expect(hung.error).toMatch(/timed out/)
   })
 
+  it('keeps Retry download visible and disables it until a download fails', () => {
+    const retry = {
+      hidden: true,
+      disabled: false,
+      textContent: '',
+      setAttribute(name, value) {
+        this[name] = value
+      }
+    }
+    applyOfflineCacheSettings({ retry }, { showRetry: false, retryLabel: 'Retry download' })
+    expect(retry.hidden).toBe(false)
+    expect(retry.disabled).toBe(true)
+    expect(retry.textContent).toBe('Retry download')
+    applyOfflineCacheSettings({ retry }, { showRetry: true, retryLabel: 'Retry download' })
+    expect(retry.disabled).toBe(false)
+    expect(retry['aria-disabled']).toBe('false')
+  })
+
   it('leaves same-origin audio non-CORS so Safari can play a cached 200', () => {
     expect(audioCrossOriginForUrl('/sound/music/music01.mp3', 'https://game.example')).toBeNull()
     expect(audioCrossOriginForUrl('https://cdn.example/music.mp3', 'https://game.example')).toBe('anonymous')
