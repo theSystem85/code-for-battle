@@ -335,6 +335,7 @@ describe('multiplayer stats server', () => {
     expect(body.lookingForMatch).toBe(1)
     expect(body.playing).toBe(1)
     expect(body.storage).toBe('blobs')
+    expect(body.backend).toBe('blobs')
     expect(JSON.stringify([...store.blobs.values()])).not.toContain('Ada Lovelace')
 
     const missing = await handleMultiplayerStatsRequest(request('/api/presence', {
@@ -342,6 +343,32 @@ describe('multiplayer stats server', () => {
       status: 'menu'
     }), { env: {}, blobs: store, now: () => NOW })
     expect(missing.status).toBe(400)
+  })
+
+  it('reports backend redis when Upstash answers the pipeline', async() => {
+    const fetchImpl = vi.fn(async() => new Response(JSON.stringify([
+      { result: [1, 0, 0, 0, 0, 'closed'] }
+    ]), { status: 200 }))
+    const blobs = createBlobStore()
+    const response = await handleMultiplayerStatsRequest(request('/api/presence', {
+      sessionId: 'session-1234',
+      status: 'menu'
+    }), {
+      env: {
+        UPSTASH_REDIS_REST_URL: 'https://example.upstash.io',
+        UPSTASH_REDIS_REST_TOKEN: 'token'
+      },
+      fetchImpl,
+      blobs,
+      now: () => NOW
+    })
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.backend).toBe('redis')
+    expect(body.storage).toBe('redis')
+    expect(body.playing).toBe(1)
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+    expect(blobs.blobs.size).toBe(0)
   })
 
   it('adapts Netlify blob conditional writes', async() => {

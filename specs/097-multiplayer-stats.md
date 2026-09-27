@@ -7,6 +7,7 @@
 - `sessionId` is an anonymous id, 8–64 characters from `[A-Za-z0-9_-]`, created in the browser and stored in both `sessionStorage` and `localStorage` under `cfb-presence-session`.
 - `status` is one of `menu`, `single-player`, `mp-host`, `mp-client`, `looking-for-match`.
 - The response totals are `playing` (every fresh session), `onlineMultiplayer` (`mp-host` + `mp-client`), `lookingForMatch`, plus the per-status counts. Sessions older than 90 seconds are dropped before the counts.
+- A debug field `backend` is `redis` when that response was produced by Upstash, or `blobs` when the Netlify Blobs fallback handled it. The local signalling helper reports `memory`. `storage` repeats the same value.
 - No alias, account, address, or other personal data is stored. Keys expire (Redis TTL 180 seconds on the sets, 60 seconds on the rate-limit key, 90 seconds on an open-host token).
 
 Redis keeps one sorted set per status (`cfb:presence:<status>`, score = timestamp). A heartbeat `ZADD`s the session into its status set, `ZREM`s it from the others, `ZREMRANGEBYSCORE`s entries older than 90 seconds, then `ZCARD`s each set. Those commands run inside one `EVAL`, sent as one Upstash REST `/pipeline` request, so the rate limit can reject the heartbeat before the sets change. The per-session limit is 8 requests per 60 seconds.

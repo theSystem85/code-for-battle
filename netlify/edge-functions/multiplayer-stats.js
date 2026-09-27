@@ -1,23 +1,34 @@
 import { handleMultiplayerStatsRequest, readRedisEnv, statsRoute } from '../../src/network/multiplayerStats.js'
 
-function readEdgeEnv() {
-  const names = ['UPSTASH_REDIS_REST_URL', 'UPSTASH_REDIS_REST_TOKEN']
-  const env = {}
-  for (const name of names) {
-    let value = ''
-    try {
-      if (typeof Netlify !== 'undefined' && Netlify.env && typeof Netlify.env.get === 'function') {
-        value = Netlify.env.get(name) || ''
-      }
-    } catch {
-      value = ''
+function readNamedEnv(name) {
+  try {
+    if (typeof Netlify !== 'undefined' && Netlify.env && typeof Netlify.env.get === 'function') {
+      const value = Netlify.env.get(name)
+      if (typeof value === 'string' && value.trim()) return value.trim()
     }
-    if (!value && typeof process !== 'undefined' && process.env) {
-      value = process.env[name] || ''
-    }
-    env[name] = value
+  } catch {
+    // An unset key throws. A secret scoped to Functions and Runtime should not.
   }
-  return env
+  try {
+    const deno = globalThis['Deno']
+    if (deno && deno.env && typeof deno.env.get === 'function') {
+      const value = deno.env.get(name)
+      if (typeof value === 'string' && value.trim()) return value.trim()
+    }
+  } catch {
+    // The edge runtime env is not the source for Netlify secrets.
+  }
+  if (typeof process !== 'undefined' && process.env && typeof process.env[name] === 'string') {
+    return process.env[name].trim()
+  }
+  return ''
+}
+
+function readEdgeEnv() {
+  return {
+    UPSTASH_REDIS_REST_URL: readNamedEnv('UPSTASH_REDIS_REST_URL'),
+    UPSTASH_REDIS_REST_TOKEN: readNamedEnv('UPSTASH_REDIS_REST_TOKEN')
+  }
 }
 
 async function forwardToBlobs(request) {

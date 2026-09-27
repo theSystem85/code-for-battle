@@ -533,6 +533,11 @@ function outcomeResponse(outcome) {
   const body = { ...outcome }
   delete body.rateLimited
   delete body.hostSessionId
+  const backend = outcome.storage === 'redis' || outcome.storage === 'blobs' || outcome.storage === 'memory'
+    ? outcome.storage
+    : 'blobs'
+  body.backend = backend
+  body.storage = backend
   return jsonResponse(200, body)
 }
 
