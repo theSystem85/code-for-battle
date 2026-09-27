@@ -4,6 +4,7 @@ import { fileURLToPath } from 'url'
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { LANDING_BUILD_MOVES, rewriteLandingUrl } from './src/landing/routes.js'
+import { offlineAssetManifestPlugin } from './src/pwa/offlineAssetManifestPlugin.js'
 import {
   PRECACHE_GLOB_IGNORES,
   PRECACHE_GLOB_PATTERNS,
@@ -98,6 +99,7 @@ export default defineConfig({
   appType: 'mpa',
   plugins: [
     legalRoutePlugin,
+    offlineAssetManifestPlugin(),
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src/pwa',

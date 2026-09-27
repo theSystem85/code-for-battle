@@ -996,6 +996,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### UI, Sidebar, and Settings
 
+- [x] **iPhone offline cache stalls and the offline relaunch never boots (2026-09-27)** — the Workbox precache was all-or-nothing, so a suspended or failed install never activated the worker. The boot shell now precaches on its own, bulk assets resume in a separate cache, audio Range requests are served offline, and readiness is the real Cache API count.
+  - Spec: [Offline mode](../specs/095-offline-mode.md)
+
 - [x] **Phone toasts cover the offline control (2026-09-27)** — portrait toasts are full-width and start at `calc(var(--safe-area-top) * 2 + 72px)` so they sit below the sidebar online/offline toggle.
   - Spec: [Offline mode](../specs/095-offline-mode.md)
 

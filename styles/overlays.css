@@ -1512,6 +1512,15 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   color: #ffe7c2;
 }
 
+.offline-cache-warning {
+  color: #ffe7c2;
+}
+
+.offline-cache-error {
+  color: #ffb4a8;
+  overflow-wrap: anywhere;
+}
+
 .offline-update-prompt {
   position: fixed;
   left: calc(var(--sidebar-width, 250px) + 12px);

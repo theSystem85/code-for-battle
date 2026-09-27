@@ -1,5 +1,6 @@
 import { gameState } from '../gameState.js'
 import { localizeMission, missionText, resolveMissionLocale } from '../missions/missionText.js'
+import { configureAudioElement } from '../pwa/audioElementPolicy.js'
 import { isEffectivelyOffline } from '../pwa/offlineState.js'
 
 export const MISSION_INTRO_PUBLIC_DIR = 'public/video'
@@ -173,6 +174,7 @@ async function startPicture(video) {
 async function startCompanionAudio(filename) {
   if (!filename) return
   const audio = new Audio(missionIntroAssetPath(filename))
+  configureAudioElement(audio, missionIntroAssetPath(filename), window.location.origin)
   audio.volume = 0.8
   activeAudio = audio
   try {

@@ -4,6 +4,7 @@ import { videoOverlay } from './ui/videoOverlay.js'
 import { gameState } from './gameState.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { isHeadlessAudioMuted } from './utils/headlessAudioMute.js'
+import { configureAudioElement } from './pwa/audioElementPolicy.js'
 import { getStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 
 const suppressAudioForAutomation = isHeadlessAudioMuted()
@@ -259,6 +260,7 @@ function _getCachedAudioElement(soundPath) {
   let element = soundElementCache.get(soundPath)
   if (!element) {
     element = new Audio(soundPath)
+    configureAudioElement(element, soundPath, window.location.origin)
     element.preload = 'auto'
 
     // Ensure the audio is fully loaded before caching
@@ -496,6 +498,7 @@ export async function initBackgroundMusic() {
     if (!element) {
       // Create and load the audio element only once
       element = new Audio(musicPath)
+      configureAudioElement(element, musicPath, window.location.origin)
       element.preload = 'auto'
       element.loop = true
       element.volume = masterVolume

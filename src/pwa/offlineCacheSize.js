@@ -14,17 +14,69 @@ export function formatCachedByteSize(bytes) {
   return `${Math.round(size)} B`
 }
 
+export function hasOfflineFileCount(done, total) {
+  return Number(total) > 0 && Number.isFinite(Number(done))
+}
+
+export function formatOfflineFileCount(done, total, filesWord = 'files') {
+  if (!hasOfflineFileCount(done, total)) return ''
+  return `${done}/${total} ${filesWord || 'files'}`
+}
+
+export function formatOfflineCacheDetail({ bytes = 0, done = null, total = null, filesWord = 'files' } = {}) {
+  const size = formatCachedByteSize(bytes)
+  const files = formatOfflineFileCount(done, total, filesWord)
+  return files ? `${size} · ${files}` : size
+}
+
 export function formatOfflineCacheTooltip({
   ready = false,
   percent = 0,
   bytes = 0,
+  done = null,
+  total = null,
+  filesWord = 'files',
   preparingTemplate = 'Preparing offline cache… {percent}%',
-  readyTemplate = 'Offline ready, {size} cached'
+  preparingFilesTemplate = 'Preparing offline cache… {size} · {done}/{total} files',
+  readyTemplate = 'Offline ready, {size} cached',
+  readyFilesTemplate = 'Offline ready, {size} · {done}/{total} files'
 } = {}) {
+  const files = hasOfflineFileCount(done, total)
   if (!ready) {
-    return String(preparingTemplate).replace('{percent}', String(clampPercent(percent)))
+    if (files) {
+      return String(preparingFilesTemplate)
+        .replaceAll('{size}', formatCachedByteSize(bytes))
+        .replaceAll('{done}', String(done))
+        .replaceAll('{total}', String(total))
+        .replaceAll('{percent}', String(clampPercent(percent)))
+    }
+    return String(preparingTemplate).replaceAll('{percent}', String(clampPercent(percent)))
   }
-  return String(readyTemplate).replace('{size}', formatCachedByteSize(bytes))
+  if (files) {
+    return String(readyFilesTemplate)
+      .replaceAll('{size}', formatCachedByteSize(bytes))
+      .replaceAll('{done}', String(done))
+      .replaceAll('{total}', String(total))
+      .replaceAll('{files}', formatOfflineFileCount(done, total, filesWord))
+  }
+  return String(readyTemplate).replaceAll('{size}', formatCachedByteSize(bytes))
+}
+
+export function formatIncompleteOfflineWarning(template, done, total) {
+  const text = String(template || '')
+  if (!hasOfflineFileCount(done, total)) {
+    return text.replace(/\s*\(\{done\}\/\{total\}\)/g, '')
+  }
+  return text.replaceAll('{done}', String(done)).replaceAll('{total}', String(total))
+}
+
+export function formatOfflineCacheError(template, failure, extra = 0) {
+  if (!failure) return ''
+  const text = String(template || '{url}: {message}')
+    .replaceAll('{url}', failure.url || '')
+    .replaceAll('{message}', failure.message || '')
+  if (extra > 0) return `${text} (+${extra})`
+  return text
 }
 
 export async function cachedResponseSize(response) {
