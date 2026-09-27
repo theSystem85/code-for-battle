@@ -136,6 +136,38 @@ paths:
         '404':
           description: Unknown or expired code
   /signalling/invite-code:
+    post:
+      summary: Store a short code for an existing long invite token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                instanceId:
+                  type: string
+                partyId:
+                  type: string
+                inviteToken:
+                  type: string
+              required: [instanceId, partyId, inviteToken]
+      responses:
+        '200':
+          description: Short code saved in the signalling store
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  inviteToken:
+                    type: string
+                  shortCode:
+                    type: string
+                  expiresAt:
+                    type: number
+        '400':
+          description: Missing instanceId, partyId, or inviteToken
     delete:
       summary: Drop the active short code for one party
       requestBody:

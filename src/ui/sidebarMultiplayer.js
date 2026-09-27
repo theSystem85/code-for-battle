@@ -827,6 +827,7 @@ async function handleInviteClick(partyState, button, status) {
       partyState.shortCode = await ensureInviteShortCode(partyState.partyId)
     }
     const inviteUrl = buildInviteUrl(partyState.inviteToken)
+    watchHostInvite({ partyId: partyState.partyId, inviteToken: partyState.inviteToken })
     await tryCopyToClipboard(inviteUrl)
     showHostNotification('Invite link copied to clipboard')
     showQRCodeModal(partyState, inviteUrl)

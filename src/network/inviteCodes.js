@@ -31,7 +31,7 @@ export function generateShortCode(random = Math.random) {
  */
 export function normalizeShortCode(input) {
   if (typeof input !== 'string') return null
-  const compact = input.toUpperCase().replace(/[\s-]+/g, '')
+  const compact = input.toUpperCase().replace(/[\s\u2010\u2011\u2012\u2013\u2014\u2212-]+/g, '')
   if (compact.length < SHORT_CODE_LENGTH || compact.length > SHORT_CODE_MAX_LENGTH) return null
   if (AMBIGUOUS.test(compact)) return null
   if (![...compact].every(char => SHORT_CODE_ALPHABET.includes(char))) return null

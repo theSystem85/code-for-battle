@@ -185,6 +185,19 @@ app.get('/signalling/invite-code/:code', async(req, res) => {
   })
 })
 
+app.post('/signalling/invite-code', async(req, res) => {
+  const { instanceId, partyId, inviteToken } = req.body || {}
+  if (!instanceId || !partyId || !inviteToken) {
+    return res.status(400).json({ error: 'instanceId, partyId, and inviteToken are required' })
+  }
+  const record = await issueStoredInviteCode(inviteCodes, { instanceId, partyId, inviteToken })
+  res.status(200).json({
+    inviteToken: record.inviteToken,
+    shortCode: record.shortCode,
+    expiresAt: record.expiresAt
+  })
+})
+
 app.delete('/signalling/invite-code', async(req, res) => {
   const { instanceId, partyId } = req.body || {}
   if (!instanceId || !partyId) {

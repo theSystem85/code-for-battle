@@ -252,6 +252,62 @@ describe('multiplayerStore', () => {
     expect(record.hostId).toBeTruthy()
   })
 
+  it('does not publish a short code the signalling store cannot resolve', async() => {
+    resetGameStateMock({
+      gameInstanceId: 'instance-1',
+      hostId: 'host-1',
+      partyStates: []
+    })
+    globalThis.fetch = vi.fn(async(url) => {
+      if (String(url).includes('invite-regenerate')) {
+        return {
+          ok: true,
+          json: async() => ({ inviteToken: 'server-token', shortCode: 'ABCDEF' })
+        }
+      }
+      return { ok: false, status: 404, json: async() => ({ error: 'invite code not found' }) }
+    })
+
+    const { generateInviteForParty, ensureMultiplayerState } = await loadStore()
+    ensureMultiplayerState()
+    const result = await generateInviteForParty('player2')
+
+    expect(result.token).toBe('server-token')
+    expect(result.shortCode).toBeNull()
+    expect(result.url).toBe('http://invite.local')
+  })
+
+  it('registers a short code when regenerate returns only the long token', async() => {
+    resetGameStateMock({
+      gameInstanceId: 'instance-1',
+      hostId: 'host-1',
+      partyStates: []
+    })
+    globalThis.fetch = vi.fn(async(url, options = {}) => {
+      const href = String(url)
+      if (href.includes('invite-regenerate')) {
+        return { ok: true, json: async() => ({ inviteToken: 'server-token' }) }
+      }
+      if (options.method === 'POST') {
+        return {
+          ok: true,
+          json: async() => ({ inviteToken: 'server-token', shortCode: 'ABCDEF', expiresAt: Date.now() + 60000 })
+        }
+      }
+      return { ok: true, json: async() => ({ inviteToken: 'server-token', shortCode: 'ABCDEF' }) }
+    })
+
+    const { generateInviteForParty, ensureMultiplayerState } = await loadStore()
+    ensureMultiplayerState()
+    const result = await generateInviteForParty('player2')
+
+    expect(result.token).toBe('server-token')
+    expect(result.shortCode).toBe('ABCDEF')
+    const methods = globalThis.fetch.mock.calls.map((call) => [String(call[0]), call[1]?.method || 'GET'])
+    expect(methods.some(([url, method]) => url.includes('/signalling/invite-code') && method === 'POST')).toBe(true)
+    expect(methods.some(([url, method]) => url.includes('/signalling/invite-code/ABCDEF') && method === 'GET')).toBe(true)
+  })
+
   it('falls back to local invite tokens when server requests fail', async() => {
     // Initialize with 3 players so player3 exists
     resetGameStateMock({
@@ -270,7 +326,7 @@ describe('multiplayerStore', () => {
 
     expect(inviteMocks.composeInviteToken).toHaveBeenCalledTimes(1)
     expect(result.token).toBe('local-token')
-    expect(result.shortCode).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/)
+    expect(result.shortCode).toBeNull()
     expect(result.url).toBe('http://invite.local')
 
     const record = validateInviteToken('local-token')

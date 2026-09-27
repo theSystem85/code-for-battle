@@ -184,6 +184,25 @@ describe('signalling API', () => {
     })
   })
 
+  it('stores a short code for an existing token and resolves it from a later invocation', async() => {
+    const created = await handler(request('POST', '/api/signalling/invite-code', {
+      instanceId: 'game-7',
+      partyId: 'player2',
+      inviteToken: 'game-7-player2-1234567890123'
+    }))
+    const body = await created.json()
+    expect(created.status).toBe(200)
+    expect(body.shortCode).toMatch(/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/)
+    expect(body.inviteToken).toBe('game-7-player2-1234567890123')
+
+    const resolved = await handler(request('GET', `/api/signalling/invite-code/${body.shortCode.toLowerCase()}`))
+    expect(resolved.status).toBe(200)
+    expect(await resolved.json()).toMatchObject({
+      inviteToken: 'game-7-player2-1234567890123',
+      shortCode: body.shortCode
+    })
+  })
+
   it('expires a short code with the invite and replaces it when that party is regenerated', async() => {
     const first = await handler(request('POST', '/api/game-instance/game-9/invite-regenerate', { partyId: 'player2' }))
     const firstBody = await first.json()

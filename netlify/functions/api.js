@@ -393,6 +393,29 @@ export default async(request, _context) => {
       )
     }
 
+    if (path === '/signalling/invite-code' && method === 'POST') {
+      const { instanceId, partyId, inviteToken } = await request.json()
+      if (!instanceId || !partyId || !inviteToken) {
+        return new Response(
+          JSON.stringify({ error: 'instanceId, partyId, and inviteToken are required' }),
+          { status: 400, headers: corsHeaders }
+        )
+      }
+      const record = await issueStoredInviteCode(blobInviteStorage(store), {
+        instanceId,
+        partyId,
+        inviteToken
+      })
+      return new Response(
+        JSON.stringify({
+          inviteToken: record.inviteToken,
+          shortCode: record.shortCode,
+          expiresAt: record.expiresAt
+        }),
+        { status: 200, headers: corsHeaders }
+      )
+    }
+
     if (path === '/signalling/invite-code' && method === 'DELETE') {
       const { instanceId, partyId } = await request.json()
       if (!instanceId || !partyId) {

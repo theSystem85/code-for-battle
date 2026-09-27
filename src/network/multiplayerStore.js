@@ -6,19 +6,13 @@ import {
   INVITE_TOKEN_TTL_MS
 } from '../config.js'
 import { composeInviteToken, buildInviteUrl, humanReadablePartyLabel } from './invites.js'
-import {
-  createMemoryInviteCodeStorage,
-  issueStoredInviteCode,
-  normalizeShortCode,
-  releaseStoredInviteCode
-} from './inviteCodes.js'
+import { normalizeShortCode } from './inviteCodes.js'
 import { showHostNotification } from './hostNotifications.js'
 import { STUN_HOST } from './signalling.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { getStoredItem } from '../storage/indexedDbStorage.js'
 
 const inviteRecords = new Map()
-const hostInviteCodes = createMemoryInviteCodeStorage()
 const HOST_ALIAS_STORAGE_KEY = 'rts-player-alias'
 
 function signallingBase() {
@@ -221,14 +215,58 @@ function releaseServerInviteCode(instanceId, partyId) {
   }).catch(() => {})
 }
 
-async function issueHostShortCode(partyId, inviteToken) {
-  const record = await issueStoredInviteCode(hostInviteCodes, {
-    instanceId: gameState.gameInstanceId,
-    partyId,
-    inviteToken,
-    ttlMs: INVITE_TOKEN_TTL_MS
-  })
-  return record
+async function registerServerInviteCode(partyId, inviteToken) {
+  const instanceId = ensureGameInstanceId()
+  if (!instanceId || !partyId || !inviteToken || typeof fetch !== 'function') return null
+  try {
+    const response = await fetch(`${signallingBase()}/signalling/invite-code`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ instanceId, partyId, inviteToken })
+    })
+    if (!response.ok) return null
+    const payload = await response.json()
+    return payload?.shortCode ? payload : null
+  } catch (err) {
+    window.logger.warn('Could not register invite code:', err)
+    return null
+  }
+}
+
+async function confirmServerInviteCode(shortCode, inviteToken) {
+  if (!shortCode || !inviteToken || typeof fetch !== 'function') return false
+  try {
+    const response = await fetch(
+      `${signallingBase()}/signalling/invite-code/${encodeURIComponent(shortCode)}?_t=${Date.now()}`,
+      { cache: 'no-store' }
+    )
+    if (!response.ok) return false
+    const payload = await response.json()
+    return payload?.inviteToken === inviteToken
+  } catch (err) {
+    window.logger.warn('Could not confirm invite code:', err)
+    return false
+  }
+}
+
+async function durableShortCode(partyId, inviteToken, payload) {
+  let shortCode = normalizeShortCode(payload?.shortCode || '')
+  let expiresAt = Number(payload?.expiresAt) || 0
+  if (shortCode && !(await confirmServerInviteCode(shortCode, inviteToken))) {
+    shortCode = ''
+  }
+  if (!shortCode) {
+    const registered = await registerServerInviteCode(partyId, inviteToken)
+    shortCode = normalizeShortCode(registered?.shortCode || '')
+    expiresAt = Number(registered?.expiresAt) || expiresAt
+    if (shortCode && !(await confirmServerInviteCode(shortCode, inviteToken))) {
+      shortCode = ''
+    }
+  }
+  return {
+    shortCode: shortCode || null,
+    expiresAt: expiresAt || (Date.now() + INVITE_TOKEN_TTL_MS)
+  }
 }
 
 export async function generateInviteForParty(partyId) {
@@ -240,12 +278,9 @@ export async function generateInviteForParty(partyId) {
 
   const payload = await requestServerInvite(partyId)
   const token = payload?.inviteToken || composeInviteToken(gameState.gameInstanceId, partyId)
-  const serverCode = normalizeShortCode(payload?.shortCode || '')
-  const shortRecord = serverCode
-    ? null
-    : await issueHostShortCode(partyId, token)
-  const shortCode = serverCode || shortRecord.shortCode
-  const expiresAt = Number(payload?.expiresAt) || shortRecord?.expiresAt || (Date.now() + INVITE_TOKEN_TTL_MS)
+  const durable = await durableShortCode(partyId, token, payload)
+  const shortCode = durable.shortCode
+  const expiresAt = durable.expiresAt
   inviteRecords.set(token, {
     token,
     shortCode,
@@ -258,7 +293,10 @@ export async function generateInviteForParty(partyId) {
 
   party.inviteToken = token
   party.shortCode = shortCode
-  showHostNotification(`Invite ready for ${humanReadablePartyLabel(party.color, party.owner)}`)
+  const label = humanReadablePartyLabel(party.color, party.owner)
+  showHostNotification(shortCode
+    ? `Invite ready for ${label}`
+    : `Invite link ready for ${label}. The short code could not be registered.`)
 
   return {
     token,
@@ -272,12 +310,12 @@ export async function ensureInviteShortCode(partyId) {
   const party = getPartyState(partyId)
   if (!party?.inviteToken) return null
   const existing = normalizeShortCode(party.shortCode || '')
-  if (existing) return existing
-  const record = await issueHostShortCode(party.partyId, party.inviteToken)
-  party.shortCode = record.shortCode
+  if (existing && await confirmServerInviteCode(existing, party.inviteToken)) return existing
+  const durable = await durableShortCode(party.partyId, party.inviteToken, null)
+  party.shortCode = durable.shortCode
   const stored = inviteRecords.get(party.inviteToken)
-  if (stored) stored.shortCode = record.shortCode
-  return record.shortCode
+  if (stored) stored.shortCode = durable.shortCode
+  return durable.shortCode
 }
 
 export function regenerateInviteToken(partyId) {
@@ -295,7 +333,6 @@ export function invalidateInviteToken(partyId) {
   }
 
   const instanceId = party.gameInstanceId || gameState.gameInstanceId
-  releaseStoredInviteCode(hostInviteCodes, instanceId, party.partyId).catch(() => {})
   releaseServerInviteCode(instanceId, party.partyId)
   inviteRecords.delete(party.inviteToken)
   party.inviteToken = null

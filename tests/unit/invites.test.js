@@ -200,6 +200,7 @@ describe('invites.js', () => {
       expect(classifyInviteInput('ABCDEF')).toEqual({ kind: 'short', code: 'ABCDEF' })
       expect(classifyInviteInput('  abc-def  ')).toEqual({ kind: 'short', code: 'ABCDEF' })
       expect(classifyInviteInput('ab c def')).toEqual({ kind: 'short', code: 'ABCDEF' })
+      expect(classifyInviteInput('K7M–Q4P')).toEqual({ kind: 'short', code: 'K7MQ4P' })
       expect(parseInviteInput('ABCDEF')).toBeNull()
     })
 

@@ -1,6 +1,8 @@
 import { createRemoteConnection, RemoteConnectionStatus, getActiveRemoteConnection } from '../network/remoteConnection.js'
 import { handleReceivedCommand, setClientPartyId, resetClientState, startGameStateSync, stopGameStateSync } from '../network/gameCommandSync.js'
-import { parsePartyIdFromToken } from '../network/invites.js'
+import { classifyInviteInput, parsePartyIdFromToken } from '../network/invites.js'
+import { fetchInviteTokenForCode } from '../network/signalling.js'
+import { uiText } from './uiText.js'
 import { gameState } from '../gameState.js'
 import { TILE_SIZE, MAP_TILES_X, MAP_TILES_Y } from '../config.js'
 import { showHostNotification } from '../network/hostNotifications.js'
@@ -483,6 +485,46 @@ export function initRemoteInviteLanding() {
     return
   }
 
+  const rawToken = getInviteTokenFromUrl()
+  const classified = classifyInviteInput(rawToken || '')
+  if (classified?.kind === 'short') {
+    resolveShortInviteCode(classified.code)
+    return
+  }
+
+  startRemoteInvite(rawToken)
+}
+
+function resolveShortInviteCode(code) {
+  const overlay = document.getElementById('remoteInviteLanding')
+  const statusElement = document.getElementById('remoteInviteStatus')
+  const tokenText = document.getElementById('remoteInviteTokenText')
+  if (overlay && statusElement) {
+    showOverlay(overlay, statusElement)
+    updateStatus(statusElement, 'Connecting to host...', false)
+  }
+  if (tokenText) tokenText.textContent = code
+  fetchInviteTokenForCode(code).then((inviteToken) => {
+    if (!inviteToken) {
+      if (overlay && statusElement) {
+        showOverlay(overlay, statusElement)
+        updateStatus(statusElement, uiText('multiplayer.joinNotFound'), true)
+      }
+      return
+    }
+    const url = new URL(window.location.href)
+    url.searchParams.set('invite', inviteToken)
+    window.history.replaceState({}, '', url)
+    startRemoteInvite(inviteToken)
+  }).catch(() => {
+    if (overlay && statusElement) {
+      showOverlay(overlay, statusElement)
+      updateStatus(statusElement, uiText('multiplayer.joinNotFound'), true)
+    }
+  })
+}
+
+function startRemoteInvite(inviteToken) {
   const overlay = document.getElementById('remoteInviteLanding')
   const form = document.getElementById('remoteInviteForm')
   const aliasInput = document.getElementById('remoteAliasInput')
@@ -490,7 +532,6 @@ export function initRemoteInviteLanding() {
   const tokenText = document.getElementById('remoteInviteTokenText')
   const submitButton = document.getElementById('remoteInviteSubmit')
   const cancelButton = document.getElementById('remoteInviteCancel')
-  const inviteToken = getInviteTokenFromUrl()
 
   // Flag to track if client was kicked (to prevent showing reconnect screen)
   let wasKicked = false

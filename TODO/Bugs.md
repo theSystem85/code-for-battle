@@ -958,6 +958,9 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Multiplayer and Networking
 
+- [x] **Short invite code does not join the host (2026-09-27)** — a short code was still shown when signalling never stored it (the host page kept one in memory, or regenerate returned a token with no code). The link kept working because the host was already watching that token, and the joiner's lookup missed. The dialog now shows a code only after the shared signalling store confirms it, and `?invite=` resolves a short code the same way as the join field.
+  - Spec: [Cross-device WebRTC join](../specs/072-cross-device-webrtc-join.md)
+
 - [x] **Candidate cursor audit (2026-09-23)** — `remoteCandidateIndex` and the host `candidateCursor` are initialized to `0` on current `main`. Both loops now treat a missing cursor as `0` so `undefined < length` cannot skip `addIceCandidate`. Cross-device joins still need TURN.
   - Spec: none
 

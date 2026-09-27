@@ -35,6 +35,8 @@ describe('invite short codes', () => {
 
   it('normalizes case, spaces, and dashes and rejects ambiguous or wrong-length input', () => {
     expect(normalizeShortCode(' ab c-def ')).toBe('ABCDEF')
+    expect(normalizeShortCode('K7M–Q4P')).toBe('K7MQ4P')
+    expect(normalizeShortCode('K7M—Q4P')).toBe('K7MQ4P')
     expect(normalizeShortCode('AbC-DeF')).toBe('ABCDEF')
     expect(formatShortCode('abcdef')).toBe('ABC-DEF')
     expect(normalizeShortCode('abc')).toBeNull()
