@@ -1836,3 +1836,26 @@ body.save-game-editor-open { overflow: hidden; }
 .sidebar-landing-link:hover {
   text-decoration: underline;
 }
+
+.multiplayer-settings--offline {
+  position: relative;
+}
+
+.multiplayer-settings--offline:hover,
+.multiplayer-settings--offline:focus-within,
+.multiplayer-settings--offline:has(.is-touch-tip) {
+  z-index: 6;
+}
+
+.multiplayer-offline-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  cursor: not-allowed;
+  background: transparent;
+}
+
+.multiplayer-offline-shield[hidden] {
+  display: none !important;
+}
+

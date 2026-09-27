@@ -34,6 +34,7 @@ import {
   getSoundCacheStatus,
   clearSoundCache
 } from './sound.js'
+import { startOfflineMode } from './pwa/offlineController.js'
 import {
   Game,
   getCurrentGame,
@@ -58,40 +59,7 @@ import {
   MAP_HEIGHT_TILES_STORAGE_KEY
 } from './game/gameOrchestrator.js'
 
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    if (import.meta.env.PROD) {
-      navigator.serviceWorker.register('/sw.js').catch(err => {
-        window.logger.warn('Service worker registration failed', err)
-      })
-      return
-    }
-
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-      registrations.forEach(registration => {
-        registration.unregister().catch(err => {
-          window.logger.warn('Service worker unregistration failed', err)
-        })
-      })
-    }).catch(err => {
-      window.logger.warn('Service worker lookup failed', err)
-    })
-
-    if (typeof caches !== 'undefined' && caches?.keys) {
-      caches.keys().then(cacheNames => {
-        cacheNames
-          .filter(name => name.startsWith('code-for-battle-cache-'))
-          .forEach(name => {
-            caches.delete(name).catch(err => {
-              window.logger.warn('Failed to delete service worker cache', name, err)
-            })
-          })
-      }).catch(err => {
-        window.logger.warn('Failed to enumerate service worker caches', err)
-      })
-    }
-  })
-}
+startOfflineMode()
 
 initializeMobileViewportLock()
 registerMapEditorRendering(getTextureManager, notifyTileMutation)

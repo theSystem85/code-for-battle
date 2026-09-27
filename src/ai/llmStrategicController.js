@@ -15,6 +15,7 @@ import { gameState } from '../gameState.js'
 import { TILE_SIZE, TANK_FIRE_RANGE, PARTY_COLORS } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 import { pruneTransitionsUpTo } from '../ai-api/transitionCollector.js'
+import { isEffectivelyOffline } from '../pwa/offlineState.js'
 
 const strategicContextTrackers = new Map()
 
@@ -827,6 +828,7 @@ function disableLlmAI(type = 'both') {
 }
 
 async function runStrategicTickForPlayer(playerId, state, settings, now, modelConfig = null) {
+  if (isEffectivelyOffline()) return
   const strategicState = ensureStrategicState(state)
   const commentaryState = ensureCommentaryState(state)
   const budgetConfig = LLM_REQUEST_BUDGETS.strategic
@@ -1239,6 +1241,7 @@ async function runStrategicTickForPlayer(playerId, state, settings, now, modelCo
 }
 
 async function runCommentaryTick(state, settings, _now) {
+  if (isEffectivelyOffline()) return
   const commentaryState = ensureCommentaryState(state)
   const budgetConfig = LLM_REQUEST_BUDGETS.commentary
   const commentaryConfig = getCommentaryModelConfig(settings)

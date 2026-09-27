@@ -1,6 +1,8 @@
 // ui/videoOverlay.js
 import { getMasterVolume } from '../sound.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
+import { showNotification } from './notifications.js'
+import { isEffectivelyOffline, shouldSkipMilestoneVideo } from '../pwa/offlineState.js'
 import {
   computeMilestoneVideoOpacity,
   takePreloadedMilestoneMedia
@@ -266,6 +268,11 @@ export class VideoOverlay {
    * Play a milestone video with synchronized audio
    */
   async playMilestoneVideo(videoFile, audioFile, milestoneInfo = {}) {
+    if (shouldSkipMilestoneVideo(isEffectivelyOffline())) {
+      await this.playNarrationWithoutVideo(audioFile, milestoneInfo)
+      return
+    }
+
     // If already playing, queue the video
     if (this.isPlaying) {
       this.videoQueue.push({ videoFile, audioFile, milestoneInfo })
@@ -570,6 +577,7 @@ export class VideoOverlay {
    * Destroy the overlay
    */
   destroy() {
+    this.stopNarrationAudio()
     this.stopCurrentVideo()
     this.clearQueue()
     if (this.overlayElement && this.overlayElement.parentNode) {
@@ -675,6 +683,32 @@ export class VideoOverlay {
     window.addEventListener('keydown', retry, true)
   }
 
+  stopNarrationAudio() {
+    const audio = this.narrationAudio
+    this.narrationAudio = null
+    if (!audio) return
+    try {
+      audio.pause()
+      audio.currentTime = 0
+    } catch {
+      // A detached narrator element can already be stopped.
+    }
+  }
+
+  async playNarrationWithoutVideo(audioFile, milestoneInfo = {}) {
+    const title = milestoneInfo?.title
+    if (title) showNotification(title)
+    this.stopNarrationAudio()
+    if (!audioFile) return
+    const audio = await this.loadCompanionAudio(audioFile)
+    if (!audio) return
+    this.narrationAudio = audio
+    audio.volume = MILESTONE_NARRATION_GAIN * getMasterVolume()
+    audio.play().catch(() => {
+      if (this.narrationAudio === audio) this.narrationAudio = null
+    })
+  }
+
   loadCompanionAudio(audioFile) {
     const audioPaths = [
       `video/${audioFile}`,
@@ -773,6 +807,9 @@ export class VideoOverlay {
    * Update the volume of current audio to match master volume
    */
   updateAudioVolume() {
+    if (this.narrationAudio) {
+      this.narrationAudio.volume = MILESTONE_NARRATION_GAIN * getMasterVolume()
+    }
     this.rememberMilestoneMute()
     if (!this.isPlaying) return
     const video = this.currentVideo

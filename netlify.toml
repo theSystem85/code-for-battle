@@ -44,6 +44,40 @@
   status = 200
   force = false
 
+# The service worker must revalidate on every visit so a deploy is noticed
+# and unchanged hashed assets are not downloaded again. registerSW.js is
+# covered for the plugin's optional register script even though this app
+# registers /sw.js itself.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/registerSW.js"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/offline-probe.txt"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 # Lighthouse plugin for performance testing
 # Runs automatically on all deploys including feature branches
 [[plugins]]

@@ -50,6 +50,7 @@
     "jsdom": "^27.4.0",
     "lighthouse": "^13.0.2",
     "vite": "^6.0.3",
+    "vite-plugin-pwa": "^1.3.0",
     "vitest": "^4.0.18"
   },
   "dependencies": {

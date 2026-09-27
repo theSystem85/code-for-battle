@@ -158,6 +158,10 @@
   </div>
 
   <div id="sidebar" class="expanded-left-sidebar">
+    <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
+      <i class="offline-mode-button__light" aria-hidden="true"></i>
+      <span data-offline-label>Online</span>
+    </button>
     <canvas id="minimap"></canvas>
 
     <!-- Money bar positioned right above the energy bar -->
@@ -686,6 +690,7 @@
       </div>
 
       <div id="multiplayerSettings" class="sidebar-accordion">
+        <div id="multiplayerOfflineShield" class="multiplayer-offline-shield" hidden tabindex="0" role="note" aria-describedby="multiplayerOfflineTip"></div>
         <button id="multiplayerToggle" class="action-button sidebar-accordion__toggle" type="button"
           data-sidebar-accordion-toggle aria-expanded="false" aria-controls="multiplayerContent">
           <span>Multiplayer</span>
@@ -1028,11 +1033,30 @@
   <canvas id="gameCanvasGPU" aria-hidden="true"></canvas>
   <canvas id="gameCanvasGL" aria-hidden="true"></canvas>
   <canvas id="gameCanvas"></canvas>
-  <div id="gamepadCursor" class="gamepad-cursor" hidden></div>
-  <div id="gamepadRemoteIndicator" class="gamepad-remote" hidden><i class="gamepad-light"></i><span data-gamepad-remote-label></span></div>
-  <div id="gamepadIndicators" class="gamepad-indicators" hidden>
+  <div id="hudStatusCluster" class="hud-status-cluster">
+    <div id="gamepadIndicators" class="gamepad-indicators" hidden>
     <span id="gamepadIndicatorP1" class="gamepad-indicator" hidden><i class="gamepad-light"></i>P1</span>
     <span id="gamepadIndicatorP2" class="gamepad-indicator" hidden><i class="gamepad-light"></i>P2</span>
+    </div>
+  </div>
+  <div id="gamepadCursor" class="gamepad-cursor" hidden></div>
+  <div id="gamepadRemoteIndicator" class="gamepad-remote" hidden><i class="gamepad-light"></i><span data-gamepad-remote-label></span></div>
+  <div id="offlineModeTip" class="offline-mode-tip" role="tooltip" hidden></div>
+  <div id="multiplayerOfflineTip" class="offline-mode-tip offline-mode-tip--warn" role="tooltip" hidden></div>
+  <div id="offlineUpdatePrompt" class="offline-update-prompt" hidden>
+    <button id="offlineUpdateReload" class="offline-update-prompt__button" type="button" data-offline-update-label>Update available – reload</button>
+  </div>
+  <div id="offlineClearDialog" class="offline-clear-dialog" hidden>
+    <div class="offline-clear-dialog__panel" role="alertdialog" aria-modal="true" aria-labelledby="offlineClearDialogTitle" aria-describedby="offlineClearDialogBody">
+      <h2 id="offlineClearDialogTitle" class="offline-clear-dialog__title">Clear offline cache?</h2>
+      <p id="offlineClearDialogBody" class="offline-clear-dialog__body"></p>
+      <p id="offlineClearDialogWarning" class="offline-clear-dialog__warning" hidden></p>
+      <div class="offline-clear-dialog__actions">
+        <button id="offlineClearCancel" class="offline-clear-dialog__button" type="button">Cancel</button>
+        <button id="offlineClearConfirm" class="offline-clear-dialog__button offline-clear-dialog__button--danger" type="button">Clear cache</button>
+        <button id="offlineClearReload" class="offline-clear-dialog__button offline-clear-dialog__button--primary" type="button" hidden>Reload</button>
+      </div>
+    </div>
   </div>
 
   <!-- FPS Display Overlay -->
@@ -1128,6 +1152,14 @@
             <input id="settingsRadarOfflineAnimationToggle" type="checkbox" checked>
             Animate minimap radar-offline grain (old TV white-snow flicker)
           </label>
+          <div id="offlineCacheSettings" class="config-modal__section">
+            <h3 class="config-modal__section-title" data-offline-clear-title>Offline</h3>
+            <p class="config-modal__hint" data-offline-clear-hint>Removes the downloaded game files. Saved games and settings stay on this device.</p>
+            <p id="offlineCacheSizeText" class="config-modal__hint">Not cached (0.0 MB)</p>
+            <div class="config-modal__actions">
+              <button id="offlineClearCacheButton" class="config-modal__button" type="button">Clear offline cache</button>
+            </div>
+          </div>
           <div class="config-modal__section">
             <h3 class="config-modal__section-title">Graphics</h3>
             <label class="config-modal__field config-modal__field--toggle">

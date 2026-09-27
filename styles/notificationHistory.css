@@ -249,7 +249,11 @@
 /* Full-bleed notifications on mobile portrait */
 @media (orientation: portrait) and (max-width: 900px) {
   body.mobile-portrait .notification {
-    top: calc(var(--safe-area-top) + 10px) !important;
+    position: fixed !important;
+    /* Clears the sidebar online/offline toggle. Portrait sidebar content
+       starts below safe-area plus a second safe-area padding, so one inset
+       is not enough on a notched phone. */
+    top: calc(var(--safe-area-top) * 2 + 72px) !important;
     left: 0 !important;
     right: 0 !important;
     width: 100vw !important;

@@ -1,4 +1,31 @@
 {
+  "offline": {
+    "online": "Online",
+    "offline": "Offline",
+    "toggleLabel": "Offline mode",
+    "preparing": "Preparing offline cache… {percent}%",
+    "ready": "Offline ready, {size} cached",
+    "multiplayerDisabled": "Multiplayer is not available in offline mode!",
+    "updateAvailable": "Update available – reload",
+    "clear": {
+      "sectionTitle": "Offline",
+      "hint": "Removes the downloaded game files. Saved games and settings stay on this device.",
+      "size": "Cached: {size}",
+      "notCached": "Not cached ({size})",
+      "emptyTooltip": "Not cached, {size}",
+      "action": "Clear offline cache",
+      "confirmTitle": "Clear offline cache?",
+      "confirmBody": "This removes the downloaded game files and the service worker. Saved games, settings, and other game data stay on this device. The game downloads the cache again the next time it loads while online.",
+      "confirmOfflineWarning": "You are offline. Clearing the cache makes the game unavailable offline until the next visit with a connection.",
+      "confirmAction": "Clear cache",
+      "cancel": "Cancel",
+      "close": "Close",
+      "clearedTitle": "Offline cache cleared",
+      "clearedBody": "Cached size is now {size}. The game will download the offline cache again the next time it loads while online.",
+      "clearedOfflineWarning": "You are offline. Reloading now leaves the game unavailable until the next visit with a connection.",
+      "reload": "Reload"
+    }
+  },
   "settings": {
     "benchmark": {
       "label": "Performance benchmark",

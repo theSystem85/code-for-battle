@@ -16,6 +16,8 @@ import { observeMultiplayerSession } from '../network/multiplayerSessionEvents.j
 import { createQRCodeCanvas } from './qrCode.js'
 import { getLlmSettings } from '../ai/llmSettings.js'
 import { getStoredItem, removeStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { isEffectivelyOffline } from '../pwa/offlineState.js'
+import { uiText } from './uiText.js'
 
 const PARTY_LIST_ID = 'multiplayerPartyList'
 const PLAYER_ALIAS_STORAGE_KEY = 'rts-player-alias'
@@ -184,6 +186,10 @@ function setupJoinInviteLinkInput() {
   }
 
   const handleJoin = () => {
+    if (isEffectivelyOffline()) {
+      showStatus(uiText('offline.multiplayerDisabled'), true)
+      return
+    }
     const inputValue = input.value
     const token = extractInviteToken(inputValue)
 

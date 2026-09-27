@@ -1,5 +1,6 @@
 import { gameState } from '../gameState.js'
 import { localizeMission, missionText, resolveMissionLocale } from '../missions/missionText.js'
+import { isEffectivelyOffline } from '../pwa/offlineState.js'
 
 export const MISSION_INTRO_PUBLIC_DIR = 'public/video'
 export const MISSION_INTRO_LOAD_TIMEOUT_MS = 2500
@@ -228,6 +229,11 @@ export async function playMissionIntro(mission, options = {}) {
   }
   window.addEventListener('keydown', onKeyDown, true)
   root.querySelector('.mission-intro__skip')?.focus()
+
+  if (isEffectivelyOffline()) {
+    if (mission.introAudio) void startCompanionAudio(mission.introAudio)
+    return false
+  }
 
   const video = root.querySelector('.mission-intro__video')
   const timeoutMs = Number.isFinite(options.loadTimeoutMs) ? options.loadTimeoutMs : MISSION_INTRO_LOAD_TIMEOUT_MS

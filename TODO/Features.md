@@ -926,6 +926,14 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Add a persistent "lastGame" autosave that runs every minute, saves immediately on** — pause, and automatically reloads after iOS/PWA resumes from a killed paused session.
   - Spec: none
 
+### Platform
+
+- [x] **Clear offline cache** — Settings has an Offline section with the cached size and a confirm-before-clear action. It removes only this app's Workbox, precache, and runtime caches and unregisters the service worker, keeps saves and settings, shows the empty size, and warns when the clear happens offline.
+  - Spec: [Offline mode](../specs/095-offline-mode.md)
+
+- [x] **Full offline mode** — Precache the single-player shell with Workbox, show one sidebar online/offline toggle, disable multiplayer with a hint, skip milestone videos while keeping narrator audio, and prompt before reloading for a deployed update.
+  - Spec: [Offline mode](../specs/095-offline-mode.md)
+
 ### Tooling and CI
 
 - [x] **Playwright E2E Testing** — Setup Playwright for end-to-end browser testing with real user interactions.
