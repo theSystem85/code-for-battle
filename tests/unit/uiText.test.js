@@ -16,6 +16,11 @@ describe('settings benchmark copy', () => {
     expect(uiText('multiplayer.joinInvalid', 'de')).toBe('Gib einen gültigen Einladungscode oder Link ein.')
     expect(uiText('multiplayer.joinNotFound', 'en')).toBe('That invite code was not found or has expired.')
     expect(uiText('multiplayer.joinNotFound', 'de')).toBe('Dieser Einladungscode wurde nicht gefunden oder ist abgelaufen.')
+    expect(uiText('multiplayer.presenceLine', 'en')).toBe('{playing} playing now · {online} in online multiplayer')
+    expect(uiText('multiplayer.presenceLine', 'de')).toBe('{playing} spielen gerade · {online} im Online-Mehrspieler')
+    expect(uiText('multiplayer.quickMatch', 'en')).toBe('Quick match')
+    expect(uiText('multiplayer.quickMatch', 'de')).toBe('Schnelles Spiel')
+    expect(uiText('multiplayer.lookingForPlayers', 'de')).toBe('Sucht Mitspieler')
   })
 
   it('stacks heavy-battle phases in the existing results dialog', () => {

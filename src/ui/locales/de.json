@@ -193,6 +193,17 @@
     "inviteCode": "Einladungscode",
     "shareInstruction": "QR-Code scannen oder den Link bzw. Code unten teilen",
     "copy": "Kopieren",
-    "copied": "Kopiert!"
+    "copied": "Kopiert!",
+    "presenceLine": "{playing} spielen gerade · {online} im Online-Mehrspieler",
+    "quickMatch": "Schnelles Spiel",
+    "quickMatchSearching": "Suche ein offenes Spiel…",
+    "quickMatchNone": "Gerade ist kein offenes Spiel verfügbar.",
+    "becomeOpenHost": "Offenes Spiel anbieten",
+    "quickMatchError": "Schnelles Spiel ist gerade nicht verfügbar.",
+    "lookingForPlayers": "Sucht Mitspieler",
+    "lookingForPlayersHint": "Bietet einen freien Platz für Schnelles Spiel an. Der Platz schließt, wenn ihn jemand beansprucht, du ihn ausschaltest oder das Spiel startet oder endet.",
+    "turnNote": "Spiel über verschiedene Netze braucht weiterhin TURN.",
+    "turnTooltip": "Auf demselben Computer reicht öffentliches STUN. Ein Telefon oder ein anderes Netz braucht den TURN-Server aus ICE_SERVERS oder TURN_* in der README.",
+    "noFreeSlot": "Kein freier Spielerplatz zum Anbieten."
   }
 }

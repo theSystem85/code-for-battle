@@ -185,4 +185,50 @@ paths:
       responses:
         '204':
           description: Code released
-**NOTE**: This API lives inside the minimal Express helper and the Netlify `/api` function and is used only for the initial WebRTC handshake; all actual game state remains inside the host browser.
+  /presence:
+    post:
+      summary: Anonymous presence heartbeat
+      description: Stores an anonymous session id and status. Returns approximate player totals. No alias or address is stored.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                status:
+                  type: string
+                  enum: [menu, single-player, mp-host, mp-client, looking-for-match]
+                openInviteToken:
+                  type: string
+                  description: Long invite token for one free slot, or omitted when the host is not listed.
+              required: [sessionId, status]
+      responses:
+        '200':
+          description: Totals for sessions seen in the last 90 seconds. Deploy previews also include `backend`, `storage`, `redisConfigured`, and `handler`. Production omits those fields.
+        '400':
+          description: Invalid session id or status
+        '429':
+          description: Per-session rate limit
+  /quick-match:
+    post:
+      summary: Claim one open host slot
+      description: Skips the caller's own host and hosts with no heartbeat for 90 seconds. The returned token joins through the normal invite link.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+              required: [sessionId]
+      responses:
+        '200':
+          description: Claimed invite token, or inviteToken null when none is open
+        '429':
+          description: Per-session rate limit
+**NOTE**: This API lives inside the minimal Express helper and the Netlify `/api` function and is used only for the initial WebRTC handshake; all actual game state remains inside the host browser. The presence and quick-match routes prefer a Netlify edge function with Upstash Redis and fall back to this function's Netlify Blobs store.

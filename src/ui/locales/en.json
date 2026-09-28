@@ -193,6 +193,17 @@
     "inviteCode": "Invite code",
     "shareInstruction": "Scan the QR code, or share the link or code below",
     "copy": "Copy",
-    "copied": "Copied!"
+    "copied": "Copied!",
+    "presenceLine": "{playing} playing now · {online} in online multiplayer",
+    "quickMatch": "Quick match",
+    "quickMatchSearching": "Looking for an open match…",
+    "quickMatchNone": "No open matches right now.",
+    "becomeOpenHost": "Host an open match",
+    "quickMatchError": "Quick match is unavailable right now.",
+    "lookingForPlayers": "Looking for players",
+    "lookingForPlayersHint": "Lists one free slot for Quick match. It closes when someone claims it, you turn this off, or the match starts or ends.",
+    "turnNote": "Cross-network play still needs TURN.",
+    "turnTooltip": "Same-computer play uses public STUN. A phone or another network needs the TURN server from ICE_SERVERS or TURN_* in the README.",
+    "noFreeSlot": "No free player slot to host."
   }
 }

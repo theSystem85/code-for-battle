@@ -246,6 +246,77 @@ body.is-touch {
   border-color: rgba(255, 100, 100, 0.8);
 }
 
+.multiplayer-presence {
+  margin: 2px 0 8px;
+  padding: 0 10px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #d7e6f5;
+}
+
+.multiplayer-presence[hidden] {
+  display: none;
+}
+
+.multiplayer-quick-match {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0 10px;
+}
+
+.multiplayer-turn-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: #a8a8a8;
+}
+
+.multiplayer-turn-note__button {
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: help;
+}
+
+.multiplayer-open-host {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.multiplayer-open-host__input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  flex: 0 0 auto;
+  accent-color: #6efc4b;
+}
+
+.multiplayer-open-host__text {
+  display: block;
+  font-weight: 600;
+}
+
+.multiplayer-open-host__hint {
+  display: block;
+  margin-top: 2px;
+  color: #a8a8a8;
+  font-size: 11px;
+  font-weight: 500;
+}
+
 /* Join via invite link section */
 .multiplayer-join-section {
   margin: 12px 0;
