@@ -374,6 +374,48 @@ describe('multiplayer stats server', () => {
     expect(blobs.blobs.size).toBe(0)
   })
 
+  it('omits store debug fields when the deploy context is production', async() => {
+    const fetchImpl = vi.fn(async() => new Response(JSON.stringify([
+      { result: [1, 0, 0, 0, 0, 'closed'] }
+    ]), { status: 200 }))
+    const response = await handleMultiplayerStatsRequest(request('/api/presence', {
+      sessionId: 'session-1234',
+      status: 'menu'
+    }), {
+      env: {
+        UPSTASH_REDIS_REST_URL: 'https://example.upstash.io',
+        UPSTASH_REDIS_REST_TOKEN: 'token',
+        CONTEXT: 'production'
+      },
+      fetchImpl,
+      now: () => NOW,
+      handler: 'edge'
+    })
+    const body = await response.json()
+    expect(body.playing).toBe(1)
+    expect(body.backend).toBeUndefined()
+    expect(body.storage).toBeUndefined()
+    expect(body.redisConfigured).toBeUndefined()
+    expect(body.handler).toBeUndefined()
+    expect(fetchImpl).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps store debug fields on deploy previews', async() => {
+    const response = await handleMultiplayerStatsRequest(request('/api/presence', {
+      sessionId: 'session-1234',
+      status: 'menu'
+    }), {
+      env: { CONTEXT: 'deploy-preview' },
+      blobs: createBlobStore(),
+      now: () => NOW,
+      handler: 'function'
+    })
+    const body = await response.json()
+    expect(body.backend).toBe('blobs')
+    expect(body.redisConfigured).toBe(false)
+    expect(body.handler).toBe('function')
+  })
+
   it('reads a secret Upstash token from Netlify.env when process.env is empty', async() => {
     const previous = globalThis.Netlify
     globalThis.Netlify = {

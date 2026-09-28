@@ -1,4 +1,4 @@
-import { handleMultiplayerStatsRequest, readRuntimeRedisEnv, statsRoute } from '../../src/network/multiplayerStats.js'
+import { handleMultiplayerStatsRequest, readRuntimeRedisEnv, statsDebugEnabled, statsRoute } from '../../src/network/multiplayerStats.js'
 
 async function forwardToBlobs(request) {
   const url = new URL(request.url)
@@ -15,18 +15,21 @@ async function forwardToBlobs(request) {
     body: body || undefined
   })
   const text = await response.text()
+  const debug = statsDebugEnabled()
   let nextBody = text
-  try {
-    const parsed = JSON.parse(text)
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      parsed.handler = 'edge-forward'
-      nextBody = JSON.stringify(parsed)
+  if (debug) {
+    try {
+      const parsed = JSON.parse(text)
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        parsed.handler = 'edge-forward'
+        nextBody = JSON.stringify(parsed)
+      }
+    } catch {
+      // Keep a non-JSON function response unchanged.
     }
-  } catch {
-    // Keep a non-JSON function response unchanged.
   }
   const responseHeaders = new Headers(response.headers)
-  responseHeaders.set('x-cfb-stats-handler', 'edge-forward')
+  if (debug) responseHeaders.set('x-cfb-stats-handler', 'edge-forward')
   responseHeaders.delete('content-length')
   return new Response(nextBody, { status: response.status, statusText: response.statusText, headers: responseHeaders })
 }

@@ -189,6 +189,22 @@ export function readRuntimeRedisEnv(env = {}) {
   })
 }
 
+function deployContext(env = {}) {
+  const proc = typeof process !== 'undefined' ? process.env : null
+  return stringEnv(env.CONTEXT)
+    || readNetlifyEnvKey('CONTEXT')
+    || readDenoEnvKey('CONTEXT')
+    || readEnvKey(proc, 'CONTEXT')
+}
+
+// Production responses stay free of store and handler names. Deploy previews,
+// branch deploys, local netlify dev, and the in-memory helper keep them.
+export function statsDebugEnabled(env = {}) {
+  if (env.statsDebug === false) return false
+  if (env.statsDebug === true) return true
+  return deployContext(env) !== 'production'
+}
+
 export function statsRoute(pathname) {
   const path = String(pathname || '')
     .replace(/^\/\.netlify\/functions\/api/, '')
@@ -595,13 +611,16 @@ function outcomeResponse(outcome, options = {}) {
   const body = { ...outcome }
   delete body.rateLimited
   delete body.hostSessionId
-  const backend = outcome.storage === 'redis' || outcome.storage === 'blobs' || outcome.storage === 'memory'
-    ? outcome.storage
-    : 'blobs'
-  body.backend = backend
-  body.storage = backend
-  body.redisConfigured = backend === 'redis'
-  if (options.handler) body.handler = options.handler
+  delete body.storage
+  if (options.debug) {
+    const backend = outcome.storage === 'redis' || outcome.storage === 'blobs' || outcome.storage === 'memory'
+      ? outcome.storage
+      : 'blobs'
+    body.backend = backend
+    body.storage = backend
+    body.redisConfigured = backend === 'redis'
+    if (options.handler) body.handler = options.handler
+  }
   return jsonResponse(200, body)
 }
 
@@ -641,7 +660,10 @@ export async function handleMultiplayerStatsRequest(request, options = {}) {
     } else {
       return jsonResponse(503, { error: 'unavailable' })
     }
-    return outcomeResponse(outcome, options)
+    return outcomeResponse(outcome, {
+      ...options,
+      debug: statsDebugEnabled(options.env || {})
+    })
   } catch {
     return jsonResponse(503, { error: 'unavailable' })
   }

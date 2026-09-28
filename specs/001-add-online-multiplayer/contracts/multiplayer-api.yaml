@@ -207,7 +207,7 @@ paths:
               required: [sessionId, status]
       responses:
         '200':
-          description: Totals for sessions seen in the last 90 seconds. `backend` is `redis` or `blobs`. `redisConfigured` is true only for Redis. `handler` is `edge`, `function`, or `edge-forward`.
+          description: Totals for sessions seen in the last 90 seconds. Deploy previews also include `backend`, `storage`, `redisConfigured`, and `handler`. Production omits those fields.
         '400':
           description: Invalid session id or status
         '429':

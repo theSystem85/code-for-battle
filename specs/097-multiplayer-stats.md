@@ -7,7 +7,7 @@
 - `sessionId` is an anonymous id, 8–64 characters from `[A-Za-z0-9_-]`, created in the browser and stored in both `sessionStorage` and `localStorage` under `cfb-presence-session`.
 - `status` is one of `menu`, `single-player`, `mp-host`, `mp-client`, `looking-for-match`.
 - The response totals are `playing` (every fresh session), `onlineMultiplayer` (`mp-host` + `mp-client`), `lookingForMatch`, plus the per-status counts. Sessions older than 90 seconds are dropped before the counts.
-- A debug field `backend` is `redis` when that response was produced by Upstash, or `blobs` when the Netlify Blobs fallback handled it. The local signalling helper reports `memory`. `storage` repeats the same value. `redisConfigured` is true only when that response used Redis. `handler` is `edge` when the edge function called Upstash, `function` when the Node function handled the request directly, and `edge-forward` when the edge function did not see both Upstash variables and forwarded once to the Node function.
+- Deploy previews, branch deploys, and local runs include `backend` (`redis`, `blobs`, or `memory`), `storage` (the same value), `redisConfigured`, and `handler` (`edge`, `function`, or `edge-forward`). Production (`CONTEXT=production`) omits those four fields. Counts and quick-match tokens stay on every context.
 - No alias, account, address, or other personal data is stored. Keys expire (Redis TTL 180 seconds on the sets, 60 seconds on the rate-limit key, 90 seconds on an open-host token).
 
 Redis keeps one sorted set per status (`cfb:presence:<status>`, score = timestamp). A heartbeat `ZADD`s the session into its status set, `ZREM`s it from the others, `ZREMRANGEBYSCORE`s entries older than 90 seconds, then `ZCARD`s each set. Those commands run inside one `EVAL`, sent as one Upstash REST `/pipeline` request, so the rate limit can reject the heartbeat before the sets change. The per-session limit is 8 requests per 60 seconds.
@@ -42,7 +42,7 @@ With `npm run stun` and `VITE_STUN_HOST=http://127.0.0.1:3333 npm run dev`, `nod
 
 ## Preview check
 
-`POST /api/presence` on `https://deploy-preview-722--code-for-battle.netlify.app` for commit `bb4730db` returned `backend: "blobs"`, `redisConfigured: false`, `handler: "edge-forward"`. The edge function ran and forwarded because neither runtime saw both Upstash variables. The site environment API lists `IMPRESSUM_CONFIG_JSON` only, and the team shared list is empty.
+After rebasing onto `166a9dc4` (#721), deploy preview 722 for commit `40c126df` answered Redis. A host heartbeat returned `backend: "redis"`, `redisConfigured: true`, `handler: "edge"`, `openSlot: "listed"`. A second session in `looking-for-match` raised `lookingForMatch` to 1. `POST /api/quick-match` returned that host token; a second claim returned `inviteToken: null`. A parallel pair of claims against a second host returned the token to only one caller, and the host's next heartbeat reported `openSlot: "filled"`. An earlier preview, before the token was visible to the deploy, had answered `backend: "blobs"`.
 
 ## Not covered here
 
