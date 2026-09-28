@@ -443,12 +443,24 @@ describe('offline sidebar toggle', () => {
     const scrollStart = html.indexOf('id="sidebarScroll"')
     const clusterStart = html.indexOf('id="hudStatusCluster"')
     const clusterEnd = html.indexOf('id="gamepadCursor"')
+    const actionsStart = html.indexOf('id="actions"')
+    const minimapAt = html.indexOf('id="minimap"')
+    const buttonAt = html.indexOf('id="offlineModeButton"')
     expect(html.match(/id="offlineModeButton"/g)).toHaveLength(1)
     expect(html).not.toContain('offlineSidebarStatus')
-    expect(html.slice(sidebarStart, scrollStart)).toContain('id="offlineModeButton"')
+    expect(minimapAt).toBeGreaterThan(sidebarStart)
+    expect(minimapAt).toBeLessThan(actionsStart)
+    expect(buttonAt).toBeGreaterThan(actionsStart)
+    expect(buttonAt).toBeLessThan(scrollStart)
     expect(html.slice(clusterStart, clusterEnd)).not.toContain('offlineModeButton')
     expect(html).not.toMatch(/id="offlineModeButton"[^>]*\stitle=/)
     expect(html).not.toMatch(/id="multiplayerOfflineShield"[^>]*\stitle=/)
+
+    const buttonCss = readFileSync(path.join(process.cwd(), 'styles/overlays.css'), 'utf8')
+    expect(buttonCss).toMatch(/#sidebar > \.offline-mode-button\s*\{[^}]*margin:\s*0 0 4px/)
+    expect(buttonCss).toContain('font-size: 11px')
+    expect(buttonCss).toContain('padding: 3px 8px')
+    expect(buttonCss).not.toContain('margin: 12px 0 8px')
 
     document.body.innerHTML = `
       <button id="offlineModeButton" type="button">Online</button>
