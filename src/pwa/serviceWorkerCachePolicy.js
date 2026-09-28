@@ -1,6 +1,9 @@
+import { OFFLINE_ASSET_FILL_HEADER } from './offlineAssetPlan.js'
 import { OFFLINE_PROBE_PATH } from './precachePolicy.js'
 
 const VIDEO_EXTENSION = /\.(?:mp4|webm|mov|m4v)$/i
+const AUDIO_EXTENSION = /\.(?:mp3|ogg|wav)$/i
+const BULK_EXTENSION = /\.(?:png|webp|gif|json|mp3|ogg|wav)$/i
 
 function pathnameOf(url) {
   if (typeof url === 'string') {
@@ -38,6 +41,25 @@ export function isNetlifyDrawerRequest(url) {
   if (/netlify-drawer|netlify-cdp|collaborator/i.test(path)) return true
   if (host.includes('netlify') && /drawer|\/netlify\.js/i.test(path)) return true
   return false
+}
+
+export function isNavigationDenylisted(url) {
+  const pathname = pathnameOf(url)
+  return pathname.startsWith('/api/') || pathname.startsWith('/.netlify/')
+}
+
+export function isAudioAssetPath(url) {
+  return AUDIO_EXTENSION.test(pathnameOf(url))
+}
+
+export function isBulkAssetPath(url) {
+  return BULK_EXTENSION.test(pathnameOf(url))
+}
+
+export function isOfflineAssetFillRequest(request) {
+  const headers = request?.headers
+  if (!headers || typeof headers.get !== 'function') return false
+  return headers.get(OFFLINE_ASSET_FILL_HEADER) === '1'
 }
 
 export function isRuntimeFontRequest(url) {

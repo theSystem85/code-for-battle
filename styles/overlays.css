@@ -1437,7 +1437,7 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   align-self: flex-start;
   flex: 0 0 auto;
   max-width: calc(100% - 4px);
-  margin: 12px 0 8px;
+  margin: 0 0 4px;
 }
 
 .offline-mode-button {
@@ -1445,18 +1445,19 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   pointer-events: auto;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
   margin: 0;
-  padding: 6px 12px;
+  padding: 3px 8px;
+  min-height: 26px;
   border-radius: 999px;
   background: rgba(12, 18, 24, 0.92);
   border: 1px solid #3dff7a;
   color: #d7fff0;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  line-height: 1.2;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
   cursor: pointer;
   appearance: none;
 }
@@ -1467,8 +1468,8 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
 }
 
 .offline-mode-button__light {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   background: #3dff7a;
   box-shadow: 0 0 8px #3dff7a;
@@ -1510,6 +1511,15 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
 .offline-mode-tip--warn {
   border-color: #ffb020;
   color: #ffe7c2;
+}
+
+.offline-cache-warning {
+  color: #ffe7c2;
+}
+
+.offline-cache-error {
+  color: #ffb4a8;
+  overflow-wrap: anywhere;
 }
 
 .offline-update-prompt {

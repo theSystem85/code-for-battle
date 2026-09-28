@@ -2,6 +2,7 @@
 import { getMasterVolume } from '../sound.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import { showNotification } from './notifications.js'
+import { configureAudioElement } from '../pwa/audioElementPolicy.js'
 import { isEffectivelyOffline, shouldSkipMilestoneVideo } from '../pwa/offlineState.js'
 import {
   computeMilestoneVideoOpacity,
@@ -717,6 +718,7 @@ export class VideoOverlay {
     ]
     const tryPath = (path) => new Promise((resolve, reject) => {
       const audio = new Audio()
+      configureAudioElement(audio, path, window.location.origin)
       audio.preload = 'auto'
       let settled = false
       const finish = (handler, value) => {

@@ -8,7 +8,23 @@ import {
   formatOfflineSettingsSize,
   offlineClearCopy
 } from './offlineCacheClear.js'
-import { formatOfflineCacheTooltip, resolveOfflineCacheBytes } from './offlineCacheSize.js'
+import {
+  formatIncompleteOfflineWarning,
+  formatOfflineCacheError,
+  formatOfflineCacheTooltip,
+  formatOfflineFileCount,
+  resolveOfflineCacheBytes
+} from './offlineCacheSize.js'
+import {
+  OFFLINE_ASSET_FILL_HEADER,
+  OFFLINE_ASSETS_CACHE,
+  OFFLINE_ASSETS_MANIFEST_PATH
+} from './offlineAssetPlan.js'
+import {
+  downloadOfflineAssets,
+  isOfflinePlayReady,
+  measureOfflineReadiness
+} from './offlineAssetDownload.js'
 import {
   getOfflineSnapshot,
   isEffectivelyOffline,
@@ -17,6 +33,7 @@ import {
   setOfflineSnapshot,
   writeForcedOffline
 } from './offlineState.js'
+import { formatPersistentStorageStatus, isStandaloneDisplayMode, requestPersistentStorage } from './persistentStorage.js'
 
 const UPDATE_RELOAD_GUARD = 'cfb-sw-update-reload'
 const PROBE_INTERVAL_MS = 30000
@@ -37,7 +54,15 @@ export function offlineModeCopy(locale) {
     multiplayerHint: uiText('offline.multiplayerDisabled', locale),
     updateLabel: uiText('offline.updateAvailable', locale),
     preparingTemplate: uiText('offline.preparing', locale),
-    readyTemplate: uiText('offline.ready', locale)
+    preparingFilesTemplate: uiText('offline.preparingFiles', locale),
+    readyTemplate: uiText('offline.ready', locale),
+    readyFilesTemplate: uiText('offline.readyFiles', locale),
+    incompleteTemplate: uiText('offline.incompleteWarning', locale),
+    cacheErrorTemplate: uiText('offline.cacheError', locale),
+    retryLabel: uiText('offline.retry', locale),
+    persistPersistent: uiText('offline.persistPersistent', locale),
+    persistTemporary: uiText('offline.persistTemporary', locale),
+    persistUnavailable: uiText('offline.persistUnavailable', locale)
   }
 }
 
@@ -82,12 +107,16 @@ export function applyOfflineModeDom(elements, view) {
     button.setAttribute('aria-label', view.toggleLabel || (offline ? view.offlineLabel : view.onlineLabel))
     button.dataset.forced = view.forced ? 'true' : 'false'
     button.dataset.offlineCache = view.cacheReady ? 'ready' : 'preparing'
+    button.dataset.offlineReady = view.cacheReady ? 'true' : 'false'
+    if (view.fileCount) button.dataset.offlineFiles = view.fileCount
+    else delete button.dataset.offlineFiles
     forgetNativeTitle(button)
     const label = button.querySelector('[data-offline-label]')
     if (label) label.textContent = offline ? view.offlineLabel : view.onlineLabel
     const tip = elements.tip || button.ownerDocument?.getElementById('offlineModeTip')
     if (tip) {
       tip.textContent = view.tooltip || ''
+      tip.classList.toggle('offline-mode-tip--warn', view.tooltipWarning === true)
       if (!tip.hidden) placeFloatingTip(button, tip)
     }
   }
@@ -183,6 +212,13 @@ export function startOfflineMode(options = {}) {
   let cacheReady = !import.meta.env.PROD
   let precachePercent = cacheReady ? 100 : 0
   let cacheBytes = null
+  let assetDone = null
+  let assetTotal = null
+  let assetFailures = []
+  let bootError = null
+  let showIncompleteWarning = false
+  let persistStatus = null
+  let assetManifest = null
   let cacheCleared = false
   let dialogPhase = null
   let clearingCache = false
@@ -191,6 +227,9 @@ export function startOfflineMode(options = {}) {
   let stopped = false
   let tipTimer = null
   let probeTimer = null
+  let measureTimer = null
+  let downloadTask = null
+  let downloadGeneration = 0
   let lastPointerType = 'mouse'
 
   const elements = () => ({
@@ -205,6 +244,10 @@ export function startOfflineMode(options = {}) {
     sectionTitle: win.document.querySelector('[data-offline-clear-title]'),
     hint: win.document.querySelector('[data-offline-clear-hint]'),
     size: win.document.getElementById('offlineCacheSizeText'),
+    persist: win.document.getElementById('offlineStoragePersistText'),
+    incomplete: win.document.getElementById('offlineCacheIncompleteText'),
+    error: win.document.getElementById('offlineCacheErrorText'),
+    retry: win.document.getElementById('offlineCacheRetryButton'),
     clearButton: win.document.getElementById('offlineClearCacheButton'),
     dialog: win.document.getElementById('offlineClearDialog'),
     title: win.document.getElementById('offlineClearDialogTitle'),
@@ -215,32 +258,62 @@ export function startOfflineMode(options = {}) {
     reload: win.document.getElementById('offlineClearReload')
   })
 
+  function fileCountsKnown() {
+    return Number(assetTotal) > 0 && Number.isFinite(Number(assetDone))
+  }
+
+  function networkAllowsDownload() {
+    return navigatorOnLine && !probeFailed && !cacheCleared && !stopped && !clearingCache
+  }
+
+  function pageVisible() {
+    const state = win.document?.visibilityState
+    return state == null || state === 'visible'
+  }
+
+  function downloadAllowed() {
+    return networkAllowsDownload() && pageVisible()
+  }
+
+  function primaryFailure() {
+    if (bootError) return bootError
+    return assetFailures[0] || null
+  }
+
   function cacheTooltip(copy, clearCopy) {
+    const failure = primaryFailure()
+    if (failure && !cacheReady && !cacheCleared) {
+      const extra = bootError ? assetFailures.length : Math.max(0, assetFailures.length - 1)
+      return formatOfflineCacheError(copy.cacheErrorTemplate, failure, extra)
+    }
+    const tooltipOptions = {
+      ready: cacheReady,
+      percent: precachePercent,
+      bytes: cacheBytes || 0,
+      done: assetDone,
+      total: assetTotal,
+      filesWord: clearCopy.filesWord,
+      preparingTemplate: copy.preparingTemplate,
+      preparingFilesTemplate: copy.preparingFilesTemplate,
+      readyTemplate: copy.readyTemplate,
+      readyFilesTemplate: copy.readyFilesTemplate
+    }
+    if (showIncompleteWarning && !cacheReady) {
+      return formatIncompleteOfflineWarning(copy.incompleteTemplate, assetDone, assetTotal)
+    }
     if (!cacheReady && !cacheCleared) {
-      return formatOfflineCacheTooltip({
-        ready: false,
-        percent: precachePercent,
-        preparingTemplate: copy.preparingTemplate,
-        readyTemplate: copy.readyTemplate
-      })
+      if (cacheBytes == null && !fileCountsKnown()) {
+        return formatOfflineCacheTooltip({ ...tooltipOptions, ready: false })
+      }
+      return formatOfflineCacheTooltip({ ...tooltipOptions, ready: false })
     }
     if (cacheBytes === 0 || (cacheCleared && !(cacheBytes > 0))) {
       return String(clearCopy.emptyTooltip || '').replaceAll('{size}', formatOfflineByteSize(cacheBytes))
     }
     if (cacheBytes == null) {
-      return formatOfflineCacheTooltip({
-        ready: false,
-        percent: precachePercent,
-        preparingTemplate: copy.preparingTemplate,
-        readyTemplate: copy.readyTemplate
-      })
+      return formatOfflineCacheTooltip({ ...tooltipOptions, ready: false })
     }
-    return formatOfflineCacheTooltip({
-      ready: true,
-      bytes: cacheBytes,
-      preparingTemplate: copy.preparingTemplate,
-      readyTemplate: copy.readyTemplate
-    })
+    return formatOfflineCacheTooltip(tooltipOptions)
   }
 
   function publish() {
@@ -251,10 +324,27 @@ export function startOfflineMode(options = {}) {
     })
     const copy = offlineModeCopy()
     const clearCopy = offlineClearCopy()
+    const failure = primaryFailure()
+    const extraFailures = bootError ? assetFailures.length : Math.max(0, assetFailures.length - 1)
+    const tooltipWarning = (showIncompleteWarning && !cacheReady) || Boolean(failure)
+    const progressTooltip = formatOfflineCacheTooltip({
+      ready: cacheReady && !cacheCleared,
+      percent: precachePercent,
+      bytes: cacheBytes || 0,
+      done: assetDone,
+      total: assetTotal,
+      filesWord: clearCopy.filesWord,
+      preparingTemplate: copy.preparingTemplate,
+      preparingFilesTemplate: copy.preparingFilesTemplate,
+      readyTemplate: copy.readyTemplate,
+      readyFilesTemplate: copy.readyFilesTemplate
+    })
     const view = {
       ...next,
       ...copy,
       cacheReady,
+      tooltipWarning,
+      fileCount: formatOfflineFileCount(assetDone, assetTotal, clearCopy.filesWord),
       tooltip: cacheTooltip(copy, clearCopy),
       updateAvailable: Boolean(updateRegistration?.waiting) && Boolean(win.navigator.serviceWorker?.controller) && !applyingUpdate
     }
@@ -263,12 +353,25 @@ export function startOfflineMode(options = {}) {
       bytes: cacheBytes,
       ready: cacheReady,
       cleared: cacheCleared,
-      preparingText: view.tooltip,
+      preparingText: (!cacheReady && !cacheCleared) ? progressTooltip : view.tooltip,
+      done: assetDone,
+      total: assetTotal,
       copy: clearCopy
     })
     applyOfflineCacheSettings(elements(), {
       ...clearCopy,
-      sizeText
+      sizeText,
+      persistText: formatPersistentStorageStatus(persistStatus, {
+        persistent: copy.persistPersistent,
+        temporary: copy.persistTemporary,
+        unavailable: copy.persistUnavailable
+      }),
+      incompleteText: showIncompleteWarning && !cacheReady
+        ? formatIncompleteOfflineWarning(copy.incompleteTemplate, assetDone, assetTotal)
+        : '',
+      errorText: failure ? formatOfflineCacheError(copy.cacheErrorTemplate, failure, bootError ? assetFailures.length : extraFailures) : '',
+      showRetry: Boolean(failure) && !cacheCleared,
+      retryLabel: copy.retryLabel
     })
     const clearedSize = formatOfflineByteSize(cacheBytes)
     applyOfflineClearDialog(elements(), {
@@ -281,13 +384,132 @@ export function startOfflineMode(options = {}) {
     return view
   }
 
+  function applyMeasurement(measured, { confirmed = false } = {}) {
+    if (!measured) return
+    assetDone = measured.done
+    assetTotal = measured.total
+    if (Number.isFinite(measured.bytes)) cacheBytes = measured.bytes
+    const controlled = Boolean(win.navigator?.serviceWorker?.controller)
+    if (confirmed) {
+      cacheReady = isOfflinePlayReady({
+        controlled,
+        done: measured.done,
+        total: measured.total,
+        failures: assetFailures
+      })
+      if (cacheReady) showIncompleteWarning = false
+    }
+  }
+
   async function refreshBytes() {
-    const resolved = await resolveOfflineCacheBytes({
-      cacheStorage: typeof caches !== 'undefined' ? caches : null
-    })
+    const cacheStorage = typeof caches !== 'undefined' ? caches : null
+    if (assetManifest && cacheStorage && import.meta.env.PROD) {
+      try {
+        const measured = await measureOfflineReadiness(cacheStorage, assetManifest)
+        applyMeasurement(measured, { confirmed: true })
+        if (!stopped) publish()
+        return { bytes: measured.bytes, source: 'cache', entries: measured.done }
+      } catch {
+        // Fall through to the storage estimate when the Cache API cannot be read.
+      }
+    }
+    const resolved = await resolveOfflineCacheBytes({ cacheStorage })
     cacheBytes = resolved.bytes
     if (!stopped) publish()
     return resolved
+  }
+
+  async function loadAssetManifest() {
+    const response = await fetchImpl(OFFLINE_ASSETS_MANIFEST_PATH, { cache: 'no-store' })
+    if (!response || !response.ok) {
+      throw new Error(response ? `HTTP ${response.status}` : 'empty response')
+    }
+    const manifest = await response.json()
+    if (!manifest || !Array.isArray(manifest.assets) || !Array.isArray(manifest.boot)) {
+      throw new Error('invalid offline asset manifest')
+    }
+    if (!manifest.cache) manifest.cache = OFFLINE_ASSETS_CACHE
+    assetManifest = manifest
+    return manifest
+  }
+
+  async function runAssetDownload(generation) {
+    const cacheStorage = typeof caches !== 'undefined' ? caches : null
+    if (!cacheStorage || !import.meta.env.PROD || cacheCleared) return
+    try {
+      const manifest = assetManifest || await loadAssetManifest()
+      if (generation !== downloadGeneration || !downloadAllowed()) return
+      const cache = await cacheStorage.open(manifest.cache || OFFLINE_ASSETS_CACHE)
+      const result = await downloadOfflineAssets({
+        assets: manifest.assets,
+        cache,
+        fetchImpl: (url) => fetchImpl(url, {
+          cache: 'no-store',
+          headers: { [OFFLINE_ASSET_FILL_HEADER]: '1' }
+        }),
+        shouldContinue: () => generation === downloadGeneration && downloadAllowed(),
+        onProgress: (progress) => {
+          if (generation !== downloadGeneration || stopped) return
+          const bootEntries = manifest.boot || []
+          const bootBytes = bootEntries.reduce((sum, entry) => sum + (Number(entry.size) || 0), 0)
+          assetDone = bootEntries.length + progress.done
+          assetTotal = bootEntries.length + progress.total
+          cacheBytes = bootBytes + progress.bytes
+          publish()
+        }
+      })
+      if (generation !== downloadGeneration || stopped) return
+      assetFailures = result.failures || []
+      const measured = await measureOfflineReadiness(cacheStorage, manifest)
+      assetDone = measured.done
+      assetTotal = measured.total
+      applyMeasurement(measured, { confirmed: true })
+      if (!result.complete && result.paused && downloadAllowed() && generation === downloadGeneration) {
+        // A pause that cleared before the next check resumes on the following kick.
+      }
+    } catch (error) {
+      if (generation !== downloadGeneration || stopped) return
+      bootError = {
+        url: OFFLINE_ASSETS_MANIFEST_PATH,
+        message: error?.message || String(error)
+      }
+    }
+    if (!stopped) publish()
+  }
+
+  function kickAssetDownload() {
+    if (!import.meta.env.PROD || stopped || cacheCleared || cacheReady || downloadTask) return
+    if (!win.navigator?.serviceWorker?.controller) return
+    if (!downloadAllowed()) return
+    const generation = downloadGeneration
+    downloadTask = runAssetDownload(generation).finally(() => {
+      downloadTask = null
+      if (!stopped && !cacheCleared && generation === downloadGeneration && downloadAllowed() && !cacheReady && !bootError) {
+        // The loop paused because the page hid or the network dropped. The
+        // visibility and online events start it again.
+      }
+    })
+  }
+
+  async function retryOfflineDownload() {
+    bootError = null
+    assetFailures = []
+    cacheReady = false
+    cacheCleared = false
+    showIncompleteWarning = forced === true
+    publish()
+    try {
+      if (!updateRegistration && win.navigator?.serviceWorker) {
+        updateRegistration = await win.navigator.serviceWorker.register('/sw.js', { scope: '/' })
+      }
+      await updateRegistration?.update?.()
+    } catch (error) {
+      bootError = { url: '/sw.js', message: error?.message || String(error) }
+      publish()
+    }
+    downloadGeneration += 1
+    if (downloadTask) await downloadTask.catch(() => {})
+    kickAssetDownload()
   }
 
   async function refreshProbe() {
@@ -300,18 +522,29 @@ export function startOfflineMode(options = {}) {
     if (stopped) return ok
     probeFailed = !ok
     publish()
+    if (ok) kickAssetDownload()
     return ok
   }
 
   function toggleForced() {
     forced = !forced
     writeForcedOffline(storage, forced)
+    if (forced && !cacheReady) {
+      showIncompleteWarning = true
+      const { button, tip } = elements()
+      publish()
+      holdFloatingTip(button, tip, 4000)
+      return
+    }
+    if (!forced) showIncompleteWarning = false
     publish()
   }
 
   function onOnline() {
     navigatorOnLine = true
-    refreshProbe()
+    refreshProbe().then(() => {
+      if (!stopped) kickAssetDownload()
+    })
   }
 
   function onOffline() {
@@ -341,8 +574,10 @@ export function startOfflineMode(options = {}) {
   async function confirmClear() {
     if (clearingCache || dialogPhase !== 'confirm') return
     clearingCache = true
+    downloadGeneration += 1
     publish()
     try {
+      if (downloadTask) await downloadTask.catch(() => {})
       await clearOfflineAppCache({
         cacheStorage: typeof caches !== 'undefined' ? caches : null,
         serviceWorker: win.navigator?.serviceWorker
@@ -350,6 +585,12 @@ export function startOfflineMode(options = {}) {
       cacheCleared = true
       cacheReady = true
       precachePercent = 100
+      assetDone = 0
+      assetTotal = 0
+      assetFailures = []
+      bootError = null
+      assetManifest = null
+      showIncompleteWarning = false
       updateRegistration = null
       dialogPhase = 'cleared'
       await refreshBytes()
@@ -372,7 +613,7 @@ export function startOfflineMode(options = {}) {
   }
 
   function bindUi() {
-    const { button, tip, shield, multiplayerHint, updatePrompt, clearButton, dialog, confirm, cancel, reload } = elements()
+    const { button, tip, shield, multiplayerHint, updatePrompt, clearButton, retry, dialog, confirm, cancel, reload } = elements()
     const longPress = createOfflineLongPress(() => {
       if (lastPointerType !== 'mouse') {
         holdFloatingTip(button, tip, 4000)
@@ -423,6 +664,12 @@ export function startOfflineMode(options = {}) {
       button.addEventListener('pointermove', (event) => longPress.pointerMove(event))
       button.addEventListener('pointerup', () => longPress.pointerUp())
       button.addEventListener('pointercancel', () => longPress.pointerUp())
+    }
+    if (retry && retry.dataset.offlineBound !== 'true') {
+      retry.dataset.offlineBound = 'true'
+      retry.addEventListener('click', () => {
+        retryOfflineDownload()
+      })
     }
     if (clearButton && clearButton.dataset.offlineBound !== 'true') {
       clearButton.dataset.offlineBound = 'true'
@@ -531,12 +778,16 @@ export function startOfflineMode(options = {}) {
 
     win.navigator.serviceWorker.addEventListener('message', (event) => {
       const data = event.data
-      if (!data || data.type !== 'OFFLINE_PRECACHE') return
-      if (Number.isFinite(data.percent)) precachePercent = data.percent
-      if (data.ready) {
-        cacheReady = true
-        refreshBytes()
+      if (!data) return
+      if (data.type === 'OFFLINE_BOOT_ERROR') {
+        bootError = { url: data.url || '/sw.js', message: data.message || 'Service worker install failed' }
+        publish()
+        return
       }
+      if (data.type !== 'OFFLINE_PRECACHE') return
+      if (Number.isFinite(data.percent)) precachePercent = data.percent
+      if (data.ready && data.boot) bootError = null
+      if (data.ready) kickAssetDownload()
       publish()
     })
 
@@ -558,6 +809,13 @@ export function startOfflineMode(options = {}) {
     const watch = (worker) => {
       if (!worker) return
       worker.addEventListener('statechange', () => {
+        if (worker.state === 'installed' && !win.navigator.serviceWorker.controller) {
+          worker.postMessage({ type: 'SKIP_WAITING' })
+        }
+        if (worker.state === 'redundant' && !win.navigator.serviceWorker.controller) {
+          bootError = { url: '/sw.js', message: 'Service worker install failed' }
+          publish()
+        }
         if (worker.state === 'installed' && win.navigator.serviceWorker.controller && registration.waiting) {
           updateRegistration = registration
           publish()
@@ -565,13 +823,23 @@ export function startOfflineMode(options = {}) {
       })
     }
     watch(registration.installing)
+    watch(registration.waiting)
     registration.addEventListener('updatefound', () => watch(registration.installing))
+
+    if (registration.waiting && !win.navigator.serviceWorker.controller) {
+      registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+    }
+
+    win.navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (stopped || applyingUpdate) return
+      kickAssetDownload()
+    })
 
     win.navigator.serviceWorker.ready.then(() => {
       if (stopped) return
-      cacheReady = true
       precachePercent = 100
       publish()
+      kickAssetDownload()
       refreshBytes()
       if (navigatorOnLine && !isEffectivelyOffline()) warmRuntimeFonts(fetchImpl)
     }).catch(() => {})
@@ -579,7 +847,14 @@ export function startOfflineMode(options = {}) {
     win.document.addEventListener('visibilitychange', () => {
       if (win.document.visibilityState !== 'visible') return
       registration.update().catch(() => {})
+      kickAssetDownload()
     })
+
+    measureTimer = setInterval(() => {
+      if (stopped || cacheReady || cacheCleared || !assetManifest) return
+      if (!pageVisible()) return
+      refreshBytes().catch(() => {})
+    }, 2000)
   }
 
   if (win.document.readyState === 'loading') {
@@ -595,14 +870,30 @@ export function startOfflineMode(options = {}) {
   probeTimer = setInterval(refreshProbe, PROBE_INTERVAL_MS)
   registerServiceWorker().catch(err => {
     win.logger?.warn?.('Service worker registration failed', err)
-    cacheReady = true
+    bootError = { url: '/sw.js', message: err?.message || 'Service worker registration failed' }
     publish()
   })
+
+  const persistentStorage = win.navigator?.storage
+  const standalone = isStandaloneDisplayMode(win)
+  if (standalone || import.meta.env.PROD) {
+    if (!persistentStorage || typeof persistentStorage.persist !== 'function') {
+      persistStatus = { supported: false, persisted: false, called: false }
+      publish()
+    } else {
+      requestPersistentStorage(persistentStorage, { standalone: true }).then(result => {
+        persistStatus = result
+        if (!stopped) publish()
+      }).catch(() => {})
+    }
+  }
 
   return {
     stop() {
       stopped = true
+      downloadGeneration += 1
       if (probeTimer) clearInterval(probeTimer)
+      if (measureTimer) clearInterval(measureTimer)
       if (tipTimer) clearTimeout(tipTimer)
       win.removeEventListener('online', onOnline)
       win.removeEventListener('offline', onOffline)

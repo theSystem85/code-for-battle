@@ -1,4 +1,5 @@
-import { readFileSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import {
@@ -6,6 +7,22 @@ import {
   PRECACHE_GLOB_PATTERNS,
   PRECACHE_MAX_FILE_BYTES
 } from '../../src/pwa/precachePolicy.js'
+import { audioCrossOriginForUrl, configureAudioElement } from '../../src/pwa/audioElementPolicy.js'
+import {
+  classifyOfflinePath,
+  OFFLINE_ASSET_REVISION_HEADER,
+  OFFLINE_ASSETS_CACHE,
+  toPublicAssetUrl
+} from '../../src/pwa/offlineAssetPlan.js'
+import { buildOfflineAssetManifest } from '../../src/pwa/offlineAssetManifestPlugin.js'
+import {
+  cleanupStaleOfflineAssets,
+  downloadOfflineAssets,
+  isOfflinePlayReady,
+  measureOfflineReadiness
+} from '../../src/pwa/offlineAssetDownload.js'
+import { isNavigationDenylisted, resolveDocumentNavigation } from '../../src/pwa/navigationFallback.js'
+import { formatPersistentStorageStatus, isStandaloneDisplayMode, requestPersistentStorage } from '../../src/pwa/persistentStorage.js'
 import {
   computeEffectiveOffline,
   createOfflineSnapshot,
@@ -18,6 +35,8 @@ import {
 import {
   cachedResponseSize,
   formatCachedByteSize,
+  formatIncompleteOfflineWarning,
+  formatOfflineCacheError,
   formatOfflineCacheTooltip,
   resolveOfflineCacheBytes,
   sumCachedResponseBytes
@@ -424,12 +443,24 @@ describe('offline sidebar toggle', () => {
     const scrollStart = html.indexOf('id="sidebarScroll"')
     const clusterStart = html.indexOf('id="hudStatusCluster"')
     const clusterEnd = html.indexOf('id="gamepadCursor"')
+    const actionsStart = html.indexOf('id="actions"')
+    const minimapAt = html.indexOf('id="minimap"')
+    const buttonAt = html.indexOf('id="offlineModeButton"')
     expect(html.match(/id="offlineModeButton"/g)).toHaveLength(1)
     expect(html).not.toContain('offlineSidebarStatus')
-    expect(html.slice(sidebarStart, scrollStart)).toContain('id="offlineModeButton"')
+    expect(minimapAt).toBeGreaterThan(sidebarStart)
+    expect(minimapAt).toBeLessThan(actionsStart)
+    expect(buttonAt).toBeGreaterThan(actionsStart)
+    expect(buttonAt).toBeLessThan(scrollStart)
     expect(html.slice(clusterStart, clusterEnd)).not.toContain('offlineModeButton')
     expect(html).not.toMatch(/id="offlineModeButton"[^>]*\stitle=/)
     expect(html).not.toMatch(/id="multiplayerOfflineShield"[^>]*\stitle=/)
+
+    const buttonCss = readFileSync(path.join(process.cwd(), 'styles/overlays.css'), 'utf8')
+    expect(buttonCss).toMatch(/#sidebar > \.offline-mode-button\s*\{[^}]*margin:\s*0 0 4px/)
+    expect(buttonCss).toContain('font-size: 11px')
+    expect(buttonCss).toContain('padding: 3px 8px')
+    expect(buttonCss).not.toContain('margin: 12px 0 8px')
 
     document.body.innerHTML = `
       <button id="offlineModeButton" type="button">Online</button>
@@ -449,7 +480,9 @@ describe('offline sidebar toggle', () => {
 describe('offline precache policy', () => {
   it('keeps videos and the connectivity probe out of the precache and off the cache', () => {
     expect(PRECACHE_MAX_FILE_BYTES).toBeGreaterThanOrEqual(4 * 1024 * 1024)
-    expect(PRECACHE_GLOB_PATTERNS.join(' ')).toContain('mp3')
+    expect(PRECACHE_GLOB_PATTERNS.join(' ')).not.toContain('mp3')
+    expect(PRECACHE_GLOB_PATTERNS.join(' ')).toContain('offline-assets-manifest.json')
+    expect(PRECACHE_GLOB_PATTERNS.join(' ')).toContain('images/sidebar')
     expect(PRECACHE_GLOB_IGNORES.join(' ')).toContain('mp4')
     expect(PRECACHE_GLOB_IGNORES.join(' ')).toContain('offline-probe.txt')
     expect(shouldBypassServiceWorkerCache('/.netlify/functions/api', 'GET')).toBe(true)
@@ -461,11 +494,378 @@ describe('offline precache policy', () => {
 
     const netlify = readFileSync(path.join(process.cwd(), 'netlify.toml'), 'utf8')
     expect(netlify).toMatch(/for = "\/sw\.js"[\s\S]*Cache-Control = "no-cache"/)
+    expect(netlify).toMatch(/for = "\/offline-assets-manifest\.json"[\s\S]*Cache-Control = "no-cache"/)
     expect(netlify).toMatch(/for = "\/assets\/\*"[\s\S]*immutable/)
     const worker = readFileSync(path.join(process.cwd(), 'src/pwa/sw.js'), 'utf8')
     expect(worker).toContain('self.__WB_MANIFEST')
     expect(worker).toContain("event.data.type === 'SKIP_WAITING'")
     expect(worker).toContain('self.skipWaiting()')
+    expect(worker).toContain('createHandlerBoundToURL')
+    expect(worker).toContain('RangeRequestsPlugin')
+    expect(worker).toContain('new CacheableResponsePlugin({ statuses: [200] })')
+    expect(worker).toContain('OFFLINE_ASSETS_CACHE')
+    expect(OFFLINE_ASSETS_CACHE).toBe('cfb-offline-assets-v1')
+    expect(worker).toContain('isNavigationDenylisted')
+    expect(worker).toContain('NAVIGATION_NETWORK_TIMEOUT_MS')
+    const installHandler = worker.slice(worker.indexOf("addEventListener('install'"), worker.indexOf("addEventListener('activate'"))
+    expect(installHandler).not.toContain('skipWaiting')
     expect(worker).toMatch(/addEventListener\('install', \(event\) => \{\s*event\.waitUntil\(reportPrecacheProgress/)
+    expect(worker).toContain('audioCachePlugins')
+    expect(installHandler).toContain('reportPrecacheProgress')
+  })
+})
+
+function memoryAssetCache() {
+  const entries = new Map()
+  const keyOf = (request) => {
+    const raw = typeof request === 'string' ? request : (request?.url || '')
+    return raw.split('?')[0]
+  }
+  return {
+    async put(request, response) {
+      entries.set(keyOf(request), response)
+    },
+    async match(request) {
+      return entries.get(keyOf(request)) || null
+    },
+    async delete(request) {
+      return entries.delete(keyOf(request))
+    },
+    async keys() {
+      return [...entries.keys()].map(url => ({ url }))
+    }
+  }
+}
+
+function asset(url, revision = 'rev-1', size = 4) {
+  return { url, revision, size }
+}
+
+describe('offline asset split', () => {
+  it('keeps the boot shell small and moves audio, atlases, and json out of the precache', () => {
+    expect(classifyOfflinePath('index.html')).toBe('boot')
+    expect(classifyOfflinePath('assets/main-abc.js')).toBe('boot')
+    expect(classifyOfflinePath('assets/main-abc.css')).toBe('boot')
+    expect(classifyOfflinePath('site.webmanifest')).toBe('boot')
+    expect(classifyOfflinePath('favicon-32x32.png')).toBe('boot')
+    expect(classifyOfflinePath('images/sidebar/tank.webp')).toBe('boot')
+    expect(classifyOfflinePath('cursors/default.svg')).toBe('boot')
+    expect(classifyOfflinePath('icons/wrench.svg')).toBe('boot')
+    expect(classifyOfflinePath('images/terrain/terrain-details.png')).toBe('bulk')
+    expect(classifyOfflinePath('images/prepared/sprite-manifest.json')).toBe('bulk')
+    expect(classifyOfflinePath('sound/music/music01.mp3')).toBe('bulk')
+    expect(classifyOfflinePath('video/narration.mp3')).toBe('bulk')
+    expect(classifyOfflinePath('mine_explosion.mp3')).toBe('bulk')
+    expect(classifyOfflinePath('video/first_tank.mp4')).toBe('exclude')
+    expect(classifyOfflinePath('offline-probe.txt')).toBe('exclude')
+    expect(classifyOfflinePath('sw.js')).toBe('exclude')
+    expect(classifyOfflinePath('offline-assets-manifest.json')).toBe('exclude')
+    expect(toPublicAssetUrl('images/prepared/aircraft/apache/body-atlas@2x.webp'))
+      .toBe('/images/prepared/aircraft/apache/body-atlas@2x.webp')
+  })
+
+  it('writes a revisioned manifest that separates boot files from bulk assets', () => {
+    const root = mkdtempSync(path.join(tmpdir(), 'cfb-offline-'))
+    try {
+      mkdirSync(path.join(root, 'images/sidebar'), { recursive: true })
+      mkdirSync(path.join(root, 'images/terrain'), { recursive: true })
+      mkdirSync(path.join(root, 'sound'), { recursive: true })
+      writeFileSync(path.join(root, 'index.html'), '<html></html>')
+      writeFileSync(path.join(root, 'app.js'), 'console.log(1)')
+      writeFileSync(path.join(root, 'images/sidebar/tank.webp'), 'sidebar')
+      writeFileSync(path.join(root, 'images/terrain/terrain-details.png'), 'terrain')
+      writeFileSync(path.join(root, 'sound/shot.mp3'), 'audio')
+      writeFileSync(path.join(root, 'clip.mp4'), 'video')
+      writeFileSync(path.join(root, 'offline-probe.txt'), 'ok')
+      const manifest = buildOfflineAssetManifest(root)
+      expect(manifest.cache).toBe(OFFLINE_ASSETS_CACHE)
+      expect(manifest.boot.map(entry => entry.url).sort()).toEqual(['/app.js', '/images/sidebar/tank.webp', '/index.html'])
+      expect(manifest.assets.map(entry => entry.url)).toEqual(['/images/terrain/terrain-details.png', '/sound/shot.mp3'])
+      expect(manifest.assets[0].revision).toMatch(/^[a-f0-9]{32}$/)
+      expect(manifest.assets[0].size).toBeGreaterThan(0)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  })
+})
+
+describe('resumable offline asset download', () => {
+  it('skips cached revisions, retries with backoff, and cleans stale entries', async() => {
+    const cache = memoryAssetCache()
+    await cache.put('/old.webp', new Response('old', {
+      status: 200,
+      headers: { [OFFLINE_ASSET_REVISION_HEADER]: 'gone', 'content-length': '3' }
+    }))
+    const attempts = []
+    const summary = await downloadOfflineAssets({
+      assets: [asset('/keep.mp3', 'aaa', 2), asset('/flaky.png', 'bbb', 2)],
+      cache,
+      concurrency: 1,
+      maxAttempts: 3,
+      sleep: async() => {},
+      fetchImpl: async(url) => {
+        attempts.push(url)
+        if (url === '/flaky.png' && attempts.filter(item => item === url).length < 2) {
+          throw new Error('network dropped')
+        }
+        return new Response('ok', { status: 200, headers: { 'content-type': 'text/plain' } })
+      }
+    })
+    expect(summary.complete).toBe(true)
+    expect(summary.failures).toEqual([])
+    expect(attempts.filter(url => url === '/flaky.png')).toHaveLength(2)
+    expect(await cache.match('/old.webp')).toBeNull()
+    const kept = await cache.match('/flaky.png')
+    expect(kept.headers.get(OFFLINE_ASSET_REVISION_HEADER)).toBe('bbb')
+
+    const second = []
+    const again = await downloadOfflineAssets({
+      assets: [asset('/keep.mp3', 'aaa', 2), asset('/flaky.png', 'bbb', 2)],
+      cache,
+      fetchImpl: async(url) => {
+        second.push(url)
+        return new Response('nope', { status: 500 })
+      }
+    })
+    expect(second).toEqual([])
+    expect(again.complete).toBe(true)
+    expect(again.done).toBe(2)
+  })
+
+  it('pauses when offline and resumes the files that were not stored', async() => {
+    const cache = memoryAssetCache()
+    let allow = true
+    let fetches = 0
+    const paused = await downloadOfflineAssets({
+      assets: [asset('/a.mp3'), asset('/b.mp3'), asset('/c.mp3')],
+      cache,
+      concurrency: 1,
+      sleep: async() => {},
+      shouldContinue: () => allow,
+      fetchImpl: async() => {
+        fetches += 1
+        if (fetches === 1) allow = false
+        return new Response('abcd', { status: 200 })
+      }
+    })
+    expect(paused.paused).toBe(true)
+    expect(paused.done).toBe(1)
+    expect(paused.complete).toBe(false)
+
+    const resumed = await downloadOfflineAssets({
+      assets: [asset('/a.mp3'), asset('/b.mp3'), asset('/c.mp3')],
+      cache,
+      concurrency: 2,
+      sleep: async() => {},
+      fetchImpl: async() => new Response('abcd', { status: 200 })
+    })
+    expect(resumed.complete).toBe(true)
+    expect(resumed.done).toBe(3)
+    expect(fetches).toBe(1)
+  })
+
+  it('limits concurrency and does not retry a missing file forever', async() => {
+    let active = 0
+    let maxActive = 0
+    const calls = []
+    const cache = memoryAssetCache()
+    const summary = await downloadOfflineAssets({
+      assets: Array.from({ length: 8 }, (_, index) => asset(`/file-${index}.webp`, 'r', 1)),
+      cache,
+      concurrency: 4,
+      maxAttempts: 2,
+      sleep: async() => {},
+      fetchImpl: async(url) => {
+        calls.push(url)
+        if (url === '/file-0.webp') return new Response('missing', { status: 404 })
+        active += 1
+        maxActive = Math.max(maxActive, active)
+        await new Promise(resolve => setTimeout(resolve, 15))
+        active -= 1
+        return new Response('x', { status: 200 })
+      }
+    })
+    expect(maxActive).toBeLessThanOrEqual(4)
+    expect(maxActive).toBeGreaterThan(1)
+    expect(calls.filter(url => url === '/file-0.webp')).toHaveLength(1)
+    expect(summary.complete).toBe(false)
+    expect(summary.failures).toEqual([{ url: '/file-0.webp', message: 'HTTP 404' }])
+    expect(summary.done).toBe(7)
+  })
+
+  it('counts cached bytes against the expected list and ignores a storage estimate', async() => {
+    const bulk = memoryAssetCache()
+    await downloadOfflineAssets({
+      assets: [asset('/sound/a.mp3', 'hash', 8)],
+      cache: bulk,
+      fetchImpl: async() => new Response('12345678', { status: 200, headers: { 'content-type': 'audio/mpeg' } })
+    })
+    const precache = memoryAssetCache()
+    await precache.put('/index.html', new Response('shell', {
+      status: 200,
+      headers: { 'content-length': '5' }
+    }))
+    const manifest = {
+      cache: OFFLINE_ASSETS_CACHE,
+      boot: [{ url: '/index.html', revision: 'boot', size: 5 }],
+      assets: [asset('/sound/a.mp3', 'hash', 8)]
+    }
+    const measured = await measureOfflineReadiness({
+      async keys() {
+        return ['workbox-precache-v2', OFFLINE_ASSETS_CACHE]
+      },
+      async open(name) {
+        return name.includes('precache') ? precache : bulk
+      }
+    }, manifest)
+    expect(measured).toMatchObject({ done: 2, total: 2, bytes: 13 })
+    expect(isOfflinePlayReady({ controlled: true, done: measured.done, total: measured.total, failures: [] })).toBe(true)
+    expect(isOfflinePlayReady({ controlled: false, done: 2, total: 2, failures: [] })).toBe(false)
+    expect(isOfflinePlayReady({ controlled: true, done: 1, total: 2, failures: [] })).toBe(false)
+    const removed = await cleanupStaleOfflineAssets(bulk, [])
+    expect(removed).toEqual(['/sound/a.mp3'])
+  })
+})
+
+describe('offline navigation and storage', () => {
+  it('serves the network document and falls back to the shell after the timeout', async() => {
+    expect(isNavigationDenylisted('/api/signalling')).toBe(true)
+    expect(isNavigationDenylisted('/.netlify/functions/api')).toBe(true)
+    expect(isNavigationDenylisted('/')).toBe(false)
+
+    let shellCalls = 0
+    const online = await resolveDocumentNavigation({
+      request: new Request('https://game/'),
+      timeoutMs: 50,
+      fetchImpl: async() => new Response('network', { status: 200 }),
+      shell: async() => {
+        shellCalls += 1
+        return new Response('shell')
+      }
+    })
+    expect(await online.text()).toBe('network')
+    expect(shellCalls).toBe(0)
+
+    const offline = await resolveDocumentNavigation({
+      request: new Request('https://game/'),
+      timeoutMs: 20,
+      fetchImpl: () => new Promise(() => {}),
+      shell: async() => new Response('shell')
+    })
+    expect(await offline.text()).toBe('shell')
+
+    const denied = await resolveDocumentNavigation({
+      request: new Request('https://game/api/x'),
+      denylisted: true,
+      timeoutMs: 20,
+      fetchImpl: async() => new Response('api', { status: 200 }),
+      shell: async() => new Response('shell')
+    })
+    expect(await denied.text()).toBe('api')
+  })
+
+  it('requests persistent storage for an installed app and formats the result', async() => {
+    expect(isStandaloneDisplayMode({
+      matchMedia: () => ({ matches: true }),
+      navigator: {}
+    })).toBe(true)
+    expect(isStandaloneDisplayMode({
+      matchMedia: () => ({ matches: false }),
+      navigator: { standalone: true }
+    })).toBe(true)
+
+    const calls = []
+    const granted = await requestPersistentStorage({
+      async persisted() {
+        return false
+      },
+      async persist() {
+        calls.push('persist')
+        return true
+      }
+    }, { standalone: true })
+    expect(granted).toMatchObject({ supported: true, persisted: true, called: true })
+    expect(calls).toEqual(['persist'])
+
+    const skipped = await requestPersistentStorage({
+      async persisted() {
+        return false
+      },
+      async persist() {
+        calls.push('again')
+        return true
+      }
+    }, { standalone: false })
+    expect(skipped).toMatchObject({ supported: true, persisted: false, called: false })
+    expect(calls).toEqual(['persist'])
+    expect(formatPersistentStorageStatus(granted, {
+      persistent: 'Storage: persistent',
+      temporary: 'Storage: not persistent',
+      unavailable: 'Storage: persistence unavailable'
+    })).toBe('Storage: persistent')
+    expect(formatPersistentStorageStatus({ supported: false, persisted: false }, {
+      unavailable: 'Storage: persistence unavailable'
+    })).toBe('Storage: persistence unavailable')
+    expect(formatPersistentStorageStatus(null, {})).toBe('')
+
+    const hung = await requestPersistentStorage({
+      persisted() {
+        return new Promise(() => {})
+      },
+      persist() {
+        return new Promise(() => {})
+      }
+    }, { standalone: true, timeoutMs: 20 })
+    expect(hung).toMatchObject({ supported: true, persisted: false, called: true })
+    expect(hung.error).toMatch(/timed out/)
+  })
+
+  it('keeps Retry download visible and disables it until a download fails', () => {
+    const retry = {
+      hidden: true,
+      disabled: false,
+      textContent: '',
+      setAttribute(name, value) {
+        this[name] = value
+      }
+    }
+    applyOfflineCacheSettings({ retry }, { showRetry: false, retryLabel: 'Retry download' })
+    expect(retry.hidden).toBe(false)
+    expect(retry.disabled).toBe(true)
+    expect(retry.textContent).toBe('Retry download')
+    applyOfflineCacheSettings({ retry }, { showRetry: true, retryLabel: 'Retry download' })
+    expect(retry.disabled).toBe(false)
+    expect(retry['aria-disabled']).toBe('false')
+  })
+
+  it('leaves same-origin audio non-CORS so Safari can play a cached 200', () => {
+    expect(audioCrossOriginForUrl('/sound/music/music01.mp3', 'https://game.example')).toBeNull()
+    expect(audioCrossOriginForUrl('https://cdn.example/music.mp3', 'https://game.example')).toBe('anonymous')
+    const audio = document.createElement('audio')
+    configureAudioElement(audio, '/sound/music/music01.mp3', 'https://game.example')
+    expect(audio.getAttribute('crossorigin')).toBeNull()
+    configureAudioElement(audio, 'https://cdn.example/music.mp3', 'https://game.example')
+    expect(audio.crossOrigin).toBe('anonymous')
+    expect(formatIncompleteOfflineWarning(
+      'Offline files are incomplete ({done}/{total}). The game may not load until the download finishes.',
+      119,
+      486
+    )).toContain('119/486')
+    expect(formatOfflineCacheError('Could not cache {url}: {message}', {
+      url: '/sound/a.mp3',
+      message: 'HTTP 404'
+    }, 2)).toBe('Could not cache /sound/a.mp3: HTTP 404 (+2)')
+    expect(formatOfflineCacheTooltip({
+      ready: true,
+      bytes: 27.1 * 1024 * 1024,
+      done: 486,
+      total: 486
+    })).toBe('Offline ready, 27.1 MB · 486/486 files')
+    expect(formatOfflineCacheTooltip({
+      ready: false,
+      bytes: 8.2 * 1024 * 1024,
+      done: 119,
+      total: 486
+    })).toBe('Preparing offline cache… 8.2 MB · 119/486 files')
   })
 })

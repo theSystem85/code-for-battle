@@ -1,5 +1,5 @@
 import { uiText } from '../ui/uiText.js'
-import { formatCachedByteSize } from './offlineCacheSize.js'
+import { formatCachedByteSize, formatOfflineCacheDetail } from './offlineCacheSize.js'
 
 const LONG_PRESS_MS = 650
 
@@ -48,6 +48,7 @@ export function offlineClearCopy(locale) {
     sizeTemplate: text('size'),
     notCachedTemplate: text('notCached'),
     emptyTooltip: text('emptyTooltip'),
+    filesWord: text('filesWord'),
     action: text('action'),
     confirmTitle: text('confirmTitle'),
     confirmBody: text('confirmBody'),
@@ -72,13 +73,18 @@ export function formatOfflineSettingsSize({
   ready = false,
   cleared = false,
   preparingText = '',
+  done = null,
+  total = null,
   copy
 } = {}) {
   if (!ready && !cleared) return preparingText
   const size = formatOfflineByteSize(bytes)
   const empty = cleared || bytes == null || !(bytes > 0)
+  const detail = empty
+    ? size
+    : formatOfflineCacheDetail({ bytes, done, total, filesWord: copy?.filesWord || 'files' })
   const template = empty ? copy?.notCachedTemplate : copy?.sizeTemplate
-  return String(template || '').replaceAll('{size}', size)
+  return String(template || '').replaceAll('{size}', detail)
 }
 
 export function applyOfflineCacheSettings(elements, view) {
@@ -86,6 +92,24 @@ export function applyOfflineCacheSettings(elements, view) {
   if (elements.sectionTitle) elements.sectionTitle.textContent = view.sectionTitle || ''
   if (elements.hint) elements.hint.textContent = view.hint || ''
   if (elements.size) elements.size.textContent = view.sizeText || ''
+  if (elements.persist) elements.persist.textContent = view.persistText || ''
+  if (elements.incomplete) {
+    const warning = view.incompleteText || ''
+    elements.incomplete.hidden = warning.length === 0
+    elements.incomplete.textContent = warning
+  }
+  if (elements.error) {
+    const error = view.errorText || ''
+    elements.error.hidden = error.length === 0
+    elements.error.textContent = error
+  }
+  if (elements.retry) {
+    const canRetry = view.showRetry === true
+    elements.retry.hidden = false
+    elements.retry.disabled = !canRetry
+    elements.retry.setAttribute('aria-disabled', canRetry ? 'false' : 'true')
+    elements.retry.textContent = view.retryLabel || 'Retry download'
+  }
   if (elements.clearButton) elements.clearButton.textContent = view.action || ''
 }
 

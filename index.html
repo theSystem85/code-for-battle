@@ -158,10 +158,6 @@
   </div>
 
   <div id="sidebar" class="expanded-left-sidebar">
-    <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
-      <i class="offline-mode-button__light" aria-hidden="true"></i>
-      <span data-offline-label>Online</span>
-    </button>
     <canvas id="minimap"></canvas>
 
     <!-- Money bar positioned right above the energy bar -->
@@ -201,6 +197,11 @@
         <span class="button-icon minimap-icon" aria-hidden="true"></span>
       </button>
     </div>
+
+    <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
+      <i class="offline-mode-button__light" aria-hidden="true"></i>
+      <span data-offline-label>Online</span>
+    </button>
 
     <!-- Master Volume Control -->
     <div id="volumeControl">
@@ -1156,7 +1157,11 @@
             <h3 class="config-modal__section-title" data-offline-clear-title>Offline</h3>
             <p class="config-modal__hint" data-offline-clear-hint>Removes the downloaded game files. Saved games and settings stay on this device.</p>
             <p id="offlineCacheSizeText" class="config-modal__hint">Not cached (0.0 MB)</p>
+            <p id="offlineStoragePersistText" class="config-modal__hint"></p>
+            <p id="offlineCacheIncompleteText" class="config-modal__hint offline-cache-warning" hidden></p>
+            <p id="offlineCacheErrorText" class="config-modal__hint offline-cache-error" hidden></p>
             <div class="config-modal__actions">
+              <button id="offlineCacheRetryButton" class="config-modal__button" type="button" hidden>Retry download</button>
               <button id="offlineClearCacheButton" class="config-modal__button" type="button">Clear offline cache</button>
             </div>
           </div>
