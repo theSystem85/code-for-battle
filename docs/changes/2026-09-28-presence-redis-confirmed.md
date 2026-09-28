@@ -12,3 +12,5 @@ Notes for this follow-up live here so they are not appended to `TODO/Bugs.md`, `
   - Spec: [Multiplayer stats and quick match](../../specs/097-multiplayer-stats.md)
 - [x] **Presence row lines up with the section** — The playing-now line, Quick match row, and TURN note use 10px horizontal padding, the same inset as player-row content and field labels, on desktop and phone portrait. Vertical margins stay as they were.
   - Spec: [Multiplayer stats and quick match](../../specs/097-multiplayer-stats.md)
+- [x] **Lint** — Removed the duplicate `Headers` global in `eslint.config.js` that failed the CI lint step after the rebase.
+  - Spec: none

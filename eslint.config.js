@@ -36,7 +36,6 @@ export default [
         Image: 'readonly',
         Audio: 'readonly',
         Blob: 'readonly',
-        Headers: 'readonly',
         performance: 'readonly',
         setTimeout: 'readonly',
         setInterval: 'readonly',
