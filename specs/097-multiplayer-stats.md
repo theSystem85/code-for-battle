@@ -14,7 +14,7 @@ Redis keeps one sorted set per status (`cfb:presence:<status>`, score = timestam
 
 The client sends a heartbeat about every 45 seconds, with ±5 seconds of jitter, and again as soon as the status or open-host token changes. It pauses while `document.visibilityState` is `hidden`, and it does not send while offline or forced offline. A missing route (`404`/`501`) hides the line immediately. Other errors back off (15s, 30s, 60s, 120s) and then stop. `429` backs off without hiding the line for good.
 
-The Multiplayer section shows one line, `{playing} playing now · {online} in online multiplayer`, in English and German. The line stays hidden while offline or after the endpoint is given up.
+The Multiplayer section shows one line, `{playing} playing now · {online} in online multiplayer`, in English and German. The line, Quick match row, and TURN note use the same 10px horizontal inset as the player rows and field labels. The line stays hidden while offline or after the endpoint is given up.
 
 ## Quick match
 

@@ -248,6 +248,7 @@ body.is-touch {
 
 .multiplayer-presence {
   margin: 2px 0 8px;
+  padding: 0 10px;
   font-size: 12px;
   line-height: 1.35;
   color: #d7e6f5;
@@ -263,6 +264,7 @@ body.is-touch {
   align-items: center;
   gap: 6px;
   margin: 0 0 8px;
+  padding: 0 10px;
 }
 
 .multiplayer-turn-note {
