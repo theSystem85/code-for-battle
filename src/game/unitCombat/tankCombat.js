@@ -12,6 +12,7 @@ import {
   isTurretAimedAtTarget
 } from './combatHelpers.js'
 import { getAircraftAltitudeLift } from '../aircraftTargeting.js'
+import { F22_MIN_ATTACK_DISTANCE } from '../f22AttackGeometry.js'
 import { handleApacheVolley, handleRocketBurstFire, handleTankFiring, handleTankV3BurstFire } from './firingHandlers.js'
 
 /**
@@ -266,20 +267,23 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
       targetCenterY = result.targetCenterY
     }
 
-    // Rocket tanks have no turret - must rotate entire body to face target
-    const unitCenterX = unit.x + TILE_SIZE / 2
-    const unitCenterY = unit.y + TILE_SIZE / 2
-    const angleToTarget = Math.atan2(targetCenterY - unitCenterY, targetCenterX - unitCenterX)
+    // Rocket tanks have no turret, so the hull has to face the target.
+    // F22 heading belongs to the attack-run flight plan. Yawing the nose at the
+    // target pulls the jet into a tight circle inside the minimum firing distance
+    // and prevents the outbound leg from lining up the next pass.
+    if (!isF22) {
+      const unitCenterX = unit.x + TILE_SIZE / 2
+      const unitCenterY = unit.y + TILE_SIZE / 2
+      const angleToTarget = Math.atan2(targetCenterY - unitCenterY, targetCenterX - unitCenterX)
 
-    // Rotate body towards target using normal rotation speed
-    const rotationSpeed = unit.rotationSpeed || 0.1
-    const currentDirection = unit.direction !== undefined ? unit.direction : (unit.movement?.rotation || 0)
-    const newDirection = smoothRotateTowardsAngle(currentDirection, angleToTarget, rotationSpeed)
+      const rotationSpeed = unit.rotationSpeed || 0.1
+      const currentDirection = unit.direction !== undefined ? unit.direction : (unit.movement?.rotation || 0)
+      const newDirection = smoothRotateTowardsAngle(currentDirection, angleToTarget, rotationSpeed)
 
-    // Update all direction properties
-    unit.direction = newDirection
-    if (unit.movement) {
-      unit.movement.rotation = newDirection
+      unit.direction = newDirection
+      if (unit.movement) {
+        unit.movement.rotation = newDirection
+      }
     }
 
     // Fire rockets if in range and allowed to attack
@@ -287,12 +291,11 @@ export function updateRocketTankCombat(unit, units, bullets, mapGrid, now, occup
     const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
     const effectiveRange = rocketRange
     const clearShot = true
-    const minF22AttackDistance = TILE_SIZE * 6
     const inFiringWindow = isF22
-      ? (distance <= effectiveRange && distance >= minF22AttackDistance)
+      ? (distance <= effectiveRange && distance >= F22_MIN_ATTACK_DISTANCE)
       : distance <= effectiveRange
 
-    if (isF22 && !inFiringWindow) {
+    if (isF22 && (unit.rocketAmmo ?? 0) <= 0) {
       unit.volleyState = null
     }
     if (inFiringWindow && canAttack && clearShot) {

@@ -863,4 +863,62 @@ describe('unitCombat.js', () => {
       expect(bullets.length).toBe(0)
     })
   })
+
+  describe('F22 attack-run volley', () => {
+    function egressingF22() {
+      return {
+        type: 'f22Raptor',
+        owner: 'player1',
+        flightState: 'airborne',
+        x: 0,
+        y: 0,
+        direction: 0,
+        rotationSpeed: 0.1,
+        rocketAmmo: 4,
+        maxRocketAmmo: 8,
+        health: 80,
+        target: {
+          id: 'tank-1',
+          type: 'tank_v1',
+          owner: 'player2',
+          health: 100,
+          tileX: 30,
+          tileY: 0,
+          x: 800,
+          y: 0
+        },
+        movement: { rotation: 0 },
+        volleyState: {
+          leftRemaining: 2,
+          rightRemaining: 2,
+          lastRocketTime: 0,
+          delay: 333,
+          nextSide: 'left',
+          totalInVolley: 4
+        }
+      }
+    }
+
+    it('keeps the remaining volley outside weapon range and does not yaw into the target', () => {
+      const jet = egressingF22()
+      const volley = jet.volleyState
+      const bullets = []
+
+      updateUnitCombat([jet], bullets, mockMapGrid, mockGameState, 10000)
+
+      expect(jet.volleyState).toBe(volley)
+      expect(jet.rocketAmmo).toBe(4)
+      expect(jet.direction).toBe(0)
+      expect(bullets).toHaveLength(0)
+    })
+
+    it('clears the volley when ammo is empty so return-to-base can start', () => {
+      const jet = egressingF22()
+      jet.rocketAmmo = 0
+
+      updateUnitCombat([jet], [], mockMapGrid, mockGameState, 10000)
+
+      expect(jet.volleyState).toBeNull()
+    })
+  })
 })

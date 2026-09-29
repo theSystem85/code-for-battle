@@ -21,6 +21,7 @@ import {
 } from './movementHelpers.js'
 import { updateApacheFlightState } from './movementApache.js'
 import { updateF22FlightState } from './movementF22.js'
+import { getF22FlightYawPerTick } from './f22AttackGeometry.js'
 import { beginJetEmergencyFuelLanding, isStrikeJet } from './jetFuel.js'
 import {
   checkUnitCollision,
@@ -403,7 +404,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
         const dirY = dy / distance
         const desiredRotation = normalizeAngle(Math.atan2(dirY, dirX))
         const apacheRotationSpeed = unit.type === 'f22Raptor'
-          ? Math.max(0.02, (unit.rotationSpeed || 0.18) * 0.28)
+          ? getF22FlightYawPerTick(unit)
           : (unit.rotationSpeed || 0.18)
         const currentRotation = unit.direction || movement.rotation || 0
         const smoothedRotation = smoothRotateTowardsAngle(currentRotation, desiredRotation, apacheRotationSpeed)
