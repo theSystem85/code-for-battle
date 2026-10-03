@@ -58,7 +58,7 @@ export function createRadialMenu(options = {}) {
       button.dataset.id = String(item.id)
       button.tabIndex = -1
       button.setAttribute('aria-label', item.label || String(item.id))
-      if (item.label) button.title = item.label
+      if (item.label && !item.customTooltip) button.title = item.label
       button.style.setProperty('--size', `${layout.buttonSize}px`)
       button.style.setProperty('--tx', `${point.x}px`)
       button.style.setProperty('--ty', `${point.y}px`)
@@ -74,6 +74,13 @@ export function createRadialMenu(options = {}) {
         img.draggable = false
         img.src = item.icon
         button.appendChild(img)
+      }
+      if (!item.icon && item.text) {
+        button.classList.add('has-text')
+        const text = document.createElement('span')
+        text.className = 'radial-menu__text'
+        text.textContent = item.text
+        button.appendChild(text)
       }
       root.appendChild(button)
       entries.push({ item, point, button })
