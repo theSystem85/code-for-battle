@@ -27,6 +27,7 @@ import {
   getUtilityQueuePosition,
   issueTankerKamikazeCommand
 } from './unitCommands/utilityQueue.js'
+import { noteDirectOrder } from '../policies/policyEngine.js'
 import { handleMovementCommand } from './unitCommands/movementCommands.js'
 import {
   handleAttackCommand,
@@ -62,6 +63,13 @@ export class UnitCommandsHandler {
 
 const proto = UnitCommandsHandler.prototype
 
+// Every handler below is a direct order. Policy-issued orders are ignored by
+// noteDirectOrder, so policies never register as their own direct orders.
+function recordDirectOrder(units, result) {
+  noteDirectOrder(units)
+  return result
+}
+
 proto.clearAttackGroupState = clearAttackGroupStateImpl
 proto.cancelRecoveryTask = cancelRecoveryTask
 proto.ensureUtilityQueueState = ensureUtilityQueueState
@@ -88,26 +96,26 @@ proto.planUtilityAssignments = function(...args) { return planUtilityAssignments
 proto.queueUtilityTargets = function(...args) { return queueUtilityTargets(this, ...args) }
 proto.getUtilityQueuePosition = function(...args) { return getUtilityQueuePosition(...args) }
 proto.issueTankerKamikazeCommand = function(...args) { return issueTankerKamikazeCommand(...args) }
-proto.handleMovementCommand = function(...args) { return handleMovementCommand(this, ...args) }
-proto.handleAttackCommand = function(...args) { return handleAttackCommand(this, ...args) }
+proto.handleMovementCommand = function(...args) { return recordDirectOrder(args[0], handleMovementCommand(this, ...args)) }
+proto.handleAttackCommand = function(...args) { return recordDirectOrder(args[0], handleAttackCommand(this, ...args)) }
 proto.assignApacheFlight = function(...args) { return assignApacheFlight(...args) }
-proto.handleApacheHelipadCommand = function(...args) { return handleApacheHelipadCommand(this, ...args) }
-proto.handleRefineryUnloadCommand = function(...args) { return handleRefineryUnloadCommand(this, ...args) }
-proto.handleHarvesterCommand = function(...args) { return handleHarvesterCommand(this, ...args) }
-proto.handleRepairWorkshopCommand = function(...args) { return handleRepairWorkshopCommand(this, ...args) }
-proto.handleWorkshopRepairHotkey = function(...args) { return handleWorkshopRepairHotkey(this, ...args) }
-proto.handleAmbulanceHealCommand = function(...args) { return handleAmbulanceHealCommand(this, ...args) }
-proto.handleTankerRefuelCommand = function(...args) { return handleTankerRefuelCommand(this, ...args) }
-proto.handleAmmunitionTruckResupplyCommand = function(...args) { return handleAmmunitionTruckResupplyCommand(this, ...args) }
-proto.handleAmmunitionTruckReloadCommand = function(...args) { return handleAmmunitionTruckReloadCommand(this, ...args) }
-proto.handleServiceProviderRequest = function(...args) { return handleServiceProviderRequest(this, ...args) }
-proto.handleAmbulanceRefillCommand = function(...args) { return handleAmbulanceRefillCommand(this, ...args) }
-proto.handleGasStationRefillCommand = function(...args) { return handleGasStationRefillCommand(this, ...args) }
-proto.handleRecoveryTowCommand = function(...args) { return handleRecoveryTowCommand(this, ...args) }
-proto.handleRecoveryTankRepairCommand = function(...args) { return handleRecoveryTankRepairCommand(this, ...args) }
-proto.handleRecoveryWreckTowCommand = function(...args) { return handleRecoveryWreckTowCommand(this, ...args) }
-proto.handleRecoveryWreckRecycleCommand = function(...args) { return handleRecoveryWreckRecycleCommand(this, ...args) }
-proto.handleDamagedUnitToRecoveryTankCommand = function(...args) { return handleDamagedUnitToRecoveryTankCommand(this, ...args) }
+proto.handleApacheHelipadCommand = function(...args) { return recordDirectOrder(args[0], handleApacheHelipadCommand(this, ...args)) }
+proto.handleRefineryUnloadCommand = function(...args) { return recordDirectOrder(args[0], handleRefineryUnloadCommand(this, ...args)) }
+proto.handleHarvesterCommand = function(...args) { return recordDirectOrder(args[0], handleHarvesterCommand(this, ...args)) }
+proto.handleRepairWorkshopCommand = function(...args) { return recordDirectOrder(args[0], handleRepairWorkshopCommand(this, ...args)) }
+proto.handleWorkshopRepairHotkey = function(...args) { return recordDirectOrder(args[0], handleWorkshopRepairHotkey(this, ...args)) }
+proto.handleAmbulanceHealCommand = function(...args) { return recordDirectOrder(args[0], handleAmbulanceHealCommand(this, ...args)) }
+proto.handleTankerRefuelCommand = function(...args) { return recordDirectOrder(args[0], handleTankerRefuelCommand(this, ...args)) }
+proto.handleAmmunitionTruckResupplyCommand = function(...args) { return recordDirectOrder(args[0], handleAmmunitionTruckResupplyCommand(this, ...args)) }
+proto.handleAmmunitionTruckReloadCommand = function(...args) { return recordDirectOrder(args[0], handleAmmunitionTruckReloadCommand(this, ...args)) }
+proto.handleServiceProviderRequest = function(...args) { return recordDirectOrder(args[1], handleServiceProviderRequest(this, ...args)) }
+proto.handleAmbulanceRefillCommand = function(...args) { return recordDirectOrder(args[0], handleAmbulanceRefillCommand(this, ...args)) }
+proto.handleGasStationRefillCommand = function(...args) { return recordDirectOrder(args[0], handleGasStationRefillCommand(this, ...args)) }
+proto.handleRecoveryTowCommand = function(...args) { return recordDirectOrder(args[0], handleRecoveryTowCommand(this, ...args)) }
+proto.handleRecoveryTankRepairCommand = function(...args) { return recordDirectOrder(args[0], handleRecoveryTankRepairCommand(this, ...args)) }
+proto.handleRecoveryWreckTowCommand = function(...args) { return recordDirectOrder(args[0], handleRecoveryWreckTowCommand(this, ...args)) }
+proto.handleRecoveryWreckRecycleCommand = function(...args) { return recordDirectOrder(args[0], handleRecoveryWreckRecycleCommand(this, ...args)) }
+proto.handleDamagedUnitToRecoveryTankCommand = function(...args) { return recordDirectOrder(args[0], handleDamagedUnitToRecoveryTankCommand(this, ...args)) }
 proto.calculateSemicircleFormation = function(...args) { return calculateSemicircleFormation(...args) }
 proto.getTargetPoint = function(...args) { return getTargetPointImpl(...args) }
 proto.isEnemyTargetForUnit = function(...args) { return isEnemyTargetForUnitImpl(...args) }
