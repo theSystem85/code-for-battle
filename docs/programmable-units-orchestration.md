@@ -1,8 +1,42 @@
 # Programmable units — implementation orchestration
 
-Status: plan only. No game or runtime code is changed by this document.
+Status: the plan still describes the full target. The **unit-policy first slice is implemented** (see the next section). Build policies, grants and folders, and the enemy AI migration remain plan only.
 
 This is the implementation plan for the six areas in the [programmable units feature list](programmable-units-feature-list.md). That file is the design source. This file says how the work is split, which interfaces the streams share, and which decisions are already fixed in the schema.
+
+## First slice: units only (implemented)
+
+The first slice lands the critical path for unit policies in one pass. Build policies, the grant and folder UI, and the `src/enemy.js` integration are not part of it. Full semantics are in [Unit policies — first slice](../specs/unit-policies-first-slice.md).
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| Schema and validation (W5) | `src/policies/policySchema.js` | `schemaVersion: 1`, at most 7 states, `variant: "unit"` only. `build` is rejected with `variant_not_supported`. |
+| Pure step (W3) | `src/policies/policyStep.js` | `stepPolicy(policy, runtime, worldView, options) -> { runtime, effects, trace }`. Deterministic. Gate `open`, `orderRunning`, `paused`. |
+| Store, apply, permissions (W4) | `src/policies/policyStore.js` | Documents, global enable, per-unit bindings, `canCommandPolicy` (owner only). Persists documents in `localStorage` (`cfb-unit-policies-v1`). |
+| Engine and direct-order interaction (W1, W5) | `src/policies/policyEngine.js` | `updateUnitPolicies` runs after `processCommandQueues` in `src/updateGame.js`. `noteDirectOrder` is called from every wrapped `handle*Command` in `src/input/unitCommands.js` and from `initiateRetreat`. |
+| Templates | `src/policies/policyTemplates.js` | Retreat if hurt, retreat while hurt, attack while an enemy is in range. |
+| Editor, panel, radial, conflict banner (W2, W6) | `src/ui/policies/*`, `src/ui/radialMenu/*` | The editor modal pauses the game. The radial apply menu does not. |
+
+`src/enemy.js` and the `src/ai/*` modules are untouched. The player entry is `updateUnitPolicies` in `src/policies/policyEngine.js`. The enemy AI will later enter the same engine through its own function.
+
+### Resolved gate items
+
+The items listed as "still closed" in section 4 are settled for units:
+
+- **One policy or many, and priority.** Several policies can be active. The last direct order or the last newly activated condition is dominant (monotonic sequence numbers). Holds re-assert only when the unit is idle.
+- **Effect vocabulary.** `attackNearestEnemy`, `retreat`, `hold`. World-view fields: `hp` (fraction), `enemyDistance` (tiles), `enemyInRange`, `underFire`.
+- **Fire control.** Edge-triggered: `if` fires once when its condition becomes true. `while` takes effect on the edge and holds until its optional `until` condition (default: condition false). Evaluation runs every 150 ms per unit at most.
+- **Validation errors.** `{ valid, errors: [{ code, message, path }] }` with codes such as `too_many_states`, `variant_not_supported`, `invalid_condition`, `invalid_state`, `invalid_transition`.
+
+### Direct order against policy
+
+A direct order puts the unit into a soft gate (`orderRunning`): `if` rules and hold re-assertion are frozen until the unit is idle again (about 500 ms start grace), but a `while` that becomes newly true still overrides. The conflict banner's pause button sets a hard `paused` gate on that binding until the order is fulfilled, after which it resumes automatically. Only the commanding owner can enable, disable, or apply policies.
+
+### Still open after the first slice
+
+- Runtime bindings are not saved, and policy documents are not synced in multiplayer. Orders issued by remote clients are not hooked on the host.
+- Build policies, grants and folders, and the enemy AI migration (W5's `src/enemy.js` work).
+- LLM-written policies: when the enemy AI is LLM-driven, that LLM can later write and apply unit policies through the same document and apply path. Spec only.
 
 ## Workstreams
 
@@ -149,6 +183,8 @@ W3 exports one pure function. W5 calls it. No other stream does.
 stepPolicy(policy, runtime, worldView) -> { nextStateId, effects, trace }
 ```
 
+The implemented first-slice signature is `stepPolicy(policy, runtime, worldView, options) -> { runtime, effects, trace }`. The next state lives in the returned `runtime.currentStateId`.
+
 - `policy` is a valid document. `runtime` holds `currentStateId` and, for a one-time policy, whether it has already started and finished. W5 owns `runtime`.
 - `worldView` is a plain snapshot W5 builds (the fields the schema names, such as enemy-in-range and hit-point fraction for unit policies, and base and building fields for build policies). W3 does not scan the unit or building lists.
 - The machine has at most 7 states. The same inputs produce the same `nextStateId`, effects, and trace.
@@ -220,9 +256,9 @@ The tick budget (how often machines step, cooldowns, and how much work one step 
 - **Editor pause.** `editor.pause` and `editor.resume` from W2. The simulation is paused while the modal is open. This is session behavior, not a field inside the policy script.
 - **Script versus switch.** The policy document has no enabled flag and no recipient list. Activation, apply, opt-in, and grants are separate JSON objects.
 
-### Still closed at the gate before streams share types
+### Gate items (resolved for units in the first slice)
 
-These still change the document or the step result. They stay in the gate even though the list above is settled.
+These changed the document or the step result. The unit answers are recorded in [First slice: units only](#first-slice-units-only-implemented). The build answers stay open until build policies are scheduled.
 
 - **One policy or many.** Whether an owner has a single active policy or an ordered list, and what `priority` means when a direct order is also present. W1 and W5 need the same answer.
 - **Effect vocabulary.** The effect names `stepPolicy` may return for unit actions (`attack`, `defend`, `retreat`, `hold`, and any others in the first slice) and for build actions, plus the world-view fields those effects may read.
@@ -233,10 +269,9 @@ These still change the document or the step result. They stay in the gate even t
 
 Safe to leave open because they do not change the JSON the other streams already share:
 
-- which unit types are programmable in the first slice
 - whether a radial apply on a multi-unit selection covers every selected unit
 - whether shipped enemy policies appear in the builder
-- whether the optional LLM layer stays above the engine or later emits policies
+- how the optional LLM layer plugs in (the direction is decided: it can later write and apply unit policies)
 - whether today's harvester automation moves into this system
 - the numeric tick budget (owned by W5 when it touches the hot path)
 - save, load, multiplayer sync, and replay transport, which must carry these same JSON objects but can be designed after the in-memory shape is stable
@@ -245,5 +280,5 @@ Enemy authors and the builder use this one schema. A second, enemy-only or build
 
 ## Non-goals of this plan
 
-- No implementation, and no edits to simulation, AI, or UI code.
+- The first slice is the only implemented part. No edits to `src/enemy.js` or the AI modules are planned before the engine is proven for units.
 - No fixed balance numbers and no final block catalog beyond the fields the JSON decision names.
