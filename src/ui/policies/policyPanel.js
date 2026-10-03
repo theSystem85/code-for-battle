@@ -49,12 +49,13 @@ function policyCard(entry) {
       role: 'switch',
       'aria-checked': String(enabled),
       'aria-label': `${enabled ? 'Disable' : 'Enable'} ${policy.name}`,
-      'data-policy-tip': enabled ? 'On. Click to disable' : 'Off. Click to enable',
       onClick: () => {
         const result = setPolicyEnabled(humanPlayer(), policy.id, !enabled)
         if (!result.ok) showNotification('Only the commanding player can switch this policy.', 2200)
       }
-    }))
+    },
+    h('span', { class: 'policy-switch__track', 'aria-hidden': 'true' }),
+    h('span', { class: 'policy-switch__label', text: enabled ? 'On · click to disable' : 'Off · click to enable' })))
   }
   card.appendChild(top)
   card.appendChild(h('div', {
