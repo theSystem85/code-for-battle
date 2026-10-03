@@ -16,6 +16,7 @@ import { recordDamageValue } from './utils/combatStats.js'
 import { recordDamage } from './ai-api/transitionCollector.js'
 import { getHarvesterMaxHarvestDensity, getTileDensity } from './game/harvesterEligibility.js'
 import { ownerUnitList } from './game/unitOwnerIndex.js'
+import { recordUnitHit } from './game/hitRecord.js'
 
 const clearShotProbe = {
   x: 0,
@@ -200,6 +201,7 @@ export function triggerExplosion(
       if (shooter && shooter.owner !== unit.owner) {
         unit.lastDamageTime = now
         unit.lastAttacker = shooter
+        recordUnitHit(unit, shooter, false, now)
         // Mark as being attacked if it's an AI unit
         if (unit.owner !== gameState.humanPlayer) {
           unit.isBeingAttacked = true

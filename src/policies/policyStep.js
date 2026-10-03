@@ -15,6 +15,8 @@
 //   "paused"       the owner paused the policy until the order is done. Nothing
 //                  is evaluated.
 
+import { compareCondition } from './policyConditions.js'
+
 export const STEP_GATE = Object.freeze({
   open: 'open',
   orderRunning: 'orderRunning',
@@ -31,6 +33,16 @@ export function createPolicyRuntime(policy) {
   }
 }
 
+function legacyMeasure(condition, view) {
+  if (condition.field === 'hp') return view.hp
+  if (condition.field === 'enemyDistance') return view.enemyDistance
+  return undefined
+}
+
+/**
+ * `view.measure(leaf)` returns a number for compare leaves and a boolean for
+ * check leaves, or undefined when the unit cannot be measured that way.
+ */
 export function evaluateCondition(condition, view) {
   switch (condition.type) {
     case 'always':
@@ -52,16 +64,12 @@ export function evaluateCondition(condition, view) {
       }
       return false
     case 'compare': {
-      const actual = condition.field === 'hp' ? view.hp : view.enemyDistance
+      const actual = view.measure ? view.measure(condition) : legacyMeasure(condition, view)
       if (typeof actual !== 'number' || Number.isNaN(actual)) return false
-      switch (condition.op) {
-        case '<': return actual < condition.value
-        case '<=': return actual <= condition.value
-        case '>': return actual > condition.value
-        case '>=': return actual >= condition.value
-        default: return false
-      }
+      return compareCondition(condition, actual)
     }
+    case 'check':
+      return view.measure ? view.measure(condition) === true : false
     default:
       return false
   }
@@ -87,6 +95,7 @@ function findTransition(policy, transitionId) {
 function makeEffect(state, phase, kind, transitionId) {
   return {
     type: state.effect.type,
+    params: state.effect,
     phase,
     kind,
     stateId: state.id,
