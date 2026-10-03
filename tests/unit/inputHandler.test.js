@@ -99,6 +99,10 @@ vi.mock('../../src/ui/notifications.js', () => ({
   showNotification: vi.fn()
 }))
 
+vi.mock('../../src/ui/policies/index.js', () => ({
+  installUnitPolicyUi: vi.fn()
+}))
+
 // Mock DOM elements
 const mockCanvas = {
   addEventListener: vi.fn(),
