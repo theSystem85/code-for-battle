@@ -96,12 +96,53 @@ Only the commanding owner (a human player, or an AI commanding its own units) ca
 
 - **Policies button** (`#policiesBtn`) opens a panel listing policies with name, scope, execution, a rule summary, Edit, Delete and, for global policies, an enable switch. Enabling does not pause the game.
 - **Editor modal** pauses the simulation while open. It offers templates, a state diagram, state cards and rule blocks. An invalid draft shows a red exclamation icon at the top right, a slight red background, and the reason (for example "More than 7 states (this draft has 8). Remove 1 to save."). Save is disabled while invalid.
-- **Radial apply menu** opens on right-click or long-press on a programmable unit and lists per-unit policies, plus "Policies…". It uses the shared radial menu with custom tooltips and no native `title`. If no per-unit policies exist the old right-click behavior is kept.
+- **Radial apply menu** uses the shared radial menu with custom tooltips and no native `title`.
+  - It lists **only per-unit policies**, plus one "Policies…" entry that opens the policy panel. Global policies are never listed.
+  - The shipped "Attack while an enemy is in range" template is global, so it never appears in the menu. Its switch in the policy panel controls it. The two retreat templates are per-unit and do appear.
+  - If the player has no per-unit policy the menu stays closed and a right-click keeps its old behavior (including deselecting).
+  - Desktop: a right-click on one of the player's own programmable units. The click lands within half a tile of the unit center and moves at most 6 px between press and release.
+  - Touch: a still half-second (500 ms) press on the unit center. Moving more than 12 px first cancels it.
+  - It is anchored on the unit it was opened on and applies to that unit only. Choosing an already applied policy removes it. Opening it does not pause the game.
 - Custom scrollbars only; the editor has a single scroll container.
 
 ## Performance
 
 `updateUnitPolicies` runs once per simulation tick after `processCommandQueues`. It early-outs for units without bindings, reuses one world-view object and one context object (no per-tick allocation), scans for enemies only for policies that need it (cached per document in a `WeakMap`), and evaluates each unit at most every 150 ms. Global bindings are synced only when the policy store version changes.
+
+## Checklist: built and remaining
+
+Checked means it is in the code on branch `cursor/programmable-unit-policies-c5c1` (PR #728), not yet in `main`. The same checklist lives in the [feature list](../docs/programmable-units-feature-list.md#checklist-built-and-remaining).
+
+Built in the first slice:
+
+- [x] Policy JSON schema v1 with validation and a cap of 7 states.
+- [x] Pure, deterministic `stepPolicy`.
+- [x] `if` (fires once) and `while` (holds until its end condition) rules; one-time and continuous execution; global and per-unit scope.
+- [x] Policy store with owner-only enable, disable and apply; policy documents persist in `localStorage`.
+- [x] Engine applying `attackNearestEnemy`, `retreat` and `hold` to the programmable unit types, once per tick.
+- [x] Direct orders win; a newly true `while` overrides an older order; newest command or newly triggered condition is dominant; several policies can be active.
+- [x] Conflict banner with "Pause policy until order is done".
+- [x] Pausing editor modal, invalid-draft treatment, policy panel with global switches, radial apply menu, three templates.
+- [x] Unit tests and a browser run of the editor, radial, conflict and pause flow.
+- [x] **Known UI bug: policy-card toggle clipped on phone widths.** Found on the Netlify preview of PR #728. The switch styled one `::after` as both knob and hover tooltip. Fixed on this branch in commit `65b112c1`; it reaches `main` with the PR.
+
+Remaining on the unit slice:
+
+- [ ] Live in-game state-machine view and trace export (the editor draws the diagram; the live view and export do not exist).
+- [ ] Apply a radial choice to every selected unit.
+- [ ] Save and load of runtime bindings.
+- [ ] Multiplayer sync of documents and bindings; hook remote client orders on the host.
+- [ ] Replay transport.
+- [ ] Exercise the touch long-press path in a real browser or device test (the browser run covered the desktop right-click only).
+- [ ] Measure the engine tick cost against the 75 FPS gate with realistic unit counts.
+- [ ] Decide on harvester automation and on shipped enemy policies in the builder.
+
+Later work (not started):
+
+- [ ] Build policies.
+- [ ] Explicit grants and the folder UI.
+- [ ] Enemy AI migration onto the engine.
+- [ ] LLM-written policies.
 
 ## Open items after this slice
 

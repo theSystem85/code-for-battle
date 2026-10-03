@@ -11,6 +11,47 @@ The first slice covers unit policies only.
 - Not included yet: **build policies** (buildings and base expansion), the **grant and folder UI** (explicit grants stay specified below, not built), **moving enemy AI onto the engine** (`src/enemy.js` and the `src/ai/*` modules are untouched), and **LLM-written policies** (see [LLM-written policies](#llm-written-policies-later)).
 - Sections below that describe build policies, grants and folders, or enemy unification describe the target design. They are not implemented in the first slice.
 
+## Checklist: built and remaining
+
+Checked means it is in the code on branch `cursor/programmable-unit-policies-c5c1` (PR #728). It is not in `main` until that PR is merged. The same checklist is kept in [Unit policies — first slice](../specs/unit-policies-first-slice.md#checklist-built-and-remaining).
+
+### Built in the first slice
+
+- [x] Policy JSON schema v1 with validation and a hard cap of 7 states (`src/policies/policySchema.js`).
+- [x] Pure, deterministic `stepPolicy` (`src/policies/policyStep.js`).
+- [x] `if` (fires once) and `while` (holds until its end condition) rules.
+- [x] One-time and continuous execution; global and per-unit scope.
+- [x] Policy store with owner-only enable, disable and apply, and `localStorage` persistence of policy documents.
+- [x] Engine that applies effects (`attackNearestEnemy`, `retreat`, `hold`) to tanks, rocket tanks and howitzers, run once per tick after `processCommandQueues`.
+- [x] Direct orders always win; a newly true `while` overrides an older order; the newest command or newly triggered condition is dominant; several policies can be active.
+- [x] Conflict banner with "Pause policy until order is done".
+- [x] Pausing editor modal with templates, state diagram, state cards and rule blocks.
+- [x] Invalid-draft treatment: red exclamation icon top right, slight red background, reason text, Save disabled.
+- [x] Policy panel (`#policiesBtn`) with global enable switches that do not pause the game.
+- [x] Radial apply menu on a unit (see [the note below](#radial-menu-behavior-first-slice)).
+- [x] Three shipped templates: retreat if hurt, retreat while hurt, attack while an enemy is in range.
+- [x] Unit tests for the schema, the step, the engine, the direct-order hook, the condition rows and the panel switch; a browser run of the editor, radial, conflict and pause flow on the dev server.
+- [x] **Known UI bug: policy-card toggle clipped on phone widths.** Found on the Netlify preview of PR #728. Cause: the switch styled one `::after` as both the knob and the hover tooltip. Fixed on this branch in commit `65b112c1` (labelled switch that wraps under the title). It reaches `main` with the PR.
+
+### Remaining work on the unit slice
+
+- [ ] Show the running state machine in game (current state and latest trace) and export the trace. The editor draws the diagram; the live view and export do not exist yet.
+- [ ] Apply a radial choice to every selected unit instead of only the unit the menu was opened on (still an open question).
+- [ ] Save and load of runtime bindings (policies applied to units). Only the policy documents persist today.
+- [ ] Multiplayer: sync policy documents and bindings, and hook orders issued by remote clients on the host.
+- [ ] Replay transport for policy activity.
+- [ ] Exercise the touch long-press path in a real browser or device test. The browser run only covered the desktop right-click.
+- [ ] Measure the engine tick cost against the 75 FPS gate with realistic unit counts and record it in the spec.
+- [ ] Decide whether existing harvester automation (`havester-policies.md`) moves into this system.
+- [ ] Decide whether shipped enemy policies appear in the builder.
+
+### Later work (not started, out of the first slice)
+
+- [ ] Build policies (buildings and base expansion, per-player build opt-in).
+- [ ] Explicit grants and the folder UI.
+- [ ] Moving the enemy AI (`src/enemy.js`, `src/ai/*`) onto the engine.
+- [ ] LLM-written policies: the LLM-driven enemy AI writes and applies unit policies through the same document and apply path.
+
 ## Goal / overview
 
 The player can program units. Alongside direct orders, the player defines how units behave in battle.
@@ -178,17 +219,27 @@ Unification replaces those scattered decisions step by step with policies on the
 - Triggers and state rules look different from each other. Unit policies and build policies look different from each other.
 - Each policy appears with its name, active state, variant, scope, execution mode, and a short view of its rules.
 - Enable and disable is a clear control during play.
-- **Radial context menu.** In combat, right-click or long-press on a unit opens a radial context menu, in the same family as the factory build menu. The menu lists the per-unit policies available to apply to that unit. Choosing one applies it dynamically to that unit. A one-time policy starts immediately. Conditions inside the policy still gate effects.
+- **Radial context menu.** In combat, right-click or long-press on a unit opens a radial context menu, in the same family as the factory build menu. The menu lists the per-unit policies available to apply to that unit. Choosing one applies it dynamically to that unit. A one-time policy starts immediately. Conditions inside the policy still gate effects. See [Radial menu behavior](#radial-menu-behavior-first-slice) for what the first slice does exactly.
 - Build policies are applied to the player's own base from that player's base policy controls. Each multiplayer player opts in or out for their own base. The unit radial menu does not list build policies.
 - The running state machine can be shown in game. The same trace can be exported for an external analysis tool.
 - Folder management shows the tree and inherited permissions. Granting is an explicit action there.
 - Presentation follows the existing HUD and stays visual. The concrete layout is still open.
 
+### Radial menu behavior (first slice)
+
+- The menu lists **only per-unit policies**, plus one "Policies…" entry that opens the policy panel. Global policies are never listed, because they are already active once enabled.
+- **The shipped "Attack while an enemy is in range" template is global, so it never appears in the radial menu.** It is switched on and off with its switch in the policy panel. The two retreat templates are per-unit and do appear.
+- If the player has **no per-unit policy**, the menu stays closed and a right-click behaves as it did before (including deselecting).
+- On desktop it opens on a **right-click** on one of the player's own programmable units. The click must land within half a tile of the unit's center and the pointer must stay within 6 px between press and release.
+- On touch it opens after a **still half-second (500 ms) press on the unit center**. Moving more than 12 px before the half second is up cancels it.
+- It is anchored on the unit it was opened on, and a choice applies to that unit only. Choosing an already applied policy removes it from the unit.
+- Opening it does not pause the game.
+
 ## Open questions
 
 These points are **not** decided:
 
-- Whether a radial apply opened on one unit of a multi-unit selection applies to every selected unit. The first slice applies to the unit the menu was opened on.
+- Whether a radial apply opened on one unit of a multi-unit selection applies to every selected unit. The first slice applies to the unit the menu was opened on (see the checklist).
 - Whether shipped enemy policies are visible in the builder.
 - Exactly how the LLM layer in `src/ai/llmStrategicController.js` plugs in. The direction is decided (it can write and apply unit policies, later); the integration is not.
 - Whether existing harvester automation (see `havester-policies.md`) moves into this policy system.
