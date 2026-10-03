@@ -465,6 +465,7 @@
 
 .policy-card__top {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
@@ -490,19 +491,44 @@
   align-items: center;
 }
 
+.policy-card__top > span:first-child {
+  flex: 1 1 140px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The switch is a labelled button: track plus visible text, so the full state
+   hint is readable on touch screens where hover tooltips never appear. */
 .policy-switch {
+  flex: 0 0 auto;
+  margin-left: auto;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: #cfe0f0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.policy-switch__track {
   position: relative;
   flex: 0 0 auto;
   width: 40px;
   height: 22px;
+  box-sizing: border-box;
   border-radius: 999px;
   border: 1px solid rgba(143, 180, 214, 0.5);
   background: #0d141b;
-  cursor: pointer;
-  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.policy-switch::after {
+.policy-switch__track::after {
   content: '';
   position: absolute;
   top: 2px;
@@ -514,14 +540,32 @@
   transition: transform 0.15s ease, background 0.15s ease;
 }
 
-.policy-switch[aria-checked='true'] {
+.policy-switch__label {
+  min-width: 0;
+  text-align: left;
+}
+
+.policy-switch[aria-checked='true'] .policy-switch__track {
   background: #1f7a3a;
   border-color: #7ee787;
 }
 
-.policy-switch[aria-checked='true']::after {
+.policy-switch[aria-checked='true'] .policy-switch__track::after {
   transform: translateX(18px);
   background: #fff;
+}
+
+.policy-switch[aria-checked='true'] .policy-switch__label {
+  color: #b9f2c0;
+}
+
+.policy-switch:focus-visible {
+  outline: none;
+}
+
+.policy-switch:focus-visible .policy-switch__track {
+  outline: 2px solid #8fb4d6;
+  outline-offset: 2px;
 }
 
 .policy-switch:disabled {
