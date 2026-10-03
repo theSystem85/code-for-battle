@@ -15,11 +15,17 @@
 // only does work for units that carry bindings, and then at most once per
 // POLICY_EVAL_INTERVAL_MS. Units without policies cost one property read.
 
-import { HOWITZER_FIRE_RANGE, TANK_FIRE_RANGE, TILE_SIZE } from '../config.js'
-import { getSpatialQuadtree } from '../game/spatialQuadtree.js'
+import { TILE_SIZE } from '../config.js'
 import { getSimulationTime } from '../game/time.js'
 import { gameState } from '../gameState.js'
+import { EFFECTS, effectNeedsEnemy, effectRepeat } from './policyEffects.js'
+import { conditionNeeds } from './policyConditions.js'
+import { isBindingControlling } from './policyActivity.js'
+import { isPolicyIssuingOrder, runAsPolicy } from './policyIssuer.js'
+import { beginUnitScope, getScopeEnemy, getScopeEnemyDistanceTiles, isScopeEnemyInRange, measureLeaf } from './policySensors.js'
 import { STEP_GATE, stepPolicy } from './policyStep.js'
+import { executeUnitCommand, findServiceTarget } from './unitCommandApi.js'
+import { ENEMY_SCAN_TILES, findNearestEnemy, findNearestFriendly, isHostile, unitCenter } from './policyWorld.js'
 import {
   canCommandPolicy,
   getPolicyDocument,
@@ -27,42 +33,29 @@ import {
   getPolicyStoreVersion,
   listEnabledGlobalPolicies,
   makeBinding,
-  nextPolicySequence,
-  normalizePolicyOwner
+  nextPolicySequence
 } from './policyStore.js'
 
 export const POLICY_EVAL_INTERVAL_MS = 150
 export const ORDER_START_GRACE_MS = 500
 export const REASSERT_INTERVAL_MS = 1000
 export const UNDER_FIRE_WINDOW_MS = 3000
-export const ENEMY_SCAN_TILES = 14
+export { ENEMY_SCAN_TILES, findNearestEnemy }
 export const RETREAT_ARRIVAL_TILES = 3
 
-/** Units that can carry policies in the first slice: combat vehicles. */
+/** Units that can carry policies: combat vehicles, helicopters/F-35 and service units. */
 export const PROGRAMMABLE_UNIT_TYPES = Object.freeze(new Set([
-  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer'
+  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer',
+  'apache', 'f35', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'
 ]))
 
 export function isProgrammableUnit(unit) {
   return Boolean(unit) && PROGRAMMABLE_UNIT_TYPES.has(unit.type)
 }
 
-let policyIssuing = 0
 const eventListeners = new Set()
 
-/** Run `fn` while orders it issues count as policy orders, not direct orders. */
-export function runAsPolicy(fn) {
-  policyIssuing += 1
-  try {
-    return fn()
-  } finally {
-    policyIssuing -= 1
-  }
-}
-
-export function isPolicyIssuingOrder() {
-  return policyIssuing > 0
-}
+export { isPolicyIssuingOrder, runAsPolicy }
 
 export function subscribePolicyEvents(listener) {
   eventListeners.add(listener)
@@ -99,7 +92,7 @@ function isHolding(binding) {
  * Orders issued by a policy are ignored.
  */
 export function noteDirectOrder(units, now = getSimulationTime(gameState)) {
-  if (policyIssuing > 0 || !Array.isArray(units)) return
+  if (isPolicyIssuingOrder() || !Array.isArray(units)) return
   for (let i = 0; i < units.length; i++) {
     const unit = units[i]
     if (!unit) continue
@@ -168,88 +161,36 @@ function updateOrderCompletion(unit, control, now) {
   }
 }
 
-function unitCenter(unit) {
-  return { x: unit.x + TILE_SIZE / 2, y: unit.y + TILE_SIZE / 2 }
-}
-
-function isHostile(unit, other) {
-  if (!other || other === unit || !(other.health > 0) || other.embarkedOnId) return false
-  if (!other.owner || !unit.owner) return false
-  return normalizePolicyOwner(other.owner) !== normalizePolicyOwner(unit.owner)
-}
-
-function nearestAmong(unit, center, candidates, radiusSq) {
-  let best = null
-  let bestSq = radiusSq
-  for (let i = 0; i < candidates.length; i++) {
-    const other = candidates[i]
-    if (!isHostile(unit, other)) continue
-    const dx = other.x + TILE_SIZE / 2 - center.x
-    const dy = other.y + TILE_SIZE / 2 - center.y
-    const distSq = dx * dx + dy * dy
-    if (distSq <= bestSq) {
-      best = other
-      bestSq = distSq
-    }
-  }
-  return best
-}
-
-/** Nearest hostile unit within the scan radius, or null. */
-export function findNearestEnemy(unit, units) {
-  const center = unitCenter(unit)
-  const radius = ENEMY_SCAN_TILES * TILE_SIZE
-  const tree = getSpatialQuadtree()
-  const candidates = tree ? tree.queryNearbyGround(center.x, center.y, radius, unit.id) : units
-  return nearestAmong(unit, center, candidates, radius * radius)
-}
-
 const policyNeeds = new WeakMap()
-
-function conditionUsesEnemy(condition) {
-  if (!condition) return false
-  switch (condition.type) {
-    case 'enemyInRange': return true
-    case 'compare': return condition.field === 'enemyDistance'
-    case 'not': return conditionUsesEnemy(condition.of)
-    case 'and':
-    case 'or': return condition.of.some(conditionUsesEnemy)
-    default: return false
-  }
-}
 
 function policyNeedsEnemy(policy) {
   let needs = policyNeeds.get(policy)
   if (needs === undefined) {
-    needs = policy.states.some(state => state.effect?.type === 'attackNearestEnemy' ||
-      (state.transitions || []).some(t => conditionUsesEnemy(t.when) || conditionUsesEnemy(t.until)))
+    const found = { enemy: false }
+    policy.states.forEach(state => {
+      if (effectNeedsEnemy(state.effect)) found.enemy = true
+      ;(state.transitions || []).forEach(t => {
+        conditionNeeds(t.when, found)
+        conditionNeeds(t.until, found)
+      })
+    })
+    needs = found.enemy
     policyNeeds.set(policy, needs)
   }
   return needs
 }
 
-function defaultFireRange(unit) {
-  const tiles = unit.type === 'howitzer' ? HOWITZER_FIRE_RANGE : TANK_FIRE_RANGE
-  return tiles * TILE_SIZE * (unit.rangeMultiplier || 1)
-}
-
-const sharedView = { hp: 1, enemyDistance: Infinity, enemyInRange: false, underFire: false }
-let sharedEnemy = null
+const sharedView = { hp: 1, enemyDistance: Infinity, enemyInRange: false, underFire: false, measure: measureLeaf }
 
 function buildWorldView(unit, needsEnemy, context, now) {
+  beginUnitScope(unit, context, now)
   sharedView.hp = unit.maxHealth > 0 ? Math.max(0, unit.health / unit.maxHealth) : 1
   sharedView.underFire = Number.isFinite(unit.lastDamageTime) && now - unit.lastDamageTime <= UNDER_FIRE_WINDOW_MS
-  sharedEnemy = null
   sharedView.enemyDistance = Infinity
   sharedView.enemyInRange = false
   if (needsEnemy) {
-    sharedEnemy = findNearestEnemy(unit, context.units)
-    if (sharedEnemy) {
-      const center = unitCenter(unit)
-      const distance = Math.hypot(sharedEnemy.x + TILE_SIZE / 2 - center.x, sharedEnemy.y + TILE_SIZE / 2 - center.y)
-      sharedView.enemyDistance = distance / TILE_SIZE
-      sharedView.enemyInRange = distance <= (context.getFireRange || defaultFireRange)(unit)
-    }
+    sharedView.enemyDistance = getScopeEnemyDistanceTiles()
+    sharedView.enemyInRange = isScopeEnemyInRange()
   }
   return sharedView
 }
@@ -308,44 +249,66 @@ export function findRetreatTile(unit, buildings, mapGrid) {
   return best
 }
 
-function stopUnit(unit) {
-  unit.path = null
-  unit.moveTarget = null
-  unit.attackTarget = null
-  unit.guardPosition = null
-  unit.target = null
-  unit.forcedAttack = false
-  unit.attackQueue = []
-  unit.attackGroupTargets = []
-  unit.commandQueue = []
-  unit.currentCommand = null
+const effectArgs = { target: null, tiles: undefined, resource: undefined, tileX: 0, tileY: 0 }
+
+function resetArgs() {
+  effectArgs.target = null
+  effectArgs.tiles = undefined
+  effectArgs.resource = undefined
+  effectArgs.tileX = 0
+  effectArgs.tileY = 0
+  return effectArgs
 }
 
-/** Carry out one policy effect on a unit. Returns true when something changed. */
+function nearestEnemyForEffect(unit, context) {
+  const enemy = getScopeEnemy()
+  return enemy && isHostile(unit, enemy) ? enemy : findNearestEnemy(unit, context.units)
+}
+
+/**
+ * Carry out one policy effect on a unit through the unit command API.
+ * Returns true when the engine allowed the command and something changed.
+ */
 export function applyPolicyEffect(unit, effect, context) {
-  const { commands, mapGrid, buildings, units } = context
+  const meta = EFFECTS[effect.type]
+  if (!meta) return false
+  const params = effect.params || effect
+  const args = resetArgs()
   switch (effect.type) {
     case 'retreat': {
-      const bases = context.factories && context.factories.length ? buildings.concat(context.factories) : buildings
-      const tile = findRetreatTile(unit, bases, mapGrid)
+      const bases = context.factories && context.factories.length ? context.buildings.concat(context.factories) : context.buildings
+      const tile = findRetreatTile(unit, bases, context.mapGrid)
       if (!tile) return false
-      runAsPolicy(() => commands.handleMovementCommand(
-        [unit], tile.x * TILE_SIZE + TILE_SIZE / 2, tile.y * TILE_SIZE + TILE_SIZE / 2, mapGrid
-      ))
-      return true
+      args.tileX = tile.x
+      args.tileY = tile.y
+      break
     }
-    case 'attackNearestEnemy': {
-      const enemy = sharedEnemy && isHostile(unit, sharedEnemy) ? sharedEnemy : findNearestEnemy(unit, units)
-      if (!enemy || unit.target === enemy) return false
-      runAsPolicy(() => commands.handleAttackCommand([unit], enemy, mapGrid, false, false))
-      return true
-    }
-    case 'hold':
-      stopUnit(unit)
-      return true
+    case 'attackNearestEnemy':
+    case 'aimNearestEnemy':
+      args.target = nearestEnemyForEffect(unit, context)
+      if (!args.target) return false
+      break
+    case 'protectNearestFriendly':
+      args.target = findNearestFriendly(unit, context.units)
+      if (!args.target) return false
+      break
+    case 'serviceNearestFriendly':
+      args.target = findServiceTarget(unit, context)
+      if (!args.target) return false
+      break
+    case 'moveForward':
+    case 'moveBackward':
+    case 'moveLeft':
+    case 'moveRight':
+      args.tiles = params.tiles
+      break
+    case 'requestRefill':
+      args.resource = params.resource
+      break
     default:
-      return false
+      break
   }
+  return executeUnitCommand(meta.command, unit, args, context)
 }
 
 function bindingGate(binding, control) {
@@ -372,6 +335,10 @@ function syncGlobalBindings(unit, globals, version) {
     bindings = bindings.filter(binding => binding.source !== 'global' ||
       globals.some(entry => entry.policy.id === binding.policyId && canCommandPolicy(entry.ownerId, unit.owner)))
     unit.policyBindings = bindings
+    if (bindings.length === 0) {
+      unit.policyActive = false
+      unit.policyActiveCount = 0
+    }
   }
   if (!isProgrammableUnit(unit) || globals.length === 0) return
   for (let i = 0; i < globals.length; i++) {
@@ -397,6 +364,7 @@ export function getUnitPolicySummary(unit) {
       holding: isHolding(binding),
       finished: binding.runtime.finished,
       paused: bindingGate(binding, control) === STEP_GATE.paused,
+      active: binding.active === true,
       stateId: binding.runtime.currentStateId
     }
   })
@@ -463,20 +431,41 @@ function processUnit(unit, context, now) {
     }
     applyPolicyEffect(unit, effect, context)
     emit({ type: 'policyActivated', unit, unitId: unit.id, policyId: binding.policyId, kind: effect.kind })
-  } else if (holder && now >= holder.binding.nextReassertAt && isUnitIdle(unit)) {
-    holder.binding.nextReassertAt = now + REASSERT_INTERVAL_MS
-    applyPolicyEffect(unit, holder.effect, context)
+  } else if (holder) {
+    const everyTick = effectRepeat(holder.effect.type) === 'tick'
+    if (everyTick || (now >= holder.binding.nextReassertAt && isUnitIdle(unit))) {
+      if (!everyTick) holder.binding.nextReassertAt = now + REASSERT_INTERVAL_MS
+      applyPolicyEffect(unit, holder.effect, context)
+    }
   }
 
   if (removeBindings) {
     unit.policyBindings = bindings.filter(binding => !binding.dead)
   }
+  refreshActivity(unit, control)
+}
+
+/** Record which policies control the unit right now (see policyActivity.js). */
+function refreshActivity(unit, control) {
+  const bindings = unit.policyBindings
+  let active = 0
+  if (bindings) {
+    for (let i = 0; i < bindings.length; i++) {
+      const binding = bindings[i]
+      const doc = getPolicyDocument(binding.policyId)
+      binding.active = Boolean(doc) && isBindingControlling(binding, doc, bindingGate(binding, control))
+      if (binding.active) active += 1
+    }
+  }
+  unit.policyActiveCount = active
+  unit.policyActive = active > 0
 }
 
 /**
  * Per-tick entry. `context` carries { units, mapGrid, buildings, factories, commands, getFireRange? }.
  */
 export function updateUnitPolicies(units, context, now = getSimulationTime(gameState)) {
+  context.now = now
   const version = getPolicyStoreVersion()
   const globals = enabledGlobals(version)
   for (let i = 0; i < units.length; i++) {

@@ -3,6 +3,21 @@
 // A policy is inert JSON. It holds no owner, no enabled flag and no recipient
 // list; those live in the policy store. The shape below is versioned and stable.
 
+import { EFFECT_TYPES, isKnownEffect, validateEffectParams } from './policyEffects.js'
+import {
+  COMPARE_OPS,
+  CONDITION_TYPES,
+  NUMERIC_FIELDS,
+  effectiveMode,
+  fieldModes,
+  isCheck,
+  validateLeafParams
+} from './policyConditions.js'
+
+export { EFFECT_TYPES }
+
+const COMPARE_FIELDS = Object.freeze(Object.keys(NUMERIC_FIELDS))
+
 export const POLICY_SCHEMA_VERSION = 1
 export const MAX_POLICY_STATES = 7
 
@@ -11,10 +26,7 @@ export const POLICY_SCOPES = Object.freeze(['global', 'perUnit'])
 export const POLICY_EXECUTIONS = Object.freeze(['oneTime', 'continuous'])
 export const TRANSITION_KINDS = Object.freeze(['if', 'while'])
 
-export const EFFECT_TYPES = Object.freeze(['attackNearestEnemy', 'retreat', 'hold'])
-export const CONDITION_TYPES = Object.freeze(['always', 'compare', 'enemyInRange', 'underFire', 'not', 'and', 'or'])
-export const COMPARE_FIELDS = Object.freeze(['hp', 'enemyDistance'])
-export const COMPARE_OPS = Object.freeze(['<', '<=', '>', '>='])
+export { COMPARE_OPS, CONDITION_TYPES, COMPARE_FIELDS }
 
 const MAX_CONDITION_DEPTH = 4
 
@@ -24,6 +36,37 @@ function error(code, message, path) {
 
 function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0
+}
+
+function validateCompare(condition, path, errors) {
+  if (!COMPARE_FIELDS.includes(condition.field)) {
+    errors.push(error('invalid_condition', `A comparison needs a field: ${COMPARE_FIELDS.join(', ')}.`, path))
+    return
+  }
+  if (!COMPARE_OPS.includes(condition.op)) {
+    errors.push(error('invalid_condition', `A comparison needs an operator (${COMPARE_OPS.join(', ')}).`, path))
+  }
+  if (typeof condition.value !== 'number' || !Number.isFinite(condition.value)) {
+    errors.push(error('invalid_condition', 'A comparison needs a numeric value.', path))
+    return
+  }
+  const meta = NUMERIC_FIELDS[condition.field]
+  if (condition.mode != null && !fieldModes(condition.field).includes(condition.mode)) {
+    errors.push(error('invalid_condition', `${meta.label} cannot be compared as "${condition.mode}".`, path))
+    return
+  }
+  const mode = effectiveMode(condition)
+  const range = mode === 'relative' ? meta.range : meta.absRange
+  if (range && (condition.value < range[0] || condition.value > range[1])) {
+    errors.push(error(
+      'invalid_condition',
+      mode === 'relative' && !meta.relativeAsDegrees
+        ? `${meta.label} is compared as a fraction between ${range[0]} and ${range[1]}.`
+        : `${meta.label} must be between ${range[0]} and ${range[1]}.`,
+      path
+    ))
+  }
+  validateLeafParams(condition).forEach(message => errors.push(error('invalid_condition', message, path)))
 }
 
 function validateCondition(condition, path, errors, depth = 0) {
@@ -36,17 +79,15 @@ function validateCondition(condition, path, errors, depth = 0) {
     return
   }
   if (condition.type === 'compare') {
-    if (!COMPARE_FIELDS.includes(condition.field)) {
-      errors.push(error('invalid_condition', `A comparison needs a field: ${COMPARE_FIELDS.join(' or ')}.`, path))
+    validateCompare(condition, path, errors)
+    return
+  }
+  if (condition.type === 'check') {
+    if (!isCheck(condition.check)) {
+      errors.push(error('invalid_condition', `Unknown check "${condition.check}".`, path))
+      return
     }
-    if (!COMPARE_OPS.includes(condition.op)) {
-      errors.push(error('invalid_condition', 'A comparison needs an operator (<, <=, > or >=).', path))
-    }
-    if (typeof condition.value !== 'number' || !Number.isFinite(condition.value)) {
-      errors.push(error('invalid_condition', 'A comparison needs a numeric value.', path))
-    } else if (condition.field === 'hp' && (condition.value < 0 || condition.value > 1)) {
-      errors.push(error('invalid_condition', 'Hit points are compared as a fraction between 0 and 1.', path))
-    }
+    validateLeafParams(condition).forEach(message => errors.push(error('invalid_condition', message, path)))
     return
   }
   if (condition.type === 'not') {
@@ -79,8 +120,12 @@ function validateState(state, index, stateIds, errors, transitionIds) {
     return
   }
   if (state.effect != null) {
-    if (typeof state.effect !== 'object' || !EFFECT_TYPES.includes(state.effect.type)) {
+    if (typeof state.effect !== 'object' || !isKnownEffect(state.effect.type)) {
       errors.push(error('invalid_effect', `State "${state.name || state.id}" has an unknown action.`, `${path}.effect`))
+    } else {
+      validateEffectParams(state.effect).forEach(message => {
+        errors.push(error('invalid_effect', `State "${state.name || state.id}": ${message}`, `${path}.effect`))
+      })
     }
   }
   const transitions = state.transitions == null ? [] : state.transitions
