@@ -1,6 +1,15 @@
 # Programmable units — feature list
 
-Status: planned, not implemented. This document is the starting specification.
+Status: the **unit-policy first slice is implemented** (see [Unit policies — first slice](../specs/unit-policies-first-slice.md)). Build policies, the grant and folder UI, and moving enemy AI onto the engine are **later work** and are still only specified here.
+
+## First slice (units only)
+
+The first slice covers unit policies only.
+
+- Included: the policy JSON (schema v1), a state machine of at most 7 states, `if` and `while` rules, one-time and continuous execution, global and per-unit scope, direct-order precedence, the conflict message, the pausing editor modal, the policy panel and the radial apply menu on a unit.
+- Programmable unit types: `tank`, `tank_v1`, `tank-v2`, `tank-v3`, `rocketTank`, `howitzer`.
+- Not included yet: **build policies** (buildings and base expansion), the **grant and folder UI** (explicit grants stay specified below, not built), **moving enemy AI onto the engine** (`src/enemy.js` and the `src/ai/*` modules are untouched), and **LLM-written policies** (see [LLM-written policies](#llm-written-policies-later)).
+- Sections below that describe build policies, grants and folders, or enemy unification describe the target design. They are not implemented in the first slice.
 
 ## Goal / overview
 
@@ -10,28 +19,41 @@ Behavior is created in a visual drag-and-drop builder. Source code is not requir
 
 Those scripts are called **policies**. The same behavior engine runs player policies and enemy AI. Only the entry point differs.
 
-A policy is also a small state machine: the engine runs it as one, and the game can show that machine. Two variants exist. Unit policies target units. Build policies target buildings and base expansion.
+A policy is also a small state machine: the engine runs it as one, and the game can show that machine. Two variants are designed. Unit policies target units and are implemented. Build policies target buildings and base expansion and are later work.
 
 ## Core concepts
 
 - **Programmable unit:** A unit can run policies that control its behavior.
 - **Policy:** A stored behavior script built from blocks and executed as a state machine. Players build policies themselves. Enemy AI uses policies on the same engine.
 - **Block:** The smallest piece in the builder (trigger, condition, state, action, link).
-- **Two rule kinds** in the same builder:
-  - **Conditional triggers:** A condition fires an action when it becomes true. Example: "If an enemy is in range, attack."
-  - **State rules:** A rule holds while a state remains true. Example: "Defend while hit points are under 50%."
-- **Two variants:** **Unit policies** target units. **Build policies** target buildings and base building / base expansion.
+- **Two rule kinds** in the same builder, written as `if` and `while`:
+  - **`if` (conditional trigger):** The rule fires **once** when the condition becomes true. It does not keep overriding later direct orders. Example: "If hit points drop below 25%, retreat."
+  - **`while` (state rule):** The rule stays in effect until its end condition (by default, the condition becoming false). A `while` condition that becomes true **after** a direct order overrides that order. Example: "Retreat while hit points are under 25%."
+- **Two variants:** **Unit policies** target units (first slice). **Build policies** target buildings and base building / base expansion (later).
 - **Two scopes:** **Global** policies are always active. **Per-unit** policies are applied to a unit mid-battle.
 - **Two execution modes:** **One-time** and **continuous**.
 - **Runtime switch:** Finished policies can be turned on and off during play, so strategy can change in the middle of a battle.
-- **Explicit grant:** A policy is shared with the granting player, another multiplayer player, or an AI only as an explicit act.
+- **Explicit grant:** A policy is shared with the granting player, another multiplayer player, or an AI only as an explicit act. (Specified, not built in the first slice.)
+- **Owner-only control:** Only the commanding owner can enable, disable, or apply a policy: a human player, or an AI commanding its own units.
 - **One engine:** Player policies and enemy behavior, including base building, run on the same script system.
 
-| | Trigger | State rule |
+| | `if` (trigger) | `while` (state rule) |
 | --- | --- | --- |
-| Evaluation | The condition becomes true and fires an action | Holds while the state is true |
-| Example | Enemy in range → attack | HP under 50% → defend |
-| End | The action has fired | The state is no longer true |
+| Evaluation | The condition becomes true and fires an action once | Takes effect when the condition becomes true and holds |
+| Example | HP under 25% → retreat, once | Retreat while HP is under 25% |
+| End | The action has fired | The end condition is met (default: the condition is false) |
+| Against a later direct order | Does not override it | Does not override it unless the condition becomes true again after that order |
+| Against an older direct order | Skipped while that order is running | Overrides it the moment the condition becomes true |
+
+## Direct orders, dominance and conflicts
+
+- **A direct order always wins when it is given.** Active policies pause until that order is completed and the unit would otherwise become idle.
+- `if` rules fire once and do not override later direct orders.
+- A `while` condition that becomes true after a direct order overrides that order. Example: HP is 100%, "retreat while below 25%" is active, the player orders an attack, HP drops below 25%, and the unit retreats. If the player orders an attack again, the new order wins.
+- **Several policies can be active at once.** The last command or the last newly triggered condition is dominant.
+- When a `while` policy is currently overriding and the player gives another direct order, the game shows a **conflict message** and lets the player **pause that policy until the new order is fulfilled**. The policy resumes automatically afterwards.
+- Applying a per-unit policy from the radial menu counts as the newest command.
+- Direct orders stay on the existing command path. Policies never replace it.
 
 ## Policy variants
 
@@ -43,7 +65,7 @@ A global unit policy is always active for its owner. A per-unit policy is applie
 
 ### Build policies
 
-Build policies are a second variant alongside unit policies.
+Later work (not in the first slice). Build policies are a second variant alongside unit policies.
 
 - They target buildings and base building / base expansion. They do not target units.
 - A player can apply build policies to their own base to automate its construction.
@@ -100,7 +122,8 @@ Unit policies and build policies use this folder and grant model. An AI receives
 - The canvas edits the policy's state machine. The builder is laid out for about 5 to 7 states and will not save a policy with more than 7.
 - Both rule kinds are created in this builder, not in two editors.
 - Both variants are created in this builder. The policy is marked unit or build, global or per-unit (unit policies), and one-time or continuous.
-- Starting block range (the catalog is still open; see [Open questions](#open-questions)):
+- An invalid draft is shown clearly: a **red exclamation icon at the top right** of the editor, a **slight red background**, and a message that states the reason (for example "More than 7 states (this draft has 8). Remove 1 to save."). Saving is blocked while the draft is invalid.
+- Starting block range (the catalog is still open; see [Open questions](#open-questions)). The first slice ships these blocks: conditions `always`, hit points compared with a threshold, nearest-enemy distance compared with a threshold, enemy in weapon range, recently under fire, and `not` / `and` / `or`; effects attack the nearest enemy, retreat to base, and hold position:
   - Triggers, for example enemy in range or under fire.
   - States, for example hit points under a threshold.
   - Actions, for example attack, defend, retreat, hold. Build policies add construction actions aimed at buildings and base expansion.
@@ -116,7 +139,13 @@ Unit policies and build policies use this folder and grant model. An AI receives
 - Enemy behavior, including base building when a build policy has been granted, is expressed as policies on the same engine.
 - A policy does not run for a player or an AI who does not hold an effective grant.
 
+## LLM-written policies (later)
+
+Spec only, no code in the first slice. When the enemy AI is driven by the LLM strategic layer (`src/ai/llmStrategicController.js`), that LLM can also **write and apply unit policies**. It would emit the same policy JSON and use the same apply path as a human player, and it is bound by the same rules: it may only command policies on its own units. This depends on the engine, the grant model, and the enemy AI entry described below, so it is later work.
+
 ## Unifying enemy AI
+
+Later work. The first slice leaves `src/enemy.js` and every `src/ai/*` module unchanged.
 
 Every existing behavior that drives the enemy AI moves onto this script system. One behavior engine then serves player policies and enemy AI. Only the entry point differs.
 
@@ -159,16 +188,14 @@ Unification replaces those scattered decisions step by step with policies on the
 
 These points are **not** decided:
 
-- Which unit types are programmable in the first slice.
-- Whether several policies can be active on one owner at once, and how conflicts and priority are resolved.
-- Whether a radial apply opened on one unit of a multi-unit selection applies to every selected unit. The decided target is the unit the menu was opened on.
+- Whether a radial apply opened on one unit of a multi-unit selection applies to every selected unit. The first slice applies to the unit the menu was opened on.
 - Whether shipped enemy policies are visible in the builder.
-- How the LLM layer in `src/ai/llmStrategicController.js` relates to the engine: it stays above the engine, or it later emits policies itself.
+- Exactly how the LLM layer in `src/ai/llmStrategicController.js` plugs in. The direction is decided (it can write and apply unit policies, later); the integration is not.
 - Whether existing harvester automation (see `havester-policies.md`) moves into this policy system.
 - Evaluation interval, cooldowns, and the engine budget inside the simulation tick. The state-machine cap (at most 7 states) bounds the size of one policy. It does not set the tick budget.
-- Save and load, multiplayer sync, and replay transport. The in-memory documents (policy, activation, grant, per-player build opt-in, state-machine trace) are specified here. Their transport is not.
+- Save and load of runtime bindings, multiplayer sync, and replay transport. In the first slice the policy documents persist in `localStorage` and runtime bindings are not saved. Orders issued by remote clients are not hooked on the host yet.
 
 ## Out of scope for this document
 
-- No implementation, and no change to AI, UI, or simulation code.
-- No fixed block catalog and no balance numbers.
+- Build policies, the grant and folder UI, enemy AI migration, and LLM-written policies are not built yet.
+- No fixed block catalog beyond the first-slice vocabulary, and no balance numbers.
