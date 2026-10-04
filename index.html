@@ -197,19 +197,21 @@
       <button id="restartBtn" class="action-button icon-button" title="Restart Game">
         <span class="button-icon restart-icon">↻</span>
       </button>
-      <button id="musicControl" class="action-button icon-button" title="Toggle Music">
-        <span class="button-icon music-icon">♪</span>
-      </button>
       <button id="mobileMinimapButton" class="action-button icon-button" type="button"
         title="Show minimap while pressed" aria-label="Show minimap while pressed">
         <span class="button-icon minimap-icon" aria-hidden="true"></span>
       </button>
     </div>
 
-    <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
-      <i class="offline-mode-button__light" aria-hidden="true"></i>
-      <span data-offline-label>Online</span>
-    </button>
+    <div id="sidebarStatusRow" class="sidebar-status-row">
+      <button id="musicControl" class="action-button icon-button" title="Toggle Music">
+        <span class="button-icon music-icon">♪</span>
+      </button>
+      <button id="offlineModeButton" class="offline-mode-button" type="button" aria-pressed="false" aria-describedby="offlineModeTip">
+        <i class="offline-mode-button__light" aria-hidden="true"></i>
+        <span data-offline-label>Online</span>
+      </button>
+    </div>
 
     <!-- Master Volume Control -->
     <div id="volumeControl">

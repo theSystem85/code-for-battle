@@ -1431,13 +1431,28 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   max-width: calc(100vw - 24px - var(--safe-area-left, 0px));
 }
 
-#sidebar > .offline-mode-button {
+#sidebar > .sidebar-status-row {
   position: relative;
   z-index: 3;
-  align-self: flex-start;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  align-self: stretch;
   flex: 0 0 auto;
+  gap: 8px;
   max-width: calc(100% - 4px);
   margin: 0 0 4px;
+}
+
+.sidebar-status-row > #musicControl {
+  width: 32px;
+  height: 32px;
+}
+
+.sidebar-status-row > .offline-mode-button {
+  margin-left: auto;
+  max-width: 100%;
 }
 
 .offline-mode-button {
