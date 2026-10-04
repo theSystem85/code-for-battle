@@ -8,6 +8,7 @@
 //     policy that ran to its end is an end state),
 //   - nothing stops it from acting: no paused gate and no running direct order.
 
+import { getPolicyDocument } from './policyStore.js'
 import { STEP_GATE } from './policyStep.js'
 
 /**
@@ -57,4 +58,18 @@ export function listActivelyControlledUnits(units, out = []) {
     if (unit && unit.policyActive === true && unit.health > 0) out.push(unit)
   }
   return out
+}
+
+/** Tooltip text naming the policies that currently control `unit` (hover only). */
+export function describeActivePolicies(unit) {
+  const bindings = unit && unit.policyBindings
+  const names = []
+  if (bindings) {
+    for (let i = 0; i < bindings.length; i++) {
+      if (bindings[i].active !== true) continue
+      const doc = getPolicyDocument(bindings[i].policyId)
+      names.push(doc ? doc.name : bindings[i].policyId)
+    }
+  }
+  return names.length ? `Controlled by policy:\n${names.join('\n')}` : 'Controlled by policy'
 }

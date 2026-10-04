@@ -686,3 +686,145 @@
   font-size: 13px;
   color: #ffd98a;
 }
+
+/* Activity counts on policy cards */
+
+.policy-card__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.policy-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid rgba(143, 180, 214, 0.3);
+  border-radius: 999px;
+  background: rgba(10, 16, 22, 0.55);
+  font-size: 12px;
+  color: #9fb8cf;
+  cursor: default;
+}
+
+.policy-count__value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #e8f1fa;
+  font-variant-numeric: tabular-nums;
+}
+
+.policy-count--active.is-lit {
+  border-color: rgba(255, 213, 79, 0.75);
+  background: rgba(255, 213, 79, 0.12);
+}
+
+.policy-count--active.is-lit .policy-count__value {
+  color: #ffd54f;
+}
+
+/* Custom tooltip (no native title tooltips in the policy UI) */
+
+.policy-tooltip {
+  position: fixed;
+  z-index: var(--z-hud-popover, 2400);
+  max-width: 260px;
+  padding: 6px 10px;
+  color: #fff;
+  background: rgba(10, 16, 22, 0.96);
+  border: 1px solid rgba(143, 180, 214, 0.5);
+  border-radius: 8px;
+  font-family: var(--game-font-family);
+  font-size: 12px;
+  pointer-events: none;
+  display: none;
+}
+
+.policy-tooltip.is-visible {
+  display: block;
+}
+
+.policy-tooltip strong {
+  display: block;
+  font-size: 13px;
+}
+
+/* Long-press list of actively controlled units */
+
+.policy-active-popover {
+  position: fixed;
+  z-index: var(--z-hud-popover, 2400);
+  width: 280px;
+  max-width: calc(100vw - 16px);
+  max-height: min(60vh, 420px);
+  display: none;
+  flex-direction: column;
+  box-sizing: border-box;
+  color: #e8f1fa;
+  background: rgba(19, 28, 37, 0.97);
+  border: 1px solid rgba(143, 180, 214, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  font-family: var(--game-font-family);
+}
+
+.policy-active-popover.is-open {
+  display: flex;
+}
+
+.policy-active-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.policy-active-empty {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #9fb8cf;
+}
+
+.policy-active-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "icon name" "icon policies";
+  column-gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  background: #182430;
+  border: 1px solid rgba(143, 180, 214, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.policy-active-row:hover {
+  border-color: rgba(255, 213, 79, 0.7);
+}
+
+.policy-active-row__icon {
+  grid-area: icon;
+  color: #ffd54f;
+}
+
+.policy-active-row__name {
+  grid-area: name;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.policy-active-row__policies {
+  grid-area: policies;
+  font-size: 12px;
+  color: #9fb8cf;
+  overflow-wrap: anywhere;
+}
