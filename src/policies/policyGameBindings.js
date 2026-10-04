@@ -75,14 +75,14 @@ function fire(unit, target, aim, context) {
 
 /** Install the game helpers on the shared policy context (once). */
 export function installPolicyGameBindings(context) {
-  context.getFireRange = getEffectiveFireRange
+  context.getFireRange = unit => getEffectiveFireRange(unit)
   context.getFireRate = getFireRate
-  context.canTarget = canUnitTargetEntity
+  context.canTarget = (unit, target) => canUnitTargetEntity(unit, target)
   context.isVisible = (unit, px, py) => isVisible(unit, px, py, context)
   context.getVisionRange = getVisionRange
   context.getMoney = getMoney
   context.getPower = getPower
-  context.getXpProgress = getExperienceProgress
+  context.getXpProgress = unit => getExperienceProgress(unit)
   context.fire = (unit, target, aim) => fire(unit, target, aim, context)
   return context
 }
