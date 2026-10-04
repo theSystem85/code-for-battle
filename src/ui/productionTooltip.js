@@ -4,6 +4,7 @@ import { TILE_SIZE, LONG_PRESS_MS } from '../config.js'
 import { focusCameraOnPoint } from './tutorialSystem/helpers.js'
 import { buildingData } from '../buildings.js'
 import { getUnitCost } from '../utils.js'
+import { getUnitAutomationStatus } from '../policies/policyActivity.js'
 
 let tooltipOpen = false
 let tooltipListenersAttached = false
@@ -198,6 +199,7 @@ function renderUnitTooltipContent(unitType) {
       const healthDisplay = `${Math.max(0, Math.round(unit.health))}/${unit.maxHealth}`
       const damageValue = formatMoney(unit.damageValue)
       const status = getUnitStatus(unit)
+      const automation = getUnitAutomationStatus(unit)
       return `
         <button class="money-tooltip__item production-tooltip__row production-tooltip__link" type="button" data-unit-id="${unit.id}">
           <span class="production-tooltip__title">${getUnitLabel(unit.type)} ${index + 1}</span>
@@ -209,6 +211,7 @@ function renderUnitTooltipContent(unitType) {
             <span class="money-tooltip__chip">👥 ${getCrewDisplay(unit)}</span>
             <span class="money-tooltip__chip">⭐ ${unit.level || 0}</span>
             <span class="money-tooltip__chip">💥 ${damageValue}</span>
+            <span class="money-tooltip__chip production-tooltip__automation" data-automation="${automation.state}">${automation.text}</span>
           </span>
         </button>
       `
@@ -224,6 +227,7 @@ function renderUnitTooltipContent(unitType) {
           <span class="production-tooltip__status">wrecked</span>
           <span class="money-tooltip__meta production-tooltip__stats">
             <span class="money-tooltip__chip">💔 ${healthDisplay}</span>
+            <span class="money-tooltip__chip production-tooltip__automation" data-automation="none">🤖 inactive</span>
           </span>
         </button>
       `
@@ -340,6 +344,27 @@ function positionProductionTooltip(anchor) {
   tooltip.style.top = `${top}px`
 }
 
+export const AUTOMATION_REFRESH_MS = 500
+let automationTimer = 0
+
+function refreshAutomationChips() {
+  const tooltip = document.getElementById('productionTooltip')
+  if (!tooltip || !tooltipOpen || !activeContext || activeContext.kind !== 'unit') return
+  const units = gameState.units || []
+  const rows = tooltip.querySelectorAll('[data-unit-id]')
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i]
+    const chip = row.querySelector('.production-tooltip__automation')
+    if (!chip) continue
+    const id = row.getAttribute('data-unit-id')
+    const unit = units.find(candidate => String(candidate.id) === id)
+    if (!unit) continue
+    const status = getUnitAutomationStatus(unit)
+    if (chip.dataset.automation !== status.state) chip.dataset.automation = status.state
+    if (chip.textContent !== status.text) chip.textContent = status.text
+  }
+}
+
 function showProductionTooltip(anchor, context) {
   const tooltip = ensureProductionTooltip()
   activeAnchor = anchor
@@ -355,6 +380,8 @@ function showProductionTooltip(anchor, context) {
   tooltip.classList.add('money-tooltip--visible')
   positionProductionTooltip(anchor)
   tooltipOpen = true
+  window.clearInterval(automationTimer)
+  automationTimer = context.kind === 'unit' ? window.setInterval(refreshAutomationChips, AUTOMATION_REFRESH_MS) : 0
 }
 
 function hideProductionTooltip() {
@@ -364,6 +391,8 @@ function hideProductionTooltip() {
   tooltipOpen = false
   activeAnchor = null
   activeContext = null
+  window.clearInterval(automationTimer)
+  automationTimer = 0
 }
 
 function clearSelections() {
