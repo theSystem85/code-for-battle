@@ -1,6 +1,6 @@
 # Unit policies — first slice
 
-Status: implemented (units only). Design source: [programmable units feature list](../docs/programmable-units-feature-list.md). Plan: [orchestration](../docs/programmable-units-orchestration.md).
+Status: implemented (units only). The condition catalog, effects and unit command API were extended afterwards; they are specified in [Unit policies — conditions, command API and activity display](unit-policies-conditions-and-command-api.md), which supersedes the vocabulary lists in this file. Design source: [programmable units feature list](../docs/programmable-units-feature-list.md). Plan: [orchestration](../docs/programmable-units-orchestration.md).
 
 ## Scope of this slice
 
@@ -53,9 +53,9 @@ Out (later work, not built here):
 ```
 
 - `scope`: `global` or `perUnit`. `execution`: `oneTime` or `continuous`.
-- A state may carry one `effect`. Effects: `attackNearestEnemy`, `retreat`, `hold`.
+- A state may carry one `effect`. First-slice effects: `attackNearestEnemy`, `retreat`, `hold`. More effects (all going through the unit command API) are listed in the companion spec; effects may carry `params`, for example `{ "type": "moveForward", "params": { "tiles": 3 } }`.
 - A transition has `kind` (`if` or `while`), a `when` condition and a target state `to`. A `while` transition may carry an optional `until` end condition (default: the condition becoming false).
-- Conditions: `always`, `compare` (`hp` as a fraction 0..1, or `enemyDistance` in tiles; operators `<`, `<=`, `>`, `>=`), `enemyInRange`, `underFire`, and `not`, `and`, `or`.
+- Conditions: `always`, `compare` (`hp` as a fraction 0..1, or `enemyDistance` in tiles; operators `<`, `<=`, `>`, `>=`), `enemyInRange`, `underFire`, and `not`, `and`, `or`. These stay valid. Additive extensions (schema v1 is unchanged): `compare` also takes `==`, an optional `mode` (`relative` / `absolute`) and `params`, many more `field` values, and a new `check` leaf. Old documents load and behave as before. The full catalog is in the companion spec.
 - The document has no owner, enabled flag or recipient list. Those live in the policy store (`src/policies/policyStore.js`). Documents persist in `localStorage` key `cfb-unit-policies-v1`. Runtime bindings are not saved.
 
 ### Validation
@@ -90,7 +90,7 @@ Only the commanding owner (a human player, or an AI commanding its own units) ca
 
 ### Programmable unit types in this slice
 
-`tank`, `tank_v1`, `tank-v2`, `tank-v3`, `rocketTank`, `howitzer`.
+`tank`, `tank_v1`, `tank-v2`, `tank-v3`, `rocketTank`, `howitzer` in this slice. Widened afterwards (see the companion spec) to also include `apache`, `f35`, `ambulance`, `tankerTruck`, `ammunitionTruck`, `recoveryTank`.
 
 ## UI
 
@@ -137,6 +137,14 @@ Remaining on the unit slice:
 - [ ] Measure the engine tick cost against the 75 FPS gate with realistic unit counts.
 - [ ] Decide on harvester automation and on shipped enemy policies in the builder.
 
+Built after this slice (details in the [companion spec](unit-policies-conditions-and-command-api.md)):
+
+- [x] Long condition list with `==, <=, >=, <, >`, `not`/`and`/`or` nesting, internal, external and sensing conditions, wired into schema, validation, editor and `stepPolicy` tests. Two conditions are skipped because the game has no such data (crew per role, hit history).
+- [x] Unit command API that returns `false` when a command is not allowed; policy effects go through it.
+- [x] Policy activity counts on each card, HUD icon, and long-press controlled-unit list.
+
+Later, spec only (not built): voice vibe coding, hotkeys running a script on selected units, one-click attack plans, base-build scripts with money/income/count conditions (including a host applying one to another player's base), one shared command path for replays/enemy LLM/scripts, and migrating every existing human and enemy behavior onto the command API (map physics is the only exception).
+
 Later work (not started):
 
 - [ ] Build policies.
@@ -153,4 +161,4 @@ Later work (not started):
 
 ## Tests
 
-`tests/unit/policyStep.test.js`, `policyEngine.test.js`, `policyDirectOrderHook.test.js`, `policyConditionRows.test.js`. Run with `npm run test:unit`.
+`tests/unit/policyStep.test.js`, `policyEngine.test.js`, `policyDirectOrderHook.test.js`, `policyConditionRows.test.js`, `policyPanelSwitch.test.js`, plus `policyConditions`, `policySensors`, `unitCommandApi`, `policyActivity` and `policyActivityUi` for the follow-up. Run with `npm run test:unit`.

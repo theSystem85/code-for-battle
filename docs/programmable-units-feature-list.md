@@ -1,13 +1,15 @@
 # Programmable units — feature list
 
-Status: the **unit-policy first slice is implemented** (see [Unit policies — first slice](../specs/unit-policies-first-slice.md)). Build policies, the grant and folder UI, and moving enemy AI onto the engine are **later work** and are still only specified here.
+Status: the **unit-policy first slice is implemented**, and on top of it the **long condition list, the unit command API and the policy activity display are implemented** on the same branch (see [Unit policies — first slice](../specs/unit-policies-first-slice.md) and [Unit policies — conditions, command API and activity display](../specs/unit-policies-conditions-and-command-api.md)). Build policies, the grant and folder UI, moving existing human and enemy behavior onto the command API, and the items under [Later, spec only](#later-spec-only) are **later work** and are only specified here.
+
+How to read the marks: **[x] built** = in the code with tests. **[ ] later** = spec only, nothing built. **skipped** = the game has no such field today, so no fake stat was invented.
 
 ## First slice (units only)
 
 The first slice covers unit policies only.
 
 - Included: the policy JSON (schema v1), a state machine of at most 7 states, `if` and `while` rules, one-time and continuous execution, global and per-unit scope, direct-order precedence, the conflict message, the pausing editor modal, the policy panel and the radial apply menu on a unit.
-- Programmable unit types: `tank`, `tank_v1`, `tank-v2`, `tank-v3`, `rocketTank`, `howitzer`.
+- Programmable unit types: `tank`, `tank_v1`, `tank-v2`, `tank-v3`, `rocketTank`, `howitzer`. The follow-up widened this to `apache`, `f35`, `ambulance`, `tankerTruck`, `ammunitionTruck`, `recoveryTank` so the new commands have units to run on.
 - Not included yet: **build policies** (buildings and base expansion), the **grant and folder UI** (explicit grants stay specified below, not built), **moving enemy AI onto the engine** (`src/enemy.js` and the `src/ai/*` modules are untouched), and **LLM-written policies** (see [LLM-written policies](#llm-written-policies-later)).
 - Sections below that describe build policies, grants and folders, or enemy unification describe the target design. They are not implemented in the first slice.
 
@@ -33,6 +35,23 @@ Checked means it is in the code on branch `cursor/programmable-unit-policies-c5c
 - [x] Unit tests for the schema, the step, the engine, the direct-order hook, the condition rows and the panel switch; a browser run of the editor, radial, conflict and pause flow on the dev server.
 - [x] **Known UI bug: policy-card toggle clipped on phone widths.** Found on the Netlify preview of PR #728. Cause: the switch styled one `::after` as both the knob and the hover tooltip. Fixed on this branch in commit `65b112c1` (labelled switch that wraps under the title). It reaches `main` with the PR.
 
+### Built after the first slice (same branch)
+
+Requirements from the Google-Doc list. Details, field names and approximations are in [the companion spec](../specs/unit-policies-conditions-and-command-api.md).
+
+- [x] **Condition catalog with operators.** `compare` with `==`, `<=`, `>=`, `<`, `>`, relative or absolute mode, per-field tolerance for `==`, circular angle compare; `check` leaves with parameters; `not`/`and`/`or` with nesting. An unmeasurable value is never true.
+- [x] **Internal conditions.** HP, XP, rank 1–3, fuel, ammo, reload status, crew present, load, wagon rotation, turret rotation, airborne, moving, attacking a unit or a building, serving a unit.
+- [x] **External conditions.** Base money, power, number of my buildings of a type, under service, under service by someone, in range of hospital / ammo factory / fuel station / workshop, protected by a unit, in range of a defense building or a combat or service unit, can attack a unit or a building, in visible range of an enemy unit or building, parked at airstrip / helipad / workshop, direct hit and indirect hit by unit or building, under attack by unit or building (only while the attacker is visible), distance to a visible unit or building.
+- [x] **Sensing.** Enemy of a chosen type or any is visible; enemy of a chosen type or any is in my fire range; some or any of my units of a type are in an enemy's fire range.
+- [x] **Wired through** the policy schema and validation, the evaluator, the editor (nested condition rows, grouped field picker, parameter selects) and `stepPolicy` tests.
+- [ ] **Skipped conditions** (the game has no such data): crew status per role (only the present count/fraction exists), and "attacker of a past hit is visible" (only the last hit is recorded, there is no hit history).
+- [x] **Unit command API** (`src/policies/unitCommandApi.js`): `executeUnitCommand` returns `false` when the engine does not allow a command and leaves the unit untouched. Commands: move forwards / backwards / sideways left and right (sideways: helicopters only), turn left / right, turn turret left / right (tanks only), take off and land (helicopters and F-35 only), aim and lock without firing, fire at the locked target, fire in the current turret direction independent of a lock, order a service unit to refill ammo / health / fuel, go to a workshop / hospital / ammo factory, attack and chase, attack when in range without chasing, attack anything in range automatically, service a target (service units only), protect a target (follow), retreat to a position.
+- [x] **Policy effects go through the API.** Existing direct-order code and enemy AI are not routed through it (see [Later](#later-spec-only)). Tests cover allowed and refused commands.
+- [x] **Policy activity counts.** Each policy card shows how many units have it enabled and how many it actively controls (a condition fired, the machine is past its start state, not finished, and a `while` hold is in force).
+- [x] **HUD icon** on units a policy actively controls, with a canvas tooltip naming the policies.
+- [x] **Controlled-unit list** opened by a long-press on the sidebar Units tab button (the game has no button literally called "Build"; see the spec).
+- [x] Custom tooltips only (no native `title`), custom scrollbars, one scroller per surface.
+
 ### Remaining work on the unit slice
 
 - [ ] Show the running state machine in game (current state and latest trace) and export the trace. The editor draws the diagram; the live view and export do not exist yet.
@@ -44,6 +63,17 @@ Checked means it is in the code on branch `cursor/programmable-unit-policies-c5c
 - [ ] Measure the engine tick cost against the 75 FPS gate with realistic unit counts and record it in the spec.
 - [ ] Decide whether existing harvester automation (`havester-policies.md`) moves into this system.
 - [ ] Decide whether shipped enemy policies appear in the builder.
+
+### Later, spec only
+
+Nothing below is built. The design is written down in [the companion spec](../specs/unit-policies-conditions-and-command-api.md#5-later-spec-only).
+
+- [ ] **Voice vibe coding:** a spoken command goes to an LLM that produces build commands and unit commands, run through the same validated paths as a hand-built policy.
+- [ ] **Hotkeys 1–9 and higher:** a hotkey runs a chosen script on the selected units.
+- [ ] **One-click attack plans.** Example: two groups wait until an F-22 destroys the artillery; then the artillery attacks air defense while the tanks protect it; then aircraft hit the turrets; then the groups destroy the construction yard, the vehicle factory and the remaining buildings.
+- [ ] **Base-build scripts** with conditions on money, income per minute, own unit and building counts, and visible enemy unit and building counts. A host can apply one to another player's base (an explicit grant).
+- [ ] **One shared command path** used by replays, the enemy LLM and these scripts.
+- [ ] **Migration of every existing human and enemy behavior to the unit command API.** Map physics is the only thing allowed to push a unit outside the API. Not done in this pass: the existing direct-order code and the enemy AI modules are unchanged, and only new policy code must use the API.
 
 ### Later work (not started, out of the first slice)
 
@@ -164,7 +194,7 @@ Unit policies and build policies use this folder and grant model. An AI receives
 - Both rule kinds are created in this builder, not in two editors.
 - Both variants are created in this builder. The policy is marked unit or build, global or per-unit (unit policies), and one-time or continuous.
 - An invalid draft is shown clearly: a **red exclamation icon at the top right** of the editor, a **slight red background**, and a message that states the reason (for example "More than 7 states (this draft has 8). Remove 1 to save."). Saving is blocked while the draft is invalid.
-- Starting block range (the catalog is still open; see [Open questions](#open-questions)). The first slice ships these blocks: conditions `always`, hit points compared with a threshold, nearest-enemy distance compared with a threshold, enemy in weapon range, recently under fire, and `not` / `and` / `or`; effects attack the nearest enemy, retreat to base, and hold position:
+- Block range. The first slice shipped `always`, hit points, nearest-enemy distance, enemy in weapon range, recently under fire and `not` / `and` / `or`, with effects attack, retreat and hold. The condition catalog is now the long list described in [Built after the first slice](#built-after-the-first-slice-same-branch), and effects cover the unit command API. Build-policy blocks are still open (see [Open questions](#open-questions)):
   - Triggers, for example enemy in range or under fire.
   - States, for example hit points under a threshold.
   - Actions, for example attack, defend, retreat, hold. Build policies add construction actions aimed at buildings and base expansion.
@@ -223,6 +253,7 @@ Unification replaces those scattered decisions step by step with policies on the
 - Build policies are applied to the player's own base from that player's base policy controls. Each multiplayer player opts in or out for their own base. The unit radial menu does not list build policies.
 - The running state machine can be shown in game. The same trace can be exported for an external analysis tool.
 - Folder management shows the tree and inherited permissions. Granting is an explicit action there.
+- **Activity display.** Each policy card shows two counts: units that have it enabled and units it actively controls. A unit under active control carries a small bolt badge on its HUD (hover for the policy names), and a long-press on the sidebar Units tab button lists those units. Tooltips are custom, never the native `title`; scrolling uses custom scrollbars with one scroller per surface.
 - Presentation follows the existing HUD and stays visual. The concrete layout is still open.
 
 ### Radial menu behavior (first slice)
@@ -249,4 +280,4 @@ These points are **not** decided:
 ## Out of scope for this document
 
 - Build policies, the grant and folder UI, enemy AI migration, and LLM-written policies are not built yet.
-- No fixed block catalog beyond the first-slice vocabulary, and no balance numbers.
+- Balance numbers, and any condition the game has no real field for (skipped, see above).

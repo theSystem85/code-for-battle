@@ -107,7 +107,7 @@ function place() {
   const width = popover.offsetWidth || 280
   const height = popover.offsetHeight || 200
   let left = rect.left - width - 8
-  if (left < 8) left = Math.min(window.innerWidth - width - 8, rect.left)
+  if (left < 8) left = Math.min(window.innerWidth - width - 8, rect.right + 8)
   left = Math.max(8, left)
   const top = Math.max(8, Math.min(rect.top, window.innerHeight - height - 8))
   popover.style.left = `${left}px`
