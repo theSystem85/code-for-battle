@@ -180,10 +180,11 @@ function policyNeedsEnemy(policy) {
   return needs
 }
 
-const sharedView = { hp: 1, enemyDistance: Infinity, enemyInRange: false, underFire: false, measure: measureLeaf }
+const sharedView = { now: 0, hp: 1, enemyDistance: Infinity, enemyInRange: false, underFire: false, measure: measureLeaf }
 
 function buildWorldView(unit, needsEnemy, context, now) {
   beginUnitScope(unit, context, now)
+  sharedView.now = now
   sharedView.hp = unit.maxHealth > 0 ? Math.max(0, unit.health / unit.maxHealth) : 1
   sharedView.underFire = Number.isFinite(unit.lastDamageTime) && now - unit.lastDamageTime <= UNDER_FIRE_WINDOW_MS
   sharedView.enemyDistance = Infinity
@@ -443,6 +444,16 @@ function processUnit(unit, context, now) {
     unit.policyBindings = bindings.filter(binding => !binding.dead)
   }
   refreshActivity(unit, control)
+}
+
+/**
+ * Recompute the activity flags of one unit right away, e.g. after a policy was
+ * applied to or removed from it by hand, instead of waiting for the next
+ * evaluation (which is skipped entirely for units without bindings).
+ */
+export function refreshUnitPolicyActivity(unit) {
+  if (!unit) return
+  refreshActivity(unit, unit.policyControl || null)
 }
 
 /** Record which policies control the unit right now (see policyActivity.js). */

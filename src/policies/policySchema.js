@@ -4,6 +4,7 @@
 // list; those live in the policy store. The shape below is versioned and stable.
 
 import { EFFECT_TYPES, isKnownEffect, validateEffectParams } from './policyEffects.js'
+import { MAX_AFTER_DELAY_SECONDS, MIN_AFTER_DELAY_SECONDS, formatDelay, isValidDelaySeconds } from './policyDelay.js'
 import {
   COMPARE_OPS,
   CONDITION_TYPES,
@@ -24,7 +25,7 @@ export const MAX_POLICY_STATES = 7
 export const POLICY_VARIANTS = Object.freeze(['unit'])
 export const POLICY_SCOPES = Object.freeze(['global', 'perUnit'])
 export const POLICY_EXECUTIONS = Object.freeze(['oneTime', 'continuous'])
-export const TRANSITION_KINDS = Object.freeze(['if', 'while'])
+export const TRANSITION_KINDS = Object.freeze(['if', 'while', 'after'])
 
 export { COMPARE_OPS, CONDITION_TYPES, COMPARE_FIELDS }
 
@@ -147,12 +148,21 @@ function validateState(state, index, stateIds, errors, transitionIds) {
       transitionIds.add(transition.id)
     }
     if (!TRANSITION_KINDS.includes(transition.kind)) {
-      errors.push(error('invalid_transition_kind', 'A rule must be "if" or "while".', `${tPath}.kind`))
+      errors.push(error('invalid_transition_kind', 'A rule must be "if", "while" or "after".', `${tPath}.kind`))
     }
     if (!stateIds.has(transition.to)) {
       errors.push(error('unknown_state', `A rule in "${state.name || state.id}" points to a state that does not exist.`, `${tPath}.to`))
     }
     validateCondition(transition.when, `${tPath}.when`, errors)
+    if (transition.kind === 'after') {
+      if (!isValidDelaySeconds(transition.delaySeconds)) {
+        errors.push(error('invalid_delay',
+          `An "after" rule needs a delay between ${formatDelay(MIN_AFTER_DELAY_SECONDS)} and ${formatDelay(MAX_AFTER_DELAY_SECONDS)}.`,
+          `${tPath}.delaySeconds`))
+      }
+    } else if (transition.delaySeconds != null) {
+      errors.push(error('invalid_transition', 'Only "after" rules can have a delay.', `${tPath}.delaySeconds`))
+    }
     if (transition.until != null) {
       if (transition.kind !== 'while') {
         errors.push(error('invalid_transition', 'Only "while" rules can have an end condition.', `${tPath}.until`))

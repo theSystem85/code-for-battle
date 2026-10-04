@@ -13,7 +13,7 @@ import {
 import { h } from './policyDom.js'
 import { countPolicyActivity } from '../../policies/policyActivity.js'
 import { describeEffect } from '../../policies/policyEffects.js'
-import { describeCondition } from './conditionRows.js'
+import { describeRuleTrigger } from './conditionRows.js'
 import { attachPolicyTooltip } from './policyTooltip.js'
 import { openPolicyEditor } from './policyEditorModal.js'
 import { showNotification } from '../notifications.js'
@@ -36,8 +36,7 @@ export function describePolicyRules(policy) {
     ;(state.transitions || []).forEach(transition => {
       const target = policy.states.find(item => item.id === transition.to)
       const action = target && target.effect ? describeEffect(target.effect) : (target ? target.name : '?')
-      const until = transition.until ? `, until ${describeCondition(transition.until)}` : ''
-      lines.push(`${transition.kind.toUpperCase()} ${describeCondition(transition.when)} → ${action}${until}`)
+      lines.push(`${describeRuleTrigger(transition)} → ${action}`)
     })
   })
   return lines
