@@ -278,6 +278,23 @@
   border-left-color: #ffb300;
 }
 
+.policy-rule--after {
+  border-left-color: #c792ea;
+}
+
+.policy-rule__delay {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #cfe0f0;
+}
+
+.policy-rule__delay-input {
+  width: 64px;
+}
+
 .policy-rule__head,
 .policy-rule__target,
 .policy-rule__until {
@@ -750,16 +767,17 @@
   font-size: 13px;
 }
 
-/* Long-press list of actively controlled units */
+/* Live state-machine view of one unit's policies */
 
-.policy-active-popover {
+.policy-machine {
   position: fixed;
+  top: 64px;
+  right: 12px;
   z-index: var(--z-hud-popover, 2400);
-  width: 280px;
-  max-width: calc(100vw - 16px);
-  max-height: min(60vh, 420px);
   display: none;
   flex-direction: column;
+  width: min(480px, calc(100vw - 24px));
+  max-height: min(72vh, 640px);
   box-sizing: border-box;
   color: #e8f1fa;
   background: rgba(19, 28, 37, 0.97);
@@ -769,62 +787,140 @@
   font-family: var(--game-font-family);
 }
 
-.policy-active-popover.is-open {
+.policy-machine.is-open {
   display: flex;
 }
 
-.policy-active-list {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  padding: 8px 10px;
+.policy-machine__header {
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.policy-active-empty {
-  margin: 4px 0;
-  font-size: 13px;
-  color: #9fb8cf;
-}
-
-.policy-active-row {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas: "icon name" "icon policies";
-  column-gap: 8px;
   align-items: center;
-  width: 100%;
-  padding: 6px 8px;
-  box-sizing: border-box;
-  text-align: left;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px 4px;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+
+.policy-machine__close {
+  width: 28px;
+  height: 28px;
   color: inherit;
-  font: inherit;
-  background: #182430;
-  border: 1px solid rgba(143, 180, 214, 0.25);
-  border-radius: 8px;
+  font-size: 18px;
+  line-height: 1;
+  background: transparent;
+  border: 1px solid rgba(143, 180, 214, 0.35);
+  border-radius: 6px;
   cursor: pointer;
 }
 
-.policy-active-row:hover {
-  border-color: rgba(255, 213, 79, 0.7);
+.policy-machine__legend {
+  display: flex;
+  gap: 12px;
+  padding: 0 10px 6px;
+  font-size: 11px;
+  color: #9fb8cf;
 }
 
-.policy-active-row__icon {
-  grid-area: icon;
-  color: #ffd54f;
+.policy-machine__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.policy-active-row__name {
-  grid-area: name;
-  font-size: 14px;
+.policy-machine__swatch {
+  display: inline-block;
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.policy-machine__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 10px 10px;
+}
+
+.policy-machine__section + .policy-machine__section {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(143, 180, 214, 0.25);
+}
+
+.policy-machine__section.is-finished {
+  opacity: 0.6;
+}
+
+.policy-machine__policy {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.policy-machine__source,
+.policy-machine__empty {
+  font-size: 12px;
+  color: #9fb8cf;
+}
+
+.policy-machine__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.policy-machine__edge {
+  fill: none;
+  stroke-width: 2;
+  opacity: 0.6;
+}
+
+.policy-machine__edge.is-armed,
+.policy-machine__edge.is-holding {
+  opacity: 1;
+  stroke-width: 3;
+}
+
+.policy-machine__label {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre;
+}
+
+.policy-machine__delay {
+  fill: #e7d5f7;
+  font-weight: 600;
+}
+
+.policy-machine__node-box {
+  fill: #182430;
+  stroke: #8fb4d6;
+  stroke-width: 1.5;
+}
+
+.policy-machine__node.is-current .policy-machine__node-box {
+  fill: #3a2f0e;
+  stroke: #ffd54f;
+  stroke-width: 3;
+}
+
+.policy-machine__node-name {
+  fill: #fff;
+  font-size: 12px;
   font-weight: 700;
 }
 
-.policy-active-row__policies {
-  grid-area: policies;
-  font-size: 12px;
-  color: #9fb8cf;
-  overflow-wrap: anywhere;
+.policy-machine__node-action,
+.policy-machine__node-count {
+  fill: #cfe0f0;
+  font-size: 10px;
+}
+
+.policy-machine__node.is-current .policy-machine__node-count {
+  fill: #ffe08a;
+  font-weight: 700;
 }

@@ -12,15 +12,17 @@ import {
   listPolicies,
   removePolicyFromUnit
 } from '../../policies/policyStore.js'
-import { getUnitPolicySummary, isProgrammableUnit } from '../../policies/policyEngine.js'
+import { getUnitPolicySummary, isProgrammableUnit, refreshUnitPolicyActivity } from '../../policies/policyEngine.js'
 import { createRadialMenu } from '../radialMenu/radialMenu.js'
 import { LONG_PRESS_MOVE_CANCEL_PX, LONG_PRESS_MS } from '../radialMenu/longPressTracker.js'
 import { showNotification } from '../notifications.js'
 import { h } from './policyDom.js'
+import { isPolicyMachineViewOpen, togglePolicyMachineView } from './policyMachineView.js'
 import { describePolicyRules, openPolicyPanel } from './policyPanel.js'
 
 const RIGHT_CLICK_MOVE_PX = 6
 const MANAGE_ID = '__manage'
+const MACHINE_ID = '__machine'
 
 function humanPlayer() {
   return gameState.humanPlayer || 'player1'
@@ -41,7 +43,8 @@ function shortLabel(name) {
 export function buildUnitPolicyItems(unit, onApplied) {
   const owner = humanPlayer()
   const entries = listPolicies(owner).filter(entry => entry.policy.scope === 'perUnit')
-  if (entries.length === 0) return []
+  const hasBindings = Boolean(unit.policyBindings && unit.policyBindings.length > 0)
+  if (entries.length === 0 && !hasBindings) return []
   const summary = getUnitPolicySummary(unit)
   const items = entries.map(entry => {
     const applied = summary.find(item => item.policyId === entry.policy.id && item.source === 'unit')
@@ -66,9 +69,24 @@ export function buildUnitPolicyItems(unit, onApplied) {
           if (result.ok) showNotification(`${entry.policy.name} applied`, 1600)
           else showNotification('Only the commanding player can apply this policy.', 2200)
         }
+        refreshUnitPolicyActivity(unit)
         if (onApplied) onApplied(unit)
       }
     }
+  })
+  const machineOpen = isPolicyMachineViewOpen(unit)
+  items.push({
+    id: MACHINE_ID,
+    label: 'State machine',
+    text: 'State machine',
+    customTooltip: true,
+    ready: machineOpen,
+    tooltipTitle: 'State machine view',
+    tooltipLines: [
+      machineOpen ? 'Showing. Click to hide.' : 'Click to show the policy state machine of this unit.',
+      'Shows the current state, each rule\'s full condition and how often every state was entered.'
+    ],
+    onSelect: () => { togglePolicyMachineView(unit) }
   })
   items.push({
     id: MANAGE_ID,
