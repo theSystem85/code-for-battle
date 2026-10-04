@@ -6,12 +6,19 @@
 // "while" transition: taken the same way, then the target state is HELD until
 //                     the end condition is met (default: the condition is no
 //                     longer true). A held state keeps asserting its effect.
+// "after" transition: when its condition becomes true a delay starts running
+//                     (runtime.pending). If the condition is still true when
+//                     the delay is over the transition is taken like an "if".
+//                     If the condition stops being true first, the delay is
+//                     dropped and starts over next time. The delay is measured
+//                     on worldView.now (milliseconds of simulation time).
 //
 // gate (how a direct order interacts with the policy):
 //   "open"         everything is evaluated.
-//   "orderRunning" a direct order is in progress. "if" rules and hold
-//                  re-assertion are frozen; a "while" rule that newly becomes
-//                  true still takes over, and end conditions still end holds.
+//   "orderRunning" a direct order is in progress. "if" and "after" rules and
+//                  hold re-assertion are frozen (a running delay is dropped); a
+//                  "while" rule that newly becomes true still takes over, and
+//                  end conditions still end holds.
 //   "paused"       the owner paused the policy until the order is done. Nothing
 //                  is evaluated.
 
@@ -29,8 +36,20 @@ export function createPolicyRuntime(policy) {
     finished: false,
     hold: null,
     prev: {},
+    pending: null,
+    entered: { [policy.initialStateId]: 1 },
     steps: 0
   }
+}
+
+function omitPending(pending, transitionId) {
+  const copy = { ...pending }
+  delete copy[transitionId]
+  return copy
+}
+
+function withEntered(entered, stateId) {
+  return { ...entered, [stateId]: (entered[stateId] || 0) + 1 }
 }
 
 function legacyMeasure(condition, view) {
@@ -146,6 +165,8 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     finished: false,
     hold: runtime.hold,
     prev: runtime.prev,
+    pending: runtime.pending || null,
+    entered: runtime.entered || { [runtime.currentStateId]: 1 },
     steps: runtime.steps + 1
   }
   const effects = []
@@ -159,6 +180,7 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
       const returnStateId = runtime.hold.returnStateId
       next.currentStateId = returnStateId
       next.hold = null
+      next.entered = withEntered(next.entered, returnStateId)
       next.prev = transition ? { [transition.id]: evaluateCondition(transition.when, worldView) } : {}
       next.finished = policy.execution === 'oneTime'
       return {
@@ -190,12 +212,35 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
   }
 
   const transitions = state.transitions || []
+  const now = typeof worldView.now === 'number' ? worldView.now : 0
   let taken = null
   let prev = null
+  let pending = next.pending
+  let pendingChanged = false
+  if (pending && gate !== STEP_GATE.open) {
+    pending = null
+    pendingChanged = true
+  }
   for (let i = 0; i < transitions.length; i++) {
     const transition = transitions[i]
-    if (transition.kind === 'if' && gate !== STEP_GATE.open) continue
+    if (gate !== STEP_GATE.open && transition.kind !== 'while') continue
     const holds = evaluateCondition(transition.when, worldView)
+    if (transition.kind === 'after') {
+      const dueAt = pending ? pending[transition.id] : undefined
+      if (!holds) {
+        if (dueAt !== undefined) {
+          pending = omitPending(pending, transition.id)
+          pendingChanged = true
+        }
+      } else if (dueAt === undefined) {
+        pending = { ...(pending || {}), [transition.id]: now + transition.delaySeconds * 1000 }
+        pendingChanged = true
+      } else if (now >= dueAt) {
+        taken = transition
+        break
+      }
+      continue
+    }
     if (prev === null) prev = { ...runtime.prev }
     const was = runtime.prev[transition.id] === true
     prev[transition.id] = holds
@@ -204,19 +249,22 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
       break
     }
   }
+  if (pendingChanged) next.pending = pending && Object.keys(pending).length ? pending : null
 
   if (!taken) {
     if (prev !== null) next.prev = prev
     return {
       runtime: next,
       effects,
-      trace: buildTrace(state.id, state.id, { gate })
+      trace: buildTrace(state.id, state.id, { gate, event: pendingChanged && next.pending ? 'delayStarted' : 'idle' })
     }
   }
 
   const target = findState(policy, taken.to)
   next.currentStateId = target.id
   next.prev = {}
+  next.pending = null
+  next.entered = withEntered(next.entered, target.id)
   if (taken.kind === 'while') {
     next.hold = { transitionId: taken.id, returnStateId: state.id }
   } else {
@@ -232,7 +280,7 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     trace: buildTrace(state.id, target.id, {
       transitionId: taken.id,
       kind: taken.kind,
-      event: taken.kind === 'while' ? 'holdStarted' : 'fired',
+      event: taken.kind === 'while' ? 'holdStarted' : taken.kind === 'after' ? 'delayElapsed' : 'fired',
       gate,
       holding: taken.kind === 'while',
       finished: next.finished

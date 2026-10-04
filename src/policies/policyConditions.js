@@ -87,7 +87,7 @@ const ABSOLUTE = 'absolute'
  * angle jitter do not make equality impossible.
  */
 export const NUMERIC_FIELDS = Object.freeze({
-  hp: { group: 'internal', label: 'Hit points', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
+  hp: { group: 'internal', label: 'HP', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
   xp: { group: 'internal', label: 'Experience', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
   rank: { group: 'internal', label: 'Rank (1–3)', modes: [ABSOLUTE], absRange: [0, 3], absTolerance: 0 },
   fuel: { group: 'internal', label: 'Fuel', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },

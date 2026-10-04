@@ -16,6 +16,7 @@ import {
   effectiveMode,
   fieldModes
 } from '../../policies/policyConditions.js'
+import { formatDelay } from '../../policies/policyDelay.js'
 import { EFFECTS, EFFECT_GROUPS, describeEffect } from '../../policies/policyEffects.js'
 
 export const MAX_EDITOR_DEPTH = 3
@@ -199,5 +200,16 @@ export const EFFECT_OPTION_GROUPS = Object.freeze(Object.entries(EFFECT_GROUPS).
   label,
   effects: Object.entries(EFFECTS).filter(([, meta]) => meta.group === id).map(([type, meta]) => ({ type, label: meta.label }))
 })))
+
+/**
+ * Full text of one rule's trigger as shown on diagram edges and in summaries:
+ * `if(hp < 25%)`, `while(hp < 25%) until(hp > 50%)`, `after 10s if(hp < 25%)`.
+ */
+export function describeRuleTrigger(transition) {
+  const when = describeCondition(transition.when)
+  if (transition.kind === 'after') return `after ${formatDelay(transition.delaySeconds)} if(${when})`
+  const until = transition.kind === 'while' && transition.until ? ` until(${describeCondition(transition.until)})` : ''
+  return `${transition.kind}(${when})${until}`
+}
 
 export { describeEffect }

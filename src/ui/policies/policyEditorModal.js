@@ -11,6 +11,7 @@ import {
 } from '../../policies/policySchema.js'
 import { POLICY_TEMPLATES, createBlankPolicy, createPolicyId } from '../../policies/policyTemplates.js'
 import { getPolicyDocument, savePolicy } from '../../policies/policyStore.js'
+import { DEFAULT_AFTER_DELAY_SECONDS, MAX_AFTER_DELAY_SECONDS, MIN_AFTER_DELAY_SECONDS, joinDelay, splitDelay } from '../../policies/policyDelay.js'
 import { h, option, svg } from './policyDom.js'
 import {
   ATOM_GROUPS,
@@ -302,6 +303,31 @@ export function openPolicyEditor(options = {}) {
     })
   }
 
+  function delayEditor(transition) {
+    const { minutes, seconds } = splitDelay(transition.delaySeconds)
+    const apply = (nextMinutes, nextSeconds) => {
+      const total = joinDelay(nextMinutes, nextSeconds)
+      transition.delaySeconds = Math.min(MAX_AFTER_DELAY_SECONDS, total)
+      render()
+    }
+    const field = (value, label, max, onChange) => h('input', {
+      class: 'policy-field__control policy-rule__delay-input',
+      type: 'number',
+      min: 0,
+      max,
+      step: 1,
+      value,
+      'aria-label': label,
+      onChange: e => onChange(Number(e.target.value))
+    })
+    return h('div', { class: 'policy-rule__delay' },
+      h('span', { text: 'wait' }),
+      field(minutes, 'Delay minutes', MAX_AFTER_DELAY_SECONDS / 60, value => apply(value, seconds)),
+      h('span', { text: 'min' }),
+      field(seconds, 'Delay seconds', 59, value => apply(minutes, value)),
+      h('span', { text: 'sec after the condition becomes true' }))
+  }
+
   function transitionBlock(state, transition) {
     const block = h('div', { class: `policy-rule policy-rule--${transition.kind}` })
     block.appendChild(h('div', { class: 'policy-rule__head' },
@@ -311,9 +337,17 @@ export function openPolicyEditor(options = {}) {
         onChange: e => {
           transition.kind = e.target.value
           if (transition.kind !== 'while') delete transition.until
+          if (transition.kind === 'after') {
+            if (!(transition.delaySeconds >= MIN_AFTER_DELAY_SECONDS)) transition.delaySeconds = DEFAULT_AFTER_DELAY_SECONDS
+          } else {
+            delete transition.delaySeconds
+          }
           render()
         }
-      }, option('if', 'IF  (fires once)', transition.kind === 'if'), option('while', 'WHILE  (stays in effect)', transition.kind === 'while')),
+      },
+      option('if', 'IF  (fires once)', transition.kind === 'if'),
+      option('while', 'WHILE  (stays in effect)', transition.kind === 'while'),
+      option('after', 'AFTER  (waits, then fires once)', transition.kind === 'after')),
       h('button', {
         class: 'policy-icon-btn',
         type: 'button',
@@ -325,6 +359,7 @@ export function openPolicyEditor(options = {}) {
         }
       })))
     block.appendChild(conditionEditor(transition.when, value => { transition.when = value; updateValidity() }, 'Condition'))
+    if (transition.kind === 'after') block.appendChild(delayEditor(transition))
     block.appendChild(h('div', { class: 'policy-rule__target' },
       h('span', { text: 'then go to' }),
       stateSelect(transition.to, value => { transition.to = value; render() }, 'Target state')))
@@ -461,7 +496,7 @@ export function openPolicyEditor(options = {}) {
     })
     const root = svg('svg', { class: 'policy-diagram', viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': 'State machine diagram' })
     root.appendChild(svg('defs', null,
-      ...[['if', '#4f9cff'], ['while', '#ffb300']].map(([kind, color]) =>
+      ...[['if', '#4f9cff'], ['while', '#ffb300'], ['after', '#c792ea']].map(([kind, color]) =>
         svg('marker', { id: `policyArrow-${kind}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' },
           svg('path', { d: 'M0,0 L10,5 L0,10 z', fill: color })))))
     states.forEach(state => {
@@ -469,7 +504,7 @@ export function openPolicyEditor(options = {}) {
         const from = points.get(state.id)
         const to = points.get(transition.to)
         if (!from || !to) return
-        const color = transition.kind === 'while' ? '#ffb300' : '#4f9cff'
+        const color = transition.kind === 'while' ? '#ffb300' : transition.kind === 'after' ? '#c792ea' : '#4f9cff'
         if (from === to) {
           root.appendChild(svg('path', {
             d: `M${from.x - 8},${from.y - 18} C${from.x - 30},${from.y - 58} ${from.x + 30},${from.y - 58} ${from.x + 8},${from.y - 18}`,
