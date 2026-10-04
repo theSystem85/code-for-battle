@@ -12,8 +12,31 @@ export const EFFECT_GROUPS = Object.freeze({
   combat: 'Combat',
   movement: 'Movement',
   air: 'Air',
-  service: 'Service and support'
+  service: 'Service and support',
+  construction: 'Base construction'
 })
+
+/** Buildings a build policy may order. Streets and shipyards need a drag or water placement and are not offered. */
+export const BUILDABLE_TYPES = Object.freeze([
+  { value: 'powerPlant', label: 'Power plant' },
+  { value: 'oreRefinery', label: 'Ore refinery' },
+  { value: 'vehicleFactory', label: 'Vehicle factory' },
+  { value: 'vehicleWorkshop', label: 'Vehicle workshop' },
+  { value: 'constructionYard', label: 'Construction yard' },
+  { value: 'radarStation', label: 'Radar station' },
+  { value: 'hospital', label: 'Hospital' },
+  { value: 'gasStation', label: 'Fuel station' },
+  { value: 'ammunitionFactory', label: 'Ammo factory' },
+  { value: 'helipad', label: 'Helipad' },
+  { value: 'airstrip', label: 'Airstrip' },
+  { value: 'turretGunV1', label: 'Turret gun V1' },
+  { value: 'turretGunV2', label: 'Turret gun V2' },
+  { value: 'turretGunV3', label: 'Turret gun V3' },
+  { value: 'rocketTurret', label: 'Rocket turret' },
+  { value: 'teslaCoil', label: 'Tesla coil' },
+  { value: 'artilleryTurret', label: 'Artillery turret' },
+  { value: 'concreteWall', label: 'Concrete wall' }
+])
 
 const TILES_PARAM = Object.freeze({ key: 'tiles', label: 'tiles', min: 1, max: 20, default: 2 })
 
@@ -52,13 +75,26 @@ export const EFFECTS = Object.freeze({
   goToWorkshop: { group: 'service', label: 'Go to a workshop', command: 'goToWorkshop', repeat: 'idle' },
   goToHospital: { group: 'service', label: 'Go to a hospital', command: 'goToHospital', repeat: 'idle' },
   goToAmmoFactory: { group: 'service', label: 'Go to an ammo factory', command: 'goToAmmoFactory', repeat: 'idle' },
-  serviceNearestFriendly: { group: 'service', label: 'Service the nearest friendly unit (service units)', command: 'serviceTarget', repeat: 'idle' }
+  serviceNearestFriendly: { group: 'service', label: 'Service the nearest friendly unit (service units)', command: 'serviceTarget', repeat: 'idle' },
+  buildBuilding: {
+    variant: 'build',
+    group: 'construction',
+    label: 'Build a building',
+    command: 'buildBuilding',
+    repeat: 'idle',
+    params: [{ key: 'buildingType', label: 'building', options: BUILDABLE_TYPES, default: 'powerPlant' }]
+  }
 })
+
+/** Effects offered to a policy of the given variant. Entries without `variant` are unit effects. */
+export function effectsForVariant(variant) {
+  return Object.keys(EFFECTS).filter(type => (EFFECTS[type].variant || 'unit') === variant)
+}
 
 export const EFFECT_TYPES = Object.freeze(Object.keys(EFFECTS))
 
-export function isKnownEffect(type) {
-  return Object.prototype.hasOwnProperty.call(EFFECTS, type)
+export function isKnownEffect(type, variant = 'unit') {
+  return Object.prototype.hasOwnProperty.call(EFFECTS, type) && (EFFECTS[type].variant || 'unit') === variant
 }
 
 export function effectRepeat(type) {

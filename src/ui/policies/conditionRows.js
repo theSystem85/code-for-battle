@@ -14,7 +14,8 @@ import {
   defaultParams,
   describeLeaf,
   effectiveMode,
-  fieldModes
+  fieldModes,
+  isAvailableIn
 } from '../../policies/policyConditions.js'
 import { formatDelay } from '../../policies/policyDelay.js'
 import { EFFECTS, EFFECT_GROUPS, describeEffect } from '../../policies/policyEffects.js'
@@ -30,23 +31,53 @@ const LEGACY_ATOMS = Object.freeze([
 function buildAtomKinds() {
   const kinds = []
   Object.entries(NUMERIC_FIELDS).forEach(([id, meta]) => {
-    kinds.push({ id, label: meta.label, group: meta.group, type: 'compare' })
+    kinds.push({
+      id,
+      label: meta.label,
+      group: meta.group,
+      buildGroup: meta.buildGroup || meta.group,
+      variants: meta.variants || ['unit'],
+      type: 'compare'
+    })
   })
   Object.entries(CHECKS).forEach(([id, meta]) => {
-    kinds.push({ id, label: meta.label, group: meta.group, type: 'check' })
+    kinds.push({ id, label: meta.label, group: meta.group, buildGroup: meta.group, variants: meta.variants || ['unit'], type: 'check' })
   })
-  LEGACY_ATOMS.forEach(atom => kinds.push({ ...atom, type: atom.id }))
+  LEGACY_ATOMS.forEach(atom => kinds.push({
+    ...atom,
+    buildGroup: atom.group,
+    variants: atom.id === 'always' ? ['unit', 'build'] : ['unit'],
+    type: atom.id
+  }))
   return kinds
 }
 
 export const ATOM_KINDS = Object.freeze(buildAtomKinds())
 
-/** Atom kinds grouped for a select with option groups. */
-export const ATOM_GROUPS = Object.freeze(Object.entries(GROUPS).map(([id, label]) => ({
-  id,
-  label,
-  kinds: ATOM_KINDS.filter(kind => kind.group === id)
-})).filter(group => group.kinds.length > 0))
+/** Atom kinds a policy variant may use, grouped for a select with option groups. */
+export function atomGroupsFor(variant = 'unit') {
+  const isBuild = variant === 'build'
+  const usable = ATOM_KINDS.filter(kind => kind.variants.includes(variant))
+  return Object.entries(GROUPS).map(([id, label]) => ({
+    id,
+    label,
+    kinds: usable.filter(kind => (isBuild ? kind.buildGroup : kind.group) === id)
+  })).filter(group => group.kinds.length > 0)
+}
+
+export const ATOM_GROUPS = Object.freeze(atomGroupsFor('unit'))
+
+/** The condition a new rule starts with. */
+export function defaultRuleAtom(variant = 'unit') {
+  return variant === 'build' ? makeAtom('money') : makeAtom('hp')
+}
+
+export function isAtomAvailable(atom, variant) {
+  if (!atom) return false
+  if (atom.type === 'compare') return isAvailableIn(NUMERIC_FIELDS[atom.field], variant)
+  if (atom.type === 'check') return isAvailableIn(CHECKS[atom.check], variant)
+  return variant === 'unit' || atom.type === 'always'
+}
 
 export const COMPARE_OPERATORS = COMPARE_OPS
 
@@ -109,8 +140,12 @@ function defaultCompareValue(field, mode) {
     case 'rotation':
     case 'turretRotation': return 90
     case 'money': return 1000
+    case 'moneyPerMinute': return 500
     case 'power': return 0
-    case 'buildingCount': return 1
+    case 'buildingCount':
+    case 'unitCount':
+    case 'enemyUnitCount':
+    case 'enemyBuildingCount': return 1
     case 'distance': return 6
     case 'reload': return mode === 'relative' ? 1 : 0
     case 'crew': return 1
@@ -194,12 +229,18 @@ export const EFFECT_LABELS = Object.freeze(Object.fromEntries(
   Object.entries(EFFECTS).map(([id, meta]) => [id, meta.label])
 ))
 
-/** Effects grouped for a select with option groups. */
-export const EFFECT_OPTION_GROUPS = Object.freeze(Object.entries(EFFECT_GROUPS).map(([id, label]) => ({
-  id,
-  label,
-  effects: Object.entries(EFFECTS).filter(([, meta]) => meta.group === id).map(([type, meta]) => ({ type, label: meta.label }))
-})))
+/** Effects a policy variant may use, grouped for a select with option groups. */
+export function effectGroupsFor(variant = 'unit') {
+  return Object.entries(EFFECT_GROUPS).map(([id, label]) => ({
+    id,
+    label,
+    effects: Object.entries(EFFECTS)
+      .filter(([, meta]) => meta.group === id && (meta.variant || 'unit') === variant)
+      .map(([type, meta]) => ({ type, label: meta.label }))
+  })).filter(group => group.effects.length > 0)
+}
+
+export const EFFECT_OPTION_GROUPS = Object.freeze(effectGroupsFor('unit'))
 
 /**
  * Full text of one rule's trigger as shown on diagram edges and in summaries:

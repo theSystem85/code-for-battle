@@ -49,6 +49,8 @@ import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.j
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
 import { updateUnitPolicies } from './policies/policyEngine.js'
+import { updateBasePolicies } from './policies/basePolicyEngine.js'
+import { installBasePolicyGameBindings } from './policies/basePolicyGameBindings.js'
 import { installPolicyGameBindings } from './policies/policyGameBindings.js'
 import {
   updateCameraFollow,
@@ -87,6 +89,7 @@ import {
 
 const EMPTY_BUILDINGS = []
 const policyContext = installPolicyGameBindings({ units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS, commands: null, bullets: null, now: 0 })
+const basePolicyContext = installBasePolicyGameBindings({ owner: null, units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS })
 const DESTRUCTION_FREEZE_SMOKE_INTERVAL_MS = 180
 const DESTRUCTION_FREEZE_SMOKE_COUNT = 3
 const DESTRUCTION_FREEZE_SMOKE_SHADE = 0.9
@@ -411,6 +414,14 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
     // Keep camera focused on followed unit when enabled
     updateCameraFollow(gameState, units, mapGrid)
+
+    // Base automation runs on every client, for that client's own player only.
+    basePolicyContext.owner = gameState.humanPlayer
+    basePolicyContext.units = units
+    basePolicyContext.mapGrid = mapGrid
+    basePolicyContext.buildings = gameState.buildings || EMPTY_BUILDINGS
+    basePolicyContext.factories = factories || EMPTY_BUILDINGS
+    updateBasePolicies(basePolicyContext, now)
 
     // === HOST-ONLY GAME LOGIC ===
     // Remote clients skip all game simulation - they receive state from host

@@ -7,7 +7,7 @@ import {
   compareCondition,
   describeLeaf
 } from '../../src/policies/policyConditions.js'
-import { EFFECTS, EFFECT_TYPES, validateEffectParams } from '../../src/policies/policyEffects.js'
+import { EFFECTS, effectsForVariant, validateEffectParams } from '../../src/policies/policyEffects.js'
 import { POLICY_SCHEMA_VERSION, validatePolicy } from '../../src/policies/policySchema.js'
 import { evaluateCondition } from '../../src/policies/policyStep.js'
 
@@ -99,7 +99,7 @@ describe('check leaves and nesting', () => {
 describe('schema validation of the new conditions', () => {
   it('accepts every catalogued numeric field and check with defaults', () => {
     Object.entries(NUMERIC_FIELDS).forEach(([field, meta]) => {
-      if (meta.legacy) return
+      if (meta.legacy || !(meta.variants || ['unit']).includes('unit')) return
       const mode = meta.modes[0]
       const value = mode === 'relative' ? 0.5 : Math.min(meta.absRange[1], 1)
       const result = validatePolicy(policyWith(compare(field, '>=', value, { mode })))
@@ -133,7 +133,7 @@ describe('schema validation of the new conditions', () => {
   })
 
   it('validates effect names and params', () => {
-    EFFECT_TYPES.forEach(type => {
+    effectsForVariant('unit').forEach(type => {
       expect(validatePolicy(policyWith(check('moving'), { type })).errors, type).toEqual([])
     })
     expect(validatePolicy(policyWith(check('moving'), { type: 'teleport' })).valid).toBe(false)
