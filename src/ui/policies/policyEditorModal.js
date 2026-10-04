@@ -13,14 +13,19 @@ import { POLICY_TEMPLATES, createBlankPolicy, createPolicyId } from '../../polic
 import { getPolicyDocument, savePolicy } from '../../policies/policyStore.js'
 import { h, option, svg } from './policyDom.js'
 import {
-  ATOM_KINDS,
-  EFFECT_LABELS,
+  ATOM_GROUPS,
+  COMPARE_OPERATORS,
+  EFFECT_OPTION_GROUPS,
+  MAX_EDITOR_DEPTH,
   atomKind,
-  conditionToRows,
-  describeCondition,
+  compareValueView,
+  conditionToTree,
   makeAtom,
-  rowsToCondition
+  setCompareMode,
+  treeToCondition
 } from './conditionRows.js'
+import { CHECKS, NUMERIC_FIELDS, effectiveMode, fieldModes } from '../../policies/policyConditions.js'
+import { EFFECTS, defaultEffectParams } from '../../policies/policyEffects.js'
 
 let active = null
 let pausedByEditor = false
@@ -132,81 +137,169 @@ export function openPolicyEditor(options = {}) {
     return select
   }
 
-  function conditionEditor(condition, onChange, label) {
-    const rows = conditionToRows(condition)
-    const wrap = h('div', { class: 'policy-cond' })
-    if (!rows) {
-      wrap.append(
-        h('span', { class: 'policy-cond__readonly', text: describeCondition(condition) }),
-        h('button', {
+  function optionGroup(label, options) {
+    return h('optgroup', { label }, options)
+  }
+
+  function paramSelects(meta, atom, label, commit) {
+    return (meta.params || []).map(param => h('label', { class: 'policy-cond__param' },
+      h('span', { text: param.label }),
+      h('select', {
+        class: 'policy-field__control',
+        'aria-label': `${label} ${param.label}`,
+        onChange: e => { atom[param.key] = e.target.value; commit() }
+      }, param.options.map(item => option(item.value, item.label, (atom[param.key] ?? param.default) === item.value)))))
+  }
+
+  function leafControls(node, label, commit) {
+    const atom = node.atom
+    const kind = atomKind(atom)
+    const controls = [h('select', {
+      class: 'policy-field__control policy-cond__kind',
+      'aria-label': `${label} block type`,
+      onChange: e => { node.atom = makeAtom(e.target.value); commit() }
+    }, ATOM_GROUPS.map(group => optionGroup(group.label, group.kinds.map(item => option(item.id, item.label, item.id === kind)))))]
+
+    if (atom.type === 'compare') {
+      const meta = NUMERIC_FIELDS[atom.field]
+      if (fieldModes(atom.field).length > 1) {
+        controls.push(h('select', {
+          class: 'policy-field__control policy-cond__mode',
+          'aria-label': `${label} compare as`,
+          onChange: e => { setCompareMode(atom, e.target.value); commit() }
+        }, fieldModes(atom.field).map(mode => option(mode, mode === 'relative' ? 'relative' : 'absolute', effectiveMode(atom) === mode))))
+      }
+      controls.push(h('select', {
+        class: 'policy-field__control policy-cond__op',
+        'aria-label': `${label} operator`,
+        onChange: e => { atom.op = e.target.value; commit() }
+      }, COMPARE_OPERATORS.map(op => option(op, op, atom.op === op))))
+      const view = compareValueView(atom)
+      controls.push(h('input', {
+        class: 'policy-field__control policy-cond__value',
+        type: 'number',
+        min: view.min,
+        max: view.max,
+        step: view.step,
+        value: Math.round(atom.value * view.scale * 100) / 100,
+        'aria-label': `${label} value`,
+        onChange: e => {
+          const raw = Number(e.target.value)
+          atom.value = Number.isFinite(raw) ? raw / view.scale : atom.value
+          commit()
+        }
+      }))
+      if (view.suffix) controls.push(h('span', { class: 'policy-cond__unit', text: view.suffix }))
+      controls.push(...paramSelects(meta, atom, label, commit))
+    } else if (atom.type === 'check') {
+      controls.push(...paramSelects(CHECKS[atom.check], atom, label, commit))
+    }
+    return controls
+  }
+
+  function conditionNode(node, depth, label, commit, onRemove, joinMode) {
+    const line = h('div', { class: `policy-cond__row${node.children ? ' policy-cond__row--group' : ''}` })
+    if (joinMode) line.appendChild(joinMode)
+    line.appendChild(h('label', { class: 'policy-cond__not' },
+      h('input', { type: 'checkbox', checked: node.not, 'aria-label': `${label} not`, onChange: e => { node.not = e.target.checked; commit() } }),
+      'not'))
+    if (!node.children) {
+      leafControls(node, label, commit).forEach(control => line.appendChild(control))
+      if (depth < MAX_EDITOR_DEPTH) {
+        line.appendChild(h('button', {
           class: 'policy-btn policy-btn--small',
           type: 'button',
-          text: 'Reset',
-          onClick: () => { onChange({ type: 'always' }); render() }
-        })
-      )
-      return wrap
-    }
-    const commit = () => onChange(rowsToCondition(rows.mode, rows.rows))
-    rows.rows.forEach((row, index) => {
-      const atom = row.atom
-      const kind = atomKind(atom)
-      const line = h('div', { class: 'policy-cond__row' })
-      if (index > 0) {
-        line.appendChild(h('select', {
-          class: 'policy-field__control policy-cond__join',
-          'aria-label': `${label} combine`,
-          onChange: e => { rows.mode = e.target.value; commit(); render() }
-        }, option('and', 'and', rows.mode === 'and'), option('or', 'or', rows.mode === 'or')))
-      }
-      line.appendChild(h('label', { class: 'policy-cond__not' },
-        h('input', { type: 'checkbox', checked: row.not, onChange: e => { row.not = e.target.checked; commit(); render() } }),
-        'not'))
-      line.appendChild(h('select', {
-        class: 'policy-field__control',
-        'aria-label': `${label} block type`,
-        onChange: e => { row.atom = makeAtom(e.target.value); commit(); render() }
-      }, ATOM_KINDS.map(item => option(item.id, item.label, item.id === kind))))
-      if (atom.type === 'compare') {
-        line.appendChild(h('select', {
-          class: 'policy-field__control policy-cond__op',
-          'aria-label': `${label} operator`,
-          onChange: e => { atom.op = e.target.value; commit(); render() }
-        }, ['<', '<=', '>', '>='].map(op => option(op, op, atom.op === op))))
-        const isHp = atom.field === 'hp'
-        line.appendChild(h('input', {
-          class: 'policy-field__control policy-cond__value',
-          type: 'number',
-          min: 0,
-          max: isHp ? 100 : 99,
-          step: 1,
-          value: isHp ? Math.round(atom.value * 100) : atom.value,
-          'aria-label': isHp ? `${label} hit points percent` : `${label} tiles`,
-          onChange: e => {
-            const raw = Number(e.target.value)
-            atom.value = isHp ? raw / 100 : raw
+          text: '( )',
+          'aria-label': `${label} turn into group`,
+          onClick: () => {
+            const leaf = node.atom
+            delete node.atom
+            node.mode = 'and'
+            node.children = [{ not: false, atom: leaf }]
             commit()
-            render()
           }
         }))
-        line.appendChild(h('span', { class: 'policy-cond__unit', text: isHp ? '%' : 'tiles' }))
       }
-      line.appendChild(h('button', {
-        class: 'policy-icon-btn',
-        type: 'button',
-        'aria-label': 'Remove block',
-        text: '×',
-        onClick: () => { rows.rows.splice(index, 1); commit(); render() }
-      }))
-      wrap.appendChild(line)
+    } else {
+      line.appendChild(h('span', { class: 'policy-cond__groupmark', text: node.mode === 'and' ? 'all of' : 'any of' }))
+    }
+    if (onRemove) {
+      line.appendChild(h('button', { class: 'policy-icon-btn', type: 'button', 'aria-label': 'Remove block', text: '×', onClick: onRemove }))
+    }
+    if (!node.children) return line
+
+    const group = h('div', { class: 'policy-cond__group' }, line)
+    const children = h('div', { class: 'policy-cond__children' })
+    node.children.forEach((child, index) => {
+      const join = index > 0
+        ? h('select', {
+          class: 'policy-field__control policy-cond__join',
+          'aria-label': `${label} combine`,
+          onChange: e => { node.mode = e.target.value; commit() }
+        }, option('and', 'and', node.mode === 'and'), option('or', 'or', node.mode === 'or'))
+        : null
+      children.appendChild(conditionNode(
+        child, depth + 1, label, commit,
+        () => { node.children.splice(index, 1); commit() }, join
+      ))
     })
-    wrap.appendChild(h('button', {
+    children.appendChild(h('button', {
       class: 'policy-btn policy-btn--small',
       type: 'button',
       text: '+ block',
-      onClick: () => { rows.rows.push({ not: false, atom: makeAtom('hp') }); commit(); render() }
+      onClick: () => { node.children.push({ not: false, atom: makeAtom('hp') }); commit() }
     }))
+    group.appendChild(children)
+    return group
+  }
+
+  function conditionEditor(condition, onChange, label) {
+    const tree = conditionToTree(condition)
+    const wrap = h('div', { class: 'policy-cond' })
+    const commit = () => { onChange(treeToCondition(tree)); render() }
+    wrap.appendChild(conditionNode(tree, 1, label, commit, null, null))
+    if (!tree.children) {
+      wrap.appendChild(h('button', {
+        class: 'policy-btn policy-btn--small',
+        type: 'button',
+        text: '+ block',
+        onClick: () => {
+          const first = tree.atom
+          delete tree.atom
+          tree.mode = 'and'
+          tree.children = [{ not: false, atom: first }, { not: false, atom: makeAtom('hp') }]
+          commit()
+        }
+      }))
+    }
     return wrap
+  }
+
+  function effectParamControls(state, index) {
+    const meta = EFFECTS[state.effect && state.effect.type]
+    if (!meta || !meta.params) return []
+    return meta.params.map(param => {
+      const value = state.effect[param.key] !== undefined ? state.effect[param.key] : param.default
+      if (param.options) {
+        return h('select', {
+          class: 'policy-field__control policy-state__param',
+          'aria-label': `State ${index + 1} ${param.label}`,
+          onChange: e => { state.effect[param.key] = e.target.value; render() }
+        }, param.options.map(item => option(item.value, item.label, item.value === value)))
+      }
+      return h('span', { class: 'policy-state__param-wrap' },
+        h('input', {
+          class: 'policy-field__control policy-state__param',
+          type: 'number',
+          min: param.min,
+          max: param.max,
+          step: 1,
+          value,
+          'aria-label': `State ${index + 1} ${param.label}`,
+          onChange: e => { state.effect[param.key] = Number(e.target.value); render() }
+        }),
+        h('span', { class: 'policy-cond__unit', text: param.label }))
+    })
   }
 
   function transitionBlock(state, transition) {
@@ -294,11 +387,13 @@ export function openPolicyEditor(options = {}) {
         class: 'policy-field__control',
         'aria-label': `State ${index + 1} action`,
         onChange: e => {
-          state.effect = e.target.value ? { type: e.target.value } : null
+          state.effect = e.target.value ? { type: e.target.value, ...defaultEffectParams(e.target.value) } : null
           render()
         }
       }, option('', 'Nothing (wait)', !state.effect),
-      Object.entries(EFFECT_LABELS).map(([id, label]) => option(id, label, state.effect?.type === id)))))
+      EFFECT_OPTION_GROUPS.map(group => optionGroup(group.label,
+        group.effects.map(item => option(item.type, item.label, state.effect?.type === item.type))))),
+      effectParamControls(state, index)))
     ;(state.transitions || []).forEach(transition => card.appendChild(transitionBlock(state, transition)))
     card.appendChild(h('button', {
       class: 'policy-btn policy-btn--small',
