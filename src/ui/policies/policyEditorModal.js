@@ -9,18 +9,19 @@ import {
   describePolicyProblem,
   validatePolicy
 } from '../../policies/policySchema.js'
-import { POLICY_TEMPLATES, createBlankPolicy, createPolicyId } from '../../policies/policyTemplates.js'
+import { createBlankPolicy, createPolicyId, templatesForVariant } from '../../policies/policyTemplates.js'
 import { getPolicyDocument, savePolicy } from '../../policies/policyStore.js'
 import { DEFAULT_AFTER_DELAY_SECONDS, MAX_AFTER_DELAY_SECONDS, MIN_AFTER_DELAY_SECONDS, joinDelay, splitDelay } from '../../policies/policyDelay.js'
 import { h, option, svg } from './policyDom.js'
 import {
-  ATOM_GROUPS,
   COMPARE_OPERATORS,
-  EFFECT_OPTION_GROUPS,
   MAX_EDITOR_DEPTH,
+  atomGroupsFor,
   atomKind,
   compareValueView,
   conditionToTree,
+  defaultRuleAtom,
+  effectGroupsFor,
   makeAtom,
   setCompareMode,
   treeToCondition
@@ -90,8 +91,9 @@ export function openPolicyEditor(options = {}) {
     draft = clone(getPolicyDocument(options.policyId))
     isNew = false
   } else {
-    const template = POLICY_TEMPLATES.find(item => item.id === options.templateId)
-    draft = template ? template.create(createPolicyId()) : createBlankPolicy(createPolicyId())
+    const wantedVariant = options.variant === 'build' ? 'build' : 'unit'
+    const template = templatesForVariant(wantedVariant).find(item => item.id === options.templateId)
+    draft = template ? template.create(createPolicyId()) : createBlankPolicy(createPolicyId(), wantedVariant)
   }
 
   let templateChoice = ''
@@ -99,6 +101,7 @@ export function openPolicyEditor(options = {}) {
 
   const backdrop = h('div', { class: 'policy-editor-backdrop' })
   const dialog = h('div', { class: 'policy-editor', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'policyEditorTitle' })
+  const titleEl = h('h2', { id: 'policyEditorTitle' })
   const alertIcon = h('div', { class: 'policy-editor__alert-icon', role: 'img', 'aria-label': 'Invalid policy' }, '!')
   const reason = h('div', { class: 'policy-editor__reason', role: 'alert' })
   const stateCount = h('span', { class: 'policy-editor__chip' })
@@ -109,7 +112,7 @@ export function openPolicyEditor(options = {}) {
 
   dialog.append(
     h('header', { class: 'policy-editor__header' },
-      h('h2', { id: 'policyEditorTitle', text: isNew ? 'New unit policy' : 'Edit unit policy' }),
+      titleEl,
       h('span', { class: 'policy-editor__pause-note', text: 'Simulation paused while editing' }),
       closeButton,
       alertIcon
@@ -120,6 +123,13 @@ export function openPolicyEditor(options = {}) {
   )
   backdrop.appendChild(dialog)
   document.body.appendChild(backdrop)
+
+  const isBuildDraft = () => draft.variant === 'build'
+
+  function updateTitle() {
+    titleEl.textContent = `${isNew ? 'New' : 'Edit'} ${isBuildDraft() ? 'build (base) policy' : 'unit policy'}`
+    dialog.classList.toggle('is-build-policy', isBuildDraft())
+  }
 
   function updateValidity() {
     const validation = validatePolicy(draft)
@@ -159,7 +169,7 @@ export function openPolicyEditor(options = {}) {
       class: 'policy-field__control policy-cond__kind',
       'aria-label': `${label} block type`,
       onChange: e => { node.atom = makeAtom(e.target.value); commit() }
-    }, ATOM_GROUPS.map(group => optionGroup(group.label, group.kinds.map(item => option(item.id, item.label, item.id === kind)))))]
+    }, atomGroupsFor(draft.variant).map(group => optionGroup(group.label, group.kinds.map(item => option(item.id, item.label, item.id === kind)))))]
 
     if (atom.type === 'compare') {
       const meta = NUMERIC_FIELDS[atom.field]
@@ -248,7 +258,7 @@ export function openPolicyEditor(options = {}) {
       class: 'policy-btn policy-btn--small',
       type: 'button',
       text: '+ block',
-      onClick: () => { node.children.push({ not: false, atom: makeAtom('hp') }); commit() }
+      onClick: () => { node.children.push({ not: false, atom: defaultRuleAtom(draft.variant) }); commit() }
     }))
     group.appendChild(children)
     return group
@@ -268,7 +278,7 @@ export function openPolicyEditor(options = {}) {
           const first = tree.atom
           delete tree.atom
           tree.mode = 'and'
-          tree.children = [{ not: false, atom: first }, { not: false, atom: makeAtom('hp') }]
+          tree.children = [{ not: false, atom: first }, { not: false, atom: defaultRuleAtom(draft.variant) }]
           commit()
         }
       }))
@@ -431,7 +441,7 @@ export function openPolicyEditor(options = {}) {
           render()
         }
       }, option('', 'Nothing (wait)', !state.effect),
-      EFFECT_OPTION_GROUPS.map(group => optionGroup(group.label,
+      effectGroupsFor(draft.variant).map(group => optionGroup(group.label,
         group.effects.map(item => option(item.type, item.label, state.effect?.type === item.type))))),
       effectParamControls(state, index)))
     ;(state.transitions || []).forEach(transition => card.appendChild(transitionBlock(state, transition)))
@@ -445,7 +455,7 @@ export function openPolicyEditor(options = {}) {
         state.transitions.push({
           id: nextId('rule', allTransitionIds(draft)),
           kind: 'if',
-          when: { type: 'compare', field: 'hp', op: '<', value: 0.25 },
+          when: isBuildDraft() ? defaultRuleAtom('build') : { type: 'compare', field: 'hp', op: '<', value: 0.25 },
           to: target.id
         })
         render()
@@ -566,11 +576,32 @@ export function openPolicyEditor(options = {}) {
           'aria-label': 'Policy name',
           onInput: e => { draft.name = e.target.value; updateValidity() }
         })),
-      h('label', { class: 'policy-field' },
-        h('span', { text: 'Applies to' }),
-        h('select', { class: 'policy-field__control', 'aria-label': 'Scope', onChange: e => { draft.scope = e.target.value; updateValidity() } },
-          option('perUnit', 'One unit (apply from its radial menu)', draft.scope === 'perUnit'),
-          option('global', 'All my units (always active once enabled)', draft.scope === 'global'))),
+      isNew
+        ? h('label', { class: 'policy-field' },
+          h('span', { text: 'Policy type' }),
+          h('select', {
+            class: 'policy-field__control',
+            'aria-label': 'Policy type',
+            onChange: e => {
+              templateChoice = ''
+              draft = createBlankPolicy(draft.id, e.target.value)
+              render()
+            }
+          },
+          option('unit', 'Unit policy (controls my units)', !isBuildDraft()),
+          option('build', 'Build policy (automates my base)', isBuildDraft())))
+        : h('div', { class: 'policy-field' },
+          h('span', { text: 'Policy type' }),
+          h('span', { class: 'policy-editor__chip', text: isBuildDraft() ? 'Build policy (base)' : 'Unit policy' })),
+      isBuildDraft()
+        ? h('div', { class: 'policy-field' },
+          h('span', { text: 'Applies to' }),
+          h('span', { class: 'policy-editor__chip', text: 'My base (when Base automation is on)' }))
+        : h('label', { class: 'policy-field' },
+          h('span', { text: 'Applies to' }),
+          h('select', { class: 'policy-field__control', 'aria-label': 'Scope', onChange: e => { draft.scope = e.target.value; updateValidity() } },
+            option('perUnit', 'One unit (apply from its radial menu)', draft.scope === 'perUnit'),
+            option('global', 'All my units (always active once enabled)', draft.scope === 'global'))),
       h('label', { class: 'policy-field' },
         h('span', { text: 'Runs' }),
         h('select', { class: 'policy-field__control', 'aria-label': 'Execution', onChange: e => { draft.execution = e.target.value; updateValidity() } },
@@ -584,24 +615,30 @@ export function openPolicyEditor(options = {}) {
             'aria-label': 'Template',
             onChange: e => {
               templateChoice = e.target.value
-              const template = POLICY_TEMPLATES.find(item => item.id === templateChoice)
+              const template = templatesForVariant(draft.variant).find(item => item.id === templateChoice)
               const id = draft.id
-              draft = template ? template.create(id) : createBlankPolicy(id)
+              draft = template ? template.create(id) : createBlankPolicy(id, draft.variant)
               render()
             }
           }, option('', 'Blank policy', templateChoice === ''),
-          POLICY_TEMPLATES.map(item => option(item.id, item.label, templateChoice === item.id))))
+          templatesForVariant(draft.variant).map(item => option(item.id, item.label, templateChoice === item.id))))
         : null)
   }
 
   function render() {
+    updateTitle()
     const scrollTop = body.scrollTop
     body.replaceChildren(
       settingsSection(),
       h('section', { class: 'policy-diagram-wrap' },
         h('h3', { text: 'State machine' }),
         diagram(),
-        h('p', { class: 'policy-hint', text: `A policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition. A direct order always wins when it is given.` })),
+        h('p', {
+          class: 'policy-hint',
+          text: isBuildDraft()
+            ? `A build policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition; AFTER rules wait. Building goes through the normal build queue, so it only happens when you can afford it, the building is unlocked and there is room.`
+            : `A policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition. A direct order always wins when it is given.`
+        })),
       h('section', { class: 'policy-states' },
         h('h3', { text: 'States' }),
         draft.states.map(stateCard),

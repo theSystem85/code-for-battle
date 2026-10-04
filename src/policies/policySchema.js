@@ -1,4 +1,4 @@
-// Unit policy document: schema constants and validation.
+// Policy document (unit and build variants): schema constants and validation.
 //
 // A policy is inert JSON. It holds no owner, no enabled flag and no recipient
 // list; those live in the policy store. The shape below is versioned and stable.
@@ -6,11 +6,14 @@
 import { EFFECT_TYPES, isKnownEffect, validateEffectParams } from './policyEffects.js'
 import { MAX_AFTER_DELAY_SECONDS, MIN_AFTER_DELAY_SECONDS, formatDelay, isValidDelaySeconds } from './policyDelay.js'
 import {
+  CHECKS,
   COMPARE_OPS,
   CONDITION_TYPES,
   NUMERIC_FIELDS,
   effectiveMode,
   fieldModes,
+  fieldsForVariant,
+  isAvailableIn,
   isCheck,
   validateLeafParams
 } from './policyConditions.js'
@@ -22,7 +25,7 @@ const COMPARE_FIELDS = Object.freeze(Object.keys(NUMERIC_FIELDS))
 export const POLICY_SCHEMA_VERSION = 1
 export const MAX_POLICY_STATES = 7
 
-export const POLICY_VARIANTS = Object.freeze(['unit'])
+export const POLICY_VARIANTS = Object.freeze(['unit', 'build'])
 export const POLICY_SCOPES = Object.freeze(['global', 'perUnit'])
 export const POLICY_EXECUTIONS = Object.freeze(['oneTime', 'continuous'])
 export const TRANSITION_KINDS = Object.freeze(['if', 'while', 'after'])
@@ -39,9 +42,15 @@ function isNonEmptyString(value) {
   return typeof value === 'string' && value.trim().length > 0
 }
 
-function validateCompare(condition, path, errors) {
+function validateCompare(condition, path, errors, variant) {
   if (!COMPARE_FIELDS.includes(condition.field)) {
     errors.push(error('invalid_condition', `A comparison needs a field: ${COMPARE_FIELDS.join(', ')}.`, path))
+    return
+  }
+  if (!isAvailableIn(NUMERIC_FIELDS[condition.field], variant)) {
+    errors.push(error('invalid_condition',
+      `${NUMERIC_FIELDS[condition.field].label} cannot be used in a ${variant} policy. Available: ${fieldsForVariant(variant).map(field => NUMERIC_FIELDS[field].label).join(', ')}.`,
+      path))
     return
   }
   if (!COMPARE_OPS.includes(condition.op)) {
@@ -70,7 +79,7 @@ function validateCompare(condition, path, errors) {
   validateLeafParams(condition).forEach(message => errors.push(error('invalid_condition', message, path)))
 }
 
-function validateCondition(condition, path, errors, depth = 0) {
+function validateCondition(condition, path, errors, variant, depth = 0) {
   if (!condition || typeof condition !== 'object') {
     errors.push(error('invalid_condition', 'A condition is missing.', path))
     return
@@ -79,13 +88,21 @@ function validateCondition(condition, path, errors, depth = 0) {
     errors.push(error('invalid_condition', `Unknown condition type "${condition.type}".`, path))
     return
   }
+  if (variant === 'build' && (condition.type === 'enemyInRange' || condition.type === 'underFire' || condition.type === 'check')) {
+    errors.push(error('invalid_condition', 'Build policies measure the base (money, counts, power), not a single unit.', path))
+    return
+  }
   if (condition.type === 'compare') {
-    validateCompare(condition, path, errors)
+    validateCompare(condition, path, errors, variant)
     return
   }
   if (condition.type === 'check') {
     if (!isCheck(condition.check)) {
       errors.push(error('invalid_condition', `Unknown check "${condition.check}".`, path))
+      return
+    }
+    if (!isAvailableIn(CHECKS[condition.check], variant)) {
+      errors.push(error('invalid_condition', `"${CHECKS[condition.check].label}" cannot be used in a ${variant} policy.`, path))
       return
     }
     validateLeafParams(condition).forEach(message => errors.push(error('invalid_condition', message, path)))
@@ -96,7 +113,7 @@ function validateCondition(condition, path, errors, depth = 0) {
       errors.push(error('invalid_condition', 'Conditions are nested too deeply.', path))
       return
     }
-    validateCondition(condition.of, `${path}.of`, errors, depth + 1)
+    validateCondition(condition.of, `${path}.of`, errors, variant, depth + 1)
     return
   }
   if (condition.type === 'and' || condition.type === 'or') {
@@ -109,20 +126,20 @@ function validateCondition(condition, path, errors, depth = 0) {
       return
     }
     condition.of.forEach((child, index) => {
-      validateCondition(child, `${path}.of[${index}]`, errors, depth + 1)
+      validateCondition(child, `${path}.of[${index}]`, errors, variant, depth + 1)
     })
   }
 }
 
-function validateState(state, index, stateIds, errors, transitionIds) {
+function validateState(state, index, stateIds, errors, transitionIds, variant) {
   const path = `states[${index}]`
   if (!state || typeof state !== 'object') {
     errors.push(error('invalid_state', `State ${index + 1} is not valid.`, path))
     return
   }
   if (state.effect != null) {
-    if (typeof state.effect !== 'object' || !isKnownEffect(state.effect.type)) {
-      errors.push(error('invalid_effect', `State "${state.name || state.id}" has an unknown action.`, `${path}.effect`))
+    if (typeof state.effect !== 'object' || !isKnownEffect(state.effect.type, variant)) {
+      errors.push(error('invalid_effect', `State "${state.name || state.id}" has an action that ${variant === 'build' ? 'a build policy cannot do' : 'is unknown'}.`, `${path}.effect`))
     } else {
       validateEffectParams(state.effect).forEach(message => {
         errors.push(error('invalid_effect', `State "${state.name || state.id}": ${message}`, `${path}.effect`))
@@ -153,7 +170,7 @@ function validateState(state, index, stateIds, errors, transitionIds) {
     if (!stateIds.has(transition.to)) {
       errors.push(error('unknown_state', `A rule in "${state.name || state.id}" points to a state that does not exist.`, `${tPath}.to`))
     }
-    validateCondition(transition.when, `${tPath}.when`, errors)
+    validateCondition(transition.when, `${tPath}.when`, errors, variant)
     if (transition.kind === 'after') {
       if (!isValidDelaySeconds(transition.delaySeconds)) {
         errors.push(error('invalid_delay',
@@ -167,7 +184,7 @@ function validateState(state, index, stateIds, errors, transitionIds) {
       if (transition.kind !== 'while') {
         errors.push(error('invalid_transition', 'Only "while" rules can have an end condition.', `${tPath}.until`))
       } else {
-        validateCondition(transition.until, `${tPath}.until`, errors)
+        validateCondition(transition.until, `${tPath}.until`, errors, variant)
       }
     }
   })
@@ -195,14 +212,15 @@ export function validatePolicy(policy) {
 
   if (policy.variant == null) {
     errors.push(error('variant_missing', 'The policy needs a variant.', 'variant'))
-  } else if (policy.variant === 'build') {
-    errors.push(error('variant_not_supported', 'Build policies are not available yet. Only unit policies are supported.', 'variant'))
   } else if (!POLICY_VARIANTS.includes(policy.variant)) {
     errors.push(error('variant_invalid', `Unknown policy variant "${policy.variant}".`, 'variant'))
   }
 
+  const variant = policy.variant === 'build' ? 'build' : 'unit'
   if (!POLICY_SCOPES.includes(policy.scope)) {
     errors.push(error('scope_missing', 'A unit policy needs a scope: global or per unit.', 'scope'))
+  } else if (variant === 'build' && policy.scope !== 'global') {
+    errors.push(error('build_scope', 'A build policy applies to the whole base, so its scope must be global.', 'scope'))
   }
   if (!POLICY_EXECUTIONS.includes(policy.execution)) {
     errors.push(error('execution_invalid', 'The policy needs an execution mode: one-time or continuous.', 'execution'))
@@ -233,7 +251,7 @@ export function validatePolicy(policy) {
       errors.push(error('missing_initial_state', 'The start state does not exist.', 'initialStateId'))
     }
     const transitionIds = new Set()
-    states.forEach((state, index) => validateState(state, index, stateIds, errors, transitionIds))
+    states.forEach((state, index) => validateState(state, index, stateIds, errors, transitionIds, variant))
   }
 
   return { valid: errors.length === 0, errors }

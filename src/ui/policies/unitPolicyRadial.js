@@ -42,7 +42,7 @@ function shortLabel(name) {
 
 export function buildUnitPolicyItems(unit, onApplied) {
   const owner = humanPlayer()
-  const entries = listPolicies(owner).filter(entry => entry.policy.scope === 'perUnit')
+  const entries = listPolicies(owner).filter(entry => entry.policy.scope === 'perUnit' && entry.policy.variant !== 'build')
   const hasBindings = Boolean(unit.policyBindings && unit.policyBindings.length > 0)
   if (entries.length === 0 && !hasBindings) return []
   const summary = getUnitPolicySummary(unit)

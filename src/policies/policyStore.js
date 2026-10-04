@@ -12,6 +12,7 @@ const STORAGE_KEY = 'cfb-unit-policies-v1'
 
 let documents = new Map()
 let globalEnabled = new Set()
+let buildOptIn = new Set()
 let sequence = 0
 let version = 0
 const listeners = new Set()
@@ -66,7 +67,8 @@ function persist() {
   try {
     store.setItem(STORAGE_KEY, JSON.stringify({
       documents: Array.from(documents.values()),
-      enabled: Array.from(globalEnabled)
+      enabled: Array.from(globalEnabled),
+      buildOptIn: Array.from(buildOptIn)
     }))
   } catch {
     // Storage may be full or blocked. Policies stay in memory for this session.
@@ -77,6 +79,7 @@ export function loadPolicyStore() {
   const store = storage()
   documents = new Map()
   globalEnabled = new Set()
+  buildOptIn = new Set()
   if (!store) return
   try {
     const raw = store.getItem(STORAGE_KEY)
@@ -90,16 +93,21 @@ export function loadPolicyStore() {
     ;(parsed.enabled || []).forEach(id => {
       if (documents.has(id)) globalEnabled.add(id)
     })
+    ;(parsed.buildOptIn || []).forEach(owner => {
+      if (typeof owner === 'string' && owner) buildOptIn.add(normalizePolicyOwner(owner))
+    })
     version += 1
   } catch {
     documents = new Map()
     globalEnabled = new Set()
+    buildOptIn = new Set()
   }
 }
 
 export function resetPolicyStore() {
   documents = new Map()
   globalEnabled = new Set()
+  buildOptIn = new Set()
   sequence = 0
   version += 1
 }
@@ -125,13 +133,43 @@ export function isPolicyEnabled(policyId) {
   return globalEnabled.has(policyId)
 }
 
+export function isBuildPolicy(policy) {
+  return Boolean(policy) && policy.variant === 'build'
+}
+
+/** Enabled global unit policies. Build policies never reach units. */
 export function listEnabledGlobalPolicies() {
   const result = []
   globalEnabled.forEach(id => {
     const entry = documents.get(id)
-    if (entry && entry.policy.scope === 'global') result.push(entry)
+    if (entry && entry.policy.scope === 'global' && !isBuildPolicy(entry.policy)) result.push(entry)
   })
   return result
+}
+
+/** Enabled build policies of one owner, in a stable order. */
+export function listEnabledBuildPolicies(ownerId) {
+  const result = []
+  globalEnabled.forEach(id => {
+    const entry = documents.get(id)
+    if (entry && isBuildPolicy(entry.policy) && canCommandPolicy(ownerId, entry.ownerId)) result.push(entry)
+  })
+  return result
+}
+
+/** True when this player let build policies run on their own base. Off by default. */
+export function isBuildAutomationOptedIn(ownerId) {
+  return Boolean(ownerId) && buildOptIn.has(normalizePolicyOwner(ownerId))
+}
+
+/** A player opts in or out for their own base only. Nobody can switch another player's base. */
+export function setBuildAutomationOptIn(actorId, enabled, ownerId = actorId) {
+  if (!actorId || !canCommandPolicy(actorId, ownerId)) return { ok: false, reason: 'not-owner' }
+  const owner = normalizePolicyOwner(ownerId)
+  if (enabled) buildOptIn.add(owner)
+  else buildOptIn.delete(owner)
+  notify()
+  return { ok: true }
 }
 
 /** Validate and store a policy. A policy can only be replaced by its own owner. */
@@ -195,6 +233,7 @@ export function makeBinding(policy, source) {
 export function applyPolicyToUnit(actorId, unit, policyId) {
   const entry = documents.get(policyId)
   if (!entry) return { ok: false, reason: 'missing' }
+  if (isBuildPolicy(entry.policy)) return { ok: false, reason: 'build-policy' }
   if (entry.policy.scope !== 'perUnit') return { ok: false, reason: 'not-per-unit' }
   if (!unit || !canCommandPolicy(actorId, unit.owner) || !canCommandPolicy(actorId, entry.ownerId)) {
     return { ok: false, reason: 'not-owner' }

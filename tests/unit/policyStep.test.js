@@ -82,8 +82,8 @@ describe('validatePolicy', () => {
     expect(validatePolicy(policy).valid).toBe(true)
   })
 
-  it('rejects build policies, a missing scope, unknown targets and bad conditions', () => {
-    expect(validatePolicy({ ...retreatIf(), variant: 'build' }).errors.map(e => e.code)).toContain('variant_not_supported')
+  it('rejects a build policy that is not global, a missing scope, unknown targets and bad conditions', () => {
+    expect(validatePolicy({ ...retreatIf(), variant: 'build' }).errors.map(e => e.code)).toContain('build_scope')
     expect(validatePolicy({ ...retreatIf(), variant: undefined }).errors.map(e => e.code)).toContain('variant_missing')
     expect(validatePolicy({ ...retreatIf(), scope: undefined }).errors.map(e => e.code)).toContain('scope_missing')
 

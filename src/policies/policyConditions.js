@@ -16,8 +16,17 @@ export const COMPARE_OPS = Object.freeze(['==', '<=', '>=', '<', '>'])
 export const GROUPS = Object.freeze({
   internal: 'Own unit',
   external: 'World',
-  sensing: 'Sensing'
+  sensing: 'Sensing',
+  base: 'My base',
+  enemies: 'Visible enemies'
 })
+
+/** Policy variants a catalog entry may appear in. Entries without `variants` are unit-only. */
+export const VARIANT_UNIT = 'unit'
+export const VARIANT_BUILD = 'build'
+const UNIT_ONLY = Object.freeze([VARIANT_UNIT])
+const BUILD_ONLY = Object.freeze([VARIANT_BUILD])
+const BOTH_VARIANTS = Object.freeze([VARIANT_UNIT, VARIANT_BUILD])
 
 export const ENEMY_UNIT_TYPES = Object.freeze([
   { value: 'any', label: 'any unit' },
@@ -97,9 +106,13 @@ export const NUMERIC_FIELDS = Object.freeze({
   load: { group: 'internal', label: 'Load (cargo)', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
   rotation: { group: 'internal', label: 'Wagon rotation (°)', circular: true, modes: [ABSOLUTE], absRange: [0, 360], absTolerance: 5, absSuffix: '°' },
   turretRotation: { group: 'internal', label: 'Turret rotation (°)', circular: true, modes: [ABSOLUTE, RELATIVE], absRange: [0, 360], range: [-180, 180], tolerance: 5, absTolerance: 5, absSuffix: '°', relSuffix: '° from wagon', relativeAsDegrees: true },
-  money: { group: 'external', label: 'Base money', modes: [ABSOLUTE], absRange: [-1000000000, 1000000000], absTolerance: 0.5 },
-  power: { group: 'external', label: 'Power surplus', modes: [ABSOLUTE], absRange: [-100000, 100000], absTolerance: 0.5 },
-  buildingCount: { group: 'external', label: 'Number of my buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
+  money: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Available money', modes: [ABSOLUTE], absRange: [-1000000000, 1000000000], absTolerance: 0.5 },
+  moneyPerMinute: { group: 'external', buildGroup: 'base', variants: BUILD_ONLY, label: 'Money inflow per minute', modes: [ABSOLUTE], absRange: [0, 1000000000], absTolerance: 0.5, absSuffix: '$/min' },
+  power: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Power surplus', modes: [ABSOLUTE], absRange: [-100000, 100000], absTolerance: 0.5 },
+  unitCount: { group: 'external', buildGroup: 'base', variants: BUILD_ONLY, label: 'Number of my units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  enemyUnitCount: { group: 'sensing', buildGroup: 'enemies', variants: BUILD_ONLY, label: 'Number of visible enemy units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  enemyBuildingCount: { group: 'sensing', buildGroup: 'enemies', variants: BUILD_ONLY, label: 'Number of visible enemy buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
+  buildingCount: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Number of my buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
   distance: { group: 'sensing', label: 'Distance to a visible…', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', params: [{ key: 'kind', label: 'target', options: KIND_OPTIONS.map(item => ({ value: item.value, label: item.label })), default: 'unit' }, { key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   enemyDistance: { group: 'sensing', label: 'Nearest enemy (tiles)', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', legacy: true }
 })
@@ -141,6 +154,15 @@ export const UNSUPPORTED_CONDITIONS = Object.freeze([
 export const LEGACY_LEAVES = Object.freeze(['always', 'enemyInRange', 'underFire'])
 export const COMBINATORS = Object.freeze(['not', 'and', 'or'])
 export const CONDITION_TYPES = Object.freeze(['always', 'compare', 'check', 'enemyInRange', 'underFire', 'not', 'and', 'or'])
+
+/** True when a numeric field or check may be used in a policy of `variant`. */
+export function isAvailableIn(meta, variant) {
+  return Boolean(meta) && (meta.variants || UNIT_ONLY).includes(variant)
+}
+
+export function fieldsForVariant(variant) {
+  return Object.keys(NUMERIC_FIELDS).filter(field => isAvailableIn(NUMERIC_FIELDS[field], variant))
+}
 
 export function isNumericField(field) {
   return Object.prototype.hasOwnProperty.call(NUMERIC_FIELDS, field)
@@ -251,7 +273,8 @@ const SUBJECTS = Object.freeze({
   load: 'load',
   rotation: 'wagon rotation',
   turretRotation: 'turret rotation',
-  money: 'base money',
+  money: 'available money',
+  moneyPerMinute: 'money inflow',
   power: 'power surplus',
   enemyDistance: 'nearest enemy'
 })
@@ -273,6 +296,12 @@ function describeCompare(condition) {
   let subject = SUBJECTS[condition.field] || meta.label
   if (condition.field === 'buildingCount') {
     subject = `my ${optionLabel(BUILDING_TYPES, paramValue(condition, 'buildingType')).toLowerCase()} count`
+  } else if (condition.field === 'unitCount') {
+    subject = `my ${optionLabel(ENEMY_UNIT_TYPES, paramValue(condition, 'unitType')).toLowerCase()} count`
+  } else if (condition.field === 'enemyUnitCount') {
+    subject = `visible enemy ${optionLabel(ENEMY_UNIT_TYPES, paramValue(condition, 'unitType')).toLowerCase()} count`
+  } else if (condition.field === 'enemyBuildingCount') {
+    subject = `visible enemy ${optionLabel(BUILDING_TYPES, paramValue(condition, 'buildingType')).toLowerCase()} count`
   } else if (condition.field === 'distance') {
     const kind = paramValue(condition, 'kind')
     const type = paramValue(condition, 'targetType')
