@@ -28,6 +28,7 @@ import { recordDamage } from '../ai-api/transitionCollector.js'
 import { getSimulationTime } from './time.js'
 import { setWorldDecal } from './tileDecals.js'
 import { getAircraftAltitudeLift } from './aircraftTargeting.js'
+import { isIndirectShooter, recordUnitHit } from './hitRecord.js'
 
 const APACHE_REMOTE_DAMAGE = 10
 const APACHE_TANK_DAMAGE_MULTIPLIER = 1.67
@@ -487,6 +488,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               if (bullet.shooter && bullet.shooter.owner !== apacheTargetUnit.owner) {
                 apacheTargetUnit.lastDamageTime = now
                 apacheTargetUnit.lastAttacker = bullet.shooter
+                recordUnitHit(apacheTargetUnit, bullet.shooter, true, now)
                 if (apacheTargetUnit.owner !== gameState.humanPlayer) {
                   apacheTargetUnit.isBeingAttacked = true
                 }
@@ -790,6 +792,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             if (bullet.shooter && bullet.shooter.owner !== unit.owner) {
               unit.lastDamageTime = now
               unit.lastAttacker = bullet.shooter
+              recordUnitHit(unit, bullet.shooter, !isIndirectShooter(bullet.shooter), now)
               // Mark as being attacked if it's an enemy unit
               if (unit.owner === 'enemy') {
                 unit.isBeingAttacked = true

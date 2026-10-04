@@ -73,7 +73,10 @@ export function handleRightMouseUp(handler, e, units, factories, selectedUnits, 
     handler.requestRenderFrame()
   }
 
-  if (!handler.rightWasDragging && !options.preserveSelection) {
+  const policyMenuOpened = gameState.suppressRightClickDeselect === true
+  gameState.suppressRightClickDeselect = false
+
+  if (!handler.rightWasDragging && !options.preserveSelection && !policyMenuOpened) {
     units.forEach(u => { if (selectionManager.isSelectableUnit(u)) u.selected = false })
     factories.forEach(f => { f.selected = false })
     if (gameState.buildings) {

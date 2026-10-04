@@ -1,0 +1,830 @@
+/* Unit policies: panel, editor, radial extras and conflict banner. */
+
+.policy-editor-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-raised, 5200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgba(4, 8, 12, 0.72);
+}
+
+.policy-editor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: min(820px, 100%);
+  box-sizing: border-box;
+  color: #e8f1fa;
+  background: #131c25;
+  border: 1px solid rgba(143, 180, 214, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+  font-family: var(--game-font-family);
+  overflow: hidden;
+}
+
+.policy-editor.is-invalid {
+  background: linear-gradient(0deg, rgba(220, 53, 53, 0.14), rgba(220, 53, 53, 0.14)), #131c25;
+  border-color: rgba(255, 99, 99, 0.65);
+}
+
+.policy-editor__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  padding-right: 96px;
+  border-bottom: 1px solid rgba(143, 180, 214, 0.2);
+}
+
+.policy-editor__header h2 {
+  margin: 0;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+}
+
+.policy-editor__pause-note {
+  font-size: 12px;
+  color: #9fb8cf;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.policy-editor__close {
+  position: absolute;
+  top: 10px;
+  right: 14px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(143, 180, 214, 0.35);
+  background: transparent;
+  color: #e8f1fa;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.policy-editor__close:hover {
+  background: rgba(143, 180, 214, 0.18);
+}
+
+.policy-editor__alert-icon {
+  display: none;
+  position: absolute;
+  top: 10px;
+  right: 54px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #e5484d;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 30px;
+  text-align: center;
+  box-shadow: 0 0 0 3px rgba(229, 72, 77, 0.3);
+}
+
+.policy-editor.is-invalid .policy-editor__alert-icon {
+  display: block;
+}
+
+.policy-editor__reason {
+  display: none;
+  padding: 8px 16px;
+  color: #ffb4b4;
+  background: rgba(229, 72, 77, 0.16);
+  border-bottom: 1px solid rgba(229, 72, 77, 0.45);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.policy-editor.is-invalid .policy-editor__reason {
+  display: block;
+}
+
+.policy-editor__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.policy-editor__body h3 {
+  margin: 0 0 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #9fb8cf;
+}
+
+.policy-editor__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 10px 16px;
+  border-top: 1px solid rgba(143, 180, 214, 0.2);
+}
+
+.policy-editor__chip {
+  margin-right: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(143, 180, 214, 0.16);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.policy-editor__chip.is-over {
+  background: #e5484d;
+  color: #fff;
+}
+
+.policy-settings {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 14px;
+}
+
+.policy-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: #9fb8cf;
+}
+
+.policy-field__control {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 6px 8px;
+  color: #e8f1fa;
+  background: #0d141b;
+  border: 1px solid rgba(143, 180, 214, 0.35);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.policy-field__control:focus-visible,
+.policy-btn:focus-visible,
+.policy-icon-btn:focus-visible {
+  outline: 2px solid #4f9cff;
+  outline-offset: 1px;
+}
+
+.policy-diagram {
+  width: 100%;
+  max-height: 220px;
+  background: #0d141b;
+  border: 1px solid rgba(143, 180, 214, 0.2);
+  border-radius: 8px;
+}
+
+.policy-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #8aa2ba;
+}
+
+.policy-states {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.policy-state {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  background: #182430;
+  border: 1px solid rgba(143, 180, 214, 0.25);
+  border-radius: 8px;
+}
+
+.policy-state.is-start {
+  border-color: rgba(126, 231, 135, 0.6);
+}
+
+.policy-state__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.policy-state__index {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #243445;
+  text-align: center;
+  line-height: 24px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.policy-state__name {
+  flex: 1 1 auto;
+}
+
+.policy-state__start,
+.policy-cond__not,
+.policy-rule__until-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #cfe0f0;
+}
+
+.policy-state__effect {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #9fb8cf;
+}
+
+.policy-rule {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-radius: 6px;
+  background: #101922;
+  border-left: 4px solid #4f9cff;
+}
+
+.policy-rule--while {
+  border-left-color: #ffb300;
+}
+
+.policy-rule__head,
+.policy-rule__target,
+.policy-rule__until {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #cfe0f0;
+}
+
+.policy-rule__head {
+  justify-content: space-between;
+}
+
+.policy-rule__kind {
+  font-weight: 700;
+}
+
+.policy-rule__until {
+  align-items: flex-start;
+}
+
+.policy-cond {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.policy-cond__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.policy-cond__op {
+  width: 62px;
+}
+
+.policy-cond__value {
+  width: 70px;
+}
+
+.policy-cond__unit,
+.policy-cond__readonly {
+  font-size: 13px;
+  color: #cfe0f0;
+}
+
+.policy-btn {
+  padding: 7px 14px;
+  color: #e8f1fa;
+  background: #243445;
+  border: 1px solid rgba(143, 180, 214, 0.4);
+  border-radius: 6px;
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.policy-btn:hover:not(:disabled) {
+  background: #2f4358;
+}
+
+.policy-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.policy-btn--primary {
+  background: #1f6feb;
+  border-color: #4f9cff;
+}
+
+.policy-btn--primary:hover:not(:disabled) {
+  background: #3b82f6;
+}
+
+.policy-btn--small {
+  padding: 3px 9px;
+  font-size: 12px;
+}
+
+.policy-icon-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  color: #e8f1fa;
+  background: transparent;
+  border: 1px solid rgba(143, 180, 214, 0.3);
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.policy-icon-btn:hover:not(:disabled) {
+  background: rgba(229, 72, 77, 0.3);
+}
+
+.policy-icon-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+@media (max-width: 640px) {
+  .policy-settings {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .policy-editor__pause-note {
+    display: none;
+  }
+}
+
+/* Policies panel (does not pause the game) */
+
+.policy-panel {
+  position: fixed;
+  z-index: var(--z-hud-popover, 2400);
+  width: 320px;
+  max-width: calc(100vw - 16px);
+  max-height: min(70vh, 520px);
+  display: none;
+  flex-direction: column;
+  box-sizing: border-box;
+  color: #e8f1fa;
+  background: rgba(19, 28, 37, 0.97);
+  border: 1px solid rgba(143, 180, 214, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  font-family: var(--game-font-family);
+}
+
+.policy-panel.is-open {
+  display: flex;
+}
+
+.policy-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(143, 180, 214, 0.2);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.policy-panel__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.policy-panel__footer {
+  padding: 8px 10px;
+  border-top: 1px solid rgba(143, 180, 214, 0.2);
+  display: flex;
+  gap: 8px;
+}
+
+.policy-panel__empty {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #9fb8cf;
+}
+
+.policy-card {
+  padding: 8px 10px;
+  background: #182430;
+  border: 1px solid rgba(143, 180, 214, 0.25);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.policy-card.is-on {
+  border-color: rgba(126, 231, 135, 0.7);
+}
+
+.policy-card__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.policy-card__meta {
+  font-size: 12px;
+  color: #9fb8cf;
+}
+
+.policy-card__rules {
+  margin: 0;
+  padding-left: 16px;
+  font-size: 12px;
+  color: #cfe0f0;
+}
+
+.policy-card__actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.policy-card__top > span:first-child {
+  flex: 1 1 140px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* The switch is a labelled button: track plus visible text, so the full state
+   hint is readable on touch screens where hover tooltips never appear. */
+.policy-switch {
+  flex: 0 0 auto;
+  margin-left: auto;
+  max-width: 100%;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+  border: 0;
+  background: transparent;
+  color: #cfe0f0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.policy-switch__track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 40px;
+  height: 22px;
+  box-sizing: border-box;
+  border-radius: 999px;
+  border: 1px solid rgba(143, 180, 214, 0.5);
+  background: #0d141b;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.policy-switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #8fb4d6;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.policy-switch__label {
+  min-width: 0;
+  text-align: left;
+}
+
+.policy-switch[aria-checked='true'] .policy-switch__track {
+  background: #1f7a3a;
+  border-color: #7ee787;
+}
+
+.policy-switch[aria-checked='true'] .policy-switch__track::after {
+  transform: translateX(18px);
+  background: #fff;
+}
+
+.policy-switch[aria-checked='true'] .policy-switch__label {
+  color: #b9f2c0;
+}
+
+.policy-switch:focus-visible {
+  outline: none;
+}
+
+.policy-switch:focus-visible .policy-switch__track {
+  outline: 2px solid #8fb4d6;
+  outline-offset: 2px;
+}
+
+.policy-switch:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Custom tooltips for policy controls (no browser title tooltips). */
+
+[data-policy-tip] {
+  position: relative;
+}
+
+[data-policy-tip]::after {
+  content: attr(data-policy-tip);
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 6px);
+  z-index: 3;
+  padding: 4px 8px;
+  white-space: nowrap;
+  color: #fff;
+  background: rgba(10, 16, 22, 0.96);
+  border: 1px solid rgba(143, 180, 214, 0.4);
+  border-radius: 6px;
+  font-size: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+[data-policy-tip]:hover::after,
+[data-policy-tip]:focus-visible::after {
+  opacity: 1;
+}
+
+#policiesBtn .button-icon {
+  font-size: 18px;
+}
+
+/* Unit radial menu extras */
+
+.unit-policy-tip {
+  position: fixed;
+  z-index: var(--z-hud-popover, 2400);
+  max-width: 240px;
+  padding: 6px 10px;
+  color: #fff;
+  background: rgba(10, 16, 22, 0.96);
+  border: 1px solid rgba(143, 180, 214, 0.5);
+  border-radius: 8px;
+  font-family: var(--game-font-family);
+  font-size: 13px;
+  pointer-events: none;
+  display: none;
+}
+
+.unit-policy-tip.is-visible {
+  display: block;
+}
+
+.unit-policy-tip strong {
+  display: block;
+  font-size: 14px;
+}
+
+/* Policy conflict banner */
+
+.policy-conflict {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  z-index: var(--z-hud-popover, 2400);
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 12px;
+  max-width: min(640px, calc(100vw - 24px));
+  padding: 10px 14px;
+  box-sizing: border-box;
+  color: #fff;
+  background: rgba(60, 38, 8, 0.97);
+  border: 1px solid #ffb300;
+  border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+  font-family: var(--game-font-family);
+  font-size: 15px;
+}
+
+.policy-conflict.is-visible {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.policy-conflict__icon {
+  flex: 0 0 auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #ffb300;
+  color: #2b1c00;
+  font-weight: 800;
+  line-height: 26px;
+  text-align: center;
+}
+
+.policy-conflict__text {
+  flex: 1 1 220px;
+}
+
+.policy-conflict__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.policy-conflict__status {
+  width: 100%;
+  font-size: 13px;
+  color: #ffd98a;
+}
+
+/* Activity counts on policy cards */
+
+.policy-card__counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.policy-count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid rgba(143, 180, 214, 0.3);
+  border-radius: 999px;
+  background: rgba(10, 16, 22, 0.55);
+  font-size: 12px;
+  color: #9fb8cf;
+  cursor: default;
+}
+
+.policy-count__value {
+  font-size: 14px;
+  font-weight: 800;
+  color: #e8f1fa;
+  font-variant-numeric: tabular-nums;
+}
+
+.policy-count--active.is-lit {
+  border-color: rgba(255, 213, 79, 0.75);
+  background: rgba(255, 213, 79, 0.12);
+}
+
+.policy-count--active.is-lit .policy-count__value {
+  color: #ffd54f;
+}
+
+/* Custom tooltip (no native title tooltips in the policy UI) */
+
+.policy-tooltip {
+  position: fixed;
+  z-index: var(--z-hud-popover, 2400);
+  max-width: 260px;
+  padding: 6px 10px;
+  color: #fff;
+  background: rgba(10, 16, 22, 0.96);
+  border: 1px solid rgba(143, 180, 214, 0.5);
+  border-radius: 8px;
+  font-family: var(--game-font-family);
+  font-size: 12px;
+  pointer-events: none;
+  display: none;
+}
+
+.policy-tooltip.is-visible {
+  display: block;
+}
+
+.policy-tooltip strong {
+  display: block;
+  font-size: 13px;
+}
+
+/* Long-press list of actively controlled units */
+
+.policy-active-popover {
+  position: fixed;
+  z-index: var(--z-hud-popover, 2400);
+  width: 280px;
+  max-width: calc(100vw - 16px);
+  max-height: min(60vh, 420px);
+  display: none;
+  flex-direction: column;
+  box-sizing: border-box;
+  color: #e8f1fa;
+  background: rgba(19, 28, 37, 0.97);
+  border: 1px solid rgba(143, 180, 214, 0.4);
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  font-family: var(--game-font-family);
+}
+
+.policy-active-popover.is-open {
+  display: flex;
+}
+
+.policy-active-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.policy-active-empty {
+  margin: 4px 0;
+  font-size: 13px;
+  color: #9fb8cf;
+}
+
+.policy-active-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: "icon name" "icon policies";
+  column-gap: 8px;
+  align-items: center;
+  width: 100%;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  background: #182430;
+  border: 1px solid rgba(143, 180, 214, 0.25);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.policy-active-row:hover {
+  border-color: rgba(255, 213, 79, 0.7);
+}
+
+.policy-active-row__icon {
+  grid-area: icon;
+  color: #ffd54f;
+}
+
+.policy-active-row__name {
+  grid-area: name;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.policy-active-row__policies {
+  grid-area: policies;
+  font-size: 12px;
+  color: #9fb8cf;
+  overflow-wrap: anywhere;
+}

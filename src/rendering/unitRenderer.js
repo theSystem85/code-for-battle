@@ -22,12 +22,16 @@ import { getNavalRenderLengthTiles, isNavalUnitType } from '../utils/navalUtils.
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
+import { describeActivePolicies } from '../policies/policyActivity.js'
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
+
+const POLICY_ICON_SIZE = 10
 
 export class UnitRenderer {
   constructor() {
     this.repairIcon = null
     this.aliveCrewRoles = []
+    this.policyIconRect = { x: 0, y: 0, width: POLICY_ICON_SIZE, height: POLICY_ICON_SIZE }
     this.donutGlowColorStops = new Map()
     this.loadRepairIcon()
   }
@@ -698,6 +702,13 @@ export class UnitRenderer {
 
     let tooltipText = null
     for (const unit of units) {
+      if (this.showsPolicyIcon(unit)) {
+        const iconRect = this.getPolicyIconRect(unit, scrollOffset)
+        if (this.isPointInRect(mouseScreenX, mouseScreenY, iconRect)) {
+          tooltipText = describeActivePolicies(unit)
+          break
+        }
+      }
       if (!unit?.selected) continue
       const label = this.getHudHoverLabelForUnit(unit, scrollOffset, mouseScreenX, mouseScreenY)
       if (!label) continue
@@ -1373,6 +1384,44 @@ export class UnitRenderer {
       )
     }
   }
+  showsPolicyIcon(unit) {
+    return unit?.policyActive === true && unit.health > 0 && unit.owner === (gameState.humanPlayer || 'player1')
+  }
+
+  getPolicyIconRect(unit, scrollOffset) {
+    const rect = this.policyIconRect
+    const lift = ((unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') && unit.altitude) ? unit.altitude * 0.4 : 0
+    rect.width = POLICY_ICON_SIZE
+    rect.height = POLICY_ICON_SIZE
+    rect.x = unit.x + TILE_SIZE - POLICY_ICON_SIZE + 2 - scrollOffset.x
+    rect.y = unit.y - 3 - scrollOffset.y - lift
+    return rect
+  }
+
+  renderPolicyActiveIcon(ctx, unit, scrollOffset) {
+    if (!this.showsPolicyIcon(unit)) return
+    const rect = this.getPolicyIconRect(unit, scrollOffset)
+    const cx = rect.x + rect.width / 2
+    const cy = rect.y + rect.height / 2
+    ctx.fillStyle = 'rgba(12, 24, 38, 0.9)'
+    ctx.strokeStyle = '#4fc3f7'
+    ctx.lineWidth = 1
+    ctx.beginPath()
+    ctx.arc(cx, cy, rect.width / 2, 0, Math.PI * 2)
+    ctx.fill()
+    ctx.stroke()
+    ctx.fillStyle = '#ffd54f'
+    ctx.beginPath()
+    ctx.moveTo(cx + 1, cy - 4)
+    ctx.lineTo(cx - 2.5, cy + 0.5)
+    ctx.lineTo(cx - 0.2, cy + 0.5)
+    ctx.lineTo(cx - 1, cy + 4)
+    ctx.lineTo(cx + 2.5, cy - 0.5)
+    ctx.lineTo(cx + 0.2, cy - 0.5)
+    ctx.closePath()
+    ctx.fill()
+  }
+
   renderCrewStatus(ctx, unit, scrollOffset) {
     if (!unit.selected || !unit.crew) return
 
@@ -2015,6 +2064,7 @@ export class UnitRenderer {
     this.renderQueueNumber(ctx, unit, scrollOffset)
     this.renderGroupNumber(ctx, unit, scrollOffset)
     this.renderCrewStatus(ctx, unit, scrollOffset)
+    this.renderPolicyActiveIcon(ctx, unit, scrollOffset)
     this.renderAttackTargetIndicator(ctx, unit, centerX, centerY, entityIndex)
     this.renderUtilityServiceIndicator(ctx, unit, centerX, centerY, entityIndex)
     this.renderWorkshopRepairIndicator(ctx, unit, centerX, centerY)

@@ -15,6 +15,7 @@ import { angleDiff } from '../logic.js'
 // import { findPath } from '../units.js' // Unused but kept for future use
 import { playSound } from '../sound.js'
 import { showNotification } from '../ui/notifications.js'
+import { noteDirectOrder } from '../policies/policyEngine.js'
 
 /**
  * Check if a unit is in retreat mode
@@ -94,6 +95,7 @@ export function initiateRetreat(selectedUnits, targetX, targetY, mapGrid) {
     }
   })
 
+  noteDirectOrder(retreatingUnits)
   playSound('confirmed', 0.7)
   showNotification(`${retreatingUnits.length} unit(s) retreating`, 1500)
 }

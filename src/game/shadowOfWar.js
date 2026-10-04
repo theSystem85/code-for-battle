@@ -162,7 +162,7 @@ function applyRectVisibility(visibilityMap, startX, startY, width, height, borde
   }
 }
 
-function getUnitVisionRange(unit) {
+export function getUnitVisionRange(unit) {
   if (!unit) return 0
   switch (unit.type) {
     case 'rocketTank':

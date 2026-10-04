@@ -48,6 +48,8 @@ import { clearBattleshipFireControl } from './game/battleshipTurrets.js'
 import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.js'
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
+import { updateUnitPolicies } from './policies/policyEngine.js'
+import { installPolicyGameBindings } from './policies/policyGameBindings.js'
 import {
   updateCameraFollow,
   updateOreSpread,
@@ -83,6 +85,8 @@ import {
   finalizeReplayPlaybackIfPending
 } from './replaySystem.js'
 
+const EMPTY_BUILDINGS = []
+const policyContext = installPolicyGameBindings({ units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS, commands: null, bullets: null, now: 0 })
 const DESTRUCTION_FREEZE_SMOKE_INTERVAL_MS = 180
 const DESTRUCTION_FREEZE_SMOKE_COUNT = 3
 const DESTRUCTION_FREEZE_SMOKE_SHADE = 0.9
@@ -417,6 +421,15 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       // Process queued unit commands before running unit systems
       const unitCommands = getUnitCommandsHandler()
       processCommandQueues(units, mapGrid, unitCommands, gameState.buildings)
+
+      // Programmable unit policies (no-op for units without bindings)
+      policyContext.units = units
+      policyContext.mapGrid = mapGrid
+      policyContext.buildings = gameState.buildings || EMPTY_BUILDINGS
+      policyContext.factories = factories || EMPTY_BUILDINGS
+      policyContext.commands = unitCommands
+      policyContext.bullets = bullets
+      updateUnitPolicies(units, policyContext, now)
 
       // Apply remote control inputs for selected tanks
       updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMap)
