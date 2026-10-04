@@ -305,26 +305,31 @@ export function openPolicyEditor(options = {}) {
 
   function delayEditor(transition) {
     const { minutes, seconds } = splitDelay(transition.delaySeconds)
-    const apply = (nextMinutes, nextSeconds) => {
-      const total = joinDelay(nextMinutes, nextSeconds)
-      transition.delaySeconds = Math.min(MAX_AFTER_DELAY_SECONDS, total)
-      render()
-    }
-    const field = (value, label, max, onChange) => h('input', {
+    const field = (value, label, max) => h('input', {
       class: 'policy-field__control policy-rule__delay-input',
       type: 'number',
       min: 0,
       max,
       step: 1,
       value,
-      'aria-label': label,
-      onChange: e => onChange(Number(e.target.value))
+      'aria-label': label
     })
+    const minuteInput = field(minutes, 'Delay minutes', MAX_AFTER_DELAY_SECONDS / 60)
+    const secondInput = field(seconds, 'Delay seconds', 59)
+    const apply = () => {
+      transition.delaySeconds = Math.min(MAX_AFTER_DELAY_SECONDS, joinDelay(minuteInput.value, secondInput.value))
+      const parts = splitDelay(transition.delaySeconds)
+      minuteInput.value = String(parts.minutes)
+      secondInput.value = String(parts.seconds)
+      updateValidity()
+    }
+    minuteInput.addEventListener('change', apply)
+    secondInput.addEventListener('change', apply)
     return h('div', { class: 'policy-rule__delay' },
       h('span', { text: 'wait' }),
-      field(minutes, 'Delay minutes', MAX_AFTER_DELAY_SECONDS / 60, value => apply(value, seconds)),
+      minuteInput,
       h('span', { text: 'min' }),
-      field(seconds, 'Delay seconds', 59, value => apply(minutes, value)),
+      secondInput,
       h('span', { text: 'sec after the condition becomes true' }))
   }
 

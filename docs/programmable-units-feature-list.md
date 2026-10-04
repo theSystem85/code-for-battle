@@ -49,12 +49,13 @@ Requirements from the Google-Doc list. Details, field names and approximations a
 - [x] **Policy effects go through the API.** Existing direct-order code and enemy AI are not routed through it (see [Later](#later-spec-only)). Tests cover allowed and refused commands.
 - [x] **Policy activity counts.** Each policy card shows how many units have it enabled and how many it actively controls (a condition fired, the machine is past its start state, not finished, and a `while` hold is in force).
 - [x] **HUD icon** on units a policy actively controls, with a canvas tooltip naming the policies.
-- [x] **Controlled-unit list** opened by a long-press on the sidebar Units tab button (the game has no button literally called "Build"; see the spec).
+- [x] **Automation status** on every unit and wreck row of the unit detail panel (long-press a unit in the build menu). The earlier Units-tab popover was removed.
+- [x] **`after` rule** (wait a delay in minutes and seconds after the condition becomes true, then fire once), **live state-machine view** from the radial menu (full rule text, current state, entry counts) and the HP label. See [the follow-up spec](../specs/unit-policies-after-rule-and-state-machine-view.md).
 - [x] Custom tooltips only (no native `title`), custom scrollbars, one scroller per surface.
 
 ### Remaining work on the unit slice
 
-- [ ] Show the running state machine in game (current state and latest trace) and export the trace. The editor draws the diagram; the live view and export do not exist yet.
+- [ ] Export the state-machine trace. The live view (current state, entry counts) is built; trace export and history are not.
 - [ ] Apply a radial choice to every selected unit instead of only the unit the menu was opened on (still an open question).
 - [ ] Save and load of runtime bindings (policies applied to units). Only the policy documents persist today.
 - [ ] Multiplayer: sync policy documents and bindings, and hook orders issued by remote clients on the host.
@@ -98,8 +99,8 @@ A policy is also a small state machine: the engine runs it as one, and the game 
 - **Policy:** A stored behavior script built from blocks and executed as a state machine. Players build policies themselves. Enemy AI uses policies on the same engine.
 - **Block:** The smallest piece in the builder (trigger, condition, state, action, link).
 - **Two rule kinds** in the same builder, written as `if` and `while`:
-  - **`if` (conditional trigger):** The rule fires **once** when the condition becomes true. It does not keep overriding later direct orders. Example: "If hit points drop below 25%, retreat."
-  - **`while` (state rule):** The rule stays in effect until its end condition (by default, the condition becoming false). A `while` condition that becomes true **after** a direct order overrides that order. Example: "Retreat while hit points are under 25%."
+  - **`if` (conditional trigger):** The rule fires **once** when the condition becomes true. It does not keep overriding later direct orders. Example: "If HP drops below 25%, retreat."
+  - **`while` (state rule):** The rule stays in effect until its end condition (by default, the condition becoming false). A `while` condition that becomes true **after** a direct order overrides that order. Example: "Retreat while HP is under 25%."
 - **Two variants:** **Unit policies** target units (first slice). **Build policies** target buildings and base building / base expansion (later).
 - **Two scopes:** **Global** policies are always active. **Per-unit** policies are applied to a unit mid-battle.
 - **Two execution modes:** **One-time** and **continuous**.
@@ -194,9 +195,9 @@ Unit policies and build policies use this folder and grant model. An AI receives
 - Both rule kinds are created in this builder, not in two editors.
 - Both variants are created in this builder. The policy is marked unit or build, global or per-unit (unit policies), and one-time or continuous.
 - An invalid draft is shown clearly: a **red exclamation icon at the top right** of the editor, a **slight red background**, and a message that states the reason (for example "More than 7 states (this draft has 8). Remove 1 to save."). Saving is blocked while the draft is invalid.
-- Block range. The first slice shipped `always`, hit points, nearest-enemy distance, enemy in weapon range, recently under fire and `not` / `and` / `or`, with effects attack, retreat and hold. The condition catalog is now the long list described in [Built after the first slice](#built-after-the-first-slice-same-branch), and effects cover the unit command API. Build-policy blocks are still open (see [Open questions](#open-questions)):
+- Block range. The first slice shipped `always`, HP, nearest-enemy distance, enemy in weapon range, recently under fire and `not` / `and` / `or`, with effects attack, retreat and hold. The condition catalog is now the long list described in [Built after the first slice](#built-after-the-first-slice-same-branch), and effects cover the unit command API. Build-policy blocks are still open (see [Open questions](#open-questions)):
   - Triggers, for example enemy in range or under fire.
-  - States, for example hit points under a threshold.
+  - States, for example HP under a threshold.
   - Actions, for example attack, defend, retreat, hold. Build policies add construction actions aimed at buildings and base expansion.
   - Links, for example if-then, while, and, or.
 - A session produces a named policy that can be stored in a folder, granted, assigned, and switched at runtime.
@@ -253,14 +254,14 @@ Unification replaces those scattered decisions step by step with policies on the
 - Build policies are applied to the player's own base from that player's base policy controls. Each multiplayer player opts in or out for their own base. The unit radial menu does not list build policies.
 - The running state machine can be shown in game. The same trace can be exported for an external analysis tool.
 - Folder management shows the tree and inherited permissions. Granting is an explicit action there.
-- **Activity display.** Each policy card shows two counts: units that have it enabled and units it actively controls. A unit under active control carries a small bolt badge on its HUD (hover for the policy names), and a long-press on the sidebar Units tab button lists those units. Tooltips are custom, never the native `title`; scrolling uses custom scrollbars with one scroller per surface.
+- **Activity display.** Each policy card shows two counts: units that have it enabled and units it actively controls. A unit under active control carries a small bolt badge on its HUD (hover for the policy names), and the unit detail panel (long-press a unit in the build menu) shows each unit's automation status. Tooltips are custom, never the native `title`; scrolling uses custom scrollbars with one scroller per surface.
 - Presentation follows the existing HUD and stays visual. The concrete layout is still open.
 
 ### Radial menu behavior (first slice)
 
 - The menu lists **only per-unit policies**, plus one "Policies…" entry that opens the policy panel. Global policies are never listed, because they are already active once enabled.
 - **The shipped "Attack while an enemy is in range" template is global, so it never appears in the radial menu.** It is switched on and off with its switch in the policy panel. The two retreat templates are per-unit and do appear.
-- If the player has **no per-unit policy**, the menu stays closed and a right-click behaves as it did before (including deselecting).
+- If the player has **no per-unit policy** and the unit carries no policy, the menu stays closed and a right-click behaves as it did before (including deselecting). The menu also has a **State machine** button that toggles the live view of the unit's policies.
 - On desktop it opens on a **right-click** on one of the player's own programmable units. The click must land within half a tile of the unit's center and the pointer must stay within 6 px between press and release.
 - On touch it opens after a **still half-second (500 ms) press on the unit center**. Moving more than 12 px before the half second is up cancels it.
 - It is anchored on the unit it was opened on, and a choice applies to that unit only. Choosing an already applied policy removes it from the unit.

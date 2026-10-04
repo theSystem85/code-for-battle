@@ -141,7 +141,7 @@ Built after this slice (details in the [companion spec](unit-policies-conditions
 
 - [x] Long condition list with `==, <=, >=, <, >`, `not`/`and`/`or` nesting, internal, external and sensing conditions, wired into schema, validation, editor and `stepPolicy` tests. Two conditions are skipped because the game has no such data (crew per role, hit history).
 - [x] Unit command API that returns `false` when a command is not allowed; policy effects go through it.
-- [x] Policy activity counts on each card, HUD icon, and long-press controlled-unit list.
+- [x] Policy activity counts on each card, HUD icon, and per-unit automation status in the unit detail panel.
 
 Later, spec only (not built): voice vibe coding, hotkeys running a script on selected units, one-click attack plans, base-build scripts with money/income/count conditions (including a host applying one to another player's base), one shared command path for replays/enemy LLM/scripts, and migrating every existing human and enemy behavior onto the command API (map physics is the only exception).
 
