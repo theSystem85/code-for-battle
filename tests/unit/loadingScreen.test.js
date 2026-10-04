@@ -17,7 +17,7 @@ describe('loadingScreen', () => {
   it('shows a determinate loading state the UI can bind to', () => {
     const session = showLoadingScreen({
       phase: 'assets',
-      kicker: 'THEATER COMMAND',
+      kicker: 'Patrick Beyer Software',
       detail: 'Loading battlefield assets',
       progress: 0.42
     })
@@ -27,7 +27,7 @@ describe('loadingScreen', () => {
     expect(root.getAttribute('aria-busy')).toBe('true')
     expect(root.dataset.phase).toBe('assets')
     expect(document.body.classList.contains('game-loading')).toBe(true)
-    expect(document.getElementById('loadingScreenKicker').textContent).toBe('THEATER COMMAND')
+    expect(document.getElementById('loadingScreenKicker').textContent).toBe('Patrick Beyer Software')
     expect(document.getElementById('loadingScreenDetail').textContent).toBe('Loading battlefield assets')
     expect(document.getElementById('loadingScreenBar').style.width).toBe('42%')
     expect(document.getElementById('loadingScreenBar').classList.contains('is-indeterminate')).toBe(false)
