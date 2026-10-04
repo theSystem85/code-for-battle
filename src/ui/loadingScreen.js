@@ -4,7 +4,7 @@ import { getBootProgress } from './bootProgress.js'
 const state = {
   visible: true,
   phase: 'boot',
-  kicker: 'THEATER COMMAND',
+  kicker: 'Patrick Beyer Software',
   detail: 'Establishing uplink',
   progress: 0.04
 }
@@ -76,7 +76,7 @@ function render() {
     document.body.classList.remove('game-loading')
   }
 
-  if (kicker) kicker.textContent = state.kicker || 'THEATER COMMAND'
+  if (kicker) kicker.textContent = state.kicker || 'Patrick Beyer Software'
   if (detail) detail.textContent = state.detail || 'Preparing the battlefield'
   if (version) version.textContent = `v${APP_VERSION}`
 
@@ -116,7 +116,7 @@ export function showLoadingScreen(options = {}) {
   activeSession += 1
   state.visible = true
   state.phase = options.phase || 'loading'
-  state.kicker = options.kicker || 'THEATER COMMAND'
+  state.kicker = options.kicker || 'Patrick Beyer Software'
   state.detail = options.detail || 'Preparing the battlefield'
   state.progress = Object.prototype.hasOwnProperty.call(options, 'progress') ? options.progress : null
   render()

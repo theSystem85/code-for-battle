@@ -672,7 +672,7 @@ class Game {
     const boot = getBootProgress()
     const session = showLoadingScreen({
       phase: boot?.phaseId || 'boot',
-      kicker: 'THEATER COMMAND',
+      kicker: 'Patrick Beyer Software',
       detail: boot?.detail || 'Initializing systems',
       progress: boot?.sample() ?? 0.04
     })
