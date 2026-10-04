@@ -11,13 +11,20 @@ import {
   subscribePolicyStore
 } from '../../policies/policyStore.js'
 import { h } from './policyDom.js'
-import { EFFECT_LABELS, describeCondition } from './conditionRows.js'
+import { countPolicyActivity } from '../../policies/policyActivity.js'
+import { describeEffect } from '../../policies/policyEffects.js'
+import { describeCondition } from './conditionRows.js'
+import { attachPolicyTooltip } from './policyTooltip.js'
 import { openPolicyEditor } from './policyEditorModal.js'
 import { showNotification } from '../notifications.js'
 
 let panel = null
 let list = null
 let button = null
+let refreshTimer = 0
+const activityScratch = new Map()
+
+export const PANEL_REFRESH_MS = 500
 
 function humanPlayer() {
   return gameState.humanPlayer || 'player1'
@@ -28,12 +35,42 @@ export function describePolicyRules(policy) {
   policy.states.forEach(state => {
     ;(state.transitions || []).forEach(transition => {
       const target = policy.states.find(item => item.id === transition.to)
-      const action = target && target.effect ? EFFECT_LABELS[target.effect.type] : (target ? target.name : '?')
+      const action = target && target.effect ? describeEffect(target.effect) : (target ? target.name : '?')
       const until = transition.until ? `, until ${describeCondition(transition.until)}` : ''
       lines.push(`${transition.kind.toUpperCase()} ${describeCondition(transition.when)} → ${action}${until}`)
     })
   })
   return lines
+}
+
+function activityCounts(policyId) {
+  const enabled = h('span', { class: 'policy-count__value', dataset: { role: 'enabled-count' }, text: '0' })
+  const active = h('span', { class: 'policy-count__value', dataset: { role: 'active-count' }, text: '0' })
+  const row = h('div', { class: 'policy-card__counts', dataset: { policyId } },
+    attachPolicyTooltip(
+      h('span', { class: 'policy-count' }, enabled, h('span', { class: 'policy-count__label', text: 'enabled' })),
+      'Units with this policy enabled\nGlobal policies count every unit that can carry one; per-unit policies count the units you applied it to.'),
+    attachPolicyTooltip(
+      h('span', { class: 'policy-count policy-count--active' }, active, h('span', { class: 'policy-count__label', text: 'in control' })),
+      'Units actively controlled\nA condition fired and the policy is past its start state and not finished, so it is steering the unit right now.'))
+  return row
+}
+
+/** Update the count text nodes in place; no card is rebuilt. */
+export function refreshPolicyCounts() {
+  if (!list) return
+  countPolicyActivity(gameState.units, activityScratch)
+  list.querySelectorAll('.policy-card').forEach(card => {
+    const entry = activityScratch.get(card.dataset.policyId)
+    const enabled = String(entry ? entry.enabled : 0)
+    const active = String(entry ? entry.active : 0)
+    const enabledEl = card.querySelector('[data-role="enabled-count"]')
+    const activeEl = card.querySelector('[data-role="active-count"]')
+    if (enabledEl && enabledEl.textContent !== enabled) enabledEl.textContent = enabled
+    if (activeEl && activeEl.textContent !== active) activeEl.textContent = active
+    const holder = card.querySelector('.policy-count--active')
+    if (holder) holder.classList.toggle('is-lit', entry ? entry.active > 0 : false)
+  })
 }
 
 function policyCard(entry) {
@@ -62,6 +99,7 @@ function policyCard(entry) {
     class: 'policy-card__meta',
     text: `${isGlobal ? 'All my units' : 'One unit'} · ${policy.execution === 'oneTime' ? 'One-time' : 'Continuous'}${isGlobal ? '' : ' · apply with right-click on a unit'}`
   }))
+  card.appendChild(activityCounts(policy.id))
   const rules = describePolicyRules(policy)
   if (rules.length) {
     card.appendChild(h('ul', { class: 'policy-card__rules' }, rules.map(line => h('li', { text: line }))))
@@ -88,6 +126,7 @@ function renderList() {
   list.replaceChildren(...(entries.length
     ? entries.map(policyCard)
     : [h('p', { class: 'policy-panel__empty', text: 'No policies yet. Create one to program your units.' })]))
+  refreshPolicyCounts()
 }
 
 function placePanel() {
@@ -109,12 +148,16 @@ export function openPolicyPanel() {
   panel.classList.add('is-open')
   if (button) button.setAttribute('aria-expanded', 'true')
   placePanel()
+  clearInterval(refreshTimer)
+  refreshTimer = setInterval(refreshPolicyCounts, PANEL_REFRESH_MS)
 }
 
 export function closePolicyPanel() {
   if (!panel) return
   panel.classList.remove('is-open')
   if (button) button.setAttribute('aria-expanded', 'false')
+  clearInterval(refreshTimer)
+  refreshTimer = 0
 }
 
 export function togglePolicyPanel() {

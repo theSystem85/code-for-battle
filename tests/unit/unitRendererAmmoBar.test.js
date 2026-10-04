@@ -405,3 +405,43 @@ describe('UnitRenderer ammo HUD consistency', () => {
     gameState.selectionHudMode = 'modern-donut'
   })
 })
+
+describe('UnitRenderer policy-control icon', () => {
+  const scroll = { x: 10, y: 20 }
+  const makeCtx = () => ({
+    fillStyle: '', strokeStyle: '', lineWidth: 1,
+    beginPath: vi.fn(), arc: vi.fn(), fill: vi.fn(), stroke: vi.fn(),
+    moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn()
+  })
+
+  beforeEach(() => {
+    globalThis.Image = class {
+      set src(_value) {}
+    }
+    globalThis.window = { logger: { warn: vi.fn() } }
+  })
+
+  it('draws only for own, living, actively controlled units', () => {
+    const renderer = new UnitRenderer()
+    const base = { type: 'tank_v1', x: 64, y: 64, health: 10, owner: 'player1', policyActive: true }
+
+    const own = makeCtx()
+    renderer.renderPolicyActiveIcon(own, base, scroll)
+    expect(own.arc).toHaveBeenCalledTimes(1)
+
+    ;[{ policyActive: false }, { owner: 'player2' }, { health: 0 }].forEach(override => {
+      const ctx = makeCtx()
+      renderer.renderPolicyActiveIcon(ctx, { ...base, ...override }, scroll)
+      expect(ctx.arc).not.toHaveBeenCalled()
+    })
+  })
+
+  it('reuses one hit rect so hover tests allocate nothing per frame', () => {
+    const renderer = new UnitRenderer()
+    const unit = { type: 'tank_v1', x: 64, y: 64 }
+    const first = renderer.getPolicyIconRect(unit, scroll)
+    const second = renderer.getPolicyIconRect({ type: 'tank_v1', x: 96, y: 96 }, scroll)
+    expect(second).toBe(first)
+    expect(second.x).toBe(96 + 32 - second.width + 2 - scroll.x)
+  })
+})
