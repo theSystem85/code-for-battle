@@ -1,0 +1,3 @@
+# Retarget AI policy scripts
+
+- [x] **Retarget Add AI policy scripts at programmable units**: The open Features item now points at the programmable-units spec on main. Policies stay JSON (schema v1), with `if`, `while`, and `after` rules. Only the commanding owner can enable, disable, or apply a policy, and the health condition label is exactly "HP". Unit policies and base/build policies exist. Shipped templates include retreat-if-hurt, retreat-while-hurt, and attack-while-in-range. Enemy combat in `src/enemy.js` and `src/ai` is later work and is not on that engine yet. The weak-unit retreat, then counterattack, sub-item stays open. Spec: [Programmable Units](../programmable-units-feature-list.md)
