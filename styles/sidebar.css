@@ -524,6 +524,19 @@ body.mobile-landscape .money-bar-value {
   flex-wrap: wrap;
 }
 
+.production-tooltip__automation[data-automation="controlling"] {
+  color: #ffe08a;
+  background: rgba(255, 193, 7, 0.14);
+}
+
+.production-tooltip__automation[data-automation="enabled"] {
+  color: #9cc7ff;
+}
+
+.production-tooltip__automation[data-automation="none"] {
+  opacity: 0.7;
+}
+
 body.is-touch .money-tooltip {
   width: min(420px, 94vw);
 }

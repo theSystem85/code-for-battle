@@ -22,7 +22,7 @@ import { getNavalRenderLengthTiles, isNavalUnitType } from '../utils/navalUtils.
 import { getExperienceProgress, initializeUnitLeveling } from '../utils.js'
 import { getSimulationTime } from '../game/time.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
-import { describeActivePolicies } from '../policies/policyActivity.js'
+import { describeActivePolicies, shouldShowPolicyIndicator } from '../policies/policyActivity.js'
 import { drawStatusBar, fillStatusBar, paintStatusBarOutline, paintStatusBarTrack, strokeStatusArc, strokeStatusRailArc } from '../utils/statusBarGradient.js'
 
 const POLICY_ICON_SIZE = 10
@@ -1385,7 +1385,7 @@ export class UnitRenderer {
     }
   }
   showsPolicyIcon(unit) {
-    return unit?.policyActive === true && unit.health > 0 && unit.owner === (gameState.humanPlayer || 'player1')
+    return shouldShowPolicyIndicator(unit, gameState.humanPlayer || 'player1')
   }
 
   getPolicyIconRect(unit, scrollOffset) {

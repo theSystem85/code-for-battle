@@ -1,6 +1,5 @@
 import { loadPolicyStore } from '../../policies/policyStore.js'
 import { installPolicyConflictBanner } from './policyConflictBanner.js'
-import { installActiveUnitsList } from './policyActiveUnitsList.js'
 import { installPolicyPanel } from './policyPanel.js'
 import { installUnitPolicyRadial } from './unitPolicyRadial.js'
 
@@ -13,7 +12,6 @@ export function installUnitPolicyUi(canvas, units) {
     storeLoaded = true
   }
   installPolicyPanel()
-  installActiveUnitsList()
   installPolicyConflictBanner()
   return installUnitPolicyRadial(canvas, () => units)
 }
