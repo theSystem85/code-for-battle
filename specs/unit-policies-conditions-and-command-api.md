@@ -21,7 +21,7 @@ A condition is a tree of leaves joined by `not`, `and`, `or` (nesting allowed). 
 
 | Condition | Field / check | Status |
 | --- | --- | --- |
-| Hit points (relative or absolute) | `hp` | Built |
+| HP (relative or absolute) | `hp` | Built |
 | Experience (relative or absolute) | `xp` | Built |
 | Rank 1–3 | `rank` | Built (`unit.level`, absolute only) |
 | Fuel | `fuel` | Built (units with a gas tank) |
@@ -125,11 +125,11 @@ Programmable unit types are now: `tank`, `tank_v1`, `tank-v2`, `tank-v3`, `rocke
 
 Existing human and enemy-AI code is **not** rewritten to use this API (see [Later](#5-later-spec-only)).
 
-## 4. Activity counts, HUD icon, controlled-unit list
+## 4. Activity counts, HUD icon, automation status
 
 A policy **actively controls** a unit while all of these hold (`src/policies/policyActivity.js`):
 
-1. One of its conditions has fired and a `while` hold is in force.
+1. One of its conditions has fired and a `while` hold is in force, or an `after` delay is running.
 2. The state machine is **not in its start state**.
 3. The machine has **not finished** (a finished one-time policy sits in an end state).
 4. The binding is not gated: no running direct order and not paused by the conflict banner.
@@ -138,8 +138,7 @@ Displays (Built):
 
 - **Policy panel.** Every card shows two counts: *enabled* (living units that carry the policy: for a global policy every unit that can carry one, for a per-unit policy the units it was applied to) and *in control* (units it actively controls right now). The count text nodes are updated in place twice a second while the panel is open; cards are not rebuilt.
 - **Unit HUD icon.** A small round badge with a bolt at the top-right of the unit, drawn for your own living units with `unit.policyActive`. Hovering it shows a canvas tooltip "Controlled by policy:" plus the policy names. Cost: one flag read per unit, one arc and one small path per controlled unit, one reused hit rectangle, no per-frame allocation.
-- **Controlled-unit list.** A 500 ms long-press (moving more than 12 px cancels) on the sidebar **Units** tab button, or on the compact `#mobileCategoryToggle` on narrow screens, opens a popover listing your actively controlled units with the policies steering each. Clicking a row selects the unit and centers the map on it. The release after a long-press does not switch tabs. A short click behaves as before. The list refreshes twice a second, updating rows in place.
-  - *Interpretation:* the game has no single "Build" button; the sidebar tab pair is Units / Buildings and the compact toggle switches between them. The Units tab is the unit production entry, so the long-press lives there. The popover opens beside the button, never on top of it.
+- **Automation status.** Superseded: the Units-tab popover was removed; each unit and wreck row of the unit detail panel shows the status instead. See [the follow-up spec](unit-policies-after-rule-and-state-machine-view.md).
 - Tooltips are custom (`policyTooltip.js`, one shared element), never the native `title` attribute; the same text is exposed as `aria-label`. Scrolling uses the global thin custom scrollbar; the panel and the list each have exactly one scroller.
 
 Tests: `tests/unit/policyActivity.test.js`, `tests/unit/policyActivityUi.test.js`, and the renderer cases in `tests/unit/unitRendererAmmoBar.test.js`.
