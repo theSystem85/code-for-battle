@@ -44,6 +44,7 @@ export default [
         requestAnimationFrame: 'readonly',
         cancelAnimationFrame: 'readonly',
         CustomEvent: 'readonly',
+        Event: 'readonly',
         RTCPeerConnection: 'readonly',
         crypto: 'readonly',
         caches: 'readonly',
