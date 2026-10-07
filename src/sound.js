@@ -161,8 +161,8 @@ const soundFiles = {
 const activeAudioElements = new Map()
 const soundThrottleTimestamps = new Map() // Track last play time for throttled sounds
 
-// Background music files
-const backgroundMusicFiles = ['music01.mp3'] // add more files as needed
+// Background music files (played as a random playlist; add more files as needed)
+const backgroundMusicFiles = ['music01.mp3', 'music02.mp3']
 
 // Cache audio buffers using Web Audio API for true zero-network caching
 const audioBufferCache = new Map()
@@ -472,6 +472,105 @@ export function testNarratedSounds() {
 export let bgMusicAudio = null
 let backgroundMusicInitialized = false
 let backgroundMusicLoading = false
+let currentBackgroundMusicFile = null
+let nextBackgroundMusicFile = null
+const backgroundMusicLoadPromises = new Map()
+
+// Pick a random track, avoiding an immediate repeat when more than one exists.
+// Music is local presentation only, so it uses Math.random and never advances
+// the lockstep game PRNG (track changes happen at different times per peer).
+export function pickBackgroundMusicFile(files, previousFile = null, random = Math.random) {
+  if (!Array.isArray(files) || files.length === 0) return null
+  const candidates = files.length > 1 ? files.filter(file => file !== previousFile) : files
+  const pool = candidates.length > 0 ? candidates : files
+  return pool[Math.min(pool.length - 1, Math.floor(random() * pool.length))]
+}
+
+// Load (once) and cache the Audio element for a music file
+function loadBackgroundMusicElement(file) {
+  const musicPath = 'sound/music/' + file
+  const cached = soundElementCache.get(musicPath)
+  if (cached) return Promise.resolve(cached)
+  const pending = backgroundMusicLoadPromises.get(musicPath)
+  if (pending) return pending
+
+  const element = new Audio(musicPath)
+  configureAudioElement(element, musicPath, window.location.origin)
+  element.preload = 'auto'
+  element.loop = false // the playlist picks the next track on 'ended'
+  element.volume = masterVolume
+
+  const loadPromise = new Promise((resolve, reject) => {
+    const onLoad = () => {
+      element.removeEventListener('canplaythrough', onLoad)
+      element.removeEventListener('error', onError)
+      resolve()
+    }
+    const onError = (e) => {
+      element.removeEventListener('canplaythrough', onLoad)
+      element.removeEventListener('error', onError)
+      reject(e)
+    }
+
+    element.addEventListener('canplaythrough', onLoad, { once: true })
+    element.addEventListener('error', onError, { once: true })
+    element.load() // Only load once here
+  }).then(() => {
+    element.addEventListener('ended', handleBackgroundMusicEnded)
+    soundElementCache.set(musicPath, element)
+    window.logger(`Background music ${file} loaded and cached`)
+    return element
+  }).finally(() => {
+    backgroundMusicLoadPromises.delete(musicPath)
+  })
+
+  backgroundMusicLoadPromises.set(musicPath, loadPromise)
+  return loadPromise
+}
+
+// Choose the following track now and warm its cache so the switch is gapless
+function preloadNextBackgroundMusic() {
+  nextBackgroundMusicFile = pickBackgroundMusicFile(backgroundMusicFiles, currentBackgroundMusicFile)
+  if (!nextBackgroundMusicFile || nextBackgroundMusicFile === currentBackgroundMusicFile) return
+  loadBackgroundMusicElement(nextBackgroundMusicFile).catch(e => {
+    window.logger.warn('Error preloading next background music:', e)
+  })
+}
+
+async function handleBackgroundMusicEnded(event) {
+  const endedElement = event?.target
+  if (suppressAudioForAutomation || !endedElement || endedElement !== bgMusicAudio) return
+
+  const file = nextBackgroundMusicFile || pickBackgroundMusicFile(backgroundMusicFiles, currentBackgroundMusicFile)
+  let element = endedElement
+  try {
+    if (file && file !== currentBackgroundMusicFile) {
+      element = await loadBackgroundMusicElement(file)
+    }
+  } catch (e) {
+    window.logger.warn('Error loading next background music, replaying current track:', e)
+    element = endedElement
+  }
+
+  // Music was reset or replaced while the next track loaded
+  if (bgMusicAudio !== endedElement) return
+
+  if (element !== endedElement && !endedElement.paused) {
+    endedElement.pause()
+  }
+  element.currentTime = 0
+  element.volume = masterVolume
+  bgMusicAudio = element
+  if (element !== endedElement) currentBackgroundMusicFile = file
+  preloadNextBackgroundMusic()
+
+  try {
+    await element.play()
+    window.logger(`Background music playing next track: ${currentBackgroundMusicFile}`)
+  } catch (e) {
+    console.error('Error playing next background music track:', e)
+  }
+}
 
 export async function initBackgroundMusic() {
   if (suppressAudioForAutomation) return
@@ -489,49 +588,14 @@ export async function initBackgroundMusic() {
   backgroundMusicLoading = true
   window.logger('Loading background music on demand...')
 
-  const file = backgroundMusicFiles[Math.floor(gameRandom() * backgroundMusicFiles.length)]
-  const musicPath = 'sound/music/' + file
+  const file = pickBackgroundMusicFile(backgroundMusicFiles, currentBackgroundMusicFile)
 
   try {
-    // Check if already cached from a previous session
-    let element = soundElementCache.get(musicPath)
-    if (!element) {
-      // Create and load the audio element only once
-      element = new Audio(musicPath)
-      configureAudioElement(element, musicPath, window.location.origin)
-      element.preload = 'auto'
-      element.loop = true
-      element.volume = masterVolume
-
-      // Wait for it to be ready before caching
-      await new Promise((resolve, reject) => {
-        const onLoad = () => {
-          element.removeEventListener('canplaythrough', onLoad)
-          element.removeEventListener('error', onError)
-          resolve()
-        }
-        const onError = (e) => {
-          element.removeEventListener('canplaythrough', onLoad)
-          element.removeEventListener('error', onError)
-          reject(e)
-        }
-
-        element.addEventListener('canplaythrough', onLoad, { once: true })
-        element.addEventListener('error', onError, { once: true })
-        element.load() // Only load once here
-      })
-
-      // Cache the loaded element
-      soundElementCache.set(musicPath, element)
-      window.logger('Background music loaded and cached successfully')
-    } else {
-      window.logger('Background music retrieved from cache')
-    }
-
     // Use the cached element directly (no cloning for background music)
-    bgMusicAudio = element
+    bgMusicAudio = await loadBackgroundMusicElement(file)
     bgMusicAudio.volume = masterVolume // Ensure volume is correct
-
+    currentBackgroundMusicFile = file
+    preloadNextBackgroundMusic()
   } catch (e) {
     console.error('Error loading background music:', e)
   } finally {
@@ -702,6 +766,8 @@ export function clearSoundCache() {
   // Reset background music state
   backgroundMusicInitialized = false
   backgroundMusicLoading = false
+  currentBackgroundMusicFile = null
+  nextBackgroundMusicFile = null
   if (bgMusicAudio) {
     bgMusicAudio.pause()
     bgMusicAudio = null
