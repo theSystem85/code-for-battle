@@ -130,7 +130,7 @@ function findShipyardPosition(mapGrid, units, buildings, factories, aiPlayerId) 
 
 // Let's improve this function to fix issues with enemy building placement
 // Modified to improve building placement with better spacing and factory avoidance
-export function findBuildingPosition(buildingType, mapGrid, units, buildings, factories, aiPlayerId) {
+export function findBuildingPosition(buildingType, mapGrid, units, buildings, factories, aiPlayerId, validateCandidate = null) {
   // Validate inputs
   if (!buildingType) {
     console.error('findBuildingPosition called with undefined/null buildingType', {
@@ -289,7 +289,7 @@ export function findBuildingPosition(buildingType, mapGrid, units, buildings, fa
             buildingType
           )
 
-          if (hasClearPaths) {
+          if (hasClearPaths && (!validateCandidate || validateCandidate(x, y))) {
             return { x, y }
           }
         }
@@ -373,12 +373,12 @@ export function findBuildingPosition(buildingType, mapGrid, units, buildings, fa
         if (!hasClearPaths) continue
 
         // If we got here, the position is valid
-        return { x, y }
+        if (!validateCandidate || validateCandidate(x, y)) return { x, y }
       }
     }
 
     // If we couldn't find a position with our preferred approach, try the fallback
-    return fallbackBuildingPosition(buildingType, mapGrid, units, buildings, factories, aiPlayerId, minSpaceBetweenBuildings)
+    return fallbackBuildingPosition(buildingType, mapGrid, units, buildings, factories, aiPlayerId, minSpaceBetweenBuildings, validateCandidate)
   }
 }
 
@@ -525,7 +525,7 @@ function directionToClosestOre(x, y, mapGrid) {
 }
 
 // Fallback position search with the original spiral pattern
-function fallbackBuildingPosition(buildingType, mapGrid, units, buildings, factories, aiPlayerId, minSpaceBetweenBuildings = 2) {
+function fallbackBuildingPosition(buildingType, mapGrid, units, buildings, factories, aiPlayerId, minSpaceBetweenBuildings = 2, validateCandidate = null) {
   // Validate inputs
   if (!buildingType) {
     window.logger.warn('fallbackBuildingPosition called with undefined buildingType')
@@ -641,7 +641,7 @@ function fallbackBuildingPosition(buildingType, mapGrid, units, buildings, facto
         buildingType
       )
 
-      if (hasClearPaths) {
+      if (hasClearPaths && (!validateCandidate || validateCandidate(x, y))) {
         return { x, y }
       }
     }
@@ -735,7 +735,7 @@ function fallbackBuildingPosition(buildingType, mapGrid, units, buildings, facto
 
         if (!hasClearPaths) continue
 
-        return { x, y }
+        if (!validateCandidate || validateCandidate(x, y)) return { x, y }
       }
     }
   }
@@ -805,7 +805,7 @@ function fallbackBuildingPosition(buildingType, mapGrid, units, buildings, facto
 
         if (!hasClearPaths) continue
 
-        return { x, y }
+        if (!validateCandidate || validateCandidate(x, y)) return { x, y }
       }
     }
   }

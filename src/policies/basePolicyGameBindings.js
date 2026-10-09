@@ -82,10 +82,10 @@ function createBuildAdapter(context) {
     findPlacement(type, owner) {
       const planning = mapBlueprintsToFootprints(gameState.blueprints || [], owner)
       const all = [...(context.buildings || []), ...planning]
-      const spot = findBuildingPosition(type, context.mapGrid, context.units || [], all, context.factories || [], owner)
-      if (!spot) return null
-      const valid = canPlaceBuilding(type, spot.x, spot.y, context.mapGrid, context.units || [], all, context.factories || [], owner)
-      return valid ? { x: spot.x, y: spot.y } : null
+      // Reject candidates with the player validator during the search, rather
+      // than giving up when the AI's first choice fails player placement rules.
+      return findBuildingPosition(type, context.mapGrid, context.units || [], all, context.factories || [], owner,
+        (x, y) => canPlaceBuilding(type, x, y, context.mapGrid, context.units || [], all, context.factories || [], owner))
     },
     queue(type, placement) {
       const button = findButton(type)

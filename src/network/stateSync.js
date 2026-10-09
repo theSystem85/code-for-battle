@@ -561,7 +561,7 @@ export function createGameStateSnapshot() {
       ? Math.max(0, now - building.constructionStartTime)
       : null
     const sellElapsed = typeof building.sellStartTime === 'number'
-      ? Math.max(0, now - building.sellStartTime)
+      ? Math.max(0, simNow - building.sellStartTime)
       : null
     return {
       id: building.id,
@@ -828,7 +828,7 @@ export function applyGameStateSnapshot(snapshot) {
     clientInitialized = true
   }
 
-  // Wall clock for construction/sell timers. Muzzle, recoil, explosions, and
+  // Wall clock for construction timers. Selling, muzzle, recoil, explosions, and
   // bullets use the simulation clock so clients do not freeze or offset them.
   const now = performance.now()
   const simNow = getSimulationTime(gameState)
@@ -1066,7 +1066,7 @@ export function applyGameStateSnapshot(snapshot) {
         ? now - snapshotBuilding.constructionElapsed
         : (snapshotBuilding.constructionStartTime ?? existing?.constructionStartTime ?? now)
       const sellStartTime = snapshotBuilding.sellElapsed != null
-        ? now - snapshotBuilding.sellElapsed
+        ? simNow - snapshotBuilding.sellElapsed
         : (snapshotBuilding.sellStartTime ?? existing?.sellStartTime ?? null)
 
       if (existing) {
@@ -1283,7 +1283,7 @@ function createClientStateUpdate() {
       health: building.health,
       constructionElapsed: typeof building.constructionStartTime === 'number' ? Math.max(0, now - building.constructionStartTime) : null,
       constructionStartTime: building.constructionStartTime,
-      sellElapsed: typeof building.sellStartTime === 'number' ? Math.max(0, now - building.sellStartTime) : null,
+      sellElapsed: typeof building.sellStartTime === 'number' ? Math.max(0, explosionTime - building.sellStartTime) : null,
       constructionFinished: building.constructionFinished,
       ammo: building.ammo,
       turretDirection: building.turretDirection,

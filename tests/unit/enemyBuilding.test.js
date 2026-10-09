@@ -76,6 +76,18 @@ describe('enemyBuilding.findBuildingPosition', () => {
     vi.restoreAllMocks()
   })
 
+  it('continues searching when the player placement validator rejects an AI candidate', () => {
+    const mapGrid = createGrid(30, 30)
+    const first = findBuildingPosition('powerPlant', mapGrid, [], [], [baseFactory], 'enemy')
+    expect(first).not.toBeNull()
+    const validate = vi.fn((x, y) => x !== first.x || y !== first.y)
+    const result = findBuildingPosition('powerPlant', mapGrid, [], [], [baseFactory], 'enemy', validate)
+    expect(result).not.toBeNull()
+    expect(result).not.toEqual(first)
+    expect(validate).toHaveBeenCalledWith(first.x, first.y)
+    expect(validate).toHaveBeenLastCalledWith(result.x, result.y)
+  })
+
   it('returns null and logs when buildingType is missing', () => {
     const mapGrid = createGrid(10, 10)
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})

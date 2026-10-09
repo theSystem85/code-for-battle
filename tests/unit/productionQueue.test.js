@@ -163,6 +163,36 @@ describe('Production Queue System', () => {
     })
   })
 
+  describe('Policy blueprint construction lifecycle', () => {
+    it('charges the full building price once and runs shared placement side effects', async() => {
+      const { createBuilding, placeBuilding, updatePowerSupply } = await import('../../src/buildings.js')
+      const { broadcastBuildingPlace } = await import('../../src/network/gameCommandSync.js')
+      gameState.buildings = [{ type: 'constructionYard', owner: 'player', health: 100 }]
+      gameState.simulationTime = 1000
+      const blueprint = { type: 'powerPlant', x: 10, y: 10 }
+      gameState.blueprints = [blueprint]
+      const controller = { updateBuildingButtonStates: vi.fn(), syncTechTreeWithBuildings: vi.fn() }
+      productionQueue.setProductionController(controller)
+      const initialMoney = gameState.money
+      productionQueue.addItem('powerPlant', mockButton, true, blueprint)
+      const finishAt = productionQueue.currentBuilding.startTime + productionQueue.currentBuilding.duration
+      productionQueue.updateProgress(finishAt)
+      expect(gameState.money).toBe(initialMoney - 500)
+      expect(gameState.buildings.at(-1)).toMatchObject({ type: 'powerPlant', owner: 'player' })
+      expect(createBuilding).toHaveBeenCalledWith('powerPlant', 10, 10)
+      expect(placeBuilding).toHaveBeenCalledWith(gameState.buildings.at(-1), gameState.mapGrid, gameState.occupancyMap)
+      expect(updatePowerSupply).toHaveBeenCalledWith(gameState.buildings, gameState)
+      expect(broadcastBuildingPlace).toHaveBeenCalledWith('powerPlant', 10, 10, 'player')
+      expect(controller.syncTechTreeWithBuildings).toHaveBeenCalled()
+      expect(gameState.pendingButtonUpdate).toBe(true)
+      expect(gameState.blueprints).toHaveLength(0)
+      productionQueue.updateProgress(finishAt + 1000)
+      expect(gameState.money).toBe(initialMoney - 500)
+      expect(gameState.buildings.filter(building => building.type === 'powerPlant')).toHaveLength(1)
+      productionQueue.setProductionController(null)
+    })
+  })
+
   describe('Queue Adding', () => {
     beforeEach(() => {
       // Add vehicle factory for unit production and construction yard for buildings

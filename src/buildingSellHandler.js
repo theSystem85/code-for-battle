@@ -1,3 +1,4 @@
+import { getSimulationTime } from './game/time.js'
 import { TILE_SIZE } from './config.js'
 import { playSound } from './sound.js'
 import { buildingCosts } from './main.js'
@@ -133,7 +134,7 @@ export function buildingSellHandler(e, gameState, gameCanvas, mapGrid, units, fa
 
       // Mark the building as being sold
       building.isBeingSold = true
-      building.sellStartTime = performance.now()
+      building.sellStartTime = getSimulationTime(gameState)
 
       // Broadcast sell action to other players
       broadcastBuildingSell(building.id, sellValue, building.sellStartTime)

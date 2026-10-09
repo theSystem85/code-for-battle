@@ -3,12 +3,12 @@ import { findClosestOre } from './logic.js'
 import { buildingCosts, factories, units } from './main.js'
 import { showNotification } from './ui/notifications.js'
 import { gameState } from './gameState.js'
-import { buildingData, createBuilding, placeBuilding, canPlaceBuilding, updatePowerSupply, isNearExistingBuilding } from './buildings.js'
+import { buildingData, canPlaceBuilding, isNearExistingBuilding } from './buildings.js'
 import { unitCosts } from './units.js'
 import { playSound } from './sound.js'
 import { assignHarvesterToOptimalRefinery } from './game/harvesterLogic.js'
-import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
-import { broadcastBuildingPlace, broadcastUnitSpawn, isHost } from './network/gameCommandSync.js'
+import { constructPlayerBuilding } from './game/playerBuildingLifecycle.js'
+import { broadcastUnitSpawn, isHost } from './network/gameCommandSync.js'
 import { gameRandom } from './utils/gameRandom.js'
 import { mapBlueprintsToFootprints } from './planning/blueprintPlanning.js'
 import { ensureAirstripOperations, claimAirstripParkingSlot } from './utils/airstripUtils.js'
@@ -914,27 +914,7 @@ export const productionQueue = {
     if (blueprint) {
       const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer)
       if (canPlaceBuilding(this.currentBuilding.type, blueprint.x, blueprint.y, gameState.mapGrid, units, [...gameState.buildings, ...planningBuildings], factories, gameState.humanPlayer)) {
-        const newBuilding = createBuilding(this.currentBuilding.type, blueprint.x, blueprint.y)
-        newBuilding.owner = gameState.humanPlayer
-        if (!gameState.buildings) gameState.buildings = []
-        gameState.buildings.push(newBuilding)
-        updateDangerZoneMaps(gameState)
-        placeBuilding(newBuilding, gameState.mapGrid)
-        updatePowerSupply(gameState.buildings, gameState)
-        if (this.currentBuilding.type !== 'street') {
-          playSound('buildingPlaced')
-        }
-        showNotification(`${buildingData[this.currentBuilding.type].displayName} constructed`)
-
-        // Broadcast building placement to other players in multiplayer
-        broadcastBuildingPlace(this.currentBuilding.type, blueprint.x, blueprint.y, gameState.humanPlayer)
-
-        // Update building button states after construction
-        if (this.productionController) {
-          this.productionController.updateBuildingButtonStates()
-          // Sync tech tree to unlock new units based on new buildings
-          this.productionController.syncTechTreeWithBuildings()
-        }
+        constructPlayerBuilding(this.currentBuilding.type, blueprint.x, blueprint.y, gameState, gameState.mapGrid, this.productionController)
       } else {
         this.completedBuildings.push({ type: this.currentBuilding.type, button: this.currentBuilding.button })
         this.currentBuilding.button.classList.add('ready-for-placement')

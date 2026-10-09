@@ -103,7 +103,7 @@ export class BuildingRenderer {
       const now = performance.now()
 
       if (building.isBeingSold) {
-        const progress = Math.min((now - building.sellStartTime) / BUILDING_SELL_DURATION, 1)
+        const progress = Math.min((getSimulationTime(gameState) - building.sellStartTime) / BUILDING_SELL_DURATION, 1)
         const heightProgress = 1 - progress
         this.drawBuildingUnderConstruction(ctx, img, screenX, screenY, width, height, heightProgress, 1)
         return

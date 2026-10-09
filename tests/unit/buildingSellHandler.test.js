@@ -90,6 +90,7 @@ describe('buildingSellHandler.js', () => {
     gameState.mapGrid = mapGrid
     gameState.humanPlayer = 'player1'
     gameState.money = 10000
+    gameState.simulationTime = 12345
     gameState.buildings = []
     gameState.scrollOffset = { x: 0, y: 0 }
     gameState.sellMode = false
@@ -271,7 +272,7 @@ describe('buildingSellHandler.js', () => {
 
       expect(building.isBeingSold).toBe(true)
       expect(building.sellStartTime).toBeDefined()
-      expect(building.sellStartTime).toBeGreaterThan(0)
+      expect(building.sellStartTime).toBe(gameState.simulationTime)
     })
 
     it('should prevent double-selling a building', () => {

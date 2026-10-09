@@ -1,12 +1,9 @@
 import { TILE_SIZE } from './config.js'
-import { canPlaceBuilding, createBuilding, placeBuilding, updatePowerSupply, calculateRepairCost } from './buildings.js'
+import { canPlaceBuilding, calculateRepairCost } from './buildings.js'
 import { playSound } from './sound.js'
 import { showNotification } from './ui/notifications.js'
-import { buildingData } from './buildings.js'
-import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
-import { savePlayerBuildPatterns } from './savePlayerBuildPatterns.js'
+import { constructPlayerBuilding } from './game/playerBuildingLifecycle.js'
 import { updateMoneyBar } from './ui/moneyBar.js'
-import { broadcastBuildingPlace } from './network/gameCommandSync.js'
 
 export function buildingRepairHandler(e, gameState, gameCanvas, mapGrid, units, factories, productionQueue, _moneyEl) {
   // If repair mode is active, check for buildings and factories to repair
@@ -138,27 +135,7 @@ export function buildingRepairHandler(e, gameState, gameCanvas, mapGrid, units, 
     try {
       // Check if placement is valid - pass buildings and factories arrays
       if (canPlaceBuilding(buildingType, tileX, tileY, mapGrid, units, gameState.buildings, factories, gameState.humanPlayer)) {
-        // Create and place the building
-        const newBuilding = createBuilding(buildingType, tileX, tileY)
-
-        // Add owner property to the building
-        newBuilding.owner = gameState.humanPlayer
-
-        // Add the building to gameState.buildings
-        if (!gameState.buildings) {
-          gameState.buildings = []
-        }
-        gameState.buildings.push(newBuilding)
-        updateDangerZoneMaps(gameState)
-
-        // Mark building tiles in the map grid
-        placeBuilding(newBuilding, mapGrid)
-
-        // Update power supply
-        updatePowerSupply(gameState.buildings, gameState)
-
-        // Broadcast building placement to other players in multiplayer
-        broadcastBuildingPlace(buildingType, tileX, tileY, gameState.humanPlayer)
+        constructPlayerBuilding(buildingType, tileX, tileY, gameState, mapGrid, productionQueue.productionController)
 
         // Exit placement mode
         gameState.buildingPlacementMode = false
@@ -192,15 +169,6 @@ export function buildingRepairHandler(e, gameState, gameCanvas, mapGrid, units, 
           // Update ready building counter for remaining buildings
           productionQueue.updateReadyBuildingCounter(building.button)
         })
-
-        // Play placement sound
-        playSound('buildingPlaced')
-
-        // Show notification
-        showNotification(`${buildingData[buildingType].displayName} constructed`)
-
-        // Save player building patterns
-        savePlayerBuildPatterns(buildingType)
       } else {
         // Play error sound for invalid placement
         playSound('constructionObstructed', 1.0, 0, true)

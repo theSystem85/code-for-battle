@@ -958,6 +958,21 @@ describe('multiplayer client snapshot sync', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
   }
 
+  it('serializes and restores selling with simulation time rather than wall time', () => {
+    gameState.simulationTime = 10000
+    gameState.buildings = [{
+      id: 'selling-power', type: 'powerPlant', owner: 'player1', x: 0, y: 0,
+      width: 2, height: 2, health: 100, power: 200,
+      isBeingSold: true, sellStartTime: 9750
+    }]
+    const snapshot = commandSync.createGameStateSnapshot()
+    expect(snapshot.buildings[0].sellElapsed).toBe(250)
+    asClient()
+    gameState.simulationTime = 12000
+    commandSync.applyGameStateSnapshot({ buildings: snapshot.buildings })
+    expect(gameState.buildings[0].sellStartTime).toBe(11750)
+  })
+
   it('includes sparse map decals and omits default explosion frame rects', () => {
     gameState.mapBiomeWeights = {}
     gameState.simulationTime = 1000
