@@ -218,21 +218,27 @@ export function openPolicyEditor(options = {}) {
       leafControls(node, label, commit).forEach(control => line.appendChild(control))
       if (depth < MAX_EDITOR_DEPTH) {
         line.appendChild(h('button', {
-          class: 'policy-btn policy-btn--small',
+          class: 'policy-btn policy-btn--small policy-cond__group-action',
           type: 'button',
-          text: '( )',
+          text: 'Group conditions',
           'aria-label': `${label} turn into group`,
           onClick: () => {
             const leaf = node.atom
             delete node.atom
             node.mode = 'and'
-            node.children = [{ not: false, atom: leaf }]
+            node.children = [
+              { not: false, atom: leaf },
+              { not: false, atom: defaultRuleAtom(draft.variant) }
+            ]
             commit()
           }
         }))
       }
     } else {
-      line.appendChild(h('span', { class: 'policy-cond__groupmark', text: node.mode === 'and' ? 'all of' : 'any of' }))
+      line.appendChild(h('span', {
+        class: 'policy-cond__groupmark',
+        text: node.mode === 'and' ? 'Match all conditions' : 'Match any condition'
+      }))
     }
     if (onRemove) {
       line.appendChild(h('button', { class: 'policy-icon-btn', type: 'button', 'aria-label': 'Remove block', text: '×', onClick: onRemove }))
@@ -255,9 +261,9 @@ export function openPolicyEditor(options = {}) {
       ))
     })
     children.appendChild(h('button', {
-      class: 'policy-btn policy-btn--small',
+      class: 'policy-btn policy-btn--small policy-cond__add-action',
       type: 'button',
-      text: '+ block',
+      text: '+ Add condition',
       onClick: () => { node.children.push({ not: false, atom: defaultRuleAtom(draft.variant) }); commit() }
     }))
     group.appendChild(children)
@@ -271,9 +277,9 @@ export function openPolicyEditor(options = {}) {
     wrap.appendChild(conditionNode(tree, 1, label, commit, null, null))
     if (!tree.children) {
       wrap.appendChild(h('button', {
-        class: 'policy-btn policy-btn--small',
+        class: 'policy-btn policy-btn--small policy-cond__add-action',
         type: 'button',
-        text: '+ block',
+        text: '+ Add condition',
         onClick: () => {
           const first = tree.atom
           delete tree.atom
@@ -373,6 +379,14 @@ export function openPolicyEditor(options = {}) {
           render()
         }
       })))
+    block.appendChild(h('p', {
+      class: 'policy-rule__help',
+      text: transition.kind === 'while'
+        ? 'WHILE keeps the target state active for as long as these conditions match.'
+        : transition.kind === 'after'
+          ? 'AFTER waits while the conditions still match, then changes state once.'
+          : 'IF changes state once when these conditions become true.'
+    }))
     block.appendChild(conditionEditor(transition.when, value => { transition.when = value; updateValidity() }, 'Condition'))
     if (transition.kind === 'after') block.appendChild(delayEditor(transition))
     block.appendChild(h('div', { class: 'policy-rule__target' },
@@ -566,6 +580,9 @@ export function openPolicyEditor(options = {}) {
 
   function settingsSection() {
     return h('section', { class: 'policy-settings' },
+      h('div', { class: 'policy-section-heading policy-settings__heading' },
+        h('h3', { text: 'Policy setup' }),
+        h('p', { text: 'Choose what this automation controls and how often it runs.' })),
       h('label', { class: 'policy-field' },
         h('span', { text: 'Name' }),
         h('input', {
@@ -631,7 +648,9 @@ export function openPolicyEditor(options = {}) {
     body.replaceChildren(
       settingsSection(),
       h('section', { class: 'policy-diagram-wrap' },
-        h('h3', { text: 'State machine' }),
+        h('div', { class: 'policy-section-heading' },
+          h('h3', { text: 'How states connect' }),
+          h('p', { text: 'Each numbered state performs an action. Arrows show which rules move automation to another state.' })),
         diagram(),
         h('p', {
           class: 'policy-hint',
@@ -640,7 +659,9 @@ export function openPolicyEditor(options = {}) {
             : `A policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition. A direct order always wins when it is given.`
         })),
       h('section', { class: 'policy-states' },
-        h('h3', { text: 'States' }),
+        h('div', { class: 'policy-section-heading' },
+          h('h3', { text: 'States and rules' }),
+          h('p', { text: 'Set an action for each state, then add IF, WHILE, or AFTER rules to decide what happens next.' })),
         draft.states.map(stateCard),
         h('button', { class: 'policy-btn', type: 'button', text: '+ Add state', onClick: addState }))
     )

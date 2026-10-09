@@ -73,6 +73,24 @@ describe('editor: marking a policy as a build policy', () => {
     expect(saved[0].policy.scope).toBe('global')
   })
 
+  it('groups conditions with a visible logical bracket and an AND/OR choice', () => {
+    const api = editor.openPolicyEditor()
+    const addRule = [...document.querySelectorAll('button')].find(button => button.textContent === '+ rule')
+    addRule.click()
+
+    const groupButton = [...document.querySelectorAll('button')].find(button => button.textContent === 'Group conditions')
+    groupButton.click()
+
+    expect(document.querySelector('.policy-cond__group')).not.toBeNull()
+    expect(document.querySelector('.policy-cond__groupmark').textContent).toBe('Match all conditions')
+    expect(api.getDraft().states[0].transitions[0].when).toMatchObject({ type: 'and' })
+    expect(api.getDraft().states[0].transitions[0].when.of).toHaveLength(2)
+
+    change(document.querySelector('select[aria-label="Condition combine"]'), 'or')
+    expect(document.querySelector('.policy-cond__groupmark').textContent).toBe('Match any condition')
+    expect(api.getDraft().states[0].transitions[0].when.type).toBe('or')
+  })
+
   it('shows the type of an existing policy but does not let it change', () => {
     const build = {
       schemaVersion: 1,
