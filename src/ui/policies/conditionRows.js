@@ -46,7 +46,7 @@ function buildAtomKinds() {
   LEGACY_ATOMS.forEach(atom => kinds.push({
     ...atom,
     buildGroup: atom.group,
-    variants: atom.id === 'always' ? ['unit', 'build'] : ['unit'],
+    variants: atom.id === 'always' ? ['unit', 'build', 'unitBuild'] : ['unit'],
     type: atom.id
   }))
   return kinds
@@ -56,7 +56,7 @@ export const ATOM_KINDS = Object.freeze(buildAtomKinds())
 
 /** Atom kinds a policy variant may use, grouped for a select with option groups. */
 export function atomGroupsFor(variant = 'unit') {
-  const isBuild = variant === 'build'
+  const isBuild = variant === 'build' || variant === 'unitBuild'
   const usable = ATOM_KINDS.filter(kind => kind.variants.includes(variant))
   return Object.entries(GROUPS).map(([id, label]) => ({
     id,
@@ -69,7 +69,7 @@ export const ATOM_GROUPS = Object.freeze(atomGroupsFor('unit'))
 
 /** The condition a new rule starts with. */
 export function defaultRuleAtom(variant = 'unit') {
-  return variant === 'build' ? makeAtom('money') : makeAtom('hp')
+  return variant === 'unit' ? makeAtom('hp') : makeAtom('money')
 }
 
 export function isAtomAvailable(atom, variant) {

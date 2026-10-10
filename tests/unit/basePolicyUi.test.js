@@ -29,7 +29,7 @@ describe('editor: marking a policy as a build policy', () => {
   it('starts as a unit policy and offers the policy type switch for a new draft', () => {
     editor.openPolicyEditor()
     expect(document.getElementById('policyEditorTitle').textContent).toBe('New unit policy')
-    expect([...typeSelect().options].map(item => item.value)).toEqual(['unit', 'build'])
+    expect([...typeSelect().options].map(item => item.value)).toEqual(['unit', 'build', 'unitBuild'])
     expect(document.querySelector('select[aria-label="Scope"]')).not.toBeNull()
   })
 
@@ -49,6 +49,19 @@ describe('editor: marking a policy as a build policy', () => {
     const templateOptions = [...document.querySelectorAll('select[aria-label="Template"] option')].map(item => item.value)
     expect(templateOptions).toContain('build-power-when-short')
     expect(templateOptions).not.toContain('retreat-if-hurt')
+  })
+
+  it('switches to unit build automation with stacking and delivery actions', () => {
+    const api = editor.openPolicyEditor()
+    change(typeSelect(), 'unitBuild')
+    expect(api.getDraft()).toMatchObject({ variant: 'unitBuild', scope: 'global' })
+    expect(document.getElementById('policyEditorTitle').textContent).toBe('New unit build policy')
+    expect(document.body.textContent).toContain('My production queue')
+    const actions = [...document.querySelectorAll('select[aria-label="State 1 action"] option')].map(item => item.value)
+    expect(actions).toContain('buildUnits')
+    expect(actions).not.toContain('buildBuilding')
+    const templates = [...document.querySelectorAll('select[aria-label="Template"] option')].map(item => item.value)
+    expect(templates).toEqual(expect.arrayContaining(['replace-lost-tank', 'harvester-escort-stack', 'harvester-raiders']))
   })
 
   it('can add a rule on available money and the draft stays valid and saveable', () => {

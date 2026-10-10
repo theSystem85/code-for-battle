@@ -13,6 +13,7 @@ const STORAGE_KEY = 'cfb-unit-policies-v1'
 let documents = new Map()
 let globalEnabled = new Set()
 let buildOptIn = new Set()
+let unitBuildOptIn = new Set()
 let sequence = 0
 let version = 0
 const listeners = new Set()
@@ -68,7 +69,8 @@ function persist() {
     store.setItem(STORAGE_KEY, JSON.stringify({
       documents: Array.from(documents.values()),
       enabled: Array.from(globalEnabled),
-      buildOptIn: Array.from(buildOptIn)
+      buildOptIn: Array.from(buildOptIn),
+      unitBuildOptIn: Array.from(unitBuildOptIn)
     }))
   } catch {
     // Storage may be full or blocked. Policies stay in memory for this session.
@@ -80,6 +82,7 @@ export function loadPolicyStore() {
   documents = new Map()
   globalEnabled = new Set()
   buildOptIn = new Set()
+  unitBuildOptIn = new Set()
   if (!store) return
   try {
     const raw = store.getItem(STORAGE_KEY)
@@ -96,11 +99,15 @@ export function loadPolicyStore() {
     ;(parsed.buildOptIn || []).forEach(owner => {
       if (typeof owner === 'string' && owner) buildOptIn.add(normalizePolicyOwner(owner))
     })
+    ;(parsed.unitBuildOptIn || []).forEach(owner => {
+      if (typeof owner === 'string' && owner) unitBuildOptIn.add(normalizePolicyOwner(owner))
+    })
     version += 1
   } catch {
     documents = new Map()
     globalEnabled = new Set()
     buildOptIn = new Set()
+    unitBuildOptIn = new Set()
   }
 }
 
@@ -108,6 +115,7 @@ export function resetPolicyStore() {
   documents = new Map()
   globalEnabled = new Set()
   buildOptIn = new Set()
+  unitBuildOptIn = new Set()
   sequence = 0
   version += 1
 }
@@ -137,12 +145,16 @@ export function isBuildPolicy(policy) {
   return Boolean(policy) && policy.variant === 'build'
 }
 
+export function isUnitBuildPolicy(policy) {
+  return Boolean(policy) && policy.variant === 'unitBuild'
+}
+
 /** Enabled global unit policies. Build policies never reach units. */
 export function listEnabledGlobalPolicies() {
   const result = []
   globalEnabled.forEach(id => {
     const entry = documents.get(id)
-    if (entry && entry.policy.scope === 'global' && !isBuildPolicy(entry.policy)) result.push(entry)
+    if (entry && entry.policy.scope === 'global' && entry.policy.variant === 'unit') result.push(entry)
   })
   return result
 }
@@ -153,6 +165,15 @@ export function listEnabledBuildPolicies(ownerId) {
   globalEnabled.forEach(id => {
     const entry = documents.get(id)
     if (entry && isBuildPolicy(entry.policy) && canCommandPolicy(ownerId, entry.ownerId)) result.push(entry)
+  })
+  return result
+}
+
+export function listEnabledUnitBuildPolicies(ownerId) {
+  const result = []
+  globalEnabled.forEach(id => {
+    const entry = documents.get(id)
+    if (entry && isUnitBuildPolicy(entry.policy) && canCommandPolicy(ownerId, entry.ownerId)) result.push(entry)
   })
   return result
 }
@@ -168,6 +189,19 @@ export function setBuildAutomationOptIn(actorId, enabled, ownerId = actorId) {
   const owner = normalizePolicyOwner(ownerId)
   if (enabled) buildOptIn.add(owner)
   else buildOptIn.delete(owner)
+  notify()
+  return { ok: true }
+}
+
+export function isUnitBuildAutomationOptedIn(ownerId) {
+  return Boolean(ownerId) && unitBuildOptIn.has(normalizePolicyOwner(ownerId))
+}
+
+export function setUnitBuildAutomationOptIn(actorId, enabled, ownerId = actorId) {
+  if (!actorId || !canCommandPolicy(actorId, ownerId)) return { ok: false, reason: 'not-owner' }
+  const owner = normalizePolicyOwner(ownerId)
+  if (enabled) unitBuildOptIn.add(owner)
+  else unitBuildOptIn.delete(owner)
   notify()
   return { ok: true }
 }
@@ -233,7 +267,7 @@ export function makeBinding(policy, source) {
 export function applyPolicyToUnit(actorId, unit, policyId) {
   const entry = documents.get(policyId)
   if (!entry) return { ok: false, reason: 'missing' }
-  if (isBuildPolicy(entry.policy)) return { ok: false, reason: 'build-policy' }
+  if (entry.policy.variant !== 'unit') return { ok: false, reason: 'build-policy' }
   if (entry.policy.scope !== 'perUnit') return { ok: false, reason: 'not-per-unit' }
   if (!unit || !canCommandPolicy(actorId, unit.owner) || !canCommandPolicy(actorId, entry.ownerId)) {
     return { ok: false, reason: 'not-owner' }

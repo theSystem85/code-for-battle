@@ -25,7 +25,7 @@ const COMPARE_FIELDS = Object.freeze(Object.keys(NUMERIC_FIELDS))
 export const POLICY_SCHEMA_VERSION = 1
 export const MAX_POLICY_STATES = 7
 
-export const POLICY_VARIANTS = Object.freeze(['unit', 'build'])
+export const POLICY_VARIANTS = Object.freeze(['unit', 'build', 'unitBuild'])
 export const POLICY_SCOPES = Object.freeze(['global', 'perUnit'])
 export const POLICY_EXECUTIONS = Object.freeze(['oneTime', 'continuous'])
 export const TRANSITION_KINDS = Object.freeze(['if', 'while', 'after'])
@@ -216,11 +216,11 @@ export function validatePolicy(policy) {
     errors.push(error('variant_invalid', `Unknown policy variant "${policy.variant}".`, 'variant'))
   }
 
-  const variant = policy.variant === 'build' ? 'build' : 'unit'
+  const variant = POLICY_VARIANTS.includes(policy.variant) ? policy.variant : 'unit'
   if (!POLICY_SCOPES.includes(policy.scope)) {
     errors.push(error('scope_missing', 'A unit policy needs a scope: global or per unit.', 'scope'))
-  } else if (variant === 'build' && policy.scope !== 'global') {
-    errors.push(error('build_scope', 'A build policy applies to the whole base, so its scope must be global.', 'scope'))
+  } else if (variant !== 'unit' && policy.scope !== 'global') {
+    errors.push(error('build_scope', 'Build automation applies to the whole production system, so its scope must be global.', 'scope'))
   }
   if (!POLICY_EXECUTIONS.includes(policy.execution)) {
     errors.push(error('execution_invalid', 'The policy needs an execution mode: one-time or continuous.', 'execution'))

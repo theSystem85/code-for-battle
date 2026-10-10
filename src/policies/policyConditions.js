@@ -24,9 +24,10 @@ export const GROUPS = Object.freeze({
 /** Policy variants a catalog entry may appear in. Entries without `variants` are unit-only. */
 export const VARIANT_UNIT = 'unit'
 export const VARIANT_BUILD = 'build'
+export const VARIANT_UNIT_BUILD = 'unitBuild'
 const UNIT_ONLY = Object.freeze([VARIANT_UNIT])
-const BUILD_ONLY = Object.freeze([VARIANT_BUILD])
-const BOTH_VARIANTS = Object.freeze([VARIANT_UNIT, VARIANT_BUILD])
+const AUTOMATION_ONLY = Object.freeze([VARIANT_BUILD, VARIANT_UNIT_BUILD])
+const BOTH_VARIANTS = Object.freeze([VARIANT_UNIT, VARIANT_BUILD, VARIANT_UNIT_BUILD])
 
 export const ENEMY_UNIT_TYPES = Object.freeze([
   { value: 'any', label: 'any unit' },
@@ -40,9 +41,19 @@ export const ENEMY_UNIT_TYPES = Object.freeze([
   { value: 'tankerTruck', label: 'Tanker truck' },
   { value: 'ammunitionTruck', label: 'Ammunition truck' },
   { value: 'recoveryTank', label: 'Recovery tank' },
+  { value: 'mineLayer', label: 'Mine layer' },
+  { value: 'mineSweeper', label: 'Mine sweeper' },
   { value: 'apache', label: 'Apache' },
   { value: 'f22Raptor', label: 'F-22 Raptor' },
-  { value: 'f35', label: 'F-35' }
+  { value: 'f35', label: 'F-35' },
+  { value: 'destroyer', label: 'Destroyer' },
+  { value: 'battleship', label: 'Battleship' },
+  { value: 'submarine', label: 'Submarine' },
+  { value: 'aircraftCarrier', label: 'Aircraft carrier' },
+  { value: 'supplyShip', label: 'Supply ship' },
+  { value: 'hovercraft', label: 'Hovercraft' },
+  { value: 'vehicleFerry', label: 'Vehicle ferry' },
+  { value: 'navalMineLayer', label: 'Naval mine layer' }
 ])
 
 export const BUILDING_TYPES = Object.freeze([
@@ -107,11 +118,11 @@ export const NUMERIC_FIELDS = Object.freeze({
   rotation: { group: 'internal', label: 'Wagon rotation (°)', circular: true, modes: [ABSOLUTE], absRange: [0, 360], absTolerance: 5, absSuffix: '°' },
   turretRotation: { group: 'internal', label: 'Turret rotation (°)', circular: true, modes: [ABSOLUTE, RELATIVE], absRange: [0, 360], range: [-180, 180], tolerance: 5, absTolerance: 5, absSuffix: '°', relSuffix: '° from wagon', relativeAsDegrees: true },
   money: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Available money', modes: [ABSOLUTE], absRange: [-1000000000, 1000000000], absTolerance: 0.5 },
-  moneyPerMinute: { group: 'external', buildGroup: 'base', variants: BUILD_ONLY, label: 'Money inflow per minute', modes: [ABSOLUTE], absRange: [0, 1000000000], absTolerance: 0.5, absSuffix: '$/min' },
+  moneyPerMinute: { group: 'external', buildGroup: 'base', variants: AUTOMATION_ONLY, label: 'Money inflow per minute', modes: [ABSOLUTE], absRange: [0, 1000000000], absTolerance: 0.5, absSuffix: '$/min' },
   power: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Power surplus', modes: [ABSOLUTE], absRange: [-100000, 100000], absTolerance: 0.5 },
-  unitCount: { group: 'external', buildGroup: 'base', variants: BUILD_ONLY, label: 'Number of my units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
-  enemyUnitCount: { group: 'sensing', buildGroup: 'enemies', variants: BUILD_ONLY, label: 'Number of visible enemy units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
-  enemyBuildingCount: { group: 'sensing', buildGroup: 'enemies', variants: BUILD_ONLY, label: 'Number of visible enemy buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
+  unitCount: { group: 'external', buildGroup: 'base', variants: AUTOMATION_ONLY, label: 'Number of my units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  enemyUnitCount: { group: 'sensing', buildGroup: 'enemies', variants: AUTOMATION_ONLY, label: 'Number of visible enemy units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  enemyBuildingCount: { group: 'sensing', buildGroup: 'enemies', variants: AUTOMATION_ONLY, label: 'Number of visible enemy buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
   buildingCount: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Number of my buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
   distance: { group: 'sensing', label: 'Distance to a visible…', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', params: [{ key: 'kind', label: 'target', options: KIND_OPTIONS.map(item => ({ value: item.value, label: item.label })), default: 'unit' }, { key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   enemyDistance: { group: 'sensing', label: 'Nearest enemy (tiles)', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', legacy: true }
@@ -122,6 +133,7 @@ const SERVICE_PARAM = { key: 'building', label: 'of a', options: SERVICE_BUILDIN
 
 /** Yes/no checks. `available` lists unit types that can show the condition; empty means all. */
 export const CHECKS = Object.freeze({
+  ownUnitDestroyed: { group: 'external', buildGroup: 'base', variants: [VARIANT_UNIT_BUILD], label: 'My unit was destroyed', params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   airborne: { group: 'internal', label: 'Is airborne' },
   moving: { group: 'internal', label: 'Is moving' },
   attacking: { group: 'internal', label: 'Is attacking', params: [{ key: 'kind', label: 'a', options: KIND_OPTIONS, default: 'unit' }] },
@@ -320,6 +332,10 @@ function describeCheck(condition) {
   const meta = CHECKS[condition.check]
   if (!meta) return 'condition'
   switch (condition.check) {
+    case 'ownUnitDestroyed': {
+      const type = paramValue(condition, 'unitType')
+      return type === 'any' ? 'one of my units was destroyed' : `my ${optionLabel(ENEMY_UNIT_TYPES, type)} was destroyed`
+    }
     case 'airborne': return 'the unit is airborne'
     case 'moving': return 'the unit is moving'
     case 'attacking': return `the unit is attacking ${optionLabel(KIND_OPTIONS, paramValue(condition, 'kind'))}`

@@ -6,12 +6,13 @@ const buildNow = buildingType => ({ type: 'buildBuilding', buildingType })
 
 export function createBlankPolicy(id, variant = 'unit') {
   const isBuild = variant === 'build'
+  const isUnitBuild = variant === 'unitBuild'
   return {
     schemaVersion: POLICY_SCHEMA_VERSION,
     id,
-    name: isBuild ? 'New base policy' : 'New policy',
-    variant: isBuild ? 'build' : 'unit',
-    scope: isBuild ? 'global' : 'perUnit',
+    name: isBuild ? 'New base policy' : isUnitBuild ? 'New unit build policy' : 'New policy',
+    variant: isBuild ? 'build' : isUnitBuild ? 'unitBuild' : 'unit',
+    scope: isBuild || isUnitBuild ? 'global' : 'perUnit',
     execution: 'continuous',
     folderId: null,
     initialStateId: 'start',
@@ -66,6 +67,38 @@ export const POLICY_TEMPLATES = Object.freeze([
     label: 'Move 2 tiles forward after 10 seconds',
     description: 'Does nothing at first. 10 seconds after it is applied the unit moves 2 tiles forward, once.',
     create: id => watchAndReact(id, 'Move forward after 10s', 'perUnit', 'oneTime', 'after', { type: 'always' }, { type: 'moveForward', tiles: 2 }, 'Move forward', 10)
+  },
+  {
+    variant: 'unitBuild',
+    id: 'replace-lost-tank',
+    label: 'Replace a lost Tank V1 with Tank V2',
+    description: 'Queues a Tank V2 whenever one of your Tank V1 units is destroyed.',
+    create: id => ({
+      schemaVersion: POLICY_SCHEMA_VERSION, id, name: 'Upgrade destroyed Tank V1', variant: 'unitBuild', scope: 'global',
+      execution: 'continuous', folderId: null, initialStateId: 'watch',
+      states: [
+        { id: 'watch', name: 'Watch losses', effect: null, transitions: [{ id: 'lost', kind: 'if', when: { type: 'check', check: 'ownUnitDestroyed', unitType: 'tank_v1' }, to: 'replace' }] },
+        { id: 'replace', name: 'Build Tank V2', effect: { type: 'buildUnits', unitType: 'tank-v2', quantity: 1, delivery: 'defendBase' }, transitions: [{ id: 'watch-again', kind: 'after', when: { type: 'always' }, delaySeconds: 1, to: 'watch' }] }
+      ]
+    })
+  },
+  {
+    variant: 'unitBuild',
+    id: 'harvester-escort-stack',
+    label: 'Build a harvester escort group',
+    description: 'Queues three tanks and sends them to defend your nearest harvester once funds are available.',
+    create: id => watchAndReact(id, 'Harvester escort group', 'global', 'oneTime', 'if',
+      { type: 'compare', field: 'money', op: '>=', value: 4000 },
+      { type: 'buildUnits', unitType: 'tank', quantity: 3, delivery: 'defendHarvester' }, 'Build escort', undefined, 'unitBuild')
+  },
+  {
+    variant: 'unitBuild',
+    id: 'harvester-raiders',
+    label: 'Build anti-harvester raiders',
+    description: 'Queues two rocket tanks and orders them to attack the nearest enemy harvester.',
+    create: id => watchAndReact(id, 'Harvester raiders', 'global', 'oneTime', 'if',
+      { type: 'compare', field: 'enemyUnitCount', op: '>=', value: 1, unitType: 'harvester' },
+      { type: 'buildUnits', unitType: 'rocketTank', quantity: 2, delivery: 'attackHarvester' }, 'Build raiders', undefined, 'unitBuild')
   },
   {
     variant: 'build',

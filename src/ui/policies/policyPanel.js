@@ -8,9 +8,11 @@ import { gameState } from '../../gameState.js'
 import {
   deletePolicy,
   isBuildAutomationOptedIn,
+  isUnitBuildAutomationOptedIn,
   isPolicyEnabled,
   listPolicies,
   setBuildAutomationOptIn,
+  setUnitBuildAutomationOptIn,
   setPolicyEnabled,
   subscribePolicyStore
 } from '../../policies/policyStore.js'
@@ -83,6 +85,7 @@ function policyCard(entry) {
   const enabled = isPolicyEnabled(policy.id)
   const isGlobal = policy.scope === 'global'
   const isBuild = policy.variant === 'build'
+  const isUnitBuild = policy.variant === 'unitBuild'
   const card = h('article', { class: `policy-card${enabled ? ' is-on' : ''}`, dataset: { policyId: policy.id } })
   const top = h('div', { class: 'policy-card__top' }, h('span', { text: policy.name }))
   if (isGlobal) {
@@ -102,16 +105,18 @@ function policyCard(entry) {
       class: 'policy-switch__label',
       text: isBuild
         ? (enabled ? 'On · applied to my base' : 'Off · click to apply')
-        : (enabled ? 'On · click to disable' : 'Off · click to enable')
+        : isUnitBuild
+          ? (enabled ? 'On · production ready' : 'Off · click to apply')
+          : (enabled ? 'On · click to disable' : 'Off · click to enable')
     })))
   }
   card.appendChild(top)
   card.appendChild(h('div', {
     class: 'policy-card__meta',
-    text: `${isBuild ? 'My base' : isGlobal ? 'All my units' : 'One unit'} · ${policy.execution === 'oneTime' ? 'One-time' : 'Continuous'}${isGlobal ? '' : ' · apply with right-click on a unit'}`
+    text: `${isBuild ? 'My base' : isUnitBuild ? 'Unit production' : isGlobal ? 'All my units' : 'One unit'} · ${policy.execution === 'oneTime' ? 'One-time' : 'Continuous'}${isGlobal ? '' : ' · apply with right-click on a unit'}`
   }))
-  if (isBuild) {
-    card.appendChild(h('div', { class: 'policy-card__status', dataset: { role: 'base-status', policyId: policy.id }, text: baseStatusText(policy.id, enabled) }))
+  if (isBuild || isUnitBuild) {
+    card.appendChild(h('div', { class: 'policy-card__status', dataset: { role: 'base-status', policyId: policy.id }, text: automationStatusText(policy, enabled) }))
   } else {
     card.appendChild(activityCounts(policy.id))
   }
@@ -135,17 +140,19 @@ function policyCard(entry) {
   return card
 }
 
-function baseStatusText(policyId, enabled) {
-  if (!enabled) return 'Not applied to my base'
-  if (!isBuildAutomationOptedIn(humanPlayer())) return 'Waiting: base automation is off'
-  return describeBasePolicyStatus(getBasePolicyStatus(policyId))
+function automationStatusText(policy, enabled) {
+  if (!enabled) return policy.variant === 'unitBuild' ? 'Not applied to unit production' : 'Not applied to my base'
+  if (policy.variant === 'unitBuild' && !isUnitBuildAutomationOptedIn(humanPlayer())) return 'Waiting: unit build automation is off'
+  if (policy.variant === 'build' && !isBuildAutomationOptedIn(humanPlayer())) return 'Waiting: base automation is off'
+  return describeBasePolicyStatus(getBasePolicyStatus(policy.id))
 }
 
 /** Update the live status line of every build policy card in place. */
 export function refreshBasePolicyStatus() {
   if (!list) return
   list.querySelectorAll('[data-role="base-status"]').forEach(element => {
-    const text = baseStatusText(element.dataset.policyId, isPolicyEnabled(element.dataset.policyId))
+    const entry = listPolicies(humanPlayer()).find(item => item.policy.id === element.dataset.policyId)
+    const text = entry ? automationStatusText(entry.policy, isPolicyEnabled(entry.policy.id)) : 'Not running'
     if (element.textContent !== text) element.textContent = text
   })
 }
@@ -169,6 +176,20 @@ function baseAutomationSwitch() {
     h('p', { class: 'policy-card__meta', text: 'Build policies only act on your own base, and only while this is on. Every player chooses for their own base. The normal build queue still decides what is allowed.' }))
 }
 
+function unitBuildAutomationSwitch() {
+  const optedIn = isUnitBuildAutomationOptedIn(humanPlayer())
+  return h('div', { class: `policy-base-optin${optedIn ? ' is-on' : ''}`, id: 'unitBuildAutomationOptIn' },
+    h('div', { class: 'policy-card__top' },
+      h('span', { text: 'Unit build automation' }),
+      h('button', {
+        class: 'policy-switch', type: 'button', role: 'switch', id: 'unitBuildAutomationSwitch',
+        'aria-checked': String(optedIn), 'aria-label': 'Run unit build policies',
+        onClick: () => setUnitBuildAutomationOptIn(humanPlayer(), !optedIn)
+      }, h('span', { class: 'policy-switch__track', 'aria-hidden': 'true' }),
+      h('span', { class: 'policy-switch__label', text: optedIn ? 'On · my factories' : 'Off · click to opt in' }))),
+    h('p', { class: 'policy-card__meta', text: 'Stacks units through the normal production queue, then gives each finished unit its configured attack, defense, or rally order.' }))
+}
+
 function sectionHeading(text, id) {
   return h('h3', { class: 'policy-panel__section', id, text })
 }
@@ -176,13 +197,19 @@ function sectionHeading(text, id) {
 function renderList() {
   if (!list) return
   const entries = listPolicies(humanPlayer())
-  const unitEntries = entries.filter(entry => entry.policy.variant !== 'build')
+  const unitEntries = entries.filter(entry => entry.policy.variant === 'unit')
   const buildEntries = entries.filter(entry => entry.policy.variant === 'build')
+  const unitBuildEntries = entries.filter(entry => entry.policy.variant === 'unitBuild')
   list.replaceChildren(
     sectionHeading('Unit policies', 'unitPoliciesHeading'),
     ...(unitEntries.length
       ? unitEntries.map(policyCard)
       : [h('p', { class: 'policy-panel__empty', text: 'No unit policies yet. Create one to program your units.' })]),
+    sectionHeading('Unit build policies', 'unitBuildPoliciesHeading'),
+    unitBuildAutomationSwitch(),
+    ...(unitBuildEntries.length
+      ? unitBuildEntries.map(policyCard)
+      : [h('p', { class: 'policy-panel__empty', text: 'No unit build policies yet. Create one to automate production and delivery orders.' })]),
     sectionHeading('Base policies', 'basePoliciesHeading'),
     baseAutomationSwitch(),
     ...(buildEntries.length
@@ -251,6 +278,11 @@ export function installPolicyPanel() {
         id: 'newBuildPolicyBtn',
         text: '+ New build policy',
         onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'build' }) }
+      }),
+      h('button', {
+        class: 'policy-btn policy-btn--primary', type: 'button', id: 'newUnitBuildPolicyBtn',
+        text: '+ New unit build policy',
+        onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'unitBuild' }) }
       })))
   document.body.appendChild(panel)
 

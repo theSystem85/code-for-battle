@@ -52,6 +52,8 @@ import { updateUnitPolicies } from './policies/policyEngine.js'
 import { updateBasePolicies } from './policies/basePolicyEngine.js'
 import { installBasePolicyGameBindings } from './policies/basePolicyGameBindings.js'
 import { installPolicyGameBindings } from './policies/policyGameBindings.js'
+import { executeUnitCommand } from './policies/unitCommandApi.js'
+import { applyUnitBuildDelivery, registerUnitBuildDeliveryHandler } from './policies/unitBuildDelivery.js'
 import {
   updateCameraFollow,
   updateOreSpread,
@@ -90,11 +92,69 @@ import {
 const EMPTY_BUILDINGS = []
 const policyContext = installPolicyGameBindings({ units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS, commands: null, bullets: null, now: 0 })
 const basePolicyContext = installBasePolicyGameBindings({ owner: null, units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS })
+const unitBuildDeliveryContext = { game: null }
+
+function nearestToUnit(unit, entities, buildings = false) {
+  let nearest = null
+  let nearestDistance = Infinity
+  const unitX = unit.x + TILE_SIZE / 2
+  const unitY = unit.y + TILE_SIZE / 2
+  for (let i = 0; i < entities.length; i++) {
+    const entity = entities[i]
+    const x = buildings ? (entity.x + (entity.width || 1) / 2) * TILE_SIZE : entity.x + TILE_SIZE / 2
+    const y = buildings ? (entity.y + (entity.height || 1) / 2) * TILE_SIZE : entity.y + TILE_SIZE / 2
+    const distance = (x - unitX) ** 2 + (y - unitY) ** 2
+    if (distance < nearestDistance) {
+      nearest = entity
+      nearestDistance = distance
+    }
+  }
+  return nearest
+}
+
+registerUnitBuildDeliveryHandler((unit, delivery) => {
+  const currentGame = unitBuildDeliveryContext.game
+  if (!currentGame) return false
+  const allBuildings = (currentGame.buildings || EMPTY_BUILDINGS).concat(currentGame.factories || EMPTY_BUILDINGS)
+  const hostileUnits = mainUnits.filter(other => other && other.health > 0 && other.owner !== unit.owner)
+  const hostileBuildings = allBuildings.filter(other => other && other.health > 0 && other.owner && other.owner !== unit.owner)
+  const friendlyHarvesters = mainUnits.filter(other => other && other.health > 0 && other.owner === unit.owner && other.type === 'harvester' && other !== unit)
+  const ownBase = allBuildings.find(other => other && other.health > 0 && other.owner === unit.owner && other.type === 'constructionYard')
+  let command = 'attackAndChase'
+  let target = null
+  if (delivery === 'attackHarvester') target = nearestToUnit(unit, hostileUnits.filter(other => other.type === 'harvester'))
+  else if (delivery === 'attackBase') {
+    const enemyBases = hostileBuildings.filter(other => other.type === 'constructionYard')
+    target = nearestToUnit(unit, enemyBases.length ? enemyBases : hostileBuildings, true)
+  }
+  else if (delivery === 'defendHarvester') {
+    command = 'protect'
+    target = nearestToUnit(unit, friendlyHarvesters)
+  } else if (delivery === 'defendBase') {
+    if (!ownBase) return false
+    const commands = getUnitCommandsHandler()
+    commands.handleMovementCommand([unit], (ownBase.x + (ownBase.width || 1) / 2) * TILE_SIZE,
+      (ownBase.y + (ownBase.height || 1) / 2) * TILE_SIZE, currentGame.mapGrid)
+    return true
+  } else target = nearestToUnit(unit, hostileUnits) || nearestToUnit(unit, hostileBuildings, true)
+  if (!target) return false
+  const context = {
+    ...policyContext,
+    now: getSimulationTime(currentGame),
+    units: mainUnits,
+    buildings: currentGame.buildings || EMPTY_BUILDINGS,
+    factories: currentGame.factories || EMPTY_BUILDINGS,
+    mapGrid: currentGame.mapGrid,
+    commands: getUnitCommandsHandler()
+  }
+  return executeUnitCommand(command, unit, { target }, context)
+})
 const DESTRUCTION_FREEZE_SMOKE_INTERVAL_MS = 180
 const DESTRUCTION_FREEZE_SMOKE_COUNT = 3
 const DESTRUCTION_FREEZE_SMOKE_SHADE = 0.9
 
 export const updateGame = logPerformance(function updateGame(delta, mapGrid, factories, units, bullets, gameState) {
+  unitBuildDeliveryContext.game = gameState
   framePhases.begin(FRAME_PHASE.sim)
   try {
     const now = getSimulationTime(gameState)
@@ -328,7 +388,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           })
         } else if (cmd.commandType === COMMAND_TYPES.UNIT_SPAWN && cmd.payload) {
           // Client requests host to spawn a unit
-          const { unitType, factoryId, rallyPoint } = cmd.payload
+          const { unitType, factoryId, rallyPoint, automationDelivery } = cmd.payload
           const partyId = cmd.sourcePartyId
           const unitCost = Number(unitCosts?.[unitType]) || 0
 
@@ -365,6 +425,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             if (newUnit) {
               newUnit.owner = partyId
               mainUnits.push(newUnit)
+              applyUnitBuildDelivery(newUnit, automationDelivery)
               recordReplayCommand({
                 type: 'unit_spawn',
                 owner: partyId,

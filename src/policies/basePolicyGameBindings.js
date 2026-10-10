@@ -16,6 +16,7 @@ import { isPositionVisibleToPlayer } from '../game/shadowOfWar.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive } from '../replaySystem.js'
 import { showNotification } from '../ui/notifications.js'
+import { unitCosts } from '../units.js'
 
 function partyState(owner) {
   const parties = gameState.partyStates
@@ -45,6 +46,45 @@ function getMoneyEarned(owner) {
 function findButton(type) {
   if (typeof document === 'undefined') return null
   return document.querySelector(`.production-button[data-building-type="${type}"]`)
+}
+
+function findUnitButton(type) {
+  if (typeof document === 'undefined') return null
+  return document.querySelector(`.production-button[data-unit-type="${type}"]`)
+}
+
+function createUnitBuildAdapter() {
+  return {
+    lockReason() {
+      if (gameState.gamePaused) return 'the game is paused'
+      if (isReplayModeActive() || isReplayInteractionLocked()) return 'a replay is running'
+      if (isLocalPartyAutomationLocked()) return 'an AI controls this party'
+      return null
+    },
+    isAvailable(type) {
+      const button = findUnitButton(type)
+      return Boolean(button) && !button.classList.contains('disabled') && typeof unitCosts[type] === 'number'
+    },
+    queueLength() {
+      return productionQueue.unitItems.length
+    },
+    queue(order) {
+      const button = findUnitButton(order.unitType)
+      if (!button) return false
+      const before = productionQueue.unitItems.length
+      for (let i = 0; i < order.quantity; i++) {
+        productionQueue.addItem(order.unitType, button, false, null, null, {
+          source: 'policy',
+          automationDelivery: order.delivery
+        })
+      }
+      const accepted = productionQueue.unitItems.length - before
+      if (accepted !== order.quantity) return false
+      const label = button.getAttribute('aria-label') || order.unitType
+      showNotification(`Unit build automation queued ${order.quantity}× ${label}`)
+      return true
+    }
+  }
 }
 
 function createBuildAdapter(context) {
@@ -112,5 +152,6 @@ export function installBasePolicyGameBindings(context) {
   context.getMoneyEarned = getMoneyEarned
   context.isPositionVisible = (owner, px, py) => isPositionVisibleToPlayer(gameState, context.mapGrid, px, py)
   context.build = createBuildAdapter(context)
+  context.unitBuild = createUnitBuildAdapter()
   return context
 }

@@ -13,8 +13,31 @@ export const EFFECT_GROUPS = Object.freeze({
   movement: 'Movement',
   air: 'Air',
   service: 'Service and support',
-  construction: 'Base construction'
+  construction: 'Base construction',
+  production: 'Unit production'
 })
+
+export const UNIT_BUILDABLE_TYPES = Object.freeze([
+  { value: 'tank', label: 'Tank V1' }, { value: 'tank-v2', label: 'Tank V2' }, { value: 'tank-v3', label: 'Tank V3' },
+  { value: 'rocketTank', label: 'Rocket tank' }, { value: 'howitzer', label: 'Howitzer' }, { value: 'harvester', label: 'Harvester' },
+  { value: 'ambulance', label: 'Ambulance' }, { value: 'tankerTruck', label: 'Tanker truck' },
+  { value: 'ammunitionTruck', label: 'Ammunition truck' }, { value: 'recoveryTank', label: 'Recovery tank' },
+  { value: 'mineLayer', label: 'Mine layer' }, { value: 'mineSweeper', label: 'Mine sweeper' },
+  { value: 'apache', label: 'Apache' }, { value: 'f22Raptor', label: 'F-22 Raptor' }, { value: 'f35', label: 'F-35' },
+  { value: 'destroyer', label: 'Destroyer' }, { value: 'battleship', label: 'Battleship' }, { value: 'submarine', label: 'Submarine' },
+  { value: 'aircraftCarrier', label: 'Aircraft carrier' }, { value: 'supplyShip', label: 'Supply ship' },
+  { value: 'hovercraft', label: 'Hovercraft' }, { value: 'vehicleFerry', label: 'Vehicle ferry' },
+  { value: 'navalMineLayer', label: 'Naval mine layer' }
+])
+
+export const UNIT_DELIVERY_ORDERS = Object.freeze([
+  { value: 'factoryRally', label: 'Use factory rally point' },
+  { value: 'attackNearest', label: 'Attack nearest enemy' },
+  { value: 'attackHarvester', label: 'Attack enemy harvester' },
+  { value: 'attackBase', label: 'Attack enemy base' },
+  { value: 'defendHarvester', label: 'Defend nearest own harvester' },
+  { value: 'defendBase', label: 'Defend own base' }
+])
 
 /** Buildings a build policy may order. Streets and shipyards need a drag or water placement and are not offered. */
 export const BUILDABLE_TYPES = Object.freeze([
@@ -83,6 +106,18 @@ export const EFFECTS = Object.freeze({
     command: 'buildBuilding',
     repeat: 'idle',
     params: [{ key: 'buildingType', label: 'building', options: BUILDABLE_TYPES, default: 'powerPlant' }]
+  },
+  buildUnits: {
+    variant: 'unitBuild',
+    group: 'production',
+    label: 'Build units',
+    command: 'buildUnits',
+    repeat: 'idle',
+    params: [
+      { key: 'unitType', label: 'unit', options: UNIT_BUILDABLE_TYPES, default: 'tank' },
+      { key: 'quantity', label: 'units', min: 1, max: 20, default: 1 },
+      { key: 'delivery', label: 'then', options: UNIT_DELIVERY_ORDERS, default: 'factoryRally' }
+    ]
   }
 })
 

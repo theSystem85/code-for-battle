@@ -275,14 +275,14 @@ export function broadcastProductionStart(productionType, itemType, factoryId, pa
  * @param {string} factoryId - ID of the factory to spawn from
  * @param {Object} rallyPoint - Optional rally point {x, y}
  */
-export function broadcastUnitSpawn(unitType, factoryId, rallyPoint) {
+export function broadcastUnitSpawn(unitType, factoryId, rallyPoint, automationDelivery = null) {
   if (!hasActiveRemoteSession()) {
     return
   }
 
   broadcastGameCommand(
     COMMAND_TYPES.UNIT_SPAWN,
-    { unitType, factoryId, rallyPoint },
+    { unitType, factoryId, rallyPoint, ...(automationDelivery ? { automationDelivery } : {}) },
     gameState.humanPlayer
   )
 }

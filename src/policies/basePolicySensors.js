@@ -41,6 +41,10 @@ const counts = {
   enemyBuildings: new Map()
 }
 
+const previousOwnUnits = new Map()
+const destroyedOwnTypes = new Set()
+let hasUnitSnapshot = false
+
 const history = {
   times: new Float64Array(MAX_SAMPLES),
   totals: new Float64Array(MAX_SAMPLES),
@@ -56,6 +60,9 @@ export function resetBaseSensors() {
   scope.context = null
   scope.ownValid = false
   scope.enemyValid = false
+  previousOwnUnits.clear()
+  destroyedOwnTypes.clear()
+  hasUnitSnapshot = false
 }
 
 function sampleAt(offsetFromOldest) {
@@ -110,6 +117,25 @@ export function beginBaseScope(context, owner, now) {
   scope.now = now
   scope.ownValid = false
   scope.enemyValid = false
+  destroyedOwnTypes.clear()
+  const current = new Map()
+  const units = context.units || []
+  for (let i = 0; i < units.length; i++) {
+    const unit = units[i]
+    if (unit && unit.id && unit.health > 0 && !unit.embarkedOnId && sameParty(unit.owner, owner)) current.set(unit.id, unit.type)
+  }
+  if (hasUnitSnapshot) {
+    previousOwnUnits.forEach((type, id) => {
+      if (!current.has(id)) {
+        destroyedOwnTypes.add(type)
+        destroyedOwnTypes.add('any')
+        if (type === 'tank') destroyedOwnTypes.add('tank_v1')
+      }
+    })
+  }
+  previousOwnUnits.clear()
+  current.forEach((type, id) => previousOwnUnits.set(id, type))
+  hasUnitSnapshot = true
   if (typeof context.getMoneyEarned === 'function') {
     const total = context.getMoneyEarned(owner)
     if (typeof total === 'number' && Number.isFinite(total)) recordMoney(now, total)
@@ -176,6 +202,9 @@ function ensureEnemy() {
 }
 
 export function measureBaseLeaf(condition) {
+  if (condition.type === 'check' && condition.check === 'ownUnitDestroyed') {
+    return destroyedOwnTypes.has(paramValue(condition, 'unitType'))
+  }
   if (condition.type !== 'compare') return undefined
   const { context, owner } = scope
   if (!context) return undefined

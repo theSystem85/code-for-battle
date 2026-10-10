@@ -165,7 +165,9 @@ describe('build policy schema', () => {
     const blank = createBlankPolicy('b', 'build')
     expect(validatePolicy(blank).valid).toBe(true)
     expect(templatesForVariant('unit').every(t => t.create('x').variant === 'unit')).toBe(true)
-    expect(POLICY_TEMPLATES.length).toBe(templatesForVariant('unit').length + templates.length)
+    expect(POLICY_TEMPLATES.length).toBe(
+      templatesForVariant('unit').length + templates.length + templatesForVariant('unitBuild').length
+    )
   })
 })
 

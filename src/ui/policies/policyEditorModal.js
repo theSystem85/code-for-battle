@@ -91,7 +91,7 @@ export function openPolicyEditor(options = {}) {
     draft = clone(getPolicyDocument(options.policyId))
     isNew = false
   } else {
-    const wantedVariant = options.variant === 'build' ? 'build' : 'unit'
+    const wantedVariant = ['build', 'unitBuild'].includes(options.variant) ? options.variant : 'unit'
     const template = templatesForVariant(wantedVariant).find(item => item.id === options.templateId)
     draft = template ? template.create(createPolicyId()) : createBlankPolicy(createPolicyId(), wantedVariant)
   }
@@ -125,10 +125,13 @@ export function openPolicyEditor(options = {}) {
   document.body.appendChild(backdrop)
 
   const isBuildDraft = () => draft.variant === 'build'
+  const isUnitBuildDraft = () => draft.variant === 'unitBuild'
+  const isAutomationDraft = () => isBuildDraft() || isUnitBuildDraft()
 
   function updateTitle() {
-    titleEl.textContent = `${isNew ? 'New' : 'Edit'} ${isBuildDraft() ? 'build (base) policy' : 'unit policy'}`
-    dialog.classList.toggle('is-build-policy', isBuildDraft())
+    const kind = isBuildDraft() ? 'build (base) policy' : isUnitBuildDraft() ? 'unit build policy' : 'unit policy'
+    titleEl.textContent = `${isNew ? 'New' : 'Edit'} ${kind}`
+    dialog.classList.toggle('is-build-policy', isAutomationDraft())
   }
 
   function updateValidity() {
@@ -469,7 +472,7 @@ export function openPolicyEditor(options = {}) {
         state.transitions.push({
           id: nextId('rule', allTransitionIds(draft)),
           kind: 'if',
-          when: isBuildDraft() ? defaultRuleAtom('build') : { type: 'compare', field: 'hp', op: '<', value: 0.25 },
+          when: isAutomationDraft() ? defaultRuleAtom(draft.variant) : { type: 'compare', field: 'hp', op: '<', value: 0.25 },
           to: target.id
         })
         render()
@@ -605,15 +608,16 @@ export function openPolicyEditor(options = {}) {
               render()
             }
           },
-          option('unit', 'Unit policy (controls my units)', !isBuildDraft()),
-          option('build', 'Build policy (automates my base)', isBuildDraft())))
+          option('unit', 'Unit control policy (controls my units)', draft.variant === 'unit'),
+          option('build', 'Base build policy (automates buildings)', isBuildDraft()),
+          option('unitBuild', 'Unit build policy (production + delivery)', isUnitBuildDraft())))
         : h('div', { class: 'policy-field' },
           h('span', { text: 'Policy type' }),
-          h('span', { class: 'policy-editor__chip', text: isBuildDraft() ? 'Build policy (base)' : 'Unit policy' })),
-      isBuildDraft()
+          h('span', { class: 'policy-editor__chip', text: isBuildDraft() ? 'Build policy (base)' : isUnitBuildDraft() ? 'Unit build policy' : 'Unit control policy' })),
+      isAutomationDraft()
         ? h('div', { class: 'policy-field' },
           h('span', { text: 'Applies to' }),
-          h('span', { class: 'policy-editor__chip', text: 'My base (when Base automation is on)' }))
+          h('span', { class: 'policy-editor__chip', text: isBuildDraft() ? 'My base (when Base automation is on)' : 'My production queue (when Unit build automation is on)' }))
         : h('label', { class: 'policy-field' },
           h('span', { text: 'Applies to' }),
           h('select', { class: 'policy-field__control', 'aria-label': 'Scope', onChange: e => { draft.scope = e.target.value; updateValidity() } },
@@ -656,7 +660,9 @@ export function openPolicyEditor(options = {}) {
           class: 'policy-hint',
           text: isBuildDraft()
             ? `A build policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition; AFTER rules wait. Building goes through the normal build queue, so it only happens when you can afford it, the building is unlocked and there is room.`
-            : `A policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition. A direct order always wins when it is given.`
+            : isUnitBuildDraft()
+              ? 'A unit build policy can stack 1–20 units per action. Each unit uses its normal factory, cost and build time, then receives the selected rally, attack, or defense order.'
+              : `A policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition. A direct order always wins when it is given.`
         })),
       h('section', { class: 'policy-states' },
         h('div', { class: 'policy-section-heading' },

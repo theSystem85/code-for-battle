@@ -105,7 +105,8 @@ describe('schema validation of the new conditions', () => {
       const result = validatePolicy(policyWith(compare(field, '>=', value, { mode })))
       expect(result.errors, field).toEqual([])
     })
-    Object.keys(CHECKS).forEach(name => {
+    Object.entries(CHECKS).forEach(([name, meta]) => {
+      if (!(meta.variants || ['unit']).includes('unit')) return
       expect(validatePolicy(policyWith(check(name))).errors, name).toEqual([])
     })
   })

@@ -18,9 +18,15 @@
 import { getSimulationTime } from '../game/time.js'
 import { gameState } from '../gameState.js'
 import { executeBuildCommand } from './buildCommandApi.js'
+import { executeUnitBuildCommand } from './unitBuildCommandApi.js'
 import { beginBaseScope, measureBaseLeaf, resetBaseSensors } from './basePolicySensors.js'
 import { EFFECTS, describeEffect } from './policyEffects.js'
-import { isBuildAutomationOptedIn, listEnabledBuildPolicies } from './policyStore.js'
+import {
+  isBuildAutomationOptedIn,
+  isUnitBuildAutomationOptedIn,
+  listEnabledBuildPolicies,
+  listEnabledUnitBuildPolicies
+} from './policyStore.js'
 import { STEP_GATE, createPolicyRuntime, stepPolicy } from './policyStep.js'
 
 export const BASE_EVAL_INTERVAL_MS = 1000
@@ -88,8 +94,10 @@ function ensureRun(entry) {
 
 function act(run, effect, context, now) {
   const meta = EFFECTS[effect.type]
-  if (!meta || meta.variant !== 'build') return
-  const result = executeBuildCommand(meta.command, effect, context)
+  if (!meta || (meta.variant !== 'build' && meta.variant !== 'unitBuild')) return
+  const result = meta.variant === 'unitBuild'
+    ? executeUnitBuildCommand(meta.command, effect, context)
+    : executeBuildCommand(meta.command, effect, context)
   run.last = { ok: result.ok, reason: result.reason, effect, at: now }
   run.nextActAt = now + (result.ok ? BASE_REASSERT_MS : BASE_REFUSED_RETRY_MS)
   if (result.ok) {
@@ -123,12 +131,16 @@ export function updateBasePolicies(context, now = getSimulationTime(gameState)) 
   if (now < lastPass) resetBasePolicyEngine()
   lastPass = now
   const owner = context.owner
-  if (!owner || !isBuildAutomationOptedIn(owner)) {
+  const runBase = owner && isBuildAutomationOptedIn(owner)
+  const runUnits = owner && isUnitBuildAutomationOptedIn(owner)
+  if (!owner || (!runBase && !runUnits)) {
     if (runs.size > 0) runs.clear()
     return
   }
   beginBaseScope(context, owner, now)
-  const entries = listEnabledBuildPolicies(owner)
+  const entries = []
+  if (runBase) entries.push(...listEnabledBuildPolicies(owner))
+  if (runUnits) entries.push(...listEnabledUnitBuildPolicies(owner))
   if (runs.size > 0) {
     runs.forEach((run, id) => {
       if (!entries.some(entry => entry.policy.id === id)) runs.delete(id)

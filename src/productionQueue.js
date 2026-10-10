@@ -17,6 +17,7 @@ import { isLocalPartyAutomationLocked } from './network/multiplayerStore.js'
 import { isReplayInteractionLocked, isReplayModeActive, recordReplayCommand } from './replaySystem.js'
 import { claimFirstProductionNarration, preloadMilestoneForProduction } from './ui/milestoneMediaCache.js'
 import { resolveExplicitSpawnFactory } from './production/spawnFactorySelection.js'
+import { applyUnitBuildDelivery } from './policies/unitBuildDelivery.js'
 
 function playUnitReadySound(unitType) {
   if (claimFirstProductionNarration(unitType)) return
@@ -267,7 +268,8 @@ export const productionQueue = {
         button,
         isBuilding,
         rallyPoint,
-        factoryId: options.factoryId || null
+        factoryId: options.factoryId || null,
+        automationDelivery: options.automationDelivery || null
       })
       const currentCount = this.unitItems.filter(item => item.button === button).length
       this.updateBatchCounter(button, currentCount)
@@ -378,7 +380,8 @@ export const productionQueue = {
       duration: duration,
       isBuilding: item.isBuilding, // Should always be false here
       rallyPoint: item.rallyPoint || null,
-      factoryId: item.factoryId || null
+      factoryId: item.factoryId || null,
+      automationDelivery: item.automationDelivery || null
     }
 
     // Warm the milestone clip before the unit exists. Playback waits for the milestone.
@@ -818,7 +821,7 @@ export const productionQueue = {
       if (isRemoteClient) {
         // Client: Send spawn request to host - don't spawn locally
         // The host will spawn the unit and it will appear in the next snapshot
-        broadcastUnitSpawn(unitType, spawnFactory.id, rallyPointTarget)
+        broadcastUnitSpawn(unitType, spawnFactory.id, rallyPointTarget, this.currentUnit.automationDelivery)
 
         // Narrator replaces the ready sting the first time this unit rolls off the line.
         playUnitReadySound(unitType)
@@ -836,6 +839,7 @@ export const productionQueue = {
         )
         if (newUnit) {
           units.push(newUnit)
+          applyUnitBuildDelivery(newUnit, this.currentUnit.automationDelivery)
           // Narrator replaces the ready sting the first time this unit rolls off the line.
           playUnitReadySound(unitType)
 
@@ -1355,7 +1359,8 @@ export const productionQueue = {
       type: item.type,
       rallyPoint: serializeRallyPoint(item.rallyPoint),
       blueprint: serializeBlueprint(item.blueprint),
-      factoryId: item.factoryId || null
+      factoryId: item.factoryId || null,
+      automationDelivery: item.automationDelivery || null
     })
 
     return {
@@ -1367,7 +1372,8 @@ export const productionQueue = {
           progress: clampProgress(this.currentUnit),
           duration: Number.isFinite(this.currentUnit.duration) ? this.currentUnit.duration : 0,
           rallyPoint: serializeRallyPoint(this.currentUnit.rallyPoint),
-          factoryId: this.currentUnit.factoryId || null
+          factoryId: this.currentUnit.factoryId || null,
+          automationDelivery: this.currentUnit.automationDelivery || null
         }
         : null,
       currentBuilding: this.currentBuilding
@@ -1497,7 +1503,8 @@ export const productionQueue = {
           button,
           isBuilding: false,
           rallyPoint,
-          factoryId: item.factoryId || null
+          factoryId: item.factoryId || null,
+          automationDelivery: item.automationDelivery || null
         })
       })
     }
@@ -1552,7 +1559,9 @@ export const productionQueue = {
 
     if (state.currentUnit && this.unitItems.length > 0) {
       const match = reorderToFront(this.unitItems, item =>
-        item.type === state.currentUnit.type && rallyPointsMatch(item.rallyPoint, state.currentUnit.rallyPoint)
+        item.type === state.currentUnit.type &&
+        item.automationDelivery === (state.currentUnit.automationDelivery || null) &&
+        rallyPointsMatch(item.rallyPoint, state.currentUnit.rallyPoint)
       )
       if (match) {
         const duration = Number.isFinite(state.currentUnit.duration) ? state.currentUnit.duration : 0
@@ -1569,7 +1578,8 @@ export const productionQueue = {
           duration,
           isBuilding: false,
           rallyPoint,
-          factoryId: state.currentUnit.factoryId || match.factoryId || null
+          factoryId: state.currentUnit.factoryId || match.factoryId || null,
+          automationDelivery: state.currentUnit.automationDelivery || match.automationDelivery || null
         }
         match.button.classList.add('active')
         if (this.pausedUnit) {
