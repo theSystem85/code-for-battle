@@ -5,12 +5,11 @@ import { logPerformance } from './performanceUtils.js'
 import { isHost } from './network/gameCommandSync.js'
 import { AI_UPDATE_FRAME_SKIP } from './config.js'
 import { updateLlmStrategicAI } from './ai/llmStrategicController.js'
-import { getSimulationTime } from './game/time.js'
+import { getSimulationTime, getFixedSimulationStepMs } from './game/time.js'
 import { isReplayModeActive } from './replaySystem.js'
 export { spawnEnemyUnit } from './ai/enemySpawner.js'
 
-// Frame counter for AI update throttling
-let aiFrameCounter = 0
+const PLAYERS = ['player1', 'player2', 'player3', 'player4']
 
 /**
  * Check if a party is currently AI-controlled (not taken over by a human via multiplayer)
@@ -44,33 +43,39 @@ export const updateEnemyAI = logPerformance(function updateEnemyAI(units, factor
     return
   }
 
-  // Frame skip throttling - only run AI logic every N frames
-  // This reduces AI CPU load while maintaining smooth gameplay
-  aiFrameCounter = (aiFrameCounter + 1) % AI_UPDATE_FRAME_SKIP
-  if (aiFrameCounter !== 0) {
-    return // Skip this frame
-  }
-
   const occupancyMap = gameState.occupancyMap
   const now = getSimulationTime(gameState)
+  // Simulation time is saved/synced. A private invocation counter or a
+  // wall-clock budget would change the schedule after restore or a slow frame.
+  const skip = Math.max(1, Math.floor(AI_UPDATE_FRAME_SKIP) || 1)
+  const phase = Math.round(now / getFixedSimulationStepMs(gameState)) % skip
   const playerCount = gameState.playerCount || 2
-  const allPlayers = ['player1', 'player2', 'player3', 'player4'].slice(0, playerCount)
-
-  const aiPlayers = allPlayers.filter(p => isPartyAiControlled(p, gameState))
   const targetedOreTiles = gameState.targetedOreTiles || {}
 
-  updateLlmStrategicAI(units, factories, bullets, mapGrid, gameState, now)
+  if (phase === 0) {
+    updateLlmStrategicAI(units, factories, bullets, mapGrid, gameState, now)
 
-  if (!gameState.lastGlobalAttackDecision || now - gameState.lastGlobalAttackDecision > 8000) {
-    const attackPointOwner = aiPlayers[0] || gameState.humanPlayer || 'player1'
-    const point = computeLeastDangerAttackPoint(gameState, attackPointOwner)
-    if (point) {
-      gameState.globalAttackPoint = point
-      gameState.lastGlobalAttackDecision = now
+    if (!gameState.lastGlobalAttackDecision || now - gameState.lastGlobalAttackDecision > 8000) {
+      let attackPointOwner = gameState.humanPlayer || 'player1'
+      for (let index = 0; index < playerCount && index < PLAYERS.length; index++) {
+        if (isPartyAiControlled(PLAYERS[index], gameState)) {
+          attackPointOwner = PLAYERS[index]
+          break
+        }
+      }
+      const point = computeLeastDangerAttackPoint(gameState, attackPointOwner)
+      if (point) {
+        gameState.globalAttackPoint = point
+        gameState.lastGlobalAttackDecision = now
+      }
     }
   }
 
-  aiPlayers.forEach(aiPlayerId => {
+  // Each player retains its 20 Hz cadence at skip=3; the three enemy players
+  // occupy separate ticks instead of all blocking the same frame.
+  for (let index = 0; index < playerCount && index < PLAYERS.length; index++) {
+    const aiPlayerId = PLAYERS[index]
+    if (index % skip !== phase || !isPartyAiControlled(aiPlayerId, gameState)) continue
     updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameState, occupancyMap, now, targetedOreTiles)
-  })
+  }
 }, false)

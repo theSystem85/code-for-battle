@@ -14,51 +14,95 @@ import {
   isNearPlayerDefense
 } from './enemyAirBehavior.js'
 
-export function checkBaseDefenseNeeded(unit, units, gameState, aiPlayerId) {
-  const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId && b.health > 0)
-  if (aiBuildings.length === 0) return false
+const BASE_DEFENDER_TYPES = new Set(['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer'])
 
-  // Check if any player units are near our base
-  const playerUnitsNearBase = units.filter(u => {
-    if (!isEnemyTo(u, aiPlayerId) || u.health <= 0) return false
-    if (!canUnitHitTarget(unit, u)) return false
+function createDefenseSnapshot() {
+  return { units: null, state: null, owner: null, centerX: [], centerY: [], threats: [], defenders: 0, currentUnit: null, currentWasDefender: false }
+}
 
-    return aiBuildings.some(building => {
-      const buildingCenterX = (building.x + building.width / 2) * TILE_SIZE
-      const buildingCenterY = (building.y + building.height / 2) * TILE_SIZE
-      const distance = Math.hypot(
-        (u.x + TILE_SIZE / 2) - buildingCenterX,
-        (u.y + TILE_SIZE / 2) - buildingCenterY
-      )
-      return distance < 12 * TILE_SIZE // Within 12 tiles of our base
-    })
-  })
+const defensePass = createDefenseSnapshot()
+const standaloneDefense = createDefenseSnapshot()
 
-  // Check if we're already sending enough defenders
-  const currentDefenders = units.filter(u =>
-    u.owner === aiPlayerId &&
-    u.health > 0 &&
-    u.defendingBase &&
-    (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank' || u.type === 'howitzer')
-  )
+function isBaseDefender(unit, owner) {
+  return unit.owner === owner && unit.health > 0 && unit.defendingBase && BASE_DEFENDER_TYPES.has(unit.type)
+}
 
-  // Need defense if player units near base and we don't have enough defenders
-  const needsDefense = playerUnitsNearBase.length > 0 && currentDefenders.length < Math.min(playerUnitsNearBase.length * 2, 6)
-
-  // Only nearby units should defend (within reasonable distance)
-  if (needsDefense) {
-    const distanceToBase = Math.min(...aiBuildings.map(building => {
-      const buildingCenterX = (building.x + building.width / 2) * TILE_SIZE
-      const buildingCenterY = (building.y + building.height / 2) * TILE_SIZE
-      return Math.hypot(
-        (unit.x + TILE_SIZE / 2) - buildingCenterX,
-        (unit.y + TILE_SIZE / 2) - buildingCenterY
-      )
-    }))
-
-    return distanceToBase < 20 * TILE_SIZE // Only units within 20 tiles should defend
+function prepareDefenseSnapshot(snapshot, units, state, owner) {
+  snapshot.units = units
+  snapshot.state = state
+  snapshot.owner = owner
+  snapshot.centerX.length = 0
+  snapshot.centerY.length = 0
+  snapshot.threats.length = 0
+  snapshot.defenders = 0
+  for (const building of state.buildings) {
+    if (building.owner !== owner || building.health <= 0) continue
+    snapshot.centerX.push((building.x + building.width / 2) * TILE_SIZE)
+    snapshot.centerY.push((building.y + building.height / 2) * TILE_SIZE)
   }
+  const radiusSquared = (12 * TILE_SIZE) ** 2
+  for (const candidate of units) {
+    if (isBaseDefender(candidate, owner)) snapshot.defenders++
+    if (!isEnemyTo(candidate, owner) || candidate.health <= 0) continue
+    for (let index = 0; index < snapshot.centerX.length; index++) {
+      const dx = candidate.x + TILE_SIZE / 2 - snapshot.centerX[index]
+      const dy = candidate.y + TILE_SIZE / 2 - snapshot.centerY[index]
+      if (dx * dx + dy * dy < radiusSquared) {
+        snapshot.threats.push(candidate)
+        break
+      }
+    }
+  }
+  return snapshot
+}
 
+// Scoped to the synchronous unit-decision pass, never cached across ticks.
+export function beginBaseDefensePass(units, state, owner) {
+  prepareDefenseSnapshot(defensePass, units, state, owner)
+}
+
+export function beginBaseDefenseUnit(unit) {
+  defensePass.currentUnit = unit
+  defensePass.currentWasDefender = Boolean(isBaseDefender(unit, defensePass.owner))
+}
+
+export function finishBaseDefenseUnit(unit) {
+  defensePass.defenders += Number(Boolean(isBaseDefender(unit, defensePass.owner))) - Number(defensePass.currentWasDefender)
+  defensePass.currentUnit = null
+}
+
+export function endBaseDefensePass() {
+  defensePass.units = null
+  defensePass.state = null
+  defensePass.owner = null
+  defensePass.currentUnit = null
+  defensePass.threats.length = 0
+}
+
+function getDefenseSnapshot(units, state, owner) {
+  if (defensePass.units === units && defensePass.state === state && defensePass.owner === owner) return defensePass
+  // Callers outside updateAIPlayer still get fresh state on each request.
+  return prepareDefenseSnapshot(standaloneDefense, units, state, owner)
+}
+
+export function checkBaseDefenseNeeded(unit, units, gameState, aiPlayerId) {
+  const snapshot = getDefenseSnapshot(units, gameState, aiPlayerId)
+  let threatCount = 0
+  for (const threat of snapshot.threats) {
+    if (canUnitHitTarget(unit, threat)) threatCount++
+  }
+  if (threatCount === 0) return false
+  let defenders = snapshot.defenders
+  if (snapshot.currentUnit === unit) {
+    defenders += Number(Boolean(isBaseDefender(unit, aiPlayerId))) - Number(snapshot.currentWasDefender)
+  }
+  if (defenders >= Math.min(threatCount * 2, 6)) return false
+  const radiusSquared = (20 * TILE_SIZE) ** 2
+  for (let index = 0; index < snapshot.centerX.length; index++) {
+    const dx = unit.x + TILE_SIZE / 2 - snapshot.centerX[index]
+    const dy = unit.y + TILE_SIZE / 2 - snapshot.centerY[index]
+    if (dx * dx + dy * dy < radiusSquared) return true
+  }
   return false
 }
 
@@ -66,42 +110,19 @@ export function checkBaseDefenseNeeded(unit, units, gameState, aiPlayerId) {
  * Finds the best target for base defense
  */
 export function findBaseDefenseTarget(unit, units, gameState, aiPlayerId) {
-  const aiBuildings = gameState.buildings.filter(b => b.owner === aiPlayerId && b.health > 0)
-  if (aiBuildings.length === 0) return null
-
-  // Find player units threatening our base
-  const threats = units.filter(u => {
-    if (!isEnemyTo(u, aiPlayerId) || u.health <= 0) return false
-    if (!canUnitHitTarget(unit, u)) return false
-
-    return aiBuildings.some(building => {
-      const buildingCenterX = (building.x + building.width / 2) * TILE_SIZE
-      const buildingCenterY = (building.y + building.height / 2) * TILE_SIZE
-      const distance = Math.hypot(
-        (u.x + TILE_SIZE / 2) - buildingCenterX,
-        (u.y + TILE_SIZE / 2) - buildingCenterY
-      )
-      return distance < 12 * TILE_SIZE
-    })
-  })
-
-  if (threats.length === 0) return null
-
-  // Find closest threat to our unit
+  const snapshot = getDefenseSnapshot(units, gameState, aiPlayerId)
   let closestThreat = null
   let closestDistance = Infinity
-
-  threats.forEach(threat => {
-    const distance = Math.hypot(
-      (threat.x + TILE_SIZE / 2) - (unit.x + TILE_SIZE / 2),
-      (threat.y + TILE_SIZE / 2) - (unit.y + TILE_SIZE / 2)
-    )
-
+  for (const threat of snapshot.threats) {
+    if (!canUnitHitTarget(unit, threat)) continue
+    const dx = threat.x - unit.x
+    const dy = threat.y - unit.y
+    const distance = dx * dx + dy * dy
     if (distance < closestDistance) {
       closestDistance = distance
       closestThreat = threat
     }
-  })
+  }
 
   return closestThreat
 }

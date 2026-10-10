@@ -738,8 +738,12 @@ class Game {
   }
 
   async loadAssets(onProgress) {
-    return new Promise((resolve) => {
-      initializeGameAssets(() => {
+    return new Promise((resolve, reject) => {
+      initializeGameAssets((error) => {
+        if (error) {
+          reject(error)
+          return
+        }
         allAssetsLoaded = true
 
         preloadTileTextures(() => {

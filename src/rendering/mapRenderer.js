@@ -1502,8 +1502,10 @@ export class MapRenderer {
         updateOptions.precomputedState = state
         this.updateChunkCache(chunk, mapGrid, useTexture, currentWaterFrame, updateOptions)
 
-        const drawX = Math.floor(chunkStartX * TILE_SIZE - scrollOffset.x) - chunk.padding
-        const drawY = Math.floor(chunkStartY * TILE_SIZE - scrollOffset.y) - chunk.padding
+        // Share the exact camera translation with entities and GPU water.
+        // Rounding terrain alone introduces a relative one-pixel scroll jiggle.
+        const drawX = chunkStartX * TILE_SIZE - scrollOffset.x - chunk.padding
+        const drawY = chunkStartY * TILE_SIZE - scrollOffset.y - chunk.padding
         this.frameChunkStats.chunksDrawn++
         ctx.drawImage(chunk.canvas, drawX, drawY)
       }
@@ -1555,8 +1557,8 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y]?.[x]
         if (!tile) continue
-        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
-        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+        const screenX = x * TILE_SIZE - scrollOffset.x
+        const screenY = y * TILE_SIZE - scrollOffset.y
 
         if (drawBase && ((tile.type === 'water' && !tile.airstripStreet) ||
           (tile.type === 'street' && this.isStreetWaterTransitionTile(mapGrid, x, y)))) {
@@ -1596,8 +1598,8 @@ export class MapRenderer {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
-        const screenX = Math.floor(x * TILE_SIZE - offsetX)
-        const screenY = Math.floor(y * TILE_SIZE - offsetY)
+        const screenX = x * TILE_SIZE - offsetX
+        const screenY = y * TILE_SIZE - offsetY
 
         if (!(skipWaterBase && visualTileType === 'water')) {
           this.drawTileBase(ctx, x, y, visualTileType, screenX, screenY, useTexture, currentWaterFrame)
@@ -1641,11 +1643,11 @@ export class MapRenderer {
           for (let x = Math.max(0, startTileX - 2); x < Math.min(mapGrid[0].length, endTileX + 2); x++) {
             const tile = mapGrid[y][x]
             if (type === 'street' && (tile.type === 'land' || tile.type === 'water') && !tile.airstripStreet) {
-              this.organicTerrain.drawRoadFringe(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - offsetX), Math.floor(y * TILE_SIZE - offsetY), TILE_SIZE)
+              this.organicTerrain.drawRoadFringe(ctx, mapGrid, x, y, x * TILE_SIZE - offsetX, y * TILE_SIZE - offsetY, TILE_SIZE)
             }
             if (tile.type !== type || tile.airstripStreet) continue
-            const sx = Math.floor(x * TILE_SIZE - offsetX)
-            const sy = Math.floor(y * TILE_SIZE - offsetY)
+            const sx = x * TILE_SIZE - offsetX
+            const sy = y * TILE_SIZE - offsetY
             if (type === 'street') this.organicTerrain.drawRoad(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
             else this.organicTerrain.drawRock(ctx, mapGrid, x, y, sx, sy, TILE_SIZE)
           }
@@ -1655,8 +1657,8 @@ export class MapRenderer {
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
-        const screenX = Math.floor(x * TILE_SIZE - offsetX)
-        const screenY = Math.floor(y * TILE_SIZE - offsetY)
+        const screenX = x * TILE_SIZE - offsetX
+        const screenY = y * TILE_SIZE - offsetY
         if (this.useOrganicTerrain(useTexture)) {
           this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
         }
@@ -1695,7 +1697,7 @@ export class MapRenderer {
 
   drawOrganicLandTransitions(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY) {
     for (let y = startTileY; y < endTileY; y++) for (let x = startTileX; x < endTileX; x++) {
-      this.drawOrganicLandTransition(ctx, mapGrid, x, y, Math.floor(x * TILE_SIZE - offsetX), Math.floor(y * TILE_SIZE - offsetY))
+      this.drawOrganicLandTransition(ctx, mapGrid, x, y, x * TILE_SIZE - offsetX, y * TILE_SIZE - offsetY)
     }
   }
 
@@ -2014,8 +2016,8 @@ export class MapRenderer {
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tileVisibility = visibilityMap[y] ? visibilityMap[y][x] : null
-        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
-        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+        const screenX = x * TILE_SIZE - scrollOffset.x
+        const screenY = y * TILE_SIZE - scrollOffset.y
 
         if (!tileVisibility || !tileVisibility.discovered) {
           this.drawUndiscoveredOverlay(ctx, x, y, screenX, screenY, visibilityMap)
@@ -2100,8 +2102,8 @@ export class MapRenderer {
     // would punch an isolated hole behind the water-hosted feathered edge.
     if (this.useOrganicTerrain(useTexture) && type === 'water') return
     if (this.useOrganicTerrain(useTexture) && type !== 'water') {
-      this.organicTerrain.drawTriangle(ctx, tileX, tileY, Math.floor(tileX * TILE_SIZE - scrollOffset.x),
-        Math.floor(tileY * TILE_SIZE - scrollOffset.y), TILE_SIZE, orientation, type)
+      this.organicTerrain.drawTriangle(ctx, tileX, tileY, tileX * TILE_SIZE - scrollOffset.x,
+        tileY * TILE_SIZE - scrollOffset.y, TILE_SIZE, orientation, type)
       return
     }
     const key = `${tileX},${tileY}`
@@ -2242,8 +2244,8 @@ export class MapRenderer {
         const tile = gameState?.mapGrid?.[y]?.[x]
         const buildOnlyStreet = Boolean(tile?.buildOnlyOccupied) && tile?.type === 'street'
         if (tileOccupied || mineBlocked || buildOnlyStreet) {
-          const tileX = Math.floor(x * TILE_SIZE - scrollOffset.x)
-          const tileY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+          const tileX = x * TILE_SIZE - scrollOffset.x
+          const tileY = y * TILE_SIZE - scrollOffset.y
           ctx.fillStyle = buildOnlyStreet && !tileOccupied && !mineBlocked
             ? 'rgba(255, 255, 0, 0.35)'
             : 'rgba(255, 0, 0, 0.3)'
@@ -2298,8 +2300,8 @@ export class MapRenderer {
         const tile = mapGrid[y][x]
         const visualTileType = tile?.airstripStreet ? 'land' : tile.type
         if (visualTileType !== 'street' || gpuRenderedStreetTerrain) continue
-        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
-        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+        const screenX = x * TILE_SIZE - scrollOffset.x
+        const screenY = y * TILE_SIZE - scrollOffset.y
         this.drawTileBase(ctx, x, y, 'street', screenX, screenY, useTexture, currentWaterFrame)
       }
     }
@@ -2336,8 +2338,8 @@ export class MapRenderer {
     for (let y = startTileY; y < endTileY; y++) {
       for (let x = startTileX; x < endTileX; x++) {
         const tile = mapGrid[y][x]
-        const screenX = Math.floor(x * TILE_SIZE - scrollOffset.x)
-        const screenY = Math.floor(y * TILE_SIZE - scrollOffset.y)
+        const screenX = x * TILE_SIZE - scrollOffset.x
+        const screenY = y * TILE_SIZE - scrollOffset.y
 
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 

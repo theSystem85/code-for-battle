@@ -1,0 +1,5996 @@
+{
+  "status": "Diagnostic evidence; user accepted the improvement and requested stopping further optimization. No 75 FPS certification.",
+  "fixture": "Seed 11, four players, 100x100 map, 320 mixed units, 60 seconds, headed Chromium, Apple M1 Metal, DPR 2. Same settings and effects before/after.",
+  "commands": {
+    "baseline": "PERF_BASE_URL=http://127.0.0.1:5174 PERF_HEADED=1 node scripts/performance/microstutterBenchmark.mjs /tmp/worker-combat-before.json",
+    "final": "PERF_BASE_URL=http://127.0.0.1:5173 PERF_HEADED=1 node scripts/performance/microstutterBenchmark.mjs /tmp/worker-combat-final-1.json"
+  },
+  "captures": [
+    {
+      "certification": "diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence",
+      "browser": "156.0.8078.4",
+      "headless": false,
+      "production": false,
+      "windowPosition": null,
+      "cpuThrottle": 1,
+      "scene": "battle",
+      "speedPxPerSec": 600,
+      "routeLengthPx": null,
+      "durationMs": 60000,
+      "routeCycles": 0,
+      "travelledPx": 0,
+      "display": {
+        "screenX": -1250,
+        "screenY": -1548,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "monitor": {
+        "version": 2,
+        "kind": "code-for-battle-performance-monitor",
+        "recordedAt": "2026-10-10T19:51:19.059Z",
+        "durationMs": 60009.6,
+        "averageFps": 104.49,
+        "device": {
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1440,
+            "height": 1000
+          },
+          "nativeDevicePixelRatio": 2,
+          "touchPoints": 0
+        },
+        "map": {
+          "widthTiles": 100,
+          "heightTiles": 100,
+          "seed": "11",
+          "players": 4,
+          "oreFields": 8,
+          "oreTotalValue": 64000,
+          "waterPercent": 10,
+          "rockPercent": 5,
+          "shoreNorth": true,
+          "shoreWest": true,
+          "shoreEast": true,
+          "shoreSouth": true,
+          "centerLake": true,
+          "biome": "grass",
+          "biomeRegions": 12,
+          "biomeDistribution": "random",
+          "biomeWeights": {
+            "grass": 30,
+            "soil": 30,
+            "sand": 20,
+            "snow": 20
+          },
+          "snowOnPlateaus": true,
+          "scrollOffset": {
+            "x": 981.22,
+            "y": 1100
+          }
+        },
+        "game": {
+          "speedMultiplier": 1,
+          "gameTime": 60.27,
+          "paused": false,
+          "frameLimiterEnabled": false,
+          "integratedSpriteSheetMode": false,
+          "entities": {
+            "units": 256,
+            "buildings": 13,
+            "factories": 4,
+            "bullets": 0,
+            "explosions": 12,
+            "smokeParticles": 178
+          }
+        },
+        "canvases": {
+          "game": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgl": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgpu": {
+            "cssWidth": 0,
+            "cssHeight": 0,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": null
+          },
+          "configuredCanvasPixelRatio": 2,
+          "overlayCanvasPixelRatio": 2
+        },
+        "renderer": {
+          "gpuTerrain": {
+            "rendered": true,
+            "backend": "webgl",
+            "requestedBackend": "webgl",
+            "rendererBackendChoice": "webgl",
+            "webgpuStatus": null,
+            "waterOnly": true,
+            "streetAtlas": false
+          },
+          "mapChunks": {
+            "chunksDrawn": 12,
+            "chunkHits": 12,
+            "chunkMisses": 0,
+            "chunkRedraws": 0,
+            "chunksPrewarmed": 0,
+            "chunksEvicted": 0,
+            "chunksQueued": 1,
+            "chunksWarmed": 1,
+            "chunkFallbacks": 0,
+            "chunkCacheSize": 48,
+            "chunkWarmQueueSize": 1,
+            "directTilePasses": 0,
+            "chunkSignatureCalls": 0,
+            "topologyReconstructions": 0,
+            "warmBacklog": 1,
+            "warmMaxJobAgeMs": 0.10000002384185791,
+            "warmExpiredJobs": 31,
+            "warmCancelledJobs": 108,
+            "terrainResidentBytes": 40791744,
+            "terrainStagingBytes": 0
+          },
+          "gpuTiming": {
+            "available": true,
+            "reason": null,
+            "milliseconds": 5.04
+          },
+          "gpuMemory": {
+            "available": false,
+            "reason": "browser API unavailable",
+            "bytes": null
+          },
+          "heap": {
+            "available": true,
+            "reason": null,
+            "usedBytes": 92501038,
+            "trend": {
+              "samples": 60,
+              "firstBytes": 102676981,
+              "lastBytes": 92501038,
+              "minBytes": 82125060,
+              "maxBytes": 113511243,
+              "deltaBytes": -10175943,
+              "suspectedCollectionDrops": 30,
+              "note": "Heap drops are suspected collections unless confirmed by a trace"
+            }
+          },
+          "byteUsage": {
+            "terrain-pages": 40791744,
+            "prepared-sprites": 0,
+            "water-topology": 0,
+            "minimap": 0,
+            "effects": 196608
+          }
+        },
+        "timingMs": {
+          "frameInterval": {
+            "samples": 6272,
+            "averageMs": 9.57,
+            "minMs": 5.6,
+            "maxMs": 58,
+            "slowFrames": 302
+          },
+          "update": {
+            "samples": 6272,
+            "averageMs": 2.72,
+            "minMs": 0,
+            "maxMs": 47.8,
+            "slowFrames": 12
+          },
+          "render": {
+            "samples": 6272,
+            "averageMs": 2.15,
+            "minMs": 1.4,
+            "maxMs": 13.6,
+            "slowFrames": 1
+          },
+          "minimap": {
+            "samples": 6272,
+            "averageMs": 0.11,
+            "minMs": 0,
+            "maxMs": 1.8,
+            "slowFrames": 0
+          },
+          "frameWork": {
+            "samples": 6272,
+            "averageMs": 4.89,
+            "minMs": 1.4,
+            "maxMs": 52.9,
+            "slowFrames": 25
+          },
+          "unattributedWait": {
+            "samples": 6272,
+            "averageMs": 4.92,
+            "minMs": 0,
+            "maxMs": 39,
+            "slowFrames": 12
+          },
+          "schedulerDelay": {
+            "samples": 6272,
+            "averageMs": 0,
+            "minMs": 0,
+            "maxMs": 0,
+            "slowFrames": 0
+          },
+          "terrain": {
+            "samples": 6272,
+            "averageMs": 0.29,
+            "minMs": 0.1,
+            "maxMs": 8.5,
+            "slowFrames": 0
+          },
+          "entities": {
+            "samples": 6272,
+            "averageMs": 1.09,
+            "minMs": 0.6,
+            "maxMs": 4.6,
+            "slowFrames": 0
+          },
+          "effects": {
+            "samples": 6272,
+            "averageMs": 0.24,
+            "minMs": 0,
+            "maxMs": 1.9,
+            "slowFrames": 0
+          },
+          "ui": {
+            "samples": 6272,
+            "averageMs": 0.09,
+            "minMs": 0,
+            "maxMs": 0.5,
+            "slowFrames": 0
+          }
+        },
+        "profiler": {
+          "enabled": false,
+          "window": {
+            "frames": 0,
+            "milliseconds": 0,
+            "callSamplesPerSpan": 512
+          },
+          "slowFrameThresholdMs": 13.333,
+          "rows": [],
+          "definitions": [
+            {
+              "id": 1,
+              "name": "FRAME"
+            },
+            {
+              "id": 2,
+              "name": "UPDATE"
+            },
+            {
+              "id": 3,
+              "name": "RENDER"
+            },
+            {
+              "id": 10,
+              "name": "TERRAIN"
+            },
+            {
+              "id": 11,
+              "name": "RENDER_TILES"
+            },
+            {
+              "id": 12,
+              "name": "CHUNK_STATE"
+            },
+            {
+              "id": 13,
+              "name": "CHUNK_SIGNATURE"
+            },
+            {
+              "id": 14,
+              "name": "WARM_QUEUE"
+            },
+            {
+              "id": 15,
+              "name": "CHUNK_REBUILD"
+            },
+            {
+              "id": 20,
+              "name": "CPU_WATER_PASS"
+            },
+            {
+              "id": 21,
+              "name": "CPU_WATER_TILE"
+            },
+            {
+              "id": 30,
+              "name": "WEBGL_BUILD"
+            },
+            {
+              "id": 31,
+              "name": "WEBGL_UPLOAD"
+            },
+            {
+              "id": 32,
+              "name": "WEBGL_SUBMIT"
+            },
+            {
+              "id": 40,
+              "name": "WEBGPU_PACK"
+            },
+            {
+              "id": 41,
+              "name": "WEBGPU_UPLOAD"
+            },
+            {
+              "id": 42,
+              "name": "WEBGPU_SUBMIT"
+            },
+            {
+              "id": 50,
+              "name": "ENTITY_BASES"
+            },
+            {
+              "id": 51,
+              "name": "ENTITY_OVERLAYS"
+            },
+            {
+              "id": 52,
+              "name": "EFFECTS"
+            },
+            {
+              "id": 60,
+              "name": "MINIMAP_BASE"
+            },
+            {
+              "id": 61,
+              "name": "MINIMAP_FOG"
+            },
+            {
+              "id": 62,
+              "name": "MINIMAP_VIDEO"
+            },
+            {
+              "id": 63,
+              "name": "MINIMAP_ENTITIES"
+            },
+            {
+              "id": 70,
+              "name": "HUD"
+            },
+            {
+              "id": 80,
+              "name": "PREP_CLIFF"
+            },
+            {
+              "id": 81,
+              "name": "PREP_BIOME_MASK"
+            },
+            {
+              "id": 1000,
+              "name": "updateBuildingsUnderRepair"
+            },
+            {
+              "id": 1001,
+              "name": "updateBuildingsAwaitingRepair"
+            },
+            {
+              "id": 1002,
+              "name": "_updateGlobalPathfinding"
+            },
+            {
+              "id": 1003,
+              "name": "anonymous"
+            },
+            {
+              "id": 1004,
+              "name": "updateBullets"
+            },
+            {
+              "id": 1005,
+              "name": "updateHarvesterLogic"
+            },
+            {
+              "id": 1006,
+              "name": "updateUnitOccupancy"
+            },
+            {
+              "id": 1007,
+              "name": "findPath"
+            },
+            {
+              "id": 1008,
+              "name": "_updateAIPlayer"
+            },
+            {
+              "id": 1009,
+              "name": "updateEnemyAI"
+            },
+            {
+              "id": 1010,
+              "name": "updateUnitMovement"
+            },
+            {
+              "id": 1011,
+              "name": "updateUnitCombat"
+            },
+            {
+              "id": 1012,
+              "name": "updateWorkshopLogic"
+            },
+            {
+              "id": 1013,
+              "name": "updateShipyardServiceLogic"
+            },
+            {
+              "id": 1014,
+              "name": "updateOreSpread"
+            },
+            {
+              "id": 1015,
+              "name": "updateUnitCollisions"
+            },
+            {
+              "id": 1016,
+              "name": "updateBuildings"
+            },
+            {
+              "id": 1017,
+              "name": "updateDefensiveBuildings"
+            },
+            {
+              "id": 1018,
+              "name": "updateGame"
+            }
+          ]
+        },
+        "diagnostics": {
+          "schemaVersion": 1,
+          "backend": "webgl",
+          "devicePixelRatio": 2,
+          "refreshRateHz": null,
+          "recordingCounterTotals": {
+            "DRAW_CALLS": 75264,
+            "UPLOAD_BYTES": 250880,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2784,
+            "BACKLOG": 6092
+          },
+          "lifetimeCounterTotals": {
+            "DRAW_CALLS": 75354,
+            "UPLOAD_BYTES": 5042612,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2784,
+            "BACKLOG": 6325
+          }
+        },
+        "scheduler": {
+          "sources": {
+            "raf": 0,
+            "watchdog": 0,
+            "timeout": 6272,
+            "unknown": 0
+          },
+          "watchdogShare": 0
+        }
+      },
+      "phases": {
+        "samples": 600,
+        "frame": {
+          "averageMs": 9.06,
+          "p95Ms": 12.7,
+          "maxMs": 25.9,
+          "fps": 110.38
+        },
+        "drawCalls": {
+          "average": 12,
+          "p95": 12,
+          "max": 12
+        },
+        "phases": {
+          "sim": {
+            "samples": 600,
+            "averageMs": 2.47,
+            "p95Ms": 5.4,
+            "minMs": 0,
+            "maxMs": 13.5
+          },
+          "movement": {
+            "samples": 600,
+            "averageMs": 1.38,
+            "p95Ms": 2.9,
+            "minMs": 0,
+            "maxMs": 6.4
+          },
+          "combat": {
+            "samples": 600,
+            "averageMs": 0.22,
+            "p95Ms": 0.5,
+            "minMs": 0,
+            "maxMs": 0.6
+          },
+          "pathfinding": {
+            "samples": 600,
+            "averageMs": 0.02,
+            "p95Ms": 0.1,
+            "minMs": 0,
+            "maxMs": 0.2
+          },
+          "ai": {
+            "samples": 600,
+            "averageMs": 0.21,
+            "p95Ms": 1.1,
+            "minMs": 0,
+            "maxMs": 9.9
+          },
+          "fog": {
+            "samples": 600,
+            "averageMs": 0.12,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "terrain": {
+            "samples": 600,
+            "averageMs": 0.25,
+            "p95Ms": 0.3,
+            "minMs": 0.1,
+            "maxMs": 1.6
+          },
+          "entities": {
+            "samples": 600,
+            "averageMs": 0.93,
+            "p95Ms": 1.2,
+            "minMs": 0.6,
+            "maxMs": 1.6
+          },
+          "effects": {
+            "samples": 600,
+            "averageMs": 0.21,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "ui": {
+            "samples": 600,
+            "averageMs": 0.08,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.5
+          },
+          "minimap": {
+            "samples": 600,
+            "averageMs": 0.09,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.2
+          }
+        }
+      },
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+      "hardwareConcurrency": 8,
+      "frames": {
+        "frameCount": 4491,
+        "durationMs": 60000.3,
+        "fps": 74.84962575187124,
+        "meanFrameMs": 13.360120240480963,
+        "p95FrameMs": 15.299999999995634,
+        "p99FrameMs": 15.399999999999636,
+        "maxFrameMs": 42.100000000000364,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 2106,
+        "missedDeadlineRatio": 0.46893787575150303,
+        "passed75Fps": false
+      },
+      "cpuTailsAvailable": true,
+      "cpuTails": {
+        "update": {
+          "samples": 6272,
+          "p50Ms": 3.899999976158142,
+          "p95Ms": 5.899999976158142,
+          "p99Ms": 7.5,
+          "maxMs": 47.799999952316284,
+          "missedDeadlines": 12
+        },
+        "render": {
+          "samples": 6272,
+          "p50Ms": 2.100000023841858,
+          "p95Ms": 2.8000000715255737,
+          "p99Ms": 3.700000047683716,
+          "maxMs": 13.599999904632568,
+          "missedDeadlines": 1
+        },
+        "work": {
+          "samples": 6272,
+          "p50Ms": 6,
+          "p95Ms": 8.5,
+          "p99Ms": 10.399999976158142,
+          "maxMs": 52.89999997615814,
+          "missedDeadlines": 25
+        }
+      },
+      "cpuSelfTime": [
+        [
+          "(idle) :0",
+          23588.31600000012
+        ],
+        [
+          "(program) :0",
+          4227.714000000002
+        ],
+        [
+          "drawImage :0",
+          3419.5670000000077
+        ],
+        [
+          "updateUnitMovement http://127.0.0.1:5174/src/game/unitMovement.js:52",
+          1616.260999999998
+        ],
+        [
+          "updateUnitPosition http://127.0.0.1:5174/src/game/movementCore.js:271",
+          1331.6540000000007
+        ],
+        [
+          "queryCircleInto http://127.0.0.1:5174/src/game/spatialQuadtree.js:162",
+          983.5310000000003
+        ],
+        [
+          "hasClearShot http://127.0.0.1:5174/src/logic.js:603",
+          768.4819999999996
+        ],
+        [
+          "hasFriendlyUnitOnTile http://127.0.0.1:5174/src/game/movementCore.js:204",
+          694.0819999999993
+        ],
+        [
+          "paintStatusBarOutline http://127.0.0.1:5174/src/utils/statusBarGradient.js:262",
+          571.2739999999999
+        ],
+        [
+          "renderAttackTargetIndicator http://127.0.0.1:5174/src/rendering/unitRenderer.js:1588",
+          565.4089999999994
+        ],
+        [
+          "prepareFrameEntityIndex http://127.0.0.1:5174/src/rendering/renderer.js:196",
+          520.0829999999997
+        ],
+        [
+          "fillRect :0",
+          491.8539999999999
+        ],
+        [
+          "save :0",
+          490.1289999999999
+        ],
+        [
+          "rebuild http://127.0.0.1:5174/src/game/spatialQuadtree.js:242",
+          480.88899999999944
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/performanceUtils.js:14",
+          474.9389999999998
+        ],
+        [
+          "applyVisibility http://127.0.0.1:5174/src/game/shadowOfWar.js:190",
+          471.09699999999947
+        ],
+        [
+          "(garbage collector) :0",
+          464.933
+        ],
+        [
+          "observeUnitCommandSignals http://127.0.0.1:5174/src/game/unitCommandHistory.js:123",
+          460.69099999999986
+        ],
+        [
+          "restore :0",
+          418.20699999999965
+        ],
+        [
+          "updateUnitRotation http://127.0.0.1:5174/src/game/unitMovement.js:368",
+          398.9389999999997
+        ],
+        [
+          "frameNeedsEntityIndex http://127.0.0.1:5174/src/rendering/renderer.js:159",
+          396.0549999999998
+        ],
+        [
+          "step http://127.0.0.1:5174/src/benchmark/benchmarkRunner.js:412",
+          365.54500000000013
+        ],
+        [
+          "renderRadarOffline http://127.0.0.1:5174/src/rendering/minimapRenderer.js:492",
+          334.35600000000017
+        ],
+        [
+          "isAirborneUnit http://127.0.0.1:5174/src/game/movementHelpers.js:46",
+          321.97099999999966
+        ],
+        [
+          "renderTankWithImages http://127.0.0.1:5174/src/rendering/tankImageRenderer.js:170",
+          321.905
+        ],
+        [
+          "renderUnitOverlay http://127.0.0.1:5174/src/rendering/unitRenderer.js:2053",
+          317.2480000000001
+        ],
+        [
+          "checkUnitCollision http://127.0.0.1:5174/src/game/movementCollision.js:459",
+          284.6079999999999
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/game/unitCombat.js:28",
+          282.35799999999983
+        ],
+        [
+          "renderUtilityServiceIndicator http://127.0.0.1:5174/src/rendering/unitRenderer.js:1717",
+          261.42199999999974
+        ],
+        [
+          "applyVisibilityOverlay http://127.0.0.1:5174/src/rendering/mapRenderer.js:2010",
+          235.75399999999993
+        ],
+        [
+          "isLineObstructedByBuilding http://127.0.0.1:5174/src/logic.js:554",
+          233.7869999999999
+        ],
+        [
+          "insert http://127.0.0.1:5174/src/game/spatialQuadtree.js:129",
+          230.35399999999996
+        ],
+        [
+          "drawUndiscoveredOverlay http://127.0.0.1:5174/src/rendering/mapRenderer.js:2035",
+          227.964
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/rendering/renderer.js:143",
+          223.56400000000002
+        ],
+        [
+          "updateAIUnitInternal http://127.0.0.1:5174/src/ai/enemyUnitBehaviorCore.js:30",
+          220.77400000000003
+        ],
+        [
+          "initializeUnitLeveling http://127.0.0.1:5174/src/utils.js:67",
+          213.39899999999994
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/game/gameLoop.js:166",
+          209.64399999999995
+        ],
+        [
+          "getMineAtTile http://127.0.0.1:5174/src/game/mineSystem.js:90",
+          206.48100000000002
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/rendering/movementTargetRenderer.js:19",
+          197.63499999999988
+        ],
+        [
+          "findPath http://127.0.0.1:5174/src/units.js:312",
+          192.80199999999996
+        ],
+        [
+          "addColorStop :0",
+          191.23399999999992
+        ],
+        [
+          "processAttackQueue http://127.0.0.1:5174/src/game/unitCombat/combatState.js:29",
+          189.55899999999997
+        ],
+        [
+          "handleStuckUnit http://127.0.0.1:5174/src/game/movementStuck.js:148",
+          168.8799999999999
+        ],
+        [
+          "fill :0",
+          164.7359999999999
+        ],
+        [
+          "renderTeslaLightning http://127.0.0.1:5174/src/rendering/effectsRenderer.js:514",
+          163.24400000000003
+        ]
+      ],
+      "errors": [],
+      "label": "baseline-1",
+      "rawCapture": "/tmp/worker-combat-before.json",
+      "heapSamples": [
+        {
+          "heapBytes": 102676981
+        },
+        {
+          "heapBytes": 88456547
+        },
+        {
+          "heapBytes": 82977528
+        },
+        {
+          "heapBytes": 92979549
+        },
+        {
+          "heapBytes": 83056089
+        },
+        {
+          "heapBytes": 96422267
+        },
+        {
+          "heapBytes": 90610452
+        },
+        {
+          "heapBytes": 98112269
+        },
+        {
+          "heapBytes": 89390710
+        },
+        {
+          "heapBytes": 83292033
+        },
+        {
+          "heapBytes": 92497239
+        },
+        {
+          "heapBytes": 95513211
+        },
+        {
+          "heapBytes": 87634611
+        },
+        {
+          "heapBytes": 86616851
+        },
+        {
+          "heapBytes": 97753805
+        },
+        {
+          "heapBytes": 88358910
+        },
+        {
+          "heapBytes": 81242516
+        },
+        {
+          "heapBytes": 109397803
+        },
+        {
+          "heapBytes": 94057883
+        },
+        {
+          "heapBytes": 95538219
+        },
+        {
+          "heapBytes": 96638678
+        },
+        {
+          "heapBytes": 96385882
+        },
+        {
+          "heapBytes": 100767709
+        },
+        {
+          "heapBytes": 110793078
+        },
+        {
+          "heapBytes": 91251183
+        },
+        {
+          "heapBytes": 91441400
+        },
+        {
+          "heapBytes": 107706492
+        },
+        {
+          "heapBytes": 94297937
+        },
+        {
+          "heapBytes": 93736769
+        },
+        {
+          "heapBytes": 90963180
+        },
+        {
+          "heapBytes": 88588644
+        },
+        {
+          "heapBytes": 85800166
+        },
+        {
+          "heapBytes": 86983636
+        },
+        {
+          "heapBytes": 89813810
+        },
+        {
+          "heapBytes": 102514141
+        },
+        {
+          "heapBytes": 102144791
+        },
+        {
+          "heapBytes": 108578745
+        },
+        {
+          "heapBytes": 112466944
+        },
+        {
+          "heapBytes": 108663439
+        },
+        {
+          "heapBytes": 96905795
+        },
+        {
+          "heapBytes": 93136938
+        },
+        {
+          "heapBytes": 112472267
+        },
+        {
+          "heapBytes": 94707400
+        },
+        {
+          "heapBytes": 105717322
+        },
+        {
+          "heapBytes": 98201667
+        },
+        {
+          "heapBytes": 89795694
+        },
+        {
+          "heapBytes": 88833315
+        },
+        {
+          "heapBytes": 104923335
+        },
+        {
+          "heapBytes": 100046518
+        },
+        {
+          "heapBytes": 94173128
+        },
+        {
+          "heapBytes": 88907972
+        },
+        {
+          "heapBytes": 94678585
+        },
+        {
+          "heapBytes": 80837143
+        },
+        {
+          "heapBytes": 95513293
+        },
+        {
+          "heapBytes": 106795822
+        },
+        {
+          "heapBytes": 90332636
+        },
+        {
+          "heapBytes": 109553053
+        },
+        {
+          "heapBytes": 97478784
+        },
+        {
+          "heapBytes": 109816742
+        },
+        {
+          "heapBytes": 96008197
+        },
+        {
+          "heapBytes": 105692545
+        }
+      ]
+    },
+    {
+      "certification": "diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence",
+      "browser": "156.0.8078.4",
+      "headless": false,
+      "production": false,
+      "windowPosition": null,
+      "cpuThrottle": 1,
+      "scene": "battle",
+      "unitCount": 320,
+      "speedPxPerSec": 600,
+      "routeLengthPx": null,
+      "durationMs": 60000,
+      "routeCycles": 0,
+      "travelledPx": 0,
+      "display": {
+        "screenX": -1250,
+        "screenY": -1548,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "monitor": {
+        "version": 2,
+        "kind": "code-for-battle-performance-monitor",
+        "recordedAt": "2026-10-10T20:17:07.383Z",
+        "durationMs": 60004.7,
+        "averageFps": 106.95,
+        "device": {
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1440,
+            "height": 1000
+          },
+          "nativeDevicePixelRatio": 2,
+          "touchPoints": 0
+        },
+        "map": {
+          "widthTiles": 100,
+          "heightTiles": 100,
+          "seed": "11",
+          "players": 4,
+          "oreFields": 8,
+          "oreTotalValue": 64000,
+          "waterPercent": 10,
+          "rockPercent": 5,
+          "shoreNorth": true,
+          "shoreWest": true,
+          "shoreEast": true,
+          "shoreSouth": true,
+          "centerLake": true,
+          "biome": "grass",
+          "biomeRegions": 12,
+          "biomeDistribution": "random",
+          "biomeWeights": {
+            "grass": 30,
+            "soil": 30,
+            "sand": 20,
+            "snow": 20
+          },
+          "snowOnPlateaus": true,
+          "scrollOffset": {
+            "x": 965.8,
+            "y": 1100
+          }
+        },
+        "game": {
+          "speedMultiplier": 1,
+          "gameTime": 60.23,
+          "paused": false,
+          "frameLimiterEnabled": false,
+          "integratedSpriteSheetMode": false,
+          "entities": {
+            "units": 259,
+            "buildings": 13,
+            "factories": 4,
+            "bullets": 0,
+            "explosions": 16,
+            "smokeParticles": 180
+          }
+        },
+        "canvases": {
+          "game": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgl": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgpu": {
+            "cssWidth": 0,
+            "cssHeight": 0,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": null
+          },
+          "configuredCanvasPixelRatio": 2,
+          "overlayCanvasPixelRatio": 2
+        },
+        "renderer": {
+          "gpuTerrain": {
+            "rendered": true,
+            "backend": "webgl",
+            "requestedBackend": "webgl",
+            "rendererBackendChoice": "webgl",
+            "webgpuStatus": null,
+            "waterOnly": true,
+            "streetAtlas": false
+          },
+          "mapChunks": {
+            "chunksDrawn": 12,
+            "chunkHits": 12,
+            "chunkMisses": 0,
+            "chunkRedraws": 0,
+            "chunksPrewarmed": 0,
+            "chunksEvicted": 0,
+            "chunksQueued": 1,
+            "chunksWarmed": 1,
+            "chunkFallbacks": 0,
+            "chunkCacheSize": 48,
+            "chunkWarmQueueSize": 1,
+            "directTilePasses": 0,
+            "chunkSignatureCalls": 0,
+            "topologyReconstructions": 0,
+            "warmBacklog": 1,
+            "warmMaxJobAgeMs": 0.20000004768371582,
+            "warmExpiredJobs": 31,
+            "warmCancelledJobs": 99,
+            "terrainResidentBytes": 41585856,
+            "terrainStagingBytes": 0
+          },
+          "gpuTiming": {
+            "available": true,
+            "reason": null,
+            "milliseconds": 5.04
+          },
+          "gpuMemory": {
+            "available": false,
+            "reason": "browser API unavailable",
+            "bytes": null
+          },
+          "heap": {
+            "available": true,
+            "reason": null,
+            "usedBytes": 113259672,
+            "trend": {
+              "samples": 60,
+              "firstBytes": 97679619,
+              "lastBytes": 113259672,
+              "minBytes": 79616079,
+              "maxBytes": 113296877,
+              "deltaBytes": 15580053,
+              "suspectedCollectionDrops": 28,
+              "note": "Heap drops are suspected collections unless confirmed by a trace"
+            }
+          },
+          "byteUsage": {
+            "terrain-pages": 41585856,
+            "prepared-sprites": 0,
+            "water-topology": 0,
+            "minimap": 0,
+            "effects": 196608
+          }
+        },
+        "timingMs": {
+          "frameInterval": {
+            "samples": 6421,
+            "averageMs": 9.35,
+            "minMs": 5.4,
+            "maxMs": 42.2,
+            "slowFrames": 239
+          },
+          "update": {
+            "samples": 6421,
+            "averageMs": 2.55,
+            "minMs": 0,
+            "maxMs": 22,
+            "slowFrames": 13
+          },
+          "render": {
+            "samples": 6421,
+            "averageMs": 2.15,
+            "minMs": 1.4,
+            "maxMs": 26.8,
+            "slowFrames": 1
+          },
+          "minimap": {
+            "samples": 6421,
+            "averageMs": 0.11,
+            "minMs": 0,
+            "maxMs": 2.2,
+            "slowFrames": 0
+          },
+          "frameWork": {
+            "samples": 6421,
+            "averageMs": 4.71,
+            "minMs": 1.4,
+            "maxMs": 32.5,
+            "slowFrames": 20
+          },
+          "unattributedWait": {
+            "samples": 6421,
+            "averageMs": 4.85,
+            "minMs": 0,
+            "maxMs": 20.9,
+            "slowFrames": 12
+          },
+          "schedulerDelay": {
+            "samples": 6421,
+            "averageMs": 0,
+            "minMs": 0,
+            "maxMs": 0,
+            "slowFrames": 0
+          },
+          "terrain": {
+            "samples": 6421,
+            "averageMs": 0.3,
+            "minMs": 0.1,
+            "maxMs": 5.7,
+            "slowFrames": 0
+          },
+          "entities": {
+            "samples": 6421,
+            "averageMs": 1.09,
+            "minMs": 0.6,
+            "maxMs": 3.9,
+            "slowFrames": 0
+          },
+          "effects": {
+            "samples": 6421,
+            "averageMs": 0.24,
+            "minMs": 0,
+            "maxMs": 24.4,
+            "slowFrames": 1
+          },
+          "ui": {
+            "samples": 6421,
+            "averageMs": 0.09,
+            "minMs": 0,
+            "maxMs": 1,
+            "slowFrames": 0
+          }
+        },
+        "profiler": {
+          "enabled": false,
+          "window": {
+            "frames": 0,
+            "milliseconds": 0,
+            "callSamplesPerSpan": 512
+          },
+          "slowFrameThresholdMs": 13.333,
+          "rows": [],
+          "definitions": [
+            {
+              "id": 1,
+              "name": "FRAME"
+            },
+            {
+              "id": 2,
+              "name": "UPDATE"
+            },
+            {
+              "id": 3,
+              "name": "RENDER"
+            },
+            {
+              "id": 10,
+              "name": "TERRAIN"
+            },
+            {
+              "id": 11,
+              "name": "RENDER_TILES"
+            },
+            {
+              "id": 12,
+              "name": "CHUNK_STATE"
+            },
+            {
+              "id": 13,
+              "name": "CHUNK_SIGNATURE"
+            },
+            {
+              "id": 14,
+              "name": "WARM_QUEUE"
+            },
+            {
+              "id": 15,
+              "name": "CHUNK_REBUILD"
+            },
+            {
+              "id": 20,
+              "name": "CPU_WATER_PASS"
+            },
+            {
+              "id": 21,
+              "name": "CPU_WATER_TILE"
+            },
+            {
+              "id": 30,
+              "name": "WEBGL_BUILD"
+            },
+            {
+              "id": 31,
+              "name": "WEBGL_UPLOAD"
+            },
+            {
+              "id": 32,
+              "name": "WEBGL_SUBMIT"
+            },
+            {
+              "id": 40,
+              "name": "WEBGPU_PACK"
+            },
+            {
+              "id": 41,
+              "name": "WEBGPU_UPLOAD"
+            },
+            {
+              "id": 42,
+              "name": "WEBGPU_SUBMIT"
+            },
+            {
+              "id": 50,
+              "name": "ENTITY_BASES"
+            },
+            {
+              "id": 51,
+              "name": "ENTITY_OVERLAYS"
+            },
+            {
+              "id": 52,
+              "name": "EFFECTS"
+            },
+            {
+              "id": 60,
+              "name": "MINIMAP_BASE"
+            },
+            {
+              "id": 61,
+              "name": "MINIMAP_FOG"
+            },
+            {
+              "id": 62,
+              "name": "MINIMAP_VIDEO"
+            },
+            {
+              "id": 63,
+              "name": "MINIMAP_ENTITIES"
+            },
+            {
+              "id": 70,
+              "name": "HUD"
+            },
+            {
+              "id": 80,
+              "name": "PREP_CLIFF"
+            },
+            {
+              "id": 81,
+              "name": "PREP_BIOME_MASK"
+            },
+            {
+              "id": 1000,
+              "name": "updateBuildingsUnderRepair"
+            },
+            {
+              "id": 1001,
+              "name": "updateBuildingsAwaitingRepair"
+            },
+            {
+              "id": 1002,
+              "name": "_updateGlobalPathfinding"
+            },
+            {
+              "id": 1003,
+              "name": "anonymous"
+            },
+            {
+              "id": 1004,
+              "name": "updateBullets"
+            },
+            {
+              "id": 1005,
+              "name": "updateHarvesterLogic"
+            },
+            {
+              "id": 1006,
+              "name": "updateUnitOccupancy"
+            },
+            {
+              "id": 1007,
+              "name": "findPath"
+            },
+            {
+              "id": 1008,
+              "name": "_updateAIPlayer"
+            },
+            {
+              "id": 1009,
+              "name": "updateEnemyAI"
+            },
+            {
+              "id": 1010,
+              "name": "updateUnitMovement"
+            },
+            {
+              "id": 1011,
+              "name": "updateUnitCombat"
+            },
+            {
+              "id": 1012,
+              "name": "updateWorkshopLogic"
+            },
+            {
+              "id": 1013,
+              "name": "updateShipyardServiceLogic"
+            },
+            {
+              "id": 1014,
+              "name": "updateOreSpread"
+            },
+            {
+              "id": 1015,
+              "name": "updateUnitCollisions"
+            },
+            {
+              "id": 1016,
+              "name": "updateBuildings"
+            },
+            {
+              "id": 1017,
+              "name": "updateDefensiveBuildings"
+            },
+            {
+              "id": 1018,
+              "name": "updateGame"
+            }
+          ]
+        },
+        "diagnostics": {
+          "schemaVersion": 1,
+          "backend": "webgl",
+          "devicePixelRatio": 2,
+          "refreshRateHz": null,
+          "recordingCounterTotals": {
+            "DRAW_CALLS": 77052,
+            "UPLOAD_BYTES": 256840,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2898,
+            "BACKLOG": 6270
+          },
+          "lifetimeCounterTotals": {
+            "DRAW_CALLS": 77142,
+            "UPLOAD_BYTES": 5048572,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2898,
+            "BACKLOG": 6503
+          }
+        },
+        "scheduler": {
+          "sources": {
+            "raf": 0,
+            "watchdog": 0,
+            "timeout": 6421,
+            "unknown": 0
+          },
+          "watchdogShare": 0
+        }
+      },
+      "phases": {
+        "samples": 600,
+        "frame": {
+          "averageMs": 9.02,
+          "p95Ms": 12.4,
+          "maxMs": 29,
+          "fps": 110.86
+        },
+        "drawCalls": {
+          "average": 12,
+          "p95": 12,
+          "max": 12
+        },
+        "phases": {
+          "sim": {
+            "samples": 600,
+            "averageMs": 2.34,
+            "p95Ms": 5.1,
+            "minMs": 0,
+            "maxMs": 22
+          },
+          "movement": {
+            "samples": 600,
+            "averageMs": 1.29,
+            "p95Ms": 2.7,
+            "minMs": 0,
+            "maxMs": 4.3
+          },
+          "combat": {
+            "samples": 600,
+            "averageMs": 0.21,
+            "p95Ms": 0.5,
+            "minMs": 0,
+            "maxMs": 0.8
+          },
+          "pathfinding": {
+            "samples": 600,
+            "averageMs": 0.02,
+            "p95Ms": 0.1,
+            "minMs": 0,
+            "maxMs": 0.2
+          },
+          "ai": {
+            "samples": 600,
+            "averageMs": 0.21,
+            "p95Ms": 1,
+            "minMs": 0,
+            "maxMs": 17.6
+          },
+          "fog": {
+            "samples": 600,
+            "averageMs": 0.12,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "terrain": {
+            "samples": 600,
+            "averageMs": 0.26,
+            "p95Ms": 0.4,
+            "minMs": 0.1,
+            "maxMs": 1.2
+          },
+          "entities": {
+            "samples": 600,
+            "averageMs": 0.99,
+            "p95Ms": 1.2,
+            "minMs": 0.6,
+            "maxMs": 1.6
+          },
+          "effects": {
+            "samples": 600,
+            "averageMs": 0.18,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "ui": {
+            "samples": 600,
+            "averageMs": 0.08,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.3
+          },
+          "minimap": {
+            "samples": 600,
+            "averageMs": 0.1,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 1.8
+          }
+        }
+      },
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+      "hardwareConcurrency": 8,
+      "frames": {
+        "frameCount": 4496,
+        "durationMs": 60002.4,
+        "fps": 74.93033611988854,
+        "meanFrameMs": 13.345729537366548,
+        "p95FrameMs": 14.900000000001455,
+        "p99FrameMs": 15.30000000000291,
+        "maxFrameMs": 27.5,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 2080,
+        "missedDeadlineRatio": 0.4626334519572954,
+        "passed75Fps": false
+      },
+      "cpuTailsAvailable": true,
+      "cpuTails": {
+        "update": {
+          "samples": 6421,
+          "p50Ms": 3.799999952316284,
+          "p95Ms": 5.5,
+          "p99Ms": 7,
+          "maxMs": 22,
+          "missedDeadlines": 13
+        },
+        "render": {
+          "samples": 6421,
+          "p50Ms": 2.100000023841858,
+          "p95Ms": 2.700000047683716,
+          "p99Ms": 3.4000000953674316,
+          "maxMs": 26.799999952316284,
+          "missedDeadlines": 1
+        },
+        "work": {
+          "samples": 6421,
+          "p50Ms": 5.799999952316284,
+          "p95Ms": 8,
+          "p99Ms": 9.700000047683716,
+          "maxMs": 32.5,
+          "missedDeadlines": 20
+        }
+      },
+      "cpuSelfTime": [
+        [
+          "(idle) :0",
+          23083.317000000363
+        ],
+        [
+          "(program) :0",
+          5092.249999999988
+        ],
+        [
+          "drawImage :0",
+          3442.9219999999978
+        ],
+        [
+          "updateUnitMovement http://127.0.0.1:5174/src/game/unitMovement.js:52",
+          1609.5269999999987
+        ],
+        [
+          "updateUnitPosition http://127.0.0.1:5174/src/game/movementCore.js:271",
+          1512.9739999999956
+        ],
+        [
+          "queryCircleInto http://127.0.0.1:5174/src/game/spatialQuadtree.js:162",
+          1166.4639999999986
+        ],
+        [
+          "hasFriendlyUnitOnTile http://127.0.0.1:5174/src/game/movementCore.js:204",
+          740.821999999999
+        ],
+        [
+          "applyVisibility http://127.0.0.1:5174/src/game/shadowOfWar.js:190",
+          674.6289999999992
+        ],
+        [
+          "restore :0",
+          647.0129999999991
+        ],
+        [
+          "save :0",
+          560.9349999999991
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/performanceUtils.js:14",
+          519.9579999999996
+        ],
+        [
+          "observeUnitCommandSignals http://127.0.0.1:5174/src/game/unitCommandHistory.js:123",
+          475.7239999999997
+        ],
+        [
+          "hasClearShot http://127.0.0.1:5174/src/logic.js:603",
+          457.6700000000001
+        ],
+        [
+          "prepareFrameEntityIndex http://127.0.0.1:5174/src/rendering/renderer.js:196",
+          408.82599999999957
+        ],
+        [
+          "updateUnitRotation http://127.0.0.1:5174/src/game/unitMovement.js:368",
+          393.93999999999966
+        ],
+        [
+          "renderRadarOffline http://127.0.0.1:5174/src/rendering/minimapRenderer.js:492",
+          392.4159999999998
+        ],
+        [
+          "(garbage collector) :0",
+          384.243
+        ],
+        [
+          "rebuild http://127.0.0.1:5174/src/game/spatialQuadtree.js:242",
+          374.5159999999999
+        ],
+        [
+          "paintStatusBarOutline http://127.0.0.1:5174/src/utils/statusBarGradient.js:262",
+          373.1589999999998
+        ],
+        [
+          "renderAttackTargetIndicator http://127.0.0.1:5174/src/rendering/unitRenderer.js:1588",
+          372.4049999999999
+        ],
+        [
+          "renderTankWithImages http://127.0.0.1:5174/src/rendering/tankImageRenderer.js:170",
+          351.02899999999966
+        ],
+        [
+          "frameNeedsEntityIndex http://127.0.0.1:5174/src/rendering/renderer.js:159",
+          318.65099999999984
+        ],
+        [
+          "fillRect :0",
+          318.5779999999998
+        ],
+        [
+          "isAirborneUnit http://127.0.0.1:5174/src/game/movementHelpers.js:46",
+          306.89899999999983
+        ],
+        [
+          "checkUnitCollision http://127.0.0.1:5174/src/game/movementCollision.js:459",
+          297.827
+        ],
+        [
+          "step http://127.0.0.1:5174/src/benchmark/benchmarkRunner.js:412",
+          290.0189999999998
+        ],
+        [
+          "fill :0",
+          237.53999999999988
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/game/gameLoop.js:166",
+          236.69599999999977
+        ],
+        [
+          "renderUnitOverlay http://127.0.0.1:5174/src/rendering/unitRenderer.js:2053",
+          232.84000000000003
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/rendering/movementTargetRenderer.js:19",
+          225.86799999999997
+        ],
+        [
+          "getMineAtTile http://127.0.0.1:5174/src/game/mineSystem.js:90",
+          216.35099999999989
+        ],
+        [
+          "insert http://127.0.0.1:5174/src/game/spatialQuadtree.js:129",
+          210.22000000000003
+        ],
+        [
+          "renderUtilityServiceIndicator http://127.0.0.1:5174/src/rendering/unitRenderer.js:1717",
+          207.33599999999996
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/game/unitCombat.js:28",
+          197.2340000000001
+        ],
+        [
+          "initializeUnitLeveling http://127.0.0.1:5174/src/utils.js:67",
+          195.52899999999997
+        ],
+        [
+          "getGamepads :0",
+          190.7670000000001
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/updateGame.js:466",
+          187.8479999999999
+        ],
+        [
+          "findPath http://127.0.0.1:5174/src/units.js:312",
+          174.11399999999995
+        ],
+        [
+          "renderExplosions http://127.0.0.1:5174/src/rendering/effectsRenderer.js:336",
+          172.354
+        ],
+        [
+          "renderGame http://127.0.0.1:5174/src/rendering/renderer.js:548",
+          171.40399999999988
+        ],
+        [
+          "updateAIUnitInternal http://127.0.0.1:5174/src/ai/enemyUnitBehaviorCore.js:30",
+          169.9110000000001
+        ],
+        [
+          "drawUndiscoveredOverlay http://127.0.0.1:5174/src/rendering/mapRenderer.js:2035",
+          164.76100000000002
+        ],
+        [
+          "handleStuckUnit http://127.0.0.1:5174/src/game/movementStuck.js:148",
+          161.483
+        ],
+        [
+          "addColorStop :0",
+          156.09799999999998
+        ],
+        [
+          "renderTeslaLightning http://127.0.0.1:5174/src/rendering/effectsRenderer.js:514",
+          155.17799999999997
+        ]
+      ],
+      "errors": [],
+      "label": "baseline-2",
+      "rawCapture": "/tmp/worker-combat-before-2.json",
+      "heapSamples": [
+        {
+          "heapBytes": 97679619
+        },
+        {
+          "heapBytes": 94625088
+        },
+        {
+          "heapBytes": 93223626
+        },
+        {
+          "heapBytes": 93261824
+        },
+        {
+          "heapBytes": 90381716
+        },
+        {
+          "heapBytes": 79616079
+        },
+        {
+          "heapBytes": 91518215
+        },
+        {
+          "heapBytes": 89010817
+        },
+        {
+          "heapBytes": 95706570
+        },
+        {
+          "heapBytes": 86155262
+        },
+        {
+          "heapBytes": 92775032
+        },
+        {
+          "heapBytes": 91797210
+        },
+        {
+          "heapBytes": 81173387
+        },
+        {
+          "heapBytes": 98940702
+        },
+        {
+          "heapBytes": 88378319
+        },
+        {
+          "heapBytes": 95870539
+        },
+        {
+          "heapBytes": 106358422
+        },
+        {
+          "heapBytes": 95027116
+        },
+        {
+          "heapBytes": 93412625
+        },
+        {
+          "heapBytes": 87840689
+        },
+        {
+          "heapBytes": 96392625
+        },
+        {
+          "heapBytes": 95573536
+        },
+        {
+          "heapBytes": 89306877
+        },
+        {
+          "heapBytes": 85528374
+        },
+        {
+          "heapBytes": 94503718
+        },
+        {
+          "heapBytes": 96228013
+        },
+        {
+          "heapBytes": 93206723
+        },
+        {
+          "heapBytes": 98586583
+        },
+        {
+          "heapBytes": 88100285
+        },
+        {
+          "heapBytes": 94799941
+        },
+        {
+          "heapBytes": 106512926
+        },
+        {
+          "heapBytes": 105235983
+        },
+        {
+          "heapBytes": 102359039
+        },
+        {
+          "heapBytes": 84716483
+        },
+        {
+          "heapBytes": 96631056
+        },
+        {
+          "heapBytes": 109813367
+        },
+        {
+          "heapBytes": 96219536
+        },
+        {
+          "heapBytes": 94182454
+        },
+        {
+          "heapBytes": 100772762
+        },
+        {
+          "heapBytes": 107238147
+        },
+        {
+          "heapBytes": 90947991
+        },
+        {
+          "heapBytes": 104577898
+        },
+        {
+          "heapBytes": 96536183
+        },
+        {
+          "heapBytes": 91019299
+        },
+        {
+          "heapBytes": 95594837
+        },
+        {
+          "heapBytes": 106287111
+        },
+        {
+          "heapBytes": 90536952
+        },
+        {
+          "heapBytes": 108291240
+        },
+        {
+          "heapBytes": 87856842
+        },
+        {
+          "heapBytes": 88627684
+        },
+        {
+          "heapBytes": 100046275
+        },
+        {
+          "heapBytes": 94718826
+        },
+        {
+          "heapBytes": 96445375
+        },
+        {
+          "heapBytes": 85768184
+        },
+        {
+          "heapBytes": 101767347
+        },
+        {
+          "heapBytes": 90537426
+        },
+        {
+          "heapBytes": 85071553
+        },
+        {
+          "heapBytes": 108271014
+        },
+        {
+          "heapBytes": 86536190
+        },
+        {
+          "heapBytes": 112864155
+        },
+        {
+          "heapBytes": 109691080
+        }
+      ]
+    },
+    {
+      "certification": "diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence",
+      "browser": "156.0.8078.4",
+      "headless": false,
+      "production": false,
+      "windowPosition": null,
+      "cpuThrottle": 1,
+      "scene": "battle",
+      "unitCount": 320,
+      "speedPxPerSec": 600,
+      "routeLengthPx": null,
+      "durationMs": 60000,
+      "routeCycles": 0,
+      "travelledPx": 0,
+      "display": {
+        "screenX": -1250,
+        "screenY": -1548,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "monitor": {
+        "version": 2,
+        "kind": "code-for-battle-performance-monitor",
+        "recordedAt": "2026-10-10T20:21:21.337Z",
+        "durationMs": 60011.3,
+        "averageFps": 102.35,
+        "device": {
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1440,
+            "height": 1000
+          },
+          "nativeDevicePixelRatio": 2,
+          "touchPoints": 0
+        },
+        "map": {
+          "widthTiles": 100,
+          "heightTiles": 100,
+          "seed": "11",
+          "players": 4,
+          "oreFields": 8,
+          "oreTotalValue": 64000,
+          "waterPercent": 10,
+          "rockPercent": 5,
+          "shoreNorth": true,
+          "shoreWest": true,
+          "shoreEast": true,
+          "shoreSouth": true,
+          "centerLake": true,
+          "biome": "grass",
+          "biomeRegions": 12,
+          "biomeDistribution": "random",
+          "biomeWeights": {
+            "grass": 30,
+            "soil": 30,
+            "sand": 20,
+            "snow": 20
+          },
+          "snowOnPlateaus": true,
+          "scrollOffset": {
+            "x": 989.86,
+            "y": 1100
+          }
+        },
+        "game": {
+          "speedMultiplier": 1,
+          "gameTime": 60.28,
+          "paused": false,
+          "frameLimiterEnabled": false,
+          "integratedSpriteSheetMode": false,
+          "entities": {
+            "units": 259,
+            "buildings": 13,
+            "factories": 4,
+            "bullets": 0,
+            "explosions": 12,
+            "smokeParticles": 179
+          }
+        },
+        "canvases": {
+          "game": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgl": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgpu": {
+            "cssWidth": 0,
+            "cssHeight": 0,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": null
+          },
+          "configuredCanvasPixelRatio": 2,
+          "overlayCanvasPixelRatio": 2
+        },
+        "renderer": {
+          "gpuTerrain": {
+            "rendered": true,
+            "backend": "webgl",
+            "requestedBackend": "webgl",
+            "rendererBackendChoice": "webgl",
+            "webgpuStatus": null,
+            "waterOnly": true,
+            "streetAtlas": false
+          },
+          "mapChunks": {
+            "chunksDrawn": 12,
+            "chunkHits": 12,
+            "chunkMisses": 0,
+            "chunkRedraws": 0,
+            "chunksPrewarmed": 0,
+            "chunksEvicted": 0,
+            "chunksQueued": 0,
+            "chunksWarmed": 1,
+            "chunkFallbacks": 0,
+            "chunkCacheSize": 48,
+            "chunkWarmQueueSize": 0,
+            "directTilePasses": 0,
+            "chunkSignatureCalls": 0,
+            "topologyReconstructions": 0,
+            "warmBacklog": 0,
+            "warmMaxJobAgeMs": 0,
+            "warmExpiredJobs": 32,
+            "warmCancelledJobs": 109,
+            "terrainResidentBytes": 40791744,
+            "terrainStagingBytes": 0
+          },
+          "gpuTiming": {
+            "available": true,
+            "reason": null,
+            "milliseconds": 4.93
+          },
+          "gpuMemory": {
+            "available": false,
+            "reason": "browser API unavailable",
+            "bytes": null
+          },
+          "heap": {
+            "available": true,
+            "reason": null,
+            "usedBytes": 112966827,
+            "trend": {
+              "samples": 60,
+              "firstBytes": 96732187,
+              "lastBytes": 112966827,
+              "minBytes": 81693742,
+              "maxBytes": 114772298,
+              "deltaBytes": 16234640,
+              "suspectedCollectionDrops": 31,
+              "note": "Heap drops are suspected collections unless confirmed by a trace"
+            }
+          },
+          "byteUsage": {
+            "terrain-pages": 40791744,
+            "prepared-sprites": 0,
+            "water-topology": 0,
+            "minimap": 0,
+            "effects": 196608
+          }
+        },
+        "timingMs": {
+          "frameInterval": {
+            "samples": 6142,
+            "averageMs": 9.77,
+            "minMs": 5.8,
+            "maxMs": 46.3,
+            "slowFrames": 334
+          },
+          "update": {
+            "samples": 6142,
+            "averageMs": 2.83,
+            "minMs": 0,
+            "maxMs": 36.5,
+            "slowFrames": 13
+          },
+          "render": {
+            "samples": 6142,
+            "averageMs": 2.23,
+            "minMs": 1.5,
+            "maxMs": 14.2,
+            "slowFrames": 1
+          },
+          "minimap": {
+            "samples": 6142,
+            "averageMs": 0.11,
+            "minMs": 0,
+            "maxMs": 2.3,
+            "slowFrames": 0
+          },
+          "frameWork": {
+            "samples": 6142,
+            "averageMs": 5.07,
+            "minMs": 1.5,
+            "maxMs": 40.8,
+            "slowFrames": 20
+          },
+          "unattributedWait": {
+            "samples": 6142,
+            "averageMs": 4.95,
+            "minMs": 0,
+            "maxMs": 32.6,
+            "slowFrames": 16
+          },
+          "schedulerDelay": {
+            "samples": 6142,
+            "averageMs": 0,
+            "minMs": 0,
+            "maxMs": 0,
+            "slowFrames": 0
+          },
+          "terrain": {
+            "samples": 6142,
+            "averageMs": 0.3,
+            "minMs": 0.1,
+            "maxMs": 6,
+            "slowFrames": 0
+          },
+          "entities": {
+            "samples": 6142,
+            "averageMs": 1.15,
+            "minMs": 0.7,
+            "maxMs": 6.5,
+            "slowFrames": 0
+          },
+          "effects": {
+            "samples": 6142,
+            "averageMs": 0.24,
+            "minMs": 0,
+            "maxMs": 1,
+            "slowFrames": 0
+          },
+          "ui": {
+            "samples": 6142,
+            "averageMs": 0.09,
+            "minMs": 0,
+            "maxMs": 1.2,
+            "slowFrames": 0
+          }
+        },
+        "profiler": {
+          "enabled": false,
+          "window": {
+            "frames": 0,
+            "milliseconds": 0,
+            "callSamplesPerSpan": 512
+          },
+          "slowFrameThresholdMs": 13.333,
+          "rows": [],
+          "definitions": [
+            {
+              "id": 1,
+              "name": "FRAME"
+            },
+            {
+              "id": 2,
+              "name": "UPDATE"
+            },
+            {
+              "id": 3,
+              "name": "RENDER"
+            },
+            {
+              "id": 10,
+              "name": "TERRAIN"
+            },
+            {
+              "id": 11,
+              "name": "RENDER_TILES"
+            },
+            {
+              "id": 12,
+              "name": "CHUNK_STATE"
+            },
+            {
+              "id": 13,
+              "name": "CHUNK_SIGNATURE"
+            },
+            {
+              "id": 14,
+              "name": "WARM_QUEUE"
+            },
+            {
+              "id": 15,
+              "name": "CHUNK_REBUILD"
+            },
+            {
+              "id": 20,
+              "name": "CPU_WATER_PASS"
+            },
+            {
+              "id": 21,
+              "name": "CPU_WATER_TILE"
+            },
+            {
+              "id": 30,
+              "name": "WEBGL_BUILD"
+            },
+            {
+              "id": 31,
+              "name": "WEBGL_UPLOAD"
+            },
+            {
+              "id": 32,
+              "name": "WEBGL_SUBMIT"
+            },
+            {
+              "id": 40,
+              "name": "WEBGPU_PACK"
+            },
+            {
+              "id": 41,
+              "name": "WEBGPU_UPLOAD"
+            },
+            {
+              "id": 42,
+              "name": "WEBGPU_SUBMIT"
+            },
+            {
+              "id": 50,
+              "name": "ENTITY_BASES"
+            },
+            {
+              "id": 51,
+              "name": "ENTITY_OVERLAYS"
+            },
+            {
+              "id": 52,
+              "name": "EFFECTS"
+            },
+            {
+              "id": 60,
+              "name": "MINIMAP_BASE"
+            },
+            {
+              "id": 61,
+              "name": "MINIMAP_FOG"
+            },
+            {
+              "id": 62,
+              "name": "MINIMAP_VIDEO"
+            },
+            {
+              "id": 63,
+              "name": "MINIMAP_ENTITIES"
+            },
+            {
+              "id": 70,
+              "name": "HUD"
+            },
+            {
+              "id": 80,
+              "name": "PREP_CLIFF"
+            },
+            {
+              "id": 81,
+              "name": "PREP_BIOME_MASK"
+            },
+            {
+              "id": 1000,
+              "name": "updateBuildingsUnderRepair"
+            },
+            {
+              "id": 1001,
+              "name": "updateBuildingsAwaitingRepair"
+            },
+            {
+              "id": 1002,
+              "name": "_updateGlobalPathfinding"
+            },
+            {
+              "id": 1003,
+              "name": "anonymous"
+            },
+            {
+              "id": 1004,
+              "name": "updateBullets"
+            },
+            {
+              "id": 1005,
+              "name": "updateHarvesterLogic"
+            },
+            {
+              "id": 1006,
+              "name": "updateUnitOccupancy"
+            },
+            {
+              "id": 1007,
+              "name": "findPath"
+            },
+            {
+              "id": 1008,
+              "name": "_updateAIPlayer"
+            },
+            {
+              "id": 1009,
+              "name": "updateEnemyAI"
+            },
+            {
+              "id": 1010,
+              "name": "updateUnitMovement"
+            },
+            {
+              "id": 1011,
+              "name": "updateUnitCombat"
+            },
+            {
+              "id": 1012,
+              "name": "updateWorkshopLogic"
+            },
+            {
+              "id": 1013,
+              "name": "updateShipyardServiceLogic"
+            },
+            {
+              "id": 1014,
+              "name": "updateOreSpread"
+            },
+            {
+              "id": 1015,
+              "name": "updateUnitCollisions"
+            },
+            {
+              "id": 1016,
+              "name": "updateBuildings"
+            },
+            {
+              "id": 1017,
+              "name": "updateDefensiveBuildings"
+            },
+            {
+              "id": 1018,
+              "name": "updateGame"
+            }
+          ]
+        },
+        "diagnostics": {
+          "schemaVersion": 1,
+          "backend": "webgl",
+          "devicePixelRatio": 2,
+          "refreshRateHz": null,
+          "recordingCounterTotals": {
+            "DRAW_CALLS": 73704,
+            "UPLOAD_BYTES": 245680,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2610,
+            "BACKLOG": 5826
+          },
+          "lifetimeCounterTotals": {
+            "DRAW_CALLS": 73794,
+            "UPLOAD_BYTES": 5037412,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2610,
+            "BACKLOG": 6059
+          }
+        },
+        "scheduler": {
+          "sources": {
+            "raf": 0,
+            "watchdog": 0,
+            "timeout": 6142,
+            "unknown": 0
+          },
+          "watchdogShare": 0
+        }
+      },
+      "phases": {
+        "samples": 600,
+        "frame": {
+          "averageMs": 9.57,
+          "p95Ms": 13.1,
+          "maxMs": 46.3,
+          "fps": 104.49
+        },
+        "drawCalls": {
+          "average": 12,
+          "p95": 12,
+          "max": 12
+        },
+        "phases": {
+          "sim": {
+            "samples": 600,
+            "averageMs": 2.7,
+            "p95Ms": 5.7,
+            "minMs": 0,
+            "maxMs": 30.2
+          },
+          "movement": {
+            "samples": 600,
+            "averageMs": 1.48,
+            "p95Ms": 3,
+            "minMs": 0,
+            "maxMs": 6.3
+          },
+          "combat": {
+            "samples": 600,
+            "averageMs": 0.24,
+            "p95Ms": 0.5,
+            "minMs": 0,
+            "maxMs": 1
+          },
+          "pathfinding": {
+            "samples": 600,
+            "averageMs": 0.02,
+            "p95Ms": 0.1,
+            "minMs": 0,
+            "maxMs": 0.2
+          },
+          "ai": {
+            "samples": 600,
+            "averageMs": 0.26,
+            "p95Ms": 1.2,
+            "minMs": 0,
+            "maxMs": 24.1
+          },
+          "fog": {
+            "samples": 600,
+            "averageMs": 0.13,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.6
+          },
+          "terrain": {
+            "samples": 600,
+            "averageMs": 0.26,
+            "p95Ms": 0.4,
+            "minMs": 0.1,
+            "maxMs": 1.6
+          },
+          "entities": {
+            "samples": 600,
+            "averageMs": 1.05,
+            "p95Ms": 1.3,
+            "minMs": 0.7,
+            "maxMs": 1.6
+          },
+          "effects": {
+            "samples": 600,
+            "averageMs": 0.21,
+            "p95Ms": 0.3,
+            "minMs": 0.1,
+            "maxMs": 0.4
+          },
+          "ui": {
+            "samples": 600,
+            "averageMs": 0.1,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.3
+          },
+          "minimap": {
+            "samples": 600,
+            "averageMs": 0.1,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 2.3
+          }
+        }
+      },
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+      "hardwareConcurrency": 8,
+      "frames": {
+        "frameCount": 4494,
+        "durationMs": 60002.6,
+        "fps": 74.89675447397279,
+        "meanFrameMs": 13.35171339563863,
+        "p95FrameMs": 15.19999999999709,
+        "p99FrameMs": 15.39999999999418,
+        "maxFrameMs": 39.30000000000018,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 2088,
+        "missedDeadlineRatio": 0.46461949265687585,
+        "passed75Fps": false
+      },
+      "cpuTailsAvailable": true,
+      "cpuTails": {
+        "update": {
+          "samples": 6142,
+          "p50Ms": 4,
+          "p95Ms": 5.899999976158142,
+          "p99Ms": 7.300000071525574,
+          "maxMs": 36.5,
+          "missedDeadlines": 13
+        },
+        "render": {
+          "samples": 6142,
+          "p50Ms": 2.1999999284744263,
+          "p95Ms": 2.8000000715255737,
+          "p99Ms": 3.5,
+          "maxMs": 14.200000047683716,
+          "missedDeadlines": 1
+        },
+        "work": {
+          "samples": 6142,
+          "p50Ms": 6.200000047683716,
+          "p95Ms": 8.5,
+          "p99Ms": 10,
+          "maxMs": 40.800000071525574,
+          "missedDeadlines": 20
+        }
+      },
+      "cpuSelfTime": [
+        [
+          "(idle) :0",
+          22214.20800000011
+        ],
+        [
+          "(program) :0",
+          5213.3269999999875
+        ],
+        [
+          "drawImage :0",
+          3477.868000000002
+        ],
+        [
+          "updateUnitMovement http://127.0.0.1:5174/src/game/unitMovement.js:52",
+          1561.6589999999985
+        ],
+        [
+          "updateUnitPosition http://127.0.0.1:5174/src/game/movementCore.js:271",
+          1490.9420000000011
+        ],
+        [
+          "queryCircleInto http://127.0.0.1:5174/src/game/spatialQuadtree.js:162",
+          1055.9609999999986
+        ],
+        [
+          "hasClearShot http://127.0.0.1:5174/src/logic.js:603",
+          709.1079999999995
+        ],
+        [
+          "hasFriendlyUnitOnTile http://127.0.0.1:5174/src/game/movementCore.js:204",
+          706.3289999999987
+        ],
+        [
+          "renderAttackTargetIndicator http://127.0.0.1:5174/src/rendering/unitRenderer.js:1588",
+          559.9449999999993
+        ],
+        [
+          "observeUnitCommandSignals http://127.0.0.1:5174/src/game/unitCommandHistory.js:123",
+          555.1029999999995
+        ],
+        [
+          "rebuild http://127.0.0.1:5174/src/game/spatialQuadtree.js:242",
+          547.3999999999996
+        ],
+        [
+          "paintStatusBarOutline http://127.0.0.1:5174/src/utils/statusBarGradient.js:262",
+          531.2439999999995
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/performanceUtils.js:14",
+          492.1529999999995
+        ],
+        [
+          "frameNeedsEntityIndex http://127.0.0.1:5174/src/rendering/renderer.js:159",
+          484.1019999999997
+        ],
+        [
+          "applyVisibility http://127.0.0.1:5174/src/game/shadowOfWar.js:190",
+          483.25099999999975
+        ],
+        [
+          "restore :0",
+          476.5179999999995
+        ],
+        [
+          "prepareFrameEntityIndex http://127.0.0.1:5174/src/rendering/renderer.js:196",
+          475.934
+        ],
+        [
+          "fillRect :0",
+          469.6149999999998
+        ],
+        [
+          "save :0",
+          445.6879999999999
+        ],
+        [
+          "updateUnitRotation http://127.0.0.1:5174/src/game/unitMovement.js:368",
+          422.97899999999953
+        ],
+        [
+          "(garbage collector) :0",
+          420.505
+        ],
+        [
+          "renderUtilityServiceIndicator http://127.0.0.1:5174/src/rendering/unitRenderer.js:1717",
+          336.99399999999986
+        ],
+        [
+          "getMineAtTile http://127.0.0.1:5174/src/game/mineSystem.js:90",
+          321.5169999999998
+        ],
+        [
+          "checkUnitCollision http://127.0.0.1:5174/src/game/movementCollision.js:459",
+          320.5959999999999
+        ],
+        [
+          "isAirborneUnit http://127.0.0.1:5174/src/game/movementHelpers.js:46",
+          314.22699999999975
+        ],
+        [
+          "initializeUnitLeveling http://127.0.0.1:5174/src/utils.js:67",
+          287.79499999999985
+        ],
+        [
+          "renderUnitOverlay http://127.0.0.1:5174/src/rendering/unitRenderer.js:2053",
+          282.3359999999999
+        ],
+        [
+          "step http://127.0.0.1:5174/src/benchmark/benchmarkRunner.js:412",
+          278.02099999999984
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/game/unitCombat.js:28",
+          271.85899999999987
+        ],
+        [
+          "renderRadarOffline http://127.0.0.1:5174/src/rendering/minimapRenderer.js:492",
+          262.19499999999994
+        ],
+        [
+          "renderTankWithImages http://127.0.0.1:5174/src/rendering/tankImageRenderer.js:170",
+          260.48499999999984
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/rendering/renderer.js:143",
+          233.90700000000004
+        ],
+        [
+          "updateAIUnitInternal http://127.0.0.1:5174/src/ai/enemyUnitBehaviorCore.js:30",
+          226.315
+        ],
+        [
+          "drawUndiscoveredOverlay http://127.0.0.1:5174/src/rendering/mapRenderer.js:2035",
+          217.708
+        ],
+        [
+          "insert http://127.0.0.1:5174/src/game/spatialQuadtree.js:129",
+          217.62899999999993
+        ],
+        [
+          "isLineObstructedByBuilding http://127.0.0.1:5174/src/logic.js:554",
+          215.45499999999993
+        ],
+        [
+          "getGamepads :0",
+          214.67999999999995
+        ],
+        [
+          "isPositionBlockedForCollision http://127.0.0.1:5174/src/game/movementCollision.js:211",
+          214.4509999999999
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/rendering/movementTargetRenderer.js:19",
+          212.47599999999994
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/rendering/retreatTargetRenderer.js:26",
+          209.35799999999998
+        ],
+        [
+          "fill :0",
+          201.90599999999998
+        ],
+        [
+          "addColorStop :0",
+          194.39499999999995
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/game/unitMovement.js:324",
+          184.43499999999997
+        ],
+        [
+          "renderLevelStars http://127.0.0.1:5174/src/rendering/unitRenderer.js:1803",
+          180.21399999999997
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5174/src/game/gameLoop.js:166",
+          178.05700000000004
+        ]
+      ],
+      "errors": [],
+      "label": "baseline-3",
+      "rawCapture": "/tmp/worker-combat-before-3.json",
+      "heapSamples": [
+        {
+          "heapBytes": 96732187
+        },
+        {
+          "heapBytes": 94111118
+        },
+        {
+          "heapBytes": 93899585
+        },
+        {
+          "heapBytes": 94835577
+        },
+        {
+          "heapBytes": 84343222
+        },
+        {
+          "heapBytes": 87906150
+        },
+        {
+          "heapBytes": 90385374
+        },
+        {
+          "heapBytes": 83213802
+        },
+        {
+          "heapBytes": 86978587
+        },
+        {
+          "heapBytes": 90123353
+        },
+        {
+          "heapBytes": 82158305
+        },
+        {
+          "heapBytes": 86717546
+        },
+        {
+          "heapBytes": 88791323
+        },
+        {
+          "heapBytes": 95604823
+        },
+        {
+          "heapBytes": 82618287
+        },
+        {
+          "heapBytes": 92332018
+        },
+        {
+          "heapBytes": 101302772
+        },
+        {
+          "heapBytes": 92927251
+        },
+        {
+          "heapBytes": 107664743
+        },
+        {
+          "heapBytes": 91638052
+        },
+        {
+          "heapBytes": 99013641
+        },
+        {
+          "heapBytes": 109767778
+        },
+        {
+          "heapBytes": 105484120
+        },
+        {
+          "heapBytes": 99064086
+        },
+        {
+          "heapBytes": 98706149
+        },
+        {
+          "heapBytes": 92449522
+        },
+        {
+          "heapBytes": 111626447
+        },
+        {
+          "heapBytes": 90933694
+        },
+        {
+          "heapBytes": 112498975
+        },
+        {
+          "heapBytes": 92701806
+        },
+        {
+          "heapBytes": 110293602
+        },
+        {
+          "heapBytes": 97623942
+        },
+        {
+          "heapBytes": 111859744
+        },
+        {
+          "heapBytes": 90054645
+        },
+        {
+          "heapBytes": 100899078
+        },
+        {
+          "heapBytes": 89836507
+        },
+        {
+          "heapBytes": 102357021
+        },
+        {
+          "heapBytes": 109339948
+        },
+        {
+          "heapBytes": 89765332
+        },
+        {
+          "heapBytes": 105249514
+        },
+        {
+          "heapBytes": 97842475
+        },
+        {
+          "heapBytes": 105618640
+        },
+        {
+          "heapBytes": 104238582
+        },
+        {
+          "heapBytes": 93817998
+        },
+        {
+          "heapBytes": 94559000
+        },
+        {
+          "heapBytes": 110279077
+        },
+        {
+          "heapBytes": 86988222
+        },
+        {
+          "heapBytes": 84253408
+        },
+        {
+          "heapBytes": 99693401
+        },
+        {
+          "heapBytes": 83976062
+        },
+        {
+          "heapBytes": 98504546
+        },
+        {
+          "heapBytes": 101481074
+        },
+        {
+          "heapBytes": 108125374
+        },
+        {
+          "heapBytes": 86898015
+        },
+        {
+          "heapBytes": 91405862
+        },
+        {
+          "heapBytes": 111517282
+        },
+        {
+          "heapBytes": 114875596
+        },
+        {
+          "heapBytes": 110566227
+        },
+        {
+          "heapBytes": 110495646
+        },
+        {
+          "heapBytes": 88421498
+        },
+        {
+          "heapBytes": 100131197
+        }
+      ]
+    },
+    {
+      "certification": "diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence",
+      "browser": "156.0.8078.4",
+      "headless": false,
+      "production": false,
+      "windowPosition": null,
+      "cpuThrottle": 1,
+      "scene": "battle",
+      "speedPxPerSec": 600,
+      "routeLengthPx": null,
+      "durationMs": 60000,
+      "routeCycles": 0,
+      "travelledPx": 0,
+      "display": {
+        "screenX": -1250,
+        "screenY": -1548,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "monitor": {
+        "version": 2,
+        "kind": "code-for-battle-performance-monitor",
+        "recordedAt": "2026-10-10T20:14:20.006Z",
+        "durationMs": 60103.8,
+        "averageFps": 56.59,
+        "device": {
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1440,
+            "height": 1000
+          },
+          "nativeDevicePixelRatio": 2,
+          "touchPoints": 0
+        },
+        "map": {
+          "widthTiles": 100,
+          "heightTiles": 100,
+          "seed": "11",
+          "players": 4,
+          "oreFields": 8,
+          "oreTotalValue": 64000,
+          "waterPercent": 10,
+          "rockPercent": 5,
+          "shoreNorth": true,
+          "shoreWest": true,
+          "shoreEast": true,
+          "shoreSouth": true,
+          "centerLake": true,
+          "biome": "grass",
+          "biomeRegions": 12,
+          "biomeDistribution": "random",
+          "biomeWeights": {
+            "grass": 30,
+            "soil": 30,
+            "sand": 20,
+            "snow": 20
+          },
+          "snowOnPlateaus": true,
+          "scrollOffset": {
+            "x": 1005.04,
+            "y": 1100
+          }
+        },
+        "game": {
+          "speedMultiplier": 1,
+          "gameTime": 48.73,
+          "paused": false,
+          "frameLimiterEnabled": false,
+          "integratedSpriteSheetMode": false,
+          "entities": {
+            "units": 266,
+            "buildings": 13,
+            "factories": 4,
+            "bullets": 0,
+            "explosions": 14,
+            "smokeParticles": 180
+          }
+        },
+        "canvases": {
+          "game": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgl": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgpu": {
+            "cssWidth": 0,
+            "cssHeight": 0,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": null
+          },
+          "configuredCanvasPixelRatio": 2,
+          "overlayCanvasPixelRatio": 2
+        },
+        "renderer": {
+          "gpuTerrain": {
+            "rendered": true,
+            "backend": "webgl",
+            "requestedBackend": "webgl",
+            "rendererBackendChoice": "webgl",
+            "webgpuStatus": null,
+            "waterOnly": true,
+            "streetAtlas": false
+          },
+          "mapChunks": {
+            "chunksDrawn": 12,
+            "chunkHits": 12,
+            "chunkMisses": 0,
+            "chunkRedraws": 0,
+            "chunksPrewarmed": 0,
+            "chunksEvicted": 0,
+            "chunksQueued": 1,
+            "chunksWarmed": 1,
+            "chunkFallbacks": 0,
+            "chunkCacheSize": 48,
+            "chunkWarmQueueSize": 1,
+            "directTilePasses": 0,
+            "chunkSignatureCalls": 0,
+            "topologyReconstructions": 0,
+            "warmBacklog": 1,
+            "warmMaxJobAgeMs": 0.19999992847442627,
+            "warmExpiredJobs": 34,
+            "warmCancelledJobs": 121,
+            "terrainResidentBytes": 40791744,
+            "terrainStagingBytes": 0
+          },
+          "gpuTiming": {
+            "available": true,
+            "reason": null,
+            "milliseconds": 4.47
+          },
+          "gpuMemory": {
+            "available": false,
+            "reason": "browser API unavailable",
+            "bytes": null
+          },
+          "heap": {
+            "available": true,
+            "reason": null,
+            "usedBytes": 89898744,
+            "trend": {
+              "samples": 57,
+              "firstBytes": 100627007,
+              "lastBytes": 89898744,
+              "minBytes": 81294557,
+              "maxBytes": 117019027,
+              "deltaBytes": -10728263,
+              "suspectedCollectionDrops": 24,
+              "note": "Heap drops are suspected collections unless confirmed by a trace"
+            }
+          },
+          "byteUsage": {
+            "terrain-pages": 40791744,
+            "prepared-sprites": 0,
+            "water-topology": 0,
+            "minimap": 0,
+            "effects": 196608
+          }
+        },
+        "timingMs": {
+          "frameInterval": {
+            "samples": 3401,
+            "averageMs": 17.67,
+            "minMs": 5.8,
+            "maxMs": 404.7,
+            "slowFrames": 552
+          },
+          "update": {
+            "samples": 3401,
+            "averageMs": 3.84,
+            "minMs": 0,
+            "maxMs": 32.6,
+            "slowFrames": 165
+          },
+          "render": {
+            "samples": 3401,
+            "averageMs": 3.93,
+            "minMs": 1.6,
+            "maxMs": 212.9,
+            "slowFrames": 39
+          },
+          "minimap": {
+            "samples": 3401,
+            "averageMs": 0.13,
+            "minMs": 0,
+            "maxMs": 2.6,
+            "slowFrames": 0
+          },
+          "frameWork": {
+            "samples": 3401,
+            "averageMs": 7.78,
+            "minMs": 1.6,
+            "maxMs": 230.2,
+            "slowFrames": 231
+          },
+          "unattributedWait": {
+            "samples": 3401,
+            "averageMs": 11.29,
+            "minMs": 0,
+            "maxMs": 382.3,
+            "slowFrames": 249
+          },
+          "schedulerDelay": {
+            "samples": 3401,
+            "averageMs": 0,
+            "minMs": 0,
+            "maxMs": 0,
+            "slowFrames": 0
+          },
+          "terrain": {
+            "samples": 3401,
+            "averageMs": 2,
+            "minMs": 0.1,
+            "maxMs": 210,
+            "slowFrames": 39
+          },
+          "entities": {
+            "samples": 3401,
+            "averageMs": 1.14,
+            "minMs": 0.7,
+            "maxMs": 4.3,
+            "slowFrames": 0
+          },
+          "effects": {
+            "samples": 3401,
+            "averageMs": 0.26,
+            "minMs": 0.1,
+            "maxMs": 1,
+            "slowFrames": 0
+          },
+          "ui": {
+            "samples": 3401,
+            "averageMs": 0.09,
+            "minMs": 0,
+            "maxMs": 1.1,
+            "slowFrames": 0
+          }
+        },
+        "profiler": {
+          "enabled": false,
+          "window": {
+            "frames": 0,
+            "milliseconds": 0,
+            "callSamplesPerSpan": 512
+          },
+          "slowFrameThresholdMs": 13.333,
+          "rows": [],
+          "definitions": [
+            {
+              "id": 1,
+              "name": "FRAME"
+            },
+            {
+              "id": 2,
+              "name": "UPDATE"
+            },
+            {
+              "id": 3,
+              "name": "RENDER"
+            },
+            {
+              "id": 10,
+              "name": "TERRAIN"
+            },
+            {
+              "id": 11,
+              "name": "RENDER_TILES"
+            },
+            {
+              "id": 12,
+              "name": "CHUNK_STATE"
+            },
+            {
+              "id": 13,
+              "name": "CHUNK_SIGNATURE"
+            },
+            {
+              "id": 14,
+              "name": "WARM_QUEUE"
+            },
+            {
+              "id": 15,
+              "name": "CHUNK_REBUILD"
+            },
+            {
+              "id": 20,
+              "name": "CPU_WATER_PASS"
+            },
+            {
+              "id": 21,
+              "name": "CPU_WATER_TILE"
+            },
+            {
+              "id": 30,
+              "name": "WEBGL_BUILD"
+            },
+            {
+              "id": 31,
+              "name": "WEBGL_UPLOAD"
+            },
+            {
+              "id": 32,
+              "name": "WEBGL_SUBMIT"
+            },
+            {
+              "id": 40,
+              "name": "WEBGPU_PACK"
+            },
+            {
+              "id": 41,
+              "name": "WEBGPU_UPLOAD"
+            },
+            {
+              "id": 42,
+              "name": "WEBGPU_SUBMIT"
+            },
+            {
+              "id": 50,
+              "name": "ENTITY_BASES"
+            },
+            {
+              "id": 51,
+              "name": "ENTITY_OVERLAYS"
+            },
+            {
+              "id": 52,
+              "name": "EFFECTS"
+            },
+            {
+              "id": 60,
+              "name": "MINIMAP_BASE"
+            },
+            {
+              "id": 61,
+              "name": "MINIMAP_FOG"
+            },
+            {
+              "id": 62,
+              "name": "MINIMAP_VIDEO"
+            },
+            {
+              "id": 63,
+              "name": "MINIMAP_ENTITIES"
+            },
+            {
+              "id": 70,
+              "name": "HUD"
+            },
+            {
+              "id": 80,
+              "name": "PREP_CLIFF"
+            },
+            {
+              "id": 81,
+              "name": "PREP_BIOME_MASK"
+            },
+            {
+              "id": 1000,
+              "name": "updateBuildingsUnderRepair"
+            },
+            {
+              "id": 1001,
+              "name": "updateBuildingsAwaitingRepair"
+            },
+            {
+              "id": 1002,
+              "name": "_updateGlobalPathfinding"
+            },
+            {
+              "id": 1003,
+              "name": "anonymous"
+            },
+            {
+              "id": 1004,
+              "name": "updateBullets"
+            },
+            {
+              "id": 1005,
+              "name": "updateHarvesterLogic"
+            },
+            {
+              "id": 1006,
+              "name": "updateUnitOccupancy"
+            },
+            {
+              "id": 1007,
+              "name": "findPath"
+            },
+            {
+              "id": 1008,
+              "name": "_updateAIPlayer"
+            },
+            {
+              "id": 1009,
+              "name": "updateEnemyAI"
+            },
+            {
+              "id": 1010,
+              "name": "updateUnitMovement"
+            },
+            {
+              "id": 1011,
+              "name": "updateUnitCombat"
+            },
+            {
+              "id": 1012,
+              "name": "updateWorkshopLogic"
+            },
+            {
+              "id": 1013,
+              "name": "updateShipyardServiceLogic"
+            },
+            {
+              "id": 1014,
+              "name": "updateOreSpread"
+            },
+            {
+              "id": 1015,
+              "name": "updateUnitCollisions"
+            },
+            {
+              "id": 1016,
+              "name": "updateBuildings"
+            },
+            {
+              "id": 1017,
+              "name": "updateDefensiveBuildings"
+            },
+            {
+              "id": 1018,
+              "name": "updateGame"
+            }
+          ]
+        },
+        "diagnostics": {
+          "schemaVersion": 1,
+          "backend": "webgl",
+          "devicePixelRatio": 2,
+          "refreshRateHz": null,
+          "recordingCounterTotals": {
+            "DRAW_CALLS": 40812,
+            "UPLOAD_BYTES": 136040,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 1369,
+            "BACKLOG": 3910
+          },
+          "lifetimeCounterTotals": {
+            "DRAW_CALLS": 40902,
+            "UPLOAD_BYTES": 4927772,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 1369,
+            "BACKLOG": 4143
+          }
+        },
+        "scheduler": {
+          "sources": {
+            "raf": 0,
+            "watchdog": 0,
+            "timeout": 3401,
+            "unknown": 0
+          },
+          "watchdogShare": 0
+        }
+      },
+      "phases": {
+        "samples": 600,
+        "frame": {
+          "averageMs": 26.87,
+          "p95Ms": 183,
+          "maxMs": 404.7,
+          "fps": 37.22
+        },
+        "drawCalls": {
+          "average": 12,
+          "p95": 12,
+          "max": 12
+        },
+        "phases": {
+          "sim": {
+            "samples": 600,
+            "averageMs": 4.98,
+            "p95Ms": 19.2,
+            "minMs": 0,
+            "maxMs": 22.8
+          },
+          "movement": {
+            "samples": 600,
+            "averageMs": 2.82,
+            "p95Ms": 10.9,
+            "minMs": 0,
+            "maxMs": 14.4
+          },
+          "combat": {
+            "samples": 600,
+            "averageMs": 0.47,
+            "p95Ms": 1.8,
+            "minMs": 0,
+            "maxMs": 2.3
+          },
+          "pathfinding": {
+            "samples": 600,
+            "averageMs": 0.03,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "ai": {
+            "samples": 600,
+            "averageMs": 0.43,
+            "p95Ms": 1.6,
+            "minMs": 0,
+            "maxMs": 7.5
+          },
+          "fog": {
+            "samples": 600,
+            "averageMs": 0.25,
+            "p95Ms": 1,
+            "minMs": 0,
+            "maxMs": 1.3
+          },
+          "terrain": {
+            "samples": 600,
+            "averageMs": 2.5,
+            "p95Ms": 0.4,
+            "minMs": 0.1,
+            "maxMs": 203.4
+          },
+          "entities": {
+            "samples": 600,
+            "averageMs": 1.09,
+            "p95Ms": 1.3,
+            "minMs": 0.7,
+            "maxMs": 2.1
+          },
+          "effects": {
+            "samples": 600,
+            "averageMs": 0.21,
+            "p95Ms": 0.3,
+            "minMs": 0.1,
+            "maxMs": 0.6
+          },
+          "ui": {
+            "samples": 600,
+            "averageMs": 0.09,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.3
+          },
+          "minimap": {
+            "samples": 600,
+            "averageMs": 0.09,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.3
+          }
+        }
+      },
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+      "hardwareConcurrency": 8,
+      "frames": {
+        "frameCount": 2969,
+        "durationMs": 60068.3,
+        "fps": 49.427068853288674,
+        "meanFrameMs": 20.231828898619064,
+        "p95FrameMs": 26.700000000004366,
+        "p99FrameMs": 186.6999999999971,
+        "maxFrameMs": 240,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 1438,
+        "missedDeadlineRatio": 0.4843381609969687,
+        "passed75Fps": false
+      },
+      "cpuTailsAvailable": true,
+      "cpuTails": {
+        "update": {
+          "samples": 3401,
+          "p50Ms": 4.200000047683716,
+          "p95Ms": 13,
+          "p99Ms": 21.299999952316284,
+          "maxMs": 32.60000002384186,
+          "missedDeadlines": 165
+        },
+        "render": {
+          "samples": 3401,
+          "p50Ms": 2.1999999284744263,
+          "p95Ms": 2.9000000953674316,
+          "p99Ms": 29,
+          "maxMs": 212.90000009536743,
+          "missedDeadlines": 39
+        },
+        "work": {
+          "samples": 3401,
+          "p50Ms": 6.399999976158142,
+          "p95Ms": 17.300000071525574,
+          "p99Ms": 50.200000047683716,
+          "maxMs": 230.19999992847443,
+          "missedDeadlines": 231
+        }
+      },
+      "cpuSelfTime": [
+        [
+          "drawImage :0",
+          24035.71100000189
+        ],
+        [
+          "(idle) :0",
+          13059.262999999955
+        ],
+        [
+          "(program) :0",
+          3230.4440000000045
+        ],
+        [
+          "updateUnitMovement http://127.0.0.1:5173/src/game/unitMovement.js:52",
+          1408.0949999999993
+        ],
+        [
+          "updateUnitPosition http://127.0.0.1:5173/src/game/movementCore.js:279",
+          1107.029999999997
+        ],
+        [
+          "queryCircleInto http://127.0.0.1:5173/src/game/spatialQuadtree.js:162",
+          1097.964999999998
+        ],
+        [
+          "hasFriendlyUnitOnTile http://127.0.0.1:5173/src/game/movementCore.js:204",
+          694.3929999999995
+        ],
+        [
+          "observeUnitCommandSignals http://127.0.0.1:5173/src/game/unitCommandHistory.js:123",
+          479.8069999999995
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/performanceUtils.js:14",
+          414.61199999999974
+        ],
+        [
+          "applyVisibility http://127.0.0.1:5173/src/game/shadowOfWar.js:190",
+          353.0279999999996
+        ],
+        [
+          "updateUnitRotation http://127.0.0.1:5173/src/game/unitMovement.js:368",
+          352.7119999999999
+        ],
+        [
+          "save :0",
+          333.63799999999935
+        ],
+        [
+          "restore :0",
+          318.14399999999944
+        ],
+        [
+          "checkUnitCollision http://127.0.0.1:5173/src/game/movementCollision.js:459",
+          306.886
+        ],
+        [
+          "(garbage collector) :0",
+          271.17299999999983
+        ],
+        [
+          "frameNeedsEntityIndex http://127.0.0.1:5173/src/rendering/renderer.js:161",
+          264.40099999999995
+        ],
+        [
+          "prepareFrameEntityIndex http://127.0.0.1:5173/src/rendering/renderer.js:198",
+          255.84
+        ],
+        [
+          "rebuild http://127.0.0.1:5173/src/game/spatialQuadtree.js:242",
+          232.0809999999999
+        ],
+        [
+          "updateAIUnitInternal http://127.0.0.1:5173/src/ai/enemyUnitBehaviorCore.js:30",
+          205.90899999999993
+        ],
+        [
+          "isPositionBlockedForCollision http://127.0.0.1:5173/src/game/movementCollision.js:211",
+          202.12899999999996
+        ],
+        [
+          "paintStatusBarOutline http://127.0.0.1:5173/src/utils/statusBarGradient.js:262",
+          194.846
+        ],
+        [
+          "step http://127.0.0.1:5173/src/benchmark/benchmarkRunner.js:412",
+          193.207
+        ],
+        [
+          "renderTankWithImages http://127.0.0.1:5173/src/rendering/tankImageRenderer.js:170",
+          190.3189999999999
+        ],
+        [
+          "getMineAtTile http://127.0.0.1:5173/src/game/mineSystem.js:90",
+          189.79499999999993
+        ],
+        [
+          "renderAttackTargetIndicator http://127.0.0.1:5173/src/rendering/unitRenderer.js:1588",
+          189.218
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/game/gameLoop.js:166",
+          178.89999999999975
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/updateGame.js:466",
+          166.53199999999995
+        ],
+        [
+          "findPath http://127.0.0.1:5173/src/units.js:312",
+          153.25600000000006
+        ],
+        [
+          "fill :0",
+          152.3069999999999
+        ],
+        [
+          "handleStuckUnit http://127.0.0.1:5173/src/game/movementStuck.js:148",
+          149.7750000000001
+        ],
+        [
+          "getGamepads :0",
+          127.72999999999998
+        ],
+        [
+          "renderUtilityServiceIndicator http://127.0.0.1:5173/src/rendering/unitRenderer.js:1717",
+          127.25499999999997
+        ],
+        [
+          "renderRadarOffline http://127.0.0.1:5173/src/rendering/minimapRenderer.js:492",
+          124.17199999999998
+        ],
+        [
+          "isAirborneUnit http://127.0.0.1:5173/src/game/movementHelpers.js:46",
+          121.81000000000006
+        ],
+        [
+          "fillRect :0",
+          117.63
+        ],
+        [
+          "hasClearShot http://127.0.0.1:5173/src/logic.js:606",
+          115.26499999999999
+        ],
+        [
+          "resolveUnitCollisions http://127.0.0.1:5173/src/units.js:1520",
+          113.01300000000003
+        ],
+        [
+          "initializeUnitLeveling http://127.0.0.1:5173/src/utils.js:67",
+          112.38399999999999
+        ],
+        [
+          "renderExplosions http://127.0.0.1:5173/src/rendering/effectsRenderer.js:336",
+          112.30700000000003
+        ],
+        [
+          "renderUnitOverlay http://127.0.0.1:5173/src/rendering/unitRenderer.js:2053",
+          112.13700000000001
+        ],
+        [
+          "renderGame http://127.0.0.1:5173/src/rendering/renderer.js:560",
+          106.37400000000004
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/rendering/movementTargetRenderer.js:19",
+          100.739
+        ],
+        [
+          "isLineObstructedByBuilding http://127.0.0.1:5173/src/logic.js:555",
+          100.00900000000003
+        ],
+        [
+          "shotCandidates http://127.0.0.1:5173/src/game/shotSpatialIndex.js:57",
+          95.68900000000002
+        ],
+        [
+          "_updateAIPlayer http://127.0.0.1:5173/src/ai/enemyAIPlayer.js:409",
+          95.42999999999999
+        ]
+      ],
+      "errors": [],
+      "label": "rejected-shot-index-1",
+      "rawCapture": "/tmp/worker-combat-after-1.json",
+      "heapSamples": [
+        {
+          "heapBytes": 100627007
+        },
+        {
+          "heapBytes": 87855923
+        },
+        {
+          "heapBytes": 88450097
+        },
+        {
+          "heapBytes": 85556851
+        },
+        {
+          "heapBytes": 81294557
+        },
+        {
+          "heapBytes": 94238203
+        },
+        {
+          "heapBytes": 87773036
+        },
+        {
+          "heapBytes": 91715656
+        },
+        {
+          "heapBytes": 95082088
+        },
+        {
+          "heapBytes": 87883653
+        },
+        {
+          "heapBytes": 96323433
+        },
+        {
+          "heapBytes": 89770589
+        },
+        {
+          "heapBytes": 93382282
+        },
+        {
+          "heapBytes": 91430407
+        },
+        {
+          "heapBytes": 88729235
+        },
+        {
+          "heapBytes": 92805563
+        },
+        {
+          "heapBytes": 83129007
+        },
+        {
+          "heapBytes": 91413849
+        },
+        {
+          "heapBytes": 107269544
+        },
+        {
+          "heapBytes": 114106985
+        },
+        {
+          "heapBytes": 97310813
+        },
+        {
+          "heapBytes": 101931561
+        },
+        {
+          "heapBytes": 103408746
+        },
+        {
+          "heapBytes": 95353713
+        },
+        {
+          "heapBytes": 110012331
+        },
+        {
+          "heapBytes": 108376305
+        },
+        {
+          "heapBytes": 104009653
+        },
+        {
+          "heapBytes": 115035518
+        },
+        {
+          "heapBytes": 108453631
+        },
+        {
+          "heapBytes": 103486129
+        },
+        {
+          "heapBytes": 115461025
+        },
+        {
+          "heapBytes": 112545664
+        },
+        {
+          "heapBytes": 121409825
+        },
+        {
+          "heapBytes": 91817361
+        },
+        {
+          "heapBytes": 90866100
+        },
+        {
+          "heapBytes": 109857377
+        },
+        {
+          "heapBytes": 111177977
+        },
+        {
+          "heapBytes": 98307046
+        },
+        {
+          "heapBytes": 95357831
+        },
+        {
+          "heapBytes": 98920635
+        },
+        {
+          "heapBytes": 114500824
+        },
+        {
+          "heapBytes": 107499434
+        },
+        {
+          "heapBytes": 115673053
+        },
+        {
+          "heapBytes": 83634321
+        },
+        {
+          "heapBytes": 96485214
+        },
+        {
+          "heapBytes": 108722946
+        },
+        {
+          "heapBytes": 94775800
+        },
+        {
+          "heapBytes": 93972910
+        },
+        {
+          "heapBytes": 106892804
+        },
+        {
+          "heapBytes": 90381187
+        },
+        {
+          "heapBytes": 102000549
+        },
+        {
+          "heapBytes": 95715099
+        },
+        {
+          "heapBytes": 101993630
+        },
+        {
+          "heapBytes": 96050333
+        },
+        {
+          "heapBytes": 82970779
+        },
+        {
+          "heapBytes": 90735660
+        },
+        {
+          "heapBytes": 90209999
+        },
+        {
+          "heapBytes": 95073720
+        },
+        {
+          "heapBytes": 101647867
+        },
+        {
+          "heapBytes": 113959478
+        },
+        {
+          "heapBytes": 90165368
+        }
+      ]
+    },
+    {
+      "certification": "diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence",
+      "browser": "156.0.8078.4",
+      "headless": false,
+      "production": false,
+      "windowPosition": null,
+      "cpuThrottle": 1,
+      "scene": "battle",
+      "unitCount": 320,
+      "speedPxPerSec": 600,
+      "routeLengthPx": null,
+      "durationMs": 60000,
+      "routeCycles": 0,
+      "travelledPx": 0,
+      "display": {
+        "screenX": -1250,
+        "screenY": -1548,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "monitor": {
+        "version": 2,
+        "kind": "code-for-battle-performance-monitor",
+        "recordedAt": "2026-10-10T20:19:00.136Z",
+        "durationMs": 60013.4,
+        "averageFps": 103.84,
+        "device": {
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1440,
+            "height": 1000
+          },
+          "nativeDevicePixelRatio": 2,
+          "touchPoints": 0
+        },
+        "map": {
+          "widthTiles": 100,
+          "heightTiles": 100,
+          "seed": "11",
+          "players": 4,
+          "oreFields": 8,
+          "oreTotalValue": 64000,
+          "waterPercent": 10,
+          "rockPercent": 5,
+          "shoreNorth": true,
+          "shoreWest": true,
+          "shoreEast": true,
+          "shoreSouth": true,
+          "centerLake": true,
+          "biome": "grass",
+          "biomeRegions": 12,
+          "biomeDistribution": "random",
+          "biomeWeights": {
+            "grass": 30,
+            "soil": 30,
+            "sand": 20,
+            "snow": 20
+          },
+          "snowOnPlateaus": true,
+          "scrollOffset": {
+            "x": 1005.34,
+            "y": 1100
+          }
+        },
+        "game": {
+          "speedMultiplier": 1,
+          "gameTime": 60.27,
+          "paused": false,
+          "frameLimiterEnabled": false,
+          "integratedSpriteSheetMode": false,
+          "entities": {
+            "units": 259,
+            "buildings": 13,
+            "factories": 4,
+            "bullets": 0,
+            "explosions": 13,
+            "smokeParticles": 180
+          }
+        },
+        "canvases": {
+          "game": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgl": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgpu": {
+            "cssWidth": 0,
+            "cssHeight": 0,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": null
+          },
+          "configuredCanvasPixelRatio": 2,
+          "overlayCanvasPixelRatio": 2
+        },
+        "renderer": {
+          "gpuTerrain": {
+            "rendered": true,
+            "backend": "webgl",
+            "requestedBackend": "webgl",
+            "rendererBackendChoice": "webgl",
+            "webgpuStatus": null,
+            "waterOnly": true,
+            "streetAtlas": false
+          },
+          "mapChunks": {
+            "chunksDrawn": 12,
+            "chunkHits": 12,
+            "chunkMisses": 0,
+            "chunkRedraws": 0,
+            "chunksPrewarmed": 0,
+            "chunksEvicted": 0,
+            "chunksQueued": 1,
+            "chunksWarmed": 0,
+            "chunkFallbacks": 0,
+            "chunkCacheSize": 48,
+            "chunkWarmQueueSize": 1,
+            "directTilePasses": 0,
+            "chunkSignatureCalls": 0,
+            "topologyReconstructions": 0,
+            "warmBacklog": 1,
+            "warmMaxJobAgeMs": 0.10000002384185791,
+            "warmExpiredJobs": 33,
+            "warmCancelledJobs": 128,
+            "terrainResidentBytes": 41790144,
+            "terrainStagingBytes": 0
+          },
+          "gpuTiming": {
+            "available": true,
+            "reason": null,
+            "milliseconds": 4.85
+          },
+          "gpuMemory": {
+            "available": false,
+            "reason": "browser API unavailable",
+            "bytes": null
+          },
+          "heap": {
+            "available": true,
+            "reason": null,
+            "usedBytes": 95563588,
+            "trend": {
+              "samples": 60,
+              "firstBytes": 102520620,
+              "lastBytes": 95563588,
+              "minBytes": 81478877,
+              "maxBytes": 113147948,
+              "deltaBytes": -6957032,
+              "suspectedCollectionDrops": 27,
+              "note": "Heap drops are suspected collections unless confirmed by a trace"
+            }
+          },
+          "byteUsage": {
+            "terrain-pages": 41790144,
+            "prepared-sprites": 0,
+            "water-topology": 0,
+            "minimap": 0,
+            "effects": 196608
+          }
+        },
+        "timingMs": {
+          "frameInterval": {
+            "samples": 6234,
+            "averageMs": 9.63,
+            "minMs": 5.8,
+            "maxMs": 37.6,
+            "slowFrames": 258
+          },
+          "update": {
+            "samples": 6234,
+            "averageMs": 2.69,
+            "minMs": 0,
+            "maxMs": 17.9,
+            "slowFrames": 5
+          },
+          "render": {
+            "samples": 6234,
+            "averageMs": 2.21,
+            "minMs": 1.5,
+            "maxMs": 13.3,
+            "slowFrames": 0
+          },
+          "minimap": {
+            "samples": 6234,
+            "averageMs": 0.11,
+            "minMs": 0,
+            "maxMs": 1.4,
+            "slowFrames": 0
+          },
+          "frameWork": {
+            "samples": 6234,
+            "averageMs": 4.92,
+            "minMs": 1.5,
+            "maxMs": 29.8,
+            "slowFrames": 13
+          },
+          "unattributedWait": {
+            "samples": 6234,
+            "averageMs": 4.88,
+            "minMs": 0,
+            "maxMs": 17.5,
+            "slowFrames": 2
+          },
+          "schedulerDelay": {
+            "samples": 6234,
+            "averageMs": 0,
+            "minMs": 0,
+            "maxMs": 0,
+            "slowFrames": 0
+          },
+          "terrain": {
+            "samples": 6234,
+            "averageMs": 0.28,
+            "minMs": 0.1,
+            "maxMs": 7.2,
+            "slowFrames": 0
+          },
+          "entities": {
+            "samples": 6234,
+            "averageMs": 1.16,
+            "minMs": 0.6,
+            "maxMs": 4,
+            "slowFrames": 0
+          },
+          "effects": {
+            "samples": 6234,
+            "averageMs": 0.25,
+            "minMs": 0,
+            "maxMs": 1.3,
+            "slowFrames": 0
+          },
+          "ui": {
+            "samples": 6234,
+            "averageMs": 0.09,
+            "minMs": 0,
+            "maxMs": 0.5,
+            "slowFrames": 0
+          }
+        },
+        "profiler": {
+          "enabled": false,
+          "window": {
+            "frames": 0,
+            "milliseconds": 0,
+            "callSamplesPerSpan": 512
+          },
+          "slowFrameThresholdMs": 13.333,
+          "rows": [],
+          "definitions": [
+            {
+              "id": 1,
+              "name": "FRAME"
+            },
+            {
+              "id": 2,
+              "name": "UPDATE"
+            },
+            {
+              "id": 3,
+              "name": "RENDER"
+            },
+            {
+              "id": 10,
+              "name": "TERRAIN"
+            },
+            {
+              "id": 11,
+              "name": "RENDER_TILES"
+            },
+            {
+              "id": 12,
+              "name": "CHUNK_STATE"
+            },
+            {
+              "id": 13,
+              "name": "CHUNK_SIGNATURE"
+            },
+            {
+              "id": 14,
+              "name": "WARM_QUEUE"
+            },
+            {
+              "id": 15,
+              "name": "CHUNK_REBUILD"
+            },
+            {
+              "id": 20,
+              "name": "CPU_WATER_PASS"
+            },
+            {
+              "id": 21,
+              "name": "CPU_WATER_TILE"
+            },
+            {
+              "id": 30,
+              "name": "WEBGL_BUILD"
+            },
+            {
+              "id": 31,
+              "name": "WEBGL_UPLOAD"
+            },
+            {
+              "id": 32,
+              "name": "WEBGL_SUBMIT"
+            },
+            {
+              "id": 40,
+              "name": "WEBGPU_PACK"
+            },
+            {
+              "id": 41,
+              "name": "WEBGPU_UPLOAD"
+            },
+            {
+              "id": 42,
+              "name": "WEBGPU_SUBMIT"
+            },
+            {
+              "id": 50,
+              "name": "ENTITY_BASES"
+            },
+            {
+              "id": 51,
+              "name": "ENTITY_OVERLAYS"
+            },
+            {
+              "id": 52,
+              "name": "EFFECTS"
+            },
+            {
+              "id": 60,
+              "name": "MINIMAP_BASE"
+            },
+            {
+              "id": 61,
+              "name": "MINIMAP_FOG"
+            },
+            {
+              "id": 62,
+              "name": "MINIMAP_VIDEO"
+            },
+            {
+              "id": 63,
+              "name": "MINIMAP_ENTITIES"
+            },
+            {
+              "id": 70,
+              "name": "HUD"
+            },
+            {
+              "id": 80,
+              "name": "PREP_CLIFF"
+            },
+            {
+              "id": 81,
+              "name": "PREP_BIOME_MASK"
+            },
+            {
+              "id": 1000,
+              "name": "updateBuildingsUnderRepair"
+            },
+            {
+              "id": 1001,
+              "name": "updateBuildingsAwaitingRepair"
+            },
+            {
+              "id": 1002,
+              "name": "_updateGlobalPathfinding"
+            },
+            {
+              "id": 1003,
+              "name": "anonymous"
+            },
+            {
+              "id": 1004,
+              "name": "updateBullets"
+            },
+            {
+              "id": 1005,
+              "name": "updateHarvesterLogic"
+            },
+            {
+              "id": 1006,
+              "name": "updateUnitOccupancy"
+            },
+            {
+              "id": 1007,
+              "name": "findPath"
+            },
+            {
+              "id": 1008,
+              "name": "_updateAIPlayer"
+            },
+            {
+              "id": 1009,
+              "name": "updateEnemyAI"
+            },
+            {
+              "id": 1010,
+              "name": "updateUnitMovement"
+            },
+            {
+              "id": 1011,
+              "name": "updateUnitCombat"
+            },
+            {
+              "id": 1012,
+              "name": "updateWorkshopLogic"
+            },
+            {
+              "id": 1013,
+              "name": "updateShipyardServiceLogic"
+            },
+            {
+              "id": 1014,
+              "name": "updateOreSpread"
+            },
+            {
+              "id": 1015,
+              "name": "updateUnitCollisions"
+            },
+            {
+              "id": 1016,
+              "name": "updateBuildings"
+            },
+            {
+              "id": 1017,
+              "name": "updateDefensiveBuildings"
+            },
+            {
+              "id": 1018,
+              "name": "updateGame"
+            }
+          ]
+        },
+        "diagnostics": {
+          "schemaVersion": 1,
+          "backend": "webgl",
+          "devicePixelRatio": 2,
+          "refreshRateHz": null,
+          "recordingCounterTotals": {
+            "DRAW_CALLS": 74808,
+            "UPLOAD_BYTES": 249360,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2728,
+            "BACKLOG": 5980
+          },
+          "lifetimeCounterTotals": {
+            "DRAW_CALLS": 74898,
+            "UPLOAD_BYTES": 5041092,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2728,
+            "BACKLOG": 6213
+          }
+        },
+        "scheduler": {
+          "sources": {
+            "raf": 0,
+            "watchdog": 0,
+            "timeout": 6234,
+            "unknown": 0
+          },
+          "watchdogShare": 0
+        }
+      },
+      "phases": {
+        "samples": 600,
+        "frame": {
+          "averageMs": 9.44,
+          "p95Ms": 12.8,
+          "maxMs": 23.8,
+          "fps": 105.93
+        },
+        "drawCalls": {
+          "average": 12,
+          "p95": 12,
+          "max": 12
+        },
+        "phases": {
+          "sim": {
+            "samples": 600,
+            "averageMs": 2.6,
+            "p95Ms": 5.1,
+            "minMs": 0,
+            "maxMs": 11.5
+          },
+          "movement": {
+            "samples": 600,
+            "averageMs": 1.39,
+            "p95Ms": 2.8,
+            "minMs": 0,
+            "maxMs": 4.5
+          },
+          "combat": {
+            "samples": 600,
+            "averageMs": 0.25,
+            "p95Ms": 0.5,
+            "minMs": 0,
+            "maxMs": 0.7
+          },
+          "pathfinding": {
+            "samples": 600,
+            "averageMs": 0.02,
+            "p95Ms": 0.1,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "ai": {
+            "samples": 600,
+            "averageMs": 0.25,
+            "p95Ms": 0.5,
+            "minMs": 0,
+            "maxMs": 7.7
+          },
+          "fog": {
+            "samples": 600,
+            "averageMs": 0.12,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "terrain": {
+            "samples": 600,
+            "averageMs": 0.23,
+            "p95Ms": 0.3,
+            "minMs": 0.1,
+            "maxMs": 1.6
+          },
+          "entities": {
+            "samples": 600,
+            "averageMs": 1.1,
+            "p95Ms": 1.4,
+            "minMs": 0.7,
+            "maxMs": 1.9
+          },
+          "effects": {
+            "samples": 600,
+            "averageMs": 0.21,
+            "p95Ms": 0.3,
+            "minMs": 0.1,
+            "maxMs": 0.4
+          },
+          "ui": {
+            "samples": 600,
+            "averageMs": 0.09,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.3
+          },
+          "minimap": {
+            "samples": 600,
+            "averageMs": 0.1,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.3
+          }
+        }
+      },
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+      "hardwareConcurrency": 8,
+      "frames": {
+        "frameCount": 4496,
+        "durationMs": 60000.40000000001,
+        "fps": 74.93283378110812,
+        "meanFrameMs": 13.345284697508898,
+        "p95FrameMs": 15.299999999999272,
+        "p99FrameMs": 15.39999999999418,
+        "maxFrameMs": 28.300000000000182,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 2115,
+        "missedDeadlineRatio": 0.47041814946619215,
+        "passed75Fps": false
+      },
+      "cpuTailsAvailable": true,
+      "cpuTails": {
+        "update": {
+          "samples": 6234,
+          "p50Ms": 4.100000023841858,
+          "p95Ms": 5.699999928474426,
+          "p99Ms": 6.899999976158142,
+          "maxMs": 17.899999976158142,
+          "missedDeadlines": 5
+        },
+        "render": {
+          "samples": 6234,
+          "p50Ms": 2.100000023841858,
+          "p95Ms": 2.8000000715255737,
+          "p99Ms": 3.5,
+          "maxMs": 13.300000071525574,
+          "missedDeadlines": 0
+        },
+        "work": {
+          "samples": 6234,
+          "p50Ms": 6.300000071525574,
+          "p95Ms": 8.199999928474426,
+          "p99Ms": 9.5,
+          "maxMs": 29.800000071525574,
+          "missedDeadlines": 13
+        }
+      },
+      "cpuSelfTime": [
+        [
+          "(idle) :0",
+          22605.030000000133
+        ],
+        [
+          "(program) :0",
+          5299.7429999999895
+        ],
+        [
+          "drawImage :0",
+          3420.3340000000003
+        ],
+        [
+          "updateUnitMovement http://127.0.0.1:5173/src/game/unitMovement.js?t=1791663461896:52",
+          1581.8129999999987
+        ],
+        [
+          "updateUnitPosition http://127.0.0.1:5173/src/game/movementCore.js?t=1791663461896:279",
+          1116.0039999999995
+        ],
+        [
+          "queryCircleInto http://127.0.0.1:5173/src/game/spatialQuadtree.js:162",
+          961.807
+        ],
+        [
+          "hasFriendlyUnitOnTile http://127.0.0.1:5173/src/game/movementCore.js?t=1791663461896:204",
+          686.5809999999998
+        ],
+        [
+          "applyVisibility http://127.0.0.1:5173/src/game/shadowOfWar.js:190",
+          637.542
+        ],
+        [
+          "renderAttackTargetIndicator http://127.0.0.1:5173/src/rendering/unitRenderer.js?t=1791663461896:1588",
+          607.5529999999997
+        ],
+        [
+          "rebuild http://127.0.0.1:5173/src/game/spatialQuadtree.js:242",
+          593.7090000000003
+        ],
+        [
+          "paintStatusBarOutline http://127.0.0.1:5173/src/utils/statusBarGradient.js:262",
+          565.6369999999996
+        ],
+        [
+          "fillRect :0",
+          472.9619999999996
+        ],
+        [
+          "frameNeedsEntityIndex http://127.0.0.1:5173/src/rendering/renderer.js?t=1791663461896:161",
+          472.431
+        ],
+        [
+          "observeUnitCommandSignals http://127.0.0.1:5173/src/game/unitCommandHistory.js:123",
+          448.73399999999987
+        ],
+        [
+          "prepareFrameEntityIndex http://127.0.0.1:5173/src/rendering/renderer.js?t=1791663461896:198",
+          435.1219999999999
+        ],
+        [
+          "restore :0",
+          425.78200000000015
+        ],
+        [
+          "updateUnitRotation http://127.0.0.1:5173/src/game/unitMovement.js?t=1791663461896:368",
+          418.55899999999986
+        ],
+        [
+          "hasClearShot http://127.0.0.1:5173/src/logic.js?t=1791663461896:606",
+          411.53499999999974
+        ],
+        [
+          "save :0",
+          409.559
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/performanceUtils.js:14",
+          400.19499999999965
+        ],
+        [
+          "(garbage collector) :0",
+          391.0199999999998
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/game/unitCombat.js?t=1791663461896:31",
+          375.90099999999984
+        ],
+        [
+          "renderUtilityServiceIndicator http://127.0.0.1:5173/src/rendering/unitRenderer.js?t=1791663461896:1717",
+          314.6629999999999
+        ],
+        [
+          "renderUnitOverlay http://127.0.0.1:5173/src/rendering/unitRenderer.js?t=1791663461896:2053",
+          305.34099999999984
+        ],
+        [
+          "shotCandidates http://127.0.0.1:5173/src/game/shotSpatialIndex.js?t=1791663409531:57",
+          305.1899999999999
+        ],
+        [
+          "checkUnitCollision http://127.0.0.1:5173/src/game/movementCollision.js?t=1791663461896:459",
+          301.1319999999999
+        ],
+        [
+          "step http://127.0.0.1:5173/src/benchmark/benchmarkRunner.js?t=1791663461896:412",
+          293.41799999999995
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/rendering/renderer.js?t=1791663461896:145",
+          290.7799999999998
+        ],
+        [
+          "insert http://127.0.0.1:5173/src/game/spatialQuadtree.js:129",
+          283.7850000000001
+        ],
+        [
+          "initializeUnitLeveling http://127.0.0.1:5173/src/utils.js:67",
+          280.06499999999994
+        ],
+        [
+          "isLineObstructedByBuilding http://127.0.0.1:5173/src/logic.js?t=1791663461896:555",
+          266.91200000000003
+        ],
+        [
+          "renderTankWithImages http://127.0.0.1:5173/src/rendering/tankImageRenderer.js:170",
+          253.85199999999998
+        ],
+        [
+          "drawUndiscoveredOverlay http://127.0.0.1:5173/src/rendering/mapRenderer.js:2035",
+          234.3349999999998
+        ],
+        [
+          "fill :0",
+          229.031
+        ],
+        [
+          "renderGame http://127.0.0.1:5173/src/rendering/renderer.js?t=1791663461896:560",
+          222.54399999999995
+        ],
+        [
+          "renderRadarOffline http://127.0.0.1:5173/src/rendering/minimapRenderer.js:492",
+          216.98499999999999
+        ],
+        [
+          "getMineAtTile http://127.0.0.1:5173/src/game/mineSystem.js?t=1791663461896:90",
+          216.364
+        ],
+        [
+          "renderLevelStars http://127.0.0.1:5173/src/rendering/unitRenderer.js?t=1791663461896:1803",
+          213.96299999999985
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/rendering/movementTargetRenderer.js:19",
+          206.77499999999998
+        ],
+        [
+          "addColorStop :0",
+          204.27700000000004
+        ],
+        [
+          "findPath http://127.0.0.1:5173/src/units.js?t=1791663461896:312",
+          198.33599999999998
+        ],
+        [
+          "renderTeslaLightning http://127.0.0.1:5173/src/rendering/effectsRenderer.js:514",
+          197.541
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/rendering/retreatTargetRenderer.js:26",
+          194.447
+        ],
+        [
+          "build http://127.0.0.1:5173/src/game/shotSpatialIndex.js?t=1791663409531:27",
+          185.22699999999998
+        ],
+        [
+          "processAttackQueue http://127.0.0.1:5173/src/game/unitCombat/combatState.js?t=1791663461896:29",
+          181.67899999999995
+        ]
+      ],
+      "errors": [],
+      "label": "rejected-shot-index-2",
+      "rawCapture": "/tmp/worker-combat-after-2.json",
+      "heapSamples": [
+        {
+          "heapBytes": 102520620
+        },
+        {
+          "heapBytes": 88301273
+        },
+        {
+          "heapBytes": 82538184
+        },
+        {
+          "heapBytes": 91513128
+        },
+        {
+          "heapBytes": 91413546
+        },
+        {
+          "heapBytes": 93709158
+        },
+        {
+          "heapBytes": 81478877
+        },
+        {
+          "heapBytes": 89722162
+        },
+        {
+          "heapBytes": 83196795
+        },
+        {
+          "heapBytes": 96809576
+        },
+        {
+          "heapBytes": 94711483
+        },
+        {
+          "heapBytes": 83552291
+        },
+        {
+          "heapBytes": 86538500
+        },
+        {
+          "heapBytes": 94693703
+        },
+        {
+          "heapBytes": 91679306
+        },
+        {
+          "heapBytes": 90642568
+        },
+        {
+          "heapBytes": 114365104
+        },
+        {
+          "heapBytes": 84610369
+        },
+        {
+          "heapBytes": 113497613
+        },
+        {
+          "heapBytes": 108034458
+        },
+        {
+          "heapBytes": 104371161
+        },
+        {
+          "heapBytes": 107086335
+        },
+        {
+          "heapBytes": 83040205
+        },
+        {
+          "heapBytes": 90811367
+        },
+        {
+          "heapBytes": 97755100
+        },
+        {
+          "heapBytes": 100634043
+        },
+        {
+          "heapBytes": 102791193
+        },
+        {
+          "heapBytes": 105932778
+        },
+        {
+          "heapBytes": 104316190
+        },
+        {
+          "heapBytes": 86662051
+        },
+        {
+          "heapBytes": 89122760
+        },
+        {
+          "heapBytes": 104993932
+        },
+        {
+          "heapBytes": 99434242
+        },
+        {
+          "heapBytes": 97334986
+        },
+        {
+          "heapBytes": 90148744
+        },
+        {
+          "heapBytes": 91686808
+        },
+        {
+          "heapBytes": 108308748
+        },
+        {
+          "heapBytes": 94003052
+        },
+        {
+          "heapBytes": 95969455
+        },
+        {
+          "heapBytes": 108515878
+        },
+        {
+          "heapBytes": 100914322
+        },
+        {
+          "heapBytes": 103753186
+        },
+        {
+          "heapBytes": 113937192
+        },
+        {
+          "heapBytes": 111777672
+        },
+        {
+          "heapBytes": 92257831
+        },
+        {
+          "heapBytes": 110511269
+        },
+        {
+          "heapBytes": 82239043
+        },
+        {
+          "heapBytes": 94383735
+        },
+        {
+          "heapBytes": 85845893
+        },
+        {
+          "heapBytes": 99526245
+        },
+        {
+          "heapBytes": 98248644
+        },
+        {
+          "heapBytes": 101192613
+        },
+        {
+          "heapBytes": 97762170
+        },
+        {
+          "heapBytes": 111530552
+        },
+        {
+          "heapBytes": 88827980
+        },
+        {
+          "heapBytes": 113797245
+        },
+        {
+          "heapBytes": 88022707
+        },
+        {
+          "heapBytes": 99886589
+        },
+        {
+          "heapBytes": 111398203
+        },
+        {
+          "heapBytes": 100839624
+        },
+        {
+          "heapBytes": 109920575
+        }
+      ]
+    },
+    {
+      "certification": "diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence",
+      "browser": "156.0.8078.4",
+      "headless": false,
+      "production": false,
+      "windowPosition": null,
+      "cpuThrottle": 1,
+      "scene": "battle",
+      "unitCount": 320,
+      "speedPxPerSec": 600,
+      "routeLengthPx": null,
+      "durationMs": 60000,
+      "routeCycles": 0,
+      "travelledPx": 0,
+      "display": {
+        "screenX": -1250,
+        "screenY": -1548,
+        "width": 1440,
+        "height": 1000,
+        "availWidth": 1440,
+        "availHeight": 1000,
+        "devicePixelRatio": 2,
+        "emulatedScreenSize": true
+      },
+      "monitor": {
+        "version": 2,
+        "kind": "code-for-battle-performance-monitor",
+        "recordedAt": "2026-10-10T20:28:08.723Z",
+        "durationMs": 60007.3,
+        "averageFps": 104.38,
+        "device": {
+          "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+          "viewport": {
+            "width": 1440,
+            "height": 1000
+          },
+          "screen": {
+            "width": 1440,
+            "height": 1000
+          },
+          "nativeDevicePixelRatio": 2,
+          "touchPoints": 0
+        },
+        "map": {
+          "widthTiles": 100,
+          "heightTiles": 100,
+          "seed": "11",
+          "players": 4,
+          "oreFields": 8,
+          "oreTotalValue": 64000,
+          "waterPercent": 10,
+          "rockPercent": 5,
+          "shoreNorth": true,
+          "shoreWest": true,
+          "shoreEast": true,
+          "shoreSouth": true,
+          "centerLake": true,
+          "biome": "grass",
+          "biomeRegions": 12,
+          "biomeDistribution": "random",
+          "biomeWeights": {
+            "grass": 30,
+            "soil": 30,
+            "sand": 20,
+            "snow": 20
+          },
+          "snowOnPlateaus": true,
+          "scrollOffset": {
+            "x": 996.22,
+            "y": 1100
+          }
+        },
+        "game": {
+          "speedMultiplier": 1,
+          "gameTime": 60.27,
+          "paused": false,
+          "frameLimiterEnabled": false,
+          "integratedSpriteSheetMode": false,
+          "entities": {
+            "units": 257,
+            "buildings": 13,
+            "factories": 4,
+            "bullets": 0,
+            "explosions": 15,
+            "smokeParticles": 180
+          }
+        },
+        "canvases": {
+          "game": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgl": {
+            "cssWidth": 1190,
+            "cssHeight": 1000,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": 2
+          },
+          "webgpu": {
+            "cssWidth": 0,
+            "cssHeight": 0,
+            "backingWidth": 2380,
+            "backingHeight": 2000,
+            "pixelRatio": null
+          },
+          "configuredCanvasPixelRatio": 2,
+          "overlayCanvasPixelRatio": 2
+        },
+        "renderer": {
+          "gpuTerrain": {
+            "rendered": true,
+            "backend": "webgl",
+            "requestedBackend": "webgl",
+            "rendererBackendChoice": "webgl",
+            "webgpuStatus": null,
+            "waterOnly": true,
+            "streetAtlas": false
+          },
+          "mapChunks": {
+            "chunksDrawn": 12,
+            "chunkHits": 12,
+            "chunkMisses": 0,
+            "chunkRedraws": 0,
+            "chunksPrewarmed": 0,
+            "chunksEvicted": 0,
+            "chunksQueued": 1,
+            "chunksWarmed": 0,
+            "chunkFallbacks": 0,
+            "chunkCacheSize": 48,
+            "chunkWarmQueueSize": 1,
+            "directTilePasses": 0,
+            "chunkSignatureCalls": 0,
+            "topologyReconstructions": 0,
+            "warmBacklog": 1,
+            "warmMaxJobAgeMs": 0.10000002384185791,
+            "warmExpiredJobs": 32,
+            "warmCancelledJobs": 137,
+            "terrainResidentBytes": 40791744,
+            "terrainStagingBytes": 0
+          },
+          "gpuTiming": {
+            "available": true,
+            "reason": null,
+            "milliseconds": 2.62
+          },
+          "gpuMemory": {
+            "available": false,
+            "reason": "browser API unavailable",
+            "bytes": null
+          },
+          "heap": {
+            "available": true,
+            "reason": null,
+            "usedBytes": 95291574,
+            "trend": {
+              "samples": 60,
+              "firstBytes": 100348889,
+              "lastBytes": 95291574,
+              "minBytes": 83990484,
+              "maxBytes": 115254566,
+              "deltaBytes": -5057315,
+              "suspectedCollectionDrops": 28,
+              "note": "Heap drops are suspected collections unless confirmed by a trace"
+            }
+          },
+          "byteUsage": {
+            "terrain-pages": 40791744,
+            "prepared-sprites": 0,
+            "water-topology": 0,
+            "minimap": 0,
+            "effects": 196608
+          }
+        },
+        "timingMs": {
+          "frameInterval": {
+            "samples": 6263,
+            "averageMs": 9.58,
+            "minMs": 5.6,
+            "maxMs": 27.1,
+            "slowFrames": 240
+          },
+          "update": {
+            "samples": 6263,
+            "averageMs": 2.74,
+            "minMs": 0,
+            "maxMs": 15.1,
+            "slowFrames": 4
+          },
+          "render": {
+            "samples": 6263,
+            "averageMs": 2.14,
+            "minMs": 1.4,
+            "maxMs": 10.8,
+            "slowFrames": 0
+          },
+          "minimap": {
+            "samples": 6263,
+            "averageMs": 0.11,
+            "minMs": 0,
+            "maxMs": 1.2,
+            "slowFrames": 0
+          },
+          "frameWork": {
+            "samples": 6263,
+            "averageMs": 4.88,
+            "minMs": 1.4,
+            "maxMs": 20,
+            "slowFrames": 12
+          },
+          "unattributedWait": {
+            "samples": 6263,
+            "averageMs": 4.91,
+            "minMs": 0,
+            "maxMs": 18.1,
+            "slowFrames": 5
+          },
+          "schedulerDelay": {
+            "samples": 6263,
+            "averageMs": 0,
+            "minMs": 0,
+            "maxMs": 0,
+            "slowFrames": 0
+          },
+          "terrain": {
+            "samples": 6263,
+            "averageMs": 0.28,
+            "minMs": 0.1,
+            "maxMs": 5.1,
+            "slowFrames": 0
+          },
+          "entities": {
+            "samples": 6263,
+            "averageMs": 1.08,
+            "minMs": 0.5,
+            "maxMs": 3.3,
+            "slowFrames": 0
+          },
+          "effects": {
+            "samples": 6263,
+            "averageMs": 0.24,
+            "minMs": 0,
+            "maxMs": 1.5,
+            "slowFrames": 0
+          },
+          "ui": {
+            "samples": 6263,
+            "averageMs": 0.09,
+            "minMs": 0,
+            "maxMs": 1,
+            "slowFrames": 0
+          }
+        },
+        "profiler": {
+          "enabled": false,
+          "window": {
+            "frames": 0,
+            "milliseconds": 0,
+            "callSamplesPerSpan": 512
+          },
+          "slowFrameThresholdMs": 13.333,
+          "rows": [],
+          "definitions": [
+            {
+              "id": 1,
+              "name": "FRAME"
+            },
+            {
+              "id": 2,
+              "name": "UPDATE"
+            },
+            {
+              "id": 3,
+              "name": "RENDER"
+            },
+            {
+              "id": 10,
+              "name": "TERRAIN"
+            },
+            {
+              "id": 11,
+              "name": "RENDER_TILES"
+            },
+            {
+              "id": 12,
+              "name": "CHUNK_STATE"
+            },
+            {
+              "id": 13,
+              "name": "CHUNK_SIGNATURE"
+            },
+            {
+              "id": 14,
+              "name": "WARM_QUEUE"
+            },
+            {
+              "id": 15,
+              "name": "CHUNK_REBUILD"
+            },
+            {
+              "id": 20,
+              "name": "CPU_WATER_PASS"
+            },
+            {
+              "id": 21,
+              "name": "CPU_WATER_TILE"
+            },
+            {
+              "id": 30,
+              "name": "WEBGL_BUILD"
+            },
+            {
+              "id": 31,
+              "name": "WEBGL_UPLOAD"
+            },
+            {
+              "id": 32,
+              "name": "WEBGL_SUBMIT"
+            },
+            {
+              "id": 40,
+              "name": "WEBGPU_PACK"
+            },
+            {
+              "id": 41,
+              "name": "WEBGPU_UPLOAD"
+            },
+            {
+              "id": 42,
+              "name": "WEBGPU_SUBMIT"
+            },
+            {
+              "id": 50,
+              "name": "ENTITY_BASES"
+            },
+            {
+              "id": 51,
+              "name": "ENTITY_OVERLAYS"
+            },
+            {
+              "id": 52,
+              "name": "EFFECTS"
+            },
+            {
+              "id": 60,
+              "name": "MINIMAP_BASE"
+            },
+            {
+              "id": 61,
+              "name": "MINIMAP_FOG"
+            },
+            {
+              "id": 62,
+              "name": "MINIMAP_VIDEO"
+            },
+            {
+              "id": 63,
+              "name": "MINIMAP_ENTITIES"
+            },
+            {
+              "id": 70,
+              "name": "HUD"
+            },
+            {
+              "id": 80,
+              "name": "PREP_CLIFF"
+            },
+            {
+              "id": 81,
+              "name": "PREP_BIOME_MASK"
+            },
+            {
+              "id": 1000,
+              "name": "updateBuildingsUnderRepair"
+            },
+            {
+              "id": 1001,
+              "name": "updateBuildingsAwaitingRepair"
+            },
+            {
+              "id": 1002,
+              "name": "_updateGlobalPathfinding"
+            },
+            {
+              "id": 1003,
+              "name": "anonymous"
+            },
+            {
+              "id": 1004,
+              "name": "updateBullets"
+            },
+            {
+              "id": 1005,
+              "name": "updateHarvesterLogic"
+            },
+            {
+              "id": 1006,
+              "name": "updateUnitOccupancy"
+            },
+            {
+              "id": 1007,
+              "name": "findPath"
+            },
+            {
+              "id": 1008,
+              "name": "_updateAIPlayer"
+            },
+            {
+              "id": 1009,
+              "name": "updateEnemyAI"
+            },
+            {
+              "id": 1010,
+              "name": "updateUnitMovement"
+            },
+            {
+              "id": 1011,
+              "name": "updateUnitCombat"
+            },
+            {
+              "id": 1012,
+              "name": "updateWorkshopLogic"
+            },
+            {
+              "id": 1013,
+              "name": "updateShipyardServiceLogic"
+            },
+            {
+              "id": 1014,
+              "name": "updateOreSpread"
+            },
+            {
+              "id": 1015,
+              "name": "updateUnitCollisions"
+            },
+            {
+              "id": 1016,
+              "name": "updateBuildings"
+            },
+            {
+              "id": 1017,
+              "name": "updateDefensiveBuildings"
+            },
+            {
+              "id": 1018,
+              "name": "updateGame"
+            }
+          ]
+        },
+        "diagnostics": {
+          "schemaVersion": 1,
+          "backend": "webgl",
+          "devicePixelRatio": 2,
+          "refreshRateHz": null,
+          "recordingCounterTotals": {
+            "DRAW_CALLS": 75156,
+            "UPLOAD_BYTES": 250520,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2681,
+            "BACKLOG": 6088
+          },
+          "lifetimeCounterTotals": {
+            "DRAW_CALLS": 75246,
+            "UPLOAD_BYTES": 5042252,
+            "RESIZE_EVENTS": 0,
+            "DECODED_SOURCE_BYTES": 0,
+            "PREPARED_RASTER_BYTES": 0,
+            "GPU_STAGING_BYTES": 0,
+            "RESIDENT_BYTES": 0,
+            "STAGING_BYTES": 0,
+            "EVICTIONS": 2681,
+            "BACKLOG": 6321
+          }
+        },
+        "scheduler": {
+          "sources": {
+            "raf": 0,
+            "watchdog": 0,
+            "timeout": 6263,
+            "unknown": 0
+          },
+          "watchdogShare": 0
+        }
+      },
+      "phases": {
+        "samples": 600,
+        "frame": {
+          "averageMs": 9.34,
+          "p95Ms": 13.3,
+          "maxMs": 24.6,
+          "fps": 107.07
+        },
+        "drawCalls": {
+          "average": 12,
+          "p95": 12,
+          "max": 12
+        },
+        "phases": {
+          "sim": {
+            "samples": 600,
+            "averageMs": 2.7,
+            "p95Ms": 5.8,
+            "minMs": 0,
+            "maxMs": 12.9
+          },
+          "movement": {
+            "samples": 600,
+            "averageMs": 1.48,
+            "p95Ms": 3.3,
+            "minMs": 0,
+            "maxMs": 8.3
+          },
+          "combat": {
+            "samples": 600,
+            "averageMs": 0.23,
+            "p95Ms": 0.5,
+            "minMs": 0,
+            "maxMs": 1.2
+          },
+          "pathfinding": {
+            "samples": 600,
+            "averageMs": 0.02,
+            "p95Ms": 0.1,
+            "minMs": 0,
+            "maxMs": 1.1
+          },
+          "ai": {
+            "samples": 600,
+            "averageMs": 0.26,
+            "p95Ms": 0.6,
+            "minMs": 0,
+            "maxMs": 3.8
+          },
+          "fog": {
+            "samples": 600,
+            "averageMs": 0.13,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.6
+          },
+          "terrain": {
+            "samples": 600,
+            "averageMs": 0.25,
+            "p95Ms": 0.4,
+            "minMs": 0.1,
+            "maxMs": 1.8
+          },
+          "entities": {
+            "samples": 600,
+            "averageMs": 0.92,
+            "p95Ms": 1.2,
+            "minMs": 0.6,
+            "maxMs": 2
+          },
+          "effects": {
+            "samples": 600,
+            "averageMs": 0.2,
+            "p95Ms": 0.3,
+            "minMs": 0,
+            "maxMs": 0.9
+          },
+          "ui": {
+            "samples": 600,
+            "averageMs": 0.09,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.4
+          },
+          "minimap": {
+            "samples": 600,
+            "averageMs": 0.09,
+            "p95Ms": 0.2,
+            "minMs": 0,
+            "maxMs": 0.3
+          }
+        }
+      },
+      "gpu": "ANGLE (Apple, ANGLE Metal Renderer: Apple M1, Unspecified Version)",
+      "hardwareConcurrency": 8,
+      "frames": {
+        "frameCount": 4498,
+        "durationMs": 60001.200000000004,
+        "fps": 74.9651673633194,
+        "meanFrameMs": 13.339528679413073,
+        "p95FrameMs": 15.200000000011642,
+        "p99FrameMs": 15.400000000001455,
+        "maxFrameMs": 26.799999999999272,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 2092,
+        "missedDeadlineRatio": 0.4650955980435749,
+        "passed75Fps": false
+      },
+      "cpuTailsAvailable": true,
+      "cpuTails": {
+        "update": {
+          "samples": 6263,
+          "p50Ms": 4.200000047683716,
+          "p95Ms": 5.699999928474426,
+          "p99Ms": 6.799999952316284,
+          "maxMs": 15.099999904632568,
+          "missedDeadlines": 4
+        },
+        "render": {
+          "samples": 6263,
+          "p50Ms": 2.100000023841858,
+          "p95Ms": 2.700000047683716,
+          "p99Ms": 3.399999976158142,
+          "maxMs": 10.800000071525574,
+          "missedDeadlines": 0
+        },
+        "work": {
+          "samples": 6263,
+          "p50Ms": 6.300000071525574,
+          "p95Ms": 8.100000023841858,
+          "p99Ms": 9.5,
+          "maxMs": 20,
+          "missedDeadlines": 12
+        }
+      },
+      "cpuSelfTime": [
+        [
+          "(idle) :0",
+          22924.00900000021
+        ],
+        [
+          "(program) :0",
+          5035.2729999999865
+        ],
+        [
+          "drawImage :0",
+          3294.4630000000006
+        ],
+        [
+          "updateUnitMovement http://127.0.0.1:5173/src/game/unitMovement.js:52",
+          1565.948
+        ],
+        [
+          "updateUnitPosition http://127.0.0.1:5173/src/game/movementCore.js:279",
+          1311.947999999999
+        ],
+        [
+          "queryCircleInto http://127.0.0.1:5173/src/game/spatialQuadtree.js:162",
+          977.901
+        ],
+        [
+          "applyVisibility http://127.0.0.1:5173/src/game/shadowOfWar.js:190",
+          816.9219999999999
+        ],
+        [
+          "hasClearShot http://127.0.0.1:5173/src/logic.js:606",
+          803.163
+        ],
+        [
+          "hasFriendlyUnitOnTile http://127.0.0.1:5173/src/game/movementCore.js:204",
+          768.1999999999997
+        ],
+        [
+          "fillRect :0",
+          581.7529999999997
+        ],
+        [
+          "rebuild http://127.0.0.1:5173/src/game/spatialQuadtree.js:242",
+          572.2919999999999
+        ],
+        [
+          "renderAttackTargetIndicator http://127.0.0.1:5173/src/rendering/unitRenderer.js:1588",
+          519.1799999999997
+        ],
+        [
+          "paintStatusBarOutline http://127.0.0.1:5173/src/utils/statusBarGradient.js:262",
+          515.8570000000001
+        ],
+        [
+          "observeUnitCommandSignals http://127.0.0.1:5173/src/game/unitCommandHistory.js:123",
+          453.9149999999997
+        ],
+        [
+          "restore :0",
+          446.41499999999985
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/performanceUtils.js:14",
+          422.4500000000003
+        ],
+        [
+          "(garbage collector) :0",
+          378.1269999999997
+        ],
+        [
+          "save :0",
+          376.06499999999966
+        ],
+        [
+          "updateUnitRotation http://127.0.0.1:5173/src/game/unitMovement.js:368",
+          367.24199999999985
+        ],
+        [
+          "prepareFrameEntityIndex http://127.0.0.1:5173/src/rendering/renderer.js:198",
+          352.56099999999975
+        ],
+        [
+          "renderUnitOverlay http://127.0.0.1:5173/src/rendering/unitRenderer.js:2053",
+          344.6909999999998
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/game/unitCombat.js:28",
+          325.9619999999997
+        ],
+        [
+          "frameNeedsEntityIndex http://127.0.0.1:5173/src/rendering/renderer.js:161",
+          317.74699999999984
+        ],
+        [
+          "renderUtilityServiceIndicator http://127.0.0.1:5173/src/rendering/unitRenderer.js:1717",
+          297.428
+        ],
+        [
+          "drawUndiscoveredOverlay http://127.0.0.1:5173/src/rendering/mapRenderer.js:2035",
+          293.6179999999999
+        ],
+        [
+          "step http://127.0.0.1:5173/src/benchmark/benchmarkRunner.js:412",
+          292.343
+        ],
+        [
+          "insert http://127.0.0.1:5173/src/game/spatialQuadtree.js:129",
+          279.57899999999995
+        ],
+        [
+          "getMineAtTile http://127.0.0.1:5173/src/game/mineSystem.js:90",
+          263.0309999999999
+        ],
+        [
+          "fill :0",
+          257.9509999999999
+        ],
+        [
+          "checkUnitCollision http://127.0.0.1:5173/src/game/movementCollision.js:459",
+          257.4289999999999
+        ],
+        [
+          "renderRadarOffline http://127.0.0.1:5173/src/rendering/minimapRenderer.js:492",
+          255.81099999999986
+        ],
+        [
+          "isLineObstructedByBuilding http://127.0.0.1:5173/src/logic.js:555",
+          252.62299999999988
+        ],
+        [
+          "initializeUnitLeveling http://127.0.0.1:5173/src/utils.js:67",
+          245.83299999999988
+        ],
+        [
+          "findPath http://127.0.0.1:5173/src/units.js:312",
+          241.07399999999987
+        ],
+        [
+          "renderTeslaLightning http://127.0.0.1:5173/src/rendering/effectsRenderer.js:514",
+          227.57899999999998
+        ],
+        [
+          "addColorStop :0",
+          224.23499999999996
+        ],
+        [
+          "renderTankWithImages http://127.0.0.1:5173/src/rendering/tankImageRenderer.js:170",
+          217.18599999999995
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/rendering/movementTargetRenderer.js:19",
+          214.75299999999993
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/rendering/renderer.js:145",
+          212.87499999999983
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/rendering/retreatTargetRenderer.js:26",
+          211.58299999999994
+        ],
+        [
+          "renderGame http://127.0.0.1:5173/src/rendering/renderer.js:560",
+          202.69499999999988
+        ],
+        [
+          "updateAIUnitInternal http://127.0.0.1:5173/src/ai/enemyUnitBehaviorCore.js:30",
+          190.24200000000002
+        ],
+        [
+          "(anonymous) http://127.0.0.1:5173/src/game/gameLoop.js:166",
+          185.80099999999996
+        ],
+        [
+          "renderLevelStars http://127.0.0.1:5173/src/rendering/unitRenderer.js:1803",
+          184.597
+        ],
+        [
+          "renderTowCable http://127.0.0.1:5173/src/rendering/unitRenderer.js:2241",
+          184.50499999999994
+        ]
+      ],
+      "errors": [],
+      "label": "final-implementation",
+      "rawCapture": "/tmp/worker-combat-final-1.json",
+      "heapSamples": [
+        {
+          "heapBytes": 100348889
+        },
+        {
+          "heapBytes": 88391827
+        },
+        {
+          "heapBytes": 83990484
+        },
+        {
+          "heapBytes": 85709439
+        },
+        {
+          "heapBytes": 94005914
+        },
+        {
+          "heapBytes": 91299047
+        },
+        {
+          "heapBytes": 97104081
+        },
+        {
+          "heapBytes": 90375212
+        },
+        {
+          "heapBytes": 94792049
+        },
+        {
+          "heapBytes": 90017158
+        },
+        {
+          "heapBytes": 96437602
+        },
+        {
+          "heapBytes": 98611149
+        },
+        {
+          "heapBytes": 92735563
+        },
+        {
+          "heapBytes": 93852277
+        },
+        {
+          "heapBytes": 91008845
+        },
+        {
+          "heapBytes": 85974843
+        },
+        {
+          "heapBytes": 91939822
+        },
+        {
+          "heapBytes": 97666580
+        },
+        {
+          "heapBytes": 94527760
+        },
+        {
+          "heapBytes": 97530532
+        },
+        {
+          "heapBytes": 88767632
+        },
+        {
+          "heapBytes": 91429686
+        },
+        {
+          "heapBytes": 98271329
+        },
+        {
+          "heapBytes": 93242895
+        },
+        {
+          "heapBytes": 86115303
+        },
+        {
+          "heapBytes": 94896020
+        },
+        {
+          "heapBytes": 108801846
+        },
+        {
+          "heapBytes": 100763073
+        },
+        {
+          "heapBytes": 97710610
+        },
+        {
+          "heapBytes": 110803958
+        },
+        {
+          "heapBytes": 86607947
+        },
+        {
+          "heapBytes": 111199790
+        },
+        {
+          "heapBytes": 103337974
+        },
+        {
+          "heapBytes": 94695525
+        },
+        {
+          "heapBytes": 110163906
+        },
+        {
+          "heapBytes": 100600384
+        },
+        {
+          "heapBytes": 90819601
+        },
+        {
+          "heapBytes": 90791720
+        },
+        {
+          "heapBytes": 104459665
+        },
+        {
+          "heapBytes": 114149659
+        },
+        {
+          "heapBytes": 85029738
+        },
+        {
+          "heapBytes": 104508935
+        },
+        {
+          "heapBytes": 101724049
+        },
+        {
+          "heapBytes": 108460452
+        },
+        {
+          "heapBytes": 99806588
+        },
+        {
+          "heapBytes": 92448052
+        },
+        {
+          "heapBytes": 105253722
+        },
+        {
+          "heapBytes": 115017168
+        },
+        {
+          "heapBytes": 85487336
+        },
+        {
+          "heapBytes": 104965546
+        },
+        {
+          "heapBytes": 110028146
+        },
+        {
+          "heapBytes": 94086777
+        },
+        {
+          "heapBytes": 97686572
+        },
+        {
+          "heapBytes": 114146792
+        },
+        {
+          "heapBytes": 98018986
+        },
+        {
+          "heapBytes": 105677134
+        },
+        {
+          "heapBytes": 103118128
+        },
+        {
+          "heapBytes": 115368652
+        },
+        {
+          "heapBytes": 97651468
+        },
+        {
+          "heapBytes": 90778760
+        },
+        {
+          "heapBytes": 110314538
+        }
+      ]
+    }
+  ]
+}

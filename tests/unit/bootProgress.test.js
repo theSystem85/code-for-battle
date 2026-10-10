@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   asymptoticPhaseFraction,
+  beginBootProgress,
   bootPhasesForBackend,
   createBootProgress,
-  gpuBootFraction
+  gpuBootFraction,
+  reportBootSprites,
+  resetBootProgressForTests
 } from '../../src/ui/bootProgress.js'
 
 function shareOf(phases, id) {
@@ -12,6 +15,19 @@ function shareOf(phases, id) {
 }
 
 describe('bootProgress', () => {
+  it('preserves a startup error when parallel sprite preparation finishes later', () => {
+    const boot = beginBootProgress()
+    boot.start('assets')
+    document.body.innerHTML = '<div id="loadingScreen" data-phase="error"><p id="loadingScreenDetail">Startup failed</p><div id="loadingScreenBar"></div></div>'
+    try {
+      reportBootSprites(1, 1)
+      expect(document.getElementById('loadingScreenDetail').textContent).toBe('Startup failed')
+      expect(document.getElementById('loadingScreen').dataset.phase).toBe('error')
+    } finally {
+      resetBootProgressForTests()
+      document.body.innerHTML = ''
+    }
+  })
   it('keeps an asymptotic phase inside its range until that phase finishes', () => {
     const fraction = asymptoticPhaseFraction(400, 400)
     expect(fraction).toBeGreaterThan(0.9)

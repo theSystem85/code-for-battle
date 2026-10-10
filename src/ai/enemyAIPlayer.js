@@ -21,6 +21,7 @@ import { ensureAirstripOperations, claimAirstripParkingSlot } from '../utils/air
 import { handleStuckHarvester } from '../game/harvesterLogic.js'
 import { createReplayEntityReference, createReplayUnitReference, recordReplayCommand } from '../replaySystem.js'
 import { getClosestEnemyFactory } from './enemyUtils.js'
+import { beginBaseDefensePass, beginBaseDefenseUnit, finishBaseDefenseUnit, endBaseDefensePass } from './enemySupportBehavior.js'
 import { ensureAdvancedForcePreference } from './advancedForcePreference.js'
 
 const AI_SELL_PRIORITY = [
@@ -1200,11 +1201,20 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
   scanAndRecoverStuckEnemyHarvesters(aiPlayerId, units, mapGrid, occupancyMap, gameState, factories, now)
 
   // --- Update AI Units ---
-  units.forEach(unit => {
-    if (unit.owner !== aiPlayerId) return
-
-    updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, targetedOreTiles, bullets)
-  })
+  beginBaseDefensePass(units, gameState, aiPlayerId)
+  try {
+    for (const unit of units) {
+      if (unit.owner !== aiPlayerId) continue
+      beginBaseDefenseUnit(unit)
+      try {
+        updateAIUnit(unit, units, gameState, mapGrid, now, aiPlayerId, targetedOreTiles, bullets)
+      } finally {
+        finishBaseDefenseUnit(unit)
+      }
+    }
+  } finally {
+    endBaseDefensePass()
+  }
 
   // --- Manage AI Crew Healing ---
   // Run crew management for this AI player

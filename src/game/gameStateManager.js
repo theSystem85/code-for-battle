@@ -42,7 +42,7 @@ import { getNavalHullDimensions } from '../utils/navalUtils.js'
 import { getSimulationTime } from './time.js'
 import { computeCoopCameraFocus, coopFocusToScroll } from '../input/gamepad/coopCamera.js'
 import { computeSweepDustRadius, getDustEffectNow } from './mineSweeperBehavior.js'
-import { prewarmDestructionExplosionTexture, spawnDestructionExplosion } from './spriteSheetEffects.js'
+import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 import {
   beginMapMutationTransaction,
   commitMapMutationTransaction,
@@ -512,7 +512,6 @@ export function cleanupDestroyedUnits(units, gameState) {
           const sampledRotorSpeed = Number.isFinite(unit.rotor?.speed) ? unit.rotor.speed : APACHE_DESTRUCTION_DEFAULT_ROTOR_SPEED
           unit.apacheDestructionRotorInitialSpeed = Math.max(0, sampledRotorSpeed)
         }
-        prewarmDestructionExplosionTexture(gameState)
         if (!unit.destructionExplosionSpawned) {
           const unitCenterX = unit.x + TILE_SIZE / 2
           const unitCenterY = unit.y + TILE_SIZE / 2

@@ -251,6 +251,22 @@ describe('MapRenderer water rendering', () => {
     expect(secondFrameStats.chunkRedraws).toBe(0)
   })
 
+  it('moves cached terrain and live overlays by the same fractional camera delta', () => {
+    const renderer = new MapRenderer(makeTextureManager())
+    const ctx = { drawImage: vi.fn(), fillRect: vi.fn(), imageSmoothingEnabled: true }
+    const map = Array.from({ length: 4 }, () => Array.from({ length: 4 }, () => ({ type: 'land' })))
+    renderer.renderTiles(ctx, map, { x: 0.1, y: 0.2 }, 0, 0, 4, 4, {}, { skipWaterBase: true, skipWaterSot: true })
+    const first = ctx.drawImage.mock.calls.at(-1)
+    ctx.drawImage.mockClear()
+    renderer.renderTiles(ctx, map, { x: 0.6, y: 0.95 }, 0, 0, 4, 4, {}, { skipWaterBase: true, skipWaterSot: true })
+    const second = ctx.drawImage.mock.calls.at(-1)
+    expect(second[1] - first[1]).toBeCloseTo(-0.5)
+    expect(second[2] - first[2]).toBeCloseTo(-0.75)
+    renderer.drawTileDecalOverlay = vi.fn()
+    renderer.renderSOTOverlays(ctx, map, { x: 0.6, y: 0.95 }, 0, 0, 4, 4, { skipWaterSot: true })
+    expect(renderer.drawTileDecalOverlay).toHaveBeenCalledWith(ctx, map[0][0], 0, 0, -0.6, -0.95)
+  })
+
   it('prewarms static terrain chunks so scrolling does not discover uncached terrain', () => {
     const mapRenderer = new MapRenderer(makeTextureManager())
     const ctx = {

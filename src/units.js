@@ -217,14 +217,17 @@ class MinHeap {
     this.content = []
   }
   push(element) {
+    element.heapIndex = this.content.length
     this.content.push(element)
     this.bubbleUp(this.content.length - 1)
   }
   pop() {
     const result = this.content[0]
     const end = this.content.pop()
+    if (result) result.heapIndex = -1
     if (this.content.length > 0) {
       this.content[0] = end
+      end.heapIndex = 0
       this.sinkDown(0)
     }
     return result
@@ -237,6 +240,8 @@ class MinHeap {
       if (element.f >= parent.f) break
       this.content[parentN] = element
       this.content[n] = parent
+      element.heapIndex = parentN
+      parent.heapIndex = n
       n = parentN
     }
   }
@@ -262,6 +267,8 @@ class MinHeap {
       if (swap === null) break
       this.content[n] = this.content[swap]
       this.content[swap] = element
+      this.content[n].heapIndex = n
+      element.heapIndex = swap
       n = swap
     }
   }
@@ -400,6 +407,10 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   // Initialize A* search.
   const openHeap = new MinHeap()
   const closedSet = new Set()
+  // Numeric tile keys avoid string churn. Keep direct node lookup separate
+  // from heap order so decrease-key preserves the existing tie behavior.
+  const openNodes = new Map()
+  const mapWidth = mapGrid[0].length
   const startNode = {
     x: start.x,
     y: start.y,
@@ -410,6 +421,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   }
   startNode.f = startNode.g + startNode.h
   openHeap.push(startNode)
+  openNodes.set(start.y * mapWidth + start.x, startNode)
 
   let finalPath = []
 
@@ -417,7 +429,8 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
   let nodesExplored = 0
   while (openHeap.size() > 0) {
     const currentNode = openHeap.pop()
-    const currentKey = `${currentNode.x},${currentNode.y}`
+    const currentKey = currentNode.y * mapWidth + currentNode.x
+    openNodes.delete(currentKey)
 
     if (currentNode.x === adjustedEnd.x && currentNode.y === adjustedEnd.y) {
       // Reconstruct path.
@@ -434,7 +447,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
     closedSet.add(currentKey)
     const neighbors = getNeighbors(currentNode, mapGrid, pathContext)
     for (const neighbor of neighbors) {
-      const neighborKey = `${neighbor.x},${neighbor.y}`
+      const neighborKey = neighbor.y * mapWidth + neighbor.x
       if (closedSet.has(neighborKey)) continue
       if (hasDiagonalCornerBlocker(currentNode, neighbor, mapGrid, occupancyMap, start, pathContext)) {
         continue
@@ -455,20 +468,15 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
       const tileType = mapGrid[neighbor.y][neighbor.x].type
       const terrainCost = contextOptions.movementType === 'water' ? 1 : (tileType === 'street' ? STREET_PATH_COST : 1)
       const gScore = currentNode.g + baseCost * terrainCost
-      let foundInHeap = false
-      for (const node of openHeap.content) {
-        if (node.x === neighbor.x && node.y === neighbor.y) {
-          foundInHeap = true
-          if (gScore < node.g) {
-            node.g = gScore
-            node.f = gScore + node.h
-            node.parent = currentNode
-            openHeap.bubbleUp(openHeap.content.indexOf(node))
-          }
-          break
+      const node = openNodes.get(neighborKey)
+      if (node) {
+        if (gScore < node.g) {
+          node.g = gScore
+          node.f = gScore + node.h
+          node.parent = currentNode
+          openHeap.bubbleUp(node.heapIndex)
         }
-      }
-      if (!foundInHeap) {
+      } else {
         const hScore = Math.hypot(adjustedEnd.x - neighbor.x, adjustedEnd.y - neighbor.y)
         const neighborNode = {
           x: neighbor.x,
@@ -479,6 +487,7 @@ export const findPath = logPerformance(function findPath(start, end, mapGrid, oc
           parent: currentNode
         }
         openHeap.push(neighborNode)
+        openNodes.set(neighborKey, neighborNode)
       }
     }
     nodesExplored++

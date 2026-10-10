@@ -306,11 +306,18 @@ async function saveGameSnapshot(page, label) {
   await page.click('#saveListTab')
   await page.fill('#saveLabelInput', label)
   await page.click('#saveGameBtn')
-  await expect.poll(async() => page.evaluate((saveLabel) => localStorage.getItem(`rts_save_${saveLabel}`) || null, label), {
+  await expect.poll(async() => page.evaluate(async(saveLabel) => {
+    const { getStoredItem } = await import('/src/storage/indexedDbStorage.js')
+    return getStoredItem(`rts_save_${saveLabel}`) || null
+  }, label), {
     timeout: 15000
   }).not.toBeNull()
 
-  return page.evaluate((saveLabel) => JSON.parse(localStorage.getItem(`rts_save_${saveLabel}`) || 'null'), label)
+  return page.evaluate(async(saveLabel) => {
+    const { getStoredItem } = await import('/src/storage/indexedDbStorage.js')
+    const { decodeSaveObject } = await import('/src/saveFormat.js')
+    return decodeSaveObject(getStoredItem(`rts_save_${saveLabel}`))
+  }, label)
 }
 
 async function pauseGameAndWaitForStableTime(page, label) {
@@ -407,11 +414,13 @@ test.describe('Replay determinism in four-player AI match', () => {
     const replayRow = page.locator('#replayList > li').first()
     await expect(replayRow).toBeVisible({ timeout: 15000 })
 
-    const originalSnapshot = await page.evaluate(({ saveLabel }) => {
-      const saveObj = JSON.parse(localStorage.getItem(`rts_save_${saveLabel}`) || 'null')
-      const replayKeys = Object.keys(localStorage).filter(key => key.startsWith('rts_replay_')).sort()
+    const originalSnapshot = await page.evaluate(async({ saveLabel }) => {
+      const { getStoredItem, getStoredKeys } = await import('/src/storage/indexedDbStorage.js')
+      const { decodeSaveObject } = await import('/src/saveFormat.js')
+      const saveObj = decodeSaveObject(getStoredItem(`rts_save_${saveLabel}`))
+      const replayKeys = getStoredKeys('rts_replay_').sort()
       const latestReplayKey = replayKeys[replayKeys.length - 1] || null
-      const latestReplay = latestReplayKey ? JSON.parse(localStorage.getItem(latestReplayKey) || 'null') : null
+      const latestReplay = latestReplayKey ? JSON.parse(getStoredItem(latestReplayKey) || 'null') : null
       return {
         state: saveObj?.state || '',
         replayKey: latestReplayKey,

@@ -25,6 +25,7 @@ const clearShotProbe = {
   tileY: 0,
   owner: null
 }
+const lineOfSightProbe = { x: 0, y: 0 }
 
 const CLEAR_SHOT_OFFSETS = [
   { x: 0, y: -1 },
@@ -558,11 +559,13 @@ function isLineObstructedByBuilding(shooterCenter, target, mapGrid) {
   const startTileX = Math.floor(shooterCenter.x / TILE_SIZE)
   const startTileY = Math.floor(shooterCenter.y / TILE_SIZE)
   const targetTileX = target.tileX !== undefined
-    ? target.tileX
+    ? (Number.isFinite(target.tileX) ? target.tileX : Math.floor((target.x + TILE_SIZE / 2) / TILE_SIZE))
     : target.x + Math.floor((target.width || 1) / 2)
   const targetTileY = target.tileY !== undefined
     ? target.tileY
-    : target.y + Math.floor((target.height || 1) / 2)
+    : (target.tileX !== undefined ? Math.floor((target.y + TILE_SIZE / 2) / TILE_SIZE) : target.y + Math.floor((target.height || 1) / 2))
+
+  if (!Number.isInteger(startTileX) || !Number.isInteger(startTileY) || !Number.isInteger(targetTileX) || !Number.isInteger(targetTileY)) return true
 
   let x0 = startTileX
   let y0 = startTileY
@@ -600,7 +603,7 @@ function isLineObstructedByBuilding(shooterCenter, target, mapGrid) {
 
 // Prevent friendly fire by ensuring clear line-of-sight.
 // Returns true if no friendly unit (other than shooter and target) is in the bullet's path.
-export function hasClearShot(shooter, target, units, mapGrid) {
+export function hasClearShot(shooter, target, units, mapGrid, ignoredUnit = shooter) {
   const shooterCenterX = shooter.x + TILE_SIZE / 2
   const shooterCenterY = shooter.y + TILE_SIZE / 2
   const targetCenterX = target.tileX !== undefined
@@ -620,9 +623,9 @@ export function hasClearShot(shooter, target, units, mapGrid) {
   const minY = Math.min(shooterCenterY, targetCenterY) - threshold
   const maxY = Math.max(shooterCenterY, targetCenterY) + threshold
 
-  clearShotProbe.x = shooterCenterX
-  clearShotProbe.y = shooterCenterY
-  if (isLineObstructedByBuilding(clearShotProbe, target, mapGrid)) {
+  lineOfSightProbe.x = shooterCenterX
+  lineOfSightProbe.y = shooterCenterY
+  if (isLineObstructedByBuilding(lineOfSightProbe, target, mapGrid)) {
     return false
   }
 
@@ -631,7 +634,7 @@ export function hasClearShot(shooter, target, units, mapGrid) {
   for (let index = 0; index < candidates.length; index++) {
     const other = candidates[index]
     // Only check for friendly units that are not the shooter or the intended target.
-    if (!other || other === shooter || other === target) continue
+    if (!other || other === ignoredUnit || other === target) continue
     if (!indexedFriendlies && other.owner !== shooter.owner) continue
     const otherCenterX = other.x + TILE_SIZE / 2
     const otherCenterY = other.y + TILE_SIZE / 2
@@ -694,7 +697,7 @@ export function findPositionWithClearShot(unit, target, units, mapGrid) {
           testUnit.tileY = testY
 
           // Check if there's a clear shot from this position
-          if (hasClearShot(testUnit, target, units, mapGrid)) {
+          if (hasClearShot(testUnit, target, units, mapGrid, unit)) {
             // Calculate distance to current position to find the nearest valid spot
             const distance = Math.hypot(testX - unitTileX, testY - unitTileY)
             if (distance < bestDistance) {

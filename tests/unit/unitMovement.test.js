@@ -226,6 +226,23 @@ describe('unitMovement.js', () => {
       expect(unit.moveTarget).toEqual({ x: 12, y: 12 })
     })
 
+    it('keeps the empty path stable while holding a target in firing range', () => {
+      const unit = {
+        id: 'stationary-shooter', owner: 'player1', health: 100, type: 'tank_v1',
+        x: 32, y: 32, tileX: 1, tileY: 1, path: [{ x: 2, y: 1 }],
+        moveTarget: { x: 2, y: 1 },
+        target: { id: 'near-target', health: 100, x: 64, y: 32, tileX: 2, tileY: 1 }
+      }
+      updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, 10000)
+      expect(unit.path).toEqual([])
+      expect(unit.moveTarget).toBeNull()
+      const stoppedPath = unit.path
+      for (let tick = 0; tick < 100; tick++) {
+        updateUnitMovement([unit], mockMapGrid, mockOccupancyMap, mockGameState, 10016 + tick * 16)
+        expect(unit.path).toBe(stoppedPath)
+      }
+    })
+
     it('sets an attack move path when target is out of range', () => {
       const target = { id: 'enemy-1', x: 400, y: 400, tileX: 12, tileY: 12, health: 100 }
       const unit = {

@@ -373,6 +373,46 @@ describe('unifiedMovement.js', () => {
   })
 
   describe('stopUnitMovement', () => {
+    it('preserves empty paths and velocity objects over repeated combat stops', () => {
+      const unit = { path: [{ x: 2, y: 1 }], movement: { velocity: { x: 2, y: 1 }, targetVelocity: { x: 3, y: 1 }, isMoving: true, currentSpeed: 2 } }
+      stopUnitMovement(unit)
+      const path = unit.path
+      const velocity = unit.movement.velocity
+      const targetVelocity = unit.movement.targetVelocity
+      for (let tick = 0; tick < 100; tick++) stopUnitMovement(unit)
+      expect(unit.path).toBe(path)
+      expect(unit.path).toEqual([])
+      expect(unit.movement.velocity).toBe(velocity)
+      expect(unit.movement.targetVelocity).toBe(targetVelocity)
+      expect(velocity).toEqual({ x: 0, y: 0 })
+      expect(targetVelocity).toEqual({ x: 0, y: 0 })
+    })
+
+    it.each([
+      { type: 'tank_v1', gas: 0 },
+      { type: 'tank_v1', crew: { driver: false } },
+      { type: 'harvester', harvesting: true },
+      { type: 'harvester', unloadingAtRefinery: true },
+      { type: 'tank_v1', repairingAtWorkshop: true }
+    ])('keeps blocked-unit movement state stable: %j', reason => {
+      const unit = { ...reason, x: 32, y: 32, path: [{ x: 2, y: 1 }], moveTarget: { x: 2, y: 1 } }
+      updateUnitPosition(unit, [], [], 0)
+      const path = unit.path
+      const movement = unit.movement
+      const velocity = movement.velocity
+      const targetVelocity = movement.targetVelocity
+      for (let tick = 0; tick < 100; tick++) updateUnitPosition(unit, [], [], tick * 16)
+      expect(unit.path).toBe(path)
+      expect(unit.path).toEqual([])
+      expect(unit.moveTarget).toBeNull()
+      expect(unit.movement).toBe(movement)
+      expect(movement.velocity).toBe(velocity)
+      expect(movement.targetVelocity).toBe(targetVelocity)
+      expect(velocity).toEqual({ x: 0, y: 0 })
+      expect(targetVelocity).toEqual({ x: 0, y: 0 })
+      expect(movement.isMoving).toBe(false)
+    })
+
     it('should stop unit movement', () => {
       const unit = {
         id: 'u1',

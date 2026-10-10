@@ -119,5 +119,8 @@ export function spawnDestructionExplosion(gameState, centerX, centerY, options =
 export function prewarmDestructionExplosionTexture(gameState) {
   const configured = getConfiguredDestructionAnimation(gameState)
   const assetPath = configured?.assetPath ?? DEFAULT_DESTRUCTION_SPRITE
-  prewarmSpriteSheetTexture(assetPath)
+  const defaultReady = prewarmSpriteSheetTexture(DEFAULT_DESTRUCTION_SPRITE)
+  return isDefaultDestructionAsset(assetPath)
+    ? defaultReady
+    : Promise.all([defaultReady, prewarmSpriteSheetTexture(assetPath)])
 }

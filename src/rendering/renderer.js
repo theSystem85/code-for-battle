@@ -30,6 +30,8 @@ import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPrevi
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
 import { bootMark } from '../ui/bootTiming.js'
+import { prewarmDestructionExplosionTexture } from '../game/spriteSheetEffects.js'
+import { gameState } from '../gameState.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import {
@@ -389,6 +391,7 @@ export class Renderer {
     let supplyShipLoaded = false
 
     let spritesPrepared = false
+    let effectsPrepared = false
 
     const checkAllLoaded = () => {
       if (typeof onProgress === 'function') {
@@ -406,9 +409,10 @@ export class Renderer {
           mineSweeperLoaded,
           destroyerLoaded,
           supplyShipLoaded,
-          spritesPrepared
+          spritesPrepared,
+          effectsPrepared
         ].filter(Boolean).length
-        onProgress(loadedCount / 14)
+        onProgress(loadedCount / 15)
         bootMark('texture-flags', {
           loadedCount,
           texturesLoaded,
@@ -416,7 +420,7 @@ export class Renderer {
           tankImagesLoaded
         })
       }
-      if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded && spritesPrepared) {
+      if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded && spritesPrepared && effectsPrepared) {
         this.wreckRenderer.prepareCaches?.(
           this.buildingRenderer.preparedSpriteRegistry?.density ||
           (typeof window !== 'undefined' ? window.devicePixelRatio : 1)
@@ -426,6 +430,16 @@ export class Renderer {
     }
 
     bindRenderingDensityPreparation()
+    // Independent readiness flags: failure of sprite preparation must not
+    // publish readiness while an explosion worker is still processing pixels.
+    prewarmDestructionExplosionTexture(gameState).then(() => {
+      effectsPrepared = true
+      checkAllLoaded()
+    }).catch(error => {
+      window.logger?.warn?.('Explosion sheet unavailable', error)
+      // Required effects never report readiness after a decode/budget error.
+      if (callback) callback(error)
+    })
     prepareRuntimeSprites().then(prepared => {
       if (prepared?.registry) this.buildingRenderer.setPreparedSpriteRegistry(prepared.registry)
     }).catch(error => {

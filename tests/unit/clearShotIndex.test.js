@@ -41,6 +41,38 @@ describe('owner unit index', () => {
     resetOwnerUnitIndexForTests()
   })
 
+  it('checks live center tiles after same-pass collision movement and never self-blocks', () => {
+    const mover = { id: 'self', x: 15.9, y: 0, type: 'tank', owner: 'player1', health: 100 }
+    const other = { id: 'other', x: 16, y: 0, type: 'tank', owner: 'player1', health: 100 }
+    rebuildOwnerUnitIndex([mover, other])
+    expect(hasFriendlyUnitOnTile(mover, 0, 0, [])).toBe(false)
+    expect(hasFriendlyUnitOnTile(mover, 1, 0, [])).toBe(true)
+    other.x = 48
+    expect(hasFriendlyUnitOnTile(mover, 1, 0, [])).toBe(false)
+    expect(hasFriendlyUnitOnTile(mover, 2, 0, [])).toBe(true)
+    other.health = 0
+    expect(hasFriendlyUnitOnTile(mover, 2, 0, [])).toBe(false)
+  })
+
+  it('handles missing tile metadata from live centers and rejects non-finite line endpoints', () => {
+    const shooter = { x: 0, y: 0, owner: 'player1' }
+    const target = { tileX: 6, x: 6 * TILE_SIZE, y: 6 * TILE_SIZE, owner: 'player2' }
+    expect(hasClearShot(shooter, target, [shooter, target], openMap())).toBe(true)
+    expect(hasClearShot(shooter, { ...target, tileY: NaN }, [shooter, target], openMap())).toBe(false)
+    expect(hasClearShot({ ...shooter, x: Infinity }, target, [], openMap())).toBe(false)
+  })
+
+  it('excludes the actual mover when testing a hypothetical firing position', () => {
+    const unit = { id: 'mover', x: 2 * TILE_SIZE, y: 0, owner: 'player1' }
+    const proxy = { x: TILE_SIZE, y: 0, owner: unit.owner }
+    const target = { tileX: 8, tileY: 0, x: 8 * TILE_SIZE, y: 0, owner: 'player2' }
+    const map = openMap()
+    expect(hasClearShot(proxy, target, [unit], map)).toBe(false)
+    expect(hasClearShot(proxy, target, [unit], map, unit)).toBe(true)
+    expect(proxy.x).toBe(TILE_SIZE)
+    expect(hasClearShot(proxy, target, [unit, { x: 4 * TILE_SIZE, y: 0, owner: unit.owner }], map, unit)).toBe(false)
+  })
+
   it('stays inactive until a movement or combat pass rebuilds it', () => {
     expect(ownerUnitList('player1')).toBeNull()
   })

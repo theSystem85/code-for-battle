@@ -2,6 +2,7 @@ import {
   createSpriteSheetAnimationInstance,
   getAnimationFrameIndex,
   getSpriteSheetTexture,
+  prewarmSpriteSheetTexture,
   normalizeSpriteSheetBlendMode,
   parseSpriteSheetMetadataFromFilename
 } from '../rendering/spriteSheetAnimation.js'
@@ -784,6 +785,7 @@ function refreshAnimationPreview(state) {
     texture &&
     (
       (typeof window !== 'undefined' && typeof window.HTMLCanvasElement !== 'undefined' && texture instanceof window.HTMLCanvasElement && texture.width > 0 && texture.height > 0) ||
+      (typeof globalThis.ImageBitmap !== 'undefined' && texture instanceof globalThis.ImageBitmap && texture.width > 0 && texture.height > 0) ||
       (texture.complete && texture.naturalWidth > 0 && texture.naturalHeight > 0)
     )
   )
@@ -896,6 +898,14 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
   if (!image) {
     setStatus(state, `Failed to load sheet: ${sheetPath}`, 'error')
     return
+  }
+  if (mode === 'animation') {
+    try {
+      await prewarmSpriteSheetTexture(sheetPath)
+    } catch (error) {
+      setStatus(state, `Failed to prepare animation sheet: ${error.message}`, 'error')
+      return
+    }
   }
 
   state.activeData = loadedData

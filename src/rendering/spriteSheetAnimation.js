@@ -1,13 +1,20 @@
 import { TILE_SIZE } from '../config.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
+import { applyBlackKey } from './blackKeyPixels.js'
+import { prepareExplosionInWorker } from './explosionPreparation.js'
 
 const FILENAME_PATTERN = /^(\d+)x(\d+)_([0-9]+)x([0-9]+)_.+\.[a-z0-9]+$/i
 const BLACK_ALPHA_CUTOFF_BRIGHTNESS = 24
 const BLACK_ALPHA_SOFTEN_BRIGHTNESS = 48
 
 const textureCache = new Map()
+const sheetAliases = new Map()
 const metadataCache = new Map()
 const processedImageCache = new WeakMap()
+const MAX_SHEET_BYTES = 16 * 1024 * 1024
+const MAX_CACHE_BYTES = 64 * 1024 * 1024
+const MAX_SHEETS = 32
+let reservedBytes = 0
 
 function normalizeBlackKeyConfig(config = null) {
   const cutoffBrightness = Number.isFinite(config?.cutoffBrightness)
@@ -28,7 +35,8 @@ export function normalizeSpriteSheetBlendMode(mode) {
 }
 
 function isCanvasTexture(texture) {
-  return typeof window !== 'undefined' && typeof window.HTMLCanvasElement !== 'undefined' && texture instanceof window.HTMLCanvasElement
+  return (typeof window !== 'undefined' && typeof window.HTMLCanvasElement !== 'undefined' && texture instanceof window.HTMLCanvasElement) ||
+    (typeof globalThis.ImageBitmap !== 'undefined' && texture instanceof globalThis.ImageBitmap)
 }
 
 function isImageTextureReady(texture) {
@@ -110,24 +118,7 @@ function buildBlackTransparentTexture(image, blackKeyConfig = null) {
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   const data = imageData.data
 
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i]
-    const g = data[i + 1]
-    const b = data[i + 2]
-    const a = data[i + 3]
-    const brightness = Math.max(r, g, b)
-    if (brightness <= cutoffBrightness) {
-      data[i + 3] = 0
-      continue
-    }
-    if (brightness < softenBrightness) {
-      const t = (brightness - cutoffBrightness) /
-        (softenBrightness - cutoffBrightness)
-      data[i + 3] = Math.round(a * t)
-      continue
-    }
-    data[i + 3] = a
-  }
+  applyBlackKey(data, cutoffBrightness, softenBrightness)
 
   ctx.putImageData(imageData, 0, 0)
   return canvas
@@ -139,8 +130,8 @@ export function getImageTextureWithBlendMode(image, blendMode = 'black', blackKe
     return image
   }
 
-  const normalizedBlackKey = normalizeBlackKeyConfig(blackKeyConfig)
-  const cacheKey = `${normalizedBlendMode}:${normalizedBlackKey.cutoffBrightness}:${normalizedBlackKey.softenBrightness}`
+  const normalizedBlackKey = blackKeyConfig ? normalizeBlackKeyConfig(blackKeyConfig) : null
+  const cacheKey = normalizedBlackKey ? `black:${normalizedBlackKey.cutoffBrightness}:${normalizedBlackKey.softenBrightness}` : 'black:24:48'
   const existingByConfig = processedImageCache.get(image)
   const existing = existingByConfig?.get(cacheKey)
   if (existing) {
@@ -159,33 +150,69 @@ export function getImageTextureWithBlendMode(image, blendMode = 'black', blackKe
 
 export function getSpriteSheetTexture(assetPath, blendMode = 'black') {
   if (!assetPath) return null
-  const existing = textureCache.get(assetPath)
-  if (existing) {
-    return getImageTextureWithBlendMode(existing.image, blendMode)
-  }
+  // Render is lookup-only. Startup/editor preparation owns loading and jobs.
+  const existing = findSheet(assetPath)
+  if (!existing) return null
+  return normalizeSpriteSheetBlendMode(blendMode) === 'alpha' ? existing.image : existing.black
+}
 
+function sheetURL(assetPath) {
+  const source = assetPath.startsWith('/') || assetPath.startsWith('blob:') || assetPath.startsWith('data:') || /^https?:\/\//i.test(assetPath)
+    ? assetPath : `/${assetPath}`
+  return new URL(source, document.baseURI).href
+}
+
+function findSheet(assetPath) {
+  const existing = sheetAliases.get(assetPath)
+  if (existing) return existing
+  const canonical = textureCache.get(sheetURL(assetPath))
+  if (canonical) {
+    if (sheetAliases.size < MAX_SHEETS * 2) sheetAliases.set(assetPath, canonical)
+  }
+  return canonical
+}
+
+function ensureSheet(assetPath) {
+  const existing = findSheet(assetPath)
+  if (existing) return existing
+  if (textureCache.size >= MAX_SHEETS) return null
+  const key = sheetURL(assetPath)
   const img = new Image()
   img.decoding = 'async'
-  if (assetPath.startsWith('/') || assetPath.startsWith('blob:') || assetPath.startsWith('data:') || /^https?:\/\//i.test(assetPath)) {
-    img.src = assetPath
-  } else {
-    img.src = `/${assetPath}`
+  img.src = key
+  const entry = { image: img, black: null, ready: null }
+  textureCache.set(key, entry)
+  if (sheetAliases.size < MAX_SHEETS * 2) sheetAliases.set(assetPath, entry)
+  entry.ready = prepareSheet(entry)
+  // Render callers only poll readiness. Startup/editor callers await the same
+  // promise and receive errors; no unhandled rejection from a render lookup.
+  entry.ready.catch(() => {})
+  return entry
+}
+
+async function prepareSheet(entry) {
+  await entry.image.decode()
+  const bytes = entry.image.naturalWidth * entry.image.naturalHeight * 4
+  // Account for both the source and processed sheet; no gameplay eviction.
+  if (!bytes || bytes > MAX_SHEET_BYTES || reservedBytes + bytes * 2 > MAX_CACHE_BYTES) {
+    entry.image.src = ''
+    throw new Error('Explosion sheet exceeds the prepared texture byte budget')
   }
-  textureCache.set(assetPath, {
-    image: img
-  })
-  return img
+  reservedBytes += bytes * 2
+  try {
+    entry.black = await prepareExplosionInWorker(entry.image)
+  } catch {
+    // Older Safari/CSP/worker failures use the same pixels during preparation,
+    // before publishing the asset. No synchronous conversion in render calls.
+  }
+  if (!entry.black) entry.black = getImageTextureWithBlendMode(entry.image)
+  return entry.black
 }
 
 export function prewarmSpriteSheetTexture(assetPath) {
-  if (!assetPath) return
-  const texture = getSpriteSheetTexture(assetPath)
-  if (isImageTextureReady(texture)) {
-    return
-  }
-  if (texture && typeof texture.decode === 'function') {
-    texture.decode().catch(() => {})
-  }
+  if (!assetPath) return Promise.resolve(null)
+  const entry = ensureSheet(assetPath)
+  return entry ? entry.ready : Promise.reject(new Error('Prepared explosion sheet count budget exceeded'))
 }
 
 export function createSpriteSheetAnimationInstance({

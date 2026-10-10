@@ -84,6 +84,14 @@ describe('gameSetup.js', () => {
       expect(callback).toHaveBeenCalled()
     })
 
+    it('propagates required texture preparation failure without later publishing readiness', () => {
+      const error = new Error('Explosion sheet exceeds byte budget')
+      preloadTileTextures.mockImplementationOnce(callback => callback(error))
+      const callback = vi.fn()
+      initializeGameAssets(callback)
+      expect(callback).toHaveBeenCalledExactlyOnceWith(error)
+    })
+
     it('should report asset progress while preload groups finish', () => {
       const onProgress = vi.fn()
 

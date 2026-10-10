@@ -1,4 +1,5 @@
 import { gameState } from '../gameState.js'
+import { AnimationSheetPreparation } from '../rendering/animationSheetPreparation.js'
 import { getMapRenderer, getTextureManager } from '../rendering.js'
 import { initializeOccupancyMap } from '../units.js'
 import { observeMultiplayerSession } from '../network/multiplayerSessionEvents.js'
@@ -94,11 +95,17 @@ function normalizeAnimationMetadata(metadata) {
   }
 }
 
+const animationPreparation = new AnimationSheetPreparation(gameState)
+
 function setActiveAnimationMetadata(metadata) {
   const normalized = normalizeAnimationMetadata(metadata)
   if (!normalized) return null
-  gameState.activeAnimationSpriteSheetMetadata = normalized
-  gameState.activeAnimationSpriteSheetPath = normalized.sheetPath || DEFAULT_ANIMATION_SHEET_PATH
+  const path = normalized.sheetPath || DEFAULT_ANIMATION_SHEET_PATH
+  // Keep the currently published sheet until its replacement is ready. An
+  // older job finishing later must never overwrite a newer editor selection.
+  animationPreparation.stage(normalized, path).catch(error => {
+    window.logger?.warn?.('Animation sheet preparation failed; keeping the active sheet', error)
+  })
   return normalized
 }
 
@@ -725,9 +732,9 @@ export function initMapEditorControls() {
     window.logger.warn('Failed to load applied SSE animation metadata from IndexedDB:', err)
   }
 
-  if (!gameState.activeAnimationSpriteSheetMetadata) {
+  if (!gameState.activeAnimationSpriteSheetMetadata && !animationPreparation.pending) {
     loadDefaultAnimationMetadata().then((metadata) => {
-      if (!metadata || gameState.activeAnimationSpriteSheetMetadata) return
+      if (!metadata || gameState.activeAnimationSpriteSheetMetadata || animationPreparation.pending) return
       setActiveAnimationMetadata(metadata)
     })
   }

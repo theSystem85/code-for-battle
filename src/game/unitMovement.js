@@ -217,7 +217,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       } else {
         // In range, stop moving
         unit.moveTarget = null
-        unit.path = []
+        if (!Array.isArray(unit.path) || unit.path.length > 0) unit.path = []
         // Reset tracking when in range
         unit.lastDistanceToTarget = distToTarget
       }

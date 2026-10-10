@@ -83,10 +83,12 @@ export class QuadtreeNode {
     const hh = b.halfHeight
     const newDepth = this.depth + 1
 
-    this.northeast = new QuadtreeNode(new AABB(b.x + hw, b.y, hw, hh), this.capacity, newDepth)
-    this.northwest = new QuadtreeNode(new AABB(b.x, b.y, hw, hh), this.capacity, newDepth)
-    this.southeast = new QuadtreeNode(new AABB(b.x + hw, b.y + hh, hw, hh), this.capacity, newDepth)
-    this.southwest = new QuadtreeNode(new AABB(b.x, b.y + hh, hw, hh), this.capacity, newDepth)
+    if (!this.northeast) {
+      this.northeast = new QuadtreeNode(new AABB(b.x + hw, b.y, hw, hh), this.capacity, newDepth)
+      this.northwest = new QuadtreeNode(new AABB(b.x, b.y, hw, hh), this.capacity, newDepth)
+      this.southeast = new QuadtreeNode(new AABB(b.x + hw, b.y + hh, hw, hh), this.capacity, newDepth)
+      this.southwest = new QuadtreeNode(new AABB(b.x, b.y + hh, hw, hh), this.capacity, newDepth)
+    }
 
     this.divided = true
 
@@ -188,20 +190,22 @@ export class QuadtreeNode {
   /**
    * Clear all units from this node and children
    */
-  clear() {
+  clear(retainNodes = false) {
     this.units.length = 0
     this.unitCount = 0
 
-    if (this.divided) {
-      this.northeast.clear()
-      this.northwest.clear()
-      this.southeast.clear()
-      this.southwest.clear()
+    if (this.divided || (!retainNodes && this.northeast)) {
+      this.northeast.clear(retainNodes)
+      this.northwest.clear(retainNodes)
+      this.southeast.clear(retainNodes)
+      this.southwest.clear(retainNodes)
 
-      this.northeast = null
-      this.northwest = null
-      this.southeast = null
-      this.southwest = null
+      if (!retainNodes) {
+        this.northeast = null
+        this.northwest = null
+        this.southeast = null
+        this.southwest = null
+      }
       this.divided = false
     }
   }
@@ -236,8 +240,11 @@ export class SpatialQuadtree {
    * @param {Array} units - All units in the game
    */
   rebuild(units) {
-    this.groundTree.clear()
-    this.airTree.clear()
+    // Keep the bounded node topology, but repartition each tick so query order
+    // and small-army cost match a freshly built tree. Empty dormant nodes hold
+    // no units; explicit clear() still releases the entire retained topology.
+    this.groundTree.clear(true)
+    this.airTree.clear(true)
 
     const halfTile = this._halfTile
 

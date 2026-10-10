@@ -220,11 +220,19 @@ export function hasFriendlyUnitOnTile(unit, tileX, tileY, units = []) {
   }
 
   const scans = listCount || 1
+  const minX = tileX * TILE_SIZE - TILE_SIZE / 2
+  const minY = tileY * TILE_SIZE - TILE_SIZE / 2
+  const maxX = minX + TILE_SIZE
+  const maxY = minY + TILE_SIZE
   for (let listIndex = 0; listIndex < scans; listIndex++) {
     const candidates = listCount ? friendlyCandidateLists[listIndex] : units
     for (let index = 0; index < candidates.length; index++) {
       const otherUnit = candidates[index]
       if (!otherUnit || otherUnit.id === unit.id || otherUnit.health <= 0) continue
+      // Reject distant live positions before domain/ownership checks. Do not
+      // cache occupancy here: earlier collision responses can move BOTH units
+      // during this pass. The final center-based check retains boundary rules.
+      if (otherUnit.x < minX || otherUnit.x >= maxX || otherUnit.y < minY || otherUnit.y >= maxY) continue
       if (!listCount && ownersAreEnemies(unit.owner, otherUnit.owner)) continue
       if (!isGroundUnit(otherUnit)) continue
 
@@ -252,6 +260,22 @@ export function initializeUnitMovement(unit) {
   }
 }
 
+// Blocked units may stay here for thousands of ticks. Preserve their zeroed
+// vectors and empty path instead of allocating three replacements every tick.
+function clearBlockedMovement(unit) {
+  if (!Array.isArray(unit.path) || unit.path.length > 0) unit.path = []
+  unit.moveTarget = null
+  const movement = unit.movement
+  if (!movement.velocity) movement.velocity = { x: 0, y: 0 }
+  if (!movement.targetVelocity) movement.targetVelocity = { x: 0, y: 0 }
+  movement.velocity.x = 0
+  movement.velocity.y = 0
+  movement.targetVelocity.x = 0
+  movement.targetVelocity.y = 0
+  movement.isMoving = false
+  movement.currentSpeed = 0
+}
+
 export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [], gameState = globalGameState, factories = null) {
   initializeUnitMovement(unit)
 
@@ -267,12 +291,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
     if (canEmergencyLand) {
       beginJetEmergencyFuelLanding(unit, now)
     } else {
-      unit.path = []
-      unit.moveTarget = null
-      unit.movement.velocity = { x: 0, y: 0 }
-      unit.movement.targetVelocity = { x: 0, y: 0 }
-      unit.movement.isMoving = false
-      unit.movement.currentSpeed = 0
+      clearBlockedMovement(unit)
       if (unit.type === 'apache' || unit.type === 'f22Raptor' || unit.type === 'f35') {
         unit.flightPlan = null
         unit.autoHoldAltitude = false
@@ -290,43 +309,23 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
 
   if (unit.type === 'harvester') {
     if (unit.harvesting) {
-      unit.path = []
-      unit.moveTarget = null
-      unit.movement.velocity = { x: 0, y: 0 }
-      unit.movement.targetVelocity = { x: 0, y: 0 }
-      unit.movement.isMoving = false
-      unit.movement.currentSpeed = 0
+      clearBlockedMovement(unit)
       return
     }
 
     if (unit.unloadingAtRefinery) {
-      unit.path = []
-      unit.moveTarget = null
-      unit.movement.velocity = { x: 0, y: 0 }
-      unit.movement.targetVelocity = { x: 0, y: 0 }
-      unit.movement.isMoving = false
-      unit.movement.currentSpeed = 0
+      clearBlockedMovement(unit)
       return
     }
   }
 
   if (!hasRestorationOverride && unit.crew && typeof unit.crew === 'object' && !unit.crew.driver && unit.type !== 'ambulance') {
-    unit.path = []
-    unit.moveTarget = null
-    unit.movement.velocity = { x: 0, y: 0 }
-    unit.movement.targetVelocity = { x: 0, y: 0 }
-    unit.movement.isMoving = false
-    unit.movement.currentSpeed = 0
+    clearBlockedMovement(unit)
     return
   }
 
   if (unit.repairingAtWorkshop) {
-    unit.path = []
-    unit.moveTarget = null
-    unit.movement.velocity = { x: 0, y: 0 }
-    unit.movement.targetVelocity = { x: 0, y: 0 }
-    unit.movement.isMoving = false
-    unit.movement.currentSpeed = 0
+    clearBlockedMovement(unit)
     return
   }
 
@@ -918,7 +917,7 @@ export function stopUnitMovement(unit) {
 
   stopTankEngineLoop(unit)
 
-  if (unit.path) {
+  if (unit.path?.length > 0) {
     unit.path = []
   }
 }
@@ -926,7 +925,7 @@ export function stopUnitMovement(unit) {
 export function cancelUnitMovement(unit) {
   initializeUnitMovement(unit)
 
-  if (unit.path) {
+  if (unit.path?.length > 0) {
     unit.path = []
   }
 

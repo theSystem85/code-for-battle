@@ -161,6 +161,38 @@ describe('spatialQuadtree.js', () => {
       expect(node.southeast.unitCount > 0).toBe(true)
     })
 
+    it('reuses split nodes while preserving fresh-tree query order as units move', () => {
+      const retained = new QuadtreeNode(boundary, 2, 0)
+      const units = Array.from({ length: 20 }, (_, index) => ({
+        id: `retained-${index}`, _cx: 10 + index * 35, _cy: 10 + index * 35
+      }))
+      units.forEach(unit => retained.insert(unit))
+      const firstChild = retained.northwest
+      for (let frame = 0; frame < 10; frame++) {
+        retained.clear(true)
+        const fresh = new QuadtreeNode(boundary, 2, 0)
+        for (const unit of units) {
+          unit._cx = 1000 - unit._cx
+          unit._cy = 1000 - unit._cy
+          retained.insert(unit)
+          fresh.insert(unit)
+        }
+        const actual = []
+        const expected = []
+        retained.queryCircleInto(500, 500, 1000 ** 2, units[0].id, actual)
+        fresh.queryCircleInto(500, 500, 1000 ** 2, units[0].id, expected)
+        expect(actual).toEqual(expected)
+        expect(actual).not.toContain(units[0])
+        expect(retained.northwest).toBe(firstChild)
+      }
+      retained.clear(true)
+      const empty = []
+      retained.queryCircleInto(500, 500, 1000 ** 2, null, empty)
+      expect(empty).toEqual([])
+      retained.clear()
+      expect(retained.northwest).toBeNull()
+    })
+
     it('should query units within circular range', () => {
       const node = new QuadtreeNode(boundary, 16, 0)
 

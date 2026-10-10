@@ -19,6 +19,7 @@ let buildingProgress = 0
 let turretProgress = 0
 let onAllAssetsLoadedCallback = null
 let onAssetsProgressCallback = null
+let assetLoadFailed = false
 
 function clampAssetProgress(value) {
   const number = Number(value)
@@ -27,6 +28,7 @@ function clampAssetProgress(value) {
 }
 
 function emitAssetProgress() {
+  if (assetLoadFailed) return
   if (typeof onAssetsProgressCallback !== 'function') return
   if (textureProgress === 1 && buildingProgress === 1 && turretProgress === 1) {
     onAssetsProgressCallback(1)
@@ -37,12 +39,13 @@ function emitAssetProgress() {
 }
 
 function checkAllAssetsLoaded() {
-  if (texturesLoaded && buildingImagesLoaded && turretImagesLoaded && onAllAssetsLoadedCallback) {
+  if (!assetLoadFailed && texturesLoaded && buildingImagesLoaded && turretImagesLoaded && onAllAssetsLoadedCallback) {
     onAllAssetsLoadedCallback()
   }
 }
 
 export function initializeGameAssets(callback, onProgress) {
+  assetLoadFailed = false
   onAllAssetsLoadedCallback = callback
   onAssetsProgressCallback = typeof onProgress === 'function' ? onProgress : null
   textureProgress = texturesLoaded ? 1 : 0
@@ -50,7 +53,12 @@ export function initializeGameAssets(callback, onProgress) {
   turretProgress = turretImagesLoaded ? 1 : 0
   emitAssetProgress()
 
-  preloadTileTextures(() => {
+  preloadTileTextures((error) => {
+    if (error) {
+      assetLoadFailed = true
+      onAllAssetsLoadedCallback?.(error)
+      return
+    }
     texturesLoaded = true
     textureProgress = 1
     emitAssetProgress()

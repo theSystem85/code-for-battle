@@ -333,6 +333,8 @@ function paintBootProgress(now) {
   const boot = activeBootProgress
   if (!boot || boot.isComplete()) return
   if (typeof document === 'undefined') return
+  // Other asset preparation can finish after startup has already failed.
+  if (document.getElementById('loadingScreen')?.dataset.phase === 'error') return
   const progress = boot.sample(now)
   const whole = Math.round(progress * 100)
   if (whole === lastBootPaintPercent) return

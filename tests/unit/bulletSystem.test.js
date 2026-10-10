@@ -1066,6 +1066,21 @@ describe('Bullet System', () => {
       expect(bullet.trail.length).toBe(1)
     })
 
+    it('retains trail storage and point order while expiring the exact 300 ms boundary', () => {
+      const expired = { x: 1, y: 2, time: 700 }
+      const retained = { x: 3, y: 4, time: 701 }
+      const trail = [expired, retained]
+      const bullet = createMockBullet({
+        parabolic: true, startTime: 1, flightDuration: 10000,
+        startX: 80, startY: 120, dx: 10, dy: 10, arcHeight: 20, trail
+      })
+      updateBullets([bullet], [], [], createGameState({ simulationTime: 1000 }), mapGrid)
+      expect(bullet.trail).toBe(trail)
+      expect(trail).toHaveLength(2)
+      expect(trail[0]).toBe(retained)
+      expect(trail[1].time).toBe(1000)
+    })
+
     it('transitions ballistic projectiles into homing mode after ascent', () => {
       const target = createMockUnit({ x: 160, y: 200, tileX: 5, tileY: 6 })
       const bullet = createMockBullet({
@@ -1468,6 +1483,26 @@ describe('Bullet System', () => {
       expect(bullets).toHaveLength(0)
     })
 
+
+    it('indexes homing targets once and observes earlier lethal impacts in the same pass', () => {
+      const target = createMockUnit({ id: 'shared-apache-target', type: 'apache', owner: 'enemy', altitude: 40, health: 1, armor: 1, flightState: 'flying' })
+      const units = [target]
+      const find = vi.spyOn(units, 'find')
+      const makeRocket = () => createMockBullet({
+        originType: 'apacheRocket', projectileType: 'rocket',
+        x: target.x + TILE_SIZE / 2, y: target.y + TILE_SIZE / 2 - 16,
+        baseDamage: 10, apacheTargetId: target.id,
+        shooter: { id: 'player-apache', owner: 'player', type: 'apache' },
+        targetPosition: { x: target.x + TILE_SIZE / 2, y: target.y + TILE_SIZE / 2 - 16 },
+        creationTime: 0, startTime: 0, maxFlightTime: 3000
+      })
+      const second = makeRocket()
+      const first = makeRocket()
+      updateBullets([second, first], units, [], createGameState({ simulationTime: 2400 }), mapGrid)
+      expect(target.health).toBeLessThanOrEqual(0)
+      expect(second.apacheTargetId).toBeNull()
+      expect(find).not.toHaveBeenCalled()
+    })
 
     it('keeps apache rockets on their original trajectory when the target moves', () => {
       const nowSpy = vi.spyOn(performance, 'now').mockReturnValue(2400)

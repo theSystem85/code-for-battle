@@ -33,6 +33,19 @@ import { isIndirectShooter, recordUnitHit } from './hitRecord.js'
 const APACHE_REMOTE_DAMAGE = 10
 const APACHE_TANK_DAMAGE_MULTIPLIER = 1.67
 const F22_TANK_DAMAGE_MULTIPLIER = 2.25
+const ROCKET_EXPLOSION_OPTIONS = Object.freeze({ buildingDamageMultiplier: 2, factoryDamageMultiplier: 2, allowAirborneDamage: false, unitDamageMultipliers: undefined })
+const AIR_ROCKET_EXPLOSION_OPTIONS = Object.freeze({ ...ROCKET_EXPLOSION_OPTIONS, allowAirborneDamage: true })
+const TURRET_ROCKET_EXPLOSION_OPTIONS = Object.freeze({ ...AIR_ROCKET_EXPLOSION_OPTIONS, unitDamageMultipliers: Object.freeze({ apache: 1.5 }) })
+const apacheTargetIndex = new Map()
+
+function trimRecentTrail(trail, now) {
+  let retained = 0
+  for (let index = 0; index < trail.length; index++) {
+    const point = trail[index]
+    if (now - point.time < 300) trail[retained++] = point
+  }
+  trail.length = retained
+}
 
 function shouldSpawnImpactDecal(bullet) {
   return Boolean(
@@ -67,6 +80,7 @@ function spawnImpactDecal(gameState, mapGrid, bullet, x, y) {
  */
 export const updateBullets = logPerformance(function updateBullets(bullets, units, factories, gameState, mapGrid) {
   const now = getSimulationTime(gameState)
+  let targetIndexBuilt = false
 
   bullets.forEach(bullet => {
     bullet.effectiveSpeed = bullet.speed
@@ -85,20 +99,22 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
     }
 
     const rocketExplosionOptions = bullet.projectileType === 'rocket'
-      ? {
-        buildingDamageMultiplier: 2,
-        factoryDamageMultiplier: 2,
-        allowAirborneDamage: bullet.originType === 'rocketTank' || bullet.originType === 'rocketTurret',
-        unitDamageMultipliers: bullet.originType === 'rocketTurret'
-          ? { apache: 1.5 }
-          : undefined
-      }
+      ? (bullet.originType === 'rocketTurret' ? TURRET_ROCKET_EXPLOSION_OPTIONS :
+        (bullet.originType === 'rocketTank' ? AIR_ROCKET_EXPLOSION_OPTIONS : ROCKET_EXPLOSION_OPTIONS))
       : undefined
 
     let apacheTargetUnit = null
     if (bullet.originType === 'apacheRocket' && bullet.apacheTargetId && Array.isArray(units)) {
-      const match = units.find(u => u && u.id === bullet.apacheTargetId && u.health > 0)
-      if (match) {
+      if (!targetIndexBuilt) {
+        apacheTargetIndex.clear()
+        for (let index = 0; index < units.length; index++) {
+          const unit = units[index]
+          if (unit && unit.health > 0 && !apacheTargetIndex.has(unit.id)) apacheTargetIndex.set(unit.id, unit)
+        }
+        targetIndexBuilt = true
+      }
+      const match = apacheTargetIndex.get(bullet.apacheTargetId)
+      if (match?.health > 0) {
         apacheTargetUnit = match
       } else {
         bullet.apacheTargetId = null
@@ -131,7 +147,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
         bullet.y = bullet.startY + bullet.dy * t - bullet.arcHeight * Math.sin(Math.PI * t)
         bullet.trail = bullet.trail || []
         bullet.trail.push({ x: bullet.x, y: bullet.y, time: now })
-        bullet.trail = bullet.trail.filter(p => now - p.time < 300)
+        trimRecentTrail(bullet.trail, now)
         skipStandardMotion = true
       }
     }
@@ -654,14 +670,14 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
         }
         bullet.trail = bullet.trail || []
         bullet.trail.push({ x: bullet.x, y: bullet.y, time: now })
-        bullet.trail = bullet.trail.filter(p => now - p.time < 300)
+        trimRecentTrail(bullet.trail, now)
       }
 
       // Add trails for Apache rockets (but no smoke)
       if (bullet.originType === 'apacheRocket') {
         bullet.trail = bullet.trail || []
         bullet.trail.push({ x: bullet.x, y: bullet.y, time: now })
-        bullet.trail = bullet.trail.filter(p => now - p.time < 300)
+        trimRecentTrail(bullet.trail, now)
       }
 
       // Check for unit collisions
