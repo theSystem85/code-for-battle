@@ -20,7 +20,8 @@
       "manual": "Player guide",
       "skip": "Skip to content",
       "github": "View on GitHub",
-      "githubShort": "GitHub"
+      "githubShort": "GitHub",
+      "automation": "Automation"
     },
     "hero": {
       "eyebrow": "Browser real-time strategy",
@@ -89,6 +90,10 @@
         "workshop": {
           "title": "Map workshop",
           "body": "Set water, rock, and ore, paint tiles in the map editor, and compose the sprite sheets the battle renders."
+        },
+        "automation": {
+          "title": "Automation",
+          "body": "Automation gives Code for Battle its name: build a state machine that makes ordinary game commands for you. Send damaged units for repairs, replace a lost tank, maintain power, or control turret fire."
         }
       }
     },
@@ -238,6 +243,18 @@
       "contact": "Contact",
       "play": "Launch the game",
       "navLabel": "Legal"
+    },
+    "automation": {
+      "title": "Code your battle",
+      "lead": "Automation gives Code for Battle its name: build a state machine that makes ordinary game commands for you. Send damaged units for repairs, replace a lost tank, maintain power, or control turret fire.",
+      "categoriesTitle": "Four ways to automate",
+      "categoriesBody": "Control supported units or defence buildings; build units or buildings. Production still needs money, technology, facilities, queue space and a legal placement. Weapon rules and manual commands keep their priority.",
+      "editorTitle": "Buttons or CFBL",
+      "editorBody": "Switch between Buttons and CFBL text without losing your draft. Both views stay synchronized. Search the legal choices with fuzzy matching, select a keyword, and enter bounded numbers. States are numbered automatically, with IF/ELSE branches, WHILE holds and AFTER delays.",
+      "phoneTitle": "Built for phones too",
+      "phoneBody": "On phones, the Automation editor fills the screen so the view toggle, code and controls stay within reach. Tablets keep a bounded dialog. Accepted programs are compiled when edited, keeping parsing outside the game loop.",
+      "guide": "Automation tutorial",
+      "reference": "Full CFBL language reference"
     }
   }
 }

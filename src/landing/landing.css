@@ -617,3 +617,5 @@ a:focus-visible {
     will-change: auto;
   }
 }
+
+.automation-guide-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
