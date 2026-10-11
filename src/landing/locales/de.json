@@ -20,7 +20,8 @@
       "manual": "Spielanleitung (Englisch)",
       "skip": "Zum Inhalt",
       "github": "Auf GitHub ansehen",
-      "githubShort": "GitHub"
+      "githubShort": "GitHub",
+      "automation": "Automation"
     },
     "hero": {
       "eyebrow": "Echtzeitstrategie im Browser",
@@ -89,6 +90,10 @@
         "workshop": {
           "title": "Kartenwerkstatt",
           "body": "Stelle Wasser, Fels und Erz ein, male Kacheln im Karteneditor und setze die Sprite-Sheets zusammen, die das Gefecht zeichnet."
+        },
+        "automation": {
+          "title": "Automation",
+          "body": "Automation gibt Code for Battle seinen Namen: Erstelle einen Zustandsautomaten, der normale Spielbefehle für dich ausführt. Schicke beschädigte Einheiten zur Reparatur, ersetze einen verlorenen Panzer, sichere die Stromversorgung oder steuere Geschützfeuer."
         }
       }
     },
@@ -238,6 +243,18 @@
       "contact": "Kontakt",
       "play": "Spiel starten",
       "navLabel": "Rechtliches"
+    },
+    "automation": {
+      "title": "Programmiere deinen Kampf",
+      "lead": "Automation gibt Code for Battle seinen Namen: Erstelle einen Zustandsautomaten, der normale Spielbefehle für dich ausführt. Schicke beschädigte Einheiten zur Reparatur, ersetze einen verlorenen Panzer, sichere die Stromversorgung oder steuere Geschützfeuer.",
+      "categoriesTitle": "Vier Arten der Automation",
+      "categoriesBody": "Steuere unterstützte Einheiten oder Verteidigungsgebäude; produziere Einheiten oder Gebäude. Produktion benötigt weiterhin Geld, Technologie, Fabriken, freie Warteschlangen und einen erlaubten Bauplatz. Waffenregeln und manuelle Befehle behalten ihre Priorität.",
+      "editorTitle": "Buttons oder CFBL",
+      "editorBody": "Wechsle zwischen Buttons und CFBL-Text, ohne deinen Entwurf zu verlieren. Beide Ansichten bleiben synchron. Suche mit unscharfer Suche nach erlaubten Optionen, wähle ein Schlüsselwort und gib Zahlen innerhalb der Grenzen ein. Zustände werden automatisch nummeriert, mit IF/ELSE-Zweigen, WHILE-Bedingungen und AFTER-Verzögerungen.",
+      "phoneTitle": "Auch für Smartphones",
+      "phoneBody": "Auf Smartphones füllt der Automation-Editor den Bildschirm, damit Ansichtswechsel, Code und Steuerelemente erreichbar bleiben. Tablets behalten einen begrenzten Dialog. Angenommene Programme werden nach Änderungen kompiliert; der Spielablauf muss den Text nicht laufend neu analysieren.",
+      "guide": "Automation-Anleitung (Englisch)",
+      "reference": "Vollständige CFBL-Sprachreferenz (Englisch)"
     }
   }
 }

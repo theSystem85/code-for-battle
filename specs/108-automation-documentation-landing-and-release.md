@@ -1,6 +1,6 @@
 # 108 — Automation manual, landing page, screenshots, and release integration
 
-Status: specified, not implemented. Read [099](099-automation-cfbl-program.md). Dependencies: 103–107. Own published user docs/marketing/screenshot capture and final cross-package verification. Current documentation rename and the planned CFBL language reference exist now; do not mark runtime features shipped until acceptance passes.
+Status: implementation in progress. User tutorial and localized landing section implemented; integrated screenshots and release verification pending. Read [099](099-automation-cfbl-program.md). Dependencies: 103–107. Own published user docs/marketing/screenshot capture and final cross-package verification. Current documentation rename and the planned CFBL language reference exist now; do not mark runtime features shipped until acceptance passes.
 
 ## User documentation
 

@@ -1,6 +1,6 @@
 # Code for Battle - Documentation
 
-Automation planning and delegation: [specs 099–108](specs/099-automation-cfbl-program.md), [implementation plan](docs/automation-implementation-plan.md), and [complete planned CFBL grammar with examples](docs/cfbl-language-reference.md). These describe follow-up implementation; the CFBL editor and defence control are not yet shipped.
+Automation is the defining feature of Code for Battle: players author state machines to control supported units and defence buildings or automate production. Start with the [step-by-step tutorial](docs/automation-tutorial.md), then use the [complete CFBL grammar, catalogs and examples](docs/cfbl-language-reference.md). [Implementation and release evidence](docs/automation-release-evidence.md) records verification and device limitations.
 
 ## Enemy Unit Retaliation System
 
