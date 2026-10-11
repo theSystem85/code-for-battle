@@ -94,14 +94,16 @@ export function evaluateCondition(condition, view) {
   }
 }
 
-function findState(policy, stateId) {
+function findState(policy, stateId, program) {
+  if (program) return program.stateTable[stateId]
   for (let i = 0; i < policy.states.length; i++) {
     if (policy.states[i].id === stateId) return policy.states[i]
   }
   return null
 }
 
-function findTransition(policy, transitionId) {
+function findTransition(policy, transitionId, program) {
+  if (program) return program.ruleTable[transitionId]?.rule
   for (let i = 0; i < policy.states.length; i++) {
     const transitions = policy.states[i].transitions || []
     for (let j = 0; j < transitions.length; j++) {
@@ -138,6 +140,7 @@ function buildTrace(from, to, extra) {
 
 export function stepPolicy(policy, runtime, worldView, options = {}) {
   const gate = options.gate || STEP_GATE.open
+  const evaluate = options.evaluate || evaluateCondition
 
   if (runtime.finished) {
     return {
@@ -159,7 +162,8 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     }
   }
 
-  const state = findState(policy, runtime.currentStateId)
+  const state = findState(policy, runtime.currentStateId, options.program)
+  if (!state) return { runtime, effects: [], trace: buildTrace(runtime.currentStateId, runtime.currentStateId, { event: 'invalid', gate, reason: 'unknown_state' }) }
   const next = {
     currentStateId: runtime.currentStateId,
     finished: false,
@@ -172,16 +176,16 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
   const effects = []
 
   if (runtime.hold) {
-    const transition = findTransition(policy, runtime.hold.transitionId)
+    const transition = findTransition(policy, runtime.hold.transitionId, options.program)
     const ended = transition
-      ? (transition.until ? evaluateCondition(transition.until, worldView) : !evaluateCondition(transition.when, worldView))
+      ? (transition.until ? evaluate(transition.until, worldView, options.program) : !evaluate(transition.when, worldView, options.program))
       : true
     if (ended) {
       const returnStateId = runtime.hold.returnStateId
       next.currentStateId = returnStateId
       next.hold = null
       next.entered = withEntered(next.entered, returnStateId)
-      next.prev = transition ? { [transition.id]: evaluateCondition(transition.when, worldView) } : {}
+      next.prev = transition ? { [transition.id]: evaluate(transition.when, worldView, options.program) } : {}
       next.finished = policy.execution === 'oneTime'
       return {
         runtime: next,
@@ -214,6 +218,7 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
   const transitions = state.transitions || []
   const now = typeof worldView.now === 'number' ? worldView.now : 0
   let taken = null
+  let branch = null
   let prev = null
   let pending = next.pending
   let pendingChanged = false
@@ -224,7 +229,7 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
   for (let i = 0; i < transitions.length; i++) {
     const transition = transitions[i]
     if (gate !== STEP_GATE.open && transition.kind !== 'while') continue
-    const holds = evaluateCondition(transition.when, worldView)
+    const holds = evaluate(transition.when, worldView, options.program)
     if (transition.kind === 'after') {
       const dueAt = pending ? pending[transition.id] : undefined
       if (!holds) {
@@ -244,8 +249,19 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     if (prev === null) prev = { ...runtime.prev }
     const was = runtime.prev[transition.id] === true
     prev[transition.id] = holds
+    if (transition.kind === 'if' && transition.elseTo != null) {
+      const elseId = transition.elseId || `${transition.id}:else`
+      const elseWas = runtime.prev[elseId] === true
+      prev[elseId] = !holds
+      if (!holds && !elseWas) {
+        taken = transition
+        branch = 'else'
+        break
+      }
+    }
     if (holds && !was) {
       taken = transition
+      branch = transition.kind === 'if' ? 'if' : null
       break
     }
   }
@@ -260,7 +276,9 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     }
   }
 
-  const target = findState(policy, taken.to)
+  const target = findState(policy, branch === 'else' ? taken.elseTo : taken.to, options.program)
+  if (!target) return { runtime, effects: [], trace: buildTrace(state.id, state.id, { event: 'invalid', gate, reason: 'unknown_target', transitionId: taken.id }) }
+  const branchId = branch === 'else' ? (taken.elseId || `${taken.id}:else`) : taken.id
   next.currentStateId = target.id
   next.prev = {}
   next.pending = null
@@ -272,13 +290,15 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     next.finished = policy.execution === 'oneTime' && terminal
   }
   if (target.effect) {
-    effects.push(makeEffect(target, 'enter', taken.kind, taken.id))
+    effects.push(makeEffect(target, 'enter', taken.kind, branchId))
   }
   return {
     runtime: next,
     effects,
     trace: buildTrace(state.id, target.id, {
-      transitionId: taken.id,
+      transitionId: branchId,
+      pairId: taken.id,
+      branch,
       kind: taken.kind,
       event: taken.kind === 'while' ? 'holdStarted' : taken.kind === 'after' ? 'delayElapsed' : 'fired',
       gate,

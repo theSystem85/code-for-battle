@@ -170,6 +170,13 @@ function validateState(state, index, stateIds, errors, transitionIds, variant) {
     if (!stateIds.has(transition.to)) {
       errors.push(error('unknown_state', `A rule in "${state.name || state.id}" points to a state that does not exist.`, `${tPath}.to`))
     }
+    if (transition.elseTo != null || transition.elseId != null) {
+      if (transition.kind !== 'if') errors.push(error('invalid_else', 'Only IF rules can have ELSE alternatives.', `${tPath}.elseTo`))
+      if (!stateIds.has(transition.elseTo)) errors.push(error('unknown_state', 'ELSE points to a state that does not exist.', `${tPath}.elseTo`))
+      const elseId = transition.elseId || `${transition.id}:else`
+      if (!isNonEmptyString(elseId) || transitionIds.has(elseId)) errors.push(error('duplicate_transition_id', 'ELSE branch needs a unique internal identity.', `${tPath}.elseId`))
+      else transitionIds.add(elseId)
+    }
     validateCondition(transition.when, `${tPath}.when`, errors, variant)
     if (transition.kind === 'after') {
       if (!isValidDelaySeconds(transition.delaySeconds)) {
