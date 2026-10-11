@@ -1,4 +1,4 @@
-import { POLICY_SCHEMA_VERSION } from './policySchema.js'
+import { POLICY_SCHEMA_VERSION, POLICY_VARIANTS } from './policySchema.js'
 
 const hpBelow = value => ({ type: 'compare', field: 'hp', op: '<', value })
 const buildCount = (buildingType, op, value) => ({ type: 'compare', field: 'buildingCount', op, value, buildingType })
@@ -10,14 +10,14 @@ export function createBlankPolicy(id, variant = 'unit') {
   return {
     schemaVersion: POLICY_SCHEMA_VERSION,
     id,
-    name: isBuild ? 'New base policy' : isUnitBuild ? 'New unit build policy' : 'New policy',
-    variant: isBuild ? 'build' : isUnitBuild ? 'unitBuild' : 'unit',
+    name: isBuild ? 'New building automation' : isUnitBuild ? 'New unit production automation' : variant === 'defence' ? 'New defence automation' : 'New unit automation',
+    variant: isBuild ? 'build' : isUnitBuild ? 'unitBuild' : variant === 'defence' ? 'defence' : 'unit',
     scope: isBuild || isUnitBuild ? 'global' : 'perUnit',
     execution: 'continuous',
     folderId: null,
     initialStateId: 'start',
     states: [
-      { id: 'start', name: 'Watch', effect: null, transitions: [] }
+      { id: 'start', name: 'State 1', effect: null, transitions: [] }
     ]
   }
 }
@@ -40,6 +40,20 @@ function watchAndReact(id, name, scope, execution, kind, when, effect, effectNam
 }
 
 export const POLICY_TEMPLATES = Object.freeze([
+  ...(POLICY_VARIANTS.includes('defence') ? [{
+    variant: 'defence',
+    id: 'defence-hold-when-damaged',
+    label: 'Hold fire when damaged; otherwise resume',
+    description: 'Check defence health every second. Hold fire below 25%, otherwise resume normal targeting.',
+    create: id => ({
+      schemaVersion: POLICY_SCHEMA_VERSION, id, name: 'Defence health guard', variant: 'defence', scope: 'perUnit', execution: 'continuous', folderId: null, initialStateId: 'watch',
+      states: [
+        { id: 'watch', name: 'State 1', effect: null, transitions: [{ id: 'health', kind: 'if', when: hpBelow(0.25), to: 'hold', elseTo: 'resume' }] },
+        { id: 'hold', name: 'State 2', effect: { type: 'holdFire' }, transitions: [{ id: 'check-held', kind: 'after', delaySeconds: 1, when: { type: 'always' }, to: 'watch' }] },
+        { id: 'resume', name: 'State 3', effect: { type: 'resumeFire' }, transitions: [{ id: 'check-resumed', kind: 'after', delaySeconds: 1, when: { type: 'always' }, to: 'watch' }] }
+      ]
+    })
+  }] : []),
   {
     variant: 'unit',
     id: 'retreat-if-hurt',

@@ -14,7 +14,7 @@ import { layoutPolicyMachine, LINE_HEIGHT } from './policyMachineLayout.js'
 import { attachPolicyTooltip } from './policyTooltip.js'
 
 export const MACHINE_REFRESH_MS = 250
-export const KIND_COLORS = Object.freeze({ if: '#4f9cff', while: '#ffb300', after: '#c792ea' })
+export const KIND_COLORS = Object.freeze({ if: '#4f9cff', else: '#7ee787', while: '#ffb300', after: '#c792ea' })
 
 let panel = null
 let bodyEl = null
@@ -153,7 +153,7 @@ export function refreshPolicyMachineView() {
   if (!sectionsMatch(targets)) {
     sections = targets.map(target => buildSection(target.binding, target.doc))
     if (sections.length === 0) {
-      bodyEl.replaceChildren(h('p', { class: 'policy-machine__empty', text: 'No policy is applied to this unit.' }))
+      bodyEl.replaceChildren(h('p', { class: 'policy-machine__empty', text: 'No automation is applied to this unit.' }))
     } else {
       bodyEl.replaceChildren(...sections.map(section => section.el))
     }
@@ -164,7 +164,7 @@ export function refreshPolicyMachineView() {
 
 function ensurePanel() {
   if (panel && panel.isConnected) return panel
-  titleEl = h('strong', { class: 'policy-machine__title', text: 'Policy state machine' })
+  titleEl = h('strong', { class: 'policy-machine__title', text: 'Automation state machine' })
   const close = h('button', {
     class: 'policy-machine__close',
     type: 'button',
@@ -179,7 +179,7 @@ function ensurePanel() {
       h('span', { class: 'policy-machine__legend-item' },
         h('i', { class: 'policy-machine__swatch', style: `background:${color}` }),
         kind)))
-  panel = h('aside', { class: 'policy-machine', role: 'dialog', 'aria-label': 'Policy state machine' },
+  panel = h('aside', { class: 'policy-machine', role: 'dialog', 'aria-label': 'Automation state machine' },
     h('header', { class: 'policy-machine__header' }, titleEl, close),
     legend,
     bodyEl)

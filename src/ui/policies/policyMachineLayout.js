@@ -50,7 +50,7 @@ export function wrapLabel(text, maxChars = LABEL_CHARS) {
  * @param {(state: object) => string} describeAction short text for what a state does
  */
 export function layoutPolicyMachine(policy, describeTrigger, describeAction) {
-  const states = policy.states || []
+  const states = (policy.states || []).map(state => ({ ...state, transitions: (state.transitions || []).flatMap(rule => rule.kind === 'if' && rule.elseTo ? [rule, { ...rule, id: rule.elseId || `${rule.id}:else`, kind: 'else', to: rule.elseTo }] : [rule]) }))
   const index = new Map(states.map((state, i) => [state.id, i]))
 
   const incoming = new Array(states.length).fill(0)
@@ -95,7 +95,7 @@ export function layoutPolicyMachine(policy, describeTrigger, describeAction) {
     const height = Math.max(NODE_MIN_HEIGHT, slotY - y + 4)
     nodes.push({
       id: state.id,
-      name: state.name || state.id,
+      name: `State ${i + 1}`,
       action: describeAction ? describeAction(state) : '',
       initial: state.id === policy.initialStateId,
       x: PADDING,

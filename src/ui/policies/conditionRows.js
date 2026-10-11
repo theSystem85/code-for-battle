@@ -20,7 +20,7 @@ import {
 import { formatDelay } from '../../policies/policyDelay.js'
 import { EFFECTS, EFFECT_GROUPS, describeEffect } from '../../policies/policyEffects.js'
 
-export const MAX_EDITOR_DEPTH = 3
+export const MAX_EDITOR_DEPTH = 4
 
 const LEGACY_ATOMS = Object.freeze([
   { id: 'enemyInRange', label: 'Enemy in weapon range', group: 'sensing' },
@@ -46,7 +46,7 @@ function buildAtomKinds() {
   LEGACY_ATOMS.forEach(atom => kinds.push({
     ...atom,
     buildGroup: atom.group,
-    variants: atom.id === 'always' ? ['unit', 'build', 'unitBuild'] : ['unit'],
+    variants: atom.id === 'always' ? ['unit', 'build', 'unitBuild', 'defence'] : ['unit', 'defence'],
     type: atom.id
   }))
   return kinds
@@ -69,14 +69,14 @@ export const ATOM_GROUPS = Object.freeze(atomGroupsFor('unit'))
 
 /** The condition a new rule starts with. */
 export function defaultRuleAtom(variant = 'unit') {
-  return variant === 'unit' ? makeAtom('hp') : makeAtom('money')
+  return ['unit', 'defence'].includes(variant) ? makeAtom('hp') : makeAtom('money')
 }
 
 export function isAtomAvailable(atom, variant) {
   if (!atom) return false
   if (atom.type === 'compare') return isAvailableIn(NUMERIC_FIELDS[atom.field], variant)
   if (atom.type === 'check') return isAvailableIn(CHECKS[atom.check], variant)
-  return variant === 'unit' || atom.type === 'always'
+  return ['unit', 'defence'].includes(variant) || atom.type === 'always'
 }
 
 export const COMPARE_OPERATORS = COMPARE_OPS
@@ -235,7 +235,7 @@ export function effectGroupsFor(variant = 'unit') {
     id,
     label,
     effects: Object.entries(EFFECTS)
-      .filter(([, meta]) => meta.group === id && (meta.variant || 'unit') === variant)
+      .filter(([, meta]) => meta.group === id && (meta.variants || [meta.variant || 'unit']).includes(variant))
       .map(([type, meta]) => ({ type, label: meta.label }))
   })).filter(group => group.effects.length > 0)
 }
@@ -248,6 +248,7 @@ export const EFFECT_OPTION_GROUPS = Object.freeze(effectGroupsFor('unit'))
  */
 export function describeRuleTrigger(transition) {
   const when = describeCondition(transition.when)
+  if (transition.kind === 'else') return `else (not ${when})`
   if (transition.kind === 'after') return `after ${formatDelay(transition.delaySeconds)} if(${when})`
   const until = transition.kind === 'while' && transition.until ? ` until(${describeCondition(transition.until)})` : ''
   return `${transition.kind}(${when})${until}`
