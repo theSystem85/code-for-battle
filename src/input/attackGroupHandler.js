@@ -1,3 +1,5 @@
+import { noteDefenceDirectOrder } from '../policies/defenceCommandApi.js'
+import { getSimulationTime } from '../game/time.js'
 // attackGroupHandler.js
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
@@ -258,6 +260,7 @@ export class AttackGroupHandler {
         building.holdFire = false
       }
       building.forcedAttack = true
+      noteDefenceDirectOrder(building, 'attack', getSimulationTime(gameState))
       const liveTargets = enemyTargets.filter(target => target && (target.health === undefined || target.health > 0))
       if (liveTargets.length === 0) {
         return

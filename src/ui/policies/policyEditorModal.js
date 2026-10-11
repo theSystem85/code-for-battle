@@ -31,6 +31,7 @@ import {
 } from './conditionRows.js'
 import { CHECKS, NUMERIC_FIELDS, effectiveMode, fieldModes } from '../../policies/policyConditions.js'
 import { EFFECTS, defaultEffectParams } from '../../policies/policyEffects.js'
+import { defenceCapabilityReason } from '../../policies/defenceCapabilities.js'
 
 let active = null
 let pausedByEditor = false
@@ -102,7 +103,18 @@ export function openPolicyEditor(options = {}) {
   const controller = createAutomationDraft(owner, draft)
   draft = controller.getSnapshot().policy
   let view = controller.getSnapshot().viewPreference || 'dav'
-  const textView = createCFBLEditor(controller)
+  function capabilityReason(kind, name, mode) {
+    if (draft.variant !== 'defence' || draft.scope === 'global' || !options.defenceBuilding) return null
+    if (['always', 'underFire', 'enemyInRange'].includes(name)) return null
+    return defenceCapabilityReason(options.defenceBuilding, kind, name, mode)
+  }
+  const textView = createCFBLEditor(controller, { capabilityReason })
+  function capabilityOption(value, label, selected, kind, name = value) {
+    const reason = capabilityReason(kind, name)
+    const control = option(value, reason ? `${label} — ${reason.replaceAll('-', ' ')}` : label, selected)
+    control.disabled = Boolean(reason)
+    return control
+  }
   let templateChoice = ''
   pauseSimulation()
 
@@ -190,7 +202,7 @@ export function openPolicyEditor(options = {}) {
         class: 'policy-field__control',
         'aria-label': `${label} ${param.label}`,
         onChange: e => { atom[param.key] = e.target.value; commit() }
-      }, param.options.map(item => option(item.value, item.label, (atom[param.key] ?? param.default) === item.value)))))
+      }, param.options.filter(item => !(draft.variant === 'defence' && param.key === 'kind' && (atom.field === 'distance' || atom.check === 'canAttack') && item.value !== 'unit')).map(item => option(item.value, item.label, (atom[param.key] ?? param.default) === item.value)))))
   }
 
   function leafControls(node, label, commit) {
@@ -199,12 +211,16 @@ export function openPolicyEditor(options = {}) {
     const controls = [h('select', {
       class: 'policy-field__control policy-cond__kind',
       'aria-label': `${label} block type`,
-      onChange: e => { node.atom = makeAtom(e.target.value); commit() }
-    }, atomGroupsFor(draft.variant).map(group => optionGroup(group.label, group.kinds.map(item => option(item.id, item.label, item.id === kind)))))]
+      onChange: e => {
+        node.atom = makeAtom(e.target.value)
+        if (draft.variant === 'defence' && node.atom.field === 'turretRotation') setCompareMode(node.atom, 'absolute')
+        commit()
+      }
+    }, atomGroupsFor(draft.variant).map(group => optionGroup(group.label, group.kinds.map(item => capabilityOption(item.id, item.label, item.id === kind, item.id.startsWith('compare:') ? 'fields' : 'checks', item.id.split(':')[1] || item.id)))))]
 
     if (atom.type === 'compare') {
       const meta = NUMERIC_FIELDS[atom.field]
-      if (fieldModes(atom.field).length > 1) {
+      if (fieldModes(atom.field).length > 1 && !(draft.variant === 'defence' && atom.field === 'turretRotation')) {
         controls.push(h('select', {
           class: 'policy-field__control policy-cond__mode',
           'aria-label': `${label} compare as`,
@@ -497,7 +513,7 @@ export function openPolicyEditor(options = {}) {
         }
       }, option('', 'Nothing (wait)', !state.effect),
       effectGroupsFor(draft.variant).map(group => optionGroup(group.label,
-        group.effects.map(item => option(item.type, item.label, state.effect?.type === item.type))))),
+        group.effects.map(item => capabilityOption(item.type, item.label, state.effect?.type === item.type, 'actions'))))),
       effectParamControls(state, index)))
     ;(state.transitions || []).forEach(transition => card.appendChild(transitionBlock(state, transition)))
     card.appendChild(h('button', {

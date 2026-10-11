@@ -61,6 +61,6 @@ describe('policy activity UI', () => {
     chip.dispatchEvent(new MouseEvent('pointerenter', { bubbles: false, clientX: 20, clientY: 20 }))
     const tip = document.querySelector('.policy-tooltip')
     expect(tip.classList.contains('is-visible')).toBe(true)
-    expect(tip.textContent).toContain('Units with this policy enabled')
+    expect(tip.textContent).toContain('Units with this automation enabled')
   })
 })

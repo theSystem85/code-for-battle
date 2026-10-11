@@ -1,3 +1,5 @@
+import { getSimulationTime } from '../game/time.js'
+import { noteDefenceDirectOrder } from '../policies/defenceCommandApi.js'
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { markWaypointsAdded } from '../game/waypointSounds.js'
@@ -87,6 +89,7 @@ function queueDefenseBuildingTarget(building, target) {
 
   building.forcedAttack = true
   building.holdFire = false
+  noteDefenceDirectOrder(building, 'attack', getSimulationTime(gameState))
   return true
 }
 

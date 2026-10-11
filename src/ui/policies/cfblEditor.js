@@ -1,6 +1,8 @@
 import './cfblEditor.css'
 import { completionContext, parseCFBL } from '../../automation/cfbl/index.js'
 import { validatePolicy } from '../../policies/policySchema.js'
+import { NUMERIC_FIELDS, CHECKS } from '../../policies/policyConditions.js'
+import { EFFECTS } from '../../policies/policyEffects.js'
 import { h } from './policyDom.js'
 
 export function fuzzyOptions(options, query) {
@@ -21,7 +23,7 @@ export function fuzzyOptions(options, query) {
 }
 
 /** Native input exposes accepted source; all provisional typing lives in the search field. */
-export function createCFBLEditor(controller) {
+export function createCFBLEditor(controller, { capabilityReason = () => null } = {}) {
   const help = h('p', { id: 'cfbl-help', text: 'Select a token, choose next token, or type to search legal choices. Enter or Tab selects; Escape closes choices. Shift+Tab leaves the editor.' })
   const mirror = h('pre', { class: 'cfbl-editor__mirror', 'aria-hidden': 'true' })
   const input = h('textarea', { class: 'cfbl-editor__input', 'aria-label': 'CFBL automation source', 'aria-describedby': 'cfbl-help', 'aria-autocomplete': 'list', 'aria-controls': 'cfbl-options', spellcheck: 'false', autocapitalize: 'off' })
@@ -72,6 +74,8 @@ export function createCFBLEditor(controller) {
   }
 
   function apply(text, operation) {
+    const disabled = context?.legalOptions.find(item => item.insertText === text && item.disabled)
+    if (disabled) { status.textContent = disabled.description; return false }
     if (operation) {
       const result = controller.transact(operation)
       if (result.ok) { closeChoices(); input.focus(); return true }
@@ -99,6 +103,7 @@ export function createCFBLEditor(controller) {
     list.replaceChildren(...options.slice(0, pageSize).map((item, index) => h('button', {
       id: `cfbl-option-${index}`, role: 'option', type: 'button', class: 'cfbl-editor__option',
       'aria-selected': index === selected ? 'true' : 'false',
+      disabled: Boolean(item.disabled),
       onClick: () => apply(item.insertText ?? item.value, item.operation)
     }, h('strong', { text: item.label || item.value }), h('code', { text: item.operation ? 'Whole source edit' : item.insertText ?? item.value }), h('span', { text: item.description || '' }))))
     if (options.length > pageSize) list.append(h('button', { type: 'button', class: 'policy-btn', text: 'Show more legal choices', onClick: () => { pageSize += 40; refreshOptions() } }))
@@ -226,6 +231,11 @@ export function createCFBLEditor(controller) {
   function openChoices(query = '') {
     selection = { start: input.selectionStart, end: input.selectionEnd }
     context = completionContext(source, selection)
+    context.legalOptions = context.legalOptions.map(item => {
+      const kind = Object.hasOwn(EFFECTS, item.value) && context.slot === 'effects' ? 'actions' : Object.hasOwn(NUMERIC_FIELDS, item.value) ? 'fields' : Object.hasOwn(CHECKS, item.value) ? 'checks' : null
+      const reason = context.variant === 'defence' && kind ? capabilityReason(kind, item.value) : null
+      return reason ? { ...item, disabled: true, description: `Unavailable on this defence: ${reason.replaceAll('-', ' ')}` } : item
+    })
     context.legalOptions = context.legalOptions.map(item => ({ ...item, description: item.value === 'relative' ? 'Compare a fraction of capacity (0–1); angle fields use degrees.' : item.value === 'absolute' ? 'Compare actual units, counts, tiles, seconds or degrees. Use the displayed numeric range.' : item.description }))
     context.legalOptions.unshift(...structuralOptions())
     const snapshot = controller.getSnapshot()

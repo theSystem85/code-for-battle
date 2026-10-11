@@ -14,6 +14,7 @@ import {
 import { handleTankFiring } from '../game/unitCombat/firingHandlers.js'
 import { getUnitVisionRange, isPositionVisibleToPlayer } from '../game/shadowOfWar.js'
 import { getExperienceProgress } from '../utils.js'
+import { hasLineOfSightToTarget } from '../logic.js'
 import { TURRET_TANK_TYPES, entityCenter, isBuildingEntity } from './policyWorld.js'
 
 const aimTarget = { id: 'policy-aim', x: 0, y: 0, tileX: 0, tileY: 0, health: 1 }
@@ -52,8 +53,9 @@ function isVisible(unit, px, py, context) {
   if (unit.owner === gameState.humanPlayer) {
     return isPositionVisibleToPlayer(gameState, context.mapGrid, px, py)
   }
-  const range = getUnitVisionRange(unit) * TILE_SIZE
-  return (px - unit.x - TILE_SIZE / 2) ** 2 + (py - unit.y - TILE_SIZE / 2) ** 2 <= range * range
+  const range = getVisionRange(unit) * TILE_SIZE
+  entityCenter(unit, centerScratch)
+  return (px - centerScratch.x) ** 2 + (py - centerScratch.y) ** 2 <= range * range
 }
 
 function getVisionRange(entity) {
@@ -84,6 +86,10 @@ export function installPolicyGameBindings(context) {
   context.getVisionRange = getVisionRange
   context.getMoney = getMoney
   context.getPower = getPower
+  context.hasLineOfSight = (building, target) => {
+    entityCenter(building, centerScratch)
+    return !context.mapGrid?.length || hasLineOfSightToTarget(centerScratch, target, context.mapGrid)
+  }
   context.getXpProgress = unit => getExperienceProgress(unit)
   context.fire = (unit, target, aim) => fire(unit, target, aim, context)
   return context

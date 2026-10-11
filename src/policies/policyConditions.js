@@ -25,9 +25,10 @@ export const GROUPS = Object.freeze({
 export const VARIANT_UNIT = 'unit'
 export const VARIANT_BUILD = 'build'
 export const VARIANT_UNIT_BUILD = 'unitBuild'
+export const VARIANT_DEFENCE = 'defence'
 const UNIT_ONLY = Object.freeze([VARIANT_UNIT])
 const AUTOMATION_ONLY = Object.freeze([VARIANT_BUILD, VARIANT_UNIT_BUILD])
-const BOTH_VARIANTS = Object.freeze([VARIANT_UNIT, VARIANT_BUILD, VARIANT_UNIT_BUILD])
+const BOTH_VARIANTS = Object.freeze([VARIANT_UNIT, VARIANT_BUILD, VARIANT_UNIT_BUILD, VARIANT_DEFENCE])
 
 export const ENEMY_UNIT_TYPES = Object.freeze([
   { value: 'any', label: 'any unit' },
@@ -107,16 +108,16 @@ const ABSOLUTE = 'absolute'
  * angle jitter do not make equality impossible.
  */
 export const NUMERIC_FIELDS = Object.freeze({
-  hp: { group: 'internal', label: 'HP', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
+  hp: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'internal', label: 'HP', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
   xp: { group: 'internal', label: 'Experience', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
   rank: { group: 'internal', label: 'Rank (1–3)', modes: [ABSOLUTE], absRange: [0, 3], absTolerance: 0 },
   fuel: { group: 'internal', label: 'Fuel', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
-  ammo: { group: 'internal', label: 'Ammo', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
-  reload: { group: 'internal', label: 'Reload (1 = ready)', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 600000], tolerance: 0.005, absTolerance: 50, absSuffix: 'ms left' },
+  ammo: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'internal', label: 'Ammo', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
+  reload: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'internal', label: 'Reload (1 = ready)', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 600000], tolerance: 0.005, absTolerance: 50, absSuffix: 'ms left' },
   crew: { group: 'internal', label: 'Crew present', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 10], tolerance: 0.005, absTolerance: 0 },
   load: { group: 'internal', label: 'Load (cargo)', modes: [RELATIVE, ABSOLUTE], range: [0, 1], absRange: [0, 100000], tolerance: 0.005, absTolerance: 0.5 },
   rotation: { group: 'internal', label: 'Wagon rotation (°)', circular: true, modes: [ABSOLUTE], absRange: [0, 360], absTolerance: 5, absSuffix: '°' },
-  turretRotation: { group: 'internal', label: 'Turret rotation (°)', circular: true, modes: [ABSOLUTE, RELATIVE], absRange: [0, 360], range: [-180, 180], tolerance: 5, absTolerance: 5, absSuffix: '°', relSuffix: '° from wagon', relativeAsDegrees: true },
+  turretRotation: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'internal', label: 'Turret rotation (°)', circular: true, modes: [ABSOLUTE, RELATIVE], absRange: [0, 360], range: [-180, 180], tolerance: 5, absTolerance: 5, absSuffix: '°', relSuffix: '° from wagon', relativeAsDegrees: true },
   money: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Available money', modes: [ABSOLUTE], absRange: [-1000000000, 1000000000], absTolerance: 0.5 },
   moneyPerMinute: { group: 'external', buildGroup: 'base', variants: AUTOMATION_ONLY, label: 'Money inflow per minute', modes: [ABSOLUTE], absRange: [0, 1000000000], absTolerance: 0.5, absSuffix: '$/min' },
   power: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Power surplus', modes: [ABSOLUTE], absRange: [-100000, 100000], absTolerance: 0.5 },
@@ -124,8 +125,8 @@ export const NUMERIC_FIELDS = Object.freeze({
   enemyUnitCount: { group: 'sensing', buildGroup: 'enemies', variants: AUTOMATION_ONLY, label: 'Number of visible enemy units', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   enemyBuildingCount: { group: 'sensing', buildGroup: 'enemies', variants: AUTOMATION_ONLY, label: 'Number of visible enemy buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
   buildingCount: { group: 'external', buildGroup: 'base', variants: BOTH_VARIANTS, label: 'Number of my buildings', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0, params: [{ key: 'buildingType', label: 'of type', options: BUILDING_TYPES, default: 'any' }] },
-  distance: { group: 'sensing', label: 'Distance to a visible…', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', params: [{ key: 'kind', label: 'target', options: KIND_OPTIONS.map(item => ({ value: item.value, label: item.label })), default: 'unit' }, { key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
-  enemyDistance: { group: 'sensing', label: 'Nearest enemy (tiles)', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', legacy: true }
+  distance: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'sensing', label: 'Distance to a visible…', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', params: [{ key: 'kind', label: 'target', options: KIND_OPTIONS.map(item => ({ value: item.value, label: item.label })), default: 'unit' }, { key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  enemyDistance: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'sensing', label: 'Nearest enemy (tiles)', modes: [ABSOLUTE], absRange: [0, 1000], absTolerance: 0.25, absSuffix: 'tiles', legacy: true }
 })
 
 const HIT_BY = [{ key: 'by', label: 'by', options: KIND_OPTIONS, default: 'unit' }]
@@ -136,21 +137,21 @@ export const CHECKS = Object.freeze({
   ownUnitDestroyed: { group: 'external', buildGroup: 'base', variants: [VARIANT_UNIT_BUILD], label: 'My unit was destroyed', params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   airborne: { group: 'internal', label: 'Is airborne' },
   moving: { group: 'internal', label: 'Is moving' },
-  attacking: { group: 'internal', label: 'Is attacking', params: [{ key: 'kind', label: 'a', options: KIND_OPTIONS, default: 'unit' }] },
+  attacking: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'internal', label: 'Is attacking', params: [{ key: 'kind', label: 'a', options: KIND_OPTIONS, default: 'unit' }] },
   serving: { group: 'internal', label: 'Is serving a unit' },
   underService: { group: 'external', label: 'Is under service' },
   underServiceByUnit: { group: 'external', label: 'Is under service by someone' },
   inServiceRange: { group: 'external', label: 'Is in range of a…', params: [SERVICE_PARAM] },
   protectedByUnit: { group: 'external', label: 'Is protected by a unit' },
   inDefenseRange: { group: 'external', label: 'Is in range of a defense or friendly unit', params: [{ key: 'by', label: 'kind', options: [{ value: 'building', label: 'defense building' }, { value: 'unit', label: 'combat or service unit' }], default: 'building' }] },
-  canAttack: { group: 'external', label: 'Can attack', params: [{ key: 'kind', label: 'a', options: KIND_OPTIONS, default: 'unit' }] },
+  canAttack: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'external', label: 'Can attack', params: [{ key: 'kind', label: 'a', options: KIND_OPTIONS, default: 'unit' }] },
   inVisibleRange: { group: 'external', label: 'Is in visible range of an enemy', params: [{ key: 'by', label: 'kind', options: KIND_OPTIONS, default: 'unit' }] },
   parkedAt: { group: 'external', label: 'Is parked at', params: [{ key: 'place', label: 'place', options: PARKING_OPTIONS, default: 'helipad' }] },
   hitDirect: { group: 'external', label: 'Got a direct hit', params: HIT_BY },
   hitIndirect: { group: 'external', label: 'Got an indirect hit', params: HIT_BY },
   underAttackBy: { group: 'external', label: 'Is under attack (attacker visible)', params: HIT_BY },
-  enemyVisible: { group: 'sensing', label: 'An enemy is visible', params: [{ key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
-  enemyInFireRange: { group: 'sensing', label: 'An enemy is in my fire range', params: [{ key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  enemyVisible: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'sensing', label: 'An enemy is visible', params: [{ key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
+  enemyInFireRange: { variants: [VARIANT_UNIT, VARIANT_DEFENCE], group: 'sensing', label: 'An enemy is in my fire range', params: [{ key: 'targetType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] },
   myUnitsInEnemyRange: { group: 'sensing', label: 'Some of my units are in an enemy fire range', params: [{ key: 'unitType', label: 'of type', options: ENEMY_UNIT_TYPES, default: 'any' }] }
 })
 

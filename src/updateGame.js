@@ -48,6 +48,7 @@ import { clearBattleshipFireControl } from './game/battleshipTurrets.js'
 import { updateBuildings, updateTeslaCoilEffects } from './game/buildingSystem.js'
 import { cleanupSoundCooldowns } from './game/soundCooldownManager.js'
 import { processCommandQueues } from './game/commandQueue.js'
+import { updateDefencePolicies } from './policies/defencePolicyEngine.js'
 import { updateUnitPolicies } from './policies/policyEngine.js'
 import { updateBasePolicies } from './policies/basePolicyEngine.js'
 import { installBasePolicyGameBindings } from './policies/basePolicyGameBindings.js'
@@ -553,6 +554,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       updateWreckPhysics(gameState, units, delta)
 
       // Building system updates
+      updateDefencePolicies(gameState.buildings || EMPTY_BUILDINGS, policyContext, now)
       updateBuildings(gameState, units, bullets, factories, mapGrid, delta)
 
       // Tesla Coil effects

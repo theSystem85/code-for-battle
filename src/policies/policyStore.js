@@ -27,6 +27,9 @@ const DEFENCE_TYPES = new Set(['turretGunV1', 'turretGunV2', 'turretGunV3', 'roc
 function clearDefenceIntent(policyId) {
   boundEntities.forEach(entity => {
     if (entity.automationIntent?.issuerId === policyId) entity.automationIntent = null
+    if (entity.automationControl === policyId) { entity.automationControl = null; entity.automationControlSequence = 0 }
+    for (const binding of entity.policyBindings || []) if (binding.policyId === policyId) binding.active = false
+    entity.policyActive = Boolean(entity.policyBindings?.some(binding => binding.active))
   })
 }
 function freezeRecord(record) {
@@ -141,7 +144,7 @@ export function exportAutomationSession(entities = []) {
       .map(entity => ({ id: entity.id, entityKind: entityKind(entity), kind: entity.type, owner: entity.owner,
         policyBindings: clone(entity.policyBindings || []), policyControl: serializedControl(entity.policyControl),
         policyNextEval: entity.policyNextEval || 0, automationIntent: clone(entity.automationIntent || null),
-        automationManualOverride: clone(entity.automationManualOverride || null) }))
+        automationManualOverride: clone(entity.automationManualOverride || null), automationControl: entity.automationControl || null, automationControlSequence: entity.automationControlSequence || 0 }))
   }
 }
 
@@ -255,6 +258,8 @@ export function restoreAutomationSession(payload, entities = [], { authority = '
       const compatible = target && (!identity.owner || normalizePolicyOwner(target.owner) === normalizePolicyOwner(identity.owner))
       Object.defineProperty(order, 'targetRef', { value: compatible ? target : null, enumerable: false, writable: true })
     }
+    entity.automationControl = saved.automationControl || null
+    entity.automationControlSequence = saved.automationControlSequence || 0
     entity.automationIntent = clone(saved.automationIntent || null)
     entity.automationManualOverride = clone(saved.automationManualOverride || null)
     entity.policyNextEval = saved.policyNextEval || 0
@@ -569,6 +574,11 @@ export function setPolicyEnabled(actorId, policyId, enabled) {
   if (entry.policy.scope !== 'global') return { ok: false, reason: 'not-global' }
   if (enabled) globalEnabled.add(policyId)
   else { globalEnabled.delete(policyId); clearDefenceIntent(policyId) }
+  if (entry.policy.variant === 'defence') boundEntities.forEach(entity => {
+    if (!entity.isBuilding || !entity.policyBindings) return
+    entity.policyBindings = entity.policyBindings.filter(binding => !(binding.policyId === policyId && binding.source === 'global'))
+    entity.policyNextEval = 0
+  })
   notify()
   mutation('enable', actorId, { policyId, enabled })
   return { ok: true }

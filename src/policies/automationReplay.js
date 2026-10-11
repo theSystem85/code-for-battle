@@ -55,3 +55,21 @@ export function applyRecordedAutomationRuntime(command, resolveEntity) {
   binding.lastTrace = { ...command.trace }
   return true
 }
+
+export function recordAutomationDefenceIntent(building) {
+  if (gameState.replayMode || !gameState.replay?.recordingActive) return
+  recordReplayCommand({ type: 'automation-defence-intent', entityRef: createReplayEntityReference(building), owner: building.owner,
+    intent: globalThis.structuredClone(building.automationIntent || null),
+    manualOverride: globalThis.structuredClone(building.automationManualOverride || null), control: building.automationControl || null, controlSequence: building.automationControlSequence || 0
+  }, { source: 'automation' })
+}
+
+export function applyRecordedAutomationDefenceIntent(command, resolveEntity) {
+  const building = resolveEntity(command.entityRef)
+  if (!building?.isBuilding || building.owner !== command.owner) return false
+  building.automationIntent = globalThis.structuredClone(command.intent)
+  building.automationManualOverride = globalThis.structuredClone(command.manualOverride)
+  building.automationControl = command.control
+  building.automationControlSequence = command.controlSequence || 0
+  return true
+}
