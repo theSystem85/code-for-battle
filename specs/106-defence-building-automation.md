@@ -1,6 +1,6 @@
 # 106 — Defence-building control automation
 
-Status: specified, not implemented. Read [099](099-automation-cfbl-program.md). Dependencies: [100](100-cfbl-language-and-coverage.md), [101](101-automation-source-sync-and-migration.md), [102](102-automation-if-else-runtime.md); consume UI adapters from 103/104 and integrate with 107. Own defence capability metadata, adapters, binding/status UI and lifecycle. Do not build a second state-machine engine.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. Read [099](099-automation-cfbl-program.md). Dependencies: [100](100-cfbl-language-and-coverage.md), [101](101-automation-source-sync-and-migration.md), [102](102-automation-if-else-runtime.md); consume UI adapters from 103/104 and integrate with 107. Own defence capability metadata, adapters, binding/status UI and lifecycle. Do not build a second state-machine engine.
 
 ## Scope and bindings
 

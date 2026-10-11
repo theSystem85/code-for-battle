@@ -1,6 +1,6 @@
 # 107 — Compile-on-edit execution and automation performance gates
 
-Status: specified, not implemented. Read [099](099-automation-cfbl-program.md) and AGENTS.md performance rules. Dependencies: 100–102; incorporate 106 before final certification. Own compiled execution and measured runtime optimization. The reference semantics/tests in 102 are the oracle; do not redefine language behavior for speed.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. Read [099](099-automation-cfbl-program.md) and AGENTS.md performance rules. Dependencies: 100–102; incorporate 106 before final certification. Own compiled execution and measured runtime optimization. The reference semantics/tests in 102 are the oracle; do not redefine language behavior for speed.
 
 ## Evaluation and decision
 

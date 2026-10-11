@@ -1,6 +1,6 @@
 # 100 — CFBL language, grammar, catalogs, and compatibility coverage
 
-Status: specified, not implemented. Read [099](099-automation-cfbl-program.md). Dependencies: 099. This is the normative grammar for CFBL v1.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. Read [099](099-automation-cfbl-program.md). Dependencies: 099. This is the normative grammar for CFBL v1.
 
 ## Deliverable and ownership
 

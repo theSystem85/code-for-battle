@@ -1,6 +1,6 @@
 # 101 — Authoritative CFBL source, synchronized drafts, and migration
 
-Status: specified, not implemented. Read [099](099-automation-cfbl-program.md) and [100](100-cfbl-language-and-coverage.md). Dependency: 100. Coordinate runtime-version changes with 102 and compilation integration with 107.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. Read [099](099-automation-cfbl-program.md) and [100](100-cfbl-language-and-coverage.md). Dependency: 100. Coordinate runtime-version changes with 102 and compilation integration with 107.
 
 ## Outcome and owned surfaces
 

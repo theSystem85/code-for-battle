@@ -1,6 +1,6 @@
 # 105 — Full-screen Automation modal on phones only
 
-Status: specified, not implemented. Read [099](099-automation-cfbl-program.md). Dependencies: none beyond 099 for initial shell work; final validation requires [103](103-automation-default-view-and-state-indexes.md) and [104](104-automation-text-view.md). Own device classification and Automation sizing, not a general sidebar/device-layout rewrite.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. Read [099](099-automation-cfbl-program.md). Dependencies: none beyond 099 for initial shell work; final validation requires [103](103-automation-default-view-and-state-indexes.md) and [104](104-automation-text-view.md). Own device classification and Automation sizing, not a general sidebar/device-layout rewrite.
 
 ## Classification contract
 

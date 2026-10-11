@@ -1,6 +1,6 @@
 # 102 — IF/ELSE pairs and state-machine execution semantics
 
-Status: specified, not implemented. User confirmed IF/ELSE pairs. Read [099](099-automation-cfbl-program.md), [100](100-cfbl-language-and-coverage.md), and the [101](101-automation-source-sync-and-migration.md) contracts. Dependency: 100; coordinate shared IDs/store adapters with 101. Own schema/stepper behavior, not editor implementation or performance rewriting.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. User confirmed IF/ELSE pairs. Read [099](099-automation-cfbl-program.md), [100](100-cfbl-language-and-coverage.md), and the [101](101-automation-source-sync-and-migration.md) contracts. Dependency: 100; coordinate shared IDs/store adapters with 101. Own schema/stepper behavior, not editor implementation or performance rewriting.
 
 ## Representation and validation
 

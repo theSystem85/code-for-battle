@@ -1,0 +1,23 @@
+{
+  "building": {
+    "id": "fullbase-player-turretGunV1",
+    "type": "turretGunV1"
+  },
+  "summary": [
+    {
+      "policyId": "landing-defence-example",
+      "name": "Hold fire while damaged",
+      "source": "building",
+      "stateIndex": 2,
+      "enabled": true,
+      "active": true,
+      "holding": true,
+      "pending": null,
+      "status": "controlling",
+      "result": {
+        "accepted": true,
+        "reason": null
+      }
+    }
+  ]
+}
