@@ -18,16 +18,20 @@
 import { TILE_SIZE } from '../config.js'
 import { getSimulationTime } from '../game/time.js'
 import { gameState } from '../gameState.js'
-import { EFFECTS, effectNeedsEnemy, effectRepeat } from './policyEffects.js'
-import { conditionNeeds } from './policyConditions.js'
+import { EFFECTS, effectRepeat } from './policyEffects.js'
 import { isBindingControlling } from './policyActivity.js'
 import { isPolicyIssuingOrder, runAsPolicy } from './policyIssuer.js'
-import { beginUnitScope, getScopeEnemy, getScopeEnemyDistanceTiles, isScopeEnemyInRange, measureLeaf } from './policySensors.js'
-import { STEP_GATE, stepPolicy } from './policyStep.js'
+import { beginUnitScope, isUnitScopeCurrent, getScopeEnemy, getScopeEnemyDistanceTiles, isScopeEnemyInRange, measureLeaf } from './policySensors.js'
+import { recordAutomationRuntime } from './automationReplay.js'
+import { stepCompiledPolicy } from './policyCompiler.js'
+import { STEP_GATE } from './policyStep.js'
 import { executeUnitCommand, findServiceTarget } from './unitCommandApi.js'
 import { ENEMY_SCAN_TILES, findNearestEnemy, findNearestFriendly, isHostile, unitCenter } from './policyWorld.js'
 import {
   canCommandPolicy,
+  getCompiledPolicyProgram,
+  refreshAutomationBinding,
+  registerAutomationEntity,
   getPolicyDocument,
   getPolicyEntry,
   getPolicyStoreVersion,
@@ -161,25 +165,6 @@ function updateOrderCompletion(unit, control, now) {
   }
 }
 
-const policyNeeds = new WeakMap()
-
-function policyNeedsEnemy(policy) {
-  let needs = policyNeeds.get(policy)
-  if (needs === undefined) {
-    const found = { enemy: false }
-    policy.states.forEach(state => {
-      if (effectNeedsEnemy(state.effect)) found.enemy = true
-      ;(state.transitions || []).forEach(t => {
-        conditionNeeds(t.when, found)
-        conditionNeeds(t.until, found)
-      })
-    })
-    needs = found.enemy
-    policyNeeds.set(policy, needs)
-  }
-  return needs
-}
-
 const sharedView = { now: 0, hp: 1, enemyDistance: Infinity, enemyInRange: false, underFire: false, measure: measureLeaf }
 
 function buildWorldView(unit, needsEnemy, context, now) {
@@ -262,8 +247,9 @@ function resetArgs() {
 }
 
 function nearestEnemyForEffect(unit, context) {
+  if (!isUnitScopeCurrent(unit, context)) return findNearestEnemy(unit, context.units)
   const enemy = getScopeEnemy()
-  return enemy && isHostile(unit, enemy) ? enemy : findNearestEnemy(unit, context.units)
+  return enemy && isHostile(unit, enemy) ? enemy : null
 }
 
 /**
@@ -347,6 +333,7 @@ function syncGlobalBindings(unit, globals, version) {
     if (!canCommandPolicy(entry.ownerId, unit.owner)) continue
     if (!unit.policyBindings) unit.policyBindings = []
     if (unit.policyBindings.some(binding => binding.policyId === entry.policy.id && binding.source === 'global')) continue
+    registerAutomationEntity(unit)
     unit.policyBindings.push(makeBinding(entry.policy, 'global'))
     unit.policyNextEval = 0
   }
@@ -382,8 +369,8 @@ function processUnit(unit, context, now) {
   let holder = null
   let needsEnemy = false
   for (let i = 0; i < bindings.length; i++) {
-    const doc = getPolicyDocument(bindings[i].policyId)
-    if (doc && policyNeedsEnemy(doc)) {
+    const program = getCompiledPolicyProgram(bindings[i].policyId)
+    if (program && (program.sensorDependencyMask & 1)) {
       needsEnemy = true
       break
     }
@@ -399,15 +386,17 @@ function processUnit(unit, context, now) {
       removeBindings = true
       continue
     }
+    const program = getCompiledPolicyProgram(binding.policyId)
+    if (!program) continue // Invalid/unprepared revisions never execute partially.
     if (binding.docRef !== doc) {
-      if (binding.docRef) {
-        binding.runtime = makeBinding(doc, binding.source).runtime
-      }
+      refreshAutomationBinding(binding, doc)
       binding.docRef = doc
     }
-    const { runtime, effects, trace } = stepPolicy(doc, binding.runtime, view, { gate: bindingGate(binding, control) })
+    const previousRuntime = binding.runtime
+    const { runtime, effects, trace } = stepCompiledPolicy(program, binding.runtime, view, bindingGate(binding, control))
     binding.runtime = runtime
     binding.lastTrace = trace
+    recordAutomationRuntime(unit, binding, previousRuntime, trace)
     if (runtime.finished && binding.source === 'unit') {
       binding.dead = true
       removeBindings = true
@@ -476,6 +465,7 @@ function refreshActivity(unit, control) {
  * Per-tick entry. `context` carries { units, mapGrid, buildings, factories, commands, getFireRange? }.
  */
 export function updateUnitPolicies(units, context, now = getSimulationTime(gameState)) {
+  if (gameState.replayMode || context.authority === false) return
   context.now = now
   const version = getPolicyStoreVersion()
   const globals = enabledGlobals(version)

@@ -3,6 +3,7 @@
 // combat, rendering or fog-of-war modules.
 
 import { BUILDING_PROXIMITY_RANGE, TILE_SIZE } from '../config.js'
+import { installAutomationReplayContext } from './automationReplay.js'
 import { gameState } from '../gameState.js'
 import { COMBAT_CONFIG } from '../game/unitCombat/combatConfig.js'
 import {
@@ -75,6 +76,7 @@ function fire(unit, target, aim, context) {
 
 /** Install the game helpers on the shared policy context (once). */
 export function installPolicyGameBindings(context) {
+  installAutomationReplayContext(context)
   context.getFireRange = unit => getEffectiveFireRange(unit)
   context.getFireRate = getFireRate
   context.canTarget = (unit, target) => canUnitTargetEntity(unit, target)

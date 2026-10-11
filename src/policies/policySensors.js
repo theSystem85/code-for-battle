@@ -92,6 +92,8 @@ export function beginUnitScope(unit, context, now) {
   }
 }
 
+export function isUnitScopeCurrent(unit, context) { return scope.unit === unit && scope.context === context }
+
 export function getScopeEnemy() {
   ensureEnemy()
   return scope.enemy

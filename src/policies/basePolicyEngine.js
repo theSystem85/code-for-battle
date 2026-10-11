@@ -22,12 +22,17 @@ import { executeUnitBuildCommand } from './unitBuildCommandApi.js'
 import { beginBaseScope, measureBaseLeaf, resetBaseSensors } from './basePolicySensors.js'
 import { EFFECTS, describeEffect } from './policyEffects.js'
 import {
+  canCommandPolicy,
+  getCompiledPolicyProgram,
+  getPolicyEntry,
+  registerAutomationRuntimeProvider,
   isBuildAutomationOptedIn,
   isUnitBuildAutomationOptedIn,
   listEnabledBuildPolicies,
   listEnabledUnitBuildPolicies
 } from './policyStore.js'
-import { STEP_GATE, createPolicyRuntime, stepPolicy } from './policyStep.js'
+import { stepCompiledPolicy } from './policyCompiler.js'
+import { STEP_GATE, createPolicyRuntime } from './policyStep.js'
 
 export const BASE_EVAL_INTERVAL_MS = 1000
 export const BASE_REASSERT_MS = 2000
@@ -59,6 +64,43 @@ export function resetBasePolicyEngine() {
   resetBaseSensors()
 }
 
+/** Session providers run at save/resync boundaries, outside simulation stepping. */
+export function exportBaseAutomationRuntime() {
+  return Array.from(runs, ([policyId, run]) => ({
+    policyId, ownerId: run.ownerId, behaviorRevision: run.behaviorRevision,
+    runtime: globalThis.structuredClone(run.runtime), nextActAt: run.nextActAt,
+    pending: globalThis.structuredClone(run.pending), orders: run.orders,
+    last: globalThis.structuredClone(run.last)
+  }))
+}
+
+export function restoreBaseAutomationRuntime(snapshot, options = {}) {
+  if (options.authority === 'host-snapshot' || !Array.isArray(snapshot)) return
+  runs.clear()
+  for (const item of snapshot) {
+    const entry = getPolicyEntry(item?.policyId)
+    if (gameState.humanPlayer && entry && !canCommandPolicy(gameState.humanPlayer, entry.ownerId)) continue
+    if (!entry || entry.ownerId !== item.ownerId || entry.behaviorRevision !== item.behaviorRevision) continue
+    if (entry.policy.variant !== 'build' && entry.policy.variant !== 'unitBuild') continue
+    const program = getCompiledPolicyProgram(item.policyId)
+    if (!program || !item.runtime || !program.stateTable[item.runtime.currentStateId]) continue
+    const hold = item.runtime.hold
+    if (hold && (!program.ruleTable[hold.transitionId] || !program.stateTable[hold.returnStateId])) continue
+    if (!Number.isFinite(item.nextActAt) || !Number.isFinite(item.orders) || item.orders < 0) continue
+    if (item.pending && !entry.policy.states.some(state => JSON.stringify(state.effect) === JSON.stringify(item.pending))) continue
+    runs.set(item.policyId, {
+      policy: entry.policy, ownerId: entry.ownerId, behaviorRevision: entry.behaviorRevision,
+      runtime: globalThis.structuredClone(item.runtime), nextActAt: item.nextActAt,
+      pending: globalThis.structuredClone(item.pending), orders: item.orders,
+      last: globalThis.structuredClone(item.last)
+    })
+  }
+  // Restore can move simulation time backwards; the next pass must preserve restored runs.
+  lastPass = -Infinity
+}
+
+registerAutomationRuntimeProvider('base', { export: exportBaseAutomationRuntime, restore: restoreBaseAutomationRuntime })
+
 /** Live state of one enabled build policy, or null when it is not running. */
 export function getBasePolicyStatus(policyId) {
   const run = runs.get(policyId)
@@ -85,10 +127,11 @@ export function describeBasePolicyStatus(status) {
 
 function ensureRun(entry) {
   let run = runs.get(entry.policy.id)
-  if (!run || run.policy !== entry.policy) {
-    run = { policy: entry.policy, runtime: createPolicyRuntime(entry.policy), nextActAt: 0, pending: null, orders: 0, last: null }
+  if (!run || run.behaviorRevision !== entry.behaviorRevision) {
+    run = { policy: entry.policy, ownerId: entry.ownerId, behaviorRevision: entry.behaviorRevision, runtime: createPolicyRuntime(entry.policy), nextActAt: 0, pending: null, orders: 0, last: null }
     runs.set(entry.policy.id, run)
   }
+  run.policy = entry.policy
   return run
 }
 
@@ -112,7 +155,9 @@ function act(run, effect, context, now) {
 function stepRun(run, context, now) {
   const previousStateId = run.runtime.currentStateId
   view.now = now
-  const outcome = stepPolicy(run.policy, run.runtime, view, { gate: STEP_GATE.open })
+  const program = getCompiledPolicyProgram(run.policy.id)
+  if (!program || program.behaviorRevision !== (run.behaviorRevision || 1)) return
+  const outcome = stepCompiledPolicy(program, run.runtime, view, STEP_GATE.open)
   run.runtime = outcome.runtime
   if (run.runtime.currentStateId !== previousStateId) run.pending = null
   for (let i = 0; i < outcome.effects.length; i++) {
@@ -127,6 +172,7 @@ function stepRun(run, context, now) {
  * ctx = { owner, units, buildings, getMoney, getPower, getMoneyEarned?, isPositionVisible?, build }
  */
 export function updateBasePolicies(context, now = getSimulationTime(gameState)) {
+  if (gameState.replayMode || context.authority === false) return
   if (now >= lastPass && now - lastPass < BASE_EVAL_INTERVAL_MS) return
   if (now < lastPass) resetBasePolicyEngine()
   lastPass = now

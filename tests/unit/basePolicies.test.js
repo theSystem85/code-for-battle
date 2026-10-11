@@ -4,6 +4,7 @@ import { POLICY_SCHEMA_VERSION, validatePolicy } from '../../src/policies/policy
 import { POLICY_TEMPLATES, createBlankPolicy, templatesForVariant } from '../../src/policies/policyTemplates.js'
 import {
   applyPolicyToUnit,
+  getCompiledPolicyProgram,
   isBuildAutomationOptedIn,
   listEnabledBuildPolicies,
   listEnabledGlobalPolicies,
@@ -20,6 +21,8 @@ import {
   resetBaseSensors
 } from '../../src/policies/basePolicySensors.js'
 import {
+  exportBaseAutomationRuntime,
+  restoreBaseAutomationRuntime,
   BASE_EVAL_INTERVAL_MS,
   BASE_REFUSED_RETRY_MS,
   describeBasePolicyStatus,
@@ -491,5 +494,41 @@ describe('base policy engine', () => {
     const { context } = makeContext()
     updateBasePolicies(context, 0)
     expect(gameState.gamePaused).toBe(false)
+  })
+})
+
+
+describe('compiled production revision and session boundaries', () => {
+  function setup(policy) {
+    expect(savePolicy(ME, policy).ok).toBe(true)
+    setPolicyEnabled(ME, policy.id, true)
+    setBuildAutomationOptIn(ME, true)
+    return makeContext()
+  }
+  it('does not reset an AFTER timer or recompile on metadata rename', () => {
+    const policy = buildPolicy('timer', { type: 'always' }, 'powerPlant', { kind: 'after', delaySeconds: 2 })
+    const { context, fake } = setup(policy)
+    const compiled = getCompiledPolicyProgram('timer')
+    updateBasePolicies(context, 0)
+    expect(savePolicy(ME, { ...policy, name: 'Renamed timer' }).ok).toBe(true)
+    expect(getCompiledPolicyProgram('timer')).toBe(compiled)
+    updateBasePolicies(context, 2000)
+    expect(fake.state.queued).toHaveLength(1)
+  })
+  it('restores a pending simulation-time delay and refuses stale revision/host snapshots', () => {
+    const policy = buildPolicy('timer', { type: 'always' }, 'powerPlant', { kind: 'after', delaySeconds: 2 })
+    const { context, fake } = setup(policy)
+    updateBasePolicies(context, 0)
+    const saved = exportBaseAutomationRuntime()
+    expect(saved[0].runtime.pending).toBeTruthy()
+    resetBasePolicyEngine()
+    restoreBaseAutomationRuntime(saved, { authority: 'host-snapshot' })
+    expect(getBasePolicyStatus('timer')).toBeNull()
+    restoreBaseAutomationRuntime(saved)
+    updateBasePolicies(context, 2000)
+    expect(fake.state.queued).toHaveLength(1)
+    resetBasePolicyEngine()
+    restoreBaseAutomationRuntime([{ ...saved[0], behaviorRevision: 99 }])
+    expect(getBasePolicyStatus('timer')).toBeNull()
   })
 })

@@ -236,6 +236,7 @@ export function restoreAutomationSession(payload, entities = [], { authority = '
       receivedSequences.set(normalized, Math.max(commandSequence, receivedSequences.get(normalized) || 0))
     }
   }
+  boundEntities.clear()
   const byId = new Map(entities.map(entity => [`${entityKind(entity)}:${entity.id}`, entity]))
   for (const saved of payload.entityBindings || []) {
     if (!saved || (saved.policyBindings != null && !Array.isArray(saved.policyBindings))) continue
@@ -332,6 +333,8 @@ export function registerAutomationEntity(entity) {
   if (entity) boundEntities.add(entity)
   return () => boundEntities.delete(entity)
 }
+
+export function unregisterAutomationEntity(entity) { boundEntities.delete(entity) }
 
 export function refreshAutomationBinding(binding, policy) {
   const entry = documents.get(policy.id)
