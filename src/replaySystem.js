@@ -1,3 +1,4 @@
+import { applyAutomationMutation } from './policies/policyStore.js'
 import { gameState } from './gameState.js'
 import { TILE_SIZE } from './config.js'
 import { saveGame, loadGameFromState, updateSaveGamesList } from './saveGame.js'
@@ -867,6 +868,10 @@ function executeReplayCommand(entry) {
   const replayActionId = buildReplayActionId(command, replay)
   replay.isApplyingReplayCommand = true
   try {
+    if (command.type === 'automation-edit') {
+      applyAutomationMutation(command.payload, [...(gameState.units || []), ...(gameState.buildings || [])])
+      return
+    }
     if (command.type === 'unit_command') {
       if (!executeReplayUnitCommand(command)) {
         applyGameTickOutput(gameState, {

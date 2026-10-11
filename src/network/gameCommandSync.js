@@ -1,3 +1,6 @@
+import { units as automationEntities } from '../main.js'
+import { applyAutomationMutation, subscribeAutomationMutations, setAutomationAuthoringGuard } from '../policies/policyStore.js'
+import { recordReplayCommand } from '../replayCommandPrimitives.js'
 /**
  * Game Command Synchronization Module - Coordinator
  *
@@ -148,6 +151,13 @@ const pendingRemoteCommands = []
 
 // Listeners for command reception
 const commandListeners = new Set()
+setAutomationAuthoringGuard(() => !gameState.replayMode)
+subscribeAutomationMutations(edit => {
+  if (gameState.replayMode) return
+  const command = { ...edit, tick: gameState.frameCount || 0, languageVersion: 1 }
+  recordReplayCommand({ type: 'automation-edit', payload: command })
+  if (gameState.multiplayerSession) broadcastGameCommand(COMMAND_TYPES.AUTOMATION_EDIT, command, command.actorId)
+})
 
 // ============ CORE COORDINATOR FUNCTIONS ============
 
@@ -197,6 +207,15 @@ export function handleReceivedCommand(command, _sourceId) {
       return
     }
 
+    if (command.commandType === COMMAND_TYPES.AUTOMATION_EDIT) {
+      if (command.payload?.actorId !== sourceParty || command.payload?.languageVersion !== 1) return
+      const result = applyAutomationMutation(command.payload, [...automationEntities, ...(gameState.buildings || [])])
+      if (!result.ok) return
+      recordReplayCommand({ type: 'automation-edit', payload: command.payload })
+      broadcastToAllPeers({ ...command, isHost: true })
+      return
+    }
+
     // Queue the command for processing
     pendingRemoteCommands.push({
       ...command,
@@ -233,6 +252,11 @@ export function handleReceivedCommand(command, _sourceId) {
 function applyCommand(command) {
   // Commands are applied based on type
   switch (command.commandType) {
+    case COMMAND_TYPES.AUTOMATION_EDIT:
+      if (command.payload?.actorId === command.sourcePartyId && command.payload?.languageVersion === 1) {
+        applyAutomationMutation(command.payload, [...automationEntities, ...(gameState.buildings || [])])
+      }
+      break
     case COMMAND_TYPES.GAME_PAUSE:
       if (!isHost()) {
         gameState.gamePaused = true

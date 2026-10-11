@@ -1,3 +1,4 @@
+import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
 // saveGame.js
 import { gameState } from './gameState.js'
 import { factories } from './main.js'
@@ -818,6 +819,7 @@ function buildSaveObject(label) {
   const mapTileState = createMapTileStateSnapshot(mapGrid)
 
   const saveData = {
+    automationSession: exportAutomationSession([...units, ...gameState.buildings, ...factories]),
     gameState: {
       money: gameState.money,
       gameTime: gameState.gameTime,
@@ -1051,6 +1053,7 @@ function loadGameFromSaveObject(saveObj, key) {
       return
     }
 
+    if (!loaded.automationSession) resetPolicyStore() // Old saves/replays cannot execute unrelated local automations.
     Object.assign(gameState, loaded.gameState)
 
     gameState.speedMultiplier = Number.isFinite(loaded.gameState?.speedMultiplier)
@@ -1550,6 +1553,8 @@ function loadGameFromSaveObject(saveObj, key) {
 
       units.push(hydrated)
     })
+
+    if (loaded.automationSession) restoreAutomationSession(loaded.automationSession, [...units, ...gameState.buildings, ...factories])
 
     if (Array.isArray(gameState.unitWrecks) && gameState.unitWrecks.length > 0) {
       const validUnitIds = new Set(units.map(unit => unit.id))
