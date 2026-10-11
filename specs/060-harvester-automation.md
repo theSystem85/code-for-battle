@@ -1,8 +1,8 @@
-# Spec 060: Harvester Automation Policy
+# Spec 060: Harvester Automation
 
 ## Summary
 
-Harvesters must follow one shared automation policy for both player-owned and AI-owned units, with only one explicit enemy-only branch: retreating from attacks before resuming the economy loop.
+Harvesters must follow one shared automation for both player-owned and AI-owned units, with only one explicit enemy-only branch: retreating from attacks before resuming the economy loop.
 
 ## Requirements
 
@@ -15,7 +15,7 @@ Harvesters must follow one shared automation policy for both player-owned and AI
 7. Shared stagnation recovery must use goal progress, not just “has path” or “has moveTarget”.
 8. A harvester is considered productive only while harvesting, unloading, or successfully making progress toward its current ore/refinery goal.
 9. If a harvester spends more than 60 seconds without meaningful progress toward its ore goal, it must retarget to a pseudo-random reachable ore tile whose refinery distance is similar to the stalled target’s refinery distance.
-10. The automation policy must prevent permanent idle-on-ore and reroute-loop states for both player and enemy harvesters.
+10. The automation must prevent permanent idle-on-ore and reroute-loop states for both player and enemy harvesters.
 11. When multiple selected harvesters are commanded to one ore tile, they must fan out across unique reachable ore tiles from that connected ore field before any target tile is reused.
 12. Manual ore commands and any transition into active harvesting must reject ore tiles above the harvester's current density permission, immediately clear stale invalid manual targets, and fall back to a valid automatic ore target instead of looping on the invalid tile.
 13. When exactly one harvester is selected and the player commands an ore tile, that harvester must preserve the exact clicked ore tile as its manual target instead of retargeting to a different nearby tile from the same field.
@@ -29,5 +29,5 @@ finish up but do NOT run the e2e tests now
 
 ## Notes
 
-- `havester-policies.md` is the operator-facing reference that visualizes this policy.
+- `harvester-automation.md` is the operator-facing reference that visualizes this automation.
 - This spec intentionally separates player command ownership from enemy retreat ownership so only one subsystem controls a harvester at a time.

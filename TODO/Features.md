@@ -52,7 +52,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
   - [ ] Make rectangle sweep commands route the sweeper to the nearest entry tile, flip to clearance mode with dust and 30% speed before entering, and pick the serpentine order (left-right/top-to-bottom versus reverse) that minimizes the approach distance while covering every tile.
   - Spec: [Land Mine System (Mine Layer + Mine Sweeper)](../specs/011-mine-system-planning/spec.md)
 
-- [ ] **Add AI policy scripts** — Make sure to come up with a sophisticated modular extensible unit AI policy architecture that can be used for humand and AI players' units. Create and integreate some JSON policy script to manage the AI's combat behaviour including priorities and another one to manage the AI's base build und unit production behaviour. Add the following initial scripts for this behaviour:
+- [ ] **Add AI automation scripts** — Make sure to come up with a sophisticated modular extensible unit AI automation architecture that can be used for humand and AI players' units. Create and integreate some JSON automation script to manage the AI's combat behaviour including priorities and another one to manage the AI's base build und unit production behaviour. Add the following initial scripts for this behaviour:
   - [ ] when player attacks -> defend or retreat into base if the unit under attack is too weak (havesters or combat units that are outnumbered) to regroup in the protection of the base defence. When attack was defended strike back.
   - Spec: [Production Button Input Architecture](../docs/production-button-input-architecture.md)
 

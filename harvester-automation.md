@@ -1,6 +1,6 @@
-# Havester Policies
+# Havester Automations
 
-This document describes the full automated harvester policy after the 2026-03-31 audit and fix pass.
+This document describes the full automated harvester automation after the 2026-03-31 audit and fix pass.
 
 ## Priority Order
 
@@ -52,7 +52,7 @@ flowchart TD
     X -->|No| K
 ```
 
-## Policy Details
+## Automation Details
 
 - Player move to non-ore: interrupts active harvesting/unloading, travels to the requested tile, then holds position there.
 - Player move to ore: interrupts active harvesting/unloading, travels to the requested ore tile, then starts normal automated harvesting and refinery unloading.

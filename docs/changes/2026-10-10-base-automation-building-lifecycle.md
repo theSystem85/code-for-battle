@@ -1,5 +1,5 @@
 - [x] **Bug: Shared player building lifecycle**
-  Manual and policy blueprint placement now share construction finalization, including power, occupancy, technology, network sync and build history; sales and multiplayer snapshots use simulation time so removal clears power and chimney emitters. Policy placement keeps searching when the player validator rejects an AI candidate.
+  Manual and automation blueprint placement now share construction finalization, including power, occupancy, technology, network sync and build history; sales and multiplayer snapshots use simulation time so removal clears power and chimney emitters. Automation placement keeps searching when the player validator rejects an AI candidate.
   Spec: none
 - [ ] **Validation: 75 FPS hardware gate**
   Qualifying reference-hardware before/after scrolling and active-sale benchmarks remain outstanding; headless functional coverage cannot certify 75 presented FPS.

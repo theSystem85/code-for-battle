@@ -6,7 +6,7 @@ Code for Battle is a 2D, tile-based RTS game built with vanilla JavaScript and C
 
 This project started in December 2024 as an experiment and benchmark: can frontier LLMs 0-shot a complex RTS game from prompt-driven development.
 
-Over time, that benchmark evolved into a full RTS game. The long-term vision is to support LLM-controlled AI players and provide a built-in, user-friendly programming workflow so players can automate unit behavior and strategy (TBD).
+Over time, that benchmark evolved into a full RTS game. Automation is the reason for the name **Code for Battle**: players define state machines to control units and automate production. The planned CFBL text editor, synchronized button view, and defence automation are described in the [numbered specs](specs/099-automation-cfbl-program.md), [implementation plan](docs/automation-implementation-plan.md), and [complete language reference](docs/cfbl-language-reference.md).
 
 The project is fully vibe coded.
 
