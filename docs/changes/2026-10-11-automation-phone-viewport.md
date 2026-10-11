@@ -1,0 +1,9 @@
+- [x] **Feature: phone-only Automation viewport shell**
+  Add independently testable hardware classification, visual-viewport sizing, safe-area-aware full-screen phone CSS, 16px inputs and 44px buttons, background scroll/input locking, focus containment and lifecycle cleanup. iPads/tablets retain the bounded dialog. Shared editor integration uses `attachAutomationViewport(backdrop, dialog)` and calls its returned cleanup before removal.
+  Spec: [Phone-only fullscreen](../../specs/105-automation-phone-fullscreen.md)
+
+Classification prioritizes explicit tablet/iPadOS signals, then phone signals and UA client hints. Unknown touch/coarse-pointer hardware uses a stable screen short edge below 600 CSS px. This heuristic cannot perfectly identify every device; window width and keyboard-shrunken visual viewports do not decide device type.
+
+Validation: 20 focused classifier/lifecycle tests pass. Local Chromium with Playwright hardware profiles passed iPhone portrait/landscape, Android phone, iPad portrait/narrow split-screen and Android tablet shell checks. Phone dialogs matched the visual viewport exactly, retained reachable footer/body scrolling and 16px inputs; tablet dialogs retained 12px rounded bounded styling. Resizing preserved unsaved input and cleanup restored opener focus. The browser harness exercised the actual viewport module and both shell styles on a controlled dialog, rather than claiming integrated DAV/ATV coverage.
+
+Actual iOS Safari keyboard/browser-bar/PWA checks and final integrated DAV/ATV flyout checks require follow-up hardware/integration validation. Chromium emulation does not certify those behaviors or the qualifying-hardware 75 FPS release gate. This module only executes during modal mounting, resizing/focus and teardown; it changes no simulation/render hot path.

@@ -1,0 +1,59 @@
+/* Hardware classification controls this shell; narrow tablets stay bounded. */
+.policy-editor-backdrop.automation-viewport {
+  inset: auto;
+  top: var(--automation-viewport-top, 0px);
+  left: var(--automation-viewport-left, 0px);
+  width: var(--automation-viewport-width, 100%);
+  height: var(--automation-viewport-height, 100vh);
+  height: var(--automation-viewport-height, 100dvh);
+}
+
+.policy-editor-backdrop.automation-phone { padding: 0; }
+
+.automation-phone .policy-editor {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding-top: max(0px, calc(env(safe-area-inset-top, 0px) - var(--automation-viewport-top, 0px)));
+  padding-bottom: max(0px, calc(env(safe-area-inset-bottom, 0px) - var(--automation-viewport-bottom, 0px)));
+  padding-left: max(0px, calc(env(safe-area-inset-left, 0px) - var(--automation-viewport-left, 0px)));
+  padding-right: max(0px, calc(env(safe-area-inset-right, 0px) - var(--automation-viewport-right, 0px)));
+}
+
+.automation-phone .policy-editor__header,
+.automation-phone .policy-editor__footer,
+.automation-phone .policy-editor__reason {
+  flex: 0 0 auto;
+}
+
+.automation-phone .policy-editor__header {
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  padding: 8px 104px 8px 12px;
+  min-height: 52px;
+  box-sizing: border-box;
+}
+
+.automation-phone .policy-editor__pause-note { display: none; }
+.automation-phone .policy-editor__footer { padding: 6px 12px; flex-wrap: wrap; }
+.automation-phone .policy-editor__body { overscroll-behavior: contain; padding: 12px; }
+.automation-phone .policy-editor__reason { max-height: 64px; overflow-y: auto; padding: 6px 12px; }
+.automation-phone .policy-editor input,
+.automation-phone .policy-editor textarea,
+.automation-phone .policy-editor select { font-size: 16px; }
+.automation-phone .policy-editor button,
+.automation-phone .policy-editor input:not([type="checkbox"]),
+.automation-phone .policy-editor select { min-height: 44px; }
+.automation-phone .policy-editor button { min-width: 44px; }
+.automation-phone .policy-editor__close {
+  top: calc(4px + max(0px, calc(env(safe-area-inset-top, 0px) - var(--automation-viewport-top, 0px))));
+  right: calc(8px + max(0px, calc(env(safe-area-inset-right, 0px) - var(--automation-viewport-right, 0px))));
+}
+.automation-phone .policy-editor__alert-icon {
+  top: calc(11px + max(0px, calc(env(safe-area-inset-top, 0px) - var(--automation-viewport-top, 0px))));
+  right: calc(60px + max(0px, calc(env(safe-area-inset-right, 0px) - var(--automation-viewport-right, 0px))));
+}
