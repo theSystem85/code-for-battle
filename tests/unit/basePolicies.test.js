@@ -168,8 +168,15 @@ describe('build policy schema', () => {
     const blank = createBlankPolicy('b', 'build')
     expect(validatePolicy(blank).valid).toBe(true)
     expect(templatesForVariant('unit').every(t => t.create('x').variant === 'unit')).toBe(true)
+    const defenceTemplates = templatesForVariant('defence')
+    expect(defenceTemplates.length).toBeGreaterThan(0)
+    defenceTemplates.forEach(template => {
+      const doc = template.create('defence-template')
+      expect(doc.variant).toBe('defence')
+      expect(validatePolicy(doc).errors, template.id).toEqual([])
+    })
     expect(POLICY_TEMPLATES.length).toBe(
-      templatesForVariant('unit').length + templates.length + templatesForVariant('unitBuild').length
+      templatesForVariant('unit').length + templates.length + templatesForVariant('unitBuild').length + defenceTemplates.length
     )
   })
 })

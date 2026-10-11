@@ -2,6 +2,7 @@
 import { gameState } from '../gameState.js'
 import { createReplayEntityReference, recordReplayCommand } from '../replayCommandPrimitives.js'
 import { executeUnitCommand } from './unitCommandApi.js'
+import { refreshRecordedAutomationActivity } from './policyActivity.js'
 
 let replayContext = null
 export function installAutomationReplayContext(context) { replayContext = context }
@@ -14,7 +15,9 @@ export function recordAutomationUnitCommand(name, unit, args) {
     unitRef: createReplayEntityReference(unit),
     name: name === 'autoAttackInRange' ? 'attackInRange' : name,
     args: { tiles: args.tiles, tileX: args.tileX, tileY: args.tileY, resource: args.resource },
-    targetRef: resolvedTarget ? createReplayEntityReference(resolvedTarget) : null
+    targetRef: resolvedTarget ? createReplayEntityReference(resolvedTarget) : null,
+    control: globalThis.structuredClone(unit.policyControl || null),
+    orderTargetRef: unit.policyControl?.order?.targetRef ? createReplayEntityReference(unit.policyControl.order.targetRef) : null
   }, { source: 'automation' })
 }
 
@@ -31,7 +34,15 @@ export function applyRecordedAutomationUnitCommand(command, resolveEntity, comma
   replayContext.mapGrid = gameState.mapGrid || []
   replayContext.bullets = gameState.bullets || []
   replayContext.commands = commands
-  return executeUnitCommand(command.name, unit, { ...command.args, target }, replayContext)
+  const accepted = executeUnitCommand(command.name, unit, { ...command.args, target }, replayContext)
+  if (accepted && 'control' in command) {
+    unit.policyControl = globalThis.structuredClone(command.control)
+    if (unit.policyControl?.order) Object.defineProperty(unit.policyControl.order, 'targetRef', {
+      value: command.orderTargetRef ? resolveEntity(command.orderTargetRef) : null, enumerable: false, writable: true
+    })
+  }
+  if (accepted) refreshRecordedAutomationActivity(unit)
+  return accepted
 }
 
 export function recordAutomationRuntime(entity, binding, previousRuntime, trace) {
@@ -53,6 +64,10 @@ export function applyRecordedAutomationRuntime(command, resolveEntity) {
   if (!binding || !command.runtime) return false
   binding.runtime = globalThis.structuredClone(command.runtime)
   binding.lastTrace = { ...command.trace }
+  if (!entity.isBuilding && binding.source === 'unit' && binding.runtime.finished) {
+    entity.policyBindings.splice(entity.policyBindings.indexOf(binding), 1)
+  }
+  refreshRecordedAutomationActivity(entity)
   return true
 }
 
@@ -71,5 +86,6 @@ export function applyRecordedAutomationDefenceIntent(command, resolveEntity) {
   building.automationManualOverride = globalThis.structuredClone(command.manualOverride)
   building.automationControl = command.control
   building.automationControlSequence = command.controlSequence || 0
+  refreshRecordedAutomationActivity(building)
   return true
 }

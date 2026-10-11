@@ -4,6 +4,9 @@ import { executeUnitCommand } from '../../src/policies/unitCommandApi.js'
 import { applyRecordedAutomationRuntime, applyRecordedAutomationUnitCommand, installAutomationReplayContext, recordAutomationRuntime } from '../../src/policies/automationReplay.js'
 import { updateUnitPolicies } from '../../src/policies/policyEngine.js'
 import { updateBasePolicies } from '../../src/policies/basePolicyEngine.js'
+import { resetPolicyStore, savePolicy } from '../../src/policies/policyStore.js'
+import { createBlankPolicy } from '../../src/policies/policyTemplates.js'
+import { applyRecordedAutomationDefenceIntent } from '../../src/policies/automationReplay.js'
 
 function tank(id = 'u') {
   return { id, type: 'tank', owner: 'player1', health: 100, x: 32, y: 32, tileX: 1, tileY: 1, turretDirection: 0 }
@@ -13,6 +16,7 @@ beforeEach(() => {
   gameState.replayMode = false
   gameState.simulationTime = 150
   gameState.replay = { recordingActive: true, recordingStartedAt: 0, commands: [] }
+  resetPolicyStore()
 })
 
 describe('automation replay outputs', () => {
@@ -59,5 +63,28 @@ describe('automation replay outputs', () => {
     expect(applyRecordedAutomationRuntime(command, () => entity)).toBe(true)
     expect(entity.policyBindings[0].runtime.currentStateId).toBe('b')
     expect(entity.policyBindings[0].lastTrace.branch).toBe('else')
+  })
+  it('refreshes defence inspection through a recorded hold and its cleanup without evaluation', () => {
+    const policy = createBlankPolicy('replay-defence', 'defence')
+    expect(savePolicy('player1', policy).ok).toBe(true)
+    const building = { id: 'turret', isBuilding: true, owner: 'player1', policyBindings: [
+      { policyId: policy.id, behaviorRevision: 1, runtime: { currentStateId: policy.initialStateId, hold: null, pending: null, finished: false } }
+    ] }
+    const resolve = () => building
+    const intent = { entityRef: { id: building.id }, owner: building.owner, intent: { issuerId: policy.id, action: 'holdFire' }, control: policy.id }
+    expect(applyRecordedAutomationDefenceIntent(intent, resolve)).toBe(true)
+    expect(building.policyActive).toBe(true)
+    expect(building.policyActiveCount).toBe(1)
+    expect(applyRecordedAutomationDefenceIntent({ ...intent, intent: null, control: null }, resolve)).toBe(true)
+    expect(building.policyActive).toBe(false)
+    expect(building.policyBindings[0].active).toBe(false)
+  })
+  it('removes a completed individual unit binding during output-only replay', () => {
+    const entity = tank()
+    entity.policyBindings = [{ policyId: 'completed', source: 'unit', behaviorRevision: 1, runtime: {} }]
+    expect(applyRecordedAutomationRuntime({ policyId: 'completed', behaviorRevision: 1,
+      runtime: { currentStateId: 'end', finished: true }, trace: { event: 'finished' } }, () => entity)).toBe(true)
+    expect(entity.policyBindings).toEqual([])
+    expect(entity.policyActive).toBe(false)
   })
 })
