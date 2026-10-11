@@ -102,6 +102,18 @@ describe('CFBL language v1', () => {
   it('rejects unresolved, repeated, skipped and excessive states and misplaced ELSE', () => {
     for (const source of [program('always').replace('goto 1', 'goto 2'), program().replace('state 1', 'state 2'), program('always', 'wait', 'control unit', 'else goto 1; else goto 1;'), program().replace('state 1', 'state 8'), program().replace('global', 'individual').replace('control unit', 'build unit')]) expect(parseCFBL(source).diagnostics.length).toBeGreaterThan(0)
   })
+  it('rejects decimal spellings for generated indexes and delays', () => {
+    for (const source of [program().replace('start 1', 'start 1.0'), program().replace('state 1', 'state 1.0'), program().replace('if (always)', 'after 1.0s if (always)')]) expect(parseCFBL(source).diagnostics.length).toBeGreaterThan(0)
+  })
+  it('offers all legal replacements on accepted source, with generated indexes protected', () => {
+    const source = program('always', 'wait')
+    const at = source.indexOf('wait') + 4
+    expect(completionContext(source, at).legalOptions.some(option => option.value === 'retreat')).toBe(true)
+    const stateIndex = source.indexOf('state 1') + 6
+    expect(completionContext(source, stateIndex).numericDomain).toBeUndefined()
+    const reference = source.indexOf('goto 1') + 5
+    expect(completionContext(source, reference).numericDomain).toMatchObject({ min: 1, max: 1 })
+  })
   it('reports malformed imported quantities rather than rounding', () => {
     const ast = parse(program('always', 'buildUnits()', 'build unit'))
     const machine = toMachine(ast)

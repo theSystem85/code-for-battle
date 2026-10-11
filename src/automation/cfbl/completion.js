@@ -63,5 +63,9 @@ export function completionContext(source, selection = source.length) {
     if (expected?.slot === 'state' && !token && complete.states.length < 7) options = [{ value: 'state', label: 'Add state', insertText: `state ${complete.states.length + 1} {\n    do wait;\n  }\n` }]
     options = options.filter(option => parseCFBL(source.slice(0, start) + option.insertText + source.slice(end)).diagnostics.length === 0)
   }
-  return { slot: expected?.slot || 'complete', legalOptions: fuzzyOptions(options, token?.[0] || ''), numericDomain: expected?.numericDomain, edits: { start, end }, query: token?.[0] || '', variant: parser.variant }
+  let numericDomain = expected?.numericDomain
+  if (complete && expected?.slot === 'state-index') numericDomain = undefined
+  if (complete && expected?.slot === 'state-reference') numericDomain = { ...numericDomain, max: complete.states.length }
+  const query = complete ? '' : token?.[0] || ''
+  return { slot: expected?.slot || 'complete', legalOptions: fuzzyOptions(options, query), numericDomain, edits: { start, end }, query, variant: parser.variant }
 }
