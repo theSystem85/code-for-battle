@@ -267,7 +267,7 @@ function initiateResync(desyncTick) {
   window.logger('[Lockstep] Initiating resync from tick:', desyncTick)
 
   // Create a full state snapshot for resync
-  const snapshot = createGameStateSnapshot()
+  const snapshot = createGameStateSnapshot({ fullAutomation: true })
 
   // Broadcast resync message
   broadcastGameCommand(

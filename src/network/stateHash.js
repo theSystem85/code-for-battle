@@ -1,3 +1,4 @@
+import { getAutomationBehaviorHash } from '../policies/policyStore.js'
 /**
  * State Hash System for Deterministic Lockstep
  *
@@ -287,6 +288,8 @@ export function hashMapGrid(mapGrid) {
  */
 export function computeStateHash(gameState, tick) {
   let hash = 2166136261
+
+  hash = hashCombine(hash, getAutomationBehaviorHash())
 
   // Include tick number
   hash = hashCombine(hash, tick)

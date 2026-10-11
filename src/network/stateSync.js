@@ -1,3 +1,4 @@
+import { exportAutomationSession, restoreAutomationSession, getPolicyStoreVersion } from '../policies/policyStore.js'
 /**
  * Game State Synchronization Module
  * Handles state snapshots, interpolation, and synchronization between host and clients
@@ -27,6 +28,7 @@ const GAME_STATE_SYNC_INTERVAL_MS = 100
 
 // Handle for periodic state sync
 let stateSyncHandle = null
+let lastAutomationSourceVersion = -1
 
 // Track if client has been initialized (first snapshot received)
 let clientInitialized = false
@@ -468,7 +470,7 @@ function createPartyMoneySnapshot() {
  * Create a game state snapshot for synchronization
  * @returns {Object} Game state snapshot
  */
-export function createGameStateSnapshot() {
+export function createGameStateSnapshot({ fullAutomation = false } = {}) {
   const now = performance.now()
   const simNow = getSimulationTime(gameState)
 
@@ -657,7 +659,12 @@ export function createGameStateSnapshot() {
     spriteCacheKey: wreck.spriteCacheKey
   }))
 
+  const automationSession = exportAutomationSession([...mainUnits, ...(gameState.buildings || []), ...mainFactories])
+  const automationVersion = getPolicyStoreVersion()
+  if (!fullAutomation && lastAutomationSourceVersion === automationVersion) delete automationSession.records
+  lastAutomationSourceVersion = automationVersion
   return {
+    automationSession,
     units,
     buildings,
     bullets,
@@ -1236,6 +1243,7 @@ export function applyGameStateSnapshot(snapshot) {
     gameState.unitWrecks = updatedWrecks
   }
 
+  if (snapshot.automationSession) restoreAutomationSession(snapshot.automationSession, [...mainUnits, ...(gameState.buildings || []), ...mainFactories], { authority: 'host-snapshot' })
   lastSnapshotTime = now
 }
 
@@ -1394,6 +1402,7 @@ export function stopGameStateSync() {
  * This ensures the first snapshot includes all map configuration data
  */
 export function notifyClientConnected() {
+  lastAutomationSourceVersion = -1
   window.logger('[GameCommandSync] New client connected, first snapshot will include full map data')
   // The mapSynced flag is only used on clients, not on the host
   // The host always includes map data in snapshots anyway
