@@ -260,6 +260,20 @@ class MockImage {
     return this._src
   }
 
+  decode() {
+    if (this.complete) return Promise.resolve()
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        this.removeEventListener('load', onLoad)
+        this.removeEventListener('error', onError)
+      }
+      const onLoad = () => { cleanup(); resolve() }
+      const onError = () => { cleanup(); reject(new Error('Image decoding failed')) }
+      this.addEventListener('load', onLoad)
+      this.addEventListener('error', onError)
+    })
+  }
+
   set src(value) {
     this._src = value
     // Simulate async image loading

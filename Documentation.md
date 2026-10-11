@@ -1,5 +1,7 @@
 # Code for Battle - Documentation
 
+Automation planning and delegation: [specs 099–108](specs/099-automation-cfbl-program.md), [implementation plan](docs/automation-implementation-plan.md), and [complete planned CFBL grammar with examples](docs/cfbl-language-reference.md). These describe follow-up implementation; the CFBL editor and defence control are not yet shipped.
+
 ## Enemy Unit Retaliation System
 
 ### Overview

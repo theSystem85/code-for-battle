@@ -757,13 +757,13 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
   - Spec: [Startup Map Initialization Bugfix](../specs/017-startup-map-initialization-bugfix.md)
 
 - [x] **AI crewless unit command loop fix (2026-03-31)** — AI was commanding crewless units (missing driver/loader) to move, attack, or harvest, causing rerouting loops and idle-at-ore behavior; fixed by: (1) adding crew checks to `harvesterLogic.js` — no driver stops all automation, no loader stops harvesting but allows unloading; (2) adding `returningToHospital` check to skip harvester automation while heading for restaffing; (3) filtering driverless units from pathfinding batch/immediate calculations in `pathfinding.js`; (4) making `enemyUnitBehavior.js` return early for mobile crewless units (clear offensive targets/paths, allow only defensive fire) so hospital pathing from `crewHealing.js` isn't overwritten.
-  - Spec: [Harvester Automation Policy](../specs/060-harvester-automation-policy.md)
+  - Spec: [Harvester automation](../specs/060-harvester-automation.md)
 
 - [x] **Harvester retreat infinite rerouting loop fix (2026-03-31)** — `updateRetreatBehavior` (player backward-movement retreat system) no longer processes AI-initiated path-based retreats, preventing its straight-line path-block check and 2-second stuck detection from instantly clearing `isRetreating` every frame; `shouldHarvesterSeekProtection` now checks the post-retreat cooldown BEFORE nearby threats, preventing immediate re-trigger that bypassed the 4-second cooldown; `shouldStopRetreating` now terminates retreat when path is consumed (arrived or cleared by stuck system); AI retreats now set `retreatStartTime` for the 30-second safety timeout; `unitMovement.js` body direction and `canAccelerate` now properly handle AI forward-movement retreats vs player backward-movement retreats.
   - Spec: [Multi-Player & AI System](../specs/007-multi-player-ai-system/spec.md)
 
-- [x] **Harvester policy/state-ownership fix (2026-03-31)** — player move orders now interrupt active harvesting/unloading, non-ore player moves create an explicit idle hold state, manual ore targets start harvesting immediately on arrival, assigned refineries remain preferred during stuck-unload recovery, and long-term stagnant ore routes reroute to a pseudo-random similar-distance ore tile instead of idling or looping forever.
-  - Spec: [Harvester Automation Policy](../specs/060-harvester-automation-policy.md)
+- [x] **Harvester automation/state-ownership fix (2026-03-31)** — player move orders now interrupt active harvesting/unloading, non-ore player moves create an explicit idle hold state, manual ore targets start harvesting immediately on arrival, assigned refineries remain preferred during stuck-unload recovery, and long-term stagnant ore routes reroute to a pseudo-random similar-distance ore tile instead of idling or looping forever.
+  - Spec: [Harvester automation](../specs/060-harvester-automation.md)
 
 - [x] **Harvester ore-path recalc throttle (2026-03-29)** — added per-harvester ore repath cooldown so same-target ore routes are not recomputed every frame when no meaningful state changed.
   - Spec: none
@@ -783,8 +783,8 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 - [x] **Enemy harvester retreat re-trigger cooldown (2026-03-28)** — stopping retreat now applies a short harvester retreat cooldown so `recentlyDamaged` heuristics cannot immediately re-enter retreat in the same area; nearby real threats can still force immediate retreat.
   - Spec: none
 
-- [x] **Enemy harvester retreat/economy policy conflict fix (2026-03-28)** — while `isRetreating` is active, harvester economy automation now pauses ore/unload scheduling so retreat logic is the single owner of routing; this removes the rapid retreat-vs-ore path overwrite loop seen when enemy harvesters are attacked.
-  - Spec: [Harvester Automation Policy](../specs/060-harvester-automation-policy.md)
+- [x] **Enemy harvester retreat/economy automation conflict fix (2026-03-28)** — while `isRetreating` is active, harvester economy automation now pauses ore/unload scheduling so retreat logic is the single owner of routing; this removes the rapid retreat-vs-ore path overwrite loop seen when enemy harvesters are attacked.
+  - Spec: [Harvester automation](../specs/060-harvester-automation.md)
 
 - [x] **Gas station + ammo factory service radius parity (2026-03-20)** — increased both building service radii to match the hospital's support footprint, applied the same wider radius to ammo-truck factory reload checks, and added regression coverage for service-radius math plus an end-to-end resupply scenario.
   - Spec: [Gas Station Explosion Safety and Damage Rings](../specs/013-gas-station-explosion.md)
