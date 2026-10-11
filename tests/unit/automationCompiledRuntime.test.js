@@ -107,3 +107,14 @@ describe('prepared runtime', () => {
     }
   })
 })
+
+describe('prepared numeric comparison defaults', () => {
+  it('keeps circular tolerance and leaf defaults equal to the reference', () => {
+    const p = machine()
+    p.states[0].transitions[0].when = { type: 'compare', field: 'turretRotation', mode: 'absolute', op: '==', value: 359 }
+    const program = compilePolicyProgram(p)
+    const r = createPolicyRuntime(p)
+    const view = { measure: () => 1 }
+    expect(stepCompiledPolicy(program, r, view)).toEqual(stepPolicy(p, r, view))
+  })
+})

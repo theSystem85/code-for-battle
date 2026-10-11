@@ -57,7 +57,7 @@ function nearestAmong(unit, center, candidates, radiusSq) {
     const dx = other.x + TILE_SIZE / 2 - center.x
     const dy = other.y + TILE_SIZE / 2 - center.y
     const distSq = dx * dx + dy * dy
-    if (distSq <= bestSq) {
+    if (distSq < bestSq || (distSq === bestSq && (!best || String(other.id) < String(best.id)))) {
       best = other
       bestSq = distSq
     }
@@ -90,7 +90,7 @@ export function findNearestFriendly(unit, units, tiles = ENEMY_SCAN_TILES, accep
     const dx = other.x + TILE_SIZE / 2 - center.x
     const dy = other.y + TILE_SIZE / 2 - center.y
     const distSq = dx * dx + dy * dy
-    if (distSq <= bestSq) {
+    if (distSq < bestSq || (distSq === bestSq && (!best || String(other.id) < String(best.id)))) {
       best = other
       bestSq = distSq
     }

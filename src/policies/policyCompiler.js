@@ -1,5 +1,5 @@
 // Compilation happens at accepted revision boundaries, never during stepping.
-import { compareCondition, conditionNeeds } from './policyConditions.js'
+import { compareValues, compareTolerance, conditionNeeds, defaultParams, effectiveMode, leafMeta, NUMERIC_FIELDS } from './policyConditions.js'
 import { validatePolicy } from './policySchema.js'
 import { effectNeedsEnemy } from './policyEffects.js'
 import { stepPolicy } from './policyStep.js'
@@ -10,7 +10,13 @@ const compiledConditionOffsets = new WeakMap()
 
 function compileCondition(condition, instructions) {
   const offset = instructions.length
-  const node = { opcode: condition.type, leaf: condition, children: [] }
+  const meta = leafMeta(condition)
+  const leaf = meta ? Object.freeze({ ...defaultParams(meta), ...condition, ...(condition.type === 'compare' ? { mode: effectiveMode(condition) } : {}) }) : condition
+  const node = {
+    opcode: condition.type, leaf, children: [],
+    tolerance: condition.type === 'compare' ? compareTolerance(condition) : 0,
+    circular: condition.type === 'compare' && Boolean(NUMERIC_FIELDS[condition.field]?.circular) && effectiveMode(condition) === 'absolute'
+  }
   instructions.push(node)
   if (condition.type === 'not') node.children.push(compileCondition(condition.of, instructions))
   if (condition.type === 'and' || condition.type === 'or') {
@@ -36,7 +42,7 @@ export function evaluateCompiledCondition(instructions, offset, view) {
       return false
     case 'compare': {
       const value = view.measure ? view.measure(node.leaf) : view[node.leaf.field]
-      return typeof value === 'number' && !Number.isNaN(value) && compareCondition(node.leaf, value)
+      return typeof value === 'number' && !Number.isNaN(value) && compareValues(value, node.leaf.op, node.leaf.value, node.tolerance, node.circular)
     }
     case 'check': return view.measure ? view.measure(node.leaf) === true : false
     default: return false
@@ -100,9 +106,13 @@ export function compilePolicyProgram(policy, metadata = {}) {
 }
 
 function evaluatePrepared(condition, view, program) {
+  if (condition.type === 'always') return true
+  if (condition.type === 'enemyInRange') return view.enemyInRange === true
+  if (condition.type === 'underFire') return view.underFire === true
   return evaluateCompiledCondition(program.conditionInstructions, compiledConditionOffsets.get(program).get(condition), view)
 }
 
-export function stepCompiledPolicy(program, runtime, view, options = {}) {
-  return stepPolicy(program.policy, runtime, view, preparedStepOptions.get(program)[options.gate || 'open'])
+export function stepCompiledPolicy(program, runtime, view, options) {
+  const gate = typeof options === 'string' ? options : options?.gate || 'open'
+  return stepPolicy(program.policy, runtime, view, preparedStepOptions.get(program)[gate])
 }

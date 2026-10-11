@@ -14,6 +14,8 @@
 // migration is listed as later work in docs/programmable-units-feature-list.md.
 
 import { TANK_FIRE_RANGE, TILE_SIZE, TURRET_AIMING_THRESHOLD } from '../config.js'
+import { getScopeEnemy, isUnitScopeCurrent } from './policySensors.js'
+import { recordAutomationUnitCommand } from './automationReplay.js'
 import { runAsPolicy } from './policyIssuer.js'
 import {
   AIR_UNIT_TYPES,
@@ -243,7 +245,7 @@ function applyAttackInRange(unit, target) {
 }
 
 function nearestEnemyInRange(unit, ctx) {
-  const enemy = findNearestEnemy(unit, ctx.units)
+  const enemy = isUnitScopeCurrent(unit, ctx) ? getScopeEnemy() : findNearestEnemy(unit, ctx.units)
   if (!enemy) return null
   return attackInRangeRefusal(unit, enemy, ctx) ? null : enemy
 }
@@ -596,5 +598,7 @@ export function executeUnitCommand(name, unit, args = NO_ARGS, ctx = EMPTY_CTX) 
     if (command.onRefused && unit) command.onRefused(unit, safeArgs, ctx)
     return false
   }
-  return runAsPolicy(() => command.run(unit, safeArgs, ctx)) === true
+  const accepted = runAsPolicy(() => command.run(unit, safeArgs, ctx)) === true
+  if (accepted) recordAutomationUnitCommand(name, unit, safeArgs)
+  return accepted
 }
