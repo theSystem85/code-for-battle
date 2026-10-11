@@ -1,4 +1,4 @@
-import { applyRecordedAutomationUnitCommand, applyRecordedAutomationRuntime } from './policies/automationReplay.js'
+import { applyRecordedAutomationUnitCommand, applyRecordedAutomationRuntime, applyRecordedAutomationDefenceIntent } from './policies/automationReplay.js'
 import { applyAutomationMutation } from './policies/policyStore.js'
 import { gameState } from './gameState.js'
 import { TILE_SIZE } from './config.js'
@@ -869,6 +869,10 @@ function executeReplayCommand(entry) {
   const replayActionId = buildReplayActionId(command, replay)
   replay.isApplyingReplayCommand = true
   try {
+    if (command.type === 'automation-defence-intent') {
+      applyRecordedAutomationDefenceIntent(command, resolveReplayEntityReference)
+      return
+    }
     if (command.type === 'automation-runtime') {
       applyRecordedAutomationRuntime(command, resolveReplayEntityReference)
       return

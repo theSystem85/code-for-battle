@@ -12,6 +12,10 @@ import {
   listPolicies,
   removePolicyFromUnit
 } from '../../policies/policyStore.js'
+import { applyPolicyToBuilding, removePolicyFromBuilding, canCommandPolicy } from '../../policies/policyStore.js'
+import { isDefenceReady } from '../../policies/defenceCapabilities.js'
+import { getDefencePolicySummary, pauseDefencePolicyUntilOrderDone } from '../../policies/defencePolicyEngine.js'
+import { releaseDefenceManualOverride } from '../../policies/defenceCommandApi.js'
 import { getUnitPolicySummary, isProgrammableUnit, refreshUnitPolicyActivity } from '../../policies/policyEngine.js'
 import { createRadialMenu } from '../radialMenu/radialMenu.js'
 import { LONG_PRESS_MOVE_CANCEL_PX, LONG_PRESS_MS } from '../radialMenu/longPressTracker.js'
@@ -42,37 +46,49 @@ function shortLabel(name) {
 
 export function buildUnitPolicyItems(unit, onApplied) {
   const owner = humanPlayer()
-  const entries = listPolicies(owner).filter(entry => entry.policy.scope === 'perUnit' && entry.policy.variant !== 'build')
+  const defence = Boolean(unit.isBuilding)
+  const entries = listPolicies(owner).filter(entry => entry.policy.scope === 'perUnit' && entry.policy.variant === (defence ? 'defence' : 'unit'))
   const hasBindings = Boolean(unit.policyBindings && unit.policyBindings.length > 0)
   if (entries.length === 0 && !hasBindings) return []
-  const summary = getUnitPolicySummary(unit)
+  const summary = defence ? getDefencePolicySummary(unit) : getUnitPolicySummary(unit)
   const items = entries.map(entry => {
-    const applied = summary.find(item => item.policyId === entry.policy.id && item.source === 'unit')
+    const applied = summary.find(item => item.policyId === entry.policy.id && item.source === (defence ? 'building' : 'unit'))
     return {
       id: entry.policy.id,
       label: entry.policy.name,
       text: shortLabel(entry.policy.name),
       customTooltip: true,
       ready: Boolean(applied),
+      disabled: !canCommandPolicy(owner, unit.owner),
       tooltipTitle: entry.policy.name,
       tooltipLines: [
+        ...(defence && applied ? [`State ${applied.stateIndex} · ${applied.status}${applied.pending ? ' · AFTER pending' : ''}${applied.holding ? ' · WHILE held' : ''}`] : []),
         applied ? (applied.holding ? 'Applied and holding. Click to remove.' : 'Applied. Click to remove.') : 'Click to apply to this unit.',
         entry.policy.execution === 'oneTime' ? 'One-time: starts now.' : 'Continuous.',
         ...describePolicyRules(entry.policy)
       ],
       onSelect: () => {
         if (applied) {
-          removePolicyFromUnit(owner, unit, entry.policy.id)
+          ;(defence ? removePolicyFromBuilding : removePolicyFromUnit)(owner, unit, entry.policy.id)
           showNotification(`${entry.policy.name} removed`, 1600)
         } else {
-          const result = applyPolicyToUnit(owner, unit, entry.policy.id)
+          const result = (defence ? applyPolicyToBuilding : applyPolicyToUnit)(owner, unit, entry.policy.id)
           if (result.ok) showNotification(`${entry.policy.name} applied`, 1600)
-          else showNotification('Only the commanding player can apply this policy.', 2200)
+          else showNotification('Only the commanding player can apply this automation.', 2200)
         }
-        refreshUnitPolicyActivity(unit)
+        if (!defence) refreshUnitPolicyActivity(unit)
         if (onApplied) onApplied(unit)
       }
     }
+  })
+  if (defence && unit.automationManualOverride) items.push({
+    id: '__pause_defence_automation', label: 'Pause until order done', text: 'Pause automation',
+    disabled: !canCommandPolicy(owner, unit.owner),
+    onSelect: () => pauseDefencePolicyUntilOrderDone(unit)
+  }, {
+    id: '__release_defence_manual', label: 'Release manual override', text: 'Resume automation',
+    disabled: !canCommandPolicy(owner, unit.owner),
+    onSelect: () => { releaseDefenceManualOverride(unit); unit.policyNextEval = 0 }
   })
   const machineOpen = isPolicyMachineViewOpen(unit)
   items.push({
@@ -83,18 +99,18 @@ export function buildUnitPolicyItems(unit, onApplied) {
     ready: machineOpen,
     tooltipTitle: 'State machine view',
     tooltipLines: [
-      machineOpen ? 'Showing. Click to hide.' : 'Click to show the policy state machine of this unit.',
+      machineOpen ? 'Showing. Click to hide.' : 'Click to show the automation state machine of this unit.',
       'Shows the current state, each rule\'s full condition and how often every state was entered.'
     ],
     onSelect: () => { togglePolicyMachineView(unit) }
   })
   items.push({
     id: MANAGE_ID,
-    label: 'Manage policies',
-    text: 'Policies…',
+    label: 'Manage automations',
+    text: 'Automation…',
     customTooltip: true,
-    tooltipTitle: 'Manage policies',
-    tooltipLines: ['Open the policy list to create or edit policies.'],
+    tooltipTitle: 'Manage automations',
+    tooltipLines: ['Open the automation list to create or edit automations.'],
     onSelect: () => openPolicyPanel()
   })
   return items
@@ -126,6 +142,10 @@ export function installUnitPolicyRadial(canvas, getUnits) {
       const { centerX, centerY } = getUnitSelectionCenter(unit)
       if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) return unit
     }
+    for (const building of gameState.buildings || []) {
+      if (!isDefenceReady(building) || !canCommandPolicy(owner, building.owner)) continue
+      if (worldX >= building.x * TILE_SIZE && worldX <= (building.x + building.width) * TILE_SIZE && worldY >= building.y * TILE_SIZE && worldY <= (building.y + building.height) * TILE_SIZE) return building
+    }
     return null
   }
 
@@ -156,7 +176,7 @@ export function installUnitPolicyRadial(canvas, getUnits) {
     const items = buildUnitPolicyItems(unit, () => {})
     if (items.length === 0) return false
     const rect = canvas.getBoundingClientRect()
-    const center = getUnitSelectionCenter(unit)
+    const center = unit.isBuilding ? { centerX: (unit.x + unit.width / 2) * TILE_SIZE, centerY: (unit.y + unit.height / 2) * TILE_SIZE } : getUnitSelectionCenter(unit)
     const anchor = {
       x: rect.left + center.centerX - gameState.scrollOffset.x || clientX,
       y: rect.top + center.centerY - gameState.scrollOffset.y || clientY

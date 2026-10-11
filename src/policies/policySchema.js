@@ -25,7 +25,7 @@ const COMPARE_FIELDS = Object.freeze(Object.keys(NUMERIC_FIELDS))
 export const POLICY_SCHEMA_VERSION = 1
 export const MAX_POLICY_STATES = 7
 
-export const POLICY_VARIANTS = Object.freeze(['unit', 'build', 'unitBuild'])
+export const POLICY_VARIANTS = Object.freeze(['unit', 'build', 'unitBuild', 'defence'])
 export const POLICY_SCOPES = Object.freeze(['global', 'perUnit'])
 export const POLICY_EXECUTIONS = Object.freeze(['oneTime', 'continuous'])
 export const TRANSITION_KINDS = Object.freeze(['if', 'while', 'after'])
@@ -66,6 +66,8 @@ function validateCompare(condition, path, errors, variant) {
     return
   }
   const mode = effectiveMode(condition)
+  if (variant === 'defence' && condition.field === 'turretRotation' && mode !== 'absolute') errors.push(error('invalid_mode', 'Defence turret rotation is absolute only.', path))
+  if (variant === 'defence' && condition.field === 'distance' && condition.kind && condition.kind !== 'unit') errors.push(error('invalid_param', 'Defence distance supports units only.', path))
   const range = mode === 'relative' ? meta.range : meta.absRange
   if (range && (condition.value < range[0] || condition.value > range[1])) {
     errors.push(error(
@@ -101,6 +103,7 @@ function validateCondition(condition, path, errors, variant, depth = 0) {
       errors.push(error('invalid_condition', `Unknown check "${condition.check}".`, path))
       return
     }
+    if (variant === 'defence' && condition.check === 'canAttack' && condition.kind && condition.kind !== 'unit') errors.push(error('invalid_param', 'Defences canAttack measures units only.', path))
     if (!isAvailableIn(CHECKS[condition.check], variant)) {
       errors.push(error('invalid_condition', `"${CHECKS[condition.check].label}" cannot be used in a ${variant} policy.`, path))
       return
@@ -226,7 +229,7 @@ export function validatePolicy(policy) {
   const variant = POLICY_VARIANTS.includes(policy.variant) ? policy.variant : 'unit'
   if (!POLICY_SCOPES.includes(policy.scope)) {
     errors.push(error('scope_missing', 'A unit policy needs a scope: global or per unit.', 'scope'))
-  } else if (variant !== 'unit' && policy.scope !== 'global') {
+  } else if (variant !== 'unit' && variant !== 'defence' && policy.scope !== 'global') {
     errors.push(error('build_scope', 'Build automation applies to the whole production system, so its scope must be global.', 'scope'))
   }
   if (!POLICY_EXECUTIONS.includes(policy.execution)) {

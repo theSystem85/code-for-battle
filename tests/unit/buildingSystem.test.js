@@ -91,6 +91,7 @@ import { triggerExplosion } from '../../src/logic.js'
 import { updateUnitSpeedModifier } from '../../src/utils.js'
 import { selectedUnits } from '../../src/inputHandler.js'
 import { gameRandom } from '../../src/utils/gameRandom.js'
+import { executeDefenceCommand, noteDefenceDirectOrder } from '../../src/policies/defenceCommandApi.js'
 
 describe('Building System', () => {
   let mapGrid
@@ -1509,5 +1510,76 @@ describe('Building System', () => {
       // lastAttackedTime should be updated to the more recent attack
       expect(gameState.buildingsAwaitingRepair[0].lastAttackedTime).toBe(newAttackTime)
     })
+  })
+})
+
+describe('Automation uses the real defence projectile path', () => {
+  beforeEach(() => {
+    resetGameState()
+    gameState.humanPlayer = 'player1'
+    gameState.simulationTime = 1000
+    gameState.mapGrid = createTestMapGrid(40, 40)
+    gameState.buildings = []
+    gameState.playerPowerSupply = 100
+  })
+
+  function gun() {
+    const building = createBuilding('turretGunV1', 10, 10)
+    building.owner = 'player1'
+    building.constructionFinished = true
+    building.turretDirection = 0
+    gameState.buildings.push(building)
+    return building
+  }
+
+  it('fires a forward gun projectile with normal ammo/cooldown then consumes the single request', () => {
+    const building = gun()
+    const bullets = []
+    const initialAmmo = building.ammo
+    expect(executeDefenceCommand(building, { type: 'fireForward' }, { owner: 'player1', now: 1000 }, { issuerId: 'forward', revision: 1 }).accepted).toBe(true)
+    updateBuildings(gameState, [], bullets, [], gameState.mapGrid, 16)
+    expect(bullets).toHaveLength(1)
+    expect(bullets[0]).toMatchObject({ shooter: building, homing: false, active: true })
+    expect(bullets[0].vx).toBeGreaterThan(0)
+    expect(Math.abs(bullets[0].vy)).toBeLessThan(0.0001)
+    expect(building.ammo).toBe(initialAmmo - 1)
+    expect(building.automationIntent.fireRequested).toBe(false)
+    gameState.simulationTime += building.fireCooldown + 1
+    updateBuildings(gameState, [], bullets, [], gameState.mapGrid, 16)
+    expect(bullets).toHaveLength(1)
+    building.ammo = 0
+    expect(executeDefenceCommand(building, { type: 'fireForward' }, { owner: 'player1', now: gameState.simulationTime }).reason).toBe('empty-ammo')
+  })
+
+  it('aims without firing, then uses the gun weapon when its real lock is fired', () => {
+    const building = gun()
+    const enemy = { id: 'actual-enemy', type: 'tank', owner: 'player2', x: 13 * TILE_SIZE, y: 10.5 * TILE_SIZE, health: 100, tileX: 13, tileY: 11 }
+    const ctx = { owner: 'player1', now: 1000, nearestEnemy: () => enemy, canTarget: () => true, targetById: () => enemy }
+    const bullets = []
+    expect(executeDefenceCommand(building, { type: 'aimNearestEnemy' }, ctx, { issuerId: 'aim', revision: 1 }).accepted).toBe(true)
+    updateBuildings(gameState, [enemy], bullets, [], gameState.mapGrid, 16)
+    expect(bullets).toHaveLength(0)
+    expect(executeDefenceCommand(building, { type: 'fireAtLocked' }, ctx, { issuerId: 'aim', revision: 1 }).accepted).toBe(true)
+    updateBuildings(gameState, [enemy], bullets, [], gameState.mapGrid, 16)
+    expect(bullets).toHaveLength(1)
+    expect(bullets[0].shooter).toBe(building)
+  })
+
+  it('manual hold wins immediately and clearing automation suppression restores normal firing', () => {
+    const building = gun()
+    const enemy = { id: 'enemy', type: 'tank', owner: 'player2', x: 13 * TILE_SIZE, y: 10.5 * TILE_SIZE, health: 100 }
+    const bullets = []
+    executeDefenceCommand(building, { type: 'holdFire' }, { owner: 'player1', now: 1000 }, { issuerId: 'hold', revision: 1 })
+    updateBuildings(gameState, [enemy], bullets, [], gameState.mapGrid, 16)
+    expect(bullets).toHaveLength(0)
+    executeDefenceCommand(building, { type: 'resumeFire' }, { owner: 'player1', now: 1000 })
+    updateBuildings(gameState, [enemy], bullets, [], gameState.mapGrid, 16)
+    expect(bullets).toHaveLength(1)
+    building.holdFire = true
+    noteDefenceDirectOrder(building, 'holdFire', 1000)
+    gameState.simulationTime += building.fireCooldown + 1
+    updateBuildings(gameState, [enemy], bullets, [], gameState.mapGrid, 16)
+    expect(bullets).toHaveLength(1)
+    expect(building.automationManualOverride.persistent).toBe(true)
   })
 })

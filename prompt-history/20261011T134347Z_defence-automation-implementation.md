@@ -1,0 +1,4 @@
+UTC: 2026-10-11T13:43:47Z
+Model: GPT-6 (exact serving variant, reasoning level, duration and token metrics unavailable); Codex harness.
+
+Implement spec 106 as an isolated subagent worktree within the user's requested orchestrated implementation of the entire Automation/CFBL feature in one PR. Own defence capabilities, sensors, command adapter and shared compiled engine integration; defensive combat and authoritative game-update boundaries; manual attack/hold priority, IF/ELSE/WHILE/AFTER, typed global/individual bindings, ownership/construction/sale/destruction lifecycle, persisted final ownership and recorded replay outputs. Add per-building interaction/status UI and player-visible preserved migration recovery warnings/export backup. Coordinate dependencies from specs 100–105/107, run focused acceptance coverage and full lint before the owned commit. Root performs the complete integrated unit/build/browser checks and documents real-hardware evidence limitations.

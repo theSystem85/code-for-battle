@@ -1,3 +1,5 @@
+import { getSimulationTime } from '../game/time.js'
+import { noteDefenceDirectOrder } from '../policies/defenceCommandApi.js'
 // keyboardHandler.js
 import { gameState } from '../gameState.js'
 import { TILE_SIZE } from '../config.js'
@@ -1202,6 +1204,7 @@ export class KeyboardHandler {
         unit.forcedAttackQueue = []
         unit.forcedAttack = false
         unit.holdFire = true
+        noteDefenceDirectOrder(unit, 'holdFire', getSimulationTime(gameState))
         stoppedCount++
         return
       }

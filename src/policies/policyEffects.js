@@ -70,13 +70,15 @@ const RESOURCE_OPTIONS = Object.freeze([
 ])
 
 export const EFFECTS = Object.freeze({
+  holdFire: { variant: 'defence', group: 'combat', label: 'Hold fire', command: 'holdFire', repeat: 'idle' },
+  resumeFire: { variant: 'defence', group: 'combat', label: 'Resume fire', command: 'resumeFire', repeat: 'idle' },
   attackNearestEnemy: { group: 'combat', label: 'Attack nearest enemy', command: 'attackAndChase', repeat: 'idle', needsEnemy: true },
-  autoAttackInRange: { group: 'combat', label: 'Attack enemies in range (no chase)', command: 'autoAttackInRange', repeat: 'tick', needsEnemy: true },
-  aimNearestEnemy: { group: 'combat', label: 'Aim at and lock nearest enemy', command: 'aimAndLock', repeat: 'tick', needsEnemy: true },
-  fireAtLocked: { group: 'combat', label: 'Fire at the locked target', command: 'fireAtLocked', repeat: 'tick' },
-  fireForward: { group: 'combat', label: 'Fire in the turret direction', command: 'fireForward', repeat: 'tick' },
-  turretLeft: { group: 'combat', label: 'Turn turret left', command: 'turretLeft', repeat: 'tick' },
-  turretRight: { group: 'combat', label: 'Turn turret right', command: 'turretRight', repeat: 'tick' },
+  autoAttackInRange: { variants: ['unit', 'defence'], group: 'combat', label: 'Attack enemies in range (no chase)', command: 'autoAttackInRange', repeat: 'tick', needsEnemy: true },
+  aimNearestEnemy: { variants: ['unit', 'defence'], group: 'combat', label: 'Aim at and lock nearest enemy', command: 'aimAndLock', repeat: 'tick', needsEnemy: true },
+  fireAtLocked: { variants: ['unit', 'defence'], group: 'combat', label: 'Fire at the locked target', command: 'fireAtLocked', repeat: 'tick' },
+  fireForward: { variants: ['unit', 'defence'], group: 'combat', label: 'Fire in the turret direction', command: 'fireForward', repeat: 'tick' },
+  turretLeft: { variants: ['unit', 'defence'], group: 'combat', label: 'Turn turret left', command: 'turretLeft', repeat: 'tick' },
+  turretRight: { variants: ['unit', 'defence'], group: 'combat', label: 'Turn turret right', command: 'turretRight', repeat: 'tick' },
   protectNearestFriendly: { group: 'combat', label: 'Protect nearest friendly unit', command: 'protect', repeat: 'idle' },
   hold: { group: 'movement', label: 'Hold position', command: 'stop', repeat: 'idle' },
   retreat: { group: 'movement', label: 'Retreat to base', command: 'retreatTo', repeat: 'idle' },
@@ -123,13 +125,13 @@ export const EFFECTS = Object.freeze({
 
 /** Effects offered to a policy of the given variant. Entries without `variant` are unit effects. */
 export function effectsForVariant(variant) {
-  return Object.keys(EFFECTS).filter(type => (EFFECTS[type].variant || 'unit') === variant)
+  return Object.keys(EFFECTS).filter(type => (EFFECTS[type].variants || [EFFECTS[type].variant || 'unit']).includes(variant))
 }
 
 export const EFFECT_TYPES = Object.freeze(Object.keys(EFFECTS))
 
 export function isKnownEffect(type, variant = 'unit') {
-  return Object.prototype.hasOwnProperty.call(EFFECTS, type) && (EFFECTS[type].variant || 'unit') === variant
+  return Object.prototype.hasOwnProperty.call(EFFECTS, type) && (EFFECTS[type].variants || [EFFECTS[type].variant || 'unit']).includes(variant)
 }
 
 export function effectRepeat(type) {

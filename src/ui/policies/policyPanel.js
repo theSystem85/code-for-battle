@@ -1,5 +1,6 @@
-// Policies panel: lists the player's unit policies and, in their own section,
-// the build policies that automate the player's base. Switching a policy on or
+import { selectedUnits } from '../../inputHandler.js'
+// Policies panel: lists the player's unit automations and, in their own section,
+// the build automations that automate the player's base. Switching a policy on or
 // off, or opting in to base automation, never pauses the simulation. Editing
 // opens the pausing editor.
 
@@ -16,6 +17,7 @@ import {
   setPolicyEnabled,
   subscribePolicyStore
 } from '../../policies/policyStore.js'
+import { getAutomationRecovery, exportAutomationRecovery } from '../../policies/policyStore.js'
 import { describeBasePolicyStatus, getBasePolicyStatus } from '../../policies/basePolicyEngine.js'
 import { h } from './policyDom.js'
 import { countPolicyActivity } from '../../policies/policyActivity.js'
@@ -42,8 +44,12 @@ export function describePolicyRules(policy) {
   policy.states.forEach(state => {
     ;(state.transitions || []).forEach(transition => {
       const target = policy.states.find(item => item.id === transition.to)
-      const action = target && target.effect ? describeEffect(target.effect) : (target ? target.name : '?')
+      const action = target && target.effect ? describeEffect(target.effect) : (target ? `State ${policy.states.indexOf(target) + 1}` : '?')
       lines.push(`${describeRuleTrigger(transition)} → ${action}`)
+      if (transition.elseTo) {
+        const alternative = policy.states.findIndex(item => item.id === transition.elseTo)
+        lines.push(`ELSE → State ${alternative + 1}`)
+      }
     })
   })
   return lines
@@ -55,10 +61,10 @@ function activityCounts(policyId) {
   const row = h('div', { class: 'policy-card__counts', dataset: { policyId } },
     attachPolicyTooltip(
       h('span', { class: 'policy-count' }, enabled, h('span', { class: 'policy-count__label', text: 'enabled' })),
-      'Units with this policy enabled\nGlobal policies count every unit that can carry one; per-unit policies count the units you applied it to.'),
+      'Units with this automation enabled\nGlobal automations count every unit that can carry one; per-unit automations count the units you applied it to.'),
     attachPolicyTooltip(
       h('span', { class: 'policy-count policy-count--active' }, active, h('span', { class: 'policy-count__label', text: 'in control' })),
-      'Units actively controlled\nA condition fired and the policy is past its start state and not finished, so it is steering the unit right now.'))
+      'Units actively controlled\nA condition fired and the automation is past its start state and not finished, so it is steering the unit right now.'))
   return row
 }
 
@@ -66,7 +72,7 @@ function activityCounts(policyId) {
 export function refreshPolicyCounts() {
   if (!list) return
   refreshBasePolicyStatus()
-  countPolicyActivity(gameState.units, activityScratch)
+  countPolicyActivity([...(gameState.units || []), ...(gameState.buildings || [])], activityScratch)
   list.querySelectorAll('.policy-card').forEach(card => {
     const entry = activityScratch.get(card.dataset.policyId)
     const enabled = String(entry ? entry.enabled : 0)
@@ -86,6 +92,7 @@ function policyCard(entry) {
   const isGlobal = policy.scope === 'global'
   const isBuild = policy.variant === 'build'
   const isUnitBuild = policy.variant === 'unitBuild'
+  const isDefence = policy.variant === 'defence'
   const card = h('article', { class: `policy-card${enabled ? ' is-on' : ''}`, dataset: { policyId: policy.id } })
   const top = h('div', { class: 'policy-card__top' }, h('span', { text: policy.name }))
   if (isGlobal) {
@@ -97,7 +104,7 @@ function policyCard(entry) {
       'aria-label': `${enabled ? 'Disable' : 'Enable'} ${policy.name}`,
       onClick: () => {
         const result = setPolicyEnabled(humanPlayer(), policy.id, !enabled)
-        if (!result.ok) showNotification('Only the commanding player can switch this policy.', 2200)
+        if (!result.ok) showNotification('Only the commanding player can switch this automation.', 2200)
       }
     },
     h('span', { class: 'policy-switch__track', 'aria-hidden': 'true' }),
@@ -113,7 +120,7 @@ function policyCard(entry) {
   card.appendChild(top)
   card.appendChild(h('div', {
     class: 'policy-card__meta',
-    text: `${isBuild ? 'My base' : isUnitBuild ? 'Unit production' : isGlobal ? 'All my units' : 'One unit'} · ${policy.execution === 'oneTime' ? 'One-time' : 'Continuous'}${isGlobal ? '' : ' · apply with right-click on a unit'}`
+    text: `${isBuild ? 'My base' : isUnitBuild ? 'Unit production' : isDefence ? (isGlobal ? 'All my completed defences' : 'One defence building') : isGlobal ? 'All my units' : 'One unit'} · ${policy.execution === 'oneTime' ? 'One-time' : 'Continuous'}${isGlobal ? '' : ' · apply with right-click or long-press'}`
   }))
   if (isBuild || isUnitBuild) {
     card.appendChild(h('div', { class: 'policy-card__status', dataset: { role: 'base-status', policyId: policy.id }, text: automationStatusText(policy, enabled) }))
@@ -129,7 +136,7 @@ function policyCard(entry) {
       class: 'policy-btn policy-btn--small',
       type: 'button',
       text: 'Edit',
-      onClick: () => { closePolicyPanel(); openPolicyEditor({ policyId: policy.id }) }
+      onClick: () => { closePolicyPanel(); openPolicyEditor({ policyId: policy.id, defenceBuilding: selectedUnits.find(entity => entity.isBuilding && entity.owner === humanPlayer()) }) }
     }),
     h('button', {
       class: 'policy-btn policy-btn--small',
@@ -168,12 +175,12 @@ function baseAutomationSwitch() {
         role: 'switch',
         id: 'baseAutomationSwitch',
         'aria-checked': String(optedIn),
-        'aria-label': 'Run build policies on my base',
+        'aria-label': 'Run build automations on my base',
         onClick: () => setBuildAutomationOptIn(humanPlayer(), !optedIn)
       },
       h('span', { class: 'policy-switch__track', 'aria-hidden': 'true' }),
       h('span', { class: 'policy-switch__label', text: optedIn ? 'On · my base' : 'Off · click to opt in' }))),
-    h('p', { class: 'policy-card__meta', text: 'Build policies only act on your own base, and only while this is on. Every player chooses for their own base. The normal build queue still decides what is allowed.' }))
+    h('p', { class: 'policy-card__meta', text: 'Build automations only act on your own base, and only while this is on. Every player chooses for their own base. The normal build queue still decides what is allowed.' }))
 }
 
 function unitBuildAutomationSwitch() {
@@ -183,7 +190,7 @@ function unitBuildAutomationSwitch() {
       h('span', { text: 'Unit build automation' }),
       h('button', {
         class: 'policy-switch', type: 'button', role: 'switch', id: 'unitBuildAutomationSwitch',
-        'aria-checked': String(optedIn), 'aria-label': 'Run unit build policies',
+        'aria-checked': String(optedIn), 'aria-label': 'Run unit build automations',
         onClick: () => setUnitBuildAutomationOptIn(humanPlayer(), !optedIn)
       }, h('span', { class: 'policy-switch__track', 'aria-hidden': 'true' }),
       h('span', { class: 'policy-switch__label', text: optedIn ? 'On · my factories' : 'Off · click to opt in' }))),
@@ -200,23 +207,44 @@ function renderList() {
   const unitEntries = entries.filter(entry => entry.policy.variant === 'unit')
   const buildEntries = entries.filter(entry => entry.policy.variant === 'build')
   const unitBuildEntries = entries.filter(entry => entry.policy.variant === 'unitBuild')
+  const defenceEntries = entries.filter(entry => entry.policy.variant === 'defence')
   list.replaceChildren(
-    sectionHeading('Unit policies', 'unitPoliciesHeading'),
+    ...recoveryNotice(),
+    sectionHeading('Unit automations', 'unitPoliciesHeading'),
     ...(unitEntries.length
       ? unitEntries.map(policyCard)
-      : [h('p', { class: 'policy-panel__empty', text: 'No unit policies yet. Create one to program your units.' })]),
-    sectionHeading('Unit build policies', 'unitBuildPoliciesHeading'),
+      : [h('p', { class: 'policy-panel__empty', text: 'No unit automations yet. Create one to program your units.' })]),
+    sectionHeading('Defence automation', 'defencePoliciesHeading'),
+    ...(defenceEntries.length ? defenceEntries.map(policyCard) : [h('p', { class: 'policy-panel__empty', text: 'Create automation for your completed gun, rocket, Tesla and artillery defences.' })]),
+    sectionHeading('Unit build automations', 'unitBuildPoliciesHeading'),
     unitBuildAutomationSwitch(),
     ...(unitBuildEntries.length
       ? unitBuildEntries.map(policyCard)
-      : [h('p', { class: 'policy-panel__empty', text: 'No unit build policies yet. Create one to automate production and delivery orders.' })]),
-    sectionHeading('Base policies', 'basePoliciesHeading'),
+      : [h('p', { class: 'policy-panel__empty', text: 'No unit build automations yet. Create one to automate production and delivery orders.' })]),
+    sectionHeading('Base automations', 'basePoliciesHeading'),
     baseAutomationSwitch(),
     ...(buildEntries.length
       ? buildEntries.map(policyCard)
-      : [h('p', { class: 'policy-panel__empty', text: 'No build policies yet. Create one to automate your base.' })])
+      : [h('p', { class: 'policy-panel__empty', text: 'No build automations yet. Create one to automate your base.' })])
   )
   refreshPolicyCounts()
+}
+
+function recoveryNotice() {
+  const recovery = getAutomationRecovery()
+  if (!recovery.length) return []
+  return [h('section', { class: 'policy-recovery', role: 'status', 'aria-label': 'Automation recovery' },
+    h('strong', { text: 'Some automation could not be restored' }),
+    h('p', { text: 'Your original data is preserved in a recovery backup. Export it before closing this session.' }),
+    h('ul', null, recovery.map(item => h('li', { text: `${item.id ? `${item.id}: ` : ''}${item.message || item.reason}` }))),
+    h('button', { class: 'policy-btn', type: 'button', text: 'Export recovery backup', onClick: () => {
+      const url = URL.createObjectURL(new Blob([exportAutomationRecovery()], { type: 'application/json' }))
+      const link = h('a', { href: url, download: 'code-for-battle-automation-recovery.json' })
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      setTimeout(() => URL.revokeObjectURL(url), 0)
+    } }))]
 }
 
 function placePanel() {
@@ -259,31 +287,33 @@ export function installPolicyPanel() {
   if (panel) return
   button = document.getElementById('policiesBtn')
   list = h('div', { class: 'policy-panel__list' })
-  panel = h('div', { class: 'policy-panel', role: 'dialog', 'aria-label': 'Policies', id: 'policyPanel' },
+  panel = h('div', { class: 'policy-panel', role: 'dialog', 'aria-label': 'Automation', id: 'policyPanel' },
     h('div', { class: 'policy-panel__header' },
-      h('span', { text: 'Policies' }),
-      h('button', { class: 'policy-icon-btn', type: 'button', 'aria-label': 'Close policies', text: '×', onClick: closePolicyPanel })),
+      h('span', { text: 'Automation' }),
+      h('button', { class: 'policy-icon-btn', type: 'button', 'aria-label': 'Close automations', text: '×', onClick: closePolicyPanel })),
     list,
     h('div', { class: 'policy-panel__footer' },
       h('button', {
         class: 'policy-btn policy-btn--primary',
         type: 'button',
         id: 'newPolicyBtn',
-        text: '+ New unit policy',
+        text: '+ New unit automation',
         onClick: () => { closePolicyPanel(); openPolicyEditor() }
       }),
       h('button', {
         class: 'policy-btn policy-btn--primary',
         type: 'button',
         id: 'newBuildPolicyBtn',
-        text: '+ New build policy',
+        text: '+ New build automation',
         onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'build' }) }
       }),
       h('button', {
         class: 'policy-btn policy-btn--primary', type: 'button', id: 'newUnitBuildPolicyBtn',
-        text: '+ New unit build policy',
+        text: '+ New unit build automation',
         onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'unitBuild' }) }
-      })))
+      }),
+      h('button', { class: 'policy-btn policy-btn--primary', type: 'button', id: 'newDefencePolicyBtn', text: '+ New defence automation',
+        onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'defence', defenceBuilding: selectedUnits.find(entity => entity.isBuilding && entity.owner === humanPlayer()) }) } })))
   document.body.appendChild(panel)
 
   if (button) {

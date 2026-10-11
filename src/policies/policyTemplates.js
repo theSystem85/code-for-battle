@@ -40,20 +40,7 @@ function watchAndReact(id, name, scope, execution, kind, when, effect, effectNam
 }
 
 export const POLICY_TEMPLATES = Object.freeze([
-  ...(POLICY_VARIANTS.includes('defence') ? [{
-    variant: 'defence',
-    id: 'defence-hold-when-damaged',
-    label: 'Hold fire when damaged; otherwise resume',
-    description: 'Check defence health every second. Hold fire below 25%, otherwise resume normal targeting.',
-    create: id => ({
-      schemaVersion: POLICY_SCHEMA_VERSION, id, name: 'Defence health guard', variant: 'defence', scope: 'perUnit', execution: 'continuous', folderId: null, initialStateId: 'watch',
-      states: [
-        { id: 'watch', name: 'State 1', effect: null, transitions: [{ id: 'health', kind: 'if', when: hpBelow(0.25), to: 'hold', elseTo: 'resume' }] },
-        { id: 'hold', name: 'State 2', effect: { type: 'holdFire' }, transitions: [{ id: 'check-held', kind: 'after', delaySeconds: 1, when: { type: 'always' }, to: 'watch' }] },
-        { id: 'resume', name: 'State 3', effect: { type: 'resumeFire' }, transitions: [{ id: 'check-resumed', kind: 'after', delaySeconds: 1, when: { type: 'always' }, to: 'watch' }] }
-      ]
-    })
-  }] : []),
+
   {
     variant: 'unit',
     id: 'retreat-if-hurt',
@@ -146,7 +133,21 @@ export const POLICY_TEMPLATES = Object.freeze([
     label: 'Build a radar station after 60 seconds',
     description: 'Base automation: waits 60 seconds after it is enabled, then queues one radar station.',
     create: id => watchAndReact(id, 'Radar after 60s', 'global', 'oneTime', 'after', { type: 'always' }, buildNow('radarStation'), 'Build radar station', 60, 'build')
-  }
+  },
+  ...(POLICY_VARIANTS.includes('defence') ? [{
+    variant: 'defence',
+    id: 'defence-hold-when-damaged',
+    label: 'Hold fire when damaged; otherwise resume',
+    description: 'Check defence health every second. Hold fire below 25%, otherwise resume normal targeting.',
+    create: id => ({
+      schemaVersion: POLICY_SCHEMA_VERSION, id, name: 'Defence health guard', variant: 'defence', scope: 'perUnit', execution: 'continuous', folderId: null, initialStateId: 'watch',
+      states: [
+        { id: 'watch', name: 'State 1', effect: null, transitions: [{ id: 'health', kind: 'if', when: hpBelow(0.25), to: 'hold', elseTo: 'resume' }] },
+        { id: 'hold', name: 'State 2', effect: { type: 'holdFire' }, transitions: [{ id: 'check-held', kind: 'after', delaySeconds: 1, when: { type: 'always' }, to: 'watch' }] },
+        { id: 'resume', name: 'State 3', effect: { type: 'resumeFire' }, transitions: [{ id: 'check-resumed', kind: 'after', delaySeconds: 1, when: { type: 'always' }, to: 'watch' }] }
+      ]
+    })
+  }] : [])
 ])
 
 export function templatesForVariant(variant) {

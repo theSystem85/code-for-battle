@@ -18,6 +18,11 @@ import { ROCKET_TURRET_IMAGE_COORDS_SIZE, ROCKET_TURRET_MUZZLE_OFFSETS } from '.
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 import { setBuildingDebrisDecals } from './tileDecals.js'
 import { getAircraftAltitudeLift } from './aircraftTargeting.js'
+import { teardownDefenceAutomation } from '../policies/defencePolicyEngine.js'
+import { defenceTargetById, prepareDefenceWorld } from '../policies/defenceSensors.js'
+
+const defenceCombatWorld = { units: null, now: 0 }
+const forwardAim = { x: 0, y: 0, tileX: 0, tileY: 0, health: 1 }
 
 
 /**
@@ -38,6 +43,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
 
       // Handle buildings currently being sold
       if (building.isBeingSold) {
+        if (building.policyBindings || building.automationIntent) teardownDefenceAutomation(building)
         const progress = (now - building.sellStartTime) / BUILDING_SELL_DURATION
         if (progress >= 1) {
           // Remove building from selected units if it was selected
@@ -63,6 +69,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
 
       // Skip destroyed buildings and remove them
       if (building.health <= 0) {
+        if (building.policyBindings || building.automationIntent) teardownDefenceAutomation(building)
         if (!building.aiApiDestroyedRecorded && gameState.gameStarted && !gameState.mapEditMode) {
           recordDestroyed({
             killerId: building.lastAttacker?.id,
@@ -231,6 +238,8 @@ function isSubmergedSubmarineTarget(target) {
 
 const updateDefensiveBuildings = logPerformance(function updateDefensiveBuildings(buildings, units, bullets, delta, gameState) {
   const now = getSimulationTime(gameState)
+  defenceCombatWorld.units = units
+  defenceCombatWorld.now = now
 
   // Debug: Count Tesla coils
   const _teslaCoils = buildings.filter(b => b.type === 'teslaCoil' && b.health > 0)
@@ -241,6 +250,15 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
       if (building.holdFire) {
         return
       }
+      const intent = building.automationIntent
+      const automationDominant = intent && (!building.automationManualOverride || building.automationControl === intent.issuerId)
+      const action = automationDominant ? intent.action : null
+      if (action === 'holdFire') return
+      if (action === 'turretLeft' || action === 'turretRight') {
+        building.turretDirection = ((building.turretDirection || 0) + (action === 'turretLeft' ? -1 : 1) * TANK_TURRET_ROT + Math.PI * 2) % (Math.PI * 2)
+        return
+      }
+      if ((action === 'fireAtLocked' || action === 'fireForward') && !intent.fireRequested && !(building.currentBurst > 0)) return
 
       const centerX = (building.x + building.width / 2) * TILE_SIZE
       const centerY = (building.y + building.height / 2) * TILE_SIZE
@@ -278,7 +296,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
         }
       }
 
-      if (!closestEnemy) {
+      if (!closestEnemy && action !== 'aimNearestEnemy' && action !== 'fireAtLocked' && action !== 'fireForward') {
         for (const unit of units) {
           if (unit.owner !== building.owner && unit.health > 0) {
             if (isSubmergedSubmarineTarget(unit)) {
@@ -308,13 +326,32 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
         }
       }
 
+      if (action === 'aimNearestEnemy' || action === 'fireAtLocked') {
+        prepareDefenceWorld(defenceCombatWorld)
+        const locked = defenceTargetById(intent.targetId)
+        closestEnemy = null
+        if (locked && locked.health > 0 && locked.owner !== building.owner && !isSubmergedSubmarineTarget(locked)) {
+          const air = (locked.type === 'apache' || locked.type === 'f22Raptor' || locked.type === 'f35') && locked.flightState !== 'grounded'
+          const distance = Math.hypot(locked.x + TILE_SIZE / 2 - centerX, locked.y + TILE_SIZE / 2 - centerY)
+          if ((!air || building.type === 'rocketTurret') && distance >= minRange && distance <= maxRange) closestEnemy = locked
+        }
+        if (!closestEnemy) return
+      } else if (action === 'fireForward') {
+        const distance = maxRange * 0.99
+        forwardAim.x = centerX + Math.cos(building.turretDirection || 0) * distance - TILE_SIZE / 2
+        forwardAim.y = centerY + Math.sin(building.turretDirection || 0) * distance - TILE_SIZE / 2
+        forwardAim.tileX = Math.floor((forwardAim.x + TILE_SIZE / 2) / TILE_SIZE)
+        forwardAim.tileY = Math.floor((forwardAim.y + TILE_SIZE / 2) / TILE_SIZE)
+        closestEnemy = forwardAim
+      }
+
       // Update turret rotation for gun turrets and rocket turrets (continuous tracking)
       if (
         building.type.startsWith('turretGun') ||
         building.type === 'artilleryTurret' ||
         building.type === 'rocketTurret'
       ) {
-        const targetObj = closestEnemy || building.forcedAttackTarget
+        const targetObj = action === 'fireForward' ? null : closestEnemy || building.forcedAttackTarget
         if (targetObj) {
           // Calculate target angle
           const targetX = targetObj.x + (targetObj.width ? targetObj.width * TILE_SIZE / 2 : TILE_SIZE / 2)
@@ -331,6 +368,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
         }
         // If no enemy, turret keeps its current direction
       }
+      if (action === 'aimNearestEnemy') return
       // Tesla Coil special logic
       if (building.type === 'teslaCoil') {
         // Check power level - Tesla coil doesn't work when power is below 0
@@ -414,6 +452,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
           building.teslaDamageApplied = false
           building.teslaTarget = closestEnemy
           building.lastShotTime = now
+          if (automationDominant && action === 'fireAtLocked') intent.fireRequested = false
           building.firingAt = closestEnemy
           building.fireStartTime = now
         }
@@ -515,6 +554,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
 
                 // Fire projectile
                 fireTurretProjectile(building, firingTarget, centerX, centerY, now, bullets, gameState)
+                if (automationDominant && (action === 'fireAtLocked' || action === 'fireForward')) intent.fireRequested = false
 
                 // Handle burst fire for turret gun v3 and rocket turret
                 if (building.burstFire) {
