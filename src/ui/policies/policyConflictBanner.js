@@ -36,16 +36,16 @@ function scheduleHide(ms) {
 function describe(policies) {
   const names = policies.map(policy => `“${policy.name}”`)
   const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0]
-  return `${names.length > 1 ? 'Policies' : 'Policy'} ${list} conflicts with your new order. Your order wins.`
+  return `${names.length > 1 ? 'Automations' : 'Automation'} ${list} ${names.length > 1 ? 'conflict' : 'conflicts'} with your new order. Your order wins.`
 }
 
 export function showPolicyConflict(event) {
   if (!banner) return
   current = { unit: event.unit, policies: event.policies, orderSeq: event.orderSeq, paused: false }
   textEl.textContent = describe(event.policies)
-  statusEl.textContent = 'The policy resumes after the order, unless its condition triggers again.'
+  statusEl.textContent = 'The automation resumes after the order, unless its condition triggers again.'
   pauseBtn.disabled = false
-  pauseBtn.textContent = 'Pause policy until order is done'
+  pauseBtn.textContent = 'Pause automation until order is done'
   banner.classList.add('is-visible')
   scheduleHide(AUTO_HIDE_MS)
 }
@@ -58,7 +58,7 @@ export function installPolicyConflictBanner() {
     class: 'policy-btn policy-btn--primary',
     type: 'button',
     id: 'policyConflictPause',
-    text: 'Pause policy until order is done',
+    text: 'Pause automation until order is done',
     onClick: () => {
       if (!current) return
       let paused = false
@@ -68,7 +68,7 @@ export function installPolicyConflictBanner() {
       if (paused) {
         current.paused = true
         pauseBtn.disabled = true
-        pauseBtn.textContent = 'Policy paused'
+        pauseBtn.textContent = 'Automation paused'
         statusEl.textContent = 'Paused until this order is fulfilled.'
         clearTimeout(hideTimer)
       }
@@ -89,7 +89,7 @@ export function installPolicyConflictBanner() {
       showPolicyConflict(event)
     } else if (event.type === 'orderFulfilled' && current && current.unit === event.unit && current.orderSeq === event.orderSeq) {
       if (current.paused) {
-        statusEl.textContent = 'Order fulfilled. The policy is active again.'
+        statusEl.textContent = 'Order fulfilled. The automation is active again.'
         pauseBtn.disabled = true
         scheduleHide(RESUME_NOTE_MS)
       } else {

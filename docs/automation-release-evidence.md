@@ -19,7 +19,7 @@ Specs 100–108 are implemented together. Software verification does not certify
 
 Combined branch results reported by the root orchestrator: `npm run test:unit -- --maxWorkers=2` passed **247 files / 4,804 tests**; `npm run test:integration -- --maxWorkers=2` passed **2 files / 86 tests**; `npm run build` passed. The root orchestrator also reports **9 public-UI browser scenarios passed** (DAV/guided CFBL history, paste, save; phone/iPad rotation; all four categories save/reopen; real replay playback; production-building lifecycle). Final combined lint is recorded with the PR.
 
-Local documentation verification: seven complete CFBL examples accepted; relative links valid; `npx vitest run tests/unit/landingPage.test.js` passed all 11 cases for the initial landing slice. The EN/DE landing routes were also checked in system Chromium: all four images decoded and had localized nonempty alt text in each locale. Full lint passed before each documentation commit. A concurrent full unit run was stopped to avoid resource contention, and is deferred to the orchestrator's combined run.
+Local documentation verification: seven complete CFBL examples accepted; relative links valid; `npx vitest run tests/unit/landingPage.test.js` passed all 11 cases for the initial landing slice. The EN/DE landing routes were also checked in system Chromium: all four images decoded and had localized nonempty alt text in each locale. Full lint passed before each documentation commit. The initial documentation worktree deferred its full unit run to the successful combined run above.
 
 ## Real screenshot provenance
 
@@ -49,5 +49,39 @@ Emulation proves layout only. It does not certify an iOS virtual keyboard, Safar
 ## Performance evidence and limits
 
 [Runtime measurement protocol](performance/automation-runtime-method.md) links raw CPU measurements and explains their scope. Cadences remain 150 ms for unit/defence control and 1,000 ms for production. Microbenchmarks include a cold pass and show **no general speedup claim**: compiled and reference machine overhead are close, and compile-on-edit removes parsing from evaluation. The 960-binding batch, shared-host contention and headless full-game diagnostics are not a 75 FPS certificate. The root orchestrator records whole-game baseline/after diagnostics and their backend/DPR limitations separately.
+
+Whole-game raw evidence: [five baseline runs](performance/automation-game-baseline.json) and [two integrated runs](performance/automation-game-after.json). Both integrated full-map routes completed without page errors at DPR 2. Their measured 13.44/13.46 FPS, frame-time tails, CPU profiling and missed deadlines are retained as diagnostics; the headless software renderer is ineligible for presented-FPS certification. The first three baseline runs were contended and did not complete the route. These measurements do not establish a controlled speedup or active worst-case acceptance.
+
+Final integration also refreshes replay inspection flags from recorded runtime/intent, restores accepted unit-command control ownership, and removes completed individual unit bindings. Replay remains output-driven and does not evaluate live machines again.
+
+### Browser reproduction
+
+With Playwright Chromium installed, run the ordinary repository configuration against its configured server:
+
+```sh
+npx playwright test tests/e2e/automationFeature.test.js tests/e2e/automationReplayCommands.test.js tests/e2e/basePolicyBuildingLifecycle.test.js
+```
+
+The cloud runner used `/usr/bin/chromium`, a separate Vite server on port 5173 and a temporary wrapper `/tmp/cfb-playwright.config.mjs`. To reproduce that configuration, place this wrapper in the repository root and pass its filename with `--config`:
+
+```js
+import config from './playwright.config.js'
+export default {
+  ...config,
+  testDir: './tests/e2e',
+  outputDir: '/tmp/cfb-e2e-results',
+  reporter: 'line',
+  workers: 1,
+  webServer: undefined,
+  use: {
+    ...config.use,
+    baseURL: 'http://127.0.0.1:5173',
+    storageState: './tests/e2e/headlessMutedStorageState.json',
+    launchOptions: { executablePath: '/usr/bin/chromium', args: ['--no-sandbox', '--mute-audio'] }
+  }
+}
+```
+
+The integrated diagnostic command used `PERF_RENDERING_PIPELINE=1 PERF_RENDERING_DURATION_MS=60000`, the same wrapper, `tests/e2e/renderingPipeline75Fps.test.js` and `--repeat-each=2`; both runs passed route/error checks. Qualifying hardware must additionally enable the acceptance gate and run the active worst-case protocol from spec 107.
 
 Accepted CFBL edits compile to inert instructions outside the simulation loop; gameplay evaluates state machines through normal game command APIs without parsing source each tick.

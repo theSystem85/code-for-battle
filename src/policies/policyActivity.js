@@ -27,6 +27,30 @@ export function isBindingControlling(binding, policy, gate) {
   return runtime.currentStateId !== policy.initialStateId
 }
 
+/** Refresh replay inspection flags from recorded state, without executing machines. */
+export function refreshRecordedAutomationActivity(entity) {
+  let active = 0
+  for (const binding of entity.policyBindings || []) {
+    const policy = getPolicyDocument(binding.policyId)
+    if (entity.isBuilding) {
+      const intent = entity.automationIntent
+      const paused = entity.holdFire || entity.automationManualOverride?.persistent ||
+        (entity.automationManualOverride && binding.pausedUntilOrderSeq === entity.automationManualOverride.issuedAt)
+      binding.active = Boolean(policy) && !paused && (binding.runtime.finished
+        ? intent?.issuerId === binding.policyId && ['holdFire', 'aimNearestEnemy', 'turretLeft', 'turretRight'].includes(intent.action)
+        : Boolean(binding.runtime.pending || intent?.issuerId === binding.policyId ||
+          (binding.runtime.hold && entity.automationControl === binding.policyId)))
+    } else {
+      const order = entity.policyControl?.order
+      const gate = order?.active ? (binding.pausedUntilOrderSeq === order.seq ? STEP_GATE.paused : STEP_GATE.orderRunning) : STEP_GATE.open
+      binding.active = Boolean(policy) && isBindingControlling(binding, policy, gate)
+    }
+    if (binding.active) active++
+  }
+  entity.policyActiveCount = active
+  entity.policyActive = active > 0
+}
+
 /**
  * Count, per policy id, the living units that have the policy enabled and the
  * units it actively controls. Reuses `into` when given.
@@ -84,7 +108,7 @@ export function describeActivePolicies(unit) {
       names.push(doc ? doc.name : bindings[i].policyId)
     }
   }
-  return names.length ? `Controlled by policy:\n${names.join('\n')}` : 'Controlled by policy'
+  return names.length ? `Controlled by automation:\n${names.join('\n')}` : 'Controlled by automation'
 }
 
 /**
@@ -106,7 +130,7 @@ export function getUnitAutomationStatus(unit) {
     }
   }
   if (controlling.length > 0) {
-    const label = controlling.length === 1 ? controlling[0] : `${controlling.length} policies`
+    const label = controlling.length === 1 ? controlling[0] : `${controlling.length} automations`
     return { state: 'controlling', controlling, enabled, text: `⚡ ${label}` }
   }
   if (enabled > 0) {

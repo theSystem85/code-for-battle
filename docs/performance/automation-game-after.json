@@ -1,0 +1,492 @@
+{
+  "phase": "after software integration",
+  "revision": "864dbd1 plus root replay/status fixes",
+  "command": "PERF_RENDERING_PIPELINE=1 PERF_RENDERING_DURATION_MS=60000 npx playwright test tests/e2e/renderingPipeline75Fps.test.js --config=/tmp/cfb-playwright.config.mjs --repeat-each=2",
+  "limitations": [
+    "Headless Chromium, software GPU, unknown physical refresh; not eligible to certify 75 presented FPS.",
+    "Generic seeded full-map route diagnostics, not a qualifying active worst-case certification.",
+    "First run may overlap final screenshot capture; do not claim a controlled before/after speedup."
+  ],
+  "reports": [
+    {
+      "schemaVersion": 1,
+      "acceptance": {
+        "enforced": false,
+        "deadlineMs": 13.333333333333334,
+        "rule": "75 FPS means no frame interval may exceed 13.333 ms."
+      },
+      "route": {
+        "points": 35,
+        "distancePx": 104580,
+        "speedPxPerFrame": 256,
+        "laps": 2,
+        "completed": true
+      },
+      "cold": {
+        "profilingOverhead": "CDP CPU sampling is intrusive diagnostic instrumentation; do not use it for FPS certification.",
+        "profileDurationMs": 35284
+      },
+      "steady": {
+        "frameCount": 431,
+        "durationMs": 32065.399999999998,
+        "fps": 13.441279385256383,
+        "meanFrameMs": 74.39767981438514,
+        "p95FrameMs": 133.3000000000029,
+        "p99FrameMs": 266.7000000000007,
+        "maxFrameMs": 583.2000000000007,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 431,
+        "missedDeadlineRatio": 1,
+        "passed75Fps": false,
+        "windows": [
+          {
+            "startMs": -29.39999999925567,
+            "frameCount": 5,
+            "fps": 4.412283798093891,
+            "maxFrameMs": 583.2000000000007
+          },
+          {
+            "startMs": 1103.800000000745,
+            "frameCount": 8,
+            "fps": 7.2727272727272725,
+            "maxFrameMs": 266.59999999999854
+          },
+          {
+            "startMs": 2203.800000000745,
+            "frameCount": 3,
+            "fps": 2.9033194619181284,
+            "maxFrameMs": 450
+          },
+          {
+            "startMs": 3237.1000000007443,
+            "frameCount": 6,
+            "fps": 5.902026362384406,
+            "maxFrameMs": 400
+          },
+          {
+            "startMs": 4253.7000000007465,
+            "frameCount": 12,
+            "fps": 12,
+            "maxFrameMs": 133.3000000000029
+          },
+          {
+            "startMs": 5253.7000000007465,
+            "frameCount": 23,
+            "fps": 21.56384774048381,
+            "maxFrameMs": 83.29999999999927
+          },
+          {
+            "startMs": 6320.300000000745,
+            "frameCount": 21,
+            "fps": 20.3232362334269,
+            "maxFrameMs": 116.70000000000073
+          },
+          {
+            "startMs": 7353.600000000744,
+            "frameCount": 12,
+            "fps": 11.804052724768813,
+            "maxFrameMs": 133.3000000000029
+          },
+          {
+            "startMs": 8370.200000000747,
+            "frameCount": 13,
+            "fps": 12.787723785166259,
+            "maxFrameMs": 150.09999999999854
+          },
+          {
+            "startMs": 9386.800000000745,
+            "frameCount": 11,
+            "fps": 10.645504693699804,
+            "maxFrameMs": 249.89999999999782
+          },
+          {
+            "startMs": 10420.100000000744,
+            "frameCount": 12,
+            "fps": 12,
+            "maxFrameMs": 200.10000000000218
+          },
+          {
+            "startMs": 11420.100000000744,
+            "frameCount": 15,
+            "fps": 15,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 12420.100000000744,
+            "frameCount": 16,
+            "fps": 15.484370463563351,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 13453.400000000744,
+            "frameCount": 21,
+            "fps": 20.325203252032434,
+            "maxFrameMs": 83.40000000000146
+          },
+          {
+            "startMs": 14486.600000000748,
+            "frameCount": 21,
+            "fps": 19.686884784850527,
+            "maxFrameMs": 83.40000000000146
+          },
+          {
+            "startMs": 15553.300000000745,
+            "frameCount": 11,
+            "fps": 11,
+            "maxFrameMs": 100.09999999999854
+          },
+          {
+            "startMs": 16553.300000000745,
+            "frameCount": 11,
+            "fps": 10.477188303647951,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 17603.200000000747,
+            "frameCount": 12,
+            "fps": 11.428571428571429,
+            "maxFrameMs": 116.69999999999709
+          },
+          {
+            "startMs": 18653.200000000747,
+            "frameCount": 10,
+            "fps": 9.836710603974046,
+            "maxFrameMs": 116.70000000000437
+          },
+          {
+            "startMs": 19669.800000000745,
+            "frameCount": 20,
+            "fps": 18.751171948246792,
+            "maxFrameMs": 83.30000000000291
+          },
+          {
+            "startMs": 20736.400000000744,
+            "frameCount": 20,
+            "fps": 19.671486180780875,
+            "maxFrameMs": 100.09999999999854
+          },
+          {
+            "startMs": 21753.100000000748,
+            "frameCount": 19,
+            "fps": 17.540620384047315,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 22836.300000000745,
+            "frameCount": 15,
+            "fps": 15,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 23836.300000000745,
+            "frameCount": 11,
+            "fps": 10.000909173561219,
+            "maxFrameMs": 200
+          },
+          {
+            "startMs": 24936.200000000747,
+            "frameCount": 14,
+            "fps": 13.547513063673293,
+            "maxFrameMs": 116.69999999999709
+          },
+          {
+            "startMs": 25969.600000000748,
+            "frameCount": 14,
+            "fps": 13.33460329555203,
+            "maxFrameMs": 116.70000000000437
+          },
+          {
+            "startMs": 27019.500000000742,
+            "frameCount": 16,
+            "fps": 16,
+            "maxFrameMs": 100.09999999999854
+          },
+          {
+            "startMs": 28019.500000000742,
+            "frameCount": 16,
+            "fps": 15.74028529267093,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 29036.000000000742,
+            "frameCount": 22,
+            "fps": 21.997800219977876,
+            "maxFrameMs": 100.10000000000582
+          },
+          {
+            "startMs": 30036.100000000748,
+            "frameCount": 11,
+            "fps": 10.155096011816866,
+            "maxFrameMs": 116.69999999999709
+          },
+          {
+            "startMs": 31119.300000000745,
+            "frameCount": 10,
+            "fps": 10.908694229300787,
+            "maxFrameMs": 116.69999999999709
+          }
+        ],
+        "profilingOverhead": "CDP CPU sampling is intrusive diagnostic instrumentation; do not use it for FPS certification."
+      },
+      "capability": {
+        "backend": "webgl",
+        "refreshRateHz": null,
+        "observedFrameRate": 13.441279385256383,
+        "displayEligible": false,
+        "certification": "diagnostic-only",
+        "reason": "headless-run-cannot-certify-presented-fps"
+      },
+      "canvas": {
+        "width": 2380,
+        "height": 2000,
+        "clientWidth": 1190,
+        "clientHeight": 1000
+      },
+      "resizeAudit": {
+        "resizeEvents": 4352,
+        "transformedDraws": 79952
+      },
+      "pageErrors": []
+    },
+    {
+      "schemaVersion": 1,
+      "acceptance": {
+        "enforced": false,
+        "deadlineMs": 13.333333333333334,
+        "rule": "75 FPS means no frame interval may exceed 13.333 ms."
+      },
+      "route": {
+        "points": 35,
+        "distancePx": 104580,
+        "speedPxPerFrame": 256,
+        "laps": 2,
+        "completed": true
+      },
+      "cold": {
+        "profilingOverhead": "CDP CPU sampling is intrusive diagnostic instrumentation; do not use it for FPS certification.",
+        "profileDurationMs": 12301
+      },
+      "steady": {
+        "frameCount": 431,
+        "durationMs": 32015.4,
+        "fps": 13.462271281945563,
+        "meanFrameMs": 74.2816705336427,
+        "p95FrameMs": 150.09999999999854,
+        "p99FrameMs": 283.2999999999993,
+        "maxFrameMs": 416.60000000000036,
+        "deadlineMs": 13.333333333333334,
+        "missedDeadlineFrames": 431,
+        "missedDeadlineRatio": 1,
+        "passed75Fps": false,
+        "windows": [
+          {
+            "startMs": -17.100000000000364,
+            "frameCount": 7,
+            "fps": 6.774412077808955,
+            "maxFrameMs": 416.60000000000036
+          },
+          {
+            "startMs": 1016.2000000000007,
+            "frameCount": 7,
+            "fps": 6.461737284224134,
+            "maxFrameMs": 283.2999999999993
+          },
+          {
+            "startMs": 2099.5,
+            "frameCount": 4,
+            "fps": 3.692421305270934,
+            "maxFrameMs": 300
+          },
+          {
+            "startMs": 3182.7999999999993,
+            "frameCount": 10,
+            "fps": 9.677731539727095,
+            "maxFrameMs": 200.09999999999854
+          },
+          {
+            "startMs": 4216.0999999999985,
+            "frameCount": 6,
+            "fps": 5.5391432791728175,
+            "maxFrameMs": 250
+          },
+          {
+            "startMs": 5299.299999999999,
+            "frameCount": 16,
+            "fps": 15.482872072769476,
+            "maxFrameMs": 116.59999999999854
+          },
+          {
+            "startMs": 6332.700000000001,
+            "frameCount": 9,
+            "fps": 8.438818565400844,
+            "maxFrameMs": 200
+          },
+          {
+            "startMs": 7399.200000000001,
+            "frameCount": 17,
+            "fps": 16.7207632536638,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 8415.900000000001,
+            "frameCount": 8,
+            "fps": 7.869368483179236,
+            "maxFrameMs": 183.29999999999927
+          },
+          {
+            "startMs": 9432.5,
+            "frameCount": 14,
+            "fps": 13.548824155617933,
+            "maxFrameMs": 150.09999999999854
+          },
+          {
+            "startMs": 10465.8,
+            "frameCount": 14,
+            "fps": 13.771394845563615,
+            "maxFrameMs": 116.60000000000218
+          },
+          {
+            "startMs": 11482.400000000001,
+            "frameCount": 11,
+            "fps": 11,
+            "maxFrameMs": 166.59999999999854
+          },
+          {
+            "startMs": 12482.400000000001,
+            "frameCount": 18,
+            "fps": 17.14448995142398,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 13532.3,
+            "frameCount": 20,
+            "fps": 20,
+            "maxFrameMs": 83.40000000000146
+          },
+          {
+            "startMs": 14532.3,
+            "frameCount": 21,
+            "fps": 20.3232362334269,
+            "maxFrameMs": 83.39999999999782
+          },
+          {
+            "startMs": 15565.599999999999,
+            "frameCount": 19,
+            "fps": 18.096961615391916,
+            "maxFrameMs": 83.30000000000291
+          },
+          {
+            "startMs": 16615.5,
+            "frameCount": 11,
+            "fps": 10.476190476190476,
+            "maxFrameMs": 116.59999999999854
+          },
+          {
+            "startMs": 17665.5,
+            "frameCount": 11,
+            "fps": 10.82038166437145,
+            "maxFrameMs": 116.70000000000073
+          },
+          {
+            "startMs": 18682.1,
+            "frameCount": 12,
+            "fps": 12,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 19682.1,
+            "frameCount": 12,
+            "fps": 12,
+            "maxFrameMs": 133.40000000000146
+          },
+          {
+            "startMs": 20682.1,
+            "frameCount": 19,
+            "fps": 18.689750147550686,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 21698.699999999997,
+            "frameCount": 24,
+            "fps": 22.15452783162553,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 22782,
+            "frameCount": 17,
+            "fps": 16.453735965931134,
+            "maxFrameMs": 100
+          },
+          {
+            "startMs": 23815.199999999997,
+            "frameCount": 18,
+            "fps": 16.118921823229094,
+            "maxFrameMs": 133.40000000000146
+          },
+          {
+            "startMs": 24931.9,
+            "frameCount": 11,
+            "fps": 10.82038166437145,
+            "maxFrameMs": 166.70000000000437
+          },
+          {
+            "startMs": 25948.5,
+            "frameCount": 14,
+            "fps": 13.334603295551938,
+            "maxFrameMs": 133.39999999999418
+          },
+          {
+            "startMs": 26998.4,
+            "frameCount": 15,
+            "fps": 14.515192568221385,
+            "maxFrameMs": 133.40000000000146
+          },
+          {
+            "startMs": 28031.800000000003,
+            "frameCount": 21,
+            "fps": 19.69057665260197,
+            "maxFrameMs": 83.20000000000437
+          },
+          {
+            "startMs": 29098.300000000003,
+            "frameCount": 23,
+            "fps": 22.997700229977035,
+            "maxFrameMs": 83.5
+          },
+          {
+            "startMs": 30098.4,
+            "frameCount": 11,
+            "fps": 10.477188303647951,
+            "maxFrameMs": 116.69999999999709
+          },
+          {
+            "startMs": 31148.300000000003,
+            "frameCount": 11,
+            "fps": 12.941176470588236,
+            "maxFrameMs": 100.09999999999854
+          }
+        ],
+        "profilingOverhead": "CDP CPU sampling is intrusive diagnostic instrumentation; do not use it for FPS certification."
+      },
+      "capability": {
+        "backend": "webgl",
+        "refreshRateHz": null,
+        "observedFrameRate": 13.462271281945563,
+        "displayEligible": false,
+        "certification": "diagnostic-only",
+        "reason": "headless-run-cannot-certify-presented-fps"
+      },
+      "canvas": {
+        "width": 2380,
+        "height": 2000,
+        "clientWidth": 1190,
+        "clientHeight": 1000
+      },
+      "resizeAudit": {
+        "resizeEvents": 4352,
+        "transformedDraws": 79931
+      },
+      "pageErrors": []
+    }
+  ]
+}
