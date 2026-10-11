@@ -125,3 +125,16 @@ describe('policy state machine view', () => {
     expect(document.querySelector('.policy-machine__delay').textContent).toBe('7s left')
   })
 })
+
+describe('automation indexes and IF/ELSE diagram', () => {
+  it('labels nodes by array index and draws both branches from one predicate', () => {
+    const policy = { initialStateId: 'stable-a', states: [
+      { id: 'stable-a', name: 'Old arbitrary name', transitions: [{ id: 'pair', kind: 'if', to: 'stable-b', elseTo: 'stable-a', when: { type: 'always' } }] },
+      { id: 'stable-b', name: 'Another name', transitions: [] }
+    ] }
+    const layout = layoutPolicyMachine(policy, rule => rule.kind, () => 'Wait')
+    expect(layout.nodes.map(node => node.name)).toEqual(['State 1', 'State 2'])
+    expect(layout.edges.map(edge => [edge.kind, edge.to])).toEqual([['if', 'stable-b'], ['else', 'stable-a']])
+    expect(layout.edges[1].id).toBe('pair:else')
+  })
+})

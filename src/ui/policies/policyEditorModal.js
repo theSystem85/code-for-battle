@@ -2,15 +2,18 @@
 // while it is open. No source code: states, rules and conditions are blocks.
 
 import './policies.css'
+import { createAutomationDraft } from '../../automation/automationDraft.js'
+import { createCFBLEditor } from './cfblEditor.js'
+import { attachAutomationViewport } from './automationViewport.js'
 import { gameState } from '../../gameState.js'
 import {
   MAX_POLICY_STATES,
-  POLICY_SCHEMA_VERSION,
+  POLICY_VARIANTS,
   describePolicyProblem,
   validatePolicy
 } from '../../policies/policySchema.js'
 import { createBlankPolicy, createPolicyId, templatesForVariant } from '../../policies/policyTemplates.js'
-import { getPolicyDocument, savePolicy } from '../../policies/policyStore.js'
+import { getPolicyDocument } from '../../policies/policyStore.js'
 import { DEFAULT_AFTER_DELAY_SECONDS, MAX_AFTER_DELAY_SECONDS, MIN_AFTER_DELAY_SECONDS, joinDelay, splitDelay } from '../../policies/policyDelay.js'
 import { h, option, svg } from './policyDom.js'
 import {
@@ -91,28 +94,35 @@ export function openPolicyEditor(options = {}) {
     draft = clone(getPolicyDocument(options.policyId))
     isNew = false
   } else {
-    const wantedVariant = ['build', 'unitBuild'].includes(options.variant) ? options.variant : 'unit'
+    const wantedVariant = ['build', 'unitBuild', 'defence'].includes(options.variant) ? options.variant : 'unit'
     const template = templatesForVariant(wantedVariant).find(item => item.id === options.templateId)
     draft = template ? template.create(createPolicyId()) : createBlankPolicy(createPolicyId(), wantedVariant)
   }
 
+  const controller = createAutomationDraft(owner, draft)
+  draft = controller.getSnapshot().policy
+  let view = controller.getSnapshot().viewPreference || 'dav'
+  const textView = createCFBLEditor(controller)
   let templateChoice = ''
   pauseSimulation()
 
   const backdrop = h('div', { class: 'policy-editor-backdrop' })
   const dialog = h('div', { class: 'policy-editor', role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'policyEditorTitle' })
   const titleEl = h('h2', { id: 'policyEditorTitle' })
-  const alertIcon = h('div', { class: 'policy-editor__alert-icon', role: 'img', 'aria-label': 'Invalid policy' }, '!')
+  const alertIcon = h('div', { class: 'policy-editor__alert-icon', role: 'img', 'aria-label': 'Invalid automation' }, '!')
   const reason = h('div', { class: 'policy-editor__reason', role: 'alert' })
   const stateCount = h('span', { class: 'policy-editor__chip' })
   const body = h('div', { class: 'policy-editor__body' })
-  const saveButton = h('button', { class: 'policy-btn policy-btn--primary', type: 'button', text: 'Save policy' })
+  const saveButton = h('button', { class: 'policy-btn policy-btn--primary', type: 'button', text: 'Save automation' })
   const cancelButton = h('button', { class: 'policy-btn', type: 'button', text: 'Cancel' })
   const closeButton = h('button', { class: 'policy-editor__close', type: 'button', 'aria-label': 'Close editor', text: '×' })
 
+  const buttonsToggle = h('button', { type: 'button', class: 'policy-btn', 'aria-label': 'Default automation view', text: 'Buttons', onClick: () => switchView('dav') })
+  const textToggle = h('button', { type: 'button', class: 'policy-btn', 'aria-label': 'Automation text view', text: 'CFBL', onClick: () => switchView('atv') })
   dialog.append(
     h('header', { class: 'policy-editor__header' },
       titleEl,
+      h('div', { class: 'policy-editor__view-toggle', role: 'group', 'aria-label': 'Automation editor view' }, buttonsToggle, textToggle),
       h('span', { class: 'policy-editor__pause-note', text: 'Simulation paused while editing' }),
       closeButton,
       alertIcon
@@ -123,18 +133,36 @@ export function openPolicyEditor(options = {}) {
   )
   backdrop.appendChild(dialog)
   document.body.appendChild(backdrop)
+  const cleanupViewport = attachAutomationViewport(backdrop, dialog)
 
   const isBuildDraft = () => draft.variant === 'build'
   const isUnitBuildDraft = () => draft.variant === 'unitBuild'
   const isAutomationDraft = () => isBuildDraft() || isUnitBuildDraft()
 
   function updateTitle() {
-    const kind = isBuildDraft() ? 'build (base) policy' : isUnitBuildDraft() ? 'unit build policy' : 'unit policy'
-    titleEl.textContent = `${isNew ? 'New' : 'Edit'} ${kind}`
+    titleEl.textContent = `Automation${draft.name ? ` · ${draft.name}` : ''}`
     dialog.classList.toggle('is-build-policy', isAutomationDraft())
+    buttonsToggle.setAttribute('aria-pressed', String(view === 'dav'))
+    textToggle.setAttribute('aria-pressed', String(view === 'atv'))
+  }
+
+  function synchronize() {
+    const snapshot = controller.getSnapshot()
+    if (JSON.stringify(snapshot.policy) === JSON.stringify(draft)) return { ok: true }
+    return controller.transact(() => clone(draft))
+  }
+
+  function switchView(next) {
+    const result = view === 'dav' ? synchronize() : { ok: true }
+    if (!result.ok) { reason.textContent = result.reason || 'Complete valid settings before changing view.'; return }
+    controller.setView(next)
+    view = next
+    draft = controller.getSnapshot().policy
+    render()
   }
 
   function updateValidity() {
+    if (view === 'dav') synchronize()
     const validation = validatePolicy(draft)
     const message = describePolicyProblem(validation)
     dialog.classList.toggle('is-invalid', !validation.valid)
@@ -147,7 +175,7 @@ export function openPolicyEditor(options = {}) {
 
   function stateSelect(value, onChange, label) {
     const select = h('select', { class: 'policy-field__control', 'aria-label': label, onChange: e => onChange(e.target.value) },
-      draft.states.map(state => option(state.id, state.name || state.id, state.id === value)))
+      draft.states.map((state, index) => option(state.id, `State ${index + 1}`, state.id === value)))
     return select
   }
 
@@ -199,7 +227,9 @@ export function openPolicyEditor(options = {}) {
         'aria-label': `${label} value`,
         onChange: e => {
           const raw = Number(e.target.value)
-          atom.value = Number.isFinite(raw) ? raw / view.scale : atom.value
+          if (!e.target.value.trim() || !Number.isFinite(raw) || raw < view.min || raw > view.max) { e.target.setCustomValidity('Enter a value within the displayed range.'); return }
+          e.target.setCustomValidity('')
+          atom.value = raw / view.scale
           commit()
         }
       }))
@@ -316,7 +346,7 @@ export function openPolicyEditor(options = {}) {
           step: 1,
           value,
           'aria-label': `State ${index + 1} ${param.label}`,
-          onChange: e => { state.effect[param.key] = Number(e.target.value); render() }
+          onChange: e => { const value = Number(e.target.value); if (!e.target.value.trim() || !Number.isInteger(value) || value < param.min || value > param.max) return; state.effect[param.key] = value; render() }
         }),
         h('span', { class: 'policy-cond__unit', text: param.label }))
     })
@@ -359,6 +389,11 @@ export function openPolicyEditor(options = {}) {
         class: 'policy-field__control policy-rule__kind',
         'aria-label': 'Rule kind',
         onChange: e => {
+          if (transition.elseTo && e.target.value !== 'if') {
+            if (!window.confirm('Changing this IF rule removes its ELSE alternative. Continue?')) { e.target.value = transition.kind; return }
+            delete transition.elseTo
+            delete transition.elseId
+          }
           transition.kind = e.target.value
           if (transition.kind !== 'while') delete transition.until
           if (transition.kind === 'after') {
@@ -382,6 +417,8 @@ export function openPolicyEditor(options = {}) {
           render()
         }
       })))
+    const ruleIndex = state.transitions.indexOf(transition)
+    block.appendChild(h('div', null, ...[-1, 1].map(direction => h('button', { type: 'button', class: 'policy-btn', text: direction < 0 ? 'Earlier rule' : 'Later rule', disabled: ruleIndex + direction < 0 || ruleIndex + direction >= state.transitions.length, onClick: () => { state.transitions.splice(ruleIndex, 1); state.transitions.splice(ruleIndex + direction, 0, transition); render() } }))))
     block.appendChild(h('p', {
       class: 'policy-rule__help',
       text: transition.kind === 'while'
@@ -395,6 +432,14 @@ export function openPolicyEditor(options = {}) {
     block.appendChild(h('div', { class: 'policy-rule__target' },
       h('span', { text: 'then go to' }),
       stateSelect(transition.to, value => { transition.to = value; render() }, 'Target state')))
+    if (transition.kind === 'if') {
+      if (transition.elseTo) {
+        block.appendChild(h('div', { class: 'policy-rule__target' }, h('span', { text: 'ELSE go to' }),
+          stateSelect(transition.elseTo, value => { transition.elseTo = value; render() }, 'ELSE target state'),
+          h('button', { type: 'button', class: 'policy-btn', text: 'Remove ELSE', onClick: () => { delete transition.elseTo; delete transition.elseId; render() } })))
+        block.appendChild(h('p', { class: 'policy-rule__help', text: 'This IF/ELSE pair always takes a branch and can preempt later rules.' }))
+      } else block.appendChild(h('button', { type: 'button', class: 'policy-btn', text: 'Add ELSE', onClick: () => { transition.elseTo = state.id; render() } }))
+    }
     if (transition.kind === 'while') {
       const custom = transition.until != null
       block.appendChild(h('label', { class: 'policy-rule__until-toggle' },
@@ -420,18 +465,11 @@ export function openPolicyEditor(options = {}) {
   function stateCard(state, index) {
     const isStart = draft.initialStateId === state.id
     const card = h('section', { class: `policy-state${isStart ? ' is-start' : ''}` })
-    const nameInput = h('input', {
-      class: 'policy-field__control policy-state__name',
-      type: 'text',
-      value: state.name,
-      maxlength: 40,
-      'aria-label': `State ${index + 1} name`,
-      onInput: e => { state.name = e.target.value; updateValidity() },
-      onChange: () => render()
-    })
+    const nameInput = h('strong', { text: `State ${index + 1}` })
     card.appendChild(h('div', { class: 'policy-state__head' },
       h('span', { class: 'policy-state__index', text: String(index + 1) }),
       nameInput,
+      ...[-1, 1].map(direction => h('button', { type: 'button', class: 'policy-icon-btn', text: direction < 0 ? '↑' : '↓', 'aria-label': `Move state ${index + 1} ${direction < 0 ? 'up' : 'down'}`, disabled: index + direction < 0 || index + direction >= draft.states.length, onClick: () => { draft.states.splice(index, 1); draft.states.splice(index + direction, 0, state); render() } })),
       h('label', { class: 'policy-state__start' },
         h('input', {
           type: 'radio',
@@ -483,18 +521,35 @@ export function openPolicyEditor(options = {}) {
 
   function removeState(stateId) {
     if (draft.states.length <= 1) return
-    draft.states = draft.states.filter(state => state.id !== stateId)
-    const fallback = draft.states[0].id
-    if (draft.initialStateId === stateId) draft.initialStateId = fallback
-    draft.states.forEach(state => {
-      ;(state.transitions || []).forEach(transition => {
-        if (transition.to === stateId) transition.to = fallback
-      })
-    })
-    render()
+    const affected = []
+    if (draft.initialStateId === stateId) affected.push('initial state')
+    draft.states.forEach((state, index) => (state.transitions || []).forEach(rule => {
+      if (rule.to === stateId) affected.push(`State ${index + 1}: ${rule.kind.toUpperCase()} target`)
+      if (rule.elseTo === stateId) affected.push(`State ${index + 1}: ELSE target`)
+    }))
+    const remaining = draft.states.filter(state => state.id !== stateId)
+    if (!affected.length) { draft.states = remaining; render(); return }
+    const repair = h('section', { class: 'policy-state-repair', role: 'group', 'aria-label': 'Repair state references' },
+      h('p', { text: `Deleting this state affects: ${affected.join(', ')}. Choose a replacement before confirming.` }))
+    const select = h('select', { class: 'policy-field__control', 'aria-label': 'Replacement state' }, remaining.map(state => option(state.id, `State ${draft.states.indexOf(state) + 1}`)))
+    repair.append(select,
+      h('button', { type: 'button', class: 'policy-btn', text: 'Delete and repair references', onClick: () => {
+        const replacement = select.value
+        draft.states = remaining
+        if (draft.initialStateId === stateId) draft.initialStateId = replacement
+        draft.states.forEach(state => (state.transitions || []).forEach(rule => {
+          if (rule.to === stateId) rule.to = replacement
+          if (rule.elseTo === stateId) rule.elseTo = replacement
+        }))
+        render()
+      } }),
+      h('button', { type: 'button', class: 'policy-btn', text: 'Cancel deletion', onClick: () => repair.remove() }))
+    body.prepend(repair)
+    select.focus()
   }
 
   function addState() {
+    if (draft.states.length >= MAX_POLICY_STATES) return
     const taken = new Set(draft.states.map(state => state.id))
     const id = nextId('state', taken)
     draft.states.push({ id, name: `State ${draft.states.length + 1}`, effect: null, transitions: [] })
@@ -528,15 +583,15 @@ export function openPolicyEditor(options = {}) {
     })
     const root = svg('svg', { class: 'policy-diagram', viewBox: `0 0 ${width} ${height}`, role: 'img', 'aria-label': 'State machine diagram' })
     root.appendChild(svg('defs', null,
-      ...[['if', '#4f9cff'], ['while', '#ffb300'], ['after', '#c792ea']].map(([kind, color]) =>
+      ...[['if', '#4f9cff'], ['else', '#7ee787'], ['while', '#ffb300'], ['after', '#c792ea']].map(([kind, color]) =>
         svg('marker', { id: `policyArrow-${kind}`, viewBox: '0 0 10 10', refX: 9, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' },
           svg('path', { d: 'M0,0 L10,5 L0,10 z', fill: color })))))
     states.forEach(state => {
-      ;(state.transitions || []).forEach((transition, tIndex) => {
+      ;(state.transitions || []).flatMap(rule => rule.kind === 'if' && rule.elseTo ? [rule, { ...rule, kind: 'else', to: rule.elseTo }] : [rule]).forEach((transition, tIndex) => {
         const from = points.get(state.id)
         const to = points.get(transition.to)
         if (!from || !to) return
-        const color = transition.kind === 'while' ? '#ffb300' : transition.kind === 'after' ? '#c792ea' : '#4f9cff'
+        const color = transition.kind === 'else' ? '#7ee787' : transition.kind === 'while' ? '#ffb300' : transition.kind === 'after' ? '#c792ea' : '#4f9cff'
         if (from === to) {
           root.appendChild(svg('path', {
             d: `M${from.x - 8},${from.y - 18} C${from.x - 30},${from.y - 58} ${from.x + 30},${from.y - 58} ${from.x + 8},${from.y - 18}`,
@@ -576,7 +631,7 @@ export function openPolicyEditor(options = {}) {
       }, document.createTextNode(String(index + 1))))
       root.appendChild(svg('text', {
         x: point.x, y: point.y + 34, fill: '#cfe0f0', 'font-size': 10, 'text-anchor': 'middle'
-      }, document.createTextNode((state.name || state.id).slice(0, 18))))
+      }, document.createTextNode(`State ${index + 1}`)))
     })
     return root
   }
@@ -584,7 +639,7 @@ export function openPolicyEditor(options = {}) {
   function settingsSection() {
     return h('section', { class: 'policy-settings' },
       h('div', { class: 'policy-section-heading policy-settings__heading' },
-        h('h3', { text: 'Policy setup' }),
+        h('h3', { text: 'Automation setup' }),
         h('p', { text: 'Choose what this automation controls and how often it runs.' })),
       h('label', { class: 'policy-field' },
         h('span', { text: 'Name' }),
@@ -593,27 +648,29 @@ export function openPolicyEditor(options = {}) {
           type: 'text',
           value: draft.name,
           maxlength: 60,
-          'aria-label': 'Policy name',
+          'aria-label': 'Automation name',
           onInput: e => { draft.name = e.target.value; updateValidity() }
         })),
       isNew
         ? h('label', { class: 'policy-field' },
-          h('span', { text: 'Policy type' }),
+          h('span', { text: 'Automation type' }),
           h('select', {
             class: 'policy-field__control',
-            'aria-label': 'Policy type',
+            'aria-label': 'Automation type',
             onChange: e => {
+              if (controller.getSnapshot().canUndo && !window.confirm('Changing automation type discards this draft. Continue?')) { e.target.value = draft.variant; return }
               templateChoice = ''
               draft = createBlankPolicy(draft.id, e.target.value)
               render()
             }
           },
-          option('unit', 'Unit control policy (controls my units)', draft.variant === 'unit'),
-          option('build', 'Base build policy (automates buildings)', isBuildDraft()),
-          option('unitBuild', 'Unit build policy (production + delivery)', isUnitBuildDraft())))
+          option('unit', 'Control → Unit', draft.variant === 'unit'),
+          POLICY_VARIANTS.includes('defence') ? option('defence', 'Control → Defence building', draft.variant === 'defence') : null,
+          option('build', 'Build → Building', isBuildDraft()),
+          option('unitBuild', 'Build → Unit', isUnitBuildDraft())))
         : h('div', { class: 'policy-field' },
-          h('span', { text: 'Policy type' }),
-          h('span', { class: 'policy-editor__chip', text: isBuildDraft() ? 'Build policy (base)' : isUnitBuildDraft() ? 'Unit build policy' : 'Unit control policy' })),
+          h('span', { text: 'Automation type' }),
+          h('span', { class: 'policy-editor__chip', text: isBuildDraft() ? 'Build → Building' : isUnitBuildDraft() ? 'Build → Unit' : draft.variant === 'defence' ? 'Control → Defence building' : 'Control → Unit' })),
       isAutomationDraft()
         ? h('div', { class: 'policy-field' },
           h('span', { text: 'Applies to' }),
@@ -621,8 +678,8 @@ export function openPolicyEditor(options = {}) {
         : h('label', { class: 'policy-field' },
           h('span', { text: 'Applies to' }),
           h('select', { class: 'policy-field__control', 'aria-label': 'Scope', onChange: e => { draft.scope = e.target.value; updateValidity() } },
-            option('perUnit', 'One unit (apply from its radial menu)', draft.scope === 'perUnit'),
-            option('global', 'All my units (always active once enabled)', draft.scope === 'global'))),
+            option('perUnit', draft.variant === 'defence' ? 'One defence building (apply from its menu)' : 'One unit (apply from its radial menu)', draft.scope === 'perUnit'),
+            option('global', draft.variant === 'defence' ? 'All my defence buildings' : 'All my units (always active once enabled)', draft.scope === 'global'))),
       h('label', { class: 'policy-field' },
         h('span', { text: 'Runs' }),
         h('select', { class: 'policy-field__control', 'aria-label': 'Execution', onChange: e => { draft.execution = e.target.value; updateValidity() } },
@@ -641,13 +698,15 @@ export function openPolicyEditor(options = {}) {
               draft = template ? template.create(id) : createBlankPolicy(id, draft.variant)
               render()
             }
-          }, option('', 'Blank policy', templateChoice === ''),
+          }, option('', 'Blank automation', templateChoice === ''),
           templatesForVariant(draft.variant).map(item => option(item.id, item.label, templateChoice === item.id))))
         : null)
   }
 
   function render() {
+    if (view === 'dav') synchronize()
     updateTitle()
+    if (view === 'atv') { draft = controller.getSnapshot().policy; body.replaceChildren(textView.element); updateValidity(); return }
     const scrollTop = body.scrollTop
     body.replaceChildren(
       settingsSection(),
@@ -659,17 +718,17 @@ export function openPolicyEditor(options = {}) {
         h('p', {
           class: 'policy-hint',
           text: isBuildDraft()
-            ? `A build policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition; AFTER rules wait. Building goes through the normal build queue, so it only happens when you can afford it, the building is unlocked and there is room.`
+            ? `A build automation is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition; AFTER rules wait. Building goes through the normal build queue, so it only happens when you can afford it, the building is unlocked and there is room.`
             : isUnitBuildDraft()
-              ? 'A unit build policy can stack 1–20 units per action. Each unit uses its normal factory, cost and build time, then receives the selected rally, attack, or defense order.'
-              : `A policy is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition. A direct order always wins when it is given.`
+              ? 'A unit build automation can stack 1–20 units per action. Each unit uses its normal factory, cost and build time, then receives the selected rally, attack, or defense order.'
+              : `An automation is a state machine of at most ${MAX_POLICY_STATES} states. IF rules fire once; WHILE rules hold their state until the end condition. A direct order always wins when it is given.`
         })),
       h('section', { class: 'policy-states' },
         h('div', { class: 'policy-section-heading' },
           h('h3', { text: 'States and rules' }),
           h('p', { text: 'Set an action for each state, then add IF, WHILE, or AFTER rules to decide what happens next.' })),
         draft.states.map(stateCard),
-        h('button', { class: 'policy-btn', type: 'button', text: '+ Add state', onClick: addState }))
+        h('button', { class: 'policy-btn', type: 'button', text: '+ Add state', disabled: draft.states.length >= MAX_POLICY_STATES, onClick: addState }))
     )
     body.scrollTop = scrollTop
     updateValidity()
@@ -678,6 +737,10 @@ export function openPolicyEditor(options = {}) {
   function close(saved) {
     if (!active) return
     document.removeEventListener('keydown', onKeyDown, true)
+    unsubscribeDraft()
+    textView.destroy()
+    controller.cancel()
+    cleanupViewport()
     backdrop.remove()
     active = null
     resumeSimulation()
@@ -686,20 +749,25 @@ export function openPolicyEditor(options = {}) {
 
   function onKeyDown(event) {
     if (event.key === 'Escape') {
+      if (view === 'atv' && textView.hasChoices()) { event.preventDefault(); event.stopPropagation(); textView.closeChoices(); return }
       event.stopPropagation()
       close(false)
     }
   }
 
   function save() {
-    draft.schemaVersion = POLICY_SCHEMA_VERSION
-    const result = savePolicy(owner, draft)
+    if (view === 'dav') synchronize()
+    const result = controller.save()
     if (!result.ok) {
       updateValidity()
       return
     }
     close(true)
   }
+
+  const unsubscribeDraft = controller.subscribe(snapshot => {
+    if (view === 'atv') { draft = snapshot.policy; updateTitle(); updateValidity() }
+  })
 
   closeButton.addEventListener('click', () => close(false))
   cancelButton.addEventListener('click', () => close(false))
@@ -710,9 +778,9 @@ export function openPolicyEditor(options = {}) {
   document.addEventListener('keydown', onKeyDown, true)
 
   render()
-  const api = { close, getDraft: () => draft }
+  const api = { close, getDraft: () => controller.getSnapshot().policy, controller, switchView }
   active = { api }
-  const firstField = dialog.querySelector('input[type="text"]')
+  const firstField = view === 'atv' ? textView.input : dialog.querySelector('input[type="text"]')
   if (firstField) firstField.focus()
   return api
 }
