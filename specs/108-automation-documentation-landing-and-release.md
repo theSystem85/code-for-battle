@@ -1,6 +1,6 @@
 # 108 — Automation manual, landing page, screenshots, and release integration
 
-Status: implementation in progress. User tutorial and localized landing section implemented; integrated screenshots and release verification pending. Read [099](099-automation-cfbl-program.md). Dependencies: 103–107. Own published user docs/marketing/screenshot capture and final cross-package verification. Current documentation rename and the planned CFBL language reference exist now; do not mark runtime features shipped until acceptance passes.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. Read [099](099-automation-cfbl-program.md). Dependencies: 103–107. Own published user docs/marketing/screenshot capture and final cross-package verification. The user tutorial, complete CFBL language reference, localized landing section and four genuine WebP screenshots are delivered. Final integrated test results and outstanding physical-device/hardware checks are recorded separately in release evidence.
 
 ## User documentation
 

@@ -619,3 +619,12 @@ a:focus-visible {
 }
 
 .automation-guide-links { display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1.5rem; }
+
+.automation-gallery { margin-top: 1.5rem; grid-template-areas: none; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.automation-gallery img { object-fit: contain; }
+.automation-gallery figure:nth-child(3) img { max-height: 34rem; }
+.automation-gallery figure { margin: 0; }
+.automation-gallery figcaption { padding: 0.75rem; }
+@media (max-width: 900px) {
+  .automation-gallery { grid-template-columns: 1fr; }
+}

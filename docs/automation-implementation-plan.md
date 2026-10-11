@@ -1,6 +1,6 @@
 # Automation implementation plan — specs 099–108
 
-Status: planning complete; implementation not started by this task. Date: 2026-10-11. Start with [099: shared contract and spec index](../specs/099-automation-cfbl-program.md). The user confirmed IF/ELSE pairs. Terminology has been updated across feature documentation; concrete legacy code/API names stay as technical references.
+Status: software implementation complete for specs 100–108; integrated test results are recorded in [release evidence](automation-release-evidence.md). Physical iOS checks and qualifying-hardware 75 FPS release certification remain open. Date: 2026-10-11. Start with [099: shared contract and spec index](../specs/099-automation-cfbl-program.md). The user confirmed IF/ELSE pairs. Terminology has been updated across feature documentation; concrete legacy code/API names stay as technical references.
 
 ## How to delegate by number
 
@@ -34,7 +34,7 @@ No additional product choices are needed to start. Finite keyword choice versus 
 | 107 | Runtime/performance agent | compile/install, indexed execution/sensing, benchmark evidence | release performance certification |
 | 108 | Docs/integration agent | manual/tutorial, EN/DE marketing, real WebP screenshots, integration evidence | final release signoff |
 
-The table describes future delegation; this task used a cheap GPT-6-Luna subagent only for the requested documentation rename. Larger implementation packages need code-aware ownership, not a blind terminology replacement.
+The implementation was delegated in isolated Git worktrees and integrated into one feature branch. The package boundaries below remain useful for maintenance and future fixes.
 
 ## Dependency-aware implementation waves
 

@@ -1,13 +1,13 @@
 # 099 — Automation and CFBL: program contract and delegation index
 
-Status: specification ready for implementation; runtime features described here are not yet implemented.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open.
 Date: 2026-10-11. This document and specs 100–108 form one feature program. Implementing a spec number means reading this contract, that spec, and its declared dependencies. Do not implement adjacent specs implicitly.
 
 ## Product outcome
 
 Automation is the defining feature of **Code for Battle**: players build state machines that control units or defence buildings, or automate unit/building production. The existing button editor is the **default automation view (DAV)**. The new guided text editor is the **automation text view (ATV)**. Both edit **CFBL (code-for-battle-language)** and share one draft and one execution model. A title-bar toggle switches views without saving, losing edits, changing enablement, or resuming the game. Phones show the entire Automation modal full screen; tablets including iPads retain a bounded modal.
 
-The present task creates specs, a plan, and the requested documentation rename. The implementation, new UI, runtime changes, landing copy, and screenshots are follow-up work covered by the numbered specs.
+Specs 100–108 are implemented together in the feature branch. The [release evidence](../docs/automation-release-evidence.md) separates verified software behavior from the outstanding physical-device and hardware performance checks.
 
 ## Binding decisions
 
@@ -19,7 +19,7 @@ The present task creates specs, a plan, and the requested documentation rename. 
 6. Compile on accepted behavior edits/import/load, outside the simulation loop. Execute bounded, inert instructions using the existing game command APIs. No `eval`, `Function`, dynamic script execution, per-frame parsing, or per-entity document normalization.
 7. Documentation uses “Automation” for the feature and dialog. Existing `src/policies/*`, API names, storage keys, and test filenames remain accurate technical references until explicitly migrated. Unrelated privacy, cache, network, or security policy terminology is unaffected. Existing prompt-history entries are not rewritten, per AGENTS.md.
 
-## Current implementation audit
+## Pre-implementation audit (historical baseline)
 
 Inspected source is the baseline; old specs include historical plans that are not all implemented.
 
@@ -54,7 +54,7 @@ The actual programmable control-unit set is tank aliases/V1/V2/V3, rocket tank, 
 | [107](107-automation-compilation-and-performance.md) | Compiled execution integration, shared sensing, deterministic benchmarking | 100, 101, 102; certify all categories after 106 |
 | [108](108-automation-documentation-landing-and-release.md) | User language manual, examples/tutorial, EN/DE landing section, real screenshots, release evidence | 103–107 |
 
-Spec 100 already defines the full language and vocabulary in documentation; its implementation package implements that contract. Spec 099 is the coordination document, not a code package. A range such as “100–102” includes each listed package in dependency order.
+Spec 100 defines the full language and vocabulary and provides the shared parser/catalog implementation. Spec 099 is the coordination document, not a code package. A range such as “100–102” includes each listed package in dependency order.
 
 ## Cross-package ownership and constraints
 

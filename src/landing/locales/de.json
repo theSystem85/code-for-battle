@@ -254,7 +254,25 @@
       "phoneTitle": "Auch für Smartphones",
       "phoneBody": "Auf Smartphones füllt der Automation-Editor den Bildschirm, damit Ansichtswechsel, Code und Steuerelemente erreichbar bleiben. Tablets behalten einen begrenzten Dialog. Angenommene Programme werden nach Änderungen kompiliert; der Spielablauf muss den Text nicht laufend neu analysieren.",
       "guide": "Automation-Anleitung (Englisch)",
-      "reference": "Vollständige CFBL-Sprachreferenz (Englisch)"
+      "reference": "Vollständige CFBL-Sprachreferenz (Englisch)",
+      "shots": {
+        "buttons": {
+          "caption": "Buttons: nummerierte Zustände und ein IF/ELSE-Paar",
+          "alt": "Automation-Buttons-Editor mit drei nummerierten Zuständen und IF/ELSE-Übergängen für Engage or advance"
+        },
+        "cfbl": {
+          "caption": "Dasselbe Programm in CFBL mit unscharfer Suche erlaubter Optionen",
+          "alt": "Farbiges CFBL für Engage or advance mit unscharfer atk-Suche nach erlaubten Aktionen"
+        },
+        "phone": {
+          "caption": "Smartphone: CFBL-Editor im Vollbild",
+          "alt": "Automation-Dialog im Smartphone-Hochformat mit Buttons- und CFBL-Umschalter, farbigem Quelltext und erreichbarer Fußleiste"
+        },
+        "defence": {
+          "caption": "Verteidigung: aktiver WHILE-Zustand eines eigenen Geschützes",
+          "alt": "Eigenes Verteidigungsgeschütz im Spiel mit Automation-Zustandsansicht und hervorgehobenem aktivem Feuerpause-Zustand"
+        }
+      }
     }
   }
 }

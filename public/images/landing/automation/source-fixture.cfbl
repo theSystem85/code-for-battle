@@ -1,0 +1,16 @@
+control unit {
+  scope individual;
+  run once;
+  start 1;
+  state 1 {
+    do wait;
+    if (enemyInRange) goto 2;
+    else goto 3;
+  }
+  state 2 {
+    do autoAttackInRange();
+  }
+  state 3 {
+    do moveForward(tiles=2);
+  }
+}

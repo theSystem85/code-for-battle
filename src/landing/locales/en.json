@@ -254,7 +254,25 @@
       "phoneTitle": "Built for phones too",
       "phoneBody": "On phones, the Automation editor fills the screen so the view toggle, code and controls stay within reach. Tablets keep a bounded dialog. Accepted programs are compiled when edited, keeping parsing outside the game loop.",
       "guide": "Automation tutorial",
-      "reference": "Full CFBL language reference"
+      "reference": "Full CFBL language reference",
+      "shots": {
+        "buttons": {
+          "caption": "Buttons: numbered states and an IF/ELSE pair",
+          "alt": "Automation Buttons editor with three numbered states and IF/ELSE transitions for Engage or advance"
+        },
+        "cfbl": {
+          "caption": "The same program in CFBL, with fuzzy legal choices",
+          "alt": "Highlighted CFBL for Engage or advance with a fuzzy atk search of legal action choices"
+        },
+        "phone": {
+          "caption": "Phone: full-screen CFBL editor",
+          "alt": "Phone portrait Automation dialog showing the Buttons and CFBL toggle, highlighted source and reachable footer"
+        },
+        "defence": {
+          "caption": "Defence: live WHILE hold on an owned turret",
+          "alt": "Owned defensive turret in the game with its live Automation state machine highlighting the active hold-fire state"
+        }
+      }
     }
   }
 }

@@ -1,6 +1,6 @@
 # 104 — ATV: constrained text editing, fuzzy completion, and highlighting
 
-Status: specified, not implemented. Read [099](099-automation-cfbl-program.md). Dependencies: [100](100-cfbl-language-and-coverage.md), [101](101-automation-source-sync-and-migration.md), [102](102-automation-if-else-runtime.md); use the shell contract from [103](103-automation-default-view-and-state-indexes.md). Own ATV internals; never create a second editor/store/grammar.
+Status: software implemented; final integrated validation is recorded in [release evidence](../docs/automation-release-evidence.md). Physical iOS keyboard/device verification and qualifying-hardware 75 FPS certification remain open. Read [099](099-automation-cfbl-program.md). Dependencies: [100](100-cfbl-language-and-coverage.md), [101](101-automation-source-sync-and-migration.md), [102](102-automation-if-else-runtime.md); use the shell contract from [103](103-automation-default-view-and-state-indexes.md). Own ATV internals; never create a second editor/store/grammar.
 
 ## Experience
 

@@ -4,7 +4,7 @@ Automation is why the game is called **Code for Battle**. You choose which norma
 
 ## Create a unit automation in Buttons
 
-Open Automation and create a control-unit automation. Choose global scope to share progress, or individual scope for each bound unit to have its own progress. Continuous keeps evaluating; once stops after the first completed pass. Give the automation a useful display title: it is a label, not a variable.
+Open Automation and create a control-unit automation. Choose global scope to apply the program to all eligible owned units, or individual scope to bind selected units. Each entity progresses through its own state machine in either control scope. Continuous keeps evaluating; once stops after the first completed pass. Give the automation a useful display title: it is a label, not a variable.
 
 States are numbered automatically from 1 to 7. Pick an initial state, an action for each state and rules that move between states. For a simple defensive machine, state 1 waits while health is healthy and moves to state 2 when relative health falls below 0.3. State 2 can seek service. Add a recovery condition to return to state 1. Save, enable and apply the automation to owned supported units. Inspect the state-machine view to see current progress.
 
