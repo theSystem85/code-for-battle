@@ -23,7 +23,7 @@ export class CFBLParser {
   }
   take(value) { if (this.token.value !== value) return false; this.position++; return true }
   number(domain = {}, slot = 'number') {
-    if (this.token.type !== 'number') this.expect([], slot, domain)
+    if (this.token.type !== 'number' || ['delay', 'state-reference', 'state-index'].includes(slot) && !/^(0|[1-9][0-9]*)$/.test(this.token.value)) this.expect([], slot, domain)
     const token = this.tokens[this.position++]
     token.role = slot
     const value = Number(token.value)
