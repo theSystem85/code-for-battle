@@ -130,6 +130,17 @@ export function effectsForVariant(variant) {
 
 export const EFFECT_TYPES = Object.freeze(Object.keys(EFFECTS))
 
+const finiteUnitEffects = new Set([
+  'moveForward', 'moveBackward', 'moveLeft', 'moveRight', 'retreat',
+  'attackNearestEnemy', 'takeoff', 'land', 'goToWorkshop', 'goToHospital', 'goToAmmoFactory'
+])
+
+/** Completion waits require a command with a definite, observable objective. */
+export function completionWaitKind(type, variant = 'unit') {
+  if (variant === 'build' && type === 'buildBuilding' || variant === 'unitBuild' && type === 'buildUnits') return 'produced'
+  return variant === 'unit' && finiteUnitEffects.has(type) ? 'done' : null
+}
+
 export function isKnownEffect(type, variant = 'unit') {
   return Object.prototype.hasOwnProperty.call(EFFECTS, type) && (EFFECTS[type].variants || [EFFECTS[type].variant || 'unit']).includes(variant)
 }
@@ -160,7 +171,9 @@ export function describeEffect(effect) {
       parts.push(`${value} ${param.label}`)
     }
   })
-  return parts.length ? `${meta.label} (${parts.join(', ')})` : meta.label
+  const description = parts.length ? `${meta.label} (${parts.join(', ')})` : meta.label
+  const waitKind = completionWaitKind(effect.type, meta.variant || 'unit')
+  return effect.waitForCompletion === true && waitKind ? `${description}; wait until ${waitKind}` : description
 }
 
 export function defaultEffectParams(type) {
@@ -171,11 +184,13 @@ export function defaultEffectParams(type) {
 }
 
 /** Problems with an effect's params, as plain sentences. */
-export function validateEffectParams(effect) {
+export function validateEffectParams(effect, variant = EFFECTS[effect.type]?.variant || 'unit') {
   const meta = EFFECTS[effect.type]
-  if (!meta || !meta.params) return []
+  if (!meta) return []
   const problems = []
-  meta.params.forEach(param => {
+  if (effect.waitForCompletion !== undefined && typeof effect.waitForCompletion !== 'boolean') problems.push('Completion wait must be a boolean.')
+  if (effect.waitForCompletion === true && !completionWaitKind(effect.type, variant)) problems.push('This action has no finite completion objective.')
+  ;(meta.params || []).forEach(param => {
     const value = effect[param.key]
     if (value === undefined) return
     if (param.options) {

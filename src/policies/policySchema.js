@@ -144,7 +144,7 @@ function validateState(state, index, stateIds, errors, transitionIds, variant) {
     if (typeof state.effect !== 'object' || !isKnownEffect(state.effect.type, variant)) {
       errors.push(error('invalid_effect', `State "${state.name || state.id}" has an action that ${variant === 'build' ? 'a build policy cannot do' : 'is unknown'}.`, `${path}.effect`))
     } else {
-      validateEffectParams(state.effect).forEach(message => {
+      validateEffectParams(state.effect, variant).forEach(message => {
         errors.push(error('invalid_effect', `State "${state.name || state.id}": ${message}`, `${path}.effect`))
       })
     }

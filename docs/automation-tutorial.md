@@ -49,6 +49,14 @@ For build-unit automation, choose unit type, quantity and delivery order. A repl
 
 For build-building automation, choose a building and supported placement options. Keep building and unit production opt-ins separate: enabling one does not enable the other. Normal costs, technology, queue limits, factory availability, production time and legal placement apply. Check failure/retry status when an action cannot proceed. An automation does not instantly create an entity.
 
+## Wait for an action to finish
+
+For building and unit production, enable **Wait until produced** beside the action. The next state is considered only after the exact building finishes construction at its placement, or every unit in that stack spawns. Rally/delivery commands happen separately.
+
+For finite unit actions, enable **Wait until done**. Movement waits for arrival; an attack waits for destruction of the target that action selected; service travel waits for its service objective. Both checkboxes have matching CFBL `wait until produced` / `wait until done` suffixes. Without a checkbox the existing behavior is unchanged. Persistent aim, rotation and protection commands do not have a finite completion option.
+
+An interrupted/canceled action is not complete. Check the waiting/failed status and reapply the automation or edit its behavior to start fresh; manual orders retain priority.
+
 ## Control defence buildings
 
 Create control defence-building automation, then apply it to owned supported defences. Pick only the options offered for that building: not every defence has the same ammunition, turret or target capabilities. Conditions can observe health, reload, visible enemies and supported range measurements. Effects use the same target and weapon rules as ordinary combat.

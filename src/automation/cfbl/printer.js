@@ -1,4 +1,5 @@
 import { getCatalog } from './catalog.js'
+import { completionWaitKind } from '../../policies/policyEffects.js'
 
 /** Expand JavaScript exponent notation without changing its finite value. */
 export function decimal(value) {
@@ -26,7 +27,8 @@ export function printCFBL(ast) {
   const category = ast.variant === 'unit' ? 'control unit' : ast.variant === 'defence' ? 'control defence-building' : ast.variant === 'unitBuild' ? 'build unit' : 'build building'
   const lines = [`${category} {`, `  scope ${ast.scope === 'perUnit' ? 'individual' : 'global'};`, `  run ${ast.execution === 'oneTime' ? 'once' : 'continuous'};`, `  start ${ast.initialStateId};`]
   for (const state of ast.states) {
-    lines.push(`  state ${state.id} {`, `    do ${state.effect ? call(state.effect.type, state.effect, catalog.effects[state.effect.type]) : 'wait'};`)
+    const wait = state.effect?.waitForCompletion === true ? ` wait until ${completionWaitKind(state.effect.type, ast.variant)}` : ''
+    lines.push(`  state ${state.id} {`, `    do ${state.effect ? call(state.effect.type, state.effect, catalog.effects[state.effect.type]) : 'wait'}${wait};`)
     for (const rule of state.transitions || []) {
       const head = rule.kind === 'after' ? `after ${decimal(rule.delaySeconds)}s if` : rule.kind
       lines.push(`    ${head} (${condition(rule.when)})${rule.until ? ` until (${condition(rule.until)})` : ''} goto ${rule.to};`)

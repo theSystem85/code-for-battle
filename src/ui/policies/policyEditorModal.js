@@ -30,7 +30,7 @@ import {
   treeToCondition
 } from './conditionRows.js'
 import { CHECKS, NUMERIC_FIELDS, effectiveMode, fieldModes } from '../../policies/policyConditions.js'
-import { EFFECTS, defaultEffectParams } from '../../policies/policyEffects.js'
+import { EFFECTS, defaultEffectParams, completionWaitKind } from '../../policies/policyEffects.js'
 import { defenceCapabilityReason } from '../../policies/defenceCapabilities.js'
 
 let active = null
@@ -343,8 +343,8 @@ export function openPolicyEditor(options = {}) {
 
   function effectParamControls(state, index) {
     const meta = EFFECTS[state.effect && state.effect.type]
-    if (!meta || !meta.params) return []
-    return meta.params.map(param => {
+    if (!meta) return []
+    const controls = (meta.params || []).map(param => {
       const value = state.effect[param.key] !== undefined ? state.effect[param.key] : param.default
       if (param.options) {
         return h('select', {
@@ -366,6 +366,13 @@ export function openPolicyEditor(options = {}) {
         }),
         h('span', { class: 'policy-cond__unit', text: param.label }))
     })
+    const waitKind = completionWaitKind(state.effect.type, draft.variant)
+    if (waitKind) controls.push(h('label', { class: 'policy-state__completion' },
+      h('input', { type: 'checkbox', checked: state.effect.waitForCompletion === true,
+        'aria-label': `State ${index + 1} wait until ${waitKind}`,
+        onChange: event => { if (event.target.checked) state.effect.waitForCompletion = true; else delete state.effect.waitForCompletion; render() } }),
+      h('span', { text: `Wait until ${waitKind}` })))
+    return controls
   }
 
   function delayEditor(transition) {

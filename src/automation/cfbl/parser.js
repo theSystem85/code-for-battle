@@ -1,6 +1,7 @@
 import { lexCFBL } from './lexer.js'
 import { getCatalog } from './catalog.js'
 import { validateCFBL } from './validation.js'
+import { completionWaitKind } from '../../policies/policyEffects.js'
 
 export class CFBLParser {
   constructor(source) {
@@ -128,7 +129,15 @@ export class CFBLParser {
       let effect = null
       if (this.token.type === 'eof') this.expect(['wait', ...Object.keys(getCatalog(this.variant).effects)], 'effects')
       if (!this.take('wait')) { const call = this.call('effects'); effect = { type: call.name, ...call.params } }
-      this.expect(';')
+      const waitKind = effect && completionWaitKind(effect.type, this.variant)
+      this.actionWaitKind = waitKind
+      const ending = this.expect(waitKind ? ['wait', ';'] : [';'], 'action-end')
+      if (ending.value === 'wait') {
+        this.expect('until')
+        this.expect(waitKind, 'completion-mode')
+        effect.waitForCompletion = true
+        this.expect(';')
+      }
       const transitions = []
       while (this.token.value !== '}') {
         if (this.token.type === 'eof') this.expect(['if', 'while', 'after', '}'], 'rule')

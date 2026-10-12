@@ -1,4 +1,5 @@
 import { getCatalog } from './catalog.js'
+import { completionWaitKind } from '../../policies/policyEffects.js'
 
 export function validateCFBL(ast) {
   const diagnostics = []
@@ -41,7 +42,11 @@ export function validateCFBL(ast) {
   }
   states.forEach((state, index) => {
     if (state.id !== index + 1) issue('state_index', 'States must be declared in contiguous index order 1 through n.', state)
-    if (state.effect) params(state.effect, catalog.effects[state.effect.type], ['type', 'range'])
+    if (state.effect) {
+      params(state.effect, catalog.effects[state.effect.type], ['type', 'range', 'waitForCompletion'])
+      if (state.effect.waitForCompletion !== undefined && typeof state.effect.waitForCompletion !== 'boolean') issue('completion_wait', 'Completion wait must be a boolean.', state)
+      if (state.effect.waitForCompletion === true && !completionWaitKind(state.effect.type, ast.variant)) issue('completion_wait', 'This action has no finite completion objective.', state)
+    }
     for (const rule of state.transitions || []) {
       if (!['if', 'while', 'after'].includes(rule.kind)) issue('rule', 'Unknown rule kind.', rule)
       if (!states.some(item => item.id === rule.to)) issue('state_reference', 'Rule target does not exist.', rule)
