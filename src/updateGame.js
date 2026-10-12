@@ -1,3 +1,4 @@
+import { broadcastGameCommand } from './network/commandBroadcast.js'
 // Main Game Update Module - Coordinates all game systems
 import {
   TILE_SIZE,
@@ -205,12 +206,13 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
       remoteCommands.forEach(cmd => {
         if (cmd.commandType === COMMAND_TYPES.BUILDING_PLACE && cmd.payload) {
-          const { buildingType, x, y } = cmd.payload
+          const { buildingType, x, y, automationCompletion } = cmd.payload
           const owner = cmd.sourcePartyId
           const buildCost = Number(buildingCosts?.[buildingType]) || 0
 
           if (!chargePartyProductionCost(owner, buildCost)) {
             window.logger.warn('[Host] Rejecting BUILDING_PLACE due to insufficient funds:', owner, buildingType, buildCost)
+            if (automationCompletion) broadcastGameCommand(COMMAND_TYPES.AUTOMATION_COMPLETION_ACK, { ...automationCompletion, ownerId: owner, status: 'failed', reason: 'the authoritative placement was rejected' })
             return
           }
 
@@ -221,6 +223,10 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           updateDangerZoneMaps(gameState)
           placeBuilding(newBuilding, mapGrid)
           updatePowerSupply(gameState.buildings, gameState)
+          if (automationCompletion) {
+            newBuilding.automationCompletion = { ...automationCompletion, ownerId: owner }
+            broadcastGameCommand(COMMAND_TYPES.AUTOMATION_COMPLETION_ACK, { ...automationCompletion, ownerId: owner, status: 'completed' })
+          }
           recordReplayCommand({
             type: 'build_place',
             owner,
@@ -389,12 +395,16 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           })
         } else if (cmd.commandType === COMMAND_TYPES.UNIT_SPAWN && cmd.payload) {
           // Client requests host to spawn a unit
-          const { unitType, factoryId, rallyPoint, automationDelivery } = cmd.payload
+          const { unitType, factoryId, rallyPoint, automationDelivery, automationCompletion } = cmd.payload
+          const completionAck = (status, reason) => {
+            if (automationCompletion?.receiptId && automationCompletion?.itemId) broadcastGameCommand(COMMAND_TYPES.AUTOMATION_COMPLETION_ACK, { ...automationCompletion, ownerId: cmd.sourcePartyId, status, reason })
+          }
           const partyId = cmd.sourcePartyId
           const unitCost = Number(unitCosts?.[unitType]) || 0
 
           if (!chargePartyProductionCost(partyId, unitCost)) {
             window.logger.warn('[Host] Rejecting UNIT_SPAWN due to insufficient funds:', partyId, unitType, unitCost)
+            completionAck('failed', 'insufficient funds at the authoritative spawn')
             return
           }
 
@@ -427,6 +437,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               newUnit.owner = partyId
               mainUnits.push(newUnit)
               applyUnitBuildDelivery(newUnit, automationDelivery)
+              if (automationCompletion) newUnit.automationCompletion = { ...automationCompletion, ownerId: partyId }
+              completionAck('completed')
               recordReplayCommand({
                 type: 'unit_spawn',
                 owner: partyId,
@@ -443,8 +455,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
                 unitId: newUnit.id,
                 unitRef: createReplayUnitReference(newUnit)
               }, { source: 'remote-human', playerId: partyId })
-            }
-          }
+            } else completionAck('failed', 'the authoritative spawn was blocked')
+          } else completionAck('failed', 'the production building was lost')
         }
         // Note: CLIENT_STATE_UPDATE is no longer processed - host is authoritative
       })

@@ -1,3 +1,4 @@
+import { failCompletionReceipt } from './completionReceipts.js'
 // Connects the base policy engine to the running game.
 // Kept apart from basePolicyEngine.js so the engine and its tests never import
 // the production queue, the sidebar or fog-of-war modules.
@@ -75,11 +76,19 @@ function createUnitBuildAdapter() {
       for (let i = 0; i < order.quantity; i++) {
         productionQueue.addItem(order.unitType, button, false, null, null, {
           source: 'policy',
-          automationDelivery: order.delivery
+          automationDelivery: order.delivery,
+          completionReceiptId: order.receiptId || null,
+          completionItemId: order.receiptId ? `${order.receiptId}:${i}` : null
         })
       }
       const accepted = productionQueue.unitItems.length - before
-      if (accepted !== order.quantity) return false
+      if (accepted !== order.quantity) {
+        if (accepted > 0 && order.receiptId) {
+          failCompletionReceipt(order.receiptId, 'only part of the requested stack was accepted')
+          return true // Keep the failed receipt blocked rather than duplicating its accepted items on retry.
+        }
+        return false
+      }
       const label = button.getAttribute('aria-label') || order.unitType
       showNotification(`Unit build automation queued ${order.quantity}× ${label}`)
       return true
@@ -127,13 +136,13 @@ function createBuildAdapter(context) {
       return findBuildingPosition(type, context.mapGrid, context.units || [], all, context.factories || [], owner,
         (x, y) => canPlaceBuilding(type, x, y, context.mapGrid, context.units || [], all, context.factories || [], owner))
     },
-    queue(type, placement) {
+    queue(type, placement, receiptId) {
       const button = findButton(type)
       if (!button) return false
       const blueprint = { type, x: placement.x, y: placement.y }
       if (!Array.isArray(gameState.blueprints)) gameState.blueprints = []
       gameState.blueprints.push(blueprint)
-      productionQueue.addItem(type, button, true, blueprint)
+      productionQueue.addItem(type, button, true, blueprint, null, { completionReceiptId: receiptId })
       const queued = productionQueue.buildingItems.some(item => item.blueprint === blueprint)
       if (!queued) {
         gameState.blueprints = gameState.blueprints.filter(item => item !== blueprint)

@@ -1,3 +1,5 @@
+import { restoreBaseAutomationRuntime } from './policies/basePolicyEngine.js'
+import { restoreCompletionReceipt } from './policies/completionReceipts.js'
 import { applyRecordedAutomationUnitCommand, applyRecordedAutomationRuntime, applyRecordedAutomationDefenceIntent } from './policies/automationReplay.js'
 import { applyAutomationMutation } from './policies/policyStore.js'
 import { gameState } from './gameState.js'
@@ -873,6 +875,14 @@ function executeReplayCommand(entry) {
       applyRecordedAutomationDefenceIntent(command, resolveReplayEntityReference)
       return
     }
+    if (command.type === 'automation-base-runtime') {
+      restoreBaseAutomationRuntime(command.snapshot, { merge: true })
+      return
+    }
+    if (command.type === 'automation-completion') {
+      restoreCompletionReceipt(command.receipt, { replay: true })
+      return
+    }
     if (command.type === 'automation-runtime') {
       applyRecordedAutomationRuntime(command, resolveReplayEntityReference)
       return
@@ -949,7 +959,7 @@ function executeReplayCommand(entry) {
           isBuilding,
           command.blueprint || null,
           command.rallyPoint || null,
-          { allowReplay: true, record: false, factoryId: command.factoryId || null }
+          { allowReplay: true, record: false, factoryId: command.factoryId || null, completionReceiptId: command.completionReceiptId || null }
         )
       }
       return

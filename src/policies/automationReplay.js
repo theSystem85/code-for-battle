@@ -50,7 +50,7 @@ export function recordAutomationRuntime(entity, binding, previousRuntime, trace)
   // Idle/held reassertions do not grow a full per-evaluation state history.
   if (binding.runtime.currentStateId === previousRuntime.currentStateId &&
       binding.runtime.hold === previousRuntime.hold && binding.runtime.pending === previousRuntime.pending &&
-      binding.runtime.finished === previousRuntime.finished) return
+      binding.runtime.finished === previousRuntime.finished && binding.runtime.wait === previousRuntime.wait) return
   recordReplayCommand({
     type: 'automation-runtime', entityRef: createReplayEntityReference(entity),
     policyId: binding.policyId, behaviorRevision: binding.behaviorRevision,

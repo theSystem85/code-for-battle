@@ -1,0 +1,55 @@
+{
+  "node": "v24.19.0",
+  "unitWaits": 800,
+  "productionWaits": 160,
+  "controlCadenceMs": 150,
+  "productionCadenceMs": 1000,
+  "passes": [
+    {
+      "p95Ms": 0.3775320000000022,
+      "p99Ms": 0.8584880000000013,
+      "maxMs": 1.6210140000000024,
+      "indexRebuilds": 200,
+      "indexedEntities": 40200,
+      "productionEvaluations": 4800,
+      "heapDeltaBytes": 1280240
+    },
+    {
+      "p95Ms": 0.26788799999999924,
+      "p99Ms": 0.36847899999999356,
+      "maxMs": 0.43103200000000186,
+      "indexRebuilds": 200,
+      "indexedEntities": 40200,
+      "productionEvaluations": 4800,
+      "heapDeltaBytes": -553320
+    },
+    {
+      "p95Ms": 0.22074899999999786,
+      "p99Ms": 0.43397600000000125,
+      "maxMs": 0.48053500000000327,
+      "indexRebuilds": 200,
+      "indexedEntities": 40200,
+      "productionEvaluations": 4800,
+      "heapDeltaBytes": 1124728
+    },
+    {
+      "p95Ms": 0.24747899999999845,
+      "p99Ms": 1.7605220000000088,
+      "maxMs": 3.1772820000000195,
+      "indexRebuilds": 200,
+      "indexedEntities": 40200,
+      "productionEvaluations": 4800,
+      "heapDeltaBytes": 916856
+    },
+    {
+      "p95Ms": 0.23768400000000156,
+      "p99Ms": 0.3755689999999845,
+      "maxMs": 1.2463960000000043,
+      "indexRebuilds": 200,
+      "indexedEntities": 40200,
+      "productionEvaluations": 4800,
+      "heapDeltaBytes": -1216704
+    }
+  ],
+  "limits": "Node CPU diagnostics only; heap delta is not a precise allocation or GC measure. Five passes use shared indexed exact-target lookup once per batch; no full-game GPU/FPS certification."
+}

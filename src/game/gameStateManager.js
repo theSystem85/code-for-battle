@@ -17,6 +17,7 @@ import {
   SMOKE_PARTICLE_FADE_EXPONENT,
   SMOKE_PARTICLE_TURBULENCE
 } from '../config.js'
+import { noteCompletionTargetDestroyed } from '../policies/unitCompletion.js'
 import { unregisterAutomationEntity } from '../policies/policyStore.js'
 import { resolveUnitCollisions, removeUnitOccupancy } from '../units.js'
 import { explosions } from '../logic.js'
@@ -682,6 +683,7 @@ export function cleanupDestroyedUnits(units, gameState) {
         stopApacheRotorSound(unit)
       }
 
+      noteCompletionTargetDestroyed(unit, 'unit')
       unregisterAutomationEntity(unit)
       units.splice(i, 1)
     }

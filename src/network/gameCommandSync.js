@@ -1,3 +1,4 @@
+import { applyProductionCompletionAck } from '../policies/completionReceipts.js'
 import { units as automationEntities } from '../main.js'
 import { applyAutomationMutation, subscribeAutomationMutations, setAutomationAuthoringGuard } from '../policies/policyStore.js'
 import { recordReplayCommand } from '../replayCommandPrimitives.js'
@@ -252,6 +253,9 @@ export function handleReceivedCommand(command, _sourceId) {
 function applyCommand(command) {
   // Commands are applied based on type
   switch (command.commandType) {
+    case COMMAND_TYPES.AUTOMATION_COMPLETION_ACK:
+      if (command.isHost) applyProductionCompletionAck(command.payload || {})
+      break
     case COMMAND_TYPES.AUTOMATION_EDIT:
       if (command.payload?.actorId === command.sourcePartyId && command.payload?.languageVersion === 1) {
         applyAutomationMutation(command.payload, [...automationEntities, ...(gameState.buildings || [])])

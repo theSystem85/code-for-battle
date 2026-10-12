@@ -590,6 +590,26 @@ export function canExecuteUnitCommand(name, unit, args, ctx) {
 }
 
 /** Run a command if allowed. Returns false (and changes nothing) when refused. */
+const COMPLETION_TRIPS = Object.freeze({ goToWorkshop: ['vehicleWorkshop', 'health', 'maxHealth'], goToHospital: ['hospital', 'medics', 'maxMedics'], goToAmmoFactory: ['ammunitionFactory', 'ammoCargo', 'maxAmmoCargo'] })
+const COMPLETION_MOVE_OFFSETS = Object.freeze({ moveForward: 0, moveBackward: Math.PI, moveSidewaysLeft: -Math.PI / 2, moveSidewaysRight: Math.PI / 2 })
+
+function completionObjective(name, unit, args, ctx) {
+  const base = { ownerId: unit.owner }
+  if (name === 'attackAndChase') return { ...base, kind: 'attack', target: { entityKind: args.target?.isBuilding ? 'building' : 'unit', id: args.target?.id, ownerId: args.target?.owner } }
+  if (name === 'takeoff' || name === 'land') return { ...base, kind: 'flight', command: name, flightState: name === 'land' ? 'grounded' : 'airborne' }
+  if (COMPLETION_TRIPS[name]) {
+    const [type, resource, maximum] = COMPLETION_TRIPS[name]
+    const target = buildingTripPlan(unit, ctx, type, () => null).building
+    return target ? { ...base, kind: 'service', target: { entityKind: 'building', id: target.id, ownerId: target.owner }, resource, maximum, expectedMaximum: unit[maximum] ?? (resource === 'medics' ? 4 : null) } : null
+  }
+  if (name === 'retreatTo') return { ...base, kind: 'arrival', tileX: args.tileX, tileY: args.tileY }
+  if (Object.hasOwn(COMPLETION_MOVE_OFFSETS, name)) {
+    const plan = planMove(unit, ctx, args.tiles, COMPLETION_MOVE_OFFSETS[name])
+    return plan.reason ? null : { ...base, kind: 'arrival', tileX: Math.floor(plan.x / TILE_SIZE), tileY: Math.floor(plan.y / TILE_SIZE) }
+  }
+  return null
+}
+
 export function executeUnitCommand(name, unit, args = NO_ARGS, ctx = EMPTY_CTX) {
   const command = COMMANDS[name]
   if (!command) return false
@@ -598,6 +618,7 @@ export function executeUnitCommand(name, unit, args = NO_ARGS, ctx = EMPTY_CTX) 
     if (command.onRefused && unit) command.onRefused(unit, safeArgs, ctx)
     return false
   }
+  if (ctx.captureCompletionObjective) ctx.completionObjective = completionObjective(name, unit, safeArgs, ctx)
   const accepted = runAsPolicy(() => command.run(unit, safeArgs, ctx)) === true
   if (accepted) recordAutomationUnitCommand(name, unit, safeArgs)
   return accepted

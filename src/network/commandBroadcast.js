@@ -202,14 +202,14 @@ export function broadcastUnitAttack(units, target) {
  * @param {number} y - Tile Y
  * @param {string} partyId - Owning party
  */
-export function broadcastBuildingPlace(buildingType, x, y, partyId) {
+export function broadcastBuildingPlace(buildingType, x, y, partyId, automationCompletion = null) {
   if (!hasActiveRemoteSession()) {
     return
   }
 
   broadcastGameCommand(
     COMMAND_TYPES.BUILDING_PLACE,
-    createBuildingPlaceCommand(buildingType, x, y),
+    { ...createBuildingPlaceCommand(buildingType, x, y), ...(automationCompletion ? { automationCompletion } : {}) },
     partyId || gameState.humanPlayer
   )
 }
@@ -275,14 +275,14 @@ export function broadcastProductionStart(productionType, itemType, factoryId, pa
  * @param {string} factoryId - ID of the factory to spawn from
  * @param {Object} rallyPoint - Optional rally point {x, y}
  */
-export function broadcastUnitSpawn(unitType, factoryId, rallyPoint, automationDelivery = null) {
+export function broadcastUnitSpawn(unitType, factoryId, rallyPoint, automationDelivery = null, automationCompletion = null) {
   if (!hasActiveRemoteSession()) {
     return
   }
 
   broadcastGameCommand(
     COMMAND_TYPES.UNIT_SPAWN,
-    { unitType, factoryId, rallyPoint, ...(automationDelivery ? { automationDelivery } : {}) },
+    { unitType, factoryId, rallyPoint, ...(automationDelivery ? { automationDelivery } : {}), ...(automationCompletion ? { automationCompletion } : {}) },
     gameState.humanPlayer
   )
 }

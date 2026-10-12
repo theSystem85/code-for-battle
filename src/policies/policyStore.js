@@ -1,3 +1,4 @@
+import { releaseUnitCompletionObjective, resetUnitCompletionObjectives } from './unitCompletion.js'
 // Unit policy store: documents, global enablement and per-unit bindings.
 //
 // Policy documents stay pure data. Ownership, enablement and per-unit apply are
@@ -80,6 +81,8 @@ export function canCommandPolicy(actorId, ownerId) {
   if (!actorId || !ownerId) return false
   return normalizePolicyOwner(actorId) === normalizePolicyOwner(ownerId)
 }
+
+export function getPolicySequence() { return sequence }
 
 export function nextPolicySequence() {
   sequence += 1
@@ -239,6 +242,7 @@ export function restoreAutomationSession(payload, entities = [], { authority = '
       receivedSequences.set(normalized, Math.max(commandSequence, receivedSequences.get(normalized) || 0))
     }
   }
+  resetUnitCompletionObjectives()
   boundEntities.clear()
   const byId = new Map(entities.map(entity => [`${entityKind(entity)}:${entity.id}`, entity]))
   for (const saved of payload.entityBindings || []) {
@@ -248,7 +252,7 @@ export function restoreAutomationSession(payload, entities = [], { authority = '
     entity.policyBindings = (saved.policyBindings || []).filter(binding => {
       const entry = documents.get(binding.policyId)
       return entry && entry.policy.variant === (entity.isBuilding ? 'defence' : 'unit') && canCommandPolicy(entity.owner, entry.ownerId) &&
-        binding.behaviorRevision === entry.behaviorRevision && validRuntime(binding.runtime, entry.policy)
+        binding.behaviorRevision === entry.behaviorRevision && validAutomationRuntime(binding.runtime, entry.policy)
     }).map(clone)
     entity.policyControl = clone(saved.policyControl || null)
     const order = entity.policyControl?.order
@@ -282,13 +286,24 @@ export function restoreAutomationSession(payload, entities = [], { authority = '
   return { ok: true, errors }
 }
 
-function validRuntime(runtime, policy) {
+export function validAutomationRuntime(runtime, policy) {
   if (!runtime || !policy.states.some(state => state.id === runtime.currentStateId)) return false
   const states = new Set(policy.states.map(state => state.id))
   const rules = new Set(policy.states.flatMap(state => state.transitions.flatMap(rule => rule.elseTo == null ? [rule.id] : [rule.id, rule.elseId || `${rule.id}:else`])))
   if (Object.keys(runtime.prev || {}).some(id => !rules.has(id))) return false
   if (Object.keys(runtime.pending || {}).some(id => !rules.has(id))) return false
   if (Object.keys(runtime.entered || {}).some(id => !states.has(id))) return false
+  if (runtime.wait) {
+    const wait = runtime.wait
+    const state = policy.states.find(state => state.id === runtime.currentStateId)
+    if (!state?.effect?.waitForCompletion || wait.stateId !== state.id || runtime.finished || !['issuing', 'pending', 'completed', 'failed'].includes(wait.status)) return false
+    if (wait.receiptId != null && typeof wait.receiptId !== 'string') return false
+    const objective = wait.objective
+    if (objective && !['arrival', 'attack', 'flight', 'service'].includes(objective.kind)) return false
+    if (objective?.target && (!['unit', 'building'].includes(objective.target.entityKind) || typeof objective.target.id !== 'string')) return false
+    if (objective?.kind === 'arrival' && (!Number.isInteger(objective.tileX) || !Number.isInteger(objective.tileY))) return false
+  }
+  if (runtime.completedEffectStateId != null && !states.has(runtime.completedEffectStateId)) return false
   if (runtime.hold) {
     const source = policy.states.find(state => state.id === runtime.hold.returnStateId)
     const rule = source?.transitions.find(rule => rule.id === runtime.hold.transitionId)
@@ -339,11 +354,15 @@ export function registerAutomationEntity(entity) {
   return () => boundEntities.delete(entity)
 }
 
-export function unregisterAutomationEntity(entity) { boundEntities.delete(entity) }
+export function unregisterAutomationEntity(entity) {
+  for (const binding of entity?.policyBindings || []) releaseUnitCompletionObjective(binding.runtime.wait?.objective)
+  boundEntities.delete(entity)
+}
 
 export function refreshAutomationBinding(binding, policy) {
   const entry = documents.get(policy.id)
   if (!entry || binding.behaviorRevision === entry.behaviorRevision) return false
+  releaseUnitCompletionObjective(binding.runtime.wait?.objective)
   binding.runtime = createPolicyRuntime(policy)
   binding.behaviorRevision = entry.behaviorRevision
   binding.activationSeq = 0
@@ -373,8 +392,10 @@ export function resetPolicyStore() {
   buildOptIn = new Set()
   unitBuildOptIn = new Set()
   sequence = 0
+  resetUnitCompletionObjectives()
   boundEntities.clear()
   compiledPrograms.clear()
+  for (const provider of runtimeProviders.values()) provider.reset?.()
   receivedSequences.clear()
   refreshBehaviorHash()
   version += 1
@@ -632,7 +653,11 @@ export function removePolicyFromUnit(actorId, unit, policyId) {
   if (!restoring && !authoringAllowed()) return { ok: false, reason: 'replay-locked' }
   if (!unit || !canCommandPolicy(actorId, unit.owner)) return { ok: false, reason: 'not-owner' }
   if (Array.isArray(unit.policyBindings)) {
-    unit.policyBindings = unit.policyBindings.filter(binding => !(binding.policyId === policyId && binding.source === 'unit'))
+    unit.policyBindings = unit.policyBindings.filter(binding => {
+      if (binding.policyId !== policyId || binding.source !== 'unit') return true
+      releaseUnitCompletionObjective(binding.runtime.wait?.objective)
+      return false
+    })
   }
   mutation('remove', actorId, { entityKind: 'unit', entityId: unit.id, policyId })
   return { ok: true }

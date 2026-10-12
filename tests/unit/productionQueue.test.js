@@ -97,7 +97,9 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
 
 // Import after mocking
 import { productionQueue } from '../../src/productionQueue.js'
-import { isNearExistingBuilding } from '../../src/buildings.js'
+import { createCompletionReceipt, getCompletionReceipt, applyProductionCompletionAck } from '../../src/policies/completionReceipts.js'
+import { isHost, broadcastUnitSpawn } from '../../src/network/gameCommandSync.js'
+import { isNearExistingBuilding, canPlaceBuilding } from '../../src/buildings.js'
 import { spawnUnit, findPath } from '../../src/units.js'
 import { playSound } from '../../src/sound.js'
 import { findClosestOre } from '../../src/logic.js'
@@ -161,6 +163,37 @@ describe('Production Queue System', () => {
       lane.pausedUnit = false
       lane.unitPaid = 0
     })
+  })
+
+  it('keeps a remote completion receipt pending until the exact host acknowledgement, including duplicate acknowledgement', () => {
+    const receiptId = createCompletionReceipt('player', 'remote-stack', 2)
+    const itemId = `${receiptId}:0`
+    gameState.buildings = [{ id: 'factory', type: 'vehicleFactory', owner: 'player', health: 100 }]
+    gameState.multiplayerSession = { isRemote: true }
+    isHost.mockReturnValue(false)
+    try {
+      productionQueue.currentUnit = { type: 'tank_v1', button: mockButton, duration: 1000, completionReceiptId: receiptId, completionItemId: itemId }
+      productionQueue.unitItems = [productionQueue.currentUnit]
+      productionQueue.completeCurrentUnitProduction()
+      expect(broadcastUnitSpawn).toHaveBeenCalledWith('tank_v1', 'factory', undefined, undefined, { receiptId, itemId })
+      expect(getCompletionReceipt(receiptId).remaining).toBe(2)
+      applyProductionCompletionAck({ receiptId, itemId, ownerId: 'player', status: 'completed' })
+      applyProductionCompletionAck({ receiptId, itemId, ownerId: 'player', status: 'completed' })
+      expect(getCompletionReceipt(receiptId).remaining).toBe(1)
+    } finally { isHost.mockReturnValue(true); gameState.multiplayerSession = null }
+  })
+
+  it('does not complete a building receipt at blueprint readiness; cancellation fails the exact ready item', () => {
+    const receiptId = createCompletionReceipt('player', 'ready-building')
+    const blueprint = { type: 'powerPlant', x: 10, y: 10 }
+    productionQueue.currentBuilding = { type: 'powerPlant', button: mockButton, blueprint, completionReceiptId: receiptId }
+    productionQueue.buildingItems = [productionQueue.currentBuilding]
+    canPlaceBuilding.mockReturnValueOnce(false)
+    productionQueue.completeCurrentBuildingProduction()
+    expect(getCompletionReceipt(receiptId).status).toBe('pending')
+    expect(productionQueue.completedBuildings[0].completionReceiptId).toBe(receiptId)
+    productionQueue.cancelReadyBuilding('powerPlant', mockButton)
+    expect(getCompletionReceipt(receiptId).status).toBe('failed')
   })
 
   describe('Policy blueprint construction lifecycle', () => {

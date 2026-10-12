@@ -22,6 +22,7 @@ import { EFFECTS, effectRepeat } from './policyEffects.js'
 import { isBindingControlling } from './policyActivity.js'
 import { isPolicyIssuingOrder, runAsPolicy } from './policyIssuer.js'
 import { beginUnitScope, isUnitScopeCurrent, getScopeEnemy, getScopeEnemyDistanceTiles, isScopeEnemyInRange, measureLeaf } from './policySensors.js'
+import { unitCompletionStatus, registerUnitCompletionObjective, releaseUnitCompletionObjective } from './unitCompletion.js'
 import { recordAutomationRuntime } from './automationReplay.js'
 import { stepCompiledPolicy } from './policyCompiler.js'
 import { STEP_GATE } from './policyStep.js'
@@ -101,6 +102,12 @@ export function noteDirectOrder(units, now = getSimulationTime(gameState)) {
     const unit = units[i]
     if (!unit) continue
     const control = ensureControl(unit)
+    for (const binding of unit.policyBindings || []) {
+      if (binding.runtime.wait) {
+        releaseUnitCompletionObjective(binding.runtime.wait.objective)
+        binding.runtime.wait = { ...binding.runtime.wait, status: 'failed', reason: 'a direct order superseded this objective' }
+      }
+    }
     let conflicting = null
     const bindings = unit.policyBindings
     if (bindings && control.dominant && control.dominant.kind === 'policy') {
@@ -295,7 +302,10 @@ export function applyPolicyEffect(unit, effect, context) {
     default:
       break
   }
-  return executeUnitCommand(meta.command, unit, args, context)
+  context.captureCompletionObjective = params.waitForCompletion === true
+  const accepted = executeUnitCommand(meta.command, unit, args, context)
+  context.captureCompletionObjective = false
+  return accepted
 }
 
 function bindingGate(binding, control) {
@@ -319,8 +329,11 @@ function syncGlobalBindings(unit, globals, version) {
   unit.policySyncVersion = version
   let bindings = unit.policyBindings
   if (bindings && bindings.length) {
-    bindings = bindings.filter(binding => binding.source !== 'global' ||
-      globals.some(entry => entry.policy.id === binding.policyId && canCommandPolicy(entry.ownerId, unit.owner)))
+    bindings = bindings.filter(binding => {
+      const keep = binding.source !== 'global' || globals.some(entry => entry.policy.id === binding.policyId && canCommandPolicy(entry.ownerId, unit.owner))
+      if (!keep) releaseUnitCompletionObjective(binding.runtime.wait?.objective)
+      return keep
+    })
     unit.policyBindings = bindings
     if (bindings.length === 0) {
       unit.policyActive = false
@@ -353,6 +366,9 @@ export function getUnitPolicySummary(unit) {
       finished: binding.runtime.finished,
       paused: bindingGate(binding, control) === STEP_GATE.paused,
       active: binding.active === true,
+      waiting: Boolean(binding.runtime.wait && binding.runtime.wait.status !== 'completed'),
+      completionStatus: binding.runtime.wait?.status || null,
+      completionReason: binding.runtime.wait?.reason || null,
       stateId: binding.runtime.currentStateId
     }
   })
@@ -382,6 +398,7 @@ function processUnit(unit, context, now) {
     const binding = bindings[i]
     const doc = getPolicyDocument(binding.policyId)
     if (!doc) {
+      releaseUnitCompletionObjective(binding.runtime.wait?.objective)
       binding.dead = true
       removeBindings = true
       continue
@@ -393,6 +410,13 @@ function processUnit(unit, context, now) {
       binding.docRef = doc
     }
     const previousRuntime = binding.runtime
+    if (binding.runtime.wait?.status === 'pending' && bindingGate(binding, control) === STEP_GATE.open) {
+      const outcome = unitCompletionStatus(unit, binding.runtime.wait.objective, context, now)
+      if (outcome.status !== 'pending') {
+        releaseUnitCompletionObjective(binding.runtime.wait.objective)
+        binding.runtime = { ...binding.runtime, wait: { ...binding.runtime.wait, ...outcome } }
+      }
+    }
     const { runtime, effects, trace } = stepCompiledPolicy(program, binding.runtime, view, bindingGate(binding, control))
     binding.runtime = runtime
     binding.lastTrace = trace
@@ -404,6 +428,11 @@ function processUnit(unit, context, now) {
     for (let j = 0; j < effects.length; j++) {
       const effect = effects[j]
       if (effect.phase === 'enter') {
+        if (override?.binding.runtime.wait?.status === 'issuing') {
+          const displaced = override.binding
+          displaced.runtime.wait = { ...displaced.runtime.wait, status: 'failed', reason: 'another automation superseded this command before issuance' }
+          recordAutomationRuntime(unit, displaced, { ...displaced.runtime, wait: null }, displaced.lastTrace)
+        }
         override = { binding, effect }
       } else if (effect.phase === 'hold' && (!holder || binding.activationSeq >= holder.binding.activationSeq)) {
         holder = { binding, effect }
@@ -419,7 +448,17 @@ function processUnit(unit, context, now) {
       control.order.active = false
       emit({ type: 'orderOverridden', unit, unitId: unit.id, policyId: binding.policyId })
     }
-    applyPolicyEffect(unit, effect, context)
+    const accepted = applyPolicyEffect(unit, effect, context)
+    if (effect.params.waitForCompletion) {
+      binding.runtime.wait = { ...binding.runtime.wait, status: accepted && context.completionObjective ? 'pending' : 'failed',
+        objective: accepted ? context.completionObjective : null, reason: accepted ? null : 'the unit command was refused' }
+      if (accepted && context.completionObjective) {
+        context.completionObjective.issuerId = binding.policyId
+        context.completionObjective.activationSeq = binding.activationSeq
+        registerUnitCompletionObjective(context.completionObjective)
+      }
+      recordAutomationRuntime(unit, binding, { ...binding.runtime, wait: null }, binding.lastTrace)
+    }
     emit({ type: 'policyActivated', unit, unitId: unit.id, policyId: binding.policyId, kind: effect.kind })
   } else if (holder) {
     const everyTick = effectRepeat(holder.effect.type) === 'tick'
