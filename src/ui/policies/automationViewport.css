@@ -39,6 +39,7 @@
 }
 
 .automation-phone .policy-editor__pause-note { display: none; }
+.automation-phone .policy-state__completion { min-height: 44px; }
 .automation-phone .policy-editor__header h2,
 .automation-phone .policy-editor__view-toggle { grid-column: 1 / -1; }
 .automation-phone .policy-editor__view-toggle { justify-self: start; }

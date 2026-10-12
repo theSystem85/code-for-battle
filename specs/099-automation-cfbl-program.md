@@ -53,6 +53,7 @@ The actual programmable control-unit set is tank aliases/V1/V2/V3, rocket tank, 
 | [106](106-defence-building-automation.md) | Defence catalogs, sensors, commands, binding UI, lifecycle and simulation integration | 100, 101, 102; UI adapters from 103/104 |
 | [107](107-automation-compilation-and-performance.md) | Compiled execution integration, shared sensing, deterministic benchmarking | 100, 101, 102; certify all categories after 106 |
 | [108](108-automation-documentation-landing-and-release.md) | User language manual, examples/tutorial, EN/DE landing section, real screenshots, release evidence | 103–107 |
+| [109](109-automation-command-completion-waits.md) | Optional exact production/unit-objective completion waits in both editors, persistence, acknowledgements and lifecycle | 100–107 |
 
 Spec 100 defines the full language and vocabulary and provides the shared parser/catalog implementation. Spec 099 is the coordination document, not a code package. A range such as “100–102” includes each listed package in dependency order.
 

@@ -1,6 +1,6 @@
 # 109 — Automation command completion waits
 
-Status: implementation in progress. Extends specs 100–108; existing automation behavior remains the default.
+Status: software implemented and verified. Qualifying-hardware 75 FPS certification remains open. Extends specs 100–108; existing automation behavior remains the default.
 
 ## Authoring contract
 
@@ -25,7 +25,7 @@ Supported finite unit effects: moveForward, moveBackward, moveLeft, moveRight, r
 
 A pending completion wait blocks outgoing IF/ELSE/AFTER transitions, WHILE return/reassertion, and one-time terminal completion. It retains the current state and never reissues an accepted command. The next normal evaluation resumes only after the exact issued work succeeds. Rules and timers do not progress while waiting.
 
-Production tracks an accepted order receipt, owner and source revision. All members of a unit stack must actually spawn; their rally/delivery behavior is separate. A building must exist at its valid placement and finish construction: queue acceptance or a blueprint becoming ready is insufficient. Other orders of the same type cannot fulfill this receipt. Refused orders use existing retry cadence without being counted as produced.
+Production tracks an accepted order receipt, owner and source revision. All members of a unit stack must actually spawn; their rally/delivery behavior is separate. A building must exist at its valid placement and be finalized as a placed game entity: queue acceptance or a blueprint becoming ready is insufficient. Other orders of the same type cannot fulfill this receipt. Refused orders use existing retry cadence without being counted as produced.
 
 Unit waits freeze the issued movement destination, attack target or finite flight/service objective. Moving elsewhere, idle state, another target's death or a later manual order does not fulfill the original objective. Attack completion means destruction of the originally issued target. Manual orders retain priority; cancellation/interruption or unreachable work reports blocked/failed, never successful completion. Reapply/re-enable or an accepted behavior revision starts fresh work. Removing/revising/disabling the automation and actor destruction clean up its wait ownership without canceling unrelated orders.
 
@@ -36,3 +36,7 @@ Receipt/runtime state, exact typed identities and source revisions survive save/
 Control polls only at its existing 150 ms simulation-time cadence; production evaluates at 1,000 ms. For 600 bound units this is at most 4,000 completion checks/second, independent of DPR. Use bounded receipt maps and lifecycle events/shared entity indexes; no parsing, whole-world scans or allocations per entity per render frame. Initialization and waits remain outside AI-specific logic.
 
 Verify exact production stacks, placed/completed buildings, unrelated/canceled work, manual overrides, movement arrival, exact target destruction, one-time terminal waits, IF/ELSE/WHILE/AFTER blocking, save/resync/replay continuation, revision/lifecycle cleanup, DAV↔ATV persistence and illegal modifiers. Run focused differential/runtime and real production/movement browser coverage, full units, lint, build and documentation validation. Retain qualifying-hardware 75 FPS certification as open when only headless/software diagnostics are available.
+
+The existing five-second visual building reveal is renderer-managed and is not a production wait condition. Completion is the successful paid placement/finalization of the actual building entity; a cosmetic animation or offscreen rendering must not hold automation.
+
+Integrated verification: 249 unit files / 4,830 tests; 86 integration tests; 11 distinct browser scenarios across the editor, real building placement, real unit movement, replay and construction lifecycle; lint, build and seven published grammar examples passed. Completion runtime stress and headless scrolling evidence are in [the measurement note](../docs/performance/automation-completion-waits.md).

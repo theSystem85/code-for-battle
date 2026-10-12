@@ -278,7 +278,7 @@ Grouping decides logic, mode decides units. This example requests ammo even if l
 
 Waiting is optional; without a modifier the current behavior remains unchanged. A wait retains the current numbered state and blocks outgoing rules, WHILE return/reassertion and one-time finishing until its exact issued objective completes. An accepted command is not issued repeatedly while waiting. AFTER timers and other rules do not advance during the wait.
 
-**Wait until produced** requires every unit in the requested stack to spawn, or the requested building to be placed and finish construction. It does not wait for unit delivery orders. Other production, a ready blueprint, or an idle queue cannot complete the tracked order. Refused build commands keep the existing retry behavior.
+**Wait until produced** requires every unit in the requested stack to spawn, or the requested building to be finalized as a placed game entity. It does not wait for unit delivery orders. Other production, a ready blueprint, or an idle queue cannot complete the tracked order. Refused build commands keep the existing retry behavior.
 
 **Wait until done** is supported by `moveForward`, `moveBackward`, `moveLeft`, `moveRight`, `retreat`, `attackNearestEnemy`, `takeoff`, `land`, `goToWorkshop`, `goToHospital` and `goToAmmoFactory`. For example, `do moveForward(tiles=2) wait until done;` waits for arrival at the issued destination; `do attackNearestEnemy() wait until done;` waits for destruction of the originally issued target. Service travel also waits for the associated service objective. Continuous rotation, protection/follow, aim/auto-fire and defence intents have no finite end and do not offer this option.
 

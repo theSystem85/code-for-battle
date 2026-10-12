@@ -62,6 +62,8 @@ export function buildUnitPolicyItems(unit, onApplied) {
       disabled: !canCommandPolicy(owner, unit.owner),
       tooltipTitle: entry.policy.name,
       tooltipLines: [
+        ...(applied?.completionStatus ? [applied.completionStatus === 'failed'
+          ? `Blocked: ${applied.completionReason || 'the action did not complete'}` : 'Waiting for the issued action to finish.'] : []),
         ...(defence && applied ? [`State ${applied.stateIndex} · ${applied.status}${applied.pending ? ' · AFTER pending' : ''}${applied.holding ? ' · WHILE held' : ''}`] : []),
         applied ? (applied.holding ? 'Applied and holding. Click to remove.' : 'Applied. Click to remove.') : 'Click to apply to this unit.',
         entry.policy.execution === 'oneTime' ? 'One-time: starts now.' : 'Continuous.',

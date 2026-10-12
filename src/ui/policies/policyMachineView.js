@@ -94,12 +94,17 @@ function buildSection(binding, doc) {
   const heading = h('div', { class: 'policy-machine__policy' },
     h('strong', { text: doc.name }),
     h('span', { class: 'policy-machine__source', text: binding.source === 'global' ? 'all units' : 'this unit' }))
-  const el = h('section', { class: 'policy-machine__section' }, heading, root)
-  return { binding, doc, el, layout, nodeEls, edgeEls }
+  const waitStatus = h('div', { class: 'policy-machine__completion', role: 'status', hidden: true })
+  const el = h('section', { class: 'policy-machine__section' }, heading, waitStatus, root)
+  return { binding, doc, el, layout, nodeEls, edgeEls, waitStatus }
 }
 
 function updateSection(section, now) {
   const runtime = section.binding.runtime
+  const wait = runtime.wait
+  section.waitStatus.hidden = !wait
+  const waitText = wait ? (wait.status === 'failed' ? `Blocked: ${wait.reason || 'the action did not complete'}` : 'Waiting for the issued action to finish') : ''
+  if (section.waitStatus.textContent !== waitText) section.waitStatus.textContent = waitText
   const entered = runtime.entered || {}
   section.nodeEls.forEach((nodeEl, stateId) => {
     const isCurrent = runtime.currentStateId === stateId
