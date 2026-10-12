@@ -1,3 +1,4 @@
+import { recordReplayCommand } from '../replayCommandPrimitives.js'
 // Base policy engine: runs build policies (base automation) for one player.
 //
 // A build policy is the same inert state machine as a unit policy, stepped with
@@ -17,6 +18,7 @@
 
 import { getSimulationTime } from '../game/time.js'
 import { gameState } from '../gameState.js'
+import { getCompletionReceipt, releaseCompletionReceipt } from './completionReceipts.js'
 import { executeBuildCommand } from './buildCommandApi.js'
 import { executeUnitBuildCommand } from './unitBuildCommandApi.js'
 import { beginBaseScope, measureBaseLeaf, resetBaseSensors } from './basePolicySensors.js'
@@ -26,6 +28,7 @@ import {
   getCompiledPolicyProgram,
   getPolicyEntry,
   registerAutomationRuntimeProvider,
+  validAutomationRuntime,
   isBuildAutomationOptedIn,
   isUnitBuildAutomationOptedIn,
   listEnabledBuildPolicies,
@@ -59,6 +62,7 @@ function emit(event) {
 }
 
 export function resetBasePolicyEngine() {
+  for (const run of runs.values()) if (run.runtime.wait?.receiptId) releaseCompletionReceipt(run.runtime.wait.receiptId)
   runs.clear()
   lastPass = -Infinity
   resetBaseSensors()
@@ -76,14 +80,14 @@ export function exportBaseAutomationRuntime() {
 
 export function restoreBaseAutomationRuntime(snapshot, options = {}) {
   if (options.authority === 'host-snapshot' || !Array.isArray(snapshot)) return
-  runs.clear()
+  if (!options.merge) runs.clear()
   for (const item of snapshot) {
     const entry = getPolicyEntry(item?.policyId)
     if (gameState.humanPlayer && entry && !canCommandPolicy(gameState.humanPlayer, entry.ownerId)) continue
     if (!entry || entry.ownerId !== item.ownerId || entry.behaviorRevision !== item.behaviorRevision) continue
     if (entry.policy.variant !== 'build' && entry.policy.variant !== 'unitBuild') continue
     const program = getCompiledPolicyProgram(item.policyId)
-    if (!program || !item.runtime || !program.stateTable[item.runtime.currentStateId]) continue
+    if (!program || !validAutomationRuntime(item.runtime, entry.policy)) continue
     const hold = item.runtime.hold
     if (hold && (!program.ruleTable[hold.transitionId] || !program.stateTable[hold.returnStateId])) continue
     if (!Number.isFinite(item.nextActAt) || !Number.isFinite(item.orders) || item.orders < 0) continue
@@ -99,7 +103,7 @@ export function restoreBaseAutomationRuntime(snapshot, options = {}) {
   lastPass = -Infinity
 }
 
-registerAutomationRuntimeProvider('base', { export: exportBaseAutomationRuntime, restore: restoreBaseAutomationRuntime })
+registerAutomationRuntimeProvider('base', { export: exportBaseAutomationRuntime, restore: restoreBaseAutomationRuntime, reset: resetBasePolicyEngine })
 
 /** Live state of one enabled build policy, or null when it is not running. */
 export function getBasePolicyStatus(policyId) {
@@ -110,7 +114,9 @@ export function getBasePolicyStatus(policyId) {
     stateId: run.runtime.currentStateId,
     stateName: state ? state.name || state.id : run.runtime.currentStateId,
     finished: run.runtime.finished && !run.pending,
-    waiting: Boolean(run.pending),
+    waiting: Boolean(run.pending || run.runtime.wait),
+    completionStatus: run.runtime.wait?.status || null,
+    completionReason: run.runtime.wait?.reason || null,
     orders: run.orders,
     last: run.last
   }
@@ -119,6 +125,10 @@ export function getBasePolicyStatus(policyId) {
 /** One line for the panel: what the policy did last, or why it is waiting. */
 export function describeBasePolicyStatus(status) {
   if (!status) return 'Not running'
+  if (status.completionStatus === 'failed') return `Blocked: ${status.completionReason || 'production was cancelled'}`
+  if (status.completionStatus === 'issuing' && status.last?.reason) return `Waiting to issue: ${status.last.reason}`
+  if (status.completionStatus && status.completionReason) return `Waiting: ${status.completionReason}`
+  if (status.completionStatus) return 'Waiting until the exact production order is completed'
   if (status.finished) return status.last && status.last.ok ? 'Finished' : 'Finished without an order'
   if (!status.last) return `In state "${status.stateName}"`
   const what = describeEffect(status.last.effect).toLowerCase()
@@ -128,6 +138,7 @@ export function describeBasePolicyStatus(status) {
 function ensureRun(entry) {
   let run = runs.get(entry.policy.id)
   if (!run || run.behaviorRevision !== entry.behaviorRevision) {
+    if (run?.runtime.wait?.receiptId) releaseCompletionReceipt(run.runtime.wait.receiptId)
     run = { policy: entry.policy, ownerId: entry.ownerId, behaviorRevision: entry.behaviorRevision, runtime: createPolicyRuntime(entry.policy), nextActAt: 0, pending: null, orders: 0, last: null }
     runs.set(entry.policy.id, run)
   }
@@ -138,6 +149,8 @@ function ensureRun(entry) {
 function act(run, effect, context, now) {
   const meta = EFFECTS[effect.type]
   if (!meta || (meta.variant !== 'build' && meta.variant !== 'unitBuild')) return
+  context.automationId = run.policy.id
+  context.automationRevision = run.behaviorRevision
   const result = meta.variant === 'unitBuild'
     ? executeUnitBuildCommand(meta.command, effect, context)
     : executeBuildCommand(meta.command, effect, context)
@@ -146,17 +159,32 @@ function act(run, effect, context, now) {
   if (result.ok) {
     run.orders += 1
     run.pending = null
+    if (effect.waitForCompletion) run.runtime.wait = { ...run.runtime.wait, status: 'pending', receiptId: result.receiptId, reason: null }
   } else {
     run.pending = effect
+    if (effect.waitForCompletion) run.runtime.wait = { ...run.runtime.wait, status: 'issuing', reason: result.reason }
   }
   emit({ type: result.ok ? 'ordered' : 'refused', policyId: run.policy.id, effect, reason: result.reason, at: now })
 }
 
 function stepRun(run, context, now) {
   const previousStateId = run.runtime.currentStateId
+  const previousRuntime = run.runtime
+  const previousOrders = run.orders
+  const previousPending = run.pending
   view.now = now
   const program = getCompiledPolicyProgram(run.policy.id)
   if (!program || program.behaviorRevision !== (run.behaviorRevision || 1)) return
+  const wait = run.runtime.wait
+  if (wait?.receiptId && wait.status === 'pending') {
+    const receipt = getCompletionReceipt(wait.receiptId)
+    if (!receipt) run.runtime = { ...run.runtime, wait: { ...wait, status: 'failed', reason: 'the exact production receipt was lost' } }
+    else if (receipt.status === 'pending' && wait.reason !== receipt.reason) run.runtime = { ...run.runtime, wait: { ...wait, reason: receipt.reason } }
+    else if (receipt.status !== 'pending') {
+      run.runtime = { ...run.runtime, wait: { ...wait, status: receipt.status, reason: receipt.reason } }
+      releaseCompletionReceipt(wait.receiptId)
+    }
+  }
   const outcome = stepCompiledPolicy(program, run.runtime, view, STEP_GATE.open)
   run.runtime = outcome.runtime
   if (run.runtime.currentStateId !== previousStateId) run.pending = null
@@ -165,6 +193,11 @@ function stepRun(run, context, now) {
     if (item.phase === 'enter' || now >= run.nextActAt) act(run, item.params, context, now)
   }
   if (run.pending && outcome.effects.length === 0 && now >= run.nextActAt) act(run, run.pending, context, now)
+  if (gameState.replay?.recordingActive && (run.orders !== previousOrders || run.pending !== previousPending || run.runtime.currentStateId !== previousRuntime.currentStateId || run.runtime.wait !== previousRuntime.wait || run.runtime.pending !== previousRuntime.pending || run.runtime.hold !== previousRuntime.hold || run.runtime.finished !== previousRuntime.finished)) {
+    recordReplayCommand({ type: 'automation-base-runtime', snapshot: [{ policyId: run.policy.id, ownerId: run.ownerId,
+      behaviorRevision: run.behaviorRevision, runtime: globalThis.structuredClone(run.runtime), nextActAt: run.nextActAt,
+      pending: globalThis.structuredClone(run.pending), orders: run.orders, last: globalThis.structuredClone(run.last) }] }, { source: 'automation' })
+  }
 }
 
 /**
@@ -189,7 +222,10 @@ export function updateBasePolicies(context, now = getSimulationTime(gameState)) 
   if (runUnits) entries.push(...listEnabledUnitBuildPolicies(owner))
   if (runs.size > 0) {
     runs.forEach((run, id) => {
-      if (!entries.some(entry => entry.policy.id === id)) runs.delete(id)
+      if (!entries.some(entry => entry.policy.id === id)) {
+        if (run.runtime.wait?.receiptId) releaseCompletionReceipt(run.runtime.wait.receiptId)
+        runs.delete(id)
+      }
     })
   }
   for (let i = 0; i < entries.length; i++) {

@@ -1,3 +1,4 @@
+import { noteCompletionTargetDestroyed } from '../policies/unitCompletion.js'
 // Building System Module - Handles building updates, defensive buildings, and Tesla coils
 import { TILE_SIZE, TANK_TURRET_ROT, BUILDING_SELL_DURATION } from '../config.js'
 import { playSound, playPositionalSound } from '../sound.js'
@@ -69,6 +70,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
 
       // Skip destroyed buildings and remove them
       if (building.health <= 0) {
+        noteCompletionTargetDestroyed(building, 'building')
         if (building.policyBindings || building.automationIntent) teardownDefenceAutomation(building)
         if (!building.aiApiDestroyedRecorded && gameState.gameStarted && !gameState.mapEditMode) {
           recordDestroyed({

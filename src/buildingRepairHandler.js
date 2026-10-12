@@ -1,3 +1,5 @@
+import { isHost } from './network/gameCommandSync.js'
+import { completeProductionItem } from './policies/completionReceipts.js'
 import { TILE_SIZE } from './config.js'
 import { canPlaceBuilding, calculateRepairCost } from './buildings.js'
 import { playSound } from './sound.js'
@@ -135,7 +137,7 @@ export function buildingRepairHandler(e, gameState, gameCanvas, mapGrid, units, 
     try {
       // Check if placement is valid - pass buildings and factories arrays
       if (canPlaceBuilding(buildingType, tileX, tileY, mapGrid, units, gameState.buildings, factories, gameState.humanPlayer)) {
-        constructPlayerBuilding(buildingType, tileX, tileY, gameState, mapGrid, productionQueue.productionController)
+        constructPlayerBuilding(buildingType, tileX, tileY, gameState, mapGrid, productionQueue.productionController, productionQueue.completedBuildings.find(item => item.type === buildingType)?.completionReceiptId)
 
         // Exit placement mode
         gameState.buildingPlacementMode = false
@@ -153,6 +155,7 @@ export function buildingRepairHandler(e, gameState, gameCanvas, mapGrid, units, 
         let placedBuildingButton = null
         if (completedBuildingIndex !== -1) {
           placedBuildingButton = productionQueue.completedBuildings[completedBuildingIndex].button
+          if (isHost() || !gameState.multiplayerSession?.isRemote) completeProductionItem(productionQueue.completedBuildings[completedBuildingIndex].completionReceiptId)
           productionQueue.completedBuildings.splice(completedBuildingIndex, 1)
         }
 

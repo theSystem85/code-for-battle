@@ -1,3 +1,4 @@
+import { failCompletionReceipt } from '../policies/completionReceipts.js'
 import { gameState } from '../gameState.js'
 import { unitCosts, buildingCosts } from '../main.js'
 import { productionQueue } from '../productionQueue.js'
@@ -601,6 +602,7 @@ export function setupBuildingButtons(controller) {
               } else {
                 // Remove queued building (no money refund for stacked buildings)
                 productionQueue.tryResumeProduction()
+                failCompletionReceipt(productionQueue.buildingItems[i]?.completionReceiptId)
                 productionQueue.buildingItems.splice(i, 1)
                 productionQueue.removeBlueprint(queued)
 
@@ -644,6 +646,7 @@ export function setupBuildingButtons(controller) {
             } else {
               // Remove queued building (no money refund for queued items)
               productionQueue.tryResumeProduction()
+              failCompletionReceipt(productionQueue.buildingItems[i]?.completionReceiptId)
               productionQueue.buildingItems.splice(i, 1)
               productionQueue.removeBlueprint(queued)
 
@@ -725,6 +728,7 @@ export function setupBuildingButtons(controller) {
             } else {
               // Remove queued building (no money refund for queued items)
               productionQueue.tryResumeProduction()
+              failCompletionReceipt(productionQueue.buildingItems[i]?.completionReceiptId)
               productionQueue.buildingItems.splice(i, 1)
               productionQueue.removeBlueprint(queued)
 

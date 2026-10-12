@@ -1,3 +1,5 @@
+import { isHost } from '../network/gameCommandSync.js'
+import { completeProductionItem } from '../policies/completionReceipts.js'
 // eventHandlers.js
 // Handle game control and building placement event handlers
 
@@ -820,7 +822,10 @@ export class EventHandlers {
           updatePowerSupply(gameState.buildings, gameState)
 
           // Broadcast building placement to other players in multiplayer
-          broadcastBuildingPlace(buildingType, tileX, tileY, gameState.humanPlayer)
+          broadcastBuildingPlace(buildingType, tileX, tileY, gameState.humanPlayer, (() => {
+            const id = productionQueue.completedBuildings.find(item => item.type === buildingType)?.completionReceiptId
+            return id ? { receiptId: id, itemId: `${id}:building` } : null
+          })())
           recordReplayCommand({
             type: 'build_place',
             buildingType,
@@ -842,6 +847,7 @@ export class EventHandlers {
           let placedBuildingButton = null
           if (completedBuildingIndex !== -1) {
             placedBuildingButton = productionQueue.completedBuildings[completedBuildingIndex].button
+            if (isHost() || !gameState.multiplayerSession?.isRemote) completeProductionItem(productionQueue.completedBuildings[completedBuildingIndex].completionReceiptId)
             productionQueue.completedBuildings.splice(completedBuildingIndex, 1)
           }
 

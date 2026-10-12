@@ -142,6 +142,17 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
   const gate = options.gate || STEP_GATE.open
   const evaluate = options.evaluate || evaluateCondition
 
+  if (runtime.wait) {
+    if (runtime.wait.status !== 'completed') {
+      return { runtime, effects: [], trace: buildTrace(runtime.currentStateId, runtime.currentStateId,
+        { gate, event: runtime.wait.status === 'failed' ? 'completionFailed' : 'waitingForCompletion', reason: runtime.wait.reason || null }) }
+    }
+    if (gate !== STEP_GATE.open) return { runtime, effects: [], trace: buildTrace(runtime.currentStateId, runtime.currentStateId, { gate, event: 'completionPaused' }) }
+    const completedState = findState(policy, runtime.currentStateId, options.program)
+    runtime = { ...runtime, wait: null, completedEffectStateId: runtime.currentStateId,
+      finished: policy.execution === 'oneTime' && !runtime.hold && !completedState?.transitions?.length }
+  }
+
   if (runtime.finished) {
     return {
       runtime,
@@ -173,6 +184,8 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     entered: runtime.entered || { [runtime.currentStateId]: 1 },
     steps: runtime.steps + 1
   }
+  if (runtime.wait) next.wait = runtime.wait
+  if (runtime.completedEffectStateId) next.completedEffectStateId = runtime.completedEffectStateId
   const effects = []
 
   if (runtime.hold) {
@@ -199,7 +212,7 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
         })
       }
     }
-    if (gate === STEP_GATE.open && state.effect) {
+    if (gate === STEP_GATE.open && state.effect && !(state.effect.waitForCompletion && runtime.completedEffectStateId === state.id)) {
       effects.push(makeEffect(state, 'hold', 'while', runtime.hold.transitionId))
     }
     return {
@@ -280,6 +293,7 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
   if (!target) return { runtime, effects: [], trace: buildTrace(state.id, state.id, { event: 'invalid', gate, reason: 'unknown_target', transitionId: taken.id }) }
   const branchId = branch === 'else' ? (taken.elseId || `${taken.id}:else`) : taken.id
   next.currentStateId = target.id
+  if (runtime.completedEffectStateId) next.completedEffectStateId = null
   next.prev = {}
   next.pending = null
   next.entered = withEntered(next.entered, target.id)
@@ -290,6 +304,10 @@ export function stepPolicy(policy, runtime, worldView, options = {}) {
     next.finished = policy.execution === 'oneTime' && terminal
   }
   if (target.effect) {
+    if (target.effect.waitForCompletion === true) {
+      next.wait = { status: 'issuing', stateId: target.id, transitionId: branchId }
+      next.finished = false
+    }
     effects.push(makeEffect(target, 'enter', taken.kind, branchId))
   }
   return {

@@ -6,6 +6,7 @@
 // Command types for synchronization
 export const COMMAND_TYPES = {
   AUTOMATION_EDIT: 'automation-edit',
+  AUTOMATION_COMPLETION_ACK: 'automation-completion-ack',
   UNIT_MOVE: 'unit-move',
   UNIT_ATTACK: 'unit-attack',
   UNIT_STOP: 'unit-stop',

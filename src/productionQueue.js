@@ -1,3 +1,4 @@
+import { completeProductionItem, failCompletionReceipt, noteProductionBlocked } from './policies/completionReceipts.js'
 import { spawnUnit, findPath } from './units.js'
 import { findClosestOre } from './logic.js'
 import { buildingCosts, factories, units } from './main.js'
@@ -91,6 +92,7 @@ export const productionQueue = {
       }
 
       this.tryResumeProduction()
+      failCompletionReceipt(this.unitItems[i]?.completionReceiptId)
       this.unitItems.splice(i, 1)
       this.updateBatchCounter(button, this.unitItems.filter(item => item.button === button).length)
 
@@ -124,6 +126,7 @@ export const productionQueue = {
       }
 
       this.tryResumeProduction()
+      failCompletionReceipt(this.buildingItems[i]?.completionReceiptId)
       this.buildingItems.splice(i, 1)
       this.removeBlueprint(queued)
       this.updateBatchCounter(button, this.buildingItems.filter(item => item.button === button).length)
@@ -160,6 +163,7 @@ export const productionQueue = {
       }
 
       const currentItem = this.buildingItems.shift()
+      failCompletionReceipt(currentItem?.completionReceiptId)
       if (currentItem?.button) {
         affectedButtons.add(currentItem.button)
       }
@@ -183,6 +187,7 @@ export const productionQueue = {
         if (item.button) {
           affectedButtons.add(item.button)
         }
+        failCompletionReceipt(this.buildingItems[i]?.completionReceiptId)
         this.buildingItems.splice(i, 1)
         cancelledCount += 1
       }
@@ -223,6 +228,8 @@ export const productionQueue = {
         itemType: type,
         isBuilding: Boolean(isBuilding),
         rallyPoint: rallyPoint || null,
+        completionReceiptId: options.completionReceiptId || null,
+        completionItemId: options.completionItemId || null,
         factoryId: options.factoryId || null,
         blueprint: blueprint
           ? {
@@ -250,7 +257,7 @@ export const productionQueue = {
         const label = button.querySelector('.new-label')
         if (label) label.style.display = 'none'
       }
-      this.buildingItems.push({ type, button, isBuilding, blueprint })
+      this.buildingItems.push({ type, button, isBuilding, blueprint, completionReceiptId: options.completionReceiptId || null })
       const currentCount = this.buildingItems.filter(item => item.button === button).length
       this.updateBatchCounter(button, currentCount)
 
@@ -268,6 +275,8 @@ export const productionQueue = {
         button,
         isBuilding,
         rallyPoint,
+        completionReceiptId: options.completionReceiptId || null,
+        completionItemId: options.completionItemId || null,
         factoryId: options.factoryId || null,
         automationDelivery: options.automationDelivery || null
       })
@@ -321,6 +330,7 @@ export const productionQueue = {
           console.error(`Attempted to start ${item.type} production without a Vehicle Factory.`)
           showNotification(`Cannot produce ${item.type}: Vehicle Factory required.`)
           // Cancel this item? Or just wait? Let's remove it and refund.
+          failCompletionReceipt(item.completionReceiptId, 'the required production building is unavailable')
           this.unitItems.shift() // Remove the item
           gameState.money += cost // Refund
           this.updateBatchCounter(item.button, this.unitItems.filter(i => i.button === item.button).length) // Update counter
@@ -337,6 +347,7 @@ export const productionQueue = {
       if (item.type === 'supplyShip' && !hasSupplyBuilding) {
         console.error('Attempted to start supply ship production without a supply building.')
         showNotification('Cannot produce Supply Ship: supply building required.')
+        failCompletionReceipt(item.completionReceiptId, 'the required production building is unavailable')
         this.unitItems.shift()
         gameState.money += cost
         this.updateBatchCounter(item.button, this.unitItems.filter(i => i.button === item.button).length)
@@ -346,6 +357,7 @@ export const productionQueue = {
       if (!hasShipyard) {
         console.error(`Attempted to start ${item.type} production without a Shipyard.`)
         showNotification(`Cannot produce ${item.type}: Shipyard required.`)
+        failCompletionReceipt(item.completionReceiptId, 'the required production building is unavailable')
         this.unitItems.shift()
         gameState.money += cost
         this.updateBatchCounter(item.button, this.unitItems.filter(i => i.button === item.button).length)
@@ -381,6 +393,8 @@ export const productionQueue = {
       isBuilding: item.isBuilding, // Should always be false here
       rallyPoint: item.rallyPoint || null,
       factoryId: item.factoryId || null,
+      completionReceiptId: item.completionReceiptId || null,
+      completionItemId: item.completionItemId || null,
       automationDelivery: item.automationDelivery || null
     }
 
@@ -435,6 +449,7 @@ export const productionQueue = {
     const yardMultiplier = this.getConstructionYardMultiplier()
     if (yardMultiplier === 0) {
       // No construction yard left - cancel this item and notify player
+      failCompletionReceipt(item.completionReceiptId, 'the construction yard was lost')
       this.buildingItems.shift()
       this.updateBatchCounter(item.button, this.buildingItems.filter(i => i.button === item.button).length)
       showNotification('Cannot construct building: Construction Yard required.')
@@ -467,6 +482,7 @@ export const productionQueue = {
         if (nearBase) break
       }
       if (!nearBase) {
+        noteProductionBlocked(item.completionReceiptId, 'the planned placement does not touch the base')
         return
       }
     }
@@ -499,6 +515,8 @@ export const productionQueue = {
       startTime: getSimulationTime(gameState),
       duration: duration,
       isBuilding: item.isBuilding,
+      completionReceiptId: item.completionReceiptId || null,
+      completionItemId: item.completionItemId || null,
       blueprint: item.blueprint || null
     }
 
@@ -603,6 +621,8 @@ export const productionQueue = {
 
   completeCurrentUnitProduction: function() {
     if (!this.currentUnit) return
+    const completionReceiptId = this.currentUnit.completionReceiptId
+    let itemSpawned = false
 
     // Remove item from queue
     this.unitItems.shift()
@@ -621,6 +641,7 @@ export const productionQueue = {
         console.error('Cannot spawn F22 Raptor: No Airstrip found.')
         showNotification('Production cancelled: F22 Raptor requires an operational Airstrip.')
         this.currentUnit.button.classList.remove('active', 'paused')
+        if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
         this.currentUnit = null
         this.startNextUnitProduction()
         return
@@ -668,6 +689,7 @@ export const productionQueue = {
         console.error('Cannot spawn apache: No Helipad found.')
         showNotification('Production cancelled: Apache requires an operational Helipad.')
         this.currentUnit.button.classList.remove('active', 'paused')
+        if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
         this.currentUnit = null
         this.startNextUnitProduction()
         return
@@ -712,6 +734,7 @@ export const productionQueue = {
         console.error('Cannot spawn F35: No Helipad or Airstrip found.')
         showNotification('Production cancelled: F35 requires an operational Helipad or Airstrip.')
         this.currentUnit.button.classList.remove('active', 'paused')
+        if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
         this.currentUnit = null
         this.startNextUnitProduction()
         return
@@ -801,6 +824,7 @@ export const productionQueue = {
         showNotification(`Production cancelled: ${unitType} requires a Vehicle Factory.`)
         // Reset and try next production
         this.currentUnit.button.classList.remove('active', 'paused')
+        if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
         this.currentUnit = null
         this.startNextUnitProduction() // Try next in queue
         return
@@ -821,7 +845,9 @@ export const productionQueue = {
       if (isRemoteClient) {
         // Client: Send spawn request to host - don't spawn locally
         // The host will spawn the unit and it will appear in the next snapshot
-        broadcastUnitSpawn(unitType, spawnFactory.id, rallyPointTarget, this.currentUnit.automationDelivery)
+        if (completionReceiptId) broadcastUnitSpawn(unitType, spawnFactory.id, rallyPointTarget, this.currentUnit.automationDelivery, { receiptId: completionReceiptId, itemId: this.currentUnit.completionItemId })
+        else broadcastUnitSpawn(unitType, spawnFactory.id, rallyPointTarget, this.currentUnit.automationDelivery)
+        itemSpawned = true // A requested spawn is pending until the authoritative acknowledgement.
 
         // Narrator replaces the ready sting the first time this unit rolls off the line.
         playUnitReadySound(unitType)
@@ -839,6 +865,8 @@ export const productionQueue = {
         )
         if (newUnit) {
           units.push(newUnit)
+          itemSpawned = true
+          completeProductionItem(completionReceiptId, this.currentUnit.completionItemId)
           applyUnitBuildDelivery(newUnit, this.currentUnit.automationDelivery)
           // Narrator replaces the ready sting the first time this unit rolls off the line.
           playUnitReadySound(unitType)
@@ -896,6 +924,7 @@ export const productionQueue = {
       progressBar.style.width = '0%'
     }
 
+    if (!itemSpawned) failCompletionReceipt(completionReceiptId, 'the unit could not be spawned')
     this.currentUnit = null
     this.pausedUnit = false  // Clear pause state when unit completes
 
@@ -918,16 +947,21 @@ export const productionQueue = {
     if (blueprint) {
       const planningBuildings = mapBlueprintsToFootprints(gameState.blueprints || [], gameState.humanPlayer)
       if (canPlaceBuilding(this.currentBuilding.type, blueprint.x, blueprint.y, gameState.mapGrid, units, [...gameState.buildings, ...planningBuildings], factories, gameState.humanPlayer)) {
-        constructPlayerBuilding(this.currentBuilding.type, blueprint.x, blueprint.y, gameState, gameState.mapGrid, this.productionController)
+        const constructed = constructPlayerBuilding(this.currentBuilding.type, blueprint.x, blueprint.y, gameState, gameState.mapGrid, this.productionController, this.currentBuilding.completionReceiptId)
+        if (constructed?.health > 0 && constructed.owner === gameState.humanPlayer) {
+          if (isHost() || !gameState.multiplayerSession?.isRemote) completeProductionItem(this.currentBuilding.completionReceiptId, `${this.currentBuilding.completionReceiptId}:building`)
+        }
+        else failCompletionReceipt(this.currentBuilding.completionReceiptId, 'the building was not finalized')
       } else {
-        this.completedBuildings.push({ type: this.currentBuilding.type, button: this.currentBuilding.button })
+        noteProductionBlocked(this.currentBuilding.completionReceiptId, 'the produced building still needs a valid placement')
+        this.completedBuildings.push({ type: this.currentBuilding.type, button: this.currentBuilding.button, completionReceiptId: this.currentBuilding.completionReceiptId || null })
         this.currentBuilding.button.classList.add('ready-for-placement')
         this.updateReadyBuildingCounter(this.currentBuilding.button)
         showNotification(`${buildingData[this.currentBuilding.type].displayName} ready! Click build button to place.`)
       }
       this.removeBlueprint(this.currentBuilding)
     } else {
-      this.completedBuildings.push({ type: this.currentBuilding.type, button: this.currentBuilding.button })
+      this.completedBuildings.push({ type: this.currentBuilding.type, button: this.currentBuilding.button, completionReceiptId: this.currentBuilding.completionReceiptId || null })
       this.currentBuilding.button.classList.add('ready-for-placement')
       this.updateReadyBuildingCounter(this.currentBuilding.button)
       showNotification(`${buildingData[this.currentBuilding.type].displayName} ready! Click build button to place.`)
@@ -1020,6 +1054,7 @@ export const productionQueue = {
 
     const isRemoteClientSession = !isHost() && gameState.multiplayerSession?.isRemote
 
+    failCompletionReceipt(this.currentUnit.completionReceiptId)
     const button = this.currentUnit.button
     const type = this.currentUnit.type
 
@@ -1073,6 +1108,7 @@ export const productionQueue = {
 
     const isRemoteClientSession = !isHost() && gameState.multiplayerSession?.isRemote
 
+    failCompletionReceipt(this.currentBuilding.completionReceiptId)
     const button = this.currentBuilding.button
     const type = this.currentBuilding.type
 
@@ -1145,6 +1181,7 @@ export const productionQueue = {
     }
 
     // Remove the completed building from the array
+    failCompletionReceipt(this.completedBuildings[completedBuildingIndex]?.completionReceiptId)
     this.completedBuildings.splice(completedBuildingIndex, 1)
 
     // Clear building placement mode
@@ -1272,6 +1309,7 @@ export const productionQueue = {
     }
 
     // Remove the completed building from the array
+    failCompletionReceipt(this.completedBuildings[completedBuildingIndex]?.completionReceiptId)
     this.completedBuildings.splice(completedBuildingIndex, 1)
 
     // If this building was in placement mode, exit placement mode
@@ -1360,6 +1398,8 @@ export const productionQueue = {
       rallyPoint: serializeRallyPoint(item.rallyPoint),
       blueprint: serializeBlueprint(item.blueprint),
       factoryId: item.factoryId || null,
+      completionReceiptId: item.completionReceiptId || null,
+      completionItemId: item.completionItemId || null,
       automationDelivery: item.automationDelivery || null
     })
 
@@ -1373,6 +1413,8 @@ export const productionQueue = {
           duration: Number.isFinite(this.currentUnit.duration) ? this.currentUnit.duration : 0,
           rallyPoint: serializeRallyPoint(this.currentUnit.rallyPoint),
           factoryId: this.currentUnit.factoryId || null,
+          completionReceiptId: this.currentUnit.completionReceiptId || null,
+          completionItemId: this.currentUnit.completionItemId || null,
           automationDelivery: this.currentUnit.automationDelivery || null
         }
         : null,
@@ -1381,6 +1423,7 @@ export const productionQueue = {
           type: this.currentBuilding.type,
           progress: clampProgress(this.currentBuilding),
           duration: Number.isFinite(this.currentBuilding.duration) ? this.currentBuilding.duration : 0,
+          completionReceiptId: this.currentBuilding.completionReceiptId || null,
           blueprint: serializeBlueprint(this.currentBuilding.blueprint)
         }
         : null,
@@ -1388,7 +1431,7 @@ export const productionQueue = {
       pausedBuilding: Boolean(this.pausedBuilding),
       unitPaid: Number.isFinite(this.unitPaid) ? this.unitPaid : 0,
       buildingPaid: Number.isFinite(this.buildingPaid) ? this.buildingPaid : 0,
-      completedBuildings: this.completedBuildings.map(item => ({ type: item.type }))
+      completedBuildings: this.completedBuildings.map(item => ({ type: item.type, completionReceiptId: item.completionReceiptId || null }))
     }
   },
 
@@ -1504,6 +1547,8 @@ export const productionQueue = {
           isBuilding: false,
           rallyPoint,
           factoryId: item.factoryId || null,
+          completionReceiptId: item.completionReceiptId || null,
+          completionItemId: item.completionItemId || null,
           automationDelivery: item.automationDelivery || null
         })
       })
@@ -1518,6 +1563,8 @@ export const productionQueue = {
           type: item.type,
           button,
           isBuilding: true,
+          completionReceiptId: item.completionReceiptId || null,
+          completionItemId: item.completionItemId || null,
           blueprint
         })
       })
@@ -1561,6 +1608,7 @@ export const productionQueue = {
       const match = reorderToFront(this.unitItems, item =>
         item.type === state.currentUnit.type &&
         item.automationDelivery === (state.currentUnit.automationDelivery || null) &&
+        (!state.currentUnit.completionReceiptId || (item.completionReceiptId === state.currentUnit.completionReceiptId && item.completionItemId === state.currentUnit.completionItemId)) &&
         rallyPointsMatch(item.rallyPoint, state.currentUnit.rallyPoint)
       )
       if (match) {
@@ -1579,6 +1627,8 @@ export const productionQueue = {
           isBuilding: false,
           rallyPoint,
           factoryId: state.currentUnit.factoryId || match.factoryId || null,
+          completionReceiptId: state.currentUnit.completionReceiptId || match.completionReceiptId || null,
+          completionItemId: state.currentUnit.completionItemId || match.completionItemId || null,
           automationDelivery: state.currentUnit.automationDelivery || match.automationDelivery || null
         }
         match.button.classList.add('active')
@@ -1597,7 +1647,7 @@ export const productionQueue = {
 
     if (state.currentBuilding && this.buildingItems.length > 0) {
       const match = reorderToFront(this.buildingItems, item =>
-        item.type === state.currentBuilding.type && blueprintsMatch(item.blueprint, state.currentBuilding.blueprint)
+        item.type === state.currentBuilding.type && (!state.currentBuilding.completionReceiptId || item.completionReceiptId === state.currentBuilding.completionReceiptId) && blueprintsMatch(item.blueprint, state.currentBuilding.blueprint)
       )
       if (match) {
         const duration = Number.isFinite(state.currentBuilding.duration) ? state.currentBuilding.duration : 0
@@ -1613,6 +1663,7 @@ export const productionQueue = {
             : now,
           duration,
           isBuilding: true,
+          completionReceiptId: state.currentBuilding.completionReceiptId || match.completionReceiptId || null,
           blueprint
         }
         match.button.classList.add('active')
@@ -1647,7 +1698,7 @@ export const productionQueue = {
       state.completedBuildings.forEach(item => {
         const button = getBuildingButton(item.type)
         if (!button) return
-        this.completedBuildings.push({ type: item.type, button })
+        this.completedBuildings.push({ type: item.type, button, completionReceiptId: item.completionReceiptId || null })
       })
 
       const processedButtons = new Set()

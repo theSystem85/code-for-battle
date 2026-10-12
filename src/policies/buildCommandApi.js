@@ -1,3 +1,4 @@
+import { createCompletionReceipt, releaseCompletionReceipt } from './completionReceipts.js'
 // Build command API: the one internal way a build policy orders construction.
 //
 // executeBuildCommand(name, args, ctx) runs a command only when the engine
@@ -52,8 +53,13 @@ const COMMANDS = {
     run(args, ctx) {
       const plan = planBuild(args, ctx)
       if (plan.reason) return { ok: false, reason: plan.reason }
-      if (ctx.build.queue(plan.type, plan.placement) !== true) return { ok: false, reason: 'the engine did not accept the order' }
-      return { ok: true, reason: null }
+      const receiptId = args.waitForCompletion ? createCompletionReceipt(ctx.owner, ctx.automationId, 1, ctx.automationRevision) : null
+      const queued = receiptId ? ctx.build.queue(plan.type, plan.placement, receiptId) : ctx.build.queue(plan.type, plan.placement)
+      if (queued !== true) {
+        if (receiptId) releaseCompletionReceipt(receiptId)
+        return { ok: false, reason: 'the engine did not accept the order' }
+      }
+      return receiptId ? { ok: true, reason: null, receiptId } : { ok: true, reason: null }
     }
   }
 }

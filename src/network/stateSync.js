@@ -1,3 +1,4 @@
+import { applyProductionCompletionAck, getCompletionReceipt } from '../policies/completionReceipts.js'
 import { exportAutomationSession, restoreAutomationSession, getPolicyStoreVersion } from '../policies/policyStore.js'
 /**
  * Game State Synchronization Module
@@ -477,6 +478,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
   // Serialize units with essential properties - use mainUnits from main.js as that's the authoritative array
   const units = (mainUnits || []).map(unit => ({
     id: unit.id,
+    automationCompletion: unit.automationCompletion || null,
     type: unit.type,
     owner: unit.owner,
     x: unit.x,
@@ -567,6 +569,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
       : null
     return {
       id: building.id,
+      automationCompletion: building.automationCompletion || null,
       type: building.type,
       owner: building.owner,
       x: building.x,
@@ -956,6 +959,7 @@ export function applyGameStateSnapshot(snapshot) {
 
     // Build the updated units array, preserving local-only properties (like cached sprites)
     const updatedUnits = snapshot.units.map(snapshotUnit => {
+      if (snapshotUnit.automationCompletion && getCompletionReceipt(snapshotUnit.automationCompletion.receiptId)) applyProductionCompletionAck({ ...snapshotUnit.automationCompletion, ownerId: snapshotUnit.owner, status: 'completed' })
       snapshotUnitIds.add(snapshotUnit.id)
       const existing = existingById.get(snapshotUnit.id)
 
@@ -1058,6 +1062,7 @@ export function applyGameStateSnapshot(snapshot) {
 
     // Replace buildings array with snapshot data, preserving any local-only properties
     gameState.buildings = snapshot.buildings.map(snapshotBuilding => {
+      if (snapshotBuilding.automationCompletion && getCompletionReceipt(snapshotBuilding.automationCompletion.receiptId)) applyProductionCompletionAck({ ...snapshotBuilding.automationCompletion, ownerId: snapshotBuilding.owner, status: 'completed' })
       const key = snapshotBuilding.id || `${snapshotBuilding.type}_${snapshotBuilding.x}_${snapshotBuilding.y}`
       const existing = existingByIdOrPos.get(key)
 

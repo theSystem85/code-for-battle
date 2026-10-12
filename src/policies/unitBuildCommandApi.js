@@ -1,3 +1,4 @@
+import { createCompletionReceipt, releaseCompletionReceipt } from './completionReceipts.js'
 import { UNIT_BUILDABLE_TYPES, UNIT_DELIVERY_ORDERS } from './policyEffects.js'
 
 export const MAX_AUTOMATED_UNIT_STACK = 20
@@ -29,8 +30,13 @@ export function executeUnitBuildCommand(name, args, ctx) {
   if (name !== 'buildUnits') return { ok: false, reason: `unknown unit build command "${name}"` }
   const order = plan(args || {}, ctx)
   if (order.reason) return { ok: false, reason: order.reason }
-  if (ctx.unitBuild.queue(order) !== true) return { ok: false, reason: 'the engine did not accept the unit stack' }
-  return { ok: true, reason: null }
+  const receiptId = args.waitForCompletion ? createCompletionReceipt(ctx.owner, ctx.automationId, order.quantity, ctx.automationRevision) : null
+  if (receiptId) order.receiptId = receiptId
+  if (ctx.unitBuild.queue(order) !== true) {
+    if (receiptId) releaseCompletionReceipt(receiptId)
+    return { ok: false, reason: 'the engine did not accept the unit stack' }
+  }
+  return receiptId ? { ok: true, reason: null, receiptId } : { ok: true, reason: null }
 }
 
 export function getUnitBuildRefusal(name, args, ctx) {

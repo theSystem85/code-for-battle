@@ -22,6 +22,7 @@ import { STEP_GATE } from './policyStep.js'
 export function isBindingControlling(binding, policy, gate) {
   const runtime = binding.runtime
   if (!runtime || runtime.finished || gate !== STEP_GATE.open) return false
+  if (runtime.wait) return runtime.wait.status !== 'failed'
   if (runtime.pending) return true
   if (!runtime.hold) return false
   return runtime.currentStateId !== policy.initialStateId
