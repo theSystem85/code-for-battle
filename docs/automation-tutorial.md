@@ -51,7 +51,7 @@ For build-building automation, choose a building and supported placement options
 
 ## Wait for an action to finish
 
-For building and unit production, enable **Wait until produced** beside the action. The next state is considered only after the exact building finishes construction at its placement, or every unit in that stack spawns. Rally/delivery commands happen separately.
+For building and unit production, enable **Wait until produced** beside the action. The next state is considered only after the exact building is finalized at its placement, or every unit in that stack spawns. Rally/delivery commands happen separately.
 
 For finite unit actions, enable **Wait until done**. Movement waits for arrival; an attack waits for destruction of the target that action selected; service travel waits for its service objective. Both checkboxes have matching CFBL `wait until produced` / `wait until done` suffixes. Without a checkbox the existing behavior is unchanged. Persistent aim, rotation and protection commands do not have a finite completion option.
 

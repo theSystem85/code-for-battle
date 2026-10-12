@@ -104,6 +104,21 @@ describe('policy state machine view', () => {
     expect(document.querySelector('.policy-machine__svg')).toBe(svgBefore)
   })
 
+  it('shows pending and blocked completion work without rebuilding the machine', () => {
+    view.openPolicyMachineView(unit)
+    const svgBefore = document.querySelector('.policy-machine__svg')
+    const status = document.querySelector('.policy-machine__completion')
+    expect(status.hidden).toBe(true)
+    unit.policyBindings[0].runtime.wait = { status: 'pending' }
+    view.refreshPolicyMachineView()
+    expect(status.hidden).toBe(false)
+    expect(status.textContent).toContain('Waiting for the issued action')
+    unit.policyBindings[0].runtime.wait = { status: 'failed', reason: 'the original target was lost' }
+    view.refreshPolicyMachineView()
+    expect(status.textContent).toBe('Blocked: the original target was lost')
+    expect(document.querySelector('.policy-machine__svg')).toBe(svgBefore)
+  })
+
   it('toggles open and closed and never uses native titles', () => {
     expect(view.togglePolicyMachineView(unit)).toBe(true)
     expect(view.isPolicyMachineViewOpen(unit)).toBe(true)

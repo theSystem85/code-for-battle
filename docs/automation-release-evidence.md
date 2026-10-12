@@ -85,3 +85,9 @@ export default {
 The integrated diagnostic command used `PERF_RENDERING_PIPELINE=1 PERF_RENDERING_DURATION_MS=60000`, the same wrapper, `tests/e2e/renderingPipeline75Fps.test.js` and `--repeat-each=2`; both runs passed route/error checks. Qualifying hardware must additionally enable the acceptance gate and run the active worst-case protocol from spec 107.
 
 Accepted CFBL edits compile to inert instructions outside the simulation loop; gameplay evaluates state machines through normal game command APIs without parsing source each tick.
+
+## Spec 109 — optional completion waits
+
+Completion waits are source-backed in both editors. Building/unit production waits track the exact order and authoritative completion; finite unit control waits track arrival, flight/service completion or the originally issued attack target. Cancellation and superseding orders cannot count as success. See [spec 109](../specs/109-automation-command-completion-waits.md) and the [runtime measurement note](performance/automation-completion-waits.md).
+
+The integrated branch passed 249 unit files / **4,830 tests**, **86 integration tests**, lint and build. Browser runs passed ten scenarios in the main combined run and two real-completion scenarios in a focused rerun, covering **11 distinct cases** in total (one building case repeated). These include actual movement to the issued destination and actual paid building placement, with no duplicate order or early transition. Seven published CFBL snippets validated, including production completion modifiers. Physical iOS and qualifying-hardware performance acceptance remain open.
