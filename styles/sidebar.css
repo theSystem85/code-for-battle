@@ -567,6 +567,9 @@ body.is-touch .money-tooltip__meta {
 }
 
 #actions {
+  position: relative;
+  /* Keep action tooltips above the resource bars (both use z-index: 2). */
+  z-index: 3;
   display: flex;
   gap: 5px;
   margin: 10px 0;

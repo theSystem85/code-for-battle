@@ -9,9 +9,9 @@ async function startGame(page) {
   await page.waitForFunction(() => window.gameState?.gameStarted && window.gameInstance?.gameLoop)
 }
 
-async function newUnitAutomation(page) {
+async function newAutomation(page, variant = 'unit') {
   await page.locator('#policiesBtn').click()
-  await page.locator('#newPolicyBtn').click()
+  await page.getByLabel('Add automation to', { exact: true }).selectOption(variant)
   return page.locator('.policy-editor')
 }
 
@@ -19,7 +19,19 @@ test('DAV and guided CFBL share changes, legal choices, history and persisted so
   const errors = []
   page.on('pageerror', error => errors.push(error.message))
   await startGame(page)
-  const editor = await newUnitAutomation(page)
+  await page.locator('#policiesBtn').hover()
+  expect(await page.locator('#actions').evaluate(element => Number(window.getComputedStyle(element).zIndex))).toBeGreaterThan(
+    await page.locator('#energyBarContainer').evaluate(element => Number(window.getComputedStyle(element).zIndex)))
+  expect(await page.locator('#actions').evaluate(element => Number(window.getComputedStyle(element).zIndex))).toBeGreaterThan(
+    await page.locator('#moneyBarContainer').evaluate(element => Number(window.getComputedStyle(element).zIndex)))
+  const editor = await newAutomation(page)
+  const buttonsTab = editor.getByRole('button', { name: 'Default automation view', exact: true })
+  const cfblTab = editor.getByRole('button', { name: 'Automation text view', exact: true })
+  const buttonsBox = await buttonsTab.boundingBox()
+  const cfblBox = await cfblTab.boundingBox()
+  expect(buttonsBox.y).toBeCloseTo(cfblBox.y, 0)
+  expect(cfblBox.x).toBeGreaterThanOrEqual(buttonsBox.x + buttonsBox.width)
+  await expect(buttonsTab).toHaveAttribute('aria-pressed', 'true')
   await editor.getByLabel('Automation name', { exact: true }).fill('Integration patrol')
   await editor.getByRole('button', { name: '+ Add state', exact: true }).click()
   await editor.getByLabel('State 2 action', { exact: true }).selectOption('moveForward')
@@ -27,6 +39,8 @@ test('DAV and guided CFBL share changes, legal choices, history and persisted so
   await editor.getByRole('button', { name: 'Add ELSE', exact: true }).click()
   await editor.getByLabel('ELSE target state', { exact: true }).selectOption({ label: 'State 2' })
   await editor.getByRole('button', { name: 'Automation text view', exact: true }).click()
+  await expect(cfblTab).toHaveAttribute('aria-pressed', 'true')
+  await expect(buttonsTab).toHaveAttribute('aria-pressed', 'false')
   const source = editor.getByRole('textbox', { name: 'CFBL automation source', exact: true })
   const original = await source.inputValue()
   expect(original).toContain('moveForward(tiles=2)')
@@ -74,7 +88,7 @@ for (const [deviceName, fullScreen] of [['iPhone 13', true], ['iPad Pro 11', fal
     const page = await context.newPage()
     try {
       await startGame(page)
-      const editor = await newUnitAutomation(page)
+      const editor = await newAutomation(page)
       const box = await editor.boundingBox()
       const viewport = page.viewportSize()
       if (fullScreen) {
@@ -106,8 +120,7 @@ for (const [variant, header, effect] of [
     const errors = []
     page.on('pageerror', error => errors.push(error.message))
     await startGame(page)
-    const editor = await newUnitAutomation(page)
-    await editor.getByLabel('Automation type', { exact: true }).selectOption(variant)
+    const editor = await newAutomation(page, variant)
     await editor.getByLabel('Automation name', { exact: true }).fill(`Category ${variant}`)
     await editor.getByLabel('State 1 action', { exact: true }).selectOption(effect)
     await editor.getByRole('button', { name: 'Automation text view', exact: true }).click()

@@ -129,8 +129,8 @@ export function openPolicyEditor(options = {}) {
   const cancelButton = h('button', { class: 'policy-btn', type: 'button', text: 'Cancel' })
   const closeButton = h('button', { class: 'policy-editor__close', type: 'button', 'aria-label': 'Close editor', text: '×' })
 
-  const buttonsToggle = h('button', { type: 'button', class: 'policy-btn', 'aria-label': 'Default automation view', text: 'Buttons', onClick: () => switchView('dav') })
-  const textToggle = h('button', { type: 'button', class: 'policy-btn', 'aria-label': 'Automation text view', text: 'CFBL', onClick: () => switchView('atv') })
+  const buttonsToggle = h('button', { type: 'button', class: 'policy-editor__tab', 'aria-label': 'Default automation view', text: 'Buttons', onClick: () => switchView('dav') })
+  const textToggle = h('button', { type: 'button', class: 'policy-editor__tab', 'aria-label': 'Automation text view', text: 'CFBL', onClick: () => switchView('atv') })
   dialog.append(
     h('header', { class: 'policy-editor__header' },
       titleEl,
