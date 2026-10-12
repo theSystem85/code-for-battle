@@ -79,6 +79,7 @@
 }
 .policy-editor__tab:focus-visible { outline: 2px solid #69b8ff; outline-offset: 2px; }
 .policy-panel__add { width: 100%; }
+.policy-state__completion { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
 
 .policy-editor__pause-note {
   grid-column: 1 / -1;

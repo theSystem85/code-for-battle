@@ -41,9 +41,12 @@ export function completionContext(source, selection = source.length) {
   const catalog = getCatalog(parser.variant)
   const complete = parseCFBL(source).ast
   if (['effects', 'condition'].includes(expected?.slot)) end = atomEnd(source, start, end)
+  const existingWait = expected?.slot === 'action-end' ? /^wait\s+until\s+(?:produced|done)/.exec(source.slice(start)) : null
+  if (existingWait) end = start + existingWait[0].length
   let options = (expected?.options || []).map(value => {
     const meta = catalog.fields[value] || catalog.checks[value] || catalog.effects[value]
     let insertText = value
+    if (expected?.slot === 'action-end' && value === 'wait') insertText = ` wait until ${parser.actionWaitKind}`
     if (meta && ['effects', 'condition'].includes(expected?.slot)) {
       insertText = defaultCall(value, meta)
       if (catalog.fields[value]) {
@@ -56,6 +59,7 @@ export function completionContext(source, selection = source.length) {
   })
   // On an accepted document, offer atomic complete edits, never a half-written call.
   if (complete) {
+    if (existingWait) options.push({ value: 'no-wait', label: 'Do not wait for completion', insertText: '', description: 'Advance using the normal rules after issuing the action.' })
     if (expected?.slot === 'rule' && !token) {
       const state = complete.states.find(item => item.range.start <= start && item.range.end >= start)
       if (state) options = ['if', 'while', 'after'].map(kind => ({ value: kind, label: `Add ${kind.toUpperCase()} rule`, insertText: `${kind === 'after' ? 'after 10s if' : kind} (always) goto ${state.id};\n    ` }))
