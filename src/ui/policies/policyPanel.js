@@ -293,27 +293,24 @@ export function installPolicyPanel() {
       h('button', { class: 'policy-icon-btn', type: 'button', 'aria-label': 'Close automations', text: '×', onClick: closePolicyPanel })),
     list,
     h('div', { class: 'policy-panel__footer' },
-      h('button', {
-        class: 'policy-btn policy-btn--primary',
-        type: 'button',
-        id: 'newPolicyBtn',
-        text: '+ New unit automation',
-        onClick: () => { closePolicyPanel(); openPolicyEditor() }
-      }),
-      h('button', {
-        class: 'policy-btn policy-btn--primary',
-        type: 'button',
-        id: 'newBuildPolicyBtn',
-        text: '+ New build automation',
-        onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'build' }) }
-      }),
-      h('button', {
-        class: 'policy-btn policy-btn--primary', type: 'button', id: 'newUnitBuildPolicyBtn',
-        text: '+ New unit build automation',
-        onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'unitBuild' }) }
-      }),
-      h('button', { class: 'policy-btn policy-btn--primary', type: 'button', id: 'newDefencePolicyBtn', text: '+ New defence automation',
-        onClick: () => { closePolicyPanel(); openPolicyEditor({ variant: 'defence', defenceBuilding: selectedUnits.find(entity => entity.isBuilding && entity.owner === humanPlayer()) }) } })))
+      h('label', { class: 'policy-field policy-panel__add' },
+        h('span', { text: 'Add automation to' }),
+        h('select', {
+          id: 'newAutomationSelect', class: 'policy-field__control', 'aria-label': 'Add automation to',
+          onChange: event => {
+            const variant = event.target.value
+            if (!variant) return
+            event.target.value = ''
+            closePolicyPanel()
+            openPolicyEditor({ variant, defenceBuilding: variant === 'defence'
+              ? selectedUnits.find(entity => entity.isBuilding && entity.owner === humanPlayer()) : undefined })
+          }
+        },
+        h('option', { value: '', text: 'Choose…', disabled: true, selected: true, hidden: true }),
+        h('option', { value: 'unitBuild', text: 'build unit' }),
+        h('option', { value: 'build', text: 'build base' }),
+        h('option', { value: 'unit', text: 'control unit' }),
+        h('option', { value: 'defence', text: 'control base defence' })))))
   document.body.appendChild(panel)
 
   if (button) {

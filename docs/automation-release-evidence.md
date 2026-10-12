@@ -17,13 +17,13 @@ Specs 100–108 are implemented together. Software verification does not certify
 | iPhone Safari keyboard, orientation and flyout usability | Physical-device verification | **Open**: unavailable in cloud runner |
 | At least 75 presented FPS under active worst-case gameplay | Qualifying reference hardware protocol, spec 107 | **Open**: headless/software browser cannot certify |
 
-Combined branch results reported by the root orchestrator: `npm run test:unit -- --maxWorkers=2` passed **247 files / 4,804 tests**; `npm run test:integration -- --maxWorkers=2` passed **2 files / 86 tests**; `npm run build` passed. The root orchestrator also reports **9 public-UI browser scenarios passed** (DAV/guided CFBL history, paste, save; phone/iPad rotation; all four categories save/reopen; real replay playback; production-building lifecycle). Final combined lint is recorded with the PR.
+Combined branch results reported by the root orchestrator: `npm run test:unit -- --maxWorkers=2` passed **247 files / 4,804 tests**; `npm run test:integration -- --maxWorkers=2` passed **2 files / 86 tests**; `npm run build` passed. The root orchestrator also reports **9 public-UI browser scenarios passed** (DAV/guided CFBL history, paste, save; phone/iPad rotation; all four categories save/reopen; real replay playback; production-building lifecycle). Final combined lint passed. The 2026-10-12 UI polish reran all 4,804 unit tests and seven editor/browser cases; those cases now enter each category through the single creation select and verify horizontal active tabs plus sidebar/resource-bar stacking.
 
 Local documentation verification: seven complete CFBL examples accepted; relative links valid; `npx vitest run tests/unit/landingPage.test.js` passed all 11 cases for the initial landing slice. The EN/DE landing routes were also checked in system Chromium: all four images decoded and had localized nonempty alt text in each locale. Full lint passed before each documentation commit. The initial documentation worktree deferred its full unit run to the successful combined run above.
 
 ## Real screenshot provenance
 
-Implementation revision: `864dbd1`, integrating specs 100–107. Capture helper: `scripts/captureAutomationScreenshots.mjs`. Assets are in `public/images/landing/automation/` and use **WebP quality 85**, DPR 1, English game UI. This is real rendered game UI, not a generated or composited editor image.
+Screenshots refreshed on 2026-10-12 from `6058fdc` plus the Automation UI polish changes in this PR: horizontal active tabs and the single creation select. The accepted source fixture and real defence scenario are unchanged. Capture helper: `scripts/captureAutomationScreenshots.mjs`. Assets are in `public/images/landing/automation/` and use **WebP quality 85**, DPR 1, English game UI. This is real rendered game UI, not a generated or composited editor image.
 
 ```sh
 npm run dev -- --host 127.0.0.1 --port 5175

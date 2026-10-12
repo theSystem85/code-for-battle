@@ -39,6 +39,9 @@
 }
 
 .automation-phone .policy-editor__pause-note { display: none; }
+.automation-phone .policy-editor__header h2,
+.automation-phone .policy-editor__view-toggle { grid-column: 1 / -1; }
+.automation-phone .policy-editor__view-toggle { justify-self: start; }
 .automation-phone .policy-editor__footer { padding: 6px 12px; flex-wrap: wrap; }
 .automation-phone .policy-editor__body { overscroll-behavior: contain; padding: 12px; }
 .automation-phone .policy-editor__reason { max-height: 64px; overflow-y: auto; padding: 6px 12px; }
