@@ -53,7 +53,11 @@ export function showNotification(message, duration = 3000, options = {}) {
 
   // Push to persistent notification history
   const historyMessage = typeof options.historyMessage === 'string' ? options.historyMessage : message
-  pushNotification(historyMessage, { llmPlayerId: options.llmPlayerId, llmColor: options.llmColor })
+  pushNotification(historyMessage, {
+    llmPlayerId: options.llmPlayerId,
+    llmColor: options.llmColor,
+    onActivate: options.onActivate
+  })
 
   // Fade out and remove
   setTimeout(() => {

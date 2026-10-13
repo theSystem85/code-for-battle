@@ -151,9 +151,11 @@ function showHarvesterPromotionNotification(unit, level, gameState) {
   }
 
   const message = `Harvester promoted to XP level ${level}`
+  const onActivate = () => focusAndSelectHarvester(unit, gameState)
 
   showNotification(message, 5000, {
     historyMessage: `${message} (${unit.id})`,
+    onActivate,
     renderContent: (notification) => {
       notification.style.display = 'flex'
       notification.style.alignItems = 'center'
@@ -177,7 +179,7 @@ function showHarvesterPromotionNotification(unit, level, gameState) {
       link.style.cursor = 'pointer'
       link.addEventListener('click', (event) => {
         event.preventDefault()
-        focusAndSelectHarvester(unit, gameState)
+        onActivate()
       })
 
       notification.appendChild(link)
