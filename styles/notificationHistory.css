@@ -166,6 +166,21 @@
   background: rgba(255, 255, 255, 0.04);
 }
 
+.notif-history__item--actionable {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.notif-history__item--actionable:focus-visible {
+  outline: 2px solid #ffd54f;
+  outline-offset: -2px;
+}
+
 .notif-history__item + .notif-history__item {
   margin-top: 2px;
 }

@@ -83,22 +83,34 @@ function renderList() {
 
   empty.style.display = 'none'
   // Render in reverse chronological order
-  list.innerHTML = notificationLog
-    .slice()
-    .reverse()
+  const entries = notificationLog.slice().reverse()
+  list.innerHTML = entries
     .map(entry => {
+      const actionable = typeof entry.onActivate === 'function'
+      const tag = actionable ? 'button' : 'div'
       const llmIndicator = entry.llmPlayerId
         ? `<span class="notif-history__llm-indicator" style="background-color: ${escapeHtml(entry.llmColor || '#FF0000')}">🤖</span>`
         : ''
       return `
-      <div class="notif-history__item${entry.llmPlayerId ? ' notif-history__item--llm' : ''}">
+      <${tag}${actionable ? ' type="button"' : ''} class="notif-history__item${actionable ? ' notif-history__item--actionable' : ''}${entry.llmPlayerId ? ' notif-history__item--llm' : ''}">
         ${llmIndicator}
         <span class="notif-history__time">${formatTimestamp(entry.timestamp)}</span>
         <span class="notif-history__msg">${escapeHtml(entry.message)}</span>
-      </div>
+      </${tag}>
     `
     })
     .join('')
+  list.querySelectorAll('.notif-history__item').forEach((row, index) => {
+    if (typeof entries[index].onActivate === 'function') {
+      row.addEventListener('click', entries[index].onActivate)
+      // Keep button activation keys from triggering game shortcuts.
+      const stopActivationShortcut = event => {
+        if (event.key === 'Enter' || event.key === ' ') event.stopPropagation()
+      }
+      row.addEventListener('keydown', stopActivationShortcut)
+      row.addEventListener('keyup', stopActivationShortcut)
+    }
+  })
 }
 
 function escapeHtml(str) {
@@ -121,7 +133,8 @@ export function pushNotification(message, options = {}) {
     message,
     timestamp: Date.now(),
     llmPlayerId: options.llmPlayerId || null,
-    llmColor: options.llmColor || null
+    llmColor: options.llmColor || null,
+    onActivate: typeof options.onActivate === 'function' ? options.onActivate : null
   })
   if (notificationLog.length > MAX_HISTORY) {
     notificationLog.splice(0, notificationLog.length - MAX_HISTORY)

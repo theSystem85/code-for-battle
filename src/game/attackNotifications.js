@@ -128,9 +128,11 @@ function showUnitUnderAttackNotification(target, now) {
   lastAttackFocusUnit = target
   const unitTypeLabel = getUnitDisplayName(target.type)
   const message = `${unitTypeLabel} is under attack!`
+  const onActivate = () => focusAndSelectUnit(target)
 
   showNotification(message, 4500, {
     historyMessage: message,
+    onActivate,
     renderContent: (notification) => {
       notification.style.display = 'flex'
       notification.style.alignItems = 'center'
@@ -152,7 +154,7 @@ function showUnitUnderAttackNotification(target, now) {
       link.style.cursor = 'pointer'
       link.addEventListener('click', (event) => {
         event.preventDefault()
-        focusAndSelectUnit(target)
+        onActivate()
       })
 
       notification.appendChild(link)
