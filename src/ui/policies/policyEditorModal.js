@@ -13,7 +13,7 @@ import {
   validatePolicy
 } from '../../policies/policySchema.js'
 import { createBlankPolicy, createPolicyId, templatesForVariant } from '../../policies/policyTemplates.js'
-import { getPolicyDocument } from '../../policies/policyStore.js'
+import { getPolicyDocument, setPolicyEnabled } from '../../policies/policyStore.js'
 import { DEFAULT_AFTER_DELAY_SECONDS, MAX_AFTER_DELAY_SECONDS, MIN_AFTER_DELAY_SECONDS, joinDelay, splitDelay } from '../../policies/policyDelay.js'
 import { h, option, svg } from './policyDom.js'
 import {
@@ -784,6 +784,9 @@ export function openPolicyEditor(options = {}) {
     if (!result.ok) {
       updateValidity()
       return
+    }
+    if (isNew && controller.getSnapshot().policy.scope === 'global') {
+      setPolicyEnabled(owner, draft.id, true)
     }
     close(true)
   }
