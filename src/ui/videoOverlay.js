@@ -1,4 +1,6 @@
+import { configureMilestoneVideo, milestoneVideoPlacement, MILESTONE_PRESENTATION_FADE_MS } from './milestoneVideoPresentation.js'
 // ui/videoOverlay.js
+import { MILESTONE_VIDEO_CROPS } from './milestoneVideoCrop.js'
 import { getMasterVolume } from '../sound.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import { showNotification } from './notifications.js'
@@ -68,7 +70,19 @@ export class VideoOverlay {
       this.applyMilestoneAudioFade(this.getMilestoneVideoOpacity())
       this.audioFadeFrame = requestAnimationFrame(this.boundAudioFadeStep)
     }
+    this.nativePresentation = false
+    this.presentationReady = false
+    this.fadeOutTimer = 0
     this.createOverlayElement()
+    this.updatePresentation = () => this.updateVideoPlacement()
+    window.addEventListener('resize', this.updatePresentation)
+    this.layoutObserver = new window.MutationObserver(this.updatePresentation)
+    this.layoutObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] })
+    const minimap = document.getElementById('minimap')
+    if (minimap && typeof window.ResizeObserver !== 'undefined') {
+      this.minimapObserver = new window.ResizeObserver(this.updatePresentation)
+      this.minimapObserver.observe(minimap)
+    }
   }
 
   /**
@@ -81,7 +95,7 @@ export class VideoOverlay {
 
     this.overlayElement.innerHTML = `
       <div class="video-container">
-        <video class="milestone-video" muted playsinline>
+        <video class="milestone-video" muted autoplay playsinline webkit-playsinline preload="auto">
           Your browser does not support the video tag.
         </video>
         <div class="video-controls">
@@ -218,6 +232,25 @@ export class VideoOverlay {
         text-shadow: 0 0 4px rgba(255, 255, 0, 0.5);
       }
     `
+    style.textContent += `
+      .video-overlay.native-video {
+        z-index: 30;
+        border-radius: 0;
+        background: transparent;
+        visibility: visible;
+        transition: opacity 400ms ease;
+        will-change: opacity;
+      }
+      .video-overlay.native-video.show { opacity: 1; visibility: visible; }
+      .video-overlay.native-video .video-controls { display: none; }
+      .video-overlay.native-video .milestone-video {
+        display: block;
+        filter: none;
+        mix-blend-mode: normal;
+        transform: none;
+      }
+      .video-overlay.native-video { box-shadow: none; }
+    `
     document.head.appendChild(style)
   }
 
@@ -235,7 +268,7 @@ export class VideoOverlay {
     video.addEventListener('ended', () => {
       // Add a small delay to prevent race conditions
       setTimeout(() => {
-        if (this.isPlaying) {
+        if (this.isPlaying && this.currentVideo === video) {
           this.stopCurrentVideo()
         }
       }, 100)
@@ -280,6 +313,7 @@ export class VideoOverlay {
       return
     }
 
+    this.isPlaying = true
     try {
       const titleElement = this.overlayElement.querySelector('.milestone-title')
       const descriptionElement = this.overlayElement.querySelector('.milestone-description')
@@ -293,7 +327,9 @@ export class VideoOverlay {
       descriptionElement.textContent = milestoneInfo.description || ''
 
       // Set priority styling
-      this.overlayElement.className = `video-overlay priority-${milestoneInfo.priority || 'low'}`
+      this.overlayElement.className = 'video-overlay'
+      configureMilestoneVideo(video)
+      video.removeAttribute('autoplay')
 
       // Load video with comprehensive error handling
       const tryLoadVideo = async(videoPath) => {
@@ -354,9 +390,7 @@ export class VideoOverlay {
       let videoLoaded = usedPreloadedVideo
       if (!videoLoaded) {
         const videoPaths = [
-          `video/${videoFile}`,
-          `/video/${videoFile}`,
-          `./video/${videoFile}`
+          `video/${videoFile}`
         ]
         for (const path of videoPaths) {
           try {
@@ -392,13 +426,31 @@ export class VideoOverlay {
         }
       }
 
-      // Keep overlay hidden - only use for video element, render on minimap instead
-      this.overlayElement.classList.add('show')
-      this.overlayElement.style.opacity = '0' // Hide DOM overlay completely
-      this.overlayElement.style.pointerEvents = 'none' // Disable all interactions
-      this.isPlaying = true
+      if (usedPreloadedVideo) {
+        const placeholder = this.overlayElement.querySelector('.milestone-video')
+        video.className = 'milestone-video'
+        video.removeAttribute('style')
+        placeholder.replaceWith(video)
+      }
       this.currentVideo = video
-      this.playbackStartedAt = performance.now()
+      this.presentationReady = false
+      this.playbackStartedAt = 0
+      const crop = MILESTONE_VIDEO_CROPS[baseFilename]
+      // Static sizing crops baked bars without canvas copies or per-frame layout.
+      video.style.width = crop ? `${crop.frameWidth / crop.width * 100}%` : '100%'
+      video.style.height = crop ? `${crop.frameHeight / crop.height * 100}%` : '100%'
+      video.style.marginLeft = crop ? `${-crop.x / crop.width * 100}%` : '0'
+      this.updateVideoPlacement()
+      video.addEventListener('playing', () => {
+        this.revealPlayingVideo(video)
+      }, { once: true })
+      video.ontimeupdate = () => {
+        if (this.currentVideo === video && this.nativePresentation &&
+          Number.isFinite(video.duration) && video.duration - video.currentTime <= 0.4) {
+          this.stopCurrentVideo()
+        }
+      }
+      configureMilestoneVideo(video)
       this.usesEmbeddedAudio = !this.currentAudio
       this.lastAudioFade = 0
       this.rememberMilestoneMute()
@@ -407,20 +459,11 @@ export class VideoOverlay {
         video.dataset.milestoneAudio = this.currentAudio ? 'mixed' : 'embedded'
       }
 
-      if (usedPreloadedVideo) {
-        const onEnded = () => {
-          setTimeout(() => {
-            if (this.isPlaying && this.currentVideo === video) {
-              this.stopCurrentVideo()
-            }
-          }, 100)
-        }
-        video.addEventListener('ended', onEnded, { once: true })
-        video.addEventListener('error', () => {
-          if (this.isPlaying && this.currentVideo === video && video.src) {
-            this.stopCurrentVideo()
-          }
-        }, { once: true })
+      video.onended = () => {
+        if (this.isPlaying && this.currentVideo === video) this.stopCurrentVideo()
+      }
+      video.onerror = () => {
+        if (this.isPlaying && this.currentVideo === video && video.src) this.stopCurrentVideo()
       }
 
       try {
@@ -463,7 +506,36 @@ export class VideoOverlay {
   /**
    * Stop current video and play next in queue
    */
-  stopCurrentVideo() {
+  revealPlayingVideo(video) {
+    if (this.currentVideo !== video || !this.isPlaying || this.fadeOutTimer) return
+    this.presentationReady = true
+    this.playbackStartedAt = performance.now()
+    this.overlayElement.classList.add('show')
+  }
+
+  updateVideoPlacement() {
+    const rect = document.getElementById('minimap')?.getBoundingClientRect()
+    const placement = milestoneVideoPlacement(document.body, rect)
+    this.nativePresentation = Boolean(placement)
+    this.overlayElement.classList.toggle('native-video', this.nativePresentation)
+    if (!placement) return
+    for (const key of ['left', 'top', 'width', 'height']) {
+      this.overlayElement.style[key] = `${placement[key]}px`
+    }
+  }
+
+  stopCurrentVideo(immediate = false) {
+    if (this.fadeOutTimer && !immediate) return
+    if (!immediate && this.isPlaying && this.nativePresentation && this.presentationReady) {
+      this.overlayElement.classList.remove('show')
+      this.fadeOutTimer = setTimeout(() => {
+        this.fadeOutTimer = 0
+        this.stopCurrentVideo(true)
+      }, MILESTONE_PRESENTATION_FADE_MS)
+      return
+    }
+    clearTimeout(this.fadeOutTimer)
+    this.fadeOutTimer = 0
     // Prevent multiple calls during cleanup
     if (!this.isPlaying) {
       return
@@ -477,7 +549,7 @@ export class VideoOverlay {
 
     // Hide overlay completely
     this.overlayElement.classList.remove('show')
-    this.overlayElement.style.opacity = '0'
+    this.overlayElement.classList.remove('native-video')
     this.overlayElement.style.pointerEvents = 'none'
 
     // Stop and clean up video with error handling
@@ -490,7 +562,7 @@ export class VideoOverlay {
         playing.currentTime = 0
         // Remove src to prevent further events
         playing.removeAttribute('src')
-        playing.load() // Reset the video element
+        // Keep the element; the next clip assigns its source once.
         if (playing !== mainVideo && playing.parentNode) {
           playing.parentNode.removeChild(playing)
         }
@@ -532,7 +604,7 @@ export class VideoOverlay {
    * Check if video is currently playing
    */
   isVideoPlaying() {
-    return this.isPlaying
+    return this.isPlaying && !this.nativePresentation
   }
 
   /**
@@ -544,12 +616,12 @@ export class VideoOverlay {
 
   /**
    * Opacity used when the minimap paints the current milestone video.
-   * Fades in over ~220ms and out over the last ~220ms. Fully opaque in between.
+   * Tracks audio fades; the native picture uses a 400ms CSS transition. Fully opaque in between.
    */
   getMilestoneVideoOpacity(now = performance.now()) {
     const video = this.currentVideo
     return computeMilestoneVideoOpacity(
-      this.isVideoPlaying(),
+      this.nativePresentation ? this.isPlaying : this.isVideoPlaying(),
       this.playbackStartedAt,
       now,
       video ? video.duration : NaN,
@@ -579,7 +651,11 @@ export class VideoOverlay {
    */
   destroy() {
     this.stopNarrationAudio()
-    this.stopCurrentVideo()
+    this.clearQueue()
+    this.stopCurrentVideo(true)
+    window.removeEventListener('resize', this.updatePresentation)
+    this.layoutObserver.disconnect()
+    this.minimapObserver?.disconnect()
     this.clearQueue()
     if (this.overlayElement && this.overlayElement.parentNode) {
       this.overlayElement.parentNode.removeChild(this.overlayElement)
