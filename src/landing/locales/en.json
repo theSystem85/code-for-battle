@@ -21,7 +21,8 @@
       "skip": "Skip to content",
       "github": "View on GitHub",
       "githubShort": "GitHub",
-      "automation": "Automation"
+      "automation": "Automation",
+      "controls": "Controls"
     },
     "hero": {
       "eyebrow": "Browser real-time strategy",
@@ -273,6 +274,25 @@
           "alt": "Owned defensive turret in the game with its live Automation state machine highlighting the active hold-fire state"
         }
       }
+    },
+    "controls": {
+      "title": "Choose your controls",
+      "lead": "Mouse and keyboard, trackpad, touch or gamepad: choose your method at the start of the tutorial. The game remembers your preference; you can change it later without disabling other devices.",
+      "mouseTitle": "Mouse + keyboard",
+      "mouseGesture": "Click / drag → Select",
+      "mouseBody": "Primary click selects; with units selected, primary-click a destination or enemy to move or attack. Hold the secondary button and drag to pan; briefly secondary-click to cancel or open context. The tutorial reads your saved keybindings.",
+      "trackpadTitle": "Trackpad",
+      "trackpadGesture": "Two fingers ↔ Map",
+      "trackpadBody": "Scroll with two fingers over the battlefield to pan on both axes. Use Shift-wheel horizontally, secondary-click hold-and-drag, or the hand-button drag mode as a fallback.",
+      "touchTitle": "Touch",
+      "touchGesture": "Tap → Select / order · Two-finger drag → Map",
+      "touchBody": "Follow touch-specific tutorial demonstrations and use the mobile command controls. In Sell mode a building tap sells first; leave the mode to use its normal shortcut.",
+      "gamepadTitle": "Gamepad",
+      "gamepadGesture": "Sticks + mapped buttons → Commands",
+      "gamepadBody": "Move the cursor or remote-control a unit with your controller. Tutorial hints follow your active profile and mappings. Settings lets you adjust bindings and deadzones.",
+      "settings": "Use Open control settings in the tutorial for your current Key Bindings or Controllers profile. Default examples are a starting point; saved mappings take precedence.",
+      "mac": "Mac trackpad: if swiping navigates browser history, turn off or remap Swipe between pages in System Settings → Trackpad → More Gestures. Check Natural scrolling under Scroll & Zoom for direction. Some system/browser gestures never reach the game; use the hand-button fallback.",
+      "guide": "Control guide and Mac setup checks"
     }
   }
 }

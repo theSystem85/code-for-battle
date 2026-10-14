@@ -1,0 +1,46 @@
+.tutorial-card { box-sizing:border-box; }
+.tutorial-card.tutorial-card--input-guide { width:560px; max-width:calc(100vw - 24px); max-height:calc(100dvh - 24px); }
+.input-method-guide { padding:12px 16px; overflow-y:auto; min-height:0; overscroll-behavior:contain; cursor:default; touch-action:pan-y; }
+.input-method-guide[hidden] { display:none; }
+.input-method-guide__choices { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.input-method-guide__choice { display:flex; align-items:center; flex-direction:column; justify-content:center; gap:5px; min-height:96px; padding:10px; background:#24313e; color:#fff; border:2px solid #63768b; border-radius:8px; cursor:pointer; }
+.input-method-guide__choice[aria-pressed=true] { background:#183d3d; border-color:#7ee787; }
+.input-method-guide__choice:focus-visible,.input-method-guide button:focus-visible { outline:3px solid #8cd7ff; outline-offset:2px; }
+.input-method-guide__icon { display:block; font-size:36px; line-height:1; }
+.input-method-guide__choice small { color:#dae2e9; text-align:center; }
+.input-method-guide__detail h4 { margin:14px 0 8px; font-size:16px; }
+.input-method-guide__note { color:#e0e7ee; line-height:1.5; }
+.input-method-guide__mappings { margin:0; }
+.input-method-guide__mapping { display:grid; grid-template-columns:minmax(90px,1fr) minmax(0,2fr); gap:10px; border-top:1px solid #546171; padding:9px 0; }
+.input-method-guide__mapping dt { color:#fff; font-weight:600; }
+.input-method-guide__mapping dd { margin:0; display:flex; flex-direction:column; gap:5px; color:#dae2e9; line-height:1.4; overflow-wrap:anywhere; }
+.input-method-guide__mapping kbd { font:inherit; font-weight:600; color:#c2efff; }
+.input-method-guide__actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+.input-method-guide__actions button { min-height:44px; }
+@media (max-width:420px) { .input-method-guide__choice { min-height:88px; padding:8px 4px; } .input-method-guide__mapping { grid-template-columns:1fr; gap:4px; } }
+.input-method-guide__schematic { display:grid; grid-template-columns:120px minmax(0,1fr); align-items:center; gap:12px; margin:10px 0; border:1px solid #63768b; border-radius:8px; padding:12px; background:#18232d; }
+.input-method-guide__device { position:relative; width:110px; height:90px; box-sizing:border-box; border:3px solid #a9cce9; border-radius:12px; background:#293d50; }
+.input-method-guide__finger { position:absolute; top:26px; width:14px; height:21px; border:2px solid #fff; border-radius:10px; background:#7ee787; }
+.input-method-guide__finger--one { left:32px; }
+.input-method-guide__finger--two { left:55px; }
+.input-method-guide__gesture-arrows { position:absolute; bottom:5px; left:24px; color:#fff; font-size:25px; font-weight:700; }
+.input-method-guide__schematic--trackpad .input-method-guide__device { border-radius:7px; border-bottom-width:11px; }
+.input-method-guide__schematic--touch .input-method-guide__device { width:82px; height:113px; margin:auto; border-width:8px 4px; }
+.input-method-guide__schematic--touch .input-method-guide__finger--one { left:16px; }
+.input-method-guide__schematic--touch .input-method-guide__finger--two { left:39px; }
+.input-method-guide__schematic--touch .input-method-guide__gesture-arrows { left:10px; }
+.input-method-guide__schematic--gamepad .input-method-guide__device { border-radius:35px 35px 28px 28px; height:76px; }
+.input-method-guide__gamepad-stick { position:absolute; top:20px; display:grid; place-items:center; width:25px; height:25px; border:2px solid #fff; border-radius:50%; color:#fff; font-size:24px; line-height:1; }
+.input-method-guide__gamepad-stick--left { left:12px; }
+.input-method-guide__gamepad-stick--right { right:12px; }
+.input-method-guide__schematic--mouse-keyboard .input-method-guide__device { width:65px; margin:auto; border-radius:30px; display:flex; justify-content:center; }
+.input-method-guide__mouse-button { width:26px; height:36px; border-bottom:2px solid #fff; display:grid; place-items:center; color:#fff; }
+.input-method-guide__mouse-button:first-child { border-right:2px solid #fff; }
+.input-method-guide__diagram-labels { min-width:0; }
+.input-method-guide__diagram-label { display:flex; flex-wrap:wrap; gap:4px 8px; margin:6px 0; color:#e5edf5; line-height:1.4; overflow-wrap:anywhere; }
+.input-method-guide__diagram-label strong { color:#b8edff; }
+.input-method-guide__schematic figcaption { grid-column:1/-1; color:#e5edf5; font-size:12px; line-height:1.5; }
+@media (max-width:360px) { .input-method-guide__schematic { grid-template-columns:90px minmax(0,1fr); gap:6px; padding:8px; } .input-method-guide__device { transform:scale(.8); transform-origin:left center; } }
+body.config-modal-open .tutorial-overlay,body.config-modal-open #tutorialCursor { visibility:hidden; }
+.tutorial-card--input-guide .tutorial-header,.tutorial-card--input-guide .tutorial-title,.tutorial-card--input-guide .tutorial-text,.tutorial-card--input-guide .tutorial-hint,.tutorial-card--input-guide .tutorial-progress,.tutorial-card--input-guide .tutorial-actions { flex-shrink:0; }
+.tutorial-card--input-guide .input-method-guide { flex:1 1 auto; }

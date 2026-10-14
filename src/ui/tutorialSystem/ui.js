@@ -1,3 +1,5 @@
+import { createInputMethodGuide } from '../inputMethodGuide.js'
+import { openSettingsModal } from '../settingsModal.js'
 import { TUTORIAL_POSITION_KEY } from './constants.js'
 import { writeToStorage } from './storage.js'
 
@@ -46,6 +48,7 @@ export function createTutorialUI(tutorial) {
         tutorial.dockButton.hidden = true
       }
     }
+    attachInputGuide(tutorial)
     setupTutorialDragHandlers(tutorial)
     return
   }
@@ -228,7 +231,18 @@ export function createTutorialUI(tutorial) {
   docsButton.addEventListener('click', () => window.openUserDocs?.())
   dockButton.addEventListener('click', () => tutorial.toggleMinimize())
 
+  attachInputGuide(tutorial)
   setupTutorialDragHandlers(tutorial)
+}
+
+function attachInputGuide(tutorial) {
+  tutorial.card.querySelector('.input-method-guide')?.remove()
+  tutorial.inputGuide = createInputMethodGuide({
+    selected: tutorial.settings.preferredInputMethod,
+    onChoose: method => tutorial.chooseInputMethod(method),
+    onOpenSettings: tab => openSettingsModal(tab)
+  })
+  tutorial.stepText.after(tutorial.inputGuide.element)
 }
 
 export function setupTutorialDragHandlers(tutorial) {
