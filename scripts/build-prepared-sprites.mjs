@@ -3,6 +3,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import sharp from 'sharp'
+import tankImageConfigData from '../src/tankImageConfig.json' with { type: 'json' }
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const OUTPUT_ROOT = path.join(ROOT, 'public/images/prepared')
@@ -15,27 +16,32 @@ const APACHE_TILT_STATES = Object.freeze(['neutral', 'forward', 'backward', 'lef
 const unitSource = name => `images/map/units/${name}`
 const buildingSource = name => `images/map/buildings/${name}`
 
+const tankMount = (variant, key) => {
+  const point = tankImageConfigData.tankImageConfig[variant][key]
+  return [point.x, point.y]
+}
+
 const definitions = [
   ...['tankV1', 'tankV2', 'tankV3'].flatMap(variant => [
     {
       id: `unit:${variant}:wagon`,
       source: unitSource(`${variant}_wagon.webp`),
       target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: TILE_SIZE },
-      anchors: { center: [0.5, 0.5], turretMountSource: [19, 32] },
+      anchors: { center: [0.5, 0.5], turretMountSource: tankMount(variant, 'turretMountPoint') },
       states: ['base']
     },
     {
       id: `unit:${variant}:turret`,
       source: unitSource(`${variant}_turret.webp`),
       target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: TILE_SIZE },
-      anchors: { center: [0.5, 0.5], barrelMountSource: [17, 35] },
+      anchors: { center: [0.5, 0.5], barrelMountSource: tankMount(variant, 'barrelMountPoint') },
       states: ['base']
     },
     {
       id: `unit:${variant}:barrel`,
       source: unitSource(`${variant}_barrel.webp`),
       target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: TILE_SIZE },
-      anchors: { center: [0.5, 0.5], muzzleSource: [2, 64] },
+      anchors: { center: [0.5, 0.5], muzzleSource: tankMount(variant, 'muzzleFlashOffset') },
       states: ['base', 'recoil']
     }
   ]),
