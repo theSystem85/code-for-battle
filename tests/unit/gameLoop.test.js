@@ -62,6 +62,7 @@ vi.mock('../../src/performanceUtils.js', () => ({
 }))
 
 vi.mock('../../src/sound.js', () => ({
+  updateDirectedMusic: vi.fn(),
   pauseAllSounds: pauseAllSoundsMock,
   resumeAllSounds: resumeAllSoundsMock
 }))

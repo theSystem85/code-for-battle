@@ -5,3 +5,17 @@
 - Files: `public/images/map/units/tankV2_{wagon,turret,barrel}.webp`, `public/images/map/units/tankV3_{wagon,turret,barrel}.webp` and the derived `public/images/prepared/unit/tankV2|tankV3/*`.
 - Source: AI-generated on 2026-10-14 with the OpenAI image generation tool through the Codex CLI (ChatGPT account of the project owner), in one generation from the prompt in `docs/asset-sources/tank-v2-v3-leopard-prompt.txt`. The original sprite sheet is stored in `docs/asset-sources/tank-v2-v3-leopard-spritesheet.webp`.
 - Post-processing: background keying, cropping, resizing and alignment by the project.
+
+## Music
+
+Background tracks in `public/sound/music/`:
+
+| File | Source | Used for |
+| --- | --- | --- |
+| `music01.mp3` | Generated with Udio (license per the owner's Udio plan) | Normal playlist |
+| `music02.mp3` | Generated with ElevenLabs Music v2.5 | Normal playlist |
+| `music_attack_motivational.mp3` | Generated with ElevenLabs Music v2.5 | First attack |
+| `music_under_attack_danger.mp3` | Generated with ElevenLabs Music v2.5 | Under attack while outnumbered |
+| `music_defeat_sad.mp3` | Generated with ElevenLabs Music v2.5 | Near defeat |
+
+The three situational tracks were generated on the owner's ElevenLabs Starter plan, which includes a commercial music license. Every ElevenLabs track carries the MP3 comment tag "Generated with ElevenLabs Music v2.5". All tracks are instrumental, 160 kbps / 48 kHz and loudness-matched to about -12 LUFS.

@@ -1,3 +1,4 @@
+import { recordMusicAttack } from '../../audio/musicDirector.js'
 import { TILE_SIZE, TANK_BULLET_SPEED, HOWITZER_PROJECTILE_SPEED, HOWITZER_EXPLOSION_RADIUS_TILES } from '../../config.js'
 import { playSound, playPositionalSound } from '../../sound.js'
 import { hasClearShot } from '../../logic.js'
@@ -209,6 +210,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         bullet.vy = bullet.speed * Math.sin(angle)
       }
 
+      recordMusicAttack(unit, target, gameState)
       bullets.push(bullet)
 
       // Deplete ammunition when firing (skip apache/f22 - handled in handleApacheVolley)
@@ -614,6 +616,7 @@ export function fireHowitzerShell(unit, aimTarget, bullets, now) {
     launchAngle
   }
 
+  recordMusicAttack(unit, unit.target, gameState)
   bullets.push(projectile)
 
   // Deplete ammunition when firing

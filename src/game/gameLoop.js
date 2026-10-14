@@ -1,3 +1,6 @@
+import { evaluateMusicDirector } from '../audio/musicDirector.js'
+import { updateDirectedMusic } from '../sound.js'
+import { TILE_SIZE, UNIT_COSTS } from '../config.js'
 // gameLoop.js
 // Handle game loop and animation management
 
@@ -380,6 +383,8 @@ export class GameLoop {
     // Update production progress
     const simulationTime = getSimulationTime(gameState)
     this.productionQueue.updateProgress(simulationTime)
+    const musicState = evaluateMusicDirector(gameState, this.units, gameState.buildings, this.factories, this.productionQueue, TILE_SIZE, UNIT_COSTS)
+    if (musicState) updateDirectedMusic(musicState)
 
     // Update buildings under repair
     updateBuildingsUnderRepair(gameState, simulationTime)

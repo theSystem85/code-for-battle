@@ -46,6 +46,7 @@ describe('background music playlist', () => {
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     sound.clearSoundCache()
     vi.restoreAllMocks()
     vi.unstubAllGlobals()
@@ -127,4 +128,64 @@ describe('background music playlist', () => {
     expect(sound.bgMusicAudio).toBe(second)
     expect(second.paused).toBe(false)
   })
+  it('crossfades situational loops, preserves toggle on resume, and scales both volumes', async() => {
+    await sound.toggleBackgroundMusic()
+    await flush()
+    const normal = sound.bgMusicAudio
+    // Load first with real timers; then advance the audio ramp deterministically.
+    await sound.updateDirectedMusic('firstAttack')
+    const attack = sound.bgMusicAudio
+    expect(attack.src).toBe('sound/music/music_attack_motivational.mp3')
+    expect(attack.loop).toBe(true)
+    expect(attack.volume).toBe(0)
+    expect(normal.paused).toBe(false)
+    sound.setMasterVolume(0.4)
+    expect(normal.volume).toBeCloseTo(0.4)
+    sound.pauseAllSounds()
+    expect(normal.paused).toBe(true)
+    expect(attack.paused).toBe(true)
+    sound.resumeAllSounds()
+    expect(attack.paused).toBe(false)
+    await sound.toggleBackgroundMusic()
+    sound.pauseAllSounds()
+    sound.resumeAllSounds()
+    expect(attack.paused).toBe(true)
+    await sound.updateDirectedMusic('nearDefeat')
+    expect(sound.bgMusicAudio).toBe(attack)
+    await sound.toggleBackgroundMusic()
+    await sound.updateDirectedMusic('nearDefeat')
+    expect(sound.bgMusicAudio.src).toBe('sound/music/music_defeat_sad.mp3')
+    sound.terminateAllSounds()
+    expect(FakeAudio.instances.every(audio => audio.paused)).toBe(true)
+  })
+
+  it('finishes its 3.5 second volume ramp and stops the outgoing track', async() => {
+    await sound.toggleBackgroundMusic()
+    await flush()
+    const normal = sound.bgMusicAudio
+    vi.useFakeTimers()
+    await sound.updateDirectedMusic('underAttackOutnumbered')
+    sound.setMasterVolume(0.6)
+    await vi.advanceTimersByTimeAsync(1750)
+    expect(sound.bgMusicAudio.volume).toBeCloseTo(0.3)
+    expect(normal.volume).toBeCloseTo(0.3)
+    await vi.advanceTimersByTimeAsync(1800)
+    expect(sound.bgMusicAudio.volume).toBeCloseTo(0.6)
+    expect(normal.paused).toBe(true)
+  })
+
+  it('starts a normal playlist crossfade before the outgoing track ends', async() => {
+    await sound.toggleBackgroundMusic()
+    await flush()
+    const first = sound.bgMusicAudio
+    first.duration = 180
+    first.currentTime = 177
+    first.dispatchEvent(new window.Event('timeupdate'))
+    await flush()
+    expect(sound.bgMusicAudio.src).toBe('sound/music/music02.mp3')
+    expect(sound.bgMusicAudio.loop).toBe(false)
+    expect(first.paused).toBe(false)
+    expect(sound.bgMusicAudio.volume).toBe(0)
+  })
+
 })

@@ -1,3 +1,5 @@
+import { gameState } from '../gameState.js'
+import { recordMusicAttack } from '../audio/musicDirector.js'
 // Bullet System Module - Handles all bullet/projectile updates and collision detection
 import { TILE_SIZE, BULLET_DAMAGES, CREW_KILL_CHANCE } from '../config.js'
 import { triggerExplosion } from '../logic.js'
@@ -1277,6 +1279,7 @@ export function fireBullet(unit, target, bullets, now) {
       bullet.vy = bullet.speed * Math.sin(angle)
     }
 
+    recordMusicAttack(unit, target, gameState)
     bullets.push(bullet)
     playPositionalSound('shoot', bullet.x, bullet.y, 0.5)
     unit.lastShotTime = now
