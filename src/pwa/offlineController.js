@@ -1,4 +1,5 @@
 import { uiText } from '../ui/uiText.js'
+import { showNotification } from '../ui/notifications.js'
 import {
   applyOfflineCacheSettings,
   applyOfflineClearDialog,
@@ -224,6 +225,7 @@ export function startOfflineMode(options = {}) {
   let clearingCache = false
   let updateRegistration = null
   let applyingUpdate = false
+  let announcedWorker = null
   let stopped = false
   let tipTimer = null
   let probeTimer = null
@@ -349,6 +351,25 @@ export function startOfflineMode(options = {}) {
       updateAvailable: Boolean(updateRegistration?.waiting) && Boolean(win.navigator.serviceWorker?.controller) && !applyingUpdate
     }
     applyOfflineModeDom(elements(), view)
+    if (view.updateAvailable && announcedWorker !== updateRegistration.waiting) {
+      announcedWorker = updateRegistration.waiting
+      showNotification(copy.updateLabel, 6000, {
+        onActivate: reloadForUpdate,
+        renderContent: notification => {
+          const link = win.document.createElement('a')
+          link.href = win.location.href
+          link.textContent = copy.updateLabel
+          link.className = 'notification__inline-link'
+          link.style.color = '#ffd54f'
+          link.style.textDecoration = 'underline'
+          link.addEventListener('click', event => {
+            event.preventDefault()
+            reloadForUpdate()
+          })
+          notification.appendChild(link)
+        }
+      })
+    }
     const sizeText = formatOfflineSettingsSize({
       bytes: cacheBytes,
       ready: cacheReady,
@@ -729,11 +750,15 @@ export function startOfflineMode(options = {}) {
     const updateReload = updatePrompt?.querySelector('#offlineUpdateReload')
     if (updateReload && updateReload.dataset.offlineBound !== 'true') {
       updateReload.dataset.offlineBound = 'true'
-      updateReload.addEventListener('click', () => {
-        if (updateRegistration) applyWaitingWorker(updateRegistration, { userAccepted: true })
-      })
+      updateReload.addEventListener('click', reloadForUpdate)
     }
     publish()
+  }
+
+  function reloadForUpdate() {
+    if (stopped || applyingUpdate) return
+    if (updateRegistration?.waiting) applyWaitingWorker(updateRegistration, { userAccepted: true })
+    else win.location.reload()
   }
 
   function applyWaitingWorker(registration, { userAccepted = false } = {}) {
@@ -745,6 +770,7 @@ export function startOfflineMode(options = {}) {
       return
     }
     applyingUpdate = true
+    publish()
     try {
       win.sessionStorage?.setItem(UPDATE_RELOAD_GUARD, '1')
     } catch {
