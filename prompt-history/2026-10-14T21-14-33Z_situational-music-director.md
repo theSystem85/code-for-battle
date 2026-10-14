@@ -31,3 +31,9 @@ Requirements:
 7. Unit tests in tests/unit/ for state selection, priority, firstAttack once-per-game, dwell, cooldown and clear-delay hysteresis.
 8. Add docs/ASSET_CREDITS.md (or extend an existing credits file) listing music01.mp3 (Udio), music02.mp3 (ElevenLabs Music v2.5), and the three new tracks as generated with ElevenLabs Music v2.5, license per the owner's ElevenLabs plan.
 Run lint and unit tests and make them pass.
+
+## Follow-up (2026-10-14T22:10Z)
+
+User prompt: "Ensure the music does not intersect when tone changes so the current one has to fade out first before the new song starts but new song does not need to fade in then. Ensure in the beginning no sad music is played."
+
+Changes: replaced the crossfade with a sequential fade-out (3.5 s) followed by a full-volume start of the next track; added a start-of-game guard so near defeat requires a once-owned construction yard/refinery and at least 3 minutes of simulation time.
