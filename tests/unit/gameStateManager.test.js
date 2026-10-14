@@ -149,18 +149,18 @@ describe('gameStateManager', () => {
         keyScroll: { left: false, right: true, up: false, down: true },
         smoothScroll: null, isRightDragging: false
       }
-      const grid = Array.from({ length: 100 }, () => Array(100).fill(null))
-      for (let frame = 0; frame < 60; frame++) updateMapScrolling(state, grid)
+      const grid = Array.from({ length: 200 }, () => Array(200).fill(null))
+      for (let frame = 0; frame < 120; frame++) updateMapScrolling(state, grid)
       expect(velocity).toEqual({ x: -KEYBOARD_SCROLL_SPEED, y: -KEYBOARD_SCROLL_SPEED })
       state.keyScroll.right = false
       const releaseX = state.scrollOffset.x
-      for (let frame = 0; frame < 9; frame++) updateMapScrolling(state, grid)
+      for (let frame = 0; frame < 100; frame++) updateMapScrolling(state, grid)
       expect(velocity.x).toBe(0)
       expect(velocity.y).toBe(-KEYBOARD_SCROLL_SPEED)
-      expect(state.scrollOffset.x - releaseX).toBeLessThan(40)
+      expect(state.scrollOffset.x - releaseX).toBeLessThan(1600)
       expect(state.dragVelocity).toBe(velocity)
       state.keyScroll.up = true
-      for (let frame = 0; frame < 9; frame++) updateMapScrolling(state, grid)
+      for (let frame = 0; frame < 100; frame++) updateMapScrolling(state, grid)
       expect(velocity.y).toBe(0)
     })
 

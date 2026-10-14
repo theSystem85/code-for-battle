@@ -1,4 +1,5 @@
 import { gameState } from '../gameState.js'
+import { INVERT_TOUCH_MAP_SCROLL } from '../config.js'
 import { suspendRemoteControlAutoFocus } from '../game/remoteControl.js'
 import { isReplayModeActive } from '../replaySystem.js'
 import {
@@ -94,7 +95,7 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
     const center = getTouchCenter(pointerIds, activePointers)
     handler.twoFingerPan.lastCenter = center
     const synthetic = createSyntheticMouseEventFromCoords(gameCanvas, center.x, center.y, 2)
-    handler.handleRightDragScrolling(synthetic, mapGrid, gameCanvas)
+    handler.handleRightDragScrolling(synthetic, mapGrid, gameCanvas, INVERT_TOUCH_MAP_SCROLL)
   }
 
   const endTwoFingerPan = (event) => {

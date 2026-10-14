@@ -10,10 +10,14 @@ test('arrow keys accelerate, auto-brake and expose live runtime Controls tuning'
   await page.getByRole('button', { name: 'Controls', exact: true }).click()
   await expect(page.locator('#config-keyboardScrollAcceleration')).toHaveValue('1200')
   await expect(page.locator('#config-keyboardScrollDeceleration')).toHaveValue('2400')
-  await expect(page.locator('#config-keyboardScrollAutoBrake')).toHaveValue('3600')
+  await expect(page.locator('#config-keyboardScrollAutoBrake')).toHaveValue('1200')
+  await expect(page.locator('#config-keyboardScrollSpeed')).toHaveValue('32')
+  await page.locator('#config-keyboardScrollSpeed').fill('4')
+  await page.locator('#config-keyboardScrollSpeed').dispatchEvent('change')
   await page.locator('#config-keyboardScrollAcceleration').fill('600')
   await page.locator('#config-keyboardScrollAcceleration').dispatchEvent('change')
   await page.locator('#runtime-config-close').click()
+  await page.waitForFunction(() => !window.gameState.runtimeConfigDialogOpen)
   await page.evaluate(() => {
     const state = window.gameState
     state.gamePaused = true
@@ -27,9 +31,9 @@ test('arrow keys accelerate, auto-brake and expose live runtime Controls tuning'
   await page.keyboard.down('ArrowRight')
   await expect.poll(() => page.evaluate(() => Math.abs(window.gameState.dragVelocity.x))).toBeGreaterThan(0)
   const slow = await page.evaluate(() => Math.abs(window.gameState.dragVelocity.x))
-  expect(slow).toBeLessThan(8)
+  expect(slow).toBeLessThan(4)
   await expect.poll(() => page.evaluate(() => Math.abs(window.gameState.dragVelocity.x))).toBeGreaterThan(slow)
-  await expect.poll(() => page.evaluate(() => Math.abs(window.gameState.dragVelocity.x))).toBe(8)
+  await expect.poll(() => page.evaluate(() => Math.abs(window.gameState.dragVelocity.x))).toBe(4)
   await page.keyboard.up('ArrowRight')
   const releasedAt = await page.evaluate(() => ({ at: performance.now(), x: window.gameState.scrollOffset.x }))
   await expect.poll(() => page.evaluate(() => window.gameState.dragVelocity.x), { intervals: [16, 16, 32, 32] }).toBe(0)

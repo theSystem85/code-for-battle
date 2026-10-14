@@ -9,18 +9,18 @@ import { configRegistry } from '../../src/configRegistry.js'
 afterEach(() => {
   setKeyboardScrollAcceleration(1200)
   setKeyboardScrollDeceleration(2400)
-  setKeyboardScrollAutoBrake(3600)
+  setKeyboardScrollAutoBrake(1200)
 })
 
 describe('keyboard camera pedals', () => {
-  it('ramps to a bounded maximum and brakes to zero within 150 ms', () => {
+  it('ramps to a bounded maximum and brakes to zero with the revised default', () => {
     let velocity = 0
     const first = advanceKeyboardCameraVelocity(velocity, 1, 1 / 60)
     expect(first).toBeGreaterThan(0)
     expect(first).toBeLessThan(KEYBOARD_SCROLL_SPEED)
-    for (let frame = 0; frame < 60; frame++) velocity = advanceKeyboardCameraVelocity(velocity, 1, 1 / 60)
+    for (let frame = 0; frame < 120; frame++) velocity = advanceKeyboardCameraVelocity(velocity, 1, 1 / 60)
     expect(velocity).toBe(KEYBOARD_SCROLL_SPEED)
-    for (let frame = 0; frame < 9; frame++) velocity = advanceKeyboardCameraVelocity(velocity, 0, 1 / 60)
+    for (let frame = 0; frame < 100; frame++) velocity = advanceKeyboardCameraVelocity(velocity, 0, 1 / 60)
     expect(velocity).toBe(0)
   })
 
@@ -44,7 +44,7 @@ describe('keyboard camera pedals', () => {
     for (const fps of [30, 60, 120]) {
       let velocity = 0
       let distance = 0
-      for (let frame = 0; frame < fps * 2; frame++) {
+      for (let frame = 0; frame < fps * 3; frame++) {
         const next = advanceKeyboardCameraVelocity(velocity, frame < fps ? 1 : 0, 1 / fps)
         distance += (velocity + next) * 0.5 * 60 / fps
         velocity = next

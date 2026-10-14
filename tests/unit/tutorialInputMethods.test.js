@@ -52,7 +52,7 @@ describe('input method guide', () => {
     expect(document.querySelector('.input-method-guide__schematic--trackpad')).not.toBeNull()
     expect(document.querySelectorAll('.input-method-guide__finger')).toHaveLength(2)
     expect(document.body.textContent).toContain('Swipe between pages')
-    expect(document.body.textContent).toContain('Drag to pan map')
+    expect(document.body.textContent).not.toContain('Drag to pan map')
     expect(document.body.textContent).not.toContain('Shift + primary drag')
     document.querySelector('[data-input-method="gamepad"]').click()
     ;[...document.querySelectorAll('button')].find(button => button.textContent === 'Open control settings').click()

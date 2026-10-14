@@ -2,7 +2,7 @@
 
 Arrow-key camera movement accelerates while held to the existing configurable maximum. Opposite input first decelerates to zero, then accelerates in the new direction. Releasing an axis applies strong automatic braking; opposite simultaneous keys cancel and brake. Clamp the map and clear outward momentum at its edges. Preserve selected-unit steering, mouse/trackpad gestures, gamepad speed and minimap focus.
 
-Runtime Config → Controls exposes maximum keyboard speed (existing 60 Hz pixel/frame units), acceleration (default 1,200 px/s²), reversal deceleration (2,400 px/s²) and automatic release braking (3,600 px/s²). Zero automatic braking permits coasting. At the default 480 px/s cap, release stops within about 0.133 seconds instead of the former roughly two-second coast. Changing settings affects the next frame and uses the existing runtime-config reset behavior.
+Runtime Config → Controls exposes maximum keyboard speed (existing 60 Hz pixel/frame units), acceleration (default 1,200 px/s²), reversal deceleration (2,400 px/s²) and automatic release braking (1,200 px/s²). Zero automatic braking permits coasting. Spec 112 raises the default cap to 1,920 px/s (32 reference pixels/frame); reaching that speed and release braking each take approximately 1.6 seconds. Changing settings affects the next frame and uses the existing runtime-config reset behavior.
 
 Use elapsed real frame time, including paused-map rendering; cap a long frame at 100 ms. No dependence on game speed or OS key-repeat frequency. Camera velocity units remain compatible with pointer/gamepad input. Keep independent axes and existing diagonal behavior.
 
@@ -13,6 +13,8 @@ Acceptance: increasing speed while held; bounded maximum; rapid release stop; co
 Software verification on 2026-10-14: full unit suite passed (254 files / 4,855 tests); the focused keyboard camera, map scrolling and game loop suites passed 63 tests. Chromium verified holding a real direction key ramps speed without key-repeat input, changing acceleration through Runtime Config takes effect, and default release braking stops within the bounded distance/time assertion. Full lint and production build passed. Minimum configured speeds remain active during paused redraws instead of being lost to the old inertia threshold.
 
 ## Performance evidence
+
+These recorded runs used the earlier 8/3,600 speed/braking defaults. Spec 112 supersedes those defaults; these measurements do not certify its higher top speed.
 
 Paired live full-map traversal used unchanged 320-unit/DPR-2 settings, cold first traversal and a repeated full-map route with selected overlays/combat. Both direction axes stayed active. Reproduce with `PLAYWRIGHT_EXECUTABLE_PATH=/usr/bin/chromium PERF_KEYBOARD_SCROLL=1 PERF_DURATION_MS=15000 PERF_SCENE=traversal PERF_UNITS=320 node scripts/performance/microstutterBenchmark.mjs /tmp/keyboard-camera.json`. The optional keyboard mode exercises both axes during the existing route without changing rendering fidelity.
 

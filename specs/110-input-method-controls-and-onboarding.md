@@ -3,6 +3,8 @@
 Status: implemented and verified in the available automated environment. Physical macOS Safari/Chrome acceptance remains open.
 Date: 2026-10-14.
 
+Revision: [spec 112](112-map-control-preferences.md) removes the hand-button mode described in the original contracts/evidence below. The current fallback is secondary-click hold-and-drag.
+
 ## Outcome
 
 Players choose Mouse + keyboard, Trackpad, Touch or Gamepad as the first tutorial step. Persist that preference in the browser and allow changes later through the tutorial. Provide Open control settings to reach the appropriate Settings tab. The choice controls instructions/demonstrations without disabling other devices. Tutorial hints use the actual keyboard bindings and active gamepad profile; defaults are examples, not fixed prompts after remapping. Preserve existing onboarding progress/settings compatibility.
@@ -43,6 +45,6 @@ Integrated verification on 2026-10-14:
 - Changed-file lint fix, full lint and production build passed. EN/DE landing control cards and manual anchors were checked at desktop/phone widths; no new binary assets are needed for the diagrams.
 - The phone tutorial width regression caught during integration was fixed by including the card border in its declared width. Header/footer remain outside the guide's scrollable mapping content.
 
-Synthetic Linux wheel events verify delivered-event handling only. They cannot certify macOS navigation gestures or a physical trackpad. No physical acceptance result is claimed by this specification. Follow the linked physical-device protocol to determine whether a particular Mac/browser emits horizontal wheel events with Swipe between pages disabled; use the tested hand-button drag fallback when it does not.
+Synthetic Linux wheel events verify delivered-event handling only. They cannot certify macOS navigation gestures or a physical trackpad. No physical acceptance result is claimed by this specification. Follow the linked physical-device protocol to determine whether a particular Mac/browser emits horizontal wheel events with Swipe between pages disabled; use secondary-click hold-and-drag when it does not.
 
 Documentation checks: `npx vitest run tests/unit/landingPage.test.js` passed 11 tests; full lint and relative-link checks pass. System Chromium verified four localized cards without horizontal overflow at 1280px and 390px for both EN/DE landing routes, plus the deployed manual anchor and four method diagrams. These are software layout checks; final integrated input checks are recorded by root orchestration.

@@ -701,7 +701,7 @@ export const WRECK_COLLISION_MAX = 2.5
 export const WRECK_COLLISION_RECOIL_FACTOR_UNIT = 0.25 // Recoil applied to unit when wreck is slower
 export const WRECK_COLLISION_RECOIL_MAX_UNIT = 0.6
 // Maximum arrow-key speed (pixels per 60 Hz reference frame).
-export let KEYBOARD_SCROLL_SPEED = 8
+export let KEYBOARD_SCROLL_SPEED = 32
 
 export function setKeyboardScrollSpeed(value) {
   KEYBOARD_SCROLL_SPEED = value
@@ -709,7 +709,12 @@ export function setKeyboardScrollSpeed(value) {
 
 export let KEYBOARD_SCROLL_ACCELERATION = 1200 // CSS pixels/second² while held
 export let KEYBOARD_SCROLL_DECELERATION = 2400 // CSS pixels/second² when reversing
-export let KEYBOARD_SCROLL_AUTO_BRAKE = 3600 // CSS pixels/second² after release
+export let KEYBOARD_SCROLL_AUTO_BRAKE = 1200 // CSS pixels/second² after release
+export let INVERT_TOUCH_MAP_SCROLL = false
+
+export function setInvertTouchMapScroll(value) {
+  INVERT_TOUCH_MAP_SCROLL = Boolean(value)
+}
 
 export function setKeyboardScrollAcceleration(value) {
   if (Number.isFinite(value) && value > 0) KEYBOARD_SCROLL_ACCELERATION = value
@@ -1874,6 +1879,7 @@ const EXPORTED_CONFIG_VARIABLES = [
   'KEYBOARD_SCROLL_ACCELERATION',
   'KEYBOARD_SCROLL_DECELERATION',
   'KEYBOARD_SCROLL_AUTO_BRAKE',
+  'INVERT_TOUCH_MAP_SCROLL',
   'LONG_PRESS_MS',
   'CHEAT_CONSOLE_HISTORY_LIMIT',
   'TANK_FIRE_RANGE',

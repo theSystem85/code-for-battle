@@ -81,6 +81,8 @@ import {
   setKeyboardScrollDeceleration,
   KEYBOARD_SCROLL_AUTO_BRAKE,
   setKeyboardScrollAutoBrake,
+  INVERT_TOUCH_MAP_SCROLL,
+  setInvertTouchMapScroll,
   DESKTOP_EDGE_AUTOSCROLL_SPEED,
   setDesktopEdgeAutoscrollSpeed,
   DESKTOP_EDGE_AUTOSCROLL_ENABLED,
@@ -862,12 +864,12 @@ export const configRegistry = {
 
   keyboardScrollSpeed: {
     name: 'Keyboard Scroll Maximum Speed',
-    description: 'Top arrow-key camera speed (pixels per 60 Hz frame; 8 = 480 pixels/second)',
+    description: 'Top arrow-key camera speed (pixels per 60 Hz frame; 32 = 1920 pixels/second)',
     type: 'number',
     get: () => KEYBOARD_SCROLL_SPEED,
     set: setKeyboardScrollSpeed,
     min: 1,
-    max: 32,
+    max: 128,
     step: 1,
     category: 'Controls'
   },
@@ -877,6 +879,13 @@ export const configRegistry = {
     description: 'How quickly held direction keys increase camera speed (pixels/second²)',
     type: 'number', get: () => KEYBOARD_SCROLL_ACCELERATION, set: setKeyboardScrollAcceleration,
     min: 60, max: 12000, step: 60, category: 'Controls'
+  },
+
+  invertTouchMapScroll: {
+    name: 'Invert Touch/Trackpad Map Panning',
+    description: 'Reverse two-finger touch pans and trackpad/wheel scrolling. Mouse drag and arrow keys are unchanged. Browsers deliver trackpad and mouse-wheel movement through the same wheel events.',
+    type: 'boolean', get: () => INVERT_TOUCH_MAP_SCROLL, set: setInvertTouchMapScroll,
+    category: 'Controls'
   },
 
   keyboardScrollDeceleration: {
