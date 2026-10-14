@@ -283,7 +283,7 @@
       "mouseBody": "Primärklick wählt aus; klicke mit ausgewählten Einheiten per Primärklick auf ein Ziel oder einen Gegner zum Bewegen oder Angreifen. Halte den Sekundärklick beim Ziehen zum Verschieben; kurzer Sekundärklick hebt die Auswahl auf oder öffnet das Kontextmenü. Das Tutorial liest deine Tastenbelegungen.",
       "trackpadTitle": "Trackpad",
       "trackpadGesture": "Zwei Finger ↔ Karte",
-      "trackpadBody": "Scrolle mit zwei Fingern über dem Schlachtfeld, um beide Achsen zu verschieben. Alternativen sind Umschalt+Scrollen für horizontal, Ziehen bei gehaltenem Sekundärklick oder der Ziehmodus der Hand-Schaltfläche.",
+      "trackpadBody": "Scrolle mit zwei Fingern über dem Schlachtfeld, um beide Achsen zu verschieben. Alternativen sind Umschalt+Scrollen für horizontal, oder Ziehen bei gehaltenem Sekundärklick.",
       "touchTitle": "Touch",
       "touchGesture": "Tippen → Auswählen / Befehl · Mit zwei Fingern ziehen → Karte",
       "touchBody": "Folge den Touch-Demonstrationen des Tutorials und nutze die mobilen Befehle. Im Verkaufsmodus verkauft das Antippen zuerst das Gebäude; verlasse den Modus für seine normale Funktion.",
@@ -291,7 +291,7 @@
       "gamepadGesture": "Sticks + belegte Tasten → Befehle",
       "gamepadBody": "Bewege den Cursor oder steuere eine Einheit direkt per Controller. Tutorial-Hinweise folgen deinem aktiven Profil und deinen Belegungen. In den Einstellungen kannst du Tasten und Totzonen anpassen.",
       "settings": "Open control settings im Tutorial öffnet deine aktuellen Key Bindings oder das Controllers-Profil. Standardbeispiele dienen als Einstieg; gespeicherte Belegungen haben Vorrang.",
-      "mac": "Mac-Trackpad: Wenn Wischen den Browserverlauf öffnet, deaktiviere oder ändere Zwischen Seiten blättern unter Systemeinstellungen → Trackpad → Weitere Gesten. Prüfe Natürliches Scrollen unter Scrollen und Zoomen für die Richtung. Manche System- oder Browsergesten erreichen das Spiel nicht; nutze dann die Hand-Schaltfläche.",
+      "mac": "Mac-Trackpad: Wenn Wischen den Browserverlauf öffnet, deaktiviere oder ändere Zwischen Seiten blättern unter Systemeinstellungen → Trackpad → Weitere Gesten. Prüfe Natürliches Scrollen unter Scrollen und Zoomen für die Richtung. Manche System- oder Browsergesten erreichen das Spiel nicht; ziehe dann bei gehaltenem Sekundärklick.",
       "guide": "Steuerungsanleitung und Mac-Prüfschritte (Englisch)"
     }
   }

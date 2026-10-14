@@ -846,14 +846,6 @@ body.is-touch {
   -webkit-touch-callout: none;
 }
 
-#gameCanvas.map-pan-active {
-  cursor: grab !important;
-}
-
-#gameCanvas.map-pan-active:active {
-  cursor: grabbing !important;
-}
-
 #gameCanvasGPU,
 #gameCanvasGL {
   z-index: var(--z-canvas);

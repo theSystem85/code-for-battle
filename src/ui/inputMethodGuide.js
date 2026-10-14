@@ -69,7 +69,7 @@ export function getInputGuideData(method) {
       ['Group select', 'One-finger selection box', 'Drag around units, or tap units to add them.'],
       ['Move / attack', 'Tap a destination / enemy', 'With units selected, tap ground to move or an enemy to attack.'],
       ['Deselect', binding('touch', 'two-finger-tap', 'Double Finger Tap'), 'Tap with two fingers without dragging.'],
-      ['Pan map', 'Two-finger drag', 'Move both fingers together across the map.'],
+      ['Pan map', 'Two-finger drag', 'Move both fingers together. Invert touch/trackpad panning in Runtime Config → Controls if desired.'],
       ['Manual driving', 'On-screen joystick', 'Select a controllable unit, then use its joystick and fire controls.']
     ]
   }
@@ -77,13 +77,13 @@ export function getInputGuideData(method) {
     ['Select / order', primary, 'Click a unit to select; click ground to move or an enemy to attack.'],
     ['Group select', `Drag ${primary} / ${additive}`, 'Drag a box around units; add individual units with the additive selection binding.'],
     ['Deselect / cancel', `${escape} / Secondary click`, 'Press the cancel key or secondary-click without dragging.'],
-    ['Pan map', method === 'trackpad' ? 'Two-finger scroll ↔ ↕' : 'Secondary-click + drag', method === 'trackpad' ? 'Scroll with two fingers over the map. Shift + wheel scrolls horizontally. Use the sidebar hand button “Drag to pan map” for primary-drag panning; toggle it off to select again.' : 'Hold the secondary button and drag. You can also use the sidebar hand button “Drag to pan map” or scroll over the map.'],
+    ['Pan map', method === 'trackpad' ? 'Two-finger scroll ↔ ↕' : 'Secondary-click + drag', method === 'trackpad' ? 'Scroll with two fingers over the map. Shift + wheel scrolls horizontally. Hold a secondary click and drag if scrolling gestures are intercepted. In Runtime Config → Controls, invert touch/trackpad panning if desired.' : 'Hold the secondary button and drag. You can also scroll over the map.'],
     ['Manual driving', driving, `With a unit selected, hold the configured driving keys; fire with ${fire}. Without a selected unit, these direction keys move the camera.`],
     ['Control settings', settingsKey, 'Open Settings to inspect or customize bindings.']
   ]
   return {
     title: method === 'trackpad' ? 'Trackpad controls' : 'Mouse + keyboard controls',
-    note: method === 'trackpad' ? 'A two-finger click or tap is the usual secondary click; enable it in your trackpad settings. On macOS, System Settings → Trackpad → More Gestures → Swipe between pages can intercept sideways gestures before the game receives them. Disable that gesture or use the sidebar hand button / secondary-click + drag fallback. The game cannot override operating-system gestures.' : 'These shortcut labels follow your current keybindings. Your choice changes guidance, not which devices can play.',
+    note: method === 'trackpad' ? 'A two-finger click or tap is the usual secondary click; enable it in your trackpad settings. On macOS, System Settings → Trackpad → More Gestures → Swipe between pages can intercept sideways gestures before the game receives them. Disable that gesture or use the secondary-click + drag fallback. The game cannot override operating-system gestures.' : 'These shortcut labels follow your current keybindings. Your choice changes guidance, not which devices can play.',
     rows
   }
 }
@@ -99,9 +99,9 @@ export function inputAwareStepText(step, method) {
   const select = gamepad ? `${row('Select / order')} with the on-screen pointer` : touch ? 'tap' : primary
   switch (step.id) {
     case 'select-single': return `To select a friendly unit, ${select}. Its status appears and commands become available.`
-    case 'select-group': return gamepad ? `Hold ${row('Select / order')} and move the pointer to drag a selection box around at least two units, then release.` : touch ? 'Drag a one-finger selection box around at least two units, or tap units one by one to add them. Two fingers pan the map.' : `Drag ${primary} to draw a selection box around multiple units. Use ${pointerInputLabel(binding('mouse', 'select-add', 'Shift+Mouse1'))} to add units. Shift-drag keeps additive selection; the sidebar hand button switches to map panning.`
+    case 'select-group': return gamepad ? `Hold ${row('Select / order')} and move the pointer to drag a selection box around at least two units, then release.` : touch ? 'Drag a one-finger selection box around at least two units, or tap units one by one to add them. Two fingers pan the map.' : `Drag ${primary} to draw a selection box around multiple units. Use ${pointerInputLabel(binding('mouse', 'select-add', 'Shift+Mouse1'))} to add units. Shift-drag keeps additive selection.`
     case 'deselect': return touch ? 'Tap with two fingers without dragging to clear the current selection.' : gamepad ? `Use ${row('Deselect / cancel')} without dragging to clear selection.` : `Press ${escape}, or use a secondary click without dragging, to clear selection. On a trackpad, use the configured two-finger secondary click.`
-    case 'move-units': return `Select a unit, then ${select} on empty ground to move it. ${touch ? 'Pan with two fingers.' : gamepad ? `Pan using ${row('Pan map')}.` : method === 'trackpad' ? 'Pan with two-finger scrolling or the sidebar hand button; turn hand mode off before issuing orders.' : 'Pan with a secondary-button drag or the sidebar hand button.'}`
+    case 'move-units': return `Select a unit, then ${select} on empty ground to move it. ${touch ? 'Pan with two fingers.' : gamepad ? `Pan using ${row('Pan map')}.` : method === 'trackpad' ? 'Pan with two-finger scrolling or a secondary-click drag.' : 'Pan with a secondary-button drag.'}`
     case 'attack': return `Select a tank, then ${select} on an enemy to attack it. Destroy all enemy buildings to win.`
     case 'tank-rally': return `Queue a Tank, select the Vehicle Factory using ${select}, then use the same input on the map to set its rally point.`
     case 'build-harvester': return `Queue a Harvester. It automatically finds ore; select it and ${select} on an ore patch to direct it there.`
@@ -129,7 +129,7 @@ function createControlSchematic(method, data) {
   if (method === 'trackpad' || method === 'touch') {
     device.append(element('span', 'input-method-guide__finger input-method-guide__finger--one'), element('span', 'input-method-guide__finger input-method-guide__finger--two'), element('span', 'input-method-guide__gesture-arrows', '↔ ↕'))
     labels = method === 'trackpad'
-      ? [['↔ ↕', 'Two-finger scroll pans the map'], ['● ●', 'Two-finger click: secondary click'], ['☝', 'Hand button: drag to pan']]
+      ? [['↔ ↕', 'Two-finger scroll pans the map'], ['● ●', 'Two-finger click: secondary click'], ['☝', 'Hold secondary click and drag: fallback pan']]
       : [['●', 'Tap: select / order'], ['● ● ↔ ↕', 'Two-finger drag: pan map'], ['● ●', 'Two-finger tap: deselect']]
   } else if (method === 'gamepad') {
     device.append(element('span', 'input-method-guide__gamepad-stick input-method-guide__gamepad-stick--left', '+'), element('span', 'input-method-guide__gamepad-stick input-method-guide__gamepad-stick--right', '●'))

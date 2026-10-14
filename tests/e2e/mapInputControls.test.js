@@ -42,8 +42,9 @@ test('map wheel movement consumes diagonal and boundary gestures while sidebar s
   expect(outside).toBe(false)
 })
 
-test('hand mode pans with captured primary drag without selecting or issuing commands', async({ page }) => {
+test('secondary drag still pans without adding a pan action button', async({ page }) => {
   await startGame(page)
+  await expect(page.locator('#mapPanBtn')).toHaveCount(0)
   await page.evaluate(() => {
     window.gameState.gamePaused = true
     window.gameState.scrollOffset.x = 300
@@ -52,25 +53,14 @@ test('hand mode pans with captured primary drag without selecting or issuing com
     window.gameState.dragVelocity.y = 0
     window.gameState.smoothScroll.active = false
   })
-  const hand = page.getByRole('button', { name: 'Drag to pan map', exact: true })
-  await hand.click()
-  await expect(hand).toHaveAttribute('aria-pressed', 'true')
   const rect = await page.locator('#gameCanvas').boundingBox()
   await page.mouse.move(rect.x + 300, rect.y + 300)
-  await page.mouse.down()
+  await page.mouse.down({ button: 'right' })
   await page.mouse.move(rect.x + 220, rect.y + 240, { steps: 5 })
-  await page.mouse.up()
-  expect(await page.evaluate(() => ({ ...window.gameState.scrollOffset }))).toEqual({ x: 380, y: 360 })
-  expect(await page.evaluate(() => window.gameState.selectionActive)).toBeFalsy()
-  await page.mouse.move(rect.x + 220, rect.y + 240)
-  await page.mouse.down()
-  await page.mouse.move(rect.x - 20, rect.y + 180, { steps: 5 })
-  await page.mouse.up()
-  expect(await page.evaluate(() => ({ ...window.gameState.scrollOffset }))).toEqual({ x: 620, y: 420 })
-  await page.mouse.move(rect.x + 300, rect.y + 300)
-  expect(await page.evaluate(() => ({ ...window.gameState.scrollOffset }))).toEqual({ x: 620, y: 420 })
-  await page.keyboard.press('Escape')
-  await expect(hand).toHaveAttribute('aria-pressed', 'false')
+  await page.mouse.up({ button: 'right' })
+  const offset = await page.evaluate(() => ({ ...window.gameState.scrollOffset }))
+  expect(offset.x).toBeGreaterThan(300)
+  expect(offset.y).toBeGreaterThan(300)
 })
 
 test('a touch tap sells a selected vehicle factory without changing its rally point or double refund', async({ browser }) => {
@@ -121,5 +111,41 @@ test('a touch tap sells a selected vehicle factory without changing its rally po
     expect(outcome.selling).toBe(true)
     expect(outcome.rally).toEqual(initial.rally)
     expect(outcome.refund - initial.money).toBe(outcome.expectedRefund)
+  } finally { await context.close() }
+})
+
+test('Controls inversion reverses two-finger touch panning', async({ browser }) => {
+  const context = await browser.newContext({ ...devices['iPhone 13'] })
+  const page = await context.newPage()
+  try {
+    await startGame(page)
+    const cdp = await context.newCDPSession(page)
+    async function pan() {
+      await page.evaluate(() => {
+        const state = window.gameState
+        state.gamePaused = true
+        state.scrollOffset.x = 500
+        state.scrollOffset.y = 500
+        state.dragVelocity.x = 0
+        state.dragVelocity.y = 0
+        state.smoothScroll.active = false
+      })
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: 150, y: 230 }, { x: 210, y: 230 }] })
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: 180, y: 260 }, { x: 240, y: 260 }] })
+      const offset = await page.evaluate(() => ({ ...window.gameState.scrollOffset }))
+      await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+      await page.evaluate(() => { window.gameState.dragVelocity.x = 0; window.gameState.dragVelocity.y = 0 })
+      return offset
+    }
+    const normal = await pan()
+    expect(normal.x).toBeLessThan(500)
+    expect(normal.y).toBeLessThan(500)
+    await page.keyboard.press('k')
+    await page.getByRole('button', { name: 'Controls', exact: true }).click()
+    await page.locator('#config-invertTouchMapScroll').check()
+    await page.locator('#runtime-config-close').click()
+    const inverted = await pan()
+    expect(inverted.x).toBeGreaterThan(500)
+    expect(inverted.y).toBeGreaterThan(500)
   } finally { await context.close() }
 })

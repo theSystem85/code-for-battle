@@ -4,7 +4,8 @@ import { gameState } from '../../src/gameState.js'
 import { notifyMapEditorWheel } from '../../src/ui/mapEditorControls.js'
 import { suspendRemoteControlAutoFocus } from '../../src/game/remoteControl.js'
 
-vi.mock('../../src/config.js', () => ({ TILE_SIZE: 32 }))
+const config = vi.hoisted(() => ({ TILE_SIZE: 32, INVERT_TOUCH_MAP_SCROLL: false }))
+vi.mock('../../src/config.js', () => config)
 vi.mock('../../src/gameState.js', () => ({ gameState: {} }))
 vi.mock('../../src/game/remoteControl.js', () => ({ suspendRemoteControlAutoFocus: vi.fn() }))
 vi.mock('../../src/benchmark/benchmarkTracker.js', () => ({ notifyBenchmarkManualCameraControl: vi.fn() }))
@@ -19,7 +20,8 @@ describe('map wheel panning', () => {
   let render
   beforeEach(() => {
     vi.clearAllMocks()
-    document.body.innerHTML = '<button id="mapPanBtn"></button><canvas id="gameCanvas"></canvas>'
+    config.INVERT_TOUCH_MAP_SCROLL = false
+    document.body.innerHTML = '<canvas id="gameCanvas"></canvas>'
     canvas = document.getElementById('gameCanvas')
     Object.assign(gameState, {
       mapGrid: Array.from({ length: 64 }, () => Array(64).fill(null)),
@@ -62,6 +64,14 @@ describe('map wheel panning', () => {
     expect(gameState.scrollOffset).toEqual({ x: 442, y: 456 })
     wheel(canvas, { deltaX: 3, deltaY: 7, shiftKey: true })
     expect(gameState.scrollOffset).toEqual({ x: 445, y: 463 })
+  })
+
+  it('reverses both wheel axes when touch/trackpad inversion is enabled', () => {
+    config.INVERT_TOUCH_MAP_SCROLL = true
+    wheel(canvas, { deltaX: 10, deltaY: -20 })
+    expect(gameState.scrollOffset).toEqual({ x: 90, y: 220 })
+    wheel(canvas, { deltaY: 10, shiftKey: true })
+    expect(gameState.scrollOffset).toEqual({ x: 80, y: 220 })
   })
 
   it('consumes outward gestures at all bounds, including maps smaller than the viewport', () => {

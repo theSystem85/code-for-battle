@@ -33,7 +33,7 @@ export function handleRightMouseDown(handler, e, worldX, worldY, gameCanvas, cur
   }
 }
 
-export function handleRightDragScrolling(handler, e, mapGrid, gameCanvas) {
+export function handleRightDragScrolling(handler, e, mapGrid, gameCanvas, invert = false) {
   if (gameState.benchmarkActive) {
     notifyBenchmarkManualCameraControl()
   }
@@ -44,7 +44,7 @@ export function handleRightDragScrolling(handler, e, mapGrid, gameCanvas) {
   const logicalHeight = getPlayableViewportHeight(gameCanvas)
 
   const isMobileLandscape = document.body?.classList?.contains('mobile-landscape')
-  const scrollSpeed = isMobileLandscape ? 1.4 : 2
+  const scrollSpeed = (isMobileLandscape ? 1.4 : 2) * (invert ? -1 : 1)
   gameState.scrollOffset.x = Math.max(
     0,
     Math.min(gameState.scrollOffset.x - (dx * scrollSpeed), mapGrid[0].length * TILE_SIZE - logicalWidth)
