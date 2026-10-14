@@ -318,6 +318,10 @@
 
     /* ─── Anchor offset ─── */
     [id] { scroll-margin-top: 16px; }
+    .input-method-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 1rem 0; }
+    .input-method-cards article { padding: 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--panel2); }
+    .input-method-diagram { padding: 0.75rem; color: var(--accent); line-height: 2; border: 1px solid var(--line); }
+    @media (max-width: 650px) { .input-method-cards { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -335,7 +339,7 @@
       <h2>Contents</h2>
       <ol>
         <li><a href="#quick">Quick Guide</a></li>
-        <li><a href="#controls">Controls &amp; HUD</a></li>
+        <li><a href="#controls">Controls &amp; HUD</a> — <a href="#input-methods">Choose your input method</a></li>
         <li><a href="#building-placement">Building Placement</a></li>
         <li><a href="#tech-tree">Tech Tree</a></li>
         <li><a href="#units">Unit Compendium</a></li>
@@ -362,7 +366,7 @@
         </article>
         <article class="card">
           <h3>Step 2 — Army</h3>
-          <p>Train tanks from the Vehicle Factory, then transition into air power with an Airstrip for F22/F35 support. Set rally points by selecting a factory and right-clicking the map, and keep gas and ammo supply online.</p>
+          <p>Train tanks from the Vehicle Factory, then transition into air power with an Airstrip for F22/F35 support. Set rally points by selecting a factory and primary-clicking the map, and keep gas and ammo supply online.</p>
           <img class="shot" src="/images/docs/quick-guide-sidebar.png" alt="Sidebar production" loading="lazy">
         </article>
         <article class="card">
@@ -392,12 +396,34 @@
     <section id="controls" class="section">
       <h2>2. Controls &amp; HUD</h2>
 
+      <div id="input-methods">
+        <h3>Choose your input method</h3>
+        <p>The first tutorial step, <strong>Choose your controls</strong>, offers <strong>Mouse + keyboard</strong>, <strong>Touch</strong>, <strong>Trackpad</strong> and <strong>Gamepad</strong>. Your preference is remembered in this browser. Change it later in the tutorial; other devices keep working. Use <strong>Open control settings</strong> for your current Key Bindings or Controllers profile. Tutorial instructions follow your saved mappings, so defaults below may differ. Use <strong>Refresh mappings</strong> after changing settings; return to the first step with Back or restart to choose another method.</p>
+        <div class="input-method-cards">
+          <article><h4>Mouse + keyboard</h4><p class="input-method-diagram"><kbd>Click / drag</kbd> → Select<br><kbd>Primary click after selection</kbd> → Move / attack</p><p>Shift-click adds/removes units. Hold the secondary button and drag to pan. Shift-primary click on a destination queues a command. See Settings → Key Bindings for your configured shortcuts.</p></article>
+          <article><h4>Trackpad</h4><p class="input-method-diagram"><kbd>Two-finger scroll ↔ ↕</kbd> → Pan<br><kbd>Primary click after selection</kbd> → Command</p><p>Scroll over the battlefield on either axis; Shift-wheel provides horizontal movement. Hold a secondary click and drag, or enable the hand button labelled <strong>Drag to pan map</strong> and drag with the primary button. Switch hand mode off or press Escape to select normally; Shift-primary selection is preserved when it is off. Entering Sell or Repair also exits hand mode.</p></article>
+          <article><h4>Touch</h4><p class="input-method-diagram"><kbd>Tap</kbd> → Select / order<br><kbd>Two-finger drag ↔ ↕</kbd> → Map</p><p>Tap a destination or enemy with units selected; drag a selection box with one finger. Double-tap selects visible units of the same type. In Sell mode, tapping an owned building sells it before any waypoint shortcut; leave Sell to use that shortcut again.</p></article>
+          <article><h4>Gamepad</h4><p class="input-method-diagram"><kbd>Sticks</kbd> → Cursor / camera / unit<br><kbd>Mapped buttons</kbd> → Actions</p><p>Use Settings → Controllers for the active profile, button mappings and deadzones. The default left stick moves the Player 1 cursor or a remotely controlled unit; the right stick pans outside aiming mode. Tutorial prompts reflect your profile rather than assuming face-button letters.</p></article>
+        </div>
+        <h4>Mac trackpad setup and browser navigation</h4>
+        <p>In <strong>System Settings → Trackpad → Point &amp; Click</strong>, enable your preferred <strong>Secondary click</strong> gesture (often two fingers); <strong>Tap to click</strong> determines whether light taps act as clicks. Hold the click while dragging if a tap does not maintain a drag.</p>
+        <p>If horizontal swipes go back or forward in the browser, turn off or remap <strong>Trackpad → More Gestures → Swipe between pages</strong>. Check <strong>Scroll &amp; Zoom → Natural scrolling</strong> for direction. Labels vary by macOS version. The game normalizes delivered wheel events and prevents their page/boundary scrolling over the map, including map edges. It cannot intercept gestures consumed by macOS or the browser before they reach the page. Use the hand-button fallback if needed; dialogs and guide pages retain ordinary scrolling. Ctrl/Meta-wheel over the canvas is consumed without pan or zoom; map-editor wheel input continues to change the brush.</p>
+        <h4>Physical Mac verification — pending</h4>
+        <ol>
+          <li>Record Mac, macOS, browser version and trackpad settings. In Safari and Chrome, choose Trackpad in the tutorial, reload and verify the preference and guidance persist.</li>
+          <li>Scroll both axes and diagonally over the map, including all map edges. Check camera movement, page position and browser history. Repeat with Swipe between pages disabled/remapped and natural scrolling on/off.</li>
+          <li>Check secondary-click deselection/context versus hold-drag panning, Shift-wheel and hand-button primary drag. Turn hand mode off; confirm ordinary and Shift-primary selection still work.</li>
+          <li>Scroll Settings and this guide normally. Verify keyboard remappings and a connected gamepad profile appear correctly in tutorial hints. Test touch Sell priority on a waypoint-capable building separately.</li>
+        </ol>
+        <p>Linux synthetic wheel tests verify delivered-event handling; physical macOS Safari/Chrome behavior remains unverified until this protocol is run on actual hardware.</p>
+      </div>
+
       <h3>Selection</h3>
       <ul>
         <li><strong>Click</strong> a unit to select it. <strong>Shift + Click</strong> to add/remove from selection.</li>
         <li><strong>Drag</strong> a box around units for group selection.</li>
         <li><strong>Double-click</strong> a unit to select all visible units of the same type. <strong>Shift + Double-click</strong> to add them.</li>
-        <li><strong>Right-click</strong> the map to move selected units. Right-click an enemy to attack.</li>
+        <li>With units selected, <strong>primary-click</strong> the map to move or an enemy to attack. A brief secondary click deselects or opens a context menu; hold and drag it to pan.</li>
       </ul>
 
       <h3>Control Groups</h3>

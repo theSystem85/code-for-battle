@@ -5,6 +5,8 @@ import { selectedUnits } from '../inputHandler.js'
 import { unitCosts } from '../units.js'
 import { clearRemoteControlSource } from '../input/remoteControlState.js'
 import { buildTutorialSteps } from './tutorialSystem/steps.js'
+import { isInputMethod } from './inputMethodGuide.js'
+import { migrateTutorialProgress, TUTORIAL_PROGRESS_VERSION } from './tutorialSystem/progress.js'
 import { createTutorialUI } from './tutorialSystem/ui.js'
 import {
   countPlayerBuildings,
@@ -17,6 +19,7 @@ import {
   getBoundingCenter,
   getCanvasPointForTile,
   getIsTouchLayout,
+  getHintForDevice,
   getPlayerCrewSnapshot,
   getSpokenTextForStep,
   getTextForDevice,
@@ -36,12 +39,21 @@ import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 
 class TutorialSystem {
   constructor() {
-    this.settings = readFromStorage(TUTORIAL_SETTINGS_KEY, DEFAULT_SETTINGS)
-    this.progress = readFromStorage(TUTORIAL_PROGRESS_KEY, DEFAULT_PROGRESS)
+    this.settings = { ...readFromStorage(TUTORIAL_SETTINGS_KEY, DEFAULT_SETTINGS) }
+    const allSteps = buildTutorialSteps()
+    this.steps = allSteps.filter(step => !step.mobileOnly || getIsTouchLayout())
+    this.progress = migrateTutorialProgress(readFromStorage(TUTORIAL_PROGRESS_KEY, null), this.steps, allSteps)
+    if (!isInputMethod(this.settings.preferredInputMethod)) this.settings.preferredInputMethod = null
+    if (!this.progress.completed && !this.settings.preferredInputMethod && this.progress.stepId !== 'input-method') {
+      this.progress.resumeAfterInputStepId = this.progress.stepId
+      this.progress.stepId = 'input-method'
+      this.progress.stepIndex = 0
+    }
     this.position = readFromStorage(TUTORIAL_POSITION_KEY, this.getDefaultPosition())
     this.active = false
     this.phase = 'demo'
     this.stepIndex = this.progress.stepIndex || 0
+    this.saveProgress()
     this.overlay = null
     this.cursor = null
     this.card = null
@@ -64,7 +76,7 @@ class TutorialSystem {
     this.animationFrame = null
     this.speaking = false
     this.minimized = false
-    this.steps = buildTutorialSteps().filter(step => !step.mobileOnly || getIsTouchLayout())
+    this.stepGeneration = 0
     this.isInviteSession = false
 
     if (typeof window !== 'undefined') {
@@ -75,6 +87,22 @@ class TutorialSystem {
         this.isInviteSession = false
       }
     }
+  }
+
+  saveProgress() {
+    this.progress.version = TUTORIAL_PROGRESS_VERSION
+    this.progress.stepId = this.steps[this.stepIndex]?.id || null
+    writeToStorage(TUTORIAL_PROGRESS_KEY, this.progress)
+  }
+
+  chooseInputMethod(method) {
+    if (!isInputMethod(method)) return
+    this.settings.preferredInputMethod = method
+    writeToStorage(TUTORIAL_SETTINGS_KEY, this.settings)
+    this.inputGuide?.update(method)
+    const step = this.steps[this.stepIndex]
+    if (step?.id === 'input-method') this.markStepCompleted()
+    this.updateContinueState(step)
   }
 
   getDefaultPosition() {
@@ -111,6 +139,13 @@ class TutorialSystem {
     this.bindSettingsControls()
     this.bindActionTracking()
     this.bindLayoutChangeListeners()
+    const settingsModal = document.getElementById('configSettingsModal')
+    if (settingsModal) {
+      this.settingsObserver = new window.MutationObserver(() => {
+        if (this.active && settingsModal.getAttribute('aria-hidden') === 'true') this.renderStep(this.steps[this.stepIndex])
+      })
+      this.settingsObserver.observe(settingsModal, { attributes: true, attributeFilter: ['aria-hidden'] })
+    }
 
     if (this.isInviteSession) {
       this.settings.showTutorial = false
@@ -310,7 +345,7 @@ class TutorialSystem {
       this.progress = { ...DEFAULT_PROGRESS }
       this.stepIndex = 0
       this.progress.completed = false
-      writeToStorage(TUTORIAL_PROGRESS_KEY, this.progress)
+      this.saveProgress()
     } else if (resume) {
       this.stepIndex = this.progress.stepIndex || 0
     }
@@ -384,7 +419,7 @@ class TutorialSystem {
     }
     this.progress.completed = true
     this.progress.stepIndex = this.steps.length
-    writeToStorage(TUTORIAL_PROGRESS_KEY, this.progress)
+    this.saveProgress()
     this.stop()
     // Permanently hide dock button when skipping
     if (this.dockButton) {
@@ -400,7 +435,7 @@ class TutorialSystem {
     if (this.stepIndex <= 0) return
     this.stepIndex -= 1
     this.progress.stepIndex = this.stepIndex
-    writeToStorage(TUTORIAL_PROGRESS_KEY, this.progress)
+    this.saveProgress()
     this.runCurrentStep()
   }
 
@@ -414,11 +449,17 @@ class TutorialSystem {
   }
 
   advanceStep() {
-    this.stepIndex += 1
+    const resumeIndex = this.steps[this.stepIndex]?.id === 'input-method'
+      ? this.steps.findIndex(step => step.id === this.progress.resumeAfterInputStepId)
+      : -1
+    if (resumeIndex > 0) {
+      this.stepIndex = resumeIndex
+      delete this.progress.resumeAfterInputStepId
+    } else this.stepIndex += 1
     this.progress.stepIndex = this.stepIndex
     if (this.stepIndex >= this.steps.length) {
       this.progress.completed = true
-      writeToStorage(TUTORIAL_PROGRESS_KEY, this.progress)
+      this.saveProgress()
       // Hide dock button immediately on completion
       if (this.dockButton) {
         this.dockButton.classList.add('tutorial-dock--hidden')
@@ -436,7 +477,7 @@ class TutorialSystem {
       }, 3000)
       return
     }
-    writeToStorage(TUTORIAL_PROGRESS_KEY, this.progress)
+    this.saveProgress()
     this.runCurrentStep()
   }
 
@@ -449,7 +490,9 @@ class TutorialSystem {
       return
     }
 
-    this.phase = 'demo'
+    this.stepGeneration += 1
+    if (this.animationFrame) { cancelAnimationFrame(this.animationFrame); this.animationFrame = null }
+    this.phase = step.interactive ? 'practice' : 'demo'
     this.lastAction = null
     this.stepState = {
       action: null,
@@ -467,6 +510,10 @@ class TutorialSystem {
     }
 
     this.renderStep(step)
+    if (step.interactive) {
+      this.speak(getSpokenTextForStep(step, this.settings.preferredInputMethod))
+      return
+    }
     this.runDemo(step)
   }
 
@@ -475,20 +522,26 @@ class TutorialSystem {
       this.stepTitle.textContent = step.title
     }
     if (this.stepText) {
-      this.stepText.textContent = getTextForDevice(step)
+      this.stepText.textContent = getTextForDevice(step, this.settings.preferredInputMethod)
     }
     if (this.stepHint) {
-      this.stepHint.textContent = step.hint || ''
+      this.stepHint.textContent = getHintForDevice(step, this.settings.preferredInputMethod)
     }
     if (this.stepVisual) {
       this.stepVisual.hidden = step.visual !== 'mobile-build-gestures'
     }
+    if (this.inputGuide) {
+      this.inputGuide.element.hidden = step.id !== 'input-method'
+      if (step.id === 'input-method') this.inputGuide.update(this.settings.preferredInputMethod)
+    }
+    this.card?.classList.toggle('tutorial-card--input-guide', step.id === 'input-method')
+    this.syncCursorVisibility()
     this.updateStepProgress(step)
     if (this.stepCount) {
       this.stepCount.textContent = `Step ${this.stepIndex + 1} of ${this.steps.length}`
     }
     if (this.stepPhase) {
-      this.stepPhase.textContent = this.phase === 'demo' ? 'Demo' : 'Your turn'
+      this.stepPhase.textContent = step.interactive ? 'Controls' : this.phase === 'demo' ? 'Demo' : 'Your turn'
     }
     if (this.minimizeButton) {
       this.minimizeButton.innerHTML = this.minimized ? '▴' : '▬'
@@ -572,7 +625,7 @@ class TutorialSystem {
 
   syncCursorVisibility() {
     if (!this.cursor) return
-    this.cursor.hidden = !this.active || this.minimized
+    this.cursor.hidden = !this.active || this.minimized || this.steps[this.stepIndex]?.interactive === true
   }
 
   updateContinueState(step) {
@@ -663,13 +716,15 @@ class TutorialSystem {
   }
 
   async runDemo(step) {
+    const generation = this.stepGeneration
     this.stopSpeech()
     if (step.demo) {
       await step.demo(this)
     }
+    if (!this.active || generation !== this.stepGeneration || this.steps[this.stepIndex] !== step) return
     this.phase = 'practice'
     this.renderStep(step)
-    this.speak(getSpokenTextForStep(step))
+    this.speak(getSpokenTextForStep(step, this.settings.preferredInputMethod))
     this.awaitCompletion(step)
   }
 

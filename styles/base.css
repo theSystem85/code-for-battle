@@ -9,6 +9,7 @@ html, body {
   cursor: var(--game-default-cursor);
   touch-action: manipulation;
   -ms-touch-action: manipulation;
+  overscroll-behavior-x: none;
   font-family: var(--game-font-family);
 }
 
@@ -839,9 +840,18 @@ body.is-touch {
   width: calc(100% - var(--sidebar-width));
   height: 100%;
   touch-action: none;
+  overscroll-behavior: none;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+}
+
+#gameCanvas.map-pan-active {
+  cursor: grab !important;
+}
+
+#gameCanvas.map-pan-active:active {
+  cursor: grabbing !important;
 }
 
 #gameCanvasGPU,

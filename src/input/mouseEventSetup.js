@@ -1,7 +1,7 @@
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { handlePointerDown as handleMapEditPointerDown, handlePointerMove as handleMapEditPointerMove, handlePointerUp as handleMapEditPointerUp } from '../mapEditor.js'
-import { notifyMapEditorWheel } from '../ui/mapEditorControls.js'
+import { setupMapPanning } from './mapPanning.js'
 import { hideLlmQueueTooltip } from '../ui/llmQueueTooltip.js'
 import { isLocalPartyAutomationLocked } from '../network/multiplayerStore.js'
 import { keybindingManager, KEYBINDING_CONTEXTS } from './keybindings.js'
@@ -11,6 +11,14 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
   handler.gameFactories = factories
   handler.gameUnits = units
   handler.selectionManager = selectionManager
+  setupMapPanning(gameCanvas, mapGrid, () => handler.requestRenderFrame?.())
+
+  gameCanvas.addEventListener('click', event => {
+    if (event.isTrusted && performance.now() < (handler.touchModeClickUntil || 0)) {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+    }
+  }, { capture: true })
 
   gameCanvas.addEventListener('contextmenu', e => e.preventDefault())
 
@@ -108,13 +116,6 @@ export function setupMouseEvents(handler, gameCanvas, units, factories, mapGrid,
   gameCanvas.addEventListener('contextmenu', (e) => {
     handler.handleContextMenu(e, gameCanvas)
   })
-
-  gameCanvas.addEventListener('wheel', (e) => {
-    if (!gameState.mapEditMode) return
-    notifyMapEditorWheel(e.deltaY)
-    if (handler.requestRenderFrame) handler.requestRenderFrame()
-  }, { passive: true })
-
 
   gameCanvas.addEventListener('mouseleave', () => {
     const edgeScrollState = gameState.desktopEdgeScroll

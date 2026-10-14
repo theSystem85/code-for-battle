@@ -187,6 +187,12 @@ export function processUtilityQueueSelection(handler, units, mapGrid, selectedUn
 }
 
 export function handleLeftMouseDown(handler, e, worldX, worldY, gameCanvas, selectedUnits, cursorManager) {
+  if (gameState.sellMode || gameState.repairMode) {
+    handler.isSelecting = false
+    gameState.selectionActive = false
+    handler.wasDragging = false
+    return
+  }
   handler.mouseDownTime = performance.now()
   handler.ctrlKeyPressed = e.ctrlKey
 
@@ -594,6 +600,12 @@ export function updateSelectionRectangle(handler, worldX, worldY, cursorManager)
 }
 
 export function handleLeftMouseUp(handler, e, units, factories, mapGrid, selectedUnits, selectionManager, unitCommands, cursorManager) {
+  if (gameState.sellMode || gameState.repairMode) {
+    handler.isSelecting = false
+    gameState.selectionActive = false
+    handler.wasDragging = false
+    return
+  }
   const rect = e.target.getBoundingClientRect()
   const worldX = e.clientX - rect.left + gameState.scrollOffset.x
   const worldY = e.clientY - rect.top + gameState.scrollOffset.y

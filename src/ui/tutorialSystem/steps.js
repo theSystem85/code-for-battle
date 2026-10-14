@@ -22,6 +22,14 @@ import { TUTORIAL_REMOTE_SOURCE } from './constants.js'
 export function buildTutorialSteps() {
   return [
     {
+      id: 'input-method',
+      title: 'Choose your controls',
+      text: 'How would you like to play? Choose an input method to see its controls, then continue to the original tutorial.',
+      hint: 'This saves your preferred guidance. All input devices remain available.',
+      interactive: true,
+      completion: ctx => Boolean(ctx.settings.preferredInputMethod)
+    },
+    {
       id: 'welcome',
       title: 'Welcome to the Command Briefing',
       text: {
@@ -272,7 +280,7 @@ export function buildTutorialSteps() {
       id: 'attack',
       title: 'Attack & Win the Battle',
       text: {
-        desktop: 'Select your tank and right-click an enemy building to attack. The goal is to destroy all enemy buildings.',
+        desktop: 'Select your tank and left-click an enemy building to attack. The goal is to destroy all enemy buildings.',
         mobile: 'Select your tank and tap an enemy building to attack. The goal is to destroy all enemy buildings.'
       },
       hint: 'Order any unit to attack to continue.',

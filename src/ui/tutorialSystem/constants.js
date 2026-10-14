@@ -6,10 +6,13 @@ export const TUTORIAL_REMOTE_SOURCE = 'tutorial'
 export const DEFAULT_SETTINGS = {
   showTutorial: true,
   speechEnabled: true,
-  selectedVoice: null
+  selectedVoice: null,
+  preferredInputMethod: null
 }
 
 export const DEFAULT_PROGRESS = {
   completed: false,
-  stepIndex: 0
+  stepIndex: 0,
+  stepId: 'input-method',
+  version: 2
 }

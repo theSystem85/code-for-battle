@@ -144,7 +144,7 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
       skipTapAfterPan: false
     }
     activePointers.set(event.pointerId, touchState)
-    if (!isReplayModeActive()) {
+    if (!isReplayModeActive() && !gameState.sellMode && !gameState.repairMode) {
       startLongPress(touchState)
     }
     if (activePointers.size >= 2) {
@@ -231,7 +231,17 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
       handler.handleRightMouseUp(synthetic, units, factories, selectedUnits, selectionManager, cursorManager, {
         preserveSelection: isReplayModeActive()
       })
-    } else if (!touchState.skipTapAfterPan) {
+    } else if (!touchState.skipTapAfterPan && event.type !== 'pointercancel') {
+      if (gameState.sellMode || gameState.repairMode) {
+        if (!touchState.leftActive && !isReplayModeActive()) {
+          handler.touchModeClickUntil = performance.now() + 500
+          gameCanvas.dispatchEvent(new MouseEvent('click', {
+            bubbles: true, cancelable: true, button: 0, clientX: event.clientX, clientY: event.clientY
+          }))
+        }
+        activePointers.delete(event.pointerId)
+        return
+      }
       const { worldX, worldY } = getWorldPosition(event)
       const synthetic = createSyntheticMouseEvent(event, gameCanvas, 0)
       if (!touchState.leftActive) {

@@ -3,6 +3,7 @@ import { productionQueue } from '../../productionQueue.js'
 import { canPlaceBuilding } from '../../buildings.js'
 import { selectedUnits } from '../../inputHandler.js'
 import { unitCosts } from '../../units.js'
+import { inputAwareStepText } from '../inputMethodGuide.js'
 import { TILE_SIZE } from '../../config.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../../utils/layoutMetrics.js'
 
@@ -14,15 +15,24 @@ export function getIsTouchLayout() {
   return Boolean(document.body?.classList.contains('is-touch'))
 }
 
-export function getTextForDevice(step) {
+export function getTextForDevice(step, inputMethod) {
+  const adapted = inputAwareStepText(step || {}, inputMethod)
+  if (adapted) return adapted
   if (!step?.text) return ''
   if (typeof step.text === 'string') return step.text
   return getIsTouchLayout() ? step.text.mobile : step.text.desktop
 }
 
-export function getSpokenTextForStep(step) {
-  const mainText = getTextForDevice(step).trim()
-  const hintText = (step?.hint || '').trim()
+export function getHintForDevice(step, inputMethod) {
+  const hint = step?.hint || ''
+  if (inputMethod === 'touch') return hint.replace(/\bClick\b/g, 'Tap')
+  if (inputMethod === 'gamepad') return hint.replace(/\bClick\b/g, 'Use the controller pointer to click')
+  return hint
+}
+
+export function getSpokenTextForStep(step, inputMethod) {
+  const mainText = getTextForDevice(step, inputMethod).trim()
+  const hintText = getHintForDevice(step, inputMethod).trim()
   if (mainText && hintText) {
     return `${mainText} ${hintText}`
   }
