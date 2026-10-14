@@ -1685,38 +1685,9 @@
       </div>
     </div>
   </div>
-  <script src="/src/main.js" type="module"></script>
+  <script src="/src/startup.js" type="module"></script>
   <script src="/src/landing/sidebarLink.js" type="module"></script>
-  <script type="module">
-    import { UNIT_COSTS } from '/src/config.js'
-    import { buildingData } from '/src/buildings.js'
 
-    document.addEventListener('DOMContentLoaded', () => {
-      // Update unit costs
-      Object.entries(UNIT_COSTS).forEach(([type, cost]) => {
-        const btn = document.querySelector(`.production-button[data-unit-type="${type}"]`)
-        if (btn) {
-          const costSpan = btn.querySelector('.unit-cost')
-          if (costSpan) costSpan.textContent = `$${cost}`
-        }
-      })
-
-      // Update building costs and power
-      Object.entries(buildingData).forEach(([type, data]) => {
-        const btn = document.querySelector(`.production-button[data-building-type="${type}"]`)
-        if (btn) {
-          const costSpan = btn.querySelector('.building-cost')
-          if (costSpan) costSpan.textContent = `$${data.cost}`
-
-          const powerSpan = btn.querySelector('.building-power')
-          if (powerSpan) {
-            const val = data.power
-            powerSpan.textContent = `${val > 0 ? '+' : ''}${val} MW`
-          }
-        }
-      })
-    })
-  </script>
   <script>
     // Add this to ensure we have sound functions even if not defined elsewhere
     function playSound(soundName) {

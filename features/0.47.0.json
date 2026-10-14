@@ -1,0 +1,12 @@
+{
+  "version": "0.47.0",
+  "features": [
+    "See what is new while an update loads and in the User Manual."
+  ],
+  "improvements": [
+    "Update highlights follow this device’s previous loading time."
+  ],
+  "bugfixes": [
+    "Available updates install before the battlefield loads."
+  ]
+}

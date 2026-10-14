@@ -1,4 +1,5 @@
 /* global self */
+import { APP_VERSION } from '../version.js'
 import { cleanupOutdatedCaches, createHandlerBoundToURL, precacheAndRoute } from 'workbox-precaching'
 import { registerRoute } from 'workbox-routing'
 import { CacheFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategies'
@@ -92,6 +93,9 @@ self.addEventListener('activate', (event) => {
 })
 
 self.addEventListener('message', (event) => {
+  if (event.data?.type === 'GET_APP_VERSION') {
+    event.ports?.[0]?.postMessage({ version: APP_VERSION })
+  }
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting()
   }

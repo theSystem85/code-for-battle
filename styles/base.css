@@ -2642,3 +2642,26 @@ body.mobile-portrait.sidebar-condensed #mobileBuildMenuContainer .tab-content.ac
     opacity: 0.85;
   }
 }
+
+.release-digest--compact {
+  margin-top: 1.5rem;
+  text-align: left;
+  min-width: 0;
+}
+
+.release-digest--compact h3 {
+  font-size: 1rem;
+  margin: 0 0 .5rem;
+}
+
+.release-digest--compact p {
+  font-size: .9rem;
+  color: #b8c8d4;
+}
+
+.release-digest__highlight {
+  white-space: nowrap;
+  overflow-x: auto;
+  margin-bottom: 0;
+  min-height: 1.5em;
+}

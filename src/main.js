@@ -2,6 +2,7 @@
 // Entry point orchestrating high-level wiring after code-splitting
 
 import './utils/debugLogger.js'
+import { buildingData } from './buildings.js'
 import { registerMapEditorRendering } from './mapEditor.js'
 import { getGameRenderer, getTextureManager, notifyTileMutation } from './rendering.js'
 import { initializeMobileViewportLock } from './ui/mobileViewportLock.js'
@@ -10,7 +11,7 @@ import { trackBootProgress } from './ui/loadingScreen.js'
 import { bootMark } from './ui/bootTiming.js'
 import { beginBootProgress, getBootProgress } from './ui/bootProgress.js'
 import { initializeGameStorage } from './storage/indexedDbStorage.js'
-import { RENDERER_BACKEND, loadGraphicsSettingsFromIndexedDb, resolveRendererBackendAvailability } from './config.js'
+import { UNIT_COSTS, RENDERER_BACKEND, loadGraphicsSettingsFromIndexedDb, resolveRendererBackendAvailability } from './config.js'
 import './ui/mobileJoysticks.js'
 import './ui/mobileControlGroups.js'
 import {
@@ -89,7 +90,18 @@ function setupAudioUnlock() {
   window.addEventListener('touchstart', unlock, { once: true })
 }
 
-document.addEventListener('DOMContentLoaded', async() => {
+export async function initializeApp() {
+  for (const [type, cost] of Object.entries(UNIT_COSTS)) {
+    const label = document.querySelector(`.production-button[data-unit-type="${type}"] .unit-cost`)
+    if (label) label.textContent = `$${cost}`
+  }
+  for (const [type, data] of Object.entries(buildingData)) {
+    const button = document.querySelector(`.production-button[data-building-type="${type}"]`)
+    const cost = button?.querySelector('.building-cost')
+    const power = button?.querySelector('.building-power')
+    if (cost) cost.textContent = `$${data.cost}`
+    if (power) power.textContent = `${data.power > 0 ? '+' : ''}${data.power} MW`
+  }
   bootMark('dom-content-loaded')
   const boot = beginBootProgress()
   trackBootProgress()
@@ -128,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async() => {
   window.gameInstance.units = units
   window.gameInstance.renderer = getGameRenderer()
   initializePerformanceMonitor()
-})
+}
 
 window.debugGetSelectedUnits = () => selectedUnits
 
