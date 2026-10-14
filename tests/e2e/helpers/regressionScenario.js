@@ -12,9 +12,13 @@ export async function prepareRegressionScenario(page, seed) {
   await page.evaluate(async() => {
     const { buildOccupancyMap, removeUnitOccupancy, updateUnitOccupancy } = await import('/src/units.js')
     const { clearBuildingFromMapGrid } = await import('/src/buildings.js')
+    const { ensureMultiplayerState } = await import('/src/network/multiplayerStore.js')
     document.querySelector('[aria-label="Skip tutorial"]')?.click()
     document.getElementById('benchmarkModalCloseBtn')?.click()
     const gs = window.gameState
+    // An empty partyStates list makes the enemy AI loop drive every party, including the
+    // human one (it sold human test buildings for emergency funds). Seed the real party table.
+    ensureMultiplayerState()
     const units = window.gameInstance.units
     gs.gamePaused = true
     gs.speedMultiplier = 1
@@ -26,6 +30,9 @@ export async function prepareRegressionScenario(page, seed) {
       if (b.x <= 40 && b.x + b.width > 16 && b.y <= 40 && b.y + b.height > 16) {
         clearBuildingFromMapGrid(b, gs.mapGrid, gs.occupancyMap)
         gs.buildings.splice(i, 1)
+        // Construction yards also live in gs.factories, where bullets still collide with them.
+        const factoryIndex = (gs.factories || []).indexOf(b)
+        if (factoryIndex !== -1) gs.factories.splice(factoryIndex, 1)
       }
     }
     for (let y = 16; y <= 40; y++) {
@@ -86,6 +93,9 @@ export async function prepareRegressionScenario(page, seed) {
         if (building.x !== x || building.y !== y) {
           throw new Error(`Expected ${type} at ${x},${y}; spawned at ${building.x},${building.y}`)
         }
+        // The arena removes harvesters and zeroes budgets, so the economy AI would sell fixture
+        // buildings for emergency funds. Pin them so only the behaviour under test changes the arena.
+        Object.defineProperty(building, 'isBeingSold', { get: () => false, set: () => {}, configurable: true })
         return building
       }
     }
@@ -119,7 +129,19 @@ export async function pollRegressionState(page, label, readState, expected, time
       return state
     }, { timeout, message: label }).toMatchObject(expected)
   } catch (error) {
-    error.message += `\n${label}: ${JSON.stringify(state)}`
+    error.message += `\n${label}: ${safeStringify(state)}`
     throw error
   }
+}
+
+// Game objects reference each other (unit.target.target...), so drop repeated references.
+function safeStringify(value) {
+  const seen = new WeakSet()
+  return JSON.stringify(value, (key, nested) => {
+    if (nested && typeof nested === 'object') {
+      if (seen.has(nested)) return '[circular]'
+      seen.add(nested)
+    }
+    return nested
+  })
 }

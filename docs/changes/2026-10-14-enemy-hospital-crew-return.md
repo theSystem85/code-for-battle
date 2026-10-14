@@ -8,7 +8,7 @@ Main diagnosis: real bugs exist. Hospital routing assigned pixel destinations to
 
 Regression: `tests/e2e/enemyHospitalCrewRegression.test.js`. Require an AI-assigned hospital route with a valid tile destination, physical travel of more than two tiles, entry into the hospital's actual healing queue, then eleven simulation seconds for its ten-second per-crew treatment. Require restored crew and released medical flags. The previous browser healing timeout was not reproduced in the coupled check; the corrected test distinguishes service arrival from healing duration and reports crew, path, destination, treatment progress, hospital footprint/radius/health, fuel, pause state and simulation time.
 
-- [ ] Human Chromium validation: `npm run test:e2e:regressions`.
+- [x] Chromium validation: `npm run test:e2e:regressions` passes (see `2026-10-14-four-regressions-chromium-validation.md`).
 - [ ] Qualifying-hardware before/after 75 FPS acceptance under `performance_improvement.md`; no browser/hardware benchmark is available. No rendering changes or performance certification.
 
 Hot-path audit and exact acceptance protocol are recorded in the hospital spec. Round 2 validation is recorded in `2026-10-14-vitest-playwright-runner-separation.md`.

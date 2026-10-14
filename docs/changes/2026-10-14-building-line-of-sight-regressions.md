@@ -10,6 +10,6 @@ Regression: `tests/e2e/buildingLineOfSightRegression.test.js`. Use two independe
 
 Shared fixture corrections: preserve the buildings array, remove overlapping footprints through the game API, rebuild occupancy after removing starting armies, maintain occupancy when positioning units, explicitly initialize airborne occupancy, verify cheat-spawned building coordinates, and observe actual simulation time. Bullets are module-local; the fixture does not claim to clear `gameState.bullets`.
 
-- [ ] Human Chromium validation: `npm run test:e2e:regressions` (browser execution prohibited here).
+- [x] Chromium validation: `npm run test:e2e:regressions` passes (see `2026-10-14-four-regressions-chromium-validation.md`).
 
 Round 2 validation is recorded in `2026-10-14-vitest-playwright-runner-separation.md`.
