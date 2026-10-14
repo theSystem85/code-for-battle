@@ -91,28 +91,28 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Saves and Replay
 
-- [ ] **Replay determinism save timing lock (2026-03-25)** — the observer-style replay determinism E2E must pause the live match before the first save and before stopping recording, and must pause again before the replay-end save, so both saved states are captured at a frozen identical `gameTime` instead of drifting on `frameCount`/time during save/stop sequencing.
+- [x] **Replay determinism save timing lock (2026-03-25)** — the observer-style replay determinism E2E must pause the live match before the first save and before stopping recording, and must pause again before the replay-end save, so both saved states are captured at a frozen identical `gameTime` instead of drifting on `frameCount`/time during save/stop sequencing.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
-- [ ] **Replay determinism overlap metric + economy harness (2026-03-25)** — the four-player replay determinism E2E should compare the paused live/replay saves by a 2-decimal state-overlap percentage instead of exact serialized equality, and the fast-forward harness must not inject artificial building budgets because that hides real money spend behavior.
+- [x] **Replay determinism overlap metric + economy harness (2026-03-25)** — the four-player replay determinism E2E should compare the paused live/replay saves by a 2-decimal state-overlap percentage instead of exact serialized equality, and the fast-forward harness must not inject artificial building budgets because that hides real money spend behavior.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
-- [ ] **Replay determinism mismatch-only diffing (2026-03-25)** — the replay determinism E2E should canonicalize compared save payloads by stripping UI/analytics-only branches, sorting comparable collections, and reporting only grouped mismatch branches so remaining overlap failures point at real simulation drift instead of save noise.
+- [x] **Replay determinism mismatch-only diffing (2026-03-25)** — the replay determinism E2E should canonicalize compared save payloads by stripping UI/analytics-only branches, sorting comparable collections, and reporting only grouped mismatch branches so remaining overlap failures point at real simulation drift instead of save noise.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
 - [ ] **Replay determinism wall-clock timestamp drift (2026-03-25)** — saved mine arming/deploy timers and wreck creation/recycling timestamps must use simulation time, not `performance.now()`, otherwise live-match and replay saves drift even when the underlying gameplay sequence is deterministic.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
-- [ ] **Replay determinism stop-marker boundary (2026-03-25)** — replay playback must include an explicit terminal marker at the paused stop-recording timestamp, otherwise playback can end at the last gameplay command one fixed step early and miss the final ore spread/economy changes present in the live-match save.
+- [x] **Replay determinism stop-marker boundary (2026-03-25)** — replay playback must include an explicit terminal marker at the paused stop-recording timestamp, otherwise playback can end at the last gameplay command one fixed step early and miss the final ore spread/economy changes present in the live-match save.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
-- [ ] **Replay determinism full pause freeze (2026-03-25)** — the E2E save-point freeze check must verify `frameCount`, `simulationTime`, `simulationAccumulator`, and `lastOreUpdate` stay fixed in addition to `gameTime`, so the compared save states are captured from a truly frozen simulation step.
+- [x] **Replay determinism full pause freeze (2026-03-25)** — the E2E save-point freeze check must verify `frameCount`, `simulationTime`, `simulationAccumulator`, and `lastOreUpdate` stay fixed in addition to `gameTime`, so the compared save states are captured from a truly frozen simulation step.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
-- [ ] **Replay determinism E2E map preset (2026-03-25)** — keep the four-player replay determinism test pinned to a `60x60` map with seed `5` and exactly `1` ore field so manual reruns stay on the intended deterministic scenario.
+- [x] **Replay determinism E2E map preset (2026-03-25)** — keep the four-player replay determinism test pinned to a `60x60` map with seed `5` and exactly `1` ore field so manual reruns stay on the intended deterministic scenario.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
-- [ ] **Replay determinism four-player E2E harness follow-up (2026-03-25)** — keep the replay determinism test tutorial-free across startup and first paint, and avoid forcing `humanPlayer` to a non-owning spectator id because that triggers the normal defeat screen immediately before recording starts.
+- [x] **Replay determinism four-player E2E harness follow-up (2026-03-25)** — keep the replay determinism test tutorial-free across startup and first paint, and avoid forcing `humanPlayer` to a non-owning spectator id because that triggers the normal defeat screen immediately before recording starts.
   - Spec: [Replay Feature](../specs/056-replay-feature.md)
 
 ## Done

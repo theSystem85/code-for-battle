@@ -49,12 +49,12 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Move main-map and minimap rendering to GPU-backed WebGL/WebGPU pipelines using atlas streaming** — and instanced quads for terrain and sprites to reduce CPU draw overhead.
   - Spec: [GPU Terrain and Sprite Rendering](../specs/014-webgl-rendering-upgrade/spec.md)
 
-- [ ] **Convert all raster files in `public/images/terrain/source` to quality-85 WebP and keep terrain** — build scripts and specifications aligned with the renamed assets.
+- [x] **Convert all raster files in `public/images/terrain/source` to quality-85 WebP and keep terrain** — build scripts and specifications aligned with the renamed assets.
   - Spec: [Terrain source WebP conversion](../specs/082-terrain-source-webp.md)
 
 ## Units and Combat
 
-- [ ] **Show numbered movement waypoints for active unit paths using the PPF marker** — style, with a W-key toggle to show/hide them.
+- [x] **Show numbered movement waypoints for active unit paths using the PPF marker** — style, with a W-key toggle to show/hide them.
   - Spec: none
 
 - [ ] **Show out-of-range attack cursor only for combat units, switch to in-range attack** — cursor appropriately, and include distance/max-range labels on the out-of-range cursor.
@@ -96,19 +96,19 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## UI, Sidebar, and Settings
 
-- [ ] **Add HUD mode 4 with quarter-donut corner bars and crew at top/right/bottom/left** — centers with 3px spacing from arc starts; refine HUD 3 corner-centering and HUD 2 outline/bar alignment.
+- [x] **Add HUD mode 4 with quarter-donut corner bars and crew at top/right/bottom/left** — centers with 3px spacing from arc starts; refine HUD 3 corner-centering and HUD 2 outline/bar alignment.
   - Spec: [Selected Unit HUD Refactor](../specs/034-selected-unit-hud-refactor.md)
 
-- [ ] **Add settings dropdown for selected-unit HUD rendering modes (classic pre-refactor, modern with** — border, modern without border + corner crew markers).
+- [x] **Add settings dropdown for selected-unit HUD rendering modes (classic pre-refactor, modern with** — border, modern without border + corner crew markers).
   - Spec: [Selected Unit HUD Refactor](../specs/034-selected-unit-hud-refactor.md)
 
-- [ ] **Follow-up HUD tweak** — constrain selected-unit edge bars to max 75% tile span so 1px selection outline remains visible, and center crew indicators horizontally beneath the bottom bar.
+- [x] **Follow-up HUD tweak** — constrain selected-unit edge bars to max 75% tile span so 1px selection outline remains visible, and center crew indicators horizontally beneath the bottom bar.
   - Spec: [Selected Unit HUD Refactor](../specs/034-selected-unit-hud-refactor.md)
 
-- [ ] **Refactor selected-unit HUD** — 1px yellow outline, 3px stat bars (ammo/hp/fuel/load/xp) centered on outline with dark grey background and no borders, move crew indicator below bottom bar, place XP stars overlapping HP bar by ~33%, and enlarge HUD footprint beyond tile size to avoid occluding the selected unit.
+- [x] **Refactor selected-unit HUD** — 1px yellow outline, 3px stat bars (ammo/hp/fuel/load/xp) centered on outline with dark grey background and no borders, move crew indicator below bottom bar, place XP stars overlapping HP bar by ~33%, and enlarge HUD footprint beyond tile size to avoid occluding the selected unit.
   - Spec: [Selected Unit HUD Refactor](../specs/034-selected-unit-hud-refactor.md)
 
-- [ ] **Refactor main.js via code-splitting (<1k LOC per file) into orchestrator, device lifecycle,** — and mobile layout modules while keeping tests passing.
+- [x] **Refactor main.js via code-splitting (<1k LOC per file) into orchestrator, device lifecycle,** — and mobile layout modules while keeping tests passing.
   - Spec: none
 
 - [ ] **Show the money/energy status bar in portrait condensed mode within the safe-area** — gap beneath the build buttons without shifting the build bar upward.
@@ -120,7 +120,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 - [ ] **Persist mobile portrait sidebar expanded/collapsed/condensed preference across reloads and default to condensed** — on first load.
   - Spec: [Mobile Portrait Sidebar Toggle](../specs/010-mobile-portrait-sidebar-toggle/spec.md)
 
-- [ ] **Disable the Buildings tab when the construction yard is destroyed and auto-switch** — to the Units tab if a vehicle factory remains available.
+- [x] **Disable the Buildings tab when the construction yard is destroyed and auto-switch** — to the Units tab if a vehicle factory remains available.
   - Spec: none
 
 ## Missions and Campaign
@@ -141,38 +141,38 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Tooling and CI
 
-- [ ] **Add unit coverage for lockstep inputBuffer networking helpers (Task 5.1 tests).**
+- [x] **Add unit coverage for lockstep inputBuffer networking helpers (Task 5.1 tests).**
   - Spec: [Deterministic Lockstep Networking](../specs/015-deterministic-lockstep/spec.md)
 
-- [ ] **Add unit test coverage for mouse handler input flows (Task 4.4) with meaningful assertions.**
+- [x] **Add unit test coverage for mouse handler input flows (Task 4.4) with meaningful assertions.**
   - Spec: none
 
-- [ ] **Stabilize unit test mocks after runtime API changes (config exports, harvester runtime** — state exports, deterministic RNG export, enemy utility exports) so unit suites run without import-time failures.
+- [x] **Stabilize unit test mocks after runtime API changes (config exports, harvester runtime** — state exports, deterministic RNG export, enemy utility exports) so unit suites run without import-time failures.
   - Spec: none
 
-- [ ] **Align unit tests with simulation-time behavior (mine deploy timestamps, AI decision timing,** — projectile timing/speed assertions) while keeping behavior-focused assertions meaningful.
+- [x] **Align unit tests with simulation-time behavior (mine deploy timestamps, AI decision timing,** — projectile timing/speed assertions) while keeping behavior-focused assertions meaningful.
   - Spec: none
 
 - [ ] **Add more E2E scenarios (combat, multiplayer, save/load)**
   - Part of: ✅ Playwright E2E Testing
   - Spec: [Playwright E2E Testing Framework](../specs/027-playwright-e2e-testing.md)
 
-- [ ] **Add a headless browser smoke test that fails on console errors and wire it into CI/Netlify pipelines for merge gating.**
+- [x] **Add a headless browser smoke test that fails on console errors and wire it into CI/Netlify pipelines for merge gating.**
   - Spec: [Forced Reflow + Console Error Cleanup](../specs/lighthouse-performance/10-reflow-console-errors.md)
 
-- [ ] **Add unit tests for the multi-unit input handler utilities (task 4.9 coverage work).**
+- [x] **Add unit tests for the multi-unit input handler utilities (task 4.9 coverage work).**
   - Spec: none
 
-- [ ] **Add unit tests for `src/input/unitCommands.js` (utility queues, resupply assignments, recovery tank handling)** — to improve input-system coverage.
+- [x] **Add unit tests for `src/input/unitCommands.js` (utility queues, resupply assignments, recovery tank handling)** — to improve input-system coverage.
   - Spec: none
 
-- [ ] **Add unit tests covering AI party synchronization during multiplayer disconnects (aiPartySync).**
+- [x] **Add unit tests covering AI party synchronization during multiplayer disconnects (aiPartySync).**
   - Spec: [Online Multiplayer Takeover](../specs/001-add-online-multiplayer/spec.md)
 
-- [ ] **Add unit tests for remote control state handling (Task 4.10 coverage for `src/input/remoteControlState.js`).**
+- [x] **Add unit tests for remote control state handling (Task 4.10 coverage for `src/input/remoteControlState.js`).**
   - Spec: none
 
-- [ ] **Add cursorManager input system unit tests (Task 4.2) to cover cursor state transitions and range UI behavior.**
+- [x] **Add cursorManager input system unit tests (Task 4.2) to cover cursor state transitions and range UI behavior.**
   - Spec: none
 
 - [ ] **Add a JSON file that determines the whole tech tree. Refactor the code to obey this file.**

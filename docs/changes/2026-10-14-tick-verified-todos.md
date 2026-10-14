@@ -1,0 +1,2 @@
+- [x] **Tick verified TODO items** — re-verified 18 improvements and 7 replay-harness bugs against main and ticked them; replay wall-clock timestamp drift stays open (sweeper and wreck code still fall back to `performance.now()`).
+  - Spec: none
