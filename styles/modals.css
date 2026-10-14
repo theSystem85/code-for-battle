@@ -356,8 +356,9 @@
   transform-origin: center center;
 }
 
-.tutorial-dock--hidden {
-  visibility: hidden;
+.tutorial-dock[hidden],
+.tutorial-overlay[hidden] {
+  display: none !important;
 }
 
 .tutorial-dock:focus,
@@ -460,8 +461,26 @@ body.mobile-portrait .tutorial-button {
 }
 
 body.mobile-portrait .tutorial-dock {
-  right: 16px;
-  bottom: calc(var(--safe-area-bottom) + 16px);
+  left: calc(var(--safe-area-left, 0px) + 8px);
+  top: calc(var(--safe-area-top, 0px) + 8px);
+  right: auto;
+  bottom: auto;
+}
+
+[data-tutorial-tooltip]:not(.tutorial-dock) { position: relative; }
+[data-tutorial-tooltip]:hover::after,
+[data-tutorial-tooltip]:focus-visible::after {
+  content: attr(data-tutorial-tooltip);
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding: 4px 8px;
+  background: #202020;
+  color: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .config-modal__field select option[data-overridden='true'] {

@@ -2,5 +2,8 @@
   "version": "0.47.1",
   "features": [],
   "improvements": [],
-  "bugfixes": ["Milestone videos fade smoothly and remain visible in compact mobile layouts."]
+  "bugfixes": [
+    "Milestone videos fade smoothly and remain visible in compact mobile layouts.",
+    "Hidden tutorials stay hidden; the phone tutorial button stays clear of the sidebar."
+  ]
 }

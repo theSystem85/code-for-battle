@@ -85,4 +85,31 @@ describe('tutorial input onboarding flow', () => {
     expect(tutorial.inputGuide.element.textContent).toContain('q / Secondary click')
   })
 
+  it('uses one visibility state for minimize, stop, skip, completion and layout updates', () => {
+    tutorial = initTutorialSystem()
+    tutorial.start({ reset: true })
+    expect(tutorial.dockButton.hidden).toBe(true)
+    tutorial.toggleMinimize()
+    expect(tutorial.dockButton.hidden).toBe(false)
+    expect(tutorial.overlay.hidden).toBe(true)
+    tutorial.stop()
+    tutorial.updatePosition()
+    tutorial.card.dispatchEvent(new Event('animationend'))
+    expect(tutorial.dockButton.hidden).toBe(true)
+    tutorial.start({ reset: true })
+    tutorial.toggleMinimize()
+    tutorial.skipTutorial()
+    tutorial.updatePosition()
+    expect(tutorial.dockButton.hidden).toBe(true)
+    tutorial.settings.showTutorial = true
+    tutorial.start({ reset: true })
+    tutorial.stepIndex = tutorial.steps.length - 1
+    tutorial.advanceStep()
+    expect(tutorial.dockButton.hidden).toBe(true)
+    expect(tutorial.overlay.hidden).toBe(true)
+    tutorial.toggleMinimize()
+    expect(tutorial.dockButton.hidden).toBe(true)
+    expect(document.querySelector('[data-tutorial-tooltip][title]')).toBeNull()
+  })
+
 })

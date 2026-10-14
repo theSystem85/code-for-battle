@@ -27,7 +27,7 @@ export function createTutorialUI(tutorial) {
     tutorial.docsButton = tutorial.overlay.querySelector('[data-tutorial-action="open-docs"]')
     if (tutorial.minimizeButton) {
       tutorial.minimizeButton.innerHTML = '▬'
-      tutorial.minimizeButton.title = 'Minimize tutorial'
+      setTutorialTooltip(tutorial.minimizeButton, 'Minimize tutorial')
       tutorial.minimizeButton.addEventListener('click', () => tutorial.toggleMinimize())
     }
     if (tutorial.voiceToggleButton) {
@@ -38,16 +38,14 @@ export function createTutorialUI(tutorial) {
     }
     if (tutorial.docsButton) {
       tutorial.docsButton.innerHTML = '📖'
-      tutorial.docsButton.title = 'Open documentation'
+      setTutorialTooltip(tutorial.docsButton, 'Open documentation')
       tutorial.docsButton.addEventListener('click', () => window.openUserDocs?.())
     }
     if (tutorial.dockButton) {
       tutorial.dockButton.addEventListener('click', () => tutorial.toggleMinimize())
-      if (!tutorial.settings.showTutorial || tutorial.progress.completed) {
-        tutorial.dockButton.classList.add('tutorial-dock--hidden')
-        tutorial.dockButton.hidden = true
-      }
+
     }
+    tutorial.syncVisibility()
     attachInputGuide(tutorial)
     setupTutorialDragHandlers(tutorial)
     return
@@ -73,7 +71,7 @@ export function createTutorialUI(tutorial) {
   minimizeButton.type = 'button'
   minimizeButton.className = 'tutorial-minimize'
   minimizeButton.innerHTML = '▬'
-  minimizeButton.title = 'Minimize tutorial'
+  setTutorialTooltip(minimizeButton, 'Minimize tutorial')
   minimizeButton.setAttribute('data-tutorial-action', 'minimize')
   minimizeButton.setAttribute('aria-pressed', 'false')
 
@@ -88,7 +86,7 @@ export function createTutorialUI(tutorial) {
   docsButton.type = 'button'
   docsButton.className = 'tutorial-voice-toggle'
   docsButton.innerHTML = '📖'
-  docsButton.title = 'Open documentation'
+  setTutorialTooltip(docsButton, 'Open documentation')
   docsButton.setAttribute('data-tutorial-action', 'open-docs')
 
   header.appendChild(stepCount)
@@ -186,8 +184,8 @@ export function createTutorialUI(tutorial) {
   const dockButton = document.createElement('button')
   dockButton.id = 'tutorialDock'
   dockButton.type = 'button'
-  const shouldHide = !tutorial.settings.showTutorial || tutorial.progress.completed
-  dockButton.className = shouldHide ? 'tutorial-dock tutorial-dock--hidden' : 'tutorial-dock'
+  dockButton.className = 'tutorial-dock'
+  setTutorialTooltip(dockButton, 'Restore tutorial')
   dockButton.textContent = '?'
   dockButton.hidden = true
 
@@ -231,6 +229,7 @@ export function createTutorialUI(tutorial) {
   docsButton.addEventListener('click', () => window.openUserDocs?.())
   dockButton.addEventListener('click', () => tutorial.toggleMinimize())
 
+  tutorial.syncVisibility()
   attachInputGuide(tutorial)
   setupTutorialDragHandlers(tutorial)
 }
@@ -318,4 +317,10 @@ export function setupTutorialDragHandlers(tutorial) {
   }, { passive: false })
 
   document.addEventListener('touchend', endDrag)
+}
+
+export function setTutorialTooltip(button, label) {
+  button.removeAttribute('title')
+  button.setAttribute('aria-label', label)
+  button.setAttribute('data-tutorial-tooltip', label)
 }

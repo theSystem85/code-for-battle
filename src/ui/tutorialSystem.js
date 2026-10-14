@@ -7,7 +7,7 @@ import { clearRemoteControlSource } from '../input/remoteControlState.js'
 import { buildTutorialSteps } from './tutorialSystem/steps.js'
 import { isInputMethod } from './inputMethodGuide.js'
 import { migrateTutorialProgress, TUTORIAL_PROGRESS_VERSION } from './tutorialSystem/progress.js'
-import { createTutorialUI } from './tutorialSystem/ui.js'
+import { createTutorialUI, setTutorialTooltip } from './tutorialSystem/ui.js'
 import {
   countPlayerBuildings,
   countPlayerUnits,
@@ -123,6 +123,7 @@ class TutorialSystem {
   }
 
   updatePosition() {
+    this.syncVisibility()
     const newPosition = this.getDefaultPosition()
     // Only update if the position actually changed
     if (JSON.stringify(this.position) !== JSON.stringify(newPosition)) {
@@ -152,12 +153,6 @@ class TutorialSystem {
       this.progress.completed = true
       this.hideUI()
       return
-    }
-
-    // Hide dock button if tutorial is disabled or completed
-    if ((!this.settings.showTutorial || this.progress.completed) && this.dockButton) {
-      this.dockButton.classList.add('tutorial-dock--hidden')
-      this.dockButton.hidden = true
     }
 
     // Only start tutorial if enabled and not completed
@@ -201,6 +196,7 @@ class TutorialSystem {
         if (!this.settings.showTutorial) {
           this.stop()
         }
+        this.syncVisibility()
         if (startButton) {
           startButton.disabled = !this.settings.showTutorial
         }
@@ -331,17 +327,13 @@ class TutorialSystem {
       return
     }
 
-    if (this.dockButton && (reset || manual)) {
-      this.dockButton.classList.remove('tutorial-dock--hidden')
-    }
-
     // Don't allow starting if completed (unless reset or manual restart)
     if (this.progress.completed && !reset && !manual) {
       this.hideUI()
       return
     }
 
-    if (reset) {
+    if (reset || (manual && this.progress.completed)) {
       this.progress = { ...DEFAULT_PROGRESS }
       this.stepIndex = 0
       this.progress.completed = false
@@ -362,27 +354,30 @@ class TutorialSystem {
     this.runCurrentStep()
   }
 
-  showUI() {
+  // The only writer of overlay/dock visibility. CSS must honor [hidden].
+  syncVisibility() {
+    const enabled = this.active && this.settings.showTutorial && !this.progress.completed && !this.isInviteSession
     if (this.overlay) {
-      this.overlay.hidden = false
-      this.overlay.classList.remove('tutorial-overlay--minimized')
+      this.overlay.hidden = !enabled || this.minimized
+      this.overlay.classList.toggle('tutorial-overlay--minimized', enabled && this.minimized)
+    }
+    if (this.dockButton) {
+      this.dockButton.hidden = !enabled || !this.minimized
+      // Remove the legacy visibility flag when reusing an existing UI.
+      this.dockButton.classList.remove('tutorial-dock--hidden')
     }
     this.syncCursorVisibility()
-    // Always hide dock button when tutorial overlay is visible
-    if (this.dockButton) {
-      this.dockButton.hidden = true
-    }
+  }
+
+  showUI() {
     this.minimized = false
+    this.syncVisibility()
   }
 
   hideUI() {
-    if (this.overlay) {
-      this.overlay.hidden = true
-    }
-    this.syncCursorVisibility()
-    if (this.dockButton) {
-      this.dockButton.hidden = true
-    }
+    this.active = false
+    this.minimized = false
+    this.syncVisibility()
   }
 
   stop() {
@@ -392,9 +387,6 @@ class TutorialSystem {
     this.clearHighlight()
     this.hideUI()
     this.stopSpeech()
-    if (this.overlay) {
-      this.overlay.classList.remove('tutorial-overlay--minimized')
-    }
     clearRemoteControlSource(TUTORIAL_REMOTE_SOURCE)
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame)
@@ -421,10 +413,6 @@ class TutorialSystem {
     this.progress.stepIndex = this.steps.length
     this.saveProgress()
     this.stop()
-    // Permanently hide dock button when skipping
-    if (this.dockButton) {
-      this.dockButton.hidden = true
-    }
   }
 
   skipStep() {
@@ -460,21 +448,8 @@ class TutorialSystem {
     if (this.stepIndex >= this.steps.length) {
       this.progress.completed = true
       this.saveProgress()
-      // Hide dock button immediately on completion
-      if (this.dockButton) {
-        this.dockButton.classList.add('tutorial-dock--hidden')
-        this.dockButton.hidden = true
-      }
-      // Speak completion message
+      this.stop()
       this.speak('Great, you completed the basic tutorial!')
-      // Wait for speech to finish, then stop
-      setTimeout(() => {
-        this.stop()
-        // Permanently hide dock button after completion
-        if (this.dockButton) {
-          this.dockButton.hidden = true
-        }
-      }, 3000)
       return
     }
     this.saveProgress()
@@ -545,7 +520,7 @@ class TutorialSystem {
     }
     if (this.minimizeButton) {
       this.minimizeButton.innerHTML = this.minimized ? '▴' : '▬'
-      this.minimizeButton.title = this.minimized ? 'Expand tutorial' : 'Minimize tutorial'
+      setTutorialTooltip(this.minimizeButton, this.minimized ? 'Expand tutorial' : 'Minimize tutorial')
       this.minimizeButton.setAttribute('aria-pressed', this.minimized ? 'true' : 'false')
     }
     if (this.voiceToggleButton) {
@@ -574,58 +549,18 @@ class TutorialSystem {
   }
 
   toggleMinimize() {
-    this.minimized = !this.minimized
-    this.syncCursorVisibility()
-
-    if (this.minimized) {
-      // Minimizing: animate card out, then show dock button
-      if (this.card) {
-        this.card.classList.add('tutorial-card--minimizing')
-        this.card.addEventListener('animationend', () => {
-          this.card.classList.remove('tutorial-card--minimizing')
-          if (this.overlay) {
-            this.overlay.classList.add('tutorial-overlay--minimized')
-            // Hide overlay completely when minimized
-            this.overlay.hidden = true
-          }
-          // Show dock button only when minimized and tutorial active
-          if (this.dockButton && this.active && this.settings.showTutorial && !this.progress.completed) {
-            this.dockButton.hidden = false
-            this.dockButton.classList.add('tutorial-dock--appearing')
-            this.dockButton.addEventListener('animationend', () => {
-              this.dockButton.classList.remove('tutorial-dock--appearing')
-            }, { once: true })
-          }
-        }, { once: true })
-      }
-    } else {
-      // Maximizing: hide dock button, animate card in
-      if (this.dockButton) {
-        this.dockButton.classList.add('tutorial-dock--disappearing')
-        this.dockButton.addEventListener('animationend', () => {
-          this.dockButton.classList.remove('tutorial-dock--disappearing')
-          this.dockButton.hidden = true
-        }, { once: true })
-      }
-      if (this.overlay) {
-        this.overlay.classList.remove('tutorial-overlay--minimized')
-        // Show overlay when maximizing
-        this.overlay.hidden = false
-      }
-      if (this.card) {
-        this.card.classList.add('tutorial-card--maximizing')
-        this.card.addEventListener('animationend', () => {
-          this.card.classList.remove('tutorial-card--maximizing')
-        }, { once: true })
-      }
+    if (!this.active || !this.settings.showTutorial || this.progress.completed) {
+      this.syncVisibility()
+      return
     }
-
+    this.minimized = !this.minimized
+    this.syncVisibility()
     this.renderStep(this.steps[this.stepIndex])
   }
 
   syncCursorVisibility() {
     if (!this.cursor) return
-    this.cursor.hidden = !this.active || this.minimized || this.steps[this.stepIndex]?.interactive === true
+    this.cursor.hidden = !this.active || !this.settings.showTutorial || this.progress.completed || this.minimized || this.steps[this.stepIndex]?.interactive === true
   }
 
   updateContinueState(step) {
