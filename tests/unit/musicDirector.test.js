@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createMusicDirector, selectMusicState, evaluateMusicDirector, recordMusicDamage, resetMusicDirector } from '../../src/audio/musicDirector.js'
+import { createMusicDirector, selectMusicState, evaluateMusicDirector, recordMusicDamage, resetMusicDirector, NEAR_DEFEAT_MIN_GAME_TIME_MS } from '../../src/audio/musicDirector.js'
 
 describe('music director', () => {
   it('selects states in priority order without changing inputs', () => {
@@ -57,19 +57,45 @@ describe('music director', () => {
     resetMusicDirector()
     expect(evaluate([own, enemy, { ...enemy, type: 'harvester' }])).toBe('normal')
   })
-  it('detects economic collapse and the empty non-producing base metric', () => {
+  it('detects economic collapse and the empty non-producing base metric once a base existed', () => {
     resetMusicDirector()
     const state = { simulationTime: 0, humanPlayer: 'p1', money: 999, availableUnitTypes: new Set(['tank']) }
     const own = { type: 'tank', owner: 'p1', health: 100, x: 0, y: 0 }
-    expect(evaluateMusicDirector(state, [own], [], [], {}, 32, { tank: 1000 })).toBe('nearDefeat')
-    resetMusicDirector()
+    const yard = { type: 'constructionYard', owner: 'p1', health: 100 }
+    const evaluate = (...args) => {
+      // Establish a base early, then evaluate after the start-of-game guard.
+      resetMusicDirector()
+      state.simulationTime = 1000
+      evaluateMusicDirector(state, [], [yard], [], { currentUnit: {} }, 32, { tank: 1000 })
+      state.simulationTime = NEAR_DEFEAT_MIN_GAME_TIME_MS
+      return evaluateMusicDirector(state, ...args, 32, { tank: 1000 })
+    }
+    expect(evaluate([own], [], [], {})).toBe('nearDefeat')
     state.money = 1000
-    expect(evaluateMusicDirector(state, [own], [], [], {}, 32, { tank: 1000 })).toBe('normal')
+    expect(evaluate([own], [], [], {})).toBe('normal')
+    expect(evaluate([], [], [], { currentUnit: {} })).toBe('normal')
+    expect(evaluate([], [], [], { currentUnit: {}, pausedUnit: true })).toBe('nearDefeat')
+    expect(evaluate([], [], [], {})).toBe('nearDefeat')
+  })
+  it('never plays near defeat at game start, before a base or before 3 minutes', () => {
     resetMusicDirector()
-    expect(evaluateMusicDirector(state, [], [], [], { currentUnit: {} }, 32, { tank: 1000 })).toBe('normal')
+    const state = { simulationTime: 0, humanPlayer: 'p1', money: 0, availableUnitTypes: new Set(['tank']) }
+    // Loading/initial phase: no buildings, no units, no money.
+    for (let t = 0; t <= 10 * 60000; t += 1000) {
+      state.simulationTime = t
+      const result = evaluateMusicDirector(state, [], [], [], {}, 32, { tank: 1000 })
+      if (result) expect(result).toBe('normal')
+    }
+    // Starting yard, but still within the first three minutes.
     resetMusicDirector()
-    expect(evaluateMusicDirector(state, [], [], [], { currentUnit: {}, pausedUnit: true }, 32, { tank: 1000 })).toBe('nearDefeat')
-    resetMusicDirector()
-    expect(evaluateMusicDirector(state, [], [], [], {}, 32, { tank: 1000 })).toBe('nearDefeat')
+    const yard = { type: 'constructionYard', owner: 'p1', health: 100 }
+    for (let t = 0; t < NEAR_DEFEAT_MIN_GAME_TIME_MS; t += 1000) {
+      state.simulationTime = t
+      const result = evaluateMusicDirector(state, [], [yard], [], {}, 32, { tank: 1000 })
+      if (result) expect(result).toBe('normal')
+    }
+    expect(NEAR_DEFEAT_MIN_GAME_TIME_MS).toBeGreaterThanOrEqual(180000)
+    state.simulationTime = NEAR_DEFEAT_MIN_GAME_TIME_MS
+    expect(evaluateMusicDirector(state, [], [yard], [], {}, 32, { tank: 1000 })).toBe('nearDefeat')
   })
 })

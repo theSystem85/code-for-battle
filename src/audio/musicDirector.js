@@ -53,9 +53,15 @@ let damageAt = -Infinity
 let damageX = 0
 let damageY = 0
 const inspectedBuildings = new Set()
+// Start-of-game guard: near defeat can only trigger after the player has
+// owned a real base (construction yard or ore refinery) and at least this much
+// simulation time has passed, so the initial/loading state never plays the sad track.
+export const NEAR_DEFEAT_MIN_GAME_TIME_MS = 180000
+let baseEstablished = false
 export function resetMusicDirector() {
   director = createMusicDirector()
   lastEvaluation = lastTime = damageAt = -Infinity
+  baseEstablished = false
 }
 
 export function recordMusicAttack(shooter, target, state) {
@@ -115,6 +121,7 @@ export function evaluateMusicDirector(state, units, buildings, factories, queue,
     count++
     yard ||= building.type === 'constructionYard' || !building.type
     refinery ||= building.type === 'oreRefinery'
+    if (building.type === 'constructionYard' || building.type === 'oreRefinery') baseEstablished = true
   }
   buildings.forEach(inspect)
   factories.forEach(inspect)
@@ -126,6 +133,6 @@ export function evaluateMusicDirector(state, units, buildings, factories, queue,
     // Recovery collapse: no yard, missing refinery/harvester, and insufficient
     // money for any unlocked unit. Or <=2 buildings, no active production,
     // and no living combat units. Include initial factory yards only once.
-    nearDefeat: (!yard && (!refinery || !harvesters) && state.money < cheapestCost) || (count <= 2 && !producing && own === 0)
+    nearDefeat: baseEstablished && now >= NEAR_DEFEAT_MIN_GAME_TIME_MS && ((!yard && (!refinery || !harvesters) && state.money < cheapestCost) || (count <= 2 && !producing && own === 0))
   })
 }
