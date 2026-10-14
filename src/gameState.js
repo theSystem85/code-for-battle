@@ -38,6 +38,8 @@ export const gameState = {
   activeSpriteSheetBiomeTag: 'grass',
   // Arrow key scrolling state
   keyScroll: { up: false, down: false, left: false, right: false },
+  keyboardCameraX: false,
+  keyboardCameraY: false,
   gamepadScroll: { x: 0, y: 0 },
   gamepadScrollSpeed: 8,
   coopCameraMode: 'p1',

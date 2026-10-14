@@ -176,7 +176,7 @@ export class GameLoop {
     const velocityX = Math.abs(gameState.dragVelocity.x)
     const velocityY = Math.abs(gameState.dragVelocity.y)
     const keyScrollActive = gameState.keyScroll.up || gameState.keyScroll.down || gameState.keyScroll.left || gameState.keyScroll.right
-    const velocityActive = velocityX > velocityThreshold || velocityY > velocityThreshold
+    const velocityActive = velocityX > velocityThreshold || velocityY > velocityThreshold || gameState.keyboardCameraX === true || gameState.keyboardCameraY === true
 
     return gameState.isRightDragging || keyScrollActive || velocityActive
   }
@@ -248,13 +248,14 @@ export class GameLoop {
     const prevOffsetY = gameState.scrollOffset.y
 
     if (!gameState.isRightDragging) {
-      updateMapScrolling(gameState, this.mapGrid)
+      const cameraDelta = this.lastFrameTimestampForMonitor ? now - this.lastFrameTimestampForMonitor : 1000 / 60
+      updateMapScrolling(gameState, this.mapGrid, cameraDelta)
 
       const velocitySnapThreshold = 0.02
-      if (Math.abs(gameState.dragVelocity.x) < velocitySnapThreshold) {
+      if (!gameState.keyboardCameraX && Math.abs(gameState.dragVelocity.x) < velocitySnapThreshold) {
         gameState.dragVelocity.x = 0
       }
-      if (Math.abs(gameState.dragVelocity.y) < velocitySnapThreshold) {
+      if (!gameState.keyboardCameraY && Math.abs(gameState.dragVelocity.y) < velocitySnapThreshold) {
         gameState.dragVelocity.y = 0
       }
     }
@@ -451,7 +452,7 @@ export class GameLoop {
       }
     }
 
-    updateMapScrolling(gameState, this.mapGrid)
+    updateMapScrolling(gameState, this.mapGrid, delta)
     const updateEnd = performance.now()
     if (!this.bootFrameMarked) {
       this.bootFrameMarked = true

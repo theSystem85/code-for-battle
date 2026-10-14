@@ -319,7 +319,7 @@ describe('GameLoop', () => {
 
     expect(updateGameMock).toHaveBeenCalledTimes(2)
     expect(updateMapScrollingMock).toHaveBeenCalledTimes(1)
-    expect(updateMapScrollingMock).toHaveBeenCalledWith(gameState, [])
+    expect(updateMapScrollingMock).toHaveBeenCalledWith(gameState, [], 33)
   })
 
   it('clears timeout-based scheduling on stop', () => {
@@ -364,6 +364,11 @@ describe('GameLoop', () => {
 
     gameState.keyScroll.right = false
     expect(loop.hasActiveScrollActivity()).toBe(false)
+    gameState.keyboardCameraX = true
+    gameState.dragVelocity.x = 0.01
+    expect(loop.hasActiveScrollActivity()).toBe(true)
+    gameState.keyboardCameraX = false
+    gameState.dragVelocity.x = 0
   })
 
   it('renders paused frames and snaps drag velocity', () => {

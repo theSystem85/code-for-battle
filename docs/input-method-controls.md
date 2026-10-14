@@ -21,6 +21,12 @@ If a horizontal swipe goes back or forward in Safari or Chrome, open **System Se
 
 Some operating-system or browser gestures are consumed before a wheel event reaches the page. Preventing a delivered event cannot stop a gesture the game never receives. Use the hand-button or secondary-drag fallback in that case. Ctrl/Meta-wheel over the canvas is consumed without moving or zooming the camera, so trackpad pinch-wheel does not become an accidental pan or browser zoom. In the map editor, wheel input still adjusts the brush instead of panning. Keep the browser scale at your preferred normal setting.
 
+## Arrow keys: accelerator-style camera
+
+When no selected unit is using the direction keys for steering, hold a direction to accelerate the camera up to its configured maximum. Release to brake quickly, or press the opposite direction to decelerate before reversing. Each axis behaves independently, so releasing one diagonal direction brakes that axis while the other continues.
+
+Open **Runtime Config → Controls** (default shortcut **K**, shown in Key Bindings if remapped). Adjust **Keyboard Scroll Maximum Speed**, **Keyboard Scroll Acceleration**, **Keyboard Scroll Reversal Deceleration** and **Keyboard Scroll Automatic Braking**. Acceleration/braking use pixels per second squared; higher values act faster. The existing speed setting uses a 60 Hz reference: 8 means 480 pixels/second. Defaults accelerate to that speed in 0.4 seconds and stop after release in about 0.13 seconds. Set automatic braking to zero only if you prefer continued coasting. Mouse/trackpad and gamepad controls retain their existing behavior.
+
 ## Touch: mode comes before a building's shortcut
 
 The tutorial uses touch instructions when you choose touch, even when another device is available. In Sell mode, tapping an owned building sells it rather than opening a waypoint or factory shortcut. Leave Sell mode before using those shortcuts. Likewise, exit Repair or placement modes before ordinary selection. Keep the current tutorial's visual hint beside the map rather than treating a desktop secondary-click instruction as a touch action.

@@ -700,11 +700,27 @@ export const WRECK_COLLISION_MIN = 0.4
 export const WRECK_COLLISION_MAX = 2.5
 export const WRECK_COLLISION_RECOIL_FACTOR_UNIT = 0.25 // Recoil applied to unit when wreck is slower
 export const WRECK_COLLISION_RECOIL_MAX_UNIT = 0.6
-// Scroll speed when using arrow keys (pixels per frame)
+// Maximum arrow-key speed (pixels per 60 Hz reference frame).
 export let KEYBOARD_SCROLL_SPEED = 8
 
 export function setKeyboardScrollSpeed(value) {
   KEYBOARD_SCROLL_SPEED = value
+}
+
+export let KEYBOARD_SCROLL_ACCELERATION = 1200 // CSS pixels/second² while held
+export let KEYBOARD_SCROLL_DECELERATION = 2400 // CSS pixels/second² when reversing
+export let KEYBOARD_SCROLL_AUTO_BRAKE = 3600 // CSS pixels/second² after release
+
+export function setKeyboardScrollAcceleration(value) {
+  if (Number.isFinite(value) && value > 0) KEYBOARD_SCROLL_ACCELERATION = value
+}
+
+export function setKeyboardScrollDeceleration(value) {
+  if (Number.isFinite(value) && value > 0) KEYBOARD_SCROLL_DECELERATION = value
+}
+
+export function setKeyboardScrollAutoBrake(value) {
+  if (Number.isFinite(value) && value >= 0) KEYBOARD_SCROLL_AUTO_BRAKE = value
 }
 
 // Desktop edge auto-scroll speed (pixels per millisecond)
@@ -1855,6 +1871,9 @@ const EXPORTED_CONFIG_VARIABLES = [
   'WRECK_COLLISION_RECOIL_FACTOR_UNIT',
   'WRECK_COLLISION_RECOIL_MAX_UNIT',
   'KEYBOARD_SCROLL_SPEED',
+  'KEYBOARD_SCROLL_ACCELERATION',
+  'KEYBOARD_SCROLL_DECELERATION',
+  'KEYBOARD_SCROLL_AUTO_BRAKE',
   'LONG_PRESS_MS',
   'CHEAT_CONSOLE_HISTORY_LIMIT',
   'TANK_FIRE_RANGE',
