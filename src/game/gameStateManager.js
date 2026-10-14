@@ -3,7 +3,6 @@ import {
   INERTIA_DECAY,
   INERTIA_STOP_THRESHOLD,
   TILE_SIZE,
-  KEYBOARD_SCROLL_SPEED,
   DESKTOP_EDGE_AUTOSCROLL_SPEED,
   DESKTOP_EDGE_AUTOSCROLL_ENABLED,
   ORE_SPREAD_INTERVAL,
@@ -42,6 +41,7 @@ import { recordDestroyed } from '../ai-api/transitionCollector.js'
 import { beginF22CrashSequence } from './movementF22.js'
 import { getNavalHullDimensions } from '../utils/navalUtils.js'
 import { getSimulationTime } from './time.js'
+import { advanceKeyboardCameraVelocity, CAMERA_REFERENCE_FPS } from '../input/keyboardCamera.js'
 import { computeCoopCameraFocus, coopFocusToScroll } from '../input/gamepad/coopCamera.js'
 import { computeSweepDustRadius, getDustEffectNow } from './mineSweeperBehavior.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
@@ -162,7 +162,7 @@ function gamepadMapScrollSpeed(state) {
   return Number.isFinite(speed) && speed > 0 ? speed : 8
 }
 
-export function updateMapScrolling(gameState, mapGrid) {
+export function updateMapScrolling(gameState, mapGrid, deltaMs = 1000 / CAMERA_REFERENCE_FPS) {
   if (!Array.isArray(mapGrid) || mapGrid.length === 0 || !Array.isArray(mapGrid[0]) || mapGrid[0].length === 0) {
     return
   }
@@ -180,6 +180,9 @@ export function updateMapScrolling(gameState, mapGrid) {
   const padX = padScroll ? padScroll.x : 0
   const padY = padScroll ? padScroll.y : 0
   const padScrollActive = padX !== 0 || padY !== 0
+  const seconds = Math.min(100, Math.max(0, Number.isFinite(deltaMs) ? deltaMs : 1000 / CAMERA_REFERENCE_FPS)) / 1000
+  const directionX = Number(gameState.keyScroll.left) - Number(gameState.keyScroll.right)
+  const directionY = Number(gameState.keyScroll.up) - Number(gameState.keyScroll.down)
 
   if (smoothState) {
     if (gameState.isRightDragging || keyScrollActive || padScrollActive) {
@@ -193,10 +196,12 @@ export function updateMapScrolling(gameState, mapGrid) {
   if (!gameState.isRightDragging) {
     const smoothingActive = !!(smoothState && smoothState.active)
     if (!smoothingActive) {
-      if (gameState.keyScroll.left) {
-        gameState.dragVelocity.x = KEYBOARD_SCROLL_SPEED
-      } else if (gameState.keyScroll.right) {
-        gameState.dragVelocity.x = -KEYBOARD_SCROLL_SPEED
+      const previousX = gameState.dragVelocity.x
+      const previousY = gameState.dragVelocity.y
+      const keyboardX = directionX !== 0 || ((gameState.keyboardCameraX || gameState.keyScroll.left || gameState.keyScroll.right) && padX === 0)
+      const keyboardY = directionY !== 0 || ((gameState.keyboardCameraY || gameState.keyScroll.up || gameState.keyScroll.down) && padY === 0)
+      if (keyboardX) {
+        gameState.dragVelocity.x = advanceKeyboardCameraVelocity(previousX, directionX, seconds)
       } else if (padX !== 0) {
         gameState.dragVelocity.x = -padX * gamepadMapScrollSpeed(gameState)
       } else {
@@ -206,10 +211,8 @@ export function updateMapScrolling(gameState, mapGrid) {
         }
       }
 
-      if (gameState.keyScroll.up) {
-        gameState.dragVelocity.y = KEYBOARD_SCROLL_SPEED
-      } else if (gameState.keyScroll.down) {
-        gameState.dragVelocity.y = -KEYBOARD_SCROLL_SPEED
+      if (keyboardY) {
+        gameState.dragVelocity.y = advanceKeyboardCameraVelocity(previousY, directionY, seconds)
       } else if (padY !== 0) {
         gameState.dragVelocity.y = -padY * gamepadMapScrollSpeed(gameState)
       } else {
@@ -219,12 +222,20 @@ export function updateMapScrolling(gameState, mapGrid) {
         }
       }
 
-      gameState.scrollOffset.x = Math.max(0, Math.min(gameState.scrollOffset.x - gameState.dragVelocity.x, maxScrollX))
-      gameState.scrollOffset.y = Math.max(0, Math.min(gameState.scrollOffset.y - gameState.dragVelocity.y, maxScrollY))
+      const distanceX = keyboardX ? (previousX + gameState.dragVelocity.x) * 0.5 * seconds * CAMERA_REFERENCE_FPS : gameState.dragVelocity.x
+      const distanceY = keyboardY ? (previousY + gameState.dragVelocity.y) * 0.5 * seconds * CAMERA_REFERENCE_FPS : gameState.dragVelocity.y
+      gameState.scrollOffset.x = Math.max(0, Math.min(gameState.scrollOffset.x - distanceX, maxScrollX))
+      gameState.scrollOffset.y = Math.max(0, Math.min(gameState.scrollOffset.y - distanceY, maxScrollY))
+      if (keyboardX && (gameState.scrollOffset.x === 0 && gameState.dragVelocity.x > 0 || gameState.scrollOffset.x === maxScrollX && gameState.dragVelocity.x < 0)) gameState.dragVelocity.x = 0
+      if (keyboardY && (gameState.scrollOffset.y === 0 && gameState.dragVelocity.y > 0 || gameState.scrollOffset.y === maxScrollY && gameState.dragVelocity.y < 0)) gameState.dragVelocity.y = 0
+      gameState.keyboardCameraX = keyboardX && gameState.dragVelocity.x !== 0
+      gameState.keyboardCameraY = keyboardY && gameState.dragVelocity.y !== 0
       if (!keyScrollActive) {
         applyDesktopEdgeAutoScroll(gameState, gameCanvas, maxScrollX, maxScrollY)
       }
     } else {
+      gameState.keyboardCameraX = false
+      gameState.keyboardCameraY = false
       gameState.dragVelocity.x *= INERTIA_DECAY
       if (Math.abs(gameState.dragVelocity.x) < INERTIA_STOP_THRESHOLD) {
         gameState.dragVelocity.x = 0
@@ -236,6 +247,10 @@ export function updateMapScrolling(gameState, mapGrid) {
     }
   } else if (smoothState) {
     smoothState.active = false
+  }
+  if (gameState.isRightDragging) {
+    gameState.keyboardCameraX = false
+    gameState.keyboardCameraY = false
   }
 
   if (!gameState.isRightDragging && smoothState && smoothState.active) {
@@ -1048,4 +1063,6 @@ export function updateCameraFollow(gameState, units, mapGrid) {
   gameState.scrollOffset.x = Math.max(0, Math.min(followUnit.x - logicalWidth / 2, maxScrollX))
   gameState.scrollOffset.y = Math.max(0, Math.min(followUnit.y - logicalHeight / 2, maxScrollY))
   gameState.dragVelocity = { x: 0, y: 0 }
+  gameState.keyboardCameraX = false
+  gameState.keyboardCameraY = false
 }

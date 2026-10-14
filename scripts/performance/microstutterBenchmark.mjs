@@ -11,12 +11,13 @@ const durationMs = Number(process.env.PERF_DURATION_MS || 60000)
 const unitCount = Number(process.env.PERF_UNITS || 320)
 if (!Number.isInteger(unitCount) || unitCount <= 0) throw new Error('PERF_UNITS must be a positive integer')
 const scene = process.env.PERF_SCENE || 'battle'
+const keyboardScroll = process.env.PERF_KEYBOARD_SCROLL === '1'
 const production = process.env.PERF_PRODUCTION === '1'
 const speedPxPerSec = Number(process.env.PERF_SCROLL_SPEED || 1800)
 const baseURL = process.env.PERF_BASE_URL || 'http://127.0.0.1:5173'
 const windowPosition = process.env.PERF_WINDOW_POSITION
 if (windowPosition && !/^-?\d+,-?\d+$/.test(windowPosition)) throw new Error('PERF_WINDOW_POSITION must be x,y integers')
-const browser = await chromium.launch({ headless: process.env.PERF_HEADED !== '1', args: windowPosition ? [`--window-position=${windowPosition}`] : [] })
+const browser = await chromium.launch({ executablePath: process.env.PLAYWRIGHT_EXECUTABLE_PATH || undefined, headless: process.env.PERF_HEADED !== '1', args: windowPosition ? [`--window-position=${windowPosition}`] : [] })
 try {
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: Number(process.env.PERF_DPR || 2) })
   const page = await context.newPage()
@@ -35,7 +36,7 @@ try {
   await cdp.send('Profiler.enable')
   await cdp.send('Profiler.start')
   const route = scene === 'traversal' ? createTimedRoute({ width: 3200, height: 3200, viewportWidth: 1190, viewportHeight: 1000, laps: 2 }) : null
-  const measurement = await page.evaluate(async({ duration, route, speedPxPerSec, production }) => {
+  const measurement = await page.evaluate(async({ duration, route, speedPxPerSec, production, keyboardScroll }) => {
     const { window, document, performance, requestAnimationFrame, navigator } = globalThis
     // Production builds use the existing monitor UI/report API, avoiding a
     // development-only module import or an additional game runtime API.
@@ -62,6 +63,10 @@ try {
     let travelledPx = 0
     if (route) {
       window.gameState.heavyBattleCamera = null
+      if (keyboardScroll) {
+        window.gameState.keyScroll.right = true
+        window.gameState.keyScroll.down = true
+      }
       Object.assign(window.gameState.scrollOffset, route[0])
       const selected = window.gameInstance.units.filter(unit => unit.owner === 'player1').slice(0, 8)
       window.selectedUnitsRef.length = 0
@@ -115,8 +120,8 @@ try {
     const debug = gl?.getExtension('WEBGL_debug_renderer_info')
     if (!production) performanceMonitor.recordFrame = recordFrame
     const display = { screenX: window.screenX, screenY: window.screenY, width: window.screen.width, height: window.screen.height, availWidth: window.screen.availWidth, availHeight: window.screen.availHeight, devicePixelRatio: window.devicePixelRatio, emulatedScreenSize: true }
-    return { intervals, cpuFrames, counts, routeCycles, travelledPx, display, monitor: performanceMonitor.stop(), phases: window.__framePhases.snapshot(), gpu: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : null, hardwareConcurrency: navigator.hardwareConcurrency }
-  }, { duration: durationMs, route, speedPxPerSec, production })
+    return { intervals, cpuFrames, counts, routeCycles, travelledPx, display, keyboardScroll, monitor: performanceMonitor.stop(), phases: window.__framePhases.snapshot(), gpu: debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : null, hardwareConcurrency: navigator.hardwareConcurrency }
+  }, { duration: durationMs, route, speedPxPerSec, production, keyboardScroll })
   const { profile } = await cdp.send('Profiler.stop')
   const nodes = new Map(profile.nodes.map(node => [node.id, node]))
   const totals = new Map()

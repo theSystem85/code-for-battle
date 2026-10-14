@@ -75,6 +75,12 @@ import {
   setStreetSpeedMultiplier,
   KEYBOARD_SCROLL_SPEED,
   setKeyboardScrollSpeed,
+  KEYBOARD_SCROLL_ACCELERATION,
+  setKeyboardScrollAcceleration,
+  KEYBOARD_SCROLL_DECELERATION,
+  setKeyboardScrollDeceleration,
+  KEYBOARD_SCROLL_AUTO_BRAKE,
+  setKeyboardScrollAutoBrake,
   DESKTOP_EDGE_AUTOSCROLL_SPEED,
   setDesktopEdgeAutoscrollSpeed,
   DESKTOP_EDGE_AUTOSCROLL_ENABLED,
@@ -855,8 +861,8 @@ export const configRegistry = {
   },
 
   keyboardScrollSpeed: {
-    name: 'Keyboard Scroll Speed',
-    description: 'Camera scroll speed with arrow keys (pixels/frame)',
+    name: 'Keyboard Scroll Maximum Speed',
+    description: 'Top arrow-key camera speed (pixels per 60 Hz frame; 8 = 480 pixels/second)',
     type: 'number',
     get: () => KEYBOARD_SCROLL_SPEED,
     set: setKeyboardScrollSpeed,
@@ -864,6 +870,27 @@ export const configRegistry = {
     max: 32,
     step: 1,
     category: 'Controls'
+  },
+
+  keyboardScrollAcceleration: {
+    name: 'Keyboard Scroll Acceleration',
+    description: 'How quickly held direction keys increase camera speed (pixels/second²)',
+    type: 'number', get: () => KEYBOARD_SCROLL_ACCELERATION, set: setKeyboardScrollAcceleration,
+    min: 60, max: 12000, step: 60, category: 'Controls'
+  },
+
+  keyboardScrollDeceleration: {
+    name: 'Keyboard Scroll Reversal Deceleration',
+    description: 'Braking before accelerating in the opposite direction (pixels/second²)',
+    type: 'number', get: () => KEYBOARD_SCROLL_DECELERATION, set: setKeyboardScrollDeceleration,
+    min: 60, max: 12000, step: 60, category: 'Controls'
+  },
+
+  keyboardScrollAutoBrake: {
+    name: 'Keyboard Scroll Automatic Braking',
+    description: 'One-pedal braking when an axis is released; 0 allows coasting (pixels/second²)',
+    type: 'number', get: () => KEYBOARD_SCROLL_AUTO_BRAKE, set: setKeyboardScrollAutoBrake,
+    min: 0, max: 12000, step: 60, category: 'Controls'
   },
 
   desktopEdgeAutoscrollEnabled: {

@@ -1,0 +1,1768 @@
+{
+  "certification": "diagnostic-only; presented 75 FPS requires qualifying physical hardware and refresh evidence",
+  "browser": "151.0.7922.173",
+  "headless": true,
+  "production": false,
+  "windowPosition": null,
+  "cpuThrottle": 1,
+  "scene": "traversal",
+  "unitCount": 320,
+  "speedPxPerSec": 1800,
+  "routeLengthPx": 24500,
+  "durationMs": 15000,
+  "intervals": [
+    33.399999999999636,
+    150,
+    99.89999999999964,
+    166.70000000000073,
+    183.29999999999927,
+    116.70000000000073,
+    133.29999999999927,
+    116.70000000000073,
+    16.600000000000364,
+    83.39999999999964,
+    100,
+    99.89999999999964,
+    116.70000000000073,
+    33.399999999999636,
+    83.29999999999927,
+    100,
+    100,
+    133.39999999999964,
+    116.60000000000036,
+    33.30000000000109,
+    116.69999999999891,
+    116.60000000000036,
+    133.29999999999927,
+    33.5,
+    99.90000000000146,
+    100,
+    33.29999999999927,
+    83.39999999999964,
+    100,
+    16.600000000000364,
+    83.29999999999927,
+    83.40000000000146,
+    50,
+    66.59999999999854,
+    83.40000000000146,
+    99.89999999999964,
+    100,
+    116.69999999999891,
+    116.70000000000073,
+    133.29999999999927,
+    16.700000000000728,
+    116.59999999999854,
+    116.70000000000073,
+    100,
+    16.600000000002183,
+    100.09999999999854,
+    116.70000000000073,
+    33.29999999999927,
+    66.70000000000073,
+    16.599999999998545,
+    83.29999999999927,
+    116.70000000000073,
+    33.29999999999927,
+    66.60000000000218,
+    116.79999999999927,
+    116.59999999999854,
+    16.700000000000728,
+    83.29999999999927,
+    100,
+    100,
+    16.600000000002183,
+    100.09999999999854,
+    99.90000000000146,
+    116.70000000000073,
+    100,
+    116.69999999999709,
+    16.700000000000728,
+    83.29999999999927,
+    116.60000000000218,
+    133.29999999999927,
+    16.700000000000728,
+    83.29999999999927,
+    133.40000000000146,
+    116.59999999999854,
+    116.79999999999927,
+    133.20000000000073,
+    150,
+    116.70000000000073,
+    100,
+    133.29999999999927,
+    116.70000000000073,
+    16.599999999998545,
+    116.70000000000073,
+    116.59999999999854,
+    116.70000000000073,
+    33.29999999999927,
+    100.10000000000218,
+    99.89999999999782,
+    33.400000000001455,
+    66.70000000000073,
+    33.20000000000073,
+    83.39999999999782,
+    100,
+    100,
+    100,
+    50,
+    83.29999999999927,
+    16.700000000000728,
+    83.29999999999927,
+    116.70000000000073,
+    100,
+    33.29999999999927,
+    66.70000000000073,
+    100,
+    99.90000000000146,
+    33.39999999999782,
+    100,
+    16.700000000000728,
+    100,
+    99.90000000000146,
+    116.70000000000073,
+    16.69999999999709,
+    116.70000000000073,
+    116.60000000000218,
+    33.39999999999782,
+    99.90000000000146,
+    116.59999999999854,
+    33.5,
+    83.29999999999927,
+    116.60000000000218,
+    16.700000000000728,
+    100,
+    100,
+    133.29999999999927,
+    100,
+    33.29999999999927,
+    66.70000000000073,
+    100,
+    33.29999999999927,
+    100.09999999999854,
+    99.90000000000146,
+    116.70000000000073,
+    116.70000000000073,
+    133.29999999999927,
+    133.29999999999927,
+    16.599999999998545,
+    100,
+    116.80000000000291,
+    116.59999999999854,
+    116.59999999999854,
+    100,
+    100,
+    16.700000000000728,
+    83.40000000000146,
+    99.89999999999782,
+    133.3000000000029,
+    33.39999999999782,
+    100,
+    16.700000000000728,
+    133.29999999999927,
+    100,
+    16.600000000002183,
+    83.29999999999927,
+    116.79999999999927,
+    16.599999999998545,
+    83.30000000000291,
+    116.69999999999709,
+    116.70000000000073,
+    116.60000000000218,
+    16.599999999998545,
+    83.40000000000146,
+    100,
+    33.39999999999782,
+    66.60000000000218,
+    116.69999999999709,
+    33.30000000000291,
+    83.29999999999927,
+    100,
+    33.39999999999782,
+    83.20000000000073,
+    83.40000000000146,
+    100.09999999999854,
+    116.60000000000218,
+    33.29999999999927
+  ],
+  "cpuFrames": {
+    "update": [
+      60.5,
+      40.69999998807907,
+      63.900000005960464,
+      87.69999998807907,
+      52.70000001788139,
+      57.20000001788139,
+      42.900000005960464,
+      41.5,
+      38.5,
+      41,
+      52.79999998211861,
+      48.69999998807907,
+      46.70000001788139,
+      48,
+      63.5,
+      57.10000002384186,
+      50.69999998807907,
+      43.900000005960464,
+      48.80000001192093,
+      65,
+      48.89999997615814,
+      49,
+      44.19999998807907,
+      42.5,
+      42.89999997615814,
+      47,
+      42.599999994039536,
+      46.70000001788139,
+      45.80000001192093,
+      46.39999997615814,
+      44.900000005960464,
+      47.89999997615814,
+      61.900000005960464,
+      44.79999998211861,
+      40.599999994039536,
+      44.900000005960464,
+      48.900000005960464,
+      47.400000005960464,
+      39.79999998211861,
+      56.30000001192093,
+      37.900000005960464,
+      55.20000001788139,
+      45.5,
+      56.30000001192093,
+      45.69999998807907,
+      42.599999994039536,
+      47.5,
+      46.60000002384186,
+      48.10000002384186,
+      42.89999997615814,
+      43,
+      48.400000005960464,
+      65.40000000596046,
+      58.900000005960464,
+      44.400000005960464,
+      50.599999994039536,
+      57.400000005960464,
+      42.20000001788139,
+      59.900000005960464,
+      62,
+      52.599999994039536,
+      44.400000005960464,
+      61.400000005960464,
+      54.69999998807907,
+      54,
+      65.7000000178814,
+      61.400000005960464,
+      53.20000001788139,
+      48,
+      47.80000001192093,
+      46.900000005960464,
+      48.599999994039536,
+      45.900000005960464,
+      47.79999998211861,
+      57.599999994039536,
+      47.60000002384186,
+      49.29999998211861,
+      45.70000001788139,
+      36.89999997615814,
+      42.099999994039536,
+      46.900000005960464,
+      68,
+      54,
+      40.30000001192093,
+      60.19999998807907,
+      44.89999997615814,
+      48.19999998807907,
+      50.79999998211861,
+      49,
+      42.5,
+      41.69999998807907,
+      53.5,
+      47.599999994039536,
+      61.69999998807907,
+      45.39999997615814,
+      44.29999998211861,
+      40.900000005960464,
+      51.39999997615814,
+      42.099999994039536,
+      41.29999998211861,
+      40,
+      51,
+      44.900000005960464,
+      52.400000005960464,
+      55.80000001192093,
+      48.69999998807907,
+      52.79999998211861,
+      39.89999997615814,
+      39.900000005960464,
+      43.400000005960464,
+      40.19999998807907,
+      56.80000001192093,
+      54.599999994039536,
+      82.2999999821186,
+      41.19999998807907,
+      41.900000005960464,
+      38.5,
+      49.79999998211861,
+      54.599999994039536,
+      47.400000005960464,
+      42.30000001192093,
+      42.099999994039536,
+      44.5,
+      44.30000001192093,
+      44.80000001192093,
+      46.79999998211861,
+      41.900000005960464,
+      44.5,
+      38.10000002384186,
+      46.30000001192093,
+      46.900000005960464,
+      41.80000001192093
+    ],
+    "render": [
+      47,
+      2.9000000059604645,
+      40.599999994039536,
+      15.800000011920929,
+      18.599999994039536,
+      5.799999982118607,
+      18.19999998807907,
+      2.9000000059604645,
+      3.199999988079071,
+      2,
+      2.5,
+      10.200000017881393,
+      2.699999988079071,
+      3.300000011920929,
+      3.7999999821186066,
+      4.899999976158142,
+      10.199999988079071,
+      5.199999988079071,
+      9.399999976158142,
+      11,
+      4.600000023841858,
+      2.9000000059604645,
+      3.2000000178813934,
+      9.400000005960464,
+      4.4000000059604645,
+      2.100000023841858,
+      2.600000023841858,
+      3.2999999821186066,
+      3.199999988079071,
+      3.100000023841858,
+      4.0999999940395355,
+      3.800000011920929,
+      8.400000005960464,
+      2.5,
+      2.4000000059604645,
+      19.900000005960464,
+      2.0999999940395355,
+      1.5999999940395355,
+      2.5,
+      2.199999988079071,
+      1.5999999940395355,
+      2,
+      5,
+      2.199999988079071,
+      1.5,
+      6.299999982118607,
+      1.9000000059604645,
+      2,
+      6.899999976158142,
+      1.7000000178813934,
+      1.5999999940395355,
+      1.699999988079071,
+      2.7999999821186066,
+      1.7999999821186066,
+      1.5999999940395355,
+      2.9000000059604645,
+      1.5999999940395355,
+      1.699999988079071,
+      1.9000000059604645,
+      2.0999999940395355,
+      1.800000011920929,
+      3.0999999940395355,
+      1.7000000178813934,
+      4.0999999940395355,
+      4.5,
+      3.9000000059604645,
+      4.199999988079071,
+      4.5,
+      3.300000011920929,
+      3.899999976158142,
+      4,
+      3.199999988079071,
+      3.7000000178813934,
+      3.4000000059604645,
+      5.0999999940395355,
+      5,
+      3.5,
+      3.199999988079071,
+      3.800000011920929,
+      3.2000000178813934,
+      5.9000000059604645,
+      8.800000011920929,
+      11.200000017881393,
+      7.0999999940395355,
+      6.800000011920929,
+      10.600000023841858,
+      8.200000017881393,
+      7.4000000059604645,
+      5.0999999940395355,
+      12.199999988079071,
+      4.9000000059604645,
+      5,
+      4.199999988079071,
+      5.9000000059604645,
+      7.200000017881393,
+      5.5,
+      5.5999999940395355,
+      7.9000000059604645,
+      17.700000017881393,
+      8.900000005960464,
+      8.699999988079071,
+      8.099999994039536,
+      6.5,
+      6.799999982118607,
+      7.5999999940395355,
+      4.5,
+      5.100000023841858,
+      6,
+      6.799999982118607,
+      8.199999988079071,
+      5.4000000059604645,
+      7.9000000059604645,
+      5,
+      6.0999999940395355,
+      6.4000000059604645,
+      5.4000000059604645,
+      3.4000000059604645,
+      6.200000017881393,
+      2.5999999940395355,
+      3.5,
+      2.300000011920929,
+      6.199999988079071,
+      3.300000011920929,
+      3.199999988079071,
+      8.5,
+      5,
+      2.9000000059604645,
+      6.5,
+      2.199999988079071,
+      2.399999976158142,
+      5.699999988079071,
+      2.4000000059604645
+    ],
+    "work": [
+      107.5,
+      43.599999994039536,
+      104.5,
+      104.09999999403954,
+      71.30000001192093,
+      63,
+      61.099999994039536,
+      44.400000005960464,
+      41.69999998807907,
+      43,
+      55.29999998211861,
+      58.900000005960464,
+      49.80000001192093,
+      51.30000001192093,
+      67.2999999821186,
+      62,
+      61,
+      49.099999994039536,
+      58.19999998807907,
+      76,
+      53.5,
+      51.900000005960464,
+      47.400000005960464,
+      51.900000005960464,
+      47.39999997615814,
+      49.10000002384186,
+      45.20000001788139,
+      50,
+      49,
+      49.5,
+      49,
+      51.69999998807907,
+      70.30000001192093,
+      47.29999998211861,
+      43,
+      64.80000001192093,
+      51,
+      49,
+      42.29999998211861,
+      58.5,
+      39.900000005960464,
+      57.20000001788139,
+      50.5,
+      58.5,
+      47.19999998807907,
+      48.89999997615814,
+      49.400000005960464,
+      48.60000002384186,
+      55,
+      44.599999994039536,
+      44.900000005960464,
+      50.099999994039536,
+      68.19999998807907,
+      60.69999998807907,
+      46,
+      53.5,
+      59,
+      43.900000005960464,
+      61.80000001192093,
+      64.69999998807907,
+      54.400000005960464,
+      47.5,
+      63.10000002384186,
+      58.79999998211861,
+      58.5,
+      69.60000002384186,
+      65.59999999403954,
+      57.80000001192093,
+      51.80000001192093,
+      51.69999998807907,
+      50.900000005960464,
+      51.79999998211861,
+      49.60000002384186,
+      51.19999998807907,
+      62.69999998807907,
+      52.60000002384186,
+      52.79999998211861,
+      48.900000005960464,
+      41.099999994039536,
+      45.30000001192093,
+      52.900000005960464,
+      76.80000001192093,
+      65.2000000178814,
+      47.400000005960464,
+      67,
+      55.5,
+      56.400000005960464,
+      59.400000005960464,
+      54.099999994039536,
+      54.69999998807907,
+      46.599999994039536,
+      58.5,
+      51.79999998211861,
+      67.59999999403954,
+      52.599999994039536,
+      49.79999998211861,
+      46.80000001192093,
+      59.29999998211861,
+      59.80000001192093,
+      50.19999998807907,
+      48.69999998807907,
+      59.19999998807907,
+      51.400000005960464,
+      59.19999998807907,
+      63.400000005960464,
+      53.69999998807907,
+      57.900000005960464,
+      46,
+      46.69999998807907,
+      51.599999994039536,
+      45.599999994039536,
+      64.7000000178814,
+      59.599999994039536,
+      88.39999997615814,
+      48.099999994039536,
+      47.30000001192093,
+      41.900000005960464,
+      56,
+      57.19999998807907,
+      51,
+      44.60000002384186,
+      48.29999998211861,
+      47.80000001192093,
+      47.5,
+      54,
+      51.79999998211861,
+      44.80000001192093,
+      51,
+      40.30000001192093,
+      48.69999998807907,
+      52.599999994039536,
+      44.20000001788139
+    ]
+  },
+  "counts": [
+    {
+      "atMs": 0,
+      "units": 320,
+      "bullets": 34,
+      "explosions": 12,
+      "heapBytes": 90016611,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 1000,
+      "units": 312,
+      "bullets": 0,
+      "explosions": 54,
+      "heapBytes": 90988577,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 2016.6000000000004,
+      "units": 312,
+      "bullets": 0,
+      "explosions": 12,
+      "heapBytes": 93259395,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 3016.6000000000004,
+      "units": 312,
+      "bullets": 0,
+      "explosions": 12,
+      "heapBytes": 99365825,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 4033.199999999999,
+      "units": 312,
+      "bullets": 0,
+      "explosions": 12,
+      "heapBytes": 100197222,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 5016.499999999998,
+      "units": 312,
+      "bullets": 0,
+      "explosions": 12,
+      "heapBytes": 96369791,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 6083.1,
+      "units": 312,
+      "bullets": 1,
+      "explosions": 12,
+      "heapBytes": 90288185,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 7083.1,
+      "units": 312,
+      "bullets": 1,
+      "explosions": 13,
+      "heapBytes": 97941768,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 8032.999999999998,
+      "units": 311,
+      "bullets": 13,
+      "explosions": 14,
+      "heapBytes": 95672309,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 9032.999999999998,
+      "units": 302,
+      "bullets": 3,
+      "explosions": 35,
+      "heapBytes": 101915304,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 10016.300000000001,
+      "units": 302,
+      "bullets": 3,
+      "explosions": 22,
+      "heapBytes": 106762122,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 11049.6,
+      "units": 302,
+      "bullets": 1,
+      "explosions": 13,
+      "heapBytes": 106247592,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 12116.300000000001,
+      "units": 302,
+      "bullets": 1,
+      "explosions": 12,
+      "heapBytes": 83320268,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 13016.199999999999,
+      "units": 302,
+      "bullets": 0,
+      "explosions": 13,
+      "heapBytes": 84530940,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 14032.800000000001,
+      "units": 302,
+      "bullets": 1,
+      "explosions": 13,
+      "heapBytes": 87512927,
+      "gpuPassMs": null
+    },
+    {
+      "atMs": 15016.1,
+      "units": 301,
+      "bullets": 2,
+      "explosions": 16,
+      "heapBytes": 100751104,
+      "gpuPassMs": null
+    }
+  ],
+  "routeCycles": 1,
+  "travelledPx": 27028.980000000003,
+  "display": {
+    "screenX": 10,
+    "screenY": 10,
+    "width": 1440,
+    "height": 1000,
+    "availWidth": 1440,
+    "availHeight": 1000,
+    "devicePixelRatio": 2,
+    "emulatedScreenSize": true
+  },
+  "keyboardScroll": true,
+  "monitor": {
+    "version": 2,
+    "kind": "code-for-battle-performance-monitor",
+    "recordedAt": "2026-10-14T08:47:30.250Z",
+    "durationMs": 15051.4,
+    "averageFps": 8.72,
+    "device": {
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+      "viewport": {
+        "width": 1440,
+        "height": 1000
+      },
+      "screen": {
+        "width": 1440,
+        "height": 1000
+      },
+      "nativeDevicePixelRatio": 2,
+      "touchPoints": 0
+    },
+    "map": {
+      "widthTiles": 100,
+      "heightTiles": 100,
+      "seed": "11",
+      "players": 4,
+      "oreFields": 8,
+      "oreTotalValue": 64000,
+      "waterPercent": 10,
+      "rockPercent": 5,
+      "shoreNorth": true,
+      "shoreWest": true,
+      "shoreEast": true,
+      "shoreSouth": true,
+      "centerLake": true,
+      "biome": "grass",
+      "biomeRegions": 12,
+      "biomeDistribution": "random",
+      "biomeWeights": {
+        "grass": 30,
+        "soil": 30,
+        "sand": 20,
+        "snow": 20
+      },
+      "snowOnPlateaus": true,
+      "scrollOffset": {
+        "x": 2010,
+        "y": 537.19
+      }
+    },
+    "game": {
+      "speedMultiplier": 1,
+      "gameTime": 11.6,
+      "paused": false,
+      "frameLimiterEnabled": false,
+      "integratedSpriteSheetMode": false,
+      "entities": {
+        "units": 301,
+        "buildings": 7,
+        "factories": 4,
+        "bullets": 0,
+        "explosions": 16,
+        "smokeParticles": 166
+      }
+    },
+    "canvases": {
+      "game": {
+        "cssWidth": 1190,
+        "cssHeight": 1000,
+        "backingWidth": 2380,
+        "backingHeight": 2000,
+        "pixelRatio": 2
+      },
+      "webgl": {
+        "cssWidth": 1190,
+        "cssHeight": 1000,
+        "backingWidth": 2380,
+        "backingHeight": 2000,
+        "pixelRatio": 2
+      },
+      "webgpu": {
+        "cssWidth": 0,
+        "cssHeight": 0,
+        "backingWidth": 2380,
+        "backingHeight": 2000,
+        "pixelRatio": null
+      },
+      "configuredCanvasPixelRatio": 2,
+      "overlayCanvasPixelRatio": 2
+    },
+    "renderer": {
+      "gpuTerrain": {
+        "rendered": true,
+        "backend": "webgl",
+        "requestedBackend": "webgl",
+        "rendererBackendChoice": "webgl",
+        "webgpuStatus": null,
+        "waterOnly": true,
+        "streetAtlas": false
+      },
+      "mapChunks": {
+        "chunksDrawn": 12,
+        "chunkHits": 12,
+        "chunkMisses": 0,
+        "chunkRedraws": 0,
+        "chunksPrewarmed": 0,
+        "chunksEvicted": 0,
+        "chunksQueued": 0,
+        "chunksWarmed": 0,
+        "chunkFallbacks": 0,
+        "chunkCacheSize": 48,
+        "chunkWarmQueueSize": 0,
+        "directTilePasses": 0,
+        "chunkSignatureCalls": 0,
+        "topologyReconstructions": 0,
+        "warmBacklog": 0,
+        "warmMaxJobAgeMs": 0,
+        "warmExpiredJobs": 0,
+        "warmCancelledJobs": 89,
+        "terrainResidentBytes": 40791744,
+        "terrainStagingBytes": 0
+      },
+      "gpuTiming": {
+        "available": false,
+        "reason": "EXT_disjoint_timer_query_webgl2-unavailable",
+        "milliseconds": null
+      },
+      "gpuMemory": {
+        "available": false,
+        "reason": "browser API unavailable",
+        "bytes": null
+      },
+      "heap": {
+        "available": true,
+        "reason": null,
+        "usedBytes": 95097181,
+        "trend": {
+          "samples": 15,
+          "firstBytes": 90016611,
+          "lastBytes": 95097181,
+          "minBytes": 90016611,
+          "maxBytes": 105598434,
+          "deltaBytes": 5080570,
+          "suspectedCollectionDrops": 5,
+          "note": "Heap drops are suspected collections unless confirmed by a trace"
+        }
+      },
+      "byteUsage": {
+        "terrain-pages": 40791744,
+        "prepared-sprites": 0,
+        "water-topology": 0,
+        "minimap": 0,
+        "effects": 196608
+      }
+    },
+    "timingMs": {
+      "frameInterval": {
+        "samples": 132,
+        "averageMs": 114.66,
+        "minMs": 90.2,
+        "maxMs": 179.5,
+        "slowFrames": 132
+      },
+      "update": {
+        "samples": 132,
+        "averageMs": 49.03,
+        "minMs": 36.9,
+        "maxMs": 87.7,
+        "slowFrames": 132
+      },
+      "render": {
+        "samples": 132,
+        "averageMs": 5.75,
+        "minMs": 1.5,
+        "maxMs": 47,
+        "slowFrames": 7
+      },
+      "minimap": {
+        "samples": 132,
+        "averageMs": 1.21,
+        "minMs": 0,
+        "maxMs": 5.7,
+        "slowFrames": 0
+      },
+      "frameWork": {
+        "samples": 132,
+        "averageMs": 54.84,
+        "minMs": 39.9,
+        "maxMs": 107.5,
+        "slowFrames": 132
+      },
+      "unattributedWait": {
+        "samples": 132,
+        "averageMs": 59.82,
+        "minMs": 0.9,
+        "maxMs": 135.9,
+        "slowFrames": 131
+      },
+      "schedulerDelay": {
+        "samples": 132,
+        "averageMs": 0,
+        "minMs": 0,
+        "maxMs": 0,
+        "slowFrames": 0
+      },
+      "terrain": {
+        "samples": 132,
+        "averageMs": 2.53,
+        "minMs": 0.2,
+        "maxMs": 41,
+        "slowFrames": 5
+      },
+      "entities": {
+        "samples": 132,
+        "averageMs": 0.99,
+        "minMs": 0,
+        "maxMs": 5.6,
+        "slowFrames": 0
+      },
+      "effects": {
+        "samples": 132,
+        "averageMs": 0.22,
+        "minMs": 0,
+        "maxMs": 2.3,
+        "slowFrames": 0
+      },
+      "ui": {
+        "samples": 132,
+        "averageMs": 0.32,
+        "minMs": 0.1,
+        "maxMs": 2.7,
+        "slowFrames": 0
+      }
+    },
+    "profiler": {
+      "enabled": false,
+      "window": {
+        "frames": 0,
+        "milliseconds": 0,
+        "callSamplesPerSpan": 512
+      },
+      "slowFrameThresholdMs": 13.333,
+      "rows": [],
+      "definitions": [
+        {
+          "id": 1,
+          "name": "FRAME"
+        },
+        {
+          "id": 2,
+          "name": "UPDATE"
+        },
+        {
+          "id": 3,
+          "name": "RENDER"
+        },
+        {
+          "id": 10,
+          "name": "TERRAIN"
+        },
+        {
+          "id": 11,
+          "name": "RENDER_TILES"
+        },
+        {
+          "id": 12,
+          "name": "CHUNK_STATE"
+        },
+        {
+          "id": 13,
+          "name": "CHUNK_SIGNATURE"
+        },
+        {
+          "id": 14,
+          "name": "WARM_QUEUE"
+        },
+        {
+          "id": 15,
+          "name": "CHUNK_REBUILD"
+        },
+        {
+          "id": 20,
+          "name": "CPU_WATER_PASS"
+        },
+        {
+          "id": 21,
+          "name": "CPU_WATER_TILE"
+        },
+        {
+          "id": 30,
+          "name": "WEBGL_BUILD"
+        },
+        {
+          "id": 31,
+          "name": "WEBGL_UPLOAD"
+        },
+        {
+          "id": 32,
+          "name": "WEBGL_SUBMIT"
+        },
+        {
+          "id": 40,
+          "name": "WEBGPU_PACK"
+        },
+        {
+          "id": 41,
+          "name": "WEBGPU_UPLOAD"
+        },
+        {
+          "id": 42,
+          "name": "WEBGPU_SUBMIT"
+        },
+        {
+          "id": 50,
+          "name": "ENTITY_BASES"
+        },
+        {
+          "id": 51,
+          "name": "ENTITY_OVERLAYS"
+        },
+        {
+          "id": 52,
+          "name": "EFFECTS"
+        },
+        {
+          "id": 60,
+          "name": "MINIMAP_BASE"
+        },
+        {
+          "id": 61,
+          "name": "MINIMAP_FOG"
+        },
+        {
+          "id": 62,
+          "name": "MINIMAP_VIDEO"
+        },
+        {
+          "id": 63,
+          "name": "MINIMAP_ENTITIES"
+        },
+        {
+          "id": 70,
+          "name": "HUD"
+        },
+        {
+          "id": 80,
+          "name": "PREP_CLIFF"
+        },
+        {
+          "id": 81,
+          "name": "PREP_BIOME_MASK"
+        },
+        {
+          "id": 1000,
+          "name": "updateBuildingsUnderRepair"
+        },
+        {
+          "id": 1001,
+          "name": "updateBuildingsAwaitingRepair"
+        },
+        {
+          "id": 1002,
+          "name": "_updateGlobalPathfinding"
+        },
+        {
+          "id": 1003,
+          "name": "anonymous"
+        },
+        {
+          "id": 1004,
+          "name": "updateBullets"
+        },
+        {
+          "id": 1005,
+          "name": "updateHarvesterLogic"
+        },
+        {
+          "id": 1006,
+          "name": "updateUnitOccupancy"
+        },
+        {
+          "id": 1007,
+          "name": "findPath"
+        },
+        {
+          "id": 1008,
+          "name": "_updateAIPlayer"
+        },
+        {
+          "id": 1009,
+          "name": "updateEnemyAI"
+        },
+        {
+          "id": 1010,
+          "name": "updateUnitMovement"
+        },
+        {
+          "id": 1011,
+          "name": "updateUnitCombat"
+        },
+        {
+          "id": 1012,
+          "name": "updateWorkshopLogic"
+        },
+        {
+          "id": 1013,
+          "name": "updateShipyardServiceLogic"
+        },
+        {
+          "id": 1014,
+          "name": "updateOreSpread"
+        },
+        {
+          "id": 1015,
+          "name": "updateUnitCollisions"
+        },
+        {
+          "id": 1016,
+          "name": "updateBuildings"
+        },
+        {
+          "id": 1017,
+          "name": "updateDefensiveBuildings"
+        },
+        {
+          "id": 1018,
+          "name": "updateGame"
+        }
+      ]
+    },
+    "diagnostics": {
+      "schemaVersion": 1,
+      "backend": "webgl",
+      "devicePixelRatio": 2,
+      "refreshRateHz": null,
+      "recordingCounterTotals": {
+        "DRAW_CALLS": 1864,
+        "UPLOAD_BYTES": 5280,
+        "RESIZE_EVENTS": 0,
+        "DECODED_SOURCE_BYTES": 0,
+        "PREPARED_RASTER_BYTES": 0,
+        "GPU_STAGING_BYTES": 0,
+        "RESIDENT_BYTES": 0,
+        "STAGING_BYTES": 0,
+        "EVICTIONS": 2,
+        "BACKLOG": 684
+      },
+      "lifetimeCounterTotals": {
+        "DRAW_CALLS": 2180,
+        "UPLOAD_BYTES": 4797892,
+        "RESIZE_EVENTS": 0,
+        "DECODED_SOURCE_BYTES": 0,
+        "PREPARED_RASTER_BYTES": 0,
+        "GPU_STAGING_BYTES": 0,
+        "RESIDENT_BYTES": 0,
+        "STAGING_BYTES": 0,
+        "EVICTIONS": 2,
+        "BACKLOG": 1332
+      }
+    },
+    "scheduler": {
+      "sources": {
+        "raf": 0,
+        "watchdog": 0,
+        "timeout": 132,
+        "unknown": 0
+      },
+      "watchdogShare": 0
+    }
+  },
+  "phases": {
+    "samples": 140,
+    "frame": {
+      "averageMs": 117.81,
+      "p95Ms": 146.1,
+      "maxMs": 383.4,
+      "fps": 8.49
+    },
+    "drawCalls": {
+      "average": 14,
+      "p95": 22,
+      "max": 26
+    },
+    "phases": {
+      "sim": {
+        "samples": 140,
+        "averageMs": 49.27,
+        "p95Ms": 64.9,
+        "minMs": 32.6,
+        "maxMs": 142.1
+      },
+      "movement": {
+        "samples": 140,
+        "averageMs": 31.29,
+        "p95Ms": 43,
+        "minMs": 19.8,
+        "maxMs": 97.2
+      },
+      "combat": {
+        "samples": 140,
+        "averageMs": 5.21,
+        "p95Ms": 7.1,
+        "minMs": 3,
+        "maxMs": 12.3
+      },
+      "pathfinding": {
+        "samples": 140,
+        "averageMs": 0.4,
+        "p95Ms": 0.8,
+        "minMs": 0,
+        "maxMs": 1.5
+      },
+      "ai": {
+        "samples": 140,
+        "averageMs": 4.11,
+        "p95Ms": 7.5,
+        "minMs": 2,
+        "maxMs": 34.2
+      },
+      "fog": {
+        "samples": 140,
+        "averageMs": 1.47,
+        "p95Ms": 2.1,
+        "minMs": 0.6,
+        "maxMs": 2.6
+      },
+      "terrain": {
+        "samples": 140,
+        "averageMs": 2.86,
+        "p95Ms": 8.5,
+        "minMs": 0.2,
+        "maxMs": 61.3
+      },
+      "entities": {
+        "samples": 140,
+        "averageMs": 1.09,
+        "p95Ms": 3.1,
+        "minMs": 0,
+        "maxMs": 5.6
+      },
+      "effects": {
+        "samples": 140,
+        "averageMs": 0.28,
+        "p95Ms": 1,
+        "minMs": 0,
+        "maxMs": 2.3
+      },
+      "ui": {
+        "samples": 140,
+        "averageMs": 0.31,
+        "p95Ms": 0.6,
+        "minMs": 0,
+        "maxMs": 2.7
+      },
+      "minimap": {
+        "samples": 140,
+        "averageMs": 1.16,
+        "p95Ms": 4.3,
+        "minMs": 0.1,
+        "maxMs": 5.7
+      }
+    }
+  },
+  "gpu": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "hardwareConcurrency": 3,
+  "frames": {
+    "frameCount": 174,
+    "durationMs": 15016.1,
+    "fps": 11.587562682720547,
+    "meanFrameMs": 86.29942528735633,
+    "p95FrameMs": 133.29999999999927,
+    "p99FrameMs": 166.70000000000073,
+    "maxFrameMs": 183.29999999999927,
+    "deadlineMs": 13.333333333333334,
+    "missedDeadlineFrames": 174,
+    "missedDeadlineRatio": 1,
+    "passed75Fps": false
+  },
+  "cpuTailsAvailable": true,
+  "cpuTails": {
+    "update": {
+      "samples": 132,
+      "p50Ms": 47,
+      "p95Ms": 63.900000005960464,
+      "p99Ms": 82.2999999821186,
+      "maxMs": 87.69999998807907,
+      "missedDeadlines": 132
+    },
+    "render": {
+      "samples": 132,
+      "p50Ms": 4.199999988079071,
+      "p95Ms": 15.800000011920929,
+      "p99Ms": 40.599999994039536,
+      "maxMs": 47,
+      "missedDeadlines": 7
+    },
+    "work": {
+      "samples": 132,
+      "p50Ms": 51.79999998211861,
+      "p95Ms": 71.30000001192093,
+      "p99Ms": 104.5,
+      "maxMs": 107.5,
+      "missedDeadlines": 132
+    }
+  },
+  "windows": [
+    {
+      "windowMs": 1000,
+      "windows": [
+        {
+          "frameCount": 8,
+          "durationMs": 1000,
+          "fps": 8,
+          "meanFrameMs": 125,
+          "p95FrameMs": 183.29999999999927,
+          "p99FrameMs": 183.29999999999927,
+          "maxFrameMs": 183.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 8,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 12,
+          "durationMs": 1016.6000000000004,
+          "fps": 11.804052724768834,
+          "meanFrameMs": 84.7166666666667,
+          "p95FrameMs": 133.39999999999964,
+          "p99FrameMs": 133.39999999999964,
+          "maxFrameMs": 133.39999999999964,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 12,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 12,
+          "durationMs": 1000,
+          "fps": 12,
+          "meanFrameMs": 83.33333333333333,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 133.29999999999927,
+          "maxFrameMs": 133.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 12,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 11,
+          "durationMs": 1016.5999999999985,
+          "fps": 10.82038166437145,
+          "meanFrameMs": 92.41818181818168,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 133.29999999999927,
+          "maxFrameMs": 133.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 11,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 13,
+          "durationMs": 983.2999999999993,
+          "fps": 13.22078714532697,
+          "meanFrameMs": 75.63846153846148,
+          "p95FrameMs": 116.79999999999927,
+          "p99FrameMs": 116.79999999999927,
+          "maxFrameMs": 116.79999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 13,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 13,
+          "durationMs": 1066.6000000000022,
+          "fps": 12.188261766360373,
+          "meanFrameMs": 82.04615384615401,
+          "p95FrameMs": 116.70000000000073,
+          "p99FrameMs": 116.70000000000073,
+          "maxFrameMs": 116.70000000000073,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 13,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 9,
+          "durationMs": 1000,
+          "fps": 9,
+          "meanFrameMs": 111.11111111111111,
+          "p95FrameMs": 150,
+          "p99FrameMs": 150,
+          "maxFrameMs": 150,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 9,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 10,
+          "durationMs": 949.8999999999978,
+          "fps": 10.527423939362063,
+          "meanFrameMs": 94.98999999999978,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 133.29999999999927,
+          "maxFrameMs": 133.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 10,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 14,
+          "durationMs": 1000,
+          "fps": 14,
+          "meanFrameMs": 71.42857142857143,
+          "p95FrameMs": 116.70000000000073,
+          "p99FrameMs": 116.70000000000073,
+          "maxFrameMs": 116.70000000000073,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 14,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 12,
+          "durationMs": 983.3000000000029,
+          "fps": 12.203803518763312,
+          "meanFrameMs": 81.9416666666669,
+          "p95FrameMs": 116.70000000000073,
+          "p99FrameMs": 116.70000000000073,
+          "maxFrameMs": 116.70000000000073,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 12,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 13,
+          "durationMs": 1033.2999999999993,
+          "fps": 12.581051001645223,
+          "meanFrameMs": 79.48461538461532,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 133.29999999999927,
+          "maxFrameMs": 133.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 13,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 11,
+          "durationMs": 1066.7000000000007,
+          "fps": 10.31217774444548,
+          "meanFrameMs": 96.97272727272734,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 133.29999999999927,
+          "maxFrameMs": 133.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 11,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 10,
+          "durationMs": 899.8999999999978,
+          "fps": 11.112345816201827,
+          "meanFrameMs": 89.98999999999978,
+          "p95FrameMs": 133.3000000000029,
+          "p99FrameMs": 133.3000000000029,
+          "maxFrameMs": 133.3000000000029,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 10,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 13,
+          "durationMs": 1016.6000000000022,
+          "fps": 12.787723785166213,
+          "meanFrameMs": 78.20000000000017,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 133.29999999999927,
+          "maxFrameMs": 133.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 13,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 13,
+          "durationMs": 983.2999999999993,
+          "fps": 13.22078714532697,
+          "meanFrameMs": 75.63846153846148,
+          "p95FrameMs": 116.69999999999709,
+          "p99FrameMs": 116.69999999999709,
+          "maxFrameMs": 116.69999999999709,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 13,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        }
+      ]
+    },
+    {
+      "windowMs": 5000,
+      "windows": [
+        {
+          "frameCount": 56,
+          "durationMs": 5016.499999999998,
+          "fps": 11.163161566829467,
+          "meanFrameMs": 89.58035714285711,
+          "p95FrameMs": 150,
+          "p99FrameMs": 183.29999999999927,
+          "maxFrameMs": 183.29999999999927,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 56,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 58,
+          "durationMs": 4999.800000000003,
+          "fps": 11.600464018560736,
+          "meanFrameMs": 86.20344827586212,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 150,
+          "maxFrameMs": 150,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 58,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        },
+        {
+          "frameCount": 60,
+          "durationMs": 4999.799999999999,
+          "fps": 12.00048001920077,
+          "meanFrameMs": 83.32999999999998,
+          "p95FrameMs": 133.29999999999927,
+          "p99FrameMs": 133.3000000000029,
+          "maxFrameMs": 133.3000000000029,
+          "deadlineMs": 13.333333333333334,
+          "missedDeadlineFrames": 60,
+          "missedDeadlineRatio": 1,
+          "passed75Fps": false
+        }
+      ]
+    }
+  ],
+  "cpuSelfTime": [
+    [
+      "(program) :0",
+      6644.860000000028
+    ],
+    [
+      "(idle) :0",
+      1835.487999999999
+    ],
+    [
+      "updateUnitPosition http://127.0.0.1:5173/src/game/movementCore.js:279",
+      1003.6780000000005
+    ],
+    [
+      "updateUnitMovement http://127.0.0.1:5173/src/game/unitMovement.js:52",
+      821.6290000000005
+    ],
+    [
+      "queryCircleInto http://127.0.0.1:5173/src/game/spatialQuadtree.js:162",
+      414.7100000000002
+    ],
+    [
+      "drawImage :0",
+      328.3839999999999
+    ],
+    [
+      "updateUnitRotation http://127.0.0.1:5173/src/game/unitMovement.js:368",
+      281.473
+    ],
+    [
+      "hasFriendlyUnitOnTile http://127.0.0.1:5173/src/game/movementCore.js:204",
+      218.78600000000012
+    ],
+    [
+      "observeUnitCommandSignals http://127.0.0.1:5173/src/game/unitCommandHistory.js:123",
+      190.37499999999997
+    ],
+    [
+      "(anonymous) http://127.0.0.1:5173/src/performanceUtils.js:14",
+      186.78300000000002
+    ],
+    [
+      "(garbage collector) :0",
+      183.28099999999998
+    ],
+    [
+      "applyVisibility http://127.0.0.1:5173/src/game/shadowOfWar.js:190",
+      143.28300000000004
+    ],
+    [
+      "isPositionBlockedForCollision http://127.0.0.1:5173/src/game/movementCollision.js:211",
+      133.23399999999992
+    ],
+    [
+      "hasClearShot http://127.0.0.1:5173/src/logic.js:606",
+      108.22699999999993
+    ],
+    [
+      "ensureLineOfSight http://127.0.0.1:5173/src/game/unitCombat/combatHelpers.js:315",
+      99.92300000000002
+    ],
+    [
+      "getMineAtTile http://127.0.0.1:5173/src/game/mineSystem.js:90",
+      95.12299999999995
+    ],
+    [
+      "findPath http://127.0.0.1:5173/src/units.js:312",
+      93.41999999999997
+    ],
+    [
+      "checkUnitCollision http://127.0.0.1:5173/src/game/movementCollision.js:459",
+      92.254
+    ],
+    [
+      "step http://127.0.0.1:5173/src/benchmark/benchmarkRunner.js:412",
+      82.88000000000001
+    ],
+    [
+      "handleStuckUnit http://127.0.0.1:5173/src/game/movementStuck.js:148",
+      80.19899999999998
+    ],
+    [
+      "updateAIUnitInternal http://127.0.0.1:5173/src/ai/enemyUnitBehaviorCore.js:30",
+      75.52700000000003
+    ],
+    [
+      "(anonymous) http://127.0.0.1:5173/src/game/unitCombat.js:28",
+      74.89400000000002
+    ],
+    [
+      "rebuild http://127.0.0.1:5173/src/game/spatialQuadtree.js:242",
+      63.168
+    ],
+    [
+      "applySafeSeparation http://127.0.0.1:5173/src/game/movementCollision.js:294",
+      59.00600000000001
+    ],
+    [
+      "updateGame http://127.0.0.1:5173/src/updateGame.js:158",
+      53.76299999999999
+    ],
+    [
+      "isLineObstructedByBuilding http://127.0.0.1:5173/src/logic.js:555",
+      49.894000000000005
+    ],
+    [
+      "initializeUnitMovement http://127.0.0.1:5173/src/game/movementCore.js:250",
+      48.83200000000001
+    ],
+    [
+      "(anonymous) http://127.0.0.1:5173/src/game/pathfinding.js:72",
+      43.61400000000002
+    ],
+    [
+      "isTileOccupied http://127.0.0.1:5173/src/units.js:610",
+      38.25800000000001
+    ],
+    [
+      "insert http://127.0.0.1:5173/src/game/spatialQuadtree.js:129",
+      37.92700000000001
+    ],
+    [
+      "(anonymous) http://127.0.0.1:5173/src/game/commandQueue.js:10",
+      37.682
+    ],
+    [
+      "updateTankV3Combat http://127.0.0.1:5173/src/game/unitCombat/tankCombat.js:166",
+      33.83199999999999
+    ],
+    [
+      "resetVisibility http://127.0.0.1:5173/src/game/shadowOfWar.js:66",
+      33.726000000000006
+    ],
+    [
+      "save :0",
+      33.492
+    ],
+    [
+      "handleTankMovement http://127.0.0.1:5173/src/game/unitCombat/combatHelpers.js:255",
+      33.212999999999994
+    ],
+    [
+      "resolveUnitCollisions http://127.0.0.1:5173/src/units.js:1520",
+      32.567
+    ],
+    [
+      "buildAiReplayCommandSignature http://127.0.0.1:5173/src/ai/enemyUnitReplay.js:73",
+      32.452000000000005
+    ],
+    [
+      "isAirborneUnit http://127.0.0.1:5173/src/game/movementHelpers.js:46",
+      32.334
+    ],
+    [
+      "calculateCollisionAvoidance http://127.0.0.1:5173/src/game/movementCollision.js:1152",
+      31.201
+    ],
+    [
+      "findPositionWithClearShot http://127.0.0.1:5173/src/logic.js:664",
+      30.520000000000003
+    ],
+    [
+      "updateSmokeParticles http://127.0.0.1:5173/src/game/gameStateManager.js:405",
+      30.318999999999996
+    ],
+    [
+      "updateGuardBehavior http://127.0.0.1:5173/src/behaviours/guard.js:10",
+      29.96
+    ],
+    [
+      "updateTankV2Combat http://127.0.0.1:5173/src/game/unitCombat/tankCombat.js:50",
+      29.576999999999998
+    ],
+    [
+      "_insertIntoChildren http://127.0.0.1:5173/src/game/spatialQuadtree.js:106",
+      29.194000000000003
+    ],
+    [
+      "createReplayEntityReference http://127.0.0.1:5173/src/replayCommandPrimitives.js:38",
+      29.136000000000003
+    ]
+  ],
+  "errors": []
+}

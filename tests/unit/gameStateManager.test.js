@@ -124,9 +124,9 @@ describe('gameStateManager', () => {
       expect(gameState.scrollOffset).toEqual({ x: 10, y: 10 })
     })
 
-    it('applies keyboard scroll velocity and clamps to map bounds', () => {
+    it('starts keyboard scrolling below maximum speed', () => {
       const gameState = {
-        scrollOffset: { x: 200, y: 150 },
+        scrollOffset: { x: 150, y: 150 },
         dragVelocity: { x: 0, y: 0 },
         keyScroll: { left: true, right: false, up: false, down: false },
         smoothScroll: null,
@@ -136,8 +136,48 @@ describe('gameStateManager', () => {
 
       updateMapScrolling(gameState, mapGrid)
 
-      expect(gameState.dragVelocity.x).toBe(KEYBOARD_SCROLL_SPEED)
-      expect(gameState.scrollOffset.x).toBe(200 - KEYBOARD_SCROLL_SPEED)
+      expect(gameState.dragVelocity.x).toBeGreaterThan(0)
+      expect(gameState.dragVelocity.x).toBeLessThan(KEYBOARD_SCROLL_SPEED)
+      expect(gameState.scrollOffset.x).toBeLessThan(150)
+      expect(gameState.scrollOffset.x).toBeGreaterThan(150 - KEYBOARD_SCROLL_SPEED)
+    })
+
+    it('brakes a released axis independently and retains the velocity object', () => {
+      const velocity = { x: 0, y: 0 }
+      const state = {
+        scrollOffset: { x: 500, y: 500 }, dragVelocity: velocity,
+        keyScroll: { left: false, right: true, up: false, down: true },
+        smoothScroll: null, isRightDragging: false
+      }
+      const grid = Array.from({ length: 100 }, () => Array(100).fill(null))
+      for (let frame = 0; frame < 60; frame++) updateMapScrolling(state, grid)
+      expect(velocity).toEqual({ x: -KEYBOARD_SCROLL_SPEED, y: -KEYBOARD_SCROLL_SPEED })
+      state.keyScroll.right = false
+      const releaseX = state.scrollOffset.x
+      for (let frame = 0; frame < 9; frame++) updateMapScrolling(state, grid)
+      expect(velocity.x).toBe(0)
+      expect(velocity.y).toBe(-KEYBOARD_SCROLL_SPEED)
+      expect(state.scrollOffset.x - releaseX).toBeLessThan(40)
+      expect(state.dragVelocity).toBe(velocity)
+      state.keyScroll.up = true
+      for (let frame = 0; frame < 9; frame++) updateMapScrolling(state, grid)
+      expect(velocity.y).toBe(0)
+    })
+
+    it('clears outward keyboard momentum at map bounds and reverses away immediately', () => {
+      const state = {
+        scrollOffset: { x: 0, y: 0 }, dragVelocity: { x: 0, y: 0 },
+        keyScroll: { left: true, right: false, up: false, down: false },
+        smoothScroll: null, isRightDragging: false
+      }
+      const grid = Array.from({ length: 100 }, () => Array(100).fill(null))
+      for (let frame = 0; frame < 60; frame++) updateMapScrolling(state, grid)
+      expect(state.scrollOffset.x).toBe(0)
+      expect(state.dragVelocity.x).toBe(0)
+      state.keyScroll.left = false
+      state.keyScroll.right = true
+      updateMapScrolling(state, grid)
+      expect(state.scrollOffset.x).toBeGreaterThan(0)
     })
 
     it('scrolls the map with the gamepad speed instead of the keyboard speed', () => {
