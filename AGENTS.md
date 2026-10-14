@@ -24,3 +24,9 @@ RULES for agentic codeing
 ## Git / Workflow
 
 Never merge `main` into a feature branch, and never create merge commits. Update a feature branch with `git fetch && git rebase origin/main`, then push with `git push --force-with-lease`. Merge pull requests without merge commits (squash or rebase).
+
+## Versioned release notes
+
+With every feature update, add a very brief, single-line, user-facing description to a versioned JSON file in `features/` (for example `features/0.47.0.json`). Each file must contain its numeric `major.minor.patch` `version` and three separate arrays: `features`, `improvements`, and `bugfixes`. Record bugfixes and improvements in their respective arrays with equally brief descriptions. Keep earlier release files unchanged; append entries to the unreleased version only. Bump `package.json` and the lockfile root version for a new release and run `node scripts/generate-version.js` so `APP_VERSION` matches. Do not assign new notes to an already shipped version: version diffs include entries strictly newer than the last successfully loaded version and no newer than the current version.
+
+The app bundles these files for offline access and uses the same release-digest component in the loading screen and User Manual. Loading prioritizes features, displays only improvement/bugfix counts when features exist, and falls back to improvement/bugfix descriptions when there are no new features. Descriptions must fit a short loading-screen line. These release notes are required in addition to `docs/changes/`, specs, and prompt history.

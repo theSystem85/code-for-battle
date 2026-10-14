@@ -1,3 +1,4 @@
+import { completeBoot, createReleaseDigest, getBootReleaseDigest, getHighlightIndex, getLoadingHighlights, LAST_DURATION_KEY, readBootStorage } from './releaseDigest.js'
 import { APP_VERSION } from '../version.js'
 import { getBootProgress } from './bootProgress.js'
 
@@ -7,6 +8,18 @@ const state = {
   kicker: 'Patrick Beyer Software',
   detail: 'Establishing uplink',
   progress: 0.04
+}
+
+let bootStartedAt = performance.now()
+let bootDigest = getBootReleaseDigest()
+let digestComponent = null
+let bootCompleted = false
+let digestTimer = null
+const estimatedBootDuration = Math.max(1, Number(readBootStorage(LAST_DURATION_KEY)) || 10000)
+
+function paintDigest() {
+  if (!digestComponent || !bootDigest) return
+  digestComponent.update(getHighlightIndex(performance.now() - bootStartedAt, estimatedBootDuration, getLoadingHighlights(bootDigest).length))
 }
 
 let activeSession = 0
@@ -78,7 +91,15 @@ function render() {
 
   if (kicker) kicker.textContent = state.kicker || 'Patrick Beyer Software'
   if (detail) detail.textContent = state.detail || 'Preparing the battlefield'
-  if (version) version.textContent = `v${APP_VERSION}`
+  if (version) version.textContent = bootDigest && !bootCompleted ? `Loading update v${bootDigest.fromVersion} → v${APP_VERSION}` : `v${APP_VERSION}`
+  if (bootDigest && !bootCompleted && state.visible) {
+    if (!digestComponent || !root.contains(digestComponent.root)) {
+      digestComponent = createReleaseDigest(bootDigest, { compact: true })
+      root.querySelector('.loading-screen__panel').appendChild(digestComponent.root)
+    }
+    paintDigest()
+    if (!digestTimer && state.visible) digestTimer = setInterval(paintDigest, 100)
+  }
 
   const progress = clampProgress(state.progress)
   const indeterminate = progress == null
@@ -113,6 +134,12 @@ export function getLoadingScreenState() {
 }
 
 export function showLoadingScreen(options = {}) {
+  if (!bootCompleted && options.phase === 'update-check') {
+    bootStartedAt = performance.now()
+    bootDigest = getBootReleaseDigest()
+  }
+  // Preflight may discover the predecessor after the first render.
+  if (!bootCompleted) bootDigest = getBootReleaseDigest()
   activeSession += 1
   state.visible = true
   state.phase = options.phase || 'loading'
@@ -134,6 +161,14 @@ export function updateLoadingScreen(patch = {}, sessionId = null) {
 
 export function hideLoadingScreen(sessionId = null) {
   if (sessionId != null && sessionId !== activeSession) return
+  if (state.visible && !bootCompleted && state.phase === 'ready') {
+    completeBoot(performance.now() - bootStartedAt, bootDigest)
+    bootCompleted = true
+  }
+  if (digestTimer) clearInterval(digestTimer)
+  digestTimer = null
+  digestComponent?.root.remove()
+  digestComponent = null
   state.visible = false
   render()
 }

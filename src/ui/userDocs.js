@@ -1,3 +1,5 @@
+import { createReleaseDigest, getManualReleaseDigest } from './releaseDigest.js'
+
 const DOCS_URL = '/docs/user-documentation.html'
 
 function closeDocsModal(modal) {
@@ -9,6 +11,15 @@ function closeDocsModal(modal) {
 function openDocsModal(modal, iframe) {
   if (!modal) return
   if (iframe && iframe.dataset.loaded !== 'true') {
+    iframe.addEventListener('load', () => {
+      const doc = iframe.contentDocument
+      if (!doc?.body || doc.getElementById('userManualReleaseDigest')) return
+      const component = createReleaseDigest(getManualReleaseDigest())
+      component.root.id = 'userManualReleaseDigest'
+      component.root.classList.add('wrap')
+      const target = doc.querySelector('.wrap') || doc.body
+      target.appendChild(doc.adoptNode(component.root))
+    })
     iframe.src = DOCS_URL
     iframe.dataset.loaded = 'true'
   }

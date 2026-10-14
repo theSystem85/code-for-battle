@@ -77,8 +77,8 @@ describe('Browser smoke test', () => {
     vi.stubGlobal('fetch', createFetchMock())
 
     try {
-      await import('../../src/main.js')
-      document.dispatchEvent(new window.Event('DOMContentLoaded'))
+      const { initializeApp } = await import('../../src/main.js')
+      await initializeApp()
 
       await waitFor(
         () => Boolean(window.gameInstance),
