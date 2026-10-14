@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "9a76b8cb98266d61",
+  "assetVersion": "d421ff9671ca7606",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "densities": [
@@ -12,7 +12,7 @@
     "entryCount": 300,
     "sourceCount": 58,
     "generatedVariantCount": 900,
-    "decodedVariantBytes": 38630816
+    "decodedVariantBytes": 38649120
   },
   "entries": [
     {
@@ -17607,22 +17607,22 @@
       "id": "unit:tankV2:wagon",
       "category": "unit",
       "source": "/images/map/units/tankV2_wagon.webp",
-      "sourceWidth": 99,
+      "sourceWidth": 129,
       "sourceHeight": 189,
-      "logicalWidth": 16.76190476190476,
+      "logicalWidth": 21.841269841269842,
       "logicalHeight": 32,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 8.38095238095238,
+          "x": 10.920634920634921,
           "y": 16
         },
         "turretMount": {
-          "x": 8.465608465608463,
+          "x": 11.005291005291005,
           "y": 15.746031746031745,
-          "sourceX": 50,
+          "sourceX": 65,
           "sourceY": 93
         }
       },
@@ -17633,23 +17633,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/tankV2/wagon@1x.webp",
-          "backingWidth": 17,
+          "backingWidth": 22,
           "backingHeight": 32,
-          "decodedBytes": 2176
+          "decodedBytes": 2816
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/tankV2/wagon@2x.webp",
-          "backingWidth": 34,
+          "backingWidth": 44,
           "backingHeight": 64,
-          "decodedBytes": 8704
+          "decodedBytes": 11264
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/tankV2/wagon@3x.webp",
-          "backingWidth": 50,
+          "backingWidth": 66,
           "backingHeight": 96,
-          "decodedBytes": 19200
+          "decodedBytes": 25344
         }
       ]
     },
@@ -17758,22 +17758,22 @@
       "id": "unit:tankV3:wagon",
       "category": "unit",
       "source": "/images/map/units/tankV3_wagon.webp",
-      "sourceWidth": 100,
+      "sourceWidth": 130,
       "sourceHeight": 189,
-      "logicalWidth": 16.93121693121693,
+      "logicalWidth": 22.01058201058201,
       "logicalHeight": 32,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 8.465608465608465,
+          "x": 11.005291005291005,
           "y": 16
         },
         "turretMount": {
-          "x": 8.465608465608465,
+          "x": 11.005291005291005,
           "y": 15.746031746031745,
-          "sourceX": 50,
+          "sourceX": 65,
           "sourceY": 93
         }
       },
@@ -17784,23 +17784,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/tankV3/wagon@1x.webp",
-          "backingWidth": 17,
+          "backingWidth": 22,
           "backingHeight": 32,
-          "decodedBytes": 2176
+          "decodedBytes": 2816
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/tankV3/wagon@2x.webp",
-          "backingWidth": 34,
+          "backingWidth": 44,
           "backingHeight": 64,
-          "decodedBytes": 8704
+          "decodedBytes": 11264
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/tankV3/wagon@3x.webp",
-          "backingWidth": 51,
+          "backingWidth": 66,
           "backingHeight": 96,
-          "decodedBytes": 19584
+          "decodedBytes": 25344
         }
       ]
     }

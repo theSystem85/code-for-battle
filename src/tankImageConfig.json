@@ -23,7 +23,7 @@
     },
     "tankV2": {
       "turretMountPoint": {
-        "x": 50,
+        "x": 65,
         "y": 93,
         "comment": "Turret mount point on wagon (pixels from top-left)"
       },
@@ -44,7 +44,7 @@
     },
     "tankV3": {
       "turretMountPoint": {
-        "x": 50,
+        "x": 65,
         "y": 93,
         "comment": "Turret mount point on wagon (pixels from top-left)"
       },
