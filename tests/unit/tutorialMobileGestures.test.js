@@ -24,6 +24,7 @@ describe('mobile sidebar tutorial guidance', () => {
       settings: { showTutorial: true },
       progress: { completed: false },
       position: {},
+      syncVisibility: vi.fn(),
       toggleMinimize: vi.fn(),
       toggleVoice: vi.fn(),
       goToPreviousStep: vi.fn(),

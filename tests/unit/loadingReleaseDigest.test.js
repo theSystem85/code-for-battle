@@ -1,6 +1,22 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { APP_VERSION } from '../../src/version.js'
 
+// Keep loading-screen behavior independent of the growing shipped release catalog.
+// Release selection and version filtering have their own releaseDigest unit tests.
+vi.mock('../../src/ui/releaseDigest.js', async importOriginal => {
+  const actual = await importOriginal()
+  const { APP_VERSION: version } = await import('../../src/version.js')
+  return {
+    ...actual,
+    getBootReleaseDigest: () => ({
+      fromVersion: '0.46.0', toVersion: version,
+      features: ['See what is new in this update.'],
+      improvements: ['Update highlights follow loading time.'],
+      bugfixes: ['A sample fix.']
+    })
+  }
+})
+
 beforeEach(() => {
   vi.resetModules()
   localStorage.clear()
@@ -18,7 +34,7 @@ describe('loading screen release integration', () => {
     const session = screen.showLoadingScreen({ phase: 'boot', progress: 0.1 })
     expect(document.getElementById('loadingScreenVersion').textContent).toBe(`Loading update v0.46.0 → v${APP_VERSION}`)
     const notes = document.querySelector('.release-digest')
-    expect(notes.textContent).toContain('1 new features · 1 improvements · 2 bugfixes')
+    expect(notes.textContent).toContain('1 new features · 1 improvements · 1 bugfixes')
     expect(notes.textContent).toContain('See what is new')
     expect(notes.textContent).not.toContain('Update highlights follow')
     now = 4100
