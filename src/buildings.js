@@ -482,6 +482,10 @@ export function updatePowerSupply(buildings, gameState) {
   const prevPlayerPower = gameState.playerPowerSupply || 0
   const prevEnemyPower = gameState.enemyPowerSupply || 0
 
+  // Reuse the owner lookup; power updates run on building lifecycle changes.
+  const powerSupplyByOwner = gameState.powerSupplyByOwner ||= Object.create(null)
+  for (const owner in powerSupplyByOwner) powerSupplyByOwner[owner] = 0
+
   // Player power calculation
   let playerTotalPower = 0
   let playerTotalProduction = 0
@@ -500,6 +504,9 @@ export function updatePowerSupply(buildings, gameState) {
     gameState.factories.forEach(factory => {
       if (factory.health > 0) {
         const factoryPower = buildingData.constructionYard.power // Use the building data value (+50)
+        if (factory.owner) {
+          powerSupplyByOwner[factory.owner] = (powerSupplyByOwner[factory.owner] || 0) + factoryPower
+        }
         if (factory.owner === gameState.humanPlayer) {
           playerTotalPower += factoryPower
           playerTotalProduction += factoryPower
@@ -516,6 +523,7 @@ export function updatePowerSupply(buildings, gameState) {
     if (!building.owner) return
 
     const buildingPower = Number.isFinite(building.power) ? building.power : 0
+    powerSupplyByOwner[building.owner] = (powerSupplyByOwner[building.owner] || 0) + buildingPower
 
     if (building.owner === gameState.humanPlayer) {
       playerTotalPower += buildingPower
