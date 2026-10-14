@@ -19,3 +19,9 @@ Background tracks in `public/sound/music/`:
 | `music_defeat_sad.mp3` | Generated with ElevenLabs Music v2.5 | Near defeat |
 
 The three situational tracks were generated on the owner's ElevenLabs Starter plan, which includes a commercial music license. Every ElevenLabs track carries the MP3 comment tag "Generated with ElevenLabs Music v2.5". All tracks are instrumental, 160 kbps / 48 kHz and loudness-matched to about -12 LUFS.
+
+## App icons
+
+- Files: `public/apple-touch-icon.png`, `public/android-chrome-192x192.png`, `public/favicon-256x256.png`, `public/favicon-512x512.png`.
+- Source: AI-generated on 2026-10-15 with the OpenAI image generation tool through the Codex CLI (ChatGPT account of the project owner), in one generation from the prompt in `docs/asset-sources/app-icon-square-prompt.txt`. The native square source (1254×1254) is stored in `docs/asset-sources/app-icon-square-source.webp`.
+- Post-processing: downscaling to each icon size by the project. The 16/32/48 favicons and `favicon.ico` keep the isolated front tank from the earlier icon set.
