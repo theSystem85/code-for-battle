@@ -1,3 +1,4 @@
+import { MUSIC_TRACKS, resetMusicDirector } from './audio/musicDirector.js'
 // sound.js
 import { MASTER_VOLUME } from './config.js'
 import { videoOverlay } from './ui/videoOverlay.js'
@@ -476,6 +477,64 @@ let currentBackgroundMusicFile = null
 let nextBackgroundMusicFile = null
 const backgroundMusicLoadPromises = new Map()
 
+let musicEnabled = false
+let musicPaused = false
+let directedState = 'normal'
+let musicRequest = 0
+let fadingAudio = null
+let fadeTimer = null
+let fadeProgress = 1
+let playlistFadePending = false
+
+function stopMusicFade() {
+  clearInterval(fadeTimer)
+  fadeTimer = null
+  if (fadingAudio) fadingAudio.pause()
+  fadingAudio = null
+  fadeProgress = 1
+}
+
+function applyMusicVolumes() {
+  if (bgMusicAudio) bgMusicAudio.volume = masterVolume * fadeProgress
+  if (fadingAudio) fadingAudio.volume = masterVolume * (1 - fadeProgress)
+}
+
+export async function updateDirectedMusic(state, advancePlaylist = false) {
+  if (suppressAudioForAutomation || !musicEnabled || musicPaused || !bgMusicAudio || (state === directedState && !advancePlaylist)) return
+  const request = ++musicRequest
+  const file = MUSIC_TRACKS[state] || pickBackgroundMusicFile(backgroundMusicFiles, currentBackgroundMusicFile)
+  try {
+    const element = await loadBackgroundMusicElement(file)
+    if (request !== musicRequest || !musicEnabled || musicPaused) return
+    stopMusicFade()
+    const previous = bgMusicAudio
+    element.currentTime = 0
+    element.loop = state !== 'normal'
+    element.volume = 0
+    await element.play()
+    if (request !== musicRequest || !musicEnabled || musicPaused) {
+      element.pause()
+      return
+    }
+    fadingAudio = previous
+    bgMusicAudio = element
+    currentBackgroundMusicFile = file
+    directedState = state
+    fadeProgress = 0
+    applyMusicVolumes()
+    // Audio-only wall-clock ramp; selection and hysteresis use simulation time.
+    fadeTimer = setInterval(() => {
+      if (musicPaused || !musicEnabled) return
+      fadeProgress = Math.min(1, fadeProgress + 50 / 3500)
+      applyMusicVolumes()
+      if (fadeProgress >= 1) stopMusicFade()
+    }, 50)
+    if (state === 'normal') preloadNextBackgroundMusic()
+  } catch (error) {
+    window.logger.warn('Situational music unavailable:', error)
+  }
+}
+
 // Pick a random track, avoiding an immediate repeat when more than one exists.
 // Music is local presentation only, so it uses Math.random and never advances
 // the lockstep game PRNG (track changes happen at different times per peer).
@@ -517,6 +576,14 @@ function loadBackgroundMusicElement(file) {
     element.load() // Only load once here
   }).then(() => {
     element.addEventListener('ended', handleBackgroundMusicEnded)
+    element.addEventListener('timeupdate', () => {
+      if (element !== bgMusicAudio || directedState !== 'normal' || element.loop ||
+          !musicEnabled || musicPaused || fadeTimer || playlistFadePending ||
+          !Number.isFinite(element.duration) || element.duration - element.currentTime > 3.5 ||
+          element.duration <= element.currentTime) return
+      playlistFadePending = true
+      updateDirectedMusic('normal', true).finally(() => { playlistFadePending = false })
+    })
     soundElementCache.set(musicPath, element)
     window.logger(`Background music ${file} loaded and cached`)
     return element
@@ -539,7 +606,7 @@ function preloadNextBackgroundMusic() {
 
 async function handleBackgroundMusicEnded(event) {
   const endedElement = event?.target
-  if (suppressAudioForAutomation || !endedElement || endedElement !== bgMusicAudio) return
+  if (suppressAudioForAutomation || !musicEnabled || musicPaused || directedState !== 'normal' || !endedElement || endedElement !== bgMusicAudio) return
 
   const file = nextBackgroundMusicFile || pickBackgroundMusicFile(backgroundMusicFiles, currentBackgroundMusicFile)
   let element = endedElement
@@ -553,7 +620,7 @@ async function handleBackgroundMusicEnded(event) {
   }
 
   // Music was reset or replaced while the next track loaded
-  if (bgMusicAudio !== endedElement) return
+  if (bgMusicAudio !== endedElement || !musicEnabled || musicPaused) return
 
   if (element !== endedElement && !endedElement.paused) {
     endedElement.pause()
@@ -613,14 +680,21 @@ export async function toggleBackgroundMusic() {
   }
 
   if (bgMusicAudio) {
-    if (bgMusicAudio.paused) {
+    if (!musicEnabled) {
+      musicEnabled = true
       try {
-        await bgMusicAudio.play()
+        if (!musicPaused) {
+          await bgMusicAudio.play()
+          if (fadingAudio) await fadingAudio.play()
+        }
         window.logger('Background music resumed from cache')
       } catch (e) {
         console.error('Error resuming background music:', e)
       }
     } else {
+      musicEnabled = false
+      musicRequest++
+      if (fadingAudio) fadingAudio.pause()
       bgMusicAudio.pause()
       window.logger('Background music paused')
     }
@@ -630,6 +704,14 @@ export async function toggleBackgroundMusic() {
 // --- Game Pause/Resume Helpers ---
 // Immediately stop all active audio sources from the current session.
 export function terminateAllSounds() {
+  musicEnabled = false
+  musicRequest++
+  stopMusicFade()
+  directedState = 'normal'
+  resetMusicDirector()
+  backgroundMusicInitialized = false
+  bgMusicAudio?.pause()
+  if (bgMusicAudio) bgMusicAudio.currentTime = 0
   activeAudioElements.forEach(source => {
     if (!source) return
     try {
@@ -668,6 +750,9 @@ export function terminateAllSounds() {
 
 // Pause all currently playing audio including background music and looped sounds
 export function pauseAllSounds() {
+  musicPaused = true
+  musicRequest++
+  if (fadingAudio) fadingAudio.pause()
   if (bgMusicAudio && !bgMusicAudio.paused) {
     try {
       bgMusicAudio.pause()
@@ -685,9 +770,11 @@ export function pauseAllSounds() {
 
 // Resume playback after game unpause
 export function resumeAllSounds() {
+  musicPaused = false
+  if (musicEnabled && fadingAudio) fadingAudio.play().catch(() => {})
   if (suppressAudioForAutomation) return
 
-  if (bgMusicAudio && bgMusicAudio.paused) {
+  if (musicEnabled && bgMusicAudio && bgMusicAudio.paused) {
     bgMusicAudio.play().catch(e => {
       window.logger.warn('Error resuming background music:', e)
     })
@@ -709,7 +796,7 @@ export function setMasterVolume(volume) {
 
   // Update background music volume if it exists
   if (bgMusicAudio) {
-    bgMusicAudio.volume = masterVolume
+    applyMusicVolumes()
   }
 
   // Update video audio volume if video overlay is available
@@ -758,6 +845,12 @@ export function getSoundCacheStatus() {
 
 // Clear cache (for testing/debugging)
 export function clearSoundCache() {
+  musicEnabled = false
+  musicPaused = false
+  musicRequest++
+  stopMusicFade()
+  directedState = 'normal'
+  resetMusicDirector()
   window.logger(`Clearing sound cache (${audioBufferCache.size} buffers, ${soundElementCache.size} elements)...`)
   audioBufferCache.clear()
   soundElementCache.clear()

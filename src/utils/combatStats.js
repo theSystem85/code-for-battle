@@ -1,3 +1,6 @@
+import { recordMusicDamage } from '../audio/musicDirector.js'
+import { gameState } from '../gameState.js'
+import { TILE_SIZE } from '../config.js'
 import { buildingData } from '../data/buildingData.js'
 import { getUnitCost } from '../utils.js'
 
@@ -23,6 +26,7 @@ export function recordDamageValue(shooter, target, healthDamage) {
   if (shooter.owner === target.owner) return
   const damage = Math.max(0, healthDamage || 0)
   if (damage <= 0) return
+  recordMusicDamage(shooter, target, damage, gameState, TILE_SIZE)
   const maxHealth = getTargetMaxHealth(target)
   const targetCost = getTargetCost(target)
   if (!targetCost) return

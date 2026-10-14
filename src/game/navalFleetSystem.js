@@ -1,3 +1,4 @@
+import { recordMusicAttack } from '../audio/musicDirector.js'
 import {
   BATTLESHIP_FIRE_RANGE,
   SUBMARINE_DETECTION_RADIUS,
@@ -1295,6 +1296,7 @@ function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, no
   const lateral = barrelIndex === 0 ? -4 : 4
   const muzzleX = solution.spawn.x + Math.cos(turret.direction + Math.PI / 2) * lateral + Math.cos(turret.direction) * TILE_SIZE * 0.72
   const muzzleY = solution.spawn.y + Math.sin(turret.direction + Math.PI / 2) * lateral + Math.sin(turret.direction) * TILE_SIZE * 0.72
+  recordMusicAttack(ship, target, gameState)
   bullets.push({
     id: `${ship.id}-${turretName}-${barrelIndex}-${now}`,
     x: muzzleX,
@@ -1495,6 +1497,7 @@ function updateSubmarine(submarine, units, bullets, now) {
   const distance = Math.hypot(destination.x - start.x, destination.y - start.y)
   if (distance > SUBMARINE_TORPEDO_RANGE || now - (submarine.lastTorpedoTime || 0) < SUBMARINE_TORPEDO_COOLDOWN || submarine.ammunition <= 0) return
   const angle = Math.atan2(destination.y - start.y, destination.x - start.x)
+  recordMusicAttack(submarine, target, gameState)
   bullets.push({
     id: `${submarine.id}-torpedo-${now}`,
     x: start.x,
