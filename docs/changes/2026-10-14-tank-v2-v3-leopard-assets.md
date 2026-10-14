@@ -10,3 +10,9 @@
   - `muzzleFlashOffset` 2,64 -> 5,115 (muzzle at the barrel tip)
 - `scripts/build-prepared-sprites.mjs` now reads the tank anchors from `src/tankImageConfig.json` per variant instead of hard-coding the V1 values; prepared sprites were rebuilt with `npm run make:prepared-sprites`.
 - Tank V1 is unchanged.
+
+## Follow-up 2026-10-15: wider hulls
+
+- Horizontally stretched `tankV2_wagon.webp` (99→129 px) and `tankV3_wagon.webp` (100→130 px) by 1.30× (premultiplied-alpha Lanczos, height 189 px unchanged, lossless WebP). No images were regenerated.
+- Turret mount x scaled to keep the turret centered: V2/V3 `turretMountPoint` 50,93 → 65,93. The turret (106 px) no longer covers most of the hull; the tracks are visible on both sides.
+- Rebuilt prepared sprites (`npm run make:prepared-sprites`). Render scale is driven by the wagon's max dimension (height), so in-game turret/barrel size is unchanged.
