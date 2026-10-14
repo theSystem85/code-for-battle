@@ -12,7 +12,7 @@ Additional coverage: rocket hull/air/building alignment in `tests/unit/combatHel
 
 Hot-path audit: aiming checks run at most a few times per active shooter per update, approximately 30,000 checks/sec for 200 firing units at 75 updates/sec. The hull branch reuses existing angle calculations and adds an altitude subtraction; no new scans, helper objects or allocations. CPU work is independent of DPR (multiplier 1); rendering is unchanged.
 
-- [ ] Human Chromium validation: `npm run test:e2e:regressions`.
+- [x] Chromium validation: `npm run test:e2e:regressions` passes (see `2026-10-14-four-regressions-chromium-validation.md`).
 - [ ] Qualifying-hardware before/after 75 FPS acceptance under `performance_improvement.md`; browsers and hardware benchmarking are prohibited/unavailable here. No performance certification is claimed.
 
 Round 2 validation is recorded in `2026-10-14-vitest-playwright-runner-separation.md`.

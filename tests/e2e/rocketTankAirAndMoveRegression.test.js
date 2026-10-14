@@ -26,7 +26,7 @@ test('rocket tank hits an airborne Apache and fires no rockets after an ordinary
     return { damaged: r.apache.health < 10000, airborne: r.apache.flightState !== 'grounded',
       health: r.apache.health, altitude: r.apache.altitude, ammo: r.rocket.ammunition,
       target: r.rocket.target?.id, heading: r.rocket.direction, turret: r.rocket.turretDirection,
-      burst: r.rocket.burstState, apacheTarget: r.apache.target?.id }
+      burstActive: Boolean(r.rocket.burstState), apacheTarget: r.apache.target?.id }
   }, { damaged: true, airborne: true })
   await page.evaluate(() => {
     const r = window.__regression
@@ -41,9 +41,9 @@ test('rocket tank hits an airborne Apache and fires no rockets after an ordinary
     const r = window.__regression
     return { target: r.rocket.target?.id || null, ammo: r.rocket.ammunition,
       initialAmmo: r.moveAmmo, lastShot: r.rocket.lastShotTime ?? null,
-      initialShot: r.moveShotTime ?? null, moved: r.rocket.y > r.startY, burst: r.rocket.burstState ?? null }
+      initialShot: r.moveShotTime ?? null, moved: r.rocket.y > r.startY, burstActive: Boolean(r.rocket.burstState) }
   })
   expect(state, `After ordinary move: ${JSON.stringify(state)}`).toMatchObject({
-    target: null, ammo: state.initialAmmo, lastShot: state.initialShot, moved: true, burst: null
+    target: null, ammo: state.initialAmmo, lastShot: state.initialShot, moved: true, burstActive: false
   })
 })

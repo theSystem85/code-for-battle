@@ -12,7 +12,7 @@ Additional coverage: `tests/unit/regressionRuntime.test.js` runs actual Apache m
 
 Hot-path audit: countdown arithmetic occurs only for nearby landing/landed aircraft in the existing pad/unit traversal. At 75 updates/sec and 200 aircraft, at most 15,000 checks/sec per pad; changing the sentinel and center arithmetic adds no scans or allocations. DPR has no effect on this CPU work (multiplier 1); rendering is unchanged.
 
-- [ ] Human Chromium validation: `npm run test:e2e:regressions`.
+- [x] Chromium validation: `npm run test:e2e:regressions` passes (see `2026-10-14-four-regressions-chromium-validation.md`).
 - [ ] Qualifying-hardware before/after 75 FPS acceptance under `performance_improvement.md`; browsers and hardware benchmarking are prohibited/unavailable here. No performance certification is claimed.
 
 Round 2 validation is recorded in `2026-10-14-vitest-playwright-runner-separation.md`.
