@@ -23,18 +23,18 @@
     },
     "tankV2": {
       "turretMountPoint": {
-        "x": 19,
-        "y": 32,
+        "x": 50,
+        "y": 93,
         "comment": "Turret mount point on wagon (pixels from top-left)"
       },
       "barrelMountPoint": {
-        "x": 17,
-        "y": 35,
+        "x": 53,
+        "y": 184,
         "comment": "Gun barrel mount point on turret (pixels from top-left)"
       },
       "muzzleFlashOffset": {
-        "x": 2,
-        "y": 64,
+        "x": 5,
+        "y": 115,
         "comment": "Muzzle flash position relative to gun barrel (pixels from top-left)"
       },
       "recoilRotationOffset": {
@@ -44,18 +44,18 @@
     },
     "tankV3": {
       "turretMountPoint": {
-        "x": 19,
-        "y": 32,
+        "x": 50,
+        "y": 93,
         "comment": "Turret mount point on wagon (pixels from top-left)"
       },
       "barrelMountPoint": {
-        "x": 17,
-        "y": 35,
+        "x": 53,
+        "y": 184,
         "comment": "Gun barrel mount point on turret (pixels from top-left)"
       },
       "muzzleFlashOffset": {
-        "x": 2,
-        "y": 64,
+        "x": 5,
+        "y": 115,
         "comment": "Muzzle flash position relative to gun barrel (pixels from top-left)"
       },
       "recoilRotationOffset": {

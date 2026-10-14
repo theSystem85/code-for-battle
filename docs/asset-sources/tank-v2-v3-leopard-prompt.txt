@@ -1,0 +1,13 @@
+Use your image generation tool to create exactly ONE image (do not retry, do not generate variations), then save it as sheet.png in the current directory and reply with its path. Do not modify anything else.
+
+Image to generate (landscape 3:2, high resolution):
+A game sprite sheet of a modern German main battle tank in the style of a Leopard 2A7, seen strictly from directly above (orthographic top-down, 90 degree overhead view, no perspective, no tilt), photorealistic military-model rendering with soft even studio lighting from above and no cast shadows.
+The tank is split into separate disassembled parts. Background: one perfectly flat, uniform solid pure blue (#0000FF), no gradients, no texture, no shadows, no ground, no text, no labels, no grid lines.
+Two rows, six parts total, each part widely separated from all others with lots of blue space between them; no part touches or overlaps another or the image border:
+ROW 1 (top) = variant A: desert sand / tan base coating (#C8A46A-like) with scattered irregular forest-green camouflage blotches on top.
+ROW 2 (bottom) = variant B: the same desert sand / tan base coating with scattered irregular dark red / crimson camouflage blotches on top.
+In each row, left to right:
+1) HULL ONLY (chassis with both tracks, no turret, no gun): elongated rectangle about 0.6 times as wide as it is long, its long axis vertical, FRONT OF THE HULL (sloped glacis and driver hatch) POINTING DOWN toward the bottom of the image, engine deck with grilles at the top. Tracks visible along the left and right sides. A circular turret ring opening is visible slightly above the hull center.
+2) TURRET ONLY (no gun barrel attached): Leopard 2A7 wedge-shaped turret, roughly as wide as long, front wedge armour pointing DOWN, commander and loader hatches, sights and a small stowage basket at the rear (top). A small round gun mantlet opening at the bottom-center of the front.
+3) GUN BARREL ONLY: a long, thin, straight 120 mm smoothbore barrel with thermal sleeve and a small fume extractor, lying perfectly vertical, muzzle pointing DOWN, about 12 times longer than wide, same length as the hull.
+All six parts at the same scale, cleanly cut-out edges, crisp silhouettes, consistent lighting, colors matching the row's camouflage.
