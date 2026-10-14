@@ -4,6 +4,26 @@ export const MUSIC_TRACKS = {
   underAttackOutnumbered: 'music_under_attack_danger.mp3',
   nearDefeat: 'music_defeat_sad.mp3'
 }
+// Fixed order for the manual "next song" button (independent of mood).
+export const MUSIC_SKIP_ORDER = [
+  'music01.mp3',
+  'music02.mp3',
+  MUSIC_TRACKS.firstAttack,
+  MUSIC_TRACKS.underAttackOutnumbered,
+  MUSIC_TRACKS.nearDefeat
+]
+// Display titles (from the MP3 title tags) for the custom music tooltip.
+export const MUSIC_TRACK_TITLES = {
+  'music01.mp3': 'Veil of Shadows (Remix)',
+  'music02.mp3': 'Battle Track 02',
+  [MUSIC_TRACKS.firstAttack]: 'First Strike (Attack Theme)',
+  [MUSIC_TRACKS.underAttackOutnumbered]: 'Outnumbered (Danger Theme)',
+  [MUSIC_TRACKS.nearDefeat]: 'Last Stand (Defeat Theme)'
+}
+export function getNextSkipTrack(currentFile, order = MUSIC_SKIP_ORDER) {
+  const index = order.indexOf(currentFile)
+  return order[(index + 1) % order.length]
+}
 const priority = { normal: 0, firstAttack: 1, underAttackOutnumbered: 2, nearDefeat: 3 }
 const combatTypes = new Set(['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f22Raptor', 'f35', 'destroyer', 'battleship', 'submarine', 'aircraftCarrier'])
 export const isMusicCombatUnit = unit => unit.health > 0 && combatTypes.has(unit.type)

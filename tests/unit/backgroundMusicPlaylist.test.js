@@ -137,10 +137,10 @@ describe('background music playlist', () => {
     await sound.updateDirectedMusic('underAttackOutnumbered')
     const danger = FakeAudio.instances.find(audio => audio.src === 'sound/music/music_under_attack_danger.mp3')
     const audible = () => FakeAudio.instances.filter(audio => !audio.paused)
-    // Halfway: only the outgoing track plays, at half volume; nothing overlaps.
+    // Halfway: only the outgoing track plays, on the fade curve; nothing overlaps.
     await vi.advanceTimersByTimeAsync(sound.MUSIC_FADE_OUT_MS / 2)
     expect(audible()).toEqual([normal])
-    expect(normal.volume).toBeCloseTo(0.3)
+    expect(normal.volume).toBeCloseTo(0.6 * sound.musicFadeGain(0.5), 2)
     expect(danger.paused).toBe(true)
     // Superseding requests during the fade only replace the successor.
     await sound.updateDirectedMusic('nearDefeat')

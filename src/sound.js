@@ -1,4 +1,4 @@
-import { MUSIC_TRACKS, resetMusicDirector } from './audio/musicDirector.js'
+import { MUSIC_TRACKS, MUSIC_SKIP_ORDER, MUSIC_TRACK_TITLES, getNextSkipTrack, resetMusicDirector } from './audio/musicDirector.js'
 // sound.js
 import { MASTER_VOLUME } from './config.js'
 import { videoOverlay } from './ui/videoOverlay.js'
@@ -484,9 +484,108 @@ let musicRequest = 0
 let fadingAudio = null
 let fadeTimer = null
 let fadeProgress = 1
+let fadeElapsed = 0
+let fadeLastTick = 0
 let playlistFadePending = false
 let pendingMusic = null
-export const MUSIC_FADE_OUT_MS = 3500
+// A manually skipped-to track plays once to its end (no loop), then the
+// director's current mood resumes; a mood change replaces it earlier.
+let manualTrack = false
+export const MUSIC_FADE_OUT_MS = 3000
+const FADE_TICK_MS = 40
+const musicTrackListeners = new Set()
+
+// Perceptually even fade-out curve. A linear amplitude ramp sounds almost
+// unchanged for most of its duration and then drops off at the very end;
+// ramping in decibels (to -30 dB) and tapering to true silence spreads the
+// audible change across the whole fade.
+export function musicFadeGain(progress) {
+  const t = Math.min(1, Math.max(0, progress))
+  if (t >= 1) return 0
+  return Math.pow(10, (-30 * t) / 20) * (1 - t * t * t)
+}
+
+// iOS/iPadOS Safari ignores HTMLMediaElement.volume (read-only), so a volume
+// ramp there is silent: the old track kept full volume and was then cut hard.
+// Route music through a Web Audio GainNode when available so fades and the
+// master volume work on every platform.
+const musicGainNodes = new WeakMap()
+function getMusicGain(element) {
+  if (!audioContext || !element || typeof audioContext.createMediaElementSource !== 'function') return null
+  let node = musicGainNodes.get(element)
+  if (node === undefined) {
+    try {
+      const source = audioContext.createMediaElementSource(element)
+      const gain = audioContext.createGain()
+      source.connect(gain)
+      gain.connect(audioContext.destination)
+      element.volume = 1
+      node = gain
+    } catch (error) {
+      window.logger.warn('Music gain routing unavailable, using element volume:', error)
+      node = null
+    }
+    musicGainNodes.set(element, node)
+  }
+  return node
+}
+
+function setMusicLevel(element, level) {
+  if (!element) return
+  const value = Math.max(0, Math.min(1, level * masterVolume))
+  const gain = getMusicGain(element)
+  if (gain) {
+    const now = audioContext.currentTime
+    gain.gain.cancelScheduledValues(now)
+    gain.gain.setTargetAtTime(value, now, 0.015)
+    element.volume = 1
+  } else {
+    element.volume = value
+  }
+}
+
+function resumeMusicContext() {
+  if (audioContext && audioContext.state === 'suspended' && !musicPaused) {
+    audioContext.resume().catch(() => {})
+  }
+}
+
+function notifyMusicTrack() {
+  musicTrackListeners.forEach(listener => {
+    try { listener() } catch (error) { window.logger.warn('Music track listener failed:', error) }
+  })
+}
+
+export function onMusicTrackChange(listener) {
+  musicTrackListeners.add(listener)
+  return () => musicTrackListeners.delete(listener)
+}
+
+export function isMusicEnabled() {
+  return musicEnabled
+}
+
+export function getMusicTrackTitle(file) {
+  return MUSIC_TRACK_TITLES[file] || (file ? file.replace(/\.mp3$/, '') : '')
+}
+
+export function getCurrentMusicTitle() {
+  return getMusicTrackTitle(currentBackgroundMusicFile || pickBackgroundMusicFile(backgroundMusicFiles, null))
+}
+
+// Text for the custom tooltip on the sidebar music buttons.
+export function getMusicTooltipText(kind = 'toggle') {
+  const playingFile = pendingMusic?.file || currentBackgroundMusicFile
+  if (kind === 'next') {
+    const next = getMusicTrackTitle(getNextSkipTrack(playingFile))
+    return musicEnabled && playingFile
+      ? `Now playing: ${getMusicTrackTitle(playingFile)} · Next: ${next}`
+      : `Play next song: ${next}`
+  }
+  return musicEnabled && playingFile
+    ? `Now playing: ${getMusicTrackTitle(playingFile)}`
+    : 'Music off'
+}
 
 function stopMusicFade() {
   clearInterval(fadeTimer)
@@ -500,7 +599,7 @@ function stopMusicFade() {
 function applyMusicVolumes() {
   // Only one music element is ever audible: the outgoing track while it fades
   // out, otherwise the current track at full (master) volume.
-  if (bgMusicAudio) bgMusicAudio.volume = masterVolume * (fadingAudio === bgMusicAudio ? fadeProgress : 1)
+  if (bgMusicAudio) setMusicLevel(bgMusicAudio, fadingAudio === bgMusicAudio ? fadeProgress : 1)
 }
 
 // Sequential transition: the outgoing track fades out completely and stops;
@@ -518,27 +617,50 @@ function finishMusicFade() {
     applyMusicVolumes()
     return
   }
-  const { element, file, state } = next
+  const { element, file, state, manual } = next
+  if (outgoing && outgoing !== element) setMusicLevel(outgoing, 1)
   element.currentTime = 0
-  element.loop = state !== 'normal'
+  manualTrack = Boolean(manual)
+  element.loop = !manualTrack && state !== 'normal'
   bgMusicAudio = element
   currentBackgroundMusicFile = file
   applyMusicVolumes()
+  resumeMusicContext()
   element.play().catch(error => window.logger.warn('Situational music unavailable:', error))
-  if (state === 'normal') preloadNextBackgroundMusic()
+  if (state === 'normal' && !manualTrack) preloadNextBackgroundMusic()
+  notifyMusicTrack()
+}
+
+function tickMusicFade() {
+  const now = Date.now()
+  const dt = Math.min(250, Math.max(0, now - fadeLastTick))
+  fadeLastTick = now
+  if (musicPaused || !musicEnabled) return
+  fadeElapsed += dt
+  fadeProgress = musicFadeGain(fadeElapsed / MUSIC_FADE_OUT_MS)
+  applyMusicVolumes()
+  if (fadeElapsed >= MUSIC_FADE_OUT_MS) finishMusicFade()
 }
 
 function startMusicFadeOut() {
   fadingAudio = bgMusicAudio
   fadeProgress = 1
+  fadeElapsed = 0
+  fadeLastTick = Date.now()
   applyMusicVolumes()
-  // Audio-only wall-clock ramp; selection and hysteresis use simulation time.
-  fadeTimer = setInterval(() => {
-    if (musicPaused || !musicEnabled) return
-    fadeProgress = Math.max(0, fadeProgress - 50 / MUSIC_FADE_OUT_MS)
-    applyMusicVolumes()
-    if (fadeProgress <= 0) finishMusicFade()
-  }, 50)
+  // Audio-only wall-clock ramp over the full MUSIC_FADE_OUT_MS; the clock
+  // freezes while the game is paused. Selection uses simulation time.
+  fadeTimer = setInterval(tickMusicFade, FADE_TICK_MS)
+}
+
+// Queue `file` as the next track: fade the audible one out first, or start
+// straight away when nothing is playing.
+function queueMusicTransition(element, file, state, manual) {
+  pendingMusic = { element, file, state, manual }
+  // A fade already in progress keeps going; only its successor is replaced.
+  if (fadeTimer) return
+  if (bgMusicAudio && !bgMusicAudio.paused) startMusicFadeOut()
+  else finishMusicFade()
 }
 
 export async function updateDirectedMusic(state, advancePlaylist = false) {
@@ -549,13 +671,36 @@ export async function updateDirectedMusic(state, advancePlaylist = false) {
     const element = await loadBackgroundMusicElement(file)
     if (request !== musicRequest || !musicEnabled || musicPaused) return
     directedState = state
-    pendingMusic = { element, file, state }
-    // A fade already in progress keeps going; only its successor is replaced.
-    if (!fadeTimer) startMusicFadeOut()
+    queueMusicTransition(element, file, state, false)
   } catch (error) {
     window.logger.warn('Situational music unavailable:', error)
   }
 }
+
+// Manual "next song": walks MUSIC_SKIP_ORDER deterministically, independent of
+// the game mood. Turns music on if it was off. Uses the same full fade-out.
+export async function skipToNextMusic() {
+  if (suppressAudioForAutomation) return null
+  if (!backgroundMusicInitialized && !backgroundMusicLoading) await initBackgroundMusic()
+  const file = getNextSkipTrack(pendingMusic?.file || currentBackgroundMusicFile)
+  if (!musicEnabled) {
+    musicEnabled = true
+    if (bgMusicAudio && !bgMusicAudio.paused) bgMusicAudio.pause()
+  }
+  resumeMusicContext()
+  const request = ++musicRequest
+  try {
+    const element = await loadBackgroundMusicElement(file)
+    if (request !== musicRequest || !musicEnabled || musicPaused) return file
+    queueMusicTransition(element, file, directedState, true)
+  } catch (error) {
+    window.logger.warn('Next music track unavailable:', error)
+  }
+  notifyMusicTrack()
+  return file
+}
+
+export { MUSIC_SKIP_ORDER }
 
 // Pick a random track, avoiding an immediate repeat when more than one exists.
 // Music is local presentation only, so it uses Math.random and never advances
@@ -599,12 +744,14 @@ function loadBackgroundMusicElement(file) {
   }).then(() => {
     element.addEventListener('ended', handleBackgroundMusicEnded)
     element.addEventListener('timeupdate', () => {
-      if (element !== bgMusicAudio || directedState !== 'normal' || element.loop ||
+      if (element !== bgMusicAudio || (directedState !== 'normal' && !manualTrack) || element.loop ||
           !musicEnabled || musicPaused || fadeTimer || playlistFadePending ||
-          !Number.isFinite(element.duration) || element.duration - element.currentTime > 3.5 ||
+          !Number.isFinite(element.duration) ||
+          element.duration - element.currentTime > MUSIC_FADE_OUT_MS / 1000 + 0.25 ||
           element.duration <= element.currentTime) return
+      // Start the fade early enough that it completes before the track ends.
       playlistFadePending = true
-      updateDirectedMusic('normal', true).finally(() => { playlistFadePending = false })
+      updateDirectedMusic(directedState, true).finally(() => { playlistFadePending = false })
     })
     soundElementCache.set(musicPath, element)
     window.logger(`Background music ${file} loaded and cached`)
@@ -632,6 +779,12 @@ async function handleBackgroundMusicEnded(event) {
     finishMusicFade()
     return
   }
+  if (endedElement && endedElement === bgMusicAudio && manualTrack && musicEnabled && !musicPaused) {
+    // Manual pick finished: hand control back to the director's current mood.
+    manualTrack = false
+    updateDirectedMusic(directedState, true)
+    return
+  }
   if (suppressAudioForAutomation || !musicEnabled || musicPaused || directedState !== 'normal' || !endedElement || endedElement !== bgMusicAudio) return
 
   const file = nextBackgroundMusicFile || pickBackgroundMusicFile(backgroundMusicFiles, currentBackgroundMusicFile)
@@ -652,10 +805,11 @@ async function handleBackgroundMusicEnded(event) {
     endedElement.pause()
   }
   element.currentTime = 0
-  element.volume = masterVolume
   bgMusicAudio = element
+  setMusicLevel(element, 1)
   if (element !== endedElement) currentBackgroundMusicFile = file
   preloadNextBackgroundMusic()
+  notifyMusicTrack()
 
   try {
     await element.play()
@@ -686,8 +840,8 @@ export async function initBackgroundMusic() {
   try {
     // Use the cached element directly (no cloning for background music)
     bgMusicAudio = await loadBackgroundMusicElement(file)
-    bgMusicAudio.volume = masterVolume // Ensure volume is correct
     currentBackgroundMusicFile = file
+    setMusicLevel(bgMusicAudio, 1) // Ensure volume is correct
     preloadNextBackgroundMusic()
   } catch (e) {
     console.error('Error loading background music:', e)
@@ -708,6 +862,7 @@ export async function toggleBackgroundMusic() {
   if (bgMusicAudio) {
     if (!musicEnabled) {
       musicEnabled = true
+      resumeMusicContext()
       try {
         if (!musicPaused) {
           await bgMusicAudio.play()
@@ -719,10 +874,12 @@ export async function toggleBackgroundMusic() {
     } else {
       musicEnabled = false
       musicRequest++
+      stopMusicFade()
       bgMusicAudio.pause()
       window.logger('Background music paused')
     }
   }
+  notifyMusicTrack()
 }
 
 // --- Game Pause/Resume Helpers ---
@@ -731,6 +888,7 @@ export function terminateAllSounds() {
   musicEnabled = false
   musicRequest++
   stopMusicFade()
+  manualTrack = false
   directedState = 'normal'
   resetMusicDirector()
   backgroundMusicInitialized = false
@@ -871,6 +1029,7 @@ export function clearSoundCache() {
   musicPaused = false
   musicRequest++
   stopMusicFade()
+  manualTrack = false
   directedState = 'normal'
   resetMusicDirector()
   window.logger(`Clearing sound cache (${audioBufferCache.size} buffers, ${soundElementCache.size} elements)...`)

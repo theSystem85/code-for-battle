@@ -37,3 +37,9 @@ Run lint and unit tests and make them pass.
 User prompt: "Ensure the music does not intersect when tone changes so the current one has to fade out first before the new song starts but new song does not need to fade in then. Ensure in the beginning no sad music is played."
 
 Changes: replaced the crossfade with a sequential fade-out (3.5 s) followed by a full-volume start of the next track; added a start-of-game guard so near defeat requires a once-owned construction yard/refinery and at least 3 minutes of simulation time.
+
+## Follow-up (2026-10-14T22:45Z)
+
+User prompt: "Next to the music on/off button in the left sidebar (only there) add another button to skip to the next song (that can be anyone independent of current tone/mood of the game but it will always be the same order not random. Only when songs play automatically then a random one will be picked. When user holds music or next song button show current song title in tooltip. Ensure current song always takes 3s to fade out before mood change starts new song. Currently it still sounds too rapid."
+
+Changes: added a compact next-song button beside the music toggle (fixed order music01, music02, attack, danger, sad); a custom tooltip (hover, keyboard focus, touch long-press) shows the current/next song title; fades now run a full 3 s on a perceptual (decibel) curve through a Web Audio GainNode so they also work on iOS, where HTMLMediaElement.volume is read-only.

@@ -970,6 +970,10 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
       if (musicButton && musicButton.parentNode !== sidebarUtilityContainer) {
         sidebarUtilityContainer.appendChild(musicButton)
       }
+      const musicNextButton = document.getElementById('musicNextButton')
+      if (musicButton && musicNextButton && musicButton.nextSibling !== musicNextButton) {
+        musicButton.after(musicNextButton)
+      }
     }
     moveSidebarSectionToModal(saveLoadMenu)
     moveSidebarSectionToModal(statsSection)
@@ -1005,6 +1009,10 @@ export function applyMobileSidebarLayout(mode, _options = {}) {
       mobileLayoutState.musicOriginalParent,
       mobileLayoutState.musicOriginalNextSibling
     )
+    const musicNextButton = document.getElementById('musicNextButton')
+    if (mobileLayoutState.musicButton && musicNextButton && mobileLayoutState.musicButton.nextSibling !== musicNextButton) {
+      mobileLayoutState.musicButton.after(musicNextButton)
+    }
     closeMobileSidebarModal()
     if (sidebarModal) {
       sidebarModal.removeAttribute('data-orientation')

@@ -1978,8 +1978,10 @@ body.mobile-portrait.sidebar-collapsed #mobilePortraitActions #actions {
 
 body.mobile-portrait.sidebar-condensed #restartBtn,
 body.mobile-portrait.sidebar-condensed #musicControl,
+body.mobile-portrait.sidebar-condensed #musicNextButton,
 body.mobile-portrait.sidebar-collapsed #restartBtn,
-body.mobile-portrait.sidebar-collapsed #musicControl {
+body.mobile-portrait.sidebar-collapsed #musicControl,
+body.mobile-portrait.sidebar-collapsed #musicNextButton {
   display: none;
 }
 

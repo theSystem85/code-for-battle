@@ -1445,9 +1445,21 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   margin: 0 0 4px;
 }
 
-.sidebar-status-row > #musicControl {
+.sidebar-status-row > #musicControl,
+.sidebar-status-row > #musicNextButton {
   width: 32px;
   height: 32px;
+}
+
+/* Music toggle and next-song sit flush together (no extra row gap). */
+.sidebar-status-row > #musicNextButton {
+  margin-left: -4px;
+}
+
+#musicNextButton .music-next-icon {
+  display: block;
+  width: 14px;
+  height: 14px;
 }
 
 .sidebar-status-row > .offline-mode-button {
