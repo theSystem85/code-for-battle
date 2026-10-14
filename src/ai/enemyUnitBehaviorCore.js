@@ -52,6 +52,66 @@ export function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPla
     return
   }
 
+  // PRIORITY: Check crew status and handle hospital returns (exclude ambulance for AI)
+  if (unit.crew && typeof unit.crew === 'object' && unit.type !== 'ambulance') {
+    let missingCrew = 0
+    for (const role in unit.crew) {
+      if (Object.prototype.hasOwnProperty.call(unit.crew, role) && !unit.crew[role]) missingCrew++
+    }
+
+    if (unit.returningToHospital && (!unit.hospitalTarget || unit.hospitalTarget.health <= 0)) {
+      unit.returningToHospital = false
+      unit.hospitalTarget = null
+    }
+
+    if (missingCrew > 0 && !unit.returningToHospital) {
+      // Unit has missing crew - prioritize hospital return
+      const canMove = unit.crew.driver && unit.crew.commander
+
+      if (!canMove) {
+        // Unit cannot move - wait for ambulance assistance
+        unit.target = null
+        unit.moveTarget = null
+        unit.path = []
+        // Allow defensive firing only
+        if (unit.isBeingAttacked && unit.lastAttacker && unit.crew.gunner) {
+          unit.target = unit.lastAttacker
+        }
+        return // Skip normal AI behavior
+      } else {
+        // Unit can move - should return to hospital immediately
+        // This will be handled by manageAICrewHealing
+        unit.needsHospital = true
+        // Stop offensive behavior - only allow defensive firing
+        unit.moveTarget = null
+        unit.path = []
+        if (unit.isBeingAttacked && unit.lastAttacker && unit.crew.gunner) {
+          unit.target = unit.lastAttacker
+        } else {
+          unit.target = null
+        }
+        return // Skip normal AI behavior until crew is restored
+      }
+    }
+
+    // Combat steering must not replace the route with a chase toward an attacker.
+    if (unit.returningToHospital) {
+      unit.target = null
+
+      // Movement clears moveTarget on arrival; completion depends on crew, not a destination.
+      if (missingCrew === 0) {
+        unit.returningToHospital = false
+        unit.hospitalTarget = null
+        unit.needsHospital = false
+        unit.moveTarget = null
+        unit.path = []
+        return // Resume strategic decisions on the next update.
+      } else {
+        return // Preserve the medical route until treatment finishes.
+      }
+    }
+  }
+
   // Skip decision making while returning to or repairing at a workshop
   if (unit.returningToWorkshop || unit.repairingAtWorkshop) {
     return
@@ -135,74 +195,6 @@ export function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPla
 
   // Skip further processing if unit is retreating
   if (unit.isRetreating) return
-
-  // PRIORITY: Check crew status and handle hospital returns (exclude ambulance for AI)
-  if (unit.crew && typeof unit.crew === 'object' && unit.type !== 'ambulance') {
-    const missingCrew = Object.values(unit.crew).filter(alive => !alive).length
-
-    if (missingCrew > 0 && !unit.returningToHospital) {
-      // Unit has missing crew - prioritize hospital return
-      const canMove = unit.crew.driver && unit.crew.commander
-
-      if (!canMove) {
-        // Unit cannot move - wait for ambulance assistance
-        unit.target = null
-        unit.moveTarget = null
-        unit.path = []
-        // Allow defensive firing only
-        if (unit.isBeingAttacked && unit.lastAttacker && unit.crew.gunner) {
-          unit.target = unit.lastAttacker
-        }
-        return // Skip normal AI behavior
-      } else {
-        // Unit can move - should return to hospital immediately
-        // This will be handled by manageAICrewHealing
-        unit.needsHospital = true
-        // Stop offensive behavior - only allow defensive firing
-        unit.moveTarget = null
-        unit.path = []
-        if (unit.isBeingAttacked && unit.lastAttacker && unit.crew.gunner) {
-          unit.target = unit.lastAttacker
-        } else {
-          unit.target = null
-        }
-        return // Skip normal AI behavior until crew is restored
-      }
-    }
-
-    // If unit is returning to hospital, only allow defensive actions
-    if (unit.returningToHospital) {
-      // Allow firing back if being attacked and has gunner
-      if (unit.isBeingAttacked && unit.lastAttacker && unit.crew.gunner) {
-        unit.target = unit.lastAttacker
-      } else {
-        unit.target = null
-      }
-
-      // Check if reached hospital area for healing
-      if (unit.hospitalTarget && unit.moveTarget) {
-        const distanceToHospital = Math.hypot(
-          unit.x - unit.moveTarget.x,
-          unit.y - unit.moveTarget.y
-        )
-
-        if (distanceToHospital < TILE_SIZE * 2) {
-          // Near hospital - check if crew is restored
-          const currentMissingCrew = Object.values(unit.crew).filter(alive => !alive).length
-          if (currentMissingCrew === 0) {
-            // Crew fully restored - resume normal behavior
-            unit.returningToHospital = false
-            unit.hospitalTarget = null
-            unit.needsHospital = false
-            unit.moveTarget = null
-            unit.path = []
-          }
-        }
-      }
-
-      return // Skip normal combat AI when returning to hospital
-    }
-  }
 
   // Handle ambulance behavior
   if (unit.type === 'ambulance') {

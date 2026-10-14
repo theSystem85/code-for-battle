@@ -328,3 +328,18 @@ As a player, I want enemy AI units to have the same crew system and for AI to ma
 - **SC-002**: [Measurable metric, e.g., "System handles 1000 concurrent users without degradation"]
 - **SC-003**: [User satisfaction metric, e.g., "90% of users successfully complete primary task on first attempt"]
 - **SC-004**: [Business metric, e.g., "Reduce support tickets related to [X] by 50%"]
+
+## Hospital return regression coverage (2026-10-14)
+
+AI medical return routing precedes strategic retreat/attack decisions. Destinations use tiles, path origins use unit centers, unreachable routes remain retryable, and restored crew clear hospital return state even after movement clears the destination on arrival.
+
+- Permanent browser coverage: `npm run test:e2e:regressions` includes `tests/e2e/enemyHospitalCrewRegression.test.js`, observing actual AI travel, automatic healing, and return-state release.
+- Focused unit coverage: `tests/unit/aiHospitalReturn.test.js` and hospital-return cases in `tests/unit/enemyUnitBehavior.test.js`.
+- Validation: `npm run lint:fix:changed` and `npm run lint` passed with installed dependencies. Unit/integration results are recorded in `docs/changes/2026-10-14-vitest-playwright-runner-separation.md`. Browser execution was prohibited.
+- Performance check remains outstanding: run the acceptance protocol in `performance_improvement.md` on qualifying hardware before/after this AI priority change. Record cold first traversal, repeated full-map scrolling, selected layered units, firing, movement, water, realistic entity counts, FPS, p95/p99/max frame times, missed 13.333 ms deadlines, CPU update/render, backend/DPR, GPU timing if available, and memory/GC. No 75 FPS certification is claimed. At 75 update calls/sec and 200 units, the moved medical check is evaluated up to 15,000 times/sec; it introduces no new per-unit allocations or rendering/DPR-dependent work.
+
+### Round 2 clarification
+
+The browser regression first observes actual travel and a healing-queue entry, then waits eleven simulation seconds for the hospital's ten-second treatment. Wall-clock time alone does not establish treatment elapsed in a rendering-heavy browser run. The coupled real movement/pathfinding/AI/hospital test is `tests/unit/regressionRuntime.test.js`; route and state-release assertions remain required. The human-reported browser healing timeout is not claimed to have been reproduced or resolved by a new hospital-service code change.
+
+Round 2 commands: `npm run test:unit`, `npm run lint:fix:changed`, `npm run lint`, `git diff --check`. Results are recorded in `docs/changes/2026-10-14-vitest-playwright-runner-separation.md`. `npm run test:e2e:regressions` and the qualifying-hardware performance protocol remain outstanding. No FPS, CPU/GPU timings, frame-time percentiles, missed-deadline counts or memory/GC measurements are fabricated from unit-test execution.

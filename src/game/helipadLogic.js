@@ -9,14 +9,15 @@ function isUnitStopped(unit) {
   return !(unit?.movement?.isMoving) && (unit?.movement?.currentSpeed || 0) <= 0.05
 }
 
+// null means no touchdown has started; zero means settling is complete.
 function getPadTouchdownReadyAt(unit) {
-  return typeof unit?.servicePadTouchdownReadyAt === 'number' ? unit.servicePadTouchdownReadyAt : 0
+  return typeof unit?.servicePadTouchdownReadyAt === 'number' ? unit.servicePadTouchdownReadyAt : null
 }
 
 function markPadTouchdown(unit, delta) {
   if (!unit) return
   const remaining = getPadTouchdownReadyAt(unit)
-  if (!remaining) {
+  if (remaining === null) {
     unit.servicePadTouchdownReadyAt = Math.max(0, SERVICE_SETTLE_TIME_MS - delta)
     return
   }
@@ -25,11 +26,20 @@ function markPadTouchdown(unit, delta) {
 
 function clearPadTouchdown(unit) {
   if (!unit) return
-  unit.servicePadTouchdownReadyAt = 0
+  unit.servicePadTouchdownReadyAt = null
+  unit.servicePadTouchdownId = null
 }
 
-function isServiceLandingSettled(unit, targetX, targetY, delta) {
-  if (!unit || unit.flightState !== 'grounded') return false
+function isServiceLandingSettled(unit, targetX, targetY, delta, helipadId) {
+  if (!unit) return false
+  if (unit.flightState !== 'grounded') {
+    if (unit.servicePadTouchdownId === helipadId) clearPadTouchdown(unit)
+    return false
+  }
+  if (unit.servicePadTouchdownId !== helipadId) {
+    clearPadTouchdown(unit)
+    unit.servicePadTouchdownId = helipadId
+  }
   const distance = Math.hypot((unit.x + TILE_SIZE / 2) - targetX, (unit.y + TILE_SIZE / 2) - targetY)
   const closeEnough = distance <= 1
   const stationary = isUnitStopped(unit)
@@ -223,8 +233,8 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               if (!isAlreadyGroundedHere) {
                 heli.x = landingX
                 heli.y = landingY
-                heli.tileX = Math.floor(heli.x / TILE_SIZE)
-                heli.tileY = Math.floor(heli.y / TILE_SIZE)
+                heli.tileX = Math.floor((heli.x + TILE_SIZE / 2) / TILE_SIZE)
+                heli.tileY = Math.floor((heli.y + TILE_SIZE / 2) / TILE_SIZE)
               }
 
               // Clear movement commands when grounded
@@ -256,7 +266,7 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
 
               heli.helipadTargetId = helipadId
 
-              const settledOnPad = isServiceLandingSettled(heli, helipadCenterX, helipadCenterY, delta)
+              const settledOnPad = isServiceLandingSettled(heli, helipadCenterX, helipadCenterY, delta, helipadId)
               if (settledOnPad) {
                 heli.landedHelipadId = helipadId
                 helipad.landedUnitId = heli.id
@@ -339,10 +349,11 @@ export const updateHelipadLogic = logPerformance(function(units, buildings, _gam
               heli.noHelipadNotificationTime = 0
             }
           } else {
-            if (heli.refuelingAtHelipad) {
+            // Visiting another pad in this loop must not reset the active pad's service timer.
+            if (landingRequested || heli.servicePadTouchdownId === helipadId) {
               heli.refuelingAtHelipad = false
+              clearPadTouchdown(heli)
             }
-            clearPadTouchdown(heli)
             if (heli.landedHelipadId === helipadId) {
               clearHelipadClaimForUnit(heli, helipadId, helipads)
             }

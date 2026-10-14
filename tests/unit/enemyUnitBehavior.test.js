@@ -134,6 +134,46 @@ describe('enemyUnitBehavior updateAIUnit', () => {
     expect(unit.path).toEqual([])
   })
 
+  it('preserves the hospital route before strategic retreat decisions', () => {
+    const route = [{ x: 5, y: 8 }, { x: 5, y: 7 }]
+    const destination = { x: 5, y: 7 }
+    const unit = createBaseUnit({
+      crew: { driver: true, commander: true, loader: true, gunner: false },
+      returningToHospital: true,
+      hospitalTarget: { id: 'hospital-1', health: 100 },
+      path: route,
+      moveTarget: destination,
+      isRetreating: true,
+      isBeingAttacked: true,
+      lastDamageTime: now,
+      lastAttacker: { id: 'attacker', owner: 'player', health: 100 },
+      target: { id: 'offensive-target', owner: 'player', health: 100 }
+    })
+
+    updateAIUnit(unit, [unit], gameState, mapGrid, now, 'ai', [], [])
+
+    expect(applyEnemyStrategies).not.toHaveBeenCalled()
+    expect(unit.path).toBe(route)
+    expect(unit.moveTarget).toBe(destination)
+    expect(unit.target).toBeNull()
+  })
+
+  it('releases hospital return state after arrival has cleared the move target', () => {
+    const unit = createBaseUnit({
+      crew: { driver: true, commander: true, loader: true, gunner: true },
+      returningToHospital: true,
+      hospitalTarget: { id: 'hospital-1', health: 100 },
+      needsHospital: true,
+      moveTarget: null
+    })
+
+    updateAIUnit(unit, [unit], gameState, mapGrid, now, 'ai', [], [])
+
+    expect(unit.returningToHospital).toBe(false)
+    expect(unit.hospitalTarget).toBeNull()
+    expect(unit.needsHospital).toBe(false)
+  })
+
   it('routes ambulances to hospitals when crew needs refilling', () => {
     const hospital = { id: 'hospital-1', type: 'hospital', owner: 'ai', health: 100, x: 5, y: 5, width: 2, height: 2 }
     gameState.buildings = [hospital]

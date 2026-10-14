@@ -23,7 +23,7 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
   gameRandom: vi.fn(() => 0)
 }))
 
-import { computeProjectileInterceptPoint, getTargetVelocity } from '../../src/game/unitCombat/combatHelpers.js'
+import { computeProjectileInterceptPoint, getTargetVelocity, isTurretAimedAtTarget } from '../../src/game/unitCombat/combatHelpers.js'
 
 describe('combatHelpers predictive rocket aiming', () => {
   it('derives target velocity from movement.velocity when available', () => {
@@ -47,5 +47,23 @@ describe('combatHelpers predictive rocket aiming', () => {
     expect(intercept.x).toBeGreaterThan(760)
     expect(intercept.y).toBeCloseTo(336, 6)
     expect(intercept.travelTime).toBeGreaterThan(50)
+  })
+})
+
+describe('rocket tank hull aiming', () => {
+  it('accepts hull alignment with an airborne sprite even when the unused turret points at the ground position', () => {
+    const target = { type: 'apache', tileX: 27, tileY: 24, x: 27 * 32, y: 24 * 32, altitude: 144, flightState: 'airborne' }
+    const launcher = { type: 'rocketTank', x: 22 * 32, y: 24 * 32, direction: Math.atan2(-144 * 0.4, 5 * 32), turretDirection: 0 }
+    expect(isTurretAimedAtTarget(launcher, target)).toBe(true)
+    launcher.direction = 0
+    expect(isTurretAimedAtTarget(launcher, target)).toBe(false)
+  })
+
+  it('uses tile coordinates for building targets and requires the hull to face them', () => {
+    const target = { x: 10, y: 14, width: 2, height: 2 }
+    const launcher = { type: 'rocketTank', x: 10 * 32, y: 10 * 32, direction: Math.atan2(4.5, 0.5), turretDirection: 0 }
+    expect(isTurretAimedAtTarget(launcher, target)).toBe(true)
+    launcher.direction = 0
+    expect(isTurretAimedAtTarget(launcher, target)).toBe(false)
   })
 })

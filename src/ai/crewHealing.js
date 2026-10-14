@@ -216,14 +216,18 @@ function sendUnitToHospital(unit, hospital, mapGrid, now) {
     { x: hospitalCenterX + 1, y: refillY + 1 }
   ]
 
+  // Only retain the return state when a reachable service position exists.
+  unit.returningToHospital = false
+
   // Find best position
-  const startNode = { x: unit.tileX, y: unit.tileY, owner: unit.owner }
+  const startNode = { x: Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE), y: Math.floor((unit.y + TILE_SIZE / 2) / TILE_SIZE), owner: unit.owner }
   for (const pos of refillPositions) {
     if (pos.x >= 0 && pos.y >= 0 && pos.x < mapGrid[0].length && pos.y < mapGrid.length) {
       const path = getCachedPath(startNode, pos, mapGrid, null, { unitOwner: unit.owner })
       if (path && path.length > 0) {
+        unit.returningToHospital = true
         unit.path = path
-        unit.moveTarget = { x: pos.x * TILE_SIZE, y: pos.y * TILE_SIZE }
+        unit.moveTarget = { x: pos.x, y: pos.y }
         break
       }
     }

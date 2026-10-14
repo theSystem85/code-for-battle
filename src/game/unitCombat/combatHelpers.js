@@ -73,7 +73,8 @@ export function isTurretAimedAtTarget(unit, target) {
     return false
   }
 
-  if (unit.type === 'howitzer') {
+  // Rocket launchers use hull heading, including the aircraft's altitude lift.
+  if (unit.type === 'howitzer' || unit.type === 'rocketTank') {
     const unitCenterX = unit.x + TILE_SIZE / 2
     const unitCenterY = unit.y + TILE_SIZE / 2
 
@@ -87,6 +88,8 @@ export function isTurretAimedAtTarget(unit, target) {
       targetCenterX = target.x * TILE_SIZE + (target.width * TILE_SIZE) / 2
       targetCenterY = target.y * TILE_SIZE + (target.height * TILE_SIZE) / 2
     }
+
+    if (unit.type === 'rocketTank') targetCenterY -= getAircraftAltitudeLift(target)
 
     const angleToTarget = Math.atan2(targetCenterY - unitCenterY, targetCenterX - unitCenterX)
     const angleDifference = Math.abs(angleDiff(unit.direction || 0, angleToTarget))
