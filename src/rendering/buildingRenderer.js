@@ -1211,7 +1211,8 @@ export class BuildingRenderer {
       building.selected &&
       gameState.showEnemyResources
     ) {
-      const powerText = `Power: ${gameState.enemyPowerSupply}`
+      const ownerPower = gameState.powerSupplyByOwner?.[building.owner]
+      const powerText = `Power: ${Number.isFinite(ownerPower) ? ownerPower : 0}`
       ctx.save()
       ctx.fillStyle = '#FFF'
       ctx.font = '12px "Rajdhani", "Arial Narrow", sans-serif'

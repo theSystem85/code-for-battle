@@ -56,7 +56,7 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
 
 ## Economy and Buildings
 
-- [ ] **Enemy base power display shows NaN when selecting an enemy construction yard; ensure it shows the correct power value.**
+- [x] **Enemy base power display shows NaN when selecting an enemy construction yard; ensure it shows the correct power value.**
   - Spec: none
 
 - [ ] **ensure when using drag and drop on the mobile build buttons that** — the unit or building info tooltip does not pop up. Only show it when the user hold the button but not when is pressed and then the finger is moved. It can pop up when the button is hold but as soon as the finger is moved by about half the size of the button the tooltip should go away again.

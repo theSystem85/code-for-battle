@@ -1215,6 +1215,35 @@ describe('Building System', () => {
       expect(gameState.playerPowerSupply).toBe(0)
     })
 
+    it('tracks finite power by owner and refreshes the same lookup after removal', () => {
+      gameState.humanPlayer = 'player1'
+      gameState.factories = [
+        { owner: 'player2', health: 100 },
+        { owner: 'player3', health: 0 }
+      ]
+      const buildings = [
+        { owner: 'player1', power: 200 },
+        { owner: 'player2', power: 200 },
+        { owner: 'player2', power: -150 },
+        { owner: 'player2' },
+        { owner: 'player2', power: NaN },
+        { owner: 'player3', power: -20 }
+      ]
+
+      buildingsModule.updatePowerSupply(buildings, gameState)
+      const lookup = gameState.powerSupplyByOwner
+      expect(lookup.player1).toBe(200)
+      expect(lookup.player2).toBe(100)
+      expect(lookup.player3).toBe(-20)
+      expect(gameState.enemyPowerSupply).toBe(80)
+
+      gameState.factories = []
+      buildingsModule.updatePowerSupply([], gameState)
+      expect(gameState.powerSupplyByOwner).toBe(lookup)
+      expect(lookup.player2).toBe(0)
+      expect(lookup.player3).toBe(0)
+    })
+
     it('should return player power supply', () => {
       const building = createBuilding('powerPlant', 5, 5)
       building.owner = 'player1'
