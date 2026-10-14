@@ -5,7 +5,7 @@ import { completeProductionItem } from '../policies/completionReceipts.js'
 
 import { gameState } from '../gameState.js'
 import { productionQueue } from '../productionQueue.js'
-import { toggleBackgroundMusic, bgMusicAudio } from '../sound.js'
+import { setupMusicControls } from './musicControls.js'
 import { initMasterVolumeControl } from './volumeControl.js'
 import { buildingRepairHandler } from '../buildingRepairHandler.js'
 import { buildingSellHandler } from '../buildingSellHandler.js'
@@ -64,7 +64,6 @@ export class EventHandlers {
   setupGameControls() {
     const pauseBtn = document.getElementById('pauseBtn')
     const restartBtn = document.getElementById('restartBtn')
-    const musicControlButton = document.getElementById('musicControl')
 
     // Pause/resume functionality
     pauseBtn.addEventListener('click', () => {
@@ -137,24 +136,8 @@ export class EventHandlers {
       }
     })
 
-    // Background music initialization and control
-    if (musicControlButton) {
-      musicControlButton.addEventListener('click', async() => {
-        await toggleBackgroundMusic()
-
-        // Toggle music icon
-        const musicIcon = musicControlButton.querySelector('.music-icon')
-        if (musicIcon) {
-          // If background music is available and we can check its state
-          if (typeof bgMusicAudio !== 'undefined' && bgMusicAudio) {
-            musicIcon.textContent = bgMusicAudio.paused ? '♪' : '🔇'
-          } else {
-            // Toggle based on previous state if audio object isn't available
-            musicIcon.textContent = musicIcon.textContent === '♪' ? '🔇' : '♪'
-          }
-        }
-      })
-    }
+    // Background music toggle, next-song button and title tooltip
+    setupMusicControls()
 
     // Handle escape key to exit building placement mode (without canceling the building)
     document.addEventListener('keydown', (e) => {
