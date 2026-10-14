@@ -104,6 +104,7 @@ export function preloadMilestoneMedia(baseFilename) {
       video.playsInline = true
       video.preload = 'auto'
       video.setAttribute('playsinline', '')
+      video.setAttribute('webkit-playsinline', '')
       video.setAttribute('aria-hidden', 'true')
       video.dataset.milestonePreload = baseFilename
       video.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;pointer-events:none;'

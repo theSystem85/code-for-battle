@@ -1,0 +1,6 @@
+{
+  "version": "0.47.1",
+  "features": [],
+  "improvements": [],
+  "bugfixes": ["Milestone videos fade smoothly and remain visible in compact mobile layouts."]
+}

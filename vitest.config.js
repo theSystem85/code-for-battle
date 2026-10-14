@@ -9,7 +9,7 @@ export default defineConfig({
     environment: 'jsdom',
 
     // Include test files
-    include: ['tests/**/*.test.js', 'tests/**/*.spec.js'],
+    include: ['tests/unit/**/*.test.js', 'tests/unit/**/*.spec.js', 'tests/integration/**/*.test.js', 'tests/integration/**/*.spec.js'],
 
     // Setup files to run before tests
     setupFiles: ['./tests/setup.js'],
