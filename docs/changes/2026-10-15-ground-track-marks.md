@@ -1,0 +1,1 @@
+- [x] **Ground track marks** Tracked units leave fading-capable tread marks on grass/soil/sand/snow, with ramp carry-over onto streets and Graphics settings toggles. Spec: [Ground track marks](../specs/ground-track-marks.md)

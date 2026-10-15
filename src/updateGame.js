@@ -80,6 +80,7 @@ import { unitCosts } from './units.js'
 import { updateDangerZoneMaps } from './game/dangerZoneMap.js'
 import { spawnUnit } from './units.js'
 import { getSimulationTime } from './game/time.js'
+import { updateTrackMarks } from './game/trackMarks.js'
 import {
   consumeReplaySimulationHaltFlag,
   createReplayEntityReference,
@@ -496,6 +497,9 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
     basePolicyContext.buildings = gameState.buildings || EMPTY_BUILDINGS
     basePolicyContext.factories = factories || EMPTY_BUILDINGS
     updateBasePolicies(basePolicyContext, now)
+
+    // Purely visual, client-local ground track marks (simulation time, pause-aware).
+    updateTrackMarks(units, mapGrid, getSimulationTime(gameState))
 
     // === HOST-ONLY GAME LOGIC ===
     // Remote clients skip all game simulation - they receive state from host
