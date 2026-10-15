@@ -31,6 +31,7 @@ const unitImageMap = {
   tank_v2: 'images/tank_v2.webp',
   'tank-v3': 'images/tank_v3.webp',
   tank_v3: 'images/tank_v3.webp',
+  lightTank: 'images/map/units/lightTank_wagon.webp',
   rocketTank: 'images/map/units/rocket_tank.webp',
   harvester: 'images/harvester.webp',
   artilleryTank: 'images/artillery_tank.webp',

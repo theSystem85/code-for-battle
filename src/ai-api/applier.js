@@ -14,6 +14,7 @@ const vehicleUnitTypes = [
   'rocketTank',
   'tank_v1',
   'tank-v3',
+  'lightTank',
   'harvester',
   'ambulance',
   'tankerTruck',

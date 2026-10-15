@@ -372,7 +372,7 @@ export function manageAIAmmunitionTrucks(units, gameState, mapGrid, onlyPlayerId
 
       // Fourth priority: follow combat groups at safe distance
       const combatUnits = aiUnits.filter(u =>
-        (u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank') &&
+        (u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'lightTank' || u.type === 'rocketTank') &&
         u.health > 0
       )
       if (combatUnits.length > 0) {

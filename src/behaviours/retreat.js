@@ -36,7 +36,7 @@ export function initiateRetreat(selectedUnits, targetX, targetY, mapGrid) {
   const retreatingUnits = selectedUnits.filter(unit =>
     unit.owner === gameState.humanPlayer &&
     (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' ||
-    unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer')
+    unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank' || unit.type === 'howitzer')
   )
 
   if (retreatingUnits.length === 0) return

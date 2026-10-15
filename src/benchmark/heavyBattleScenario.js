@@ -17,7 +17,7 @@ export const HEAVY_BATTLE_MIN_UNITS = 40
 export const HEAVY_BATTLE_MAX_UNITS = 800
 export const HEAVY_BATTLE_CAMERA_SPEED_PX_PER_SEC = 600
 export const HEAVY_BATTLE_PLAYERS = Object.freeze(['player1', 'player2', 'player3', 'player4'])
-export const HEAVY_BATTLE_TYPES = Object.freeze(['tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer'])
+export const HEAVY_BATTLE_TYPES = Object.freeze(['tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer'])
 
 const COLUMN_STRIDE = 2
 const ROW_STRIDE = 2

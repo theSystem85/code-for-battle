@@ -45,6 +45,7 @@ const UNIT_TYPE_DISPLAY_NAMES = {
   tank_v1: 'Tank',
   'tank-v2': 'Tank V2',
   'tank-v3': 'Tank V3',
+  lightTank: 'Light Tank',
   rocketTank: 'Rocket Tank',
   harvester: 'Harvester',
   tankerTruck: 'Tanker Truck',

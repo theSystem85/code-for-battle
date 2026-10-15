@@ -35,6 +35,7 @@ export const ENEMY_UNIT_TYPES = Object.freeze([
   { value: 'tank_v1', label: 'Tank V1' },
   { value: 'tank-v2', label: 'Tank V2' },
   { value: 'tank-v3', label: 'Tank V3' },
+  { value: 'lightTank', label: 'Light Tank' },
   { value: 'rocketTank', label: 'Rocket tank' },
   { value: 'howitzer', label: 'Howitzer' },
   { value: 'harvester', label: 'Harvester' },

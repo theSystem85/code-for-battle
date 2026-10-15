@@ -270,7 +270,7 @@ export function handleMovementCommand(handler, selectedUnits, targetX, targetY, 
       unit.moveTarget = destTile
       unit.originalTarget = null
 
-      if (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank') {
+      if (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank') {
         unit.turretShouldFollowMovement = true
       }
       unit.originalPath = null

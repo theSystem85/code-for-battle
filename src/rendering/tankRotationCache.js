@@ -10,7 +10,7 @@
 
 export const TANK_ROTATION_STEPS = 64
 export const TANK_ROTATION_SUPERSAMPLE = 2
-export const TANK_ROTATION_VARIANTS = Object.freeze(['tankV1', 'tankV2', 'tankV3'])
+export const TANK_ROTATION_VARIANTS = Object.freeze(['tankV1', 'tankV2', 'tankV3', 'lightTank'])
 export const TANK_ROTATION_PARTS = Object.freeze(['wagon', 'turret', 'barrel'])
 const TWO_PI = Math.PI * 2
 const FRAME_SLICE_MS = 8

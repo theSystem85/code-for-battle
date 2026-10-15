@@ -125,6 +125,7 @@ function usesGroupAttackPermission(unit) {
     unit.type === 'tank_v1' ||
     unit.type === 'tank-v2' ||
     unit.type === 'tank-v3' ||
+    unit.type === 'lightTank' ||
     unit.type === 'rocketTank' ||
     unit.type === 'howitzer'
   )

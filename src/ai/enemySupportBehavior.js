@@ -14,7 +14,7 @@ import {
   isNearPlayerDefense
 } from './enemyAirBehavior.js'
 
-const BASE_DEFENDER_TYPES = new Set(['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer'])
+const BASE_DEFENDER_TYPES = new Set(['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer'])
 
 function createDefenseSnapshot() {
   return { units: null, state: null, owner: null, centerX: [], centerY: [], threats: [], defenders: 0, currentUnit: null, currentWasDefender: false }

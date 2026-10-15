@@ -443,7 +443,7 @@ function updateUnitRotation(unit, now) {
   unit.isRotating = bodyNeedsRotation
 
   // Update turret direction for combat units with tracked guns (after body direction is updated)
-  if (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'destroyer') {
+  if (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank' || unit.type === 'destroyer') {
     if (unit.target) {
       // Tank has a target - rotate turret to track target
       let targetCenterX, targetCenterY

@@ -1488,7 +1488,7 @@ function loadGameFromSaveObject(saveObj, key) {
         hydrated.level = u.level || 0
         hydrated.experience = u.experience || 0
         hydrated.baseCost = u.baseCost || (function() {
-          const costs = { tank: 1000, rocketTank: 2000, 'tank-v2': 2000, 'tank-v3': 3000, tank_v1: 1000 }
+          const costs = { tank: 1000, rocketTank: 2000, 'tank-v2': 2000, 'tank-v3': 3000, tank_v1: 1000, lightTank: 700 }
           return costs[hydrated.type] || 1000
         })()
 

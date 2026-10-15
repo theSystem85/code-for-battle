@@ -19,6 +19,7 @@ const UNIT_DPS = {
   tank_v2: 24 / (4000 / 1000),
   'tank-v2': 24 / (4000 / 1000),
   'tank-v3': 30 / (4000 / 1000),
+  lightTank: 6 / (1000 / 1000),
   rocketTank: 120 / (12000 / 1000),
   howitzer: 80 / (4000 / 1000)
 }
@@ -119,7 +120,7 @@ function countNearbyAllies(unit, units) {
     u.owner === unit.owner &&
     u !== unit &&
     u.health > 0 &&
-    (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank' || u.type === 'howitzer') &&
+    (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'lightTank' || u.type === 'rocketTank' || u.type === 'howitzer') &&
     Math.hypot(u.x - unit.x, u.y - unit.y) < AI_CONFIG.GROUP_FORMATION_RANGE * TILE_SIZE
   ).length
 }
@@ -266,7 +267,7 @@ export function assignAttackDirection(unit, units, gameState) {
     u.owner === unit.owner &&
     u !== unit &&
     u.health > 0 &&
-    (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank' || u.type === 'howitzer') &&
+    (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'lightTank' || u.type === 'rocketTank' || u.type === 'howitzer') &&
     Math.hypot(u.x - unit.x, u.y - unit.y) < AI_CONFIG.GROUP_FORMATION_RANGE * TILE_SIZE * 2
   )
 
@@ -358,7 +359,7 @@ export function handleMultiDirectionalAttack(unit, units, gameState, mapGrid, no
   // Only apply to combat units that aren't already retreating
   if (unit.isRetreating || !unit.allowedToAttack) return false
 
-  const combatTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer']
+  const combatTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer']
   if (!combatTypes.includes(unit.type)) return false
 
   // Skip if unit already has a specific approach position
@@ -451,7 +452,7 @@ export function handleMultiDirectionalAttack(unit, units, gameState, mapGrid, no
     // Apply simple formation to nearby allies
     const group = units.filter(u =>
       u.owner === unit.owner &&
-      (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank' || u.type === 'howitzer') &&
+      (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'lightTank' || u.type === 'rocketTank' || u.type === 'howitzer') &&
       Math.hypot(u.x - unit.x, u.y - unit.y) <= AI_CONFIG.GROUP_FORMATION_RANGE * TILE_SIZE
     )
     if (group.length > 1) {

@@ -417,6 +417,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
         'tank_v1',
         'tank-v2',
         'tank-v3',
+        'lightTank',
         'rocketTank',
         'howitzer',
         'apache',

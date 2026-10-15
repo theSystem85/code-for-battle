@@ -1,7 +1,7 @@
 import { TILE_SIZE, TANK_FIRE_RANGE } from '../../config.js'
 import { smoothRotateTowardsAngle } from '../../logic.js'
 import { gameState } from '../../gameState.js'
-import { COMBAT_CONFIG } from './combatConfig.js'
+import { COMBAT_CONFIG, getBaseFireRateForTankType } from './combatConfig.js'
 import {
   canUnitTargetEntity,
   ensureLineOfSight,
@@ -38,7 +38,7 @@ export function updateTankCombat(unit, units, bullets, mapGrid, now, occupancyMa
     const canAttack = isHumanControlledParty(unit.owner) || unit.allowedToAttack === true
     const effectiveRange = getEffectiveFireRange(unit)
     if (distance <= effectiveRange && canAttack && clearShot) {
-      const effectiveFireRate = getEffectiveFireRate(unit, COMBAT_CONFIG.FIRE_RATES.STANDARD)
+      const effectiveFireRate = getEffectiveFireRate(unit, getBaseFireRateForTankType(unit.type))
       handleTankFiring(unit, unit.target, bullets, now, effectiveFireRate, targetCenterX, targetCenterY, 'bullet', units, mapGrid, false, null, clearShot)
     }
   }

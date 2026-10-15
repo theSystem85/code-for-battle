@@ -56,6 +56,9 @@ When a spec exists, replace `Spec: none` with a relative link such as `[Title](.
   - [ ] when player attacks -> defend or retreat into base if the unit under attack is too weak (havesters or combat units that are outnumbered) to regroup in the protection of the base defence. When attack was defended strike back.
   - Spec: [Production Button Input Architecture](../docs/production-button-input-architecture.md)
 
+- [ ] **Light Tank (M2 Bradley-style IFV)** — Cheap, fast, lightly armored tracked unit with a rapid-fire 25 mm autocannon, built in the Vehicle Factory from the start, with Grok Imagine art in retina quality, AI usage, track marks and factory roll-out support.
+  - Spec: [Light Tank (M2 Bradley-style IFV)](../specs/light-tank-bradley.md)
+
 - [ ] **Wrecks and recovery/recycling** — Ensure the units when destroyed do not just vanish from the map but their left overs keep lying on the map. The left overs should look totally color desaturated and slightly noisy to indicated dirt and damage (cache those desaturated images and reuse them). Any (also the ones from the enemy) left over unit can be pulled by a recovery tank to the base when player has the recovery tank selected and clicks on the tank. The the recovery tank will drive to the target then mount (indicated by a 2px black string that connects both units) and then automatically drive to the workshop where it unmounts and the unit gets fully restored but without crew.
   - 2nd option is that the user has the recovery tank selected and clicks on the left over unit while holding shift key. Then the leftover unit get recycled completely (vanishes from the map) but the owner of the recovery tank gets 33% of the value of the unit added to his budget (like a harvesting of resources). This process takes about as long as it took the unit to build. Show blue progress bar on the recovery tank while this mode is active.
   - Spec: none

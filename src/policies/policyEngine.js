@@ -50,7 +50,7 @@ export const RETREAT_ARRIVAL_TILES = 3
 
 /** Units that can carry policies: combat vehicles, helicopters/F-35 and service units. */
 export const PROGRAMMABLE_UNIT_TYPES = Object.freeze(new Set([
-  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer',
+  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer',
   'apache', 'f35', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank'
 ]))
 

@@ -24,6 +24,7 @@ const GROUND_COMBAT_TYPES = new Set([
   'rocketTank',
   'tank-v2',
   'tank-v3',
+  'lightTank',
   'howitzer'
 ])
 

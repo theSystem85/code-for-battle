@@ -9,7 +9,7 @@ export const ENEMY_SCAN_TILES = 14
 
 export const AIR_UNIT_TYPES = Object.freeze(new Set(['apache', 'f22Raptor', 'f35']))
 export const COMBAT_UNIT_TYPES = Object.freeze(new Set([
-  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f22Raptor', 'f35'
+  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer', 'apache', 'f22Raptor', 'f35'
 ]))
 export const SERVICE_UNIT_TYPES = Object.freeze(new Set(['ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank']))
 

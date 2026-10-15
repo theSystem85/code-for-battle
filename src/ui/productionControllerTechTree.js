@@ -170,6 +170,7 @@ export function syncTechTreeWithBuildings(controller) {
 
   if (hasFactory) {
     controller.forceUnlockUnitType('tank')
+    controller.forceUnlockUnitType('lightTank')
     controller.forceUnlockBuildingType('ammunitionFactory')
   }
 

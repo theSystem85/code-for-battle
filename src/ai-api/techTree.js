@@ -44,6 +44,7 @@ const FULL_UNIT_TECH_TREE = [
   { type: 'f22Raptor', req: 'airstrip', spawn: 'airstrip' },
   { type: 'f35', req: 'airstrip', spawn: 'airstrip' },
   { type: 'tank-v3', req: '2xvehicleFactory', spawn: 'vehicleFactory' },
+  { type: 'lightTank', req: 'vehicleFactory', spawn: 'vehicleFactory' },
   { type: 'rocketTank', req: 'rocketTurret', spawn: 'vehicleFactory' },
   { type: 'tank-v2', req: 'radarStation', spawn: 'vehicleFactory' },
   { type: 'howitzer', req: 'vehicleFactory+radarStation+artilleryTurret', spawn: 'vehicleFactory' }
@@ -120,6 +121,7 @@ export function computeAvailableUnitTypes(buildings, factories, owner) {
   if (hasFactory) {
     available.add('tank')
     available.add('tank_v1')
+    available.add('lightTank')
   }
   if (hasFactory && hasRefinery) available.add('harvester')
   if (hasFactory && hasGasStation) available.add('tankerTruck')
