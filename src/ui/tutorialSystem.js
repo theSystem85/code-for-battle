@@ -39,7 +39,7 @@ import {
 import { readFromStorage, writeToStorage } from './tutorialSystem/storage.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import { createTutorialNarrator } from './tutorialSystem/narration.js'
-import { getEffectsVolume, setMusicDuck } from '../sound.js'
+import { getEffectsVolume, routeNarrationElement, setMusicDuck } from '../sound.js'
 import { configureAudioElement } from '../pwa/audioElementPolicy.js'
 
 class TutorialSystem {
@@ -741,6 +741,7 @@ class TutorialSystem {
           return audio
         },
         getVolume: () => getEffectsVolume(),
+        routeVoice: (audio, relative) => routeNarrationElement(audio, relative),
         setDuck: factor => setMusicDuck(factor),
         speakTts: text => this.speakWithTts(text),
         cancelTts: () => window.speechSynthesis?.cancel?.(),

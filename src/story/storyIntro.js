@@ -9,11 +9,12 @@ import {
 
 export const STORY_INTRO_STORAGE_KEY = 'cfb-story-intro-v1'
 // Music is a quiet bed under the narration: 0.1 of the normal music level
-// against narration at 0.9 of the effects level, about 11 % of the narration
-// amplitude (~-19 dB). During the last STORY_INTRO_MUSIC_RAMP_MS of the
+// against narration at 1.0 of the effects level. With the default balance
+// (music 50 %) the bed is 5 % of the narration amplitude (~-26 dB). During the last STORY_INTRO_MUSIC_RAMP_MS of the
 // narration it rises smoothly to full music level, announcing the game start.
 export const STORY_INTRO_MUSIC_DUCK = 0.1
-export const STORY_INTRO_VOICE_GAIN = 0.9
+// Same relative narration gain as the tutorial (NARRATION_GAIN in sound.js).
+export const STORY_INTRO_VOICE_GAIN = 1
 export const STORY_INTRO_MUSIC_RAMP_MS = 7000
 export const STORY_INTRO_CLOSED_EVENT = 'story-intro-closed'
 // Late clips (still decoding) join their segment mid-way, unless almost over.

@@ -2,7 +2,8 @@ import { TUTORIAL_NARRATION_CLIPS } from './narrationManifest.js'
 
 // Music level while a tutorial voice clip plays (same idea as the story intro).
 export const TUTORIAL_MUSIC_DUCK = 0.35
-export const TUTORIAL_VOICE_GAIN = 0.95
+// Same relative narration gain as the story intro (see NARRATION_GAIN).
+export const TUTORIAL_VOICE_GAIN = 1
 
 // Only English has recorded clips; the tutorial copy is English-only today, so
 // any other language falls back to browser TTS.
@@ -78,7 +79,9 @@ export function createTutorialNarrator(deps) {
     }
     const state = { audio, clip, stopped: false, released: false, fellBack: false }
     current = state
-    audio.volume = Math.max(0, Math.min(1, deps.getVolume() * TUTORIAL_VOICE_GAIN))
+    if (!deps.routeVoice?.(audio, TUTORIAL_VOICE_GAIN)) {
+      audio.volume = Math.max(0, Math.min(1, deps.getVolume() * TUTORIAL_VOICE_GAIN))
+    }
     audio.addEventListener?.('ended', () => {
       release(state)
       deps.onEnd?.()

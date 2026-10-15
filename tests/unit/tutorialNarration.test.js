@@ -99,7 +99,7 @@ describe('tutorial narrator', () => {
     const narrator = createTutorialNarrator(deps)
     expect(narrator.speak('welcome', clip.text)).toBe('clip')
     expect(deps.clips[0].src).toBe(clip.file)
-    expect(deps.clips[0].volume).toBeCloseTo(0.475, 5)
+    expect(deps.clips[0].volume).toBeCloseTo(0.5, 5)
     expect(deps.duck).toEqual([TUTORIAL_MUSIC_DUCK])
     expect(deps.tts).toEqual([])
     deps.clips[0].dispatchEvent(new window.Event('ended'))
