@@ -26,11 +26,17 @@ for (const density of [1, 3]) {
         r.exitTank = window.gameInstance.units.find(unit => unit.factoryExit?.factoryId === factory.id)
         if (!r.exitTank) throw new Error('Production did not create an exiting tank')
         r.exitFactory = factory
+        // An idle friendly tank parks on the rally point so the exit must pick the nearest free tile.
+        r.unit('tank_v1', r.human, 21, 29)
         r.captureTime = 0
       })
       const directory = process.env.FACTORY_EXIT_SHOTS_DIR || 'output/factory-exit-shots'
       await mkdir(directory, { recursive: true })
-      for (const timestamp of [0, 250, 500, 750, 1000, 1250]) {
+      const frameStep = 1000 / 30
+      const keyShots = new Map([[0, '0'], [1000, '1000'], [2000, '2000'], [3000, '3000'], [3800, '3800'], [5000, 'done']])
+      const timestamps = [...new Set([...Array.from({ length: 151 }, (_, i) => Math.round(i * frameStep)), ...keyShots.keys()])].sort((a, b) => a - b)
+      await mkdir(path.join(directory, `frames-dpr${density}`), { recursive: true })
+      for (const timestamp of timestamps) {
         // Step the deterministic simulation while paused, then force one paused frame.
         await page.evaluate(async target => {
           const { updateGame } = await import('/src/updateGame.js')
@@ -56,7 +62,8 @@ for (const density of [1, 3]) {
             y: bounds.y + f.y * 32 - gs.scrollOffset.y - 32, width: 224, height: 224 }
         })
         const screenshot = await page.screenshot({ clip })
-        await sharp(screenshot).webp({ quality: 90 }).toFile(path.join(directory, `factory-dpr${density}-${timestamp === 1250 ? 'done' : timestamp}.webp`))
+        if (keyShots.has(timestamp)) await sharp(screenshot).webp({ quality: 90 }).toFile(path.join(directory, `factory-dpr${density}-${keyShots.get(timestamp)}.webp`))
+        if (Math.abs(timestamp - Math.round(Math.round(timestamp / frameStep) * frameStep)) < 1) await sharp(screenshot).png().toFile(path.join(directory, `frames-dpr${density}`, `f${String(Math.round(timestamp / frameStep)).padStart(4, '0')}.png`))
       }
       const full = await page.screenshot()
       await sharp(full).webp({ quality: 85 }).toFile(path.join(directory, `factory-dpr${density}-full.webp`))
