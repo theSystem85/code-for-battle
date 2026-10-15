@@ -31,6 +31,7 @@ export function preloadDestroyerImage(callback) {
 }
 
 export function isDestroyerImageLoaded() {
+  if (getPreparedSprite('naval:destroyer:hull')) return true
   return destroyerLoaded && destroyerImage?.complete
 }
 

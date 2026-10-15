@@ -1,3 +1,7 @@
+import { loadPreparedImage } from './rendering/prepared/imagePreparation.js'
+import { getPreparedBuildingLayer } from './rendering/prepared/preparedSpritePipeline.js'
+const buildingImageLoads = new Map()
+
 // buildingImageMap.js
 // Maps building types to their image assets
 
@@ -45,6 +49,12 @@ export function getBuildingImage(buildingType, callback) {
     return buildingImageCache[buildingType]
   }
 
+  const prepared = getPreparedBuildingLayer(buildingType)
+  if (prepared) {
+    callback?.(prepared.image)
+    return prepared.image
+  }
+
   // Get the image path from the mapping
   const imagePath = buildingImageMap[buildingType]
 
@@ -55,21 +65,15 @@ export function getBuildingImage(buildingType, callback) {
   }
 
   // Load the source image
-  const img = new Image()
-  img.onload = () => {
-    // Store the original image in the cache
-    buildingImageCache[buildingType] = img
-
-    // Return the original image
-    if (callback) callback(img)
+  let pending = buildingImageLoads.get(buildingType)
+  if (!pending) {
+    pending = loadPreparedImage(imagePath).then(img => {
+      buildingImageCache[buildingType] = img
+      return img
+    }, () => null)
+    buildingImageLoads.set(buildingType, pending)
   }
-
-  img.onerror = () => {
-    console.error(`Failed to load building image: ${imagePath}`)
-    if (callback) callback(null)
-  }
-
-  img.src = imagePath
+  pending.then(img => callback?.(img))
   return null // Return null for async loading
 }
 
@@ -115,6 +119,7 @@ export function clearBuildingImageCache() {
     delete buildingImageCache[key]
   }
   buildingImagesPreloaded = false
+  buildingImageLoads.clear()
 }
 
 // Get cache stats for debugging

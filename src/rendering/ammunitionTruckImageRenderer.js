@@ -17,6 +17,7 @@ export function preloadAmmunitionTruckImage(callback) {
 }
 
 export function isAmmunitionTruckImageLoaded() {
+  if (getPreparedSprite('unit:ammunitionTruck:base')) return true
   return ammunitionLoaded && ammunitionImg && ammunitionImg.complete
 }
 

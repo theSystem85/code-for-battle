@@ -552,7 +552,7 @@ describe('TextureManager integrated multi-sheet selection', () => {
 
     expect(fetchSpy).toHaveBeenCalledWith(
       'images/map/sprite_sheets/streets24_q90_1024x1024.json',
-      { cache: 'no-store' }
+      expect.objectContaining({ cache: 'no-cache', signal: expect.any(globalThis.AbortSignal) })
     )
     expect(imageSpy).toHaveBeenCalledWith('images/map/sprite_sheets/streets24_q90_1024x1024.webp')
     expect(manager.defaultStreetSheetImage).toEqual({ id: 'street-only' })

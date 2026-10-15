@@ -1,3 +1,4 @@
+import { fetchAssetJson } from '../utils/assetLoading.js'
 // rendering/textureManager.js
 import { TILE_SIZE } from '../config.js'
 import { bootMark } from '../ui/bootTiming.js'
@@ -5,7 +6,7 @@ import { reportBootTextures } from '../ui/bootProgress.js'
 import { buildingImageMap } from '../buildingImageMap.js'
 import { getImageTextureWithBlendMode, normalizeSpriteSheetBlendMode } from './spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
-import { decodePreparedImage, estimateDecodedImageBytes, loadPreparedImage } from './prepared/imagePreparation.js'
+import { estimateDecodedImageBytes, loadPreparedImage } from './prepared/imagePreparation.js'
 import { PreparationGeneration } from './prepared/preparedMap.js'
 
 const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
@@ -307,14 +308,7 @@ export class TextureManager {
 
   async preloadDefaultCombatDecalSheet() {
     try {
-      const response = await fetch(DEFAULT_COMBAT_DECAL_METADATA_PATH, { cache: 'no-store' })
-      if (!response.ok) {
-        this.defaultCombatDecalSheetMetadata = null
-        this.defaultCombatDecalTagBuckets = {}
-        return
-      }
-
-      const metadata = expandCompactSpriteSheetMetadata(await response.json())
+      const metadata = expandCompactSpriteSheetMetadata(await fetchAssetJson(DEFAULT_COMBAT_DECAL_METADATA_PATH))
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultCombatDecalSheetMetadata = null
         this.defaultCombatDecalTagBuckets = {}
@@ -357,14 +351,7 @@ export class TextureManager {
 
   async preloadDefaultCrystalSheet() {
     try {
-      const response = await fetch(DEFAULT_CRYSTAL_METADATA_PATH, { cache: 'no-store' })
-      if (!response.ok) {
-        this.defaultCrystalSheetMetadata = null
-        this.defaultCrystalTagBuckets = {}
-        return
-      }
-
-      const metadata = expandCompactSpriteSheetMetadata(await response.json())
+      const metadata = expandCompactSpriteSheetMetadata(await fetchAssetJson(DEFAULT_CRYSTAL_METADATA_PATH))
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultCrystalSheetMetadata = null
         this.defaultCrystalTagBuckets = {}
@@ -399,15 +386,7 @@ export class TextureManager {
 
   async preloadDefaultStreetSheet() {
     try {
-      const response = await fetch(DEFAULT_STREET_METADATA_PATH, { cache: 'no-store' })
-      if (!response.ok) {
-        this.defaultStreetSheetMetadata = null
-        this.defaultStreetTagBuckets = {}
-        this.clearStreetSelectionPoolCache()
-        return
-      }
-
-      const metadata = expandCompactSpriteSheetMetadata(await response.json())
+      const metadata = expandCompactSpriteSheetMetadata(await fetchAssetJson(DEFAULT_STREET_METADATA_PATH))
       if (!this.hasTaggedIntegratedTiles(metadata)) {
         this.defaultStreetSheetMetadata = null
         this.defaultStreetTagBuckets = {}
@@ -969,32 +948,12 @@ export class TextureManager {
         return
       }
 
-      const img = new Image()
-      img.onload = async() => {
-        try {
-          await decodePreparedImage(img)
-          // Cache only decoded images. This prevents an onload callback from
-          // publishing an asset generation that is not renderable yet.
-          this.imageCache[baseName] = img
-          console.debug(`✅ Successfully loaded: ${baseName}.${extensions[index]}`)
-
-          while (this.loadingImages[baseName].length > 0) {
-            const cb = this.loadingImages[baseName].shift()
-            cb(img)
-          }
-          delete this.loadingImages[baseName]
-        } catch {
-          tryLoadImage(baseName, extensions, index + 1)
-        }
-      }
-
-      img.onerror = () => {
-        // Try next extension
-        tryLoadImage(baseName, extensions, index + 1)
-      }
-
-      // The public directory is served at the root
-      img.src = `${baseName}.${extensions[index]}`
+      loadPreparedImage(`${baseName}.${extensions[index]}`).then(img => {
+        this.imageCache[baseName] = img
+        const callbacks = this.loadingImages[baseName] || []
+        delete this.loadingImages[baseName]
+        for (const cb of callbacks) cb(img)
+      }, () => tryLoadImage(baseName, extensions, index + 1))
     }
 
     tryLoadImage(baseName, extensions, 0)
@@ -1026,7 +985,10 @@ export class TextureManager {
     this.preloadPromise = (async() => {
       try {
         bootMark('tile-textures:start')
-        const waterImg = await loadPreparedImage('images/map/water_spritesheet.webp')
+        const waterImg = await loadPreparedImage('images/map/water_spritesheet.webp').catch(error => {
+          window.logger?.warn?.('Water image unavailable; using procedural water', error)
+          return null
+        })
         bootMark('tile-textures:water-decoded')
         completedWeight += 346
         report(completedWeight / totalWeight)
@@ -1035,7 +997,7 @@ export class TextureManager {
         // Water remains a separate animated frame set. These frames are
         // prepared before readiness and are never included in static pages.
         const waterFrames = []
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; waterImg && i < 16; i++) {
           const canvas = document.createElement('canvas')
           canvas.width = TILE_SIZE
           canvas.height = TILE_SIZE
@@ -1082,11 +1044,12 @@ export class TextureManager {
         bootMark('tile-textures:end')
         return this
       } catch (error) {
-        this.loadingStarted = false
-        this.allTexturesLoaded = false
-        this.texturePreparationState = 'failed'
+        this.loadingStarted = true
+        this.texturePreparationState = 'degraded'
+        this.allTexturesLoaded = true
         this.texturePreparationError = error
-        throw error
+        window.logger?.warn?.('Terrain textures unavailable; using terrain fallback', error)
+        return this
       }
     })()
 
@@ -1117,7 +1080,8 @@ export class TextureManager {
   }
 
   retryPreloadAllTextures(callback) {
-    if (this.texturePreparationState !== 'failed') return this.preloadPromise || Promise.resolve(this)
+    if (!['failed', 'degraded'].includes(this.texturePreparationState)) return this.preloadPromise || Promise.resolve(this)
+    this.preloadPromise = null
     return this.preloadAllTextures(callback)
   }
 

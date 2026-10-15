@@ -30,6 +30,7 @@ export function preloadAmbulanceImage(callback) {
 }
 
 export function isAmbulanceImageLoaded() {
+  if (getPreparedSprite('unit:ambulance:base')) return true
   return ambulanceLoaded && ambulanceImg && ambulanceImg.complete
 }
 

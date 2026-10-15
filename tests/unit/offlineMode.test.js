@@ -566,6 +566,10 @@ describe('offline asset split', () => {
     expect(classifyOfflinePath('icons/wrench.svg')).toBe('boot')
     expect(classifyOfflinePath('images/terrain/terrain-details.png')).toBe('bulk')
     expect(classifyOfflinePath('images/prepared/sprite-manifest.json')).toBe('bulk')
+    for (const scale of [1, 2, 3]) {
+      expect(classifyOfflinePath(`images/prepared/unit/tank/base@${scale}x.webp`)).toBe('exclude')
+    }
+    expect(classifyOfflinePath('images/map/units/harvester.webp')).toBe('exclude')
     expect(classifyOfflinePath('sound/music/music01.mp3')).toBe('bulk')
     expect(classifyOfflinePath('video/narration.mp3')).toBe('bulk')
     expect(classifyOfflinePath('mine_explosion.mp3')).toBe('bulk')

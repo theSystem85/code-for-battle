@@ -29,6 +29,7 @@ export function preloadSupplyShipImage(callback) {
 }
 
 export function isSupplyShipImageLoaded() {
+  if (getPreparedSprite('naval:supplyShip:hull')) return true
   return supplyShipLoaded && supplyShipImage?.complete
 }
 

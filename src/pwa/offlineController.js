@@ -274,7 +274,9 @@ export function startOfflineMode(options = {}) {
   }
 
   function downloadAllowed() {
-    return networkAllowsDownload() && pageVisible()
+    const loading = win.document?.getElementById?.('loadingScreen')
+    const playable = !loading || loading.classList.contains('loading-screen--hidden')
+    return playable && networkAllowsDownload() && pageVisible()
   }
 
   function primaryFailure() {
@@ -889,6 +891,7 @@ export function startOfflineMode(options = {}) {
     bindUi()
   }
 
+  win.addEventListener('game-playable', kickAssetDownload)
   win.addEventListener('online', onOnline)
   win.addEventListener('offline', onOffline)
   publish()
@@ -921,6 +924,7 @@ export function startOfflineMode(options = {}) {
       if (probeTimer) clearInterval(probeTimer)
       if (measureTimer) clearInterval(measureTimer)
       if (tipTimer) clearTimeout(tipTimer)
+      win.removeEventListener('game-playable', kickAssetDownload)
       win.removeEventListener('online', onOnline)
       win.removeEventListener('offline', onOffline)
     },

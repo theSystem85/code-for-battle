@@ -1,3 +1,6 @@
+import { createIdleAssetQueue } from '../../utils/idleAssetQueue.js'
+import { loadPreparedImage } from './imagePreparation.js'
+import { fetchAssetJson, withTimeout } from '../../utils/assetLoading.js'
 import { PreparedSpriteRegistry } from './preparedSpriteRegistry.js'
 import { bootMark } from '../../ui/bootTiming.js'
 import { reportBootSprites, yieldBootPaint } from '../../ui/bootProgress.js'
@@ -11,6 +14,8 @@ export const AIRCRAFT_RESIZE_AUDIT_TAGS = Object.freeze({
 const DEFAULT_BYTE_BUDGET = 256 * 1024 * 1024
 const DENSITY_PRECISION = 1000
 const AUTHORIZED_AIRCRAFT_RESIZE_TAGS = new Set(Object.values(AIRCRAFT_RESIZE_AUDIT_TAGS))
+let backgroundPriorities = null
+let activePrepared = null
 let activeRegistry = null
 let activeManifest = null
 let activeDensity = 0
@@ -44,32 +49,7 @@ function createAbortError() {
 }
 
 function loadImage(url, imageFactory, signal) {
-  return new Promise((resolve, reject) => {
-    throwIfAborted(signal)
-    const image = imageFactory()
-    const cleanup = () => signal?.removeEventListener('abort', abort)
-    const abort = () => {
-      cleanup()
-      image.src = ''
-      reject(signal.reason || createAbortError())
-    }
-    image.onload = async() => {
-      try {
-        if (typeof image.decode === 'function') await image.decode()
-        cleanup()
-        resolve(image)
-      } catch (error) {
-        cleanup()
-        reject(error)
-      }
-    }
-    image.onerror = () => {
-      cleanup()
-      reject(new Error(`Failed to decode prepared sprite source: ${url}`))
-    }
-    signal?.addEventListener('abort', abort, { once: true })
-    image.src = url
-  })
+  return loadPreparedImage(url, { imageFactory, signal })
 }
 
 function chooseVariant(entry, density) {
@@ -207,14 +187,14 @@ export async function prepareSpriteRegistry({
   createBitmap = globalThis.createImageBitmap?.bind(globalThis),
   canvasFactory = defaultCanvasFactory,
   signal,
-  onProgress
+  onProgress,
+  deferUnits = false,
+  initialUnitTypes = []
 } = {}) {
   assertDensity(density)
   if (typeof fetchImpl !== 'function') throw new TypeError('fetchImpl is required')
   throwIfAborted(signal)
-  const response = await fetchImpl(manifestUrl, { signal })
-  if (!response.ok) throw new Error(`Failed to load prepared sprite manifest: ${response.status}`)
-  const manifest = await response.json()
+  const manifest = await fetchAssetJson(manifestUrl, { fetchImpl, signal })
   if (manifest.schemaVersion !== 1 || !manifest.assetVersion || !Array.isArray(manifest.entries)) {
     throw new Error('Unsupported prepared sprite manifest')
   }
@@ -246,33 +226,47 @@ export async function prepareSpriteRegistry({
   }
 
   try {
-    for (const entry of manifest.entries) {
+    const prepareEntry = async(entry) => {
       throwIfAborted(signal)
       const selection = chooseVariant(entry, density)
       const targetWidth = Math.max(1, Math.round(entry.logicalWidth * density))
       const targetHeight = Math.max(1, Math.round(entry.logicalHeight * density))
       // Always fetch a prepared density variant (the nearest one at or above the device
       // density); full-size source images are never downloaded when variants exist.
-      const sourceUrl = selection.variant?.path || entry.source
-      const source = await getSource(sourceUrl)
+      const path = selection.variant?.path || entry.source
+      const sourceUrl = selection.variant?.path
+        ? `${path}${path.includes('?') ? '&' : '?'}v=${encodeURIComponent(manifest.assetVersion)}`
+        : path
+      let source
+      try {
+        source = await getSource(sourceUrl)
+      } catch (error) {
+        if (signal?.aborted) throw error
+        console.warn(`Prepared sprite unavailable: ${entry.id}`, error)
+        return
+      }
       let image = source
       if (
-        selection.variant.sourceRect ||
+        selection.variant?.sourceRect ||
         !selection.exact ||
         (source.naturalWidth || source.width) !== targetWidth ||
         (source.naturalHeight || source.height) !== targetHeight
       ) {
-        image = await createSizedBitmap(
+        image = await withTimeout(createSizedBitmap(
           source,
-          selection.variant.sourceRect,
+          selection.variant?.sourceRect,
           targetWidth,
           targetHeight,
           createBitmap,
           canvasFactory
-        )
+        ))
         if (typeof image.close === 'function') {
           stagedDisposables.push(image)
         }
+      }
+      if (registry.disposed) {
+        if (image !== source) image.close?.()
+        return
       }
       const sprite = createSpriteHandle(entry, image, density, manifest)
       preparedEntries += 1
@@ -280,7 +274,7 @@ export async function prepareSpriteRegistry({
         bootMark('sprites:entry', { index: preparedEntries, entries: entryCount })
       }
       onProgress?.(preparedEntries, entryCount)
-      reportBootSprites(preparedEntries, entryCount)
+      if (!deferUnits || activeRegistry !== registry) reportBootSprites(preparedEntries, entryCount)
       const paintDue = preparedEntries === 1 ||
         (typeof performance !== 'undefined' && performance.now() - lastPaintYield >= 80)
       if (paintDue) {
@@ -293,9 +287,56 @@ export async function prepareSpriteRegistry({
         { decodedBytes: targetWidth * targetHeight * 4, dispose: disposePreparedImage }
       )
     }
+    const entriesById = new Map(manifest.entries.map(entry => [entry.id, entry]))
+    const safePrepareEntry = async entry => {
+      try {
+        await prepareEntry(entry)
+      } catch (error) {
+        if (signal?.aborted) throw error
+        console.warn(`Prepared sprite failed; using fallback: ${entry.id}`, error)
+      }
+    }
+    const deferred = []
+    const critical = []
+    for (const entry of manifest.entries) {
+      if (deferUnits && entry.category !== 'building' && !initialUnitTypes.includes(entry.id.split(':')[1])) {
+        deferred.push(entry)
+      } else {
+        critical.push(entry)
+      }
+    }
+    let nextEntry = 0
+    const prepareCritical = async() => {
+      while (nextEntry < critical.length) {
+        const entry = critical[nextEntry++]
+        await safePrepareEntry(entry)
+      }
+    }
+    await Promise.all(Array.from({ length: Math.min(4, critical.length) }, prepareCritical))
+    const queue = createIdleAssetQueue(async id => {
+      if (registry.disposed) return null
+      const entry = entriesById.get(id)
+      if (!entry) return null
+      try {
+        await safePrepareEntry(entry)
+        if (activeRegistry === registry) {
+          const sprite = registry.get(getPreparedSpriteCacheKey(manifest.assetVersion, density, id))
+          if (sprite) activeLookup.set(id, sprite)
+        }
+      } catch (error) {
+        console.warn(`Deferred sprite unavailable: ${id}`, error)
+      }
+    })
     throwIfAborted(signal)
     bootMark('sprites:end', { entries: entryCount })
-    return { registry, manifest, density, decodedBytes: registry.decodedBytes }
+    return {
+      registry, manifest, density, decodedBytes: registry.decodedBytes,
+      request: id => entriesById.has(id) ? queue.request(id, true) : null,
+      preloadRemaining: (priorityTypes = []) => {
+        deferred.sort((a, b) => Number(priorityTypes.includes(b.id.split(':')[1])) - Number(priorityTypes.includes(a.id.split(':')[1])))
+        return Promise.all(deferred.map(entry => queue.request(entry.id)))
+      }
+    }
   } catch (error) {
     registry.dispose()
     for (const image of stagedDisposables) {
@@ -317,7 +358,7 @@ export function publishPreparedSpriteRegistry(prepared) {
     const sprite = prepared.registry.get(
       getPreparedSpriteCacheKey(prepared.manifest.assetVersion, prepared.density, entry.id)
     )
-    if (!sprite) throw new Error(`Prepared sprite missing during publication: ${entry.id}`)
+    if (!sprite) continue
     lookup.set(entry.id, sprite)
     if (entry.id.startsWith('building:')) {
       const separator = entry.id.lastIndexOf(':')
@@ -331,16 +372,20 @@ export function publishPreparedSpriteRegistry(prepared) {
       layers[layer] = sprite
     }
   }
+  activePrepared = prepared
   activeRegistry = prepared.registry
   activeManifest = prepared.manifest
   activeDensity = prepared.density
   activeLookup = lookup
   activeBuildingLayers = buildingLayers
+  if (backgroundPriorities !== null) prepared.preloadRemaining?.(backgroundPriorities)
   if (previous && previous !== activeRegistry) previous.dispose()
   return activeRegistry
 }
 
 export function disposePreparedSpriteRegistry() {
+  backgroundPriorities = null
+  activePrepared = null
   activeRegistry?.dispose()
   activeRegistry = null
   activeManifest = null
@@ -349,17 +394,26 @@ export function disposePreparedSpriteRegistry() {
   activeBuildingLayers = null
 }
 
+
+export function preloadRemainingPreparedSprites(priorityTypes = []) {
+  backgroundPriorities = priorityTypes
+  return activePrepared?.preloadRemaining?.(priorityTypes)
+}
+
 export function getPreparedSprite(id) {
   if (!activeRegistry || !activeManifest || !activeLookup) return null
   const sprite = activeLookup.get(id)
-  if (!sprite) throw new Error(`Prepared sprite missing after readiness: ${id}`)
+  if (!sprite) {
+    activePrepared?.request?.(id)
+    return null
+  }
   return sprite
 }
 
 export function getPreparedBuildingLayer(buildingType, layer = 'base') {
   if (!activeBuildingLayers) return null
   const sprite = activeBuildingLayers.get(buildingType)?.[layer]
-  if (!sprite) throw new Error(`Prepared building layer missing after readiness: ${buildingType}:${layer}`)
+  if (!sprite) return null
   return sprite
 }
 

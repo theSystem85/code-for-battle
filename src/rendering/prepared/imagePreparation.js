@@ -1,3 +1,5 @@
+import { withTimeout } from '../../utils/assetLoading.js'
+
 function abortError(reason = 'Image preparation aborted') {
   if (reason instanceof globalThis.DOMException && reason.name === 'AbortError') return reason
   return new globalThis.DOMException(String(reason), 'AbortError')
@@ -11,7 +13,7 @@ export async function decodePreparedImage(image, { signal } = {}) {
   throwIfAborted(signal)
   if (!image) throw new TypeError('A source image is required')
   if (typeof image.decode === 'function') {
-    await image.decode()
+    await withTimeout(image.decode(), 10000, 'Image decode')
     throwIfAborted(signal)
   }
   if (('naturalWidth' in image && !image.naturalWidth) || ('naturalHeight' in image && !image.naturalHeight)) {
@@ -23,14 +25,17 @@ export async function decodePreparedImage(image, { signal } = {}) {
 export function loadPreparedImage(src, {
   signal,
   imageFactory = () => new Image(),
-  crossOrigin
+  crossOrigin,
+  timeoutMs = 10000
 } = {}) {
   throwIfAborted(signal)
   return new Promise((resolve, reject) => {
     const image = imageFactory()
     let settled = false
+    const timer = setTimeout(() => settle(reject, new Error(`Image load timed out: ${src}`)), timeoutMs)
 
     const cleanup = () => {
+      clearTimeout(timer)
       signal?.removeEventListener?.('abort', onAbort)
       if (image.removeEventListener) {
         image.removeEventListener('load', onLoad)

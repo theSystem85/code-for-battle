@@ -35,6 +35,7 @@ export function preloadRocketTankImage(callback) {
 }
 
 export function isRocketTankImageLoaded() {
+  if (getPreparedSprite('unit:rocketTank:base')) return true
   return rocketTankLoaded && rocketTankImg && rocketTankImg.complete
 }
 

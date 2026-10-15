@@ -118,14 +118,31 @@ describe('GameWebGPURenderer', () => {
       }
     }
 
-    renderer.finishFrameValidation()
-    await Promise.resolve()
-    await Promise.resolve()
+    await renderer.finishFrameValidation()
 
     const logged = warn.mock.calls.map(call => call.join(' ')).join('\n')
     expect(logged).toContain(`[WebGPU] WebGPU frame validation failed: ${detail}`)
     expect(logged.includes('...')).toBe(false)
     warn.mockRestore()
+  })
+
+  it('falls back when frame submission never settles', async() => {
+    vi.useFakeTimers()
+    const renderer = new GameWebGPURenderer({}, null)
+    renderer.validationPending = true
+    renderer.device = { queue: { onSubmittedWorkDone: () => new Promise(() => {}) } }
+    const fail = vi.spyOn(renderer, 'fail').mockImplementation(() => {})
+    try {
+      const validation = renderer.finishFrameValidation()
+      await vi.advanceTimersByTimeAsync(8000)
+      await validation
+      expect(fail).toHaveBeenCalledWith('WebGPU frame submission timed out after 8000ms')
+      expect(renderer.validationPending).toBe(false)
+      expect(renderer.validationCheckScheduled).toBe(false)
+      expect(vi.getTimerCount()).toBe(0)
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   function placeholderDevice() {

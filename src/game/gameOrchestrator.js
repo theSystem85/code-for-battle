@@ -1,3 +1,4 @@
+import { preloadRemainingPreparedSprites } from '../rendering/prepared/preparedSpritePipeline.js'
 // Core game orchestration extracted from main.js
 import { setupInputHandlers, setRenderScheduler, selectedUnits } from '../inputHandler.js'
 import { unitCosts, initializeOccupancyMap, rebuildOccupancyMapWithTextures } from '../units.js'
@@ -119,7 +120,6 @@ import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../st
 import { bootMark } from '../ui/bootTiming.js'
 import { beginBootProgress, getBootProgress, waitForBootPhase } from '../ui/bootProgress.js'
 import { stopBootProgressPaint } from '../ui/loadingScreen.js'
-import { maybeAutoPlayStoryIntro, mountStoryIntroReplay } from '../story/storyIntroBoot.js'
 import {
   hideLoadingScreen,
   runWithLoadingScreen,
@@ -727,8 +727,12 @@ class Game {
         bootMark('loading-screen-ready')
       })
       hideLoadingScreen(session)
-      mountStoryIntroReplay()
-      maybeAutoPlayStoryIntro()
+      scheduleIdleTask('startup:offline-assets', () => window.dispatchEvent(new CustomEvent('game-playable')))
+      preloadRemainingPreparedSprites([...gameState.availableUnitTypes, 'harvester', 'lightTank', 'tankV1'])
+      import('../story/storyIntroBoot.js').then(({ mountStoryIntroReplay, maybeAutoPlayStoryIntro }) => {
+        mountStoryIntroReplay()
+        maybeAutoPlayStoryIntro()
+      }).catch(error => window.logger?.warn?.('Story intro unavailable', error))
       this.setupDeferredStartupTasks()
     } catch (error) {
       stopBootProgressPaint()

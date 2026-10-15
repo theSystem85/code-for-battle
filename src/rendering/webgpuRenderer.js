@@ -1,3 +1,4 @@
+import { withTimeout } from '../utils/assetLoading.js'
 import {
   TILE_SIZE,
   WATER_EFFECT_SATURATION,
@@ -215,13 +216,17 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     bootMark('webgpu-init:start')
     reportBootGpuSteps(0)
     if (!navigator?.gpu || !canvas?.getContext) throw new Error('WebGPU is unavailable')
-    const adapter = await navigator.gpu.requestAdapter({ powerPreference: 'high-performance' })
+    const adapter = await withTimeout(navigator.gpu.requestAdapter({ powerPreference: 'high-performance' }), 8000, 'WebGPU initialization')
     bootMark('webgpu-init:adapter')
     reportBootGpuSteps(1)
     if (!adapter) throw new Error('No WebGPU adapter is available')
     this.captureAdapterInfo(adapter)
     this.timestampSupported = Boolean(adapter.features?.has?.('timestamp-query'))
-    this.device = await this.requestDevice(adapter)
+    this.device = await withTimeout(this.requestDevice(adapter), 8000, 'WebGPU initialization')
+    const initializedDevice = this.device
+    initializedDevice.lost?.then(info => {
+      if (this.device === initializedDevice) this.handleDeviceLost(info)
+    })
     bootMark('webgpu-init:device')
     reportBootGpuSteps(2)
     this.device.onuncapturederror = event => {
@@ -233,25 +238,24 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
     this.context.configure({ device: this.device, format: this.format, alphaMode: 'premultiplied' })
     this.device.pushErrorScope('validation')
     const shaderModule = this.device.createShaderModule({ code: WEBGPU_TERRAIN_SHADER })
-    const compilationMessages = await this.readShaderCompilationErrors(shaderModule)
+    const compilationMessages = await withTimeout(this.readShaderCompilationErrors(shaderModule), 8000, 'WebGPU initialization')
     bootMark('webgpu-init:shader')
     this.createPipeline(shaderModule)
     bootMark('webgpu-init:pipeline')
     this.createTimestampResources()
-    const pipelineError = await this.device.popErrorScope()
+    const pipelineError = await withTimeout(this.device.popErrorScope(), 8000, 'WebGPU initialization')
     if (pipelineError || compilationMessages.length) {
       const detail = [pipelineError?.message, ...compilationMessages].filter(Boolean).join('; ')
       throw new Error(`WebGPU pipeline validation failed: ${detail}`)
     }
+    if (this.status === 'failed') throw new Error(this.failureReason || 'WebGPU device lost during initialization')
     this.status = 'ready'
     bootMark('webgpu-init:ready')
     reportBootGpuSteps(3)
     finishBootGpu()
     this.loggedFailure = null
     setRendererBackendFailureSummary(null)
-    this.device.lost.then(info => {
-      this.handleDeviceLost(info)
-    })
+
   }
 
   captureAdapterInfo(adapter) {
@@ -590,8 +594,8 @@ export class GameWebGPURenderer extends GameWebGLRenderer {
   finishFrameValidation() {
     if (!this.validationPending || this.validationComplete || this.validationCheckScheduled) return
     this.validationCheckScheduled = true
-    this.device.queue.onSubmittedWorkDone().then(async() => {
-      const error = await this.device.popErrorScope()
+    return withTimeout(this.device.queue.onSubmittedWorkDone(), 8000, 'WebGPU frame submission').then(async() => {
+      const error = await withTimeout(this.device.popErrorScope(), 8000, 'WebGPU initialization')
       this.validationPending = false
       this.validationCheckScheduled = false
       if (error) {

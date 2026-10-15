@@ -17,6 +17,7 @@ export function preloadTankerTruckImage(callback) {
 }
 
 export function isTankerTruckImageLoaded() {
+  if (getPreparedSprite('unit:tankerTruck:base')) return true
   return tankerLoaded && tankerImg && tankerImg.complete
 }
 
