@@ -699,6 +699,7 @@ export async function skipToNextMusic() {
   const file = getNextSkipTrack(pendingMusic?.file || currentBackgroundMusicFile)
   if (!musicEnabled) {
     musicEnabled = true
+    rememberMusicUserChoice(false)
     if (bgMusicAudio && !bgMusicAudio.paused) bgMusicAudio.pause()
   }
   resumeMusicContext()
@@ -715,6 +716,95 @@ export async function skipToNextMusic() {
 }
 
 export { MUSIC_SKIP_ORDER }
+
+// --- Story cues (first-launch intro and first gameplay) ---
+// The user's explicit "music off" choice is remembered so automatic cues never
+// override it; everything else about playback (master volume, narration duck,
+// Web Audio gain, 3 s sequential fade-out) goes through the normal path.
+export const MUSIC_USER_OFF_STORAGE_KEY = 'cfb-music-user-off'
+export const FIRST_GAMEPLAY_MUSIC_STORAGE_KEY = 'cfb-first-gameplay-music-v1'
+export const STORY_INTRO_MUSIC_FILE = MUSIC_TRACKS.firstAttack
+export const FIRST_GAMEPLAY_MUSIC_FILE = 'music02.mp3'
+let musicPauseExempt = false
+
+export function isMusicUserDisabled() {
+  try {
+    return getStoredItem(MUSIC_USER_OFF_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+function rememberMusicUserChoice(off) {
+  try {
+    setStoredItem(MUSIC_USER_OFF_STORAGE_KEY, off ? 'true' : 'false')
+  } catch {
+    // Storage unavailable: the choice only lasts for this session.
+  }
+}
+
+// While the story intro holds the game paused, the pause handler must not
+// silence its background music (or suspend the audio context it plays through).
+export function setMusicPauseExempt(exempt) {
+  musicPauseExempt = Boolean(exempt)
+  if (musicPauseExempt && musicPaused) {
+    musicPaused = false
+    resumeMusicContext()
+  }
+}
+
+// Queue a specific track as a one-off cue: it plays once to its end (or until a
+// mood change), after which the director's current mood resumes. Turns music
+// on unless the user explicitly switched it off.
+export async function playMusicCue(file) {
+  if (suppressAudioForAutomation || !file) return false
+  if (isMusicUserDisabled()) return false
+  if (!backgroundMusicInitialized && !backgroundMusicLoading) await initBackgroundMusic()
+  if (!musicEnabled) {
+    musicEnabled = true
+    if (bgMusicAudio && !bgMusicAudio.paused) bgMusicAudio.pause()
+  }
+  resumeMusicContext()
+  const request = ++musicRequest
+  try {
+    const element = await loadBackgroundMusicElement(file)
+    if (request !== musicRequest || !musicEnabled || musicPaused) return false
+    queueMusicTransition(element, file, directedState, true)
+    notifyMusicTrack()
+    return true
+  } catch (error) {
+    window.logger.warn('Music cue unavailable:', error)
+    return false
+  }
+}
+
+export function isMusicFilePlaying(file) {
+  if (pendingMusic) return pendingMusic.file === file
+  return Boolean(musicEnabled && bgMusicAudio && !bgMusicAudio.paused && currentBackgroundMusicFile === file)
+}
+
+export function hasPlayedFirstGameplayMusic() {
+  try {
+    return getStoredItem(FIRST_GAMEPLAY_MUSIC_STORAGE_KEY) === 'true'
+  } catch {
+    return false
+  }
+}
+
+// Battle Track 02 opens the very first gameplay session, once per device.
+export async function playFirstGameplayMusic() {
+  if (hasPlayedFirstGameplayMusic()) return false
+  const started = await playMusicCue(FIRST_GAMEPLAY_MUSIC_FILE)
+  if (started) {
+    try {
+      setStoredItem(FIRST_GAMEPLAY_MUSIC_STORAGE_KEY, 'true')
+    } catch {
+      // Without storage it may play again next launch; harmless.
+    }
+  }
+  return started
+}
+
 
 // Pick a random track, avoiding an immediate repeat when more than one exists.
 // Music is local presentation only, so it uses Math.random and never advances
@@ -876,6 +966,7 @@ export async function toggleBackgroundMusic() {
   if (bgMusicAudio) {
     if (!musicEnabled) {
       musicEnabled = true
+      rememberMusicUserChoice(false)
       resumeMusicContext()
       try {
         if (!musicPaused) {
@@ -887,6 +978,7 @@ export async function toggleBackgroundMusic() {
       }
     } else {
       musicEnabled = false
+      rememberMusicUserChoice(true)
       musicRequest++
       stopMusicFade()
       bgMusicAudio.pause()
@@ -946,6 +1038,8 @@ export function terminateAllSounds() {
 
 // Pause all currently playing audio including background music and looped sounds
 export function pauseAllSounds() {
+  // The story intro pauses the simulation but keeps its music playing.
+  if (musicPauseExempt) return
   musicPaused = true
   musicRequest++
   if (bgMusicAudio && !bgMusicAudio.paused) {
