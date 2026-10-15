@@ -9,5 +9,9 @@ Do the same image asset overhaul as for the tanks for the destroyer, battleship 
 ## Result
 
 - Sprites authored at the DPR 3 backing size, prepared with `nativeDensity: 3`, so 3x is 1:1 and nothing is upscaled.
-- Battleship turret layout re-measured (foreOuter 2.229, foreInner 1.637, aftInner 0.992, aftOuter -2.16 tiles), three barrels per turret with unchanged salvo damage.
+- Battleship: Bismarck-class art (2 turrets fore, 2 aft, twin-gun turret). Logic unchanged from main; turret positions re-measured (foreOuter 1.342, foreInner 0.931, aftInner -1.425, aftOuter -1.827 tiles) and barrel offsets matched to the gun ports.
 - Destroyer gun anchor re-measured, carrier mirrored so the parking slots stay on the clear deck.
+
+## Follow-up (2026-10-15T07:30:00Z)
+
+Revert all battleship logic changes (3 barrels, 52 damage, ammo, aftInner facing) back to main; use the new Bismarck-class hull and two-gun turret, and only update the image, turret positions and barrel offsets.

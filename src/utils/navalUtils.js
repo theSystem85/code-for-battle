@@ -30,9 +30,10 @@ export const NAVAL_RENDER_LENGTH_TILES = Object.freeze({
 // backing size (see docs/asset-sources/ship-build-assets.py). Their sprite length is the
 // visible hull length, not the old padded square canvas, so they are never upscaled.
 export const NAVAL_SPRITE_NATIVE_DENSITY = 3
+const BATTLESHIP_SPRITE_HEIGHT = 599
 export const NAVAL_SPRITE_LENGTH_TILES = Object.freeze({
   destroyer: 337 / NAVAL_SPRITE_NATIVE_DENSITY / TILE_SIZE,
-  battleship: 599 / NAVAL_SPRITE_NATIVE_DENSITY / TILE_SIZE,
+  battleship: BATTLESHIP_SPRITE_HEIGHT / NAVAL_SPRITE_NATIVE_DENSITY / TILE_SIZE,
   aircraftCarrier: 857 / NAVAL_SPRITE_NATIVE_DENSITY / TILE_SIZE
 })
 const NAVAL_HULL_WIDTH_RATIOS = Object.freeze({

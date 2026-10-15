@@ -49,4 +49,4 @@ The three situational tracks were generated on the owner's ElevenLabs Starter pl
 
 - Files: `public/images/map/units/{destroyer_map,battleship_map,battleship_turret,battleship_barrel,aircraft_carrier_map}.webp` and their prepared 1x/2x/3x variants.
 - Source: AI-generated on 2026-10-15 with Grok Imagine (xAI), 1280×720, one image per asset. Raw sources and prompts in `docs/asset-sources/ship-*`.
-- Post-processing by the project with `docs/asset-sources/ship-build-assets.py`: chroma keying, cropping, lossless 90° rotation, carrier mirrored, battleship bow barbette retouched to an empty ring, Lanczos downscale to the DPR 3 backing size.
+- Post-processing by the project with `docs/asset-sources/ship-build-assets.py`: chroma keying, cropping, lossless 90° rotation, carrier mirrored, Lanczos downscale to the DPR 3 backing size.
