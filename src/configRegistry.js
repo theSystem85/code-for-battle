@@ -110,8 +110,6 @@ import {
   getMobileApacheJoystickMapping,
   setMobileApacheJoystickMapping,
   SAFE_RANGE_ENABLED,
-  USE_PROCEDURAL_WATER_RENDERING,
-  setUseProceduralWaterRendering,
   WATER_EFFECT_TONE,
   setWaterEffectTone,
   WATER_EFFECT_SATURATION,
@@ -276,15 +274,6 @@ export const configRegistry = {
     name: 'Smoke Wind Sway Speed', description: 'Frequency of animated wind direction changes', type: 'number',
     get: () => WIND_SWAY_FREQUENCY, set: setWindSwayFrequency,
     min: 0, max: 0.01, step: 0.0001, category: 'Graphics'
-  },
-
-  proceduralWaterRendering: {
-    name: 'Procedural Water Rendering',
-    description: 'Switch between the new procedural water shader and the classic animated water tiles',
-    type: 'boolean',
-    get: () => USE_PROCEDURAL_WATER_RENDERING,
-    set: setUseProceduralWaterRendering,
-    category: 'Graphics'
   },
 
   waterEffectTone: {

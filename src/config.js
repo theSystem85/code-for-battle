@@ -394,9 +394,8 @@ export function loadGraphicsSettingsFromIndexedDb() {
     }
 
     const parsed = JSON.parse(stored)
-    if (typeof parsed?.useProceduralWaterRendering === 'boolean') {
-      USE_PROCEDURAL_WATER_RENDERING = parsed.useProceduralWaterRendering
-    }
+    // Procedural water is the only water renderer; a stored legacy
+    // useProceduralWaterRendering=false value is ignored.
 
     WATER_EFFECT_TONE = clampNumber(parsed?.waterEffectTone, -1, 1, WATER_EFFECT_TONE)
     WATER_EFFECT_SATURATION = clampNumber(parsed?.waterEffectSaturation, 0, 2, WATER_EFFECT_SATURATION)
@@ -423,12 +422,11 @@ function requestWebGPURetry() {
   globalThis.window?.gameInstance?.renderer?.requestWebGPUAttempt?.()
 }
 
-export let USE_PROCEDURAL_WATER_RENDERING = true
+// Water is always rendered procedurally (CPU pass / WebGL / WebGPU). The
+// classic bitmap water sprite sheet was removed.
+export const USE_PROCEDURAL_WATER_RENDERING = true
 
-export function setUseProceduralWaterRendering(value) {
-  USE_PROCEDURAL_WATER_RENDERING = Boolean(value)
-  saveGraphicsSettingsToIndexedDb()
-  requestGraphicsSettingsRender()
+export function setUseProceduralWaterRendering() {
   return USE_PROCEDURAL_WATER_RENDERING
 }
 

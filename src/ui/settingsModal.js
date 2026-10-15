@@ -22,7 +22,6 @@ import {
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
 const DYNAMIC_WATER_LAND_BLEND_KEY = 'rts_dynamic_water_land_blend'
 const WATER_SETTINGS_CONFIG_IDS = {
-  enabled: 'proceduralWaterRendering',
   tone: 'waterEffectTone',
   saturation: 'waterEffectSaturation',
   pixelDensity: 'mobileCanvasPixelRatioCap',
@@ -58,7 +57,6 @@ function rendererBackendSelectValue(value) {
 }
 
 function syncWaterGraphicsControls(modal) {
-  const enabledToggle = modal.querySelector('#settingsProceduralWaterToggle')
   const toneInput = modal.querySelector('#settingsWaterToneRange')
   const saturationInput = modal.querySelector('#settingsWaterSaturationRange')
   const pixelDensityInput = modal.querySelector('#settingsMobilePixelDensityRange')
@@ -67,14 +65,9 @@ function syncWaterGraphicsControls(modal) {
   const pixelDensityValue = modal.querySelector('#settingsMobilePixelDensityValue')
   const rendererSelect = modal.querySelector('#settingsRendererBackend')
 
-  if (enabledToggle) {
-    enabledToggle.checked = Boolean(getConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled))
-  }
-
   if (toneInput) {
     const tone = Number(getConfigValue(WATER_SETTINGS_CONFIG_IDS.tone) ?? 0)
     toneInput.value = String(tone)
-    toneInput.disabled = !enabledToggle?.checked
     if (toneValue) {
       toneValue.textContent = formatWaterTone(tone)
     }
@@ -83,7 +76,6 @@ function syncWaterGraphicsControls(modal) {
   if (saturationInput) {
     const saturation = Number(getConfigValue(WATER_SETTINGS_CONFIG_IDS.saturation) ?? 1)
     saturationInput.value = String(saturation)
-    saturationInput.disabled = !enabledToggle?.checked
     if (saturationValue) {
       saturationValue.textContent = formatWaterSaturation(saturation)
     }
@@ -274,7 +266,6 @@ export function initSettingsModal() {
   const runtimeLaunchBtn = document.getElementById('openRuntimeConfigDialogBtn')
   const frameLimiterToggle = document.getElementById('settingsFrameLimiterToggle')
   const radarOfflineAnimationToggle = document.getElementById('settingsRadarOfflineAnimationToggle')
-  const proceduralWaterToggle = document.getElementById('settingsProceduralWaterToggle')
   const dynamicWaterLandBlendToggle = document.getElementById('settingsDynamicWaterLandBlendToggle')
   const waterToneRange = document.getElementById('settingsWaterToneRange')
   const waterSaturationRange = document.getElementById('settingsWaterSaturationRange')
@@ -335,14 +326,6 @@ export function initSettingsModal() {
       const enabled = event.target.checked
       gameState.radarOfflineAnimationEnabled = enabled
       saveRadarOfflineAnimationSetting(enabled)
-    })
-  }
-
-  if (proceduralWaterToggle) {
-    proceduralWaterToggle.checked = Boolean(getConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled))
-    proceduralWaterToggle.addEventListener('change', (event) => {
-      setConfigValue(WATER_SETTINGS_CONFIG_IDS.enabled, event.target.checked)
-      syncWaterGraphicsControls(modal)
     })
   }
 
