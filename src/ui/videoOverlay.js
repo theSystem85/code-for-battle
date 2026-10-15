@@ -1,7 +1,7 @@
 import { configureMilestoneVideo, milestoneVideoPlacement, MILESTONE_PRESENTATION_FADE_MS } from './milestoneVideoPresentation.js'
 // ui/videoOverlay.js
 import { MILESTONE_VIDEO_CROPS } from './milestoneVideoCrop.js'
-import { getMasterVolume } from '../sound.js'
+import { getEffectsVolume } from '../sound.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
 import { showNotification } from './notifications.js'
 import { configureAudioElement } from '../pwa/audioElementPolicy.js'
@@ -668,7 +668,7 @@ export class VideoOverlay {
    * SFX and voice stay fully open because those channels are not separate sliders.
    */
   rememberMilestoneMute() {
-    const master = getMasterVolume()
+    const master = getEffectsVolume()
     this.milestoneMasterVolume = master
     this.milestoneAudioMuted = master <= 0 || isHeadlessAudioMuted()
   }
@@ -780,7 +780,7 @@ export class VideoOverlay {
     const audio = await this.loadCompanionAudio(audioFile)
     if (!audio) return
     this.narrationAudio = audio
-    audio.volume = MILESTONE_NARRATION_GAIN * getMasterVolume()
+    audio.volume = MILESTONE_NARRATION_GAIN * getEffectsVolume()
     audio.play().catch(() => {
       if (this.narrationAudio === audio) this.narrationAudio = null
     })
@@ -886,7 +886,7 @@ export class VideoOverlay {
    */
   updateAudioVolume() {
     if (this.narrationAudio) {
-      this.narrationAudio.volume = MILESTONE_NARRATION_GAIN * getMasterVolume()
+      this.narrationAudio.volume = MILESTONE_NARRATION_GAIN * getEffectsVolume()
     }
     this.rememberMilestoneMute()
     if (!this.isPlaying) return

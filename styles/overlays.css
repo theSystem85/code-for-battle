@@ -2118,3 +2118,49 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
     transition-duration: 0ms;
   }
 }
+
+/* Sound effects / music ratio: compact slider with a custom tooltip. */
+.config-modal__field--mix {
+  position: relative;
+}
+
+.config-modal__mix-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.config-modal__mix-row input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+
+.config-modal__mix-end {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.config-modal__mix-tip {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  z-index: 2;
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: #0b0d10;
+  border: 1px solid #2d3640;
+  color: #cfd8e3;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 120ms ease;
+}
+
+.config-modal__field--mix:hover .config-modal__mix-tip,
+.config-modal__field--mix:focus-within .config-modal__mix-tip {
+  opacity: 1;
+  visibility: visible;
+}
