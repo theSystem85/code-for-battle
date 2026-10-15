@@ -1,6 +1,6 @@
 # Lighthouse Performance Remediation Plan (Top 10)
 
-Source report: `tests/lighthouse/default.report.json`.
+Source report: `tests/lighthouse/default.report.json` (generated locally with `npm run lighthouse`; reports are no longer committed).
 
 Current Lighthouse performance baseline:
 - Performance score: **0.20**

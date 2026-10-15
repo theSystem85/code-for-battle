@@ -2,6 +2,8 @@
 import sharp from 'sharp'
 import { readFile, writeFile } from 'node:fs/promises'
 const dir = new URL('../public/images/terrain/', import.meta.url)
+// Build-only source art lives outside public/ so it never ships in a deploy.
+const srcDir = new URL('../assets-src/terrain/', import.meta.url)
 const layers = []
 const terrain = await sharp(new URL('organic-atlas.png',dir).pathname).ensureAlpha().raw().toBuffer({resolveWithObject:true})
 function material(x,y,road=false) {
@@ -10,8 +12,8 @@ function material(x,y,road=false) {
  const i=(sy*terrain.info.width+sx)*4
  return terrain.data.subarray(i,i+3)
 }
-const roadSource=await sharp(new URL('source/materials.webp',dir).pathname).metadata()
-const road=await sharp(new URL('source/materials.webp',dir).pathname).extract({left:0,top:Math.floor(roadSource.height/2),width:roadSource.width,height:Math.floor(roadSource.height/2)}).resize(128,128).removeAlpha().raw().toBuffer()
+const roadSource=await sharp(new URL('materials.webp', srcDir).pathname).metadata()
+const road=await sharp(new URL('materials.webp', srcDir).pathname).extract({left:0,top:Math.floor(roadSource.height/2),width:roadSource.width,height:Math.floor(roadSource.height/2)}).resize(128,128).removeAlpha().raw().toBuffer()
 function color(x,y,isRoad=false) {return isRoad?road.subarray((((y&127)*128)+(x&127))*3,(((y&127)*128)+(x&127))*3+3):material(x,y)}
 async function addPixels(pixels,width,height,left,top) {layers.push({input:await sharp(pixels,{raw:{width,height,channels:4}}).png().toBuffer(),left,top})}
 const cornerUV=(corner,x,y)=>[corner===1||corner===2?31-x:x,corner>=2?31-y:y]
@@ -59,7 +61,7 @@ for(let kind=0;kind<2;kind++)for(let corner=0;corner<4;corner++) {
  await addPixels(p,32,32,corner*32,128+kind*32)
 }
 async function cropSheet(name,cols,rows) {
- const path=new URL(`source/${name}.webp`,dir).pathname,m=await sharp(path).metadata(),out=[]
+ const path=new URL(`${name}.webp`, srcDir).pathname,m=await sharp(path).metadata(),out=[]
  for(let i=0;i<cols*rows;i++) {
   const b=await sharp(path).extract({left:Math.floor(i%cols*m.width/cols),top:Math.floor(Math.floor(i/cols)*m.height/rows),width:Math.floor(m.width/cols),height:Math.floor(m.height/rows)}).png().toBuffer()
   out.push(await sharp(b).trim({threshold:8}).png().toBuffer())
@@ -70,9 +72,9 @@ const decorations=await cropSheet('decoration',4,3)
 for(let i=0;i<12;i++)layers.push({input:await sharp(decorations[i]).resize(32,32,{fit:'contain',background:'#00000000'}).png().toBuffer(),left:i*32,top:192})
 // Generated sprites have unequal gutters; explicit reviewed bounds avoid
 // accidentally packing fragments of neighboring sprites.
-const bounds=JSON.parse(await readFile(new URL('source/cliffs-layout.json',dir),'utf8'))
+const bounds=JSON.parse(await readFile(new URL('cliffs-layout.json', srcDir),'utf8'))
 const cliffs=await Promise.all(bounds.map(async rect=>{
- const b=await sharp(new URL('source/cliffs.webp',dir).pathname).extract(rect).png().toBuffer()
+ const b=await sharp(new URL('cliffs.webp', srcDir).pathname).extract(rect).png().toBuffer()
  return sharp(b).trim({threshold:8}).png().toBuffer()
 }))
 // Draw-direction-specific samples retain the generated lighting (no rotations).

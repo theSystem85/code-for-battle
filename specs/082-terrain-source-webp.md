@@ -2,7 +2,7 @@
 
 ## Requirement
 
-All raster source assets in `public/images/terrain/source` must use WebP with quality 85. Terrain compiler scripts must reference the WebP filenames, while generated atlas outputs remain unchanged.
+All raster source assets in `public/images/terrain/source` (runtime biome ground: meadow, soil, snow, sand) and `assets-src/terrain/` (build-only compiler inputs, moved out of `public/` on 2026-10-15 so they no longer ship) must use WebP with quality 85. Terrain compiler scripts must reference the WebP filenames, while generated atlas outputs remain unchanged.
 
 ## Verification
 
