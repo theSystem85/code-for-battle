@@ -14,3 +14,12 @@
 
 ## Verification
 Lint, all unit tests, and Playwright crops at DPR 1 (1280×800) and DPR 3 (iPhone 14 Pro landscape) next to Tank V1/V3, plus the build button. Not yet checked on a real device.
+
+## Follow-up: plain Bradley map sprite (no camouflage, boxy turret)
+- Feedback: the map sprite must have no camouflage and a real Bradley's boxy turret. The parts were replaced with Patrick's Grok Imagine sheet attempt 3 (`docs/asset-sources/light-tank-bradley-plain-spritesheet.jpg`, solid tan on blue): an empty hull with the turret ring, rear ramp at the top and front glacis/grille at the bottom (front points down); a boxy turret with a TOW box on its left; and the barrel.
+- The turret was scaled so its length is 43% of the hull length (body about 59% of the hull width, so it covers the middle with a little overhang). It was padded on the right so the image centre, which is the rotation pivot, is the turret body centre rather than being shifted by the TOW box. Mount: the turret-ring centre (58, 109).
+- Barrel: the muzzle-side 45% of the source. Its breech starts at 90% of the turret height (under the front hatch), so it is never drawn over the turret.
+- Grade: mild only (brightness 0.9, saturation 1.05, contrast 1.08), no camouflage added. The cut-out now clamps blue below green below red to remove the blue fringe on the thin barrel.
+- Resolution: raw parts are 279×571 (hull), 435×282 (turret) and 31×511 (barrel) px. Committed sources are 115×236, 80×101 and 13×95 px; the prepared @3x sizes are 41×84, 29×36 and 5×34 px. Everything is downsampled; nothing is upscaled.
+- Build button unchanged.
+- Skill: map sprites now default to a solid single-colour paint scheme with no camouflage unless explicitly requested (art requirements and prompting tips), plus tips on turret proportions/pivots and thin-part despill.
