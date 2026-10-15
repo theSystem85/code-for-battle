@@ -1,0 +1,19 @@
+:root {
+  color-scheme: dark;
+  font-family: system-ui, sans-serif;
+  --sidebar-shared-bg-color: #20252a;
+  --sidebar-shared-bg-image: none;
+}
+body { margin: 0; background: #121619; color: #eee; }
+* { box-sizing: border-box; }
+.sse-standalone .config-modal { display: none; }
+.sse-standalone .config-modal--open { display: block; }
+.sse-standalone .config-modal__dialog { height: 100dvh; }
+.sse-standalone button, .sse-standalone input, .sse-standalone select {
+  font: inherit; color: inherit; background: #303940; border: 1px solid #697780; padding: 5px;
+}
+.sse-standalone button { cursor: pointer; }
+.sse-standalone #spriteSheetEditorCloseBtn { display: none; }
+@media (max-width: 650px) {
+  .sse-standalone .sprite-sheet-editor { grid-template-columns: 220px minmax(0, 1fr); }
+}

@@ -1,3 +1,4 @@
+import { initSseExtend } from './sseExtend.js'
 import {
   createSpriteSheetAnimationInstance,
   getAnimationFrameIndex,
@@ -174,6 +175,7 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
     ? Array.from(new Set([...expandedRaw.tags.filter(Boolean), ...baseTags]))
     : [...baseTags]
   const data = {
+    extension: expandedRaw?.extension,
     schemaVersion: 1,
     sheetPath,
     tileSize: normalizedTileSize,
@@ -246,6 +248,7 @@ function toSerializableData(data, image) {
 
   return {
     schemaVersion: 1,
+    extension: data.extension,
     sheetPath: data.sheetPath,
     tileSize: data.tileSize,
     rowHeight: data.rowHeight || data.tileSize,
@@ -893,8 +896,9 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
     saveDataToIndexedDb(state.activeData, state.mode)
   }
 
-  const loadedData = await loadMetadataFromSourcesForMode(sheetPath, mode)
-  const image = await loadImage(sheetPath)
+  const local = state.localSheets?.get(sheetPath)
+  const loadedData = local?.data || await loadMetadataFromSourcesForMode(sheetPath, mode)
+  const image = local?.image || await loadImage(sheetPath)
   if (!image) {
     setStatus(state, `Failed to load sheet: ${sheetPath}`, 'error')
     return
@@ -1352,8 +1356,13 @@ async function loadDroppedSheetFile(state, file) {
   setStatus(state, `Loaded dropped image: ${file.name || 'image'}`)
 }
 
-export async function loadDroppedFiles(state, files) {
+export async function loadDroppedFiles(state, files, { source = false } = {}) {
   const droppedFiles = Array.from(files || []).filter(Boolean)
+  if (source) {
+    const image = droppedFiles.find(file => isDroppedImageFile(file) && !isDroppedJsonFile(file))
+    if (!image) throw new Error('Choose an image for the source.')
+    return state.extendApi.loadSourceImage(image)
+  }
   if (!droppedFiles.length) {
     await loadDroppedSheetFile(state, null)
     return
@@ -1467,6 +1476,8 @@ async function loadDroppedTagFile(state, file) {
     }
 
     state.activeData = normalizeSheetDataForTags(imported, sheetPath, baseTags)
+    const local = state.localSheets?.get(sheetPath)
+    if (local) local.data = state.activeData
     if (!state.activeData.tags.includes(state.activeTag)) {
       state.activeTag = state.activeData.tags[0] || baseTags[0]
     }
@@ -1565,6 +1576,7 @@ function resolveSheetDisplayLabel(state, sheetPath) {
 
 export async function initSpriteSheetEditor(options = {}) {
   const state = {
+    localSheets: new Map(),
     modal: document.getElementById('spriteSheetEditorModal'),
     closeBtn: document.getElementById('spriteSheetEditorCloseBtn'),
     openBtn: document.getElementById('openSpriteSheetEditorBtn'),
@@ -1672,6 +1684,7 @@ export async function initSpriteSheetEditor(options = {}) {
     // ignore
   }
 
+  if (options.standalone) state.mode = 'static'
   state.staticSheetPaths = await loadSheetList()
   state.animationSheetPaths = await loadAnimationSheetList()
   state.previewBackgroundImage = new Image()
@@ -2079,7 +2092,34 @@ export async function initSpriteSheetEditor(options = {}) {
     setSidebarHidden(false)
   }
 
+  state.extendApi = initSseExtend(state, {
+    staticMode: () => switchMode('static'),
+    newData: (path, data) => normalizeSheetDataForTags(data, path, DEFAULT_SSE_TAGS),
+    register: (path, name, image, data) => {
+      state.localSheets.set(path, { image, data })
+      ensureSheetPathInMode(state, path, name, 'static')
+      state.sheetPaths = state.staticSheetPaths
+      renderSheetOptions(state)
+      state.sheetSelect.value = path
+      state.image = image
+      state.activeData = data
+      state.tileSizeInput.value = data.tileSize
+      state.rowHeightInput.value = data.rowHeight
+      state.borderWidthInput.value = data.borderWidth
+      renderTagList(state)
+    },
+    refresh: () => {
+      state.localSheets.set(state.activeData.sheetPath, { image: state.image, data: state.activeData })
+      drawSseCanvas(state)
+      updateSheetMetadataUi(state)
+    },
+    select: path => loadSheet(state, path, { mode: 'static' }),
+    serialize: () => toSerializableData(state.activeData, state.image),
+    name: () => resolveSheetDisplayLabel(state, state.activeData.sheetPath),
+    loadFiles: files => loadDroppedFiles(state, files, { source: true })
+  })
   bindCanvasInteractions(state)
+  if (options.standalone) await openModal(state)
   refreshAnimationPreview(state)
   if (state.previewPlaying && state.isModalOpen) {
     startAnimationPreviewLoop(state)

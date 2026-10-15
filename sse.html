@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sprite Sheet Editor — Code for Battle</title></head>
+<body class="sse-standalone"><button id="openSpriteSheetEditorBtn" hidden type="button">Open editor</button>
+  <div id="spriteSheetEditorModal" class="config-modal" aria-hidden="true">
+    <div class="config-modal__dialog sprite-sheet-editor-modal" role="dialog" aria-modal="true"
+      aria-label="Sprite Sheet Editor">
+      <div id="sseRoot" class="config-modal__body sprite-sheet-editor">
+        <aside id="sseSidebar" class="sprite-sheet-editor__sidebar">
+          <div class="sprite-sheet-editor__mode-tabs" role="tablist" aria-label="Sprite sheet editor mode">
+            <button id="sseModeStaticBtn" class="action-button sprite-sheet-editor__mode-tab is-active" type="button" role="tab" aria-selected="true">Static</button>
+            <button id="sseModeAnimatedBtn" class="action-button sprite-sheet-editor__mode-tab" type="button" role="tab" aria-selected="false">Animated</button>
+          </div>
+          <div id="sseAnimationPreviewPanel" class="sprite-sheet-editor__preview-panel" hidden>
+            <span class="sprite-sheet-editor__tags-title">Animation preview</span>
+            <canvas id="sseAnimationPreviewCanvas" width="128" height="128"></canvas>
+            <div class="sprite-sheet-editor__preview-controls">
+              <label class="sprite-sheet-editor__checkbox-row">
+                <input id="ssePreviewLoopCheckbox" type="checkbox">
+                <span>Loop</span>
+              </label>
+              <label class="sprite-sheet-editor__checkbox-row">
+                <input id="ssePreviewBackgroundCheckbox" type="checkbox" checked>
+                <span>Background</span>
+              </label>
+              <button id="ssePreviewPlayPauseBtn" class="action-button" type="button">Pause</button>
+            </div>
+            <div id="ssePreviewDuration" class="sprite-sheet-editor__preview-duration">Duration: 0ms (0 frames)</div>
+          </div>
+          <label class="sprite-sheet-editor__field">
+            <span>Sprite Sheet</span>
+            <select id="sseSheetSelect" class="sidebar-input"></select>
+          </label>
+          <div id="sseSheetMetaRow" class="sprite-sheet-editor__sheet-meta" hidden>
+            <span id="sseSheetResolution" class="sprite-sheet-editor__sheet-resolution">Resolution: --</span>
+            <div id="sseSheetInfoWrap" class="sprite-sheet-editor__sheet-info">
+              <button
+                id="sseSheetInfoBtn"
+                class="sprite-sheet-editor__sheet-info-btn"
+                type="button"
+                aria-label="Show sprite sheet image metadata"
+                aria-expanded="false"
+              >i</button>
+              <div id="sseSheetInfoPopover" class="sprite-sheet-editor__sheet-info-popover" role="tooltip"></div>
+            </div>
+          </div>
+          <div id="sseImageConverterAccordion" class="sse-image-converter-accordion">
+            <button
+              id="sseImageConverterToggle"
+              class="action-button sse-image-converter-accordion__toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="sseImageConverterContent"
+            >
+              <span>SSE Image Converter</span>
+              <span id="sseImageConverterToggleIcon">▼</span>
+            </button>
+            <div id="sseImageConverterContent" class="sse-image-converter" hidden>
+              <p class="sse-image-converter__hint">
+                Drag and drop PNG/JPEG/WEBP files to convert and auto-download as WEBP.
+              </p>
+              <div class="sse-image-converter__inputs">
+                <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                  <input
+                    type="number"
+                    class="sidebar-input"
+                    id="sseImageConverterCompression"
+                    min="1"
+                    max="100"
+                    value="90"
+                    placeholder=" "
+                  >
+                  <label for="sseImageConverterCompression">Compression %</label>
+                </div>
+                <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                  <input
+                    type="number"
+                    class="sidebar-input"
+                    id="sseImageConverterWidth"
+                    min="1"
+                    max="2048"
+                    value="1024"
+                    placeholder=" "
+                  >
+                  <label for="sseImageConverterWidth">Width</label>
+                </div>
+                <div class="floating-label-input floating-label-input--narrow sse-image-converter__input">
+                  <input
+                    type="number"
+                    class="sidebar-input"
+                    id="sseImageConverterHeight"
+                    min="1"
+                    max="2048"
+                    value="1024"
+                    placeholder=" "
+                  >
+                  <label for="sseImageConverterHeight">Height</label>
+                </div>
+              </div>
+              <label class="sse-image-converter__checkbox">
+                <input type="checkbox" id="sseImageConverterFilenameSuffix">
+                <span>Add _qXX_WIDTHxHEIGHT suffix to filename</span>
+              </label>
+              <label
+                id="sseImageConverterDropZone"
+                class="sse-image-converter__drop-zone"
+                for="sseImageConverterFileInput"
+              >
+                <input
+                  type="file"
+                  id="sseImageConverterFileInput"
+                  accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp"
+                  multiple
+                >
+                <span>Drop files here or click to browse</span>
+              </label>
+              <div id="sseImageConverterStatus" class="sse-image-converter__status" aria-live="polite"></div>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__field">
+            <div class="floating-label-input sprite-sheet-editor__floating-input">
+              <input id="sseTileSizeInput" class="sidebar-input" type="number" min="8" value="64" placeholder=" ">
+              <label for="sseTileSizeInput">Tile size (px)</label>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__field">
+            <div class="floating-label-input sprite-sheet-editor__floating-input">
+              <input id="sseRowHeightInput" class="sidebar-input" type="number" min="8" value="64" placeholder=" ">
+              <label for="sseRowHeightInput">Row height (px)</label>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__field">
+            <div class="floating-label-input sprite-sheet-editor__floating-input">
+              <input id="sseBorderWidthInput" class="sidebar-input" type="number" min="0" value="1" placeholder=" ">
+              <label for="sseBorderWidthInput">Grid border width (px)</label>
+            </div>
+          </div>
+          <label class="sprite-sheet-editor__field">
+            <span>Transparency / blending</span>
+            <select id="sseBlendModeSelect" class="sidebar-input">
+              <option value="black" selected>Black</option>
+              <option value="alpha">Alpha</option>
+            </select>
+          </label>
+          <div class="sprite-sheet-editor__field">
+            <div class="sprite-sheet-editor__inline">
+              <div class="floating-label-input sprite-sheet-editor__floating-input">
+                <input id="sseNewTagInput" class="sidebar-input" type="text" placeholder=" ">
+                <label for="sseNewTagInput">Add tag</label>
+              </div>
+              <button id="sseAddTagBtn" class="action-button" type="button">Add</button>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__field">
+            <div class="floating-label-input sprite-sheet-editor__floating-input">
+              <input id="sseGroupIdInput" class="sidebar-input" type="number" min="1" max="999" value="1" placeholder=" ">
+              <label for="sseGroupIdInput">Group id</label>
+            </div>
+          </div>
+          <label class="sprite-sheet-editor__checkbox-row">
+            <input id="sseShowGridCheckbox" type="checkbox" checked>
+            <span>Show grid overlay</span>
+          </label>
+          <label class="sprite-sheet-editor__checkbox-row">
+            <input id="sseShowLabelsCheckbox" type="checkbox" checked>
+            <span>Show tag labels</span>
+          </label>
+          <label class="sprite-sheet-editor__checkbox-row">
+            <input id="sseShowTaggedOverlayCheckbox" type="checkbox" checked>
+            <span>Show red tag overlay</span>
+          </label>
+          <div class="sprite-sheet-editor__zoom-controls">
+            <span class="sprite-sheet-editor__tags-title">Zoom</span>
+            <div class="sprite-sheet-editor__zoom-row">
+              <button id="sseZoomOutBtn" class="action-button" type="button">-</button>
+              <span id="sseZoomValue" class="sprite-sheet-editor__zoom-value">100%</span>
+              <button id="sseZoomInBtn" class="action-button" type="button">+</button>
+            </div>
+            <div class="sprite-sheet-editor__zoom-row">
+              <button id="sseZoom100Btn" class="action-button" type="button">100%</button>
+              <button id="sseZoomFitBtn" class="action-button" type="button">Snap to canvas</button>
+            </div>
+          </div>
+          <div class="sprite-sheet-editor__tags">
+            <span class="sprite-sheet-editor__tags-title">Tags</span>
+            <div id="sseTagList" class="sprite-sheet-editor__tag-list" role="radiogroup" aria-label="SSE tag list"></div>
+          </div>
+          <button id="sseApplyCurrentTagAllBtn" class="action-button" type="button">Apply current tag to all tiles</button>
+          <button id="sseResetAllTagsBtn" class="action-button" type="button">Reset all tags</button>
+          <div class="sprite-sheet-editor__actions">
+            <button id="spriteSheetEditorCloseBtn" class="action-button" type="button">Close</button>
+            <button id="sseApplyTagsBtn" class="action-button" type="button">Apply tags</button>
+          </div>
+          <div id="sseStatus" class="sprite-sheet-editor__status" aria-live="polite"></div>
+        </aside>
+        <section class="sprite-sheet-editor__workspace">
+          <button
+            id="sseSidebarMenuToggle"
+            class="action-button sprite-sheet-editor__menu-toggle"
+            type="button"
+            aria-label="Open Sprite Sheet Editor sidebar"
+            aria-expanded="false"
+            hidden
+          >☰</button>
+          <div id="sseCanvasWrap" class="sprite-sheet-editor__canvas-wrap">
+            <div id="sseCanvasViewport" class="sprite-sheet-editor__canvas-viewport">
+              <canvas id="sseTileCanvas"></canvas>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+<script type="module" src="/src/sseApp.js"></script></body></html>

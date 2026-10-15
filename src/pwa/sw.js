@@ -6,7 +6,7 @@ import { CacheFirst, NetworkOnly, StaleWhileRevalidate } from 'workbox-strategie
 import { CacheableResponsePlugin } from 'workbox-cacheable-response'
 import { ExpirationPlugin } from 'workbox-expiration'
 import { RangeRequestsPlugin } from 'workbox-range-requests'
-import { resolveDocumentNavigation } from './navigationFallback.js'
+import { getNavigationShellPath, resolveDocumentNavigation } from './navigationFallback.js'
 import { NAVIGATION_NETWORK_TIMEOUT_MS, OFFLINE_ASSETS_CACHE } from './offlineAssetPlan.js'
 import {
   isAudioAssetPath,
@@ -32,6 +32,7 @@ precacheAndRoute(PRECACHE_MANIFEST, {
 cleanupOutdatedCaches()
 
 const appShell = createHandlerBoundToURL('/index.html')
+const sseShell = createHandlerBoundToURL('/sse.html')
 const audioCachePlugins = [
   new CacheableResponsePlugin({ statuses: [200] }),
   new RangeRequestsPlugin()
@@ -116,7 +117,7 @@ registerRoute(
     denylisted: false,
     timeoutMs: NAVIGATION_NETWORK_TIMEOUT_MS,
     fetchImpl: (request) => fetch(request),
-    shell: () => appShell(context)
+    shell: () => getNavigationShellPath(context.request.url) === '/sse.html' ? sseShell(context) : appShell(context)
   })
 )
 

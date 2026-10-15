@@ -1,0 +1,6 @@
+{
+  "version": "0.55.0",
+  "features": ["Extend sprite sheets with click-to-isolate imports in the standalone editor."],
+  "improvements": [],
+  "bugfixes": []
+}

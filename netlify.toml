@@ -36,6 +36,16 @@
   to = "/landing.html"
   status = 200
 
+[[redirects]]
+  from = "/sse"
+  to = "/sse.html"
+  status = 200
+
+[[redirects]]
+  from = "/sse/"
+  to = "/sse.html"
+  status = 200
+
 # SPA fallback for client-side routing
 # force = false ensures functions and assets are served first
 [[redirects]]
