@@ -2033,6 +2033,81 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   cursor: pointer;
 }
 
+.story-intro--awaiting-start .story-intro__paper {
+  filter: brightness(0.45);
+}
+
+.story-intro--awaiting-start .story-intro__caption,
+.story-intro--awaiting-start .story-intro__progress {
+  visibility: hidden;
+}
+
+.story-intro__start {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.story-intro__start-btn {
+  pointer-events: auto;
+  min-width: 220px;
+  min-height: 56px;
+  padding: 14px 32px;
+  background-color: var(--sidebar-shared-bg-color, #1b232c);
+  background-image: var(--sidebar-shared-bg-image, none);
+  color: #fff;
+  border: 2px solid #4f9cff;
+  box-shadow: 0 0 0 1px #0b0d10, 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 22px rgba(79, 156, 255, 0.35);
+  font: inherit;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  animation: story-intro-start-pulse 1.8s ease-in-out infinite;
+}
+
+.story-intro__start-btn:hover,
+.story-intro__start-btn:focus-visible {
+  outline: none;
+  background-color: #24303c;
+  border-color: #8fc1ff;
+}
+
+.story-intro__start-btn:active {
+  transform: scale(0.97);
+}
+
+/* Visible hint instead of a native title tooltip (works on touch too). */
+.story-intro__start-hint {
+  margin: 0;
+  padding: 4px 10px;
+  background: rgba(11, 13, 16, 0.75);
+  color: #cfd8e3;
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+@keyframes story-intro-start-pulse {
+  0%, 100% { box-shadow: 0 0 0 1px #0b0d10, 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 14px rgba(79, 156, 255, 0.25); }
+  50% { box-shadow: 0 0 0 1px #0b0d10, 0 8px 28px rgba(0, 0, 0, 0.6), 0 0 30px rgba(79, 156, 255, 0.55); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story-intro__start-btn {
+    animation: none;
+  }
+}
+
 .story-intro__skip:focus-visible {
   outline: 2px solid #4f9cff;
   outline-offset: 2px;

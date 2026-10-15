@@ -517,6 +517,8 @@ function getMusicGain(element) {
     try {
       const source = audioContext.createMediaElementSource(element)
       const gain = audioContext.createGain()
+      // Start silent; setMusicLevel ramps to the real level (no full-volume blip).
+      gain.gain.value = 0
       source.connect(gain)
       gain.connect(audioContext.destination)
       element.volume = 1

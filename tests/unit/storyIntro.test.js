@@ -135,37 +135,67 @@ describe('story intro', () => {
     expect(STORY_INTRO_STORAGE_KEY).toMatch(/story-intro/)
   })
 
-  it('keeps the timeline running while audio is locked and starts narration and music at the first gesture', async() => {
+  it('waits on a Start intro button while audio is locked; pressing it starts narration and music together', async() => {
     const { deps, timers, audios, music, ducks } = fakeDeps({ unlocked: false })
     playStoryIntro({ deps, withMusic: true })
     await flush()
     expect(document.querySelector('.story-intro__sound')).toBeNull()
+    const start = document.querySelector('.story-intro__start-btn')
+    expect(start).not.toBeNull()
+    expect(start.textContent).toMatch(/Start intro/i)
+    expect(start.hasAttribute('title')).toBe(false)
+    // The timeline has not started: no timer, no clip, no music, no section.
+    expect(timers).toHaveLength(0)
     expect(audios).toHaveLength(0)
     expect(music.starts).toBe(0)
-    fireLatestTimer(timers)
-    expect(getActiveStoryIntroIndex()).toBe(1)
-
-    // First tap on the newspaper unlocks audio instead of skipping.
-    music.unlocked = true
-    const stage = document.querySelector('.story-intro__stage')
-    stage.dispatchEvent(new window.Event('pointerdown', { bubbles: true }))
-    stage.click()
-    await flush()
+    expect(getActiveStoryIntroIndex()).toBe(-1)
+    // Tapping the dimmed newspaper does not skip while waiting.
+    document.querySelector('.story-intro__stage').click()
     expect(isStoryIntroOpen()).toBe(true)
-    expect(music.starts).toBeGreaterThanOrEqual(1)
+
+    music.unlocked = true
+    start.click()
+    await flush()
+    expect(document.querySelector('.story-intro__start-btn')).toBeNull()
+    expect(music.unlocks).toBeGreaterThanOrEqual(2)
+    expect(music.starts).toBe(1)
     expect(ducks).toContain(STORY_INTRO_MUSIC_DUCK)
-    expect(audios.map(a => a.src)).toEqual([STORY_SEGMENTS[1].audio])
+    expect(getActiveStoryIntroIndex()).toBe(0)
+    expect(audios.map(a => a.src)).toEqual([STORY_SEGMENTS[0].audio])
 
     // Later segments continue with no additional gesture.
     fireLatestTimer(timers)
     await flush()
     fireLatestTimer(timers)
     await flush()
-    expect(audios.map(a => a.src)).toEqual(STORY_SEGMENTS.slice(1, 4).map(s => s.audio))
+    expect(audios.map(a => a.src)).toEqual(STORY_SEGMENTS.slice(0, 3).map(s => s.audio))
 
-    // A second tap skips as before.
-    stage.click()
+    document.querySelector('.story-intro__stage').click()
     expect(isStoryIntroOpen()).toBe(false)
+  })
+
+  it('keeps Skip and Escape available while waiting for Start', () => {
+    const { deps } = fakeDeps({ unlocked: false })
+    playStoryIntro({ deps, withMusic: true })
+    document.querySelector('.story-intro__skip').click()
+    expect(isStoryIntroOpen()).toBe(false)
+    playStoryIntro({ deps, withMusic: true })
+    window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape' }))
+    expect(isStoryIntroOpen()).toBe(false)
+  })
+
+  it('replays from the sidebar without the button when audio is already unlocked', async() => {
+    const { deps, audios, music } = fakeDeps()
+    playStoryIntro({ deps })
+    await flush()
+    expect(document.querySelector('.story-intro__start-btn')).toBeNull()
+    expect(getActiveStoryIntroIndex()).toBe(0)
+    expect(audios).toHaveLength(1)
+    expect(music.starts).toBe(0)
+    closeStoryIntro('skipped')
+    music.unlocked = false
+    playStoryIntro({ deps })
+    expect(document.querySelector('.story-intro__start-btn')).not.toBeNull()
   })
 
   it('starts the intro music immediately when audio is already unlocked', () => {
