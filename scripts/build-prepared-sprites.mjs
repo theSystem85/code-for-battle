@@ -35,6 +35,8 @@ const tankMount = (variant, key) => {
 // The light tank (IFV) hull is shorter than the main battle tanks, so it fills less of the tile.
 const tankMaxDimension = variant => (variant === 'lightTank' ? TILE_SIZE * 0.88 : TILE_SIZE)
 
+const HOWITZER_MAX_DIMENSION = 38
+
 const definitions = [
   ...['tankV1', 'tankV2', 'tankV3', 'lightTank'].flatMap(variant => [
     {
@@ -80,15 +82,16 @@ const definitions = [
   {
     id: 'unit:howitzer:base',
     source: unitSource('howitzer_map.webp'),
-    target: { maxDimension: TILE_SIZE },
-    anchors: { center: [0.5, 0.5], barrelMountSource: [96.2, 18.8] },
+    // PzH 2000-style hull is ~1.2 tiles long so it keeps natural proportions at ~18 CSS px width
+    target: { maxDimension: HOWITZER_MAX_DIMENSION },
+    anchors: { center: [0.5, 0.5], barrelMountSource: [119.7, 86.3] },
     states: ['base']
   },
   {
     id: 'unit:howitzer:barrel',
     source: unitSource('howitzer_barrel.webp'),
-    target: { reference: unitSource('howitzer_map.webp'), maxDimension: TILE_SIZE },
-    anchors: { mountSource: [11.5, 0], muzzleSource: [11.5, 152] },
+    target: { reference: unitSource('howitzer_map.webp'), maxDimension: HOWITZER_MAX_DIMENSION },
+    anchors: { mountSource: [7, 0], muzzleSource: [7, 150] },
     states: ['base', 'recoil']
   },
   ...[

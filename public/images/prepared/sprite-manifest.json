@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "28f8c7fd41c840b7",
+  "assetVersion": "9d283e73b7237248",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -13,7 +13,7 @@
     "entryCount": 303,
     "sourceCount": 62,
     "generatedVariantCount": 909,
-    "decodedVariantBytes": 38685780
+    "decodedVariantBytes": 38706568
   },
   "entries": [
     {
@@ -17027,25 +17027,25 @@
       "id": "unit:howitzer:barrel",
       "category": "unit",
       "source": "/images/map/units/howitzer_barrel.webp",
-      "sourceWidth": 23,
-      "sourceHeight": 152,
-      "logicalWidth": 3.833333333333333,
-      "logicalHeight": 25.333333333333332,
+      "sourceWidth": 14,
+      "sourceHeight": 150,
+      "logicalWidth": 2.216666666666667,
+      "logicalHeight": 23.75,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "mount": {
-          "x": 1.9166666666666665,
+          "x": 1.1083333333333334,
           "y": 0,
-          "sourceX": 11.5,
+          "sourceX": 7,
           "sourceY": 0
         },
         "muzzle": {
-          "x": 1.9166666666666665,
-          "y": 25.333333333333332,
-          "sourceX": 11.5,
-          "sourceY": 152
+          "x": 1.1083333333333334,
+          "y": 23.75,
+          "sourceX": 7,
+          "sourceY": 150
         }
       },
       "states": [
@@ -17056,23 +17056,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/howitzer/barrel@1x.webp",
-          "backingWidth": 4,
-          "backingHeight": 25,
-          "decodedBytes": 400
+          "backingWidth": 2,
+          "backingHeight": 24,
+          "decodedBytes": 192
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/howitzer/barrel@2x.webp",
-          "backingWidth": 8,
-          "backingHeight": 51,
-          "decodedBytes": 1632
+          "backingWidth": 4,
+          "backingHeight": 48,
+          "decodedBytes": 768
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/howitzer/barrel@3x.webp",
-          "backingWidth": 12,
-          "backingHeight": 76,
-          "decodedBytes": 3648
+          "backingWidth": 7,
+          "backingHeight": 71,
+          "decodedBytes": 1988
         }
       ]
     },
@@ -17080,23 +17080,23 @@
       "id": "unit:howitzer:base",
       "category": "unit",
       "source": "/images/map/units/howitzer_map.webp",
-      "sourceWidth": 192,
-      "sourceHeight": 192,
-      "logicalWidth": 32,
-      "logicalHeight": 32,
+      "sourceWidth": 240,
+      "sourceHeight": 240,
+      "logicalWidth": 38,
+      "logicalHeight": 38,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 16,
-          "y": 16
+          "x": 19,
+          "y": 19
         },
         "barrelMount": {
-          "x": 16.03333333333333,
-          "y": 3.1333333333333333,
-          "sourceX": 96.2,
-          "sourceY": 18.8
+          "x": 18.9525,
+          "y": 13.664166666666665,
+          "sourceX": 119.7,
+          "sourceY": 86.3
         }
       },
       "states": [
@@ -17106,23 +17106,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/howitzer/base@1x.webp",
-          "backingWidth": 32,
-          "backingHeight": 32,
-          "decodedBytes": 4096
+          "backingWidth": 38,
+          "backingHeight": 38,
+          "decodedBytes": 5776
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/howitzer/base@2x.webp",
-          "backingWidth": 64,
-          "backingHeight": 64,
-          "decodedBytes": 16384
+          "backingWidth": 76,
+          "backingHeight": 76,
+          "decodedBytes": 23104
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/howitzer/base@3x.webp",
-          "backingWidth": 96,
-          "backingHeight": 96,
-          "decodedBytes": 36864
+          "backingWidth": 114,
+          "backingHeight": 114,
+          "decodedBytes": 51984
         }
       ]
     },
