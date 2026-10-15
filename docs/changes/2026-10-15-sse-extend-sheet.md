@@ -1,5 +1,5 @@
 - [x] **Feature: Standalone sprite sheet composition**
-  Open `/sse` without game boot; create/select a target, upload a source, click sprites to isolate/pack with row growth, then download WebP 0.85 plus SSE JSON. Operator lint/unit/E2E/build verification is pending because dependencies are absent in the offline sandbox.
+  Open `/sse` without game boot; create/select a target, upload a source, click sprites to isolate/pack with row growth, then download WebP 0.85 plus SSE JSON. Verified on the box after Codex: `npm run lint`, full `npm run test:unit` (5027 passed), and Playwright `tests/e2e/sseExtend.test.js` (chromium) all green.
   Spec: [Standalone Sprite Sheet Editor and extend-sheet workflow](../../specs/2026-10-15-sse-extend-sheet.md)
 
 Agent API: `window.__SSE__.getState()`, `createBlankSheet(options)`, `selectTargetSheet(pathOrId?)`, `loadSourceImage(input)`, `isolateAt({ x, y, cutoff? })`, `downloadExtendedSheet()`, `on(event, handler)`. Mutations return promises; coordinates are original source pixels. Window events: `sse:source-loaded`, `sse:isolated`, `sse:packed`, `sse:sheet-grown`, `sse:downloaded`, `sse:error`. Exact arguments/payloads and return values are in the spec and [workflow skill](../../skills/extend-sprite-sheet/SKILL.md). LLM JSON tagging follows download and is outside SSE.
