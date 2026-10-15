@@ -12,6 +12,7 @@ import {
 } from '../rendering/spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { DEFAULT_SSE_SHEETS, filterRetiredSheetPaths, isRetiredSpriteSheetPath } from './spriteSheetRegistry.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -23,7 +24,7 @@ const SSE_LAST_SHEET_KEY = 'rts-sse-last-sheet'
 const SSE_LAST_ANIMATION_SHEET_KEY = 'rts-sse-last-animation-sheet'
 const SSE_MODE_STORAGE_KEY = 'rts-sse-mode'
 const ANIMATION_DEFAULT_DURATION_MS = 1050
-const SSE_PREVIEW_BACKGROUND_TILE = 'images/map/land01.webp'
+const SSE_PREVIEW_BACKGROUND_TILE = 'images/terrain/source/meadow.webp'
 const COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters_tracks.webp'
 const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
@@ -58,21 +59,7 @@ export const DEFAULT_SSE_TAGS = [
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
 
-const fallbackSheets = [
-  'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
-  'images/map/sprite_sheets/grass.webp',
-  'images/map/sprite_sheets/soil.webp',
-  'images/map/sprite_sheets/snow.webp',
-  'images/map/sprite_sheets/desert.webp',
-  'images/map/sprite_sheets/water.webp',
-  'images/map/sprite_sheets/multiTerrainSpriteSheet.webp',
-  'images/map/sprite_sheets/debris_craters_tracks.webp',
-  'images/map/sprite_sheets/dt_grass_1024_q85.webp',
-  'images/map/sprite_sheets/dt_soil_1024_q85.webp',
-  'images/map/sprite_sheets/dt_sand_1024_q85.webp',
-  'images/map/sprite_sheets/dt_snow_1024_q85.webp',
-  'images/map/sprite_sheets/dt_universal_1024_q85.webp'
-]
+const fallbackSheets = [...DEFAULT_SSE_SHEETS]
 
 function safeParseJson(raw, fallback) {
   if (!raw) return fallback
@@ -1541,8 +1528,9 @@ async function loadSheetList() {
     const response = await fetch(SSE_SHEETS_INDEX, { cache: 'no-store' })
     if (response.ok) {
       const data = await response.json()
-      if (Array.isArray(data?.sheets) && data.sheets.length) {
-        return data.sheets
+      const sheets = filterRetiredSheetPaths(data?.sheets)
+      if (sheets.length) {
+        return sheets
       }
     }
   } catch {
@@ -1556,8 +1544,9 @@ async function loadAnimationSheetList() {
     const response = await fetch(SSE_ANIMATION_SHEETS_INDEX, { cache: 'no-store' })
     if (response.ok) {
       const data = await response.json()
-      if (Array.isArray(data?.sheets) && data.sheets.length) {
-        return data.sheets
+      const sheets = filterRetiredSheetPaths(data?.sheets)
+      if (sheets.length) {
+        return sheets
       }
     }
   } catch {
@@ -1724,7 +1713,8 @@ export async function initSpriteSheetEditor(options = {}) {
   renderSheetOptions(state)
   updateModeTabUi(state)
 
-  const lastSheet = getStoredItem(SSE_LAST_SHEET_KEY)
+  const storedLastSheet = getStoredItem(SSE_LAST_SHEET_KEY)
+  const lastSheet = isRetiredSpriteSheetPath(storedLastSheet) ? null : storedLastSheet
   const lastAnimationSheet = getStoredItem(SSE_LAST_ANIMATION_SHEET_KEY)
   const initialSheetPath = state.mode === 'animated'
     ? (lastAnimationSheet && state.sheetPaths.includes(lastAnimationSheet) ? lastAnimationSheet : state.sheetPaths[0])
