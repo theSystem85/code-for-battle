@@ -1,3 +1,4 @@
+import { compressionLabel, detectWebPCompression } from './sseExport.js'
 import { initSseExtend } from './sseExtend.js'
 import {
   createSpriteSheetAnimationInstance,
@@ -121,6 +122,7 @@ function buildSheetMetadataText(data, image) {
     `Path: ${data.sheetPath}`,
     `Filename: ${data.sheetPath.split('/').pop() || data.sheetPath}`,
     `Image: ${width}x${height}px`,
+    `Compression: ${compressionLabel(data.compression)}`,
     `Aspect ratio: ${formatAspectRatio(width, height)}`,
     `Decoded: ${image.complete ? 'yes' : 'no'}`,
     `Grid columns: ${columns}`,
@@ -176,6 +178,7 @@ function normalizeSheetDataForTags(raw, sheetPath, baseTags = DEFAULT_SSE_TAGS) 
     : [...baseTags]
   const data = {
     extension: expandedRaw?.extension,
+    compression: expandedRaw?.compression,
     schemaVersion: 1,
     sheetPath,
     tileSize: normalizedTileSize,
@@ -249,6 +252,7 @@ function toSerializableData(data, image) {
   return {
     schemaVersion: 1,
     extension: data.extension,
+    compression: data.compression,
     sheetPath: data.sheetPath,
     tileSize: data.tileSize,
     rowHeight: data.rowHeight || data.tileSize,
@@ -912,6 +916,12 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
     }
   }
 
+  if (!loadedData.compression && !local) {
+    try {
+      const response = await fetch(sheetPath)
+      if (response.ok) loadedData.compression = detectWebPCompression(await response.arrayBuffer())
+    } catch { /* Compression is unknown when bytes are unavailable. */ }
+  }
   state.activeData = loadedData
   state.image = image
   if (!state.activeData.tags.includes(state.activeTag)) {
@@ -1506,7 +1516,7 @@ function positionSheetInfoPopover(state) {
   const desiredLeft = rect.right + gap
   const maxLeft = Math.max(8, window.innerWidth - state.sheetInfoPopover.offsetWidth - 8)
   const left = Math.min(desiredLeft, maxLeft)
-  const top = Math.max(8, rect.bottom + 6)
+  const top = Math.max(8, Math.min(rect.bottom + 6, window.innerHeight - state.sheetInfoPopover.offsetHeight - 8))
   state.sheetInfoPopover.style.left = `${left}px`
   state.sheetInfoPopover.style.top = `${top}px`
 }
@@ -1893,22 +1903,34 @@ export async function initSpriteSheetEditor(options = {}) {
     await loadSheet(state, e.target.value, { mode: state.mode })
   })
 
+  if (state.sheetInfoPopover) state.modal.appendChild(state.sheetInfoPopover)
+  const showSheetInfo = () => {
+    state.sheetInfoPopover.style.display = 'block'
+    positionSheetInfoPopover(state)
+  }
+  const hideSheetInfo = () => {
+    if (!state.sheetInfoWrap?.classList.contains('is-open')) state.sheetInfoPopover.style.display = ''
+  }
+  state.sheetInfoWrap?.addEventListener('mouseleave', hideSheetInfo)
+  state.sheetInfoWrap?.addEventListener('focusout', hideSheetInfo)
   state.sheetInfoBtn?.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
     const isOpen = state.sheetInfoWrap?.classList.toggle('is-open')
     state.sheetInfoBtn?.setAttribute('aria-expanded', isOpen ? 'true' : 'false')
     if (isOpen) {
-      positionSheetInfoPopover(state)
+      showSheetInfo()
+    } else {
+      state.sheetInfoPopover.style.display = ''
     }
   })
 
   state.sheetInfoWrap?.addEventListener('mouseenter', () => {
-    positionSheetInfoPopover(state)
+    showSheetInfo()
   })
 
   state.sheetInfoWrap?.addEventListener('focusin', () => {
-    positionSheetInfoPopover(state)
+    showSheetInfo()
   })
 
   window.addEventListener('resize', () => {
@@ -1921,6 +1943,7 @@ export async function initSpriteSheetEditor(options = {}) {
     if (!state.sheetInfoWrap || !state.sheetInfoBtn) return
     if (state.sheetInfoWrap.contains(event.target)) return
     state.sheetInfoWrap.classList.remove('is-open')
+    state.sheetInfoPopover.style.display = ''
     state.sheetInfoBtn.setAttribute('aria-expanded', 'false')
   })
 

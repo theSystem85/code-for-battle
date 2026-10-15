@@ -343,8 +343,16 @@
 #sseExtendPanel label { display: flex; flex-direction: column; margin-block: 6px; }
 #sseExtendPanel input { min-width: 0; max-width: 100%; }
 #sseExtendPanel button { margin-block: 4px; }
-#sseSourcePane { max-height: 45%; overflow: auto; padding: 8px; border-top: 2px solid #65727b; flex-shrink: 0; }
-#sseSourcePane canvas { max-width: 100%; height: auto; cursor: crosshair; background: #000; }
+#sseSourcePane { position: relative; overflow: hidden; flex: 1; min-height: 80px; background: #06080c; }
+#sseSourcePane p { position: relative; z-index: 1; pointer-events: none; margin: 8px; }
+#sseSourceCanvas { position: absolute; left: 0; top: 0; display: block; max-width: none; transform-origin: 0 0; image-rendering: pixelated; cursor: crosshair; }
 .sprite-sheet-editor__workspace { display: flex; flex-direction: column; }
 .sprite-sheet-editor__canvas-wrap { flex: 1; min-height: 80px; height: auto; }
+.sse-has-source .sprite-sheet-editor__canvas-wrap { flex: 0 0 var(--sse-target-ratio, 60%); }
+#ssePaneDivider { display: none; height: 10px; flex: 0 0 10px; background: #65727b; cursor: row-resize; touch-action: none; }
+.sse-has-source #ssePaneDivider { display: block; }
 #sseRoot [hidden] { display: none !important; }
+.sse-selecting { cursor: cell; outline: 2px solid #65baff; outline-offset: -2px; }
+.sprite-sheet-editor__sheet-info-popover { z-index: 10000; max-height: calc(100dvh - 16px); overflow: auto; }
+.sse-tile-selection { position: absolute; inset: 0; pointer-events: none; }
+.sse-tile-selection span { position: absolute; border: 1px solid #65baff; }
