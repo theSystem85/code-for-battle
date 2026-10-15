@@ -32,26 +32,29 @@ const tankMount = (variant, key) => {
   return [point.x, point.y]
 }
 
+// The light tank (IFV) hull is shorter than the main battle tanks, so it fills less of the tile.
+const tankMaxDimension = variant => (variant === 'lightTank' ? TILE_SIZE * 0.88 : TILE_SIZE)
+
 const definitions = [
-  ...['tankV1', 'tankV2', 'tankV3'].flatMap(variant => [
+  ...['tankV1', 'tankV2', 'tankV3', 'lightTank'].flatMap(variant => [
     {
       id: `unit:${variant}:wagon`,
       source: unitSource(`${variant}_wagon.webp`),
-      target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: TILE_SIZE },
+      target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: tankMaxDimension(variant) },
       anchors: { center: [0.5, 0.5], turretMountSource: tankMount(variant, 'turretMountPoint') },
       states: ['base']
     },
     {
       id: `unit:${variant}:turret`,
       source: unitSource(`${variant}_turret.webp`),
-      target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: TILE_SIZE },
+      target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: tankMaxDimension(variant) },
       anchors: { center: [0.5, 0.5], barrelMountSource: tankMount(variant, 'barrelMountPoint') },
       states: ['base']
     },
     {
       id: `unit:${variant}:barrel`,
       source: unitSource(`${variant}_barrel.webp`),
-      target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: TILE_SIZE },
+      target: { reference: unitSource(`${variant}_wagon.webp`), maxDimension: tankMaxDimension(variant) },
       anchors: { center: [0.5, 0.5], muzzleSource: tankMount(variant, 'muzzleFlashOffset') },
       states: ['base', 'recoil']
     }

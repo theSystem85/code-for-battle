@@ -62,6 +62,27 @@
         "degrees": 90,
         "comment": "Additional rotation offset for recoil direction in degrees (use console commands to adjust)"
       }
+    },
+    "lightTank": {
+      "turretMountPoint": {
+        "x": 62,
+        "y": 112,
+        "comment": "Turret ring centre on the light tank hull (pixels from top-left)"
+      },
+      "barrelMountPoint": {
+        "x": 50,
+        "y": 149,
+        "comment": "Autocannon barrel centre on the turret; breech sits under the mantlet (pixels from top-left)"
+      },
+      "muzzleFlashOffset": {
+        "x": 6,
+        "y": 83,
+        "comment": "Muzzle flash position relative to gun barrel (pixels from top-left)"
+      },
+      "recoilRotationOffset": {
+        "degrees": 90,
+        "comment": "Additional rotation offset for recoil direction in degrees (use console commands to adjust)"
+      }
     }
   }
 }
