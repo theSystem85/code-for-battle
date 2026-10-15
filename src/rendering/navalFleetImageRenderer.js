@@ -5,7 +5,7 @@ import {
 } from '../game/battleshipTurrets.js'
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
-import { getNavalRenderLengthTiles } from '../utils/navalUtils.js'
+import { getNavalRenderLengthTiles, hasNativeNavalSprite, NAVAL_SPRITE_NATIVE_DENSITY } from '../utils/navalUtils.js'
 import {
   drawPreparedSpriteCentered,
   drawPreparedSpriteTopLeft,
@@ -37,6 +37,10 @@ const PREPARED_BATTLESHIP_TURRET_ID = 'naval:battleship:turret'
 const PREPARED_BATTLESHIP_BARREL_ID = 'naval:battleship:barrel'
 const BATTLESHIP_IMAGE_KEYS = Object.freeze(['battleship', 'battleshipTurret', 'battleshipBarrel'])
 export const BATTLESHIP_TURRET_RENDER_SCALE = 0.7
+// Three-gun turrets (Iowa-like). Lateral offsets and the barrel root are measured from the
+// three barrel openings of the turret sprite (docs/asset-sources/ship-build-assets.py).
+export const BATTLESHIP_BARREL_LATERAL_OFFSETS = Object.freeze([-3.05, 0, 3.05])
+const BATTLESHIP_BARREL_ROOT_Y = 3
 export const BATTLESHIP_TURRET_RENDER_ORDER = Object.freeze([
   'foreOuter',
   'aftOuter',
@@ -133,38 +137,39 @@ function renderBattleshipLayers(ctx, unit, centerX, centerY, opacity) {
     const x = centerX + Math.cos(direction) * localPoint.y
     const y = centerY + Math.sin(direction) * localPoint.y
     const turretDirection = Number.isFinite(turret.direction) ? turret.direction : direction
-    const turretSize = preparedTurret?.logicalWidth || TILE_SIZE * 0.78 * BATTLESHIP_TURRET_RENDER_SCALE
-    const barrelHeight = preparedBarrel?.logicalHeight || TILE_SIZE * 1.02 * BATTLESHIP_TURRET_RENDER_SCALE
-    const barrelWidth = preparedBarrel?.logicalWidth ||
-      barrelHeight * ((barrelImage.naturalWidth || barrelImage.width) / (barrelImage.naturalHeight || barrelImage.height))
+    const turretWidth = preparedTurret?.logicalWidth || (turretImage.naturalWidth || turretImage.width) / NAVAL_SPRITE_NATIVE_DENSITY
+    const turretHeight = preparedTurret?.logicalHeight || (turretImage.naturalHeight || turretImage.height) / NAVAL_SPRITE_NATIVE_DENSITY
+    const barrelWidth = preparedBarrel?.logicalWidth || (barrelImage.naturalWidth || barrelImage.width) / NAVAL_SPRITE_NATIVE_DENSITY
+    const barrelHeight = preparedBarrel?.logicalHeight || (barrelImage.naturalHeight || barrelImage.height) / NAVAL_SPRITE_NATIVE_DENSITY
 
     ctx.save()
     ctx.globalAlpha *= opacity
     ctx.translate(x, y)
     ctx.rotate(turretDirection - SOUTH_FACING_SOURCE_ANGLE)
-    if (preparedTurret) {
-      drawPreparedSpriteCentered(ctx, preparedTurret, 0, 0)
-    } else {
-      ctx.drawImage(turretImage, -turretSize / 2, -turretSize / 2, turretSize, turretSize)
-    }
-    for (let barrelIndex = 0; barrelIndex < 2; barrelIndex++) {
-      const side = barrelIndex === 0 ? -1 : 1
+    // Barrels are drawn first so they emerge from the turret's gun ports and recoil under its roof.
+    BATTLESHIP_BARREL_LATERAL_OFFSETS.forEach((barrelX, barrelIndex) => {
       const recoil = getRecoilOffset(turret.barrelRecoilStartTimes?.[barrelIndex], now) * BATTLESHIP_TURRET_RENDER_SCALE
-      const barrelX = side * TILE_SIZE * 0.105 * BATTLESHIP_TURRET_RENDER_SCALE
-      const barrelY = -TILE_SIZE * 0.12 * BATTLESHIP_TURRET_RENDER_SCALE - recoil
+      const barrelY = BATTLESHIP_BARREL_ROOT_Y - recoil
       if (preparedBarrel) {
         drawPreparedSpriteTopLeft(ctx, preparedBarrel, barrelX - barrelWidth / 2, barrelY)
       } else {
         ctx.drawImage(barrelImage, barrelX - barrelWidth / 2, barrelY, barrelWidth, barrelHeight)
       }
+    })
+    if (preparedTurret) {
+      drawPreparedSpriteCentered(ctx, preparedTurret, 0, 0)
+    } else {
+      ctx.drawImage(turretImage, -turretWidth / 2, -turretHeight / 2, turretWidth, turretHeight)
+    }
+    BATTLESHIP_BARREL_LATERAL_OFFSETS.forEach((barrelX, barrelIndex) => {
       renderBattleshipMuzzleFlash(
         ctx,
         barrelX,
-        barrelY + barrelHeight * 0.96,
+        BATTLESHIP_BARREL_ROOT_Y + barrelHeight * 0.98,
         turret.muzzleFlashStartTimes?.[barrelIndex],
         now
       )
-    }
+    })
     ctx.restore()
   }
 
@@ -212,7 +217,9 @@ export function renderNavalFleetUnit(ctx, unit, centerX, centerY, viewerOwner) {
   const sourceHeight = prepared?.sourceHeight || image.naturalHeight || image.height
   const scale = prepared
     ? prepared.logicalWidth / sourceWidth
-    : (TILE_SIZE * getNavalRenderLengthTiles(unit.type)) / Math.max(sourceWidth, sourceHeight)
+    : hasNativeNavalSprite(unit.type)
+      ? 1 / NAVAL_SPRITE_NATIVE_DENSITY
+      : (TILE_SIZE * getNavalRenderLengthTiles(unit.type)) / Math.max(sourceWidth, sourceHeight)
   const width = prepared?.logicalWidth || sourceWidth * scale
   const height = prepared?.logicalHeight || sourceHeight * scale
   const direction = unit.direction || unit.rotation || 0

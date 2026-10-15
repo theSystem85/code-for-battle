@@ -44,3 +44,9 @@ The three situational tracks were generated on the owner's ElevenLabs Starter pl
 - Files: `public/video/{first_f35,first_f22,first_apache,first_destroyer,first_battleship,first_submarine,shipyard,helipad}.mp4`
 - Source: AI-generated on 2026-10-15 with Grok Imagine (xAI), 15 s 720p, using the matching sidebar build icon as reference image. Prompts in `docs/asset-sources/milestone-videos-air-naval-prompts.md`. Re-encoded and center-cropped to 960×576 by the project.
 - Narration: the matching `.mp3` files were generated with ElevenLabs (eleven_v4, voice "Dave") on the owner's ElevenLabs Starter plan, which includes a commercial license. Trimmed and loudness-normalized by the project.
+
+## Destroyer, battleship and aircraft carrier map sprites
+
+- Files: `public/images/map/units/{destroyer_map,battleship_map,battleship_turret,battleship_barrel,aircraft_carrier_map}.webp` and their prepared 1x/2x/3x variants.
+- Source: AI-generated on 2026-10-15 with Grok Imagine (xAI), 1280×720, one image per asset. Raw sources and prompts in `docs/asset-sources/ship-*`.
+- Post-processing by the project with `docs/asset-sources/ship-build-assets.py`: chroma keying, cropping, lossless 90° rotation, carrier mirrored, battleship bow barbette retouched to an empty ring, Lanczos downscale to the DPR 3 backing size.

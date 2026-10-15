@@ -7,10 +7,10 @@ describe('Destroyer image renderer', () => {
     const createdImages = []
     globalThis.Image = class {
       constructor() {
-        this.naturalWidth = 109
-        this.naturalHeight = 342
-        this.width = 109
-        this.height = 342
+        this.naturalWidth = 59
+        this.naturalHeight = 337
+        this.width = 59
+        this.height = 337
         this.complete = true
         createdImages.push(this)
       }

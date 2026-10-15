@@ -26,6 +26,15 @@ export const NAVAL_RENDER_LENGTH_TILES = Object.freeze({
   battleship: 6.6,
   submarine: 2.8
 })
+// Ships whose map sprites are cropped tightly to the visible hull and authored at the DPR 3
+// backing size (see docs/asset-sources/ship-build-assets.py). Their sprite length is the
+// visible hull length, not the old padded square canvas, so they are never upscaled.
+export const NAVAL_SPRITE_NATIVE_DENSITY = 3
+export const NAVAL_SPRITE_LENGTH_TILES = Object.freeze({
+  destroyer: 337 / NAVAL_SPRITE_NATIVE_DENSITY / TILE_SIZE,
+  battleship: 599 / NAVAL_SPRITE_NATIVE_DENSITY / TILE_SIZE,
+  aircraftCarrier: 857 / NAVAL_SPRITE_NATIVE_DENSITY / TILE_SIZE
+})
 const NAVAL_HULL_WIDTH_RATIOS = Object.freeze({
   destroyer: 0.24,
   supplyShip: 0.3,
@@ -50,6 +59,14 @@ export function isNavalUnitType(type) {
 
 export function getNavalRenderLengthTiles(type) {
   return NAVAL_RENDER_LENGTH_TILES[type] || DESTROYER_RENDER_LENGTH_TILES
+}
+
+export function hasNativeNavalSprite(type) {
+  return Object.prototype.hasOwnProperty.call(NAVAL_SPRITE_LENGTH_TILES, type)
+}
+
+export function getNavalSpriteLengthTiles(type) {
+  return NAVAL_SPRITE_LENGTH_TILES[type] || getNavalRenderLengthTiles(type)
 }
 
 export function getNavalHullDimensions(type) {

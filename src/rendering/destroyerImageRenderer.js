@@ -1,8 +1,9 @@
-import { TILE_SIZE } from '../config.js'
 import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
 
 const SOUTH_FACING_SOURCE_ANGLE = Math.PI / 2
-const SOUTH_FACING_GUN_SOURCE_POINT = Object.freeze({ x: 55, y: 260 })
+const SOUTH_FACING_GUN_SOURCE_POINT = Object.freeze({ x: 29.4, y: 272.8 })
+// destroyer_map.webp is authored at the DPR 3 backing size; draw it at 1/3 when unprepared.
+const DESTROYER_SOURCE_DENSITY = 3
 let destroyerImage = null
 const loadCallbacks = []
 let destroyerLoaded = false
@@ -40,11 +41,11 @@ export function getDestroyerBaseImage() {
 export function getDestroyerGunSpawnPoint(unit, centerX, centerY) {
   const prepared = getPreparedSprite('naval:destroyer:hull')
   const image = destroyerImage
-  const sourceWidth = prepared?.sourceWidth || image?.naturalWidth || image?.width || 109
-  const sourceHeight = prepared?.sourceHeight || image?.naturalHeight || image?.height || 342
+  const sourceWidth = prepared?.sourceWidth || image?.naturalWidth || image?.width || 59
+  const sourceHeight = prepared?.sourceHeight || image?.naturalHeight || image?.height || 337
   const scale = prepared
     ? prepared.logicalWidth / sourceWidth
-    : (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
+    : 1 / DESTROYER_SOURCE_DENSITY
   const localX = prepared
     ? prepared.anchors.gun.x - prepared.logicalWidth / 2
     : (SOUTH_FACING_GUN_SOURCE_POINT.x - sourceWidth / 2) * scale
@@ -77,7 +78,7 @@ export function renderDestroyerWithImage(ctx, unit, centerX, centerY) {
     const image = destroyerImage
     const sourceWidth = image.naturalWidth || image.width
     const sourceHeight = image.naturalHeight || image.height
-    const scale = (TILE_SIZE * 3.9) / Math.max(sourceWidth, sourceHeight)
+    const scale = 1 / DESTROYER_SOURCE_DENSITY
     const width = sourceWidth * scale
     const height = sourceHeight * scale
     ctx.drawImage(image, -width / 2, -height / 2, width, height)

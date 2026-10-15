@@ -12,7 +12,7 @@ import {
 import { getDestroyerBaseImage } from './destroyerImageRenderer.js'
 import { getSupplyShipBaseImage } from './supplyShipImageRenderer.js'
 import { getNavalFleetBaseImage } from './navalFleetImageRenderer.js'
-import { getNavalRenderLengthTiles, navalUnitTypes } from '../utils/navalUtils.js'
+import { getNavalRenderLengthTiles, getNavalSpriteLengthTiles, navalUnitTypes } from '../utils/navalUtils.js'
 import { selectedUnits } from '../inputHandler.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { drawStatusBar } from '../utils/statusBarGradient.js'
@@ -69,13 +69,13 @@ export class WreckRenderer {
     this.preparedDensity = Number.isFinite(density) && density > 0 ? density : 1
     prewarmWreckSpriteCache(this.preparedDensity)
     this.prepareSinkingSprite('supplyShip', getSupplyShipBaseImage(), 2.2)
-    this.prepareSinkingSprite('destroyer', getDestroyerBaseImage(), 2.6)
+    this.prepareSinkingSprite('destroyer', getDestroyerBaseImage(), getNavalSpriteLengthTiles('destroyer'))
     for (const unitType of navalUnitTypes) {
       if (unitType === 'supplyShip' || unitType === 'destroyer') continue
       this.prepareSinkingSprite(
         unitType,
         getNavalFleetBaseImage(unitType),
-        getNavalRenderLengthTiles(unitType)
+        getNavalSpriteLengthTiles(unitType)
       )
     }
   }
@@ -278,9 +278,7 @@ export class WreckRenderer {
     const direction = wreck.direction || 0
     const spriteLengthTiles = wreck.unitType === 'supplyShip'
       ? 2.2
-      : wreck.unitType === 'destroyer'
-        ? 2.6
-        : getNavalRenderLengthTiles(wreck.unitType)
+      : getNavalSpriteLengthTiles(wreck.unitType)
 
     ctx.save()
     const prepared = getCachedPreparedSinkingWreckSprite(wreck.unitType, this.preparedDensity)
