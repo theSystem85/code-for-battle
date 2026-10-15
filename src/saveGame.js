@@ -587,6 +587,7 @@ function buildSaveObject(label) {
   // Gather all units (human player and AI players)
   const allUnits = units.map(u => {
     const serialized = {
+      factoryExit: u.factoryExit ? { ...u.factoryExit } : null,
       type: u.type,
       owner: u.owner,
       x: u.x,
@@ -1340,8 +1341,8 @@ function loadGameFromSaveObject(saveObj, key) {
         return
       }
       // Use tileX/tileY if present, else calculate from x/y
-      const tileX = u.tileX !== undefined ? u.tileX : Math.floor(u.x / TILE_SIZE)
-      const tileY = u.tileY !== undefined ? u.tileY : Math.floor(u.y / TILE_SIZE)
+      const tileX = u.tileX !== undefined ? u.tileX : Math.floor((u.x + TILE_SIZE / 2) / TILE_SIZE)
+      const tileY = u.tileY !== undefined ? u.tileY : Math.floor((u.y + TILE_SIZE / 2) / TILE_SIZE)
       const hydrated = createUnit(factory, u.type, tileX, tileY)
       // Store the default maxHealth from createUnit before Object.assign overwrites it
       const defaultMaxHealth = hydrated.maxHealth

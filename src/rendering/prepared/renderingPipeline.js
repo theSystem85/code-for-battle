@@ -1,3 +1,4 @@
+import { prepareFactoryExitSprites } from '../factoryExitRenderer.js'
 import { TILE_SIZE } from '../../config.js'
 import { bootMark } from '../../ui/bootTiming.js'
 import { reportBootSprites } from '../../ui/bootProgress.js'
@@ -98,6 +99,7 @@ async function prepareAndPublishSprites({ density, signal, onProgress }) {
     signal,
     onProgress
   })
+  prepareFactoryExitSprites(prepared.registry, prepared.manifest.assetVersion)
   publishPreparedSpriteRegistry(prepared)
   lastPreparedDensity = density
   // Rotated tank frames are built from the freshly published density variant in idle time.

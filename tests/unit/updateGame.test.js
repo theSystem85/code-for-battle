@@ -474,6 +474,19 @@ describe('updateGame.js', () => {
       expect(mainUnits[0].guardPosition).toBeNull()
     })
 
+    it('rejects remote movement orders while a vehicle is inside the garage', async() => {
+      const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
+      const { units: mainUnits } = await import('../../src/main.js')
+      isHost.mockReturnValue(true)
+      mainUnits.length = 0
+      const unit = { id: 'exiting', owner: 'player2', factoryExit: { phase: 'waiting' }, moveTarget: null }
+      mainUnits.push(unit)
+      processPendingRemoteCommands.mockReturnValue([{ commandType: COMMAND_TYPES.UNIT_MOVE,
+        payload: { unitIds: [unit.id], targetX: 64, targetY: 96 }, sourcePartyId: 'player2' }])
+      updateGameModule.updateGame(16, [], [], [], [], { gamePaused: true, occupancyMap: [], buildings: [] })
+      expect(unit.moveTarget).toBeNull()
+    })
+
     it('should apply UNIT_ATTACK commands with target entity', async() => {
       const { processPendingRemoteCommands, isHost, COMMAND_TYPES } = await import('../../src/network/gameCommandSync.js')
       const { units: mainUnits } = await import('../../src/main.js')

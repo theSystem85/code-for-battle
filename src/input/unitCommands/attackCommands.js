@@ -187,7 +187,7 @@ export function getTargetPoint(target, unitCenter) {
 }
 
 export function isEnemyTargetForUnit(target, unit) {
-  if (!target || !unit || !unit.owner) {
+  if (!target || target.factoryExit || !unit || unit.factoryExit || !unit.owner) {
     return false
   }
 

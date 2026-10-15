@@ -525,6 +525,7 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     sweeping: unit.sweeping,
     isNaval: unit.isNaval,
     isAirUnit: unit.isAirUnit,
+    factoryExit: unit.factoryExit ? { ...unit.factoryExit } : null,
     embarkedOnId: unit.embarkedOnId,
     embarkedUnitIds: unit.embarkedUnitIds,
     embarkedUnitTypes: unit.embarkedUnitTypes,

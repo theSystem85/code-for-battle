@@ -28,6 +28,7 @@ const GROUND_COMBAT_TYPES = new Set([
 ])
 
 export function updateAIUnitInternal(unit, units, gameState, mapGrid, now, aiPlayerId, _targetedOreTiles, bullets) {
+  if (unit.factoryExit) return
   // Reset being attacked flag if enough time has passed since last damage
   if (unit.isBeingAttacked && unit.lastDamageTime && (now - unit.lastDamageTime > 5000)) {
     unit.isBeingAttacked = false

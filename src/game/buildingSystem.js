@@ -235,7 +235,7 @@ export const updateBuildings = logPerformance(function updateBuildings(gameState
  * @param {Object} gameState - Game state object
  */
 function isSubmergedSubmarineTarget(target) {
-  return target?.type === 'submarine' && target.depthState !== 'surfaced'
+  return Boolean(target?.factoryExit) || target?.type === 'submarine' && target.depthState !== 'surfaced'
 }
 
 const updateDefensiveBuildings = logPerformance(function updateDefensiveBuildings(buildings, units, bullets, delta, gameState) {
@@ -300,7 +300,7 @@ const updateDefensiveBuildings = logPerformance(function updateDefensiveBuilding
 
       if (!closestEnemy && action !== 'aimNearestEnemy' && action !== 'fireAtLocked' && action !== 'fireForward') {
         for (const unit of units) {
-          if (unit.owner !== building.owner && unit.health > 0) {
+          if (!unit.factoryExit && unit.owner !== building.owner && unit.health > 0) {
             if (isSubmergedSubmarineTarget(unit)) {
               continue
             }

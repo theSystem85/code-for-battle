@@ -98,7 +98,7 @@ export class AttackGroupHandler {
       target.type !== 'apache' &&
       target.type !== 'f22Raptor' &&
       target.type !== 'f35' &&
-      !target.embarkedOnId
+      !target.factoryExit && !target.embarkedOnId
     )
 
     transports.forEach(transport => {
@@ -184,7 +184,7 @@ export class AttackGroupHandler {
     }
 
     for (const unit of units) {
-      if (unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
+      if (unit.factoryExit || unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
       if (!isHumanPlayerTarget(unit) && unit.health > 0) {
         const centerX = unit.x + TILE_SIZE / 2
         const centerY = unit.y + TILE_SIZE / 2

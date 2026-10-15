@@ -26,7 +26,7 @@ function isEligibleFriendlyGroundServiceTarget(source, unit) {
 const AUTO_REFUEL_SCAN_INTERVAL = 10000
 
 export const updateTankerTruckLogic = logPerformance(function(units, gameState, delta) {
-  const tankers = units.filter(u => u.type === 'tankerTruck' && u.health > 0)
+  const tankers = units.filter(u => !u.factoryExit && u.type === 'tankerTruck' && u.health > 0)
   if (tankers.length === 0) return
 
   // IMMEDIATE RESPONSE: Check for units that just ran out of gas completely

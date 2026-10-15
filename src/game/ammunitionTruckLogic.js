@@ -57,7 +57,7 @@ function findNearestEmptyAmmoBuilding(ammoTruck, buildings) {
 }
 
 export const updateAmmunitionTruckLogic = logPerformance(function(units, gameState, delta) {
-  const ammoTrucks = units.filter(u => u.type === 'ammunitionTruck' && u.health > 0)
+  const ammoTrucks = units.filter(u => !u.factoryExit && u.type === 'ammunitionTruck' && u.health > 0)
   if (ammoTrucks.length === 0) return
 
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null

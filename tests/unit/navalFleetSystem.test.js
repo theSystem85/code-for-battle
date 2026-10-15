@@ -1251,3 +1251,9 @@ describe('water mine system', () => {
     expect(getWaterMineAtTile(7, 7)).toBeNull()
   })
 })
+
+it('rejects garage vehicles as combat targets for land and naval shooters', () => {
+  const target = { type: 'tank', owner: 'player2', health: 100, factoryExit: { phase: 'moving' } }
+  expect(canUnitTargetEntity({ type: 'tank' }, target)).toBe(false)
+  expect(canUnitTargetEntity({ type: 'battleship' }, target)).toBe(false)
+})

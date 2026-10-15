@@ -282,7 +282,7 @@ function resolveReplayCommandUnits(command = {}) {
       }
     }
 
-    if (!unit || usedLiveIds.has(unit.id)) {
+    if (!unit || unit.factoryExit || usedLiveIds.has(unit.id)) {
       continue
     }
 

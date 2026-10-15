@@ -555,7 +555,7 @@ function appendCoopControlledUnits(units) {
       slot.unit = unit
       if (!unit && units.length > 0) slot.unitId = null
     }
-    if (!unit) continue
+    if (!unit || unit.factoryExit) continue
     let found = false
     for (let i = 0; i < selectedUnits.length; i++) {
       if (selectedUnits[i] === unit) {
@@ -658,6 +658,7 @@ export function updateRemoteControlledUnits(units, bullets, mapGrid, occupancyMa
   try {
     appendCoopControlledUnits(units)
     selectedUnits.forEach(unit => {
+      if (unit.factoryExit) return
       if (!unit || !unit.movement) return
       const scoped = coopSlotForUnit(unit)
       const scopedActions = scoped ? scoped.actions : null

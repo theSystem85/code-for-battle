@@ -29,7 +29,7 @@ export const updateAmbulanceLogic = logPerformance(function(units, gameState, de
     })
   }
 
-  const ambulances = units.filter(u => u.type === 'ambulance')
+  const ambulances = units.filter(u => !u.factoryExit && u.type === 'ambulance')
   if (ambulances.length === 0) return
 
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null

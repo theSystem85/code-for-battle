@@ -69,6 +69,14 @@ function hashUnit(unit) {
   hash = hashCombine(hash, quantize(unit.tileX, 1))
   hash = hashCombine(hash, quantize(unit.tileY, 1))
 
+  if (unit.factoryExit) {
+    hash = hashCombine(hash, hashString(unit.factoryExit.factoryId || ''))
+    hash = hashCombine(hash, hashString(unit.factoryExit.phase))
+    hash = hashCombine(hash, quantize(unit.factoryExit.elapsed, POSITION_PRECISION))
+    hash = hashCombine(hash, quantize(unit.factoryExit.endX, POSITION_PRECISION))
+    hash = hashCombine(hash, quantize(unit.factoryExit.endY, POSITION_PRECISION))
+  }
+
   // Hash health
   hash = hashCombine(hash, quantize(unit.health, 1))
   hash = hashCombine(hash, quantize(unit.maxHealth, 1))

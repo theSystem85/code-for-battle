@@ -531,7 +531,7 @@ describe('units.js', () => {
       expect(unit.owner).toBe('player1')
     })
 
-    it('should return null if no spawn position available', () => {
+    it('should wait inside the factory if no exit position is available', () => {
       // Block all surrounding tiles
       for (let y = 0; y < mapGrid.length; y++) {
         for (let x = 0; x < mapGrid[0].length; x++) {
@@ -542,17 +542,18 @@ describe('units.js', () => {
       const units = []
       const unit = spawnUnit(factory, 'tank_v1', units, mapGrid)
 
-      expect(unit).toBeNull()
+      expect(unit.factoryExit.phase).toBe('waiting')
+      expect(unit.factoryExit.elapsed).toBe(0)
     })
 
-    it('should set path to rally point if provided', () => {
+    it('should defer the rally path until exit completion', () => {
       const rallyPoint = { x: 10, y: 10 }
       const units = []
       const unit = spawnUnit(factory, 'tank_v1', units, mapGrid, rallyPoint)
 
-      if (unit && unit.path) {
-        expect(unit.moveTarget).toEqual(rallyPoint)
-      }
+      expect(unit.factoryExit.rallyPoint).toEqual(rallyPoint)
+      expect(unit.moveTarget).toBeNull()
+      expect(unit.path).toEqual([])
     })
 
     it('should not set path for harvester with rally point', () => {
@@ -570,7 +571,7 @@ describe('units.js', () => {
       const unit = spawnUnit(factory, 'tank_v1', units, mapGrid, null, gameState.occupancyMap)
 
       expect(unit).toBeTruthy()
-      // Occupancy should be updated for spawn position
+      expect(gameState.occupancyMap[unit.tileY][unit.tileX]).toBe(0)
     })
   })
 

@@ -533,7 +533,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             // Check if explosion will hit any tanks
             const explosionRadius = TILE_SIZE * 2
             const hasTankNearby = units.some(u => {
-              if (u.health <= 0 || u.owner === bullet.shooter.owner) return false
+              if (u.factoryExit || u.health <= 0 || u.owner === bullet.shooter.owner) return false
               const tankTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3']
               if (!tankTypes.includes(u.type)) return false
               const explosionOriginX = bullet.x

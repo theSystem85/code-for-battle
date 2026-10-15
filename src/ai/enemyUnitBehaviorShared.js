@@ -13,7 +13,7 @@ function isAirborneAirUnit(target) {
 }
 
 export function canUnitHitTarget(shooter, target) {
-  if (!shooter || !target) return false
+  if (!shooter || shooter.factoryExit || !target || target.factoryExit) return false
   if (!isAirborneAirUnit(target)) return true
   return shooter.type === 'rocketTank' || shooter.type === 'apache' || shooter.type === 'f22Raptor'
 }

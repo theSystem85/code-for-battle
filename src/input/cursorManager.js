@@ -465,7 +465,7 @@ export class CursorManager {
 
     const isFriendlyOwner = owner => owner === gameState.humanPlayer || (gameState.humanPlayer === 'player1' && owner === 'player')
     const hoveredUnits = (units || [])
-      .filter(unit => unit && unit.health > 0 && !unit.embarkedOnId && isFriendlyOwner(unit.owner))
+      .filter(unit => unit && unit.health > 0 && !unit.factoryExit && !unit.embarkedOnId && isFriendlyOwner(unit.owner))
       .map(unit => {
         const centerX = unit.x + TILE_SIZE / 2
         const centerY = unit.y + TILE_SIZE / 2

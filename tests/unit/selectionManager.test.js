@@ -99,6 +99,17 @@ import { showNotification } from '../../src/ui/notifications.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../../src/utils/layoutMetrics.js'
 
 describe('selectionManager', () => {
+  it('rejects garage vehicles for click, box selection and commands', () => {
+    const unit = { id: 'exiting', owner: 'player1', type: 'tank', health: 100, x: 32, y: 32, factoryExit: { phase: 'moving' } }
+    const selected = []
+    expect(manager.isSelectableUnit(unit)).toBe(false)
+    expect(manager.isCommandableUnit(unit)).toBe(false)
+    manager.handleUnitSelection(unit, {}, [unit], [], selected)
+    expect(selected).toEqual([])
+    manager.selectAllOfType('tank', [unit], selected)
+    expect(selected).toEqual([])
+  })
+
   let manager
   let getElementByIdSpy
 

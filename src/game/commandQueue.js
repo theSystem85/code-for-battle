@@ -8,6 +8,7 @@ import { getSimulationTime } from './time.js'
 
 export function processCommandQueues(units, mapGrid, unitCommands, buildings = []) {
   units.forEach(unit => {
+    if (unit.factoryExit) return
     if ((!unit.commandQueue || unit.commandQueue.length === 0) && !unit.currentCommand) return
 
     if (!unit.currentCommand) {
