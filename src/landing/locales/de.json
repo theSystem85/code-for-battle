@@ -22,7 +22,8 @@
       "github": "Auf GitHub ansehen",
       "githubShort": "GitHub",
       "automation": "Automation",
-      "controls": "Steuerung"
+      "controls": "Steuerung",
+      "story": "Story"
     },
     "hero": {
       "eyebrow": "Echtzeitstrategie im Browser",
@@ -293,6 +294,28 @@
       "settings": "Open control settings im Tutorial öffnet deine aktuellen Key Bindings oder das Controllers-Profil. Standardbeispiele dienen als Einstieg; gespeicherte Belegungen haben Vorrang.",
       "mac": "Mac-Trackpad: Wenn Wischen den Browserverlauf öffnet, deaktiviere oder ändere Zwischen Seiten blättern unter Systemeinstellungen → Trackpad → Weitere Gesten. Prüfe Natürliches Scrollen unter Scrollen und Zoomen für die Richtung. Manche System- oder Browsergesten erreichen das Spiel nicht; ziehe dann bei gehaltenem Sekundärklick.",
       "guide": "Steuerungsanleitung und Mac-Prüfschritte (Englisch)"
+    },
+    "story": {
+      "dateline": "The Global Herald · 12. Juni 2038",
+      "headline": "Krieg um rätselhafte blaue Kristalle ausgebrochen",
+      "imageAlt": "Titelseite des Global Herald vom 12. Juni 2038: Krieg um rätselhafte blaue Kristalle ausgebrochen",
+      "title": "Wie der Krieg begann",
+      "lead": "Kyronit, ein neu entdeckter blauer Kristall, lässt Fabriken KI-gesteuerte Waffen in Minuten bauen. Binnen Wochen kämpften alle Großmächte um die Vorkommen.",
+      "kyronite": {
+        "title": "Die Macht des Kyronits",
+        "body": "Aufgeladenes Kyronit ordnet Materie auf molekularer Ebene neu und beschleunigt die Fertigung um bis zu 98 %. Wer die Felder hält, entscheidet den Krieg."
+      },
+      "machines": {
+        "title": "KI-Kriegsmaschinen",
+        "body": "Fabriken an den Kristallfeldern bauen rund um die Uhr KI-Panzer, Drohnenschwärme und Roboter-Infanterie. In Code for Battle programmierst du sie selbst."
+      },
+      "fronts": {
+        "title": "Fronten rund um den Globus",
+        "body": "Osteuropa, Zentralasien, der Südpazifik und Afrika: Der Kampf um Kyronit hat jeden Kontinent erreicht."
+      },
+      "tickerLabel": "Eilmeldungen",
+      "ticker": "Märkte brechen ein, der Krieg breitet sich aus • Flüchtlingskrise verschärft sich • Cyberangriffe auf Kristall-Infrastruktur nehmen zu • ",
+      "cta": "Jetzt spielen"
     }
   }
 }

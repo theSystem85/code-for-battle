@@ -117,6 +117,7 @@ import { runMeasuredTask, scheduleAfterNextPaint, scheduleIdleTask } from '../st
 import { bootMark } from '../ui/bootTiming.js'
 import { beginBootProgress, getBootProgress, waitForBootPhase } from '../ui/bootProgress.js'
 import { stopBootProgressPaint } from '../ui/loadingScreen.js'
+import { maybeAutoPlayStoryIntro, mountStoryIntroReplay } from '../story/storyIntroBoot.js'
 import {
   hideLoadingScreen,
   runWithLoadingScreen,
@@ -724,6 +725,8 @@ class Game {
         bootMark('loading-screen-ready')
       })
       hideLoadingScreen(session)
+      mountStoryIntroReplay()
+      maybeAutoPlayStoryIntro()
       this.setupDeferredStartupTasks()
     } catch (error) {
       stopBootProgressPaint()
