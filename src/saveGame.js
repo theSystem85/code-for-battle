@@ -1,6 +1,7 @@
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
 // saveGame.js
 import { gameState } from './gameState.js'
+import { migrateSavedSpriteSheetState } from './ui/spriteSheetRegistry.js'
 import { factories } from './main.js'
 import { units } from './main.js'
 import { mapGrid } from './main.js'
@@ -1074,6 +1075,7 @@ function loadGameFromSaveObject(saveObj, key) {
       : 0
     restoreDeterministicRng(loaded.gameState)
 
+    migrateSavedSpriteSheetState(loaded.gameState)
     gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
     gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
     gameState.activeSpriteSheetMetadata = loaded.gameState?.activeSpriteSheetMetadata || null

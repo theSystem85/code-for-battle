@@ -21,7 +21,14 @@ import {
 import { listPartyStates, observePartyOwnershipChange } from '../network/multiplayerStore.js'
 import { initSpriteSheetEditor } from './spriteSheetEditor.js'
 import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../utils/spriteSheetMetadata.js'
-import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { getStoredItem, setStoredItem, removeStoredItem, getStoredKeys } from '../storage/indexedDbStorage.js'
+import {
+  DEFAULT_SSE_SHEETS,
+  filterRetiredSheetPaths,
+  isRetiredSpriteSheetPath,
+  purgeRetiredSheetStorage,
+  sanitizeAppliedSheetMetadata
+} from './spriteSheetRegistry.js'
 
 let editButton = null
 let tileSelect = null
@@ -56,22 +63,6 @@ const COMBAT_DECAL_BLACK_KEY = Object.freeze({
   cutoffBrightness: 8,
   softenBrightness: 24
 })
-const RETIRED_MAJOR_SPRITE_SHEET_PATH = 'images/map/sprite_sheets/major_sprite_sheet_default.webp'
-
-const DEFAULT_SSE_SHEETS = [
-  'images/map/sprite_sheets/streets24_q90_1024x1024.webp',
-  'images/map/sprite_sheets/seasons_1024_q90_2.webp',
-  'images/map/sprite_sheets/seasons_1024_q90_3.webp',
-  'images/map/sprite_sheets/crystals_q90_1024x1024.webp',
-  'images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp',
-  'images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp',
-  'images/map/sprite_sheets/debris_craters_tracks.webp',
-  'images/map/sprite_sheets/dt_grass_1024_q85.webp',
-  'images/map/sprite_sheets/dt_soil_1024_q85.webp',
-  'images/map/sprite_sheets/dt_sand_1024_q85.webp',
-  'images/map/sprite_sheets/dt_snow_1024_q85.webp',
-  'images/map/sprite_sheets/dt_universal_1024_q85.webp'
-]
 const DEFAULT_ANIMATION_SHEET_PATH = 'images/map/animations/explosion.webp'
 const DEFAULT_ANIMATION_METADATA_PATH = 'images/map/animations/explosion.json'
 const RETIRED_EXPLOSION_SHEET_PATTERN = /^images\/map\/animations\/\d+x\d+_\d+x\d+_.*explosion\.(webp|png|jpg|jpeg)$/i
@@ -178,7 +169,7 @@ function mergeSheetPaths(baseSheetPaths = [], additionalSheetPaths = []) {
     if (
       typeof sheetPath !== 'string' ||
       !sheetPath.trim() ||
-      sheetPath === RETIRED_MAJOR_SPRITE_SHEET_PATH ||
+      isRetiredSpriteSheetPath(sheetPath) ||
       seen.has(sheetPath)
     ) return
     seen.add(sheetPath)
@@ -431,7 +422,7 @@ async function loadStaticSheetPaths() {
   try {
     const parsed = await fetchAssetJson(SSE_SHEETS_INDEX)
     if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
-      return parsed.sheets.filter(path => typeof path === 'string' && path !== RETIRED_MAJOR_SPRITE_SHEET_PATH)
+      return filterRetiredSheetPaths(parsed.sheets)
     }
   } catch (err) {
     window.logger.warn('Failed to load sprite sheet index:', err)
@@ -664,10 +655,13 @@ export function initMapEditorControls() {
   } catch (err) {
     window.logger.warn('Failed to load integrated sprite sheet biome:', err)
   }
+  purgeRetiredSheetStorage({ getStoredItem, setStoredItem, removeStoredItem, getStoredKeys })
+  if (isRetiredSpriteSheetPath(gameState.activeSpriteSheetPath)) gameState.activeSpriteSheetPath = null
+  gameState.activeSpriteSheetMetadata = sanitizeAppliedSheetMetadata(gameState.activeSpriteSheetMetadata)
   try {
     const storedAppliedMetadata = getStoredItem(SSE_APPLIED_METADATA_STORAGE_KEY)
     if (storedAppliedMetadata) {
-      const parsed = JSON.parse(storedAppliedMetadata)
+      const parsed = sanitizeAppliedSheetMetadata(JSON.parse(storedAppliedMetadata))
       if (parsed && typeof parsed === 'object' && hasTaggedTiles(parsed) &&
         typeof parsed.sheetPath === 'string' && DEFAULT_SSE_SHEETS.includes(parsed.sheetPath)) {
         gameState.activeSpriteSheetMetadata = parsed

@@ -17,7 +17,9 @@ Use this checklist when creating decorative map tiles (DT), biome props, or new 
 - **Mixed maps:** multi-tile DT footprints must stay entirely inside **one** biome.
 - **Winter/frozen lakes:** tagged `impassable` (and usually `water` + `winter`).
 - **Rocks/stones:** include biome-tagged rock groups on the new DT sheets.
-- **Cliffs/boulders:** keep on the existing neutral system (`rockCliffsMountains_*` / rock type). Do **not** replace them with DT sheets.
+- **Cliffs/boulders:** keep on the organic terrain system (`type === 'rock'` cells drawn with `images/terrain/terraced-cliffs.webp`). The old `rockCliffsMountains_*` sheet was removed (2026-10-15); do **not** add cliffs to DT sheets.
+- **Ground:** plain ground always comes from the organic terrain art in `public/images/terrain/`. Do not add custom grass/soil/sand/snow ground sheets; DT sheets only carry decorations.
+- **Multi-tile placement:** the map generator places multi-tile `group` sprites first from the sheet JSON (see spec 120), so a group must be fully tagged on the sheet with its biome and `decorative`.
 
 ## Biomes and sheets
 Map biomes: `grass` | `soil` | `sand` | `snow` (+ `mixed` at map level only).
