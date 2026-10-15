@@ -1,0 +1,8 @@
+{
+  "version": "0.53.1",
+  "features": [],
+  "improvements": [],
+  "bugfixes": [
+    "Dropping a sprite sheet image into the Sprite Sheet Editor works again, also for images without a file type and when the image is dropped together with its tag file."
+  ]
+}
