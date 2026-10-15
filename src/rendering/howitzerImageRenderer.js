@@ -20,9 +20,9 @@ let howitzerLoaded = false
 let howitzerLoading = false
 const pendingCallbacks = []
 
-const HOWITZER_BARREL_MOUNT = { x: 30, y: 30 }
-let BARREL_MOUNT_POINT = { x: 2, y: 0 }
-let barrelMuzzlePoint = { x: 2, y: 64 }
+const HOWITZER_BARREL_MOUNT = { x: 96.2, y: 18.8 }
+let BARREL_MOUNT_POINT = { x: 11.5, y: 0 }
+let barrelMuzzlePoint = { x: 11.5, y: 152 }
 const HOWITZER_RECOIL_MULTIPLIER = 1.4
 
 function resolveCallbacks(success) {
@@ -77,7 +77,7 @@ export function preloadHowitzerImage(callback) {
   howitzerBarrelImg = new Image()
   howitzerBarrelImg.onload = () => {
     BARREL_MOUNT_POINT = {
-      x: 2,
+      x: 11.5,
       y: 0
     }
     barrelMuzzlePoint = {
