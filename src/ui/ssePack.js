@@ -34,3 +34,20 @@ export function findPackingRegion({ columns, rows, occupied, width, height, tile
   }
   throw new Error('Unable to pack sprite.')
 }
+
+// Existing, non-imported content is supplied as fixed occupied cells.
+export function compactSprites(sprites, grid) {
+  const occupied = new Set(grid.occupied || [])
+  let rows = grid.rows
+  const placements = [...sprites].sort((a, b) => a.placedAt.row - b.placedAt.row || a.placedAt.column - b.placedAt.column).map(sprite => {
+    const region = findPackingRegion({ ...grid, rows, occupied,
+      width: sprite.tileSpan.columns * grid.tileSize - 2 * (grid.borderWidth || 0),
+      height: sprite.tileSpan.rows * (grid.rowHeight || grid.tileSize) - 2 * (grid.borderWidth || 0) })
+    rows = region.rows
+    for (let y = 0; y < region.spanY; y++) {
+      for (let x = 0; x < region.spanX; x++) occupied.add(`${region.x + x},${region.y + y}`)
+    }
+    return { ...sprite, placedAt: { column: region.x, row: region.y } }
+  })
+  return { placements, occupied, rows }
+}
