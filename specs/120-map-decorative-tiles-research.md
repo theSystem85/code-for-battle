@@ -35,11 +35,17 @@ Implemented hybrid biome DT sheets + runtime selection (organic DT retained).
 Packer: `scripts/pack-biome-decorative-tiles.mjs`.
 
 ## Runtime behavior
-- `getIntegratedTileForMapTile('land', …)` for decorative tiles:
-  - Prefers grouped `decorative` variants whose tags include the tile biome **or** `universal`
-  - Requires every cell of the footprint to be land+decorative and share the same biome
-  - Falls back to 1×1 biome+decorative candidates, then universal+decorative
-- Cliffs/boulders unchanged on `type === 'rock'` / rockCliffs sheets
+- Ground: plain land always shows the default organic terrain, also with custom sprite sheets on. Decorations are drawn on top of it (`MapRenderer.drawIntegratedLandOverlay`).
+- Placement (`src/rendering/decorationLayout.js`), built once per map grid and sheet configuration by `TextureManager.getDecorationLayout(mapGrid)`:
+  1. Decorative `group_N` definitions from the sheet JSON are split per biome into multi-tile and 1x1 pools. A group joins a biome when it is tagged with that biome or `universal`. Season tags are filtered per biome (`BIOME_SEASONS`: grass summer/autumn, soil spring/summer/autumn, sand summer, snow winter); untagged sprites are always allowed.
+  2. Multi-tile pass first: every land cell whose hash hits `MULTI_TILE_ANCHOR_INTERVAL` is an anchor. Candidates are tried from a hash-chosen start, largest first; a sprite is placed only when every covered cell is free, decoratable land (no ore, seed crystal, building or airstrip) of the anchor's biome. Covered cells are marked occupied.
+  3. 1x1 pass: remaining free land cells whose hash hits `SINGLE_DECORATION_INTERVAL` get a 1x1 sprite of their biome.
+  4. Everything else is null, so the organic ground shows.
+- The layout is a pure function of the map grid, so it is deterministic per map seed. A lookup re-validates the whole footprint, so a later map edit (street, building) drops the entire sprite instead of leaving half a lake.
+- The old per-cell hash classification and the post-hoc search for matching neighbouring cells (`selectGroupedTileForMapTile`) were removed.
+- Ground cut-out (`src/rendering/decorationCutout.js`): each group is composed into one canvas, pixels close to the group's border ground colour become transparent and the outer edge is feathered. Sprites that fill their footprint (forests) get a wide irregular fade instead. Universal sprites that stay mostly opaque (clearings, paths, rubble fields) are not placed on maps because they would show as foreign ground patches.
+- Custom ground sheets (passable, non-decorative tiles) added through the editor still cover undecorated land cells.
+- Cliffs/boulders stay on the organic `terraced-cliffs` art for `type === 'rock'` (the `rockCliffsMountains_*` sheet was removed on 2026-10-15)
 - Occupancy passes `mapGrid` + `tile.biome` into integrated lookups so mixed-map lakes block correctly
 
 ## Verification
