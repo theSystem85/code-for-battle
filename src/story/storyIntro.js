@@ -167,27 +167,51 @@ function startMusic(state) {
   state.deps.startMusic()
 }
 
-// Audio still locked when the intro opened: the visuals keep running, and the
-// first pointerdown/keydown anywhere unlocks the shared context and starts the
-// narration from the current section plus the background music. That first
-// tap only unlocks; it does not skip (the Skip button and Esc always skip).
-// Media elements (the music) need a real user activation even where the Web
-// Audio context already runs, so the gesture is awaited for those too.
-function onUnlockGesture(state, event) {
-  if (state.closed) return
+// Every gesture during the intro re-unlocks the shared context and retries the
+// music if a browser dropped it (Skip and Esc only skip).
+function onIntroGesture(state, event) {
+  if (state.closed || state.awaitingStart) return
   const isSkipButton = event?.target?.closest?.('.story-intro__skip')
   const isEscape = event?.type === 'keydown' && event.key === 'Escape'
-  state.deps.unlockAudio()
   if (isSkipButton || isEscape) return
-  const firstUnlock = state.needsGesture
-  state.needsGesture = false
+  state.deps.unlockAudio()
   startMusic(state)
-  if (!firstUnlock) return
-  if (event?.type === 'pointerdown' || event?.type === 'touchend') state.swallowStageClick = true
-  state.deps.log({ event: 'gesture-unlock', restartedSegment: !state.audioStarted })
-  if (state.audioStarted) return
+}
+
+// Audio locked when the intro opens: a centered "Start intro" button waits and
+// the newspaper does not move yet, so nothing is missed. Pressing it unlocks
+// the shared AudioContext and starts narration and music in that same gesture.
+function beginIntro(state) {
+  if (state.closed || state.started) return
+  state.awaitingStart = false
+  const start = state.root.querySelector('.story-intro__start')
+  if (start) start.remove()
+  state.root.classList.remove('story-intro--awaiting-start')
+  state.deps.unlockAudio()
   startAudio(state)
-  if (state.index >= 0) showSegment(state, state.index)
+  startMusic(state)
+  state.deps.log({ event: 'intro-started' })
+  showSegment(state, 0)
+}
+
+function showStartButton(state) {
+  state.awaitingStart = true
+  state.root.classList.add('story-intro--awaiting-start')
+  const wrap = state.doc.createElement('div')
+  wrap.className = 'story-intro__start'
+  wrap.innerHTML = `
+    <button type="button" class="story-intro__start-btn" aria-describedby="story-intro-start-hint">Start intro</button>
+    <p class="story-intro__start-hint" id="story-intro-start-hint">How the war began: narrated briefing with music</p>
+  `
+  const button = wrap.querySelector('button')
+  button.addEventListener('click', event => {
+    event.stopPropagation()
+    beginIntro(state)
+  })
+  wrap.addEventListener('click', event => event.stopPropagation())
+  state.root.appendChild(wrap)
+  state.deps.log({ event: 'awaiting-start' })
+  button.focus?.()
 }
 
 function showSegment(state, index) {
@@ -272,8 +296,7 @@ export function playStoryIntro(options = {}) {
     segmentStartedAt: 0,
     audioStarted: false,
     musicStarted: false,
-    needsGesture: false,
-    swallowStageClick: false,
+    awaitingStart: false,
     gestureEvents: ['pointerdown', 'keydown', 'touchend'],
     started: false,
     closed: false,
@@ -295,16 +318,12 @@ export function playStoryIntro(options = {}) {
     event.stopPropagation()
     closeStoryIntro('skipped')
   })
-  // Tapping the newspaper skips the intro, except for the tap that unlocked
-  // the audio (see onUnlockGesture).
+  // Tapping the newspaper skips the running intro.
   state.root.querySelector('.story-intro__stage').addEventListener('click', () => {
-    if (state.swallowStageClick) {
-      state.swallowStageClick = false
-      return
-    }
+    if (state.awaitingStart) return
     closeStoryIntro('skipped')
   })
-  state.onGesture = event => onUnlockGesture(state, event)
+  state.onGesture = event => onIntroGesture(state, event)
   state.gestureEvents.forEach(type => win.addEventListener(type, state.onGesture, true))
   win.addEventListener('keydown', state.onKey, true)
   win.addEventListener('resize', state.onResize)
@@ -314,15 +333,18 @@ export function playStoryIntro(options = {}) {
   holdGame(state)
   preloadClips(state)
   state.deps.unlockAudio()
-  if (state.deps.isAudioUnlocked()) startAudio(state)
-  if (state.deps.hasUserActivation()) {
-    startMusic(state)
+  // Media elements (the music) need a real user activation even where the
+  // Web Audio context already runs, so both conditions must hold to start now.
+  const locked = !state.deps.isAudioUnlocked() || (state.withMusic && !state.deps.hasUserActivation())
+  if (locked) {
+    state.deps.log({ event: 'audio-locked' })
+    // Frame the first section without starting the timeline.
+    applyCamera(state, state.segments[0], true)
+    showStartButton(state)
   } else {
-    state.needsGesture = true
-    state.deps.log({ event: 'audio-locked', narration: state.audioStarted })
+    state.root.querySelector('.story-intro__skip').focus?.()
+    beginIntro(state)
   }
-  state.root.querySelector('.story-intro__skip').focus?.()
-  showSegment(state, 0)
   return true
 }
 
