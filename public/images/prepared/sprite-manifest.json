@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "95c431bd577be4e9",
+  "assetVersion": "28f8c7fd41c840b7",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -13,7 +13,7 @@
     "entryCount": 303,
     "sourceCount": 62,
     "generatedVariantCount": 909,
-    "decodedVariantBytes": 38684836
+    "decodedVariantBytes": 38685780
   },
   "entries": [
     {
@@ -17027,25 +17027,25 @@
       "id": "unit:howitzer:barrel",
       "category": "unit",
       "source": "/images/map/units/howitzer_barrel.webp",
-      "sourceWidth": 5,
-      "sourceHeight": 64,
-      "logicalWidth": 2.5,
-      "logicalHeight": 32,
+      "sourceWidth": 23,
+      "sourceHeight": 152,
+      "logicalWidth": 3.833333333333333,
+      "logicalHeight": 25.333333333333332,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "mount": {
-          "x": 1,
+          "x": 1.9166666666666665,
           "y": 0,
-          "sourceX": 2,
+          "sourceX": 11.5,
           "sourceY": 0
         },
         "muzzle": {
-          "x": 1,
-          "y": 32,
-          "sourceX": 2,
-          "sourceY": 64
+          "x": 1.9166666666666665,
+          "y": 25.333333333333332,
+          "sourceX": 11.5,
+          "sourceY": 152
         }
       },
       "states": [
@@ -17056,23 +17056,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/howitzer/barrel@1x.webp",
-          "backingWidth": 3,
-          "backingHeight": 32,
-          "decodedBytes": 384
+          "backingWidth": 4,
+          "backingHeight": 25,
+          "decodedBytes": 400
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/howitzer/barrel@2x.webp",
-          "backingWidth": 5,
-          "backingHeight": 64,
-          "decodedBytes": 1280
+          "backingWidth": 8,
+          "backingHeight": 51,
+          "decodedBytes": 1632
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/howitzer/barrel@3x.webp",
-          "backingWidth": 8,
-          "backingHeight": 96,
-          "decodedBytes": 3072
+          "backingWidth": 12,
+          "backingHeight": 76,
+          "decodedBytes": 3648
         }
       ]
     },
@@ -17080,8 +17080,8 @@
       "id": "unit:howitzer:base",
       "category": "unit",
       "source": "/images/map/units/howitzer_map.webp",
-      "sourceWidth": 64,
-      "sourceHeight": 64,
+      "sourceWidth": 192,
+      "sourceHeight": 192,
       "logicalWidth": 32,
       "logicalHeight": 32,
       "hasAlpha": true,
@@ -17093,10 +17093,10 @@
           "y": 16
         },
         "barrelMount": {
-          "x": 15,
-          "y": 15,
-          "sourceX": 30,
-          "sourceY": 30
+          "x": 16.03333333333333,
+          "y": 3.1333333333333333,
+          "sourceX": 96.2,
+          "sourceY": 18.8
         }
       },
       "states": [

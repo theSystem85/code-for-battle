@@ -81,14 +81,14 @@ const definitions = [
     id: 'unit:howitzer:base',
     source: unitSource('howitzer_map.webp'),
     target: { maxDimension: TILE_SIZE },
-    anchors: { center: [0.5, 0.5], barrelMountSource: [30, 30] },
+    anchors: { center: [0.5, 0.5], barrelMountSource: [96.2, 18.8] },
     states: ['base']
   },
   {
     id: 'unit:howitzer:barrel',
     source: unitSource('howitzer_barrel.webp'),
     target: { reference: unitSource('howitzer_map.webp'), maxDimension: TILE_SIZE },
-    anchors: { mountSource: [2, 0], muzzleSource: [2, 64] },
+    anchors: { mountSource: [11.5, 0], muzzleSource: [11.5, 152] },
     states: ['base', 'recoil']
   },
   ...[
