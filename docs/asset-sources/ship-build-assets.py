@@ -31,16 +31,16 @@ VISIBLE_LENGTH_CSS = {
     'battleship': 241 / 256 * 6.6 * 32,
     'aircraftCarrier': 243 / 256 * 9.36 * 32,
 }
-# Battleship barbette ring centres in the bow-right source (x along the hull, y across).
+# Battleship (Bismarck-class) barbette ring centres in the bow-right source (x along the hull).
 BATTLESHIP_RINGS = {
-    'aftOuter': (220.5, 351.0),
-    'aftInner': (838.5, 351.0),
-    'foreInner': (965.0, 351.0),
-    'foreOuter': (1081.0, 354.0),  # had a baked-in gun mount; retouched to an empty ring
+    'aftOuter': (275.5, 352.0),
+    'aftInner': (356.0, 352.0),
+    'foreInner': (828.0, 352.0),
+    'foreOuter': (910.5, 352.0),
 }
 DESTROYER_GUN_SOURCE = (1018.0, 352.0)  # centre of the forward gun mount, bow-right source
-TURRET_WIDTH_CSS = 15.0
-BARREL_LENGTH_CSS = 22.0
+TURRET_WIDTH_CSS = 11.0
+BARREL_LENGTH_CSS = 16.0
 BARREL_WIDTH_CSS = 5 / 3
 
 
@@ -66,23 +66,6 @@ def to_output_point(point, origin, crop_size, scale):
     return ((crop_size[1] - y) * scale, x * scale)
 
 
-def retouch_ring(image, src_center, dst_center, radius):
-    arr = np.asarray(image).copy()
-    sx, sy = src_center
-    dx, dy = dst_center
-    r = int(radius) + 2
-    for oy in range(-r, r + 1):
-        for ox in range(-r, r + 1):
-            d = (ox * ox + oy * oy) ** 0.5
-            if d > radius + 1.5:
-                continue
-            w = 1.0 if d <= radius else max(0.0, (radius + 1.5 - d) / 1.5)
-            px, py = int(round(dx + ox)), int(round(dy + oy))
-            qx, qy = int(round(sx + ox)), int(round(sy + oy))
-            arr[py, px] = (arr[qy, qx] * w + arr[py, px] * (1 - w)).round().astype(np.uint8)
-    return Image.fromarray(arr, 'RGBA')
-
-
 def main():
     report = {}
     src = lambda name: os.path.join(HERE, name)
@@ -104,7 +87,6 @@ def main():
 
     # Battleship hull
     image, _ = common.chroma_key(src('ship-battleship-hull-source.jpg'))
-    image = retouch_ring(image, BATTLESHIP_RINGS['foreInner'], BATTLESHIP_RINGS['foreOuter'], 41)
     box = common.largest_bbox(image)
     out, scale, origin, crop_size = build_hull('battleship', image, box)
     hull_center_x = (box[0] + box[2]) / 2
@@ -124,8 +106,8 @@ def main():
     barrel = common.crop_region(right, bbox, 1)
     barrel_out = common.resize_to_height(barrel, round(BARREL_LENGTH_CSS * DENSITY))
     barrel_out = barrel_out.resize((max(3, round(BARREL_WIDTH_CSS * DENSITY)), barrel_out.height), Image.Resampling.LANCZOS)
-    openings = [361.0, 432.0, 506.0]
-    opening_y = 540.0
+    openings = [397.5, 471.0]
+    opening_y = 522.0
     report['battleshipTurret'] = {
         'size': save(turret_out, 'battleship_turret.webp'),
         'barrelOffsetsCss': [round((x - (tbox[0] + tbox[2]) / 2) * t_scale / DENSITY, 2) for x in openings],

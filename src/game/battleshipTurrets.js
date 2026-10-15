@@ -7,17 +7,13 @@ export const BATTLESHIP_TURRET_NAMES = Object.freeze([
   'aftOuter'
 ])
 
-// Longitudinal offsets (tiles, + = towards the bow) are the barbette ring centres measured on
-// battleship_map.webp (docs/asset-sources/ship-build-assets.py): three superfiring turrets
-// forward of the superstructure and one aft. The names stay unchanged for save compatibility.
 export const BATTLESHIP_TURRET_LAYOUT = Object.freeze({
-  foreOuter: Object.freeze({ longitudinal: 2.229, directionOffset: 0 }),
-  foreInner: Object.freeze({ longitudinal: 1.637, directionOffset: 0 }),
-  aftInner: Object.freeze({ longitudinal: 0.992, directionOffset: 0 }),
-  aftOuter: Object.freeze({ longitudinal: -2.16, directionOffset: Math.PI })
+  // Barbette ring centres measured on battleship_map.webp (docs/asset-sources/ship-build-assets.py).
+  foreOuter: Object.freeze({ longitudinal: 1.342, directionOffset: 0 }),
+  foreInner: Object.freeze({ longitudinal: 0.931, directionOffset: 0 }),
+  aftInner: Object.freeze({ longitudinal: -1.425, directionOffset: Math.PI }),
+  aftOuter: Object.freeze({ longitudinal: -1.827, directionOffset: Math.PI })
 })
-
-export const BATTLESHIP_BARRELS_PER_TURRET = 3
 
 const BATTLESHIP_TURRET_LOCAL_POINTS = Object.freeze(Object.fromEntries(
   BATTLESHIP_TURRET_NAMES.map(name => [name, Object.freeze({
@@ -48,9 +44,9 @@ function createTurretState(ship, name, source = null) {
     scheduledAt: Number.isFinite(source?.scheduledAt) ? source.scheduledAt : null,
     nextBarrelIndex: Number.isInteger(source?.nextBarrelIndex) ? source.nextBarrelIndex : 0,
     reloadUntil: Number.isFinite(source?.reloadUntil) ? source.reloadUntil : 0,
-    barrelRecoilStartTimes: Array.from({ length: BATTLESHIP_BARRELS_PER_TURRET }, (_, index) =>
+    barrelRecoilStartTimes: Array.from({ length: 2 }, (_, index) =>
       Number.isFinite(source?.barrelRecoilStartTimes?.[index]) ? source.barrelRecoilStartTimes[index] : null),
-    muzzleFlashStartTimes: Array.from({ length: BATTLESHIP_BARRELS_PER_TURRET }, (_, index) =>
+    muzzleFlashStartTimes: Array.from({ length: 2 }, (_, index) =>
       Number.isFinite(source?.muzzleFlashStartTimes?.[index]) ? source.muzzleFlashStartTimes[index] : null)
   }
 }
@@ -93,7 +89,7 @@ export function clearBattleshipFireControl(ship) {
     ship.lastHullTargetId ||
     BATTLESHIP_TURRET_NAMES.some(name => {
       const turret = ship.batteries[name]
-      return turret.targetId || (turret.scheduledAt !== null && turret.nextBarrelIndex < BATTLESHIP_BARRELS_PER_TURRET)
+      return turret.targetId || (turret.scheduledAt !== null && turret.nextBarrelIndex < 2)
     })
   )
 

@@ -56,8 +56,8 @@ describe('battleship layered turret rendering', () => {
     const turret = {
       direction: 0,
       enabled: true,
-      barrelRecoilStartTimes: [null, null, null],
-      muzzleFlashStartTimes: [null, null, null]
+      barrelRecoilStartTimes: [null, null],
+      muzzleFlashStartTimes: [null, null]
     }
     const battleship = {
       type: 'battleship',
@@ -73,7 +73,7 @@ describe('battleship layered turret rendering', () => {
     }
 
     expect(renderNavalFleetUnit(ctx, battleship, 100, 100, 'player1')).toBe(true)
-    expect(ctx.drawImage).toHaveBeenCalledTimes(17)
+    expect(ctx.drawImage).toHaveBeenCalledTimes(13)
     expect(ctx.setLineDash).not.toHaveBeenCalled()
     expect(ctx.arc).not.toHaveBeenCalled()
   })

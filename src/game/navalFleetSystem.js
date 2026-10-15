@@ -13,7 +13,6 @@ import { getBuildingIdentifier } from '../utils.js'
 import { gameRandom } from '../utils/gameRandom.js'
 import { addShipWake, getNavalHullDimensions, getNavalRenderLengthTiles, isWaterPassableTile } from '../utils/navalUtils.js'
 import {
-  BATTLESHIP_BARRELS_PER_TURRET,
   BATTLESHIP_TURRET_NAMES,
   ensureBattleshipTurrets,
   getBattleshipTurretWorldPoint,
@@ -48,7 +47,6 @@ const TRANSPORT_ALIGNMENT_TOLERANCE = 0.035
 // Half the former rounds-per-minute rate (previously one shot per 2.6s).
 export const SUBMARINE_TORPEDO_COOLDOWN = 5200
 const BATTLESHIP_BARREL_DELAY = 300
-const BATTLESHIP_AMMO_PER_SALVO = 2
 const BATTLESHIP_TURRET_DELAY = 1000
 const BATTLESHIP_RELOAD_DURATION = 8000
 const BATTLESHIP_AIM_TOLERANCE = 0.045
@@ -1289,15 +1287,13 @@ function hasBattleshipHullControlOverride(ship) {
 
 function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, now) {
   const turret = ship.batteries[turretName]
-  // A three-shell salvo costs BATTLESHIP_AMMO_PER_SALVO (2) ammunition: the first shells consume it.
-  const consumesAmmo = barrelIndex < BATTLESHIP_AMMO_PER_SALVO
-  if (!turret || turret.enabled === false || (consumesAmmo && ship.ammunition < 1)) return false
+  if (!turret || turret.enabled === false || ship.ammunition < 1) return false
   const solution = getBattleshipTargetSolution(ship, turretName, target)
   if (solution.distance > BATTLESHIP_FIRE_RANGE ||
       isBattleshipTurretAngleBlocked(ship, turretName, solution.direction) ||
       Math.abs(normalizeAngle(solution.direction - turret.direction)) > BATTLESHIP_AIM_TOLERANCE) return false
 
-  const lateral = (barrelIndex - (BATTLESHIP_BARRELS_PER_TURRET - 1) / 2) * 3
+  const lateral = barrelIndex === 0 ? -4 : 4
   const muzzleX = solution.spawn.x + Math.cos(turret.direction + Math.PI / 2) * lateral + Math.cos(turret.direction) * TILE_SIZE * 0.72
   const muzzleY = solution.spawn.y + Math.sin(turret.direction + Math.PI / 2) * lateral + Math.sin(turret.direction) * TILE_SIZE * 0.72
   recordMusicAttack(ship, target, gameState)
@@ -1312,8 +1308,7 @@ function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, no
     targetPosition: solution.targetCenter,
     target,
     shooter: ship,
-    // Three shells per turret salvo; 52 each keeps the former 2 x 78 salvo damage.
-    baseDamage: 52,
+    baseDamage: 78,
     active: true,
     speed: 7,
     projectileType: 'shell',
@@ -1324,10 +1319,10 @@ function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, no
     startTime: now,
     skipCollisionChecks: true
   })
-  if (consumesAmmo) ship.ammunition--
+  ship.ammunition--
   turret.barrelRecoilStartTimes[barrelIndex] = now
   turret.muzzleFlashStartTimes[barrelIndex] = now
-  if (barrelIndex === BATTLESHIP_BARRELS_PER_TURRET - 1) turret.lastShotTime = now
+  if (barrelIndex === 1) turret.lastShotTime = now
   playPositionalSound('battleshipFire', muzzleX, muzzleY, 0.65)
   return true
 }
@@ -1354,13 +1349,13 @@ function updateBattleshipBroadside(ship, targetEntries, bullets, now) {
   if (now >= (ship.broadsideReloadUntil || 0)) {
     BATTLESHIP_TURRET_NAMES.forEach(name => {
       const turret = ship.batteries[name]
-      if (turret.scheduledAt !== null && turret.nextBarrelIndex < BATTLESHIP_BARRELS_PER_TURRET) clearBattleshipTurretSalvo(turret)
+      if (turret.scheduledAt !== null && turret.nextBarrelIndex < 2) clearBattleshipTurretSalvo(turret)
     })
   }
 
   const hasPendingSalvo = BATTLESHIP_TURRET_NAMES.some(name => {
     const turret = ship.batteries[name]
-    return turret.scheduledAt !== null && turret.nextBarrelIndex < BATTLESHIP_BARRELS_PER_TURRET
+    return turret.scheduledAt !== null && turret.nextBarrelIndex < 2
   })
   if (!hasPendingSalvo && now >= (ship.broadsideReloadUntil || 0) && targetEntries.length > 0) {
     beginBattleshipBroadside(ship, targetEntries, now)
@@ -1368,12 +1363,12 @@ function updateBattleshipBroadside(ship, targetEntries, bullets, now) {
 
   targetEntries.forEach(({ turretName, target }) => {
     const turret = ship.batteries[turretName]
-    if (turret.scheduledAt === null || turret.nextBarrelIndex >= BATTLESHIP_BARRELS_PER_TURRET) return
+    if (turret.scheduledAt === null || turret.nextBarrelIndex >= 2) return
     const fireAt = turret.scheduledAt + turret.nextBarrelIndex * BATTLESHIP_BARREL_DELAY
     if (now < fireAt) return
     if (!fireBattleshipBarrel(ship, turretName, target, turret.nextBarrelIndex, bullets, now)) return
     turret.nextBarrelIndex++
-    if (turret.nextBarrelIndex >= BATTLESHIP_BARRELS_PER_TURRET) clearBattleshipTurretSalvo(turret)
+    if (turret.nextBarrelIndex >= 2) clearBattleshipTurretSalvo(turret)
   })
 }
 

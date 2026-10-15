@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "9d283e73b7237248",
+  "assetVersion": "02a87b8cb4470f43",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -13,7 +13,7 @@
     "entryCount": 303,
     "sourceCount": 62,
     "generatedVariantCount": 909,
-    "decodedVariantBytes": 38706568
+    "decodedVariantBytes": 32643552
   },
   "entries": [
     {
@@ -16440,17 +16440,17 @@
       "id": "naval:aircraftCarrier:hull",
       "category": "naval",
       "source": "/images/map/units/aircraft_carrier_map.webp",
-      "sourceWidth": 256,
-      "sourceHeight": 256,
-      "logicalWidth": 299.52,
-      "logicalHeight": 299.52,
+      "sourceWidth": 214,
+      "sourceHeight": 857,
+      "logicalWidth": 71.33333333333333,
+      "logicalHeight": 285.6666666666667,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 149.76,
-          "y": 149.76
+          "x": 35.666666666666664,
+          "y": 142.83333333333334
         }
       },
       "states": [
@@ -16460,23 +16460,23 @@
         {
           "density": 1,
           "path": "/images/prepared/naval/aircraftCarrier/hull@1x.webp",
-          "backingWidth": 300,
-          "backingHeight": 300,
-          "decodedBytes": 360000
+          "backingWidth": 71,
+          "backingHeight": 286,
+          "decodedBytes": 81224
         },
         {
           "density": 2,
           "path": "/images/prepared/naval/aircraftCarrier/hull@2x.webp",
-          "backingWidth": 599,
-          "backingHeight": 599,
-          "decodedBytes": 1435204
+          "backingWidth": 143,
+          "backingHeight": 571,
+          "decodedBytes": 326612
         },
         {
           "density": 3,
           "path": "/images/prepared/naval/aircraftCarrier/hull@3x.webp",
-          "backingWidth": 899,
-          "backingHeight": 899,
-          "decodedBytes": 3232804
+          "backingWidth": 214,
+          "backingHeight": 857,
+          "decodedBytes": 733592
         }
       ]
     },
@@ -16484,21 +16484,21 @@
       "id": "naval:battleship:barrel",
       "category": "naval",
       "source": "/images/map/units/battleship_barrel.webp",
-      "sourceWidth": 20,
-      "sourceHeight": 128,
-      "logicalWidth": 3.57,
-      "logicalHeight": 22.848,
+      "sourceWidth": 5,
+      "sourceHeight": 48,
+      "logicalWidth": 1.6666666666666667,
+      "logicalHeight": 16,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 1.785,
-          "y": 11.424
+          "x": 0.8333333333333334,
+          "y": 8
         },
         "muzzle": {
-          "x": 1.785,
-          "y": 21.934079999999998
+          "x": 0.8333333333333334,
+          "y": 15.36
         }
       },
       "states": [
@@ -16509,23 +16509,23 @@
         {
           "density": 1,
           "path": "/images/prepared/naval/battleship/barrel@1x.webp",
-          "backingWidth": 4,
-          "backingHeight": 23,
-          "decodedBytes": 368
+          "backingWidth": 2,
+          "backingHeight": 16,
+          "decodedBytes": 128
         },
         {
           "density": 2,
           "path": "/images/prepared/naval/battleship/barrel@2x.webp",
-          "backingWidth": 7,
-          "backingHeight": 46,
-          "decodedBytes": 1288
+          "backingWidth": 3,
+          "backingHeight": 32,
+          "decodedBytes": 384
         },
         {
           "density": 3,
           "path": "/images/prepared/naval/battleship/barrel@3x.webp",
-          "backingWidth": 11,
-          "backingHeight": 69,
-          "decodedBytes": 3036
+          "backingWidth": 5,
+          "backingHeight": 48,
+          "decodedBytes": 960
         }
       ]
     },
@@ -16533,17 +16533,17 @@
       "id": "naval:battleship:hull",
       "category": "naval",
       "source": "/images/map/units/battleship_map.webp",
-      "sourceWidth": 256,
-      "sourceHeight": 256,
-      "logicalWidth": 211.2,
-      "logicalHeight": 211.2,
+      "sourceWidth": 131,
+      "sourceHeight": 599,
+      "logicalWidth": 43.666666666666664,
+      "logicalHeight": 199.66666666666666,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 105.6,
-          "y": 105.6
+          "x": 21.833333333333332,
+          "y": 99.83333333333333
         }
       },
       "states": [
@@ -16553,23 +16553,23 @@
         {
           "density": 1,
           "path": "/images/prepared/naval/battleship/hull@1x.webp",
-          "backingWidth": 211,
-          "backingHeight": 211,
-          "decodedBytes": 178084
+          "backingWidth": 44,
+          "backingHeight": 200,
+          "decodedBytes": 35200
         },
         {
           "density": 2,
           "path": "/images/prepared/naval/battleship/hull@2x.webp",
-          "backingWidth": 422,
-          "backingHeight": 422,
-          "decodedBytes": 712336
+          "backingWidth": 87,
+          "backingHeight": 399,
+          "decodedBytes": 138852
         },
         {
           "density": 3,
           "path": "/images/prepared/naval/battleship/hull@3x.webp",
-          "backingWidth": 634,
-          "backingHeight": 634,
-          "decodedBytes": 1607824
+          "backingWidth": 131,
+          "backingHeight": 599,
+          "decodedBytes": 313876
         }
       ]
     },
@@ -16577,17 +16577,17 @@
       "id": "naval:battleship:turret",
       "category": "naval",
       "source": "/images/map/units/battleship_turret.webp",
-      "sourceWidth": 127,
-      "sourceHeight": 128,
-      "logicalWidth": 17.471999999999998,
-      "logicalHeight": 17.471999999999998,
+      "sourceWidth": 33,
+      "sourceHeight": 41,
+      "logicalWidth": 11,
+      "logicalHeight": 13.666666666666666,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 8.735999999999999,
-          "y": 8.735999999999999
+          "x": 5.5,
+          "y": 6.833333333333333
         }
       },
       "states": [
@@ -16597,23 +16597,23 @@
         {
           "density": 1,
           "path": "/images/prepared/naval/battleship/turret@1x.webp",
-          "backingWidth": 17,
-          "backingHeight": 17,
-          "decodedBytes": 1156
+          "backingWidth": 11,
+          "backingHeight": 14,
+          "decodedBytes": 616
         },
         {
           "density": 2,
           "path": "/images/prepared/naval/battleship/turret@2x.webp",
-          "backingWidth": 35,
-          "backingHeight": 35,
-          "decodedBytes": 4900
+          "backingWidth": 22,
+          "backingHeight": 27,
+          "decodedBytes": 2376
         },
         {
           "density": 3,
           "path": "/images/prepared/naval/battleship/turret@3x.webp",
-          "backingWidth": 52,
-          "backingHeight": 52,
-          "decodedBytes": 10816
+          "backingWidth": 33,
+          "backingHeight": 41,
+          "decodedBytes": 5412
         }
       ]
     },
@@ -16621,23 +16621,23 @@
       "id": "naval:destroyer:hull",
       "category": "naval",
       "source": "/images/map/units/destroyer_map.webp",
-      "sourceWidth": 109,
-      "sourceHeight": 342,
-      "logicalWidth": 39.77543859649123,
-      "logicalHeight": 124.79999999999998,
+      "sourceWidth": 59,
+      "sourceHeight": 337,
+      "logicalWidth": 19.666666666666668,
+      "logicalHeight": 112.33333333333333,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 19.887719298245614,
-          "y": 62.39999999999999
+          "x": 9.833333333333334,
+          "y": 56.166666666666664
         },
         "gun": {
-          "x": 20.07017543859649,
-          "y": 94.87719298245614,
-          "sourceX": 55,
-          "sourceY": 260
+          "x": 9.8,
+          "y": 90.93333333333334,
+          "sourceX": 29.4,
+          "sourceY": 272.8
         }
       },
       "states": [
@@ -16647,23 +16647,23 @@
         {
           "density": 1,
           "path": "/images/prepared/naval/destroyer/hull@1x.webp",
-          "backingWidth": 40,
-          "backingHeight": 125,
-          "decodedBytes": 20000
+          "backingWidth": 20,
+          "backingHeight": 112,
+          "decodedBytes": 8960
         },
         {
           "density": 2,
           "path": "/images/prepared/naval/destroyer/hull@2x.webp",
-          "backingWidth": 80,
-          "backingHeight": 250,
-          "decodedBytes": 80000
+          "backingWidth": 39,
+          "backingHeight": 225,
+          "decodedBytes": 35100
         },
         {
           "density": 3,
           "path": "/images/prepared/naval/destroyer/hull@3x.webp",
-          "backingWidth": 119,
-          "backingHeight": 374,
-          "decodedBytes": 178024
+          "backingWidth": 59,
+          "backingHeight": 337,
+          "decodedBytes": 79532
         }
       ]
     },
