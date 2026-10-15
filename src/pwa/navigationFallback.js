@@ -45,3 +45,9 @@ export async function resolveDocumentNavigation({
     return shell()
   }
 }
+
+// Editor documents must never fall back to the game boot shell.
+export function getNavigationShellPath(url) {
+  const { pathname } = new URL(url, 'https://code-for-battle.local')
+  return /^\/sse(?:\/|\.html)?$/.test(pathname) ? '/sse.html' : '/index.html'
+}

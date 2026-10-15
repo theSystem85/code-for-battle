@@ -44,6 +44,7 @@ function getRewrittenLegalUrl(url = '') {
 }
 
 function rewriteStaticPageUrl(url = '', mode = 'dev') {
+  if (/^\/sse\/?(?:[?#]|$)/.test(url)) return url.replace(/^\/sse\/?/, '/sse.html')
   if (mode === 'preview') {
     return rewriteLandingUrl(url, 'preview')
   }
@@ -124,6 +125,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        sse: resolve(__dirname, 'sse.html'),
         impressum: resolve(LEGAL_ENTRY_DIR, 'impressum.html'),
         imprint: resolve(LEGAL_ENTRY_DIR, 'imprint.html'),
         datenschutz: resolve(LEGAL_ENTRY_DIR, 'datenschutz.html'),
