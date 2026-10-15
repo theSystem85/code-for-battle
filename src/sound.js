@@ -47,6 +47,57 @@ function saveVolumeToStorage(volume) {
 
 let masterVolume = loadVolumeFromStorage()
 
+// Sound effects / music balance (0 = effects only, 50 = equal, 100 = music
+// only). Scales music against effects + narration; both stay under the master
+// volume slider.
+export const MIX_BALANCE_STORAGE_KEY = 'cfb-audio-mix-balance'
+export const DEFAULT_MIX_BALANCE = 50
+
+function loadMixBalance() {
+  try {
+    const stored = Number.parseFloat(getStoredItem(MIX_BALANCE_STORAGE_KEY))
+    if (Number.isFinite(stored)) return Math.max(0, Math.min(100, stored))
+  } catch {
+    // Storage unavailable: fall back to the default balance.
+  }
+  return DEFAULT_MIX_BALANCE
+}
+
+let mixBalance = loadMixBalance()
+const audioVolumeListeners = new Set()
+
+export function musicMixScale(balance = mixBalance) {
+  return Math.max(0, Math.min(1, balance / 50))
+}
+
+export function effectsMixScale(balance = mixBalance) {
+  return Math.max(0, Math.min(1, (100 - balance) / 50))
+}
+
+export function getMixBalance() {
+  return mixBalance
+}
+
+// Effective level for sound effects and narration (master x balance).
+export function getEffectsVolume() {
+  return masterVolume * effectsMixScale()
+}
+
+export function getMusicVolume() {
+  return masterVolume * musicMixScale()
+}
+
+export function onAudioVolumeChange(listener) {
+  audioVolumeListeners.add(listener)
+  return () => audioVolumeListeners.delete(listener)
+}
+
+function notifyAudioVolume() {
+  audioVolumeListeners.forEach(listener => {
+    try { listener() } catch (error) { window.logger?.warn?.('Volume listener failed:', error) }
+  })
+}
+
 export function reloadMasterVolumeFromStorage() {
   masterVolume = loadVolumeFromStorage()
   return masterVolume
@@ -240,7 +291,7 @@ function playAudioBuffer(audioBuffer, volume = 1.0, onEnded, options = {}) {
       source.connect(gainNode)
     }
     gainNode.connect(audioContext.destination)
-    gainNode.gain.value = volume * masterVolume
+    gainNode.gain.value = volume * getEffectsVolume()
 
     // Handle ended event
     if (onEnded) {
@@ -391,7 +442,7 @@ function playImmediate(eventName, volume = 1.0, throttleSeconds = 0, onEnded, op
     gainNode.connect(audioContext.destination)
     oscillator.frequency.value = 500
     oscillator.type = 'sine'
-    gainNode.gain.value = volume * masterVolume // Apply master volume
+    gainNode.gain.value = volume * getEffectsVolume() // Apply master volume and balance
 
     // Use a more reliable callback mechanism for the fallback beep
     const duration = 0.3 // Slightly longer beep for better audio feedback
@@ -535,11 +586,40 @@ function getMusicGain(element) {
 // Narration (story intro) ducks the music instead of stopping it.
 let musicDuck = 1
 
+let duckRampTimer = null
+
+function stopDuckRamp() {
+  clearInterval(duckRampTimer)
+  duckRampTimer = null
+}
+
 export function setMusicDuck(factor = 1) {
+  stopDuckRamp()
   const next = Number.isFinite(factor) ? Math.max(0, Math.min(1, factor)) : 1
   if (next === musicDuck) return
   musicDuck = next
   applyMusicVolumes()
+}
+
+// Smoothly moves the duck to `target` over `durationMs` (smoothstep curve),
+// following live master/balance changes because each step re-applies levels.
+export function rampMusicDuck(target = 1, durationMs = 7000, now = () => Date.now()) {
+  stopDuckRamp()
+  const from = musicDuck
+  const to = Number.isFinite(target) ? Math.max(0, Math.min(1, target)) : 1
+  const start = now()
+  if (!(durationMs > 0)) {
+    musicDuck = to
+    applyMusicVolumes()
+    return
+  }
+  duckRampTimer = setInterval(() => {
+    const t = Math.min(1, (now() - start) / durationMs)
+    const eased = t * t * (3 - 2 * t)
+    musicDuck = from + (to - from) * eased
+    applyMusicVolumes()
+    if (t >= 1) stopDuckRamp()
+  }, 50)
 }
 
 export function getMusicDuck() {
@@ -548,7 +628,7 @@ export function getMusicDuck() {
 
 function setMusicLevel(element, level) {
   if (!element) return
-  const value = Math.max(0, Math.min(1, level * masterVolume * musicDuck))
+  const value = Math.max(0, Math.min(1, level * getMusicVolume() * musicDuck))
   const gain = getMusicGain(element)
   if (gain) {
     const now = audioContext.currentTime
@@ -780,13 +860,23 @@ export function loadNarrationBuffer(url) {
 
 // Plays a decoded narration clip at `volume` (already including master volume)
 // from `offsetSeconds`. Returns a handle with stop(), or null when it cannot play.
+// `volume` is relative (narration gain); the master volume and the effects
+// side of the balance are applied here and follow live slider changes.
+const liveNarration = new Set()
+function narrationGainValue(entry) {
+  return Math.max(0, Math.min(1, entry.volume * getEffectsVolume()))
+}
+
 export function playNarrationBuffer(buffer, { volume = 1, offsetSeconds = 0, onEnded } = {}) {
   if (!audioContext || !buffer || audioContext.state !== 'running') return null
   try {
     const source = audioContext.createBufferSource()
     const gain = audioContext.createGain()
     source.buffer = buffer
-    gain.gain.value = Math.max(0, Math.min(1, volume))
+    const entry = { gain, volume }
+    liveNarration.add(entry)
+    source.addEventListener('ended', () => liveNarration.delete(entry), { once: true })
+    gain.gain.value = narrationGainValue(entry)
     source.connect(gain)
     gain.connect(audioContext.destination)
     if (onEnded) source.addEventListener('ended', onEnded, { once: true })
@@ -796,6 +886,7 @@ export function playNarrationBuffer(buffer, { volume = 1, offsetSeconds = 0, onE
       source,
       gain,
       stop() {
+        liveNarration.delete(entry)
         try { source.stop() } catch { /* already stopped */ }
         try { gain.disconnect() } catch { /* ignore */ }
       }
@@ -806,8 +897,17 @@ export function playNarrationBuffer(buffer, { volume = 1, offsetSeconds = 0, onE
   }
 }
 
+function applyNarrationVolumes() {
+  liveNarration.forEach(entry => {
+    try { entry.gain.gain.value = narrationGainValue(entry) } catch { /* node gone */ }
+  })
+}
+
 export function getMusicDebugState() {
   return {
+    mixBalance,
+    musicVolume: getMusicVolume(),
+    effectsVolume: getEffectsVolume(),
     enabled: musicEnabled,
     paused: musicPaused,
     pauseExempt: musicPauseExempt,
@@ -968,7 +1068,7 @@ function loadBackgroundMusicElement(file) {
   configureAudioElement(element, musicPath, window.location.origin)
   element.preload = 'auto'
   element.loop = false // the playlist picks the next track on 'ended'
-  element.volume = masterVolume
+  element.volume = getMusicVolume()
 
   const loadPromise = new Promise((resolve, reject) => {
     const onLoad = () => {
@@ -1232,6 +1332,25 @@ export function setMasterVolume(volume) {
   if (videoOverlay && typeof videoOverlay.updateAudioVolume === 'function') {
     videoOverlay.updateAudioVolume()
   }
+  applyNarrationVolumes()
+  notifyAudioVolume()
+}
+
+export function setMixBalance(balance) {
+  const next = Number(balance)
+  mixBalance = Number.isFinite(next) ? Math.max(0, Math.min(100, next)) : DEFAULT_MIX_BALANCE
+  try {
+    setStoredItem(MIX_BALANCE_STORAGE_KEY, String(mixBalance))
+  } catch {
+    // Storage unavailable: the balance lasts for this session.
+  }
+  if (bgMusicAudio) applyMusicVolumes()
+  applyNarrationVolumes()
+  if (videoOverlay && typeof videoOverlay.updateAudioVolume === 'function') {
+    videoOverlay.updateAudioVolume()
+  }
+  notifyAudioVolume()
+  return mixBalance
 }
 
 export function getMasterVolume() {

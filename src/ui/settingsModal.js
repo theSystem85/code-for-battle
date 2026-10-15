@@ -10,6 +10,7 @@ import { gameState } from '../gameState.js'
 import { getConfigValue, setConfigValue } from '../configRegistry.js'
 import { getRendererBackendStatusText, whenRendererBackendResolved } from '../config.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import { getMixBalance, setMixBalance } from '../sound.js'
 import {
   loadTrackMarkSettings,
   trackMarkSettings,
@@ -177,6 +178,7 @@ function openModal(modal, defaultTab = 'keybindings') {
   }
   refreshRendererBackendControls(modal)
   syncTrackMarkControls(modal)
+  bindMixBalanceControl(modal)
   if (keybindingsPanel) {
     renderKeybindingsEditor(keybindingsPanel)
   }
@@ -237,6 +239,28 @@ function bindTrackMarkControls(modal) {
     syncTrackMarkControls(modal)
   })
   syncTrackMarkControls(modal)
+}
+
+// "Equal" at 50; otherwise how much each side keeps, e.g. "SFX 100% / Music 40%".
+export function formatMixBalance(balance) {
+  const value = Number(balance)
+  if (value === 50) return 'Equal'
+  const music = Math.round(Math.min(1, value / 50) * 100)
+  const sfx = Math.round(Math.min(1, (100 - value) / 50) * 100)
+  return `SFX ${sfx}% / Music ${music}%`
+}
+
+export function bindMixBalanceControl(root = document) {
+  const range = root.querySelector('#settingsMixBalanceRange')
+  const valueLabel = root.querySelector('#settingsMixBalanceValue')
+  if (!range || range.dataset.bound) return
+  range.dataset.bound = 'true'
+  range.value = String(getMixBalance())
+  if (valueLabel) valueLabel.textContent = formatMixBalance(range.value)
+  range.addEventListener('input', event => {
+    const applied = setMixBalance(Number(event.target.value))
+    if (valueLabel) valueLabel.textContent = formatMixBalance(applied)
+  })
 }
 
 export function initSettingsModal() {
@@ -348,5 +372,6 @@ export function initSettingsModal() {
   }
 
   bindTrackMarkControls(modal)
+  bindMixBalanceControl(modal)
   refreshRendererBackendControls(modal)
 }
