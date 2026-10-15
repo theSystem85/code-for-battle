@@ -3,8 +3,10 @@
 import sharp from 'sharp'
 import { writeFile } from 'node:fs/promises'
 const root = new URL('../public/images/terrain/', import.meta.url)
-const source = await sharp(new URL('source/terraced-cliffs.webp', root).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-const canyon = await sharp(new URL('source/terraced-cliffs-canyon.webp', root).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+// Build-only source art lives outside public/ so it never ships in a deploy.
+const srcDir = new URL('../assets-src/terrain/', import.meta.url)
+const source = await sharp(new URL('terraced-cliffs.webp', srcDir).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+const canyon = await sharp(new URL('terraced-cliffs-canyon.webp', srcDir).pathname).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
 const cell = 160, tile = 64, padding = 48, variants = 8, tallCell = 224, tallPadding = 80
 const macroBaseY = cell * variants, macroVariantWidth = 2048, macroVariantHeight = 576
 const tallBaseY = macroBaseY + macroVariantHeight * Math.ceil(variants / 2)
@@ -191,7 +193,7 @@ for (let variant = 0; variant < variants; variant++) for (let mask = 0; mask < 1
   tallTiles[`${mask},${variant}`] = { mask, variant, heightClass: 2, rect }
 }
 // Five newly generated transparent crack/chip overlays share the final atlas.
-const topPath = new URL('source/plateau-details.webp', root).pathname
+const topPath = new URL('plateau-details.webp', srcDir).pathname
 const topMeta = await sharp(topPath).metadata()
 for (let variant = 0; variant < variants; variant++) {
   const detailVariant = variant % 5
