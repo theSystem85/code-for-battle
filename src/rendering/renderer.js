@@ -1,3 +1,4 @@
+import { factoryExitVisibility } from '../game/factoryExit.js'
 import { renderFactoryInterior, renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
 // rendering/renderer.js
 import { TextureManager } from './textureManager.js'
@@ -769,14 +770,24 @@ export class Renderer {
     this.trackMarksRenderer.render(gameCtx, scrollOffset, gameState)
     const exitRegistry = this.buildingRenderer.preparedSpriteRegistry
     for (const building of visibleBuildings) renderFactoryInterior(gameCtx, building, scrollOffset, exitRegistry)
-    this.unitRenderer.renderBases(gameCtx, visibleExitingUnits, scrollOffset, true)
+    for (const unit of visibleExitingUnits) {
+      const visibility = factoryExitVisibility(unit)
+      if (visibility <= 0) continue
+      gameCtx.save()
+      gameCtx.globalAlpha *= visibility
+      this.singleExitingUnit[0] = unit
+      this.unitRenderer.renderBases(gameCtx, this.singleExitingUnit, scrollOffset, true)
+      gameCtx.restore()
+    }
     this.buildingRenderer.renderBases(gameCtx, visibleBuildings, mapGrid, scrollOffset, true)
     // Render initial construction yards using the same renderer
     this.buildingRenderer.renderBases(gameCtx, visibleFactories, mapGrid, scrollOffset, true)
     // Redraw exiting units over the factory's dirt apron, still hidden behind its walls.
     for (const unit of visibleExitingUnits) {
       gameCtx.save()
-      if (clipOutsideFactoryBody(gameCtx, unit, scrollOffset)) {
+      const visibility = factoryExitVisibility(unit)
+      if (visibility > 0 && clipOutsideFactoryBody(gameCtx, unit, scrollOffset)) {
+        gameCtx.globalAlpha *= visibility
         this.singleExitingUnit[0] = unit
         this.unitRenderer.renderBases(gameCtx, this.singleExitingUnit, scrollOffset, true)
         renderFactoryExitEffects(gameCtx, unit, scrollOffset, exitRegistry)
