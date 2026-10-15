@@ -11,13 +11,21 @@ const UNIT_VIDEO_MILESTONES = Object.freeze({
   mineLayer: Object.freeze(['firstMineLayer', 'first_mine_layer']),
   mineSweeper: Object.freeze(['firstMineSweeper', 'first_mine_sweeper']),
   rocketTank: Object.freeze(['firstRocketTankBuilt', 'first_rocket_tank']),
-  howitzer: Object.freeze(['firstHowitzer', 'first_artillery'])
+  howitzer: Object.freeze(['firstHowitzer', 'first_artillery']),
+  f35: Object.freeze(['firstF35', 'first_f35']),
+  f22Raptor: Object.freeze(['firstF22', 'first_f22']),
+  apache: Object.freeze(['firstApache', 'first_apache']),
+  destroyer: Object.freeze(['firstDestroyer', 'first_destroyer']),
+  battleship: Object.freeze(['firstBattleship', 'first_battleship']),
+  submarine: Object.freeze(['firstSubmarine', 'first_submarine'])
 })
 
 const BUILDING_VIDEO_MILESTONES = Object.freeze({
   oreRefinery: Object.freeze(['firstRefinery', 'tank_over_crystals']),
   teslaCoil: Object.freeze(['firstTeslaCoil', 'tesla_coil_hits_tank']),
-  airstrip: Object.freeze(['firstAirstrip', 'air_strip'])
+  airstrip: Object.freeze(['firstAirstrip', 'air_strip']),
+  shipyard: Object.freeze(['firstShipyard', 'shipyard']),
+  helipad: Object.freeze(['firstHelipad', 'helipad'])
 })
 
 const preloadCache = new Map()
