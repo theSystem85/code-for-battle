@@ -1,6 +1,15 @@
 import {
+  FIRST_GAMEPLAY_MUSIC_FILE,
   STORY_INTRO_MUSIC_FILE,
   getMasterVolume,
+  getMusicDebugState,
+  getSharedAudioContext,
+  hasUserActivation,
+  isAudioUnlocked,
+  loadNarrationBuffer,
+  playNarrationBuffer,
+  primeMusicElementInGesture,
+  unlockAudioContext,
   isMusicFilePlaying,
   hasPlayedFirstGameplayMusic,
   playFirstGameplayMusic,
@@ -10,23 +19,57 @@ import {
 } from '../sound.js'
 import { suppressNextFirstAttackTheme } from '../audio/musicDirector.js'
 import { isMissionIntroOpen } from '../ui/missionIntro.js'
-import { configureAudioElement } from '../pwa/audioElementPolicy.js'
 import { playStoryIntro, shouldAutoPlayStoryIntro } from './storyIntro.js'
+
+// Per-segment playback log for debugging autoplay problems; also exposed to
+// Playwright via window.__storyIntroAudioLog.
+function logStoryAudio(entry) {
+  const record = { t: Math.round(performance.now()), ...entry, music: getMusicDebugState() }
+  if (typeof window !== 'undefined') {
+    window.__storyIntroAudioLog = window.__storyIntroAudioLog || []
+    window.__storyIntroAudioLog.push(record)
+  }
+}
+
+// Plays a decoded clip once the shared context is actually running (a resume
+// started inside the unlocking gesture may still be settling).
+function playClipWhenReady(buffer, options) {
+  const ctx = getSharedAudioContext()
+  if (!ctx) return null
+  if (ctx.state === 'running') return playNarrationBuffer(buffer, options)
+  let handle = null
+  let cancelled = false
+  const startedAt = performance.now()
+  unlockAudioContext().then(running => {
+    if (!running || cancelled) return
+    const waited = (performance.now() - startedAt) / 1000
+    handle = playNarrationBuffer(buffer, { ...options, offsetSeconds: (options.offsetSeconds || 0) + waited })
+  })
+  return { stop: () => { cancelled = true; handle?.stop() } }
+}
 
 function storyDeps() {
   return {
-    createAudio: src => {
-      const audio = new Audio(src)
-      configureAudioElement(audio, src, window.location.origin)
-      return audio
+    loadClip: src => loadNarrationBuffer(src),
+    playClip: (buffer, options) => playClipWhenReady(buffer, options),
+    isAudioUnlocked: () => isAudioUnlocked(),
+    hasUserActivation: () => hasUserActivation(),
+    // Runs inside every gesture during the intro, so it also primes the music
+    // elements that iOS would otherwise refuse to start later.
+    unlockAudio: () => {
+      primeMusicElementInGesture(STORY_INTRO_MUSIC_FILE)
+      primeMusicElementInGesture(FIRST_GAMEPLAY_MUSIC_FILE)
+      return unlockAudioContext()
     },
+    // The intro pauses the game; keep the audio context and music alive.
+    setAudioHold: hold => setMusicPauseExempt(hold),
+    log: logStoryAudio,
     getVolume: () => getMasterVolume(),
     setDuck: factor => setMusicDuck(factor),
     // First Strike under the first-launch intro, ducked by setDuck while the
     // narration runs. The game is paused meanwhile, so music is exempted from
     // the pause handler until the intro closes.
     startMusic: () => {
-      setMusicPauseExempt(true)
       if (isMusicFilePlaying(STORY_INTRO_MUSIC_FILE)) return
       playMusicCue(STORY_INTRO_MUSIC_FILE).then(started => {
         if (started) suppressNextFirstAttackTheme()
@@ -35,7 +78,6 @@ function storyDeps() {
     // Closing the first intro hands over to Battle Track 02: First Strike fades
     // out for the full 3 s, then Battle Track 02 starts at full volume.
     endMusic: withMusic => {
-      setMusicPauseExempt(false)
       if (withMusic) playFirstGameplayMusic()
     }
   }

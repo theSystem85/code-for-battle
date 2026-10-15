@@ -94,6 +94,24 @@ describe('story intro and first gameplay music cues', () => {
     sound.setMusicDuck(1)
     expect(sound.bgMusicAudio.volume).toBeCloseTo(0.8, 5)
   })
+  it('starts a cue without first loading a random playlist track', async() => {
+    expect(await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)).toBe(true)
+    await flush()
+    expect(sound.bgMusicAudio.src).toBe('sound/music/music_attack_motivational.mp3')
+    expect(sound.getMusicDebugState().file).toBe('music_attack_motivational.mp3')
+  })
+
+  it('primes the cue element muted inside a gesture and pauses it again', async() => {
+    expect(sound.primeMusicElementInGesture(sound.STORY_INTRO_MUSIC_FILE)).toBe(true)
+    await flush()
+    // A second prime is a no-op; the element is unmuted and paused again.
+    expect(sound.primeMusicElementInGesture(sound.STORY_INTRO_MUSIC_FILE)).toBe(false)
+    expect(await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)).toBe(true)
+    await flush()
+    expect(sound.bgMusicAudio.paused).toBe(false)
+    expect(Boolean(sound.bgMusicAudio.muted)).toBe(false)
+  })
+
 })
 
 describe('first attack theme after the intro', () => {
@@ -111,4 +129,5 @@ describe('first attack theme after the intro', () => {
     next.attack()
     expect(next.update(0, {})).toBe('firstAttack')
   })
+
 })

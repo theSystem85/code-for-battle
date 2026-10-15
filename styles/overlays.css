@@ -2019,8 +2019,7 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   transition: width 400ms linear;
 }
 
-.story-intro__skip,
-.story-intro__sound {
+.story-intro__skip {
   padding: 6px 12px;
   background-color: var(--sidebar-shared-bg-color, #1b232c);
   background-image: var(--sidebar-shared-bg-image, none);
@@ -2034,8 +2033,7 @@ body.mobile-portrait.sidebar-condensed .hud-status-cluster {
   cursor: pointer;
 }
 
-.story-intro__skip:focus-visible,
-.story-intro__sound:focus-visible {
+.story-intro__skip:focus-visible {
   outline: 2px solid #4f9cff;
   outline-offset: 2px;
 }
