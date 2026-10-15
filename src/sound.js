@@ -717,6 +717,107 @@ export async function skipToNextMusic() {
 
 export { MUSIC_SKIP_ORDER }
 
+// --- Shared audio unlock (story intro narration) ---
+// Browsers (iOS Safari above all) only allow audio after a user gesture, and
+// iOS checks that per HTMLAudioElement. Narration therefore plays as decoded
+// AudioBuffers through the one shared AudioContext: once that context has been
+// resumed inside a gesture, every later clip plays without another gesture.
+const narrationBufferCache = new Map()
+
+export function getSharedAudioContext() {
+  return audioContext
+}
+
+// True once the page has had a user gesture (or when the browser cannot tell).
+export function hasUserActivation() {
+  const activation = typeof navigator !== 'undefined' ? navigator.userActivation : null
+  if (!activation) return audioContext ? audioContext.state === 'running' : false
+  return Boolean(activation.hasBeenActive)
+}
+
+// Narration (Web Audio buffers) can play once the shared context runs, or will
+// run as soon as resume() settles after an earlier gesture.
+export function isAudioUnlocked() {
+  if (!audioContext) return false
+  return audioContext.state === 'running' || hasUserActivation()
+}
+
+// Call synchronously from a gesture handler (pointerdown/keydown/click).
+// Resumes the context and plays one silent sample, which is what WebKit needs
+// to treat the context as user-unlocked.
+export function unlockAudioContext() {
+  if (!audioContext) return Promise.resolve(false)
+  let resumed = Promise.resolve()
+  try {
+    if (audioContext.state !== 'running') resumed = audioContext.resume()
+    const silent = audioContext.createBuffer(1, 1, Math.max(8000, audioContext.sampleRate || 22050))
+    const source = audioContext.createBufferSource()
+    source.buffer = silent
+    source.connect(audioContext.destination)
+    source.start(0)
+  } catch {
+    // An unlock attempt outside a gesture may throw on old engines; harmless.
+  }
+  return Promise.resolve(resumed)
+    .then(() => audioContext.state === 'running')
+    .catch(() => false)
+}
+
+export function loadNarrationBuffer(url) {
+  if (!audioContext || !url) return Promise.resolve(null)
+  if (!narrationBufferCache.has(url)) {
+    const promise = loadAudioBuffer(url).catch(error => {
+      narrationBufferCache.delete(url)
+      window.logger?.warn?.('Narration clip unavailable:', error)
+      return null
+    })
+    narrationBufferCache.set(url, promise)
+  }
+  return narrationBufferCache.get(url)
+}
+
+// Plays a decoded narration clip at `volume` (already including master volume)
+// from `offsetSeconds`. Returns a handle with stop(), or null when it cannot play.
+export function playNarrationBuffer(buffer, { volume = 1, offsetSeconds = 0, onEnded } = {}) {
+  if (!audioContext || !buffer || audioContext.state !== 'running') return null
+  try {
+    const source = audioContext.createBufferSource()
+    const gain = audioContext.createGain()
+    source.buffer = buffer
+    gain.gain.value = Math.max(0, Math.min(1, volume))
+    source.connect(gain)
+    gain.connect(audioContext.destination)
+    if (onEnded) source.addEventListener('ended', onEnded, { once: true })
+    const offset = Math.max(0, Math.min(offsetSeconds, Math.max(0, buffer.duration - 0.05)))
+    source.start(0, offset)
+    return {
+      source,
+      gain,
+      stop() {
+        try { source.stop() } catch { /* already stopped */ }
+        try { gain.disconnect() } catch { /* ignore */ }
+      }
+    }
+  } catch (error) {
+    window.logger?.warn?.('Narration playback failed:', error)
+    return null
+  }
+}
+
+export function getMusicDebugState() {
+  return {
+    enabled: musicEnabled,
+    paused: musicPaused,
+    pauseExempt: musicPauseExempt,
+    file: currentBackgroundMusicFile,
+    elementPaused: bgMusicAudio ? bgMusicAudio.paused : null,
+    duck: musicDuck,
+    masterVolume,
+    gain: bgMusicAudio && musicGainNodes.get(bgMusicAudio) ? musicGainNodes.get(bgMusicAudio).gain.value : null,
+    contextState: audioContext ? audioContext.state : 'none'
+  }
+}
+
 // --- Story cues (first-launch intro and first gameplay) ---
 // The user's explicit "music off" choice is remembered so automatic cues never
 // override it; everything else about playback (master volume, narration duck,
@@ -759,7 +860,10 @@ export function setMusicPauseExempt(exempt) {
 export async function playMusicCue(file) {
   if (suppressAudioForAutomation || !file) return false
   if (isMusicUserDisabled()) return false
-  if (!backgroundMusicInitialized && !backgroundMusicLoading) await initBackgroundMusic()
+  // The cue itself becomes the current track, so there is no need to wait for
+  // a random playlist track first (on iOS that wait never ends before a
+  // gesture, because media elements do not preload until then).
+  if (!backgroundMusicInitialized && !backgroundMusicLoading) backgroundMusicInitialized = true
   if (!musicEnabled) {
     musicEnabled = true
     if (bgMusicAudio && !bgMusicAudio.paused) bgMusicAudio.pause()
@@ -774,6 +878,40 @@ export async function playMusicCue(file) {
     return true
   } catch (error) {
     window.logger.warn('Music cue unavailable:', error)
+    return false
+  }
+}
+
+// Call synchronously inside a user gesture. iOS only lets an HTMLAudioElement
+// play later (outside a gesture) once play() was called on it during one, and it
+// does not even preload media before that. Plays the cue element muted and
+// pauses it again straight away, so the real cue can start whenever it is due.
+const primedMusicElements = new WeakSet()
+export function primeMusicElementInGesture(file) {
+  if (suppressAudioForAutomation || !file || isMusicUserDisabled()) return false
+  const musicPath = 'sound/music/' + file
+  let element = soundElementCache.get(musicPath)
+  if (!element) {
+    loadBackgroundMusicElement(file).catch(() => {})
+    element = soundElementCache.get(musicPath) || backgroundMusicLoadPromises.get(musicPath)?.element
+  }
+  if (!element || !element.paused || primedMusicElements.has(element)) return false
+  primedMusicElements.add(element)
+  try {
+    const wasMuted = element.muted
+    element.muted = true
+    const playing = element.play()
+    const restore = () => {
+      if (element !== bgMusicAudio || !musicEnabled) element.pause()
+      element.muted = wasMuted
+    }
+    if (playing && typeof playing.then === 'function') playing.then(restore, () => {
+      element.muted = wasMuted
+      primedMusicElements.delete(element)
+    })
+    else restore()
+    return true
+  } catch {
     return false
   }
 }
@@ -863,6 +1001,7 @@ function loadBackgroundMusicElement(file) {
   }).finally(() => {
     backgroundMusicLoadPromises.delete(musicPath)
   })
+  loadPromise.element = element
 
   backgroundMusicLoadPromises.set(musicPath, loadPromise)
   return loadPromise
@@ -959,7 +1098,7 @@ export async function toggleBackgroundMusic() {
   if (suppressAudioForAutomation) return
 
   // Initialize music on first toggle (loads from server once)
-  if (!backgroundMusicInitialized && !backgroundMusicLoading) {
+  if (!bgMusicAudio && !backgroundMusicLoading) {
     await initBackgroundMusic()
   }
 

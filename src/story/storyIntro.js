@@ -8,19 +8,31 @@ import {
 } from './storyIntroSegments.js'
 
 export const STORY_INTRO_STORAGE_KEY = 'cfb-story-intro-v1'
-export const STORY_INTRO_MUSIC_DUCK = 0.25
-export const STORY_INTRO_VOICE_GAIN = 0.95
+// Music level under the narration, relative to the normal music volume.
+export const STORY_INTRO_MUSIC_DUCK = 0.35
+export const STORY_INTRO_VOICE_GAIN = 0.9
 export const STORY_INTRO_CLOSED_EVENT = 'story-intro-closed'
+// Late clips (still decoding) join their segment mid-way, unless almost over.
+const LATE_CLIP_MAX_SECONDS = 1.5
 
 let active = null
 
 function defaultDeps() {
   return {
-    createAudio: src => new Audio(src),
+    // Narration goes through one shared, gesture-unlocked AudioContext (see
+    // storyIntroBoot.js). Without one the intro simply runs silently.
+    loadClip: () => Promise.resolve(null),
+    playClip: () => null,
+    isAudioUnlocked: () => false,
+    hasUserActivation: () => false,
+    unlockAudio: () => Promise.resolve(false),
     getVolume: () => 1,
     setDuck: () => {},
+    setAudioHold: () => {},
     startMusic: () => {},
     endMusic: () => {},
+    log: () => {},
+    now: () => Date.now(),
     setTimer: (fn, ms) => setTimeout(fn, ms),
     clearTimer: id => clearTimeout(id)
   }
@@ -76,7 +88,6 @@ function buildRoot(doc) {
       <p class="story-intro__caption" aria-live="polite"></p>
       <div class="story-intro__bar">
         <div class="story-intro__progress" aria-hidden="true"><span></span></div>
-        <button type="button" class="story-intro__sound" hidden>Sound on</button>
         <button type="button" class="story-intro__skip">Skip intro</button>
       </div>
     </div>
@@ -95,40 +106,88 @@ function applyCamera(state, segment, instant = false) {
 }
 
 function stopVoice(state) {
+  state.voiceToken += 1
   if (!state.voice) return
   try {
-    state.voice.pause()
-    state.voice.src = ''
+    state.voice.stop()
   } catch {
-    // Teardown errors are irrelevant once the intro closes.
+    // Teardown errors are irrelevant once the clip is replaced.
   }
   state.voice = null
 }
 
-function playVoice(state, segment) {
+// Plays the current segment's clip on the shared unlocked context. A clip that
+// is still decoding starts late, offset to the time already elapsed.
+function playVoice(state, segment, index) {
   stopVoice(state)
-  if (state.muted) return
-  let voice
-  try {
-    voice = state.deps.createAudio(segment.audio)
-  } catch {
+  if (!state.audioStarted) {
+    state.deps.log({ event: 'segment-silent', segment: segment.id, reason: 'audio-locked' })
     return
   }
-  voice.volume = Math.max(0, Math.min(1, state.deps.getVolume() * STORY_INTRO_VOICE_GAIN))
-  state.voice = voice
-  const playing = voice.play?.()
-  if (playing && typeof playing.catch === 'function') {
-    playing.catch(error => {
-      if (state.voice !== voice || state.closed) return
-      // Autoplay blocked before the first user gesture: keep the pictures
-      // running on the measured clip timings and offer a sound button.
-      if (error?.name === 'NotAllowedError') {
-        state.muted = true
-        const btn = state.root.querySelector('.story-intro__sound')
-        if (btn) btn.hidden = false
-      }
-    })
-  }
+  const token = state.voiceToken
+  const segmentStart = state.segmentStartedAt
+  Promise.resolve(state.deps.loadClip(segment.audio)).then(clip => {
+    if (state.closed || token !== state.voiceToken || state.index !== index) return
+    if (!clip) {
+      state.deps.log({ event: 'segment-silent', segment: segment.id, reason: 'clip-unavailable' })
+      return
+    }
+    const offsetSeconds = Math.max(0, (state.deps.now() - segmentStart) / 1000)
+    if (offsetSeconds > LATE_CLIP_MAX_SECONDS && offsetSeconds * 1000 > segment.durationMs - 1500) {
+      state.deps.log({ event: 'segment-silent', segment: segment.id, reason: 'clip-too-late' })
+      return
+    }
+    const volume = Math.max(0, Math.min(1, state.deps.getVolume() * STORY_INTRO_VOICE_GAIN))
+    const handle = state.deps.playClip(clip, { volume, offsetSeconds: offsetSeconds < 0.25 ? 0 : offsetSeconds })
+    state.voice = handle || null
+    state.deps.log({ event: handle ? 'segment-playing' : 'segment-silent', segment: segment.id, reason: handle ? undefined : 'play-failed', offsetSeconds })
+  }, () => {})
+}
+
+function preloadClips(state) {
+  state.segments.forEach(segment => {
+    try {
+      Promise.resolve(state.deps.loadClip(segment.audio)).catch(() => {})
+    } catch {
+      // Preloading is best effort.
+    }
+  })
+}
+
+function startAudio(state) {
+  if (state.audioStarted || state.closed) return
+  state.audioStarted = true
+  state.deps.setDuck(STORY_INTRO_MUSIC_DUCK)
+  state.deps.log({ event: 'audio-started' })
+}
+
+function startMusic(state) {
+  if (!state.withMusic || state.closed) return
+  state.musicStarted = true
+  state.deps.startMusic()
+}
+
+// Audio still locked when the intro opened: the visuals keep running, and the
+// first pointerdown/keydown anywhere unlocks the shared context and starts the
+// narration from the current section plus the background music. That first
+// tap only unlocks; it does not skip (the Skip button and Esc always skip).
+// Media elements (the music) need a real user activation even where the Web
+// Audio context already runs, so the gesture is awaited for those too.
+function onUnlockGesture(state, event) {
+  if (state.closed) return
+  const isSkipButton = event?.target?.closest?.('.story-intro__skip')
+  const isEscape = event?.type === 'keydown' && event.key === 'Escape'
+  state.deps.unlockAudio()
+  if (isSkipButton || isEscape) return
+  const firstUnlock = state.needsGesture
+  state.needsGesture = false
+  startMusic(state)
+  if (!firstUnlock) return
+  if (event?.type === 'pointerdown' || event?.type === 'touchend') state.swallowStageClick = true
+  state.deps.log({ event: 'gesture-unlock', restartedSegment: !state.audioStarted })
+  if (state.audioStarted) return
+  startAudio(state)
+  if (state.index >= 0) showSegment(state, state.index)
 }
 
 function showSegment(state, index) {
@@ -145,7 +204,8 @@ function showSegment(state, index) {
   if (bar) bar.style.width = `${Math.round(((index + 1) / state.segments.length) * 100)}%`
   applyCamera(state, segment, index === 0 && !state.started)
   state.started = true
-  playVoice(state, segment)
+  state.segmentStartedAt = state.deps.now()
+  playVoice(state, segment, index)
   state.onSegment?.(segment, index)
   state.deps.clearTimer(state.timer)
   state.timer = state.deps.setTimer(() => showSegment(state, index + 1), segment.durationMs + state.gapMs)
@@ -169,8 +229,10 @@ export function closeStoryIntro(status = 'skipped') {
   state.deps.clearTimer(state.timer)
   stopVoice(state)
   state.deps.setDuck(1)
+  state.gestureEvents.forEach(type => state.win.removeEventListener(type, state.onGesture, true))
   try {
     state.deps.endMusic(state.withMusic, status)
+    state.deps.setAudioHold(false)
   } catch {
     // Music hand-off problems must never keep the overlay open.
   }
@@ -206,7 +268,13 @@ export function playStoryIntro(options = {}) {
     index: -1,
     timer: null,
     voice: null,
-    muted: false,
+    voiceToken: 0,
+    segmentStartedAt: 0,
+    audioStarted: false,
+    musicStarted: false,
+    needsGesture: false,
+    swallowStageClick: false,
+    gestureEvents: ['pointerdown', 'keydown', 'touchend'],
     started: false,
     closed: false,
     pausedGame: false,
@@ -227,23 +295,32 @@ export function playStoryIntro(options = {}) {
     event.stopPropagation()
     closeStoryIntro('skipped')
   })
-  state.root.querySelector('.story-intro__sound').addEventListener('click', event => {
-    event.stopPropagation()
-    state.muted = false
-    event.currentTarget.hidden = true
-    // The click is a user gesture, so blocked background music can start now.
-    if (state.withMusic) state.deps.startMusic()
-    const segment = state.segments[state.index]
-    if (segment) playVoice(state, segment)
+  // Tapping the newspaper skips the intro, except for the tap that unlocked
+  // the audio (see onUnlockGesture).
+  state.root.querySelector('.story-intro__stage').addEventListener('click', () => {
+    if (state.swallowStageClick) {
+      state.swallowStageClick = false
+      return
+    }
+    closeStoryIntro('skipped')
   })
-  // Tapping the newspaper itself skips the intro.
-  state.root.querySelector('.story-intro__stage').addEventListener('click', () => closeStoryIntro('skipped'))
+  state.onGesture = event => onUnlockGesture(state, event)
+  state.gestureEvents.forEach(type => win.addEventListener(type, state.onGesture, true))
   win.addEventListener('keydown', state.onKey, true)
   win.addEventListener('resize', state.onResize)
   doc.body.appendChild(state.root)
+  // Keep the shared audio context and music alive while the game is paused.
+  state.deps.setAudioHold(true)
   holdGame(state)
-  state.deps.setDuck(STORY_INTRO_MUSIC_DUCK)
-  if (state.withMusic) state.deps.startMusic()
+  preloadClips(state)
+  state.deps.unlockAudio()
+  if (state.deps.isAudioUnlocked()) startAudio(state)
+  if (state.deps.hasUserActivation()) {
+    startMusic(state)
+  } else {
+    state.needsGesture = true
+    state.deps.log({ event: 'audio-locked', narration: state.audioStarted })
+  }
   state.root.querySelector('.story-intro__skip').focus?.()
   showSegment(state, 0)
   return true
