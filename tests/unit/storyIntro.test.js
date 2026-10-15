@@ -4,6 +4,7 @@ import { gameState } from '../../src/gameState.js'
 import { resetGameStorageForTests } from '../../src/storage/indexedDbStorage.js'
 import {
   STORY_INTRO_MUSIC_DUCK,
+  STORY_INTRO_MUSIC_RAMP_MS,
   STORY_INTRO_STORAGE_KEY,
   closeStoryIntro,
   getActiveStoryIntroIndex,
@@ -85,7 +86,7 @@ describe('story intro', () => {
   it('advances each segment after its measured clip duration and plays its own clip without further gestures', async() => {
     const { deps, timers, audios, ducks } = fakeDeps()
     const seen = []
-    playStoryIntro({ deps, gapMs: 400, onSegment: segment => seen.push(segment.id) })
+    playStoryIntro({ fromGesture: true, deps, gapMs: 400, onSegment: segment => seen.push(segment.id) })
     expect(isStoryIntroOpen()).toBe(true)
     expect(gameState.gamePaused).toBe(true)
     expect(ducks[0]).toBe(STORY_INTRO_MUSIC_DUCK)
@@ -113,7 +114,7 @@ describe('story intro', () => {
     const run = trigger => {
       resetGameStorageForTests({})
       const { deps } = fakeDeps()
-      playStoryIntro({ deps })
+      playStoryIntro({ fromGesture: true, deps })
       trigger(document.getElementById('story-intro'))
       expect(isStoryIntroOpen()).toBe(false)
       expect(getStoryIntroStatus()).toBe('skipped')
@@ -184,26 +185,45 @@ describe('story intro', () => {
     expect(isStoryIntroOpen()).toBe(false)
   })
 
-  it('replays from the sidebar without the button when audio is already unlocked', async() => {
-    const { deps, audios, music } = fakeDeps()
-    playStoryIntro({ deps })
+  it('replays from a sidebar click straight away, without the button', async() => {
+    const { deps, audios } = fakeDeps()
+    playStoryIntro({ fromGesture: true, deps })
     await flush()
     expect(document.querySelector('.story-intro__start-btn')).toBeNull()
     expect(getActiveStoryIntroIndex()).toBe(0)
     expect(audios).toHaveLength(1)
-    expect(music.starts).toBe(0)
-    closeStoryIntro('skipped')
-    music.unlocked = false
-    playStoryIntro({ deps })
-    expect(document.querySelector('.story-intro__start-btn')).not.toBeNull()
   })
 
-  it('starts the intro music immediately when audio is already unlocked', () => {
-    const { deps, music } = fakeDeps()
+  it('always shows the Start intro button on the automatic intro, even when audio looks unlocked', async() => {
+    const { deps, timers, audios, music } = fakeDeps({ unlocked: true })
     playStoryIntro({ deps, withMusic: true })
+    await flush()
+    expect(document.querySelector('.story-intro__start-btn')).not.toBeNull()
+    expect(timers).toHaveLength(0)
+    expect(audios).toHaveLength(0)
+    expect(music.starts).toBe(0)
+    document.querySelector('.story-intro__start-btn').click()
+    await flush()
     expect(music.starts).toBe(1)
-    expect(document.querySelector('.story-intro__sound')).toBeNull()
-    expect(document.querySelector('#story-intro button').textContent).toMatch(/Skip/i)
+    expect(audios).toHaveLength(1)
+  })
+
+  it('keeps music a quiet bed and swells it to full level over the last seconds of narration', async() => {
+    const { deps, timers, ducks } = fakeDeps()
+    const ramps = []
+    deps.rampDuck = (target, ms) => ramps.push({ target, ms })
+    const segments = [
+      { id: 'a', audio: 'a.mp3', durationMs: 10000, focus: STORY_SEGMENTS[0].focus, caption: 'a' },
+      { id: 'b', audio: 'b.mp3', durationMs: 5000, focus: STORY_SEGMENTS[0].focus, caption: 'b' }
+    ]
+    playStoryIntro({ fromGesture: true, deps, segments, gapMs: 500 })
+    expect(STORY_INTRO_MUSIC_DUCK).toBeLessThanOrEqual(0.12)
+    expect(ducks[0]).toBe(STORY_INTRO_MUSIC_DUCK)
+    // Remaining 15.5 s: ramp starts 8.5 s in, scheduled before the segment timer.
+    const ramp = timers.find(t => t.ms === 15500 - STORY_INTRO_MUSIC_RAMP_MS)
+    expect(ramp).toBeTruthy()
+    ramp.fn()
+    expect(ramps).toEqual([{ target: 1, ms: STORY_INTRO_MUSIC_RAMP_MS }])
   })
 
   it('fits and centers the focus rectangle', () => {
@@ -220,7 +240,7 @@ describe('story intro hand-off', () => {
     const { deps } = fakeDeps()
     const listener = vi.fn()
     window.addEventListener('story-intro-closed', listener, { once: true })
-    playStoryIntro({ deps })
+    playStoryIntro({ fromGesture: true, deps })
     closeStoryIntro('skipped')
     expect(listener).toHaveBeenCalledTimes(1)
     expect(listener.mock.calls[0][0].detail.status).toBe('skipped')
