@@ -1,6 +1,5 @@
 // howitzerImageRenderer.js - render howitzers with articulated barrel animation
 import {
-  TILE_SIZE,
   RECOIL_DISTANCE,
   RECOIL_DURATION,
   MUZZLE_FLASH_DURATION,
@@ -20,10 +19,11 @@ let howitzerLoaded = false
 let howitzerLoading = false
 const pendingCallbacks = []
 
-const HOWITZER_BARREL_MOUNT = { x: 96.2, y: 18.8 }
-let BARREL_MOUNT_POINT = { x: 11.5, y: 0 }
-let barrelMuzzlePoint = { x: 11.5, y: 152 }
+const HOWITZER_BARREL_MOUNT = { x: 119.7, y: 86.3 }
+let BARREL_MOUNT_POINT = { x: 7, y: 0 }
+let barrelMuzzlePoint = { x: 7, y: 150 }
 const HOWITZER_RECOIL_MULTIPLIER = 1.4
+const HOWITZER_MAX_DIMENSION = 38 // keep in sync with scripts/build-prepared-sprites.mjs
 
 function resolveCallbacks(success) {
   while (pendingCallbacks.length) {
@@ -77,7 +77,7 @@ export function preloadHowitzerImage(callback) {
   howitzerBarrelImg = new Image()
   howitzerBarrelImg.onload = () => {
     BARREL_MOUNT_POINT = {
-      x: 11.5,
+      x: 7,
       y: 0
     }
     barrelMuzzlePoint = {
@@ -114,7 +114,7 @@ export function renderHowitzerWithImage(ctx, unit, centerX, centerY) {
   const baseSourceHeight = preparedBase?.sourceHeight || howitzerBaseImg.height
   const baseScale = preparedBase
     ? preparedBase.logicalWidth / baseSourceWidth
-    : TILE_SIZE / Math.max(baseSourceWidth, baseSourceHeight)
+    : HOWITZER_MAX_DIMENSION / Math.max(baseSourceWidth, baseSourceHeight)
   if (preparedBase) {
     drawPreparedSpriteCentered(ctx, preparedBase, 0, 0)
   } else {
