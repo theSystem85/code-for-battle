@@ -1,0 +1,14 @@
+Generate ONE new image with your image generation tool. Output must be a native square 1:1 image, 1024x1024 pixels. Do not write code, do not draw it programmatically.
+
+Subject: app icon artwork for a real-time strategy game, photorealistic, same style, colors and lighting as the attached reference image (bright midday sun, warm sandy desert ground, deep blue sea, hazy pale blue sky, sharp realistic military vehicles, slight high camera angle).
+
+Composition (very important, tight framing, the units must be big):
+- Camera is close and low; the units fill about 90% of the frame. Almost no empty space anywhere.
+- Sky is only a THIN band at the very top, at most 15% of the image height. In that thin sky band, near the top edge: a small AH-64 Apache attack helicopter at top left and a small F-22 Raptor fighter jet at top right, both fully visible, not cropped.
+- Just below the sky: a calm blue sea with a large grey modern battleship at the coast, filling most of the width, fully visible.
+- Front and bottom center, BIG, the dominant hero object: a modern desert main battle tank (Leopard 2 style, sand/olive coating) facing the viewer, its gun pointing toward the viewer, occupying roughly the lower-middle 40% of the image width, fully visible with tracks at the bottom.
+- Behind the tank, on the sandy ground, slightly smaller: a towed/self-propelled howitzer artillery gun on the left and a rocket launcher tank with a box of rocket tubes on the right, both fully visible.
+- Optional, small: a tesla coil lattice tower with purple electric arcs between the tank and the battleship, it must not reach into the top of the sky.
+- Every unit fully inside the square, none cut off at the edges. No text, no letters, no logo, no border, no watermark.
+
+After generating, copy the generated PNG file into the current working directory as icon_square.png and print its pixel size. Generate only once.
