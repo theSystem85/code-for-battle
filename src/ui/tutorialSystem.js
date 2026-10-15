@@ -24,6 +24,7 @@ import {
   getPlayerCrewSnapshot,
   getSpokenTextForStep,
   getTextForDevice,
+  resolveTutorialInputMethod,
   getUnitTile,
   sleep
 } from './tutorialSystem/helpers.js'
@@ -493,10 +494,15 @@ class TutorialSystem {
 
     this.renderStep(step)
     if (step.interactive) {
-      this.speak(getSpokenTextForStep(step, this.settings.preferredInputMethod))
+      this.speak(getSpokenTextForStep(step, this.getInputMethod()))
       return
     }
     this.runDemo(step)
+  }
+
+  // Effective method for copy and narration (preference, else current layout).
+  getInputMethod() {
+    return resolveTutorialInputMethod(this.settings.preferredInputMethod)
   }
 
   renderStep(step) {
@@ -504,10 +510,10 @@ class TutorialSystem {
       this.stepTitle.textContent = step.title
     }
     if (this.stepText) {
-      this.stepText.textContent = getTextForDevice(step, this.settings.preferredInputMethod)
+      this.stepText.textContent = getTextForDevice(step, this.getInputMethod())
     }
     if (this.stepHint) {
-      this.stepHint.textContent = getHintForDevice(step, this.settings.preferredInputMethod)
+      this.stepHint.textContent = getHintForDevice(step, this.getInputMethod())
     }
     if (this.stepVisual) {
       this.stepVisual.hidden = step.visual !== 'mobile-build-gestures'
@@ -666,7 +672,7 @@ class TutorialSystem {
     if (!this.active || generation !== this.stepGeneration || this.steps[this.stepIndex] !== step) return
     this.phase = 'practice'
     this.renderStep(step)
-    this.speak(getSpokenTextForStep(step, this.settings.preferredInputMethod))
+    this.speak(getSpokenTextForStep(step, this.getInputMethod()))
     this.awaitCompletion(step)
   }
 

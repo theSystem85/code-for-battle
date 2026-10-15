@@ -2,9 +2,9 @@ import { describe, expect, it, vi } from 'vitest'
 import fs from 'fs'
 import path from 'path'
 import { TUTORIAL_NARRATION_CLIPS } from '../../src/ui/tutorialSystem/narrationManifest.js'
-import { TUTORIAL_MUSIC_DUCK, createTutorialNarrator, findTutorialNarrationClip } from '../../src/ui/tutorialSystem/narration.js'
+import { TUTORIAL_MUSIC_DUCK, createTutorialNarrator, findTutorialNarrationClip, normalizeNarrationText } from '../../src/ui/tutorialSystem/narration.js'
 import { buildTutorialSteps } from '../../src/ui/tutorialSystem/steps.js'
-import { getSpokenTextForStep } from '../../src/ui/tutorialSystem/helpers.js'
+import { getSpokenTextForStep, resolveTutorialInputMethod } from '../../src/ui/tutorialSystem/helpers.js'
 
 class FakeClip extends window.EventTarget {
   constructor(src, playResult = Promise.resolve()) {
@@ -54,6 +54,30 @@ describe('tutorial narration manifest', () => {
       }
     }
     document.body.classList.remove('is-touch')
+  })
+
+  // Regression: a player who skipped the input-method step has no preference.
+  // Steps 7+ used the legacy copy then and fell back to browser TTS.
+  it('resolves a clip for every step when no input method was chosen', () => {
+    for (const touchLayout of [false, true]) {
+      document.body.classList.toggle('is-touch', touchLayout)
+      const method = resolveTutorialInputMethod(null)
+      expect(method).toBe(touchLayout ? 'touch' : 'mouse-keyboard')
+      for (const step of buildTutorialSteps()) {
+        if (step.id === 'mobile-sidebar-gestures' && !touchLayout) continue
+        const text = getSpokenTextForStep(step, method)
+        expect(findTutorialNarrationClip(step.id, text), `${step.id} null ${touchLayout}`).not.toBeNull()
+      }
+    }
+    document.body.classList.remove('is-touch')
+    expect(resolveTutorialInputMethod('trackpad')).toBe('trackpad')
+    expect(resolveTutorialInputMethod('bogus')).toBe('mouse-keyboard')
+  })
+
+  it('ignores whitespace and typographic punctuation differences', () => {
+    const clip = TUTORIAL_NARRATION_CLIPS.find(c => c.step === 'welcome')
+    expect(normalizeNarrationText('  a\n  b \u2019c\u2019 ')).toBe("a b 'c'")
+    expect(findTutorialNarrationClip('welcome', `  ${clip.text.replace(/ /g, '  ')}\n`)).toBe(clip)
   })
 
   it('only matches the exact text for the step and English', () => {
