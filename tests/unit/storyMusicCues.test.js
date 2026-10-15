@@ -94,6 +94,46 @@ describe('story intro and first gameplay music cues', () => {
     sound.setMusicDuck(1)
     expect(sound.bgMusicAudio.volume).toBeCloseTo(0.8, 5)
   })
+  it('scales music and effects with the persisted SFX/music balance and the master volume', async() => {
+    const storage = await import('../../src/storage/indexedDbStorage.js')
+    sound.setMasterVolume(0.5)
+    expect(sound.getMixBalance()).toBe(50)
+    expect(sound.getMusicVolume()).toBeCloseTo(0.5)
+    expect(sound.getEffectsVolume()).toBeCloseTo(0.5)
+    sound.setMixBalance(75)
+    expect(storage.getStoredItem(sound.MIX_BALANCE_STORAGE_KEY)).toBe('75')
+    expect(sound.getMusicVolume()).toBeCloseTo(0.5)
+    expect(sound.getEffectsVolume()).toBeCloseTo(0.25)
+    sound.setMixBalance(20)
+    expect(sound.getMusicVolume()).toBeCloseTo(0.2)
+    expect(sound.getEffectsVolume()).toBeCloseTo(0.5)
+    const heard = []
+    const off = sound.onAudioVolumeChange(() => heard.push(sound.getMusicVolume()))
+    sound.setMasterVolume(1)
+    off()
+    expect(heard).toEqual([0.4])
+    sound.setMixBalance(50)
+  })
+
+  it('ramps the music duck smoothly to the target', () => {
+    vi.useFakeTimers()
+    sound.setMusicDuck(0.1)
+    let t = 0
+    sound.rampMusicDuck(1, 1000, () => t)
+    t = 500
+    vi.advanceTimersByTime(50)
+    expect(sound.getMusicDuck()).toBeCloseTo(0.55, 2)
+    t = 1000
+    vi.advanceTimersByTime(50)
+    expect(sound.getMusicDuck()).toBe(1)
+    // A direct duck cancels a running ramp.
+    sound.rampMusicDuck(0.2, 1000, () => t)
+    sound.setMusicDuck(1)
+    t = 2000
+    vi.advanceTimersByTime(100)
+    expect(sound.getMusicDuck()).toBe(1)
+  })
+
   it('starts a cue without first loading a random playlist track', async() => {
     expect(await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)).toBe(true)
     await flush()

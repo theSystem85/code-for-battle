@@ -1,7 +1,6 @@
 import {
   FIRST_GAMEPLAY_MUSIC_FILE,
   STORY_INTRO_MUSIC_FILE,
-  getMasterVolume,
   getMusicDebugState,
   getSharedAudioContext,
   hasUserActivation,
@@ -14,6 +13,7 @@ import {
   hasPlayedFirstGameplayMusic,
   playFirstGameplayMusic,
   playMusicCue,
+  rampMusicDuck,
   setMusicDuck,
   setMusicPauseExempt
 } from '../sound.js'
@@ -64,8 +64,10 @@ function storyDeps() {
     // The intro pauses the game; keep the audio context and music alive.
     setAudioHold: hold => setMusicPauseExempt(hold),
     log: logStoryAudio,
-    getVolume: () => getMasterVolume(),
+    // Relative: playNarrationBuffer applies master x balance live.
+    getVolume: () => 1,
     setDuck: factor => setMusicDuck(factor),
+    rampDuck: (target, ms) => rampMusicDuck(target, ms),
     // First Strike under the first-launch intro, ducked by setDuck while the
     // narration runs. The game is paused meanwhile, so music is exempted from
     // the pause handler until the intro closes.
@@ -84,7 +86,7 @@ function storyDeps() {
 }
 
 export function startStoryIntro(options = {}) {
-  return playStoryIntro({ deps: storyDeps(), withMusic: Boolean(options.withMusic) })
+  return playStoryIntro({ deps: storyDeps(), withMusic: Boolean(options.withMusic), fromGesture: Boolean(options.fromGesture) })
 }
 
 // Called once the loading screen is gone. The automatic first-launch intro
@@ -114,5 +116,5 @@ export function mountStoryIntroReplay(doc = document) {
   const button = doc.getElementById('storyIntroReplay')
   if (!button || button.dataset.bound) return
   button.dataset.bound = 'true'
-  button.addEventListener('click', () => startStoryIntro())
+  button.addEventListener('click', () => startStoryIntro({ fromGesture: true }))
 }
