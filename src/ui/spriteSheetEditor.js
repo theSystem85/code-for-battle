@@ -1311,7 +1311,7 @@ function ensureSheetPathInMode(state, sheetPath, label, mode) {
   state.customSheetLabels[sheetPath] = label
 }
 
-function isDroppedJsonFile(file) {
+export function isDroppedJsonFile(file) {
   if (!file) return false
   return Boolean(
     file.type === 'application/json'
@@ -1320,7 +1320,7 @@ function isDroppedJsonFile(file) {
   )
 }
 
-function isDroppedImageFile(file) {
+export function isDroppedImageFile(file) {
   if (!file) return false
   return Boolean(
     file.type?.startsWith('image/')
@@ -1352,7 +1352,7 @@ async function loadDroppedSheetFile(state, file) {
   setStatus(state, `Loaded dropped image: ${file.name || 'image'}`)
 }
 
-async function loadDroppedFiles(state, files) {
+export async function loadDroppedFiles(state, files) {
   const droppedFiles = Array.from(files || []).filter(Boolean)
   if (!droppedFiles.length) {
     await loadDroppedSheetFile(state, null)

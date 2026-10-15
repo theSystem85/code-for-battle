@@ -1322,7 +1322,7 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 ### Tooling and CI
 
 - [x] **SSE drag-and-drop mixed asset regression (2026-10-15)** — dropping files onto the Sprite Sheet Editor canvas accepts images by extension when the MIME type is empty, processes multi-file drops image-first and then JSON tags, and only applies tag JSON to a loaded sheet (JSON alone with no sheet shows a warning).
-  - Spec: [SSE drop import parity](../specs/066-sse-drop-import-parity.md)
+  - Spec: [SSE drop import parity](../specs/2026-10-15-sse-drop-import-parity.md)
   - Related: [#648](https://github.com/theSystem85/code-for-battle/pull/648)
 - [x] **Full-repo lint on PR 692 (2026-09-23)** — `npm run lint` failed in CI because `preparedMap.js` uses `AbortController` and `DOMException` while `eslint.config.js` browser globals omitted them. Both are now readonly globals beside `fetch` and `Request`. Prepared-map behavior is unchanged.
   - Spec: none

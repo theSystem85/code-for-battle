@@ -1,4 +1,4 @@
-# Spec 066: SSE drop import parity for image + JSON assets
+# Spec: SSE drop import parity for image + JSON assets
 
 ## Scope
 - Preserve SSE drag-and-drop support for both sprite sheet image imports and JSON tag metadata imports.
@@ -12,3 +12,7 @@
    - Then apply dropped JSON metadata to the now-active sheet.
 4. Dropping only JSON should continue to apply tags to the currently loaded sheet and should still warn if no sheet is loaded.
 5. Dropping unsupported file types should show the existing import warning.
+
+## Tests
+- E2E: `tests/e2e/spriteSheetEditorDrop.test.js` dispatches real `DataTransfer` drop events for an image with MIME type, `.png`/`.webp` with an empty MIME type, and image + JSON together (JSON listed first).
+- Unit: `tests/unit/spriteSheetEditorDrop.test.js` covers type detection, JSON without a loaded sheet, and unsupported files.
