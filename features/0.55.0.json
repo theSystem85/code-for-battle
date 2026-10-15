@@ -1,6 +1,12 @@
 {
   "version": "0.55.0",
-  "features": ["Extend sprite sheets with click-to-isolate imports in the standalone editor."],
+  "features": [
+    "Extend sprite sheets with click-to-isolate imports in the standalone editor.",
+    "Create, clear and export sprite sheets losslessly with touch pan, zoom and resizable panes."
+  ],
   "improvements": [],
-  "bugfixes": ["Fix standalone sprite sheet editor builds for supported browsers."]
+  "bugfixes": [
+    "Fix standalone sprite sheet editor builds for supported browsers.",
+    "Keep sprite sheet information visible above the editor canvas."
+  ]
 }

@@ -9,10 +9,14 @@ body { margin: 0; background: #121619; color: #eee; }
 .sse-standalone .config-modal { display: none; }
 .sse-standalone .config-modal--open { display: block; }
 .sse-standalone .config-modal__dialog { height: 100dvh; }
-.sse-standalone button, .sse-standalone input, .sse-standalone select {
-  font: inherit; color: inherit; background: #303940; border: 1px solid #697780; padding: 5px;
-}
-.sse-standalone button { cursor: pointer; }
+.sse-standalone .sprite-sheet-editor__sidebar { font-size: 13px; }
+.sse-standalone .sidebar-input { width: 100%; min-width: 0; font: inherit; }
+.sse-standalone .sidebar-field { margin-block: 8px; }
+.sse-standalone details { padding: 8px; }
+.sse-standalone summary { cursor: pointer; font-weight: 700; margin-bottom: 8px; }
+.sse-standalone .action-button { width: 100%; margin-block: 4px; }
+.sse-standalone .sidebar-check-row { flex-direction: row; align-items: center; gap: 8px; }
+.sse-standalone input[type="range"] { width: 100%; }
 .sse-standalone #spriteSheetEditorCloseBtn { display: none; }
 @media (max-width: 650px) {
   .sse-standalone .sprite-sheet-editor { grid-template-columns: 220px minmax(0, 1fr); }

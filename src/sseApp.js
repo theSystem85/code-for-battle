@@ -1,3 +1,5 @@
+import '../styles/base.css'
+import '../styles/sidebar.css'
 import '../styles/spriteSheetEditor.css'
 import '../styles/sseStandalone.css'
 import { initializeGameStorage } from './storage/indexedDbStorage.js'

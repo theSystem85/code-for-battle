@@ -737,32 +737,39 @@ body.is-touch .money-tooltip__meta {
 
 /* Expanded left sidebar spacing. Scoped so the collapsed rail, portrait HUD,
    right-side overlays, and settings modal keep their own layout. */
+.sprite-sheet-editor__sidebar.expanded-left-sidebar #sidebarScroll,
 #sidebar.expanded-left-sidebar #sidebarScroll {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar #sidebarScroll > *,
 #sidebar.expanded-left-sidebar #sidebarScroll > * {
   margin-top: 0;
   margin-bottom: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar #stats,
 #sidebar.expanded-left-sidebar #stats {
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid #444;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar #stats p,
 #sidebar.expanded-left-sidebar #stats p {
   margin: 4px 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar #speedControl,
 #sidebar.expanded-left-sidebar #speedControl,
+.sprite-sheet-editor__sidebar.expanded-left-sidebar #shuffleControl,
 #sidebar.expanded-left-sidebar #shuffleControl {
   margin-top: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-section-title,
 #sidebar.expanded-left-sidebar .sidebar-section-title {
   margin: 0 0 8px;
   padding: 0;
@@ -772,11 +779,13 @@ body.is-touch .money-tooltip__meta {
   line-height: 1.2;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion,
 #sidebar.expanded-left-sidebar .sidebar-accordion {
   margin: 0;
   padding: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion__toggle,
 #sidebar.expanded-left-sidebar .sidebar-accordion__toggle {
   box-sizing: border-box;
   display: flex;
@@ -788,6 +797,7 @@ body.is-touch .money-tooltip__meta {
   text-align: left;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion__content,
 #sidebar.expanded-left-sidebar .sidebar-accordion__content {
   display: grid;
   grid-template-rows: 0fr;
@@ -795,28 +805,33 @@ body.is-touch .money-tooltip__meta {
   transition: grid-template-rows 200ms ease-in-out, margin-top 200ms ease-in-out;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion__content.is-open,
 #sidebar.expanded-left-sidebar .sidebar-accordion__content.is-open {
   grid-template-rows: 1fr;
   margin-top: 8px;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion__body,
 #sidebar.expanded-left-sidebar .sidebar-accordion__body {
   min-height: 0;
   overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion__content,
   #sidebar.expanded-left-sidebar .sidebar-accordion__content {
     transition: none;
   }
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-accordion__icon,
 #sidebar.expanded-left-sidebar .sidebar-accordion__icon {
   flex: 0 0 auto;
   font-size: 12px;
   line-height: 1;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-tool-row,
 #sidebar.expanded-left-sidebar .sidebar-tool-row {
   display: flex;
   flex-wrap: nowrap;
@@ -828,6 +843,7 @@ body.is-touch .money-tooltip__meta {
   margin: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-tool-row > .action-button.icon-button,
 #sidebar.expanded-left-sidebar .sidebar-tool-row > .action-button.icon-button {
   flex: 1 1 0;
   width: auto;
@@ -836,33 +852,40 @@ body.is-touch .money-tooltip__meta {
   padding: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-save-toolbar,
 #sidebar.expanded-left-sidebar .sidebar-save-toolbar {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-icon-actions,
 #sidebar.expanded-left-sidebar .sidebar-icon-actions {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-field,
 #sidebar.expanded-left-sidebar .sidebar-field {
   margin: 8px 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-field-label,
 #sidebar.expanded-left-sidebar .sidebar-field-label {
   display: block;
   margin: 0 0 6px;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-field > .sidebar-input,
 #sidebar.expanded-left-sidebar .sidebar-field > .sidebar-input,
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-form-row .sidebar-input,
 #sidebar.expanded-left-sidebar .sidebar-form-row .sidebar-input {
   box-sizing: border-box;
   width: 100%;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-form-row,
 #sidebar.expanded-left-sidebar .sidebar-form-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -871,12 +894,16 @@ body.is-touch .money-tooltip__meta {
   margin: 8px 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-form-row > :last-child:nth-child(odd),
 #sidebar.expanded-left-sidebar .sidebar-form-row > :last-child:nth-child(odd) {
   grid-column: 1 / -1;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-form-row > .floating-label-input,
 #sidebar.expanded-left-sidebar .sidebar-form-row > .floating-label-input,
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-form-row > .sidebar-field,
 #sidebar.expanded-left-sidebar .sidebar-form-row > .sidebar-field,
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-form-row > div,
 #sidebar.expanded-left-sidebar .sidebar-form-row > div {
   width: auto;
   max-width: none;
@@ -884,14 +911,17 @@ body.is-touch .money-tooltip__meta {
   margin: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-field > .sidebar-form-row:first-child,
 #sidebar.expanded-left-sidebar .sidebar-field > .sidebar-form-row:first-child {
   margin-top: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-field > .sidebar-form-row:last-child,
 #sidebar.expanded-left-sidebar .sidebar-field > .sidebar-form-row:last-child {
   margin-bottom: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-check-row,
 #sidebar.expanded-left-sidebar .sidebar-check-row {
   display: flex;
   align-items: center;
@@ -899,6 +929,7 @@ body.is-touch .money-tooltip__meta {
   margin: 8px 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .sidebar-hint,
 #sidebar.expanded-left-sidebar .sidebar-hint {
   display: block;
   margin: 0 0 8px;
@@ -907,11 +938,13 @@ body.is-touch .money-tooltip__meta {
   line-height: 1.3;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar #mapSaveMinimumEstimate,
 #sidebar.expanded-left-sidebar #mapSaveMinimumEstimate {
   margin: 0 0 8px;
   color: #9fd39f;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .map-edit-controls,
 #sidebar.expanded-left-sidebar .map-edit-controls {
   display: flex;
   flex-direction: column;
@@ -919,16 +952,21 @@ body.is-touch .money-tooltip__meta {
   margin: 8px 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-check-row,
 #sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-check-row,
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-field,
 #sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-field,
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-hint,
 #sidebar.expanded-left-sidebar .map-edit-controls > .sidebar-hint {
   margin: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .multiplayer-party-list,
 #sidebar.expanded-left-sidebar .multiplayer-party-list {
   margin-top: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .multiplayer-join-section,
 #sidebar.expanded-left-sidebar .multiplayer-join-section {
   display: flex;
   flex-direction: column;
@@ -937,10 +975,12 @@ body.is-touch .money-tooltip__meta {
   padding: 8px 0 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .multiplayer-join-status,
 #sidebar.expanded-left-sidebar .multiplayer-join-status {
   margin-top: 0;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .multiplayer-join-input-row,
 #sidebar.expanded-left-sidebar .multiplayer-join-input-row {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -948,11 +988,14 @@ body.is-touch .money-tooltip__meta {
   align-items: center;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .multiplayer-join-input-row .multiplayer-join-input,
 #sidebar.expanded-left-sidebar .multiplayer-join-input-row .multiplayer-join-input {
   grid-column: 1 / -1;
 }
 
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .multiplayer-join-btn,
 #sidebar.expanded-left-sidebar .multiplayer-join-btn,
+.sprite-sheet-editor__sidebar.expanded-left-sidebar .multiplayer-scan-btn,
 #sidebar.expanded-left-sidebar .multiplayer-scan-btn {
   width: 100%;
 }
