@@ -65,18 +65,18 @@
     },
     "lightTank": {
       "turretMountPoint": {
-        "x": 62,
-        "y": 112,
-        "comment": "Turret ring centre on the light tank hull (pixels from top-left)"
+        "x": 58,
+        "y": 109,
+        "comment": "Turret ring centre on the light tank hull; the turret image is padded so its centre is the turret body centre (pixels from top-left)"
       },
       "barrelMountPoint": {
-        "x": 50,
-        "y": 149,
+        "x": 37,
+        "y": 138,
         "comment": "Autocannon barrel centre on the turret; breech sits under the mantlet (pixels from top-left)"
       },
       "muzzleFlashOffset": {
         "x": 6,
-        "y": 83,
+        "y": 95,
         "comment": "Muzzle flash position relative to gun barrel (pixels from top-left)"
       },
       "recoilRotationOffset": {

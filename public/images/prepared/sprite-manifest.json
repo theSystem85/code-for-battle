@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "a97f7f3ed9e635f1",
+  "assetVersion": "95c431bd577be4e9",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -13,7 +13,7 @@
     "entryCount": 303,
     "sourceCount": 62,
     "generatedVariantCount": 909,
-    "decodedVariantBytes": 38689440
+    "decodedVariantBytes": 38684836
   },
   "entries": [
     {
@@ -17130,23 +17130,23 @@
       "id": "unit:lightTank:barrel",
       "category": "unit",
       "source": "/images/map/units/lightTank_barrel.webp",
-      "sourceWidth": 12,
-      "sourceHeight": 83,
-      "logicalWidth": 1.431864406779661,
-      "logicalHeight": 9.903728813559322,
+      "sourceWidth": 13,
+      "sourceHeight": 95,
+      "logicalWidth": 1.551186440677966,
+      "logicalHeight": 11.335593220338984,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 0.7159322033898305,
-          "y": 4.951864406779661
+          "x": 0.775593220338983,
+          "y": 5.667796610169492
         },
         "muzzle": {
-          "x": 0.7159322033898305,
-          "y": 9.903728813559322,
+          "x": 0.7159322033898304,
+          "y": 11.335593220338984,
           "sourceX": 6,
-          "sourceY": 83
+          "sourceY": 95
         }
       },
       "states": [
@@ -17157,23 +17157,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/lightTank/barrel@1x.webp",
-          "backingWidth": 1,
-          "backingHeight": 10,
-          "decodedBytes": 40
+          "backingWidth": 2,
+          "backingHeight": 11,
+          "decodedBytes": 88
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/lightTank/barrel@2x.webp",
           "backingWidth": 3,
-          "backingHeight": 20,
-          "decodedBytes": 240
+          "backingHeight": 23,
+          "decodedBytes": 276
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/lightTank/barrel@3x.webp",
-          "backingWidth": 4,
-          "backingHeight": 30,
-          "decodedBytes": 480
+          "backingWidth": 5,
+          "backingHeight": 34,
+          "decodedBytes": 680
         }
       ]
     },
@@ -17181,23 +17181,23 @@
       "id": "unit:lightTank:turret",
       "category": "unit",
       "source": "/images/map/units/lightTank_turret.webp",
-      "sourceWidth": 99,
-      "sourceHeight": 117,
-      "logicalWidth": 11.812881355932204,
-      "logicalHeight": 13.960677966101695,
+      "sourceWidth": 80,
+      "sourceHeight": 101,
+      "logicalWidth": 9.545762711864407,
+      "logicalHeight": 12.051525423728814,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 5.906440677966102,
-          "y": 6.9803389830508475
+          "x": 4.772881355932204,
+          "y": 6.025762711864407
         },
         "barrelMount": {
-          "x": 5.966101694915254,
-          "y": 17.778983050847458,
-          "sourceX": 50,
-          "sourceY": 149
+          "x": 4.414915254237289,
+          "y": 16.4664406779661,
+          "sourceX": 37,
+          "sourceY": 138
         }
       },
       "states": [
@@ -17207,23 +17207,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/lightTank/turret@1x.webp",
-          "backingWidth": 12,
-          "backingHeight": 14,
-          "decodedBytes": 672
+          "backingWidth": 10,
+          "backingHeight": 12,
+          "decodedBytes": 480
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/lightTank/turret@2x.webp",
-          "backingWidth": 24,
-          "backingHeight": 28,
-          "decodedBytes": 2688
+          "backingWidth": 19,
+          "backingHeight": 24,
+          "decodedBytes": 1824
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/lightTank/turret@3x.webp",
-          "backingWidth": 35,
-          "backingHeight": 42,
-          "decodedBytes": 5880
+          "backingWidth": 29,
+          "backingHeight": 36,
+          "decodedBytes": 4176
         }
       ]
     },
@@ -17231,23 +17231,23 @@
       "id": "unit:lightTank:wagon",
       "category": "unit",
       "source": "/images/map/units/lightTank_wagon.webp",
-      "sourceWidth": 125,
+      "sourceWidth": 115,
       "sourceHeight": 236,
-      "logicalWidth": 14.915254237288137,
+      "logicalWidth": 13.722033898305085,
       "logicalHeight": 28.16,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 7.457627118644068,
+          "x": 6.861016949152543,
           "y": 14.08
         },
         "turretMount": {
-          "x": 7.397966101694916,
-          "y": 13.36406779661017,
-          "sourceX": 62,
-          "sourceY": 112
+          "x": 6.920677966101695,
+          "y": 13.006101694915255,
+          "sourceX": 58,
+          "sourceY": 109
         }
       },
       "states": [
@@ -17257,23 +17257,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/lightTank/wagon@1x.webp",
-          "backingWidth": 15,
+          "backingWidth": 14,
           "backingHeight": 28,
-          "decodedBytes": 1680
+          "decodedBytes": 1568
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/lightTank/wagon@2x.webp",
-          "backingWidth": 30,
+          "backingWidth": 27,
           "backingHeight": 56,
-          "decodedBytes": 6720
+          "decodedBytes": 6048
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/lightTank/wagon@3x.webp",
-          "backingWidth": 45,
+          "backingWidth": 41,
           "backingHeight": 84,
-          "decodedBytes": 15120
+          "decodedBytes": 13776
         }
       ]
     },

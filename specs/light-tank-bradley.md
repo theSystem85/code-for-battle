@@ -30,5 +30,6 @@ Sustained DPS is 6/s against 5/s for Tank V1, but the low per-round damage is st
 ## Rendering
 - Layered hull/turret/barrel sprites (`public/images/map/units/lightTank_{wagon,turret,barrel}.webp`) rendered by the tank image renderer with runtime rotation caching (64 steps) and @1x/@2x/@3x prepared variants chosen by device pixel ratio.
 - Prepared target: 0.88 tiles on the long axis (smaller than the 1-tile main battle tanks).
+- Map sprite: solid desert tan paint, no camouflage, boxy Bradley turret with TOW launcher on the left; turret length about 43% of the hull length, pivot at the turret-ring centre.
 - Leaves track marks; uses tank wreck rendering; desert-camo build button `public/images/sidebar/light_tank.webp`.
 - Firing reuses the tank shot sound at a lower volume (0.3).

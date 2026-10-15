@@ -3,7 +3,7 @@
 from PIL import Image, ImageFilter
 import numpy as np
 from scipy import ndimage
-im=np.asarray(Image.open('docs/asset-sources/light-tank-bradley-spritesheet.jpg').convert('RGB')).astype(float)
+im=np.asarray(Image.open('docs/asset-sources/light-tank-bradley-plain-spritesheet.jpg').convert('RGB')).astype(float)
 bg=np.median(np.concatenate([im[:20].reshape(-1,3),im[-20:].reshape(-1,3)]),0); print('bg',bg)
 r,g,b=im[...,0],im[...,1],im[...,2]
 # blueness: how much b exceeds max(r,g)
@@ -24,7 +24,8 @@ for name,(sl,i) in zip(['wagon','turret','barrel'],objs):
   aa=np.clip(al,0.05,1)[...,None]
   rgb=np.where((al<0.999)[...,None],(im-(1-aa)*bg)/aa,im).clip(0,255)
   # despill: clamp blue to max(r,g)+small
-  rgb[...,2]=np.minimum(rgb[...,2],np.maximum(rgb[...,0],rgb[...,1])+6)
+  rgb[...,1]=np.minimum(rgb[...,1],rgb[...,0]+4)
+  rgb[...,2]=np.minimum(rgb[...,2],rgb[...,1]*0.85+6)  # tan paint: blue < green < red; kills teal/blue fringe
   ys,xs=np.where(al>0.02); y0,y1,x0,x1=ys.min(),ys.max()+1,xs.min(),xs.max()+1
   out=np.dstack([rgb,al*255])[y0:y1,x0:x1].clip(0,255).astype(np.uint8)
   Image.fromarray(out,'RGBA').save(f'raw_{name}.png'); print(name,out.shape,(x0,y0))
