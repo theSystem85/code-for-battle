@@ -867,6 +867,7 @@ describe('six-ship naval fleet systems', () => {
       battleship.batteries[name].direction = name !== 'aftOuter' ? 0 : Math.PI
     })
 
+    const ammunitionBeforeBroadside = battleship.ammunition
     const bullets = []
     updateNavalFleet([battleship, ...targets], bullets, createMap(), { occupancyMap: [], explosions: [] }, 4000, 16)
     expect(bullets.map(bullet => bullet.id)).toEqual([expect.stringContaining('-foreOuter-0-')])
@@ -881,6 +882,9 @@ describe('six-ship naval fleet systems', () => {
       expect(bullets.filter(bullet => bullet.id.includes(`-${name}-`))).toHaveLength(3)
     })
     expect(bullets).toHaveLength(12)
+    expect(bullets.every(bullet => bullet.baseDamage === 52)).toBe(true)
+    // Four three-shell salvos cost 2 ammunition each.
+    expect(battleship.ammunition).toBe(ammunitionBeforeBroadside - 8)
 
     updateNavalFleet([battleship, ...targets], bullets, createMap(), { occupancyMap: [], explosions: [] }, 11999, 16)
     expect(bullets).toHaveLength(12)
