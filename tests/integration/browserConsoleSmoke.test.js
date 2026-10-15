@@ -77,8 +77,18 @@ describe('Browser smoke test', () => {
     vi.stubGlobal('fetch', createFetchMock())
 
     try {
+      const { Game } = await import('../../src/game/gameOrchestrator.js')
+      const initializeGame = Game.prototype.initializeGame
+      let gameStartup
+      vi.spyOn(Game.prototype, 'initializeGame').mockImplementation(function(...args) {
+        gameStartup = initializeGame.apply(this, args)
+        return gameStartup
+      })
+
       const { initializeApp } = await import('../../src/main.js')
       await initializeApp()
+      // Construction starts async initialization; keep the DOM alive until it finishes.
+      await gameStartup
 
       await waitFor(
         () => Boolean(window.gameInstance),
@@ -91,6 +101,9 @@ describe('Browser smoke test', () => {
       expect(window.gameInstance).toBeTruthy()
       expect(startupFailures, `Startup failures detected:\n${startupFailures.join('\n')}`).toHaveLength(0)
     } finally {
+      window.gameInstance?.gameLoop?.stop()
+      const { stopBootProgressPaint } = await import('../../src/ui/loadingScreen.js')
+      stopBootProgressPaint()
       window.removeEventListener('error', handleWindowError)
       window.removeEventListener('unhandledrejection', handleUnhandledRejection)
     }
