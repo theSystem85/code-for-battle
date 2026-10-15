@@ -1,3 +1,5 @@
+import { APP_VERSION } from '../../version.js'
+import { gameState } from '../../gameState.js'
 import { prepareFactoryExitSprites } from '../factoryExitRenderer.js'
 import { TILE_SIZE } from '../../config.js'
 import { bootMark } from '../../ui/bootTiming.js'
@@ -5,6 +7,7 @@ import { reportBootSprites } from '../../ui/bootProgress.js'
 import { RenderByteBudget, RENDER_BYTE_OWNERS } from './renderByteBudget.js'
 import { TerrainPreparationPipeline } from './terrainPreparation.js'
 import {
+  PREPARED_SPRITE_MANIFEST_URL,
   getPreparedSpriteState,
   prepareSpriteRegistry,
   publishPreparedSpriteRegistry
@@ -37,6 +40,17 @@ export function getTerrainPreparationPipeline() {
 export function bindRenderingDensityPreparation() {
   if (densityListenerBound || typeof document === 'undefined') return
   densityListenerBound = true
+  const watchResolution = () => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const query = window.matchMedia(`(resolution: ${window.devicePixelRatio}dppx)`)
+    query.addEventListener('change', () => {
+      document.dispatchEvent(new CustomEvent('canvas-density-changed', {
+        detail: { rawPixelRatio: window.devicePixelRatio }
+      }))
+      watchResolution()
+    }, { once: true })
+  }
+  watchResolution()
   document.addEventListener('canvas-density-changed', event => {
     const density = resolveSpriteDensityFromEvent(event.detail)
     if (!Number.isFinite(density) || density <= 0) return
@@ -71,6 +85,7 @@ export async function prepareRuntimeSprites({
   signal,
   onProgress
 } = {}) {
+  density = Math.min(3, Math.max(1, Math.ceil(density)))
   bindRenderingDensityPreparation()
   const state = getPreparedSpriteState()
   if (state.ready && Math.abs((state.density || 0) - density) < 0.0001) {
@@ -93,18 +108,33 @@ export async function prepareRuntimeSprites({
 }
 
 async function prepareAndPublishSprites({ density, signal, onProgress }) {
+  const generation = ++spriteAssetGeneration
   const prepared = await prepareSpriteRegistry({
     density,
-    assetGeneration: ++spriteAssetGeneration,
+    assetGeneration: generation,
+    manifestUrl: `${PREPARED_SPRITE_MANIFEST_URL}?v=${APP_VERSION}`,
     signal,
-    onProgress
+    onProgress,
+    deferUnits: true,
+    initialUnitTypes: (gameState.units || []).map(unit => unit.type)
   })
+  if (generation !== spriteAssetGeneration) {
+    prepared.registry.dispose()
+    return getPreparedSpriteState()
+  }
   prepareFactoryExitSprites(prepared.registry, prepared.manifest.assetVersion)
-  publishPreparedSpriteRegistry(prepared)
   lastPreparedDensity = density
   // Rotated tank frames are built from the freshly published density variant in idle time.
   resetTankRotationCache()
-  startTankRotationCache()
+  const preloadRemaining = prepared.preloadRemaining
+  let rotationScheduled = false
+  prepared.preloadRemaining = priorityTypes => preloadRemaining(priorityTypes).then(() => {
+    if (!rotationScheduled && !prepared.registry.disposed) {
+      rotationScheduled = true
+      startTankRotationCache()
+    }
+  })
+  publishPreparedSpriteRegistry(prepared)
   return prepared
 }
 

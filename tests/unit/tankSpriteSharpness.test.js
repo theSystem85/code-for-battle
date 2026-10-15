@@ -167,14 +167,14 @@ describe('DPR variant selection', () => {
   }
 
   it('fetches only the prepared variant matching the device pixel ratio', async() => {
-    expect(await prepareWith(1)).toEqual(['/images/prepared/unit/tankV1/wagon@1x.webp'])
-    expect(await prepareWith(2)).toEqual(['/images/prepared/unit/tankV1/wagon@2x.webp'])
-    expect(await prepareWith(3)).toEqual(['/images/prepared/unit/tankV1/wagon@3x.webp'])
+    expect(await prepareWith(1)).toEqual(['/images/prepared/unit/tankV1/wagon@1x.webp?v=v-test'])
+    expect(await prepareWith(2)).toEqual(['/images/prepared/unit/tankV1/wagon@2x.webp?v=v-test'])
+    expect(await prepareWith(3)).toEqual(['/images/prepared/unit/tankV1/wagon@3x.webp?v=v-test'])
   })
 
   it('uses the nearest higher prepared variant (never the full-size source) for fractional DPRs', async() => {
-    expect(await prepareWith(2.625)).toEqual(['/images/prepared/unit/tankV1/wagon@3x.webp'])
-    expect(await prepareWith(1.5)).toEqual(['/images/prepared/unit/tankV1/wagon@2x.webp'])
+    expect(await prepareWith(2.625)).toEqual(['/images/prepared/unit/tankV1/wagon@3x.webp?v=v-test'])
+    expect(await prepareWith(1.5)).toEqual(['/images/prepared/unit/tankV1/wagon@2x.webp?v=v-test'])
   })
 
   it('ships @1x/@2x/@3x prepared variants for every tank part', async() => {

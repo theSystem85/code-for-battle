@@ -1,3 +1,4 @@
+import { withTimeout } from '../utils/assetLoading.js'
 import { factoryExitVisibility } from '../game/factoryExit.js'
 import { renderFactoryInterior, renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
 // rendering/renderer.js
@@ -15,24 +16,11 @@ import { UIRenderer } from './uiRenderer.js'
 import { MinimapRenderer } from './minimapRenderer.js'
 import { HarvesterHUD } from '../ui/harvesterHUD.js'
 import { DangerZoneRenderer } from './dangerZoneRenderer.js'
-import { preloadTankImages } from './tankImageRenderer.js'
-import { preloadHarvesterImage } from './harvesterImageRenderer.js'
-import { preloadRocketTankImage } from './rocketTankImageRenderer.js'
-import { preloadAmbulanceImage } from './ambulanceImageRenderer.js'
-import { preloadTankerTruckImage } from './tankerTruckImageRenderer.js'
-import { preloadRecoveryTankImage } from './recoveryTankImageRenderer.js'
-import { preloadAmmunitionTruckImage } from './ammunitionTruckImageRenderer.js'
-import { preloadMineLayerImage } from './mineLayerImageRenderer.js'
-import { preloadMineSweeperImage } from './mineSweeperImageRenderer.js'
-import { preloadHowitzerImage } from './howitzerImageRenderer.js'
-import { preloadDestroyerImage } from './destroyerImageRenderer.js'
-import { preloadSupplyShipImage } from './supplyShipImageRenderer.js'
 import { WreckRenderer } from './wreckRenderer.js'
 import { TrackMarksRenderer } from './trackMarksRenderer.js'
 import { renderMineIndicators, renderMineDeploymentPreview, renderSweepAreaPreview, renderFreeformSweepPreview } from './mineRenderer.js'
 import { GameWebGLRenderer } from './webglRenderer.js'
 import { GameWebGPURenderer } from './webgpuRenderer.js'
-import { bootMark } from '../ui/bootTiming.js'
 import { prewarmDestructionExplosionTexture } from '../game/spriteSheetEffects.js'
 import { gameState } from '../gameState.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
@@ -384,188 +372,29 @@ export class Renderer {
 
   // Initialize texture loading
   preloadTextures(callback, onProgress) {
-    // Load both tile textures and tank images in parallel
-    let texturesLoaded = false
-    let tankImagesLoaded = false
-    let harvesterLoaded = false
-    let rocketTankLoaded = false
-    let ambulanceLoaded = false
-    let tankerLoaded = false
-    let recoveryTankLoaded = false
-    let ammunitionLoaded = false
-    let howitzerLoaded = false
-    let mineLayerLoaded = false
-    let mineSweeperLoaded = false
-    let destroyerLoaded = false
-    let supplyShipLoaded = false
-
-    let spritesPrepared = false
-    let effectsPrepared = false
-
-    const checkAllLoaded = () => {
-      if (typeof onProgress === 'function') {
-        const loadedCount = [
-          texturesLoaded,
-          tankImagesLoaded,
-          harvesterLoaded,
-          rocketTankLoaded,
-          ambulanceLoaded,
-          tankerLoaded,
-          recoveryTankLoaded,
-          ammunitionLoaded,
-          howitzerLoaded,
-          mineLayerLoaded,
-          mineSweeperLoaded,
-          destroyerLoaded,
-          supplyShipLoaded,
-          spritesPrepared,
-          effectsPrepared
-        ].filter(Boolean).length
-        onProgress(loadedCount / 15)
-        bootMark('texture-flags', {
-          loadedCount,
-          texturesLoaded,
-          spritesPrepared,
-          tankImagesLoaded
-        })
-      }
-      if (texturesLoaded && tankImagesLoaded && harvesterLoaded && rocketTankLoaded && ambulanceLoaded && tankerLoaded && recoveryTankLoaded && ammunitionLoaded && howitzerLoaded && mineLayerLoaded && mineSweeperLoaded && destroyerLoaded && supplyShipLoaded && spritesPrepared && effectsPrepared) {
-        this.wreckRenderer.prepareCaches?.(
-          this.buildingRenderer.preparedSpriteRegistry?.density ||
-          (typeof window !== 'undefined' ? window.devicePixelRatio : 1)
-        )
-        if (callback) callback()
-      }
-    }
-
-    bindRenderingDensityPreparation()
-    // Independent readiness flags: failure of sprite preparation must not
-    // publish readiness while an explosion worker is still processing pixels.
-    prewarmDestructionExplosionTexture(gameState).then(() => {
-      effectsPrepared = true
-      checkAllLoaded()
-    }).catch(error => {
-      window.logger?.warn?.('Explosion sheet unavailable', error)
-      // Required effects never report readiness after a decode/budget error.
-      if (callback) callback(error)
-    })
-    if (!this.preparedSpritesListenerBound && typeof document !== 'undefined') {
-      // Density swaps (DPR change) publish a new registry; keep the renderers pointed at it.
-      this.preparedSpritesListenerBound = true
+    if (!this.assetPreloadPromise) {
+      bindRenderingDensityPreparation()
+      this.assetPreloadPromise = Promise.allSettled([
+        this.textureManager.preloadAllTextures(),
+        prepareRuntimeSprites().then(prepared => {
+          if (prepared?.registry) this.setPreparedSpriteRegistry(prepared.registry)
+        }),
+        withTimeout(prewarmDestructionExplosionTexture(gameState), 10000, 'Explosion preparation')
+      ]).then(results => {
+        for (const result of results) {
+          if (result.status === 'rejected') window.logger?.warn?.('Optional asset preparation failed', result.reason)
+        }
+        this.wreckRenderer.prepareCaches?.(window.devicePixelRatio || 1)
+      }).catch(error => {
+        window.logger?.warn?.('Optional rendering caches unavailable; using fallback', error)
+      })
       document.addEventListener('prepared-sprites-published', event => {
         if (event.detail?.registry) this.setPreparedSpriteRegistry(event.detail.registry)
       })
     }
-    prepareRuntimeSprites().then(prepared => {
-      if (prepared?.registry) this.buildingRenderer.setPreparedSpriteRegistry(prepared.registry)
-    }).catch(error => {
-      if (typeof window !== 'undefined') window.logger?.warn?.('Prepared sprites unavailable, using source images', error)
-    }).finally(() => {
-      spritesPrepared = true
-      // Tank parts come from the prepared density variant; the full-size source images are
-      // only fetched when sprite preparation failed.
-      preloadTankImages((success) => {
-        if (!success) {
-          window.logger.warn('Tank images failed to load, falling back to original rendering')
-        }
-        tankImagesLoaded = true
-        checkAllLoaded()
-      })
-    })
-
-    // Load tile textures
-    this.textureManager.preloadAllTextures(() => {
-      texturesLoaded = true
-      checkAllLoaded()
-    })
-
-
-    preloadHarvesterImage((success) => {
-      if (!success) {
-        window.logger.warn('Harvester image failed to load')
-      }
-      harvesterLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadRocketTankImage((success) => {
-      if (!success) {
-        window.logger.warn('Rocket tank image failed to load')
-      }
-      rocketTankLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadAmbulanceImage((success) => {
-      if (!success) {
-        window.logger.warn('Ambulance image failed to load')
-      }
-      ambulanceLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadTankerTruckImage((success) => {
-      if (!success) {
-        window.logger.warn('Tanker truck image failed to load')
-      }
-      tankerLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadRecoveryTankImage((success) => {
-      if (!success) {
-        window.logger.warn('Recovery tank image failed to load')
-      }
-      recoveryTankLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadAmmunitionTruckImage((success) => {
-      if (!success) {
-        window.logger.warn('Ammunition truck image failed to load')
-      }
-      ammunitionLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadHowitzerImage((success) => {
-      if (!success) {
-        window.logger.warn('Howitzer image failed to load')
-      }
-      howitzerLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadDestroyerImage((success) => {
-      if (!success) {
-        window.logger.warn('Destroyer image failed to load')
-      }
-      destroyerLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadSupplyShipImage((success) => {
-      if (!success) {
-        window.logger.warn('Supply ship image failed to load')
-      }
-      supplyShipLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadMineLayerImage((success) => {
-      if (!success) {
-        window.logger.warn('Mine layer image failed to load')
-      }
-      mineLayerLoaded = true
-      checkAllLoaded()
-    })
-
-    preloadMineSweeperImage((success) => {
-      if (!success) {
-        window.logger.warn('Mine sweeper image failed to load')
-      }
-      mineSweeperLoaded = true
-      checkAllLoaded()
+    this.assetPreloadPromise.then(() => {
+      onProgress?.(1)
+      callback?.()
     })
   }
 

@@ -1,3 +1,4 @@
+import { fetchAssetJson } from './utils/assetLoading.js'
 import { getStoredItem, initializeGameStorage, removeStoredItem, setStoredItem } from './storage/indexedDbStorage.js'
 import { resolveUiLocale, uiText } from './ui/uiText.js'
 import {
@@ -223,12 +224,7 @@ async function loadOverridesFromFile() {
   }
 
   try {
-    const response = await fetch(EXTERNAL_OVERRIDE_PATH, { cache: 'no-store' })
-    if (!response.ok) {
-      return
-    }
-
-    const data = await response.json()
+    const data = await fetchAssetJson(EXTERNAL_OVERRIDE_PATH)
     applyOverridesFromObject(data)
   } catch (err) {
     window.logger.warn('Failed to load config overrides file:', err)

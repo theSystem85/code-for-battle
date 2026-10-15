@@ -1,3 +1,4 @@
+import { loadPreparedImage } from './prepared/imagePreparation.js'
 // turretImageRenderer.js
 // Renders turret buildings using separate base and top image assets
 
@@ -46,7 +47,7 @@ export function preloadTurretImages(callback, onProgress) {
   function onImageComplete() {
     loadedCount++
     reportProgress(totalImages === 0 ? 1 : loadedCount / totalImages)
-    if (loadedCount + errorCount >= totalImages) {
+    if (loadedCount >= totalImages) {
       turretImagesPreloaded = true
       window.logger(`Turret images loaded: ${loadedCount}/${totalImages}`)
       if (callback) callback(errorCount === 0)
@@ -66,19 +67,18 @@ export function preloadTurretImages(callback, onProgress) {
     // Initialize cache for this turret type
     turretImageCache[turretType] = {}
 
-    // Load base image
-    const baseImg = new Image()
-    baseImg.onload = onImageComplete
-    baseImg.onerror = () => onImageError(`images/map/buildings/${config.base}`)
-    baseImg.src = `images/map/buildings/${config.base}`
-    turretImageCache[turretType].base = baseImg
-
-    // Load top image
-    const topImg = new Image()
-    topImg.onload = onImageComplete
-    topImg.onerror = () => onImageError(`images/map/buildings/${config.top}`)
-    topImg.src = `images/map/buildings/${config.top}`
-    turretImageCache[turretType].top = topImg
+    if (getPreparedBuildingLayer(turretType, 'base') && getPreparedBuildingLayer(turretType, 'top')) {
+      onImageComplete()
+      onImageComplete()
+      return
+    }
+    for (const layer of ['base', 'top']) {
+      const path = `images/map/buildings/${config[layer]}`
+      loadPreparedImage(path).then(image => {
+        turretImageCache[turretType][layer] = image
+        onImageComplete()
+      }, () => onImageError(path))
+    }
   })
 
   // Handle case where no turret types are configured
@@ -95,6 +95,7 @@ export function preloadTurretImages(callback, onProgress) {
  * @returns {boolean} True if turret images are available and loaded
  */
 export function turretImagesAvailable(buildingType) {
+  if (getPreparedBuildingLayer(buildingType, 'base') && getPreparedBuildingLayer(buildingType, 'top')) return true
   return turretImagesPreloaded &&
          turretImageCache[buildingType] &&
          turretImageCache[buildingType].base &&

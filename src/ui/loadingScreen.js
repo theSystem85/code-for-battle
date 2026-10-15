@@ -175,8 +175,12 @@ export function hideLoadingScreen(sessionId = null) {
 
 export function waitForLoadingPaint() {
   return new Promise((resolve) => {
+    const timer = setTimeout(resolve, 100)
     requestAnimationFrame(() => {
-      requestAnimationFrame(() => resolve())
+      requestAnimationFrame(() => {
+        clearTimeout(timer)
+        resolve()
+      })
     })
   })
 }

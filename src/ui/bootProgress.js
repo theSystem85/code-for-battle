@@ -323,7 +323,11 @@ export function resetBootProgressForTests() {
 export function yieldBootPaint() {
   if (!activeBootProgress || activeBootProgress.isComplete()) return Promise.resolve()
   return new Promise(resolve => {
-    requestAnimationFrame(() => resolve())
+    const timer = setTimeout(resolve, 100)
+    requestAnimationFrame(() => {
+      clearTimeout(timer)
+      resolve()
+    })
   })
 }
 
@@ -399,14 +403,20 @@ export function waitForBootPhase(id, timeoutMs = 20000) {
   const boot = activeBootProgress
   if (!boot || boot.isPhaseDone(id) || boot.isComplete()) return Promise.resolve()
   return new Promise(resolve => {
+    const timer = setTimeout(() => {
+      activeBootProgress?.finish(id)
+      resolve()
+    }, timeoutMs)
     const started = performance.now()
     const tick = () => {
       if (!activeBootProgress || activeBootProgress.isPhaseDone(id) || activeBootProgress.isComplete()) {
+        clearTimeout(timer)
         resolve()
         return
       }
       if (performance.now() - started >= timeoutMs) {
         activeBootProgress.finish(id)
+        clearTimeout(timer)
         resolve()
         return
       }

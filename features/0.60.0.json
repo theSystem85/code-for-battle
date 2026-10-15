@@ -1,0 +1,10 @@
+{
+  "version": "0.60.0",
+  "features": [],
+  "improvements": [
+    "Faster startup with idle unit image loading and device-matched sprites."
+  ],
+  "bugfixes": [
+    "Recover from stalled or missing assets while loading."
+  ]
+}

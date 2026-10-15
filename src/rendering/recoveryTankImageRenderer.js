@@ -17,6 +17,7 @@ export function preloadRecoveryTankImage(callback) {
 }
 
 export function isRecoveryTankImageLoaded() {
+  if (getPreparedSprite('unit:recoveryTank:base')) return true
   return loaded && image && image.complete
 }
 

@@ -30,6 +30,7 @@ export function preloadMineSweeperImage(callback) {
 }
 
 export function isMineSweeperImageLoaded() {
+  if (getPreparedSprite('unit:mineSweeper:base')) return true
   return mineSweeperLoaded && mineSweeperImg && mineSweeperImg.complete
 }
 

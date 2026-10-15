@@ -1,3 +1,4 @@
+import { fetchAssetJson } from '../utils/assetLoading.js'
 import { gameState } from '../gameState.js'
 import { AnimationSheetPreparation } from '../rendering/animationSheetPreparation.js'
 import { getMapRenderer, getTextureManager } from '../rendering.js'
@@ -423,12 +424,9 @@ function initSseImageConverterControls() {
 
 async function loadStaticSheetPaths() {
   try {
-    const response = await fetch(SSE_SHEETS_INDEX, { cache: 'no-store' })
-    if (response.ok) {
-      const parsed = await response.json()
-      if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
-        return parsed.sheets.filter(path => path !== RETIRED_MAJOR_SPRITE_SHEET_PATH)
-      }
+    const parsed = await fetchAssetJson(SSE_SHEETS_INDEX)
+    if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
+      return parsed.sheets.filter(path => typeof path === 'string' && path !== RETIRED_MAJOR_SPRITE_SHEET_PATH)
     }
   } catch (err) {
     window.logger.warn('Failed to load sprite sheet index:', err)
@@ -447,10 +445,7 @@ async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {
 
   const sidecarPath = buildMetaPath(sheetPath)
   try {
-    const res = await fetch(sidecarPath, { cache: 'no-store' })
-    if (res.ok) {
-      return normalizeMetadataForSheet(sheetPath, await res.json())
-    }
+    return normalizeMetadataForSheet(sheetPath, await fetchAssetJson(sidecarPath))
   } catch {
     // ignored: missing sidecar file
   }
@@ -496,9 +491,7 @@ function updateIntegratedSheetSelectionVisibility() {
 
 async function loadDefaultAnimationMetadata() {
   try {
-    const response = await fetch(DEFAULT_ANIMATION_METADATA_PATH, { cache: 'no-store' })
-    if (!response.ok) return null
-    const parsed = await response.json()
+    const parsed = await fetchAssetJson(DEFAULT_ANIMATION_METADATA_PATH)
     return normalizeAnimationMetadata(parsed)
   } catch (err) {
     window.logger.warn('Failed to load default explosion animation metadata:', err)
@@ -670,7 +663,8 @@ export function initMapEditorControls() {
     const storedAppliedMetadata = getStoredItem(SSE_APPLIED_METADATA_STORAGE_KEY)
     if (storedAppliedMetadata) {
       const parsed = JSON.parse(storedAppliedMetadata)
-      if (parsed && typeof parsed === 'object') {
+      if (parsed && typeof parsed === 'object' && hasTaggedTiles(parsed) &&
+        typeof parsed.sheetPath === 'string' && DEFAULT_SSE_SHEETS.includes(parsed.sheetPath)) {
         gameState.activeSpriteSheetMetadata = parsed
         gameState.activeSpriteSheetPath = parsed.sheetPath || gameState.activeSpriteSheetPath || null
         cacheRuntimeIntegratedMetadata(parsed)

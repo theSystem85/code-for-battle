@@ -30,6 +30,7 @@ export function preloadMineLayerImage(callback) {
 }
 
 export function isMineLayerImageLoaded() {
+  if (getPreparedSprite('unit:mineLayer:base')) return true
   return mineLayerLoaded && mineLayerImg && mineLayerImg.complete
 }
 

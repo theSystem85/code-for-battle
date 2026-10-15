@@ -1,3 +1,4 @@
+import { withTimeout } from '../utils/assetLoading.js'
 const DB_NAME = 'code-for-battle-storage'
 const DB_VERSION = 1
 const STORE_NAME = 'keyValue'
@@ -9,6 +10,7 @@ const pendingWrites = new Set()
 let databasePromise = null
 let initialized = false
 let initializePromise = null
+let hydrationAbandoned = false
 
 function getLogger() {
   return globalThis.window?.logger || console
@@ -104,6 +106,7 @@ async function loadIndexedDbCache() {
   await runStoreOperation('readonly', store => {
     const request = store.getAll()
     request.onsuccess = () => {
+      if (hydrationAbandoned) return
       cache.clear()
       ;(request.result || []).forEach(entry => {
         if (entry?.key) {
@@ -185,8 +188,13 @@ export function initializeGameStorage() {
 
   if (!initializePromise) {
     initializePromise = (async() => {
-      await loadIndexedDbCache()
-      await migrateLegacyStorage()
+      try {
+        await withTimeout(loadIndexedDbCache(), 3000, 'Stored settings')
+        await withTimeout(migrateLegacyStorage(), 3000, 'Settings migration')
+      } catch (error) {
+        hydrationAbandoned = true
+        getLogger().warn?.('Using default settings because storage is unavailable', error)
+      }
       initialized = true
     })()
   }
@@ -259,6 +267,7 @@ export async function flushGameStorageWrites() {
 }
 
 export function resetGameStorageForTests(entries = {}) {
+  hydrationAbandoned = false
   cache.clear()
   Object.entries(entries).forEach(([key, value]) => {
     cache.set(key, String(value))

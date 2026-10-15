@@ -33,6 +33,7 @@ export function preloadHarvesterImage(callback) {
 }
 
 export function isHarvesterImageLoaded() {
+  if (getPreparedSprite('unit:harvester:base')) return true
   return harvesterLoaded && harvesterImg && harvesterImg.complete
 }
 

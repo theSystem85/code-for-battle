@@ -91,6 +91,7 @@ export function preloadHowitzerImage(callback) {
 }
 
 export function isHowitzerImageLoaded() {
+  if (getPreparedSprite('unit:howitzer:base') && getPreparedSprite('unit:howitzer:barrel')) return true
   return (
     howitzerLoaded &&
     howitzerBaseImg && howitzerBaseImg.complete &&
@@ -101,7 +102,7 @@ export function isHowitzerImageLoaded() {
 export function renderHowitzerWithImage(ctx, unit, centerX, centerY) {
   const preparedBase = getPreparedSprite('unit:howitzer:base')
   const preparedBarrel = getPreparedSprite('unit:howitzer:barrel')
-  if (!preparedBase && !isHowitzerImageLoaded()) return false
+  if ((!preparedBase || !preparedBarrel) && !isHowitzerImageLoaded()) return false
 
   const now = getSimulationTime(gameState)
   ctx.save()
