@@ -1853,6 +1853,15 @@ body.save-game-editor-open { overflow: hidden; }
   text-decoration: underline;
 }
 
+.sidebar-story-replay {
+  display: block;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .multiplayer-settings--offline {
   position: relative;
 }

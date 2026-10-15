@@ -43,6 +43,7 @@
     <a class="landing-brand" href="/" data-i18n="landing.hero.title"></a>
     <div class="landing-bar-nav">
       <nav class="landing-section-nav" data-i18n-aria="landing.nav.sectionsLabel">
+        <a href="#story" data-i18n="landing.nav.story"></a>
         <a href="#gallery" data-i18n="landing.nav.gallery"></a>
         <a href="#features" data-i18n="landing.nav.features"></a>
         <a href="#automation" data-i18n="landing.nav.automation"></a>
@@ -68,7 +69,8 @@
   <main id="content" class="landing-main">
     <section class="hero">
       <div>
-        <p class="eyebrow" data-i18n="landing.hero.eyebrow"></p>
+        <p class="eyebrow" data-i18n="landing.story.dateline"></p>
+        <p class="hero-headline" data-i18n="landing.story.headline"></p>
         <h1 data-i18n="landing.hero.title"></h1>
         <p class="tagline" data-i18n="landing.hero.tagline"></p>
         <p class="lead" data-i18n="landing.hero.lead"></p>
@@ -85,15 +87,48 @@
           <li><img src="/images/sidebar/tesla_coil.webp" alt="" width="64" height="64"></li>
         </ul>
       </div>
-      <figure class="hero-frame">
-        <img
-          src="/images/docs/GamePlayDesktop.webp"
-          width="1254"
-          height="784"
-          data-i18n-alt="landing.gallery.desktop.alt"
-          fetchpriority="high"
-          decoding="async">
+      <figure class="hero-frame hero-frame--paper">
+        <a href="/images/story/global-herald-2038.webp" target="_blank" rel="noopener">
+          <img
+            src="/images/story/global-herald-2038-960.webp"
+            srcset="/images/story/global-herald-2038-960.webp 960w, /images/story/global-herald-2038.webp 1536w"
+            sizes="(max-width: 900px) 100vw, 560px"
+            width="1536"
+            height="1024"
+            alt=""
+            data-i18n-alt="landing.story.imageAlt"
+            fetchpriority="high"
+            decoding="async">
+        </a>
       </figure>
+    </section>
+
+    <section id="story" class="landing-section story">
+      <h2 data-i18n="landing.story.title"></h2>
+      <p class="section-lead" data-i18n="landing.story.lead"></p>
+      <div class="story-grid">
+        <article class="hud-panel story-card">
+          <h3 data-i18n="landing.story.kyronite.title"></h3>
+          <p data-i18n="landing.story.kyronite.body"></p>
+        </article>
+        <article class="hud-panel story-card">
+          <h3 data-i18n="landing.story.machines.title"></h3>
+          <p data-i18n="landing.story.machines.body"></p>
+        </article>
+        <article class="hud-panel story-card">
+          <h3 data-i18n="landing.story.fronts.title"></h3>
+          <p data-i18n="landing.story.fronts.body"></p>
+        </article>
+      </div>
+      <div class="news-ticker" role="marquee" data-i18n-aria="landing.story.tickerLabel">
+        <div class="news-ticker__track">
+          <span data-i18n="landing.story.ticker"></span>
+          <span aria-hidden="true" data-i18n="landing.story.ticker"></span>
+        </div>
+      </div>
+      <div class="hero-actions">
+        <a class="landing-cta" href="/" data-play-link data-i18n="landing.story.cta"></a>
+      </div>
     </section>
 
     <section id="gallery" class="landing-section">

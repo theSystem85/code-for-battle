@@ -32,3 +32,8 @@ The three situational tracks were generated on the owner's ElevenLabs Starter pl
 - Source: AI-generated on 2026-10-15 with the OpenAI image generation tool through the Codex CLI (ChatGPT account of the project owner), in one generation from the prompt in `docs/asset-sources/tank-v1-leopard-prompt.txt`, with the V2/V3 sprite sheet as style reference. The original sprite sheet is stored in `docs/asset-sources/tank-v1-leopard-spritesheet.webp`.
 - Post-processing: background keying, cropping and resizing to the V2/V3 part sizes by the project.
 - The previous V1 barrel is kept unchanged as `public/images/map/units/howitzer_barrel.webp` for the howitzer.
+
+## Story newspaper and narration
+
+- Image: `public/images/story/global-herald-2038.webp` (1536×1024) and `global-herald-2038-960.webp`. Source: front-page artwork supplied by the project owner (fictional "The Global Herald", June 12 2038). The project edited it in place with Pillow, without regenerating: the UN emblem, the "UN Secretary-General" attribution and "The United Nations" mention were replaced with the fictional Accord Council (original programmatic emblem, Source Serif Pro / Source Sans Pro text, SIL OFL fonts).
+- Narration: `public/sound/story/herald_vo_01.mp3` … `herald_vo_08.mp3`, generated on 2026-10-15 with ElevenLabs text-to-speech (model `eleven_v4`, library voice "Atlas Morgan - Narration & News", voice id `08NAVeqzFfSo6Aw5128W`) on the owner's ElevenLabs Starter plan, which includes a commercial license. Loudness-normalized to -16 LUFS, mono 96 kbps by the project. Script: `src/story/storyIntroSegments.js`.

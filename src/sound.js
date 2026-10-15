@@ -530,9 +530,23 @@ function getMusicGain(element) {
   return node
 }
 
+// Narration (story intro) ducks the music instead of stopping it.
+let musicDuck = 1
+
+export function setMusicDuck(factor = 1) {
+  const next = Number.isFinite(factor) ? Math.max(0, Math.min(1, factor)) : 1
+  if (next === musicDuck) return
+  musicDuck = next
+  applyMusicVolumes()
+}
+
+export function getMusicDuck() {
+  return musicDuck
+}
+
 function setMusicLevel(element, level) {
   if (!element) return
-  const value = Math.max(0, Math.min(1, level * masterVolume))
+  const value = Math.max(0, Math.min(1, level * masterVolume * musicDuck))
   const gain = getMusicGain(element)
   if (gain) {
     const now = audioContext.currentTime

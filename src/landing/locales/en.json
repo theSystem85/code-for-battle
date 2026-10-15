@@ -22,7 +22,8 @@
       "github": "View on GitHub",
       "githubShort": "GitHub",
       "automation": "Automation",
-      "controls": "Controls"
+      "controls": "Controls",
+      "story": "Story"
     },
     "hero": {
       "eyebrow": "Browser real-time strategy",
@@ -293,6 +294,28 @@
       "settings": "Use Open control settings in the tutorial for your current Key Bindings or Controllers profile. Default examples are a starting point; saved mappings take precedence.",
       "mac": "Mac trackpad: if swiping navigates browser history, turn off or remap Swipe between pages in System Settings → Trackpad → More Gestures. Check Natural scrolling under Scroll & Zoom for direction. Some system/browser gestures never reach the game; use secondary-click hold-and-drag.",
       "guide": "Control guide and Mac setup checks"
+    },
+    "story": {
+      "dateline": "The Global Herald · June 12, 2038",
+      "headline": "War erupts over mysterious blue crystals",
+      "imageAlt": "The Global Herald front page from June 12, 2038: War erupts over mysterious blue crystals",
+      "title": "How the war began",
+      "lead": "Kyronite, a newly discovered blue crystal, lets factories build AI-controlled weapons in minutes. Within weeks every major power was fighting for the deposits.",
+      "kyronite": {
+        "title": "The power of Kyronite",
+        "body": "Energized Kyronite reorganizes matter at the molecular level and speeds up manufacturing by up to 98%. Whoever controls the fields controls the war."
+      },
+      "machines": {
+        "title": "AI war machines",
+        "body": "Factories next to crystal sites turn out AI tanks, drone swarms and robotic infantry around the clock. In Code for Battle you program them yourself."
+      },
+      "fronts": {
+        "title": "Front lines across the globe",
+        "body": "Eastern Europe, Central Asia, the South Pacific and Africa: the fight for Kyronite has spread to every continent."
+      },
+      "tickerLabel": "Breaking news",
+      "ticker": "Markets collapse as war spreads • Refugee crisis deepens • Cyberattacks targeting crystal infrastructure increase • ",
+      "cta": "Play now"
     }
   }
 }

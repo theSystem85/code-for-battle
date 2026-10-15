@@ -1,4 +1,5 @@
 import { gameState } from '../gameState.js'
+import { STORY_INTRO_CLOSED_EVENT, isStoryIntroOpen } from '../story/storyIntro.js'
 import { productionQueue } from '../productionQueue.js'
 import { buildingData } from '../buildings.js'
 import { selectedUnits } from '../inputHandler.js'
@@ -157,7 +158,10 @@ class TutorialSystem {
 
     // Only start tutorial if enabled and not completed
     if (this.settings.showTutorial && !this.progress.completed) {
-      setTimeout(() => this.start({ resume: true }), 600)
+      const begin = () => setTimeout(() => this.start({ resume: true }), 600)
+      // Never talk over the story intro narration: start once it closes.
+      if (isStoryIntroOpen()) window.addEventListener(STORY_INTRO_CLOSED_EVENT, begin, { once: true })
+      else begin()
     } else {
       // Ensure overlay is hidden when tutorial is completed or disabled
       this.hideUI()
