@@ -93,7 +93,7 @@ describe('story intro', () => {
     expect(timers[0].ms).toBe(STORY_SEGMENTS[0].durationMs + 400)
     await flush()
     expect(audios[0].src).toBe(STORY_SEGMENTS[0].audio)
-    expect(audios[0].volume).toBeCloseTo(0.45)
+    expect(audios[0].volume).toBeCloseTo(0.5)
     for (let i = 1; i < STORY_SEGMENTS.length; i++) {
       fireLatestTimer(timers)
       await flush()

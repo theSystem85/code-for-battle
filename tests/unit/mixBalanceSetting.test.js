@@ -27,6 +27,10 @@ describe('sound effects / music ratio setting', () => {
     expect(getEffectsVolume()).toBeCloseTo(1)
     expect(root.querySelector('#settingsMixBalanceValue').textContent).toBe('SFX 100% / Music 50%')
     expect(root.querySelector('[title]')).toBeNull()
-    setMixBalance(50)
+    setMixBalance(25)
+  })
+
+  it('labels the default Music 50% / SFX 100%', () => {
+    expect(formatMixBalance(25)).toBe('SFX 100% / Music 50%')
   })
 })

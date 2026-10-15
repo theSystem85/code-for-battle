@@ -85,21 +85,25 @@ describe('story intro and first gameplay music cues', () => {
     expect(sound.bgMusicAudio.paused).toBe(true)
   })
 
-  it('applies the narration duck on top of master volume', async() => {
+  it('applies the narration duck on top of master volume and the default music balance', async() => {
     await sound.playMusicCue(sound.STORY_INTRO_MUSIC_FILE)
     await flush()
     sound.setMasterVolume(0.8)
     sound.setMusicDuck(0.25)
-    expect(sound.bgMusicAudio.volume).toBeCloseTo(0.2, 5)
+    expect(sound.bgMusicAudio.volume).toBeCloseTo(0.1, 5)
     sound.setMusicDuck(1)
-    expect(sound.bgMusicAudio.volume).toBeCloseTo(0.8, 5)
+    expect(sound.bgMusicAudio.volume).toBeCloseTo(0.4, 5)
   })
   it('scales music and effects with the persisted SFX/music balance and the master volume', async() => {
     const storage = await import('../../src/storage/indexedDbStorage.js')
     sound.setMasterVolume(0.5)
-    expect(sound.getMixBalance()).toBe(50)
-    expect(sound.getMusicVolume()).toBeCloseTo(0.5)
+    // Default with no saved value: Music 50% / SFX 100%.
+    expect(sound.DEFAULT_MIX_BALANCE).toBe(25)
+    expect(sound.getMixBalance()).toBe(25)
+    expect(sound.getMusicVolume()).toBeCloseTo(0.25)
     expect(sound.getEffectsVolume()).toBeCloseTo(0.5)
+    sound.setMixBalance(50)
+    expect(sound.getMusicVolume()).toBeCloseTo(0.5)
     sound.setMixBalance(75)
     expect(storage.getStoredItem(sound.MIX_BALANCE_STORAGE_KEY)).toBe('75')
     expect(sound.getMusicVolume()).toBeCloseTo(0.5)
@@ -112,7 +116,21 @@ describe('story intro and first gameplay music cues', () => {
     sound.setMasterVolume(1)
     off()
     expect(heard).toEqual([0.4])
-    sound.setMixBalance(50)
+    sound.setMixBalance(25)
+  })
+
+  it('gives intro and tutorial narration the same gain chain', () => {
+    sound.setMasterVolume(0.8)
+    sound.setMixBalance(25)
+    expect(sound.NARRATION_GAIN).toBe(1)
+    expect(sound.getNarrationVolume()).toBeCloseTo(0.8)
+    // Without a running AudioContext the element falls back to the same level.
+    const element = { volume: 1 }
+    expect(sound.routeNarrationElement(element)).toBe(false)
+    expect(element.volume).toBeCloseTo(0.8)
+    sound.setMixBalance(75)
+    expect(sound.getNarrationVolume()).toBeCloseTo(0.4)
+    sound.setMixBalance(25)
   })
 
   it('ramps the music duck smoothly to the target', () => {

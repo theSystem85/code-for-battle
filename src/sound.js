@@ -51,7 +51,8 @@ let masterVolume = loadVolumeFromStorage()
 // only). Scales music against effects + narration; both stay under the master
 // volume slider.
 export const MIX_BALANCE_STORAGE_KEY = 'cfb-audio-mix-balance'
-export const DEFAULT_MIX_BALANCE = 50
+// 25 = Music 50% / SFX 100% (music scale = balance / 50, capped at 1).
+export const DEFAULT_MIX_BALANCE = 25
 
 function loadMixBalance() {
   try {
@@ -865,6 +866,50 @@ export function loadNarrationBuffer(url) {
 const liveNarration = new Set()
 function narrationGainValue(entry) {
   return Math.max(0, Math.min(1, entry.volume * getEffectsVolume()))
+}
+
+// One narration gain chain for every narrator (story intro and tutorial):
+// AudioContext gain = NARRATION_GAIN x master x effects side of the balance,
+// applied live. iOS ignores HTMLMediaElement.volume, so element-based clips
+// are routed through the same Web Audio gain when the context runs.
+export const NARRATION_GAIN = 1
+
+export function getNarrationVolume(relative = NARRATION_GAIN) {
+  return Math.max(0, Math.min(1, relative * getEffectsVolume()))
+}
+
+const routedNarrationElements = new WeakMap()
+export function routeNarrationElement(element, relative = NARRATION_GAIN) {
+  if (!element) return false
+  const existing = routedNarrationElements.get(element)
+  if (existing) {
+    existing.volume = relative
+    existing.gain.gain.value = narrationGainValue(existing)
+    liveNarration.add(existing)
+    return true
+  }
+  if (!audioContext || audioContext.state !== 'running' || typeof audioContext.createMediaElementSource !== 'function') {
+    element.volume = getNarrationVolume(relative)
+    return false
+  }
+  try {
+    const source = audioContext.createMediaElementSource(element)
+    const gain = audioContext.createGain()
+    source.connect(gain)
+    gain.connect(audioContext.destination)
+    element.volume = 1
+    const entry = { gain, volume: relative }
+    gain.gain.value = narrationGainValue(entry)
+    routedNarrationElements.set(element, entry)
+    liveNarration.add(entry)
+    const release = () => liveNarration.delete(entry)
+    element.addEventListener?.('ended', release)
+    element.addEventListener?.('pause', release)
+    return true
+  } catch {
+    element.volume = getNarrationVolume(relative)
+    return false
+  }
 }
 
 export function playNarrationBuffer(buffer, { volume = 1, offsetSeconds = 0, onEnded } = {}) {

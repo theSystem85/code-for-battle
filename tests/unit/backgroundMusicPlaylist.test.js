@@ -43,6 +43,8 @@ describe('background music playlist', () => {
     vi.stubGlobal('Audio', FakeAudio)
     vi.spyOn(Math, 'random').mockReturnValue(0)
     sound = await import('../../src/sound.js')
+    // These tests check fades against master volume only: neutral balance.
+    sound.setMixBalance(50)
   })
 
   afterEach(() => {
