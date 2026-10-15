@@ -87,17 +87,19 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
         biomeTag: typeof tile?.biome === 'string' ? tile.biome : undefined
       }
 
-      if (textureManager?.integratedSpriteSheetMode && textureManager.getIntegratedTileForMapTile) {
-        const taggedTile = textureManager.getIntegratedTileForMapTile(tile.type, x, y, tileLookupOptions)
-        if (taggedTile?.tags?.includes('impassable')) {
-          isImpassableTagged = true
-        }
+      // One lookup per tile: land tiles reuse it for the impassable-grass count (frozen lakes etc.).
+      const needsTaggedLookup = textureManager?.getIntegratedTileForMapTile &&
+        (tile.type === 'land' || textureManager.integratedSpriteSheetMode)
+      const taggedTile = needsTaggedLookup
+        ? textureManager.getIntegratedTileForMapTile(tile.type, x, y, tileLookupOptions)
+        : null
+      const taggedImpassable = taggedTile?.tags?.includes('impassable') || false
+      if (textureManager?.integratedSpriteSheetMode && taggedImpassable) {
+        isImpassableTagged = true
       }
-
-      if (tile.type === 'land' && textureManager?.getIntegratedTileForMapTile) {
-        const taggedTile = textureManager.getIntegratedTileForMapTile('land', x, y, tileLookupOptions)
-        isImpassableGrass = taggedTile?.tags?.includes('impassable') || false
-        if (isImpassableGrass) impassableGrassCount++
+      if (tile.type === 'land' && taggedImpassable) {
+        isImpassableGrass = true
+        impassableGrassCount++
       }
 
       occupancy[y][x] =
