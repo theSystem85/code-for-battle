@@ -3,7 +3,7 @@ import { productionQueue } from '../../productionQueue.js'
 import { canPlaceBuilding } from '../../buildings.js'
 import { selectedUnits } from '../../inputHandler.js'
 import { unitCosts } from '../../units.js'
-import { inputAwareStepText } from '../inputMethodGuide.js'
+import { inputAwareStepText, isInputMethod } from '../inputMethodGuide.js'
 import { TILE_SIZE } from '../../config.js'
 import { getPlayableViewportHeight, getPlayableViewportWidth } from '../../utils/layoutMetrics.js'
 
@@ -13,6 +13,14 @@ export function sleep(ms) {
 
 export function getIsTouchLayout() {
   return Boolean(document.body?.classList.contains('is-touch'))
+}
+
+// A player who skipped the input-method step has no preference yet. Use the
+// method that matches the current layout so the copy (and its recorded
+// narrator clip) is the input-aware variant instead of the legacy text.
+export function resolveTutorialInputMethod(preferred) {
+  if (isInputMethod(preferred)) return preferred
+  return getIsTouchLayout() ? 'touch' : 'mouse-keyboard'
 }
 
 export function getTextForDevice(step, inputMethod) {

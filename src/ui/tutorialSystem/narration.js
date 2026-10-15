@@ -10,10 +10,20 @@ export function isNarrationLanguage(lang) {
   return !lang || /^en\b/i.test(String(lang))
 }
 
+// Whitespace and typographic quote/dash differences must not cost a clip.
+export function normalizeNarrationText(text) {
+  return String(text ?? '')
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 export function findTutorialNarrationClip(stepId, text, { lang = 'en', clips = TUTORIAL_NARRATION_CLIPS } = {}) {
   if (!stepId || !text || !isNarrationLanguage(lang)) return null
-  const spoken = String(text).trim()
-  return clips.find(clip => clip.step === stepId && clip.text === spoken) || null
+  const spoken = normalizeNarrationText(text)
+  return clips.find(clip => clip.step === stepId && normalizeNarrationText(clip.text) === spoken) || null
 }
 
 // Plays the recorded narrator clip for a step and falls back to the existing
