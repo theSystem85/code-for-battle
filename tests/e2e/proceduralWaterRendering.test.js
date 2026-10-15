@@ -543,7 +543,7 @@ test.describe('Procedural WebGL water rendering', () => {
     }
   })
 
-  test('settings modal persists water renderer mode and procedural color sliders', async({ page, browserName }) => {
+  test('settings modal persists procedural water color sliders', async({ page, browserName }) => {
     test.skip(browserName !== 'chromium', 'Water settings rendering checks run on Chromium only')
 
     await page.addInitScript(() => {
@@ -572,11 +572,10 @@ test.describe('Procedural WebGL water rendering', () => {
     await expect(page.locator('#configSettingsModal')).toHaveClass(/config-modal--open/)
     await expect(page.locator('[data-config-tab="runtime"]')).toHaveClass(/config-modal__tab--active/)
 
-    const proceduralToggle = page.locator('#settingsProceduralWaterToggle')
     const toneSlider = page.locator('#settingsWaterToneRange')
     const saturationSlider = page.locator('#settingsWaterSaturationRange')
 
-    await expect(proceduralToggle).toBeChecked()
+    await expect(page.locator('#settingsProceduralWaterToggle')).toHaveCount(0)
 
     await toneSlider.evaluate((element, value) => {
       element.value = String(value)
@@ -592,15 +591,6 @@ test.describe('Procedural WebGL water rendering', () => {
     expect(tonedProcedural).not.toBeNull()
     expect(tonedProcedural).not.toEqual(proceduralBefore)
 
-    await proceduralToggle.uncheck()
-    await expect(toneSlider).toBeDisabled()
-    await expect(saturationSlider).toBeDisabled()
-    await page.waitForTimeout(250)
-
-    const classicPixel = await readWaterPixel(page)
-    expect(classicPixel).not.toBeNull()
-    expect(classicPixel).not.toEqual(tonedProcedural)
-
     await page.reload()
     await page.waitForSelector('#gameCanvas', { state: 'visible', timeout: 30000 })
     await page.waitForFunction(() => Boolean(window.gameState && window.gameInstance))
@@ -609,13 +599,11 @@ test.describe('Procedural WebGL water rendering', () => {
 
     await page.keyboard.press('k')
     await expect(page.locator('#configSettingsModal')).toHaveClass(/config-modal--open/)
-    await expect(proceduralToggle).not.toBeChecked()
     await expect(toneSlider).toHaveValue('0.7')
     await expect(saturationSlider).toHaveValue('1.6')
 
     const storedSettings = await page.evaluate(() => JSON.parse(localStorage.getItem('rts_graphics_settings') || '{}'))
     expect(storedSettings).toMatchObject({
-      useProceduralWaterRendering: false,
       waterEffectTone: 0.7,
       waterEffectSaturation: 1.6
     })
