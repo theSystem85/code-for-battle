@@ -1,7 +1,8 @@
 import { clearTargetTiles, encodeLosslessWebP, exportMetadata, exportOptions } from './sseExport.js'
 import { bindSseSplit, bindSseViewport } from './sseViewport.js'
+import { detectSprites } from './sseDetect.js'
 import { isolateComponent } from './sseIsolate.js'
-import { findPackingRegion, MAX_SSE_PIXELS, validateGrid } from './ssePack.js'
+import { compactSprites, findPackingRegion, MAX_SSE_PIXELS, validateGrid } from './ssePack.js'
 
 function canvas(width, height) {
   if (width < 1 || height < 1 || width > 16383 || height > 16383 || width * height > MAX_SSE_PIXELS) throw new Error('Image exceeds the 16 megapixel limit.')
@@ -24,6 +25,8 @@ export function initSseExtend(state, adapters) {
   let source = null
   let status = 'Create or select a target, then upload a source.'
   let sequence = 0
+  let spriteSequence = 0
+  let selectedSpriteId = null
   const targets = new Map()
   const checkTargetBudget = (path, pixels) => {
     let total = pixels
@@ -45,6 +48,9 @@ export function initSseExtend(state, adapters) {
     <button id="sseCreateBlank" type="button">New sheet</button>
     <button id="sseUseTarget" type="button">Use current sheet as target</button>
     <label>Source image (upload or drop below) <input id="sseSourceFile" type="file" accept="image/*"></label>
+    <button id="sseExtractAll" type="button">Extract all</button>
+    <button id="sseRemoveSprite" type="button">Remove sprite</button>
+    <button id="sseCompact" type="button">Compact</button>
     <label>Near-black cutoff <input id="sseCutoff" type="number" min="0" max="255" value="16"></label>
     <label><input id="sseClearMode" type="checkbox"> Select tiles to clear (click, shift-click or drag)</label>
     <button id="sseClearTiles" type="button">Clear tiles</button>
@@ -63,6 +69,26 @@ export function initSseExtend(state, adapters) {
   sourcePane.innerHTML = '<p>Source — click a sprite to isolate and pack into target</p><canvas id="sseSourceCanvas" aria-label="Source sprites"></canvas>'
   state.root.querySelector('.sprite-sheet-editor__workspace').appendChild(sourcePane)
   const sourceCanvas = sourcePane.querySelector('canvas')
+  const drawSource = () => {
+    if (!source) return
+    const ctx = sourceCanvas.getContext('2d')
+    ctx.putImageData(source.pixels, 0, 0)
+    for (const { bbox, pixels } of source.masks.values()) {
+      const overlay = new Uint8ClampedArray(pixels.length)
+      for (let y = 0; y < bbox.height; y++) {
+        for (let x = 0; x < bbox.width; x++) {
+          const i = (y * bbox.width + x) * 4
+          if (!pixels[i + 3]) continue
+          const edge = x === 0 || y === 0 || x === bbox.width - 1 || y === bbox.height - 1
+            || !pixels[i - 1] || !pixels[i + 7] || !pixels[i - bbox.width * 4 + 3] || !pixels[i + bbox.width * 4 + 3]
+          overlay.set([70, 210, 255, edge ? 230 : 65], i)
+        }
+      }
+      const layer = canvas(bbox.width, bbox.height)
+      layer.getContext('2d').putImageData(new window.ImageData(overlay, bbox.width, bbox.height), 0, 0)
+      ctx.drawImage(layer, bbox.x, bbox.y)
+    }
+  }
   const workspace = sourcePane.parentElement
   const setSourceVisible = () => workspace.classList.toggle('sse-has-source', panel.open && Boolean(source))
   panel.addEventListener('toggle', setSourceVisible)
@@ -216,7 +242,16 @@ export function initSseExtend(state, adapters) {
         }
       }
     }
-    target = { data, image, occupied, imports: data.extension?.imports || [], columns, rows, tileSize: data.tileSize, rowHeight: data.rowHeight, borderWidth: data.borderWidth }
+    const imports = data.extension?.imports || []
+    const ids = new Set(imports.map(item => item.id).filter(Boolean))
+    const normalizedImports = imports.map(item => {
+      if (item.id) return item
+      let id
+      do { id = `sprite-${++spriteSequence}` } while (ids.has(id))
+      ids.add(id)
+      return { ...item, id }
+    })
+    target = { data, image, occupied, imports: normalizedImports, columns, rows, tileSize: data.tileSize, rowHeight: data.rowHeight, borderWidth: data.borderWidth }
     targets.set(data.sheetPath, target)
     state.image = image
     return target
@@ -226,7 +261,146 @@ export function initSseExtend(state, adapters) {
     state.activeData.extension = { occupiedTiles: [...target.occupied], imports: target.imports }
     adapters.refresh()
   }
+  const componentOverlaps = ({ bbox, pixels }) => [...source.masks.values()].some(mask => {
+    const left = Math.max(bbox.x, mask.bbox.x)
+    const top = Math.max(bbox.y, mask.bbox.y)
+    const right = Math.min(bbox.x + bbox.width, mask.bbox.x + mask.bbox.width)
+    const bottom = Math.min(bbox.y + bbox.height, mask.bbox.y + mask.bbox.height)
+    for (let y = top; y < bottom; y++) {
+      for (let x = left; x < right; x++) {
+        if (pixels[((y - bbox.y) * bbox.width + x - bbox.x) * 4 + 3]
+      && mask.pixels[((y - mask.bbox.y) * mask.bbox.width + x - mask.bbox.x) * 4 + 3]) return true
+      }
+    }
+    return false
+  })
+  const placeComponent = (component, target, redraw = true) => {
+    const { bbox } = component
+    const key = `${bbox.x},${bbox.y},${bbox.width},${bbox.height}`
+    if (source.isolated.has(key) || componentOverlaps(component)) throw new Error('This source sprite has already been imported.')
+    const region = findPackingRegion({ ...target, width: bbox.width, height: bbox.height })
+    checkTargetBudget(state.activeData.sheetPath, target.image.width * region.rows * target.rowHeight)
+    const crop = canvas(bbox.width, bbox.height)
+    crop.getContext('2d').putImageData(new window.ImageData(component.pixels, bbox.width, bbox.height), 0, 0)
+    const oldRows = target.rows
+    if (region.rows > oldRows) {
+      const grown = canvas(target.image.width, region.rows * target.rowHeight)
+      const ctx = grown.getContext('2d')
+      ctx.fillStyle = '#000'
+      ctx.fillRect(0, 0, grown.width, grown.height)
+      ctx.drawImage(target.image, 0, 0)
+      target.image = grown
+      target.rows = region.rows
+    }
+    target.image.getContext('2d').drawImage(crop, region.x * target.tileSize + target.borderWidth, region.y * target.rowHeight + target.borderWidth)
+    for (let dy = 0; dy < region.spanY; dy++) {
+      for (let dx = 0; dx < region.spanX; dx++) target.occupied.add(`${region.x + dx},${region.y + dy}`)
+    }
+    let id
+    do { id = `sprite-${++spriteSequence}` } while (target.imports.some(item => item.id === id))
+    const result = { id, ok: true, bbox, tileSpan: { columns: region.spanX, rows: region.spanY }, placedAt: { column: region.x, row: region.y } }
+    source.isolated.add(key)
+    source.masks.set(key, { ...component, id: result.id, targetPath: target.data.sheetPath })
+    if (redraw) drawSource()
+    target.imports.push(result)
+    sync(target)
+    report(`Packed sprite at column ${region.x}, row ${region.y}. ${target.imports.length} imported.`)
+    emit('isolated', result)
+    if (target.rows !== oldRows) emit('sheet-grown', { previousRows: oldRows, rows: target.rows })
+    emit('packed', result)
+    return result
+  }
   const api = {
+    extractAll: guard(async(options = {}) => {
+      if (!source) throw new Error('Upload a source image first.')
+      const target = currentTarget()
+      const components = detectSprites(source.pixels, { cutoff: Number(field('sseCutoff').value), ...options })
+      const results = []
+      try {
+        for (const component of components) {
+          // A prior click may have extracted a subset of a gap-merged component.
+          if (!componentOverlaps(component)) results.push(placeComponent(component, target, false))
+        }
+      } finally { drawSource() }
+      emit('extracted-all', { sprites: results })
+      report(`Extracted ${results.length} sprites.`)
+      return results
+    }),
+    selectSprite: guard(async id => {
+      const sprite = currentTarget().imports.find(item => item.id === id)
+      if (!sprite) throw new Error('Sprite not found.')
+      selectedSpriteId = id
+      const cells = []
+      for (let y = 0; y < sprite.tileSpan.rows; y++) {
+        for (let x = 0; x < sprite.tileSpan.columns; x++) cells.push({ col: sprite.placedAt.column + x, row: sprite.placedAt.row + y })
+      }
+      setSelectedCells(cells)
+      emit('sprite-selected', { id })
+      return sprite
+    }),
+    removeSprite: guard(async id => {
+      const sprite = currentTarget().imports.find(item => item.id === id)
+      if (!sprite) throw new Error('Sprite not found.')
+      const cells = []
+      for (let y = 0; y < sprite.tileSpan.rows; y++) {
+        for (let x = 0; x < sprite.tileSpan.columns; x++) cells.push({ col: sprite.placedAt.column + x, row: sprite.placedAt.row + y })
+      }
+      await api.clearTiles(cells)
+      emit('sprite-removed', { id })
+      return api.getState()
+    }),
+    compact: guard(async() => {
+      const target = currentTarget()
+      const fixed = new Set(target.occupied)
+      for (const sprite of target.imports) {
+        for (let y = 0; y < sprite.tileSpan.rows; y++) {
+          for (let x = 0; x < sprite.tileSpan.columns; x++) fixed.delete(`${sprite.placedAt.column + x},${sprite.placedAt.row + y}`)
+        }
+      }
+      const packed = compactSprites(target.imports, { ...target, occupied: fixed })
+      checkTargetBudget(state.activeData.sheetPath, target.image.width * packed.rows * target.rowHeight)
+      const image = canvas(target.image.width, packed.rows * target.rowHeight)
+      const ctx = image.getContext('2d')
+      ctx.fillStyle = '#000'
+      ctx.fillRect(0, 0, image.width, image.height)
+      const tiles = {}
+      for (const key of fixed) {
+        const [x, y] = key.split(',').map(Number)
+        ctx.drawImage(target.image, x * target.tileSize, y * target.rowHeight, target.tileSize, target.rowHeight,
+          x * target.tileSize, y * target.rowHeight, target.tileSize, target.rowHeight)
+        if (target.data.tiles[key]) tiles[key] = target.data.tiles[key]
+      }
+      for (const sprite of packed.placements) {
+        const old = target.imports.find(item => item.id === sprite.id)
+        const width = sprite.tileSpan.columns * target.tileSize
+        const height = sprite.tileSpan.rows * target.rowHeight
+        ctx.drawImage(target.image, old.placedAt.column * target.tileSize, old.placedAt.row * target.rowHeight, width, height,
+          sprite.placedAt.column * target.tileSize, sprite.placedAt.row * target.rowHeight, width, height)
+        for (let y = 0; y < sprite.tileSpan.rows; y++) {
+          for (let x = 0; x < sprite.tileSpan.columns; x++) {
+            const entry = target.data.tiles[`${old.placedAt.column + x},${old.placedAt.row + y}`]
+            if (entry) {
+              const dx = (sprite.placedAt.column - old.placedAt.column) * target.tileSize
+              const dy = (sprite.placedAt.row - old.placedAt.row) * target.rowHeight
+              tiles[`${sprite.placedAt.column + x},${sprite.placedAt.row + y}`] = { ...entry,
+                ...(entry.rect ? { rect: { ...entry.rect, x: entry.rect.x + dx, y: entry.rect.y + dy } } : {}) }
+            }
+          }
+        }
+      }
+      target.image = image
+      target.rows = packed.rows
+      target.imports = packed.placements
+      target.occupied = packed.occupied
+      target.data.tiles = tiles
+      selected.clear()
+      selectedSpriteId = null
+      selectionStatus()
+      sync(target)
+      emit('compacted', { sprites: target.imports })
+      report(`Compacted ${target.imports.length} sprites.`)
+      return target.imports
+    }),
     setClearMode: guard(async enabled => setClearMode(enabled)),
     selectTiles: guard(async(cells, { append = false } = {}) => setSelectedCells(cells, append)),
     setExportOptions: guard(async options => setExportOptions(options)),
@@ -248,9 +422,17 @@ export function initSseExtend(state, adapters) {
       const cleared = clearTargetTiles(target, cells)
       if (source) {
         for (const item of previousImports) {
-          if (!target.imports.includes(item)) source.isolated.delete(`${item.bbox.x},${item.bbox.y},${item.bbox.width},${item.bbox.height}`)
+          if (!target.imports.includes(item)) {
+            const key = `${item.bbox.x},${item.bbox.y},${item.bbox.width},${item.bbox.height}`
+            if (source.masks.get(key)?.id === item.id && source.masks.get(key)?.targetPath === target.data.sheetPath) {
+              source.isolated.delete(key)
+              source.masks.delete(key)
+            }
+          }
         }
       }
+      drawSource()
+      selectedSpriteId = null
       sync(target)
       selected.clear()
       selectionStatus()
@@ -280,7 +462,7 @@ export function initSseExtend(state, adapters) {
       return { mode: 'extend', targetSheetPath: state.activeData?.sheetPath || null, sourceLoaded: Boolean(source),
         tileSize: state.activeData?.tileSize, rowHeight: state.activeData?.rowHeight, borderWidth: state.activeData?.borderWidth,
         columns: target?.columns, rows: target?.rows, occupiedTiles: target ? [...target.occupied] : [],
-        pendingSprites: 0, importedSprites: target?.imports.length || 0, status }
+        sprites: target?.imports || [], selectedSpriteId, pendingSprites: 0, importedSprites: target?.imports.length || 0, status }
     },
     createBlankSheet: guard(async({ columns = 8, rows = 4, tileSize = 64, rowHeight = tileSize, borderWidth = 1, name = 'extended-sheet' } = {}) => {
       validateGrid({ columns, rows, tileSize, rowHeight, borderWidth })
@@ -296,6 +478,7 @@ export function initSseExtend(state, adapters) {
       targets.set(path, { data, image, columns, rows, tileSize, rowHeight, borderWidth, occupied: new Set(), imports: [] })
       sync(targets.get(path))
       selected.clear()
+      selectedSpriteId = null
       selectionStatus()
       report(`Target created: ${name}`)
       emit('sheet-created', { name, ...api.getState() })
@@ -312,6 +495,7 @@ export function initSseExtend(state, adapters) {
       }
       sync(currentTarget())
       selected.clear()
+      selectedSpriteId = null
       selectionStatus()
       report(`Target selected: ${state.activeData.sheetPath}`)
       return api.getState()
@@ -332,7 +516,7 @@ export function initSseExtend(state, adapters) {
         const staging = canvas(image.width, image.height)
         staging.getContext('2d').drawImage(image, 0, 0)
         const pixels = staging.getContext('2d').getImageData(0, 0, image.width, image.height)
-        source = { pixels, isolated: new Set() }
+        source = { pixels, isolated: new Set(), masks: new Map() }
         sourceCanvas.width = image.width
         sourceCanvas.height = image.height
         sourceCanvas.getContext('2d').drawImage(staging, 0, 0)
@@ -353,36 +537,7 @@ export function initSseExtend(state, adapters) {
       const target = currentTarget()
       const component = isolateComponent(source.pixels, x, y, cutoff)
       if (!component || component.area < 2) throw new Error('Click a non-black sprite containing at least two pixels.')
-      const { bbox } = component
-      const key = `${bbox.x},${bbox.y},${bbox.width},${bbox.height}`
-      if (source.isolated.has(key)) throw new Error('This source sprite has already been imported.')
-      const region = findPackingRegion({ ...target, width: bbox.width, height: bbox.height })
-      checkTargetBudget(state.activeData.sheetPath, target.image.width * region.rows * target.rowHeight)
-      const crop = canvas(bbox.width, bbox.height)
-      crop.getContext('2d').putImageData(new window.ImageData(component.pixels, bbox.width, bbox.height), 0, 0)
-      const oldRows = target.rows
-      if (region.rows > oldRows) {
-        const grown = canvas(target.image.width, region.rows * target.rowHeight)
-        const ctx = grown.getContext('2d')
-        ctx.fillStyle = '#000'
-        ctx.fillRect(0, 0, grown.width, grown.height)
-        ctx.drawImage(target.image, 0, 0)
-        target.image = grown
-        target.rows = region.rows
-      }
-      target.image.getContext('2d').drawImage(crop, region.x * target.tileSize + target.borderWidth, region.y * target.rowHeight + target.borderWidth)
-      for (let dy = 0; dy < region.spanY; dy++) {
-        for (let dx = 0; dx < region.spanX; dx++) target.occupied.add(`${region.x + dx},${region.y + dy}`)
-      }
-      const result = { ok: true, bbox, tileSpan: { columns: region.spanX, rows: region.spanY }, placedAt: { column: region.x, row: region.y } }
-      source.isolated.add(key)
-      target.imports.push(result)
-      sync(target)
-      report(`Packed sprite at column ${region.x}, row ${region.y}. ${target.imports.length} imported.`)
-      emit('isolated', result)
-      if (target.rows !== oldRows) emit('sheet-grown', { previousRows: oldRows, rows: target.rows })
-      emit('packed', result)
-      return result
+      return placeComponent(component, target)
     }),
     downloadExtendedSheet: () => api.exportSheet(),
     on: (event, handler) => {
@@ -403,6 +558,22 @@ export function initSseExtend(state, adapters) {
     tileSize: Number(field('sseNewTile').value) }))
   bind('sseUseTarget', () => api.selectTargetSheet(state.sheetSelect.value))
   bind('sseDownloadExtended', () => api.exportSheet({ lossless: field('sseLossless').checked, quality: Number(field('sseQuality').value) }))
+  bind('sseExtractAll', () => api.extractAll())
+  bind('sseCompact', () => api.compact())
+  bind('sseRemoveSprite', () => api.removeSprite(selectedSpriteId))
+  state.canvas.addEventListener('click', event => {
+    if (panel.querySelector('#sseClearMode').checked || !targets.has(state.activeData?.sheetPath)) return
+    const cell = tileAt(event)
+    const sprite = currentTarget().imports.find(item => cell.col >= item.placedAt.column && cell.row >= item.placedAt.row
+      && cell.col < item.placedAt.column + item.tileSpan.columns && cell.row < item.placedAt.row + item.tileSpan.rows)
+    if (sprite) api.selectSprite(sprite.id).catch(() => {})
+    else { selectedSpriteId = null; selected.clear(); selectionStatus() }
+  })
+  state.root.addEventListener('keydown', event => {
+    if (event.key !== 'Delete' || event.target.closest('input, textarea, select, [contenteditable="true"]') || !selectedSpriteId) return
+    event.preventDefault()
+    api.removeSprite(selectedSpriteId).catch(() => {})
+  })
   bind('sseClearTiles', () => api.clearTiles([...selected.values()]))
   field('sseLossless').addEventListener('change', () => setExportOptions({ lossless: field('sseLossless').checked, quality: Number(field('sseQuality').value) }))
   field('sseQuality').addEventListener('input', () => setExportOptions({ lossless: field('sseLossless').checked, quality: Number(field('sseQuality').value) }))

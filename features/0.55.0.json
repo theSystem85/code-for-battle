@@ -2,7 +2,8 @@
   "version": "0.55.0",
   "features": [
     "Extend sprite sheets with click-to-isolate imports in the standalone editor.",
-    "Create, clear and export sprite sheets losslessly with touch pan, zoom and resizable panes."
+    "Create, clear and export sprite sheets losslessly with touch pan, zoom and resizable panes.",
+    "Extract all sprites, preview isolation masks, remove placements and compact sheets."
   ],
   "improvements": [],
   "bugfixes": [
