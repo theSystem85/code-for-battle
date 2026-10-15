@@ -34,6 +34,19 @@ export function selectMusicState({ nearDefeat, underAttackOutnumbered, firstAtta
   return firstAttack ? 'firstAttack' : 'normal'
 }
 
+// When the first-launch story intro already played the First Strike theme,
+// the first attack of that session should not repeat it a minute later. The
+// flag lives at module level so a director reset at game start keeps it; it is
+// consumed by the first attack (only the theme is skipped, never the
+// outnumbered / near-defeat moods).
+let skipNextFirstAttackTheme = false
+export function suppressNextFirstAttackTheme(skip = true) {
+  skipNextFirstAttackTheme = Boolean(skip)
+}
+export function isFirstAttackThemeSuppressed() {
+  return skipNextFirstAttackTheme
+}
+
 export function createMusicDirector() {
   let state = 'normal'
   let switchedAt = -Infinity
@@ -43,7 +56,10 @@ export function createMusicDirector() {
   return {
     get state() { return state },
     attack() {
-      if (!firstAttackSeen) firstAttackPending = true
+      if (!firstAttackSeen) {
+        firstAttackPending = !skipNextFirstAttackTheme
+        skipNextFirstAttackTheme = false
+      }
       firstAttackSeen = true
     },
     update(now, conditions) {

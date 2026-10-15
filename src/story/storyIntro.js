@@ -19,6 +19,8 @@ function defaultDeps() {
     createAudio: src => new Audio(src),
     getVolume: () => 1,
     setDuck: () => {},
+    startMusic: () => {},
+    endMusic: () => {},
     setTimer: (fn, ms) => setTimeout(fn, ms),
     clearTimer: id => clearTimeout(id)
   }
@@ -167,6 +169,11 @@ export function closeStoryIntro(status = 'skipped') {
   state.deps.clearTimer(state.timer)
   stopVoice(state)
   state.deps.setDuck(1)
+  try {
+    state.deps.endMusic(state.withMusic, status)
+  } catch {
+    // Music hand-off problems must never keep the overlay open.
+  }
   state.win.removeEventListener('keydown', state.onKey, true)
   state.win.removeEventListener('resize', state.onResize)
   state.root.remove()
@@ -202,7 +209,8 @@ export function playStoryIntro(options = {}) {
     muted: false,
     started: false,
     closed: false,
-    pausedGame: false
+    pausedGame: false,
+    withMusic: Boolean(options.withMusic)
   }
   active = state
   state.onKey = event => {
@@ -223,6 +231,8 @@ export function playStoryIntro(options = {}) {
     event.stopPropagation()
     state.muted = false
     event.currentTarget.hidden = true
+    // The click is a user gesture, so blocked background music can start now.
+    if (state.withMusic) state.deps.startMusic()
     const segment = state.segments[state.index]
     if (segment) playVoice(state, segment)
   })
@@ -233,6 +243,7 @@ export function playStoryIntro(options = {}) {
   doc.body.appendChild(state.root)
   holdGame(state)
   state.deps.setDuck(STORY_INTRO_MUSIC_DUCK)
+  if (state.withMusic) state.deps.startMusic()
   state.root.querySelector('.story-intro__skip').focus?.()
   showSegment(state, 0)
   return true

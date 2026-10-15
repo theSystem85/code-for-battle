@@ -37,6 +37,9 @@ import {
 } from './tutorialSystem/constants.js'
 import { readFromStorage, writeToStorage } from './tutorialSystem/storage.js'
 import { isHeadlessAudioMuted } from '../utils/headlessAudioMute.js'
+import { createTutorialNarrator } from './tutorialSystem/narration.js'
+import { getMasterVolume, setMusicDuck } from '../sound.js'
+import { configureAudioElement } from '../pwa/audioElementPolicy.js'
 
 class TutorialSystem {
   constructor() {
@@ -215,7 +218,7 @@ class TutorialSystem {
       speechToggle.addEventListener('change', () => {
         this.settings.speechEnabled = Boolean(speechToggle.checked)
         if (!this.settings.speechEnabled) {
-          window.speechSynthesis?.cancel?.()
+          this.stopSpeech()
         }
         writeToStorage(TUTORIAL_SETTINGS_KEY, this.settings)
       })
@@ -453,7 +456,7 @@ class TutorialSystem {
       this.progress.completed = true
       this.saveProgress()
       this.stop()
-      this.speak('Great, you completed the basic tutorial!')
+      this.speak('Great, you completed the basic tutorial!', 'tutorial-complete')
       return
     }
     this.saveProgress()
@@ -599,7 +602,7 @@ class TutorialSystem {
   toggleVoice() {
     this.settings.speechEnabled = !this.settings.speechEnabled
     if (!this.settings.speechEnabled) {
-      window.speechSynthesis?.cancel?.()
+      this.stopSpeech()
     }
     writeToStorage(TUTORIAL_SETTINGS_KEY, this.settings)
     this.renderStep(this.steps[this.stepIndex])
@@ -648,7 +651,7 @@ class TutorialSystem {
       this.stepState.crewRestored = true
       if (!this.stepState.crewRestoredAnnounced) {
         this.stepState.crewRestoredAnnounced = true
-        this.speak('Great, you completed all sub tasks of the crew system tutorial!')
+        this.speak('Great, you completed all sub tasks of the crew system tutorial!', 'crew-complete')
       }
     }
     return this.stepState.crewRestored
@@ -723,10 +726,41 @@ class TutorialSystem {
     this.cursor?.classList.remove('tutorial-cursor--click')
   }
 
-  speak(text) {
+  getNarrator() {
+    if (!this.narrator) {
+      this.narrator = createTutorialNarrator({
+        createAudio: src => {
+          const audio = new Audio(src)
+          configureAudioElement(audio, src, window.location.origin)
+          return audio
+        },
+        getVolume: () => getMasterVolume(),
+        setDuck: factor => setMusicDuck(factor),
+        speakTts: text => this.speakWithTts(text),
+        cancelTts: () => window.speechSynthesis?.cancel?.(),
+        onEnd: () => { this.speaking = false }
+      })
+    }
+    return this.narrator
+  }
+
+  // Recorded narrator clip first (same voice as the story intro), browser TTS
+  // when no clip matches the exact text, it fails to load, or the page
+  // language is not English.
+  speak(text, stepId = this.steps?.[this.stepIndex]?.id) {
     if (!this.settings.speechEnabled) return
     if (isHeadlessAudioMuted()) return
-    if (!text || typeof SpeechSynthesisUtterance === 'undefined') return
+    if (!text) return
+    this.speaking = true
+    const lang = typeof document !== 'undefined' ? document.documentElement?.lang : 'en'
+    this.getNarrator().speak(stepId, text, { lang })
+  }
+
+  speakWithTts(text) {
+    if (!text || typeof SpeechSynthesisUtterance === 'undefined') {
+      this.speaking = false
+      return
+    }
     window.speechSynthesis?.cancel?.()
     const utterance = new SpeechSynthesisUtterance(text)
     utterance.lang = 'en-US'
@@ -747,6 +781,7 @@ class TutorialSystem {
   }
 
   stopSpeech() {
+    this.narrator?.stop()
     if (this.speaking) {
       window.speechSynthesis?.cancel?.()
       this.speaking = false

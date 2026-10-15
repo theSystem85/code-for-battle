@@ -1,6 +1,6 @@
 {
   "version": "0.48.0",
-  "features": ["Narrated newspaper intro tells how the Kyronite war began."],
-  "improvements": ["Landing page opens with the war's front page and a news ticker."],
+  "features": ["Narrated newspaper intro tells how the Kyronite war began.", "The tutorial is now voiced by the same narrator as the intro."],
+  "improvements": ["Landing page opens with the war's front page and a news ticker.", "First launch plays First Strike under the intro, then Battle Track 02 when the game begins."],
   "bugfixes": []
 }
