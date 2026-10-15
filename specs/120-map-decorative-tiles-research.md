@@ -1,4 +1,4 @@
-# Spec 087: Biome-aware decorative map tiles (research → implementation)
+# Spec 120: Biome-aware decorative map tiles (research → implementation)
 
 ## Status
 Implemented hybrid biome DT sheets + runtime selection (organic DT retained).

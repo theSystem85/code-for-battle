@@ -85,4 +85,4 @@ After packing, **visually inspect** the sheet and write accurate tags/footprints
 - Map Settings → enable Custom sprite sheets → ensure DT sheets checked → regenerate map across biomes / Mixed.
 - `npm run test:unit`
 - `npm run lint:fix:changed`
-- Update `TODO/Features.md`, `specs/087-map-decorative-tiles-research.md`, and `prompt-history/`.
+- Update `TODO/Features.md`, `specs/120-map-decorative-tiles-research.md`, and `prompt-history/`.

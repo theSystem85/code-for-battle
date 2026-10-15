@@ -215,7 +215,7 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 ### Terrain and Map Generation
 
 - [x] **Biome-aware decorative map tiles (2026-09-22, rebased 2026-10-15)** — hybrid per-biome + `universal` DT sprite sheets (WebP 85%, seasons/group tags, winter lakes impassable), per-cell placement by `tile.biome` so multi-tile groups stay inside one biome on mixed maps, organic DT retained, cliffs/boulders unchanged, skill at `skills/map-assets/SKILL.md`, packer `scripts/pack-biome-decorative-tiles.mjs`.
-  - Spec: [Map Decorative Tiles Research](../specs/087-map-decorative-tiles-research.md)
+  - Spec: [Map Decorative Tiles Research](../specs/120-map-decorative-tiles-research.md)
 
 - [x] **Street sprite-sheet v24 routing follow-up (2026-04-26)** — replaced retired street-sheet defaults with `streets24_q90_1024x1024`, tightened street sprite selection to exact directional-tag matches, and made `full` street tiles dominant for diagonal corner clusters.
   - Spec: [Street sprite-sheet routing (streets24 default)](../specs/051-street-sheet-routing.md)

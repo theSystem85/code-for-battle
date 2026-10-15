@@ -1,0 +1,6 @@
+{
+  "version": "0.54.0",
+  "features": ["Maps now show biome-specific decorations such as trees, ponds, rocks and frozen lakes, and on mixed maps each decoration stays inside its own biome. Frozen lakes block movement."],
+  "improvements": [],
+  "bugfixes": []
+}
