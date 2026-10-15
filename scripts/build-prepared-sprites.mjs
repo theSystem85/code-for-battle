@@ -95,36 +95,44 @@ const definitions = [
     states: ['base', 'recoil']
   },
   ...[
-    ['destroyer', 'destroyer_map.webp', 3.9],
     ['supplyShip', 'supply_ship_map.webp', 3.3],
     ['hovercraft', 'hovercraft_map.webp', 3.3],
     ['vehicleFerry', 'vehicle_ferry_map.webp', 4.8],
-    ['aircraftCarrier', 'aircraft_carrier_map.webp', 9.36],
     ['navalMineLayer', 'naval_mine_layer_map.webp', 4.05],
-    ['battleship', 'battleship_map.webp', 6.6],
     ['submarine', 'submarine_map.webp', 2.8]
   ].map(([type, filename, tiles]) => ({
     id: `naval:${type}:hull`,
     source: unitSource(filename),
     target: { maxDimension: TILE_SIZE * tiles },
-    anchors: type === 'destroyer'
-      ? { center: [0.5, 0.5], gunSource: [55, 260] }
-      : { center: [0.5, 0.5] },
+    anchors: { center: [0.5, 0.5] },
     states: type === 'submarine'
       ? ['surfaced', 'surfacing-clip', 'submerging-clip', 'submerged']
       : ['base']
   })),
+  // Destroyer, battleship and aircraft carrier sources are authored at the exact DPR 3
+  // backing size (docs/asset-sources/ship-build-assets.py), so 3x is 1:1 and nothing is upscaled.
+  ...[
+    ['destroyer', 'destroyer_map.webp', { center: [0.5, 0.5], gunSource: [29.4, 272.8] }],
+    ['aircraftCarrier', 'aircraft_carrier_map.webp', { center: [0.5, 0.5] }],
+    ['battleship', 'battleship_map.webp', { center: [0.5, 0.5] }]
+  ].map(([type, filename, anchors]) => ({
+    id: `naval:${type}:hull`,
+    source: unitSource(filename),
+    target: { nativeDensity: 3 },
+    anchors,
+    states: ['base']
+  })),
   {
     id: 'naval:battleship:turret',
     source: unitSource('battleship_turret.webp'),
-    target: { width: TILE_SIZE * 0.78 * 0.7, height: TILE_SIZE * 0.78 * 0.7 },
+    target: { nativeDensity: 3 },
     anchors: { center: [0.5, 0.5] },
     states: ['base']
   },
   {
     id: 'naval:battleship:barrel',
     source: unitSource('battleship_barrel.webp'),
-    target: { height: TILE_SIZE * 1.02 * 0.7, preserveAspect: true },
+    target: { nativeDensity: 3 },
     anchors: { center: [0.5, 0.5], muzzle: [0.5, 0.96] },
     states: ['base', 'recoil']
   },
@@ -240,6 +248,9 @@ function resolveLogicalSize(definition, sourceInventory) {
     const reference = sourceInventory.get(target.reference)
     const scale = target.maxDimension / Math.max(reference.width, reference.height)
     return { width: source.width * scale, height: source.height * scale }
+  }
+  if (target.nativeDensity) {
+    return { width: source.width / target.nativeDensity, height: source.height / target.nativeDensity }
   }
   if (target.maxDimension) {
     const scale = target.maxDimension / Math.max(source.width, source.height)

@@ -855,7 +855,8 @@ describe('six-ship naval fleet systems', () => {
     }
     battleship.batteries = createBattleshipTurrets(battleship)
     const targets = BATTLESHIP_TURRET_NAMES.map((name, index) => {
-      const isFore = name.startsWith('fore')
+      // aftInner sits forward of the superstructure (superfiring), so only aftOuter faces aft.
+      const isFore = name !== 'aftOuter'
       return createShip('destroyer', `${name}-target`, 'player2', isFore ? 18 : 2, 8 + index * 0.02)
     })
 
@@ -863,7 +864,7 @@ describe('six-ship naval fleet systems', () => {
       const point = getBattleshipTurretWorldPoint(battleship, name)
       expect(selectBattleshipTurret(battleship, point.x, point.y)).toBe(name)
       expect(setBattleshipTarget(battleship, targets[index])).toBe(true)
-      battleship.batteries[name].direction = name.startsWith('fore') ? 0 : Math.PI
+      battleship.batteries[name].direction = name !== 'aftOuter' ? 0 : Math.PI
     })
 
     const bullets = []
@@ -871,20 +872,20 @@ describe('six-ship naval fleet systems', () => {
     expect(bullets.map(bullet => bullet.id)).toEqual([expect.stringContaining('-foreOuter-0-')])
     expect(battleship.batteries.foreOuter.barrelRecoilStartTimes[0]).toBe(4000)
 
-    ;[4300, 5000, 5300, 6000, 6300, 7000, 7300].forEach(now => {
+    ;[4300, 4600, 5000, 5300, 5600, 6000, 6300, 6600, 7000, 7300, 7600].forEach(now => {
       updateNavalFleet([battleship, ...targets], bullets, createMap(), { occupancyMap: [], explosions: [] }, now, 16)
     })
 
     BATTLESHIP_TURRET_NAMES.forEach((name, index) => {
       expect(battleship.batteries[name].targetId).toBe(targets[index].id)
-      expect(bullets.filter(bullet => bullet.id.includes(`-${name}-`))).toHaveLength(2)
+      expect(bullets.filter(bullet => bullet.id.includes(`-${name}-`))).toHaveLength(3)
     })
-    expect(bullets).toHaveLength(8)
+    expect(bullets).toHaveLength(12)
 
     updateNavalFleet([battleship, ...targets], bullets, createMap(), { occupancyMap: [], explosions: [] }, 11999, 16)
-    expect(bullets).toHaveLength(8)
+    expect(bullets).toHaveLength(12)
     updateNavalFleet([battleship, ...targets], bullets, createMap(), { occupancyMap: [], explosions: [] }, 12000, 16)
-    expect(bullets).toHaveLength(9)
+    expect(bullets).toHaveLength(13)
   })
 
   it('hydrates battleship turret state once and preserves every hot-loop object identity', () => {
@@ -955,7 +956,8 @@ describe('six-ship naval fleet systems', () => {
     expect(battleship.direction).toBe(0)
     expect(bullets).toHaveLength(1)
     expect(bullets[0].id).toContain('-foreOuter-0-')
-    expect(battleship.batteries.aftInner.scheduledAt).toBeNull()
+    // aftInner is forward of the superstructure, so it has a clear forward arc as well.
+    expect(battleship.batteries.aftInner.scheduledAt).not.toBeNull()
     expect(battleship.batteries.aftOuter.scheduledAt).toBeNull()
   })
 
