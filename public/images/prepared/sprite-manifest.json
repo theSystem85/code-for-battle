@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "770fbc2dc58d77c1",
+  "assetVersion": "a97f7f3ed9e635f1",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -10,10 +10,10 @@
     3
   ],
   "inventory": {
-    "entryCount": 300,
-    "sourceCount": 59,
-    "generatedVariantCount": 900,
-    "decodedVariantBytes": 38655920
+    "entryCount": 303,
+    "sourceCount": 62,
+    "generatedVariantCount": 909,
+    "decodedVariantBytes": 38689440
   },
   "entries": [
     {
@@ -17123,6 +17123,157 @@
           "backingWidth": 96,
           "backingHeight": 96,
           "decodedBytes": 36864
+        }
+      ]
+    },
+    {
+      "id": "unit:lightTank:barrel",
+      "category": "unit",
+      "source": "/images/map/units/lightTank_barrel.webp",
+      "sourceWidth": 12,
+      "sourceHeight": 83,
+      "logicalWidth": 1.431864406779661,
+      "logicalHeight": 9.903728813559322,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "center": {
+          "x": 0.7159322033898305,
+          "y": 4.951864406779661
+        },
+        "muzzle": {
+          "x": 0.7159322033898305,
+          "y": 9.903728813559322,
+          "sourceX": 6,
+          "sourceY": 83
+        }
+      },
+      "states": [
+        "base",
+        "recoil"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/unit/lightTank/barrel@1x.webp",
+          "backingWidth": 1,
+          "backingHeight": 10,
+          "decodedBytes": 40
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/unit/lightTank/barrel@2x.webp",
+          "backingWidth": 3,
+          "backingHeight": 20,
+          "decodedBytes": 240
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/unit/lightTank/barrel@3x.webp",
+          "backingWidth": 4,
+          "backingHeight": 30,
+          "decodedBytes": 480
+        }
+      ]
+    },
+    {
+      "id": "unit:lightTank:turret",
+      "category": "unit",
+      "source": "/images/map/units/lightTank_turret.webp",
+      "sourceWidth": 99,
+      "sourceHeight": 117,
+      "logicalWidth": 11.812881355932204,
+      "logicalHeight": 13.960677966101695,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "center": {
+          "x": 5.906440677966102,
+          "y": 6.9803389830508475
+        },
+        "barrelMount": {
+          "x": 5.966101694915254,
+          "y": 17.778983050847458,
+          "sourceX": 50,
+          "sourceY": 149
+        }
+      },
+      "states": [
+        "base"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/unit/lightTank/turret@1x.webp",
+          "backingWidth": 12,
+          "backingHeight": 14,
+          "decodedBytes": 672
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/unit/lightTank/turret@2x.webp",
+          "backingWidth": 24,
+          "backingHeight": 28,
+          "decodedBytes": 2688
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/unit/lightTank/turret@3x.webp",
+          "backingWidth": 35,
+          "backingHeight": 42,
+          "decodedBytes": 5880
+        }
+      ]
+    },
+    {
+      "id": "unit:lightTank:wagon",
+      "category": "unit",
+      "source": "/images/map/units/lightTank_wagon.webp",
+      "sourceWidth": 125,
+      "sourceHeight": 236,
+      "logicalWidth": 14.915254237288137,
+      "logicalHeight": 28.16,
+      "hasAlpha": true,
+      "alphaMode": "straight",
+      "anchorSpace": "logical-pixels",
+      "anchors": {
+        "center": {
+          "x": 7.457627118644068,
+          "y": 14.08
+        },
+        "turretMount": {
+          "x": 7.397966101694916,
+          "y": 13.36406779661017,
+          "sourceX": 62,
+          "sourceY": 112
+        }
+      },
+      "states": [
+        "base"
+      ],
+      "variants": [
+        {
+          "density": 1,
+          "path": "/images/prepared/unit/lightTank/wagon@1x.webp",
+          "backingWidth": 15,
+          "backingHeight": 28,
+          "decodedBytes": 1680
+        },
+        {
+          "density": 2,
+          "path": "/images/prepared/unit/lightTank/wagon@2x.webp",
+          "backingWidth": 30,
+          "backingHeight": 56,
+          "decodedBytes": 6720
+        },
+        {
+          "density": 3,
+          "path": "/images/prepared/unit/lightTank/wagon@3x.webp",
+          "backingWidth": 45,
+          "backingHeight": 84,
+          "decodedBytes": 15120
         }
       ]
     },
