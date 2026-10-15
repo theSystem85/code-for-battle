@@ -4,7 +4,12 @@ import { TILE_SIZE, RECOIL_DISTANCE, RECOIL_DURATION, MUZZLE_FLASH_DURATION, MUZ
 import tankImageConfigData from '../tankImageConfig.json' with { type: 'json' }
 import { gameState } from '../gameState.js'
 import { getSimulationTime } from '../game/time.js'
-import { drawPreparedSpriteCentered, getPreparedSprite } from './prepared/preparedSpritePipeline.js'
+import { drawPreparedSpriteCentered, getPreparedSprite, getPreparedSpriteState } from './prepared/preparedSpritePipeline.js'
+import {
+  getTankRotationFrame,
+  scheduleTankRotationCache,
+  snapToDevicePixel
+} from './tankRotationCache.js'
 
 // Tank image asset cache - organized by tank variant
 const tankImageCache = {
@@ -49,11 +54,42 @@ const PREPARED_TANK_IDS = Object.freeze({
   })
 })
 
+const TANK_VARIANTS = Object.freeze(['tankV1', 'tankV2', 'tankV3'])
+
+function getPreparedTankAssets(variant) {
+  const ids = PREPARED_TANK_IDS[variant]
+  if (!ids) return null
+  const wagon = getPreparedSprite(ids.wagon)
+  const turret = getPreparedSprite(ids.turret)
+  const barrel = getPreparedSprite(ids.barrel)
+  if (!wagon?.image || !turret?.image || !barrel?.image) return null
+  return { wagon: wagon.image, turret: turret.image, barrel: barrel.image }
+}
+
+/**
+ * Pre-render the rotation cache for all tank parts from the currently published prepared
+ * sprites (device density). Runs in idle slices; live rotation is used until it is ready.
+ */
+export function startTankRotationCache() {
+  const state = getPreparedSpriteState()
+  if (!state.ready || !state.density) return Promise.resolve(null)
+  return scheduleTankRotationCache({
+    density: state.density,
+    getSprite: (variant, part) => getPreparedSprite(PREPARED_TANK_IDS[variant][part])
+  })
+}
+
 /**
  * Preload all tank image assets for all variants
  * @param {Function} callback - Called when all images are loaded
  */
 export function preloadTankImages(callback) {
+  // Prepared density variants (@1x/@2x/@3x) already contain every tank part at the
+  // device resolution, so the full-size source images are only fetched as a fallback.
+  if (getPreparedSpriteState().ready && TANK_VARIANTS.every(variant => getPreparedTankAssets(variant))) {
+    if (callback) callback(true)
+    return
+  }
   if (tankImagesLoaded) {
     if (callback) callback(true)
     return
@@ -117,6 +153,7 @@ export function preloadTankImages(callback) {
  */
 export function areTankImagesLoaded(tankType = 'tank_v1') {
   const variant = getTankVariant(tankType)
+  if (getPreparedTankAssets(variant)) return true
   return tankImagesLoaded &&
          tankImageCache[variant] &&
          tankImageCache[variant].wagon &&
@@ -149,6 +186,8 @@ export function getTankVariantForType(tankType) {
 }
 
 export function getTankImageAssets(tankType = 'tank_v1') {
+  const prepared = getPreparedTankAssets(getTankVariant(tankType))
+  if (prepared) return prepared
   if (!areTankImagesLoaded(tankType)) {
     return null
   }
@@ -171,9 +210,11 @@ export function renderTankWithImages(ctx, unit, centerX, centerY, options = {}) 
   const overrideImages = options.images || null
   const variant = getTankVariant(unit.type)
   const preparedIds = PREPARED_TANK_IDS[variant]
-  const preparedWagon = overrideImages ? null : getPreparedSprite(preparedIds.wagon)
-  const preparedTurret = overrideImages ? null : getPreparedSprite(preparedIds.turret)
-  const preparedBarrel = overrideImages ? null : getPreparedSprite(preparedIds.barrel)
+  // Prepared sprites always provide the logical size/mount metadata; override images
+  // (wreck rendering) only replace the pixels.
+  const preparedWagon = getPreparedSprite(preparedIds.wagon)
+  const preparedTurret = getPreparedSprite(preparedIds.turret)
+  const preparedBarrel = getPreparedSprite(preparedIds.barrel)
   if (!overrideImages && !preparedWagon && !areTankImagesLoaded(unit.type)) {
     return false // Images not ready, caller should fall back to original rendering
   }
@@ -189,25 +230,16 @@ export function renderTankWithImages(ctx, unit, centerX, centerY, options = {}) 
     return false
   }
 
-  // Save context state
-  ctx.save()
+  // Snap the tank center to whole device pixels so sprite edges are not resampled at
+  // sub-pixel offsets (the main cause of soft tanks on retina screens).
+  const density = getTankSnapDensity(preparedWagon)
+  const snappedCenterX = snapToDevicePixel(centerX, density)
+  const snappedCenterY = snapToDevicePixel(centerY, density)
 
-  // Move to tank center
-  ctx.translate(centerX, centerY)
-
-  // 1. Render tank wagon (chassis)
-  ctx.save()
-
-  // The wagon image faces down by default, but unit.direction = 0 means facing right
-  // So we need to subtract π/2 to align the image with the unit direction
-  // unit.direction = 0 (right) → rotate by -π/2 to make down-facing image face right
-  // unit.direction = π/2 (down) → rotate by 0 to keep down-facing image facing down
-  // unit.direction = π (left) → rotate by π/2 to make down-facing image face left
-  // unit.direction = 3π/2 (up) → rotate by π to make down-facing image face up
+  // The wagon image faces down by default, but unit.direction = 0 means facing right,
+  // so subtract π/2 to align the image with the unit direction.
   const wagonRotation = unit.direction - Math.PI / 2
-  ctx.rotate(wagonRotation)
 
-  // Don't change aspect ratio - use original image dimensions scaled proportionally
   // Keep original size relationships - scale wagon to fit tile, others maintain relative size
   const wagonSourceWidth = preparedWagon?.sourceWidth || wagonImg.width
   const wagonSourceHeight = preparedWagon?.sourceHeight || wagonImg.height
@@ -216,21 +248,9 @@ export function renderTankWithImages(ctx, unit, centerX, centerY, options = {}) 
     : TILE_SIZE / Math.max(wagonSourceWidth, wagonSourceHeight)
   const wagonWidth = preparedWagon?.logicalWidth || wagonSourceWidth * wagonScale
   const wagonHeight = preparedWagon?.logicalHeight || wagonSourceHeight * wagonScale
+  const turretOnly = unit.type === 'harvester' || unit.type === 'rocketTank'
 
-  if (preparedWagon) {
-    drawPreparedSpriteCentered(ctx, preparedWagon, 0, 0)
-  } else {
-    ctx.drawImage(wagonImg, -wagonWidth / 2, -wagonHeight / 2, wagonWidth, wagonHeight)
-  }
-  ctx.restore()
-
-  // Skip turret/barrel for harvesters and rocket tanks
-  if (unit.type === 'harvester' || unit.type === 'rocketTank') {
-    ctx.restore()
-    return true
-  }
-
-  // 2. Calculate recoil offset for turret/barrel
+  // Recoil offset for the barrel
   let recoilOffset = 0
   if (!options.disableRecoil && unit.recoilStartTime && now - unit.recoilStartTime <= RECOIL_DURATION) {
     const progress = (now - unit.recoilStartTime) / RECOIL_DURATION
@@ -238,112 +258,156 @@ export function renderTankWithImages(ctx, unit, centerX, centerY, options = {}) 
     recoilOffset = RECOIL_DISTANCE * (1 - easedProgress)
   }
 
-  // 3. Determine turret rotation
-  let turretRotation
-  if (unit.turretDirection !== undefined) {
-    // Use the tank's turret direction (whether targeting or following movement)
-    turretRotation = unit.turretDirection - Math.PI / 2
-  } else {
-    // Fallback - turret follows wagon direction (should rarely happen)
-    turretRotation = wagonRotation
-  }
+  const turretRotation = unit.turretDirection !== undefined
+    ? unit.turretDirection - Math.PI / 2
+    : wagonRotation
 
-  // 4. Calculate turret position using configurable mount point
-  // Convert mount point from image coordinates to world coordinates
-  // The mount point is where the CENTER of the turret should be positioned
+  // Turret mount point (image coordinates -> wagon-local logical coordinates -> rotated)
   const turretMountX = (variantConfig.turretMountPoint.x - wagonSourceWidth / 2) * wagonScale
   const turretMountY = (variantConfig.turretMountPoint.y - wagonSourceHeight / 2) * wagonScale
+  const wagonCos = Math.cos(wagonRotation)
+  const wagonSin = Math.sin(wagonRotation)
+  const rotatedMountX = turretMountX * wagonCos - turretMountY * wagonSin
+  const rotatedMountY = turretMountX * wagonSin + turretMountY * wagonCos
 
-  // Rotate mount point by wagon rotation
-  const rotatedMountX = turretMountX * Math.cos(wagonRotation) - turretMountY * Math.sin(wagonRotation)
-  const rotatedMountY = turretMountX * Math.sin(wagonRotation) + turretMountY * Math.cos(wagonRotation)
-
-  // 5. Render turret (without barrel)
-  ctx.save()
-  ctx.translate(rotatedMountX, rotatedMountY)
-  ctx.rotate(turretRotation)
-
-  // Don't change aspect ratio for turret - maintain original size relationship to wagon
-  const turretScale = wagonScale // Use same scale as wagon to maintain original size relationships
+  const turretScale = wagonScale
   const turretSourceWidth = preparedTurret?.sourceWidth || turretImg.width
   const turretSourceHeight = preparedTurret?.sourceHeight || turretImg.height
   const turretWidth = preparedTurret?.logicalWidth || turretSourceWidth * turretScale
   const turretHeight = preparedTurret?.logicalHeight || turretSourceHeight * turretScale
 
-  // Center the turret on the mount point (no recoil - recoil is applied to barrel only)
-  if (preparedTurret) {
-    drawPreparedSpriteCentered(ctx, preparedTurret, 0, 0)
-  } else {
-    ctx.drawImage(turretImg, -turretWidth / 2, -turretHeight / 2, turretWidth, turretHeight)
-  }
-
-  // Position barrel using configurable mount point on turret
-  // The mount point is relative to the turret image's top-left, but we need it relative to center
+  // Barrel mount point on the turret (relative to turret center). The barrel is drawn
+  // after the turret, but its mount point lies at the front edge of the turret, so the
+  // turret covers the barrel breech (V1, V2 and V3 share this layout).
   const barrelMountX = (variantConfig.barrelMountPoint.x - turretSourceWidth / 2) * turretScale
   const barrelMountY = (variantConfig.barrelMountPoint.y - turretSourceHeight / 2) * turretScale
-
-  // Apply recoil offset to barrel only - recoil goes backward along turret's X-axis
-  // Add configurable rotation offset for debugging/tweaking
   const recoilOffsetRadians = (variantConfig.recoilRotationOffset.degrees * Math.PI) / 180
   const recoilLocalX = -recoilOffset * Math.cos(recoilOffsetRadians)
   const recoilLocalY = -recoilOffset * Math.sin(recoilOffsetRadians)
 
-  // Don't change aspect ratio for barrel - barrel can extend beyond tile (this is OK)
-  const barrelScale = wagonScale // Use same scale as wagon to maintain original size relationships
+  const barrelScale = wagonScale
   const barrelSourceWidth = preparedBarrel?.sourceWidth || barrelImg.width
   const barrelSourceHeight = preparedBarrel?.sourceHeight || barrelImg.height
   const barrelWidth = preparedBarrel?.logicalWidth || barrelSourceWidth * barrelScale
   const barrelHeight = preparedBarrel?.logicalHeight || barrelSourceHeight * barrelScale
 
-  // Center the barrel on its mount point with recoil offset in local coordinates
-  if (preparedBarrel) {
-    drawPreparedSpriteCentered(
+  const barrelLocalX = barrelMountX + recoilLocalX
+  const barrelLocalY = barrelMountY + recoilLocalY
+
+  // Fast path: pre-rendered rotation frames drawn with an identity rotation at snapped positions.
+  const cachedWagon = overrideImages ? null : getTankRotationFrame(variant, 'wagon', wagonRotation, preparedWagon)
+  const cachedTurret = cachedWagon && !turretOnly ? getTankRotationFrame(variant, 'turret', turretRotation, preparedTurret) : null
+  const cachedBarrel = cachedTurret ? getTankRotationFrame(variant, 'barrel', turretRotation, preparedBarrel) : null
+
+  if (cachedWagon && (turretOnly || (cachedTurret && cachedBarrel))) {
+    drawRotationFrame(ctx, cachedWagon, snappedCenterX, snappedCenterY)
+    if (turretOnly) return true
+    const turretX = snappedCenterX + rotatedMountX
+    const turretY = snappedCenterY + rotatedMountY
+    drawRotationFrame(ctx, cachedTurret, turretX, turretY)
+    const turretCos = Math.cos(turretRotation)
+    const turretSin = Math.sin(turretRotation)
+    drawRotationFrame(
       ctx,
-      preparedBarrel,
-      barrelMountX + recoilLocalX,
-      barrelMountY + recoilLocalY
+      cachedBarrel,
+      turretX + barrelLocalX * turretCos - barrelLocalY * turretSin,
+      turretY + barrelLocalX * turretSin + barrelLocalY * turretCos
     )
-  } else {
-    ctx.drawImage(
-      barrelImg,
-      barrelMountX - barrelWidth / 2 + recoilLocalX,
-      barrelMountY - barrelHeight / 2 + recoilLocalY,
-      barrelWidth,
-      barrelHeight
-    )
+    if (hasActiveMuzzleFlash(unit, now, options)) {
+      ctx.save()
+      ctx.translate(turretX, turretY)
+      ctx.rotate(turretRotation)
+      drawMuzzleFlash(ctx, unit, now, variantConfig, barrelLocalX, barrelLocalY, barrelSourceWidth, barrelSourceHeight, barrelScale)
+      ctx.restore()
+    }
+    return true
   }
 
-  // 7. Render muzzle flash if active
-  if (!options.disableMuzzleFlash && unit.muzzleFlashStartTime && now - unit.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION) {
-    const flashProgress = (now - unit.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION
-    const flashAlpha = 1 - flashProgress
-    const flashSize = MUZZLE_FLASH_SIZE * (1 - flashProgress * 0.5)
+  // Fallback: live rotation (rotation cache not ready yet, or wreck override images).
+  ctx.save()
+  ctx.translate(snappedCenterX, snappedCenterY)
 
-    ctx.save()
-    ctx.globalAlpha = flashAlpha
+  ctx.save()
+  ctx.rotate(wagonRotation)
+  if (preparedWagon && !overrideImages) {
+    drawPreparedSpriteCentered(ctx, preparedWagon, 0, 0)
+  } else {
+    ctx.drawImage(wagonImg, -wagonWidth / 2, -wagonHeight / 2, wagonWidth, wagonHeight)
+  }
+  ctx.restore()
 
-    // Position muzzle flash using configurable offset relative to barrel
-    // The flash should also be affected by recoil (same local coordinate system)
-    const flashX = barrelMountX + (variantConfig.muzzleFlashOffset.x - barrelSourceWidth / 2) * barrelScale + recoilLocalX
-    const flashY = barrelMountY + (variantConfig.muzzleFlashOffset.y - barrelSourceHeight / 2) * barrelScale + recoilLocalY
-
-    // Create radial gradient for muzzle flash
-    const gradient = ctx.createRadialGradient(flashX, flashY, 0, flashX, flashY, flashSize)
-    gradient.addColorStop(0, '#FFF')
-    gradient.addColorStop(0.3, '#FF0')
-    gradient.addColorStop(1, 'rgba(255, 165, 0, 0)')
-
-    ctx.fillStyle = gradient
-    ctx.beginPath()
-    ctx.arc(flashX, flashY, flashSize, 0, Math.PI * 2)
-    ctx.fill()
+  if (turretOnly) {
     ctx.restore()
+    return true
+  }
+
+  ctx.save()
+  ctx.translate(rotatedMountX, rotatedMountY)
+  ctx.rotate(turretRotation)
+
+  if (preparedTurret && !overrideImages) {
+    drawPreparedSpriteCentered(ctx, preparedTurret, 0, 0)
+  } else {
+    ctx.drawImage(turretImg, -turretWidth / 2, -turretHeight / 2, turretWidth, turretHeight)
+  }
+
+  if (preparedBarrel && !overrideImages) {
+    drawPreparedSpriteCentered(ctx, preparedBarrel, barrelLocalX, barrelLocalY)
+  } else {
+    ctx.drawImage(barrelImg, barrelLocalX - barrelWidth / 2, barrelLocalY - barrelHeight / 2, barrelWidth, barrelHeight)
+  }
+
+  if (hasActiveMuzzleFlash(unit, now, options)) {
+    drawMuzzleFlash(ctx, unit, now, variantConfig, barrelLocalX, barrelLocalY, barrelSourceWidth, barrelSourceHeight, barrelScale)
   }
 
   ctx.restore() // Restore turret transformation
   ctx.restore() // Restore main transformation
 
   return true // Successfully rendered with images
+}
+
+function getTankSnapDensity(preparedSprite) {
+  if (preparedSprite?.density) return preparedSprite.density
+  const overlay = typeof window !== 'undefined' ? window.gameState?.overlayCanvasPixelRatio : 0
+  if (Number.isFinite(overlay) && overlay > 0) return overlay
+  return (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+}
+
+function drawRotationFrame(ctx, frame, x, y) {
+  const half = frame.logicalSize / 2
+  ctx.drawImage(
+    frame.image,
+    snapToDevicePixel(x, frame.density) - half,
+    snapToDevicePixel(y, frame.density) - half,
+    frame.logicalSize,
+    frame.logicalSize
+  )
+}
+
+function hasActiveMuzzleFlash(unit, now, options) {
+  return !options.disableMuzzleFlash && unit.muzzleFlashStartTime && now - unit.muzzleFlashStartTime <= MUZZLE_FLASH_DURATION
+}
+
+// Draws the muzzle flash in turret-local coordinates (caller sets up the turret transform).
+function drawMuzzleFlash(ctx, unit, now, variantConfig, barrelLocalX, barrelLocalY, barrelSourceWidth, barrelSourceHeight, barrelScale) {
+  const flashProgress = (now - unit.muzzleFlashStartTime) / MUZZLE_FLASH_DURATION
+  const flashAlpha = 1 - flashProgress
+  const flashSize = MUZZLE_FLASH_SIZE * (1 - flashProgress * 0.5)
+
+  ctx.save()
+  ctx.globalAlpha = flashAlpha
+  const flashX = barrelLocalX + (variantConfig.muzzleFlashOffset.x - barrelSourceWidth / 2) * barrelScale
+  const flashY = barrelLocalY + (variantConfig.muzzleFlashOffset.y - barrelSourceHeight / 2) * barrelScale
+  const gradient = ctx.createRadialGradient(flashX, flashY, 0, flashX, flashY, flashSize)
+  gradient.addColorStop(0, '#FFF')
+  gradient.addColorStop(0.3, '#FF0')
+  gradient.addColorStop(1, 'rgba(255, 165, 0, 0)')
+  ctx.fillStyle = gradient
+  ctx.beginPath()
+  ctx.arc(flashX, flashY, flashSize, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.restore()
 }
 
 /**

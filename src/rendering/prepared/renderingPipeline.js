@@ -9,6 +9,8 @@ import {
   publishPreparedSpriteRegistry
 } from './preparedSpritePipeline.js'
 import { getMapMutationRevisionStore } from './mapMutationNotifier.js'
+import { startTankRotationCache } from '../tankImageRenderer.js'
+import { resetTankRotationCache } from '../tankRotationCache.js'
 
 const PIPELINE_BYTE_LIMIT = 512 * 1024 * 1024
 
@@ -18,6 +20,7 @@ let mapGeneration = 0
 let densityListenerBound = false
 let lastPreparedDensity = 0
 let lastPreparedMapKey = ''
+let inflightSprites = null
 
 function createPipelineBudget() {
   return new RenderByteBudget(Object.fromEntries(RENDER_BYTE_OWNERS.map(owner => [owner, PIPELINE_BYTE_LIMIT])))
@@ -34,12 +37,32 @@ export function bindRenderingDensityPreparation() {
   if (densityListenerBound || typeof document === 'undefined') return
   densityListenerBound = true
   document.addEventListener('canvas-density-changed', event => {
-    const density = Number(event.detail?.density)
+    const density = resolveSpriteDensityFromEvent(event.detail)
     if (!Number.isFinite(density) || density <= 0) return
-    prepareRuntimeSprites({ density }).catch(error => {
+    prepareRuntimeSprites({ density }).then(prepared => {
+      if (prepared?.registry) {
+        document.dispatchEvent(new CustomEvent('prepared-sprites-published', {
+          detail: { registry: prepared.registry, density: prepared.density }
+        }))
+      }
+    }).catch(error => {
       if (typeof window !== 'undefined') window.logger?.warn?.('Prepared sprite density swap failed', error)
     })
   })
+}
+
+/**
+ * Units and buildings are drawn on the overlay canvas at its own (native) DPR, so prepared
+ * sprites follow overlayPixelRatio. The event never carried a `density` field; reading it
+ * meant DPR changes (zoom, moving the window to another display) never swapped variants.
+ */
+export function resolveSpriteDensityFromEvent(detail) {
+  const candidates = [detail?.overlayPixelRatio, detail?.rawPixelRatio, detail?.pixelRatio, detail?.density]
+  for (const candidate of candidates) {
+    const value = Number(candidate)
+    if (Number.isFinite(value) && value > 0) return value
+  }
+  return NaN
 }
 
 export async function prepareRuntimeSprites({
@@ -54,6 +77,21 @@ export async function prepareRuntimeSprites({
     reportBootSprites(1, 1)
     return state
   }
+  // The initial canvas density event and the boot preparation can ask for the same density
+  // at the same time; share one preparation instead of fetching every variant twice.
+  if (inflightSprites && Math.abs(inflightSprites.density - density) < 0.0001) {
+    return inflightSprites.promise
+  }
+  const promise = prepareAndPublishSprites({ density, signal, onProgress })
+  inflightSprites = { density, promise }
+  try {
+    return await promise
+  } finally {
+    if (inflightSprites?.promise === promise) inflightSprites = null
+  }
+}
+
+async function prepareAndPublishSprites({ density, signal, onProgress }) {
   const prepared = await prepareSpriteRegistry({
     density,
     assetGeneration: ++spriteAssetGeneration,
@@ -62,6 +100,9 @@ export async function prepareRuntimeSprites({
   })
   publishPreparedSpriteRegistry(prepared)
   lastPreparedDensity = density
+  // Rotated tank frames are built from the freshly published density variant in idle time.
+  resetTankRotationCache()
+  startTankRotationCache()
   return prepared
 }
 
@@ -107,4 +148,6 @@ export function resetRenderingPipelineForTests() {
   lastPreparedDensity = 0
   lastPreparedMapKey = ''
   densityListenerBound = false
+  inflightSprites = null
+  resetTankRotationCache()
 }

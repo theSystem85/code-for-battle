@@ -12,7 +12,7 @@ export class CanvasManager {
     this.gameGl = this.initializeGlContext()
     this.minimapCanvas = document.getElementById('minimap')
     this.minimapCtx = this.minimapCanvas ? this.minimapCanvas.getContext('2d') : null
-    this.adaptivePixelRatioCap = this.isTouchLayout() ? 1 : MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
     this.graphicsPixelRatioCap = Infinity
     this.automaticDensityAdjustmentEnabled = false
     this.pixelRatio = this.resolvePixelRatio()
@@ -24,6 +24,7 @@ export class CanvasManager {
     this.lastAdaptivePixelRatioCheck = 0
     this.lastAdaptivePixelRatioChange = 0
     this.stableCameraSince = 0
+    this.resetTerrainDensityGovernor()
     this.handleLayoutChange = () => this.resizeCanvases()
     this.resizeObserver = null
 
@@ -57,8 +58,9 @@ export class CanvasManager {
   }
 
   resetAdaptivePixelRatioCap() {
-    this.adaptivePixelRatioCap = this.isTouchLayout() ? 1 : MOBILE_CANVAS_PIXEL_RATIO_CAP
+    this.adaptivePixelRatioCap = MOBILE_CANVAS_PIXEL_RATIO_CAP
     this.stableCameraSince = 0
+    this.resetTerrainDensityGovernor()
     this.resizeCanvases()
   }
 
@@ -120,6 +122,55 @@ export class CanvasManager {
 
     this.adaptivePixelRatioCap = nextCap
     this.lastAdaptivePixelRatioChange = now
+    this.resizeCanvases()
+    return true
+  }
+
+  resetTerrainDensityGovernor() {
+    this.terrainGovernor = {
+      lastSample: 0,
+      lowSamples: 0,
+      refreshEstimate: 60,
+      lastStepDown: 0
+    }
+  }
+
+  /**
+   * Step-down-only governor for the mobile terrain DPR (default cap 2x).
+   * The frame target is the 75 FPS gate, limited by what the display can present
+   * (estimated from the highest FPS observed, e.g. 60 Hz iPhones). When the measured
+   * FPS stays more than 3 FPS below that target for 3 consecutive one-second samples,
+   * the terrain cap drops by 0.5 (never below 1x). It never raises automatically during
+   * a session, so the terrain is not re-prepared back and forth while scrolling.
+   * Units, buildings and UI always stay at native DPR.
+   */
+  updateTerrainDensityGovernor(fps, now = performance.now()) {
+    const rawPixelRatio = (typeof window !== 'undefined' && window.devicePixelRatio) || 1
+    if (!this.terrainGovernor) this.resetTerrainDensityGovernor()
+    const governor = this.terrainGovernor
+    if (
+      this.automaticDensityAdjustmentEnabled ||
+      !this.isTouchLayout() ||
+      rawPixelRatio <= 1 ||
+      this.adaptivePixelRatioCap <= 1 ||
+      !Number.isFinite(fps) ||
+      fps <= 0
+    ) {
+      return false
+    }
+    if (now - governor.lastSample < 1000) return false
+    governor.lastSample = now
+    governor.refreshEstimate = Math.max(governor.refreshEstimate, Math.min(fps, 240))
+    const target = Math.min(75, governor.refreshEstimate)
+    if (fps >= target - 3) {
+      governor.lowSamples = 0
+      return false
+    }
+    governor.lowSamples += 1
+    if (governor.lowSamples < 3 || now - governor.lastStepDown < 3000) return false
+    governor.lowSamples = 0
+    governor.lastStepDown = now
+    this.adaptivePixelRatioCap = Math.max(1, this.adaptivePixelRatioCap - 0.5)
     this.resizeCanvases()
     return true
   }

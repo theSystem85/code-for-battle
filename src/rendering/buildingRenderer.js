@@ -28,7 +28,7 @@ export class BuildingRenderer {
   }
 
   getPreparedSprite(key) {
-    if (this.preparedSpriteRegistry) {
+    if (this.preparedSpriteRegistry && !this.preparedSpriteRegistry.disposed) {
       try {
         return this.preparedSpriteRegistry.get(key) || null
       } catch {

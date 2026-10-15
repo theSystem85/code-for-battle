@@ -1,8 +1,9 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "d421ff9671ca7606",
+  "assetVersion": "a34428a77697a297",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
+  "unitWebpQuality": 95,
   "densities": [
     1,
     2,
@@ -10,9 +11,9 @@
   ],
   "inventory": {
     "entryCount": 300,
-    "sourceCount": 58,
+    "sourceCount": 59,
     "generatedVariantCount": 900,
-    "decodedVariantBytes": 38649120
+    "decodedVariantBytes": 38655920
   },
   "entries": [
     {
@@ -17025,7 +17026,7 @@
     {
       "id": "unit:howitzer:barrel",
       "category": "unit",
-      "source": "/images/map/units/tankV1_barrel.webp",
+      "source": "/images/map/units/howitzer_barrel.webp",
       "sourceWidth": 5,
       "sourceHeight": 64,
       "logicalWidth": 2.5,
@@ -17355,23 +17356,23 @@
       "id": "unit:tankV1:barrel",
       "category": "unit",
       "source": "/images/map/units/tankV1_barrel.webp",
-      "sourceWidth": 5,
-      "sourceHeight": 64,
-      "logicalWidth": 2.5396825396825395,
-      "logicalHeight": 32.507936507936506,
+      "sourceWidth": 11,
+      "sourceHeight": 115,
+      "logicalWidth": 1.8624338624338623,
+      "logicalHeight": 19.470899470899468,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 1.2698412698412698,
-          "y": 16.253968253968253
+          "x": 0.9312169312169312,
+          "y": 9.735449735449734
         },
         "muzzle": {
-          "x": 1.0158730158730158,
-          "y": 32.507936507936506,
-          "sourceX": 2,
-          "sourceY": 64
+          "x": 0.8465608465608465,
+          "y": 19.470899470899468,
+          "sourceX": 5,
+          "sourceY": 115
         }
       },
       "states": [
@@ -17382,23 +17383,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/tankV1/barrel@1x.webp",
-          "backingWidth": 3,
-          "backingHeight": 33,
-          "decodedBytes": 396
+          "backingWidth": 2,
+          "backingHeight": 19,
+          "decodedBytes": 152
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/tankV1/barrel@2x.webp",
-          "backingWidth": 5,
-          "backingHeight": 65,
-          "decodedBytes": 1300
+          "backingWidth": 4,
+          "backingHeight": 39,
+          "decodedBytes": 624
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/tankV1/barrel@3x.webp",
-          "backingWidth": 8,
-          "backingHeight": 98,
-          "decodedBytes": 3136
+          "backingWidth": 6,
+          "backingHeight": 58,
+          "decodedBytes": 1392
         }
       ]
     },
@@ -17406,23 +17407,23 @@
       "id": "unit:tankV1:turret",
       "category": "unit",
       "source": "/images/map/units/tankV1_turret.webp",
-      "sourceWidth": 34,
-      "sourceHeight": 38,
-      "logicalWidth": 17.26984126984127,
-      "logicalHeight": 19.3015873015873,
+      "sourceWidth": 106,
+      "sourceHeight": 138,
+      "logicalWidth": 17.947089947089946,
+      "logicalHeight": 23.365079365079364,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 8.634920634920634,
-          "y": 9.65079365079365
+          "x": 8.973544973544973,
+          "y": 11.682539682539682
         },
         "barrelMount": {
-          "x": 8.634920634920634,
-          "y": 17.77777777777778,
-          "sourceX": 17,
-          "sourceY": 35
+          "x": 8.973544973544973,
+          "y": 31.49206349206349,
+          "sourceX": 53,
+          "sourceY": 186
         }
       },
       "states": [
@@ -17432,23 +17433,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/tankV1/turret@1x.webp",
-          "backingWidth": 17,
-          "backingHeight": 19,
-          "decodedBytes": 1292
+          "backingWidth": 18,
+          "backingHeight": 23,
+          "decodedBytes": 1656
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/tankV1/turret@2x.webp",
-          "backingWidth": 35,
-          "backingHeight": 39,
-          "decodedBytes": 5460
+          "backingWidth": 36,
+          "backingHeight": 47,
+          "decodedBytes": 6768
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/tankV1/turret@3x.webp",
-          "backingWidth": 52,
-          "backingHeight": 58,
-          "decodedBytes": 12064
+          "backingWidth": 54,
+          "backingHeight": 70,
+          "decodedBytes": 15120
         }
       ]
     },
@@ -17456,23 +17457,23 @@
       "id": "unit:tankV1:wagon",
       "category": "unit",
       "source": "/images/map/units/tankV1_wagon.webp",
-      "sourceWidth": 38,
-      "sourceHeight": 63,
-      "logicalWidth": 19.3015873015873,
+      "sourceWidth": 129,
+      "sourceHeight": 189,
+      "logicalWidth": 21.841269841269842,
       "logicalHeight": 32,
       "hasAlpha": true,
       "alphaMode": "straight",
       "anchorSpace": "logical-pixels",
       "anchors": {
         "center": {
-          "x": 9.65079365079365,
+          "x": 10.920634920634921,
           "y": 16
         },
         "turretMount": {
-          "x": 9.65079365079365,
-          "y": 16.253968253968253,
-          "sourceX": 19,
-          "sourceY": 32
+          "x": 11.005291005291005,
+          "y": 14.39153439153439,
+          "sourceX": 65,
+          "sourceY": 85
         }
       },
       "states": [
@@ -17482,23 +17483,23 @@
         {
           "density": 1,
           "path": "/images/prepared/unit/tankV1/wagon@1x.webp",
-          "backingWidth": 19,
+          "backingWidth": 22,
           "backingHeight": 32,
-          "decodedBytes": 2432
+          "decodedBytes": 2816
         },
         {
           "density": 2,
           "path": "/images/prepared/unit/tankV1/wagon@2x.webp",
-          "backingWidth": 39,
+          "backingWidth": 44,
           "backingHeight": 64,
-          "decodedBytes": 9984
+          "decodedBytes": 11264
         },
         {
           "density": 3,
           "path": "/images/prepared/unit/tankV1/wagon@3x.webp",
-          "backingWidth": 58,
+          "backingWidth": 66,
           "backingHeight": 96,
-          "decodedBytes": 22272
+          "decodedBytes": 25344
         }
       ]
     },

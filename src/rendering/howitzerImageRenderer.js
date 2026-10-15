@@ -87,7 +87,7 @@ export function preloadHowitzerImage(callback) {
     handleAssetLoaded()
   }
   howitzerBarrelImg.onerror = () => handleAssetError('barrel')
-  howitzerBarrelImg.src = 'images/map/units/tankV1_barrel.webp'
+  howitzerBarrelImg.src = 'images/map/units/howitzer_barrel.webp'
 }
 
 export function isHowitzerImageLoaded() {

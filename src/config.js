@@ -436,7 +436,9 @@ export function setUseProceduralWaterRendering(value) {
   return USE_PROCEDURAL_WATER_RENDERING
 }
 
-export let MOBILE_CANVAS_PIXEL_RATIO_CAP = 1
+// Mobile terrain (map ground) DPR cap. 2x keeps the ground sharp on retina phones; the
+// CanvasManager terrain-density governor steps it down when frames miss the target.
+export let MOBILE_CANVAS_PIXEL_RATIO_CAP = 2
 
 export function setMobileCanvasPixelRatioCap(value) {
   MOBILE_CANVAS_PIXEL_RATIO_CAP = clampNumber(value, 1, 3, MOBILE_CANVAS_PIXEL_RATIO_CAP)

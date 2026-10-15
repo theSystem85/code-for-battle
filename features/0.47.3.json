@@ -1,0 +1,12 @@
+{
+  "version": "0.47.3",
+  "features": [],
+  "improvements": [
+    "Sharper tanks on retina screens with pre-rendered rotations.",
+    "Tank V1 redesigned in Leopard style with brown camouflage.",
+    "Sharper map ground on phones (2x, steps down if FPS drops)."
+  ],
+  "bugfixes": [
+    "Sprites now reload at the right resolution when screen DPR changes."
+  ]
+}

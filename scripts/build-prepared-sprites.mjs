@@ -10,6 +10,17 @@ const OUTPUT_ROOT = path.join(ROOT, 'public/images/prepared')
 const TILE_SIZE = 32
 const DENSITIES = Object.freeze([1, 2, 3])
 const WEBP_QUALITY = 85
+// Unit sprites (tanks, vehicles, ships, aircraft) carry thin high-contrast details such as
+// camouflage edges and barrels, which q85 4:2:0 chroma subsampling smears. They use q95 with
+// sharp-YUV ("smartSubsample") chroma; buildings and other sprites keep q85.
+const UNIT_WEBP_QUALITY = 95
+const UNIT_SPRITE_PREFIXES = Object.freeze(['unit:', 'naval:', 'aircraft:'])
+
+export function webpOptionsForSprite(id) {
+  const unitSprite = UNIT_SPRITE_PREFIXES.some(prefix => id.startsWith(prefix))
+  const quality = unitSprite ? UNIT_WEBP_QUALITY : WEBP_QUALITY
+  return { quality, alphaQuality: quality, effort: 6, smartSubsample: unitSprite }
+}
 const APACHE_BUCKET_DEGREES = Object.freeze(Array.from({ length: 48 }, (_, index) => index * 7.5))
 const APACHE_TILT_STATES = Object.freeze(['neutral', 'forward', 'backward', 'left', 'right'])
 
@@ -72,7 +83,7 @@ const definitions = [
   },
   {
     id: 'unit:howitzer:barrel',
-    source: unitSource('tankV1_barrel.webp'),
+    source: unitSource('howitzer_barrel.webp'),
     target: { reference: unitSource('howitzer_map.webp'), maxDimension: TILE_SIZE },
     anchors: { mountSource: [2, 0], muzzleSource: [2, 64] },
     states: ['base', 'recoil']
@@ -262,7 +273,7 @@ async function buildSpriteVariant(definition, logicalSize, density) {
   await mkdir(path.dirname(output), { recursive: true })
   await sharp(absolutePublicPath(definition.source))
     .resize(width, height, { fit: 'fill', kernel: sharp.kernel.lanczos3 })
-    .webp({ quality: WEBP_QUALITY, alphaQuality: WEBP_QUALITY, effort: 6 })
+    .webp(webpOptionsForSprite(definition.id))
     .toFile(output)
   return {
     density,
@@ -339,7 +350,7 @@ async function buildApacheAtlas(density) {
     create: { width: atlasWidth, height: atlasHeight, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } }
   })
     .composite(composites)
-    .webp({ quality: WEBP_QUALITY, alphaQuality: WEBP_QUALITY, effort: 6 })
+    .webp(webpOptionsForSprite('aircraft:apache:body-atlas'))
     .toFile(output)
   return {
     density,
@@ -355,7 +366,7 @@ async function buildApacheAtlas(density) {
 async function main() {
   const sourceInventory = await inspectSources()
   const versionHash = createHash('sha256')
-  versionHash.update(JSON.stringify({ definitions, densities: DENSITIES, quality: WEBP_QUALITY }))
+  versionHash.update(JSON.stringify({ definitions, densities: DENSITIES, quality: WEBP_QUALITY, unitQuality: UNIT_WEBP_QUALITY, unitSmartSubsample: true }))
   for (const [source, metadata] of sourceInventory) versionHash.update(`${source}:${metadata.sha256}`)
   const assetVersion = versionHash.digest('hex').slice(0, 16)
 
@@ -427,6 +438,7 @@ async function main() {
     assetVersion,
     generatedBy: 'scripts/build-prepared-sprites.mjs',
     webpQuality: WEBP_QUALITY,
+    unitWebpQuality: UNIT_WEBP_QUALITY,
     densities: DENSITIES,
     inventory: {
       entryCount: entries.length,
