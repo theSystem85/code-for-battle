@@ -48,6 +48,7 @@ const TRANSPORT_ALIGNMENT_TOLERANCE = 0.035
 // Half the former rounds-per-minute rate (previously one shot per 2.6s).
 export const SUBMARINE_TORPEDO_COOLDOWN = 5200
 const BATTLESHIP_BARREL_DELAY = 300
+const BATTLESHIP_AMMO_PER_SALVO = 2
 const BATTLESHIP_TURRET_DELAY = 1000
 const BATTLESHIP_RELOAD_DURATION = 8000
 const BATTLESHIP_AIM_TOLERANCE = 0.045
@@ -1288,7 +1289,9 @@ function hasBattleshipHullControlOverride(ship) {
 
 function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, now) {
   const turret = ship.batteries[turretName]
-  if (!turret || turret.enabled === false || ship.ammunition < 1) return false
+  // A three-shell salvo costs BATTLESHIP_AMMO_PER_SALVO (2) ammunition: the first shells consume it.
+  const consumesAmmo = barrelIndex < BATTLESHIP_AMMO_PER_SALVO
+  if (!turret || turret.enabled === false || (consumesAmmo && ship.ammunition < 1)) return false
   const solution = getBattleshipTargetSolution(ship, turretName, target)
   if (solution.distance > BATTLESHIP_FIRE_RANGE ||
       isBattleshipTurretAngleBlocked(ship, turretName, solution.direction) ||
@@ -1321,7 +1324,7 @@ function fireBattleshipBarrel(ship, turretName, target, barrelIndex, bullets, no
     startTime: now,
     skipCollisionChecks: true
   })
-  ship.ammunition--
+  if (consumesAmmo) ship.ammunition--
   turret.barrelRecoilStartTimes[barrelIndex] = now
   turret.muzzleFlashStartTimes[barrelIndex] = now
   if (barrelIndex === BATTLESHIP_BARRELS_PER_TURRET - 1) turret.lastShotTime = now
