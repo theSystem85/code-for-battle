@@ -40,15 +40,39 @@ Use this checklist when adding any new unit type to Code for Battle.
 - Treat map and build-button art as two mandatory, distinct camera conventions:
   - **Build-button/sidebar art:** use a photorealistic elevated three-quarter perspective with the entire unit visible. The horizon must always be visible inside the second quarter from the top of the image (25–50% image height). Ships retain a realistic water background.
   - **Map art:** use a strict 90-degree top-down/orthographic view with clean alpha, the entire unit visible, and the unit facing straight downward (south). Do not use an isometric, three-quarter, diagonal, or horizon-bearing map sprite.
+- Follow the **Retina sprite quality requirements** section below for every map sprite (mandatory since the tank art overhaul, PRs #740/#742 and the light tank).
 - Add rotation animation/facing support matching existing unit conventions. Always default to the single authored strict top-down south-facing map sprite and rotate it programmatically for every angle. Use multiple authored headings only when the user explicitly requests them.
 - Add movement effects such as dust, tracks, rotor wash, jet exhaust, wake, or waves as applicable.
 - Verify effect layer order (for example, wakes below a ship), emit movement effects only after actual displacement/current speed, and let residual particles fade after stopping.
 - Add damage smoke/fire and destruction animation, wreck or sink behavior, and sound hooks.
 - Explicitly decide whether the new unit/building emits smoke; do not inherit smoke spots from source artwork assumptions.
 
+## Retina sprite quality requirements
+These rules come from the tank image overhaul (#740, #742) and the light tank. Every new map sprite must meet them.
+
+- **Three densities, served by DPR:** register the sprite in `scripts/build-prepared-sprites.mjs` and run `npm run make:prepared-sprites`. This writes `@1x/@2x/@3x` WebP variants under `public/images/prepared/` plus the manifest entry; the runtime picks the variant matching the device pixel ratio. Update the entry count assertions in `tests/unit/preparedSpriteImageRenderers.test.js`.
+- **Source resolution:** the committed source in `public/images/map/units/` must be at least as large as the @3x output (3 × logical size, e.g. 96 px for a 1-tile unit). Never upscale to reach @3x; if the generated art is too small, say so in the PR and docs and state the effective resolution. Downscale with premultiplied-alpha Lanczos (avoids dark fringes) and only a mild unsharp mask (radius ≈ 0.8, ≈ 50–60%).
+- **Unit WebP settings:** unit sprites use q95 with sharp-YUV chroma (`webpOptionsForSprite`); do not lower this for camouflage or thin barrels.
+- **Rotations are generated at runtime, never stored:** turreted tanks add their variant to `TANK_ROTATION_VARIANTS` (`src/rendering/tankRotationCache.js`) and the tank image renderer; other units rotate the single south-facing sprite programmatically. Do not commit pre-rotated frames.
+- **Layered hull/turret/barrel units** (tank family): ship three separate images, all facing south (front down), drawn at the same scale:
+  - `wagon` = hull only with tracks; **no turret or gun baked in** (reject generations with a baked-in turret).
+  - `turret` = turret only, no barrel; the turret rotates around its image center, so crop it so the image center is the turret pivot.
+  - `barrel` = barrel only, vertical, muzzle down.
+  - Mount points in `src/tankImageConfig.json`: `turretMountPoint` = turret-ring center on the hull; `barrelMountPoint` = barrel *center* on the turret, placed so the breech starts just under the mantlet (barrel top between ~85% and 100% of turret height). **The barrel must never be drawn over the turret body.** `muzzleFlashOffset` = muzzle tip in barrel pixels.
+  - Check the turret footprint against the hull's turret ring (the turret should cover the ring, not overhang the hull sides) and scale the turret if needed.
+  - Snap the unit center to device pixels (the renderer already does this through `snapToDevicePixel`).
+- **Sharpness and contrast checks:** compare the new sprite with Tank V1 (mean RGB, saturation, luminance spread) and grade it to the same palette before export; inspect zoomed Playwright crops at DPR 1 and DPR 3 next to Tank V1 on grass and on road. The unit must read clearly at DPR 1 and not look washed out or blurry at DPR 3.
+- **Chroma-key cut-outs:** generate on a flat, uniform background color (pure blue works best for desert tones; avoid green with green camo). Key by "blueness", un-mix the background color from anti-aliased edge pixels, then despill. Check edges on a contrasting background at 4× zoom. Example scripts: `docs/asset-sources/light-tank-cutout.py` and `light-tank-build.py`.
+- **Grok Imagine (xAI) prompting:** use at most 1–2 generation attempts per asset, so prepare prompts carefully:
+  - Map sheet: "strictly top-down orthographic, 90-degree overhead view, no perspective", "soft even studio lighting from above, no cast shadows", flat solid background color with no text or grid, one row of three widely separated parts (hull only / turret only, no gun / barrel only), front pointing DOWN, same scale, desert sand base (#C8A46A-like) with dark earth-brown blotches. Attach the Tank V1 sheet (`docs/asset-sources/tank-v1-leopard-spritesheet.webp`) as a style reference when the tool supports it.
+  - Say explicitly "the hull has NO turret and NO gun" — models tend to bake the turret into the hull.
+  - Build button: photorealistic elevated three-quarter view in the desert with the horizon in the 25–50% band. A 16:9 result must be extended to the square button (extend sky/ground, do not stretch the vehicle) and checked in the sidebar.
+  - Keep the raw sheet in `docs/asset-sources/` and record the prompt in `prompt-history/`.
+
 ## Validation
 - Add/update unit tests for reusable logic and production/tech-tree behavior.
 - Test domain-aware cheat spawning, rally paths, AI production routing, low-health service retreat/resume, renderer source selection/rotation, and visual-effect anchor calculations where applicable.
+- Take Playwright screenshots at DPR 1 and DPR 3 of the unit in game next to existing units, plus the build button, and inspect them before committing.
 - Run `npm run test:unit` and fix root causes.
 - Run `npm run lint:fix:changed` and manually resolve remaining lint issues.
 - Update the matching TODO file and specs, and record the prompt in `prompt-history/`. A new unit is a feature: add it under the right area heading in `TODO/Features.md` (above Done) as `- [ ] **Title** — description` plus `Spec: [Title](../specs/....md)` or `Spec: none`. Do not append it to Done or to the end of the file.
