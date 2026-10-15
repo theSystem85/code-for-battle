@@ -15,6 +15,17 @@ const SQUARE_PILLAR = Object.freeze({
   frameHeight: 576
 })
 
+// Full 5:3 frame with no bars. Listed so dark openings (submarine) are not
+// misread as black bars by the first-frame scan.
+const FULL_5X3 = Object.freeze({
+  x: 0,
+  y: 0,
+  width: 960,
+  height: 576,
+  frameWidth: 960,
+  frameHeight: 576
+})
+
 export const MILESTONE_VIDEO_CROPS = Object.freeze({
   first_tank: Object.freeze({
     x: 52,
@@ -28,7 +39,15 @@ export const MILESTONE_VIDEO_CROPS = Object.freeze({
   first_artillery: SQUARE_PILLAR,
   first_mine_layer: SQUARE_PILLAR,
   first_mine_sweeper: SQUARE_PILLAR,
-  first_rocket_tank: SQUARE_PILLAR
+  first_rocket_tank: SQUARE_PILLAR,
+  first_f35: FULL_5X3,
+  first_f22: FULL_5X3,
+  first_apache: FULL_5X3,
+  first_destroyer: FULL_5X3,
+  first_battleship: FULL_5X3,
+  first_submarine: FULL_5X3,
+  shipyard: FULL_5X3,
+  helipad: FULL_5X3
 })
 
 const detectedByVideo = new WeakMap()

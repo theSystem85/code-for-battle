@@ -3,6 +3,20 @@ import { playSyncedVideoAudio } from '../ui/videoOverlay.js'
 import { firstProductionNarrationMilestoneId, setFirstProductionNarrationClaim, setMilestoneAchievedCheck } from '../ui/milestoneMediaCache.js'
 import { showNotification } from '../ui/notifications.js'
 
+export const FIRST_UNIT_VIDEO_MILESTONES = Object.freeze([
+  Object.freeze(['firstF35', 'f35']),
+  Object.freeze(['firstF22', 'f22Raptor']),
+  Object.freeze(['firstApache', 'apache']),
+  Object.freeze(['firstDestroyer', 'destroyer']),
+  Object.freeze(['firstBattleship', 'battleship']),
+  Object.freeze(['firstSubmarine', 'submarine'])
+])
+
+export const FIRST_BUILDING_VIDEO_MILESTONES = Object.freeze([
+  Object.freeze(['firstShipyard', 'shipyard']),
+  Object.freeze(['firstHelipad', 'helipad'])
+])
+
 /**
  * Milestone detection and trigger system
  * Tracks game achievements and triggers audio-visual events
@@ -114,6 +128,62 @@ export class MilestoneSystem {
         displayName: 'Tanker Truck Available',
         description: 'Mobile refueling capabilities unlocked',
         priority: 'medium'
+      },
+      firstF35: {
+        id: 'firstF35',
+        displayName: 'First F-35 Produced',
+        description: 'Your first F-35 stealth fighter is airborne.',
+        videoFilename: 'first_f35',
+        priority: 'high'
+      },
+      firstF22: {
+        id: 'firstF22',
+        displayName: 'First F-22 Raptor Produced',
+        description: 'Your first F-22 Raptor has taken to the skies.',
+        videoFilename: 'first_f22',
+        priority: 'high'
+      },
+      firstApache: {
+        id: 'firstApache',
+        displayName: 'First Apache Produced',
+        description: 'Your first Apache attack helicopter is in the air.',
+        videoFilename: 'first_apache',
+        priority: 'high'
+      },
+      firstDestroyer: {
+        id: 'firstDestroyer',
+        displayName: 'First Destroyer Produced',
+        description: 'Your first Destroyer is ready for action.',
+        videoFilename: 'first_destroyer',
+        priority: 'high'
+      },
+      firstBattleship: {
+        id: 'firstBattleship',
+        displayName: 'First Battleship Produced',
+        description: 'Your first Battleship has joined the fleet.',
+        videoFilename: 'first_battleship',
+        priority: 'high'
+      },
+      firstSubmarine: {
+        id: 'firstSubmarine',
+        displayName: 'First Submarine Produced',
+        description: 'Your first Submarine has slipped beneath the waves.',
+        videoFilename: 'first_submarine',
+        priority: 'high'
+      },
+      firstShipyard: {
+        id: 'firstShipyard',
+        displayName: 'First Shipyard Built',
+        description: 'Naval production is now operational.',
+        videoFilename: 'shipyard',
+        priority: 'high'
+      },
+      firstHelipad: {
+        id: 'firstHelipad',
+        displayName: 'First Helipad Built',
+        description: 'Helicopters can now land, refuel and rearm.',
+        videoFilename: 'helipad',
+        priority: 'high'
       },
       firstAirstrip: {
         id: 'firstAirstrip',
@@ -389,6 +459,22 @@ export class MilestoneSystem {
       )
       if (hasHowitzer) {
         this.triggerMilestone('firstHowitzer')
+      }
+    }
+
+    // First-production milestone videos for air and naval units and buildings.
+    for (let i = 0; i < FIRST_UNIT_VIDEO_MILESTONES.length; i++) {
+      const [milestoneId, unitType] = FIRST_UNIT_VIDEO_MILESTONES[i]
+      if (this.achievedMilestones.has(milestoneId)) continue
+      if (gameState.units?.some(unit => unit.owner === gameState.humanPlayer && unit.type === unitType)) {
+        this.triggerMilestone(milestoneId)
+      }
+    }
+    for (let i = 0; i < FIRST_BUILDING_VIDEO_MILESTONES.length; i++) {
+      const [milestoneId, buildingType] = FIRST_BUILDING_VIDEO_MILESTONES[i]
+      if (this.achievedMilestones.has(milestoneId)) continue
+      if (gameState.buildings?.some(building => building.owner === gameState.humanPlayer && building.type === buildingType)) {
+        this.triggerMilestone(milestoneId)
       }
     }
 
