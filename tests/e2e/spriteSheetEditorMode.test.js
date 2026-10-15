@@ -203,8 +203,9 @@ test.describe('Sprite Sheet Editor integration', () => {
     })
     expect(taggedTileCount).toBeGreaterThan(0)
 
-    const appliedStorage = await page.evaluate(() => {
-      const raw = localStorage.getItem('rts-sse-applied-metadata')
+    const appliedStorage = await page.evaluate(async() => {
+      const { getStoredItem } = await import('/src/storage/indexedDbStorage.js')
+      const raw = getStoredItem('rts-sse-applied-metadata')
       if (!raw) return null
       const parsed = JSON.parse(raw)
       return {
@@ -222,12 +223,13 @@ test.describe('Sprite Sheet Editor integration', () => {
 
     await page.selectOption('#integratedSpriteSheetBiomeSelect', 'snow')
 
-    const runtimeModeEnabled = await page.evaluate(() => {
+    const runtimeModeEnabled = await page.evaluate(async() => {
+      const { getStoredItem } = await import('/src/storage/indexedDbStorage.js')
       return {
         stateFlag: Boolean(window.gameState?.useIntegratedSpriteSheetMode),
-        persistedFlag: localStorage.getItem('rts-integrated-spritesheet-mode'),
+        persistedFlag: getStoredItem('rts-integrated-spritesheet-mode'),
         biomeTag: window.gameState?.activeSpriteSheetBiomeTag || null,
-        persistedBiome: localStorage.getItem('rts-integrated-spritesheet-biome')
+        persistedBiome: getStoredItem('rts-integrated-spritesheet-biome')
       }
     })
 
@@ -314,10 +316,7 @@ test.describe('Sprite Sheet Editor integration', () => {
         biomeTag: 'grass'
       })
 
-      const originalClassifier = textureManager.getLandClassificationTag.bind(textureManager)
-      textureManager.getLandClassificationTag = () => 'passable'
       const landGrass = textureManager.getIntegratedTileForMapTile('land', 2, 2)
-      textureManager.getLandClassificationTag = originalClassifier
 
       return {
         biomeTag: textureManager.integratedBiomeTag,
@@ -328,13 +327,36 @@ test.describe('Sprite Sheet Editor integration', () => {
     expect(grassBiomeResolutionCheck.biomeTag).toBe('grass')
     expect(grassBiomeResolutionCheck.grassTags).toContain('grass')
 
-    const decorativeBiomeUseCheck = await page.evaluate(async() => {
+    const decorativeLayoutCheck = await page.evaluate(async() => {
       const renderingModule = await import('/src/rendering.js')
       const textureManager = renderingModule?.getTextureManager ? renderingModule.getTextureManager() : null
       const gameState = window.gameState
-      if (!textureManager || !gameState?.activeSpriteSheetPath || !gameState?.activeSpriteSheetMetadata) {
+      const mapGrid = gameState?.mapGrid
+      if (!textureManager || !mapGrid?.length || !gameState?.activeSpriteSheetPath || !gameState?.activeSpriteSheetMetadata) {
         return null
       }
+      const dtPath = 'images/map/sprite_sheets/dt_grass_1024_q85.webp'
+      const dtMetadata = await (await fetch('/images/map/sprite_sheets/dt_grass_1024_q85.json')).json()
+      await textureManager.setIntegratedSpriteSheetConfig({
+        enabled: true,
+        biomeTag: 'grass',
+        sheets: [{ sheetPath: dtPath, metadata: dtMetadata }]
+      })
+      const grassGrid = mapGrid.map(row => row.map(tile => ({ ...tile, biome: 'grass' })))
+      const layout = textureManager.getDecorationLayout(grassGrid)
+      const multi = layout.placements.find(p => p.group.width * p.group.height > 1)
+      const multiTags = multi
+        ? textureManager.getIntegratedTileForMapTile('land', multi.anchorX, multi.anchorY, { mapGrid: grassGrid })?.tags || []
+        : []
+      let emptyLand = null
+      for (let i = 0; i < layout.cells.length && !emptyLand; i++) {
+        const x = i % layout.width
+        const y = Math.floor(i / layout.width)
+        if (!layout.cells[i] && grassGrid[y][x].type === 'land') emptyLand = { x, y }
+      }
+      const emptyTile = emptyLand
+        ? textureManager.getIntegratedTileForMapTile('land', emptyLand.x, emptyLand.y, { mapGrid: grassGrid })
+        : 'missing'
 
       await textureManager.setIntegratedSpriteSheetConfig({
         enabled: true,
@@ -342,36 +364,16 @@ test.describe('Sprite Sheet Editor integration', () => {
         metadata: gameState.activeSpriteSheetMetadata,
         biomeTag: 'grass'
       })
-
-      const originalClassifier = textureManager.getLandClassificationTag.bind(textureManager)
-
-      textureManager.getLandClassificationTag = () => 'decorative'
-      const decorativeTile = textureManager.getIntegratedTileForMapTile('land', 3, 3)
-      let decorativeNullCount = 0
-      for (let i = 0; i < 24; i++) {
-        const sampleTile = textureManager.getIntegratedTileForMapTile('land', i, i + 1)
-        if (!sampleTile) {
-          decorativeNullCount++
-        }
-      }
-
-      textureManager.getLandClassificationTag = () => 'passable'
-      const passableTile = textureManager.getIntegratedTileForMapTile('land', 3, 3)
-
-      textureManager.getLandClassificationTag = originalClassifier
-
       return {
-        decorativeTags: decorativeTile?.tags || [],
-        passableTags: passableTile?.tags || [],
-        decorativeNullCount
+        placements: layout.placements.length,
+        multiTags,
+        emptyIsGround: emptyTile === null
       }
     })
-    expect(decorativeBiomeUseCheck).not.toBeNull()
-    expect(decorativeBiomeUseCheck.decorativeTags).toContain('grass')
-    expect(decorativeBiomeUseCheck.decorativeTags).toContain('decorative')
-    expect(decorativeBiomeUseCheck.decorativeNullCount).toBe(0)
-    expect(decorativeBiomeUseCheck.passableTags).toContain('grass')
-    expect(decorativeBiomeUseCheck.passableTags).not.toContain('decorative')
+    expect(decorativeLayoutCheck).not.toBeNull()
+    expect(decorativeLayoutCheck.placements).toBeGreaterThan(0)
+    expect(decorativeLayoutCheck.multiTags).toContain('decorative')
+    expect(decorativeLayoutCheck.emptyIsGround).toBe(true)
 
     const fallbackCheck = await page.evaluate(async() => {
       const renderingModule = await import('/src/rendering.js')
@@ -410,14 +412,15 @@ test.describe('Sprite Sheet Editor integration', () => {
 
       return {
         rockNull: rockTile === null,
-        streetNull: streetTile === null,
+        // Streets always fall back to the bundled default street sheet.
+        streetNullOrDefault: streetTile === null || String(streetTile.sheetPath || '').includes('streets24'),
         waterNull: waterTile === null,
         landNull: landTile === null
       }
     })
     expect(fallbackCheck).not.toBeNull()
     expect(fallbackCheck.rockNull).toBe(true)
-    expect(fallbackCheck.streetNull).toBe(true)
+    expect(fallbackCheck.streetNullOrDefault).toBe(true)
     expect(fallbackCheck.waterNull).toBe(true)
     expect(fallbackCheck.landNull).toBe(true)
 

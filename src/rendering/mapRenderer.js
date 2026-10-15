@@ -1576,8 +1576,15 @@ export class MapRenderer {
   }
 
   useOrganicTerrain(useTexture) {
-    // Explicit custom biome/spritesheet selections retain their own art.
-    return useTexture && this.organicTerrain?.ready && !this.textureManager.integratedSpriteSheetMode
+    // The organic terrain is always the ground. Custom sprite sheets only add
+    // decorations (and optional custom ground tiles) on top of it.
+    return Boolean(useTexture && this.organicTerrain?.ready)
+  }
+
+  drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY) {
+    if (!this.textureManager.integratedSpriteSheetMode || tile?.type !== 'land' || tile.airstripStreet) return false
+    const overlay = this.textureManager.getIntegratedTileForMapTile('land', x, y, { mapGrid })
+    return this.drawIntegratedTileImage(ctx, overlay, screenX, screenY)
   }
 
   drawBaseLayer(ctx, mapGrid, startTileX, startTileY, endTileX, endTileY, offsetX, offsetY, useTexture, currentWaterFrame, options = {}) {
@@ -1660,7 +1667,9 @@ export class MapRenderer {
         const screenX = x * TILE_SIZE - offsetX
         const screenY = y * TILE_SIZE - offsetY
         if (this.useOrganicTerrain(useTexture)) {
-          this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+          if (!this.drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY)) {
+            this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
+          }
         }
         this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
 
@@ -1775,13 +1784,9 @@ export class MapRenderer {
     ctx.restore()
   }
 
-  drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame) {
+  drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, _useTexture, _currentWaterFrame) {
     if (type === 'water') {
-      if (USE_PROCEDURAL_WATER_RENDERING) {
-        this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
-      } else {
-        this.drawClassicWater(ctx, screenX, screenY, TILE_SIZE + 1, currentWaterFrame)
-      }
+      this.drawProceduralWater(ctx, screenX, screenY, TILE_SIZE + 1, tileX, tileY)
       return
     }
 
@@ -1894,16 +1899,6 @@ export class MapRenderer {
     ctx.fillStyle = toRgba(brightColor, 0.16 + shimmer * 0.08)
     ctx.fillRect(screenX, screenY, size, size)
     ctx.fillStyle = toRgba(shimmerColor, 0.08 + shimmer * 0.05)
-    ctx.fillRect(screenX, screenY, size, size)
-  }
-
-  drawClassicWater(ctx, screenX, screenY, size, currentWaterFrame) {
-    if (currentWaterFrame) {
-      ctx.drawImage(currentWaterFrame, screenX, screenY, size, size)
-      return
-    }
-
-    ctx.fillStyle = TILE_COLORS.water
     ctx.fillRect(screenX, screenY, size, size)
   }
 
@@ -2097,7 +2092,7 @@ export class MapRenderer {
   /**
    * Draw a Smoothening Overlay Texture (SOT) on a single tile
    */
-  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', currentWaterFrame = null) {
+  drawSOT(ctx, tileX, tileY, orientation, scrollOffset, useTexture, sotApplied, type = 'street', _currentWaterFrame = null) {
     // Organic shores own the complete land alpha. A legacy water triangle
     // would punch an isolated hole behind the water-hosted feathered edge.
     if (this.useOrganicTerrain(useTexture) && type === 'water') return
@@ -2149,11 +2144,7 @@ export class MapRenderer {
         ? this.textureManager.getIntegratedTileForMapTile('water', tileX, tileY)
         : null
       if (!this.drawIntegratedTileImage(ctx, integratedWaterTile, drawX, drawY)) {
-        if (USE_PROCEDURAL_WATER_RENDERING) {
-          this.drawProceduralWater(ctx, drawX, drawY, drawSize, tileX, tileY)
-        } else {
-          this.drawClassicWater(ctx, drawX, drawY, drawSize, currentWaterFrame)
-        }
+        this.drawProceduralWater(ctx, drawX, drawY, drawSize, tileX, tileY)
       }
     } else if (type === 'street') {
       const fullStreetTile = this.textureManager.selectFullStreetTileForSOT?.(tileX, tileY)

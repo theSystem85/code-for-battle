@@ -23,7 +23,6 @@ describe('TextureManager integrated multi-sheet selection', () => {
       }]
     })
 
-    expect(() => manager.getLandClassificationTag(4, 7)).not.toThrow()
     expect(manager.getIntegratedTileForMapTile('land', 4, 7)).toEqual(expect.objectContaining({
       image: enabledImage,
       sheetPath: 'enabled.webp',
@@ -559,10 +558,10 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.defaultStreetSheetImage).toEqual({ id: 'street-only' })
   })
 
-  it('selects biome or universal decorative groups and keeps multi-tile footprints inside one biome', async() => {
+  it('places multi-tile decorations from the layout, inside one biome, and frozen lakes block movement', async() => {
     const manager = new TextureManager()
     vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ id: 'dt-sheet' })
-    vi.spyOn(manager, 'getLandClassificationTag').mockReturnValue('decorative')
+    const tile = (col, row, tags) => ({ col, row, tags, rect: { x: col * 64, y: row * 64, width: 64, height: 64 } })
 
     await manager.setIntegratedSpriteSheetConfig({
       enabled: true,
@@ -572,95 +571,63 @@ describe('TextureManager integrated multi-sheet selection', () => {
         metadata: {
           blendMode: 'black',
           tiles: {
-            '0,0': { col: 0, row: 0, tags: ['grass', 'decorative', 'summer', 'group_1'], rect: { x: 0, y: 0, width: 64, height: 64 } },
-            '1,0': { col: 1, row: 0, tags: ['grass', 'decorative', 'summer', 'group_1'], rect: { x: 64, y: 0, width: 64, height: 64 } },
-            '0,1': { col: 0, row: 1, tags: ['sand', 'decorative', 'summer', 'group_2'], rect: { x: 0, y: 64, width: 64, height: 64 } },
-            '1,1': { col: 1, row: 1, tags: ['sand', 'decorative', 'summer', 'group_2'], rect: { x: 64, y: 64, width: 64, height: 64 } },
-            '2,0': { col: 2, row: 0, tags: ['universal', 'decorative', 'group_3'], rect: { x: 128, y: 0, width: 64, height: 64 } },
-            '3,0': {
-              col: 3,
-              row: 0,
-              tags: ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4'],
-              rect: { x: 192, y: 0, width: 64, height: 64 }
-            },
-            '4,0': {
-              col: 4,
-              row: 0,
-              tags: ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4'],
-              rect: { x: 256, y: 0, width: 64, height: 64 }
-            },
-            '3,1': {
-              col: 3,
-              row: 1,
-              tags: ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4'],
-              rect: { x: 192, y: 64, width: 64, height: 64 }
-            },
-            '4,1': {
-              col: 4,
-              row: 1,
-              tags: ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4'],
-              rect: { x: 256, y: 64, width: 64, height: 64 }
-            }
+            '0,0': tile(0, 0, ['grass', 'decorative', 'summer', 'group_1']),
+            '1,0': tile(1, 0, ['grass', 'decorative', 'summer', 'group_1']),
+            '0,1': tile(0, 1, ['grass', 'decorative', 'summer', 'group_1']),
+            '1,1': tile(1, 1, ['grass', 'decorative', 'summer', 'group_1']),
+            '2,0': tile(2, 0, ['universal', 'decorative', 'group_3']),
+            '3,0': tile(3, 0, ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4']),
+            '4,0': tile(4, 0, ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4']),
+            '3,1': tile(3, 1, ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4']),
+            '4,1': tile(4, 1, ['snow', 'decorative', 'winter', 'impassable', 'water', 'group_4'])
           }
         }
       }]
     })
 
-    const mixedGrid = [
-      [
-        { type: 'land', biome: 'grass' },
-        { type: 'land', biome: 'grass' },
-        { type: 'land', biome: 'sand' },
-        { type: 'land', biome: 'snow' },
-        { type: 'land', biome: 'snow' }
-      ],
-      [
-        { type: 'land', biome: 'sand' },
-        { type: 'land', biome: 'sand' },
-        { type: 'land', biome: 'sand' },
-        { type: 'land', biome: 'snow' },
-        { type: 'land', biome: 'snow' }
-      ]
-    ]
+    // Left half grass, right half snow.
+    const size = 60
+    const mapGrid = Array.from({ length: size }, () => Array.from({ length: size }, (_, x) => ({
+      type: 'land',
+      biome: x < size / 2 ? 'grass' : 'snow'
+    })))
 
-    const grassTile = manager.getIntegratedTileForMapTile('land', 0, 0, { mapGrid: mixedGrid, biomeTag: 'grass' })
-    expect(grassTile?.tags).toEqual(expect.arrayContaining(['grass', 'decorative', 'group_1']))
-
-    const sandOnlyGrid = [
-      [{ type: 'land', biome: 'sand' }, { type: 'land', biome: 'grass' }],
-      [{ type: 'land', biome: 'sand' }, { type: 'land', biome: 'sand' }]
-    ]
-    const blockedCrossBiome = manager.getIntegratedTileForMapTile('land', 0, 0, {
-      mapGrid: sandOnlyGrid,
-      biomeTag: 'sand'
+    const layout = manager.getDecorationLayout(mapGrid)
+    expect(layout.placements.length).toBeGreaterThan(0)
+    const frozen = layout.placements.filter(p => p.group.tagSet.has('impassable'))
+    expect(frozen.length).toBeGreaterThan(0)
+    layout.placements.forEach(({ group, anchorX, anchorY, biome }) => {
+      for (let gy = 0; gy < group.height; gy++) {
+        for (let gx = 0; gx < group.width; gx++) {
+          expect(mapGrid[anchorY + gy][anchorX + gx].biome).toBe(biome)
+          const selected = manager.getIntegratedTileForMapTile('land', anchorX + gx, anchorY + gy, { mapGrid })
+          expect(selected?.tags).toEqual(expect.arrayContaining([group.groupLabel]))
+        }
+      }
     })
-    // sand 2x2 group_2 fits at 0,0 only if both columns are sand — col1 is grass, so group must not win
-    expect(blockedCrossBiome?.tags?.includes('group_2') || false).toBe(false)
 
-    const universalTile = manager.getIntegratedTileForMapTile('land', 2, 0, {
-      mapGrid: mixedGrid,
-      biomeTag: 'sand'
-    })
-    expect(universalTile?.tags).toEqual(expect.arrayContaining(['universal', 'decorative']))
+    // Cached per map grid.
+    expect(manager.getDecorationLayout(mapGrid)).toBe(layout)
 
-    const frozen = manager.getIntegratedTileForMapTile('land', 3, 0, {
-      mapGrid: mixedGrid,
-      biomeTag: 'snow'
-    })
-    expect(frozen?.tags).toEqual(expect.arrayContaining(['impassable', 'winter', 'group_4']))
-
-    // Without an explicit biomeTag the per-cell tile.biome drives selection.
-    const implicitFrozen = manager.getIntegratedTileForMapTile('land', 4, 1, { mapGrid: mixedGrid })
-    expect(implicitFrozen?.tags).toEqual(expect.arrayContaining(['snow', 'impassable', 'group_4']))
-
-    // Frozen lakes block movement in the occupancy map; other decorative cells stay passable.
     window.logger = window.logger || (() => {})
-    const occupancy = buildOccupancyMap([], mixedGrid, manager)
-    expect(occupancy[0][3]).toBe(1)
-    expect(occupancy[0][4]).toBe(1)
-    expect(occupancy[1][3]).toBe(1)
-    expect(occupancy[1][4]).toBe(1)
-    expect(occupancy[0][0]).toBe(0)
-    expect(occupancy[0][1]).toBe(0)
+    const occupancy = buildOccupancyMap([], mapGrid, manager)
+    const lake = frozen[0]
+    for (let gy = 0; gy < 2; gy++) {
+      for (let gx = 0; gx < 2; gx++) {
+        expect(occupancy[lake.anchorY + gy][lake.anchorX + gx]).toBe(1)
+      }
+    }
+    const grassPlacement = layout.placements.find(p => p.biome === 'grass')
+    expect(occupancy[grassPlacement.anchorY][grassPlacement.anchorX]).toBe(0)
+
+    // Cells without a decoration return null so the organic ground shows.
+    const emptyIndex = layout.cells.findIndex(cell => !cell)
+    const emptyX = emptyIndex % size
+    const emptyY = Math.floor(emptyIndex / size)
+    expect(manager.getIntegratedTileForMapTile('land', emptyX, emptyY, { mapGrid })).toBeNull()
+
+    // Editing a covered cell drops the whole sprite instead of drawing half of it.
+    mapGrid[lake.anchorY][lake.anchorX] = { type: 'street', biome: 'snow' }
+    expect(manager.getIntegratedTileForMapTile('land', lake.anchorX + 1, lake.anchorY + 1, { mapGrid })).toBeNull()
   })
 })
