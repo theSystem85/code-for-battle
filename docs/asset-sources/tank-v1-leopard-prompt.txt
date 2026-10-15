@@ -1,0 +1,13 @@
+Use your image generation tool to create exactly ONE image (do not retry, do not generate variations, do not draw it programmatically), then save it as sheet.png in the current directory and reply with its path. Do not modify anything else.
+
+The attached reference.png is an existing sprite sheet of the same tank family (top row green camouflage, bottom row red camouflage). Match its style, scale, proportions, lighting, sand base color and part shapes as closely as possible; only the camouflage color changes.
+
+Image to generate (landscape 3:2, high resolution):
+A game sprite sheet of a modern German main battle tank in the style of a Leopard 2A7, seen strictly from directly above (orthographic top-down, 90 degree overhead view, no perspective, no tilt), photorealistic military-model rendering with soft even studio lighting from above and no cast shadows.
+The tank is split into separate disassembled parts. Background: one perfectly flat, uniform solid pure blue (#0000FF), no gradients, no texture, no shadows, no ground, no text, no labels, no grid lines.
+ONE row, three parts total, left to right, each widely separated from the others with lots of blue space; no part touches or overlaps another or the image border.
+Coating: the same desert sand / tan base coating as the reference (#C8A46A-like) with scattered irregular dark chocolate-brown / earth-brown camouflage blotches on top (no green, no red).
+1) HULL ONLY (chassis with both tracks, no turret, no gun): elongated rectangle about 0.6 times as wide as it is long, long axis vertical, FRONT OF THE HULL (sloped glacis and driver hatch) POINTING DOWN, engine deck with grilles at the top, tracks along the left and right sides, a circular turret ring opening slightly above the hull center.
+2) TURRET ONLY (no gun barrel attached): Leopard 2A7 wedge-shaped turret, roughly as wide as long, front wedge armour pointing DOWN, commander and loader hatches, sights and a small stowage basket at the rear (top), a small round gun mantlet opening at the bottom-center of the front.
+3) GUN BARREL ONLY: a long, thin, straight 120 mm smoothbore barrel with thermal sleeve and small fume extractor, perfectly vertical, muzzle pointing DOWN, about 12 times longer than wide, same length as the hull.
+All three parts at the same scale as each other and as the reference, cleanly cut-out edges, crisp silhouettes, consistent lighting.

@@ -251,9 +251,9 @@ export async function prepareSpriteRegistry({
       const selection = chooseVariant(entry, density)
       const targetWidth = Math.max(1, Math.round(entry.logicalWidth * density))
       const targetHeight = Math.max(1, Math.round(entry.logicalHeight * density))
-      const sourceUrl = selection.exact || selection.variant.sourceRect
-        ? selection.variant.path
-        : entry.source
+      // Always fetch a prepared density variant (the nearest one at or above the device
+      // density); full-size source images are never downloaded when variants exist.
+      const sourceUrl = selection.variant?.path || entry.source
       const source = await getSource(sourceUrl)
       let image = source
       if (

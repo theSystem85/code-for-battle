@@ -513,6 +513,7 @@ export class GameLoop {
     this.lastFrameTimestampForMonitor = now
     framePhases.finishFrame(frameInterval)
     this.canvasManager.updateAdaptivePixelRatio?.(this.fpsDisplay.fps, now, this.hasActiveScrollActivity())
+    this.canvasManager.updateTerrainDensityGovernor?.(this.fpsDisplay.fps, now)
 
     this.forceRender = false
 

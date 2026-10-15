@@ -25,3 +25,10 @@ The three situational tracks were generated on the owner's ElevenLabs Starter pl
 - Files: `public/apple-touch-icon.png`, `public/android-chrome-192x192.png`, `public/favicon-256x256.png`, `public/favicon-512x512.png`.
 - Source: AI-generated on 2026-10-15 with the OpenAI image generation tool through the Codex CLI (ChatGPT account of the project owner), in one generation from the prompt in `docs/asset-sources/app-icon-square-prompt.txt`. The native square source (1254×1254) is stored in `docs/asset-sources/app-icon-square-source.webp`.
 - Post-processing: downscaling to each icon size by the project. The 16/32/48 favicons and `favicon.ico` keep the isolated front tank from the earlier icon set.
+
+## Tank V1 images
+
+- Files: `public/images/map/units/tankV1_{wagon,turret,barrel}.webp` and the derived `public/images/prepared/unit/tankV1/*`.
+- Source: AI-generated on 2026-10-15 with the OpenAI image generation tool through the Codex CLI (ChatGPT account of the project owner), in one generation from the prompt in `docs/asset-sources/tank-v1-leopard-prompt.txt`, with the V2/V3 sprite sheet as style reference. The original sprite sheet is stored in `docs/asset-sources/tank-v1-leopard-spritesheet.webp`.
+- Post-processing: background keying, cropping and resizing to the V2/V3 part sizes by the project.
+- The previous V1 barrel is kept unchanged as `public/images/map/units/howitzer_barrel.webp` for the howitzer.

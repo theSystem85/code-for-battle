@@ -440,13 +440,28 @@ export class Renderer {
       // Required effects never report readiness after a decode/budget error.
       if (callback) callback(error)
     })
+    if (!this.preparedSpritesListenerBound && typeof document !== 'undefined') {
+      // Density swaps (DPR change) publish a new registry; keep the renderers pointed at it.
+      this.preparedSpritesListenerBound = true
+      document.addEventListener('prepared-sprites-published', event => {
+        if (event.detail?.registry) this.setPreparedSpriteRegistry(event.detail.registry)
+      })
+    }
     prepareRuntimeSprites().then(prepared => {
       if (prepared?.registry) this.buildingRenderer.setPreparedSpriteRegistry(prepared.registry)
     }).catch(error => {
       if (typeof window !== 'undefined') window.logger?.warn?.('Prepared sprites unavailable, using source images', error)
     }).finally(() => {
       spritesPrepared = true
-      checkAllLoaded()
+      // Tank parts come from the prepared density variant; the full-size source images are
+      // only fetched when sprite preparation failed.
+      preloadTankImages((success) => {
+        if (!success) {
+          window.logger.warn('Tank images failed to load, falling back to original rendering')
+        }
+        tankImagesLoaded = true
+        checkAllLoaded()
+      })
     })
 
     // Load tile textures
@@ -455,14 +470,6 @@ export class Renderer {
       checkAllLoaded()
     })
 
-    // Load tank images
-    preloadTankImages((success) => {
-      if (!success) {
-        window.logger.warn('Tank images failed to load, falling back to original rendering')
-      }
-      tankImagesLoaded = true
-      checkAllLoaded()
-    })
 
     preloadHarvesterImage((success) => {
       if (!success) {
