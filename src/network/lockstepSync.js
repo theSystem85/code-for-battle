@@ -397,7 +397,7 @@ function applyMoveInput(input) {
 
   for (const unitId of unitIds) {
     const unit = mainUnits.find(u => u.id === unitId)
-    if (unit) {
+    if (unit && !unit.factoryExit) {
       unit.moveTarget = { x: targetX, y: targetY }
       unit.attackTarget = null
       unit.path = null
@@ -422,11 +422,11 @@ function applyAttackInput(input) {
     target = gameState.buildings.find(b => b.id === targetId)
   }
 
-  if (!target) return
+  if (!target || target.factoryExit) return
 
   for (const unitId of unitIds) {
     const unit = mainUnits.find(u => u.id === unitId)
-    if (unit) {
+    if (unit && !unit.factoryExit) {
       unit.attackTarget = target
       unit.moveTarget = null
     }
@@ -441,12 +441,12 @@ function applyStopInput(input) {
   const { unitIds } = input.data
   if (!unitIds || !Array.isArray(unitIds)) return
 
-  const stoppedUnits = unitIds.map(unitId => mainUnits.find(unit => unit.id === unitId)).filter(Boolean)
+  const stoppedUnits = unitIds.map(unitId => mainUnits.find(unit => unit.id === unitId)).filter(unit => unit && !unit.factoryExit)
   cancelTransportOperations(stoppedUnits, mainUnits, gameState.occupancyMap)
 
   for (const unitId of unitIds) {
     const unit = mainUnits.find(u => u.id === unitId)
-    if (unit) {
+    if (unit && !unit.factoryExit) {
       clearBattleshipFireControl(unit)
       unit.moveTarget = null
       unit.attackTarget = null

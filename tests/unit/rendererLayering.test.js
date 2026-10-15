@@ -146,6 +146,7 @@ describe('Renderer airborne layering', () => {
 
   it('partitions airborne and carrier-deck units into the top render layer', () => {
     const renderer = new Renderer()
+    const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'waiting' } }
     const groundedTank = { id: 'ground-1', type: 'tank_v1', x: 0, y: 0, flightState: 'grounded' }
     const airborneApache = { id: 'air-1', type: 'apache', x: 0, y: 0, flightState: 'airborne', isAirUnit: true }
     const parkedApache = { id: 'air-2', type: 'apache', x: 0, y: 0, flightState: 'grounded', isAirUnit: true }
@@ -160,8 +161,9 @@ describe('Renderer airborne layering', () => {
       carrierOperation: { state: 'parked', carrierId: 'carrier-1' }
     }
 
-    const result = renderer.partitionUnitsByRenderLayer([groundedTank, airborneApache, parkedApache, parkedCarrierF22])
+    const result = renderer.partitionUnitsByRenderLayer([exitingTank, groundedTank, airborneApache, parkedApache, parkedCarrierF22])
 
+    expect(result.exitingUnits).toEqual([exitingTank])
     expect(result.groundedUnits.map(unit => unit.id)).toEqual(['ground-1', 'air-2'])
     expect(result.airborneUnits.map(unit => unit.id)).toEqual(['air-1', 'deck-1'])
   })
@@ -187,6 +189,7 @@ describe('Renderer airborne layering', () => {
   it('renders airborne units after grounded units and building overlays', () => {
     const renderer = new Renderer()
     const callOrder = []
+    const exitingTank = { id: 'exiting', type: 'tank_v1', x: 0, y: 0, factoryExit: { elapsed: 800, duration: 1200, phase: 'waiting' } }
     const groundedTank = { id: 'ground-1', type: 'tank_v1', x: 0, y: 0, flightState: 'grounded' }
     const airborneApache = { id: 'air-1', type: 'apache', x: 64, y: 64, flightState: 'airborne', isAirUnit: true }
     const carrier = { id: 'carrier-1', type: 'aircraftCarrier', x: 96, y: 96, flightState: 'grounded' }
@@ -209,6 +212,9 @@ describe('Renderer airborne layering', () => {
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       beginPath: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
+      closePath: vi.fn(),
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),
@@ -243,7 +249,7 @@ describe('Renderer airborne layering', () => {
       { width: 800, height: 600 },
       [[{ type: 'land' }]],
       [{ id: 'factory-1', type: 'constructionYard', x: 0, y: 0, width: 2, height: 2 }],
-      [groundedTank, airborneApache, parkedCarrierF22, carrier],
+      [exitingTank, groundedTank, airborneApache, parkedCarrierF22, carrier],
       [],
       [{ id: 'building-1', type: 'powerPlant', x: 2, y: 2, width: 2, height: 2 }],
       { x: 0, y: 0 },
@@ -253,6 +259,8 @@ describe('Renderer airborne layering', () => {
       { entityImageOpacityLevel: 0, unitWrecks: [] }
     )
 
+    expect(callOrder.indexOf('unit-bases:exiting')).toBeLessThan(callOrder.indexOf('building-bases:1'))
+    expect(callOrder).not.toContain('unit-overlays:exiting')
     expect(callOrder).toContain('unit-bases:ground-1,carrier-1')
     expect(callOrder).toContain('unit-bases:air-1,deck-1')
     expect(callOrder).toContain('unit-overlays:ground-1,carrier-1')
@@ -274,6 +282,8 @@ describe('Renderer airborne layering', () => {
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       beginPath: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),
@@ -336,6 +346,8 @@ describe('Renderer airborne layering', () => {
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       beginPath: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),
@@ -404,6 +416,8 @@ describe('Renderer airborne layering', () => {
       fillRect: vi.fn(),
       strokeRect: vi.fn(),
       beginPath: vi.fn(),
+      rect: vi.fn(),
+      clip: vi.fn(),
       moveTo: vi.fn(),
       lineTo: vi.fn(),
       stroke: vi.fn(),

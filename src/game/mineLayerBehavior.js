@@ -12,6 +12,7 @@ import { hasBlockingBuilding } from '../utils/buildingPassability.js'
  */
 export function updateMineLayerBehavior(units, now) {
   units.forEach(unit => {
+    if (unit.factoryExit) return
     if (unit.type !== 'mineLayer') return
 
     // Check if unit is in deployment mode (has mine deployment commands queued)

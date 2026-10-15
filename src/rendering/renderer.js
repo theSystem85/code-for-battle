@@ -1,3 +1,4 @@
+import { renderFactoryInterior, renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
 // rendering/renderer.js
 import { TextureManager } from './textureManager.js'
 import { performanceMonitor } from '../performance/performanceMonitor.js'
@@ -90,13 +91,16 @@ export class Renderer {
     // renderGame runs once per animation frame. These containers are mutated in
     // place so a 200-entity scene does not allocate six replacement lists and
     // a target index on every one of the 75 expected frames per second.
+    this.singleExitingUnit = [null]
     this.frameLayers = {
       groundedUnits: [],
       airborneUnits: [],
       visibleGroundedUnits: [],
       visibleAirborneUnits: [],
       visibleBuildings: [],
-      visibleFactories: []
+      visibleFactories: [],
+      exitingUnits: [],
+      visibleExitingUnits: []
     }
     this.frameEntityIndex = new Map()
     this.attackQueueBuffer = []
@@ -140,11 +144,13 @@ export class Renderer {
   }
 
   partitionUnitsByRenderLayer(units) {
-    const { groundedUnits, airborneUnits } = this.frameLayers
+    const { groundedUnits, airborneUnits, exitingUnits } = this.frameLayers
+    exitingUnits.length = 0
     groundedUnits.length = 0
     airborneUnits.length = 0
 
     ;(units || []).forEach(unit => {
+      if (unit.factoryExit) { exitingUnits.push(unit); return }
       if (isAirborneUnit(unit) || unit.carrierId || unit.carrierOperation?.carrierId) {
         airborneUnits.push(unit)
         return
@@ -738,7 +744,9 @@ export class Renderer {
       visibleGroundedUnits,
       visibleAirborneUnits,
       visibleBuildings,
-      visibleFactories
+      visibleFactories,
+      exitingUnits,
+      visibleExitingUnits
     } = this.partitionUnitsByRenderLayer(units)
     const frameEntityIndex = this.prepareFrameEntityIndex(
       units,
@@ -747,6 +755,7 @@ export class Renderer {
       gameState.unitWrecks,
       gameState
     )
+    this.unitRenderer.collectVisibleUnits(gameCtx, exitingUnits, scrollOffset, visibleExitingUnits)
     this.unitRenderer.collectVisibleUnits(gameCtx, groundedUnits, scrollOffset, visibleGroundedUnits)
     this.unitRenderer.collectVisibleUnits(gameCtx, airborneUnits, scrollOffset, visibleAirborneUnits)
     this.buildingRenderer.collectVisibleBuildings(gameCtx, buildings, scrollOffset, visibleBuildings)
@@ -758,9 +767,22 @@ export class Renderer {
     gameCtx.globalAlpha *= entityImageAlpha
     // Ground track marks sit on the terrain, beneath buildings, wrecks and units.
     this.trackMarksRenderer.render(gameCtx, scrollOffset, gameState)
+    const exitRegistry = this.buildingRenderer.preparedSpriteRegistry
+    for (const building of visibleBuildings) renderFactoryInterior(gameCtx, building, scrollOffset, exitRegistry)
+    this.unitRenderer.renderBases(gameCtx, visibleExitingUnits, scrollOffset, true)
     this.buildingRenderer.renderBases(gameCtx, visibleBuildings, mapGrid, scrollOffset, true)
     // Render initial construction yards using the same renderer
     this.buildingRenderer.renderBases(gameCtx, visibleFactories, mapGrid, scrollOffset, true)
+    // Redraw exiting units over the factory's dirt apron, still hidden behind its walls.
+    for (const unit of visibleExitingUnits) {
+      gameCtx.save()
+      if (clipOutsideFactoryBody(gameCtx, unit, scrollOffset)) {
+        this.singleExitingUnit[0] = unit
+        this.unitRenderer.renderBases(gameCtx, this.singleExitingUnit, scrollOffset, true)
+        renderFactoryExitEffects(gameCtx, unit, scrollOffset, exitRegistry)
+      }
+      gameCtx.restore()
+    }
     // Naval wakes belong to the water layer beneath ships and fade after movement stops.
     this.effectsRenderer.renderShipWakes?.(gameCtx, gameState, scrollOffset)
     this.effectsRenderer.renderDepthCharges?.(gameCtx, gameState, scrollOffset)

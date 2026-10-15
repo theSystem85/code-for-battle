@@ -120,6 +120,18 @@ proto.calculateSemicircleFormation = function(...args) { return calculateSemicir
 proto.getTargetPoint = function(...args) { return getTargetPointImpl(...args) }
 proto.isEnemyTargetForUnit = function(...args) { return isEnemyTargetForUnitImpl(...args) }
 
+// Reject direct orders during the garage exit, including stale control-group references.
+for (const name of Object.keys(proto)) {
+  if (!name.startsWith('handle')) continue
+  const handler = proto[name]
+  proto[name] = function(...args) {
+    const index = name === 'handleServiceProviderRequest' ? 1 : 0
+    if (Array.isArray(args[index])) args[index] = args[index].filter(unit => !unit.factoryExit)
+    else if (args[index]?.factoryExit) return false
+    return handler.apply(this, args)
+  }
+}
+
 export {
   UTILITY_QUEUE_MODES,
   computeUtilityApproachPath,

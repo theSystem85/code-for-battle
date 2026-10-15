@@ -1,3 +1,4 @@
+import { beginFactoryExit } from './game/factoryExit.js'
 // units.js
 import {
   TILE_SIZE,
@@ -109,7 +110,7 @@ export function buildOccupancyMap(units, mapGrid, textureManager = null) {
   }
 
   safeUnits.forEach(unit => {
-    if ((unit.isAirUnit && unit.flightState !== 'grounded') || unit.isNaval) {
+    if (unit.factoryExit || (unit.isAirUnit && unit.flightState !== 'grounded') || unit.isNaval) {
       return
     }
     const tileX = Math.floor((unit.x + TILE_SIZE / 2) / TILE_SIZE)
@@ -156,7 +157,7 @@ export function rebuildOccupancyMapWithTextures(units, mapGrid, textureManager) 
 }
 
 export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(unit, prevTileX, prevTileY, occupancyMap) {
-  if (!occupancyMap) return
+  if (!occupancyMap || unit.factoryExit) return
 
   // Skip occupancy updates for air units that are:
   // 1. Not grounded (airborne), OR
@@ -194,7 +195,7 @@ export const updateUnitOccupancy = logPerformance(function updateUnitOccupancy(u
 }, false)
 
 export function removeUnitOccupancy(unit, occupancyMap, options = {}) {
-  if (!occupancyMap) return
+  if (!occupancyMap || unit.factoryExit) return
   const { ignoreFlightState = false } = options
   if (!ignoreFlightState && unit.isAirUnit && unit.flightState !== 'grounded') {
     return
@@ -769,9 +770,6 @@ function smoothPath(path, mapGrid, occupancyMap, options = {}) {
 // Spawns a unit near the specified factory.
 // Accepts an optional rallyPointTarget from the specific spawning factory.
 export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null, occupancyMap = gameState.occupancyMap, options = {}) {
-  // Default spawn position is the center below the factory
-  const spawnX = factory.x + Math.floor(factory.width / 2)
-  const spawnY = factory.y + factory.height
 
   let spawnPosition = null
   let worldPositionOverride = null
@@ -816,16 +814,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   } else if (isShipyardNavalUnit) {
     spawnPosition = getShipyardLaunchTile(factory, mapGrid)
   } else if (factory.type === 'vehicleFactory') {
-    // Attempt to free the designated spawn tile using algorithm A1
-    moveBlockingUnits(spawnX, spawnY, units, mapGrid)
-
-    // If the spot is valid after moving blockers, use it
-    if (isPositionValid(spawnX, spawnY, mapGrid, units)) {
-      spawnPosition = { x: spawnX, y: spawnY }
-    } else {
-      // Fallback: search near the designated spot
-      spawnPosition = findAvailableSpawnPosition(spawnX, spawnY, mapGrid, units)
-    }
+    spawnPosition = { x: factory.x + 1, y: factory.y + 1 }
   } else {
     // Determine the center of the factory/building for spawn proximity check
     const factoryCenterX = factory.x + Math.floor(factory.width / 2)
@@ -845,7 +834,8 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
     : options
 
   const newUnit = createUnit(factory, type, spawnPosition.x, spawnPosition.y, unitOptions)
-  if (occupancyMap && !isHelipadApache && !isAirstripF22 && !isPadF35 && !isShipyardNavalUnit) {
+  if (factory.type === 'vehicleFactory') beginFactoryExit(newUnit, factory, type === 'harvester' ? null : rallyPointTarget)
+  if (occupancyMap && !newUnit.factoryExit && !isHelipadApache && !isAirstripF22 && !isPadF35 && !isShipyardNavalUnit) {
     // Use center coordinates for occupancy map consistency
     const centerTileX = Math.floor((newUnit.x + TILE_SIZE / 2) / TILE_SIZE)
     const centerTileY = Math.floor((newUnit.y + TILE_SIZE / 2) / TILE_SIZE)
@@ -980,7 +970,7 @@ export function spawnUnit(factory, type, units, mapGrid, rallyPointTarget = null
   // This allows each factory to have its own individual assembly point.
   // Harvesters handle their own initial path logic in productionQueue.js
   // Apache helicopters spawned on helipads and F22 Raptors spawned on airstrips should not immediately move to rally points - they should stay landed
-  if (rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22 && !isPadF35) {
+  if (!newUnit.factoryExit && rallyPointTarget && type !== 'harvester' && !isHelipadApache && !isAirstripF22 && !isPadF35) {
     const path = findPath(
       { x: spawnPosition.x, y: spawnPosition.y },
       { x: rallyPointTarget.x, y: rallyPointTarget.y },
@@ -1536,13 +1526,13 @@ export function resolveUnitCollisions(units, mapGrid) {
 
   for (let i = 0, len = units.length; i < len; i++) {
     const unit1 = units[i]
-    if (!unit1 || unit1.health <= 0) continue
+    if (!unit1 || unit1.factoryExit || unit1.health <= 0) continue
     if (unit1.isAirUnit && unit1.flightState !== 'grounded') continue // Skip airborne units (e.g. F22 in flight)
     if (unit1.path && unit1.path.length > 0) continue // Skip moving units
 
     // Update tile coordinates
-    unit1.tileX = (unit1.x / TILE_SIZE) | 0
-    unit1.tileY = (unit1.y / TILE_SIZE) | 0
+    unit1.tileX = Math.floor((unit1.x + TILE_SIZE / 2) / TILE_SIZE)
+    unit1.tileY = Math.floor((unit1.y + TILE_SIZE / 2) / TILE_SIZE)
 
     // Use pre-computed centers from quadtree rebuild
     const unit1CenterX = unit1._cx ?? (unit1.x + TILE_SIZE * 0.5)
@@ -1553,6 +1543,7 @@ export function resolveUnitCollisions(units, mapGrid) {
 
     for (let j = 0, jlen = nearbyUnits.length; j < jlen; j++) {
       const unit2 = nearbyUnits[j]
+      if (unit2.factoryExit) continue
       if (unit2.path && unit2.path.length > 0) continue // Skip moving units
 
       // Create a consistent pair key to avoid processing the same pair twice
@@ -1594,8 +1585,8 @@ export function resolveUnitCollisions(units, mapGrid) {
         else if (unit2.y > maxY) unit2.y = maxY
 
         // Update tile positions
-        unit1.tileX = (unit1.x / TILE_SIZE) | 0
-        unit1.tileY = (unit1.y / TILE_SIZE) | 0
+        unit1.tileX = Math.floor((unit1.x + TILE_SIZE / 2) / TILE_SIZE)
+        unit1.tileY = Math.floor((unit1.y + TILE_SIZE / 2) / TILE_SIZE)
         unit2.tileX = (unit2.x / TILE_SIZE) | 0
         unit2.tileY = (unit2.y / TILE_SIZE) | 0
       }

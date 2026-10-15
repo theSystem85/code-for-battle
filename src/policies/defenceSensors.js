@@ -28,7 +28,7 @@ export function prepareDefenceWorld(context) {
 export function defenceTargetById(id) { return lookup.get(id) || null }
 
 export function canDefenceTarget(building, target, context, requireRange = true) {
-  if (!isHostile(building, target) || target.isBuilding || target.embarkedOnId) return false
+  if (!isHostile(building, target) || target.isBuilding || target.factoryExit || target.embarkedOnId) return false
   if (target.type === 'submarine' && target.depthState !== 'surfaced') return false
   if (ALLOWED_AIR.has(target.type) && target.flightState !== 'grounded' && building.type !== 'rocketTurret') return false
   const x = target.x + TILE_SIZE / 2

@@ -1,3 +1,5 @@
+import { updateFactoryExits } from './game/factoryExit.js'
+import { findPath as findFactoryExitPath } from './units.js'
 import { broadcastGameCommand } from './network/commandBroadcast.js'
 // Main Game Update Module - Coordinates all game systems
 import {
@@ -92,6 +94,8 @@ import {
   finalizeReplayPlaybackIfPending
 } from './replaySystem.js'
 
+const factoryExitFindPath = (...args) => findFactoryExitPath(...args)
+const factoryExitCompleted = (unit, state) => { if (state.delivery) applyUnitBuildDelivery(unit, state.delivery) }
 const EMPTY_BUILDINGS = []
 const policyContext = installPolicyGameBindings({ units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS, commands: null, bullets: null, now: 0 })
 const basePolicyContext = installBasePolicyGameBindings({ owner: null, units: null, mapGrid: null, buildings: EMPTY_BUILDINGS, factories: EMPTY_BUILDINGS })
@@ -260,7 +264,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           unitIds.forEach(unitId => {
             // Find unit by ID - owner check is implicit since client can only select their own units
             const unit = mainUnits.find(u => u.id === unitId)
-            if (unit) {
+            if (unit && !unit.factoryExit) {
               // Verify ownership before applying command
               if (unit.owner === partyId && !unit.transportOperation && !unit.transportTransfer) {
                 // Set movement target in TILE coordinates - the movement system will handle pathfinding
@@ -300,12 +304,12 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
             factories.find(f => f.id === targetId)
           unitIds.forEach(unitId => {
             const unit = mainUnits.find(u => u.id === unitId && u.owner === partyId)
-            if (unit) {
+            if (unit && !unit.factoryExit) {
               // Find the target
               const target = mainUnits.find(u => u.id === targetId) ||
                              gameState.buildings.find(b => b.id === targetId) ||
                              factories.find(f => f.id === targetId)
-              if (target) {
+              if (target && !target.factoryExit) {
                 // Combat system uses unit.target, not unit.attackTarget
                 if (unit.type === 'battleship') {
                   unit.selectedTurret = battleshipTurretSelections[unit.id] || null
@@ -358,11 +362,11 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           const unitRefs = createReplayUnitReferences(unitIds)
           const stoppedUnits = unitIds
             .map(unitId => mainUnits.find(unit => unit.id === unitId && unit.owner === partyId))
-            .filter(Boolean)
+            .filter(unit => unit && !unit.factoryExit)
           cancelTransportOperations(stoppedUnits, mainUnits, gameState.occupancyMap)
           unitIds.forEach(unitId => {
             const unit = mainUnits.find(u => u.id === unitId && u.owner === partyId)
-            if (unit) {
+            if (unit && !unit.factoryExit) {
               unit.path = null
               unit.moveTarget = null
               unit.attackTarget = null
@@ -389,7 +393,7 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           const partyId = cmd.sourcePartyId
           unitIds.forEach(unitId => {
             const unit = mainUnits.find(u => u.id === unitId && u.owner === partyId)
-            if (unit) {
+            if (unit && !unit.factoryExit) {
               unit.guardPosition = { x: guardX, y: guardY }
               unit.attackTarget = null
             }
@@ -469,6 +473,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
 
     // Update game time (both host and client need this for animations)
     updateGameTime(gameState, delta)
+
+    if (!isRemoteClient) updateFactoryExits(units, gameState.buildings || EMPTY_BUILDINGS, mapGrid, occupancyMap, delta, false, factoryExitFindPath, factoryExitCompleted)
 
     // Update unit interpolation for smooth movement on remote clients
     // This must be called every frame to interpolate between host snapshots

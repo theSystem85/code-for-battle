@@ -11,7 +11,7 @@ import { getAircraftAltitudeLift } from './aircraftTargeting.js'
 export function checkUnitCollision(bullet, unit) {
   try {
     // Validate inputs
-    if (!bullet || !unit || unit.health <= 0 || unit.embarkedOnId || unit.transportTransfer) return false
+    if (!bullet || !unit || unit.health <= 0 || unit.factoryExit || unit.embarkedOnId || unit.transportTransfer) return false
     if (bullet.navalOnly && !unit.isNaval) return false
     if (bullet.strictTarget && bullet.target?.id && unit.id !== bullet.target.id) return false
     if (unit.type === 'submarine' && unit.depthState !== 'surfaced' && bullet.originType !== 'depthCharge') return false

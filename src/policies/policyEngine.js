@@ -515,7 +515,7 @@ export function updateUnitPolicies(units, context, now = getSimulationTime(gameS
     }
     const bindings = unit.policyBindings
     if (!bindings || bindings.length === 0) continue
-    if (!(unit.health > 0)) continue
+    if (unit.factoryExit || !(unit.health > 0)) continue
     if (now < (unit.policyNextEval || 0)) continue
     unit.policyNextEval = now + POLICY_EVAL_INTERVAL_MS
     processUnit(unit, context, now)

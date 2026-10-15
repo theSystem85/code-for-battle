@@ -114,6 +114,7 @@ export function triggerExplosion(
 
   // Apply damage to nearby units
   units.forEach(unit => {
+    if (unit.factoryExit) return
     if (unit.type === 'submarine' && unit.depthState !== 'surfaced' && !allowSubmergedDamage) return
     const isAirUnit = unit.isAirUnit || unit.type === 'apache' || unit.type === 'f35'
     const airborneStates = ['takeoff', 'airborne', 'landing']
@@ -634,7 +635,7 @@ export function hasClearShot(shooter, target, units, mapGrid, ignoredUnit = shoo
   for (let index = 0; index < candidates.length; index++) {
     const other = candidates[index]
     // Only check for friendly units that are not the shooter or the intended target.
-    if (!other || other === ignoredUnit || other === target) continue
+    if (!other || other.factoryExit || other === ignoredUnit || other === target) continue
     if (!indexedFriendlies && other.owner !== shooter.owner) continue
     const otherCenterX = other.x + TILE_SIZE / 2
     const otherCenterY = other.y + TILE_SIZE / 2

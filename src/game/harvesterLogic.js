@@ -500,6 +500,7 @@ export const updateHarvesterLogic = logPerformance(function updateHarvesterLogic
   }
 
   units.forEach(unit => {
+    if (unit.factoryExit) return
     if (unit.type !== 'harvester') return
     if (!Number.isFinite(unit.level)) {
       unit.level = 0
@@ -1390,6 +1391,7 @@ function cleanupDestroyedRefineries(units, gameState) {
 
   // Check all harvesters for invalid refinery assignments
   units.forEach(unit => {
+    if (unit.factoryExit) return
     if (unit.type === 'harvester' && unit.assignedRefinery) {
       if (!existingRefineries.has(unit.assignedRefinery)) {
         // Clear assignment and queue position for destroyed refinery

@@ -435,9 +435,10 @@ describe('saveGame.js', () => {
       })
     })
 
-    it('should save units array', async() => {
+    it('should save units and their resumable factory exit state', async() => {
       const { units } = await import('../../src/main.js')
       units.push({
+        factoryExit: { factoryId: 'garage', startX: 208, startY: 176, endX: 128, endY: 256, elapsed: 375, duration: 1200, phase: 'moving' },
         id: 'tank-1',
         type: 'tank',
         owner: 'player1',
@@ -457,6 +458,7 @@ describe('saveGame.js', () => {
       expect(state.units).toBeInstanceOf(Array)
       expect(state.units.length).toBe(1)
       expect(state.units[0].type).toBe('tank')
+      expect(state.units[0].factoryExit).toEqual(units[0].factoryExit)
     })
 
     it('should save per-unit crew state for later load restoration', async() => {

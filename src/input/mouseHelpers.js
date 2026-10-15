@@ -162,7 +162,7 @@ export function findEnemyTarget(worldX, worldY, gameFactories, units) {
   }
 
   for (const unit of units) {
-    if (unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
+    if (unit.factoryExit || unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
     if (isEnemyRelativeToHuman(unit.owner)) {
       const { centerX, centerY } = getUnitSelectionCenter(unit)
       const distance = Math.hypot(worldX - centerX, worldY - centerY)

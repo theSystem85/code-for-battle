@@ -69,6 +69,7 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
       continue
     }
 
+    if (unit.factoryExit) continue
     if (unit.embarkedOnId || unit.carrierOperation || unit.transportOperation || unit.transportTransfer || unit.transportBoardingLocked) {
       initializeUnitMovement(unit)
       unit.movement.velocity = { x: 0, y: 0 }
@@ -271,6 +272,7 @@ export function updateUnitPathfinding(units, mapGrid, gameState) {
   // Update pathfinding for units with movement targets
   // Skip units with attack targets - they are handled by updateUnitMovement()
   const unitsWithMoveTarget = units.filter(unit =>
+    !unit.factoryExit &&
     unit.moveTarget &&
     !unit.sweepingOverrideMovement &&
     !(unit.target && unit.target.health > 0) && // Skip attack mode units
@@ -322,6 +324,7 @@ export function updateSpawnExit(units, factories, mapGrid, occupancyMap) {
   const now = performance.now()
 
   units.forEach(unit => {
+    if (unit.factoryExit) return
     if (unit.spawnedInFactory) {
       // Check if the unit should still be held in the factory (for AI units)
       if (unit.holdInFactory && unit.owner !== gameState.humanPlayer) {

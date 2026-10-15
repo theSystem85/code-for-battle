@@ -43,7 +43,7 @@ export function sameParty(a, b) {
 }
 
 export function isHostile(unit, other) {
-  if (!other || other === unit || !(other.health > 0) || other.embarkedOnId) return false
+  if (!other || other === unit || !(other.health > 0) || other.factoryExit || other.embarkedOnId) return false
   if (!other.owner || !unit.owner) return false
   return !sameParty(other.owner, unit.owner)
 }
@@ -84,7 +84,7 @@ export function findNearestFriendly(unit, units, tiles = ENEMY_SCAN_TILES, accep
   let bestSq = radius * radius
   for (let i = 0; i < candidates.length; i++) {
     const other = candidates[i]
-    if (!other || other === unit || !(other.health > 0) || other.embarkedOnId) continue
+    if (!other || other === unit || !(other.health > 0) || other.factoryExit || other.embarkedOnId) continue
     if (!sameParty(other.owner, unit.owner)) continue
     if (accept && !accept(other)) continue
     const dx = other.x + TILE_SIZE / 2 - center.x
@@ -125,7 +125,7 @@ export function findNearestFriendlyProvider(unit, units, type, usable) {
   let bestSq = Infinity
   for (let i = 0; i < units.length; i++) {
     const other = units[i]
-    if (!other || other.type !== type || other === unit || !(other.health > 0) || other.embarkedOnId) continue
+    if (!other || other.type !== type || other === unit || !(other.health > 0) || other.factoryExit || other.embarkedOnId) continue
     if (!sameParty(other.owner, unit.owner)) continue
     if (usable && !usable(other)) continue
     const distSq = (other.x + TILE_SIZE / 2 - center.x) ** 2 + (other.y + TILE_SIZE / 2 - center.y) ** 2

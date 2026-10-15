@@ -67,6 +67,7 @@ function baseRefusal(unit) {
   if (!unit || typeof unit !== 'object') return 'no unit'
   if (unit.isBuilding === true) return 'buildings cannot receive unit commands'
   if (!(unit.health > 0)) return 'the unit is destroyed'
+  if (unit.factoryExit) return 'the unit is leaving its factory'
   if (unit.embarkedOnId) return 'the unit is embarked'
   if (!unit.owner) return 'the unit has no owner'
   return null
@@ -84,6 +85,7 @@ function mobilityRefusal(unit) {
 function targetRefusal(unit, target, ctx) {
   if (!target || typeof target !== 'object') return 'there is no target'
   if (!(target.health > 0)) return 'the target is destroyed'
+  if (target.factoryExit) return 'the target is leaving its factory'
   if (target.embarkedOnId) return 'the target is embarked'
   if (!isHostile(unit, target)) return 'the target is not an enemy'
   if (ctx.canTarget && !ctx.canTarget(unit, target)) return 'the unit cannot target that'

@@ -70,6 +70,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
   // IMMEDIATE path calculation for units with moveTarget but no path
   // This ensures remote player units get paths right away without waiting for the interval
   const unitsNeedingImmediatePath = units.filter(u =>
+    !u.factoryExit &&
     u.type !== 'f22Raptor' &&
     u.moveTarget &&
     (!u.path || u.path.length === 0) &&
@@ -106,6 +107,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
 
     // First pass: identify all formation groups and calculate centers
     units.forEach(unit => {
+      if (unit.factoryExit) return
       if (unit.formationActive && unit.groupNumber) {
         if (!formationGroups[unit.groupNumber]) {
           formationGroups[unit.groupNumber] = {
@@ -130,6 +132,7 @@ function _updateGlobalPathfinding(units, mapGrid, occupancyMap, gameState) {
     const unitsNeedingPaths = []
 
     units.forEach(unit => {
+      if (unit.factoryExit) return
       if (unit.type === 'f22Raptor') {
         return
       }

@@ -273,7 +273,7 @@ function handleRecycleTask(tank, task, wreck, gameState, delta) {
 }
 
 export const updateRecoveryTankLogic = logPerformance(function(units, gameState, delta) {
-  const tanks = units.filter(u => u.type === 'recoveryTank')
+  const tanks = units.filter(u => !u.factoryExit && u.type === 'recoveryTank')
   if (tanks.length === 0) return
 
   const unitCommands = getUnitCommandsHandler ? getUnitCommandsHandler() : null

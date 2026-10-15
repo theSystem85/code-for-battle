@@ -345,7 +345,7 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
     if (!isOverEnemy && !isOverFriendlyUnit) {
       const humanPlayer = gameState.humanPlayer || 'player1'
       for (const unit of units) {
-        if (unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
+        if (unit.factoryExit || unit.embarkedOnId || (unit.type === 'submarine' && unit.depthState !== 'surfaced')) continue
         if (unit.owner !== humanPlayer && !(humanPlayer === 'player1' && unit.owner === 'player')) {
           const { centerX, centerY } = getUnitSelectionCenter(unit)
           if (Math.hypot(worldX - centerX, worldY - centerY) < TILE_SIZE / 2) {
