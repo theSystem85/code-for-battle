@@ -204,7 +204,7 @@ export function applyEnemyStrategies(unit, units, gameState, mapGrid, now) {
   }
 
   // Check for low health - immediately send to workshop when possible
-  if ((unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer')) {
+  if ((unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank' || unit.type === 'howitzer')) {
     if (shouldRetreatLowHealth(unit)) {
       const sent = sendUnitToWorkshop(unit, gameState, mapGrid)
       if (!sent) {
@@ -223,7 +223,7 @@ export function applyEnemyStrategies(unit, units, gameState, mapGrid, now) {
   }
 
   // Apply group attack strategies for combat units
-  if ((unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer')) {
+  if ((unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank' || unit.type === 'howitzer')) {
     // Only evaluate group-attack gating when the unit already has a target.
     // When target is null, shouldConductGroupAttack returns false which would
     // incorrectly clear allowedToAttack and prevent the unit from ever firing.

@@ -173,6 +173,7 @@ export function getUnitVisionRange(unit) {
     case 'tank_v2':
     case 'tank-v3':
     case 'tank_v3':
+    case 'lightTank':
     case 'recoveryTank':
       return TANK_FIRE_RANGE
     case 'harvester':

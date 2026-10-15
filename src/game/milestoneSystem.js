@@ -223,6 +223,7 @@ export class MilestoneSystem {
 
     // Unlock basic tank
     this.productionController.unlockUnitType('tank')
+    this.productionController.unlockUnitType('lightTank')
   }
 
   /**

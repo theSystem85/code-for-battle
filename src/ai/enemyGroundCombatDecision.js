@@ -242,7 +242,7 @@ export function updateGroundCombatDecision(unit, units, gameState, mapGrid, now,
             // AI ready for major attacks - proceed with normal group attack logic
             // Check if we should conduct group attack before selecting targets
             const nearbyAllies = units.filter(u => u.owner === aiPlayerId && u !== unit &&
-                (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank' || u.type === 'howitzer') &&
+                (u.type === 'tank' || u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'lightTank' || u.type === 'rocketTank' || u.type === 'howitzer') &&
                 Math.hypot(u.x - unit.x, u.y - unit.y) < 8 * TILE_SIZE)
 
             // Use group attack strategy with priority targeting

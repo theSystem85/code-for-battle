@@ -16,6 +16,7 @@ const unitDisplayNames = {
   tank_v1: 'Tank V1',
   'tank-v2': 'Tank V2',
   'tank-v3': 'Tank V3',
+  lightTank: 'Light Tank',
   rocketTank: 'Rocket Tank',
   howitzer: 'Howitzer',
   harvester: 'Harvester',

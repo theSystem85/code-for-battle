@@ -20,7 +20,7 @@ import { drawStatusBar } from '../utils/statusBarGradient.js'
 const noiseCanvasCache = new Map()
 const MAX_NOISE_CACHE_ENTRIES = 32
 const WORKSHOP_RESTORATION_ROTATION = Math.PI / 4
-const TANK_WRECK_TYPES = new Set(['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3'])
+const TANK_WRECK_TYPES = new Set(['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3', 'lightTank'])
 
 function getNoiseCanvas(seedKey, density) {
   const safeDensity = Number.isFinite(density) && density > 0 ? density : 1

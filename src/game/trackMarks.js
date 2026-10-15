@@ -42,7 +42,7 @@ export const TRACK_KIND = Object.freeze({ segment: 0, pivot: 1 })
 // Types with tracks rather than wheels. Trucks, ambulances and the jeep-like
 // support vehicles are wheeled and excluded.
 export const TRACKED_UNIT_TYPES = new Set([
-  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'tank_v2', 'tank_v3',
+  'tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'tank_v2', 'tank_v3',
   'rocketTank', 'howitzer', 'recoveryTank', 'harvester', 'mineLayer', 'mineSweeper'
 ])
 

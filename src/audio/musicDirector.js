@@ -25,7 +25,7 @@ export function getNextSkipTrack(currentFile, order = MUSIC_SKIP_ORDER) {
   return order[(index + 1) % order.length]
 }
 const priority = { normal: 0, firstAttack: 1, underAttackOutnumbered: 2, nearDefeat: 3 }
-const combatTypes = new Set(['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer', 'apache', 'f22Raptor', 'f35', 'destroyer', 'battleship', 'submarine', 'aircraftCarrier'])
+const combatTypes = new Set(['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer', 'apache', 'f22Raptor', 'f35', 'destroyer', 'battleship', 'submarine', 'aircraftCarrier'])
 export const isMusicCombatUnit = unit => unit.health > 0 && combatTypes.has(unit.type)
 
 export function selectMusicState({ nearDefeat, underAttackOutnumbered, firstAttack }) {

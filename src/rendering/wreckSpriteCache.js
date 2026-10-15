@@ -220,7 +220,7 @@ export function prewarmWreckSpriteCache(density = 1) {
   ]) {
     getPreparedSingleImageWreckSprite(unitType, density)
   }
-  for (const tankType of ['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3']) {
+  for (const tankType of ['tank_v1', 'tank-v2', 'tank_v2', 'tank-v3', 'tank_v3', 'lightTank']) {
     getTankWreckCanvases(tankType)
   }
 }

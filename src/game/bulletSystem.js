@@ -527,14 +527,14 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           // Apply tank damage multiplier for direct unit hits
           let damageMultiplier = 1.0
           const tankDamageMultiplier = bullet.f22Rocket ? F22_TANK_DAMAGE_MULTIPLIER : APACHE_TANK_DAMAGE_MULTIPLIER
-          if (apacheTargetUnit && ['tank', 'tank_v1', 'tank-v2', 'tank-v3'].includes(apacheTargetUnit.type)) {
+          if (apacheTargetUnit && ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank'].includes(apacheTargetUnit.type)) {
             damageMultiplier = tankDamageMultiplier
           } else if (bullet.shooter && units) {
             // Check if explosion will hit any tanks
             const explosionRadius = TILE_SIZE * 2
             const hasTankNearby = units.some(u => {
               if (u.factoryExit || u.health <= 0 || u.owner === bullet.shooter.owner) return false
-              const tankTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3']
+              const tankTypes = ['tank', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank']
               if (!tankTypes.includes(u.type)) return false
               const explosionOriginX = bullet.x
               const explosionOriginY = bullet.y
@@ -734,7 +734,7 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             let damageMultiplier = 0.8 + gameRandom() * 0.4
 
             // Rocket tank projectiles are balanced against tanks
-            const isTankTarget = unit.type && ['tank_v1', 'tank', 'tank-v2', 'tank-v3', 'rocketTank', 'howitzer'].includes(unit.type)
+            const isTankTarget = unit.type && ['tank_v1', 'tank', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'howitzer'].includes(unit.type)
             if (bullet.originType === 'rocketTank' && isTankTarget) {
               // Ensure one rocket makes exactly 23% damage on a normal tank (100 HP)
               // 23% of 100 = 23 damage. Base damage is 120.
@@ -1178,6 +1178,18 @@ export function fireBullet(unit, target, bullets, now) {
       y: unitCenterY,
       speed: 12,
       baseDamage: BULLET_DAMAGES.tank_v2,
+      active: true,
+      shooter: unit,
+      homing: false,
+      target
+    }
+  } else if (unit.type === 'lightTank') {
+    bullet = {
+      id: Date.now() + gameRandom(),
+      x: unitCenterX,
+      y: unitCenterY,
+      speed: 16,
+      baseDamage: BULLET_DAMAGES.lightTank,
       active: true,
       shooter: unit,
       homing: false,

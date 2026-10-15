@@ -11,7 +11,7 @@ export function isTankUnit(unit) {
 
   const tankTypes = [
     'tank', 'tank_v1', 'tank_v2', 'tank_v3',
-    'tank-v2', 'tank-v3', 'rocketTank'
+    'tank-v2', 'tank-v3', 'lightTank', 'rocketTank'
   ]
 
   return tankTypes.includes(unit.type)

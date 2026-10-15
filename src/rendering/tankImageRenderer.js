@@ -27,6 +27,11 @@ const tankImageCache = {
     wagon: null,
     turret: null,
     barrel: null
+  },
+  lightTank: {
+    wagon: null,
+    turret: null,
+    barrel: null
   }
 }
 
@@ -51,10 +56,15 @@ const PREPARED_TANK_IDS = Object.freeze({
     wagon: 'unit:tankV3:wagon',
     turret: 'unit:tankV3:turret',
     barrel: 'unit:tankV3:barrel'
+  }),
+  lightTank: Object.freeze({
+    wagon: 'unit:lightTank:wagon',
+    turret: 'unit:lightTank:turret',
+    barrel: 'unit:lightTank:barrel'
   })
 })
 
-const TANK_VARIANTS = Object.freeze(['tankV1', 'tankV2', 'tankV3'])
+const TANK_VARIANTS = Object.freeze(['tankV1', 'tankV2', 'tankV3', 'lightTank'])
 
 function getPreparedTankAssets(variant) {
   const ids = PREPARED_TANK_IDS[variant]
@@ -120,7 +130,7 @@ export function preloadTankImages(callback) {
   }
 
   // Load images for all tank variants
-  const variants = ['tankV1', 'tankV2', 'tankV3']
+  const variants = ['tankV1', 'tankV2', 'tankV3', 'lightTank']
 
   variants.forEach(variant => {
     // Load tank wagon
@@ -176,6 +186,8 @@ function getTankVariant(tankType) {
     case 'tank-v3':
     case 'tank_v3':
       return 'tankV3'
+    case 'lightTank':
+      return 'lightTank'
     default:
       return 'tankV1' // Default fallback
   }

@@ -41,7 +41,7 @@ export const updateUnitCombat = logPerformance(function updateUnitCombat(units, 
     updateGuardTargeting(unit, units)
 
     // Combat logic for different unit types
-    if (unit.type === 'tank' || unit.type === 'tank_v1') {
+    if (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'lightTank') {
       updateTankCombat(unit, units, bullets, mapGrid, now, occupancyMap)
     } else if (unit.type === 'tank-v2') {
       updateTankV2Combat(unit, units, bullets, mapGrid, now, occupancyMap)

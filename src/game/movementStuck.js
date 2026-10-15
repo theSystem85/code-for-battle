@@ -314,7 +314,7 @@ export function handleStuckUnit(unit, mapGrid, occupancyMap, units, gameState = 
       }
     } else if (distanceMoved < TILE_SIZE / 4 && unit.path && unit.path.length > 0) {
       const isAICombatUnit = unit.owner === 'enemy' &&
-        (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank')
+        (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank')
 
       const movementThreshold = isAICombatUnit ? TILE_SIZE / 8 : TILE_SIZE / 4
       const stuckTimeThreshold = isAICombatUnit ? stuckThreshold * 3 : stuckThreshold

@@ -478,9 +478,9 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
     const aiTanks = units.filter(
       u =>
         u.owner === aiPlayerId &&
-        (u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3')
+        (u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'lightTank')
     )
-    const tanksInProduction = ['tank_v1', 'tank-v2', 'tank-v3'].includes(
+    const tanksInProduction = ['tank_v1', 'tank-v2', 'tank-v3', 'lightTank'].includes(
       aiFactory.currentlyProducingUnit
     )
       ? 1
@@ -1046,7 +1046,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
         const aiRecoveryTanks = units.filter(u => u.owner === aiPlayerId && u.type === 'recoveryTank' && u.health > 0)
         const aiCombatUnits = units.filter(u =>
           u.owner === aiPlayerId &&
-          (u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'rocketTank') &&
+          (u.type === 'tank_v1' || u.type === 'tank-v2' || u.type === 'tank-v3' || u.type === 'lightTank' || u.type === 'rocketTank') &&
           u.health > 0
         )
 
@@ -1072,13 +1072,15 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
             else unitType = 'rocketTank'
           } else if (isHighBudget) {
             // High budget: Balanced advanced units
-            if (rand < 0.2) unitType = 'tank_v1'
+            if (rand < 0.12) unitType = 'tank_v1'
+            else if (rand < 0.2) unitType = 'lightTank'
             else if (rand < 0.5) unitType = 'tank-v2'
             else if (rand < 0.75) unitType = 'rocketTank'
             else unitType = 'tank-v3'
           } else {
             // Normal budget: Mix of basic and medium units
-            if (rand < 0.5) unitType = 'tank_v1'
+            if (rand < 0.35) unitType = 'tank_v1'
+            else if (rand < 0.55) unitType = 'lightTank'
             else if (rand < 0.8) unitType = 'tank-v2'
             else unitType = 'rocketTank'
           }
@@ -1097,6 +1099,7 @@ function _updateAIPlayer(aiPlayerId, units, factories, bullets, mapGrid, gameSta
           unitType === 'tank_v1' ||
           unitType === 'tank-v2' ||
           unitType === 'tank-v3' ||
+          unitType === 'lightTank' ||
           unitType === 'rocketTank' ||
           unitType === 'ambulance' ||
           unitType === 'tankerTruck' ||

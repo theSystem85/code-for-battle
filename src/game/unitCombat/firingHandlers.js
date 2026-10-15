@@ -224,7 +224,8 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
       }
 
       const soundName = isF35Bomb ? 'f35BombDrop' : (projectileType === 'rocket' ? 'shoot_rocket' : 'shoot')
-      const vol = (projectileType === 'rocket' || isF35Bomb) ? 0.3 : 0.5
+      // The light tank reuses the tank shot at a lower volume so its rapid autocannon fire is not overpowering.
+      const vol = (projectileType === 'rocket' || isF35Bomb || unit.type === 'lightTank') ? 0.3 : 0.5
       playPositionalSound(soundName, bullet.x, bullet.y, vol)
       unit.lastShotTime = now
 

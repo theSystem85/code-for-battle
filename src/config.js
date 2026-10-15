@@ -1060,6 +1060,7 @@ export const UNIT_COSTS = {
   harvester: 1500,
   'tank-v2': 2000,
   'tank-v3': 3000,
+  lightTank: 700,
   ambulance: 500,
   tankerTruck: 300,
   ammunitionTruck: 800,
@@ -1123,6 +1124,15 @@ export const UNIT_PROPERTIES = {
     rotationSpeed: TANK_WAGON_ROT,
     turretRotationSpeed: TANK_TURRET_ROT * 1.5, // 50% faster turret rotation for better tracking
     alertMode: true
+  },
+  // Light tank / IFV (M2 Bradley style): fast, lightly armored, rapid-fire autocannon
+  lightTank: {
+    health: 70,
+    maxHealth: 70,
+    speed: 0.46, // ~1.4x tank_v1 speed
+    rotationSpeed: TANK_WAGON_ROT * 1.3,
+    turretRotationSpeed: TANK_TURRET_ROT * 1.5,
+    armor: 0.8 // light armor: damage is divided by armor, so it takes 25% more damage
   },
   // Rocket tank properties
   rocketTank: {
@@ -1411,6 +1421,7 @@ export const BULLET_DAMAGES = {
   tank_v1: 20,
   tank_v2: 24,
   tank_v3: 30,
+  lightTank: 6, // 25 mm autocannon round, fired rapidly
   rocketTank: 120
 }
 
@@ -1431,6 +1442,7 @@ export const UNIT_TYPE_COLORS = {
   tank_v1: '#0000FF',     // Blue
   'tank-v2': '#FFFFFF',   // White
   'tank-v3': '#32CD32',   // Lime green
+  lightTank: '#C8A46A',   // Desert sand
   harvester: '#9400D3',   // Purple
   rocketTank: '#800000',
   ambulance: '#00FFFF',   // Dark red
@@ -1580,6 +1592,7 @@ export const UNIT_AMMO_CAPACITY = {
   tank_v1: 42,
   'tank-v2': 42,
   'tank-v3': 50,
+  lightTank: 150,
   rocketTank: 24,
   howitzer: 30,
   apache: 38,
@@ -1612,6 +1625,7 @@ const TURRET_TANK_TYPES = new Set([
   'tank_v3',
   'tank-v2',
   'tank-v3',
+  'lightTank',
   'destroyer',
   'rocketTank'
 ])
@@ -1785,6 +1799,7 @@ export const UNIT_GAS_PROPERTIES = {
   tank_v1: { tankSize: 1900, consumption: 450 },
   'tank-v2': { tankSize: 1900, consumption: 450 },
   'tank-v3': { tankSize: 1900, consumption: 450 },
+  lightTank: { tankSize: 1500, consumption: 350 },
   rocketTank: { tankSize: 1900, consumption: 450 },
   // Recovery tanks consume the same fuel as standard tanks
   recoveryTank: { tankSize: 1900, consumption: 450 },

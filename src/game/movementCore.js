@@ -46,6 +46,7 @@ const NO_AUTO_ROTATION_TYPES = new Set([
   'tank_v1',
   'tank-v2',
   'tank-v3',
+  'lightTank',
   'rocketTank',
   'howitzer',
   'apache',
@@ -581,7 +582,7 @@ export function updateUnitPosition(unit, mapGrid, occupancyMap, now, units = [],
   let canAccelerate = true
   let shouldDecelerate = false
 
-  if (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'rocketTank' || unit.type === 'howitzer') {
+  if (unit.type === 'tank' || unit.type === 'tank_v1' || unit.type === 'tank-v2' || unit.type === 'tank-v3' || unit.type === 'lightTank' || unit.type === 'rocketTank' || unit.type === 'howitzer') {
     if (unit.isRetreating) {
       canAccelerate = unit.canAccelerate !== false
       shouldDecelerate = !canAccelerate

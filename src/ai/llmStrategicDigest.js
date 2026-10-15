@@ -62,6 +62,7 @@ const UNIT_ROLE_LABELS = {
   tank_v1: 'frontline',
   'tank-v2': 'frontline',
   'tank-v3': 'heavy-frontline',
+  lightTank: 'fast-raider',
   rocketTank: 'anti-armor',
   harvester: 'economy',
   tankerTruck: 'fuel-support',

@@ -1051,7 +1051,7 @@ export class BuildingRenderer {
       factory = entityIndex?.get(`factory:${building.owner}`) ||
         gameState.factories?.find(f => f.id === building.owner)
       if (factory && factory.currentlyProducingUnit &&
-          ['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'tankerTruck', 'howitzer'].includes(factory.currentlyProducingUnit)) {
+          ['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'tankerTruck', 'howitzer'].includes(factory.currentlyProducingUnit)) {
         isFactory = true
         currentlyBuilding = factory.currentlyProducingUnit
         buildStartTime = factory.unitBuildStartTime
@@ -1080,7 +1080,7 @@ export class BuildingRenderer {
 
     ctx.save()
 
-    const productionColor = ['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'rocketTank', 'tankerTruck', 'howitzer'].includes(currentlyBuilding)
+    const productionColor = ['harvester', 'tank_v1', 'tank-v2', 'tank-v3', 'lightTank', 'rocketTank', 'tankerTruck', 'howitzer'].includes(currentlyBuilding)
       ? '#2196F3'
       : '#4CAF50'
     drawStatusBar(ctx, progressBarX, progressBarY, progressBarWidth, progressBarHeight, progress, productionColor, 'horizontal')
@@ -1098,6 +1098,7 @@ export class BuildingRenderer {
       if (currentlyBuilding === 'tank_v1') displayName = 'Tank'
       else if (currentlyBuilding === 'tank-v2') displayName = 'Tank V2'
       else if (currentlyBuilding === 'tank-v3') displayName = 'Tank V3'
+      else if (currentlyBuilding === 'lightTank') displayName = 'Light Tank'
       else if (currentlyBuilding === 'rocketTank') displayName = 'Rocket Tank'
       else if (currentlyBuilding === 'howitzer') displayName = 'Howitzer'
       else if (currentlyBuilding === 'tankerTruck') displayName = 'Tanker Truck'
