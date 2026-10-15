@@ -10,6 +10,13 @@ import { gameState } from '../gameState.js'
 import { getConfigValue, setConfigValue } from '../configRegistry.js'
 import { getRendererBackendStatusText, whenRendererBackendResolved } from '../config.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
+import {
+  loadTrackMarkSettings,
+  trackMarkSettings,
+  setTrackMarksEnabled,
+  setTrackMarksFade,
+  setTrackMarksFadeDelay
+} from '../game/trackMarks.js'
 
 const RADAR_OFFLINE_ANIMATION_SETTINGS_KEY = 'rts_radar_offline_animation'
 const DYNAMIC_WATER_LAND_BLEND_KEY = 'rts_dynamic_water_land_blend'
@@ -169,6 +176,7 @@ function openModal(modal, defaultTab = 'keybindings') {
     radarOfflineAnimationToggle.checked = gameState.radarOfflineAnimationEnabled !== false
   }
   refreshRendererBackendControls(modal)
+  syncTrackMarkControls(modal)
   if (keybindingsPanel) {
     renderKeybindingsEditor(keybindingsPanel)
   }
@@ -195,6 +203,40 @@ export function closeSettingsModal() {
   const modal = document.getElementById('configSettingsModal')
   if (!modal) return
   closeModal(modal)
+}
+
+function syncTrackMarkControls(modal) {
+  const enabledToggle = modal.querySelector('#settingsTrackMarksToggle')
+  const fadeToggle = modal.querySelector('#settingsTrackFadeToggle')
+  const delayRange = modal.querySelector('#settingsTrackFadeDelayRange')
+  const delayValue = modal.querySelector('#settingsTrackFadeDelayValue')
+  if (enabledToggle) enabledToggle.checked = trackMarkSettings.enabled
+  if (fadeToggle) {
+    fadeToggle.checked = trackMarkSettings.fade
+    fadeToggle.disabled = !trackMarkSettings.enabled
+  }
+  if (delayRange) {
+    delayRange.value = String(trackMarkSettings.fadeDelayS)
+    delayRange.disabled = !trackMarkSettings.enabled || !trackMarkSettings.fade
+  }
+  if (delayValue) delayValue.textContent = `${trackMarkSettings.fadeDelayS} s`
+}
+
+function bindTrackMarkControls(modal) {
+  loadTrackMarkSettings()
+  modal.querySelector('#settingsTrackMarksToggle')?.addEventListener('change', event => {
+    setTrackMarksEnabled(event.target.checked)
+    syncTrackMarkControls(modal)
+  })
+  modal.querySelector('#settingsTrackFadeToggle')?.addEventListener('change', event => {
+    setTrackMarksFade(event.target.checked)
+    syncTrackMarkControls(modal)
+  })
+  modal.querySelector('#settingsTrackFadeDelayRange')?.addEventListener('input', event => {
+    setTrackMarksFadeDelay(Number(event.target.value))
+    syncTrackMarkControls(modal)
+  })
+  syncTrackMarkControls(modal)
 }
 
 export function initSettingsModal() {
@@ -305,5 +347,6 @@ export function initSettingsModal() {
     })
   }
 
+  bindTrackMarkControls(modal)
   refreshRendererBackendControls(modal)
 }

@@ -1221,6 +1221,21 @@
               </span>
               <input type="range" id="settingsMobilePixelDensityRange" min="1" max="3" step="0.25" value="1">
             </label>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsTrackMarksToggle" checked>
+              <span>Track marks behind tracked vehicles on grass, sand and snow</span>
+            </label>
+            <label class="config-modal__field config-modal__field--toggle">
+              <input type="checkbox" id="settingsTrackFadeToggle">
+              <span>Fade track marks out over time</span>
+            </label>
+            <label class="config-modal__field">
+              <span class="config-modal__range-label-row">
+                <span>Track fade delay</span>
+                <span id="settingsTrackFadeDelayValue" class="config-modal__range-value">60 s</span>
+              </span>
+              <input type="range" id="settingsTrackFadeDelayRange" min="5" max="300" step="5" value="60" disabled>
+            </label>
             <label class="config-modal__field">
               <span>Terrain renderer</span>
               <select id="settingsRendererBackend">
