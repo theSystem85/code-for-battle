@@ -90,3 +90,13 @@ After packing, **visually inspect** the sheet and write accurate tags/footprints
 - `npm run test:unit`
 - `npm run lint:fix:changed`
 - Update a dedicated `docs/changes/` note, feature spec, versioned release notes, and `prompt-history/`.
+
+## Seeded placement categories (PR #688)
+
+Add `trees`, `rocks`, `farm`, `landmark`, `roadside`, `shore`, `ground_detail` and `city` to SSE's default and preferred tags. Keep all existing tags, especially `impassable`. Assign categories by propLayout sprite id to both the entry and every footprint cell; a prop can have multiple categories. Trees include groves, rows, palms, pines, shrubs and cacti; rocks include boulders, outcrops, ridges and ice chunks; farms include barns, hay, tools, wells, sheds and orchards. Tag the named 3x3 pond, farmstead, oasis, frozen lake and village block as landmarks. Wrecks, road obstacles, crates, barrels and scrap use roadside. Existing water props keep their water tags; do not add shore to water footprints just to make them land props.
+
+Optional decorations use seeded smooth noise and separate forest/rock/farm clusters. All footprint cells stay on one biome and off roads, their one-tile buffer, starts/bases (radius 8), ore (radius 2) and narrow passages. Roadside footprints use the second road ring; shore footprints use adjacent land. Minimum separation by span is 4/2/1 tiles for large/medium/small props, and identical sprites require six tiles. Landmarks are limited to one per 64x64 region and three per map. Category bags cycle evenly through seeded candidates; incompatible candidates are rejected.
+
+`ground_detail` belongs only to optional art, is passable and occupies an independent layer below props at opacity 0.55. It uses sparse noise, never water/roads, and does not consume spacing. With no detail art loaded, rendering is unchanged. Future `dtv3_ground_detail` and `dtv3_shore` are registered only when both WebP q85 and JSON exist; missing optional files warn and skip. Prepare layout before gameplay and use the bounded terrain cache; do not create resized sprite variants during gameplay. Verify DPR-aware final-size preparation when supplying the future art.
+
+See [placement specification](../../specs/121-map-generator-placement-rules.md) for helper tests, performance audit and outstanding qualifying-hardware verification. Preserve the empty-custom-selection equivalence test.

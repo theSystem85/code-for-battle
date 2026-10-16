@@ -76,6 +76,7 @@ export function publishPreparedRuntimeMap(mapGrid) {
   mapRenderer?.attachMutationStore?.(mapGrid)
   bindRenderingDensityPreparation()
   if (!mapGrid?.length) return Promise.resolve(null)
+  if (gameRenderer.textureManager.integratedSpriteSheetMode) gameRenderer.textureManager.getDecorationLayout(mapGrid)
   if (mapRenderer && !mapRenderer.sotMask) mapRenderer.computeSOTMask(mapGrid)
   return prepareRuntimeMap({ grid: mapGrid, sotMask: mapRenderer?.sotMask }).catch(error => {
     if (typeof window !== 'undefined') window.logger?.warn?.('Prepared map generation failed', error)
