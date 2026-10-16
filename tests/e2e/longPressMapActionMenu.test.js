@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test'
+import { waitForLoadingScreenHidden } from './helpers/loadingScreen.js'
 import { prepareRegressionScenario } from './helpers/regressionScenario.js'
 
 async function prepare(page) {
   await prepareRegressionScenario(page, 417)
+  await waitForLoadingScreenHidden(page)
   return page.evaluate(async() => {
     const r = window.__regression
     r.tank = r.unit('tank_v1', r.human, 22, 22)
@@ -77,6 +79,7 @@ test('settings change hold duration and browser agent API exposes every action',
   await page.locator('#settingsMapActionLongPressMs').fill('900')
   await page.locator('#settingsMapActionLongPressMs').dispatchEvent('change')
   await page.locator('#configModalCloseBtn').click()
+  expect(await page.evaluate(async() => (await import('/src/config.js')).MAP_ACTION_LONG_PRESS_MS)).toBe(900)
   await hold(page, point, 500)
   await expect(menu(page)).toBeHidden()
   await page.evaluate(() => { window.selectedUnitsRef.splice(0, window.selectedUnitsRef.length, window.__regression.tank) })

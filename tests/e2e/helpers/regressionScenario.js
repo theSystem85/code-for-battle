@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test'
+import { waitForLoadingScreenHidden } from './loadingScreen.js'
 
 export async function prepareRegressionScenario(page, seed) {
   await page.addInitScript(() => {
@@ -9,6 +10,7 @@ export async function prepareRegressionScenario(page, seed) {
   await page.waitForFunction(() => Boolean(
     window.gameState?.gameStarted && window.gameInstance?.units && window.cheatSystem && window.unitCommandsHandler
   ), null, { timeout: 30000 })
+  await waitForLoadingScreenHidden(page)
   await page.evaluate(async() => {
     const { buildOccupancyMap, removeUnitOccupancy, updateUnitOccupancy } = await import('/src/units.js')
     const { clearBuildingFromMapGrid } = await import('/src/buildings.js')

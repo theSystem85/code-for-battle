@@ -457,11 +457,11 @@ bindGamepadCommands({
 })
 
 if (typeof window !== 'undefined') {
-  window.remoteControlApi = {
+  window.remoteControlApi = Object.assign(window.remoteControlApi || {}, {
     setRemoteControlAction,
     setRemoteControlAbsolute,
     clearRemoteControlSource,
     clearRemoteControlAbsoluteSource,
     applyCoopRemoteSnapshot
-  }
+  })
 }

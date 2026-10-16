@@ -198,6 +198,7 @@ function closeModal(modal) {
 }
 
 export function openSettingsModal(defaultTab = 'keybindings') {
+  initSettingsModal()
   const modal = document.getElementById('configSettingsModal')
   if (!modal) return
   openModal(modal, defaultTab)
@@ -265,6 +266,8 @@ export function bindMixBalanceControl(root = document) {
   })
 }
 
+const initializedSettingsModals = new WeakSet()
+
 export function initSettingsModal() {
   const modal = document.getElementById('configSettingsModal')
   const closeBtn = document.getElementById('configModalCloseBtn')
@@ -278,7 +281,8 @@ export function initSettingsModal() {
   const mobilePixelDensityRange = document.getElementById('settingsMobilePixelDensityRange')
   const rendererBackendSelect = document.getElementById('settingsRendererBackend')
 
-  if (!modal) return
+  if (!modal || initializedSettingsModals.has(modal)) return
+  initializedSettingsModals.add(modal)
 
   const gamepadTab = modal.querySelector('[data-config-tab="gamepads"]')
   if (gamepadTab) gamepadTab.textContent = uiText('settings.gamepad.tab')

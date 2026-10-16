@@ -5,6 +5,12 @@ import { setMapActionLongPressMs, loadMapActionLongPressSetting, MAP_ACTION_LONG
 import { getStoredItem } from '../../src/storage/indexedDbStorage.js'
 import { broadcastGameCommand } from '../../src/network/commandBroadcast.js'
 
+vi.mock('../../src/network/remoteConnection.js', () => ({ getActiveRemoteConnection: vi.fn() }))
+vi.mock('../../src/replaySystem.js', () => ({
+  createReplayUnitReferences: vi.fn(() => []), recordReplayCommand: vi.fn(),
+  isReplayInteractionLocked: vi.fn(() => false)
+}))
+
 vi.mock('../../src/network/commandBroadcast.js', () => ({ broadcastGameCommand: vi.fn() }))
 vi.mock('../../src/network/multiplayerStore.js', () => ({ isLocalPartyAutomationLocked: () => false }))
 
@@ -81,5 +87,31 @@ describe('map action DOM integration', () => {
     expect(getStoredItem('rts_map_action_long_press_ms')).toBe('850')
     loadMapActionLongPressSetting()
     expect(MAP_ACTION_LONG_PRESS_MS).toBe(850)
+  })
+})
+
+// Re-evaluate the real remote-control initializer on either side of menu installation.
+describe('map action API initialization order', () => {
+  it.each(['menu-first', 'remote-first'])('preserves every action with %s', async order => {
+    vi.resetModules()
+    const previousApi = window.remoteControlApi
+    window.remoteControlApi = undefined
+    try {
+      if (order === 'remote-first') await import('../../src/input/remoteControlState.js')
+      const canvas = document.createElement('canvas')
+      const api = installMapActionMenu(canvas, {
+        selection: [], units: [], commands: {},
+        handler: { activeTouchPointers: new Map(), attackGroupHandler: {} }
+      })
+      if (order === 'menu-first') await import('../../src/input/remoteControlState.js')
+      for (const name of ['openMapActionMenu', 'closeMapActionMenu', 'forceAttackAt', 'defendHoldAt',
+        'applyAutomationOnArrival', 'listApplicableAutomations', 'setLongPressDuration', 'holdFire', 'clearTarget']) {
+        expect(window.remoteControlApi[name]).toBe(api[name])
+        expect(typeof window.remoteControlApi[name]).toBe('function')
+      }
+      expect(typeof window.remoteControlApi.setRemoteControlAction).toBe('function')
+    } finally {
+      window.remoteControlApi = previousApi
+    }
   })
 })
