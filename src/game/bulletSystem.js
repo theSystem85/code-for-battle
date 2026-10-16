@@ -1,3 +1,4 @@
+import { getCityAtWorld, applyCityDamage } from './cityBuildings.js'
 import { gameState } from '../gameState.js'
 import { recordMusicAttack } from '../audio/musicDirector.js'
 // Bullet System Module - Handles all bullet/projectile updates and collision detection
@@ -935,6 +936,19 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
         if (wreckHit) {
           continue
         }
+      }
+
+      // City collision probes use the same structure bounds and impact path.
+      if (!bullet.skipCollisionChecks && bullet.active) {
+        const city = getCityAtWorld(mapGrid, bullet.x, bullet.y)
+        if (city && checkBuildingCollision(bullet, city)) {
+          const damage = Math.round(bullet.baseDamage * (0.8 + gameRandom() * 0.4) * (bullet.projectileType === 'rocket' ? 2 : 1))
+          applyCityDamage(city, damage, mapGrid, gameState, playPositionalSound)
+          triggerExplosion(bullet.x, bullet.y, bullet.baseDamage, units, factories, bullet.shooter, now, mapGrid, bullet.explosionRadius, undefined, rocketExplosionOptions)
+          bullets.splice(i, 1)
+          bullet.active = false
+        }
+        if (!bullet.active) continue
       }
 
       // Check for collisions with buildings

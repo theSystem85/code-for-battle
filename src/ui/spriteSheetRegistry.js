@@ -18,7 +18,7 @@ export const DEFAULT_SSE_SHEETS = Object.freeze([
 // either picker. Both image and metadata must exist before registration.
 const futureSheetFiles = import.meta.glob('/public/images/map/sprite_sheets/dtv3_*.{webp,json}', { eager: true, query: '?url', import: 'default' })
 export function availableFutureSheets(files, warn = console.warn) {
-  return ['dtv3_ground_detail', 'dtv3_shore'].flatMap(name => {
+  return ['dtv3_ground_detail', 'dtv3_shore', 'dtv3_city'].flatMap(name => {
     const prefix = `/public/${SHEET_DIR}${name}`
     if (Object.hasOwn(files, `${prefix}.webp`) && Object.hasOwn(files, `${prefix}.json`)) return [`${SHEET_DIR}${name}.webp`]
     warn(`Skipping unavailable optional sprite sheet: ${name}`)

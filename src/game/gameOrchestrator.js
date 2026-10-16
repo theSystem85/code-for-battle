@@ -1,4 +1,5 @@
 import { preloadRemainingPreparedSprites } from '../rendering/prepared/preparedSpritePipeline.js'
+import { DECORATION_SETTINGS, normalizeDecorationSettings } from './decorationSettings.js'
 // Core game orchestration extracted from main.js
 import { setupInputHandlers, setRenderScheduler, selectedUnits } from '../inputHandler.js'
 import { unitCosts, initializeOccupancyMap, rebuildOccupancyMapWithTextures } from '../units.js'
@@ -372,6 +373,16 @@ function parseStartupMapOverrides() {
 const startupMapOverrides = parseStartupMapOverrides()
 
 function loadPersistedSettings() {
+  const decorationParams = new URLSearchParams(window.location.search)
+  const decorationValues = {}
+  for (const key of Object.keys(DECORATION_SETTINGS)) {
+    decorationValues[key] = decorationParams.get(key) ?? getStoredItem(`rts-${key}`) ?? gameState[key]
+  }
+  Object.assign(gameState, normalizeDecorationSettings(decorationValues))
+  for (const key of Object.keys(DECORATION_SETTINGS)) {
+    const input = document.getElementById(key)
+    if (input) input.value = gameState[key]
+  }
   const mapOverrides = startupMapOverrides
   try {
     const seedInput = document.getElementById('mapSeed')
@@ -1030,6 +1041,14 @@ class Game {
     ]))
 
     const applyMapSettingsAndRegenerate = async(changedField = null) => {
+      const values = {}
+      for (const key of Object.keys(DECORATION_SETTINGS)) values[key] = document.getElementById(key)?.value ?? gameState[key]
+      Object.assign(gameState, normalizeDecorationSettings(values))
+      for (const key of Object.keys(DECORATION_SETTINGS)) {
+        const input = document.getElementById(key)
+        if (input) input.value = gameState[key]
+        persistSetting(`rts-${key}`, gameState[key], key)
+      }
       const seed = seedInput ? seedInput.value || '1' : '1'
       const widthTiles = mapWidthInput ? sanitizeMapDimension(mapWidthInput.value, MAP_TILES_X) : MAP_TILES_X
       const heightTiles = mapHeightInput ? sanitizeMapDimension(mapHeightInput.value, MAP_TILES_Y) : MAP_TILES_Y
@@ -1185,6 +1204,11 @@ class Game {
 
     if (playerCountInput) {
       playerCountInput.addEventListener('change', applyMapSettingsAndRegenerate)
+    }
+
+    for (const key of Object.keys(DECORATION_SETTINGS)) {
+      const input = document.getElementById(key)
+      if (input) input.addEventListener('change', applyMapSettingsAndRegenerate)
     }
 
     if (oreFieldInput) {
@@ -1903,6 +1927,7 @@ function regenerateMapForClient(seed, widthTiles, heightTiles, playerCount, mapO
     gameState.mapOreTotalValue = sanitizeOreTotalValue(mapOreTotalValue)
   }
   if (terrainSettings && typeof terrainSettings === 'object') {
+    Object.assign(gameState, normalizeDecorationSettings(terrainSettings))
     gameState.mapWaterPercent = sanitizeTerrainPercent(terrainSettings.mapWaterPercent, gameState.mapWaterPercent)
     gameState.mapRockPercent = sanitizeTerrainPercent(terrainSettings.mapRockPercent, gameState.mapRockPercent)
     gameState.mapShoreNorth = !!terrainSettings.mapShoreNorth

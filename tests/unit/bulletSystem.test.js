@@ -1,3 +1,4 @@
+import { prepareCityBuildings } from '../../src/game/cityBuildings.js'
 /**
  * Unit tests for bullet/projectile system
  *
@@ -80,7 +81,8 @@ vi.mock('../../src/ai/enemyStrategies.js', () => ({
   handleAICrewLossEvent: vi.fn()
 }))
 
-vi.mock('../../src/game/tileDecals.js', () => ({
+vi.mock('../../src/game/tileDecals.js', async(importOriginal) => ({
+  ...await importOriginal(),
   setWorldDecal: vi.fn()
 }))
 
@@ -959,6 +961,19 @@ describe('Bullet System', () => {
         ...overrides
       }
     }
+
+    it('direct projectiles hit neutral city footprints without adding auto-target buildings', () => {
+      const map = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ type: 'land' })))
+      const group = { width: 1, height: 1, tagSet: new Set(['city']) }
+      const [city] = prepareCityBuildings(map, { width: 8, height: 8, cells: Array.from({ length: 64 }, (_, index) => index === 18 ? { group, anchorX: 2, anchorY: 2 } : null) })
+      const state = createGameState({ simulationTime: 1000 })
+      const bullets = [createMockBullet({ x: 80, y: 80, vx: 0, vy: 0, baseDamage: 10000, startTime: 999 })]
+      updateBullets(bullets, [], [], state, map)
+      expect(city.health).toBe(0)
+      expect(bullets).toHaveLength(0)
+      expect(state.buildings).toHaveLength(0)
+      expect(map[2][2].decal.tag).toBe('debris')
+    })
 
     it('removes inactive bullets from the array', () => {
       const bullets = [createMockBullet({ active: false })]

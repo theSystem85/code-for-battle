@@ -496,7 +496,7 @@ async function loadDefaultAnimationMetadata() {
   }
 }
 
-async function applyIntegratedSpriteSheetRuntime(metadata = null) {
+export async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   const textureManager = getTextureManager()
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
   cacheRuntimeIntegratedMetadata(metadata)

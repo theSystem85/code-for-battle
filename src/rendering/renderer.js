@@ -1,4 +1,5 @@
 import { withTimeout } from '../utils/assetLoading.js'
+import { renderCityHealthBars } from '../game/cityBuildings.js'
 import { factoryExitVisibility } from '../game/factoryExit.js'
 import { renderFactoryInterior, renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
 // rendering/renderer.js
@@ -672,6 +673,7 @@ export class Renderer {
     uiMs += framePhases.end(FRAME_PHASE.ui)
     framePhases.begin(FRAME_PHASE.entities)
     const entityOverlaysSpan = renderProfiler.startSpan(PROFILER_SPAN_IDS.ENTITY_OVERLAYS)
+    renderCityHealthBars(gameCtx, mapGrid, scrollOffset)
     this.buildingRenderer.renderOverlays(gameCtx, visibleBuildings, scrollOffset, true, frameEntityIndex)
     this.buildingRenderer.renderOverlays(gameCtx, visibleFactories, scrollOffset, true, frameEntityIndex)
     this.unitRenderer.renderOverlays(gameCtx, visibleGroundedUnits, scrollOffset, frameEntityIndex, units, true)
