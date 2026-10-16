@@ -65,12 +65,12 @@
     },
     "lightTank": {
       "turretMountPoint": {
-        "x": 58,
-        "y": 109,
+        "x": 57,
+        "y": 127,
         "comment": "Turret ring centre on the light tank hull; the turret image is padded so its centre is the turret body centre (pixels from top-left)"
       },
       "barrelMountPoint": {
-        "x": 37,
+        "x": 32,
         "y": 138,
         "comment": "Autocannon barrel centre on the turret; breech sits under the mantlet (pixels from top-left)"
       },

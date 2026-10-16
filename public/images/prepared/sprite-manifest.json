@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "assetVersion": "02a87b8cb4470f43",
+  "assetVersion": "7ae84ff8b7733947",
   "generatedBy": "scripts/build-prepared-sprites.mjs",
   "webpQuality": 85,
   "unitWebpQuality": 95,
@@ -17194,9 +17194,9 @@
           "y": 6.025762711864407
         },
         "barrelMount": {
-          "x": 4.414915254237289,
+          "x": 3.818305084745763,
           "y": 16.4664406779661,
-          "sourceX": 37,
+          "sourceX": 32,
           "sourceY": 138
         }
       },
@@ -17244,10 +17244,10 @@
           "y": 14.08
         },
         "turretMount": {
-          "x": 6.920677966101695,
-          "y": 13.006101694915255,
-          "sourceX": 58,
-          "sourceY": 109
+          "x": 6.80135593220339,
+          "y": 15.153898305084747,
+          "sourceX": 57,
+          "sourceY": 127
         }
       },
       "states": [

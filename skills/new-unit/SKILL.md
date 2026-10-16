@@ -47,6 +47,14 @@ Use this checklist when adding any new unit type to Code for Battle.
 - Add damage smoke/fire and destruction animation, wreck or sink behavior, and sound hooks.
 - Explicitly decide whether the new unit/building emits smoke; do not inherit smoke spots from source artwork assumptions.
 
+## Canonical facing direction (mandatory)
+Every image in `public/images/map/units/` (hull/wagon, turret, barrel, single-image body, rotor, every resolution and every prepared `@1x/@2x/@3x` variant) faces **SOUTH**: the front, nose, bow or muzzle points to the bottom of the image. This was learned the hard way: the M2/light tank shipped with a north-facing hull and turret and drove backwards in game (fixed in 0.58.0), and the mine layer was north-facing and only "worked" through a `+ Math.PI / 2` renderer hack while its wreck rendered backwards.
+
+- **Renderer rule:** rotate a south-facing image with `unit.direction - Math.PI / 2` (direction 0 = east, PI/2 = south). Never compensate a wrongly oriented asset with a different offset; rotate the asset 180° instead (re-encode with `webpOptionsForSprite` settings, q95 sharp-YUV) and mirror any source-pixel anchors (`x' = width - x`, `y' = height - y`), e.g. `turretMountPoint` in `src/tankImageConfig.json`.
+- **Register the facing:** add every new asset to `UNIT_SPRITE_FACING` in `src/rendering/unitSpriteFacing.js` as `'south'` (or `'symmetric'` for rotors). `tests/unit/unitSpriteFacing.test.js` fails if an asset is missing, if a new non-south entry appears, or if any layered tank part is not south-facing. The only allowed exceptions are the frozen legacy aircraft assets (Apache, F-22, F-35); do not grow that list.
+- **How to verify the front visually (do not trust the generator):** before committing, identify the front by real features, not by guesswork: gun mantlet / barrel port, driver hatch, headlights, cab, nose, bow. Hull and turret must agree (turret gun port on the same side the barrel leaves). Then spawn the unit in game, order it to drive east, south, west and north, and take a zoomed Playwright screenshot of each leg next to Tank V1 (whose front is known-good); the unit must drive front-first in all four. Store the screenshots with the PR.
+- Re-run `npm run make:prepared-sprites` after rotating so the `@1x/@2x/@3x` variants and manifest match the source.
+
 ## Retina sprite quality requirements
 These rules come from the tank image overhaul (#740, #742) and the light tank. Every new map sprite must meet them.
 

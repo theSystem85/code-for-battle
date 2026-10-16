@@ -40,8 +40,8 @@ export function renderMineLayerWithImage(ctx, unit, centerX, centerY) {
   ctx.save()
   ctx.translate(centerX, centerY)
 
-  // Image faces upward by default. Rotate so unit.direction=0 faces right.
-  const rotation = unit.direction + Math.PI / 2
+  // Canonical unit art faces south (front down); see src/rendering/unitSpriteFacing.js.
+  const rotation = unit.direction - Math.PI / 2
   ctx.rotate(rotation)
 
   if (prepared) {
