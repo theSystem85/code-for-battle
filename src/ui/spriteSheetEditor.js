@@ -1,3 +1,4 @@
+import { toggleSpriteTag } from './sseTags.js'
 import { compressionLabel, detectWebPCompression } from './sseExport.js'
 import { initSseExtend } from './sseExtend.js'
 import {
@@ -982,18 +983,9 @@ function toggleTagOnTile(state, col, row) {
   const data = state.activeData
   if (!data || !state.activeTag) return
 
-  const tileKey = makeTileKey(col, row)
-  const entry = ensureTileRecord(data, tileKey)
-  const currentIndex = entry.tags.indexOf(state.activeTag)
-  if (currentIndex >= 0) {
-    entry.tags.splice(currentIndex, 1)
-  } else {
-    entry.tags.push(state.activeTag)
-  }
-
-  if (!entry.tags.length) {
-    delete data.tiles[tileKey]
-  }
+  const cells = toggleSpriteTag(data, col, row, state.activeTag)
+  for (const key of cells) state.dragVisited?.add(key)
+  window.dispatchEvent(new CustomEvent('sse:tag-toggled', { detail: { col, row, tag: state.activeTag, tiles: cells } }))
 }
 
 function applyGroupTagToTile(state, col, row, groupId) {
@@ -1373,9 +1365,11 @@ async function loadDroppedSheetFile(state, file) {
 export async function loadDroppedFiles(state, files, { source = false } = {}) {
   const droppedFiles = Array.from(files || []).filter(Boolean)
   if (source) {
-    const image = droppedFiles.find(file => isDroppedImageFile(file) && !isDroppedJsonFile(file))
-    if (!image) throw new Error('Choose an image for the source.')
-    return state.extendApi.loadSourceImage(image)
+    const images = droppedFiles.filter(file => isDroppedImageFile(file) && !isDroppedJsonFile(file))
+    if (!images.length) throw new Error('Choose an image for the source.')
+    const ids = []
+    for (const image of images) ids.push(await state.extendApi.addSourceImage(image))
+    return ids
   }
   if (!droppedFiles.length) {
     await loadDroppedSheetFile(state, null)
@@ -2120,6 +2114,7 @@ export async function initSpriteSheetEditor(options = {}) {
   }
 
   state.extendApi = initSseExtend(state, {
+    toggleTag: (col, row, tag) => { const previous = state.activeTag; state.activeTag = tag; toggleTagOnTile(state, col, row); state.activeTag = previous; drawSseCanvas(state); renderTagList(state) },
     staticMode: () => switchMode('static'),
     newData: (path, data) => normalizeSheetDataForTags(data, path, DEFAULT_SSE_TAGS),
     register: (path, name, image, data) => {
