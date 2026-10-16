@@ -703,6 +703,10 @@ class Game {
         boot?.finish('assets')
         bootMark('assets-end')
 
+        // Apply persisted sheets before world generation; the first fingerprint
+        // records the initial configuration without regenerating a running map.
+        await initMapEditorControls()
+
         boot?.start('map')
         await waitForLoadingPaint()
         bootMark('map-start')
@@ -944,7 +948,6 @@ class Game {
 
   setupDeferredStartupTasks() {
     scheduleAfterNextPaint('startup:after-paint-ui', () => {
-      initMapEditorControls()
       initTutorialSystem()
       initUserDocs()
       initSidebarMultiplayer()
