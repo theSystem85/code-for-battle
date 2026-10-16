@@ -68,17 +68,17 @@ function groupSeasonAllowed(tagSet, biome) {
  */
 export function buildDecorationPools(groups) {
   const pools = {}
-  DECORATION_BIOMES.forEach((biome) => { pools[biome] = { multi: [], single: [] } })
+  DECORATION_BIOMES.forEach((biome) => { pools[biome] = { multi: [], single: [], groundDetail: [] } })
   if (!Array.isArray(groups)) return pools
   groups.forEach((group) => {
     if (!group?.tilesByOffset || !(group.tagSet instanceof Set)) return
-    if (!group.tagSet.has('decorative')) return
+    if (!group.tagSet.has('decorative') && !group.tagSet.has('ground_detail')) return
     const isUniversal = group.tagSet.has('universal')
     if (isUniversal && Number.isFinite(group.coverage) && group.coverage > UNIVERSAL_MAX_COVERAGE) return
     DECORATION_BIOMES.forEach((biome) => {
       if (!group.tagSet.has(biome) && !group.tagSet.has('universal')) return
       if (!groupSeasonAllowed(group.tagSet, biome)) return
-      const target = (group.width * group.height) > 1 ? pools[biome].multi : pools[biome].single
+      const target = group.tagSet.has('ground_detail') ? pools[biome].groundDetail : (group.width * group.height) > 1 ? pools[biome].multi : pools[biome].single
       target.push(group)
     })
   })
@@ -120,7 +120,10 @@ export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, r
 /**
  * @returns {{ width:number, height:number, cells:Array<null|{group:Object,offsetX:number,offsetY:number,anchorX:number,anchorY:number,biome:string}>, placements:Array }}
  */
-export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, ruinSeed = salt } = {}) {
+export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, ruinSeed = salt, startPositions = [], placementRules = false } = {}) {
+  if (placementRules || DECORATION_BIOMES.some(biome => [...(pools?.[biome]?.multi || []), ...(pools?.[biome]?.single || []), ...(pools?.[biome]?.groundDetail || [])].some(group => ['trees', 'rocks', 'farm', 'landmark', 'roadside', 'shore', 'ground_detail', 'city'].some(tag => group.tagSet.has(tag))))) {
+    return buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome, salt, startPositions })
+  }
   const height = Array.isArray(mapGrid) ? mapGrid.length : 0
   const width = height ? (mapGrid[0]?.length || 0) : 0
   const cells = new Array(width * height).fill(null)
@@ -221,9 +224,9 @@ export function summarizeDecorationLayout(layout) {
  * edited) map: every covered cell must still be decoratable land of the
  * placement biome. Otherwise null, so the cell shows plain ground.
  */
-export function getValidDecorationCell(layout, mapGrid, x, y, defaultBiome = 'grass') {
+export function getValidDecorationCell(layout, mapGrid, x, y, defaultBiome = 'grass', groundDetail = false) {
   if (!layout || x < 0 || y < 0 || x >= layout.width || y >= layout.height) return null
-  const cell = layout.cells[(y * layout.width) + x]
+  const cell = (groundDetail ? layout.groundDetails : layout.cells)?.[(y * layout.width) + x]
   if (!cell) return null
   const { group, anchorX, anchorY, biome } = cell
   for (let gy = 0; gy < group.height; gy++) {
@@ -233,4 +236,234 @@ export function getValidDecorationCell(layout, mapGrid, x, y, defaultBiome = 'gr
     }
   }
   return cell
+}
+
+/** Convert numeric or textual map seeds into a stable 32-bit salt. */
+export function decorationSeed(seed) {
+  if (Number.isFinite(seed)) return seed | 0
+  let salt = 0
+  for (const character of String(seed ?? '')) salt = (Math.imul(salt, 31) + character.charCodeAt(0)) | 0
+  return salt
+}
+
+/** Smooth, low-frequency value noise. No mutable PRNG or traversal dependence. */
+export function decorationDensity(x, y, seed = 0, scale = 16) {
+  const salt = decorationSeed(seed)
+  const ix = Math.floor(x / scale)
+  const iy = Math.floor(y / scale)
+  const smooth = value => value * value * (3 - 2 * value)
+  const tx = smooth(x / scale - ix)
+  const ty = smooth(y / scale - iy)
+  const value = (dx, dy) => decorationHash(ix + dx, iy + dy, salt) / 0xffffffff
+  const top = value(0, 0) * (1 - tx) + value(1, 0) * tx
+  const bottom = value(0, 1) * (1 - tx) + value(1, 1) * tx
+  return Math.max(0, Math.min(1, (top * (1 - ty) + bottom * ty - 0.2) / 0.6))
+}
+
+const CLUSTER_CATEGORIES = ['trees', 'rocks', 'farm']
+
+export function buildCategoryClusters(mapGrid, { salt = 0, defaultBiome = 'grass' } = {}) {
+  return Object.fromEntries(CLUSTER_CATEGORIES.map((category, index) => [category,
+    buildRuinClusters(mapGrid, { defaultBiome, salt: decorationSeed(salt) + index * 1013, radius: [11, 8, 6][index], minDistance: 1 })
+  ]))
+}
+
+export function categoryClusterAllows(group, x, y, biome, clusters) {
+  // A farm's orchard belongs to the farmstead, rather than requiring two
+  // independently seeded clusters to intersect.
+  const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag))
+  if (!category) return true
+  const cluster = clusters[category]
+  return cluster.centers.some(center => center.biome === biome && (center.x - x) ** 2 + (center.y - y) ** 2 <= cluster.radius ** 2)
+}
+
+const isRoad = tile => tile?.type === 'street' || tile?.type === 'road' || tile?.airstripStreet
+const isBarrier = tile => Boolean(tile && (tile.type === 'water' || tile.type === 'rock' || tile.impassable || tile.building))
+
+/** Preparation-only masks; all footprint queries below are constant per cell. */
+export function buildDecorationConstraints(mapGrid, startPositions = []) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  const keepClear = new Uint8Array(width * height)
+  const roadDistance = new Uint8Array(width * height).fill(255)
+  const shoreDistance = new Uint8Array(width * height).fill(255)
+  const markRadius = (x, y, radius) => {
+    for (let dy = -radius; dy <= radius; dy++) {
+      for (let dx = -radius; dx <= radius; dx++) {
+        if (dx * dx + dy * dy > radius * radius) continue
+        const cx = x + dx
+        const cy = y + dy
+        if (cx >= 0 && cy >= 0 && cx < width && cy < height) keepClear[cy * width + cx] = 1
+      }
+    }
+  }
+  for (const point of startPositions) markRadius(Math.floor(point.x), Math.floor(point.y), 8)
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const tile = mapGrid[y][x]
+      if (tile.ore || tile.seedCrystal) markRadius(x, y, 2)
+      if (tile.startPosition || tile.basePosition) markRadius(x, y, 8)
+      if (isDecoratableLand(tile)) {
+        const blocked = (dx, dy) => isBarrier(mapGrid[y + dy]?.[x + dx])
+        if (([1, 2].some(d => blocked(-d, 0)) && [1, 2].some(d => blocked(d, 0))) ||
+          ([1, 2].some(d => blocked(0, -d)) && [1, 2].some(d => blocked(0, d)))) keepClear[y * width + x] = 1
+      }
+      if (!isRoad(tile) && tile.type !== 'water') continue
+      const distances = isRoad(tile) ? roadDistance : shoreDistance
+      const radius = isRoad(tile) ? 2 : 1
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          const cx = x + dx
+          const cy = y + dy
+          if (cx < 0 || cy < 0 || cx >= width || cy >= height) continue
+          const index = cy * width + cx
+          distances[index] = Math.min(distances[index], Math.max(Math.abs(dx), Math.abs(dy)))
+        }
+      }
+    }
+  }
+  return { width, height, keepClear, roadDistance, shoreDistance }
+}
+
+export function decorationEnvironmentAllows(group, x, y, constraints) {
+  const index = y * constraints.width + x
+  if (constraints.keepClear[index] || constraints.roadDistance[index] <= 1) return false
+  if (group.tagSet.has('roadside') && constraints.roadDistance[index] !== 2) return false
+  if (group.tagSet.has('shore') && constraints.shoreDistance[index] > 1) return false
+  return true
+}
+
+export function decorationSpacing(group) {
+  const span = Math.max(group.width, group.height)
+  return span >= 3 ? 4 : span >= 2 ? 2 : 1
+}
+
+/** Distance between closest covered tile centers, accounting for full spans. */
+export function decorationFootprintDistance(a, b) {
+  const dx = Math.max(0, a.anchorX - (b.anchorX + b.group.width - 1), b.anchorX - (a.anchorX + a.group.width - 1))
+  const dy = Math.max(0, a.anchorY - (b.anchorY + b.group.height - 1), b.anchorY - (a.anchorY + a.group.height - 1))
+  return Math.hypot(dx, dy)
+}
+
+export function decorationIdentity(group) {
+  const first = group.tilesByOffset['0,0']
+  return `${first?.sheetPath || group.sheetPath || ''}:${group.groupLabel || JSON.stringify(first?.rect)}`
+}
+
+export function decorationSpacingAllows(placement, nearby) {
+  const identity = decorationIdentity(placement.group)
+  return nearby.every(other => {
+    const distance = decorationFootprintDistance(placement, other)
+    return distance >= Math.max(decorationSpacing(placement.group), decorationSpacing(other.group)) &&
+      (identity !== decorationIdentity(other.group) || distance >= 6)
+  })
+}
+
+export function landmarkAllows(x, y, landmarks) {
+  return landmarks.length < 3 && !landmarks.some(point => Math.floor(point.anchorX / 64) === Math.floor(x / 64) && Math.floor(point.anchorY / 64) === Math.floor(y / 64))
+}
+
+/** Seeded round robin: each candidate is offered once before the bag repeats. */
+export function createDecorationBag(candidates, salt = 0) {
+  const ordered = candidates.map((group, index) => ({ group, hash: decorationHash(index, candidates.length, decorationSeed(salt)) }))
+    .sort((a, b) => a.hash - b.hash).map(entry => entry.group)
+  let cursor = 0
+  return { next: () => ordered.length ? ordered[cursor++ % ordered.length] : null, size: ordered.length }
+}
+
+/** Natural placement is used only with opted-in category/detail catalogs. */
+export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, startPositions = [] } = {}) {
+  const height = mapGrid?.length || 0
+  const width = mapGrid?.[0]?.length || 0
+  const cells = new Array(width * height).fill(null)
+  const groundDetails = new Array(width * height).fill(null)
+  const placements = []
+  if (!width || !height || !pools) return { width, height, cells, placements, groundDetails }
+  salt = decorationSeed(salt)
+  const constraints = buildDecorationConstraints(mapGrid, startPositions)
+  const clusters = buildCategoryClusters(mapGrid, { salt, defaultBiome })
+  const ruins = buildRuinClusters(mapGrid, { salt, defaultBiome })
+  const clusterSeeds = new Set(Object.values(clusters).flatMap(cluster => cluster.centers.map(center => `${center.x},${center.y}`)))
+  const landmarks = []
+  // Index covered tiles once. Spacing probes visit at most a six-tile halo,
+  // rather than scanning all earlier placements per candidate.
+  const occupied = new Array(width * height).fill(null)
+  const bags = {}
+  for (const biome of DECORATION_BIOMES) {
+    bags[biome] = {}
+    for (const kind of ['multi', 'single', 'groundDetail']) {
+      const categories = new Map()
+      for (const group of pools[biome]?.[kind] || []) {
+        const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
+        if (!categories.has(category)) categories.set(category, [])
+        categories.get(category).push(group)
+      }
+      bags[biome][kind] = [...categories.values()].map(groups => createDecorationBag(groups, salt))
+    }
+  }
+  const fits = (placement, detail = false) => {
+    const { group, anchorX: x, anchorY: y, biome } = placement
+    if (x + group.width > width || y + group.height > height) return false
+    for (let dy = 0; dy < group.height; dy++) {
+      for (let dx = 0; dx < group.width; dx++) {
+        const cx = x + dx
+        const cy = y + dy
+        const tile = mapGrid[cy][cx]
+        if (!isDecoratableLand(tile) || isRoad(tile) || resolveBiome(tile, defaultBiome) !== biome ||
+          !decorationEnvironmentAllows(group, cx, cy, constraints) || (detail ? groundDetails[cy * width + cx] : occupied[cy * width + cx])) return false
+      }
+    }
+    if (detail) return true
+    if (!categoryClusterAllows(group, x, y, biome, clusters)) return false
+    if (group.tagSet.has('ruins') && !ruins.anchorKeys.has(`${x},${y}`)) return false
+    if (group.tagSet.has('landmark') && !landmarkAllows(x, y, landmarks)) return false
+    const nearby = new Set()
+    for (let cy = Math.max(0, y - 6); cy < Math.min(height, y + group.height + 6); cy++) {
+      for (let cx = Math.max(0, x - 6); cx < Math.min(width, x + group.width + 6); cx++) {
+        const other = occupied[cy * width + cx]
+        if (other) nearby.add(other)
+      }
+    }
+    return decorationSpacingAllows(placement, [...nearby])
+  }
+  // Ground detail has its own cells, no impassability and no spacing ownership.
+  for (const kind of ['groundDetail', 'multi', 'single']) {
+    const detail = kind === 'groundDetail'
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const biome = resolveBiome(mapGrid[y][x], defaultBiome)
+        const categoryBags = bags[biome]?.[kind]
+        if (!categoryBags?.length || !isDecoratableLand(mapGrid[y][x])) continue
+        const hash = decorationHash(x, y, salt + (detail ? 3209 : kind === 'single' ? 7919 : 0))
+        const interval = detail ? 40 : kind === 'multi' ? MULTI_TILE_ANCHOR_INTERVAL : SINGLE_DECORATION_INTERVAL
+        const density = decorationDensity(x, y, salt)
+        if (hash / 0x100000000 >= density / interval && !(kind !== 'groundDetail' && (ruins.anchorKeys.has(`${x},${y}`) || clusterSeeds.has(`${x},${y}`)))) continue
+        const start = (hash >>> 8) % categoryBags.length
+        let placed = false
+        for (let index = 0; index < categoryBags.length && !placed; index++) {
+          const bag = categoryBags[(start + index) % categoryBags.length]
+          for (let attempt = 0; attempt < bag.size; attempt++) {
+            const group = bag.next()
+            const placement = { group, anchorX: x, anchorY: y, biome }
+            if (!fits(placement, detail)) continue
+            if (!detail) {
+              if (kind === 'multi') placements.push(placement)
+              if (group.tagSet.has('landmark')) landmarks.push(placement)
+            }
+            for (let dy = 0; dy < group.height; dy++) {
+              for (let dx = 0; dx < group.width; dx++) {
+                const offset = (y + dy) * width + x + dx
+                const cell = { ...placement, offsetX: dx, offsetY: dy }
+                if (detail) groundDetails[offset] = cell
+                else { cells[offset] = cell; occupied[offset] = placement }
+              }
+            }
+            placed = true
+            break
+          }
+        }
+      }
+    }
+  }
+  return { width, height, cells, placements, groundDetails }
 }

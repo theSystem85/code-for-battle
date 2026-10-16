@@ -1,6 +1,6 @@
 import { fetchAssetJson } from '../utils/assetLoading.js'
 // rendering/textureManager.js
-import { TILE_SIZE } from '../config.js'
+import { TILE_SIZE, PLAYER_POSITIONS } from '../config.js'
 import { gameState } from '../gameState.js'
 import { bootMark } from '../ui/bootTiming.js'
 import { reportBootTextures } from '../ui/bootProgress.js'
@@ -13,6 +13,7 @@ import {
   buildDecorationLayout,
   buildDecorationPools,
   decorationHash,
+  decorationSeed,
   getValidDecorationCell,
   SINGLE_DECORATION_INTERVAL
 } from './decorationLayout.js'
@@ -79,6 +80,8 @@ export class TextureManager {
     this.defaultStreetTagBuckets = {}
     this.integratedGroupedTagCatalog = {}
     this.integratedDecorationPools = buildDecorationPools([])
+    this.hasGroundDetails = false
+    this.naturalDecorationRules = false
     this.decorationLayoutCache = null
     this.defaultCombatDecalGroupedTagCatalog = {}
     this.streetSelectionPoolCache = new Map()
@@ -172,7 +175,10 @@ export class TextureManager {
         this.integratedSpriteSheetImagesByPath[sheetPath] = image
         return image
       })
-      .catch(() => null)
+      .catch(() => {
+        console.warn(`Skipping unavailable sprite sheet: ${sheetPath}`)
+        return null
+      })
       .finally(() => {
         delete this.integratedSpriteSheetLoadsByPath[sheetPath]
       })
@@ -216,7 +222,7 @@ export class TextureManager {
     for (const biome of ['grass', 'soil', 'sand', 'snow']) {
       catalog[biome] = {
         all: this.getTagBucketCandidates(tagBuckets, [biome]),
-        passable: this.getTagBucketCandidates(tagBuckets, [biome, 'passable'], ['decorative', 'impassable']),
+        passable: this.getTagBucketCandidates(tagBuckets, [biome, 'passable'], ['decorative', 'impassable', 'ground_detail']),
         decorative: this.getTagBucketCandidates(tagBuckets, [biome, 'decorative']),
         impassable: this.getTagBucketCandidates(tagBuckets, [biome, 'impassable'])
       }
@@ -462,6 +468,8 @@ export class TextureManager {
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
       this.integratedDecorationPools = buildDecorationPools([])
+      this.hasGroundDetails = false
+      this.naturalDecorationRules = false
       this.decorationLayoutCache = null
       this.integratedRenderSignature = `off|${this.integratedBiomeTag}`
       this.clearStreetSelectionPoolCache()
@@ -516,6 +524,8 @@ export class TextureManager {
       this.integratedBlackKey = null
       this.integratedGroupedTagCatalog = {}
       this.integratedDecorationPools = buildDecorationPools([])
+      this.hasGroundDetails = false
+      this.naturalDecorationRules = false
       this.decorationLayoutCache = null
       this.integratedRenderSignature = 'off'
       this.clearStreetSelectionPoolCache()
@@ -533,12 +543,25 @@ export class TextureManager {
     this.integratedTagBuckets = this.buildIntegratedTagBuckets(normalizedEntries)
     this.integratedLandBuckets = this.buildIntegratedLandBuckets(this.integratedTagBuckets)
     this.integratedGroupedTagCatalog = this.buildGroupedTagCatalog(normalizedEntries)
-    this.integratedDecorationPools = buildDecorationPools(
-      (this.integratedGroupedTagCatalog.decorative || []).map(group => ({
-        ...cutoutDecorationGroup(group),
-        tagSet: TextureManager.collectGroupTagSet(group)
-      }))
-    )
+    const decorationGroups = [...(this.integratedGroupedTagCatalog.decorative || []), ...(this.integratedGroupedTagCatalog.ground_detail || [])]
+    const seenGroups = new Set()
+    const preparedGroups = []
+    for (const group of decorationGroups) {
+      const first = group.tilesByOffset['0,0']
+      const key = `${first.sheetPath}:${group.groupLabel}`
+      if (seenGroups.has(key)) continue
+      seenGroups.add(key)
+      const tagSet = TextureManager.collectGroupTagSet(group)
+      preparedGroups.push({ ...(tagSet.has('ground_detail') ? group : cutoutDecorationGroup(group)), tagSet })
+    }
+    // Future detail sheets may carry individual tiles without group labels.
+    for (const tile of this.integratedTagBuckets.ground_detail || []) {
+      if (TextureManager.getGroupTagId(tile.tags)) continue
+      preparedGroups.push({ width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) })
+    }
+    this.integratedDecorationPools = buildDecorationPools(preparedGroups)
+    this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
+    this.naturalDecorationRules = normalizedEntries.some(entry => /\/dtv[23]_/.test(entry.sheetPath))
     this.decorationLayoutCache = null
     this.integratedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag) ? config.biomeTag : 'grass'
     this.integratedBlendMode = normalizeSpriteSheetBlendMode(normalizedEntries[0].metadata?.blendMode)
@@ -582,7 +605,10 @@ export class TextureManager {
     }
     const layout = buildDecorationLayout(mapGrid, this.integratedDecorationPools, {
       defaultBiome: this.getDefaultDecorationBiome(),
-      ruinSeed: gameState.mapSeed
+      ruinSeed: gameState.mapSeed,
+      salt: this.naturalDecorationRules ? decorationSeed(gameState.mapSeed) : 0,
+      placementRules: Boolean(this.naturalDecorationRules),
+      startPositions: Object.values(PLAYER_POSITIONS).slice(0, gameState.playerCount || 2).map(point => ({ x: Math.floor(width * point.x), y: Math.floor(mapGrid.length * point.y) }))
     })
     this.decorationLayoutCache = {
       mapGrid,
@@ -592,6 +618,16 @@ export class TextureManager {
       layout
     }
     return layout
+  }
+
+  getGroundDetailForMapTile(mapGrid, x, y) {
+    if (!this.integratedSpriteSheetMode || !this.hasGroundDetails || mapGrid?.[y]?.[x]?.type !== 'land') return null
+    const layout = this.getDecorationLayout(mapGrid)
+    const cell = layout?.groundDetails?.[y * layout.width + x]
+    if (!cell) return null
+    // Reuse the footprint validation for edited maps without decorating occupancy.
+    if (!getValidDecorationCell(layout, mapGrid, x, y, this.getDefaultDecorationBiome(), true)) return null
+    return cell.group.tilesByOffset[`${cell.offsetX},${cell.offsetY}`] || null
   }
 
   invalidateDecorationLayout() {

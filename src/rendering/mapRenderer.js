@@ -1581,9 +1581,27 @@ export class MapRenderer {
     return Boolean(useTexture && this.organicTerrain?.ready)
   }
 
+  // Called while baking static terrain chunks, below decorative overlays.
+  drawGroundDetail(ctx, mapGrid, x, y, screenX, screenY) {
+    if (!this.textureManager.hasGroundDetails) return false
+    const detail = this.textureManager.getGroundDetailForMapTile(mapGrid, x, y)
+    if (!detail) return false
+    const alpha = ctx.globalAlpha
+    ctx.globalAlpha = alpha * 0.55
+    const drawn = this.drawIntegratedTileImage(ctx, detail, screenX, screenY)
+    ctx.globalAlpha = alpha
+    return drawn
+  }
+
   drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY) {
     if (!this.textureManager.integratedSpriteSheetMode || tile?.type !== 'land' || tile.airstripStreet) return false
     const overlay = this.textureManager.getIntegratedTileForMapTile('land', x, y, { mapGrid })
+    if (overlay?.tags?.includes('passable') && !overlay.tags.includes('decorative')) {
+      const drawn = this.drawIntegratedTileImage(ctx, overlay, screenX, screenY)
+      this.drawGroundDetail(ctx, mapGrid, x, y, screenX, screenY)
+      return drawn
+    }
+    this.drawGroundDetail(ctx, mapGrid, x, y, screenX, screenY)
     return this.drawIntegratedTileImage(ctx, overlay, screenX, screenY)
   }
 
@@ -1835,6 +1853,10 @@ export class MapRenderer {
         ? this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY, { mapGrid, biomeTag: tileBiome })
         : this.textureManager.getIntegratedTileForMapTile(type, tileX, tileY)
       if (integratedTile?.image && integratedTile?.rect) {
+        if (type === 'land' && mapGrid && this.textureManager.hasGroundDetails && integratedTile.tags?.includes('decorative')) {
+          this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
+          this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
+        }
         if (type === 'rock' && this.textureManager.integratedSpriteSheetMode) {
           const landTile = mapGrid
             ? this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: tileBiome })
@@ -1844,6 +1866,9 @@ export class MapRenderer {
           }
         }
         this.drawIntegratedTileImage(ctx, integratedTile, screenX, screenY)
+        if (type === 'land' && mapGrid && integratedTile.tags?.includes('passable') && !integratedTile.tags.includes('decorative')) {
+          this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
+        }
         const blend = mapGrid?.[tileY]?.[tileX]?.biomeBlend
         if (type === 'land' && blend?.biome && blend.alpha > 0) {
           const blendTile = this.textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid, biomeTag: blend.biome })
@@ -1854,6 +1879,7 @@ export class MapRenderer {
     }
 
     this.drawFallbackTileBase(ctx, tileX, tileY, type, screenX, screenY, useTexture, currentWaterFrame)
+    if (type === 'land' && mapGrid) this.drawGroundDetail(ctx, mapGrid, tileX, tileY, screenX, screenY)
   }
 
   drawProceduralWater(ctx, screenX, screenY, size, tileX, tileY) {

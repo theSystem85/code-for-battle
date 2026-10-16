@@ -14,12 +14,25 @@ export const DEFAULT_SSE_SHEETS = Object.freeze([
   `${SHEET_DIR}debris_craters_tracks.webp`
 ])
 
+// Vite resolves availability at build time; missing future sheets never enter
+// either picker. Both image and metadata must exist before registration.
+const futureSheetFiles = import.meta.glob('/public/images/map/sprite_sheets/dtv3_*.{webp,json}', { eager: true, query: '?url', import: 'default' })
+export function availableFutureSheets(files, warn = console.warn) {
+  return ['dtv3_ground_detail', 'dtv3_shore'].flatMap(name => {
+    const prefix = `/public/${SHEET_DIR}${name}`
+    if (Object.hasOwn(files, `${prefix}.webp`) && Object.hasOwn(files, `${prefix}.json`)) return [`${SHEET_DIR}${name}.webp`]
+    warn(`Skipping unavailable optional sprite sheet: ${name}`)
+    return []
+  })
+}
+
 export const OPTIONAL_SSE_SHEETS = Object.freeze([
   `${SHEET_DIR}dtv2_grass.webp`,
   `${SHEET_DIR}dtv2_soil.webp`,
   `${SHEET_DIR}dtv2_sand.webp`,
   `${SHEET_DIR}dtv2_snow.webp`,
-  `${SHEET_DIR}dtv2_universal.webp`
+  `${SHEET_DIR}dtv2_universal.webp`,
+  ...availableFutureSheets(futureSheetFiles)
 ])
 
 // Sheets that used to ship and were removed. Stored settings, editor state and

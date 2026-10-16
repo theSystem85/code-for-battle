@@ -52,7 +52,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 64,
@@ -69,7 +70,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 128,
@@ -86,7 +88,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 192,
@@ -103,7 +106,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 64,
@@ -120,7 +124,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 128,
@@ -137,7 +142,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 192,
@@ -154,7 +160,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 64,
@@ -171,7 +178,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 128,
@@ -188,7 +196,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ],
       "rect": {
         "x": 192,
@@ -351,7 +360,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_6"
+        "group_6",
+        "roadside"
       ],
       "rect": {
         "x": 0,
@@ -367,7 +377,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_6"
+        "group_6",
+        "roadside"
       ],
       "rect": {
         "x": 64,
@@ -382,7 +393,8 @@
       "tags": [
         "universal",
         "decorative",
-        "impassable"
+        "impassable",
+        "roadside"
       ],
       "rect": {
         "x": 128,
@@ -444,7 +456,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 128,
@@ -459,7 +472,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 192,
@@ -474,7 +488,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 256,
@@ -489,7 +504,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 320,
@@ -504,7 +520,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 0,
@@ -519,7 +536,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 64,
@@ -534,7 +552,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 128,
@@ -565,7 +584,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 256,
@@ -580,7 +600,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 320,
@@ -595,7 +616,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 0,
@@ -610,7 +632,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ],
       "rect": {
         "x": 64,
@@ -651,7 +674,8 @@
         "decorative",
         "impassable",
         "group_2",
-        "ruins"
+        "ruins",
+        "landmark"
       ]
     },
     {
@@ -707,7 +731,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_6"
+        "group_6",
+        "roadside"
       ]
     },
     {
@@ -720,7 +745,8 @@
       "tags": [
         "universal",
         "decorative",
-        "impassable"
+        "impassable",
+        "roadside"
       ]
     },
     {
@@ -760,7 +786,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -773,7 +800,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -786,7 +814,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -799,7 +828,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -812,7 +842,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -825,7 +856,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -838,7 +870,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -865,7 +898,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -878,7 +912,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -891,7 +926,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     },
     {
@@ -904,7 +940,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "roadside"
       ]
     }
   ]
