@@ -1,6 +1,7 @@
 import { fetchAssetJson } from '../utils/assetLoading.js'
 // rendering/textureManager.js
 import { TILE_SIZE } from '../config.js'
+import { gameState } from '../gameState.js'
 import { bootMark } from '../ui/bootTiming.js'
 import { reportBootTextures } from '../ui/bootProgress.js'
 import { buildingImageMap } from '../buildingImageMap.js'
@@ -444,7 +445,7 @@ export class TextureManager {
     this.integratedPreparationGeneration?.cancel('Integrated sprite-sheet preparation superseded')
     const preparation = new PreparationGeneration(++this.texturePreparationGeneration)
     this.integratedPreparationGeneration = preparation
-    const enabled = Boolean(config?.enabled)
+    const enabled = Boolean(config?.enabled) && !(Array.isArray(config.sheets) && config.sheets.length === 0)
     const requestedBiomeTag = ['soil', 'sand', 'grass', 'snow', 'mixed'].includes(config?.biomeTag)
       ? config.biomeTag
       : this.integratedBiomeTag
@@ -580,7 +581,8 @@ export class TextureManager {
       return cache.layout
     }
     const layout = buildDecorationLayout(mapGrid, this.integratedDecorationPools, {
-      defaultBiome: this.getDefaultDecorationBiome()
+      defaultBiome: this.getDefaultDecorationBiome(),
+      ruinSeed: gameState.mapSeed
     })
     this.decorationLayoutCache = {
       mapGrid,

@@ -192,7 +192,8 @@
       "tags": [
         "grass",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins"
       ],
       "rect": {
         "x": 256,
@@ -616,7 +617,8 @@
       "tags": [
         "grass",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins"
       ]
     },
     {

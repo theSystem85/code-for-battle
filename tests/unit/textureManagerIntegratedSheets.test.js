@@ -631,3 +631,19 @@ describe('TextureManager integrated multi-sheet selection', () => {
     expect(manager.getIntegratedTileForMapTile('land', lake.anchorX + 1, lake.anchorY + 1, { mapGrid })).toBeNull()
   })
 })
+
+
+it('explicit empty selection clears previous custom sheets and matches disabled tile choices', async() => {
+  const manager = new TextureManager()
+  manager.lastIntegratedSheetEntries = [{ sheetPath: 'stale.webp', metadata: { tiles: {} } }]
+  const load = vi.spyOn(manager, 'loadIntegratedSpriteSheetImage')
+  const grid = Array.from({ length: 20 }, () => Array.from({ length: 20 }, () => ({ type: 'land', biome: 'grass' })))
+  await manager.setIntegratedSpriteSheetConfig({ enabled: false, biomeTag: 'grass' })
+  const choices = grid.map((row, y) => row.map((tile, x) => manager.getIntegratedTileForMapTile(tile.type, x, y, { mapGrid: grid })))
+  const pools = manager.integratedDecorationPools
+  await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [], biomeTag: 'grass' })
+  expect(grid.map((row, y) => row.map((tile, x) => manager.getIntegratedTileForMapTile(tile.type, x, y, { mapGrid: grid })))).toEqual(choices)
+  expect(manager.integratedDecorationPools).toEqual(pools)
+  expect(manager.integratedSpriteSheetMode).toBe(false)
+  expect(load).not.toHaveBeenCalled()
+})

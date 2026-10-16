@@ -12,7 +12,7 @@ import {
 } from '../rendering/spriteSheetAnimation.js'
 import { expandCompactSpriteSheetMetadata } from '../utils/spriteSheetMetadata.js'
 import { getStoredItem, setStoredItem } from '../storage/indexedDbStorage.js'
-import { DEFAULT_SSE_SHEETS, filterRetiredSheetPaths, isRetiredSpriteSheetPath } from './spriteSheetRegistry.js'
+import { DEFAULT_SSE_SHEETS, OPTIONAL_SSE_SHEETS, filterRetiredSheetPaths, isRetiredSpriteSheetPath } from './spriteSheetRegistry.js'
 
 const DEFAULT_TILE_SIZE = 64
 const DEFAULT_BORDER_WIDTH = 1
@@ -46,6 +46,7 @@ export const DEFAULT_SSE_TAGS = [
   'autumn',
   'winter',
   'rocks',
+  'ruins',
   'concrete',
   'street',
   'top',
@@ -59,7 +60,7 @@ export const DEFAULT_SSE_TAGS = [
 
 export const DEFAULT_SSE_ANIMATION_TAGS = ['explosion']
 
-const fallbackSheets = [...DEFAULT_SSE_SHEETS]
+const fallbackSheets = [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS]
 
 function safeParseJson(raw, fallback) {
   if (!raw) return fallback
@@ -1530,7 +1531,7 @@ async function loadSheetList() {
       const data = await response.json()
       const sheets = filterRetiredSheetPaths(data?.sheets)
       if (sheets.length) {
-        return sheets
+        return [...new Set([...sheets, ...OPTIONAL_SSE_SHEETS])]
       }
     }
   } catch {
@@ -1546,7 +1547,7 @@ async function loadAnimationSheetList() {
       const data = await response.json()
       const sheets = filterRetiredSheetPaths(data?.sheets)
       if (sheets.length) {
-        return sheets
+        return [...new Set([...sheets, ...OPTIONAL_SSE_SHEETS])]
       }
     }
   } catch {
@@ -2182,7 +2183,7 @@ export async function initSpriteSheetEditor(options = {}) {
     },
     suggestTileForMap(x, y, tagBuckets) {
       if (!tagBuckets || typeof tagBuckets !== 'object') return null
-      const preferredTags = ['passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow', 'universal', 'spring', 'summer', 'autumn', 'winter']
+      const preferredTags = ['ruins', 'passable', 'decorative', 'impassable', 'street', 'intersection', 'concrete', 'grass', 'soil', 'sand', 'snow', 'universal', 'spring', 'summer', 'autumn', 'winter']
       for (const tag of preferredTags) {
         const list = tagBuckets[tag]
         if (Array.isArray(list) && list.length) {

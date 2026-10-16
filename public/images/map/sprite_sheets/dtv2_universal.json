@@ -17,7 +17,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_1"
+        "group_1",
+        "ruins"
       ],
       "rect": {
         "x": 0,
@@ -33,7 +34,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_1"
+        "group_1",
+        "ruins"
       ],
       "rect": {
         "x": 0,
@@ -49,7 +51,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 64,
@@ -65,7 +68,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 128,
@@ -81,7 +85,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 192,
@@ -97,7 +102,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 64,
@@ -113,7 +119,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 128,
@@ -129,7 +136,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 192,
@@ -145,7 +153,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 64,
@@ -161,7 +170,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 128,
@@ -177,7 +187,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ],
       "rect": {
         "x": 192,
@@ -193,7 +204,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_3"
+        "group_3",
+        "ruins"
       ],
       "rect": {
         "x": 256,
@@ -209,7 +221,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_3"
+        "group_3",
+        "ruins"
       ],
       "rect": {
         "x": 320,
@@ -225,7 +238,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_3"
+        "group_3",
+        "ruins"
       ],
       "rect": {
         "x": 256,
@@ -241,7 +255,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_3"
+        "group_3",
+        "ruins"
       ],
       "rect": {
         "x": 320,
@@ -534,7 +549,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "ruins"
       ],
       "rect": {
         "x": 192,
@@ -619,7 +635,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_1"
+        "group_1",
+        "ruins"
       ]
     },
     {
@@ -633,7 +650,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_2"
+        "group_2",
+        "ruins"
       ]
     },
     {
@@ -647,7 +665,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_3"
+        "group_3",
+        "ruins"
       ]
     },
     {
@@ -832,7 +851,8 @@
       "tags": [
         "universal",
         "decorative",
-        "passable"
+        "passable",
+        "ruins"
       ]
     },
     {

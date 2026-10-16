@@ -851,6 +851,7 @@ function buildSaveObject(label) {
       lastOreUpdate: Number.isFinite(gameState.lastOreUpdate) ? gameState.lastOreUpdate : 0,
       speedMultiplier: gameState.speedMultiplier,
       useIntegratedSpriteSheetMode: Boolean(gameState.useIntegratedSpriteSheetMode),
+      activeSpriteSheetSelections: gameState.activeSpriteSheetSelections,
       activeSpriteSheetPath: gameState.activeSpriteSheetPath || null,
       activeSpriteSheetMetadata: gameState.activeSpriteSheetMetadata || null,
       activeSpriteSheetBiomeTag: gameState.activeSpriteSheetBiomeTag || 'grass',
@@ -1077,6 +1078,9 @@ function loadGameFromSaveObject(saveObj, key) {
 
     migrateSavedSpriteSheetState(loaded.gameState)
     gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
+    gameState.activeSpriteSheetSelections = Array.isArray(loaded.gameState?.activeSpriteSheetSelections)
+      ? loaded.gameState.activeSpriteSheetSelections.filter(path => typeof path === 'string')
+      : undefined
     gameState.activeSpriteSheetPath = loaded.gameState?.activeSpriteSheetPath || null
     gameState.activeSpriteSheetMetadata = loaded.gameState?.activeSpriteSheetMetadata || null
     gameState.activeSpriteSheetBiomeTag = loaded.gameState?.activeSpriteSheetBiomeTag || 'grass'
@@ -1827,6 +1831,7 @@ function loadGameFromSaveObject(saveObj, key) {
     if (textureManager?.setIntegratedSpriteSheetConfig) {
       textureManager.setIntegratedSpriteSheetConfig({
         enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+        ...(gameState.activeSpriteSheetSelections?.length === 0 ? { sheets: [] } : {}),
         sheetPath: gameState.activeSpriteSheetPath,
         metadata: gameState.activeSpriteSheetMetadata,
         biomeTag: gameState.activeSpriteSheetBiomeTag

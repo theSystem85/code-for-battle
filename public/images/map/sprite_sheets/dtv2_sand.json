@@ -222,7 +222,8 @@
       "tags": [
         "sand",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins"
       ],
       "rect": {
         "x": 256,
@@ -268,7 +269,8 @@
         "sand",
         "decorative",
         "impassable",
-        "group_8"
+        "group_8",
+        "ruins"
       ],
       "rect": {
         "x": 256,
@@ -284,7 +286,8 @@
         "sand",
         "decorative",
         "impassable",
-        "group_8"
+        "group_8",
+        "ruins"
       ],
       "rect": {
         "x": 320,
@@ -300,7 +303,8 @@
         "sand",
         "decorative",
         "impassable",
-        "group_8"
+        "group_8",
+        "ruins"
       ],
       "rect": {
         "x": 256,
@@ -316,7 +320,8 @@
         "sand",
         "decorative",
         "impassable",
-        "group_8"
+        "group_8",
+        "ruins"
       ],
       "rect": {
         "x": 320,
@@ -640,7 +645,8 @@
       "tags": [
         "sand",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins"
       ]
     },
     {
@@ -680,7 +686,8 @@
         "sand",
         "decorative",
         "impassable",
-        "group_8"
+        "group_8",
+        "ruins"
       ]
     },
     {
