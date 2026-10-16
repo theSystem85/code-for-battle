@@ -4,5 +4,7 @@
     "Hold the map for attack, defend and automation-on-arrival actions."
   ],
   "improvements": [],
-  "bugfixes": []
+  "bugfixes": [
+    "Fix map action startup, agent controls and hold-duration settings."
+  ]
 }
