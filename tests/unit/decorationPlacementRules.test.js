@@ -6,6 +6,7 @@ import {
   decorationFootprintDistance, decorationIdentity, decorationSeed, decorationSpacing,
   decorationSpacingAllows, getValidDecorationCell, landmarkAllows
 } from '../../src/rendering/decorationLayout.js'
+import { tagShoreSheet } from '../../scripts/shoreTags.mjs'
 import { MapRenderer } from '../../src/rendering/mapRenderer.js'
 import { TextureManager } from '../../src/rendering/textureManager.js'
 import { availableFutureSheets } from '../../src/ui/spriteSheetRegistry.js'
@@ -22,65 +23,88 @@ const point = (g, x, y) => ({ group: g, anchorX: x, anchorY: y })
 const anchors = layout => layout.cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
 
 describe('natural decoration preparation', () => {
-  it('fills a lake coastline deterministically before inland props, including land-only huts', () => {
-    const map = grid(64)
-    for (let y = 16; y < 48; y++) for (let x = 16; x < 48; x++) map[y][x].type = 'water'
-    const reeds = group('reeds', ['universal', 'shore'])
-    const hut = group('hut', ['universal', 'shore', 'impassable'], 2, 1)
-    const pools = buildDecorationPools([{ ...reeds, coverage: 0.9 }, hut, group('inland'), group('pond', ['water'])])
-    expect(pools.snow.single).toContainEqual({ ...reeds, coverage: 0.9 })
+  it('keeps shore classification and biome tags synchronized on every sprite', () => {
+    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_shore.json', 'utf8'))
+    expect(tagShoreSheet(JSON.parse(JSON.stringify(sheet)))).toEqual(sheet)
+    for (const tile of [...Object.values(sheet.tiles), ...sheet.propLayout]) {
+      if (!tile.tags.includes('shore')) continue
+      expect(tile.tags.filter(tag => ['onshore', 'offshore', 'shore_trans'].includes(tag))).toHaveLength(1)
+    }
+    for (const key of ['0,0', '1,0', '2,0', '3,0', '4,0', '5,0', '0,1', '0,3']) {
+      expect(sheet.tiles[key].tags).not.toContain('universal')
+      expect(sheet.tiles[key].tags).not.toContain('snow')
+      expect(sheet.tiles[key].tags).toEqual(expect.arrayContaining(['grass', 'soil', 'sand']))
+    }
+  })
+
+  it.each(['onshore', 'offshore', 'shore_trans'])('places sparse deterministic %s props on a 60-tile coast', kind => {
+    for (const vertical of [false, true]) for (const reverse of [false, true]) {
+      const map = Array.from({ length: 60 }, (_, y) => Array.from({ length: 60 }, (_, x) => ({
+        type: ((vertical ? x : y) < 20) !== reverse ? 'water' : 'land', biome: 'grass'
+      })))
+      const prop = group('shore-prop', ['shore', kind, kind === 'shore_trans' ? 'impassable' : 'passable'], kind === 'shore_trans' ? 2 : 1, 1)
+      const pools = buildDecorationPools([prop])
+      const layout = buildDecorationLayout(map, pools, { salt: 688 })
+      const placed = anchors(layout)
+      expect(placed.length).toBeGreaterThanOrEqual(2)
+      expect(placed.length).toBeLessThanOrEqual(8)
+      expect(buildDecorationLayout(map, pools, { salt: 688 })).toEqual(layout)
+      placed.forEach((cell, i) => expect(decorationSpacingAllows(cell, placed.slice(i + 1))).toBe(true))
+      for (const cell of placed) {
+        expect(getValidDecorationCell(layout, map, cell.anchorX, cell.anchorY)).toBeTruthy()
+        const types = []
+        for (let dy = 0; dy < cell.footprintHeight; dy++) for (let dx = 0; dx < cell.footprintWidth; dx++) {
+          types.push(map[cell.anchorY + dy][cell.anchorX + dx].type)
+        }
+        if (kind === 'onshore') expect(types).toEqual(['land'])
+        if (kind === 'offshore') {
+          expect(types).toEqual(['water'])
+          expect(Math.abs((vertical ? cell.anchorX : cell.anchorY) - (reverse ? 19 : 20))).toBe(1)
+        }
+        if (kind === 'shore_trans') {
+          expect(types.sort()).toEqual(['land', 'water'])
+          expect(cell.rotation).toBe(vertical ? (reverse ? 0 : 180) : (reverse ? 90 : 270))
+          expect([cell.footprintWidth, cell.footprintHeight]).toEqual(vertical ? [2, 1] : [1, 2])
+          const landCell = layout.cells[cell.landY * 60 + cell.landX]
+          expect([landCell.offsetX, landCell.offsetY]).toEqual([0, 0])
+        }
+      }
+    }
+  })
+
+  it('renders rotated crossings and keeps the water half passable', () => {
+    const map = Array.from({ length: 60 }, (_, y) => Array.from({ length: 60 }, () => ({ type: y < 20 ? 'water' : 'land', biome: 'grass' })))
+    const prop = group('pier', ['shore', 'shore_trans', 'impassable'], 2, 1)
+    const pools = buildDecorationPools([prop])
     const layout = buildDecorationLayout(map, pools, { salt: 688 })
-    expect(buildDecorationLayout(map, pools, { salt: 688 })).toEqual(layout)
-    const shore = anchors(layout).filter(cell => cell.group.tagSet.has('shore'))
-    expect(shore.length).toBeGreaterThanOrEqual(20)
-    expect(shore.some(cell => cell.group === hut)).toBe(true)
-    const constraints = buildDecorationConstraints(map)
-    for (const cell of shore) {
-      let adjacent = false
-      for (let dy = 0; dy < cell.group.height; dy++) for (let dx = 0; dx < cell.group.width; dx++) {
-        const x = cell.anchorX + dx
-        const y = cell.anchorY + dy
-        expect(map[y][x].type).toBe('land')
-        adjacent ||= constraints.shoreDistance[y * 64 + x] === 1
-      }
-      expect(adjacent).toBe(true)
-    }
-    expect(group('pond', ['water']).tagSet.has('shore')).toBe(false)
+    const cell = anchors(layout)[0]
+    const manager = new TextureManager()
+    manager.integratedSpriteSheetMode = true
+    manager.integratedSpriteSheetImage = {}
+    manager.integratedSpriteSheetMetadata = {}
+    manager.integratedDecorationPools = pools
+    vi.spyOn(manager, 'getDecorationLayout').mockReturnValue(layout)
+    const land = manager.getIntegratedTileForMapTile('land', cell.landX, cell.landY, { mapGrid: map })
+    const water = manager.getIntegratedTileForMapTile('water', cell.landX, cell.landY - 1, { mapGrid: map })
+    expect(land.tags).toContain('impassable')
+    expect(water.tags).not.toContain('impassable')
+    expect(water.tags).toContain('passable')
+    expect(water.rotation).toBe(270)
+    const renderer = Object.create(MapRenderer.prototype)
+    const ctx = { save: vi.fn(), translate: vi.fn(), rotate: vi.fn(), drawImage: vi.fn(), restore: vi.fn() }
+    expect(renderer.drawIntegratedTileImage(ctx, water, 64, 96)).toBe(true)
+    expect(ctx.translate).toHaveBeenCalledWith(80, 112)
+    expect(ctx.rotate).toHaveBeenCalledWith(270 * Math.PI / 180)
+    expect(ctx.drawImage).toHaveBeenCalledOnce()
+    expect(ctx.restore).toHaveBeenCalledOnce()
+    map[cell.landY][cell.landX].type = 'water'
+    expect(getValidDecorationCell(layout, map, cell.landX, cell.landY - 1)).toBeNull()
   })
 
-  it('covers at least 40% of a straight 30-tile grass coast with deterministic land-only props', () => {
-    const map = Array.from({ length: 12 }, (_, y) => Array.from({ length: 30 }, () => ({ type: y < 4 ? 'water' : 'land', biome: 'grass' })))
-    const reeds = group('reeds', ['shore'])
-    const hut = group('hut', ['shore'], 3, 1)
-    // The largest candidate cannot fit: placement must try the hut and reeds.
-    const oversized = group('oversized', ['shore'], 31, 1)
-    const pools = buildDecorationPools([reeds, hut, oversized, group('inland', [], 3)])
-    const layout = buildDecorationLayout(map, pools, { salt: 23 })
-    expect(buildDecorationLayout(map, pools, { salt: 23 })).toEqual(layout)
-    expect(layout.cells.slice(4 * 30, 5 * 30).filter(cell => cell?.group.tagSet.has('shore')).length).toBeGreaterThanOrEqual(12)
-    const shore = anchors(layout).filter(cell => cell.group.tagSet.has('shore'))
-    expect(shore.some(cell => cell.group === hut)).toBe(true)
-    expect(shore.some(cell => cell.group === reeds)).toBe(true)
-    const constraints = buildDecorationConstraints(map)
-    for (const cell of shore) {
-      for (let dy = 0; dy < cell.group.height; dy++) for (let dx = 0; dx < cell.group.width; dx++) {
-        const x = cell.anchorX + dx
-        const y = cell.anchorY + dy
-        expect(map[y][x].type).toBe('land')
-        expect(constraints.shoreDistance[y * 30 + x]).toBe(1)
-      }
-    }
-    const placed = anchors(layout)
-    placed.forEach((cell, i) => expect(decorationSpacingAllows(cell, placed.slice(i + 1))).toBe(true))
-  })
-
-  it('allows adjacent shore footprints without overlap or relaxing inland spacing', () => {
+  it('uses normal spacing between shore props', () => {
     const shore = group('hut', ['shore'], 2, 1)
-    const inland = group('inland', [], 3)
-    expect(decorationSpacingAllows(point(shore, 2, 0), [point(shore, 0, 0)])).toBe(true)
-    expect(decorationSpacingAllows(point(shore, 1, 0), [point(shore, 0, 0)])).toBe(false)
-    expect(decorationSpacingAllows(point(shore, 3, 0), [point(inland, 0, 0)])).toBe(false)
-    expect(decorationSpacingAllows(point(inland, 3, 0), [point(shore, 0, 0)])).toBe(false)
+    expect(decorationSpacingAllows(point(shore, 2, 0), [point(shore, 0, 0)])).toBe(false)
+    expect(decorationSpacingAllows(point(shore, 7, 0), [point(shore, 0, 0)])).toBe(true)
   })
 
   it('requires explicit biome tags for details and leaves all rocky terrain empty', () => {

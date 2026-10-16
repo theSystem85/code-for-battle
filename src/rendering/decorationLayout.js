@@ -75,6 +75,10 @@ export function buildDecorationPools(groups) {
   groups.forEach((group) => {
     if (!group?.tilesByOffset || !(group.tagSet instanceof Set)) return
     if (!group.tagSet.has('decorative') && !group.tagSet.has('ground_detail')) return
+    if (group.tagSet.has('offshore') || group.tagSet.has('shore_trans')) {
+      group.waterTags ||= [...group.tagSet].filter(tag => tag !== 'impassable')
+      if (!group.waterTags.includes('passable')) group.waterTags.push('passable')
+    }
     const isUniversal = group.tagSet.has('universal')
     if (isUniversal && !group.tagSet.has('shore') && !group.tagSet.has('city') && Number.isFinite(group.coverage) && group.coverage > UNIVERSAL_MAX_COVERAGE) return
     DECORATION_BIOMES.forEach((biome) => {
@@ -232,9 +236,14 @@ export function getValidDecorationCell(layout, mapGrid, x, y, defaultBiome = 'gr
   const cell = (groundDetail ? layout.groundDetails : layout.cells)?.[(y * layout.width) + x]
   if (!cell || cell.cityBuilding?.health <= 0) return null
   const { group, anchorX, anchorY, biome } = cell
-  for (let gy = 0; gy < group.height; gy++) {
-    for (let gx = 0; gx < group.width; gx++) {
+  for (let gy = 0; gy < (cell.footprintHeight || group.height); gy++) {
+    for (let gx = 0; gx < (cell.footprintWidth || group.width); gx++) {
       const tile = mapGrid?.[anchorY + gy]?.[anchorX + gx]
+      const water = group.tagSet.has('offshore') || (group.tagSet.has('shore_trans') && (anchorX + gx !== cell.landX || anchorY + gy !== cell.landY))
+      if (water) {
+        if (tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal) return null
+        continue
+      }
       if (!isDecoratableLand(tile) || resolveBiome(tile, defaultBiome) !== biome) return null
     }
   }
@@ -290,6 +299,7 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
   const keepClear = new Uint8Array(width * height)
   const roadDistance = new Uint8Array(width * height).fill(255)
   const shoreDistance = new Uint8Array(width * height).fill(255)
+  const landDistance = new Uint8Array(width * height).fill(255)
   const markRadius = (x, y, radius) => {
     for (let dy = -radius; dy <= radius; dy++) {
       for (let dx = -radius; dx <= radius; dx++) {
@@ -307,6 +317,13 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
       if (tile.ore || tile.seedCrystal) markRadius(x, y, 2)
       if (tile.startPosition || tile.basePosition) markRadius(x, y, 8)
       if (isDecoratableLand(tile)) {
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const cx = x + dx, cy = y + dy
+          if (cx >= 0 && cy >= 0 && cx < width && cy < height) {
+            const index = cy * width + cx
+            landDistance[index] = Math.min(landDistance[index], Math.max(Math.abs(dx), Math.abs(dy)))
+          }
+        }
         const blocked = (dx, dy) => isBarrier(mapGrid[y + dy]?.[x + dx])
         if (([1, 2].some(d => blocked(-d, 0)) && [1, 2].some(d => blocked(d, 0))) ||
           ([1, 2].some(d => blocked(0, -d)) && [1, 2].some(d => blocked(0, d)))) keepClear[y * width + x] = 1
@@ -325,7 +342,7 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
       }
     }
   }
-  return { width, height, keepClear, roadDistance, shoreDistance }
+  return { width, height, keepClear, roadDistance, shoreDistance, landDistance }
 }
 
 export function decorationEnvironmentAllows(group, x, y, constraints, footprint = false) {
@@ -343,8 +360,8 @@ export function decorationSpacing(group) {
 
 /** Distance between closest covered tile centers, accounting for full spans. */
 export function decorationFootprintDistance(a, b) {
-  const dx = Math.max(0, a.anchorX - (b.anchorX + b.group.width - 1), b.anchorX - (a.anchorX + a.group.width - 1))
-  const dy = Math.max(0, a.anchorY - (b.anchorY + b.group.height - 1), b.anchorY - (a.anchorY + a.group.height - 1))
+  const dx = Math.max(0, a.anchorX - (b.anchorX + (b.footprintWidth || b.group.width) - 1), b.anchorX - (a.anchorX + (a.footprintWidth || a.group.width) - 1))
+  const dy = Math.max(0, a.anchorY - (b.anchorY + (b.footprintHeight || b.group.height) - 1), b.anchorY - (a.anchorY + (a.footprintHeight || a.group.height) - 1))
   return Math.hypot(dx, dy)
 }
 
@@ -357,7 +374,6 @@ export function decorationSpacingAllows(placement, nearby) {
   const identity = decorationIdentity(placement.group)
   return nearby.every(other => {
     const distance = decorationFootprintDistance(placement, other)
-    if (placement.group.tagSet.has('shore') && other.group.tagSet.has('shore')) return distance >= 1
     if (placement.group.tagSet.has('city') && other.group.tagSet.has('city')) return distance >= 2
     return distance >= Math.max(decorationSpacing(placement.group), decorationSpacing(other.group)) &&
       (identity !== decorationIdentity(other.group) || distance >= 6)
@@ -411,19 +427,22 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   }
   const fits = (placement, detail = false) => {
     const { group, anchorX: x, anchorY: y, biome } = placement
-    if (x + group.width > width || y + group.height > height) return false
+    const fw = placement.footprintWidth || group.width
+    const fh = placement.footprintHeight || group.height
+    if (x < 0 || y < 0 || x + fw > width || y + fh > height) return false
     let touchesWater = false
-    for (let dy = 0; dy < group.height; dy++) {
-      for (let dx = 0; dx < group.width; dx++) {
+    for (let dy = 0; dy < fh; dy++) {
+      for (let dx = 0; dx < fw; dx++) {
         const cx = x + dx
         const cy = y + dy
         const tile = mapGrid[cy][cx]
-        if (!isDecoratableLand(tile) || isRoad(tile) || resolveBiome(tile, defaultBiome) !== biome ||
+        const water = group.tagSet.has('offshore') || (group.tagSet.has('shore_trans') && (cx !== placement.landX || cy !== placement.landY))
+        if ((water ? tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal || constraints.landDistance[cy * width + cx] !== 1 : !isDecoratableLand(tile) || resolveBiome(tile, defaultBiome) !== biome) || isRoad(tile) ||
           !decorationEnvironmentAllows(group, cx, cy, constraints, true) || (detail ? groundDetails[cy * width + cx] : occupied[cy * width + cx])) return false
         if (constraints.shoreDistance[cy * width + cx] === 1) touchesWater = true
       }
     }
-    if (group.tagSet.has('shore') && !touchesWater) return false
+    if (group.tagSet.has('shore') && !group.tagSet.has('offshore') && !group.tagSet.has('shore_trans') && !touchesWater) return false
     if (detail) return true
     if (!group.tagSet.has('shore') && !categoryClusterAllows(group, x, y, biome, clusters)) return false
     if (group.tagSet.has('city') && !cities.centers.some(center => {
@@ -442,34 +461,50 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     }
     return decorationSpacingAllows(placement, [...nearby])
   }
-  // Coast props have first choice, independent of inland noise and variety.
-  // Try half the land coast anchors, with larger sprites before 1x1 fallbacks.
-  const shoreCandidates = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
-    [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])]
-      .filter(group => group.tagSet.has('shore'))
-      .sort((a, b) => b.width * b.height - a.width * a.height)
+  // Preparation-only coast pass: one attempt per 14 coast tiles, with the
+  // ordinary footprint and identical-sprite spacing rules.
+  const shoreBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
+    createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])]
+      .filter(group => group.tagSet.has('shore')), salt)
   ]))
   const coastAnchors = []
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      if (constraints.shoreDistance[y * width + x] === 1 && isDecoratableLand(mapGrid[y][x])) coastAnchors.push({ x, y })
-    }
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    if (constraints.shoreDistance[y * width + x] === 1 && isDecoratableLand(mapGrid[y][x])) coastAnchors.push({ x, y })
   }
-  for (const { x, y } of coastAnchors) {
-    if (decorationHash(x, y, salt + 4441) % 2 !== 0) continue
+  const phase = decorationHash(width, height, salt + 4441) % 14
+  for (let i = phase; i < coastAnchors.length; i += 14) {
+    const { x, y } = coastAnchors[i]
     const biome = resolveBiome(mapGrid[y][x], defaultBiome)
-    for (const group of shoreCandidates[biome]) {
-      const placement = { group, anchorX: x, anchorY: y, biome }
-      if (!fits(placement)) continue
-      if (group.width * group.height > 1) placements.push(placement)
-      for (let dy = 0; dy < group.height; dy++) {
-        for (let dx = 0; dx < group.width; dx++) {
-          const offset = (y + dy) * width + x + dx
-          cells[offset] = { ...placement, offsetX: dx, offsetY: dy }
+    const bag = shoreBags[biome]
+    let placed = false
+    for (let attempt = 0; attempt < bag.size && !placed; attempt++) {
+      const group = bag.next()
+      const directions = group.tagSet.has('offshore')
+        ? [[1, 0, 0], [0, 1, 90], [-1, 0, 180], [0, -1, 270], [1, 1, 0], [-1, 1, 0], [1, -1, 0], [-1, -1, 0]]
+        : group.tagSet.has('shore_trans') ? [[1, 0, 0], [0, 1, 90], [-1, 0, 180], [0, -1, 270]] : [[0, 0, 0]]
+      for (const [nx, ny, angle] of directions) {
+        const offshore = group.tagSet.has('offshore')
+        const crossing = group.tagSet.has('shore_trans')
+        if ((offshore || crossing) && mapGrid[y + ny]?.[x + nx]?.type !== 'water') continue
+        if (crossing && (group.width !== 2 || group.height !== 1)) continue
+        const rotation = crossing ? angle : 0
+        const fw = rotation % 180 ? group.height : group.width
+        const fh = rotation % 180 ? group.width : group.height
+        const ax = offshore ? x + nx : x + Math.min(0, nx)
+        const ay = offshore ? y + ny : y + Math.min(0, ny)
+        const placement = { group, anchorX: ax, anchorY: ay, biome, rotation, footprintWidth: fw, footprintHeight: fh, landX: x, landY: y }
+        if (!fits(placement)) continue
+        if (group.width * group.height > 1) placements.push(placement)
+        for (let dy = 0; dy < fh; dy++) for (let dx = 0; dx < fw; dx++) {
+          const offsetX = rotation === 90 ? dy : rotation === 180 ? fw - 1 - dx : rotation === 270 ? fh - 1 - dy : dx
+          const offsetY = rotation === 90 ? fw - 1 - dx : rotation === 180 ? fh - 1 - dy : rotation === 270 ? dx : dy
+          const offset = (ay + dy) * width + ax + dx
+          cells[offset] = { ...placement, offsetX, offsetY }
           occupied[offset] = placement
         }
+        placed = true
+        break
       }
-      break
     }
   }
   // Ground detail has its own cells, no impassability and no spacing ownership.
