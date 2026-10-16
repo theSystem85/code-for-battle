@@ -140,7 +140,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
           mapGrid,
           bullet.explosionRadius,
           undefined,
-          rocketExplosionOptions
+          rocketExplosionOptions,
+          bullet
         )
         bullets.splice(i,1)
         continue
@@ -250,7 +251,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
                 mapGrid,
                 TILE_SIZE * 0.8,
                 false,
-                rocketExplosionOptions
+                rocketExplosionOptions,
+                bullet
               )
             }
 
@@ -269,7 +271,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               mapGrid,
               bullet.explosionRadius,
               undefined,
-              rocketExplosionOptions
+              rocketExplosionOptions,
+              bullet
             )
           }
           bullets.splice(i, 1)
@@ -319,7 +322,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               mapGrid,
               bullet.explosionRadius || TILE_SIZE,
               undefined,
-              rocketExplosionOptions
+              rocketExplosionOptions,
+              bullet
             )
             playPositionalSound('explosion', bullet.x, bullet.y, 0.5)
             bullets.splice(i, 1)
@@ -351,7 +355,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               mapGrid,
               bullet.explosionRadius || TILE_SIZE,
               undefined,
-              rocketExplosionOptions
+              rocketExplosionOptions,
+              bullet
             )
             playPositionalSound('explosion', bullet.x, bullet.y, 0.5)
             bullets.splice(i, 1)
@@ -388,7 +393,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               mapGrid,
               bullet.originType === 'f35Bomb' ? TILE_SIZE * 2.5 : TILE_SIZE * 2,
               false,
-              rocketExplosionOptions
+              rocketExplosionOptions,
+              bullet
             )
             playPositionalSound(bullet.originType === 'f35Bomb' ? 'f35BombImpact' : 'explosion', bullet.x, bullet.y, 0.7)
           } else {
@@ -404,7 +410,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
               mapGrid,
               bullet.explosionRadius,
               undefined,
-              rocketExplosionOptions
+              rocketExplosionOptions,
+              bullet
             )
           }
           bullets.splice(i, 1)
@@ -618,7 +625,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             mapGrid,
             bullet.explosionRadius || TILE_SIZE * 1.5,
             false,
-            rocketExplosionOptions
+            rocketExplosionOptions,
+            bullet
           )
 
           playPositionalSound('explosion', explosionX, explosionY, 0.7)
@@ -656,7 +664,8 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
             mapGrid,
             TILE_SIZE * 2.5,
             false,
-            rocketExplosionOptions
+            rocketExplosionOptions,
+            bullet
           )
           playPositionalSound('f35BombImpact', explosionX, explosionY, 0.7)
           bullets.splice(i, 1)
@@ -862,7 +871,9 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
                 mapGrid,
                 bullet.explosionRadius,
                 undefined,
-                rocketExplosionOptions
+                rocketExplosionOptions,
+                bullet,
+                'unit'
               )
             }
             bullets.splice(i, 1)
@@ -902,7 +913,9 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
                 mapGrid,
                 bullet.explosionRadius,
                 undefined,
-                rocketExplosionOptions
+                rocketExplosionOptions,
+                bullet,
+                'unit'
               )
             }
             bullets.splice(i, 1)
@@ -1019,7 +1032,9 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
                 mapGrid,
                 bullet.explosionRadius,
                 undefined,
-                rocketExplosionOptions
+                rocketExplosionOptions,
+                bullet,
+                'building'
               )
             }
             bullets.splice(i, 1)
@@ -1117,7 +1132,9 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
                 mapGrid,
                 bullet.explosionRadius,
                 undefined,
-                rocketExplosionOptions
+                rocketExplosionOptions,
+                bullet,
+                'building'
               )
             }
             bullets.splice(i, 1)

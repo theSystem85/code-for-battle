@@ -1,4 +1,5 @@
 // logic.js
+import { createImpactVisual } from './rendering/vfx/impactVfx.js'
 import {
   TILE_SIZE,
   HOWITZER_BUILDING_DAMAGE_MULTIPLIER
@@ -81,7 +82,9 @@ export function triggerExplosion(
   _mapGrid,
   radius = TILE_SIZE * 2,
   constantDamage = false,
-  options = {}
+  options = {},
+  visualProjectile = null,
+  visualSurface = undefined
 ) {
   const explosionRadius = radius
   const {
@@ -102,13 +105,7 @@ export function triggerExplosion(
 
   if (spawnVisual) {
     // Add explosion visual effect
-    explosions.push({
-      x,
-      y,
-      startTime: now,
-      duration: 500,
-      maxRadius: explosionRadius
-    })
+    explosions.push(createImpactVisual(x, y, now, explosionRadius, shooter, visualProjectile, visualSurface))
   }
   playPositionalSound('explosion', x, y, 0.5)
 
