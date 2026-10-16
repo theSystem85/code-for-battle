@@ -76,9 +76,9 @@ export function buildDecorationPools(groups) {
     if (!group?.tilesByOffset || !(group.tagSet instanceof Set)) return
     if (!group.tagSet.has('decorative') && !group.tagSet.has('ground_detail')) return
     const isUniversal = group.tagSet.has('universal')
-    if (isUniversal && !group.tagSet.has('city') && Number.isFinite(group.coverage) && group.coverage > UNIVERSAL_MAX_COVERAGE) return
+    if (isUniversal && !group.tagSet.has('shore') && !group.tagSet.has('city') && Number.isFinite(group.coverage) && group.coverage > UNIVERSAL_MAX_COVERAGE) return
     DECORATION_BIOMES.forEach((biome) => {
-      if (!group.tagSet.has(biome) && !group.tagSet.has('universal')) return
+      if (!group.tagSet.has(biome) && (group.tagSet.has('ground_detail') || !isUniversal)) return
       if (!groupSeasonAllowed(group.tagSet, biome)) return
       const target = group.tagSet.has('ground_detail') ? pools[biome].groundDetail : (group.width * group.height) > 1 ? pools[biome].multi : pools[biome].single
       target.push(group)
@@ -328,11 +328,11 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
   return { width, height, keepClear, roadDistance, shoreDistance }
 }
 
-export function decorationEnvironmentAllows(group, x, y, constraints) {
+export function decorationEnvironmentAllows(group, x, y, constraints, footprint = false) {
   const index = y * constraints.width + x
   if (constraints.keepClear[index] || constraints.roadDistance[index] <= 1) return false
   if (group.tagSet.has('roadside') && constraints.roadDistance[index] !== 2) return false
-  if (group.tagSet.has('shore') && constraints.shoreDistance[index] > 1) return false
+  if (!footprint && group.tagSet.has('shore') && constraints.shoreDistance[index] !== 1) return false
   return true
 }
 
@@ -400,6 +400,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     for (const kind of ['multi', 'single', 'groundDetail']) {
       const categories = new Map()
       for (const group of pools[biome]?.[kind] || []) {
+        if (group.tagSet.has('shore')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
         if (!categories.has(category)) categories.set(category, [])
         categories.get(category).push(group)
@@ -410,16 +411,20 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   const fits = (placement, detail = false) => {
     const { group, anchorX: x, anchorY: y, biome } = placement
     if (x + group.width > width || y + group.height > height) return false
+    let touchesWater = false
     for (let dy = 0; dy < group.height; dy++) {
       for (let dx = 0; dx < group.width; dx++) {
         const cx = x + dx
         const cy = y + dy
         const tile = mapGrid[cy][cx]
         if (!isDecoratableLand(tile) || isRoad(tile) || resolveBiome(tile, defaultBiome) !== biome ||
-          !decorationEnvironmentAllows(group, cx, cy, constraints) || (detail ? groundDetails[cy * width + cx] : occupied[cy * width + cx])) return false
+          !decorationEnvironmentAllows(group, cx, cy, constraints, true) || (detail ? groundDetails[cy * width + cx] : occupied[cy * width + cx])) return false
+        if (constraints.shoreDistance[cy * width + cx] === 1) touchesWater = true
       }
     }
+    if (group.tagSet.has('shore') && !touchesWater) return false
     if (detail) return true
+    if (group.tagSet.has('shore')) return true
     if (!categoryClusterAllows(group, x, y, biome, clusters)) return false
     if (group.tagSet.has('city') && !cities.centers.some(center => {
       const farX = Math.max(Math.abs(center.x - x), Math.abs(center.x - (x + group.width - 1)))
@@ -436,6 +441,32 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       }
     }
     return decorationSpacingAllows(placement, [...nearby])
+  }
+  // Coast props have first choice, independent of inland noise and variety.
+  // One seeded attempt per four coast anchors; every footprint stays on land.
+  const shoreBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
+    createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('shore')), salt)
+  ]))
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (decorationHash(x, y, salt + 4441) % 4 !== 0) continue
+      const biome = resolveBiome(mapGrid[y][x], defaultBiome)
+      const bag = shoreBags[biome]
+      for (let attempt = 0; attempt < (bag?.size || 0); attempt++) {
+        const group = bag.next()
+        const placement = { group, anchorX: x, anchorY: y, biome }
+        if (!fits(placement)) continue
+        if (group.width * group.height > 1) placements.push(placement)
+        for (let dy = 0; dy < group.height; dy++) {
+          for (let dx = 0; dx < group.width; dx++) {
+            const offset = (y + dy) * width + x + dx
+            cells[offset] = { ...placement, offsetX: dx, offsetY: dy }
+            occupied[offset] = placement
+          }
+        }
+        break
+      }
+    }
   }
   // Ground detail has its own cells, no impassability and no spacing ownership.
   for (const kind of ['groundDetail', 'multi', 'single']) {
