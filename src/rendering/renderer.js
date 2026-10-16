@@ -429,11 +429,12 @@ export class Renderer {
     let uiMs = 0
     // Render all game elements in order
     let gpuRendered = false
+    const integratedMode = this.textureManager.integratedSpriteSheetMode
     const hasIntegratedWaterTiles = Boolean(
-      gameState.useIntegratedSpriteSheetMode &&
+      integratedMode &&
       this.textureManager.integratedTagBuckets?.water?.length
     )
-    const needsCpuTerrainComposite = !gameState.useIntegratedSpriteSheetMode
+    const needsCpuTerrainComposite = !integratedMode
     const hasGpuStreetAtlas = Boolean(
       needsCpuTerrainComposite &&
       this.textureManager.defaultStreetTagBuckets?.street?.some(tile => tile?.image && tile?.rect)
@@ -445,13 +446,13 @@ export class Renderer {
     // viewport. Static land and street art already lives in the bounded,
     // prewarmed 2D chunk cache, so only water and its SOT wedges belong here.
     const gpuWaterOnly = Boolean(
-      (gameState.useIntegratedSpriteSheetMode && !hasIntegratedWaterTiles) ||
+      (integratedMode && !hasIntegratedWaterTiles) ||
       needsCpuTerrainComposite
     )
     const shouldUseGpuTerrain = Boolean(
       USE_PROCEDURAL_WATER_RENDERING &&
       ((gpuContext && gpuCanvas) || (webgpuCanvas && typeof navigator !== 'undefined' && navigator.gpu)) &&
-      (!gameState.useIntegratedSpriteSheetMode || gpuWaterOnly)
+      (!integratedMode || gpuWaterOnly)
     )
 
     let gpuBackend = 'cpu'

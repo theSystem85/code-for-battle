@@ -24,6 +24,7 @@ import { expandCompactSpriteSheetMetadata, hasTaggedSpriteSheetTiles } from '../
 import { getStoredItem, setStoredItem, removeStoredItem, getStoredKeys } from '../storage/indexedDbStorage.js'
 import {
   DEFAULT_SSE_SHEETS,
+  OPTIONAL_SSE_SHEETS,
   filterRetiredSheetPaths,
   isRetiredSpriteSheetPath,
   purgeRetiredSheetStorage,
@@ -422,12 +423,12 @@ async function loadStaticSheetPaths() {
   try {
     const parsed = await fetchAssetJson(SSE_SHEETS_INDEX)
     if (Array.isArray(parsed?.sheets) && parsed.sheets.length) {
-      return filterRetiredSheetPaths(parsed.sheets)
+      return [...new Set([...filterRetiredSheetPaths(parsed.sheets), ...OPTIONAL_SSE_SHEETS])]
     }
   } catch (err) {
     window.logger.warn('Failed to load sprite sheet index:', err)
   }
-  return [...DEFAULT_SSE_SHEETS]
+  return [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS]
 }
 
 async function loadMetadataForSheet(sheetPath, { allowLocalOverride = true } = {}) {
@@ -523,8 +524,8 @@ async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     ? gameState.availableStaticSpriteSheets
     : await loadStaticSheetPaths()
   gameState.availableStaticSpriteSheets = allStaticSheets
-  if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = [...allStaticSheets]
+  if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
+    gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
   }
 
   const selectedSheetPaths = allStaticSheets.filter(path => gameState.activeSpriteSheetSelections.includes(path))
@@ -674,20 +675,20 @@ export function initMapEditorControls() {
   }
 
   gameState.availableStaticSpriteSheets = mergeSheetPaths(
-    DEFAULT_SSE_SHEETS,
+    [...DEFAULT_SSE_SHEETS, ...OPTIONAL_SSE_SHEETS],
     [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath]
   )
 
   try {
-    const storedSelected = safeParseJson(getStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), [])
-    if (Array.isArray(storedSelected) && storedSelected.length) {
+    const storedSelected = safeParseJson(getStoredItem(INTEGRATED_SELECTED_SHEETS_STORAGE_KEY), null)
+    if (Array.isArray(storedSelected)) {
       gameState.activeSpriteSheetSelections = gameState.availableStaticSpriteSheets.filter(path => storedSelected.includes(path))
     }
   } catch (err) {
     window.logger.warn('Failed to load selected integrated sprite sheets:', err)
   }
-  if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-    gameState.activeSpriteSheetSelections = [...gameState.availableStaticSpriteSheets]
+  if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
+    gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
   }
   renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
   loadStaticSheetPaths().then(async(sheetPaths) => {
@@ -696,13 +697,10 @@ export function initMapEditorControls() {
       [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath]
     )
     const availablePaths = gameState.availableStaticSpriteSheets
-    if (!Array.isArray(gameState.activeSpriteSheetSelections) || !gameState.activeSpriteSheetSelections.length) {
-      gameState.activeSpriteSheetSelections = [...availablePaths]
+    if (!Array.isArray(gameState.activeSpriteSheetSelections)) {
+      gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
     } else {
       gameState.activeSpriteSheetSelections = availablePaths.filter(path => gameState.activeSpriteSheetSelections.includes(path))
-      if (!gameState.activeSpriteSheetSelections.length) {
-        gameState.activeSpriteSheetSelections = [...availablePaths]
-      }
     }
     renderIntegratedSheetSelectionList(availablePaths)
     if (gameState.useIntegratedSpriteSheetMode) {

@@ -336,8 +336,9 @@ describe('Renderer airborne layering', () => {
     )
   })
 
-  it('isolates procedural water from default street sheet terrain on the GPU', () => {
+  it.each([false, true])('isolates default ground and procedural water with custom checkbox %s and no selected sheets', (customCheckbox) => {
     const renderer = new Renderer()
+    renderer.textureManager.integratedSpriteSheetMode = false
     const gameCtx = {
       clearRect: vi.fn(),
       save: vi.fn(),
@@ -366,7 +367,7 @@ describe('Renderer airborne layering', () => {
     const gameCanvas = { width: 800, height: 600 }
     const gpuCanvas = { width: 800, height: 600 }
     const mapGrid = [[{ type: 'street' }, { type: 'water' }]]
-    const gameState = { useIntegratedSpriteSheetMode: false, unitWrecks: [] }
+    const gameState = { useIntegratedSpriteSheetMode: customCheckbox, unitWrecks: [] }
 
     renderer.textureManager.defaultStreetTagBuckets = {
       street: [{ image: { id: 'default-street-atlas' }, rect: { x: 0, y: 0, width: 64, height: 64 } }]
@@ -396,7 +397,7 @@ describe('Renderer airborne layering', () => {
       mapGrid,
       { x: 0, y: 0 },
       gameCanvas,
-      expect.objectContaining({ useIntegratedSpriteSheetMode: false, unitWrecks: [] }),
+      expect.objectContaining({ useIntegratedSpriteSheetMode: customCheckbox, unitWrecks: [] }),
       null,
       { skipBaseLayer: false, skipWaterSot: true, skipWaterBase: true, gpuRenderedResources: false, separateWaterLayer: false, gpuRenderedStreetTerrain: false }
     )
@@ -438,6 +439,7 @@ describe('Renderer airborne layering', () => {
     const mapGrid = [[{ type: 'water' }, { type: 'land' }]]
     const gameState = { useIntegratedSpriteSheetMode: true, unitWrecks: [] }
 
+    renderer.textureManager.integratedSpriteSheetMode = true
     renderer.textureManager.integratedTagBuckets = { water: [{ rect: { x: 0, y: 0, width: 64, height: 64 } }] }
     renderer.mapRenderer.render.mockClear()
 

@@ -89,16 +89,51 @@ export function buildDecorationPools(groups) {
   return pools
 }
 
+/** Seeded land centers and minimum-distance anchors, prepared once per layout. */
+export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, radius = 8, minDistance = 4, biomes = DECORATION_BIOMES } = {}) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  const candidates = []
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (isDecoratableLand(mapGrid[y][x]) && biomes.includes(resolveBiome(mapGrid[y][x], defaultBiome))) candidates.push({ x, y, biome: resolveBiome(mapGrid[y][x], defaultBiome), hash: decorationHash(x, y, salt + 1877) })
+    }
+  }
+  candidates.sort((a, b) => a.hash - b.hash || a.y - b.y || a.x - b.x)
+  const centers = []
+  const count = Math.max(2, Math.min(4, Math.ceil(width * height / 4096)))
+  for (const point of candidates) {
+    if (centers.every(center => (center.x - point.x) ** 2 + (center.y - point.y) ** 2 >= (radius * 2) ** 2)) centers.push(point)
+    if (centers.length >= count) break
+  }
+  const anchors = []
+  const anchorKeys = new Set()
+  for (const point of candidates) {
+    if (!centers.some(center => center.biome === point.biome && (center.x - point.x) ** 2 + (center.y - point.y) ** 2 <= radius ** 2)) continue
+    if (!anchors.every(anchor => (anchor.x - point.x) ** 2 + (anchor.y - point.y) ** 2 >= minDistance ** 2)) continue
+    anchors.push(point)
+    anchorKeys.add(`${point.x},${point.y}`)
+  }
+  return { centers, anchors, anchorKeys, radius, minDistance }
+}
+
 /**
  * @returns {{ width:number, height:number, cells:Array<null|{group:Object,offsetX:number,offsetY:number,anchorX:number,anchorY:number,biome:string}>, placements:Array }}
  */
-export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0 } = {}) {
+export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, ruinSeed = salt } = {}) {
   const height = Array.isArray(mapGrid) ? mapGrid.length : 0
   const width = height ? (mapGrid[0]?.length || 0) : 0
   const cells = new Array(width * height).fill(null)
   const placements = []
   if (!width || !height || !pools) return { width, height, cells, placements }
   const fallbackBiome = DECORATION_BIOMES.includes(defaultBiome) ? defaultBiome : 'grass'
+
+  const hasRuins = DECORATION_BIOMES.some(biome => [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].some(group => group.tagSet.has('ruins')))
+  let ruinSalt = 0
+  for (const character of String(ruinSeed)) ruinSalt = (Math.imul(ruinSalt, 31) + character.charCodeAt(0)) | 0
+  const ruinBiomes = DECORATION_BIOMES.filter(biome => [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].some(group => group.tagSet.has('ruins')))
+  const ruins = hasRuins ? buildRuinClusters(mapGrid, { defaultBiome: fallbackBiome, salt: ruinSeed === salt ? salt : ruinSalt, biomes: ruinBiomes }) : null
+  const ruinAllowed = (group, x, y) => !group.tagSet.has('ruins') || ruins.anchorKeys.has(`${x},${y}`)
 
   const fits = (group, anchorX, anchorY, biome) => {
     if (anchorX + group.width > width || anchorY + group.height > height) return false
@@ -121,14 +156,15 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
       const tile = mapGrid[y][x]
       if (!isDecoratableLand(tile)) continue
       const hash = decorationHash(x, y, salt)
-      if (hash % MULTI_TILE_ANCHOR_INTERVAL !== 0) continue
+      if (hash % MULTI_TILE_ANCHOR_INTERVAL !== 0 && !ruins?.anchorKeys.has(`${x},${y}`)) continue
       const biome = resolveBiome(tile, fallbackBiome)
       const candidates = pools[biome]?.multi
       if (!candidates?.length) continue
       const start = (hash >>> 8) % candidates.length
       for (let i = 0; i < candidates.length; i++) {
         const group = candidates[(start + i) % candidates.length]
-        if (!fits(group, x, y, biome)) continue
+        if (!group.tagSet.has('ruins') && hash % MULTI_TILE_ANCHOR_INTERVAL !== 0) continue
+        if (!ruinAllowed(group, x, y) || !fits(group, x, y, biome)) continue
         const placement = { group, anchorX: x, anchorY: y, biome }
         placements.push(placement)
         for (let gy = 0; gy < group.height; gy++) {
@@ -148,11 +184,15 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
       const tile = mapGrid[y][x]
       if (!isDecoratableLand(tile)) continue
       const hash = decorationHash(x, y, salt + 7919)
-      if (hash % SINGLE_DECORATION_INTERVAL !== 0) continue
+      if (hash % SINGLE_DECORATION_INTERVAL !== 0 && !ruins?.anchorKeys.has(`${x},${y}`)) continue
       const biome = resolveBiome(tile, fallbackBiome)
       const candidates = pools[biome]?.single
       if (!candidates?.length) continue
-      const group = candidates[(hash >>> 8) % candidates.length]
+      const eligible = ruins?.anchorKeys.has(`${x},${y}`) ? candidates.filter(group => group.tagSet.has('ruins')) : candidates
+      if (!eligible.length) continue
+      const group = eligible[(hash >>> 8) % eligible.length]
+      if (!group.tagSet.has('ruins') && hash % SINGLE_DECORATION_INTERVAL !== 0) continue
+      if (!ruinAllowed(group, x, y)) continue
       cells[(y * width) + x] = { group, anchorX: x, anchorY: y, biome, offsetX: 0, offsetY: 0 }
     }
   }

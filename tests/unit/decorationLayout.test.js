@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
   buildDecorationLayout,
+  buildRuinClusters,
   buildDecorationPools,
   getValidDecorationCell,
   summarizeDecorationLayout
@@ -103,5 +104,25 @@ describe('decoration layout', () => {
     const start = performance.now()
     buildDecorationLayout(grid, pools)
     expect(performance.now() - start).toBeLessThan(500)
+  })
+})
+
+
+it('clusters ruins deterministically on matching land with minimum spacing', () => {
+  const grid = makeGrid(80, 80, x => ({ type: 'land', biome: x < 40 ? 'grass' : 'soil' }))
+  const clusters = buildRuinClusters(grid, { salt: 42, biomes: ['grass'] })
+  expect(buildRuinClusters(grid, { salt: 42, biomes: ['grass'] })).toEqual(clusters)
+  expect(buildRuinClusters(grid, { salt: 43, biomes: ['grass'] }).anchors).not.toEqual(clusters.anchors)
+  expect(clusters.centers.length).toBeGreaterThanOrEqual(2)
+  expect(clusters.anchors.length).toBeGreaterThan(10)
+  clusters.anchors.forEach((anchor, index) => {
+    expect(clusters.centers.some(center => center.biome === anchor.biome && Math.hypot(center.x - anchor.x, center.y - anchor.y) <= clusters.radius)).toBe(true)
+    clusters.anchors.slice(index + 1).forEach(other => expect(Math.hypot(other.x - anchor.x, other.y - anchor.y)).toBeGreaterThanOrEqual(clusters.minDistance))
+  })
+  const pools = buildDecorationPools([group('ruin', 1, 1, ['grass', 'decorative', 'ruins'])])
+  const layout = buildDecorationLayout(grid, pools, { salt: 42 })
+  expect(layout.cells.some(Boolean)).toBe(true)
+  layout.cells.forEach(cell => {
+    if (cell) expect(clusters.anchorKeys.has(`${cell.anchorX},${cell.anchorY}`)).toBe(true)
   })
 })
