@@ -1,4 +1,6 @@
 import { fetchAssetJson } from '../utils/assetLoading.js'
+import { prepareCityBuildings } from '../game/cityBuildings.js'
+import { normalizeDecorationSettings } from '../game/decorationSettings.js'
 // rendering/textureManager.js
 import { TILE_SIZE, PLAYER_POSITIONS } from '../config.js'
 import { gameState } from '../gameState.js'
@@ -597,6 +599,12 @@ export class TextureManager {
     if (
       cache &&
       cache.mapGrid === mapGrid &&
+      cache.firstTile === mapGrid[0][0] &&
+      cache.seed === gameState.mapSeed &&
+      cache.citySeeds === gameState.citySeeds &&
+      cache.cityClusterSize === gameState.cityClusterSize &&
+      cache.ruinSeeds === gameState.ruinSeeds &&
+      cache.ruinClusterSize === gameState.ruinClusterSize &&
       cache.width === width &&
       cache.height === mapGrid.length &&
       cache.version === this.integratedConfigVersion
@@ -606,12 +614,20 @@ export class TextureManager {
     const layout = buildDecorationLayout(mapGrid, this.integratedDecorationPools, {
       defaultBiome: this.getDefaultDecorationBiome(),
       ruinSeed: gameState.mapSeed,
+      ...normalizeDecorationSettings(gameState),
       salt: this.naturalDecorationRules ? decorationSeed(gameState.mapSeed) : 0,
       placementRules: Boolean(this.naturalDecorationRules),
       startPositions: Object.values(PLAYER_POSITIONS).slice(0, gameState.playerCount || 2).map(point => ({ x: Math.floor(width * point.x), y: Math.floor(mapGrid.length * point.y) }))
     })
+    prepareCityBuildings(mapGrid, layout)
     this.decorationLayoutCache = {
       mapGrid,
+      firstTile: mapGrid[0][0],
+      seed: gameState.mapSeed,
+      citySeeds: gameState.citySeeds,
+      cityClusterSize: gameState.cityClusterSize,
+      ruinSeeds: gameState.ruinSeeds,
+      ruinClusterSize: gameState.ruinClusterSize,
       width,
       height: mapGrid.length,
       version: this.integratedConfigVersion,

@@ -100,3 +100,11 @@ Optional decorations use seeded smooth noise and separate forest/rock/farm clust
 `ground_detail` belongs only to optional art, is passable and occupies an independent layer below props at opacity 0.55. It uses sparse noise, never water/roads, and does not consume spacing. With no detail art loaded, rendering is unchanged. Future `dtv3_ground_detail` and `dtv3_shore` are registered only when both WebP q85 and JSON exist; missing optional files warn and skip. Prepare layout before gameplay and use the bounded terrain cache; do not create resized sprite variants during gameplay. Verify DPR-aware final-size preparation when supplying the future art.
 
 See [placement specification](../../specs/121-map-generator-placement-rules.md) for helper tests, performance audit and outstanding qualifying-hardware verification. Preserve the empty-custom-selection equivalence test.
+
+## Destructible cities (PR #688 follow-up)
+
+`dtv3_city`, `dtv3_shore` and `dtv3_ground_detail` are registered as optional only when both WebP and JSON exist. Never put them in the default selection or the defaults-only `index.json`. City groups and all footprint cells carry `universal`, `decorative`, `impassable`, `city` and the matching `group_N` where needed. Keep propLayout ids stable.
+
+City groups use seeded city centers and a loose street grid, with whole-footprint keep-clear validation and no water. The four shared settings are `citySeeds` (2, 0–8), `cityClusterSize` (8, 3–20), `ruinSeeds` (3, 0–10) and `ruinClusterSize` (7, 3–20). Zero seeds disables that category. Maintain matching sidebar, storage/URL, save and host snapshot behavior.
+
+Each city footprint shares one neutral HP object, outside auto-target lists. Preserve saved tombstones when preparing layouts. Destruction uses only the existing combat decal system (`debris_craters_tracks`); never generate city rubble art. Free the static occupancy contribution while preserving other occupants, invalidate terrain and path caches, and use existing destruction effects. Keep city projectile lookup indexed and preparation outside steady-state loops. See [spec 132](../../specs/132-destructible-city-buildings.md), including outstanding browser/performance acceptance.

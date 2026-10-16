@@ -33,7 +33,7 @@ describe('sprite sheet registry', () => {
   })
 
   it('keeps optional sheets out of defaults and restores seasons', () => {
-    expect(OPTIONAL_SSE_SHEETS).toHaveLength(5)
+    expect(OPTIONAL_SSE_SHEETS).toHaveLength(8)
     OPTIONAL_SSE_SHEETS.forEach(path => expect(DEFAULT_SSE_SHEETS).not.toContain(path))
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(false)
   })

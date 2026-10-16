@@ -2018,3 +2018,6 @@ const EXPORTED_CONFIG_VARIABLES = [
 // direct function references that work correctly with minification.
 
 export const CONFIG_VARIABLE_NAMES = [...EXPORTED_CONFIG_VARIABLES]
+
+// Neutral city structure durability by occupied tile count.
+export const CITY_BUILDING_HEALTH = Object.freeze({ 1: 1500, 2: 2500, 4: 4000 })

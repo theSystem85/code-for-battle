@@ -1,3 +1,4 @@
+import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
 // saveGame.js
 import { gameState } from './gameState.js'
@@ -332,6 +333,7 @@ function ensureMapGridMatchesDimensions(grid, width, height) {
 
 function createSerializableMapTile(tile = {}) {
   return {
+    cityBuilding: tile.cityBuilding ? { ...tile.cityBuilding } : undefined,
     type: typeof tile.type === 'string' ? tile.type : 'land',
     ore: Boolean(tile.ore),
     oreDensity: Number.isFinite(tile.oreDensity) ? Math.max(0, Math.min(5, Math.floor(tile.oreDensity))) : undefined,
@@ -406,6 +408,7 @@ function restoreStaticMapTiles(loaded, targetMapGrid) {
         targetTile.seedCrystalDensity = Number.isFinite(savedTile?.seedCrystalDensity)
           ? Math.max(0, Math.min(5, Math.floor(savedTile.seedCrystalDensity)))
           : (targetTile.seedCrystal ? Math.max(1, targetTile.oreDensity || 1) : 0)
+        targetTile.cityBuilding = savedTile?.cityBuilding ? { ...savedTile.cityBuilding } : undefined
         targetTile.decal = savedTile?.decal && typeof savedTile.decal.tag === 'string'
           ? {
             tag: savedTile.decal.tag,
@@ -846,6 +849,7 @@ function buildSaveObject(label) {
       mapTilesX: gameState.mapTilesX,
       mapTilesY: gameState.mapTilesY,
       mapSeed: gameState.mapSeed,
+      ...normalizeDecorationSettings(gameState),
       mapOreFieldCount: gameState.mapOreFieldCount,
       mapOreTotalValue: gameState.mapOreTotalValue,
       lastOreUpdate: Number.isFinite(gameState.lastOreUpdate) ? gameState.lastOreUpdate : 0,
@@ -1106,6 +1110,11 @@ function loadGameFromSaveObject(saveObj, key) {
       gameState.mapSeed = savedSeed
     }
 
+    Object.assign(gameState, normalizeDecorationSettings(loaded.gameState))
+    for (const [key, value] of Object.entries(normalizeDecorationSettings(gameState))) {
+      const input = document.getElementById(key)
+      if (input) input.value = value
+    }
     const savedOreFieldCount = Number.isFinite(loaded?.gameState?.mapOreFieldCount)
       ? Math.max(0, Math.min(24, Math.floor(loaded.gameState.mapOreFieldCount)))
       : (Number.isFinite(gameState.mapOreFieldCount)
@@ -1829,13 +1838,16 @@ function loadGameFromSaveObject(saveObj, key) {
 
     const textureManager = getTextureManager()
     if (textureManager?.setIntegratedSpriteSheetConfig) {
-      textureManager.setIntegratedSpriteSheetConfig({
-        enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
-        ...(gameState.activeSpriteSheetSelections?.length === 0 ? { sheets: [] } : {}),
-        sheetPath: gameState.activeSpriteSheetPath,
-        metadata: gameState.activeSpriteSheetMetadata,
-        biomeTag: gameState.activeSpriteSheetBiomeTag
-      }).then(() => {
+      const restoreSheets = Array.isArray(gameState.activeSpriteSheetSelections) && gameState.activeSpriteSheetSelections.length
+        ? import('./ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime())
+        : textureManager.setIntegratedSpriteSheetConfig({
+          enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
+          ...(gameState.activeSpriteSheetSelections?.length === 0 ? { sheets: [] } : {}),
+          sheetPath: gameState.activeSpriteSheetPath,
+          metadata: gameState.activeSpriteSheetMetadata,
+          biomeTag: gameState.activeSpriteSheetBiomeTag
+        })
+      restoreSheets.then(() => {
         if (mapRenderer) {
           mapRenderer.invalidateAllChunks()
         }

@@ -1,3 +1,5 @@
+import { normalizeDecorationSettings } from '../game/decorationSettings.js'
+
 // Decorative sprite placement for custom sprite-sheet mode.
 //
 // Multi-tile sprites (forests, lakes, frozen lakes, rock clusters) are placed
@@ -74,7 +76,7 @@ export function buildDecorationPools(groups) {
     if (!group?.tilesByOffset || !(group.tagSet instanceof Set)) return
     if (!group.tagSet.has('decorative') && !group.tagSet.has('ground_detail')) return
     const isUniversal = group.tagSet.has('universal')
-    if (isUniversal && Number.isFinite(group.coverage) && group.coverage > UNIVERSAL_MAX_COVERAGE) return
+    if (isUniversal && !group.tagSet.has('city') && Number.isFinite(group.coverage) && group.coverage > UNIVERSAL_MAX_COVERAGE) return
     DECORATION_BIOMES.forEach((biome) => {
       if (!group.tagSet.has(biome) && !group.tagSet.has('universal')) return
       if (!groupSeasonAllowed(group.tagSet, biome)) return
@@ -90,7 +92,7 @@ export function buildDecorationPools(groups) {
 }
 
 /** Seeded land centers and minimum-distance anchors, prepared once per layout. */
-export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, radius = 8, minDistance = 4, biomes = DECORATION_BIOMES } = {}) {
+export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, radius = 8, minDistance = 4, biomes = DECORATION_BIOMES, count: requestedCount } = {}) {
   const height = mapGrid.length
   const width = mapGrid[0]?.length || 0
   const candidates = []
@@ -101,8 +103,9 @@ export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, r
   }
   candidates.sort((a, b) => a.hash - b.hash || a.y - b.y || a.x - b.x)
   const centers = []
-  const count = Math.max(2, Math.min(4, Math.ceil(width * height / 4096)))
+  const count = requestedCount ?? Math.max(2, Math.min(4, Math.ceil(width * height / 4096)))
   for (const point of candidates) {
+    if (centers.length >= count) break
     if (centers.every(center => (center.x - point.x) ** 2 + (center.y - point.y) ** 2 >= (radius * 2) ** 2)) centers.push(point)
     if (centers.length >= count) break
   }
@@ -120,9 +123,9 @@ export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, r
 /**
  * @returns {{ width:number, height:number, cells:Array<null|{group:Object,offsetX:number,offsetY:number,anchorX:number,anchorY:number,biome:string}>, placements:Array }}
  */
-export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, ruinSeed = salt, startPositions = [], placementRules = false } = {}) {
+export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, ruinSeed = salt, startPositions = [], placementRules = false, ...settings } = {}) {
   if (placementRules || DECORATION_BIOMES.some(biome => [...(pools?.[biome]?.multi || []), ...(pools?.[biome]?.single || []), ...(pools?.[biome]?.groundDetail || [])].some(group => ['trees', 'rocks', 'farm', 'landmark', 'roadside', 'shore', 'ground_detail', 'city'].some(tag => group.tagSet.has(tag))))) {
-    return buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome, salt, startPositions })
+    return buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome, salt, startPositions, ...settings })
   }
   const height = Array.isArray(mapGrid) ? mapGrid.length : 0
   const width = height ? (mapGrid[0]?.length || 0) : 0
@@ -135,7 +138,7 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
   let ruinSalt = 0
   for (const character of String(ruinSeed)) ruinSalt = (Math.imul(ruinSalt, 31) + character.charCodeAt(0)) | 0
   const ruinBiomes = DECORATION_BIOMES.filter(biome => [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].some(group => group.tagSet.has('ruins')))
-  const ruins = hasRuins ? buildRuinClusters(mapGrid, { defaultBiome: fallbackBiome, salt: ruinSeed === salt ? salt : ruinSalt, biomes: ruinBiomes }) : null
+  const ruins = hasRuins ? buildRuinClusters(mapGrid, { defaultBiome: fallbackBiome, salt: ruinSeed === salt ? salt : ruinSalt, biomes: ruinBiomes, count: normalizeDecorationSettings(settings).ruinSeeds, radius: normalizeDecorationSettings(settings).ruinClusterSize }) : null
   const ruinAllowed = (group, x, y) => !group.tagSet.has('ruins') || ruins.anchorKeys.has(`${x},${y}`)
 
   const fits = (group, anchorX, anchorY, biome) => {
@@ -227,7 +230,7 @@ export function summarizeDecorationLayout(layout) {
 export function getValidDecorationCell(layout, mapGrid, x, y, defaultBiome = 'grass', groundDetail = false) {
   if (!layout || x < 0 || y < 0 || x >= layout.width || y >= layout.height) return null
   const cell = (groundDetail ? layout.groundDetails : layout.cells)?.[(y * layout.width) + x]
-  if (!cell) return null
+  if (!cell || cell.cityBuilding?.health <= 0) return null
   const { group, anchorX, anchorY, biome } = cell
   for (let gy = 0; gy < group.height; gy++) {
     for (let gx = 0; gx < group.width; gx++) {
@@ -354,6 +357,7 @@ export function decorationSpacingAllows(placement, nearby) {
   const identity = decorationIdentity(placement.group)
   return nearby.every(other => {
     const distance = decorationFootprintDistance(placement, other)
+    if (placement.group.tagSet.has('city') && other.group.tagSet.has('city')) return distance >= 2
     return distance >= Math.max(decorationSpacing(placement.group), decorationSpacing(other.group)) &&
       (identity !== decorationIdentity(other.group) || distance >= 6)
   })
@@ -372,7 +376,8 @@ export function createDecorationBag(candidates, salt = 0) {
 }
 
 /** Natural placement is used only with opted-in category/detail catalogs. */
-export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, startPositions = [] } = {}) {
+export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, startPositions = [], ...settings } = {}) {
+  const options = normalizeDecorationSettings(settings)
   const height = mapGrid?.length || 0
   const width = mapGrid?.[0]?.length || 0
   const cells = new Array(width * height).fill(null)
@@ -382,7 +387,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   salt = decorationSeed(salt)
   const constraints = buildDecorationConstraints(mapGrid, startPositions)
   const clusters = buildCategoryClusters(mapGrid, { salt, defaultBiome })
-  const ruins = buildRuinClusters(mapGrid, { salt, defaultBiome })
+  const ruins = buildRuinClusters(mapGrid, { salt, defaultBiome, count: options.ruinSeeds, radius: options.ruinClusterSize })
+  const cities = buildRuinClusters(mapGrid, { salt: salt + 7919, defaultBiome, count: options.citySeeds, radius: options.cityClusterSize, minDistance: 1 })
   const clusterSeeds = new Set(Object.values(clusters).flatMap(cluster => cluster.centers.map(center => `${center.x},${center.y}`)))
   const landmarks = []
   // Index covered tiles once. Spacing probes visit at most a six-tile halo,
@@ -415,6 +421,11 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     }
     if (detail) return true
     if (!categoryClusterAllows(group, x, y, biome, clusters)) return false
+    if (group.tagSet.has('city') && !cities.centers.some(center => {
+      const farX = Math.max(Math.abs(center.x - x), Math.abs(center.x - (x + group.width - 1)))
+      const farY = Math.max(Math.abs(center.y - y), Math.abs(center.y - (y + group.height - 1)))
+      return center.biome === biome && farX ** 2 + farY ** 2 <= cities.radius ** 2 && (x - center.x) % 3 === 0 && (y - center.y) % 3 === 0
+    })) return false
     if (group.tagSet.has('ruins') && !ruins.anchorKeys.has(`${x},${y}`)) return false
     if (group.tagSet.has('landmark') && !landmarkAllows(x, y, landmarks)) return false
     const nearby = new Set()
@@ -437,7 +448,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
         const hash = decorationHash(x, y, salt + (detail ? 3209 : kind === 'single' ? 7919 : 0))
         const interval = detail ? 40 : kind === 'multi' ? MULTI_TILE_ANCHOR_INTERVAL : SINGLE_DECORATION_INTERVAL
         const density = decorationDensity(x, y, salt)
-        if (hash / 0x100000000 >= density / interval && !(kind !== 'groundDetail' && (ruins.anchorKeys.has(`${x},${y}`) || clusterSeeds.has(`${x},${y}`)))) continue
+        if (hash / 0x100000000 >= density / interval && !(kind !== 'groundDetail' && (ruins.anchorKeys.has(`${x},${y}`) || cities.anchorKeys.has(`${x},${y}`) || clusterSeeds.has(`${x},${y}`)))) continue
         const start = (hash >>> 8) % categoryBags.length
         let placed = false
         for (let index = 0; index < categoryBags.length && !placed; index++) {

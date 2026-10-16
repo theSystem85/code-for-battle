@@ -1,3 +1,4 @@
+import { prepareCityBuildings } from '../../src/game/cityBuildings.js'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import {
   angleDiff,
@@ -639,6 +640,23 @@ describe('logic.js', () => {
 
     afterEach(() => {
       explosions.length = 0
+    })
+
+    it('applies the same footprint splash damage to neutral cities and ordinary buildings', () => {
+      const map = Array.from({ length: 8 }, () => Array.from({ length: 8 }, () => ({ type: 'land' })))
+      const group = { width: 2, height: 1, tagSet: new Set(['city']) }
+      const layout = { cells: [{ group, anchorX: 2, anchorY: 2 }] }
+      const [city] = prepareCityBuildings(map, layout)
+      const building = { x: 2, y: 2, width: 2, height: 1, health: city.maxHealth, owner: 'player2' }
+      gameState.buildings = [building]
+      triggerExplosion(2 * 32, 2 * 32, 100, [], [], null, 100, map, 64, true)
+      expect(city.health).toBe(building.health)
+      expect(city.health).toBe(city.maxHealth - 100)
+      triggerExplosion(2 * 32, 2 * 32, 10000, [], [], null, 100, map, 64, true)
+      expect(city.health).toBe(0)
+      expect(map[2][2].decal.tag).toBe('debris')
+      expect(map[2][3].decal.tag).toBe('debris')
+      gameState.buildings = []
     })
 
     it('adds explosion to explosions array', () => {

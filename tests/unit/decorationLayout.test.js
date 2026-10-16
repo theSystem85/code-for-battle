@@ -110,9 +110,9 @@ describe('decoration layout', () => {
 
 it('clusters ruins deterministically on matching land with minimum spacing', () => {
   const grid = makeGrid(80, 80, x => ({ type: 'land', biome: x < 40 ? 'grass' : 'soil' }))
-  const clusters = buildRuinClusters(grid, { salt: 42, biomes: ['grass'] })
-  expect(buildRuinClusters(grid, { salt: 42, biomes: ['grass'] })).toEqual(clusters)
-  expect(buildRuinClusters(grid, { salt: 43, biomes: ['grass'] }).anchors).not.toEqual(clusters.anchors)
+  const clusters = buildRuinClusters(grid, { salt: 42, biomes: ['grass'], count: 3, radius: 7 })
+  expect(buildRuinClusters(grid, { salt: 42, biomes: ['grass'], count: 3, radius: 7 })).toEqual(clusters)
+  expect(buildRuinClusters(grid, { salt: 43, biomes: ['grass'], count: 3, radius: 7 }).anchors).not.toEqual(clusters.anchors)
   expect(clusters.centers.length).toBeGreaterThanOrEqual(2)
   expect(clusters.anchors.length).toBeGreaterThan(10)
   clusters.anchors.forEach((anchor, index) => {

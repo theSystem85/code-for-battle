@@ -958,6 +958,17 @@ describe('multiplayer client snapshot sync', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
   }
 
+  it('serializes cluster settings and applies host city destruction without player buildings', () => {
+    Object.assign(gameState, { citySeeds: 0, cityClusterSize: 20, ruinSeeds: 10, ruinClusterSize: 3 })
+    const snapshot = commandSync.createGameStateSnapshot()
+    expect([snapshot.citySeeds, snapshot.cityClusterSize, snapshot.ruinSeeds, snapshot.ruinClusterSize]).toEqual([0, 20, 10, 3])
+    asClient()
+    gameState.mapGrid = [[{ type: 'land', cityBuilding: { id: 'city-0,0', x: 0, y: 0, width: 1, height: 1, health: 1500, maxHealth: 1500 } }]]
+    commandSync.applyGameStateSnapshot({ cityBuildings: [{ ...gameState.mapGrid[0][0].cityBuilding, health: 0 }] })
+    expect(gameState.mapGrid[0][0].cityBuilding.health).toBe(0)
+    expect(gameState.mapGrid[0][0].decal.tag).toBe('debris')
+  })
+
   it('serializes and restores selling with simulation time rather than wall time', () => {
     gameState.simulationTime = 10000
     gameState.buildings = [{

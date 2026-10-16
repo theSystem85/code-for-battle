@@ -299,6 +299,10 @@ export const gameState = {
   mapSeed: '1',
 
   // Number of generated ore fields for map generation
+  citySeeds: 2,
+  cityClusterSize: 8,
+  ruinSeeds: 3,
+  ruinClusterSize: 7,
   mapOreFieldCount: 8,
   mapOreTotalValue: 64000,
   mapWaterPercent: 10,
