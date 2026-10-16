@@ -49,9 +49,11 @@ export function initSseExtend(state, adapters) {
       throw new Error('Session target budget reached (8 targets / 32 megapixels). Download targets and reload the editor.')
     }
   }
-  const panel = document.createElement('details')
+  const panel = document.createElement('div')
   panel.id = 'sseExtendPanel'
-  panel.innerHTML = `<summary>Extend sheet / Import sprites</summary>
+  panel.className = 'sidebar-accordion'
+  panel.innerHTML = `<button id="sseExtendToggle" class="action-button sidebar-accordion__toggle" type="button" data-sidebar-accordion-toggle aria-expanded="false" aria-controls="sseExtendContent"><span>Extend sheet / Import sprites</span><span class="sidebar-accordion__icon" data-sidebar-accordion-icon>▼</span></button>
+    <div id="sseExtendContent" class="sidebar-accordion__content"><div class="sidebar-accordion__body">
     <p>Target: the main editor canvas. Source: the separate canvas below. Click each source sprite once.</p>
     <label>Name <input id="sseNewName" value="extended-sheet"></label>
     <label>Columns <input id="sseNewColumns" type="number" min="1" value="18"></label>
@@ -75,16 +77,15 @@ export function initSseExtend(state, adapters) {
     <label class="slider-control-label" for="sseQuality">Quality <output id="sseQualityValue">85%</output></label>
     <input id="sseQuality" class="volume-slider" type="range" min="0" max="100" value="85" disabled>
     <button id="sseDownloadExtended" type="button">Export</button></details>
-    <p id="sseExtendStatus" role="status"></p>`
-  panel.querySelector('summary').innerHTML = 'Extend sheet / Import sprites <span class="sidebar-accordion__icon" aria-hidden="true">▾</span>'
-  panel.querySelector('summary').classList.add('action-button')
-  panel.querySelectorAll('input:not([type="checkbox"]):not([type="range"]):not([type="file"])').forEach(input => {
+    <p id="sseExtendStatus" role="status"></p></div></div>`
+  panel.querySelectorAll('input:not([type="checkbox"]):not([type="range"]):not([type="file"]), select').forEach(input => {
     const label = input.parentElement
     const text = label.firstChild.textContent.trim()
     const wrapper = document.createElement('div')
     wrapper.className = 'floating-label-input sprite-sheet-editor__floating-input'
     label.replaceWith(wrapper)
-    input.placeholder = ' '
+    input.classList.add('sidebar-input')
+    if (input.tagName === 'INPUT') input.placeholder = ' '
     wrapper.appendChild(input)
     const caption = document.createElement('label')
     caption.htmlFor = input.id
@@ -491,16 +492,19 @@ export function initSseExtend(state, adapters) {
       if (!sprite) throw new Error('Sprite not found.')
       return api.resizeSprite(id, { columns: sprite.tileSpan.columns + 1, rows: sprite.tileSpan.rows + 1 })
     }),
-    extractAll: guard(async({ sourceId = [...sources.keys()].at(-1), ...options } = {}) => {
-      source = sources.get(sourceId)
-      if (!source) throw new Error('Upload a source image first.')
+    extractAll: guard(async({ sourceId, ...options } = {}) => {
+      const selectedSources = sourceId === undefined ? [...sources.values()] : [sources.get(sourceId)]
+      if (!selectedSources.length || selectedSources.some(item => !item)) throw new Error('Upload a source image first.')
       const target = currentTarget()
-      const components = detectSprites(source.pixels, { cutoff: Number(field('sseCutoff').value), ...options })
       const results = []
       try {
-        for (const component of components) {
-          // A prior click may have extracted a subset of a gap-merged component.
-          if (!componentOverlaps(component)) results.push(placeComponent(component, target, false))
+        for (const item of selectedSources) {
+          source = item
+          const components = detectSprites(source.pixels, { cutoff: Number(field('sseCutoff').value), ...options })
+          for (const component of components) {
+            // A prior click may have extracted a subset of a gap-merged component.
+            if (!componentOverlaps(component)) results.push(placeComponent(component, target, false))
+          }
         }
       } finally { drawSource() }
       emit('extracted-all', { sprites: results })
@@ -754,7 +758,7 @@ export function initSseExtend(state, adapters) {
         sourceCanvas.height = image.height
         sourceCanvas.getContext('2d').drawImage(staging, 0, 0)
         sourcePane.hidden = false
-        panel.open = true
+        await api.setExtendOpen(true)
         setSourceVisible()
         applySourceView({ x: 0, y: 0, scale: Math.min(1, sourcePane.clientWidth / image.width || 1,
           (sourcePane.clientHeight ? Math.max(1, sourcePane.clientHeight - sourcePane.querySelector('p').offsetHeight) / image.height : 1)) })
@@ -803,8 +807,17 @@ export function initSseExtend(state, adapters) {
   const bind = (id, fn) => field(id).addEventListener('click', () => { fn().catch(() => {}) })
   api.chooseSourceImages = guard(async() => { field('sseSourceFile').click(); emit('source-chooser-opened', {}) })
   bind('sseAddSource', () => api.chooseSourceImages())
-  api.setExtendOpen = guard(async open => { panel.open = Boolean(open); emit('extend-toggled', { open: panel.open }); return panel.open })
-  panel.querySelector('summary').addEventListener('click', event => { event.preventDefault(); api.setExtendOpen(!panel.open).catch(() => {}) })
+  api.setExtendOpen = guard(async open => {
+    panel.open = Boolean(open)
+    field('sseExtendToggle').setAttribute('aria-expanded', String(panel.open))
+    field('sseExtendContent').classList.toggle('is-open', panel.open)
+    field('sseExtendContent').inert = !panel.open
+    panel.dispatchEvent(new Event('toggle'))
+    emit('extend-toggled', { open: panel.open })
+    return panel.open
+  })
+  field('sseExtendContent').inert = true
+  field('sseExtendToggle').addEventListener('click', () => { api.setExtendOpen(!panel.open).catch(() => {}) })
   api.setNewSheetOptions = guard(async options => {
     const fields = { columns: 'sseNewColumns', rows: 'sseNewRows', tileSize: 'sseNewTile', name: 'sseNewName' }
     for (const [key, id] of Object.entries(fields)) if (options[key] !== undefined) field(id).value = options[key]

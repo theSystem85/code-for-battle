@@ -8,7 +8,7 @@ test('light SSE imports two ungridded source sprites, grows target and exports m
   await page.waitForFunction(() => Boolean(window.__SSE__))
   await expect(page.locator('#gameCanvas, #loadingScreen')).toHaveCount(0)
   expect(requests.some(url => /\/images\/map\/units\/|\/src\/main\.js|gameOrchestrator|textureManager/.test(url))).toBe(false)
-  await page.locator('#sseExtendPanel summary').first().click()
+  await page.locator('#sseExtendToggle').click()
   await page.locator('#sseNewColumns').fill('1')
   await page.locator('#sseNewRows').fill('1')
   await page.locator('#sseNewTile').fill('16')
@@ -80,7 +80,7 @@ test('light SSE imports two ungridded source sprites, grows target and exports m
 test('new sheet, lossless export, clearing and viewport controls share the browser API', async({ page }) => {
   await page.goto('/sse')
   await page.waitForFunction(() => Boolean(window.__SSE__))
-  await page.locator('#sseExtendPanel summary').first().click()
+  await page.locator('#sseExtendToggle').click()
   await expect(page.getByRole('button', { name: 'New sheet', exact: true })).toBeVisible()
   await page.locator('#sseNewName').fill('test-sheet')
   await page.locator('#sseNewColumns').fill('3')
@@ -274,4 +274,45 @@ test('multiple source clicks toggle imports, resize buttons grow and shrink, and
     const sidebar = await page.locator('.sprite-sheet-editor__sidebar').boundingBox()
     expect(bounds.y).toBeGreaterThanOrEqual(sidebar.y + sidebar.height - 1)
   }
+})
+
+test('Extract all imports both source sheets in order with independent segmentation and shared accordion controls', async({ page }) => {
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  const ids = await page.evaluate(async() => {
+    const api = window.__SSE__
+    await api.newSheet({ cols: 4, rows: 2, tileSize: 16 })
+    const source = document.createElement('canvas')
+    source.width = 32
+    source.height = 16
+    const ctx = source.getContext('2d')
+    ctx.fillStyle = '#f00'
+    ctx.fillRect(2, 2, 8, 8)
+    ctx.fillRect(20, 2, 8, 8)
+    return [await api.addSourceImage(source.toDataURL()), await api.addSourceImage(source.toDataURL())]
+  })
+  const toggle = page.locator('#sseExtendToggle')
+  await expect(toggle).toHaveClass('action-button sidebar-accordion__toggle')
+  await toggle.click()
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+  await page.evaluate(() => window.__SSE__.setExtendOpen(true))
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.locator('#sseExtendPanel')).toHaveCSS('border-top-width', '0px')
+  await page.locator('#sseExtractAll').click()
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().importedSprites)).toBe(4)
+  const result = await page.evaluate(async() => ({
+    sprites: window.__SSE__.getState().sprites,
+    duplicates: await window.__SSE__.extractAll(),
+    masks: [...document.querySelectorAll('#sseSources canvas')].map(canvas => {
+      const pixel = canvas.getContext('2d').getImageData(4, 4, 1, 1).data
+      return pixel[1] > 0 && pixel[2] > 0
+    })
+  }))
+  expect(result.sprites.map(sprite => sprite.sourceId)).toEqual([ids[0], ids[0], ids[1], ids[1]])
+  expect(result.sprites.map(sprite => sprite.placedAt)).toEqual([0, 1, 2, 3].map(column => ({ column, row: 0 })))
+  expect(result.duplicates).toEqual([])
+  expect(result.masks).toEqual([true, true])
+  await page.evaluate(id => window.__SSE__.removeSprite(id), result.sprites[0].id)
+  expect(await page.evaluate(sourceId => window.__SSE__.extractAll({ sourceId }), ids[1])).toEqual([])
+  expect(await page.evaluate(sourceId => window.__SSE__.extractAll({ sourceId }), ids[0])).toHaveLength(1)
 })

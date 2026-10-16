@@ -7,13 +7,16 @@
     "Anchor, scale and shrink imported sprites within reserved tiles.",
     "Import from multiple source sheets and shrink or grow sprites."
   ],
-  "improvements": [],
+  "improvements": [
+    "Match sprite import controls to the game sidebar."
+  ],
   "bugfixes": [
     "Fix standalone sprite sheet editor builds for supported browsers.",
     "Keep sprite sheet information visible above the editor canvas.",
     "Allow source sprites to be imported again after switching target sheets.",
     "Fix source canvas clicks when importing sprites in the sheet editor.",
     "Keep multi-tile sprite tags together and canvases visible on mobile.",
-    "Keep sprite imports, placement and source clicks stable during editor startup."
+    "Keep sprite imports, placement and source clicks stable during editor startup.",
+    "Extract sprites from every loaded source sheet in source order."
   ]
 }
