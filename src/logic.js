@@ -96,7 +96,8 @@ export function triggerExplosion(
     allowSubmergedDamage = false,
     unitDamageMultipliers = {},
     damageRingMultipliers: configuredDamageRingMultipliers,
-    spawnVisual = true
+    spawnVisual = true,
+    visualOnly = false
   } = options || {}
   const damageRingMultipliers = Array.isArray(configuredDamageRingMultipliers) &&
     configuredDamageRingMultipliers.length > 0
@@ -107,6 +108,9 @@ export function triggerExplosion(
     // Add explosion visual effect
     explosions.push(createImpactVisual(x, y, now, explosionRadius, shooter, visualProjectile, visualSurface))
   }
+  // Visual-only impacts (direct-fire rounds without splash) never damage the area around them.
+  if (visualOnly) return
+
   playPositionalSound('explosion', x, y, 0.5)
 
   // Apply damage to nearby units

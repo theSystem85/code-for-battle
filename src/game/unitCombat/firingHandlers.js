@@ -11,9 +11,10 @@ import { getF35BombSpawnPoint } from '../../rendering/f35ImageRenderer.js'
 import { getDestroyerGunSpawnPoint } from '../../rendering/destroyerImageRenderer.js'
 import { isHowitzerGunReadyToFire, getHowitzerLaunchAngle } from '../howitzerGunController.js'
 import { gameRandom } from '../../utils/gameRandom.js'
-import { COMBAT_CONFIG } from './combatConfig.js'
+import { COMBAT_CONFIG, isNoSplashShooterType } from './combatConfig.js'
 import {
   applyTargetingSpread,
+  computeLeadAimPoint,
   computeProjectileInterceptPoint,
   getDamageForUnitType,
   getHowitzerDamage,
@@ -94,8 +95,23 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         aimY = targetCenterY + targetVelY * leadFactor
       }
 
+      // M2 autocannon always leads its target with a full intercept solution (fast, direct fire).
+      const isLightTankRound = unit.type === 'lightTank' && projectileType === 'bullet'
+      if (isLightTankRound && !overrideTarget && target) {
+        const lead = computeLeadAimPoint({
+          shooterX: unitCenterX,
+          shooterY: unitCenterY,
+          target,
+          targetCenterX,
+          targetCenterY,
+          projectileSpeed: COMBAT_CONFIG.LIGHT_TANK_PROJECTILE.SPEED
+        })
+        aimX = lead.x
+        aimY = lead.y
+      }
+
       // Store current position for next frame's velocity calculation (for predictive aiming)
-      if (usePredictiveAiming && !overrideTarget) {
+      if ((usePredictiveAiming || isLightTankRound) && !overrideTarget && target) {
         target.lastKnownX = targetCenterX
         target.lastKnownY = targetCenterY
       }
@@ -115,7 +131,7 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         ? 6
         : (projectileType === 'rocket'
           ? (isApacheRocket ? (isF22Rocket ? 7.5 : 5) : 3)
-          : (isF35Bomb ? 0 : TANK_BULLET_SPEED))
+          : (isF35Bomb ? 0 : (isLightTankRound ? COMBAT_CONFIG.LIGHT_TANK_PROJECTILE.SPEED : TANK_BULLET_SPEED)))
 
       let rocketSpawn = null
       if (isRocketTankRocket) {
@@ -146,6 +162,16 @@ export function handleTankFiring(unit, target, bullets, now, fireRate, targetCen
         targetPosition: { x: finalTarget.x, y: finalTarget.y },
         startTime: now,
         projectileType
+      }
+
+      if (isNoSplashShooterType(unit.type) && projectileType === 'bullet') {
+        // Kinetic 25 mm round: damage only on direct hit, tiny impact flash.
+        bullet.noSplash = true
+        bullet.explosionRadius = TILE_SIZE * COMBAT_CONFIG.LIGHT_TANK_PROJECTILE.IMPACT_VISUAL_RADIUS_TILES
+        // Keep flying a little past the aim point so the round can still collide with the target.
+        bullet.startX = projectileSpawn.x
+        bullet.startY = projectileSpawn.y
+        bullet.maxTravel = Math.hypot(finalTarget.x - projectileSpawn.x, finalTarget.y - projectileSpawn.y) + TILE_SIZE * 0.75
       }
 
       // For rocket tank rockets, explicitly ensure target is set for burst consistency

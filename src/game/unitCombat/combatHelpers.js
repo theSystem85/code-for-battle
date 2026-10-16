@@ -144,7 +144,9 @@ export function applyTargetingSpread(shooterX, shooterY, targetX, targetY, proje
   let maxAngleOffset
   if (unitType === 'tank-v3') {
     maxAngleOffset = 0.009 // about 0.5 degrees - very accurate
-  } else if (unitType === 'tank-v2' || unitType === 'lightTank') {
+  } else if (unitType === 'lightTank') {
+    maxAngleOffset = COMBAT_CONFIG.LIGHT_TANK_PROJECTILE.SPREAD_RADIANS // ~0.3 degrees: direct-fire autocannon
+  } else if (unitType === 'tank-v2') {
     maxAngleOffset = 0.017 // about 1 degree
   } else {
     maxAngleOffset = 0.035 // about 2 degrees for standard tanks
@@ -247,6 +249,26 @@ export function computeProjectileInterceptPoint({
     y: targetY + targetVelocityY * travelTime,
     travelTime
   }
+}
+
+/**
+ * Full predictive (lead) aim point for a straight-flying projectile: solves the intercept of
+ * the projectile with the target's current velocity, so moving targets are not missed.
+ */
+export function computeLeadAimPoint({ shooterX, shooterY, spawnX, spawnY, target, targetCenterX, targetCenterY, projectileSpeed }) {
+  const velocity = getTargetVelocity(target, targetCenterX, targetCenterY)
+  const intercept = computeProjectileInterceptPoint({
+    shooterX,
+    shooterY,
+    spawnX,
+    spawnY,
+    targetX: targetCenterX,
+    targetY: targetCenterY,
+    targetVelocityX: velocity.x,
+    targetVelocityY: velocity.y,
+    projectileSpeed
+  })
+  return { x: intercept.x, y: intercept.y, travelTime: intercept.travelTime }
 }
 
 /**

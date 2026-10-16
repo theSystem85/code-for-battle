@@ -1600,7 +1600,7 @@ export const UNIT_AMMO_CAPACITY = {
   tank_v1: 42,
   'tank-v2': 42,
   'tank-v3': 50,
-  lightTank: 150,
+  lightTank: 195, // +30% (was 150). Real M2: 900x 25 mm (300 ready + 600 stowed); one game shot ~ a 4-5 round burst -> 180-225 bursts
   rocketTank: 24,
   howitzer: 30,
   apache: 38,

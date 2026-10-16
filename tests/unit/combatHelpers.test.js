@@ -23,7 +23,7 @@ vi.mock('../../src/utils/gameRandom.js', () => ({
   gameRandom: vi.fn(() => 0)
 }))
 
-import { computeProjectileInterceptPoint, getTargetVelocity, isTurretAimedAtTarget } from '../../src/game/unitCombat/combatHelpers.js'
+import { applyTargetingSpread, computeLeadAimPoint, computeProjectileInterceptPoint, getTargetVelocity, isTurretAimedAtTarget } from '../../src/game/unitCombat/combatHelpers.js'
 
 describe('combatHelpers predictive rocket aiming', () => {
   it('derives target velocity from movement.velocity when available', () => {
@@ -65,5 +65,29 @@ describe('rocket tank hull aiming', () => {
     expect(isTurretAimedAtTarget(launcher, target)).toBe(true)
     launcher.direction = 0
     expect(isTurretAimedAtTarget(launcher, target)).toBe(false)
+  })
+})
+
+describe('M2 (lightTank) lead aiming', () => {
+  it('aims ahead of a moving target so the fast round meets it', () => {
+    const target = { movement: { velocity: { x: 0, y: 2 } } }
+    const aim = computeLeadAimPoint({ shooterX: 0, shooterY: 0, target, targetCenterX: 160, targetCenterY: 0, projectileSpeed: 16 })
+    expect(aim.y).toBeGreaterThan(0)
+    // Projectile and target arrive at the same point at the same time.
+    const projectileDistance = Math.hypot(aim.x, aim.y)
+    expect(projectileDistance / 16).toBeCloseTo(aim.travelTime, 5)
+    expect(aim.y).toBeCloseTo(2 * aim.travelTime, 5)
+  })
+
+  it('aims straight at a stationary target', () => {
+    const aim = computeLeadAimPoint({ shooterX: 0, shooterY: 0, target: {}, targetCenterX: 100, targetCenterY: 50, projectileSpeed: 16 })
+    expect(aim.x).toBeCloseTo(100)
+    expect(aim.y).toBeCloseTo(50)
+  })
+
+  it('uses a tighter spread than standard tanks', () => {
+    const lt = applyTargetingSpread(0, 0, 320, 0, 'bullet', 'lightTank')
+    const std = applyTargetingSpread(0, 0, 320, 0, 'bullet', 'tank_v1')
+    expect(Math.abs(lt.y)).toBeLessThan(Math.abs(std.y))
   })
 })

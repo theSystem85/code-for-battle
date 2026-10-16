@@ -1,0 +1,12 @@
+{
+  "version": "0.58.0",
+  "features": [],
+  "improvements": [
+    "The light tank's autocannon now fires faster rounds that lead moving targets, with small impact flashes and no splash damage.",
+    "The light tank carries 30% more ammunition (195 rounds)."
+  ],
+  "bugfixes": [
+    "The light tank no longer looks like it is driving backwards.",
+    "The mine layer wreck now faces the same way as the vehicle."
+  ]
+}

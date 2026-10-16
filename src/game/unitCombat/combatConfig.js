@@ -30,6 +30,13 @@ export const COMBAT_CONFIG = {
     COUNT: 4,
     DELAY: 300
   },
+  // M2 Bradley-style 25 mm autocannon: fast, direct-fire kinetic rounds with a tiny impact
+  // flash and no splash damage. SPEED is in px per frame like TANK_BULLET_SPEED (8).
+  LIGHT_TANK_PROJECTILE: {
+    SPEED: 16,
+    IMPACT_VISUAL_RADIUS_TILES: 0.35,
+    SPREAD_RADIANS: 0.005
+  },
   TANK_V3_BURST: {
     COUNT: TANK_V3_BURST.COUNT,
     DELAY: TANK_V3_BURST.DELAY
@@ -39,4 +46,9 @@ export const COMBAT_CONFIG = {
 /** Base reload time for single-shot tank guns (the light tank autocannon cycles faster). */
 export function getBaseFireRateForTankType(unitType) {
   return unitType === 'lightTank' ? COMBAT_CONFIG.FIRE_RATES.LIGHT_TANK : COMBAT_CONFIG.FIRE_RATES.STANDARD
+}
+
+/** Light tank (M2) rounds hit only what they touch: no area/splash damage. */
+export function isNoSplashShooterType(unitType) {
+  return unitType === 'lightTank'
 }
