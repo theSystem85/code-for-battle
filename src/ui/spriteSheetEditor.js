@@ -2113,6 +2113,11 @@ export async function initSpriteSheetEditor(options = {}) {
     setSidebarHidden(false)
   }
 
+  // Finish initial sheet loading and reveal the workspace before publishing the
+  // controller. Otherwise a pending startup load can overwrite a new API target
+  // and source fitting measures the hidden workspace.
+  if (options.standalone) await openModal(state)
+
   state.extendApi = initSseExtend(state, {
     toggleTag: (col, row, tag) => { const previous = state.activeTag; state.activeTag = tag; toggleTagOnTile(state, col, row); state.activeTag = previous; drawSseCanvas(state); renderTagList(state) },
     staticMode: () => switchMode('static'),
@@ -2141,7 +2146,6 @@ export async function initSpriteSheetEditor(options = {}) {
     loadFiles: files => loadDroppedFiles(state, files, { source: true })
   })
   bindCanvasInteractions(state)
-  if (options.standalone) await openModal(state)
   refreshAnimationPreview(state)
   if (state.previewPlaying && state.isModalOpen) {
     startAnimationPreviewLoop(state)

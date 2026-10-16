@@ -177,3 +177,40 @@ it('grows downward from original pixels and rejects occupied cells and edges wit
   expect(JSON.stringify(api.getState().sprites[0])).toBe(JSON.stringify(JSON.parse(before)[0]))
   await expect(api.resizeSprite(sprite.id, { columns: 4, rows: 3 })).rejects.toThrow('edge')
 })
+
+it('maps clicks to each source independently through strip and local transforms without double toggling', async() => {
+  const { api } = controller()
+  await api.newSheet({ cols: 6, rows: 4, tileSize: 16 })
+  const first = await api.addSourceImage('data:image/png;base64,first')
+  const second = await api.addSourceImage('data:image/png;base64,second')
+  await api.setViewport({ pane: 'source', x: -5, y: 12, scale: 2 })
+  await api.setViewport({ pane: 'source', sourceId: second, x: 3, y: -1, scale: 0.5 })
+  const canvases = [...document.querySelectorAll('#sseSources canvas')]
+  // Bounds include the strip translation/scale, 20px inter-sheet gap and
+  // each sheet's own viewport. Click coordinates must remain sheet-local.
+  const bounds = [{ left: 25, top: 82, width: 40, height: 40 }, { left: 111, top: 80, width: 20, height: 20 }]
+  canvases.forEach((canvas, index) => { canvas.getBoundingClientRect = () => bounds[index] })
+  const click = index => {
+    const rect = bounds[index]
+    canvases[index].dispatchEvent(new MouseEvent('click', { bubbles: true,
+      clientX: rect.left + 2 * rect.width / 20, clientY: rect.top + 2 * rect.height / 20 }))
+  }
+  click(0)
+  await vi.waitFor(() => expect(api.getState().importedSprites).toBe(1))
+  expect(api.getState().sprites[0].sourceId).toBe(first)
+  click(1)
+  await vi.waitFor(() => expect(api.getState().importedSprites).toBe(2))
+  expect(api.getState().sprites[1].sourceId).toBe(second)
+  click(1)
+  await vi.waitFor(() => expect(api.getState().sprites.map(sprite => sprite.sourceId)).toEqual([first]))
+})
+
+it('reserves ratio-sized cells with borders inset inside the span', async() => {
+  const { api } = controller(sourceFixture([[2, 2, 16, 16], [25, 2, 16, 16]]))
+  await api.createBlankSheet({ columns: 3, rows: 2, tileSize: 16, borderWidth: 1 })
+  await api.loadSourceImage('data:image/png;base64,test')
+  const sprites = await api.extractAll()
+  expect(sprites.map(sprite => sprite.placedAt)).toEqual([{ column: 0, row: 0 }, { column: 1, row: 0 }])
+  expect(sprites.map(sprite => sprite.tileSpan)).toEqual([{ columns: 1, rows: 1 }, { columns: 1, rows: 1 }])
+  expect(sprites[0].renderRect).toEqual({ x: 1, y: 1, width: 14, height: 14 })
+})
