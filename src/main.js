@@ -11,7 +11,7 @@ import { trackBootProgress } from './ui/loadingScreen.js'
 import { bootMark } from './ui/bootTiming.js'
 import { beginBootProgress, getBootProgress } from './ui/bootProgress.js'
 import { initializeGameStorage } from './storage/indexedDbStorage.js'
-import { UNIT_COSTS, RENDERER_BACKEND, loadGraphicsSettingsFromIndexedDb, resolveRendererBackendAvailability } from './config.js'
+import { UNIT_COSTS, RENDERER_BACKEND, loadMapActionLongPressSetting, loadGraphicsSettingsFromIndexedDb, resolveRendererBackendAvailability } from './config.js'
 import './ui/mobileJoysticks.js'
 import './ui/mobileControlGroups.js'
 import {
@@ -110,6 +110,7 @@ export async function initializeApp() {
   boot.finish('storage')
   bootMark('storage-ready')
   loadGraphicsSettingsFromIndexedDb()
+  loadMapActionLongPressSetting()
   boot.start('backend')
   await resolveRendererBackendAvailability()
   if (RENDERER_BACKEND !== 'webgpu') getBootProgress()?.applyWebGLProfile()

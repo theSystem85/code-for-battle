@@ -1,5 +1,4 @@
-import { getSimulationTime } from '../game/time.js'
-import { noteDefenceDirectOrder } from '../policies/defenceCommandApi.js'
+import { queueDefenseBuildingTarget } from './unitCommands/defenceCommands.js'
 import { TILE_SIZE } from '../config.js'
 import { gameState } from '../gameState.js'
 import { markWaypointsAdded } from '../game/waypointSounds.js'
@@ -65,33 +64,6 @@ function findForcedAttackTargetForBuilding(worldX, worldY, units, selectionManag
   return target
 }
 
-
-function queueDefenseBuildingTarget(building, target) {
-  if (!building || !target) {
-    return false
-  }
-
-  if (!Array.isArray(building.forcedAttackQueue)) {
-    building.forcedAttackQueue = []
-  }
-
-  const isSameTarget = candidate => candidate && target && candidate.id === target.id
-  const currentTarget = building.forcedAttackTarget
-  const targetAlreadyQueued = building.forcedAttackQueue.some(isSameTarget)
-
-  if (!currentTarget || currentTarget.health <= 0) {
-    building.forcedAttackTarget = target
-  } else if (!isSameTarget(currentTarget) && !targetAlreadyQueued) {
-    // New target becomes active immediately; previous active target is queued next.
-    building.forcedAttackQueue.unshift(currentTarget)
-    building.forcedAttackTarget = target
-  }
-
-  building.forcedAttack = true
-  building.holdFire = false
-  noteDefenceDirectOrder(building, 'attack', getSimulationTime(gameState))
-  return true
-}
 
 export function handleForceAttackCommand(handler, worldX, worldY, units, selectedUnits, unitCommands, mapGrid, selectionManager) {
   const commandableUnits = selectedUnits.filter(u => selectionManager.isCommandableUnit(u))

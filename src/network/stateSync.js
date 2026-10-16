@@ -510,6 +510,8 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     // Combat state
     attackTarget: unit.attackTarget ? { id: unit.attackTarget.id } : null,
     guardPosition: unit.guardPosition,
+    mapHoldPosition: unit.mapHoldPosition,
+    mapArrivalAction: unit.mapArrivalAction,
     // Leveling/experience state
     level: unit.level,
     bountyCounter: unit.bountyCounter,

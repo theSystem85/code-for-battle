@@ -11,6 +11,7 @@ import { observeMultiplayerSession } from './network/multiplayerSessionEvents.js
 import { showNotification } from './ui/notifications.js'
 import { bindGamepadCommands } from './input/gamepad/gamepadCommandBridge.js'
 import { installProductionRadialMenu } from './ui/productionRadial/productionRadialController.js'
+import { installMapActionMenu } from './ui/mapActions/mapActionMenu.js'
 import { installUnitPolicyUi } from './ui/policies/index.js'
 
 export const selectedUnits = []
@@ -71,6 +72,7 @@ export function setupInputHandlers(units, factories, mapGrid) {
 
   // Setup input handlers
   mouseHandler.setupMouseEvents(gameCanvas, units, factories, mapGrid, selectedUnits, selectionManager, unitCommands, cursorManager)
+  installMapActionMenu(gameCanvas, { selection: selectedUnits, units, commands: unitCommands, handler: mouseHandler })
   installProductionRadialMenu(gameCanvas)
   installUnitPolicyUi(gameCanvas, units)
   keyboardHandler.setupKeyboardEvents(units, selectedUnits, mapGrid, factories)

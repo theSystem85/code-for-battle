@@ -224,7 +224,7 @@ export function installUnitPolicyRadial(canvas, getUnits) {
       close()
       return
     }
-    if (event.pointerType !== 'touch' || event.target !== canvas) return
+    if (canvas.dataset.mapActionTracking === 'true' || event.pointerType !== 'touch' || event.target !== canvas) return
     const unit = interactionLocked() ? null : unitAt(event.clientX, event.clientY)
     if (!unit) return
     const state = { x: event.clientX, y: event.clientY, unit, fired: false, timer: 0 }

@@ -1,3 +1,4 @@
+import { applyMapAction } from './ui/mapActions/mapActionCommands.js'
 import { updateFactoryExits } from './game/factoryExit.js'
 import { findPath as findFactoryExitPath } from './units.js'
 import { broadcastGameCommand } from './network/commandBroadcast.js'
@@ -210,7 +211,9 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
       }
 
       remoteCommands.forEach(cmd => {
-        if (cmd.commandType === COMMAND_TYPES.BUILDING_PLACE && cmd.payload) {
+        if (cmd.commandType === COMMAND_TYPES.MAP_ACTION && cmd.payload) {
+          applyMapAction(cmd.payload, cmd.sourcePartyId, { units: mainUnits, buildings: gameState.buildings, mapGrid, commands: getUnitCommandsHandler() })
+        } else if (cmd.commandType === COMMAND_TYPES.BUILDING_PLACE && cmd.payload) {
           const { buildingType, x, y, automationCompletion } = cmd.payload
           const owner = cmd.sourcePartyId
           const buildCost = Number(buildingCosts?.[buildingType]) || 0
@@ -271,6 +274,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
                 unit.moveTarget = { x: tileX, y: tileY }
                 unit.attackTarget = null
                 unit.guardPosition = null
+                unit.mapArrivalAction = null
+                if (unit.mapHoldPosition) { unit.mapHoldPosition = null; unit.alertMode = false }
                 window.logger('[Host] Unit', unitId, 'moveTarget set to tile', tileX, tileY)
               } else {
                 window.logger.warn('[Host] Unit', unitId, 'owner mismatch:', unit.owner, '!==', partyId)
@@ -319,6 +324,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
                 }
                 unit.moveTarget = null
                 unit.guardPosition = null
+                unit.mapArrivalAction = null
+                if (unit.mapHoldPosition) { unit.mapHoldPosition = null; unit.alertMode = false }
                 unit.path = null // Clear path so unit stops and attacks
                 window.logger('[Host] Unit', unitId, 'target set to', target.id || target.type)
               } else if (targetX !== undefined && targetY !== undefined) {
@@ -371,6 +378,8 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
               unit.moveTarget = null
               unit.attackTarget = null
               unit.guardPosition = null
+              unit.mapArrivalAction = null
+              if (unit.mapHoldPosition) { unit.mapHoldPosition = null; unit.alertMode = false }
               clearBattleshipFireControl(unit)
               unit.target = null  // Clear the combat target to stop firing
               unit.forcedAttack = false

@@ -128,6 +128,8 @@ export const updateUnitMovement = logPerformance(function updateUnitMovement(uni
     // so remote control can aim/fire at a selected target without forcing movement until deselect or timeout.
     if (
       !unit.isRetreating &&
+      !unit.mapHoldPosition &&
+      !unit.mapArrivalAction &&
       unit.target &&
       unit.target.health > 0 &&
       !remoteControlCooldownActive &&

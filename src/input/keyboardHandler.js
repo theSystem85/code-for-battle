@@ -1236,6 +1236,8 @@ export class KeyboardHandler {
         unit.attackGroupTargets = []
       }
 
+      unit.mapArrivalAction = null
+      if (unit.mapHoldPosition) { unit.mapHoldPosition = null; unit.alertMode = false }
       unit.guardMode = false
       unit.guardTarget = null
       unit.guardTargets = null

@@ -164,6 +164,8 @@ function bindTabs(modal) {
 
 function openModal(modal, defaultTab = 'keybindings') {
   setActiveTab(modal, defaultTab)
+  const mapHoldInput = modal.querySelector('#settingsMapActionLongPressMs')
+  if (mapHoldInput) mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
   modal.classList.add('config-modal--open')
   modal.setAttribute('aria-hidden', 'false')
   document.body.classList.add('config-modal-open')
@@ -289,6 +291,14 @@ export function initSettingsModal() {
     window.logger.warn('Failed to load dynamic water shoreline setting:', error)
   }
 
+  const mapHoldInput = modal.querySelector('#settingsMapActionLongPressMs')
+  if (mapHoldInput) {
+    mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
+    mapHoldInput.addEventListener('change', () => {
+      setConfigValue('mapActionLongPressMs', Number(mapHoldInput.value))
+      mapHoldInput.value = String(getConfigValue('mapActionLongPressMs'))
+    })
+  }
   bindTabs(modal)
   initLlmSettingsPanel()
 
