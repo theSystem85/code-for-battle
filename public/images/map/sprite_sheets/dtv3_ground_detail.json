@@ -1,0 +1,692 @@
+{
+  "schemaVersion": 1,
+  "sheetPath": "images/map/sprite_sheets/dtv3_ground_detail.webp",
+  "tileSize": 64,
+  "rowHeight": 64,
+  "borderWidth": 0,
+  "blendMode": "black",
+  "tags": [
+    "ground_detail",
+    "passable",
+    "universal"
+  ],
+  "columns": 6,
+  "rows": 6,
+  "tiles": {
+    "0,0": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 0
+    },
+    "1,0": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 0
+    },
+    "2,0": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 0
+    },
+    "3,0": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 0
+    },
+    "4,0": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 0
+    },
+    "5,0": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 0
+    },
+    "0,1": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 1
+    },
+    "1,1": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 1
+    },
+    "2,1": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 1
+    },
+    "3,1": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 1
+    },
+    "4,1": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 1
+    },
+    "5,1": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 1
+    },
+    "0,2": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 2
+    },
+    "1,2": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 2
+    },
+    "2,2": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 2
+    },
+    "3,2": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 2
+    },
+    "4,2": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 2
+    },
+    "5,2": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 2
+    },
+    "0,3": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 3
+    },
+    "1,3": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 3
+    },
+    "2,3": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 3
+    },
+    "3,3": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 3
+    },
+    "4,3": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 3
+    },
+    "5,3": {
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 3
+    }
+  },
+  "displayName": "dtv3_ground_detail.webp",
+  "propLayout": [
+    {
+      "id": "ground_detail_detail_00",
+      "col": 0,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 1,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_01",
+      "col": 1,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 2,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_02",
+      "col": 2,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 3,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_03",
+      "col": 3,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 4,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_04",
+      "col": 4,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 5,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_05",
+      "col": 5,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "groupId": 6,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_06",
+      "col": 0,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "groupId": 7,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_07",
+      "col": 1,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "groupId": 8,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_08",
+      "col": 2,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "groupId": 9,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_09",
+      "col": 3,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "groupId": 10,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_10",
+      "col": 4,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "groupId": 11,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_11",
+      "col": 5,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "groupId": 12,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_12",
+      "col": 0,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "groupId": 13,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_13",
+      "col": 1,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "groupId": 14,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_14",
+      "col": 2,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "groupId": 15,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_15",
+      "col": 3,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "groupId": 16,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_16",
+      "col": 4,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "groupId": 17,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_17",
+      "col": 5,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "groupId": 18,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_18",
+      "col": 0,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "groupId": 19,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_19",
+      "col": 1,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "groupId": 20,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_20",
+      "col": 2,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "groupId": 21,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_21",
+      "col": 3,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "groupId": 22,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_22",
+      "col": 4,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "groupId": 23,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    },
+    {
+      "id": "ground_detail_detail_23",
+      "col": 5,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "groupId": 24,
+      "tags": [
+        "universal",
+        "ground_detail",
+        "passable"
+      ]
+    }
+  ]
+}
