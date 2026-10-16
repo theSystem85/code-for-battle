@@ -1,3 +1,4 @@
+import { fitSprite, resetSourceImports, SPRITE_ANCHORS } from './sseFit.js'
 import { clearTargetTiles, encodeLosslessWebP, exportMetadata, exportOptions } from './sseExport.js'
 import { bindSseSplit, bindSseViewport } from './sseViewport.js'
 import { detectSprites } from './sseDetect.js'
@@ -23,11 +24,20 @@ function download(blob, name) {
 
 export function initSseExtend(state, adapters) {
   let source = null
+  let anchor = 'center'
+  let sizeRatio = 1
+  let activeTargetPath = null
+  const spriteImages = new Map()
   let status = 'Create or select a target, then upload a source.'
   let sequence = 0
   let spriteSequence = 0
   let selectedSpriteId = null
   const targets = new Map()
+  const checkSpriteBudget = (width, height) => {
+    let pixels = width * height
+    for (const { image } of spriteImages.values()) pixels += image.width * image.height
+    if (pixels > MAX_SSE_PIXELS * 2) throw new Error('Sprite source budget reached (32 megapixels). Download targets and reload the editor.')
+  }
   const checkTargetBudget = (path, pixels) => {
     let total = pixels
     for (const [key, target] of targets) {
@@ -48,6 +58,8 @@ export function initSseExtend(state, adapters) {
     <button id="sseCreateBlank" type="button">New sheet</button>
     <button id="sseUseTarget" type="button">Use current sheet as target</button>
     <label>Source image (upload or drop below) <input id="sseSourceFile" type="file" accept="image/*"></label>
+    <label>Anchor <select id="sseAnchor">${SPRITE_ANCHORS.map(value => `<option value="${value}" ${value === 'center' ? 'selected' : ''}>${value}</option>`).join('')}</select></label>
+    <label>Source-to-target size ratio <input id="sseSizeRatio" type="number" min="0.05" max="4" step="0.05" value="1"></label>
     <button id="sseExtractAll" type="button">Extract all</button>
     <button id="sseRemoveSprite" type="button">Remove sprite</button>
     <button id="sseCompact" type="button">Compact</button>
@@ -214,6 +226,11 @@ export function initSseExtend(state, adapters) {
   const currentTarget = () => {
     if (state.mode !== 'static' || !state.activeData || !state.image) throw new Error('Select a static target sheet first.')
     const data = state.activeData
+    if (activeTargetPath !== data.sheetPath) {
+      activeTargetPath = data.sheetPath
+      resetSourceImports(source)
+      drawSource()
+    }
     const columns = Math.floor(state.image.width / data.tileSize)
     const rows = Math.floor(state.image.height / data.rowHeight)
     validateGrid({ ...data, columns, rows })
@@ -274,12 +291,69 @@ export function initSseExtend(state, adapters) {
     }
     return false
   })
+  const drawSprite = (target, sprite, image, ratio = sprite.sizeRatio ?? 1) => {
+    const width = sprite.tileSpan.columns * target.tileSize
+    const height = sprite.tileSpan.rows * target.rowHeight
+    const border = sprite.anchor === 'stretch' ? 0 : target.borderWidth
+    const fit = fitSprite(image.width * ratio, image.height * ratio,
+      width - border * 2, height - border * 2, sprite.anchor || 'center')
+    sprite.renderRect = { ...fit, x: fit.x + border, y: fit.y + border }
+    const ctx = target.image.getContext('2d')
+    const x = sprite.placedAt.column * target.tileSize
+    const y = sprite.placedAt.row * target.rowHeight
+    ctx.save()
+    ctx.beginPath()
+    ctx.rect(x, y, width, height)
+    ctx.clip()
+    ctx.drawImage(image, x + sprite.renderRect.x, y + sprite.renderRect.y, fit.width, fit.height)
+    ctx.restore()
+  }
+  const editSprite = (id, update) => {
+    const target = currentTarget()
+    const sprite = target.imports.find(item => item.id === id)
+    if (!sprite) throw new Error('Sprite not found.')
+    const next = { ...sprite, ...update }
+    let image = spriteImages.get(`${target.data.sheetPath}:${id}`)?.image
+    if (!image) {
+      const rect = sprite.renderRect || { x: target.borderWidth, y: target.borderWidth, width: sprite.bbox.width, height: sprite.bbox.height }
+      checkSpriteBudget(Math.ceil(rect.width), Math.ceil(rect.height))
+      image = canvas(Math.max(1, Math.ceil(rect.width)), Math.max(1, Math.ceil(rect.height)))
+      image.getContext('2d').drawImage(target.image, sprite.placedAt.column * target.tileSize + rect.x,
+        sprite.placedAt.row * target.rowHeight + rect.y, rect.width, rect.height, 0, 0, image.width, image.height)
+      spriteImages.set(`${target.data.sheetPath}:${id}`, { image, sizeRatio: 1 })
+    }
+    const tags = new Set(sprite.tags || [])
+    for (let y = 0; y < sprite.tileSpan.rows; y++) {
+      for (let x = 0; x < sprite.tileSpan.columns; x++) {
+        const key = `${sprite.placedAt.column + x},${sprite.placedAt.row + y}`
+        for (const tag of target.data.tiles[key]?.tags || []) tags.add(tag)
+        delete target.data.tiles[key]
+        target.occupied.delete(key)
+      }
+    }
+    const ctx = target.image.getContext('2d')
+    ctx.fillStyle = '#000'
+    ctx.fillRect(sprite.placedAt.column * target.tileSize, sprite.placedAt.row * target.rowHeight,
+      sprite.tileSpan.columns * target.tileSize, sprite.tileSpan.rows * target.rowHeight)
+    Object.assign(sprite, next, { tags: [...tags] })
+    for (let y = 0; y < sprite.tileSpan.rows; y++) {
+      for (let x = 0; x < sprite.tileSpan.columns; x++) {
+        const key = `${sprite.placedAt.column + x},${sprite.placedAt.row + y}`
+        target.occupied.add(key)
+        if (tags.size) target.data.tiles[key] = { tags: [...tags] }
+      }
+    }
+    drawSprite(target, sprite, image, spriteImages.get(`${target.data.sheetPath}:${id}`).sizeRatio)
+    sync(target)
+    return sprite
+  }
   const placeComponent = (component, target, redraw = true) => {
     const { bbox } = component
     const key = `${bbox.x},${bbox.y},${bbox.width},${bbox.height}`
     if (source.isolated.has(key) || componentOverlaps(component)) throw new Error('This source sprite has already been imported.')
-    const region = findPackingRegion({ ...target, width: bbox.width, height: bbox.height })
+    const region = findPackingRegion({ ...target, width: Math.max(1, Math.ceil(bbox.width * sizeRatio)), height: Math.max(1, Math.ceil(bbox.height * sizeRatio)) })
     checkTargetBudget(state.activeData.sheetPath, target.image.width * region.rows * target.rowHeight)
+    checkSpriteBudget(bbox.width, bbox.height)
     const crop = canvas(bbox.width, bbox.height)
     crop.getContext('2d').putImageData(new window.ImageData(component.pixels, bbox.width, bbox.height), 0, 0)
     const oldRows = target.rows
@@ -292,13 +366,14 @@ export function initSseExtend(state, adapters) {
       target.image = grown
       target.rows = region.rows
     }
-    target.image.getContext('2d').drawImage(crop, region.x * target.tileSize + target.borderWidth, region.y * target.rowHeight + target.borderWidth)
     for (let dy = 0; dy < region.spanY; dy++) {
       for (let dx = 0; dx < region.spanX; dx++) target.occupied.add(`${region.x + dx},${region.y + dy}`)
     }
     let id
     do { id = `sprite-${++spriteSequence}` } while (target.imports.some(item => item.id === id))
-    const result = { id, ok: true, bbox, tileSpan: { columns: region.spanX, rows: region.spanY }, placedAt: { column: region.x, row: region.y } }
+    const result = { id, ok: true, bbox, anchor, sizeRatio, tileSpan: { columns: region.spanX, rows: region.spanY }, placedAt: { column: region.x, row: region.y } }
+    spriteImages.set(`${target.data.sheetPath}:${id}`, { image: crop, sizeRatio })
+    drawSprite(target, result, crop)
     source.isolated.add(key)
     source.masks.set(key, { ...component, id: result.id, targetPath: target.data.sheetPath })
     if (redraw) drawSource()
@@ -311,6 +386,49 @@ export function initSseExtend(state, adapters) {
     return result
   }
   const api = {
+    targetChanged: () => {
+      const path = state.activeData?.sheetPath
+      if (path === activeTargetPath) return
+      activeTargetPath = path
+      resetSourceImports(source)
+      drawSource()
+      selected.clear()
+      selectedSpriteId = null
+      selectionStatus()
+      emit('target-changed', { path })
+    },
+    setAnchor: guard(async value => {
+      if (!SPRITE_ANCHORS.includes(value)) throw new Error('Invalid anchor.')
+      anchor = value
+      field('sseAnchor').value = value
+      emit('anchor-changed', { anchor })
+      return anchor
+    }),
+    setSpriteAnchor: guard(async(id, value) => {
+      if (!SPRITE_ANCHORS.includes(value)) throw new Error('Invalid anchor.')
+      const sprite = editSprite(id, { anchor: value })
+      if (selectedSpriteId === id) field('sseAnchor').value = value
+      emit('sprite-anchor-changed', { id, anchor: value })
+      return sprite
+    }),
+    setSizeRatio: guard(async value => {
+      if (!Number.isFinite(value) || value < 0.05 || value > 4) throw new Error('Size ratio must be between 0.05 and 4.')
+      sizeRatio = value
+      field('sseSizeRatio').value = value
+      emit('size-ratio-changed', { sizeRatio })
+      return sizeRatio
+    }),
+    resizeSprite: guard(async(id, { columns, rows }) => {
+      const sprite = currentTarget().imports.find(item => item.id === id)
+      if (!sprite) throw new Error('Sprite not found.')
+      if (![columns, rows].every(value => Number.isInteger(value) && value >= 1)
+        || columns > sprite.tileSpan.columns || rows > sprite.tileSpan.rows
+        || (columns === sprite.tileSpan.columns && rows === sprite.tileSpan.rows)) throw new Error('Choose a smaller tile span.')
+      const result = editSprite(id, { tileSpan: { columns, rows }, anchor: sprite.anchor === 'stretch' ? 'center' : (sprite.anchor || 'center') })
+      await api.selectSprite(id)
+      emit('sprite-resized', { id, tileSpan: result.tileSpan })
+      return result
+    }),
     extractAll: guard(async(options = {}) => {
       if (!source) throw new Error('Upload a source image first.')
       const target = currentTarget()
@@ -330,6 +448,7 @@ export function initSseExtend(state, adapters) {
       const sprite = currentTarget().imports.find(item => item.id === id)
       if (!sprite) throw new Error('Sprite not found.')
       selectedSpriteId = id
+      field('sseAnchor').value = sprite.anchor || 'center'
       const cells = []
       for (let y = 0; y < sprite.tileSpan.rows; y++) {
         for (let x = 0; x < sprite.tileSpan.columns; x++) cells.push({ col: sprite.placedAt.column + x, row: sprite.placedAt.row + y })
@@ -420,6 +539,9 @@ export function initSseExtend(state, adapters) {
       const target = currentTarget()
       const previousImports = target.imports
       const cleared = clearTargetTiles(target, cells)
+      for (const item of previousImports) {
+        if (!target.imports.includes(item)) spriteImages.delete(`${target.data.sheetPath}:${item.id}`)
+      }
       if (source) {
         for (const item of previousImports) {
           if (!target.imports.includes(item)) {
@@ -444,6 +566,8 @@ export function initSseExtend(state, adapters) {
       const target = currentTarget()
       sync(target)
       const compression = exportOptions(options)
+      target.data.compression = compression
+      adapters.refresh()
       const name = adapters.name().replace(/\.[^.]+$/, '').replace(/[^a-z0-9_-]/gi, '-') || 'extended-sheet'
       const json = exportMetadata(adapters.serialize(), name, compression)
       const webpBlob = compression.lossless
@@ -459,7 +583,7 @@ export function initSseExtend(state, adapters) {
     }),
     getState: () => {
       const target = targets.get(state.activeData?.sheetPath)
-      return { mode: 'extend', targetSheetPath: state.activeData?.sheetPath || null, sourceLoaded: Boolean(source),
+      return { mode: 'extend', anchor, sizeRatio, targetSheetPath: state.activeData?.sheetPath || null, sourceLoaded: Boolean(source),
         tileSize: state.activeData?.tileSize, rowHeight: state.activeData?.rowHeight, borderWidth: state.activeData?.borderWidth,
         columns: target?.columns, rows: target?.rows, occupiedTiles: target ? [...target.occupied] : [],
         sprites: target?.imports || [], selectedSpriteId, pendingSprites: 0, importedSprites: target?.imports.length || 0, status }
@@ -476,6 +600,9 @@ export function initSseExtend(state, adapters) {
       const data = adapters.newData(path, { tileSize, rowHeight, borderWidth })
       adapters.register(path, name, image, data)
       targets.set(path, { data, image, columns, rows, tileSize, rowHeight, borderWidth, occupied: new Set(), imports: [] })
+      activeTargetPath = path
+      resetSourceImports(source)
+      drawSource()
       sync(targets.get(path))
       selected.clear()
       selectedSpriteId = null
@@ -494,9 +621,12 @@ export function initSseExtend(state, adapters) {
         state.activeData.extension = undefined
       }
       sync(currentTarget())
+      resetSourceImports(source)
+      drawSource()
       selected.clear()
       selectedSpriteId = null
       selectionStatus()
+      emit('target-selected', { path: state.activeData.sheetPath })
       report(`Target selected: ${state.activeData.sheetPath}`)
       return api.getState()
     }),
@@ -522,9 +652,9 @@ export function initSseExtend(state, adapters) {
         sourceCanvas.getContext('2d').drawImage(staging, 0, 0)
         sourcePane.hidden = false
         panel.open = true
-        sourceView = { x: 0, y: 0, scale: 1 }
-        sourceCanvas.style.transform = ''
         setSourceVisible()
+        applySourceView({ x: 0, y: 0, scale: Math.min(1, sourcePane.clientWidth / image.width || 1,
+          Math.max(1, sourcePane.clientHeight - sourcePane.querySelector('p').offsetHeight) / image.height) })
         report('Source loaded. Click a sprite in the source pane.')
         emit('source-loaded', { width: image.width, height: image.height })
         return api.getState()
@@ -558,6 +688,14 @@ export function initSseExtend(state, adapters) {
     tileSize: Number(field('sseNewTile').value) }))
   bind('sseUseTarget', () => api.selectTargetSheet(state.sheetSelect.value))
   bind('sseDownloadExtended', () => api.exportSheet({ lossless: field('sseLossless').checked, quality: Number(field('sseQuality').value) }))
+  field('sseAnchor').addEventListener('change', async event => {
+    const value = event.target.value
+    try {
+      await api.setAnchor(value)
+      if (selectedSpriteId) await api.setSpriteAnchor(selectedSpriteId, value)
+    } catch { /* Controller reports errors. */ }
+  })
+  field('sseSizeRatio').addEventListener('change', event => { api.setSizeRatio(Number(event.target.value)).catch(() => {}) })
   bind('sseExtractAll', () => api.extractAll())
   bind('sseCompact', () => api.compact())
   bind('sseRemoveSprite', () => api.removeSprite(selectedSpriteId))
@@ -569,7 +707,72 @@ export function initSseExtend(state, adapters) {
     if (sprite) api.selectSprite(sprite.id).catch(() => {})
     else { selectedSpriteId = null; selected.clear(); selectionStatus() }
   })
+  const menu = document.createElement('div')
+  menu.id = 'sseSpriteContextMenu'
+  menu.hidden = true
+  menu.setAttribute('role', 'dialog')
+  menu.setAttribute('aria-label', 'Resize sprite')
+  menu.style.cssText = 'position:fixed;z-index:10000;padding:8px;background:#202820;border:1px solid #6efc4b;max-width:260px'
+  menu.innerHTML = '<label>Columns <input id="sseResizeColumns" type="number" min="1" class="sidebar-input"></label><label>Rows <input id="sseResizeRows" type="number" min="1" class="sidebar-input"></label><button type="button" class="action-button" id="sseResizeApply">Shrink sprite</button><button type="button" class="action-button" id="sseResizeClose">Close</button>'
+  state.root.appendChild(menu)
+  const closeMenu = () => {
+    menu.hidden = true
+    emit('sprite-menu-closed', {})
+  }
+  api.closeSpriteMenu = guard(async() => closeMenu())
+  api.openSpriteMenu = guard(async(id, { x = 0, y = 0 } = {}) => {
+    if (![x, y].every(Number.isFinite)) throw new Error('Invalid menu position.')
+    const sprite = await api.selectSprite(id)
+    menu.querySelector('#sseResizeColumns').value = sprite.tileSpan.columns
+    menu.querySelector('#sseResizeColumns').max = sprite.tileSpan.columns
+    menu.querySelector('#sseResizeRows').value = sprite.tileSpan.rows
+    menu.querySelector('#sseResizeRows').max = sprite.tileSpan.rows
+    menu.style.left = `${Math.max(0, Math.min(x, window.innerWidth - 280))}px`
+    menu.style.top = `${Math.max(0, Math.min(y, window.innerHeight - 180))}px`
+    menu.hidden = false
+    menu.querySelector('input').focus()
+    emit('sprite-menu-opened', { id })
+  })
+  menu.querySelector('#sseResizeClose').addEventListener('click', () => { api.closeSpriteMenu().catch(() => {}) })
+  menu.querySelector('#sseResizeApply').addEventListener('click', async() => {
+    try {
+      await api.resizeSprite(selectedSpriteId, { columns: Number(menu.querySelector('#sseResizeColumns').value), rows: Number(menu.querySelector('#sseResizeRows').value) })
+      await api.closeSpriteMenu()
+    } catch { /* Controller reports validation errors. */ }
+  })
+  const spriteAt = event => {
+    if (!state.activeData || !targets.has(state.activeData.sheetPath)) return null
+    const cell = tileAt(event)
+    return currentTarget().imports.find(item => cell.col >= item.placedAt.column && cell.row >= item.placedAt.row
+      && cell.col < item.placedAt.column + item.tileSpan.columns && cell.row < item.placedAt.row + item.tileSpan.rows)
+  }
+  state.canvas.addEventListener('contextmenu', event => {
+    const sprite = spriteAt(event)
+    if (!sprite) return
+    event.preventDefault()
+    api.openSpriteMenu(sprite.id, { x: event.clientX, y: event.clientY }).catch(() => {})
+  })
+  let pressTimer = null
+  let pressPoint = null
+  const cancelPress = () => { clearTimeout(pressTimer); pressTimer = null }
+  state.canvasWrap.addEventListener('pointerdown', event => {
+    cancelPress()
+    if (event.pointerType !== 'touch' || !event.isPrimary) return
+    const sprite = spriteAt(event)
+    if (!sprite) return
+    pressPoint = { x: event.clientX, y: event.clientY }
+    pressTimer = setTimeout(() => {
+      state.dragging = false
+      api.openSpriteMenu(sprite.id, pressPoint).catch(() => {})
+    }, 550)
+  })
+  state.canvasWrap.addEventListener('pointermove', event => {
+    if (pressPoint && Math.hypot(event.clientX - pressPoint.x, event.clientY - pressPoint.y) > 8) cancelPress()
+  })
+  state.canvasWrap.addEventListener('pointerup', cancelPress)
+  state.canvasWrap.addEventListener('pointercancel', cancelPress)
   state.root.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !menu.hidden) api.closeSpriteMenu().catch(() => {})
     if (event.key !== 'Delete' || event.target.closest('input, textarea, select, [contenteditable="true"]') || !selectedSpriteId) return
     event.preventDefault()
     api.removeSprite(selectedSpriteId).catch(() => {})

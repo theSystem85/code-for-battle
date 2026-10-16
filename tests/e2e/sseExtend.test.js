@@ -111,7 +111,7 @@ test('new sheet, lossless export, clearing and viewport controls share the brows
   expect(result.ratio).toBe('0.4')
   await page.locator('#sseSheetInfoBtn').click()
   await expect(page.locator('#sseSheetInfoPopover')).toBeVisible()
-  await expect(page.locator('#sseSheetInfoPopover')).toContainText('Compression: unknown')
+  await expect(page.locator('#sseSheetInfoPopover')).toContainText('Compression: lossless')
   const wrap = page.locator('.sprite-sheet-editor__canvas-wrap')
   const before = await page.locator('.sprite-sheet-editor__canvas-viewport').evaluate(el => el.style.transform)
   await wrap.dispatchEvent('wheel', { deltaX: 30, deltaY: 20 })
@@ -156,8 +156,8 @@ test('extract all, source masks, removal and compaction share UI and API actions
     canvas.width = bitmap.width
     canvas.height = bitmap.height
     canvas.getContext('2d').drawImage(bitmap, 0, 0)
-    const pixel = x => [...canvas.getContext('2d').getImageData(x, 2, 1, 1).data]
-    return { sprites: json.extension.imports, pixels: [pixel(2), pixel(18), pixel(34)] }
+    const pixel = x => [...canvas.getContext('2d').getImageData(x, 8, 1, 1).data]
+    return { sprites: json.extension.imports, pixels: [pixel(8), pixel(24), pixel(40)] }
   })
   expect(result.sprites.map(item => item.id)).toEqual([initial.sprites[0].id, initial.sprites[2].id])
   expect(result.sprites.map(item => item.placedAt.column)).toEqual([0, 1])
@@ -170,4 +170,53 @@ test('extract all, source masks, removal and compaction share UI and API actions
   await page.getByRole('button', { name: 'Remove sprite', exact: true }).focus()
   await page.keyboard.press('Delete')
   await expect.poll(() => page.evaluate(() => window.__SSE__.getState().importedSprites)).toBe(1)
+})
+
+test('anchor, ratio and shrink UI persist metadata and permit reimport on target changes', async({ page }) => {
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  const first = await page.evaluate(async() => {
+    const api = window.__SSE__
+    const sheet = await api.newSheet({ cols: 4, rows: 2, tileSize: 16 })
+    const source = document.createElement('canvas')
+    source.width = 24
+    source.height = 24
+    source.getContext('2d').fillStyle = '#f00'
+    source.getContext('2d').fillRect(2, 2, 18, 10)
+    await api.loadSourceImage(source.toDataURL())
+    return sheet.targetSheetPath
+  })
+  await page.locator('#sseAnchor').selectOption('bottom-right')
+  await page.locator('#sseSizeRatio').fill('1.5')
+  await page.locator('#sseSizeRatio').dispatchEvent('change')
+  const sprite = await page.evaluate(() => window.__SSE__.isolateAt({ x: 3, y: 3 }))
+  expect(sprite.anchor).toBe('bottom-right')
+  expect(sprite.tileSpan).toEqual({ columns: 2, rows: 1 })
+  await page.locator('#sseTileCanvas').evaluate((canvas, placed) => {
+    const rect = canvas.getBoundingClientRect()
+    canvas.dispatchEvent(new MouseEvent('contextmenu', { bubbles: true, cancelable: true,
+      clientX: rect.left + (placed.column * 16 + 8) * rect.width / canvas.width,
+      clientY: rect.top + (placed.row * 16 + 8) * rect.height / canvas.height }))
+  }, sprite.placedAt)
+  await expect(page.locator('#sseSpriteContextMenu')).toBeVisible()
+  await page.locator('#sseResizeColumns').fill('1')
+  await page.locator('#sseResizeApply').click()
+  await expect(page.locator('#sseSpriteContextMenu')).toBeHidden()
+  const result = await page.evaluate(async({ first, id }) => {
+    const api = window.__SSE__
+    const resized = api.getState().sprites.find(item => item.id === id)
+    const { json } = await api.exportSheet()
+    await api.newSheet({ cols: 4, rows: 2, tileSize: 16 })
+    const again = await api.isolateAt({ x: 3, y: 3 })
+    await api.selectTargetSheet(first)
+    const returned = await api.isolateAt({ x: 3, y: 3 })
+    return { resized, json, again, returned }
+  }, { first, id: sprite.id })
+  expect(result.resized.tileSpan).toEqual({ columns: 1, rows: 1 })
+  expect(result.resized.renderRect.width).toBe(16)
+  expect(result.resized.renderRect.height).toBeCloseTo(16 * 10 / 18)
+  expect(result.json.extension.imports[0].anchor).toBe('bottom-right')
+  expect(result.json.sprites.find(item => item.id === sprite.id).px.width).toBe(16)
+  expect(result.again.ok).toBe(true)
+  expect(result.returned.ok).toBe(true)
 })

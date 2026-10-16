@@ -83,13 +83,14 @@ export function exportMetadata(metadata, name, options = {}) {
     return { tiles: { col, row, cols: 1, rows: 1 }, px: entry.rect || { x: col * tileSize + borderWidth, y: row * rowHeight + borderWidth, width: tileSize - 2 * borderWidth, height: rowHeight - 2 * borderWidth }, tags: entry.tags || [] }
   })
   for (const item of metadata.extension?.imports || []) {
-    const tags = new Set()
+    const tags = new Set(item.tags || [])
     for (let dy = 0; dy < item.tileSpan.rows; dy++) {
       for (let dx = 0; dx < item.tileSpan.columns; dx++) {
         for (const tag of metadata.tiles?.[`${item.placedAt.column + dx},${item.placedAt.row + dy}`]?.tags || []) tags.add(tag)
       }
     }
-    sprites.push({ tiles: { col: item.placedAt.column, row: item.placedAt.row, cols: item.tileSpan.columns, rows: item.tileSpan.rows }, px: { x: item.placedAt.column * tileSize + borderWidth, y: item.placedAt.row * rowHeight + borderWidth, width: item.bbox.width, height: item.bbox.height }, tags: [...tags] })
+    const rect = item.renderRect || { x: borderWidth, y: borderWidth, width: item.bbox.width, height: item.bbox.height }
+    sprites.push({ id: item.id, anchor: item.anchor || 'center', tiles: { col: item.placedAt.column, row: item.placedAt.row, cols: item.tileSpan.columns, rows: item.tileSpan.rows }, px: { ...rect, x: item.placedAt.column * tileSize + rect.x, y: item.placedAt.row * rowHeight + rect.y }, tags: [...tags] })
   }
   return { ...metadata, name, sheetPath: `${name}.webp`, compression: exportOptions(options), grid: { tileSize, rowHeight, borderWidth, cols: metadata.columns, rows: metadata.rows }, sprites }
 }

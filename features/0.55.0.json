@@ -3,11 +3,13 @@
   "features": [
     "Extend sprite sheets with click-to-isolate imports in the standalone editor.",
     "Create, clear and export sprite sheets losslessly with touch pan, zoom and resizable panes.",
-    "Extract all sprites, preview isolation masks, remove placements and compact sheets."
+    "Extract all sprites, preview isolation masks, remove placements and compact sheets.",
+    "Anchor, scale and shrink imported sprites within reserved tiles."
   ],
   "improvements": [],
   "bugfixes": [
     "Fix standalone sprite sheet editor builds for supported browsers.",
-    "Keep sprite sheet information visible above the editor canvas."
+    "Keep sprite sheet information visible above the editor canvas.",
+    "Allow source sprites to be imported again after switching target sheets."
   ]
 }
