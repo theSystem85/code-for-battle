@@ -88,6 +88,8 @@ import {
   DESKTOP_EDGE_AUTOSCROLL_ENABLED,
   setDesktopEdgeAutoscrollEnabled,
   LONG_PRESS_MS,
+  MAP_ACTION_LONG_PRESS_MS,
+  setMapActionLongPressMs,
   setLongPressMs,
   CHEAT_CONSOLE_HISTORY_LIMIT,
   setCheatConsoleHistoryLimit,
@@ -920,6 +922,18 @@ export const configRegistry = {
     min: 0,
     max: 2,
     step: 0.05,
+    category: 'Controls'
+  },
+
+  mapActionLongPressMs: {
+    name: 'Map Action Long-Press Duration',
+    description: 'Hold the map to open selected unit actions (ms)',
+    type: 'number',
+    get: () => MAP_ACTION_LONG_PRESS_MS,
+    set: setMapActionLongPressMs,
+    min: 300,
+    max: 5000,
+    step: 50,
     category: 'Controls'
   },
 

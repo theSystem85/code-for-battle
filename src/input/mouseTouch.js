@@ -38,6 +38,7 @@ export function setupTouchEvents(handler, gameCanvas, units, factories, mapGrid,
   }
 
   const startLongPress = (touchState) => {
+    if (gameCanvas.dataset.mapActionTracking === 'true') return
     if (touchState.longPressTimer) {
       clearTimeout(touchState.longPressTimer)
     }

@@ -14,7 +14,7 @@ export function recordAutomationUnitCommand(name, unit, args) {
     type: 'automation-unit-command', owner: unit.owner,
     unitRef: createReplayEntityReference(unit),
     name: name === 'autoAttackInRange' ? 'attackInRange' : name,
-    args: { tiles: args.tiles, tileX: args.tileX, tileY: args.tileY, resource: args.resource },
+    args: { ...(args.order ? { order: args.order } : {}), tiles: args.tiles, tileX: args.tileX, tileY: args.tileY, resource: args.resource },
     targetRef: resolvedTarget ? createReplayEntityReference(resolvedTarget) : null,
     control: globalThis.structuredClone(unit.policyControl || null),
     orderTargetRef: unit.policyControl?.order?.targetRef ? createReplayEntityReference(unit.policyControl.order.targetRef) : null

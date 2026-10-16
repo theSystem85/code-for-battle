@@ -1,0 +1,8 @@
+{
+  "version": "0.58.0",
+  "features": [
+    "Hold the map for attack, defend and automation-on-arrival actions."
+  ],
+  "improvements": [],
+  "bugfixes": []
+}

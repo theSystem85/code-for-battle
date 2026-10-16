@@ -38,6 +38,7 @@ export const DEFAULT_MOVE_TILES = 2
 const MODES = Object.freeze({ heal: 'heal', refuel: 'refuel', repair: 'repair', ammo: 'ammoResupply' })
 const JET_TYPES = new Set(['f22Raptor', 'f35'])
 const FIRING_TANK_TYPES = TURRET_TANK_TYPES
+const NAVAL_HOLD_WEAPON_TYPES = new Set(['destroyer', 'battleship', 'submarine'])
 
 function normalizeAngle(angle) {
   let result = angle
@@ -93,7 +94,7 @@ function targetRefusal(unit, target, ctx) {
 }
 
 function weaponRefusal(unit) {
-  if (!COMBAT_UNIT_TYPES.has(unit.type)) return 'the unit has no weapon'
+  if (!COMBAT_UNIT_TYPES.has(unit.type) && !(unit.mapHoldPosition && NAVAL_HOLD_WEAPON_TYPES.has(unit.type))) return 'the unit has no weapon'
   return null
 }
 
@@ -423,6 +424,21 @@ const COMMANDS = {
     }
   },
 
+  mapHold: {
+    check: unit => baseRefusal(unit),
+    run(unit, args) {
+      unit.mapHoldPosition = args.order
+      unit.flightPlan = null
+      unit.guardTarget = null
+      unit.guardTargets = null
+      unit.guardMode = false
+      unit.path = null
+      unit.moveTarget = null
+      unit.target = null
+      unit.alertMode = true
+      return true
+    }
+  },
   stop: {
     check: unit => baseRefusal(unit),
     run(unit) {

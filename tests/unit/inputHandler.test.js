@@ -1,3 +1,4 @@
+vi.mock('../../src/ui/mapActions/mapActionMenu.js', () => ({ installMapActionMenu: vi.fn() }))
 /**
  * Unit tests for src/inputHandler.js
  *

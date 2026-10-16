@@ -279,7 +279,7 @@ export function computeLeadAimPoint({ shooterX, shooterY, spawnX, spawnY, target
 
 export function handleTankMovement(unit, target, now, occupancyMap, chaseThreshold, mapGrid, rangeOverride = null, stopWhenInRange = true) {
   // Skip movement handling if unit is retreating (retreat behavior handles movement)
-  if (unit.isRetreating) {
+  if (unit.isRetreating || unit.mapHoldPosition || unit.mapArrivalAction) {
     // Still calculate distance for firing decisions
     const unitCenterX = unit.x + TILE_SIZE / 2
     const unitCenterY = unit.y + TILE_SIZE / 2
@@ -350,7 +350,7 @@ export function ensureLineOfSight(unit, target, units, mapGrid) {
 
   // A packed formation blocks the shot every tick. Searching a sidestep every
   // frame cloned work and rewrote the path; a few searches per second is enough.
-  if (!clearShot) {
+  if (!clearShot && !unit.mapHoldPosition && !unit.mapArrivalAction) {
     const now = getSimulationTime(gameState)
     if (now >= (unit.clearShotSearchAt || 0)) {
       unit.clearShotSearchAt = now + CLEAR_SHOT_SEARCH_INTERVAL_MS

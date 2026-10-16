@@ -1,3 +1,4 @@
+import { unitCommandBroadcastSuppressed } from './commandBroadcastScope.js'
 /**
  * Command Broadcasting Module
  * Handles broadcasting game commands to multiplayer peers
@@ -150,6 +151,7 @@ export function broadcastUnitStop(units) {
  * @param {number} targetY - Target Y
  */
 export function broadcastUnitMove(units, targetX, targetY) {
+  if (unitCommandBroadcastSuppressed()) return
   if (!hasActiveRemoteSession()) {
     return
   }
@@ -173,6 +175,7 @@ export function broadcastUnitMove(units, targetX, targetY) {
  * @param {Object} target - Target unit or building
  */
 export function broadcastUnitAttack(units, target) {
+  if (unitCommandBroadcastSuppressed()) return
   if (!hasActiveRemoteSession()) {
     return
   }

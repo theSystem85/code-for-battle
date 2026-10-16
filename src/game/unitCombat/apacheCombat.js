@@ -285,6 +285,7 @@ function initiateF35PadReturn(unit, padInfo) {
 }
 
 export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupancyMap) {
+  if (unit.mapArrivalAction) return
   if (hasActiveRemoteApacheOverride(unit, now)) {
     if (unit.autoHelipadReturnActive || unit.autoHelipadReturnAttackTargetId || unit.autoReturnToHelipadOnTargetLoss) {
       unit.autoHelipadReturnActive = false
@@ -443,7 +444,10 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
     }
   }
 
-  if (inRange && !targetDirectlyBelow) {
+  if (unit.mapHoldPosition) {
+    unit.flightPlan = null
+    unit.moveTarget = null
+  } else if (inRange && !targetDirectlyBelow) {
     if (existingPlan) {
       unit.flightPlan = null
       existingPlan = null
@@ -564,6 +568,7 @@ export function updateApacheCombat(unit, units, bullets, mapGrid, now, _occupanc
 }
 
 export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMap) {
+  if (unit.mapArrivalAction) return
   if (unit.target && unit.target.health <= 0) {
     unit.target = null
   }
@@ -624,7 +629,7 @@ export function updateF35Combat(unit, units, bullets, mapGrid, now, _occupancyMa
     unit.movement.targetRotation = newDirection
   }
 
-  if (!unit.helipadLandingRequested) {
+  if (!unit.helipadLandingRequested && !unit.mapHoldPosition) {
     const overflyX = targetCenter.x
     const overflyY = targetCenter.y
     unit.flightPlan = {

@@ -1,3 +1,4 @@
+import { updateMapArrival } from './mapArrivalOrders.js'
 // Unit policy engine: runs policy state machines for units and decides how a
 // policy interacts with direct orders.
 //
@@ -40,6 +41,8 @@ import {
   makeBinding,
   nextPolicySequence
 } from './policyStore.js'
+
+const MAP_HOLD_COMMAND_ARGS = Object.freeze({})
 
 export const POLICY_EVAL_INTERVAL_MS = 150
 export const ORDER_START_GRACE_MS = 500
@@ -101,6 +104,11 @@ export function noteDirectOrder(units, now = getSimulationTime(gameState)) {
   for (let i = 0; i < units.length; i++) {
     const unit = units[i]
     if (!unit) continue
+    unit.mapArrivalAction = null
+    if (unit.mapHoldPosition) {
+      unit.mapHoldPosition = null
+      unit.alertMode = false
+    }
     const control = ensureControl(unit)
     for (const binding of unit.policyBindings || []) {
       if (binding.runtime.wait) {
@@ -510,6 +518,15 @@ export function updateUnitPolicies(units, context, now = getSimulationTime(gameS
   const globals = enabledGlobals(version)
   for (let i = 0; i < units.length; i++) {
     const unit = units[i]
+    updateMapArrival(unit)
+    if (unit.mapHoldPosition) {
+      if (now >= (unit.mapHoldNextEval || 0)) {
+        unit.mapHoldNextEval = now + POLICY_EVAL_INTERVAL_MS
+        beginUnitScope(unit, context, now)
+        executeUnitCommand('autoAttackInRange', unit, MAP_HOLD_COMMAND_ARGS, context)
+      }
+      continue
+    }
     if (unit.policySyncVersion !== version) {
       syncGlobalBindings(unit, globals, version)
     }

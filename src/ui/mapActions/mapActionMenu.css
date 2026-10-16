@@ -1,0 +1,17 @@
+/* Small DOM-only progress cue; independent of map size, unit count and canvas DPR. */
+.map-action-progress {
+  position: fixed;
+  z-index: 1100;
+  width: 28px;
+  height: 28px;
+  margin: -14px;
+  border: 2px solid rgba(100, 220, 180, 0.25);
+  border-top-color: rgba(100, 220, 180, 0.9);
+  border-radius: 50%;
+  pointer-events: none;
+  animation: map-action-hold var(--hold-time, 1300ms) linear forwards;
+}
+@keyframes map-action-hold {
+  from { transform: rotate(0deg) scale(0.7); opacity: 0.4; }
+  to { transform: rotate(360deg) scale(1); opacity: 1; }
+}

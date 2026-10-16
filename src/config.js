@@ -744,6 +744,22 @@ export function setDesktopEdgeAutoscrollEnabled(value) {
   DESKTOP_EDGE_AUTOSCROLL_ENABLED = Boolean(value)
 }
 
+export let MAP_ACTION_LONG_PRESS_MS = 1500
+export function setMapActionLongPressMs(value) {
+  const ms = Number(value)
+  if (!Number.isFinite(ms)) return false
+  MAP_ACTION_LONG_PRESS_MS = Math.max(300, Math.min(5000, Math.round(ms)))
+  setStoredItem('rts_map_action_long_press_ms', String(MAP_ACTION_LONG_PRESS_MS))
+  return true
+}
+
+export function loadMapActionLongPressSetting() {
+  const stored = getStoredItem('rts_map_action_long_press_ms')
+  if (stored !== null && Number.isFinite(Number(stored))) {
+    MAP_ACTION_LONG_PRESS_MS = Math.max(300, Math.min(5000, Math.round(Number(stored))))
+  }
+}
+
 // Long-press duration to show production tooltips (in milliseconds)
 export let LONG_PRESS_MS = 250
 
@@ -1906,6 +1922,7 @@ const EXPORTED_CONFIG_VARIABLES = [
   'KEYBOARD_SCROLL_AUTO_BRAKE',
   'INVERT_TOUCH_MAP_SCROLL',
   'LONG_PRESS_MS',
+  'MAP_ACTION_LONG_PRESS_MS',
   'CHEAT_CONSOLE_HISTORY_LIMIT',
   'TANK_FIRE_RANGE',
   'SERVICE_DISCOVERY_RANGE',
