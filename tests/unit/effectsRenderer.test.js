@@ -123,7 +123,7 @@ describe('EffectsRenderer', () => {
     })
   })
 
-  it('samples chimney smoke from a prepared sprite and keeps explosion radii procedural', () => {
+  it('samples chimney smoke and renders pooled impacts without shockwave rings or runtime gradients', () => {
     const renderer = new EffectsRenderer()
     const gradient = { addColorStop: vi.fn() }
     const ctx = {
@@ -134,6 +134,7 @@ describe('EffectsRenderer', () => {
       arc: vi.fn(),
       fill: vi.fn(),
       stroke: vi.fn(),
+      moveTo: vi.fn(), lineTo: vi.fn(), ellipse: vi.fn(),
       drawImage: vi.fn()
     }
 
@@ -152,9 +153,10 @@ describe('EffectsRenderer', () => {
       14.5,
       14.5
     )
-    expect(ctx.createRadialGradient).toHaveBeenCalled()
+    expect(ctx.createRadialGradient).not.toHaveBeenCalled()
     expect(ctx.arc).not.toHaveBeenCalledWith(50, 60, 7.25, 0, Math.PI * 2)
-    expect(ctx.arc).toHaveBeenCalledWith(80, 90, expect.any(Number), 0, Math.PI * 2)
+    expect(ctx.arc).not.toHaveBeenCalled()
+    expect(ctx.ellipse).toHaveBeenCalled()
   })
 
   describe('renderDust', () => {

@@ -1,3 +1,4 @@
+import { ImpactVfx, isLowImpactQuality } from './vfx/impactVfx.js'
 // rendering/effectsRenderer.js
 import { TILE_SIZE } from '../config.js'
 import { drawTeslaCoilLightning, getCanvasLogicalSize } from './renderingUtils.js'
@@ -17,6 +18,7 @@ function isCircleOutsideViewport(x, y, radius, width, height) {
 
 export class EffectsRenderer {
   constructor() {
+    this.impactVfx = new ImpactVfx()
     this.blackBlendAnimations = []
     this.alphaBlendAnimations = []
     this.gpuSmoke = new PreparedSmokeBatch()
@@ -334,14 +336,17 @@ export class EffectsRenderer {
   }
 
   renderExplosions(ctx, gameState, scrollOffset) {
-    if (!gameState?.explosions || gameState.explosions.length === 0) return
+    if (!gameState?.explosions) return
 
     const currentTime = getSimulationTime(gameState)
+    this.impactVfx.beginFrame(currentTime)
+    if (gameState.explosions.length === 0 && currentTime >= this.impactVfx.activeUntil) return
     const visibilityMap = gameState?.visibilityMap
     const shadowEnabled = Boolean(gameState?.shadowOfWarEnabled && visibilityMap && visibilityMap.length)
 
     // Get canvas dimensions for view frustum culling
     const { width: canvasWidth, height: canvasHeight } = getCanvasLogicalSize(ctx.canvas)
+    const lowImpactQuality = isLowImpactQuality(gameState)
     const explosions = gameState.explosions
     const len = explosions.length
     const blackBlendAnimations = this.blackBlendAnimations
@@ -384,71 +389,9 @@ export class EffectsRenderer {
         continue
       }
 
-      const safeDuration = Number.isFinite(exp.duration) && exp.duration > 0 ? exp.duration : 1
-      const rawProgress = (currentTime - exp.startTime) / safeDuration
-      const progress = Math.min(Math.max(rawProgress, 0), 1)
-      const easedProgress = 1 - (1 - progress) * (1 - progress)
-      const currentRadius = maxRadius * easedProgress
-      const fade = Math.max(0, 1 - progress)
-      const flare = 0.65 + 0.35 * (1 - progress)
-      const alpha = fade * flare
-
-      if (!Number.isFinite(centerX) || !Number.isFinite(centerY) || !Number.isFinite(currentRadius) || currentRadius <= 0) {
-        continue
-      }
-
-      // These radii are continuous functions of age. Render exact procedural
-      // gradients so no growing raster is resized or discretized into frames.
-      const plumeRadius = currentRadius
-      const coreRadius = plumeRadius * (0.45 + 0.2 * fade)
-      const plumeGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, plumeRadius)
-      plumeGradient.addColorStop(0, 'rgba(255,150,0,1)')
-      plumeGradient.addColorStop(0.4, 'rgba(255,90,0,0.8)')
-      plumeGradient.addColorStop(1, 'rgba(255,50,0,0)')
-      ctx.globalAlpha = alpha * 0.9
-      ctx.fillStyle = plumeGradient
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, plumeRadius, 0, Math.PI * 2)
-      ctx.fill()
-
-      const coreGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, coreRadius)
-      coreGradient.addColorStop(0, 'rgba(255,255,235,1)')
-      coreGradient.addColorStop(0.2, 'rgba(255,230,140,0.95)')
-      coreGradient.addColorStop(0.55, 'rgba(255,150,40,0.55)')
-      coreGradient.addColorStop(1, 'rgba(255,120,0,0)')
-      ctx.globalAlpha = Math.min(1, 0.25 + fade * 1.15)
-      ctx.fillStyle = coreGradient
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, coreRadius, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.globalAlpha = 1
-
-      // Draw an energetic shockwave ring with time-varying jitter
-      const shockwaveRadius = plumeRadius * (0.92 + 0.12 * progress)
-      const jitterSeed = (exp.x * 0.13 + exp.y * 0.09 + exp.startTime * 0.001) % (Math.PI * 2)
-      const jitter = Math.sin(progress * 34 + jitterSeed) * 0.08 + 1
-      ctx.strokeStyle = `rgba(255,200,110,${alpha * 0.75})`
-      ctx.lineWidth = 1.2 + 1.8 * fade
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, shockwaveRadius * jitter, 0, 2 * Math.PI)
-      ctx.stroke()
-
-      // Faint embers at low count keep the effect fancy without heavy particle systems
-      if (fade > 0.2) {
-        const emberCount = Math.min(4, Math.max(1, Math.floor(maxRadius / TILE_SIZE)))
-        ctx.fillStyle = `rgba(255,215,120,${alpha * 0.5})`
-        for (let e = 0; e < emberCount; e++) {
-          const angle = jitterSeed + e * 2.11
-          const drift = plumeRadius * (0.45 + e * 0.12 + progress * 0.25)
-          const emberX = centerX + Math.cos(angle) * drift
-          const emberY = centerY + Math.sin(angle) * drift
-          const emberRadius = Math.max(0.8, 2.4 * fade - e * 0.35)
-          ctx.beginPath()
-          ctx.arc(emberX, emberY, emberRadius, 0, Math.PI * 2)
-          ctx.fill()
-        }
-      }
+      this.impactVfx.emit(exp, currentTime, lowImpactQuality)
     }
+    this.impactVfx.render(ctx, gameState, scrollOffset, currentTime, canvasWidth, canvasHeight)
 
     if (blackBlendAnimations.length > 0 || alphaBlendAnimations.length > 0) {
       const previousOperation = ctx.globalCompositeOperation

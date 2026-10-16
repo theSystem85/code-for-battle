@@ -1000,7 +1000,8 @@ describe('Bullet System', () => {
         mapGrid,
         bullet.explosionRadius,
         undefined,
-        undefined
+        undefined,
+        bullet
       )
       expect(setWorldDecal).toHaveBeenCalledWith(mapGrid, expect.any(Object), 50, 60, 'impact')
       expect(bullets).toHaveLength(0)
@@ -1136,7 +1137,8 @@ describe('Bullet System', () => {
         mapGrid,
         bullet.explosionRadius,
         undefined,
-        undefined
+        undefined,
+        bullet
       )
       expect(bullets).toHaveLength(0)
     })
@@ -1327,7 +1329,8 @@ describe('Bullet System', () => {
           factoryDamageMultiplier: 2,
           allowAirborneDamage: true,
           unitDamageMultipliers: { apache: 1.5 }
-        })
+        }),
+        bullet
       )
     })
 
@@ -1377,7 +1380,8 @@ describe('Bullet System', () => {
         mapGrid,
         bullet.explosionRadius,
         false,
-        expect.objectContaining({ allowAirborneDamage: true })
+        expect.objectContaining({ allowAirborneDamage: true }),
+        bullet
       )
     })
 
@@ -1410,7 +1414,8 @@ describe('Bullet System', () => {
         expect.objectContaining({
           buildingDamageMultiplier: 2,
           factoryDamageMultiplier: 2
-        })
+        }),
+        bullet
       )
       expect(bullets).toHaveLength(0)
     })
@@ -1444,7 +1449,8 @@ describe('Bullet System', () => {
         expect.objectContaining({
           buildingDamageMultiplier: 2,
           factoryDamageMultiplier: 2
-        })
+        }),
+        bullet
       )
       expect(bullets).toHaveLength(0)
     })

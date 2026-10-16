@@ -1,3 +1,4 @@
+import { prepareImpactFlash } from '../rendering/vfx/impactVfx.js'
 import { createSpriteSheetAnimationInstance, prewarmSpriteSheetTexture } from '../rendering/spriteSheetAnimation.js'
 import { getSimulationTime } from './time.js'
 
@@ -117,6 +118,7 @@ export function spawnDestructionExplosion(gameState, centerX, centerY, options =
 }
 
 export function prewarmDestructionExplosionTexture(gameState) {
+  prepareImpactFlash()
   const configured = getConfiguredDestructionAnimation(gameState)
   const assetPath = configured?.assetPath ?? DEFAULT_DESTRUCTION_SPRITE
   const defaultReady = prewarmSpriteSheetTexture(DEFAULT_DESTRUCTION_SPRITE)
