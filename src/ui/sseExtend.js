@@ -377,7 +377,8 @@ export function initSseExtend(state, adapters) {
     const { bbox } = component
     const key = `${bbox.x},${bbox.y},${bbox.width},${bbox.height}`
     if (source.isolated.has(key) || componentOverlaps(component)) throw new Error('This source sprite has already been imported.')
-    const region = findPackingRegion({ ...target, width: Math.max(1, Math.ceil(bbox.width * sizeRatio)), height: Math.max(1, Math.ceil(bbox.height * sizeRatio)) })
+    // Borders are insets within the reserved cells, not extra packing pitch.
+    const region = findPackingRegion({ ...target, borderWidth: 0, width: Math.max(1, Math.ceil(bbox.width * sizeRatio)), height: Math.max(1, Math.ceil(bbox.height * sizeRatio)) })
     checkTargetBudget(state.activeData.sheetPath, target.image.width * region.rows * target.rowHeight)
     checkSpriteBudget(bbox.width, bbox.height)
     const crop = canvas(bbox.width, bbox.height)
@@ -756,7 +757,7 @@ export function initSseExtend(state, adapters) {
         panel.open = true
         setSourceVisible()
         applySourceView({ x: 0, y: 0, scale: Math.min(1, sourcePane.clientWidth / image.width || 1,
-          Math.max(1, sourcePane.clientHeight - sourcePane.querySelector('p').offsetHeight) / image.height) })
+          (sourcePane.clientHeight ? Math.max(1, sourcePane.clientHeight - sourcePane.querySelector('p').offsetHeight) / image.height : 1)) })
         report('Source loaded. Click a sprite in the source pane.')
         emit('source-loaded', { sourceId, width: image.width, height: image.height })
         return sourceId

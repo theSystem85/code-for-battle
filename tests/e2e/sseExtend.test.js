@@ -186,7 +186,16 @@ test('anchor, ratio and shrink UI persist metadata and permit reimport on target
     await api.loadSourceImage(source.toDataURL())
     return sheet.targetSheetPath
   })
+  // Register before triggering UI actions so completion is observed even when
+  // the controller dispatches synchronously during the click/change event.
+  await page.evaluate(() => {
+    window.sseCompletedEvents = []
+    for (const name of ['anchor-changed', 'size-ratio-changed', 'sprite-resized', 'sprite-menu-closed']) {
+      window.__SSE__.on(name, detail => window.sseCompletedEvents.push({ name, detail }))
+    }
+  })
   await page.locator('#sseAnchor').selectOption('bottom-right')
+  await expect.poll(() => page.evaluate(() => window.sseCompletedEvents.some(event => event.name === 'anchor-changed' && event.detail.anchor === 'bottom-right'))).toBe(true)
   await page.locator('#sseSizeRatio').fill('1.5')
   await page.locator('#sseSizeRatio').dispatchEvent('change')
   await expect.poll(() => page.evaluate(() => window.__SSE__.getState().sizeRatio)).toBe(1.5)
@@ -204,6 +213,7 @@ test('anchor, ratio and shrink UI persist metadata and permit reimport on target
   await page.locator('#sseResizeColumns').fill('1')
   await page.locator('#sseResizeApply').click()
   await expect.poll(() => page.evaluate(id => window.__SSE__.getState().sprites.find(item => item.id === id)?.tileSpan.columns, sprite.id)).toBe(1)
+  await expect.poll(() => page.evaluate(() => window.sseCompletedEvents.filter(event => ['sprite-resized', 'sprite-menu-closed'].includes(event.name)).map(event => event.name))).toEqual(['sprite-resized', 'sprite-menu-closed'])
   await expect(page.locator('#sseSpriteContextMenu')).toBeHidden()
   const result = await page.evaluate(async({ first, id }) => {
     const api = window.__SSE__

@@ -13,6 +13,7 @@
     "Keep sprite sheet information visible above the editor canvas.",
     "Allow source sprites to be imported again after switching target sheets.",
     "Fix source canvas clicks when importing sprites in the sheet editor.",
-    "Keep multi-tile sprite tags together and canvases visible on mobile."
+    "Keep multi-tile sprite tags together and canvases visible on mobile.",
+    "Keep sprite imports, placement and source clicks stable during editor startup."
   ]
 }
