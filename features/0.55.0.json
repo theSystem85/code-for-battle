@@ -10,6 +10,7 @@
   "bugfixes": [
     "Fix standalone sprite sheet editor builds for supported browsers.",
     "Keep sprite sheet information visible above the editor canvas.",
-    "Allow source sprites to be imported again after switching target sheets."
+    "Allow source sprites to be imported again after switching target sheets.",
+    "Fix source canvas clicks when importing sprites in the sheet editor."
   ]
 }

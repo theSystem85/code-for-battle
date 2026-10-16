@@ -783,8 +783,7 @@ export function initSseExtend(state, adapters) {
   field('sseSourceFile').addEventListener('change', event => {
     adapters.loadFiles(event.target.files).catch(handleUiError)
   })
-  sourcePane.addEventListener('click', event => {
-    if (event.target.closest('p')) return
+  sourceCanvas.addEventListener('click', event => {
     const rect = sourceCanvas.getBoundingClientRect()
     api.isolateAt({ x: (event.clientX - rect.left) * sourceCanvas.width / rect.width,
       y: (event.clientY - rect.top) * sourceCanvas.height / rect.height }).catch(() => {})
