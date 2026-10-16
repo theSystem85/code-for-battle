@@ -189,6 +189,8 @@ test('anchor, ratio and shrink UI persist metadata and permit reimport on target
   await page.locator('#sseAnchor').selectOption('bottom-right')
   await page.locator('#sseSizeRatio').fill('1.5')
   await page.locator('#sseSizeRatio').dispatchEvent('change')
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().sizeRatio)).toBe(1.5)
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().anchor)).toBe('bottom-right')
   const sprite = await page.evaluate(() => window.__SSE__.isolateAt({ x: 3, y: 3 }))
   expect(sprite.anchor).toBe('bottom-right')
   expect(sprite.tileSpan).toEqual({ columns: 2, rows: 1 })
@@ -201,6 +203,7 @@ test('anchor, ratio and shrink UI persist metadata and permit reimport on target
   await expect(page.locator('#sseSpriteContextMenu')).toBeVisible()
   await page.locator('#sseResizeColumns').fill('1')
   await page.locator('#sseResizeApply').click()
+  await expect.poll(() => page.evaluate(id => window.__SSE__.getState().sprites.find(item => item.id === id)?.tileSpan.columns, sprite.id)).toBe(1)
   await expect(page.locator('#sseSpriteContextMenu')).toBeHidden()
   const result = await page.evaluate(async({ first, id }) => {
     const api = window.__SSE__
@@ -219,4 +222,46 @@ test('anchor, ratio and shrink UI persist metadata and permit reimport on target
   expect(result.json.sprites.find(item => item.id === sprite.id).px.width).toBe(16)
   expect(result.again.ok).toBe(true)
   expect(result.returned.ok).toBe(true)
+})
+
+test('multiple source clicks toggle imports, resize buttons grow and shrink, and mobile panes stay visible', async({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/sse')
+  await page.waitForFunction(() => Boolean(window.__SSE__))
+  await page.evaluate(async() => {
+    const api = window.__SSE__
+    await api.newSheet({ cols: 6, rows: 4, tileSize: 16 })
+    const source = document.createElement('canvas')
+    source.width = source.height = 28
+    source.getContext('2d').fillStyle = '#ff0000'
+    source.getContext('2d').fillRect(2, 2, 18, 18)
+    await api.addSourceImage(source.toDataURL())
+    await api.addSourceImage(source.toDataURL())
+  })
+  const clickSource = async index => {
+    await page.locator('#sseSources canvas').nth(index).evaluate(canvas => {
+      const r = canvas.getBoundingClientRect()
+      canvas.dispatchEvent(new MouseEvent('click', { clientX: r.left + 4 * r.width / canvas.width, clientY: r.top + 4 * r.height / canvas.height }))
+    })
+  }
+  await clickSource(0)
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().importedSprites)).toBe(1)
+  await clickSource(1)
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().importedSprites)).toBe(2)
+  await clickSource(1)
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().importedSprites)).toBe(1)
+  await page.evaluate(() => window.__SSE__.openSpriteMenu(window.__SSE__.getState().sprites[0].id, { x: 10, y: 350 }))
+  await page.getByRole('button', { name: 'Shrink', exact: true }).click()
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().sprites[0].tileSpan.columns)).toBe(1)
+  await page.getByRole('button', { name: 'Grow', exact: true }).click()
+  await expect.poll(() => page.evaluate(() => window.__SSE__.getState().sprites[0].tileSpan.columns)).toBe(2)
+  await page.evaluate(() => window.__SSE__.closeSpriteMenu())
+  for (const selector of ['.sprite-sheet-editor__canvas-wrap', '#sseSourcePane']) {
+    const bounds = await page.locator(selector).boundingBox()
+    expect(bounds.height).toBeGreaterThan(70)
+    expect(bounds.y).toBeGreaterThanOrEqual(0)
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(844)
+    const sidebar = await page.locator('.sprite-sheet-editor__sidebar').boundingBox()
+    expect(bounds.y).toBeGreaterThanOrEqual(sidebar.y + sidebar.height - 1)
+  }
 })

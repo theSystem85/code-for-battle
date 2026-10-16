@@ -19,5 +19,5 @@ body { margin: 0; background: #121619; color: #eee; }
 .sse-standalone input[type="range"] { width: 100%; }
 .sse-standalone #spriteSheetEditorCloseBtn { display: none; }
 @media (max-width: 650px) {
-  .sse-standalone .sprite-sheet-editor { grid-template-columns: 220px minmax(0, 1fr); }
+  .sse-standalone .sprite-sheet-editor { grid-template-columns: minmax(0, 1fr); }
 }
