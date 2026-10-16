@@ -7,10 +7,16 @@
   "blendMode": "black",
   "tags": [
     "decorative",
+    "grass",
     "impassable",
+    "offshore",
+    "onshore",
     "passable",
     "rocks",
+    "sand",
     "shore",
+    "shore_trans",
+    "soil",
     "universal"
   ],
   "columns": 6,
@@ -18,10 +24,13 @@
   "tiles": {
     "0,0": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ],
       "rect": {
         "x": 0,
@@ -34,10 +43,13 @@
     },
     "1,0": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ],
       "rect": {
         "x": 64,
@@ -50,10 +62,13 @@
     },
     "2,0": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ],
       "rect": {
         "x": 128,
@@ -66,10 +81,13 @@
     },
     "3,0": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ],
       "rect": {
         "x": 192,
@@ -82,10 +100,13 @@
     },
     "4,0": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ],
       "rect": {
         "x": 256,
@@ -98,10 +119,13 @@
     },
     "5,0": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ],
       "rect": {
         "x": 320,
@@ -114,10 +138,13 @@
     },
     "0,1": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ],
       "rect": {
         "x": 0,
@@ -134,7 +161,8 @@
         "decorative",
         "passable",
         "shore",
-        "rocks"
+        "rocks",
+        "onshore"
       ],
       "rect": {
         "x": 64,
@@ -151,7 +179,8 @@
         "decorative",
         "passable",
         "shore",
-        "rocks"
+        "rocks",
+        "onshore"
       ],
       "rect": {
         "x": 128,
@@ -168,7 +197,8 @@
         "decorative",
         "passable",
         "shore",
-        "rocks"
+        "rocks",
+        "onshore"
       ],
       "rect": {
         "x": 192,
@@ -181,10 +211,12 @@
     },
     "4,1": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "onshore"
       ],
       "rect": {
         "x": 256,
@@ -197,10 +229,12 @@
     },
     "5,1": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "onshore"
       ],
       "rect": {
         "x": 320,
@@ -216,7 +250,8 @@
         "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "onshore"
       ],
       "rect": {
         "x": 0,
@@ -232,7 +267,8 @@
         "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "onshore"
       ],
       "rect": {
         "x": 64,
@@ -249,7 +285,8 @@
         "decorative",
         "passable",
         "shore",
-        "group_15"
+        "group_15",
+        "shore_trans"
       ],
       "rect": {
         "x": 128,
@@ -266,7 +303,8 @@
         "decorative",
         "passable",
         "shore",
-        "group_15"
+        "group_15",
+        "shore_trans"
       ],
       "rect": {
         "x": 192,
@@ -283,7 +321,8 @@
         "decorative",
         "impassable",
         "shore",
-        "group_16"
+        "group_16",
+        "shore_trans"
       ],
       "rect": {
         "x": 256,
@@ -300,7 +339,8 @@
         "decorative",
         "impassable",
         "shore",
-        "group_16"
+        "group_16",
+        "shore_trans"
       ],
       "rect": {
         "x": 320,
@@ -313,10 +353,13 @@
     },
     "0,3": {
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "offshore"
       ],
       "rect": {
         "x": 0,
@@ -332,7 +375,8 @@
         "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "offshore"
       ],
       "rect": {
         "x": 64,
@@ -354,10 +398,13 @@
       "h": 1,
       "groupId": 1,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ]
     },
     {
@@ -368,10 +415,13 @@
       "h": 1,
       "groupId": 2,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ]
     },
     {
@@ -382,10 +432,13 @@
       "h": 1,
       "groupId": 3,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ]
     },
     {
@@ -396,10 +449,13 @@
       "h": 1,
       "groupId": 4,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ]
     },
     {
@@ -410,10 +466,13 @@
       "h": 1,
       "groupId": 5,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ]
     },
     {
@@ -424,10 +483,13 @@
       "h": 1,
       "groupId": 6,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ]
     },
     {
@@ -438,10 +500,13 @@
       "h": 1,
       "groupId": 7,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "onshore"
       ]
     },
     {
@@ -456,7 +521,8 @@
         "decorative",
         "passable",
         "shore",
-        "rocks"
+        "rocks",
+        "onshore"
       ]
     },
     {
@@ -471,7 +537,8 @@
         "decorative",
         "passable",
         "shore",
-        "rocks"
+        "rocks",
+        "onshore"
       ]
     },
     {
@@ -486,7 +553,8 @@
         "decorative",
         "passable",
         "shore",
-        "rocks"
+        "rocks",
+        "onshore"
       ]
     },
     {
@@ -497,10 +565,12 @@
       "h": 1,
       "groupId": 11,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "onshore"
       ]
     },
     {
@@ -511,10 +581,12 @@
       "h": 1,
       "groupId": 12,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "onshore"
       ]
     },
     {
@@ -528,7 +600,8 @@
         "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "onshore"
       ]
     },
     {
@@ -542,7 +615,8 @@
         "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "onshore"
       ]
     },
     {
@@ -557,7 +631,8 @@
         "decorative",
         "passable",
         "shore",
-        "group_15"
+        "group_15",
+        "shore_trans"
       ]
     },
     {
@@ -572,7 +647,8 @@
         "decorative",
         "impassable",
         "shore",
-        "group_16"
+        "group_16",
+        "shore_trans"
       ]
     },
     {
@@ -583,10 +659,13 @@
       "h": 1,
       "groupId": 17,
       "tags": [
-        "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "grass",
+        "soil",
+        "sand",
+        "offshore"
       ]
     },
     {
@@ -600,7 +679,8 @@
         "universal",
         "decorative",
         "passable",
-        "shore"
+        "shore",
+        "offshore"
       ]
     }
   ]

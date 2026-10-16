@@ -114,3 +114,9 @@ Each city footprint shares one neutral HP object, outside auto-target lists. Pre
 Selected sheets and tile tags are gameplay configuration. Use `computeMapTopologyFingerprint` for canonical selected paths/tags and city/ruin settings; disabled mode and an empty selection share `default`. Apply changes through `applyIntegratedSpriteSheetRuntime`, which invokes the existing map reset with the same seed. Collect SSE edits until apply/close. Do not hash in update/render loops. Include tag changes in prepared rendering signatures.
 
 Only hosts may edit multiplayer topology before start; distribute selection, metadata, settings and fingerprint. Never regenerate multiplayer maps mid-match. Saves retain their fingerprint and selected metadata: preserve saved topology on load and show a non-blocking mismatch notice. Keep the topology fingerprint and empty custom sheet E2E regressions green.
+
+## Shore classes (2026-10-17)
+
+Every coastal sprite keeps `shore` plus exactly one of `onshore`, `offshore`, `shore_trans`; expose all three in SSE. Onshore art stays on land touching water, offshore art is passable render-only on shallow coast water, and a 2x1 crossing starts on land and ends on adjacent water. Prepare rotation and transposed footprint offsets for all four cardinal coast normals. Water cells never contribute optional impassability.
+
+Use one seeded attempt per 14 coastal land anchors with ordinary spacing and six-tile identical-sprite separation. Keep all road/resource/start/building exclusions. Reeds and lilies are grass/soil/sand, never universal or snow; grassy mounds are grass/soil. Retag propLayout and every group cell together. dtv2 water-tagged ponds and frozen lakes are inland footprints, not offshore coastal art: preserve their water/impassable contracts. The terrain-details compiler emits reviewed dtv3 shore tags through `scripts/shoreTags.mjs`. See [shore specification](../../specs/135-shore-classes.md).

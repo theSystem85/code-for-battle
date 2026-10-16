@@ -567,6 +567,7 @@ export class TextureManager {
       const group = { width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) }
       preparedGroups.push(tile.tags.includes('ground_detail') ? group : cutoutDecorationGroup(group))
     }
+    this.hasShoreDecorations = preparedGroups.some(group => group.tagSet.has('shore'))
     this.integratedDecorationPools = buildDecorationPools(preparedGroups)
     this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))
     this.naturalDecorationRules = normalizedEntries.some(entry => /\/dtv[23]_/.test(entry.sheetPath))
@@ -989,7 +990,9 @@ export class TextureManager {
     let selected = null
     const mapGrid = options?.mapGrid
 
-    if (type === 'land') {
+    let rotation = 0
+    let selectedTags = null
+    if (type === 'land' || type === 'water') {
       const tileBiome = mapGrid?.[y]?.[x]?.biome
       const requestedBiome = ['soil', 'sand', 'grass', 'snow'].includes(options?.biomeTag)
         ? options.biomeTag
@@ -998,9 +1001,11 @@ export class TextureManager {
         // Decorations come from the precomputed layout (multi-tile first, then 1x1).
         const cell = getValidDecorationCell(this.getDecorationLayout(mapGrid), mapGrid, x, y, this.getDefaultDecorationBiome())
         if (cell && (!options?.biomeTag || cell.biome === requestedBiome)) {
+          rotation = cell.rotation || 0
+          if (type === 'water') selectedTags = cell.group.waterTags
           selected = cell.group.tilesByOffset[`${cell.offsetX},${cell.offsetY}`] || null
         }
-      } else {
+      } else if (type === 'land') {
         // Without a map only 1x1 sprites can be chosen.
         const hash = decorationHash(x, y, 7919)
         const singles = this.integratedDecorationPools?.[requestedBiome]?.single
@@ -1011,12 +1016,11 @@ export class TextureManager {
       // Custom ground sheets (passable, non-decorative tiles) still cover the
       // remaining cells. The bundled sheets have none, so those cells show the
       // default organic ground.
-      selected = selected || this.selectIntegratedTileFromCandidates(this.integratedLandBuckets[requestedBiome]?.passable, x, y)
+      if (type === 'water') selected = selected || this.selectIntegratedTileByTags(['water'], x, y)
+      if (type === 'land') selected = selected || this.selectIntegratedTileFromCandidates(this.integratedLandBuckets[requestedBiome]?.passable, x, y)
     } else if (type === 'rock') {
       selected = this.selectIntegratedTileByTags(['rocks'], x, y)
         || this.selectIntegratedTileByTags(['rock'], x, y)
-    } else if (type === 'water') {
-      selected = this.selectIntegratedTileByTags(['water'], x, y)
     } else {
       selected = this.selectIntegratedTileByTags([type], x, y)
         || this.selectIntegratedTileByTags(['passable'], x, y)
@@ -1027,7 +1031,8 @@ export class TextureManager {
     return {
       image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey),
       rect: selected.rect,
-      tags: selected.tags || [],
+      tags: selectedTags || selected.tags || [],
+      rotation,
       sheetPath: selected.sheetPath || null
     }
   }

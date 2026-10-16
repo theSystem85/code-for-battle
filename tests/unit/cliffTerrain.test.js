@@ -1,9 +1,29 @@
+import { measureCliffJoins } from '../../scripts/measure-cliff-joins.mjs'
+import { cliffMacroProfile } from '../../scripts/cliffMacroProfile.mjs'
 import { describe, it, expect } from 'vitest'
 import { buildCliffDepth, cliffContourMask, cliffHeightClass, cliffMacroRect, cliffTallRect, isPlateauTile, prepareCliffDescriptor, CLIFF_LEVELS } from '../../src/rendering/cliffTerrain.js'
 
 const plateau = (size, margin = 1) => Array.from({ length: size }, (_, y) => Array.from({ length: size }, (_, x) => ({ type: x >= margin && y >= margin && x < size - margin && y < size - margin ? 'rock' : 'land' })))
 
 describe('terraced cliff elevation', () => {
+  it('joins every straight macro direction with equal depth, silhouette and lighting', () => {
+    for (const mask of [3, 6, 9, 12]) for (let variant = 0; variant < 8; variant++) {
+      const start = cliffMacroProfile(mask, 0, variant)
+      const end = cliffMacroProfile(mask, 1, variant)
+      for (const key of Object.keys(start)) expect(end[key]).toBeCloseTo(start[key], 10)
+      // Pixel-center samples on both sides of a four-tile join converge.
+      const before = cliffMacroProfile(mask, 1 - .5 / 256, variant)
+      const after = cliffMacroProfile(mask, .5 / 256, variant)
+      expect(Math.abs(before.wallDepth - after.wallDepth)).toBeLessThan(.01)
+      expect(Math.abs(before.strataPhase - after.strataPhase)).toBeLessThan(.001)
+    }
+  })
+  it('ships a cliff atlas without abrupt horizontal strip-join bands', async() => {
+    const result = await measureCliffJoins('public/images/terrain/terraced-cliffs.webp')
+    expect(result.samples).toBe(10752)
+    expect(result.meanPremultipliedRGBJump).toBeLessThan(3)
+    expect(result.maxJump).toBeLessThan(60)
+  })
   it('raises wider interiors with three contour levels and never changes gameplay tiles', () => {
     const grid = plateau(17), before = JSON.stringify(grid)
     const depth = buildCliffDepth(grid, 0, 0, 17, 17)

@@ -1594,8 +1594,9 @@ export class MapRenderer {
   }
 
   drawIntegratedLandOverlay(ctx, mapGrid, tile, x, y, screenX, screenY) {
-    if (!this.textureManager.integratedSpriteSheetMode || tile?.type !== 'land' || tile.airstripStreet) return false
-    const overlay = this.textureManager.getIntegratedTileForMapTile('land', x, y, { mapGrid })
+    if (!this.textureManager.integratedSpriteSheetMode || (tile?.type !== 'land' && tile?.type !== 'water') || tile.airstripStreet) return false
+    if (tile.type === 'water' && !this.textureManager.hasShoreDecorations) return false
+    const overlay = this.textureManager.getIntegratedTileForMapTile(tile.type, x, y, { mapGrid })
     if (overlay?.tags?.includes('passable') && !overlay.tags.includes('decorative')) {
       const drawn = this.drawIntegratedTileImage(ctx, overlay, screenX, screenY)
       this.drawGroundDetail(ctx, mapGrid, x, y, screenX, screenY)
@@ -1731,6 +1732,17 @@ export class MapRenderer {
   drawIntegratedTileImage(ctx, integratedTile, screenX, screenY) {
     if (!integratedTile?.image || !integratedTile?.rect) return false
     const { image, rect } = integratedTile
+    const rotation = integratedTile.rotation || 0
+    if (rotation) {
+      // Rotated source offsets were prepared with the footprint. Each cell
+      // rotates about its center, equivalent to rotating the complete group.
+      ctx.save()
+      ctx.translate(screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2)
+      ctx.rotate(rotation * Math.PI / 180)
+      ctx.drawImage(image, rect.x, rect.y, rect.width, rect.height, -TILE_SIZE / 2, -TILE_SIZE / 2, TILE_SIZE, TILE_SIZE)
+      ctx.restore()
+      return true
+    }
     ctx.drawImage(
       image,
       rect.x,
