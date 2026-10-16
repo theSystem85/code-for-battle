@@ -495,7 +495,8 @@
         "universal",
         "decorative",
         "impassable",
-        "city"
+        "city",
+        "group_10"
       ],
       "rect": {
         "x": 128,
@@ -511,7 +512,8 @@
         "universal",
         "decorative",
         "impassable",
-        "city"
+        "city",
+        "group_10"
       ],
       "rect": {
         "x": 192,
@@ -522,45 +524,13 @@
       "col": 3,
       "row": 4
     },
-    "4,4": {
-      "tags": [
-        "universal",
-        "decorative",
-        "impassable",
-        "city"
-      ],
-      "rect": {
-        "x": 256,
-        "y": 256,
-        "width": 64,
-        "height": 64
-      },
-      "col": 4,
-      "row": 4
-    },
-    "5,4": {
-      "tags": [
-        "universal",
-        "decorative",
-        "impassable",
-        "city"
-      ],
-      "rect": {
-        "x": 320,
-        "y": 256,
-        "width": 64,
-        "height": 64
-      },
-      "col": 5,
-      "row": 4
-    },
     "2,5": {
       "tags": [
         "universal",
         "decorative",
         "impassable",
         "city",
-        "group_14"
+        "group_10"
       ],
       "rect": {
         "x": 128,
@@ -577,7 +547,7 @@
         "decorative",
         "impassable",
         "city",
-        "group_14"
+        "group_10"
       ],
       "rect": {
         "x": 192,
@@ -588,12 +558,47 @@
       "col": 3,
       "row": 5
     },
+    "4,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_11"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 4
+    },
+    "5,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_11"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 4
+    },
     "4,5": {
       "tags": [
         "universal",
         "decorative",
         "impassable",
-        "city"
+        "city",
+        "group_11"
       ],
       "rect": {
         "x": 256,
@@ -609,7 +614,8 @@
         "universal",
         "decorative",
         "impassable",
-        "city"
+        "city",
+        "group_11"
       ],
       "rect": {
         "x": 320,
@@ -619,6 +625,138 @@
       },
       "col": 5,
       "row": 5
+    },
+    "0,6": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 6
+    },
+    "1,6": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 6
+    },
+    "2,6": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 6
+    },
+    "3,6": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_15"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 6
+    },
+    "4,6": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_15"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 6
+    },
+    "3,7": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_15"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 7
+    },
+    "4,7": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_15"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 7
+    },
+    "5,6": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 6
     }
   },
   "displayName": "dtv3_city.webp",
@@ -759,37 +897,39 @@
       ]
     },
     {
-      "id": "city_corner_shop_a",
+      "id": "city_corner_shop_b",
       "col": 2,
       "row": 4,
-      "w": 1,
-      "h": 1,
+      "w": 2,
+      "h": 2,
       "groupId": 10,
       "tags": [
         "universal",
         "decorative",
         "impassable",
-        "city"
+        "city",
+        "group_10"
       ]
     },
     {
-      "id": "city_corner_shop_b",
-      "col": 3,
+      "id": "city_corner_shop_a",
+      "col": 4,
       "row": 4,
-      "w": 1,
-      "h": 1,
+      "w": 2,
+      "h": 2,
       "groupId": 11,
       "tags": [
         "universal",
         "decorative",
         "impassable",
-        "city"
+        "city",
+        "group_11"
       ]
     },
     {
-      "id": "city_house_a",
-      "col": 4,
-      "row": 4,
+      "id": "city_house_b",
+      "col": 0,
+      "row": 6,
       "w": 1,
       "h": 1,
       "groupId": 12,
@@ -801,9 +941,9 @@
       ]
     },
     {
-      "id": "city_house_b",
-      "col": 5,
-      "row": 4,
+      "id": "city_house_c",
+      "col": 1,
+      "row": 6,
       "w": 1,
       "h": 1,
       "groupId": 13,
@@ -815,27 +955,12 @@
       ]
     },
     {
-      "id": "city_petrol_station",
+      "id": "city_house_d",
       "col": 2,
-      "row": 5,
-      "w": 2,
-      "h": 1,
-      "groupId": 14,
-      "tags": [
-        "universal",
-        "decorative",
-        "impassable",
-        "city",
-        "group_14"
-      ]
-    },
-    {
-      "id": "city_house_c",
-      "col": 4,
-      "row": 5,
+      "row": 6,
       "w": 1,
       "h": 1,
-      "groupId": 15,
+      "groupId": 14,
       "tags": [
         "universal",
         "decorative",
@@ -844,9 +969,24 @@
       ]
     },
     {
-      "id": "city_house_d",
+      "id": "city_petrol_station",
+      "col": 3,
+      "row": 6,
+      "w": 2,
+      "h": 2,
+      "groupId": 15,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_15"
+      ]
+    },
+    {
+      "id": "city_house_a",
       "col": 5,
-      "row": 5,
+      "row": 6,
       "w": 1,
       "h": 1,
       "groupId": 16,
