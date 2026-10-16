@@ -357,6 +357,7 @@ export function decorationSpacingAllows(placement, nearby) {
   const identity = decorationIdentity(placement.group)
   return nearby.every(other => {
     const distance = decorationFootprintDistance(placement, other)
+    if (placement.group.tagSet.has('shore') && other.group.tagSet.has('shore')) return distance >= 1
     if (placement.group.tagSet.has('city') && other.group.tagSet.has('city')) return distance >= 2
     return distance >= Math.max(decorationSpacing(placement.group), decorationSpacing(other.group)) &&
       (identity !== decorationIdentity(other.group) || distance >= 6)
@@ -424,8 +425,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     }
     if (group.tagSet.has('shore') && !touchesWater) return false
     if (detail) return true
-    if (group.tagSet.has('shore')) return true
-    if (!categoryClusterAllows(group, x, y, biome, clusters)) return false
+    if (!group.tagSet.has('shore') && !categoryClusterAllows(group, x, y, biome, clusters)) return false
     if (group.tagSet.has('city') && !cities.centers.some(center => {
       const farX = Math.max(Math.abs(center.x - x), Math.abs(center.x - (x + group.width - 1)))
       const farY = Math.max(Math.abs(center.y - y), Math.abs(center.y - (y + group.height - 1)))
@@ -443,29 +443,33 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     return decorationSpacingAllows(placement, [...nearby])
   }
   // Coast props have first choice, independent of inland noise and variety.
-  // One seeded attempt per four coast anchors; every footprint stays on land.
-  const shoreBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
-    createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('shore')), salt)
+  // Try half the land coast anchors, with larger sprites before 1x1 fallbacks.
+  const shoreCandidates = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
+    [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])]
+      .filter(group => group.tagSet.has('shore'))
+      .sort((a, b) => b.width * b.height - a.width * a.height)
   ]))
+  const coastAnchors = []
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      if (decorationHash(x, y, salt + 4441) % 4 !== 0) continue
-      const biome = resolveBiome(mapGrid[y][x], defaultBiome)
-      const bag = shoreBags[biome]
-      for (let attempt = 0; attempt < (bag?.size || 0); attempt++) {
-        const group = bag.next()
-        const placement = { group, anchorX: x, anchorY: y, biome }
-        if (!fits(placement)) continue
-        if (group.width * group.height > 1) placements.push(placement)
-        for (let dy = 0; dy < group.height; dy++) {
-          for (let dx = 0; dx < group.width; dx++) {
-            const offset = (y + dy) * width + x + dx
-            cells[offset] = { ...placement, offsetX: dx, offsetY: dy }
-            occupied[offset] = placement
-          }
+      if (constraints.shoreDistance[y * width + x] === 1 && isDecoratableLand(mapGrid[y][x])) coastAnchors.push({ x, y })
+    }
+  }
+  for (const { x, y } of coastAnchors) {
+    if (decorationHash(x, y, salt + 4441) % 2 !== 0) continue
+    const biome = resolveBiome(mapGrid[y][x], defaultBiome)
+    for (const group of shoreCandidates[biome]) {
+      const placement = { group, anchorX: x, anchorY: y, biome }
+      if (!fits(placement)) continue
+      if (group.width * group.height > 1) placements.push(placement)
+      for (let dy = 0; dy < group.height; dy++) {
+        for (let dx = 0; dx < group.width; dx++) {
+          const offset = (y + dy) * width + x + dx
+          cells[offset] = { ...placement, offsetX: dx, offsetY: dy }
+          occupied[offset] = placement
         }
-        break
       }
+      break
     }
   }
   // Ground detail has its own cells, no impassability and no spacing ownership.

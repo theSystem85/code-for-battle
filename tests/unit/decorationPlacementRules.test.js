@@ -48,6 +48,41 @@ describe('natural decoration preparation', () => {
     expect(group('pond', ['water']).tagSet.has('shore')).toBe(false)
   })
 
+  it('covers at least 40% of a straight 30-tile grass coast with deterministic land-only props', () => {
+    const map = Array.from({ length: 12 }, (_, y) => Array.from({ length: 30 }, () => ({ type: y < 4 ? 'water' : 'land', biome: 'grass' })))
+    const reeds = group('reeds', ['shore'])
+    const hut = group('hut', ['shore'], 3, 1)
+    // The largest candidate cannot fit: placement must try the hut and reeds.
+    const oversized = group('oversized', ['shore'], 31, 1)
+    const pools = buildDecorationPools([reeds, hut, oversized, group('inland', [], 3)])
+    const layout = buildDecorationLayout(map, pools, { salt: 23 })
+    expect(buildDecorationLayout(map, pools, { salt: 23 })).toEqual(layout)
+    expect(layout.cells.slice(4 * 30, 5 * 30).filter(cell => cell?.group.tagSet.has('shore')).length).toBeGreaterThanOrEqual(12)
+    const shore = anchors(layout).filter(cell => cell.group.tagSet.has('shore'))
+    expect(shore.some(cell => cell.group === hut)).toBe(true)
+    expect(shore.some(cell => cell.group === reeds)).toBe(true)
+    const constraints = buildDecorationConstraints(map)
+    for (const cell of shore) {
+      for (let dy = 0; dy < cell.group.height; dy++) for (let dx = 0; dx < cell.group.width; dx++) {
+        const x = cell.anchorX + dx
+        const y = cell.anchorY + dy
+        expect(map[y][x].type).toBe('land')
+        expect(constraints.shoreDistance[y * 30 + x]).toBe(1)
+      }
+    }
+    const placed = anchors(layout)
+    placed.forEach((cell, i) => expect(decorationSpacingAllows(cell, placed.slice(i + 1))).toBe(true))
+  })
+
+  it('allows adjacent shore footprints without overlap or relaxing inland spacing', () => {
+    const shore = group('hut', ['shore'], 2, 1)
+    const inland = group('inland', [], 3)
+    expect(decorationSpacingAllows(point(shore, 2, 0), [point(shore, 0, 0)])).toBe(true)
+    expect(decorationSpacingAllows(point(shore, 1, 0), [point(shore, 0, 0)])).toBe(false)
+    expect(decorationSpacingAllows(point(shore, 3, 0), [point(inland, 0, 0)])).toBe(false)
+    expect(decorationSpacingAllows(point(inland, 3, 0), [point(shore, 0, 0)])).toBe(false)
+  })
+
   it('requires explicit biome tags for details and leaves all rocky terrain empty', () => {
     const map = grid(96)
     const biomes = ['grass', 'soil', 'sand', 'snow']
