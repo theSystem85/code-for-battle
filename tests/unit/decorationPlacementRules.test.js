@@ -22,6 +22,66 @@ const point = (g, x, y) => ({ group: g, anchorX: x, anchorY: y })
 const anchors = layout => layout.cells.filter(cell => cell && cell.offsetX === 0 && cell.offsetY === 0)
 
 describe('natural decoration preparation', () => {
+  it('fills a lake coastline deterministically before inland props, including land-only huts', () => {
+    const map = grid(64)
+    for (let y = 16; y < 48; y++) for (let x = 16; x < 48; x++) map[y][x].type = 'water'
+    const reeds = group('reeds', ['universal', 'shore'])
+    const hut = group('hut', ['universal', 'shore', 'impassable'], 2, 1)
+    const pools = buildDecorationPools([{ ...reeds, coverage: 0.9 }, hut, group('inland'), group('pond', ['water'])])
+    expect(pools.snow.single).toContainEqual({ ...reeds, coverage: 0.9 })
+    const layout = buildDecorationLayout(map, pools, { salt: 688 })
+    expect(buildDecorationLayout(map, pools, { salt: 688 })).toEqual(layout)
+    const shore = anchors(layout).filter(cell => cell.group.tagSet.has('shore'))
+    expect(shore.length).toBeGreaterThanOrEqual(20)
+    expect(shore.some(cell => cell.group === hut)).toBe(true)
+    const constraints = buildDecorationConstraints(map)
+    for (const cell of shore) {
+      let adjacent = false
+      for (let dy = 0; dy < cell.group.height; dy++) for (let dx = 0; dx < cell.group.width; dx++) {
+        const x = cell.anchorX + dx
+        const y = cell.anchorY + dy
+        expect(map[y][x].type).toBe('land')
+        adjacent ||= constraints.shoreDistance[y * 64 + x] === 1
+      }
+      expect(adjacent).toBe(true)
+    }
+    expect(group('pond', ['water']).tagSet.has('shore')).toBe(false)
+  })
+
+  it('requires explicit biome tags for details and leaves all rocky terrain empty', () => {
+    const map = grid(96)
+    const biomes = ['grass', 'soil', 'sand', 'snow']
+    for (let y = 0; y < 96; y++) for (let x = 0; x < 96; x++) {
+      map[y][x].biome = biomes[Math.floor(x / 24)]
+      if (y < 12) map[y][x].type = ['rock', 'cliff', 'mountain'][y % 3]
+    }
+    const detail = group('grass-detail', ['ground_detail', 'passable', 'universal'])
+    const untagged = { ...detail, tagSet: new Set(['ground_detail', 'universal']) }
+    const pools = buildDecorationPools([detail, untagged, group('prop', ['universal'])])
+    for (const biome of ['soil', 'sand', 'snow']) expect(pools[biome].groundDetail).toEqual([])
+    const layout = buildDecorationLayout(map, pools, { salt: 688 })
+    expect(layout.groundDetails.some(Boolean)).toBe(true)
+    layout.groundDetails.forEach((cell, index) => {
+      if (cell) expect(map[Math.floor(index / 96)][index % 96].biome).toBe('grass')
+    })
+    for (let index = 0; index < 12 * 96; index++) {
+      expect(layout.cells[index]).toBeNull()
+      expect(layout.groundDetails[index]).toBeNull()
+    }
+  })
+
+  it('prepares ungrouped shore art without replacing terrain rock buckets', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })
+    const metadata = { blendMode: 'alpha', tiles: { '0,0': {
+      tags: ['universal', 'decorative', 'passable', 'shore', 'rocks'], rect: { x: 0, y: 0, width: 64, height: 64 }
+    } } }
+    await manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{ sheetPath: 'images/map/sprite_sheets/dtv3_shore.webp', metadata }] })
+    expect(manager.integratedDecorationPools.grass.single).toHaveLength(1)
+    expect(manager.integratedDecorationPools.snow.single).toHaveLength(1)
+    expect(manager.getIntegratedTileForMapTile('rock', 0, 0)).toBeNull()
+  })
+
   it('samples smooth seeded noise with both dense patches and clearings', () => {
     expect(decorationSeed('map-688')).toBe(decorationSeed('map-688'))
     expect(decorationSeed('map-689')).not.toBe(decorationSeed('map-688'))

@@ -208,6 +208,8 @@ export class TextureManager {
           sheetPath: entry.sheetPath
         }
         tile.tags.forEach((tag) => {
+          // Decorative rocks are props, never terrain replacements.
+          if ((tag === 'rock' || tag === 'rocks') && (tile.tags.includes('decorative') || tile.tags.includes('ground_detail'))) return
           if (!buckets[tag]) {
             buckets[tag] = []
           }
@@ -556,10 +558,12 @@ export class TextureManager {
       const tagSet = TextureManager.collectGroupTagSet(group)
       preparedGroups.push({ ...(tagSet.has('ground_detail') ? group : cutoutDecorationGroup(group)), tagSet })
     }
-    // Future detail sheets may carry individual tiles without group labels.
-    for (const tile of this.integratedTagBuckets.ground_detail || []) {
+    // Optional prop and detail sheets may carry ungrouped 1x1 tiles.
+    const singles = new Set([...(this.integratedTagBuckets.decorative || []), ...(this.integratedTagBuckets.ground_detail || [])])
+    for (const tile of singles) {
       if (TextureManager.getGroupTagId(tile.tags)) continue
-      preparedGroups.push({ width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) })
+      const group = { width: 1, height: 1, tilesByOffset: { '0,0': tile }, tagSet: new Set(tile.tags) }
+      preparedGroups.push(tile.tags.includes('ground_detail') ? group : cutoutDecorationGroup(group))
     }
     this.integratedDecorationPools = buildDecorationPools(preparedGroups)
     this.hasGroundDetails = preparedGroups.some(group => group.tagSet.has('ground_detail'))

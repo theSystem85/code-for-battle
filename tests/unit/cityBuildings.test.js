@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { buildDecorationLayout, buildDecorationPools, getValidDecorationCell, buildRuinClusters } from '../../src/rendering/decorationLayout.js'
 import { normalizeDecorationSettings } from '../../src/game/decorationSettings.js'
 import { prepareCityBuildings, getCityBuildings, applyCityDamage, applyCitySnapshot, getCityAtWorld, renderCityHealthBars } from '../../src/game/cityBuildings.js'
+import { CITY_BUILDING_HEALTH } from '../../src/config.js'
 import { pathCache } from '../../src/game/pathCache.js'
 
 vi.mock('../../src/sound.js', () => ({ playPositionalSound: vi.fn() }))
@@ -53,6 +54,22 @@ describe('city clusters and settings', () => {
 })
 
 describe('city structure lifecycle', () => {
+  it.each([
+    ['house', 1, 1], ['shop', 2, 1], ['shop block', 2, 2], ['petrol station', 2, 2]
+  ])('derives %s HP from its actual %ix%i footprint', (label, width, height) => {
+    const { map, pools } = fixture()
+    const group = { ...pools.grass.multi[0], groupLabel: label, width, height }
+    const cells = new Array(64 * 64).fill(null)
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      cells[y * 64 + x] = { group, anchorX: 0, anchorY: 0, offsetX: x, offsetY: y }
+    }
+    const buildings = prepareCityBuildings(map, { cells, width: 64, height: 64 })
+    expect(buildings).toHaveLength(1)
+    expect(buildings[0].health).toBe(CITY_BUILDING_HEALTH[width * height])
+    expect(buildings[0].maxHealth).toBe(CITY_BUILDING_HEALTH[width * height])
+    expect(cells.filter(Boolean).every(cell => cell.cityBuilding === buildings[0])).toBe(true)
+  })
+
   it('shares group HP, stamps existing debris, removes intact imagery, frees only static occupancy and clears cached paths', () => {
     const { map, layout, buildings } = prepared()
     const building = buildings[0]
