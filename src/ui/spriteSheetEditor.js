@@ -1,3 +1,4 @@
+import { zoomSseView } from './sseViewport.js'
 import { toggleSpriteTag } from './sseTags.js'
 import { compressionLabel, detectWebPCompression } from './sseExport.js'
 import { initSseExtend } from './sseExtend.js'
@@ -505,6 +506,7 @@ function drawSseCanvas(state) {
 }
 
 function updateZoomDisplay(state) {
+  state.syncZoomInput?.()
   if (!state.zoomValueEl) return
   state.zoomValueEl.textContent = `${Math.round(state.zoomScale * 100)}%`
 }
@@ -546,17 +548,22 @@ function applyCanvasZoom(state) {
 
 function setZoomScale(state, nextScale, { preserveCenter = true } = {}) {
   if (!Number.isFinite(nextScale)) return
-  const prevScale = state.zoomScale
-  const viewportWidth = state.canvasWrap?.clientWidth || 0
-  const viewportHeight = state.canvasWrap?.clientHeight || 0
-  const worldCenterX = preserveCenter ? ((viewportWidth / 2) - state.panX) / prevScale : 0
-  const worldCenterY = preserveCenter ? ((viewportHeight / 2) - state.panY) / prevScale : 0
-
-  state.zoomScale = Math.max(0.1, Math.min(8, nextScale))
-
-  if (preserveCenter && viewportWidth > 0 && viewportHeight > 0) {
-    state.panX = (viewportWidth / 2) - (worldCenterX * state.zoomScale)
-    state.panY = (viewportHeight / 2) - (worldCenterY * state.zoomScale)
+  if (state.applyViewport) {
+    const view = zoomSseView({ x: state.panX, y: state.panY, scale: state.zoomScale }, nextScale,
+      (state.canvasWrap?.clientWidth || 0) / 2, (state.canvasWrap?.clientHeight || 0) / 2)
+    if (!preserveCenter) {
+      view.x = ((state.canvasWrap?.clientWidth || 0) - state.canvas.width * view.scale) / 2
+      view.y = ((state.canvasWrap?.clientHeight || 0) - state.canvas.height * view.scale) / 2
+    }
+    state.applyViewport(view)
+    return
+  }
+  const view = zoomSseView({ x: state.panX, y: state.panY, scale: state.zoomScale }, nextScale,
+    (state.canvasWrap?.clientWidth || 0) / 2, (state.canvasWrap?.clientHeight || 0) / 2)
+  state.zoomScale = view.scale
+  if (preserveCenter) {
+    state.panX = view.x
+    state.panY = view.y
   }
 
   applyCanvasZoom(state)

@@ -1,6 +1,6 @@
 import { fitSprite, resetSourceImports, SPRITE_ANCHORS } from './sseFit.js'
 import { clearTargetTiles, encodeLosslessWebP, exportMetadata, exportOptions } from './sseExport.js'
-import { bindSseSplit, bindSseViewport } from './sseViewport.js'
+import { bindSseSplit, bindSseViewport, bindSseZoomInput } from './sseViewport.js'
 import { detectSprites } from './sseDetect.js'
 import { isolateComponent } from './sseIsolate.js'
 import { compactSprites, findPackingRegion, MAX_SSE_PIXELS, validateGrid } from './ssePack.js'
@@ -130,9 +130,28 @@ export function initSseExtend(state, adapters) {
   const setSplitRatio = bindSseSplit(workspace, sourcePane, ratio => {
     window.dispatchEvent(new CustomEvent('sse:split-changed', { detail: { ratio } }))
   })
+  const zoomControls = state.zoomValueEl?.parentElement?.parentElement || state.root.querySelector('aside')
+  state.zoomScale ??= 1
+  state.panX ??= 0
+  state.panY ??= 0
+  const addZoomInput = (name, id) => {
+    const label = document.createElement('label')
+    label.textContent = name + ' zoom (%) '
+    const input = document.createElement('input')
+    input.type = 'number'
+    input.id = id
+    label.appendChild(input)
+    zoomControls.appendChild(label)
+    return input
+  }
+  const targetZoomInput = addZoomInput('Target', 'sseZoomInput')
+  const sourceZoomInput = addZoomInput('Source pane', 'sseSourceZoomInput')
+  let syncTargetZoom = () => {}
+  let syncSourceZoom = () => {}
   let sourceView = { x: 0, y: 0, scale: 1 }
   const applySourceView = view => {
     sourceView = view
+    syncSourceZoom()
     sourceStrip.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`
     window.dispatchEvent(new CustomEvent('sse:viewport-changed', { detail: { pane: 'source', ...view } }))
   }
@@ -141,10 +160,16 @@ export function initSseExtend(state, adapters) {
     state.panX = view.x
     state.panY = view.y
     state.zoomScale = view.scale
+    syncTargetZoom()
     state.canvasViewport.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`
     if (state.zoomValueEl) state.zoomValueEl.textContent = `${Math.round(view.scale * 100)}%`
     window.dispatchEvent(new CustomEvent('sse:viewport-changed', { detail: { pane: 'target', ...view } }))
   }
+  state.applyViewport = applyTargetView
+  const readTarget = () => ({ x: state.panX, y: state.panY, scale: state.zoomScale })
+  syncTargetZoom = bindSseZoomInput(targetZoomInput, state.canvasWrap, readTarget, applyTargetView)
+  state.syncZoomInput = syncTargetZoom
+  syncSourceZoom = bindSseZoomInput(sourceZoomInput, sourcePane, () => sourceView, applySourceView)
   bindSseViewport(sourcePane, () => sourceView, applySourceView)
   bindSseViewport(state.canvasWrap, () => ({ x: state.panX, y: state.panY, scale: state.zoomScale }), applyTargetView)
   const selectionLayer = document.createElement('div')
@@ -740,11 +765,15 @@ export function initSseExtend(state, adapters) {
         sourceCanvas.dataset.sourceId = sourceId
         const item = source
         item.view = { x: 0, y: 0, scale: 1 }
+        const input = addZoomInput(sourceId, 'sseZoom-' + sourceId)
+        let syncZoom = () => {}
         item.applyView = view => {
           item.view = view
+          syncZoom()
           item.canvas.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.scale})`
           emit('viewport-changed', { pane: 'source', sourceId, ...view })
         }
+        syncZoom = bindSseZoomInput(input, frame, () => item.view, item.applyView)
         bindSseViewport(frame, () => item.view, view => api.setViewport({ pane: 'source', sourceId, ...view }).catch(() => {}))
         frame.addEventListener('wheel', event => event.stopPropagation())
         for (const type of ['pointerdown', 'pointermove', 'pointerup', 'pointercancel']) frame.addEventListener(type, event => event.stopPropagation())

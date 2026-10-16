@@ -26,6 +26,16 @@ describe('SSE input-driven viewport', () => {
     expect((100 - read().x) / read().scale).toBeCloseTo((100 - before.x) / before.scale)
     expect((100 - read().y) / read().scale).toBeCloseTo((100 - before.y) / before.scale)
   })
+  it('normalizes line and page wheel deltas and prevents page scrolling', () => {
+    const { element, read } = viewport()
+    Object.defineProperty(element, 'clientHeight', { value: 400 })
+    const lines = new window.WheelEvent('wheel', { deltaX: 2, deltaY: 3, deltaMode: 1, cancelable: true })
+    element.dispatchEvent(lines)
+    expect(lines.defaultPrevented).toBe(true)
+    expect(read()).toEqual({ x: -32, y: -48, scale: 1 })
+    element.dispatchEvent(new window.WheelEvent('wheel', { deltaY: 1, deltaMode: 2 }))
+    expect(read()).toEqual({ x: -32, y: -448, scale: 1 })
+  })
   it('anchors pointer pinch zoom at the moving two-finger centre', () => {
     const { element, read } = viewport()
     pointer(element, 'pointerdown', 1, 60, 120)
@@ -56,5 +66,55 @@ describe('SSE input-driven viewport', () => {
     divider.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'ArrowDown' }))
     expect(Number(localStorage.getItem('sse.splitRatio'))).toBeCloseTo(0.45)
     localStorage.removeItem('sse.splitRatio')
+  })
+})
+
+describe('SSE zoom helpers and alternative gestures', () => {
+  it('clamps zoom while preserving the anchor and synchronizes input in both directions', async() => {
+    const { zoomSseView, bindSseZoomInput } = await import('../../src/ui/sseViewport.js')
+    const original = { x: 25, y: -40, scale: 2 }
+    const zoomed = zoomSseView(original, 100, 80, 120)
+    expect(zoomed.scale).toBe(8)
+    expect((80 - zoomed.x) / zoomed.scale).toBe((80 - original.x) / original.scale)
+    expect((120 - zoomed.y) / zoomed.scale).toBe((120 - original.y) / original.scale)
+    expect(zoomSseView(original, -1, 0, 0).scale).toBe(0.1)
+    const element = document.createElement('div')
+    const input = document.createElement('input')
+    input.type = 'number'
+    let view = original
+    let calls = 0
+    const sync = bindSseZoomInput(input, element, () => view, next => { view = next; calls++; sync() })
+    expect(input.value).toBe('200')
+    input.value = '350'
+    input.dispatchEvent(new Event('input'))
+    expect(view.scale).toBe(3.5)
+    expect(calls).toBe(1)
+    view = zoomed
+    sync()
+    expect(input.value).toBe('800')
+    expect(calls).toBe(1)
+  })
+
+  it('handles TouchEvent pinch and Safari relative gesture scales', () => {
+    const element = document.createElement('div')
+    element.getBoundingClientRect = () => ({ left: 0, top: 0 })
+    let view = { x: 0, y: 0, scale: 1 }
+    bindSseViewport(element, () => view, next => { view = next })
+    const touch = (type, points) => {
+      const event = new Event(type, { cancelable: true })
+      Object.defineProperty(event, 'touches', { value: points.map(([clientX, clientY]) => ({ clientX, clientY })) })
+      element.dispatchEvent(event)
+      return event
+    }
+    touch('touchstart', [[50, 100], [150, 100]])
+    expect(touch('touchmove', [[50, 100], [250, 100]]).defaultPrevented).toBe(true)
+    expect(view).toEqual({ x: -50, y: -100, scale: 2 })
+    touch('touchend', [])
+    for (const [type, scale] of [['gesturestart', 1], ['gesturechange', 1.5], ['gesturechange', 2], ['gestureend', 2]]) {
+      const event = new Event(type, { cancelable: true })
+      Object.assign(event, { scale, clientX: 150, clientY: 100 })
+      element.dispatchEvent(event)
+    }
+    expect(view.scale).toBe(4)
   })
 })

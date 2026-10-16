@@ -8,7 +8,8 @@
     "Import from multiple source sheets and shrink or grow sprites."
   ],
   "improvements": [
-    "Match sprite import controls to the game sidebar."
+    "Match sprite import controls to the game sidebar.",
+    "Sprite Sheet Editor supports trackpad and touch zoom with synced controls."
   ],
   "bugfixes": [
     "Fix standalone sprite sheet editor builds for supported browsers.",

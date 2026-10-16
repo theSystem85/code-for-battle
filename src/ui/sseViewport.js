@@ -1,5 +1,26 @@
+export function zoomSseView(view, scale, x, y, dx = 0, dy = 0) {
+  scale = Number.isFinite(scale) ? Math.max(0.1, Math.min(8, scale)) : view.scale
+  const ratio = scale / view.scale
+  return { scale, x: x - (x - view.x) * ratio + dx, y: y - (y - view.y) * ratio + dy }
+}
+
+// Writing a value never emits input events, so updates cannot feed back.
+export function bindSseZoomInput(input, element, read, apply) {
+  const sync = () => { input.value = String(Math.round(read().scale * 10000) / 100) }
+  input.min = '10'
+  input.max = '800'
+  input.step = 'any'
+  input.addEventListener('input', () => {
+    if (!input.value || !Number.isFinite(Number(input.value))) return
+    apply(zoomSseView(read(), Number(input.value) / 100, element.clientWidth / 2, element.clientHeight / 2))
+  })
+  sync()
+  return sync
+}
+
 // Input-driven transforms only: no animation loop or bitmap resizing.
 export function bindSseViewport(element, read, apply) {
+  element.dataset.sseViewport = ''
   const pointers = new Map()
   let previous = null
   let suppressUntil = 0
@@ -11,9 +32,7 @@ export function bindSseViewport(element, read, apply) {
   const zoom = (x, y, factor, dx = 0, dy = 0) => {
     const rect = element.getBoundingClientRect()
     const current = read()
-    const scale = Math.max(0.1, Math.min(8, current.scale * factor))
-    const ratio = scale / current.scale
-    apply({ scale, x: x - rect.left - (x - rect.left - current.x) * ratio + dx, y: y - rect.top - (y - rect.top - current.y) * ratio + dy })
+    apply(zoomSseView(current, current.scale * factor, x - rect.left, y - rect.top, dx, dy))
   }
   element.style.touchAction = 'none'
   element.addEventListener('wheel', event => {
@@ -36,7 +55,7 @@ export function bindSseViewport(element, read, apply) {
     if (!pointers.has(event.pointerId)) return
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
     const next = geometry()
-    if (previous && next) {
+    if (previous && next && !touchActive) {
       event.preventDefault()
       zoom(previous.x, previous.y, previous.distance > 0 ? next.distance / previous.distance : 1, next.x - previous.x, next.y - previous.y)
     }
@@ -52,12 +71,52 @@ export function bindSseViewport(element, read, apply) {
   element.addEventListener('click', event => {
     if (performance.now() < suppressUntil) { event.stopImmediatePropagation(); event.preventDefault() }
   }, true)
-  element.addEventListener('touchstart', event => {
-    if (event.touches.length > 1) { event.stopImmediatePropagation(); event.preventDefault() }
-  }, { passive: false, capture: true })
-  element.addEventListener('touchmove', event => {
-    if (performance.now() < suppressUntil) { event.stopImmediatePropagation(); event.preventDefault() }
-  }, { passive: false, capture: true })
+  let touchPrevious = null
+  let touchActive = false
+  let gestureScale = null
+  const touchGeometry = touches => ({
+    x: (touches[0].clientX + touches[1].clientX) / 2,
+    y: (touches[0].clientY + touches[1].clientY) / 2,
+    distance: Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY)
+  })
+  const touch = event => {
+    if (event.target.closest?.('[data-sse-viewport]') !== element) return
+    if (event.touches.length === 2) {
+      const next = touchGeometry(event.touches)
+      if (touchPrevious && event.type === 'touchmove') {
+        zoom(touchPrevious.x, touchPrevious.y, touchPrevious.distance > 0 ? next.distance / touchPrevious.distance : 1,
+          next.x - touchPrevious.x, next.y - touchPrevious.y)
+      }
+      touchPrevious = next
+      touchActive = true
+      suppressUntil = Infinity
+    } else touchPrevious = null
+    if (touchActive) {
+      event.stopImmediatePropagation()
+      event.preventDefault()
+      if (!event.touches.length) {
+        touchActive = false
+        suppressUntil = performance.now() + 350
+      }
+    }
+  }
+  for (const type of ['touchstart', 'touchmove', 'touchend', 'touchcancel']) {
+    element.addEventListener(type, touch, { passive: false, capture: true })
+  }
+  for (const type of ['gesturestart', 'gesturechange', 'gestureend']) {
+    element.addEventListener(type, event => {
+      event.preventDefault()
+      event.stopPropagation()
+      if (type === 'gesturestart') gestureScale = event.scale || 1
+      if (type === 'gesturechange' && gestureScale && !touchActive && pointers.size < 2) {
+        const rect = element.getBoundingClientRect()
+        zoom(Number.isFinite(event.clientX) ? event.clientX : rect.left + rect.width / 2,
+          Number.isFinite(event.clientY) ? event.clientY : rect.top + rect.height / 2, event.scale / gestureScale)
+        gestureScale = event.scale
+      }
+      if (type === 'gestureend') gestureScale = null
+    }, { passive: false })
+  }
 }
 
 export function bindSseSplit(workspace, sourcePane, change) {
