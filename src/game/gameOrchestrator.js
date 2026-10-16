@@ -1,4 +1,8 @@
 import { preloadRemainingPreparedSprites } from '../rendering/prepared/preparedSpritePipeline.js'
+import { clearPathCache } from './pathCache.js'
+import { clearFlowFields } from './flowField.js'
+import { computeMapTopologyFingerprint, topologyChangesAllowed } from './mapTopology.js'
+import { setTopologyRegenerator } from '../ui/mapEditorControls.js'
 import { DECORATION_SETTINGS, normalizeDecorationSettings } from './decorationSettings.js'
 // Core game orchestration extracted from main.js
 import { setupInputHandlers, setRenderScheduler, selectedUnits } from '../inputHandler.js'
@@ -1014,6 +1018,17 @@ class Game {
   }
 
   setupMapShuffle() {
+    setTopologyRegenerator(async() => {
+      const wasStarted = gameState.gameStarted
+      await runWithLoadingScreen(() => this.resetGameWithNewMap(gameState.mapSeed, { preserveCamera: true }), {
+        phase: 'map', detail: 'Generating the map', progress: null
+      })
+      if (!wasStarted) {
+        gameState.gameStarted = false
+        gameState.gamePaused = true
+      }
+      refreshSidebarMultiplayer()
+    })
     const seedInput = document.getElementById('mapSeed')
     const playerCountInput = document.getElementById('playerCount')
     const mapWidthInput = document.getElementById('mapWidthTiles')
@@ -1041,6 +1056,10 @@ class Game {
     ]))
 
     const applyMapSettingsAndRegenerate = async(changedField = null) => {
+      if (!topologyChangesAllowed(gameState)) {
+        showNotification('Map settings are controlled by the host before the match starts.')
+        return
+      }
       const values = {}
       for (const key of Object.keys(DECORATION_SETTINGS)) values[key] = document.getElementById(key)?.value ?? gameState[key]
       Object.assign(gameState, normalizeDecorationSettings(values))
@@ -1515,6 +1534,13 @@ class Game {
   }
 
   resetGameWithNewMap(seed, options = {}) {
+    clearPathCache()
+    clearFlowFields()
+    const textures = getTextureManager()
+    textures?.invalidateDecorationLayout()
+    gameState.mapTopologyFingerprint = computeMapTopologyFingerprint({
+      ...gameState, enabled: textures?.integratedSpriteSheetMode, sheets: textures?.integratedSpriteSheets || []
+    })
     deactivateMapEditMode()
     const preserveCamera = !!options.preserveCamera
     const previousScrollOffset = {

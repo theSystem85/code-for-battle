@@ -958,6 +958,16 @@ describe('multiplayer client snapshot sync', () => {
     gameState.multiplayerSession = { localRole: 'client', isRemote: true }
   }
 
+  it('serializes host topology and selection with cluster settings', () => {
+    gameState.mapTopologyFingerprint = '688abcde'
+    gameState.activeSpriteSheetSelections = ['optional.webp']
+    gameState.mapTopologySheets = [{ sheetPath: 'optional.webp', metadata: { tiles: {} } }]
+    const snapshot = JSON.parse(JSON.stringify(commandSync.createGameStateSnapshot({ fullAutomation: true })))
+    expect(snapshot.mapTopologyFingerprint).toBe('688abcde')
+    expect(snapshot.activeSpriteSheetSelections).toEqual(['optional.webp'])
+    expect(snapshot.mapTopologySheets).toEqual(gameState.mapTopologySheets)
+  })
+
   it('serializes cluster settings and applies host city destruction without player buildings', () => {
     Object.assign(gameState, { citySeeds: 0, cityClusterSize: 20, ruinSeeds: 10, ruinClusterSize: 3 })
     const snapshot = commandSync.createGameStateSnapshot()

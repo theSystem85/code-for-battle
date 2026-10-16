@@ -1,4 +1,6 @@
 import { fetchAssetJson } from '../utils/assetLoading.js'
+import { computeMapTopologyFingerprint, topologyChangesAllowed } from '../game/mapTopology.js'
+import { showNotification } from './notifications.js'
 import { gameState } from '../gameState.js'
 import { AnimationSheetPreparation } from '../rendering/animationSheetPreparation.js'
 import { getMapRenderer, getTextureManager } from '../rendering.js'
@@ -462,6 +464,11 @@ function renderIntegratedSheetSelectionList(sheetPaths = []) {
     checkbox.dataset.sheetPath = sheetPath
     checkbox.checked = selectedPaths.has(sheetPath)
     checkbox.addEventListener('change', async() => {
+      if (!topologyChangesAllowed(gameState)) {
+        checkbox.checked = !checkbox.checked
+        showNotification('Map sheet changes are controlled by the host before the match starts.')
+        return
+      }
       const currentSelected = new Set(Array.isArray(gameState.activeSpriteSheetSelections) ? gameState.activeSpriteSheetSelections : sheetPaths)
       if (checkbox.checked) currentSelected.add(sheetPath)
       else currentSelected.delete(sheetPath)
@@ -496,7 +503,25 @@ async function loadDefaultAnimationMetadata() {
   }
 }
 
-export async function applyIntegratedSpriteSheetRuntime(metadata = null) {
+export async function applyIntegratedSpriteSheetRuntime(metadata = null, { preserveTopology = false, authoritative = false, sheetsOverride = null } = {}) {
+  if (!preserveTopology && !topologyChangesAllowed(gameState, authoritative)) {
+    showNotification('Map sheet changes are controlled by the host before the match starts.')
+    return
+  }
+  const previousFingerprint = gameState.mapTopologyFingerprint
+  const updateTopology = async() => {
+    if (preserveTopology) return
+    const fingerprint = computeMapTopologyFingerprint({
+      ...gameState,
+      enabled: textureManager.integratedSpriteSheetMode,
+      sheets: textureManager.integratedSpriteSheets
+    })
+    gameState.mapTopologySheets = (textureManager.integratedSpriteSheets || []).map(({ sheetPath, metadata }) => ({ sheetPath, metadata }))
+    gameState.mapTopologyFingerprint = fingerprint
+    if (previousFingerprint != null && previousFingerprint !== fingerprint) {
+      await regenerateTopology?.()
+    }
+  }
   const textureManager = getTextureManager()
   if (!textureManager?.setIntegratedSpriteSheetConfig) return
   cacheRuntimeIntegratedMetadata(metadata)
@@ -517,6 +542,7 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
       gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
     }
+    await updateTopology()
     return
   }
 
@@ -528,15 +554,16 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null) {
     gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
   }
 
-  const selectedSheetPaths = allStaticSheets.filter(path => gameState.activeSpriteSheetSelections.includes(path))
+  const selectedSheetPaths = [...gameState.activeSpriteSheetSelections].sort()
   const multiplayerActive = isMultiplayerSessionActive()
   const allowLocalOverride = !multiplayerActive
   const resolvedSheets = []
   for (const sheetPath of selectedSheetPaths) {
     const runtimeAppliedMetadata = runtimeAppliedStaticMetadataBySheetPath.get(sheetPath)
-    const resolvedMetadata = metadata?.sheetPath === sheetPath
+    const savedMetadata = sheetsOverride?.find(entry => entry.sheetPath === sheetPath)?.metadata
+    const resolvedMetadata = savedMetadata || (metadata?.sheetPath === sheetPath
       ? metadata
-      : (runtimeAppliedMetadata || await loadMetadataForSheet(sheetPath, { allowLocalOverride }))
+      : ((!multiplayerActive && runtimeAppliedMetadata) || await loadMetadataForSheet(sheetPath, { allowLocalOverride })))
     if (!hasTaggedTiles(resolvedMetadata)) continue
     resolvedSheets.push({
       sheetPath,
@@ -565,6 +592,12 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null) {
   if (Array.isArray(gameState.units) && Array.isArray(gameState.mapGrid)) {
     gameState.occupancyMap = initializeOccupancyMap(gameState.units, gameState.mapGrid, textureManager)
   }
+  await updateTopology()
+}
+
+let regenerateTopology = null
+export function setTopologyRegenerator(callback) {
+  regenerateTopology = callback
 }
 
 function updatePauseIcon() {
@@ -757,6 +790,11 @@ export function initMapEditorControls() {
     integratedSpriteSheetModeCheckbox.checked = gameState.useIntegratedSpriteSheetMode
     updateIntegratedSheetSelectionVisibility()
     integratedSpriteSheetModeCheckbox.addEventListener('change', async(e) => {
+      if (!topologyChangesAllowed(gameState)) {
+        e.target.checked = gameState.useIntegratedSpriteSheetMode
+        showNotification('Map sheet changes are controlled by the host before the match starts.')
+        return
+      }
       const enabled = Boolean(e.target.checked)
       gameState.useIntegratedSpriteSheetMode = enabled
       updateIntegratedSheetSelectionVisibility()
@@ -785,15 +823,13 @@ export function initMapEditorControls() {
 
   initSpriteSheetEditor({
     initialSheetPath: gameState.activeSpriteSheetPath,
+    onClose: () => applyIntegratedSpriteSheetRuntime(),
     onSheetDataChange: (metadata) => {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
       cacheRuntimeIntegratedMetadata(metadata)
       if (metadata?.sheetPath && hasTaggedTiles(metadata)) {
         ensureIntegratedSheetVisible(metadata.sheetPath, { autoSelect: false })
-      }
-      if (gameState.useIntegratedSpriteSheetMode) {
-        applyIntegratedSpriteSheetRuntime(metadata)
       }
     },
     onAnimationSheetDataChange: (metadata) => {
@@ -803,6 +839,10 @@ export function initMapEditorControls() {
       gameState.activeSpriteSheetPath = metadata?.sheetPath || gameState.activeSpriteSheetPath || null
       gameState.activeSpriteSheetMetadata = metadata
       cacheRuntimeIntegratedMetadata(metadata)
+      if (!topologyChangesAllowed(gameState)) {
+        showNotification('Map sheet changes are controlled by the host before the match starts.')
+        return
+      }
       if (metadata?.sheetPath && hasTaggedTiles(metadata)) {
         ensureIntegratedSheetVisible(metadata.sheetPath, { autoSelect: true })
       }
