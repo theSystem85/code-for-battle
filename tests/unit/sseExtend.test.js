@@ -1,3 +1,4 @@
+import { fitSprite, resetSourceImports } from '../../src/ui/sseFit.js'
 import { getNavigationShellPath } from '../../src/pwa/navigationFallback.js'
 import { describe, it, expect } from 'vitest'
 import { isolateComponent } from '../../src/ui/sseIsolate.js'
@@ -65,5 +66,31 @@ describe('SSE document fallback', () => {
     }
     expect(getNavigationShellPath('/')).toBe('/index.html')
     expect(getNavigationShellPath('/sse-other')).toBe('/index.html')
+  })
+})
+
+describe('SSE reserved-area fitting', () => {
+  it('contains wide and tall sprites without overflow or changing aspect', () => {
+    expect(fitSprite(100, 50, 32, 32)).toEqual({ x: 0, y: 8, width: 32, height: 16 })
+    expect(fitSprite(50, 100, 32, 32)).toEqual({ x: 8, y: 0, width: 16, height: 32 })
+    expect(fitSprite(8, 4, 32, 32)).toEqual({ x: 12, y: 14, width: 8, height: 4 })
+  })
+  it('supports every anchor and explicit stretch', () => {
+    for (const [anchor, x, y] of [['top-left', 0, 0], ['top-right', 24, 0], ['bottom-left', 0, 28], ['bottom-right', 24, 28]]) {
+      expect(fitSprite(8, 4, 32, 32, anchor)).toEqual({ x, y, width: 8, height: 4 })
+    }
+    expect(fitSprite(8, 4, 32, 32, 'stretch')).toEqual({ x: 0, y: 0, width: 32, height: 32 })
+    expect(() => fitSprite(0, 1, 32, 32)).toThrow()
+    expect(() => fitSprite(1, 1, 32, 32, 'invalid')).toThrow()
+  })
+  it('clears duplicate mappings in place so overlays and imports can reset', () => {
+    const source = { isolated: new Set(['sprite']), masks: new Map([['sprite', {}]]) }
+    const { isolated, masks } = source
+    resetSourceImports(source)
+    expect(source.isolated).toBe(isolated)
+    expect(source.masks).toBe(masks)
+    expect(isolated.size).toBe(0)
+    expect(masks.size).toBe(0)
+    resetSourceImports(null)
   })
 })

@@ -53,3 +53,16 @@ describe('SSE clearing', () => {
     expect(target.occupied.size).toBe(2)
   })
 })
+
+describe('SSE fitted placement metadata', () => {
+  it('exports fitted coordinates and merges sprite and tile tags after shrinking', () => {
+    const result = exportMetadata({ tileSize: 16, rowHeight: 16, tiles: { '1,2': { tags: ['forest'] } },
+      extension: { imports: [{ id: 'sprite-1', anchor: 'bottom-right', bbox: { width: 100, height: 50 },
+        placedAt: { column: 1, row: 2 }, tileSpan: { columns: 1, rows: 1 },
+        renderRect: { x: 0, y: 8, width: 16, height: 8 }, tags: ['tree', 'forest'] }] } }, 'trees')
+    expect(result.sprites.find(sprite => sprite.id === 'sprite-1')).toEqual({
+      id: 'sprite-1', anchor: 'bottom-right', tiles: { col: 1, row: 2, cols: 1, rows: 1 },
+      px: { x: 16, y: 40, width: 16, height: 8 }, tags: ['tree', 'forest']
+    })
+  })
+})

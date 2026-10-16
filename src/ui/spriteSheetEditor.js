@@ -800,7 +800,10 @@ function refreshAnimationPreview(state) {
   const sequenceIndex = getAnimationFrameIndex(animation, performance.now())
   const sourceRect = animation.frameRects[sequenceIndex]
   if (!sourceRect) return
-  const drawWidth = 64
+  // One preview sprite per animation frame, fixed 128px canvas (DPR 1).
+  // Scalar containment adds no per-frame allocations or bitmap variants.
+  const drawWidth = Math.min(64, state.animationPreviewCanvas.width,
+    state.animationPreviewCanvas.height * sourceRect.width / sourceRect.height)
   const drawHeight = drawWidth * (sourceRect.height / sourceRect.width)
   const previousSmoothing = ctx.imageSmoothingEnabled
   const previousOperation = ctx.globalCompositeOperation
@@ -948,6 +951,7 @@ async function loadSheet(state, sheetPath, { saveCurrent = true, mode = 'static'
     state.blendModeSelect.value = normalizeSpriteSheetBlendMode(state.activeData.blendMode)
   }
 
+  state.extendApi?.targetChanged()
   updateSheetMetadataUi(state)
   saveDataToIndexedDb(state.activeData, state.mode)
   drawSseCanvas(state)
