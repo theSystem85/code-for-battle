@@ -1,0 +1,861 @@
+{
+  "schemaVersion": 1,
+  "sheetPath": "images/map/sprite_sheets/dtv3_city.webp",
+  "tileSize": 64,
+  "rowHeight": 64,
+  "borderWidth": 0,
+  "blendMode": "black",
+  "tags": [
+    "city",
+    "decorative",
+    "impassable",
+    "universal"
+  ],
+  "columns": 6,
+  "rows": 8,
+  "tiles": {
+    "0,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_1"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 0
+    },
+    "1,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_1"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 0
+    },
+    "0,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_1"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 1
+    },
+    "1,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_1"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 1
+    },
+    "2,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_2"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 0
+    },
+    "3,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_2"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 0
+    },
+    "2,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_2"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 1
+    },
+    "3,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_2"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 1
+    },
+    "4,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_3"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 0
+    },
+    "5,0": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_3"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 0
+    },
+    "4,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_3"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 1
+    },
+    "5,1": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_3"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 1
+    },
+    "0,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_4"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 2
+    },
+    "1,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_4"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 2
+    },
+    "0,3": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_4"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 3
+    },
+    "1,3": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_4"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 3
+    },
+    "2,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_5"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 2
+    },
+    "3,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_5"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 2
+    },
+    "4,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_6"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 2
+    },
+    "5,2": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_6"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 2
+    },
+    "2,3": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_7"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 3
+    },
+    "3,3": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_7"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 3
+    },
+    "4,3": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_8"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 3
+    },
+    "5,3": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_8"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 3
+    },
+    "0,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_9"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 4
+    },
+    "1,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_9"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 4
+    },
+    "0,5": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_9"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 5
+    },
+    "1,5": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_9"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 5
+    },
+    "2,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 4
+    },
+    "3,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 4
+    },
+    "4,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 4
+    },
+    "5,4": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 4
+    },
+    "2,5": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_14"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 5
+    },
+    "3,5": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_14"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 5
+    },
+    "4,5": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 5
+    },
+    "5,5": {
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 5
+    }
+  },
+  "displayName": "dtv3_city.webp",
+  "propLayout": [
+    {
+      "id": "city_supermarket",
+      "col": 0,
+      "row": 0,
+      "w": 2,
+      "h": 2,
+      "groupId": 1,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_1"
+      ]
+    },
+    {
+      "id": "city_office_block",
+      "col": 2,
+      "row": 0,
+      "w": 2,
+      "h": 2,
+      "groupId": 2,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_2"
+      ]
+    },
+    {
+      "id": "city_apartment_block_a",
+      "col": 4,
+      "row": 0,
+      "w": 2,
+      "h": 2,
+      "groupId": 3,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_3"
+      ]
+    },
+    {
+      "id": "city_apartment_block_b",
+      "col": 0,
+      "row": 2,
+      "w": 2,
+      "h": 2,
+      "groupId": 4,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_4"
+      ]
+    },
+    {
+      "id": "city_warehouse_a",
+      "col": 2,
+      "row": 2,
+      "w": 2,
+      "h": 1,
+      "groupId": 5,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_5"
+      ]
+    },
+    {
+      "id": "city_row_houses_a",
+      "col": 4,
+      "row": 2,
+      "w": 2,
+      "h": 1,
+      "groupId": 6,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_6"
+      ]
+    },
+    {
+      "id": "city_warehouse_b",
+      "col": 2,
+      "row": 3,
+      "w": 2,
+      "h": 1,
+      "groupId": 7,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_7"
+      ]
+    },
+    {
+      "id": "city_row_houses_b",
+      "col": 4,
+      "row": 3,
+      "w": 2,
+      "h": 1,
+      "groupId": 8,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_8"
+      ]
+    },
+    {
+      "id": "city_church",
+      "col": 0,
+      "row": 4,
+      "w": 2,
+      "h": 2,
+      "groupId": 9,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_9"
+      ]
+    },
+    {
+      "id": "city_corner_shop_a",
+      "col": 2,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "groupId": 10,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ]
+    },
+    {
+      "id": "city_corner_shop_b",
+      "col": 3,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "groupId": 11,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ]
+    },
+    {
+      "id": "city_house_a",
+      "col": 4,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "groupId": 12,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ]
+    },
+    {
+      "id": "city_house_b",
+      "col": 5,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "groupId": 13,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ]
+    },
+    {
+      "id": "city_petrol_station",
+      "col": 2,
+      "row": 5,
+      "w": 2,
+      "h": 1,
+      "groupId": 14,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city",
+        "group_14"
+      ]
+    },
+    {
+      "id": "city_house_c",
+      "col": 4,
+      "row": 5,
+      "w": 1,
+      "h": 1,
+      "groupId": 15,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ]
+    },
+    {
+      "id": "city_house_d",
+      "col": 5,
+      "row": 5,
+      "w": 1,
+      "h": 1,
+      "groupId": 16,
+      "tags": [
+        "universal",
+        "decorative",
+        "impassable",
+        "city"
+      ]
+    }
+  ]
+}
