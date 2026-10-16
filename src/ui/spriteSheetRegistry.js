@@ -8,16 +8,21 @@ export const DEFAULT_SSE_SHEETS = Object.freeze([
   `${SHEET_DIR}streets24_q90_1024x1024.webp`,
   `${SHEET_DIR}crystals_q90_1024x1024.webp`,
   `${SHEET_DIR}debris_craters_tracks.webp`,
-  `${SHEET_DIR}dt_grass_1024_q85.webp`,
-  `${SHEET_DIR}dt_soil_1024_q85.webp`,
-  `${SHEET_DIR}dt_sand_1024_q85.webp`,
-  `${SHEET_DIR}dt_snow_1024_q85.webp`,
-  `${SHEET_DIR}dt_universal_1024_q85.webp`
+  `${SHEET_DIR}dtv2_grass.webp`,
+  `${SHEET_DIR}dtv2_soil.webp`,
+  `${SHEET_DIR}dtv2_sand.webp`,
+  `${SHEET_DIR}dtv2_snow.webp`,
+  `${SHEET_DIR}dtv2_universal.webp`
 ])
 
 // Sheets that used to ship and were removed. Stored settings, editor state and
 // saved games that still point at them must fall back to the defaults.
 export const RETIRED_SPRITE_SHEET_PATHS = Object.freeze(new Set([
+  `${SHEET_DIR}dt_grass_1024_q85.webp`,
+  `${SHEET_DIR}dt_soil_1024_q85.webp`,
+  `${SHEET_DIR}dt_sand_1024_q85.webp`,
+  `${SHEET_DIR}dt_snow_1024_q85.webp`,
+  `${SHEET_DIR}dt_universal_1024_q85.webp`,
   `${SHEET_DIR}major_sprite_sheet_default.webp`,
   `${SHEET_DIR}seasons_1024_q90_2.webp`,
   `${SHEET_DIR}seasons_1024_q90_3.webp`,

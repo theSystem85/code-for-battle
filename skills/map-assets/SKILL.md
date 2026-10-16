@@ -28,11 +28,11 @@ Create **separate decorative sheets per biome** plus one **universal** sheet:
 
 | Sheet | Path pattern |
 |-------|----------------|
-| Grass DT | `public/images/map/sprite_sheets/dt_grass_1024_q85.webp` + `.json` |
-| Soil DT | `.../dt_soil_1024_q85.webp` + `.json` |
-| Sand DT | `.../dt_sand_1024_q85.webp` + `.json` |
-| Snow DT | `.../dt_snow_1024_q85.webp` + `.json` |
-| Universal DT | `.../dt_universal_1024_q85.webp` + `.json` |
+| Grass DT | `public/images/map/sprite_sheets/dtv2_grass.webp` + `.json` |
+| Soil DT | `.../dtv2_soil.webp` + `.json` |
+| Sand DT | `.../dtv2_sand.webp` + `.json` |
+| Snow DT | `.../dtv2_snow.webp` + `.json` |
+| Universal DT | `.../dtv2_universal.webp` + `.json` |
 
 Register every new sheet in:
 1. `public/images/map/sprite_sheets/index.json`
@@ -72,7 +72,7 @@ After packing, **visually inspect** the sheet and write accurate tags/footprints
 ## Art pipeline
 1. Generate photorealistic props matching the camera brief (per-prop preferred if full-sheet one-shot quality is poor).
 2. Place sources under `tmp/dt-props/` (or equivalent).
-3. Pack with `node scripts/pack-biome-decorative-tiles.mjs` (or update that manifest for new props).
+3. Pack with the Sprite Sheet Editor flow (`skills/extend-sprite-sheet/SKILL.md`): new 6-column 64 px sheet, Extract all, resize each sprite to its real size (1 tile ~ 10 m; vehicles, trees and small props 1x1), Compact, export, then tag every tile with `[biome|universal, decorative, passable|impassable]` plus `group_N` on multi-tile sprites, and save as WebP q85.
 4. Inspect output WebP in SSE / image viewer; correct JSON tags/groups.
 5. Keep `package-lock.json`; Netlify build stays `npm ci --include=dev && npm run build && npm run test:smoke`.
 
@@ -83,7 +83,7 @@ After packing, **visually inspect** the sheet and write accurate tags/footprints
 - Occupancy must honor `impassable` tags on selected integrated tiles (frozen lakes).
 
 ## Validation
-- Open SSE → select each `dt_*` sheet → confirm tags/groups visible.
+- Open SSE → select each `dtv2_*` sheet → confirm tags/groups visible.
 - Map Settings → enable Custom sprite sheets → ensure DT sheets checked → regenerate map across biomes / Mixed.
 - `npm run test:unit`
 - `npm run lint:fix:changed`
