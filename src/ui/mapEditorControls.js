@@ -554,7 +554,7 @@ export async function applyIntegratedSpriteSheetRuntime(metadata = null, { prese
     gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
   }
 
-  const selectedSheetPaths = [...gameState.activeSpriteSheetSelections].sort()
+  const selectedSheetPaths = gameState.activeSpriteSheetSelections.filter(path => allStaticSheets.includes(path)).sort()
   const multiplayerActive = isMultiplayerSessionActive()
   const allowLocalOverride = !multiplayerActive
   const resolvedSheets = []
@@ -659,7 +659,7 @@ function toggleEditMode() {
   updatePauseIcon()
 }
 
-export function initMapEditorControls() {
+export async function initMapEditorControls() {
   editButton = document.getElementById('mapEditModeBtn')
   tileSelect = document.getElementById('mapEditTileSelect')
   randomCheckbox = document.getElementById('mapEditRandomToggle')
@@ -724,7 +724,7 @@ export function initMapEditorControls() {
     gameState.activeSpriteSheetSelections = [...DEFAULT_SSE_SHEETS]
   }
   renderIntegratedSheetSelectionList(gameState.availableStaticSpriteSheets)
-  loadStaticSheetPaths().then(async(sheetPaths) => {
+  const runtimeReady = loadStaticSheetPaths().then(async(sheetPaths) => {
     gameState.availableStaticSpriteSheets = mergeSheetPaths(
       sheetPaths,
       [gameState.activeSpriteSheetMetadata?.sheetPath, gameState.activeSpriteSheetPath]
@@ -861,10 +861,6 @@ export function initMapEditorControls() {
         window.logger.warn('Failed to persist applied SSE animation metadata:', err)
       }
     }
-  }).then((controller) => {
-    if (gameState.useIntegratedSpriteSheetMode) {
-      controller.refreshRuntimeSheetData()
-    }
   }).catch((err) => {
     window.logger.warn('Failed to initialize Sprite Sheet Editor:', err)
   })
@@ -876,6 +872,7 @@ export function initMapEditorControls() {
   updateLockState()
   syncControlsFromState()
   updatePauseIcon()
+  await runtimeReady
 }
 
 export function applyProductionBrush(kind, payload) {

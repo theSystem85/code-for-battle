@@ -125,6 +125,35 @@ describe('mapEditorControls integrated sheet selection list', () => {
     gameState.useIntegratedSpriteSheetMode = true
   })
 
+  it('awaits persisted startup sheets without regenerating or applying the editor selection', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { initMapEditorControls, setTopologyRegenerator } = await import('../../src/ui/mapEditorControls.js')
+    const regenerate = vi.fn()
+    setTopologyRegenerator(regenerate)
+    gameState.mapTopologyFingerprint = null
+    localStorage.setItem('rts-integrated-spritesheet-mode', 'true')
+    localStorage.setItem('rts-integrated-spritesheet-selected-sheets', JSON.stringify([
+      'images/map/sprite_sheets/dtv3_city.webp', 'images/map/sprite_sheets/missing.webp'
+    ]))
+    await initMapEditorControls()
+    expect(mockSetIntegratedSpriteSheetConfig).toHaveBeenCalledTimes(1)
+    expect(gameState.activeSpriteSheetSelections).toEqual(['images/map/sprite_sheets/dtv3_city.webp'])
+    expect(fetch).not.toHaveBeenCalledWith(expect.stringContaining('missing'), expect.anything())
+    expect(gameState.mapTopologyFingerprint).toBe('default')
+    expect(regenerate).not.toHaveBeenCalled()
+    setTopologyRegenerator(null)
+  })
+
+  it('filters unknown runtime selections before fetching sheet metadata', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { applyIntegratedSpriteSheetRuntime } = await import('../../src/ui/mapEditorControls.js')
+    gameState.availableStaticSpriteSheets = ['images/map/sprite_sheets/default.webp']
+    gameState.activeSpriteSheetSelections = ['images/map/sprite_sheets/missing.webp']
+    await applyIntegratedSpriteSheetRuntime()
+    expect(fetch).not.toHaveBeenCalled()
+    expect(mockSetIntegratedSpriteSheetConfig.mock.calls.at(-1)[0].sheets).toEqual([])
+  })
+
   it('adds applied uploaded sheets to the checkbox list and runtime selected sheets', async() => {
     const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
     initMapEditorControls()
