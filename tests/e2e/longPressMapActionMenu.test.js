@@ -46,7 +46,13 @@ test('desktop hold opens, release is consumed, short click and movement do not o
   await page.waitForTimeout(550)
   await page.mouse.up()
   await expect(menu(page)).toBeHidden()
-  await page.evaluate(() => { window.selectedUnitsRef.splice(0, window.selectedUnitsRef.length, window.__regression.tank) })
+  await page.evaluate(() => {
+    const tank = window.__regression.tank
+    window.selectedUnitsRef.splice(0, window.selectedUnitsRef.length, tank)
+    // Earlier short clicks can issue movement orders; isolate the hold/release.
+    tank.moveTarget = null
+    tank.path = []
+  })
   await hold(page, point)
   await expect(menu(page)).toBeVisible()
   expect(await page.evaluate(() => window.__regression.tank.moveTarget)).toBeNull()
@@ -87,6 +93,8 @@ test('settings change hold duration and browser agent API exposes every action',
   await expect(menu(page)).toBeVisible()
   await page.keyboard.press('Escape')
   const result = await page.evaluate(() => {
+    // Escape also clears selection; restore it for the selected-unit API calls.
+    window.selectedUnitsRef.splice(0, window.selectedUnitsRef.length, window.__regression.tank)
     const api = window.remoteControlApi
     const point = { x: 25 * 32 + 16, y: 25 * 32 + 16 }
     return {
