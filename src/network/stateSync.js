@@ -702,6 +702,8 @@ export function createGameStateSnapshot({ fullAutomation = false } = {}) {
     partyStates: gameState.partyStates,
     // Include map seed, dimensions, and player count so client can generate matching map
     mapSeed: gameState.mapSeed,
+    mapTopologyFingerprint: gameState.mapTopologyFingerprint,
+    mapTopologySheets: fullAutomation || !gameState.gameStarted ? gameState.mapTopologySheets : undefined,
     mapTilesX: gameState.mapTilesX,
     mapTilesY: gameState.mapTilesY,
     playerCount: gameState.playerCount,
@@ -756,7 +758,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
   }
 
   // Only regenerate map once per connection
-  if (mapSynced) {
+  if (mapSynced && (gameState.gameStarted || terrainSettings?.mapTopologyFingerprint === gameState.mapTopologyFingerprint)) {
     return true
   }
 
@@ -785,6 +787,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
       gameState.mapOreTotalValue = mapOreTotalValue
     }
     if (terrainSettings && typeof terrainSettings === 'object') {
+      gameState.mapTopologyFingerprint = terrainSettings.mapTopologyFingerprint || 'default'
       Object.assign(gameState, normalizeDecorationSettings(terrainSettings))
       if (typeof terrainSettings.useIntegratedSpriteSheetMode === 'boolean') {
         gameState.useIntegratedSpriteSheetMode = terrainSettings.useIntegratedSpriteSheetMode
@@ -842,7 +845,7 @@ function syncClientMap(seed, width, height, playerCount, mapOreFieldCount, mapOr
     if (Array.isArray(restoredGrid) && restoredGrid.length) {
       bindRenderingDensityPreparation()
       const sheetPreparation = typeof terrainSettings?.useIntegratedSpriteSheetMode === 'boolean'
-        ? import('../ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime())
+        ? import('../ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, authoritative: true, sheetsOverride: terrainSettings.mapTopologySheets }))
         : Promise.resolve()
       sheetPreparation.then(() => prepareRuntimeMap({ grid: restoredGrid })).catch(error => {
         window.logger?.warn?.('Prepared map generation failed after network restore', error)
@@ -902,6 +905,8 @@ export function applyGameStateSnapshot(snapshot) {
   // This must happen before syncing buildings so placeBuilding can work
   if (snapshot.mapSeed && snapshot.mapTilesX && snapshot.mapTilesY) {
     syncClientMap(snapshot.mapSeed, snapshot.mapTilesX, snapshot.mapTilesY, snapshot.playerCount, snapshot.mapOreFieldCount, snapshot.mapOreTotalValue, {
+      mapTopologyFingerprint: snapshot.mapTopologyFingerprint,
+      mapTopologySheets: snapshot.mapTopologySheets,
       useIntegratedSpriteSheetMode: snapshot.useIntegratedSpriteSheetMode,
       activeSpriteSheetSelections: snapshot.activeSpriteSheetSelections,
       ...normalizeDecorationSettings(snapshot),

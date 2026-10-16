@@ -2126,6 +2126,7 @@ export async function initSpriteSheetEditor(options = {}) {
   }
   state.onModalClosed = () => {
     setSidebarHidden(false)
+    options.onClose?.()
   }
 
   // Finish initial sheet loading and reveal the workspace before publishing the

@@ -108,3 +108,9 @@ See [placement specification](../../specs/121-map-generator-placement-rules.md) 
 City groups use seeded city centers and a loose street grid, with whole-footprint keep-clear validation and no water. The four shared settings are `citySeeds` (2, 0–8), `cityClusterSize` (8, 3–20), `ruinSeeds` (3, 0–10) and `ruinClusterSize` (7, 3–20). Zero seeds disables that category. Maintain matching sidebar, storage/URL, save and host snapshot behavior.
 
 Each city footprint shares one neutral HP object, outside auto-target lists. Preserve saved tombstones when preparing layouts. Destruction uses only the existing combat decal system (`debris_craters_tracks`); never generate city rubble art. Free the static occupancy contribution while preserving other occupants, invalidate terrain and path caches, and use existing destruction effects. Keep city projectile lookup indexed and preparation outside steady-state loops. See [spec 132](../../specs/132-destructible-city-buildings.md), including outstanding browser/performance acceptance.
+
+## Topology changes
+
+Selected sheets and tile tags are gameplay configuration. Use `computeMapTopologyFingerprint` for canonical selected paths/tags and city/ruin settings; disabled mode and an empty selection share `default`. Apply changes through `applyIntegratedSpriteSheetRuntime`, which invokes the existing map reset with the same seed. Collect SSE edits until apply/close. Do not hash in update/render loops. Include tag changes in prepared rendering signatures.
+
+Only hosts may edit multiplayer topology before start; distribute selection, metadata, settings and fingerprint. Never regenerate multiplayer maps mid-match. Saves retain their fingerprint and selected metadata: preserve saved topology on load and show a non-blocking mismatch notice. Keep the topology fingerprint and empty custom sheet E2E regressions green.

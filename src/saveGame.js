@@ -849,6 +849,8 @@ function buildSaveObject(label) {
       mapTilesX: gameState.mapTilesX,
       mapTilesY: gameState.mapTilesY,
       mapSeed: gameState.mapSeed,
+      mapTopologyFingerprint: gameState.mapTopologyFingerprint,
+      mapTopologySheets: (getTextureManager()?.integratedSpriteSheets || []).map(({ sheetPath, metadata }) => ({ sheetPath, metadata })),
       ...normalizeDecorationSettings(gameState),
       mapOreFieldCount: gameState.mapOreFieldCount,
       mapOreTotalValue: gameState.mapOreTotalValue,
@@ -1061,6 +1063,7 @@ function loadGameFromSaveObject(saveObj, key) {
     }
 
     if (!loaded.automationSession) resetPolicyStore() // Old saves/replays cannot execute unrelated local automations.
+    const previousTopologyFingerprint = gameState.mapTopologyFingerprint
     Object.assign(gameState, loaded.gameState)
 
     gameState.speedMultiplier = Number.isFinite(loaded.gameState?.speedMultiplier)
@@ -1080,6 +1083,8 @@ function loadGameFromSaveObject(saveObj, key) {
       : 0
     restoreDeterministicRng(loaded.gameState)
 
+    const topologyMismatch = loaded.gameState.mapTopologyFingerprint && previousTopologyFingerprint !== loaded.gameState.mapTopologyFingerprint
+    gameState.mapTopologyFingerprint = loaded.gameState.mapTopologyFingerprint || 'default'
     migrateSavedSpriteSheetState(loaded.gameState)
     gameState.useIntegratedSpriteSheetMode = Boolean(loaded.gameState?.useIntegratedSpriteSheetMode)
     gameState.activeSpriteSheetSelections = Array.isArray(loaded.gameState?.activeSpriteSheetSelections)
@@ -1839,7 +1844,7 @@ function loadGameFromSaveObject(saveObj, key) {
     const textureManager = getTextureManager()
     if (textureManager?.setIntegratedSpriteSheetConfig) {
       const restoreSheets = Array.isArray(gameState.activeSpriteSheetSelections) && gameState.activeSpriteSheetSelections.length
-        ? import('./ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime())
+        ? import('./ui/mapEditorControls.js').then(module => module.applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true, sheetsOverride: loaded.gameState.mapTopologySheets }))
         : textureManager.setIntegratedSpriteSheetConfig({
           enabled: Boolean(gameState.useIntegratedSpriteSheetMode),
           ...(gameState.activeSpriteSheetSelections?.length === 0 ? { sheets: [] } : {}),
@@ -2024,7 +2029,9 @@ function loadGameFromSaveObject(saveObj, key) {
       queueMissionIntro(getBuiltinMissionById(key.slice(BUILTIN_SAVE_PREFIX.length)))
     }
 
-    showNotification('Game loaded: ' + (saveObj.label || key))
+    showNotification('Game loaded: ' + (saveObj.label || key) + (topologyMismatch
+      ? '. This save uses a different sheet/tag configuration; its saved topology is preserved.'
+      : ''))
   }
 }
 

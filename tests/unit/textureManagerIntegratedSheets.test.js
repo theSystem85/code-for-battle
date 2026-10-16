@@ -4,6 +4,25 @@ import { TextureManager } from '../../src/rendering/textureManager.js'
 import { buildOccupancyMap } from '../../src/units.js'
 
 describe('TextureManager integrated multi-sheet selection', () => {
+  it('invalidates layout and changes blocked occupancy after an optional sheet tag edit', async() => {
+    const manager = new TextureManager()
+    vi.spyOn(manager, 'loadIntegratedSpriteSheetImage').mockResolvedValue({ width: 64, height: 64 })
+    const grid = Array.from({ length: 40 }, () => Array.from({ length: 40 }, () => ({ type: 'land', biome: 'grass' })))
+    const configure = tags => manager.setIntegratedSpriteSheetConfig({ enabled: true, sheets: [{
+      sheetPath: 'images/map/sprite_sheets/optional.webp',
+      metadata: { tileSize: 64, borderWidth: 0, tiles: { '0,0': { tags, rect: { x: 0, y: 0, width: 64, height: 64 } } } }
+    }] })
+    await configure(['grass', 'decorative', 'impassable'])
+    const blocked = buildOccupancyMap([], grid, manager).flat().filter(Boolean).length
+    const signature = manager.integratedRenderSignature
+    const layout = manager.getDecorationLayout(grid)
+    await configure(['grass', 'decorative', 'passable'])
+    expect(manager.getDecorationLayout(grid)).not.toBe(layout)
+    expect(manager.integratedRenderSignature).not.toBe(signature)
+    expect(blocked).toBeGreaterThan(0)
+    expect(buildOccupancyMap([], grid, manager).flat().filter(Boolean)).toHaveLength(0)
+  })
+
   it('selects land without recursion and only from enabled SSE sheets', async() => {
     const manager = new TextureManager()
     const enabledImage = { id: 'enabled-land-sheet' }

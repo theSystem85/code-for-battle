@@ -1,4 +1,5 @@
 import { fetchAssetJson } from '../utils/assetLoading.js'
+import { computeMapTopologyFingerprint } from '../game/mapTopology.js'
 import { prepareCityBuildings } from '../game/cityBuildings.js'
 import { normalizeDecorationSettings } from '../game/decorationSettings.js'
 // rendering/textureManager.js
@@ -538,6 +539,7 @@ export class TextureManager {
     }
 
     preparation.assertCurrent(this.texturePreparationGeneration)
+    normalizedEntries.sort((a, b) => a.sheetPath < b.sheetPath ? -1 : a.sheetPath > b.sheetPath ? 1 : 0)
     this.integratedSpriteSheetMode = true
     this.integratedSpriteSheets = normalizedEntries
     this.integratedSpriteSheetPath = normalizedEntries[0].sheetPath
@@ -575,7 +577,7 @@ export class TextureManager {
     const signatureSheets = normalizedEntries
       .map(entry => `${entry.sheetPath}|${entry.metadata?.tileSize}|${entry.metadata?.borderWidth}|${Object.keys(entry.metadata?.tiles || {}).length}|${entry.blendMode}|${entry.blackKey?.cutoffBrightness ?? 'default'}|${entry.blackKey?.softenBrightness ?? 'default'}`)
       .join(';')
-    this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}`
+    this.integratedRenderSignature = `${signatureSheets}|${this.integratedBiomeTag}|${computeMapTopologyFingerprint({ enabled: true, sheets: normalizedEntries, ...gameState })}`
     this.clearStreetSelectionPoolCache()
     this.integratedConfigVersion++
   }

@@ -103,6 +103,28 @@ describe('mapEditorControls integrated sheet selection list', () => {
     }))
   })
 
+  it('regenerates changed topology once and preserves topology during restore', async() => {
+    const { gameState } = await import('../../src/gameState.js')
+    const { applyIntegratedSpriteSheetRuntime, setTopologyRegenerator } = await import('../../src/ui/mapEditorControls.js')
+    const regenerate = vi.fn()
+    setTopologyRegenerator(regenerate)
+    gameState.useIntegratedSpriteSheetMode = false
+    gameState.mapTopologyFingerprint = 'previous-custom-topology'
+    gameState.mapSeed = '688'
+    await applyIntegratedSpriteSheetRuntime()
+    expect(regenerate).toHaveBeenCalledTimes(1)
+    expect(gameState.mapTopologyFingerprint).toBe('default')
+    expect(gameState.mapSeed).toBe('688')
+    await applyIntegratedSpriteSheetRuntime()
+    expect(regenerate).toHaveBeenCalledTimes(1)
+    gameState.mapTopologyFingerprint = 'saved-topology'
+    await applyIntegratedSpriteSheetRuntime(null, { preserveTopology: true })
+    expect(gameState.mapTopologyFingerprint).toBe('saved-topology')
+    expect(regenerate).toHaveBeenCalledTimes(1)
+    setTopologyRegenerator(null)
+    gameState.useIntegratedSpriteSheetMode = true
+  })
+
   it('adds applied uploaded sheets to the checkbox list and runtime selected sheets', async() => {
     const { initMapEditorControls } = await import('../../src/ui/mapEditorControls.js')
     initMapEditorControls()
