@@ -263,6 +263,18 @@ describe('logic.js', () => {
       globalThis.window.cheatSystem = undefined
     })
 
+    it('visualOnly impacts (M2 autocannon, no splash) show a small flash but damage nothing nearby', () => {
+      const shooter = { id: 'm2', owner: 'player1', type: 'lightTank' }
+      const neighbour = { id: 'n1', type: 'tank_v1', owner: 'enemy', x: 160, y: 160, health: 100, maxHealth: 100 }
+      const factory = { id: 'f1', type: 'constructionYard', x: 5, y: 5, width: 3, height: 3, health: 500 }
+      triggerExplosion(neighbour.x + TILE_SIZE / 2, neighbour.y + TILE_SIZE / 2, 50, [neighbour], [factory], shooter,
+        1000, [], TILE_SIZE * 0.35, false, { visualOnly: true })
+      expect(neighbour.health).toBe(100)
+      expect(factory.health).toBe(500)
+      expect(explosions).toHaveLength(1)
+      expect(explosions[0].maxRadius).toBeCloseTo(TILE_SIZE * 0.35)
+    })
+
     it('applies the same direct-hit damage to grounded and airborne apaches', () => {
       const shooter = { id: 'rocket-turret-1', owner: 'player1', type: 'rocketTurret' }
       const groundedApache = {

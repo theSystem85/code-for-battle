@@ -80,6 +80,9 @@ function spawnImpactDecal(gameState, mapGrid, bullet, x, y) {
  * @param {Object} gameState - Game state object
  * @param {Array} mapGrid - 2D array representing the map
  */
+// Direct-fire rounds (M2 autocannon) only show a small impact flash; damage comes from the hit itself.
+const NO_SPLASH_EXPLOSION_OPTIONS = Object.freeze({ visualOnly: true })
+
 export const updateBullets = logPerformance(function updateBullets(bullets, units, factories, gameState, mapGrid) {
   const now = getSimulationTime(gameState)
   let targetIndexBuilt = false
@@ -100,10 +103,12 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
       bullet.startTime = now
     }
 
-    const rocketExplosionOptions = bullet.projectileType === 'rocket'
-      ? (bullet.originType === 'rocketTurret' ? TURRET_ROCKET_EXPLOSION_OPTIONS :
-        (bullet.originType === 'rocketTank' ? AIR_ROCKET_EXPLOSION_OPTIONS : ROCKET_EXPLOSION_OPTIONS))
-      : undefined
+    const rocketExplosionOptions = bullet.noSplash
+      ? NO_SPLASH_EXPLOSION_OPTIONS
+      : bullet.projectileType === 'rocket'
+        ? (bullet.originType === 'rocketTurret' ? TURRET_ROCKET_EXPLOSION_OPTIONS :
+          (bullet.originType === 'rocketTank' ? AIR_ROCKET_EXPLOSION_OPTIONS : ROCKET_EXPLOSION_OPTIONS))
+        : undefined
 
     let apacheTargetUnit = null
     if (bullet.originType === 'apacheRocket' && bullet.apacheTargetId && Array.isArray(units)) {
@@ -373,8 +378,11 @@ export const updateBullets = logPerformance(function updateBullets(bullets, unit
 
         // Explode if bullet has been flying too long or is close enough to its original target destination (for non-homing)
         // For non-homing, targetPosition is the intended destination.
-        if (now - bullet.startTime > timeLimit ||
-          (bullet.targetPosition && distanceFromTarget < 15 && !bullet.homing && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb')) {
+        // Direct-fire no-splash rounds fly slightly past their aim point so they can still hit by collision.
+        const reachedAimPoint = bullet.noSplash && Number.isFinite(bullet.maxTravel)
+          ? Math.hypot(bullet.x - bullet.startX, bullet.y - bullet.startY) >= bullet.maxTravel
+          : (bullet.targetPosition && distanceFromTarget < 15 && !bullet.homing && bullet.originType !== 'apacheRocket' && bullet.originType !== 'f35Bomb')
+        if (now - bullet.startTime > timeLimit || reachedAimPoint) {
         // Explode at the bullet's current position or original target if non-homing and close
           const explosionX = !bullet.homing && bullet.targetPosition ? bullet.targetPosition.x : bullet.x
           const explosionY = !bullet.homing && bullet.targetPosition ? bullet.targetPosition.y : bullet.y
@@ -1210,6 +1218,8 @@ export function fireBullet(unit, target, bullets, now) {
       active: true,
       shooter: unit,
       homing: false,
+      noSplash: true,
+      explosionRadius: TILE_SIZE * 0.35,
       target
     }
   } else if (unit.type === 'tank-v3') {
