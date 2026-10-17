@@ -1,7 +1,7 @@
 import { clearFlowFields } from './flowField.js'
 import { CITY_BUILDING_HEALTH, TILE_SIZE } from '../config.js'
 import { setBuildingDebrisDecals } from './tileDecals.js'
-import { notifySurfaceTileMutation } from '../rendering/prepared/mapMutationNotifier.js'
+import { notifySurfaceTileMutation, notifyTopologyMutation } from '../rendering/prepared/mapMutationNotifier.js'
 import { clearPathCache } from './pathCache.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 
@@ -37,7 +37,55 @@ export function prepareCityBuildings(mapGrid, layout) {
   }
   layouts.set(mapGrid, layout)
   registries.set(mapGrid, buildings)
+  applyCityStreets(mapGrid, layout)
   return buildings
+}
+
+/**
+ * Stamp the layout's city streets as ordinary street tiles (flagged
+ * `cityStreet`) and revert streets a previous layout added that the new one
+ * no longer wants. Layout preparation treats flagged streets as land, so a
+ * rebuilt layout yields the same streets and this is idempotent.
+ */
+export function applyCityStreets(mapGrid, layout) {
+  const height = mapGrid?.length || 0
+  const width = mapGrid?.[0]?.length || 0
+  if (!width || !height) return 0
+  const wanted = new Set(layout?.width === width ? layout.cityStreets || [] : [])
+  let changed = 0
+  let bounds = null
+  const touch = (x, y) => {
+    changed++
+    bounds = bounds
+      ? { left: Math.min(bounds.left, x), top: Math.min(bounds.top, y), right: Math.max(bounds.right, x + 1), bottom: Math.max(bounds.bottom, y + 1) }
+      : { left: x, top: y, right: x + 1, bottom: y + 1 }
+  }
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      const tile = mapGrid[y][x]
+      if (!tile?.cityStreet || wanted.has(y * width + x)) continue
+      delete tile.cityStreet
+      if (tile.type === 'street') {
+        tile.type = 'land'
+        touch(x, y)
+      }
+    }
+  }
+  for (const offset of wanted) {
+    const x = offset % width
+    const y = (offset - x) / width
+    const tile = mapGrid[y]?.[x]
+    if (!tile || tile.cityStreet || tile.type !== 'land' || tile.building) continue
+    tile.type = 'street'
+    tile.cityStreet = true
+    touch(x, y)
+  }
+  if (changed) {
+    notifyTopologyMutation(mapGrid, bounds)
+    clearPathCache()
+    clearFlowFields()
+  }
+  return changed
 }
 
 export function getCityAtWorld(mapGrid, x, y) {

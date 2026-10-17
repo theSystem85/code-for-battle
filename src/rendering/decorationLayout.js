@@ -53,6 +53,17 @@ function isDecoratableLand(tile) {
     !tile.building
 }
 
+/** Streets stamped by city layouts; layout preparation treats them as the land they replaced. */
+export function isCityStreetTile(tile) {
+  return Boolean(tile?.cityStreet) && tile.type === 'street'
+}
+
+// Layout preparation must give identical results before and after city
+// streets are stamped, so every layout query sees a city street as land.
+function isLayoutLand(tile) {
+  return isDecoratableLand(tile) || (isCityStreetTile(tile) && !tile.airstripStreet && !tile.ore && !tile.seedCrystal && !tile.building)
+}
+
 function groupSeasonAllowed(tagSet, biome) {
   const allowed = BIOME_SEASONS[biome] || []
   let hasSeason = false
@@ -102,7 +113,7 @@ export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, r
   const candidates = []
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
-      if (isDecoratableLand(mapGrid[y][x]) && biomes.includes(resolveBiome(mapGrid[y][x], defaultBiome))) candidates.push({ x, y, biome: resolveBiome(mapGrid[y][x], defaultBiome), hash: decorationHash(x, y, salt + 1877) })
+      if (isLayoutLand(mapGrid[y][x]) && biomes.includes(resolveBiome(mapGrid[y][x], defaultBiome))) candidates.push({ x, y, biome: resolveBiome(mapGrid[y][x], defaultBiome), hash: decorationHash(x, y, salt + 1877) })
     }
   }
   candidates.sort((a, b) => a.hash - b.hash || a.y - b.y || a.x - b.x)
@@ -153,7 +164,7 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
         const cx = anchorX + gx
         if (cells[((anchorY + gy) * width) + cx]) return false
         const tile = row[cx]
-        if (!isDecoratableLand(tile) || resolveBiome(tile, fallbackBiome) !== biome) return false
+        if (!isLayoutLand(tile) || resolveBiome(tile, fallbackBiome) !== biome) return false
       }
     }
     return true
@@ -164,7 +175,7 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
     for (let x = 0; x < width; x++) {
       if (cells[(y * width) + x]) continue
       const tile = mapGrid[y][x]
-      if (!isDecoratableLand(tile)) continue
+      if (!isLayoutLand(tile)) continue
       const hash = decorationHash(x, y, salt)
       if (hash % MULTI_TILE_ANCHOR_INTERVAL !== 0 && !ruins?.anchorKeys.has(`${x},${y}`)) continue
       const biome = resolveBiome(tile, fallbackBiome)
@@ -192,7 +203,7 @@ export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', 
     for (let x = 0; x < width; x++) {
       if (cells[(y * width) + x]) continue
       const tile = mapGrid[y][x]
-      if (!isDecoratableLand(tile)) continue
+      if (!isLayoutLand(tile)) continue
       const hash = decorationHash(x, y, salt + 7919)
       if (hash % SINGLE_DECORATION_INTERVAL !== 0 && !ruins?.anchorKeys.has(`${x},${y}`)) continue
       const biome = resolveBiome(tile, fallbackBiome)
@@ -289,7 +300,7 @@ export function categoryClusterAllows(group, x, y, biome, clusters) {
   return cluster.centers.some(center => center.biome === biome && (center.x - x) ** 2 + (center.y - y) ** 2 <= cluster.radius ** 2)
 }
 
-const isRoad = tile => tile?.type === 'street' || tile?.type === 'road' || tile?.airstripStreet
+const isRoad = tile => !isCityStreetTile(tile) && (tile?.type === 'street' || tile?.type === 'road' || tile?.airstripStreet)
 const isBarrier = tile => Boolean(tile && (tile.type === 'water' || tile.type === 'rock' || tile.impassable || tile.building))
 
 /** Preparation-only masks; all footprint queries below are constant per cell. */
@@ -316,7 +327,7 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
       const tile = mapGrid[y][x]
       if (tile.ore || tile.seedCrystal) markRadius(x, y, 2)
       if (tile.startPosition || tile.basePosition) markRadius(x, y, 8)
-      if (isDecoratableLand(tile)) {
+      if (isLayoutLand(tile)) {
         for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
           const cx = x + dx, cy = y + dy
           if (cx >= 0 && cy >= 0 && cx < width && cy < height) {
@@ -392,6 +403,194 @@ export function createDecorationBag(candidates, salt = 0) {
   return { next: () => ordered.length ? ordered[cursor++ % ordered.length] : null, size: ordered.length }
 }
 
+const mod3 = value => ((value % 3) + 3) % 3
+
+function isCityStreetCandidate(tile) {
+  return Boolean(tile) && (tile.type === 'land' || isCityStreetTile(tile)) &&
+    !tile.building && !tile.airstripStreet && !tile.ore && !tile.seedCrystal
+}
+
+/**
+ * Preparation-only street lattice for city clusters. City anchors sit on a
+ * three-tile grid around each center, so rows and columns at offset 2 are the
+ * one-tile streets between blocks. Returns center index + 1 per tile, else 0.
+ */
+export function buildCityStreetLattice(mapGrid, cities) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  const lattice = new Uint8Array(width * height)
+  const reach = cities.radius + 1
+  cities.centers.forEach((center, index) => {
+    for (let y = Math.max(0, center.y - reach); y <= Math.min(height - 1, center.y + reach); y++) {
+      for (let x = Math.max(0, center.x - reach); x <= Math.min(width - 1, center.x + reach); x++) {
+        if ((x - center.x) ** 2 + (y - center.y) ** 2 > reach ** 2) continue
+        if (mod3(x - center.x) !== 2 && mod3(y - center.y) !== 2) continue
+        const offset = y * width + x
+        if (!lattice[offset] && isCityStreetCandidate(mapGrid[y][x])) lattice[offset] = index + 1
+      }
+    }
+  })
+  return lattice
+}
+
+function createMinHeap() {
+  const items = []
+  return {
+    get size() { return items.length },
+    push(cost, offset) {
+      items.push([cost, offset])
+      let i = items.length - 1
+      while (i > 0) {
+        const parent = (i - 1) >> 1
+        if (items[parent][0] < items[i][0] || (items[parent][0] === items[i][0] && items[parent][1] <= items[i][1])) break
+        ;[items[parent], items[i]] = [items[i], items[parent]]
+        i = parent
+      }
+    },
+    pop() {
+      const top = items[0]
+      const last = items.pop()
+      if (items.length) {
+        items[0] = last
+        let i = 0
+        for (;;) {
+          const l = i * 2 + 1
+          const r = l + 1
+          let m = i
+          const less = (a, b) => items[a][0] < items[b][0] || (items[a][0] === items[b][0] && items[a][1] < items[b][1])
+          if (l < items.length && less(l, m)) m = l
+          if (r < items.length && less(r, m)) m = r
+          if (m === i) break
+          ;[items[m], items[i]] = [items[i], items[m]]
+          i = m
+        }
+      }
+      return top
+    }
+  }
+}
+
+/**
+ * Keep the lattice only around placed city buildings, then join every street
+ * component to the generated road network with a cheapest path that never
+ * crosses a city building, water, rock or structure.
+ */
+export function planCityStreets(mapGrid, { cells, groundDetails, lattice, cities }) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  const boxes = cities.centers.map(() => null)
+  const isCityCell = offset => Boolean(cells[offset]?.group?.tagSet?.has('city'))
+  for (let offset = 0; offset < cells.length; offset++) {
+    if (!isCityCell(offset)) continue
+    const x = offset % width
+    const y = (offset - x) / width
+    let owner = -1
+    let best = Infinity
+    cities.centers.forEach((center, index) => {
+      const distance = (center.x - x) ** 2 + (center.y - y) ** 2
+      if (distance < best) { best = distance; owner = index }
+    })
+    if (owner < 0) continue
+    const box = boxes[owner] ||= { left: x, top: y, right: x, bottom: y }
+    box.left = Math.min(box.left, x)
+    box.top = Math.min(box.top, y)
+    box.right = Math.max(box.right, x)
+    box.bottom = Math.max(box.bottom, y)
+  }
+  const streets = new Uint8Array(width * height)
+  for (let offset = 0; offset < lattice.length; offset++) {
+    const box = lattice[offset] ? boxes[lattice[offset] - 1] : null
+    if (!box) continue
+    const x = offset % width
+    const y = (offset - x) / width
+    if (x >= box.left - 1 && x <= box.right + 1 && y >= box.top - 1 && y <= box.bottom + 1) streets[offset] = 1
+  }
+  const neighbours = offset => {
+    const x = offset % width
+    const result = []
+    if (x > 0) result.push(offset - 1)
+    if (x < width - 1) result.push(offset + 1)
+    if (offset >= width) result.push(offset - width)
+    if (offset + width < width * height) result.push(offset + width)
+    return result
+  }
+  const tileAt = offset => mapGrid[Math.floor(offset / width)][offset % width]
+  const isNetworkRoad = offset => {
+    const tile = tileAt(offset)
+    return isRoad(tile) && !tile.airstripStreet
+  }
+  const passable = offset => {
+    const tile = tileAt(offset)
+    return Boolean(tile) && tile.type !== 'water' && tile.type !== 'rock' && !tile.building && !tile.seedCrystal &&
+      !tile.impassable && !tile.airstripStreet && !isCityCell(offset)
+  }
+  const connected = new Uint8Array(width * height)
+  const component = new Int32Array(width * height).fill(-1)
+  const components = []
+  for (let offset = 0; offset < streets.length; offset++) {
+    if (!streets[offset] || component[offset] >= 0) continue
+    const members = [offset]
+    component[offset] = components.length
+    for (let i = 0; i < members.length; i++) {
+      for (const next of neighbours(members[i])) {
+        if (streets[next] && component[next] < 0) { component[next] = components.length; members.push(next) }
+      }
+    }
+    components.push(members)
+  }
+  const removed = new Set()
+  for (const members of components) {
+    if (members.some(offset => neighbours(offset).some(next => isNetworkRoad(next) || connected[next]))) {
+      members.forEach(offset => { connected[offset] = 1 })
+      continue
+    }
+    const cost = new Float64Array(width * height).fill(Infinity)
+    const previous = new Int32Array(width * height).fill(-1)
+    const heap = createMinHeap()
+    members.forEach(offset => { cost[offset] = 0; heap.push(0, offset) })
+    let reached = -1
+    while (heap.size) {
+      const [current, offset] = heap.pop()
+      if (current > cost[offset]) continue
+      if (isNetworkRoad(offset) || connected[offset]) { reached = offset; break }
+      for (const next of neighbours(offset)) {
+        if (!passable(next) && !isNetworkRoad(next)) continue
+        const step = cells[next] ? 4 : 1
+        if (current + step < cost[next]) {
+          cost[next] = current + step
+          previous[next] = offset
+          heap.push(current + step, next)
+        }
+      }
+    }
+    members.forEach(offset => { connected[offset] = 1 })
+    if (reached < 0) continue
+    for (let offset = previous[reached]; offset >= 0 && !streets[offset]; offset = previous[offset]) {
+      streets[offset] = 1
+      connected[offset] = 1
+      const cell = cells[offset]
+      if (cell) removed.add(cell)
+    }
+  }
+  // Decorations a connector crosses give way to the street.
+  if (removed.size) {
+    const anchors = new Set([...removed].map(cell => `${cell.anchorX},${cell.anchorY}`))
+    for (let offset = 0; offset < cells.length; offset++) {
+      const cell = cells[offset]
+      if (cell && !cell.group.tagSet.has('city') && anchors.has(`${cell.anchorX},${cell.anchorY}`)) cells[offset] = null
+    }
+  }
+  const result = []
+  for (let offset = 0; offset < streets.length; offset++) {
+    if (!streets[offset]) continue
+    // Already-generated roads stay as they are; only land becomes city street.
+    if (isNetworkRoad(offset)) continue
+    groundDetails[offset] = null
+    result.push(offset)
+  }
+  return result
+}
+
 /** Natural placement is used only with opted-in category/detail catalogs. */
 export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, startPositions = [], ...settings } = {}) {
   const options = normalizeDecorationSettings(settings)
@@ -407,6 +606,9 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   const ruins = buildRuinClusters(mapGrid, { salt, defaultBiome, count: options.ruinSeeds, radius: options.ruinClusterSize })
   const cities = buildRuinClusters(mapGrid, { salt: salt + 7919, defaultBiome, count: options.citySeeds, radius: options.cityClusterSize, minDistance: 1 })
   const clusterSeeds = new Set(Object.values(clusters).flatMap(cluster => cluster.centers.map(center => `${center.x},${center.y}`)))
+  const hasCityGroups = options.citySeeds > 0 && DECORATION_BIOMES.some(biome => ['multi', 'single'].some(kind => (pools[biome]?.[kind] || []).some(group => group.tagSet.has('city'))))
+  // City streets are reserved before any decoration so blocks keep their roads.
+  const cityLattice = hasCityGroups ? buildCityStreetLattice(mapGrid, cities) : null
   const landmarks = []
   // Index covered tiles once. Spacing probes visit at most a six-tile halo,
   // rather than scanning all earlier placements per candidate.
@@ -437,7 +639,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
         const cy = y + dy
         const tile = mapGrid[cy][cx]
         const water = group.tagSet.has('offshore') || (group.tagSet.has('shore_trans') && (cx !== placement.landX || cy !== placement.landY))
-        if ((water ? tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal || constraints.landDistance[cy * width + cx] !== 1 : !isDecoratableLand(tile) || resolveBiome(tile, defaultBiome) !== biome) || isRoad(tile) ||
+        if (cityLattice?.[cy * width + cx]) return false
+        if ((water ? tile?.type !== 'water' || tile.building || tile.ore || tile.seedCrystal || constraints.landDistance[cy * width + cx] !== 1 : !isLayoutLand(tile) || resolveBiome(tile, defaultBiome) !== biome) || isRoad(tile) ||
           !decorationEnvironmentAllows(group, cx, cy, constraints, true) || (detail ? groundDetails[cy * width + cx] : occupied[cy * width + cx])) return false
         if (constraints.shoreDistance[cy * width + cx] === 1) touchesWater = true
       }
@@ -469,7 +672,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   ]))
   const coastAnchors = []
   for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
-    if (constraints.shoreDistance[y * width + x] === 1 && isDecoratableLand(mapGrid[y][x])) coastAnchors.push({ x, y })
+    if (constraints.shoreDistance[y * width + x] === 1 && isLayoutLand(mapGrid[y][x])) coastAnchors.push({ x, y })
   }
   const phase = decorationHash(width, height, salt + 4441) % 14
   for (let i = phase; i < coastAnchors.length; i += 14) {
@@ -514,7 +717,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       for (let x = 0; x < width; x++) {
         const biome = resolveBiome(mapGrid[y][x], defaultBiome)
         const categoryBags = bags[biome]?.[kind]
-        if (!categoryBags?.length || !isDecoratableLand(mapGrid[y][x])) continue
+        if (!categoryBags?.length || !isLayoutLand(mapGrid[y][x])) continue
         const hash = decorationHash(x, y, salt + (detail ? 3209 : kind === 'single' ? 7919 : 0))
         const interval = detail ? 40 : kind === 'multi' ? MULTI_TILE_ANCHOR_INTERVAL : SINGLE_DECORATION_INTERVAL
         const density = decorationDensity(x, y, salt)
@@ -546,5 +749,6 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       }
     }
   }
-  return { width, height, cells, placements, groundDetails }
+  const cityStreets = cityLattice ? planCityStreets(mapGrid, { cells, groundDetails, lattice: cityLattice, cities }) : []
+  return { width, height, cells, placements, groundDetails, cityStreets }
 }

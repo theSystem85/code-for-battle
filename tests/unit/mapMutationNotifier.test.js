@@ -47,7 +47,8 @@ describe('M10 map mutation notifications', () => {
       'src/gameSetup.js',
       'src/saveGame.js',
       'src/network/stateSync.js',
-      'src/game/gameOrchestrator.js'
+      'src/game/gameOrchestrator.js',
+      'src/game/cityBuildings.js'
     ])
     expect(M10_RENDER_DEPENDENCIES.resource).toEqual([
       'ore',

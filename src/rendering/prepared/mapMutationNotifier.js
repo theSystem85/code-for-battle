@@ -14,7 +14,8 @@ export const M10_MUTATION_PRODUCERS = Object.freeze([
   'src/gameSetup.js',
   'src/saveGame.js',
   'src/network/stateSync.js',
-  'src/game/gameOrchestrator.js'
+  'src/game/gameOrchestrator.js',
+  'src/game/cityBuildings.js'
 ])
 
 export const M10_RENDER_DEPENDENCIES = Object.freeze({
