@@ -78,4 +78,4 @@ Follow-up automated results:
 - `npm run test:unit`: 278 files / 5,045 tests passed (59.82 s).
 - `npm test`: 280 files / 5,131 tests passed (48.68 s).
 - Coverage includes actual `lightTank` origin/shooter lookup, config aliases without roster expansion, tank radius/lifetime, surface-specific particles, bounded pool identity, mobile cap, cone bounds and no stroked circles across blasty/sparky/default.
-- `git diff --check`: passed. No commit created; version remains 0.59.0.
+- `git diff --check`: passed. No commit created; version remains 0.56.0.
