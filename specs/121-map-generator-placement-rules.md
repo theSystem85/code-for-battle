@@ -47,3 +47,7 @@ Qualifying-hardware performance acceptance remains **outstanding**: this sandbox
 | 256x256 | Natural | 214.18 | 204.82 | 222.21 | -4,486,592 | 577 | 755 |
 
 Heap deltas include garbage collection and are not retained-memory measurements. This Node run has no graphics backend, canvas DPR, GPU timer or presented-frame measurement. FPS, frame-time p95/p99/max, deadline misses, update/render CPU and GPU timings therefore remain unmeasured. The qualifying-hardware gate is still open.
+
+## Roadside and rare props (0.61.0)
+- `roadside` props are placed only in a dedicated sparse pass: anchors on land tiles directly next to a road, 1 in `ROADSIDE_INTERVAL` (14) such tiles by seeded hash; footprint cells stay within the second road ring and off roads. They are excluded from the generic category bags.
+- `rare` props are placed at most once per map (identity-based).

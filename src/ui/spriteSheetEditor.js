@@ -52,6 +52,7 @@ export const DEFAULT_SSE_TAGS = [
   'landmark',
   'roadside',
   'stones',
+  'rare',
   'inner_cuts',
   'shore', 'onshore', 'offshore', 'shore_trans',
   'ground_detail',
