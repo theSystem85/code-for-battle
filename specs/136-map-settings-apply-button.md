@@ -15,3 +15,6 @@ Editing a sidebar map setting must not regenerate the map immediately. The user 
 - `src/ui/mapSettingsApply.js` `createMapSettingsApplyController({ inputs, button, onApply, fieldOf })` snapshots the inputs, tracks dirtiness on `input`/`change`, and re-snapshots after a successful apply.
 - `GameOrchestrator.setupMapShuffle` wires it; the regenerate routine calls `resync()` and returns `false` when refused.
 - Tests: `tests/unit/mapSettingsApply.test.js`.
+
+## Stones (0.61.0)
+- `stoneCount` (Stones, default 40, 0–400) is part of `DECORATION_SETTINGS` and is applied with the Apply button like the city/ruin settings.
