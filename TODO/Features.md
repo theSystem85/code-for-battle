@@ -168,7 +168,7 @@ Completed entries stay here so the detail is not dropped. Do not add new work in
 
 ### Input and Controls
 
-- [x] **Long-press map action menu (0.57.0)** — Hold the map for force attack, defend-and-hold or automation on arrival, with configurable timing and matching browser API commands. Browser and reference-hardware acceptance remain tracked in the change note.
+- [x] **Long-press map action menu (0.58.0)** — Hold the map for force attack, defend-and-hold or automation on arrival, with configurable timing and matching browser API commands. Browser and reference-hardware acceptance remain tracked in the change note.
   - Spec: [Long-press map action menu](../specs/long-press-map-action-menu.md)
 
 - [x] **Gamepad and couch co-op (2026-09-25)** — Settings lists every button, axis, and trigger of up to two controllers with live meters and click-to-bind. Each controller keeps its own saved profiles. Player 1 drives the cursor; player 2 remote-controls another unit of the same party, including off screen, and the camera eases between that unit and player 1. Controller commands reuse the mouse, keyboard, and remote-control paths so lockstep stays in sync.
