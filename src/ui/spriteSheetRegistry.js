@@ -5,12 +5,10 @@
 const SHEET_DIR = 'images/map/sprite_sheets/'
 
 export const DEFAULT_SSE_SHEETS = Object.freeze([
-  `${SHEET_DIR}streets24_q90_1024x1024.webp`,
   `${SHEET_DIR}seasons_1024_q90_2.webp`,
   `${SHEET_DIR}seasons_1024_q90_3.webp`,
   `${SHEET_DIR}crystals_q90_1024x1024.webp`,
   `${SHEET_DIR}rocks_64x64_1024x1024_q85.webp`,
-  `${SHEET_DIR}rockCliffsMountains_64x64_1024x1024.webp`,
   `${SHEET_DIR}debris_craters_tracks.webp`
 ])
 
@@ -60,7 +58,10 @@ export const RETIRED_SPRITE_SHEET_PATHS = Object.freeze(new Set([
   `${SHEET_DIR}snow.webp`,
   `${SHEET_DIR}desert.webp`,
   `${SHEET_DIR}water.webp`,
-  `${SHEET_DIR}multiTerrainSpriteSheet.webp`
+  `${SHEET_DIR}multiTerrainSpriteSheet.webp`,
+  // Removed in 0.61.0: streets and rock cliffs come from the organic terrain art.
+  `${SHEET_DIR}streets24_q90_1024x1024.webp`,
+  `${SHEET_DIR}rockCliffsMountains_64x64_1024x1024.webp`
 ]))
 
 export function normalizeSheetPath(sheetPath) {

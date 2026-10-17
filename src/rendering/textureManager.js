@@ -26,8 +26,6 @@ const DEFAULT_COMBAT_DECAL_SHEET_PATH = 'images/map/sprite_sheets/debris_craters
 const DEFAULT_COMBAT_DECAL_METADATA_PATH = 'images/map/sprite_sheets/debris_craters_tracks.json'
 const DEFAULT_CRYSTAL_SHEET_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.webp'
 const DEFAULT_CRYSTAL_METADATA_PATH = 'images/map/sprite_sheets/crystals_q90_1024x1024.json'
-const DEFAULT_STREET_SHEET_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
-const DEFAULT_STREET_METADATA_PATH = 'images/map/sprite_sheets/streets24_q90_1024x1024.json'
 const STREET_DIRECTION_MASKS = {
   top: 1,
   right: 2,
@@ -78,8 +76,6 @@ export class TextureManager {
     this.defaultCrystalSheetImage = null
     this.defaultCrystalSheetMetadata = null
     this.defaultCrystalTagBuckets = {}
-    this.defaultStreetSheetImage = null
-    this.defaultStreetSheetMetadata = null
     this.defaultStreetTagBuckets = {}
     this.integratedGroupedTagCatalog = {}
     this.integratedDecorationPools = buildDecorationPools([])
@@ -411,44 +407,6 @@ export class TextureManager {
       this.defaultCrystalSheetMetadata = null
       this.defaultCrystalTagBuckets = {}
       window.logger.warn('Failed to preload default crystal sheet:', err)
-    }
-  }
-
-  async preloadDefaultStreetSheet() {
-    try {
-      const metadata = expandCompactSpriteSheetMetadata(await fetchAssetJson(DEFAULT_STREET_METADATA_PATH))
-      if (!this.hasTaggedIntegratedTiles(metadata)) {
-        this.defaultStreetSheetMetadata = null
-        this.defaultStreetTagBuckets = {}
-        this.clearStreetSelectionPoolCache()
-        return
-      }
-
-      const image = await this.loadIntegratedSpriteSheetImage(DEFAULT_STREET_SHEET_PATH)
-      if (!image) {
-        this.defaultStreetSheetMetadata = null
-        this.defaultStreetTagBuckets = {}
-        this.clearStreetSelectionPoolCache()
-        return
-      }
-
-      const blendMode = normalizeSpriteSheetBlendMode(metadata?.blendMode)
-      const blackKey = metadata?.blackKey || null
-      this.defaultStreetSheetImage = image
-      this.defaultStreetSheetMetadata = metadata
-      this.defaultStreetTagBuckets = this.buildIntegratedTagBuckets([{
-        sheetPath: DEFAULT_STREET_SHEET_PATH,
-        metadata,
-        image,
-        blendMode,
-        blackKey
-      }])
-      this.clearStreetSelectionPoolCache()
-    } catch (err) {
-      this.defaultStreetSheetMetadata = null
-      this.defaultStreetTagBuckets = {}
-      this.clearStreetSelectionPoolCache()
-      window.logger.warn('Failed to preload default street sheet:', err)
     }
   }
 
@@ -976,7 +934,7 @@ export class TextureManager {
       const selectedStreetTile = this.selectStreetTileByTags(['street'], x, y, mapGrid)
       if (!selectedStreetTile?.rect) return null
       return {
-        image: selectedStreetTile.image || this.integratedSpriteSheetImage || this.defaultStreetSheetImage,
+        image: selectedStreetTile.image || this.integratedSpriteSheetImage,
         rect: selectedStreetTile.rect,
         tags: selectedStreetTile.tags || [],
         sheetPath: selectedStreetTile.sheetPath || null
@@ -1124,8 +1082,7 @@ export class TextureManager {
         }
         await Promise.all([
           reportSheet(this.preloadDefaultCombatDecalSheet()),
-          reportSheet(this.preloadDefaultCrystalSheet()),
-          reportSheet(this.preloadDefaultStreetSheet())
+          reportSheet(this.preloadDefaultCrystalSheet())
         ])
 
         // Publish one complete texture generation after every source decoded
@@ -1133,8 +1090,7 @@ export class TextureManager {
         this.waterFrames = waterFrames
         const decodedImages = new Set([
           this.defaultCombatDecalSheetImage,
-          this.defaultCrystalSheetImage,
-          this.defaultStreetSheetImage
+          this.defaultCrystalSheetImage
         ].filter(Boolean))
         this.textureByteUsage = {
           decodedSourceBytes: [...decodedImages].reduce((total, image) => total + estimateDecodedImageBytes(image), 0),
@@ -1177,8 +1133,7 @@ export class TextureManager {
     return [
       { key: 'water-animation-source', image: null, animated: true, frames: this.waterFrames },
       { key: 'combat-decals', image: this.defaultCombatDecalSheetImage, animated: false },
-      { key: 'crystals', image: this.defaultCrystalSheetImage, animated: false },
-      { key: 'streets', image: this.defaultStreetSheetImage, animated: false }
+      { key: 'crystals', image: this.defaultCrystalSheetImage, animated: false }
     ].filter(asset => asset.image || asset.frames?.length)
   }
 

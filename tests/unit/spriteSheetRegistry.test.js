@@ -9,7 +9,7 @@ import {
 } from '../../src/ui/spriteSheetRegistry.js'
 
 const SEASONS = 'images/map/sprite_sheets/dt_grass_1024_q85.webp'
-const STREETS = 'images/map/sprite_sheets/streets24_q90_1024x1024.webp'
+const STREETS = 'images/map/sprite_sheets/seasons_1024_q90_2.webp'
 
 function memoryStorage(entries) {
   const map = new Map(Object.entries(entries))
@@ -37,6 +37,8 @@ describe('sprite sheet registry', () => {
     expect(OPTIONAL_SSE_SHEETS).toContain('images/map/sprite_sheets/dtv3_winter.webp')
     OPTIONAL_SSE_SHEETS.forEach(path => expect(DEFAULT_SSE_SHEETS).not.toContain(path))
     expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/seasons_1024_q90_2.webp')).toBe(false)
+    expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/streets24_q90_1024x1024.webp')).toBe(true)
+    expect(isRetiredSpriteSheetPath('images/map/sprite_sheets/rockCliffsMountains_64x64_1024x1024.webp')).toBe(true)
   })
 
   it('purges stored state that references retired sheets', () => {
