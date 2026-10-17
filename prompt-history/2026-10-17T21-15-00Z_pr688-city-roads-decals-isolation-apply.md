@@ -19,3 +19,14 @@ Outcome: rebased onto main 0.60.0 as 0.61.0, then one conventional commit per fi
 - Item 7: "non-winter shrubs and trees still show up on snow tiles. Make placement strict: on snow tiles, only place props with an explicit snow tag ... make sure the code is ready to pick up a new snow-tagged optional sheet."
 - Item 8: Patrick approved the winter sprite sources (`winter_shrubs`, `winter_pines`, `winter_bare_trees`, `winter_small`). Isolate them with the SSE flow keeping interior dark pixels, pack them into a new optional lossless WebP + JSON sheet at about 10 m per tile, tag them only with decorative, passable/impassable, snow and group tags, register it as optional so it is placed on snow, and verify it on a snow map.
 - Bare-tree decision: "make the gaps between the branches transparent in the image itself, for only the 6 bare trees in dtv3_winter ... with a soft 1px alpha edge ... Don't touch the trunk, the branches themselves, or any other sprite. The runtime and SSE rule (never strip interior pixels) stays unchanged. Keep the file lossless WebP and the JSON unchanged."
+
+## Round 4 requests (2026-10-17/18, same session)
+
+- 4) inner_cuts replaces the "never strip interior pixels" rule: by default only edge-connected black background is removed; enclosed black background pixels are cut only for sprites tagged `inner_cuts` (SSE auto-isolation and runtime keying). Tag the six dtv3_winter bare trees and the decals, audit and tag the other sheets, add the tag to the SSE.
+- 1) dtv2_universal: the screenshot sprite (fuel depot) and the water tower must be rare; most sprites become `ruins`, some lower-sheet sprites become `roadside` placed sparsely only on or next to roads; support the tag in the SSE and the map generator.
+- 2) Remove `streets24_q90_1024x1024` and `rockCliffsMountains_64x64_1024x1024` completely without breaking anything.
+- 3) Tag `rocks_64x64_1024x1024_q85` with a new `stones` tag; place stones naturally (mixed sizes, loose clusters, more near water/coasts and rocks), deterministic, with a stone-count map setting that works with Apply.
+- 5) Organic city layout: one gently curved main street per city joined to the big roads, 1-4 side streets (some branching once), houses only along streets facing them, deterministic, keep HP/attack, units must still path through.
+
+Outcome: see docs/changes/2026-10-18-pr688-round4.md; screenshots in /workspace/vfx-verify/688-r4/.
+
