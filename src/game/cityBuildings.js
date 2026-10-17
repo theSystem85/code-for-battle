@@ -1,6 +1,6 @@
 import { clearFlowFields } from './flowField.js'
 import { CITY_BUILDING_HEALTH, TILE_SIZE } from '../config.js'
-import { setBuildingDebrisDecals } from './tileDecals.js'
+import { setBuildingDebrisDecals, setDecalSurfaceBlocker } from './tileDecals.js'
 import { notifySurfaceTileMutation, notifyTopologyMutation } from '../rendering/prepared/mapMutationNotifier.js'
 import { clearPathCache } from './pathCache.js'
 import { spawnDestructionExplosion } from './spriteSheetEffects.js'
@@ -8,6 +8,12 @@ import { spawnDestructionExplosion } from './spriteSheetEffects.js'
 const registries = new WeakMap()
 const EMPTY = Object.freeze([])
 const layouts = new WeakMap()
+
+// Living city buildings are impassable structures, so impacts on them leave no decal.
+setDecalSurfaceBlocker('cityBuildings', (mapGrid, tileX, tileY) => {
+  const building = getCityAtWorld(mapGrid, (tileX + 0.5) * TILE_SIZE, (tileY + 0.5) * TILE_SIZE)
+  return Boolean(building && building.health > 0)
+})
 
 export function getCityBuildings(mapGrid) {
   return registries.get(mapGrid) || EMPTY

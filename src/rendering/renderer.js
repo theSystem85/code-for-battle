@@ -1,5 +1,6 @@
 import { withTimeout } from '../utils/assetLoading.js'
 import { renderCityHealthBars } from '../game/cityBuildings.js'
+import { setDecalSurfaceBlocker } from '../game/tileDecals.js'
 import { factoryExitVisibility } from '../game/factoryExit.js'
 import { renderFactoryInterior, renderFactoryExitEffects, clipOutsideFactoryBody } from './factoryExitRenderer.js'
 // rendering/renderer.js
@@ -50,6 +51,12 @@ export class Renderer {
   constructor() {
     this.textureManager = new TextureManager()
     this.mapRenderer = new MapRenderer(this.textureManager)
+    // Impassable decorations (trees, frozen lakes, city blocks) never carry impact decals.
+    const textureManager = this.textureManager
+    setDecalSurfaceBlocker('impassableDecorations', (mapGrid, tileX, tileY, tile) => {
+      if (!textureManager.integratedSpriteSheetMode || tile.type !== 'land') return false
+      return Boolean(textureManager.getIntegratedTileForMapTile('land', tileX, tileY, { mapGrid })?.tags?.includes('impassable'))
+    })
     this.buildingRenderer = new BuildingRenderer()
     this.unitRenderer = new UnitRenderer()
     this.effectsRenderer = new EffectsRenderer()

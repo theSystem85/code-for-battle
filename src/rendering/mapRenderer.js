@@ -9,7 +9,7 @@ import {
   WATER_EFFECT_ZOOM
 } from '../config.js'
 import { getSotDrawOffset, OrganicTerrain, shorelineCornerMask } from './organicTerrain.js'
-import { getTileDecalSignature } from '../game/tileDecals.js'
+import { getTileDecalSignature, isDecalBlockedTile } from '../game/tileDecals.js'
 import { getCanvasLogicalSize } from './renderingUtils.js'
 import { RENDER_REVISION_DOMAINS } from './prepared/renderRevisionStore.js'
 import {
@@ -1690,7 +1690,7 @@ export class MapRenderer {
             this.organicTerrain.drawDecoration(ctx, mapGrid, x, y, screenX, screenY, TILE_SIZE, this.sotMask[y]?.[x])
           }
         }
-        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
 
         if (tile.seedCrystal) {
           this.drawSeedOverlay(ctx, x, y, screenX, screenY, useTexture, tile.seedCrystalDensity || tile.oreDensity || 1)
@@ -1980,10 +1980,12 @@ export class MapRenderer {
     ctx.fillRect(screenX, screenY, TILE_SIZE + 1, TILE_SIZE + 1)
   }
 
-  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY) {
+  drawTileDecalOverlay(ctx, tile, tileX, tileY, screenX, screenY, mapGrid = null) {
     if (!tile?.decal || typeof tile.decal !== 'object') return
     const tag = tile.decal.tag
     if (!tag) return
+    // Older decals stay hidden while a structure or impassable decoration covers the tile.
+    if (mapGrid && isDecalBlockedTile(mapGrid, tileX, tileY, tag)) return
 
     const variantSeed = Number.isFinite(tile.decal.variantSeed)
       ? tile.decal.variantSeed
@@ -2370,7 +2372,7 @@ export class MapRenderer {
         const screenX = x * TILE_SIZE - scrollOffset.x
         const screenY = y * TILE_SIZE - scrollOffset.y
 
-        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY)
+        this.drawTileDecalOverlay(ctx, tile, x, y, screenX, screenY, mapGrid)
 
         if (tile.seedCrystal) {
           if (gpuRenderedResources && !this.shouldRenderCrystalOverlayOnCpu(tile, x, y)) {
