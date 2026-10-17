@@ -51,6 +51,8 @@ export const UNIVERSAL_MAX_COVERAGE = 0.45
 // 1 in N land cells tries to anchor a multi-tile sprite / receives a 1x1 sprite.
 export const MULTI_TILE_ANCHOR_INTERVAL = 23
 export const SINGLE_DECORATION_INTERVAL = 29
+// 1 in N land tiles directly next to a road tries a roadside prop.
+export const ROADSIDE_INTERVAL = 14
 
 export function decorationHash(x, y, salt = 0) {
   let hash = ((x * 73856093) ^ (y * 19349663) ^ ((x + y + salt) * 83492791)) >>> 0
@@ -159,7 +161,7 @@ export function buildRuinClusters(mapGrid, { defaultBiome = 'grass', salt = 0, r
  * @returns {{ width:number, height:number, cells:Array<null|{group:Object,offsetX:number,offsetY:number,anchorX:number,anchorY:number,biome:string}>, placements:Array }}
  */
 export function buildDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, ruinSeed = salt, startPositions = [], placementRules = false, ...settings } = {}) {
-  if (placementRules || DECORATION_BIOMES.some(biome => [...(pools?.[biome]?.multi || []), ...(pools?.[biome]?.single || []), ...(pools?.[biome]?.groundDetail || [])].some(group => ['trees', 'rocks', 'farm', 'landmark', 'roadside', 'shore', 'ground_detail', 'city'].some(tag => group.tagSet.has(tag))))) {
+  if (placementRules || DECORATION_BIOMES.some(biome => [...(pools?.[biome]?.multi || []), ...(pools?.[biome]?.single || []), ...(pools?.[biome]?.groundDetail || [])].some(group => ['trees', 'rocks', 'farm', 'landmark', 'roadside', 'rare', 'stones', 'shore', 'ground_detail', 'city'].some(tag => group.tagSet.has(tag))))) {
     return buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome, salt, startPositions, ...settings })
   }
   const height = Array.isArray(mapGrid) ? mapGrid.length : 0
@@ -378,8 +380,14 @@ export function buildDecorationConstraints(mapGrid, startPositions = []) {
 
 export function decorationEnvironmentAllows(group, x, y, constraints, footprint = false) {
   const index = y * constraints.width + x
-  if (constraints.keepClear[index] || constraints.roadDistance[index] <= 1) return false
-  if (group.tagSet.has('roadside') && constraints.roadDistance[index] !== 2) return false
+  if (constraints.keepClear[index]) return false
+  // Roadside props sit directly next to a road (anchor on the first ring;
+  // other footprint cells may reach the second ring). Everything else keeps
+  // a one-tile buffer from roads.
+  if (group.tagSet.has('roadside')) {
+    const distance = constraints.roadDistance[index]
+    if (footprint ? distance < 1 || distance > 2 : distance !== 1) return false
+  } else if (constraints.roadDistance[index] <= 1) return false
   if (!footprint && group.tagSet.has('shore') && constraints.shoreDistance[index] !== 1) return false
   return true
 }
@@ -630,6 +638,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   // City streets are reserved before any decoration so blocks keep their roads.
   const cityLattice = hasCityGroups ? buildCityStreetLattice(mapGrid, cities) : null
   const landmarks = []
+  const rarePlaced = new Set()
   // Index covered tiles once. Spacing probes visit at most a six-tile halo,
   // rather than scanning all earlier placements per candidate.
   const occupied = new Array(width * height).fill(null)
@@ -639,7 +648,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     for (const kind of ['multi', 'single', 'groundDetail']) {
       const categories = new Map()
       for (const group of pools[biome]?.[kind] || []) {
-        if (group.tagSet.has('shore')) continue
+        // Shore and roadside props have their own sparse passes.
+        if (group.tagSet.has('shore') || group.tagSet.has('roadside')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
         if (!categories.has(category)) categories.set(category, [])
         categories.get(category).push(group)
@@ -675,6 +685,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     })) return false
     if (group.tagSet.has('ruins') && !ruins.anchorKeys.has(`${x},${y}`)) return false
     if (group.tagSet.has('landmark') && !landmarkAllows(x, y, landmarks)) return false
+    // 'rare' props appear at most once per map.
+    if (group.tagSet.has('rare') && rarePlaced.has(decorationIdentity(group))) return false
     const nearby = new Set()
     for (let cy = Math.max(0, y - 6); cy < Math.min(height, y + group.height + 6); cy++) {
       for (let cx = Math.max(0, x - 6); cx < Math.min(width, x + group.width + 6); cx++) {
@@ -730,6 +742,33 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       }
     }
   }
+  // Preparation-only roadside pass: sparse, seeded attempts on land tiles
+  // directly next to a road (one per ROADSIDE_INTERVAL road-adjacent tiles).
+  const roadsideBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
+    createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])]
+      .filter(group => group.tagSet.has('roadside') && !group.tagSet.has('shore')), salt + 1)
+  ]))
+  const roadAnchors = []
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    if (constraints.roadDistance[y * width + x] === 1 && isLayoutLand(mapGrid[y][x]) && !isRoad(mapGrid[y][x])) roadAnchors.push({ x, y })
+  }
+  for (const { x, y } of roadAnchors) {
+    if (decorationHash(x, y, salt + 6151) % ROADSIDE_INTERVAL !== 0) continue
+    const biome = resolveBiome(mapGrid[y][x], defaultBiome)
+    const bag = roadsideBags[biome]
+    for (let attempt = 0; attempt < bag.size; attempt++) {
+      const group = bag.next()
+      const placement = { group, anchorX: x, anchorY: y, biome }
+      if (!fits(placement)) continue
+      if (group.width * group.height > 1) placements.push(placement)
+      for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
+        const offset = (y + dy) * width + x + dx
+        cells[offset] = { ...placement, offsetX: dx, offsetY: dy }
+        occupied[offset] = placement
+      }
+      break
+    }
+  }
   // Ground detail has its own cells, no impassability and no spacing ownership.
   for (const kind of ['groundDetail', 'multi', 'single']) {
     const detail = kind === 'groundDetail'
@@ -753,6 +792,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
             if (!detail) {
               if (kind === 'multi') placements.push(placement)
               if (group.tagSet.has('landmark')) landmarks.push(placement)
+              if (group.tagSet.has('rare')) rarePlaced.add(decorationIdentity(group))
             }
             for (let dy = 0; dy < group.height; dy++) {
               for (let dx = 0; dx < group.width; dx++) {

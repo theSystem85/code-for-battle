@@ -7,8 +7,12 @@
   "blendMode": "black",
   "tags": [
     "decorative",
-    "universal",
-    "inner_cuts"
+    "inner_cuts",
+    "landmark",
+    "rare",
+    "roadside",
+    "ruins",
+    "universal"
   ],
   "columns": 6,
   "rows": 7,
@@ -281,7 +285,9 @@
       "tags": [
         "universal",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins",
+        "rare"
       ],
       "rect": {
         "x": 0,
@@ -297,7 +303,9 @@
         "universal",
         "decorative",
         "impassable",
-        "group_5"
+        "group_5",
+        "ruins",
+        "rare"
       ],
       "rect": {
         "x": 256,
@@ -313,7 +321,9 @@
         "universal",
         "decorative",
         "impassable",
-        "group_5"
+        "group_5",
+        "ruins",
+        "rare"
       ],
       "rect": {
         "x": 320,
@@ -329,7 +339,9 @@
         "universal",
         "decorative",
         "impassable",
-        "group_5"
+        "group_5",
+        "ruins",
+        "rare"
       ],
       "rect": {
         "x": 256,
@@ -345,7 +357,9 @@
         "universal",
         "decorative",
         "impassable",
-        "group_5"
+        "group_5",
+        "ruins",
+        "rare"
       ],
       "rect": {
         "x": 320,
@@ -395,7 +409,7 @@
         "universal",
         "decorative",
         "impassable",
-        "roadside"
+        "ruins"
       ],
       "rect": {
         "x": 128,
@@ -410,7 +424,8 @@
       "tags": [
         "universal",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins"
       ],
       "rect": {
         "x": 192,
@@ -426,7 +441,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_9"
+        "group_9",
+        "ruins"
       ],
       "rect": {
         "x": 0,
@@ -442,7 +458,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_9"
+        "group_9",
+        "ruins"
       ],
       "rect": {
         "x": 64,
@@ -458,8 +475,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "ruins"
       ],
       "rect": {
         "x": 128,
@@ -507,8 +524,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ],
       "rect": {
         "x": 320,
@@ -524,8 +541,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ],
       "rect": {
         "x": 0,
@@ -541,8 +558,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ],
       "rect": {
         "x": 64,
@@ -606,8 +623,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ],
       "rect": {
         "x": 320,
@@ -709,7 +726,9 @@
       "tags": [
         "universal",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins",
+        "rare"
       ]
     },
     {
@@ -723,7 +742,9 @@
         "universal",
         "decorative",
         "impassable",
-        "group_5"
+        "group_5",
+        "ruins",
+        "rare"
       ]
     },
     {
@@ -752,7 +773,7 @@
         "universal",
         "decorative",
         "impassable",
-        "roadside"
+        "ruins"
       ]
     },
     {
@@ -765,7 +786,8 @@
       "tags": [
         "universal",
         "decorative",
-        "impassable"
+        "impassable",
+        "ruins"
       ]
     },
     {
@@ -779,7 +801,8 @@
         "universal",
         "decorative",
         "impassable",
-        "group_9"
+        "group_9",
+        "ruins"
       ]
     },
     {
@@ -793,8 +816,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "ruins"
       ]
     },
     {
@@ -836,8 +859,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ]
     },
     {
@@ -851,8 +874,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ]
     },
     {
@@ -866,8 +889,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ]
     },
     {
@@ -923,8 +946,8 @@
         "universal",
         "decorative",
         "passable",
-        "roadside",
-        "inner_cuts"
+        "inner_cuts",
+        "roadside"
       ]
     },
     {
