@@ -127,7 +127,7 @@ describe('inner_cuts opt-in', () => {
     expect(alphaAt(cuts, 0, 0)).toBe(0)
   })
 
-  it('tags the shipped bare trees and every combat decal with inner_cuts', async() => {
+  it('tags the shipped bare trees with inner_cuts but no combat decal', async() => {
     const { readFileSync } = await import('node:fs')
     const winter = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_winter.json', 'utf8'))
     const bare = winter.propLayout.filter(prop => prop.id.startsWith('winter_bare_tree'))
@@ -138,6 +138,8 @@ describe('inner_cuts opt-in', () => {
     }
     expect(winter.propLayout.filter(prop => !prop.id.startsWith('winter_bare_tree')).every(prop => !prop.tags.includes('inner_cuts'))).toBe(true)
     const decals = JSON.parse(readFileSync('public/images/map/sprite_sheets/debris_craters_tracks.json', 'utf8'))
-    expect(Object.values(decals.tiles).every(tile => tile.tags.includes('inner_cuts'))).toBe(true)
+    // Decals get no cut-outs (they will be reworked with real alpha).
+    expect(Object.values(decals.tiles).some(tile => tile.tags.includes('inner_cuts'))).toBe(false)
+    expect(decals.tags).not.toContain('inner_cuts')
   })
 })

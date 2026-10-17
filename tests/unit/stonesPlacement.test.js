@@ -67,4 +67,10 @@ describe('stones', () => {
     expect(sheet.propLayout.filter(prop => prop.w * prop.h > 1).length).toBeGreaterThan(20)
     for (const prop of sheet.propLayout.filter(p => p.w * p.h > 1)) expect(prop.tags).toContain(`group_${prop.groupId}`)
   })
+
+  it('never uses the image generator watermark (bottom-right cells) as a stone', () => {
+    const sheet = JSON.parse(readFileSync('public/images/map/sprite_sheets/rocks_64x64_1024x1024_q85.json', 'utf8'))
+    for (const key of ['14,14', '15,14', '14,15', '15,15']) expect(sheet.tiles[key]).toBeUndefined()
+    for (const prop of sheet.propLayout) expect(prop.col + prop.w <= 14 || prop.row + prop.h <= 14).toBe(true)
+  })
 })

@@ -30,3 +30,7 @@ Outcome: rebased onto main 0.60.0 as 0.61.0, then one conventional commit per fi
 
 Outcome: see docs/changes/2026-10-18-pr688-round4.md; screenshots in /workspace/vfx-verify/688-r4/.
 
+## Round 4 answers (2026-10-18)
+
+Patrick: (1) remove inner_cuts from all debris_craters_tracks decal tiles (decals will be reworked with alpha later), keep it on the other audited sprites; (2) Stones default 40 is fine, make sure the image generator watermark is never used as a stone; (3) unrotated houses are OK. Then rebase onto origin/main (v0.61.0 after #756, including the turret commit f657f84), bump #688 to 0.62.0, verify, force-push, do not merge.
+
