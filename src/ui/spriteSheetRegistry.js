@@ -59,7 +59,7 @@ export const RETIRED_SPRITE_SHEET_PATHS = Object.freeze(new Set([
   `${SHEET_DIR}desert.webp`,
   `${SHEET_DIR}water.webp`,
   `${SHEET_DIR}multiTerrainSpriteSheet.webp`,
-  // Removed in 0.61.0: streets and rock cliffs come from the organic terrain art.
+  // Removed in 0.62.0: streets and rock cliffs come from the organic terrain art.
   `${SHEET_DIR}streets24_q90_1024x1024.webp`,
   `${SHEET_DIR}rockCliffsMountains_64x64_1024x1024.webp`
 ]))

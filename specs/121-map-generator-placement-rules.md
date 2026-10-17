@@ -48,9 +48,9 @@ Qualifying-hardware performance acceptance remains **outstanding**: this sandbox
 
 Heap deltas include garbage collection and are not retained-memory measurements. This Node run has no graphics backend, canvas DPR, GPU timer or presented-frame measurement. FPS, frame-time p95/p99/max, deadline misses, update/render CPU and GPU timings therefore remain unmeasured. The qualifying-hardware gate is still open.
 
-## Roadside and rare props (0.61.0)
+## Roadside and rare props (0.62.0)
 - `roadside` props are placed only in a dedicated sparse pass: anchors on land tiles directly next to a road, 1 in `ROADSIDE_INTERVAL` (14) such tiles by seeded hash; footprint cells stay within the second road ring and off roads. They are excluded from the generic category bags.
 - `rare` props are placed at most once per map (identity-based).
 
-## Stones (0.61.0)
+## Stones (0.62.0)
 - Props tagged `stones` are placed only by the seeded stones pass: `stoneCount` attempts target, cluster centres weighted toward water and rock terrain (within three tiles), stones scattered 1–5.5 tiles around centres (20% free weighted picks), mixing 1x1 and multi-tile stones. Deterministic for a given map seed.
