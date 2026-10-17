@@ -52,3 +52,24 @@ Supervisor feedback after visual verification (the hover animation itself looks 
 6. Delete prompt-history/2026-10-17T22-20-41Z_repository-instructions.md (AGENTS.md is not a user prompt). In prompt-history/2026-10-17T22-20-41Z_build-hover-sheet.md, record the model exactly as "gpt-6.1-sol (reasoning effort: high)" and harness "Codex CLI 0.162.1 on Patrick's box (restricted user codex)", and append this follow-up prompt to it as a second section.
 7. Update the spec and docs/changes note accordingly.
 Then run `npm run lint:fix:changed`, `npm run lint` and `npm run test:unit` and fix everything. Print a short summary when done.
+
+
+## Round 2 user prompt — PR #756
+
+UTC first recorded round 2 timestamp: 2026-10-17T22:56:57Z
+Model: gpt-6.1-sol (reasoning effort: high)
+Harness: Codex CLI 0.162.1 on Patrick's box (restricted user codex)
+Exact token counts and total task duration are unavailable and omitted.
+
+Round 2 feedback from Patrick on PR #756 (branch feat/build-hover-card, this working tree, HEAD 5a32b38). .git is read-only for you; do not commit, the supervisor commits. Follow AGENTS.md.
+
+ROOT CAUSE (already measured by the supervisor in real Chromium at normal speed on the deploy preview): with prefers-reduced-motion: no-preference the sheet transform animates fine (≈15 intermediate frames over 240 ms). With prefers-reduced-motion: reduce the computed transition-duration is 0s and the sheet jumps from translateY(88.5px) straight to 0. Patrick's desktop has the OS-level "reduce motion / animation effects off" setting on (Chrome maps it to prefers-reduced-motion: reduce), so the @media (prefers-reduced-motion: reduce) block in styles/sidebar.css that sets `transition: none` on the hover sheet removes the slide completely.
+
+Changes:
+1. Do NOT disable the slide under prefers-reduced-motion. Keep it there too, only shorten it (use 200ms for transform and opacity of the sheet, its ::before, the stats, the name background and the NEW/counter badge fades). Make sure no other rule (including generic reduced-motion rules elsewhere) zeroes those transitions.
+2. Timing: hover-in (name slides up to the top, stats slide up with it) uses ease-in; hover-out (slides back down) uses ease-out; normal duration 300ms. Implement with CSS: the transition declared on the :hover / :focus-visible state rules is used for hover-in (ease-in), the transition on the base rules is used for hover-out (ease-out). Keep everything driven by transform/opacity only (no display toggling, no height/top animation).
+3. More left padding before the left-aligned stats text: increase the stats horizontal padding from 5px to 10px (left and right) so text no longer hugs the edge, while the name stays centered.
+4. Make the title (the name line) bold (font-weight 700). All other lines stay at the same size (11px) and weight (400), all white.
+5. Update specs/build-card-hover-sheet.md (timing, reduced-motion behaviour, bold title), add a new docs/changes note for this round (e.g. docs/changes/2026-10-18-build-card-hover-motion.md, classified as a bug fix + improvement), add a release note line to features/0.61.0.json bugfixes ("Build-card hover slide now also animates with reduced motion enabled." or similar short line), and append this prompt as a new section to prompt-history/2026-10-17T22-20-41Z_build-hover-sheet.md (model gpt-6.1-sol, reasoning effort high, Codex CLI 0.162.1 on Patrick's box as restricted user codex).
+6. If practical, add a unit test that parses styles/sidebar.css and asserts the reduced-motion block does not set `transition: none` for the hover sheet selectors.
+Then run `npm run lint:fix:changed`, `npm run lint`, `npm run test:unit`, fix everything, and print a short summary.
