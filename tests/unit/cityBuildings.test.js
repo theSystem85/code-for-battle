@@ -73,12 +73,12 @@ describe('city structure lifecycle', () => {
   it('shares group HP, stamps existing debris, removes intact imagery, frees only static occupancy and clears cached paths', () => {
     const { map, layout, buildings } = prepared()
     const building = buildings[0]
-    expect(building.maxHealth).toBe(4000)
+    expect(building.maxHealth).toBe(400)
     expect(getCityAtWorld(map, building.x * 32 + 16, building.y * 32 + 16)).toBe(building)
     const state = { mapSeed: '688', occupancyMap: map.map(row => row.map(() => 2)) }
     pathCache.set('test', [])
     applyCityDamage(building, 100, map, state)
-    expect(building.health).toBe(3900)
+    expect(building.health).toBe(300)
     expect(getValidDecorationCell(layout, map, building.x, building.y)).not.toBeNull()
     applyCityDamage(building, 5000, map, state)
     expect(building.health).toBe(0)
@@ -101,7 +101,7 @@ describe('city structure lifecycle', () => {
     // Use the same deterministic catalog/layout, with new persistent anchor objects.
     prepareCityBuildings(restored, layout)
     expect(getCityBuildings(restored)[0].health).toBe(0)
-    expect(getCityBuildings(restored)[1].health).toBe(3900)
+    expect(getCityBuildings(restored)[1].health).toBe(300)
     expect(getValidDecorationCell(layout, restored, buildings[0].x, buildings[0].y)).toBeNull()
   })
 

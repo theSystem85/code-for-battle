@@ -296,7 +296,7 @@ describe('saveGame.js', () => {
     const { gameState } = await import('../../src/gameState.js')
     const { mapGrid } = await import('../../src/main.js')
     const originalMap = mapGrid.map(row => row.map(tile => ({ ...tile })))
-    const city = { id: 'city-2,2', type: 'city', owner: 'neutral', x: 2, y: 2, width: 2, height: 1, health: 0, maxHealth: 2500 }
+    const city = { id: 'city-2,2', type: 'city', owner: 'neutral', x: 2, y: 2, width: 2, height: 1, health: 0, maxHealth: 250 }
     mapGrid[2][2].cityBuilding = city
     mapGrid[2][2].decal = { tag: 'debris', variantSeed: 42, groupWidth: 2, groupHeight: 1, groupOriginX: 2, groupOriginY: 2 }
     Object.assign(gameState, { citySeeds: 0, cityClusterSize: 12, ruinSeeds: 8, ruinClusterSize: 15 })

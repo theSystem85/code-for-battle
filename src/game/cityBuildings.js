@@ -24,7 +24,7 @@ export function prepareCityBuildings(mapGrid, layout) {
     if (!seen.has(key)) {
       seen.add(key)
       const area = cell.group.width * cell.group.height
-      const maxHealth = CITY_BUILDING_HEALTH[area] || area * 1000
+      const maxHealth = CITY_BUILDING_HEALTH[area] || area * 100
       tile.cityBuilding ||= {
         id: `city-${key}`, type: 'city', owner: 'neutral',
         x: cell.anchorX, y: cell.anchorY,
