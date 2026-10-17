@@ -49,6 +49,26 @@ export function getCityAtWorld(mapGrid, x, y) {
   return layout.cells[tileY * layout.width + tileX]?.cityBuilding || null
 }
 
+// Living city structure under a world point, for normal attack clicks and hover.
+export function getAttackableCityAtWorld(mapGrid, x, y) {
+  const building = getCityAtWorld(mapGrid, x, y)
+  return building && building.health > 0 ? building : null
+}
+
+export function isCityBuildingTarget(entity) {
+  return Boolean(entity) && entity.type === 'city' && entity.owner === 'neutral' &&
+    typeof entity.id === 'string' && entity.id.startsWith('city-')
+}
+
+// City ids encode their anchor tile (`city-x,y`), so commands, replays and
+// saves can resolve them from the map grid before the layout is prepared.
+export function findCityBuildingById(mapGrid, id) {
+  const match = /^city-(\d+),(\d+)$/.exec(typeof id === 'string' ? id : '')
+  if (!match) return null
+  const building = mapGrid?.[Number(match[2])]?.[Number(match[1])]?.cityBuilding
+  return building && building.id === id ? building : null
+}
+
 export function applyCityDamage(building, damage, mapGrid, state, playSound = null) {
   // City damage is simulated by the host; clients receive the resulting state.
   if (state.multiplayerSession?.isRemote && state.multiplayerSession?.localRole !== 'host') return false

@@ -1,3 +1,4 @@
+import { findCityBuildingById } from '../game/cityBuildings.js'
 /**
  * Lockstep Synchronization Module
  * Handles deterministic lockstep synchronization for multiplayer games (Spec 015)
@@ -420,6 +421,8 @@ function applyAttackInput(input) {
     target = mainUnits.find(u => u.id === targetId)
   } else if (targetType === 'building') {
     target = gameState.buildings.find(b => b.id === targetId)
+  } else if (targetType === 'city') {
+    target = findCityBuildingById(gameState.mapGrid, targetId)
   }
 
   if (!target || target.factoryExit) return

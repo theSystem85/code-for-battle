@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from 'vitest'
 import { buildDecorationLayout, buildDecorationPools, getValidDecorationCell, buildRuinClusters } from '../../src/rendering/decorationLayout.js'
 import { normalizeDecorationSettings } from '../../src/game/decorationSettings.js'
-import { prepareCityBuildings, getCityBuildings, applyCityDamage, applyCitySnapshot, getCityAtWorld, renderCityHealthBars } from '../../src/game/cityBuildings.js'
+import { prepareCityBuildings, getCityBuildings, applyCityDamage, applyCitySnapshot, getCityAtWorld, renderCityHealthBars, findCityBuildingById, getAttackableCityAtWorld, isCityBuildingTarget } from '../../src/game/cityBuildings.js'
+import { createReplayEntityReference } from '../../src/replayCommandPrimitives.js'
 import { CITY_BUILDING_HEALTH } from '../../src/config.js'
 import { pathCache } from '../../src/game/pathCache.js'
 
@@ -126,5 +127,21 @@ describe('city structure lifecycle', () => {
     buildings[0].health--
     renderCityHealthBars(ctx, map, { x: 0, y: 0 })
     expect(ctx.fillRect).toHaveBeenCalledTimes(2)
+  })
+
+  it('resolves city targets by id and reference for commands, replays and saves', () => {
+    const { map, buildings } = prepared()
+    const building = buildings[0]
+    expect(isCityBuildingTarget(building)).toBe(true)
+    expect(isCityBuildingTarget({ id: 'x', type: 'tank', owner: 'player' })).toBe(false)
+    expect(findCityBuildingById(map, building.id)).toBe(building)
+    expect(findCityBuildingById(map, 'city-999,999')).toBeNull()
+    expect(findCityBuildingById(map, 'unit-1')).toBeNull()
+    expect(createReplayEntityReference(building)).toEqual({ kind: 'city', id: building.id, x: building.x, y: building.y })
+    const worldX = building.x * 32 + 16
+    const worldY = building.y * 32 + 16
+    expect(getAttackableCityAtWorld(map, worldX, worldY)).toBe(building)
+    applyCityDamage(building, 9999, map, {})
+    expect(getAttackableCityAtWorld(map, worldX, worldY)).toBeNull()
   })
 })

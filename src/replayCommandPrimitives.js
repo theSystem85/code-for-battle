@@ -1,5 +1,6 @@
 import { gameState } from './gameState.js'
 import { getBuildingIdentifier } from './utils.js'
+import { isCityBuildingTarget } from './game/cityBuildings.js'
 
 function ensureReplayCommandState() {
   if (!gameState.replay) {
@@ -46,6 +47,9 @@ export function createReplayEntityReference(entity) {
       tileX: entity.tileX,
       tileY: entity.tileY
     }
+  }
+  if (isCityBuildingTarget(entity)) {
+    return { kind: 'city', id: entity.id, x: entity.x, y: entity.y }
   }
   if (entity.isBuilding) {
     return {

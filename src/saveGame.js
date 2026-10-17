@@ -1,3 +1,4 @@
+import { findCityBuildingById } from './game/cityBuildings.js'
 import { normalizeDecorationSettings } from './game/decorationSettings.js'
 import { exportAutomationSession, restoreAutomationSession, resetPolicyStore } from './policies/policyStore.js'
 // saveGame.js
@@ -1596,6 +1597,9 @@ function loadGameFromSaveObject(saveObj, key) {
         let target = units.find(u => u.id === unit.targetId)
         if (!target) {
           target = gameState.buildings.find(b => b.id === unit.targetId)
+        }
+        if (!target) {
+          target = findCityBuildingById(gameState.mapGrid, unit.targetId)
         }
         if (target) {
           unit.target = target
