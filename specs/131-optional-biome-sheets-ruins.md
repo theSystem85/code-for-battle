@@ -20,3 +20,8 @@ The renderer change reads the prepared active-mode boolean once per frame, rathe
 Qualifying-hardware performance acceptance remains outstanding: this sandbox cannot bind a development-server port (`listen EPERM`), and cannot certify 75 presented FPS. Before acceptance, follow `performance_improvement.md`: compare cold traversal, repeated full-map scrolling, selected layered units, firing, movement and procedural water at realistic entity counts and unchanged fidelity. Record backend/DPR, FPS, p95/p99/max frame times, missed 13.333 ms deadlines, CPU update/render time, GPU time where available and memory/GC evidence.
 
 Sandbox results (2026-10-16): `npm run lint:fix:changed` and `npm run lint` passed. `npm run test:unit -- --maxWorkers=2` passed all 5,035 tests in 279 files (118.89 seconds). An earlier unrestricted run hit an unrelated flow-field setup timeout; the bounded-worker run required no weakened assertions or increased timeouts. The E2E command could not start its Vite server; a direct `npm run dev -- --host 127.0.0.1` confirmed `listen EPERM: operation not permitted 127.0.0.1:5173`. No live benchmark metrics or canvas-pixel equivalence are claimed.
+
+## Strict snow placement (0.61.0)
+- On snow tiles only vegetation with an explicit `snow` tag is placed. Universal groups tagged as vegetation (`VEGETATION_TAGS` in `decorationLayout.js`) never enter the snow pools; universal non-vegetation props still do.
+- The organic fallback details (summer vegetation) are never drawn on snow tiles.
+- Any additional bundled `dtv<N>_<name>.webp` + `.json` pair is registered as an optional sheet automatically (for example a snow-tagged winter vegetation sheet).
