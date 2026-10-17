@@ -366,7 +366,7 @@ export class EffectsRenderer {
 
       if (
         exp.type !== 'spriteSheet' &&
-        isCircleOutsideViewport(centerX, centerY, maxRadius, canvasWidth, canvasHeight)
+        isCircleOutsideViewport(centerX, centerY, maxRadius * 2.3, canvasWidth, canvasHeight)
       ) {
         continue
       }

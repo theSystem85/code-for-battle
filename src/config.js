@@ -1101,6 +1101,7 @@ export const UNIT_PROPERTIES = {
   },
   // Tank properties
   tank_v1: {
+    impactVfxProfile: 'blasty',
     health: 100,
     maxHealth: 100,
     speed: 0.33,  // 50% slower: 0.66 * 0.5 = 0.33
@@ -1109,6 +1110,7 @@ export const UNIT_PROPERTIES = {
   },
   // Tank V2 properties
   'tank-v2': {
+    impactVfxProfile: 'blasty',
     health: 150,
     maxHealth: 150,
     speed: 0.3,  // 50% slower: 0.6 * 0.5 = 0.3
@@ -1118,6 +1120,7 @@ export const UNIT_PROPERTIES = {
   },
   // Tank V3 properties
   'tank-v3': {
+    impactVfxProfile: 'blasty',
     health: 200,
     maxHealth: 200,
     speed: 0.25,  // 50% slower: 0.5 * 0.5 = 0.25
@@ -1127,6 +1130,7 @@ export const UNIT_PROPERTIES = {
   },
   // Light tank / IFV (M2 Bradley style): fast, lightly armored, rapid-fire autocannon
   lightTank: {
+    impactVfxProfile: 'sparky',
     health: 70,
     maxHealth: 70,
     speed: 0.46, // ~1.4x tank_v1 speed
@@ -1326,6 +1330,10 @@ export const UNIT_PROPERTIES = {
     armor: 6 // 2x tank armor (tank_v1 has no explicit armor, so using base of 3 * 2)
   }
 }
+
+// Legacy tank is the same unit as tank_v1, not another playable roster entry.
+// Keep config-based cosmetic lookup available without changing roster enumeration.
+Object.defineProperty(UNIT_PROPERTIES, 'tank', { value: UNIT_PROPERTIES.tank_v1, enumerable: false })
 
 export let HOWITZER_SPEED = UNIT_PROPERTIES.howitzer.speed
 

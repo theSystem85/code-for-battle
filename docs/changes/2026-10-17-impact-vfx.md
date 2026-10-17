@@ -10,3 +10,5 @@ Implemented: visual-only profile/direction/surface data at impact creation; rand
 Proposed only: refraction/true background blur, camera micro-shake and its settings UI, new decal rotation/scaling (requires terrain renderer changes), remote snapshot transport of visual metadata, and qualifying-hardware performance certification. No new M2 unit or gameplay configuration was added.
 
 Validation: lint passed; all 5,039 unit tests and all 5,125 combined unit/integration tests passed. E2E and live benchmarking are blocked by missing Chromium and sandbox port restrictions. No commit was created.
+
+Follow-up: see [stronger impacts](2026-10-17-strengthen-impact-vfx.md) for corrected lightTank config mapping and enlarged blasts; the follow-up supersedes compact flashes and alias-only Bradley support.

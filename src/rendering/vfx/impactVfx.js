@@ -1,5 +1,5 @@
 // Cosmetic PRNG: never consumes the deterministic simulation random stream.
-import { TILE_SIZE } from '../../config.js'
+import { TILE_SIZE, UNIT_PROPERTIES } from '../../config.js'
 
 export const MAX_IMPACT_PARTICLES = 384
 export const MOBILE_IMPACT_PARTICLES = 128
@@ -7,6 +7,8 @@ const COLORS = ['#ffe3a0', '#8b7053', '#ff8d27', '#65605a', '#ffad43']
 let rendererSerial = 0
 
 export function selectImpactProfile(type) {
+  const configured = UNIT_PROPERTIES[type]?.impactVfxProfile
+  if (configured) return configured
   switch (type) {
     case 'm2': case 'bradley': case 'm2Bradley': case 'bradleyM2': return 'sparky'
     case 'tank': case 'tank_v1': case 'tank-v2': case 'tank-v3':
@@ -71,7 +73,7 @@ export class ImpactVfx {
   constructor() {
     this.serial = ++rendererSerial
     this.particles = Array.from({ length: MAX_IMPACT_PARTICLES }, () => ({
-      x: 0, y: 0, vx: 0, vy: 0, start: 0, life: 0, size: 0, angle: 0, kind: 0, stretch: 1
+      x: 0, y: 0, vx: 0, vy: 0, start: 0, life: 0, size: 0, angle: 0, kind: 0, stretch: 1, ground: false
     }))
     this.cursor = 0
     this.seed = 1
@@ -108,23 +110,27 @@ export class ImpactVfx {
     this.seed = exp.visualSeed || ((exp.x * 73856093 ^ exp.y * 19349663 ^ exp.startTime) >>> 0) || 1
     const sparky = exp.impactProfile === 'sparky'
     const blasty = exp.impactProfile === 'blasty'
-    const count = Math.floor((sparky ? 22 : blasty ? 28 : 16) * (0.75 + this.random() * 0.5) * (low ? 0.4 : 1))
+    const ground = !exp.impactSurface || exp.impactSurface === 'ground'
+    const sparkCount = Math.floor((24 + this.random() * 17) * (ground ? 0.8 : 1) * (low ? 0.4 : 1))
+    const count = sparky ? sparkCount + (ground ? 4 : 1) : Math.floor((blasty ? 40 : 24) * (low ? 0.4 : 1))
     const cap = low ? MOBILE_IMPACT_PARTICLES : MAX_IMPACT_PARTICLES
     const reverse = exp.impactAngle || 0
     const spread = !exp.impactSurface || exp.impactSurface === 'ground' ? 2.6 : 1.2
     for (let i = 0; i < count; i++) {
       const p = this.particles[this.cursor++ % cap]
-      p.kind = i === 0 ? 4 : sparky ? 0 : i % 5 === 0 ? 3 : i % 3 === 0 ? 2 : i % 2 === 0 ? 1 : 0
-      const angle = reverse + (this.random() - 0.5) * spread
+      p.ground = ground
+      p.kind = i === 0 ? 4 : ground && i === 1 ? 5 : sparky ? (ground && i < 4 ? (i === 2 ? 1 : 3) : 0) : i % (ground ? 4 : 10) === 0 ? 3 : i % 5 === 0 ? 2 : i % (ground ? 2 : 4) === 0 ? 1 : 0
+      const angle = p.kind === 1 || p.kind === 2 || p.kind === 3
+        ? this.random() * Math.PI * 2 : reverse + (this.random() - 0.5) * spread
       const speed = p.kind === 3 ? 5 + this.random() * 10 : 25 + this.random() * (sparky ? 180 : 95)
       p.x = exp.x
       p.y = exp.y
-      p.vx = p.kind === 4 ? 0 : Math.cos(angle) * speed
-      p.vy = p.kind === 4 ? 0 : Math.sin(angle) * speed - (p.kind === 3 ? 15 : 0)
+      p.vx = p.kind >= 4 ? 0 : Math.cos(angle) * speed
+      p.vy = p.kind >= 4 ? 0 : Math.sin(angle) * speed - (p.kind === 3 ? 15 : 0)
       p.start = start + (i === 0 ? 0 : this.random() * 65)
-      p.life = p.kind === 4 ? 120 + this.random() * 80 : p.kind === 3 ? 850 + this.random() * 600 : p.kind === 2 ? 400 + this.random() * 400 : 100 + this.random() * (sparky ? 160 : 400)
+      p.life = p.kind === 4 ? (sparky ? 140 : 400) : p.kind === 5 ? 1500 : p.kind === 3 ? 1000 + this.random() * 450 : p.kind === 0 ? 250 + this.random() * 150 : 600 + this.random() * 500
       this.activeUntil = Math.max(this.activeUntil, p.start + p.life)
-      p.size = p.kind === 3 ? 5 + this.random() * 7 : p.kind === 4 ? (sparky ? 2 + this.random() * 2 : Math.min(24, Math.max(8, (Number.isFinite(exp.maxRadius) ? exp.maxRadius : TILE_SIZE) * 0.4)) * (0.7 + this.random() * 0.3)) : 1 + this.random() * 2
+      p.size = p.kind === 4 ? (sparky ? 3 : Math.max(8, Number.isFinite(exp.maxRadius) ? exp.maxRadius : TILE_SIZE) * 2.3) : p.kind === 5 ? 10 : p.kind === 3 ? 8 + this.random() * 8 : 1.5 + this.random() * 2
       p.angle = this.random() * Math.PI * 2
       p.stretch = 0.55 + this.random() * 0.6
     }
@@ -155,43 +161,51 @@ export class ImpactVfx {
       if (age < 0 || age >= p.life) continue
       const t = age / 1000
       const fade = 1 - age / p.life
-      const x = p.x + p.vx * t - scroll.x
-      const y = p.y + p.vy * t + (p.kind === 1 ? 65 * t * t : 0) - scroll.y
-      if (x < -24 || y < -24 || x > width + 24 || y > height + 24) continue
+      const travel = p.kind === 0 ? (1 - Math.exp(-4 * t)) / 4 : t
+      const x = p.x + p.vx * travel - scroll.x
+      const y = p.y + p.vy * travel + (p.kind === 1 ? 65 * t * t : 0) - scroll.y
+      const extent = Math.max(24, p.size * 1.6)
+      if (x < -extent || y < -extent || x > width + extent || y > height + extent) continue
       if (state.shadowOfWarEnabled && !state.visibilityMap?.[Math.floor((y + scroll.y) / TILE_SIZE)]?.[Math.floor((x + scroll.x) / TILE_SIZE)]?.visible) continue
       ctx.globalAlpha = fade * (p.kind === 3 ? 0.22 : 0.85)
       ctx.fillStyle = COLORS[p.kind]
       if (p.kind === 4) {
-        // Subtle 120–200 ms soft brightness pulse, not a shockwave ring.
-        // Density changes suppress the raster until explicit preparation.
-        if (!low && this.flash && this.dpr === ((typeof window !== 'undefined' && window.devicePixelRatio) || 1)) {
-          ctx.globalCompositeOperation = 'lighter'
-          ctx.globalAlpha = fade * 0.22
-          ctx.drawImage(this.flash, p.x - scroll.x - 24, p.y - scroll.y - 24, 48, 48)
-          ctx.globalCompositeOperation = operation
+        // Concentric FILLED disks accumulate brightness toward the center.
+        // No edge band, stroke, gradient allocation or resized bitmap per frame.
+        const radius = p.size * Math.min(1, 0.3 + age / 220)
+        ctx.fillStyle = '#ff7018'
+        for (let layer = 8; layer > 0; layer--) {
+          ctx.globalAlpha = Math.min(1, fade * 2) * 0.18
+          ctx.beginPath()
+          ctx.arc(x, y, radius * layer / 8, 0, Math.PI * 2)
+          ctx.fill()
         }
-        ctx.globalAlpha = fade * 0.9
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.fillStyle = '#fff4bc'
+        ctx.globalAlpha = Math.min(1, fade * 2)
         ctx.beginPath()
-        ctx.arc(p.x - scroll.x, p.y - scroll.y, p.size * (0.5 + fade * 0.5), 0, Math.PI * 2)
+        ctx.arc(x, y, radius * 0.4 * fade, 0, Math.PI * 2)
         ctx.fill()
-        // Compact hot core makes tank flashes read as fire, without another
-        // bitmap layer or a large translucent fill.
-        ctx.globalAlpha = fade * fade
-        ctx.fillStyle = '#fff0b0'
-        ctx.beginPath()
-        ctx.arc(p.x - scroll.x, p.y - scroll.y, p.size * 0.35 * fade, 0, Math.PI * 2)
-        ctx.fill()
+        ctx.globalCompositeOperation = operation
       } else if (p.kind === 0) {
-        ctx.strokeStyle = COLORS[0]
+        ctx.globalCompositeOperation = 'lighter'
+        ctx.strokeStyle = p.ground ? '#ffd27a' : '#fff8d5'
         ctx.lineWidth = p.size * fade
         ctx.beginPath()
         ctx.moveTo(x, y)
-        ctx.lineTo(x - p.vx * 0.025 * fade, y - p.vy * 0.025 * fade)
+        ctx.lineTo(x - p.vx * 0.09 * Math.exp(-4 * t), y - p.vy * 0.09 * Math.exp(-4 * t))
         ctx.stroke()
+        ctx.globalCompositeOperation = operation
       } else {
-        ctx.beginPath()
-        ctx.ellipse(x, y, p.size, p.size * p.stretch, p.angle, 0, Math.PI * 2)
-        ctx.fill()
+        ctx.fillStyle = p.kind === 5 ? '#30251b' : p.kind === 3 ? (p.ground ? '#a58a63' : '#66636a') : p.kind === 1 ? (p.ground ? '#806040' : '#ffc477') : COLORS[p.kind]
+        const size = p.size * (p.kind === 3 ? 0.6 + age / p.life : 1)
+        const layers = p.kind === 3 || p.kind === 5 ? 4 : 1
+        ctx.globalAlpha = fade * (layers === 4 ? 0.08 : 0.9)
+        for (let layer = layers; layer > 0; layer--) {
+          ctx.beginPath()
+          ctx.ellipse(x, y, size * layer / layers, size * p.stretch * layer / layers, p.angle, 0, Math.PI * 2)
+          ctx.fill()
+        }
       }
     }
     ctx.fillStyle = fill

@@ -1,6 +1,10 @@
 {
   "version": "0.59.0",
   "features": [],
-  "improvements": ["Impacts gain directional sparks, varied tank blasts and subtle light flashes."],
-  "bugfixes": []
+  "improvements": [
+    "Impacts gain directional sparks, varied tank blasts and subtle light flashes."
+  ],
+  "bugfixes": [
+    "Bradley hits throw bright sparks; tank blasts are larger with lingering debris and dust."
+  ]
 }
