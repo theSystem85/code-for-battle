@@ -10,7 +10,7 @@
 
 Loading investigation: `setupGameWorld()` sets `gameStarted` before systems and renderer preparation. `initializeGame()` waits for the present boot phase (bounded at 20 seconds by `waitForBootPhase`) before hiding the overlay and scheduling deferred settings initialization. The operator's 3-second observation is inside that normal startup window; it does not establish a stuck real-game overlay. The regression helper now waits for the overlay to be hidden (or absent) before pausing and mutating the arena. Renderer preparation and the loading overlay remain intact.
 
-The settings API now initializes listeners once per modal before opening, including when called before the idle startup task. The E2E duration case also asserts the effective config value. Radial option selectors match the implementation; options still use geometric pointer selection after fly-out. Default hold remains 1500 ms, with existing movement, camera, drag and multitouch cancellation and consumed-release coverage. No simulation or rendering hot paths were changed.
+The settings API now initializes listeners once per modal before opening, including when called before the idle startup task. The E2E duration case also asserts the effective config value. Radial option selectors match the implementation; options still use geometric pointer selection after fly-out. The default hold was 1500 ms at this point (now 1000 ms, see `2026-10-17-long-press-labels-and-delay.md`), with existing movement, camera, drag and multitouch cancellation and consumed-release coverage. No simulation or rendering hot paths were changed.
 
 Browser acceptance remains outstanding in the operator environment: `npm run test:e2e -- tests/e2e/longPressMapActionMenu.test.js --project=chromium`.
 

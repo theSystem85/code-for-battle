@@ -5,7 +5,7 @@ import { updateUnitPolicies, noteDirectOrder } from '../../src/policies/policyEn
 import { updateMapArrival } from '../../src/policies/mapArrivalOrders.js'
 import { resetPolicyStore, savePolicy } from '../../src/policies/policyStore.js'
 import { POLICY_TEMPLATES } from '../../src/policies/policyTemplates.js'
-import { TILE_SIZE, MAP_ACTION_LONG_PRESS_MS, setMapActionLongPressMs } from '../../src/config.js'
+import { TILE_SIZE, DEFAULT_MAP_ACTION_LONG_PRESS_MS, MAP_ACTION_LONG_PRESS_MS, setMapActionLongPressMs } from '../../src/config.js'
 
 const tank = () => ({ id: 'tank', owner: 'player1', type: 'tank', health: 100, x: 0, y: 0, tileX: 0, tileY: 0 })
 const turret = () => ({ id: 'turret', owner: 'player1', type: 'turretGunV1', health: 100, isBuilding: true })
@@ -16,9 +16,12 @@ describe('map long press controller', () => {
   function setup() {
     const open = vi.fn(() => true)
     const progress = vi.fn()
-    const controller = createMapLongPressController({ duration: () => 1500, open, progress })
+    const controller = createMapLongPressController({ duration: () => DEFAULT_MAP_ACTION_LONG_PRESS_MS, open, progress })
     return { controller, open, progress }
   }
+  it('defaults to a 1000 ms hold', () => {
+    expect(DEFAULT_MAP_ACTION_LONG_PRESS_MS).toBe(1000)
+  })
   it('delays feedback and opens once at the configured duration, consuming release', () => {
     const { controller, open, progress } = setup()
     controller.down({ x: 100, y: 100 })
@@ -26,8 +29,8 @@ describe('map long press controller', () => {
     vi.advanceTimersByTime(199)
     expect(progress).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
-    expect(progress).toHaveBeenCalledWith({ x: 100, y: 100 }, 1300)
-    vi.advanceTimersByTime(1299)
+    expect(progress).toHaveBeenCalledWith({ x: 100, y: 100 }, 800)
+    vi.advanceTimersByTime(799)
     expect(open).not.toHaveBeenCalled()
     vi.advanceTimersByTime(1)
     expect(open).toHaveBeenCalledTimes(1)
@@ -37,7 +40,7 @@ describe('map long press controller', () => {
   it('short release never opens or consumes the click', () => {
     const { controller, open } = setup()
     controller.down({ x: 0, y: 0 })
-    vi.advanceTimersByTime(1499)
+    vi.advanceTimersByTime(999)
     expect(controller.up()).toBe(false)
     vi.advanceTimersByTime(2000)
     expect(open).not.toHaveBeenCalled()
@@ -165,6 +168,6 @@ describe('map action selection and dispatch', () => {
     setMapActionLongPressMs(9000)
     expect(MAP_ACTION_LONG_PRESS_MS).toBe(5000)
     expect(setMapActionLongPressMs(NaN)).toBe(false)
-    setMapActionLongPressMs(1500)
+    setMapActionLongPressMs(DEFAULT_MAP_ACTION_LONG_PRESS_MS)
   })
 })
