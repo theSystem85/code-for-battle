@@ -67,4 +67,19 @@ describe('map settings Apply button', () => {
     expect($('apply').disabled).toBe(false)
     expect(controller.isDirty()).toBe(true)
   })
+
+  it('keeps edits made while the map regenerates pending after Apply settles', async() => {
+    let finish
+    const { $, controller, edit } = setup(vi.fn(() => new Promise(resolve => { finish = resolve })))
+    edit('seed', '5')
+    const pending = controller.apply()
+    expect($('apply').disabled).toBe(true)
+    edit('water', '30')
+    controller.resync() // e.g. the regeneration path resyncing mid-apply
+    finish()
+    await pending
+    expect($('apply').disabled).toBe(false)
+    edit('water', '10')
+    expect($('apply').disabled).toBe(true)
+  })
 })

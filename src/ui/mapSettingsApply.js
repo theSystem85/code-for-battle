@@ -31,8 +31,12 @@ export function createMapSettingsApplyController({ inputs, button, onApply, fiel
     button.setAttribute('aria-disabled', String(button.disabled))
     button.dataset.pending = dirty ? 'true' : 'false'
   }
-  const resync = () => {
-    snapshot = new Map(watched.map(input => [input, readValue(input)]))
+  const capture = () => new Map(watched.map(input => [input, readValue(input)]))
+  // External resyncs (e.g. after a regeneration) are ignored while an Apply
+  // is running; the Apply itself records exactly the values it applied.
+  const resync = (values = null) => {
+    if (applying && !values) return
+    snapshot = values || capture()
     changedField = null
     refresh()
   }
@@ -49,13 +53,15 @@ export function createMapSettingsApplyController({ inputs, button, onApply, fiel
     if (applying || !isDirty()) return false
     applying = true
     refresh()
+    // Values edited while the map regenerates stay pending afterwards.
+    const appliedValues = capture()
     const field = changedField
     let applied = false
     try {
       applied = (await onApply(field)) !== false
     } finally {
       applying = false
-      if (applied) resync()
+      if (applied) resync(appliedValues)
       else refresh()
     }
     return applied
