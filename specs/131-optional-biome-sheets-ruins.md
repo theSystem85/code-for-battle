@@ -25,3 +25,4 @@ Sandbox results (2026-10-16): `npm run lint:fix:changed` and `npm run lint` pass
 - On snow tiles only vegetation with an explicit `snow` tag is placed. Universal groups tagged as vegetation (`VEGETATION_TAGS` in `decorationLayout.js`) never enter the snow pools; universal non-vegetation props still do.
 - The organic fallback details (summer vegetation) are never drawn on snow tiles.
 - Any additional bundled `dtv<N>_<name>.webp` + `.json` pair is registered as an optional sheet automatically (for example a snow-tagged winter vegetation sheet).
+- `dtv3_winter` (lossless WebP + JSON, 6x8 @ 64 px) is the first snow vegetation sheet: 2x2 bare trees and 1x1 pines (impassable), 1x1 shrubs, tufts and reeds (passable). Tags are limited to `decorative`, `snow`, `passable`/`impassable` and `group_N`. It is optional, off by default and absent from `index.json`.
