@@ -5,6 +5,7 @@
   ],
   "improvements": [],
   "bugfixes": [
-    "Build-card unlocks include build-order prerequisites."
+    "Build-card unlocks include build-order prerequisites.",
+    "Build-card hover slide now also animates with reduced motion enabled."
   ]
 }

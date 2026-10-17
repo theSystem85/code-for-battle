@@ -1252,6 +1252,7 @@ body.is-touch .money-tooltip__meta {
 
 /* One in-card sheet: the name rests at the bottom until hover or keyboard focus. */
 .production-button {
+  --production-hover-duration: 300ms;
   container-type: inline-size;
 }
 
@@ -1261,7 +1262,7 @@ body.is-touch .money-tooltip__meta {
   z-index: 2;
   border-radius: 6px;
   transform: translateY(calc(100% - 24px));
-  transition: transform 240ms ease-out;
+  transition: transform var(--production-hover-duration) ease-out;
   pointer-events: none;
 }
 
@@ -1273,7 +1274,7 @@ body.is-touch .money-tooltip__meta {
   background: rgba(12, 17, 24, 0.88);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09), 0 3px 10px rgba(0, 0, 0, 0.25);
   opacity: 0;
-  transition: opacity 240ms ease-out;
+  transition: opacity var(--production-hover-duration) ease-out;
 }
 
 .production-button .building-name,
@@ -1283,11 +1284,22 @@ body.is-touch .money-tooltip__meta {
   display: block;
   height: 24px;
   padding: 6px 4px;
-  background: rgba(0, 0, 0, 0.7);
+  background: transparent;
   border-radius: 6px 6px 0 0;
   text-align: center;
-  transition: background-color 240ms ease-out;
   pointer-events: none;
+}
+
+.production-button .building-name::before,
+.production-button .unit-name::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, 0.7);
+  opacity: 1;
+  transition: opacity var(--production-hover-duration) ease-out;
 }
 
 .production-button .production-hover-stats {
@@ -1295,10 +1307,10 @@ body.is-touch .money-tooltip__meta {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 0 5px 4px;
+  padding: 0 10px 4px;
   opacity: 0;
   transform: translateY(8px);
-  transition: opacity 240ms ease-out, transform 240ms ease-out;
+  transition: opacity var(--production-hover-duration) ease-out, transform var(--production-hover-duration) ease-out;
   pointer-events: none;
 }
 
@@ -1311,6 +1323,11 @@ body.is-touch .money-tooltip__meta {
   font-size: 11px;
   font-weight: 400;
   line-height: 12px;
+}
+
+.production-button .production-hover-sheet .building-name,
+.production-button .production-hover-sheet .unit-name {
+  font-weight: 700;
 }
 
 .production-button .production-hover-stats span {
@@ -1335,11 +1352,16 @@ body.is-touch .money-tooltip__meta {
 .production-button .new-label,
 .production-button .batch-counter,
 .production-button .ready-counter {
-  transition: opacity 240ms ease-out;
+  transition: opacity var(--production-hover-duration) ease-out;
   pointer-events: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
+  .production-button:hover :is(.production-hover-sheet, .production-hover-stats, .new-label, .batch-counter, .ready-counter),
+  .production-button:hover :is(.production-hover-sheet, .building-name, .unit-name)::before {
+    transition-timing-function: ease-in;
+  }
+
   .production-button:hover .new-label,
   .production-button:hover .batch-counter,
   .production-button:hover .ready-counter {
@@ -1359,10 +1381,15 @@ body.is-touch .money-tooltip__meta {
     transform: translateY(0);
   }
 
-  .production-button:hover .production-hover-sheet .building-name,
-  .production-button:hover .production-hover-sheet .unit-name {
-    background-color: transparent;
+  .production-button:hover .production-hover-sheet .building-name::before,
+  .production-button:hover .production-hover-sheet .unit-name::before {
+    opacity: 0;
   }
+}
+
+.production-button:focus-visible :is(.production-hover-sheet, .production-hover-stats, .new-label, .batch-counter, .ready-counter),
+.production-button:focus-visible :is(.production-hover-sheet, .building-name, .unit-name)::before {
+  transition-timing-function: ease-in;
 }
 
 .production-button:focus-visible .new-label,
@@ -1381,21 +1408,14 @@ body.is-touch .money-tooltip__meta {
   opacity: 1;
 }
 
-.production-button:focus-visible .production-hover-sheet .building-name,
-.production-button:focus-visible .production-hover-sheet .unit-name {
-  background-color: transparent;
+.production-button:focus-visible .production-hover-sheet .building-name::before,
+.production-button:focus-visible .production-hover-sheet .unit-name::before {
+  opacity: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .production-button .production-hover-sheet,
-  .production-hover-sheet::before,
-  .production-button .production-hover-stats,
-  .production-button .building-name,
-  .production-button .unit-name,
-  .production-button .new-label,
-  .production-button .batch-counter,
-  .production-button .ready-counter {
-    transition: none;
+  .production-button {
+    --production-hover-duration: 200ms;
   }
 }
 
