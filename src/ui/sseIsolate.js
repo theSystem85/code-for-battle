@@ -36,11 +36,50 @@ export function isolateComponent(image, x, y, cutoff = 16) {
     if (py + 1 < height) visit(index + width)
   }
   const bbox = { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
-  const pixels = new Uint8ClampedArray(bbox.width * bbox.height * 4)
-  for (let i = 0; i < tail; i++) {
-    const index = queue[i]
-    const destination = ((Math.floor(index / width) - top) * bbox.width + index % width - left) * 4
-    pixels.set(data.subarray(index * 4, index * 4 + 4), destination)
+  const { pixels, holes } = copyComponentWithInterior(image, bbox, queue, tail)
+  return { bbox, pixels, area: tail, holes }
+}
+
+/**
+ * Copy a component's pixels into its bounding box, plus every pixel the
+ * silhouette encloses. Only background connected to the bounding-box edge
+ * stays transparent, so dark or black detail inside a sprite (windows,
+ * shadows, outlines around holes) is never stripped.
+ */
+export function copyComponentWithInterior({ width, data }, bbox, indices, count = indices.length) {
+  const local = new Uint8Array(bbox.width * bbox.height)
+  for (let i = 0; i < count; i++) {
+    const index = indices[i]
+    local[(Math.floor(index / width) - bbox.y) * bbox.width + index % width - bbox.x] = 1
   }
-  return { bbox, pixels, area: tail }
+  // Flood the non-component pixels from the bounding-box edge: what it
+  // cannot reach is enclosed by the sprite.
+  const outside = new Uint8Array(local.length)
+  const queue = new Int32Array(local.length)
+  let head = 0
+  let tail = 0
+  const seed = offset => {
+    if (!local[offset] && !outside[offset]) { outside[offset] = 1; queue[tail++] = offset }
+  }
+  for (let x = 0; x < bbox.width; x++) { seed(x); seed((bbox.height - 1) * bbox.width + x) }
+  for (let y = 0; y < bbox.height; y++) { seed(y * bbox.width); seed(y * bbox.width + bbox.width - 1) }
+  while (head < tail) {
+    const offset = queue[head++]
+    const x = offset % bbox.width
+    if (x > 0) seed(offset - 1)
+    if (x + 1 < bbox.width) seed(offset + 1)
+    if (offset >= bbox.width) seed(offset - bbox.width)
+    if (offset + bbox.width < local.length) seed(offset + bbox.width)
+  }
+  const pixels = new Uint8ClampedArray(local.length * 4)
+  let holes = 0
+  for (let offset = 0; offset < local.length; offset++) {
+    if (outside[offset]) continue
+    if (!local[offset]) holes++
+    const x = offset % bbox.width
+    const y = (offset - x) / bbox.width
+    const source = ((bbox.y + y) * width + bbox.x + x) * 4
+    pixels.set(data.subarray(source, source + 4), offset * 4)
+  }
+  return { pixels, holes }
 }

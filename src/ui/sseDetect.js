@@ -1,5 +1,8 @@
+import { copyComponentWithInterior } from './sseIsolate.js'
+
 // Pure source processing. A gap of one pixel is bridged by default; only
-// original foreground pixels are copied, so merging never paints the gap.
+// original pixels are copied (foreground plus what it encloses), so merging
+// never paints the gap.
 export function detectSprites({ width, height, data }, { cutoff = 16, minArea = 2, gap = 1 } = {}) {
   if (!Number.isFinite(cutoff) || cutoff < 0 || cutoff > 255
     || !Number.isInteger(minArea) || minArea < 2 || !Number.isInteger(gap) || gap < 0 || gap > 2) throw new Error('Invalid detection options.')
@@ -40,13 +43,9 @@ export function detectSprites({ width, height, data }, { cutoff = 16, minArea = 
     }
     if (tail < minArea) continue
     const bbox = { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
-    const pixels = new Uint8ClampedArray(bbox.width * bbox.height * 4)
-    for (let i = 0; i < tail; i++) {
-      const index = queue[i]
-      const offset = ((Math.floor(index / width) - top) * bbox.width + index % width - left) * 4
-      pixels.set(data.subarray(index * 4, index * 4 + 4), offset)
-    }
-    components.push({ bbox, pixels, area: tail })
+    // Interior pixels (dark detail, enclosed holes) stay; only edge-connected background is dropped.
+    const { pixels, holes } = copyComponentWithInterior({ width, data }, bbox, queue, tail)
+    components.push({ bbox, pixels, area: tail, holes })
   }
   return components
 }
