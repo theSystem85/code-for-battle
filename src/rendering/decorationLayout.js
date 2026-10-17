@@ -413,7 +413,8 @@ export function decorationSpacingAllows(placement, nearby) {
   const identity = decorationIdentity(placement.group)
   return nearby.every(other => {
     const distance = decorationFootprintDistance(placement, other)
-    if (placement.group.tagSet.has('city') && other.group.tagSet.has('city')) return distance >= 2
+    // Houses along a street may form gapless rows.
+    if (placement.group.tagSet.has('city') && other.group.tagSet.has('city')) return distance >= 1
     return distance >= Math.max(decorationSpacing(placement.group), decorationSpacing(other.group)) &&
       (identity !== decorationIdentity(other.group) || distance >= 6)
   })
@@ -431,34 +432,10 @@ export function createDecorationBag(candidates, salt = 0) {
   return { next: () => ordered.length ? ordered[cursor++ % ordered.length] : null, size: ordered.length }
 }
 
-const mod3 = value => ((value % 3) + 3) % 3
 
 function isCityStreetCandidate(tile) {
   return Boolean(tile) && (tile.type === 'land' || isCityStreetTile(tile)) &&
     !tile.building && !tile.airstripStreet && !tile.ore && !tile.seedCrystal
-}
-
-/**
- * Preparation-only street lattice for city clusters. City anchors sit on a
- * three-tile grid around each center, so rows and columns at offset 2 are the
- * one-tile streets between blocks. Returns center index + 1 per tile, else 0.
- */
-export function buildCityStreetLattice(mapGrid, cities) {
-  const height = mapGrid.length
-  const width = mapGrid[0]?.length || 0
-  const lattice = new Uint8Array(width * height)
-  const reach = cities.radius + 1
-  cities.centers.forEach((center, index) => {
-    for (let y = Math.max(0, center.y - reach); y <= Math.min(height - 1, center.y + reach); y++) {
-      for (let x = Math.max(0, center.x - reach); x <= Math.min(width - 1, center.x + reach); x++) {
-        if ((x - center.x) ** 2 + (y - center.y) ** 2 > reach ** 2) continue
-        if (mod3(x - center.x) !== 2 && mod3(y - center.y) !== 2) continue
-        const offset = y * width + x
-        if (!lattice[offset] && isCityStreetCandidate(mapGrid[y][x])) lattice[offset] = index + 1
-      }
-    }
-  })
-  return lattice
 }
 
 function createMinHeap() {
@@ -498,50 +475,237 @@ function createMinHeap() {
   }
 }
 
+const sign = value => (value > 0 ? 1 : value < 0 ? -1 : 0)
+
 /**
- * Keep the lattice only around placed city buildings, then join every street
- * component to the generated road network with a cheapest path that never
- * crosses a city building, water, rock or structure.
+ * Organic city streets (preparation only). Each city centre gets one gently
+ * curved main street through it along the axis with the most usable land,
+ * plus 1-4 perpendicular side streets (by city radius) that may branch once.
+ * Streets bend around water, rock and other obstacles, stop at the map's
+ * roads (joined) or when they touch another street (reconnected); everything
+ * else is a dead end. Deterministic from the salt and the map.
+ * Returns { mask, cities: [{ index, center, streets: [{ kind, tiles, joined }], ends }] },
+ * where mask holds the city index + 1 for every planned street tile.
  */
-export function planCityStreets(mapGrid, { cells, groundDetails, lattice, cities }) {
+export function planOrganicCityStreets(mapGrid, cities, { salt = 0, constraints = null } = {}) {
   const height = mapGrid.length
   const width = mapGrid[0]?.length || 0
-  const boxes = cities.centers.map(() => null)
+  const mask = new Uint8Array(width * height)
+  const result = []
+  const isNetworkRoad = tile => isRoad(tile) && !tile.airstripStreet
+  const usable = (x, y) => {
+    if (x < 0 || y < 0 || x >= width || y >= height) return false
+    if (constraints?.keepClear[y * width + x]) return false
+    return isCityStreetCandidate(mapGrid[y][x])
+  }
+  const neighbours4 = (x, y) => [[x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]]
+  const touchesStreet = (x, y, ignore) => neighbours4(x, y).some(([nx, ny]) => {
+    if (nx < 0 || ny < 0 || nx >= width || ny >= height || (ignore && ignore.has(ny * width + nx))) return false
+    return mask[ny * width + nx] || isNetworkRoad(mapGrid[ny][nx])
+  })
+  // Walk a one-tile street from `start` (already a street tile) along `dir`.
+  const walk = (owner, start, dir, length, { slope = 0, amplitude = 0, period = 12, phase = 0, graceSteps = 1 } = {}) => {
+    const [dx, dy] = dir
+    const horizontal = dx !== 0
+    const toXY = (t, lateral) => horizontal ? [start.x + dx * t, lateral] : [lateral, start.y + dy * t]
+    const tiles = []
+    let lateral = horizontal ? start.y : start.x
+    let base = lateral
+    let prev = start.y * width + start.x
+    let joined = false
+    let stopped = false
+    // Grace: the first steps of a branch may touch its parent street.
+    const parentNear = new Set([prev])
+    for (const [nx, ny] of neighbours4(start.x, start.y)) if (nx >= 0 && ny >= 0 && nx < width && ny < height) parentNear.add(ny * width + nx)
+    const tryTile = (x, y, t) => {
+      if (x < 0 || y < 0 || x >= width || y >= height) return 'blocked'
+      const offset = y * width + x
+      if (isNetworkRoad(mapGrid[y][x])) return 'join'
+      if (mask[offset]) return 'join'
+      if (!usable(x, y)) return 'blocked'
+      const ignore = new Set([prev])
+      if (t <= graceSteps) for (const near of parentNear) ignore.add(near)
+      const touches = touchesStreet(x, y, ignore)
+      mask[offset] = owner + 1
+      tiles.push(offset)
+      prev = offset
+      return touches ? 'join' : 'ok'
+    }
+    for (let t = 1; t <= length && !stopped; t++) {
+      const desired = Math.round(base + slope * t + amplitude * (Math.sin(phase + (2 * Math.PI * t) / period) - Math.sin(phase)))
+      if (desired !== lateral) {
+        const next = lateral + sign(desired - lateral)
+        const [x, y] = toXY(t - 1, next)
+        if (usable(x, y) && !mask[y * width + x]) {
+          const status = tryTile(x, y, t)
+          lateral = next
+          if (status === 'join') { joined = true; break }
+        }
+      }
+      let [x, y] = toXY(t, lateral)
+      let status = tryTile(x, y, t)
+      if (status === 'blocked') {
+        // Follow the terrain: sidestep one tile around the obstacle.
+        let detoured = false
+        for (const nudge of [1, -1]) {
+          const [sx, sy] = toXY(t - 1, lateral + nudge)
+          ;[x, y] = toXY(t, lateral + nudge)
+          if (!usable(sx, sy) || !usable(x, y) || mask[sy * width + sx] || mask[y * width + x]) continue
+          const first = tryTile(sx, sy, t)
+          lateral += nudge
+          base += nudge
+          if (first === 'join') { joined = true; stopped = true; detoured = true; break }
+          status = tryTile(x, y, t)
+          detoured = true
+          break
+        }
+        if (!detoured) break
+        if (stopped) break
+      }
+      if (status === 'join') { joined = true; break }
+      if (status === 'blocked') break
+    }
+    return { tiles, joined }
+  }
+  const releaseShort = (street, minimum) => {
+    if (street.tiles.length >= minimum) return street
+    street.tiles.forEach(offset => { mask[offset] = 0 })
+    return { ...street, tiles: [] }
+  }
+
+  // A centre right beside a big road would only grow a stub; move it up to
+  // three tiles away from roads (nearest such tile, deterministic order).
+  const relocate = center => {
+    let best = null
+    for (let dy = -3; dy <= 3; dy++) for (let dx = -3; dx <= 3; dx++) {
+      const x = center.x + dx
+      const y = center.y + dy
+      if (!usable(x, y) || mask[y * width + x]) continue
+      if (constraints && constraints.roadDistance[y * width + x] <= 2) continue
+      const distance = dx * dx + dy * dy
+      if (!best || distance < best.distance) best = { x, y, distance }
+    }
+    return best ? { ...center, x: best.x, y: best.y } : center
+  }
+  cities.centers.forEach((originalCenter, index) => {
+    const center = relocate(originalCenter)
+    if (!usable(center.x, center.y) || mask[center.y * width + center.x]) return
+    const random = createSeededRandom(decorationHash(center.x, center.y, salt + 9013 + index))
+    const radius = cities.radius
+    const reach = Math.max(3, radius)
+    // Main street along the axis with the most usable land through the centre.
+    const landAlong = ([dx, dy]) => {
+      let count = 0
+      for (let t = -reach; t <= reach; t++) if (usable(center.x + dx * t, center.y + dy * t)) count++
+      return count
+    }
+    const horizontalLand = landAlong([1, 0])
+    const verticalLand = landAlong([0, 1])
+    const axis = horizontalLand === verticalLand ? (random() < 0.5 ? [1, 0] : [0, 1]) : horizontalLand > verticalLand ? [1, 0] : [0, 1]
+    const centerOffset = center.y * width + center.x
+    mask[centerOffset] = index + 1
+    const curve = () => ({ slope: (random() - 0.5) * 0.3, amplitude: 0.5 + random() * 0.9, period: reach * (2 + random() * 2), phase: random() * Math.PI * 2 })
+    const shape = curve()
+    const forward = walk(index, center, axis, reach, shape)
+    // Same curve continued through the centre: mirror slope, amplitude and phase.
+    const backward = walk(index, center, [-axis[0], -axis[1]], reach, { ...shape, slope: -shape.slope, amplitude: -shape.amplitude, phase: -shape.phase })
+    const mainTiles = [...[...backward.tiles].reverse(), centerOffset, ...forward.tiles]
+    const streets = [{ kind: 'main', tiles: mainTiles, joined: forward.joined || backward.joined }]
+    const ends = [
+      { offset: backward.tiles.at(-1) ?? centerOffset, joined: backward.joined },
+      { offset: forward.tiles.at(-1) ?? centerOffset, joined: forward.joined }
+    ]
+    // Side streets: more for bigger cities, spread along the main street on
+    // alternating sides; some branch once (dead end or reconnecting).
+    const sideCount = Math.max(1, Math.min(4, Math.round(radius / 4) + Math.floor(random() * 3) - 1))
+    let side = random() < 0.5 ? 1 : -1
+    const used = []
+    for (let j = 0; j < sideCount; j++) {
+      const ideal = Math.round(((j + 1) * (mainTiles.length - 1)) / (sideCount + 1)) + Math.floor(random() * 3) - 1
+      let at = Math.max(2, Math.min(mainTiles.length - 3, ideal))
+      // Start from a straight piece of the main street (no jog beside it).
+      const straight = index => {
+        const offset = mainTiles[index]
+        if (offset == null) return false
+        const x = offset % width
+        const y = Math.floor(offset / width)
+        const across = axis[0] ? [[x, y - 1], [x, y + 1]] : [[x - 1, y], [x + 1, y]]
+        return across.every(([cx, cy]) => !mask[cy * width + cx])
+      }
+      at = [0, 1, -1, 2, -2].map(delta => at + delta).find(index => index >= 2 && index <= mainTiles.length - 3 && straight(index)) ?? -1
+      if (at < 2 || used.some(other => other.side === side && Math.abs(other.at - at) < 5)) { side = -side; continue }
+      const origin = mainTiles[at]
+      const start = { x: origin % width, y: Math.floor(origin / width) }
+      const dir = axis[0] ? [0, side] : [side, 0]
+      const length = Math.max(3, Math.round(reach * (0.45 + random() * 0.4)))
+      const street = releaseShort({ kind: 'side', ...walk(index, start, dir, length, { slope: (random() - 0.5) * 0.2, amplitude: random() * 0.6, period: length * 2.5, phase: random() * Math.PI * 2 }) }, 3)
+      used.push({ side, at })
+      side = -side
+      if (!street.tiles.length) continue
+      streets.push(street)
+      if (random() < 0.5 && street.tiles.length >= 4) {
+        const from = street.tiles[Math.max(1, Math.round(street.tiles.length * 0.6) - 1)]
+        const branchStart = { x: from % width, y: Math.floor(from / width) }
+        const along = random() < 0.5 ? 1 : -1
+        const branch = releaseShort({ kind: 'branch', ...walk(index, branchStart, [axis[0] * along, axis[1] * along], 3 + Math.floor(random() * 4), { graceSteps: 1 }) }, 2)
+        if (branch.tiles.length) streets.push(branch)
+      }
+    }
+    result.push({ index, center, streets, ends })
+  })
+  // Keep two tiles beyond every street tip free of houses, so dead ends stay
+  // open and main-street ends can be linked to the road network.
+  const reserved = new Set()
+  const reserveBeyond = (from, tip) => {
+    const fx = from % width
+    const tx = tip % width
+    const dx = tx - fx
+    const dy = Math.floor(tip / width) - Math.floor(from / width)
+    if (Math.abs(dx) + Math.abs(dy) !== 1) return
+    for (let step = 1; step <= 2; step++) {
+      const x = tx + dx * step
+      const y = Math.floor(tip / width) + dy * step
+      if (x >= 0 && y >= 0 && x < width && y < height) reserved.add(y * width + x)
+    }
+  }
+  for (const city of result) {
+    for (const street of city.streets) {
+      const tiles = street.tiles
+      if (tiles.length >= 2) {
+        reserveBeyond(tiles.at(-2), tiles.at(-1))
+        if (street.kind === 'main') reserveBeyond(tiles[1], tiles[0])
+      }
+    }
+  }
+  return { mask, cities: result, reserved }
+}
+
+/** Facing rows next to a street tile for a w x h house on each side. */
+export function cityHouseAnchors(sx, sy, w, h) {
+  const anchors = []
+  for (let shift = 0; shift < w; shift++) {
+    anchors.push({ x: sx - shift, y: sy - h, facing: [...Array(w)].map((_, i) => [sx - shift + i, sy]) })
+    anchors.push({ x: sx - shift, y: sy + 1, facing: [...Array(w)].map((_, i) => [sx - shift + i, sy]) })
+  }
+  for (let shift = 0; shift < h; shift++) {
+    anchors.push({ x: sx - w, y: sy - shift, facing: [...Array(h)].map((_, i) => [sx, sy - shift + i]) })
+    anchors.push({ x: sx + 1, y: sy - shift, facing: [...Array(h)].map((_, i) => [sx, sy - shift + i]) })
+  }
+  return anchors
+}
+
+/**
+ * Join each city's main street to the map's road network at both ends where
+ * possible (cheapest path that never crosses a city building, water, rock or
+ * structure, and avoids hugging its own streets). Falls back to a single
+ * connection from any street tile. Returns the final city street offsets.
+ */
+export function connectCityStreets(mapGrid, { cells, groundDetails, plan }) {
+  const height = mapGrid.length
+  const width = mapGrid[0]?.length || 0
+  const { mask } = plan
+  const streets = new Uint8Array(mask)
   const isCityCell = offset => Boolean(cells[offset]?.group?.tagSet?.has('city'))
-  for (let offset = 0; offset < cells.length; offset++) {
-    if (!isCityCell(offset)) continue
-    const x = offset % width
-    const y = (offset - x) / width
-    let owner = -1
-    let best = Infinity
-    cities.centers.forEach((center, index) => {
-      const distance = (center.x - x) ** 2 + (center.y - y) ** 2
-      if (distance < best) { best = distance; owner = index }
-    })
-    if (owner < 0) continue
-    const box = boxes[owner] ||= { left: x, top: y, right: x, bottom: y }
-    box.left = Math.min(box.left, x)
-    box.top = Math.min(box.top, y)
-    box.right = Math.max(box.right, x)
-    box.bottom = Math.max(box.bottom, y)
-  }
-  const streets = new Uint8Array(width * height)
-  for (let offset = 0; offset < lattice.length; offset++) {
-    const box = lattice[offset] ? boxes[lattice[offset] - 1] : null
-    if (!box) continue
-    const x = offset % width
-    const y = (offset - x) / width
-    if (x >= box.left - 1 && x <= box.right + 1 && y >= box.top - 1 && y <= box.bottom + 1) streets[offset] = 1
-  }
-  const neighbours = offset => {
-    const x = offset % width
-    const result = []
-    if (x > 0) result.push(offset - 1)
-    if (x < width - 1) result.push(offset + 1)
-    if (offset >= width) result.push(offset - width)
-    if (offset + width < width * height) result.push(offset + width)
-    return result
-  }
   const tileAt = offset => mapGrid[Math.floor(offset / width)][offset % width]
   const isNetworkRoad = offset => {
     const tile = tileAt(offset)
@@ -552,38 +716,33 @@ export function planCityStreets(mapGrid, { cells, groundDetails, lattice, cities
     return Boolean(tile) && tile.type !== 'water' && tile.type !== 'rock' && !tile.building && !tile.seedCrystal &&
       !tile.impassable && !tile.airstripStreet && !isCityCell(offset)
   }
-  const connected = new Uint8Array(width * height)
-  const component = new Int32Array(width * height).fill(-1)
-  const components = []
-  for (let offset = 0; offset < streets.length; offset++) {
-    if (!streets[offset] || component[offset] >= 0) continue
-    const members = [offset]
-    component[offset] = components.length
-    for (let i = 0; i < members.length; i++) {
-      for (const next of neighbours(members[i])) {
-        if (streets[next] && component[next] < 0) { component[next] = components.length; members.push(next) }
-      }
-    }
-    components.push(members)
+  const neighbours = offset => {
+    const x = offset % width
+    const list = []
+    if (x > 0) list.push(offset - 1)
+    if (x < width - 1) list.push(offset + 1)
+    if (offset >= width) list.push(offset - width)
+    if (offset + width < width * height) list.push(offset + width)
+    return list
   }
   const removed = new Set()
-  for (const members of components) {
-    if (members.some(offset => neighbours(offset).some(next => isNetworkRoad(next) || connected[next]))) {
-      members.forEach(offset => { connected[offset] = 1 })
-      continue
-    }
+  const route = (sources, cap) => {
     const cost = new Float64Array(width * height).fill(Infinity)
     const previous = new Int32Array(width * height).fill(-1)
     const heap = createMinHeap()
-    members.forEach(offset => { cost[offset] = 0; heap.push(0, offset) })
+    const sourceSet = new Set(sources)
+    sources.forEach(offset => { cost[offset] = 0; heap.push(0, offset) })
     let reached = -1
     while (heap.size) {
       const [current, offset] = heap.pop()
       if (current > cost[offset]) continue
-      if (isNetworkRoad(offset) || connected[offset]) { reached = offset; break }
+      if (current > cap) break
+      if (isNetworkRoad(offset)) { reached = offset; break }
       for (const next of neighbours(offset)) {
+        if (sourceSet.has(next) || (streets[next] && !isNetworkRoad(next))) continue
         if (!passable(next) && !isNetworkRoad(next)) continue
-        const step = cells[next] ? 4 : 1
+        const hugging = neighbours(next).some(n => streets[n] && !sourceSet.has(n) && !isNetworkRoad(n))
+        const step = (cells[next] ? 4 : 1) + (hugging ? 3 : 0)
         if (current + step < cost[next]) {
           cost[next] = current + step
           previous[next] = offset
@@ -591,13 +750,34 @@ export function planCityStreets(mapGrid, { cells, groundDetails, lattice, cities
         }
       }
     }
-    members.forEach(offset => { connected[offset] = 1 })
-    if (reached < 0) continue
-    for (let offset = previous[reached]; offset >= 0 && !streets[offset]; offset = previous[offset]) {
+    if (reached < 0) return null
+    const path = []
+    for (let offset = previous[reached]; offset >= 0 && !sourceSet.has(offset); offset = previous[offset]) path.push(offset)
+    return { cost: cost[reached], path }
+  }
+  const commit = found => {
+    for (const offset of found.path) {
       streets[offset] = 1
-      connected[offset] = 1
-      const cell = cells[offset]
-      if (cell) removed.add(cell)
+      if (cells[offset]) removed.add(cells[offset])
+    }
+  }
+  for (const city of plan.cities) {
+    const all = city.streets.flatMap(street => street.tiles)
+    if (!all.length) continue
+    const radius = Math.max(4, ...all.map(offset => Math.hypot(offset % width - city.center.x, Math.floor(offset / width) - city.center.y)))
+    // Join both main-street ends: the cheaper link always (within reach),
+    // the other only when it stays short, so cities do not sprout long
+    // parallel feeder roads.
+    // (A street that merely touched another city street is not connected.)
+    const atRoad = offset => neighbours(offset).some(isNetworkRoad)
+    const links = city.ends.filter(end => !atRoad(end.offset)).map(end => route([end.offset], radius * 3 + 30)).filter(Boolean).sort((a, b) => a.cost - b.cost)
+    let connected = all.some(atRoad)
+    links.forEach((link, order) => {
+      if (order === 0 && !connected) { commit(link); connected = true } else if (link.path.length <= Math.max(8, radius * 1.5)) commit(link)
+    })
+    if (!connected) {
+      const fallback = route(all, Infinity)
+      if (fallback) commit(fallback)
     }
   }
   // Decorations a connector crosses give way to the street.
@@ -610,10 +790,9 @@ export function planCityStreets(mapGrid, { cells, groundDetails, lattice, cities
   }
   const result = []
   for (let offset = 0; offset < streets.length; offset++) {
-    if (!streets[offset]) continue
-    // Already-generated roads stay as they are; only land becomes city street.
-    if (isNetworkRoad(offset)) continue
+    if (!streets[offset] || isNetworkRoad(offset)) continue
     groundDetails[offset] = null
+    if (cells[offset] && !cells[offset].group.tagSet.has('city')) cells[offset] = null
     result.push(offset)
   }
   return result
@@ -737,8 +916,9 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
   const cities = buildRuinClusters(mapGrid, { salt: salt + 7919, defaultBiome, count: options.citySeeds, radius: options.cityClusterSize, minDistance: 1 })
   const clusterSeeds = new Set(Object.values(clusters).flatMap(cluster => cluster.centers.map(center => `${center.x},${center.y}`)))
   const hasCityGroups = options.citySeeds > 0 && DECORATION_BIOMES.some(biome => ['multi', 'single'].some(kind => (pools[biome]?.[kind] || []).some(group => group.tagSet.has('city'))))
-  // City streets are reserved before any decoration so blocks keep their roads.
-  const cityLattice = hasCityGroups ? buildCityStreetLattice(mapGrid, cities) : null
+  // City streets are planned before any decoration so houses can line them.
+  const cityPlan = hasCityGroups ? planOrganicCityStreets(mapGrid, cities, { salt, constraints }) : null
+  const cityLattice = cityPlan?.mask || null
   const landmarks = []
   const rarePlaced = new Set()
   // Index covered tiles once. Spacing probes visit at most a six-tile halo,
@@ -750,8 +930,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     for (const kind of ['multi', 'single', 'groundDetail']) {
       const categories = new Map()
       for (const group of pools[biome]?.[kind] || []) {
-        // Shore and roadside props have their own sparse passes.
-        if (group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones')) continue
+        // Shore, roadside, stones and city props have their own passes.
+        if (group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones') || group.tagSet.has('city')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
         if (!categories.has(category)) categories.set(category, [])
         categories.get(category).push(group)
@@ -780,11 +960,8 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
     if (group.tagSet.has('shore') && !group.tagSet.has('offshore') && !group.tagSet.has('shore_trans') && !touchesWater) return false
     if (detail) return true
     if (!group.tagSet.has('shore') && !categoryClusterAllows(group, x, y, biome, clusters)) return false
-    if (group.tagSet.has('city') && !cities.centers.some(center => {
-      const farX = Math.max(Math.abs(center.x - x), Math.abs(center.x - (x + group.width - 1)))
-      const farY = Math.max(Math.abs(center.y - y), Math.abs(center.y - (y + group.height - 1)))
-      return center.biome === biome && farX ** 2 + farY ** 2 <= cities.radius ** 2 && (x - center.x) % 3 === 0 && (y - center.y) % 3 === 0
-    })) return false
+    // City houses are placed only by the street-facing city pass.
+    if (group.tagSet.has('city') && !placement.cityHouse) return false
     if (group.tagSet.has('ruins') && !ruins.anchorKeys.has(`${x},${y}`)) return false
     if (group.tagSet.has('landmark') && !landmarkAllows(x, y, landmarks)) return false
     // 'rare' props appear at most once per map.
@@ -797,6 +974,45 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       }
     }
     return decorationSpacingAllows(placement, [...nearby])
+  }
+  // City pass: houses only directly beside a planned street, with one full
+  // side facing it (rows without gaps are fine; no interior blocks).
+  if (cityPlan) {
+    const cityBags = Object.fromEntries(DECORATION_BIOMES.map(biome => [biome,
+      createDecorationBag([...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('city')), salt + 5)
+    ]))
+    const coversReserved = (x, y, group) => {
+      for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) if (cityPlan.reserved.has((y + dy) * width + x + dx)) return true
+      return false
+    }
+    for (const city of cityPlan.cities) {
+      for (const street of city.streets) {
+        for (const offset of street.tiles) {
+          const sx = offset % width
+          const sy = (offset - sx) / width
+          const biome = resolveBiome(mapGrid[sy][sx], defaultBiome)
+          const bag = cityBags[biome]
+          for (let side = 0; side < 4; side++) {
+            for (let attempt = 0; attempt < bag.size; attempt++) {
+              const group = bag.next()
+              const anchors = cityHouseAnchors(sx, sy, group.width, group.height)
+                .filter((_, index) => index % 2 === side % 2 && (side < 2 ? index < group.width * 2 : index >= group.width * 2))
+              const hit = anchors.find(({ x, y, facing }) => !coversReserved(x, y, group) && facing.every(([fx, fy]) => fx >= 0 && fy >= 0 && fx < width && fy < height && cityLattice[fy * width + fx]) &&
+                fits({ group, anchorX: x, anchorY: y, biome: resolveBiome(mapGrid[y]?.[x], defaultBiome), cityHouse: true }))
+              if (!hit) continue
+              const placement = { group, anchorX: hit.x, anchorY: hit.y, biome: resolveBiome(mapGrid[hit.y][hit.x], defaultBiome) }
+              if (group.width * group.height > 1) placements.push(placement)
+              for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
+                const cell = (hit.y + dy) * width + hit.x + dx
+                cells[cell] = { ...placement, offsetX: dx, offsetY: dy }
+                occupied[cell] = placement
+              }
+              break
+            }
+          }
+        }
+      }
+    }
   }
   // Preparation-only coast pass: one attempt per 14 coast tiles, with the
   // ordinary footprint and identical-sprite spacing rules.
@@ -912,6 +1128,6 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       }
     }
   }
-  const cityStreets = cityLattice ? planCityStreets(mapGrid, { cells, groundDetails, lattice: cityLattice, cities }) : []
+  const cityStreets = cityPlan ? connectCityStreets(mapGrid, { cells, groundDetails, plan: cityPlan }) : []
   return { width, height, cells, placements, groundDetails, cityStreets }
 }

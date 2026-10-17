@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { buildDecorationLayout, buildDecorationPools } from '../../src/rendering/decorationLayout.js'
+import { buildDecorationLayout, buildDecorationPools, planOrganicCityStreets, buildRuinClusters } from '../../src/rendering/decorationLayout.js'
 import { applyCityStreets, prepareCityBuildings } from '../../src/game/cityBuildings.js'
 
 vi.mock('../../src/sound.js', () => ({ playPositionalSound: vi.fn() }))
@@ -84,5 +84,62 @@ describe('city streets', () => {
     applyCityStreets(map, disabled)
     expect(map.flat().some(tile => tile.cityStreet)).toBe(false)
     expect(map.flat().filter(tile => tile.type === 'street')).toHaveLength(64)
+  })
+
+  it('lines every house up with one full side facing a street (no interior blocks)', () => {
+    const { map, pools } = fixture()
+    const layout = buildDecorationLayout(map, pools, options)
+    const streets = new Set(layout.cityStreets)
+    const houses = layout.placements.filter(p => p.group.tagSet.has('city'))
+    expect(houses.length).toBeGreaterThan(8)
+    for (const { anchorX: x, anchorY: y, group: { width: w, height: h } } of houses) {
+      const row = (y0) => [...Array(w)].every((_, i) => streets.has(y0 * 64 + x + i))
+      const column = (x0) => [...Array(h)].every((_, i) => streets.has((y + i) * 64 + x0))
+      expect(row(y - 1) || row(y + h) || column(x - 1) || column(x + w)).toBe(true)
+    }
+  })
+
+  it('plans one curved main street per city with 1-4 side streets, deterministically', () => {
+    const { map } = fixture()
+    const cities = buildRuinClusters(map, { salt: 7919, count: 2, radius: 8, minDistance: 1 })
+    const plan = planOrganicCityStreets(map, cities, { salt: 5 })
+    expect(plan.cities.length).toBe(cities.centers.length)
+    for (const city of plan.cities) {
+      const main = city.streets.filter(street => street.kind === 'main')
+      expect(main).toHaveLength(1)
+      expect(main[0].tiles.length).toBeGreaterThanOrEqual(9)
+      const sides = city.streets.filter(street => street.kind === 'side')
+      expect(sides.length).toBeGreaterThanOrEqual(1)
+      expect(sides.length).toBeLessThanOrEqual(4)
+      // Every street is a single 4-connected chain.
+      for (const street of city.streets) {
+        for (let i = 1; i < street.tiles.length; i++) {
+          const a = street.tiles[i - 1]
+          const b = street.tiles[i]
+          expect(Math.abs((a % 64) - (b % 64)) + Math.abs(Math.floor(a / 64) - Math.floor(b / 64))).toBe(1)
+        }
+      }
+    }
+    // The main street is not a straight line through the centre (gentle curve or a sidestep).
+    const bent = plan.cities.some(city => {
+      const tiles = city.streets[0].tiles
+      return new Set(tiles.map(o => o % 64)).size > 1 && new Set(tiles.map(o => Math.floor(o / 64))).size > 1
+    })
+    expect(bent).toBe(true)
+    expect(planOrganicCityStreets(map, cities, { salt: 5 }).cities).toEqual(plan.cities)
+  })
+
+  it('bends a street around water instead of crossing it', () => {
+    const { map } = fixture()
+    const cities = { radius: 8, centers: [{ x: 30, y: 30, biome: 'grass' }] }
+    const straight = planOrganicCityStreets(map, cities, { salt: 1 })
+    const main = straight.cities[0].streets[0].tiles
+    const blocker = main[main.length - 3]
+    const bx = blocker % 64
+    const by = Math.floor(blocker / 64)
+    map[by][bx].type = 'water'
+    const bent = planOrganicCityStreets(map, cities, { salt: 1 })
+    for (const city of bent.cities) for (const street of city.streets) for (const offset of street.tiles) expect(map[Math.floor(offset / 64)][offset % 64].type).not.toBe('water')
+    expect(bent.cities[0].streets[0].tiles.length).toBeGreaterThanOrEqual(main.length - 1)
   })
 })
