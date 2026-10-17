@@ -1,0 +1,5604 @@
+{
+  "schemaVersion": 1,
+  "sheetPath": "images/map/sprite_sheets/rocks_64x64_1024x1024_q85.webp",
+  "tileSize": 64,
+  "rowHeight": 64,
+  "borderWidth": 0,
+  "blendMode": "black",
+  "tags": [
+    "grass",
+    "soil",
+    "sand",
+    "snow",
+    "decorative",
+    "stones",
+    "passable",
+    "impassable"
+  ],
+  "columns": 16,
+  "rows": 16,
+  "tiles": {
+    "0,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 0
+    },
+    "1,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 0
+    },
+    "2,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_1"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 0
+    },
+    "3,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_2"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 0
+    },
+    "4,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 0
+    },
+    "5,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 0
+    },
+    "6,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 0
+    },
+    "7,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_3"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 0
+    },
+    "8,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 0
+    },
+    "9,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 0
+    },
+    "10,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_4"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 0
+    },
+    "11,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_5"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 0
+    },
+    "12,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_6"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 0
+    },
+    "13,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_7"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 0
+    },
+    "14,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_8"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 0
+    },
+    "15,0": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_9"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 0,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 0
+    },
+    "0,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 1
+    },
+    "1,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 1
+    },
+    "2,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_1"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 1
+    },
+    "3,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_2"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 1
+    },
+    "4,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 1
+    },
+    "5,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 1
+    },
+    "6,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 1
+    },
+    "7,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_3"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 1
+    },
+    "8,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 1
+    },
+    "9,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 1
+    },
+    "10,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_4"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 1
+    },
+    "11,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_5"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 1
+    },
+    "12,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_6"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 1
+    },
+    "13,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_7"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 1
+    },
+    "14,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_8"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 1
+    },
+    "15,1": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_9"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 64,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 1
+    },
+    "0,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 2
+    },
+    "1,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 2
+    },
+    "2,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 2
+    },
+    "3,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 2
+    },
+    "4,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 2
+    },
+    "5,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 2
+    },
+    "6,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 2
+    },
+    "7,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 2
+    },
+    "8,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 2
+    },
+    "9,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 2
+    },
+    "10,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_10"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 2
+    },
+    "11,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 2
+    },
+    "12,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 2
+    },
+    "13,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 2
+    },
+    "14,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_11"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 2
+    },
+    "15,2": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 128,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 2
+    },
+    "0,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 3
+    },
+    "1,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 3
+    },
+    "2,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 3
+    },
+    "3,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 3
+    },
+    "4,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 3
+    },
+    "5,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 3
+    },
+    "6,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 3
+    },
+    "7,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 3
+    },
+    "8,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 3
+    },
+    "9,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 3
+    },
+    "10,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_10"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 3
+    },
+    "11,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 3
+    },
+    "12,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 3
+    },
+    "13,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 3
+    },
+    "14,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_11"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 3
+    },
+    "15,3": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 192,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 3
+    },
+    "0,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_12"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 4
+    },
+    "1,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 4
+    },
+    "2,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 4
+    },
+    "3,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 4
+    },
+    "4,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 4
+    },
+    "5,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_13"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 4
+    },
+    "6,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_13"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 4
+    },
+    "7,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_13"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 4
+    },
+    "8,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_14"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 4
+    },
+    "9,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_14"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 4
+    },
+    "10,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_15"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 4
+    },
+    "11,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_15"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 4
+    },
+    "12,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_16"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 4
+    },
+    "13,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_16"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 4
+    },
+    "14,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_17"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 4
+    },
+    "15,4": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_17"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 256,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 4
+    },
+    "0,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_12"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 5
+    },
+    "1,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 5
+    },
+    "2,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 5
+    },
+    "3,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 5
+    },
+    "4,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 5
+    },
+    "5,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_13"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 5
+    },
+    "6,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_13"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 5
+    },
+    "7,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_13"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 5
+    },
+    "8,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_14"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 5
+    },
+    "9,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_14"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 5
+    },
+    "10,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_15"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 5
+    },
+    "11,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_15"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 5
+    },
+    "12,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_16"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 5
+    },
+    "13,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_16"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 5
+    },
+    "14,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_17"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 5
+    },
+    "15,5": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_17"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 320,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 5
+    },
+    "0,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_18"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 6
+    },
+    "1,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_18"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 6
+    },
+    "2,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 6
+    },
+    "3,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 6
+    },
+    "4,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_19"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 6
+    },
+    "5,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_20"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 6
+    },
+    "6,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_20"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 6
+    },
+    "7,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_20"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 6
+    },
+    "8,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_21"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 6
+    },
+    "9,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_21"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 6
+    },
+    "10,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_22"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 6
+    },
+    "11,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_22"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 6
+    },
+    "12,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_23"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 6
+    },
+    "13,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_23"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 6
+    },
+    "14,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_24"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 6
+    },
+    "15,6": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_24"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 384,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 6
+    },
+    "0,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_18"
+      ],
+      "rect": {
+        "x": 0,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 0,
+      "row": 7
+    },
+    "1,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_18"
+      ],
+      "rect": {
+        "x": 64,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 1,
+      "row": 7
+    },
+    "2,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 7
+    },
+    "3,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 7
+    },
+    "4,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_19"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 7
+    },
+    "5,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_20"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 7
+    },
+    "6,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_20"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 7
+    },
+    "7,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_20"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 7
+    },
+    "8,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_21"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 7
+    },
+    "9,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_21"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 7
+    },
+    "10,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_22"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 7
+    },
+    "11,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_22"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 7
+    },
+    "12,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_23"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 7
+    },
+    "13,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_23"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 7
+    },
+    "14,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_24"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 7
+    },
+    "15,7": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_24"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 448,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 7
+    },
+    "3,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_25"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 8
+    },
+    "4,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_25"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 8
+    },
+    "5,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_25"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 8
+    },
+    "6,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_26"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 8
+    },
+    "7,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_26"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 8
+    },
+    "8,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_27"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 8
+    },
+    "9,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_27"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 8
+    },
+    "10,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_28"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 8
+    },
+    "11,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_28"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 8
+    },
+    "12,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_29"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 8
+    },
+    "13,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_29"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 8
+    },
+    "14,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_30"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 8
+    },
+    "15,8": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_30"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 512,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 8
+    },
+    "3,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_25"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 9
+    },
+    "4,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_25"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 9
+    },
+    "5,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_25"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 9
+    },
+    "6,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_26"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 9
+    },
+    "7,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_26"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 9
+    },
+    "8,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_27"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 9
+    },
+    "9,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_27"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 9
+    },
+    "10,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_28"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 9
+    },
+    "11,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_28"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 9
+    },
+    "12,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_29"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 9
+    },
+    "13,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_29"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 9
+    },
+    "14,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_30"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 9
+    },
+    "15,9": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_30"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 576,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 9
+    },
+    "3,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_31"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 10
+    },
+    "4,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_31"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 10
+    },
+    "5,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_31"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 10
+    },
+    "6,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_32"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 10
+    },
+    "7,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_32"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 10
+    },
+    "8,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_33"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 10
+    },
+    "9,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_33"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 10
+    },
+    "12,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_34"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 10
+    },
+    "13,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_34"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 10
+    },
+    "14,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_35"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 10
+    },
+    "15,10": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_35"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 640,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 10
+    },
+    "3,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_31"
+      ],
+      "rect": {
+        "x": 192,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 3,
+      "row": 11
+    },
+    "4,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_31"
+      ],
+      "rect": {
+        "x": 256,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 4,
+      "row": 11
+    },
+    "5,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_31"
+      ],
+      "rect": {
+        "x": 320,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 5,
+      "row": 11
+    },
+    "6,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_32"
+      ],
+      "rect": {
+        "x": 384,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 6,
+      "row": 11
+    },
+    "7,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_32"
+      ],
+      "rect": {
+        "x": 448,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 7,
+      "row": 11
+    },
+    "8,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_33"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 11
+    },
+    "9,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_33"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 11
+    },
+    "12,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_34"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 11
+    },
+    "13,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_34"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 11
+    },
+    "14,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_35"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 11
+    },
+    "15,11": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_35"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 704,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 11
+    },
+    "2,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 12
+    },
+    "8,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_36"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 12
+    },
+    "9,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_36"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 12
+    },
+    "10,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_37"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 12
+    },
+    "11,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_37"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 12
+    },
+    "12,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_38"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 12
+    },
+    "13,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_38"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 12
+    },
+    "14,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_39"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 12
+    },
+    "15,12": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_39"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 768,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 12
+    },
+    "2,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 13
+    },
+    "8,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_40"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 13
+    },
+    "9,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_40"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 13
+    },
+    "10,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 13
+    },
+    "11,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 13
+    },
+    "12,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_41"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 13
+    },
+    "13,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_41"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 13
+    },
+    "14,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 896,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 14,
+      "row": 13
+    },
+    "15,13": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 960,
+        "y": 832,
+        "width": 64,
+        "height": 64
+      },
+      "col": 15,
+      "row": 13
+    },
+    "2,14": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 128,
+        "y": 896,
+        "width": 64,
+        "height": 64
+      },
+      "col": 2,
+      "row": 14
+    },
+    "8,14": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 512,
+        "y": 896,
+        "width": 64,
+        "height": 64
+      },
+      "col": 8,
+      "row": 14
+    },
+    "9,14": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 576,
+        "y": 896,
+        "width": 64,
+        "height": 64
+      },
+      "col": 9,
+      "row": 14
+    },
+    "10,14": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 640,
+        "y": 896,
+        "width": 64,
+        "height": 64
+      },
+      "col": 10,
+      "row": 14
+    },
+    "11,14": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 704,
+        "y": 896,
+        "width": 64,
+        "height": 64
+      },
+      "col": 11,
+      "row": 14
+    },
+    "12,14": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 768,
+        "y": 896,
+        "width": 64,
+        "height": 64
+      },
+      "col": 12,
+      "row": 14
+    },
+    "13,14": {
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ],
+      "rect": {
+        "x": 832,
+        "y": 896,
+        "width": 64,
+        "height": 64
+      },
+      "col": 13,
+      "row": 14
+    }
+  },
+  "displayName": "rocks_64x64_1024x1024_q85.webp",
+  "propLayout": [
+    {
+      "id": "stone_small_001",
+      "col": 0,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_002",
+      "col": 1,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_003",
+      "col": 2,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_1"
+      ]
+    },
+    {
+      "id": "stone_large_004",
+      "col": 3,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 2,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_2"
+      ]
+    },
+    {
+      "id": "stone_small_005",
+      "col": 4,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_006",
+      "col": 5,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_007",
+      "col": 6,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_008",
+      "col": 7,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 3,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_3"
+      ]
+    },
+    {
+      "id": "stone_small_009",
+      "col": 8,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_010",
+      "col": 9,
+      "row": 0,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_011",
+      "col": 10,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 4,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_4"
+      ]
+    },
+    {
+      "id": "stone_large_012",
+      "col": 11,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 5,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_5"
+      ]
+    },
+    {
+      "id": "stone_large_013",
+      "col": 12,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 6,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_6"
+      ]
+    },
+    {
+      "id": "stone_large_014",
+      "col": 13,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 7,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_7"
+      ]
+    },
+    {
+      "id": "stone_large_015",
+      "col": 14,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 8,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_8"
+      ]
+    },
+    {
+      "id": "stone_large_016",
+      "col": 15,
+      "row": 0,
+      "w": 1,
+      "h": 2,
+      "groupId": 9,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_9"
+      ]
+    },
+    {
+      "id": "stone_small_017",
+      "col": 0,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_018",
+      "col": 1,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_019",
+      "col": 4,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_020",
+      "col": 5,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_021",
+      "col": 6,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_022",
+      "col": 8,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_023",
+      "col": 9,
+      "row": 1,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_024",
+      "col": 0,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_025",
+      "col": 1,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_026",
+      "col": 2,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_027",
+      "col": 3,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_028",
+      "col": 4,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_029",
+      "col": 5,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_030",
+      "col": 6,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_031",
+      "col": 7,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_032",
+      "col": 8,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_033",
+      "col": 9,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_034",
+      "col": 10,
+      "row": 2,
+      "w": 1,
+      "h": 2,
+      "groupId": 10,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_10"
+      ]
+    },
+    {
+      "id": "stone_small_035",
+      "col": 11,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_036",
+      "col": 12,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_037",
+      "col": 13,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_038",
+      "col": 14,
+      "row": 2,
+      "w": 1,
+      "h": 2,
+      "groupId": 11,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_11"
+      ]
+    },
+    {
+      "id": "stone_small_039",
+      "col": 15,
+      "row": 2,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_040",
+      "col": 0,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_041",
+      "col": 1,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_042",
+      "col": 2,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_043",
+      "col": 3,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_044",
+      "col": 4,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_045",
+      "col": 5,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_046",
+      "col": 6,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_047",
+      "col": 7,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_048",
+      "col": 8,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_049",
+      "col": 9,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_050",
+      "col": 11,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_051",
+      "col": 12,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_052",
+      "col": 13,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_053",
+      "col": 15,
+      "row": 3,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_054",
+      "col": 0,
+      "row": 4,
+      "w": 1,
+      "h": 2,
+      "groupId": 12,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_12"
+      ]
+    },
+    {
+      "id": "stone_small_055",
+      "col": 1,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_056",
+      "col": 2,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_057",
+      "col": 3,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_058",
+      "col": 4,
+      "row": 4,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_059",
+      "col": 5,
+      "row": 4,
+      "w": 3,
+      "h": 2,
+      "groupId": 13,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_13"
+      ]
+    },
+    {
+      "id": "stone_large_060",
+      "col": 8,
+      "row": 4,
+      "w": 2,
+      "h": 2,
+      "groupId": 14,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_14"
+      ]
+    },
+    {
+      "id": "stone_large_061",
+      "col": 10,
+      "row": 4,
+      "w": 2,
+      "h": 2,
+      "groupId": 15,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_15"
+      ]
+    },
+    {
+      "id": "stone_large_062",
+      "col": 12,
+      "row": 4,
+      "w": 2,
+      "h": 2,
+      "groupId": 16,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_16"
+      ]
+    },
+    {
+      "id": "stone_large_063",
+      "col": 14,
+      "row": 4,
+      "w": 2,
+      "h": 2,
+      "groupId": 17,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_17"
+      ]
+    },
+    {
+      "id": "stone_small_064",
+      "col": 1,
+      "row": 5,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_065",
+      "col": 2,
+      "row": 5,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_066",
+      "col": 3,
+      "row": 5,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_067",
+      "col": 4,
+      "row": 5,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_068",
+      "col": 0,
+      "row": 6,
+      "w": 2,
+      "h": 2,
+      "groupId": 18,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_18"
+      ]
+    },
+    {
+      "id": "stone_small_069",
+      "col": 2,
+      "row": 6,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_070",
+      "col": 3,
+      "row": 6,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_071",
+      "col": 4,
+      "row": 6,
+      "w": 1,
+      "h": 2,
+      "groupId": 19,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_19"
+      ]
+    },
+    {
+      "id": "stone_large_072",
+      "col": 5,
+      "row": 6,
+      "w": 3,
+      "h": 2,
+      "groupId": 20,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_20"
+      ]
+    },
+    {
+      "id": "stone_large_073",
+      "col": 8,
+      "row": 6,
+      "w": 2,
+      "h": 2,
+      "groupId": 21,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_21"
+      ]
+    },
+    {
+      "id": "stone_large_074",
+      "col": 10,
+      "row": 6,
+      "w": 2,
+      "h": 2,
+      "groupId": 22,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_22"
+      ]
+    },
+    {
+      "id": "stone_large_075",
+      "col": 12,
+      "row": 6,
+      "w": 2,
+      "h": 2,
+      "groupId": 23,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_23"
+      ]
+    },
+    {
+      "id": "stone_large_076",
+      "col": 14,
+      "row": 6,
+      "w": 2,
+      "h": 2,
+      "groupId": 24,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_24"
+      ]
+    },
+    {
+      "id": "stone_small_077",
+      "col": 2,
+      "row": 7,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_078",
+      "col": 3,
+      "row": 7,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_079",
+      "col": 3,
+      "row": 8,
+      "w": 3,
+      "h": 2,
+      "groupId": 25,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_25"
+      ]
+    },
+    {
+      "id": "stone_large_080",
+      "col": 6,
+      "row": 8,
+      "w": 2,
+      "h": 2,
+      "groupId": 26,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_26"
+      ]
+    },
+    {
+      "id": "stone_large_081",
+      "col": 8,
+      "row": 8,
+      "w": 2,
+      "h": 2,
+      "groupId": 27,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_27"
+      ]
+    },
+    {
+      "id": "stone_large_082",
+      "col": 10,
+      "row": 8,
+      "w": 2,
+      "h": 2,
+      "groupId": 28,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_28"
+      ]
+    },
+    {
+      "id": "stone_large_083",
+      "col": 12,
+      "row": 8,
+      "w": 2,
+      "h": 2,
+      "groupId": 29,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_29"
+      ]
+    },
+    {
+      "id": "stone_large_084",
+      "col": 14,
+      "row": 8,
+      "w": 2,
+      "h": 2,
+      "groupId": 30,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_30"
+      ]
+    },
+    {
+      "id": "stone_large_085",
+      "col": 3,
+      "row": 10,
+      "w": 3,
+      "h": 2,
+      "groupId": 31,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_31"
+      ]
+    },
+    {
+      "id": "stone_large_086",
+      "col": 6,
+      "row": 10,
+      "w": 2,
+      "h": 2,
+      "groupId": 32,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_32"
+      ]
+    },
+    {
+      "id": "stone_large_087",
+      "col": 8,
+      "row": 10,
+      "w": 2,
+      "h": 2,
+      "groupId": 33,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_33"
+      ]
+    },
+    {
+      "id": "stone_large_088",
+      "col": 12,
+      "row": 10,
+      "w": 2,
+      "h": 2,
+      "groupId": 34,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_34"
+      ]
+    },
+    {
+      "id": "stone_large_089",
+      "col": 14,
+      "row": 10,
+      "w": 2,
+      "h": 2,
+      "groupId": 35,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_35"
+      ]
+    },
+    {
+      "id": "stone_small_090",
+      "col": 2,
+      "row": 12,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_091",
+      "col": 8,
+      "row": 12,
+      "w": 2,
+      "h": 1,
+      "groupId": 36,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_36"
+      ]
+    },
+    {
+      "id": "stone_large_092",
+      "col": 10,
+      "row": 12,
+      "w": 2,
+      "h": 1,
+      "groupId": 37,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_37"
+      ]
+    },
+    {
+      "id": "stone_large_093",
+      "col": 12,
+      "row": 12,
+      "w": 2,
+      "h": 1,
+      "groupId": 38,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_38"
+      ]
+    },
+    {
+      "id": "stone_large_094",
+      "col": 14,
+      "row": 12,
+      "w": 2,
+      "h": 1,
+      "groupId": 39,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_39"
+      ]
+    },
+    {
+      "id": "stone_small_095",
+      "col": 2,
+      "row": 13,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_096",
+      "col": 8,
+      "row": 13,
+      "w": 2,
+      "h": 1,
+      "groupId": 40,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_40"
+      ]
+    },
+    {
+      "id": "stone_small_097",
+      "col": 10,
+      "row": 13,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_098",
+      "col": 11,
+      "row": 13,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_large_099",
+      "col": 12,
+      "row": 13,
+      "w": 2,
+      "h": 1,
+      "groupId": 41,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "impassable",
+        "group_41"
+      ]
+    },
+    {
+      "id": "stone_small_100",
+      "col": 14,
+      "row": 13,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_101",
+      "col": 15,
+      "row": 13,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_102",
+      "col": 2,
+      "row": 14,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "snow",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_103",
+      "col": 8,
+      "row": 14,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_104",
+      "col": 9,
+      "row": 14,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_105",
+      "col": 10,
+      "row": 14,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_106",
+      "col": 11,
+      "row": 14,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_107",
+      "col": 12,
+      "row": 14,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    },
+    {
+      "id": "stone_small_108",
+      "col": 13,
+      "row": 14,
+      "w": 1,
+      "h": 1,
+      "tags": [
+        "grass",
+        "soil",
+        "sand",
+        "decorative",
+        "stones",
+        "passable"
+      ]
+    }
+  ]
+}

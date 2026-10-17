@@ -570,6 +570,7 @@ export class TextureManager {
       cache.cityClusterSize === gameState.cityClusterSize &&
       cache.ruinSeeds === gameState.ruinSeeds &&
       cache.ruinClusterSize === gameState.ruinClusterSize &&
+      cache.stoneCount === gameState.stoneCount &&
       cache.width === width &&
       cache.height === mapGrid.length &&
       cache.version === this.integratedConfigVersion
@@ -593,6 +594,7 @@ export class TextureManager {
       cityClusterSize: gameState.cityClusterSize,
       ruinSeeds: gameState.ruinSeeds,
       ruinClusterSize: gameState.ruinClusterSize,
+      stoneCount: gameState.stoneCount,
       width,
       height: mapGrid.length,
       version: this.integratedConfigVersion,

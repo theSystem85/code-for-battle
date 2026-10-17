@@ -620,6 +620,108 @@ export function planCityStreets(mapGrid, { cells, groundDetails, lattice, cities
 }
 
 /** Natural placement is used only with opted-in category/detail catalogs. */
+// Stones: a seeded, loosely clustered scatter of 'stones' props. Cluster
+// centres prefer coasts and the surroundings of rock terrain; each stone lands
+// a few tiles from a centre (or, sometimes, anywhere weighted), mixing small
+// 1x1 stones with larger multi-tile ones.
+export function stoneSiteWeight(mapGrid, x, y) {
+  // Nearest water / rock within three tiles (Chebyshev distance).
+  let water = 4
+  let rock = 4
+  for (let dy = -3; dy <= 3; dy++) {
+    for (let dx = -3; dx <= 3; dx++) {
+      const type = mapGrid[y + dy]?.[x + dx]?.type
+      const distance = Math.max(Math.abs(dx), Math.abs(dy))
+      if (type === 'water' && distance < water) water = distance
+      else if (type === 'rock' && distance < rock) rock = distance
+    }
+  }
+  return 1 + (water <= 3 ? 20 - water * 5 : 0) + (rock <= 3 ? 20 - rock * 5 : 0)
+}
+
+function createSeededRandom(seed) {
+  let state = (seed >>> 0) || 0x9e3779b9
+  return () => {
+    state = (state + 0x6d2b79f5) >>> 0
+    let t = state
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 0x100000000
+  }
+}
+
+function placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height }) {
+  const target = options.stoneCount
+  if (!target) return 0
+  const small = {}
+  const large = {}
+  let any = false
+  for (const biome of DECORATION_BIOMES) {
+    const groups = [...(pools[biome]?.multi || []), ...(pools[biome]?.single || [])].filter(group => group.tagSet.has('stones'))
+    small[biome] = createDecorationBag(groups.filter(group => group.width * group.height === 1), salt + 2)
+    large[biome] = createDecorationBag(groups.filter(group => group.width * group.height > 1), salt + 3)
+    if (groups.length) any = true
+  }
+  if (!any) return 0
+  const sites = []
+  let total = 0
+  for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+    if (!isLayoutLand(mapGrid[y][x]) || isRoad(mapGrid[y][x])) continue
+    total += stoneSiteWeight(mapGrid, x, y)
+    sites.push({ x, y, cumulative: total })
+  }
+  if (!sites.length) return 0
+  const random = createSeededRandom(decorationHash(width, height, salt + 1543))
+  const pickSite = () => {
+    const value = random() * total
+    let low = 0
+    let high = sites.length - 1
+    while (low < high) {
+      const mid = (low + high) >> 1
+      if (sites[mid].cumulative <= value) low = mid + 1
+      else high = mid
+    }
+    return sites[low]
+  }
+  const centers = Array.from({ length: Math.max(1, Math.ceil(target / 5)) }, pickSite)
+  let placed = 0
+  for (let attempt = 0; attempt < target * 25 && placed < target; attempt++) {
+    let x
+    let y
+    if (random() < 0.2) ({ x, y } = pickSite())
+    else {
+      const center = centers[Math.floor(random() * centers.length)]
+      const angle = random() * Math.PI * 2
+      const distance = 1 + random() * 4.5
+      x = Math.round(center.x + Math.cos(angle) * distance)
+      y = Math.round(center.y + Math.sin(angle) * distance)
+    }
+    const tile = mapGrid[y]?.[x]
+    if (!tile || !isLayoutLand(tile)) continue
+    const biome = resolveBiome(tile, defaultBiome)
+    const preferLarge = random() < 0.3
+    const bags = preferLarge ? [large[biome], small[biome]] : [small[biome], large[biome]]
+    let done = false
+    for (const bag of bags) {
+      for (let pick = 0; pick < Math.min(bag.size, 4) && !done; pick++) {
+        const group = bag.next()
+        const placement = { group, anchorX: x, anchorY: y, biome }
+        if (!fits(placement)) continue
+        if (group.width * group.height > 1) placements.push(placement)
+        for (let dy = 0; dy < group.height; dy++) for (let dx = 0; dx < group.width; dx++) {
+          const offset = (y + dy) * width + x + dx
+          cells[offset] = { ...placement, offsetX: dx, offsetY: dy }
+          occupied[offset] = placement
+        }
+        done = true
+      }
+      if (done) break
+    }
+    if (done) placed++
+  }
+  return placed
+}
+
 export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'grass', salt = 0, startPositions = [], ...settings } = {}) {
   const options = normalizeDecorationSettings(settings)
   const height = mapGrid?.length || 0
@@ -649,7 +751,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       const categories = new Map()
       for (const group of pools[biome]?.[kind] || []) {
         // Shore and roadside props have their own sparse passes.
-        if (group.tagSet.has('shore') || group.tagSet.has('roadside')) continue
+        if (group.tagSet.has('shore') || group.tagSet.has('roadside') || group.tagSet.has('stones')) continue
         const category = group.tagSet.has('farm') ? 'farm' : CLUSTER_CATEGORIES.find(tag => group.tagSet.has(tag)) || 'other'
         if (!categories.has(category)) categories.set(category, [])
         categories.get(category).push(group)
@@ -769,6 +871,7 @@ export function buildNaturalDecorationLayout(mapGrid, pools, { defaultBiome = 'g
       break
     }
   }
+  placeStones({ mapGrid, pools, options, salt, defaultBiome, fits, cells, occupied, placements, width, height })
   // Ground detail has its own cells, no impassability and no spacing ownership.
   for (const kind of ['groundDetail', 'multi', 'single']) {
     const detail = kind === 'groundDetail'

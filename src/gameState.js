@@ -304,6 +304,7 @@ export const gameState = {
   cityClusterSize: 8,
   ruinSeeds: 3,
   ruinClusterSize: 7,
+  stoneCount: 40,
   mapOreFieldCount: 8,
   mapOreTotalValue: 64000,
   mapWaterPercent: 10,
