@@ -2,8 +2,9 @@
 // default organic terrain without visible square patches.
 //
 // Each multi-tile group is composed into one canvas. The ground colour is
-// estimated from the group's outer border; pixels close to it become
-// transparent (soft threshold), and the outer border is feathered so any
+// estimated from the group's outer border; pixels close to it that are
+// connected to that border become transparent (soft threshold), so ground-
+// coloured or dark detail inside the sprite is kept. The outer border is feathered so any
 // remaining ground blends in. Interior seams between cells are untouched.
 
 const KEY_INNER = 18 // colour distance below which a pixel is fully ground
@@ -38,6 +39,27 @@ function median(values) {
 function smoothstep(edge0, edge1, value) {
   const t = Math.max(0, Math.min(1, (value - edge0) / (edge1 - edge0)))
   return t * t * (3 - 2 * t)
+}
+
+/** Pixels connected to the image border through `isBackground` pixels (4-neighbour). */
+export function floodBorderBackground(data, width, height, isBackground) {
+  const total = width * height
+  const reached = new Uint8Array(total)
+  const queue = new Int32Array(total)
+  let head = 0
+  let tail = 0
+  const visit = index => { if (!reached[index] && isBackground(index)) { reached[index] = 1; queue[tail++] = index } }
+  for (let x = 0; x < width; x++) { visit(x); visit(((height - 1) * width) + x) }
+  for (let y = 0; y < height; y++) { visit(y * width); visit((y * width) + width - 1) }
+  while (head < tail) {
+    const index = queue[head++]
+    const x = index % width
+    if (x > 0) visit(index - 1)
+    if (x + 1 < width) visit(index + 1)
+    if (index >= width) visit(index - width)
+    if (index + width < total) visit(index + width)
+  }
+  return reached
 }
 
 export function cutoutDecorationGroup(group, cellSize = 64) {
@@ -87,17 +109,24 @@ export function cutoutDecorationGroup(group, cellSize = 64) {
   const spread = median(rs.map((r, i) => Math.abs(r - ground[0]) + Math.abs(gs[i] - ground[1]) + Math.abs(bs[i] - ground[2])))
   const keyGround = spread <= UNIFORM_BORDER_MAX_SPREAD
 
+  const groundDistance = index => {
+    const i = index * 4
+    const dr = data[i] - ground[0]
+    const dg = data[i + 1] - ground[1]
+    const db = data[i + 2] - ground[2]
+    return Math.sqrt((dr * dr) + (dg * dg) + (db * db))
+  }
+  // Key only ground connected to the group's outer border; ground-coloured
+  // or dark pixels enclosed by the sprite are part of it and stay opaque.
+  const background = keyGround ? floodBorderBackground(data, width, height, index => !data[index * 4 + 3] || groundDistance(index) < KEY_OUTER) : null
+
   let alphaSum = 0
   for (let y = 0; y < height; y++) {
     const edgeY = Math.min(y, height - 1 - y)
     for (let x = 0; x < width; x++) {
       const i = ((y * width) + x) * 4
       if (!data[i + 3]) continue
-      const dr = data[i] - ground[0]
-      const dg = data[i + 1] - ground[1]
-      const db = data[i + 2] - ground[2]
-      const distance = Math.sqrt((dr * dr) + (dg * dg) + (db * db))
-      const keep = keyGround ? smoothstep(KEY_INNER, KEY_OUTER, distance) : 1
+      const keep = background?.[(y * width) + x] ? smoothstep(KEY_INNER, KEY_OUTER, groundDistance((y * width) + x)) : 1
       const edge = Math.min(edgeY, x, width - 1 - x)
       const featherWidth = keyGround
         ? FEATHER_PX

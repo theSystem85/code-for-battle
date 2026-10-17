@@ -203,7 +203,7 @@ export class TextureManager {
           ...tile,
           tagSet: this.buildTagSet(tile.tags),
           streetDirectionMask: this.getStreetDirectionMask(tile.tags),
-          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
+          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey, entry.metadata),
           blendMode: entry.blendMode,
           blackKey: entry.blackKey,
           sheetPath: entry.sheetPath
@@ -270,7 +270,7 @@ export class TextureManager {
         }
         sheetGroups[groupLabel].push({
           ...tile,
-          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey),
+          image: getImageTextureWithBlendMode(entry.image, entry.blendMode, entry.blackKey, entry.metadata),
           blendMode: entry.blendMode,
           blackKey: entry.blackKey,
           sheetPath: entry.sheetPath
@@ -1029,7 +1029,7 @@ export class TextureManager {
     if (!selected?.rect) return null
 
     return {
-      image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey),
+      image: selected.image || getImageTextureWithBlendMode(this.integratedSpriteSheetImage, this.integratedBlendMode, this.integratedBlackKey, this.integratedSpriteSheetMetadata),
       rect: selected.rect,
       tags: selectedTags || selected.tags || [],
       rotation,
