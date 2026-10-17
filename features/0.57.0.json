@@ -1,5 +1,5 @@
 {
-  "version": "0.58.0",
+  "version": "0.57.0",
   "features": [],
   "improvements": [
     "The light tank's autocannon now fires faster rounds that lead moving targets, with small impact flashes and no splash damage.",

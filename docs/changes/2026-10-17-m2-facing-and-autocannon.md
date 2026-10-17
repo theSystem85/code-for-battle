@@ -4,4 +4,4 @@
   - New `src/rendering/unitSpriteFacing.js` declares the facing of every unit asset; `tests/unit/unitSpriteFacing.test.js` enforces it. The `new-unit` skill gained a mandatory "Canonical facing direction" section.
   - M2 autocannon: no splash damage (impact is visual only, flash radius 0.35 tiles instead of the default 2 tiles), projectile speed 16 px/frame (was 8 via the shared tank path), full intercept lead aiming for moving targets, tighter spread (~0.3°), and rounds fly slightly past the aim point so they can still hit by collision. Damage per hit unchanged.
   - M2 ammo 150 → 195 (+30%). Real M2: 900 × 25 mm (300 ready + 600 stowed), 7 TOW (2 + 5), 2,200 × 7.62 mm coax (800 + 1,400) — FM 3-22.1 Bradley Gunnery. The game has a single ammo pool and no TOW/coax; one game shot ≈ one 4–5 round 25 mm burst gives 180–225, so 195 (+30%) sits in that range.
-  - Version 0.58.0.
+  - Version 0.57.0.
