@@ -1,3 +1,4 @@
+import { findCityBuildingById } from './game/cityBuildings.js'
 import { restoreBaseAutomationRuntime } from './policies/basePolicyEngine.js'
 import { restoreCompletionReceipt } from './policies/completionReceipts.js'
 import { applyRecordedAutomationUnitCommand, applyRecordedAutomationRuntime, applyRecordedAutomationDefenceIntent } from './policies/automationReplay.js'
@@ -337,6 +338,10 @@ function resolveReplayEntityReference(reference) {
       if (reference.id && getBuildingIdentifier(building) === reference.id) return true
       return building.type === reference.type && building.x === reference.x && building.y === reference.y
     }) || null
+  }
+
+  if (reference.kind === 'city') {
+    return findCityBuildingById(gameState.mapGrid, reference.id)
   }
 
   if (reference.kind === 'wreck') {

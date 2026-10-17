@@ -1,3 +1,4 @@
+import { isCityBuildingTarget } from '../game/cityBuildings.js'
 import { unitCommandBroadcastSuppressed } from './commandBroadcastScope.js'
 /**
  * Command Broadcasting Module
@@ -185,7 +186,7 @@ export function broadcastUnitAttack(units, target) {
     return
   }
 
-  const targetType = target.isBuilding ? 'building' : 'unit'
+  const targetType = isCityBuildingTarget(target) ? 'city' : target.isBuilding ? 'building' : 'unit'
   const partyId = units[0]?.owner || gameState.humanPlayer
   const battleshipTurretSelections = Object.fromEntries(units
     .filter(unit => unit.type === 'battleship')

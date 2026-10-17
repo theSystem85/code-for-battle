@@ -1,3 +1,4 @@
+import { findCityBuildingById } from './game/cityBuildings.js'
 import { applyMapAction } from './ui/mapActions/mapActionCommands.js'
 import { updateFactoryExits } from './game/factoryExit.js'
 import { findPath as findFactoryExitPath } from './units.js'
@@ -306,14 +307,16 @@ export const updateGame = logPerformance(function updateGame(delta, mapGrid, fac
           const unitRefs = createReplayUnitReferences(unitIds)
           const replayTarget = mainUnits.find(u => u.id === targetId) ||
             gameState.buildings.find(b => b.id === targetId) ||
-            factories.find(f => f.id === targetId)
+            factories.find(f => f.id === targetId) ||
+            findCityBuildingById(gameState.mapGrid, targetId)
           unitIds.forEach(unitId => {
             const unit = mainUnits.find(u => u.id === unitId && u.owner === partyId)
             if (unit && !unit.factoryExit) {
               // Find the target
               const target = mainUnits.find(u => u.id === targetId) ||
                              gameState.buildings.find(b => b.id === targetId) ||
-                             factories.find(f => f.id === targetId)
+                             factories.find(f => f.id === targetId) ||
+                             findCityBuildingById(gameState.mapGrid, targetId)
               if (target && !target.factoryExit) {
                 // Combat system uses unit.target, not unit.attackTarget
                 if (unit.type === 'battleship') {

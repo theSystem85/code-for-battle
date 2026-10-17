@@ -3,6 +3,7 @@ import { gameState } from '../gameState.js'
 import { showNotification } from '../ui/notifications.js'
 import { GAME_DEFAULT_CURSOR } from './cursorStyles.js'
 import { getUnitSelectionCenter } from './selectionManager.js'
+import { getAttackableCityAtWorld } from '../game/cityBuildings.js'
 
 function normalizeOwner(owner) {
   return owner === 'player' ? 'player1' : owner
@@ -172,7 +173,9 @@ export function findEnemyTarget(worldX, worldY, gameFactories, units) {
     }
   }
 
-  return null
+  // Neutral city buildings are valid targets for a normal attack click.
+  // They stay out of auto-acquisition because they are not in gameState.buildings.
+  return getAttackableCityAtWorld(gameState.mapGrid, worldX, worldY)
 }
 
 export function selectWreck(wreck, selectedUnits, factories, selectionManager) {

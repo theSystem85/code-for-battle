@@ -15,6 +15,7 @@ import { canRecoveryTankTowTarget } from '../game/jetFuel.js'
 import { initiateRetreat } from '../behaviours/retreat.js'
 import * as mineInput from './mineInputHandler.js'
 import { isWithinBaseRange } from '../utils/baseUtils.js'
+import { getAttackableCityAtWorld } from '../game/cityBuildings.js'
 import {
   isRallyPointTileBlocked,
   shouldStartUtilityQueueMode,
@@ -353,6 +354,18 @@ export function updateEnemyHover(handler, worldX, worldY, units, factories, sele
             hoveredEnemyCenter = { x: centerX, y: centerY }
             break
           }
+        }
+      }
+    }
+
+    if (!isOverEnemy && !isOverFriendlyUnit) {
+      // Neutral city buildings accept a normal attack click, so show the attack cursor.
+      const city = getAttackableCityAtWorld(gameState.mapGrid, worldX, worldY)
+      if (city) {
+        isOverEnemy = true
+        hoveredEnemyCenter = {
+          x: (city.x + city.width / 2) * TILE_SIZE,
+          y: (city.y + city.height / 2) * TILE_SIZE
         }
       }
     }
