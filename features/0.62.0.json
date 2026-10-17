@@ -1,0 +1,39 @@
+{
+  "version": "0.62.0",
+  "features": [
+    "Maps now show new top-down biome decorations for grass, soil, sand, snow and neutral ground, sized to scale (one tile is about 10 m), and on mixed maps each decoration stays inside its own biome. Water, buildings and large wrecks block movement.",
+    "Custom sprite sheets now keep the default ground and place large decorations such as forests, lakes and frozen lakes as whole pieces.",
+    "Optional biome sprite sheets add clustered ruins.",
+    "Optional map decorations form natural patches with clear roads, protected starts and rare landmarks.",
+    "Optional city buildings can be destroyed, with adjustable city and ruin clusters.",
+    "Shore props now include sparse land, shallow-water and rotating pier placements.",
+    "City houses now line their own streets, and every city street joins the map's road network.",
+    "New optional dtv3_winter sprite sheet: snowy bare trees, pines, shrubs, tufts and reeds placed on snow tiles.",
+    "Stones: the rocks sheet is now tagged 'stones' and a seeded generator pass scatters loosely clustered small and large stones, favouring coasts and rock terrain; new Stones map setting (works with Apply map settings)."
+  ],
+  "improvements": [
+    "Removed unused ground and water images and moved build-only terrain sources out of the deployed files, so each deploy is about 4.6 MB smaller.",
+    "Restored the original default sprite sheets.",
+    "City buildings now have a tenth of their old health, so ordinary fire destroys them quickly.",
+    "Select units and click a city building to attack it; no force attack needed. Units still do not attack cities on their own.",
+    "Sidebar map settings no longer regenerate the map on every change: an Apply button is enabled once changes are detected and regenerates on click.",
+    "Removed the legacy streets24 and rockCliffsMountains sprite sheets; streets and cliffs use the organic terrain art.",
+    "New inner_cuts sprite tag: interior black is only cut for tagged sprites (bare winter trees, decals, arches, fences, tyres, reeds and more); everything else keeps its dark interior.",
+    "dtv2_universal props are now mostly ruins (clustered in ruin regions) and roadside decoration placed sparsely right next to roads; the fuel depot and water tower are rare (once per map).",
+    "Cities now have an organic layout: one gently curved main street joined to the big roads, 1-4 side streets with occasional branches, and houses only along streets facing them (no grid).",
+    "Combat decals no longer carry inner_cuts (no cut-outs; to be reworked with real alpha)."
+  ],
+  "bugfixes": [
+    "Empty custom sheet selections now render exactly like default mode.",
+    "Shore props now line water edges and ground details stay in their matching biomes.",
+    "Decorative shore rocks no longer replace terrain rock tiles.",
+    "Changing custom sheets or tags now rebuilds map topology with the same seed.",
+    "Grass coasts now have denser shore props while keeping roads clear.",
+    "Saved optional sprite sheets now apply before the startup map is generated.",
+    "Green reeds and lilies stay off snow, and cliff strip joins have smoother lighting.",
+    "Craters and impact marks no longer appear on buildings, city houses or other impassable tiles.",
+    "Sprite isolation never strips interior pixels: SSE click/auto isolation and the runtime black key on the final sheet only remove background connected to the sprite edge.",
+    "Snow tiles no longer show green shrubs or trees: only snow-tagged vegetation is placed on snow, and the fallback summer ground details skip snow.",
+    "Map settings edited while an Apply regeneration is still running stay pending instead of being silently dropped."
+  ]
+}
