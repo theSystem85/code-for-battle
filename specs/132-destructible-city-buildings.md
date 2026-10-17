@@ -9,7 +9,7 @@ Previously, map decorations were prepared layout cells with sprite tags and opti
 ## Behavior
 
 - `dtv3_city`, `dtv3_shore` and `dtv3_ground_detail` are optional, available only when image and metadata exist. `index.json` lists defaults only, so remains unchanged. Explicit empty custom selections retain default-mode parity.
-- City anchors own a neutral structure object shared by every footprint cell. Configurable durability is 1500 HP for one tile, 2500 for two, 4000 for four; other footprints use 1000 HP per tile.
+- City anchors own a neutral structure object shared by every footprint cell. Configurable durability is 150 HP for one tile, 250 for two, 400 for four; other footprints use 100 HP per tile (reduced tenfold in 0.61.0 so cities fall to ordinary fire).
 - Cities remain outside player structure/auto-target/production/victory lists. Projectile collisions and attack-ground splash damage can damage them. Splash uses the existing structure rectangle calculation, howitzer multiplier, damage rings, building multiplier and caps.
 - Only damaged, surviving cities show a small solid health bar. Dead cities return no intact decorative sprite. Destruction stamps existing grouped `debris` decals, invalidates the affected terrain surface, triggers the existing destruction animation, and uses the explosion sound.
 - Match existing destroyed-structure convention: free the static occupancy contribution across the footprint. Preserve unit/wreck occupancy contributions and independent map building references. Clear shared path caches. Unit tile calculations remain center-based; city positions are structure footprint tile coordinates, not unit positions.
