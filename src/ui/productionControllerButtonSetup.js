@@ -1,3 +1,4 @@
+import { setupProductionHoverCard } from './productionHoverCard.js'
 import { failCompletionReceipt } from '../policies/completionReceipts.js'
 import { gameState } from '../gameState.js'
 import { unitCosts, buildingCosts } from '../main.js'
@@ -125,6 +126,7 @@ export function setupUnitButtons(controller) {
   unitButtons.forEach(button => {
     const unitType = button.getAttribute('data-unit-type')
     controller.unitButtons.set(unitType, button)
+    setupProductionHoverCard(button, { kind: 'unit', type: unitType }, gameState, productionQueue)
 
     // Check if this unit is already unlocked and make it visible
     if (gameState.availableUnitTypes.has(unitType)) {
@@ -244,13 +246,13 @@ export function setupUnitButtons(controller) {
       if (!requirementsMet) {
         showNotification(`Cannot produce ${unitType}: ${requirementText}.`)
         button.classList.add('disabled')
-        button.title = requirementText
+        button.dataset.requirement = requirementText
         return // Stop processing
       }
 
       // Re-enable button if requirements were previously unmet but now are met
       button.classList.remove('disabled')
-      button.title = '' // Clear requirement tooltip
+      button.dataset.requirement = '' // Clear requirement tooltip
 
       if (gameState.newUnitTypes.has(unitType)) {
         gameState.newUnitTypes.delete(unitType)
@@ -422,6 +424,7 @@ export function setupBuildingButtons(controller) {
   buildingButtons.forEach(button => {
     const buildingType = button.getAttribute('data-building-type')
     controller.buildingButtons.set(buildingType, button)
+    setupProductionHoverCard(button, { kind: 'building', type: buildingType }, gameState, productionQueue)
 
     // Check if this building is already unlocked and make it visible
     if (gameState.availableBuildingTypes.has(buildingType)) {
@@ -524,7 +527,7 @@ export function setupBuildingButtons(controller) {
       // Prevent action if game is paused or button is disabled
       if (gameState.gamePaused || button.classList.contains('disabled')) {
         if (button.classList.contains('disabled')) {
-          showNotification('Cannot construct building: ' + (button.title || 'Prerequisite missing.'))
+          showNotification('Cannot construct building: ' + (button.dataset.requirement || 'Prerequisite missing.'))
         }
         return
       }

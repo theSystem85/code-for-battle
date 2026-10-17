@@ -1,3 +1,4 @@
+import { getProductionDuration, vehicleFactorySpeedUnitTypes } from './production/timing.js'
 import { completeProductionItem, failCompletionReceipt, noteProductionBlocked } from './policies/completionReceipts.js'
 import { spawnUnit, findPath } from './units.js'
 import { findClosestOre } from './logic.js'
@@ -32,7 +33,6 @@ function playUnitReadySound(unitType) {
 const vehicleUnitTypes = ['tank', 'tank-v2', 'rocketTank', 'tank_v1', 'tank-v3', 'lightTank', 'harvester', 'ambulance', 'tankerTruck', 'ammunitionTruck', 'recoveryTank', 'howitzer', 'mineLayer', 'mineSweeper']
 const navalUnitTypes = ['destroyer', 'supplyShip', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
 
-const vehicleFactorySpeedUnitTypes = [...vehicleUnitTypes, 'apache', 'f22Raptor', 'f35']
 
 // Enhanced production queue system
 export const productionQueue = {
@@ -366,22 +366,8 @@ export const productionQueue = {
       }
     }
 
-    // Set production duration proportional to cost.
-    const baseDuration = 3000 // Restore to original (was 750 for 4x faster)
-    let duration = baseDuration * (cost / 500) // Example scaling
-
-    // Apply vehicle factory speedup (if applicable)
-    // Duration is inversely proportional to the multiplier
-    if (vehicleMultiplier > 0) {
-      duration = duration / vehicleMultiplier
-    }
-
-    // Apply energy slowdown using the new power penalty formula
-    if (gameState.playerPowerSupply < 0) {
-      // Use the playerBuildSpeedModifier calculated in updatePowerSupply
-      // This is already set to follow the formula: 1 / (1 + (negativePower / 100))
-      duration = duration / gameState.playerBuildSpeedModifier
-    }
+    const duration = getProductionDuration(cost, false, vehicleMultiplier,
+      gameState.playerPowerSupply < 0 ? gameState.playerBuildSpeedModifier : 1)
 
 
     this.currentUnit = {
@@ -492,20 +478,9 @@ export const productionQueue = {
     // Reset paid tracker for this production
     this.buildingPaid = 0
 
-    // Set production duration proportional to cost
-    const baseDuration = 750 // 4x faster (was 3000)
-    let duration = baseDuration * (cost / 500)
-
-    // Apply construction yard speedup
     const constructionMultiplier = yardMultiplier
-    duration = duration / constructionMultiplier
-
-    // Apply energy slowdown using the new power penalty formula
-    if (gameState.playerPowerSupply < 0) {
-      // Use the playerBuildSpeedModifier calculated in updatePowerSupply
-      // This is already set to follow the formula: 1 / (1 + (negativePower / 100))
-      duration = duration / gameState.playerBuildSpeedModifier
-    }
+    const duration = getProductionDuration(cost, true, constructionMultiplier,
+      gameState.playerPowerSupply < 0 ? gameState.playerBuildSpeedModifier : 1)
 
 
     this.currentBuilding = {

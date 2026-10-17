@@ -1,0 +1,10 @@
+{
+  "version": "0.61.0",
+  "features": [
+    "Build-card hover sheets show build time, power and tech unlocks."
+  ],
+  "improvements": [],
+  "bugfixes": [
+    "Build-card unlocks include build-order prerequisites."
+  ]
+}

@@ -1,5 +1,5 @@
 import { gameState } from '../gameState.js'
-import { buildingData } from '../buildings.js'
+import { getMissingBuildingRequirements } from '../production/buildingRequirements.js'
 
 export function updateVehicleButtonStates(controller) {
   // In edit mode, enable all units regardless of tech tree
@@ -7,7 +7,7 @@ export function updateVehicleButtonStates(controller) {
     const unitButtons = document.querySelectorAll('.production-button[data-unit-type]')
     unitButtons.forEach(button => {
       button.classList.remove('disabled')
-      button.title = ''
+      button.dataset.requirement = ''
       button.style.display = ''
     })
     return
@@ -48,117 +48,117 @@ export function updateVehicleButtonStates(controller) {
     if (unitType === 'tankerTruck') {
       if (hasVehicleFactory && hasGasStation) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory & Gas Station'
+        button.dataset.requirement = 'Requires Vehicle Factory & Gas Station'
       }
     } else if (unitType === 'recoveryTank') {
       if (hasVehicleFactory && hasWorkshop) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory & Workshop'
+        button.dataset.requirement = 'Requires Vehicle Factory & Workshop'
       }
     } else if (unitType === 'ammunitionTruck') {
       if (hasVehicleFactory && hasAmmunitionFactory) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory & Ammunition Factory'
+        button.dataset.requirement = 'Requires Vehicle Factory & Ammunition Factory'
       }
     } else if (unitType === 'howitzer') {
       if (hasVehicleFactory && hasRadar) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory & Radar Station'
+        button.dataset.requirement = 'Requires Vehicle Factory & Radar Station'
       }
     } else if (unitType === 'ambulance') {
       if (hasVehicleFactory && hasHospital) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory & Hospital'
+        button.dataset.requirement = 'Requires Vehicle Factory & Hospital'
       }
     } else if (unitType === 'apache') {
       if (hasHelipad) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Helipad'
+        button.dataset.requirement = 'Requires Helipad'
       }
     } else if (unitType === 'f22Raptor') {
       const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
       if (hasAirstrip) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Airstrip'
+        button.dataset.requirement = 'Requires Airstrip'
       }
     } else if (unitType === 'f35') {
       const hasAirstrip = gameState.buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
       if ((hasHelipad || hasAirstrip) && hasAmmunitionFactory) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Helipad or Airstrip and Ammunition Factory'
+        button.dataset.requirement = 'Requires Helipad or Airstrip and Ammunition Factory'
       }
     } else if (controller.navalUnitTypes.includes(unitType) && unitType !== 'supplyShip') {
       if (hasShipyard) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Shipyard'
+        button.dataset.requirement = 'Requires Shipyard'
       }
     } else if (unitType === 'supplyShip') {
       const hasSupplyBuilding = hasGasStation || hasHospital || hasAmmunitionFactory || hasWorkshop
       if (hasShipyard && hasSupplyBuilding) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Shipyard and Gas Station, Hospital, Ammunition Factory, or Workshop'
+        button.dataset.requirement = 'Requires Shipyard and Gas Station, Hospital, Ammunition Factory, or Workshop'
       }
     } else if (unitType === 'mineLayer') {
       if (hasVehicleFactory && hasWorkshop && hasAmmunitionFactory) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory, Workshop & Ammunition Factory'
+        button.dataset.requirement = 'Requires Vehicle Factory, Workshop & Ammunition Factory'
       }
     } else if (unitType === 'mineSweeper') {
       if (hasVehicleFactory && hasWorkshop) {
         button.classList.remove('disabled')
-        button.title = ''
+        button.dataset.requirement = ''
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory & Workshop'
+        button.dataset.requirement = 'Requires Vehicle Factory & Workshop'
       }
     } else if (controller.vehicleUnitTypes.includes(unitType)) {
       if (hasVehicleFactory) {
         button.classList.remove('disabled')
-        button.title = '' // Clear tooltip
+        button.dataset.requirement = '' // Clear tooltip
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory' // Add tooltip
+        button.dataset.requirement = 'Requires Vehicle Factory' // Add tooltip
       }
     } else if (unitType === 'harvester') {
       if (hasVehicleFactory && hasRefinery) {
         button.classList.remove('disabled')
-        button.title = '' // Clear tooltip
+        button.dataset.requirement = '' // Clear tooltip
       } else {
         button.classList.add('disabled')
-        button.title = 'Requires Vehicle Factory & Ore Refinery' // Add tooltip
+        button.dataset.requirement = 'Requires Vehicle Factory & Ore Refinery' // Add tooltip
       }
     }
   })
@@ -170,7 +170,7 @@ export function updateBuildingButtonStates(controller) {
     const buildingButtons = document.querySelectorAll('.production-button[data-building-type]')
     buildingButtons.forEach(button => {
       button.classList.remove('disabled')
-      button.title = ''
+      button.dataset.requirement = ''
       button.style.display = ''
     })
     return
@@ -180,19 +180,12 @@ export function updateBuildingButtonStates(controller) {
     b => b.owner === gameState.humanPlayer && b.health > 0
   )
 
-  const hasRadar = playerBuildings.some(b => b.type === 'radarStation')
-  const hasConstructionYard = playerBuildings.some(b => b.type === 'constructionYard')
-  const hasPowerPlant = playerBuildings.some(b => b.type === 'powerPlant')
-  const hasRefinery = playerBuildings.some(b => b.type === 'oreRefinery')
-  const hasVehicleFactory = playerBuildings.some(b => b.type === 'vehicleFactory')
-  const hasVehicleWorkshop = playerBuildings.some(b => b.type === 'vehicleWorkshop')
+  const ownedTypes = new Set(playerBuildings.map(building => building.type))
 
   const buildingButtons = document.querySelectorAll('.production-button[data-building-type]')
 
   buildingButtons.forEach(button => {
     const type = button.getAttribute('data-building-type')
-    let disable = false
-    const req = []
     const shouldForceVisible =
       button.classList.contains('ready-for-placement') ||
       controller.getBuildingProductionCount(button) > 0
@@ -203,53 +196,12 @@ export function updateBuildingButtonStates(controller) {
       return
     }
 
-    const isPowerPlant = type === 'powerPlant'
-    const isOreRefinery = type === 'oreRefinery'
-    const isVehicleFactory = type === 'vehicleFactory'
-    const isConstructionYardButton = type === 'constructionYard'
-    const isStreet = type === 'street'
+    const req = getMissingBuildingRequirements(type, ownedTypes)
 
-    if (!hasConstructionYard && !isConstructionYardButton && !isStreet) {
-      disable = true
-      if (!req.includes('Construction Yard')) req.push('Construction Yard')
-    }
-
-    if (buildingData[type]?.requiresRadar && !hasRadar && !isStreet) {
-      disable = true
-      if (!req.includes('Radar Station')) req.push('Radar Station')
-    }
-
-    if (buildingData[type]?.requiresVehicleFactory && !hasVehicleFactory && !isStreet) {
-      disable = true
-      if (!req.includes('Vehicle Factory')) req.push('Vehicle Factory')
-    }
-
-    if (!hasPowerPlant && !isPowerPlant && !isConstructionYardButton && !isStreet) {
-      disable = true
-      if (!req.includes('Power Plant')) req.push('Power Plant')
-    }
-
-    if (hasPowerPlant && !hasRefinery && !isPowerPlant && !isOreRefinery && !isConstructionYardButton && !isStreet) {
-      disable = true
-      if (!req.includes('Ore Refinery')) req.push('Ore Refinery')
-    }
-
-    if (hasPowerPlant && hasRefinery && !hasVehicleFactory && !isPowerPlant && !isOreRefinery && !isVehicleFactory && !isConstructionYardButton && !isStreet) {
-      disable = true
-      if (!req.includes('Vehicle Factory')) req.push('Vehicle Factory')
-    }
-
-    if (isConstructionYardButton && !hasVehicleWorkshop) {
-      disable = true
-      if (!req.includes('Vehicle Workshop')) req.push('Vehicle Workshop')
-    }
-
-    // Vehicle Factory now only requires Power Plant (removed refinery requirement)
-
-    if (disable) {
+    if (req.length > 0) {
       button.classList.add('disabled')
       const requirementText = req.length ? 'Requires ' + req.join(' & ') : ''
-      button.title = requirementText
+      button.dataset.requirement = requirementText
       if (!shouldForceVisible) {
         button.style.display = 'none'
       } else {
@@ -257,7 +209,7 @@ export function updateBuildingButtonStates(controller) {
       }
     } else {
       button.classList.remove('disabled')
-      button.title = ''
+      button.dataset.requirement = ''
       button.style.display = ''
     }
   })
