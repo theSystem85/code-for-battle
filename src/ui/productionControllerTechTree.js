@@ -1,3 +1,4 @@
+import { visitProductionUnlocks } from '../production/techTree.js'
 import { gameState } from '../gameState.js'
 import { playSound } from '../sound.js'
 
@@ -153,90 +154,7 @@ export function forceUnlockBuildingType(controller, type) {
 
 // Sync tech tree unlocks based on existing player buildings
 export function syncTechTreeWithBuildings(controller) {
-  const buildings = gameState.buildings.filter(b => b.owner === gameState.humanPlayer)
-  const hasFactory = buildings.some(b => b.type === 'vehicleFactory')
-  const hasRefinery = buildings.some(b => b.type === 'oreRefinery')
-  const hasRocketTurret = buildings.some(b => b.type === 'rocketTurret')
-  const hasArtilleryTurret = buildings.some(b => b.type === 'artilleryTurret')
-  const hasRadar = buildings.some(b => b.type === 'radarStation')
-  const hasGasStation = buildings.some(b => b.type === 'gasStation')
-  const hasHospital = buildings.some(b => b.type === 'hospital')
-  const hasWorkshop = buildings.some(b => b.type === 'vehicleWorkshop')
-  const hasHelipad = buildings.some(b => b.type === 'helipad')
-  const hasAirstrip = buildings.some(b => b.type === 'airstrip' && b.owner === gameState.humanPlayer && b.health > 0)
-  const hasAmmunitionFactory = buildings.some(b => b.type === 'ammunitionFactory')
-  const hasShipyard = buildings.some(b => b.type === 'shipyard')
-  const factoryCount = buildings.filter(b => b.type === 'vehicleFactory').length
-
-  if (hasFactory) {
-    controller.forceUnlockUnitType('tank')
-    controller.forceUnlockUnitType('lightTank')
-    controller.forceUnlockBuildingType('ammunitionFactory')
-  }
-
-  if (hasFactory && hasRefinery) {
-    controller.forceUnlockUnitType('harvester')
-  }
-
-  if (hasFactory && hasGasStation) {
-    controller.forceUnlockUnitType('tankerTruck')
-  }
-
-  if (hasFactory && hasAmmunitionFactory) {
-    controller.forceUnlockUnitType('ammunitionTruck')
-  }
-
-  if (hasHospital) {
-    controller.forceUnlockUnitType('ambulance')
-  }
-
-  if (hasFactory && hasWorkshop) {
-    controller.forceUnlockUnitType('recoveryTank')
-    controller.forceUnlockUnitType('mineSweeper')
-  }
-
-  if (hasFactory && hasWorkshop && hasAmmunitionFactory) {
-    controller.forceUnlockUnitType('mineLayer')
-  }
-
-  if (hasHelipad) {
-    controller.forceUnlockUnitType('apache')
-  }
-
-  if (hasAirstrip) {
-    controller.forceUnlockUnitType('f22Raptor')
-  }
-
-  if ((hasHelipad || hasAirstrip) && hasAmmunitionFactory) {
-    controller.forceUnlockUnitType('f35')
-  }
-
-  if (factoryCount >= 2) {
-    controller.forceUnlockUnitType('tank-v3')
-  }
-
-  if (hasShipyard) {
-    ;['destroyer', 'hovercraft', 'vehicleFerry', 'aircraftCarrier', 'navalMineLayer', 'battleship', 'submarine']
-      .forEach(type => controller.forceUnlockUnitType(type))
-  }
-
-  if (hasShipyard && (hasGasStation || hasHospital || hasAmmunitionFactory || hasWorkshop)) {
-    controller.forceUnlockUnitType('supplyShip')
-  }
-
-  if (hasRocketTurret) {
-    controller.forceUnlockUnitType('rocketTank')
-  }
-
-  if (hasRadar) {
-    controller.forceUnlockUnitType('tank-v2')
-    if (hasFactory) controller.forceUnlockBuildingType('shipyard')
-    ;['airstrip', 'turretGunV2', 'turretGunV3', 'rocketTurret', 'teslaCoil', 'artilleryTurret']
-      .forEach(t => controller.forceUnlockBuildingType(t))
-    if (hasFactory && hasArtilleryTurret) {
-      controller.forceUnlockUnitType('howitzer')
-    }
-  }
+  visitProductionUnlocks(gameState.buildings, gameState.humanPlayer, controller)
 
   controller.updateVehicleButtonStates()
   controller.updateBuildingButtonStates()

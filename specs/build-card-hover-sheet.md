@@ -1,0 +1,33 @@
+# Build-card hover sheet
+
+Feature release: 0.61.0.
+
+Each sidebar `.production-button` keeps its image and bottom-centered name at rest. With a fine pointer on a hover-capable device, hovering slides a single in-card sheet to the top over 240 ms with ease-out motion. A dark translucent rounded panel fades in, and left-aligned stats slide up under the centered name. Leaving reverses the transition. Keyboard focus also reveals the sheet. Reduced-motion preferences disable transitions. All sheet text is white, 11px, weight 400.
+
+Stats retain cost and building power and add estimated build time and cached building unlock counts. Unit cards omit unlock information entirely. Buildings with no unlocks read “Unlocks: none”. Short unlock name lists appear on cards at least 145px wide; counts take priority on smaller cards. Names remain centered, stats left aligned. NEW badges and batch/ready counters fade out over the same 240 ms while hover or keyboard focus opens the sheet, and fade back on close. Reduced motion also disables these fades. Existing progress bars, upper/lower click areas and long-press tooltips remain independent. Decorative sheet layers have `pointer-events: none`. Touch devices retain the resting card and existing tap/drag/long-press behavior. Production cards use no native `title` attributes; prerequisite messages remain in `data-requirement` for click notifications and appear as an extra white line when non-empty. The line refreshes on pointer entry and focus, and is hidden when requirements are satisfied.
+
+## Data and timing
+
+`src/production/techTree.js` holds gameplay tech unlock rules. `src/production/buildingRequirements.js` prepares the existing button-availability checks once, including their original conditional build-order checks, `requiresRadar` / `requiresVehicleFactory` flags and the Workshop prerequisite for Construction Yard. Both the button-state controller and hover index use these shared requirements; gameplay behavior and requirement-message order stay unchanged.
+
+The hover index combines tech unlocks with availability gates, collects only types with actual `.production-button` elements, and deduplicates outputs. A gated building is attributed only to its last prerequisite in the normal build order, removing earlier dependencies transitively. Transitive attribution stops at the starting Construction Yard to avoid the Yard/Workshop expansion cycle, while retaining its direct Power Plant gate and the Workshop unlock for later Construction Yards. Unit unlock attribution retains every relevant tech-rule prerequisite, including alternatives and additional requirements; two factories still unlock Tank V3. The index is computed once, rather than on hover or mouse movement.
+
+With the current production buttons, Power Plant unlocks Ore Refinery (0 units, 1 building); Ore Refinery unlocks Vehicle Factory and contributes Harvester (1 unit, 1 building); Vehicle Factory unlocks 10 units and 7 buildings; Radar Station unlocks 2 units and 8 buildings, including Helipad through its radar flag. Vehicle Workshop unlocks Construction Yard. These counts describe potential unlocks, not only currently locked options or a promise that one building satisfies all prerequisites.
+
+The queue and card share `getProductionDuration`: `(building ? 750 : 3000) * cost / 500 / producerMultiplier / powerModifier`, in simulation milliseconds. Buildings use the existing construction-yard multiplier (active yard count + 1); vehicles and aircraft use the vehicle-factory count; naval units use 1. The power modifier applies only with negative power. Missing producers show a baseline estimate using multiplier 1. Displayed seconds are rounded to one decimal place. These are simulation-time estimates, excluding queue delays, pauses and resource shortages. Values refresh on setup, pointer entry and focus.
+
+## Performance scope
+
+All additions are DOM UI or production/tech-tree event work. Button-state refreshes run during setup and building lifecycle/network/load events, including pending-button-update handling in the game loop; they do not run every frame. Shared requirement definitions preserve identity, and the availability lookup is built once per event, outside the per-button loop (20 building buttons, independent of DPR). No rendering, simulation update, occupancy, pathfinding, sprite preparation or canvas hot paths change. The shared duration helper runs when production starts. Tech-tree traversal runs on the same building lifecycle, load and network sync events as before. Unlock indexing is cached; there are no mousemove handlers, timers or per-frame DOM updates. CSS animation operates on a card-sized element. The 75 FPS reference-hardware presentation gate cannot be certified by a headless browser; no such certification is claimed.
+
+## Validation
+
+- Focused unit coverage in `tests/unit/productionHoverCard.test.js` and `tests/unit/buildingRequirements.test.js`: cost/timing and speed modifiers, cached last-gate unlock counts for the actual production catalog, alternative prerequisites, factory count, ownership, conditional availability/message order, DOM setup and click bubbling, omitted unit unlock rows and pointer/focus requirement refresh.
+- Initial implementation: lint passed and all 294 test files / 5,139 unit tests passed. Follow-up: `npm run lint:fix:changed` and `npm run lint` passed; `npm run test:unit` passed all 295 files / 5,151 tests in 41.60 s.
+- Follow-up parity comparison: all 1,280 combinations of six building-presence flags across twenty building types preserve the original availability requirements and requirement-message order.
+- One-off parity comparison against the pre-change controller: all 8,192 combinations of the twelve prerequisite building types, including an additional factory, produced identical unit/building unlock sets.
+- The supervisor confirmed the original hover animation using the supplied unit/building strips; follow-up visual review remains with the supervisor. Original live-browser limitations: `npm run dev -- --host 127.0.0.1` failed with `listen EPERM` on port 5173. Playwright launch of the installed Chrome wrapper failed creating a read-only runtime directory; direct Chrome launch failed with `setsockopt: Operation not permitted` and SIGTRAP. Supervisor verification should cover desktop hover/leave, white typography, compact-card fit, upper/lower clicks, keyboard focus, reduced motion and touch resting state.
+
+## Local commit status
+
+Follow-up changes are intentionally left uncommitted as requested; the supervisor commits. No git write, remote, credential or push operations are performed during this follow-up.

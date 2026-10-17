@@ -1250,62 +1250,153 @@ body.is-touch .money-tooltip__meta {
   pointer-events: none;
 }
 
-/* Building labels styling */
+/* One in-card sheet: the name rests at the bottom until hover or keyboard focus. */
+.production-button {
+  container-type: inline-size;
+}
+
+.production-button .production-hover-sheet {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: 6px;
+  transform: translateY(calc(100% - 24px));
+  transition: transform 240ms ease-out;
+  pointer-events: none;
+}
+
+.production-hover-sheet::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(12, 17, 24, 0.88);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.09), 0 3px 10px rgba(0, 0, 0, 0.25);
+  opacity: 0;
+  transition: opacity 240ms ease-out;
+}
+
 .production-button .building-name,
 .production-button .unit-name {
-  position: absolute;
-  font-family: var(--game-font-family);
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  color: white;
-  padding: 5px 0;
-  font-size: 12px;
+  box-sizing: border-box;
+  position: relative;
+  display: block;
+  height: 24px;
+  padding: 6px 4px;
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 6px 6px 0 0;
   text-align: center;
-  z-index: 2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.production-button .building-cost,
-.production-button .unit-cost {
-  position: absolute;
-  top: 40%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #4CAF50;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-weight: bold;
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  transition: background-color 240ms ease-out;
   pointer-events: none;
-  z-index: 5;
 }
 
-.production-button .building-power {
-  position: absolute;
-  top: 60%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: rgba(0, 0, 0, 0.8);
-  color: #FFD700;
-  padding: 5px 10px;
-  border-radius: 4px;
-  font-weight: bold;
+.production-button .production-hover-stats {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 5px 4px;
   opacity: 0;
-  transition: opacity 0.2s ease;
+  transform: translateY(8px);
+  transition: opacity 240ms ease-out, transform 240ms ease-out;
   pointer-events: none;
-  z-index: 5;
 }
 
-.production-button:hover .building-cost,
-.production-button:hover .unit-cost,
-.production-button:hover .building-power {
+.production-button .production-hover-sheet span {
+  position: relative;
+  inset: auto;
+  width: auto;
+  color: #fff;
+  font-family: var(--game-font-family);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 12px;
+}
+
+.production-button .production-hover-stats span {
+  padding: 0;
+  background: transparent;
+  text-align: left;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.production-button .production-unlock-names {
+  display: none;
+}
+
+@container (min-width: 145px) {
+  .production-button .production-unlock-names {
+    display: block;
+  }
+}
+
+.production-button .new-label,
+.production-button .batch-counter,
+.production-button .ready-counter {
+  transition: opacity 240ms ease-out;
+  pointer-events: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .production-button:hover .new-label,
+  .production-button:hover .batch-counter,
+  .production-button:hover .ready-counter {
+    opacity: 0;
+  }
+
+  .production-button:hover .production-hover-sheet {
+    transform: translateY(0);
+  }
+
+  .production-button:hover .production-hover-sheet::before,
+  .production-button:hover .production-hover-stats {
+    opacity: 1;
+  }
+
+  .production-button:hover .production-hover-stats {
+    transform: translateY(0);
+  }
+
+  .production-button:hover .production-hover-sheet .building-name,
+  .production-button:hover .production-hover-sheet .unit-name {
+    background-color: transparent;
+  }
+}
+
+.production-button:focus-visible .new-label,
+.production-button:focus-visible .batch-counter,
+.production-button:focus-visible .ready-counter {
+  opacity: 0;
+}
+
+.production-button:focus-visible .production-hover-sheet,
+.production-button:focus-visible .production-hover-stats {
+  transform: translateY(0);
+}
+
+.production-button:focus-visible .production-hover-sheet::before,
+.production-button:focus-visible .production-hover-stats {
   opacity: 1;
+}
+
+.production-button:focus-visible .production-hover-sheet .building-name,
+.production-button:focus-visible .production-hover-sheet .unit-name {
+  background-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .production-button .production-hover-sheet,
+  .production-hover-sheet::before,
+  .production-button .production-hover-stats,
+  .production-button .building-name,
+  .production-button .unit-name,
+  .production-button .new-label,
+  .production-button .batch-counter,
+  .production-button .ready-counter {
+    transition: none;
+  }
 }
 
 /* Production Tabs Styling */
