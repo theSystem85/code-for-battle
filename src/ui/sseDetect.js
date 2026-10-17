@@ -1,9 +1,9 @@
-import { copyComponentWithInterior } from './sseIsolate.js'
+import { copyComponentOnly, copyComponentWithInterior } from './sseIsolate.js'
 
 // Pure source processing. A gap of one pixel is bridged by default; only
 // original pixels are copied (foreground plus what it encloses), so merging
 // never paints the gap.
-export function detectSprites({ width, height, data }, { cutoff = 16, minArea = 2, gap = 1 } = {}) {
+export function detectSprites({ width, height, data }, { cutoff = 16, minArea = 2, gap = 1, innerCuts = false } = {}) {
   if (!Number.isFinite(cutoff) || cutoff < 0 || cutoff > 255
     || !Number.isInteger(minArea) || minArea < 2 || !Number.isInteger(gap) || gap < 0 || gap > 2) throw new Error('Invalid detection options.')
   const mask = new Uint8Array(width * height)
@@ -43,9 +43,12 @@ export function detectSprites({ width, height, data }, { cutoff = 16, minArea = 
     }
     if (tail < minArea) continue
     const bbox = { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
-    // Interior pixels (dark detail, enclosed holes) stay; only edge-connected background is dropped.
-    const { pixels, holes } = copyComponentWithInterior({ width, data }, bbox, queue, tail)
-    components.push({ bbox, pixels, area: tail, holes })
+    // Default: interior pixels (dark detail, enclosed holes) stay and only
+    // edge-connected background is dropped. With innerCuts (sprites tagged
+    // inner_cuts) enclosed black background is cut as well.
+    const copy = innerCuts ? copyComponentOnly : copyComponentWithInterior
+    const { pixels, holes } = copy({ width, data }, bbox, queue, tail)
+    components.push({ bbox, pixels, area: tail, holes, innerCuts })
   }
   return components
 }

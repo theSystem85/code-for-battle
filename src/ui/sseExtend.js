@@ -69,6 +69,7 @@ export function initSseExtend(state, adapters) {
     <button id="sseRemoveSprite" type="button">Remove sprite</button>
     <button id="sseCompact" type="button">Compact</button>
     <label>Near-black cutoff <input id="sseCutoff" type="number" min="0" max="255" value="16"></label>
+    <label><input id="sseInnerCuts" type="checkbox"> Inner cuts (also cut enclosed black background; tags the sprite inner_cuts)</label>
     <label><input id="sseClearMode" type="checkbox"> Select tiles to clear (click, shift-click or drag)</label>
     <button id="sseClearTiles" type="button">Clear tiles</button>
     <p id="sseSelectionStatus" role="status">0 tiles selected</p>
@@ -427,6 +428,19 @@ export function initSseExtend(state, adapters) {
     const result = { id, sourceId: source.id, ok: true, bbox, anchor, sizeRatio, tileSpan: { columns: region.spanX, rows: region.spanY }, placedAt: { column: region.x, row: region.y } }
     spriteImages.set(`${target.data.sheetPath}:${id}`, { image: crop, sizeRatio })
     drawSprite(target, result, crop)
+    if (component.innerCuts) {
+      // The runtime black key reads this tag to cut enclosed black too.
+      result.innerCuts = true
+      target.data.tiles ||= {}
+      for (let dy = 0; dy < region.spanY; dy++) {
+        for (let dx = 0; dx < region.spanX; dx++) {
+          const cell = `${region.x + dx},${region.y + dy}`
+          const tags = new Set(target.data.tiles[cell]?.tags || [])
+          tags.add('inner_cuts')
+          target.data.tiles[cell] = { ...(target.data.tiles[cell] || {}), tags: [...tags] }
+        }
+      }
+    }
     source.isolated.add(key)
     source.masks.set(key, { ...component, id: result.id, targetPath: target.data.sheetPath })
     if (redraw) drawSource()
@@ -525,7 +539,7 @@ export function initSseExtend(state, adapters) {
       try {
         for (const item of selectedSources) {
           source = item
-          const components = detectSprites(source.pixels, { cutoff: Number(field('sseCutoff').value), ...options })
+          const components = detectSprites(source.pixels, { cutoff: Number(field('sseCutoff').value), innerCuts: field('sseInnerCuts').checked, ...options })
           for (const component of components) {
             // A prior click may have extracted a subset of a gap-merged component.
             if (!componentOverlaps(component)) results.push(placeComponent(component, target, false))
@@ -798,11 +812,11 @@ export function initSseExtend(state, adapters) {
         if (ownedUrl) URL.revokeObjectURL(ownedUrl)
       }
     }),
-    isolateAt: guard(async({ sourceId = [...sources.keys()].at(-1), x, y, cutoff = Number(field('sseCutoff').value) }) => {
+    isolateAt: guard(async({ sourceId = [...sources.keys()].at(-1), x, y, cutoff = Number(field('sseCutoff').value), innerCuts = field('sseInnerCuts').checked }) => {
       source = sources.get(sourceId)
       if (!source) throw new Error('Source image not found.')
       const target = currentTarget()
-      const component = isolateComponent(source.pixels, x, y, cutoff)
+      const component = isolateComponent(source.pixels, x, y, cutoff, { innerCuts: Boolean(innerCuts) })
       if (!component || component.area < 2) throw new Error('Click a non-black sprite containing at least two pixels.')
       return placeComponent(component, target)
     }),

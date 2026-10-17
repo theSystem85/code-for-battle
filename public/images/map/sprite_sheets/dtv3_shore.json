@@ -17,7 +17,8 @@
     "shore",
     "shore_trans",
     "soil",
-    "universal"
+    "universal",
+    "inner_cuts"
   ],
   "columns": 6,
   "rows": 11,
@@ -30,7 +31,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -49,7 +51,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 64,
@@ -68,7 +71,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -87,7 +91,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 192,
@@ -106,7 +111,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 256,
@@ -125,7 +131,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 320,
@@ -144,7 +151,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -180,7 +188,8 @@
         "passable",
         "shore",
         "rocks",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 128,
@@ -359,7 +368,8 @@
         "grass",
         "soil",
         "sand",
-        "offshore"
+        "offshore",
+        "inner_cuts"
       ],
       "rect": {
         "x": 0,
@@ -404,7 +414,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -421,7 +432,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -438,7 +450,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -455,7 +468,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -472,7 +486,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -489,7 +504,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -506,7 +522,8 @@
         "grass",
         "soil",
         "sand",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -538,7 +555,8 @@
         "passable",
         "shore",
         "rocks",
-        "onshore"
+        "onshore",
+        "inner_cuts"
       ]
     },
     {
@@ -665,7 +683,8 @@
         "grass",
         "soil",
         "sand",
-        "offshore"
+        "offshore",
+        "inner_cuts"
       ]
     },
     {

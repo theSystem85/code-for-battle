@@ -1,5 +1,5 @@
 // Event-driven image processing only; no simulation/render-loop work.
-export function isolateComponent(image, x, y, cutoff = 16) {
+export function isolateComponent(image, x, y, cutoff = 16, { innerCuts = false } = {}) {
   const { width, height, data } = image
   x = Math.floor(x)
   y = Math.floor(y)
@@ -36,8 +36,8 @@ export function isolateComponent(image, x, y, cutoff = 16) {
     if (py + 1 < height) visit(index + width)
   }
   const bbox = { x: left, y: top, width: right - left + 1, height: bottom - top + 1 }
-  const { pixels, holes } = copyComponentWithInterior(image, bbox, queue, tail)
-  return { bbox, pixels, area: tail, holes }
+  const { pixels, holes } = innerCuts ? copyComponentOnly(image, bbox, queue, tail) : copyComponentWithInterior(image, bbox, queue, tail)
+  return { bbox, pixels, area: tail, holes, innerCuts }
 }
 
 /**
@@ -81,5 +81,22 @@ export function copyComponentWithInterior({ width, data }, bbox, indices, count 
     const source = ((bbox.y + y) * width + bbox.x + x) * 4
     pixels.set(data.subarray(source, source + 4), offset * 4)
   }
+  return { pixels, holes }
+}
+
+/**
+ * `inner_cuts` variant: copy only the component's own (non-black) pixels, so
+ * black background enclosed by the silhouette (gaps between branches, fence
+ * slats, arches) becomes transparent too. `holes` counts the enclosed
+ * background pixels that were cut.
+ */
+export function copyComponentOnly({ width, data }, bbox, indices, count = indices.length) {
+  const pixels = new Uint8ClampedArray(bbox.width * bbox.height * 4)
+  for (let i = 0; i < count; i++) {
+    const index = indices[i]
+    const offset = (Math.floor(index / width) - bbox.y) * bbox.width + index % width - bbox.x
+    pixels.set(data.subarray(index * 4, index * 4 + 4), offset * 4)
+  }
+  const { holes } = copyComponentWithInterior({ width, data }, bbox, indices, count)
   return { pixels, holes }
 }

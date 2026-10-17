@@ -97,3 +97,47 @@ describe('sprite isolation keeps interior pixels', () => {
     expect(reached[3 * width + 3]).toBe(0)
   })
 })
+
+describe('inner_cuts opt-in', () => {
+  it('click and auto isolation cut enclosed black only with innerCuts', () => {
+    const image = spriteWithBlackInterior()
+    const kept = isolateComponent(image, 3, 3)
+    const cut = isolateComponent(image, 3, 3, 16, { innerCuts: true })
+    const local = result => ({ width: 6, data: result.pixels })
+    expect(alphaAt(local(kept), 2, 2)).toBe(255)
+    expect(alphaAt(local(cut), 2, 2)).toBe(0)
+    expect(alphaAt(local(cut), 3, 3)).toBe(0)
+    expect(alphaAt(local(cut), 0, 0)).toBe(255) // the frame itself stays
+    expect(alphaAt(local(cut), 4, 1)).toBe(255) // dark grey above the cutoff is sprite, not background
+    const [auto] = detectSprites(spriteWithBlackInterior(), { gap: 0, innerCuts: true })
+    expect(alphaAt({ width: 6, data: auto.pixels }, 2, 2)).toBe(0)
+    expect(auto.innerCuts).toBe(true)
+  })
+
+  it('runtime key cuts enclosed black only in tiles tagged inner_cuts', () => {
+    const tile = tags => ({ '0,0': { rect: { x: 0, y: 0, width: 10, height: 10 }, tags } })
+    const plain = spriteWithBlackInterior()
+    applyEdgeConnectedBlackKey(plain.data, 10, 10, 24, 48, buildBlackKeySeedMask(10, 10, { tiles: tile(['decorative']) }))
+    expect(alphaAt(plain, 4, 4)).toBe(255)
+    const cuts = spriteWithBlackInterior()
+    applyEdgeConnectedBlackKey(cuts.data, 10, 10, 24, 48, buildBlackKeySeedMask(10, 10, { tiles: tile(['decorative', 'inner_cuts']) }))
+    expect(alphaAt(cuts, 4, 4)).toBe(0)
+    expect(alphaAt(cuts, 5, 5)).toBe(0)
+    expect(alphaAt(cuts, 3, 3)).toBe(255)
+    expect(alphaAt(cuts, 0, 0)).toBe(0)
+  })
+
+  it('tags the shipped bare trees and every combat decal with inner_cuts', async() => {
+    const { readFileSync } = await import('node:fs')
+    const winter = JSON.parse(readFileSync('public/images/map/sprite_sheets/dtv3_winter.json', 'utf8'))
+    const bare = winter.propLayout.filter(prop => prop.id.startsWith('winter_bare_tree'))
+    expect(bare).toHaveLength(6)
+    for (const prop of bare) {
+      expect(prop.tags).toContain('inner_cuts')
+      for (let y = prop.row; y < prop.row + prop.h; y++) for (let x = prop.col; x < prop.col + prop.w; x++) expect(winter.tiles[`${x},${y}`].tags).toContain('inner_cuts')
+    }
+    expect(winter.propLayout.filter(prop => !prop.id.startsWith('winter_bare_tree')).every(prop => !prop.tags.includes('inner_cuts'))).toBe(true)
+    const decals = JSON.parse(readFileSync('public/images/map/sprite_sheets/debris_craters_tracks.json', 'utf8'))
+    expect(Object.values(decals.tiles).every(tile => tile.tags.includes('inner_cuts'))).toBe(true)
+  })
+})
