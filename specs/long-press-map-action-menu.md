@@ -1,6 +1,6 @@
 # Long-press map action menu
 
-Version: 0.57.0
+Version: 0.58.0
 
 Hold the primary mouse button or a single touch on the map with owned units or completed defence buildings selected. After 1000 ms by default (`DEFAULT_MAP_ACTION_LONG_PRESS_MS`), open the existing radial menu at the press location. Settings and `remoteControlApi.setLongPressDuration(ms)` adjust the duration to 300–5000 ms, persisted through the game's IndexedDB storage. The production-tooltip delay is independent.
 
